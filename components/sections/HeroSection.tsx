@@ -47,7 +47,7 @@ export function HeroSection({ section, hideDefaultBackground }: HeroSectionProps
         <div>Navigating...</div>
       </div>
 
-      <div className="container-base relative z-10">
+      <div className="container-base relative z-20">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
           <div>
             {/* Logo: Text or Image */}

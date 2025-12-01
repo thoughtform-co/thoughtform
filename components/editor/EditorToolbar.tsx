@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { useEditorStore, useIsEditMode } from "@/store/editor-store";
 import { useAuth } from "@/components/auth/AuthProvider";
@@ -11,7 +11,16 @@ export function EditorToolbar() {
   const isEditMode = useIsEditMode();
   const { user } = useAuth();
   const [showLoginModal, setShowLoginModal] = useState(false);
-  const { toggleEditMode } = useEditorStore();
+  const { toggleEditMode, undo, redo, canUndo, canRedo } = useEditorStore();
+  
+  // Force re-render when history changes
+  const [, forceUpdate] = useState(0);
+  useEffect(() => {
+    const unsubscribe = useEditorStore.subscribe(() => {
+      forceUpdate((n) => n + 1);
+    });
+    return unsubscribe;
+  }, []);
 
   const handleEditClick = () => {
     if (!user) {
@@ -28,9 +37,70 @@ export function EditorToolbar() {
     }
   };
 
+  // Keyboard shortcuts for undo/redo
+  useEffect(() => {
+    if (!isEditMode) return;
+    
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "z") {
+        e.preventDefault();
+        if (e.shiftKey) {
+          redo();
+        } else {
+          undo();
+        }
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === "y") {
+        e.preventDefault();
+        redo();
+      }
+    };
+    
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isEditMode, undo, redo]);
+
   return (
     <>
-      {/* Top-right buttons only */}
+      {/* Undo/Redo - Top Center (only in edit mode) */}
+      {isEditMode && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[70] flex gap-1">
+          <button
+            onClick={undo}
+            disabled={!canUndo()}
+            className={cn(
+              "px-3 py-2",
+              "font-mono text-sm",
+              "bg-void/90 backdrop-blur-xl border border-dawn-15",
+              "transition-colors",
+              canUndo()
+                ? "text-dawn hover:text-gold hover:border-gold"
+                : "text-dawn-30 cursor-not-allowed opacity-50"
+            )}
+            title="Undo (Ctrl+Z)"
+          >
+            ↩
+          </button>
+          <button
+            onClick={redo}
+            disabled={!canRedo()}
+            className={cn(
+              "px-3 py-2",
+              "font-mono text-sm",
+              "bg-void/90 backdrop-blur-xl border border-dawn-15",
+              "transition-colors",
+              canRedo()
+                ? "text-dawn hover:text-gold hover:border-gold"
+                : "text-dawn-30 cursor-not-allowed opacity-50"
+            )}
+            title="Redo (Ctrl+Shift+Z)"
+          >
+            ↪
+          </button>
+        </div>
+      )}
+
+      {/* Top-right buttons */}
       <div className="fixed top-4 right-4 z-[70] flex gap-2">
         {user && (
           <button

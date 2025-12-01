@@ -73,7 +73,28 @@ function debounceSave(id: string, fn: () => void, delay = 500) {
   debounceTimers[id] = setTimeout(fn, delay);
 }
 
-export const useEditorStore = create<EditorState>((set, get) => ({
+// History state for undo/redo
+interface HistoryState {
+  sections: Section[];
+}
+
+const MAX_HISTORY_LENGTH = 50;
+
+// Extended state with history
+interface EditorStateWithHistory extends EditorState {
+  // History
+  past: HistoryState[];
+  future: HistoryState[];
+  
+  // History actions
+  undo: () => void;
+  redo: () => void;
+  canUndo: () => boolean;
+  canRedo: () => boolean;
+  saveToHistory: () => void;
+}
+
+export const useEditorStore = create<EditorStateWithHistory>((set, get) => ({
   // Initial state
   page: null,
   sections: [],
@@ -83,6 +104,10 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   isDragging: false,
   gridSize: 24,
   showGrid: true,
+  
+  // History state
+  past: [],
+  future: [],
 
   // Basic setters
   setPage: (page) => set({ page }),
@@ -93,6 +118,55 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   setIsDragging: (isDragging) => set({ isDragging }),
   setGridSize: (size) => set({ gridSize: size }),
   toggleGrid: () => set((state) => ({ showGrid: !state.showGrid })),
+  
+  // History actions
+  saveToHistory: () => {
+    const { sections, past } = get();
+    // Don't save if sections are empty or same as last history
+    if (sections.length === 0) return;
+    if (past.length > 0) {
+      const lastState = past[past.length - 1];
+      if (JSON.stringify(lastState.sections) === JSON.stringify(sections)) return;
+    }
+    
+    const newPast = [...past, { sections: JSON.parse(JSON.stringify(sections)) }];
+    // Limit history length
+    if (newPast.length > MAX_HISTORY_LENGTH) {
+      newPast.shift();
+    }
+    set({ past: newPast, future: [] });
+  },
+  
+  undo: () => {
+    const { past, sections, future } = get();
+    if (past.length === 0) return;
+    
+    const previous = past[past.length - 1];
+    const newPast = past.slice(0, -1);
+    
+    set({
+      sections: previous.sections,
+      past: newPast,
+      future: [{ sections: JSON.parse(JSON.stringify(sections)) }, ...future],
+    });
+  },
+  
+  redo: () => {
+    const { past, sections, future } = get();
+    if (future.length === 0) return;
+    
+    const next = future[0];
+    const newFuture = future.slice(1);
+    
+    set({
+      sections: next.sections,
+      past: [...past, { sections: JSON.parse(JSON.stringify(sections)) }],
+      future: newFuture,
+    });
+  },
+  
+  canUndo: () => get().past.length > 0,
+  canRedo: () => get().future.length > 0,
 
   // Section Actions
   addSection: async (type, index) => {
@@ -140,6 +214,9 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   },
 
   updateSection: (id, updates) => {
+    // Save to history before making changes
+    get().saveToHistory();
+    
     // Update local state immediately
     set((state) => ({
       sections: state.sections.map((s) =>
