@@ -282,3 +282,151 @@ export const DEFAULT_ELEMENT_DIMENSIONS: Record<ElementType, { width: number; he
 export const GRID_SIZES = [8, 16, 24, 32] as const;
 export type GridSize = typeof GRID_SIZES[number];
 
+// ═══════════════════════════════════════════════════════════════════
+// SECTION CONTENT SCHEMAS
+// Define editable content for each template section type
+// ═══════════════════════════════════════════════════════════════════
+
+export interface ButtonConfig {
+  text: string;
+  href: string;
+  variant: "ghost" | "solid";
+}
+
+export interface HeroContent {
+  // Logo can be text or image
+  logoType: "text" | "image";
+  logoText?: string;           // e.g., "THOUGHT + FORM"
+  logoImageUrl?: string;       // SVG or PNG URL
+  logoImageAlt?: string;
+  // Headlines
+  headline: string;
+  subheadline: string;
+  // Buttons
+  primaryButton: ButtonConfig;
+  secondaryButton: ButtonConfig;
+  // Layout
+  contentAlign: "left" | "center" | "right";
+}
+
+export interface QuoteContent {
+  quote: string;
+  attribution?: string;
+}
+
+export interface TaglineContent {
+  tagline: string;
+  subtext?: string;
+}
+
+export interface CTAContent {
+  headline: string;
+  subheadline?: string;
+  primaryButton: ButtonConfig;
+  secondaryButton?: ButtonConfig;
+}
+
+export interface ProblemContent {
+  title: string;
+  description: string;
+  symptoms: Array<{ icon: string; text: string }>;
+}
+
+export interface ShiftContent {
+  title: string;
+  definition: string;
+  cards: Array<{
+    icon: string;
+    title: string;
+    description: string;
+  }>;
+}
+
+export interface ServicesContent {
+  title: string;
+  services: Array<{
+    title: string;
+    description: string;
+  }>;
+}
+
+export interface AboutContent {
+  title: string;
+  bio: string;
+  imageUrl?: string;
+  credentials?: string[];
+}
+
+// Union type for all section content
+export type SectionContent = 
+  | HeroContent
+  | QuoteContent
+  | TaglineContent
+  | CTAContent
+  | ProblemContent
+  | ShiftContent
+  | ServicesContent
+  | AboutContent;
+
+// Default content for each section type
+export const DEFAULT_SECTION_CONTENT: Record<SectionType, SectionContent | null> = {
+  hero: {
+    logoType: "text",
+    logoText: "THOUGHT + FORM",
+    headline: "Thoughtform pioneers intuitive human-AI collaboration.",
+    subheadline: "We teach teams how to navigate AI for creative and strategic work.",
+    primaryButton: { text: "GUIDE ME", href: "#contact", variant: "solid" },
+    secondaryButton: { text: "LEARN MORE", href: "#manifesto", variant: "ghost" },
+    contentAlign: "left",
+  } as HeroContent,
+  quote: {
+    quote: "The future belongs to those who understand that doing more with less is compassionate, prosperous, and enduring, and thus more intelligent than the opposite.",
+    attribution: "— R. Buckminster Fuller",
+  } as QuoteContent,
+  tagline: {
+    tagline: "CLARITY IN COMPLEXITY",
+    subtext: "Navigate the noise. Find your signal.",
+  } as TaglineContent,
+  cta: {
+    headline: "Charting a new course.",
+    subheadline: "Ready to navigate AI with intention?",
+    primaryButton: { text: "SCHEDULE A CALL", href: "#contact", variant: "solid" },
+    secondaryButton: { text: "VIEW SERVICES", href: "#services", variant: "ghost" },
+  } as CTAContent,
+  problem: {
+    title: "You're already behind.",
+    description: "While you're reading best practices from last quarter, the landscape has already shifted. The old playbooks don't account for a world where AI can draft, design, and decide in seconds.",
+    symptoms: [
+      { icon: "⬡", text: "Drowning in AI options" },
+      { icon: "⬢", text: "Team resistance" },
+      { icon: "⬡", text: "Hallucination anxiety" },
+      { icon: "⬢", text: "No clear ROI path" },
+    ],
+  } as ProblemContent,
+  shift: {
+    title: "THOUGHTFORM",
+    definition: "Architecture of intention. How ideas take shape.",
+    cards: [
+      { icon: "N", title: "NAVIGATE", description: "Map the AI landscape with clarity" },
+      { icon: "E", title: "EVALUATE", description: "Test what works for your context" },
+      { icon: "S", title: "SYNTHESIZE", description: "Integrate AI into existing workflows" },
+    ],
+  } as ShiftContent,
+  services: {
+    title: "Services",
+    services: [
+      { title: "AI Navigation Sessions", description: "1:1 strategic guidance for leaders" },
+      { title: "Team Workshops", description: "Hands-on training for creative teams" },
+      { title: "Workflow Audits", description: "Find AI opportunities in your process" },
+      { title: "Implementation Support", description: "Ongoing guidance as you scale" },
+    ],
+  } as ServicesContent,
+  about: {
+    title: "About",
+    bio: "Strategic consultant bridging human creativity and artificial intelligence. Former creative director now helping organizations navigate the AI landscape with intention.",
+    credentials: ["10+ years creative direction", "Fortune 500 AI strategy", "Published author on human-AI collaboration"],
+  } as AboutContent,
+  proof: null,  // Uses logos, handled differently
+  musings: null, // Uses blog posts, handled differently
+  freeform: null,
+};

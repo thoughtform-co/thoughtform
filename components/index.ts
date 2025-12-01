@@ -33,6 +33,9 @@ export { EditorToolbar } from "./editor/EditorToolbar";
 export { PropertyPanel } from "./editor/PropertyPanel";
 export { BackgroundPicker } from "./editor/BackgroundPicker";
 export { DraggableElement } from "./editor/DraggableElement";
+export { EditableText } from "./editor/EditableText";
+export { EditableImage } from "./editor/EditableImage";
+export { EditableButton } from "./editor/EditableButton";
 
 // Element Components
 export { TextElement } from "./editor/elements/TextElement";

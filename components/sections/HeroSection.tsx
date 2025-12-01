@@ -1,13 +1,38 @@
 "use client";
 
-import { Button } from "@/components/ui/Button";
 import { HeroCanvas } from "@/components/canvas/HeroCanvas";
+import { EditableText } from "@/components/editor/EditableText";
+import { EditableImage } from "@/components/editor/EditableImage";
+import { EditableButton } from "@/components/editor/EditableButton";
+import { DEFAULT_SECTION_CONTENT, type HeroContent, type Section } from "@/lib/types";
+import { useEditorStore } from "@/store/editor-store";
 
 interface HeroSectionProps {
+  section?: Section;
   hideDefaultBackground?: boolean;
 }
 
-export function HeroSection({ hideDefaultBackground }: HeroSectionProps) {
+const defaultContent = DEFAULT_SECTION_CONTENT.hero as HeroContent;
+
+export function HeroSection({ section, hideDefaultBackground }: HeroSectionProps) {
+  const { updateSection, isEditMode } = useEditorStore();
+  
+  // Merge section config with defaults
+  const content: HeroContent = {
+    ...defaultContent,
+    ...(section?.config as Partial<HeroContent>),
+  };
+
+  const updateContent = (updates: Partial<HeroContent>) => {
+    if (!section) return;
+    updateSection(section.id, {
+      config: { ...content, ...updates },
+    });
+  };
+
+  // Split logo text for styling
+  const logoLines = content.logoText?.split(" + ") || ["THOUGHT", "FORM"];
+
   return (
     <section className="relative min-h-screen flex items-center overflow-hidden pt-20">
       {!hideDefaultBackground && <HeroCanvas />}
@@ -25,24 +50,78 @@ export function HeroSection({ hideDefaultBackground }: HeroSectionProps) {
       <div className="container-base relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
           <div>
-            <h1 className="font-mono text-[clamp(2.5rem,7vw,4.5rem)] font-normal tracking-[0.12em] uppercase text-dawn leading-none mb-8">
-              THOUGHT
-              <br />
-              <span className="text-gold">+</span>FORM
-            </h1>
-            <p className="text-lg text-dawn-70 leading-relaxed mb-2 max-w-[420px]">
-              Thoughtform pioneers intuitive human-AI collaboration.
-            </p>
-            <p className="text-base text-dawn-50 leading-relaxed mb-10 max-w-[420px]">
-              We teach teams how to navigate AI for creative and strategic work.
-            </p>
+            {/* Logo: Text or Image */}
+            {content.logoType === "image" && content.logoImageUrl ? (
+              <div className="mb-8">
+                <EditableImage
+                  src={content.logoImageUrl}
+                  alt={content.logoImageAlt || "Logo"}
+                  onChange={(src) => updateContent({ logoImageUrl: src })}
+                  width={300}
+                  height={100}
+                  fallbackText="LOGO"
+                />
+              </div>
+            ) : (
+              <h1 className="font-mono text-[clamp(2.5rem,7vw,4.5rem)] font-normal tracking-[0.12em] uppercase text-dawn leading-none mb-8">
+                {isEditMode ? (
+                  <EditableText
+                    value={logoLines[0] || "THOUGHT"}
+                    onChange={(text) => {
+                      const newLogo = [text, logoLines[1] || "FORM"].join(" + ");
+                      updateContent({ logoText: newLogo });
+                    }}
+                    className="font-mono text-[clamp(2.5rem,7vw,4.5rem)] font-normal tracking-[0.12em] uppercase text-dawn leading-none"
+                  />
+                ) : (
+                  <>{logoLines[0] || "THOUGHT"}</>
+                )}
+                <br />
+                <span className="text-gold">+</span>
+                {isEditMode ? (
+                  <EditableText
+                    value={logoLines[1] || "FORM"}
+                    onChange={(text) => {
+                      const newLogo = [logoLines[0] || "THOUGHT", text].join(" + ");
+                      updateContent({ logoText: newLogo });
+                    }}
+                    className="font-mono text-[clamp(2.5rem,7vw,4.5rem)] font-normal tracking-[0.12em] uppercase text-dawn leading-none inline"
+                    as="span"
+                  />
+                ) : (
+                  <>{logoLines[1] || "FORM"}</>
+                )}
+              </h1>
+            )}
+
+            {/* Headline */}
+            <EditableText
+              value={content.headline}
+              onChange={(headline) => updateContent({ headline })}
+              className="text-lg text-dawn-70 leading-relaxed mb-2 max-w-[420px]"
+              as="p"
+              multiline
+            />
+
+            {/* Subheadline */}
+            <EditableText
+              value={content.subheadline}
+              onChange={(subheadline) => updateContent({ subheadline })}
+              className="text-base text-dawn-50 leading-relaxed mb-10 max-w-[420px]"
+              as="p"
+              multiline
+            />
+
+            {/* Buttons */}
             <div className="flex gap-3 flex-wrap">
-              <Button variant="ghost" href="#manifesto">
-                Learn More
-              </Button>
-              <Button variant="solid" href="#contact">
-                Guide Me
-              </Button>
+              <EditableButton
+                config={content.secondaryButton}
+                onChange={(secondaryButton) => updateContent({ secondaryButton })}
+              />
+              <EditableButton
+                config={content.primaryButton}
+                onChange={(primaryButton) => updateContent({ primaryButton })}
+              />
             </div>
           </div>
         </div>

@@ -160,7 +160,7 @@ export function SectionWrapper({ section }: SectionWrapperProps) {
   const renderSection = () => {
     switch (section.type) {
       case "hero":
-        return <HeroSection hideDefaultBackground={hasCustomBackground} />;
+        return <HeroSection section={section} hideDefaultBackground={hasCustomBackground} />;
       case "problem":
         return <ProblemSection />;
       case "quote":

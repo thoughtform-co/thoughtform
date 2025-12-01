@@ -9,7 +9,7 @@ import {
   useIsEditMode,
 } from "@/store/editor-store";
 import { BackgroundPicker } from "./BackgroundPicker";
-import { GRID_SIZES, type ElementType, type TextContent } from "@/lib/types";
+import { GRID_SIZES, type ElementType, type TextContent, type HeroContent, DEFAULT_SECTION_CONTENT } from "@/lib/types";
 
 export function PropertyPanel() {
   const isEditMode = useIsEditMode();
@@ -168,6 +168,14 @@ export function PropertyPanel() {
               updateSection(selectedSection.id, { background })
             }
           />
+
+          {/* Hero-specific: Logo Type Toggle */}
+          {selectedSection.type === "hero" && (
+            <HeroContentControls
+              section={selectedSection}
+              onUpdate={(updates) => updateSection(selectedSection.id, updates)}
+            />
+          )}
         </div>
       )}
 
@@ -339,5 +347,115 @@ function TextElementControls({
         </div>
       </div>
     </>
+  );
+}
+
+// Hero section content controls
+function HeroContentControls({
+  section,
+  onUpdate,
+}: {
+  section: { id: string; config: Record<string, unknown> };
+  onUpdate: (updates: { config: Record<string, unknown> }) => void;
+}) {
+  const defaultContent = DEFAULT_SECTION_CONTENT.hero as HeroContent;
+  const content: HeroContent = {
+    ...defaultContent,
+    ...(section.config as Partial<HeroContent>),
+  };
+
+  const updateContent = (updates: Partial<HeroContent>) => {
+    onUpdate({ config: { ...content, ...updates } });
+  };
+
+  return (
+    <div className="mt-3 pt-3 border-t border-dawn-08">
+      <div className="font-mono text-2xs text-dawn-30 mb-2">Logo Type</div>
+      <div className="flex gap-1 mb-3">
+        <button
+          onClick={() => updateContent({ logoType: "text" })}
+          className={cn(
+            "flex-1 px-2 py-1.5 border font-mono text-2xs transition-colors",
+            content.logoType === "text"
+              ? "bg-gold text-void border-gold"
+              : "bg-surface-1 text-dawn-50 border-dawn-08 hover:border-dawn-15"
+          )}
+        >
+          Text
+        </button>
+        <button
+          onClick={() => updateContent({ logoType: "image" })}
+          className={cn(
+            "flex-1 px-2 py-1.5 border font-mono text-2xs transition-colors",
+            content.logoType === "image"
+              ? "bg-gold text-void border-gold"
+              : "bg-surface-1 text-dawn-50 border-dawn-08 hover:border-dawn-15"
+          )}
+        >
+          Image
+        </button>
+      </div>
+
+      {content.logoType === "image" && (
+        <div className="space-y-2">
+          <div className="font-mono text-2xs text-dawn-30">Image URL</div>
+          <input
+            type="text"
+            value={content.logoImageUrl || ""}
+            onChange={(e) => updateContent({ logoImageUrl: e.target.value })}
+            placeholder="https://... or upload in preview"
+            className={cn(
+              "w-full px-2 py-1.5 bg-surface-1 border border-dawn-08",
+              "font-mono text-2xs text-dawn placeholder:text-dawn-30",
+              "focus:outline-none focus:border-gold"
+            )}
+          />
+          <p className="font-mono text-2xs text-dawn-30">
+            Tip: Click logo in preview to upload
+          </p>
+        </div>
+      )}
+
+      {content.logoType === "text" && (
+        <div className="space-y-2">
+          <div className="font-mono text-2xs text-dawn-30">Logo Text</div>
+          <input
+            type="text"
+            value={content.logoText || ""}
+            onChange={(e) => updateContent({ logoText: e.target.value })}
+            placeholder="THOUGHT + FORM"
+            className={cn(
+              "w-full px-2 py-1.5 bg-surface-1 border border-dawn-08",
+              "font-mono text-2xs text-dawn placeholder:text-dawn-30",
+              "focus:outline-none focus:border-gold"
+            )}
+          />
+          <p className="font-mono text-2xs text-dawn-30">
+            Use &quot;+&quot; to split into two lines
+          </p>
+        </div>
+      )}
+
+      {/* Content alignment */}
+      <div className="mt-3">
+        <div className="font-mono text-2xs text-dawn-30 mb-1">Content Align</div>
+        <div className="flex gap-1">
+          {(["left", "center", "right"] as const).map((align) => (
+            <button
+              key={align}
+              onClick={() => updateContent({ contentAlign: align })}
+              className={cn(
+                "flex-1 px-2 py-1 border font-mono text-2xs transition-colors",
+                content.contentAlign === align
+                  ? "bg-gold text-void border-gold"
+                  : "bg-surface-1 text-dawn-50 border-dawn-08"
+              )}
+            >
+              {align === "left" ? "←" : align === "center" ? "↔" : "→"}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
   );
 }
