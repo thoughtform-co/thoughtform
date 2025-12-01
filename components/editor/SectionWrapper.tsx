@@ -51,7 +51,7 @@ export function SectionWrapper({ section }: SectionWrapperProps) {
   const isSelected = selectedSectionId === section.id;
   
   // Check if section has a custom background
-  const hasCustomBackground = section.background && section.background.type !== "none";
+  const hasCustomBackground = !!(section.background && section.background.type !== "none");
 
   const handleClick = (e: React.MouseEvent) => {
     if (!isEditMode) return;
