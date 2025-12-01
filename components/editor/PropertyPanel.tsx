@@ -48,16 +48,16 @@ export function PropertyPanel() {
         "flex flex-col"
       )}
     >
-      {/* Add Elements Section */}
+      {/* Add Elements Section - Always visible */}
       <div className="p-3 border-b border-dawn-08">
         <div className="font-mono text-2xs uppercase tracking-widest text-dawn-30 mb-2">
           Add Elements
         </div>
-        <div className="flex gap-1">
+        <div className="grid grid-cols-3 gap-1">
           <button
             onClick={() => handleAddElement("text")}
             className={cn(
-              "flex-1 flex items-center justify-center gap-1 px-2 py-1.5",
+              "flex items-center justify-center gap-1 px-2 py-1.5",
               "bg-surface-1 border border-dawn-08",
               "font-mono text-2xs text-dawn-70",
               "hover:border-dawn-15 hover:text-dawn transition-colors"
@@ -69,7 +69,7 @@ export function PropertyPanel() {
           <button
             onClick={() => handleAddElement("image")}
             className={cn(
-              "flex-1 flex items-center justify-center gap-1 px-2 py-1.5",
+              "flex items-center justify-center gap-1 px-2 py-1.5",
               "bg-surface-1 border border-dawn-08",
               "font-mono text-2xs text-dawn-70",
               "hover:border-dawn-15 hover:text-dawn transition-colors"
@@ -78,8 +78,98 @@ export function PropertyPanel() {
             <span className="text-gold">▣</span>
             Img
           </button>
+          <button
+            onClick={() => handleAddElement("video")}
+            className={cn(
+              "flex items-center justify-center gap-1 px-2 py-1.5",
+              "bg-surface-1 border border-dawn-08",
+              "font-mono text-2xs text-dawn-70",
+              "hover:border-dawn-15 hover:text-dawn transition-colors"
+            )}
+          >
+            <span className="text-gold">▶</span>
+            Vid
+          </button>
         </div>
       </div>
+
+      {/* Grid Settings - Always visible */}
+      <div className="p-3 border-b border-dawn-08">
+        <div className="font-mono text-2xs uppercase tracking-widest text-dawn-30 mb-2">
+          Grid
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={toggleGrid}
+            className={cn(
+              "px-2 py-1 border font-mono text-2xs transition-colors",
+              showGrid
+                ? "bg-gold text-void border-gold"
+                : "bg-surface-1 text-dawn-50 border-dawn-08"
+            )}
+          >
+            {showGrid ? "ON" : "OFF"}
+          </button>
+          <div className="flex gap-0.5 flex-1">
+            {GRID_SIZES.map((size) => (
+              <button
+                key={size}
+                onClick={() => setGridSize(size)}
+                className={cn(
+                  "flex-1 px-1 py-1",
+                  "font-mono text-2xs",
+                  "border transition-colors",
+                  gridSize === size
+                    ? "bg-gold/20 text-gold border-gold/30"
+                    : "bg-surface-1 text-dawn-30 border-dawn-08"
+                )}
+              >
+                {size}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Selected Section Properties */}
+      {selectedSection && (
+        <div className="p-3 border-b border-dawn-08">
+          <div className="font-mono text-2xs uppercase tracking-widest text-gold mb-3">
+            Section: {selectedSection.type}
+          </div>
+
+          {/* Min Height */}
+          <div className="mb-3">
+            <div className="font-mono text-2xs text-dawn-30 mb-1">
+              Min Height
+            </div>
+            <select
+              value={selectedSection.minHeight}
+              onChange={(e) =>
+                updateSection(selectedSection.id, { minHeight: e.target.value })
+              }
+              className={cn(
+                "w-full px-2 py-1.5 bg-surface-1 border border-dawn-08",
+                "font-mono text-2xs text-dawn",
+                "focus:outline-none focus:border-gold"
+              )}
+            >
+              <option value="auto">Auto</option>
+              <option value="50vh">50vh</option>
+              <option value="75vh">75vh</option>
+              <option value="100vh">100vh</option>
+            </select>
+          </div>
+
+          {/* Background */}
+          <BackgroundPicker
+            background={selectedSection.background}
+            onChange={(background) =>
+              updateSection(selectedSection.id, { background })
+            }
+          />
+        </div>
+      )}
 
       {/* Selected Element Properties */}
       {selectedElement && (
@@ -172,83 +262,14 @@ export function PropertyPanel() {
         </div>
       )}
 
-      {/* Selected Section Properties */}
-      {selectedSection && (
-        <div className="p-3 border-b border-dawn-08">
-          <div className="font-mono text-2xs uppercase tracking-widest text-gold mb-3">
-            Section: {selectedSection.type}
+      {/* Empty state hint */}
+      {!selectedSection && !selectedElement && (
+        <div className="p-3 text-center">
+          <div className="font-mono text-2xs text-dawn-30">
+            Click a section to edit
           </div>
-
-          {/* Min Height */}
-          <div className="mb-3">
-            <div className="font-mono text-2xs text-dawn-30 mb-1">
-              Min Height
-            </div>
-            <select
-              value={selectedSection.minHeight}
-              onChange={(e) =>
-                updateSection(selectedSection.id, { minHeight: e.target.value })
-              }
-              className={cn(
-                "w-full px-2 py-1.5 bg-surface-1 border border-dawn-08",
-                "font-mono text-2xs text-dawn",
-                "focus:outline-none focus:border-gold"
-              )}
-            >
-              <option value="auto">Auto</option>
-              <option value="50vh">50vh</option>
-              <option value="75vh">75vh</option>
-              <option value="100vh">100vh</option>
-            </select>
-          </div>
-
-          {/* Background */}
-          <BackgroundPicker
-            background={selectedSection.background}
-            onChange={(background) =>
-              updateSection(selectedSection.id, { background })
-            }
-          />
         </div>
       )}
-
-      {/* Grid Settings */}
-      <div className="p-3 mt-auto border-t border-dawn-08">
-        <div className="font-mono text-2xs uppercase tracking-widest text-dawn-30 mb-2">
-          Grid
-        </div>
-        <div className="flex items-center gap-2 mb-2">
-          <button
-            onClick={toggleGrid}
-            className={cn(
-              "px-2 py-1 border font-mono text-2xs transition-colors",
-              showGrid
-                ? "bg-gold text-void border-gold"
-                : "bg-surface-1 text-dawn-50 border-dawn-08"
-            )}
-          >
-            {showGrid ? "ON" : "OFF"}
-          </button>
-          <div className="flex gap-0.5 flex-1">
-            {GRID_SIZES.map((size) => (
-              <button
-                key={size}
-                onClick={() => setGridSize(size)}
-                className={cn(
-                  "flex-1 px-1 py-1",
-                  "font-mono text-2xs",
-                  "border transition-colors",
-                  gridSize === size
-                    ? "bg-gold/20 text-gold border-gold/30"
-                    : "bg-surface-1 text-dawn-30 border-dawn-08"
-                )}
-              >
-                {size}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
     </motion.div>
   );
 }
