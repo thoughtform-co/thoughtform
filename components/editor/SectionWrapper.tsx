@@ -158,26 +158,27 @@ export function SectionWrapper({ section }: SectionWrapperProps) {
   };
 
   // Render the appropriate section component
+  // ALL sections receive the section prop for consistent editability
   const renderSection = () => {
     switch (section.type) {
       case "hero":
         return <HeroSection section={section} hideDefaultBackground={hasCustomBackground} />;
       case "problem":
-        return <ProblemSection />;
+        return <ProblemSection section={section} />;
       case "quote":
         return <QuoteSection section={section} hideDefaultBackground={hasCustomBackground} />;
       case "shift":
-        return <ShiftSection />;
+        return <ShiftSection section={section} />;
       case "proof":
-        return <ProofSection />;
+        return <ProofSection section={section} />;
       case "tagline":
         return <TaglineSection section={section} hideDefaultBackground={hasCustomBackground} />;
       case "services":
-        return <ServicesSection />;
+        return <ServicesSection section={section} />;
       case "about":
-        return <AboutSection />;
+        return <AboutSection section={section} />;
       case "musings":
-        return <MusingsSection />;
+        return <MusingsSection section={section} />;
       case "cta":
         return <CTASection section={section} />;
       case "freeform":
@@ -214,34 +215,28 @@ export function SectionWrapper({ section }: SectionWrapperProps) {
       {/* Section content */}
       <div className="relative z-10">{renderSection()}</div>
 
-      {/* Custom elements layer (for non-freeform sections) */}
-      {(hasElements || (isEditMode && isSelected && section.type !== "freeform")) && (
-        <div 
-          className="absolute inset-0 z-15 pointer-events-none"
-          style={{ minHeight: section.minHeight }}
-        >
-          {/* Enable pointer events only for elements */}
-          <div className="relative w-full h-full pointer-events-auto">
-            {section.elements?.map((element) => (
-              <DraggableElement key={element.id} element={element} />
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Edit mode overlay */}
+      {/* Edit mode hover overlay (lowest z-index, just for visual feedback) */}
       {isEditMode && (
         <div
           className={cn(
-            "absolute inset-0 z-20 pointer-events-none transition-colors",
+            "absolute inset-0 z-15 pointer-events-none transition-colors",
             isSelected ? "bg-gold/5" : "hover:bg-dawn-04"
           )}
         />
       )}
 
+      {/* Custom elements layer - ALWAYS render if there are elements */}
+      {section.type !== "freeform" && section.elements && section.elements.length > 0 && (
+        <div className="absolute inset-0 z-30">
+          {section.elements.map((element) => (
+            <DraggableElement key={element.id} element={element} />
+          ))}
+        </div>
+      )}
+
       {/* Edit mode controls */}
       {isEditMode && isSelected && (
-        <div className="absolute top-4 left-4 z-30 flex gap-2">
+        <div className="absolute top-4 left-4 z-40 flex gap-2">
           {/* Section type badge */}
           <div className="px-3 py-1.5 bg-void/90 border border-dawn-15 font-mono text-2xs uppercase tracking-wider text-gold">
             {section.type}
