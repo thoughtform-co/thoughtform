@@ -89,7 +89,11 @@ export function FreeformSection({ section }: FreeformSectionProps) {
 
       {/* Render elements */}
       {section.elements?.map((element) => (
-        <DraggableElement key={element.id} element={element} />
+        <DraggableElement 
+          key={element.id} 
+          element={element} 
+          containerRef={containerRef}
+        />
       ))}
     </div>
   );

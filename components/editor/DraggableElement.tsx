@@ -12,6 +12,7 @@ import type { Element } from "@/lib/types";
 
 interface DraggableElementProps {
   element: Element;
+  containerRef?: React.RefObject<HTMLElement>;
 }
 
 const ELEMENT_COMPONENTS: Record<string, React.ComponentType<{ element: Element; isEditing: boolean }>> = {
@@ -20,7 +21,28 @@ const ELEMENT_COMPONENTS: Record<string, React.ComponentType<{ element: Element;
   video: VideoElement,
 };
 
-export function DraggableElement({ element }: DraggableElementProps) {
+// Minimum padding from container edges
+const EDGE_PADDING = 16;
+
+// Constrain position to viewport/container bounds
+function constrainToBounds(
+  x: number,
+  y: number,
+  elementWidth: number,
+  elementHeight: number,
+  containerWidth: number,
+  containerHeight: number
+) {
+  const maxX = containerWidth - elementWidth - EDGE_PADDING;
+  const maxY = containerHeight - elementHeight - EDGE_PADDING;
+
+  return {
+    x: Math.max(EDGE_PADDING, Math.min(x, maxX)),
+    y: Math.max(EDGE_PADDING, Math.min(y, maxY)),
+  };
+}
+
+export function DraggableElement({ element, containerRef }: DraggableElementProps) {
   const elementRef = useRef<HTMLDivElement>(null);
   const isEditMode = useIsEditMode();
   const {
@@ -37,6 +59,12 @@ export function DraggableElement({ element }: DraggableElementProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0, elementX: 0, elementY: 0 });
   const [resizeStart, setResizeStart] = useState({ x: 0, y: 0, width: 0, height: 0 });
+  const [nearEdge, setNearEdge] = useState<{ top: boolean; right: boolean; bottom: boolean; left: boolean }>({
+    top: false,
+    right: false,
+    bottom: false,
+    left: false,
+  });
 
   const isSelected = selectedElementId === element.id;
   const ElementComponent = ELEMENT_COMPONENTS[element.type];
@@ -86,13 +114,46 @@ export function DraggableElement({ element }: DraggableElementProps) {
     const handleMouseMove = (e: MouseEvent) => {
       const deltaX = e.clientX - dragStart.x;
       const deltaY = e.clientY - dragStart.y;
-      const newX = snapToGrid(dragStart.elementX + deltaX, gridSize);
-      const newY = snapToGrid(dragStart.elementY + deltaY, gridSize);
+      let newX = snapToGrid(dragStart.elementX + deltaX, gridSize);
+      let newY = snapToGrid(dragStart.elementY + deltaY, gridSize);
+
+      // Get container or viewport bounds
+      const container = containerRef?.current || elementRef.current?.parentElement;
+      if (container) {
+        const containerRect = container.getBoundingClientRect();
+        const containerWidth = container.scrollWidth;
+        const containerHeight = container.scrollHeight;
+        const elementWidth = element.width ?? 200;
+        const elementHeight = element.height ?? 100;
+
+        // Apply constraints
+        const constrained = constrainToBounds(
+          newX,
+          newY,
+          elementWidth,
+          elementHeight,
+          containerWidth,
+          containerHeight
+        );
+        newX = constrained.x;
+        newY = constrained.y;
+
+        // Check if near edges (for visual feedback)
+        const edgeThreshold = 32;
+        setNearEdge({
+          top: newY <= EDGE_PADDING + edgeThreshold,
+          left: newX <= EDGE_PADDING + edgeThreshold,
+          right: newX >= containerWidth - elementWidth - EDGE_PADDING - edgeThreshold,
+          bottom: newY >= containerHeight - elementHeight - EDGE_PADDING - edgeThreshold,
+        });
+      }
+
       moveElement(element.id, newX, newY);
     };
 
     const handleMouseUp = () => {
       setIsDragging(false);
+      setNearEdge({ top: false, right: false, bottom: false, left: false });
     };
 
     document.addEventListener("mousemove", handleMouseMove);
@@ -102,7 +163,7 @@ export function DraggableElement({ element }: DraggableElementProps) {
       document.removeEventListener("mousemove", handleMouseMove);
       document.removeEventListener("mouseup", handleMouseUp);
     };
-  }, [isDragging, dragStart, element.id, gridSize, moveElement]);
+  }, [isDragging, dragStart, element.id, gridSize, moveElement, element.width, element.height, containerRef]);
 
   // Handle resize start
   const handleResizeStart = useCallback(
@@ -129,8 +190,23 @@ export function DraggableElement({ element }: DraggableElementProps) {
     const handleMouseMove = (e: MouseEvent) => {
       const deltaX = e.clientX - resizeStart.x;
       const deltaY = e.clientY - resizeStart.y;
-      const newWidth = Math.max(50, snapToGrid(resizeStart.width + deltaX, gridSize));
-      const newHeight = Math.max(50, snapToGrid(resizeStart.height + deltaY, gridSize));
+      let newWidth = Math.max(50, snapToGrid(resizeStart.width + deltaX, gridSize));
+      let newHeight = Math.max(50, snapToGrid(resizeStart.height + deltaY, gridSize));
+
+      // Constrain resize to container bounds
+      const container = containerRef?.current || elementRef.current?.parentElement;
+      if (container) {
+        const containerWidth = container.scrollWidth;
+        const containerHeight = container.scrollHeight;
+
+        // Don't let resize push element past boundaries
+        const maxWidth = containerWidth - element.x - EDGE_PADDING;
+        const maxHeight = containerHeight - element.y - EDGE_PADDING;
+
+        newWidth = Math.min(newWidth, maxWidth);
+        newHeight = Math.min(newHeight, maxHeight);
+      }
+
       resizeElement(element.id, newWidth, newHeight);
     };
 
@@ -145,7 +221,7 @@ export function DraggableElement({ element }: DraggableElementProps) {
       document.removeEventListener("mousemove", handleMouseMove);
       document.removeEventListener("mouseup", handleMouseUp);
     };
-  }, [isResizing, resizeStart, element.id, gridSize, resizeElement]);
+  }, [isResizing, resizeStart, element.id, element.x, element.y, gridSize, resizeElement, containerRef]);
 
   // Handle delete
   const handleDelete = useCallback(
@@ -181,14 +257,14 @@ export function DraggableElement({ element }: DraggableElementProps) {
         "absolute",
         isEditMode && "cursor-move",
         isEditMode && isSelected && "ring-2 ring-gold ring-offset-1 ring-offset-void",
-        isDragging && "opacity-80"
+        isDragging && "opacity-90 shadow-lg shadow-gold/20"
       )}
       style={{
         left: element.x,
         top: element.y,
         width: element.width ?? "auto",
         height: element.height ?? "auto",
-        zIndex: element.zIndex + (isSelected ? 100 : 0),
+        zIndex: element.zIndex + (isSelected ? 100 : 0) + (isDragging ? 200 : 0),
       }}
       onClick={handleClick}
       onDoubleClick={handleDoubleClick}
@@ -198,6 +274,24 @@ export function DraggableElement({ element }: DraggableElementProps) {
     >
       {/* Element content */}
       <ElementComponent element={element} isEditing={isEditing} />
+
+      {/* Edge proximity indicators */}
+      {isDragging && (
+        <>
+          {nearEdge.top && (
+            <div className="absolute -top-1 left-0 right-0 h-0.5 bg-gold animate-pulse" />
+          )}
+          {nearEdge.left && (
+            <div className="absolute top-0 bottom-0 -left-1 w-0.5 bg-gold animate-pulse" />
+          )}
+          {nearEdge.right && (
+            <div className="absolute top-0 bottom-0 -right-1 w-0.5 bg-gold animate-pulse" />
+          )}
+          {nearEdge.bottom && (
+            <div className="absolute -bottom-1 left-0 right-0 h-0.5 bg-gold animate-pulse" />
+          )}
+        </>
+      )}
 
       {/* Selection controls */}
       {isEditMode && isSelected && !isEditing && (
@@ -215,6 +309,11 @@ export function DraggableElement({ element }: DraggableElementProps) {
             onMouseDown={handleResizeStart}
             className="absolute -bottom-1.5 -right-1.5 w-3 h-3 bg-gold cursor-se-resize"
           />
+
+          {/* Position indicator */}
+          <div className="absolute -bottom-6 left-0 font-mono text-2xs text-dawn-30">
+            {element.x}, {element.y}
+          </div>
         </>
       )}
     </motion.div>
