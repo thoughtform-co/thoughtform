@@ -18,6 +18,7 @@ import { AboutSection } from "@/components/sections/AboutSection";
 import { MusingsSection } from "@/components/sections/MusingsSection";
 import { CTASection } from "@/components/sections/CTASection";
 import { FreeformSection } from "@/components/sections/FreeformSection";
+import { DraggableElement } from "@/components/editor/DraggableElement";
 
 import dynamic from "next/dynamic";
 
@@ -164,13 +165,13 @@ export function SectionWrapper({ section }: SectionWrapperProps) {
       case "problem":
         return <ProblemSection />;
       case "quote":
-        return <QuoteSection hideDefaultBackground={hasCustomBackground} />;
+        return <QuoteSection section={section} hideDefaultBackground={hasCustomBackground} />;
       case "shift":
         return <ShiftSection />;
       case "proof":
         return <ProofSection />;
       case "tagline":
-        return <TaglineSection hideDefaultBackground={hasCustomBackground} />;
+        return <TaglineSection section={section} hideDefaultBackground={hasCustomBackground} />;
       case "services":
         return <ServicesSection />;
       case "about":
@@ -178,7 +179,7 @@ export function SectionWrapper({ section }: SectionWrapperProps) {
       case "musings":
         return <MusingsSection />;
       case "cta":
-        return <CTASection />;
+        return <CTASection section={section} />;
       case "freeform":
         return <FreeformSection section={section} />;
       default:
@@ -189,6 +190,9 @@ export function SectionWrapper({ section }: SectionWrapperProps) {
         );
     }
   };
+
+  // Check if this section has custom elements (for non-freeform sections)
+  const hasElements = section.elements && section.elements.length > 0 && section.type !== "freeform";
 
   return (
     <motion.div
@@ -209,6 +213,21 @@ export function SectionWrapper({ section }: SectionWrapperProps) {
 
       {/* Section content */}
       <div className="relative z-10">{renderSection()}</div>
+
+      {/* Custom elements layer (for non-freeform sections) */}
+      {(hasElements || (isEditMode && isSelected && section.type !== "freeform")) && (
+        <div 
+          className="absolute inset-0 z-15 pointer-events-none"
+          style={{ minHeight: section.minHeight }}
+        >
+          {/* Enable pointer events only for elements */}
+          <div className="relative w-full h-full pointer-events-auto">
+            {section.elements?.map((element) => (
+              <DraggableElement key={element.id} element={element} />
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Edit mode overlay */}
       {isEditMode && (

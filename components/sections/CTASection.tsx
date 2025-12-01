@@ -1,27 +1,66 @@
-import { Button } from "@/components/ui/Button";
+"use client";
 
-export function CTASection() {
+import { EditableText } from "@/components/editor/EditableText";
+import { EditableButton } from "@/components/editor/EditableButton";
+import { DEFAULT_SECTION_CONTENT, type CTAContent, type Section } from "@/lib/types";
+import { useEditorStore } from "@/store/editor-store";
+
+interface CTASectionProps {
+  section?: Section;
+}
+
+const defaultContent = DEFAULT_SECTION_CONTENT.cta as CTAContent;
+
+export function CTASection({ section }: CTASectionProps) {
+  const { updateSection } = useEditorStore();
+
+  // Merge section config with defaults
+  const content: CTAContent = {
+    ...defaultContent,
+    ...(section?.config as Partial<CTAContent>),
+  };
+
+  const updateContent = (updates: Partial<CTAContent>) => {
+    if (!section) return;
+    updateSection(section.id, {
+      config: { ...content, ...updates },
+    });
+  };
+
   return (
     <section id="contact" className="section-spacing text-center">
       <div className="container-narrow">
         <h2 className="font-mono text-[clamp(1.5rem,3vw,2rem)] tracking-wide uppercase text-dawn mb-6">
-          Begin the Navigation
+          <EditableText
+            value={content.headline}
+            onChange={(headline) => updateContent({ headline })}
+            className="font-mono text-[clamp(1.5rem,3vw,2rem)] tracking-wide uppercase text-dawn"
+          />
         </h2>
-        <p className="text-[1.0625rem] text-dawn-70 leading-relaxed max-w-[560px] mx-auto mb-10">
-          The technology is here. The question is whether your team will develop
-          navigation skills before convergence flattens everything into beige
-          uniformity.
-        </p>
+        {content.subheadline && (
+          <p className="text-[1.0625rem] text-dawn-70 leading-relaxed max-w-[560px] mx-auto mb-10">
+            <EditableText
+              value={content.subheadline}
+              onChange={(subheadline) => updateContent({ subheadline })}
+              className="text-[1.0625rem] text-dawn-70 leading-relaxed"
+              multiline
+              as="span"
+            />
+          </p>
+        )}
         <div className="flex gap-3 justify-center flex-wrap">
-          <Button variant="solid" href="mailto:vince@thoughtform.ai">
-            Reach Out
-          </Button>
-          <Button variant="ghost" href="#services">
-            Explore Services
-          </Button>
+          <EditableButton
+            config={content.primaryButton}
+            onChange={(primaryButton) => updateContent({ primaryButton })}
+          />
+          {content.secondaryButton && (
+            <EditableButton
+              config={content.secondaryButton}
+              onChange={(secondaryButton) => updateContent({ secondaryButton })}
+            />
+          )}
         </div>
       </div>
     </section>
   );
 }
-
