@@ -36,20 +36,6 @@ interface SectionWrapperProps {
   section: Section;
 }
 
-// Map section types to their components (freeform is handled separately)
-const SECTION_COMPONENTS: Record<string, React.ComponentType> = {
-  hero: HeroSection,
-  problem: ProblemSection,
-  quote: QuoteSection,
-  shift: ShiftSection,
-  proof: ProofSection,
-  tagline: TaglineSection,
-  services: ServicesSection,
-  about: AboutSection,
-  musings: MusingsSection,
-  cta: CTASection,
-};
-
 // Map canvas presets to components
 const CANVAS_COMPONENTS: Record<string, React.ComponentType> = {
   torus: HeroCanvas,
@@ -60,10 +46,12 @@ const CANVAS_COMPONENTS: Record<string, React.ComponentType> = {
 export function SectionWrapper({ section }: SectionWrapperProps) {
   const sectionRef = useRef<HTMLDivElement>(null);
   const isEditMode = useIsEditMode();
-  const { selectedSectionId, setSelectedSection, removeSection, reorderSections } = useEditorStore();
+  const { selectedSectionId, setSelectedSection, removeSection } = useEditorStore();
   
   const isSelected = selectedSectionId === section.id;
-  const SectionComponent = SECTION_COMPONENTS[section.type];
+  
+  // Check if section has a custom background
+  const hasCustomBackground = section.background && section.background.type !== "none";
 
   const handleClick = (e: React.MouseEvent) => {
     if (!isEditMode) return;
@@ -128,13 +116,39 @@ export function SectionWrapper({ section }: SectionWrapperProps) {
     return null;
   };
 
-  if (!SectionComponent) {
-    return (
-      <div className="section-spacing bg-surface-1 text-center">
-        <p className="text-dawn-50">Unknown section type: {section.type}</p>
-      </div>
-    );
-  }
+  // Render the appropriate section component
+  const renderSection = () => {
+    switch (section.type) {
+      case "hero":
+        return <HeroSection hideDefaultBackground={hasCustomBackground} />;
+      case "problem":
+        return <ProblemSection />;
+      case "quote":
+        return <QuoteSection hideDefaultBackground={hasCustomBackground} />;
+      case "shift":
+        return <ShiftSection />;
+      case "proof":
+        return <ProofSection />;
+      case "tagline":
+        return <TaglineSection hideDefaultBackground={hasCustomBackground} />;
+      case "services":
+        return <ServicesSection />;
+      case "about":
+        return <AboutSection />;
+      case "musings":
+        return <MusingsSection />;
+      case "cta":
+        return <CTASection />;
+      case "freeform":
+        return <FreeformSection section={section} />;
+      default:
+        return (
+          <div className="section-spacing bg-surface-1 text-center">
+            <p className="text-dawn-50">Unknown section type: {section.type}</p>
+          </div>
+        );
+    }
+  };
 
   return (
     <motion.div
@@ -155,11 +169,7 @@ export function SectionWrapper({ section }: SectionWrapperProps) {
 
       {/* Section content */}
       <div className="relative z-10">
-        {section.type === "freeform" ? (
-          <FreeformSection section={section} />
-        ) : (
-          <SectionComponent />
-        )}
+        {renderSection()}
       </div>
 
       {/* Edit mode overlay */}
@@ -174,7 +184,7 @@ export function SectionWrapper({ section }: SectionWrapperProps) {
 
       {/* Edit mode controls */}
       {isEditMode && isSelected && (
-        <div className="absolute top-4 right-4 z-30 flex gap-2">
+        <div className="absolute top-4 left-4 z-30 flex gap-2">
           {/* Section type badge */}
           <div className="px-3 py-1.5 bg-void/90 border border-dawn-15 font-mono text-2xs uppercase tracking-wider text-gold">
             {section.type}
@@ -189,18 +199,6 @@ export function SectionWrapper({ section }: SectionWrapperProps) {
           </button>
         </div>
       )}
-
-      {/* Drag handle (shown on hover in edit mode) */}
-      {isEditMode && (
-        <div className="absolute left-4 top-1/2 -translate-y-1/2 z-30 opacity-0 group-hover:opacity-100 transition-opacity">
-          <div className="w-6 h-12 flex flex-col justify-center items-center gap-1 bg-void/90 border border-dawn-15 cursor-grab">
-            <div className="w-3 h-0.5 bg-dawn-30" />
-            <div className="w-3 h-0.5 bg-dawn-30" />
-            <div className="w-3 h-0.5 bg-dawn-30" />
-          </div>
-        </div>
-      )}
     </motion.div>
   );
 }
-

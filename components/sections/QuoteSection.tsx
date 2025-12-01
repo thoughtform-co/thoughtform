@@ -2,10 +2,14 @@
 
 import { AttractorCanvas } from "@/components/canvas/AttractorCanvas";
 
-export function QuoteSection() {
+interface QuoteSectionProps {
+  hideDefaultBackground?: boolean;
+}
+
+export function QuoteSection({ hideDefaultBackground }: QuoteSectionProps) {
   return (
     <section className="section-spacing-compact relative overflow-hidden">
-      <AttractorCanvas />
+      {!hideDefaultBackground && <AttractorCanvas />}
 
       <div className="container-narrow relative z-10 text-center">
         <blockquote className="text-[clamp(1.125rem,2.5vw,1.5rem)] leading-relaxed text-dawn max-w-[700px] mx-auto mb-6 italic">
@@ -20,4 +24,3 @@ export function QuoteSection() {
     </section>
   );
 }
-

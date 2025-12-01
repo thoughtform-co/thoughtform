@@ -3,10 +3,14 @@
 import { Button } from "@/components/ui/Button";
 import { HeroCanvas } from "@/components/canvas/HeroCanvas";
 
-export function HeroSection() {
+interface HeroSectionProps {
+  hideDefaultBackground?: boolean;
+}
+
+export function HeroSection({ hideDefaultBackground }: HeroSectionProps) {
   return (
     <section className="relative min-h-screen flex items-center overflow-hidden pt-20">
-      <HeroCanvas />
+      {!hideDefaultBackground && <HeroCanvas />}
 
       {/* HUD Elements */}
       <div className="absolute top-[20%] right-[10%] z-10 font-mono text-2xs uppercase tracking-wide text-dawn-30 pointer-events-none">
@@ -52,4 +56,3 @@ export function HeroSection() {
     </section>
   );
 }
-
