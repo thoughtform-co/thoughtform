@@ -17,10 +17,26 @@ export type SectionType =
   | "freeform";
 
 // Background Types
-export type BackgroundType = "none" | "image" | "canvas" | "threejs";
+export type BackgroundType = "none" | "image" | "video" | "animation";
 
-export type CanvasPreset = "torus" | "attractor" | "wave" | "gateway";
-export type ThreeJSPreset = "starfield" | "particles" | "geometric" | "nebula" | "grid" | "spiral" | "vortex" | "custom";
+// All animation presets (2D canvas + 3D Three.js unified)
+export type AnimationPreset = 
+  // Featured
+  | "gateway-cardinal"  // Gateway with Halvorsen flow (default)
+  | "gateway"           // Gateway torus with terrain
+  // 2D Canvas
+  | "torus"             // Rotating geometric ring
+  | "attractor"         // Chaotic motion lines
+  | "wave"              // Flowing wave patterns
+  // 3D Three.js
+  | "starfield"         // Rotating star sphere
+  | "particles"         // Wave-motion particles
+  | "geometric"         // Wireframe torus points
+  | "nebula"            // Colorful particle cloud
+  | "grid"              // Rolling wave grid
+  | "spiral"            // DNA double helix
+  | "vortex"            // Swirling tunnel
+  | "custom";           // Custom code
 
 export interface BackgroundConfig {
   type: BackgroundType;
@@ -28,13 +44,15 @@ export interface BackgroundConfig {
   imageUrl?: string;
   imagePosition?: "cover" | "contain" | "center";
   imageOpacity?: number;
-  // Canvas background
-  canvasPreset?: CanvasPreset;
-  canvasOpacity?: number;
-  // Three.js background
-  threejsPreset?: ThreeJSPreset;
-  threejsOpacity?: number;
-  // Custom Three.js code
+  // Video background
+  videoUrl?: string;
+  videoOpacity?: number;
+  videoMuted?: boolean;
+  videoLoop?: boolean;
+  // Animation background (unified 2D/3D)
+  animationPreset?: AnimationPreset;
+  animationOpacity?: number;
+  // Custom animation code
   customCode?: string;
 }
 

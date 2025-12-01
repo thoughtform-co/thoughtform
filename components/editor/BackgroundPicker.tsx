@@ -2,38 +2,35 @@
 
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import type {
-  BackgroundConfig,
-  BackgroundType,
-  CanvasPreset,
-  ThreeJSPreset,
-} from "@/lib/types";
+import type { BackgroundConfig, BackgroundType, AnimationPreset } from "@/lib/types";
 
 interface BackgroundPickerProps {
   background: BackgroundConfig | null;
   onChange: (background: BackgroundConfig | null) => void;
 }
 
-const CANVAS_PRESETS: { value: CanvasPreset; label: string; description: string }[] = [
+const ANIMATION_PRESETS: { value: AnimationPreset; label: string; description: string }[] = [
+  // Featured
+  { value: "gateway-cardinal", label: "Gateway Cardinal", description: "Torus with Halvorsen flow" },
+  { value: "gateway", label: "Gateway", description: "Torus with terrain & stars" },
+  // 2D Canvas
   { value: "torus", label: "Torus", description: "Rotating geometric ring" },
   { value: "attractor", label: "Attractor", description: "Chaotic motion lines" },
   { value: "wave", label: "Wave Field", description: "Flowing wave patterns" },
-  { value: "gateway", label: "Gateway", description: "Torus with terrain & stars" },
-];
-
-const THREEJS_PRESETS: { value: ThreeJSPreset; label: string; description: string }[] = [
+  // 3D Three.js
   { value: "starfield", label: "Starfield", description: "Rotating star sphere" },
   { value: "particles", label: "Particles", description: "Wave-motion particles" },
   { value: "geometric", label: "Geometric", description: "Wireframe torus points" },
   { value: "nebula", label: "Nebula", description: "Colorful particle cloud" },
-  { value: "grid", label: "Grid", description: "Rolling wave grid plane" },
+  { value: "grid", label: "Grid", description: "Rolling wave grid" },
   { value: "spiral", label: "Spiral", description: "DNA double helix" },
-  { value: "vortex", label: "Vortex", description: "Swirling tunnel effect" },
-  { value: "custom", label: "Custom Code", description: "Paste your own Three.js" },
+  { value: "vortex", label: "Vortex", description: "Swirling tunnel" },
+  { value: "custom", label: "Custom Code", description: "Paste your own code" },
 ];
 
 export function BackgroundPicker({ background, onChange }: BackgroundPickerProps) {
   const [imageUrl, setImageUrl] = useState(background?.imageUrl || "");
+  const [videoUrl, setVideoUrl] = useState(background?.videoUrl || "");
   const [customCode, setCustomCode] = useState(background?.customCode || "");
 
   const currentType = background?.type || "none";
@@ -48,10 +45,12 @@ export function BackgroundPicker({ background, onChange }: BackgroundPickerProps
       type,
       imageUrl: type === "image" ? imageUrl : undefined,
       imageOpacity: 0.5,
-      canvasPreset: type === "canvas" ? "torus" : undefined,
-      canvasOpacity: 0.5,
-      threejsPreset: type === "threejs" ? "starfield" : undefined,
-      threejsOpacity: 0.5,
+      videoUrl: type === "video" ? videoUrl : undefined,
+      videoOpacity: 1,
+      videoMuted: true,
+      videoLoop: true,
+      animationPreset: type === "animation" ? "gateway-cardinal" : undefined,
+      animationOpacity: 0.5,
     });
   };
 
@@ -62,21 +61,22 @@ export function BackgroundPicker({ background, onChange }: BackgroundPickerProps
     }
   };
 
-  const handleCanvasPresetChange = (preset: CanvasPreset) => {
-    if (background?.type === "canvas") {
-      onChange({ ...background, canvasPreset: preset });
+  const handleVideoUrlChange = (url: string) => {
+    setVideoUrl(url);
+    if (background?.type === "video") {
+      onChange({ ...background, videoUrl: url });
     }
   };
 
-  const handleThreeJSPresetChange = (preset: ThreeJSPreset) => {
-    if (background?.type === "threejs") {
-      onChange({ ...background, threejsPreset: preset });
+  const handleAnimationPresetChange = (preset: AnimationPreset) => {
+    if (background?.type === "animation") {
+      onChange({ ...background, animationPreset: preset });
     }
   };
 
   const handleCustomCodeChange = (code: string) => {
     setCustomCode(code);
-    if (background?.type === "threejs" && background.threejsPreset === "custom") {
+    if (background?.type === "animation" && background.animationPreset === "custom") {
       onChange({ ...background, customCode: code });
     }
   };
@@ -87,9 +87,9 @@ export function BackgroundPicker({ background, onChange }: BackgroundPickerProps
     const key =
       background.type === "image"
         ? "imageOpacity"
-        : background.type === "canvas"
-        ? "canvasOpacity"
-        : "threejsOpacity";
+        : background.type === "video"
+        ? "videoOpacity"
+        : "animationOpacity";
 
     onChange({ ...background, [key]: opacity });
   };
@@ -97,8 +97,8 @@ export function BackgroundPicker({ background, onChange }: BackgroundPickerProps
   const getCurrentOpacity = () => {
     if (!background) return 0.5;
     if (background.type === "image") return background.imageOpacity ?? 0.5;
-    if (background.type === "canvas") return background.canvasOpacity ?? 0.5;
-    if (background.type === "threejs") return background.threejsOpacity ?? 0.5;
+    if (background.type === "video") return background.videoOpacity ?? 1;
+    if (background.type === "animation") return background.animationOpacity ?? 0.5;
     return 0.5;
   };
 
@@ -110,7 +110,7 @@ export function BackgroundPicker({ background, onChange }: BackgroundPickerProps
 
       {/* Type selector */}
       <div className="flex flex-wrap gap-1 mb-3">
-        {(["none", "image", "canvas", "threejs"] as BackgroundType[]).map((type) => (
+        {(["none", "image", "video", "animation"] as BackgroundType[]).map((type) => (
           <button
             key={type}
             onClick={() => handleTypeChange(type)}
@@ -121,7 +121,7 @@ export function BackgroundPicker({ background, onChange }: BackgroundPickerProps
                 : "bg-surface-1 text-dawn-50 border-dawn-08 hover:border-dawn-15"
             )}
           >
-            {type === "threejs" ? "3D" : type}
+            {type === "animation" ? "3D" : type}
           </button>
         ))}
       </div>
@@ -136,7 +136,7 @@ export function BackgroundPicker({ background, onChange }: BackgroundPickerProps
             placeholder="Image URL..."
             className={cn(
               "w-full px-2 py-1.5 bg-surface-1 border border-dawn-08",
-              "font-mono text-xs text-dawn",
+              "font-mono text-2xs text-dawn",
               "placeholder:text-dawn-30",
               "focus:outline-none focus:border-gold"
             )}
@@ -144,55 +144,72 @@ export function BackgroundPicker({ background, onChange }: BackgroundPickerProps
         </div>
       )}
 
-      {/* Canvas options */}
-      {currentType === "canvas" && (
-        <div className="space-y-1">
-          <div className="font-mono text-2xs text-dawn-30 mb-2">2D Canvas</div>
-          {CANVAS_PRESETS.map((preset) => (
-            <button
-              key={preset.value}
-              onClick={() => handleCanvasPresetChange(preset.value)}
-              className={cn(
-                "w-full px-3 py-2 border text-left transition-colors",
-                background?.canvasPreset === preset.value
-                  ? "bg-gold/20 border-gold/30"
-                  : "bg-surface-1 border-dawn-08 hover:border-dawn-15"
-              )}
-            >
-              <div className={cn(
-                "font-mono text-xs",
-                background?.canvasPreset === preset.value ? "text-gold" : "text-dawn"
-              )}>
-                {preset.label}
-              </div>
-              <div className="font-mono text-2xs text-dawn-30 mt-0.5">
-                {preset.description}
-              </div>
-            </button>
-          ))}
+      {/* Video options */}
+      {currentType === "video" && (
+        <div className="space-y-3">
+          <input
+            type="text"
+            value={videoUrl}
+            onChange={(e) => handleVideoUrlChange(e.target.value)}
+            placeholder="Video URL (MP4, WebM)..."
+            className={cn(
+              "w-full px-2 py-1.5 bg-surface-1 border border-dawn-08",
+              "font-mono text-2xs text-dawn",
+              "placeholder:text-dawn-30",
+              "focus:outline-none focus:border-gold"
+            )}
+          />
+          <div className="flex gap-2">
+            <label className="flex items-center gap-1 font-mono text-2xs text-dawn-50">
+              <input
+                type="checkbox"
+                checked={background?.videoMuted ?? true}
+                onChange={(e) =>
+                  onChange({ ...background!, videoMuted: e.target.checked })
+                }
+                className="accent-gold"
+              />
+              Muted
+            </label>
+            <label className="flex items-center gap-1 font-mono text-2xs text-dawn-50">
+              <input
+                type="checkbox"
+                checked={background?.videoLoop ?? true}
+                onChange={(e) =>
+                  onChange({ ...background!, videoLoop: e.target.checked })
+                }
+                className="accent-gold"
+              />
+              Loop
+            </label>
+          </div>
         </div>
       )}
 
-      {/* Three.js options */}
-      {currentType === "threejs" && (
+      {/* Animation options */}
+      {currentType === "animation" && (
         <div className="space-y-1">
           <div className="font-mono text-2xs text-dawn-30 mb-2">3D Animation</div>
           <div className="max-h-[200px] overflow-y-auto space-y-1 pr-1">
-            {THREEJS_PRESETS.map((preset) => (
+            {ANIMATION_PRESETS.map((preset) => (
               <button
                 key={preset.value}
-                onClick={() => handleThreeJSPresetChange(preset.value)}
+                onClick={() => handleAnimationPresetChange(preset.value)}
                 className={cn(
                   "w-full px-3 py-2 border text-left transition-colors",
-                  background?.threejsPreset === preset.value
+                  background?.animationPreset === preset.value
                     ? "bg-gold/20 border-gold/30"
                     : "bg-surface-1 border-dawn-08 hover:border-dawn-15"
                 )}
               >
-                <div className={cn(
-                  "font-mono text-xs",
-                  background?.threejsPreset === preset.value ? "text-gold" : "text-dawn"
-                )}>
+                <div
+                  className={cn(
+                    "font-mono text-xs",
+                    background?.animationPreset === preset.value
+                      ? "text-gold"
+                      : "text-dawn"
+                  )}
+                >
                   {preset.label}
                 </div>
                 <div className="font-mono text-2xs text-dawn-30 mt-0.5">
@@ -203,44 +220,27 @@ export function BackgroundPicker({ background, onChange }: BackgroundPickerProps
           </div>
 
           {/* Custom code textarea */}
-          {background?.threejsPreset === "custom" && (
+          {background?.animationPreset === "custom" && (
             <div className="mt-3 space-y-2">
               <div className="font-mono text-2xs text-dawn-30">
-                Paste your scene code below:
+                Paste your code:
               </div>
               <textarea
                 value={customCode}
                 onChange={(e) => handleCustomCodeChange(e.target.value)}
-                placeholder={`// Your Three.js scene function
-// Available: useRef, useMemo, useFrame, THREE, Points, PointMaterial
+                placeholder={`// Generate positions Float32Array
+const count = 1000;
+const positions = new Float32Array(count * 3);
 
-function CustomScene() {
-  const ref = useRef();
-  
-  const positions = useMemo(() => {
-    const arr = new Float32Array(1000 * 3);
-    for (let i = 0; i < 1000; i++) {
-      arr[i * 3] = (Math.random() - 0.5) * 10;
-      arr[i * 3 + 1] = (Math.random() - 0.5) * 10;
-      arr[i * 3 + 2] = (Math.random() - 0.5) * 10;
-    }
-    return arr;
-  }, []);
+for (let i = 0; i < count; i++) {
+  positions[i * 3] = (Math.random() - 0.5) * 10;
+  positions[i * 3 + 1] = (Math.random() - 0.5) * 10;
+  positions[i * 3 + 2] = (Math.random() - 0.5) * 10;
+}
 
-  useFrame((state) => {
-    if (ref.current) {
-      ref.current.rotation.y = state.clock.elapsedTime * 0.1;
-    }
-  });
-
-  return (
-    <Points ref={ref} positions={positions}>
-      <PointMaterial color="#CAA554" size={0.05} />
-    </Points>
-  );
-}`}
+const config = { color: "#CAA554", size: 0.03 };`}
                 className={cn(
-                  "w-full h-64 px-3 py-2 bg-surface-1 border border-dawn-08",
+                  "w-full h-48 px-3 py-2 bg-surface-1 border border-dawn-08",
                   "font-mono text-2xs text-dawn leading-relaxed",
                   "placeholder:text-dawn-20",
                   "focus:outline-none focus:border-gold",
@@ -248,9 +248,6 @@ function CustomScene() {
                 )}
                 spellCheck={false}
               />
-              <div className="font-mono text-2xs text-dawn-20">
-                Code runs in a sandboxed Three.js Canvas
-              </div>
             </div>
           )}
         </div>

@@ -4,7 +4,7 @@ import { useRef } from "react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useEditorStore, useIsEditMode } from "@/store/editor-store";
-import type { Section } from "@/lib/types";
+import type { Section, AnimationPreset } from "@/lib/types";
 
 // Template Section Components
 import { HeroSection } from "@/components/sections/HeroSection";
@@ -21,11 +21,12 @@ import { FreeformSection } from "@/components/sections/FreeformSection";
 
 import dynamic from "next/dynamic";
 
-// Background components
+// 2D Canvas background components
 import { HeroCanvas } from "@/components/canvas/HeroCanvas";
 import { AttractorCanvas } from "@/components/canvas/AttractorCanvas";
 import { WaveCanvas } from "@/components/canvas/WaveCanvas";
 import { GatewayCanvas } from "@/components/canvas/GatewayCanvas";
+import { GatewayCardinalCanvas } from "@/components/canvas/GatewayCardinalCanvas";
 
 // Dynamic import for Three.js to avoid SSR issues
 const ThreeBackground = dynamic(
@@ -37,23 +38,38 @@ interface SectionWrapperProps {
   section: Section;
 }
 
-// Map canvas presets to components
+// Map 2D canvas presets to components
 const CANVAS_COMPONENTS: Record<string, React.ComponentType> = {
+  "gateway-cardinal": GatewayCardinalCanvas,
+  gateway: GatewayCanvas,
   torus: HeroCanvas,
   attractor: AttractorCanvas,
   wave: WaveCanvas,
-  gateway: GatewayCanvas,
 };
+
+// Three.js presets (handled by ThreeBackground component)
+const THREEJS_PRESETS = new Set([
+  "starfield",
+  "particles",
+  "geometric",
+  "nebula",
+  "grid",
+  "spiral",
+  "vortex",
+  "custom",
+]);
 
 export function SectionWrapper({ section }: SectionWrapperProps) {
   const sectionRef = useRef<HTMLDivElement>(null);
   const isEditMode = useIsEditMode();
   const { selectedSectionId, setSelectedSection, removeSection } = useEditorStore();
-  
+
   const isSelected = selectedSectionId === section.id;
-  
+
   // Check if section has a custom background
-  const hasCustomBackground = !!(section.background && section.background.type !== "none");
+  const hasCustomBackground = !!(
+    section.background && section.background.type !== "none"
+  );
 
   const handleClick = (e: React.MouseEvent) => {
     if (!isEditMode) return;
@@ -72,37 +88,19 @@ export function SectionWrapper({ section }: SectionWrapperProps) {
   const renderBackground = () => {
     if (!section.background) return null;
 
-    const { 
-      type, 
-      canvasPreset, 
-      threejsPreset,
-      imageUrl, 
-      imageOpacity = 0.5, 
-      canvasOpacity = 0.5,
-      threejsOpacity = 0.5,
+    const {
+      type,
+      imageUrl,
+      imageOpacity = 0.5,
+      videoUrl,
+      videoOpacity = 1,
+      videoMuted = true,
+      videoLoop = true,
+      animationPreset,
+      animationOpacity = 0.5,
     } = section.background;
 
-    if (type === "canvas" && canvasPreset) {
-      const CanvasComponent = CANVAS_COMPONENTS[canvasPreset];
-      if (CanvasComponent) {
-        return (
-          <div className="absolute inset-0 z-0" style={{ opacity: canvasOpacity }}>
-            <CanvasComponent />
-          </div>
-        );
-      }
-    }
-
-    if (type === "threejs" && threejsPreset) {
-      return (
-        <ThreeBackground 
-          preset={threejsPreset} 
-          opacity={threejsOpacity} 
-          customCode={section.background?.customCode}
-        />
-      );
-    }
-
+    // Image background
     if (type === "image" && imageUrl) {
       return (
         <div
@@ -113,6 +111,46 @@ export function SectionWrapper({ section }: SectionWrapperProps) {
           }}
         />
       );
+    }
+
+    // Video background
+    if (type === "video" && videoUrl) {
+      return (
+        <div className="absolute inset-0 z-0 overflow-hidden" style={{ opacity: videoOpacity }}>
+          <video
+            src={videoUrl}
+            autoPlay
+            muted={videoMuted}
+            loop={videoLoop}
+            playsInline
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+        </div>
+      );
+    }
+
+    // Animation background (unified 2D canvas + 3D Three.js)
+    if (type === "animation" && animationPreset) {
+      // Check if it's a 2D canvas preset
+      if (CANVAS_COMPONENTS[animationPreset]) {
+        const CanvasComponent = CANVAS_COMPONENTS[animationPreset];
+        return (
+          <div className="absolute inset-0 z-0" style={{ opacity: animationOpacity }}>
+            <CanvasComponent />
+          </div>
+        );
+      }
+
+      // Check if it's a Three.js preset
+      if (THREEJS_PRESETS.has(animationPreset)) {
+        return (
+          <ThreeBackground
+            preset={animationPreset as any}
+            opacity={animationOpacity}
+            customCode={section.background?.customCode}
+          />
+        );
+      }
     }
 
     return null;
@@ -170,9 +208,7 @@ export function SectionWrapper({ section }: SectionWrapperProps) {
       {renderBackground()}
 
       {/* Section content */}
-      <div className="relative z-10">
-        {renderSection()}
-      </div>
+      <div className="relative z-10">{renderSection()}</div>
 
       {/* Edit mode overlay */}
       {isEditMode && (
@@ -191,7 +227,7 @@ export function SectionWrapper({ section }: SectionWrapperProps) {
           <div className="px-3 py-1.5 bg-void/90 border border-dawn-15 font-mono text-2xs uppercase tracking-wider text-gold">
             {section.type}
           </div>
-          
+
           {/* Delete button */}
           <button
             onClick={handleDelete}
