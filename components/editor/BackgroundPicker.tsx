@@ -2,23 +2,32 @@
 
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import type { BackgroundConfig, BackgroundType, CanvasPreset, ThreeJSPreset } from "@/lib/types";
+import type {
+  BackgroundConfig,
+  BackgroundType,
+  CanvasPreset,
+  ThreeJSPreset,
+} from "@/lib/types";
 
 interface BackgroundPickerProps {
   background: BackgroundConfig | null;
   onChange: (background: BackgroundConfig | null) => void;
 }
 
-const CANVAS_PRESETS: { value: CanvasPreset; label: string }[] = [
-  { value: "torus", label: "Torus (Geometry)" },
-  { value: "attractor", label: "Attractor (Alterity)" },
-  { value: "wave", label: "Wave Field (Dynamics)" },
+const CANVAS_PRESETS: { value: CanvasPreset; label: string; description: string }[] = [
+  { value: "torus", label: "Torus", description: "Rotating geometric ring" },
+  { value: "attractor", label: "Attractor", description: "Chaotic motion lines" },
+  { value: "wave", label: "Wave Field", description: "Flowing wave patterns" },
 ];
 
-const THREEJS_PRESETS: { value: ThreeJSPreset; label: string }[] = [
-  { value: "starfield", label: "Starfield" },
-  { value: "particles", label: "Particles" },
-  { value: "geometric", label: "Geometric" },
+const THREEJS_PRESETS: { value: ThreeJSPreset; label: string; description: string }[] = [
+  { value: "starfield", label: "Starfield", description: "Rotating star sphere" },
+  { value: "particles", label: "Particles", description: "Wave-motion particles" },
+  { value: "geometric", label: "Geometric", description: "Wireframe torus points" },
+  { value: "nebula", label: "Nebula", description: "Colorful particle cloud" },
+  { value: "grid", label: "Grid", description: "Rolling wave grid plane" },
+  { value: "spiral", label: "Spiral", description: "DNA double helix" },
+  { value: "vortex", label: "Vortex", description: "Swirling tunnel effect" },
 ];
 
 export function BackgroundPicker({ background, onChange }: BackgroundPickerProps) {
@@ -96,13 +105,13 @@ export function BackgroundPicker({ background, onChange }: BackgroundPickerProps
             key={type}
             onClick={() => handleTypeChange(type)}
             className={cn(
-              "px-2 py-1 border font-mono text-2xs capitalize transition-colors",
+              "px-2 py-1 border font-mono text-2xs transition-colors",
               currentType === type
                 ? "bg-gold text-void border-gold"
                 : "bg-surface-1 text-dawn-50 border-dawn-08 hover:border-dawn-15"
             )}
           >
-            {type}
+            {type === "threejs" ? "3D" : type}
           </button>
         ))}
       </div>
@@ -127,19 +136,28 @@ export function BackgroundPicker({ background, onChange }: BackgroundPickerProps
 
       {/* Canvas options */}
       {currentType === "canvas" && (
-        <div className="space-y-2">
+        <div className="space-y-1">
+          <div className="font-mono text-2xs text-dawn-30 mb-2">2D Canvas</div>
           {CANVAS_PRESETS.map((preset) => (
             <button
               key={preset.value}
               onClick={() => handleCanvasPresetChange(preset.value)}
               className={cn(
-                "w-full px-3 py-2 border font-mono text-xs text-left transition-colors",
+                "w-full px-3 py-2 border text-left transition-colors",
                 background?.canvasPreset === preset.value
-                  ? "bg-gold/20 text-gold border-gold/30"
-                  : "bg-surface-1 text-dawn-50 border-dawn-08 hover:border-dawn-15"
+                  ? "bg-gold/20 border-gold/30"
+                  : "bg-surface-1 border-dawn-08 hover:border-dawn-15"
               )}
             >
-              {preset.label}
+              <div className={cn(
+                "font-mono text-xs",
+                background?.canvasPreset === preset.value ? "text-gold" : "text-dawn"
+              )}>
+                {preset.label}
+              </div>
+              <div className="font-mono text-2xs text-dawn-30 mt-0.5">
+                {preset.description}
+              </div>
             </button>
           ))}
         </div>
@@ -147,21 +165,32 @@ export function BackgroundPicker({ background, onChange }: BackgroundPickerProps
 
       {/* Three.js options */}
       {currentType === "threejs" && (
-        <div className="space-y-2">
-          {THREEJS_PRESETS.map((preset) => (
-            <button
-              key={preset.value}
-              onClick={() => handleThreeJSPresetChange(preset.value)}
-              className={cn(
-                "w-full px-3 py-2 border font-mono text-xs text-left transition-colors",
-                background?.threejsPreset === preset.value
-                  ? "bg-gold/20 text-gold border-gold/30"
-                  : "bg-surface-1 text-dawn-50 border-dawn-08 hover:border-dawn-15"
-              )}
-            >
-              {preset.label}
-            </button>
-          ))}
+        <div className="space-y-1">
+          <div className="font-mono text-2xs text-dawn-30 mb-2">3D Animation</div>
+          <div className="max-h-[300px] overflow-y-auto space-y-1 pr-1">
+            {THREEJS_PRESETS.map((preset) => (
+              <button
+                key={preset.value}
+                onClick={() => handleThreeJSPresetChange(preset.value)}
+                className={cn(
+                  "w-full px-3 py-2 border text-left transition-colors",
+                  background?.threejsPreset === preset.value
+                    ? "bg-gold/20 border-gold/30"
+                    : "bg-surface-1 border-dawn-08 hover:border-dawn-15"
+                )}
+              >
+                <div className={cn(
+                  "font-mono text-xs",
+                  background?.threejsPreset === preset.value ? "text-gold" : "text-dawn"
+                )}>
+                  {preset.label}
+                </div>
+                <div className="font-mono text-2xs text-dawn-30 mt-0.5">
+                  {preset.description}
+                </div>
+              </button>
+            ))}
+          </div>
         </div>
       )}
 
@@ -188,4 +217,3 @@ export function BackgroundPicker({ background, onChange }: BackgroundPickerProps
     </div>
   );
 }
-
