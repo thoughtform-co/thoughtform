@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { generateId, snapToGrid } from "@/lib/utils";
+import { updateSection as updateSectionDB, updateElement as updateElementDB } from "@/lib/queries";
 import type {
   EditorState,
   Page,
@@ -10,8 +11,6 @@ import type {
   TextContent,
   ImageContent,
   VideoContent,
-  DEFAULT_ELEMENT_DIMENSIONS,
-  SECTION_TEMPLATES,
 } from "@/lib/types";
 
 // Default content for new elements
@@ -55,6 +54,15 @@ function getDefaultDimensions(type: ElementType) {
     video: { width: 560, height: 315 },
   };
   return dimensions[type];
+}
+
+// Debounce helper for auto-save
+const debounceTimers: Record<string, NodeJS.Timeout> = {};
+function debounceSave(id: string, fn: () => void, delay = 500) {
+  if (debounceTimers[id]) {
+    clearTimeout(debounceTimers[id]);
+  }
+  debounceTimers[id] = setTimeout(fn, delay);
 }
 
 export const useEditorStore = create<EditorState>((set, get) => ({
@@ -112,11 +120,25 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   },
 
   updateSection: (id, updates) => {
+    // Update local state immediately
     set((state) => ({
       sections: state.sections.map((s) =>
         s.id === id ? { ...s, ...updates, updatedAt: new Date().toISOString() } : s
       ),
     }));
+
+    // Debounce save to Supabase
+    debounceSave(`section-${id}`, async () => {
+      const section = get().sections.find((s) => s.id === id);
+      if (section) {
+        await updateSectionDB(id, {
+          background: section.background,
+          minHeight: section.minHeight,
+          config: section.config,
+        });
+        console.log("✓ Section saved to database");
+      }
+    });
   },
 
   removeSection: (id) => {
@@ -181,6 +203,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   },
 
   updateElement: (id, updates) => {
+    // Update local state immediately
     set((state) => ({
       sections: state.sections.map((section) => ({
         ...section,
@@ -189,6 +212,26 @@ export const useEditorStore = create<EditorState>((set, get) => ({
         ),
       })),
     }));
+
+    // Debounce save to Supabase
+    debounceSave(`element-${id}`, async () => {
+      let element: Element | undefined;
+      for (const section of get().sections) {
+        element = section.elements?.find((e) => e.id === id);
+        if (element) break;
+      }
+      if (element) {
+        await updateElementDB(id, {
+          x: element.x,
+          y: element.y,
+          width: element.width,
+          height: element.height,
+          content: element.content,
+          zIndex: element.zIndex,
+        });
+        console.log("✓ Element saved to database");
+      }
+    });
   },
 
   removeElement: (id) => {
@@ -216,6 +259,11 @@ export const useEditorStore = create<EditorState>((set, get) => ({
         ),
       })),
     }));
+
+    // Debounce save position
+    debounceSave(`element-pos-${id}`, async () => {
+      await updateElementDB(id, { x: snappedX, y: snappedY });
+    });
   },
 
   resizeElement: (id, width, height) => {
@@ -233,6 +281,11 @@ export const useEditorStore = create<EditorState>((set, get) => ({
         ),
       })),
     }));
+
+    // Debounce save size
+    debounceSave(`element-size-${id}`, async () => {
+      await updateElementDB(id, { width: snappedWidth, height: snappedHeight });
+    });
   },
 }));
 
@@ -253,4 +306,3 @@ export const useSelectedElement = () => {
   }
   return null;
 };
-

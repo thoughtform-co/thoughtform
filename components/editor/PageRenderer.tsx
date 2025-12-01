@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useEditorStore, useSections, useIsEditMode } from "@/store/editor-store";
+import { getPageWithSections } from "@/lib/queries";
 import { Navigation } from "@/components/ui/Navigation";
 import { FlowNode } from "@/components/ui/FlowNode";
 import { Footer } from "@/components/sections/Footer";
@@ -11,7 +12,7 @@ import { SectionSidebar } from "./SectionSidebar";
 import { PropertyPanel } from "./PropertyPanel";
 import type { Section, Page } from "@/lib/types";
 
-// Default sections for the landing page
+// Default sections for the landing page (used if Supabase has no data)
 const DEFAULT_SECTIONS: Section[] = [
   { id: "hero", pageId: "home", type: "hero", orderIndex: 0, config: {}, background: null, minHeight: "100vh", createdAt: "", updatedAt: "" },
   { id: "problem", pageId: "home", type: "problem", orderIndex: 1, config: {}, background: null, minHeight: "auto", createdAt: "", updatedAt: "" },
@@ -40,12 +41,47 @@ export function PageRenderer() {
   const { setPage, setSections } = useEditorStore();
   const sections = useSections();
   const isEditMode = useIsEditMode();
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Initialize with default sections
+  // Load page data from Supabase, fall back to defaults
   useEffect(() => {
-    setPage(DEFAULT_PAGE);
-    setSections(DEFAULT_SECTIONS);
+    async function loadPage() {
+      try {
+        const data = await getPageWithSections("home");
+        
+        if (data && data.sections.length > 0) {
+          // Use data from Supabase
+          setPage(data.page);
+          setSections(data.sections);
+          console.log("✓ Loaded page from database");
+        } else {
+          // Fall back to defaults
+          setPage(DEFAULT_PAGE);
+          setSections(DEFAULT_SECTIONS);
+          console.log("→ Using default sections (no database data)");
+        }
+      } catch (error) {
+        console.error("Failed to load page:", error);
+        // Fall back to defaults on error
+        setPage(DEFAULT_PAGE);
+        setSections(DEFAULT_SECTIONS);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    loadPage();
   }, [setPage, setSections]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-void flex items-center justify-center">
+        <div className="font-mono text-2xs uppercase tracking-widest text-dawn-30 animate-pulse">
+          Loading...
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative min-h-screen">
@@ -80,4 +116,3 @@ export function PageRenderer() {
     </div>
   );
 }
-
