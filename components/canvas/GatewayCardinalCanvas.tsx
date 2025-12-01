@@ -16,9 +16,14 @@ const CONFIG = {
     dt: 0.004,
     points: 12000,
     scale: 0.25,
-    flowSpeed: 0.15,
-    opacity: 0.5,
+    flowSpeed: 0.5,      // Increased from 0.15
+    opacity: 0.6,        // Slightly more visible
   },
+  // Animation speeds
+  pulseSpeed: 1.2,       // Torus breathing
+  torusRotation: 1.5,    // Energy wave around ring
+  terrainWave: 1.0,      // Terrain undulation
+  starTwinkle: 3.0,      // Star sparkle speed
 };
 
 const colors = {
@@ -282,14 +287,14 @@ export function GatewayCardinalCanvas() {
 
       timeRef.current += 0.016;
       const time = timeRef.current;
-      const pulse = Math.sin(time * 0.5) * 0.03;
+      const pulse = Math.sin(time * CONFIG.pulseSpeed) * 0.03;
       const flowOffset = time * CONFIG.halvorsen.flowSpeed;
 
       // Stars
       for (const star of starPoints) {
         const p = projectStar(star.x, star.y, star.z);
         if (p.z < -5) continue;
-        const twinkle = Math.sin(time * 2 + star.twinkle) * 0.3 + 0.7;
+        const twinkle = Math.sin(time * CONFIG.starTwinkle + star.twinkle) * 0.3 + 0.7;
         drawPixel(p.x, p.y, colors.dawn, 0.15 * twinkle * p.scale, star.size);
       }
 
@@ -322,7 +327,7 @@ export function GatewayCardinalCanvas() {
         const depth = (p.proj.z + 4) / 8;
         let alpha = (0.12 + depth * 0.45) * Math.min(1, p.proj.x / (w * 0.3)) * 0.65;
         const color = depth > 0.5 ? colors.dawn : colors.gold;
-        const waveOffset = Math.sin(time * 0.5 + p.i * 0.1 + p.j * 0.15) * 0.02;
+        const waveOffset = Math.sin(time * CONFIG.terrainWave + p.i * 0.1 + p.j * 0.15) * 0.02;
         drawPixel(p.proj.x, p.proj.y + waveOffset * 100 * p.proj.scale, color, alpha, gridSize);
       }
 
@@ -362,7 +367,7 @@ export function GatewayCardinalCanvas() {
       for (const p of sortedTorus) {
         const depth = (p.proj.z + 3) / 6;
         const isInner = Math.cos(p.phi) < 0;
-        let alpha = (0.2 + depth * 0.7) * (Math.sin(p.theta * 2 - time * 0.8) * 0.15 + 0.85);
+        let alpha = (0.2 + depth * 0.7) * (Math.sin(p.theta * 2 - time * CONFIG.torusRotation) * 0.15 + 0.85);
         const color = depth > 0.4 && !isInner ? colors.dawn : colors.gold;
         drawPixel(p.proj.x, p.proj.y, color, isInner ? alpha * 0.5 : alpha, gridSize);
       }
