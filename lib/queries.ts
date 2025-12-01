@@ -283,3 +283,62 @@ export async function savePage(page: Page, sections: Section[]): Promise<boolean
   return true;
 }
 
+// ═══════════════════════════════════════════════════════════════════
+// INITIALIZATION
+// ═══════════════════════════════════════════════════════════════════
+
+const DEFAULT_SECTION_TYPES: SectionType[] = [
+  "hero",
+  "problem",
+  "quote",
+  "shift",
+  "proof",
+  "tagline",
+  "services",
+  "about",
+  "musings",
+  "cta",
+];
+
+export async function initializeHomePage(): Promise<{ page: Page; sections: Section[] } | null> {
+  if (!isSupabaseConfigured || !supabase) {
+    console.log("Supabase not configured, using local defaults");
+    return null;
+  }
+
+  // Check if home page exists
+  let page = await getPageBySlug("home");
+  
+  if (!page) {
+    // Create home page
+    console.log("Creating home page in database...");
+    page = await createPage("home", "Thoughtform | Navigate AI for Creative Breakthroughs");
+    if (!page) {
+      console.error("Failed to create home page");
+      return null;
+    }
+  }
+
+  // Get existing sections
+  let sections = await getSectionsByPageId(page.id);
+
+  // If no sections, create defaults
+  if (sections.length === 0) {
+    console.log("Creating default sections in database...");
+    
+    for (let i = 0; i < DEFAULT_SECTION_TYPES.length; i++) {
+      const type = DEFAULT_SECTION_TYPES[i];
+      const minHeight = type === "hero" ? "100vh" : "auto";
+      
+      const section = await createSection(page.id, type, i, {}, null, minHeight);
+      if (section) {
+        sections.push(section);
+      }
+    }
+    
+    console.log(`Created ${sections.length} sections`);
+  }
+
+  return { page, sections };
+}
+

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useEditorStore, useSections, useIsEditMode } from "@/store/editor-store";
-import { getPageWithSections } from "@/lib/queries";
+import { initializeHomePage } from "@/lib/queries";
 import { Navigation } from "@/components/ui/Navigation";
 import { FlowNode } from "@/components/ui/FlowNode";
 import { Footer } from "@/components/sections/Footer";
@@ -43,11 +43,12 @@ export function PageRenderer() {
   const isEditMode = useIsEditMode();
   const [isLoading, setIsLoading] = useState(true);
 
-  // Load page data from Supabase, fall back to defaults
+  // Load or initialize page data from Supabase
   useEffect(() => {
     async function loadPage() {
       try {
-        const data = await getPageWithSections("home");
+        // This will create the page/sections if they don't exist
+        const data = await initializeHomePage();
         
         if (data && data.sections.length > 0) {
           // Use data from Supabase
@@ -55,10 +56,10 @@ export function PageRenderer() {
           setSections(data.sections);
           console.log("✓ Loaded page from database");
         } else {
-          // Fall back to defaults
+          // Fall back to defaults (Supabase not configured)
           setPage(DEFAULT_PAGE);
           setSections(DEFAULT_SECTIONS);
-          console.log("→ Using default sections (no database data)");
+          console.log("→ Using default sections (Supabase not configured)");
         }
       } catch (error) {
         console.error("Failed to load page:", error);
