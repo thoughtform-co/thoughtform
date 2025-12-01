@@ -4,10 +4,8 @@ import { useRef, useMemo } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { Points, PointMaterial } from "@react-three/drei";
 import * as THREE from "three";
-import type { ThreeJSPreset } from "@/lib/types";
-
 interface ThreeBackgroundProps {
-  preset: ThreeJSPreset;
+  preset: "starfield" | "particles" | "geometric" | "nebula" | "grid" | "spiral" | "vortex" | "custom";
   opacity?: number;
   customCode?: string;
 }
@@ -522,7 +520,9 @@ function CustomScene({ code }: CustomSceneProps) {
 // MAIN COMPONENT
 // ═══════════════════════════════════════════════════════════════════
 
-const PRESET_SCENES: Record<Exclude<ThreeJSPreset, 'custom'>, React.ComponentType> = {
+type ThreePreset = "starfield" | "particles" | "geometric" | "nebula" | "grid" | "spiral" | "vortex";
+
+const PRESET_SCENES: Record<ThreePreset, React.ComponentType> = {
   starfield: StarfieldScene,
   particles: ParticlesScene,
   geometric: GeometricScene,
