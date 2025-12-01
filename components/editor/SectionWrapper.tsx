@@ -36,7 +36,7 @@ interface SectionWrapperProps {
   section: Section;
 }
 
-// Map section types to their components
+// Map section types to their components (freeform is handled separately)
 const SECTION_COMPONENTS: Record<string, React.ComponentType> = {
   hero: HeroSection,
   problem: ProblemSection,
@@ -48,7 +48,6 @@ const SECTION_COMPONENTS: Record<string, React.ComponentType> = {
   about: AboutSection,
   musings: MusingsSection,
   cta: CTASection,
-  freeform: FreeformSection,
 };
 
 // Map canvas presets to components

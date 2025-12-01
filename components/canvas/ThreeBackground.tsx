@@ -89,7 +89,6 @@ function ParticlesScene() {
       const time = state.clock.elapsedTime;
 
       for (let i = 0; i < positions.count; i++) {
-        const i3 = i * 3;
         const x = positions.getX(i);
         const y = positions.getY(i);
 
@@ -120,67 +119,58 @@ function ParticlesScene() {
 }
 
 // ═══════════════════════════════════════════════════════════════════
-// GEOMETRIC PRESET
+// GEOMETRIC PRESET - Points-based wireframe effect
 // ═══════════════════════════════════════════════════════════════════
 
 function GeometricScene() {
-  const groupRef = useRef<THREE.Group>(null);
-  const torusRef = useRef<THREE.Mesh>(null);
-  const icosaRef = useRef<THREE.Mesh>(null);
+  const ref = useRef<THREE.Points>(null);
+
+  // Generate points along geometric shapes
+  const positions = useMemo(() => {
+    const points: number[] = [];
+    
+    // Torus points
+    const majorR = 2;
+    const minorR = 0.5;
+    for (let i = 0; i < 200; i++) {
+      const theta = (i / 200) * Math.PI * 2;
+      const phi = (i * 7 / 200) * Math.PI * 2; // spiral
+      
+      const x = (majorR + minorR * Math.cos(phi)) * Math.cos(theta);
+      const y = (majorR + minorR * Math.cos(phi)) * Math.sin(theta);
+      const z = minorR * Math.sin(phi);
+      
+      points.push(x, y, z);
+    }
+    
+    // Orbiting points
+    for (let i = 0; i < 8; i++) {
+      const angle = (i / 8) * Math.PI * 2;
+      points.push(Math.cos(angle) * 3, 0, Math.sin(angle) * 3);
+    }
+    
+    return new Float32Array(points);
+  }, []);
 
   useFrame((state) => {
-    const time = state.clock.elapsedTime;
-
-    if (groupRef.current) {
-      groupRef.current.rotation.y = time * 0.1;
-    }
-
-    if (torusRef.current) {
-      torusRef.current.rotation.x = time * 0.2;
-      torusRef.current.rotation.z = time * 0.1;
-    }
-
-    if (icosaRef.current) {
-      icosaRef.current.rotation.x = time * 0.15;
-      icosaRef.current.rotation.y = time * 0.1;
+    if (ref.current) {
+      const time = state.clock.elapsedTime;
+      ref.current.rotation.y = time * 0.1;
+      ref.current.rotation.x = time * 0.05;
     }
   });
 
   return (
-    <group ref={groupRef}>
-      {/* Wireframe torus */}
-      <mesh ref={torusRef} position={[0, 0, 0]}>
-        <torusGeometry args={[2, 0.5, 16, 48]} />
-        <meshBasicMaterial
-          color="#CAA554"
-          wireframe
-          transparent
-          opacity={0.3}
-        />
-      </mesh>
-
-      {/* Wireframe icosahedron */}
-      <mesh ref={icosaRef} position={[0, 0, 0]}>
-        <icosahedronGeometry args={[1.5, 1]} />
-        <meshBasicMaterial
-          color="#ECE3D6"
-          wireframe
-          transparent
-          opacity={0.2}
-        />
-      </mesh>
-
-      {/* Orbiting points */}
-      {Array.from({ length: 8 }).map((_, i) => {
-        const angle = (i / 8) * Math.PI * 2;
-        return (
-          <mesh key={i} position={[Math.cos(angle) * 3, 0, Math.sin(angle) * 3]}>
-            <sphereGeometry args={[0.05, 8, 8]} />
-            <meshBasicMaterial color="#CAA554" />
-          </mesh>
-        );
-      })}
-    </group>
+    <Points ref={ref} positions={positions} stride={3}>
+      <PointMaterial
+        transparent
+        color="#CAA554"
+        size={0.04}
+        sizeAttenuation={true}
+        depthWrite={false}
+        opacity={0.7}
+      />
+    </Points>
   );
 }
 
@@ -217,4 +207,3 @@ export function ThreeBackground({ preset, opacity = 0.5 }: ThreeBackgroundProps)
     </div>
   );
 }
-

@@ -167,9 +167,11 @@ export async function deleteSection(id: string): Promise<boolean> {
 export async function reorderSections(pageId: string, sectionIds: string[]): Promise<boolean> {
   if (!isSupabaseConfigured || !supabase) return false;
 
+  const client = supabase; // Local reference for TypeScript
+  
   // Update each section's order_index
   const updates = sectionIds.map((id, index) =>
-    supabase.from("sections").update({ order_index: index }).eq("id", id)
+    client.from("sections").update({ order_index: index }).eq("id", id)
   );
 
   const results = await Promise.all(updates);
