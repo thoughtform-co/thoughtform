@@ -62,9 +62,9 @@ export function EditorToolbar() {
 
   return (
     <>
-      {/* Undo/Redo - Top Center (only in edit mode) */}
+      {/* Undo/Redo - Below nav bar, center (only in edit mode) */}
       {isEditMode && (
-        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[70] flex gap-1">
+        <div className="fixed top-16 left-1/2 -translate-x-1/2 z-[70] flex gap-1">
           <button
             onClick={undo}
             disabled={!canUndo()}

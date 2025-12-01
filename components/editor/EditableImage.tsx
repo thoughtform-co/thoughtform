@@ -142,11 +142,11 @@ export function EditableImage({
               </button>
             </div>
 
-            {/* Preview */}
+            {/* Preview & Remove */}
             {src && (
               <div className="pt-4 border-t border-surface-700">
                 <label className="text-dawn/60 text-xs font-mono mb-2 block">Current Image</label>
-                <div className="bg-void p-4 rounded flex items-center justify-center">
+                <div className="bg-void p-4 rounded flex items-center justify-center mb-3">
                   <Image
                     src={src}
                     alt={alt}
@@ -156,6 +156,16 @@ export function EditableImage({
                     unoptimized={src.startsWith("blob:") || src.startsWith("data:")}
                   />
                 </div>
+                <button
+                  onClick={() => {
+                    onChange("");
+                    setUrlInput("");
+                    setShowModal(false);
+                  }}
+                  className="w-full border border-red-500/50 text-red-400 py-2 rounded font-mono text-sm hover:border-red-400 hover:text-red-300 transition-colors"
+                >
+                  Remove Image
+                </button>
               </div>
             )}
 
