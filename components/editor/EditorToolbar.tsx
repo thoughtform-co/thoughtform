@@ -71,11 +71,11 @@ export function EditorToolbar() {
             className={cn(
               "px-3 py-2",
               "font-mono text-sm",
-              "bg-void/90 backdrop-blur-xl border border-dawn-15",
+              "bg-void/90 backdrop-blur-xl border",
               "transition-colors",
               canUndo()
-                ? "text-dawn hover:text-gold hover:border-gold"
-                : "text-dawn-30 cursor-not-allowed opacity-50"
+                ? "text-dawn border-dawn/30 hover:border-dawn hover:bg-dawn/10"
+                : "text-dawn-30 border-dawn-15 cursor-not-allowed opacity-50"
             )}
             title="Undo (Ctrl+Z)"
           >
@@ -87,11 +87,11 @@ export function EditorToolbar() {
             className={cn(
               "px-3 py-2",
               "font-mono text-sm",
-              "bg-void/90 backdrop-blur-xl border border-dawn-15",
+              "bg-void/90 backdrop-blur-xl border",
               "transition-colors",
               canRedo()
-                ? "text-dawn hover:text-gold hover:border-gold"
-                : "text-dawn-30 cursor-not-allowed opacity-50"
+                ? "text-gold border-gold/30 hover:border-gold hover:bg-gold/10"
+                : "text-dawn-30 border-dawn-15 cursor-not-allowed opacity-50"
             )}
             title="Redo (Ctrl+Shift+Z)"
           >
