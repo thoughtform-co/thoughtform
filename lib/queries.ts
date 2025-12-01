@@ -339,6 +339,16 @@ export async function initializeHomePage(): Promise<{ page: Page; sections: Sect
     console.log(`Created ${sections.length} sections`);
   }
 
-  return { page, sections };
+  // Load elements for each section
+  const sectionsWithElements = await Promise.all(
+    sections.map(async (section) => {
+      const elements = await getElementsBySectionId(section.id);
+      return { ...section, elements };
+    })
+  );
+
+  console.log(`Loaded ${sectionsWithElements.reduce((acc, s) => acc + (s.elements?.length || 0), 0)} elements`);
+
+  return { page, sections: sectionsWithElements };
 }
 

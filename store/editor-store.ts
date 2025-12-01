@@ -1,6 +1,14 @@
 import { create } from "zustand";
 import { generateId, snapToGrid } from "@/lib/utils";
-import { updateSection as updateSectionDB, updateElement as updateElementDB } from "@/lib/queries";
+import { 
+  updateSection as updateSectionDB, 
+  updateElement as updateElementDB,
+  createSection as createSectionDB,
+  deleteSection as deleteSectionDB,
+  reorderSections as reorderSectionsDB,
+  createElement as createElementDB,
+  deleteElement as deleteElementDB,
+} from "@/lib/queries";
 import type {
   EditorState,
   Page,
@@ -87,19 +95,24 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   toggleGrid: () => set((state) => ({ showGrid: !state.showGrid })),
 
   // Section Actions
-  addSection: (type, index) => {
+  addSection: async (type, index) => {
     const { sections, page } = get();
     if (!page) return;
 
     const newIndex = index ?? sections.length;
-    const newSection: Section = {
+    const minHeight = type === "hero" ? "100vh" : type === "freeform" ? "50vh" : "auto";
+
+    // Create in database first
+    const dbSection = await createSectionDB(page.id, type, newIndex, {}, null, minHeight);
+    
+    const newSection: Section = dbSection ?? {
       id: generateId(),
       pageId: page.id,
       type,
       orderIndex: newIndex,
       config: {},
       background: null,
-      minHeight: type === "hero" ? "100vh" : type === "freeform" ? "50vh" : "auto",
+      minHeight,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       elements: [],
@@ -111,12 +124,19 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     );
 
     // Insert new section
-    updatedSections.splice(newIndex, 0, newSection);
+    updatedSections.splice(newIndex, 0, { ...newSection, elements: [] });
     
     // Re-sort by order index
     updatedSections.sort((a, b) => a.orderIndex - b.orderIndex);
 
     set({ sections: updatedSections, selectedSectionId: newSection.id });
+
+    // Save new order to database
+    if (dbSection) {
+      const sectionIds = updatedSections.map((s) => s.id);
+      await reorderSectionsDB(page.id, sectionIds);
+      console.log("✓ Section created and saved to database");
+    }
   },
 
   updateSection: (id, updates) => {
@@ -141,7 +161,10 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     });
   },
 
-  removeSection: (id) => {
+  removeSection: async (id) => {
+    const { page } = get();
+    
+    // Update local state immediately
     set((state) => {
       const filteredSections = state.sections.filter((s) => s.id !== id);
       // Re-index remaining sections
@@ -154,9 +177,21 @@ export const useEditorStore = create<EditorState>((set, get) => ({
         selectedSectionId: state.selectedSectionId === id ? null : state.selectedSectionId,
       };
     });
+
+    // Delete from database
+    const deleted = await deleteSectionDB(id);
+    if (deleted && page) {
+      // Update order in database
+      const sectionIds = get().sections.map((s) => s.id);
+      await reorderSectionsDB(page.id, sectionIds);
+      console.log("✓ Section deleted from database");
+    }
   },
 
-  reorderSections: (fromIndex, toIndex) => {
+  reorderSections: async (fromIndex, toIndex) => {
+    const { page } = get();
+    
+    // Update local state immediately
     set((state) => {
       const sections = [...state.sections];
       const [removed] = sections.splice(fromIndex, 1);
@@ -166,10 +201,17 @@ export const useEditorStore = create<EditorState>((set, get) => ({
         sections: sections.map((s, i) => ({ ...s, orderIndex: i })),
       };
     });
+
+    // Save new order to database
+    if (page) {
+      const sectionIds = get().sections.map((s) => s.id);
+      await reorderSectionsDB(page.id, sectionIds);
+      console.log("✓ Section order saved to database");
+    }
   },
 
   // Element Actions
-  addElement: (sectionId, type, position) => {
+  addElement: async (sectionId, type, position) => {
     const { sections, gridSize } = get();
     const section = sections.find((s) => s.id === sectionId);
     if (!section) return;
@@ -177,8 +219,22 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     const dims = getDefaultDimensions(type);
     const x = position ? snapToGrid(position.x, gridSize) : 50;
     const y = position ? snapToGrid(position.y, gridSize) : 50;
+    const content = getDefaultContent(type);
+    const zIndex = (section.elements?.length ?? 0) + 1;
 
-    const newElement: Element = {
+    // Create in database first
+    const dbElement = await createElementDB(
+      sectionId,
+      type,
+      x,
+      y,
+      content,
+      dims.width,
+      dims.height,
+      zIndex
+    );
+
+    const newElement: Element = dbElement ?? {
       id: generateId(),
       sectionId,
       type,
@@ -186,8 +242,8 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       y,
       width: dims.width,
       height: dims.height,
-      content: getDefaultContent(type),
-      zIndex: (section.elements?.length ?? 0) + 1,
+      content,
+      zIndex,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
@@ -200,6 +256,10 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       ),
       selectedElementId: newElement.id,
     }));
+
+    if (dbElement) {
+      console.log("✓ Element created and saved to database");
+    }
   },
 
   updateElement: (id, updates) => {
@@ -234,7 +294,8 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     });
   },
 
-  removeElement: (id) => {
+  removeElement: async (id) => {
+    // Update local state immediately
     set((state) => ({
       sections: state.sections.map((section) => ({
         ...section,
@@ -242,6 +303,12 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       })),
       selectedElementId: state.selectedElementId === id ? null : state.selectedElementId,
     }));
+
+    // Delete from database
+    const deleted = await deleteElementDB(id);
+    if (deleted) {
+      console.log("✓ Element deleted from database");
+    }
   },
 
   moveElement: (id, x, y) => {
