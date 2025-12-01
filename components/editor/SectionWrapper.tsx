@@ -25,6 +25,7 @@ import dynamic from "next/dynamic";
 import { HeroCanvas } from "@/components/canvas/HeroCanvas";
 import { AttractorCanvas } from "@/components/canvas/AttractorCanvas";
 import { WaveCanvas } from "@/components/canvas/WaveCanvas";
+import { GatewayCanvas } from "@/components/canvas/GatewayCanvas";
 
 // Dynamic import for Three.js to avoid SSR issues
 const ThreeBackground = dynamic(
@@ -41,6 +42,7 @@ const CANVAS_COMPONENTS: Record<string, React.ComponentType> = {
   torus: HeroCanvas,
   attractor: AttractorCanvas,
   wave: WaveCanvas,
+  gateway: GatewayCanvas,
 };
 
 export function SectionWrapper({ section }: SectionWrapperProps) {

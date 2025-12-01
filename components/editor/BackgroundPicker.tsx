@@ -18,6 +18,7 @@ const CANVAS_PRESETS: { value: CanvasPreset; label: string; description: string 
   { value: "torus", label: "Torus", description: "Rotating geometric ring" },
   { value: "attractor", label: "Attractor", description: "Chaotic motion lines" },
   { value: "wave", label: "Wave Field", description: "Flowing wave patterns" },
+  { value: "gateway", label: "Gateway", description: "Torus with terrain & stars" },
 ];
 
 const THREEJS_PRESETS: { value: ThreeJSPreset; label: string; description: string }[] = [

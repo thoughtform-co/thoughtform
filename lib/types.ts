@@ -19,7 +19,7 @@ export type SectionType =
 // Background Types
 export type BackgroundType = "none" | "image" | "canvas" | "threejs";
 
-export type CanvasPreset = "torus" | "attractor" | "wave";
+export type CanvasPreset = "torus" | "attractor" | "wave" | "gateway";
 export type ThreeJSPreset = "starfield" | "particles" | "geometric" | "nebula" | "grid" | "spiral" | "vortex" | "custom";
 
 export interface BackgroundConfig {
