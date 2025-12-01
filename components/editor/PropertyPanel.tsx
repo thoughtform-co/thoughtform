@@ -165,7 +165,7 @@ export function PropertyPanel() {
           {/* Text-specific */}
           {selectedElement.type === "text" && (
             <TextElementControls
-              element={selectedElement}
+              element={{ content: selectedElement.content as TextContent }}
               onUpdate={(updates) => updateElement(selectedElement.id, updates)}
             />
           )}
