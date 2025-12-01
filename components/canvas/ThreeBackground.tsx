@@ -9,6 +9,7 @@ import type { ThreeJSPreset } from "@/lib/types";
 interface ThreeBackgroundProps {
   preset: ThreeJSPreset;
   opacity?: number;
+  customCode?: string;
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -437,10 +438,91 @@ function VortexScene() {
 }
 
 // ═══════════════════════════════════════════════════════════════════
+// CUSTOM SCENE - Dynamic code execution
+// ═══════════════════════════════════════════════════════════════════
+
+interface CustomSceneProps {
+  code: string;
+}
+
+function CustomScene({ code }: CustomSceneProps) {
+  const ref = useRef<THREE.Points>(null);
+  
+  // Parse and execute the custom code to generate positions
+  const { positions, colors, config } = useMemo(() => {
+    try {
+      // Create a sandboxed function that returns positions
+      const fn = new Function(
+        'THREE',
+        `
+        try {
+          ${code}
+          // Look for common variable names
+          if (typeof positions !== 'undefined') return { positions, colors: typeof colors !== 'undefined' ? colors : null, config: typeof config !== 'undefined' ? config : {} };
+          if (typeof points !== 'undefined') return { positions: points, colors: null, config: {} };
+          // Default fallback
+          return { positions: null, colors: null, config: {} };
+        } catch (e) {
+          console.error('Custom code error:', e);
+          return { positions: null, colors: null, config: {} };
+        }
+        `
+      );
+      
+      const result = fn(THREE);
+      return {
+        positions: result.positions instanceof Float32Array ? result.positions : null,
+        colors: result.colors instanceof Float32Array ? result.colors : null,
+        config: result.config || {},
+      };
+    } catch (e) {
+      console.error('Failed to parse custom code:', e);
+      return { positions: null, colors: null, config: {} };
+    }
+  }, [code]);
+
+  // Fallback to default positions if custom code fails
+  const fallbackPositions = useMemo(() => {
+    if (positions) return positions;
+    
+    const count = 1000;
+    const arr = new Float32Array(count * 3);
+    for (let i = 0; i < count; i++) {
+      arr[i * 3] = (Math.random() - 0.5) * 10;
+      arr[i * 3 + 1] = (Math.random() - 0.5) * 10;
+      arr[i * 3 + 2] = (Math.random() - 0.5) * 10;
+    }
+    return arr;
+  }, [positions]);
+
+  useFrame((state) => {
+    if (ref.current) {
+      const time = state.clock.elapsedTime;
+      ref.current.rotation.y = time * 0.1;
+      ref.current.rotation.x = Math.sin(time * 0.05) * 0.2;
+    }
+  });
+
+  return (
+    <Points ref={ref} positions={fallbackPositions} stride={3}>
+      <PointMaterial
+        transparent
+        color={config.color || "#CAA554"}
+        size={config.size || 0.03}
+        sizeAttenuation={true}
+        depthWrite={false}
+        opacity={config.opacity || 0.7}
+        vertexColors={!!colors}
+      />
+    </Points>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════
 // MAIN COMPONENT
 // ═══════════════════════════════════════════════════════════════════
 
-const PRESET_SCENES: Record<ThreeJSPreset, React.ComponentType> = {
+const PRESET_SCENES: Record<Exclude<ThreeJSPreset, 'custom'>, React.ComponentType> = {
   starfield: StarfieldScene,
   particles: ParticlesScene,
   geometric: GeometricScene,
@@ -453,7 +535,24 @@ const PRESET_SCENES: Record<ThreeJSPreset, React.ComponentType> = {
 export function ThreeBackground({
   preset,
   opacity = 0.5,
+  customCode,
 }: ThreeBackgroundProps) {
+  // Handle custom preset
+  if (preset === "custom") {
+    return (
+      <div className="absolute inset-0 z-0" style={{ opacity }}>
+        <Canvas
+          camera={{ position: [0, 0, 5], fov: 60 }}
+          dpr={[1, 2]}
+          gl={{ antialias: true, alpha: true }}
+          style={{ background: "transparent" }}
+        >
+          <CustomScene code={customCode || ""} />
+        </Canvas>
+      </div>
+    );
+  }
+
   const SceneComponent = PRESET_SCENES[preset];
 
   if (!SceneComponent) {

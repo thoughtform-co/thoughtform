@@ -28,10 +28,12 @@ const THREEJS_PRESETS: { value: ThreeJSPreset; label: string; description: strin
   { value: "grid", label: "Grid", description: "Rolling wave grid plane" },
   { value: "spiral", label: "Spiral", description: "DNA double helix" },
   { value: "vortex", label: "Vortex", description: "Swirling tunnel effect" },
+  { value: "custom", label: "Custom Code", description: "Paste your own Three.js" },
 ];
 
 export function BackgroundPicker({ background, onChange }: BackgroundPickerProps) {
   const [imageUrl, setImageUrl] = useState(background?.imageUrl || "");
+  const [customCode, setCustomCode] = useState(background?.customCode || "");
 
   const currentType = background?.type || "none";
 
@@ -68,6 +70,13 @@ export function BackgroundPicker({ background, onChange }: BackgroundPickerProps
   const handleThreeJSPresetChange = (preset: ThreeJSPreset) => {
     if (background?.type === "threejs") {
       onChange({ ...background, threejsPreset: preset });
+    }
+  };
+
+  const handleCustomCodeChange = (code: string) => {
+    setCustomCode(code);
+    if (background?.type === "threejs" && background.threejsPreset === "custom") {
+      onChange({ ...background, customCode: code });
     }
   };
 
@@ -167,7 +176,7 @@ export function BackgroundPicker({ background, onChange }: BackgroundPickerProps
       {currentType === "threejs" && (
         <div className="space-y-1">
           <div className="font-mono text-2xs text-dawn-30 mb-2">3D Animation</div>
-          <div className="max-h-[300px] overflow-y-auto space-y-1 pr-1">
+          <div className="max-h-[200px] overflow-y-auto space-y-1 pr-1">
             {THREEJS_PRESETS.map((preset) => (
               <button
                 key={preset.value}
@@ -191,6 +200,58 @@ export function BackgroundPicker({ background, onChange }: BackgroundPickerProps
               </button>
             ))}
           </div>
+
+          {/* Custom code textarea */}
+          {background?.threejsPreset === "custom" && (
+            <div className="mt-3 space-y-2">
+              <div className="font-mono text-2xs text-dawn-30">
+                Paste your scene code below:
+              </div>
+              <textarea
+                value={customCode}
+                onChange={(e) => handleCustomCodeChange(e.target.value)}
+                placeholder={`// Your Three.js scene function
+// Available: useRef, useMemo, useFrame, THREE, Points, PointMaterial
+
+function CustomScene() {
+  const ref = useRef();
+  
+  const positions = useMemo(() => {
+    const arr = new Float32Array(1000 * 3);
+    for (let i = 0; i < 1000; i++) {
+      arr[i * 3] = (Math.random() - 0.5) * 10;
+      arr[i * 3 + 1] = (Math.random() - 0.5) * 10;
+      arr[i * 3 + 2] = (Math.random() - 0.5) * 10;
+    }
+    return arr;
+  }, []);
+
+  useFrame((state) => {
+    if (ref.current) {
+      ref.current.rotation.y = state.clock.elapsedTime * 0.1;
+    }
+  });
+
+  return (
+    <Points ref={ref} positions={positions}>
+      <PointMaterial color="#CAA554" size={0.05} />
+    </Points>
+  );
+}`}
+                className={cn(
+                  "w-full h-64 px-3 py-2 bg-surface-1 border border-dawn-08",
+                  "font-mono text-2xs text-dawn leading-relaxed",
+                  "placeholder:text-dawn-20",
+                  "focus:outline-none focus:border-gold",
+                  "resize-none"
+                )}
+                spellCheck={false}
+              />
+              <div className="font-mono text-2xs text-dawn-20">
+                Code runs in a sandboxed Three.js Canvas
+              </div>
+            </div>
+          )}
         </div>
       )}
 

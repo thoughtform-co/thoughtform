@@ -105,7 +105,11 @@ export function SectionWrapper({ section }: SectionWrapperProps) {
 
     if (type === "threejs" && threejsPreset) {
       return (
-        <ThreeBackground preset={threejsPreset} opacity={threejsOpacity} />
+        <ThreeBackground 
+          preset={threejsPreset} 
+          opacity={threejsOpacity} 
+          customCode={section.background?.customCode}
+        />
       );
     }
 
