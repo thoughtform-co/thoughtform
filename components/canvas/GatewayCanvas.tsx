@@ -181,8 +181,8 @@ export function GatewayCanvas() {
     const gridSize = 2;
 
     function project(x: number, y: number, z: number): ProjectedPoint {
-      const w = canvas.width / window.devicePixelRatio;
-      const h = canvas.height / window.devicePixelRatio;
+      const w = canvas!.width / window.devicePixelRatio;
+      const h = canvas!.height / window.devicePixelRatio;
 
       const cosY = Math.cos(angleYRef.current);
       const sinY = Math.sin(angleYRef.current);
@@ -242,12 +242,12 @@ export function GatewayCanvas() {
     // ═══════════════════════════════════════════════════════════════════
 
     function resize() {
-      const parent = canvas.parentElement;
+      const parent = canvas!.parentElement;
       if (!parent) return;
 
-      canvas.width = parent.clientWidth * window.devicePixelRatio;
-      canvas.height = parent.clientHeight * window.devicePixelRatio;
-      ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+      canvas!.width = parent.clientWidth * window.devicePixelRatio;
+      canvas!.height = parent.clientHeight * window.devicePixelRatio;
+      ctx!.scale(window.devicePixelRatio, window.devicePixelRatio);
     }
 
     resize();
@@ -258,8 +258,8 @@ export function GatewayCanvas() {
     // ═══════════════════════════════════════════════════════════════════
 
     function draw() {
-      const w = canvas.width / window.devicePixelRatio;
-      const h = canvas.height / window.devicePixelRatio;
+      const w = canvas!.width / window.devicePixelRatio;
+      const h = canvas!.height / window.devicePixelRatio;
 
       // Fade trail
       ctx.fillStyle = "rgba(7, 6, 4, 0.12)";
