@@ -216,8 +216,8 @@ export function GatewayCanvas() {
     ) {
       const px = Math.floor(x / size) * size;
       const py = Math.floor(y / size) * size;
-      ctx.fillStyle = rgba(color, alpha);
-      ctx.fillRect(px, py, size - 0.5, size - 0.5);
+      ctx!.fillStyle = rgba(color, alpha);
+      ctx!.fillRect(px, py, size - 0.5, size - 0.5);
     }
 
     function drawLine(
@@ -229,12 +229,12 @@ export function GatewayCanvas() {
       alpha: number,
       width: number = 1
     ) {
-      ctx.strokeStyle = rgba(color, alpha);
-      ctx.lineWidth = width;
-      ctx.beginPath();
-      ctx.moveTo(x1, y1);
-      ctx.lineTo(x2, y2);
-      ctx.stroke();
+      ctx!.strokeStyle = rgba(color, alpha);
+      ctx!.lineWidth = width;
+      ctx!.beginPath();
+      ctx!.moveTo(x1, y1);
+      ctx!.lineTo(x2, y2);
+      ctx!.stroke();
     }
 
     // ═══════════════════════════════════════════════════════════════════
@@ -262,8 +262,8 @@ export function GatewayCanvas() {
       const h = canvas!.height / window.devicePixelRatio;
 
       // Fade trail
-      ctx.fillStyle = "rgba(7, 6, 4, 0.12)";
-      ctx.fillRect(0, 0, w, h);
+      ctx!.fillStyle = "rgba(7, 6, 4, 0.12)";
+      ctx!.fillRect(0, 0, w, h);
 
       timeRef.current += 0.016;
       const time = timeRef.current;
@@ -293,10 +293,10 @@ export function GatewayCanvas() {
         drawLine(p1.x, p1.y, p2.x, p2.y, colors.dawn, 0.15, 0.5);
 
         if (ann.hasNode) {
-          ctx.beginPath();
-          ctx.arc(p2.x, p2.y, 2, 0, Math.PI * 2);
-          ctx.fillStyle = rgba(colors.dawn, 0.3);
-          ctx.fill();
+          ctx!.beginPath();
+          ctx!.arc(p2.x, p2.y, 2, 0, Math.PI * 2);
+          ctx!.fillStyle = rgba(colors.dawn, 0.3);
+          ctx!.fill();
         }
 
         if (ann.hasTick) {
