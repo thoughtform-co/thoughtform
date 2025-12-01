@@ -216,19 +216,27 @@ export function SectionWrapper({ section }: SectionWrapperProps) {
       <div className="relative z-10">{renderSection()}</div>
 
       {/* Edit mode hover overlay (lowest z-index, just for visual feedback) */}
-      {isEditMode && (
+      {isEditMode && !isSelected && (
         <div
-          className={cn(
-            "absolute inset-0 z-15 pointer-events-none transition-colors",
-            isSelected ? "bg-gold/5" : "hover:bg-dawn-04"
-          )}
+          className="absolute inset-0 z-15 pointer-events-none transition-colors hover:bg-dawn-04"
         />
       )}
 
-      {/* Custom elements layer - ALWAYS render if there are elements */}
-      {section.type !== "freeform" && section.elements && section.elements.length > 0 && (
-        <div className="absolute inset-0 z-30">
-          {section.elements.map((element) => (
+      {/* Custom elements layer - render in edit mode when selected OR if has elements */}
+      {section.type !== "freeform" && (isSelected || (section.elements && section.elements.length > 0)) && (
+        <div 
+          className={cn(
+            "absolute inset-0 z-25",
+            isEditMode && isSelected && "pointer-events-auto"
+          )}
+          onClick={(e) => {
+            // Only stop propagation if clicking on the elements layer background
+            if (e.target === e.currentTarget && isEditMode) {
+              e.stopPropagation();
+            }
+          }}
+        >
+          {section.elements?.map((element) => (
             <DraggableElement key={element.id} element={element} />
           ))}
         </div>

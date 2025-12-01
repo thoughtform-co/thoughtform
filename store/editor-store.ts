@@ -293,9 +293,13 @@ export const useEditorStore = create<EditorStateWithHistory>((set, get) => ({
     const section = sections.find((s) => s.id === sectionId);
     if (!section) return;
 
+    // Save to history before adding
+    get().saveToHistory();
+
     const dims = getDefaultDimensions(type);
-    const x = position ? snapToGrid(position.x, gridSize) : 50;
-    const y = position ? snapToGrid(position.y, gridSize) : 50;
+    // Default position: centered horizontally, 100px from top
+    const x = position ? snapToGrid(position.x, gridSize) : snapToGrid(100, gridSize);
+    const y = position ? snapToGrid(position.y, gridSize) : snapToGrid(100, gridSize);
     const content = getDefaultContent(type);
     const zIndex = (section.elements?.length ?? 0) + 1;
 
