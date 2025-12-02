@@ -535,8 +535,8 @@ export const useEditorStore = create<EditorStateWithHistory>((set, get) => ({
       x,
       y,
       newElement.content,
-      newElement.width,
-      newElement.height,
+      newElement.width ?? undefined,
+      newElement.height ?? undefined,
       zIndex
     );
 
@@ -584,8 +584,8 @@ export const useEditorStore = create<EditorStateWithHistory>((set, get) => ({
       x,
       y,
       newElement.content,
-      newElement.width,
-      newElement.height,
+      newElement.width ?? undefined,
+      newElement.height ?? undefined,
       zIndex
     );
 
