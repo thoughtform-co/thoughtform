@@ -480,69 +480,130 @@ function HeroContentControls({
     onUpdate({ config: { ...content, ...updates } });
   };
 
+  // Visibility toggles (default to true)
+  const showLogo = content.showLogo !== false;
+  const showHeadline = content.showHeadline !== false;
+  const showSubheadline = content.showSubheadline !== false;
+  const showButtons = content.showButtons !== false;
+
   return (
     <div className="space-y-3">
-      {/* Logo Type */}
+      {/* Visibility Toggles */}
       <div>
-        <div className="font-mono text-2xs text-dawn-30 mb-1">Logo Type</div>
-        <div className="flex gap-1">
+        <div className="font-mono text-2xs text-dawn-30 mb-1">Show/Hide</div>
+        <div className="grid grid-cols-2 gap-1">
           <button
-            onClick={() => updateContent({ logoType: "text" })}
+            onClick={() => updateContent({ showLogo: !showLogo })}
             className={cn(
-              "flex-1 px-2 py-1.5 border font-mono text-2xs transition-colors",
-              content.logoType === "text"
-                ? "bg-gold text-void border-gold"
-                : "bg-surface-1 text-dawn-50 border-dawn-08 hover:border-dawn-15"
+              "px-2 py-1 border font-mono text-2xs transition-colors",
+              showLogo
+                ? "bg-gold/20 text-gold border-gold/30"
+                : "bg-surface-1 text-dawn-30 border-dawn-08 line-through"
             )}
           >
-            Text
+            Logo
           </button>
           <button
-            onClick={() => updateContent({ logoType: "image" })}
+            onClick={() => updateContent({ showHeadline: !showHeadline })}
             className={cn(
-              "flex-1 px-2 py-1.5 border font-mono text-2xs transition-colors",
-              content.logoType === "image"
-                ? "bg-gold text-void border-gold"
-                : "bg-surface-1 text-dawn-50 border-dawn-08 hover:border-dawn-15"
+              "px-2 py-1 border font-mono text-2xs transition-colors",
+              showHeadline
+                ? "bg-gold/20 text-gold border-gold/30"
+                : "bg-surface-1 text-dawn-30 border-dawn-08 line-through"
             )}
           >
-            Image
+            Headline
+          </button>
+          <button
+            onClick={() => updateContent({ showSubheadline: !showSubheadline })}
+            className={cn(
+              "px-2 py-1 border font-mono text-2xs transition-colors",
+              showSubheadline
+                ? "bg-gold/20 text-gold border-gold/30"
+                : "bg-surface-1 text-dawn-30 border-dawn-08 line-through"
+            )}
+          >
+            Subhead
+          </button>
+          <button
+            onClick={() => updateContent({ showButtons: !showButtons })}
+            className={cn(
+              "px-2 py-1 border font-mono text-2xs transition-colors",
+              showButtons
+                ? "bg-gold/20 text-gold border-gold/30"
+                : "bg-surface-1 text-dawn-30 border-dawn-08 line-through"
+            )}
+          >
+            Buttons
           </button>
         </div>
       </div>
 
-      {content.logoType === "image" && (
-        <div className="space-y-1">
-          <div className="font-mono text-2xs text-dawn-30">Image URL</div>
-          <input
-            type="text"
-            value={content.logoImageUrl || ""}
-            onChange={(e) => updateContent({ logoImageUrl: e.target.value })}
-            placeholder="https://..."
-            className={cn(
-              "w-full px-2 py-1.5 bg-surface-1 border border-dawn-08",
-              "font-mono text-2xs text-dawn placeholder:text-dawn-30",
-              "focus:outline-none focus:border-gold"
-            )}
-          />
-        </div>
-      )}
+      {/* Logo Type - only show if logo is visible */}
+      {showLogo && (
+        <>
+          <div>
+            <div className="font-mono text-2xs text-dawn-30 mb-1">Logo Type</div>
+            <div className="flex gap-1">
+              <button
+                onClick={() => updateContent({ logoType: "text" })}
+                className={cn(
+                  "flex-1 px-2 py-1.5 border font-mono text-2xs transition-colors",
+                  content.logoType === "text"
+                    ? "bg-gold text-void border-gold"
+                    : "bg-surface-1 text-dawn-50 border-dawn-08 hover:border-dawn-15"
+                )}
+              >
+                Text
+              </button>
+              <button
+                onClick={() => updateContent({ logoType: "image" })}
+                className={cn(
+                  "flex-1 px-2 py-1.5 border font-mono text-2xs transition-colors",
+                  content.logoType === "image"
+                    ? "bg-gold text-void border-gold"
+                    : "bg-surface-1 text-dawn-50 border-dawn-08 hover:border-dawn-15"
+                )}
+              >
+                Image
+              </button>
+            </div>
+          </div>
 
-      {content.logoType === "text" && (
-        <div className="space-y-1">
-          <div className="font-mono text-2xs text-dawn-30">Logo Text</div>
-          <input
-            type="text"
-            value={content.logoText || ""}
-            onChange={(e) => updateContent({ logoText: e.target.value })}
-            placeholder="THOUGHT + FORM"
-            className={cn(
-              "w-full px-2 py-1.5 bg-surface-1 border border-dawn-08",
-              "font-mono text-2xs text-dawn placeholder:text-dawn-30",
-              "focus:outline-none focus:border-gold"
-            )}
-          />
-        </div>
+          {content.logoType === "image" && (
+            <div className="space-y-1">
+              <div className="font-mono text-2xs text-dawn-30">Image URL</div>
+              <input
+                type="text"
+                value={content.logoImageUrl || ""}
+                onChange={(e) => updateContent({ logoImageUrl: e.target.value })}
+                placeholder="https://..."
+                className={cn(
+                  "w-full px-2 py-1.5 bg-surface-1 border border-dawn-08",
+                  "font-mono text-2xs text-dawn placeholder:text-dawn-30",
+                  "focus:outline-none focus:border-gold"
+                )}
+              />
+            </div>
+          )}
+
+          {content.logoType === "text" && (
+            <div className="space-y-1">
+              <div className="font-mono text-2xs text-dawn-30">Logo Text</div>
+              <input
+                type="text"
+                value={content.logoText || ""}
+                onChange={(e) => updateContent({ logoText: e.target.value })}
+                placeholder="THOUGHT + FORM"
+                className={cn(
+                  "w-full px-2 py-1.5 bg-surface-1 border border-dawn-08",
+                  "font-mono text-2xs text-dawn placeholder:text-dawn-30",
+                  "focus:outline-none focus:border-gold"
+                )}
+              />
+            </div>
+          )}
+        </>
       )}
 
       {/* Content alignment */}

@@ -32,6 +32,12 @@ export function HeroSection({ section, hideDefaultBackground }: HeroSectionProps
 
   // Split logo text for styling
   const logoLines = content.logoText?.split(" + ") || ["THOUGHT", "FORM"];
+  
+  // Visibility flags (default to true if undefined)
+  const showLogo = content.showLogo !== false;
+  const showHeadline = content.showHeadline !== false;
+  const showSubheadline = content.showSubheadline !== false;
+  const showButtons = content.showButtons !== false;
 
   return (
     <section className="relative min-h-screen flex items-center overflow-hidden pt-20">
@@ -51,78 +57,86 @@ export function HeroSection({ section, hideDefaultBackground }: HeroSectionProps
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
           <div>
             {/* Logo: Text or Image */}
-            {content.logoType === "image" && content.logoImageUrl ? (
-              <div className="mb-8">
-                <EditableImage
-                  src={content.logoImageUrl}
-                  alt={content.logoImageAlt || "Logo"}
-                  onChange={(src) => updateContent({ logoImageUrl: src })}
-                  width={300}
-                  height={100}
-                  fallbackText="LOGO"
-                />
-              </div>
-            ) : (
-              <h1 className="font-mono text-[clamp(2.5rem,7vw,4.5rem)] font-normal tracking-[0.12em] uppercase text-dawn leading-none mb-8">
-                {isEditMode ? (
-                  <EditableText
-                    value={logoLines[0] || "THOUGHT"}
-                    onChange={(text) => {
-                      const newLogo = [text, logoLines[1] || "FORM"].join(" + ");
-                      updateContent({ logoText: newLogo });
-                    }}
-                    className="font-mono text-[clamp(2.5rem,7vw,4.5rem)] font-normal tracking-[0.12em] uppercase text-dawn leading-none"
+            {showLogo && (
+              content.logoType === "image" && content.logoImageUrl ? (
+                <div className="mb-8">
+                  <EditableImage
+                    src={content.logoImageUrl}
+                    alt={content.logoImageAlt || "Logo"}
+                    onChange={(src) => updateContent({ logoImageUrl: src })}
+                    width={300}
+                    height={100}
+                    fallbackText="LOGO"
                   />
-                ) : (
-                  <>{logoLines[0] || "THOUGHT"}</>
-                )}
-                <br />
-                <span className="text-gold">+</span>
-                {isEditMode ? (
-                  <EditableText
-                    value={logoLines[1] || "FORM"}
-                    onChange={(text) => {
-                      const newLogo = [logoLines[0] || "THOUGHT", text].join(" + ");
-                      updateContent({ logoText: newLogo });
-                    }}
-                    className="font-mono text-[clamp(2.5rem,7vw,4.5rem)] font-normal tracking-[0.12em] uppercase text-dawn leading-none inline"
-                    as="span"
-                  />
-                ) : (
-                  <>{logoLines[1] || "FORM"}</>
-                )}
-              </h1>
+                </div>
+              ) : (
+                <h1 className="font-mono text-[clamp(2.5rem,7vw,4.5rem)] font-normal tracking-[0.12em] uppercase text-dawn leading-none mb-8">
+                  {isEditMode ? (
+                    <EditableText
+                      value={logoLines[0] || "THOUGHT"}
+                      onChange={(text) => {
+                        const newLogo = [text, logoLines[1] || "FORM"].join(" + ");
+                        updateContent({ logoText: newLogo });
+                      }}
+                      className="font-mono text-[clamp(2.5rem,7vw,4.5rem)] font-normal tracking-[0.12em] uppercase text-dawn leading-none"
+                    />
+                  ) : (
+                    <>{logoLines[0] || "THOUGHT"}</>
+                  )}
+                  <br />
+                  <span className="text-gold">+</span>
+                  {isEditMode ? (
+                    <EditableText
+                      value={logoLines[1] || "FORM"}
+                      onChange={(text) => {
+                        const newLogo = [logoLines[0] || "THOUGHT", text].join(" + ");
+                        updateContent({ logoText: newLogo });
+                      }}
+                      className="font-mono text-[clamp(2.5rem,7vw,4.5rem)] font-normal tracking-[0.12em] uppercase text-dawn leading-none inline"
+                      as="span"
+                    />
+                  ) : (
+                    <>{logoLines[1] || "FORM"}</>
+                  )}
+                </h1>
+              )
             )}
 
             {/* Headline */}
-            <EditableText
-              value={content.headline}
-              onChange={(headline) => updateContent({ headline })}
-              className="text-lg text-dawn-70 leading-relaxed mb-2 max-w-[420px]"
-              as="p"
-              multiline
-            />
+            {showHeadline && (
+              <EditableText
+                value={content.headline}
+                onChange={(headline) => updateContent({ headline })}
+                className="text-lg text-dawn-70 leading-relaxed mb-2 max-w-[420px]"
+                as="p"
+                multiline
+              />
+            )}
 
             {/* Subheadline */}
-            <EditableText
-              value={content.subheadline}
-              onChange={(subheadline) => updateContent({ subheadline })}
-              className="text-base text-dawn-50 leading-relaxed mb-10 max-w-[420px]"
-              as="p"
-              multiline
-            />
+            {showSubheadline && (
+              <EditableText
+                value={content.subheadline}
+                onChange={(subheadline) => updateContent({ subheadline })}
+                className="text-base text-dawn-50 leading-relaxed mb-10 max-w-[420px]"
+                as="p"
+                multiline
+              />
+            )}
 
             {/* Buttons */}
-            <div className="flex gap-3 flex-wrap">
-              <EditableButton
-                config={content.secondaryButton}
-                onChange={(secondaryButton) => updateContent({ secondaryButton })}
-              />
-              <EditableButton
-                config={content.primaryButton}
-                onChange={(primaryButton) => updateContent({ primaryButton })}
-              />
-            </div>
+            {showButtons && (
+              <div className="flex gap-3 flex-wrap">
+                <EditableButton
+                  config={content.secondaryButton}
+                  onChange={(secondaryButton) => updateContent({ secondaryButton })}
+                />
+                <EditableButton
+                  config={content.primaryButton}
+                  onChange={(primaryButton) => updateContent({ primaryButton })}
+                />
+              </div>
+            )}
           </div>
         </div>
       </div>

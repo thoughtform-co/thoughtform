@@ -497,6 +497,11 @@ export interface HeroContent {
   secondaryButton: ButtonConfig;
   // Layout
   contentAlign: "left" | "center" | "right";
+  // Visibility toggles (hide template content to use custom elements)
+  showLogo?: boolean;
+  showHeadline?: boolean;
+  showSubheadline?: boolean;
+  showButtons?: boolean;
 }
 
 export interface QuoteContent {
@@ -568,6 +573,10 @@ export const DEFAULT_SECTION_CONTENT: Record<SectionType, SectionContent | null>
     primaryButton: { text: "GUIDE ME", href: "#contact", variant: "solid" },
     secondaryButton: { text: "LEARN MORE", href: "#manifesto", variant: "ghost" },
     contentAlign: "left",
+    showLogo: true,
+    showHeadline: true,
+    showSubheadline: true,
+    showButtons: true,
   } as HeroContent,
   quote: {
     quote: "The future belongs to those who understand that doing more with less is compassionate, prosperous, and enduring, and thus more intelligent than the opposite.",
