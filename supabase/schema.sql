@@ -39,10 +39,30 @@ create table if not exists elements (
   updated_at timestamptz default now()
 );
 
+-- Design Log table (for AI editing context)
+-- Tracks all design changes for use as context in the semantic editor
+create table if not exists design_log (
+  id uuid primary key default gen_random_uuid(),
+  -- What changed
+  change_type text not null, -- 'create' | 'update' | 'delete' | 'style' | 'content' | 'layout'
+  target_type text not null, -- 'page' | 'section' | 'element' | 'background' | 'global'
+  target_id uuid, -- Reference to the changed entity (nullable for global changes)
+  -- Description (can be used as AI context)
+  summary text not null, -- Short description like git commit message
+  details jsonb, -- Detailed change info (before/after, specific fields changed)
+  -- Metadata
+  author text, -- Who made the change (user email or 'system')
+  source text default 'cursor', -- 'cursor' | 'editor' | 'chat' | 'mcp' | 'api'
+  commit_hash text, -- Git commit hash if available
+  created_at timestamptz default now()
+);
+
 -- Indexes for performance
 create index if not exists idx_sections_page_id on sections(page_id);
 create index if not exists idx_sections_order on sections(page_id, order_index);
 create index if not exists idx_elements_section_id on elements(section_id);
+create index if not exists idx_design_log_created_at on design_log(created_at desc);
+create index if not exists idx_design_log_target on design_log(target_type, target_id);
 
 -- Updated at trigger function
 create or replace function update_updated_at_column()

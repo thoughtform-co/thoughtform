@@ -30,9 +30,6 @@ export function HeroSection({ section, hideDefaultBackground }: HeroSectionProps
     });
   };
 
-  // Split logo text for styling
-  const logoLines = content.logoText?.split(" + ") || ["THOUGHT", "FORM"];
-  
   // Visibility flags (default to true if undefined)
   const showLogo = content.showLogo !== false;
   const showHeadline = content.showHeadline !== false;
@@ -56,49 +53,28 @@ export function HeroSection({ section, hideDefaultBackground }: HeroSectionProps
       <div className="container-base relative z-20">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
           <div>
-            {/* Logo: Text or Image */}
+            {/* Logo: SVG Word Mark (default) or custom image */}
             {showLogo && (
               content.logoType === "image" && content.logoImageUrl ? (
                 <div className="mb-8">
                   <EditableImage
                     src={content.logoImageUrl}
-                    alt={content.logoImageAlt || "Logo"}
+                    alt={content.logoImageAlt || "Thoughtform Logo"}
                     onChange={(src) => updateContent({ logoImageUrl: src })}
-                    width={300}
-                    height={100}
+                    width={400}
+                    height={120}
                     fallbackText="LOGO"
                   />
                 </div>
               ) : (
-                <h1 className="font-mono text-[clamp(2.5rem,7vw,4.5rem)] font-normal tracking-[0.12em] uppercase text-dawn leading-none mb-8">
-                  {isEditMode ? (
-                    <EditableText
-                      value={logoLines[0] || "THOUGHT"}
-                      onChange={(text) => {
-                        const newLogo = [text, logoLines[1] || "FORM"].join(" + ");
-                        updateContent({ logoText: newLogo });
-                      }}
-                      className="font-mono text-[clamp(2.5rem,7vw,4.5rem)] font-normal tracking-[0.12em] uppercase text-dawn leading-none"
-                    />
-                  ) : (
-                    <>{logoLines[0] || "THOUGHT"}</>
-                  )}
-                  <br />
-                  <span className="text-gold">+</span>
-                  {isEditMode ? (
-                    <EditableText
-                      value={logoLines[1] || "FORM"}
-                      onChange={(text) => {
-                        const newLogo = [logoLines[0] || "THOUGHT", text].join(" + ");
-                        updateContent({ logoText: newLogo });
-                      }}
-                      className="font-mono text-[clamp(2.5rem,7vw,4.5rem)] font-normal tracking-[0.12em] uppercase text-dawn leading-none inline"
-                      as="span"
-                    />
-                  ) : (
-                    <>{logoLines[1] || "FORM"}</>
-                  )}
-                </h1>
+                <div className="mb-8">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img 
+                    src="/logos/Thoughtform_Word Mark.svg" 
+                    alt="Thoughtform" 
+                    className="h-auto w-full max-w-[500px]"
+                  />
+                </div>
               )
             )}
 
