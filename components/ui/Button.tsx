@@ -3,7 +3,7 @@
 import { cn } from "@/lib/utils";
 import { type ButtonHTMLAttributes, type AnchorHTMLAttributes } from "react";
 
-type ButtonVariant = "ghost" | "solid";
+type ButtonVariant = "ghost" | "solid" | "outline";
 
 interface ButtonBaseProps {
   variant?: ButtonVariant;
@@ -37,6 +37,13 @@ const variantStyles: Record<ButtonVariant, string> = {
     border-gold 
     text-void 
     hover:bg-gold-70 
+    hover:border-gold-70
+  `,
+  outline: `
+    bg-transparent 
+    border-gold 
+    text-gold 
+    hover:bg-gold/10 
     hover:border-gold-70
   `,
 };
