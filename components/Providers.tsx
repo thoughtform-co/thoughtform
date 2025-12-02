@@ -1,11 +1,14 @@
 "use client";
 
 import { AuthProvider } from "./auth/AuthProvider";
+import { KeyboardShortcutsProvider } from "./editor/KeyboardShortcutsProvider";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <AuthProvider>
-      {children}
+      <KeyboardShortcutsProvider>
+        {children}
+      </KeyboardShortcutsProvider>
     </AuthProvider>
   );
 }

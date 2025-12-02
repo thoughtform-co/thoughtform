@@ -31,16 +31,21 @@ export { SectionToolbar } from "./editor/SectionToolbar";
 export { SectionSidebar } from "./editor/SectionSidebar";
 export { EditorToolbar } from "./editor/EditorToolbar";
 export { PropertyPanel } from "./editor/PropertyPanel";
+export { LayerPanel } from "./editor/LayerPanel";
 export { BackgroundPicker } from "./editor/BackgroundPicker";
 export { DraggableElement } from "./editor/DraggableElement";
 export { EditableText } from "./editor/EditableText";
 export { EditableImage } from "./editor/EditableImage";
 export { EditableButton } from "./editor/EditableButton";
+export { KeyboardShortcutsProvider } from "./editor/KeyboardShortcutsProvider";
 
 // Element Components
 export { TextElement } from "./editor/elements/TextElement";
 export { ImageElement } from "./editor/elements/ImageElement";
 export { VideoElement } from "./editor/elements/VideoElement";
+export { ButtonElement } from "./editor/elements/ButtonElement";
+export { ContainerElement } from "./editor/elements/ContainerElement";
+export { DividerElement } from "./editor/elements/DividerElement";
 
 // Parallax Components
 export { ParallaxLayer, ParallaxContainer, FadeInOnScroll, ScaleOnScroll } from "./parallax/ParallaxLayer";

@@ -56,13 +56,20 @@ export interface BackgroundConfig {
   customCode?: string;
 }
 
-// Element Types
-export type ElementType = "text" | "image" | "video";
+// Element Types - Extended for medium feature parity
+export type ElementType = "text" | "image" | "video" | "button" | "container" | "divider";
+
+// ═══════════════════════════════════════════════════════════════════
+// ELEMENT CONTENT TYPES
+// ═══════════════════════════════════════════════════════════════════
 
 export interface TextContent {
   html: string;
   fontSize?: number;
   fontFamily?: "mono" | "sans";
+  fontWeight?: "normal" | "medium" | "semibold" | "bold";
+  lineHeight?: number;
+  letterSpacing?: number;
   color?: string;
   textAlign?: "left" | "center" | "right";
 }
@@ -81,7 +88,78 @@ export interface VideoContent {
   muted?: boolean;
 }
 
-export type ElementContent = TextContent | ImageContent | VideoContent;
+export interface ButtonContent {
+  text: string;
+  href: string;
+  variant: "ghost" | "solid" | "outline";
+  size?: "sm" | "md" | "lg";
+}
+
+export interface ContainerContent {
+  // Child element IDs (for grouping)
+  children: string[];
+  // Layout direction for flow children
+  direction?: "row" | "column";
+  // Alignment
+  alignItems?: "start" | "center" | "end" | "stretch";
+  justifyContent?: "start" | "center" | "end" | "between" | "around";
+  // Spacing
+  gap?: number;
+  padding?: SpacingConfig;
+}
+
+export interface DividerContent {
+  orientation: "horizontal" | "vertical";
+  thickness?: number;
+  color?: string;
+  style?: "solid" | "dashed" | "dotted";
+}
+
+export type ElementContent = 
+  | TextContent 
+  | ImageContent 
+  | VideoContent 
+  | ButtonContent 
+  | ContainerContent 
+  | DividerContent;
+
+// ═══════════════════════════════════════════════════════════════════
+// ELEMENT STYLING TYPES
+// ═══════════════════════════════════════════════════════════════════
+
+export interface SpacingConfig {
+  top: number;
+  right: number;
+  bottom: number;
+  left: number;
+}
+
+export interface ShadowConfig {
+  x: number;
+  y: number;
+  blur: number;
+  spread: number;
+  color: string;
+}
+
+export type LayoutMode = "absolute" | "flow";
+
+export type AlignmentType = 
+  | "left" 
+  | "center" 
+  | "right" 
+  | "top" 
+  | "middle" 
+  | "bottom";
+
+export type DistributeDirection = "horizontal" | "vertical";
+
+export interface Bounds {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
 
 // Database Models
 export interface Page {
@@ -110,12 +188,39 @@ export interface Element {
   id: string;
   sectionId: string;
   type: ElementType;
+  name?: string;              // User-friendly name for layer panel
+  
+  // Position & Size
   x: number;
   y: number;
   width: number | null;
   height: number | null;
+  
+  // Layout
+  layoutMode?: LayoutMode;    // "absolute" | "flow"
+  flowOrder?: number;         // Order in flow layout
+  
+  // Content
   content: ElementContent;
   zIndex: number;
+  
+  // State
+  locked?: boolean;           // Prevent selection/editing
+  hidden?: boolean;           // Hide in preview mode
+  
+  // Styling (universal)
+  opacity?: number;           // 0-1
+  rotation?: number;          // degrees
+  borderRadius?: number;
+  borderWidth?: number;
+  borderColor?: string;
+  shadow?: ShadowConfig;
+  
+  // Container-specific (when type === "container")
+  padding?: SpacingConfig;
+  gap?: number;               // Flex gap for children
+  
+  // Timestamps
   createdAt: string;
   updatedAt: string;
 }
@@ -129,17 +234,28 @@ export interface EditorState {
   // UI State
   isEditMode: boolean;
   selectedSectionId: string | null;
-  selectedElementId: string | null;
+  selectedElementIds: string[];           // Multi-select support
   isDragging: boolean;
   gridSize: number;
   showGrid: boolean;
+  
+  // Clipboard
+  clipboard: Element | null;
   
   // Actions
   setPage: (page: Page | null) => void;
   setSections: (sections: Section[]) => void;
   toggleEditMode: () => void;
   setSelectedSection: (id: string | null) => void;
-  setSelectedElement: (id: string | null) => void;
+  
+  // Selection Actions (multi-select)
+  selectElement: (id: string) => void;
+  selectElements: (ids: string[]) => void;
+  addToSelection: (id: string) => void;
+  removeFromSelection: (id: string) => void;
+  selectAllInSection: (sectionId: string) => void;
+  clearSelection: () => void;
+  
   setIsDragging: (isDragging: boolean) => void;
   setGridSize: (size: number) => void;
   toggleGrid: () => void;
@@ -153,9 +269,36 @@ export interface EditorState {
   // Element Actions
   addElement: (sectionId: string, type: ElementType, position?: { x: number; y: number }) => void;
   updateElement: (id: string, updates: Partial<Element>) => void;
+  updateElements: (ids: string[], updates: Partial<Element>) => void;  // Batch update
   removeElement: (id: string) => void;
+  removeElements: (ids: string[]) => void;  // Batch remove
   moveElement: (id: string, x: number, y: number) => void;
   resizeElement: (id: string, width: number, height: number) => void;
+  
+  // Clipboard Actions
+  copyElement: (id: string) => void;
+  copyElements: (ids: string[]) => void;
+  pasteElement: (sectionId: string, position?: { x: number; y: number }) => void;
+  duplicateElement: (id: string) => void;
+  duplicateElements: (ids: string[]) => void;
+  
+  // Layer Actions
+  bringToFront: (id: string) => void;
+  sendToBack: (id: string) => void;
+  bringForward: (id: string) => void;
+  sendBackward: (id: string) => void;
+  
+  // Lock/Hide Actions
+  lockElement: (id: string) => void;
+  unlockElement: (id: string) => void;
+  hideElement: (id: string) => void;
+  showElement: (id: string) => void;
+  toggleLock: (id: string) => void;
+  toggleVisibility: (id: string) => void;
+  
+  // Group Actions
+  groupElements: (ids: string[]) => void;
+  ungroupElement: (containerId: string) => void;
 }
 
 // Section Template Configuration
@@ -276,6 +419,53 @@ export const DEFAULT_ELEMENT_DIMENSIONS: Record<ElementType, { width: number; he
   text: { width: 400, height: 100 },
   image: { width: 300, height: 200 },
   video: { width: 560, height: 315 },
+  button: { width: 150, height: 44 },
+  container: { width: 400, height: 300 },
+  divider: { width: 200, height: 2 },
+};
+
+// Default content for new elements
+export const DEFAULT_ELEMENT_CONTENT: Record<ElementType, ElementContent> = {
+  text: {
+    html: "<p>Click to edit text</p>",
+    fontSize: 16,
+    fontFamily: "sans",
+    fontWeight: "normal",
+    color: "dawn-70",
+    textAlign: "left",
+  } as TextContent,
+  image: {
+    src: "",
+    alt: "Image description",
+    objectFit: "cover",
+  } as ImageContent,
+  video: {
+    src: "",
+    type: "url",
+    autoplay: false,
+    loop: false,
+    muted: true,
+  } as VideoContent,
+  button: {
+    text: "CLICK ME",
+    href: "#",
+    variant: "solid",
+    size: "md",
+  } as ButtonContent,
+  container: {
+    children: [],
+    direction: "column",
+    alignItems: "start",
+    justifyContent: "start",
+    gap: 16,
+    padding: { top: 16, right: 16, bottom: 16, left: 16 },
+  } as ContainerContent,
+  divider: {
+    orientation: "horizontal",
+    thickness: 1,
+    color: "dawn-15",
+    style: "solid",
+  } as DividerContent,
 };
 
 // Grid snap options
@@ -290,7 +480,7 @@ export type GridSize = typeof GRID_SIZES[number];
 export interface ButtonConfig {
   text: string;
   href: string;
-  variant: "ghost" | "solid";
+  variant: "ghost" | "solid" | "outline";
 }
 
 export interface HeroContent {

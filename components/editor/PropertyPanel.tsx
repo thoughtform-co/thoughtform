@@ -198,6 +198,48 @@ export function PropertyPanel() {
                   <span className="text-base">▶</span>
                   <span>Video</span>
                 </button>
+                <button
+                  onClick={() => handleAddElement("button")}
+                  className={cn(
+                    "flex flex-col items-center justify-center gap-1 px-2 py-2",
+                    "bg-surface-1 border border-dawn-08",
+                    "font-mono text-2xs text-dawn-70",
+                    "hover:border-gold hover:text-gold transition-colors",
+                    !selectedSectionId && "opacity-50 cursor-not-allowed"
+                  )}
+                  disabled={!selectedSectionId}
+                >
+                  <span className="text-base">◉</span>
+                  <span>Button</span>
+                </button>
+                <button
+                  onClick={() => handleAddElement("container")}
+                  className={cn(
+                    "flex flex-col items-center justify-center gap-1 px-2 py-2",
+                    "bg-surface-1 border border-dawn-08",
+                    "font-mono text-2xs text-dawn-70",
+                    "hover:border-gold hover:text-gold transition-colors",
+                    !selectedSectionId && "opacity-50 cursor-not-allowed"
+                  )}
+                  disabled={!selectedSectionId}
+                >
+                  <span className="text-base">⬜</span>
+                  <span>Frame</span>
+                </button>
+                <button
+                  onClick={() => handleAddElement("divider")}
+                  className={cn(
+                    "flex flex-col items-center justify-center gap-1 px-2 py-2",
+                    "bg-surface-1 border border-dawn-08",
+                    "font-mono text-2xs text-dawn-70",
+                    "hover:border-gold hover:text-gold transition-colors",
+                    !selectedSectionId && "opacity-50 cursor-not-allowed"
+                  )}
+                  disabled={!selectedSectionId}
+                >
+                  <span className="text-base">—</span>
+                  <span>Divider</span>
+                </button>
               </div>
             </div>
 

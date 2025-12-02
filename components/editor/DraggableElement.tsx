@@ -4,10 +4,13 @@ import { useRef, useState, useCallback, useEffect } from "react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { snapToGrid } from "@/lib/utils";
-import { useEditorStore, useIsEditMode } from "@/store/editor-store";
+import { useEditorStore, useIsEditMode, useSelectedElementIds } from "@/store/editor-store";
 import { TextElement } from "./elements/TextElement";
 import { ImageElement } from "./elements/ImageElement";
 import { VideoElement } from "./elements/VideoElement";
+import { ButtonElement } from "./elements/ButtonElement";
+import { ContainerElement } from "./elements/ContainerElement";
+import { DividerElement } from "./elements/DividerElement";
 import type { Element } from "@/lib/types";
 
 interface DraggableElementProps {
@@ -19,6 +22,9 @@ const ELEMENT_COMPONENTS: Record<string, React.ComponentType<{ element: Element;
   text: TextElement,
   image: ImageElement,
   video: VideoElement,
+  button: ButtonElement,
+  container: ContainerElement,
+  divider: DividerElement,
 };
 
 // Minimum padding from container edges
@@ -45,9 +51,10 @@ function constrainToBounds(
 export function DraggableElement({ element, containerRef }: DraggableElementProps) {
   const elementRef = useRef<HTMLDivElement>(null);
   const isEditMode = useIsEditMode();
+  const selectedElementIds = useSelectedElementIds();
   const {
-    selectedElementId,
-    setSelectedElement,
+    selectElement,
+    addToSelection,
     moveElement,
     resizeElement,
     removeElement,
@@ -66,17 +73,24 @@ export function DraggableElement({ element, containerRef }: DraggableElementProp
     left: false,
   });
 
-  const isSelected = selectedElementId === element.id;
+  const isSelected = selectedElementIds.includes(element.id);
   const ElementComponent = ELEMENT_COMPONENTS[element.type];
 
-  // Handle click to select
+  // Handle click to select (with shift for multi-select)
   const handleClick = useCallback(
     (e: React.MouseEvent) => {
       if (!isEditMode) return;
       e.stopPropagation();
-      setSelectedElement(element.id);
+      
+      if (e.shiftKey) {
+        // Multi-select with shift
+        addToSelection(element.id);
+      } else {
+        // Single select
+        selectElement(element.id);
+      }
     },
-    [isEditMode, element.id, setSelectedElement]
+    [isEditMode, element.id, selectElement, addToSelection]
   );
 
   // Handle double click to edit

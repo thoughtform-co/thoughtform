@@ -10,6 +10,7 @@ import { SectionWrapper } from "./SectionWrapper";
 import { EditorToolbar } from "./EditorToolbar";
 import { SectionSidebar } from "./SectionSidebar";
 import { PropertyPanel } from "./PropertyPanel";
+import { LayerPanel } from "./LayerPanel";
 import type { Section, Page } from "@/lib/types";
 
 // Default sections for the landing page (used if Supabase has no data)
@@ -93,6 +94,7 @@ export function PageRenderer() {
         <>
           <SectionSidebar />
           <PropertyPanel />
+          <LayerPanel />
         </>
       )}
 
