@@ -1,0 +1,1525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Thoughtform │ Navigate AI for Creative Breakthroughs</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=PT+Mono&display=swap" rel="stylesheet">
+  
+  <style>
+    /* ═══════════════════════════════════════════════════════════════════
+       CSS VARIABLES - ASTROLABE DESIGN TOKENS
+       ═══════════════════════════════════════════════════════════════════ */
+    :root {
+      /* Background Layers */
+      --color-void: #070604;
+      --color-surface-0: #0d0b07;
+      --color-surface-1: #141210;
+      --color-surface-2: #1a1814;
+      
+      /* Dawn (Text) */
+      --color-dawn: #ECE3D6;
+      --color-dawn-70: rgba(236, 227, 214, 0.7);
+      --color-dawn-50: rgba(236, 227, 214, 0.5);
+      --color-dawn-30: rgba(236, 227, 214, 0.3);
+      --color-dawn-15: rgba(236, 227, 214, 0.15);
+      --color-dawn-08: rgba(236, 227, 214, 0.08);
+      --color-dawn-04: rgba(236, 227, 214, 0.04);
+      
+      /* Gold (Accent) */
+      --color-gold: #CAA554;
+      --color-gold-70: rgba(202, 165, 84, 0.7);
+      --color-gold-40: rgba(202, 165, 84, 0.4);
+      --color-gold-15: rgba(202, 165, 84, 0.15);
+      
+      /* Teal (Cardinal) */
+      --color-teal: #5B8A7A;
+      --color-teal-40: rgba(91, 138, 122, 0.4);
+      --color-teal-15: rgba(91, 138, 122, 0.15);
+      
+      /* Typography */
+      --font-sans: 'IBM Plex Sans', system-ui, sans-serif;
+      --font-mono: 'PT Mono', ui-monospace, monospace;
+      
+      /* Transitions */
+      --transition-base: 150ms cubic-bezier(0.19, 1, 0.22, 1);
+      --transition-slow: 300ms cubic-bezier(0.19, 1, 0.22, 1);
+    }
+    
+    /* ═══════════════════════════════════════════════════════════════════
+       RESET & BASE STYLES
+       ═══════════════════════════════════════════════════════════════════ */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    html {
+      scroll-behavior: smooth;
+    }
+    
+    body {
+      background: var(--color-void);
+      color: var(--color-dawn-70);
+      font-family: var(--font-sans);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    
+    ::selection {
+      background: var(--color-gold-40);
+      color: var(--color-dawn);
+    }
+    
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    
+    ::-webkit-scrollbar-track {
+      background: var(--color-surface-0);
+    }
+    
+    ::-webkit-scrollbar-thumb {
+      background: var(--color-dawn-15);
+    }
+    
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--color-dawn-30);
+    }
+    
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+    
+    img {
+      max-width: 100%;
+      height: auto;
+    }
+    
+    /* ═══════════════════════════════════════════════════════════════════
+       CONTAINER UTILITIES
+       ═══════════════════════════════════════════════════════════════════ */
+    .container-base {
+      width: 100%;
+      max-width: 1008px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+    
+    .container-narrow {
+      width: 100%;
+      max-width: 768px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+    
+    .container-wide {
+      width: 100%;
+      max-width: 1148px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+    
+    /* ═══════════════════════════════════════════════════════════════════
+       SECTION SPACING
+       ═══════════════════════════════════════════════════════════════════ */
+    .section-spacing {
+      padding: 120px 0;
+    }
+    
+    .section-spacing-compact {
+      padding: 80px 0;
+    }
+    
+    @media (min-width: 768px) {
+      .section-spacing {
+        padding: 160px 0;
+      }
+      .section-spacing-compact {
+        padding: 120px 0;
+      }
+    }
+    
+    @media (min-width: 1024px) {
+      .section-spacing {
+        padding: 200px 0;
+      }
+      .section-spacing-compact {
+        padding: 160px 0;
+      }
+    }
+    
+    /* ═══════════════════════════════════════════════════════════════════
+       NAVIGATION
+       ═══════════════════════════════════════════════════════════════════ */
+    .nav {
+      position: fixed;
+      top: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      gap: 32px;
+      padding: 12px 24px;
+      background: rgba(7, 6, 4, 0.9);
+      backdrop-filter: blur(24px);
+      border: 1px solid var(--color-dawn-08);
+      font-family: var(--font-mono);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+    
+    .nav a {
+      color: var(--color-dawn-50);
+      transition: color var(--transition-base);
+    }
+    
+    .nav a:hover {
+      color: var(--color-dawn);
+    }
+    
+    /* ═══════════════════════════════════════════════════════════════════
+       SECTION HEADER COMPONENT
+       ═══════════════════════════════════════════════════════════════════ */
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 48px;
+      width: 100%;
+    }
+    
+    .section-header__label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--color-gold);
+      white-space: nowrap;
+    }
+    
+    .section-header__label span {
+      color: var(--color-dawn-30);
+    }
+    
+    .section-header__line {
+      flex: 1;
+      height: 1px;
+      min-width: 100px;
+      background: linear-gradient(to right, var(--color-dawn-15), transparent);
+    }
+    
+    /* ═══════════════════════════════════════════════════════════════════
+       FLOW NODE COMPONENT
+       ═══════════════════════════════════════════════════════════════════ */
+    .flow-node {
+      position: relative;
+      display: flex;
+      justify-content: center;
+      padding: 48px 0;
+    }
+    
+    .flow-node__icon {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--color-gold-40);
+      background: var(--color-void);
+      padding: 0 8px;
+    }
+    
+    /* ═══════════════════════════════════════════════════════════════════
+       BUTTON COMPONENT
+       ═══════════════════════════════════════════════════════════════════ */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px 20px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      border: 1px solid;
+      cursor: pointer;
+      transition: all var(--transition-base);
+    }
+    
+    .btn--ghost {
+      background: transparent;
+      border-color: var(--color-dawn-15);
+      color: var(--color-dawn-70);
+    }
+    
+    .btn--ghost:hover {
+      border-color: var(--color-dawn-30);
+      background: var(--color-dawn-04);
+      color: var(--color-dawn);
+    }
+    
+    .btn--solid {
+      background: var(--color-gold);
+      border-color: var(--color-gold);
+      color: var(--color-void);
+    }
+    
+    .btn--solid:hover {
+      background: var(--color-gold-70);
+      border-color: var(--color-gold-70);
+    }
+    
+    .btn--outline {
+      background: transparent;
+      border-color: var(--color-gold);
+      color: var(--color-gold);
+    }
+    
+    .btn--outline:hover {
+      background: rgba(202, 165, 84, 0.1);
+      border-color: var(--color-gold-70);
+    }
+    
+    /* ═══════════════════════════════════════════════════════════════════
+       HERO SECTION
+       ═══════════════════════════════════════════════════════════════════ */
+    .hero {
+      position: relative;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      overflow: hidden;
+      padding-top: 80px;
+    }
+    
+    .hero__canvas {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+    }
+    
+    .hero__canvas canvas {
+      width: 100%;
+      height: 100%;
+    }
+    
+    .hero__hud {
+      position: absolute;
+      z-index: 10;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--color-dawn-30);
+      pointer-events: none;
+    }
+    
+    .hero__hud--top {
+      top: 20%;
+      right: 10%;
+    }
+    
+    .hero__hud--bottom {
+      bottom: 25%;
+      right: 15%;
+    }
+    
+    .hero__hud-label {
+      color: var(--color-gold-40);
+      margin-bottom: 4px;
+    }
+    
+    .hero__content {
+      position: relative;
+      z-index: 20;
+    }
+    
+    .hero__grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 64px;
+      align-items: center;
+    }
+    
+    @media (min-width: 1024px) {
+      .hero__grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+    
+    .hero__logo {
+      margin-bottom: 32px;
+    }
+    
+    .hero__logo svg {
+      width: 100%;
+      max-width: 500px;
+      height: auto;
+    }
+    
+    .hero__headline {
+      font-size: 18px;
+      color: var(--color-dawn-70);
+      line-height: 1.6;
+      margin-bottom: 8px;
+      max-width: 420px;
+    }
+    
+    .hero__subheadline {
+      font-size: 16px;
+      color: var(--color-dawn-50);
+      line-height: 1.6;
+      margin-bottom: 40px;
+      max-width: 420px;
+    }
+    
+    .hero__buttons {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    
+    .hero__scroll {
+      position: absolute;
+      bottom: 48px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      color: var(--color-dawn-30);
+      font-family: var(--font-mono);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      z-index: 10;
+      animation: float 2s ease-in-out infinite;
+    }
+    
+    .hero__scroll-line {
+      width: 1px;
+      height: 32px;
+      background: linear-gradient(to bottom, var(--color-dawn-30), transparent);
+    }
+    
+    @keyframes float {
+      0%, 100% { transform: translateX(-50%) translateY(0); }
+      50% { transform: translateX(-50%) translateY(8px); }
+    }
+    
+    /* ═══════════════════════════════════════════════════════════════════
+       PROBLEM SECTION
+       ═══════════════════════════════════════════════════════════════════ */
+    .problem {
+      background: var(--color-void);
+    }
+    
+    .problem__grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 64px;
+    }
+    
+    @media (min-width: 768px) {
+      .problem__grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 80px;
+      }
+    }
+    
+    .problem__title {
+      font-family: var(--font-mono);
+      font-size: clamp(1.75rem, 4vw, 2.5rem);
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--color-dawn);
+      margin-bottom: 32px;
+      line-height: 1.2;
+    }
+    
+    .problem__description {
+      font-size: 17px;
+      line-height: 1.8;
+      color: var(--color-dawn-70);
+    }
+    
+    .problem__symptoms {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    
+    .problem__symptom {
+      position: relative;
+      padding-left: 32px;
+      border-left: 2px solid var(--color-dawn-15);
+      transition: border-color var(--transition-slow);
+    }
+    
+    .problem__symptom:hover {
+      border-color: var(--color-dawn-30);
+    }
+    
+    .problem__symptom-number {
+      position: absolute;
+      left: -12px;
+      top: 0;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--color-dawn-30);
+      background: var(--color-void);
+      padding: 4px 0;
+    }
+    
+    .problem__symptom-text {
+      font-family: var(--font-mono);
+      font-size: 14px;
+      color: var(--color-dawn);
+    }
+    
+    /* ═══════════════════════════════════════════════════════════════════
+       QUOTE SECTION
+       ═══════════════════════════════════════════════════════════════════ */
+    .quote {
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .quote__canvas {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+    }
+    
+    .quote__content {
+      position: relative;
+      z-index: 10;
+      text-align: center;
+    }
+    
+    .quote__text {
+      font-size: clamp(1.125rem, 2.5vw, 1.5rem);
+      line-height: 1.6;
+      color: var(--color-dawn);
+      max-width: 700px;
+      margin: 0 auto 24px;
+      font-style: italic;
+    }
+    
+    .quote__attribution {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: var(--color-gold);
+    }
+    
+    /* ═══════════════════════════════════════════════════════════════════
+       SHIFT SECTION
+       ═══════════════════════════════════════════════════════════════════ */
+    .shift {
+      background: var(--color-void);
+    }
+    
+    .shift__header {
+      text-align: center;
+      max-width: 640px;
+      margin: 0 auto 80px;
+    }
+    
+    .shift__title {
+      font-family: var(--font-mono);
+      font-size: clamp(1.5rem, 3vw, 2rem);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--color-gold);
+      margin-bottom: 8px;
+    }
+    
+    .shift__pronunciation {
+      font-family: var(--font-mono);
+      font-size: 14px;
+      color: var(--color-dawn-50);
+      font-style: italic;
+      margin-bottom: 24px;
+    }
+    
+    .shift__definition {
+      font-size: 17px;
+      color: var(--color-dawn-70);
+      line-height: 1.6;
+    }
+    
+    .shift__cards {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 32px;
+    }
+    
+    @media (min-width: 768px) {
+      .shift__cards {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 40px;
+      }
+    }
+    
+    .shift__card {
+      position: relative;
+      padding: 40px 32px 32px;
+      background: var(--color-surface-1);
+      border: 1px solid var(--color-dawn-08);
+      transition: all var(--transition-base);
+    }
+    
+    .shift__card:hover {
+      border-color: var(--color-dawn-15);
+      background: var(--color-surface-2);
+    }
+    
+    .shift__card-bar {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+    }
+    
+    .shift__card-bar--gold { background: var(--color-gold); }
+    .shift__card-bar--dawn { background: var(--color-dawn); }
+    .shift__card-bar--teal { background: var(--color-teal); }
+    
+    .shift__card-type {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 16px;
+    }
+    
+    .shift__card-type--gold { color: var(--color-gold); }
+    .shift__card-type--dawn { color: var(--color-dawn); }
+    .shift__card-type--teal { color: var(--color-teal); }
+    
+    .shift__card-title {
+      font-family: var(--font-mono);
+      font-size: 15px;
+      color: var(--color-dawn);
+      margin-bottom: 12px;
+      line-height: 1.4;
+    }
+    
+    .shift__card-description {
+      font-size: 14px;
+      color: var(--color-dawn-50);
+      line-height: 1.6;
+    }
+    
+    /* ═══════════════════════════════════════════════════════════════════
+       PROOF SECTION
+       ═══════════════════════════════════════════════════════════════════ */
+    .proof {
+      padding: 60px 0;
+      text-align: center;
+    }
+    
+    @media (min-width: 768px) {
+      .proof {
+        padding: 80px 0;
+      }
+    }
+    
+    .proof__title {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: var(--color-dawn-30);
+      margin-bottom: 32px;
+    }
+    
+    .proof__logos {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 48px;
+      flex-wrap: wrap;
+    }
+    
+    .proof__logo {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--color-dawn-30);
+      transition: color var(--transition-base);
+    }
+    
+    .proof__logo:hover {
+      color: var(--color-dawn-50);
+    }
+    
+    /* ═══════════════════════════════════════════════════════════════════
+       TAGLINE SECTION
+       ═══════════════════════════════════════════════════════════════════ */
+    .tagline {
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .tagline__canvas {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+    }
+    
+    .tagline__content {
+      position: relative;
+      z-index: 10;
+      text-align: center;
+    }
+    
+    .tagline__text {
+      font-family: var(--font-mono);
+      font-size: clamp(1rem, 2vw, 1.25rem);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--color-gold);
+    }
+    
+    .tagline__subtext {
+      margin-top: 16px;
+      font-size: 14px;
+      color: var(--color-dawn-50);
+    }
+    
+    /* ═══════════════════════════════════════════════════════════════════
+       SERVICES SECTION
+       ═══════════════════════════════════════════════════════════════════ */
+    .services {
+      background: var(--color-void);
+    }
+    
+    .services__header {
+      text-align: center;
+      max-width: 560px;
+      margin: 0 auto 64px;
+    }
+    
+    .services__title {
+      font-family: var(--font-mono);
+      font-size: clamp(1.5rem, 3vw, 2rem);
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--color-dawn);
+      margin-bottom: 16px;
+    }
+    
+    .services__subtitle {
+      font-size: 16px;
+      color: var(--color-dawn-50);
+      line-height: 1.6;
+    }
+    
+    .services__grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 32px;
+    }
+    
+    @media (min-width: 768px) {
+      .services__grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+    
+    .services__card {
+      position: relative;
+      background: var(--color-surface-1);
+      border: 1px solid var(--color-dawn-08);
+      overflow: hidden;
+      transition: all var(--transition-base);
+    }
+    
+    .services__card:hover {
+      border-color: var(--color-dawn-15);
+      transform: translateY(-2px);
+    }
+    
+    .services__card-bar {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 3px;
+      height: 100%;
+    }
+    
+    .services__card-bar--gold { background: var(--color-gold); }
+    .services__card-bar--teal { background: var(--color-teal); }
+    .services__card-bar--dawn { background: var(--color-dawn); }
+    
+    .services__card-image {
+      aspect-ratio: 16/10;
+      background: var(--color-surface-0);
+    }
+    
+    .services__card-content {
+      padding: 24px;
+    }
+    
+    .services__card-type {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 12px;
+    }
+    
+    .services__card-type--gold { color: var(--color-gold); }
+    .services__card-type--teal { color: var(--color-teal); }
+    .services__card-type--dawn { color: var(--color-dawn); }
+    
+    .services__card-dot {
+      width: 5px;
+      height: 5px;
+    }
+    
+    .services__card-title {
+      font-family: var(--font-mono);
+      font-size: 15px;
+      color: var(--color-dawn);
+      margin-bottom: 8px;
+      line-height: 1.4;
+    }
+    
+    .services__card-description {
+      font-size: 14px;
+      color: var(--color-dawn-50);
+      line-height: 1.6;
+    }
+    
+    /* ═══════════════════════════════════════════════════════════════════
+       ABOUT SECTION
+       ═══════════════════════════════════════════════════════════════════ */
+    .about {
+      background: var(--color-void);
+    }
+    
+    .about__grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 48px;
+      align-items: start;
+    }
+    
+    @media (min-width: 768px) {
+      .about__grid {
+        grid-template-columns: 1fr 1.5fr;
+        gap: 64px;
+      }
+    }
+    
+    .about__portrait {
+      aspect-ratio: 4/5;
+      background: var(--color-surface-1);
+      border: 1px solid var(--color-dawn-08);
+      overflow: hidden;
+    }
+    
+    .about__portrait-placeholder {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--color-dawn-30);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+    
+    .about__title {
+      font-family: var(--font-mono);
+      font-size: clamp(1.25rem, 2.5vw, 1.75rem);
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--color-dawn);
+      margin-bottom: 8px;
+    }
+    
+    .about__role {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--color-gold);
+      margin-bottom: 32px;
+    }
+    
+    .about__bio {
+      font-size: 16px;
+      line-height: 1.8;
+      color: var(--color-dawn-70);
+    }
+    
+    /* ═══════════════════════════════════════════════════════════════════
+       MUSINGS SECTION
+       ═══════════════════════════════════════════════════════════════════ */
+    .musings {
+      background: var(--color-void);
+    }
+    
+    .musings__header {
+      text-align: center;
+      max-width: 480px;
+      margin: 0 auto 48px;
+    }
+    
+    .musings__title {
+      font-family: var(--font-mono);
+      font-size: clamp(1.25rem, 2.5vw, 1.5rem);
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--color-dawn);
+      margin-bottom: 8px;
+    }
+    
+    .musings__subtitle {
+      font-size: 16px;
+      color: var(--color-dawn-50);
+    }
+    
+    .musings__grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+      margin-bottom: 40px;
+    }
+    
+    @media (min-width: 768px) {
+      .musings__grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+    
+    .musings__card {
+      background: var(--color-surface-0);
+      border: 1px solid var(--color-dawn-08);
+      transition: all var(--transition-base);
+    }
+    
+    .musings__card:hover {
+      border-color: var(--color-dawn-15);
+      background: var(--color-surface-1);
+    }
+    
+    .musings__card-image {
+      aspect-ratio: 16/10;
+      background: var(--color-surface-1);
+    }
+    
+    .musings__card-content {
+      padding: 20px;
+    }
+    
+    .musings__card-title {
+      font-family: var(--font-mono);
+      font-size: 14px;
+      color: var(--color-dawn);
+      line-height: 1.4;
+      margin-bottom: 12px;
+    }
+    
+    .musings__card-date {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.05em;
+      color: var(--color-gold);
+    }
+    
+    .musings__more {
+      text-align: center;
+    }
+    
+    /* ═══════════════════════════════════════════════════════════════════
+       CTA SECTION
+       ═══════════════════════════════════════════════════════════════════ */
+    .cta {
+      text-align: center;
+    }
+    
+    .cta__title {
+      font-family: var(--font-mono);
+      font-size: clamp(1.5rem, 3vw, 2rem);
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--color-dawn);
+      margin-bottom: 24px;
+    }
+    
+    .cta__subtitle {
+      font-size: 17px;
+      color: var(--color-dawn-70);
+      line-height: 1.6;
+      max-width: 560px;
+      margin: 0 auto 40px;
+    }
+    
+    .cta__buttons {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    
+    /* ═══════════════════════════════════════════════════════════════════
+       FOOTER
+       ═══════════════════════════════════════════════════════════════════ */
+    .footer {
+      padding: 64px 0;
+      border-top: 1px solid var(--color-dawn-08);
+    }
+    
+    .footer__grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 48px;
+      margin-bottom: 48px;
+    }
+    
+    @media (min-width: 768px) {
+      .footer__grid {
+        grid-template-columns: 2fr 1fr 1fr;
+        gap: 64px;
+      }
+    }
+    
+    .footer__brand-name {
+      font-family: var(--font-mono);
+      font-size: 14px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--color-dawn);
+      margin-bottom: 8px;
+    }
+    
+    .footer__brand-name span {
+      color: var(--color-gold);
+    }
+    
+    .footer__tagline {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--color-gold);
+      font-style: italic;
+      margin-bottom: 16px;
+    }
+    
+    .footer__description {
+      font-size: 13px;
+      color: var(--color-dawn-50);
+      line-height: 1.6;
+      max-width: 280px;
+    }
+    
+    .footer__section-title {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--color-dawn-50);
+      margin-bottom: 20px;
+    }
+    
+    .footer__links {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    
+    .footer__link {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--color-dawn-70);
+      transition: color var(--transition-base);
+    }
+    
+    .footer__link:hover {
+      color: var(--color-dawn);
+    }
+    
+    .footer__copyright {
+      padding-top: 32px;
+      border-top: 1px solid var(--color-dawn-08);
+      text-align: center;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.05em;
+      color: var(--color-dawn-30);
+    }
+    
+    /* ═══════════════════════════════════════════════════════════════════
+       CANVAS PLACEHOLDER BACKGROUNDS
+       ═══════════════════════════════════════════════════════════════════ */
+    .canvas-hero {
+      background: 
+        radial-gradient(ellipse at 70% 50%, rgba(202, 165, 84, 0.08) 0%, transparent 50%),
+        radial-gradient(ellipse at 30% 30%, rgba(91, 138, 122, 0.05) 0%, transparent 40%),
+        var(--color-void);
+    }
+    
+    .canvas-attractor {
+      background: 
+        radial-gradient(ellipse at 50% 50%, rgba(202, 165, 84, 0.06) 0%, transparent 60%),
+        var(--color-void);
+    }
+    
+    .canvas-wave {
+      background: 
+        radial-gradient(ellipse at 50% 80%, rgba(91, 138, 122, 0.08) 0%, transparent 50%),
+        radial-gradient(ellipse at 50% 20%, rgba(202, 165, 84, 0.04) 0%, transparent 40%),
+        var(--color-void);
+    }
+  </style>
+</head>
+<body>
+  <!-- ═══════════════════════════════════════════════════════════════════
+       NAVIGATION
+       ═══════════════════════════════════════════════════════════════════ -->
+  <nav class="nav">
+    <a href="#manifesto">Manifesto</a>
+    <a href="#services">Services</a>
+    <a href="#about">About</a>
+    <a href="#musings">Musings</a>
+    <a href="#contact">Contact</a>
+  </nav>
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       HERO SECTION
+       ═══════════════════════════════════════════════════════════════════ -->
+  <section class="hero">
+    <div class="hero__canvas canvas-hero"></div>
+    
+    <!-- HUD Elements -->
+    <div class="hero__hud hero__hud--top">
+      <div class="hero__hud-label">// Vector Space</div>
+      <div>Semantic Manifold</div>
+    </div>
+    <div class="hero__hud hero__hud--bottom">
+      <div class="hero__hud-label">// Status</div>
+      <div>Navigating...</div>
+    </div>
+    
+    <div class="container-base hero__content">
+      <div class="hero__grid">
+        <div>
+          <!-- Logo -->
+          <div class="hero__logo">
+            <svg viewBox="0 0 1178.18 494.93" xmlns="http://www.w3.org/2000/svg">
+              <style>
+                .logo-dawn { fill: #ebe3d6; }
+                .logo-gold { fill: #caa554; }
+              </style>
+              <path class="logo-dawn" d="M517.7,108.78c0,59.15-39.04,108.78-107.06,108.78s-107.06-49.63-107.06-108.78S342.62,0,410.64,0s107.06,49.63,107.06,108.78ZM491.63,108.78c0-56.24-28.32-103.49-80.86-103.49s-80.86,47.38-80.86,103.49,28.32,103.49,80.86,103.49,80.86-47.38,80.86-103.49Z"/>
+              <path class="logo-gold" d="M421.49,374.38l-2.51,8.47h-93.83l-1.19,6.62h-8.87l-20.38,105.47h-11.38l18.26-97.13h-4.23l1.46-8.34h-9.93l1.19-6.62H0l2.51-8.47h294.31l1.19-6.62h8.87l18.39-97.93h11.38l-16.28,89.59h4.23l-1.46,8.34h9.93l-1.19,6.62h89.72-.13Z"/>
+              <path class="logo-dawn" d="M598.29,273.54v9.93h-106.93v210.02h-25.94v-219.94h133-.13Z"/>
+              <path class="logo-dawn" d="M557,373.58h-70.27v9.93h70.27v-9.93Z"/>
+              <path class="logo-dawn" d="M734.59,483.95h-89.72v9.79h89.72v-9.79Z"/>
+              <path class="logo-dawn" d="M618.54,316.94h-25.94v133.39h25.94v-133.39h0Z"/>
+              <path class="logo-dawn" d="M786.47,316.94h-25.94v133.39h25.94v-133.39h0Z"/>
+              <path class="logo-dawn" d="M734.59,283.46v-9.53h-89.99v9.53h-25.94v33.48h25.94v-33.22h89.99v33.22h25.94v-33.48h-25.94Z"/>
+              <path class="logo-dawn" d="M644.87,450.47h-25.94v33.48h25.94v-33.48Z"/>
+              <path class="logo-dawn" d="M760.53,450.47h-25.94v33.48h25.94v-33.48Z"/>
+              <path class="logo-dawn" d="M912.58,283.46v100.31h-85.09v-100.31h85.09v-10.45h-111.16v220.74h26.07v-99.25h40.89v33.48h25.28v44.07h25.94v-44.07h-25.94v-33.48h18.92v-10.85h21.84v-100.31h-21.84v.13Z"/>
+              <path class="logo-dawn" d="M930.98,472.17h-11.38v21.7h11.38v-21.7Z"/>
+              <path class="logo-dawn" d="M1117.7,273.01v44.73h-25.67v43.27h-10.45v44.73h10.45v-44.73h25.67v132.6h25.81v-220.74h-25.81v.13Z"/>
+              <path class="logo-dawn" d="M1009.06,361.14v-43.27h-25.67v-44.73h-25.81v220.74h25.81v-132.6h25.67v44.73h10.45v-44.73h-10.45v-.13Z"/>
+              <path class="logo-dawn" d="M1035.26,405.87h-15.75v44.33h15.75v-44.33h0Z"/>
+              <path class="logo-dawn" d="M1081.84,405.87h-15.75v44.33h15.75v-44.33h0Z"/>
+              <path class="logo-dawn" d="M1066.09,450.2h-30.83v43.67h30.83v-43.67h0Z"/>
+              <path class="logo-dawn" d="M877.38,1.85v4.9c7.68-.13,15.62-.66,16.54,8.73l-.26,188.45c-1.72,8.2-9.66,6.48-16.28,6.48v4.9h59.68v-4.9c-14.03.93-16.54-.79-17.47-14.56v-87.47h68.95v95.68c0,6.48-12.04,6.88-16.54,6.22v4.9h59.82v-4.9c-7.28,0-15.48,1.72-16.54-7.81l.66-190.56c2.12-6.22,10.72-5.16,15.88-5.29V1.59h-59.68v4.9c3.97,0,9.4-.53,13.1,1.46,1.06.66,3.57,3.97,3.57,4.76v85.75h-67.62l-1.32-1.32V19.19c0-.26.79-5.69.93-6.35,1.72-7.54,10.32-6.35,16.41-6.35V1.46h-59.82.13l-.13.4Z"/>
+              <path class="logo-dawn" d="M301.33,1.72h-59.82v4.9h.93c1.99,0,4.76,0,7.41.26h.66c2.91.4,5.56,1.32,6.75,3.44.4.53,1.72,4.63,1.72,4.9v83.24h-69.87V15.22c0-.26,1.46-4.5,1.72-4.9,1.19-2.12,3.84-3.04,6.75-3.44h.66c2.65-.4,5.43-.26,7.41-.26h.93V1.72h-59.82v4.9h0c3.57.13,6.75,0,9.26.53h.53c4.1.79,6.88,3.18,7.68,9.93v181.43c-.93,12.57-5.96,12.44-17.47,11.91v4.9h59.82v-4.9h-7.68c-.66,0-1.46,0-2.12-.26-2.51-.4-4.63-1.32-5.96-3.71-.26-.66-1.72-4.63-1.72-4.9v-92.37h69.87v92.37c0,.26-1.46,4.23-1.72,4.9-1.32,2.38-3.57,3.31-5.96,3.71h-9.79v4.9h59.82v-4.9c-11.65.53-16.54.66-17.47-11.91V16.81c.79-6.75,3.44-9.13,7.68-9.93h.53c2.65-.4,5.82-.26,9.26-.26h0V1.59h0v.13Z"/>
+              <path class="logo-dawn" d="M744.52,107.32l1.85,1.32,79.93.66c4.5,1.72,4.9,9.53,5.29,13.9,1.59,22.76-1.32,47.51,0,70.53l-.53,2.12c-32.29,25.94-80.86,21.31-107.99-9.93-45.13-52.27-30.83-175.87,51.48-180.64,14.16-.79,48.7,5.43,53.07,21.7,4.1,15.88-8.87,23.03-18.13,32.95v1.59l2.51,2.38,38.51-38.51c-43.01-37.72-119.37-32.95-155.23,12.44-34.27,43.54-31.89,123.47,14.16,158.14,38.64,29.11,111.96,29.91,147.29-5.43l.66-75.43c1.46-8.07,10.19-6.22,16.41-6.35v-9.93h-129.56v8.6h.4l-.13-.13Z"/>
+              <path class="logo-dawn" d="M1178.18,28.19h-4.5s-5.56-11.65-10.32-14.82c-6.88-4.76-16.54-6.75-25.01-6.62h-2.25c-2.25.13-3.97.53-5.43,1.06-.26,0-.53.13-.66.26-.13,0-.26.13-.53.26-1.99,1.06-3.04,2.65-3.57,4.76h0c0,.26-.13.4-.26.66v186.99c-.13,3.97,3.04,9.53,7.15,9.53h12.7v4.9h-66.17v-4.9h12.7c4.1,0,7.28-5.56,7.15-9.53V13.76c0-.26-.13-.4-.26-.66h0c-.53-2.12-1.59-3.71-3.57-4.76-.13,0-.26-.13-.53-.26-.26,0-.4-.13-.66-.26-1.32-.53-3.18-.93-5.29-1.06h-2.25c-8.47-.26-18.13,1.85-25.01,6.62-4.63,3.18-10.32,14.82-10.32,14.82h-4.5l4.5-20.78,1.19-5.43h119.76l1.19,5.43,4.5,20.78h.26Z"/>
+              <path class="logo-dawn" d="M134.19,28.19h-4.5s-5.56-11.65-10.32-14.82c-6.88-4.76-16.54-6.75-25.01-6.62h-2.25c-2.25.13-3.97.53-5.43,1.06-.26,0-.53.13-.66.26-.13,0-.26.13-.53.26-1.99,1.06-3.04,2.65-3.57,4.76h0c0,.26-.13.4-.26.66v186.99c-.13,3.97,3.04,9.53,7.15,9.53h12.7v4.9H35.2v-4.9h12.7c4.1,0,7.28-5.56,7.15-9.53V13.76c0-.26-.13-.4-.26-.66h0c-.53-2.12-1.46-3.71-3.57-4.76-.13,0-.26-.13-.53-.26-.26,0-.4-.13-.66-.26-1.32-.53-3.18-.93-5.43-1.06h-2.25c-8.47-.26-18,1.85-25.01,6.62-4.63,3.18-10.32,14.82-10.32,14.82H2.65L7.15,7.41l1.19-5.43h119.76l1.19,5.43,4.5,20.78h.4Z"/>
+              <path class="logo-dawn" d="M631.5,1.85v4.9c8.47,0,15.48-.66,16.54,9.53-2.38,49.36,3.18,101.63,0,150.86-1.85,29.11-18.26,47.38-48.7,45.13-24.09-1.72-33.61-20.11-36-41.82V15.62c.26-9.4,9.26-8.87,16.54-8.73V1.98h-59.68v4.9c11.65-.66,15.22.79,16.81,8.73v137.76c-.26,34.27,13.1,60.87,53.46,63.92,35.86,2.65,60.08-10.72,62.73-48.43,3.31-49.1-2.51-101.9,0-151.39,1.32-10.98,6.88-10.45,16.54-10.45V2.12h-38.24v-.26Z"/>
+            </svg>
+          </div>
+          
+          <p class="hero__headline">Thoughtform pioneers intuitive human-AI collaboration.</p>
+          <p class="hero__subheadline">We teach teams how to navigate AI for creative and strategic work.</p>
+          
+          <div class="hero__buttons">
+            <a href="#manifesto" class="btn btn--ghost">Learn More</a>
+            <a href="#contact" class="btn btn--solid">Guide Me</a>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="hero__scroll">
+      <span>Scroll</span>
+      <div class="hero__scroll-line"></div>
+    </div>
+  </section>
+
+  <!-- Flow Node -->
+  <div class="flow-node">
+    <span class="flow-node__icon">◇</span>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       PROBLEM SECTION
+       ═══════════════════════════════════════════════════════════════════ -->
+  <section id="manifesto" class="problem section-spacing">
+    <div class="container-base">
+      <div class="section-header">
+        <div class="section-header__label">
+          <span>//</span> The Problem
+        </div>
+        <div class="section-header__line"></div>
+      </div>
+      
+      <div class="problem__grid">
+        <div>
+          <h2 class="problem__title">You're already behind.</h2>
+          <p class="problem__description">
+            While you're reading best practices from last quarter, the landscape has already shifted. The old playbooks don't account for a world where AI can draft, design, and decide in seconds.
+          </p>
+        </div>
+        
+        <div class="problem__symptoms">
+          <div class="problem__symptom">
+            <span class="problem__symptom-number">// 01</span>
+            <div class="problem__symptom-text">Drowning in AI options</div>
+          </div>
+          <div class="problem__symptom">
+            <span class="problem__symptom-number">// 02</span>
+            <div class="problem__symptom-text">Team resistance</div>
+          </div>
+          <div class="problem__symptom">
+            <span class="problem__symptom-number">// 03</span>
+            <div class="problem__symptom-text">Hallucination anxiety</div>
+          </div>
+          <div class="problem__symptom">
+            <span class="problem__symptom-number">// 04</span>
+            <div class="problem__symptom-text">No clear ROI path</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       QUOTE SECTION
+       ═══════════════════════════════════════════════════════════════════ -->
+  <section class="quote section-spacing-compact">
+    <div class="quote__canvas canvas-attractor"></div>
+    <div class="container-narrow quote__content">
+      <blockquote class="quote__text">
+        "The future belongs to those who understand that doing more with less is compassionate, prosperous, and enduring, and thus more intelligent than the opposite."
+      </blockquote>
+      <cite class="quote__attribution">— R. Buckminster Fuller</cite>
+    </div>
+  </section>
+
+  <!-- Flow Node -->
+  <div class="flow-node">
+    <span class="flow-node__icon">◇</span>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       SHIFT SECTION
+       ═══════════════════════════════════════════════════════════════════ -->
+  <section id="shift" class="shift section-spacing">
+    <div class="container-base">
+      <div class="section-header">
+        <div class="section-header__label">
+          <span>//</span> The Shift
+        </div>
+        <div class="section-header__line"></div>
+      </div>
+      
+      <div class="shift__header">
+        <h2 class="shift__title">THOUGHTFORM</h2>
+        <div class="shift__pronunciation">(θɔːtfɔːrm / THAWT-form)</div>
+        <p class="shift__definition">Architecture of intention. How ideas take shape.</p>
+      </div>
+      
+      <div class="shift__cards">
+        <div class="shift__card">
+          <div class="shift__card-bar shift__card-bar--gold"></div>
+          <div class="shift__card-type shift__card-type--gold">N GEOMETRY</div>
+          <h3 class="shift__card-title">NAVIGATE</h3>
+          <p class="shift__card-description">Map the AI landscape with clarity</p>
+        </div>
+        
+        <div class="shift__card">
+          <div class="shift__card-bar shift__card-bar--dawn"></div>
+          <div class="shift__card-type shift__card-type--dawn">E ALTERITY</div>
+          <h3 class="shift__card-title">EVALUATE</h3>
+          <p class="shift__card-description">Test what works for your context</p>
+        </div>
+        
+        <div class="shift__card">
+          <div class="shift__card-bar shift__card-bar--teal"></div>
+          <div class="shift__card-type shift__card-type--teal">S DYNAMICS</div>
+          <h3 class="shift__card-title">SYNTHESIZE</h3>
+          <p class="shift__card-description">Integrate AI into existing workflows</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       PROOF SECTION
+       ═══════════════════════════════════════════════════════════════════ -->
+  <section class="proof">
+    <div class="container-base">
+      <h2 class="proof__title">Trusted By</h2>
+      <div class="proof__logos">
+        <span class="proof__logo">ACC Belgium</span>
+        <span class="proof__logo">Tool</span>
+        <span class="proof__logo">Thomas More</span>
+        <span class="proof__logo">Voka</span>
+        <span class="proof__logo">Loop Earplugs</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       TAGLINE SECTION
+       ═══════════════════════════════════════════════════════════════════ -->
+  <section class="tagline section-spacing-compact">
+    <div class="tagline__canvas canvas-wave"></div>
+    <div class="container-narrow tagline__content">
+      <div class="tagline__text">CLARITY IN COMPLEXITY</div>
+      <p class="tagline__subtext">Navigate the noise. Find your signal.</p>
+    </div>
+  </section>
+
+  <!-- Flow Node -->
+  <div class="flow-node">
+    <span class="flow-node__icon">◇</span>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       SERVICES SECTION
+       ═══════════════════════════════════════════════════════════════════ -->
+  <section id="services" class="services section-spacing">
+    <div class="container-base">
+      <div class="section-header">
+        <div class="section-header__label">
+          <span>//</span> Services
+        </div>
+        <div class="section-header__line"></div>
+      </div>
+      
+      <div class="services__header">
+        <h2 class="services__title">Services</h2>
+        <p class="services__subtitle">From inspiration to transformation. Choose your entry point into dimensional thinking.</p>
+      </div>
+      
+      <div class="services__grid">
+        <article class="services__card">
+          <div class="services__card-bar services__card-bar--gold"></div>
+          <div class="services__card-image"></div>
+          <div class="services__card-content">
+            <div class="services__card-type services__card-type--gold">
+              <span class="services__card-dot" style="background: var(--color-gold)"></span>
+              Inspire // Keynotes
+            </div>
+            <h3 class="services__card-title">AI Navigation Sessions</h3>
+            <p class="services__card-description">1:1 strategic guidance for leaders navigating the AI landscape with clarity and intention.</p>
+          </div>
+        </article>
+        
+        <article class="services__card">
+          <div class="services__card-bar services__card-bar--teal"></div>
+          <div class="services__card-image"></div>
+          <div class="services__card-content">
+            <div class="services__card-type services__card-type--teal">
+              <span class="services__card-dot" style="background: var(--color-teal)"></span>
+              Practice // Workshops
+            </div>
+            <h3 class="services__card-title">Team Workshops</h3>
+            <p class="services__card-description">Hands-on training for creative teams to build AI fluency and develop intuitive workflows.</p>
+          </div>
+        </article>
+        
+        <article class="services__card">
+          <div class="services__card-bar services__card-bar--dawn"></div>
+          <div class="services__card-image"></div>
+          <div class="services__card-content">
+            <div class="services__card-type services__card-type--dawn">
+              <span class="services__card-dot" style="background: var(--color-dawn)"></span>
+              Transform // Strategy
+            </div>
+            <h3 class="services__card-title">Workflow Audits</h3>
+            <p class="services__card-description">Find AI opportunities in your process and build a roadmap for sustainable transformation.</p>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- Flow Node -->
+  <div class="flow-node">
+    <span class="flow-node__icon">◇</span>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       ABOUT SECTION
+       ═══════════════════════════════════════════════════════════════════ -->
+  <section id="about" class="about section-spacing">
+    <div class="container-base">
+      <div class="section-header">
+        <div class="section-header__label">
+          <span>//</span> About
+        </div>
+        <div class="section-header__line"></div>
+      </div>
+      
+      <div class="about__grid">
+        <div class="about__portrait">
+          <div class="about__portrait-placeholder">Add portrait</div>
+        </div>
+        
+        <div>
+          <h2 class="about__title">About</h2>
+          <div class="about__role">// Voidwalker</div>
+          <p class="about__bio">
+            Strategic consultant bridging human creativity and artificial intelligence. Former creative director now helping organizations navigate the AI landscape with intention. I believe the most powerful tool isn't the AI itself—it's the human who knows how to wield it.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Flow Node -->
+  <div class="flow-node">
+    <span class="flow-node__icon">◇</span>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       MUSINGS SECTION
+       ═══════════════════════════════════════════════════════════════════ -->
+  <section id="musings" class="musings section-spacing">
+    <div class="container-base">
+      <div class="section-header">
+        <div class="section-header__label">
+          <span>//</span> Musings
+        </div>
+        <div class="section-header__line"></div>
+      </div>
+      
+      <div class="musings__header">
+        <h2 class="musings__title">Latent Musings</h2>
+        <p class="musings__subtitle">Thoughts on AI, work, and the shape of ideas.</p>
+      </div>
+      
+      <div class="musings__grid">
+        <article class="musings__card">
+          <div class="musings__card-image"></div>
+          <div class="musings__card-content">
+            <h3 class="musings__card-title">Why AI for strategic & creative work needs a different approach</h3>
+            <span class="musings__card-date">Jun 10, 2025</span>
+          </div>
+        </article>
+        
+        <article class="musings__card">
+          <div class="musings__card-image"></div>
+          <div class="musings__card-content">
+            <h3 class="musings__card-title">Stop asking if AI can be creative. Start asking who will teach it.</h3>
+            <span class="musings__card-date">May 6, 2025</span>
+          </div>
+        </article>
+        
+        <article class="musings__card">
+          <div class="musings__card-image"></div>
+          <div class="musings__card-content">
+            <h3 class="musings__card-title">We need fewer prompting frameworks and more "AI intuition"</h3>
+            <span class="musings__card-date">Apr 7, 2025</span>
+          </div>
+        </article>
+      </div>
+      
+      <div class="musings__more">
+        <a href="#" class="btn btn--ghost">Read More →</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       CTA SECTION
+       ═══════════════════════════════════════════════════════════════════ -->
+  <section id="contact" class="cta section-spacing">
+    <div class="container-narrow">
+      <h2 class="cta__title">Charting a new course.</h2>
+      <p class="cta__subtitle">Ready to navigate AI with intention?</p>
+      <div class="cta__buttons">
+        <a href="#contact" class="btn btn--solid">Schedule a Call</a>
+        <a href="#services" class="btn btn--ghost">View Services</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       FOOTER
+       ═══════════════════════════════════════════════════════════════════ -->
+  <footer class="footer">
+    <div class="container-base">
+      <div class="footer__grid">
+        <div>
+          <div class="footer__brand-name">THOUGHT<span>+</span>FORM</div>
+          <div class="footer__tagline">Intuition is the interface.</div>
+          <p class="footer__description">
+            Cultivating enduring AI adoption through intuitive human-AI collaboration.
+          </p>
+        </div>
+        
+        <div>
+          <h3 class="footer__section-title">Navigate</h3>
+          <div class="footer__links">
+            <a href="#manifesto" class="footer__link">Manifesto</a>
+            <a href="#shift" class="footer__link">The Shift</a>
+            <a href="#services" class="footer__link">Services</a>
+            <a href="#about" class="footer__link">About</a>
+            <a href="#musings" class="footer__link">Musings</a>
+          </div>
+        </div>
+        
+        <div>
+          <h3 class="footer__section-title">Connect</h3>
+          <div class="footer__links">
+            <a href="#" class="footer__link">X (Twitter)</a>
+            <a href="#" class="footer__link">LinkedIn</a>
+            <a href="#" class="footer__link">Instagram</a>
+            <a href="mailto:vince@thoughtform.ai" class="footer__link">Email</a>
+          </div>
+        </div>
+      </div>
+      
+      <div class="footer__copyright">
+        © 2025 Thoughtform │ Navigate courageously
+      </div>
+    </div>
+  </footer>
+</body>
+</html>
+
