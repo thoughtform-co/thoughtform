@@ -8,75 +8,85 @@ const config: Config = {
   theme: {
     extend: {
       /* ═══════════════════════════════════════════════════════════════════
-         ASTROLABE DESIGN TOKENS
+         THOUGHTFORM NAVIGATION COCKPIT DESIGN TOKENS
          ═══════════════════════════════════════════════════════════════════ */
       colors: {
-        // Background Layers
-        void: "#070604",
+        // Void (Backgrounds) - The depths, infinite space
+        void: {
+          DEFAULT: "#0a0908",
+          deep: "#050504",
+        },
+        // Surface Layers
         surface: {
           0: "#0D0B07",
           1: "#141210",
           2: "#1A1814",
         },
-        // Semantic Dawn (Text)
+        // Dawn (Text & Particles) - Emergence into light
         dawn: {
-          DEFAULT: "#ECE3D6",
-          70: "rgba(236, 227, 214, 0.7)",
-          50: "rgba(236, 227, 214, 0.5)",
-          30: "rgba(236, 227, 214, 0.3)",
-          15: "rgba(236, 227, 214, 0.15)",
-          "08": "rgba(236, 227, 214, 0.08)",
-          "04": "rgba(236, 227, 214, 0.04)",
+          DEFAULT: "#ebe3d6",
+          90: "rgba(235, 227, 214, 0.9)",
+          70: "rgba(235, 227, 214, 0.7)",
+          50: "rgba(235, 227, 214, 0.5)",
+          30: "rgba(235, 227, 214, 0.3)",
+          15: "rgba(235, 227, 214, 0.15)",
+          "08": "rgba(235, 227, 214, 0.08)",
+          "04": "rgba(235, 227, 214, 0.04)",
         },
-        // Tensor Gold (Accent)
+        // Gold (Accent) - Navigation & measurement
         gold: {
-          DEFAULT: "#CAA554",
+          DEFAULT: "#caa554",
           70: "rgba(202, 165, 84, 0.7)",
-          40: "rgba(202, 165, 84, 0.4)",
+          50: "rgba(202, 165, 84, 0.5)",
+          30: "rgba(202, 165, 84, 0.3)",
           15: "rgba(202, 165, 84, 0.15)",
           10: "rgba(202, 165, 84, 0.10)",
           "05": "rgba(202, 165, 84, 0.05)",
         },
-        // Dynamics Teal (Cardinal)
-        teal: {
-          DEFAULT: "#5B8A7A",
-          40: "rgba(91, 138, 122, 0.4)",
-          15: "rgba(91, 138, 122, 0.15)",
-        },
+        // Alert - For emphasis
+        alert: "#ff6b35",
       },
       fontFamily: {
-        mono: ["var(--font-pt-mono)", "ui-monospace", "monospace"],
-        sans: ["var(--font-ibm-plex)", "system-ui", "sans-serif"],
+        display: ["var(--font-mondwest)", "'PP Mondwest'", "serif"],
+        body: ["var(--font-ibm-plex)", "'IBM Plex Sans'", "sans-serif"],
+        data: ["var(--font-ibm-plex)", "'IBM Plex Sans'", "sans-serif"],
       },
       fontSize: {
-        // Custom sizes for precise control
-        "2xs": ["10px", { lineHeight: "1.4", letterSpacing: "0.1em" }],
+        // HUD data sizes
+        "2xs": ["9px", { lineHeight: "1.4", letterSpacing: "0.1em" }],
         xs: ["11px", { lineHeight: "1.4", letterSpacing: "0.08em" }],
+        sm: ["12px", { lineHeight: "1.5", letterSpacing: "0.06em" }],
       },
       spacing: {
-        // Section spacing tokens
-        "section-mobile": "120px",
-        "section-tablet": "160px",
-        "section-desktop": "200px",
-        "section-compact-mobile": "80px",
-        "section-compact-tablet": "120px",
-        "section-compact-desktop": "160px",
+        // 8px grid spacing
+        xs: "4px",
+        sm: "8px",
+        md: "16px",
+        lg: "24px",
+        xl: "32px",
+        "2xl": "48px",
+        "3xl": "64px",
+        "4xl": "96px",
       },
       transitionTimingFunction: {
-        out: "cubic-bezier(0.19, 1, 0.22, 1)",
+        out: "cubic-bezier(0.16, 1, 0.3, 1)",
       },
       transitionDuration: {
-        base: "150ms",
-        slow: "300ms",
-        slower: "500ms",
+        fast: "150ms",
+        normal: "300ms",
       },
       animation: {
-        float: "float 2s ease-in-out infinite",
+        "fade-up": "fadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards",
+        "hud-enter": "hudEnter 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards",
       },
       keyframes: {
-        float: {
-          "0%, 100%": { transform: "translateX(-50%) translateY(0)" },
-          "50%": { transform: "translateX(-50%) translateY(8px)" },
+        fadeUp: {
+          from: { opacity: "0", transform: "translateY(20px)" },
+          to: { opacity: "1", transform: "translateY(0)" },
+        },
+        hudEnter: {
+          from: { opacity: "0" },
+          to: { opacity: "1" },
         },
       },
     },
@@ -85,4 +95,3 @@ const config: Config = {
 };
 
 export default config;
-

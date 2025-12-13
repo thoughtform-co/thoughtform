@@ -1,6 +1,5 @@
-import { PageRenderer } from "@/components/editor/PageRenderer";
+import { NavigationCockpit } from "@/components/hud";
 
 export default function Home() {
-  return <PageRenderer />;
+  return <NavigationCockpit />;
 }
-
