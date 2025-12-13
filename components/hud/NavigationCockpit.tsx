@@ -5,18 +5,10 @@ import { ParticleCanvas } from "./ParticleCanvas";
 import { HUDFrame } from "./HUDFrame";
 import { Wordmark } from "./Wordmark";
 import { useLenis } from "@/lib/hooks/useLenis";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
-
-// Register GSAP plugins
-if (typeof window !== "undefined") {
-  gsap.registerPlugin(ScrollTrigger);
-}
 
 export function NavigationCockpit() {
   const [activeSection, setActiveSection] = useState("hero");
   const { scrollProgress, scrollTo } = useLenis();
-  const hasAnimated = useRef(false);
 
   // Handle navigation
   const handleNavigate = useCallback(
@@ -50,53 +42,6 @@ export function NavigationCockpit() {
     sections.forEach((section) => observer.observe(section));
 
     return () => observer.disconnect();
-  }, []);
-
-  // HUD entrance animations only (content visible by default)
-  useEffect(() => {
-    if (hasAnimated.current) return;
-    hasAnimated.current = true;
-
-    // HUD entrance animation
-    gsap.from(".hud-corner", {
-      opacity: 0,
-      duration: 0.8,
-      stagger: 0.1,
-      delay: 0.2,
-      ease: "power2.out",
-    });
-
-    gsap.from(".hud-top", {
-      opacity: 0,
-      y: -15,
-      duration: 0.6,
-      delay: 0.3,
-      ease: "power3.out",
-    });
-
-    gsap.from(".hud-bottom", {
-      opacity: 0,
-      y: 15,
-      duration: 0.6,
-      delay: 0.4,
-      ease: "power3.out",
-    });
-
-    gsap.from(".hud-rail-left", {
-      opacity: 0,
-      x: -15,
-      duration: 0.6,
-      delay: 0.5,
-      ease: "power3.out",
-    });
-
-    gsap.from(".hud-rail-right", {
-      opacity: 0,
-      x: 15,
-      duration: 0.6,
-      delay: 0.5,
-      ease: "power3.out",
-    });
   }, []);
 
   return (
@@ -162,51 +107,54 @@ export function NavigationCockpit() {
           </div>
         </section>
 
-        {/* Section 2: Manifesto */}
+        {/* Section 2: Manifesto - The Commandment */}
         <section
           className="section section-manifesto"
           id="manifesto"
           data-section="manifesto"
         >
-          <div className="section-layout">
-            <div className="section-label">
-              <span className="label-number">02</span>
-              <span className="label-text">Manifesto</span>
+          <div className="terminal-frame">
+            <div className="terminal-header">
+              <div className="terminal-icon" />
+              <span className="terminal-title">Manifesto</span>
             </div>
+            
+            <div className="terminal-frame-inner">
+              <div className="terminal-content">
+                <h2 className="headline">
+                  AI Isn't Software
+                </h2>
 
-            <div className="section-content">
-              <h2 className="headline">
-                AI Isn't Software
-              </h2>
-
-              <div className="text-block">
-                <p className="text">
-                  Most companies struggle because they treat AI like normal
-                  software.
-                </p>
-                <p className="text text-emphasis">
-                  But AI isn't a tool to command.
-                </p>
-                <p className="text">
-                  It's a strange, new intelligence we must learn to{" "}
-                  <em>navigate</em>. It leaps across dimensions. It hallucinates.
-                  It surprises.
-                </p>
-                <p className="text">
-                  In technical work, that strangeness must be constrained.
-                  <br />
-                  In creative work?{" "}
-                  <strong>It's the source of truly novel ideas.</strong>
-                </p>
-              </div>
-
-              <div className="section-meta">
-                <span className="meta-label">Landmark:</span>
-                <span className="meta-value">
-                  polar coordinates / semantic orbit
-                </span>
+                <div className="text-block">
+                  <p className="text">
+                    Most companies struggle because they treat AI like normal
+                    software.
+                  </p>
+                  <p className="text text-emphasis">
+                    But AI isn't a tool to command.
+                  </p>
+                  <p className="text">
+                    It's a strange, new intelligence we must learn to{" "}
+                    <em>navigate</em>. It leaps across dimensions. It hallucinates.
+                    It surprises.
+                  </p>
+                  <p className="text">
+                    In technical work, that strangeness must be constrained.
+                    <br />
+                    In creative work?{" "}
+                    <strong>It's the source of truly novel ideas.</strong>
+                  </p>
+                </div>
               </div>
             </div>
+
+            <div className="terminal-footer">
+              <span className="terminal-tag">Landmark: Polar Orbit</span>
+              <span className="terminal-tag">Section 02</span>
+            </div>
+            
+            {/* Bottom corner brackets */}
+            <div className="terminal-frame-corners" />
           </div>
         </section>
 
@@ -309,3 +257,4 @@ export function NavigationCockpit() {
     </>
   );
 }
+

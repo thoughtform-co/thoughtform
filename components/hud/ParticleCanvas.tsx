@@ -2,6 +2,11 @@
 
 import { useEffect, useRef, useCallback } from "react";
 
+// ═══════════════════════════════════════════════════════════════
+// THOUGHTFORM PARTICLE SYSTEM
+// Following brand guidelines: sharp geometry, grid-snapped, no glow
+// ═══════════════════════════════════════════════════════════════
+
 const GRID = 3;
 const DAWN = "#ebe3d6";
 const GOLD = "#caa554";
@@ -9,6 +14,11 @@ const ALERT = "#ff6b35";
 
 // Semantic ASCII characters for close particles
 const CHARS = ["λ", "δ", "θ", "φ", "ψ", "Σ", "π", "∇", "∞", "∂", "⟨", "⟩"];
+
+// Grid snapping function
+function snap(value: number): number {
+  return Math.floor(value / GRID) * GRID;
+}
 
 interface Particle {
   x: number;
@@ -41,8 +51,9 @@ function createPoint(
 function initParticles(): Particle[] {
   const particles: Particle[] = [];
 
-  // ─── A. STARFIELD (Background, loops infinitely) ───
-  for (let i = 0; i < 600; i++) {
+  // ─── A. STARFIELD (Background, ambient) ───
+  // Limit: 400-600 stars
+  for (let i = 0; i < 500; i++) {
     particles.push(
       createPoint(
         (Math.random() - 0.5) * 6000,
@@ -55,10 +66,13 @@ function initParticles(): Particle[] {
   }
 
   // ─── B. LANDMARK 1: SEMANTIC TERRAIN (Z: 800-2000) ───
+  // Concept: Meaning has topology — ideas are landscapes
+  // Isometric wireframe mesh with sine-wave height
   for (let r = 0; r < 40; r++) {
     for (let c = 0; c < 40; c++) {
       const x = (c - 20) * 60;
       const z = 800 + r * 30;
+      // Multi-wave terrain for organic topology
       const y =
         350 +
         Math.sin(c * 0.18) * 120 +
@@ -69,6 +83,8 @@ function initParticles(): Particle[] {
   }
 
   // ─── C. LANDMARK 2: POLAR ORBIT (Z: 2500-3500) ───
+  // Concept: Cyclical thinking, recursive patterns
+  // Concentric rings
   for (let ring = 0; ring < 6; ring++) {
     const baseZ = 2800;
     const radius = 150 + ring * 80;
@@ -93,20 +109,23 @@ function initParticles(): Particle[] {
   }
 
   // ─── D. LANDMARK 3: TRAJECTORY TUNNEL (Z: 4000-5500) ───
+  // Concept: Direction, purpose, moving toward a goal
+  // Helix structure
   for (let i = 0; i < 500; i++) {
     const z = 4200 + i * 2.5;
     const radius = 350 + Math.sin(i * 0.08) * 80;
     const angle = i * 0.15;
     const x = Math.cos(angle) * radius;
     const y = Math.sin(angle) * radius;
-    particles.push(createPoint(x, y, z, "geo", "#ffffff"));
+    particles.push(createPoint(x, y, z, "geo", DAWN));
   }
-  // Grid lines
+  // Receding perspective rectangles
   for (let layer = 0; layer < 12; layer++) {
     const z = 4200 + layer * 100;
     const size = 300 - layer * 15;
     for (let i = 0; i < 40; i++) {
       const t = (i / 40) * 2 - 1;
+      // Rectangle edges
       particles.push(createPoint(t * size, -size, z, "geo", GOLD));
       particles.push(createPoint(t * size, size, z, "geo", GOLD));
       particles.push(createPoint(-size, t * size, z, "geo", GOLD));
@@ -115,6 +134,8 @@ function initParticles(): Particle[] {
   }
 
   // ─── E. LANDMARK 4: EVENT HORIZON (Z: 6000-7500) ───
+  // Concept: The singularity, point of convergence
+  // Sphere distribution
   for (let i = 0; i < 800; i++) {
     const r = 450;
     const theta = Math.random() * Math.PI * 2;
@@ -200,13 +221,15 @@ export function ParticleCanvas({ scrollProgress }: ParticleCanvasProps) {
 
       const scrollZ = scrollProgressRef.current * 7500;
 
-      // Clear with slight trail for motion feel
+      // Trail effect (don't fully clear) - creates motion blur
       ctx.fillStyle = "rgba(5, 5, 4, 0.85)";
       ctx.fillRect(0, 0, width, height);
 
-      // SPLIT VANISHING POINTS
+      // Split vanishing points
+      // Stars: center (flying forward)
+      // Geo: right side (looking out the cockpit window)
       const cx_stars = width * 0.5;
-      const cx_geo = width * 0.72;
+      const cx_geo = width * 0.68;
       const cy = height * 0.5;
 
       // Sort by depth for proper layering
@@ -236,22 +259,25 @@ export function ParticleCanvas({ scrollProgress }: ParticleCanvasProps) {
         // Out of bounds check
         if (x < -50 || x > width + 50 || y < -50 || y > height + 50) return;
 
-        // Alpha based on depth
+        // Depth-based alpha (closer = more visible)
         const depthAlpha = Math.min(1, (1 - relZ / MAX_DEPTH) * 1.8);
         ctx.globalAlpha = depthAlpha;
         ctx.fillStyle = p.color;
 
         if (p.type === "geo" && scale > 0.35) {
+          // Close geo particles: render as ASCII characters
           const fontSize = Math.max(8, Math.min(18, 12 * scale));
           ctx.font = `${fontSize}px "IBM Plex Sans", sans-serif`;
-          ctx.fillText(p.char, x, y);
+          ctx.fillText(p.char, snap(x), snap(y));
         } else if (p.type === "geo") {
-          const size = Math.max(1.5, 3 * scale);
-          ctx.fillRect(x, y, size, size);
+          // Distant geo particles: grid-snapped squares
+          const size = Math.max(GRID, GRID * scale);
+          ctx.fillRect(snap(x), snap(y), size - 1, size - 1);
         } else {
-          const size = Math.max(1, p.size * scale);
+          // Stars: smaller, dimmer squares
+          const size = Math.max(GRID, p.size * scale * GRID);
           ctx.globalAlpha = depthAlpha * 0.4;
-          ctx.fillRect(x, y, size, size);
+          ctx.fillRect(snap(x), snap(y), size - 1, size - 1);
         }
       });
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useMemo } from "react";
+import { useMemo } from "react";
 
 interface SectionData {
   sector: string;
@@ -83,6 +83,11 @@ export function HUDFrame({
     };
   }, [scrollProgress, activeSection]);
 
+  // HUD visibility based on scroll - hidden in hero section
+  // Start fading in after 5% scroll, fully visible at 15%
+  const hudOpacity = Math.min(1, Math.max(0, (scrollProgress - 0.05) / 0.1));
+  const showHUD = scrollProgress > 0.02;
+
   // Generate tick marks
   const tickCount = 20;
   const tickLabels: Record<number, string> = {
@@ -117,18 +122,26 @@ export function HUDFrame({
 
   return (
     <div className="hud-frame">
-      {/* Corner Brackets - Gold L-shapes */}
-      <div className="hud-corner hud-corner-tl" />
-      <div className="hud-corner hud-corner-tr" />
-      <div className="hud-corner hud-corner-bl" />
-      <div className="hud-corner hud-corner-br" />
+      {/* Corner Brackets - Gold L-shapes (hidden in hero) */}
+      {showHUD && (
+        <>
+          <div className="hud-corner hud-corner-tl" style={{ opacity: hudOpacity }} />
+          <div className="hud-corner hud-corner-tr" style={{ opacity: hudOpacity }} />
+          <div className="hud-corner hud-corner-bl" style={{ opacity: hudOpacity }} />
+          <div className="hud-corner hud-corner-br" style={{ opacity: hudOpacity }} />
+        </>
+      )}
 
       {/* Top Bar: Brand Navigation */}
       <header className="hud-top">
         <div className="hud-brand">
           <span className="brand-label">Thoughtform</span>
-          <span className="brand-divider">/</span>
-          <span className="brand-sector">{hudState.sector}</span>
+          {showHUD && (
+            <>
+              <span className="brand-divider" style={{ opacity: hudOpacity }}>/</span>
+              <span className="brand-sector" style={{ opacity: hudOpacity }}>{hudState.sector}</span>
+            </>
+          )}
         </div>
         <nav className="hud-nav">
           {navLinks.map((link) => (
@@ -143,109 +156,117 @@ export function HUDFrame({
             </a>
           ))}
         </nav>
-        <div className="hud-signal">
-          <span className="signal-label">Signal</span>
-          <span className="signal-value">{hudState.signal}</span>
-        </div>
+        {showHUD && (
+          <div className="hud-signal" style={{ opacity: hudOpacity }}>
+            <span className="signal-label">Signal</span>
+            <span className="signal-value">{hudState.signal}</span>
+          </div>
+        )}
       </header>
 
-      {/* Left Rail: Depth Scale (Radar-style) */}
-      <aside className="hud-rail hud-rail-left">
-        <div className="rail-scale">
-          <div className="scale-ticks">
-            {Array.from({ length: tickCount + 1 }).map((_, i) => (
-              <div key={i} style={{ position: "relative" }}>
+      {/* Left Rail: Depth Scale (hidden in hero) */}
+      {showHUD && (
+        <aside className="hud-rail hud-rail-left" style={{ opacity: hudOpacity }}>
+          <div className="rail-scale">
+            <div className="scale-ticks">
+              {Array.from({ length: tickCount + 1 }).map((_, i) => (
+                <div key={i} style={{ position: "relative" }}>
+                  <div
+                    className={`tick ${i % 5 === 0 ? "tick-major" : "tick-minor"}`}
+                  />
+                  {tickLabels[i] && (
+                    <span
+                      className="tick-label"
+                      style={{
+                        position: "absolute",
+                        top: "-4px",
+                        left: "28px",
+                      }}
+                    >
+                      {tickLabels[i]}
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
+            <div
+              className="scale-indicator"
+              style={{ top: `${scrollProgress * 100}%` }}
+            />
+          </div>
+          <div className="rail-readouts">
+            <div className="readout">
+              <span className="readout-value">
+                {hudState.depth}
+                <span className="readout-unit">km</span>
+              </span>
+            </div>
+            <div className="readout">
+              <span className="readout-label">Vector</span>
+              <span className="readout-value">{hudState.vector}</span>
+            </div>
+          </div>
+        </aside>
+      )}
+
+      {/* Right Rail: Section Markers (hidden in hero) */}
+      {showHUD && (
+        <aside className="hud-rail hud-rail-right" style={{ opacity: hudOpacity }}>
+          <div className="rail-scale">
+            <div className="scale-ticks">
+              {Array.from({ length: tickCount + 1 }).map((_, i) => (
                 <div
+                  key={i}
                   className={`tick ${i % 5 === 0 ? "tick-major" : "tick-minor"}`}
                 />
-                {tickLabels[i] && (
-                  <span
-                    className="tick-label"
-                    style={{
-                      position: "absolute",
-                      top: "-4px",
-                      left: "24px",
-                    }}
-                  >
-                    {tickLabels[i]}
-                  </span>
-                )}
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-          <div
-            className="scale-indicator"
-            style={{ top: `${scrollProgress * 100}%` }}
-          />
-        </div>
-        <div className="rail-readouts">
-          <div className="readout">
-            <span className="readout-value">
-              {hudState.depth}
-              <span className="readout-unit">km</span>
+          <div className="rail-markers">
+            {sectionMarkers.map((marker) => {
+              const sectionOrder = Object.keys(sectionData);
+              const isActive = marker.section === activeSection;
+              const isPast =
+                sectionOrder.indexOf(marker.section) <=
+                sectionOrder.indexOf(activeSection);
+              return (
+                <div
+                  key={marker.section}
+                  className={`section-marker ${isActive || isPast ? "active" : ""}`}
+                  data-section={marker.section}
+                  onClick={() => onNavigate(marker.section)}
+                >
+                  <span className="marker-dot" />
+                  <span className="marker-label">{marker.label}</span>
+                </div>
+              );
+            })}
+          </div>
+        </aside>
+      )}
+
+      {/* Bottom Bar: Coordinates + Progress (hidden in hero) */}
+      {showHUD && (
+        <footer className="hud-bottom" style={{ opacity: hudOpacity }}>
+          <div className="hud-coords">
+            <span className="coord">
+              δ: <span>{hudState.delta}</span>
+            </span>
+            <span className="coord">
+              θ: <span>{hudState.theta}</span>
+            </span>
+            <span className="coord">
+              ρ: <span>{hudState.rho}</span>
+            </span>
+            <span className="coord">
+              ζ: <span>{hudState.zeta}</span>
             </span>
           </div>
-          <div className="readout">
-            <span className="readout-label">Vector</span>
-            <span className="readout-value">{hudState.vector}</span>
+          <div className="hud-instruction">
+            <span>{hudState.instruction}</span>
           </div>
-        </div>
-      </aside>
-
-      {/* Right Rail: Section Markers */}
-      <aside className="hud-rail hud-rail-right">
-        <div className="rail-scale">
-          <div className="scale-ticks">
-            {Array.from({ length: tickCount + 1 }).map((_, i) => (
-              <div
-                key={i}
-                className={`tick ${i % 5 === 0 ? "tick-major" : "tick-minor"}`}
-              />
-            ))}
-          </div>
-        </div>
-        <div className="rail-markers">
-          {sectionMarkers.map((marker) => {
-            const sectionOrder = Object.keys(sectionData);
-            const isActive = marker.section === activeSection;
-            const isPast =
-              sectionOrder.indexOf(marker.section) <=
-              sectionOrder.indexOf(activeSection);
-            return (
-              <div
-                key={marker.section}
-                className={`section-marker ${isActive || isPast ? "active" : ""}`}
-                data-section={marker.section}
-                onClick={() => onNavigate(marker.section)}
-              >
-                <span className="marker-dot" />
-                <span className="marker-label">{marker.label}</span>
-              </div>
-            );
-          })}
-        </div>
-      </aside>
-
-      {/* Bottom Bar: Coordinates + Progress */}
-      <footer className="hud-bottom">
-        <div className="hud-coords">
-          <span className="coord">
-            δ: <span>{hudState.delta}</span>
-          </span>
-          <span className="coord">
-            θ: <span>{hudState.theta}</span>
-          </span>
-          <span className="coord">
-            ρ: <span>{hudState.rho}</span>
-          </span>
-          <span className="coord">
-            ζ: <span>{hudState.zeta}</span>
-          </span>
-        </div>
-        <div className="hud-instruction">
-          <span>{hudState.instruction}</span>
-        </div>
-      </footer>
+        </footer>
+      )}
     </div>
   );
 }
