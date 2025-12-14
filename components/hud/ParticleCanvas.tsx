@@ -24,27 +24,32 @@ interface Particle {
   x: number;
   y: number;
   z: number;
-  type: "star" | "geo";
+  baseY: number; // Original Y for emergence animation
+  type: "star" | "geo" | "terrain";
   color: string;
   char: string;
   size: number;
+  landmark?: number; // Which section this belongs to (0=terrain, 1-4=sections)
 }
 
 function createPoint(
   x: number,
   y: number,
   z: number,
-  type: "star" | "geo",
-  color: string
+  type: "star" | "geo" | "terrain",
+  color: string,
+  landmark?: number
 ): Particle {
   return {
     x,
     y,
     z,
+    baseY: y,
     type,
     color,
     char: CHARS[Math.floor(Math.random() * CHARS.length)],
     size: 1 + Math.random(),
+    landmark,
   };
 }
 
@@ -52,7 +57,6 @@ function initParticles(): Particle[] {
   const particles: Particle[] = [];
 
   // ─── A. STARFIELD (Background, ambient) ───
-  // Limit: 400-600 stars
   for (let i = 0; i < 500; i++) {
     particles.push(
       createPoint(
@@ -65,96 +69,116 @@ function initParticles(): Particle[] {
     );
   }
 
-  // ─── B. LANDMARK 1: SEMANTIC TERRAIN (Z: 800-2000) ───
-  // Concept: Meaning has topology — ideas are landscapes
-  // Isometric wireframe mesh with sine-wave height
-  for (let r = 0; r < 40; r++) {
-    for (let c = 0; c < 40; c++) {
-      const x = (c - 20) * 60;
-      const z = 800 + r * 30;
+  // ─── B. PERSISTENT TERRAIN (Always visible background) ───
+  // This terrain fills the entire background and stays at fixed depth
+  // It represents the "latent space" we're navigating - always there
+  // Increased density to fill the screen more completely
+  for (let r = 0; r < 60; r++) {
+    for (let c = 0; c < 60; c++) {
+      const x = (c - 30) * 70; // Wider spread to fill screen
+      const z = 1500 + (r * 50); // Fixed Z depth, doesn't scroll away
       // Multi-wave terrain for organic topology
       const y =
-        350 +
-        Math.sin(c * 0.18) * 120 +
-        Math.cos(r * 0.12) * 100 +
-        Math.sin(c * 0.4 + r * 0.2) * 40;
-      particles.push(createPoint(x, y, z, "geo", GOLD));
+        500 +
+        Math.sin(c * 0.2) * 150 +
+        Math.cos(r * 0.15) * 150 +
+        Math.sin(c * 0.35 + r * 0.2) * 50;
+      particles.push(createPoint(x, y, z, "terrain", GOLD, 0));
     }
   }
 
-  // ─── C. LANDMARK 2: POLAR ORBIT (Z: 2500-3500) ───
-  // Concept: Cyclical thinking, recursive patterns
-  // Concentric rings
-  for (let ring = 0; ring < 6; ring++) {
-    const baseZ = 2800;
-    const radius = 150 + ring * 80;
-    const points = 40 + ring * 10;
+  // ─── C. LANDMARK 1: GATEWAY PORTAL (Section 1 - Hero) ───
+  // Emerges from terrain when entering
+  // Positioned to appear above terrain (Z: 1500-2000)
+  const portalOffsetX = 200;
+  for (let layer = 0; layer < 12; layer++) {
+    const z = 1800 + layer * 40; // Positioned above terrain base
+    const radius = 300 - layer * 18;
+    const points = Math.max(20, 40 - layer * 2);
     for (let i = 0; i < points; i++) {
       const angle = (i / points) * Math.PI * 2;
-      const x = Math.cos(angle) * radius;
-      const y = Math.sin(angle) * radius;
-      const z = baseZ + Math.sin(angle * 3) * 100;
-      particles.push(createPoint(x, y, z, "geo", GOLD));
+      const x = portalOffsetX + Math.cos(angle) * radius;
+      const y = 200 + Math.sin(angle) * radius; // Positioned above terrain Y
+      particles.push(createPoint(x, y, z, "geo", GOLD, 1));
     }
   }
-  // Spiral core
-  for (let i = 0; i < 200; i++) {
-    const t = i / 200;
-    const angle = t * Math.PI * 2 * 4;
-    const radius = t * 350;
-    const x = Math.cos(angle) * radius;
-    const y = Math.sin(angle) * radius;
-    const z = 2600 + t * 600;
-    particles.push(createPoint(x, y, z, "geo", DAWN));
+  // Inner spiral
+  for (let i = 0; i < 80; i++) {
+    const t = i / 80;
+    const angle = t * Math.PI * 2 * 3;
+    const radius = (1 - t) * 250;
+    const z = 1850 + t * 350;
+    const x = portalOffsetX + Math.cos(angle) * radius;
+    const y = 200 + Math.sin(angle) * radius;
+    particles.push(createPoint(x, y, z, "geo", DAWN, 1));
   }
 
-  // ─── D. LANDMARK 3: TRAJECTORY TUNNEL (Z: 4000-5500) ───
-  // Concept: Direction, purpose, moving toward a goal
-  // Helix structure
-  for (let i = 0; i < 500; i++) {
-    const z = 4200 + i * 2.5;
-    const radius = 350 + Math.sin(i * 0.08) * 80;
-    const angle = i * 0.15;
-    const x = Math.cos(angle) * radius;
-    const y = Math.sin(angle) * radius;
-    particles.push(createPoint(x, y, z, "geo", DAWN));
+  // ─── D. LANDMARK 2: DATA OVERLAY (Section 2 - Manifesto) ───
+  // Vertical data streams rising from terrain
+  // Positioned to emerge from terrain surface
+  for (let stream = 0; stream < 8; stream++) {
+    const baseX = (stream - 4) * 120;
+    const baseZ = 2800 + stream * 30; // Above terrain
+    for (let i = 0; i < 25; i++) {
+      const y = 550 - i * 30; // Rising from terrain base (~500)
+      particles.push(createPoint(baseX, y, baseZ, "geo", DAWN, 2));
+    }
   }
-  // Receding perspective rectangles
-  for (let layer = 0; layer < 12; layer++) {
-    const z = 4200 + layer * 100;
-    const size = 300 - layer * 15;
-    for (let i = 0; i < 40; i++) {
-      const t = (i / 40) * 2 - 1;
-      // Rectangle edges
-      particles.push(createPoint(t * size, -size, z, "geo", GOLD));
-      particles.push(createPoint(t * size, size, z, "geo", GOLD));
-      particles.push(createPoint(-size, t * size, z, "geo", GOLD));
-      particles.push(createPoint(size, t * size, z, "geo", GOLD));
+  // Horizontal scan lines
+  for (let line = 0; line < 6; line++) {
+    const y = 250 - line * 50; // Above terrain
+    const z = 2900 + line * 20;
+    for (let i = 0; i < 30; i++) {
+      const x = (i - 15) * 40;
+      particles.push(createPoint(x, y, z, "geo", GOLD, 2));
     }
   }
 
-  // ─── E. LANDMARK 4: EVENT HORIZON (Z: 6000-7500) ───
-  // Concept: The singularity, point of convergence
-  // Sphere distribution
-  for (let i = 0; i < 800; i++) {
-    const r = 450;
+  // ─── E. LANDMARK 3: TRAJECTORY GRID (Section 3 - Services) ───
+  // Perspective grid converging to vanishing point
+  // Positioned to emerge from terrain
+  for (let layer = 0; layer < 15; layer++) {
+    const z = 4200 + layer * 80; // Above terrain range
+    const size = 350 - layer * 18;
+    const points = 35 - layer;
+    for (let i = 0; i < points; i++) {
+      const t = (i / points) * 2 - 1;
+      particles.push(createPoint(t * size, -size * 0.6 + 200, z, "geo", GOLD, 3));
+      particles.push(createPoint(t * size, size * 0.6 + 200, z, "geo", GOLD, 3));
+      particles.push(createPoint(-size, t * size * 0.6 + 200, z, "geo", GOLD, 3));
+      particles.push(createPoint(size, t * size * 0.6 + 200, z, "geo", GOLD, 3));
+    }
+  }
+  // Helix tunnel
+  for (let i = 0; i < 400; i++) {
+    const z = 4300 + i * 3;
+    const radius = 300 + Math.sin(i * 0.1) * 60;
+    const angle = i * 0.18;
+    const x = Math.cos(angle) * radius;
+    const y = 200 + Math.sin(angle) * radius;
+    particles.push(createPoint(x, y, z, "geo", DAWN, 3));
+  }
+
+  // ─── F. LANDMARK 4: EVENT HORIZON (Section 4 - Contact) ───
+  // Sphere/singularity - final destination
+  for (let i = 0; i < 600; i++) {
+    const r = 400;
     const theta = Math.random() * Math.PI * 2;
     const phi = Math.acos(2 * Math.random() - 1);
-
     const x = r * Math.sin(phi) * Math.cos(theta);
-    const y = r * Math.sin(phi) * Math.sin(theta);
-    const z = 6500 + r * Math.cos(phi) * 0.5;
-    particles.push(createPoint(x, y, z, "geo", ALERT));
+    const y = 200 + r * Math.sin(phi) * Math.sin(theta); // Above terrain
+    const z = 6000 + r * Math.cos(phi) * 0.5;
+    particles.push(createPoint(x, y, z, "geo", ALERT, 4));
   }
   // Core rings
-  for (let ring = 0; ring < 4; ring++) {
-    const radius = 100 + ring * 60;
-    const z = 6500;
-    for (let i = 0; i < 30; i++) {
-      const angle = (i / 30) * Math.PI * 2;
+  for (let ring = 0; ring < 5; ring++) {
+    const radius = 80 + ring * 50;
+    const z = 6000;
+    for (let i = 0; i < 25 + ring * 5; i++) {
+      const angle = (i / (25 + ring * 5)) * Math.PI * 2;
       const x = Math.cos(angle) * radius;
-      const y = Math.sin(angle) * radius;
-      particles.push(createPoint(x, y, z, "geo", GOLD));
+      const y = 200 + Math.sin(angle) * radius;
+      particles.push(createPoint(x, y, z, "geo", GOLD, 4));
     }
   }
 
@@ -173,7 +197,7 @@ export function ParticleCanvas({ scrollProgress }: ParticleCanvasProps) {
   const scrollProgressRef = useRef(0);
 
   const FOCAL = 400;
-  const MAX_DEPTH = 3500;
+  const MAX_DEPTH = 5000; // Increased to allow terrain to be visible
 
   // Update scroll progress ref when prop changes
   useEffect(() => {
@@ -219,58 +243,115 @@ export function ParticleCanvas({ scrollProgress }: ParticleCanvasProps) {
         return;
       }
 
-      const scrollZ = scrollProgressRef.current * 7500;
+      const scrollP = scrollProgressRef.current;
+      const scrollZ = scrollP * 6000;
+      
+      // Determine which section we're in (0-4)
+      const currentSection = Math.floor(scrollP * 4) + 1;
+      const sectionProgress = (scrollP * 4) % 1; // 0-1 within current section
 
       // Trail effect (don't fully clear) - creates motion blur
       ctx.fillStyle = "rgba(5, 5, 4, 0.85)";
       ctx.fillRect(0, 0, width, height);
 
-      // Split vanishing points
-      // Stars: center (flying forward)
-      // Geo: right side (looking out the cockpit window)
+      // Dynamic vanishing point - starts centered, shifts right
+      const scrollT = Math.min(1, scrollP * 3);
       const cx_stars = width * 0.5;
-      const cx_geo = width * 0.68;
+      const cx_geo = width * (0.5 + scrollT * 0.25);
       const cy = height * 0.5;
 
       // Sort by depth for proper layering
       const sorted = [...particlesRef.current].sort((a, b) => {
-        const zA = a.z - scrollZ;
-        const zB = b.z - scrollZ;
-        return zB - zA;
+        const getZ = (p: Particle) => {
+          if (p.type === "terrain") {
+            // Terrain always at fixed relative Z (doesn't scroll)
+            return p.z; // Use absolute Z from init (1500 + offset)
+          }
+          return p.z - scrollZ;
+        };
+        return getZ(b) - getZ(a);
       });
 
       sorted.forEach((p) => {
-        let relZ = p.z - scrollZ;
+        let relZ: number;
+        let particleAlpha = 1;
+        let yOffset = 0;
+        let terrainAlphaMultiplier = 1;
 
-        // Loop stars infinitely
-        if (p.type === "star") {
+        if (p.type === "terrain") {
+          // TERRAIN: Always visible at fixed depth (1500 + offset)
+          // Never scrolls away - fills the entire background
+          relZ = p.z; // Use absolute Z, not relative to scroll
+          
+          // Ensure terrain is always in visible range
+          // If it goes out of bounds, it's still there but will be culled below
+          terrainAlphaMultiplier = 0.6; // Subtle - 60% opacity for background
+        } else if (p.type === "star") {
+          // STARS: Loop infinitely
+          relZ = p.z - scrollZ;
           while (relZ < 0) relZ += 8000;
           while (relZ > 8000) relZ -= 8000;
+        } else {
+          // LANDMARKS: Scroll with content but fade based on section
+          relZ = p.z - scrollZ;
+          
+          // Calculate landmark visibility based on current section
+          if (p.landmark) {
+            const landmarkSection = p.landmark;
+            const sectionDist = Math.abs(currentSection - landmarkSection);
+            
+            if (sectionDist === 0) {
+              // Current section: fully visible, emerge from terrain
+              particleAlpha = 1;
+              // Emergence animation: particles rise up as section comes into view
+              const emergence = Math.min(1, sectionProgress * 2);
+              yOffset = (1 - emergence) * 150; // Rise from below/terrain
+            } else if (sectionDist === 1) {
+              // Adjacent section: partially visible
+              particleAlpha = 0.4;
+            } else {
+              // Far sections: hidden
+              particleAlpha = 0;
+              return;
+            }
+          }
         }
 
-        // Culling
-        if (relZ <= 10 || relZ > MAX_DEPTH) return;
+        // Culling - terrain should always be visible, so use larger bounds
+        if (p.type === "terrain") {
+          // Terrain can be visible even if slightly out of range
+          if (relZ <= 100 || relZ > 5000) return;
+        } else {
+          if (relZ <= 10 || relZ > MAX_DEPTH) return;
+        }
 
         const scale = FOCAL / relZ;
         const center = p.type === "star" ? cx_stars : cx_geo;
         const x = center + p.x * scale;
-        const y = cy + p.y * scale;
+        const y = cy + (p.y + yOffset) * scale;
 
-        // Out of bounds check
-        if (x < -50 || x > width + 50 || y < -50 || y > height + 50) return;
+        // Out of bounds check - more lenient for terrain
+        if (p.type === "terrain") {
+          // Allow terrain to extend beyond viewport for full coverage
+          if (x < -200 || x > width + 200 || y < -200 || y > height + 200) return;
+        } else {
+          if (x < -50 || x > width + 50 || y < -50 || y > height + 50) return;
+        }
 
         // Depth-based alpha (closer = more visible)
         const depthAlpha = Math.min(1, (1 - relZ / MAX_DEPTH) * 1.8);
-        ctx.globalAlpha = depthAlpha;
+        
+        // Apply terrain subtlety multiplier
+        ctx.globalAlpha = depthAlpha * particleAlpha * terrainAlphaMultiplier;
         ctx.fillStyle = p.color;
 
-        if (p.type === "geo" && scale > 0.35) {
-          // Close geo particles: render as ASCII characters
+        if ((p.type === "geo" || p.type === "terrain") && scale > 0.35) {
+          // Close particles: render as ASCII characters
           const fontSize = Math.max(8, Math.min(18, 12 * scale));
           ctx.font = `${fontSize}px "IBM Plex Sans", sans-serif`;
           ctx.fillText(p.char, snap(x), snap(y));
-        } else if (p.type === "geo") {
-          // Distant geo particles: grid-snapped squares
+        } else if (p.type === "geo" || p.type === "terrain") {
+          // Distant particles: grid-snapped squares
           const size = Math.max(GRID, GRID * scale);
           ctx.fillRect(snap(x), snap(y), size - 1, size - 1);
         } else {
@@ -300,3 +381,4 @@ export function ParticleCanvas({ scrollProgress }: ParticleCanvasProps) {
     </div>
   );
 }
+

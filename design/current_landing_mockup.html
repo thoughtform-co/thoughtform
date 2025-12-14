@@ -1,0 +1,1244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Thoughtform — Navigate Intelligence (Mockup)</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  
+  <style>
+    /* ═══════════════════════════════════════════════════════════════
+       DESIGN TOKENS
+       ═══════════════════════════════════════════════════════════════ */
+    :root {
+      /* Colors */
+      --void: #0a0908;
+      --void-deep: #050504;
+      --dawn: #ebe3d6;
+      --dawn-90: rgba(235, 227, 214, 0.9);
+      --dawn-70: rgba(235, 227, 214, 0.7);
+      --dawn-50: rgba(235, 227, 214, 0.5);
+      --dawn-30: rgba(235, 227, 214, 0.3);
+      --dawn-15: rgba(235, 227, 214, 0.15);
+      --dawn-08: rgba(235, 227, 214, 0.08);
+      --gold: #caa554;
+      --gold-70: rgba(202, 165, 84, 0.7);
+      --gold-50: rgba(202, 165, 84, 0.5);
+      --gold-30: rgba(202, 165, 84, 0.3);
+      --alert: #ff6b35;
+
+      /* Typography */
+      --font-display: 'PP Mondwest', Georgia, serif;
+      --font-body: 'IBM Plex Sans', sans-serif;
+      --font-data: 'IBM Plex Sans', sans-serif;
+
+      /* Spacing */
+      --space-xs: 4px;
+      --space-sm: 8px;
+      --space-md: 16px;
+      --space-lg: 24px;
+      --space-xl: 32px;
+      --space-2xl: 48px;
+      --space-3xl: 64px;
+
+      /* Layout */
+      --hud-padding: clamp(32px, 4vw, 64px);
+      --rail-width: 60px;
+      --corner-size: 40px;
+
+      /* Animation */
+      --duration-fast: 0.15s;
+      --duration-normal: 0.3s;
+      --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       RESET & BASE
+       ═══════════════════════════════════════════════════════════════ */
+    *, *::before, *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html {
+      font-size: 16px;
+      -webkit-font-smoothing: antialiased;
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: var(--font-body);
+      background: var(--void);
+      color: var(--dawn);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    ::selection {
+      background: var(--gold-30);
+      color: var(--dawn);
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       PARTICLE CANVAS BACKGROUND
+       ═══════════════════════════════════════════════════════════════ */
+    .space-background {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .space-canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       HUD FRAME
+       ═══════════════════════════════════════════════════════════════ */
+    .hud-frame {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      pointer-events: none;
+    }
+
+    .hud-frame > * {
+      pointer-events: auto;
+    }
+
+    /* Corner Brackets */
+    .hud-corner {
+      position: absolute;
+      width: var(--corner-size);
+      height: var(--corner-size);
+      pointer-events: none;
+    }
+
+    .hud-corner::before,
+    .hud-corner::after {
+      content: '';
+      position: absolute;
+      background: var(--gold);
+    }
+
+    .hud-corner-tl {
+      top: var(--hud-padding);
+      left: var(--hud-padding);
+    }
+    .hud-corner-tl::before { top: 0; left: 0; width: var(--corner-size); height: 2px; }
+    .hud-corner-tl::after { top: 0; left: 0; width: 2px; height: var(--corner-size); }
+
+    .hud-corner-tr {
+      top: var(--hud-padding);
+      right: var(--hud-padding);
+    }
+    .hud-corner-tr::before { top: 0; right: 0; width: var(--corner-size); height: 2px; }
+    .hud-corner-tr::after { top: 0; right: 0; width: 2px; height: var(--corner-size); }
+
+    .hud-corner-bl {
+      bottom: var(--hud-padding);
+      left: var(--hud-padding);
+    }
+    .hud-corner-bl::before { bottom: 0; left: 0; width: var(--corner-size); height: 2px; }
+    .hud-corner-bl::after { bottom: 0; left: 0; width: 2px; height: var(--corner-size); }
+
+    .hud-corner-br {
+      bottom: var(--hud-padding);
+      right: var(--hud-padding);
+    }
+    .hud-corner-br::before { bottom: 0; right: 0; width: var(--corner-size); height: 2px; }
+    .hud-corner-br::after { bottom: 0; right: 0; width: 2px; height: var(--corner-size); }
+
+    /* Top Bar */
+    .hud-top {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 56px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 calc(var(--hud-padding) + 24px);
+      background: linear-gradient(to bottom, var(--void) 60%, transparent);
+    }
+
+    .hud-brand {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+      font-family: var(--font-data);
+      font-size: 11px;
+      font-weight: 400;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .brand-label { color: var(--dawn-70); }
+    .brand-divider { color: var(--dawn-30); }
+    .brand-sector { color: var(--gold); }
+
+    .hud-nav {
+      display: flex;
+      gap: var(--space-2xl);
+    }
+
+    .nav-link {
+      font-family: var(--font-data);
+      font-size: 12px;
+      font-weight: 400;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--dawn-50);
+      text-decoration: none;
+      padding: var(--space-sm) 0;
+      position: relative;
+      transition: color var(--duration-fast) var(--ease-out);
+    }
+
+    .nav-link:hover { color: var(--dawn); }
+    .nav-link.active { color: var(--dawn); }
+    .nav-link.active::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: var(--gold);
+    }
+
+    .hud-signal {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+      font-family: var(--font-data);
+      font-size: 11px;
+    }
+
+    .signal-label {
+      color: var(--dawn-30);
+      text-transform: uppercase;
+      font-size: 9px;
+      letter-spacing: 0.08em;
+    }
+
+    .signal-value {
+      color: var(--gold);
+      padding: 3px 10px;
+      border: 1px solid var(--gold);
+    }
+
+    /* Side Rails */
+    .hud-rail {
+      position: absolute;
+      top: calc(var(--hud-padding) + var(--corner-size) + 20px);
+      bottom: calc(var(--hud-padding) + var(--corner-size) + 20px);
+      width: var(--rail-width);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-lg);
+    }
+
+    .hud-rail-left {
+      left: var(--hud-padding);
+      align-items: flex-start;
+    }
+
+    .hud-rail-right {
+      right: var(--hud-padding);
+      align-items: flex-end;
+    }
+
+    .hud-rail-left::before,
+    .hud-rail-right::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 1px;
+      background: linear-gradient(
+        to bottom,
+        transparent 0%,
+        var(--gold-50) 10%,
+        var(--gold-50) 90%,
+        transparent 100%
+      );
+    }
+
+    .hud-rail-left::before { left: 0; }
+    .hud-rail-right::before { right: 0; }
+
+    .rail-readouts {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-md);
+      margin-top: auto;
+      margin-bottom: var(--space-lg);
+      padding-left: 28px;
+    }
+
+    .readout {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .readout-label {
+      font-family: var(--font-data);
+      font-size: 9px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--dawn-30);
+    }
+
+    .readout-value {
+      font-family: var(--font-data);
+      font-size: 14px;
+      color: var(--dawn);
+    }
+
+    .readout-unit {
+      font-size: 10px;
+      color: var(--dawn-30);
+      margin-left: 2px;
+    }
+
+    .rail-markers {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-lg);
+      align-items: flex-end;
+      margin-top: auto;
+      margin-bottom: var(--space-lg);
+      padding-right: 28px;
+    }
+
+    .section-marker {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+      opacity: 0.4;
+      cursor: pointer;
+      transition: opacity var(--duration-fast);
+    }
+
+    .section-marker.active { opacity: 1; }
+
+    .marker-dot {
+      width: 8px;
+      height: 8px;
+      border: 1px solid var(--dawn-50);
+    }
+
+    .section-marker.active .marker-dot {
+      background: var(--gold);
+      border-color: var(--gold);
+    }
+
+    .marker-label {
+      font-family: var(--font-data);
+      font-size: 11px;
+      color: var(--dawn-50);
+      letter-spacing: 0.08em;
+    }
+
+    .section-marker.active .marker-label { color: var(--gold); }
+
+    /* Bottom Bar */
+    .hud-bottom {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 56px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 calc(var(--hud-padding) + 24px);
+      background: linear-gradient(to top, var(--void) 60%, transparent);
+    }
+
+    .hud-coords {
+      display: flex;
+      gap: var(--space-xl);
+    }
+
+    .coord {
+      font-family: var(--font-data);
+      font-size: 10px;
+      color: var(--dawn-30);
+    }
+
+    .coord span { color: var(--dawn-50); }
+
+    .hud-instruction {
+      font-family: var(--font-data);
+      font-size: 10px;
+      color: var(--dawn-30);
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       SCROLL CONTAINER & SECTIONS
+       ═══════════════════════════════════════════════════════════════ */
+    .scroll-container {
+      position: relative;
+      z-index: 10;
+    }
+
+    .section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      padding: 100px calc(var(--hud-padding) + var(--rail-width) + 120px);
+      padding-right: 18%;
+      position: relative;
+    }
+
+    .section * {
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       HERO SECTION
+       ═══════════════════════════════════════════════════════════════ */
+    .section-hero {
+      padding-top: 140px;
+      padding-right: 22%;
+    }
+
+    .hero-layout {
+      max-width: 520px;
+    }
+
+    .hero-content {
+      display: flex;
+      flex-direction: column;
+      padding-right: var(--space-2xl);
+    }
+
+    .wordmark {
+      max-width: 320px;
+      margin-bottom: var(--space-2xl);
+    }
+
+    .wordmark svg {
+      width: 100%;
+      height: auto;
+    }
+
+    .hero-tagline {
+      font-family: var(--font-display);
+      font-size: clamp(20px, 2.5vw, 26px);
+      color: var(--dawn);
+      line-height: 1.4;
+      margin-bottom: var(--space-md);
+    }
+
+    .hero-description {
+      font-size: 14px;
+      color: var(--dawn-70);
+      line-height: 1.7;
+      margin-bottom: var(--space-2xl);
+      max-width: 400px;
+    }
+
+    .hero-description em {
+      color: var(--gold);
+      font-style: normal;
+    }
+
+    .hero-cta {
+      margin-bottom: var(--space-3xl);
+    }
+
+    .hero-meta {
+      font-family: var(--font-data);
+      font-size: 11px;
+      color: var(--dawn-30);
+    }
+
+    .meta-label {
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-right: var(--space-sm);
+    }
+
+    .meta-value { color: var(--dawn-50); }
+
+    /* ═══════════════════════════════════════════════════════════════
+       TERMINAL FRAME (Manifesto)
+       ═══════════════════════════════════════════════════════════════ */
+    .section-manifesto {
+      padding-left: calc(var(--hud-padding) + var(--rail-width) + var(--space-2xl));
+      padding-right: calc(var(--hud-padding) + var(--rail-width) + var(--space-2xl));
+      justify-content: center;
+    }
+
+    .terminal-frame {
+      background: rgba(10, 9, 8, 0.85);
+      border: 1px solid var(--dawn-15);
+      padding: var(--space-2xl);
+      position: relative;
+      max-width: 720px;
+      margin: 0 auto;
+    }
+
+    .terminal-frame::before,
+    .terminal-frame::after {
+      content: '';
+      position: absolute;
+      width: 24px;
+      height: 24px;
+    }
+
+    .terminal-frame::before {
+      top: -1px;
+      left: -1px;
+      border-top: 2px solid var(--gold);
+      border-left: 2px solid var(--gold);
+    }
+
+    .terminal-frame::after {
+      top: -1px;
+      right: -1px;
+      border-top: 2px solid var(--gold);
+      border-right: 2px solid var(--gold);
+    }
+
+    .terminal-frame-corners {
+      position: absolute;
+      bottom: -1px;
+      left: -1px;
+      right: -1px;
+      height: 24px;
+      pointer-events: none;
+    }
+
+    .terminal-frame-corners::before,
+    .terminal-frame-corners::after {
+      content: '';
+      position: absolute;
+      width: 24px;
+      height: 24px;
+    }
+
+    .terminal-frame-corners::before {
+      bottom: 0;
+      left: 0;
+      border-bottom: 2px solid var(--gold);
+      border-left: 2px solid var(--gold);
+    }
+
+    .terminal-frame-corners::after {
+      bottom: 0;
+      right: 0;
+      border-bottom: 2px solid var(--gold);
+      border-right: 2px solid var(--gold);
+    }
+
+    .terminal-header {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+      margin-bottom: var(--space-2xl);
+      padding-left: var(--space-md);
+    }
+
+    .terminal-icon {
+      width: 10px;
+      height: 10px;
+      background: var(--gold);
+    }
+
+    .terminal-title {
+      font-family: var(--font-data);
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--dawn-50);
+    }
+
+    .terminal-content {
+      text-align: center;
+      padding: 0 var(--space-lg);
+    }
+
+    .terminal-footer {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-lg);
+      margin-top: var(--space-2xl);
+      padding-top: var(--space-lg);
+      border-top: 1px solid var(--dawn-08);
+    }
+
+    .terminal-tag {
+      font-family: var(--font-data);
+      font-size: 9px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--dawn-30);
+      padding: var(--space-xs) var(--space-sm);
+      border: 1px solid var(--dawn-08);
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       SECTION LAYOUT (Services, Contact)
+       ═══════════════════════════════════════════════════════════════ */
+    .section-layout {
+      width: 100%;
+      max-width: 640px;
+    }
+
+    .section-label {
+      display: flex;
+      align-items: baseline;
+      gap: var(--space-md);
+      margin-bottom: var(--space-2xl);
+    }
+
+    .label-number {
+      font-family: var(--font-data);
+      font-size: 11px;
+      color: var(--gold);
+      letter-spacing: 0.08em;
+    }
+
+    .label-text {
+      font-family: var(--font-data);
+      font-size: 11px;
+      color: var(--dawn-30);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .section-content {
+      padding-left: var(--space-2xl);
+      border-left: 1px solid var(--dawn-08);
+    }
+
+    .section-content-centered {
+      text-align: center;
+      border-left: none;
+      padding-left: 0;
+    }
+
+    .headline {
+      font-family: var(--font-display);
+      font-size: clamp(28px, 4vw, 42px);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--dawn);
+      margin-bottom: var(--space-2xl);
+    }
+
+    .text-block {
+      max-width: 560px;
+    }
+
+    .text {
+      font-size: 15px;
+      font-weight: 300;
+      line-height: 1.7;
+      color: var(--dawn-70);
+      margin-bottom: var(--space-lg);
+    }
+
+    .text:last-child { margin-bottom: 0; }
+
+    .text-emphasis {
+      color: var(--dawn);
+      font-size: 16px;
+      font-weight: 400;
+    }
+
+    .text strong {
+      color: var(--dawn);
+      font-weight: 500;
+    }
+
+    .text em {
+      color: var(--gold);
+      font-style: normal;
+    }
+
+    .section-meta {
+      margin-top: var(--space-3xl);
+      font-family: var(--font-data);
+      font-size: 11px;
+      color: var(--dawn-30);
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       BUTTONS
+       ═══════════════════════════════════════════════════════════════ */
+    .btn {
+      font-family: var(--font-data);
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: var(--space-md) var(--space-xl);
+      cursor: pointer;
+      transition: all var(--duration-fast) var(--ease-out);
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid;
+    }
+
+    .btn-primary {
+      background: var(--gold);
+      border-color: var(--gold);
+      color: var(--void);
+    }
+
+    .btn-primary:hover {
+      background: var(--dawn);
+      border-color: var(--dawn);
+    }
+
+    .btn-large {
+      padding: var(--space-md) var(--space-2xl);
+      font-size: 12px;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       SERVICES GRID
+       ═══════════════════════════════════════════════════════════════ */
+    .services-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--space-lg);
+      margin-bottom: var(--space-2xl);
+    }
+
+    .service-card {
+      padding: var(--space-xl);
+      border: 1px solid var(--dawn-08);
+    }
+
+    .service-id {
+      font-family: var(--font-data);
+      font-size: 11px;
+      color: var(--gold);
+      letter-spacing: 0.08em;
+      display: block;
+      margin-bottom: var(--space-md);
+    }
+
+    .service-title {
+      font-family: var(--font-data);
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--dawn);
+      margin-bottom: var(--space-sm);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .service-desc {
+      font-size: 12px;
+      color: var(--dawn-50);
+      line-height: 1.6;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       CONTACT
+       ═══════════════════════════════════════════════════════════════ */
+    .contact-email {
+      margin-top: var(--space-2xl);
+      font-family: var(--font-data);
+      font-size: 12px;
+      color: var(--dawn-30);
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       RESPONSIVE
+       ═══════════════════════════════════════════════════════════════ */
+    @media (max-width: 1100px) {
+      .services-grid {
+        grid-template-columns: 1fr;
+      }
+      .section {
+        padding-right: 20%;
+      }
+    }
+
+    @media (max-width: 900px) {
+      :root {
+        --rail-width: 0px;
+        --corner-size: 30px;
+      }
+      .hud-rail { display: none; }
+      .hud-signal { display: none; }
+      .section {
+        padding: 100px var(--hud-padding);
+      }
+    }
+
+    @media (max-width: 600px) {
+      .hud-brand { display: none; }
+      .hud-coords { display: none; }
+      :root { --corner-size: 24px; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Particle Canvas Background -->
+  <div class="space-background">
+    <canvas id="particleCanvas" class="space-canvas"></canvas>
+  </div>
+
+  <!-- HUD Frame -->
+  <div class="hud-frame">
+    <!-- Corners -->
+    <div class="hud-corner hud-corner-tl"></div>
+    <div class="hud-corner hud-corner-tr"></div>
+    <div class="hud-corner hud-corner-bl"></div>
+    <div class="hud-corner hud-corner-br"></div>
+
+    <!-- Top Bar -->
+    <header class="hud-top">
+      <div class="hud-brand">
+        <span class="brand-label">Thoughtform</span>
+        <span class="brand-divider">/</span>
+        <span class="brand-sector">Manifesto</span>
+      </div>
+      <nav class="hud-nav">
+        <a href="#manifesto" class="nav-link active">Manifesto</a>
+        <a href="#services" class="nav-link">Services</a>
+        <a href="#about" class="nav-link">About</a>
+        <a href="#contact" class="nav-link">Contact</a>
+      </nav>
+      <div class="hud-signal">
+        <span class="signal-label">Signal</span>
+        <span class="signal-value">74%</span>
+      </div>
+    </header>
+
+    <!-- Left Rail -->
+    <aside class="hud-rail hud-rail-left">
+      <div class="rail-readouts">
+        <div class="readout">
+          <span class="readout-value">2.6<span class="readout-unit">km</span></span>
+        </div>
+        <div class="readout">
+          <span class="readout-label">Vector</span>
+          <span class="readout-value">Creative</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Right Rail -->
+    <aside class="hud-rail hud-rail-right">
+      <div class="rail-markers">
+        <div class="section-marker active">
+          <span class="marker-dot"></span>
+          <span class="marker-label">01</span>
+        </div>
+        <div class="section-marker active">
+          <span class="marker-dot"></span>
+          <span class="marker-label">02</span>
+        </div>
+        <div class="section-marker">
+          <span class="marker-dot"></span>
+          <span class="marker-label">03</span>
+        </div>
+        <div class="section-marker">
+          <span class="marker-dot"></span>
+          <span class="marker-label">04</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Bottom Bar -->
+    <footer class="hud-bottom">
+      <div class="hud-coords">
+        <span class="coord">δ: <span>0.44</span></span>
+        <span class="coord">θ: <span>68.4°</span></span>
+        <span class="coord">ρ: <span>0.73</span></span>
+        <span class="coord">ζ: <span>4.8</span></span>
+      </div>
+      <div class="hud-instruction">
+        <span>Navigation services detected. Plotting course.</span>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Main Content -->
+  <main class="scroll-container">
+    <!-- Section 1: Hero -->
+    <section class="section section-hero" id="hero">
+      <div class="hero-layout">
+        <div class="hero-content">
+          <div class="wordmark">
+            <!-- Thoughtform SVG Wordmark -->
+            <svg viewBox="0 0 280 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <text x="0" y="30" font-family="Georgia, serif" font-size="28" fill="#ebe3d6" letter-spacing="0.08em">THOUGHT</text>
+              <line x1="0" y1="45" x2="60" y2="45" stroke="#caa554" stroke-width="2"/>
+              <text x="22" y="70" font-family="Georgia, serif" font-size="28" fill="#ebe3d6" letter-spacing="0.08em">FORM</text>
+              <text x="0" y="60" font-family="Georgia, serif" font-size="36" fill="#caa554">+</text>
+            </svg>
+          </div>
+
+          <p class="hero-tagline">Navigate the alien terrain of machine intelligence.</p>
+
+          <p class="hero-description">
+            Thoughtform pioneers intuitive human-AI collaboration. We teach teams to think <em>with</em> AI—navigating its latent space for creative breakthroughs.
+          </p>
+
+          <div class="hero-cta">
+            <a href="#manifesto" class="btn btn-primary">Begin Navigation</a>
+          </div>
+
+          <div class="hero-meta">
+            <span class="meta-label">Landmark:</span>
+            <span class="meta-value">semantic terrain / latent topology</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 2: Manifesto -->
+    <section class="section section-manifesto" id="manifesto">
+      <div class="terminal-frame">
+        <div class="terminal-header">
+          <div class="terminal-icon"></div>
+          <span class="terminal-title">Manifesto</span>
+        </div>
+        
+        <div class="terminal-content">
+          <h2 class="headline">AI Isn't Software</h2>
+
+          <div class="text-block">
+            <p class="text">Most companies struggle because they treat AI like normal software.</p>
+            <p class="text text-emphasis">But AI isn't a tool to command.</p>
+            <p class="text">It's a strange, new intelligence we must learn to <em>navigate</em>. It leaps across dimensions. It hallucinates. It surprises.</p>
+            <p class="text">In technical work, that strangeness must be constrained.<br>In creative work? <strong>It's the source of truly novel ideas.</strong></p>
+          </div>
+        </div>
+
+        <div class="terminal-footer">
+          <span class="terminal-tag">Landmark: Polar Orbit</span>
+          <span class="terminal-tag">Section 02</span>
+        </div>
+        
+        <div class="terminal-frame-corners"></div>
+      </div>
+    </section>
+
+    <!-- Section 3: Services -->
+    <section class="section section-services" id="services">
+      <div class="section-layout">
+        <div class="section-label">
+          <span class="label-number">03</span>
+          <span class="label-text">Services</span>
+        </div>
+
+        <div class="section-content">
+          <h2 class="headline">Navigation Training</h2>
+
+          <div class="services-grid">
+            <div class="service-card">
+              <span class="service-id">01</span>
+              <h3 class="service-title">AI Intuition Workshops</h3>
+              <p class="service-desc">Develop the mental models that unlock creative collaboration with AI.</p>
+            </div>
+            <div class="service-card">
+              <span class="service-id">02</span>
+              <h3 class="service-title">Strategic Integration</h3>
+              <p class="service-desc">Design AI-augmented workflows for creative and strategic teams.</p>
+            </div>
+            <div class="service-card">
+              <span class="service-id">03</span>
+              <h3 class="service-title">Custom Expeditions</h3>
+              <p class="service-desc">Guided exploration of AI capabilities tailored to your domain.</p>
+            </div>
+          </div>
+
+          <div class="section-meta">
+            <span class="meta-label">Landmark:</span>
+            <span class="meta-value">trajectory grid / vanishing point</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 4: Contact -->
+    <section class="section section-contact" id="contact">
+      <div class="section-layout">
+        <div class="section-label">
+          <span class="label-number">04</span>
+          <span class="label-text">Contact</span>
+        </div>
+
+        <div class="section-content section-content-centered">
+          <h2 class="headline">Plot Your Course</h2>
+
+          <p class="text" style="text-align: center;">Ready to navigate intelligence with your team?</p>
+
+          <a href="mailto:hello@thoughtform.co" class="btn btn-primary btn-large">Initiate Contact</a>
+
+          <div class="contact-email">hello@thoughtform.co</div>
+
+          <div class="section-meta">
+            <span class="meta-label">Landmark:</span>
+            <span class="meta-value">event horizon / destination lock</span>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Particle System Script -->
+  <script>
+    // ═══════════════════════════════════════════════════════════════
+    // THOUGHTFORM PARTICLE SYSTEM
+    // Sharp geometry, grid-snapped, scroll-driven
+    // ═══════════════════════════════════════════════════════════════
+    
+    const GRID = 3;
+    const DAWN = "#ebe3d6";
+    const GOLD = "#caa554";
+    const ALERT = "#ff6b35";
+    const CHARS = ["λ", "δ", "θ", "φ", "ψ", "Σ", "π", "∇", "∞", "∂", "⟨", "⟩"];
+    
+    function snap(value) {
+      return Math.floor(value / GRID) * GRID;
+    }
+    
+    function createPoint(x, y, z, type, color) {
+      return {
+        x, y, z, type, color,
+        char: CHARS[Math.floor(Math.random() * CHARS.length)],
+        size: 1 + Math.random()
+      };
+    }
+    
+    function initParticles() {
+      const particles = [];
+      
+      // Starfield
+      for (let i = 0; i < 500; i++) {
+        particles.push(createPoint(
+          (Math.random() - 0.5) * 6000,
+          (Math.random() - 0.5) * 6000,
+          Math.random() * 8000,
+          "star", DAWN
+        ));
+      }
+      
+      // Gateway Portal
+      const portalOffsetX = 200;
+      for (let layer = 0; layer < 15; layer++) {
+        const z = 200 + layer * 40;
+        const radius = 350 - layer * 18;
+        const points = Math.max(24, 50 - layer * 2);
+        for (let i = 0; i < points; i++) {
+          const angle = (i / points) * Math.PI * 2;
+          const x = portalOffsetX + Math.cos(angle) * radius;
+          const y = Math.sin(angle) * radius;
+          particles.push(createPoint(x, y, z, "geo", GOLD));
+        }
+      }
+      
+      // Inner spiral
+      for (let i = 0; i < 120; i++) {
+        const t = i / 120;
+        const angle = t * Math.PI * 2 * 3;
+        const radius = (1 - t) * 280;
+        const z = 250 + t * 400;
+        const x = portalOffsetX + Math.cos(angle) * radius;
+        const y = Math.sin(angle) * radius;
+        particles.push(createPoint(x, y, z, "geo", DAWN));
+      }
+      
+      // Semantic Terrain
+      for (let r = 0; r < 40; r++) {
+        for (let c = 0; c < 40; c++) {
+          const x = (c - 20) * 60;
+          const z = 1000 + r * 30;
+          const y = 350 + Math.sin(c * 0.18) * 120 + Math.cos(r * 0.12) * 100 + Math.sin(c * 0.4 + r * 0.2) * 40;
+          particles.push(createPoint(x, y, z, "geo", GOLD));
+        }
+      }
+      
+      // Polar Orbit
+      for (let ring = 0; ring < 6; ring++) {
+        const baseZ = 2800;
+        const radius = 150 + ring * 80;
+        const points = 40 + ring * 10;
+        for (let i = 0; i < points; i++) {
+          const angle = (i / points) * Math.PI * 2;
+          const x = Math.cos(angle) * radius;
+          const y = Math.sin(angle) * radius;
+          const z = baseZ + Math.sin(angle * 3) * 100;
+          particles.push(createPoint(x, y, z, "geo", GOLD));
+        }
+      }
+      
+      // Spiral core
+      for (let i = 0; i < 200; i++) {
+        const t = i / 200;
+        const angle = t * Math.PI * 2 * 4;
+        const radius = t * 350;
+        const x = Math.cos(angle) * radius;
+        const y = Math.sin(angle) * radius;
+        const z = 2600 + t * 600;
+        particles.push(createPoint(x, y, z, "geo", DAWN));
+      }
+      
+      // Trajectory Tunnel
+      for (let i = 0; i < 500; i++) {
+        const z = 4200 + i * 2.5;
+        const radius = 350 + Math.sin(i * 0.08) * 80;
+        const angle = i * 0.15;
+        const x = Math.cos(angle) * radius;
+        const y = Math.sin(angle) * radius;
+        particles.push(createPoint(x, y, z, "geo", DAWN));
+      }
+      
+      for (let layer = 0; layer < 12; layer++) {
+        const z = 4200 + layer * 100;
+        const size = 300 - layer * 15;
+        for (let i = 0; i < 40; i++) {
+          const t = (i / 40) * 2 - 1;
+          particles.push(createPoint(t * size, -size, z, "geo", GOLD));
+          particles.push(createPoint(t * size, size, z, "geo", GOLD));
+          particles.push(createPoint(-size, t * size, z, "geo", GOLD));
+          particles.push(createPoint(size, t * size, z, "geo", GOLD));
+        }
+      }
+      
+      // Event Horizon
+      for (let i = 0; i < 800; i++) {
+        const r = 450;
+        const theta = Math.random() * Math.PI * 2;
+        const phi = Math.acos(2 * Math.random() - 1);
+        const x = r * Math.sin(phi) * Math.cos(theta);
+        const y = r * Math.sin(phi) * Math.sin(theta);
+        const z = 6500 + r * Math.cos(phi) * 0.5;
+        particles.push(createPoint(x, y, z, "geo", ALERT));
+      }
+      
+      for (let ring = 0; ring < 4; ring++) {
+        const radius = 100 + ring * 60;
+        const z = 6500;
+        for (let i = 0; i < 30; i++) {
+          const angle = (i / 30) * Math.PI * 2;
+          const x = Math.cos(angle) * radius;
+          const y = Math.sin(angle) * radius;
+          particles.push(createPoint(x, y, z, "geo", GOLD));
+        }
+      }
+      
+      return particles;
+    }
+    
+    // Initialize
+    const canvas = document.getElementById('particleCanvas');
+    const ctx = canvas.getContext('2d');
+    const particles = initParticles();
+    
+    const FOCAL = 400;
+    const MAX_DEPTH = 3500;
+    
+    let scrollProgress = 0;
+    
+    function resize() {
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = window.innerWidth * dpr;
+      canvas.height = window.innerHeight * dpr;
+      canvas.style.width = window.innerWidth + 'px';
+      canvas.style.height = window.innerHeight + 'px';
+      ctx.scale(dpr, dpr);
+    }
+    
+    function render() {
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+      
+      const scrollZ = scrollProgress * 7500;
+      const scrollT = Math.min(1, scrollProgress * 4);
+      
+      // Trail effect
+      ctx.fillStyle = "rgba(5, 5, 4, 0.85)";
+      ctx.fillRect(0, 0, width, height);
+      
+      const cx_stars = width * 0.5;
+      const cx_geo = width * (0.5 + scrollT * 0.18);
+      const cy = height * 0.5;
+      
+      // Sort by depth
+      const sorted = [...particles].sort((a, b) => {
+        const zA = a.z - scrollZ;
+        const zB = b.z - scrollZ;
+        return zB - zA;
+      });
+      
+      sorted.forEach(p => {
+        let relZ = p.z - scrollZ;
+        
+        if (p.type === "star") {
+          while (relZ < 0) relZ += 8000;
+          while (relZ > 8000) relZ -= 8000;
+        }
+        
+        if (relZ <= 10 || relZ > MAX_DEPTH) return;
+        
+        const scale = FOCAL / relZ;
+        const center = p.type === "star" ? cx_stars : cx_geo;
+        const x = center + p.x * scale;
+        const y = cy + p.y * scale;
+        
+        if (x < -50 || x > width + 50 || y < -50 || y > height + 50) return;
+        
+        const depthAlpha = Math.min(1, (1 - relZ / MAX_DEPTH) * 1.8);
+        ctx.globalAlpha = depthAlpha;
+        ctx.fillStyle = p.color;
+        
+        if (p.type === "geo" && scale > 0.35) {
+          const fontSize = Math.max(8, Math.min(18, 12 * scale));
+          ctx.font = `${fontSize}px "IBM Plex Sans", sans-serif`;
+          ctx.fillText(p.char, snap(x), snap(y));
+        } else if (p.type === "geo") {
+          const size = Math.max(GRID, GRID * scale);
+          ctx.fillRect(snap(x), snap(y), size - 1, size - 1);
+        } else {
+          const size = Math.max(GRID, p.size * scale * GRID);
+          ctx.globalAlpha = depthAlpha * 0.4;
+          ctx.fillRect(snap(x), snap(y), size - 1, size - 1);
+        }
+      });
+      
+      ctx.globalAlpha = 1;
+      requestAnimationFrame(render);
+    }
+    
+    // Scroll handler
+    window.addEventListener('scroll', () => {
+      const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+      scrollProgress = Math.max(0, Math.min(1, window.scrollY / maxScroll));
+    });
+    
+    window.addEventListener('resize', resize);
+    resize();
+    render();
+  </script>
+</body>
+</html>
+
