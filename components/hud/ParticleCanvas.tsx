@@ -69,30 +69,34 @@ function initParticles(): Particle[] {
     );
   }
 
-  // ─── B. PERSISTENT TERRAIN (Always visible background) ───
-  // This terrain fills the entire background and stays at fixed depth
-  // It represents the "latent space" we're navigating - always there
-  // Increased density to fill the screen more completely
-  for (let r = 0; r < 60; r++) {
-    for (let c = 0; c < 60; c++) {
-      const x = (c - 30) * 70; // Wider spread to fill screen
-      const z = 1500 + (r * 50); // Fixed Z depth, doesn't scroll away
-      // Multi-wave terrain for organic topology
-      const y =
-        500 +
-        Math.sin(c * 0.2) * 150 +
-        Math.cos(r * 0.15) * 150 +
-        Math.sin(c * 0.35 + r * 0.2) * 50;
+  // ─── B. TOPOLOGY MOUNTAIN (Extended terrain through entire journey) ───
+  // This terrain extends through the entire scroll journey (Z: 800 to 8800)
+  // It scrolls WITH the content, creating the sense of traveling across it
+  // The terrain evolves as you travel - waves shift phase, creating organic morphing
+  // 160 rows × 70 columns - fills background throughout the entire journey
+  for (let r = 0; r < 160; r++) {
+    for (let c = 0; c < 70; c++) {
+      const x = (c - 35) * 65; // Wide spread to fill screen
+      const z = 800 + (r * 50); // Spans Z: 800 to 8800 across entire journey
+      
+      // Multi-wave terrain that evolves as you travel
+      const wavePhase = r * 0.02; // Terrain morphs as you progress
+      const y = 400 
+        + Math.sin(c * 0.2 + wavePhase) * 180  // Primary wave with phase shift
+        + Math.cos(r * 0.12) * 150              // Secondary wave
+        + Math.sin(c * 0.35 + r * 0.15) * 70    // Detail wave
+        + Math.sin(r * 0.08) * 100;             // Long-wave undulation over distance
+      
       particles.push(createPoint(x, y, z, "terrain", GOLD, 0));
     }
   }
 
   // ─── C. LANDMARK 1: GATEWAY PORTAL (Section 1 - Hero) ───
   // Emerges from terrain when entering
-  // Positioned to appear above terrain (Z: 1500-2000)
+  // Positioned at start of terrain journey
   const portalOffsetX = 200;
   for (let layer = 0; layer < 12; layer++) {
-    const z = 1800 + layer * 40; // Positioned above terrain base
+    const z = 1500 + layer * 40; // Positioned early in terrain journey
     const radius = 300 - layer * 18;
     const points = Math.max(20, 40 - layer * 2);
     for (let i = 0; i < points; i++) {
@@ -107,7 +111,7 @@ function initParticles(): Particle[] {
     const t = i / 80;
     const angle = t * Math.PI * 2 * 3;
     const radius = (1 - t) * 250;
-    const z = 1850 + t * 350;
+    const z = 1550 + t * 350;
     const x = portalOffsetX + Math.cos(angle) * radius;
     const y = 200 + Math.sin(angle) * radius;
     particles.push(createPoint(x, y, z, "geo", DAWN, 1));
@@ -134,52 +138,27 @@ function initParticles(): Particle[] {
     }
   }
 
-  // ─── E. LANDMARK 3: TRAJECTORY GRID (Section 3 - Services) ───
-  // Perspective grid converging to vanishing point
-  // Positioned to emerge from terrain
-  for (let layer = 0; layer < 15; layer++) {
-    const z = 4200 + layer * 80; // Above terrain range
-    const size = 350 - layer * 18;
-    const points = 35 - layer;
-    for (let i = 0; i < points; i++) {
-      const t = (i / points) * 2 - 1;
-      particles.push(createPoint(t * size, -size * 0.6 + 200, z, "geo", GOLD, 3));
-      particles.push(createPoint(t * size, size * 0.6 + 200, z, "geo", GOLD, 3));
-      particles.push(createPoint(-size, t * size * 0.6 + 200, z, "geo", GOLD, 3));
-      particles.push(createPoint(size, t * size * 0.6 + 200, z, "geo", GOLD, 3));
-    }
-  }
-  // Helix tunnel
-  for (let i = 0; i < 400; i++) {
-    const z = 4300 + i * 3;
-    const radius = 300 + Math.sin(i * 0.1) * 60;
-    const angle = i * 0.18;
-    const x = Math.cos(angle) * radius;
-    const y = 200 + Math.sin(angle) * radius;
+  // ─── E. LANDMARK 3: TRAJECTORY TUNNEL (Section 3 - Services) ───
+  // Helix tunnel emerging from terrain - matches the reference design
+  for (let i = 0; i < 600; i++) {
+    const z = 5500 + i * 4.5; // Positioned mid-journey, emerging from terrain
+    const rad = 320 + Math.sin(i * 0.08) * 80;
+    const angle = i * 0.14;
+    const x = Math.cos(angle) * rad;
+    const y = Math.sin(angle) * rad;
     particles.push(createPoint(x, y, z, "geo", DAWN, 3));
   }
 
   // ─── F. LANDMARK 4: EVENT HORIZON (Section 4 - Contact) ───
-  // Sphere/singularity - final destination
-  for (let i = 0; i < 600; i++) {
-    const r = 400;
+  // Sphere/singularity - final destination, emerging from terrain
+  for (let i = 0; i < 700; i++) {
+    const r = 450;
     const theta = Math.random() * Math.PI * 2;
     const phi = Math.acos(2 * Math.random() - 1);
     const x = r * Math.sin(phi) * Math.cos(theta);
-    const y = 200 + r * Math.sin(phi) * Math.sin(theta); // Above terrain
-    const z = 6000 + r * Math.cos(phi) * 0.5;
+    const y = r * Math.sin(phi) * Math.sin(theta);
+    const z = 8500 + r * Math.cos(phi) * 0.5; // Near end of terrain journey
     particles.push(createPoint(x, y, z, "geo", ALERT, 4));
-  }
-  // Core rings
-  for (let ring = 0; ring < 5; ring++) {
-    const radius = 80 + ring * 50;
-    const z = 6000;
-    for (let i = 0; i < 25 + ring * 5; i++) {
-      const angle = (i / (25 + ring * 5)) * Math.PI * 2;
-      const x = Math.cos(angle) * radius;
-      const y = 200 + Math.sin(angle) * radius;
-      particles.push(createPoint(x, y, z, "geo", GOLD, 4));
-    }
   }
 
   return particles;
@@ -197,7 +176,7 @@ export function ParticleCanvas({ scrollProgress }: ParticleCanvasProps) {
   const scrollProgressRef = useRef(0);
 
   const FOCAL = 400;
-  const MAX_DEPTH = 5000; // Increased to allow terrain to be visible
+  const MAX_DEPTH = 6500; // Extended to show more terrain as it scrolls through
 
   // Update scroll progress ref when prop changes
   useEffect(() => {
@@ -244,32 +223,26 @@ export function ParticleCanvas({ scrollProgress }: ParticleCanvasProps) {
       }
 
       const scrollP = scrollProgressRef.current;
-      const scrollZ = scrollP * 6000;
+      const scrollZ = scrollP * 8500; // Extended range to match terrain (8800 max)
       
-      // Determine which section we're in (0-4)
+      // Determine which section we're in (1-4)
       const currentSection = Math.floor(scrollP * 4) + 1;
       const sectionProgress = (scrollP * 4) % 1; // 0-1 within current section
 
       // Trail effect (don't fully clear) - creates motion blur
-      ctx.fillStyle = "rgba(5, 5, 4, 0.85)";
+      ctx.fillStyle = "rgba(5, 5, 4, 0.88)";
       ctx.fillRect(0, 0, width, height);
 
-      // Dynamic vanishing point - starts centered, shifts right
-      const scrollT = Math.min(1, scrollP * 3);
-      const cx_stars = width * 0.5;
-      const cx_geo = width * (0.5 + scrollT * 0.25);
-      const cy = height * 0.5;
+      // Split vanishing points - stars center, geometry right (fixed position)
+      // This creates the "looking out window" effect with integrated terrain
+      const cx_stars = width * 0.5;   // Stars: Center (fly straight)
+      const cx_geo = width * 0.72;    // Geo/Terrain: Right (look out window) - fixed position
+      const cy = height * 0.52;
 
       // Sort by depth for proper layering
+      // All particles scroll with content, including terrain
       const sorted = [...particlesRef.current].sort((a, b) => {
-        const getZ = (p: Particle) => {
-          if (p.type === "terrain") {
-            // Terrain always at fixed relative Z (doesn't scroll)
-            return p.z; // Use absolute Z from init (1500 + offset)
-          }
-          return p.z - scrollZ;
-        };
-        return getZ(b) - getZ(a);
+        return (b.z - scrollZ) - (a.z - scrollZ);
       });
 
       sorted.forEach((p) => {
@@ -279,13 +252,10 @@ export function ParticleCanvas({ scrollProgress }: ParticleCanvasProps) {
         let terrainAlphaMultiplier = 1;
 
         if (p.type === "terrain") {
-          // TERRAIN: Always visible at fixed depth (1500 + offset)
-          // Never scrolls away - fills the entire background
-          relZ = p.z; // Use absolute Z, not relative to scroll
-          
-          // Ensure terrain is always in visible range
-          // If it goes out of bounds, it's still there but will be culled below
-          terrainAlphaMultiplier = 0.6; // Subtle - 60% opacity for background
+          // TERRAIN: Scrolls with content, extends through entire journey (Z: 800-8800)
+          // Always visible because it spans the full scroll range
+          relZ = p.z - scrollZ;
+          terrainAlphaMultiplier = 0.7; // Slightly more visible (70%) since it's the main feature
         } else if (p.type === "star") {
           // STARS: Loop infinitely
           relZ = p.z - scrollZ;
@@ -317,10 +287,10 @@ export function ParticleCanvas({ scrollProgress }: ParticleCanvasProps) {
           }
         }
 
-        // Culling - terrain should always be visible, so use larger bounds
+        // Culling - terrain extends through entire journey, so use larger bounds
         if (p.type === "terrain") {
-          // Terrain can be visible even if slightly out of range
-          if (relZ <= 100 || relZ > 5000) return;
+          // Terrain spans entire journey, allow wider range
+          if (relZ <= 50 || relZ > MAX_DEPTH) return;
         } else {
           if (relZ <= 10 || relZ > MAX_DEPTH) return;
         }
