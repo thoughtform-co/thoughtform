@@ -593,11 +593,15 @@ body {
   position: relative;
 }
 
-/* Manifesto section - centered terminal frame */
+/* Manifesto section - centered terminal frame, vertically centered */
 .section-manifesto {
   padding-left: calc(var(--hud-padding) + var(--rail-width) + var(--space-2xl));
   padding-right: calc(var(--hud-padding) + var(--rail-width) + var(--space-2xl));
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
   justify-content: center;
+  align-items: center;
+  min-height: 100vh;
 }
 
 .section * {

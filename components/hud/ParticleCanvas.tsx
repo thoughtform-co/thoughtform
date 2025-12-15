@@ -53,6 +53,33 @@ function createPoint(
   };
 }
 
+/**
+ * Calculate terrain Y position at given X, Z coordinates
+ * This matches the terrain generation formula exactly
+ * Terrain: 160 rows (r: 0-159), 70 columns (c: 0-69)
+ * Z range: 800 to 8800 (row * 50 + 800)
+ * X range: -2275 to +2275 ((c - 35) * 65)
+ */
+function getTerrainY(x: number, z: number): number {
+  // Clamp Z to terrain range
+  const clampedZ = Math.max(800, Math.min(8800, z));
+  // Convert Z to row index (terrain spans Z: 800 to 8800, step 50)
+  const r = (clampedZ - 800) / 50;
+  
+  // Convert X to column value (terrain: (c - 35) * 65, so c = x/65 + 35)
+  const c = (x / 65) + 35;
+  
+  // Use same wave formula as terrain generation
+  const wavePhase = r * 0.02;
+  const y = 400 
+    + Math.sin(c * 0.2 + wavePhase) * 180
+    + Math.cos(r * 0.12) * 150
+    + Math.sin(c * 0.35 + r * 0.15) * 70
+    + Math.sin(r * 0.08) * 100;
+  
+  return y;
+}
+
 function initParticles(): Particle[] {
   const particles: Particle[] = [];
 
@@ -92,72 +119,149 @@ function initParticles(): Particle[] {
   }
 
   // ─── C. LANDMARK 1: GATEWAY PORTAL (Section 1 - Hero) ───
-  // Emerges from terrain when entering
-  // Positioned at start of terrain journey
+  // Portal emerges from terrain surface
   const portalOffsetX = 200;
+  const portalZ = 1500;
+  const terrainYAtPortal = getTerrainY(portalOffsetX, portalZ);
+  
   for (let layer = 0; layer < 12; layer++) {
-    const z = 1500 + layer * 40; // Positioned early in terrain journey
+    const z = portalZ + layer * 40;
     const radius = 300 - layer * 18;
     const points = Math.max(20, 40 - layer * 2);
     for (let i = 0; i < points; i++) {
       const angle = (i / points) * Math.PI * 2;
       const x = portalOffsetX + Math.cos(angle) * radius;
-      const y = 200 + Math.sin(angle) * radius; // Positioned above terrain Y
+      const terrainY = getTerrainY(x, z);
+      // Portal rings emerge from terrain, rising upward
+      const y = terrainY - 50 + Math.sin(angle) * radius * 0.3;
       particles.push(createPoint(x, y, z, "geo", GOLD, 1));
     }
   }
-  // Inner spiral
+  // Inner spiral emerging from terrain
   for (let i = 0; i < 80; i++) {
     const t = i / 80;
     const angle = t * Math.PI * 2 * 3;
     const radius = (1 - t) * 250;
-    const z = 1550 + t * 350;
+    const z = portalZ + 50 + t * 350;
     const x = portalOffsetX + Math.cos(angle) * radius;
-    const y = 200 + Math.sin(angle) * radius;
+    const terrainY = getTerrainY(x, z);
+    const y = terrainY - 30 + Math.sin(angle) * radius * 0.2;
     particles.push(createPoint(x, y, z, "geo", DAWN, 1));
   }
 
-  // ─── D. LANDMARK 2: DATA OVERLAY (Section 2 - Manifesto) ───
-  // Vertical data streams rising from terrain
-  // Positioned to emerge from terrain surface
-  for (let stream = 0; stream < 8; stream++) {
-    const baseX = (stream - 4) * 120;
-    const baseZ = 2800 + stream * 30; // Above terrain
-    for (let i = 0; i < 25; i++) {
-      const y = 550 - i * 30; // Rising from terrain base (~500)
-      particles.push(createPoint(baseX, y, baseZ, "geo", DAWN, 2));
-    }
-  }
-  // Horizontal scan lines
-  for (let line = 0; line < 6; line++) {
-    const y = 250 - line * 50; // Above terrain
-    const z = 2900 + line * 20;
-    for (let i = 0; i < 30; i++) {
-      const x = (i - 15) * 40;
+  // ─── D. LANDMARK 2: GEOMETRIC TOWER (Section 2 - Manifesto) ───
+  // "AI Isn't Software" - A crystalline data structure emerging from terrain
+  // Represents AI as alien intelligence rising from the topology of meaning
+  const manifestoCenterX = 0;
+  const manifestoZ = 2900;
+  const terrainYAtManifesto = getTerrainY(manifestoCenterX, manifestoZ);
+  
+  // Base foundation squares - embedded in terrain
+  for (let row = 0; row < 3; row++) {
+    for (let col = 0; col < 3; col++) {
+      const x = manifestoCenterX + (col - 1) * 80;
+      const z = manifestoZ + (row - 1) * 25;
+      const terrainY = getTerrainY(x, z);
+      // Foundation squares sit ON terrain
+      const y = terrainY;
       particles.push(createPoint(x, y, z, "geo", GOLD, 2));
     }
   }
+  
+  // Rising geometric tower - interconnected squares growing upward
+  // Creates a crystalline/geometric structure that supports the "alien intelligence" narrative
+  for (let level = 0; level < 8; level++) {
+    const height = level * 35;
+    const baseY = terrainYAtManifesto + height;
+    
+    // Each level is a square pattern, smaller as it rises
+    const levelSize = 180 - level * 15;
+    const pointsPerSide = 8 - Math.floor(level / 2);
+    
+    // Bottom square of level
+    for (let i = 0; i < pointsPerSide; i++) {
+      const t = i / pointsPerSide;
+      const x = manifestoCenterX + (t - 0.5) * levelSize;
+      const z = manifestoZ - levelSize * 0.5;
+      particles.push(createPoint(x, baseY, z, "geo", DAWN, 2));
+    }
+    // Top square of level
+    for (let i = 0; i < pointsPerSide; i++) {
+      const t = i / pointsPerSide;
+      const x = manifestoCenterX + (t - 0.5) * levelSize;
+      const z = manifestoZ + levelSize * 0.5;
+      particles.push(createPoint(x, baseY, z, "geo", DAWN, 2));
+    }
+    // Left square of level
+    for (let i = 0; i < pointsPerSide; i++) {
+      const t = i / pointsPerSide;
+      const z = manifestoZ + (t - 0.5) * levelSize;
+      const x = manifestoCenterX - levelSize * 0.5;
+      particles.push(createPoint(x, baseY, z, "geo", DAWN, 2));
+    }
+    // Right square of level
+    for (let i = 0; i < pointsPerSide; i++) {
+      const t = i / pointsPerSide;
+      const z = manifestoZ + (t - 0.5) * levelSize;
+      const x = manifestoCenterX + levelSize * 0.5;
+      particles.push(createPoint(x, baseY, z, "geo", DAWN, 2));
+    }
+    
+    // Vertical connectors between levels (rising columns)
+    if (level > 0) {
+      for (let corner = 0; corner < 4; corner++) {
+        const angle = (corner / 4) * Math.PI * 2;
+        const cornerX = manifestoCenterX + Math.cos(angle) * levelSize * 0.35;
+        const cornerZ = manifestoZ + Math.sin(angle) * levelSize * 0.35;
+        particles.push(createPoint(cornerX, baseY - 17, cornerZ, "geo", GOLD, 2));
+      }
+    }
+  }
+  
+  // Top accent - geometric cap
+  const topY = terrainYAtManifesto + 8 * 35 + 20;
+  for (let i = 0; i < 4; i++) {
+    const angle = (i / 4) * Math.PI * 2;
+    const radius = 40;
+    const x = manifestoCenterX + Math.cos(angle) * radius;
+    const z = manifestoZ + Math.sin(angle) * radius;
+    particles.push(createPoint(x, topY, z, "geo", GOLD, 2));
+  }
 
   // ─── E. LANDMARK 3: TRAJECTORY TUNNEL (Section 3 - Services) ───
-  // Helix tunnel emerging from terrain - matches the reference design
+  // Helix tunnel emerging from terrain surface
+  const tunnelStartZ = 5500;
   for (let i = 0; i < 600; i++) {
-    const z = 5500 + i * 4.5; // Positioned mid-journey, emerging from terrain
+    const z = tunnelStartZ + i * 4.5;
     const rad = 320 + Math.sin(i * 0.08) * 80;
     const angle = i * 0.14;
     const x = Math.cos(angle) * rad;
-    const y = Math.sin(angle) * rad;
+    // Calculate terrain Y at this position, then offset tunnel upward from it
+    const terrainY = getTerrainY(x, z);
+    // Tunnel spirals upward from terrain, creating a rising helix
+    const baseHeight = terrainY + 50;
+    const y = baseHeight + Math.sin(angle) * rad * 0.6;
     particles.push(createPoint(x, y, z, "geo", DAWN, 3));
   }
 
   // ─── F. LANDMARK 4: EVENT HORIZON (Section 4 - Contact) ───
-  // Sphere/singularity - final destination, emerging from terrain
+  // Sphere/singularity emerging from terrain - final destination
+  const horizonCenterX = 0;
+  const horizonZ = 8500;
+  const terrainYAtHorizon = getTerrainY(horizonCenterX, horizonZ);
+  
+  // Sphere particles arranged in layers, bottom half embedded in terrain
   for (let i = 0; i < 700; i++) {
     const r = 450;
     const theta = Math.random() * Math.PI * 2;
     const phi = Math.acos(2 * Math.random() - 1);
-    const x = r * Math.sin(phi) * Math.cos(theta);
-    const y = r * Math.sin(phi) * Math.sin(theta);
-    const z = 8500 + r * Math.cos(phi) * 0.5; // Near end of terrain journey
+    const x = horizonCenterX + r * Math.sin(phi) * Math.cos(theta);
+    const z = horizonZ + r * Math.cos(phi) * 0.3;
+    // Calculate terrain Y, then position sphere emerging from it
+    const terrainY = getTerrainY(x, z);
+    // Bottom half of sphere sits on terrain, top half rises
+    const sphereY = terrainYAtHorizon + r * Math.sin(phi) * Math.sin(theta);
+    const y = Math.max(terrainY - 100, sphereY); // Don't go below terrain
     particles.push(createPoint(x, y, z, "geo", ALERT, 4));
   }
 
@@ -273,9 +377,11 @@ export function ParticleCanvas({ scrollProgress }: ParticleCanvasProps) {
             if (sectionDist === 0) {
               // Current section: fully visible, emerge from terrain
               particleAlpha = 1;
-              // Emergence animation: particles rise up as section comes into view
-              const emergence = Math.min(1, sectionProgress * 2);
-              yOffset = (1 - emergence) * 150; // Rise from below/terrain
+              // Emergence animation: objects grow upward from terrain as section comes into view
+              const emergence = Math.min(1, sectionProgress * 1.5);
+              // Scale from terrain up, so particles closer to terrain Y stay put, higher ones scale down
+              yOffset = 0; // Objects already positioned at terrain, just fade/grow in
+              particleAlpha *= emergence; // Fade in as they emerge
             } else if (sectionDist === 1) {
               // Adjacent section: partially visible
               particleAlpha = 0.4;

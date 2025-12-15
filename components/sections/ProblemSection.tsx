@@ -63,7 +63,7 @@ export function ProblemSection({ section }: ProblemSectionProps) {
                 className="relative pl-8 border-l-2 border-dawn-15 hover:border-dawn-30 transition-colors duration-slow"
               >
                 <span className="absolute -left-3 top-0 font-mono text-2xs text-dawn-30 bg-void py-1">
-                  // 0{index + 1}
+                  {`// 0${index + 1}`}
                 </span>
                 <div className="font-mono text-sm text-dawn mb-2">
                   <EditableText

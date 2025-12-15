@@ -42,11 +42,11 @@ export function HeroSection({ section, hideDefaultBackground }: HeroSectionProps
 
       {/* HUD Elements */}
       <div className="absolute top-[20%] right-[10%] z-10 font-mono text-2xs uppercase tracking-wide text-dawn-30 pointer-events-none">
-        <div className="text-gold-40 mb-1">// Vector Space</div>
+        <div className="text-gold-40 mb-1">{`// Vector Space`}</div>
         <div>Semantic Manifold</div>
       </div>
       <div className="absolute bottom-[25%] right-[15%] z-10 font-mono text-2xs uppercase tracking-wide text-dawn-30 pointer-events-none">
-        <div className="text-gold-40 mb-1">// Status</div>
+        <div className="text-gold-40 mb-1">{`// Status`}</div>
         <div>Navigating...</div>
       </div>
 

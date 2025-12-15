@@ -112,17 +112,29 @@ export function FadeInOnScroll({
   };
 
   const initialPosition = getInitialPosition();
-  const x = "x" in initialPosition
-    ? useTransform(scrollYProgress, [0, 1], [initialPosition.x, 0])
-    : undefined;
-  const y = "y" in initialPosition
-    ? useTransform(scrollYProgress, [0, 1], [initialPosition.y, 0])
-    : undefined;
+  const hasX = "x" in initialPosition;
+  const hasY = "y" in initialPosition;
+  
+  // Always call hooks unconditionally (React rules of hooks)
+  const xTransform = useTransform(
+    scrollYProgress, 
+    [0, 1], 
+    [hasX ? (initialPosition as { x: number }).x : 0, 0]
+  );
+  const yTransform = useTransform(
+    scrollYProgress, 
+    [0, 1], 
+    [hasY ? (initialPosition as { y: number }).y : 0, 0]
+  );
 
   return (
     <motion.div
       ref={ref}
-      style={{ opacity, x, y }}
+      style={{ 
+        opacity, 
+        x: hasX ? xTransform : undefined, 
+        y: hasY ? yTransform : undefined 
+      }}
       className={className}
       transition={{ duration, delay }}
     >

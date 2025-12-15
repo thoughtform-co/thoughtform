@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { NavigationBar } from "./NavigationBar";
 
 interface SectionData {
   sector: string;
@@ -98,13 +99,6 @@ export function HUDFrame({
     20: "10",
   };
 
-  const navLinks = [
-    { href: "#manifesto", label: "Manifesto", section: "manifesto" },
-    { href: "#services", label: "Services", section: "services" },
-    { href: "#about", label: "About", section: "about" },
-    { href: "#contact", label: "Contact", section: "contact" },
-  ];
-
   const sectionMarkers = [
     { section: "hero", label: "01" },
     { section: "manifesto", label: "02" },
@@ -112,16 +106,11 @@ export function HUDFrame({
     { section: "contact", label: "04" },
   ];
 
-  const handleNavClick = (
-    e: React.MouseEvent<HTMLAnchorElement>,
-    sectionId: string
-  ) => {
-    e.preventDefault();
-    onNavigate(sectionId);
-  };
-
   return (
     <div className="hud-frame">
+      {/* Top Navigation Bar - Brandworld Specification */}
+      <NavigationBar activeSection={activeSection} onNavigate={onNavigate} />
+
       {/* Corner Brackets - Gold L-shapes (hidden in hero) */}
       {showHUD && (
         <>
@@ -131,38 +120,6 @@ export function HUDFrame({
           <div className="hud-corner hud-corner-br" style={{ opacity: hudOpacity }} />
         </>
       )}
-
-      {/* Top Bar: Brand Navigation */}
-      <header className="hud-top">
-        <div className="hud-brand">
-          <span className="brand-label">Thoughtform</span>
-          {showHUD && (
-            <>
-              <span className="brand-divider" style={{ opacity: hudOpacity }}>/</span>
-              <span className="brand-sector" style={{ opacity: hudOpacity }}>{hudState.sector}</span>
-            </>
-          )}
-        </div>
-        <nav className="hud-nav">
-          {navLinks.map((link) => (
-            <a
-              key={link.section}
-              href={link.href}
-              className={`nav-link ${activeSection === link.section ? "active" : ""}`}
-              data-section={link.section}
-              onClick={(e) => handleNavClick(e, link.section)}
-            >
-              {link.label}
-            </a>
-          ))}
-        </nav>
-        {showHUD && (
-          <div className="hud-signal" style={{ opacity: hudOpacity }}>
-            <span className="signal-label">Signal</span>
-            <span className="signal-value">{hudState.signal}</span>
-          </div>
-        )}
-      </header>
 
       {/* Left Rail: Depth Scale (hidden in hero) */}
       {showHUD && (

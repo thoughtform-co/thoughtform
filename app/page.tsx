@@ -1,5 +1,5 @@
-import { NavigationCockpit } from "@/components/hud";
+import { NavigationCockpitV2 } from "@/components/hud";
 
 export default function Home() {
-  return <NavigationCockpit />;
+  return <NavigationCockpitV2 />;
 }

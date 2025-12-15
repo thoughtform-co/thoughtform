@@ -66,7 +66,7 @@ export function AboutSection({ section }: AboutSectionProps) {
               />
             </h2>
             <div className="font-mono text-xs uppercase tracking-wide text-gold mb-8">
-              // Voidwalker
+              {`// Voidwalker`}
             </div>
             <div className="text-base leading-[1.8] text-dawn-70">
               <EditableText

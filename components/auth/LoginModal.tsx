@@ -57,7 +57,7 @@ export function LoginModal({ isOpen, onClose, onSuccess }: LoginModalProps) {
               {/* Header */}
               <div className="text-center mb-8">
                 <div className="font-mono text-2xs uppercase tracking-widest text-gold mb-2">
-                  // Authentication
+                  {`// Authentication`}
                 </div>
                 <h2 className="font-mono text-xl text-dawn uppercase tracking-wide">
                   Sign In

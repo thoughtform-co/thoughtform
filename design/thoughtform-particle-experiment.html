@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Thoughtform Particle Experiment — Topology Visualization</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      /* Thoughtform Colors */
+      --void: #050403;
+      --surface-0: #0A0908;
+      --dawn: #ECE3D6;
+      --dawn-70: rgba(236, 227, 214, 0.7);
+      --dawn-50: rgba(236, 227, 214, 0.5);
+      --dawn-30: rgba(236, 227, 214, 0.3);
+      --dawn-15: rgba(236, 227, 214, 0.15);
+      --dawn-08: rgba(236, 227, 214, 0.08);
+      
+      --gold: #CAA554;
+      --gold-70: rgba(202, 165, 84, 0.7);
+      --gold-50: rgba(202, 165, 84, 0.5);
+      --gold-30: rgba(202, 165, 84, 0.3);
+      --gold-15: rgba(202, 165, 84, 0.15);
+      
+      --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+      --font-sans: 'IBM Plex Sans', sans-serif;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: var(--font-sans);
+      background: var(--void);
+      color: var(--dawn);
+      min-height: 100vh;
+      overflow: hidden;
+    }
+
+    /* Canvas container */
+    #topology {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+    }
+
+    /* HUD Overlay */
+    .hud {
+      position: fixed;
+      inset: 0;
+      z-index: 10;
+      pointer-events: none;
+      display: flex;
+      flex-direction: column;
+      padding: 32px;
+    }
+
+    .hud * { pointer-events: auto; }
+
+    /* Top Bar */
+    .top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+    }
+
+    .logo {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--dawn-50);
+    }
+
+    .title {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      color: var(--gold);
+      text-transform: uppercase;
+    }
+
+    .stats {
+      display: flex;
+      gap: 24px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--dawn-30);
+    }
+
+    .stat-value {
+      color: var(--gold);
+    }
+
+    /* Info Panel */
+    .info-panel {
+      position: absolute;
+      bottom: 32px;
+      left: 32px;
+      max-width: 400px;
+      background: rgba(10, 9, 8, 0.85);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--dawn-08);
+      padding: 20px;
+    }
+
+    .info-title {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 12px;
+    }
+
+    .info-text {
+      font-family: var(--font-sans);
+      font-size: 13px;
+      line-height: 1.6;
+      color: var(--dawn-50);
+      margin-bottom: 8px;
+    }
+
+    .cluster-legend {
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--dawn-08);
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--dawn-30);
+    }
+
+    .legend-dot {
+      width: 8px;
+      height: 8px;
+      flex-shrink: 0;
+    }
+  </style>
+</head>
+<body>
+  <!-- Topology Canvas -->
+  <canvas id="topology"></canvas>
+
+  <!-- HUD Overlay -->
+  <div class="hud">
+    <div class="top-bar">
+      <div class="logo">Thoughtform</div>
+      <div class="title">Particle Topology Experiment</div>
+      <div class="stats">
+        <span>Clusters: <span class="stat-value">5</span></span>
+        <span>Particles: <span class="stat-value" id="particle-count">0</span></span>
+        <span>Connections: <span class="stat-value" id="connection-count">0</span></span>
+      </div>
+    </div>
+
+    <div class="info-panel">
+      <div class="info-title">// Topology Visualization</div>
+      <div class="info-text">
+        Exploring semantic terrain using particle clustering. Each cluster represents
+        a conceptual region in the latent space of machine intelligence.
+      </div>
+      <div class="info-text">
+        Particles breathe and flow, creating organic connections that reveal the
+        underlying geometry of meaning.
+      </div>
+      <div class="cluster-legend">
+        <div class="legend-item">
+          <span class="legend-dot" style="background: var(--gold);"></span>
+          <span>Gateway Portal</span>
+        </div>
+        <div class="legend-item">
+          <span class="legend-dot" style="background: var(--dawn-70);"></span>
+          <span>Crystalline Tower</span>
+        </div>
+        <div class="legend-item">
+          <span class="legend-dot" style="background: #5BA882;"></span>
+          <span>Trajectory Tunnel</span>
+        </div>
+        <div class="legend-item">
+          <span class="legend-dot" style="background: #FF6B35;"></span>
+          <span>Event Horizon</span>
+        </div>
+        <div class="legend-item">
+          <span class="legend-dot" style="background: var(--dawn-30);"></span>
+          <span>Terrain Base</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* ═══════════════════════════════════════════════════════════════
+       PARTICLE SYSTEM — Topology Visualization
+       Based on Ledger particle approach, adapted for Thoughtform topology
+       ═══════════════════════════════════════════════════════════════ */
+    
+    const GRID = 3; // Non-negotiable per brand guidelines
+    
+    // Color constants as RGB triplets
+    const DAWN = '236, 227, 214';
+    const VOID = '5, 4, 3';
+    const GOLD = '202, 165, 84';
+    const VERDE_GLOW = '91, 168, 130';
+    const ALERT = '255, 107, 53';
+    
+    const canvas = document.getElementById('topology');
+    const ctx = canvas.getContext('2d');
+    
+    // Topology clusters representing conceptual regions
+    const clusters = [
+      { 
+        name: 'gateway', 
+        cx: 0.25, 
+        cy: 0.35, 
+        spread: 0.12, 
+        color: GOLD, 
+        density: 80,
+        shape: 'portal' // Concentric rings
+      },
+      { 
+        name: 'tower', 
+        cx: 0.55, 
+        cy: 0.45, 
+        spread: 0.10, 
+        color: DAWN, 
+        density: 120,
+        shape: 'tower' // Vertical structure
+      },
+      { 
+        name: 'tunnel', 
+        cx: 0.75, 
+        cy: 0.60, 
+        spread: 0.14, 
+        color: VERDE_GLOW, 
+        density: 100,
+        shape: 'helix' // Spiral pattern
+      },
+      { 
+        name: 'horizon', 
+        cx: 0.50, 
+        cy: 0.75, 
+        spread: 0.15, 
+        color: ALERT, 
+        density: 90,
+        shape: 'sphere' // Radial expansion
+      },
+      { 
+        name: 'terrain', 
+        cx: 0.30, 
+        cy: 0.65, 
+        spread: 0.20, 
+        color: '236, 227, 214', 
+        density: 150,
+        shape: 'wave' // Undulating terrain
+      }
+    ];
+    
+    let particles = [];
+    let flows = [];
+    let time = 0;
+    
+    // Gaussian random for natural clustering
+    function gaussianRandom() {
+      let u = 0, v = 0;
+      while (u === 0) u = Math.random();
+      while (v === 0) v = Math.random();
+      return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+    }
+    
+    // Generate particles based on cluster shape
+    function generateParticles() {
+      const parts = [];
+      
+      clusters.forEach(cluster => {
+        const count = cluster.density;
+        
+        for (let i = 0; i < count; i++) {
+          let x, y;
+          
+          // Different shapes for different clusters
+          if (cluster.shape === 'portal') {
+            // Concentric rings
+            const ring = Math.floor(i / 10) + 1;
+            const angle = (i % 10) / 10 * Math.PI * 2;
+            const radius = (ring / 8) * cluster.spread;
+            x = cluster.cx + Math.cos(angle) * radius;
+            y = cluster.cy + Math.sin(angle) * radius * 0.6;
+          } else if (cluster.shape === 'tower') {
+            // Vertical tower structure
+            const level = Math.floor(i / 8);
+            const angle = (i % 8) / 8 * Math.PI * 2;
+            const radius = (1 - level / 15) * cluster.spread * 0.8;
+            x = cluster.cx + Math.cos(angle) * radius;
+            y = cluster.cy - (level / 15) * 0.3 + Math.sin(angle) * radius * 0.3;
+          } else if (cluster.shape === 'helix') {
+            // Helix/spiral
+            const t = i / count;
+            const angle = t * Math.PI * 6;
+            const radius = cluster.spread * (0.3 + t * 0.7);
+            x = cluster.cx + Math.cos(angle) * radius;
+            y = cluster.cy + Math.sin(angle) * radius * 0.5 + t * 0.2;
+          } else if (cluster.shape === 'sphere') {
+            // Radial sphere
+            const angle = Math.random() * Math.PI * 2;
+            const dist = Math.sqrt(Math.random()) * cluster.spread;
+            x = cluster.cx + Math.cos(angle) * dist;
+            y = cluster.cy + Math.sin(angle) * dist;
+          } else {
+            // Wave/terrain (gaussian cluster)
+            const angle = Math.random() * Math.PI * 2;
+            const dist = Math.abs(gaussianRandom()) * cluster.spread;
+            x = cluster.cx + Math.cos(angle) * dist;
+            y = cluster.cy + Math.sin(angle) * dist;
+          }
+          
+          parts.push({
+            x, y,
+            baseX: x,
+            baseY: y,
+            cluster: cluster.name,
+            color: cluster.color,
+            phase: Math.random() * Math.PI * 2,
+            size: cluster.shape === 'tower' ? 1.5 : 1,
+            clusterData: cluster
+          });
+        }
+      });
+      
+      return parts;
+    }
+    
+    // Generate flow connections between nearby particles
+    function generateFlows(particles) {
+      const fl = [];
+      particles.forEach((p, i) => {
+        particles.forEach((other, j) => {
+          if (i >= j) return;
+          
+          // Connect particles from same cluster or adjacent clusters
+          const sameCluster = p.cluster === other.cluster;
+          const dist = Math.hypot(p.x - other.x, p.y - other.y);
+          
+          // Same cluster: connect if close
+          if (sameCluster && dist < 0.08 && Math.random() > 0.85) {
+            fl.push({
+              x1: p.x, y1: p.y,
+              x2: other.x, y2: other.y,
+              color: p.color,
+              alpha: 0.12 - dist * 0.8,
+              cluster: p.cluster
+            });
+          }
+          // Different clusters: connect if very close (bridging)
+          else if (!sameCluster && dist < 0.05 && Math.random() > 0.95) {
+            fl.push({
+              x1: p.x, y1: p.y,
+              x2: other.x, y2: other.y,
+              color: DAWN,
+              alpha: 0.08,
+              cluster: 'bridge'
+            });
+          }
+        });
+      });
+      return fl;
+    }
+    
+    // Canvas setup with DPR
+    function setup() {
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = window.innerWidth * dpr;
+      canvas.height = window.innerHeight * dpr;
+      ctx.scale(dpr, dpr);
+      particles = generateParticles();
+      flows = generateFlows(particles);
+      
+      // Update stats
+      document.getElementById('particle-count').textContent = particles.length;
+      document.getElementById('connection-count').textContent = flows.length;
+    }
+    
+    // Core drawPixel function (GRID=3 snapping)
+    function drawPixel(x, y, color, alpha, size = GRID) {
+      const px = Math.floor(x / GRID) * GRID;
+      const py = Math.floor(y / GRID) * GRID;
+      ctx.fillStyle = `rgba(${color}, ${alpha})`;
+      ctx.fillRect(px, py, size - 1, size - 1);
+    }
+    
+    // Main animation loop
+    function draw() {
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      
+      // Clear with trail effect (motion blur)
+      ctx.fillStyle = `rgba(${VOID}, 0.08)`;
+      ctx.fillRect(0, 0, w, h);
+      
+      // Sparse background grid
+      if (time % 180 === 0) {
+        for (let x = 0; x < w; x += GRID * 25) {
+          for (let y = 0; y < h; y += GRID * 25) {
+            drawPixel(x, y, DAWN, 0.008);
+          }
+        }
+      }
+      
+      // Draw flow connections
+      flows.forEach(flow => {
+        const x1 = flow.x1 * w, y1 = flow.y1 * h;
+        const x2 = flow.x2 * w, y2 = flow.y2 * h;
+        const dist = Math.hypot(x2 - x1, y2 - y1);
+        const steps = Math.floor(dist / (GRID * 2));
+        
+        for (let i = 0; i <= steps; i++) {
+          const t = i / steps;
+          const x = x1 + (x2 - x1) * t;
+          const y = y1 + (y2 - y1) * t;
+          
+          // Pulse effect along flow
+          const pulse = Math.sin(time * 0.03 + t * 10) * 0.3 + 0.7;
+          const alpha = flow.alpha * pulse;
+          
+          if (alpha > 0.01) {
+            drawPixel(x, y, flow.color, alpha);
+          }
+        }
+      });
+      
+      // Draw cluster halos (atmosphere)
+      clusters.forEach(cluster => {
+        const cx = cluster.cx * w;
+        const cy = cluster.cy * h;
+        const spread = cluster.spread * w;
+        const pulse = Math.sin(time * 0.01) * 0.15 + 0.85;
+        
+        // Outer halo layers
+        for (let r = 0; r < 3; r++) {
+          const radius = spread * (r / 2) * 1.5;
+          const alpha = 0.015 * (1 - r / 3) * pulse;
+          const points = Math.floor(radius / GRID * 1.2);
+          
+          for (let i = 0; i < points; i++) {
+            const angle = (i / points) * Math.PI * 2 + time * 0.005;
+            if (Math.random() > 0.6) {
+              drawPixel(
+                cx + Math.cos(angle) * radius,
+                cy + Math.sin(angle) * radius,
+                cluster.color, alpha
+              );
+            }
+          }
+        }
+      });
+      
+      // Draw particles with breathing animation
+      particles.forEach((p, i) => {
+        // Breathing/cluster animation
+        const breathe = Math.sin(time * 0.02 + p.phase) * 0.01;
+        const driftX = Math.cos(time * 0.015 + p.phase * 1.5) * 0.005;
+        const driftY = Math.sin(time * 0.012 + p.phase * 2) * 0.005;
+        
+        // Shape-specific movement
+        if (p.clusterData.shape === 'portal') {
+          // Rotating rings
+          const angle = Math.atan2(p.baseY - p.clusterData.cy, p.baseX - p.clusterData.cx);
+          const dist = Math.hypot(p.baseX - p.clusterData.cx, p.baseY - p.clusterData.cy);
+          p.x = p.clusterData.cx + Math.cos(angle + time * 0.003) * dist;
+          p.y = p.clusterData.cy + Math.sin(angle + time * 0.003) * dist * 0.6;
+        } else if (p.clusterData.shape === 'tower') {
+          // Vertical breathing
+          p.x = p.baseX + driftX;
+          p.y = p.baseY + breathe * 0.5;
+        } else if (p.clusterData.shape === 'helix') {
+          // Spiral motion
+          const angle = Math.atan2(p.baseY - p.clusterData.cy, p.baseX - p.clusterData.cx);
+          const dist = Math.hypot(p.baseX - p.clusterData.cx, p.baseY - p.clusterData.cy);
+          p.x = p.clusterData.cx + Math.cos(angle + time * 0.008) * dist;
+          p.y = p.clusterData.cy + Math.sin(angle + time * 0.008) * dist * 0.5;
+        } else {
+          // Standard breathing
+          p.x = p.baseX + breathe + driftX;
+          p.y = p.baseY + breathe * 0.7 + driftY;
+        }
+        
+        const x = p.x * w;
+        const y = p.y * h;
+        const size = p.size * GRID;
+        
+        // Depth-based alpha (distance from cluster center)
+        const distFromCenter = Math.hypot(
+          (p.x - p.clusterData.cx) * w,
+          (p.y - p.clusterData.cy) * h
+        );
+        const maxDist = p.clusterData.spread * w;
+        const distAlpha = 1 - (distFromCenter / maxDist) * 0.5;
+        
+        // Breathing alpha
+        const breatheAlpha = 0.4 + Math.sin(time * 0.025 + p.phase) * 0.2;
+        
+        const alpha = distAlpha * breatheAlpha;
+        drawPixel(x, y, p.color, alpha, size);
+        
+        // Special effects for certain clusters
+        if (p.clusterData.shape === 'horizon' && distFromCenter < maxDist * 0.3) {
+          // Glow effect for sphere center
+          const glowPulse = Math.sin(time * 0.05 + i) * 0.3 + 0.7;
+          if (glowPulse > 0.5) {
+            drawPixel(x, y, p.color, 0.15 * glowPulse, GRID * 4);
+          }
+        }
+      });
+      
+      // Draw cluster centroids (crosshair markers)
+      clusters.forEach(cluster => {
+        const cx = cluster.cx * w;
+        const cy = cluster.cy * h;
+        const size = 8;
+        
+        // Crosshair pattern
+        for (let i = -size; i <= size; i += GRID) {
+          if (Math.abs(i) > 4) {
+            drawPixel(cx + i, cy, cluster.color, 0.25);
+            drawPixel(cx, cy + i, cluster.color, 0.25);
+          }
+        }
+        
+        // Center dot
+        drawPixel(cx, cy, cluster.color, 0.5, GRID * 2);
+      });
+      
+      time++;
+      requestAnimationFrame(draw);
+    }
+    
+    // Initialize
+    setup();
+    draw();
+    window.addEventListener('resize', setup);
+  </script>
+</body>
+</html>
+

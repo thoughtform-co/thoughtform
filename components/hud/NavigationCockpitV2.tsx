@@ -1,14 +1,21 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback } from "react";
-import { ParticleCanvas } from "./ParticleCanvas";
+import { useEffect, useState, useCallback } from "react";
+import { ParticleCanvasV2 } from "./ParticleCanvasV2";
 import { HUDFrame } from "./HUDFrame";
 import { Wordmark } from "./Wordmark";
 import { useLenis } from "@/lib/hooks/useLenis";
+import {
+  ParticleConfigProvider,
+  useParticleConfig,
+} from "@/lib/contexts/ParticleConfigContext";
+import { AdminGate, ParticleAdminPanel } from "@/components/admin";
 
-export function NavigationCockpit() {
+// Inner component that uses the config context
+function NavigationCockpitInner() {
   const [activeSection, setActiveSection] = useState("hero");
   const { scrollProgress, scrollTo } = useLenis();
+  const { config, isLoading } = useParticleConfig();
 
   // Handle navigation
   const handleNavigate = useCallback(
@@ -46,8 +53,8 @@ export function NavigationCockpit() {
 
   return (
     <>
-      {/* Fixed Background - 3D Latent Engine */}
-      <ParticleCanvas scrollProgress={scrollProgress} />
+      {/* Fixed Background - V2 Particle System with Gateway */}
+      <ParticleCanvasV2 scrollProgress={scrollProgress} config={config} />
 
       {/* Fixed HUD Frame - Navigation Cockpit */}
       <HUDFrame
@@ -56,9 +63,14 @@ export function NavigationCockpit() {
         onNavigate={handleNavigate}
       />
 
+      {/* Admin Panel - Only visible to authorized users */}
+      <AdminGate>
+        <ParticleAdminPanel />
+      </AdminGate>
+
       {/* Scroll Container - Content Sections */}
       <main className="scroll-container">
-        {/* Section 1: Hero */}
+        {/* Section 1: Hero - Simplified */}
         <section
           className="section section-hero"
           id="hero"
@@ -70,14 +82,16 @@ export function NavigationCockpit() {
                 <Wordmark />
               </div>
 
-              <p className="hero-tagline">
-                Navigate the alien terrain of machine intelligence.
+              <p className="hero-tagline hero-tagline-v2">
+                Thoughtform pioneers intuitive
+                <br />
+                human-AI collaboration.
               </p>
 
-              <p className="hero-description">
-                Thoughtform pioneers intuitive human-AI collaboration. We teach
-                teams to think <em>with</em> AI—navigating its latent space for
-                creative breakthroughs.
+              <p className="hero-description hero-description-v2">
+                We teach teams how to navigate AI
+                <br />
+                for creative and strategic work.
               </p>
 
               <div className="hero-cta">
@@ -89,56 +103,47 @@ export function NavigationCockpit() {
                     handleNavigate("manifesto");
                   }}
                 >
-                  Begin Navigation
+                  Enter the Gateway
                 </a>
-              </div>
-
-              <div className="hero-meta">
-                <span className="meta-label">Landmark:</span>
-                <span className="meta-value">
-                  semantic terrain / latent topology
-                </span>
               </div>
             </div>
 
             <div className="hero-visualization">
-              {/* Landmark 1 canvas renders in background */}
+              {/* Gateway renders in background via ParticleCanvasV2 */}
             </div>
           </div>
         </section>
 
-        {/* Section 2: Manifesto - The Commandment */}
+        {/* Section 2: Manifesto - LARGER */}
         <section
-          className="section section-manifesto"
+          className="section section-manifesto section-manifesto-v2"
           id="manifesto"
           data-section="manifesto"
         >
-          <div className="terminal-frame">
-            <div className="terminal-header">
+          <div className="terminal-frame terminal-frame-v2">
+            <div className="terminal-header terminal-header-v2">
               <div className="terminal-icon" />
               <span className="terminal-title">Manifesto</span>
             </div>
-            
-            <div className="terminal-frame-inner">
-              <div className="terminal-content">
-                <h2 className="headline">
-                  AI Isn&apos;t Software
-                </h2>
 
-                <div className="text-block">
-                  <p className="text">
+            <div className="terminal-frame-inner">
+              <div className="terminal-content terminal-content-v2">
+                <h2 className="headline headline-v2">AI Isn&apos;t Software</h2>
+
+                <div className="text-block text-block-v2">
+                  <p className="text text-v2">
                     Most companies struggle because they treat AI like normal
                     software.
                   </p>
-                  <p className="text text-emphasis">
+                  <p className="text text-emphasis text-v2">
                     But AI isn&apos;t a tool to command.
                   </p>
-                  <p className="text">
+                  <p className="text text-v2">
                     It&apos;s a strange, new intelligence we must learn to{" "}
-                    <em>navigate</em>. It leaps across dimensions. It hallucinates.
-                    It surprises.
+                    <em>navigate</em>. It leaps across dimensions. It
+                    hallucinates. It surprises.
                   </p>
-                  <p className="text">
+                  <p className="text text-v2">
                     In technical work, that strangeness must be constrained.
                     <br />
                     In creative work?{" "}
@@ -148,11 +153,11 @@ export function NavigationCockpit() {
               </div>
             </div>
 
-            <div className="terminal-footer">
+            <div className="terminal-footer terminal-footer-v2">
               <span className="terminal-tag">Landmark: Crystalline Tower</span>
               <span className="terminal-tag">Section 02</span>
             </div>
-            
+
             {/* Bottom corner brackets */}
             <div className="terminal-frame-corners" />
           </div>
@@ -171,9 +176,7 @@ export function NavigationCockpit() {
             </div>
 
             <div className="section-content">
-              <h2 className="headline">
-                Navigation Training
-              </h2>
+              <h2 className="headline">Navigation Training</h2>
 
               <div className="services-grid">
                 <div className="service-card">
@@ -225,9 +228,7 @@ export function NavigationCockpit() {
             </div>
 
             <div className="section-content section-content-centered">
-              <h2 className="headline">
-                Plot Your Course
-              </h2>
+              <h2 className="headline">Plot Your Course</h2>
 
               <p className="text text-center">
                 Ready to navigate intelligence with your team?
@@ -240,9 +241,7 @@ export function NavigationCockpit() {
                 Initiate Contact
               </a>
 
-              <div className="contact-email">
-                hello@thoughtform.co
-              </div>
+              <div className="contact-email">hello@thoughtform.co</div>
 
               <div className="section-meta">
                 <span className="meta-label">Landmark:</span>
@@ -254,7 +253,89 @@ export function NavigationCockpit() {
           </div>
         </section>
       </main>
+
+      {/* V2 Specific Styles */}
+      <style jsx global>{`
+        /* Hero V2 - Cleaner, more focused */
+        .hero-tagline-v2 {
+          font-size: clamp(24px, 3vw, 32px) !important;
+          line-height: 1.3 !important;
+          margin-bottom: var(--space-lg) !important;
+        }
+
+        .hero-description-v2 {
+          font-size: 16px !important;
+          line-height: 1.6 !important;
+          color: var(--dawn-70) !important;
+          margin-bottom: var(--space-2xl) !important;
+        }
+
+        /* Manifesto V2 - LARGER */
+        .section-manifesto-v2 {
+          padding: 60px calc(var(--hud-padding) + var(--rail-width) + 80px) !important;
+        }
+
+        .terminal-frame-v2 {
+          max-width: 880px !important;
+          padding: var(--space-3xl) !important;
+        }
+
+        .terminal-header-v2 {
+          margin-bottom: var(--space-xl) !important;
+        }
+
+        .terminal-content-v2 {
+          padding: var(--space-xl) 0 !important;
+        }
+
+        .headline-v2 {
+          font-size: clamp(36px, 5vw, 52px) !important;
+          margin-bottom: var(--space-2xl) !important;
+        }
+
+        .text-block-v2 {
+          max-width: 700px !important;
+        }
+
+        .text-v2 {
+          font-size: 18px !important;
+          line-height: 1.7 !important;
+          margin-bottom: var(--space-lg) !important;
+        }
+
+        .text-v2.text-emphasis {
+          font-size: 20px !important;
+        }
+
+        .terminal-footer-v2 {
+          margin-top: var(--space-2xl) !important;
+          padding-top: var(--space-lg) !important;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 900px) {
+          .headline-v2 {
+            font-size: clamp(28px, 4vw, 40px) !important;
+          }
+
+          .text-v2 {
+            font-size: 16px !important;
+          }
+
+          .terminal-frame-v2 {
+            padding: var(--space-2xl) !important;
+          }
+        }
+      `}</style>
     </>
   );
 }
 
+// Main component with provider wrapper
+export function NavigationCockpitV2() {
+  return (
+    <ParticleConfigProvider>
+      <NavigationCockpitInner />
+    </ParticleConfigProvider>
+  );
+}
