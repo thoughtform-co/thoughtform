@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { ParticleCanvasV2 } from "./ParticleCanvasV2";
+import { ThreeGateway } from "./ThreeGateway";
 import { HUDFrame } from "./HUDFrame";
 import { Wordmark } from "./Wordmark";
 import { useLenis } from "@/lib/hooks/useLenis";
@@ -15,7 +16,15 @@ import { AdminGate, ParticleAdminPanel } from "@/components/admin";
 function NavigationCockpitInner() {
   const [activeSection, setActiveSection] = useState("hero");
   const { scrollProgress, scrollTo } = useLenis();
-  const { config, isLoading } = useParticleConfig();
+  const { config: rawConfig, isLoading } = useParticleConfig();
+  
+  // Force-disable the canvas gateway since we're using Three.js gateway
+  const config = {
+    ...rawConfig,
+    landmarks: rawConfig.landmarks.map(l => 
+      l.shape === "gateway" ? { ...l, enabled: false } : l
+    ),
+  };
 
   // Handle navigation
   const handleNavigate = useCallback(
@@ -53,8 +62,11 @@ function NavigationCockpitInner() {
 
   return (
     <>
-      {/* Fixed Background - V2 Particle System with Gateway */}
+      {/* Fixed Background - V2 Particle System (Manifold) */}
       <ParticleCanvasV2 scrollProgress={scrollProgress} config={config} />
+
+      {/* Three.js Gateway Overlay - only in hero section, fades out on scroll */}
+      <ThreeGateway scrollProgress={scrollProgress} config={rawConfig.gateway} />
 
       {/* Fixed HUD Frame - Navigation Cockpit */}
       <HUDFrame

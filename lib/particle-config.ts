@@ -59,11 +59,36 @@ export interface LandmarkConfig {
 }
 
 /**
+ * Configuration for the Three.js Gateway (hero section)
+ */
+export interface GatewayConfig {
+  /** Whether the gateway is visible */
+  enabled: boolean;
+  /** Primary color for the portal ring */
+  primaryColor: string;
+  /** Accent/gold color for inner details */
+  accentColor: string;
+  /** Overall scale multiplier (0.5-3.0) */
+  scale: number;
+  /** Horizontal position offset (-3 to 3) */
+  positionX: number;
+  /** Vertical position offset (-2 to 2) */
+  positionY: number;
+  /** Particle density multiplier (0.3-2.0) */
+  density: number;
+  /** Tunnel depth multiplier (0.5-2.0) */
+  tunnelDepth: number;
+  /** Rotation on Y-axis in radians */
+  rotationY: number;
+}
+
+/**
  * Complete particle system configuration
  */
 export interface ParticleSystemConfig {
   manifold: ManifoldConfig;
   landmarks: LandmarkConfig[];
+  gateway: GatewayConfig;
   /** Config version for migrations */
   version: number;
 }
@@ -95,7 +120,7 @@ export const DEFAULT_LANDMARKS: LandmarkConfig[] = [
     density: 1.0,
     scale: 1.0,
     position: { x: 150, y: 180, z: 800 },
-    enabled: true,
+    enabled: false, // Disabled - using Three.js gateway instead
   },
   {
     id: "tower",
@@ -133,12 +158,28 @@ export const DEFAULT_LANDMARKS: LandmarkConfig[] = [
 ];
 
 /**
+ * Default gateway configuration
+ */
+export const DEFAULT_GATEWAY: GatewayConfig = {
+  enabled: true,
+  primaryColor: "#ebe3d6", // Dawn color
+  accentColor: "#caa554", // Gold
+  scale: 2.2,
+  positionX: -1.3, // Right side of screen (Three.js coords)
+  positionY: 0.15,
+  density: 1.0,
+  tunnelDepth: 1.0,
+  rotationY: -0.5, // Facing inward
+};
+
+/**
  * Default complete configuration
  */
 export const DEFAULT_CONFIG: ParticleSystemConfig = {
   manifold: DEFAULT_MANIFOLD,
   landmarks: DEFAULT_LANDMARKS,
-  version: 1,
+  gateway: DEFAULT_GATEWAY,
+  version: 2, // Bumped version for gateway config
 };
 
 /**
@@ -155,6 +196,10 @@ export function mergeWithDefaults(
     landmarks: partial.landmarks?.length
       ? partial.landmarks
       : DEFAULT_LANDMARKS,
+    gateway: {
+      ...DEFAULT_GATEWAY,
+      ...(partial.gateway || {}),
+    },
     version: partial.version || DEFAULT_CONFIG.version,
   };
 }

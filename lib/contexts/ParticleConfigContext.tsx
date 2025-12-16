@@ -13,6 +13,7 @@ import {
   type ParticleSystemConfig,
   type ManifoldConfig,
   type LandmarkConfig,
+  type GatewayConfig,
 } from "@/lib/particle-config";
 
 // localStorage key for fallback storage
@@ -64,6 +65,8 @@ interface ParticleConfigContextValue {
   updateConfig: (config: Partial<ParticleSystemConfig>) => void;
   /** Update manifold settings */
   updateManifold: (manifold: Partial<ManifoldConfig>) => void;
+  /** Update gateway settings */
+  updateGateway: (gateway: Partial<GatewayConfig>) => void;
   /** Update a specific landmark */
   updateLandmark: (id: string, updates: Partial<LandmarkConfig>) => void;
   /** Add a new landmark */
@@ -166,6 +169,17 @@ export function ParticleConfigProvider({
       ...prev,
       manifold: {
         ...prev.manifold,
+        ...updates,
+      },
+    }));
+  }, []);
+
+  // Update gateway settings
+  const updateGateway = useCallback((updates: Partial<GatewayConfig>) => {
+    setConfig((prev) => ({
+      ...prev,
+      gateway: {
+        ...prev.gateway,
         ...updates,
       },
     }));
@@ -307,6 +321,7 @@ export function ParticleConfigProvider({
       storageMode,
       updateConfig,
       updateManifold,
+      updateGateway,
       updateLandmark,
       addLandmark,
       removeLandmark,
@@ -324,6 +339,7 @@ export function ParticleConfigProvider({
       storageMode,
       updateConfig,
       updateManifold,
+      updateGateway,
       updateLandmark,
       addLandmark,
       removeLandmark,

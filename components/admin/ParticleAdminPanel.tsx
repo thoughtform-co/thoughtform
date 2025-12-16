@@ -8,13 +8,14 @@ import {
   type LandmarkShape,
   type LandmarkConfig,
   type ManifoldConfig,
+  type GatewayConfig,
 } from "@/lib/particle-config";
 
-type Tab = "manifold" | "landmarks";
+type Tab = "gateway" | "manifold" | "landmarks";
 
 export function ParticleAdminPanel() {
   const [isOpen, setIsOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<Tab>("manifold");
+  const [activeTab, setActiveTab] = useState<Tab>("gateway");
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
   
@@ -83,6 +84,7 @@ export function ParticleAdminPanel() {
     error,
     storageMode,
     updateManifold,
+    updateGateway,
     updateLandmark,
     addLandmark,
     removeLandmark,
@@ -185,6 +187,12 @@ export function ParticleAdminPanel() {
           {/* Tabs */}
           <div className="admin-tabs">
             <button
+              className={`admin-tab ${activeTab === "gateway" ? "active" : ""}`}
+              onClick={() => setActiveTab("gateway")}
+            >
+              Gateway
+            </button>
+            <button
               className={`admin-tab ${activeTab === "manifold" ? "active" : ""}`}
               onClick={() => setActiveTab("manifold")}
             >
@@ -194,12 +202,18 @@ export function ParticleAdminPanel() {
               className={`admin-tab ${activeTab === "landmarks" ? "active" : ""}`}
               onClick={() => setActiveTab("landmarks")}
             >
-              Landmarks ({config.landmarks.length})
+              Landmarks
             </button>
           </div>
 
           {/* Content */}
           <div className="admin-content">
+            {activeTab === "gateway" && (
+              <GatewayControls
+                gateway={config.gateway}
+                onUpdate={updateGateway}
+              />
+            )}
             {activeTab === "manifold" && (
               <ManifoldControls
                 manifold={config.manifold}
@@ -596,6 +610,171 @@ export function ParticleAdminPanel() {
         }
       `}</style>
     </>
+  );
+}
+
+// Gateway Controls Component (Three.js portal)
+interface GatewayControlsProps {
+  gateway: GatewayConfig;
+  onUpdate: (updates: Partial<GatewayConfig>) => void;
+}
+
+function GatewayControls({ gateway, onUpdate }: GatewayControlsProps) {
+  return (
+    <div>
+      <div className="admin-section">
+        <div className="admin-section-title">Visibility</div>
+        <div className="admin-field">
+          <label className="landmark-toggle">
+            <input
+              type="checkbox"
+              checked={gateway.enabled}
+              onChange={(e) => onUpdate({ enabled: e.target.checked })}
+              className="admin-checkbox"
+            />
+            <span className="admin-label" style={{ margin: 0 }}>
+              Show Gateway Portal
+            </span>
+          </label>
+        </div>
+      </div>
+
+      <div className="admin-section">
+        <div className="admin-section-title">Colors</div>
+        <div className="admin-field">
+          <div className="admin-label">Primary Color (Ring/Structure)</div>
+          <div className="admin-color-row">
+            {Object.entries(COLOR_PRESETS).map(([name, color]) => (
+              <button
+                key={name}
+                className={`admin-color-btn ${gateway.primaryColor === color ? "active" : ""}`}
+                style={{ backgroundColor: color }}
+                onClick={() => onUpdate({ primaryColor: color })}
+                title={name}
+              />
+            ))}
+            <input
+              type="color"
+              value={gateway.primaryColor}
+              onChange={(e) => onUpdate({ primaryColor: e.target.value })}
+              className="admin-color-input"
+            />
+          </div>
+        </div>
+        <div className="admin-field">
+          <div className="admin-label">Accent Color (Gold Details)</div>
+          <div className="admin-color-row">
+            {Object.entries(COLOR_PRESETS).map(([name, color]) => (
+              <button
+                key={name}
+                className={`admin-color-btn ${gateway.accentColor === color ? "active" : ""}`}
+                style={{ backgroundColor: color }}
+                onClick={() => onUpdate({ accentColor: color })}
+                title={name}
+              />
+            ))}
+            <input
+              type="color"
+              value={gateway.accentColor}
+              onChange={(e) => onUpdate({ accentColor: e.target.value })}
+              className="admin-color-input"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div className="admin-section">
+        <div className="admin-section-title">Size & Position</div>
+        <div className="admin-field">
+          <div className="admin-label">
+            <span>Scale</span>
+            <span className="admin-value">{gateway.scale.toFixed(1)}x</span>
+          </div>
+          <input
+            type="range"
+            min="50"
+            max="300"
+            value={gateway.scale * 100}
+            onChange={(e) => onUpdate({ scale: parseInt(e.target.value) / 100 })}
+            className="admin-slider"
+          />
+        </div>
+        <div className="admin-field">
+          <div className="admin-label">
+            <span>Position X (Horizontal)</span>
+            <span className="admin-value">{gateway.positionX.toFixed(1)}</span>
+          </div>
+          <input
+            type="range"
+            min="-300"
+            max="100"
+            value={gateway.positionX * 100}
+            onChange={(e) => onUpdate({ positionX: parseInt(e.target.value) / 100 })}
+            className="admin-slider"
+          />
+        </div>
+        <div className="admin-field">
+          <div className="admin-label">
+            <span>Position Y (Vertical)</span>
+            <span className="admin-value">{gateway.positionY.toFixed(2)}</span>
+          </div>
+          <input
+            type="range"
+            min="-200"
+            max="200"
+            value={gateway.positionY * 100}
+            onChange={(e) => onUpdate({ positionY: parseInt(e.target.value) / 100 })}
+            className="admin-slider"
+          />
+        </div>
+      </div>
+
+      <div className="admin-section">
+        <div className="admin-section-title">Appearance</div>
+        <div className="admin-field">
+          <div className="admin-label">
+            <span>Particle Density</span>
+            <span className="admin-value">{gateway.density.toFixed(1)}x</span>
+          </div>
+          <input
+            type="range"
+            min="30"
+            max="200"
+            value={gateway.density * 100}
+            onChange={(e) => onUpdate({ density: parseInt(e.target.value) / 100 })}
+            className="admin-slider"
+          />
+        </div>
+        <div className="admin-field">
+          <div className="admin-label">
+            <span>Tunnel Depth</span>
+            <span className="admin-value">{gateway.tunnelDepth.toFixed(1)}x</span>
+          </div>
+          <input
+            type="range"
+            min="30"
+            max="200"
+            value={gateway.tunnelDepth * 100}
+            onChange={(e) => onUpdate({ tunnelDepth: parseInt(e.target.value) / 100 })}
+            className="admin-slider"
+          />
+        </div>
+        <div className="admin-field">
+          <div className="admin-label">
+            <span>Rotation (Inward Angle)</span>
+            <span className="admin-value">{(gateway.rotationY * (180 / Math.PI)).toFixed(0)}°</span>
+          </div>
+          <input
+            type="range"
+            min="-157"
+            max="157"
+            value={gateway.rotationY * 100}
+            onChange={(e) => onUpdate({ rotationY: parseInt(e.target.value) / 100 })}
+            className="admin-slider"
+          />
+        </div>
+      </div>
+    </div>
   );
 }
 
