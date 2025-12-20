@@ -238,7 +238,7 @@ export function ParticleAdminPanel() {
       sectionId: "new-section",
       name: "New Landmark",
       shape: "ring",
-      color: COLOR_PRESETS.gold,
+      color: COLOR_PRESETS["Tensor Gold"],
       density: 1.0,
       scale: 1.0,
       position: { x: 0, y: 0, z: 5000 },
