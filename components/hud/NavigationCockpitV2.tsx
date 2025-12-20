@@ -1,16 +1,21 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { ParticleCanvasV2 } from "./ParticleCanvasV2";
 import { ThreeGateway } from "./ThreeGateway";
 import { HUDFrame } from "./HUDFrame";
 import { Wordmark } from "./Wordmark";
+import { WordmarkSans } from "./WordmarkSans";
+import { ThoughtformSigil } from "./ThoughtformSigil";
+import { GlitchText } from "./GlitchText";
 import { useLenis } from "@/lib/hooks/useLenis";
 import {
   ParticleConfigProvider,
   useParticleConfig,
 } from "@/lib/contexts/ParticleConfigContext";
 import { AdminGate, ParticleAdminPanel } from "@/components/admin";
+import { Stack } from "@/components/ui/Stack";
+import { Typewriter } from "@/components/ui/Typewriter";
 
 // Inner component that uses the config context
 function NavigationCockpitInner() {
@@ -18,11 +23,19 @@ function NavigationCockpitInner() {
   const { scrollProgress, scrollTo } = useLenis();
   const { config: rawConfig, isLoading } = useParticleConfig();
   
+  // Refs for tracking element positions
+  const wordmarkRef = useRef<HTMLDivElement>(null);
+  const definitionRef = useRef<HTMLDivElement>(null);
+  
+  // Determine if we should show the SVG Vector I
+  const showSvgVector = scrollProgress < 0.02;
+  
   // Force-disable the canvas gateway since we're using Three.js gateway
+  // Also disable Lorenz attractor since it's now rendered by ParticleVectorMorph
   const config = {
     ...rawConfig,
     landmarks: rawConfig.landmarks.map(l => 
-      l.shape === "gateway" ? { ...l, enabled: false } : l
+      l.shape === "gateway" || l.shape === "lorenz" ? { ...l, enabled: false } : l
     ),
   };
 
@@ -68,6 +81,52 @@ function NavigationCockpitInner() {
       {/* Three.js Gateway Overlay - only in hero section, fades out on scroll */}
       <ThreeGateway scrollProgress={scrollProgress} config={rawConfig.gateway} />
 
+      {/* Hero Logo + Text - positioned in top left */}
+      {/* Hero Wordmark - top aligned with HUD line */}
+      <div
+        className="hero-wordmark-container"
+        style={{
+          opacity: scrollProgress > 0.005 ? 0 : 1,
+          pointerEvents: scrollProgress > 0.005 ? 'none' : 'auto',
+        }}
+      >
+        <div className="hero-wordmark-topleft" ref={wordmarkRef}>
+          <Wordmark hideVectorI={!showSvgVector} />
+        </div>
+      </div>
+
+      {/* Runway arrows pointing to gateway */}
+      <div
+        className="hero-runway-arrows"
+        style={{
+          opacity: scrollProgress > 0.005 ? 0 : 1,
+          pointerEvents: 'none',
+        }}
+      >
+        <div className="runway-arrow runway-arrow-1">›</div>
+        <div className="runway-arrow runway-arrow-2">›</div>
+        <div className="runway-arrow runway-arrow-3">›</div>
+        <div className="runway-arrow runway-arrow-4">›</div>
+        <div className="runway-arrow runway-arrow-5">›</div>
+      </div>
+
+      {/* Hero Text - bottom aligned */}
+      <div
+        className="hero-text-container"
+        style={{
+          opacity: scrollProgress > 0.005 ? 0 : 1,
+          pointerEvents: scrollProgress > 0.005 ? 'none' : 'auto',
+        }}
+      >
+        <div className="hero-text-frame">
+          <p className="hero-tagline hero-tagline-v2 hero-tagline-main">
+            AI isn&apos;t software to command.<br />
+            It&apos;s a strange intelligence to navigate.<br />
+            Thoughtform teaches how.
+          </p>
+        </div>
+      </div>
+
       {/* Fixed HUD Frame - Navigation Cockpit */}
       <HUDFrame
         activeSection={activeSection}
@@ -80,6 +139,30 @@ function NavigationCockpitInner() {
         <ParticleAdminPanel />
       </AdminGate>
 
+      {/* Fixed Thoughtform Sigil - appears centered during scroll */}
+      {rawConfig.sigil?.enabled !== false && (
+        <div 
+          ref={definitionRef}
+          className="fixed-sigil-container"
+          style={{
+            opacity: scrollProgress < 0.02 ? 0 : Math.min(1, (scrollProgress - 0.02) * 15),
+            pointerEvents: 'none',
+          }}
+        >
+          <ThoughtformSigil
+            size={rawConfig.sigil?.size ?? 220}
+            particleCount={rawConfig.sigil?.particleCount ?? 500}
+            color={rawConfig.sigil?.color ?? "202, 165, 84"}
+            scrollProgress={scrollProgress}
+            particleSize={rawConfig.sigil?.particleSize ?? 1.0}
+            opacity={rawConfig.sigil?.opacity ?? 1.0}
+            wanderStrength={rawConfig.sigil?.wanderStrength ?? 1.0}
+            pulseSpeed={rawConfig.sigil?.pulseSpeed ?? 1.0}
+            returnStrength={rawConfig.sigil?.returnStrength ?? 1.0}
+          />
+        </div>
+      )}
+
       {/* Scroll Container - Content Sections */}
       <main className="scroll-container">
         {/* Section 1: Hero - Simplified */}
@@ -89,93 +172,132 @@ function NavigationCockpitInner() {
           data-section="hero"
         >
           <div className="hero-layout">
-            <div className="hero-content">
-              <div className="wordmark">
-                <Wordmark />
-              </div>
-
-              <p className="hero-tagline hero-tagline-v2">
-                Thoughtform pioneers intuitive
-                <br />
-                human-AI collaboration.
-              </p>
-
-              <p className="hero-description hero-description-v2">
-                We teach teams how to navigate AI
-                <br />
-                for creative and strategic work.
-              </p>
-
-              <div className="hero-cta">
-                <a
-                  href="#manifesto"
-                  className="btn btn-primary"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    handleNavigate("manifesto");
-                  }}
-                >
-                  Enter the Gateway
-                </a>
-              </div>
+            {/* Definition content - fades in during scroll */}
+            <div 
+              className="hero-tagline-frame"
+              style={{
+                opacity: scrollProgress < 0.08 ? 0 : scrollProgress < 0.18 ? 1 : Math.max(0, 1 - (scrollProgress - 0.18) * 8),
+                visibility: scrollProgress < 0.08 ? 'hidden' : 'visible',
+                pointerEvents: scrollProgress > 0.25 || scrollProgress < 0.08 ? 'none' : 'auto',
+              }}
+            >
+              <Stack gap={20} className="definition-frame">
+                <div className="definition-wordmark">
+                  <WordmarkSans />
+                </div>
+                <span className="definition-phonetic">(θɔːtfɔːrm / THAWT-form)</span>
+                <p className="hero-tagline hero-tagline-v2">
+                  <Typewriter
+                    text="the practice of intuitive human-AI collaboration"
+                    active={scrollProgress > 0.08}
+                    startDelay={200}
+                    speed={15}
+                    speedVariation={8}
+                    glitch={true}
+                    glitchIterations={1}
+                  />
+                </p>
+              </Stack>
             </div>
 
-            <div className="hero-visualization">
-              {/* Gateway renders in background via ParticleCanvasV2 */}
+            {/* Module cards on the right - pointing to sigil */}
+            <div 
+              className="definition-modules"
+              style={{
+                opacity: scrollProgress < 0.08 ? 0 : scrollProgress < 0.18 ? 1 : Math.max(0, 1 - (scrollProgress - 0.18) * 8),
+                visibility: scrollProgress < 0.08 ? 'hidden' : 'visible',
+                pointerEvents: scrollProgress > 0.25 || scrollProgress < 0.08 ? 'none' : 'auto',
+              }}
+            >
+              <div className="module-card">
+                <div className="module-connect" />
+                <div className="module-header">
+                  <span className="module-id">MOD_01</span>
+                  <span className="module-icon">⊞</span>
+                </div>
+                <h3 className="module-title">Navigate Intelligence</h3>
+                <p className="module-desc">Chart a course through the latent space. Identify high-value coordinates amidst the noise.</p>
+              </div>
+
+              <div className="module-card">
+                <div className="module-connect" />
+                <div className="module-header">
+                  <span className="module-id">MOD_02</span>
+                  <span className="module-icon">⊟</span>
+                </div>
+                <h3 className="module-title">Steer from Mediocrity</h3>
+                <p className="module-desc">Force the model away from the average. Displace the probable to find the exceptional.</p>
+              </div>
+
+              <div className="module-card">
+                <div className="module-connect" />
+                <div className="module-header">
+                  <span className="module-id">MOD_03</span>
+                  <span className="module-icon">✦</span>
+                </div>
+                <h3 className="module-title">Leverage Hallucinations</h3>
+                <p className="module-desc">Errors are not bugs; they are creative vectors. Use the glitch to break linear thinking.</p>
+              </div>
             </div>
           </div>
         </section>
 
-        {/* Section 2: Manifesto - LARGER */}
+        {/* Section 2: Definition - The Semantic Core with Sigil */}
         <section
-          className="section section-manifesto section-manifesto-v2"
+          className="section section-definition"
+          id="definition"
+          data-section="definition"
+        >
+          {/* Placeholder for layout */}
+          <div className="sigil-placeholder" />
+        </section>
+
+        {/* Section 3: Manifesto - Elimar-inspired text-based layout */}
+        <section
+          className="section section-manifesto"
           id="manifesto"
           data-section="manifesto"
         >
-          <div className="terminal-frame terminal-frame-v2">
-            <div className="terminal-header terminal-header-v2">
-              <div className="terminal-icon" />
-              <span className="terminal-title">Manifesto</span>
+          <div className="manifesto-layout-text">
+            {/* Section label - horizontal like Services */}
+            <div className="section-label">
+              <span className="label-number">03</span>
+              <span className="label-text">Manifesto</span>
             </div>
 
-            <div className="terminal-frame-inner">
-              <div className="terminal-content terminal-content-v2">
-                <h2 className="headline headline-v2">AI Isn&apos;t Software</h2>
+            {/* Content with vertical line */}
+            <div className="manifesto-content-area">
+              {/* Large title */}
+              <h2 className="manifesto-title-large">AI Isn&apos;t Software.</h2>
 
-                <div className="text-block text-block-v2">
-                  <p className="text text-v2">
-                    Most companies struggle because they treat AI like normal
-                    software.
-                  </p>
-                  <p className="text text-emphasis text-v2">
-                    But AI isn&apos;t a tool to command.
-                  </p>
-                  <p className="text text-v2">
-                    It&apos;s a strange, new intelligence we must learn to{" "}
-                    <em>navigate</em>. It leaps across dimensions. It
-                    hallucinates. It surprises.
-                  </p>
-                  <p className="text text-v2">
-                    In technical work, that strangeness must be constrained.
-                    <br />
-                    In creative work?{" "}
-                    <strong>It&apos;s the source of truly novel ideas.</strong>
-                  </p>
-                </div>
+              {/* Body text - all same size */}
+              <div className="manifesto-body-text">
+                <p>
+                  Most companies struggle with their AI adoption because they treat AI like normal software.
+                </p>
+
+                <p>
+                  But AI isn&apos;t a tool to command. It&apos;s a strange, new intelligence we have to learn how to{" "}
+                  <em>navigate</em>. It leaps across dimensions we can&apos;t fathom.
+                  It hallucinates. It surprises.
+                </p>
+
+                <p>
+                  In technical work, that strangeness must be constrained.
+                  But in creative and strategic work? It&apos;s the source of truly
+                  novel ideas.
+                </p>
+
+                <p>
+                  Thoughtform teaches teams to think <strong>with</strong> that
+                  intelligence—navigating its strangeness for creative breakthroughs.
+                </p>
               </div>
             </div>
-
-            <div className="terminal-footer terminal-footer-v2">
-              <span className="terminal-tag">Landmark: Crystalline Tower</span>
-              <span className="terminal-tag">Section 02</span>
-            </div>
-
-            {/* Bottom corner brackets */}
-            <div className="terminal-frame-corners" />
           </div>
         </section>
 
-        {/* Section 3: Services */}
+        {/* Section 4: Services */}
         <section
           className="section section-services"
           id="services"
@@ -183,7 +305,7 @@ function NavigationCockpitInner() {
         >
           <div className="section-layout">
             <div className="section-label">
-              <span className="label-number">03</span>
+              <span className="label-number">04</span>
               <span className="label-text">Services</span>
             </div>
 
@@ -227,7 +349,7 @@ function NavigationCockpitInner() {
           </div>
         </section>
 
-        {/* Section 4: Contact */}
+        {/* Section 5: Contact */}
         <section
           className="section section-contact"
           id="contact"
@@ -235,7 +357,7 @@ function NavigationCockpitInner() {
         >
           <div className="section-layout">
             <div className="section-label">
-              <span className="label-number">04</span>
+              <span className="label-number">05</span>
               <span className="label-text">Contact</span>
             </div>
 
@@ -268,11 +390,133 @@ function NavigationCockpitInner() {
 
       {/* V2 Specific Styles */}
       <style jsx global>{`
+        /* Hero section and layout */
+        .section-hero {
+          position: relative;
+          min-height: 100vh;
+          height: 100vh;
+        }
+
+        .hero-layout {
+          position: relative;
+          width: 100%;
+          height: 100vh;
+        }
+
+        /* Hero main container - Logo + Text in Stack */
+        /* Hero wordmark container - top aligned with HUD line */
+        .hero-wordmark-container {
+          position: fixed;
+          top: 90px;
+          left: calc(var(--rail-width) + 120px);
+          z-index: 10;
+          transition: opacity 0.3s ease-out;
+        }
+
+        .hero-wordmark-topleft {
+          width: 220px;
+        }
+
+        .hero-wordmark-topleft svg {
+          width: 100%;
+          height: auto;
+        }
+
+        /* Hero text container - vertically centered */
+        .hero-text-container {
+          position: fixed;
+          top: 50%;
+          left: calc(var(--rail-width) + 120px);
+          transform: translateY(-50%);
+          z-index: 10;
+          transition: opacity 0.3s ease-out;
+        }
+
+        /* Runway arrows pointing to gateway - bottom aligned */
+        .hero-runway-arrows {
+          position: fixed;
+          bottom: 90px;
+          left: calc(var(--rail-width) + 120px);
+          display: flex;
+          gap: 24px;
+          z-index: 10;
+          transition: opacity 0.3s ease-out;
+        }
+
+        .runway-arrow {
+          font-size: 28px;
+          color: var(--gold, #caa554);
+          opacity: 0.3;
+          animation: runway-pulse 2s ease-in-out infinite;
+        }
+
+        .runway-arrow-1 { animation-delay: 0s; }
+        .runway-arrow-2 { animation-delay: 0.15s; }
+        .runway-arrow-3 { animation-delay: 0.3s; }
+        .runway-arrow-4 { animation-delay: 0.45s; }
+        .runway-arrow-5 { animation-delay: 0.6s; }
+
+        @keyframes runway-pulse {
+          0%, 100% {
+            opacity: 0.2;
+          }
+          50% {
+            opacity: 0.7;
+          }
+        }
+
+        /* Transparent frame around hero text */
+        .hero-text-frame {
+          position: relative;
+          padding: 20px 24px;
+          border: 1px solid rgba(236, 227, 214, 0.1);
+          background: rgba(10, 9, 8, 0.25);
+          backdrop-filter: blur(8px);
+          -webkit-backdrop-filter: blur(8px);
+        }
+
+        /* Gold corner accents for hero text frame */
+        .hero-text-frame::before {
+          content: '';
+          position: absolute;
+          top: -1px;
+          left: -1px;
+          width: 10px;
+          height: 10px;
+          border-top: 1px solid var(--gold, #caa554);
+          border-left: 1px solid var(--gold, #caa554);
+        }
+
+        .hero-text-frame::after {
+          content: '';
+          position: absolute;
+          bottom: -1px;
+          right: -1px;
+          width: 10px;
+          height: 10px;
+          border-bottom: 1px solid var(--gold, #caa554);
+          border-right: 1px solid var(--gold, #caa554);
+        }
+
+        /* Hero tagline - vertically centered on left, no frame */
+        .hero-tagline-frame {
+          position: fixed;
+          top: calc(50% + 30px);
+          left: calc(var(--rail-width) + 120px);
+          transform: translateY(-50%);
+          max-width: 500px;
+          padding: 0;
+          z-index: 10;
+          transition: opacity 0.3s ease-out;
+        }
+
         /* Hero V2 - Cleaner, more focused */
         .hero-tagline-v2 {
-          font-size: clamp(24px, 3vw, 32px) !important;
-          line-height: 1.3 !important;
-          margin-bottom: var(--space-lg) !important;
+          font-size: clamp(20px, 2.5vw, 28px) !important;
+          line-height: 1.4 !important;
+          margin: 0 !important;
+          color: var(--dawn) !important;
+          font-weight: 300 !important;
         }
 
         .hero-description-v2 {
@@ -282,60 +526,450 @@ function NavigationCockpitInner() {
           margin-bottom: var(--space-2xl) !important;
         }
 
-        /* Manifesto V2 - LARGER */
-        .section-manifesto-v2 {
-          padding: 60px calc(var(--hud-padding) + var(--rail-width) + 80px) !important;
+        /* ═══════════════════════════════════════════════════════════════
+           MANIFESTO - Text-based layout like Services section
+           ═══════════════════════════════════════════════════════════════ */
+        .section-manifesto {
+          /* Use same padding as default .section (which Services uses) */
+          padding: 100px calc(var(--hud-padding) + var(--rail-width) + 120px) !important;
+          padding-top: 180px !important; /* Extra top padding so it starts later */
+          padding-right: 18% !important;
+          justify-content: flex-start !important;
+          align-items: flex-start !important;
         }
 
-        .terminal-frame-v2 {
-          max-width: 880px !important;
-          padding: var(--space-3xl) !important;
+        .manifesto-layout-text {
+          width: 100%;
+          max-width: 640px;
+          margin: 0;
+          margin-right: auto;
         }
 
-        .terminal-header-v2 {
-          margin-bottom: var(--space-xl) !important;
+        /* Content area with vertical line on left */
+        .manifesto-content-area {
+          border-left: 1px solid var(--dawn-15);
+          padding-left: var(--space-xl);
+          display: flex;
+          flex-direction: column;
+          gap: 40px;
         }
 
-        .terminal-content-v2 {
-          padding: var(--space-xl) 0 !important;
+        /* Large title - only this is big */
+        .manifesto-title-large {
+          font-family: var(--font-display);
+          font-size: clamp(48px, 6vw, 72px);
+          font-weight: 400;
+          line-height: 1.05;
+          letter-spacing: 0.01em;
+          color: var(--dawn);
+          margin: 0;
         }
 
-        .headline-v2 {
-          font-size: clamp(36px, 5vw, 52px) !important;
-          margin-bottom: var(--space-2xl) !important;
+        /* Body text - all paragraphs same size */
+        .manifesto-body-text {
+          display: flex;
+          flex-direction: column;
+          gap: 24px;
         }
 
-        .text-block-v2 {
-          max-width: 700px !important;
+        .manifesto-body-text p {
+          font-family: var(--font-body);
+          font-size: clamp(17px, 2vw, 20px);
+          font-weight: 300;
+          line-height: 1.7;
+          color: var(--dawn-80);
+          margin: 0;
+          max-width: 540px;
         }
 
-        .text-v2 {
-          font-size: 18px !important;
-          line-height: 1.7 !important;
-          margin-bottom: var(--space-lg) !important;
+        .manifesto-body-text em {
+          color: var(--gold);
+          font-style: normal;
         }
 
-        .text-v2.text-emphasis {
-          font-size: 20px !important;
+        .manifesto-body-text strong {
+          font-weight: 500;
+          color: var(--dawn);
         }
 
-        .terminal-footer-v2 {
-          margin-top: var(--space-2xl) !important;
-          padding-top: var(--space-lg) !important;
+        /* Responsive */
+        @media (max-width: 768px) {
+          .manifesto-title-large {
+            font-size: clamp(36px, 8vw, 48px);
+          }
+
+          .manifesto-body-text p {
+            font-size: 17px;
+          }
+        }
+
+        /* ═══════════════════════════════════════════════════════════════
+           FIXED SIGIL - Appears centered during scroll
+           ═══════════════════════════════════════════════════════════════ */
+        .fixed-sigil-container {
+          position: fixed;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          z-index: 5;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          transition: opacity 0.3s ease-out;
+        }
+
+        /* Wordmark above the definition text */
+        .definition-wordmark {
+          width: 100%;
+          max-width: 380px;
+        }
+
+        .definition-wordmark svg {
+          width: 100%;
+          height: auto;
+        }
+
+        .definition-frame {
+          /* No frame styling - just layout */
+        }
+
+        .definition-phonetic {
+          font-family: var(--font-data, 'PT Mono', monospace);
+          font-size: 16px;
+          color: rgba(202, 165, 84, 0.6);
+          letter-spacing: 0.05em;
+        }
+
+        /* ═══════════════════════════════════════════════════════════════
+           MODULE CARDS - Right side pointing to sigil
+           ═══════════════════════════════════════════════════════════════ */
+        .definition-modules {
+          position: fixed;
+          right: calc(var(--rail-width, 60px) + 120px);
+          top: 50%;
+          transform: translateY(-50%);
+          display: flex;
+          flex-direction: column;
+          gap: 20px;
+          z-index: 10;
+          transition: opacity 0.3s ease-out, visibility 0.3s ease-out;
+        }
+
+        .module-card {
+          position: relative;
+          background: rgba(10, 9, 8, 0.5);
+          backdrop-filter: blur(8px);
+          -webkit-backdrop-filter: blur(8px);
+          border: 1px solid rgba(236, 227, 214, 0.1);
+          padding: 20px 24px;
+          max-width: 280px;
+          transition: all 0.3s ease;
+          cursor: pointer;
+        }
+
+        .module-card:hover {
+          background: rgba(20, 18, 16, 0.7);
+          border-color: var(--gold, #caa554);
+          transform: translateX(-5px);
+        }
+
+        /* Technical corner accents */
+        .module-card::before {
+          content: '';
+          position: absolute;
+          top: -1px;
+          left: -1px;
+          width: 10px;
+          height: 10px;
+          border-top: 1px solid var(--gold, #caa554);
+          border-left: 1px solid var(--gold, #caa554);
+        }
+
+        .module-card::after {
+          content: '';
+          position: absolute;
+          bottom: -1px;
+          right: -1px;
+          width: 10px;
+          height: 10px;
+          border-bottom: 1px solid var(--gold, #caa554);
+          border-right: 1px solid var(--gold, #caa554);
+        }
+
+        /* Connection point - dot on left edge */
+        .module-connect {
+          position: absolute;
+          left: -4px;
+          top: 50%;
+          transform: translateY(-50%);
+          width: 6px;
+          height: 6px;
+          background: var(--gold, #caa554);
+          border-radius: 50%;
+        }
+
+        .module-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 10px;
+        }
+
+        .module-id {
+          font-family: var(--font-data, 'PT Mono', monospace);
+          font-size: 10px;
+          color: var(--gold, #caa554);
+          letter-spacing: 0.1em;
+        }
+
+        .module-icon {
+          font-size: 16px;
+          color: rgba(236, 227, 214, 0.5);
+        }
+
+        .module-title {
+          font-family: var(--font-body, system-ui);
+          font-size: 14px;
+          font-weight: 500;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          color: var(--dawn, #ECE3D6);
+          margin-bottom: 8px;
+        }
+
+        .module-desc {
+          font-family: var(--font-body, system-ui);
+          font-size: 12px;
+          line-height: 1.5;
+          color: rgba(236, 227, 214, 0.5);
+        }
+
+        /* ═══════════════════════════════════════════════════════════════
+           DEFINITION SECTION - Placeholder for layout flow
+           ═══════════════════════════════════════════════════════════════ */
+        .section-definition {
+          position: relative;
+          min-height: 100vh !important;
+          display: flex !important;
+          flex-direction: column !important;
+          justify-content: center !important;
+          align-items: center !important;
+          padding: 30px calc(var(--rail-width) + 60px) 80px !important;
+        }
+
+        .sigil-placeholder {
+          width: 220px;
+          height: 220px;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 1100px) {
+          .section-definition {
+            padding: 60px var(--hud-padding) !important;
+          }
+        }
+
+        /* ═══════════════════════════════════════════════════════════════
+           INFO CARD SYSTEM (Kriss.ai inspired - for Services, etc.)
+           ═══════════════════════════════════════════════════════════════ */
+        .info-card {
+          position: relative;
+          background: rgba(10, 9, 8, 0.94);
+          border: 1px solid var(--dawn-15);
+          padding: 32px;
+          max-width: 340px;
+          display: flex;
+          flex-direction: column;
+          gap: 20px;
+        }
+
+        /* Corner brackets */
+        .card-corner {
+          position: absolute;
+          width: 16px;
+          height: 16px;
+          pointer-events: none;
+        }
+
+        .card-corner-tl {
+          top: -1px;
+          left: -1px;
+          border-top: 2px solid var(--gold);
+          border-left: 2px solid var(--gold);
+        }
+
+        .card-corner-tr {
+          top: -1px;
+          right: -1px;
+          border-top: 2px solid var(--gold);
+          border-right: 2px solid var(--gold);
+        }
+
+        .card-corner-bl {
+          bottom: -1px;
+          left: -1px;
+          border-bottom: 2px solid var(--gold);
+          border-left: 2px solid var(--gold);
+        }
+
+        .card-corner-br {
+          bottom: -1px;
+          right: -1px;
+          border-bottom: 2px solid var(--gold);
+          border-right: 2px solid var(--gold);
+        }
+
+        /* Card header */
+        .card-header {
+          display: flex;
+          align-items: center;
+        }
+
+        .card-label {
+          font-family: var(--font-data);
+          font-size: 11px;
+          font-weight: 400;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+          color: var(--gold);
+        }
+
+        /* Card title */
+        .card-title {
+          font-family: var(--font-display);
+          font-size: clamp(24px, 3vw, 32px);
+          font-weight: 400;
+          letter-spacing: 0.02em;
+          color: var(--dawn);
+          line-height: 1.2;
+          margin: 0;
+        }
+
+        /* Card description */
+        .card-description {
+          color: var(--dawn-70);
+          font-size: 14px;
+          line-height: 1.65;
+        }
+
+        .card-description p {
+          margin: 0;
+        }
+
+        .card-description em {
+          color: var(--gold);
+          font-style: normal;
+        }
+
+        /* Feature list */
+        .card-features {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+          padding-top: 8px;
+        }
+
+        .features-label {
+          font-family: var(--font-data);
+          font-size: 10px;
+          font-weight: 400;
+          letter-spacing: 0.06em;
+          text-transform: uppercase;
+          color: var(--dawn-30);
+        }
+
+        .features-list {
+          list-style: none;
+          margin: 0;
+          padding: 0;
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+        }
+
+        .features-list li {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+        }
+
+        .feature-icon {
+          font-size: 12px;
+          color: var(--gold);
+          width: 16px;
+          text-align: center;
+        }
+
+        .feature-text {
+          font-family: var(--font-body);
+          font-size: 13px;
+          font-weight: 400;
+          color: var(--dawn);
+          letter-spacing: 0.01em;
+        }
+
+        /* Card CTA */
+        .card-cta {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding-top: 16px;
+          border-top: 1px solid var(--dawn-08);
+          text-decoration: none;
+          color: var(--gold);
+          font-family: var(--font-data);
+          font-size: 12px;
+          font-weight: 400;
+          letter-spacing: 0.04em;
+          transition: color 0.15s ease;
+          cursor: pointer;
+        }
+
+        .card-cta:hover {
+          color: var(--dawn);
+        }
+
+        .cta-arrow {
+          font-size: 14px;
+          transition: transform 0.15s ease;
+        }
+
+        .card-cta:hover .cta-arrow {
+          transform: translateX(4px);
+        }
+
+        /* Gradient overlay at bottom */
+        .card-gradient {
+          position: absolute;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          height: 80px;
+          background: linear-gradient(
+            to top,
+            rgba(202, 165, 84, 0.06) 0%,
+            transparent 100%
+          );
+          pointer-events: none;
         }
 
         /* Responsive adjustments */
         @media (max-width: 900px) {
-          .headline-v2 {
-            font-size: clamp(28px, 4vw, 40px) !important;
+          .info-card {
+            padding: 24px;
+            max-width: 100%;
           }
 
-          .text-v2 {
-            font-size: 16px !important;
+          .card-title {
+            font-size: clamp(22px, 5vw, 28px);
           }
 
-          .terminal-frame-v2 {
-            padding: var(--space-2xl) !important;
+          .card-description {
+            font-size: 13px;
+          }
+
+          .feature-text {
+            font-size: 12px;
           }
         }
       `}</style>
@@ -351,3 +985,4 @@ export function NavigationCockpitV2() {
     </ParticleConfigProvider>
   );
 }
+

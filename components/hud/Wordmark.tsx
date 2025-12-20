@@ -1,6 +1,12 @@
 "use client";
 
-export function Wordmark({ className = "" }: { className?: string }) {
+export interface WordmarkProps {
+  className?: string;
+  /** Whether to hide the gold Vector I (for particle replacement) */
+  hideVectorI?: boolean;
+}
+
+export function Wordmark({ className = "", hideVectorI = false }: WordmarkProps) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -14,9 +20,14 @@ export function Wordmark({ className = "" }: { className?: string }) {
         className="wm-dawn"
         d="M517.7,108.78c0,59.15-39.04,108.78-107.06,108.78s-107.06-49.63-107.06-108.78S342.62,0,410.64,0s107.06,49.63,107.06,108.78ZM491.63,108.78c0-56.24-28.32-103.49-80.86-103.49s-80.86,47.38-80.86,103.49,28.32,103.49,80.86,103.49,80.86-47.38,80.86-103.49Z"
       />
+      {/* Gold Vector I - fades out as particle version takes over */}
       <path
         className="wm-gold"
         d="M421.49,374.38l-2.51,8.47h-93.83l-1.19,6.62h-8.87l-20.38,105.47h-11.38l18.26-97.13h-4.23l1.46-8.34h-9.93l1.19-6.62H0l2.51-8.47h294.31l1.19-6.62h8.87l18.39-97.93h11.38l-16.28,89.59h4.23l-1.46,8.34h9.93l-1.19,6.62h89.72-.13Z"
+        style={{
+          opacity: hideVectorI ? 0 : 1,
+          transition: "opacity 0.3s ease-out",
+        }}
       />
       <path
         className="wm-dawn"

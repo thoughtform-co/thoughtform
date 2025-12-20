@@ -21,6 +21,33 @@ function snap(value: number): number {
   return Math.floor(value / GRID) * GRID;
 }
 
+/**
+ * Blend an RGB color toward a muted gray based on depth
+ * Creates the atmospheric, Dragonfly-style depth fade
+ * @param rgbString - "r, g, b" format
+ * @param depth - normalized depth (0 = close, 1 = far)
+ * @param intensity - how much to desaturate (0-1)
+ */
+function desaturateByDepth(rgbString: string, depth: number, intensity: number = 0.8): string {
+  const parts = rgbString.split(',').map(s => parseInt(s.trim()));
+  if (parts.length !== 3) return rgbString;
+  
+  const [r, g, b] = parts;
+  
+  // Target: muted warm gray that matches the void background
+  const targetGray = { r: 35, g: 33, b: 30 }; // Warm dark gray
+  
+  // Calculate blend factor based on depth
+  // Closer particles retain more color, far particles become gray
+  const blendFactor = Math.min(1, depth * intensity);
+  
+  const newR = Math.round(r + (targetGray.r - r) * blendFactor);
+  const newG = Math.round(g + (targetGray.g - g) * blendFactor);
+  const newB = Math.round(b + (targetGray.b - b) * blendFactor);
+  
+  return `${newR}, ${newG}, ${newB}`;
+}
+
 // Core pixel drawing function
 function drawPixel(
   ctx: CanvasRenderingContext2D,
@@ -81,6 +108,7 @@ function createPoint(
 
 /**
  * Calculate terrain Y position at given X, Z coordinates
+ * Includes mountain range effect in far background
  */
 function getTerrainY(
   x: number,
@@ -92,12 +120,30 @@ function getTerrainY(
   const c = x / 65 + 35;
 
   const wavePhase = r * 0.02;
-  const y =
+  let y =
     400 +
     Math.sin(c * config.waveFrequency + wavePhase) * config.waveAmplitude +
     Math.cos(r * 0.12) * 150 +
     Math.sin(c * 0.35 + r * 0.15) * 70 +
     Math.sin(r * 0.08) * 100;
+  
+  // Mountain range effect in far background (after row ~100)
+  const mountainStart = 100;
+  if (r > mountainStart) {
+    const mountainProgress = (r - mountainStart) / (config.rows - mountainStart);
+    const maxMountainHeight = 400;
+    const mountainHeight = mountainProgress * maxMountainHeight;
+    
+    const peakFreq1 = 0.08;
+    const peakFreq2 = 0.15;
+    const peakFreq3 = 0.03;
+    
+    const peak1 = Math.pow(Math.max(0, Math.sin(c * peakFreq1 + 1.5)), 2) * mountainHeight;
+    const peak2 = Math.pow(Math.max(0, Math.sin(c * peakFreq2 + 0.8)), 2) * mountainHeight * 0.6;
+    const peak3 = Math.pow(Math.max(0, Math.sin(c * peakFreq3)), 1.5) * mountainHeight * 0.8;
+    
+    y -= (peak1 + peak2 + peak3) * 0.7;
+  }
 
   return y;
 }
@@ -327,6 +373,272 @@ function generateRingShape(
   }
 }
 
+/**
+ * ZIGGURAT SHAPE - A stepped structure that EMERGES from the manifold terrain
+ * Like a sacred mountain or tree growing from the landscape
+ * Uses "geo" type for highlight rendering (no depth desaturation)
+ */
+function generateZigguratShape(
+  particles: Particle[],
+  landmark: LandmarkConfig,
+  index: number,
+  manifoldConfig: ParticleSystemConfig["manifold"]
+): void {
+  const colorRgb = hexToRgb(landmark.color);
+  const scale = landmark.scale;
+  const density = landmark.density;
+  const centerX = landmark.position.x;
+  const centerZ = landmark.position.z;
+  
+  // Get the terrain height at this position - we emerge FROM it
+  const terrainY = getTerrainY(centerX, centerZ, manifoldConfig);
+  
+  // ─── ROOT SYSTEM: Particles that blend into the manifold ───
+  // Creates visual connection to the terrain
+  const rootCount = Math.floor(80 * density);
+  for (let i = 0; i < rootCount; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const dist = 100 + Math.random() * 250 * scale;
+    const x = centerX + Math.cos(angle) * dist;
+    const z = centerZ + Math.sin(angle) * dist * 0.4;
+    const localTerrainY = getTerrainY(x, z, manifoldConfig);
+    // Roots sit ON the terrain, slightly above
+    const y = localTerrainY - Math.random() * 20;
+    particles.push(createPoint(x, y, z, "geo", colorRgb, index, landmark.id));
+  }
+  
+  // ─── ZIGGURAT TIERS: Stepped layers rising upward ───
+  const tierCount = Math.floor(8 * density);
+  const baseSize = 300 * scale;
+  const tierHeight = 35 * scale;
+  
+  for (let tier = 0; tier < tierCount; tier++) {
+    const tierRatio = 1 - (tier / tierCount) * 0.7; // Each tier gets smaller
+    const tierSize = baseSize * tierRatio;
+    const y = terrainY - (tier * tierHeight); // Rising up (Y goes negative for up in this system)
+    const zOffset = centerZ + tier * 8; // Slight z offset for depth
+    
+    // Square platform edges for each tier
+    const pointsPerSide = Math.max(4, Math.floor(12 * tierRatio * density));
+    
+    for (let side = 0; side < 4; side++) {
+      for (let i = 0; i < pointsPerSide; i++) {
+        const t = i / pointsPerSide;
+        let x: number, z: number;
+        
+        if (side === 0) { // Front
+          x = centerX + (t - 0.5) * tierSize;
+          z = zOffset - tierSize * 0.25;
+        } else if (side === 1) { // Back
+          x = centerX + (t - 0.5) * tierSize;
+          z = zOffset + tierSize * 0.25;
+        } else if (side === 2) { // Left
+          x = centerX - tierSize * 0.5;
+          z = zOffset + (t - 0.5) * tierSize * 0.5;
+        } else { // Right
+          x = centerX + tierSize * 0.5;
+          z = zOffset + (t - 0.5) * tierSize * 0.5;
+        }
+        
+        particles.push(createPoint(x, y, z, "geo", colorRgb, index, landmark.id));
+        
+        // Add some fill particles on the platform surface
+        if (i % 2 === 0 && tier < tierCount - 2) {
+          const fillX = x + (Math.random() - 0.5) * 30;
+          const fillZ = z + (Math.random() - 0.5) * 15;
+          particles.push(createPoint(fillX, y - 5, fillZ, "geo", colorRgb, index, landmark.id));
+        }
+      }
+    }
+    
+    // Vertical connectors between tiers (pillars)
+    if (tier > 0 && tier < tierCount - 1) {
+      const pillarCount = 4;
+      for (let p = 0; p < pillarCount; p++) {
+        const angle = (p / pillarCount) * Math.PI * 2 + Math.PI / 4;
+        const pillarDist = tierSize * 0.35;
+        const px = centerX + Math.cos(angle) * pillarDist;
+        const pz = zOffset + Math.sin(angle) * pillarDist * 0.4;
+        
+        // Vertical line of particles
+        for (let h = 0; h < 3; h++) {
+          const py = y + h * (tierHeight / 3);
+          particles.push(createPoint(px, py, pz, "geo", colorRgb, index, landmark.id));
+        }
+      }
+    }
+  }
+  
+  // ─── APEX: Crown of the ziggurat ───
+  const apexY = terrainY - (tierCount * tierHeight) - 20;
+  const apexPoints = Math.floor(30 * density);
+  
+  // Central spire
+  for (let i = 0; i < 5; i++) {
+    particles.push(createPoint(centerX, apexY - i * 15, centerZ + tierCount * 8, "geo", colorRgb, index, landmark.id));
+  }
+  
+  // Radiating crown particles
+  for (let i = 0; i < apexPoints; i++) {
+    const angle = (i / apexPoints) * Math.PI * 2;
+    const dist = 30 + Math.random() * 40 * scale;
+    const x = centerX + Math.cos(angle) * dist;
+    const z = centerZ + tierCount * 8 + Math.sin(angle) * dist * 0.3;
+    const y = apexY - Math.random() * 30;
+    particles.push(createPoint(x, y, z, "geo", colorRgb, index, landmark.id));
+  }
+  
+  // ─── ASCENDING PARTICLES: Like energy/light rising ───
+  const ascendCount = Math.floor(40 * density);
+  for (let i = 0; i < ascendCount; i++) {
+    const t = i / ascendCount;
+    const spiralAngle = t * Math.PI * 4;
+    const spiralRadius = (1 - t) * 80 * scale;
+    const x = centerX + Math.cos(spiralAngle) * spiralRadius;
+    const z = centerZ + (tierCount * 8) / 2 + Math.sin(spiralAngle) * spiralRadius * 0.3;
+    const y = terrainY - t * (tierCount * tierHeight + 80);
+    particles.push(createPoint(x, y, z, "geo", colorRgb, index, landmark.id));
+  }
+}
+
+/**
+ * LORENZ ATTRACTOR - The famous butterfly-shaped chaotic attractor
+ * Floats above the manifold as a mathematical sculpture
+ * dx/dt = σ(y - x), dy/dt = x(ρ - z) - y, dz/dt = xy - βz
+ */
+function generateLorenzShape(
+  particles: Particle[],
+  landmark: LandmarkConfig,
+  index: number,
+  manifoldConfig: ParticleSystemConfig["manifold"]
+): void {
+  const colorRgb = hexToRgb(landmark.color);
+  const scale = landmark.scale;
+  const density = landmark.density;
+  const centerX = landmark.position.x;
+  const centerZ = landmark.position.z;
+  const baseY = landmark.position.y || 200; // Float above terrain
+  
+  // Lorenz system parameters
+  const sigma = 10;
+  const rho = 28;
+  const beta = 8 / 3;
+  const dt = 0.005;
+  
+  const numPoints = Math.floor(3000 * density);
+  const visualScale = 12 * scale;
+  
+  // Starting point
+  let x = 0.1, y = 0, z = 0;
+  
+  for (let i = 0; i < numPoints; i++) {
+    // Lorenz equations
+    const dx = sigma * (y - x);
+    const dy = x * (rho - z) - y;
+    const dz = x * y - beta * z;
+    
+    x += dx * dt;
+    y += dy * dt;
+    z += dz * dt;
+    
+    // Map attractor coordinates to world space
+    // The Lorenz attractor is roughly centered around (0, 0, 25) with wings extending ±20
+    const worldX = centerX + x * visualScale;
+    const worldY = baseY - z * visualScale * 0.5; // Z becomes height (inverted)
+    const worldZ = centerZ + y * visualScale * 0.4; // Y becomes depth (compressed for perspective)
+    
+    particles.push(createPoint(worldX, worldY, worldZ, "geo", colorRgb, index, landmark.id));
+  }
+}
+
+/**
+ * HALVORSEN ATTRACTOR - Symmetrical three-lobed chaotic attractor
+ * dx/dt = -ax - 4y - 4z - y², dy/dt = -ay - 4z - 4x - z², dz/dt = -az - 4x - 4y - x²
+ */
+function generateHalvorsenShape(
+  particles: Particle[],
+  landmark: LandmarkConfig,
+  index: number,
+  manifoldConfig: ParticleSystemConfig["manifold"]
+): void {
+  const colorRgb = hexToRgb(landmark.color);
+  const scale = landmark.scale;
+  const density = landmark.density;
+  const centerX = landmark.position.x;
+  const centerZ = landmark.position.z;
+  const baseY = landmark.position.y || 200;
+  
+  // Halvorsen parameters
+  const a = 1.89;
+  const dt = 0.005;
+  
+  const numPoints = Math.floor(2500 * density);
+  const visualScale = 40 * scale;
+  
+  let x = 1, y = 0, z = 0;
+  
+  for (let i = 0; i < numPoints; i++) {
+    const dx = -a * x - 4 * y - 4 * z - y * y;
+    const dy = -a * y - 4 * z - 4 * x - z * z;
+    const dz = -a * z - 4 * x - 4 * y - x * x;
+    
+    x += dx * dt;
+    y += dy * dt;
+    z += dz * dt;
+    
+    const worldX = centerX + x * visualScale;
+    const worldY = baseY - z * visualScale * 0.4;
+    const worldZ = centerZ + y * visualScale * 0.3;
+    
+    particles.push(createPoint(worldX, worldY, worldZ, "geo", colorRgb, index, landmark.id));
+  }
+}
+
+/**
+ * RÖSSLER ATTRACTOR - Spiral-shaped chaotic attractor with a folded band
+ * dx/dt = -y - z, dy/dt = x + ay, dz/dt = b + z(x - c)
+ */
+function generateRosslerShape(
+  particles: Particle[],
+  landmark: LandmarkConfig,
+  index: number,
+  manifoldConfig: ParticleSystemConfig["manifold"]
+): void {
+  const colorRgb = hexToRgb(landmark.color);
+  const scale = landmark.scale;
+  const density = landmark.density;
+  const centerX = landmark.position.x;
+  const centerZ = landmark.position.z;
+  const baseY = landmark.position.y || 200;
+  
+  // Rössler parameters
+  const a = 0.2;
+  const b = 0.2;
+  const c = 5.7;
+  const dt = 0.02;
+  
+  const numPoints = Math.floor(2000 * density);
+  const visualScale = 15 * scale;
+  
+  let x = 0.1, y = 0, z = 0;
+  
+  for (let i = 0; i < numPoints; i++) {
+    const dx = -y - z;
+    const dy = x + a * y;
+    const dz = b + z * (x - c);
+    
+    x += dx * dt;
+    y += dy * dt;
+    z += dz * dt;
+    
+    const worldX = centerX + x * visualScale;
+    const worldY = baseY - z * visualScale * 0.3;
+    const worldZ = centerZ + y * visualScale * 0.3;
+    
+    particles.push(createPoint(worldX, worldY, worldZ, "geo", colorRgb, index, landmark.id));
+  }
+}
+
 // ═══════════════════════════════════════════════════════════════
 // MAIN INITIALIZATION
 // ═══════════════════════════════════════════════════════════════
@@ -344,12 +656,41 @@ function initParticles(config: ParticleSystemConfig): Particle[] {
       const z = 1200 + r * (55 * manifold.spreadZ);
 
       const wavePhase = r * 0.02;
-      const y =
+      
+      // Base terrain waves
+      let y =
         400 +
         Math.sin(c * manifold.waveFrequency + wavePhase) * manifold.waveAmplitude +
         Math.cos(r * 0.12) * 150 +
         Math.sin(c * 0.35 + r * 0.15) * 70 +
         Math.sin(r * 0.08) * 100;
+      
+      // ─── MOUNTAIN RANGE in far background ───
+      // Mountains start appearing after row 100 (far back)
+      const mountainStart = 100;
+      if (r > mountainStart) {
+        const mountainProgress = (r - mountainStart) / (manifold.rows - mountainStart);
+        
+        // Create multiple mountain peaks using overlapping sine waves
+        const peakFreq1 = 0.08; // Main peaks
+        const peakFreq2 = 0.15; // Secondary peaks
+        const peakFreq3 = 0.03; // Broad mountain ranges
+        
+        // Mountain height increases towards the back
+        const maxMountainHeight = 400;
+        const mountainHeight = mountainProgress * maxMountainHeight;
+        
+        // Combine multiple frequencies for natural-looking mountain silhouette
+        const peak1 = Math.pow(Math.max(0, Math.sin(c * peakFreq1 + 1.5)), 2) * mountainHeight;
+        const peak2 = Math.pow(Math.max(0, Math.sin(c * peakFreq2 + 0.8)), 2) * mountainHeight * 0.6;
+        const peak3 = Math.pow(Math.max(0, Math.sin(c * peakFreq3)), 1.5) * mountainHeight * 0.8;
+        
+        // Subtract from Y (negative Y = higher on screen)
+        y -= (peak1 + peak2 + peak3) * 0.7;
+        
+        // Add some jagged variation for realism
+        y -= Math.random() * mountainHeight * 0.1;
+      }
 
       particles.push(createPoint(x, y, z, "terrain", manifoldColorRgb, 0));
     }
@@ -376,6 +717,18 @@ function initParticles(config: ParticleSystemConfig): Particle[] {
         break;
       case "ring":
         generateRingShape(particles, landmark, landmarkIndex, manifold);
+        break;
+      case "ziggurat":
+        generateZigguratShape(particles, landmark, landmarkIndex, manifold);
+        break;
+      case "lorenz":
+        generateLorenzShape(particles, landmark, landmarkIndex, manifold);
+        break;
+      case "halvorsen":
+        generateHalvorsenShape(particles, landmark, landmarkIndex, manifold);
+        break;
+      case "rossler":
+        generateRosslerShape(particles, landmark, landmarkIndex, manifold);
         break;
     }
   });
@@ -404,7 +757,6 @@ export function ParticleCanvasV2({
   const timeRef = useRef(0);
   const configRef = useRef(config);
 
-  const FOCAL = 400;
   const MAX_DEPTH = 7000;
 
   // Update config ref when config changes
@@ -469,9 +821,22 @@ export function ParticleCanvasV2({
       ctx.fillStyle = "#050504";
       ctx.fillRect(0, 0, width, height);
 
-      // Vanishing point - geometry focused right side
-      const cx_geo = width * 0.7;
-      const cy = height * 0.5;
+      // Camera settings from config
+      const camera = currentConfig.camera;
+      const FOCAL = camera.focalLength;
+      const cx_geo = width * camera.vanishX;
+      const cy = height * camera.vanishY;
+      
+      // Pre-calculate pitch/yaw/roll transforms
+      const pitchRad = (camera.pitch * Math.PI) / 180;
+      const yawRad = (camera.yaw * Math.PI) / 180;
+      const rollRad = (camera.roll * Math.PI) / 180;
+      const cosPitch = Math.cos(pitchRad);
+      const sinPitch = Math.sin(pitchRad);
+      const cosYaw = Math.cos(yawRad);
+      const sinYaw = Math.sin(yawRad);
+      const cosRoll = Math.cos(rollRad);
+      const sinRoll = Math.sin(rollRad);
 
       // Sort by depth
       const sorted = [...particlesRef.current].sort((a, b) => {
@@ -522,15 +887,41 @@ export function ParticleCanvasV2({
           if (relZ <= 5 || relZ > MAX_DEPTH) return;
         }
 
-        const scale = FOCAL / relZ;
-        const center = cx_geo;
-
         // Breathing animation
         const breatheX = Math.sin(time * 0.015 + p.phase) * 5;
         const breatheY = Math.cos(time * 0.012 + p.phase * 1.3) * 4;
 
-        const x = center + (p.x + breatheX) * scale;
-        const y = cy + (p.y + breatheY) * scale;
+        // Get world position with breathing and truck offset
+        // Truck moves camera, so we offset particles in opposite direction
+        let worldX = p.x + breatheX - camera.truckX;
+        let worldZ = relZ;
+
+        // Apply yaw rotation (horizontal rotation of the grid)
+        const rotX = worldX * cosYaw - worldZ * sinYaw;
+        const rotZ = worldX * sinYaw + worldZ * cosYaw;
+        worldX = rotX;
+        worldZ = rotZ;
+
+        // Skip if behind camera after yaw rotation
+        if (worldZ <= 5) return;
+
+        // Perspective projection
+        const scale = FOCAL / worldZ;
+        
+        // For pitch: compress vertical spread as we look more top-down
+        // Also apply truckY offset (camera moves up = world appears to move down)
+        const pitchFactor = cosPitch;
+        const worldY = (p.y + breatheY - camera.truckY) * pitchFactor;
+        
+        // Calculate screen position before roll
+        const preRollX = cx_geo + worldX * scale;
+        const preRollY = cy + worldY * scale - (sinPitch * 150 * scale);
+        
+        // Apply roll (2D rotation around screen center)
+        const dx = preRollX - cx_geo;
+        const dy = preRollY - cy;
+        const x = cx_geo + dx * cosRoll - dy * sinRoll;
+        const y = cy + dx * sinRoll + dy * cosRoll;
 
         // Bounds check
         if (p.type === "terrain") {
@@ -540,82 +931,157 @@ export function ParticleCanvasV2({
           if (x < -50 || x > width + 50 || y < -50 || y > height + 50) return;
         }
 
-        // Depth-based alpha with proximity boost
-        // Nearby particles (low relZ) should be MORE visible
-        const normalizedDepth = relZ / MAX_DEPTH; // 0 = close, 1 = far
-        const depthAlpha = Math.min(1, (1 - normalizedDepth) * 1.5 + 0.3);
+        // Depth-based alpha - atmospheric fade creates integration with background
+        const normalizedDepth = worldZ / MAX_DEPTH; // 0 = close, 1 = far
+        const depthAlpha = Math.min(1, (1 - normalizedDepth) * 1.2 + 0.2);
         
-        // Proximity boost: particles closer to camera get brighter
-        const proximityBoost = relZ < 1500 ? 1 + (1 - relZ / 1500) * 0.8 : 1;
+        // Subtle proximity boost: closer particles slightly more visible
+        // Reduced from 0.8 to 0.3 for more subdued look
+        const proximityBoost = worldZ < 1500 ? 1 + (1 - worldZ / 1500) * 0.3 : 1;
         
-        const breatheAlpha = 0.85 + Math.sin(time * 0.02 + p.phase) * 0.15;
+        // Subtle breathing animation
+        const breatheAlpha = 0.9 + Math.sin(time * 0.015 + p.phase) * 0.1;
         const finalAlpha =
           Math.min(1, depthAlpha * particleAlpha * terrainAlphaMultiplier * breatheAlpha * proximityBoost);
 
         ctx.globalAlpha = 1;
 
         if (p.type === "terrain") {
-          // Terrain: only render in lower 60% of screen to avoid noise above
-          if (y < height * 0.35) return;
+          // Terrain: clip above certain screen percentage
+          if (camera.terrainClipY > 0 && y < height * camera.terrainClipY) return;
 
           // Terrain: scale size based on depth, nearby = bigger
           const sizeMultiplier = Math.min(2.5, 0.6 + scale * 1.2);
           const size = Math.max(GRID, GRID * sizeMultiplier);
-          drawPixel(ctx, x, y, p.color, finalAlpha, size);
+          
+          // Distance blur effect: far particles get larger and softer
+          const distanceBlur = normalizedDepth > 0.4 ? (normalizedDepth - 0.4) * 2 : 0;
+          const blurredSize = size + distanceBlur * 3;
+          
+          // ATMOSPHERIC DEPTH FADE: particles fade to background as they recede
+          // This creates the subdued, integrated look inspired by Dragonfly
+          const atmosphericFade = Math.pow(normalizedDepth, 0.6); // Non-linear fade
+          const blurredAlpha = finalAlpha * (1 - atmosphericFade * 0.7) * (1 - distanceBlur * 0.2);
+          
+          // Apply depth-based desaturation - far particles become muted gray
+          const desaturatedColor = desaturateByDepth(p.color, normalizedDepth, 0.85);
+          
+          // Draw main particle with atmospheric color
+          drawPixel(ctx, x, y, desaturatedColor, blurredAlpha, blurredSize);
+          
+          // Subtle bloom only for very close particles (creates depth without noise)
+          if (normalizedDepth < 0.15 && finalAlpha > 0.4) {
+            const bloomAlpha = blurredAlpha * 0.08;
+            drawPixel(ctx, x, y, desaturatedColor, bloomAlpha, blurredSize * 2);
+          }
         } else if (p.type === "gateway" || p.type === "geo") {
-          // Gateway and landmarks: larger, more prominent
+          // Check if this is a "highlight" landmark (attractors, ziggurat) that should POP
+          const isHighlightLandmark = p.landmarkId === "ziggurat" || 
+            p.landmarkId === "lorenz" || 
+            p.landmarkId === "halvorsen" || 
+            p.landmarkId === "rossler";
+          
+          let landmarkColor: string;
+          let landmarkAlpha: number;
+          
+          if (isHighlightLandmark) {
+            // HIGHLIGHT LANDMARKS: Full bright color, minimal fade
+            // These should stand out dramatically from the subdued grid
+            landmarkColor = p.color; // Use full original color (bright gold)
+            const highlightFade = Math.pow(normalizedDepth, 1.2); // Gentler fade
+            landmarkAlpha = finalAlpha * (1 - highlightFade * 0.3) * 1.2; // Boost visibility
+          } else {
+            // Regular landmarks: subtle desaturation
+            landmarkColor = desaturateByDepth(p.color, normalizedDepth, 0.5);
+            const landmarkAtmosphericFade = Math.pow(normalizedDepth, 0.8);
+            landmarkAlpha = finalAlpha * (1 - landmarkAtmosphericFade * 0.5);
+          }
+          
           const baseSize = p.type === "gateway" ? GRID * 2 : GRID * 1.6;
           const size = Math.max(GRID, baseSize * Math.min(3, scale * 2));
-          drawPixel(ctx, x, y, p.color, finalAlpha, size);
+          drawPixel(ctx, x, y, landmarkColor, landmarkAlpha, size);
 
-          // Glow for close gateway particles
+          // Very subtle glow only for very close highlight landmarks
+          // Removed aggressive glow to keep ziggurat crisp
+          if (isHighlightLandmark && scale > 0.8 && normalizedDepth < 0.15) {
+            drawPixel(
+              ctx,
+              x,
+              y,
+              landmarkColor,
+              landmarkAlpha * 0.05,
+              size * 1.5
+            );
+          }
+          
+          // Subtle glow for close gateway particles - more subdued
           if (p.type === "gateway" && scale > 0.6 && particleAlpha > 0.5) {
-            const glowPulse = Math.sin(time * 0.03 + p.phase) * 0.35 + 0.65;
-            if (glowPulse > 0.4) {
+            const glowPulse = Math.sin(time * 0.03 + p.phase) * 0.25 + 0.5;
+            if (glowPulse > 0.3 && normalizedDepth < 0.3) {
               drawPixel(
                 ctx,
                 x,
                 y,
-                p.color,
-                finalAlpha * 0.12 * glowPulse,
-                GRID * 5
+                landmarkColor,
+                landmarkAlpha * 0.08 * glowPulse,
+                GRID * 4
               );
             }
           }
         }
       });
 
-      // Gateway halo effect (visible in hero section)
+      // Gateway halo effect (visible in hero section) - very subtle, atmospheric
       if (scrollP < 0.25) {
         const gatewayLandmark = currentConfig.landmarks.find(
           (l) => l.shape === "gateway" && l.enabled
         );
         if (gatewayLandmark) {
-          const gatewayRelZ = gatewayLandmark.position.z - scrollZ;
-          if (gatewayRelZ > 50 && gatewayRelZ < 2000) {
-            const scale = FOCAL / gatewayRelZ;
-            const gatewayX = cx_geo + gatewayLandmark.position.x * scale;
-            const gatewayY = cy + gatewayLandmark.position.y * scale;
-            const pulse = Math.sin(time * 0.02) * 0.2 + 0.8;
-            const fadeOut =
-              scrollP < 0.15 ? 1 : Math.max(0, 1 - (scrollP - 0.15) * 6);
-            const gatewayColorRgb = hexToRgb(gatewayLandmark.color);
+          let gRelZ = gatewayLandmark.position.z - scrollZ;
+          if (gRelZ > 50 && gRelZ < 2000) {
+            // Apply truck offset and yaw rotation to gateway position
+            let gx = gatewayLandmark.position.x - camera.truckX;
+            const gRotX = gx * cosYaw - gRelZ * sinYaw;
+            const gRotZ = gx * sinYaw + gRelZ * cosYaw;
+            gx = gRotX;
+            gRelZ = gRotZ;
+            
+            if (gRelZ > 5) {
+              const gScale = FOCAL / gRelZ;
+              const gy = (gatewayLandmark.position.y - camera.truckY) * cosPitch;
+              // Calculate screen position before roll
+              const preGatewayX = cx_geo + gx * gScale;
+              const preGatewayY = cy + gy * gScale - (sinPitch * 150 * gScale);
+              // Apply roll
+              const gdx = preGatewayX - cx_geo;
+              const gdy = preGatewayY - cy;
+              const gatewayX = cx_geo + gdx * cosRoll - gdy * sinRoll;
+              const gatewayY = cy + gdx * sinRoll + gdy * cosRoll;
+              const pulse = Math.sin(time * 0.02) * 0.15 + 0.7; // More subtle pulse
+              const fadeOut =
+                scrollP < 0.15 ? 1 : Math.max(0, 1 - (scrollP - 0.15) * 6);
+              
+              // Desaturate the gateway color for atmospheric integration
+              const gatewayColorRgb = hexToRgb(gatewayLandmark.color);
+              const mutedGatewayColor = desaturateByDepth(gatewayColorRgb, 0.4, 0.6);
 
-            for (let r = 0; r < 5; r++) {
-              const radius = (200 + r * 60) * scale * gatewayLandmark.scale;
-              const alpha = 0.02 * (1 - r / 5) * pulse * fadeOut;
-              const points = Math.floor((radius / GRID) * 1.5);
+              // Fewer, more subtle rings
+              for (let r = 0; r < 3; r++) {
+                const radius = (200 + r * 80) * gScale * gatewayLandmark.scale;
+                const alpha = 0.012 * (1 - r / 3) * pulse * fadeOut; // Much more subtle
+                const points = Math.floor((radius / GRID) * 1.2);
 
-              for (let i = 0; i < points; i++) {
-                const angle = (i / points) * Math.PI * 2 + time * 0.004;
-                if (Math.random() > 0.5) {
-                  drawPixel(
-                    ctx,
-                    gatewayX + Math.cos(angle) * radius,
-                    gatewayY + Math.sin(angle) * radius,
-                    gatewayColorRgb,
-                    alpha
-                  );
+                for (let i = 0; i < points; i++) {
+                  const angle = (i / points) * Math.PI * 2 + time * 0.003;
+                  if (Math.random() > 0.6) { // Sparser
+                    drawPixel(
+                      ctx,
+                      gatewayX + Math.cos(angle) * radius,
+                      gatewayY + Math.sin(angle) * radius,
+                      mutedGatewayColor,
+                      alpha
+                    );
+                  }
                 }
               }
             }

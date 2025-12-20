@@ -19,26 +19,33 @@ const sectionData: Record<string, SectionData> = {
     signal: 61,
     landmark: 1,
   },
+  definition: {
+    sector: "Definition",
+    depth: 1.8,
+    vector: "Discovery",
+    signal: 68,
+    landmark: 2,
+  },
   manifesto: {
     sector: "Manifesto",
-    depth: 2.4,
+    depth: 3.8,
     vector: "Creative",
     signal: 74,
-    landmark: 2,
+    landmark: 3,
   },
   services: {
     sector: "Services",
     depth: 5.8,
     vector: "Strategic",
     signal: 88,
-    landmark: 3,
+    landmark: 4,
   },
   contact: {
     sector: "Contact",
     depth: 9.2,
     vector: "Destination",
     signal: 95,
-    landmark: 4,
+    landmark: 5,
   },
 };
 
@@ -61,9 +68,11 @@ export function HUDFrame({
     let instruction = "Scroll to descend. The window stays. The world changes.";
     if (p < 0.1) {
       instruction = "Scroll to descend. The window stays. The world changes.";
-    } else if (p < 0.3) {
+    } else if (p < 0.25) {
+      instruction = "Defining thoughtform. Calibrating understanding.";
+    } else if (p < 0.45) {
       instruction = "Entering the manifesto. Recalibrating perspective.";
-    } else if (p < 0.6) {
+    } else if (p < 0.7) {
       instruction = "Navigation services detected. Plotting course.";
     } else if (p < 0.9) {
       instruction = "Approaching destination. Signal strengthening.";
@@ -84,10 +93,9 @@ export function HUDFrame({
     };
   }, [scrollProgress, activeSection]);
 
-  // HUD visibility based on scroll - hidden in hero section
-  // Start fading in after 5% scroll, fully visible at 15%
-  const hudOpacity = Math.min(1, Math.max(0, (scrollProgress - 0.05) / 0.1));
-  const showHUD = scrollProgress > 0.02;
+  // HUD visibility - always visible, with subtle fade for emphasis on scroll
+  const hudOpacity = scrollProgress < 0.05 ? 0.6 : Math.min(1, 0.6 + (scrollProgress - 0.05) * 4);
+  const showHUD = true;
 
   // Generate tick marks
   const tickCount = 20;
@@ -101,9 +109,10 @@ export function HUDFrame({
 
   const sectionMarkers = [
     { section: "hero", label: "01" },
-    { section: "manifesto", label: "02" },
-    { section: "services", label: "03" },
-    { section: "contact", label: "04" },
+    { section: "definition", label: "02" },
+    { section: "manifesto", label: "03" },
+    { section: "services", label: "04" },
+    { section: "contact", label: "05" },
   ];
 
   return (
@@ -150,18 +159,6 @@ export function HUDFrame({
               className="scale-indicator"
               style={{ top: `${scrollProgress * 100}%` }}
             />
-          </div>
-          <div className="rail-readouts">
-            <div className="readout">
-              <span className="readout-value">
-                {hudState.depth}
-                <span className="readout-unit">km</span>
-              </span>
-            </div>
-            <div className="readout">
-              <span className="readout-label">Vector</span>
-              <span className="readout-value">{hudState.vector}</span>
-            </div>
           </div>
         </aside>
       )}

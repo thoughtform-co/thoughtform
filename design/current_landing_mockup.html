@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Thoughtform — Navigate Intelligence (Mockup)</title>
+  <title>Thoughtform — Navigate Intelligence (Current Design Mockup)</title>
   
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -12,7 +12,7 @@
   
   <style>
     /* ═══════════════════════════════════════════════════════════════
-       DESIGN TOKENS
+       DESIGN TOKENS (Thoughtform Brand World)
        ═══════════════════════════════════════════════════════════════ */
     :root {
       /* Colors */
@@ -20,6 +20,7 @@
       --void-deep: #050504;
       --dawn: #ebe3d6;
       --dawn-90: rgba(235, 227, 214, 0.9);
+      --dawn-80: rgba(235, 227, 214, 0.8);
       --dawn-70: rgba(235, 227, 214, 0.7);
       --dawn-50: rgba(235, 227, 214, 0.5);
       --dawn-30: rgba(235, 227, 214, 0.3);
@@ -73,7 +74,7 @@
 
     body {
       font-family: var(--font-body);
-      background: var(--void);
+      background: var(--void-deep);
       color: var(--dawn);
       line-height: 1.6;
       overflow-x: hidden;
@@ -85,7 +86,7 @@
     }
 
     /* ═══════════════════════════════════════════════════════════════
-       PARTICLE CANVAS BACKGROUND
+       PARTICLE CANVAS BACKGROUNDS
        ═══════════════════════════════════════════════════════════════ */
     .space-background {
       position: fixed;
@@ -101,14 +102,81 @@
       height: 100%;
     }
 
+    /* Three.js Gateway Overlay (simulated in canvas) */
+    .gateway-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    .gateway-canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+    }
+
     /* ═══════════════════════════════════════════════════════════════
-       HUD FRAME
+       NAVIGATION BAR (Centered, Glass-morphic)
+       ═══════════════════════════════════════════════════════════════ */
+    .nav-container {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      gap: 8px;
+      padding: 8px 16px;
+      background: rgba(10, 9, 8, 0.7);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(235, 227, 214, 0.1);
+    }
+
+    .nav-link {
+      font-family: var(--font-data);
+      font-size: 11px;
+      font-weight: 400;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--dawn-50);
+      text-decoration: none;
+      padding: 8px 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all var(--duration-fast) var(--ease-out);
+    }
+
+    .nav-link:hover { 
+      color: var(--dawn); 
+      background: rgba(235, 227, 214, 0.05);
+    }
+    
+    .nav-link.active { 
+      color: var(--gold); 
+    }
+
+    .nav-icon {
+      font-size: 10px;
+      opacity: 0.6;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       HUD FRAME (Corners & Rails - appears after hero)
        ═══════════════════════════════════════════════════════════════ */
     .hud-frame {
       position: fixed;
       inset: 0;
       z-index: 100;
       pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+
+    .hud-frame.visible {
+      opacity: 1;
     }
 
     .hud-frame > * {
@@ -158,86 +226,6 @@
     .hud-corner-br::before { bottom: 0; right: 0; width: var(--corner-size); height: 2px; }
     .hud-corner-br::after { bottom: 0; right: 0; width: 2px; height: var(--corner-size); }
 
-    /* Top Bar */
-    .hud-top {
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 56px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 0 calc(var(--hud-padding) + 24px);
-      background: linear-gradient(to bottom, var(--void) 60%, transparent);
-    }
-
-    .hud-brand {
-      display: flex;
-      align-items: center;
-      gap: var(--space-sm);
-      font-family: var(--font-data);
-      font-size: 11px;
-      font-weight: 400;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-    }
-
-    .brand-label { color: var(--dawn-70); }
-    .brand-divider { color: var(--dawn-30); }
-    .brand-sector { color: var(--gold); }
-
-    .hud-nav {
-      display: flex;
-      gap: var(--space-2xl);
-    }
-
-    .nav-link {
-      font-family: var(--font-data);
-      font-size: 12px;
-      font-weight: 400;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      color: var(--dawn-50);
-      text-decoration: none;
-      padding: var(--space-sm) 0;
-      position: relative;
-      transition: color var(--duration-fast) var(--ease-out);
-    }
-
-    .nav-link:hover { color: var(--dawn); }
-    .nav-link.active { color: var(--dawn); }
-    .nav-link.active::after {
-      content: '';
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      height: 1px;
-      background: var(--gold);
-    }
-
-    .hud-signal {
-      display: flex;
-      align-items: center;
-      gap: var(--space-sm);
-      font-family: var(--font-data);
-      font-size: 11px;
-    }
-
-    .signal-label {
-      color: var(--dawn-30);
-      text-transform: uppercase;
-      font-size: 9px;
-      letter-spacing: 0.08em;
-    }
-
-    .signal-value {
-      color: var(--gold);
-      padding: 3px 10px;
-      border: 1px solid var(--gold);
-    }
-
     /* Side Rails */
     .hud-rail {
       position: absolute;
@@ -283,7 +271,7 @@
       flex-direction: column;
       gap: var(--space-md);
       margin-top: auto;
-      margin-bottom: var(--space-lg);
+      margin-bottom: var(--space-3xl);
       padding-left: 28px;
     }
 
@@ -313,80 +301,6 @@
       margin-left: 2px;
     }
 
-    .rail-markers {
-      display: flex;
-      flex-direction: column;
-      gap: var(--space-lg);
-      align-items: flex-end;
-      margin-top: auto;
-      margin-bottom: var(--space-lg);
-      padding-right: 28px;
-    }
-
-    .section-marker {
-      display: flex;
-      align-items: center;
-      gap: var(--space-sm);
-      opacity: 0.4;
-      cursor: pointer;
-      transition: opacity var(--duration-fast);
-    }
-
-    .section-marker.active { opacity: 1; }
-
-    .marker-dot {
-      width: 8px;
-      height: 8px;
-      border: 1px solid var(--dawn-50);
-    }
-
-    .section-marker.active .marker-dot {
-      background: var(--gold);
-      border-color: var(--gold);
-    }
-
-    .marker-label {
-      font-family: var(--font-data);
-      font-size: 11px;
-      color: var(--dawn-50);
-      letter-spacing: 0.08em;
-    }
-
-    .section-marker.active .marker-label { color: var(--gold); }
-
-    /* Bottom Bar */
-    .hud-bottom {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      height: 56px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 0 calc(var(--hud-padding) + 24px);
-      background: linear-gradient(to top, var(--void) 60%, transparent);
-    }
-
-    .hud-coords {
-      display: flex;
-      gap: var(--space-xl);
-    }
-
-    .coord {
-      font-family: var(--font-data);
-      font-size: 10px;
-      color: var(--dawn-30);
-    }
-
-    .coord span { color: var(--dawn-50); }
-
-    .hud-instruction {
-      font-family: var(--font-data);
-      font-size: 10px;
-      color: var(--dawn-30);
-    }
-
     /* ═══════════════════════════════════════════════════════════════
        SCROLL CONTAINER & SECTIONS
        ═══════════════════════════════════════════════════════════════ */
@@ -410,7 +324,7 @@
     }
 
     /* ═══════════════════════════════════════════════════════════════
-       HERO SECTION
+       HERO SECTION (Current Design)
        ═══════════════════════════════════════════════════════════════ */
     .section-hero {
       padding-top: 140px;
@@ -437,161 +351,166 @@
       height: auto;
     }
 
-    .hero-tagline {
-      font-family: var(--font-display);
-      font-size: clamp(20px, 2.5vw, 26px);
+    .hero-tagline-v2 {
+      font-family: var(--font-body);
+      font-size: clamp(24px, 3vw, 32px);
       color: var(--dawn);
-      line-height: 1.4;
-      margin-bottom: var(--space-md);
+      line-height: 1.3;
+      margin-bottom: var(--space-lg);
+      text-shadow: 0 0 40px rgba(5,4,3,0.9);
     }
 
-    .hero-description {
-      font-size: 14px;
-      color: var(--dawn-70);
+    /* ═══════════════════════════════════════════════════════════════
+       MANIFESTO SECTION (Current Text-based Design)
+       ═══════════════════════════════════════════════════════════════ */
+    .section-manifesto {
+      padding: 100px calc(var(--hud-padding) + var(--rail-width) + 120px) !important;
+      padding-right: 18% !important;
+      justify-content: flex-start !important;
+      align-items: flex-start !important;
+    }
+
+    .manifesto-layout-text {
+      width: 100%;
+      max-width: 640px;
+      margin: 0;
+      margin-right: auto;
+    }
+
+    .manifesto-content-area {
+      border-left: 1px solid var(--dawn-15);
+      padding-left: var(--space-xl);
+      display: flex;
+      flex-direction: column;
+      gap: 40px;
+    }
+
+    .manifesto-title-large {
+      font-family: var(--font-display);
+      font-size: clamp(48px, 6vw, 72px);
+      font-weight: 400;
+      line-height: 1.05;
+      letter-spacing: 0.01em;
+      color: var(--dawn);
+      margin: 0;
+    }
+
+    .manifesto-body-text {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .manifesto-body-text p {
+      font-family: var(--font-body);
+      font-size: clamp(17px, 2vw, 20px);
+      font-weight: 300;
       line-height: 1.7;
-      margin-bottom: var(--space-2xl);
-      max-width: 400px;
+      color: var(--dawn-80);
+      margin: 0;
+      max-width: 540px;
     }
 
-    .hero-description em {
+    .manifesto-body-text em {
       color: var(--gold);
       font-style: normal;
     }
 
-    .hero-cta {
-      margin-bottom: var(--space-3xl);
+    .manifesto-body-text strong {
+      font-weight: 500;
+      color: var(--dawn);
     }
-
-    .hero-meta {
-      font-family: var(--font-data);
-      font-size: 11px;
-      color: var(--dawn-30);
-    }
-
-    .meta-label {
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      margin-right: var(--space-sm);
-    }
-
-    .meta-value { color: var(--dawn-50); }
 
     /* ═══════════════════════════════════════════════════════════════
-       TERMINAL FRAME (Manifesto)
+       DEFINITION SECTION
        ═══════════════════════════════════════════════════════════════ */
-    .section-manifesto {
-      padding-left: calc(var(--hud-padding) + var(--rail-width) + var(--space-2xl));
-      padding-right: calc(var(--hud-padding) + var(--rail-width) + var(--space-2xl));
-      justify-content: center;
+    .section-definition {
+      justify-content: center !important;
+      padding: 100px var(--hud-padding) !important;
     }
 
-    .terminal-frame {
-      background: rgba(10, 9, 8, 0.85);
-      border: 1px solid var(--dawn-15);
-      padding: var(--space-2xl);
-      position: relative;
-      max-width: 720px;
+    .definition-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 40px;
+      max-width: 1100px;
       margin: 0 auto;
     }
 
-    .terminal-frame::before,
-    .terminal-frame::after {
-      content: '';
-      position: absolute;
-      width: 24px;
-      height: 24px;
+    .definition-header {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
     }
 
-    .terminal-frame::before {
-      top: -1px;
-      left: -1px;
-      border-top: 2px solid var(--gold);
-      border-left: 2px solid var(--gold);
+    .definition-title {
+      font-family: var(--font-display);
+      font-size: clamp(28px, 4vw, 40px);
+      font-weight: 400;
+      letter-spacing: 0.08em;
+      color: var(--gold);
+      margin: 0;
     }
 
-    .terminal-frame::after {
-      top: -1px;
-      right: -1px;
-      border-top: 2px solid var(--gold);
-      border-right: 2px solid var(--gold);
+    .definition-phonetic {
+      font-family: var(--font-body);
+      font-size: 14px;
+      font-style: italic;
+      color: var(--dawn-50);
+      letter-spacing: 0.02em;
     }
 
-    .terminal-frame-corners {
-      position: absolute;
-      bottom: -1px;
-      left: -1px;
-      right: -1px;
-      height: 24px;
-      pointer-events: none;
+    .definition-intro {
+      font-family: var(--font-body);
+      font-size: 18px;
+      font-weight: 300;
+      color: var(--dawn);
+      margin: 0;
+      text-align: center;
     }
 
-    .terminal-frame-corners::before,
-    .terminal-frame-corners::after {
-      content: '';
-      position: absolute;
-      width: 24px;
-      height: 24px;
+    .definition-cards {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      justify-content: center;
     }
 
-    .terminal-frame-corners::before {
-      bottom: 0;
-      left: 0;
-      border-bottom: 2px solid var(--gold);
-      border-left: 2px solid var(--gold);
-    }
-
-    .terminal-frame-corners::after {
-      bottom: 0;
-      right: 0;
-      border-bottom: 2px solid var(--gold);
-      border-right: 2px solid var(--gold);
-    }
-
-    .terminal-header {
+    .definition-card {
+      background: var(--dawn);
       display: flex;
       align-items: center;
-      gap: var(--space-sm);
-      margin-bottom: var(--space-2xl);
-      padding-left: var(--space-md);
+      justify-content: space-between;
+      gap: 24px;
+      padding: 20px 24px;
+      min-width: 280px;
+      max-width: 320px;
+      border: none;
+      color: var(--void);
     }
 
-    .terminal-icon {
-      width: 10px;
-      height: 10px;
-      background: var(--gold);
+    .definition-card-content {
+      flex: 1;
     }
 
-    .terminal-title {
-      font-family: var(--font-data);
-      font-size: 10px;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--dawn-50);
+    .definition-card-text {
+      font-family: var(--font-body);
+      font-size: 16px;
+      font-weight: 400;
+      line-height: 1.4;
     }
 
-    .terminal-content {
-      text-align: center;
-      padding: 0 var(--space-lg);
-    }
-
-    .terminal-footer {
+    .definition-card-icon {
+      flex-shrink: 0;
+      width: 48px;
+      height: 48px;
+      background: rgba(202, 165, 84, 0.15);
+      border: 1px solid rgba(202, 165, 84, 0.25);
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: var(--space-lg);
-      margin-top: var(--space-2xl);
-      padding-top: var(--space-lg);
-      border-top: 1px solid var(--dawn-08);
-    }
-
-    .terminal-tag {
-      font-family: var(--font-data);
-      font-size: 9px;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--dawn-30);
-      padding: var(--space-xs) var(--space-sm);
-      border: 1px solid var(--dawn-08);
     }
 
     /* ═══════════════════════════════════════════════════════════════
@@ -600,6 +519,9 @@
     .section-layout {
       width: 100%;
       max-width: 640px;
+      margin: 0;
+      margin-right: auto;
+      display: block;
     }
 
     .section-label {
@@ -637,7 +559,7 @@
 
     .headline {
       font-family: var(--font-display);
-      font-size: clamp(28px, 4vw, 42px);
+      font-size: clamp(36px, 5vw, 52px);
       letter-spacing: 0.04em;
       text-transform: uppercase;
       color: var(--dawn);
@@ -645,11 +567,11 @@
     }
 
     .text-block {
-      max-width: 560px;
+      max-width: 700px;
     }
 
     .text {
-      font-size: 15px;
+      font-size: 18px;
       font-weight: 300;
       line-height: 1.7;
       color: var(--dawn-70);
@@ -660,7 +582,7 @@
 
     .text-emphasis {
       color: var(--dawn);
-      font-size: 16px;
+      font-size: 20px;
       font-weight: 400;
     }
 
@@ -680,6 +602,14 @@
       font-size: 11px;
       color: var(--dawn-30);
     }
+
+    .meta-label {
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-right: var(--space-sm);
+    }
+
+    .meta-value { color: var(--dawn-50); }
 
     /* ═══════════════════════════════════════════════════════════════
        BUTTONS
@@ -784,57 +714,74 @@
         --corner-size: 30px;
       }
       .hud-rail { display: none; }
-      .hud-signal { display: none; }
       .section {
         padding: 100px var(--hud-padding);
+      }
+      .manifesto-title-large {
+        font-size: clamp(36px, 8vw, 48px);
+      }
+      .manifesto-body-text p {
+        font-size: 17px;
       }
     }
 
     @media (max-width: 600px) {
-      .hud-brand { display: none; }
-      .hud-coords { display: none; }
+      .nav-container {
+        padding: 6px 10px;
+      }
+      .nav-link {
+        padding: 6px 10px;
+        font-size: 10px;
+      }
+      .nav-icon { display: none; }
       :root { --corner-size: 24px; }
     }
   </style>
 </head>
 <body>
-  <!-- Particle Canvas Background -->
+  <!-- Particle Canvas Background (Manifold) -->
   <div class="space-background">
-    <canvas id="particleCanvas" class="space-canvas"></canvas>
+    <canvas id="manifoldCanvas" class="space-canvas"></canvas>
   </div>
 
-  <!-- HUD Frame -->
-  <div class="hud-frame">
+  <!-- Gateway Canvas Overlay (Three.js simulation) -->
+  <div class="gateway-overlay">
+    <canvas id="gatewayCanvas" class="gateway-canvas"></canvas>
+  </div>
+
+  <!-- Navigation Bar (Centered) -->
+  <nav class="nav-container">
+    <a href="#manifesto" class="nav-link">
+      <span class="nav-icon">◇</span>
+      <span>Manifesto</span>
+    </a>
+    <a href="#definition" class="nav-link">
+      <span class="nav-icon">⊞</span>
+      <span>Definition</span>
+    </a>
+    <a href="#services" class="nav-link">
+      <span class="nav-icon">✦</span>
+      <span>Services</span>
+    </a>
+    <a href="#contact" class="nav-link">
+      <span class="nav-icon">↗</span>
+      <span>Contact</span>
+    </a>
+  </nav>
+
+  <!-- HUD Frame (visible after hero) -->
+  <div class="hud-frame" id="hudFrame">
     <!-- Corners -->
     <div class="hud-corner hud-corner-tl"></div>
     <div class="hud-corner hud-corner-tr"></div>
     <div class="hud-corner hud-corner-bl"></div>
     <div class="hud-corner hud-corner-br"></div>
 
-    <!-- Top Bar -->
-    <header class="hud-top">
-      <div class="hud-brand">
-        <span class="brand-label">Thoughtform</span>
-        <span class="brand-divider">/</span>
-        <span class="brand-sector">Manifesto</span>
-      </div>
-      <nav class="hud-nav">
-        <a href="#manifesto" class="nav-link active">Manifesto</a>
-        <a href="#services" class="nav-link">Services</a>
-        <a href="#about" class="nav-link">About</a>
-        <a href="#contact" class="nav-link">Contact</a>
-      </nav>
-      <div class="hud-signal">
-        <span class="signal-label">Signal</span>
-        <span class="signal-value">74%</span>
-      </div>
-    </header>
-
     <!-- Left Rail -->
     <aside class="hud-rail hud-rail-left">
       <div class="rail-readouts">
         <div class="readout">
-          <span class="readout-value">2.6<span class="readout-unit">km</span></span>
+          <span class="readout-value" id="distanceReadout">0.0<span class="readout-unit">km</span></span>
         </div>
         <div class="readout">
           <span class="readout-label">Vector</span>
@@ -844,39 +791,7 @@
     </aside>
 
     <!-- Right Rail -->
-    <aside class="hud-rail hud-rail-right">
-      <div class="rail-markers">
-        <div class="section-marker active">
-          <span class="marker-dot"></span>
-          <span class="marker-label">01</span>
-        </div>
-        <div class="section-marker active">
-          <span class="marker-dot"></span>
-          <span class="marker-label">02</span>
-        </div>
-        <div class="section-marker">
-          <span class="marker-dot"></span>
-          <span class="marker-label">03</span>
-        </div>
-        <div class="section-marker">
-          <span class="marker-dot"></span>
-          <span class="marker-label">04</span>
-        </div>
-      </div>
-    </aside>
-
-    <!-- Bottom Bar -->
-    <footer class="hud-bottom">
-      <div class="hud-coords">
-        <span class="coord">δ: <span>0.44</span></span>
-        <span class="coord">θ: <span>68.4°</span></span>
-        <span class="coord">ρ: <span>0.73</span></span>
-        <span class="coord">ζ: <span>4.8</span></span>
-      </div>
-      <div class="hud-instruction">
-        <span>Navigation services detected. Plotting course.</span>
-      </div>
-    </footer>
+    <aside class="hud-rail hud-rail-right"></aside>
   </div>
 
   <!-- Main Content -->
@@ -895,57 +810,102 @@
             </svg>
           </div>
 
-          <p class="hero-tagline">Navigate the alien terrain of machine intelligence.</p>
-
-          <p class="hero-description">
-            Thoughtform pioneers intuitive human-AI collaboration. We teach teams to think <em>with</em> AI—navigating its latent space for creative breakthroughs.
+          <p class="hero-tagline-v2">
+            Thoughtform pioneers intuitive<br>
+            human-AI collaboration.
           </p>
-
-          <div class="hero-cta">
-            <a href="#manifesto" class="btn btn-primary">Begin Navigation</a>
-          </div>
-
-          <div class="hero-meta">
-            <span class="meta-label">Landmark:</span>
-            <span class="meta-value">semantic terrain / latent topology</span>
-          </div>
         </div>
       </div>
     </section>
 
-    <!-- Section 2: Manifesto -->
+    <!-- Section 2: Manifesto (Current Text-based Design) -->
     <section class="section section-manifesto" id="manifesto">
-      <div class="terminal-frame">
-        <div class="terminal-header">
-          <div class="terminal-icon"></div>
-          <span class="terminal-title">Manifesto</span>
+      <div class="manifesto-layout-text">
+        <!-- Section label - horizontal like Services -->
+        <div class="section-label">
+          <span class="label-number">02</span>
+          <span class="label-text">Manifesto</span>
         </div>
-        
-        <div class="terminal-content">
-          <h2 class="headline">AI Isn't Software</h2>
 
-          <div class="text-block">
-            <p class="text">Most companies struggle because they treat AI like normal software.</p>
-            <p class="text text-emphasis">But AI isn't a tool to command.</p>
-            <p class="text">It's a strange, new intelligence we must learn to <em>navigate</em>. It leaps across dimensions. It hallucinates. It surprises.</p>
-            <p class="text">In technical work, that strangeness must be constrained.<br>In creative work? <strong>It's the source of truly novel ideas.</strong></p>
+        <!-- Content with vertical line -->
+        <div class="manifesto-content-area">
+          <!-- Large title -->
+          <h2 class="manifesto-title-large">AI Isn't Software.</h2>
+
+          <!-- Body text - all same size -->
+          <div class="manifesto-body-text">
+            <p>
+              Most companies struggle with their AI adoption because they treat AI like normal software.
+            </p>
+
+            <p>
+              But AI isn't a tool to command. It's a strange, new intelligence we have to learn how to <em>navigate</em>. It leaps across dimensions we can't fathom.
+              It hallucinates. It surprises.
+            </p>
+
+            <p>
+              In technical work, that strangeness must be constrained.
+              But in creative and strategic work? It's the source of truly
+              novel ideas.
+            </p>
+
+            <p>
+              Thoughtform teaches teams to think <strong>with</strong> that
+              intelligence—navigating its strangeness for creative breakthroughs.
+            </p>
           </div>
         </div>
-
-        <div class="terminal-footer">
-          <span class="terminal-tag">Landmark: Polar Orbit</span>
-          <span class="terminal-tag">Section 02</span>
-        </div>
-        
-        <div class="terminal-frame-corners"></div>
       </div>
     </section>
 
-    <!-- Section 3: Services -->
+    <!-- Section 3: Definition -->
+    <section class="section section-definition" id="definition">
+      <div class="definition-container">
+        <div class="definition-header">
+          <h2 class="definition-title">THOUGHTFORM</h2>
+          <span class="definition-phonetic">(θɔːtfɔːrm / THAWT-form)</span>
+        </div>
+
+        <p class="definition-intro">
+          the practice of intuitive human-AI collaboration where you
+        </p>
+
+        <div class="definition-cards">
+          <div class="definition-card">
+            <div class="definition-card-content">
+              <span class="definition-card-text">navigate its<br>intelligence</span>
+            </div>
+            <div class="definition-card-icon">
+              <span style="font-size: 24px; color: #0a0908;">⊞</span>
+            </div>
+          </div>
+
+          <div class="definition-card">
+            <div class="definition-card-content">
+              <span class="definition-card-text">steer it away from<br>mediocrity</span>
+            </div>
+            <div class="definition-card-icon">
+              <span style="font-size: 24px; color: #0a0908;">⊟</span>
+            </div>
+          </div>
+
+          <div class="definition-card">
+            <div class="definition-card-content">
+              <span class="definition-card-text">leverage its<br>hallucinations</span>
+            </div>
+            <div class="definition-card-icon">
+              <span style="font-size: 24px; color: #0a0908;">⬡</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 4: Services -->
     <section class="section section-services" id="services">
       <div class="section-layout">
         <div class="section-label">
-          <span class="label-number">03</span>
+          <span class="label-number">04</span>
           <span class="label-text">Services</span>
         </div>
 
@@ -978,11 +938,11 @@
       </div>
     </section>
 
-    <!-- Section 4: Contact -->
+    <!-- Section 5: Contact -->
     <section class="section section-contact" id="contact">
       <div class="section-layout">
         <div class="section-label">
-          <span class="label-number">04</span>
+          <span class="label-number">05</span>
           <span class="label-text">Contact</span>
         </div>
 
@@ -1004,245 +964,171 @@
     </section>
   </main>
 
-  <!-- Particle System Script -->
+  <!-- Particle System Scripts -->
   <script>
     // ═══════════════════════════════════════════════════════════════
-    // THOUGHTFORM PARTICLE SYSTEM
-    // Pure pixel particles (Ledger-style), grid-snapped, scroll-driven
-    // No ASCII characters - only square particles with flow connections
+    // THOUGHTFORM PARTICLE SYSTEM V2
+    // 
+    // This mockup simulates the current React implementation:
+    // - ParticleCanvasV2: Manifold terrain (dawn-colored topology)
+    // - ThreeGateway: Wormhole portal (simulated in 2D canvas)
+    // 
+    // The actual implementation uses:
+    // - React Three Fiber for the gateway
+    // - HTML5 Canvas for the manifold
     // ═══════════════════════════════════════════════════════════════
     
-    const GRID = 3; // Non-negotiable grid snapping
+    const GRID = 3;
     
-    // RGB triplets for blending
+    // RGB triplets
     const DAWN_RGB = '236, 227, 214';
     const GOLD_RGB = '202, 165, 84';
-    const ALERT_RGB = '255, 107, 53';
-    const VOID_RGB = '5, 4, 3';
-    
-    // Hex for simple fills
-    const DAWN = "#ebe3d6";
-    const GOLD = "#caa554";
-    const ALERT = "#ff6b35";
+    const VOID_RGB = '5, 5, 4';
     
     function snap(value) {
       return Math.floor(value / GRID) * GRID;
     }
     
-    // Core pixel drawing function (Ledger-style)
-    function drawPixel(ctx, x, y, color, alpha, size = GRID) {
-      const px = snap(x);
-      const py = snap(y);
-      if (typeof color === 'string' && color.includes(',')) {
-        ctx.fillStyle = `rgba(${color}, ${alpha})`;
-      } else {
-        ctx.globalAlpha = alpha;
-        ctx.fillStyle = color;
-      }
-      ctx.fillRect(px, py, size - 1, size - 1);
-    }
+    // ─── MANIFOLD CANVAS (Background Terrain) ───
+    const manifoldCanvas = document.getElementById('manifoldCanvas');
+    const manifoldCtx = manifoldCanvas.getContext('2d');
     
-    function createPoint(x, y, z, type, color, landmark) {
-      return {
-        x, y, z, 
-        baseX: x,
-        baseY: y,
-        type, color, 
-        landmark: landmark || undefined,
-        phase: Math.random() * Math.PI * 2,
-        size: 1 + Math.random() * 0.5
-      };
-    }
-    
-    function initParticles() {
-      const particles = [];
-      
-      // ─── A. STARFIELD (Background, ambient) ───
-      for (let i = 0; i < 600; i++) {
-        particles.push(createPoint(
-          (Math.random() - 0.5) * 6000,
-          (Math.random() - 0.5) * 6000,
-          Math.random() * 8000,
-          "star", DAWN_RGB
-        ));
-      }
-
-      // ─── B. PERSISTENT TERRAIN (Always visible background) ───
-      // Denser terrain grid for better flow visualization
-      for (let r = 0; r < 80; r++) {
-        for (let c = 0; c < 70; c++) {
-          const x = (c - 35) * 60;
-          const z = 1500 + (r * 45);
-          // Multi-wave terrain for organic topology
-          const y = 500 + Math.sin(c * 0.18) * 160 + Math.cos(r * 0.12) * 160 + Math.sin(c * 0.3 + r * 0.18) * 60;
-          particles.push(createPoint(x, y, z, "terrain", GOLD_RGB, 0));
-        }
-      }
-
-      // ─── C. LANDMARK 1: GATEWAY PORTAL (Section 1 - Hero) ───
-      const portalOffsetX = 200;
-      // Concentric rings with more density
-      for (let layer = 0; layer < 15; layer++) {
-        const z = 1800 + layer * 35;
-        const radius = 320 - layer * 18;
-        const points = Math.max(25, 50 - layer * 2);
-        for (let i = 0; i < points; i++) {
-          const angle = (i / points) * Math.PI * 2;
-          const x = portalOffsetX + Math.cos(angle) * radius;
-          const y = 200 + Math.sin(angle) * radius;
-          particles.push(createPoint(x, y, z, "geo", GOLD_RGB, 1));
-        }
-      }
-      // Inner spiral with more particles
-      for (let i = 0; i < 120; i++) {
-        const t = i / 120;
-        const angle = t * Math.PI * 2 * 4;
-        const radius = (1 - t) * 280;
-        const z = 1850 + t * 400;
-        const x = portalOffsetX + Math.cos(angle) * radius;
-        const y = 200 + Math.sin(angle) * radius;
-        particles.push(createPoint(x, y, z, "geo", DAWN_RGB, 1));
-      }
-
-      // ─── D. LANDMARK 2: CRYSTALLINE TOWER (Section 2 - Manifesto) ───
-      // Vertical tower structure (no more data streams)
-      for (let level = 0; level < 20; level++) {
-        const baseZ = 2800 + level * 25;
-        const levelRadius = 200 - level * 8;
-        const points = Math.max(12, 30 - level);
-        for (let i = 0; i < points; i++) {
-          const angle = (i / points) * Math.PI * 2;
-          const x = Math.cos(angle) * levelRadius;
-          const y = 450 - level * 35;
-          particles.push(createPoint(x, y, baseZ, "geo", DAWN_RGB, 2));
-        }
-        // Cross-bracing
-        for (let i = 0; i < 4; i++) {
-          const angle = (i / 4) * Math.PI * 2;
-          const x = Math.cos(angle) * levelRadius * 0.7;
-          const y = 450 - level * 35;
-          particles.push(createPoint(x, y, baseZ, "geo", GOLD_RGB, 2));
-        }
-      }
-      // Apex
-      for (let i = 0; i < 30; i++) {
-        const t = i / 30;
-        const x = (Math.random() - 0.5) * 60;
-        const y = -300 - t * 100;
-        const z = 3050 + t * 50;
-        particles.push(createPoint(x, y, z, "geo", GOLD_RGB, 2));
-      }
-
-      // ─── E. LANDMARK 3: TRAJECTORY TUNNEL (Section 3 - Services) ───
-      // Perspective grid with particle flows
-      for (let layer = 0; layer < 18; layer++) {
-        const z = 4200 + layer * 70;
-        const size = 380 - layer * 18;
-        const points = 40 - layer;
-        for (let i = 0; i < points; i++) {
-          const t = (i / points) * 2 - 1;
-          particles.push(createPoint(t * size, -size * 0.6 + 200, z, "geo", GOLD_RGB, 3));
-          particles.push(createPoint(t * size, size * 0.6 + 200, z, "geo", GOLD_RGB, 3));
-          particles.push(createPoint(-size, t * size * 0.6 + 200, z, "geo", GOLD_RGB, 3));
-          particles.push(createPoint(size, t * size * 0.6 + 200, z, "geo", GOLD_RGB, 3));
-        }
-      }
-      // Double helix tunnel
-      for (let i = 0; i < 500; i++) {
-        const z = 4300 + i * 2.5;
-        const radius = 280 + Math.sin(i * 0.08) * 70;
-        const angle = i * 0.16;
-        const x = Math.cos(angle) * radius;
-        const y = 200 + Math.sin(angle) * radius;
-        particles.push(createPoint(x, y, z, "geo", DAWN_RGB, 3));
-        // Second helix strand
-        const x2 = Math.cos(angle + Math.PI) * radius * 0.8;
-        const y2 = 200 + Math.sin(angle + Math.PI) * radius * 0.8;
-        particles.push(createPoint(x2, y2, z, "geo", GOLD_RGB, 3));
-      }
-
-      // ─── F. LANDMARK 4: EVENT HORIZON (Section 4 - Contact) ───
-      // Denser sphere with particle clustering
-      for (let i = 0; i < 800; i++) {
-        const r = 420;
-        const theta = Math.random() * Math.PI * 2;
-        const phi = Math.acos(2 * Math.random() - 1);
-        const x = r * Math.sin(phi) * Math.cos(theta);
-        const y = 200 + r * Math.sin(phi) * Math.sin(theta);
-        const z = 6000 + r * Math.cos(phi) * 0.5;
-        particles.push(createPoint(x, y, z, "geo", ALERT_RGB, 4));
-      }
-      // Core rings with more definition
-      for (let ring = 0; ring < 7; ring++) {
-        const radius = 60 + ring * 45;
-        const z = 6000;
-        const points = 30 + ring * 8;
-        for (let i = 0; i < points; i++) {
-          const angle = (i / points) * Math.PI * 2;
-          const x = Math.cos(angle) * radius;
-          const y = 200 + Math.sin(angle) * radius;
-          particles.push(createPoint(x, y, z, "geo", GOLD_RGB, 4));
-        }
-      }
-      // Inner pulsing core
-      for (let i = 0; i < 50; i++) {
-        const angle = Math.random() * Math.PI * 2;
-        const dist = Math.random() * 50;
-        const x = Math.cos(angle) * dist;
-        const y = 200 + Math.sin(angle) * dist;
-        const z = 6000 + (Math.random() - 0.5) * 50;
-        particles.push(createPoint(x, y, z, "geo", ALERT_RGB, 4));
-      }
-      
-      return particles;
-    }
-    
-    // Generate flow connections between nearby particles
-    function generateFlows(particles) {
-      const flows = [];
-      const landmarkParticles = particles.filter(p => p.type === "geo");
-      
-      for (let i = 0; i < landmarkParticles.length; i++) {
-        const p = landmarkParticles[i];
-        for (let j = i + 1; j < landmarkParticles.length; j++) {
-          const other = landmarkParticles[j];
-          // Only connect particles from the same landmark
-          if (p.landmark !== other.landmark) continue;
-          
-          const dist = Math.hypot(p.x - other.x, p.y - other.y, (p.z - other.z) * 0.3);
-          // Connect if close enough (random chance for variety)
-          if (dist < 150 && Math.random() > 0.92) {
-            flows.push({
-              p1: p, p2: other,
-              color: p.color,
-              landmark: p.landmark,
-              dist: dist
-            });
-          }
-        }
-      }
-      return flows;
-    }
-    
-    // Initialize
-    const canvas = document.getElementById('particleCanvas');
-    const ctx = canvas.getContext('2d');
-    const particles = initParticles();
-    const flows = generateFlows(particles);
+    // ─── GATEWAY CANVAS (Overlay) ───
+    const gatewayCanvas = document.getElementById('gatewayCanvas');
+    const gatewayCtx = gatewayCanvas.getContext('2d');
     
     const FOCAL = 400;
-    const MAX_DEPTH = 5000;
+    const MAX_DEPTH = 8000;
     
     let scrollProgress = 0;
     let time = 0;
     
+    // Manifold terrain particles
+    const terrainParticles = [];
+    
+    // Initialize terrain
+    function initTerrain() {
+      // Dense terrain grid
+      for (let r = 0; r < 140; r++) {
+        for (let c = 0; c < 60; c++) {
+          const x = (c - 30) * 55;
+          const z = 800 + r * 60;
+          // Wave topology
+          const wavePhase = c * 0.2 + r * 0.15;
+          const y = 400 + Math.sin(wavePhase) * 180 + Math.cos(r * 0.12) * 100;
+          
+          terrainParticles.push({
+            x, y, z,
+            baseY: y,
+            phase: Math.random() * Math.PI * 2
+          });
+        }
+      }
+    }
+    
+    // Gateway particles (simulating Three.js portal)
+    const gatewayParticles = [];
+    
+    function initGateway() {
+      const centerX = 0;
+      const centerY = 0;
+      
+      // Portal ring layers
+      for (let layer = 0; layer < 8; layer++) {
+        const z = layer * 0.08;
+        const count = 250;
+        
+        for (let i = 0; i < count; i++) {
+          const angle = (i / count) * Math.PI * 2;
+          const r = 1.0 + (Math.random() - 0.5) * 0.15;
+          
+          gatewayParticles.push({
+            x: Math.cos(angle) * r,
+            y: Math.sin(angle) * r,
+            z: z,
+            type: 'ring',
+            color: DAWN_RGB
+          });
+        }
+      }
+      
+      // Tunnel depth
+      for (let d = 0; d < 35; d++) {
+        const t = d / 35;
+        const z = 0.2 + d * 0.18;
+        const radius = 0.95 - t * 0.25;
+        const count = 100;
+        
+        for (let i = 0; i < count; i++) {
+          const angle = (i / count) * Math.PI * 2;
+          const jitter = (Math.random() - 0.5) * 0.04;
+          
+          gatewayParticles.push({
+            x: Math.cos(angle) * (radius + jitter),
+            y: Math.sin(angle) * (radius + jitter),
+            z: z,
+            type: 'tunnel',
+            color: DAWN_RGB
+          });
+        }
+      }
+      
+      // Gold inner ring
+      for (let layer = 0; layer < 4; layer++) {
+        const z = layer * 0.05;
+        const count = 150;
+        const radius = 0.88;
+        
+        for (let i = 0; i < count; i++) {
+          const angle = (i / count) * Math.PI * 2;
+          const r = radius + (Math.random() - 0.5) * 0.04;
+          
+          gatewayParticles.push({
+            x: Math.cos(angle) * r,
+            y: Math.sin(angle) * r,
+            z: z,
+            type: 'gold',
+            color: GOLD_RGB
+          });
+        }
+      }
+      
+      // Interior streaks
+      for (let streak = 0; streak < 40; streak++) {
+        const baseAngle = (streak / 40) * Math.PI * 2;
+        const baseRadius = 0.3 + (streak % 10) * 0.04;
+        
+        for (let p = 0; p < 20; p++) {
+          const t = p / 20;
+          const z = 0.5 + t * 5;
+          const radius = baseRadius - t * 0.1;
+          const angle = baseAngle + t * 0.2;
+          
+          gatewayParticles.push({
+            x: Math.cos(angle) * radius,
+            y: Math.sin(angle) * radius,
+            z: z,
+            type: 'interior',
+            color: DAWN_RGB
+          });
+        }
+      }
+    }
+    
     function resize() {
       const dpr = window.devicePixelRatio || 1;
-      canvas.width = window.innerWidth * dpr;
-      canvas.height = window.innerHeight * dpr;
-      canvas.style.width = window.innerWidth + 'px';
-      canvas.style.height = window.innerHeight + 'px';
-      ctx.scale(dpr, dpr);
+      
+      manifoldCanvas.width = window.innerWidth * dpr;
+      manifoldCanvas.height = window.innerHeight * dpr;
+      manifoldCanvas.style.width = window.innerWidth + 'px';
+      manifoldCanvas.style.height = window.innerHeight + 'px';
+      manifoldCtx.scale(dpr, dpr);
+      
+      gatewayCanvas.width = window.innerWidth * dpr;
+      gatewayCanvas.height = window.innerHeight * dpr;
+      gatewayCanvas.style.width = window.innerWidth + 'px';
+      gatewayCanvas.style.height = window.innerHeight + 'px';
+      gatewayCtx.scale(dpr, dpr);
     }
     
     function render() {
@@ -1250,228 +1136,121 @@
       const height = window.innerHeight;
       
       const scrollP = scrollProgress;
-      const scrollZ = scrollP * 6000;
+      const scrollZ = scrollP * MAX_DEPTH;
       
-      // Determine which section we're in (1-4)
-      const currentSection = Math.floor(scrollP * 4) + 1;
-      const sectionProgress = (scrollP * 4) % 1;
+      // ─── RENDER MANIFOLD ───
+      manifoldCtx.fillStyle = '#050504';
+      manifoldCtx.fillRect(0, 0, width, height);
       
-      // Trail effect (Ledger-style motion blur)
-      ctx.fillStyle = `rgba(${VOID_RGB}, 0.06)`;
-      ctx.fillRect(0, 0, width, height);
+      const cx = width * 0.7;
+      const cy = height * 0.5; // Current camera position (not tilted down)
       
-      // Sparse background grid (every ~3 seconds)
-      if (time % 180 === 0) {
-        for (let x = 0; x < width; x += GRID * 30) {
-          for (let y = 0; y < height; y += GRID * 30) {
-            drawPixel(ctx, x, y, DAWN_RGB, 0.008);
-          }
-        }
-      }
-      
-      // Dynamic vanishing point
-      const scrollT = Math.min(1, scrollP * 3);
-      const cx_stars = width * 0.5;
-      const cx_geo = width * (0.5 + scrollT * 0.25);
-      const cy = height * 0.5;
-      
-      // ─── DRAW FLOW CONNECTIONS ───
-      flows.forEach(flow => {
-        const p1 = flow.p1;
-        const p2 = flow.p2;
-        
-        // Calculate landmark visibility
-        if (flow.landmark) {
-          const sectionDist = Math.abs(currentSection - flow.landmark);
-          if (sectionDist > 1) return;
-        }
-        
-        // Get Z positions
-        let z1 = p1.z - scrollZ;
-        let z2 = p2.z - scrollZ;
-        
-        if (z1 <= 10 || z1 > MAX_DEPTH || z2 <= 10 || z2 > MAX_DEPTH) return;
-        
-        const scale1 = FOCAL / z1;
-        const scale2 = FOCAL / z2;
-        
-        const x1 = cx_geo + p1.x * scale1;
-        const y1 = cy + p1.y * scale1;
-        const x2 = cx_geo + p2.x * scale2;
-        const y2 = cy + p2.y * scale2;
-        
-        // Draw flow as dotted line with pulse
-        const dist = Math.hypot(x2 - x1, y2 - y1);
-        const steps = Math.floor(dist / (GRID * 3));
-        
-        for (let i = 0; i <= steps; i++) {
-          const t = i / steps;
-          const x = x1 + (x2 - x1) * t;
-          const y = y1 + (y2 - y1) * t;
-          
-          // Pulse effect along flow
-          const pulse = Math.sin(time * 0.03 + t * 8 + p1.phase) * 0.3 + 0.7;
-          const depthAlpha = Math.min(1, (1 - ((z1 + z2) / 2) / MAX_DEPTH) * 1.5);
-          const alpha = 0.1 * pulse * depthAlpha;
-          
-          if (alpha > 0.01) {
-            drawPixel(ctx, x, y, flow.color, alpha);
-          }
-        }
-      });
-      
-      // ─── DRAW CLUSTER HALOS (atmospheric effect) ───
-      // Portal halo
-      if (currentSection === 1 || currentSection === 2) {
-        const portalZ = 1900 - scrollZ;
-        if (portalZ > 100 && portalZ < MAX_DEPTH) {
-          const scale = FOCAL / portalZ;
-          const portalX = cx_geo + 200 * scale;
-          const portalY = cy + 200 * scale;
-          const pulse = Math.sin(time * 0.015) * 0.2 + 0.8;
-          
-          for (let r = 0; r < 4; r++) {
-            const radius = (150 + r * 40) * scale;
-            const alpha = 0.015 * (1 - r / 4) * pulse;
-            const points = Math.floor(radius / GRID * 1.5);
-            
-            for (let i = 0; i < points; i++) {
-              const angle = (i / points) * Math.PI * 2 + time * 0.006;
-              if (Math.random() > 0.6) {
-                drawPixel(ctx,
-                  portalX + Math.cos(angle) * radius,
-                  portalY + Math.sin(angle) * radius,
-                  GOLD_RGB, alpha
-                );
-              }
-            }
-          }
-        }
-      }
-      
-      // Event Horizon halo
-      if (currentSection === 4 || currentSection === 3) {
-        const horizonZ = 6000 - scrollZ;
-        if (horizonZ > 100 && horizonZ < MAX_DEPTH) {
-          const scale = FOCAL / horizonZ;
-          const horizonX = cx_geo;
-          const horizonY = cy + 200 * scale;
-          const pulse = Math.sin(time * 0.02) * 0.25 + 0.75;
-          
-          for (let r = 0; r < 5; r++) {
-            const radius = (200 + r * 60) * scale;
-            const alpha = 0.02 * (1 - r / 5) * pulse;
-            const points = Math.floor(radius / GRID * 1.2);
-            
-            for (let i = 0; i < points; i++) {
-              const angle = (i / points) * Math.PI * 2 + time * 0.004;
-              if (Math.random() > 0.55) {
-                drawPixel(ctx,
-                  horizonX + Math.cos(angle) * radius,
-                  horizonY + Math.sin(angle) * radius,
-                  ALERT_RGB, alpha
-                );
-              }
-            }
-          }
-        }
-      }
-      
-      // ─── DRAW PARTICLES ───
-      // Sort by depth
-      const sorted = [...particles].sort((a, b) => {
-        const getZ = (p) => {
-          if (p.type === "terrain") return p.z;
-          return p.z - scrollZ;
-        };
-        return getZ(b) - getZ(a);
-      });
+      // Sort terrain by depth
+      const sorted = [...terrainParticles].sort((a, b) => (b.z - scrollZ) - (a.z - scrollZ));
       
       sorted.forEach(p => {
-        let relZ;
-        let particleAlpha = 1;
-        let terrainAlphaMultiplier = 1;
-
-        if (p.type === "terrain") {
-          relZ = p.z;
-          terrainAlphaMultiplier = 0.5;
-        } else if (p.type === "star") {
-          relZ = p.z - scrollZ;
-          while (relZ < 0) relZ += 8000;
-          while (relZ > 8000) relZ -= 8000;
-        } else {
-          relZ = p.z - scrollZ;
-          
-          if (p.landmark) {
-            const landmarkSection = p.landmark;
-            const sectionDist = Math.abs(currentSection - landmarkSection);
-            
-            if (sectionDist === 0) {
-              particleAlpha = 1;
-            } else if (sectionDist === 1) {
-              particleAlpha = 0.35;
-            } else {
-              particleAlpha = 0;
-              return;
-            }
-          }
-        }
-
-        // Culling
-        if (p.type === "terrain") {
-          if (relZ <= 100 || relZ > 5000) return;
-        } else {
-          if (relZ <= 10 || relZ > MAX_DEPTH) return;
-        }
-
+        const relZ = p.z - scrollZ * 0.8;
+        
+        if (relZ <= 50 || relZ > MAX_DEPTH) return;
+        
         const scale = FOCAL / relZ;
-        const center = p.type === "star" ? cx_stars : cx_geo;
         
-        // Breathing animation (Ledger-style)
-        const breatheX = Math.sin(time * 0.02 + p.phase) * 8;
-        const breatheY = Math.cos(time * 0.015 + p.phase * 1.5) * 6;
+        // Breathing
+        const breatheX = Math.sin(time * 0.015 + p.phase) * 5;
+        const breatheY = Math.cos(time * 0.012 + p.phase * 1.3) * 4;
         
-        const x = center + (p.x + breatheX) * scale;
+        const x = cx + (p.x + breatheX) * scale;
         const y = cy + (p.y + breatheY) * scale;
-
-        // Out of bounds check
-        if (p.type === "terrain") {
-          if (x < -200 || x > width + 200 || y < -200 || y > height + 200) return;
-        } else {
-          if (x < -50 || x > width + 50 || y < -50 || y > height + 50) return;
-        }
-
-        // Depth-based alpha
-        const depthAlpha = Math.min(1, (1 - relZ / MAX_DEPTH) * 1.8);
+        
+        // Y-culling (only lower 65% of screen)
+        if (y < height * 0.35) return;
+        if (x < -100 || x > width + 100) return;
+        
+        // Depth alpha with proximity boost
+        const depthFactor = 1 - relZ / MAX_DEPTH;
+        const proximityBoost = Math.max(0, 1 - relZ / 2000) * 0.5;
+        const depthAlpha = Math.max(0.3, depthFactor * 1.2 + proximityBoost);
         
         // Breathing alpha
-        const breatheAlpha = 0.7 + Math.sin(time * 0.025 + p.phase) * 0.3;
+        const breatheAlpha = 0.85 + Math.sin(time * 0.02 + p.phase) * 0.15;
         
-        const finalAlpha = depthAlpha * particleAlpha * terrainAlphaMultiplier * breatheAlpha;
+        const alpha = depthAlpha * breatheAlpha * 0.45;
         
-        ctx.globalAlpha = 1; // Reset since we're using drawPixel
-
-        if (p.type === "geo" || p.type === "terrain") {
-          // Size based on depth (closer = larger)
-          const baseSize = GRID * (p.type === "terrain" ? 1 : 1.5);
-          const size = Math.max(GRID, baseSize * Math.min(2, scale * 1.5));
-          drawPixel(ctx, x, y, p.color, finalAlpha, size);
-          
-          // Glow effect for close landmark particles
-          if (p.type === "geo" && scale > 0.5 && particleAlpha > 0.8) {
-            const glowPulse = Math.sin(time * 0.04 + p.phase) * 0.3 + 0.7;
-            if (glowPulse > 0.5) {
-              drawPixel(ctx, x, y, p.color, finalAlpha * 0.15 * glowPulse, GRID * 4);
-            }
-          }
-        } else {
-          // Stars: smaller, dimmer squares
-          const size = Math.max(GRID, p.size * scale * GRID);
-          drawPixel(ctx, x, y, p.color, finalAlpha * 0.3, size);
-        }
+        // Size based on depth
+        const size = Math.max(GRID, GRID * 1.8 * Math.min(2.5, scale * 2));
+        
+        const px = snap(x);
+        const py = snap(y);
+        
+        manifoldCtx.fillStyle = `rgba(${DAWN_RGB}, ${alpha})`;
+        manifoldCtx.fillRect(px, py, size - 1, size - 1);
       });
       
-      ctx.globalAlpha = 1;
+      // ─── RENDER GATEWAY (fades out on scroll) ───
+      const gatewayOpacity = scrollP > 0.06 
+        ? Math.max(0, 1 - (scrollP - 0.06) * 10) 
+        : 1;
+      
+      gatewayCtx.clearRect(0, 0, width, height);
+      
+      if (gatewayOpacity > 0) {
+        // Gateway position (right side, offset from center)
+        const gatewayX = width * 0.65;
+        const gatewayY = height * 0.45;
+        const gatewayScale = Math.min(width, height) * 0.35;
+        
+        // Camera fly-through effect
+        const cameraZ = scrollP * 90;
+        
+        gatewayParticles.forEach(p => {
+          // Apply camera movement
+          const adjustedZ = p.z - cameraZ * 0.1;
+          if (adjustedZ < -2) return;
+          
+          const perspective = 1 / (1 + adjustedZ * 0.3);
+          
+          const x = gatewayX + p.x * gatewayScale * perspective;
+          const y = gatewayY + p.y * gatewayScale * perspective;
+          
+          if (x < 0 || x > width || y < 0 || y > height) return;
+          
+          // Breathing
+          const breathe = Math.sin(time * 0.02 + p.z * 2) * 0.008;
+          const scale = 1 + breathe;
+          
+          // Alpha based on type and position
+          let alpha = gatewayOpacity;
+          if (p.type === 'tunnel') alpha *= 0.5;
+          if (p.type === 'interior') alpha *= 0.45;
+          if (p.type === 'gold') {
+            alpha *= 0.7 + Math.sin(time * 0.04) * 0.15;
+          }
+          alpha *= perspective;
+          
+          const size = p.type === 'gold' ? 4 : 3;
+          
+          gatewayCtx.fillStyle = `rgba(${p.color}, ${alpha})`;
+          gatewayCtx.fillRect(
+            snap(x - size/2), 
+            snap(y - size/2), 
+            size * scale, 
+            size * scale
+          );
+        });
+      }
+      
+      // Update HUD
+      const hud = document.getElementById('hudFrame');
+      const distance = document.getElementById('distanceReadout');
+      
+      if (scrollP > 0.1) {
+        hud.classList.add('visible');
+      } else {
+        hud.classList.remove('visible');
+      }
+      
+      distance.innerHTML = (scrollP * 8.8).toFixed(1) + '<span class="readout-unit">km</span>';
+      
       time++;
       requestAnimationFrame(render);
     }
@@ -1482,11 +1261,21 @@
       scrollProgress = Math.max(0, Math.min(1, window.scrollY / maxScroll));
     });
     
+    // Nav link active state
+    document.querySelectorAll('.nav-link').forEach(link => {
+      link.addEventListener('click', function(e) {
+        document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+        this.classList.add('active');
+      });
+    });
+    
     window.addEventListener('resize', resize);
+    
+    // Initialize
+    initTerrain();
+    initGateway();
     resize();
     render();
   </script>
 </body>
 </html>
-
-

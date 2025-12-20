@@ -10,14 +10,27 @@ import React, {
 } from "react";
 import {
   DEFAULT_CONFIG,
+  mergeWithDefaults,
   type ParticleSystemConfig,
   type ManifoldConfig,
   type LandmarkConfig,
   type GatewayConfig,
+  type CameraConfig,
+  type SigilConfig,
 } from "@/lib/particle-config";
 
-// localStorage key for fallback storage
+// localStorage keys
 const LOCAL_STORAGE_KEY = "thoughtform-particle-config";
+const PRESETS_STORAGE_KEY = "thoughtform-gateway-presets";
+
+// Preset type - stores entire configuration
+export interface ConfigPreset {
+  id: string;
+  name: string;
+  config: ParticleSystemConfig;
+  createdAt: number;
+  updatedAt: number;
+}
 
 // Helper to safely access localStorage
 const getLocalStorage = (): ParticleSystemConfig | null => {
@@ -48,6 +61,73 @@ const clearLocalStorage = (): void => {
   }
 };
 
+// Preset storage functions
+const getPresets = (): ConfigPreset[] => {
+  if (typeof window === "undefined") return [];
+  try {
+    const stored = localStorage.getItem(PRESETS_STORAGE_KEY);
+    if (!stored) return [];
+    
+    const parsed = JSON.parse(stored);
+    
+    // Migrate legacy presets (old format had 'gateway' instead of 'config')
+    return parsed.map((preset: Record<string, unknown>) => {
+      if (preset.config) {
+        return preset as ConfigPreset;
+      }
+      // Legacy preset - convert
+      if (preset.gateway) {
+        return {
+          id: preset.id,
+          name: preset.name,
+          config: {
+            ...DEFAULT_CONFIG,
+            gateway: preset.gateway,
+          },
+          createdAt: preset.createdAt || Date.now(),
+          updatedAt: preset.updatedAt || Date.now(),
+        } as ConfigPreset;
+      }
+      return preset as ConfigPreset;
+    });
+  } catch {
+    return [];
+  }
+};
+
+const savePresetsToStorage = (presets: ConfigPreset[]): void => {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(PRESETS_STORAGE_KEY, JSON.stringify(presets));
+  } catch (err) {
+    console.warn("Failed to save presets:", err);
+  }
+};
+
+const ACTIVE_PRESET_KEY = "thoughtform-active-preset";
+
+const getActivePresetId = (): string | null => {
+  if (typeof window === "undefined") return null;
+  try {
+    return localStorage.getItem(ACTIVE_PRESET_KEY);
+  } catch {
+    return null;
+  }
+};
+
+const saveActivePresetId = (id: string | null): void => {
+  if (typeof window === "undefined") return;
+  try {
+    if (id) {
+      localStorage.setItem(ACTIVE_PRESET_KEY, id);
+    } else {
+      localStorage.removeItem(ACTIVE_PRESET_KEY);
+    }
+  } catch {
+    // Ignore
+  }
+};
+
 interface ParticleConfigContextValue {
   /** Current configuration */
   config: ParticleSystemConfig;
@@ -67,6 +147,10 @@ interface ParticleConfigContextValue {
   updateManifold: (manifold: Partial<ManifoldConfig>) => void;
   /** Update gateway settings */
   updateGateway: (gateway: Partial<GatewayConfig>) => void;
+  /** Update camera settings */
+  updateCamera: (camera: Partial<CameraConfig>) => void;
+  /** Update sigil settings */
+  updateSigil: (sigil: Partial<SigilConfig>) => void;
   /** Update a specific landmark */
   updateLandmark: (id: string, updates: Partial<LandmarkConfig>) => void;
   /** Add a new landmark */
@@ -81,6 +165,18 @@ interface ParticleConfigContextValue {
   reloadConfig: () => Promise<void>;
   /** Toggle preview mode */
   setPreviewMode: (enabled: boolean) => void;
+  /** Configuration presets */
+  presets: ConfigPreset[];
+  /** Currently active preset ID */
+  activePresetId: string | null;
+  /** Save current config - updates active preset or creates new one */
+  saveToPreset: (name?: string) => void;
+  /** Load a preset (makes it active) */
+  loadPreset: (id: string) => void;
+  /** Delete a preset */
+  deletePreset: (id: string) => void;
+  /** Create a new preset from current config */
+  createPreset: (name: string) => void;
 }
 
 const ParticleConfigContext = createContext<ParticleConfigContextValue | null>(
@@ -101,6 +197,14 @@ export function ParticleConfigProvider({
   const [isPreviewMode, setIsPreviewMode] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [storageMode, setStorageMode] = useState<"server" | "local">("server");
+  const [presets, setPresets] = useState<ConfigPreset[]>([]);
+  const [activePresetId, setActivePresetId] = useState<string | null>(null);
+
+  // Load presets and active preset on mount
+  useEffect(() => {
+    setPresets(getPresets());
+    setActivePresetId(getActivePresetId());
+  }, []);
 
   // Check if there are unsaved changes
   const hasChanges = useMemo(() => {
@@ -180,6 +284,28 @@ export function ParticleConfigProvider({
       ...prev,
       gateway: {
         ...prev.gateway,
+        ...updates,
+      },
+    }));
+  }, []);
+
+  // Update camera settings
+  const updateCamera = useCallback((updates: Partial<CameraConfig>) => {
+    setConfig((prev) => ({
+      ...prev,
+      camera: {
+        ...prev.camera,
+        ...updates,
+      },
+    }));
+  }, []);
+
+  // Update sigil settings
+  const updateSigil = useCallback((updates: Partial<SigilConfig>) => {
+    setConfig((prev) => ({
+      ...prev,
+      sigil: {
+        ...prev.sigil,
         ...updates,
       },
     }));
@@ -311,6 +437,66 @@ export function ParticleConfigProvider({
     setIsPreviewMode(enabled);
   }, []);
 
+  // Create a new preset from current config
+  const createPreset = useCallback((name: string) => {
+    const newPreset: ConfigPreset = {
+      id: `preset-${Date.now()}`,
+      name,
+      config: { ...config },
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    };
+    const updatedPresets = [...presets, newPreset];
+    setPresets(updatedPresets);
+    savePresetsToStorage(updatedPresets);
+    setActivePresetId(newPreset.id);
+    saveActivePresetId(newPreset.id);
+    setSavedConfig(config);
+  }, [config, presets]);
+
+  // Save to active preset, or create new if name provided
+  const saveToPreset = useCallback((name?: string) => {
+    if (activePresetId) {
+      // Update existing preset
+      const updatedPresets = presets.map(p => 
+        p.id === activePresetId 
+          ? { ...p, config: { ...config }, updatedAt: Date.now() }
+          : p
+      );
+      setPresets(updatedPresets);
+      savePresetsToStorage(updatedPresets);
+      setSavedConfig(config);
+    } else if (name) {
+      // Create new preset
+      createPreset(name);
+    }
+  }, [activePresetId, config, presets, createPreset]);
+
+  // Load a preset (makes it active)
+  const loadPreset = useCallback((id: string) => {
+    const preset = presets.find(p => p.id === id);
+    if (preset) {
+      // Merge with defaults to ensure all fields exist (handles legacy/incomplete presets)
+      const fullConfig = mergeWithDefaults(preset.config || {});
+      setConfig(fullConfig);
+      setSavedConfig(fullConfig);
+      setActivePresetId(id);
+      saveActivePresetId(id);
+    }
+  }, [presets]);
+
+  // Delete a preset
+  const deletePreset = useCallback((id: string) => {
+    const updatedPresets = presets.filter(p => p.id !== id);
+    setPresets(updatedPresets);
+    savePresetsToStorage(updatedPresets);
+    // If deleting active preset, clear active
+    if (activePresetId === id) {
+      setActivePresetId(null);
+      saveActivePresetId(null);
+    }
+  }, [presets, activePresetId]);
+
   const value = useMemo(
     () => ({
       config,
@@ -322,6 +508,8 @@ export function ParticleConfigProvider({
       updateConfig,
       updateManifold,
       updateGateway,
+      updateCamera,
+      updateSigil,
       updateLandmark,
       addLandmark,
       removeLandmark,
@@ -329,6 +517,12 @@ export function ParticleConfigProvider({
       resetToDefaults,
       reloadConfig,
       setPreviewMode,
+      presets,
+      activePresetId,
+      saveToPreset,
+      loadPreset,
+      deletePreset,
+      createPreset,
     }),
     [
       config,
@@ -340,6 +534,8 @@ export function ParticleConfigProvider({
       updateConfig,
       updateManifold,
       updateGateway,
+      updateCamera,
+      updateSigil,
       updateLandmark,
       addLandmark,
       removeLandmark,
@@ -347,6 +543,12 @@ export function ParticleConfigProvider({
       resetToDefaults,
       reloadConfig,
       setPreviewMode,
+      presets,
+      activePresetId,
+      saveToPreset,
+      loadPreset,
+      deletePreset,
+      createPreset,
     ]
   );
 

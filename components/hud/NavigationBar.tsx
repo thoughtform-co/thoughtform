@@ -1,56 +1,43 @@
 "use client";
 
-import { useRef, useEffect, useCallback } from "react";
-
 // ═══════════════════════════════════════════════════════════════
 // NAVIGATION BAR - Brandworld Specification
-// Fixed top navigation with canvas-based particle icons
+// Fixed top navigation with logo and text links
 // ═══════════════════════════════════════════════════════════════
-
-const GRID = 2;
-const GOLD = "202, 165, 84";
-const DAWN = "236, 227, 214";
-
-function drawPixel(
-  ctx: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  color: string,
-  alpha: number,
-  size: number = GRID
-) {
-  const px = Math.floor(x / GRID) * GRID;
-  const py = Math.floor(y / GRID) * GRID;
-  ctx.fillStyle = `rgba(${color}, ${alpha})`;
-  ctx.fillRect(px, py, size - 1, size - 1);
-}
-
-function setupIcon(
-  canvas: HTMLCanvasElement | null,
-  size: number
-): { ctx: CanvasRenderingContext2D; size: number } | null {
-  if (!canvas) return null;
-  const dpr = window.devicePixelRatio || 1;
-  canvas.width = size * dpr;
-  canvas.height = size * dpr;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) return null;
-  ctx.scale(dpr, dpr);
-  return { ctx, size };
-}
 
 interface NavItem {
   label: string;
   sectionId: string;
-  icon: "manifesto" | "services" | "about" | "contact";
 }
 
 const navItems: NavItem[] = [
-  { label: "Manifesto", sectionId: "manifesto", icon: "manifesto" },
-  { label: "Services", sectionId: "services", icon: "services" },
-  { label: "About", sectionId: "about", icon: "about" },
-  { label: "Contact", sectionId: "contact", icon: "contact" },
+  { label: "Definition", sectionId: "definition" },
+  { label: "Manifesto", sectionId: "manifesto" },
+  { label: "Services", sectionId: "services" },
+  { label: "About", sectionId: "about" },
+  { label: "Contact", sectionId: "contact" },
 ];
+
+// Thoughtform Sigil SVG (brand mark)
+function ThoughtformLogo({ size = 24, color = "#caa554" }: { size?: number; color?: string }) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 430.99 436"
+      width={size}
+      height={size}
+      fill={color}
+    >
+      <path d="M336.78,99.43c18.82,18.93,33.41,41.16,43.78,66.63,5.03,12.35,8.81,24.86,11.42,37.57h19.62c-1.91-18.99-6.54-37.52-13.79-55.54-10.01-24.71-24.56-46.73-43.78-66.02-19.17-19.29-41.16-33.97-65.92-43.99-7.9-3.24-15.9-5.92-23.95-8.1l-1.36,7.49-.9,4.91-1.41,7.49c2.87,1.11,5.79,2.28,8.65,3.54,25.51,10.99,48.06,26.33,67.63,46.02h.01Z"/>
+      <path d="M383.13,314.65c-8.61,22.23-21.59,41.97-38.85,59.38-16.91,16.61-35.23,29.06-55,37.36-19.78,8.3-40.21,12.45-61.29,12.45-11.68,0-23.35-1.22-34.92-3.7-2.47-.46-4.93-1.01-7.4-1.67-2.42-.61-4.88-1.27-7.3-2.02-7.4-2.18-14.74-4.91-22.14-8.1-1.21-.51-2.47-1.06-3.67-1.62-1.16-.51-2.31-1.06-3.42-1.62-2.37-1.11-4.73-2.28-7.05-3.49-20.78-10.83-39.75-24.86-56.91-42.07-19.98-19.69-35.63-42.88-46.9-69.56-5.38-12.61-9.46-25.36-12.28-38.22-.6-2.53-1.11-5.06-1.56-7.59s-.85-5.06-1.21-7.59c-.81-5.87-1.41-11.85-1.71-17.77-.1-2.53-.2-5.06-.2-7.59-.05-.96-.05-1.92-.05-2.89,0-1.57,0-3.14.1-4.71.45-21.06,4.48-41.21,11.98-60.45,8.1-20.66,20.53-39.49,37.44-56.45,16.86-17.01,35.48-29.57,55.86-37.67,20.33-8.1,41.62-12.2,63.91-12.2,5.99,0,11.93.25,17.86.81l2.72-14.68c-26.82,0-53.19,5.32-79,15.95-25.92,10.63-49.06,26.12-69.39,46.63-20.73,20.81-36.38,43.99-46.95,69.51-6.59,15.85-11.12,32.05-13.59,48.55-.35,2.53-.7,5.06-.96,7.59-.3,2.53-.5,5.06-.7,7.59-.35,5.01-.55,10.02-.55,15.04,0,.91,0,1.82.05,2.73,0,2.53.1,5.06.25,7.59.1,2.53.25,5.06.5,7.59,1.76,19.9,6.49,39.24,14.14,57.97,9.96,24.3,24.56,46.12,43.78,65.41,19.93,19.74,42.57,34.78,67.93,45.21,3.72,1.52,7.5,2.99,11.27,4.25,2.42.86,4.83,1.67,7.25,2.38,2.42.76,4.88,1.47,7.3,2.13,7.5,2.03,15.1,3.59,22.74,4.71,2.52.35,5.03.71,7.55.96,2.52.3,5.03.51,7.55.66,4.88.41,9.76.56,14.64.56,26.87,0,52.84-5.11,78-15.34,25.16-10.23,47.71-25.41,67.68-45.51,20.33-20.81,35.78-44.2,46.35-70.07,7.1-17.42,11.78-35.18,14.09-53.31h-15.1c-.71,21.82-4.98,42.78-12.83,62.88h-.01Z"/>
+      <path d="M29.12,218.81l132.09-.05v.05H29.12h0Z"/>
+      <path d="M163.32,250.35l12.58.05h-12.58v-.05Z"/>
+      <path d="M179.17,408.81l30.34-158.46-29.79,158.61s-.35-.1-.55-.15h0Z"/>
+      <path d="M430.98,218.81l-5.23,17.77h-184.93l-10.32.05-2.47,13.72h-18.52l-30.34,158.46c-7.2-2.23-14.44-4.96-21.59-8.1l24.05-132.9h-8.86l3.12-17.42h-20.73l2.57-13.77H30.87c-.86-5.87-1.46-11.8-1.76-17.77h132.09l10.32-.05,2.47-13.72h18.52l29.54-157.85,1.36-7.49,1.41-7.44.2-1.21,1.41-7.49,1.36-7.44L230.76.06h23.6l-3.52,19.14-1.36,7.44-1.41,7.49-.65,3.44-1.36,7.49-1.41,7.54-23.9,129.71h.6l13.49.1-4.78,21.52h17.01l-.2,1.16-2.57,13.77h186.69v-.05h-.01Z"/>
+      <path d="M254.35,0l-33.01,182.26h-.6L254.35,0h0Z"/>
+    </svg>
+  );
+}
 
 interface NavigationBarProps {
   activeSection: string;
@@ -58,124 +45,26 @@ interface NavigationBarProps {
 }
 
 export function NavigationBar({ activeSection, onNavigate }: NavigationBarProps) {
-  const iconRefs = useRef<(HTMLCanvasElement | null)[]>([]);
-
-  const drawManifestoIcon = useCallback((ctx: CanvasRenderingContext2D, size: number) => {
-    // Diamond pattern
-    const cx = size / 2;
-    const cy = size / 2;
-    const r = size * 0.35;
-    
-    // Diamond points
-    drawPixel(ctx, cx, cy - r, GOLD, 0.6);
-    drawPixel(ctx, cx + r, cy, GOLD, 0.6);
-    drawPixel(ctx, cx, cy + r, GOLD, 0.6);
-    drawPixel(ctx, cx - r, cy, GOLD, 0.6);
-    
-    // Center dot
-    drawPixel(ctx, cx, cy, GOLD, 0.8);
-    
-    // Connecting lines
-    for (let i = 1; i < 3; i++) {
-      const t = i / 3;
-      drawPixel(ctx, cx + t * r, cy - (1 - t) * r, GOLD, 0.4);
-      drawPixel(ctx, cx + (1 - t) * r, cy + t * r, GOLD, 0.4);
-      drawPixel(ctx, cx - t * r, cy + (1 - t) * r, GOLD, 0.4);
-      drawPixel(ctx, cx - (1 - t) * r, cy - t * r, GOLD, 0.4);
-    }
-  }, []);
-
-  const drawServicesIcon = useCallback((ctx: CanvasRenderingContext2D, size: number) => {
-    // 3x3 grid pattern
-    const spacing = size / 4;
-    const positions = [
-      [1, 1], [2, 1], [3, 1],
-      [1, 2], [2, 2], [3, 2],
-      [1, 3], [2, 3], [3, 3],
-    ];
-    
-    positions.forEach(([x, y], i) => {
-      const alpha = 0.3 + (i / positions.length) * 0.45;
-      drawPixel(ctx, x * spacing, y * spacing, DAWN, alpha);
-    });
-  }, []);
-
-  const drawAboutIcon = useCallback((ctx: CanvasRenderingContext2D, size: number) => {
-    // Person silhouette
-    const cx = size / 2;
-    
-    // Head
-    drawPixel(ctx, cx, size * 0.2, DAWN, 0.7);
-    
-    // Body (vertical line)
-    for (let i = 0; i < 3; i++) {
-      drawPixel(ctx, cx, size * 0.35 + i * GRID, DAWN, 0.5 - i * 0.1);
-    }
-    
-    // Arms
-    drawPixel(ctx, cx - GRID * 2, size * 0.4, DAWN, 0.4);
-    drawPixel(ctx, cx + GRID * 2, size * 0.4, DAWN, 0.4);
-    
-    // Legs
-    drawPixel(ctx, cx - GRID, size * 0.7, DAWN, 0.35);
-    drawPixel(ctx, cx + GRID, size * 0.7, DAWN, 0.35);
-  }, []);
-
-  const drawContactIcon = useCallback((ctx: CanvasRenderingContext2D, size: number) => {
-    // Arrow pointing right (destination)
-    const cx = size / 2;
-    const cy = size / 2;
-    
-    // Vertical line
-    for (let i = -2; i <= 2; i++) {
-      drawPixel(ctx, cx - GRID * 2, cy + i * GRID, DAWN, 0.4);
-    }
-    
-    // Arrow head
-    drawPixel(ctx, cx + GRID * 2, cy, GOLD, 0.7);
-    drawPixel(ctx, cx + GRID, cy - GRID, GOLD, 0.5);
-    drawPixel(ctx, cx + GRID, cy + GRID, GOLD, 0.5);
-    
-    // Arrow shaft
-    drawPixel(ctx, cx, cy, DAWN, 0.5);
-    drawPixel(ctx, cx - GRID, cy, DAWN, 0.4);
-  }, []);
-
-  useEffect(() => {
-    navItems.forEach((item, index) => {
-      const canvas = iconRefs.current[index];
-      const setup = setupIcon(canvas, 17);
-      if (!setup) return;
-
-      const { ctx, size } = setup;
-      ctx.clearRect(0, 0, size, size);
-
-      switch (item.icon) {
-        case "manifesto":
-          drawManifestoIcon(ctx, size);
-          break;
-        case "services":
-          drawServicesIcon(ctx, size);
-          break;
-        case "about":
-          drawAboutIcon(ctx, size);
-          break;
-        case "contact":
-          drawContactIcon(ctx, size);
-          break;
-      }
-    });
-  }, [drawManifestoIcon, drawServicesIcon, drawAboutIcon, drawContactIcon]);
-
   const handleClick = (e: React.MouseEvent<HTMLAnchorElement>, sectionId: string) => {
     e.preventDefault();
     onNavigate(sectionId);
   };
 
+  const handleLogoClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
     <div className="navbar-container">
       <nav className="navbar">
-        {navItems.map((item, index) => {
+        {/* Logo on the left */}
+        <a href="#" className="navbar-logo" onClick={handleLogoClick}>
+          <ThoughtformLogo size={22} />
+        </a>
+        
+        {/* Nav links - text only */}
+        {navItems.map((item) => {
           const isActive = activeSection === item.sectionId;
           return (
             <a
@@ -184,13 +73,7 @@ export function NavigationBar({ activeSection, onNavigate }: NavigationBarProps)
               className={`navbar-link ${isActive ? "active" : ""}`}
               onClick={(e) => handleClick(e, item.sectionId)}
             >
-              <canvas
-                ref={(el) => { iconRefs.current[index] = el; }}
-                width={17}
-                height={17}
-                className="navbar-icon"
-              />
-              <span>{item.label}</span>
+              {item.label}
             </a>
           );
         })}
@@ -211,18 +94,33 @@ export function NavigationBar({ activeSection, onNavigate }: NavigationBarProps)
         .navbar {
           display: flex;
           align-items: center;
-          background: var(--surface-0, #0A0908);
+          background: rgba(10, 9, 8, 0.25);
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
           border: 1px solid rgba(236, 227, 214, 0.1);
           height: 44px;
           pointer-events: auto;
+        }
+
+        .navbar-logo {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 0 14px;
+          height: 100%;
+          border-right: 1px solid rgba(236, 227, 214, 0.08);
+          transition: opacity 150ms ease;
+        }
+
+        .navbar-logo:hover {
+          opacity: 0.8;
         }
 
         .navbar-link {
           display: flex;
           align-items: center;
           justify-content: center;
-          gap: 10px;
-          padding: 0 18px;
+          padding: 0 16px;
           height: 100%;
           font-family: var(--font-data, 'PT Mono', monospace);
           font-size: 12px;
@@ -246,11 +144,6 @@ export function NavigationBar({ activeSection, onNavigate }: NavigationBarProps)
         .navbar-link.active {
           color: var(--dawn, #ECE3D6);
           background: rgba(236, 227, 214, 0.1);
-        }
-
-        .navbar-icon {
-          width: 17px;
-          height: 17px;
         }
       `}</style>
     </div>
