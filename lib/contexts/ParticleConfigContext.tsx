@@ -73,22 +73,23 @@ const getPresets = (): ConfigPreset[] => {
     // Migrate legacy presets (old format had 'gateway' instead of 'config')
     return parsed.map((preset: Record<string, unknown>) => {
       if (preset.config) {
-        return preset as ConfigPreset;
+        return preset as unknown as ConfigPreset;
       }
       // Legacy preset - convert
       if (preset.gateway) {
         return {
-          id: preset.id,
-          name: preset.name,
+          id: preset.id as string,
+          name: preset.name as string,
           config: {
             ...DEFAULT_CONFIG,
-            gateway: preset.gateway,
+            gateway: preset.gateway as GatewayConfig,
           },
-          createdAt: preset.createdAt || Date.now(),
-          updatedAt: preset.updatedAt || Date.now(),
+          createdAt: (preset.createdAt as number) || Date.now(),
+          updatedAt: (preset.updatedAt as number) || Date.now(),
         } as ConfigPreset;
       }
-      return preset as ConfigPreset;
+      // Fallback: assume it's a valid preset structure
+      return preset as unknown as ConfigPreset;
     });
   } catch {
     return [];
