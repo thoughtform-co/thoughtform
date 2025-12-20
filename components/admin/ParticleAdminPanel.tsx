@@ -1240,7 +1240,8 @@ function GatewayControls({ gateway, onUpdate }: GatewayControlsProps) {
           <div className="shape-category-label">Strange Attractors</div>
           <div className="shape-selector">
             {(Object.keys(GATEWAY_SHAPE_LABELS) as GatewayShape[])
-              .filter(k => GATEWAY_SHAPE_IS_ATTRACTOR[k])
+              .filter(k => GATEWAY_SHAPE_IS_ATTRACTOR[k] && 
+                !['torus', 'hyperboloid', 'vortex', 'spiralTorus', 'mobius', 'hypersphere'].includes(k))
               .map((shapeKey) => (
               <button
                 key={shapeKey}
@@ -1256,6 +1257,33 @@ function GatewayControls({ gateway, onUpdate }: GatewayControlsProps) {
                   {shapeKey === "rossler" && "⟳"}
                   {shapeKey === "dadras" && "⚛"}
                   {shapeKey === "galaxy" && "✦"}
+                </span>
+                <span className="shape-name">{GATEWAY_SHAPE_LABELS[shapeKey]}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+        
+        {/* Portal Surfaces */}
+        <div className="admin-field">
+          <div className="shape-category-label">Portal Surfaces</div>
+          <div className="shape-selector">
+            {(Object.keys(GATEWAY_SHAPE_LABELS) as GatewayShape[])
+              .filter(k => ['torus', 'hyperboloid', 'vortex', 'spiralTorus', 'mobius', 'hypersphere'].includes(k))
+              .map((shapeKey) => (
+              <button
+                key={shapeKey}
+                className={`shape-btn attractor ${gateway.shape === shapeKey ? "active" : ""}`}
+                onClick={() => onUpdate({ shape: shapeKey })}
+                title={GATEWAY_SHAPE_LABELS[shapeKey]}
+              >
+                <span className="shape-icon">
+                  {shapeKey === "torus" && "⊚"}
+                  {shapeKey === "hyperboloid" && "⧫"}
+                  {shapeKey === "vortex" && "🌀"}
+                  {shapeKey === "spiralTorus" && "⟐"}
+                  {shapeKey === "mobius" && "∞"}
+                  {shapeKey === "hypersphere" && "◈"}
                 </span>
                 <span className="shape-name">{GATEWAY_SHAPE_LABELS[shapeKey]}</span>
               </button>
@@ -1427,6 +1455,75 @@ function GatewayControls({ gateway, onUpdate }: GatewayControlsProps) {
           />
         </div>
       </div>
+
+      {/* Algorithmic Effects / Latent Space Field - Only for circle shape */}
+      {gateway.shape === "circle" && (
+        <div className="admin-section">
+          <div className="admin-section-title">Algorithmic Effects (Latent Space Field)</div>
+          <div className="admin-field">
+            <label className="landmark-toggle">
+              <input
+                type="checkbox"
+                checked={gateway.algorithmicEffects || false}
+                onChange={(e) => onUpdate({ algorithmicEffects: e.target.checked })}
+                className="admin-checkbox"
+              />
+              <span className="admin-label" style={{ margin: 0 }}>
+                Enable Algorithmic Effects
+              </span>
+            </label>
+            <div className="admin-hint" style={{ marginTop: "8px", fontSize: "11px", opacity: 0.6 }}>
+              Mathematical patterns (spirals, Lissajous curves, field lines) that emanate from the gateway
+            </div>
+          </div>
+          
+          {gateway.algorithmicEffects && (
+            <>
+              <div className="admin-field">
+                <div className="admin-label">
+                  <span>Intensity</span>
+                  <span className="admin-value">{((gateway.algorithmicIntensity || 1.0) * 100).toFixed(0)}%</span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="200"
+                  value={(gateway.algorithmicIntensity || 1.0) * 100}
+                  onChange={(e) => onUpdate({ algorithmicIntensity: parseInt(e.target.value) / 100 })}
+                  className="admin-slider"
+                />
+              </div>
+              
+              <div className="admin-field">
+                <div className="admin-label">Pattern Type</div>
+                <div className="shape-selector" style={{ marginTop: "8px" }}>
+                  {(['spiral', 'lissajous', 'fieldLines', 'particleStreams', 'all'] as const).map((pattern) => (
+                    <button
+                      key={pattern}
+                      className={`shape-btn ${gateway.algorithmicPattern === pattern ? "active" : ""}`}
+                      onClick={() => onUpdate({ algorithmicPattern: pattern })}
+                      style={{ fontSize: "10px", padding: "6px 10px" }}
+                    >
+                      {pattern === 'spiral' && '🌀'}
+                      {pattern === 'lissajous' && '∞'}
+                      {pattern === 'fieldLines' && '⚡'}
+                      {pattern === 'particleStreams' && '✨'}
+                      {pattern === 'all' && '★'}
+                      <span style={{ marginLeft: "4px" }}>
+                        {pattern === 'spiral' && 'Spiral'}
+                        {pattern === 'lissajous' && 'Lissajous'}
+                        {pattern === 'fieldLines' && 'Field Lines'}
+                        {pattern === 'particleStreams' && 'Streams'}
+                        {pattern === 'all' && 'All'}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+      )}
     </div>
   );
 }

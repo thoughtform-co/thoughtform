@@ -67,7 +67,9 @@ export type GatewayShape =
   // Geometric shapes (2D outlines)
   | 'circle' | 'hexagon' | 'octagon' | 'diamond' | 'arch' | 'ellipse'
   // Strange attractors (3D particle systems)
-  | 'lorenz' | 'thomas' | 'aizawa' | 'sprott' | 'rossler' | 'dadras' | 'galaxy';
+  | 'lorenz' | 'thomas' | 'aizawa' | 'sprott' | 'rossler' | 'dadras' | 'galaxy'
+  // Portal-like mathematical surfaces
+  | 'torus' | 'hyperboloid' | 'vortex' | 'spiralTorus' | 'mobius' | 'hypersphere';
 
 /**
  * Labels for gateway shapes (for admin panel)
@@ -88,6 +90,13 @@ export const GATEWAY_SHAPE_LABELS: Record<GatewayShape, string> = {
   rossler: "Rössler (Fold)",
   dadras: "Dadras (Complex)",
   galaxy: "Galaxy (Spiral)",
+  // Portal-like surfaces
+  torus: "Torus (Donut Portal)",
+  hyperboloid: "Hyperboloid (Hourglass)",
+  vortex: "Vortex (Whirlpool)",
+  spiralTorus: "Spiral Torus (Twisted Donut)",
+  mobius: "Möbius (Twisted Portal)",
+  hypersphere: "Hypersphere (4D Portal)",
 };
 
 /**
@@ -107,6 +116,12 @@ export const GATEWAY_SHAPE_IS_ATTRACTOR: Record<GatewayShape, boolean> = {
   rossler: true,
   dadras: true,
   galaxy: true,
+  torus: true,
+  hyperboloid: true,
+  vortex: true,
+  spiralTorus: true,
+  mobius: true,
+  hypersphere: true,
 };
 
 /**
@@ -137,6 +152,12 @@ export interface GatewayConfig {
   tunnelCurve: number;
   /** Tunnel width multiplier (0.5-2.0) */
   tunnelWidth: number;
+  /** Enable algorithmic effects / latent space field around gateway */
+  algorithmicEffects: boolean;
+  /** Intensity of algorithmic effects (0.0-2.0) */
+  algorithmicIntensity: number;
+  /** Pattern type for algorithmic effects */
+  algorithmicPattern: 'spiral' | 'lissajous' | 'fieldLines' | 'particleStreams' | 'all';
 }
 
 /**
@@ -297,6 +318,9 @@ export const DEFAULT_GATEWAY: GatewayConfig = {
   rotationY: -0.5, // Gateway ring facing inward
   tunnelCurve: 0, // Straight tunnel (negative = curves left, positive = curves right)
   tunnelWidth: 1.0, // Default width
+  algorithmicEffects: false, // Disabled by default
+  algorithmicIntensity: 1.0, // Default intensity
+  algorithmicPattern: 'all', // Use all patterns combined
 };
 
 /**

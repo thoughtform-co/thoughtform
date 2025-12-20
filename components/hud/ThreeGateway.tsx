@@ -92,6 +92,101 @@ function generateAttractorPoints(type: GatewayShape, count: number): AttractorPo
         }
         continue;
       }
+      case 'torus': {
+        // Torus (donut) - parametric surface
+        if (i >= warmup) {
+          const idx = i - warmup;
+          const u = (idx / count) * Math.PI * 2;
+          const v = (idx % 20) / 20 * Math.PI * 2;
+          const R = 0.6; // Major radius
+          const r = 0.3; // Minor radius
+          points.push({
+            x: (R + r * Math.cos(v)) * Math.cos(u),
+            y: (R + r * Math.cos(v)) * Math.sin(u),
+            z: r * Math.sin(v),
+          });
+        }
+        continue;
+      }
+      case 'hyperboloid': {
+        // Hyperboloid of one sheet - hourglass portal shape
+        if (i >= warmup) {
+          const idx = i - warmup;
+          const u = (idx / count) * Math.PI * 2;
+          const v = (idx % 20) / 20 * Math.PI * 2;
+          const a = 0.5, b = 0.5, c = 0.4;
+          points.push({
+            x: a * Math.cosh(v) * Math.cos(u),
+            y: b * Math.cosh(v) * Math.sin(u),
+            z: c * Math.sinh(v),
+          });
+        }
+        continue;
+      }
+      case 'vortex': {
+        // Vortex/whirlpool - spiraling portal
+        if (i >= warmup) {
+          const idx = i - warmup;
+          const t = (idx / count) * Math.PI * 4;
+          const r = Math.min(t * 0.15, 1.0);
+          const height = Math.sin(t * 2) * 0.3;
+          points.push({
+            x: r * Math.cos(t),
+            y: height,
+            z: r * Math.sin(t),
+          });
+        }
+        continue;
+      }
+      case 'spiralTorus': {
+        // Spiral torus - twisted donut portal
+        if (i >= warmup) {
+          const idx = i - warmup;
+          const u = (idx / count) * Math.PI * 4;
+          const v = (idx % 20) / 20 * Math.PI * 2;
+          const R = 0.5;
+          const r = 0.25;
+          const twist = u * 0.5;
+          points.push({
+            x: (R + r * Math.cos(v + twist)) * Math.cos(u),
+            y: (R + r * Math.cos(v + twist)) * Math.sin(u),
+            z: r * Math.sin(v + twist),
+          });
+        }
+        continue;
+      }
+      case 'mobius': {
+        // Möbius strip - twisted portal
+        if (i >= warmup) {
+          const idx = i - warmup;
+          const u = (idx / count) * Math.PI * 2;
+          const v = (idx % 20) / 20 * 2 - 1; // -1 to 1
+          const w = 0.2; // Width
+          points.push({
+            x: (1 + v * w * Math.cos(u / 2)) * Math.cos(u),
+            y: (1 + v * w * Math.cos(u / 2)) * Math.sin(u),
+            z: v * w * Math.sin(u / 2),
+          });
+        }
+        continue;
+      }
+      case 'hypersphere': {
+        // Hypersphere (4D sphere projected to 3D) - portal-like
+        if (i >= warmup) {
+          const idx = i - warmup;
+          const u = (idx / count) * Math.PI * 2;
+          const v = (idx % 20) / 20 * Math.PI;
+          const w = (idx % 10) / 10 * Math.PI * 2;
+          const r = 0.6;
+          // 4D hypersphere projection
+          points.push({
+            x: r * Math.sin(v) * Math.cos(u) * Math.cos(w),
+            y: r * Math.sin(v) * Math.sin(u) * Math.cos(w),
+            z: r * Math.cos(v) * Math.sin(w),
+          });
+        }
+        continue;
+      }
       default:
         continue;
     }
@@ -968,11 +1063,219 @@ function AttractorPortal({
           transparent 
           color={accentColor} 
           size={0.02} 
-          sizeAttenuation 
+          sizeAttenuation
           depthWrite={false} 
           opacity={0.9} 
         />
       </Points>
+    </group>
+  );
+}
+
+// ─── LATENT SPACE FIELD / ALGORITHMIC EFFECTS ───
+// Mathematical patterns that emanate from and connect to the gateway
+
+interface LatentSpaceFieldProps {
+  opacity: number;
+  primaryColor: string;
+  accentColor: string;
+  intensity: number;
+  pattern: 'spiral' | 'lissajous' | 'fieldLines' | 'particleStreams' | 'all';
+  radius: number;
+}
+
+function LatentSpaceField({
+  opacity,
+  primaryColor,
+  accentColor,
+  intensity,
+  pattern,
+  radius,
+}: LatentSpaceFieldProps) {
+  const linesRef = useRef<THREE.LineSegments>(null);
+  const pointsRef = useRef<THREE.Points>(null);
+  const timeRef = useRef(0);
+
+  // Generate algorithmic patterns
+  const { linePositions, pointPositions } = useMemo(() => {
+    const linePoints: number[] = [];
+    const particlePoints: number[] = [];
+    const baseRadius = radius;
+    const outerRadius = baseRadius * (1.5 + intensity * 0.5);
+    
+    // Spiral patterns - logarithmic spirals emanating from gateway
+    if (pattern === 'spiral' || pattern === 'all') {
+      const spiralCount = 8;
+      const spiralPoints = 50;
+      for (let s = 0; s < spiralCount; s++) {
+        const angleOffset = (s / spiralCount) * Math.PI * 2;
+        for (let i = 0; i < spiralPoints; i++) {
+          const t = i / spiralPoints;
+          const r = baseRadius + (outerRadius - baseRadius) * t;
+          const angle = angleOffset + t * Math.PI * 4; // Multiple rotations
+          const x = r * Math.cos(angle);
+          const y = r * Math.sin(angle);
+          const z = Math.sin(t * Math.PI * 2) * 0.3 * intensity; // Slight 3D curve
+          
+          if (i > 0) {
+            // Connect to previous point
+            const prevT = (i - 1) / spiralPoints;
+            const prevR = baseRadius + (outerRadius - baseRadius) * prevT;
+            const prevAngle = angleOffset + prevT * Math.PI * 4;
+            const prevX = prevR * Math.cos(prevAngle);
+            const prevY = prevR * Math.sin(prevAngle);
+            const prevZ = Math.sin(prevT * Math.PI * 2) * 0.3 * intensity;
+            
+            linePoints.push(prevX, prevY, prevZ, x, y, z);
+          }
+          
+          // Add particles along spiral
+          if (i % 3 === 0) {
+            particlePoints.push(x, y, z);
+          }
+        }
+      }
+    }
+    
+    // Lissajous curves - parametric equations creating figure-8 patterns
+    if (pattern === 'lissajous' || pattern === 'all') {
+      const lissajousCount = 6;
+      const lissajousPoints = 60;
+      for (let l = 0; l < lissajousCount; l++) {
+        const freqX = 2 + l;
+        const freqY = 3 + l * 0.5;
+        const phase = (l / lissajousCount) * Math.PI * 2;
+        
+        for (let i = 0; i < lissajousPoints; i++) {
+          const t = (i / lissajousPoints) * Math.PI * 2;
+          const scale = baseRadius * (0.8 + intensity * 0.4);
+          const x = scale * Math.sin(freqX * t + phase);
+          const y = scale * Math.sin(freqY * t);
+          const z = Math.sin(t * 2) * 0.2 * intensity;
+          
+          if (i > 0) {
+            const prevT = ((i - 1) / lissajousPoints) * Math.PI * 2;
+            const prevX = scale * Math.sin(freqX * prevT + phase);
+            const prevY = scale * Math.sin(freqY * prevT);
+            const prevZ = Math.sin(prevT * 2) * 0.2 * intensity;
+            
+            linePoints.push(prevX, prevY, prevZ, x, y, z);
+          }
+          
+          if (i % 2 === 0) {
+            particlePoints.push(x, y, z);
+          }
+        }
+      }
+    }
+    
+    // Field lines - radial lines connecting gateway to outer points
+    if (pattern === 'fieldLines' || pattern === 'all') {
+      const lineCount = 16;
+      for (let i = 0; i < lineCount; i++) {
+        const angle = (i / lineCount) * Math.PI * 2;
+        const segments = 20;
+        
+        for (let s = 0; s < segments; s++) {
+          const t = s / segments;
+          const r = baseRadius + (outerRadius - baseRadius) * t;
+          const x = r * Math.cos(angle);
+          const y = r * Math.sin(angle);
+          const z = Math.sin(t * Math.PI * 3) * 0.15 * intensity; // Wave along line
+          
+          if (s > 0) {
+            const prevT = (s - 1) / segments;
+            const prevR = baseRadius + (outerRadius - baseRadius) * prevT;
+            const prevX = prevR * Math.cos(angle);
+            const prevY = prevR * Math.sin(angle);
+            const prevZ = Math.sin(prevT * Math.PI * 3) * 0.15 * intensity;
+            
+            linePoints.push(prevX, prevY, prevZ, x, y, z);
+          }
+        }
+      }
+    }
+    
+    // Particle streams - flowing particles along curved paths
+    if (pattern === 'particleStreams' || pattern === 'all') {
+      const streamCount = 12;
+      const streamLength = 40;
+      for (let s = 0; s < streamCount; s++) {
+        const angle = (s / streamCount) * Math.PI * 2;
+        const curve = Math.sin(angle) * 0.3; // Curved path
+        
+        for (let i = 0; i < streamLength; i++) {
+          const t = i / streamLength;
+          const r = baseRadius * 1.1 + (outerRadius - baseRadius * 1.1) * t;
+          const pathAngle = angle + curve * t * t;
+          const x = r * Math.cos(pathAngle);
+          const y = r * Math.sin(pathAngle);
+          const z = Math.sin(t * Math.PI * 4 + s) * 0.25 * intensity;
+          
+          particlePoints.push(x, y, z);
+        }
+      }
+    }
+    
+    return {
+      linePositions: new Float32Array(linePoints),
+      pointPositions: new Float32Array(particlePoints),
+    };
+  }, [radius, intensity, pattern]);
+
+  useFrame((state) => {
+    timeRef.current = state.clock.elapsedTime;
+    
+    if (linesRef.current) {
+      // Subtle rotation of the field
+      linesRef.current.rotateY(0.01);
+    }
+    
+    if (pointsRef.current) {
+      // Breathing/pulsing effect
+      const breathe = 1 + Math.sin(timeRef.current * 0.8) * 0.05;
+      pointsRef.current.scale.setScalar(breathe);
+      
+      const material = pointsRef.current.material as THREE.PointsMaterial;
+      material.opacity = 0.6 * opacity * intensity;
+    }
+  });
+
+  return (
+    <group>
+      {/* Lines connecting patterns */}
+      {linePositions.length > 0 && (
+        <lineSegments ref={linesRef}>
+          <bufferGeometry attach="geometry">
+            <bufferAttribute
+              attach="attributes-position"
+              count={linePositions.length / 3}
+              array={linePositions}
+              itemSize={3}
+            />
+          </bufferGeometry>
+          <lineBasicMaterial
+            attach="material"
+            color={primaryColor}
+            transparent
+            opacity={0.4 * opacity * intensity}
+          />
+        </lineSegments>
+      )}
+      
+      {/* Particle points along patterns */}
+      {pointPositions.length > 0 && (
+        <Points ref={pointsRef} positions={pointPositions} stride={3} frustumCulled={false}>
+          <PointMaterial
+            transparent
+            color={accentColor}
+            size={0.008 * intensity}
+            sizeAttenuation
+            depthWrite={false}
+            opacity={0.7 * opacity * intensity}
+          />
+        </Points>
+      )}
     </group>
   );
 }
@@ -1060,6 +1363,17 @@ function GatewayScene({ scrollProgress, config }: GatewaySceneProps) {
               tunnelWidth={tunnelWidth}
               shape={shape}
             />
+            {/* Algorithmic effects / latent space field - only for circle */}
+            {shape === "circle" && config.algorithmicEffects && (
+              <LatentSpaceField
+                opacity={opacity}
+                primaryColor={primaryColor}
+                accentColor={accentColor}
+                intensity={config.algorithmicIntensity || 1.0}
+                pattern={config.algorithmicPattern || "all"}
+                radius={0.82} // Match the gateway ring radius
+              />
+            )}
           </>
         )}
       </group>
