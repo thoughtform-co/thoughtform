@@ -49,8 +49,9 @@ export function HeroBackgroundSigil({ scrollProgress, config }: HeroBackgroundSi
         transform: "translate(-50%, -50%)",
         opacity: sigilOpacity,
         pointerEvents: "none",
-        zIndex: 0, // Behind gateway (which is zIndex 1)
+        zIndex: -1, // Further back, behind manifold
         transition: "opacity 0.5s ease-out",
+        filter: "blur(1px)", // Slight blur for distance effect
       }}
     >
       <ThoughtformSigil
@@ -58,8 +59,8 @@ export function HeroBackgroundSigil({ scrollProgress, config }: HeroBackgroundSi
         particleCount={config?.particleCount ?? 700}
         color={config?.color ?? "202, 165, 84"}
         scrollProgress={1.0} // Always fully formed
-        particleSize={(config?.particleSize ?? 1.0) * 0.8} // Slightly smaller particles for distance effect
-        opacity={(config?.opacity ?? 1.0) * 0.6} // Reduced opacity for background/distance
+        particleSize={(config?.particleSize ?? 1.0) * 0.7} // Smaller particles for greater distance
+        opacity={(config?.opacity ?? 1.0) * 0.4} // Further reduced opacity for deep background
         wanderStrength={config?.wanderStrength ?? 1.0}
         pulseSpeed={config?.pulseSpeed ?? 1.0}
         returnStrength={config?.returnStrength ?? 1.0}
