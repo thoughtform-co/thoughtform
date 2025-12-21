@@ -196,9 +196,9 @@ export function ConnectorLines({
       // Get actual particle positions from sigil
       const particles = sigilParticlesRef.current;
 
-      // Check if we have valid particles (lower threshold so lines appear earlier)
+      // Check if we have any valid particles (minimal threshold for fast appearance)
       const validParticles = particles.filter(isValidParticlePosition);
-      const hasValidParticles = validParticles.length > 5; // Lower threshold for earlier appearance
+      const hasValidParticles = validParticles.length > 2; // Minimal threshold - appear as soon as possible
 
       // Get all current targets to avoid overlap
       const allCurrentTargets = lineState.map((s) => s.currentTarget);
@@ -348,12 +348,12 @@ export function ConnectorLines({
   }, [cardRefs, sigilParticlesRef]);
 
   const opacity =
-    scrollProgress < 0.08
+    scrollProgress < 0.06
       ? 0
       : scrollProgress < 0.18
         ? 1
         : Math.max(0, 1 - (scrollProgress - 0.18) * 8);
-  const isVisible = scrollProgress >= 0.08;
+  const isVisible = scrollProgress >= 0.06;
 
   return (
     <svg
