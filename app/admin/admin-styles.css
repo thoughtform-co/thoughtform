@@ -1,194 +1,258 @@
-/* Admin Login Card - Terminal-inspired styling */
-.admin-login-card {
+/* ═══════════════════════════════════════════════════════════════
+   THOUGHTFORM TERMINAL - CRT-inspired login interface
+   Inspired by cool-retro-term (https://github.com/Swordfish90/cool-retro-term)
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Container */
+.terminal-container {
+  min-height: 100vh;
+  background: #0a0908;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
   position: relative;
-  background: rgba(10, 9, 8, 0.95);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border: none;
-  padding: 32px;
-  transition: all 0.2s ease;
-  max-width: 100%;
-  box-shadow:
-    0 0 20px rgba(202, 165, 84, 0.1),
-    inset 0 0 60px rgba(10, 9, 8, 0.5);
   overflow: hidden;
 }
 
-/* CRT Scanline effect */
-.admin-login-card::before {
-  content: "";
+/* Manifold background */
+.terminal-background {
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: repeating-linear-gradient(
-    0deg,
-    rgba(0, 0, 0, 0.15) 0px,
-    rgba(0, 0, 0, 0.15) 1px,
-    transparent 1px,
-    transparent 2px
-  );
-  pointer-events: none;
-  z-index: 1;
-  animation: scanline 8s linear infinite;
+  inset: 0;
+  z-index: 0;
+  opacity: 0.7;
 }
 
-@keyframes scanline {
+/* Sigil overlay */
+.terminal-sigil {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.12;
+  pointer-events: none;
+}
+
+/* Terminal window */
+.terminal-window {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  max-width: 600px;
+  background: rgba(8, 8, 6, 0.92);
+  border: 1px solid rgba(202, 165, 84, 0.25);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.5),
+    0 0 60px rgba(202, 165, 84, 0.08),
+    0 0 120px rgba(202, 165, 84, 0.04),
+    inset 0 0 100px rgba(0, 0, 0, 0.3);
+}
+
+/* CRT scanline overlay */
+.terminal-window::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.1) 0px,
+    rgba(0, 0, 0, 0.1) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+  pointer-events: none;
+  z-index: 100;
+  animation: scanlines 10s linear infinite;
+}
+
+@keyframes scanlines {
   0% {
     transform: translateY(0);
   }
   100% {
-    transform: translateY(4px);
+    transform: translateY(6px);
   }
 }
 
-.admin-login-card:hover {
-  background: rgba(20, 18, 16, 0.7);
-  border-color: var(--gold, #caa554);
-}
-
-/* Terminal corner brackets */
-.admin-login-card::after {
+/* CRT screen curvature effect */
+.terminal-window::after {
   content: "";
   position: absolute;
-  top: 8px;
-  left: 8px;
+  inset: 0;
+  background: radial-gradient(
+    ellipse at center,
+    transparent 0%,
+    transparent 60%,
+    rgba(0, 0, 0, 0.15) 100%
+  );
+  pointer-events: none;
+  z-index: 99;
+}
+
+/* Terminal header bar */
+.terminal-header {
+  background: rgba(20, 18, 14, 0.95);
+  padding: 10px 16px;
+  border-bottom: 1px solid rgba(202, 165, 84, 0.15);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.terminal-controls {
+  display: flex;
+  gap: 8px;
+}
+
+.terminal-control {
   width: 12px;
   height: 12px;
-  border-top: 2px solid #caa554;
-  border-left: 2px solid #caa554;
-  z-index: 2;
-  opacity: 0.6;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
-.admin-login-card .terminal-corner-br {
-  position: absolute;
-  bottom: 8px;
-  right: 8px;
-  width: 12px;
-  height: 12px;
-  border-bottom: 2px solid #caa554;
-  border-right: 2px solid #caa554;
-  z-index: 2;
-  opacity: 0.6;
+.terminal-control.close {
+  background: rgba(255, 95, 86, 0.8);
+  box-shadow: 0 0 6px rgba(255, 95, 86, 0.5);
 }
 
-/* Header styling - Terminal prompt style */
-.admin-login-card .admin-header {
-  text-align: left;
-  margin-bottom: 32px;
-  position: relative;
-  z-index: 2;
+.terminal-control.close:hover {
+  background: #ff5f56;
+  box-shadow: 0 0 12px rgba(255, 95, 86, 0.8);
 }
 
-.admin-login-card .admin-label {
+.terminal-control.minimize {
+  background: rgba(255, 189, 46, 0.6);
+  box-shadow: 0 0 4px rgba(255, 189, 46, 0.3);
+}
+
+.terminal-control.maximize {
+  background: rgba(39, 201, 63, 0.6);
+  box-shadow: 0 0 4px rgba(39, 201, 63, 0.3);
+}
+
+.terminal-title {
   font-family: "IBM Plex Mono", monospace;
   font-size: 11px;
-  font-weight: 400;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: #caa554;
-  margin-bottom: 12px;
-  text-shadow: 0 0 8px rgba(202, 165, 84, 0.5);
-}
-
-.admin-login-card .admin-label::before {
-  content: "$ ";
-  color: rgba(202, 165, 84, 0.6);
-  margin-right: 4px;
-}
-
-.admin-login-card .admin-title {
-  font-family: "IBM Plex Mono", monospace;
-  font-size: 20px;
-  font-weight: 400;
-  letter-spacing: 0.05em;
-  color: #ece3d6;
-  text-transform: uppercase;
-  text-shadow: 0 0 10px rgba(236, 227, 214, 0.3);
-  line-height: 1.4;
-}
-
-/* Form inputs - Terminal style */
-.admin-login-card label {
-  font-family: "IBM Plex Mono", monospace;
-  font-size: 11px;
-  font-weight: 400;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
   color: rgba(202, 165, 84, 0.7);
-  display: block;
-  margin-bottom: 8px;
-  position: relative;
-  z-index: 2;
+  letter-spacing: 0.05em;
+  text-shadow: 0 0 8px rgba(202, 165, 84, 0.3);
 }
 
-.admin-login-card label::before {
-  content: "> ";
+/* Terminal body */
+.terminal-body {
+  padding: 24px;
+  min-height: 300px;
+  max-height: 400px;
+  overflow-y: auto;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+/* Custom scrollbar */
+.terminal-body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.terminal-body::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.terminal-body::-webkit-scrollbar-thumb {
+  background: rgba(202, 165, 84, 0.3);
+  border-radius: 3px;
+}
+
+.terminal-body::-webkit-scrollbar-thumb:hover {
+  background: rgba(202, 165, 84, 0.5);
+}
+
+/* Terminal lines */
+.terminal-line {
+  white-space: pre-wrap;
+  word-break: break-word;
+  min-height: 1.7em;
+}
+
+.terminal-line.system {
+  color: rgba(236, 227, 214, 0.6);
+  text-shadow: 0 0 4px rgba(236, 227, 214, 0.2);
+}
+
+.terminal-line.prompt {
+  color: #caa554;
+  text-shadow: 0 0 8px rgba(202, 165, 84, 0.4);
+}
+
+.terminal-line.prompt::before {
+  content: "$ ";
   color: rgba(202, 165, 84, 0.5);
-  margin-right: 4px;
 }
 
-.admin-login-card .input-wrapper {
-  position: relative;
-  z-index: 2;
+.terminal-line.input {
+  color: #ece3d6;
+  text-shadow: 0 0 6px rgba(236, 227, 214, 0.3);
 }
 
-.admin-login-card input {
-  width: 100%;
-  padding: 12px 16px 12px 32px;
-  background: rgba(0, 0, 0, 0.4);
-  border: 1px solid rgba(202, 165, 84, 0.2);
+.terminal-line.error {
+  color: #ff6b6b;
+  text-shadow: 0 0 8px rgba(255, 107, 107, 0.4);
+}
+
+.terminal-line.success {
+  color: #5eff5e;
+  text-shadow: 0 0 8px rgba(94, 255, 94, 0.4);
+}
+
+/* Input line */
+.terminal-input-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #ece3d6;
+}
+
+.terminal-prompt {
+  color: #caa554;
+  text-shadow: 0 0 8px rgba(202, 165, 84, 0.5);
+  flex-shrink: 0;
+}
+
+.terminal-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
   font-family: "IBM Plex Mono", monospace;
   font-size: 13px;
   color: #ece3d6;
-  transition: all 0.2s ease;
-  box-sizing: border-box;
-  text-shadow: 0 0 5px rgba(236, 227, 214, 0.2);
-  box-shadow:
-    inset 0 0 10px rgba(0, 0, 0, 0.5),
-    0 0 5px rgba(202, 165, 84, 0.1);
-  letter-spacing: 0.5px;
+  text-shadow: 0 0 6px rgba(236, 227, 214, 0.3);
+  caret-color: transparent;
+  padding: 0;
 }
 
-.admin-login-card input::placeholder {
+.terminal-input::placeholder {
   color: rgba(236, 227, 214, 0.2);
-  font-style: italic;
 }
 
-.admin-login-card input:focus {
-  outline: none;
-  border-color: #caa554;
-  background: rgba(0, 0, 0, 0.6);
-  box-shadow:
-    inset 0 0 10px rgba(0, 0, 0, 0.5),
-    0 0 15px rgba(202, 165, 84, 0.3);
-  text-shadow: 0 0 8px rgba(236, 227, 214, 0.4);
-}
-
-/* Terminal cursor after input */
-.admin-login-card .input-wrapper::after {
-  content: "";
-  position: absolute;
-  right: 16px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 2px;
+/* Blinking cursor */
+.terminal-cursor {
+  display: inline-block;
+  width: 8px;
   height: 16px;
   background: #caa554;
-  animation: blink 1s infinite;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.2s;
-  z-index: 4;
+  animation: cursor-blink 1s step-end infinite;
+  box-shadow: 0 0 8px rgba(202, 165, 84, 0.6);
+  margin-left: -4px;
 }
 
-.admin-login-card .input-wrapper:has(input:focus)::after {
-  opacity: 1;
-}
-
-@keyframes blink {
+@keyframes cursor-blink {
   0%,
   50% {
     opacity: 1;
@@ -199,152 +263,70 @@
   }
 }
 
-/* Terminal prompt before input */
-.admin-login-card .input-prompt {
-  position: absolute;
-  left: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: rgba(202, 165, 84, 0.6);
-  font-family: "IBM Plex Mono", monospace;
-  font-size: 13px;
-  pointer-events: none;
-  z-index: 3;
+/* Spinner */
+.terminal-spinner {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border: 2px solid rgba(202, 165, 84, 0.3);
+  border-top-color: #caa554;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
 }
 
-/* Buttons - Terminal style */
-.admin-login-card button {
-  font-family: "IBM Plex Mono", monospace;
-  font-size: 11px;
-  font-weight: 400;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  transition: all 0.2s ease;
-  position: relative;
-  z-index: 2;
-  text-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
-.admin-login-card .btn-secondary {
-  background: rgba(0, 0, 0, 0.4);
-  border: 1px solid rgba(202, 165, 84, 0.3);
-  color: rgba(202, 165, 84, 0.8);
-  padding: 12px 24px;
-  box-shadow:
-    inset 0 0 10px rgba(0, 0, 0, 0.5),
-    0 0 5px rgba(202, 165, 84, 0.1);
+/* Phosphor glow effect on text */
+.terminal-body {
+  text-shadow: 0 0 2px currentColor;
 }
 
-.admin-login-card .btn-secondary:hover {
-  border-color: rgba(202, 165, 84, 0.6);
-  color: #caa554;
-  box-shadow:
-    inset 0 0 10px rgba(0, 0, 0, 0.5),
-    0 0 10px rgba(202, 165, 84, 0.3);
-  text-shadow: 0 0 8px rgba(202, 165, 84, 0.5);
+/* Screen flicker effect (subtle) */
+@keyframes flicker {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  92% {
+    opacity: 1;
+  }
+  93% {
+    opacity: 0.95;
+  }
+  94% {
+    opacity: 1;
+  }
 }
 
-.admin-login-card .btn-primary {
-  background: rgba(202, 165, 84, 0.2);
-  border: 1px solid #caa554;
-  color: #caa554;
-  padding: 12px 24px;
-  box-shadow:
-    inset 0 0 10px rgba(202, 165, 84, 0.1),
-    0 0 10px rgba(202, 165, 84, 0.2);
-  text-shadow: 0 0 8px rgba(202, 165, 84, 0.6);
+.terminal-window {
+  animation: flicker 4s infinite;
 }
 
-.admin-login-card .btn-primary:hover:not(:disabled) {
-  background: rgba(202, 165, 84, 0.3);
-  border-color: #caa554;
-  box-shadow:
-    inset 0 0 15px rgba(202, 165, 84, 0.2),
-    0 0 20px rgba(202, 165, 84, 0.4);
-  text-shadow: 0 0 12px rgba(202, 165, 84, 0.8);
-}
+/* Mobile responsiveness */
+@media (max-width: 640px) {
+  .terminal-container {
+    padding: 12px;
+  }
 
-.admin-login-card .btn-primary:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-  box-shadow: none;
-}
+  .terminal-window {
+    border-radius: 4px;
+  }
 
-/* Error message - Terminal error style */
-.admin-login-card .error-message {
-  font-family: "IBM Plex Mono", monospace;
-  font-size: 12px;
-  color: #ff6b6b;
-  margin-top: 8px;
-  position: relative;
-  z-index: 2;
-  padding-left: 16px;
-  text-shadow: 0 0 8px rgba(255, 107, 107, 0.5);
-}
+  .terminal-body {
+    padding: 16px;
+    font-size: 12px;
+    min-height: 250px;
+  }
 
-.admin-login-card .error-message::before {
-  content: "ERROR: ";
-  color: rgba(255, 107, 107, 0.6);
-  font-weight: 600;
-}
+  .terminal-header {
+    padding: 8px 12px;
+  }
 
-/* Email sent state - Terminal output style */
-.admin-login-card .email-sent-content {
-  text-align: left;
-  position: relative;
-  z-index: 2;
-}
-
-.admin-login-card .email-sent-title {
-  font-family: "IBM Plex Mono", monospace;
-  font-size: 14px;
-  color: #ece3d6;
-  margin-bottom: 12px;
-  text-shadow: 0 0 10px rgba(236, 227, 214, 0.3);
-}
-
-.admin-login-card .email-sent-title::before {
-  content: "$ ";
-  color: rgba(202, 165, 84, 0.6);
-  margin-right: 4px;
-}
-
-.admin-login-card .email-sent-text {
-  font-family: "IBM Plex Mono", monospace;
-  font-size: 11px;
-  color: rgba(236, 227, 214, 0.7);
-  line-height: 1.8;
-  margin-bottom: 8px;
-  text-shadow: 0 0 5px rgba(236, 227, 214, 0.2);
-}
-
-.admin-login-card .email-sent-text strong {
-  color: #caa554;
-  font-weight: 400;
-  text-shadow: 0 0 8px rgba(202, 165, 84, 0.5);
-}
-
-.admin-login-card .email-sent-hint {
-  font-family: "IBM Plex Mono", monospace;
-  font-size: 11px;
-  color: rgba(202, 165, 84, 0.4);
-  margin-top: 8px;
-  font-style: italic;
-}
-
-/* Terminal status text */
-.admin-login-card .terminal-status {
-  font-family: "IBM Plex Mono", monospace;
-  font-size: 12px;
-  color: rgba(236, 227, 214, 0.6);
-  margin-bottom: 16px;
-  position: relative;
-  z-index: 2;
-  text-shadow: 0 0 5px rgba(236, 227, 214, 0.2);
-}
-
-.admin-login-card .terminal-status::before {
-  content: "> ";
-  color: rgba(202, 165, 84, 0.5);
-  margin-right: 4px;
+  .terminal-title {
+    font-size: 10px;
+  }
 }
