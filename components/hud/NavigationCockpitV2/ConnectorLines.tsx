@@ -85,42 +85,40 @@ export function ConnectorLines({
   ];
   const lineAnimationRef = useRef<number | null>(null);
 
-  // Persist line state across re-renders to prevent resets on scroll
-  const lineStateRef = useRef([
-    {
-      currentTarget: -1, // -1 means not yet initialized
-      nextTarget: -1,
-      lastSwitch: 0,
-      targetPos: null as { x: number; y: number } | null,
-      growthProgress: 0, // 0 = not started, 1 = fully grown
-      initialized: false, // Track if we've picked initial target
-    },
-    {
-      currentTarget: -1,
-      nextTarget: -1,
-      lastSwitch: 0,
-      targetPos: null as { x: number; y: number } | null,
-      growthProgress: 0,
-      initialized: false,
-    },
-    {
-      currentTarget: -1,
-      nextTarget: -1,
-      lastSwitch: 0,
-      targetPos: null as { x: number; y: number } | null,
-      growthProgress: 0,
-      initialized: false,
-    },
-  ]);
-
   useEffect(() => {
     if (typeof window === "undefined") return;
 
     let cachedCardPositions: Array<{ x: number; y: number } | null> = [null, null, null];
     let lastPositionUpdate = 0;
 
-    // Use the persisted state ref
-    const lineState = lineStateRef.current;
+    // Track current and next targets for each line (for smooth transitions)
+    // Initialize targetPos to null - will be set directly to particle position on first valid update
+    const lineState = [
+      {
+        currentTarget: -1, // -1 means not yet initialized
+        nextTarget: -1,
+        lastSwitch: 0,
+        targetPos: null as { x: number; y: number } | null,
+        growthProgress: 0, // 0 = not started, 1 = fully grown
+        initialized: false, // Track if we've picked initial target
+      },
+      {
+        currentTarget: -1,
+        nextTarget: -1,
+        lastSwitch: 0,
+        targetPos: null as { x: number; y: number } | null,
+        growthProgress: 0,
+        initialized: false,
+      },
+      {
+        currentTarget: -1,
+        nextTarget: -1,
+        lastSwitch: 0,
+        targetPos: null as { x: number; y: number } | null,
+        growthProgress: 0,
+        initialized: false,
+      },
+    ];
 
     const updateCardPositions = () => {
       cardRefs.forEach((cardRef, index) => {
@@ -214,15 +212,11 @@ export function ConnectorLines({
 
         const state = lineState[index];
 
-        // If no valid particles yet, hide the line but DON'T reset state
-        // This prevents lines from resetting when scrolling within the section
+        // If no valid particles yet, hide the line (growth = 0)
         if (!hasValidParticles) {
-          // Only reset if we haven't initialized yet
-          if (!state.initialized) {
-            state.growthProgress = 0;
-          }
-          // Don't reset state.initialized or growthProgress - keep the state stable
-          // Clear the path visually but maintain state
+          state.growthProgress = 0;
+          state.initialized = false;
+          // Clear the path
           pathRef.current.setAttribute("d", "");
           const circleRef = lineEndCircleRefs[index];
           if (circleRef.current) {

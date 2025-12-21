@@ -17,7 +17,7 @@ import { Typewriter } from "@/components/ui/Typewriter";
 import { ModuleCards } from "./ModuleCards";
 import { ConnectorLines } from "./ConnectorLines";
 import { SigilSection } from "./SigilSection";
-import { HeroSigil } from "./HeroSigil";
+import { HeroBackgroundSigil } from "./HeroBackgroundSigil";
 import { cockpitStyles } from "./styles";
 
 // Inner component that uses the config context
@@ -90,11 +90,11 @@ function NavigationCockpitInner() {
       {/* Fixed Background - V2 Particle System (Manifold) */}
       <ParticleCanvasV2 scrollProgress={scrollProgress} config={config} />
 
+      {/* Hero Background Sigil - fully formed in the distance, behind gateway */}
+      <HeroBackgroundSigil scrollProgress={scrollProgress} config={rawConfig.sigil} />
+
       {/* Three.js Gateway Overlay - only in hero section, fades out on scroll */}
-      <ThreeGateway scrollProgress={scrollProgress} config={rawConfig.gateway}>
-        {/* Hero Sigil - positioned in front of gateway, flows into it on scroll */}
-        <HeroSigil scrollProgress={scrollProgress} config={rawConfig.sigil} />
-      </ThreeGateway>
+      <ThreeGateway scrollProgress={scrollProgress} config={rawConfig.gateway} />
 
       {/* Hero Logo + Text - positioned in top left */}
       {/* Hero Wordmark - top aligned with HUD line */}
