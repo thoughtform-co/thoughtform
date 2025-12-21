@@ -414,32 +414,28 @@ export function ParticleAdminPanel() {
       <style jsx global>{`
         .admin-toggle {
           position: fixed;
-          bottom: 80px;
+          top: 20px;
           right: clamp(48px, 8vw, 120px);
-          transform: translateX(50%);
           z-index: 9999;
           display: flex;
           align-items: center;
           justify-content: center;
-          width: 28px;
-          height: 28px;
+          width: 24px;
+          height: 24px;
           background: transparent;
-          border: 1px solid rgba(236, 227, 214, 0.15);
+          border: none;
           color: rgba(202, 165, 84, 0.4);
           font-family: var(--font-data, "PT Mono", monospace);
           cursor: pointer;
-          transition: all 150ms ease;
+          transition: color 150ms ease;
         }
 
         .admin-toggle:hover {
           color: rgba(202, 165, 84, 1);
-          border-color: rgba(202, 165, 84, 0.5);
-          background: rgba(202, 165, 84, 0.08);
         }
 
         .admin-toggle.is-open {
           color: var(--dawn, #ebe3d6);
-          border-color: rgba(236, 227, 214, 0.3);
         }
 
         .admin-toggle-icon {
