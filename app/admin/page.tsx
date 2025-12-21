@@ -76,9 +76,10 @@ function AdminPageContent() {
     return (
       <div className="min-h-screen bg-void flex items-center justify-center p-4">
         <div className="admin-login-card">
+          <div className="terminal-corner-br" />
           <div className="admin-header">
-            <div className="admin-label">{`// Configuration Error`}</div>
-            <h1 className="admin-title">Setup Required</h1>
+            <div className="admin-label">CONFIGURATION ERROR</div>
+            <h1 className="admin-title">SETUP REQUIRED</h1>
           </div>
           <div className="error-message">
             Supabase is not configured. Please set NEXT_PUBLIC_SUPABASE_URL and
@@ -100,12 +101,13 @@ function AdminPageContent() {
         className="w-full max-w-sm relative z-10"
       >
         <div className="admin-login-card">
+          <div className="terminal-corner-br" />
           <div className="admin-header">
-            <div className="admin-label">{`// Admin Access`}</div>
-            <h1 className="admin-title">Signed In</h1>
+            <div className="admin-label">ADMIN ACCESS</div>
+            <h1 className="admin-title">AUTHENTICATION SUCCESSFUL</h1>
           </div>
           <div className="space-y-4">
-            <div className="font-mono text-sm text-dawn">You are signed in as {user?.email}</div>
+            <div className="terminal-status">You are signed in as {user?.email}</div>
             <div className="flex gap-3 pt-2">
               <button type="button" onClick={() => router.push("/")} className="btn-primary flex-1">
                 Go to Site
@@ -143,9 +145,10 @@ function AdminPageContent() {
         className="w-full max-w-sm relative z-10"
       >
         <div className="admin-login-card">
+          <div className="terminal-corner-br" />
           <div className="admin-header">
-            <div className="admin-label">{`// Admin Access`}</div>
-            <h1 className="admin-title">Sign In</h1>
+            <div className="admin-label">ADMIN ACCESS</div>
+            <h1 className="admin-title">AUTHENTICATION REQUIRED</h1>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -156,7 +159,7 @@ function AdminPageContent() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                placeholder="you@example.com"
+                placeholder="user@domain.com"
                 autoComplete="email"
               />
             </div>
