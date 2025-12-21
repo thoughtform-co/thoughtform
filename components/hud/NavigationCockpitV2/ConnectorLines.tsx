@@ -212,11 +212,15 @@ export function ConnectorLines({
 
         const state = lineState[index];
 
-        // If no valid particles yet, hide the line (growth = 0)
+        // If no valid particles yet, hide the line but DON'T reset state
+        // This prevents lines from resetting when scrolling within the section
         if (!hasValidParticles) {
-          state.growthProgress = 0;
-          state.initialized = false;
-          // Clear the path
+          // Only reset if we haven't initialized yet
+          if (!state.initialized) {
+            state.growthProgress = 0;
+          }
+          // Don't reset state.initialized or growthProgress - keep the state stable
+          // Clear the path visually but maintain state
           pathRef.current.setAttribute("d", "");
           const circleRef = lineEndCircleRefs[index];
           if (circleRef.current) {
