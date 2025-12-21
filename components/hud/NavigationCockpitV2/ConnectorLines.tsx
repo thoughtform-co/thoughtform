@@ -226,9 +226,9 @@ export function ConnectorLines({
         }
 
         // We have valid particles - grow the line
-        // Growth takes about 0.5 seconds per line, staggered
-        const growthDuration = 0.5;
-        const growthDelay = index * 0.15; // Stagger each line
+        // Growth takes about 0.25 seconds per line, staggered
+        const growthDuration = 0.25;
+        const growthDelay = index * 0.08; // Stagger each line
         const timeSinceParticlesValid = elapsed; // Will reset when component mounts
 
         // Only start growing after the sigil is visible (controlled by parent opacity)
