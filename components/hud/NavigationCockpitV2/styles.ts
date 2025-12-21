@@ -36,21 +36,21 @@ export const cockpitStyles = `
     height: auto;
   }
 
-  /* Hero text container - vertically centered */
+  /* Hero text container - at the bottom */
   .hero-text-container {
     position: fixed;
-    top: 50%;
+    bottom: 90px;
     left: calc(var(--rail-width) + 120px);
-    transform: translateY(-50%);
     z-index: 10;
     transition: opacity 0.3s ease-out;
   }
 
-  /* Runway arrows pointing to gateway - same width as hero text card */
+  /* Runway arrows pointing to gateway - vertically centered */
   .hero-runway-arrows {
     position: fixed;
-    bottom: 90px;
+    top: 50%;
     left: calc(var(--rail-width) + 120px);
+    transform: translateY(-50%);
     display: flex;
     justify-content: space-between;
     width: calc(100% - var(--rail-width) - 120px - var(--rail-width) - 120px);
