@@ -101,25 +101,29 @@ export function EditorToolbar() {
       )}
 
       {/* Top-right buttons */}
-      <div className="fixed top-4 right-4 z-[70] flex gap-2 items-center">
+      <div className="fixed top-4 right-4 z-[70] flex gap-3 items-center">
         {user && userName && (
-          <div className="px-3 py-2 font-mono text-2xs uppercase tracking-wider text-dawn-50">
-            {userName}
+          <div className="flex items-center gap-2">
+            <span className="font-mono text-[10px] uppercase tracking-wider text-dawn">
+              {userName}
+            </span>
+            <span className="font-mono text-[8px] tracking-wider text-[rgba(91,138,122,0.8)]">
+              ACTIVE
+            </span>
           </div>
         )}
         {user && (
           <button
             onClick={handleLogout}
             className={cn(
-              "px-3 py-2",
-              "font-mono text-2xs uppercase tracking-wider",
-              "bg-void/90 backdrop-blur-xl border border-dawn-15",
-              "text-dawn-30 hover:text-dawn hover:border-dawn-30",
+              "px-3 py-1.5",
+              "font-mono text-[10px] uppercase tracking-wider",
+              "text-dawn-30 hover:text-dawn",
               "transition-colors"
             )}
             title={user.email || "Signed in"}
           >
-            Sign Out
+            Log out
           </button>
         )}
         <button

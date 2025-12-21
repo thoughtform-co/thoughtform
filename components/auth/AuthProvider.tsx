@@ -23,7 +23,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Extract user name from user_metadata
+  // Extract user name from user_metadata or email
   const getUserName = (user: User | null): string | null => {
     if (!user) return null;
 
@@ -31,8 +31,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const fullName = user.user_metadata?.full_name;
     if (fullName) return fullName;
 
-    // Fallback to email if no name set
-    return user.email || null;
+    // Extract name from email (part before @) like Atlas does
+    if (user.email) {
+      return user.email.split("@")[0];
+    }
+
+    return null;
   };
 
   useEffect(() => {
