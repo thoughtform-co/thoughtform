@@ -27,12 +27,18 @@ interface PresetsBarProps {
   onCreatePreset: (name: string) => void;
 }
 
-function PresetsBar({ presets, activePresetId, onLoadPreset, onDeletePreset, onCreatePreset }: PresetsBarProps) {
+function PresetsBar({
+  presets,
+  activePresetId,
+  onLoadPreset,
+  onDeletePreset,
+  onCreatePreset,
+}: PresetsBarProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [newPresetName, setNewPresetName] = useState("");
   const [showInput, setShowInput] = useState(false);
 
-  const activePreset = presets.find(p => p.id === activePresetId);
+  const activePreset = presets.find((p) => p.id === activePresetId);
 
   const handleCreate = () => {
     if (newPresetName.trim()) {
@@ -52,17 +58,17 @@ function PresetsBar({ presets, activePresetId, onLoadPreset, onDeletePreset, onC
         </span>
         <span className={`presets-chevron ${isExpanded ? "expanded" : ""}`}>›</span>
       </div>
-      
+
       {isExpanded && (
         <div className="presets-content">
           {presets.length > 0 && (
             <div className="presets-list">
               {presets.map((preset) => (
-                <div key={preset.id} className={`preset-chip ${preset.id === activePresetId ? "active" : ""}`}>
-                  <button
-                    className="preset-chip-name"
-                    onClick={() => onLoadPreset(preset.id)}
-                  >
+                <div
+                  key={preset.id}
+                  className={`preset-chip ${preset.id === activePresetId ? "active" : ""}`}
+                >
+                  <button className="preset-chip-name" onClick={() => onLoadPreset(preset.id)}>
                     {preset.name}
                   </button>
                   <button
@@ -80,7 +86,7 @@ function PresetsBar({ presets, activePresetId, onLoadPreset, onDeletePreset, onC
               ))}
             </div>
           )}
-          
+
           {showInput ? (
             <div className="presets-input-row">
               <input
@@ -98,7 +104,9 @@ function PresetsBar({ presets, activePresetId, onLoadPreset, onDeletePreset, onC
                   }
                 }}
               />
-              <button className="presets-save-btn" onClick={handleCreate}>Create</button>
+              <button className="presets-save-btn" onClick={handleCreate}>
+                Create
+              </button>
             </div>
           ) : (
             <button className="presets-add-btn" onClick={() => setShowInput(true)}>
@@ -116,7 +124,7 @@ export function ParticleAdminPanel() {
   const [activeTab, setActiveTab] = useState<Tab>("gateway");
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
-  
+
   // Draggable panel state - starts near the toggle button (top-right)
   const [position, setPosition] = useState({ x: 500, y: 74 });
   const [hasSetInitialPosition, setHasSetInitialPosition] = useState(false);
@@ -126,7 +134,7 @@ export function ParticleAdminPanel() {
 
   // Set initial position on mount (top-right corner)
   useEffect(() => {
-    if (!hasSetInitialPosition && typeof window !== 'undefined') {
+    if (!hasSetInitialPosition && typeof window !== "undefined") {
       setPosition({ x: window.innerWidth - 420, y: 74 });
       setHasSetInitialPosition(true);
     }
@@ -151,11 +159,11 @@ export function ParticleAdminPanel() {
     const handleMouseMove = (e: MouseEvent) => {
       const newX = e.clientX - dragOffset.current.x;
       const newY = e.clientY - dragOffset.current.y;
-      
+
       // Keep panel within viewport bounds
       const maxX = window.innerWidth - 400; // panel width
       const maxY = window.innerHeight - 100; // minimum visible height
-      
+
       setPosition({
         x: Math.max(0, Math.min(newX, maxX)),
         y: Math.max(0, Math.min(newY, maxY)),
@@ -263,25 +271,21 @@ export function ParticleAdminPanel() {
 
       {/* Panel */}
       {isOpen && (
-        <div 
+        <div
           ref={panelRef}
           className={`admin-panel ${isDragging ? "dragging" : ""}`}
           style={{ left: position.x, top: position.y }}
           onWheel={(e) => e.stopPropagation()}
         >
           {/* Compact Header */}
-          <div 
-            className="admin-header admin-drag-handle"
-            onMouseDown={handleDragStart}
-          >
+          <div className="admin-header admin-drag-handle" onMouseDown={handleDragStart}>
             <div className="admin-header-left">
               <span className="drag-icon">⋮⋮</span>
               <h3 className="admin-title">Particles</h3>
-              <span className={`storage-badge ${storageMode}`} title={
-                storageMode === "server" 
-                  ? "Synced to Vercel KV" 
-                  : "Local storage only"
-              }>
+              <span
+                className={`storage-badge ${storageMode}`}
+                title={storageMode === "server" ? "Synced to Vercel KV" : "Local storage only"}
+              >
                 {storageMode === "server" ? "☁" : "●"}
               </span>
             </div>
@@ -308,7 +312,7 @@ export function ParticleAdminPanel() {
           </div>
 
           {/* Presets Bar */}
-          <PresetsBar 
+          <PresetsBar
             presets={presets}
             activePresetId={activePresetId}
             onLoadPreset={loadPreset}
@@ -334,14 +338,11 @@ export function ParticleAdminPanel() {
                   }}
                 />
                 <div className="save-prompt-actions">
-                  <button 
-                    className="save-prompt-cancel" 
-                    onClick={() => setShowSavePrompt(false)}
-                  >
+                  <button className="save-prompt-cancel" onClick={() => setShowSavePrompt(false)}>
                     Cancel
                   </button>
-                  <button 
-                    className="save-prompt-save" 
+                  <button
+                    className="save-prompt-save"
                     onClick={handleSaveNewPreset}
                     disabled={!newPresetName.trim()}
                   >
@@ -389,22 +390,13 @@ export function ParticleAdminPanel() {
           {/* Content */}
           <div className="admin-content">
             {activeTab === "gateway" && (
-              <GatewayControls
-                gateway={config.gateway}
-                onUpdate={updateGateway}
-              />
+              <GatewayControls gateway={config.gateway} onUpdate={updateGateway} />
             )}
             {activeTab === "manifold" && (
-              <ManifoldControls
-                manifold={config.manifold}
-                onUpdate={updateManifold}
-              />
+              <ManifoldControls manifold={config.manifold} onUpdate={updateManifold} />
             )}
             {activeTab === "camera" && (
-              <CameraControls
-                camera={config.camera}
-                onUpdate={updateCamera}
-              />
+              <CameraControls camera={config.camera} onUpdate={updateCamera} />
             )}
             {activeTab === "landmarks" && (
               <LandmarksControls
@@ -414,12 +406,7 @@ export function ParticleAdminPanel() {
                 onRemove={removeLandmark}
               />
             )}
-            {activeTab === "sigil" && (
-              <SigilControls
-                sigil={config.sigil}
-                onUpdate={updateSigil}
-              />
-            )}
+            {activeTab === "sigil" && <SigilControls sigil={config.sigil} onUpdate={updateSigil} />}
           </div>
         </div>
       )}
@@ -427,18 +414,19 @@ export function ParticleAdminPanel() {
       <style jsx global>{`
         .admin-toggle {
           position: fixed;
-          top: 20px;
-          right: 20px;
+          bottom: 80px;
+          right: clamp(48px, 8vw, 120px);
+          transform: translateX(50%);
           z-index: 9999;
           display: flex;
           align-items: center;
           justify-content: center;
-          width: 44px;
-          height: 44px;
-          background: var(--surface-0, #0A0908);
+          width: 28px;
+          height: 28px;
+          background: transparent;
           border: 1px solid rgba(236, 227, 214, 0.15);
-          color: rgba(202, 165, 84, 0.5);
-          font-family: var(--font-data, 'PT Mono', monospace);
+          color: rgba(202, 165, 84, 0.4);
+          font-family: var(--font-data, "PT Mono", monospace);
           cursor: pointer;
           transition: all 150ms ease;
         }
@@ -455,16 +443,16 @@ export function ParticleAdminPanel() {
         }
 
         .admin-toggle-icon {
-          font-size: 18px;
+          font-size: 12px;
           line-height: 1;
         }
 
         .admin-toggle-dot {
           position: absolute;
-          top: 8px;
-          right: 8px;
-          width: 6px;
-          height: 6px;
+          top: 4px;
+          right: 4px;
+          width: 5px;
+          height: 5px;
           background: #ff6b35;
           border-radius: 50%;
         }
@@ -931,7 +919,7 @@ export function ParticleAdminPanel() {
           padding: 16px;
           overscroll-behavior: contain;
         }
-        
+
         .admin-panel:hover {
           /* Prevent page scroll when hovering over panel */
         }
@@ -1207,87 +1195,101 @@ function GatewayControls({ gateway, onUpdate }: GatewayControlsProps) {
 
       <div className="admin-section">
         <div className="admin-section-title">Portal Shape</div>
-        
+
         {/* Geometric Shapes */}
         <div className="admin-field">
           <div className="shape-category-label">Geometric</div>
           <div className="shape-selector">
             {(Object.keys(GATEWAY_SHAPE_LABELS) as GatewayShape[])
-              .filter(k => !GATEWAY_SHAPE_IS_ATTRACTOR[k])
+              .filter((k) => !GATEWAY_SHAPE_IS_ATTRACTOR[k])
               .map((shapeKey) => (
-              <button
-                key={shapeKey}
-                className={`shape-btn ${gateway.shape === shapeKey ? "active" : ""}`}
-                onClick={() => onUpdate({ shape: shapeKey })}
-                title={GATEWAY_SHAPE_LABELS[shapeKey]}
-              >
-                <span className="shape-icon">
-                  {shapeKey === "circle" && "○"}
-                  {shapeKey === "hexagon" && "⬡"}
-                  {shapeKey === "octagon" && "⯃"}
-                  {shapeKey === "diamond" && "◇"}
-                  {shapeKey === "arch" && "⌓"}
-                  {shapeKey === "ellipse" && "⬭"}
-                </span>
-                <span className="shape-name">{GATEWAY_SHAPE_LABELS[shapeKey]}</span>
-              </button>
-            ))}
+                <button
+                  key={shapeKey}
+                  className={`shape-btn ${gateway.shape === shapeKey ? "active" : ""}`}
+                  onClick={() => onUpdate({ shape: shapeKey })}
+                  title={GATEWAY_SHAPE_LABELS[shapeKey]}
+                >
+                  <span className="shape-icon">
+                    {shapeKey === "circle" && "○"}
+                    {shapeKey === "hexagon" && "⬡"}
+                    {shapeKey === "octagon" && "⯃"}
+                    {shapeKey === "diamond" && "◇"}
+                    {shapeKey === "arch" && "⌓"}
+                    {shapeKey === "ellipse" && "⬭"}
+                  </span>
+                  <span className="shape-name">{GATEWAY_SHAPE_LABELS[shapeKey]}</span>
+                </button>
+              ))}
           </div>
         </div>
-        
+
         {/* Strange Attractors */}
         <div className="admin-field">
           <div className="shape-category-label">Strange Attractors</div>
           <div className="shape-selector">
             {(Object.keys(GATEWAY_SHAPE_LABELS) as GatewayShape[])
-              .filter(k => GATEWAY_SHAPE_IS_ATTRACTOR[k] && 
-                !['torus', 'hyperboloid', 'vortex', 'spiralTorus', 'mobius', 'hypersphere'].includes(k))
+              .filter(
+                (k) =>
+                  GATEWAY_SHAPE_IS_ATTRACTOR[k] &&
+                  ![
+                    "torus",
+                    "hyperboloid",
+                    "vortex",
+                    "spiralTorus",
+                    "mobius",
+                    "hypersphere",
+                  ].includes(k)
+              )
               .map((shapeKey) => (
-              <button
-                key={shapeKey}
-                className={`shape-btn attractor ${gateway.shape === shapeKey ? "active" : ""}`}
-                onClick={() => onUpdate({ shape: shapeKey })}
-                title={GATEWAY_SHAPE_LABELS[shapeKey]}
-              >
-                <span className="shape-icon">
-                  {shapeKey === "lorenz" && "∞"}
-                  {shapeKey === "thomas" && "◎"}
-                  {shapeKey === "aizawa" && "◉"}
-                  {shapeKey === "sprott" && "◌"}
-                  {shapeKey === "rossler" && "⟳"}
-                  {shapeKey === "dadras" && "⚛"}
-                  {shapeKey === "galaxy" && "✦"}
-                </span>
-                <span className="shape-name">{GATEWAY_SHAPE_LABELS[shapeKey]}</span>
-              </button>
-            ))}
+                <button
+                  key={shapeKey}
+                  className={`shape-btn attractor ${gateway.shape === shapeKey ? "active" : ""}`}
+                  onClick={() => onUpdate({ shape: shapeKey })}
+                  title={GATEWAY_SHAPE_LABELS[shapeKey]}
+                >
+                  <span className="shape-icon">
+                    {shapeKey === "lorenz" && "∞"}
+                    {shapeKey === "thomas" && "◎"}
+                    {shapeKey === "aizawa" && "◉"}
+                    {shapeKey === "sprott" && "◌"}
+                    {shapeKey === "rossler" && "⟳"}
+                    {shapeKey === "dadras" && "⚛"}
+                    {shapeKey === "galaxy" && "✦"}
+                  </span>
+                  <span className="shape-name">{GATEWAY_SHAPE_LABELS[shapeKey]}</span>
+                </button>
+              ))}
           </div>
         </div>
-        
+
         {/* Portal Surfaces */}
         <div className="admin-field">
           <div className="shape-category-label">Portal Surfaces</div>
           <div className="shape-selector">
             {(Object.keys(GATEWAY_SHAPE_LABELS) as GatewayShape[])
-              .filter(k => ['torus', 'hyperboloid', 'vortex', 'spiralTorus', 'mobius', 'hypersphere'].includes(k))
+              .filter((k) =>
+                ["torus", "hyperboloid", "vortex", "spiralTorus", "mobius", "hypersphere"].includes(
+                  k
+                )
+              )
               .map((shapeKey) => (
-              <button
-                key={shapeKey}
-                className={`shape-btn attractor ${gateway.shape === shapeKey ? "active" : ""}`}
-                onClick={() => onUpdate({ shape: shapeKey })}
-                title={GATEWAY_SHAPE_LABELS[shapeKey]}
-              >
-                <span className="shape-icon">
-                  {shapeKey === "torus" && "⊚"}
-                  {shapeKey === "hyperboloid" && "⧫"}
-                  {shapeKey === "vortex" && "🌀"}
-                  {shapeKey === "spiralTorus" && "⟐"}
-                  {shapeKey === "mobius" && "∞"}
-                  {shapeKey === "hypersphere" && "◈"}
-                </span>
-                <span className="shape-name">{GATEWAY_SHAPE_LABELS[shapeKey]}</span>
-              </button>
-            ))}
+                <button
+                  key={shapeKey}
+                  className={`shape-btn attractor ${gateway.shape === shapeKey ? "active" : ""}`}
+                  onClick={() => onUpdate({ shape: shapeKey })}
+                  title={GATEWAY_SHAPE_LABELS[shapeKey]}
+                >
+                  <span className="shape-icon">
+                    {shapeKey === "torus" && "⊚"}
+                    {shapeKey === "hyperboloid" && "⧫"}
+                    {shapeKey === "vortex" && "🌀"}
+                    {shapeKey === "spiralTorus" && "⟐"}
+                    {shapeKey === "mobius" && "∞"}
+                    {shapeKey === "hypersphere" && "◈"}
+                  </span>
+                  <span className="shape-name">{GATEWAY_SHAPE_LABELS[shapeKey]}</span>
+                </button>
+              ))}
           </div>
         </div>
       </div>
@@ -1472,52 +1474,62 @@ function GatewayControls({ gateway, onUpdate }: GatewayControlsProps) {
                 Enable Algorithmic Effects
               </span>
             </label>
-            <div className="admin-hint" style={{ marginTop: "8px", fontSize: "11px", opacity: 0.6 }}>
-              Mathematical patterns (spirals, Lissajous curves, field lines) that emanate from the gateway
+            <div
+              className="admin-hint"
+              style={{ marginTop: "8px", fontSize: "11px", opacity: 0.6 }}
+            >
+              Mathematical patterns (spirals, Lissajous curves, field lines) that emanate from the
+              gateway
             </div>
           </div>
-          
+
           {gateway.algorithmicEffects && (
             <>
               <div className="admin-field">
                 <div className="admin-label">
                   <span>Intensity</span>
-                  <span className="admin-value">{((gateway.algorithmicIntensity || 1.0) * 100).toFixed(0)}%</span>
+                  <span className="admin-value">
+                    {((gateway.algorithmicIntensity || 1.0) * 100).toFixed(0)}%
+                  </span>
                 </div>
                 <input
                   type="range"
                   min="0"
                   max="200"
                   value={(gateway.algorithmicIntensity || 1.0) * 100}
-                  onChange={(e) => onUpdate({ algorithmicIntensity: parseInt(e.target.value) / 100 })}
+                  onChange={(e) =>
+                    onUpdate({ algorithmicIntensity: parseInt(e.target.value) / 100 })
+                  }
                   className="admin-slider"
                 />
               </div>
-              
+
               <div className="admin-field">
                 <div className="admin-label">Pattern Type</div>
                 <div className="shape-selector" style={{ marginTop: "8px" }}>
-                  {(['spiral', 'lissajous', 'fieldLines', 'particleStreams', 'all'] as const).map((pattern) => (
-                    <button
-                      key={pattern}
-                      className={`shape-btn ${gateway.algorithmicPattern === pattern ? "active" : ""}`}
-                      onClick={() => onUpdate({ algorithmicPattern: pattern })}
-                      style={{ fontSize: "10px", padding: "6px 10px" }}
-                    >
-                      {pattern === 'spiral' && '🌀'}
-                      {pattern === 'lissajous' && '∞'}
-                      {pattern === 'fieldLines' && '⚡'}
-                      {pattern === 'particleStreams' && '✨'}
-                      {pattern === 'all' && '★'}
-                      <span style={{ marginLeft: "4px" }}>
-                        {pattern === 'spiral' && 'Spiral'}
-                        {pattern === 'lissajous' && 'Lissajous'}
-                        {pattern === 'fieldLines' && 'Field Lines'}
-                        {pattern === 'particleStreams' && 'Streams'}
-                        {pattern === 'all' && 'All'}
-                      </span>
-                    </button>
-                  ))}
+                  {(["spiral", "lissajous", "fieldLines", "particleStreams", "all"] as const).map(
+                    (pattern) => (
+                      <button
+                        key={pattern}
+                        className={`shape-btn ${gateway.algorithmicPattern === pattern ? "active" : ""}`}
+                        onClick={() => onUpdate({ algorithmicPattern: pattern })}
+                        style={{ fontSize: "10px", padding: "6px 10px" }}
+                      >
+                        {pattern === "spiral" && "🌀"}
+                        {pattern === "lissajous" && "∞"}
+                        {pattern === "fieldLines" && "⚡"}
+                        {pattern === "particleStreams" && "✨"}
+                        {pattern === "all" && "★"}
+                        <span style={{ marginLeft: "4px" }}>
+                          {pattern === "spiral" && "Spiral"}
+                          {pattern === "lissajous" && "Lissajous"}
+                          {pattern === "fieldLines" && "Field Lines"}
+                          {pattern === "particleStreams" && "Streams"}
+                          {pattern === "all" && "All"}
+                        </span>
+                      </button>
+                    )
+                  )}
                 </div>
               </div>
             </>
@@ -1604,9 +1616,7 @@ function ManifoldControls({ manifold, onUpdate }: ManifoldControlsProps) {
             min="50"
             max="400"
             value={manifold.waveAmplitude}
-            onChange={(e) =>
-              onUpdate({ waveAmplitude: parseInt(e.target.value) })
-            }
+            onChange={(e) => onUpdate({ waveAmplitude: parseInt(e.target.value) })}
             className="admin-slider"
           />
         </div>
@@ -1620,9 +1630,7 @@ function ManifoldControls({ manifold, onUpdate }: ManifoldControlsProps) {
             min="5"
             max="50"
             value={manifold.waveFrequency * 100}
-            onChange={(e) =>
-              onUpdate({ waveFrequency: parseInt(e.target.value) / 100 })
-            }
+            onChange={(e) => onUpdate({ waveFrequency: parseInt(e.target.value) / 100 })}
             className="admin-slider"
           />
         </div>
@@ -1640,9 +1648,7 @@ function ManifoldControls({ manifold, onUpdate }: ManifoldControlsProps) {
             min="50"
             max="200"
             value={manifold.spreadX * 100}
-            onChange={(e) =>
-              onUpdate({ spreadX: parseInt(e.target.value) / 100 })
-            }
+            onChange={(e) => onUpdate({ spreadX: parseInt(e.target.value) / 100 })}
             className="admin-slider"
           />
         </div>
@@ -1656,9 +1662,7 @@ function ManifoldControls({ manifold, onUpdate }: ManifoldControlsProps) {
             min="50"
             max="200"
             value={manifold.spreadZ * 100}
-            onChange={(e) =>
-              onUpdate({ spreadZ: parseInt(e.target.value) / 100 })
-            }
+            onChange={(e) => onUpdate({ spreadZ: parseInt(e.target.value) / 100 })}
             className="admin-slider"
           />
         </div>
@@ -1676,9 +1680,7 @@ function ManifoldControls({ manifold, onUpdate }: ManifoldControlsProps) {
             min="10"
             max="100"
             value={manifold.opacity * 100}
-            onChange={(e) =>
-              onUpdate({ opacity: parseInt(e.target.value) / 100 })
-            }
+            onChange={(e) => onUpdate({ opacity: parseInt(e.target.value) / 100 })}
             className="admin-slider"
           />
         </div>
@@ -1850,55 +1852,61 @@ function CameraControls({ camera, onUpdate }: CameraControlsProps) {
 
       <div className="admin-section">
         <div className="admin-section-title">Presets</div>
-        <div className="admin-color-row" style={{ gap: '4px' }}>
+        <div className="admin-color-row" style={{ gap: "4px" }}>
           <button
             className="admin-btn admin-btn-secondary"
-            style={{ flex: 1, fontSize: '9px', padding: '8px 4px' }}
-            onClick={() => onUpdate({
-              pitch: 0,
-              yaw: 0,
-              roll: 0,
-              truckX: 0,
-              truckY: 0,
-              focalLength: 400,
-              vanishX: 0.7,
-              vanishY: 0.5,
-              terrainClipY: 0.35,
-            })}
+            style={{ flex: 1, fontSize: "9px", padding: "8px 4px" }}
+            onClick={() =>
+              onUpdate({
+                pitch: 0,
+                yaw: 0,
+                roll: 0,
+                truckX: 0,
+                truckY: 0,
+                focalLength: 400,
+                vanishX: 0.7,
+                vanishY: 0.5,
+                terrainClipY: 0.35,
+              })
+            }
           >
             Default
           </button>
           <button
             className="admin-btn admin-btn-secondary"
-            style={{ flex: 1, fontSize: '9px', padding: '8px 4px' }}
-            onClick={() => onUpdate({
-              pitch: 25,
-              yaw: 0,
-              roll: 0,
-              truckX: 0,
-              truckY: 0,
-              focalLength: 400,
-              vanishX: 0.5,
-              vanishY: 0.55,
-              terrainClipY: 0.2,
-            })}
+            style={{ flex: 1, fontSize: "9px", padding: "8px 4px" }}
+            onClick={() =>
+              onUpdate({
+                pitch: 25,
+                yaw: 0,
+                roll: 0,
+                truckX: 0,
+                truckY: 0,
+                focalLength: 400,
+                vanishX: 0.5,
+                vanishY: 0.55,
+                terrainClipY: 0.2,
+              })
+            }
           >
             Top-Down
           </button>
           <button
             className="admin-btn admin-btn-secondary"
-            style={{ flex: 1, fontSize: '9px', padding: '8px 4px' }}
-            onClick={() => onUpdate({
-              pitch: 35,
-              yaw: 15,
-              roll: 5,
-              truckX: 100,
-              truckY: -50,
-              focalLength: 350,
-              vanishX: 0.5,
-              vanishY: 0.5,
-              terrainClipY: 0,
-            })}
+            style={{ flex: 1, fontSize: "9px", padding: "8px 4px" }}
+            onClick={() =>
+              onUpdate({
+                pitch: 35,
+                yaw: 15,
+                roll: 5,
+                truckX: 100,
+                truckY: -50,
+                focalLength: 350,
+                vanishX: 0.5,
+                vanishY: 0.5,
+                terrainClipY: 0,
+              })
+            }
           >
             Bird&apos;s Eye
           </button>
@@ -1916,12 +1924,7 @@ interface LandmarksControlsProps {
   onRemove: (id: string) => void;
 }
 
-function LandmarksControls({
-  landmarks,
-  onUpdate,
-  onAdd,
-  onRemove,
-}: LandmarksControlsProps) {
+function LandmarksControls({ landmarks, onUpdate, onAdd, onRemove }: LandmarksControlsProps) {
   return (
     <div>
       {landmarks.map((landmark) => (
@@ -1947,9 +1950,7 @@ function LandmarksControls({
             <input
               type="checkbox"
               checked={landmark.enabled}
-              onChange={(e) =>
-                onUpdate(landmark.id, { enabled: e.target.checked })
-              }
+              onChange={(e) => onUpdate(landmark.id, { enabled: e.target.checked })}
               className="admin-checkbox"
             />
             <span className="admin-label" style={{ margin: 0 }}>
@@ -1962,9 +1963,7 @@ function LandmarksControls({
             <input
               type="text"
               value={landmark.sectionId}
-              onChange={(e) =>
-                onUpdate(landmark.id, { sectionId: e.target.value })
-              }
+              onChange={(e) => onUpdate(landmark.id, { sectionId: e.target.value })}
               className="admin-input"
             />
           </div>
@@ -1973,9 +1972,7 @@ function LandmarksControls({
             <div className="admin-label">Shape</div>
             <select
               value={landmark.shape}
-              onChange={(e) =>
-                onUpdate(landmark.id, { shape: e.target.value as LandmarkShape })
-              }
+              onChange={(e) => onUpdate(landmark.id, { shape: e.target.value as LandmarkShape })}
               className="admin-select"
             >
               {Object.entries(SHAPE_LABELS).map(([value, label]) => (
@@ -2001,9 +1998,7 @@ function LandmarksControls({
               <input
                 type="color"
                 value={landmark.color}
-                onChange={(e) =>
-                  onUpdate(landmark.id, { color: e.target.value })
-                }
+                onChange={(e) => onUpdate(landmark.id, { color: e.target.value })}
                 className="admin-color-input"
               />
             </div>
@@ -2048,8 +2043,10 @@ function LandmarksControls({
           </div>
 
           {/* Position Controls */}
-          <div className="admin-section-title" style={{ marginTop: '12px' }}>Position</div>
-          
+          <div className="admin-section-title" style={{ marginTop: "12px" }}>
+            Position
+          </div>
+
           <div className="admin-field">
             <div className="admin-label">
               <span>X (Horizontal)</span>
@@ -2296,49 +2293,55 @@ function SigilControls({ sigil, onUpdate }: SigilControlsProps) {
 
       <div className="admin-section">
         <div className="admin-section-title">Presets</div>
-        <div className="admin-color-row" style={{ gap: '4px' }}>
+        <div className="admin-color-row" style={{ gap: "4px" }}>
           <button
             className="admin-btn admin-btn-secondary"
-            style={{ flex: 1, fontSize: '9px', padding: '8px 4px' }}
-            onClick={() => onUpdate({
-              size: 220,
-              particleCount: 500,
-              particleSize: 1.0,
-              opacity: 1.0,
-              wanderStrength: 1.0,
-              pulseSpeed: 1.0,
-              returnStrength: 1.0,
-            })}
+            style={{ flex: 1, fontSize: "9px", padding: "8px 4px" }}
+            onClick={() =>
+              onUpdate({
+                size: 220,
+                particleCount: 500,
+                particleSize: 1.0,
+                opacity: 1.0,
+                wanderStrength: 1.0,
+                pulseSpeed: 1.0,
+                returnStrength: 1.0,
+              })
+            }
           >
             Default
           </button>
           <button
             className="admin-btn admin-btn-secondary"
-            style={{ flex: 1, fontSize: '9px', padding: '8px 4px' }}
-            onClick={() => onUpdate({
-              size: 280,
-              particleCount: 700,
-              particleSize: 0.8,
-              opacity: 0.9,
-              wanderStrength: 0.3,
-              pulseSpeed: 0.5,
-              returnStrength: 2.0,
-            })}
+            style={{ flex: 1, fontSize: "9px", padding: "8px 4px" }}
+            onClick={() =>
+              onUpdate({
+                size: 280,
+                particleCount: 700,
+                particleSize: 0.8,
+                opacity: 0.9,
+                wanderStrength: 0.3,
+                pulseSpeed: 0.5,
+                returnStrength: 2.0,
+              })
+            }
           >
             Dense
           </button>
           <button
             className="admin-btn admin-btn-secondary"
-            style={{ flex: 1, fontSize: '9px', padding: '8px 4px' }}
-            onClick={() => onUpdate({
-              size: 200,
-              particleCount: 300,
-              particleSize: 1.5,
-              opacity: 0.7,
-              wanderStrength: 1.8,
-              pulseSpeed: 2.0,
-              returnStrength: 0.6,
-            })}
+            style={{ flex: 1, fontSize: "9px", padding: "8px 4px" }}
+            onClick={() =>
+              onUpdate({
+                size: 200,
+                particleCount: 300,
+                particleSize: 1.5,
+                opacity: 0.7,
+                wanderStrength: 1.8,
+                pulseSpeed: 2.0,
+                returnStrength: 0.6,
+              })
+            }
           >
             Organic
           </button>
@@ -2347,4 +2350,3 @@ function SigilControls({ sigil, onUpdate }: SigilControlsProps) {
     </div>
   );
 }
-
