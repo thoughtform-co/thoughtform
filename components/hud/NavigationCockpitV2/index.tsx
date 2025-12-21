@@ -209,8 +209,8 @@ function NavigationCockpitInner() {
           // Slide from top (90px) to above the frame
           // At t=0: top: 90px (hero position at top)
           // At t=1: Wordmark above frame, aligned with rail marker 5 (~50vh)
-          // Wordmark top at t=1: calc(50vh - 100px) = balanced spacing
-          top: `calc(${lerp(90, 0, tHeroToDef)}px + ${lerp(0, 50, tHeroToDef)}vh - ${lerp(0, 100, tHeroToDef)}px)`,
+          // Wordmark top at t=1: calc(50vh - 125px) = tighter spacing to frame
+          top: `calc(${lerp(90, 0, tHeroToDef)}px + ${lerp(0, 50, tHeroToDef)}vh - ${lerp(0, 125, tHeroToDef)}px)`,
           // CSS variable for brandmark fade
           ["--brandmark-opacity" as string]: 1 - tHeroToDef,
           // Fade out faster - wordmark disappears early while sigil is still animating toward navbar
@@ -261,15 +261,17 @@ function NavigationCockpitInner() {
         visible={tHeroToDef > 0.1 && tHeroToDef < 0.9}
       />
 
-      {/* Runway arrows pointing to gateway - fade out during early transition */}
+      {/* Runway arrows pointing to gateway - fade out quickly during transition */}
+      {/* Only visible in hero section, completely hidden before definition section appears */}
       <div
         className="hero-runway-arrows"
         style={{
-          opacity: tHeroToDef < 0.05 ? 1 : tHeroToDef < 0.3 ? 1 - (tHeroToDef - 0.05) / 0.25 : 0,
+          opacity: tHeroToDef < 0.02 ? 1 : tHeroToDef < 0.08 ? 1 - (tHeroToDef - 0.02) / 0.06 : 0,
+          visibility: tHeroToDef < 0.1 ? "visible" : "hidden",
           pointerEvents: "none",
         }}
       >
-        {Array.from({ length: 8 }, (_, i) => (
+        {Array.from({ length: 7 }, (_, i) => (
           <div key={i} className={`runway-arrow runway-arrow-${i + 1}`}>
             ›
           </div>
@@ -286,9 +288,9 @@ function NavigationCockpitInner() {
           // Frame slides UP from bottom (90px) to below wordmark
           // At t=0: bottom: 90px (hero position at bottom)
           // At t=1: Frame below wordmark, aligned with rail marker 5 (~50vh)
-          // Frame bottom edge at t=1: calc(50vh - 120px) = balanced spacing
-          // This positions frame below the wordmark with comfortable spacing
-          bottom: `calc(${90 * (1 - tHeroToDef)}px + ${tHeroToDef * 50}vh - ${tHeroToDef * 120}px)`,
+          // Frame bottom edge at t=1: calc(50vh - 70px) = tighter spacing to wordmark
+          // This positions frame closer to the wordmark with tighter spacing
+          bottom: `calc(${90 * (1 - tHeroToDef)}px + ${tHeroToDef * 50}vh - ${tHeroToDef * 70}px)`,
           // Fade out faster - in sync with wordmark
           opacity:
             scrollProgress < 0.15

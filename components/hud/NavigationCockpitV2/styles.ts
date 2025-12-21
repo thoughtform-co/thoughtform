@@ -105,7 +105,8 @@ export const cockpitStyles = `
     line-height: 1.2;
   }
 
-  /* Runway arrows pointing to gateway - vertically centered, same width as hero text */
+  /* Runway arrows pointing to gateway - vertically centered */
+  /* Only visible in hero section, hidden during definition transition */
   .hero-runway-arrows {
     position: fixed;
     top: 50%;
@@ -113,16 +114,15 @@ export const cockpitStyles = `
     transform: translateY(-50%);
     display: flex;
     justify-content: space-between;
-    /* Match the hero text frame width (padding 24px on each side + text content) */
-    width: 460px;
-    z-index: 10;
+    width: 230px;
+    z-index: 5; /* Lower z-index so they don't appear above wordmark/frame */
     transition: opacity 0.3s ease-out;
   }
 
   .runway-arrow {
-    font-size: 20px;
+    font-size: 32px;
     color: var(--gold, #caa554);
-    opacity: 0.3;
+    opacity: 0.4;
     animation: runway-pulse 2s ease-in-out infinite;
   }
 
@@ -133,11 +133,6 @@ export const cockpitStyles = `
   .runway-arrow-5 { animation-delay: 0.4s; }
   .runway-arrow-6 { animation-delay: 0.5s; }
   .runway-arrow-7 { animation-delay: 0.6s; }
-  .runway-arrow-8 { animation-delay: 0.7s; }
-  .runway-arrow-9 { animation-delay: 0.8s; }
-  .runway-arrow-10 { animation-delay: 0.9s; }
-  .runway-arrow-11 { animation-delay: 1.0s; }
-  .runway-arrow-12 { animation-delay: 1.1s; }
 
   @keyframes runway-pulse {
     0%, 100% {
@@ -433,17 +428,17 @@ export const cockpitStyles = `
 
   .module-title {
     font-family: var(--font-body, system-ui);
-    font-size: 14px;
+    font-size: 18px;
     font-weight: 500;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.08em;
     color: var(--dawn, #ECE3D6);
-    margin-bottom: 8px;
+    margin-bottom: 10px;
   }
 
   .module-desc {
     font-family: var(--font-body, system-ui);
-    font-size: 12px;
+    font-size: 14px;
     line-height: 1.5;
     color: rgba(236, 227, 214, 0.5);
   }
