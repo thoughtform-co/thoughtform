@@ -52,7 +52,9 @@ export const cockpitStyles = `
     left: calc(var(--rail-width) + 120px);
     transform: translateY(-50%);
     display: flex;
-    gap: 16px;
+    justify-content: space-between;
+    /* Match the hero text frame width (padding 24px on each side + text content) */
+    width: 460px;
     z-index: 10;
     transition: opacity 0.3s ease-out;
   }
