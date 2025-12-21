@@ -9,12 +9,44 @@ interface ConnectorLinesProps {
   sigilParticlesRef: React.MutableRefObject<ParticlePosition[]>;
 }
 
-// Generate angular segmented path from start to end (like the mockup)
-function generateAngularPath(startX: number, startY: number, endX: number, endY: number): string {
+// Generate angular segmented path from start to end with growth animation
+// growthProgress: 0 = line at start point, 1 = line fully extended to end
+function generateAngularPath(
+  startX: number,
+  startY: number,
+  endX: number,
+  endY: number,
+  growthProgress: number = 1
+): string {
+  if (growthProgress <= 0) {
+    // No line yet - return empty path at start point
+    return `M ${startX} ${startY} L ${startX} ${startY}`;
+  }
+
   // Create a path that goes: horizontal first, then diagonal to target
   const midX = startX + (endX - startX) * 0.4;
   const midY = startY;
-  return `M ${startX} ${startY} L ${midX} ${midY} L ${endX} ${endY}`;
+
+  if (growthProgress >= 1) {
+    // Full line
+    return `M ${startX} ${startY} L ${midX} ${midY} L ${endX} ${endY}`;
+  }
+
+  // Partial line - grow along the path
+  // First half of growth: horizontal segment
+  // Second half: diagonal segment
+  if (growthProgress < 0.4) {
+    // Growing horizontal segment
+    const horizProgress = growthProgress / 0.4;
+    const currentX = startX + (midX - startX) * horizProgress;
+    return `M ${startX} ${startY} L ${currentX} ${midY}`;
+  } else {
+    // Horizontal complete, growing diagonal
+    const diagProgress = (growthProgress - 0.4) / 0.6;
+    const currentX = midX + (endX - midX) * diagProgress;
+    const currentY = midY + (endY - midY) * diagProgress;
+    return `M ${startX} ${startY} L ${midX} ${midY} L ${currentX} ${currentY}`;
+  }
 }
 
 // Zone offsets for each line to prefer different areas of the sigil
@@ -26,6 +58,15 @@ const ZONE_OFFSETS = [
 
 // Staggered start times for visual variety
 const INIT_OFFSETS = [0, 0.33, 0.66];
+
+// Check if a particle position is valid (not at origin or suspiciously centered)
+function isValidParticlePosition(p: ParticlePosition): boolean {
+  // Invalid if at origin
+  if (p.screenX === 0 && p.screenY === 0) return false;
+  // Invalid if very close to origin (likely uninitialized)
+  if (p.screenX < 50 && p.screenY < 50) return false;
+  return true;
+}
 
 export function ConnectorLines({
   scrollProgress,
@@ -51,24 +92,28 @@ export function ConnectorLines({
     let lastPositionUpdate = 0;
 
     // Track current and next targets for each line (for smooth transitions)
+    // Initialize targetPos to null - will be set from card position on first valid update
     const lineState = [
       {
         currentTarget: 0,
         nextTarget: 0,
         lastSwitch: 0,
-        targetPos: { x: 0, y: 0 },
+        targetPos: null as { x: number; y: number } | null,
+        growthProgress: 0, // 0 = not started, 1 = fully grown
       },
       {
         currentTarget: 0,
         nextTarget: 0,
         lastSwitch: 0,
-        targetPos: { x: 0, y: 0 },
+        targetPos: null as { x: number; y: number } | null,
+        growthProgress: 0,
       },
       {
         currentTarget: 0,
         nextTarget: 0,
         lastSwitch: 0,
-        targetPos: { x: 0, y: 0 },
+        targetPos: null as { x: number; y: number } | null,
+        growthProgress: 0,
       },
     ];
 
@@ -97,22 +142,29 @@ export function ConnectorLines({
       particles: ParticlePosition[],
       otherTargets: number[]
     ): number => {
-      if (particles.length === 0) return 0;
+      // Filter to only valid particles
+      const validParticles = particles
+        .map((p, idx) => ({ p, idx }))
+        .filter(({ p }) => isValidParticlePosition(p));
+
+      if (validParticles.length === 0) return -1; // Return -1 to indicate no valid target
 
       const centerY = window.innerHeight / 2;
       const preferredY = centerY + ZONE_OFFSETS[lineIndex].yBias;
 
       // Sort particles by distance from this line's preferred zone
-      const scoredParticles = particles.map((p, idx) => {
+      const scoredParticles = validParticles.map(({ p, idx }) => {
         const yDist = Math.abs(p.screenY - preferredY);
         // Also check distance from other targets
         let minOtherDist = Infinity;
         for (const otherIdx of otherTargets) {
           if (otherIdx >= 0 && otherIdx < particles.length) {
             const other = particles[otherIdx];
-            const dx = p.screenX - other.screenX;
-            const dy = p.screenY - other.screenY;
-            minOtherDist = Math.min(minOtherDist, Math.sqrt(dx * dx + dy * dy));
+            if (other && isValidParticlePosition(other)) {
+              const dx = p.screenX - other.screenX;
+              const dy = p.screenY - other.screenY;
+              minOtherDist = Math.min(minOtherDist, Math.sqrt(dx * dx + dy * dy));
+            }
           }
         }
         // Score: prefer particles in our zone AND far from other lines
@@ -141,6 +193,10 @@ export function ConnectorLines({
       // Get actual particle positions from sigil
       const particles = sigilParticlesRef.current;
 
+      // Check if we have valid particles (sigil is fully formed)
+      const validParticles = particles.filter(isValidParticlePosition);
+      const hasValidParticles = validParticles.length > 10; // Need enough particles
+
       // Get all current targets to avoid overlap
       const allCurrentTargets = lineState.map((s) => s.currentTarget);
 
@@ -153,29 +209,65 @@ export function ConnectorLines({
 
         const state = lineState[index];
 
+        // If no valid particles yet, hide the line (growth = 0)
+        if (!hasValidParticles) {
+          state.growthProgress = 0;
+          // Initialize target position from card position so lines start there
+          if (!state.targetPos) {
+            state.targetPos = { x: cardPos.x, y: cardPos.y };
+          }
+          // Clear the path
+          pathRef.current.setAttribute("d", "");
+          const circleRef = lineEndCircleRefs[index];
+          if (circleRef.current) {
+            circleRef.current.setAttribute("opacity", "0");
+          }
+          return;
+        }
+
+        // We have valid particles - grow the line
+        // Growth takes about 0.5 seconds per line, staggered
+        const growthDuration = 0.5;
+        const growthDelay = index * 0.15; // Stagger each line
+        const timeSinceParticlesValid = elapsed; // Will reset when component mounts
+
+        // Only start growing after the sigil is visible (controlled by parent opacity)
+        if (state.growthProgress < 1) {
+          const growthElapsed = Math.max(0, timeSinceParticlesValid - growthDelay);
+          state.growthProgress = Math.min(1, growthElapsed / growthDuration);
+        }
+
+        // Initialize target position from card if not set
+        if (!state.targetPos) {
+          state.targetPos = { x: cardPos.x, y: cardPos.y };
+        }
+
         // Different switch intervals for each line (0.2 to 0.4 seconds - VERY FAST)
         const switchInterval = 0.2 + index * 0.08;
         const staggeredTime = elapsed + INIT_OFFSETS[index] * 2;
         const timeSinceSwitch = staggeredTime - state.lastSwitch;
 
         // Time to switch to a new target
-        if (timeSinceSwitch > switchInterval && particles.length > 0) {
+        if (timeSinceSwitch > switchInterval && hasValidParticles) {
           state.currentTarget = state.nextTarget;
           // Pick new target that's different from other lines
           const othersTargets = allCurrentTargets.filter((_, i) => i !== index);
-          state.nextTarget = pickNewTarget(index, particles, othersTargets);
+          const newTarget = pickNewTarget(index, particles, othersTargets);
+          if (newTarget >= 0) {
+            state.nextTarget = newTarget;
+          }
           state.lastSwitch = staggeredTime;
           // Update allCurrentTargets for next line's calculation
           allCurrentTargets[index] = state.currentTarget;
         }
 
-        // Calculate target position
-        let targetX = window.innerWidth / 2;
-        let targetY = window.innerHeight / 2;
+        // Calculate target position from particle
+        let targetX = state.targetPos.x;
+        let targetY = state.targetPos.y;
 
-        if (particles.length > 0 && state.currentTarget < particles.length) {
+        if (state.currentTarget >= 0 && state.currentTarget < particles.length) {
           const particle = particles[state.currentTarget];
-          if (particle) {
+          if (particle && isValidParticlePosition(particle)) {
             targetX = particle.screenX;
             targetY = particle.screenY;
           }
@@ -186,15 +278,23 @@ export function ConnectorLines({
         state.targetPos.x += (targetX - state.targetPos.x) * lerpSpeed;
         state.targetPos.y += (targetY - state.targetPos.y) * lerpSpeed;
 
-        // Set path
+        // Set path with growth animation
         pathRef.current.setAttribute(
           "d",
-          generateAngularPath(cardPos.x, cardPos.y, state.targetPos.x, state.targetPos.y)
+          generateAngularPath(
+            cardPos.x,
+            cardPos.y,
+            state.targetPos.x,
+            state.targetPos.y,
+            state.growthProgress
+          )
         );
 
-        // Update end circle
+        // Update end circle - only visible when growth is complete
         const circleRef = lineEndCircleRefs[index];
         if (circleRef.current) {
+          const circleOpacity = state.growthProgress >= 0.95 ? 1 : 0;
+          circleRef.current.setAttribute("opacity", circleOpacity.toString());
           circleRef.current.setAttribute("cx", state.targetPos.x.toString());
           circleRef.current.setAttribute("cy", state.targetPos.y.toString());
         }
