@@ -1,12 +1,10 @@
 // ═══════════════════════════════════════════════════════════════════
-// TYPES RE-EXPORT - Backwards compatibility layer
+// TYPES INDEX - Re-exports all types for convenient importing
 // ═══════════════════════════════════════════════════════════════════
-// This file re-exports from @/types and @/constants for backwards compatibility.
-// For new code, import directly from "@/types" or "@/constants" instead.
+// Usage: import { Page, Section, EditorState } from "@/types";
 
-// Re-export all types
+// UI Types
 export type {
-  // UI Types
   SpacingConfig,
   ShadowConfig,
   Bounds,
@@ -17,7 +15,10 @@ export type {
   AnimationPreset,
   BackgroundConfig,
   GridSize,
-  // Content Types
+} from "./ui";
+
+// Content Types
+export type {
   TextContent,
   ImageContent,
   VideoContent,
@@ -35,22 +36,10 @@ export type {
   ServicesContent,
   AboutContent,
   SectionContent,
-  // Database Types
-  SectionType,
-  ElementType,
-  Page,
-  Section,
-  Element,
-  // Editor Types
-  EditorState,
-  SectionTemplate,
-} from "@/types";
+} from "./content";
 
-// Re-export all constants
-export {
-  GRID_SIZES,
-  SECTION_TEMPLATES,
-  DEFAULT_ELEMENT_DIMENSIONS,
-  DEFAULT_ELEMENT_CONTENT,
-  DEFAULT_SECTION_CONTENT,
-} from "@/constants";
+// Database Types
+export type { SectionType, ElementType, Page, Section, Element } from "./database";
+
+// Editor Types
+export type { EditorState, SectionTemplate } from "./editor";

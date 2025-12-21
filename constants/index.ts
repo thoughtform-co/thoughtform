@@ -1,8 +1,14 @@
 // ═══════════════════════════════════════════════════════════════════
-// NAVIGATION COCKPIT V2 - Re-export for backwards compatibility
+// CONSTANTS INDEX - Re-exports all constants
 // ═══════════════════════════════════════════════════════════════════
-// This component has been refactored into smaller modules.
-// Import from here or directly from the new location:
-// import { NavigationCockpitV2 } from "@/components/hud/NavigationCockpitV2";
+// Usage: import { SECTION_TEMPLATES, DEFAULT_ELEMENT_CONTENT } from "@/constants";
 
-export { NavigationCockpitV2 } from "./NavigationCockpitV2/index";
+export { SECTION_TEMPLATES } from "./templates";
+
+export {
+  DEFAULT_ELEMENT_DIMENSIONS,
+  DEFAULT_ELEMENT_CONTENT,
+  DEFAULT_SECTION_CONTENT,
+} from "./defaults";
+
+export { GRID_SIZES, type GridSize } from "./grid";

@@ -1,8 +1,7 @@
 // ═══════════════════════════════════════════════════════════════════
-// NAVIGATION COCKPIT V2 - Re-export for backwards compatibility
+// GRID CONSTANTS - Grid snap options and sizing
 // ═══════════════════════════════════════════════════════════════════
-// This component has been refactored into smaller modules.
-// Import from here or directly from the new location:
-// import { NavigationCockpitV2 } from "@/components/hud/NavigationCockpitV2";
 
-export { NavigationCockpitV2 } from "./NavigationCockpitV2/index";
+// Grid snap options
+export const GRID_SIZES = [8, 16, 24, 32] as const;
+export type GridSize = (typeof GRID_SIZES)[number];

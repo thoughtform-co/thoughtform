@@ -2,6 +2,16 @@
 
 import { useRef, useEffect, useMemo } from "react";
 
+// Exported type for particle position data
+export interface ParticlePosition {
+  x: number;
+  y: number;
+  screenX: number;
+  screenY: number;
+  alpha: number;
+  size: number;
+}
+
 interface ThoughtformSigilProps {
   size?: number;
   color?: string;
@@ -14,6 +24,8 @@ interface ThoughtformSigilProps {
   wanderStrength?: number; // Multiplier for particle drift (default 1.0)
   pulseSpeed?: number; // Multiplier for breathing animation (default 1.0)
   returnStrength?: number; // Multiplier for snap-back force (default 1.0)
+  // Callback to expose particle positions for external use (e.g., connector lines)
+  onParticlePositions?: React.MutableRefObject<ParticlePosition[]>;
 }
 
 const GRID = 3; // Base unit from Signal System
@@ -80,7 +92,7 @@ function samplePointsFromPaths(
   canvasSize: number
 ): { x: number; y: number }[] {
   const points: { x: number; y: number }[] = [];
-  
+
   // Create offscreen canvas for path testing
   const offscreen = document.createElement("canvas");
   const scale = canvasSize / Math.max(VIEWBOX_WIDTH, VIEWBOX_HEIGHT);
@@ -157,11 +169,13 @@ export function ThoughtformSigil({
   wanderStrength = 1.0,
   pulseSpeed = 1.0,
   returnStrength = 1.0,
+  onParticlePositions,
 }: ThoughtformSigilProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number>(0);
   const particlesRef = useRef<Particle[]>([]);
   const initializedRef = useRef(false);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   // Initialize particles once
   useEffect(() => {
@@ -176,7 +190,7 @@ export function ThoughtformSigil({
       const baseY = point.y - center;
       const baseAlpha = 0.3 + Math.random() * 0.6;
       const baseSize = GRID - 1 + Math.random();
-      
+
       // Origin: particles emerge from depth (z-axis) within the manifold
       // They start scattered but closer to their final X/Y position
       // The key effect is they come from "behind" (high z = far away)
@@ -184,7 +198,7 @@ export function ThoughtformSigil({
       const originX = baseX * spreadFactor + (Math.random() - 0.5) * size * 0.3;
       const originY = baseY * spreadFactor + (Math.random() - 0.5) * size * 0.3 + size * 0.15; // Slight downward bias
       const originZ = 0.6 + Math.random() * 0.4; // Start deep in manifold (0.6-1.0)
-      
+
       return {
         x: originX,
         y: originY,
@@ -215,11 +229,11 @@ export function ThoughtformSigil({
   // Store props in refs for animation loop
   const scrollRef = useRef(scrollProgress);
   const configRef = useRef({ particleSize, opacity, wanderStrength, pulseSpeed, returnStrength });
-  
+
   useEffect(() => {
     scrollRef.current = scrollProgress;
   }, [scrollProgress]);
-  
+
   useEffect(() => {
     configRef.current = { particleSize, opacity, wanderStrength, pulseSpeed, returnStrength };
   }, [particleSize, opacity, wanderStrength, pulseSpeed, returnStrength]);
@@ -249,9 +263,10 @@ export function ThoughtformSigil({
       const emergenceStart = 0.02;
       const emergenceEnd = 0.08;
       const currentScroll = scrollRef.current;
-      const emergenceProgress = Math.max(0, Math.min(1, 
-        (currentScroll - emergenceStart) / (emergenceEnd - emergenceStart)
-      ));
+      const emergenceProgress = Math.max(
+        0,
+        Math.min(1, (currentScroll - emergenceStart) / (emergenceEnd - emergenceStart))
+      );
 
       // Global pulse wave (only active when formed)
       const globalPulse = Math.sin(time * 0.001) * 0.5 + 0.5;
@@ -260,11 +275,12 @@ export function ThoughtformSigil({
 
       particlesRef.current.forEach((particle) => {
         // Calculate this particle's emergence (staggered)
-        const particleEmergence = Math.max(0, Math.min(1,
-          (emergenceProgress - particle.emergenceDelay) / (1 - particle.emergenceDelay)
-        ));
+        const particleEmergence = Math.max(
+          0,
+          Math.min(1, (emergenceProgress - particle.emergenceDelay) / (1 - particle.emergenceDelay))
+        );
         const easedEmergence = easeOutCubic(particleEmergence);
-        
+
         // Z-axis: move from deep (originZ) to front (0)
         const targetZ = particle.originZ * (1 - easedEmergence);
         const dz = targetZ - particle.z;
@@ -272,38 +288,43 @@ export function ThoughtformSigil({
         particle.vz *= 0.9;
         particle.z += particle.vz;
         particle.z = Math.max(0, particle.z); // Clamp to front
-        
+
         // Get current config values
         const cfg = configRef.current;
-        
+
         // Depth-based scaling: far = small, close = full size
         const depthScale = 1 - particle.z * 0.8; // At z=1 (far), scale is 0.2; at z=0, scale is 1
         particle.size = particle.baseSize * depthScale * cfg.particleSize;
-        
+
         // Target position interpolated between origin and base
         // Also apply perspective: particles converge toward center when far away
         const perspectiveFactor = 1 - particle.z * 0.5;
-        const targetX = particle.originX + (particle.baseX - particle.originX) * easedEmergence * perspectiveFactor;
-        const targetY = particle.originY + (particle.baseY - particle.originY) * easedEmergence * perspectiveFactor;
-        
+        const targetX =
+          particle.originX +
+          (particle.baseX - particle.originX) * easedEmergence * perspectiveFactor;
+        const targetY =
+          particle.originY +
+          (particle.baseY - particle.originY) * easedEmergence * perspectiveFactor;
+
         // Noise-based wandering force (increases as particle forms and comes forward)
         const noiseX = noise2D(particle.x + particle.noiseOffsetX, particle.y, time);
         const noiseY = noise2D(particle.x, particle.y + particle.noiseOffsetY, time);
-        
+
         // Apply wandering force (scaled by emergence and depth)
         const wanderScale = easedEmergence * depthScale;
         particle.vx += noiseX * particle.wanderStrength * 0.1 * wanderScale * cfg.wanderStrength;
         particle.vy += noiseY * particle.wanderStrength * 0.1 * wanderScale * cfg.wanderStrength;
-        
+
         // Return force toward target position
         const dx = targetX - particle.x;
         const dy = targetY - particle.y;
-        
+
         // Stronger pull during emergence, lighter once formed
-        const pullStrength = emergenceProgress < 1 ? 0.1 : particle.returnStrength * cfg.returnStrength;
+        const pullStrength =
+          emergenceProgress < 1 ? 0.1 : particle.returnStrength * cfg.returnStrength;
         particle.vx += dx * pullStrength;
         particle.vy += dy * pullStrength;
-        
+
         // Slight attraction toward global wave center (only when formed and close)
         if (easedEmergence > 0.5 && particle.z < 0.3) {
           const waveDx = waveX - particle.x;
@@ -312,32 +333,38 @@ export function ThoughtformSigil({
           particle.vx += (waveDx / waveDist) * 0.01 * globalPulse * easedEmergence;
           particle.vy += (waveDy / waveDist) * 0.01 * globalPulse * easedEmergence;
         }
-        
+
         // Damping
         particle.vx *= 0.9;
         particle.vy *= 0.9;
-        
+
         // Update position
         particle.x += particle.vx;
         particle.y += particle.vy;
-        
+
         // Alpha based on emergence, depth, and breathing
         const distFromTarget = Math.sqrt(dx * dx + dy * dy);
-        const breathe = Math.sin(time * particle.pulseSpeed * cfg.pulseSpeed + particle.phase) * 0.3 + 1;
+        const breathe =
+          Math.sin(time * particle.pulseSpeed * cfg.pulseSpeed + particle.phase) * 0.3 + 1;
         const distanceFade = Math.max(0.3, 1 - distFromTarget * 0.015);
-        
+
         // Depth-based alpha: particles fade when far away
         const depthAlpha = Math.pow(depthScale, 0.5); // Fade more gently
-        
+
         // Fade in as particle emerges
         const emergenceAlpha = easedEmergence;
-        const alpha = particle.baseAlpha * breathe * distanceFade * emergenceAlpha * depthAlpha * cfg.opacity;
+        const alpha =
+          particle.baseAlpha * breathe * distanceFade * emergenceAlpha * depthAlpha * cfg.opacity;
+
+        // Store alpha on particle for external access
+        particle.alpha = alpha;
 
         // Skip if not visible
         if (alpha < 0.01 || particle.size < 0.5) return;
 
         // Occasional glitch displacement
-        let glitchX = 0, glitchY = 0;
+        let glitchX = 0,
+          glitchY = 0;
         if (Math.random() < 0.001 && easedEmergence > 0.8) {
           glitchX = (Math.random() - 0.5) * GRID * 4;
           glitchY = (Math.random() - 0.5) * GRID * 2;
@@ -350,6 +377,24 @@ export function ThoughtformSigil({
         ctx.fillStyle = `rgba(${color}, ${alpha})`;
         ctx.fillRect(px, py, particle.size, particle.size);
       });
+
+      // Update particle positions for external use (connector lines)
+      if (onParticlePositions) {
+        const rect = canvasRef.current?.getBoundingClientRect();
+        if (rect) {
+          const positions: ParticlePosition[] = particlesRef.current
+            .filter((p) => p.size > 0.5) // Include particles that have emerged
+            .map((p) => ({
+              x: p.x,
+              y: p.y,
+              screenX: rect.left + rect.width / 2 + p.x,
+              screenY: rect.top + rect.height / 2 + p.y,
+              alpha: p.alpha,
+              size: p.size,
+            }));
+          onParticlePositions.current = positions;
+        }
+      }
 
       time++;
       animationRef.current = requestAnimationFrame(render);
