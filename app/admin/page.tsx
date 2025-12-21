@@ -6,9 +6,18 @@ import { signInWithEmail, signOut } from "@/lib/auth";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { ParticleCanvasV2 } from "@/components/hud/ParticleCanvasV2";
 import { ThoughtformSigil } from "@/components/hud/ThoughtformSigil";
-import { DEFAULT_CONFIG } from "@/lib/particle-config";
+import { DEFAULT_CONFIG, ParticleSystemConfig } from "@/lib/particle-config";
 import { supabase } from "@/lib/supabase";
 import "./admin-styles.css";
+
+// Custom config for admin page - manifold only, no Lorenz attractor
+const ADMIN_CONFIG: ParticleSystemConfig = {
+  ...DEFAULT_CONFIG,
+  landmarks: DEFAULT_CONFIG.landmarks.map((landmark) => ({
+    ...landmark,
+    enabled: false, // Disable all landmarks including Lorenz
+  })),
+};
 
 type TerminalStep = "idle" | "email" | "password" | "authenticating" | "success" | "error";
 
@@ -196,16 +205,17 @@ function AdminPageContent() {
     return (
       <div className="terminal-container">
         <div className="terminal-background">
-          <ParticleCanvasV2 scrollProgress={0.15} config={DEFAULT_CONFIG} />
+          <ParticleCanvasV2 scrollProgress={0.15} config={ADMIN_CONFIG} />
         </div>
         <div className="terminal-sigil">
           <ThoughtformSigil
-            size={500}
+            size={600}
             color="202, 165, 84"
-            particleCount={400}
+            particleCount={600}
             scrollProgress={1}
-            particleSize={1}
-            opacity={0.6}
+            particleSize={1.5}
+            opacity={0.8}
+            wanderStrength={0.8}
           />
         </div>
         <div className="terminal-window">
@@ -245,18 +255,19 @@ function AdminPageContent() {
     <div className="terminal-container" onClick={handleTerminalClick}>
       {/* Manifold background */}
       <div className="terminal-background">
-        <ParticleCanvasV2 scrollProgress={0.15} config={DEFAULT_CONFIG} />
+        <ParticleCanvasV2 scrollProgress={0.15} config={ADMIN_CONFIG} />
       </div>
 
-      {/* Sigil overlay */}
+      {/* Sigil as main background particle effect */}
       <div className="terminal-sigil">
         <ThoughtformSigil
-          size={500}
+          size={600}
           color="202, 165, 84"
-          particleCount={400}
+          particleCount={600}
           scrollProgress={1}
-          particleSize={1}
-          opacity={0.6}
+          particleSize={1.5}
+          opacity={0.8}
+          wanderStrength={0.8}
         />
       </div>
 
