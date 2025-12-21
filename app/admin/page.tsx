@@ -11,9 +11,14 @@ import { DEFAULT_CONFIG } from "@/lib/particle-config";
 import { supabase } from "@/lib/supabase";
 import "./admin-styles.css";
 
-function AdminPageContent() {
-  const router = useRouter();
+// Separate component that uses searchParams to avoid blocking Suspense
+function AdminPageWithParams() {
   const searchParams = useSearchParams();
+  return <AdminPageContent searchParams={searchParams} />;
+}
+
+function AdminPageContent({ searchParams }: { searchParams: URLSearchParams | null }) {
+  const router = useRouter();
   const { user, isLoading } = useAuth();
   const [email, setEmail] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -26,40 +31,44 @@ function AdminPageContent() {
     setMounted(true);
     console.log("[Admin] Page mounted, supabase configured:", !!supabase);
     console.log("[Admin] Auth state - isLoading:", isLoading, "user:", !!user);
-  }, []);
+  }, [isLoading, user]);
 
   // Handle Supabase auth callback (magic link redirects with hash fragments)
   useEffect(() => {
-    if (!supabase) return;
+    if (!mounted || !supabase) return;
 
-    // Check for hash fragments from Supabase redirect
-    const hashParams = new URLSearchParams(window.location.hash.substring(1));
-    const accessToken = hashParams.get("access_token");
-    const error = hashParams.get("error");
-    const errorDescription = hashParams.get("error_description");
+    try {
+      // Check for hash fragments from Supabase redirect
+      const hashParams = new URLSearchParams(window.location.hash.substring(1));
+      const accessToken = hashParams.get("access_token");
+      const error = hashParams.get("error");
+      const errorDescription = hashParams.get("error_description");
 
-    if (error) {
-      setError(errorDescription || "Authentication failed. Please try again.");
-      // Clean up URL
-      window.history.replaceState({}, document.title, "/admin");
-      return;
+      if (error) {
+        setError(errorDescription || "Authentication failed. Please try again.");
+        // Clean up URL
+        window.history.replaceState({}, document.title, "/admin");
+        return;
+      }
+
+      if (accessToken) {
+        // Supabase will automatically handle the session via the client
+        // Just wait for AuthProvider to update
+        // Clean up URL
+        window.history.replaceState({}, document.title, "/admin");
+      }
+
+      // Check for error in URL params (from server redirect)
+      const urlError = searchParams?.get("error");
+      if (urlError === "auth") {
+        setError("Authentication failed. Please try again.");
+      } else if (urlError === "config") {
+        setError("Configuration error. Please check your environment variables.");
+      }
+    } catch (err) {
+      console.error("[Admin] Error processing auth callback:", err);
     }
-
-    if (accessToken) {
-      // Supabase will automatically handle the session via the client
-      // Just wait for AuthProvider to update
-      // Clean up URL
-      window.history.replaceState({}, document.title, "/admin");
-    }
-
-    // Check for error in URL params (from server redirect)
-    const urlError = searchParams.get("error");
-    if (urlError === "auth") {
-      setError("Authentication failed. Please try again.");
-    } else if (urlError === "config") {
-      setError("Configuration error. Please check your environment variables.");
-    }
-  }, [searchParams]);
+  }, [mounted, searchParams]);
 
   // Redirect if already logged in (only after mount to prevent SSR issues)
   useEffect(() => {
@@ -217,7 +226,7 @@ export default function AdminPage() {
         </div>
       }
     >
-      <AdminPageContent />
+      <AdminPageWithParams />
     </Suspense>
   );
 }
