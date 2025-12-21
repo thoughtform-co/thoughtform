@@ -4,7 +4,7 @@
   background: rgba(10, 9, 8, 0.95);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  border: 2px solid rgba(202, 165, 84, 0.3);
+  border: none;
   padding: 32px;
   transition: all 0.2s ease;
   max-width: 100%;
