@@ -15,7 +15,9 @@ export function Wordmark({ className = "", hideVectorI = false }: WordmarkProps)
   return (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2987 749" className={className}>
       <defs>
-        <style>{`.st0{fill:${goldColor}}.st1{fill:${dawnColor}}`}</style>
+        {/* .st0 = gold brandmark paths, .st1 = dawn text paths
+            --brandmark-opacity CSS variable allows parent to fade the gold brandmark */}
+        <style>{`.st0{fill:${goldColor};opacity:var(--brandmark-opacity,1)}.st1{fill:${dawnColor}}`}</style>
       </defs>
       {/* Exact paths from Thoughtform_Wordmark (bicolored).svg */}
       <path className="st1" d="M2044.09,235.85v13.77h-148.1v290.77h-35.97V235.85h184.07,0Z" />

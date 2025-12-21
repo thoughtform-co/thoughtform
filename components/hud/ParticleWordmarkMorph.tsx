@@ -2,6 +2,21 @@
 
 import { useEffect, useRef, useCallback } from "react";
 
+// ═══════════════════════════════════════════════════════════════════
+// THOUGHTFORM PARTICLE SYSTEM CONSTANTS
+// Matches ThoughtformSigil aesthetic for brand consistency
+// ═══════════════════════════════════════════════════════════════════
+
+const GRID = 3; // Sacred Thoughtform grid unit - NEVER change this
+
+// Noise function for organic movement (same as ThoughtformSigil)
+function noise2D(x: number, y: number, time: number): number {
+  const sin1 = Math.sin(x * 0.05 + time * 0.001);
+  const sin2 = Math.sin(y * 0.05 + time * 0.0015);
+  const sin3 = Math.sin((x + y) * 0.03 + time * 0.0008);
+  return (sin1 + sin2 + sin3) / 3;
+}
+
 // Hero wordmark paths (stacked layout) - all dawn paths from Wordmark.tsx (excluding Vector I)
 // ViewBox: 0 0 1178.18 494.93
 const HERO_WORDMARK_PATHS = [
@@ -77,10 +92,19 @@ interface MorphPoint {
   tgtY: number;
   phase: number;
   baseAlpha: number;
+  // Thoughtform particle system additions
+  noiseOffsetX: number;
+  noiseOffsetY: number;
+  wanderStrength: number;
+  size: number;
+  emergeDelay: number; // Staggered emergence timing
 }
 
 interface ParticleWordmarkMorphProps {
-  scrollProgress: number;
+  /** Direct morph progress (0-1). If provided, overrides scrollProgress threshold calculation */
+  morphProgress?: number;
+  /** Legacy: scroll progress for internal threshold calculation (deprecated, use morphProgress) */
+  scrollProgress?: number;
   wordmarkBounds?: DOMRect | null;
   targetBounds?: { x: number; y: number; width: number; height: number } | null;
   visible?: boolean;
@@ -95,21 +119,21 @@ function samplePointsFromPaths(
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
   if (!ctx) return points;
-  
+
   canvas.width = bounds.maxX;
   canvas.height = bounds.maxY;
-  
+
   // Create paths
-  const path2Ds = paths.map(p => new Path2D(p));
-  
+  const path2Ds = paths.map((p) => new Path2D(p));
+
   let tries = 0;
   const maxTries = density * 30;
-  
+
   while (points.length < density && tries < maxTries) {
     tries++;
     const x = bounds.minX + Math.random() * (bounds.maxX - bounds.minX);
     const y = bounds.minY + Math.random() * (bounds.maxY - bounds.minY);
-    
+
     // Check if point is in any path
     for (const path of path2Ds) {
       if (ctx.isPointInPath(path, x, y)) {
@@ -118,7 +142,7 @@ function samplePointsFromPaths(
       }
     }
   }
-  
+
   return points;
 }
 
@@ -127,7 +151,8 @@ function easeInOutCubic(t: number): number {
 }
 
 export function ParticleWordmarkMorph({
-  scrollProgress,
+  morphProgress: morphProgressProp,
+  scrollProgress = 0,
   wordmarkBounds,
   targetBounds,
   visible = true,
@@ -136,26 +161,26 @@ export function ParticleWordmarkMorph({
   const animationRef = useRef<number>(0);
   const pointsRef = useRef<MorphPoint[]>([]);
   const initializedRef = useRef(false);
-  
+
   const initializePoints = useCallback(() => {
     if (initializedRef.current) return;
     if (typeof window === "undefined") return;
-    
+
     const POINT_COUNT = 1000;
-    
+
     // Sample from hero wordmark
     const heroPoints = samplePointsFromPaths(HERO_WORDMARK_PATHS, HERO_BOUNDS, POINT_COUNT);
-    
+
     // Sample from inline wordmark
     const inlinePoints = samplePointsFromPaths(INLINE_WORDMARK_PATHS, INLINE_BOUNDS, POINT_COUNT);
-    
-    // Match and create morph points
+
+    // Match and create morph points with Thoughtform particle properties
     const morphPoints: MorphPoint[] = [];
-    
+
     for (let i = 0; i < POINT_COUNT; i++) {
       const src = heroPoints[i % heroPoints.length];
       const tgt = inlinePoints[i % inlinePoints.length];
-      
+
       // Normalize to center-relative coordinates
       morphPoints.push({
         srcX: src.x - HERO_BOUNDS.maxX / 2,
@@ -163,25 +188,31 @@ export function ParticleWordmarkMorph({
         tgtX: tgt.x - INLINE_BOUNDS.maxX / 2,
         tgtY: tgt.y - INLINE_BOUNDS.maxY / 2,
         phase: Math.random() * Math.PI * 2,
-        baseAlpha: 0.5 + Math.random() * 0.5,
+        baseAlpha: 0.4 + Math.random() * 0.5,
+        // Thoughtform particle system properties
+        noiseOffsetX: Math.random() * 1000,
+        noiseOffsetY: Math.random() * 1000,
+        wanderStrength: 8 + Math.random() * 12, // Organic drift amount
+        size: GRID * (0.8 + Math.random() * 0.4), // Vary particle size slightly
+        emergeDelay: Math.random() * 0.2, // Stagger emergence for wave effect
       });
     }
-    
+
     pointsRef.current = morphPoints;
     initializedRef.current = true;
   }, []);
-  
+
   useEffect(() => {
     initializePoints();
   }, [initializePoints]);
-  
+
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas || !visible) return;
-    
+
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-    
+
     const resize = () => {
       const dpr = window.devicePixelRatio || 1;
       canvas.width = window.innerWidth * dpr;
@@ -190,109 +221,173 @@ export function ParticleWordmarkMorph({
       canvas.style.height = `${window.innerHeight}px`;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     };
-    
+
     resize();
     window.addEventListener("resize", resize);
-    
+
     let time = 0;
-    
+
     const draw = () => {
       time++;
-      
+
+      // Clear canvas each frame - don't use trail effect here as it covers the gateway/manifold
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      
+
       if (!pointsRef.current.length) {
         animationRef.current = requestAnimationFrame(draw);
         return;
       }
-      
-      // Follow AFTER Vector I morph timing, but appear in Definition section
-      // Vector I: starts at 0.0, completes at 0.2
-      // Wordmark: starts at 0.15 (during Definition section), completes at 0.25 (still in Definition)
-      const morphStart = 0.15; // Start earlier to appear in Definition section
-      const morphEnd = 0.25; // Complete morph while still in Definition section
-      const rawProgress = Math.max(0, Math.min(1, (scrollProgress - morphStart) / (morphEnd - morphStart)));
-      const morphProgress = easeInOutCubic(rawProgress);
-      
-      // Fade in particles - starts when morph begins, stays visible after
-      const fadeInStart = 0.15; // Start fading when morph starts
-      const fadeInEnd = 0.18; // Quick fade in
-      const fadeInProgress = Math.max(0, Math.min(1, (scrollProgress - fadeInStart) / (fadeInEnd - fadeInStart)));
-      // Once faded in, keep opacity at 1 (stay visible)
-      const particleOpacity = scrollProgress >= fadeInEnd ? 1 : fadeInProgress;
-      
+
+      // Use morphProgressProp if provided, otherwise fall back to legacy threshold calculation
+      let morphProgress: number;
+      let particleOpacity: number;
+
+      if (morphProgressProp !== undefined) {
+        // New API: direct progress control (0-1)
+        morphProgress = morphProgressProp;
+        // Opacity ramps in quickly at start, stays at 1
+        particleOpacity = Math.min(1, morphProgressProp * 5); // Full opacity by progress 0.2
+      } else {
+        // Legacy API: calculate from scrollProgress thresholds
+        const morphStart = 0.15;
+        const morphEnd = 0.25;
+        const rawProgress = Math.max(
+          0,
+          Math.min(1, (scrollProgress - morphStart) / (morphEnd - morphStart))
+        );
+        morphProgress = easeInOutCubic(rawProgress);
+
+        const fadeInStart = 0.15;
+        const fadeInEnd = 0.18;
+        const fadeInProgress = Math.max(
+          0,
+          Math.min(1, (scrollProgress - fadeInStart) / (fadeInEnd - fadeInStart))
+        );
+        particleOpacity = scrollProgress >= fadeInEnd ? 1 : fadeInProgress;
+      }
+
       // Calculate positions - follow same trajectory as Vector I
       let centerX: number, centerY: number, scale: number;
-      
+
       // Default to target position (top of viewport) if available
       if (targetBounds) {
         centerX = targetBounds.x + targetBounds.width / 2;
         centerY = targetBounds.y + targetBounds.height / 2;
-        scale = Math.min(targetBounds.width / INLINE_BOUNDS.maxX, targetBounds.height * 0.5 / INLINE_BOUNDS.maxY) * 1.5;
+        scale =
+          Math.min(
+            targetBounds.width / INLINE_BOUNDS.maxX,
+            (targetBounds.height * 0.5) / INLINE_BOUNDS.maxY
+          ) * 1.5;
       } else {
         centerX = window.innerWidth / 2;
         centerY = window.innerHeight / 2;
         scale = 1;
       }
-      
+
       // Interpolate during morph - from hero wordmark to target position
       if (morphProgress > 0 && morphProgress < 1 && wordmarkBounds && targetBounds) {
         const srcCenterX = wordmarkBounds.left + wordmarkBounds.width / 2;
         const srcCenterY = wordmarkBounds.top + wordmarkBounds.height / 2;
         const tgtCenterX = targetBounds.x + targetBounds.width / 2;
         const tgtCenterY = targetBounds.y + targetBounds.height / 2;
-        
+
         centerX = srcCenterX + (tgtCenterX - srcCenterX) * morphProgress;
         centerY = srcCenterY + (tgtCenterY - srcCenterY) * morphProgress;
-        
-        const srcScale = Math.min(wordmarkBounds.width / HERO_BOUNDS.maxX, wordmarkBounds.height / HERO_BOUNDS.maxY) * 1.2;
-        const tgtScale = Math.min(targetBounds.width / INLINE_BOUNDS.maxX, targetBounds.height * 0.5 / INLINE_BOUNDS.maxY) * 1.5;
+
+        const srcScale =
+          Math.min(
+            wordmarkBounds.width / HERO_BOUNDS.maxX,
+            wordmarkBounds.height / HERO_BOUNDS.maxY
+          ) * 1.2;
+        const tgtScale =
+          Math.min(
+            targetBounds.width / INLINE_BOUNDS.maxX,
+            (targetBounds.height * 0.5) / INLINE_BOUNDS.maxY
+          ) * 1.5;
         scale = srcScale + (tgtScale - srcScale) * morphProgress;
       } else if (morphProgress >= 1 && targetBounds) {
         // After morph completes, ensure we're at target position
         centerX = targetBounds.x + targetBounds.width / 2;
         centerY = targetBounds.y + targetBounds.height / 2;
-        scale = Math.min(targetBounds.width / INLINE_BOUNDS.maxX, targetBounds.height * 0.5 / INLINE_BOUNDS.maxY) * 1.5;
+        scale =
+          Math.min(
+            targetBounds.width / INLINE_BOUNDS.maxX,
+            (targetBounds.height * 0.5) / INLINE_BOUNDS.maxY
+          ) * 1.5;
       }
-      
-      // Draw particles
-      const GRID = 2;
-      
+
+      // Draw particles with Thoughtform aesthetic
       for (const point of pointsRef.current) {
-        const x = point.srcX + (point.tgtX - point.srcX) * morphProgress;
-        const y = point.srcY + (point.tgtY - point.srcY) * morphProgress;
-        
-        const breathe = Math.sin(time * 0.02 + point.phase) * 1.5;
-        
-        const screenX = centerX + x * scale + breathe * 0.3;
-        const screenY = centerY + y * scale + breathe * 0.2;
-        
-        const px = Math.floor(screenX / GRID) * GRID;
-        const py = Math.floor(screenY / GRID) * GRID;
-        
-        const pulse = 0.9 + Math.sin(time * 0.015 + point.phase) * 0.1;
-        const alpha = point.baseAlpha * pulse * particleOpacity;
-        
-        // Semantic Dawn color: #ebe3d6 = rgb(235, 227, 214)
-        ctx.fillStyle = `rgba(235, 227, 214, ${alpha})`;
-        ctx.fillRect(px, py, GRID - 0.5, GRID - 0.5);
+        // Calculate staggered emergence for wave effect
+        const adjustedProgress = Math.max(
+          0,
+          (morphProgress - point.emergeDelay) / (1 - point.emergeDelay)
+        );
+        const easedProgress = easeInOutCubic(Math.min(1, adjustedProgress));
+
+        // Interpolate position from source to target
+        const x = point.srcX + (point.tgtX - point.srcX) * easedProgress;
+        const y = point.srcY + (point.tgtY - point.srcY) * easedProgress;
+
+        // Organic noise-based wandering (Thoughtform style)
+        const noiseX = noise2D(point.noiseOffsetX, time * 0.1, time) * point.wanderStrength;
+        const noiseY = noise2D(point.noiseOffsetY, time * 0.1 + 100, time) * point.wanderStrength;
+
+        // Reduce wander during mid-transition for more controlled morph
+        const wanderFactor = 1 - Math.sin(morphProgress * Math.PI) * 0.5;
+
+        // Breathing animation
+        const breathe = Math.sin(time * 0.02 + point.phase) * 2;
+
+        const screenX = centerX + x * scale + noiseX * wanderFactor + breathe * 0.3;
+        const screenY = centerY + y * scale + noiseY * wanderFactor + breathe * 0.2;
+
+        // Occasional glitch displacement (Thoughtform style)
+        let glitchX = 0,
+          glitchY = 0;
+        if (Math.random() < 0.002 && morphProgress > 0.2 && morphProgress < 0.8) {
+          glitchX = (Math.random() - 0.5) * GRID * 4;
+          glitchY = (Math.random() - 0.5) * GRID * 2;
+        }
+
+        // GRID snap (SACRED RULE)
+        const px = Math.floor((screenX + glitchX) / GRID) * GRID;
+        const py = Math.floor((screenY + glitchY) / GRID) * GRID;
+
+        // Pulsing alpha
+        const pulse = 0.85 + Math.sin(time * 0.015 + point.phase) * 0.15;
+        let alpha = point.baseAlpha * pulse * particleOpacity;
+
+        // Fade edges for smoother look
+        if (morphProgress < 0.1) {
+          alpha *= morphProgress / 0.1;
+        } else if (morphProgress > 0.9) {
+          alpha *= (1 - morphProgress) / 0.1;
+        }
+
+        // Skip invisible particles
+        if (alpha < 0.01) continue;
+
+        // Semantic Dawn color: rgb(236, 227, 214) - Thoughtform brand color
+        ctx.fillStyle = `rgba(236, 227, 214, ${alpha})`;
+        ctx.fillRect(px, py, point.size, point.size);
       }
-      
+
       animationRef.current = requestAnimationFrame(draw);
     };
-    
+
     draw();
-    
+
     return () => {
       window.removeEventListener("resize", resize);
       if (animationRef.current) {
         cancelAnimationFrame(animationRef.current);
       }
     };
-  }, [scrollProgress, wordmarkBounds, targetBounds, visible]);
-  
+  }, [morphProgressProp, scrollProgress, wordmarkBounds, targetBounds, visible]);
+
   if (!visible) return null;
-  
+
   return (
     <canvas
       ref={canvasRef}
@@ -303,7 +398,8 @@ export function ParticleWordmarkMorph({
         width: "100%",
         height: "100%",
         pointerEvents: "none",
-        zIndex: 14, // Above ParticleVectorMorph but below UI
+        zIndex: 2, // Above manifold (0) and gateway (1), but below wordmark container (10)
+        backgroundColor: "transparent", // Ensure transparent background
       }}
     />
   );

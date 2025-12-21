@@ -9,10 +9,10 @@ import { signOut } from "@/lib/auth";
 
 export function EditorToolbar() {
   const isEditMode = useIsEditMode();
-  const { user } = useAuth();
+  const { user, userName } = useAuth();
   const [showLoginModal, setShowLoginModal] = useState(false);
   const { toggleEditMode, undo, redo, canUndo, canRedo } = useEditorStore();
-  
+
   // Force re-render when history changes
   const [, forceUpdate] = useState(0);
   useEffect(() => {
@@ -40,7 +40,7 @@ export function EditorToolbar() {
   // Keyboard shortcuts for undo/redo
   useEffect(() => {
     if (!isEditMode) return;
-    
+
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === "z") {
         e.preventDefault();
@@ -55,7 +55,7 @@ export function EditorToolbar() {
         redo();
       }
     };
-    
+
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isEditMode, undo, redo]);
@@ -101,7 +101,12 @@ export function EditorToolbar() {
       )}
 
       {/* Top-right buttons */}
-      <div className="fixed top-4 right-4 z-[70] flex gap-2">
+      <div className="fixed top-4 right-4 z-[70] flex gap-2 items-center">
+        {user && userName && (
+          <div className="px-3 py-2 font-mono text-2xs uppercase tracking-wider text-dawn-50">
+            {userName}
+          </div>
+        )}
         {user && (
           <button
             onClick={handleLogout}

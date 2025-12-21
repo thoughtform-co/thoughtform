@@ -8,18 +8,32 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   isLoading: boolean;
+  userName: string | null; // User's display name from user_metadata
 }
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
   session: null,
   isLoading: true,
+  userName: null,
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Extract user name from user_metadata
+  const getUserName = (user: User | null): string | null => {
+    if (!user) return null;
+
+    // Try user_metadata.full_name first (Supabase default)
+    const fullName = user.user_metadata?.full_name;
+    if (fullName) return fullName;
+
+    // Fallback to email if no name set
+    return user.email || null;
+  };
 
   useEffect(() => {
     if (!supabase) {
@@ -35,18 +49,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-      }
-    );
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+    });
 
     return () => subscription.unsubscribe();
   }, []);
 
+  const userName = getUserName(user);
+
   return (
-    <AuthContext.Provider value={{ user, session, isLoading }}>
+    <AuthContext.Provider value={{ user, session, isLoading, userName }}>
       {children}
     </AuthContext.Provider>
   );
@@ -55,4 +71,3 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 export function useAuth() {
   return useContext(AuthContext);
 }
-

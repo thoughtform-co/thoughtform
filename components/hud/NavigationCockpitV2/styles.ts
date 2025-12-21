@@ -18,13 +18,12 @@ export const cockpitStyles = `
   }
 
   /* Hero main container - Logo + Text in Stack */
-  /* Hero wordmark container - top aligned with HUD line */
+  /* Wordmark container - slides from hero (top) to definition (mid-left, above frame) */
   .hero-wordmark-container {
     position: fixed;
-    top: 90px;
+    /* top is now controlled by inline style for animation */
     left: calc(var(--rail-width) + 120px);
     z-index: 10;
-    transition: opacity 0.3s ease-out;
   }
 
   .hero-wordmark-topleft {
@@ -36,13 +35,74 @@ export const cockpitStyles = `
     height: auto;
   }
 
-  /* Hero text container - at the bottom */
+  /* Fade embedded brandmark (gold paths) using CSS variable */
+  .hero-wordmark-topleft svg .st0 {
+    opacity: var(--brandmark-opacity, 1);
+    transition: opacity 0.1s ease-out;
+  }
+
+  /* Definition Wordmark - positioned within the same container */
+  .definition-wordmark-inner {
+    width: 380px;
+  }
+
+  .definition-wordmark-inner svg {
+    width: 100%;
+    height: auto;
+  }
+
+  /* Hero text container - at the bottom (legacy, kept for reference) */
   .hero-text-container {
     position: fixed;
     bottom: 90px;
     left: calc(var(--rail-width) + 120px);
     z-index: 10;
     transition: opacity 0.3s ease-out;
+  }
+
+  /* ═══════════════════════════════════════════════════════════════
+     BRIDGE FRAME - Unified hero→definition text container
+     Frame maintains FIXED SIZE, only slides position
+     ═══════════════════════════════════════════════════════════════ */
+  .bridge-frame {
+    position: fixed;
+    left: calc(var(--rail-width) + 120px);
+    z-index: 10;
+    width: 500px; /* Fixed width - no scaling */
+    max-width: 500px;
+    box-sizing: border-box; /* Ensure padding is included in width */
+  }
+
+  .bridge-frame .hero-text-frame {
+    position: relative;
+    width: 100%; /* Fill parent */
+    box-sizing: border-box; /* Padding included in width */
+    /* Reduced padding to bring text closer together */
+    padding: 16px 20px;
+    min-height: 100px; /* Prevent layout shift during glitch transition */
+  }
+
+  /* Glitch text content - inherits hero-tagline-v2 styling from parent */
+  .bridge-content-glitch {
+    display: block;
+  }
+
+  /* Ensure glitch text inherits parent font styling */
+  .hero-tagline .bridge-content-glitch .glitch-text-main {
+    font-size: inherit;
+    line-height: inherit;
+    color: inherit;
+    font-weight: inherit;
+    font-family: inherit;
+  }
+  
+  /* First line (phonetic) - smaller font and spacing */
+  .hero-tagline .bridge-content-glitch .glitch-text-main .glitch-line-first,
+  .hero-tagline .bridge-content-glitch .glitch-text-ghost .glitch-line-first {
+    font-size: 0.75em !important;
+    display: block;
+    margin-bottom: 0.5em;
+    line-height: 1.2;
   }
 
   /* Runway arrows pointing to gateway - vertically centered, same width as hero text */
@@ -136,10 +196,15 @@ export const cockpitStyles = `
   /* Hero V2 - Cleaner, more focused */
   .hero-tagline-v2 {
     font-size: clamp(20px, 2.5vw, 28px) !important;
-    line-height: 1.4 !important;
+    line-height: 1.2 !important; /* Reduced from 1.4 to bring lines closer */
     margin: 0 !important;
     color: var(--dawn) !important;
     font-weight: 300 !important;
+  }
+  
+  /* Reduce spacing between lines in bridge frame */
+  .bridge-frame .hero-tagline-v2 br {
+    line-height: 0.8; /* Tighter line breaks */
   }
 
   .hero-description-v2 {

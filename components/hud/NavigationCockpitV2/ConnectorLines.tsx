@@ -5,6 +5,8 @@ import type { ParticlePosition } from "../ThoughtformSigil";
 
 interface ConnectorLinesProps {
   scrollProgress: number;
+  /** Hero→Definition transition progress (0-1) for timing */
+  transitionProgress?: number;
   cardRefs: React.RefObject<HTMLDivElement>[];
   sigilParticlesRef: React.MutableRefObject<ParticlePosition[]>;
 }
@@ -70,6 +72,7 @@ function isValidParticlePosition(p: ParticlePosition): boolean {
 
 export function ConnectorLines({
   scrollProgress,
+  transitionProgress,
   cardRefs,
   sigilParticlesRef,
 }: ConnectorLinesProps) {
@@ -249,17 +252,18 @@ export function ConnectorLines({
             state.targetPos = { x: cardPos.x, y: cardPos.y };
           }
           state.initialized = true;
-          state.lastSwitch = elapsed + INIT_OFFSETS[index] * 2;
+          // Start switching immediately, no initial delay
+          state.lastSwitch = elapsed;
           allCurrentTargets[index] = state.currentTarget;
         }
 
-        // We have valid particles - grow the line
-        // Growth takes about 0.15 seconds per line, staggered
-        const growthDuration = 0.15;
-        const growthDelay = index * 0.05; // Stagger each line
+        // We have valid particles - grow the line immediately
+        // Growth takes about 0.12 seconds per line, minimal stagger
+        const growthDuration = 0.12;
+        const growthDelay = index * 0.02; // Minimal stagger for visual variety
         const timeSinceParticlesValid = elapsed;
 
-        // Only start growing after the sigil is visible (controlled by parent opacity)
+        // Start growing immediately when particles are valid
         if (state.growthProgress < 1) {
           const growthElapsed = Math.max(0, timeSinceParticlesValid - growthDelay);
           state.growthProgress = Math.min(1, growthElapsed / growthDuration);
@@ -347,13 +351,40 @@ export function ConnectorLines({
     };
   }, [cardRefs, sigilParticlesRef]);
 
-  const opacity =
-    scrollProgress < 0.06
-      ? 0
-      : scrollProgress < 0.18
-        ? 1
-        : Math.max(0, 1 - (scrollProgress - 0.18) * 8);
-  const isVisible = scrollProgress >= 0.06;
+  // Use transitionProgress if provided, otherwise fall back to legacy scrollProgress timing
+  let opacity: number;
+  let isVisible: boolean;
+
+  if (transitionProgress !== undefined) {
+    // New timing: appear immediately when sigil starts forming (tHeroToDef > 0.5)
+    // Fade out as we scroll to next section
+    const t = transitionProgress;
+    const fadeOutStart = 0.15;
+    const fadeOutEnd = 0.22;
+    if (scrollProgress < fadeOutStart) {
+      // Still in definition section - normal visibility
+      opacity = t < 0.5 ? 0 : t < 0.65 ? (t - 0.5) / 0.15 : 1;
+      isVisible = t >= 0.5;
+    } else if (scrollProgress >= fadeOutStart && scrollProgress < fadeOutEnd) {
+      // Fading out as we scroll to next section
+      const fadeOut = (scrollProgress - fadeOutStart) / (fadeOutEnd - fadeOutStart);
+      opacity = (t < 0.5 ? 0 : t < 0.65 ? (t - 0.5) / 0.15 : 1) * (1 - fadeOut);
+      isVisible = t >= 0.5 && opacity > 0.01;
+    } else {
+      // Fully faded out
+      opacity = 0;
+      isVisible = false;
+    }
+  } else {
+    // Legacy timing
+    opacity =
+      scrollProgress < 0.06
+        ? 0
+        : scrollProgress < 0.18
+          ? 1
+          : Math.max(0, 1 - (scrollProgress - 0.18) * 8);
+    isVisible = scrollProgress >= 0.06;
+  }
 
   return (
     <svg

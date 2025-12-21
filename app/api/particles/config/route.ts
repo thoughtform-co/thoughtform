@@ -5,29 +5,49 @@ import {
   mergeWithDefaults,
   type ParticleSystemConfig,
 } from "@/lib/particle-config";
+import { createServerClient } from "@/lib/supabase";
+import { isAuthorized } from "@/lib/auth-server";
 
 const CONFIG_KEY = "particle-system-config";
 
 /**
  * GET /api/particles/config
  * Returns the current particle system configuration
+ * Priority: Supabase > Vercel KV > defaults
  */
 export async function GET() {
   try {
-    // Try to get config from KV store
-    const storedConfig = await kv.get<ParticleSystemConfig>(CONFIG_KEY);
+    // 1. Try Supabase first (server-side with service role key)
+    const supabase = createServerClient();
+    if (supabase) {
+      const { data, error } = await supabase
+        .from("particle_config")
+        .select("config")
+        .eq("id", "default")
+        .single();
 
-    if (storedConfig) {
-      // Merge with defaults to ensure all fields exist (handles schema migrations)
-      const config = mergeWithDefaults(storedConfig);
-      return NextResponse.json(config);
+      if (!error && data?.config) {
+        const config = mergeWithDefaults(data.config);
+        return NextResponse.json(config);
+      }
     }
 
-    // Return defaults if no stored config
+    // 2. Fall back to Vercel KV
+    try {
+      const storedConfig = await kv.get<ParticleSystemConfig>(CONFIG_KEY);
+      if (storedConfig) {
+        const config = mergeWithDefaults(storedConfig);
+        return NextResponse.json(config);
+      }
+    } catch (kvError) {
+      // KV not configured, continue to defaults
+      console.warn("Vercel KV not available:", kvError);
+    }
+
+    // 3. Return defaults
     return NextResponse.json(DEFAULT_CONFIG);
   } catch (error) {
-    // If KV is not configured (local dev), return defaults
-    console.warn("Vercel KV not available, using defaults:", error);
+    console.error("Failed to load particle config:", error);
     return NextResponse.json(DEFAULT_CONFIG);
   }
 }
@@ -40,16 +60,13 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     // Check for admin authorization
-    // In production, Vercel Auth sets x-vercel-auth-user header for authenticated team members
-    const authHeader = request.headers.get("x-vercel-auth-user");
+    // In dev: allow all. In production: check Supabase session
     const isLocalDev = process.env.NODE_ENV === "development";
+    const authorized = isLocalDev || (await isAuthorized());
 
-    // Allow saves in local dev or if authenticated via Vercel
-    if (!isLocalDev && !authHeader) {
-      return NextResponse.json(
-        { error: "Unauthorized - admin access required" },
-        { status: 401 }
-      );
+    // Allow saves in local dev or if authenticated via Supabase
+    if (!isLocalDev && !authorized) {
+      return NextResponse.json({ error: "Unauthorized - admin access required" }, { status: 401 });
     }
 
     // Parse and validate the config
@@ -59,14 +76,42 @@ export async function POST(request: Request) {
     // Increment version on save
     config.version = (config.version || 0) + 1;
 
-    // Save to KV store
-    await kv.set(CONFIG_KEY, config);
+    // 1. Try to save to Supabase first (server-side with service role key)
+    const supabase = createServerClient();
+    if (supabase) {
+      const { error: supabaseError } = await supabase.from("particle_config").upsert(
+        {
+          id: "default",
+          config: config,
+          updated_at: new Date().toISOString(),
+        },
+        {
+          onConflict: "id",
+        }
+      );
 
-    return NextResponse.json({
-      success: true,
-      config,
-      message: "Configuration saved successfully",
-    });
+      if (!supabaseError) {
+        return NextResponse.json({
+          success: true,
+          config,
+          message: "Configuration saved successfully to Supabase",
+        });
+      }
+      console.warn("Supabase save failed, falling back to KV:", supabaseError);
+    }
+
+    // 2. Fall back to Vercel KV
+    try {
+      await kv.set(CONFIG_KEY, config);
+      return NextResponse.json({
+        success: true,
+        config,
+        message: "Configuration saved successfully to KV",
+      });
+    } catch (kvError) {
+      // If KV also fails, return error
+      throw kvError;
+    }
   } catch (error) {
     console.error("Failed to save particle config:", error);
 
@@ -82,10 +127,7 @@ export async function POST(request: Request) {
       );
     }
 
-    return NextResponse.json(
-      { error: "Failed to save configuration" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to save configuration" }, { status: 500 });
   }
 }
 
@@ -96,30 +138,45 @@ export async function POST(request: Request) {
 export async function DELETE(request: Request) {
   try {
     // Check for admin authorization
-    const authHeader = request.headers.get("x-vercel-auth-user");
+    // In dev: allow all. In production: check Supabase session
     const isLocalDev = process.env.NODE_ENV === "development";
+    const authorized = isLocalDev || (await isAuthorized());
 
-    if (!isLocalDev && !authHeader) {
-      return NextResponse.json(
-        { error: "Unauthorized - admin access required" },
-        { status: 401 }
-      );
+    if (!isLocalDev && !authorized) {
+      return NextResponse.json({ error: "Unauthorized - admin access required" }, { status: 401 });
     }
 
-    // Delete from KV store
-    await kv.del(CONFIG_KEY);
+    // 1. Try to delete from Supabase first
+    const supabase = createServerClient();
+    if (supabase) {
+      const { error: supabaseError } = await supabase
+        .from("particle_config")
+        .delete()
+        .eq("id", "default");
 
-    return NextResponse.json({
-      success: true,
-      config: DEFAULT_CONFIG,
-      message: "Configuration reset to defaults",
-    });
+      if (!supabaseError) {
+        return NextResponse.json({
+          success: true,
+          config: DEFAULT_CONFIG,
+          message: "Configuration reset to defaults (Supabase)",
+        });
+      }
+      console.warn("Supabase delete failed, falling back to KV:", supabaseError);
+    }
+
+    // 2. Fall back to Vercel KV
+    try {
+      await kv.del(CONFIG_KEY);
+      return NextResponse.json({
+        success: true,
+        config: DEFAULT_CONFIG,
+        message: "Configuration reset to defaults (KV)",
+      });
+    } catch (kvError) {
+      throw kvError;
+    }
   } catch (error) {
     console.error("Failed to reset particle config:", error);
-    return NextResponse.json(
-      { error: "Failed to reset configuration" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to reset configuration" }, { status: 500 });
   }
 }
-

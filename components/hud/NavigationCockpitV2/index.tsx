@@ -6,12 +6,12 @@ import { ThreeGateway } from "../ThreeGateway";
 import { HUDFrame } from "../HUDFrame";
 import { Wordmark } from "../Wordmark";
 import { WordmarkSans } from "../WordmarkSans";
+import { GlitchText } from "../GlitchText";
+import { ParticleWordmarkMorph } from "../ParticleWordmarkMorph";
 import type { ParticlePosition } from "../ThoughtformSigil";
 import { useLenis } from "@/lib/hooks/useLenis";
 import { ParticleConfigProvider, useParticleConfig } from "@/lib/contexts/ParticleConfigContext";
 import { AdminGate, ParticleAdminPanel } from "@/components/admin";
-import { Stack } from "@/components/ui/Stack";
-import { Typewriter } from "@/components/ui/Typewriter";
 
 // Extracted components
 import { ModuleCards } from "./ModuleCards";
@@ -20,6 +20,24 @@ import { SigilSection } from "./SigilSection";
 import { HeroBackgroundSigil } from "./HeroBackgroundSigil";
 import { cockpitStyles } from "./styles";
 
+// ═══════════════════════════════════════════════════════════════════
+// HERO → DEFINITION TRANSITION
+// ═══════════════════════════════════════════════════════════════════
+
+// Fixed scroll thresholds for hero→definition transition
+const HERO_END = 0; // Transition starts immediately on scroll
+const DEF_START = 0.12; // Transition completes by 12% of total scroll
+
+// Easing function for smooth transition
+function easeInOutCubic(t: number): number {
+  return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+}
+
+// Linear interpolation helper
+function lerp(a: number, b: number, t: number): number {
+  return a + (b - a) * t;
+}
+
 // Inner component that uses the config context
 function NavigationCockpitInner() {
   const [activeSection, setActiveSection] = useState("hero");
@@ -27,7 +45,9 @@ function NavigationCockpitInner() {
   const { config: rawConfig } = useParticleConfig();
 
   // Refs for tracking element positions
-  const wordmarkRef = useRef<HTMLDivElement>(null);
+  const wordmarkContainerRef = useRef<HTMLDivElement>(null);
+  const wordmarkSvgRef = useRef<HTMLDivElement>(null); // For brandmark origin calculation
+  const definitionWordmarkRef = useRef<HTMLDivElement>(null);
   const definitionRef = useRef<HTMLDivElement>(null);
   const modulesRef = useRef<HTMLDivElement>(null);
   const moduleCardRefs = [
@@ -38,6 +58,54 @@ function NavigationCockpitInner() {
 
   // Ref to receive particle positions from ThoughtformSigil
   const sigilParticlesRef = useRef<ParticlePosition[]>([]);
+
+  // State for wordmark bounds (for particle morph positioning)
+  const [wordmarkBounds, setWordmarkBounds] = useState<DOMRect | null>(null);
+  const [defWordmarkBounds, setDefWordmarkBounds] = useState<{
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  } | null>(null);
+
+  // ═══════════════════════════════════════════════════════════════════
+  // BRANDMARK ORIGIN CALCULATION
+  // The brandmark (compass) is embedded in the "O" of THOUGHTFORM
+  // Position: approximately x = 27%, y = 44% of the wordmark container
+  // ═══════════════════════════════════════════════════════════════════
+  const brandmarkOrigin = wordmarkBounds
+    ? {
+        x: wordmarkBounds.left + wordmarkBounds.width * 0.27,
+        y: wordmarkBounds.top + wordmarkBounds.height * 0.44,
+      }
+    : null;
+
+  // Measure wordmark bounds on mount and resize
+  useEffect(() => {
+    const updateBounds = () => {
+      if (wordmarkSvgRef.current) {
+        setWordmarkBounds(wordmarkSvgRef.current.getBoundingClientRect());
+      }
+      if (definitionWordmarkRef.current) {
+        const rect = definitionWordmarkRef.current.getBoundingClientRect();
+        setDefWordmarkBounds({
+          x: rect.left,
+          y: rect.top,
+          width: rect.width,
+          height: rect.height,
+        });
+      }
+    };
+    updateBounds();
+    window.addEventListener("resize", updateBounds);
+    // Also update on scroll since positions may change
+    const scrollUpdate = () => requestAnimationFrame(updateBounds);
+    window.addEventListener("scroll", scrollUpdate, { passive: true });
+    return () => {
+      window.removeEventListener("resize", updateBounds);
+      window.removeEventListener("scroll", scrollUpdate);
+    };
+  }, []);
 
   // Determine if we should show the SVG Vector I
   const showSvgVector = scrollProgress < 0.02;
@@ -50,6 +118,13 @@ function NavigationCockpitInner() {
       l.shape === "gateway" || l.shape === "lorenz" ? { ...l, enabled: false } : l
     ),
   };
+
+  // ═══════════════════════════════════════════════════════════════════
+  // HERO → DEFINITION TRANSITION PROGRESS
+  // Single normalized value (0→1) driving all transition animations
+  // ═══════════════════════════════════════════════════════════════════
+  const rawT = Math.max(0, Math.min(1, (scrollProgress - HERO_END) / (DEF_START - HERO_END)));
+  const tHeroToDef = easeInOutCubic(rawT);
 
   // Handle navigation
   const handleNavigate = useCallback(
@@ -96,25 +171,84 @@ function NavigationCockpitInner() {
       {/* Three.js Gateway Overlay - only in hero section, fades out on scroll */}
       <ThreeGateway scrollProgress={scrollProgress} config={rawConfig.gateway} />
 
-      {/* Hero Logo + Text - positioned in top left */}
-      {/* Hero Wordmark - top aligned with HUD line */}
+      {/* ═══════════════════════════════════════════════════════════════════
+          WORDMARK TRANSITION SYSTEM
+          Phase 1 (t=0-0.25): Solid hero Wordmark fades out
+          Phase 2 (t=0.10-0.90): ParticleWordmarkMorph animates
+          Phase 3 (t=0.75-1): Solid WordmarkSans fades in
+          ═══════════════════════════════════════════════════════════════════ */}
+
+      {/* ═══════════════════════════════════════════════════════════════════
+          WORDMARK - Slides from top-left (hero) to mid-left (above frame)
+          Content morphs: Wordmark → particles → WordmarkSans
+          ═══════════════════════════════════════════════════════════════════ */}
+
+      {/* Wordmark container - slides from top to above the frame */}
       <div
         className="hero-wordmark-container"
+        ref={wordmarkContainerRef}
         style={{
-          opacity: scrollProgress > 0.005 ? 0 : 1,
-          pointerEvents: scrollProgress > 0.005 ? "none" : "auto",
+          // Slide from top (90px) to above the frame
+          // At t=0: top: 90px (hero position at top)
+          // At t=1: Wordmark above frame, aligned with rail marker 5 (~50vh)
+          // Wordmark top at t=1: calc(50vh - 100px) = balanced spacing
+          top: `calc(${lerp(90, 0, tHeroToDef)}px + ${lerp(0, 50, tHeroToDef)}vh - ${lerp(0, 100, tHeroToDef)}px)`,
+          // CSS variable for brandmark fade
+          ["--brandmark-opacity" as string]: 1 - tHeroToDef,
+          // Fade out as we scroll to next section (same timing as sigil/cards)
+          // Wordmark should ONLY fade, not close inward
+          opacity:
+            scrollProgress < 0.15
+              ? 1
+              : scrollProgress < 0.22
+                ? 1 - (scrollProgress - 0.15) / 0.07
+                : 0,
+          visibility: scrollProgress < 0.22 ? "visible" : "hidden",
         }}
       >
-        <div className="hero-wordmark-topleft" ref={wordmarkRef}>
+        {/* Hero Wordmark - stays visible until particles fully take over */}
+        <div
+          className="hero-wordmark-topleft"
+          ref={wordmarkSvgRef}
+          style={{
+            // Keep visible until particles are fully visible (t=0.15)
+            // Then fade out gradually as particles take over
+            opacity: tHeroToDef < 0.15 ? 1 : tHeroToDef < 0.35 ? 1 - (tHeroToDef - 0.15) / 0.2 : 0,
+            visibility: tHeroToDef > 0.35 ? "hidden" : "visible",
+          }}
+        >
           <Wordmark hideVectorI={!showSvgVector} />
+        </div>
+
+        {/* Definition Wordmark - fades in at end of transition (slower) */}
+        <div
+          className="definition-wordmark-inner"
+          ref={definitionWordmarkRef}
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            opacity: tHeroToDef > 0.75 ? (tHeroToDef - 0.75) / 0.25 : 0,
+            visibility: tHeroToDef > 0.7 ? "visible" : "hidden",
+          }}
+        >
+          <WordmarkSans color="var(--dawn)" />
         </div>
       </div>
 
-      {/* Runway arrows pointing to gateway */}
+      {/* Particle Wordmark Morph - visible during mid-transition (extended timing) */}
+      <ParticleWordmarkMorph
+        morphProgress={tHeroToDef < 0.15 ? 0 : tHeroToDef > 0.85 ? 1 : (tHeroToDef - 0.15) / 0.7}
+        wordmarkBounds={wordmarkBounds}
+        targetBounds={defWordmarkBounds}
+        visible={tHeroToDef > 0.1 && tHeroToDef < 0.9}
+      />
+
+      {/* Runway arrows pointing to gateway - fade out during early transition */}
       <div
         className="hero-runway-arrows"
         style={{
-          opacity: scrollProgress > 0.005 ? 0 : 1,
+          opacity: tHeroToDef < 0.05 ? 1 : tHeroToDef < 0.3 ? 1 - (tHeroToDef - 0.05) / 0.25 : 0,
           pointerEvents: "none",
         }}
       >
@@ -125,22 +259,49 @@ function NavigationCockpitInner() {
         ))}
       </div>
 
-      {/* Hero Text - bottom aligned */}
+      {/* ═══════════════════════════════════════════════════════════════════
+          BRIDGE FRAME - Unified text container that transitions from hero to definition
+          SAME FRAME slides UP from bottom to center, only text content changes
+          ═══════════════════════════════════════════════════════════════════ */}
       <div
-        className="hero-text-container"
+        className="bridge-frame"
         style={{
-          opacity: scrollProgress > 0.005 ? 0 : 1,
-          pointerEvents: scrollProgress > 0.005 ? "none" : "auto",
+          // Frame slides UP from bottom (90px) to below wordmark
+          // At t=0: bottom: 90px (hero position at bottom)
+          // At t=1: Frame below wordmark, aligned with rail marker 5 (~50vh)
+          // Frame bottom edge at t=1: calc(50vh - 120px) = balanced spacing
+          // This positions frame below the wordmark with comfortable spacing
+          bottom: `calc(${90 * (1 - tHeroToDef)}px + ${tHeroToDef * 50}vh - ${tHeroToDef * 120}px)`,
+          // Fade out as we scroll to next section (same timing as sigil/cards/wordmark)
+          opacity:
+            scrollProgress < 0.15
+              ? 1
+              : scrollProgress < 0.22
+                ? 1 - (scrollProgress - 0.15) / 0.07
+                : 0,
+          visibility: scrollProgress < 0.22 ? "visible" : "hidden",
+          pointerEvents: tHeroToDef > 0.95 || tHeroToDef < 0.05 ? "auto" : "none",
+          // Close inward effect - scale down proportionately (borders scale too)
+          transform:
+            scrollProgress >= 0.15
+              ? `scale(${1 - Math.min(1, (scrollProgress - 0.15) / 0.07)})`
+              : "scale(1)",
+          transformOrigin: "center center",
         }}
       >
         <div className="hero-text-frame">
-          <p className="hero-tagline hero-tagline-v2 hero-tagline-main">
-            AI isn&apos;t software to command.
-            <br />
-            It&apos;s a strange intelligence to navigate.
-            <br />
-            Thoughtform teaches how.
-          </p>
+          {/* Glitch text transition - hero text morphs into definition text */}
+          <div className="hero-tagline hero-tagline-v2 hero-tagline-main">
+            <GlitchText
+              initialText={`AI isn't software to command.
+It's a strange intelligence to navigate.
+Thoughtform teaches how.`}
+              finalText={`(θɔːtfɔːrm / THAWT-form)
+the interface for human-AI collaboration`}
+              progress={tHeroToDef}
+              className="bridge-content-glitch"
+            />
+          </div>
         </div>
       </div>
 
@@ -156,12 +317,15 @@ function NavigationCockpitInner() {
         <ParticleAdminPanel />
       </AdminGate>
 
-      {/* Fixed Thoughtform Sigil - appears centered during definition section */}
+      {/* Fixed Thoughtform Sigil - appears centered during definition section
+          Animates from brandmark origin (in hero wordmark) to center */}
       <SigilSection
         ref={definitionRef}
         scrollProgress={scrollProgress}
         config={rawConfig.sigil}
         onParticlePositions={sigilParticlesRef}
+        originPos={brandmarkOrigin}
+        transitionProgress={tHeroToDef}
       />
 
       {/* Scroll Container - Content Sections */}
@@ -169,42 +333,10 @@ function NavigationCockpitInner() {
         {/* Section 1: Hero - Simplified */}
         <section className="section section-hero" id="hero" data-section="hero">
           <div className="hero-layout">
-            {/* Definition content - fades in during scroll */}
-            <div
-              className="hero-tagline-frame"
-              style={{
-                opacity:
-                  scrollProgress < 0.08
-                    ? 0
-                    : scrollProgress < 0.18
-                      ? 1
-                      : Math.max(0, 1 - (scrollProgress - 0.18) * 8),
-                visibility: scrollProgress < 0.08 ? "hidden" : "visible",
-                pointerEvents: scrollProgress > 0.25 || scrollProgress < 0.08 ? "none" : "auto",
-              }}
-            >
-              <Stack gap={20} className="definition-frame">
-                <div className="definition-wordmark">
-                  <WordmarkSans />
-                </div>
-                <span className="definition-phonetic">(θɔːtfɔːrm / THAWT-form)</span>
-                <p className="hero-tagline hero-tagline-v2">
-                  <Typewriter
-                    text="the practice of intuitive human-AI collaboration"
-                    active={scrollProgress > 0.08}
-                    startDelay={200}
-                    speed={15}
-                    speedVariation={8}
-                    glitch={true}
-                    glitchIterations={1}
-                  />
-                </p>
-              </Stack>
-            </div>
-
             {/* Connecting lines from module cards to sigil */}
             <ConnectorLines
               scrollProgress={scrollProgress}
+              transitionProgress={tHeroToDef}
               cardRefs={moduleCardRefs}
               sigilParticlesRef={sigilParticlesRef}
             />
@@ -213,6 +345,7 @@ function NavigationCockpitInner() {
             <ModuleCards
               ref={modulesRef}
               scrollProgress={scrollProgress}
+              transitionProgress={tHeroToDef}
               cardRefs={moduleCardRefs}
             />
           </div>

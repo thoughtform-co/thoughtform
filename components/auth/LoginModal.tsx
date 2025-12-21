@@ -11,6 +11,9 @@ interface LoginModalProps {
   onSuccess: () => void;
 }
 
+// Restrict login to specific email (set via environment variable or hardcode)
+const ALLOWED_EMAIL = process.env.NEXT_PUBLIC_ALLOWED_EMAIL || "";
+
 export function LoginModal({ isOpen, onClose, onSuccess }: LoginModalProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -21,6 +24,13 @@ export function LoginModal({ isOpen, onClose, onSuccess }: LoginModalProps) {
     e.preventDefault();
     setError(null);
     setIsLoading(true);
+
+    // Check if email is allowed (if restriction is enabled)
+    if (ALLOWED_EMAIL && email.toLowerCase() !== ALLOWED_EMAIL.toLowerCase()) {
+      setError("Access restricted. Only authorized users can sign in.");
+      setIsLoading(false);
+      return;
+    }
 
     try {
       await signInWithEmail(email, password);
@@ -59,9 +69,7 @@ export function LoginModal({ isOpen, onClose, onSuccess }: LoginModalProps) {
                 <div className="font-mono text-2xs uppercase tracking-widest text-gold mb-2">
                   {`// Authentication`}
                 </div>
-                <h2 className="font-mono text-xl text-dawn uppercase tracking-wide">
-                  Sign In
-                </h2>
+                <h2 className="font-mono text-xl text-dawn uppercase tracking-wide">Sign In</h2>
               </div>
 
               {/* Form */}
@@ -107,11 +115,7 @@ export function LoginModal({ isOpen, onClose, onSuccess }: LoginModalProps) {
                 </div>
 
                 {/* Error */}
-                {error && (
-                  <div className="text-sm text-red-400 font-mono">
-                    {error}
-                  </div>
-                )}
+                {error && <div className="text-sm text-red-400 font-mono">{error}</div>}
 
                 {/* Buttons */}
                 <div className="flex gap-3 pt-4">
@@ -151,4 +155,3 @@ export function LoginModal({ isOpen, onClose, onSuccess }: LoginModalProps) {
     </AnimatePresence>
   );
 }
-

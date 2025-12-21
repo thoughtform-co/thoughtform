@@ -1,0 +1,179 @@
+/* Admin Login Card - matches module card styling */
+.admin-login-card {
+  position: relative;
+  background: rgba(10, 9, 8, 0.5);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(236, 227, 214, 0.1);
+  padding: 32px;
+  transition: all 0.2s ease;
+  max-width: 100%;
+}
+
+.admin-login-card:hover {
+  background: rgba(20, 18, 16, 0.7);
+  border-color: var(--gold, #caa554);
+}
+
+/* Technical corner accents - matching module cards */
+.admin-login-card::before {
+  content: "";
+  position: absolute;
+  top: -1px;
+  left: -1px;
+  width: 10px;
+  height: 10px;
+  border-top: 1px solid #caa554;
+  border-left: 1px solid #caa554;
+  z-index: 1;
+}
+
+.admin-login-card::after {
+  content: "";
+  position: absolute;
+  bottom: -1px;
+  right: -1px;
+  width: 10px;
+  height: 10px;
+  border-bottom: 1px solid #caa554;
+  border-right: 1px solid #caa554;
+  z-index: 1;
+}
+
+/* Header styling */
+.admin-login-card .admin-header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.admin-login-card .admin-label {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #caa554;
+  margin-bottom: 8px;
+}
+
+.admin-login-card .admin-title {
+  font-family: "PP Mondwest", serif;
+  font-size: 24px;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  color: #ece3d6;
+  text-transform: uppercase;
+}
+
+/* Form inputs */
+.admin-login-card label {
+  font-family: var(--font-data, "PT Mono", monospace);
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(236, 227, 214, 0.5);
+  display: block;
+  margin-bottom: 8px;
+}
+
+.admin-login-card input {
+  width: 100%;
+  padding: 12px 16px;
+  background: rgba(10, 9, 8, 0.6);
+  border: 1px solid rgba(236, 227, 214, 0.15);
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 13px;
+  color: #ece3d6;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+.admin-login-card input::placeholder {
+  color: rgba(236, 227, 214, 0.3);
+}
+
+.admin-login-card input:focus {
+  outline: none;
+  border-color: #caa554;
+  background: rgba(20, 18, 16, 0.8);
+}
+
+/* Buttons */
+.admin-login-card button {
+  font-family: var(--font-data, "PT Mono", monospace);
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  transition: all 0.2s ease;
+}
+
+.admin-login-card .btn-secondary {
+  background: transparent;
+  border: 1px solid rgba(236, 227, 214, 0.15);
+  color: rgba(236, 227, 214, 0.5);
+  padding: 12px 24px;
+}
+
+.admin-login-card .btn-secondary:hover {
+  border-color: rgba(236, 227, 214, 0.3);
+  color: #ece3d6;
+}
+
+.admin-login-card .btn-primary {
+  background: #caa554;
+  border: 1px solid #caa554;
+  color: #050504;
+  padding: 12px 24px;
+}
+
+.admin-login-card .btn-primary:hover:not(:disabled) {
+  background: rgba(202, 165, 84, 0.7);
+  border-color: rgba(202, 165, 84, 0.7);
+}
+
+.admin-login-card .btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Error message */
+.admin-login-card .error-message {
+  font-family: var(--font-data, "PT Mono", monospace);
+  font-size: 12px;
+  color: #ff6b6b;
+  margin-top: 8px;
+}
+
+/* Email sent state */
+.admin-login-card .email-sent-content {
+  text-align: center;
+}
+
+.admin-login-card .email-sent-title {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 14px;
+  color: #ece3d6;
+  margin-bottom: 12px;
+}
+
+.admin-login-card .email-sent-text {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 11px;
+  color: rgba(236, 227, 214, 0.5);
+  line-height: 1.6;
+  margin-bottom: 8px;
+}
+
+.admin-login-card .email-sent-text strong {
+  color: #ece3d6;
+  font-weight: 400;
+}
+
+.admin-login-card .email-sent-hint {
+  font-family: var(--font-data, "PT Mono", monospace);
+  font-size: 11px;
+  color: rgba(236, 227, 214, 0.3);
+  margin-top: 8px;
+}

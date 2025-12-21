@@ -26,14 +26,44 @@ export async function signOut() {
 export async function getSession() {
   if (!supabase) return null;
 
-  const { data: { session } } = await supabase.auth.getSession();
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
   return session;
 }
 
 export async function getUser() {
   if (!supabase) return null;
 
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   return user;
 }
 
+/**
+ * Send magic link to email for passwordless authentication
+ */
+export async function signInWithMagicLink(email: string) {
+  if (!supabase) {
+    throw new Error("Supabase not configured");
+  }
+
+  // Check if email is allowed (if restriction is enabled)
+  const allowedEmail = process.env.NEXT_PUBLIC_ALLOWED_EMAIL;
+  if (allowedEmail && email.toLowerCase() !== allowedEmail.toLowerCase()) {
+    throw new Error("Access restricted. Only authorized users can sign in.");
+  }
+
+  const origin = typeof window !== "undefined" ? window.location.origin : "";
+  const { data, error } = await supabase.auth.signInWithOtp({
+    email,
+    options: {
+      emailRedirectTo: `${origin}/admin`,
+      shouldCreateUser: true,
+    },
+  });
+
+  if (error) throw error;
+  return data;
+}

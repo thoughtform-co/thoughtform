@@ -94,6 +94,20 @@ create trigger update_elements_updated_at
 -- alter table sections enable row level security;
 -- alter table elements enable row level security;
 
+-- Particle Config table (for storing particle system configuration)
+create table if not exists particle_config (
+  id text primary key default 'default',
+  config jsonb not null default '{}',
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+-- Apply updated_at trigger to particle_config
+drop trigger if exists update_particle_config_updated_at on particle_config;
+create trigger update_particle_config_updated_at
+  before update on particle_config
+  for each row execute function update_updated_at_column();
+
 -- Insert default home page
 insert into pages (slug, title) 
 values ('home', 'Thoughtform | Navigate AI for Creative Breakthroughs')
