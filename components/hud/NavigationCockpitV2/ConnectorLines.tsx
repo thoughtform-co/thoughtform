@@ -340,18 +340,18 @@ export function ConnectorLines({
       <path
         ref={linePathRefs[0]}
         fill="none"
-        stroke="rgba(202, 165, 84, 0.4)"
-        strokeWidth="1"
+        stroke="rgba(202, 165, 84, 0.5)"
+        strokeWidth="1.5"
         strokeLinecap="round"
         strokeLinejoin="round"
         className="module-line module-line-1"
       />
       <circle
         ref={lineEndCircleRefs[0]}
-        r="3"
+        r="3.5"
         fill="none"
-        stroke="rgba(202, 165, 84, 0.6)"
-        strokeWidth="1"
+        stroke="rgba(202, 165, 84, 0.7)"
+        strokeWidth="1.5"
         className="module-line-end"
       />
 
@@ -359,18 +359,18 @@ export function ConnectorLines({
       <path
         ref={linePathRefs[1]}
         fill="none"
-        stroke="rgba(202, 165, 84, 0.4)"
-        strokeWidth="1"
+        stroke="rgba(202, 165, 84, 0.5)"
+        strokeWidth="1.5"
         strokeLinecap="round"
         strokeLinejoin="round"
         className="module-line module-line-2"
       />
       <circle
         ref={lineEndCircleRefs[1]}
-        r="3"
+        r="3.5"
         fill="none"
-        stroke="rgba(202, 165, 84, 0.6)"
-        strokeWidth="1"
+        stroke="rgba(202, 165, 84, 0.7)"
+        strokeWidth="1.5"
         className="module-line-end"
       />
 
@@ -378,18 +378,18 @@ export function ConnectorLines({
       <path
         ref={linePathRefs[2]}
         fill="none"
-        stroke="rgba(202, 165, 84, 0.4)"
-        strokeWidth="1"
+        stroke="rgba(202, 165, 84, 0.5)"
+        strokeWidth="1.5"
         strokeLinecap="round"
         strokeLinejoin="round"
         className="module-line module-line-3"
       />
       <circle
         ref={lineEndCircleRefs[2]}
-        r="3"
+        r="3.5"
         fill="none"
-        stroke="rgba(202, 165, 84, 0.6)"
-        strokeWidth="1"
+        stroke="rgba(202, 165, 84, 0.7)"
+        strokeWidth="1.5"
         className="module-line-end"
       />
     </svg>
