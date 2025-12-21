@@ -1,29 +1,22 @@
 "use client";
 
 import { useState, useEffect, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { cn } from "@/lib/utils";
-import { signInWithMagicLink, signOut } from "@/lib/auth";
+import { signInWithEmail, signOut } from "@/lib/auth";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { ParticleCanvasV2 } from "@/components/hud/ParticleCanvasV2";
 import { DEFAULT_CONFIG } from "@/lib/particle-config";
 import { supabase } from "@/lib/supabase";
 import "./admin-styles.css";
 
-// Separate component that uses searchParams to avoid blocking Suspense
-function AdminPageWithParams() {
-  const searchParams = useSearchParams();
-  return <AdminPageContent searchParams={searchParams} />;
-}
-
-function AdminPageContent({ searchParams }: { searchParams: URLSearchParams | null }) {
+function AdminPageContent() {
   const router = useRouter();
   const { user, isLoading } = useAuth();
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [isSending, setIsSending] = useState(false);
-  const [emailSent, setEmailSent] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
 
@@ -32,87 +25,40 @@ function AdminPageContent({ searchParams }: { searchParams: URLSearchParams | nu
   // Ensure we're mounted (client-side only)
   useEffect(() => {
     setMounted(true);
-    console.log("[Admin] Page mounted, supabase configured:", !!supabase);
-    console.log("[Admin] Auth state - isLoading:", isLoading, "user:", !!user);
-  }, [isLoading, user]);
-
-  // Handle Supabase auth callback (magic link redirects with hash fragments)
-  useEffect(() => {
-    if (!mounted || !supabase) return;
-
-    try {
-      // Check for hash fragments from Supabase redirect
-      const hashParams = new URLSearchParams(window.location.hash.substring(1));
-      const accessToken = hashParams.get("access_token");
-      const error = hashParams.get("error");
-      const errorDescription = hashParams.get("error_description");
-
-      if (error) {
-        setError(errorDescription || "Authentication failed. Please try again.");
-        // Clean up URL
-        window.history.replaceState({}, document.title, "/admin");
-        return;
-      }
-
-      if (accessToken) {
-        // Supabase will automatically handle the session via the client
-        // Just wait for AuthProvider to update
-        // Clean up URL
-        window.history.replaceState({}, document.title, "/admin");
-      }
-
-      // Check for error in URL params (from server redirect)
-      const urlError = searchParams?.get("error");
-      if (urlError === "auth") {
-        setError("Authentication failed. Please try again.");
-      } else if (urlError === "config") {
-        setError("Configuration error. Please check your environment variables.");
-      }
-    } catch (err) {
-      console.error("[Admin] Error processing auth callback:", err);
-    }
-  }, [mounted, searchParams]);
+  }, []);
 
   // Enforce allowed email; stay on page instead of redirecting
   useEffect(() => {
     if (mounted && !isLoading && user) {
       const userEmail = user.email?.toLowerCase();
       if (allowedEmail && userEmail && userEmail !== allowedEmail && !signingOut) {
-        console.log("[Admin] User email not allowed, signing out", userEmail);
         setSigningOut(true);
         signOut()
           .catch((err) => console.error("[Admin] Sign out failed:", err))
           .finally(() => {
             setSigningOut(false);
-            setError("Access restricted. Please sign in with an authorized email.");
+            setError("Access restricted. Only authorized users can sign in.");
           });
-        return;
       }
-      console.log("[Admin] User is logged in and allowed", user.email);
-    } else {
-      console.log(
-        "[Admin] Not redirecting - mounted:",
-        mounted,
-        "isLoading:",
-        isLoading,
-        "user:",
-        !!user
-      );
     }
-  }, [mounted, user, isLoading, router, allowedEmail, signingOut]);
+  }, [mounted, user, isLoading, allowedEmail, signingOut]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    setIsSending(true);
+    setIsSubmitting(true);
 
     try {
-      await signInWithMagicLink(email);
-      setEmailSent(true);
+      // Check allowed email before attempting login
+      if (allowedEmail && email.toLowerCase() !== allowedEmail) {
+        throw new Error("Access restricted. Only authorized users can sign in.");
+      }
+      await signInWithEmail(email, password);
+      // Auth state will update via AuthProvider
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to send magic link");
+      setError(err instanceof Error ? err.message : "Failed to sign in");
     } finally {
-      setIsSending(false);
+      setIsSubmitting(false);
     }
   };
 
@@ -186,7 +132,7 @@ function AdminPageContent({ searchParams }: { searchParams: URLSearchParams | nu
 
   const renderLogin = () => (
     <div className="min-h-screen bg-void relative flex items-center justify-center p-4 overflow-hidden">
-      {/* Manifold background in the distance */}
+      {/* Manifold background */}
       <div className="absolute inset-0 z-0" style={{ opacity: 0.8 }}>
         <ParticleCanvasV2 scrollProgress={0.2} config={DEFAULT_CONFIG} />
       </div>
@@ -197,62 +143,51 @@ function AdminPageContent({ searchParams }: { searchParams: URLSearchParams | nu
         className="w-full max-w-sm relative z-10"
       >
         <div className="admin-login-card">
-          {/* Header */}
           <div className="admin-header">
             <div className="admin-label">{`// Admin Access`}</div>
             <h1 className="admin-title">Sign In</h1>
           </div>
 
-          {emailSent ? (
-            <div className="email-sent-content space-y-4">
-              <div>
-                <div className="email-sent-title">Check your email</div>
-                <p className="email-sent-text">
-                  We sent a magic link to <strong>{email}</strong>
-                </p>
-                <p className="email-sent-hint">Click the link in the email to sign in.</p>
-              </div>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label>Email</label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                placeholder="you@example.com"
+                autoComplete="email"
+              />
+            </div>
+
+            <div>
+              <label>Password</label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                placeholder="••••••••"
+                autoComplete="current-password"
+              />
+            </div>
+
+            {error && <div className="error-message">{error}</div>}
+
+            <div className="flex gap-3 pt-2">
               <button
-                onClick={() => {
-                  setEmailSent(false);
-                  setEmail("");
-                }}
-                className="btn-secondary w-full"
+                type="button"
+                onClick={() => router.push("/")}
+                className="btn-secondary flex-1"
               >
-                Use Different Email
+                Cancel
+              </button>
+              <button type="submit" disabled={isSubmitting} className="btn-primary flex-1">
+                {isSubmitting ? "Signing in..." : "Sign In"}
               </button>
             </div>
-          ) : (
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div>
-                <label>Email</label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  placeholder="you@example.com"
-                />
-              </div>
-
-              {/* Error */}
-              {error && <div className="error-message">{error}</div>}
-
-              {/* Buttons */}
-              <div className="flex gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={() => router.push("/")}
-                  className="btn-secondary flex-1"
-                >
-                  Cancel
-                </button>
-                <button type="submit" disabled={isSending} className="btn-primary flex-1">
-                  {isSending ? "Sending..." : "Send Magic Link"}
-                </button>
-              </div>
-            </form>
-          )}
+          </form>
         </div>
       </motion.div>
     </div>
@@ -274,7 +209,7 @@ export default function AdminPage() {
         </div>
       }
     >
-      <AdminPageWithParams />
+      <AdminPageContent />
     </Suspense>
   );
 }
