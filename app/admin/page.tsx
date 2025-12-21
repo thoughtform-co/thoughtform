@@ -74,8 +74,6 @@ function AdminPageContent() {
         { type: "system", text: "THOUGHTFORM TERMINAL v2.1.0" },
         { type: "system", text: "═══════════════════════════════════════" },
         { type: "system", text: "" },
-        { type: "success", text: `SESSION ACTIVE: ${user.email}` },
-        { type: "system", text: "" },
         { type: "prompt", text: "Type 'exit' to sign out or 'home' to return to site" },
       ]);
       setStep("success");
@@ -219,6 +217,8 @@ function AdminPageContent() {
           />
         </div>
         <div className="terminal-window">
+          <div className="terminal-corner-tl" />
+          <div className="terminal-corner-br" />
           <div className="terminal-header">
             <span className="terminal-title">thoughtform://admin</span>
           </div>
@@ -237,6 +237,8 @@ function AdminPageContent() {
           <ParticleCanvasV2 scrollProgress={0.15} config={DEFAULT_CONFIG} />
         </div>
         <div className="terminal-window">
+          <div className="terminal-corner-tl" />
+          <div className="terminal-corner-br" />
           <div className="terminal-header">
             <span className="terminal-title">thoughtform://admin</span>
           </div>
@@ -273,8 +275,16 @@ function AdminPageContent() {
 
       {/* Terminal window */}
       <div className="terminal-window">
+        <div className="terminal-corner-tl" />
+        <div className="terminal-corner-br" />
         <div className="terminal-header">
           <span className="terminal-title">thoughtform://admin</span>
+          {user && (
+            <div className="terminal-status-indicator">
+              <span className="terminal-status-orb" />
+              <span>ACTIVE</span>
+            </div>
+          )}
         </div>
 
         <div className="terminal-body" ref={terminalRef}>
