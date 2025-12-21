@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { signInWithEmail, signOut } from "@/lib/auth";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { ParticleCanvasV2 } from "@/components/hud/ParticleCanvasV2";
+import { ThoughtformSigil } from "@/components/hud/ThoughtformSigil";
 import { DEFAULT_CONFIG } from "@/lib/particle-config";
 import { supabase } from "@/lib/supabase";
 import "./admin-styles.css";
@@ -92,8 +93,19 @@ function AdminPageContent() {
 
   const renderSignedIn = () => (
     <div className="min-h-screen bg-void relative flex items-center justify-center p-4 overflow-hidden">
-      <div className="absolute inset-0 z-0" style={{ opacity: 0.8 }}>
-        <ParticleCanvasV2 scrollProgress={0.2} config={DEFAULT_CONFIG} />
+      {/* Thoughtform Sigil background */}
+      <div
+        className="absolute inset-0 z-0 flex items-center justify-center"
+        style={{ opacity: 0.15 }}
+      >
+        <ThoughtformSigil
+          size={600}
+          color="202, 165, 84"
+          particleCount={500}
+          scrollProgress={1}
+          particleSize={1.2}
+          opacity={0.8}
+        />
       </div>
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
@@ -134,9 +146,19 @@ function AdminPageContent() {
 
   const renderLogin = () => (
     <div className="min-h-screen bg-void relative flex items-center justify-center p-4 overflow-hidden">
-      {/* Manifold background */}
-      <div className="absolute inset-0 z-0" style={{ opacity: 0.8 }}>
-        <ParticleCanvasV2 scrollProgress={0.2} config={DEFAULT_CONFIG} />
+      {/* Thoughtform Sigil background */}
+      <div
+        className="absolute inset-0 z-0 flex items-center justify-center"
+        style={{ opacity: 0.15 }}
+      >
+        <ThoughtformSigil
+          size={600}
+          color="202, 165, 84"
+          particleCount={500}
+          scrollProgress={1}
+          particleSize={1.2}
+          opacity={0.8}
+        />
       </div>
 
       <motion.div
@@ -154,26 +176,32 @@ function AdminPageContent() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label>Email</label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                placeholder="user@domain.com"
-                autoComplete="email"
-              />
+              <div className="input-wrapper">
+                <span className="input-prompt">$</span>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  placeholder="user@domain.com"
+                  autoComplete="email"
+                />
+              </div>
             </div>
 
             <div>
               <label>Password</label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                placeholder="••••••••"
-                autoComplete="current-password"
-              />
+              <div className="input-wrapper">
+                <span className="input-prompt">$</span>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  placeholder="••••••••"
+                  autoComplete="current-password"
+                />
+              </div>
             </div>
 
             {error && <div className="error-message">{error}</div>}
