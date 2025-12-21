@@ -19,6 +19,14 @@ function AdminPageContent() {
   const [error, setError] = useState<string | null>(null);
   const [isSending, setIsSending] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  // Ensure we're mounted (client-side only)
+  useEffect(() => {
+    setMounted(true);
+    console.log("[Admin] Page mounted, supabase configured:", !!supabase);
+    console.log("[Admin] Auth state - isLoading:", isLoading, "user:", !!user);
+  }, []);
 
   // Handle Supabase auth callback (magic link redirects with hash fragments)
   useEffect(() => {
@@ -53,12 +61,26 @@ function AdminPageContent() {
     }
   }, [searchParams]);
 
-  // Redirect if already logged in
+  // Redirect if already logged in (only after mount to prevent SSR issues)
   useEffect(() => {
-    if (!isLoading && user) {
-      router.push("/");
+    if (mounted && !isLoading && user) {
+      console.log("[Admin] User is logged in, redirecting to home", user.email);
+      // Small delay to ensure the page doesn't flash
+      const timer = setTimeout(() => {
+        router.push("/");
+      }, 1000); // Increased delay to see what's happening
+      return () => clearTimeout(timer);
+    } else {
+      console.log(
+        "[Admin] Not redirecting - mounted:",
+        mounted,
+        "isLoading:",
+        isLoading,
+        "user:",
+        !!user
+      );
     }
-  }, [user, isLoading, router]);
+  }, [mounted, user, isLoading, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -75,7 +97,8 @@ function AdminPageContent() {
     }
   };
 
-  if (isLoading) {
+  // Show loading state while checking auth or not mounted
+  if (!mounted || isLoading) {
     return (
       <div className="min-h-screen bg-void flex items-center justify-center">
         <div className="font-mono text-dawn-50">Loading...</div>
@@ -83,8 +106,31 @@ function AdminPageContent() {
     );
   }
 
+  // If user is logged in, show a brief message before redirect
   if (user) {
-    return null; // Will redirect
+    return (
+      <div className="min-h-screen bg-void flex items-center justify-center">
+        <div className="font-mono text-dawn-50">Redirecting...</div>
+      </div>
+    );
+  }
+
+  // Check if Supabase is configured
+  if (!supabase) {
+    return (
+      <div className="min-h-screen bg-void flex items-center justify-center p-4">
+        <div className="admin-login-card">
+          <div className="admin-header">
+            <div className="admin-label">{`// Configuration Error`}</div>
+            <h1 className="admin-title">Setup Required</h1>
+          </div>
+          <div className="error-message">
+            Supabase is not configured. Please set NEXT_PUBLIC_SUPABASE_URL and
+            NEXT_PUBLIC_SUPABASE_ANON_KEY environment variables.
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
