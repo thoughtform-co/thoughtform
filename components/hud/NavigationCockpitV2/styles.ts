@@ -273,7 +273,7 @@ export const cockpitStyles = `
     transform: translateY(-50%);
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 32px;
     z-index: 10;
     transition: opacity 0.3s ease-out, visibility 0.3s ease-out;
   }
