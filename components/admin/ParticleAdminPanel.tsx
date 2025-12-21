@@ -415,7 +415,7 @@ export function ParticleAdminPanel() {
         .admin-toggle {
           position: fixed;
           top: 26px;
-          right: calc(clamp(48px, 8vw, 120px) + 130px);
+          right: calc(clamp(48px, 8vw, 120px) + 100px);
           z-index: 1000;
           display: flex;
           align-items: center;
