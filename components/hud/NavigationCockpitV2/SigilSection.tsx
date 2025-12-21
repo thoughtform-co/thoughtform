@@ -25,8 +25,9 @@ export const SigilSection = forwardRef<HTMLDivElement, SigilSectionProps>(functi
   { scrollProgress, config, onParticlePositions },
   ref
 ) {
-  // Sigil appears during definition section (0.02 to 0.25), fades out after
-  const sigilInStart = 0.02;
+  // Sigil appears during definition section (starts after hero sigil flows into gateway)
+  // Start slightly later to allow hero sigil transition to complete
+  const sigilInStart = 0.03;
   const sigilInEnd = 0.08;
   const sigilOutStart = 0.25;
   const sigilOutEnd = 0.35;
