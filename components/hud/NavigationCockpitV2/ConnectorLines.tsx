@@ -92,28 +92,31 @@ export function ConnectorLines({
     let lastPositionUpdate = 0;
 
     // Track current and next targets for each line (for smooth transitions)
-    // Initialize targetPos to null - will be set from card position on first valid update
+    // Initialize targetPos to null - will be set directly to particle position on first valid update
     const lineState = [
       {
-        currentTarget: 0,
-        nextTarget: 0,
+        currentTarget: -1, // -1 means not yet initialized
+        nextTarget: -1,
         lastSwitch: 0,
         targetPos: null as { x: number; y: number } | null,
         growthProgress: 0, // 0 = not started, 1 = fully grown
+        initialized: false, // Track if we've picked initial target
       },
       {
-        currentTarget: 0,
-        nextTarget: 0,
+        currentTarget: -1,
+        nextTarget: -1,
         lastSwitch: 0,
         targetPos: null as { x: number; y: number } | null,
         growthProgress: 0,
+        initialized: false,
       },
       {
-        currentTarget: 0,
-        nextTarget: 0,
+        currentTarget: -1,
+        nextTarget: -1,
         lastSwitch: 0,
         targetPos: null as { x: number; y: number } | null,
         growthProgress: 0,
+        initialized: false,
       },
     ];
 
@@ -193,9 +196,9 @@ export function ConnectorLines({
       // Get actual particle positions from sigil
       const particles = sigilParticlesRef.current;
 
-      // Check if we have valid particles (sigil is fully formed)
+      // Check if we have valid particles (lower threshold so lines appear earlier)
       const validParticles = particles.filter(isValidParticlePosition);
-      const hasValidParticles = validParticles.length > 10; // Need enough particles
+      const hasValidParticles = validParticles.length > 5; // Lower threshold for earlier appearance
 
       // Get all current targets to avoid overlap
       const allCurrentTargets = lineState.map((s) => s.currentTarget);
@@ -212,10 +215,7 @@ export function ConnectorLines({
         // If no valid particles yet, hide the line (growth = 0)
         if (!hasValidParticles) {
           state.growthProgress = 0;
-          // Initialize target position from card position so lines start there
-          if (!state.targetPos) {
-            state.targetPos = { x: cardPos.x, y: cardPos.y };
-          }
+          state.initialized = false;
           // Clear the path
           pathRef.current.setAttribute("d", "");
           const circleRef = lineEndCircleRefs[index];
@@ -225,11 +225,39 @@ export function ConnectorLines({
           return;
         }
 
+        // First time we have valid particles - pick distinct initial targets for ALL lines
+        if (!state.initialized) {
+          // Get targets already picked by previous lines in this frame
+          const alreadyPicked = lineState
+            .slice(0, index)
+            .filter((s) => s.initialized)
+            .map((s) => s.currentTarget);
+
+          // Pick a target for this line that's different from others
+          const initialTarget = pickNewTarget(index, particles, alreadyPicked);
+          if (initialTarget >= 0) {
+            state.currentTarget = initialTarget;
+            state.nextTarget = initialTarget;
+            // Initialize targetPos directly to the particle position (not card)
+            const particle = particles[initialTarget];
+            if (particle && isValidParticlePosition(particle)) {
+              state.targetPos = { x: particle.screenX, y: particle.screenY };
+            } else {
+              state.targetPos = { x: cardPos.x, y: cardPos.y };
+            }
+          } else {
+            state.targetPos = { x: cardPos.x, y: cardPos.y };
+          }
+          state.initialized = true;
+          state.lastSwitch = elapsed + INIT_OFFSETS[index] * 2;
+          allCurrentTargets[index] = state.currentTarget;
+        }
+
         // We have valid particles - grow the line
         // Growth takes about 0.15 seconds per line, staggered
         const growthDuration = 0.15;
         const growthDelay = index * 0.05; // Stagger each line
-        const timeSinceParticlesValid = elapsed; // Will reset when component mounts
+        const timeSinceParticlesValid = elapsed;
 
         // Only start growing after the sigil is visible (controlled by parent opacity)
         if (state.growthProgress < 1) {
@@ -237,17 +265,12 @@ export function ConnectorLines({
           state.growthProgress = Math.min(1, growthElapsed / growthDuration);
         }
 
-        // Initialize target position from card if not set
-        if (!state.targetPos) {
-          state.targetPos = { x: cardPos.x, y: cardPos.y };
-        }
-
         // Different switch intervals for each line (0.6 to 0.9 seconds)
         const switchInterval = 0.6 + index * 0.15;
         const staggeredTime = elapsed + INIT_OFFSETS[index] * 2;
         const timeSinceSwitch = staggeredTime - state.lastSwitch;
 
-        // Time to switch to a new target
+        // Time to switch to a new target (after initial setup)
         if (timeSinceSwitch > switchInterval && hasValidParticles) {
           state.currentTarget = state.nextTarget;
           // Pick new target that's different from other lines
@@ -262,8 +285,8 @@ export function ConnectorLines({
         }
 
         // Calculate target position from particle
-        let targetX = state.targetPos.x;
-        let targetY = state.targetPos.y;
+        let targetX = state.targetPos?.x ?? cardPos.x;
+        let targetY = state.targetPos?.y ?? cardPos.y;
 
         if (state.currentTarget >= 0 && state.currentTarget < particles.length) {
           const particle = particles[state.currentTarget];
@@ -271,6 +294,11 @@ export function ConnectorLines({
             targetX = particle.screenX;
             targetY = particle.screenY;
           }
+        }
+
+        // Ensure targetPos exists
+        if (!state.targetPos) {
+          state.targetPos = { x: targetX, y: targetY };
         }
 
         // Smooth interpolation toward target for deliberate analysis feel
