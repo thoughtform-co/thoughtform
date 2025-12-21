@@ -554,7 +554,9 @@ body {
   justify-content: space-between;
   align-items: center;
   padding: 0 calc(var(--hud-padding) + 24px);
-  background: linear-gradient(to top, var(--void) 60%, transparent);
+  background: transparent !important;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
 .hud-coords {

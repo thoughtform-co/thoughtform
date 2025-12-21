@@ -218,20 +218,23 @@ export function ParticleConfigProvider({
     setError(null);
     
     // First, check localStorage for any saved config
-    const localConfig = getLocalStorage();
+    const localConfigRaw = getLocalStorage();
+    const localConfig = localConfigRaw ? mergeWithDefaults(localConfigRaw) : null;
     
     try {
       const response = await fetch("/api/particles/config");
       if (response.ok) {
         const data = await response.json();
+        // Merge with defaults to ensure all fields exist (handles schema migrations)
+        const serverConfig = mergeWithDefaults(data);
         // If server returned defaults but we have local config, use local
-        if (localConfig && data.version === DEFAULT_CONFIG.version) {
+        if (localConfig && serverConfig.version === DEFAULT_CONFIG.version) {
           setConfig(localConfig);
           setSavedConfig(localConfig);
           setStorageMode("local");
         } else {
-          setConfig(data);
-          setSavedConfig(data);
+          setConfig(serverConfig);
+          setSavedConfig(serverConfig);
           setStorageMode("server");
         }
       } else {
@@ -362,19 +365,23 @@ export function ParticleConfigProvider({
 
       if (response.ok) {
         const data = await response.json();
-        setConfig(data.config);
-        setSavedConfig(data.config);
+        // Merge with defaults to ensure all fields exist
+        const savedConfig = mergeWithDefaults(data.config);
+        setConfig(savedConfig);
+        setSavedConfig(savedConfig);
         setStorageMode("server");
         // Also save to localStorage as backup
-        setLocalStorage(data.config);
+        setLocalStorage(savedConfig);
         return true;
       } else {
         const errorData = await response.json();
         // If KV not configured, fall back to localStorage
         if (errorData.error === "Vercel KV not configured" || response.status === 503) {
-          setLocalStorage(configToSave);
-          setConfig(configToSave);
-          setSavedConfig(configToSave);
+          // Ensure config is merged with defaults before saving
+          const mergedConfig = mergeWithDefaults(configToSave);
+          setLocalStorage(mergedConfig);
+          setConfig(mergedConfig);
+          setSavedConfig(mergedConfig);
           setStorageMode("local");
           setError("Saved locally (KV not configured)");
           return true;
@@ -385,9 +392,11 @@ export function ParticleConfigProvider({
     } catch (err) {
       console.error("Failed to save particle config:", err);
       // Fall back to localStorage on network error
-      setLocalStorage(configToSave);
-      setConfig(configToSave);
-      setSavedConfig(configToSave);
+      // Ensure config is merged with defaults before saving
+      const mergedConfig = mergeWithDefaults(configToSave);
+      setLocalStorage(mergedConfig);
+      setConfig(mergedConfig);
+      setSavedConfig(mergedConfig);
       setStorageMode("local");
       setError("Saved locally (server unavailable)");
       return true;
@@ -408,8 +417,10 @@ export function ParticleConfigProvider({
 
       if (response.ok) {
         const data = await response.json();
-        setConfig(data.config);
-        setSavedConfig(data.config);
+        // Merge with defaults to ensure all fields exist
+        const resetConfig = mergeWithDefaults(data.config);
+        setConfig(resetConfig);
+        setSavedConfig(resetConfig);
         setStorageMode("server");
         return true;
       } else {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import { ParticleCanvasV2 } from "./ParticleCanvasV2";
 import { ThreeGateway } from "./ThreeGateway";
 import { HUDFrame } from "./HUDFrame";
@@ -26,6 +26,130 @@ function NavigationCockpitInner() {
   // Refs for tracking element positions
   const wordmarkRef = useRef<HTMLDivElement>(null);
   const definitionRef = useRef<HTMLDivElement>(null);
+  const modulesRef = useRef<HTMLDivElement>(null);
+  const moduleCardRefs = [useRef<HTMLDivElement>(null), useRef<HTMLDivElement>(null), useRef<HTMLDivElement>(null)];
+  const linePathRefs = [useRef<SVGPathElement>(null), useRef<SVGPathElement>(null), useRef<SVGPathElement>(null)];
+  const lineAnimationRef = useRef<number | null>(null);
+  const lineTimeRef = useRef(0);
+  
+  // Calculate and animate line paths - using direct DOM manipulation to avoid React re-renders
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
+    const sigilSize = rawConfig.sigil?.size ?? 220;
+    
+    // Generate angular segmented path from start to end
+    const generateAngularPath = (startX: number, startY: number, endX: number, endY: number): string => {
+      const midX = startX + (endX - startX) * 0.4;
+      const midY = startY;
+      return `M ${startX} ${startY} L ${midX} ${midY} L ${endX} ${endY}`;
+    };
+    
+    // Sample particle positions within sigil bounds
+    const getParticleTargets = () => {
+      const sigilX = window.innerWidth / 2;
+      const sigilY = window.innerHeight / 2;
+      const radius = sigilSize / 2;
+      const targets: Array<{ x: number; y: number }> = [];
+      
+      const gridSize = 8;
+      for (let i = 0; i < gridSize; i++) {
+        for (let j = 0; j < gridSize; j++) {
+          const u = (i + 0.5) / gridSize;
+          const v = (j + 0.5) / gridSize;
+          const angle = u * Math.PI * 2;
+          const dist = Math.sqrt(v) * radius * 0.8;
+          
+          targets.push({
+            x: sigilX + Math.cos(angle) * dist,
+            y: sigilY + Math.sin(angle) * dist,
+          });
+        }
+      }
+      return targets;
+    };
+    
+    let particleTargets = getParticleTargets();
+    let cachedCardPositions: Array<{ x: number; y: number } | null> = [null, null, null];
+    let lastPositionUpdate = 0;
+    
+    const updateCardPositions = () => {
+      moduleCardRefs.forEach((cardRef, index) => {
+        if (!cardRef.current) {
+          cachedCardPositions[index] = null;
+          return;
+        }
+        const cardRect = cardRef.current.getBoundingClientRect();
+        cachedCardPositions[index] = {
+          x: cardRect.left - 4,
+          y: cardRect.top + cardRect.height / 2,
+        };
+      });
+    };
+    
+    updateCardPositions();
+    let lastTime = performance.now();
+    
+    const updateLines = () => {
+      const now = performance.now();
+      const deltaTime = (now - lastTime) / 1000;
+      lastTime = now;
+      lineTimeRef.current += deltaTime;
+      
+      // Update card positions only every 200ms
+      if (now - lastPositionUpdate > 200) {
+        updateCardPositions();
+        lastPositionUpdate = now;
+      }
+      
+      // Direct DOM manipulation - no React state updates
+      linePathRefs.forEach((pathRef, index) => {
+        if (!pathRef.current) return;
+        
+        const cardPos = cachedCardPositions[index];
+        if (!cardPos) return;
+        
+        const switchInterval = 2.5;
+        const targetIndex = Math.floor((lineTimeRef.current + index * 0.7) / switchInterval) % particleTargets.length;
+        const currentTarget = particleTargets[targetIndex];
+        const nextTargetIndex = (targetIndex + 1) % particleTargets.length;
+        const nextTarget = particleTargets[nextTargetIndex];
+        
+        const switchProgress = ((lineTimeRef.current + index * 0.7) % switchInterval) / switchInterval;
+        const transitionStart = 0.7;
+        let targetX = currentTarget.x;
+        let targetY = currentTarget.y;
+        
+        if (switchProgress > transitionStart) {
+          const t = (switchProgress - transitionStart) / (1 - transitionStart);
+          const easeT = t * t;
+          targetX = currentTarget.x + (nextTarget.x - currentTarget.x) * easeT;
+          targetY = currentTarget.y + (nextTarget.y - currentTarget.y) * easeT;
+        }
+        
+        // Directly set path d attribute - no React re-render
+        pathRef.current.setAttribute('d', generateAngularPath(cardPos.x, cardPos.y, targetX, targetY));
+      });
+      
+      lineAnimationRef.current = requestAnimationFrame(updateLines);
+    };
+    
+    lineAnimationRef.current = requestAnimationFrame(updateLines);
+    
+    const handleResize = () => {
+      particleTargets = getParticleTargets();
+      updateCardPositions();
+    };
+    
+    window.addEventListener('resize', handleResize);
+    
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      if (lineAnimationRef.current) {
+        cancelAnimationFrame(lineAnimationRef.current);
+      }
+    };
+  }, [rawConfig.sigil?.size]);
   
   // Determine if we should show the SVG Vector I
   const showSvgVector = scrollProgress < 0.02;
@@ -139,29 +263,66 @@ function NavigationCockpitInner() {
         <ParticleAdminPanel />
       </AdminGate>
 
-      {/* Fixed Thoughtform Sigil - appears centered during scroll */}
-      {rawConfig.sigil?.enabled !== false && (
-        <div 
-          ref={definitionRef}
-          className="fixed-sigil-container"
-          style={{
-            opacity: scrollProgress < 0.02 ? 0 : Math.min(1, (scrollProgress - 0.02) * 15),
-            pointerEvents: 'none',
-          }}
-        >
-          <ThoughtformSigil
-            size={rawConfig.sigil?.size ?? 220}
-            particleCount={rawConfig.sigil?.particleCount ?? 500}
-            color={rawConfig.sigil?.color ?? "202, 165, 84"}
-            scrollProgress={scrollProgress}
-            particleSize={rawConfig.sigil?.particleSize ?? 1.0}
-            opacity={rawConfig.sigil?.opacity ?? 1.0}
-            wanderStrength={rawConfig.sigil?.wanderStrength ?? 1.0}
-            pulseSpeed={rawConfig.sigil?.pulseSpeed ?? 1.0}
-            returnStrength={rawConfig.sigil?.returnStrength ?? 1.0}
-          />
-        </div>
-      )}
+      {/* Fixed Thoughtform Sigil - appears centered during definition section, reverses when scrolling out */}
+      {rawConfig.sigil?.enabled !== false && (() => {
+        // Sigil appears during definition section (0.02 to 0.25), fades out after
+        const sigilInStart = 0.02;
+        const sigilInEnd = 0.08;
+        const sigilOutStart = 0.25;
+        const sigilOutEnd = 0.35;
+        
+        let sigilOpacity = 0;
+        let sigilScrollProgress = 0;
+        
+        if (scrollProgress < sigilInStart) {
+          // Before sigil appears
+          sigilOpacity = 0;
+          sigilScrollProgress = 0;
+        } else if (scrollProgress >= sigilInStart && scrollProgress < sigilInEnd) {
+          // Fading in during definition section
+          const fadeIn = (scrollProgress - sigilInStart) / (sigilInEnd - sigilInStart);
+          sigilOpacity = fadeIn;
+          // Map to the emergence range that ThoughtformSigil expects (0.02 to 0.08)
+          sigilScrollProgress = sigilInStart + fadeIn * (sigilInEnd - sigilInStart);
+        } else if (scrollProgress >= sigilInEnd && scrollProgress < sigilOutStart) {
+          // Fully visible in definition section
+          sigilOpacity = 1;
+          sigilScrollProgress = sigilInEnd; // Fully formed
+        } else if (scrollProgress >= sigilOutStart && scrollProgress < sigilOutEnd) {
+          // Fading out after definition section
+          const fadeOut = (scrollProgress - sigilOutStart) / (sigilOutEnd - sigilOutStart);
+          sigilOpacity = 1 - fadeOut;
+          // Reverse the emergence animation by going backwards through the range
+          sigilScrollProgress = sigilInEnd - fadeOut * (sigilInEnd - sigilInStart);
+        } else {
+          // After fade out
+          sigilOpacity = 0;
+          sigilScrollProgress = sigilInStart;
+        }
+        
+        return (
+          <div 
+            ref={definitionRef}
+            className="fixed-sigil-container"
+            style={{
+              opacity: sigilOpacity,
+              pointerEvents: 'none',
+            }}
+          >
+            <ThoughtformSigil
+              size={rawConfig.sigil?.size ?? 220}
+              particleCount={rawConfig.sigil?.particleCount ?? 500}
+              color={rawConfig.sigil?.color ?? "202, 165, 84"}
+              scrollProgress={sigilScrollProgress}
+              particleSize={rawConfig.sigil?.particleSize ?? 1.0}
+              opacity={rawConfig.sigil?.opacity ?? 1.0}
+              wanderStrength={rawConfig.sigil?.wanderStrength ?? 1.0}
+              pulseSpeed={rawConfig.sigil?.pulseSpeed ?? 1.0}
+              returnStrength={rawConfig.sigil?.returnStrength ?? 1.0}
+            />
+          </div>
+        );
+      })()}
 
       {/* Scroll Container - Content Sections */}
       <main className="scroll-container">
@@ -201,7 +362,46 @@ function NavigationCockpitInner() {
             </div>
 
             {/* Module cards on the right - pointing to sigil */}
+            {/* Connecting lines from module cards to sigil - animated angular paths */}
+            <svg
+              className="module-connection-lines"
+              style={{
+                opacity: scrollProgress < 0.08 ? 0 : scrollProgress < 0.18 ? 1 : Math.max(0, 1 - (scrollProgress - 0.18) * 8),
+                visibility: scrollProgress < 0.08 ? 'hidden' : 'visible',
+                pointerEvents: 'none',
+              }}
+            >
+              <path
+                ref={linePathRefs[0]}
+                fill="none"
+                stroke="rgba(202, 165, 84, 0.3)"
+                strokeWidth="1"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="module-line module-line-1"
+              />
+              <path
+                ref={linePathRefs[1]}
+                fill="none"
+                stroke="rgba(202, 165, 84, 0.3)"
+                strokeWidth="1"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="module-line module-line-2"
+              />
+              <path
+                ref={linePathRefs[2]}
+                fill="none"
+                stroke="rgba(202, 165, 84, 0.3)"
+                strokeWidth="1"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="module-line module-line-3"
+              />
+            </svg>
+
             <div 
+              ref={modulesRef}
               className="definition-modules"
               style={{
                 opacity: scrollProgress < 0.08 ? 0 : scrollProgress < 0.18 ? 1 : Math.max(0, 1 - (scrollProgress - 0.18) * 8),
@@ -209,31 +409,28 @@ function NavigationCockpitInner() {
                 pointerEvents: scrollProgress > 0.25 || scrollProgress < 0.08 ? 'none' : 'auto',
               }}
             >
-              <div className="module-card">
+              <div ref={moduleCardRefs[0]} className="module-card">
                 <div className="module-connect" />
                 <div className="module-header">
                   <span className="module-id">MOD_01</span>
-                  <span className="module-icon">⊞</span>
                 </div>
                 <h3 className="module-title">Navigate Intelligence</h3>
                 <p className="module-desc">Chart a course through the latent space. Identify high-value coordinates amidst the noise.</p>
               </div>
 
-              <div className="module-card">
+              <div ref={moduleCardRefs[1]} className="module-card">
                 <div className="module-connect" />
                 <div className="module-header">
                   <span className="module-id">MOD_02</span>
-                  <span className="module-icon">⊟</span>
                 </div>
                 <h3 className="module-title">Steer from Mediocrity</h3>
                 <p className="module-desc">Force the model away from the average. Displace the probable to find the exceptional.</p>
               </div>
 
-              <div className="module-card">
+              <div ref={moduleCardRefs[2]} className="module-card">
                 <div className="module-connect" />
                 <div className="module-header">
                   <span className="module-id">MOD_03</span>
-                  <span className="module-icon">✦</span>
                 </div>
                 <h3 className="module-title">Leverage Hallucinations</h3>
                 <p className="module-desc">Errors are not bugs; they are creative vectors. Use the glitch to break linear thinking.</p>
@@ -641,6 +838,22 @@ function NavigationCockpitInner() {
         }
 
         /* ═══════════════════════════════════════════════════════════════
+           MODULE CONNECTION LINES - Lines from cards to sigil
+           ═══════════════════════════════════════════════════════════════ */
+        .module-connection-lines {
+          position: fixed;
+          inset: 0;
+          width: 100vw;
+          height: 100vh;
+          z-index: 4;
+          pointer-events: none;
+        }
+
+        .module-line {
+          transition: opacity 0.3s ease-out;
+        }
+
+        /* ═══════════════════════════════════════════════════════════════
            MODULE CARDS - Right side pointing to sigil
            ═══════════════════════════════════════════════════════════════ */
         .definition-modules {
@@ -650,7 +863,7 @@ function NavigationCockpitInner() {
           transform: translateY(-50%);
           display: flex;
           flex-direction: column;
-          gap: 20px;
+          gap: 36px;
           z-index: 10;
           transition: opacity 0.3s ease-out, visibility 0.3s ease-out;
         }
@@ -710,7 +923,6 @@ function NavigationCockpitInner() {
 
         .module-header {
           display: flex;
-          justify-content: space-between;
           align-items: center;
           margin-bottom: 10px;
         }
