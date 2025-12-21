@@ -30,8 +30,8 @@ export function HeroSigil({ scrollProgress, config }: HeroSigilProps) {
 
   let sigilOpacity = 1;
   // ThoughtformSigil uses scrollProgress 0.02-0.08 for emergence
-  // Pass 0.08+ for fully formed, lower values cause particles to scatter
-  let sigilScrollProgress = 0.08; // Start fully formed
+  // Use 1.0 to ensure fully formed from the start (well above 0.08)
+  let sigilScrollProgress = 1.0; // Start fully formed
   let scale = 1;
 
   if (scrollProgress >= heroSigilStart && scrollProgress < heroSigilEnd) {
@@ -40,7 +40,7 @@ export function HeroSigil({ scrollProgress, config }: HeroSigilProps) {
     sigilOpacity = 1 - fadeOut;
     // Particles dissolve/scatter as they flow into gateway
     // Going below 0.02 makes particles scatter (before emergence)
-    sigilScrollProgress = 0.08 - fadeOut * 0.07; // From fully formed (0.08) to scattering (0.01)
+    sigilScrollProgress = 1.0 - fadeOut * 0.99; // From fully formed (1.0) to scattering (0.01)
     scale = 1 - fadeOut * 0.2; // Slight shrink
   } else if (scrollProgress >= heroSigilEnd) {
     // Fully faded out
