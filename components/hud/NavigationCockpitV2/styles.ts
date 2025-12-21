@@ -46,29 +46,38 @@ export const cockpitStyles = `
     transition: opacity 0.3s ease-out;
   }
 
-  /* Runway arrows pointing to gateway - bottom aligned */
+  /* Runway arrows pointing to gateway - same width as hero text card */
   .hero-runway-arrows {
     position: fixed;
     bottom: 90px;
     left: calc(var(--rail-width) + 120px);
     display: flex;
-    gap: 24px;
+    justify-content: space-between;
+    width: calc(100% - var(--rail-width) - 120px - var(--rail-width) - 120px);
+    max-width: 500px;
     z-index: 10;
     transition: opacity 0.3s ease-out;
   }
 
   .runway-arrow {
-    font-size: 28px;
+    font-size: 20px;
     color: var(--gold, #caa554);
     opacity: 0.3;
     animation: runway-pulse 2s ease-in-out infinite;
   }
 
   .runway-arrow-1 { animation-delay: 0s; }
-  .runway-arrow-2 { animation-delay: 0.15s; }
-  .runway-arrow-3 { animation-delay: 0.3s; }
-  .runway-arrow-4 { animation-delay: 0.45s; }
-  .runway-arrow-5 { animation-delay: 0.6s; }
+  .runway-arrow-2 { animation-delay: 0.1s; }
+  .runway-arrow-3 { animation-delay: 0.2s; }
+  .runway-arrow-4 { animation-delay: 0.3s; }
+  .runway-arrow-5 { animation-delay: 0.4s; }
+  .runway-arrow-6 { animation-delay: 0.5s; }
+  .runway-arrow-7 { animation-delay: 0.6s; }
+  .runway-arrow-8 { animation-delay: 0.7s; }
+  .runway-arrow-9 { animation-delay: 0.8s; }
+  .runway-arrow-10 { animation-delay: 0.9s; }
+  .runway-arrow-11 { animation-delay: 1.0s; }
+  .runway-arrow-12 { animation-delay: 1.1s; }
 
   @keyframes runway-pulse {
     0%, 100% {

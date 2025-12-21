@@ -114,11 +114,11 @@ function NavigationCockpitInner() {
           pointerEvents: "none",
         }}
       >
-        <div className="runway-arrow runway-arrow-1">›</div>
-        <div className="runway-arrow runway-arrow-2">›</div>
-        <div className="runway-arrow runway-arrow-3">›</div>
-        <div className="runway-arrow runway-arrow-4">›</div>
-        <div className="runway-arrow runway-arrow-5">›</div>
+        {Array.from({ length: 12 }, (_, i) => (
+          <div key={i} className={`runway-arrow runway-arrow-${i + 1}`}>
+            ›
+          </div>
+        ))}
       </div>
 
       {/* Hero Text - bottom aligned */}
