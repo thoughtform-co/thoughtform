@@ -4,7 +4,7 @@ import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { signInWithMagicLink } from "@/lib/auth";
+import { signInWithMagicLink, signOut } from "@/lib/auth";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { ParticleCanvasV2 } from "@/components/hud/ParticleCanvasV2";
 import { DEFAULT_CONFIG } from "@/lib/particle-config";
@@ -25,6 +25,9 @@ function AdminPageContent({ searchParams }: { searchParams: URLSearchParams | nu
   const [isSending, setIsSending] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
+
+  const allowedEmail = process.env.NEXT_PUBLIC_ALLOWED_EMAIL?.toLowerCase();
 
   // Ensure we're mounted (client-side only)
   useEffect(() => {
@@ -73,6 +76,20 @@ function AdminPageContent({ searchParams }: { searchParams: URLSearchParams | nu
   // Redirect if already logged in (only after mount to prevent SSR issues)
   useEffect(() => {
     if (mounted && !isLoading && user) {
+      const userEmail = user.email?.toLowerCase();
+      // If user is not allowed, sign them out and stay on page
+      if (allowedEmail && userEmail && userEmail !== allowedEmail && !signingOut) {
+        console.log("[Admin] User email not allowed, signing out", userEmail);
+        setSigningOut(true);
+        signOut()
+          .catch((err) => console.error("[Admin] Sign out failed:", err))
+          .finally(() => {
+            setSigningOut(false);
+            setError("Access restricted. Please sign in with an authorized email.");
+          });
+        return;
+      }
+
       console.log("[Admin] User is logged in, redirecting to home", user.email);
       // Small delay to ensure the page doesn't flash
       const timer = setTimeout(() => {
