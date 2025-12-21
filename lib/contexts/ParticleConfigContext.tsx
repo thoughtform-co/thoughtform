@@ -19,6 +19,7 @@ import {
   type CameraConfig,
   type SigilConfig,
 } from "@/lib/particle-config";
+import { useAuth } from "@/components/auth/AuthProvider";
 
 // localStorage keys
 const LOCAL_STORAGE_KEY = "thoughtform-particle-config";
@@ -188,6 +189,7 @@ interface ParticleConfigProviderProps {
 }
 
 export function ParticleConfigProvider({ children }: ParticleConfigProviderProps) {
+  const { user } = useAuth();
   const [config, setConfig] = useState<ParticleSystemConfig>(DEFAULT_CONFIG);
   const [savedConfig, setSavedConfig] = useState<ParticleSystemConfig>(DEFAULT_CONFIG);
   const [isLoading, setIsLoading] = useState(true);
@@ -218,8 +220,10 @@ export function ParticleConfigProvider({ children }: ParticleConfigProviderProps
     let loadedFrom: "server" | "local" = "local";
 
     // 1. Try server API first (which uses Supabase server-side with service role key)
+    // Only load user-specific config if user is logged in
     try {
-      const response = await fetch("/api/particles/config");
+      const url = user?.id ? `/api/particles/config?userId=${user.id}` : "/api/particles/config";
+      const response = await fetch(url);
       if (response.ok) {
         const data = await response.json();
         loadedConfig = mergeWithDefaults(data);
@@ -248,7 +252,7 @@ export function ParticleConfigProvider({ children }: ParticleConfigProviderProps
     setSavedConfig(loadedConfig);
     setStorageMode(loadedFrom === "server" ? "server" : "local");
     setIsLoading(false);
-  }, []);
+  }, [user?.id]);
 
   // Auto-save debounce timer
   const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -266,29 +270,38 @@ export function ParticleConfigProvider({ children }: ParticleConfigProviderProps
   }, []);
 
   // Auto-save to server API (which uses Supabase server-side, less frequent, debounced longer)
-  const autoSaveToServer = useCallback(async (configToSave: ParticleSystemConfig) => {
-    if (serverSaveTimerRef.current) {
-      clearTimeout(serverSaveTimerRef.current);
-    }
-    serverSaveTimerRef.current = setTimeout(async () => {
-      try {
-        const mergedConfig = mergeWithDefaults(configToSave);
-        const response = await fetch("/api/particles/config", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(mergedConfig),
-        });
+  const autoSaveToServer = useCallback(
+    async (configToSave: ParticleSystemConfig) => {
+      // Only save if user is logged in
+      if (!user?.id) return;
 
-        if (!response.ok) {
-          console.warn("Failed to auto-save to server:", response.statusText);
-        }
-      } catch (err) {
-        console.warn("Server auto-save error:", err);
+      if (serverSaveTimerRef.current) {
+        clearTimeout(serverSaveTimerRef.current);
       }
-    }, 2000); // 2s debounce for server API
-  }, []);
+      serverSaveTimerRef.current = setTimeout(async () => {
+        try {
+          const mergedConfig = mergeWithDefaults(configToSave);
+          const response = await fetch("/api/particles/config", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              ...mergedConfig,
+              userId: user.id,
+            }),
+          });
+
+          if (!response.ok) {
+            console.warn("Failed to auto-save to server:", response.statusText);
+          }
+        } catch (err) {
+          console.warn("Server auto-save error:", err);
+        }
+      }, 2000); // 2s debounce for server API
+    },
+    [user?.id]
+  );
 
   useEffect(() => {
     loadConfig();
@@ -399,6 +412,11 @@ export function ParticleConfigProvider({ children }: ParticleConfigProviderProps
 
   // Save config to server (with localStorage fallback)
   const saveConfig = useCallback(async (): Promise<boolean> => {
+    if (!user?.id) {
+      setError("You must be logged in to save configuration");
+      return false;
+    }
+
     setError(null);
 
     // Prepare config with incremented version
@@ -413,7 +431,10 @@ export function ParticleConfigProvider({ children }: ParticleConfigProviderProps
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(config),
+        body: JSON.stringify({
+          ...configToSave,
+          userId: user.id,
+        }),
       });
 
       if (response.ok) {
@@ -428,6 +449,7 @@ export function ParticleConfigProvider({ children }: ParticleConfigProviderProps
         return true;
       } else {
         const errorData = await response.json();
+        setError(errorData.error || "Failed to save configuration");
         // If KV not configured, fall back to localStorage
         if (errorData.error === "Vercel KV not configured" || response.status === 503) {
           // Ensure config is merged with defaults before saving
@@ -458,13 +480,18 @@ export function ParticleConfigProvider({ children }: ParticleConfigProviderProps
 
   // Reset to defaults
   const resetToDefaults = useCallback(async (): Promise<boolean> => {
+    if (!user?.id) {
+      setError("You must be logged in to reset configuration");
+      return false;
+    }
+
     setError(null);
 
     // Always clear localStorage
     clearLocalStorage();
 
     try {
-      const response = await fetch("/api/particles/config", {
+      const response = await fetch(`/api/particles/config?userId=${user.id}`, {
         method: "DELETE",
       });
 
@@ -490,7 +517,7 @@ export function ParticleConfigProvider({ children }: ParticleConfigProviderProps
       setStorageMode("local");
       return true;
     }
-  }, []);
+  }, [user?.id]);
 
   // Reload config from server
   const reloadConfig = useCallback(async () => {

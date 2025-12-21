@@ -94,13 +94,18 @@ create trigger update_elements_updated_at
 -- alter table sections enable row level security;
 -- alter table elements enable row level security;
 
--- Particle Config table (for storing particle system configuration)
+-- Particle Config table (for storing particle system configuration per user)
 create table if not exists particle_config (
-  id text primary key default 'default',
+  id text primary key, -- user_id (as text) or 'default' for global
+  user_id uuid references auth.users(id) on delete cascade,
   config jsonb not null default '{}',
   created_at timestamptz default now(),
-  updated_at timestamptz default now()
+  updated_at timestamptz default now(),
+  unique(user_id)
 );
+
+-- Create index on user_id for faster lookups
+create index if not exists idx_particle_config_user_id on particle_config(user_id);
 
 -- Apply updated_at trigger to particle_config
 drop trigger if exists update_particle_config_updated_at on particle_config;

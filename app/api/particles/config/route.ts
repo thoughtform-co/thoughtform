@@ -13,13 +13,31 @@ const CONFIG_KEY = "particle-system-config";
 /**
  * GET /api/particles/config
  * Returns the current particle system configuration
- * Priority: Supabase > Vercel KV > defaults
+ * Priority: User-specific Supabase > Global Supabase > Vercel KV > defaults
  */
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const { searchParams } = new URL(request.url);
+    const userId = searchParams.get("userId");
+
     // 1. Try Supabase first (server-side with service role key)
     const supabase = createServerClient();
     if (supabase) {
+      // If user ID provided, try user-specific config first
+      if (userId) {
+        const { data, error } = await supabase
+          .from("particle_config")
+          .select("config")
+          .eq("user_id", userId)
+          .single();
+
+        if (!error && data?.config) {
+          const config = mergeWithDefaults(data.config);
+          return NextResponse.json(config);
+        }
+      }
+
+      // Fall back to global default config
       const { data, error } = await supabase
         .from("particle_config")
         .select("config")
@@ -71,7 +89,9 @@ export async function POST(request: Request) {
 
     // Parse and validate the config
     const body = await request.json();
+    const userId = body.userId;
     const config = mergeWithDefaults(body) as ParticleSystemConfig;
+    delete (config as any).userId; // Remove userId from config object
 
     // Increment version on save
     config.version = (config.version || 0) + 1;
@@ -79,6 +99,31 @@ export async function POST(request: Request) {
     // 1. Try to save to Supabase first (server-side with service role key)
     const supabase = createServerClient();
     if (supabase) {
+      // If user ID provided, save as user-specific config
+      if (userId) {
+        const { error: supabaseError } = await supabase.from("particle_config").upsert(
+          {
+            id: userId, // Use user ID as primary key (text)
+            user_id: userId,
+            config: config,
+            updated_at: new Date().toISOString(),
+          },
+          {
+            onConflict: "user_id", // Use user_id for conflict resolution
+          }
+        );
+
+        if (!supabaseError) {
+          return NextResponse.json({
+            success: true,
+            config,
+            message: "Configuration saved successfully to Supabase (user-specific)",
+          });
+        }
+        console.warn("Supabase user config save failed, falling back:", supabaseError);
+      }
+
+      // Fall back to global default config (if no user ID or user save failed)
       const { error: supabaseError } = await supabase.from("particle_config").upsert(
         {
           id: "default",
@@ -94,7 +139,9 @@ export async function POST(request: Request) {
         return NextResponse.json({
           success: true,
           config,
-          message: "Configuration saved successfully to Supabase",
+          message: userId
+            ? "Configuration saved successfully to Supabase (user-specific)"
+            : "Configuration saved successfully to Supabase (global)",
         });
       }
       console.warn("Supabase save failed, falling back to KV:", supabaseError);
@@ -146,9 +193,29 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: "Unauthorized - admin access required" }, { status: 401 });
     }
 
+    const { searchParams } = new URL(request.url);
+    const userId = searchParams.get("userId");
+
     // 1. Try to delete from Supabase first
     const supabase = createServerClient();
     if (supabase) {
+      // If user ID provided, delete user-specific config
+      if (userId) {
+        const { error: supabaseError } = await supabase
+          .from("particle_config")
+          .delete()
+          .eq("user_id", userId);
+
+        if (!supabaseError) {
+          return NextResponse.json({
+            success: true,
+            config: DEFAULT_CONFIG,
+            message: "Configuration reset to defaults (user-specific)",
+          });
+        }
+      }
+
+      // Fall back to deleting global default
       const { error: supabaseError } = await supabase
         .from("particle_config")
         .delete()
@@ -158,7 +225,9 @@ export async function DELETE(request: Request) {
         return NextResponse.json({
           success: true,
           config: DEFAULT_CONFIG,
-          message: "Configuration reset to defaults (Supabase)",
+          message: userId
+            ? "Configuration reset to defaults (user-specific)"
+            : "Configuration reset to defaults (global)",
         });
       }
       console.warn("Supabase delete failed, falling back to KV:", supabaseError);

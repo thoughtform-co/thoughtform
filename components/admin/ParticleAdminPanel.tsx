@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useParticleConfig, type ConfigPreset } from "@/lib/contexts/ParticleConfigContext";
+import { useAuth } from "@/components/auth/AuthProvider";
 import {
   COLOR_PRESETS,
   SHAPE_LABELS,
@@ -255,7 +256,10 @@ export function ParticleAdminPanel() {
     addLandmark(newLandmark);
   }, [addLandmark]);
 
-  if (isLoading) return null;
+  const { user } = useAuth();
+
+  // Only show admin panel for logged-in users
+  if (isLoading || !user) return null;
 
   return (
     <>
