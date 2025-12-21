@@ -242,8 +242,8 @@ export function ConnectorLines({
           state.targetPos = { x: cardPos.x, y: cardPos.y };
         }
 
-        // Different switch intervals for each line (0.2 to 0.4 seconds - VERY FAST)
-        const switchInterval = 0.2 + index * 0.08;
+        // Different switch intervals for each line (0.6 to 0.9 seconds)
+        const switchInterval = 0.6 + index * 0.15;
         const staggeredTime = elapsed + INIT_OFFSETS[index] * 2;
         const timeSinceSwitch = staggeredTime - state.lastSwitch;
 
@@ -273,8 +273,8 @@ export function ConnectorLines({
           }
         }
 
-        // Very fast interpolation toward target for snappy analysis feel
-        const lerpSpeed = 0.35; // Very snappy movement
+        // Smooth interpolation toward target for deliberate analysis feel
+        const lerpSpeed = 0.15; // Smoother movement
         state.targetPos.x += (targetX - state.targetPos.x) * lerpSpeed;
         state.targetPos.y += (targetY - state.targetPos.y) * lerpSpeed;
 
