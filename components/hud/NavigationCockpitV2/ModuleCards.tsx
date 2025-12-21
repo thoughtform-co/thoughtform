@@ -19,20 +19,17 @@ const MODULE_CARDS_DATA: ModuleCardProps[] = [
   {
     id: "VECTOR_01",
     title: "NAVIGATE",
-    description:
-      "Chart a course through the latent space. Identify high-value coordinates amidst the noise.",
+    description: "Meaning is geometry. Navigate it.",
   },
   {
     id: "VECTOR_02",
     title: "COLLABORATE",
-    description:
-      "Force the model away from the average. Displace the probable to find the exceptional.",
+    description: "Tool and partner blur. Develop intuition for both.",
   },
   {
     id: "VECTOR_03",
     title: "BUILD",
-    description:
-      "Errors are not bugs; they are creative vectors. Use the glitch to break linear thinking.",
+    description: "Thought becomes form. Build anything.",
   },
 ];
 
@@ -116,9 +113,6 @@ export const ModuleCards = forwardRef<HTMLDivElement, ModuleCardsProps>(function
             }}
           >
             <div className="module-connect" />
-            <div className="module-header">
-              <span className="module-id">{card.id}</span>
-            </div>
             <h3 className="module-title">{card.title}</h3>
             <p className="module-desc">{card.description}</p>
           </div>
