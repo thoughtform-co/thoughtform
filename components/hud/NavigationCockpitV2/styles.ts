@@ -45,16 +45,14 @@ export const cockpitStyles = `
     transition: opacity 0.3s ease-out;
   }
 
-  /* Runway arrows pointing to gateway - vertically centered */
+  /* Runway arrows pointing to gateway - vertically centered, same width as hero text */
   .hero-runway-arrows {
     position: fixed;
     top: 50%;
     left: calc(var(--rail-width) + 120px);
     transform: translateY(-50%);
     display: flex;
-    justify-content: space-between;
-    width: calc(100% - var(--rail-width) - 120px - var(--rail-width) - 120px);
-    max-width: 500px;
+    gap: 16px;
     z-index: 10;
     transition: opacity 0.3s ease-out;
   }
