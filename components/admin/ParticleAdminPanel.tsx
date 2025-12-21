@@ -414,9 +414,9 @@ export function ParticleAdminPanel() {
       <style jsx global>{`
         .admin-toggle {
           position: fixed;
-          top: calc(clamp(32px, 4vw, 64px) + 50px);
-          right: calc(clamp(32px, 4vw, 64px) + 8px);
-          z-index: 9999;
+          top: 20px;
+          right: calc(clamp(48px, 8vw, 120px) + 130px);
+          z-index: 1000;
           display: flex;
           align-items: center;
           justify-content: center;
