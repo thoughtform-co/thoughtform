@@ -357,10 +357,10 @@ export function ConnectorLines({
 
   if (transitionProgress !== undefined) {
     // New timing: appear immediately when sigil starts forming (tHeroToDef > 0.5)
-    // Fade out as we scroll to next section
+    // Fade out as we scroll to next section (slower to match sigil animation)
     const t = transitionProgress;
     const fadeOutStart = 0.15;
-    const fadeOutEnd = 0.22;
+    const fadeOutEnd = 0.3;
     if (scrollProgress < fadeOutStart) {
       // Still in definition section - normal visibility
       opacity = t < 0.5 ? 0 : t < 0.65 ? (t - 0.5) / 0.15 : 1;

@@ -1,7 +1,7 @@
 "use client";
 
-import { useMemo } from "react";
-import { NavigationBar } from "./NavigationBar";
+import { useMemo, forwardRef } from "react";
+import { NavigationBar, NavigationBarHandle } from "./NavigationBar";
 
 interface SectionData {
   sector: string;
@@ -55,11 +55,13 @@ interface HUDFrameProps {
   onNavigate: (sectionId: string) => void;
 }
 
-export function HUDFrame({
-  activeSection,
-  scrollProgress,
-  onNavigate,
-}: HUDFrameProps) {
+// Re-export NavigationBarHandle for convenience
+export type { NavigationBarHandle };
+
+export const HUDFrame = forwardRef<NavigationBarHandle, HUDFrameProps>(function HUDFrame(
+  { activeSection, scrollProgress, onNavigate },
+  ref
+) {
   // Compute HUD state directly from props (no useState to avoid loops)
   const hudState = useMemo(() => {
     const p = scrollProgress;
@@ -118,7 +120,7 @@ export function HUDFrame({
   return (
     <div className="hud-frame">
       {/* Top Navigation Bar - Brandworld Specification */}
-      <NavigationBar activeSection={activeSection} onNavigate={onNavigate} />
+      <NavigationBar ref={ref} activeSection={activeSection} onNavigate={onNavigate} />
 
       {/* Corner Brackets - Gold L-shapes (hidden in hero) */}
       {showHUD && (
@@ -137,9 +139,7 @@ export function HUDFrame({
             <div className="scale-ticks">
               {Array.from({ length: tickCount + 1 }).map((_, i) => (
                 <div key={i} style={{ position: "relative" }}>
-                  <div
-                    className={`tick ${i % 5 === 0 ? "tick-major" : "tick-minor"}`}
-                  />
+                  <div className={`tick ${i % 5 === 0 ? "tick-major" : "tick-minor"}`} />
                   {tickLabels[i] && (
                     <span
                       className="tick-label"
@@ -155,10 +155,7 @@ export function HUDFrame({
                 </div>
               ))}
             </div>
-            <div
-              className="scale-indicator"
-              style={{ top: `${scrollProgress * 100}%` }}
-            />
+            <div className="scale-indicator" style={{ top: `${scrollProgress * 100}%` }} />
           </div>
         </aside>
       )}
@@ -169,10 +166,7 @@ export function HUDFrame({
           <div className="rail-scale">
             <div className="scale-ticks">
               {Array.from({ length: tickCount + 1 }).map((_, i) => (
-                <div
-                  key={i}
-                  className={`tick ${i % 5 === 0 ? "tick-major" : "tick-minor"}`}
-                />
+                <div key={i} className={`tick ${i % 5 === 0 ? "tick-major" : "tick-minor"}`} />
               ))}
             </div>
           </div>
@@ -181,8 +175,7 @@ export function HUDFrame({
               const sectionOrder = Object.keys(sectionData);
               const isActive = marker.section === activeSection;
               const isPast =
-                sectionOrder.indexOf(marker.section) <=
-                sectionOrder.indexOf(activeSection);
+                sectionOrder.indexOf(marker.section) <= sectionOrder.indexOf(activeSection);
               return (
                 <div
                   key={marker.section}
@@ -223,4 +216,4 @@ export function HUDFrame({
       )}
     </div>
   );
-}
+});

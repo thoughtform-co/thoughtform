@@ -244,6 +244,8 @@ interface SigilSectionProps {
   onParticlePositions: React.MutableRefObject<ParticlePosition[]>;
   /** Origin position for brandmark-to-sigil animation (screen coordinates) */
   originPos?: { x: number; y: number } | null;
+  /** Destination position for sigil-to-navbar animation when leaving definition section */
+  destinationPos?: { x: number; y: number; width: number; height: number } | null;
   /** Hero→Definition transition progress (0-1) for positioning animation */
   transitionProgress?: number;
 }
@@ -254,7 +256,14 @@ function easeOutCubic(t: number): number {
 }
 
 export const SigilSection = forwardRef<HTMLDivElement, SigilSectionProps>(function SigilSection(
-  { scrollProgress, config, onParticlePositions, originPos, transitionProgress = 0 },
+  {
+    scrollProgress,
+    config,
+    onParticlePositions,
+    originPos,
+    destinationPos,
+    transitionProgress = 0,
+  },
   ref
 ) {
   // Track viewport center for animation
@@ -272,14 +281,17 @@ export const SigilSection = forwardRef<HTMLDivElement, SigilSectionProps>(functi
     return () => window.removeEventListener("resize", updateCenter);
   }, []);
 
-  // Sigil appears during definition section (0.02 to 0.18), fades out as we scroll to next section
+  // Sigil appears during definition section (0.02 to 0.18), then moves to navbar logo
   const sigilInStart = 0.02;
   const sigilInEnd = 0.08;
-  const sigilOutStart = 0.15; // Start fading out earlier
-  const sigilOutEnd = 0.22; // Complete fade out before next section
+  const sigilOutStart = 0.15; // Start moving toward navbar
+  const sigilOutEnd = 0.3; // Complete arrival at navbar (slower animation)
 
   let sigilOpacity = 0;
   let sigilScrollProgress = 0;
+
+  // Exit progress: 0 = at center, 1 = at navbar logo
+  let exitProgress = 0;
 
   if (scrollProgress < sigilInStart) {
     // Before sigil appears
@@ -296,15 +308,21 @@ export const SigilSection = forwardRef<HTMLDivElement, SigilSectionProps>(functi
     sigilOpacity = 1;
     sigilScrollProgress = sigilInEnd; // Fully formed
   } else if (scrollProgress >= sigilOutStart && scrollProgress < sigilOutEnd) {
-    // Fading out after definition section
-    const fadeOut = (scrollProgress - sigilOutStart) / (sigilOutEnd - sigilOutStart);
-    sigilOpacity = 1 - fadeOut;
-    // Reverse the emergence animation by going backwards through the range
-    sigilScrollProgress = sigilInEnd - fadeOut * (sigilInEnd - sigilInStart);
+    // Moving toward navbar logo - stay visible until nearly at destination
+    exitProgress = (scrollProgress - sigilOutStart) / (sigilOutEnd - sigilOutStart);
+    const easedExit = easeOutCubic(exitProgress);
+
+    // Keep opacity at 1 for 98% of movement, only fade in final 2%
+    // This ensures particles are visible until they're fully inside the navbar icon
+    sigilOpacity = exitProgress < 0.98 ? 1 : 1 - (exitProgress - 0.98) / 0.02;
+
+    // Reverse the emergence animation as it moves - particles fold back
+    sigilScrollProgress = sigilInEnd - easedExit * (sigilInEnd - sigilInStart);
   } else {
-    // After fade out
+    // After arriving at navbar
     sigilOpacity = 0;
     sigilScrollProgress = sigilInStart;
+    exitProgress = 1;
   }
 
   if (config?.enabled === false) {
@@ -312,12 +330,14 @@ export const SigilSection = forwardRef<HTMLDivElement, SigilSectionProps>(functi
   }
 
   // ═══════════════════════════════════════════════════════════════════
-  // BRANDMARK → SIGIL POSITION ANIMATION
-  // Sigil starts at brandmark position and moves to center
+  // SIGIL POSITION ANIMATION
+  // Entry: Brandmark → Center (during hero→definition transition)
+  // Exit: Center → Navbar Logo (when leaving definition section)
   // ═══════════════════════════════════════════════════════════════════
   const sigilSize = config?.size ?? 220;
+  const navbarLogoSize = destinationPos?.width ?? 22;
 
-  // Calculate transform based on transition progress
+  // Calculate transform based on transition progress and exit progress
   let transformStyle = "translate(-50%, -50%)"; // Default: centered
   let scaleValue = 1;
 
@@ -357,8 +377,32 @@ export const SigilSection = forwardRef<HTMLDivElement, SigilSectionProps>(functi
   // Glow intensity for the container (CSS filter) - STRONGER
   const glowIntensity = transitionIntensity * 25; // 0 to 25px blur at peak
 
-  if (originPos && transitionProgress < 1) {
-    // Apply easing to the transition
+  if (exitProgress > 0 && destinationPos) {
+    // ═══════════════════════════════════════════════════════════════════
+    // EXIT ANIMATION: Center → Navbar Logo
+    // Sigil moves from viewport center to navbar logo position
+    // ═══════════════════════════════════════════════════════════════════
+    const easedExit = easeOutCubic(exitProgress);
+
+    // Calculate offset from center to navbar logo
+    const destOffsetX = destinationPos.x - viewportCenter.x;
+    const destOffsetY = destinationPos.y - viewportCenter.y;
+
+    // Interpolate from center (0 offset) to destination offset
+    const currentOffsetX = destOffsetX * easedExit;
+    const currentOffsetY = destOffsetY * easedExit;
+
+    // Scale: shrink from full (1) to navbar logo size ratio
+    // Final scale should match navbar logo size
+    const targetScale = navbarLogoSize / sigilSize;
+    scaleValue = 1 - (1 - targetScale) * easedExit;
+
+    // Apply transform
+    transformStyle = `translate(calc(-50% + ${currentOffsetX}px), calc(-50% + ${currentOffsetY}px)) scale(${scaleValue})`;
+  } else if (originPos && transitionProgress < 1) {
+    // ═══════════════════════════════════════════════════════════════════
+    // ENTRY ANIMATION: Brandmark → Center
+    // ═══════════════════════════════════════════════════════════════════
     const easedT = easeOutCubic(transitionProgress);
 
     // Calculate offset from center to origin

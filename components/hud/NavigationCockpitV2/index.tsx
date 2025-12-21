@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { ParticleCanvasV2 } from "../ParticleCanvasV2";
 import { ThreeGateway } from "../ThreeGateway";
-import { HUDFrame } from "../HUDFrame";
+import { HUDFrame, NavigationBarHandle } from "../HUDFrame";
 import { Wordmark } from "../Wordmark";
 import { WordmarkSans } from "../WordmarkSans";
 import { GlitchText } from "../GlitchText";
@@ -56,12 +56,23 @@ function NavigationCockpitInner() {
     useRef<HTMLDivElement>(null),
   ];
 
+  // Ref for navbar logo (sigil destination)
+  const navbarLogoRef = useRef<NavigationBarHandle>(null);
+
   // Ref to receive particle positions from ThoughtformSigil
   const sigilParticlesRef = useRef<ParticlePosition[]>([]);
 
   // State for wordmark bounds (for particle morph positioning)
   const [wordmarkBounds, setWordmarkBounds] = useState<DOMRect | null>(null);
   const [defWordmarkBounds, setDefWordmarkBounds] = useState<{
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  } | null>(null);
+
+  // State for navbar logo position (sigil destination when leaving definition section)
+  const [navbarLogoPos, setNavbarLogoPos] = useState<{
     x: number;
     y: number;
     width: number;
@@ -94,6 +105,13 @@ function NavigationCockpitInner() {
           width: rect.width,
           height: rect.height,
         });
+      }
+      // Get navbar logo position for sigil destination
+      if (navbarLogoRef.current) {
+        const logoPos = navbarLogoRef.current.getLogoPosition();
+        if (logoPos) {
+          setNavbarLogoPos(logoPos);
+        }
       }
     };
     updateBounds();
@@ -195,15 +213,14 @@ function NavigationCockpitInner() {
           top: `calc(${lerp(90, 0, tHeroToDef)}px + ${lerp(0, 50, tHeroToDef)}vh - ${lerp(0, 100, tHeroToDef)}px)`,
           // CSS variable for brandmark fade
           ["--brandmark-opacity" as string]: 1 - tHeroToDef,
-          // Fade out as we scroll to next section (same timing as sigil/cards)
-          // Wordmark should ONLY fade, not close inward
+          // Fade out faster - wordmark disappears early while sigil is still animating toward navbar
           opacity:
             scrollProgress < 0.15
               ? 1
-              : scrollProgress < 0.22
-                ? 1 - (scrollProgress - 0.15) / 0.07
+              : scrollProgress < 0.2
+                ? 1 - (scrollProgress - 0.15) / 0.05
                 : 0,
-          visibility: scrollProgress < 0.22 ? "visible" : "hidden",
+          visibility: scrollProgress < 0.2 ? "visible" : "hidden",
         }}
       >
         {/* Hero Wordmark - stays visible until particles fully take over */}
@@ -272,19 +289,19 @@ function NavigationCockpitInner() {
           // Frame bottom edge at t=1: calc(50vh - 120px) = balanced spacing
           // This positions frame below the wordmark with comfortable spacing
           bottom: `calc(${90 * (1 - tHeroToDef)}px + ${tHeroToDef * 50}vh - ${tHeroToDef * 120}px)`,
-          // Fade out as we scroll to next section (same timing as sigil/cards/wordmark)
+          // Fade out faster - in sync with wordmark
           opacity:
             scrollProgress < 0.15
               ? 1
-              : scrollProgress < 0.22
-                ? 1 - (scrollProgress - 0.15) / 0.07
+              : scrollProgress < 0.2
+                ? 1 - (scrollProgress - 0.15) / 0.05
                 : 0,
-          visibility: scrollProgress < 0.22 ? "visible" : "hidden",
+          visibility: scrollProgress < 0.2 ? "visible" : "hidden",
           pointerEvents: tHeroToDef > 0.95 || tHeroToDef < 0.05 ? "auto" : "none",
           // Close inward effect - scale down proportionately (borders scale too)
           transform:
             scrollProgress >= 0.15
-              ? `scale(${1 - Math.min(1, (scrollProgress - 0.15) / 0.07)})`
+              ? `scale(${1 - Math.min(1, (scrollProgress - 0.15) / 0.05)})`
               : "scale(1)",
           transformOrigin: "center center",
         }}
@@ -307,6 +324,7 @@ the interface for human-AI collaboration`}
 
       {/* Fixed HUD Frame - Navigation Cockpit */}
       <HUDFrame
+        ref={navbarLogoRef}
         activeSection={activeSection}
         scrollProgress={scrollProgress}
         onNavigate={handleNavigate}
@@ -318,13 +336,15 @@ the interface for human-AI collaboration`}
       </AdminGate>
 
       {/* Fixed Thoughtform Sigil - appears centered during definition section
-          Animates from brandmark origin (in hero wordmark) to center */}
+          Animates from brandmark origin (in hero wordmark) to center,
+          then to navbar logo when leaving definition section */}
       <SigilSection
         ref={definitionRef}
         scrollProgress={scrollProgress}
         config={rawConfig.sigil}
         onParticlePositions={sigilParticlesRef}
         originPos={brandmarkOrigin}
+        destinationPos={navbarLogoPos}
         transitionProgress={tHeroToDef}
       />
 

@@ -49,9 +49,9 @@ export const ModuleCards = forwardRef<HTMLDivElement, ModuleCardsProps>(function
     // New timing: appear when tHeroToDef > 0.7 (as sigil settles)
     // Fade in from t=0.7 to t=0.85, then close inward (no fade) as we scroll to next section
     const t = transitionProgress;
-    // Close starts at scrollProgress 0.15, completes by 0.22
+    // Close starts at scrollProgress 0.15, completes by 0.30 (slower to match sigil)
     const closeStart = 0.15;
-    const closeEnd = 0.22;
+    const closeEnd = 0.3;
     if (scrollProgress < closeStart) {
       // Still in definition section - normal visibility (fade in only)
       opacity = t < 0.7 ? 0 : t < 0.85 ? (t - 0.7) / 0.15 : 1;
@@ -78,12 +78,12 @@ export const ModuleCards = forwardRef<HTMLDivElement, ModuleCardsProps>(function
     isInteractive = scrollProgress <= 0.25 && scrollProgress >= 0.08;
   }
 
-  // Calculate close progress for inward collapse effect
-  const closeStart = 0.15;
-  const closeEnd = 0.22;
+  // Calculate close progress for inward collapse effect (slower to match sigil)
+  const closeStartCalc = 0.15;
+  const closeEndCalc = 0.3;
   const closeProgress =
-    scrollProgress >= closeStart
-      ? Math.min(1, (scrollProgress - closeStart) / (closeEnd - closeStart))
+    scrollProgress >= closeStartCalc
+      ? Math.min(1, (scrollProgress - closeStartCalc) / (closeEndCalc - closeStartCalc))
       : 0;
 
   return (
