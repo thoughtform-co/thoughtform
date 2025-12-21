@@ -181,9 +181,9 @@
   pointer-events: none;
   opacity: 0;
   transition: opacity 0.2s;
+  z-index: 4;
 }
 
-.admin-login-card input:focus + .input-wrapper::after,
 .admin-login-card .input-wrapper:has(input:focus)::after {
   opacity: 1;
 }
