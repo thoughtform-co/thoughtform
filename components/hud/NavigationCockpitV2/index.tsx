@@ -114,7 +114,7 @@ function NavigationCockpitInner() {
           pointerEvents: "none",
         }}
       >
-        {Array.from({ length: 12 }, (_, i) => (
+        {Array.from({ length: 8 }, (_, i) => (
           <div key={i} className={`runway-arrow runway-arrow-${i + 1}`}>
             ›
           </div>
