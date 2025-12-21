@@ -73,11 +73,10 @@ function AdminPageContent({ searchParams }: { searchParams: URLSearchParams | nu
     }
   }, [mounted, searchParams]);
 
-  // Redirect if already logged in (only after mount to prevent SSR issues)
+  // Enforce allowed email; stay on page instead of redirecting
   useEffect(() => {
     if (mounted && !isLoading && user) {
       const userEmail = user.email?.toLowerCase();
-      // If user is not allowed, sign them out and stay on page
       if (allowedEmail && userEmail && userEmail !== allowedEmail && !signingOut) {
         console.log("[Admin] User email not allowed, signing out", userEmail);
         setSigningOut(true);
@@ -89,13 +88,7 @@ function AdminPageContent({ searchParams }: { searchParams: URLSearchParams | nu
           });
         return;
       }
-
-      console.log("[Admin] User is logged in, redirecting to home", user.email);
-      // Small delay to ensure the page doesn't flash
-      const timer = setTimeout(() => {
-        router.push("/");
-      }, 1000); // Increased delay to see what's happening
-      return () => clearTimeout(timer);
+      console.log("[Admin] User is logged in and allowed", user.email);
     } else {
       console.log(
         "[Admin] Not redirecting - mounted:",
@@ -106,7 +99,7 @@ function AdminPageContent({ searchParams }: { searchParams: URLSearchParams | nu
         !!user
       );
     }
-  }, [mounted, user, isLoading, router]);
+  }, [mounted, user, isLoading, router, allowedEmail, signingOut]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -132,15 +125,6 @@ function AdminPageContent({ searchParams }: { searchParams: URLSearchParams | nu
     );
   }
 
-  // If user is logged in, show a brief message before redirect
-  if (user) {
-    return (
-      <div className="min-h-screen bg-void flex items-center justify-center">
-        <div className="font-mono text-dawn-50">Redirecting...</div>
-      </div>
-    );
-  }
-
   // Check if Supabase is configured
   if (!supabase) {
     return (
@@ -159,7 +143,48 @@ function AdminPageContent({ searchParams }: { searchParams: URLSearchParams | nu
     );
   }
 
-  return (
+  const renderSignedIn = () => (
+    <div className="min-h-screen bg-void relative flex items-center justify-center p-4 overflow-hidden">
+      <div className="absolute inset-0 z-0" style={{ opacity: 0.8 }}>
+        <ParticleCanvasV2 scrollProgress={0.2} config={DEFAULT_CONFIG} />
+      </div>
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="w-full max-w-sm relative z-10"
+      >
+        <div className="admin-login-card">
+          <div className="admin-header">
+            <div className="admin-label">{`// Admin Access`}</div>
+            <h1 className="admin-title">Signed In</h1>
+          </div>
+          <div className="space-y-4">
+            <div className="font-mono text-sm text-dawn">You are signed in as {user?.email}</div>
+            <div className="flex gap-3 pt-2">
+              <button type="button" onClick={() => router.push("/")} className="btn-primary flex-1">
+                Go to Site
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setSigningOut(true);
+                  signOut()
+                    .catch((err) => console.error("[Admin] Sign out failed:", err))
+                    .finally(() => setSigningOut(false));
+                }}
+                className="btn-secondary flex-1"
+                disabled={signingOut}
+              >
+                {signingOut ? "Signing out..." : "Sign Out"}
+              </button>
+            </div>
+          </div>
+        </div>
+      </motion.div>
+    </div>
+  );
+
+  const renderLogin = () => (
     <div className="min-h-screen bg-void relative flex items-center justify-center p-4 overflow-hidden">
       {/* Manifold background in the distance */}
       <div className="absolute inset-0 z-0" style={{ opacity: 0.8 }}>
@@ -232,6 +257,12 @@ function AdminPageContent({ searchParams }: { searchParams: URLSearchParams | nu
       </motion.div>
     </div>
   );
+
+  // Render signed-in view or login view
+  if (user) {
+    return renderSignedIn();
+  }
+  return renderLogin();
 }
 
 export default function AdminPage() {
