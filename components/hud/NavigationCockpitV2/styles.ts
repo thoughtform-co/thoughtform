@@ -28,7 +28,7 @@ export const cockpitStyles = `
   }
 
   .hero-wordmark-topleft {
-    width: 220px;
+    width: 460px;
   }
 
   .hero-wordmark-topleft svg {
