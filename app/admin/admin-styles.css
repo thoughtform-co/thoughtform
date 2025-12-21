@@ -43,7 +43,7 @@
   max-width: 600px;
   background: rgba(8, 8, 6, 0.92);
   border: 1px solid rgba(202, 165, 84, 0.25);
-  border-radius: 8px;
+  border-radius: 0;
   overflow: hidden;
   box-shadow:
     0 0 0 1px rgba(0, 0, 0, 0.5),
@@ -100,47 +100,15 @@
   border-bottom: 1px solid rgba(202, 165, 84, 0.15);
   display: flex;
   align-items: center;
-  gap: 12px;
-}
-
-.terminal-controls {
-  display: flex;
-  gap: 8px;
-}
-
-.terminal-control {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.terminal-control.close {
-  background: rgba(255, 95, 86, 0.8);
-  box-shadow: 0 0 6px rgba(255, 95, 86, 0.5);
-}
-
-.terminal-control.close:hover {
-  background: #ff5f56;
-  box-shadow: 0 0 12px rgba(255, 95, 86, 0.8);
-}
-
-.terminal-control.minimize {
-  background: rgba(255, 189, 46, 0.6);
-  box-shadow: 0 0 4px rgba(255, 189, 46, 0.3);
-}
-
-.terminal-control.maximize {
-  background: rgba(39, 201, 63, 0.6);
-  box-shadow: 0 0 4px rgba(39, 201, 63, 0.3);
+  justify-content: center;
 }
 
 .terminal-title {
   font-family: "IBM Plex Mono", monospace;
   font-size: 11px;
   color: rgba(202, 165, 84, 0.7);
-  letter-spacing: 0.05em;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   text-shadow: 0 0 8px rgba(202, 165, 84, 0.3);
 }
 
@@ -214,7 +182,6 @@
 .terminal-input-line {
   display: flex;
   align-items: center;
-  gap: 8px;
   color: #ece3d6;
 }
 
@@ -222,26 +189,32 @@
   color: #caa554;
   text-shadow: 0 0 8px rgba(202, 165, 84, 0.5);
   flex-shrink: 0;
+  margin-right: 8px;
 }
 
-.terminal-input {
-  flex: 1;
-  background: transparent;
-  border: none;
-  outline: none;
+.terminal-input-wrapper {
+  display: inline-flex;
+  align-items: center;
+  position: relative;
+}
+
+.terminal-input-text {
   font-family: "IBM Plex Mono", monospace;
   font-size: 13px;
   color: #ece3d6;
   text-shadow: 0 0 6px rgba(236, 227, 214, 0.3);
-  caret-color: transparent;
-  padding: 0;
+  white-space: pre;
 }
 
-.terminal-input::placeholder {
-  color: rgba(236, 227, 214, 0.2);
+.terminal-input-hidden {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+  width: 0;
+  height: 0;
 }
 
-/* Blinking cursor */
+/* Blinking cursor - follows text */
 .terminal-cursor {
   display: inline-block;
   width: 8px;
@@ -249,7 +222,8 @@
   background: #caa554;
   animation: cursor-blink 1s step-end infinite;
   box-shadow: 0 0 8px rgba(202, 165, 84, 0.6);
-  margin-left: -4px;
+  vertical-align: middle;
+  flex-shrink: 0;
 }
 
 @keyframes cursor-blink {
@@ -310,10 +284,6 @@
 @media (max-width: 640px) {
   .terminal-container {
     padding: 12px;
-  }
-
-  .terminal-window {
-    border-radius: 4px;
   }
 
   .terminal-body {

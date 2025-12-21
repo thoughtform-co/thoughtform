@@ -274,11 +274,6 @@ function AdminPageContent() {
       {/* Terminal window */}
       <div className="terminal-window">
         <div className="terminal-header">
-          <div className="terminal-controls">
-            <span className="terminal-control close" onClick={() => router.push("/")} />
-            <span className="terminal-control minimize" />
-            <span className="terminal-control maximize" />
-          </div>
           <span className="terminal-title">thoughtform://admin</span>
         </div>
 
@@ -294,17 +289,22 @@ function AdminPageContent() {
           {(step === "email" || step === "password" || step === "success") && (
             <div className="terminal-input-line">
               <span className="terminal-prompt">&gt;</span>
-              <input
-                ref={inputRef}
-                type={step === "password" ? "password" : "text"}
-                value={currentInput}
-                onChange={(e) => setCurrentInput(e.target.value)}
-                onKeyDown={handleKeyDown}
-                className="terminal-input"
-                autoComplete={step === "email" ? "email" : "current-password"}
-                autoFocus
-              />
-              <span className="terminal-cursor" />
+              <span className="terminal-input-wrapper">
+                <span className="terminal-input-text">
+                  {step === "password" ? "•".repeat(currentInput.length) : currentInput}
+                </span>
+                <span className="terminal-cursor" />
+                <input
+                  ref={inputRef}
+                  type={step === "password" ? "password" : "text"}
+                  value={currentInput}
+                  onChange={(e) => setCurrentInput(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  className="terminal-input-hidden"
+                  autoComplete={step === "email" ? "email" : "current-password"}
+                  autoFocus
+                />
+              </span>
             </div>
           )}
 
