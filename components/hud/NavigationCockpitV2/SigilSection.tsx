@@ -288,7 +288,7 @@ export const SigilSection = forwardRef<HTMLDivElement, SigilSectionProps>(functi
   const sigilInStart = 0.02;
   const sigilInEnd = 0.08;
   const sigilOutStart = 0.15; // Start moving toward navbar
-  const sigilOutEnd = 0.3; // Complete arrival at navbar (slower animation)
+  const sigilOutEnd = 0.4; // Complete arrival at navbar (slower fade-out)
 
   let sigilOpacity = 0;
   let sigilScrollProgress = 0;
