@@ -210,9 +210,10 @@ function NavigationCockpitInner() {
   // ═══════════════════════════════════════════════════════════════════
   // DEFINITION → MANIFESTO TRANSITION PROGRESS
   // Frame transforms from definition position to manifesto terminal
+  // Synced with sigil exit animation (0.15 → 0.40)
   // ═══════════════════════════════════════════════════════════════════
-  const DEF_TO_MANIFESTO_START = 0.25; // Start transforming at 25%
-  const DEF_TO_MANIFESTO_END = 0.35; // Complete transformation by 35%
+  const DEF_TO_MANIFESTO_START = 0.15; // Start transforming at 15% (synced with sigil exit)
+  const DEF_TO_MANIFESTO_END = 0.4; // Complete transformation by 40% (synced with sigil arrival)
   const rawTDefToManifesto = Math.max(
     0,
     Math.min(
