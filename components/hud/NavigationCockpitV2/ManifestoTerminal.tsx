@@ -7,21 +7,11 @@ import { useEffect, useState, useRef, useMemo } from "react";
 // Progressive reveal with typewriter effect - cool-retro-term style
 // ═══════════════════════════════════════════════════════════════════
 
-// ASCII Art title - "AI ISN'T SOFTWARE."
+// ASCII Art title - "AI ISN'T SOFTWARE." - compact 3-line version
 const ASCII_TITLE = `
- █████╗ ██╗    ██╗███████╗███╗   ██╗██╗████████╗
-██╔══██╗██║    ██║██╔════╝████╗  ██║╚═╝╚══██╔══╝
-███████║██║    ██║███████╗██╔██╗ ██║██╗   ██║   
-██╔══██║██║    ██║╚════██║██║╚██╗██║██║   ██║   
-██║  ██║██║    ██║███████║██║ ╚████║██║   ██║   
-╚═╝  ╚═╝╚═╝    ╚═╝╚══════╝╚═╝  ╚═══╝╚═╝   ╚═╝   
-                                                
-███████╗ ██████╗ ███████╗████████╗██╗    ██╗ █████╗ ██████╗ ███████╗
-██╔════╝██╔═══██╗██╔════╝╚══██╔══╝██║    ██║██╔══██╗██╔══██╗██╔════╝
-███████╗██║   ██║█████╗     ██║   ██║ █╗ ██║███████║██████╔╝█████╗  ██╗
-╚════██║██║   ██║██╔══╝     ██║   ██║███╗██║██╔══██║██╔══██╗██╔══╝  ╚═╝
-███████║╚██████╔╝██║        ██║   ╚███╔███╔╝██║  ██║██║  ██║███████╗██╗
-╚══════╝ ╚═════╝ ╚═╝        ╚═╝    ╚══╝╚══╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝╚═╝
+╔═╗╦  ╦╔═╗╔╗╔ ╔╦╗  ╔═╗╔═╗╔═╗╔╦╗╦ ╦╔═╗╦═╗╔═╗
+╠═╣║  ║╚═╗║║║  ║   ╚═╗║ ║╠╣  ║ ║║║╠═╣╠╦╝║╣ 
+╩ ╩╩  ╩╚═╝╝╚╝  ╩   ╚═╝╚═╝╚   ╩ ╚╩╝╩ ╩╩╚═╚═╝.
 `;
 
 // Manifesto content - full text for character-by-character reveal
@@ -127,13 +117,13 @@ export function ManifestoTerminal({
           z-index: -1;
         }
 
-        /* ASCII Art Title - smaller font, preserve spacing */
+        /* ASCII Art Title - compact 3-line version */
         .ascii-title {
           font-family: "Iosevka Web", "Iosevka", "IBM Plex Mono", "Fira Code", monospace;
-          font-size: clamp(6px, 0.8vw, 10px);
-          line-height: 1.1;
+          font-size: clamp(10px, 1.2vw, 14px);
+          line-height: 1.15;
           color: var(--gold, #caa554);
-          margin: 0 0 16px 0;
+          margin: 0 0 20px 0;
           white-space: pre;
           overflow: hidden;
           text-shadow:
