@@ -7,8 +7,26 @@ import { useEffect, useState, useRef, useMemo } from "react";
 // Progressive reveal with typewriter effect - cool-retro-term style
 // ═══════════════════════════════════════════════════════════════════
 
+// ASCII Art title - "AI ISN'T SOFTWARE."
+const ASCII_TITLE = `
+ █████╗ ██╗    ██╗███████╗███╗   ██╗██╗████████╗
+██╔══██╗██║    ██║██╔════╝████╗  ██║╚═╝╚══██╔══╝
+███████║██║    ██║███████╗██╔██╗ ██║██╗   ██║   
+██╔══██║██║    ██║╚════██║██║╚██╗██║██║   ██║   
+██║  ██║██║    ██║███████║██║ ╚████║██║   ██║   
+╚═╝  ╚═╝╚═╝    ╚═╝╚══════╝╚═╝  ╚═══╝╚═╝   ╚═╝   
+                                                
+███████╗ ██████╗ ███████╗████████╗██╗    ██╗ █████╗ ██████╗ ███████╗
+██╔════╝██╔═══██╗██╔════╝╚══██╔══╝██║    ██║██╔══██╗██╔══██╗██╔════╝
+███████╗██║   ██║█████╗     ██║   ██║ █╗ ██║███████║██████╔╝█████╗  ██╗
+╚════██║██║   ██║██╔══╝     ██║   ██║███╗██║██╔══██║██╔══██╗██╔══╝  ╚═╝
+███████║╚██████╔╝██║        ██║   ╚███╔███╔╝██║  ██║██║  ██║███████╗██╗
+╚══════╝ ╚═════╝ ╚═╝        ╚═╝    ╚══╝╚══╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝╚═╝
+`;
+
 // Manifesto content - full text for character-by-character reveal
-const MANIFESTO_TEXT = `Most companies struggle with their AI adoption because
+const MANIFESTO_TEXT = `
+Most companies struggle with their AI adoption because
 they treat AI like normal software.
 
 But AI isn't a tool to command.
@@ -23,6 +41,9 @@ It's the source of truly novel ideas.
 
 Thoughtform teaches teams to think WITH that intelligence—
 navigating its strangeness for creative breakthroughs.`;
+
+// Combined content for total character count
+const FULL_CONTENT = ASCII_TITLE + MANIFESTO_TEXT;
 
 interface ManifestoTerminalProps {
   /** Progress through the manifesto (0-1) */
@@ -42,7 +63,7 @@ export function ManifestoTerminal({
   const hasCompletedRef = useRef(false);
 
   // Calculate total characters
-  const totalChars = useMemo(() => MANIFESTO_TEXT.length, []);
+  const totalChars = useMemo(() => FULL_CONTENT.length, []);
 
   // Calculate how much to reveal based on progress (character by character)
   useEffect(() => {
@@ -53,7 +74,7 @@ export function ManifestoTerminal({
     }
 
     const charsToShow = Math.floor(revealProgress * totalChars);
-    setDisplayedText(MANIFESTO_TEXT.slice(0, charsToShow));
+    setDisplayedText(FULL_CONTENT.slice(0, charsToShow));
 
     // Check if complete
     if (charsToShow >= totalChars && !hasCompletedRef.current) {
@@ -64,14 +85,22 @@ export function ManifestoTerminal({
 
   if (!isActive) return null;
 
+  // Split displayed text into ASCII art and manifesto parts
+  const asciiLength = ASCII_TITLE.length;
+  const displayedAscii = displayedText.slice(0, asciiLength);
+  const displayedManifesto = displayedText.slice(asciiLength);
+
   return (
     <div className="manifesto-terminal">
       {/* CRT glow overlay */}
       <div className="crt-glow"></div>
 
+      {/* ASCII Art Title */}
+      <pre className="ascii-title">{displayedAscii}</pre>
+
       {/* Manifesto content - typewriter character reveal */}
       <div className="manifesto-content">
-        <span className="typed-text">{displayedText}</span>
+        <span className="typed-text">{displayedManifesto}</span>
         {/* Blinking block cursor */}
         <span className="cursor-blink">█</span>
       </div>
@@ -96,6 +125,22 @@ export function ManifestoTerminal({
           );
           filter: blur(20px);
           z-index: -1;
+        }
+
+        /* ASCII Art Title - smaller font, preserve spacing */
+        .ascii-title {
+          font-family: "Iosevka Web", "Iosevka", "IBM Plex Mono", "Fira Code", monospace;
+          font-size: clamp(6px, 0.8vw, 10px);
+          line-height: 1.1;
+          color: var(--gold, #caa554);
+          margin: 0 0 16px 0;
+          white-space: pre;
+          overflow: hidden;
+          text-shadow:
+            0 0 2px rgba(202, 165, 84, 0.8),
+            0 0 4px rgba(202, 165, 84, 0.4),
+            0 0 8px rgba(202, 165, 84, 0.2);
+          animation: crt-flicker 0.15s infinite;
         }
 
         .manifesto-content {
