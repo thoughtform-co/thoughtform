@@ -410,52 +410,11 @@ the interface for human-AI collaboration`}
           <div className="sigil-placeholder" />
         </section>
 
-        {/* Section 3: Manifesto - Elimar-inspired text-based layout */}
-        <section className="section section-manifesto" id="manifesto" data-section="manifesto">
-          <div className="manifesto-layout-text">
-            {/* Section label - horizontal like Services */}
-            <div className="section-label">
-              <span className="label-number">03</span>
-              <span className="label-text">Manifesto</span>
-            </div>
-
-            {/* Content with vertical line */}
-            <div className="manifesto-content-area">
-              {/* Large title */}
-              <h2 className="manifesto-title-large">AI Isn&apos;t Software.</h2>
-
-              {/* Body text - all same size */}
-              <div className="manifesto-body-text">
-                <p>
-                  Most companies struggle with their AI adoption because they treat AI like normal
-                  software.
-                </p>
-
-                <p>
-                  But AI isn&apos;t a tool to command. It&apos;s a strange, new intelligence we have
-                  to learn how to <em>navigate</em>. It leaps across dimensions we can&apos;t
-                  fathom. It hallucinates. It surprises.
-                </p>
-
-                <p>
-                  In technical work, that strangeness must be constrained. But in creative and
-                  strategic work? It&apos;s the source of truly novel ideas.
-                </p>
-
-                <p>
-                  Thoughtform teaches teams to think <strong>with</strong> that
-                  intelligence—navigating its strangeness for creative breakthroughs.
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Section 4: Services */}
+        {/* Section 3: Services */}
         <section className="section section-services" id="services" data-section="services">
           <div className="section-layout">
             <div className="section-label">
-              <span className="label-number">04</span>
+              <span className="label-number">03</span>
               <span className="label-text">Services</span>
             </div>
 
@@ -489,6 +448,47 @@ the interface for human-AI collaboration`}
               <div className="section-meta">
                 <span className="meta-label">Landmark:</span>
                 <span className="meta-value">trajectory grid / vanishing point</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Section 4: Manifesto - Elimar-inspired text-based layout */}
+        <section className="section section-manifesto" id="manifesto" data-section="manifesto">
+          <div className="manifesto-layout-text">
+            {/* Section label - horizontal like Services */}
+            <div className="section-label">
+              <span className="label-number">04</span>
+              <span className="label-text">Manifesto</span>
+            </div>
+
+            {/* Content with vertical line */}
+            <div className="manifesto-content-area">
+              {/* Large title */}
+              <h2 className="manifesto-title-large">AI Isn&apos;t Software.</h2>
+
+              {/* Body text - all same size */}
+              <div className="manifesto-body-text">
+                <p>
+                  Most companies struggle with their AI adoption because they treat AI like normal
+                  software.
+                </p>
+
+                <p>
+                  But AI isn&apos;t a tool to command. It&apos;s a strange, new intelligence we have
+                  to learn how to <em>navigate</em>. It leaps across dimensions we can&apos;t
+                  fathom. It hallucinates. It surprises.
+                </p>
+
+                <p>
+                  In technical work, that strangeness must be constrained. But in creative and
+                  strategic work? It&apos;s the source of truly novel ideas.
+                </p>
+
+                <p>
+                  Thoughtform teaches teams to think <strong>with</strong> that
+                  intelligence—navigating its strangeness for creative breakthroughs.
+                </p>
               </div>
             </div>
           </div>

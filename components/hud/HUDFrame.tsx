@@ -115,8 +115,8 @@ export const HUDFrame = forwardRef<NavigationBarHandle, HUDFrameProps>(function 
   const sectionMarkers = [
     { section: "hero", label: "01" },
     { section: "definition", label: "02" },
-    { section: "manifesto", label: "03" },
-    { section: "services", label: "04" },
+    { section: "services", label: "03" },
+    { section: "manifesto", label: "04" },
     { section: "contact", label: "05" },
   ];
 
