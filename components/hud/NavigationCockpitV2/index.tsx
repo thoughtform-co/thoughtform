@@ -264,9 +264,9 @@ function NavigationCockpitInner() {
   const widthGrowth = 200; // 500px → 700px
   const baseHeight = 100;
   const heightGrowth = 300; // 100px → 400px (min-height)
-  // Note: Actual content height is ~640px due to terminal content
+  // Note: Actual content height is ~720px to fit question + manifesto text
   // Use actual content height for centering calculation
-  const actualContentHeight = 640;
+  const actualContentHeight = 720;
 
   // Manifesto CENTERED position: bottom = 50vh - (actualHeight/2)
   // This keeps the frame vertically centered based on actual content
@@ -522,13 +522,13 @@ function NavigationCockpitInner() {
         }
       >
         {/* Text content - hero/definition/question - ONE continuous morph */}
-        {/* Fades out as manifesto is revealed by scrolling */}
+        {/* Question stays visible when manifesto reveals - text unfolds below */}
         <div
           className="hero-text-frame"
           style={{
-            // Fade out as manifesto reveals (scroll-based, not click-based)
-            opacity: manifestoRevealProgress > 0 ? Math.max(0, 1 - manifestoRevealProgress * 3) : 1,
-            visibility: manifestoRevealProgress > 0.4 ? "hidden" : "visible",
+            // Stay visible - question remains as header for manifesto
+            opacity: 1,
+            visibility: "visible",
             // Always relative - let parent bridge-frame handle positioning
             position: "relative",
             width: "100%",
@@ -537,7 +537,7 @@ function NavigationCockpitInner() {
             justifyContent: "flex-start",
             // Padding interpolates: hero/definition = 16px top, terminal = 72px top (below header with breathing room)
             padding: `${16 + 56 * tDefToManifesto}px 24px 16px 24px`,
-            pointerEvents: manifestoRevealProgress > 0.3 ? "none" : "auto",
+            pointerEvents: "auto",
             cursor: "default",
             // Higher z-index so text stays on top of terminal chrome
             zIndex: 2,
@@ -600,12 +600,28 @@ the interface for human-AI collaboration`}
                 progress={tDefToManifesto}
                 className="bridge-content-glitch question-morph"
               />
-              {/* Pulsing block cursor - only visible at end of manifesto transition */}
-              {tDefToManifesto > 0.9 && !transmissionAcknowledged && (
+              {/* Pulsing block cursor - only visible when terminal ready but manifesto not started */}
+              {tDefToManifesto > 0.9 && manifestoRevealProgress === 0 && (
                 <span className="terminal-block-cursor"></span>
               )}
             </span>
           </div>
+
+          {/* Manifesto content - appears below question when scrolling */}
+          {tDefToManifesto > 0.95 && manifestoRevealProgress > 0 && (
+            <div
+              style={{
+                marginTop: "24px",
+                width: "100%",
+              }}
+            >
+              <ManifestoTerminal
+                revealProgress={manifestoRevealProgress}
+                isActive={true}
+                onComplete={() => setManifestoComplete(true)}
+              />
+            </div>
+          )}
         </div>
 
         {/* Terminal frame elements - appear during manifesto transition (behind text) */}
@@ -641,13 +657,6 @@ the interface for human-AI collaboration`}
             {/* Scanlines overlay */}
             <div className="terminal-scanlines"></div>
           </div>
-
-          {/* ManifestoTerminal - positioned to match question text location */}
-          <ManifestoTerminal
-            revealProgress={manifestoRevealProgress}
-            isActive={tDefToManifesto > 0.95}
-            onComplete={() => setManifestoComplete(true)}
-          />
         </div>
       </div>
 

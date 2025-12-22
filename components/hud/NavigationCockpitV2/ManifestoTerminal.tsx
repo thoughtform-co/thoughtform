@@ -79,28 +79,21 @@ export function ManifestoTerminal({
 
       <style jsx>{`
         .manifesto-terminal {
-          /* No scrolling - content fits in frame */
-          overflow: hidden;
-          /* Position to match the question text location exactly */
-          position: absolute;
-          top: 0;
-          left: 0;
-          right: 0;
-          /* Match hero-text-frame padding when in terminal mode: 72px top, 24px sides */
-          padding: 72px 24px 16px 24px;
+          /* Flows naturally below question text */
+          width: 100%;
         }
 
         .manifesto-content {
           /* Match hero-tagline-v2 styling */
           font-family: var(--font-display, "Relative Trial", sans-serif);
-          font-size: clamp(20px, 2.5vw, 28px);
-          line-height: 1.4;
+          font-size: clamp(18px, 2.2vw, 24px);
+          line-height: 1.5;
           font-weight: 300;
           color: var(--dawn, #ebe3d6);
         }
 
         .manifesto-line {
-          min-height: 1.4em;
+          min-height: 1.5em;
         }
 
         .cursor-blink {
