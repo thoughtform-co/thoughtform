@@ -85,6 +85,7 @@ function NavigationCockpitInner() {
 
   // State for manifesto scroll progress (0-1 within manifesto section)
   const [manifestoScrollProgress, setManifestoScrollProgress] = useState(0);
+  const [manifestoInView, setManifestoInView] = useState(false);
 
   // Calculate scroll progress within manifesto section
   useEffect(() => {
@@ -111,6 +112,10 @@ function NavigationCockpitInner() {
       const progress = Math.max(0, Math.min(1, scrollDistance / scrollRange));
 
       setManifestoScrollProgress(progress);
+
+      // Terminal appears immediately when section is in viewport
+      const isInView = rect.top < windowHeight && rect.bottom > 0;
+      setManifestoInView(isInView);
     };
 
     const handleScroll = () => {
@@ -503,7 +508,13 @@ the interface for human-AI collaboration`}
             ></div>
           </div>
 
-          <div className="manifesto-terminal">
+          <div
+            className="manifesto-terminal"
+            style={{
+              opacity: manifestoInView ? 1 : 0, // Appears immediately when section is in view
+              transition: "opacity 0.2s ease-out",
+            }}
+          >
             {/* Gold corner accents */}
             <div className="terminal-corner terminal-corner-tl"></div>
             <div className="terminal-corner terminal-corner-br"></div>
