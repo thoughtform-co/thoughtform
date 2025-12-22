@@ -399,24 +399,24 @@ export const cockpitStyles = `
     opacity: 0.6;
   }
 
-  /* Question morph - same styling as definition text */
-  .question-morph {
-    transition: all 0.2s ease-out;
-  }
-
-  .question-morph:hover {
-    text-shadow: 0 0 10px rgba(202, 165, 84, 0.3);
-  }
-
-  /* Final question text after morph complete */
-  .question-text-final {
+  /* Question text inside terminal */
+  .terminal-question {
     font-family: var(--font-display, "PP Mondwest", serif);
     font-size: clamp(16px, 2vw, 22px);
     font-weight: 400;
     color: var(--dawn, #ece3d6);
     letter-spacing: 0.02em;
     line-height: 1.5;
+    margin-bottom: 24px;
     transition: opacity 0.3s ease-out;
+  }
+
+  .terminal-question:hover {
+    text-shadow: 0 0 10px rgba(202, 165, 84, 0.3);
+  }
+
+  .terminal-question .question-morph {
+    transition: all 0.2s ease-out;
   }
 
   /* Phase 3: Typed manifesto content */
@@ -1062,8 +1062,9 @@ export const cockpitStyles = `
       min-height: auto;
     }
 
-    .question-text-final {
+    .terminal-question {
       font-size: clamp(14px, 4vw, 18px);
+      margin-bottom: 16px;
     }
 
     .typed-title {

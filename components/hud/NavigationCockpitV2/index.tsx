@@ -432,19 +432,18 @@ function NavigationCockpitInner() {
               }
         }
       >
-        {/* Text content - morphs through three stages: hero → definition → question */}
-        <div
-          className="hero-text-frame"
-          style={{
-            opacity: 1,
-            visibility: "visible",
-            position: "relative",
-            width: "100%",
-          }}
-        >
-          <div className="hero-tagline hero-tagline-v2 hero-tagline-main">
-            {/* Stage 1→2: Hero text morphs to definition */}
-            {tDefToManifesto === 0 && (
+        {/* Text content - hero/definition only (before manifesto transition) */}
+        {tDefToManifesto === 0 && (
+          <div
+            className="hero-text-frame"
+            style={{
+              opacity: 1,
+              visibility: "visible",
+              position: "relative",
+              width: "100%",
+            }}
+          >
+            <div className="hero-tagline hero-tagline-v2 hero-tagline-main">
               <GlitchText
                 initialText={`AI isn't software to command.
 It's a strange intelligence to navigate.
@@ -454,38 +453,9 @@ the interface for human-AI collaboration`}
                 progress={tHeroToDef}
                 className="bridge-content-glitch"
               />
-            )}
-            {/* Stage 2→3: Definition text morphs to question - clickable when complete */}
-            {tDefToManifesto > 0 && !transmissionAcknowledged && (
-              <div
-                onClick={
-                  tDefToManifesto > 0.9 ? () => setTransmissionAcknowledged(true) : undefined
-                }
-                style={{ cursor: tDefToManifesto > 0.9 ? "pointer" : "default" }}
-              >
-                <GlitchText
-                  initialText={`(θɔːtfɔːrm / THAWT-form)
-the interface for human-AI collaboration`}
-                  finalText={`But why is AI so different?`}
-                  progress={tDefToManifesto}
-                  className="bridge-content-glitch question-morph"
-                />
-              </div>
-            )}
-            {/* Stage 3: Question clicked - fade out */}
-            {transmissionAcknowledged && (
-              <div
-                className="question-text-final"
-                style={{
-                  opacity: Math.max(0, 1 - manifestoScrollProgress * 3),
-                  cursor: "default",
-                }}
-              >
-                But why is AI so different?
-              </div>
-            )}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Terminal content - fades in as we scroll to manifesto */}
         <div
@@ -519,6 +489,37 @@ the interface for human-AI collaboration`}
           <div className="terminal-body">
             {/* Scanlines overlay */}
             <div className="terminal-scanlines"></div>
+
+            {/* Question text - morphs from definition, clickable when complete */}
+            {!transmissionAcknowledged && (
+              <div
+                className="terminal-question"
+                onClick={
+                  tDefToManifesto > 0.9 ? () => setTransmissionAcknowledged(true) : undefined
+                }
+                style={{ cursor: tDefToManifesto > 0.9 ? "pointer" : "default" }}
+              >
+                <GlitchText
+                  initialText={`(θɔːtfɔːrm / THAWT-form)
+the interface for human-AI collaboration`}
+                  finalText={`But why is AI so different?`}
+                  progress={tDefToManifesto}
+                  className="bridge-content-glitch question-morph"
+                />
+              </div>
+            )}
+
+            {/* Question after click - fades out */}
+            {transmissionAcknowledged && (
+              <div
+                className="terminal-question"
+                style={{
+                  opacity: Math.max(0, 1 - manifestoScrollProgress * 3),
+                }}
+              >
+                But why is AI so different?
+              </div>
+            )}
 
             {/* Typed manifesto content - reveals progressively after click */}
             <div
