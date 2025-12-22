@@ -399,14 +399,14 @@ export const cockpitStyles = `
     opacity: 0.6;
   }
 
-  /* Question text inside terminal */
+  /* Question text inside terminal - matches hero-tagline-v2 font size */
   .terminal-question {
     font-family: var(--font-display, "PP Mondwest", serif);
-    font-size: clamp(16px, 2vw, 22px);
-    font-weight: 400;
+    font-size: clamp(20px, 2.5vw, 28px);
+    font-weight: 300;
     color: var(--dawn, #ece3d6);
     letter-spacing: 0.02em;
-    line-height: 1.5;
+    line-height: 1.2;
     margin-bottom: 24px;
     transition: opacity 0.3s ease-out;
   }
@@ -1063,7 +1063,7 @@ export const cockpitStyles = `
     }
 
     .terminal-question {
-      font-size: clamp(14px, 4vw, 18px);
+      font-size: clamp(13px, 3.5vw, 16px);
       margin-bottom: 16px;
     }
 
