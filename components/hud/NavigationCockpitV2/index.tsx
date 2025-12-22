@@ -517,8 +517,8 @@ the interface for human-AI collaboration`}
           <div
             className="manifesto-terminal"
             style={{
-              // Appear right after definition section disappears (scrollProgress ~0.3) or when in view
-              opacity: scrollProgress > 0.28 || manifestoInView ? 1 : 0,
+              // Appear as definition section starts fading (scrollProgress ~0.25) or when in view
+              opacity: scrollProgress > 0.25 || manifestoInView ? 1 : 0,
               transition: "opacity 0.15s ease-out",
             }}
           >
