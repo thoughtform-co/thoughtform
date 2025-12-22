@@ -236,36 +236,30 @@ export const cockpitStyles = `
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
     border: 1px solid rgba(236, 227, 214, 0.1);
-    overflow: hidden;
     z-index: 2;
   }
 
-  /* Top-left gold corner */
-  .manifesto-terminal::before {
-    content: '';
+  /* Gold corner accents */
+  .terminal-corner {
     position: absolute;
-    top: -1px;
-    left: -1px;
-    width: 16px;
-    height: 16px;
-    border-top: 1px solid var(--gold, #caa554);
-    border-left: 1px solid var(--gold, #caa554);
+    width: 20px;
+    height: 20px;
     pointer-events: none;
-    z-index: 20;
+    z-index: 50;
   }
 
-  /* Bottom-right gold corner */
-  .manifesto-terminal::after {
-    content: '';
-    position: absolute;
+  .terminal-corner-tl {
+    top: -1px;
+    left: -1px;
+    border-top: 2px solid var(--gold, #caa554);
+    border-left: 2px solid var(--gold, #caa554);
+  }
+
+  .terminal-corner-br {
     bottom: -1px;
     right: -1px;
-    width: 16px;
-    height: 16px;
-    border-bottom: 1px solid var(--gold, #caa554);
-    border-right: 1px solid var(--gold, #caa554);
-    pointer-events: none;
-    z-index: 20;
+    border-bottom: 2px solid var(--gold, #caa554);
+    border-right: 2px solid var(--gold, #caa554);
   }
 
   /* Terminal header bar */

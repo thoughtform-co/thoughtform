@@ -413,6 +413,10 @@ the interface for human-AI collaboration`}
         {/* Section 3: Manifesto - Terminal-styled with ASCII art */}
         <section className="section section-manifesto" id="manifesto" data-section="manifesto">
           <div className="manifesto-terminal">
+            {/* Gold corner accents */}
+            <div className="terminal-corner terminal-corner-tl"></div>
+            <div className="terminal-corner terminal-corner-br"></div>
+
             {/* Terminal window frame */}
             <div className="terminal-header">
               <span className="terminal-title">thoughtform@manifesto:~</span>
