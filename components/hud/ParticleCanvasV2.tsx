@@ -789,8 +789,7 @@ export function ParticleCanvasV2({
       manifold: {
         ...config.manifold,
         rows: Math.floor(config.manifold.rows * 0.5), // Half the rows
-        cols: Math.floor(config.manifold.cols * 0.6), // 60% of columns
-        starDensity: config.manifold.starDensity * 0.4, // 40% stars
+        columns: Math.floor(config.manifold.columns * 0.6), // 60% of columns
       },
       // Reduce landmark density on mobile
       landmarks: config.landmarks.map((l) => ({
