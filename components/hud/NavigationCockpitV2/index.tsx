@@ -386,21 +386,18 @@ function NavigationCockpitInner() {
               }
             : {
                 // DESKTOP: Frame smoothly transitions from definition → manifesto
-                // Calculate interpolated position based on tDefToManifesto
-                // Definition position: left-aligned at rail + 120px
-                // Manifesto position: centered (top: 50vh, left: 50%)
+                // Use consistent top-based positioning throughout
+                // Definition position: ~30vh (below wordmark)
+                // Manifesto position: 50vh (centered)
 
-                // Smoothly interpolate top position
-                // At t=0: definition position (use calc based on tHeroToDef)
-                // At t=1: 50vh (centered)
-                top:
-                  tDefToManifesto > 0
-                    ? `calc(${50 - (1 - tDefToManifesto) * 20}vh)` // Moves from ~30vh to 50vh
-                    : undefined,
-                bottom:
-                  tDefToManifesto === 0
-                    ? `calc(${90 * (1 - tHeroToDef)}px + ${tHeroToDef * 50}vh - ${tHeroToDef * 70}px)`
-                    : undefined,
+                // Calculate definition position as top value
+                // Original bottom calc: 90*(1-t)px + t*50vh - t*70px
+                // When fully in definition (tHeroToDef=1): bottom = 0 + 50vh - 70px
+                // That's approximately top: 50vh - 100px (frame height) ≈ 30vh
+
+                // Smoothly interpolate from definition position (~30vh) to center (50vh)
+                top: `calc(${30 + tDefToManifesto * 20}vh)`,
+
                 // Smoothly interpolate left position (from rail+120px to 50%)
                 left: `calc(${(1 - tDefToManifesto) * 184}px + ${tDefToManifesto * 50}%)`,
 
@@ -409,7 +406,7 @@ function NavigationCockpitInner() {
                 maxWidth: `${500 + tDefToManifesto * 420}px`,
 
                 // Height grows for terminal content
-                minHeight: tDefToManifesto > 0 ? `${100 + tDefToManifesto * 400}px` : undefined,
+                minHeight: `${100 + tDefToManifesto * 400}px`,
 
                 opacity: 1,
                 visibility: "visible",
@@ -434,16 +431,22 @@ function NavigationCockpitInner() {
               }
         }
       >
-        {/* Definition content - fades out as we scroll to manifesto */}
+        {/* Definition content - glitches out as we scroll to manifesto */}
         <div
-          className="hero-text-frame"
+          className={`hero-text-frame ${tDefToManifesto > 0 ? "glitch-out" : ""}`}
           style={{
-            opacity: 1 - tDefToManifesto,
-            visibility: tDefToManifesto < 1 ? "visible" : "hidden",
+            opacity: 1 - tDefToManifesto * 1.5, // Fade out faster
+            visibility: tDefToManifesto < 0.8 ? "visible" : "hidden",
             position: tDefToManifesto > 0 ? "absolute" : "relative",
             top: 0,
             left: 0,
             width: "100%",
+            // Glitch transform effect
+            transform:
+              tDefToManifesto > 0
+                ? `translateX(${Math.sin(tDefToManifesto * 50) * tDefToManifesto * 10}px) skewX(${tDefToManifesto * 5}deg)`
+                : "none",
+            filter: tDefToManifesto > 0 ? `blur(${tDefToManifesto * 2}px)` : "none",
           }}
         >
           <div className="hero-tagline hero-tagline-v2 hero-tagline-main">

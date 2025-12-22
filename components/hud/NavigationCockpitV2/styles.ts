@@ -93,6 +93,56 @@ export const cockpitStyles = `
     overflow: visible; /* Allow corners to extend during transition */
   }
 
+  /* Glitch-out effect for definition text */
+  .hero-text-frame.glitch-out {
+    animation: glitch-out 0.1s infinite;
+  }
+
+  .hero-text-frame.glitch-out::before,
+  .hero-text-frame.glitch-out::after {
+    content: attr(data-text);
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0.8;
+  }
+
+  .hero-text-frame.glitch-out::before {
+    color: var(--gold, #caa554);
+    animation: glitch-shift 0.1s infinite;
+    clip-path: polygon(0 0, 100% 0, 100% 45%, 0 45%);
+  }
+
+  .hero-text-frame.glitch-out::after {
+    color: var(--dawn, #ece3d6);
+    animation: glitch-shift-reverse 0.1s infinite;
+    clip-path: polygon(0 55%, 100% 55%, 100% 100%, 0 100%);
+  }
+
+  @keyframes glitch-out {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-2px) skewX(1deg); }
+    40% { transform: translateX(2px) skewX(-1deg); }
+    60% { transform: translateX(-1px); }
+    80% { transform: translateX(1px) skewX(0.5deg); }
+  }
+
+  @keyframes glitch-shift {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(3px); }
+    50% { transform: translateX(-3px); }
+    75% { transform: translateX(2px); }
+  }
+
+  @keyframes glitch-shift-reverse {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-3px); }
+    50% { transform: translateX(3px); }
+    75% { transform: translateX(-2px); }
+  }
+
   /* Glitch text content - inherits hero-tagline-v2 styling from parent */
   .bridge-content-glitch {
     display: block;
