@@ -493,7 +493,7 @@ the interface for human-AI collaboration`}
             {/* Question text - morphs from definition, clickable when complete */}
             {!transmissionAcknowledged && (
               <div
-                className="terminal-question"
+                className="terminal-question hero-tagline hero-tagline-v2"
                 onClick={
                   tDefToManifesto > 0.9 ? () => setTransmissionAcknowledged(true) : undefined
                 }
@@ -512,7 +512,7 @@ the interface for human-AI collaboration`}
             {/* Question after click - fades out */}
             {transmissionAcknowledged && (
               <div
-                className="terminal-question"
+                className="terminal-question hero-tagline hero-tagline-v2"
                 style={{
                   opacity: Math.max(0, 1 - manifestoScrollProgress * 3),
                 }}
