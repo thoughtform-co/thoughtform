@@ -459,10 +459,14 @@ function NavigationCockpitInner() {
                 width: `${baseWidth + growthProgress * widthGrowth}px`,
                 maxWidth: `${baseWidth + growthProgress * widthGrowth}px`,
 
-                // Height grows subtly: 100px → 640px with smooth easing
-                // Use fixed height (not minHeight) + overflow:hidden to prevent content from expanding frame
-                height: `${baseHeight + growthProgress * (actualContentHeight - baseHeight)}px`,
-                overflow: "hidden",
+                // Height: auto during hero/definition, then controlled during manifesto transition
+                // Only apply fixed height + overflow:hidden when transitioning to manifesto
+                // This prevents cutting off hero/definition text while controlling manifesto growth
+                height:
+                  tDefToManifesto > 0
+                    ? `${baseHeight + growthProgress * (actualContentHeight - baseHeight)}px`
+                    : "auto",
+                overflow: tDefToManifesto > 0 ? "hidden" : "visible",
 
                 opacity: 1,
                 visibility: "visible",
@@ -491,10 +495,11 @@ function NavigationCockpitInner() {
           style={{
             opacity: 1 - tDefToManifesto, // Fade out as manifesto appears
             visibility: tDefToManifesto < 1 ? "visible" : "hidden",
-            // Always absolute - frame height controlled by parent's height style
-            position: "absolute",
-            top: 0,
-            left: 0,
+            // Relative during hero/definition (so content determines parent height)
+            // Absolute during manifesto transition (so it overlays with terminal content)
+            position: tDefToManifesto > 0 ? "absolute" : "relative",
+            top: tDefToManifesto > 0 ? 0 : undefined,
+            left: tDefToManifesto > 0 ? 0 : undefined,
             width: "100%",
             display: "flex",
             alignItems: "center", // Vertically center the definition text
