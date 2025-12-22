@@ -357,13 +357,13 @@ function NavigationCockpitInner() {
           transform: isMobile ? "translateX(-50%)" : undefined,
           // CSS variable for brandmark fade
           ["--brandmark-opacity" as string]: 1 - tHeroToDef,
-          // Fade out - sync with sigil exit animation (0.15 to 0.40)
-          // Wordmark starts fading when sigil starts moving toward navbar
+          // Fade out - starts slightly before other elements (0.12) for smoother lead-in
+          // Completes at 0.40 with sigil arrival at navbar
           opacity:
-            scrollProgress < 0.15
+            scrollProgress < 0.12
               ? 1
               : scrollProgress < 0.4
-                ? 1 - (scrollProgress - 0.15) / 0.25
+                ? 1 - (scrollProgress - 0.12) / 0.28
                 : 0,
           visibility: scrollProgress < 0.4 ? "visible" : "hidden",
         }}
