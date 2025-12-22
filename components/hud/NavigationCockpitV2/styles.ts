@@ -232,27 +232,38 @@ export const cockpitStyles = `
     position: relative;
     width: 100%;
     max-width: 920px;
-    background: #080806;
-    border: 1px solid rgba(202, 165, 84, 0.4);
+    background: rgba(10, 9, 8, 0.5);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(236, 227, 214, 0.1);
     overflow: hidden;
-    box-shadow: 
-      0 0 60px rgba(202, 165, 84, 0.15),
-      0 0 120px rgba(202, 165, 84, 0.05),
-      inset 0 0 100px rgba(0, 0, 0, 0.8);
     z-index: 2;
   }
 
-  /* CRT Screen curvature effect */
+  /* Top-left gold corner */
   .manifesto-terminal::before {
     content: '';
     position: absolute;
-    inset: 0;
-    background: radial-gradient(
-      ellipse at center,
-      transparent 0%,
-      transparent 60%,
-      rgba(0, 0, 0, 0.4) 100%
-    );
+    top: -1px;
+    left: -1px;
+    width: 16px;
+    height: 16px;
+    border-top: 1px solid var(--gold, #caa554);
+    border-left: 1px solid var(--gold, #caa554);
+    pointer-events: none;
+    z-index: 20;
+  }
+
+  /* Bottom-right gold corner */
+  .manifesto-terminal::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    right: -1px;
+    width: 16px;
+    height: 16px;
+    border-bottom: 1px solid var(--gold, #caa554);
+    border-right: 1px solid var(--gold, #caa554);
     pointer-events: none;
     z-index: 20;
   }
@@ -262,34 +273,26 @@ export const cockpitStyles = `
     display: flex;
     align-items: center;
     padding: 12px 24px;
-    background: rgba(202, 165, 84, 0.06);
-    border-bottom: 1px solid rgba(202, 165, 84, 0.2);
+    border-bottom: 1px solid rgba(236, 227, 214, 0.1);
   }
 
   .terminal-title {
     font-family: var(--font-mono, 'IBM Plex Mono', monospace);
-    font-size: 13px;
-    color: #caa554;
+    font-size: 12px;
+    color: var(--gold, #caa554);
     letter-spacing: 0.05em;
     text-transform: uppercase;
   }
 
-  /* Terminal body with scanlines */
+  /* Terminal body */
   .terminal-body {
     position: relative;
     padding: 24px 32px 32px 32px;
     min-height: 400px;
-    background: linear-gradient(
-      180deg,
-      rgba(202, 165, 84, 0.02) 0%,
-      transparent 20%,
-      transparent 80%,
-      rgba(202, 165, 84, 0.02) 100%
-    );
     text-align: left;
   }
 
-  /* CRT Scanlines effect */
+  /* Subtle scanlines effect */
   .terminal-scanlines {
     position: absolute;
     inset: 0;
@@ -297,25 +300,12 @@ export const cockpitStyles = `
     background: repeating-linear-gradient(
       0deg,
       transparent,
-      transparent 1px,
-      rgba(0, 0, 0, 0.2) 1px,
-      rgba(0, 0, 0, 0.2) 2px
+      transparent 2px,
+      rgba(0, 0, 0, 0.1) 2px,
+      rgba(0, 0, 0, 0.1) 4px
     );
     z-index: 15;
-  }
-
-  /* Phosphor glow effect */
-  .terminal-body::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: radial-gradient(
-      ellipse at 50% 0%,
-      rgba(202, 165, 84, 0.03) 0%,
-      transparent 50%
-    );
-    pointer-events: none;
-    z-index: 1;
+    opacity: 0.5;
   }
 
   /* ASCII Art Title */
@@ -323,13 +313,9 @@ export const cockpitStyles = `
     font-family: var(--font-mono, 'IBM Plex Mono', monospace);
     font-size: clamp(5px, 0.9vw, 9px);
     line-height: 1.15;
-    color: #caa554;
+    color: var(--gold, #caa554);
     margin: 0 0 32px 0;
     overflow-x: auto;
-    text-shadow: 
-      0 0 10px rgba(202, 165, 84, 0.8),
-      0 0 20px rgba(202, 165, 84, 0.4),
-      0 0 40px rgba(202, 165, 84, 0.2);
     white-space: pre;
     position: relative;
     z-index: 5;
@@ -353,20 +339,17 @@ export const cockpitStyles = `
   }
 
   .prompt {
-    color: #caa554;
+    color: var(--gold, #caa554);
     font-weight: 600;
-    text-shadow: 0 0 8px rgba(202, 165, 84, 0.6);
   }
 
   .command {
-    color: #caa554;
-    text-shadow: 0 0 5px rgba(202, 165, 84, 0.4);
+    color: var(--gold, #caa554);
   }
 
   .cursor {
-    color: #caa554;
+    color: var(--gold, #caa554);
     animation: blink 1s step-end infinite;
-    text-shadow: 0 0 10px rgba(202, 165, 84, 0.8);
   }
 
   @keyframes blink {
@@ -388,23 +371,20 @@ export const cockpitStyles = `
     font-family: var(--font-mono, 'IBM Plex Mono', monospace);
     font-size: clamp(13px, 1.4vw, 15px);
     line-height: 1.9;
-    color: rgba(202, 165, 84, 0.85);
+    color: var(--dawn-80, rgba(236, 227, 214, 0.8));
     margin: 0;
     max-width: 72ch;
-    text-shadow: 0 0 4px rgba(202, 165, 84, 0.3);
     text-align: left;
   }
 
   .terminal-output em {
-    color: #caa554;
+    color: var(--gold, #caa554);
     font-style: italic;
-    text-shadow: 0 0 10px rgba(202, 165, 84, 0.6);
   }
 
   .terminal-output strong {
-    color: #ece3d6;
+    color: var(--dawn, #ece3d6);
     font-weight: 600;
-    text-shadow: 0 0 6px rgba(236, 227, 214, 0.4);
   }
 
   /* ═══════════════════════════════════════════════════════════════
