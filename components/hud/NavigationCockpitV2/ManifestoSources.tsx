@@ -96,7 +96,7 @@ export function ManifestoSources({ isVisible }: ManifestoSourcesProps) {
       <style jsx>{`
         .sources-rail {
           position: fixed;
-          left: 220px;
+          left: 160px;
           top: 50%;
           transform: translateY(-50%);
           z-index: 100;
