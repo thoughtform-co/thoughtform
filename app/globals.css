@@ -1679,12 +1679,17 @@ body {
 }
 
 /* Question morph - ensure same font size as definition text */
+/* Tensor Gold color with CRT glow effect */
 .question-morph .glitch-text-main {
   font-size: clamp(20px, 2.5vw, 36px) !important;
   line-height: 1.2 !important;
-  color: var(--dawn, #ece3d6) !important;
+  color: var(--gold, #caa554) !important;
   font-weight: 300 !important;
   font-family: var(--font-display, "PP Mondwest", serif) !important;
+  text-shadow:
+    0 0 2px rgba(202, 165, 84, 0.8),
+    0 0 4px rgba(202, 165, 84, 0.4),
+    0 0 8px rgba(202, 165, 84, 0.2) !important;
 }
 
 /* First line (phonetic) - smaller font and spacing */
