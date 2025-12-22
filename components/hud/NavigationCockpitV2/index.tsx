@@ -367,7 +367,7 @@ function NavigationCockpitInner() {
           SAME FRAME slides UP from bottom to center, only text content changes
           ═══════════════════════════════════════════════════════════════════ */}
       <div
-        className="bridge-frame"
+        className={`bridge-frame ${scrollProgress >= DEF_TO_MANIFESTO_START ? "manifesto-terminal" : ""}`}
         style={
           isMobile
             ? {
@@ -394,7 +394,7 @@ function NavigationCockpitInner() {
                     : undefined,
                 top:
                   scrollProgress >= DEF_TO_MANIFESTO_START
-                    ? `${50 - tDefToManifesto * 0}vh` // Move to center (50vh)
+                    ? "50vh" // Move to center
                     : undefined,
                 left:
                   scrollProgress >= DEF_TO_MANIFESTO_START
@@ -418,8 +418,8 @@ function NavigationCockpitInner() {
                       : "none",
                 transform:
                   scrollProgress >= DEF_TO_MANIFESTO_START
-                    ? `translateX(-50%) scale(${1 + tDefToManifesto * 0.84})` // Scale up
-                    : "translateX(0) scale(1)",
+                    ? `translateX(-50%) translateY(-50%)` // Center both axes
+                    : "translateX(0) translateY(0)",
                 transformOrigin: "center center",
               }
         }
@@ -440,12 +440,7 @@ the interface for human-AI collaboration`}
             </div>
           </div>
         ) : (
-          <div
-            className={`hero-text-frame manifesto-terminal-frame`}
-            style={{
-              opacity: tDefToManifesto,
-            }}
-          >
+          <>
             {/* Gold corner accents */}
             <div className="terminal-corner terminal-corner-tl"></div>
             <div className="terminal-corner terminal-corner-br"></div>
@@ -568,7 +563,7 @@ the interface for human-AI collaboration`}
                 </div>
               </div>
             </div>
-          </div>
+          </>
         )}
       </div>
 

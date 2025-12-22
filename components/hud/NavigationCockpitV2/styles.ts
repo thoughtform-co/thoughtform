@@ -82,17 +82,15 @@ export const cockpitStyles = `
     min-height: 100px; /* Prevent layout shift during glitch transition */
   }
 
-  /* Manifesto terminal frame - transformed bridge-frame */
-  .bridge-frame .manifesto-terminal-frame {
-    position: relative;
-    width: 100%;
-    background: rgba(10, 9, 8, 0.5);
+  /* Bridge-frame transformed into manifesto terminal */
+  .bridge-frame.manifesto-terminal {
+    background: rgba(10, 9, 8, 0.5) !important;
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
-    border: 1px solid rgba(236, 227, 214, 0.1);
+    border: 1px solid rgba(236, 227, 214, 0.1) !important;
     overflow: visible; /* Allow corners to extend */
-    box-sizing: border-box;
     min-height: 500px;
+    padding: 0; /* Remove default padding, terminal has its own */
   }
 
   /* Glitch text content - inherits hero-tagline-v2 styling from parent */
@@ -233,23 +231,6 @@ export const cockpitStyles = `
     align-items: center !important;
     display: flex !important;
     min-height: 100vh !important;
-  }
-  
-  /* Override generic section * rule for manifesto terminal */
-  .section-manifesto .manifesto-terminal,
-  .section-manifesto .manifesto-terminal * {
-    z-index: auto;
-  }
-
-  .section-manifesto .manifesto-terminal {
-    position: relative;
-    width: 100%;
-    max-width: 920px;
-    background: rgba(10, 9, 8, 0.5);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    border: 1px solid rgba(236, 227, 214, 0.1);
-    z-index: 2;
   }
 
   /* Gold corner accents */
@@ -1063,7 +1044,7 @@ export const cockpitStyles = `
       padding-top: 100px !important;
     }
 
-    .manifesto-terminal {
+    .bridge-frame.manifesto-terminal {
       max-width: 100%;
       border-width: 1px;
     }
