@@ -7,11 +7,9 @@ import { useEffect, useState, useRef, useMemo } from "react";
 // Progressive reveal with typewriter effect - cool-retro-term style
 // ═══════════════════════════════════════════════════════════════════
 
-// ASCII Art title - "AI ISN'T SOFTWARE." - compact 3-line version
-const ASCII_TITLE = `
-╔═╗╦  ╦╔═╗╔╗╔ ╔╦╗  ╔═╗╔═╗╔═╗╔╦╗╦ ╦╔═╗╦═╗╔═╗
-╠═╣║  ║╚═╗║║║  ║   ╚═╗║ ║╠╣  ║ ║║║╠═╣╠╦╝║╣ 
-╩ ╩╩  ╩╚═╝╝╚╝  ╩   ╚═╝╚═╝╚   ╩ ╚╩╝╩ ╩╩╚═╚═╝.
+// ASCII Art title - "AI ISN'T SOFTWARE." - elegant underline style
+const ASCII_TITLE = `▄▀█ █   █ █▀ █▄░█ ▀ ▀█▀   █▀ █▀█ █▀▀ ▀█▀ █░█░█ ▄▀█ █▀█ █▀▀
+█▀█ █   █ ▄█ █░▀█   ░█░   ▄█ █▄█ █▀░ ░█░ ▀▄▀▄▀ █▀█ █▀▄ ██▄.
 `;
 
 // Manifesto content - full text for character-by-character reveal
@@ -101,6 +99,7 @@ export function ManifestoTerminal({
           width: 100%;
           text-align: left;
           position: relative;
+          margin-top: -8px; /* Bring closer to question text */
         }
 
         /* CRT phosphor glow effect */
@@ -117,13 +116,13 @@ export function ManifestoTerminal({
           z-index: -1;
         }
 
-        /* ASCII Art Title - compact 3-line version */
+        /* ASCII Art Title - elegant 2-line style */
         .ascii-title {
           font-family: "Iosevka Web", "Iosevka", "IBM Plex Mono", "Fira Code", monospace;
-          font-size: clamp(10px, 1.2vw, 14px);
-          line-height: 1.15;
+          font-size: clamp(11px, 1.3vw, 15px);
+          line-height: 1.2;
           color: var(--gold, #caa554);
-          margin: 0 0 20px 0;
+          margin: 0 0 12px 0; /* Reduced gap to manifesto */
           white-space: pre;
           overflow: hidden;
           text-shadow:
