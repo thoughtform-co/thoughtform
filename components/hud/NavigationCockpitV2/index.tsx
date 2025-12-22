@@ -533,7 +533,9 @@ function NavigationCockpitInner() {
             position: "relative",
             width: "100%",
             display: "flex",
-            alignItems: "center",
+            // Switch to column layout when manifesto is showing
+            flexDirection: manifestoRevealProgress > 0 ? "column" : "row",
+            alignItems: manifestoRevealProgress > 0 ? "flex-start" : "center",
             justifyContent: "flex-start",
             // Padding interpolates: hero/definition = 16px top, terminal = 72px top (below header with breathing room)
             padding: `${16 + 56 * tDefToManifesto}px 24px 16px 24px`,

@@ -81,19 +81,21 @@ export function ManifestoTerminal({
         .manifesto-terminal {
           /* Flows naturally below question text */
           width: 100%;
+          text-align: left;
         }
 
         .manifesto-content {
-          /* Match hero-tagline-v2 styling */
-          font-family: var(--font-display, "Relative Trial", sans-serif);
-          font-size: clamp(18px, 2.2vw, 24px);
-          line-height: 1.5;
-          font-weight: 300;
+          /* IBM Plex Sans for manifesto body */
+          font-family: "IBM Plex Sans", "Inter", sans-serif;
+          font-size: clamp(14px, 1.6vw, 18px);
+          line-height: 1.6;
+          font-weight: 400;
           color: var(--dawn, #ebe3d6);
+          text-align: left;
         }
 
         .manifesto-line {
-          min-height: 1.5em;
+          min-height: 1.6em;
         }
 
         .cursor-blink {
