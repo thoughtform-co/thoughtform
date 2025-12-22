@@ -22,6 +22,7 @@ import { ConnectorLines } from "./ConnectorLines";
 import { SigilSection } from "./SigilSection";
 import { HeroBackgroundSigil } from "./HeroBackgroundSigil";
 import { ManifestoTerminal } from "./ManifestoTerminal";
+import { ManifestoSources } from "./ManifestoSources";
 import { useScrollCapture } from "./hooks/useScrollCapture";
 // Styles consolidated into app/globals.css
 
@@ -674,6 +675,9 @@ the interface for human-AI collaboration`}
       <AdminGate>
         <ParticleAdminPanel />
       </AdminGate>
+
+      {/* Manifesto Sources - Fixed left rail, visible after manifesto complete */}
+      <ManifestoSources isVisible={manifestoComplete} />
 
       {/* Fixed Thoughtform Sigil - appears centered during definition section
           Animates from brandmark origin (in hero wordmark) to center,

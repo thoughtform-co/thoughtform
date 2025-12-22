@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState, useRef, useMemo } from "react";
-import { ManifestoSources } from "./ManifestoSources";
 
 // ═══════════════════════════════════════════════════════════════════
 // MANIFESTO CONTENT
@@ -49,7 +48,6 @@ export function ManifestoTerminal({
   onComplete,
 }: ManifestoTerminalProps) {
   const [displayedText, setDisplayedText] = useState("");
-  const [showSources, setShowSources] = useState(false);
   const hasCompletedRef = useRef(false);
 
   // Calculate total characters
@@ -59,7 +57,6 @@ export function ManifestoTerminal({
   useEffect(() => {
     if (!isActive) {
       setDisplayedText("");
-      setShowSources(false);
       hasCompletedRef.current = false;
       return;
     }
@@ -70,8 +67,6 @@ export function ManifestoTerminal({
     // Check if complete
     if (charsToShow >= totalChars && !hasCompletedRef.current) {
       hasCompletedRef.current = true;
-      // Show sources after a brief delay
-      setTimeout(() => setShowSources(true), 300);
       onComplete?.();
     }
   }, [revealProgress, isActive, onComplete, totalChars]);
@@ -97,9 +92,6 @@ export function ManifestoTerminal({
         {/* Blinking block cursor - hide when complete */}
         {revealProgress < 1 && <span className="cursor-blink">█</span>}
       </div>
-
-      {/* Sources section - appears after manifesto complete */}
-      <ManifestoSources isVisible={showSources} />
 
       <style jsx>{`
         .manifesto-terminal {
