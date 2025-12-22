@@ -15,33 +15,33 @@ interface Source {
 const SOURCES: Source[] = [
   {
     id: "01",
-    title: "Why AI Is Harder Than We Think",
-    author: "Mitchell",
-    url: "https://arxiv.org/abs/2104.12871",
+    title: "Cognition All The Way Down",
+    author: "Chis-Ciure & Levin",
+    url: "https://link.springer.com/article/10.1007/s11229-025-05319-6",
   },
   {
     id: "02",
-    title: "AI-Assisted Writing",
-    author: "Wattenberger",
-    url: "https://wattenberger.com/thoughts/ai-writing",
+    title: "Universal Geometry of Embeddings",
+    author: "Pandey et al.",
+    url: "https://arxiv.org/abs/2505.12540",
   },
   {
     id: "03",
-    title: "Latent Space Interpolation",
-    author: "Mollick",
-    url: "https://www.oneusefulthing.org/p/latent-space-interpolation",
+    title: "Why Concepts Are (Probably) Vectors",
+    author: "Piantadosi",
+    url: "https://colala.berkeley.edu/papers/piantadosi2024why.pdf",
   },
   {
     id: "04",
-    title: "The Urgency of Interpretability",
-    author: "Amodei",
-    url: "https://www.anthropic.com/research/interpretability",
+    title: "Creativity Through Associative Thinking",
+    author: "Wang et al.",
+    url: "https://arxiv.org/abs/2405.06715",
   },
   {
     id: "05",
-    title: "LLM Homogenization Effects",
-    author: "Chung et al.",
-    url: "https://arxiv.org/abs/2402.01536",
+    title: "Deep Meditations: Latent Space Navigation",
+    author: "Mordvintsev et al.",
+    url: "https://nips2018creativity.github.io/doc/Deep_Meditations.pdf",
   },
 ];
 
