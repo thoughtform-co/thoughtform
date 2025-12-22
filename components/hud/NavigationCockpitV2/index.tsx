@@ -676,8 +676,8 @@ the interface for human-AI collaboration`}
         <ParticleAdminPanel />
       </AdminGate>
 
-      {/* Manifesto Sources - Fixed left rail, visible after manifesto complete */}
-      <ManifestoSources isVisible={manifestoComplete} />
+      {/* Manifesto Sources - Fixed left rail, appears with manifesto text */}
+      <ManifestoSources isVisible={manifestoRevealProgress > 0.1} />
 
       {/* Fixed Thoughtform Sigil - appears centered during definition section
           Animates from brandmark origin (in hero wordmark) to center,

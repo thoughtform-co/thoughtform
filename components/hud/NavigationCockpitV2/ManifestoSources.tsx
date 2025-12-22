@@ -1,10 +1,8 @@
 "use client";
 
-import { useState } from "react";
-
 // ═══════════════════════════════════════════════════════════════════
 // MANIFESTO SOURCES - Left Rail
-// Minimalistic source markers aligned with navigation rail
+// Clean source list aligned with navigation grid
 // ═══════════════════════════════════════════════════════════════════
 
 interface Source {
@@ -53,54 +51,51 @@ interface ManifestoSourcesProps {
 }
 
 export function ManifestoSources({ isVisible }: ManifestoSourcesProps) {
-  const [hoveredId, setHoveredId] = useState<string | null>(null);
-
   if (!isVisible) return null;
 
   return (
-    <div className="sources-rail">
+    <nav className="sources-rail" aria-label="Manifesto sources">
       {/* Vertical line */}
-      <div className="sources-line" />
+      <div className="sources-line" aria-hidden="true" />
 
       {/* Content container */}
       <div className="sources-content">
         {/* Label */}
-        <div className="sources-label">
-          <span className="label-dot">°</span>
-          <span className="label-text">SOURCES</span>
-        </div>
+        <header className="sources-header">
+          <span className="header-marker" aria-hidden="true">
+            °
+          </span>
+          <span className="header-label">SOURCES</span>
+        </header>
 
-        {/* Source markers */}
-        <div className="sources-markers">
+        {/* Source list */}
+        <ul className="sources-list">
           {SOURCES.map((source, index) => (
-            <a
+            <li
               key={source.id}
-              href={source.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={`source-marker ${hoveredId === source.id ? "active" : ""}`}
-              onMouseEnter={() => setHoveredId(source.id)}
-              onMouseLeave={() => setHoveredId(null)}
-              style={{ animationDelay: `${index * 0.08}s` }}
+              className="source-item"
+              style={{ animationDelay: `${index * 0.1}s` }}
             >
-              <span className="marker-id">{source.id}</span>
-
-              {/* Tooltip on hover */}
-              {hoveredId === source.id && (
-                <div className="marker-tooltip">
-                  <span className="tooltip-title">{source.title}</span>
-                  <span className="tooltip-author">{source.author}</span>
+              <a
+                href={source.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="source-link"
+              >
+                <span className="source-id">{source.id}</span>
+                <div className="source-info">
+                  <span className="source-title">{source.title}</span>
+                  <span className="source-author">{source.author}</span>
                 </div>
-              )}
-            </a>
+              </a>
+            </li>
           ))}
-        </div>
+        </ul>
       </div>
 
       <style jsx>{`
         .sources-rail {
           position: fixed;
-          /* Position inside the grid - closer to manifesto */
           left: 220px;
           top: 50%;
           transform: translateY(-50%);
@@ -108,8 +103,7 @@ export function ManifestoSources({ isVisible }: ManifestoSourcesProps) {
           display: flex;
           flex-direction: row;
           align-items: stretch;
-          gap: 0;
-          animation: fadeIn 0.4s ease-out forwards;
+          animation: fadeIn 0.5s ease-out forwards;
         }
 
         @keyframes fadeIn {
@@ -121,70 +115,70 @@ export function ManifestoSources({ isVisible }: ManifestoSourcesProps) {
           }
         }
 
-        /* Solid vertical line on the left */
+        /* Solid vertical line */
         .sources-line {
           width: 1px;
           background: linear-gradient(
             to bottom,
             transparent 0%,
-            rgba(202, 165, 84, 0.4) 10%,
-            rgba(202, 165, 84, 0.4) 90%,
+            rgba(202, 165, 84, 0.3) 10%,
+            rgba(202, 165, 84, 0.3) 90%,
             transparent 100%
           );
-          margin-right: 12px;
+          margin-right: 16px;
+          flex-shrink: 0;
         }
 
-        /* Content to the right of the line */
+        /* Content container */
         .sources-content {
           display: flex;
           flex-direction: column;
-          align-items: flex-start;
-          gap: 8px;
+          gap: 16px;
         }
 
-        .sources-label {
+        /* Header */
+        .sources-header {
           display: flex;
           align-items: center;
-          gap: 4px;
+          gap: 6px;
         }
 
-        .label-dot {
+        .header-marker {
           font-family: "Iosevka Web", "Iosevka", monospace;
-          font-size: 12px;
-          color: var(--gold, #caa554);
-          opacity: 0.6;
-        }
-
-        .label-text {
-          font-family: "Iosevka Web", "Iosevka", monospace;
-          font-size: 9px;
-          letter-spacing: 0.12em;
+          font-size: 14px;
           color: var(--gold, #caa554);
           opacity: 0.5;
         }
 
-        .sources-markers {
-          display: flex;
-          flex-direction: column;
-          gap: 4px;
+        .header-label {
+          font-family: "Iosevka Web", "Iosevka", monospace;
+          font-size: 10px;
+          font-weight: 500;
+          letter-spacing: 0.15em;
+          color: var(--gold, #caa554);
+          opacity: 0.6;
         }
 
-        .source-marker {
-          position: relative;
+        /* Source list */
+        .sources-list {
+          list-style: none;
+          margin: 0;
+          padding: 0;
           display: flex;
-          align-items: center;
-          text-decoration: none;
-          padding: 3px 6px;
-          border-radius: 2px;
-          transition: all 0.15s ease;
-          animation: slideIn 0.3s ease-out forwards;
+          flex-direction: column;
+          gap: 12px;
+        }
+
+        /* Individual source item */
+        .source-item {
+          animation: slideIn 0.4s ease-out forwards;
           opacity: 0;
         }
 
         @keyframes slideIn {
           from {
             opacity: 0;
-            transform: translateX(-4px);
+            transform: translateX(-8px);
           }
           to {
             opacity: 1;
@@ -192,67 +186,75 @@ export function ManifestoSources({ isVisible }: ManifestoSourcesProps) {
           }
         }
 
-        .source-marker:hover,
-        .source-marker.active {
-          background: rgba(202, 165, 84, 0.08);
-        }
-
-        .marker-id {
-          font-family: "Iosevka Web", "Iosevka", monospace;
-          font-size: 10px;
-          color: var(--gold, #caa554);
-          opacity: 0.5;
-          transition: all 0.15s ease;
-        }
-
-        .source-marker:hover .marker-id,
-        .source-marker.active .marker-id {
-          opacity: 1;
-          text-shadow: 0 0 6px rgba(202, 165, 84, 0.5);
-        }
-
-        /* Tooltip */
-        .marker-tooltip {
-          position: absolute;
-          left: 100%;
-          top: 50%;
-          transform: translateY(-50%);
-          margin-left: 12px;
-          padding: 8px 12px;
-          background: rgba(10, 10, 10, 0.95);
-          border: 1px solid rgba(202, 165, 84, 0.2);
+        .source-link {
+          display: flex;
+          align-items: flex-start;
+          gap: 12px;
+          text-decoration: none;
+          padding: 8px 10px;
+          margin: -8px -10px;
           border-radius: 4px;
-          white-space: nowrap;
+          transition: background-color 0.2s ease;
+        }
+
+        .source-link:hover {
+          background: rgba(202, 165, 84, 0.06);
+        }
+
+        .source-link:focus-visible {
+          outline: 1px solid rgba(202, 165, 84, 0.4);
+          outline-offset: 2px;
+        }
+
+        /* Source ID number */
+        .source-id {
+          font-family: "Iosevka Web", "Iosevka", monospace;
+          font-size: 11px;
+          color: var(--gold, #caa554);
+          opacity: 0.4;
+          min-width: 20px;
+          padding-top: 2px;
+          transition: opacity 0.2s ease;
+        }
+
+        .source-link:hover .source-id {
+          opacity: 0.8;
+        }
+
+        /* Source info container */
+        .source-info {
           display: flex;
           flex-direction: column;
           gap: 2px;
-          animation: tooltipIn 0.15s ease-out forwards;
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
         }
 
-        @keyframes tooltipIn {
-          from {
-            opacity: 0;
-            transform: translateY(-50%) translateX(-4px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(-50%) translateX(0);
-          }
+        /* Source title */
+        .source-title {
+          font-family: "Iosevka Web", "Iosevka", monospace;
+          font-size: 12px;
+          font-weight: 400;
+          color: var(--semantic-dawn, #ece3d6);
+          opacity: 0.8;
+          line-height: 1.4;
+          transition: all 0.2s ease;
         }
 
-        .tooltip-title {
+        .source-link:hover .source-title {
+          color: var(--gold, #caa554);
+          opacity: 1;
+        }
+
+        /* Source author */
+        .source-author {
           font-family: "Iosevka Web", "Iosevka", monospace;
           font-size: 11px;
-          color: var(--semantic-dawn, #ece3d6);
-          line-height: 1.3;
+          color: var(--gold, #caa554);
+          opacity: 0.4;
+          transition: opacity 0.2s ease;
         }
 
-        .tooltip-author {
-          font-family: "Iosevka Web", "Iosevka", monospace;
-          font-size: 10px;
-          color: var(--gold, #caa554);
-          opacity: 0.6;
+        .source-link:hover .source-author {
+          opacity: 0.7;
         }
 
         /* Hide on mobile */
@@ -262,7 +264,7 @@ export function ManifestoSources({ isVisible }: ManifestoSourcesProps) {
           }
         }
       `}</style>
-    </div>
+    </nav>
   );
 }
 
