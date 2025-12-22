@@ -86,6 +86,7 @@ function NavigationCockpitInner() {
   // State for manifesto scroll progress (0-1 within manifesto section)
   const [manifestoScrollProgress, setManifestoScrollProgress] = useState(0);
   const [manifestoInView, setManifestoInView] = useState(false);
+  const [manifestoFullyVisible, setManifestoFullyVisible] = useState(false);
 
   // Calculate scroll progress within manifesto section
   useEffect(() => {
@@ -116,6 +117,11 @@ function NavigationCockpitInner() {
       // Terminal appears immediately when section is in viewport
       const isInView = rect.top < windowHeight && rect.bottom > 0;
       setManifestoInView(isInView);
+
+      // Terminal is "fully visible" when section is centered or well into viewport
+      // This means the section top is above viewport center and bottom is below it
+      const isFullyVisible = rect.top < viewportCenter && rect.bottom > viewportCenter;
+      setManifestoFullyVisible(isFullyVisible);
     };
 
     const handleScroll = () => {
@@ -511,8 +517,9 @@ the interface for human-AI collaboration`}
           <div
             className="manifesto-terminal"
             style={{
-              opacity: manifestoInView ? 1 : 0, // Appears immediately when section is in view
-              transition: "opacity 0.2s ease-out",
+              // Appear right after definition section disappears (scrollProgress ~0.2) or when in view
+              opacity: scrollProgress > 0.18 || manifestoInView ? 1 : 0,
+              transition: "opacity 0.15s ease-out",
             }}
           >
             {/* Gold corner accents */}
@@ -529,15 +536,16 @@ the interface for human-AI collaboration`}
               {/* Scanlines overlay */}
               <div className="terminal-scanlines"></div>
 
-              {/* Phase 1: Incoming transmission popup - flickers then disappears */}
+              {/* Phase 1: Incoming transmission popup - only when terminal is fully visible */}
               <div
                 className="transmission-popup"
                 style={{
                   opacity:
-                    manifestoScrollProgress < 0.1
+                    manifestoFullyVisible && manifestoScrollProgress < 0.1
                       ? Math.sin(manifestoScrollProgress * 100) * 0.5 + 0.5 // Flicker effect
                       : 0,
-                  display: manifestoScrollProgress < 0.15 ? "block" : "none",
+                  display:
+                    manifestoFullyVisible && manifestoScrollProgress < 0.15 ? "block" : "none",
                 }}
               >
                 <div className="popup-border">
