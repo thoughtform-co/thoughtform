@@ -543,8 +543,9 @@ the interface for human-AI collaboration`}
               <div
                 className="transmission-popup"
                 style={{
-                  opacity: manifestoFullyVisible && !transmissionAcknowledged ? 1 : 0,
-                  display: manifestoFullyVisible && !transmissionAcknowledged ? "block" : "none",
+                  opacity: scrollProgress > 0.28 && !transmissionAcknowledged ? 1 : 0,
+                  visibility:
+                    scrollProgress > 0.28 && !transmissionAcknowledged ? "visible" : "hidden",
                   cursor: "pointer",
                 }}
                 onClick={() => setTransmissionAcknowledged(true)}

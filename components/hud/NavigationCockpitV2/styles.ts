@@ -361,6 +361,7 @@ export const cockpitStyles = `
     transform: translate(-50%, -50%);
     z-index: 20;
     transition: opacity 0.1s ease-out;
+    pointer-events: auto;
   }
 
   .popup-border {
@@ -371,6 +372,7 @@ export const cockpitStyles = `
     gap: 16px;
     background: rgba(10, 9, 8, 0.95);
     transition: all 0.2s ease-out;
+    cursor: pointer;
   }
 
   .transmission-popup:hover .popup-border {
