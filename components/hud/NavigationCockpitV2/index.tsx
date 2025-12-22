@@ -383,15 +383,14 @@ function NavigationCockpitInner() {
           transform: isMobile ? "translateX(-50%)" : undefined,
           // CSS variable for brandmark fade
           ["--brandmark-opacity" as string]: 1 - tHeroToDef,
-          // Fade out - starts slightly before other elements (0.12) for smoother lead-in
-          // Completes at 0.40 with sigil arrival at navbar
+          // Fade out faster - starts at 0.08, completes by 0.25
           opacity:
-            scrollProgress < 0.12
+            scrollProgress < 0.08
               ? 1
-              : scrollProgress < 0.4
-                ? 1 - (scrollProgress - 0.12) / 0.28
+              : scrollProgress < 0.25
+                ? 1 - (scrollProgress - 0.08) / 0.17
                 : 0,
-          visibility: scrollProgress < 0.4 ? "visible" : "hidden",
+          visibility: scrollProgress < 0.25 ? "visible" : "hidden",
         }}
       >
         {/* Hero Wordmark - stays visible until particles fully take over */}
