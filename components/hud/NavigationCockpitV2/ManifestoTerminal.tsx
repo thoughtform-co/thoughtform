@@ -1,30 +1,28 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 
 // ═══════════════════════════════════════════════════════════════════
 // MANIFESTO CONTENT
-// Progressive reveal - each line appears as user scrolls
+// Progressive reveal with typewriter effect - cool-retro-term style
 // ═══════════════════════════════════════════════════════════════════
 
-// Manifesto content - each line as separate item for progressive reveal
-const MANIFESTO_LINES = [
-  "Most companies struggle with their AI adoption because",
-  "they treat AI like normal software.",
-  "",
-  "But AI isn't a tool to command.",
-  "",
-  "It's a strange, new intelligence we have to learn how",
-  "to navigate. It leaps across dimensions we can't fathom.",
-  "It hallucinates. It surprises.",
-  "",
-  "In technical work, that strangeness must be constrained.",
-  "But in creative and strategic work?",
-  "It's the source of truly novel ideas.",
-  "",
-  "Thoughtform teaches teams to think WITH that intelligence—",
-  "navigating its strangeness for creative breakthroughs.",
-];
+// Manifesto content - full text for character-by-character reveal
+const MANIFESTO_TEXT = `Most companies struggle with their AI adoption because
+they treat AI like normal software.
+
+But AI isn't a tool to command.
+
+It's a strange, new intelligence we have to learn how
+to navigate. It leaps across dimensions we can't fathom.
+It hallucinates. It surprises.
+
+In technical work, that strangeness must be constrained.
+But in creative and strategic work?
+It's the source of truly novel ideas.
+
+Thoughtform teaches teams to think WITH that intelligence—
+navigating its strangeness for creative breakthroughs.`;
 
 interface ManifestoTerminalProps {
   /** Progress through the manifesto (0-1) */
@@ -40,41 +38,42 @@ export function ManifestoTerminal({
   isActive,
   onComplete,
 }: ManifestoTerminalProps) {
-  const [displayedLines, setDisplayedLines] = useState<string[]>([]);
+  const [displayedText, setDisplayedText] = useState("");
   const hasCompletedRef = useRef(false);
 
-  // Calculate how much to reveal based on progress
+  // Calculate total characters
+  const totalChars = useMemo(() => MANIFESTO_TEXT.length, []);
+
+  // Calculate how much to reveal based on progress (character by character)
   useEffect(() => {
     if (!isActive) {
-      setDisplayedLines([]);
+      setDisplayedText("");
       hasCompletedRef.current = false;
       return;
     }
 
-    const totalLines = MANIFESTO_LINES.length;
-    const linesToShow = Math.floor(revealProgress * totalLines);
-    setDisplayedLines(MANIFESTO_LINES.slice(0, linesToShow));
+    const charsToShow = Math.floor(revealProgress * totalChars);
+    setDisplayedText(MANIFESTO_TEXT.slice(0, charsToShow));
 
     // Check if complete
-    if (linesToShow >= totalLines && !hasCompletedRef.current) {
+    if (charsToShow >= totalChars && !hasCompletedRef.current) {
       hasCompletedRef.current = true;
       onComplete?.();
     }
-  }, [revealProgress, isActive, onComplete]);
+  }, [revealProgress, isActive, onComplete, totalChars]);
 
   if (!isActive) return null;
 
   return (
     <div className="manifesto-terminal">
-      {/* Manifesto content - revealed line by line */}
+      {/* CRT glow overlay */}
+      <div className="crt-glow"></div>
+
+      {/* Manifesto content - typewriter character reveal */}
       <div className="manifesto-content">
-        {displayedLines.map((line, index) => (
-          <div key={index} className="manifesto-line">
-            {line || "\u00A0"} {/* Non-breaking space for empty lines */}
-          </div>
-        ))}
-        {/* Blinking cursor at end */}
-        {displayedLines.length > 0 && <span className="cursor-blink">█</span>}
+        <span className="typed-text">{displayedText}</span>
+        {/* Blinking block cursor */}
+        <span className="cursor-blink">█</span>
       </div>
 
       <style jsx>{`
@@ -82,6 +81,21 @@ export function ManifestoTerminal({
           /* Flows naturally below question text */
           width: 100%;
           text-align: left;
+          position: relative;
+        }
+
+        /* CRT phosphor glow effect */
+        .crt-glow {
+          position: absolute;
+          inset: -10px;
+          pointer-events: none;
+          background: radial-gradient(
+            ellipse at center,
+            rgba(202, 165, 84, 0.03) 0%,
+            transparent 70%
+          );
+          filter: blur(20px);
+          z-index: -1;
         }
 
         .manifesto-content {
@@ -91,20 +105,33 @@ export function ManifestoTerminal({
           font-size: clamp(14px, 1.5vw, 16px);
           line-height: 1.7;
           font-weight: 400;
-          color: var(--dawn, #ebe3d6);
+          /* Tensor Gold color */
+          color: var(--gold, #caa554);
           text-align: left;
           letter-spacing: 0.02em;
+          white-space: pre-wrap;
+          /* CRT text glow */
+          text-shadow:
+            0 0 2px rgba(202, 165, 84, 0.8),
+            0 0 4px rgba(202, 165, 84, 0.4),
+            0 0 8px rgba(202, 165, 84, 0.2);
+          /* Subtle CRT flicker */
+          animation: crt-flicker 0.15s infinite;
         }
 
-        .manifesto-line {
-          min-height: 1.6em;
+        .typed-text {
+          /* Slight phosphor persistence effect */
+          opacity: 0.95;
         }
 
         .cursor-blink {
           display: inline-block;
-          margin-left: 4px;
-          animation: blink 1s step-end infinite;
+          margin-left: 2px;
+          animation: blink 0.8s step-end infinite;
           color: var(--gold, #caa554);
+          text-shadow:
+            0 0 4px rgba(202, 165, 84, 1),
+            0 0 8px rgba(202, 165, 84, 0.6);
         }
 
         @keyframes blink {
@@ -115,6 +142,19 @@ export function ManifestoTerminal({
           51%,
           100% {
             opacity: 0;
+          }
+        }
+
+        /* Subtle CRT flicker - very subtle to not be distracting */
+        @keyframes crt-flicker {
+          0% {
+            opacity: 0.97;
+          }
+          50% {
+            opacity: 1;
+          }
+          100% {
+            opacity: 0.98;
           }
         }
       `}</style>
