@@ -632,14 +632,14 @@ the interface for human-AI collaboration`}
           <div className="terminal-body">
             {/* Scanlines overlay */}
             <div className="terminal-scanlines"></div>
-
-            {/* ManifestoTerminal - revealed progressively by scroll */}
-            <ManifestoTerminal
-              revealProgress={manifestoRevealProgress}
-              isActive={tDefToManifesto > 0.95}
-              onComplete={() => setManifestoComplete(true)}
-            />
           </div>
+
+          {/* ManifestoTerminal - positioned to match question text location */}
+          <ManifestoTerminal
+            revealProgress={manifestoRevealProgress}
+            isActive={tDefToManifesto > 0.95}
+            onComplete={() => setManifestoComplete(true)}
+          />
         </div>
       </div>
 
