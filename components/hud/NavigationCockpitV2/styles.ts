@@ -290,8 +290,7 @@ export const cockpitStyles = `
   .geo-shape {
     position: absolute;
     border: 1px solid rgba(202, 165, 84, 0.15);
-    opacity: 0;
-    animation: geo-fade-in 2s ease-out forwards;
+    transition: opacity 0.5s ease-out;
   }
 
   .geo-shape-1 {
@@ -300,7 +299,6 @@ export const cockpitStyles = `
     top: 10%;
     right: 5%;
     transform: rotate(45deg);
-    animation-delay: 4s;
   }
 
   .geo-shape-2 {
@@ -309,7 +307,6 @@ export const cockpitStyles = `
     bottom: 20%;
     left: 8%;
     border-radius: 50%;
-    animation-delay: 5s;
   }
 
   .geo-shape-3 {
@@ -318,7 +315,6 @@ export const cockpitStyles = `
     top: 30%;
     left: 15%;
     clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
-    animation-delay: 6s;
   }
 
   .geo-grid {
@@ -328,13 +324,7 @@ export const cockpitStyles = `
       linear-gradient(rgba(202, 165, 84, 0.03) 1px, transparent 1px),
       linear-gradient(90deg, rgba(202, 165, 84, 0.03) 1px, transparent 1px);
     background-size: 60px 60px;
-    opacity: 0;
-    animation: geo-fade-in 3s ease-out 3s forwards;
-  }
-
-  @keyframes geo-fade-in {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    transition: opacity 0.5s ease-out;
   }
 
   /* Terminal body */
@@ -370,8 +360,7 @@ export const cockpitStyles = `
     left: 50%;
     transform: translate(-50%, -50%);
     z-index: 20;
-    opacity: 0;
-    animation: popup-sequence 3s ease-out forwards;
+    transition: opacity 0.1s ease-out;
   }
 
   .popup-border {
@@ -386,7 +375,6 @@ export const cockpitStyles = `
   .popup-icon {
     color: var(--gold, #caa554);
     font-size: 24px;
-    animation: icon-pulse 0.5s ease-in-out infinite;
   }
 
   .popup-text {
@@ -397,23 +385,10 @@ export const cockpitStyles = `
     text-transform: uppercase;
   }
 
-  @keyframes popup-sequence {
-    0% { opacity: 0; transform: translate(-50%, -50%) scale(0.9); }
-    10% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-    70% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-    100% { opacity: 0; transform: translate(-50%, -50%) scale(1.02); }
-  }
-
-  @keyframes icon-pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.5; }
-  }
-
   /* Phase 2: The question */
   .manifesto-question {
-    opacity: 0;
-    animation: question-appear 1s ease-out 2.5s forwards;
     margin-bottom: 40px;
+    transition: opacity 0.3s ease-out, transform 0.3s ease-out;
   }
 
   .manifesto-question h2 {
@@ -426,20 +401,9 @@ export const cockpitStyles = `
     margin: 0;
   }
 
-  @keyframes question-appear {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
   /* Phase 3: Typed manifesto content */
   .manifesto-typed-content {
-    opacity: 0;
-    animation: content-appear 0.5s ease-out 3.5s forwards;
-  }
-
-  @keyframes content-appear {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    transition: opacity 0.3s ease-out;
   }
 
   .typed-title {
@@ -449,23 +413,7 @@ export const cockpitStyles = `
     color: var(--gold, #caa554);
     letter-spacing: 0.1em;
     margin-bottom: 32px;
-    overflow: hidden;
-    white-space: nowrap;
-    border-right: 2px solid var(--gold, #caa554);
-    animation: 
-      typing-title 1s steps(18, end) 3.5s forwards,
-      blink-cursor 0.75s step-end infinite 3.5s;
-    width: 0;
-  }
-
-  @keyframes typing-title {
-    from { width: 0; }
-    to { width: 100%; max-width: 320px; }
-  }
-
-  @keyframes blink-cursor {
-    from, to { border-color: var(--gold, #caa554); }
-    50% { border-color: transparent; }
+    transition: opacity 0.3s ease-out;
   }
 
   .typed-body {
@@ -480,17 +428,7 @@ export const cockpitStyles = `
     line-height: 1.8;
     color: var(--dawn-80, rgba(236, 227, 214, 0.8));
     margin: 0;
-    opacity: 0;
-  }
-
-  .typed-line.line-1 { animation: line-appear 0.5s ease-out 4.5s forwards; }
-  .typed-line.line-2 { animation: line-appear 0.5s ease-out 5.5s forwards; }
-  .typed-line.line-3 { animation: line-appear 0.5s ease-out 6.5s forwards; }
-  .typed-line.line-4 { animation: line-appear 0.5s ease-out 7.5s forwards; }
-
-  @keyframes line-appear {
-    from { opacity: 0; transform: translateY(5px); }
-    to { opacity: 1; transform: translateY(0); }
+    transition: opacity 0.3s ease-out;
   }
 
   .typed-line em {
@@ -505,18 +443,21 @@ export const cockpitStyles = `
 
   .terminal-cursor {
     margin-top: 24px;
-    opacity: 0;
-    animation: cursor-appear 0.3s ease-out 8s forwards;
     display: flex;
     align-items: center;
     gap: 12px;
     font-family: var(--font-mono, 'IBM Plex Mono', monospace);
     font-size: 14px;
+    transition: opacity 0.3s ease-out;
   }
 
-  @keyframes cursor-appear {
-    from { opacity: 0; }
-    to { opacity: 1; }
+  .terminal-cursor .cursor {
+    animation: blink-cursor 0.75s step-end infinite;
+  }
+
+  @keyframes blink-cursor {
+    from, to { opacity: 1; }
+    50% { opacity: 0; }
   }
 
   /* Terminal content */

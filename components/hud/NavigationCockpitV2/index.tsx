@@ -53,6 +53,7 @@ function NavigationCockpitInner() {
   const definitionWordmarkRef = useRef<HTMLDivElement>(null);
   const definitionRef = useRef<HTMLDivElement>(null);
   const modulesRef = useRef<HTMLDivElement>(null);
+  const manifestoRef = useRef<HTMLDivElement>(null);
   const moduleCardRefs = [
     useRef<HTMLDivElement>(null),
     useRef<HTMLDivElement>(null),
@@ -81,6 +82,51 @@ function NavigationCockpitInner() {
     width: number;
     height: number;
   } | null>(null);
+
+  // State for manifesto scroll progress (0-1 within manifesto section)
+  const [manifestoScrollProgress, setManifestoScrollProgress] = useState(0);
+
+  // Calculate scroll progress within manifesto section
+  useEffect(() => {
+    if (!manifestoRef.current) return;
+
+    const updateManifestoProgress = () => {
+      const element = manifestoRef.current;
+      if (!element) return;
+
+      const rect = element.getBoundingClientRect();
+      const windowHeight = window.innerHeight;
+      const sectionHeight = rect.height;
+
+      // Calculate progress: 0 = section top at viewport center, 1 = section scrolled through
+      // Start when section top reaches viewport center
+      const viewportCenter = windowHeight * 0.5;
+      const sectionTop = rect.top;
+
+      // Progress from 0 to 1 as section scrolls from center to bottom
+      // We want the full section height to scroll through viewport center
+      const scrollRange = sectionHeight + windowHeight; // Full section + viewport
+      const scrollDistance = viewportCenter - sectionTop; // Distance from center
+
+      const progress = Math.max(0, Math.min(1, scrollDistance / scrollRange));
+
+      setManifestoScrollProgress(progress);
+    };
+
+    const handleScroll = () => {
+      requestAnimationFrame(updateManifestoProgress);
+    };
+
+    // Listen to scroll events
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    window.addEventListener("resize", handleScroll);
+    updateManifestoProgress(); // Initial calculation
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("resize", handleScroll);
+    };
+  }, []);
 
   // ═══════════════════════════════════════════════════════════════════
   // BRANDMARK ORIGIN CALCULATION
@@ -411,13 +457,50 @@ the interface for human-AI collaboration`}
         </section>
 
         {/* Section 3: Manifesto - Cinematic sci-fi terminal sequence */}
-        <section className="section section-manifesto" id="manifesto" data-section="manifesto">
+        <section
+          ref={manifestoRef}
+          className="section section-manifesto"
+          id="manifesto"
+          data-section="manifesto"
+        >
           {/* Background geometric shapes that appear during typing */}
           <div className="manifesto-bg-shapes">
-            <div className="geo-shape geo-shape-1"></div>
-            <div className="geo-shape geo-shape-2"></div>
-            <div className="geo-shape geo-shape-3"></div>
-            <div className="geo-grid"></div>
+            <div
+              className="geo-shape geo-shape-1"
+              style={{
+                opacity:
+                  manifestoScrollProgress > 0.2
+                    ? Math.min(1, (manifestoScrollProgress - 0.2) * 2)
+                    : 0,
+              }}
+            ></div>
+            <div
+              className="geo-shape geo-shape-2"
+              style={{
+                opacity:
+                  manifestoScrollProgress > 0.3
+                    ? Math.min(1, (manifestoScrollProgress - 0.3) * 2)
+                    : 0,
+              }}
+            ></div>
+            <div
+              className="geo-shape geo-shape-3"
+              style={{
+                opacity:
+                  manifestoScrollProgress > 0.4
+                    ? Math.min(1, (manifestoScrollProgress - 0.4) * 2)
+                    : 0,
+              }}
+            ></div>
+            <div
+              className="geo-grid"
+              style={{
+                opacity:
+                  manifestoScrollProgress > 0.25
+                    ? Math.min(1, (manifestoScrollProgress - 0.25) * 2)
+                    : 0,
+              }}
+            ></div>
           </div>
 
           <div className="manifesto-terminal">
@@ -435,47 +518,117 @@ the interface for human-AI collaboration`}
               {/* Scanlines overlay */}
               <div className="terminal-scanlines"></div>
 
-              {/* Phase 1: Incoming transmission popup */}
-              <div className="transmission-popup">
+              {/* Phase 1: Incoming transmission popup - flickers then disappears */}
+              <div
+                className="transmission-popup"
+                style={{
+                  opacity:
+                    manifestoScrollProgress < 0.1
+                      ? Math.sin(manifestoScrollProgress * 100) * 0.5 + 0.5 // Flicker effect
+                      : 0,
+                  display: manifestoScrollProgress < 0.15 ? "block" : "none",
+                }}
+              >
                 <div className="popup-border">
                   <span className="popup-icon">◈</span>
                   <span className="popup-text">INCOMING TRANSMISSION</span>
                 </div>
               </div>
 
-              {/* Phase 2: The question */}
-              <div className="manifesto-question">
+              {/* Phase 2: The question - appears after popup */}
+              <div
+                className="manifesto-question"
+                style={{
+                  opacity:
+                    manifestoScrollProgress > 0.1
+                      ? Math.min(1, (manifestoScrollProgress - 0.1) * 10)
+                      : 0,
+                  transform: `translateY(${manifestoScrollProgress > 0.1 ? 0 : 10}px)`,
+                }}
+              >
                 <h2>But why is AI so different?</h2>
               </div>
 
-              {/* Phase 3: Typed manifesto content */}
-              <div className="manifesto-typed-content">
-                <div className="typed-title">AI ISN&apos;T SOFTWARE.</div>
+              {/* Phase 3: Typed manifesto content - reveals progressively */}
+              <div
+                className="manifesto-typed-content"
+                style={{
+                  opacity: manifestoScrollProgress > 0.15 ? 1 : 0,
+                }}
+              >
+                <div
+                  className="typed-title"
+                  style={{
+                    opacity:
+                      manifestoScrollProgress > 0.15
+                        ? Math.min(1, (manifestoScrollProgress - 0.15) * 5)
+                        : 0,
+                  }}
+                >
+                  AI ISN&apos;T SOFTWARE.
+                </div>
 
                 <div className="typed-body">
-                  <p className="typed-line line-1">
+                  <p
+                    className="typed-line line-1"
+                    style={{
+                      opacity:
+                        manifestoScrollProgress > 0.25
+                          ? Math.min(1, (manifestoScrollProgress - 0.25) * 4)
+                          : 0,
+                    }}
+                  >
                     Most companies struggle with AI adoption because they treat it like normal
                     software.
                   </p>
 
-                  <p className="typed-line line-2">
+                  <p
+                    className="typed-line line-2"
+                    style={{
+                      opacity:
+                        manifestoScrollProgress > 0.4
+                          ? Math.min(1, (manifestoScrollProgress - 0.4) * 3)
+                          : 0,
+                    }}
+                  >
                     But AI isn&apos;t a tool to command. It&apos;s a strange, new intelligence we
                     have to learn how to <em>navigate</em>. It leaps across dimensions we can&apos;t
                     fathom. It hallucinates. It surprises.
                   </p>
 
-                  <p className="typed-line line-3">
+                  <p
+                    className="typed-line line-3"
+                    style={{
+                      opacity:
+                        manifestoScrollProgress > 0.55
+                          ? Math.min(1, (manifestoScrollProgress - 0.55) * 3)
+                          : 0,
+                    }}
+                  >
                     In technical work, that strangeness must be constrained. But in creative and
                     strategic work? It&apos;s the source of truly novel ideas.
                   </p>
 
-                  <p className="typed-line line-4">
+                  <p
+                    className="typed-line line-4"
+                    style={{
+                      opacity:
+                        manifestoScrollProgress > 0.7
+                          ? Math.min(1, (manifestoScrollProgress - 0.7) * 3)
+                          : 0,
+                    }}
+                  >
                     Thoughtform teaches teams to think <strong>with</strong> that
                     intelligence—navigating its strangeness for creative breakthroughs.
                   </p>
                 </div>
 
-                <div className="terminal-cursor">
+                <div
+                  className="terminal-cursor"
+                  style={{
+                    opacity: manifestoScrollProgress > 0.85 ? 1 : 0,
+                  }}
+                >
                   <span className="prompt">$</span>
                   <span className="cursor">_</span>
                 </div>
