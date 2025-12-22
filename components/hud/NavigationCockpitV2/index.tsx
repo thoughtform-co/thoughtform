@@ -410,14 +410,7 @@ the interface for human-AI collaboration`}
           <div className="sigil-placeholder" />
         </section>
 
-        {/* Interstitial: Typewriter question before manifesto */}
-        <section className="section section-interstitial">
-          <div className="interstitial-text">
-            <span className="typewriter-text">But why is AI so different?</span>
-          </div>
-        </section>
-
-        {/* Section 3: Manifesto - Terminal-styled with ASCII art */}
+        {/* Section 3: Manifesto - Expanding terminal with transmission */}
         <section className="section section-manifesto" id="manifesto" data-section="manifesto">
           <div className="manifesto-terminal">
             {/* Gold corner accents */}
@@ -433,6 +426,15 @@ the interface for human-AI collaboration`}
             <div className="terminal-body">
               {/* Scanlines overlay */}
               <div className="terminal-scanlines"></div>
+
+              {/* Incoming transmission intro */}
+              <div className="transmission-intro">
+                <span className="transmission-label">{`// INCOMING TRANSMISSION`}</span>
+                <h2 className="transmission-question">But why is AI so different?</h2>
+              </div>
+
+              {/* Divider line */}
+              <div className="terminal-divider"></div>
 
               {/* ASCII Art Title */}
               <pre className="ascii-title">
