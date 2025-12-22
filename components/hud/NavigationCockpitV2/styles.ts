@@ -157,6 +157,15 @@ export const cockpitStyles = `
     font-family: inherit;
   }
   
+  /* Question morph - ensure same font size as definition text */
+  .question-morph .glitch-text-main {
+    font-size: clamp(20px, 2.5vw, 36px) !important; /* Increased to 36px to compensate for visual perception in larger terminal frame */
+    line-height: 1.2 !important;
+    color: var(--dawn, #ece3d6) !important;
+    font-weight: 300 !important;
+    font-family: var(--font-display, "PP Mondwest", serif) !important;
+  }
+  
   /* First line (phonetic) - smaller font and spacing */
   .hero-tagline .bridge-content-glitch .glitch-text-main .glitch-line-first,
   .hero-tagline .bridge-content-glitch .glitch-text-ghost .glitch-line-first {
@@ -208,13 +217,15 @@ export const cockpitStyles = `
   .hero-text-frame {
     position: relative;
     padding: 20px 24px;
-    border: 1px solid rgba(236, 227, 214, 0.1);
-    background: rgba(10, 9, 8, 0.25);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+    /* Use CSS variable for smooth fade out during manifesto transition */
+    border: 1px solid rgba(236, 227, 214, calc(0.1 * var(--frame-opacity, 1)));
+    background: rgba(10, 9, 8, calc(0.25 * var(--frame-opacity, 1)));
+    backdrop-filter: blur(calc(8px * var(--frame-opacity, 1)));
+    -webkit-backdrop-filter: blur(calc(8px * var(--frame-opacity, 1)));
+    transition: none; /* Controlled by scroll, not CSS transitions */
   }
 
-  /* Gold corner accents for hero text frame */
+  /* Gold corner accents for hero text frame - fade with frame */
   .hero-text-frame::before {
     content: '';
     position: absolute;
@@ -222,8 +233,8 @@ export const cockpitStyles = `
     left: -1px;
     width: 10px;
     height: 10px;
-    border-top: 1px solid var(--gold, #caa554);
-    border-left: 1px solid var(--gold, #caa554);
+    border-top: 1px solid rgba(202, 165, 84, var(--frame-opacity, 1));
+    border-left: 1px solid rgba(202, 165, 84, var(--frame-opacity, 1));
   }
 
   .hero-text-frame::after {
@@ -233,8 +244,8 @@ export const cockpitStyles = `
     right: -1px;
     width: 10px;
     height: 10px;
-    border-bottom: 1px solid var(--gold, #caa554);
-    border-right: 1px solid var(--gold, #caa554);
+    border-bottom: 1px solid rgba(202, 165, 84, var(--frame-opacity, 1));
+    border-right: 1px solid rgba(202, 165, 84, var(--frame-opacity, 1));
   }
 
   /* Hero tagline - vertically centered on left, no frame */
@@ -300,8 +311,8 @@ export const cockpitStyles = `
   }
 
   .terminal-corner-br {
-    bottom: -1px;
-    right: -1px;
+    bottom: 0;
+    right: 0;
     border-bottom: 2px solid var(--gold, #caa554);
     border-right: 2px solid var(--gold, #caa554);
   }
@@ -374,13 +385,12 @@ export const cockpitStyles = `
   /* Terminal body */
   .terminal-body {
     position: relative;
-    padding: 40px;
+    padding: 24px 40px 40px;
     min-height: 500px;
     text-align: left;
     display: flex;
     flex-direction: column;
-    justify-content: center;
-    align-items: center;
+    align-items: flex-start;
   }
 
   /* Subtle scanlines effect */
@@ -399,6 +409,15 @@ export const cockpitStyles = `
     opacity: 0.6;
   }
 
+  /* Question text wrapper in terminal - appears below header */
+  .terminal-question-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 24px;
+    width: 100%;
+  }
+
   /* Question text inside terminal - inherits hero-tagline-v2 styling */
   .terminal-question {
     margin-bottom: 24px;
@@ -408,6 +427,27 @@ export const cockpitStyles = `
   .terminal-question:hover {
     text-shadow: 0 0 10px rgba(202, 165, 84, 0.3);
     cursor: pointer;
+  }
+
+  /* Pulsing block cursor - terminal style */
+  .terminal-block-cursor {
+    display: inline-block;
+    width: 14px;
+    height: 1em;
+    background-color: var(--gold, #caa554);
+    animation: terminal-cursor-blink 1s infinite;
+    vertical-align: baseline;
+    margin-left: 4px;
+    transform: translateY(-2px);
+  }
+
+  @keyframes terminal-cursor-blink {
+    0%, 50% {
+      opacity: 1;
+    }
+    51%, 100% {
+      opacity: 0;
+    }
   }
 
   /* Phase 3: Typed manifesto content */
@@ -980,9 +1020,10 @@ export const cockpitStyles = `
       padding: 16px 20px;
       min-height: 70px;
       text-align: center;
-      background: rgba(10, 9, 8, 0.85);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
+      /* Use CSS variable for smooth fade out during manifesto transition */
+      background: rgba(10, 9, 8, calc(0.85 * var(--frame-opacity, 1)));
+      backdrop-filter: blur(calc(12px * var(--frame-opacity, 1)));
+      -webkit-backdrop-filter: blur(calc(12px * var(--frame-opacity, 1)));
     }
 
     /* Center text in bridge frame */

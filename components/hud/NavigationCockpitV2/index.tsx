@@ -489,50 +489,114 @@ function NavigationCockpitInner() {
               }
         }
       >
-        {/* Text content - hero/definition - fades out as manifesto appears */}
+        {/* Text content - hero/definition/question - ONE continuous morph */}
         <div
           className="hero-text-frame"
           style={{
-            opacity: 1 - tDefToManifesto, // Fade out as manifesto appears
-            visibility: tDefToManifesto < 1 ? "visible" : "hidden",
-            // Relative during hero/definition (so content determines parent height)
-            // Absolute during manifesto transition (so it overlays with terminal content)
-            position: tDefToManifesto > 0 ? "absolute" : "relative",
-            top: tDefToManifesto > 0 ? 0 : undefined,
-            left: tDefToManifesto > 0 ? 0 : undefined,
+            // Stay visible throughout transition - no fading until click
+            opacity: transmissionAcknowledged ? 0 : 1,
+            visibility: transmissionAcknowledged ? "hidden" : "visible",
+            // Always relative - let parent bridge-frame handle positioning
+            position: "relative",
             width: "100%",
             display: "flex",
-            alignItems: "center", // Vertically center the definition text
-            padding: "16px 24px",
-            pointerEvents: tDefToManifesto < 0.5 ? "auto" : "none",
+            alignItems: "center",
+            justifyContent: "flex-start",
+            // Padding interpolates: hero/definition = 16px top, terminal = 72px top (below header with breathing room)
+            padding: `${16 + 56 * tDefToManifesto}px 24px 16px 24px`,
+            pointerEvents: transmissionAcknowledged ? "none" : "auto",
+            cursor: tDefToManifesto > 0.9 ? "pointer" : "default",
+            // Higher z-index so text stays on top of terminal chrome
+            zIndex: 2,
+            // Gradually fade out frame styling as terminal takes over
+            // The bridge-frame parent already has interpolated terminal background/border
+            ["--frame-opacity" as string]: 1 - tDefToManifesto,
           }}
+          onClick={
+            tDefToManifesto > 0.9 && !transmissionAcknowledged
+              ? () => setTransmissionAcknowledged(true)
+              : undefined
+          }
         >
-          <div className="hero-tagline hero-tagline-v2 hero-tagline-main">
-            <GlitchText
-              initialText={`AI isn't software to command.
+          <div
+            className="hero-tagline hero-tagline-v2 hero-tagline-main"
+            style={{
+              // Container for overlapping text - relative positioning
+              position: "relative",
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              width: "100%",
+            }}
+          >
+            {/* Two-stage glitch transformation:
+                Stage 1 (tHeroToDef): Hero text → Definition text  
+                Stage 2 (tDefToManifesto): Definition text → Question text
+                Pure opacity cross-fade - both elements overlap */}
+
+            {/* Definition text - visible during hero and definition sections */}
+            <span
+              style={{
+                opacity: 1 - tDefToManifesto,
+                visibility: tDefToManifesto >= 1 ? "hidden" : "visible",
+              }}
+            >
+              <GlitchText
+                initialText={`AI isn't software to command.
 It's a strange intelligence to navigate.
 Thoughtform teaches how.`}
-              finalText={`(θɔːtfɔːrm / THAWT-form)
+                finalText={`(θɔːtfɔːrm / THAWT-form)
 the interface for human-AI collaboration`}
-              progress={tHeroToDef}
-              className="bridge-content-glitch"
-            />
+                progress={tHeroToDef}
+                className="bridge-content-glitch"
+              />
+            </span>
+
+            {/* Question text - fades in during manifesto transition, positioned absolute to overlap */}
+            <span
+              style={{
+                position: "absolute",
+                left: 0,
+                top: 0,
+                opacity: tDefToManifesto,
+                visibility: tDefToManifesto <= 0 ? "hidden" : "visible",
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+              }}
+            >
+              <GlitchText
+                initialText={`(θɔːtfɔːrm / THAWT-form)
+the interface for human-AI collaboration`}
+                finalText={`But why is AI so different?`}
+                progress={tDefToManifesto}
+                className="bridge-content-glitch question-morph"
+              />
+              {/* Pulsing block cursor - only visible at end of manifesto transition */}
+              {tDefToManifesto > 0.9 && !transmissionAcknowledged && (
+                <span className="terminal-block-cursor"></span>
+              )}
+            </span>
           </div>
         </div>
 
-        {/* Terminal content - fades in as definition fades out */}
+        {/* Terminal frame elements - appear during manifesto transition (behind text) */}
         <div
           className="terminal-content-wrapper"
           style={{
-            opacity: tDefToManifesto, // Fade in as manifesto appears
+            // Cross-fade in during transition
+            opacity: tDefToManifesto,
             visibility: tDefToManifesto > 0 ? "visible" : "hidden",
             // Keep absolute positioning - frame height is controlled by parent's height style
             position: "absolute",
             top: 0,
             left: 0,
             width: "100%",
+            height: "100%",
+            // Lower z-index so text stays on top
+            zIndex: 1,
             // Don't constrain height - let content flow naturally within overflow:hidden parent
-            pointerEvents: tDefToManifesto > 0.5 ? "auto" : "none",
+            pointerEvents: transmissionAcknowledged ? "auto" : "none",
           }}
         >
           {/* Gold corner accents */}
@@ -549,26 +613,7 @@ the interface for human-AI collaboration`}
             {/* Scanlines overlay */}
             <div className="terminal-scanlines"></div>
 
-            {/* Question text - morphs from definition, clickable when complete */}
-            {!transmissionAcknowledged && (
-              <div
-                className="terminal-question hero-tagline hero-tagline-v2"
-                onClick={
-                  tDefToManifesto > 0.9 ? () => setTransmissionAcknowledged(true) : undefined
-                }
-                style={{ cursor: tDefToManifesto > 0.9 ? "pointer" : "default" }}
-              >
-                <GlitchText
-                  initialText={`(θɔːtfɔːrm / THAWT-form)
-the interface for human-AI collaboration`}
-                  finalText={`But why is AI so different?`}
-                  progress={tDefToManifesto}
-                  className="bridge-content-glitch question-morph"
-                />
-              </div>
-            )}
-
-            {/* Question after click - fades out */}
+            {/* Manifesto content after click - fades out as you scroll */}
             {transmissionAcknowledged && (
               <div
                 className="terminal-question hero-tagline hero-tagline-v2"
