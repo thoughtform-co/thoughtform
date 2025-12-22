@@ -54,6 +54,7 @@ function NavigationCockpitInner() {
   const definitionRef = useRef<HTMLDivElement>(null);
   const modulesRef = useRef<HTMLDivElement>(null);
   const manifestoRef = useRef<HTMLDivElement>(null);
+  const bridgeFrameRef = useRef<HTMLDivElement>(null);
   const moduleCardRefs = [
     useRef<HTMLDivElement>(null),
     useRef<HTMLDivElement>(null),
@@ -221,42 +222,60 @@ function NavigationCockpitInner() {
   const tDefToManifesto = easeInOutCubic(rawTDefToManifesto);
 
   // Calculate frame position values for manifesto transition
-  // Definition end position (when tHeroToDef = 1, tDefToManifesto = 0)
-  // Definition: bottom = 50vh - 70px (small frame, ~70px tall)
+  // Use BOTTOM positioning throughout for smooth, continuous transition
+  //
+  // CSS bottom positioning: larger value = frame higher up (closer to top of viewport)
+  // To CENTER a frame: bottom = 50vh - (height/2)
+  //
+  // Definition state: bottom = 50vh - 70px, height = 100px
+  // Manifesto state: bottom = 50vh - 200px, height = 400px (centered)
   const defBottomVh = 50;
   const defBottomPx = -70;
 
-  // Manifesto center position (frame center at 50vh)
-  // With final height ~400px, bottom = 50vh - 200px (frame center at 50vh)
-  const manifestoBottomVh = 50;
-  const manifestoBottomPx = -200;
+  // Frame growth values - define first since used in position calculations
+  const baseWidth = 500;
+  const widthGrowth = 200; // 500px → 700px
+  const baseHeight = 100;
+  const heightGrowth = 300; // 100px → 400px (min-height)
+  // Note: Actual content height is ~640px due to terminal content
+  // Use actual content height for centering calculation
+  const actualContentHeight = 640;
 
-  // Hero→definition bottom calculation (when tDefToManifesto = 0)
+  // Manifesto CENTERED position: bottom = 50vh - (actualHeight/2)
+  // This keeps the frame vertically centered based on actual content
+  const manifestoBottomVh = 50;
+  const manifestoBottomPx = -(actualContentHeight / 2); // -320px for ~640px content
+
+  // Hero→definition bottom calculation (for definition state)
   const heroBottomPx = 90 * (1 - tHeroToDef);
   const heroBottomVh = tHeroToDef * defBottomVh;
   const heroBottomOffsetPx = tHeroToDef * defBottomPx;
 
-  // Interpolate bottom position for manifesto transition
-  // Move from definition position to manifesto position (straight DOWN)
-  const manifestoBottomPxCurrent =
-    defBottomPx + (manifestoBottomPx - defBottomPx) * tDefToManifesto;
-
-  // Final bottom position: hero/definition base + manifesto offset
-  const finalBottom =
-    tDefToManifesto > 0
-      ? `calc(${heroBottomPx + manifestoBottomPxCurrent}px + ${heroBottomVh}vh)`
-      : `calc(${heroBottomPx}px + ${heroBottomVh}vh + ${heroBottomOffsetPx}px)`;
-
-  // Frame growth values (more subtle with smoother easing)
-  const baseWidth = 500;
-  const widthGrowth = 200; // 500px → 700px (40% increase)
-  const baseHeight = 100;
-  const heightGrowth = 300; // 100px → 400px (more reasonable)
+  // Definition position (when tDefToManifesto = 0)
+  const definitionBottomPx = heroBottomPx + heroBottomOffsetPx;
+  const definitionBottomVh = heroBottomVh;
 
   // Apply smoother easing to growth for more subtle animation
-  // Use easeOutCubic for growth (starts fast, ends slow)
   const easeOutCubic = (t: number) => 1 - Math.pow(1 - t, 3);
   const growthProgress = easeOutCubic(tDefToManifesto);
+
+  // Calculate current height during transition
+  const currentHeight = baseHeight + growthProgress * heightGrowth;
+
+  // Interpolate BOTTOM position for manifesto transition
+  // As frame grows, adjust bottom to keep frame CENTERED (not pushed to top)
+  // Dynamic center: bottom = 50vh - (currentHeight / 2)
+  // Definition: 50vh - 70px (slightly off-center for small frame)
+  // Manifesto: 50vh - 200px (centered for 400px frame)
+  //
+  // Interpolate from definition position to manifesto centered position
+  const manifestoBottomPxCurrent =
+    definitionBottomPx + (manifestoBottomPx - definitionBottomPx) * tDefToManifesto;
+  const manifestoBottomVhCurrent =
+    definitionBottomVh + (manifestoBottomVh - definitionBottomVh) * tDefToManifesto;
+
+  // Final bottom position: smooth transition to centered position
+  const finalBottom = `calc(${manifestoBottomPxCurrent}px + ${manifestoBottomVhCurrent}vh)`;
 
   // Handle navigation
   const handleNavigate = useCallback(
@@ -405,6 +424,7 @@ function NavigationCockpitInner() {
           SAME FRAME slides UP from bottom to center, only text content changes
           ═══════════════════════════════════════════════════════════════════ */}
       <div
+        ref={bridgeFrameRef}
         className="bridge-frame"
         style={
           isMobile
@@ -424,220 +444,224 @@ function NavigationCockpitInner() {
               }
             : {
                 // DESKTOP: Frame moves from hero → definition → manifesto
-                // Position: moves DOWN to center (not up)
+                // Use BOTTOM positioning throughout for smooth, continuous transition
                 bottom: finalBottom,
 
-                // Left position: smoothly move from rail+120px to center
-                left:
-                  tDefToManifesto > 0
-                    ? `calc(${(1 - tDefToManifesto) * 184}px + ${tDefToManifesto * 50}%)`
-                    : undefined,
+                // Left position: ALWAYS apply interpolated value for smooth transition
+                // Definition: left = 184px (rail + 120px)
+                // Manifesto: left = 50% (centered)
+                // At tDefToManifesto=0: calc(184px + 0%) = 184px
+                // At tDefToManifesto=1: calc(0px + 50%) = 50%
+                left: `calc(${(1 - tDefToManifesto) * 184}px + ${tDefToManifesto * 50}%)`,
 
                 // Width grows subtly: 500px → 700px (40% increase) with smooth easing
-                width:
-                  tDefToManifesto > 0 ? `${baseWidth + growthProgress * widthGrowth}px` : undefined,
-                maxWidth:
-                  tDefToManifesto > 0 ? `${baseWidth + growthProgress * widthGrowth}px` : undefined,
+                // ALWAYS apply to avoid jump
+                width: `${baseWidth + growthProgress * widthGrowth}px`,
+                maxWidth: `${baseWidth + growthProgress * widthGrowth}px`,
 
-                // Height grows subtly: 100px → 400px with smooth easing
-                minHeight:
-                  tDefToManifesto > 0
-                    ? `${baseHeight + growthProgress * heightGrowth}px`
-                    : undefined,
+                // Height grows subtly: 100px → 640px with smooth easing
+                // Use fixed height (not minHeight) + overflow:hidden to prevent content from expanding frame
+                height: `${baseHeight + growthProgress * (actualContentHeight - baseHeight)}px`,
+                overflow: "hidden",
 
                 opacity: 1,
                 visibility: "visible",
                 pointerEvents:
                   tHeroToDef > 0.95 || tHeroToDef < 0.05 || tDefToManifesto > 0 ? "auto" : "none",
 
-                // Transform for horizontal centering - use center origin for smoother transform
-                transform:
-                  tDefToManifesto > 0 ? `translateX(${-50 * tDefToManifesto}%)` : undefined,
-                transformOrigin: tDefToManifesto > 0 ? "center" : "left",
+                // Transform for horizontal centering - ALWAYS apply for smooth transition
+                // At tDefToManifesto=0: translateX(0%) = no transform
+                // At tDefToManifesto=1: translateX(-50%) = centered
+                transform: `translateX(${-50 * tDefToManifesto}%)`,
+                transformOrigin: "center",
 
-                // Terminal styling - NO FADE, just instant switch
-                ["--terminal-opacity" as string]: tDefToManifesto > 0 ? 1 : 0,
-                background: tDefToManifesto > 0 ? "rgba(10, 9, 8, 0.5)" : undefined,
-                backdropFilter: tDefToManifesto > 0 ? "blur(8px)" : undefined,
-                border: tDefToManifesto > 0 ? "1px solid rgba(236, 227, 214, 0.1)" : undefined,
+                // Terminal styling - smooth transition (interpolate from 0)
+                ["--terminal-opacity" as string]: tDefToManifesto,
+                background: `rgba(10, 9, 8, ${0.5 * tDefToManifesto})`,
+                backdropFilter: `blur(${8 * tDefToManifesto}px)`,
+                border: `1px solid rgba(236, 227, 214, ${0.1 * tDefToManifesto})`,
 
                 transition: "none", // We're animating via scroll, not CSS transitions
               }
         }
       >
-        {/* Text content - hero/definition only (before manifesto transition) */}
-        {/* Hero/Definition text - shows before manifesto */}
-        {tDefToManifesto === 0 && (
-          <div
-            className="hero-text-frame"
-            style={{
-              opacity: 1,
-              visibility: "visible",
-              position: "relative",
-              width: "100%",
-            }}
-          >
-            <div className="hero-tagline hero-tagline-v2 hero-tagline-main">
-              <GlitchText
-                initialText={`AI isn't software to command.
+        {/* Text content - hero/definition - fades out as manifesto appears */}
+        <div
+          className="hero-text-frame"
+          style={{
+            opacity: 1 - tDefToManifesto, // Fade out as manifesto appears
+            visibility: tDefToManifesto < 1 ? "visible" : "hidden",
+            // Always absolute - frame height controlled by parent's height style
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: "100%",
+            display: "flex",
+            alignItems: "center", // Vertically center the definition text
+            padding: "16px 24px",
+            pointerEvents: tDefToManifesto < 0.5 ? "auto" : "none",
+          }}
+        >
+          <div className="hero-tagline hero-tagline-v2 hero-tagline-main">
+            <GlitchText
+              initialText={`AI isn't software to command.
 It's a strange intelligence to navigate.
 Thoughtform teaches how.`}
-                finalText={`(θɔːtfɔːrm / THAWT-form)
+              finalText={`(θɔːtfɔːrm / THAWT-form)
 the interface for human-AI collaboration`}
-                progress={tHeroToDef}
-                className="bridge-content-glitch"
-              />
-            </div>
+              progress={tHeroToDef}
+              className="bridge-content-glitch"
+            />
           </div>
-        )}
+        </div>
 
-        {/* Terminal content - appears when transitioning to manifesto (NO FADE) */}
-        {tDefToManifesto > 0 && (
-          <div
-            className="terminal-content-wrapper"
-            style={{
-              opacity: 1, // No fade - stays solid
-              visibility: "visible",
-              position: "relative",
-              width: "100%",
-              height: "100%",
-            }}
-          >
-            {/* Gold corner accents */}
-            <div className="terminal-corner terminal-corner-tl"></div>
-            <div className="terminal-corner terminal-corner-br"></div>
+        {/* Terminal content - fades in as definition fades out */}
+        <div
+          className="terminal-content-wrapper"
+          style={{
+            opacity: tDefToManifesto, // Fade in as manifesto appears
+            visibility: tDefToManifesto > 0 ? "visible" : "hidden",
+            // Keep absolute positioning - frame height is controlled by parent's height style
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: "100%",
+            // Don't constrain height - let content flow naturally within overflow:hidden parent
+            pointerEvents: tDefToManifesto > 0.5 ? "auto" : "none",
+          }}
+        >
+          {/* Gold corner accents */}
+          <div className="terminal-corner terminal-corner-tl"></div>
+          <div className="terminal-corner terminal-corner-br"></div>
 
-            {/* Terminal window frame */}
-            <div className="terminal-header">
-              <span className="terminal-title">thoughtform@manifesto:~</span>
-            </div>
+          {/* Terminal window frame */}
+          <div className="terminal-header">
+            <span className="terminal-title">thoughtform@manifesto:~</span>
+          </div>
 
-            {/* Terminal content */}
-            <div className="terminal-body">
-              {/* Scanlines overlay */}
-              <div className="terminal-scanlines"></div>
+          {/* Terminal content */}
+          <div className="terminal-body">
+            {/* Scanlines overlay */}
+            <div className="terminal-scanlines"></div>
 
-              {/* Question text - morphs from definition, clickable when complete */}
-              {!transmissionAcknowledged && (
-                <div
-                  className="terminal-question hero-tagline hero-tagline-v2"
-                  onClick={
-                    tDefToManifesto > 0.9 ? () => setTransmissionAcknowledged(true) : undefined
-                  }
-                  style={{ cursor: tDefToManifesto > 0.9 ? "pointer" : "default" }}
-                >
-                  <GlitchText
-                    initialText={`(θɔːtfɔːrm / THAWT-form)
-the interface for human-AI collaboration`}
-                    finalText={`But why is AI so different?`}
-                    progress={tDefToManifesto}
-                    className="bridge-content-glitch question-morph"
-                  />
-                </div>
-              )}
-
-              {/* Question after click - fades out */}
-              {transmissionAcknowledged && (
-                <div
-                  className="terminal-question hero-tagline hero-tagline-v2"
-                  style={{
-                    opacity: Math.max(0, 1 - manifestoScrollProgress * 3),
-                  }}
-                >
-                  But why is AI so different?
-                </div>
-              )}
-
-              {/* Typed manifesto content - reveals progressively after click */}
+            {/* Question text - morphs from definition, clickable when complete */}
+            {!transmissionAcknowledged && (
               <div
-                className="manifesto-typed-content"
+                className="terminal-question hero-tagline hero-tagline-v2"
+                onClick={
+                  tDefToManifesto > 0.9 ? () => setTransmissionAcknowledged(true) : undefined
+                }
+                style={{ cursor: tDefToManifesto > 0.9 ? "pointer" : "default" }}
+              >
+                <GlitchText
+                  initialText={`(θɔːtfɔːrm / THAWT-form)
+the interface for human-AI collaboration`}
+                  finalText={`But why is AI so different?`}
+                  progress={tDefToManifesto}
+                  className="bridge-content-glitch question-morph"
+                />
+              </div>
+            )}
+
+            {/* Question after click - fades out */}
+            {transmissionAcknowledged && (
+              <div
+                className="terminal-question hero-tagline hero-tagline-v2"
                 style={{
-                  opacity: transmissionAcknowledged ? 1 : 0,
-                  transition: "opacity 0.3s ease-out",
-                  pointerEvents: transmissionAcknowledged ? "auto" : "none",
+                  opacity: Math.max(0, 1 - manifestoScrollProgress * 3),
                 }}
               >
-                <div
-                  className="typed-title"
+                But why is AI so different?
+              </div>
+            )}
+
+            {/* Typed manifesto content - reveals progressively after click */}
+            <div
+              className="manifesto-typed-content"
+              style={{
+                opacity: transmissionAcknowledged ? 1 : 0,
+                transition: "opacity 0.3s ease-out",
+                pointerEvents: transmissionAcknowledged ? "auto" : "none",
+              }}
+            >
+              <div
+                className="typed-title"
+                style={{
+                  opacity: transmissionAcknowledged ? Math.min(1, manifestoScrollProgress * 2) : 0,
+                  transition: "opacity 0.3s ease-out",
+                }}
+              >
+                AI ISN&apos;T SOFTWARE.
+              </div>
+
+              <div className="typed-body">
+                <p
+                  className="typed-line line-1"
                   style={{
                     opacity: transmissionAcknowledged
-                      ? Math.min(1, manifestoScrollProgress * 2)
+                      ? Math.min(1, Math.max(0, (manifestoScrollProgress - 0.1) * 3))
                       : 0,
                     transition: "opacity 0.3s ease-out",
                   }}
                 >
-                  AI ISN&apos;T SOFTWARE.
-                </div>
+                  Most companies struggle with AI adoption because they treat it like normal
+                  software.
+                </p>
 
-                <div className="typed-body">
-                  <p
-                    className="typed-line line-1"
-                    style={{
-                      opacity: transmissionAcknowledged
-                        ? Math.min(1, Math.max(0, (manifestoScrollProgress - 0.1) * 3))
-                        : 0,
-                      transition: "opacity 0.3s ease-out",
-                    }}
-                  >
-                    Most companies struggle with AI adoption because they treat it like normal
-                    software.
-                  </p>
-
-                  <p
-                    className="typed-line line-2"
-                    style={{
-                      opacity: transmissionAcknowledged
-                        ? Math.min(1, Math.max(0, (manifestoScrollProgress - 0.25) * 2.5))
-                        : 0,
-                      transition: "opacity 0.3s ease-out",
-                    }}
-                  >
-                    But AI isn&apos;t a tool to command. It&apos;s a strange, new intelligence we
-                    have to learn how to <em>navigate</em>. It leaps across dimensions we can&apos;t
-                    fathom. It hallucinates. It surprises.
-                  </p>
-
-                  <p
-                    className="typed-line line-3"
-                    style={{
-                      opacity: transmissionAcknowledged
-                        ? Math.min(1, Math.max(0, (manifestoScrollProgress - 0.4) * 2.5))
-                        : 0,
-                      transition: "opacity 0.3s ease-out",
-                    }}
-                  >
-                    In technical work, that strangeness must be constrained. But in creative and
-                    strategic work? It&apos;s the source of truly novel ideas.
-                  </p>
-
-                  <p
-                    className="typed-line line-4"
-                    style={{
-                      opacity: transmissionAcknowledged
-                        ? Math.min(1, Math.max(0, (manifestoScrollProgress - 0.55) * 2.5))
-                        : 0,
-                      transition: "opacity 0.3s ease-out",
-                    }}
-                  >
-                    Thoughtform teaches teams to think <strong>with</strong> that
-                    intelligence—navigating its strangeness for creative breakthroughs.
-                  </p>
-                </div>
-
-                <div
-                  className="terminal-cursor"
+                <p
+                  className="typed-line line-2"
                   style={{
-                    opacity: transmissionAcknowledged && manifestoScrollProgress > 0.7 ? 1 : 0,
+                    opacity: transmissionAcknowledged
+                      ? Math.min(1, Math.max(0, (manifestoScrollProgress - 0.25) * 2.5))
+                      : 0,
                     transition: "opacity 0.3s ease-out",
                   }}
                 >
-                  <span className="prompt">$</span>
-                  <span className="cursor">_</span>
-                </div>
+                  But AI isn&apos;t a tool to command. It&apos;s a strange, new intelligence we have
+                  to learn how to <em>navigate</em>. It leaps across dimensions we can&apos;t
+                  fathom. It hallucinates. It surprises.
+                </p>
+
+                <p
+                  className="typed-line line-3"
+                  style={{
+                    opacity: transmissionAcknowledged
+                      ? Math.min(1, Math.max(0, (manifestoScrollProgress - 0.4) * 2.5))
+                      : 0,
+                    transition: "opacity 0.3s ease-out",
+                  }}
+                >
+                  In technical work, that strangeness must be constrained. But in creative and
+                  strategic work? It&apos;s the source of truly novel ideas.
+                </p>
+
+                <p
+                  className="typed-line line-4"
+                  style={{
+                    opacity: transmissionAcknowledged
+                      ? Math.min(1, Math.max(0, (manifestoScrollProgress - 0.55) * 2.5))
+                      : 0,
+                    transition: "opacity 0.3s ease-out",
+                  }}
+                >
+                  Thoughtform teaches teams to think <strong>with</strong> that
+                  intelligence—navigating its strangeness for creative breakthroughs.
+                </p>
+              </div>
+
+              <div
+                className="terminal-cursor"
+                style={{
+                  opacity: transmissionAcknowledged && manifestoScrollProgress > 0.7 ? 1 : 0,
+                  transition: "opacity 0.3s ease-out",
+                }}
+              >
+                <span className="prompt">$</span>
+                <span className="cursor">_</span>
               </div>
             </div>
           </div>
-        )}
+        </div>
       </div>
 
       {/* Fixed HUD Frame - Navigation Cockpit */}
