@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useCallback, useMemo } from "react";
+import { useIsMobile } from "@/lib/hooks/useMediaQuery";
 
 // ═══════════════════════════════════════════════════════════════════
 // THOUGHTFORM PARTICLE SYSTEM CONSTANTS
@@ -161,12 +162,14 @@ export function ParticleWordmarkMorph({
   const animationRef = useRef<number>(0);
   const pointsRef = useRef<MorphPoint[]>([]);
   const initializedRef = useRef(false);
+  const isMobile = useIsMobile();
+
+  // Reduce point count on mobile for performance
+  const POINT_COUNT = useMemo(() => (isMobile ? 500 : 1000), [isMobile]);
 
   const initializePoints = useCallback(() => {
     if (initializedRef.current) return;
     if (typeof window === "undefined") return;
-
-    const POINT_COUNT = 1000;
 
     // Sample from hero wordmark
     const heroPoints = samplePointsFromPaths(HERO_WORDMARK_PATHS, HERO_BOUNDS, POINT_COUNT);
@@ -200,7 +203,7 @@ export function ParticleWordmarkMorph({
 
     pointsRef.current = morphPoints;
     initializedRef.current = true;
-  }, []);
+  }, [POINT_COUNT]);
 
   useEffect(() => {
     initializePoints();

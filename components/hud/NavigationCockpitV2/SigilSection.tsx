@@ -2,6 +2,7 @@
 
 import { forwardRef, useEffect, useState, useRef } from "react";
 import { ThoughtformSigil, type ParticlePosition } from "../ThoughtformSigil";
+import { useIsMobile } from "@/lib/hooks/useMediaQuery";
 
 // Spark particle for transition effect
 // ═══════════════════════════════════════════════════════════════════
@@ -266,6 +267,8 @@ export const SigilSection = forwardRef<HTMLDivElement, SigilSectionProps>(functi
   },
   ref
 ) {
+  const isMobile = useIsMobile();
+
   // Track viewport center for animation
   const [viewportCenter, setViewportCenter] = useState({ x: 0, y: 0 });
 
@@ -361,21 +364,25 @@ export const SigilSection = forwardRef<HTMLDivElement, SigilSectionProps>(functi
   }
 
   // Boost values during transition for more dramatic effect
-  const baseParticleCount = config?.particleCount ?? 500;
-  const boostParticleCount = Math.floor(baseParticleCount + transitionIntensity * 500); // Up to 1000 particles at peak
+  // On mobile: reduce particle counts for performance
+  const mobileMultiplier = isMobile ? 0.5 : 1;
+  const baseParticleCount = (config?.particleCount ?? 500) * mobileMultiplier;
+  const boostParticleCount = Math.floor(
+    baseParticleCount + transitionIntensity * 500 * mobileMultiplier
+  );
 
   const baseParticleSize = config?.particleSize ?? 1.0;
-  const boostParticleSize = baseParticleSize + transitionIntensity * 1.2; // Up to 2.2x size at peak
+  const boostParticleSize = baseParticleSize + transitionIntensity * 1.2;
 
   const baseOpacity = config?.opacity ?? 1.0;
-  const boostOpacity = Math.min(2.0, baseOpacity + transitionIntensity * 1.0); // Up to 2x brightness at peak
+  const boostOpacity = Math.min(2.0, baseOpacity + transitionIntensity * 1.0);
 
   // Increase wander strength during transition for more dynamic movement
   const baseWanderStrength = config?.wanderStrength ?? 1.0;
-  const boostWanderStrength = baseWanderStrength + transitionIntensity * 2.5; // More energetic particle movement
+  const boostWanderStrength = baseWanderStrength + transitionIntensity * 2.5;
 
-  // Glow intensity for the container (CSS filter) - STRONGER
-  const glowIntensity = transitionIntensity * 25; // 0 to 25px blur at peak
+  // Glow intensity for the container (CSS filter) - STRONGER on desktop, reduced on mobile
+  const glowIntensity = transitionIntensity * (isMobile ? 15 : 25);
 
   if (exitProgress > 0 && destinationPos) {
     // ═══════════════════════════════════════════════════════════════════
@@ -421,7 +428,8 @@ export const SigilSection = forwardRef<HTMLDivElement, SigilSectionProps>(functi
   }
 
   // Show sparks during early-mid transition (0.05 to 0.7 progress)
-  const sparksActive = transitionProgress > 0.05 && transitionProgress < 0.7;
+  // Disable sparks on mobile for performance
+  const sparksActive = !isMobile && transitionProgress > 0.05 && transitionProgress < 0.7;
 
   // Get origin position (brandmark) or fallback to a reasonable default
   const sparkOriginX = originPos?.x ?? viewportCenter.x - 200;

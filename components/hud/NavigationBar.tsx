@@ -1,10 +1,12 @@
 "use client";
 
-import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
+import { useIsMobile } from "@/lib/hooks/useMediaQuery";
 
 // ═══════════════════════════════════════════════════════════════
 // NAVIGATION BAR - Brandworld Specification
 // Fixed top navigation with logo and text links
+// Mobile: Hamburger menu with slide-out panel
 // ═══════════════════════════════════════════════════════════════
 
 interface NavItem {
@@ -44,6 +46,47 @@ const ThoughtformLogo = forwardRef<SVGSVGElement, { size?: number; color?: strin
   }
 );
 
+// Hamburger menu icon
+function HamburgerIcon({ isOpen }: { isOpen: boolean }) {
+  return (
+    <svg
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      style={{
+        transition: "transform 0.3s ease",
+        transform: isOpen ? "rotate(45deg)" : "rotate(0deg)",
+      }}
+    >
+      <line
+        x1="4"
+        y1="8"
+        x2="20"
+        y2="8"
+        style={{
+          transition: "all 0.3s ease",
+          transform: isOpen ? "translateY(4px)" : "translateY(0)",
+        }}
+      />
+      <line
+        x1="4"
+        y1="16"
+        x2="20"
+        y2="16"
+        style={{
+          transition: "all 0.3s ease",
+          transform: isOpen ? "translateY(-4px) rotate(90deg)" : "translateY(0)",
+          transformOrigin: "center",
+        }}
+      />
+    </svg>
+  );
+}
+
 // Export handle type for the NavigationBar ref
 export interface NavigationBarHandle {
   getLogoPosition: () => { x: number; y: number; width: number; height: number } | null;
@@ -57,6 +100,35 @@ interface NavigationBarProps {
 export const NavigationBar = forwardRef<NavigationBarHandle, NavigationBarProps>(
   function NavigationBar({ activeSection, onNavigate }, ref) {
     const logoRef = useRef<SVGSVGElement>(null);
+    const isMobile = useIsMobile();
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+    // Close menu when navigating
+    const handleNavigate = (sectionId: string) => {
+      setIsMenuOpen(false);
+      onNavigate(sectionId);
+    };
+
+    // Close menu on escape key
+    useEffect(() => {
+      const handleEscape = (e: KeyboardEvent) => {
+        if (e.key === "Escape") setIsMenuOpen(false);
+      };
+      window.addEventListener("keydown", handleEscape);
+      return () => window.removeEventListener("keydown", handleEscape);
+    }, []);
+
+    // Prevent body scroll when menu is open
+    useEffect(() => {
+      if (isMenuOpen) {
+        document.body.style.overflow = "hidden";
+      } else {
+        document.body.style.overflow = "";
+      }
+      return () => {
+        document.body.style.overflow = "";
+      };
+    }, [isMenuOpen]);
 
     // Expose logo position through imperative handle
     useImperativeHandle(ref, () => ({
@@ -74,37 +146,88 @@ export const NavigationBar = forwardRef<NavigationBarHandle, NavigationBarProps>
 
     const handleClick = (e: React.MouseEvent<HTMLAnchorElement>, sectionId: string) => {
       e.preventDefault();
-      onNavigate(sectionId);
+      handleNavigate(sectionId);
     };
 
     const handleLogoClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
       e.preventDefault();
+      setIsMenuOpen(false);
       window.scrollTo({ top: 0, behavior: "smooth" });
     };
 
     return (
-      <div className="navbar-container">
-        <nav className="navbar">
-          {/* Logo on the left */}
-          <a href="#" className="navbar-logo" onClick={handleLogoClick}>
-            <ThoughtformLogo ref={logoRef} size={22} />
-          </a>
+      <>
+        <div className="navbar-container">
+          <nav className="navbar">
+            {/* Logo on the left */}
+            <a href="#" className="navbar-logo" onClick={handleLogoClick}>
+              <ThoughtformLogo ref={logoRef} size={22} />
+            </a>
 
-          {/* Nav links - text only */}
-          {navItems.map((item) => {
-            const isActive = activeSection === item.sectionId;
-            return (
-              <a
-                key={item.sectionId}
-                href={`#${item.sectionId}`}
-                className={`navbar-link ${isActive ? "active" : ""}`}
-                onClick={(e) => handleClick(e, item.sectionId)}
+            {/* Desktop: Nav links */}
+            {!isMobile &&
+              navItems.map((item) => {
+                const isActive = activeSection === item.sectionId;
+                return (
+                  <a
+                    key={item.sectionId}
+                    href={`#${item.sectionId}`}
+                    className={`navbar-link ${isActive ? "active" : ""}`}
+                    onClick={(e) => handleClick(e, item.sectionId)}
+                  >
+                    {item.label}
+                  </a>
+                );
+              })}
+
+            {/* Mobile: Hamburger button */}
+            {isMobile && (
+              <button
+                className="navbar-hamburger"
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                aria-label={isMenuOpen ? "Close menu" : "Open menu"}
+                aria-expanded={isMenuOpen}
               >
-                {item.label}
-              </a>
-            );
-          })}
-        </nav>
+                <HamburgerIcon isOpen={isMenuOpen} />
+              </button>
+            )}
+          </nav>
+        </div>
+
+        {/* Mobile menu overlay */}
+        {isMobile && (
+          <>
+            <div
+              className={`mobile-menu-backdrop ${isMenuOpen ? "open" : ""}`}
+              onClick={() => setIsMenuOpen(false)}
+            />
+            <div className={`mobile-menu ${isMenuOpen ? "open" : ""}`}>
+              <div className="mobile-menu-content">
+                {navItems.map((item, index) => {
+                  const isActive = activeSection === item.sectionId;
+                  return (
+                    <a
+                      key={item.sectionId}
+                      href={`#${item.sectionId}`}
+                      className={`mobile-menu-link ${isActive ? "active" : ""}`}
+                      onClick={(e) => handleClick(e, item.sectionId)}
+                      style={{
+                        animationDelay: isMenuOpen ? `${index * 50}ms` : "0ms",
+                      }}
+                    >
+                      <span className="mobile-menu-number">0{index + 1}</span>
+                      <span className="mobile-menu-label">{item.label}</span>
+                    </a>
+                  );
+                })}
+              </div>
+
+              <div className="mobile-menu-footer">
+                <span className="mobile-menu-email">hello@thoughtform.co</span>
+              </div>
+            </div>
+          </>
+        )}
 
         <style jsx>{`
           .navbar-container {
@@ -172,8 +295,152 @@ export const NavigationBar = forwardRef<NavigationBarHandle, NavigationBarProps>
             color: var(--dawn, #ece3d6);
             background: rgba(236, 227, 214, 0.1);
           }
+
+          /* Mobile hamburger button */
+          .navbar-hamburger {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 44px;
+            height: 44px;
+            padding: 0;
+            margin: 0;
+            background: transparent;
+            border: none;
+            color: var(--gold, #caa554);
+            cursor: pointer;
+            transition: color 150ms ease;
+          }
+
+          .navbar-hamburger:hover {
+            color: var(--dawn, #ece3d6);
+          }
+
+          /* Mobile menu backdrop */
+          .mobile-menu-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(5, 4, 3, 0.8);
+            opacity: 0;
+            visibility: hidden;
+            transition:
+              opacity 0.3s ease,
+              visibility 0.3s ease;
+            z-index: 999;
+          }
+
+          .mobile-menu-backdrop.open {
+            opacity: 1;
+            visibility: visible;
+          }
+
+          /* Mobile menu panel */
+          .mobile-menu {
+            position: fixed;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            width: min(320px, 85vw);
+            background: rgba(10, 9, 8, 0.98);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-left: 1px solid rgba(236, 227, 214, 0.1);
+            z-index: 1001;
+            display: flex;
+            flex-direction: column;
+            transform: translateX(100%);
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+          }
+
+          .mobile-menu.open {
+            transform: translateX(0);
+          }
+
+          .mobile-menu-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 80px 32px;
+            gap: 8px;
+          }
+
+          .mobile-menu-link {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px 0;
+            text-decoration: none;
+            border-bottom: 1px solid rgba(236, 227, 214, 0.06);
+            opacity: 0;
+            transform: translateX(20px);
+            transition: all 0.2s ease;
+          }
+
+          .mobile-menu.open .mobile-menu-link {
+            opacity: 1;
+            transform: translateX(0);
+            animation: slideIn 0.4s ease forwards;
+          }
+
+          @keyframes slideIn {
+            from {
+              opacity: 0;
+              transform: translateX(20px);
+            }
+            to {
+              opacity: 1;
+              transform: translateX(0);
+            }
+          }
+
+          .mobile-menu-link:hover,
+          .mobile-menu-link.active {
+            border-bottom-color: var(--gold, #caa554);
+          }
+
+          .mobile-menu-number {
+            font-family: var(--font-data, monospace);
+            font-size: 11px;
+            color: var(--gold, #caa554);
+            letter-spacing: 0.1em;
+            min-width: 24px;
+          }
+
+          .mobile-menu-label {
+            font-family: var(--font-data, monospace);
+            font-size: 18px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--dawn-70, rgba(235, 227, 214, 0.7));
+            transition: color 0.2s ease;
+          }
+
+          .mobile-menu-link:hover .mobile-menu-label,
+          .mobile-menu-link.active .mobile-menu-label {
+            color: var(--dawn, #ece3d6);
+          }
+
+          .mobile-menu-footer {
+            padding: 24px 32px;
+            border-top: 1px solid rgba(236, 227, 214, 0.08);
+          }
+
+          .mobile-menu-email {
+            font-family: var(--font-data, monospace);
+            font-size: 12px;
+            letter-spacing: 0.05em;
+            color: var(--dawn-30, rgba(235, 227, 214, 0.3));
+          }
+
+          /* Mobile adjustments */
+          @media (max-width: 768px) {
+            .navbar-container {
+              top: 12px;
+            }
+          }
         `}</style>
-      </div>
+      </>
     );
   }
 );

@@ -1,11 +1,17 @@
 "use client";
 
 import React from "react";
-import { useRef, useMemo, useEffect } from "react";
+import { useRef, useMemo, useEffect, useState } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Points, PointMaterial } from "@react-three/drei";
 import * as THREE from "three";
-import { type GatewayConfig, type GatewayShape, GATEWAY_SHAPE_IS_ATTRACTOR, DEFAULT_GATEWAY } from "@/lib/particle-config";
+import {
+  type GatewayConfig,
+  type GatewayShape,
+  GATEWAY_SHAPE_IS_ATTRACTOR,
+  DEFAULT_GATEWAY,
+} from "@/lib/particle-config";
+import { useIsMobile } from "@/lib/hooks/useMediaQuery";
 
 // ═══════════════════════════════════════════════════════════════
 // THREE.JS GATEWAY - SOLID ARCHITECTURAL PORTAL
@@ -18,65 +24,85 @@ const DEFAULT_ACCENT = "#caa554";
 // ─── STRANGE ATTRACTOR GENERATORS ───
 // Generate 3D point clouds from mathematical chaos systems
 
-interface AttractorPoint { x: number; y: number; z: number; }
+interface AttractorPoint {
+  x: number;
+  y: number;
+  z: number;
+}
 
 function generateAttractorPoints(type: GatewayShape, count: number): AttractorPoint[] {
   const points: AttractorPoint[] = [];
   const dt = 0.005;
   const warmup = 500;
-  
+
   // Initial conditions
   let x = 0.1 + Math.random() * 0.1;
   let y = 0.1 + Math.random() * 0.1;
   let z = 0.1 + Math.random() * 0.1;
-  
+
   for (let i = 0; i < count + warmup; i++) {
-    let dx = 0, dy = 0, dz = 0;
-    
+    let dx = 0,
+      dy = 0,
+      dz = 0;
+
     switch (type) {
-      case 'lorenz': {
-        const sigma = 10, rho = 28, beta = 8/3;
+      case "lorenz": {
+        const sigma = 10,
+          rho = 28,
+          beta = 8 / 3;
         dx = sigma * (y - x);
         dy = x * (rho - z) - y;
         dz = x * y - beta * z;
         break;
       }
-      case 'thomas': {
+      case "thomas": {
         const b = 0.208186;
         dx = Math.sin(y) - b * x;
         dy = Math.sin(z) - b * y;
         dz = Math.sin(x) - b * z;
         break;
       }
-      case 'aizawa': {
-        const a = 0.95, b = 0.7, c = 0.6, d = 3.5, e = 0.25, f = 0.1;
+      case "aizawa": {
+        const a = 0.95,
+          b = 0.7,
+          c = 0.6,
+          d = 3.5,
+          e = 0.25,
+          f = 0.1;
         dx = (z - b) * x - d * y;
         dy = d * x + (z - b) * y;
         dz = c + a * z - (z * z * z) / 3 - (x * x + y * y) * (1 + e * z) + f * z * x * x * x;
         break;
       }
-      case 'sprott': {
-        const a = 0.4, b = 1.2;
+      case "sprott": {
+        const a = 0.4,
+          b = 1.2;
         dx = a * y * z;
         dy = x - y;
         dz = b - x * y;
         break;
       }
-      case 'rossler': {
-        const a = 0.2, b = 0.2, c = 5.7;
+      case "rossler": {
+        const a = 0.2,
+          b = 0.2,
+          c = 5.7;
         dx = -(y + z);
         dy = x + a * y;
         dz = b + z * (x - c);
         break;
       }
-      case 'dadras': {
-        const p = 3, q = 2.7, r = 1.7, s = 2, e = 9;
+      case "dadras": {
+        const p = 3,
+          q = 2.7,
+          r = 1.7,
+          s = 2,
+          e = 9;
         dx = y - p * x + q * y * z;
         dy = r * y - x * z + z;
         dz = s * x * y - e * z;
         break;
       }
-      case 'galaxy': {
+      case "galaxy": {
         // Galaxy is parametric, not differential
         if (i >= warmup) {
           const t = (i - warmup) * 0.01;
@@ -92,12 +118,12 @@ function generateAttractorPoints(type: GatewayShape, count: number): AttractorPo
         }
         continue;
       }
-      case 'torus': {
+      case "torus": {
         // Torus (donut) - parametric surface
         if (i >= warmup) {
           const idx = i - warmup;
           const u = (idx / count) * Math.PI * 2;
-          const v = (idx % 20) / 20 * Math.PI * 2;
+          const v = ((idx % 20) / 20) * Math.PI * 2;
           const R = 0.6; // Major radius
           const r = 0.3; // Minor radius
           points.push({
@@ -108,13 +134,15 @@ function generateAttractorPoints(type: GatewayShape, count: number): AttractorPo
         }
         continue;
       }
-      case 'hyperboloid': {
+      case "hyperboloid": {
         // Hyperboloid of one sheet - hourglass portal shape
         if (i >= warmup) {
           const idx = i - warmup;
           const u = (idx / count) * Math.PI * 2;
-          const v = (idx % 20) / 20 * Math.PI * 2;
-          const a = 0.5, b = 0.5, c = 0.4;
+          const v = ((idx % 20) / 20) * Math.PI * 2;
+          const a = 0.5,
+            b = 0.5,
+            c = 0.4;
           points.push({
             x: a * Math.cosh(v) * Math.cos(u),
             y: b * Math.cosh(v) * Math.sin(u),
@@ -123,7 +151,7 @@ function generateAttractorPoints(type: GatewayShape, count: number): AttractorPo
         }
         continue;
       }
-      case 'vortex': {
+      case "vortex": {
         // Vortex/whirlpool - spiraling portal
         if (i >= warmup) {
           const idx = i - warmup;
@@ -138,12 +166,12 @@ function generateAttractorPoints(type: GatewayShape, count: number): AttractorPo
         }
         continue;
       }
-      case 'spiralTorus': {
+      case "spiralTorus": {
         // Spiral torus - twisted donut portal
         if (i >= warmup) {
           const idx = i - warmup;
           const u = (idx / count) * Math.PI * 4;
-          const v = (idx % 20) / 20 * Math.PI * 2;
+          const v = ((idx % 20) / 20) * Math.PI * 2;
           const R = 0.5;
           const r = 0.25;
           const twist = u * 0.5;
@@ -155,12 +183,12 @@ function generateAttractorPoints(type: GatewayShape, count: number): AttractorPo
         }
         continue;
       }
-      case 'mobius': {
+      case "mobius": {
         // Möbius strip - twisted portal
         if (i >= warmup) {
           const idx = i - warmup;
           const u = (idx / count) * Math.PI * 2;
-          const v = (idx % 20) / 20 * 2 - 1; // -1 to 1
+          const v = ((idx % 20) / 20) * 2 - 1; // -1 to 1
           const w = 0.2; // Width
           points.push({
             x: (1 + v * w * Math.cos(u / 2)) * Math.cos(u),
@@ -170,13 +198,13 @@ function generateAttractorPoints(type: GatewayShape, count: number): AttractorPo
         }
         continue;
       }
-      case 'hypersphere': {
+      case "hypersphere": {
         // Hypersphere (4D sphere projected to 3D) - portal-like
         if (i >= warmup) {
           const idx = i - warmup;
           const u = (idx / count) * Math.PI * 2;
-          const v = (idx % 20) / 20 * Math.PI;
-          const w = (idx % 10) / 10 * Math.PI * 2;
+          const v = ((idx % 20) / 20) * Math.PI;
+          const w = ((idx % 10) / 10) * Math.PI * 2;
           const r = 0.6;
           // 4D hypersphere projection
           points.push({
@@ -190,42 +218,48 @@ function generateAttractorPoints(type: GatewayShape, count: number): AttractorPo
       default:
         continue;
     }
-    
+
     // Euler integration
     x += dx * dt;
     y += dy * dt;
     z += dz * dt;
-    
+
     if (i >= warmup) {
       points.push({ x, y, z });
     }
   }
-  
+
   return normalizeAttractorPoints(points);
 }
 
 function normalizeAttractorPoints(points: AttractorPoint[]): AttractorPoint[] {
   if (points.length === 0) return points;
-  
+
   // Find bounding box
-  let minX = Infinity, maxX = -Infinity;
-  let minY = Infinity, maxY = -Infinity;
-  let minZ = Infinity, maxZ = -Infinity;
-  
+  let minX = Infinity,
+    maxX = -Infinity;
+  let minY = Infinity,
+    maxY = -Infinity;
+  let minZ = Infinity,
+    maxZ = -Infinity;
+
   for (const p of points) {
-    minX = Math.min(minX, p.x); maxX = Math.max(maxX, p.x);
-    minY = Math.min(minY, p.y); maxY = Math.max(maxY, p.y);
-    minZ = Math.min(minZ, p.z); maxZ = Math.max(maxZ, p.z);
+    minX = Math.min(minX, p.x);
+    maxX = Math.max(maxX, p.x);
+    minY = Math.min(minY, p.y);
+    maxY = Math.max(maxY, p.y);
+    minZ = Math.min(minZ, p.z);
+    maxZ = Math.max(maxZ, p.z);
   }
-  
+
   // Center and scale to fit radius of 1
   const centerX = (minX + maxX) / 2;
   const centerY = (minY + maxY) / 2;
   const centerZ = (minZ + maxZ) / 2;
   const rangeMax = Math.max(maxX - minX, maxY - minY, maxZ - minZ) || 1;
   const scaleFactor = 2 / rangeMax;
-  
-  return points.map(p => ({
+
+  return points.map((p) => ({
     x: (p.x - centerX) * scaleFactor,
     y: (p.y - centerY) * scaleFactor,
     z: (p.z - centerZ) * scaleFactor,
@@ -258,54 +292,54 @@ const geometricShapeGenerators: Record<string, ShapePointFn> = {
     x: Math.cos(t * Math.PI * 2) * radius,
     y: Math.sin(t * Math.PI * 2) * radius,
   }),
-  
+
   // 6-sided hexagon
   hexagon: (t, radius) => {
     const sides = 6;
     const angle = t * Math.PI * 2;
     const segment = Math.floor(t * sides) % sides;
     const segmentT = (t * sides) % 1;
-    
+
     const angle1 = (segment / sides) * Math.PI * 2 - Math.PI / 2;
     const angle2 = ((segment + 1) / sides) * Math.PI * 2 - Math.PI / 2;
-    
+
     const x1 = Math.cos(angle1) * radius;
     const y1 = Math.sin(angle1) * radius;
     const x2 = Math.cos(angle2) * radius;
     const y2 = Math.sin(angle2) * radius;
-    
+
     return {
       x: x1 + (x2 - x1) * segmentT,
       y: y1 + (y2 - y1) * segmentT,
     };
   },
-  
+
   // 8-sided octagon
   octagon: (t, radius) => {
     const sides = 8;
     const segment = Math.floor(t * sides) % sides;
     const segmentT = (t * sides) % 1;
-    
+
     const angle1 = (segment / sides) * Math.PI * 2 - Math.PI / 8;
     const angle2 = ((segment + 1) / sides) * Math.PI * 2 - Math.PI / 8;
-    
+
     const x1 = Math.cos(angle1) * radius;
     const y1 = Math.sin(angle1) * radius;
     const x2 = Math.cos(angle2) * radius;
     const y2 = Math.sin(angle2) * radius;
-    
+
     return {
       x: x1 + (x2 - x1) * segmentT,
       y: y1 + (y2 - y1) * segmentT,
     };
   },
-  
+
   // Diamond (rotated square)
   diamond: (t, radius) => {
     const sides = 4;
     const segment = Math.floor(t * sides) % sides;
     const segmentT = (t * sides) % 1;
-    
+
     // Points at top, right, bottom, left
     const points = [
       { x: 0, y: radius },
@@ -313,22 +347,22 @@ const geometricShapeGenerators: Record<string, ShapePointFn> = {
       { x: 0, y: -radius },
       { x: -radius, y: 0 },
     ];
-    
+
     const p1 = points[segment];
     const p2 = points[(segment + 1) % 4];
-    
+
     return {
       x: p1.x + (p2.x - p1.x) * segmentT,
       y: p1.y + (p2.y - p1.y) * segmentT,
     };
   },
-  
+
   // Arch/doorway - semicircle on top, straight sides, flat bottom
   arch: (t, radius) => {
     // Split: 0-0.4 = top semicircle, 0.4-0.7 = right side, 0.7-0.8 = bottom, 0.8-1.0 = left side
     const archHeight = radius * 1.3;
     const archWidth = radius * 0.8;
-    
+
     if (t < 0.5) {
       // Top semicircle (top half of the arch)
       const archT = t / 0.5;
@@ -360,7 +394,7 @@ const geometricShapeGenerators: Record<string, ShapePointFn> = {
       };
     }
   },
-  
+
   // Wide ellipse
   ellipse: (t, radius) => ({
     x: Math.cos(t * Math.PI * 2) * radius * 1.4,
@@ -392,33 +426,33 @@ const DEPTH_MARKER_SPIRAL_ARMS = 4;
 const DEPTH_MARKER_SPIRAL_POINTS = 50;
 
 // ─── SOLID SHAPE RING (no depth, no curve needed) ───
-function SolidShapeRing({ 
-  opacity, 
-  color, 
+function SolidShapeRing({
+  opacity,
+  color,
   density,
-  shape
-}: { 
-  opacity: number; 
-  color: string; 
+  shape,
+}: {
+  opacity: number;
+  color: string;
   density: number;
   shape: GatewayShape;
 }) {
   const pointsRef = useRef<THREE.Points>(null);
   const getPoint = getShapeGenerator(shape);
-  
+
   const positions = useMemo(() => {
     const points: number[] = [];
     const R = 1.0;
     const thickness = 0.12;
-    
+
     for (let i = 0; i < TORUS_PARTICLES; i++) {
       const t = i / TORUS_PARTICLES;
       const { x, y } = getPoint(t, R);
-      
+
       // Add thickness variation (like a torus cross-section)
       const thicknessAngle = Math.random() * Math.PI * 2;
       const thicknessR = thickness * (0.8 + Math.random() * 0.4);
-      
+
       // Normal direction for thickness (perpendicular to the shape edge)
       const nextT = (t + 0.001) % 1;
       const next = getPoint(nextT, R);
@@ -427,104 +461,114 @@ function SolidShapeRing({
       const len = Math.sqrt(dx * dx + dy * dy) || 1;
       const nx = -dy / len; // Normal perpendicular to edge
       const ny = dx / len;
-      
+
       points.push(
         x + nx * thicknessR * Math.cos(thicknessAngle),
         y + ny * thicknessR * Math.cos(thicknessAngle),
         thicknessR * Math.sin(thicknessAngle) * 0.3
       );
     }
-    
+
     return new Float32Array(points);
   }, [getPoint]);
-  
+
   useFrame((state) => {
     if (pointsRef.current) {
       const time = state.clock.elapsedTime;
       pointsRef.current.scale.setScalar(1 + Math.sin(time * 0.3) * 0.008);
-      
+
       const material = pointsRef.current.material as THREE.PointsMaterial;
       material.opacity = 0.85 * opacity * density;
     }
   });
-  
+
   return (
     <Points ref={pointsRef} positions={positions} stride={3} frustumCulled={false}>
-      <PointMaterial transparent color={color} size={0.014} sizeAttenuation depthWrite={false} opacity={0.85} />
+      <PointMaterial
+        transparent
+        color={color}
+        size={0.014}
+        sizeAttenuation
+        depthWrite={false}
+        opacity={0.85}
+      />
     </Points>
   );
 }
 
 // ─── EDGE GLOW RING (no depth, no curve needed) ───
-function EdgeGlowRing({ 
-  opacity, 
-  color, 
+function EdgeGlowRing({
+  opacity,
+  color,
   density,
-  shape
-}: { 
-  opacity: number; 
-  color: string; 
+  shape,
+}: {
+  opacity: number;
+  color: string;
   density: number;
   shape: GatewayShape;
 }) {
   const pointsRef = useRef<THREE.Points>(null);
   const getPoint = getShapeGenerator(shape);
-  
+
   const positions = useMemo(() => {
     const points: number[] = [];
     const baseRadius = 1.12;
     const layers = 5;
     const pointsPerLayer = EDGE_PARTICLES / layers;
-    
+
     for (let layer = 0; layer < layers; layer++) {
       const layerScale = 1 + layer * 0.02;
       const layerZ = layer * 0.015;
-      
+
       for (let i = 0; i < pointsPerLayer; i++) {
         const t = i / pointsPerLayer;
         const { x, y } = getPoint(t, baseRadius * layerScale);
         const jitter = (Math.random() - 0.5) * 0.03;
-        
-        points.push(
-          x + jitter,
-          y + jitter,
-          layerZ + (Math.random() - 0.5) * 0.02
-        );
+
+        points.push(x + jitter, y + jitter, layerZ + (Math.random() - 0.5) * 0.02);
       }
     }
-    
+
     return new Float32Array(points);
   }, [getPoint]);
-  
+
   useFrame((state) => {
     if (pointsRef.current) {
       const time = state.clock.elapsedTime;
       const pulse = 0.85 + Math.sin(time * 1.5) * 0.15;
-      
+
       const material = pointsRef.current.material as THREE.PointsMaterial;
       material.opacity = 0.95 * opacity * density * pulse;
     }
   });
-  
+
   return (
     <Points ref={pointsRef} positions={positions} stride={3} frustumCulled={false}>
-      <PointMaterial transparent color={color} size={0.018} sizeAttenuation depthWrite={false} opacity={0.95} />
+      <PointMaterial
+        transparent
+        color={color}
+        size={0.018}
+        sizeAttenuation
+        depthWrite={false}
+        opacity={0.95}
+      />
     </Points>
   );
 }
 
 // ─── TUNNEL DEPTH RINGS (with curvature and width support) ───
-function TunnelDepthRings({ 
-  opacity, 
-  color, 
+function TunnelDepthRings({
+  opacity,
+  color,
   density,
   tunnelDepth,
   tunnelCurve,
   tunnelWidth,
-  shape
-}: { 
-  opacity: number; 
-  color: string; 
+  shape,
+}: {
+  opacity: number;
+  color: string;
   density: number;
   tunnelDepth: number;
   tunnelCurve: number;
@@ -535,123 +579,137 @@ function TunnelDepthRings({
   // Store base X, Y positions and depth values for curve/width recalculation
   const baseDataRef = useRef<{ baseX: number[]; baseY: number[]; depths: number[] } | null>(null);
   const getPoint = getShapeGenerator(shape);
-  
+
   const positions = useMemo(() => {
     const points: number[] = [];
     const baseX: number[] = [];
     const baseY: number[] = [];
     const depths: number[] = [];
     const startRadius = 0.95;
-    
+
     for (let ring = 0; ring < TUNNEL_RING_COUNT; ring++) {
       const t = ring / (TUNNEL_RING_COUNT - 1);
       const radius = startRadius * (1 - t * 0.4);
-      
+
       for (let i = 0; i < TUNNEL_PARTICLES_PER_RING; i++) {
         const pointT = i / TUNNEL_PARTICLES_PER_RING;
         const { x: shapeX, y: shapeY } = getPoint(pointT, 1);
         const jitter = (Math.random() - 0.5) * 0.03;
         const x = shapeX * radius + jitter;
         const y = shapeY * radius + jitter;
-        
+
         baseX.push(x);
         baseY.push(y);
         depths.push(t);
-        
+
         points.push(x, y, t);
       }
     }
-    
+
     baseDataRef.current = { baseX, baseY, depths };
     return new Float32Array(points);
   }, [getPoint]);
-  
+
   // Update positions when tunnelCurve or tunnelWidth changes
   useEffect(() => {
     if (!pointsRef.current || !baseDataRef.current) return;
-    
+
     const posArray = pointsRef.current.geometry.attributes.position.array as Float32Array;
     const { baseX, baseY, depths } = baseDataRef.current;
-    
+
     for (let i = 0; i < baseX.length; i++) {
       const t = depths[i];
       // Width scales more at the back (depth-dependent), multiplied by 2 for stronger effect
       const widthScale = 1 + (tunnelWidth - 1) * t * 2;
       const curveOffset = tunnelCurve * t * t * 2;
-      
+
       posArray[i * 3] = baseX[i] * widthScale + curveOffset;
       posArray[i * 3 + 1] = baseY[i] * widthScale;
     }
-    
+
     pointsRef.current.geometry.attributes.position.needsUpdate = true;
   }, [tunnelCurve, tunnelWidth]);
-  
+
   useFrame(() => {
     if (pointsRef.current) {
       pointsRef.current.scale.z = 8 * tunnelDepth;
-      
+
       const material = pointsRef.current.material as THREE.PointsMaterial;
       material.opacity = 0.65 * opacity * density;
     }
   });
-  
+
   return (
     <Points ref={pointsRef} positions={positions} stride={3} frustumCulled={false}>
-      <PointMaterial transparent color={color} size={0.010} sizeAttenuation depthWrite={false} opacity={0.65} />
+      <PointMaterial
+        transparent
+        color={color}
+        size={0.01}
+        sizeAttenuation
+        depthWrite={false}
+        opacity={0.65}
+      />
     </Points>
   );
 }
 
 // ─── INNER ACCENT RING (no depth, no curve needed) ───
-function InnerAccentRing({ 
-  opacity, 
-  color, 
+function InnerAccentRing({
+  opacity,
+  color,
   density,
-  shape
-}: { 
-  opacity: number; 
-  color: string; 
+  shape,
+}: {
+  opacity: number;
+  color: string;
   density: number;
   shape: GatewayShape;
 }) {
   const pointsRef = useRef<THREE.Points>(null);
   const getPoint = getShapeGenerator(shape);
-  
+
   const positions = useMemo(() => {
     const points: number[] = [];
     const radius = 0.88;
     const thickness = 0.06;
     const layers = 6;
     const pointsPerLayer = INNER_RING_PARTICLES / layers;
-    
+
     for (let layer = 0; layer < layers; layer++) {
       const layerZ = layer * 0.04;
-      
+
       for (let i = 0; i < pointsPerLayer; i++) {
         const t = i / pointsPerLayer;
         const r = radius + (Math.random() - 0.5) * thickness;
         const { x, y } = getPoint(t, r);
-        
+
         points.push(x, y, layerZ + (Math.random() - 0.5) * 0.02);
       }
     }
-    
+
     return new Float32Array(points);
   }, [getPoint]);
-  
+
   useFrame((state) => {
     if (pointsRef.current) {
       const time = state.clock.elapsedTime;
       const pulse = 0.7 + Math.sin(time * 1.2) * 0.3;
-      
+
       const material = pointsRef.current.material as THREE.PointsMaterial;
       material.opacity = 0.9 * opacity * density * pulse;
     }
   });
-  
+
   return (
     <Points ref={pointsRef} positions={positions} stride={3} frustumCulled={false}>
-      <PointMaterial transparent color={color} size={0.016} sizeAttenuation depthWrite={false} opacity={0.9} />
+      <PointMaterial
+        transparent
+        color={color}
+        size={0.016}
+        sizeAttenuation
+        depthWrite={false}
+        opacity={0.9}
+      />
     </Points>
   );
 }
@@ -664,7 +722,7 @@ function DepthSpiral({
   tunnelDepth,
   tunnelCurve,
   tunnelWidth,
-  shape
+  shape,
 }: {
   opacity: number;
   color: string;
@@ -724,39 +782,46 @@ function DepthSpiral({
     baseDataRef.current = { baseX, baseY, depths };
     return new Float32Array(points);
   }, []);
-  
+
   useEffect(() => {
     if (!pointsRef.current || !baseDataRef.current) return;
-    
+
     const posArray = pointsRef.current.geometry.attributes.position.array as Float32Array;
     const { baseX, baseY, depths } = baseDataRef.current;
-    
+
     for (let i = 0; i < baseX.length; i++) {
       const t = depths[i];
       const widthScale = 1 + (tunnelWidth - 1) * t * 2;
       const curveOffset = tunnelCurve * t * t * 2;
-      
+
       posArray[i * 3] = baseX[i] * widthScale + curveOffset;
       posArray[i * 3 + 1] = baseY[i] * widthScale;
     }
-    
+
     pointsRef.current.geometry.attributes.position.needsUpdate = true;
   }, [tunnelCurve, tunnelWidth]);
-  
+
   useFrame((state) => {
     if (pointsRef.current) {
       const time = state.clock.elapsedTime;
       pointsRef.current.rotation.z = time * 0.03;
       pointsRef.current.scale.z = 6 * tunnelDepth;
-      
+
       const material = pointsRef.current.material as THREE.PointsMaterial;
       material.opacity = 0.55 * opacity * density;
     }
   });
-  
+
   return (
     <Points ref={pointsRef} positions={positions} stride={3} frustumCulled={false}>
-      <PointMaterial transparent color={color} size={0.008} sizeAttenuation depthWrite={false} opacity={0.55} />
+      <PointMaterial
+        transparent
+        color={color}
+        size={0.008}
+        sizeAttenuation
+        depthWrite={false}
+        opacity={0.55}
+      />
     </Points>
   );
 }
@@ -769,7 +834,7 @@ function InteriorFill({
   tunnelDepth,
   tunnelCurve,
   tunnelWidth,
-  shape
+  shape,
 }: {
   opacity: number;
   color: string;
@@ -796,7 +861,7 @@ function InteriorFill({
       const shapeT = Math.random();
       const radiusScale = Math.random() * maxRadius;
       const { x: shapeX, y: shapeY } = getPoint(shapeT, radiusScale);
-      
+
       baseX.push(shapeX);
       baseY.push(shapeY);
       depths.push(depthT);
@@ -807,39 +872,46 @@ function InteriorFill({
     baseDataRef.current = { baseX, baseY, depths };
     return new Float32Array(points);
   }, [getPoint]);
-  
+
   useEffect(() => {
     if (!pointsRef.current || !baseDataRef.current) return;
-    
+
     const posArray = pointsRef.current.geometry.attributes.position.array as Float32Array;
     const { baseX, baseY, depths } = baseDataRef.current;
-    
+
     for (let i = 0; i < baseX.length; i++) {
       const t = depths[i];
       const widthScale = 1 + (tunnelWidth - 1) * t * 2;
       const curveOffset = tunnelCurve * t * t * 2;
-      
+
       posArray[i * 3] = baseX[i] * widthScale + curveOffset;
       posArray[i * 3 + 1] = baseY[i] * widthScale;
     }
-    
+
     pointsRef.current.geometry.attributes.position.needsUpdate = true;
   }, [tunnelCurve, tunnelWidth]);
-  
+
   useFrame((state) => {
     if (pointsRef.current) {
       const time = state.clock.elapsedTime;
       pointsRef.current.rotation.z = Math.sin(time * 0.1) * 0.02;
       pointsRef.current.scale.z = 7 * tunnelDepth;
-      
+
       const material = pointsRef.current.material as THREE.PointsMaterial;
-      material.opacity = 0.40 * opacity * density;
+      material.opacity = 0.4 * opacity * density;
     }
   });
-  
+
   return (
     <Points ref={pointsRef} positions={positions} stride={3} frustumCulled={false}>
-      <PointMaterial transparent color={color} size={0.007} sizeAttenuation depthWrite={false} opacity={0.40} />
+      <PointMaterial
+        transparent
+        color={color}
+        size={0.007}
+        sizeAttenuation
+        depthWrite={false}
+        opacity={0.4}
+      />
     </Points>
   );
 }
@@ -852,7 +924,7 @@ function GoldDepthMarkers({
   tunnelDepth,
   tunnelCurve,
   tunnelWidth,
-  shape
+  shape,
 }: {
   opacity: number;
   color: string;
@@ -910,39 +982,46 @@ function GoldDepthMarkers({
     baseDataRef.current = { baseX, baseY, depths };
     return new Float32Array(points);
   }, [getPoint]);
-  
+
   useEffect(() => {
     if (!pointsRef.current || !baseDataRef.current) return;
-    
+
     const posArray = pointsRef.current.geometry.attributes.position.array as Float32Array;
     const { baseX, baseY, depths } = baseDataRef.current;
-    
+
     for (let i = 0; i < baseX.length; i++) {
       const t = depths[i];
       const widthScale = 1 + (tunnelWidth - 1) * t * 2;
       const curveOffset = tunnelCurve * t * t * 2;
-      
+
       posArray[i * 3] = baseX[i] * widthScale + curveOffset;
       posArray[i * 3 + 1] = baseY[i] * widthScale;
     }
-    
+
     pointsRef.current.geometry.attributes.position.needsUpdate = true;
   }, [tunnelCurve, tunnelWidth]);
-  
+
   useFrame((state) => {
     if (pointsRef.current) {
       const time = state.clock.elapsedTime;
       const pulse = 0.75 + Math.sin(time * 1.8) * 0.25;
       pointsRef.current.scale.z = 5 * tunnelDepth;
-      
+
       const material = pointsRef.current.material as THREE.PointsMaterial;
-      material.opacity = 0.80 * opacity * density * pulse;
+      material.opacity = 0.8 * opacity * density * pulse;
     }
   });
-  
+
   return (
     <Points ref={pointsRef} positions={positions} stride={3} frustumCulled={false}>
-      <PointMaterial transparent color={color} size={0.018} sizeAttenuation depthWrite={false} opacity={0.80} />
+      <PointMaterial
+        transparent
+        color={color}
+        size={0.018}
+        sizeAttenuation
+        depthWrite={false}
+        opacity={0.8}
+      />
     </Points>
   );
 }
@@ -950,15 +1029,15 @@ function GoldDepthMarkers({
 // ─── FLYING CAMERA ───
 function FlyingCamera({ scrollProgress, gatewayX }: { scrollProgress: number; gatewayX: number }) {
   const { camera } = useThree();
-  
+
   useFrame(() => {
     const z = scrollProgress * 18 * 5;
     const x = scrollProgress < 0.08 ? gatewayX * (scrollProgress / 0.08) : gatewayX;
-    
+
     camera.position.set(x, 0.15, z);
     camera.lookAt(gatewayX, 0.15, z + 10);
   });
-  
+
   return null;
 }
 
@@ -982,23 +1061,23 @@ function AttractorPortal({
 }) {
   const pointsRef = useRef<THREE.Points>(null);
   const accentPointsRef = useRef<THREE.Points>(null);
-  
+
   const { positions, accentPositions } = useMemo(() => {
     const attractorPoints = getCachedAttractorPoints(shape, ATTRACTOR_PARTICLE_COUNT);
-    
+
     // Main particles
     const mainPoints: number[] = [];
     const accentPoints: number[] = [];
-    
+
     attractorPoints.forEach((p, i) => {
       // Add some jitter for organic feel
       const jitter = 0.02;
       const x = p.x + (Math.random() - 0.5) * jitter;
       const y = p.y + (Math.random() - 0.5) * jitter;
       const z = p.z + (Math.random() - 0.5) * jitter;
-      
+
       mainPoints.push(x, y, z);
-      
+
       // Every 5th particle gets an accent version slightly offset
       if (i % 5 === 0) {
         accentPoints.push(
@@ -1008,64 +1087,64 @@ function AttractorPortal({
         );
       }
     });
-    
+
     return {
       positions: new Float32Array(mainPoints),
       accentPositions: new Float32Array(accentPoints),
     };
   }, [shape]);
-  
+
   useFrame((state) => {
     const time = state.clock.elapsedTime;
-    
+
     if (pointsRef.current) {
       // Slow rotation
       pointsRef.current.rotation.y = time * 0.1;
       pointsRef.current.rotation.x = Math.sin(time * 0.05) * 0.1;
-      
+
       // Breathing scale
       const breathe = 1 + Math.sin(time * 0.5) * 0.02;
       pointsRef.current.scale.setScalar(breathe);
-      
+
       const material = pointsRef.current.material as THREE.PointsMaterial;
       material.opacity = 0.7 * opacity * density;
     }
-    
+
     if (accentPointsRef.current) {
       accentPointsRef.current.rotation.y = time * 0.1;
       accentPointsRef.current.rotation.x = Math.sin(time * 0.05) * 0.1;
-      
+
       const breathe = 1 + Math.sin(time * 0.5) * 0.02;
       accentPointsRef.current.scale.setScalar(breathe);
-      
+
       const material = accentPointsRef.current.material as THREE.PointsMaterial;
       material.opacity = 0.9 * opacity * density * (0.7 + Math.sin(time * 1.2) * 0.3);
     }
   });
-  
+
   return (
     <group>
       {/* Main attractor particles */}
       <Points ref={pointsRef} positions={positions} stride={3} frustumCulled={false}>
-        <PointMaterial 
-          transparent 
-          color={primaryColor} 
-          size={0.015} 
-          sizeAttenuation 
-          depthWrite={false} 
-          opacity={0.7} 
+        <PointMaterial
+          transparent
+          color={primaryColor}
+          size={0.015}
+          sizeAttenuation
+          depthWrite={false}
+          opacity={0.7}
         />
       </Points>
-      
+
       {/* Accent particles (gold highlights) */}
       <Points ref={accentPointsRef} positions={accentPositions} stride={3} frustumCulled={false}>
-        <PointMaterial 
-          transparent 
-          color={accentColor} 
-          size={0.02} 
+        <PointMaterial
+          transparent
+          color={accentColor}
+          size={0.02}
           sizeAttenuation
-          depthWrite={false} 
-          opacity={0.9} 
+          depthWrite={false}
+          opacity={0.9}
         />
       </Points>
     </group>
@@ -1080,7 +1159,7 @@ interface LatentSpaceFieldProps {
   primaryColor: string;
   accentColor: string;
   intensity: number;
-  pattern: 'spiral' | 'lissajous' | 'fieldLines' | 'particleStreams' | 'all';
+  pattern: "spiral" | "lissajous" | "fieldLines" | "particleStreams" | "all";
   radius: number;
 }
 
@@ -1102,9 +1181,9 @@ function LatentSpaceField({
     const particlePoints: number[] = [];
     const baseRadius = radius;
     const outerRadius = baseRadius * (1.5 + intensity * 0.5);
-    
+
     // Spiral patterns - logarithmic spirals emanating from gateway
-    if (pattern === 'spiral' || pattern === 'all') {
+    if (pattern === "spiral" || pattern === "all") {
       const spiralCount = 8;
       const spiralPoints = 50;
       for (let s = 0; s < spiralCount; s++) {
@@ -1116,7 +1195,7 @@ function LatentSpaceField({
           const x = r * Math.cos(angle);
           const y = r * Math.sin(angle);
           const z = Math.sin(t * Math.PI * 2) * 0.3 * intensity; // Slight 3D curve
-          
+
           if (i > 0) {
             // Connect to previous point
             const prevT = (i - 1) / spiralPoints;
@@ -1125,10 +1204,10 @@ function LatentSpaceField({
             const prevX = prevR * Math.cos(prevAngle);
             const prevY = prevR * Math.sin(prevAngle);
             const prevZ = Math.sin(prevT * Math.PI * 2) * 0.3 * intensity;
-            
+
             linePoints.push(prevX, prevY, prevZ, x, y, z);
           }
-          
+
           // Add particles along spiral
           if (i % 3 === 0) {
             particlePoints.push(x, y, z);
@@ -1136,74 +1215,74 @@ function LatentSpaceField({
         }
       }
     }
-    
+
     // Lissajous curves - parametric equations creating figure-8 patterns
-    if (pattern === 'lissajous' || pattern === 'all') {
+    if (pattern === "lissajous" || pattern === "all") {
       const lissajousCount = 6;
       const lissajousPoints = 60;
       for (let l = 0; l < lissajousCount; l++) {
         const freqX = 2 + l;
         const freqY = 3 + l * 0.5;
         const phase = (l / lissajousCount) * Math.PI * 2;
-        
+
         for (let i = 0; i < lissajousPoints; i++) {
           const t = (i / lissajousPoints) * Math.PI * 2;
           const scale = baseRadius * (0.8 + intensity * 0.4);
           const x = scale * Math.sin(freqX * t + phase);
           const y = scale * Math.sin(freqY * t);
           const z = Math.sin(t * 2) * 0.2 * intensity;
-          
+
           if (i > 0) {
             const prevT = ((i - 1) / lissajousPoints) * Math.PI * 2;
             const prevX = scale * Math.sin(freqX * prevT + phase);
             const prevY = scale * Math.sin(freqY * prevT);
             const prevZ = Math.sin(prevT * 2) * 0.2 * intensity;
-            
+
             linePoints.push(prevX, prevY, prevZ, x, y, z);
           }
-          
+
           if (i % 2 === 0) {
             particlePoints.push(x, y, z);
           }
         }
       }
     }
-    
+
     // Field lines - radial lines connecting gateway to outer points
-    if (pattern === 'fieldLines' || pattern === 'all') {
+    if (pattern === "fieldLines" || pattern === "all") {
       const lineCount = 16;
       for (let i = 0; i < lineCount; i++) {
         const angle = (i / lineCount) * Math.PI * 2;
         const segments = 20;
-        
+
         for (let s = 0; s < segments; s++) {
           const t = s / segments;
           const r = baseRadius + (outerRadius - baseRadius) * t;
           const x = r * Math.cos(angle);
           const y = r * Math.sin(angle);
           const z = Math.sin(t * Math.PI * 3) * 0.15 * intensity; // Wave along line
-          
+
           if (s > 0) {
             const prevT = (s - 1) / segments;
             const prevR = baseRadius + (outerRadius - baseRadius) * prevT;
             const prevX = prevR * Math.cos(angle);
             const prevY = prevR * Math.sin(angle);
             const prevZ = Math.sin(prevT * Math.PI * 3) * 0.15 * intensity;
-            
+
             linePoints.push(prevX, prevY, prevZ, x, y, z);
           }
         }
       }
     }
-    
+
     // Particle streams - flowing particles along curved paths
-    if (pattern === 'particleStreams' || pattern === 'all') {
+    if (pattern === "particleStreams" || pattern === "all") {
       const streamCount = 12;
       const streamLength = 40;
       for (let s = 0; s < streamCount; s++) {
         const angle = (s / streamCount) * Math.PI * 2;
         const curve = Math.sin(angle) * 0.3; // Curved path
-        
+
         for (let i = 0; i < streamLength; i++) {
           const t = i / streamLength;
           const r = baseRadius * 1.1 + (outerRadius - baseRadius * 1.1) * t;
@@ -1211,12 +1290,12 @@ function LatentSpaceField({
           const x = r * Math.cos(pathAngle);
           const y = r * Math.sin(pathAngle);
           const z = Math.sin(t * Math.PI * 4 + s) * 0.25 * intensity;
-          
+
           particlePoints.push(x, y, z);
         }
       }
     }
-    
+
     return {
       linePositions: new Float32Array(linePoints),
       pointPositions: new Float32Array(particlePoints),
@@ -1225,17 +1304,17 @@ function LatentSpaceField({
 
   useFrame((state) => {
     timeRef.current = state.clock.elapsedTime;
-    
+
     if (linesRef.current) {
       // Subtle rotation of the field
       linesRef.current.rotateY(0.01);
     }
-    
+
     if (pointsRef.current) {
       // Breathing/pulsing effect
       const breathe = 1 + Math.sin(timeRef.current * 0.8) * 0.05;
       pointsRef.current.scale.setScalar(breathe);
-      
+
       const material = pointsRef.current.material as THREE.PointsMaterial;
       material.opacity = 0.6 * opacity * intensity;
     }
@@ -1262,7 +1341,7 @@ function LatentSpaceField({
           />
         </lineSegments>
       )}
-      
+
       {/* Particle points along patterns */}
       {pointPositions.length > 0 && (
         <Points ref={pointsRef} positions={pointPositions} stride={3} frustumCulled={false}>
@@ -1286,9 +1365,7 @@ interface GatewaySceneProps {
 }
 
 function GatewayScene({ scrollProgress, config }: GatewaySceneProps) {
-  const opacity = scrollProgress > 0.06
-    ? Math.max(0, 1 - (scrollProgress - 0.06) * 10)
-    : 1;
+  const opacity = scrollProgress > 0.06 ? Math.max(0, 1 - (scrollProgress - 0.06) * 10) : 1;
 
   if (opacity <= 0) return null;
 
@@ -1299,7 +1376,7 @@ function GatewayScene({ scrollProgress, config }: GatewaySceneProps) {
   const tunnelCurve = config.tunnelCurve || 0;
   const tunnelWidth = config.tunnelWidth || 1.0;
   const shape = config.shape || "circle";
-  
+
   // Check if this is an attractor shape (3D point cloud) vs geometric (2D outline)
   const isAttractor = isAttractorShape(shape);
 
@@ -1324,7 +1401,12 @@ function GatewayScene({ scrollProgress, config }: GatewaySceneProps) {
         ) : (
           // Render geometric 2D outline with tunnel
           <>
-            <SolidShapeRing opacity={opacity} color={primaryColor} density={density} shape={shape} />
+            <SolidShapeRing
+              opacity={opacity}
+              color={primaryColor}
+              density={density}
+              shape={shape}
+            />
             <EdgeGlowRing opacity={opacity} color={primaryColor} density={density} shape={shape} />
             <TunnelDepthRings
               opacity={opacity}
@@ -1335,7 +1417,12 @@ function GatewayScene({ scrollProgress, config }: GatewaySceneProps) {
               tunnelWidth={tunnelWidth}
               shape={shape}
             />
-            <InnerAccentRing opacity={opacity} color={accentColor} density={density} shape={shape} />
+            <InnerAccentRing
+              opacity={opacity}
+              color={accentColor}
+              density={density}
+              shape={shape}
+            />
             <DepthSpiral
               opacity={opacity}
               color={primaryColor}
@@ -1389,9 +1476,21 @@ interface ThreeGatewayProps {
 }
 
 export function ThreeGateway({ scrollProgress, config, children }: ThreeGatewayProps) {
-  const gatewayConfig = { ...DEFAULT_GATEWAY, ...config };
+  const isMobile = useIsMobile();
 
-  if (!gatewayConfig.enabled || scrollProgress > 0.20) return null;
+  // On mobile: center the gateway and reduce density for performance
+  const mobileConfig: Partial<GatewayConfig> = isMobile
+    ? {
+        positionX: 0, // Center on mobile
+        positionY: 0,
+        scale: 0.85, // Slightly smaller on mobile
+        density: 0.5, // Half density for performance
+      }
+    : {};
+
+  const gatewayConfig = { ...DEFAULT_GATEWAY, ...config, ...mobileConfig };
+
+  if (!gatewayConfig.enabled || scrollProgress > 0.2) return null;
 
   // Calculate screen position offset based on 3D gateway position
   // Camera FOV = 60, gateway is at z = 4
@@ -1399,7 +1498,7 @@ export function ThreeGateway({ scrollProgress, config, children }: ThreeGatewayP
   // For 16:9 aspect, visible width ≈ 8.2 units
   const fovRadians = (60 * Math.PI) / 180;
   const visibleHeight = 2 * 4 * Math.tan(fovRadians / 2);
-  
+
   // Convert 3D position to screen percentage (relative to center)
   // positionX in Three.js: negative = left, positive = right
   // But due to camera looking down -Z, we need to flip X
@@ -1407,8 +1506,8 @@ export function ThreeGateway({ scrollProgress, config, children }: ThreeGatewayP
   const offsetYPercent = (-gatewayConfig.positionY / visibleHeight) * 100;
 
   return (
-    <div 
-      style={{ 
+    <div
+      style={{
         position: "fixed",
         top: 0,
         left: 0,
@@ -1423,30 +1522,39 @@ export function ThreeGateway({ scrollProgress, config, children }: ThreeGatewayP
     >
       <Canvas
         camera={{ position: [0, 0, 0], fov: 60 }}
-        gl={{ antialias: true, alpha: true }}
+        gl={{
+          antialias: !isMobile, // Disable antialiasing on mobile for performance
+          alpha: true,
+          powerPreference: isMobile ? "low-power" : "default",
+        }}
         style={{ background: "transparent" }}
+        dpr={isMobile ? 1 : undefined} // Lower DPR on mobile for performance
       >
         <GatewayScene scrollProgress={scrollProgress} config={gatewayConfig} />
       </Canvas>
       {children && (
-        <div style={{ 
-          position: "absolute", 
-          pointerEvents: "none",
-          width: "100%",
-          height: "100%",
-          top: 0,
-          left: 0,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}>
-          <div style={{
+        <div
+          style={{
+            position: "absolute",
+            pointerEvents: "none",
+            width: "100%",
+            height: "100%",
+            top: 0,
+            left: 0,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            // Offset to match 3D gateway position
-            transform: `translate(${offsetXPercent}vh, ${offsetYPercent}vh)`,
-          }}>
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              // Offset to match 3D gateway position
+              transform: `translate(${offsetXPercent}vh, ${offsetYPercent}vh)`,
+            }}
+          >
             {children}
           </div>
         </div>

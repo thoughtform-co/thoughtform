@@ -671,4 +671,246 @@ export const cockpitStyles = `
       font-size: 12px;
     }
   }
+
+  /* ═══════════════════════════════════════════════════════════════
+     MOBILE RESPONSIVE STYLES (768px and below)
+     Restructures layout for single-column mobile experience
+     ═══════════════════════════════════════════════════════════════ */
+  @media (max-width: 768px) {
+    /* Hero section mobile layout */
+    .section-hero {
+      min-height: 100vh;
+      min-height: 100dvh;
+      height: auto;
+    }
+
+    .hero-layout {
+      height: auto;
+      min-height: 100vh;
+      min-height: 100dvh;
+    }
+
+    /* Wordmark - centered above gateway */
+    .hero-wordmark-container {
+      left: 50% !important;
+      right: auto !important;
+      transform: translateX(-50%) !important;
+      width: 80vw;
+      max-width: 280px;
+      top: 12vh !important;
+      display: flex;
+      justify-content: center;
+    }
+
+    .hero-wordmark-topleft {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+    }
+
+    .hero-wordmark-topleft svg {
+      max-width: 100%;
+    }
+
+    .definition-wordmark-inner {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+    }
+
+    /* Bridge frame - centered, animates from bottom to below wordmark */
+    .bridge-frame {
+      left: 50% !important;
+      right: auto !important;
+      width: 85vw !important;
+      max-width: 320px !important;
+    }
+
+    .bridge-frame .hero-text-frame {
+      padding: 16px 20px;
+      min-height: 70px;
+      text-align: center;
+      background: rgba(10, 9, 8, 0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+
+    /* Center text in bridge frame */
+    .bridge-frame .hero-tagline {
+      text-align: center;
+    }
+
+    .bridge-frame .hero-tagline-v2 {
+      font-size: clamp(13px, 3.5vw, 16px) !important;
+      line-height: 1.4 !important;
+    }
+
+    /* Hide runway arrows on mobile */
+    .hero-runway-arrows {
+      display: none !important;
+    }
+
+    /* Hero tagline mobile sizing */
+    .hero-tagline-v2 {
+      font-size: clamp(14px, 4vw, 18px) !important;
+      line-height: 1.3 !important;
+      text-align: center !important;
+    }
+
+    /* Definition section mobile */
+    .section-definition {
+      padding: 60px 24px !important;
+      min-height: auto !important;
+    }
+
+    .sigil-placeholder {
+      width: 160px;
+      height: 160px;
+    }
+
+    /* Fixed sigil mobile - smaller and centered */
+    .fixed-sigil-container {
+      transform: translate(-50%, -50%) scale(0.7);
+    }
+
+    /* Module cards - hide desktop version on mobile */
+    .definition-modules {
+      display: none !important;
+    }
+
+    /* Module connection lines - hide on mobile */
+    .module-connection-lines {
+      display: none !important;
+    }
+
+    /* Manifesto section mobile */
+    .section-manifesto {
+      padding: 80px 24px !important;
+      padding-top: 100px !important;
+    }
+
+    .manifesto-layout-text {
+      max-width: 100%;
+    }
+
+    .manifesto-content-area {
+      padding-left: var(--space-lg, 24px);
+      gap: 32px;
+    }
+
+    .manifesto-title-large {
+      font-size: clamp(32px, 10vw, 44px);
+    }
+
+    .manifesto-body-text {
+      gap: 20px;
+    }
+
+    .manifesto-body-text p {
+      font-size: 15px;
+      max-width: 100%;
+    }
+
+    /* Info card mobile */
+    .info-card {
+      padding: 20px;
+      max-width: 100%;
+    }
+  }
+
+  /* ═══════════════════════════════════════════════════════════════
+     MOBILE MODULE TABS - Tabbed interface for module cards
+     Used when desktop ModuleCards are hidden
+     ═══════════════════════════════════════════════════════════════ */
+  .mobile-module-tabs {
+    position: fixed;
+    bottom: 60px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: calc(100% - 80px);
+    max-width: 320px;
+    z-index: 20;
+    background: rgba(10, 9, 8, 0.9);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(236, 227, 214, 0.15);
+    display: none;
+  }
+
+  @media (max-width: 768px) {
+    .mobile-module-tabs {
+      display: block;
+    }
+  }
+
+  .mobile-tabs-header {
+    display: flex;
+    border-bottom: 1px solid rgba(236, 227, 214, 0.1);
+  }
+
+  .mobile-tab-button {
+    flex: 1;
+    padding: 12px 6px;
+    background: transparent;
+    border: none;
+    font-family: var(--font-data, monospace);
+    font-size: 9px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--dawn-50, rgba(235, 227, 214, 0.5));
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+  }
+
+  .mobile-tab-button.active {
+    color: var(--gold, #caa554);
+  }
+
+  .mobile-tab-button.active::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 20%;
+    right: 20%;
+    height: 2px;
+    background: var(--gold, #caa554);
+  }
+
+  .mobile-tabs-content {
+    padding: 16px 20px;
+    min-height: 80px;
+  }
+
+  .mobile-tab-panel {
+    display: none;
+  }
+
+  .mobile-tab-panel.active {
+    display: block;
+    animation: fadeIn 0.3s ease;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .mobile-tab-title {
+    font-family: var(--font-body, system-ui);
+    font-size: 14px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--dawn, #ECE3D6);
+    margin-bottom: 6px;
+  }
+
+  .mobile-tab-desc {
+    font-family: var(--font-body, system-ui);
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--dawn-70, rgba(235, 227, 214, 0.7));
+  }
+
 `;

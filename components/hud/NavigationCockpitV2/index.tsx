@@ -10,11 +10,13 @@ import { GlitchText } from "../GlitchText";
 import { ParticleWordmarkMorph } from "../ParticleWordmarkMorph";
 import type { ParticlePosition } from "../ThoughtformSigil";
 import { useLenis } from "@/lib/hooks/useLenis";
+import { useIsMobile } from "@/lib/hooks/useMediaQuery";
 import { ParticleConfigProvider, useParticleConfig } from "@/lib/contexts/ParticleConfigContext";
 import { AdminGate, ParticleAdminPanel } from "@/components/admin";
 
 // Extracted components
 import { ModuleCards } from "./ModuleCards";
+import { MobileModuleTabs } from "./MobileModuleTabs";
 import { ConnectorLines } from "./ConnectorLines";
 import { SigilSection } from "./SigilSection";
 import { HeroBackgroundSigil } from "./HeroBackgroundSigil";
@@ -43,6 +45,7 @@ function NavigationCockpitInner() {
   const [activeSection, setActiveSection] = useState("hero");
   const { scrollProgress, scrollTo } = useLenis();
   const { config: rawConfig } = useParticleConfig();
+  const isMobile = useIsMobile();
 
   // Refs for tracking element positions
   const wordmarkContainerRef = useRef<HTMLDivElement>(null);
@@ -210,7 +213,12 @@ function NavigationCockpitInner() {
           // At t=0: top: 90px (hero position at top)
           // At t=1: Wordmark above frame, aligned with rail marker 5 (~50vh)
           // Wordmark top at t=1: calc(50vh - 125px) = tighter spacing to frame
-          top: `calc(${lerp(90, 0, tHeroToDef)}px + ${lerp(0, 50, tHeroToDef)}vh - ${lerp(0, 125, tHeroToDef)}px)`,
+          // On mobile, let CSS control positioning
+          top: isMobile
+            ? undefined
+            : `calc(${lerp(90, 0, tHeroToDef)}px + ${lerp(0, 50, tHeroToDef)}vh - ${lerp(0, 125, tHeroToDef)}px)`,
+          // On mobile, apply centering transform
+          transform: isMobile ? "translateX(-50%)" : undefined,
           // CSS variable for brandmark fade
           ["--brandmark-opacity" as string]: 1 - tHeroToDef,
           // Fade out faster - wordmark disappears early while sigil is still animating toward navbar
@@ -244,7 +252,8 @@ function NavigationCockpitInner() {
           style={{
             position: "absolute",
             top: 0,
-            left: 0,
+            left: isMobile ? "50%" : 0,
+            transform: isMobile ? "translateX(-50%)" : undefined,
             opacity: tHeroToDef > 0.75 ? (tHeroToDef - 0.75) / 0.25 : 0,
             visibility: tHeroToDef > 0.7 ? "visible" : "hidden",
           }}
@@ -262,21 +271,23 @@ function NavigationCockpitInner() {
       />
 
       {/* Runway arrows pointing to gateway - fade out quickly during transition */}
-      {/* Only visible in hero section, completely hidden before definition section appears */}
-      <div
-        className="hero-runway-arrows"
-        style={{
-          opacity: tHeroToDef < 0.02 ? 1 : tHeroToDef < 0.08 ? 1 - (tHeroToDef - 0.02) / 0.06 : 0,
-          visibility: tHeroToDef < 0.1 ? "visible" : "hidden",
-          pointerEvents: "none",
-        }}
-      >
-        {Array.from({ length: 7 }, (_, i) => (
-          <div key={i} className={`runway-arrow runway-arrow-${i + 1}`}>
-            ›
-          </div>
-        ))}
-      </div>
+      {/* Only visible in hero section on desktop, hidden on mobile */}
+      {!isMobile && (
+        <div
+          className="hero-runway-arrows"
+          style={{
+            opacity: tHeroToDef < 0.02 ? 1 : tHeroToDef < 0.08 ? 1 - (tHeroToDef - 0.02) / 0.06 : 0,
+            visibility: tHeroToDef < 0.1 ? "visible" : "hidden",
+            pointerEvents: "none",
+          }}
+        >
+          {Array.from({ length: 7 }, (_, i) => (
+            <div key={i} className={`runway-arrow runway-arrow-${i + 1}`}>
+              ›
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* ═══════════════════════════════════════════════════════════════════
           BRIDGE FRAME - Unified text container that transitions from hero to definition
@@ -284,29 +295,40 @@ function NavigationCockpitInner() {
           ═══════════════════════════════════════════════════════════════════ */}
       <div
         className="bridge-frame"
-        style={{
-          // Frame slides UP from bottom (90px) to below wordmark
-          // At t=0: bottom: 90px (hero position at bottom)
-          // At t=1: Frame below wordmark, aligned with rail marker 5 (~50vh)
-          // Frame bottom edge at t=1: calc(50vh - 70px) = tighter spacing to wordmark
-          // This positions frame closer to the wordmark with tighter spacing
-          bottom: `calc(${90 * (1 - tHeroToDef)}px + ${tHeroToDef * 50}vh - ${tHeroToDef * 70}px)`,
-          // Fade out faster - in sync with wordmark
-          opacity:
-            scrollProgress < 0.15
-              ? 1
-              : scrollProgress < 0.2
-                ? 1 - (scrollProgress - 0.15) / 0.05
-                : 0,
-          visibility: scrollProgress < 0.2 ? "visible" : "hidden",
-          pointerEvents: tHeroToDef > 0.95 || tHeroToDef < 0.05 ? "auto" : "none",
-          // Close inward effect - scale down proportionately (borders scale too)
-          transform:
-            scrollProgress >= 0.15
-              ? `scale(${1 - Math.min(1, (scrollProgress - 0.15) / 0.05)})`
-              : "scale(1)",
-          transformOrigin: "center center",
-        }}
+        style={
+          isMobile
+            ? {
+                // MOBILE: Frame slides UP from bottom to below wordmark
+                // At t=0: bottom: 8vh (hero position)
+                // At t=1: top: 18vh (below wordmark in definition)
+                bottom: tHeroToDef < 0.5 ? `${8 + tHeroToDef * 30}vh` : undefined,
+                top: tHeroToDef >= 0.5 ? `${48 - (tHeroToDef - 0.5) * 60}vh` : undefined,
+                // Stay visible throughout transition on mobile
+                opacity: 1,
+                visibility: "visible",
+                pointerEvents: "auto",
+                // Center horizontally
+                transform: "translateX(-50%)",
+                transformOrigin: "center center",
+              }
+            : {
+                // DESKTOP: Original behavior
+                bottom: `calc(${90 * (1 - tHeroToDef)}px + ${tHeroToDef * 50}vh - ${tHeroToDef * 70}px)`,
+                opacity:
+                  scrollProgress < 0.15
+                    ? 1
+                    : scrollProgress < 0.2
+                      ? 1 - (scrollProgress - 0.15) / 0.05
+                      : 0,
+                visibility: scrollProgress < 0.2 ? "visible" : "hidden",
+                pointerEvents: tHeroToDef > 0.95 || tHeroToDef < 0.05 ? "auto" : "none",
+                transform:
+                  scrollProgress >= 0.15
+                    ? `scale(${1 - Math.min(1, (scrollProgress - 0.15) / 0.05)})`
+                    : "scale(1)",
+                transformOrigin: "center center",
+              }
+        }
       >
         <div className="hero-text-frame">
           {/* Glitch text transition - hero text morphs into definition text */}
@@ -350,26 +372,35 @@ the interface for human-AI collaboration`}
         transitionProgress={tHeroToDef}
       />
 
+      {/* Mobile Module Tabs - shown at bottom on mobile only */}
+      {isMobile && (
+        <MobileModuleTabs scrollProgress={scrollProgress} transitionProgress={tHeroToDef} />
+      )}
+
       {/* Scroll Container - Content Sections */}
       <main className="scroll-container">
         {/* Section 1: Hero - Simplified */}
         <section className="section section-hero" id="hero" data-section="hero">
           <div className="hero-layout">
-            {/* Connecting lines from module cards to sigil */}
-            <ConnectorLines
-              scrollProgress={scrollProgress}
-              transitionProgress={tHeroToDef}
-              cardRefs={moduleCardRefs}
-              sigilParticlesRef={sigilParticlesRef}
-            />
+            {/* Connecting lines from module cards to sigil - desktop only */}
+            {!isMobile && (
+              <ConnectorLines
+                scrollProgress={scrollProgress}
+                transitionProgress={tHeroToDef}
+                cardRefs={moduleCardRefs}
+                sigilParticlesRef={sigilParticlesRef}
+              />
+            )}
 
-            {/* Module cards on the right - pointing to sigil */}
-            <ModuleCards
-              ref={modulesRef}
-              scrollProgress={scrollProgress}
-              transitionProgress={tHeroToDef}
-              cardRefs={moduleCardRefs}
-            />
+            {/* Module cards on the right - desktop only */}
+            {!isMobile && (
+              <ModuleCards
+                ref={modulesRef}
+                scrollProgress={scrollProgress}
+                transitionProgress={tHeroToDef}
+                cardRefs={moduleCardRefs}
+              />
+            )}
           </div>
         </section>
 

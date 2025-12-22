@@ -2,6 +2,7 @@
 
 import { useMemo, forwardRef } from "react";
 import { NavigationBar, NavigationBarHandle } from "./NavigationBar";
+import { useIsMobile } from "@/lib/hooks/useMediaQuery";
 
 interface SectionData {
   sector: string;
@@ -62,6 +63,8 @@ export const HUDFrame = forwardRef<NavigationBarHandle, HUDFrameProps>(function 
   { activeSection, scrollProgress, onNavigate },
   ref
 ) {
+  const isMobile = useIsMobile();
+
   // Compute HUD state directly from props (no useState to avoid loops)
   const hudState = useMemo(() => {
     const p = scrollProgress;
@@ -122,7 +125,7 @@ export const HUDFrame = forwardRef<NavigationBarHandle, HUDFrameProps>(function 
       {/* Top Navigation Bar - Brandworld Specification */}
       <NavigationBar ref={ref} activeSection={activeSection} onNavigate={onNavigate} />
 
-      {/* Corner Brackets - Gold L-shapes (hidden in hero) */}
+      {/* Corner Brackets - Gold L-shapes */}
       {showHUD && (
         <>
           <div className="hud-corner hud-corner-tl" style={{ opacity: hudOpacity }} />
@@ -132,7 +135,7 @@ export const HUDFrame = forwardRef<NavigationBarHandle, HUDFrameProps>(function 
         </>
       )}
 
-      {/* Left Rail: Depth Scale (hidden in hero) */}
+      {/* Left Rail: Depth Scale */}
       {showHUD && (
         <aside className="hud-rail hud-rail-left" style={{ opacity: hudOpacity }}>
           <div className="rail-scale">
@@ -140,7 +143,7 @@ export const HUDFrame = forwardRef<NavigationBarHandle, HUDFrameProps>(function 
               {Array.from({ length: tickCount + 1 }).map((_, i) => (
                 <div key={i} style={{ position: "relative" }}>
                   <div className={`tick ${i % 5 === 0 ? "tick-major" : "tick-minor"}`} />
-                  {tickLabels[i] && (
+                  {tickLabels[i] && !isMobile && (
                     <span
                       className="tick-label"
                       style={{
@@ -160,7 +163,7 @@ export const HUDFrame = forwardRef<NavigationBarHandle, HUDFrameProps>(function 
         </aside>
       )}
 
-      {/* Right Rail: Section Markers (hidden in hero) */}
+      {/* Right Rail: Section Markers */}
       {showHUD && (
         <aside className="hud-rail hud-rail-right" style={{ opacity: hudOpacity }}>
           <div className="rail-scale">
@@ -184,7 +187,7 @@ export const HUDFrame = forwardRef<NavigationBarHandle, HUDFrameProps>(function 
                   onClick={() => onNavigate(marker.section)}
                 >
                   <span className="marker-dot" />
-                  <span className="marker-label">{marker.label}</span>
+                  {!isMobile && <span className="marker-label">{marker.label}</span>}
                 </div>
               );
             })}
@@ -192,23 +195,25 @@ export const HUDFrame = forwardRef<NavigationBarHandle, HUDFrameProps>(function 
         </aside>
       )}
 
-      {/* Bottom Bar: Coordinates + Progress (hidden in hero) */}
+      {/* Bottom Bar: Full coords on desktop, instruction only on mobile */}
       {showHUD && (
         <footer className="hud-bottom" style={{ opacity: hudOpacity }}>
-          <div className="hud-coords">
-            <span className="coord">
-              δ: <span>{hudState.delta}</span>
-            </span>
-            <span className="coord">
-              θ: <span>{hudState.theta}</span>
-            </span>
-            <span className="coord">
-              ρ: <span>{hudState.rho}</span>
-            </span>
-            <span className="coord">
-              ζ: <span>{hudState.zeta}</span>
-            </span>
-          </div>
+          {!isMobile && (
+            <div className="hud-coords">
+              <span className="coord">
+                δ: <span>{hudState.delta}</span>
+              </span>
+              <span className="coord">
+                θ: <span>{hudState.theta}</span>
+              </span>
+              <span className="coord">
+                ρ: <span>{hudState.rho}</span>
+              </span>
+              <span className="coord">
+                ζ: <span>{hudState.zeta}</span>
+              </span>
+            </div>
+          )}
           <div className="hud-instruction">
             <span>{hudState.instruction}</span>
           </div>
