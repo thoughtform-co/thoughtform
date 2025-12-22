@@ -240,6 +240,14 @@ function NavigationCockpitInner() {
     onComplete: () => setManifestoComplete(true),
   });
 
+  // Reset manifesto progress when scrolling back up (leaving terminal view)
+  useEffect(() => {
+    if (tDefToManifesto < 0.9 && (manifestoRevealProgress > 0 || manifestoComplete)) {
+      setManifestoRevealProgress(0);
+      setManifestoComplete(false);
+    }
+  }, [tDefToManifesto, manifestoRevealProgress, manifestoComplete]);
+
   // Calculate frame position values for manifesto transition
   // Use BOTTOM positioning throughout for smooth, continuous transition
   //
