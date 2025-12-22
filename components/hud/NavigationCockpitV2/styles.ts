@@ -214,17 +214,19 @@ export const cockpitStyles = `
      ═══════════════════════════════════════════════════════════════ */
   .section-interstitial {
     min-height: 100vh;
+    min-height: 100dvh;
     display: flex !important;
     justify-content: center !important;
     align-items: center !important;
-    padding: 100px calc(var(--hud-padding) + var(--rail-width) + 60px) !important;
+    padding: 0 !important;
+    text-align: center;
   }
 
   .interstitial-text {
+    width: 100%;
     display: flex;
     justify-content: center;
     align-items: center;
-    width: 100%;
   }
 
   .typewriter-text {
