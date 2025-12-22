@@ -59,33 +59,42 @@ export function ManifestoSources({ isVisible }: ManifestoSourcesProps) {
 
   return (
     <div className="sources-rail">
-      {/* Label */}
-      <div className="sources-label">SRC</div>
+      {/* Vertical line */}
+      <div className="sources-line" />
 
-      {/* Source markers */}
-      <div className="sources-markers">
-        {SOURCES.map((source, index) => (
-          <a
-            key={source.id}
-            href={source.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={`source-marker ${hoveredId === source.id ? "active" : ""}`}
-            onMouseEnter={() => setHoveredId(source.id)}
-            onMouseLeave={() => setHoveredId(null)}
-            style={{ animationDelay: `${index * 0.08}s` }}
-          >
-            <span className="marker-id">{source.id}</span>
+      {/* Content container */}
+      <div className="sources-content">
+        {/* Label */}
+        <div className="sources-label">
+          <span className="label-dot">°</span>
+          <span className="label-text">SOURCES</span>
+        </div>
 
-            {/* Tooltip on hover */}
-            {hoveredId === source.id && (
-              <div className="marker-tooltip">
-                <span className="tooltip-title">{source.title}</span>
-                <span className="tooltip-author">{source.author}</span>
-              </div>
-            )}
-          </a>
-        ))}
+        {/* Source markers */}
+        <div className="sources-markers">
+          {SOURCES.map((source, index) => (
+            <a
+              key={source.id}
+              href={source.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`source-marker ${hoveredId === source.id ? "active" : ""}`}
+              onMouseEnter={() => setHoveredId(source.id)}
+              onMouseLeave={() => setHoveredId(null)}
+              style={{ animationDelay: `${index * 0.08}s` }}
+            >
+              <span className="marker-id">{source.id}</span>
+
+              {/* Tooltip on hover */}
+              {hoveredId === source.id && (
+                <div className="marker-tooltip">
+                  <span className="tooltip-title">{source.title}</span>
+                  <span className="tooltip-author">{source.author}</span>
+                </div>
+              )}
+            </a>
+          ))}
+        </div>
       </div>
 
       <style jsx>{`
@@ -96,9 +105,9 @@ export function ManifestoSources({ isVisible }: ManifestoSourcesProps) {
           transform: translateY(-50%);
           z-index: 100;
           display: flex;
-          flex-direction: column;
-          align-items: flex-start;
-          gap: 4px;
+          flex-direction: row;
+          align-items: stretch;
+          gap: 0;
           animation: fadeIn 0.4s ease-out forwards;
         }
 
@@ -111,20 +120,52 @@ export function ManifestoSources({ isVisible }: ManifestoSourcesProps) {
           }
         }
 
+        /* Solid vertical line on the left */
+        .sources-line {
+          width: 1px;
+          background: linear-gradient(
+            to bottom,
+            transparent 0%,
+            rgba(202, 165, 84, 0.4) 10%,
+            rgba(202, 165, 84, 0.4) 90%,
+            transparent 100%
+          );
+          margin-right: 12px;
+        }
+
+        /* Content to the right of the line */
+        .sources-content {
+          display: flex;
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 8px;
+        }
+
         .sources-label {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+        }
+
+        .label-dot {
+          font-family: "Iosevka Web", "Iosevka", monospace;
+          font-size: 12px;
+          color: var(--gold, #caa554);
+          opacity: 0.6;
+        }
+
+        .label-text {
           font-family: "Iosevka Web", "Iosevka", monospace;
           font-size: 9px;
-          letter-spacing: 0.15em;
+          letter-spacing: 0.12em;
           color: var(--gold, #caa554);
-          opacity: 0.4;
-          margin-bottom: 8px;
-          padding-left: 2px;
+          opacity: 0.5;
         }
 
         .sources-markers {
           display: flex;
           flex-direction: column;
-          gap: 6px;
+          gap: 4px;
         }
 
         .source-marker {
@@ -132,7 +173,7 @@ export function ManifestoSources({ isVisible }: ManifestoSourcesProps) {
           display: flex;
           align-items: center;
           text-decoration: none;
-          padding: 4px 6px;
+          padding: 3px 6px;
           border-radius: 2px;
           transition: all 0.15s ease;
           animation: slideIn 0.3s ease-out forwards;
