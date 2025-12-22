@@ -389,23 +389,19 @@ function NavigationCockpitInner() {
                 // Keep original positioning until manifesto transition starts
 
                 // HERO/DEFINITION: Use original bottom-based positioning
-                // MANIFESTO: Transition to centered top-based positioning
-                bottom:
-                  tDefToManifesto === 0
-                    ? `calc(${90 * (1 - tHeroToDef)}px + ${tHeroToDef * 50}vh - ${tHeroToDef * 70}px)`
-                    : undefined,
-                top:
-                  tDefToManifesto > 0
-                    ? `calc(${30 + tDefToManifesto * 20}vh)` // Smoothly move from ~30vh to 50vh
-                    : undefined,
+                // MANIFESTO: Frame moves DOWN to center while growing
+                // Definition end: bottom = 50vh - 70px (frame is above center)
+                // Manifesto end: bottom = ~25vh (so center of 500px frame is at 50vh)
+                // Calculate: for frame centered at 50vh with height 500px, bottom = 50vh - 250px ≈ 25vh
+                bottom: `calc(${90 * (1 - tHeroToDef)}px + ${tHeroToDef * 50 - tDefToManifesto * 25}vh - ${tHeroToDef * 70 * (1 - tDefToManifesto)}px)`,
 
-                // Left position: only changes during manifesto transition
+                // Left position: smoothly move from rail+120px to center
                 left:
                   tDefToManifesto > 0
                     ? `calc(${(1 - tDefToManifesto) * 184}px + ${tDefToManifesto * 50}%)`
                     : undefined, // Use default CSS positioning
 
-                // Width only grows during manifesto transition
+                // Width grows during manifesto transition
                 width: tDefToManifesto > 0 ? `${500 + tDefToManifesto * 420}px` : undefined,
                 maxWidth: tDefToManifesto > 0 ? `${500 + tDefToManifesto * 420}px` : undefined,
 
@@ -417,12 +413,10 @@ function NavigationCockpitInner() {
                 pointerEvents:
                   tHeroToDef > 0.95 || tHeroToDef < 0.05 || tDefToManifesto > 0 ? "auto" : "none",
 
-                // Transform for centering only when in manifesto mode
+                // Transform for horizontal centering only
                 transform:
-                  tDefToManifesto > 0
-                    ? `translateX(${-50 * tDefToManifesto}%) translateY(${-50 * tDefToManifesto}%)`
-                    : undefined,
-                transformOrigin: "top left",
+                  tDefToManifesto > 0 ? `translateX(${-50 * tDefToManifesto}%)` : undefined,
+                transformOrigin: "left",
 
                 // Terminal styling via CSS variables - only during manifesto
                 ["--terminal-opacity" as string]: tDefToManifesto,
