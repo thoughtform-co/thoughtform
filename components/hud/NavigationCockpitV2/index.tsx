@@ -539,9 +539,9 @@ the interface for human-AI collaboration`}
               {/* Scanlines overlay */}
               <div className="terminal-scanlines"></div>
 
-              {/* Phase 1: Incoming transmission popup - stays visible until clicked */}
+              {/* Question button - stays visible until clicked, then reveals manifesto */}
               <div
-                className="transmission-popup"
+                className="question-button"
                 style={{
                   opacity: scrollProgress > 0.28 && !transmissionAcknowledged ? 1 : 0,
                   visibility:
@@ -550,23 +550,10 @@ the interface for human-AI collaboration`}
                 }}
                 onClick={() => setTransmissionAcknowledged(true)}
               >
-                <div className="popup-border">
-                  <span className="popup-icon">◈</span>
-                  <span className="popup-text">INCOMING TRANSMISSION</span>
+                <div className="question-button-inner">
+                  <div className="question-scanlines"></div>
+                  <span className="question-text">But why is AI so different?</span>
                 </div>
-              </div>
-
-              {/* Phase 2: The question - appears after popup is clicked */}
-              <div
-                className="manifesto-question"
-                style={{
-                  opacity: transmissionAcknowledged ? 1 : 0,
-                  transform: `translateY(${transmissionAcknowledged ? 0 : 10}px)`,
-                  transition: "opacity 0.5s ease-out, transform 0.5s ease-out",
-                  pointerEvents: transmissionAcknowledged ? "auto" : "none",
-                }}
-              >
-                <h2>But why is AI so different?</h2>
               </div>
 
               {/* Phase 3: Typed manifesto content - reveals progressively after click */}

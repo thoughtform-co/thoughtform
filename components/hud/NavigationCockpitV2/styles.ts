@@ -355,70 +355,70 @@ export const cockpitStyles = `
     opacity: 0.6;
   }
 
-  /* Phase 1: Transmission popup - Alien style */
-  .transmission-popup {
+  /* Question button - MU/TH/UR inspired */
+  .question-button {
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
     z-index: 100;
-    transition: opacity 0.1s ease-out;
+    transition: opacity 0.2s ease-out;
     pointer-events: auto;
   }
 
-  .popup-border {
-    border: 2px solid var(--gold, #caa554);
-    padding: 20px 40px;
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    background: rgba(10, 9, 8, 0.95);
-    transition: all 0.2s ease-out;
+  .question-button-inner {
+    position: relative;
+    padding: 32px 64px;
+    background: linear-gradient(
+      180deg,
+      rgba(180, 200, 160, 0.15) 0%,
+      rgba(160, 180, 140, 0.25) 50%,
+      rgba(140, 160, 120, 0.15) 100%
+    );
+    border: 2px solid rgba(180, 200, 160, 0.4);
+    border-radius: 4px;
+    overflow: hidden;
     cursor: pointer;
+    transition: all 0.2s ease-out;
   }
 
-  .transmission-popup:hover .popup-border {
-    border-color: var(--gold, #caa554);
-    background: rgba(10, 9, 8, 0.98);
-    box-shadow: 0 0 20px rgba(202, 165, 84, 0.3);
+  .question-button:hover .question-button-inner {
+    background: linear-gradient(
+      180deg,
+      rgba(180, 200, 160, 0.2) 0%,
+      rgba(160, 180, 140, 0.35) 50%,
+      rgba(140, 160, 120, 0.2) 100%
+    );
+    border-color: rgba(180, 200, 160, 0.6);
+    box-shadow: 
+      0 0 30px rgba(180, 200, 160, 0.2),
+      inset 0 0 20px rgba(180, 200, 160, 0.1);
     transform: scale(1.02);
   }
 
-  .popup-icon {
-    color: var(--gold, #caa554);
-    font-size: 24px;
-    animation: icon-pulse 1.5s ease-in-out infinite;
+  .question-scanlines {
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0, 0, 0, 0.15) 2px,
+      rgba(0, 0, 0, 0.15) 4px
+    );
+    pointer-events: none;
+    z-index: 1;
   }
 
-  @keyframes icon-pulse {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.7; transform: scale(1.1); }
-  }
-
-  .popup-text {
-    font-family: var(--font-mono, 'IBM Plex Mono', monospace);
-    font-size: 14px;
-    color: var(--gold, #caa554);
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-  }
-
-  /* Phase 2: The question */
-  .manifesto-question {
-    width: 100%;
-    margin-bottom: 40px;
-    transition: opacity 0.3s ease-out, transform 0.3s ease-out;
-    z-index: 10;
-  }
-
-  .manifesto-question h2 {
+  .question-text {
+    position: relative;
+    z-index: 2;
     font-family: var(--font-display, "PP Mondwest", serif);
-    font-size: clamp(28px, 4vw, 48px);
+    font-size: clamp(24px, 3.5vw, 40px);
     font-weight: 400;
-    color: var(--gold, #caa554);
+    color: rgba(40, 50, 30, 0.9);
     letter-spacing: 0.02em;
-    line-height: 1.2;
-    margin: 0;
+    text-shadow: 0 0 10px rgba(180, 200, 160, 0.5);
   }
 
   /* Phase 3: Typed manifesto content */
@@ -1068,18 +1068,12 @@ export const cockpitStyles = `
       min-height: auto;
     }
 
-    .popup-border {
-      padding: 16px 24px;
-      gap: 12px;
+    .question-button-inner {
+      padding: 24px 32px;
     }
 
-    .popup-text {
-      font-size: 11px;
-      letter-spacing: 0.15em;
-    }
-
-    .manifesto-question h2 {
-      font-size: clamp(22px, 6vw, 32px);
+    .question-text {
+      font-size: clamp(18px, 5vw, 28px);
     }
 
     .typed-title {
