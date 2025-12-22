@@ -356,14 +356,15 @@ function NavigationCockpitInner() {
           transform: isMobile ? "translateX(-50%)" : undefined,
           // CSS variable for brandmark fade
           ["--brandmark-opacity" as string]: 1 - tHeroToDef,
-          // Fade out - wordmark disappears while sigil is still animating toward navbar
+          // Fade out - sync with sigil exit animation (0.15 to 0.40)
+          // Wordmark starts fading when sigil starts moving toward navbar
           opacity:
-            scrollProgress < 0.25
+            scrollProgress < 0.15
               ? 1
-              : scrollProgress < 0.3
-                ? 1 - (scrollProgress - 0.25) / 0.05
+              : scrollProgress < 0.4
+                ? 1 - (scrollProgress - 0.15) / 0.25
                 : 0,
-          visibility: scrollProgress < 0.3 ? "visible" : "hidden",
+          visibility: scrollProgress < 0.4 ? "visible" : "hidden",
         }}
       >
         {/* Hero Wordmark - stays visible until particles fully take over */}

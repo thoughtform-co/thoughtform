@@ -46,16 +46,17 @@ export const ModuleCards = forwardRef<HTMLDivElement, ModuleCardsProps>(function
     // New timing: appear when tHeroToDef > 0.7 (as sigil settles)
     // Fade in from t=0.7 to t=0.85, then close inward (no fade) as we scroll to next section
     const t = transitionProgress;
-    // Close starts at scrollProgress 0.15, completes by 0.30 (slower to match sigil)
+    // Close synced with sigil exit animation: starts at 0.15, completes by 0.40
     const closeStart = 0.15;
-    const closeEnd = 0.3;
+    const closeEnd = 0.4;
     if (scrollProgress < closeStart) {
       // Still in definition section - normal visibility (fade in only)
       opacity = t < 0.7 ? 0 : t < 0.85 ? (t - 0.7) / 0.15 : 1;
       isVisible = t >= 0.7;
     } else if (scrollProgress >= closeStart && scrollProgress < closeEnd) {
-      // Closing inward - NO fade, keep opacity at 1, only clipPath will close
-      opacity = t < 0.7 ? 0 : t < 0.85 ? (t - 0.7) / 0.15 : 1; // Keep full opacity
+      // Closing inward - fade opacity to sync with sigil movement
+      const closeProgress = (scrollProgress - closeStart) / (closeEnd - closeStart);
+      opacity = t < 0.7 ? 0 : t < 0.85 ? (t - 0.7) / 0.15 : 1 - closeProgress;
       isVisible = t >= 0.7;
     } else {
       // Fully closed - hide completely
@@ -75,9 +76,9 @@ export const ModuleCards = forwardRef<HTMLDivElement, ModuleCardsProps>(function
     isInteractive = scrollProgress <= 0.25 && scrollProgress >= 0.08;
   }
 
-  // Calculate close progress for inward collapse effect (slower to match sigil)
+  // Calculate close progress for inward collapse effect (synced with sigil exit: 0.15 to 0.40)
   const closeStartCalc = 0.15;
-  const closeEndCalc = 0.3;
+  const closeEndCalc = 0.4;
   const closeProgress =
     scrollProgress >= closeStartCalc
       ? Math.min(1, (scrollProgress - closeStartCalc) / (closeEndCalc - closeStartCalc))
