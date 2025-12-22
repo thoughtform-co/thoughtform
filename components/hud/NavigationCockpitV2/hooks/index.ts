@@ -9,6 +9,7 @@ export { useHeroToDefTransition } from "./useHeroToDefTransition";
 export { useDefToManifestoTransition } from "./useDefToManifestoTransition";
 export { useManifestoProgress } from "./useManifestoProgress";
 export { useActiveSection } from "./useActiveSection";
+export { useScrollCapture } from "./useScrollCapture";
 
 // Shared utilities
 export { easeInOutCubic, easeOutCubic, lerp } from "./easing";

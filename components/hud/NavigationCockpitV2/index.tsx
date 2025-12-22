@@ -21,6 +21,8 @@ import { MobileModuleTabs } from "./MobileModuleTabs";
 import { ConnectorLines } from "./ConnectorLines";
 import { SigilSection } from "./SigilSection";
 import { HeroBackgroundSigil } from "./HeroBackgroundSigil";
+import { ManifestoTerminal } from "./ManifestoTerminal";
+import { useScrollCapture } from "./hooks/useScrollCapture";
 // Styles consolidated into app/globals.css
 
 // ═══════════════════════════════════════════════════════════════════
@@ -90,6 +92,10 @@ function NavigationCockpitInner() {
   const [manifestoInView, setManifestoInView] = useState(false);
   const [manifestoFullyVisible, setManifestoFullyVisible] = useState(false);
   const [transmissionAcknowledged, setTransmissionAcknowledged] = useState(false);
+
+  // State for manifesto reveal progress (scroll-capture based)
+  const [manifestoRevealProgress, setManifestoRevealProgress] = useState(0);
+  const [manifestoComplete, setManifestoComplete] = useState(false);
 
   // Calculate scroll progress within manifesto section
   useEffect(() => {
@@ -222,6 +228,17 @@ function NavigationCockpitInner() {
     )
   );
   const tDefToManifesto = easeInOutCubic(rawTDefToManifesto);
+
+  // Scroll capture: when terminal is visible and question is shown, capture scroll to reveal manifesto
+  const shouldCaptureScroll = tDefToManifesto > 0.95 && !manifestoComplete;
+
+  useScrollCapture({
+    isActive: shouldCaptureScroll,
+    progress: manifestoRevealProgress,
+    onProgressChange: setManifestoRevealProgress,
+    scrollSpeed: 0.0015, // Slower for comfortable reading
+    onComplete: () => setManifestoComplete(true),
+  });
 
   // Calculate frame position values for manifesto transition
   // Use BOTTOM positioning throughout for smooth, continuous transition
@@ -497,12 +514,13 @@ function NavigationCockpitInner() {
         }
       >
         {/* Text content - hero/definition/question - ONE continuous morph */}
+        {/* Fades out as manifesto is revealed by scrolling */}
         <div
           className="hero-text-frame"
           style={{
-            // Stay visible throughout transition - no fading until click
-            opacity: transmissionAcknowledged ? 0 : 1,
-            visibility: transmissionAcknowledged ? "hidden" : "visible",
+            // Fade out as manifesto reveals (scroll-based, not click-based)
+            opacity: manifestoRevealProgress > 0 ? Math.max(0, 1 - manifestoRevealProgress * 3) : 1,
+            visibility: manifestoRevealProgress > 0.4 ? "hidden" : "visible",
             // Always relative - let parent bridge-frame handle positioning
             position: "relative",
             width: "100%",
@@ -511,19 +529,14 @@ function NavigationCockpitInner() {
             justifyContent: "flex-start",
             // Padding interpolates: hero/definition = 16px top, terminal = 72px top (below header with breathing room)
             padding: `${16 + 56 * tDefToManifesto}px 24px 16px 24px`,
-            pointerEvents: transmissionAcknowledged ? "none" : "auto",
-            cursor: tDefToManifesto > 0.9 ? "pointer" : "default",
+            pointerEvents: manifestoRevealProgress > 0.3 ? "none" : "auto",
+            cursor: "default",
             // Higher z-index so text stays on top of terminal chrome
             zIndex: 2,
             // Gradually fade out frame styling as terminal takes over
             // The bridge-frame parent already has interpolated terminal background/border
             ["--frame-opacity" as string]: 1 - tDefToManifesto,
           }}
-          onClick={
-            tDefToManifesto > 0.9 && !transmissionAcknowledged
-              ? () => setTransmissionAcknowledged(true)
-              : undefined
-          }
         >
           <div
             className="hero-tagline hero-tagline-v2 hero-tagline-main"
@@ -600,10 +613,10 @@ the interface for human-AI collaboration`}
             left: 0,
             width: "100%",
             height: "100%",
-            // Lower z-index so text stays on top
-            zIndex: 1,
+            // Lower z-index until manifesto starts revealing, then bring to front
+            zIndex: manifestoRevealProgress > 0 ? 3 : 1,
             // Don't constrain height - let content flow naturally within overflow:hidden parent
-            pointerEvents: transmissionAcknowledged ? "auto" : "none",
+            pointerEvents: manifestoRevealProgress > 0 ? "auto" : "none",
           }}
         >
           {/* Gold corner accents */}
@@ -620,103 +633,12 @@ the interface for human-AI collaboration`}
             {/* Scanlines overlay */}
             <div className="terminal-scanlines"></div>
 
-            {/* Manifesto content after click - fades out as you scroll */}
-            {transmissionAcknowledged && (
-              <div
-                className="terminal-question hero-tagline hero-tagline-v2"
-                style={{
-                  opacity: Math.max(0, 1 - manifestoScrollProgress * 3),
-                }}
-              >
-                But why is AI so different?
-              </div>
-            )}
-
-            {/* Typed manifesto content - reveals progressively after click */}
-            <div
-              className="manifesto-typed-content"
-              style={{
-                opacity: transmissionAcknowledged ? 1 : 0,
-                transition: "opacity 0.3s ease-out",
-                pointerEvents: transmissionAcknowledged ? "auto" : "none",
-              }}
-            >
-              <div
-                className="typed-title"
-                style={{
-                  opacity: transmissionAcknowledged ? Math.min(1, manifestoScrollProgress * 2) : 0,
-                  transition: "opacity 0.3s ease-out",
-                }}
-              >
-                AI ISN&apos;T SOFTWARE.
-              </div>
-
-              <div className="typed-body">
-                <p
-                  className="typed-line line-1"
-                  style={{
-                    opacity: transmissionAcknowledged
-                      ? Math.min(1, Math.max(0, (manifestoScrollProgress - 0.1) * 3))
-                      : 0,
-                    transition: "opacity 0.3s ease-out",
-                  }}
-                >
-                  Most companies struggle with AI adoption because they treat it like normal
-                  software.
-                </p>
-
-                <p
-                  className="typed-line line-2"
-                  style={{
-                    opacity: transmissionAcknowledged
-                      ? Math.min(1, Math.max(0, (manifestoScrollProgress - 0.25) * 2.5))
-                      : 0,
-                    transition: "opacity 0.3s ease-out",
-                  }}
-                >
-                  But AI isn&apos;t a tool to command. It&apos;s a strange, new intelligence we have
-                  to learn how to <em>navigate</em>. It leaps across dimensions we can&apos;t
-                  fathom. It hallucinates. It surprises.
-                </p>
-
-                <p
-                  className="typed-line line-3"
-                  style={{
-                    opacity: transmissionAcknowledged
-                      ? Math.min(1, Math.max(0, (manifestoScrollProgress - 0.4) * 2.5))
-                      : 0,
-                    transition: "opacity 0.3s ease-out",
-                  }}
-                >
-                  In technical work, that strangeness must be constrained. But in creative and
-                  strategic work? It&apos;s the source of truly novel ideas.
-                </p>
-
-                <p
-                  className="typed-line line-4"
-                  style={{
-                    opacity: transmissionAcknowledged
-                      ? Math.min(1, Math.max(0, (manifestoScrollProgress - 0.55) * 2.5))
-                      : 0,
-                    transition: "opacity 0.3s ease-out",
-                  }}
-                >
-                  Thoughtform teaches teams to think <strong>with</strong> that
-                  intelligence—navigating its strangeness for creative breakthroughs.
-                </p>
-              </div>
-
-              <div
-                className="terminal-cursor"
-                style={{
-                  opacity: transmissionAcknowledged && manifestoScrollProgress > 0.7 ? 1 : 0,
-                  transition: "opacity 0.3s ease-out",
-                }}
-              >
-                <span className="prompt">$</span>
-                <span className="cursor">_</span>
-              </div>
-            </div>
+            {/* ManifestoTerminal - revealed progressively by scroll */}
+            <ManifestoTerminal
+              revealProgress={manifestoRevealProgress}
+              isActive={tDefToManifesto > 0.95}
+              onComplete={() => setManifestoComplete(true)}
+            />
           </div>
         </div>
       </div>
@@ -797,7 +719,7 @@ the interface for human-AI collaboration`}
             <div
               className="geo-shape geo-shape-1"
               style={{
-                opacity: transmissionAcknowledged
+                opacity: manifestoComplete
                   ? Math.min(1, Math.max(0, (manifestoScrollProgress - 0.1) * 2))
                   : 0,
               }}
@@ -805,7 +727,7 @@ the interface for human-AI collaboration`}
             <div
               className="geo-shape geo-shape-2"
               style={{
-                opacity: transmissionAcknowledged
+                opacity: manifestoComplete
                   ? Math.min(1, Math.max(0, (manifestoScrollProgress - 0.2) * 2))
                   : 0,
               }}
@@ -813,7 +735,7 @@ the interface for human-AI collaboration`}
             <div
               className="geo-shape geo-shape-3"
               style={{
-                opacity: transmissionAcknowledged
+                opacity: manifestoComplete
                   ? Math.min(1, Math.max(0, (manifestoScrollProgress - 0.3) * 2))
                   : 0,
               }}
@@ -821,7 +743,7 @@ the interface for human-AI collaboration`}
             <div
               className="geo-grid"
               style={{
-                opacity: transmissionAcknowledged
+                opacity: manifestoComplete
                   ? Math.min(1, Math.max(0, (manifestoScrollProgress - 0.15) * 2))
                   : 0,
               }}
