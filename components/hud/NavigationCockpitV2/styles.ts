@@ -335,6 +335,8 @@ export const cockpitStyles = `
     text-align: left;
     display: flex;
     flex-direction: column;
+    justify-content: center;
+    align-items: center;
   }
 
   /* Subtle scanlines effect */
@@ -359,7 +361,7 @@ export const cockpitStyles = `
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    z-index: 20;
+    z-index: 100;
     transition: opacity 0.1s ease-out;
     pointer-events: auto;
   }
@@ -403,8 +405,10 @@ export const cockpitStyles = `
 
   /* Phase 2: The question */
   .manifesto-question {
+    width: 100%;
     margin-bottom: 40px;
     transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+    z-index: 10;
   }
 
   .manifesto-question h2 {
@@ -419,7 +423,9 @@ export const cockpitStyles = `
 
   /* Phase 3: Typed manifesto content */
   .manifesto-typed-content {
+    width: 100%;
     transition: opacity 0.3s ease-out;
+    z-index: 10;
   }
 
   .typed-title {

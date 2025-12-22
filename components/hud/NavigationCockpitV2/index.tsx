@@ -563,6 +563,7 @@ the interface for human-AI collaboration`}
                   opacity: transmissionAcknowledged ? 1 : 0,
                   transform: `translateY(${transmissionAcknowledged ? 0 : 10}px)`,
                   transition: "opacity 0.5s ease-out, transform 0.5s ease-out",
+                  pointerEvents: transmissionAcknowledged ? "auto" : "none",
                 }}
               >
                 <h2>But why is AI so different?</h2>
@@ -574,6 +575,7 @@ the interface for human-AI collaboration`}
                 style={{
                   opacity: transmissionAcknowledged ? 1 : 0,
                   transition: "opacity 0.3s ease-out",
+                  pointerEvents: transmissionAcknowledged ? "auto" : "none",
                 }}
               >
                 <div
