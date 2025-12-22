@@ -100,7 +100,8 @@ export function ManifestoSources({ isVisible }: ManifestoSourcesProps) {
       <style jsx>{`
         .sources-rail {
           position: fixed;
-          left: 24px;
+          /* Position inside the grid - right of the left HUD rail */
+          left: 72px;
           top: 50%;
           transform: translateY(-50%);
           z-index: 100;
