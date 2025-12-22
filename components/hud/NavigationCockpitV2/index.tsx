@@ -220,6 +220,44 @@ function NavigationCockpitInner() {
   );
   const tDefToManifesto = easeInOutCubic(rawTDefToManifesto);
 
+  // Calculate frame position values for manifesto transition
+  // Definition end position (when tHeroToDef = 1, tDefToManifesto = 0)
+  // Definition: bottom = 50vh - 70px (small frame, ~70px tall)
+  const defBottomVh = 50;
+  const defBottomPx = -70;
+
+  // Manifesto center position (frame center at 50vh)
+  // With final height ~400px, bottom = 50vh - 200px (frame center at 50vh)
+  const manifestoBottomVh = 50;
+  const manifestoBottomPx = -200;
+
+  // Hero→definition bottom calculation (when tDefToManifesto = 0)
+  const heroBottomPx = 90 * (1 - tHeroToDef);
+  const heroBottomVh = tHeroToDef * defBottomVh;
+  const heroBottomOffsetPx = tHeroToDef * defBottomPx;
+
+  // Interpolate bottom position for manifesto transition
+  // Move from definition position to manifesto position (straight DOWN)
+  const manifestoBottomPxCurrent =
+    defBottomPx + (manifestoBottomPx - defBottomPx) * tDefToManifesto;
+
+  // Final bottom position: hero/definition base + manifesto offset
+  const finalBottom =
+    tDefToManifesto > 0
+      ? `calc(${heroBottomPx + manifestoBottomPxCurrent}px + ${heroBottomVh}vh)`
+      : `calc(${heroBottomPx}px + ${heroBottomVh}vh + ${heroBottomOffsetPx}px)`;
+
+  // Frame growth values (more subtle with smoother easing)
+  const baseWidth = 500;
+  const widthGrowth = 200; // 500px → 700px (40% increase)
+  const baseHeight = 100;
+  const heightGrowth = 300; // 100px → 400px (more reasonable)
+
+  // Apply smoother easing to growth for more subtle animation
+  // Use easeOutCubic for growth (starts fast, ends slow)
+  const easeOutCubic = (t: number) => 1 - Math.pow(1 - t, 3);
+  const growthProgress = easeOutCubic(tDefToManifesto);
+
   // Handle navigation
   const handleNavigate = useCallback(
     (sectionId: string) => {
@@ -386,37 +424,36 @@ function NavigationCockpitInner() {
               }
             : {
                 // DESKTOP: Frame moves from hero → definition → manifesto
-                // Keep original positioning until manifesto transition starts
-
-                // HERO/DEFINITION: Use original bottom-based positioning
-                // MANIFESTO: Frame moves DOWN to center while growing
-                // Definition end: bottom = 50vh - 70px (frame is above center)
-                // Manifesto end: bottom = ~25vh (so center of 500px frame is at 50vh)
-                // Calculate: for frame centered at 50vh with height 500px, bottom = 50vh - 250px ≈ 25vh
-                bottom: `calc(${90 * (1 - tHeroToDef)}px + ${tHeroToDef * 50 - tDefToManifesto * 25}vh - ${tHeroToDef * 70 * (1 - tDefToManifesto)}px)`,
+                // Position: moves DOWN to center (not up)
+                bottom: finalBottom,
 
                 // Left position: smoothly move from rail+120px to center
                 left:
                   tDefToManifesto > 0
                     ? `calc(${(1 - tDefToManifesto) * 184}px + ${tDefToManifesto * 50}%)`
-                    : undefined, // Use default CSS positioning
+                    : undefined,
 
-                // Width grows during manifesto transition
-                width: tDefToManifesto > 0 ? `${500 + tDefToManifesto * 420}px` : undefined,
-                maxWidth: tDefToManifesto > 0 ? `${500 + tDefToManifesto * 420}px` : undefined,
+                // Width grows subtly: 500px → 700px (40% increase) with smooth easing
+                width:
+                  tDefToManifesto > 0 ? `${baseWidth + growthProgress * widthGrowth}px` : undefined,
+                maxWidth:
+                  tDefToManifesto > 0 ? `${baseWidth + growthProgress * widthGrowth}px` : undefined,
 
-                // Height grows for terminal content
-                minHeight: tDefToManifesto > 0 ? `${100 + tDefToManifesto * 400}px` : undefined,
+                // Height grows subtly: 100px → 400px with smooth easing
+                minHeight:
+                  tDefToManifesto > 0
+                    ? `${baseHeight + growthProgress * heightGrowth}px`
+                    : undefined,
 
                 opacity: 1,
                 visibility: "visible",
                 pointerEvents:
                   tHeroToDef > 0.95 || tHeroToDef < 0.05 || tDefToManifesto > 0 ? "auto" : "none",
 
-                // Transform for horizontal centering only
+                // Transform for horizontal centering - use center origin for smoother transform
                 transform:
                   tDefToManifesto > 0 ? `translateX(${-50 * tDefToManifesto}%)` : undefined,
-                transformOrigin: "left",
+                transformOrigin: tDefToManifesto > 0 ? "center" : "left",
 
                 // Terminal styling - NO FADE, just instant switch
                 ["--terminal-opacity" as string]: tDefToManifesto > 0 ? 1 : 0,
