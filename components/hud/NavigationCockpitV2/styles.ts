@@ -210,80 +210,212 @@ export const cockpitStyles = `
   }
 
   /* ═══════════════════════════════════════════════════════════════
-     MANIFESTO - Text-based layout like Services section
+     MANIFESTO - Terminal-styled with ASCII art title
+     Retro CRT aesthetic with amber/gold text
      ═══════════════════════════════════════════════════════════════ */
   .section-manifesto {
-    /* Use same padding as default .section (which Services uses) */
-    padding: 100px calc(var(--hud-padding) + var(--rail-width) + 120px) !important;
-    padding-top: 180px !important; /* Extra top padding so it starts later */
-    padding-right: 18% !important;
-    justify-content: flex-start !important;
-    align-items: flex-start !important;
+    padding: 100px calc(var(--hud-padding) + var(--rail-width) + 60px) !important;
+    padding-top: 140px !important;
+    justify-content: center !important;
+    align-items: center !important;
+    display: flex !important;
+    min-height: 100vh !important;
+  }
+  
+  /* Override generic section * rule for manifesto terminal */
+  .section-manifesto .manifesto-terminal,
+  .section-manifesto .manifesto-terminal * {
+    z-index: auto;
   }
 
-  .manifesto-layout-text {
+  .section-manifesto .manifesto-terminal {
+    position: relative;
     width: 100%;
-    max-width: 640px;
-    margin: 0;
-    margin-right: auto;
+    max-width: 920px;
+    background: #080806;
+    border: 2px solid rgba(202, 165, 84, 0.4);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 
+      0 0 60px rgba(202, 165, 84, 0.15),
+      0 0 120px rgba(202, 165, 84, 0.05),
+      inset 0 0 100px rgba(0, 0, 0, 0.8);
+    z-index: 2;
   }
 
-  /* Content area with vertical line on left */
-  .manifesto-content-area {
-    border-left: 1px solid var(--dawn-15);
-    padding-left: var(--space-xl);
+  /* CRT Screen curvature effect */
+  .manifesto-terminal::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(
+      ellipse at center,
+      transparent 0%,
+      transparent 60%,
+      rgba(0, 0, 0, 0.4) 100%
+    );
+    pointer-events: none;
+    z-index: 20;
+    border-radius: 12px;
+  }
+
+  /* Terminal header bar */
+  .terminal-header {
     display: flex;
-    flex-direction: column;
-    gap: 40px;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 20px;
+    background: rgba(202, 165, 84, 0.06);
+    border-bottom: 1px solid rgba(202, 165, 84, 0.2);
   }
 
-  /* Large title - only this is big */
-  .manifesto-title-large {
-    font-family: var(--font-display);
-    font-size: clamp(48px, 6vw, 72px);
-    font-weight: 400;
-    line-height: 1.05;
-    letter-spacing: 0.01em;
-    color: var(--dawn);
-    margin: 0;
+  .terminal-title {
+    font-family: var(--font-mono, 'IBM Plex Mono', monospace);
+    font-size: 13px;
+    color: #caa554;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
   }
 
-  /* Body text - all paragraphs same size */
-  .manifesto-body-text {
+  .terminal-controls {
+    display: flex;
+    gap: 8px;
+  }
+
+  .control-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: rgba(202, 165, 84, 0.3);
+    border: 1px solid rgba(202, 165, 84, 0.5);
+  }
+
+  /* Terminal body with scanlines */
+  .terminal-body {
+    position: relative;
+    padding: 40px;
+    min-height: 450px;
+    background: linear-gradient(
+      180deg,
+      rgba(202, 165, 84, 0.02) 0%,
+      transparent 20%,
+      transparent 80%,
+      rgba(202, 165, 84, 0.02) 100%
+    );
+  }
+
+  /* CRT Scanlines effect */
+  .terminal-scanlines {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 1px,
+      rgba(0, 0, 0, 0.2) 1px,
+      rgba(0, 0, 0, 0.2) 2px
+    );
+    z-index: 15;
+  }
+
+  /* Phosphor glow effect */
+  .terminal-body::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(
+      ellipse at 50% 0%,
+      rgba(202, 165, 84, 0.03) 0%,
+      transparent 50%
+    );
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  /* ASCII Art Title */
+  .ascii-title {
+    font-family: var(--font-mono, 'IBM Plex Mono', monospace);
+    font-size: clamp(5px, 0.9vw, 9px);
+    line-height: 1.15;
+    color: #caa554;
+    margin: 0 0 40px 0;
+    overflow-x: auto;
+    text-shadow: 
+      0 0 10px rgba(202, 165, 84, 0.8),
+      0 0 20px rgba(202, 165, 84, 0.4),
+      0 0 40px rgba(202, 165, 84, 0.2);
+    white-space: pre;
+    position: relative;
+    z-index: 5;
+  }
+
+  /* Terminal content */
+  .terminal-content {
+    position: relative;
+    z-index: 5;
+  }
+
+  .terminal-line {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    font-family: var(--font-mono, 'IBM Plex Mono', monospace);
+    font-size: 14px;
+  }
+
+  .prompt {
+    color: #caa554;
+    font-weight: 600;
+    text-shadow: 0 0 8px rgba(202, 165, 84, 0.6);
+  }
+
+  .command {
+    color: #caa554;
+    text-shadow: 0 0 5px rgba(202, 165, 84, 0.4);
+  }
+
+  .cursor {
+    color: #caa554;
+    animation: blink 1s step-end infinite;
+    text-shadow: 0 0 10px rgba(202, 165, 84, 0.8);
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+  }
+
+  /* Terminal output text */
+  .terminal-output {
+    padding-left: 28px;
+    margin-bottom: 28px;
     display: flex;
     flex-direction: column;
     gap: 24px;
   }
 
-  .manifesto-body-text p {
-    font-family: var(--font-body);
-    font-size: clamp(17px, 2vw, 20px);
-    font-weight: 300;
-    line-height: 1.7;
-    color: var(--dawn-80);
+  .terminal-output p {
+    font-family: var(--font-mono, 'IBM Plex Mono', monospace);
+    font-size: clamp(13px, 1.4vw, 15px);
+    line-height: 1.9;
+    color: rgba(202, 165, 84, 0.85);
     margin: 0;
-    max-width: 540px;
+    max-width: 72ch;
+    text-shadow: 0 0 4px rgba(202, 165, 84, 0.3);
   }
 
-  .manifesto-body-text em {
-    color: var(--gold);
-    font-style: normal;
+  .terminal-output em {
+    color: #caa554;
+    font-style: italic;
+    text-shadow: 0 0 10px rgba(202, 165, 84, 0.6);
   }
 
-  .manifesto-body-text strong {
-    font-weight: 500;
-    color: var(--dawn);
-  }
-
-  /* Responsive */
-  @media (max-width: 768px) {
-    .manifesto-title-large {
-      font-size: clamp(36px, 8vw, 48px);
-    }
-
-    .manifesto-body-text p {
-      font-size: 17px;
-    }
+  .terminal-output strong {
+    color: #ece3d6;
+    font-weight: 600;
+    text-shadow: 0 0 6px rgba(236, 227, 214, 0.4);
   }
 
   /* ═══════════════════════════════════════════════════════════════
@@ -783,32 +915,57 @@ export const cockpitStyles = `
       display: none !important;
     }
 
-    /* Manifesto section mobile */
+    /* Manifesto terminal mobile */
     .section-manifesto {
-      padding: 80px 24px !important;
+      padding: 80px 12px !important;
       padding-top: 100px !important;
     }
 
-    .manifesto-layout-text {
+    .manifesto-terminal {
       max-width: 100%;
+      border-radius: 8px;
+      border-width: 1px;
     }
 
-    .manifesto-content-area {
-      padding-left: var(--space-lg, 24px);
-      gap: 32px;
+    .terminal-header {
+      padding: 10px 14px;
     }
 
-    .manifesto-title-large {
-      font-size: clamp(32px, 10vw, 44px);
+    .terminal-title {
+      font-size: 10px;
     }
 
-    .manifesto-body-text {
-      gap: 20px;
+    .control-dot {
+      width: 8px;
+      height: 8px;
     }
 
-    .manifesto-body-text p {
-      font-size: 15px;
-      max-width: 100%;
+    .terminal-body {
+      padding: 20px 16px;
+      min-height: auto;
+    }
+
+    .ascii-title {
+      font-size: 2.5px;
+      margin-bottom: 24px;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .terminal-line {
+      font-size: 12px;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .terminal-output {
+      padding-left: 20px;
+      gap: 18px;
+    }
+
+    .terminal-output p {
+      font-size: 12px;
+      line-height: 1.75;
     }
 
     /* Info card mobile */

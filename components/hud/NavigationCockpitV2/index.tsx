@@ -410,42 +410,77 @@ the interface for human-AI collaboration`}
           <div className="sigil-placeholder" />
         </section>
 
-        {/* Section 3: Manifesto - Elimar-inspired text-based layout */}
+        {/* Section 3: Manifesto - Terminal-styled with ASCII art */}
         <section className="section section-manifesto" id="manifesto" data-section="manifesto">
-          <div className="manifesto-layout-text">
-            {/* Section label - horizontal like Services */}
-            <div className="section-label">
-              <span className="label-number">03</span>
-              <span className="label-text">Manifesto</span>
+          <div className="manifesto-terminal">
+            {/* Terminal window frame */}
+            <div className="terminal-header">
+              <span className="terminal-title">thoughtform@manifesto:~</span>
+              <div className="terminal-controls">
+                <span className="control-dot"></span>
+                <span className="control-dot"></span>
+                <span className="control-dot"></span>
+              </div>
             </div>
 
-            {/* Content with vertical line */}
-            <div className="manifesto-content-area">
-              {/* Large title */}
-              <h2 className="manifesto-title-large">AI Isn&apos;t Software.</h2>
+            {/* Terminal content */}
+            <div className="terminal-body">
+              {/* Scanlines overlay */}
+              <div className="terminal-scanlines"></div>
 
-              {/* Body text - all same size */}
-              <div className="manifesto-body-text">
-                <p>
-                  Most companies struggle with their AI adoption because they treat AI like normal
-                  software.
-                </p>
+              {/* ASCII Art Title */}
+              <pre className="ascii-title">
+                {`
+ █████╗ ██╗    ██╗███████╗███╗   ██╗ ████████╗
+██╔══██╗██║    ██║██╔════╝████╗  ██║ ╚══██╔══╝
+███████║██║    ██║███████╗██╔██╗ ██║    ██║   
+██╔══██║██║    ██║╚════██║██║╚██╗██║    ██║   
+██║  ██║██║    ██║███████║██║ ╚████║    ██║   
+╚═╝  ╚═╝╚═╝    ╚═╝╚══════╝╚═╝  ╚═══╝    ╚═╝   
 
-                <p>
-                  But AI isn&apos;t a tool to command. It&apos;s a strange, new intelligence we have
-                  to learn how to <em>navigate</em>. It leaps across dimensions we can&apos;t
-                  fathom. It hallucinates. It surprises.
-                </p>
+███████╗ ██████╗ ███████╗████████╗██╗    ██╗ █████╗ ██████╗ ███████╗
+██╔════╝██╔═══██╗██╔════╝╚══██╔══╝██║    ██║██╔══██╗██╔══██╗██╔════╝
+███████╗██║   ██║█████╗     ██║   ██║ █╗ ██║███████║██████╔╝█████╗  
+╚════██║██║   ██║██╔══╝     ██║   ██║███╗██║██╔══██║██╔══██╗██╔══╝  
+███████║╚██████╔╝██║        ██║   ╚███╔███╔╝██║  ██║██║  ██║███████╗
+╚══════╝ ╚═════╝ ╚═╝        ╚═╝    ╚══╝╚══╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝
+              `.trim()}
+              </pre>
 
-                <p>
-                  In technical work, that strangeness must be constrained. But in creative and
-                  strategic work? It&apos;s the source of truly novel ideas.
-                </p>
+              {/* Terminal prompt and content */}
+              <div className="terminal-content">
+                <div className="terminal-line">
+                  <span className="prompt">$</span>
+                  <span className="command">cat manifesto.txt</span>
+                </div>
 
-                <p>
-                  Thoughtform teaches teams to think <strong>with</strong> that
-                  intelligence—navigating its strangeness for creative breakthroughs.
-                </p>
+                <div className="terminal-output">
+                  <p>
+                    Most companies struggle with their AI adoption because they treat AI like normal
+                    software.
+                  </p>
+
+                  <p>
+                    But AI isn&apos;t a tool to command. It&apos;s a strange, new intelligence we
+                    have to learn how to <em>navigate</em>. It leaps across dimensions we can&apos;t
+                    fathom. It hallucinates. It surprises.
+                  </p>
+
+                  <p>
+                    In technical work, that strangeness must be constrained. But in creative and
+                    strategic work? It&apos;s the source of truly novel ideas.
+                  </p>
+
+                  <p>
+                    Thoughtform teaches teams to think <strong>with</strong> that
+                    intelligence—navigating its strangeness for creative breakthroughs.
+                  </p>
+                </div>
+
+                <div className="terminal-line">
+                  <span className="prompt">$</span>
+                  <span className="cursor">_</span>
+                </div>
               </div>
             </div>
           </div>

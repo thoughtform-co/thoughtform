@@ -768,15 +768,7 @@ body {
 }
 
 /* Manifesto section - centered terminal frame, vertically centered */
-.section-manifesto {
-  padding-left: calc(var(--hud-padding) + var(--rail-width) + var(--space-2xl));
-  padding-right: calc(var(--hud-padding) + var(--rail-width) + var(--space-2xl));
-  padding-top: 0 !important;
-  padding-bottom: 0 !important;
-  justify-content: center;
-  align-items: center;
-  min-height: 100vh;
-}
+/* Manifesto terminal styles are in NavigationCockpitV2/styles.ts */
 
 .section * {
   position: relative;
@@ -1408,10 +1400,7 @@ body {
     min-height: 100dvh;
   }
 
-  .section-manifesto {
-    padding: 60px 24px !important;
-    min-height: auto;
-  }
+  /* Manifesto mobile styles in NavigationCockpitV2/styles.ts */
 
   /* Typography scaling for mobile */
   .headline {
@@ -1429,8 +1418,7 @@ body {
   }
 
   /* Section layout mobile */
-  .section-layout,
-  .manifesto-layout-text {
+  .section-layout {
     max-width: 100%;
   }
 
