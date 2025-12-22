@@ -85,13 +85,15 @@ export function ManifestoTerminal({
         }
 
         .manifesto-content {
-          /* IBM Plex Sans for manifesto body */
-          font-family: "IBM Plex Sans", "Inter", sans-serif;
-          font-size: clamp(14px, 1.6vw, 18px);
-          line-height: 1.6;
+          /* Iosevka - beautiful monospace terminal font */
+          font-family:
+            "Iosevka Web", "Iosevka", "Iosevka Term", "IBM Plex Mono", "Fira Code", monospace;
+          font-size: clamp(14px, 1.5vw, 16px);
+          line-height: 1.7;
           font-weight: 400;
           color: var(--dawn, #ebe3d6);
           text-align: left;
+          letter-spacing: 0.02em;
         }
 
         .manifesto-line {

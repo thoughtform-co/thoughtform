@@ -2,6 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Iosevka Web Font - Terminal aesthetic monospace */
+@import url("https://cdn.jsdelivr.net/npm/iosevka-webfont@11.2.2/iosevka/iosevka.css");
+
 /* ═══════════════════════════════════════════════════════════════
    THOUGHTFORM NAVIGATION COCKPIT
    HUD-style interface with radar ticks and semantic landmarks
