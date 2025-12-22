@@ -432,34 +432,58 @@ function NavigationCockpitInner() {
               }
         }
       >
-        {/* Definition content - glitches out as we scroll to manifesto */}
+        {/* Text content - morphs through three stages: hero → definition → question */}
         <div
-          className={`hero-text-frame ${tDefToManifesto > 0.05 ? "glitch-out" : ""}`}
+          className="hero-text-frame"
           style={{
-            opacity: tDefToManifesto > 0 ? Math.max(0, 1 - tDefToManifesto * 1.5) : 1, // Only fade when transitioning
-            visibility: tDefToManifesto < 0.8 ? "visible" : "hidden",
-            position: tDefToManifesto > 0 ? "absolute" : "relative",
-            top: 0,
-            left: 0,
+            opacity: 1,
+            visibility: "visible",
+            position: "relative",
             width: "100%",
-            // Glitch transform effect - only during transition
-            transform:
-              tDefToManifesto > 0.05
-                ? `translateX(${Math.sin(tDefToManifesto * 50) * tDefToManifesto * 10}px) skewX(${tDefToManifesto * 5}deg)`
-                : "none",
-            filter: tDefToManifesto > 0.05 ? `blur(${tDefToManifesto * 2}px)` : "none",
           }}
         >
           <div className="hero-tagline hero-tagline-v2 hero-tagline-main">
-            <GlitchText
-              initialText={`AI isn't software to command.
+            {/* Stage 1→2: Hero text morphs to definition */}
+            {tDefToManifesto === 0 && (
+              <GlitchText
+                initialText={`AI isn't software to command.
 It's a strange intelligence to navigate.
 Thoughtform teaches how.`}
-              finalText={`(θɔːtfɔːrm / THAWT-form)
+                finalText={`(θɔːtfɔːrm / THAWT-form)
 the interface for human-AI collaboration`}
-              progress={tHeroToDef}
-              className="bridge-content-glitch"
-            />
+                progress={tHeroToDef}
+                className="bridge-content-glitch"
+              />
+            )}
+            {/* Stage 2→3: Definition text morphs to question - clickable when complete */}
+            {tDefToManifesto > 0 && !transmissionAcknowledged && (
+              <div
+                onClick={
+                  tDefToManifesto > 0.9 ? () => setTransmissionAcknowledged(true) : undefined
+                }
+                style={{ cursor: tDefToManifesto > 0.9 ? "pointer" : "default" }}
+              >
+                <GlitchText
+                  initialText={`(θɔːtfɔːrm / THAWT-form)
+the interface for human-AI collaboration`}
+                  finalText={`But why is AI so different?`}
+                  progress={tDefToManifesto}
+                  className="bridge-content-glitch question-morph"
+                />
+              </div>
+            )}
+            {/* Stage 3: Question clicked - fade out */}
+            {transmissionAcknowledged && (
+              <div
+                className="question-text-final"
+                style={{
+                  opacity: Math.max(0, 1 - manifestoScrollProgress * 3),
+                  cursor: "default",
+                }}
+              >
+                But why is AI so different?
+              </div>
+            )}
           </div>
         </div>
 
@@ -495,23 +519,6 @@ the interface for human-AI collaboration`}
           <div className="terminal-body">
             {/* Scanlines overlay */}
             <div className="terminal-scanlines"></div>
-
-            {/* Question button - stays visible until clicked, then reveals manifesto */}
-            <div
-              className="question-button"
-              style={{
-                opacity: tDefToManifesto > 0.9 && !transmissionAcknowledged ? 1 : 0,
-                visibility:
-                  tDefToManifesto > 0.9 && !transmissionAcknowledged ? "visible" : "hidden",
-                cursor: "pointer",
-              }}
-              onClick={() => setTransmissionAcknowledged(true)}
-            >
-              <div className="question-button-inner">
-                <div className="question-scanlines"></div>
-                <span className="question-text">But why is AI so different?</span>
-              </div>
-            </div>
 
             {/* Typed manifesto content - reveals progressively after click */}
             <div

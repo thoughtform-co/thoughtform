@@ -399,70 +399,24 @@ export const cockpitStyles = `
     opacity: 0.6;
   }
 
-  /* Question button - MU/TH/UR inspired */
-  .question-button {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    z-index: 100;
-    transition: opacity 0.2s ease-out;
-    pointer-events: auto;
-  }
-
-  .question-button-inner {
-    position: relative;
-    padding: 32px 64px;
-    background: linear-gradient(
-      180deg,
-      rgba(202, 165, 84, 0.1) 0%,
-      rgba(202, 165, 84, 0.2) 50%,
-      rgba(202, 165, 84, 0.1) 100%
-    );
-    border: 2px solid rgba(202, 165, 84, 0.4);
-    border-radius: 4px;
-    overflow: hidden;
-    cursor: pointer;
+  /* Question morph - same styling as definition text */
+  .question-morph {
     transition: all 0.2s ease-out;
   }
 
-  .question-button:hover .question-button-inner {
-    background: linear-gradient(
-      180deg,
-      rgba(202, 165, 84, 0.15) 0%,
-      rgba(202, 165, 84, 0.3) 50%,
-      rgba(202, 165, 84, 0.15) 100%
-    );
-    border-color: rgba(202, 165, 84, 0.6);
-    box-shadow: 
-      0 0 30px rgba(202, 165, 84, 0.2),
-      inset 0 0 20px rgba(202, 165, 84, 0.1);
-    transform: scale(1.02);
+  .question-morph:hover {
+    text-shadow: 0 0 10px rgba(202, 165, 84, 0.3);
   }
 
-  .question-scanlines {
-    position: absolute;
-    inset: 0;
-    background: repeating-linear-gradient(
-      0deg,
-      transparent,
-      transparent 2px,
-      rgba(0, 0, 0, 0.15) 2px,
-      rgba(0, 0, 0, 0.15) 4px
-    );
-    pointer-events: none;
-    z-index: 1;
-  }
-
-  .question-text {
-    position: relative;
-    z-index: 2;
+  /* Final question text after morph complete */
+  .question-text-final {
     font-family: var(--font-display, "PP Mondwest", serif);
-    font-size: clamp(24px, 3.5vw, 40px);
+    font-size: clamp(16px, 2vw, 22px);
     font-weight: 400;
-    color: var(--gold, #caa554);
+    color: var(--dawn, #ece3d6);
     letter-spacing: 0.02em;
-    text-shadow: 0 0 10px rgba(202, 165, 84, 0.5);
+    line-height: 1.5;
+    transition: opacity 0.3s ease-out;
   }
 
   /* Phase 3: Typed manifesto content */
@@ -1108,12 +1062,8 @@ export const cockpitStyles = `
       min-height: auto;
     }
 
-    .question-button-inner {
-      padding: 24px 32px;
-    }
-
-    .question-text {
-      font-size: clamp(18px, 5vw, 28px);
+    .question-text-final {
+      font-size: clamp(14px, 4vw, 18px);
     }
 
     .typed-title {
