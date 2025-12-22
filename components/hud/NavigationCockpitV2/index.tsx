@@ -410,8 +410,16 @@ the interface for human-AI collaboration`}
           <div className="sigil-placeholder" />
         </section>
 
-        {/* Section 3: Manifesto - Expanding terminal with transmission */}
+        {/* Section 3: Manifesto - Cinematic sci-fi terminal sequence */}
         <section className="section section-manifesto" id="manifesto" data-section="manifesto">
+          {/* Background geometric shapes that appear during typing */}
+          <div className="manifesto-bg-shapes">
+            <div className="geo-shape geo-shape-1"></div>
+            <div className="geo-shape geo-shape-2"></div>
+            <div className="geo-shape geo-shape-3"></div>
+            <div className="geo-grid"></div>
+          </div>
+
           <div className="manifesto-terminal">
             {/* Gold corner accents */}
             <div className="terminal-corner terminal-corner-tl"></div>
@@ -427,65 +435,47 @@ the interface for human-AI collaboration`}
               {/* Scanlines overlay */}
               <div className="terminal-scanlines"></div>
 
-              {/* Incoming transmission intro */}
-              <div className="transmission-intro">
-                <span className="transmission-label">{`// INCOMING TRANSMISSION`}</span>
-                <h2 className="transmission-question">But why is AI so different?</h2>
+              {/* Phase 1: Incoming transmission popup */}
+              <div className="transmission-popup">
+                <div className="popup-border">
+                  <span className="popup-icon">◈</span>
+                  <span className="popup-text">INCOMING TRANSMISSION</span>
+                </div>
               </div>
 
-              {/* Divider line */}
-              <div className="terminal-divider"></div>
+              {/* Phase 2: The question */}
+              <div className="manifesto-question">
+                <h2>But why is AI so different?</h2>
+              </div>
 
-              {/* ASCII Art Title */}
-              <pre className="ascii-title">
-                {`
- █████╗ ██╗    ██╗███████╗███╗   ██╗ ████████╗
-██╔══██╗██║    ██║██╔════╝████╗  ██║ ╚══██╔══╝
-███████║██║    ██║███████╗██╔██╗ ██║    ██║   
-██╔══██║██║    ██║╚════██║██║╚██╗██║    ██║   
-██║  ██║██║    ██║███████║██║ ╚████║    ██║   
-╚═╝  ╚═╝╚═╝    ╚═╝╚══════╝╚═╝  ╚═══╝    ╚═╝   
+              {/* Phase 3: Typed manifesto content */}
+              <div className="manifesto-typed-content">
+                <div className="typed-title">AI ISN&apos;T SOFTWARE.</div>
 
-███████╗ ██████╗ ███████╗████████╗██╗    ██╗ █████╗ ██████╗ ███████╗
-██╔════╝██╔═══██╗██╔════╝╚══██╔══╝██║    ██║██╔══██╗██╔══██╗██╔════╝
-███████╗██║   ██║█████╗     ██║   ██║ █╗ ██║███████║██████╔╝█████╗  
-╚════██║██║   ██║██╔══╝     ██║   ██║███╗██║██╔══██║██╔══██╗██╔══╝  
-███████║╚██████╔╝██║        ██║   ╚███╔███╔╝██║  ██║██║  ██║███████╗
-╚══════╝ ╚═════╝ ╚═╝        ╚═╝    ╚══╝╚══╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝
-              `.trim()}
-              </pre>
-
-              {/* Terminal prompt and content */}
-              <div className="terminal-content">
-                <div className="terminal-line">
-                  <span className="prompt">$</span>
-                  <span className="command">cat manifesto.txt</span>
-                </div>
-
-                <div className="terminal-output">
-                  <p>
-                    Most companies struggle with their AI adoption because they treat AI like normal
+                <div className="typed-body">
+                  <p className="typed-line line-1">
+                    Most companies struggle with AI adoption because they treat it like normal
                     software.
                   </p>
 
-                  <p>
+                  <p className="typed-line line-2">
                     But AI isn&apos;t a tool to command. It&apos;s a strange, new intelligence we
                     have to learn how to <em>navigate</em>. It leaps across dimensions we can&apos;t
                     fathom. It hallucinates. It surprises.
                   </p>
 
-                  <p>
+                  <p className="typed-line line-3">
                     In technical work, that strangeness must be constrained. But in creative and
                     strategic work? It&apos;s the source of truly novel ideas.
                   </p>
 
-                  <p>
+                  <p className="typed-line line-4">
                     Thoughtform teaches teams to think <strong>with</strong> that
                     intelligence—navigating its strangeness for creative breakthroughs.
                   </p>
                 </div>
 
-                <div className="terminal-line">
+                <div className="terminal-cursor">
                   <span className="prompt">$</span>
                   <span className="cursor">_</span>
                 </div>

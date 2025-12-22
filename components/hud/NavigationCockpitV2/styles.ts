@@ -278,12 +278,73 @@ export const cockpitStyles = `
     text-transform: uppercase;
   }
 
+  /* Background geometric shapes */
+  .manifesto-bg-shapes {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+  }
+
+  .geo-shape {
+    position: absolute;
+    border: 1px solid rgba(202, 165, 84, 0.15);
+    opacity: 0;
+    animation: geo-fade-in 2s ease-out forwards;
+  }
+
+  .geo-shape-1 {
+    width: 200px;
+    height: 200px;
+    top: 10%;
+    right: 5%;
+    transform: rotate(45deg);
+    animation-delay: 4s;
+  }
+
+  .geo-shape-2 {
+    width: 120px;
+    height: 120px;
+    bottom: 20%;
+    left: 8%;
+    border-radius: 50%;
+    animation-delay: 5s;
+  }
+
+  .geo-shape-3 {
+    width: 80px;
+    height: 80px;
+    top: 30%;
+    left: 15%;
+    clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
+    animation-delay: 6s;
+  }
+
+  .geo-grid {
+    position: absolute;
+    inset: 0;
+    background-image: 
+      linear-gradient(rgba(202, 165, 84, 0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(202, 165, 84, 0.03) 1px, transparent 1px);
+    background-size: 60px 60px;
+    opacity: 0;
+    animation: geo-fade-in 3s ease-out 3s forwards;
+  }
+
+  @keyframes geo-fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
   /* Terminal body */
   .terminal-body {
     position: relative;
-    padding: 32px;
-    min-height: 400px;
+    padding: 40px;
+    min-height: 500px;
     text-align: left;
+    display: flex;
+    flex-direction: column;
   }
 
   /* Subtle scanlines effect */
@@ -295,33 +356,69 @@ export const cockpitStyles = `
       0deg,
       transparent,
       transparent 2px,
-      rgba(0, 0, 0, 0.1) 2px,
-      rgba(0, 0, 0, 0.1) 4px
+      rgba(0, 0, 0, 0.08) 2px,
+      rgba(0, 0, 0, 0.08) 4px
     );
     z-index: 15;
-    opacity: 0.5;
+    opacity: 0.6;
   }
 
-  /* Incoming transmission intro */
-  .transmission-intro {
-    margin-bottom: 32px;
-    text-align: left;
+  /* Phase 1: Transmission popup - Alien style */
+  .transmission-popup {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 20;
+    opacity: 0;
+    animation: popup-sequence 3s ease-out forwards;
   }
 
-  .transmission-label {
-    font-family: var(--font-mono, 'IBM Plex Mono', monospace);
-    font-size: 11px;
+  .popup-border {
+    border: 2px solid var(--gold, #caa554);
+    padding: 20px 40px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: rgba(10, 9, 8, 0.95);
+  }
+
+  .popup-icon {
     color: var(--gold, #caa554);
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    display: block;
-    margin-bottom: 16px;
-    opacity: 0.7;
+    font-size: 24px;
+    animation: icon-pulse 0.5s ease-in-out infinite;
   }
 
-  .transmission-question {
+  .popup-text {
+    font-family: var(--font-mono, 'IBM Plex Mono', monospace);
+    font-size: 14px;
+    color: var(--gold, #caa554);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+  }
+
+  @keyframes popup-sequence {
+    0% { opacity: 0; transform: translate(-50%, -50%) scale(0.9); }
+    10% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    70% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    100% { opacity: 0; transform: translate(-50%, -50%) scale(1.02); }
+  }
+
+  @keyframes icon-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+
+  /* Phase 2: The question */
+  .manifesto-question {
+    opacity: 0;
+    animation: question-appear 1s ease-out 2.5s forwards;
+    margin-bottom: 40px;
+  }
+
+  .manifesto-question h2 {
     font-family: var(--font-display, "PP Mondwest", serif);
-    font-size: clamp(32px, 5vw, 56px);
+    font-size: clamp(28px, 4vw, 48px);
     font-weight: 400;
     color: var(--gold, #caa554);
     letter-spacing: 0.02em;
@@ -329,31 +426,97 @@ export const cockpitStyles = `
     margin: 0;
   }
 
-  /* Terminal divider */
-  .terminal-divider {
-    width: 100%;
-    height: 1px;
-    background: linear-gradient(
-      90deg,
-      var(--gold, #caa554) 0%,
-      rgba(202, 165, 84, 0.3) 50%,
-      transparent 100%
-    );
-    margin: 32px 0;
+  @keyframes question-appear {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
   }
 
-  /* ASCII Art Title */
-  .ascii-title {
+  /* Phase 3: Typed manifesto content */
+  .manifesto-typed-content {
+    opacity: 0;
+    animation: content-appear 0.5s ease-out 3.5s forwards;
+  }
+
+  @keyframes content-appear {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  .typed-title {
     font-family: var(--font-mono, 'IBM Plex Mono', monospace);
-    font-size: clamp(5px, 0.9vw, 9px);
-    line-height: 1.15;
+    font-size: clamp(18px, 2.5vw, 28px);
+    font-weight: 600;
     color: var(--gold, #caa554);
-    margin: 0 0 32px 0;
-    overflow-x: auto;
-    white-space: pre;
-    position: relative;
-    z-index: 5;
-    text-align: left;
+    letter-spacing: 0.1em;
+    margin-bottom: 32px;
+    overflow: hidden;
+    white-space: nowrap;
+    border-right: 2px solid var(--gold, #caa554);
+    animation: 
+      typing-title 1s steps(18, end) 3.5s forwards,
+      blink-cursor 0.75s step-end infinite 3.5s;
+    width: 0;
+  }
+
+  @keyframes typing-title {
+    from { width: 0; }
+    to { width: 100%; max-width: 320px; }
+  }
+
+  @keyframes blink-cursor {
+    from, to { border-color: var(--gold, #caa554); }
+    50% { border-color: transparent; }
+  }
+
+  .typed-body {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .typed-line {
+    font-family: var(--font-mono, 'IBM Plex Mono', monospace);
+    font-size: clamp(13px, 1.4vw, 15px);
+    line-height: 1.8;
+    color: var(--dawn-80, rgba(236, 227, 214, 0.8));
+    margin: 0;
+    opacity: 0;
+  }
+
+  .typed-line.line-1 { animation: line-appear 0.5s ease-out 4.5s forwards; }
+  .typed-line.line-2 { animation: line-appear 0.5s ease-out 5.5s forwards; }
+  .typed-line.line-3 { animation: line-appear 0.5s ease-out 6.5s forwards; }
+  .typed-line.line-4 { animation: line-appear 0.5s ease-out 7.5s forwards; }
+
+  @keyframes line-appear {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .typed-line em {
+    color: var(--gold, #caa554);
+    font-style: italic;
+  }
+
+  .typed-line strong {
+    color: var(--dawn, #ece3d6);
+    font-weight: 600;
+  }
+
+  .terminal-cursor {
+    margin-top: 24px;
+    opacity: 0;
+    animation: cursor-appear 0.3s ease-out 8s forwards;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-family: var(--font-mono, 'IBM Plex Mono', monospace);
+    font-size: 14px;
+  }
+
+  @keyframes cursor-appear {
+    from { opacity: 0; }
+    to { opacity: 1; }
   }
 
   /* Terminal content */
@@ -937,38 +1100,51 @@ export const cockpitStyles = `
       font-size: 10px;
     }
 
-    .control-dot {
-      width: 8px;
-      height: 8px;
-    }
-
     .terminal-body {
-      padding: 20px 16px;
+      padding: 24px 16px;
       min-height: auto;
     }
 
-    .transmission-intro {
-      margin-bottom: 24px;
+    .popup-border {
+      padding: 16px 24px;
+      gap: 12px;
     }
 
-    .transmission-label {
-      font-size: 10px;
-      margin-bottom: 12px;
+    .popup-text {
+      font-size: 11px;
+      letter-spacing: 0.15em;
     }
 
-    .transmission-question {
-      font-size: clamp(24px, 7vw, 36px);
+    .manifesto-question h2 {
+      font-size: clamp(22px, 6vw, 32px);
     }
 
-    .terminal-divider {
-      margin: 24px 0;
+    .typed-title {
+      font-size: clamp(14px, 4vw, 18px);
     }
 
-    .ascii-title {
-      font-size: 2.5px;
-      margin-bottom: 24px;
-      overflow-x: auto;
-      -webkit-overflow-scrolling: touch;
+    .typed-body {
+      gap: 16px;
+    }
+
+    .typed-line {
+      font-size: 12px;
+      line-height: 1.7;
+    }
+
+    .geo-shape-1 {
+      width: 100px;
+      height: 100px;
+    }
+
+    .geo-shape-2 {
+      width: 60px;
+      height: 60px;
+    }
+
+    .geo-shape-3 {
+      width: 40px;
+      height: 40px;
     }
 
     .terminal-line {
