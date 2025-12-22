@@ -87,6 +87,7 @@ function NavigationCockpitInner() {
   const [manifestoScrollProgress, setManifestoScrollProgress] = useState(0);
   const [manifestoInView, setManifestoInView] = useState(false);
   const [manifestoFullyVisible, setManifestoFullyVisible] = useState(false);
+  const [transmissionAcknowledged, setTransmissionAcknowledged] = useState(false);
 
   // Calculate scroll progress within manifesto section
   useEffect(() => {
@@ -479,37 +480,33 @@ the interface for human-AI collaboration`}
             <div
               className="geo-shape geo-shape-1"
               style={{
-                opacity:
-                  manifestoScrollProgress > 0.2
-                    ? Math.min(1, (manifestoScrollProgress - 0.2) * 2)
-                    : 0,
+                opacity: transmissionAcknowledged
+                  ? Math.min(1, Math.max(0, (manifestoScrollProgress - 0.1) * 2))
+                  : 0,
               }}
             ></div>
             <div
               className="geo-shape geo-shape-2"
               style={{
-                opacity:
-                  manifestoScrollProgress > 0.3
-                    ? Math.min(1, (manifestoScrollProgress - 0.3) * 2)
-                    : 0,
+                opacity: transmissionAcknowledged
+                  ? Math.min(1, Math.max(0, (manifestoScrollProgress - 0.2) * 2))
+                  : 0,
               }}
             ></div>
             <div
               className="geo-shape geo-shape-3"
               style={{
-                opacity:
-                  manifestoScrollProgress > 0.4
-                    ? Math.min(1, (manifestoScrollProgress - 0.4) * 2)
-                    : 0,
+                opacity: transmissionAcknowledged
+                  ? Math.min(1, Math.max(0, (manifestoScrollProgress - 0.3) * 2))
+                  : 0,
               }}
             ></div>
             <div
               className="geo-grid"
               style={{
-                opacity:
-                  manifestoScrollProgress > 0.25
-                    ? Math.min(1, (manifestoScrollProgress - 0.25) * 2)
-                    : 0,
+                opacity: transmissionAcknowledged
+                  ? Math.min(1, Math.max(0, (manifestoScrollProgress - 0.15) * 2))
+                  : 0,
               }}
             ></div>
           </div>
@@ -517,9 +514,15 @@ the interface for human-AI collaboration`}
           <div
             className="manifesto-terminal"
             style={{
-              // Appear as definition section starts fading (scrollProgress ~0.25) or when in view
-              opacity: scrollProgress > 0.25 || manifestoInView ? 1 : 0,
-              transition: "opacity 0.15s ease-out",
+              // Appear with curve as definition elements fade out (inverse curve)
+              // Definition fades from 0.25-0.3, terminal appears in same range
+              opacity:
+                scrollProgress < 0.25
+                  ? 0
+                  : scrollProgress < 0.3
+                    ? easeInOutCubic((scrollProgress - 0.25) / 0.05) // Smooth curve as definition fades
+                    : 1,
+              transition: "opacity 0.2s ease-out",
             }}
           >
             {/* Gold corner accents */}
@@ -536,17 +539,15 @@ the interface for human-AI collaboration`}
               {/* Scanlines overlay */}
               <div className="terminal-scanlines"></div>
 
-              {/* Phase 1: Incoming transmission popup - only when terminal is fully visible */}
+              {/* Phase 1: Incoming transmission popup - stays visible until clicked */}
               <div
                 className="transmission-popup"
                 style={{
-                  opacity:
-                    manifestoFullyVisible && manifestoScrollProgress < 0.1
-                      ? Math.sin(manifestoScrollProgress * 100) * 0.5 + 0.5 // Flicker effect
-                      : 0,
-                  display:
-                    manifestoFullyVisible && manifestoScrollProgress < 0.15 ? "block" : "none",
+                  opacity: manifestoFullyVisible && !transmissionAcknowledged ? 1 : 0,
+                  display: manifestoFullyVisible && !transmissionAcknowledged ? "block" : "none",
+                  cursor: "pointer",
                 }}
+                onClick={() => setTransmissionAcknowledged(true)}
               >
                 <div className="popup-border">
                   <span className="popup-icon">◈</span>
@@ -554,34 +555,33 @@ the interface for human-AI collaboration`}
                 </div>
               </div>
 
-              {/* Phase 2: The question - appears after popup */}
+              {/* Phase 2: The question - appears after popup is clicked */}
               <div
                 className="manifesto-question"
                 style={{
-                  opacity:
-                    manifestoScrollProgress > 0.1
-                      ? Math.min(1, (manifestoScrollProgress - 0.1) * 10)
-                      : 0,
-                  transform: `translateY(${manifestoScrollProgress > 0.1 ? 0 : 10}px)`,
+                  opacity: transmissionAcknowledged ? 1 : 0,
+                  transform: `translateY(${transmissionAcknowledged ? 0 : 10}px)`,
+                  transition: "opacity 0.5s ease-out, transform 0.5s ease-out",
                 }}
               >
                 <h2>But why is AI so different?</h2>
               </div>
 
-              {/* Phase 3: Typed manifesto content - reveals progressively */}
+              {/* Phase 3: Typed manifesto content - reveals progressively after click */}
               <div
                 className="manifesto-typed-content"
                 style={{
-                  opacity: manifestoScrollProgress > 0.15 ? 1 : 0,
+                  opacity: transmissionAcknowledged ? 1 : 0,
+                  transition: "opacity 0.3s ease-out",
                 }}
               >
                 <div
                   className="typed-title"
                   style={{
-                    opacity:
-                      manifestoScrollProgress > 0.15
-                        ? Math.min(1, (manifestoScrollProgress - 0.15) * 5)
-                        : 0,
+                    opacity: transmissionAcknowledged
+                      ? Math.min(1, manifestoScrollProgress * 2)
+                      : 0,
+                    transition: "opacity 0.3s ease-out",
                   }}
                 >
                   AI ISN&apos;T SOFTWARE.
@@ -591,10 +591,10 @@ the interface for human-AI collaboration`}
                   <p
                     className="typed-line line-1"
                     style={{
-                      opacity:
-                        manifestoScrollProgress > 0.25
-                          ? Math.min(1, (manifestoScrollProgress - 0.25) * 4)
-                          : 0,
+                      opacity: transmissionAcknowledged
+                        ? Math.min(1, Math.max(0, (manifestoScrollProgress - 0.1) * 3))
+                        : 0,
+                      transition: "opacity 0.3s ease-out",
                     }}
                   >
                     Most companies struggle with AI adoption because they treat it like normal
@@ -604,10 +604,10 @@ the interface for human-AI collaboration`}
                   <p
                     className="typed-line line-2"
                     style={{
-                      opacity:
-                        manifestoScrollProgress > 0.4
-                          ? Math.min(1, (manifestoScrollProgress - 0.4) * 3)
-                          : 0,
+                      opacity: transmissionAcknowledged
+                        ? Math.min(1, Math.max(0, (manifestoScrollProgress - 0.25) * 2.5))
+                        : 0,
+                      transition: "opacity 0.3s ease-out",
                     }}
                   >
                     But AI isn&apos;t a tool to command. It&apos;s a strange, new intelligence we
@@ -618,10 +618,10 @@ the interface for human-AI collaboration`}
                   <p
                     className="typed-line line-3"
                     style={{
-                      opacity:
-                        manifestoScrollProgress > 0.55
-                          ? Math.min(1, (manifestoScrollProgress - 0.55) * 3)
-                          : 0,
+                      opacity: transmissionAcknowledged
+                        ? Math.min(1, Math.max(0, (manifestoScrollProgress - 0.4) * 2.5))
+                        : 0,
+                      transition: "opacity 0.3s ease-out",
                     }}
                   >
                     In technical work, that strangeness must be constrained. But in creative and
@@ -631,10 +631,10 @@ the interface for human-AI collaboration`}
                   <p
                     className="typed-line line-4"
                     style={{
-                      opacity:
-                        manifestoScrollProgress > 0.7
-                          ? Math.min(1, (manifestoScrollProgress - 0.7) * 3)
-                          : 0,
+                      opacity: transmissionAcknowledged
+                        ? Math.min(1, Math.max(0, (manifestoScrollProgress - 0.55) * 2.5))
+                        : 0,
+                      transition: "opacity 0.3s ease-out",
                     }}
                   >
                     Thoughtform teaches teams to think <strong>with</strong> that
@@ -645,7 +645,8 @@ the interface for human-AI collaboration`}
                 <div
                   className="terminal-cursor"
                   style={{
-                    opacity: manifestoScrollProgress > 0.85 ? 1 : 0,
+                    opacity: transmissionAcknowledged && manifestoScrollProgress > 0.7 ? 1 : 0,
+                    transition: "opacity 0.3s ease-out",
                   }}
                 >
                   <span className="prompt">$</span>

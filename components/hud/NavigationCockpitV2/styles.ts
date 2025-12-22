@@ -370,11 +370,25 @@ export const cockpitStyles = `
     align-items: center;
     gap: 16px;
     background: rgba(10, 9, 8, 0.95);
+    transition: all 0.2s ease-out;
+  }
+
+  .transmission-popup:hover .popup-border {
+    border-color: var(--gold, #caa554);
+    background: rgba(10, 9, 8, 0.98);
+    box-shadow: 0 0 20px rgba(202, 165, 84, 0.3);
+    transform: scale(1.02);
   }
 
   .popup-icon {
     color: var(--gold, #caa554);
     font-size: 24px;
+    animation: icon-pulse 1.5s ease-in-out infinite;
+  }
+
+  @keyframes icon-pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.7; transform: scale(1.1); }
   }
 
   .popup-text {
