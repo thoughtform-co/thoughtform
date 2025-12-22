@@ -278,14 +278,14 @@ function NavigationCockpitInner() {
           transform: isMobile ? "translateX(-50%)" : undefined,
           // CSS variable for brandmark fade
           ["--brandmark-opacity" as string]: 1 - tHeroToDef,
-          // Fade out faster - wordmark disappears early while sigil is still animating toward navbar
+          // Fade out - wordmark disappears while sigil is still animating toward navbar
           opacity:
-            scrollProgress < 0.15
+            scrollProgress < 0.25
               ? 1
-              : scrollProgress < 0.2
-                ? 1 - (scrollProgress - 0.15) / 0.05
+              : scrollProgress < 0.3
+                ? 1 - (scrollProgress - 0.25) / 0.05
                 : 0,
-          visibility: scrollProgress < 0.2 ? "visible" : "hidden",
+          visibility: scrollProgress < 0.3 ? "visible" : "hidden",
         }}
       >
         {/* Hero Wordmark - stays visible until particles fully take over */}
@@ -372,16 +372,16 @@ function NavigationCockpitInner() {
                 // DESKTOP: Original behavior
                 bottom: `calc(${90 * (1 - tHeroToDef)}px + ${tHeroToDef * 50}vh - ${tHeroToDef * 70}px)`,
                 opacity:
-                  scrollProgress < 0.15
+                  scrollProgress < 0.25
                     ? 1
-                    : scrollProgress < 0.2
-                      ? 1 - (scrollProgress - 0.15) / 0.05
+                    : scrollProgress < 0.3
+                      ? 1 - (scrollProgress - 0.25) / 0.05
                       : 0,
-                visibility: scrollProgress < 0.2 ? "visible" : "hidden",
+                visibility: scrollProgress < 0.3 ? "visible" : "hidden",
                 pointerEvents: tHeroToDef > 0.95 || tHeroToDef < 0.05 ? "auto" : "none",
                 transform:
-                  scrollProgress >= 0.15
-                    ? `scale(${1 - Math.min(1, (scrollProgress - 0.15) / 0.05)})`
+                  scrollProgress >= 0.25
+                    ? `scale(${1 - Math.min(1, (scrollProgress - 0.25) / 0.05)})`
                     : "scale(1)",
                 transformOrigin: "center center",
               }
@@ -517,8 +517,8 @@ the interface for human-AI collaboration`}
           <div
             className="manifesto-terminal"
             style={{
-              // Appear right after definition section disappears (scrollProgress ~0.2) or when in view
-              opacity: scrollProgress > 0.18 || manifestoInView ? 1 : 0,
+              // Appear right after definition section disappears (scrollProgress ~0.3) or when in view
+              opacity: scrollProgress > 0.28 || manifestoInView ? 1 : 0,
               transition: "opacity 0.15s ease-out",
             }}
           >
