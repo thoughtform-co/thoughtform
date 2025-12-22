@@ -410,6 +410,13 @@ the interface for human-AI collaboration`}
           <div className="sigil-placeholder" />
         </section>
 
+        {/* Interstitial: Typewriter question before manifesto */}
+        <section className="section section-interstitial">
+          <div className="interstitial-text">
+            <span className="typewriter-text">But why is AI so different?</span>
+          </div>
+        </section>
+
         {/* Section 3: Manifesto - Terminal-styled with ASCII art */}
         <section className="section section-manifesto" id="manifesto" data-section="manifesto">
           <div className="manifesto-terminal">

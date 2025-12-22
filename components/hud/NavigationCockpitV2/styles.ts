@@ -210,6 +210,50 @@ export const cockpitStyles = `
   }
 
   /* ═══════════════════════════════════════════════════════════════
+     INTERSTITIAL - Typewriter question before manifesto
+     ═══════════════════════════════════════════════════════════════ */
+  .section-interstitial {
+    min-height: 100vh;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    padding: 100px calc(var(--hud-padding) + var(--rail-width) + 60px) !important;
+  }
+
+  .interstitial-text {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+  }
+
+  .typewriter-text {
+    font-family: var(--font-display, "PP Mondwest", serif);
+    font-size: clamp(42px, 7vw, 80px);
+    font-weight: 400;
+    color: var(--gold, #caa554);
+    letter-spacing: 0.02em;
+    line-height: 1.2;
+    display: inline-block;
+    overflow: hidden;
+    border-right: 3px solid var(--gold, #caa554);
+    white-space: nowrap;
+    animation: 
+      typewriter 2s steps(28, end) forwards,
+      blink-caret 0.75s step-end infinite;
+  }
+
+  @keyframes typewriter {
+    from { width: 0; }
+    to { width: 100%; }
+  }
+
+  @keyframes blink-caret {
+    from, to { border-color: transparent; }
+    50% { border-color: var(--gold, #caa554); }
+  }
+
+  /* ═══════════════════════════════════════════════════════════════
      MANIFESTO - Terminal-styled with ASCII art title
      Retro CRT aesthetic with amber/gold text
      ═══════════════════════════════════════════════════════════════ */
@@ -876,6 +920,17 @@ export const cockpitStyles = `
     /* Module connection lines - hide on mobile */
     .module-connection-lines {
       display: none !important;
+    }
+
+    /* Interstitial mobile */
+    .section-interstitial {
+      padding: 60px 24px !important;
+    }
+
+    .typewriter-text {
+      font-size: clamp(24px, 8vw, 42px);
+      white-space: normal;
+      border-right: 2px solid var(--gold, #caa554);
     }
 
     /* Manifesto terminal mobile */
