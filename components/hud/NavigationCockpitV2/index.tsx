@@ -367,7 +367,7 @@ function NavigationCockpitInner() {
           SAME FRAME slides UP from bottom to center, only text content changes
           ═══════════════════════════════════════════════════════════════════ */}
       <div
-        className={`bridge-frame ${scrollProgress >= DEF_TO_MANIFESTO_START ? "manifesto-terminal" : ""}`}
+        className="bridge-frame"
         style={
           isMobile
             ? {
@@ -385,186 +385,217 @@ function NavigationCockpitInner() {
                 transformOrigin: "center center",
               }
             : {
-                // DESKTOP: Frame moves from hero → definition → manifesto
-                // In definition: positioned below wordmark
-                // In manifesto: centered, larger, terminal style
+                // DESKTOP: Frame smoothly transitions from definition → manifesto
+                // Calculate interpolated position based on tDefToManifesto
+                // Definition position: left-aligned at rail + 120px
+                // Manifesto position: centered (top: 50vh, left: 50%)
+
+                // Smoothly interpolate top position
+                // At t=0: definition position (use calc based on tHeroToDef)
+                // At t=1: 50vh (centered)
+                top:
+                  tDefToManifesto > 0
+                    ? `calc(${50 - (1 - tDefToManifesto) * 20}vh)` // Moves from ~30vh to 50vh
+                    : undefined,
                 bottom:
-                  scrollProgress < DEF_TO_MANIFESTO_START
+                  tDefToManifesto === 0
                     ? `calc(${90 * (1 - tHeroToDef)}px + ${tHeroToDef * 50}vh - ${tHeroToDef * 70}px)`
                     : undefined,
-                top:
-                  scrollProgress >= DEF_TO_MANIFESTO_START
-                    ? "50vh" // Move to center
-                    : undefined,
-                left:
-                  scrollProgress >= DEF_TO_MANIFESTO_START
-                    ? "50%" // Center horizontally
-                    : undefined,
-                width:
-                  scrollProgress >= DEF_TO_MANIFESTO_START
-                    ? `${500 + tDefToManifesto * 420}px` // Grow from 500px to 920px
-                    : undefined,
-                maxWidth:
-                  scrollProgress >= DEF_TO_MANIFESTO_START
-                    ? `${500 + tDefToManifesto * 420}px`
-                    : undefined,
-                opacity: 1, // Always visible, content changes instead
+                // Smoothly interpolate left position (from rail+120px to 50%)
+                left: `calc(${(1 - tDefToManifesto) * 184}px + ${tDefToManifesto * 50}%)`,
+
+                // Width grows from 500px to 920px
+                width: `${500 + tDefToManifesto * 420}px`,
+                maxWidth: `${500 + tDefToManifesto * 420}px`,
+
+                // Height grows for terminal content
+                minHeight: tDefToManifesto > 0 ? `${100 + tDefToManifesto * 400}px` : undefined,
+
+                opacity: 1,
                 visibility: "visible",
                 pointerEvents:
-                  scrollProgress >= DEF_TO_MANIFESTO_START
-                    ? "auto"
-                    : tHeroToDef > 0.95 || tHeroToDef < 0.05
-                      ? "auto"
-                      : "none",
-                transform:
-                  scrollProgress >= DEF_TO_MANIFESTO_START
-                    ? `translateX(-50%) translateY(-50%)` // Center both axes
-                    : "translateX(0) translateY(0)",
-                transformOrigin: "center center",
+                  tHeroToDef > 0.95 || tHeroToDef < 0.05 || tDefToManifesto > 0 ? "auto" : "none",
+
+                // Transform for centering when in manifesto mode
+                transform: `translateX(${-50 * tDefToManifesto}%) translateY(${-50 * tDefToManifesto}%)`,
+                transformOrigin: "top left",
+
+                // Terminal styling via CSS variables
+                ["--terminal-opacity" as string]: tDefToManifesto,
+                background:
+                  tDefToManifesto > 0 ? `rgba(10, 9, 8, ${0.5 * tDefToManifesto})` : undefined,
+                backdropFilter: tDefToManifesto > 0 ? `blur(${8 * tDefToManifesto}px)` : undefined,
+                border:
+                  tDefToManifesto > 0
+                    ? `1px solid rgba(236, 227, 214, ${0.1 * tDefToManifesto})`
+                    : undefined,
+
+                transition: "none", // We're animating via scroll, not CSS transitions
               }
         }
       >
-        {scrollProgress < DEF_TO_MANIFESTO_START ? (
-          <div className="hero-text-frame">
-            {/* Glitch text transition - hero text morphs into definition text */}
-            <div className="hero-tagline hero-tagline-v2 hero-tagline-main">
-              <GlitchText
-                initialText={`AI isn't software to command.
+        {/* Definition content - fades out as we scroll to manifesto */}
+        <div
+          className="hero-text-frame"
+          style={{
+            opacity: 1 - tDefToManifesto,
+            visibility: tDefToManifesto < 1 ? "visible" : "hidden",
+            position: tDefToManifesto > 0 ? "absolute" : "relative",
+            top: 0,
+            left: 0,
+            width: "100%",
+          }}
+        >
+          <div className="hero-tagline hero-tagline-v2 hero-tagline-main">
+            <GlitchText
+              initialText={`AI isn't software to command.
 It's a strange intelligence to navigate.
 Thoughtform teaches how.`}
-                finalText={`(θɔːtfɔːrm / THAWT-form)
+              finalText={`(θɔːtfɔːrm / THAWT-form)
 the interface for human-AI collaboration`}
-                progress={tHeroToDef}
-                className="bridge-content-glitch"
-              />
-            </div>
+              progress={tHeroToDef}
+              className="bridge-content-glitch"
+            />
           </div>
-        ) : (
-          <>
-            {/* Gold corner accents */}
-            <div className="terminal-corner terminal-corner-tl"></div>
-            <div className="terminal-corner terminal-corner-br"></div>
+        </div>
 
-            {/* Terminal window frame */}
-            <div className="terminal-header">
-              <span className="terminal-title">thoughtform@manifesto:~</span>
+        {/* Terminal content - fades in as we scroll to manifesto */}
+        <div
+          className="terminal-content-wrapper"
+          style={{
+            opacity: tDefToManifesto,
+            visibility: tDefToManifesto > 0 ? "visible" : "hidden",
+            position: tDefToManifesto < 1 ? "absolute" : "relative",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+          }}
+        >
+          {/* Gold corner accents */}
+          <div
+            className="terminal-corner terminal-corner-tl"
+            style={{ opacity: tDefToManifesto }}
+          ></div>
+          <div
+            className="terminal-corner terminal-corner-br"
+            style={{ opacity: tDefToManifesto }}
+          ></div>
+
+          {/* Terminal window frame */}
+          <div className="terminal-header">
+            <span className="terminal-title">thoughtform@manifesto:~</span>
+          </div>
+
+          {/* Terminal content */}
+          <div className="terminal-body">
+            {/* Scanlines overlay */}
+            <div className="terminal-scanlines"></div>
+
+            {/* Question button - stays visible until clicked, then reveals manifesto */}
+            <div
+              className="question-button"
+              style={{
+                opacity: tDefToManifesto > 0.9 && !transmissionAcknowledged ? 1 : 0,
+                visibility:
+                  tDefToManifesto > 0.9 && !transmissionAcknowledged ? "visible" : "hidden",
+                cursor: "pointer",
+              }}
+              onClick={() => setTransmissionAcknowledged(true)}
+            >
+              <div className="question-button-inner">
+                <div className="question-scanlines"></div>
+                <span className="question-text">But why is AI so different?</span>
+              </div>
             </div>
 
-            {/* Terminal content */}
-            <div className="terminal-body">
-              {/* Scanlines overlay */}
-              <div className="terminal-scanlines"></div>
-
-              {/* Question button - stays visible until clicked, then reveals manifesto */}
+            {/* Typed manifesto content - reveals progressively after click */}
+            <div
+              className="manifesto-typed-content"
+              style={{
+                opacity: transmissionAcknowledged ? 1 : 0,
+                transition: "opacity 0.3s ease-out",
+                pointerEvents: transmissionAcknowledged ? "auto" : "none",
+              }}
+            >
               <div
-                className="question-button"
+                className="typed-title"
                 style={{
-                  opacity:
-                    scrollProgress > DEF_TO_MANIFESTO_END && !transmissionAcknowledged ? 1 : 0,
-                  visibility:
-                    scrollProgress > DEF_TO_MANIFESTO_END && !transmissionAcknowledged
-                      ? "visible"
-                      : "hidden",
-                  cursor: "pointer",
+                  opacity: transmissionAcknowledged ? Math.min(1, manifestoScrollProgress * 2) : 0,
+                  transition: "opacity 0.3s ease-out",
                 }}
-                onClick={() => setTransmissionAcknowledged(true)}
               >
-                <div className="question-button-inner">
-                  <div className="question-scanlines"></div>
-                  <span className="question-text">But why is AI so different?</span>
-                </div>
+                AI ISN&apos;T SOFTWARE.
               </div>
 
-              {/* Typed manifesto content - reveals progressively after click */}
-              <div
-                className="manifesto-typed-content"
-                style={{
-                  opacity: transmissionAcknowledged ? 1 : 0,
-                  transition: "opacity 0.3s ease-out",
-                  pointerEvents: transmissionAcknowledged ? "auto" : "none",
-                }}
-              >
-                <div
-                  className="typed-title"
+              <div className="typed-body">
+                <p
+                  className="typed-line line-1"
                   style={{
                     opacity: transmissionAcknowledged
-                      ? Math.min(1, manifestoScrollProgress * 2)
+                      ? Math.min(1, Math.max(0, (manifestoScrollProgress - 0.1) * 3))
                       : 0,
                     transition: "opacity 0.3s ease-out",
                   }}
                 >
-                  AI ISN&apos;T SOFTWARE.
-                </div>
+                  Most companies struggle with AI adoption because they treat it like normal
+                  software.
+                </p>
 
-                <div className="typed-body">
-                  <p
-                    className="typed-line line-1"
-                    style={{
-                      opacity: transmissionAcknowledged
-                        ? Math.min(1, Math.max(0, (manifestoScrollProgress - 0.1) * 3))
-                        : 0,
-                      transition: "opacity 0.3s ease-out",
-                    }}
-                  >
-                    Most companies struggle with AI adoption because they treat it like normal
-                    software.
-                  </p>
-
-                  <p
-                    className="typed-line line-2"
-                    style={{
-                      opacity: transmissionAcknowledged
-                        ? Math.min(1, Math.max(0, (manifestoScrollProgress - 0.25) * 2.5))
-                        : 0,
-                      transition: "opacity 0.3s ease-out",
-                    }}
-                  >
-                    But AI isn&apos;t a tool to command. It&apos;s a strange, new intelligence we
-                    have to learn how to <em>navigate</em>. It leaps across dimensions we can&apos;t
-                    fathom. It hallucinates. It surprises.
-                  </p>
-
-                  <p
-                    className="typed-line line-3"
-                    style={{
-                      opacity: transmissionAcknowledged
-                        ? Math.min(1, Math.max(0, (manifestoScrollProgress - 0.4) * 2.5))
-                        : 0,
-                      transition: "opacity 0.3s ease-out",
-                    }}
-                  >
-                    In technical work, that strangeness must be constrained. But in creative and
-                    strategic work? It&apos;s the source of truly novel ideas.
-                  </p>
-
-                  <p
-                    className="typed-line line-4"
-                    style={{
-                      opacity: transmissionAcknowledged
-                        ? Math.min(1, Math.max(0, (manifestoScrollProgress - 0.55) * 2.5))
-                        : 0,
-                      transition: "opacity 0.3s ease-out",
-                    }}
-                  >
-                    Thoughtform teaches teams to think <strong>with</strong> that
-                    intelligence—navigating its strangeness for creative breakthroughs.
-                  </p>
-                </div>
-
-                <div
-                  className="terminal-cursor"
+                <p
+                  className="typed-line line-2"
                   style={{
-                    opacity: transmissionAcknowledged && manifestoScrollProgress > 0.7 ? 1 : 0,
+                    opacity: transmissionAcknowledged
+                      ? Math.min(1, Math.max(0, (manifestoScrollProgress - 0.25) * 2.5))
+                      : 0,
                     transition: "opacity 0.3s ease-out",
                   }}
                 >
-                  <span className="prompt">$</span>
-                  <span className="cursor">_</span>
-                </div>
+                  But AI isn&apos;t a tool to command. It&apos;s a strange, new intelligence we have
+                  to learn how to <em>navigate</em>. It leaps across dimensions we can&apos;t
+                  fathom. It hallucinates. It surprises.
+                </p>
+
+                <p
+                  className="typed-line line-3"
+                  style={{
+                    opacity: transmissionAcknowledged
+                      ? Math.min(1, Math.max(0, (manifestoScrollProgress - 0.4) * 2.5))
+                      : 0,
+                    transition: "opacity 0.3s ease-out",
+                  }}
+                >
+                  In technical work, that strangeness must be constrained. But in creative and
+                  strategic work? It&apos;s the source of truly novel ideas.
+                </p>
+
+                <p
+                  className="typed-line line-4"
+                  style={{
+                    opacity: transmissionAcknowledged
+                      ? Math.min(1, Math.max(0, (manifestoScrollProgress - 0.55) * 2.5))
+                      : 0,
+                    transition: "opacity 0.3s ease-out",
+                  }}
+                >
+                  Thoughtform teaches teams to think <strong>with</strong> that
+                  intelligence—navigating its strangeness for creative breakthroughs.
+                </p>
+              </div>
+
+              <div
+                className="terminal-cursor"
+                style={{
+                  opacity: transmissionAcknowledged && manifestoScrollProgress > 0.7 ? 1 : 0,
+                  transition: "opacity 0.3s ease-out",
+                }}
+              >
+                <span className="prompt">$</span>
+                <span className="cursor">_</span>
               </div>
             </div>
-          </>
-        )}
+          </div>
+        </div>
       </div>
 
       {/* Fixed HUD Frame - Navigation Cockpit */}

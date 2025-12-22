@@ -82,15 +82,15 @@ export const cockpitStyles = `
     min-height: 100px; /* Prevent layout shift during glitch transition */
   }
 
-  /* Bridge-frame transformed into manifesto terminal */
-  .bridge-frame.manifesto-terminal {
-    background: rgba(10, 9, 8, 0.5) !important;
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    border: 1px solid rgba(236, 227, 214, 0.1) !important;
-    overflow: visible; /* Allow corners to extend */
-    min-height: 500px;
-    padding: 0; /* Remove default padding, terminal has its own */
+  /* Terminal content wrapper for smooth transition */
+  .terminal-content-wrapper {
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Bridge-frame during manifesto transition */
+  .bridge-frame {
+    overflow: visible; /* Allow corners to extend during transition */
   }
 
   /* Glitch text content - inherits hero-tagline-v2 styling from parent */
@@ -1044,10 +1044,6 @@ export const cockpitStyles = `
       padding-top: 100px !important;
     }
 
-    .bridge-frame.manifesto-terminal {
-      max-width: 100%;
-      border-width: 1px;
-    }
 
     .terminal-header {
       padding: 10px 14px;
