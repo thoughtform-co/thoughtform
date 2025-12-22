@@ -49,9 +49,10 @@ export async function signInWithMagicLink(email: string) {
     throw new Error("Supabase not configured");
   }
 
-  // Check if email is allowed (if restriction is enabled)
-  const allowedEmail = process.env.NEXT_PUBLIC_ALLOWED_EMAIL;
-  if (allowedEmail && email.toLowerCase() !== allowedEmail.toLowerCase()) {
+  // Check if email is allowed using centralized helper
+  // Import dynamically to avoid issues with server/client boundaries
+  const { isAllowedUserEmail } = await import("@/lib/auth/allowed-user");
+  if (!isAllowedUserEmail(email)) {
     throw new Error("Access restricted. Only authorized users can sign in.");
   }
 

@@ -1,16 +1,34 @@
+// ═══════════════════════════════════════════════════════════════
+// ACTIVE COMPONENTS - Used by the main landing page
+// ═══════════════════════════════════════════════════════════════
+
 // UI Components
 export { Button } from "./ui/Button";
 export { SectionHeader } from "./ui/SectionHeader";
 export { Navigation } from "./ui/Navigation";
 export { FlowNode } from "./ui/FlowNode";
 
-// Canvas Components
+// Parallax Components
+export {
+  ParallaxLayer,
+  ParallaxContainer,
+  FadeInOnScroll,
+  ScaleOnScroll,
+} from "./parallax/ParallaxLayer";
+
+// ═══════════════════════════════════════════════════════════════
+// INTERNAL/LEGACY COMPONENTS - Used only by protected /test/* routes
+// These are kept for admin testing but not used in the main app.
+// Copies archived in legacy/ folder for reference.
+// ═══════════════════════════════════════════════════════════════
+
+// Canvas Components (used by sections)
 export { HeroCanvas } from "./canvas/HeroCanvas";
 export { AttractorCanvas } from "./canvas/AttractorCanvas";
 export { WaveCanvas } from "./canvas/WaveCanvas";
 export { ThreeBackground } from "./canvas/ThreeBackground";
 
-// Section Components
+// Section Components (used by test routes)
 export { HeroSection } from "./sections/HeroSection";
 export { ProblemSection } from "./sections/ProblemSection";
 export { QuoteSection } from "./sections/QuoteSection";
@@ -24,7 +42,7 @@ export { CTASection } from "./sections/CTASection";
 export { Footer } from "./sections/Footer";
 export { FreeformSection } from "./sections/FreeformSection";
 
-// Editor Components
+// Editor Components (used by sections)
 export { PageRenderer } from "./editor/PageRenderer";
 export { SectionWrapper } from "./editor/SectionWrapper";
 export { SectionToolbar } from "./editor/SectionToolbar";
@@ -39,14 +57,10 @@ export { EditableImage } from "./editor/EditableImage";
 export { EditableButton } from "./editor/EditableButton";
 export { KeyboardShortcutsProvider } from "./editor/KeyboardShortcutsProvider";
 
-// Element Components
+// Element Components (used by editor)
 export { TextElement } from "./editor/elements/TextElement";
 export { ImageElement } from "./editor/elements/ImageElement";
 export { VideoElement } from "./editor/elements/VideoElement";
 export { ButtonElement } from "./editor/elements/ButtonElement";
 export { ContainerElement } from "./editor/elements/ContainerElement";
 export { DividerElement } from "./editor/elements/DividerElement";
-
-// Parallax Components
-export { ParallaxLayer, ParallaxContainer, FadeInOnScroll, ScaleOnScroll } from "./parallax/ParallaxLayer";
-

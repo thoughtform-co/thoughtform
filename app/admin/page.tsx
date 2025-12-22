@@ -8,6 +8,7 @@ import { ParticleCanvasV2 } from "@/components/hud/ParticleCanvasV2";
 import { ThoughtformSigil } from "@/components/hud/ThoughtformSigil";
 import { DEFAULT_CONFIG, ParticleSystemConfig } from "@/lib/particle-config";
 import { supabase } from "@/lib/supabase";
+import { isAllowedUserEmail } from "@/lib/auth/allowed-user";
 import "./admin-styles.css";
 
 // Custom config for admin page - manifold only, no Lorenz attractor
@@ -38,8 +39,6 @@ function AdminPageContent() {
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const terminalRef = useRef<HTMLDivElement>(null);
-
-  const allowedEmail = process.env.NEXT_PUBLIC_ALLOWED_EMAIL?.toLowerCase();
 
   // Auto-scroll terminal
   useEffect(() => {
@@ -147,8 +146,8 @@ function AdminPageContent() {
       if (step === "email") {
         if (!value) return;
 
-        // Check allowed email
-        if (allowedEmail && value.toLowerCase() !== allowedEmail) {
+        // Check allowed email using centralized helper
+        if (!isAllowedUserEmail(value)) {
           addLine({ type: "input", text: `> ${value}` });
           addLine({ type: "error", text: "ACCESS DENIED: Unauthorized user" });
           addLine({ type: "system", text: "" });

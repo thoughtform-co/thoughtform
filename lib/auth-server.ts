@@ -1,45 +1,71 @@
-import { NextRequest } from "next/server";
+import { createServerClient } from "./supabase";
+import { isAllowedUserEmail } from "./auth/allowed-user";
 
 /**
- * Get the authenticated user from the server-side request
- * Returns null if not authenticated or email doesn't match allowed email
+ * Get the authenticated user from a Bearer token in the Authorization header.
+ * Returns the user object if valid, null otherwise.
  *
- * Note: This is a simplified version. For production, you should:
- * 1. Use Next.js middleware to verify Supabase sessions
- * 2. Or implement proper cookie-based session checking
+ * @param request - The incoming request with Authorization header
  */
-export async function getServerUser(request?: NextRequest) {
+export async function getServerUser(request: Request) {
   // In development, allow all (for easier testing)
-  const isLocalDev = process.env.NODE_ENV === "development";
-
-  if (isLocalDev) {
-    // Return a mock user in dev mode
-    return { email: process.env.NEXT_PUBLIC_ALLOWED_EMAIL || "dev@example.com" } as any;
+  if (process.env.NODE_ENV === "development") {
+    return { email: process.env.NEXT_PUBLIC_ALLOWED_EMAIL || "dev@example.com" };
   }
 
-  // In production, we'd check the session from cookies/headers
-  // For now, this is a placeholder - you can enhance it with proper middleware
-  // The client-side AuthProvider handles the actual auth, and API routes
-  // can trust the client in dev mode. For production, add proper middleware.
-  return null;
+  const authHeader = request.headers.get("Authorization");
+  if (!authHeader?.startsWith("Bearer ")) {
+    return null;
+  }
+
+  const token = authHeader.slice(7);
+  const supabase = createServerClient();
+  if (!supabase) {
+    return null;
+  }
+
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser(token);
+  if (error || !user) {
+    return null;
+  }
+
+  return user;
 }
 
 /**
- * Check if the current request is from an authorized user
+ * Check if the current request is from an authorized admin user.
+ * Validates the Bearer token and checks the user's email against the allowlist.
  *
- * For now, this allows all requests in dev mode.
- * In production, you should implement proper server-side session verification.
+ * @param request - The incoming request with Authorization header
+ * @returns true if the request is from the allowed admin user
  */
-export async function isAuthorized(request?: NextRequest): Promise<boolean> {
-  const isLocalDev = process.env.NODE_ENV === "development";
-
-  // In dev, allow all (for easier testing)
-  if (isLocalDev) {
+export async function isAuthorized(request: Request): Promise<boolean> {
+  // In development, allow all (for easier testing)
+  if (process.env.NODE_ENV === "development") {
     return true;
   }
 
-  // In production, for now we rely on client-side checks
-  // TODO: Implement proper server-side session checking with Next.js middleware
-  // This would verify Supabase session cookies/headers
-  return false;
+  const authHeader = request.headers.get("Authorization");
+  if (!authHeader?.startsWith("Bearer ")) {
+    return false;
+  }
+
+  const token = authHeader.slice(7);
+  const supabase = createServerClient();
+  if (!supabase) {
+    return false;
+  }
+
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser(token);
+  if (error || !user) {
+    return false;
+  }
+
+  return isAllowedUserEmail(user.email);
 }

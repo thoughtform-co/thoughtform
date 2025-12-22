@@ -189,7 +189,7 @@ interface ParticleConfigProviderProps {
 }
 
 export function ParticleConfigProvider({ children }: ParticleConfigProviderProps) {
-  const { user } = useAuth();
+  const { user, session } = useAuth();
   const [config, setConfig] = useState<ParticleSystemConfig>(DEFAULT_CONFIG);
   const [savedConfig, setSavedConfig] = useState<ParticleSystemConfig>(DEFAULT_CONFIG);
   const [isLoading, setIsLoading] = useState(true);
@@ -412,7 +412,7 @@ export function ParticleConfigProvider({ children }: ParticleConfigProviderProps
 
   // Save config to server (with localStorage fallback)
   const saveConfig = useCallback(async (): Promise<boolean> => {
-    if (!user?.id) {
+    if (!user?.id || !session?.access_token) {
       setError("You must be logged in to save configuration");
       return false;
     }
@@ -430,6 +430,7 @@ export function ParticleConfigProvider({ children }: ParticleConfigProviderProps
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
         },
         body: JSON.stringify({
           ...configToSave,
@@ -476,11 +477,11 @@ export function ParticleConfigProvider({ children }: ParticleConfigProviderProps
       setError("Saved locally (server unavailable)");
       return true;
     }
-  }, [config]);
+  }, [config, session?.access_token]);
 
   // Reset to defaults
   const resetToDefaults = useCallback(async (): Promise<boolean> => {
-    if (!user?.id) {
+    if (!user?.id || !session?.access_token) {
       setError("You must be logged in to reset configuration");
       return false;
     }
@@ -493,6 +494,9 @@ export function ParticleConfigProvider({ children }: ParticleConfigProviderProps
     try {
       const response = await fetch(`/api/particles/config?userId=${user.id}`, {
         method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
       });
 
       if (response.ok) {
@@ -517,7 +521,7 @@ export function ParticleConfigProvider({ children }: ParticleConfigProviderProps
       setStorageMode("local");
       return true;
     }
-  }, [user?.id]);
+  }, [user?.id, session?.access_token]);
 
   // Reload config from server
   const reloadConfig = useCallback(async () => {

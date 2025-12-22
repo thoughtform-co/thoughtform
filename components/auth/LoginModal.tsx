@@ -4,15 +4,13 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { signInWithEmail } from "@/lib/auth";
+import { isAllowedUserEmail } from "@/lib/auth/allowed-user";
 
 interface LoginModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
 }
-
-// Restrict login to specific email (set via environment variable or hardcode)
-const ALLOWED_EMAIL = process.env.NEXT_PUBLIC_ALLOWED_EMAIL || "";
 
 export function LoginModal({ isOpen, onClose, onSuccess }: LoginModalProps) {
   const [email, setEmail] = useState("");
@@ -25,8 +23,8 @@ export function LoginModal({ isOpen, onClose, onSuccess }: LoginModalProps) {
     setError(null);
     setIsLoading(true);
 
-    // Check if email is allowed (if restriction is enabled)
-    if (ALLOWED_EMAIL && email.toLowerCase() !== ALLOWED_EMAIL.toLowerCase()) {
+    // Check if email is allowed using centralized helper
+    if (!isAllowedUserEmail(email)) {
       setError("Access restricted. Only authorized users can sign in.");
       setIsLoading(false);
       return;

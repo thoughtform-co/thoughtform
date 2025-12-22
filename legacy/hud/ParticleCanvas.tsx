@@ -1,3 +1,12 @@
+/**
+ * LEGACY - ParticleCanvas (V1)
+ *
+ * This component has been superseded by ParticleCanvasV2.
+ * Archived for reference. Do not use in new development.
+ *
+ * Original location: components/hud/ParticleCanvas.tsx
+ */
+
 "use client";
 
 import { useEffect, useRef, useCallback } from "react";
@@ -65,18 +74,19 @@ function getTerrainY(x: number, z: number): number {
   const clampedZ = Math.max(800, Math.min(8800, z));
   // Convert Z to row index (terrain spans Z: 800 to 8800, step 50)
   const r = (clampedZ - 800) / 50;
-  
+
   // Convert X to column value (terrain: (c - 35) * 65, so c = x/65 + 35)
-  const c = (x / 65) + 35;
-  
+  const c = x / 65 + 35;
+
   // Use same wave formula as terrain generation
   const wavePhase = r * 0.02;
-  const y = 400 
-    + Math.sin(c * 0.2 + wavePhase) * 180
-    + Math.cos(r * 0.12) * 150
-    + Math.sin(c * 0.35 + r * 0.15) * 70
-    + Math.sin(r * 0.08) * 100;
-  
+  const y =
+    400 +
+    Math.sin(c * 0.2 + wavePhase) * 180 +
+    Math.cos(r * 0.12) * 150 +
+    Math.sin(c * 0.35 + r * 0.15) * 70 +
+    Math.sin(r * 0.08) * 100;
+
   return y;
 }
 
@@ -104,16 +114,17 @@ function initParticles(): Particle[] {
   for (let r = 0; r < 160; r++) {
     for (let c = 0; c < 70; c++) {
       const x = (c - 35) * 65; // Wide spread to fill screen
-      const z = 800 + (r * 50); // Spans Z: 800 to 8800 across entire journey
-      
+      const z = 800 + r * 50; // Spans Z: 800 to 8800 across entire journey
+
       // Multi-wave terrain that evolves as you travel
       const wavePhase = r * 0.02; // Terrain morphs as you progress
-      const y = 400 
-        + Math.sin(c * 0.2 + wavePhase) * 180  // Primary wave with phase shift
-        + Math.cos(r * 0.12) * 150              // Secondary wave
-        + Math.sin(c * 0.35 + r * 0.15) * 70    // Detail wave
-        + Math.sin(r * 0.08) * 100;             // Long-wave undulation over distance
-      
+      const y =
+        400 +
+        Math.sin(c * 0.2 + wavePhase) * 180 + // Primary wave with phase shift
+        Math.cos(r * 0.12) * 150 + // Secondary wave
+        Math.sin(c * 0.35 + r * 0.15) * 70 + // Detail wave
+        Math.sin(r * 0.08) * 100; // Long-wave undulation over distance
+
       particles.push(createPoint(x, y, z, "terrain", GOLD, 0));
     }
   }
@@ -123,7 +134,7 @@ function initParticles(): Particle[] {
   const portalOffsetX = 200;
   const portalZ = 1500;
   const terrainYAtPortal = getTerrainY(portalOffsetX, portalZ);
-  
+
   for (let layer = 0; layer < 12; layer++) {
     const z = portalZ + layer * 40;
     const radius = 300 - layer * 18;
@@ -155,7 +166,7 @@ function initParticles(): Particle[] {
   const manifestoCenterX = 0;
   const manifestoZ = 2900;
   const terrainYAtManifesto = getTerrainY(manifestoCenterX, manifestoZ);
-  
+
   // Base foundation squares - embedded in terrain
   for (let row = 0; row < 3; row++) {
     for (let col = 0; col < 3; col++) {
@@ -167,17 +178,17 @@ function initParticles(): Particle[] {
       particles.push(createPoint(x, y, z, "geo", GOLD, 2));
     }
   }
-  
+
   // Rising geometric tower - interconnected squares growing upward
   // Creates a crystalline/geometric structure that supports the "alien intelligence" narrative
   for (let level = 0; level < 8; level++) {
     const height = level * 35;
     const baseY = terrainYAtManifesto + height;
-    
+
     // Each level is a square pattern, smaller as it rises
     const levelSize = 180 - level * 15;
     const pointsPerSide = 8 - Math.floor(level / 2);
-    
+
     // Bottom square of level
     for (let i = 0; i < pointsPerSide; i++) {
       const t = i / pointsPerSide;
@@ -206,7 +217,7 @@ function initParticles(): Particle[] {
       const x = manifestoCenterX + levelSize * 0.5;
       particles.push(createPoint(x, baseY, z, "geo", DAWN, 2));
     }
-    
+
     // Vertical connectors between levels (rising columns)
     if (level > 0) {
       for (let corner = 0; corner < 4; corner++) {
@@ -217,7 +228,7 @@ function initParticles(): Particle[] {
       }
     }
   }
-  
+
   // Top accent - geometric cap
   const topY = terrainYAtManifesto + 8 * 35 + 20;
   for (let i = 0; i < 4; i++) {
@@ -249,7 +260,7 @@ function initParticles(): Particle[] {
   const horizonCenterX = 0;
   const horizonZ = 8500;
   const terrainYAtHorizon = getTerrainY(horizonCenterX, horizonZ);
-  
+
   // Sphere particles arranged in layers, bottom half embedded in terrain
   for (let i = 0; i < 700; i++) {
     const r = 450;
@@ -328,7 +339,7 @@ export function ParticleCanvas({ scrollProgress }: ParticleCanvasProps) {
 
       const scrollP = scrollProgressRef.current;
       const scrollZ = scrollP * 8500; // Extended range to match terrain (8800 max)
-      
+
       // Determine which section we're in (1-4)
       const currentSection = Math.floor(scrollP * 4) + 1;
       const sectionProgress = (scrollP * 4) % 1; // 0-1 within current section
@@ -339,14 +350,14 @@ export function ParticleCanvas({ scrollProgress }: ParticleCanvasProps) {
 
       // Split vanishing points - stars center, geometry right (fixed position)
       // This creates the "looking out window" effect with integrated terrain
-      const cx_stars = width * 0.5;   // Stars: Center (fly straight)
-      const cx_geo = width * 0.72;    // Geo/Terrain: Right (look out window) - fixed position
+      const cx_stars = width * 0.5; // Stars: Center (fly straight)
+      const cx_geo = width * 0.72; // Geo/Terrain: Right (look out window) - fixed position
       const cy = height * 0.52;
 
       // Sort by depth for proper layering
       // All particles scroll with content, including terrain
       const sorted = [...particlesRef.current].sort((a, b) => {
-        return (b.z - scrollZ) - (a.z - scrollZ);
+        return b.z - scrollZ - (a.z - scrollZ);
       });
 
       sorted.forEach((p) => {
@@ -368,12 +379,12 @@ export function ParticleCanvas({ scrollProgress }: ParticleCanvasProps) {
         } else {
           // LANDMARKS: Scroll with content but fade based on section
           relZ = p.z - scrollZ;
-          
+
           // Calculate landmark visibility based on current section
           if (p.landmark) {
             const landmarkSection = p.landmark;
             const sectionDist = Math.abs(currentSection - landmarkSection);
-            
+
             if (sectionDist === 0) {
               // Current section: fully visible, emerge from terrain
               particleAlpha = 1;
@@ -416,7 +427,7 @@ export function ParticleCanvas({ scrollProgress }: ParticleCanvasProps) {
 
         // Depth-based alpha (closer = more visible)
         const depthAlpha = Math.min(1, (1 - relZ / MAX_DEPTH) * 1.8);
-        
+
         // Apply terrain subtlety multiplier
         ctx.globalAlpha = depthAlpha * particleAlpha * terrainAlphaMultiplier;
         ctx.fillStyle = p.color;
@@ -457,4 +468,3 @@ export function ParticleCanvas({ scrollProgress }: ParticleCanvasProps) {
     </div>
   );
 }
-

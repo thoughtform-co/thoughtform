@@ -73,17 +73,16 @@ export async function GET(request: Request) {
 /**
  * POST /api/particles/config
  * Saves the particle system configuration
- * Requires admin authentication (checked via Vercel Auth header)
+ * Requires admin authentication via Bearer token
  */
 export async function POST(request: Request) {
   try {
     // Check for admin authorization
-    // In dev: allow all. In production: check Supabase session
-    const isLocalDev = process.env.NODE_ENV === "development";
-    const authorized = isLocalDev || (await isAuthorized());
+    // In dev: allow all. In production: verify Bearer token + email allowlist
+    const authorized = await isAuthorized(request);
 
-    // Allow saves in local dev or if authenticated via Supabase
-    if (!isLocalDev && !authorized) {
+    // Reject if not authorized
+    if (!authorized) {
       return NextResponse.json({ error: "Unauthorized - admin access required" }, { status: 401 });
     }
 
@@ -185,11 +184,10 @@ export async function POST(request: Request) {
 export async function DELETE(request: Request) {
   try {
     // Check for admin authorization
-    // In dev: allow all. In production: check Supabase session
-    const isLocalDev = process.env.NODE_ENV === "development";
-    const authorized = isLocalDev || (await isAuthorized());
+    // In dev: allow all. In production: verify Bearer token + email allowlist
+    const authorized = await isAuthorized(request);
 
-    if (!isLocalDev && !authorized) {
+    if (!authorized) {
       return NextResponse.json({ error: "Unauthorized - admin access required" }, { status: 401 });
     }
 

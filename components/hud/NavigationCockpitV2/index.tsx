@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { ParticleCanvasV2 } from "../ParticleCanvasV2";
 import { ThreeGateway } from "../ThreeGateway";
+import { CanvasErrorBoundary } from "../CanvasErrorBoundary";
 import { HUDFrame, NavigationBarHandle } from "../HUDFrame";
 import { Wordmark } from "../Wordmark";
 import { WordmarkSans } from "../WordmarkSans";
@@ -20,7 +21,7 @@ import { MobileModuleTabs } from "./MobileModuleTabs";
 import { ConnectorLines } from "./ConnectorLines";
 import { SigilSection } from "./SigilSection";
 import { HeroBackgroundSigil } from "./HeroBackgroundSigil";
-import { cockpitStyles } from "./styles";
+// Styles consolidated into app/globals.css
 
 // ═══════════════════════════════════════════════════════════════════
 // HERO → DEFINITION TRANSITION
@@ -314,13 +315,17 @@ function NavigationCockpitInner() {
   return (
     <>
       {/* Fixed Background - V2 Particle System (Manifold) */}
-      <ParticleCanvasV2 scrollProgress={scrollProgress} config={config} />
+      <CanvasErrorBoundary>
+        <ParticleCanvasV2 scrollProgress={scrollProgress} config={config} />
+      </CanvasErrorBoundary>
 
       {/* Hero Background Sigil - fully formed in the distance, behind gateway */}
       <HeroBackgroundSigil scrollProgress={scrollProgress} config={rawConfig.sigil} />
 
       {/* Three.js Gateway Overlay - only in hero section, fades out on scroll */}
-      <ThreeGateway scrollProgress={scrollProgress} config={rawConfig.gateway} />
+      <CanvasErrorBoundary>
+        <ThreeGateway scrollProgress={scrollProgress} config={rawConfig.gateway} />
+      </CanvasErrorBoundary>
 
       {/* ═══════════════════════════════════════════════════════════════════
           WORDMARK TRANSITION SYSTEM
@@ -892,11 +897,6 @@ the interface for human-AI collaboration`}
           </div>
         </section>
       </main>
-
-      {/* V2 Specific Styles */}
-      <style jsx global>
-        {cockpitStyles}
-      </style>
     </>
   );
 }

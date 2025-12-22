@@ -1,9 +1,18 @@
+/**
+ * LEGACY - NavigationCockpit (V1)
+ *
+ * This component has been superseded by NavigationCockpitV2.
+ * Archived for reference. Do not use in new development.
+ *
+ * Original location: components/hud/NavigationCockpit.tsx
+ */
+
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import { ParticleCanvas } from "./ParticleCanvas";
-import { HUDFrame } from "./HUDFrame";
-import { Wordmark } from "./Wordmark";
+import { HUDFrame } from "@/components/hud/HUDFrame";
+import { Wordmark } from "@/components/hud/Wordmark";
 import { useLenis } from "@/lib/hooks/useLenis";
 
 export function NavigationCockpit() {
@@ -59,25 +68,18 @@ export function NavigationCockpit() {
       {/* Scroll Container - Content Sections */}
       <main className="scroll-container">
         {/* Section 1: Hero */}
-        <section
-          className="section section-hero"
-          id="hero"
-          data-section="hero"
-        >
+        <section className="section section-hero" id="hero" data-section="hero">
           <div className="hero-layout">
             <div className="hero-content">
               <div className="wordmark">
                 <Wordmark />
               </div>
 
-              <p className="hero-tagline">
-                Navigate the alien terrain of machine intelligence.
-              </p>
+              <p className="hero-tagline">Navigate the alien terrain of machine intelligence.</p>
 
               <p className="hero-description">
-                Thoughtform pioneers intuitive human-AI collaboration. We teach
-                teams to think <em>with</em> AI—navigating its latent space for
-                creative breakthroughs.
+                Thoughtform pioneers intuitive human-AI collaboration. We teach teams to think{" "}
+                <em>with</em> AI—navigating its latent space for creative breakthroughs.
               </p>
 
               <div className="hero-cta">
@@ -95,9 +97,7 @@ export function NavigationCockpit() {
 
               <div className="hero-meta">
                 <span className="meta-label">Landmark:</span>
-                <span className="meta-value">
-                  semantic terrain / latent topology
-                </span>
+                <span className="meta-value">semantic terrain / latent topology</span>
               </div>
             </div>
 
@@ -108,41 +108,30 @@ export function NavigationCockpit() {
         </section>
 
         {/* Section 2: Manifesto - The Commandment */}
-        <section
-          className="section section-manifesto"
-          id="manifesto"
-          data-section="manifesto"
-        >
+        <section className="section section-manifesto" id="manifesto" data-section="manifesto">
           <div className="terminal-frame">
             <div className="terminal-header">
               <div className="terminal-icon" />
               <span className="terminal-title">Manifesto</span>
             </div>
-            
+
             <div className="terminal-frame-inner">
               <div className="terminal-content">
-                <h2 className="headline">
-                  AI Isn&apos;t Software
-                </h2>
+                <h2 className="headline">AI Isn&apos;t Software</h2>
 
                 <div className="text-block">
                   <p className="text">
-                    Most companies struggle because they treat AI like normal
-                    software.
+                    Most companies struggle because they treat AI like normal software.
                   </p>
-                  <p className="text text-emphasis">
-                    But AI isn&apos;t a tool to command.
-                  </p>
+                  <p className="text text-emphasis">But AI isn&apos;t a tool to command.</p>
                   <p className="text">
-                    It&apos;s a strange, new intelligence we must learn to{" "}
-                    <em>navigate</em>. It leaps across dimensions. It hallucinates.
-                    It surprises.
+                    It&apos;s a strange, new intelligence we must learn to <em>navigate</em>. It
+                    leaps across dimensions. It hallucinates. It surprises.
                   </p>
                   <p className="text">
                     In technical work, that strangeness must be constrained.
                     <br />
-                    In creative work?{" "}
-                    <strong>It&apos;s the source of truly novel ideas.</strong>
+                    In creative work? <strong>It&apos;s the source of truly novel ideas.</strong>
                   </p>
                 </div>
               </div>
@@ -152,18 +141,14 @@ export function NavigationCockpit() {
               <span className="terminal-tag">Landmark: Crystalline Tower</span>
               <span className="terminal-tag">Section 02</span>
             </div>
-            
+
             {/* Bottom corner brackets */}
             <div className="terminal-frame-corners" />
           </div>
         </section>
 
         {/* Section 3: Services */}
-        <section
-          className="section section-services"
-          id="services"
-          data-section="services"
-        >
+        <section className="section section-services" id="services" data-section="services">
           <div className="section-layout">
             <div className="section-label">
               <span className="label-number">03</span>
@@ -171,53 +156,42 @@ export function NavigationCockpit() {
             </div>
 
             <div className="section-content">
-              <h2 className="headline">
-                Navigation Training
-              </h2>
+              <h2 className="headline">Navigation Training</h2>
 
               <div className="services-grid">
                 <div className="service-card">
                   <span className="service-id">01</span>
                   <h3 className="service-title">AI Intuition Workshops</h3>
                   <p className="service-desc">
-                    Develop the mental models that unlock creative collaboration
-                    with AI.
+                    Develop the mental models that unlock creative collaboration with AI.
                   </p>
                 </div>
                 <div className="service-card">
                   <span className="service-id">02</span>
                   <h3 className="service-title">Strategic Integration</h3>
                   <p className="service-desc">
-                    Design AI-augmented workflows for creative and strategic
-                    teams.
+                    Design AI-augmented workflows for creative and strategic teams.
                   </p>
                 </div>
                 <div className="service-card">
                   <span className="service-id">03</span>
                   <h3 className="service-title">Custom Expeditions</h3>
                   <p className="service-desc">
-                    Guided exploration of AI capabilities tailored to your
-                    domain.
+                    Guided exploration of AI capabilities tailored to your domain.
                   </p>
                 </div>
               </div>
 
               <div className="section-meta">
                 <span className="meta-label">Landmark:</span>
-                <span className="meta-value">
-                  trajectory grid / vanishing point
-                </span>
+                <span className="meta-value">trajectory grid / vanishing point</span>
               </div>
             </div>
           </div>
         </section>
 
         {/* Section 4: Contact */}
-        <section
-          className="section section-contact"
-          id="contact"
-          data-section="contact"
-        >
+        <section className="section section-contact" id="contact" data-section="contact">
           <div className="section-layout">
             <div className="section-label">
               <span className="label-number">04</span>
@@ -225,30 +199,19 @@ export function NavigationCockpit() {
             </div>
 
             <div className="section-content section-content-centered">
-              <h2 className="headline">
-                Plot Your Course
-              </h2>
+              <h2 className="headline">Plot Your Course</h2>
 
-              <p className="text text-center">
-                Ready to navigate intelligence with your team?
-              </p>
+              <p className="text text-center">Ready to navigate intelligence with your team?</p>
 
-              <a
-                href="mailto:hello@thoughtform.co"
-                className="btn btn-primary btn-large"
-              >
+              <a href="mailto:hello@thoughtform.co" className="btn btn-primary btn-large">
                 Initiate Contact
               </a>
 
-              <div className="contact-email">
-                hello@thoughtform.co
-              </div>
+              <div className="contact-email">hello@thoughtform.co</div>
 
               <div className="section-meta">
                 <span className="meta-label">Landmark:</span>
-                <span className="meta-value">
-                  event horizon / destination lock
-                </span>
+                <span className="meta-value">event horizon / destination lock</span>
               </div>
             </div>
           </div>
@@ -257,4 +220,3 @@ export function NavigationCockpit() {
     </>
   );
 }
-
