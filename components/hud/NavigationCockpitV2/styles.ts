@@ -82,6 +82,19 @@ export const cockpitStyles = `
     min-height: 100px; /* Prevent layout shift during glitch transition */
   }
 
+  /* Manifesto terminal frame - transformed bridge-frame */
+  .bridge-frame .manifesto-terminal-frame {
+    position: relative;
+    width: 100%;
+    background: rgba(10, 9, 8, 0.5);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(236, 227, 214, 0.1);
+    overflow: visible; /* Allow corners to extend */
+    box-sizing: border-box;
+    min-height: 500px;
+  }
+
   /* Glitch text content - inherits hero-tagline-v2 styling from parent */
   .bridge-content-glitch {
     display: block;
@@ -371,11 +384,11 @@ export const cockpitStyles = `
     padding: 32px 64px;
     background: linear-gradient(
       180deg,
-      rgba(180, 200, 160, 0.15) 0%,
-      rgba(160, 180, 140, 0.25) 50%,
-      rgba(140, 160, 120, 0.15) 100%
+      rgba(202, 165, 84, 0.1) 0%,
+      rgba(202, 165, 84, 0.2) 50%,
+      rgba(202, 165, 84, 0.1) 100%
     );
-    border: 2px solid rgba(180, 200, 160, 0.4);
+    border: 2px solid rgba(202, 165, 84, 0.4);
     border-radius: 4px;
     overflow: hidden;
     cursor: pointer;
@@ -385,14 +398,14 @@ export const cockpitStyles = `
   .question-button:hover .question-button-inner {
     background: linear-gradient(
       180deg,
-      rgba(180, 200, 160, 0.2) 0%,
-      rgba(160, 180, 140, 0.35) 50%,
-      rgba(140, 160, 120, 0.2) 100%
+      rgba(202, 165, 84, 0.15) 0%,
+      rgba(202, 165, 84, 0.3) 50%,
+      rgba(202, 165, 84, 0.15) 100%
     );
-    border-color: rgba(180, 200, 160, 0.6);
+    border-color: rgba(202, 165, 84, 0.6);
     box-shadow: 
-      0 0 30px rgba(180, 200, 160, 0.2),
-      inset 0 0 20px rgba(180, 200, 160, 0.1);
+      0 0 30px rgba(202, 165, 84, 0.2),
+      inset 0 0 20px rgba(202, 165, 84, 0.1);
     transform: scale(1.02);
   }
 
@@ -416,9 +429,9 @@ export const cockpitStyles = `
     font-family: var(--font-display, "PP Mondwest", serif);
     font-size: clamp(24px, 3.5vw, 40px);
     font-weight: 400;
-    color: rgba(40, 50, 30, 0.9);
+    color: var(--gold, #caa554);
     letter-spacing: 0.02em;
-    text-shadow: 0 0 10px rgba(180, 200, 160, 0.5);
+    text-shadow: 0 0 10px rgba(202, 165, 84, 0.5);
   }
 
   /* Phase 3: Typed manifesto content */
