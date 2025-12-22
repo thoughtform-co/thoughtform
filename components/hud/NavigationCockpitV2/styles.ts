@@ -233,8 +233,7 @@ export const cockpitStyles = `
     width: 100%;
     max-width: 920px;
     background: #080806;
-    border: 2px solid rgba(202, 165, 84, 0.4);
-    border-radius: 12px;
+    border: 1px solid rgba(202, 165, 84, 0.4);
     overflow: hidden;
     box-shadow: 
       0 0 60px rgba(202, 165, 84, 0.15),
@@ -256,15 +255,13 @@ export const cockpitStyles = `
     );
     pointer-events: none;
     z-index: 20;
-    border-radius: 12px;
   }
 
   /* Terminal header bar */
   .terminal-header {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    padding: 14px 20px;
+    padding: 12px 24px;
     background: rgba(202, 165, 84, 0.06);
     border-bottom: 1px solid rgba(202, 165, 84, 0.2);
   }
@@ -277,24 +274,11 @@ export const cockpitStyles = `
     text-transform: uppercase;
   }
 
-  .terminal-controls {
-    display: flex;
-    gap: 8px;
-  }
-
-  .control-dot {
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    background: rgba(202, 165, 84, 0.3);
-    border: 1px solid rgba(202, 165, 84, 0.5);
-  }
-
   /* Terminal body with scanlines */
   .terminal-body {
     position: relative;
-    padding: 40px;
-    min-height: 450px;
+    padding: 24px 32px 32px 32px;
+    min-height: 400px;
     background: linear-gradient(
       180deg,
       rgba(202, 165, 84, 0.02) 0%,
@@ -302,6 +286,7 @@ export const cockpitStyles = `
       transparent 80%,
       rgba(202, 165, 84, 0.02) 100%
     );
+    text-align: left;
   }
 
   /* CRT Scanlines effect */
@@ -339,7 +324,7 @@ export const cockpitStyles = `
     font-size: clamp(5px, 0.9vw, 9px);
     line-height: 1.15;
     color: #caa554;
-    margin: 0 0 40px 0;
+    margin: 0 0 32px 0;
     overflow-x: auto;
     text-shadow: 
       0 0 10px rgba(202, 165, 84, 0.8),
@@ -348,12 +333,14 @@ export const cockpitStyles = `
     white-space: pre;
     position: relative;
     z-index: 5;
+    text-align: left;
   }
 
   /* Terminal content */
   .terminal-content {
     position: relative;
     z-index: 5;
+    text-align: left;
   }
 
   .terminal-line {
@@ -389,11 +376,12 @@ export const cockpitStyles = `
 
   /* Terminal output text */
   .terminal-output {
-    padding-left: 28px;
-    margin-bottom: 28px;
+    padding-left: 24px;
+    margin-bottom: 24px;
     display: flex;
     flex-direction: column;
-    gap: 24px;
+    gap: 20px;
+    text-align: left;
   }
 
   .terminal-output p {
@@ -404,6 +392,7 @@ export const cockpitStyles = `
     margin: 0;
     max-width: 72ch;
     text-shadow: 0 0 4px rgba(202, 165, 84, 0.3);
+    text-align: left;
   }
 
   .terminal-output em {
@@ -923,7 +912,6 @@ export const cockpitStyles = `
 
     .manifesto-terminal {
       max-width: 100%;
-      border-radius: 8px;
       border-width: 1px;
     }
 

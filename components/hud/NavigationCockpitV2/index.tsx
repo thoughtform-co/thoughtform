@@ -416,11 +416,6 @@ the interface for human-AI collaboration`}
             {/* Terminal window frame */}
             <div className="terminal-header">
               <span className="terminal-title">thoughtform@manifesto:~</span>
-              <div className="terminal-controls">
-                <span className="control-dot"></span>
-                <span className="control-dot"></span>
-                <span className="control-dot"></span>
-              </div>
             </div>
 
             {/* Terminal content */}
