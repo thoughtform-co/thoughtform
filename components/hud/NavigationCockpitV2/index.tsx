@@ -428,14 +428,15 @@ function NavigationCockpitInner() {
         className="hero-wordmark-container"
         ref={wordmarkContainerRef}
         style={{
-          // Slide from top (90px) to above the frame
+          // Slide from top (90px) to above the frame with consistent 24px gap
           // At t=0: top: 90px (hero position at top)
-          // At t=1: Wordmark above frame, aligned with rail marker 5 (~50vh)
-          // Wordmark top at t=1: calc(50vh - 125px) = tighter spacing to frame
+          // At t=1: top: calc(50vh - 100px) = positioned ~24px above the frame
+          //   Frame is centered at ~50vh with top at ~50vh - 30px
+          //   Wordmark (~40px tall) bottom at 50vh - 60px, creating ~30px gap
           // On mobile, let CSS control positioning
           top: isMobile
             ? undefined
-            : `calc(${lerp(90, 0, tHeroToDef)}px + ${lerp(0, 50, tHeroToDef)}vh - ${lerp(0, 125, tHeroToDef)}px)`,
+            : `calc(${lerp(90, -100, tHeroToDef)}px + ${lerp(0, 50, tHeroToDef)}vh)`,
           // On mobile, apply centering transform
           transform: isMobile ? "translateX(-50%)" : undefined,
           // CSS variable for brandmark fade
