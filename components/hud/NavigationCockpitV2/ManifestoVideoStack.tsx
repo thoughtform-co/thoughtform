@@ -195,14 +195,17 @@ export function ManifestoVideoStack({
       <style jsx>{`
         .video-stack-container {
           position: fixed;
-          /* Position on the right side of the screen */
-          right: 160px;
+          /* Position to the right of manifesto terminal (.bridge-frame)
+             Bridge frame: left: calc(var(--rail-width) + 120px), width: 500px
+             So right edge is at: calc(var(--rail-width) + 620px)
+             Add 48px gap between manifesto and video stack */
+          left: calc(var(--rail-width, 48px) + 120px + 500px + 48px);
           top: 50%;
           transform: translateY(-50%);
           z-index: 100;
           display: flex;
           flex-direction: column;
-          align-items: flex-end;
+          align-items: flex-start;
           gap: 16px;
           animation: fadeIn 0.5s ease-out forwards;
         }
@@ -210,7 +213,7 @@ export function ManifestoVideoStack({
         @keyframes fadeIn {
           from {
             opacity: 0;
-            transform: translateY(-50%) translateX(20px);
+            transform: translateY(-50%) translateX(-20px);
           }
           to {
             opacity: 1;
@@ -435,7 +438,7 @@ export function ManifestoVideoStack({
           display: flex;
           align-items: center;
           gap: 6px;
-          padding-right: 8px;
+          padding-left: 8px;
         }
 
         .label-dot {
@@ -454,23 +457,55 @@ export function ManifestoVideoStack({
         }
 
         /* ─── RESPONSIVE ─── */
-        @media (max-width: 1200px) {
+        /* On smaller screens, reduce gap and card size to fit between manifesto and rail */
+        @media (max-width: 1400px) {
           .video-stack-container {
-            right: 80px;
+            /* Reduce gap on medium screens */
+            left: calc(var(--rail-width, 48px) + 120px + 500px + 32px);
           }
 
           .video-stack {
-            width: 150px;
-            height: 200px;
+            width: 160px;
+            height: 213px;
           }
 
           .video-card {
-            width: 150px;
-            height: 200px;
+            width: 160px;
+            height: 213px;
           }
         }
 
-        @media (max-width: 768px) {
+        @media (max-width: 1200px) {
+          .video-stack-container {
+            /* Even smaller gap, smaller cards */
+            left: calc(var(--rail-width, 48px) + 120px + 500px + 24px);
+          }
+
+          .video-stack {
+            width: 140px;
+            height: 187px;
+          }
+
+          .video-card {
+            width: 140px;
+            height: 187px;
+          }
+
+          .card-info {
+            padding: 10px;
+          }
+
+          .card-title {
+            font-size: 9px;
+          }
+
+          .card-description {
+            font-size: 8px;
+          }
+        }
+
+        /* Hide on narrow screens where there's no room */
+        @media (max-width: 1024px) {
           .video-stack-container {
             display: none;
           }
