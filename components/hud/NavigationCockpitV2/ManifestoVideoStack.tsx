@@ -242,7 +242,9 @@ export function ManifestoVideoStack({
       </div>
 
       {/* ═══════════════════════════════════════════════════════════════════
-          EXPANDED MODAL - Atlas EntityCardPreview / DenizenModalV3 Style
+          EXPANDED MODAL - Exact DenizenModalV3 Layout
+          3-column grid: 150px | 1fr | 150px
+          3-row grid: 32px | 1fr | 110px
           ═══════════════════════════════════════════════════════════════════ */}
       {expandedCard &&
         createPortal(
@@ -270,11 +272,11 @@ export function ManifestoVideoStack({
                     <span className="modal-placeholder-text">[VIDEO COMING SOON]</span>
                   </div>
                 )}
-                {/* Gradient overlay */}
+                {/* Gradient overlay - exact DenizenModalV3 */}
                 <div className="modal-gradient" />
               </div>
 
-              {/* Header - glassmorphism (exact Atlas EntityCardPreview style) */}
+              {/* Header - glassmorphism spanning all columns */}
               <div className="modal-header">
                 <span className="modal-header-brand">THOUGHTFORM</span>
                 <span className="modal-header-data">
@@ -312,7 +314,50 @@ export function ManifestoVideoStack({
                 </div>
               </div>
 
-              {/* Footer - glassmorphism (exact Atlas EntityCardPreview style) */}
+              {/* Left Column - glassmorphism with minimal background */}
+              <div className="modal-left-col">
+                <div className="modal-readout">
+                  <div className="readout-label">▸ Source</div>
+                  <div className="readout-value">
+                    {expandedCard.role?.toUpperCase() || "MANIFESTO"}
+                  </div>
+                </div>
+                <div className="modal-readout">
+                  <div className="readout-label">▸ Type</div>
+                  <div className="readout-value">{expandedCard.type?.toUpperCase() || "VOICE"}</div>
+                </div>
+                <div className="modal-readout">
+                  <div className="readout-label">▸ Status</div>
+                  <div className="readout-value-alert">ACTIVE</div>
+                </div>
+              </div>
+
+              {/* Center - transparent to show background media */}
+              <div className="modal-center">
+                {/* Coordinates display - centered above visual */}
+                <div className="modal-coords">
+                  <span className="coord-label">◆</span>
+                  <span className="coord-value">VOICE</span>
+                </div>
+              </div>
+
+              {/* Right Column - glassmorphism with minimal background */}
+              <div className="modal-right-col">
+                <div className="modal-readout">
+                  <div className="readout-label">▸ Duration</div>
+                  <div className="readout-value">{formatTime(elapsedTime)}</div>
+                </div>
+                <div className="modal-readout">
+                  <div className="readout-label">▸ Signal</div>
+                  <div className="readout-value">0.946</div>
+                </div>
+                <div className="modal-readout">
+                  <div className="readout-label">▸ Clarity</div>
+                  <div className="readout-value-dynamics">NOMINAL</div>
+                </div>
+              </div>
+
+              {/* Footer - glassmorphism spanning all columns */}
               <div className="modal-footer">
                 <div className="modal-footer-left">
                   <div className="modal-name">{expandedCard.title.toUpperCase()}</div>
@@ -645,17 +690,17 @@ export function ManifestoVideoStack({
           }
         }
 
-        /* Card - exact Atlas EntityCardPreview sizing and grid */
+        /* Card - exact DenizenModalV3 grid layout: 150px | 1fr | 150px */
         .modal-card {
           position: relative;
-          width: 620px;
+          width: min(calc(100vh * 0.8), 720px);
           max-width: calc(100vw - 80px);
           aspect-ratio: 4 / 5;
-          background: var(--void, #050403);
+          background: #050403;
           overflow: hidden;
           display: grid;
-          grid-template-columns: 1fr;
-          grid-template-rows: 32px 1fr 140px;
+          grid-template-columns: 150px 1fr 150px;
+          grid-template-rows: 32px 1fr 110px;
           gap: 1px;
           border: 1px solid rgba(236, 227, 214, 0.08);
           animation: modalCardIn 0.4s cubic-bezier(0.19, 1, 0.22, 1) forwards;
@@ -814,19 +859,128 @@ export function ManifestoVideoStack({
           color: rgba(236, 227, 214, 0.8);
         }
 
-        /* Footer - exact Atlas EntityCardPreview.module.css */
+        /* Left Column - exact DenizenModalV3 glassmorphism */
+        .modal-left-col {
+          display: flex;
+          flex-direction: column;
+          gap: 1px;
+          position: relative;
+          z-index: 10;
+          background: rgba(5, 4, 3, 0.03);
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
+          border-right: 1px solid rgba(236, 227, 214, 0.08);
+        }
+
+        /* Readout panels - exact DenizenModalV3 styling */
+        .modal-readout {
+          background: rgba(5, 4, 3, 0.03);
+          padding: 8px;
+          display: flex;
+          flex-direction: column;
+          flex: 1;
+          min-height: 0;
+          border-bottom: 1px solid rgba(236, 227, 214, 0.06);
+        }
+
+        .readout-label {
+          font-family: var(--font-mono, "PT Mono", monospace);
+          font-size: 9px;
+          letter-spacing: 0.1em;
+          text-transform: uppercase;
+          color: rgba(236, 227, 214, 0.4);
+          margin-bottom: 8px;
+          display: flex;
+          align-items: center;
+          gap: 4px;
+        }
+
+        .readout-value {
+          font-family: var(--font-mono, "PT Mono", monospace);
+          font-size: 10px;
+          color: var(--gold, #caa554);
+          text-align: center;
+          letter-spacing: 0.05em;
+          margin-top: auto;
+        }
+
+        .readout-value-alert {
+          font-family: var(--font-mono, "PT Mono", monospace);
+          font-size: 10px;
+          color: #c17f59;
+          text-align: center;
+          letter-spacing: 0.05em;
+          margin-top: auto;
+        }
+
+        .readout-value-dynamics {
+          font-family: var(--font-mono, "PT Mono", monospace);
+          font-size: 10px;
+          color: #5b8a7a;
+          text-align: center;
+          letter-spacing: 0.05em;
+          margin-top: auto;
+        }
+
+        /* Center - transparent to show background media */
+        .modal-center {
+          background: transparent;
+          position: relative;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          overflow: hidden;
+        }
+
+        .modal-coords {
+          position: absolute;
+          top: 20px;
+          left: 50%;
+          transform: translateX(-50%);
+          z-index: 15;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-family: var(--font-mono, "PT Mono", monospace);
+          font-size: 9px;
+          color: rgba(236, 227, 214, 0.4);
+          letter-spacing: 0.08em;
+        }
+
+        .coord-label {
+          color: var(--gold, #caa554);
+        }
+
+        .coord-value {
+          color: rgba(236, 227, 214, 0.5);
+        }
+
+        /* Right Column - exact DenizenModalV3 glassmorphism */
+        .modal-right-col {
+          display: flex;
+          flex-direction: column;
+          gap: 1px;
+          position: relative;
+          z-index: 10;
+          background: rgba(5, 4, 3, 0.03);
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
+          border-left: 1px solid rgba(236, 227, 214, 0.08);
+        }
+
+        /* Footer - exact DenizenModalV3 glassmorphism */
         .modal-footer {
           grid-column: 1 / -1;
+          position: relative;
+          z-index: 10;
           background: rgba(10, 9, 8, 0.1);
           backdrop-filter: blur(12px);
           -webkit-backdrop-filter: blur(12px);
           border-top: 1px solid rgba(236, 227, 214, 0.12);
-          padding: 18px 28px;
+          padding: 12px 28px;
           display: grid;
           grid-template-columns: 180px 1fr;
-          gap: 24px;
-          position: relative;
-          z-index: 10;
+          gap: 20px;
         }
 
         .modal-footer-left {
@@ -837,20 +991,20 @@ export function ManifestoVideoStack({
 
         .modal-name {
           font-family: var(--font-mono, "PT Mono", monospace);
-          font-size: 22px;
+          font-size: 24px;
           color: var(--gold, #caa554);
           letter-spacing: 0.1em;
-          line-height: 1.1;
+          line-height: 1;
           text-transform: uppercase;
         }
 
         .modal-meta {
-          margin-top: 10px;
+          margin-top: 8px;
           font-family: var(--font-mono, "PT Mono", monospace);
-          font-size: 9px;
+          font-size: 8px;
           display: flex;
           flex-direction: column;
-          gap: 5px;
+          gap: 3px;
         }
 
         .modal-meta-line {
@@ -865,16 +1019,18 @@ export function ManifestoVideoStack({
 
         .modal-footer-right {
           display: flex;
-          align-items: center;
+          align-items: flex-start;
           border-left: 1px solid rgba(236, 227, 214, 0.08);
-          padding-left: 28px;
+          padding-left: 24px;
+          padding-top: 4px;
+          padding-bottom: 4px;
         }
 
         .modal-bio {
           font-family: var(--font-sans, "IBM Plex Sans", sans-serif);
           font-size: 12px;
           color: rgba(236, 227, 214, 0.5);
-          line-height: 1.7;
+          line-height: 1.6;
         }
 
         /* ═══════════════════════════════════════════════════════════════════
@@ -929,9 +1085,17 @@ export function ManifestoVideoStack({
             font-size: 7px;
           }
 
+          /* Modal responsive - collapse side columns */
           .modal-card {
             width: 100%;
             max-width: 500px;
+            grid-template-columns: 1fr;
+            grid-template-rows: 32px 1fr 120px;
+          }
+
+          .modal-left-col,
+          .modal-right-col {
+            display: none;
           }
 
           .modal-footer {
