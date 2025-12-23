@@ -196,8 +196,16 @@ export function ManifestoVideoStack({
         .video-stack-container {
           position: fixed;
           /* Position centered between terminal right edge and right rail
-             Using right positioning with transform to center in available space */
-          right: calc(var(--rail-width, 48px) + 70px);
+             Terminal right: calc(var(--rail-width) + 120px + 500px)
+             Right rail left: calc(100vw - var(--hud-padding) - var(--rail-width))
+             Calculate midpoint and position card center there */
+          left: calc(
+            (
+                var(--rail-width, 60px) + 120px + 500px +
+                  100vw - var(--hud-padding, 48px) - var(--rail-width, 60px)
+              ) /
+              2 - 100px
+          );
           top: 50%;
           transform: translateY(-50%);
           z-index: 50; /* Below the terminal (z-index 100) */
@@ -455,10 +463,16 @@ export function ManifestoVideoStack({
         }
 
         /* ─── RESPONSIVE ─── */
-        /* On smaller screens, reduce gap and card size to fit between manifesto and rail */
+        /* On smaller screens, maintain centering with adjusted card sizes */
         @media (max-width: 1400px) {
           .video-stack-container {
-            right: calc(var(--rail-width, 48px) + 60px);
+            left: calc(
+              (
+                  var(--rail-width, 60px) + 120px + 500px +
+                    100vw - var(--hud-padding, 48px) - var(--rail-width, 60px)
+                ) /
+                2 - 90px
+            );
           }
 
           .video-stack {
@@ -474,7 +488,13 @@ export function ManifestoVideoStack({
 
         @media (max-width: 1200px) {
           .video-stack-container {
-            right: calc(var(--rail-width, 48px) + 50px);
+            left: calc(
+              (
+                  var(--rail-width, 60px) + 120px + 500px +
+                    100vw - var(--hud-padding, 48px) - var(--rail-width, 60px)
+                ) /
+                2 - 80px
+            );
           }
 
           .video-stack {
