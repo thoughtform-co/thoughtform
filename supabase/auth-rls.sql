@@ -7,6 +7,8 @@
 alter table pages enable row level security;
 alter table sections enable row level security;
 alter table elements enable row level security;
+alter table design_log enable row level security;
+alter table particle_config enable row level security;
 
 -- PAGES: Anyone can read, only authenticated users can write
 create policy "Pages are viewable by everyone"
@@ -67,4 +69,35 @@ create policy "Authenticated users can delete elements"
   on elements for delete
   to authenticated
   using (true);
+
+-- DESIGN_LOG: Anyone can read, only authenticated users can insert
+create policy "Design log is viewable by everyone"
+  on design_log for select
+  using (true);
+
+create policy "Authenticated users can insert design log entries"
+  on design_log for insert
+  to authenticated
+  with check (true);
+
+-- PARTICLE_CONFIG: Anyone can read, users can manage their own config
+create policy "Particle config is viewable by everyone"
+  on particle_config for select
+  using (true);
+
+create policy "Users can insert their own particle config"
+  on particle_config for insert
+  to authenticated
+  with check (user_id = auth.uid() OR (id = 'default' AND user_id IS NULL));
+
+create policy "Users can update their own particle config"
+  on particle_config for update
+  to authenticated
+  using (user_id = auth.uid() OR (id = 'default' AND user_id IS NULL))
+  with check (user_id = auth.uid() OR (id = 'default' AND user_id IS NULL));
+
+create policy "Users can delete their own particle config"
+  on particle_config for delete
+  to authenticated
+  using (user_id = auth.uid() OR (id = 'default' AND user_id IS NULL));
 
