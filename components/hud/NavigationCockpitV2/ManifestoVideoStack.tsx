@@ -195,17 +195,15 @@ export function ManifestoVideoStack({
       <style jsx>{`
         .video-stack-container {
           position: fixed;
-          /* Position between terminal and right rail
-             Right rail is ~120px from edge (includes rail width + margin)
-             Video stack needs ~220px (180px card + 40px for stack offset)
-             Position so there's room for both */
-          right: calc(var(--rail-width, 48px) + 100px);
+          /* Position centered between terminal right edge and right rail
+             Using right positioning with transform to center in available space */
+          right: calc(var(--rail-width, 48px) + 70px);
           top: 50%;
           transform: translateY(-50%);
           z-index: 50; /* Below the terminal (z-index 100) */
           display: flex;
           flex-direction: column;
-          align-items: flex-start;
+          align-items: center;
           gap: 16px;
           animation: fadeIn 0.5s ease-out forwards;
         }
@@ -223,15 +221,15 @@ export function ManifestoVideoStack({
 
         .video-stack {
           position: relative;
-          width: 180px;
-          height: 240px;
+          width: 200px;
+          height: 267px;
         }
 
         /* ─── CARD STYLING (Atlas-inspired) ─── */
         .video-card {
           position: absolute;
-          width: 180px;
-          height: 240px;
+          width: 200px;
+          height: 267px;
           cursor: pointer;
           background: var(--surface-0, #0a0908);
           border: 1px solid rgba(236, 227, 214, 0.08);
@@ -460,33 +458,33 @@ export function ManifestoVideoStack({
         /* On smaller screens, reduce gap and card size to fit between manifesto and rail */
         @media (max-width: 1400px) {
           .video-stack-container {
-            right: calc(var(--rail-width, 48px) + 80px);
+            right: calc(var(--rail-width, 48px) + 60px);
           }
 
           .video-stack {
-            width: 160px;
-            height: 213px;
+            width: 180px;
+            height: 240px;
           }
 
           .video-card {
-            width: 160px;
-            height: 213px;
+            width: 180px;
+            height: 240px;
           }
         }
 
         @media (max-width: 1200px) {
           .video-stack-container {
-            right: calc(var(--rail-width, 48px) + 60px);
+            right: calc(var(--rail-width, 48px) + 50px);
           }
 
           .video-stack {
-            width: 140px;
-            height: 187px;
+            width: 160px;
+            height: 213px;
           }
 
           .video-card {
-            width: 140px;
-            height: 187px;
+            width: 160px;
+            height: 213px;
           }
 
           .card-info {
