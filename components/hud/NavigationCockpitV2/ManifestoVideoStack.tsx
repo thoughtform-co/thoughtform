@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
+import { createPortal } from "react-dom";
 
 // ═══════════════════════════════════════════════════════════════════
 // MANIFESTO VIDEO STACK - Atlas Entity Card Style
-// Stacked video cards that play on hover
+// Stacked video cards that play on hover, with expanded modal view
 // ═══════════════════════════════════════════════════════════════════
 
 interface VideoCard {
@@ -17,6 +18,8 @@ interface VideoCard {
   title: string;
   /** Short description or quote */
   description: string;
+  /** Full quote or extended text for modal */
+  fullText?: string;
   /** Optional speaker role/affiliation */
   role?: string;
 }
@@ -29,6 +32,8 @@ const PLACEHOLDER_CARDS: VideoCard[] = [
     thumbnail: "",
     title: "AI as Intelligence",
     description: "It leaps across dimensions we can't fathom.",
+    fullText:
+      "AI isn't just a tool—it's a strange, new intelligence that leaps across dimensions we can't fully comprehend. It sees patterns in places we've never looked.",
     role: "Manifesto",
   },
   {
@@ -37,6 +42,8 @@ const PLACEHOLDER_CARDS: VideoCard[] = [
     thumbnail: "",
     title: "Navigate Strangeness",
     description: "The source of truly novel ideas.",
+    fullText:
+      "In technical work, AI's strangeness must be constrained. But in creative and strategic work, that strangeness becomes the source of truly novel ideas.",
     role: "Manifesto",
   },
   {
@@ -45,6 +52,8 @@ const PLACEHOLDER_CARDS: VideoCard[] = [
     thumbnail: "",
     title: "Think WITH AI",
     description: "Navigating its strangeness for creative breakthroughs.",
+    fullText:
+      "Thoughtform teaches teams to think WITH that intelligence—not against it, not around it—navigating its strangeness for creative breakthroughs.",
     role: "Manifesto",
   },
 ];
@@ -65,7 +74,10 @@ export function ManifestoVideoStack({
 }: ManifestoVideoStackProps) {
   const [activeCardIndex, setActiveCardIndex] = useState<number | null>(null);
   const [hoveredCard, setHoveredCard] = useState<string | null>(null);
+  const [expandedCard, setExpandedCard] = useState<VideoCard | null>(null);
+  const [elapsedTime, setElapsedTime] = useState(0);
   const videoRefs = useRef<Map<string, HTMLVideoElement>>(new Map());
+  const modalVideoRef = useRef<HTMLVideoElement>(null);
 
   // Control video playback based on hover state
   useEffect(() => {
@@ -83,6 +95,46 @@ export function ManifestoVideoStack({
       }
     });
   }, [hoveredCard, cards]);
+
+  // Elapsed time for modal (mimicking Atlas)
+  useEffect(() => {
+    if (!expandedCard) {
+      setElapsedTime(0);
+      return;
+    }
+    const interval = setInterval(() => setElapsedTime((prev) => prev + 1), 1000);
+    return () => clearInterval(interval);
+  }, [expandedCard]);
+
+  // Handle escape key to close modal
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && expandedCard) {
+        setExpandedCard(null);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [expandedCard]);
+
+  // Handle backdrop click
+  const handleBackdropClick = useCallback((e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) {
+      setExpandedCard(null);
+    }
+  }, []);
+
+  // Format time like Atlas modal
+  const formatTime = (seconds: number) => {
+    const hrs = Math.floor(seconds / 3600)
+      .toString()
+      .padStart(2, "0");
+    const mins = Math.floor((seconds % 3600) / 60)
+      .toString()
+      .padStart(2, "0");
+    const secs = (seconds % 60).toString().padStart(2, "0");
+    return `${hrs}:${mins}:${secs}`;
+  };
 
   if (!isVisible) return null;
 
@@ -127,7 +179,7 @@ export function ManifestoVideoStack({
                 setHoveredCard(null);
                 setActiveCardIndex(null);
               }}
-              onClick={() => setActiveCardIndex(isActive ? null : index)}
+              onClick={() => setExpandedCard(card)}
             >
               {/* Outer glow */}
               <div className="card-glow" />
@@ -192,6 +244,98 @@ export function ManifestoVideoStack({
         <span className="label-text">VOICES</span>
       </div>
 
+      {/* ═══════════════════════════════════════════════════════════════════
+          EXPANDED MODAL - Atlas Style
+          ═══════════════════════════════════════════════════════════════════ */}
+      {expandedCard &&
+        createPortal(
+          <div className="modal-backdrop" onClick={handleBackdropClick}>
+            <div className="modal-card">
+              {/* Scan line animation */}
+              <div className="modal-scanline" />
+
+              {/* Full-bleed media background */}
+              <div className="modal-media">
+                {expandedCard.videoUrl ? (
+                  <video
+                    ref={modalVideoRef}
+                    src={expandedCard.videoUrl}
+                    poster={expandedCard.thumbnail}
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    className="modal-video"
+                  />
+                ) : (
+                  <div className="modal-placeholder">
+                    <span className="modal-placeholder-icon">▶</span>
+                    <span className="modal-placeholder-text">VIDEO COMING SOON</span>
+                  </div>
+                )}
+                {/* Gradient overlay */}
+                <div className="modal-gradient" />
+              </div>
+
+              {/* Header - glassmorphism (Atlas style) */}
+              <div className="modal-header">
+                <span className="modal-header-brand">THOUGHTFORM</span>
+                <span className="modal-header-mode">
+                  MODE: <span className="modal-header-value">PLAYBACK</span>
+                </span>
+                <div className="modal-header-right">
+                  <span className="modal-header-time">
+                    [<span className="modal-header-value">{formatTime(elapsedTime)}</span>]
+                  </span>
+                  <button
+                    className="modal-close-btn"
+                    onClick={() => setExpandedCard(null)}
+                    title="Close"
+                  >
+                    <svg
+                      width="12"
+                      height="12"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <line x1="18" y1="6" x2="6" y2="18" />
+                      <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              {/* Footer - glassmorphism (Atlas style) */}
+              <div className="modal-footer">
+                <div className="modal-footer-left">
+                  <h2 className="modal-title">{expandedCard.title.toUpperCase()}</h2>
+                  <div className="modal-meta">
+                    {expandedCard.role && (
+                      <span className="modal-role">{expandedCard.role.toUpperCase()}</span>
+                    )}
+                  </div>
+                </div>
+                <div className="modal-footer-right">
+                  <p className="modal-description">
+                    {expandedCard.fullText || expandedCard.description}
+                  </p>
+                </div>
+              </div>
+
+              {/* Corner accents */}
+              <div className="modal-corner tl" />
+              <div className="modal-corner tr" />
+              <div className="modal-corner bl" />
+              <div className="modal-corner br" />
+            </div>
+          </div>,
+          document.body
+        )}
+
       <style jsx>{`
         .video-stack-container {
           position: fixed;
@@ -221,15 +365,15 @@ export function ManifestoVideoStack({
 
         .video-stack {
           position: relative;
-          width: 200px;
-          height: 267px;
+          width: 220px;
+          height: 293px;
         }
 
         /* ─── CARD STYLING (Atlas-inspired) ─── */
         .video-card {
           position: absolute;
-          width: 200px;
-          height: 267px;
+          width: 220px;
+          height: 293px;
           cursor: pointer;
           background: var(--surface-0, #0a0908);
           border: 1px solid rgba(236, 227, 214, 0.08);
@@ -454,6 +598,288 @@ export function ManifestoVideoStack({
           opacity: 0.5;
         }
 
+        /* ═══════════════════════════════════════════════════════════════════
+           EXPANDED MODAL STYLES (Atlas-inspired)
+           ═══════════════════════════════════════════════════════════════════ */
+        .modal-backdrop {
+          position: fixed;
+          inset: 0;
+          z-index: 9999;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 40px;
+          background: rgba(5, 4, 3, 0.5);
+          backdrop-filter: blur(16px);
+          -webkit-backdrop-filter: blur(16px);
+          animation: modalFadeIn 0.3s ease-out forwards;
+        }
+
+        @keyframes modalFadeIn {
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
+        }
+
+        .modal-card {
+          position: relative;
+          width: min(calc(100vh * 0.8), 640px);
+          max-width: calc(100vw - 80px);
+          aspect-ratio: 4/5;
+          background: #050403;
+          border: 1px solid rgba(236, 227, 214, 0.1);
+          overflow: hidden;
+          display: grid;
+          grid-template-rows: 36px 1fr 120px;
+          animation: modalCardIn 0.4s cubic-bezier(0.19, 1, 0.22, 1) forwards;
+        }
+
+        @keyframes modalCardIn {
+          from {
+            opacity: 0;
+            transform: scale(0.95) translateY(10px);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+          }
+        }
+
+        /* Scan line */
+        .modal-scanline {
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          height: 2px;
+          background: linear-gradient(to bottom, rgba(202, 165, 84, 0.5), transparent);
+          z-index: 100;
+          animation: modalScan 10s linear infinite;
+          pointer-events: none;
+        }
+
+        @keyframes modalScan {
+          0% {
+            top: 0;
+            opacity: 0;
+          }
+          5% {
+            opacity: 0.7;
+          }
+          95% {
+            opacity: 0.7;
+          }
+          100% {
+            top: 100%;
+            opacity: 0;
+          }
+        }
+
+        /* Modal media */
+        .modal-media {
+          position: absolute;
+          inset: 0;
+          z-index: 0;
+        }
+
+        .modal-video {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+
+        .modal-placeholder {
+          width: 100%;
+          height: 100%;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: 16px;
+          background: linear-gradient(180deg, rgba(20, 18, 15, 1) 0%, rgba(10, 9, 8, 1) 100%);
+        }
+
+        .modal-placeholder-icon {
+          font-size: 48px;
+          color: rgba(202, 165, 84, 0.3);
+        }
+
+        .modal-placeholder-text {
+          font-family: "Iosevka Web", "Iosevka", monospace;
+          font-size: 11px;
+          letter-spacing: 0.2em;
+          color: rgba(236, 227, 214, 0.3);
+        }
+
+        .modal-gradient {
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(
+            to bottom,
+            rgba(5, 4, 3, 0.4) 0%,
+            rgba(5, 4, 3, 0.15) 30%,
+            rgba(5, 4, 3, 0.15) 60%,
+            rgba(5, 4, 3, 0.7) 100%
+          );
+          pointer-events: none;
+        }
+
+        /* Modal header */
+        .modal-header {
+          position: relative;
+          z-index: 10;
+          background: rgba(10, 9, 8, 0.15);
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
+          border-bottom: 1px solid rgba(236, 227, 214, 0.1);
+          display: flex;
+          align-items: center;
+          padding: 0 14px;
+          gap: 16px;
+          font-family: "Iosevka Web", "Iosevka", monospace;
+          font-size: 10px;
+          letter-spacing: 0.1em;
+        }
+
+        .modal-header-brand {
+          color: var(--gold, #caa554);
+          text-transform: uppercase;
+        }
+
+        .modal-header-mode {
+          color: rgba(236, 227, 214, 0.3);
+        }
+
+        .modal-header-value {
+          color: rgba(236, 227, 214, 0.6);
+        }
+
+        .modal-header-right {
+          margin-left: auto;
+          display: flex;
+          align-items: center;
+          gap: 12px;
+        }
+
+        .modal-header-time {
+          color: rgba(236, 227, 214, 0.3);
+        }
+
+        .modal-close-btn {
+          background: none;
+          border: none;
+          width: 24px;
+          height: 24px;
+          padding: 0;
+          cursor: pointer;
+          color: rgba(236, 227, 214, 0.5);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: color 0.2s ease;
+        }
+
+        .modal-close-btn:hover {
+          color: rgba(236, 227, 214, 0.9);
+        }
+
+        /* Modal footer */
+        .modal-footer {
+          position: relative;
+          z-index: 10;
+          background: rgba(10, 9, 8, 0.15);
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
+          border-top: 1px solid rgba(236, 227, 214, 0.1);
+          padding: 16px 20px;
+          display: grid;
+          grid-template-columns: 180px 1fr;
+          gap: 24px;
+        }
+
+        .modal-footer-left {
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+        }
+
+        .modal-title {
+          font-family: "Iosevka Web", "Iosevka", monospace;
+          font-size: 22px;
+          font-weight: 400;
+          color: var(--gold, #caa554);
+          letter-spacing: 0.1em;
+          line-height: 1;
+          margin: 0;
+        }
+
+        .modal-meta {
+          margin-top: 8px;
+        }
+
+        .modal-role {
+          font-family: "Iosevka Web", "Iosevka", monospace;
+          font-size: 9px;
+          letter-spacing: 0.1em;
+          color: rgba(236, 227, 214, 0.4);
+        }
+
+        .modal-footer-right {
+          display: flex;
+          align-items: center;
+          border-left: 1px solid rgba(236, 227, 214, 0.08);
+          padding-left: 24px;
+        }
+
+        .modal-description {
+          font-family: var(--font-sans, "Inter", sans-serif);
+          font-size: 13px;
+          color: rgba(236, 227, 214, 0.6);
+          line-height: 1.7;
+          margin: 0;
+        }
+
+        /* Modal corner accents */
+        .modal-corner {
+          position: absolute;
+          width: 20px;
+          height: 20px;
+          border: 1px solid rgba(236, 227, 214, 0.2);
+          pointer-events: none;
+          z-index: 50;
+        }
+
+        .modal-corner.tl {
+          top: -1px;
+          left: -1px;
+          border-right: none;
+          border-bottom: none;
+        }
+
+        .modal-corner.tr {
+          top: -1px;
+          right: -1px;
+          border-left: none;
+          border-bottom: none;
+        }
+
+        .modal-corner.bl {
+          bottom: -1px;
+          left: -1px;
+          border-right: none;
+          border-top: none;
+        }
+
+        .modal-corner.br {
+          bottom: -1px;
+          right: -1px;
+          border-left: none;
+          border-top: none;
+        }
+
         /* ─── RESPONSIVE ─── */
         /* Mirroring Sources positioning - adjust on smaller screens */
         @media (max-width: 1400px) {
@@ -462,13 +888,13 @@ export function ManifestoVideoStack({
           }
 
           .video-stack {
-            width: 180px;
-            height: 240px;
+            width: 200px;
+            height: 267px;
           }
 
           .video-card {
-            width: 180px;
-            height: 240px;
+            width: 200px;
+            height: 267px;
           }
         }
 
@@ -478,13 +904,13 @@ export function ManifestoVideoStack({
           }
 
           .video-stack {
-            width: 160px;
-            height: 213px;
+            width: 180px;
+            height: 240px;
           }
 
           .video-card {
-            width: 160px;
-            height: 213px;
+            width: 180px;
+            height: 240px;
           }
 
           .card-info {
@@ -497,6 +923,18 @@ export function ManifestoVideoStack({
 
           .card-description {
             font-size: 8px;
+          }
+
+          .modal-footer {
+            grid-template-columns: 1fr;
+            gap: 12px;
+          }
+
+          .modal-footer-right {
+            border-left: none;
+            border-top: 1px solid rgba(236, 227, 214, 0.08);
+            padding-left: 0;
+            padding-top: 12px;
           }
         }
 
