@@ -15,7 +15,7 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  { label: "Definition", sectionId: "definition" },
+  { label: "Interface", sectionId: "definition" },
   { label: "Manifesto", sectionId: "manifesto" },
   { label: "Services", sectionId: "services" },
   { label: "About", sectionId: "about" },

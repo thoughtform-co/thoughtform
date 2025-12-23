@@ -658,6 +658,213 @@ function generateRosslerShape(
   }
 }
 
+/**
+ * ORBIT SHAPE - Clean concentric paths for celestial navigation
+ */
+function generateOrbitShape(
+  particles: Particle[],
+  landmark: LandmarkConfig,
+  index: number,
+  manifoldConfig: ParticleSystemConfig["manifold"]
+): void {
+  const colorRgb = hexToRgb(landmark.color);
+  const scale = landmark.scale;
+  const density = landmark.density;
+  const centerX = landmark.position.x;
+  const centerZ = landmark.position.z;
+
+  const radius = 500 * scale;
+  // Higher base point count so orbits read like clean UI rings (less chunky)
+  const points = Math.floor(1400 * density);
+
+  for (let i = 0; i < points; i++) {
+    const angle = (i / points) * Math.PI * 2;
+    const x = centerX + Math.cos(angle) * radius;
+    const z = centerZ + Math.sin(angle) * radius;
+
+    // Positioned slightly above the manifold to float like a UI element
+    const terrainY = getTerrainY(x, z, manifoldConfig);
+    const y = terrainY - 40;
+
+    particles.push(createPoint(x, y, z, "geo", colorRgb, index, landmark.id));
+
+    // Add vertical "pulsar" lines at cardinal points
+    if (i % (points / 8) === 0) {
+      for (let j = 0; j < 12; j++) {
+        particles.push(createPoint(x, y - j * 25, z, "geo", colorRgb, index, landmark.id));
+      }
+    }
+  }
+}
+
+/**
+ * GRID LINES - Structured X/Z axis grid (not random dots)
+ * Creates the technical topology grid seen in strategy games
+ */
+function generateGridlinesShape(
+  particles: Particle[],
+  landmark: LandmarkConfig,
+  index: number,
+  manifoldConfig: ParticleSystemConfig["manifold"]
+): void {
+  const colorRgb = hexToRgb(landmark.color);
+  const scale = landmark.scale;
+  const density = landmark.density;
+  const centerX = landmark.position.x;
+  const centerZ = landmark.position.z;
+  const baseY = landmark.position.y || 400;
+
+  const gridSize = 2000 * scale;
+  const gridSpacing = 250 / density; // Wider line spacing for cleaner grid
+  const linePointSpacing = 3; // Very tight for smooth lines
+
+  // Calculate grid bounds
+  const halfGrid = gridSize / 2;
+  const numLines = Math.floor(gridSize / gridSpacing);
+
+  // Z-axis lines (running front to back)
+  for (let i = 0; i <= numLines; i++) {
+    const x = centerX - halfGrid + i * gridSpacing;
+    for (let z = centerZ - halfGrid; z <= centerZ + halfGrid; z += linePointSpacing) {
+      // Add subtle wave to the grid for topology
+      const waveY = Math.sin(x * 0.003 + z * 0.002) * 40 + Math.cos(z * 0.003) * 25;
+      const y = baseY + waveY;
+      particles.push(createPoint(x, y, z, "geo", colorRgb, index, landmark.id));
+    }
+  }
+
+  // X-axis lines (running left to right)
+  for (let i = 0; i <= numLines; i++) {
+    const z = centerZ - halfGrid + i * gridSpacing;
+    for (let x = centerX - halfGrid; x <= centerX + halfGrid; x += linePointSpacing) {
+      const waveY = Math.sin(x * 0.003 + z * 0.002) * 40 + Math.cos(z * 0.003) * 25;
+      const y = baseY + waveY;
+      particles.push(createPoint(x, y, z, "geo", colorRgb, index, landmark.id));
+    }
+  }
+}
+
+/**
+ * CONTOUR LINES - Topographic elevation rings
+ * Creates concentric elevation contours like a topographic map
+ */
+function generateContourShape(
+  particles: Particle[],
+  landmark: LandmarkConfig,
+  index: number,
+  manifoldConfig: ParticleSystemConfig["manifold"]
+): void {
+  const colorRgb = hexToRgb(landmark.color);
+  const scale = landmark.scale;
+  const density = landmark.density;
+  const centerX = landmark.position.x;
+  const centerZ = landmark.position.z;
+  const baseY = landmark.position.y || 400;
+
+  const numContours = Math.floor(15 * density);
+  const maxRadius = 600 * scale;
+  const contourSpacing = maxRadius / numContours;
+  const pointsPerContour = Math.floor(400 * density); // Much denser rings
+
+  for (let c = 1; c <= numContours; c++) {
+    const radius = c * contourSpacing;
+    // Each contour at different elevation
+    const elevation = -c * 12; // Rising up (negative Y = higher)
+
+    for (let i = 0; i < pointsPerContour; i++) {
+      const angle = (i / pointsPerContour) * Math.PI * 2;
+      // Add some organic wobble to the contours
+      const wobble = Math.sin(angle * 7 + c * 0.4) * 15 * (c / numContours);
+      const r = radius + wobble;
+
+      const x = centerX + Math.cos(angle) * r;
+      const z = centerZ + Math.sin(angle) * r * 0.7; // Compress for isometric view
+      const y = baseY + elevation;
+
+      particles.push(createPoint(x, y, z, "geo", colorRgb, index, landmark.id));
+    }
+  }
+}
+
+/**
+ * WIREFRAME SPHERE - Clean geometric wireframe (like the red sphere in reference)
+ */
+function generateWireframeSphereShape(
+  particles: Particle[],
+  landmark: LandmarkConfig,
+  index: number,
+  manifoldConfig: ParticleSystemConfig["manifold"]
+): void {
+  const colorRgb = hexToRgb(landmark.color);
+  const scale = landmark.scale;
+  const density = landmark.density;
+  const centerX = landmark.position.x;
+  const centerZ = landmark.position.z;
+  const baseY = landmark.position.y || 200;
+
+  const radius = 150 * scale;
+  const latLines = Math.floor(10 * density); // Horizontal rings
+  const longLines = Math.floor(16 * density); // Vertical lines
+  const pointsPerLine = Math.floor(80 * density); // Much denser lines
+
+  // Latitude lines (horizontal rings)
+  for (let lat = 1; lat < latLines; lat++) {
+    const phi = (lat / latLines) * Math.PI; // 0 to PI
+    const ringRadius = radius * Math.sin(phi);
+    const ringY = baseY - radius * Math.cos(phi);
+
+    for (let i = 0; i < pointsPerLine; i++) {
+      const theta = (i / pointsPerLine) * Math.PI * 2;
+      const x = centerX + ringRadius * Math.cos(theta);
+      const z = centerZ + ringRadius * Math.sin(theta) * 0.5; // Compressed for isometric
+      particles.push(createPoint(x, ringY, z, "geo", colorRgb, index, landmark.id));
+    }
+  }
+
+  // Longitude lines (vertical arcs)
+  for (let lon = 0; lon < longLines; lon++) {
+    const theta = (lon / longLines) * Math.PI * 2;
+
+    for (let i = 0; i <= pointsPerLine; i++) {
+      const phi = (i / pointsPerLine) * Math.PI;
+      const x = centerX + radius * Math.sin(phi) * Math.cos(theta);
+      const y = baseY - radius * Math.cos(phi);
+      const z = centerZ + radius * Math.sin(phi) * Math.sin(theta) * 0.5;
+      particles.push(createPoint(x, y, z, "geo", colorRgb, index, landmark.id));
+    }
+  }
+}
+
+/**
+ * STARFIELD - Scattered stars in 3D space (background layer)
+ */
+function generateStarfieldShape(
+  particles: Particle[],
+  landmark: LandmarkConfig,
+  index: number,
+  manifoldConfig: ParticleSystemConfig["manifold"]
+): void {
+  const colorRgb = hexToRgb(landmark.color);
+  const scale = landmark.scale;
+  const density = landmark.density;
+  const centerX = landmark.position.x;
+  const centerZ = landmark.position.z;
+  const baseY = landmark.position.y || -200; // Above the grid (negative Y = up)
+
+  const numStars = Math.floor(500 * density);
+  const spreadX = 4000 * scale;
+  const spreadZ = 6000 * scale;
+  const spreadY = 800 * scale;
+
+  for (let i = 0; i < numStars; i++) {
+    const x = centerX + (Math.random() - 0.5) * spreadX;
+    const z = centerZ + (Math.random() - 0.5) * spreadZ;
+    const y = baseY - Math.random() * spreadY; // Scattered above
+
+    particles.push(createPoint(x, y, z, "star", colorRgb, index, landmark.id));
+  }
+}
+
 // ═══════════════════════════════════════════════════════════════
 // MAIN INITIALIZATION
 // ═══════════════════════════════════════════════════════════════
@@ -672,7 +879,7 @@ function initParticles(config: ParticleSystemConfig): Particle[] {
   for (let r = 0; r < manifold.rows; r++) {
     for (let c = 0; c < manifold.columns; c++) {
       const x = (c - manifold.columns / 2) * (70 * manifold.spreadX);
-      const z = 1200 + r * (55 * manifold.spreadZ);
+      const z = 200 + r * (55 * manifold.spreadZ);
 
       const wavePhase = r * 0.02;
 
@@ -750,6 +957,21 @@ function initParticles(config: ParticleSystemConfig): Particle[] {
       case "rossler":
         generateRosslerShape(particles, landmark, landmarkIndex, manifold);
         break;
+      case "orbit":
+        generateOrbitShape(particles, landmark, landmarkIndex, manifold);
+        break;
+      case "gridlines":
+        generateGridlinesShape(particles, landmark, landmarkIndex, manifold);
+        break;
+      case "contour":
+        generateContourShape(particles, landmark, landmarkIndex, manifold);
+        break;
+      case "wireframeSphere":
+        generateWireframeSphereShape(particles, landmark, landmarkIndex, manifold);
+        break;
+      case "starfield":
+        generateStarfieldShape(particles, landmark, landmarkIndex, manifold);
+        break;
     }
   });
 
@@ -777,8 +999,6 @@ export function ParticleCanvasV2({
   const timeRef = useRef(0);
   const configRef = useRef(config);
   const isMobile = useIsMobile();
-
-  const MAX_DEPTH = 7000;
 
   // Mobile-optimized config with reduced density
   const mobileConfig = useMemo(() => {
@@ -865,6 +1085,7 @@ export function ParticleCanvasV2({
 
       // Camera settings from config
       const camera = currentConfig.camera;
+      const MAX_DEPTH = camera.maxDepth ?? 12000;
       const FOCAL = camera.focalLength;
       const cx_geo = width * camera.vanishX;
       const cy = height * camera.vanishY;
@@ -900,8 +1121,9 @@ export function ParticleCanvasV2({
             particleAlpha = Math.max(0, 1 - (scrollP - 0.15) * 4);
           }
         } else if (p.type === "star") {
-          // Stars removed - skip
-          return;
+          // Starfield particles - fixed in space (don't scroll with terrain)
+          relZ = p.z; // Stars are at fixed positions
+          particleAlpha = 0.6 + Math.random() * 0.4; // Twinkle effect
         } else {
           relZ = p.z - scrollZ;
 
@@ -1058,6 +1280,12 @@ export function ParticleCanvasV2({
               drawPixel(ctx, x, y, landmarkColor, landmarkAlpha * 0.08 * glowPulse, GRID * 4);
             }
           }
+        } else if (p.type === "star") {
+          // STARFIELD RENDERING
+          const twinkle = 0.4 + Math.sin(time * 0.05 + p.phase * 10) * 0.3;
+          const starAlpha = finalAlpha * twinkle * 0.8;
+          const starSize = GRID * (0.8 + Math.random() * 0.4);
+          drawPixel(ctx, x, y, p.color, starAlpha, starSize);
         }
       });
 

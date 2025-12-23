@@ -21,7 +21,7 @@ const sectionData: Record<string, SectionData> = {
     landmark: 1,
   },
   definition: {
-    sector: "Definition",
+    sector: "Interface",
     depth: 1.8,
     vector: "Discovery",
     signal: 68,

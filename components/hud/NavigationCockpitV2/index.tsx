@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import { ParticleCanvasV2 } from "../ParticleCanvasV2";
 import { ThreeGateway } from "../ThreeGateway";
 import { CanvasErrorBoundary } from "../CanvasErrorBoundary";
@@ -24,6 +24,7 @@ import { HeroBackgroundSigil } from "./HeroBackgroundSigil";
 import { ManifestoTerminal } from "./ManifestoTerminal";
 import { ManifestoSources } from "./ManifestoSources";
 import { ManifestoVideoStack } from "./ManifestoVideoStack";
+import { RunwayArrows } from "./RunwayArrows";
 import { useScrollCapture } from "./hooks/useScrollCapture";
 // Styles consolidated into app/globals.css
 
@@ -90,18 +91,21 @@ function NavigationCockpitInner() {
   } | null>(null);
 
   // State for manifesto scroll progress (0-1 within manifesto section)
+  // Only used for geometric shapes animation after manifesto is complete
   const [manifestoScrollProgress, setManifestoScrollProgress] = useState(0);
-  const [manifestoInView, setManifestoInView] = useState(false);
-  const [manifestoFullyVisible, setManifestoFullyVisible] = useState(false);
-  const [transmissionAcknowledged, setTransmissionAcknowledged] = useState(false);
 
   // State for manifesto reveal progress (scroll-capture based)
   const [manifestoRevealProgress, setManifestoRevealProgress] = useState(0);
   const [manifestoComplete, setManifestoComplete] = useState(false);
 
   // Calculate scroll progress within manifesto section
+  // Only calculate when manifesto is complete (for geometric shapes animation)
+  // Throttle to avoid expensive getBoundingClientRect calls
   useEffect(() => {
-    if (!manifestoRef.current) return;
+    if (!manifestoRef.current || !manifestoComplete) return;
+
+    let rafId: number | null = null;
+    let lastProgress = manifestoScrollProgress;
 
     const updateManifestoProgress = () => {
       const element = manifestoRef.current;
@@ -112,34 +116,28 @@ function NavigationCockpitInner() {
       const sectionHeight = rect.height;
 
       // Calculate progress: 0 = section top at viewport center, 1 = section scrolled through
-      // Start when section top reaches viewport center
       const viewportCenter = windowHeight * 0.5;
       const sectionTop = rect.top;
-
-      // Progress from 0 to 1 as section scrolls from center to bottom
-      // We want the full section height to scroll through viewport center
-      const scrollRange = sectionHeight + windowHeight; // Full section + viewport
-      const scrollDistance = viewportCenter - sectionTop; // Distance from center
-
+      const scrollRange = sectionHeight + windowHeight;
+      const scrollDistance = viewportCenter - sectionTop;
       const progress = Math.max(0, Math.min(1, scrollDistance / scrollRange));
 
-      setManifestoScrollProgress(progress);
-
-      // Terminal appears immediately when section is in viewport
-      const isInView = rect.top < windowHeight && rect.bottom > 0;
-      setManifestoInView(isInView);
-
-      // Terminal is "fully visible" when section is centered or well into viewport
-      // This means the section top is above viewport center and bottom is below it
-      const isFullyVisible = rect.top < viewportCenter && rect.bottom > viewportCenter;
-      setManifestoFullyVisible(isFullyVisible);
+      // Only update if progress changed significantly (throttle)
+      if (Math.abs(progress - lastProgress) > 0.01) {
+        setManifestoScrollProgress(progress);
+        lastProgress = progress;
+      }
     };
 
     const handleScroll = () => {
-      requestAnimationFrame(updateManifestoProgress);
+      if (rafId !== null) return; // Throttle to one RAF per scroll
+      rafId = requestAnimationFrame(() => {
+        updateManifestoProgress();
+        rafId = null;
+      });
     };
 
-    // Listen to scroll events
+    // Only listen when manifesto is complete
     window.addEventListener("scroll", handleScroll, { passive: true });
     window.addEventListener("resize", handleScroll);
     updateManifestoProgress(); // Initial calculation
@@ -147,8 +145,9 @@ function NavigationCockpitInner() {
     return () => {
       window.removeEventListener("scroll", handleScroll);
       window.removeEventListener("resize", handleScroll);
+      if (rafId !== null) cancelAnimationFrame(rafId);
     };
-  }, []);
+  }, [manifestoComplete]);
 
   // ═══════════════════════════════════════════════════════════════════
   // BRANDMARK ORIGIN CALCULATION
@@ -163,7 +162,11 @@ function NavigationCockpitInner() {
     : null;
 
   // Measure wordmark bounds on mount and resize
+  // Only update on scroll during hero→definition transition (when positions actually change)
   useEffect(() => {
+    let rafId: number | null = null;
+    let lastScrollProgress = scrollProgress;
+
     const updateBounds = () => {
       if (wordmarkSvgRef.current) {
         setWordmarkBounds(wordmarkSvgRef.current.getBoundingClientRect());
@@ -185,16 +188,31 @@ function NavigationCockpitInner() {
         }
       }
     };
+
     updateBounds();
     window.addEventListener("resize", updateBounds);
-    // Also update on scroll since positions may change
-    const scrollUpdate = () => requestAnimationFrame(updateBounds);
+
+    // Only update on scroll during hero→definition transition (0-0.12)
+    // This avoids expensive getBoundingClientRect calls during manifesto section
+    const scrollUpdate = () => {
+      // Only update if we're in the transition range where positions change
+      const inTransitionRange = scrollProgress >= 0 && scrollProgress <= 0.15;
+      const scrollChanged = Math.abs(scrollProgress - lastScrollProgress) > 0.001;
+
+      if (inTransitionRange && scrollChanged) {
+        if (rafId !== null) cancelAnimationFrame(rafId);
+        rafId = requestAnimationFrame(updateBounds);
+        lastScrollProgress = scrollProgress;
+      }
+    };
+
     window.addEventListener("scroll", scrollUpdate, { passive: true });
     return () => {
       window.removeEventListener("resize", updateBounds);
       window.removeEventListener("scroll", scrollUpdate);
+      if (rafId !== null) cancelAnimationFrame(rafId);
     };
-  }, []);
+  }, [scrollProgress]);
 
   // Determine if we should show the SVG Vector I
   const showSvgVector = scrollProgress < 0.02;
@@ -298,13 +316,51 @@ function NavigationCockpitInner() {
   // Manifesto: 50vh - 200px (centered for 400px frame)
   //
   // Interpolate from definition position to manifesto centered position
-  const manifestoBottomPxCurrent =
-    definitionBottomPx + (manifestoBottomPx - definitionBottomPx) * tDefToManifesto;
-  const manifestoBottomVhCurrent =
-    definitionBottomVh + (manifestoBottomVh - definitionBottomVh) * tDefToManifesto;
+  // Memoize expensive calculations - recalculate only when transition progress changes
+  const bridgeFrameStyles = useMemo(() => {
+    // Recalculate dependent values inside memo
+    const heroBottomPx = 90 * (1 - tHeroToDef);
+    const heroBottomVh = tHeroToDef * defBottomVh;
+    const heroBottomOffsetPx = tHeroToDef * defBottomPx;
+    const definitionBottomPx = heroBottomPx + heroBottomOffsetPx;
+    const definitionBottomVh = heroBottomVh;
+    const easeOutCubic = (t: number) => 1 - Math.pow(1 - t, 3);
+    const growthProgress = easeOutCubic(tDefToManifesto);
 
-  // Final bottom position: smooth transition to centered position
-  const finalBottom = `calc(${manifestoBottomPxCurrent}px + ${manifestoBottomVhCurrent}vh)`;
+    const manifestoBottomPxCurrent =
+      definitionBottomPx + (manifestoBottomPx - definitionBottomPx) * tDefToManifesto;
+    const manifestoBottomVhCurrent =
+      definitionBottomVh + (manifestoBottomVh - definitionBottomVh) * tDefToManifesto;
+
+    // Final bottom position: smooth transition to centered position
+    const finalBottom = `calc(${manifestoBottomPxCurrent}px + ${manifestoBottomVhCurrent}vh)`;
+
+    return {
+      finalBottom,
+      left: `calc(${(1 - tDefToManifesto) * 184}px + ${tDefToManifesto * 50}%)`,
+      width: `${baseWidth + growthProgress * widthGrowth}px`,
+      height:
+        tDefToManifesto > 0
+          ? `${baseHeight + growthProgress * (actualContentHeight - baseHeight)}px`
+          : "auto",
+      transform: `translateX(${-50 * tDefToManifesto}%)`,
+      background: `rgba(10, 9, 8, ${0.5 * tDefToManifesto})`,
+      backdropFilter: `blur(${8 * tDefToManifesto}px)`,
+      border: `1px solid rgba(236, 227, 214, ${0.1 * tDefToManifesto})`,
+      "--terminal-opacity": tDefToManifesto,
+    };
+  }, [
+    tHeroToDef,
+    tDefToManifesto,
+    defBottomVh,
+    defBottomPx,
+    manifestoBottomPx,
+    manifestoBottomVh,
+    baseWidth,
+    widthGrowth,
+    baseHeight,
+    actualContentHeight,
+  ]);
 
   // Handle navigation
   const handleNavigate = useCallback(
@@ -433,23 +489,13 @@ function NavigationCockpitInner() {
         visible={tHeroToDef > 0.1 && tHeroToDef < 0.9}
       />
 
-      {/* Runway arrows pointing to gateway - fade out quickly during transition */}
-      {/* Only visible in hero section on desktop, hidden on mobile */}
+      {/* Runway arrows - transform from "› › › › › ›" in hero to ">>> SERVICES <<<" in interface section */}
       {!isMobile && (
-        <div
-          className="hero-runway-arrows"
-          style={{
-            opacity: tHeroToDef < 0.02 ? 1 : tHeroToDef < 0.08 ? 1 - (tHeroToDef - 0.02) / 0.06 : 0,
-            visibility: tHeroToDef < 0.1 ? "visible" : "hidden",
-            pointerEvents: "none",
-          }}
-        >
-          {Array.from({ length: 7 }, (_, i) => (
-            <div key={i} className={`runway-arrow runway-arrow-${i + 1}`}>
-              ›
-            </div>
-          ))}
-        </div>
+        <RunwayArrows
+          transitionProgress={tHeroToDef}
+          scrollProgress={scrollProgress}
+          onNavigate={() => handleNavigate("services")}
+        />
       )}
 
       {/* ═══════════════════════════════════════════════════════════════════
@@ -478,46 +524,22 @@ function NavigationCockpitInner() {
             : {
                 // DESKTOP: Frame moves from hero → definition → manifesto
                 // Use BOTTOM positioning throughout for smooth, continuous transition
-                bottom: finalBottom,
-
-                // Left position: ALWAYS apply interpolated value for smooth transition
-                // Definition: left = 184px (rail + 120px)
-                // Manifesto: left = 50% (centered)
-                // At tDefToManifesto=0: calc(184px + 0%) = 184px
-                // At tDefToManifesto=1: calc(0px + 50%) = 50%
-                left: `calc(${(1 - tDefToManifesto) * 184}px + ${tDefToManifesto * 50}%)`,
-
-                // Width grows subtly: 500px → 700px (40% increase) with smooth easing
-                // ALWAYS apply to avoid jump
-                width: `${baseWidth + growthProgress * widthGrowth}px`,
-                maxWidth: `${baseWidth + growthProgress * widthGrowth}px`,
-
-                // Height: auto during hero/definition, then controlled during manifesto transition
-                // Only apply fixed height + overflow:hidden when transitioning to manifesto
-                // This prevents cutting off hero/definition text while controlling manifesto growth
-                height:
-                  tDefToManifesto > 0
-                    ? `${baseHeight + growthProgress * (actualContentHeight - baseHeight)}px`
-                    : "auto",
+                bottom: bridgeFrameStyles.finalBottom,
+                left: bridgeFrameStyles.left,
+                width: bridgeFrameStyles.width,
+                maxWidth: bridgeFrameStyles.width,
+                height: bridgeFrameStyles.height,
                 overflow: tDefToManifesto > 0 ? "hidden" : "visible",
-
                 opacity: 1,
                 visibility: "visible",
                 pointerEvents:
                   tHeroToDef > 0.95 || tHeroToDef < 0.05 || tDefToManifesto > 0 ? "auto" : "none",
-
-                // Transform for horizontal centering - ALWAYS apply for smooth transition
-                // At tDefToManifesto=0: translateX(0%) = no transform
-                // At tDefToManifesto=1: translateX(-50%) = centered
-                transform: `translateX(${-50 * tDefToManifesto}%)`,
+                transform: bridgeFrameStyles.transform,
                 transformOrigin: "center",
-
-                // Terminal styling - smooth transition (interpolate from 0)
-                ["--terminal-opacity" as string]: tDefToManifesto,
-                background: `rgba(10, 9, 8, ${0.5 * tDefToManifesto})`,
-                backdropFilter: `blur(${8 * tDefToManifesto}px)`,
-                border: `1px solid rgba(236, 227, 214, ${0.1 * tDefToManifesto})`,
-
+                ["--terminal-opacity" as string]: bridgeFrameStyles["--terminal-opacity"],
+                background: bridgeFrameStyles.background,
+                backdropFilter: bridgeFrameStyles.backdropFilter,
+                border: bridgeFrameStyles.border,
                 transition: "none", // We're animating via scroll, not CSS transitions
               }
         }

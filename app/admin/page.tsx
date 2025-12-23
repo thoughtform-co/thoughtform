@@ -70,8 +70,32 @@ function AdminPageContent() {
   useEffect(() => {
     if (mounted && !isLoading && user) {
       setLines([
-        { type: "system", text: "THOUGHTFORM TERMINAL v2.1.0" },
-        { type: "system", text: "═══════════════════════════════════════" },
+        {
+          type: "system",
+          text: " _____ _   _  ___  _   _  ____ _   _ _____ _____ ___  ____  __  __ ",
+        },
+        {
+          type: "system",
+          text: "|_   _| | | |/ _ \\| | | |/ ___| | | |_   _|  ___/ _ \\|  _ \\|  \\/  |",
+        },
+        {
+          type: "system",
+          text: "  | | | |_| | | | | | | | |  _| |_| | | | | |_ | | | | |_) | |\\/| |",
+        },
+        {
+          type: "system",
+          text: "  | | |  _  | |_| | |_| | |_| |  _  | | | |  _|| |_| |  _ <| |  | |",
+        },
+        {
+          type: "system",
+          text: "  |_| |_| |_|\\___/ \\___/ \\____|_| |_| |_| |_|   \\___/|_| \\_\\_|  |_|",
+        },
+        {
+          type: "system",
+          text: "---------------------------------------------------------------------",
+        },
+        { type: "system", text: "" },
+        { type: "success", text: `Session active: ${user.email}` },
         { type: "system", text: "" },
         { type: "prompt", text: "Type 'exit' to sign out or 'home' to return to site" },
       ]);
@@ -87,21 +111,33 @@ function AdminPageContent() {
     setLines([]);
     setStep("idle");
 
-    // Simulate boot sequence
-    const bootLines: TerminalLine[] = [
-      { type: "system", text: "THOUGHTFORM TERMINAL v2.1.0" },
-      { type: "system", text: "═══════════════════════════════════════" },
-      { type: "system", text: "" },
-      { type: "system", text: "Initializing secure connection..." },
+    // ASCII art logo - simple block letters
+    const asciiLogo = [
+      " _____ _   _  ___  _   _  ____ _   _ _____ _____ ___  ____  __  __ ",
+      "|_   _| | | |/ _ \\| | | |/ ___| | | |_   _|  ___/ _ \\|  _ \\|  \\/  |",
+      "  | | | |_| | | | | | | | |  _| |_| | | | | |_ | | | | |_) | |\\/| |",
+      "  | | |  _  | |_| | |_| | |_| |  _  | | | |  _|| |_| |  _ <| |  | |",
+      "  |_| |_| |_|\\___/ \\___/ \\____|_| |_| |_| |_|   \\___/|_| \\_\\_|  |_|",
     ];
 
-    for (const line of bootLines) {
-      addLine(line);
-      await new Promise((r) => setTimeout(r, 150));
+    // Add ASCII logo instantly
+    for (const line of asciiLogo) {
+      addLine({ type: "system", text: line });
     }
 
-    await new Promise((r) => setTimeout(r, 300));
+    addLine({
+      type: "system",
+      text: "---------------------------------------------------------------------",
+    });
+
+    // Boot sequence with tighter timing
+    await new Promise((r) => setTimeout(r, 200));
+    addLine({ type: "system", text: "" });
+    addLine({ type: "system", text: "Initializing secure connection..." });
+
+    await new Promise((r) => setTimeout(r, 400));
     addLine({ type: "success", text: "Connection established." });
+
     await new Promise((r) => setTimeout(r, 200));
     addLine({ type: "system", text: "" });
     addLine({ type: "system", text: "Authentication required to proceed." });

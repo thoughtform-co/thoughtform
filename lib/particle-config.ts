@@ -28,7 +28,21 @@ export interface ManifoldConfig {
 /**
  * Available landmark shapes
  */
-export type LandmarkShape = 'gateway' | 'tower' | 'helix' | 'sphere' | 'ring' | 'ziggurat' | 'lorenz' | 'halvorsen' | 'rossler';
+export type LandmarkShape =
+  | "gateway"
+  | "tower"
+  | "helix"
+  | "sphere"
+  | "ring"
+  | "ziggurat"
+  | "lorenz"
+  | "halvorsen"
+  | "rossler"
+  | "orbit"
+  | "gridlines"
+  | "contour"
+  | "wireframeSphere"
+  | "starfield";
 
 /**
  * Configuration for a section landmark
@@ -63,13 +77,29 @@ export interface LandmarkConfig {
  * Geometric: 2D polygon outlines
  * Attractors: 3D mathematical chaos systems
  */
-export type GatewayShape = 
+export type GatewayShape =
   // Geometric shapes (2D outlines)
-  | 'circle' | 'hexagon' | 'octagon' | 'diamond' | 'arch' | 'ellipse'
+  | "circle"
+  | "hexagon"
+  | "octagon"
+  | "diamond"
+  | "arch"
+  | "ellipse"
   // Strange attractors (3D particle systems)
-  | 'lorenz' | 'thomas' | 'aizawa' | 'sprott' | 'rossler' | 'dadras' | 'galaxy'
+  | "lorenz"
+  | "thomas"
+  | "aizawa"
+  | "sprott"
+  | "rossler"
+  | "dadras"
+  | "galaxy"
   // Portal-like mathematical surfaces
-  | 'torus' | 'hyperboloid' | 'vortex' | 'spiralTorus' | 'mobius' | 'hypersphere';
+  | "torus"
+  | "hyperboloid"
+  | "vortex"
+  | "spiralTorus"
+  | "mobius"
+  | "hypersphere";
 
 /**
  * Labels for gateway shapes (for admin panel)
@@ -157,7 +187,7 @@ export interface GatewayConfig {
   /** Intensity of algorithmic effects (0.0-2.0) */
   algorithmicIntensity: number;
   /** Pattern type for algorithmic effects */
-  algorithmicPattern: 'spiral' | 'lissajous' | 'fieldLines' | 'particleStreams' | 'all';
+  algorithmicPattern: "spiral" | "lissajous" | "fieldLines" | "particleStreams" | "all";
 }
 
 /**
@@ -206,6 +236,8 @@ export interface CameraConfig {
   truckY: number;
   /** Clip terrain above this screen percentage (0 = no clip, 0.35 = default) */
   terrainClipY: number;
+  /** Optional max render depth (world Z). Higher = deeper vistas, more particles. */
+  maxDepth?: number;
 }
 
 /**
@@ -320,7 +352,7 @@ export const DEFAULT_GATEWAY: GatewayConfig = {
   tunnelWidth: 1.0, // Default width
   algorithmicEffects: false, // Disabled by default
   algorithmicIntensity: 1.0, // Default intensity
-  algorithmicPattern: 'all', // Use all patterns combined
+  algorithmicPattern: "all", // Use all patterns combined
 };
 
 /**
@@ -328,13 +360,13 @@ export const DEFAULT_GATEWAY: GatewayConfig = {
  */
 export const DEFAULT_CAMERA: CameraConfig = {
   focalLength: 400,
-  vanishX: 0.5,      // Centered vanishing point - straight ahead navigation
-  vanishY: 0.5,      // Center vertically
-  pitch: 0,          // No pitch (horizon view, current behavior)
-  yaw: 0,            // No yaw rotation
-  roll: 0,           // No roll (frontal tilt)
-  truckX: 0,         // No horizontal camera offset
-  truckY: 0,         // No vertical camera offset
+  vanishX: 0.5, // Centered vanishing point - straight ahead navigation
+  vanishY: 0.5, // Center vertically
+  pitch: 0, // No pitch (horizon view, current behavior)
+  yaw: 0, // No yaw rotation
+  roll: 0, // No roll (frontal tilt)
+  truckX: 0, // No horizontal camera offset
+  truckY: 0, // No vertical camera offset
   terrainClipY: 0.35, // Clip terrain above 35% of screen (current behavior)
 };
 
@@ -368,17 +400,13 @@ export const DEFAULT_CONFIG: ParticleSystemConfig = {
 /**
  * Validate and merge partial config with defaults
  */
-export function mergeWithDefaults(
-  partial: Partial<ParticleSystemConfig>
-): ParticleSystemConfig {
+export function mergeWithDefaults(partial: Partial<ParticleSystemConfig>): ParticleSystemConfig {
   return {
     manifold: {
       ...DEFAULT_MANIFOLD,
       ...(partial.manifold || {}),
     },
-    landmarks: partial.landmarks?.length
-      ? partial.landmarks
-      : DEFAULT_LANDMARKS,
+    landmarks: partial.landmarks?.length ? partial.landmarks : DEFAULT_LANDMARKS,
     gateway: {
       ...DEFAULT_GATEWAY,
       ...(partial.gateway || {}),
@@ -406,7 +434,7 @@ export function hexToRgb(hex: string): string {
 
 /**
  * Preset color options for the admin panel
- * 
+ *
  * DESIGN PHILOSOPHY (inspired by Dragonfly.xyz):
  * - Use MUTED colors for the particle grid to create atmospheric depth
  * - Reserve ACCENT colors for UI elements that should "pop" above the grid
@@ -414,8 +442,8 @@ export function hexToRgb(hex: string): string {
  */
 export const COLOR_PRESETS = {
   // Thoughtform brand colors only
-  "Semantic Dawn": "#ebe3d6",  // Primary light color - structure/text
-  "Tensor Gold": "#caa554",    // Accent gold - highlights
+  "Semantic Dawn": "#ebe3d6", // Primary light color - structure/text
+  "Tensor Gold": "#caa554", // Accent gold - highlights
 };
 
 /**
@@ -431,5 +459,9 @@ export const SHAPE_LABELS: Record<LandmarkShape, string> = {
   lorenz: "Lorenz Attractor",
   halvorsen: "Halvorsen Attractor",
   rossler: "Rössler Attractor",
+  orbit: "Orbital Path",
+  gridlines: "Grid Lines",
+  contour: "Contour Topology",
+  wireframeSphere: "Wireframe Sphere",
+  starfield: "Starfield",
 };
-
