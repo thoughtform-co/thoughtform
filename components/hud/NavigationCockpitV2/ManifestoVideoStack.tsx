@@ -4,8 +4,9 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 
 // ═══════════════════════════════════════════════════════════════════
-// MANIFESTO VIDEO STACK - Atlas Entity Card Style
+// MANIFESTO VIDEO STACK - Atlas Entity Card Style (Exact Match)
 // Stacked video cards that play on hover, with expanded modal view
+// Following: atlas/src/components/constellation/EntityCard.tsx
 // ═══════════════════════════════════════════════════════════════════
 
 interface VideoCard {
@@ -22,19 +23,22 @@ interface VideoCard {
   fullText?: string;
   /** Optional speaker role/affiliation */
   role?: string;
+  /** Optional type label */
+  type?: string;
 }
 
 // Placeholder cards - replace with actual video content
 const PLACEHOLDER_CARDS: VideoCard[] = [
   {
     id: "card-1",
-    videoUrl: "", // Add video URL when available
+    videoUrl: "",
     thumbnail: "",
     title: "AI as Intelligence",
     description: "It leaps across dimensions we can't fathom.",
     fullText:
       "AI isn't just a tool—it's a strange, new intelligence that leaps across dimensions we can't fully comprehend. It sees patterns in places we've never looked.",
     role: "Manifesto",
+    type: "Voice",
   },
   {
     id: "card-2",
@@ -45,6 +49,7 @@ const PLACEHOLDER_CARDS: VideoCard[] = [
     fullText:
       "In technical work, AI's strangeness must be constrained. But in creative and strategic work, that strangeness becomes the source of truly novel ideas.",
     role: "Manifesto",
+    type: "Voice",
   },
   {
     id: "card-3",
@@ -55,6 +60,7 @@ const PLACEHOLDER_CARDS: VideoCard[] = [
     fullText:
       "Thoughtform teaches teams to think WITH that intelligence—not against it, not around it—navigating its strangeness for creative breakthroughs.",
     role: "Manifesto",
+    type: "Voice",
   },
 ];
 
@@ -72,7 +78,6 @@ export function ManifestoVideoStack({
   cards = PLACEHOLDER_CARDS,
   revealProgress = 1,
 }: ManifestoVideoStackProps) {
-  const [activeCardIndex, setActiveCardIndex] = useState<number | null>(null);
   const [hoveredCard, setHoveredCard] = useState<string | null>(null);
   const [expandedCard, setExpandedCard] = useState<VideoCard | null>(null);
   const [elapsedTime, setElapsedTime] = useState(0);
@@ -140,7 +145,7 @@ export function ManifestoVideoStack({
 
   // Calculate staggered reveal for each card
   const getCardOpacity = (index: number) => {
-    const cardRevealStart = index * 0.15; // Stagger by 15% each
+    const cardRevealStart = index * 0.15;
     const cardProgress = Math.max(0, (revealProgress - cardRevealStart) / 0.3);
     return Math.min(1, cardProgress);
   };
@@ -150,88 +155,80 @@ export function ManifestoVideoStack({
       {/* Stack of cards */}
       <div className="video-stack">
         {cards.map((card, index) => {
-          const isActive = activeCardIndex === index;
           const isHovered = hoveredCard === card.id;
-          const stackOffset = index * 12; // Offset for stack effect
-          const rotation = (index - 1) * 2; // Slight rotation: -2, 0, 2 degrees
+          const stackOffset = index * 4; // Offset for stack effect (matching Atlas stacked hint)
+          const rotation = (index % 2 === 0 ? 1 : -1) * 0.8; // Slight rotation like Atlas
           const cardOpacity = getCardOpacity(index);
 
           return (
             <article
               key={card.id}
-              className={`video-card ${isActive ? "active" : ""} ${isHovered ? "hovered" : ""}`}
+              className={`video-card group ${isHovered ? "hovered" : ""}`}
               style={{
-                transform: `
-                  translateX(${stackOffset}px)
-                  translateY(${stackOffset}px)
-                  rotate(${rotation}deg)
-                  ${isHovered ? "translateY(-8px) scale(1.02)" : ""}
-                `,
+                left: `${stackOffset}px`,
+                top: `${stackOffset}px`,
+                transform: `rotate(${rotation}deg) ${isHovered ? "translateY(-2px)" : ""}`,
                 zIndex: isHovered ? 50 : cards.length - index,
                 opacity: cardOpacity,
-                animationDelay: `${index * 0.1}s`,
               }}
-              onMouseEnter={() => {
-                setHoveredCard(card.id);
-                setActiveCardIndex(index);
-              }}
-              onMouseLeave={() => {
-                setHoveredCard(null);
-                setActiveCardIndex(null);
-              }}
+              onMouseEnter={() => setHoveredCard(card.id)}
+              onMouseLeave={() => setHoveredCard(null)}
               onClick={() => setExpandedCard(card)}
             >
-              {/* Outer glow */}
+              {/* Outer glow - exact Atlas style */}
               <div className="card-glow" />
 
-              {/* Corner accents */}
+              {/* Corner bracket accents - exact Atlas style */}
               <div className="corner-accent tl" />
               <div className="corner-accent br" />
 
-              {/* Media container */}
-              <div className="card-media">
-                {/* Video (plays on hover) */}
-                {card.videoUrl ? (
-                  <video
-                    ref={(el) => {
-                      if (el) videoRefs.current.set(card.id, el);
-                    }}
-                    src={card.videoUrl}
-                    poster={card.thumbnail}
-                    loop
-                    muted
-                    playsInline
-                    className="card-video"
-                  />
-                ) : (
-                  /* Placeholder background */
-                  <div className="card-placeholder">
-                    <span className="placeholder-icon">▶</span>
-                  </div>
-                )}
+              {/* Main frame */}
+              <div className="card-frame">
+                {/* Media container - 3:4 aspect ratio like Atlas */}
+                <div className="card-media">
+                  {/* Video (plays on hover) */}
+                  {card.videoUrl ? (
+                    <video
+                      ref={(el) => {
+                        if (el) videoRefs.current.set(card.id, el);
+                      }}
+                      src={card.videoUrl}
+                      poster={card.thumbnail}
+                      loop
+                      muted
+                      playsInline
+                      className="card-video"
+                    />
+                  ) : (
+                    /* Placeholder background */
+                    <div className="card-placeholder">
+                      <span className="placeholder-letter">{card.title[0]}</span>
+                    </div>
+                  )}
 
-                {/* Scanlines (appear on hover) */}
-                <div className="scanlines" />
+                  {/* Gradient overlay for readability - exact Atlas style */}
+                  <div className="card-gradient" />
 
-                {/* Gradient overlay */}
-                <div className="card-gradient" />
-              </div>
+                  {/* Scanlines (appear on hover) - exact Atlas style */}
+                  <div className="scanlines" />
+                </div>
 
-              {/* Info overlay - Atlas glassmorphism style */}
-              <div className="card-info">
-                {/* Title */}
-                <h4 className="card-title">{card.title}</h4>
+                {/* Info overlay - Atlas glassmorphism style */}
+                <div className="card-info">
+                  {/* Title */}
+                  <h3 className="card-title">{card.title}</h3>
 
-                {/* Description */}
-                <p className="card-description">{card.description}</p>
+                  {/* Description - only show if available */}
+                  <p className="card-description">{card.description}</p>
 
-                {/* Meta row */}
-                {card.role && (
+                  {/* Meta row - exact Atlas style */}
                   <div className="card-meta">
-                    <span className="card-role">{card.role}</span>
+                    <span className="card-type">
+                      TYPE <span>{card.type || "Voice"}</span>
+                    </span>
                     <span className="card-indicator">◆</span>
                   </div>
-                )}
+                </div>
               </div>
             </article>
           );
@@ -245,13 +242,13 @@ export function ManifestoVideoStack({
       </div>
 
       {/* ═══════════════════════════════════════════════════════════════════
-          EXPANDED MODAL - Atlas Style
+          EXPANDED MODAL - Atlas EntityCardPreview / DenizenModalV3 Style
           ═══════════════════════════════════════════════════════════════════ */}
       {expandedCard &&
         createPortal(
           <div className="modal-backdrop" onClick={handleBackdropClick}>
             <div className="modal-card">
-              {/* Scan line animation */}
+              {/* Scan line animation - exact Atlas style */}
               <div className="modal-scanline" />
 
               {/* Full-bleed media background */}
@@ -269,23 +266,29 @@ export function ManifestoVideoStack({
                   />
                 ) : (
                   <div className="modal-placeholder">
-                    <span className="modal-placeholder-icon">▶</span>
-                    <span className="modal-placeholder-text">VIDEO COMING SOON</span>
+                    <div className="modal-placeholder-box">◇</div>
+                    <span className="modal-placeholder-text">[VIDEO COMING SOON]</span>
                   </div>
                 )}
                 {/* Gradient overlay */}
                 <div className="modal-gradient" />
               </div>
 
-              {/* Header - glassmorphism (Atlas style) */}
+              {/* Header - glassmorphism (exact Atlas EntityCardPreview style) */}
               <div className="modal-header">
                 <span className="modal-header-brand">THOUGHTFORM</span>
-                <span className="modal-header-mode">
-                  MODE: <span className="modal-header-value">PLAYBACK</span>
+                <span className="modal-header-data">
+                  MODE: <span>PLAYBACK</span>
+                </span>
+                <span className="modal-header-data">
+                  SIG: <span>0.946</span>
                 </span>
                 <div className="modal-header-right">
-                  <span className="modal-header-time">
-                    [<span className="modal-header-value">{formatTime(elapsedTime)}</span>]
+                  <span className="modal-header-data">
+                    EPOCH: <span>4.2847</span>
+                  </span>
+                  <span className="modal-header-data">
+                    [<span>{formatTime(elapsedTime)}</span>]
                   </span>
                   <button
                     className="modal-close-btn"
@@ -309,38 +312,33 @@ export function ManifestoVideoStack({
                 </div>
               </div>
 
-              {/* Footer - glassmorphism (Atlas style) */}
+              {/* Footer - glassmorphism (exact Atlas EntityCardPreview style) */}
               <div className="modal-footer">
                 <div className="modal-footer-left">
-                  <h2 className="modal-title">{expandedCard.title.toUpperCase()}</h2>
+                  <div className="modal-name">{expandedCard.title.toUpperCase()}</div>
                   <div className="modal-meta">
-                    {expandedCard.role && (
-                      <span className="modal-role">{expandedCard.role.toUpperCase()}</span>
-                    )}
+                    <div className="modal-meta-line">
+                      TYPE <span>{expandedCard.type?.toUpperCase() || "VOICE"}</span>
+                    </div>
                   </div>
                 </div>
                 <div className="modal-footer-right">
-                  <p className="modal-description">
+                  <div className="modal-bio">
                     {expandedCard.fullText || expandedCard.description}
-                  </p>
+                  </div>
                 </div>
               </div>
-
-              {/* Corner accents */}
-              <div className="modal-corner tl" />
-              <div className="modal-corner tr" />
-              <div className="modal-corner bl" />
-              <div className="modal-corner br" />
             </div>
           </div>,
           document.body
         )}
 
       <style jsx>{`
+        /* ═══════════════════════════════════════════════════════════════════
+           VIDEO STACK CONTAINER
+           ═══════════════════════════════════════════════════════════════════ */
         .video-stack-container {
           position: fixed;
-          /* Mirror the Sources positioning - close to the right rail
-             Sources are at left: 160px, add extra for card width balance */
           right: 200px;
           top: 50%;
           transform: translateY(-50%);
@@ -369,40 +367,27 @@ export function ManifestoVideoStack({
           height: 293px;
         }
 
-        /* ─── CARD STYLING (Atlas-inspired) ─── */
+        /* ═══════════════════════════════════════════════════════════════════
+           CARD STYLING - Exact Atlas EntityCard.tsx Match
+           ═══════════════════════════════════════════════════════════════════ */
         .video-card {
           position: absolute;
           width: 220px;
-          height: 293px;
           cursor: pointer;
-          background: var(--surface-0, #0a0908);
-          border: 1px solid rgba(236, 227, 214, 0.08);
-          transition: all 0.35s cubic-bezier(0.19, 1, 0.22, 1);
-          overflow: hidden;
         }
 
-        .video-card:hover {
-          border-color: rgba(236, 227, 214, 0.3);
-        }
-
-        .video-card.hovered {
-          box-shadow:
-            0 0 0 1px rgba(236, 227, 214, 0.03),
-            0 20px 50px -15px rgba(0, 0, 0, 0.5);
-        }
-
-        /* Outer glow */
+        /* Outer glow - exact Atlas radial gradient */
         .card-glow {
           position: absolute;
-          inset: -20px;
+          inset: -30px;
           background: radial-gradient(
             ellipse 60% 70% at 50% 45%,
-            rgba(202, 165, 84, 0.08) 0%,
-            rgba(202, 165, 84, 0.03) 40%,
+            rgba(236, 227, 214, 0.08) 0%,
+            rgba(236, 227, 214, 0.03) 40%,
             transparent 70%
           );
           opacity: 0;
-          transition: opacity 0.3s ease;
+          transition: opacity 0.4s ease;
           pointer-events: none;
         }
 
@@ -410,15 +395,16 @@ export function ManifestoVideoStack({
           opacity: 1;
         }
 
-        /* Corner accents */
+        /* Corner bracket accents - exact Atlas style */
         .corner-accent {
           position: absolute;
           width: 12px;
           height: 12px;
-          border: 1px solid rgba(236, 227, 214, 0.15);
+          border: 1px solid var(--dawn-15, rgba(236, 227, 214, 0.15));
           opacity: 0;
           transition: opacity 0.3s ease;
           pointer-events: none;
+          z-index: 10;
         }
 
         .corner-accent.tl {
@@ -439,12 +425,34 @@ export function ManifestoVideoStack({
           opacity: 1;
         }
 
-        /* ─── MEDIA CONTAINER ─── */
+        /* Main frame - exact Atlas styling */
+        .card-frame {
+          position: relative;
+          width: 220px;
+          overflow: hidden;
+          border: 1px solid var(--dawn-08, rgba(236, 227, 214, 0.08));
+          background: var(--surface-0, #0a0908);
+          transition: all 0.25s cubic-bezier(0.19, 1, 0.22, 1);
+        }
+
+        .video-card:hover .card-frame {
+          border-color: var(--dawn-30, rgba(236, 227, 214, 0.3));
+          transform: translateY(-2px);
+          box-shadow:
+            0 0 0 1px rgba(236, 227, 214, 0.03),
+            0 20px 50px -15px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Media container - 3:4 aspect ratio like Atlas */
         .card-media {
           position: relative;
           width: 100%;
-          height: 100%;
-          background: linear-gradient(180deg, rgba(15, 14, 12, 1) 0%, rgba(10, 9, 8, 1) 100%);
+          aspect-ratio: 3 / 4;
+          background: linear-gradient(
+            180deg,
+            var(--surface-1, #0f0e0c) 0%,
+            var(--surface-0, #0a0908) 100%
+          );
           overflow: hidden;
         }
 
@@ -465,21 +473,40 @@ export function ManifestoVideoStack({
           display: flex;
           align-items: center;
           justify-content: center;
-          background: linear-gradient(180deg, rgba(20, 18, 15, 1) 0%, rgba(10, 9, 8, 1) 100%);
+          background: linear-gradient(
+            180deg,
+            var(--surface-1, #0f0e0c) 0%,
+            var(--surface-0, #0a0908) 100%
+          );
         }
 
-        .placeholder-icon {
-          font-size: 24px;
-          color: rgba(202, 165, 84, 0.3);
-          transition: all 0.3s ease;
+        .placeholder-letter {
+          font-family: var(--font-mono, "Iosevka Web", "PT Mono", monospace);
+          font-size: 4rem;
+          color: var(--dawn-08, rgba(236, 227, 214, 0.08));
+          transition: color 0.3s ease;
         }
 
-        .video-card:hover .placeholder-icon {
-          color: rgba(202, 165, 84, 0.6);
-          transform: scale(1.1);
+        .video-card:hover .placeholder-letter {
+          color: var(--dawn-15, rgba(236, 227, 214, 0.15));
         }
 
-        /* Scanlines */
+        /* Gradient overlay - exact Atlas style */
+        .card-gradient {
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(
+            to bottom,
+            rgba(5, 4, 3, 0.1) 0%,
+            transparent 30%,
+            transparent 50%,
+            rgba(5, 4, 3, 0.4) 80%,
+            rgba(5, 4, 3, 0.85) 100%
+          );
+          pointer-events: none;
+        }
+
+        /* Scanlines - exact Atlas style */
         .scanlines {
           position: absolute;
           inset: 0;
@@ -499,22 +526,9 @@ export function ManifestoVideoStack({
           opacity: 1;
         }
 
-        /* Gradient overlay */
-        .card-gradient {
-          position: absolute;
-          inset: 0;
-          background: linear-gradient(
-            to bottom,
-            rgba(5, 4, 3, 0.1) 0%,
-            transparent 30%,
-            transparent 50%,
-            rgba(5, 4, 3, 0.4) 75%,
-            rgba(5, 4, 3, 0.95) 100%
-          );
-          pointer-events: none;
-        }
-
-        /* ─── INFO OVERLAY (Glassmorphism) ─── */
+        /* ═══════════════════════════════════════════════════════════════════
+           INFO OVERLAY - Exact Atlas Glassmorphism
+           ═══════════════════════════════════════════════════════════════════ */
         .card-info {
           position: absolute;
           bottom: 0;
@@ -528,7 +542,7 @@ export function ManifestoVideoStack({
         }
 
         .card-title {
-          font-family: "Iosevka Web", "Iosevka", "PT Mono", monospace;
+          font-family: var(--font-mono, "Iosevka Web", "PT Mono", monospace);
           font-size: 10px;
           font-weight: 400;
           letter-spacing: 0.06em;
@@ -545,37 +559,44 @@ export function ManifestoVideoStack({
 
         .card-description {
           margin: 6px 0 0 0;
-          font-family: "Iosevka Web", "Iosevka", monospace;
-          font-size: 9px;
+          font-family: var(--font-mono, "Iosevka Web", monospace);
+          font-size: 8px;
           line-height: 1.5;
-          color: rgba(236, 227, 214, 0.6);
-          letter-spacing: 0.02em;
+          color: var(--dawn-50, rgba(236, 227, 214, 0.5));
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
         }
 
+        /* Meta row - exact Atlas style */
         .card-meta {
           display: flex;
           align-items: center;
           justify-content: space-between;
           margin-top: 8px;
           padding-top: 8px;
-          border-top: 1px solid rgba(236, 227, 214, 0.08);
+          border-top: 1px solid var(--dawn-08, rgba(236, 227, 214, 0.08));
         }
 
-        .card-role {
-          font-family: "Iosevka Web", "Iosevka", monospace;
+        .card-type {
+          font-family: var(--font-mono, "Iosevka Web", monospace);
           font-size: 7px;
           letter-spacing: 0.12em;
           text-transform: uppercase;
-          color: rgba(236, 227, 214, 0.3);
+          color: var(--dawn-30, rgba(236, 227, 214, 0.3));
+        }
+
+        .card-type span {
+          color: var(--dawn-50, rgba(236, 227, 214, 0.5));
         }
 
         .card-indicator {
           font-size: 8px;
           color: var(--gold, #caa554);
-          opacity: 0.6;
         }
 
-        /* ─── STACK LABEL ─── */
+        /* ═══════════════════════════════════════════════════════════════════
+           STACK LABEL
+           ═══════════════════════════════════════════════════════════════════ */
         .stack-label {
           display: flex;
           align-items: center;
@@ -590,7 +611,7 @@ export function ManifestoVideoStack({
         }
 
         .label-text {
-          font-family: "Iosevka Web", "Iosevka", monospace;
+          font-family: var(--font-mono, "Iosevka Web", monospace);
           font-size: 9px;
           letter-spacing: 0.12em;
           text-transform: uppercase;
@@ -599,7 +620,7 @@ export function ManifestoVideoStack({
         }
 
         /* ═══════════════════════════════════════════════════════════════════
-           EXPANDED MODAL STYLES (Atlas-inspired)
+           MODAL - Exact Atlas EntityCardPreview.module.css Match
            ═══════════════════════════════════════════════════════════════════ */
         .modal-backdrop {
           position: fixed;
@@ -609,9 +630,9 @@ export function ManifestoVideoStack({
           align-items: center;
           justify-content: center;
           padding: 40px;
-          background: rgba(5, 4, 3, 0.5);
-          backdrop-filter: blur(16px);
-          -webkit-backdrop-filter: blur(16px);
+          background: rgba(5, 4, 3, 0.3);
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
           animation: modalFadeIn 0.3s ease-out forwards;
         }
 
@@ -624,16 +645,19 @@ export function ManifestoVideoStack({
           }
         }
 
+        /* Card - exact Atlas EntityCardPreview sizing and grid */
         .modal-card {
           position: relative;
-          width: min(calc(100vh * 0.8), 640px);
+          width: 620px;
           max-width: calc(100vw - 80px);
-          aspect-ratio: 4/5;
-          background: #050403;
-          border: 1px solid rgba(236, 227, 214, 0.1);
+          aspect-ratio: 4 / 5;
+          background: var(--void, #050403);
           overflow: hidden;
           display: grid;
-          grid-template-rows: 36px 1fr 120px;
+          grid-template-columns: 1fr;
+          grid-template-rows: 32px 1fr 140px;
+          gap: 1px;
+          border: 1px solid rgba(236, 227, 214, 0.08);
           animation: modalCardIn 0.4s cubic-bezier(0.19, 1, 0.22, 1) forwards;
         }
 
@@ -648,16 +672,16 @@ export function ManifestoVideoStack({
           }
         }
 
-        /* Scan line */
+        /* Scanline - exact Atlas animation */
         .modal-scanline {
           position: absolute;
           top: 0;
           left: 0;
           right: 0;
           height: 2px;
-          background: linear-gradient(to bottom, rgba(202, 165, 84, 0.5), transparent);
+          background: linear-gradient(to bottom, rgba(202, 165, 84, 0.4), transparent);
           z-index: 100;
-          animation: modalScan 10s linear infinite;
+          animation: modalScan 12s linear infinite;
           pointer-events: none;
         }
 
@@ -667,10 +691,10 @@ export function ManifestoVideoStack({
             opacity: 0;
           }
           5% {
-            opacity: 0.7;
+            opacity: 0.6;
           }
           95% {
-            opacity: 0.7;
+            opacity: 0.6;
           }
           100% {
             top: 100%;
@@ -678,7 +702,7 @@ export function ManifestoVideoStack({
           }
         }
 
-        /* Modal media */
+        /* Full-bleed media background - exact Atlas style */
         .modal-media {
           position: absolute;
           inset: 0;
@@ -698,19 +722,26 @@ export function ManifestoVideoStack({
           flex-direction: column;
           align-items: center;
           justify-content: center;
-          gap: 16px;
-          background: linear-gradient(180deg, rgba(20, 18, 15, 1) 0%, rgba(10, 9, 8, 1) 100%);
+          gap: 8px;
+          background: var(--void, #050403);
         }
 
-        .modal-placeholder-icon {
-          font-size: 48px;
-          color: rgba(202, 165, 84, 0.3);
+        .modal-placeholder-box {
+          width: 100px;
+          height: 100px;
+          border: 1px dashed rgba(236, 227, 214, 0.15);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 24px;
+          color: rgba(236, 227, 214, 0.3);
         }
 
         .modal-placeholder-text {
-          font-family: "Iosevka Web", "Iosevka", monospace;
-          font-size: 11px;
-          letter-spacing: 0.2em;
+          font-family: var(--font-mono, "PT Mono", monospace);
+          font-size: 9px;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
           color: rgba(236, 227, 214, 0.3);
         }
 
@@ -720,41 +751,42 @@ export function ManifestoVideoStack({
           background: linear-gradient(
             to bottom,
             rgba(5, 4, 3, 0.4) 0%,
-            rgba(5, 4, 3, 0.15) 30%,
-            rgba(5, 4, 3, 0.15) 60%,
-            rgba(5, 4, 3, 0.7) 100%
+            rgba(5, 4, 3, 0.2) 50%,
+            rgba(5, 4, 3, 0.6) 100%
           );
           pointer-events: none;
         }
 
-        /* Modal header */
+        /* Header - exact Atlas EntityCardPreview.module.css */
         .modal-header {
-          position: relative;
-          z-index: 10;
-          background: rgba(10, 9, 8, 0.15);
+          grid-column: 1 / -1;
+          background: rgba(10, 9, 8, 0.1);
           backdrop-filter: blur(12px);
           -webkit-backdrop-filter: blur(12px);
-          border-bottom: 1px solid rgba(236, 227, 214, 0.1);
           display: flex;
           align-items: center;
-          padding: 0 14px;
-          gap: 16px;
-          font-family: "Iosevka Web", "Iosevka", monospace;
-          font-size: 10px;
+          padding: 0 12px;
+          font-size: 9px;
           letter-spacing: 0.1em;
+          gap: 12px;
+          border-bottom: 1px solid rgba(236, 227, 214, 0.12);
+          position: relative;
+          z-index: 10;
         }
 
         .modal-header-brand {
           color: var(--gold, #caa554);
           text-transform: uppercase;
+          font-family: var(--font-mono, "PT Mono", monospace);
         }
 
-        .modal-header-mode {
+        .modal-header-data {
           color: rgba(236, 227, 214, 0.3);
+          font-family: var(--font-mono, "PT Mono", monospace);
         }
 
-        .modal-header-value {
-          color: rgba(236, 227, 214, 0.6);
+        .modal-header-data span {
+          color: rgba(236, 227, 214, 0.5);
         }
 
         .modal-header-right {
@@ -762,10 +794,6 @@ export function ManifestoVideoStack({
           display: flex;
           align-items: center;
           gap: 12px;
-        }
-
-        .modal-header-time {
-          color: rgba(236, 227, 214, 0.3);
         }
 
         .modal-close-btn {
@@ -779,25 +807,26 @@ export function ManifestoVideoStack({
           display: flex;
           align-items: center;
           justify-content: center;
-          transition: color 0.2s ease;
+          transition: color 0.15s ease;
         }
 
         .modal-close-btn:hover {
-          color: rgba(236, 227, 214, 0.9);
+          color: rgba(236, 227, 214, 0.8);
         }
 
-        /* Modal footer */
+        /* Footer - exact Atlas EntityCardPreview.module.css */
         .modal-footer {
-          position: relative;
-          z-index: 10;
-          background: rgba(10, 9, 8, 0.15);
+          grid-column: 1 / -1;
+          background: rgba(10, 9, 8, 0.1);
           backdrop-filter: blur(12px);
           -webkit-backdrop-filter: blur(12px);
-          border-top: 1px solid rgba(236, 227, 214, 0.1);
-          padding: 16px 20px;
+          border-top: 1px solid rgba(236, 227, 214, 0.12);
+          padding: 18px 28px;
           display: grid;
           grid-template-columns: 180px 1fr;
           gap: 24px;
+          position: relative;
+          z-index: 10;
         }
 
         .modal-footer-left {
@@ -806,82 +835,51 @@ export function ManifestoVideoStack({
           justify-content: center;
         }
 
-        .modal-title {
-          font-family: "Iosevka Web", "Iosevka", monospace;
+        .modal-name {
+          font-family: var(--font-mono, "PT Mono", monospace);
           font-size: 22px;
-          font-weight: 400;
           color: var(--gold, #caa554);
           letter-spacing: 0.1em;
-          line-height: 1;
-          margin: 0;
+          line-height: 1.1;
+          text-transform: uppercase;
         }
 
         .modal-meta {
-          margin-top: 8px;
+          margin-top: 10px;
+          font-family: var(--font-mono, "PT Mono", monospace);
+          font-size: 9px;
+          display: flex;
+          flex-direction: column;
+          gap: 5px;
         }
 
-        .modal-role {
-          font-family: "Iosevka Web", "Iosevka", monospace;
-          font-size: 9px;
-          letter-spacing: 0.1em;
-          color: rgba(236, 227, 214, 0.4);
+        .modal-meta-line {
+          color: rgba(236, 227, 214, 0.3);
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+        }
+
+        .modal-meta-line span {
+          color: rgba(236, 227, 214, 0.5);
         }
 
         .modal-footer-right {
           display: flex;
           align-items: center;
           border-left: 1px solid rgba(236, 227, 214, 0.08);
-          padding-left: 24px;
+          padding-left: 28px;
         }
 
-        .modal-description {
-          font-family: var(--font-sans, "Inter", sans-serif);
-          font-size: 13px;
-          color: rgba(236, 227, 214, 0.6);
+        .modal-bio {
+          font-family: var(--font-sans, "IBM Plex Sans", sans-serif);
+          font-size: 12px;
+          color: rgba(236, 227, 214, 0.5);
           line-height: 1.7;
-          margin: 0;
         }
 
-        /* Modal corner accents */
-        .modal-corner {
-          position: absolute;
-          width: 20px;
-          height: 20px;
-          border: 1px solid rgba(236, 227, 214, 0.2);
-          pointer-events: none;
-          z-index: 50;
-        }
-
-        .modal-corner.tl {
-          top: -1px;
-          left: -1px;
-          border-right: none;
-          border-bottom: none;
-        }
-
-        .modal-corner.tr {
-          top: -1px;
-          right: -1px;
-          border-left: none;
-          border-bottom: none;
-        }
-
-        .modal-corner.bl {
-          bottom: -1px;
-          left: -1px;
-          border-right: none;
-          border-top: none;
-        }
-
-        .modal-corner.br {
-          bottom: -1px;
-          right: -1px;
-          border-left: none;
-          border-top: none;
-        }
-
-        /* ─── RESPONSIVE ─── */
-        /* Mirroring Sources positioning - adjust on smaller screens */
+        /* ═══════════════════════════════════════════════════════════════════
+           RESPONSIVE
+           ═══════════════════════════════════════════════════════════════════ */
         @media (max-width: 1400px) {
           .video-stack-container {
             right: 160px;
@@ -894,7 +892,10 @@ export function ManifestoVideoStack({
 
           .video-card {
             width: 200px;
-            height: 267px;
+          }
+
+          .card-frame {
+            width: 200px;
           }
         }
 
@@ -910,7 +911,10 @@ export function ManifestoVideoStack({
 
           .video-card {
             width: 180px;
-            height: 240px;
+          }
+
+          .card-frame {
+            width: 180px;
           }
 
           .card-info {
@@ -922,12 +926,18 @@ export function ManifestoVideoStack({
           }
 
           .card-description {
-            font-size: 8px;
+            font-size: 7px;
+          }
+
+          .modal-card {
+            width: 100%;
+            max-width: 500px;
           }
 
           .modal-footer {
             grid-template-columns: 1fr;
             gap: 12px;
+            padding: 14px 20px;
           }
 
           .modal-footer-right {
