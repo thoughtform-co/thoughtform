@@ -195,14 +195,14 @@ export function ManifestoVideoStack({
       <style jsx>{`
         .video-stack-container {
           position: fixed;
-          /* Position to the right of manifesto terminal (.bridge-frame)
-             Bridge frame: left: calc(var(--rail-width) + 120px), width: 500px
-             So right edge is at: calc(var(--rail-width) + 620px)
-             Add 48px gap between manifesto and video stack */
-          left: calc(var(--rail-width, 48px) + 120px + 500px + 48px);
+          /* Position between terminal and right rail
+             Right rail is ~120px from edge (includes rail width + margin)
+             Video stack needs ~220px (180px card + 40px for stack offset)
+             Position so there's room for both */
+          right: calc(var(--rail-width, 48px) + 100px);
           top: 50%;
           transform: translateY(-50%);
-          z-index: 100;
+          z-index: 50; /* Below the terminal (z-index 100) */
           display: flex;
           flex-direction: column;
           align-items: flex-start;
@@ -213,7 +213,7 @@ export function ManifestoVideoStack({
         @keyframes fadeIn {
           from {
             opacity: 0;
-            transform: translateY(-50%) translateX(-20px);
+            transform: translateY(-50%) translateX(20px);
           }
           to {
             opacity: 1;
@@ -460,8 +460,7 @@ export function ManifestoVideoStack({
         /* On smaller screens, reduce gap and card size to fit between manifesto and rail */
         @media (max-width: 1400px) {
           .video-stack-container {
-            /* Reduce gap on medium screens */
-            left: calc(var(--rail-width, 48px) + 120px + 500px + 32px);
+            right: calc(var(--rail-width, 48px) + 80px);
           }
 
           .video-stack {
@@ -477,8 +476,7 @@ export function ManifestoVideoStack({
 
         @media (max-width: 1200px) {
           .video-stack-container {
-            /* Even smaller gap, smaller cards */
-            left: calc(var(--rail-width, 48px) + 120px + 500px + 24px);
+            right: calc(var(--rail-width, 48px) + 60px);
           }
 
           .video-stack {
