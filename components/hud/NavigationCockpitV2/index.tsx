@@ -23,6 +23,7 @@ import { SigilSection } from "./SigilSection";
 import { HeroBackgroundSigil } from "./HeroBackgroundSigil";
 import { ManifestoTerminal } from "./ManifestoTerminal";
 import { ManifestoSources } from "./ManifestoSources";
+import { ManifestoVideoStack } from "./ManifestoVideoStack";
 import { useScrollCapture } from "./hooks/useScrollCapture";
 // Styles consolidated into app/globals.css
 
@@ -677,6 +678,12 @@ the interface for human-AI collaboration`}
 
       {/* Manifesto Sources - Fixed left rail, appears with manifesto text */}
       <ManifestoSources isVisible={manifestoRevealProgress > 0.1} />
+
+      {/* Manifesto Video Stack - Fixed right side, appears with manifesto text */}
+      <ManifestoVideoStack
+        isVisible={manifestoRevealProgress > 0.1}
+        revealProgress={manifestoRevealProgress}
+      />
 
       {/* Fixed Thoughtform Sigil - appears centered during definition section
           Animates from brandmark origin (in hero wordmark) to center,
