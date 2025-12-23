@@ -196,8 +196,8 @@ export function ManifestoVideoStack({
         .video-stack-container {
           position: fixed;
           /* Mirror the Sources positioning - close to the right rail
-             Sources are at left: 160px, so we mirror with right: 160px */
-          right: 160px;
+             Sources are at left: 160px, add extra for card width balance */
+          right: 200px;
           top: 50%;
           transform: translateY(-50%);
           z-index: 100;
@@ -458,7 +458,7 @@ export function ManifestoVideoStack({
         /* Mirroring Sources positioning - adjust on smaller screens */
         @media (max-width: 1400px) {
           .video-stack-container {
-            right: 120px;
+            right: 160px;
           }
 
           .video-stack {
@@ -474,7 +474,7 @@ export function ManifestoVideoStack({
 
         @media (max-width: 1200px) {
           .video-stack-container {
-            right: 100px;
+            right: 120px;
           }
 
           .video-stack {
