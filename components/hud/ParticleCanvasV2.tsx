@@ -933,8 +933,8 @@ function initParticles(config: ParticleSystemConfig): Particle[] {
   // so the impact basin reads as dense + deep.
   {
     const craterCenterX = 0;
-    // Pull crater forward so we reach the rim during Manifesto and move over it into Services
-    const craterCenterZ = 6000;
+    // Crater center is positioned so the rim is reached when the manifesto finishes revealing.
+    const craterCenterZ = 6700;
     const floorRadius = 520;
     const floorPoints = 850;
 
@@ -1010,17 +1010,31 @@ function initParticles(config: ParticleSystemConfig): Particle[] {
 interface ParticleCanvasV2Props {
   scrollProgress: number;
   config?: ParticleSystemConfig;
+  /** Manifesto reveal progress (0-1). Used to sync world travel/crater with typed reveal. */
+  manifestoRevealProgress?: number;
+  /** Whether the manifesto reveal is complete (scroll capture released). */
+  manifestoComplete?: boolean;
+  /** When true, lock the particle camera scroll position (prevents Lenis momentum drift). */
+  lockScrollProgress?: boolean;
 }
 
 export function ParticleCanvasV2({
   scrollProgress,
   config = DEFAULT_CONFIG,
+  manifestoRevealProgress = 0,
+  manifestoComplete = false,
+  lockScrollProgress = false,
 }: ParticleCanvasV2Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const particlesRef = useRef<Particle[]>([]);
   const animationRef = useRef<number>(0);
   const dimensionsRef = useRef({ width: 0, height: 0 });
   const scrollProgressRef = useRef(0);
+  const lockedScrollProgressRef = useRef(0);
+  const wasLockActiveRef = useRef(false);
+  const lockScrollProgressRef = useRef(false);
+  const manifestoRevealProgressRef = useRef(0);
+  const manifestoCompleteRef = useRef(false);
   const timeRef = useRef(0);
   const configRef = useRef(config);
   const isMobile = useIsMobile();
@@ -1054,6 +1068,18 @@ export function ParticleCanvasV2({
   useEffect(() => {
     scrollProgressRef.current = scrollProgress;
   }, [scrollProgress]);
+
+  useEffect(() => {
+    lockScrollProgressRef.current = lockScrollProgress;
+  }, [lockScrollProgress]);
+
+  useEffect(() => {
+    manifestoRevealProgressRef.current = manifestoRevealProgress;
+  }, [manifestoRevealProgress]);
+
+  useEffect(() => {
+    manifestoCompleteRef.current = manifestoComplete;
+  }, [manifestoComplete]);
 
   const resize = useCallback(() => {
     const canvas = canvasRef.current;
@@ -1098,8 +1124,31 @@ export function ParticleCanvasV2({
 
       const currentConfig = configRef.current;
       const time = timeRef.current;
-      const scrollP = scrollProgressRef.current;
-      const scrollZ = scrollP * 9000;
+      const rawScrollP = scrollProgressRef.current;
+
+      // Lock scroll progress while manifesto scroll-capture is active to avoid Lenis momentum drift
+      // moving the particle world forward before the manifesto is fully revealed.
+      const lockActive = lockScrollProgressRef.current && !manifestoCompleteRef.current;
+      if (lockActive && !wasLockActiveRef.current) {
+        lockedScrollProgressRef.current = rawScrollP;
+        wasLockActiveRef.current = true;
+      } else if (!lockActive && wasLockActiveRef.current) {
+        wasLockActiveRef.current = false;
+      }
+
+      const scrollP = lockActive ? lockedScrollProgressRef.current : rawScrollP;
+
+      // Add extra "travel" during the manifesto reveal so we arrive at the crater rim
+      // exactly when the last line finishes.
+      const MANIFESTO_TRAVEL_Z = 700; // px in world-Z
+      const manifestoTravelFactor = manifestoCompleteRef.current
+        ? 1
+        : lockActive
+          ? Math.max(0, Math.min(1, manifestoRevealProgressRef.current))
+          : 0;
+      const extraTravelZ = MANIFESTO_TRAVEL_Z * manifestoTravelFactor;
+
+      const scrollZ = scrollP * 9000 + extraTravelZ;
 
       const currentSection = Math.floor(scrollP * 4) + 1;
       const sectionProgress = (scrollP * 4) % 1;
@@ -1119,9 +1168,8 @@ export function ParticleCanvasV2({
       const easeInOutCubic = (t: number) =>
         t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 
-      // Services camera tilt: look slightly more "down" into the crater
-      // Only activates once we start entering services.
-      const servicesTiltRaw = clamp01((scrollP - 0.5) / 0.22);
+      // Services camera tilt: only after manifesto is fully revealed.
+      const servicesTiltRaw = manifestoCompleteRef.current ? clamp01((scrollP - 0.5) / 0.22) : 0;
       const servicesTilt = easeInOutCubic(servicesTiltRaw);
       const dynamicPitchDeg = camera.pitch + servicesTilt * 10; // subtle forward tilt
 
@@ -1204,28 +1252,19 @@ export function ParticleCanvasV2({
         // ═══════════════════════════════════════════════════════════════════
         let craterOffset = 0;
         if (p.type === "terrain") {
-          // Morph in as we enter Services so it syncs with the Services transition.
-          // (Aligned with the Services-only camera tilt window.)
-          // Start forming near the end of the Manifesto transition so the crater rim
-          // is present once the manifesto is fully revealed, but we don't "move over" it
-          // during the reveal phase.
-          const craterMorphStart = 0.32;
-          const craterMorphEnd = 0.4;
-          const craterMorph = Math.max(
-            0,
-            Math.min(1, (scrollP - craterMorphStart) / (craterMorphEnd - craterMorphStart))
-          );
-          const easedMorph = craterMorph * craterMorph;
+          // Crater morph is synced to the manifesto typing:
+          // - While scroll-capture is active, we form the crater as text reveals
+          // - At the final line, we're at the rim (see MANIFESTO_TRAVEL_Z)
+          // - Only AFTER the manifesto is complete do we start moving over the crater
+          const easedMorph = manifestoTravelFactor * manifestoTravelFactor;
 
           if (easedMorph > 0) {
-            // Fixed crater center (near the far end of the experience)
-            // Keep this within the extended manifold depth.
+            // Crater positioned so:
+            // scrollZ ≈ 0.40*9000 + MANIFESTO_TRAVEL_Z (700) = 4300 ⇒ slopeStartZ=4300 ⇒ craterCenterZ=6700
             const craterCenterX = 0;
-            const craterCenterZ = 6000;
+            const craterCenterZ = 6700;
 
             // Long descent slope (start well before the crater)
-            // Shorten the approach so the rim/edge aligns with the end of the manifesto reveal.
-            // With craterCenterZ=6000, slopeStartZ≈3600 puts the rim at scrollP≈0.40 (scrollZ≈3600).
             const slopeStartZ = craterCenterZ - 2400;
             const slopeEndZ = craterCenterZ;
             const slopeT =

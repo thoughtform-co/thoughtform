@@ -493,7 +493,13 @@ function NavigationCockpitInner() {
     <>
       {/* Fixed Background - V2 Particle System (Manifold) */}
       <CanvasErrorBoundary>
-        <ParticleCanvasV2 scrollProgress={scrollProgress} config={config} />
+        <ParticleCanvasV2
+          scrollProgress={scrollProgress}
+          config={config}
+          manifestoRevealProgress={manifestoRevealProgress}
+          manifestoComplete={manifestoComplete}
+          lockScrollProgress={shouldCaptureScroll}
+        />
       </CanvasErrorBoundary>
 
       {/* Hero Background Sigil - fully formed in the distance, behind gateway */}
