@@ -280,12 +280,14 @@ function NavigationCockpitInner() {
   // Terminal slides from center to right, sources/videos fade out
   // Only activates after manifesto reveal is complete
   // Uses same easing pattern as other transitions for consistent feel
+  // Delayed by one scroll action (starts at 15% scroll progress)
   // ═══════════════════════════════════════════════════════════════════
   const tManifestoToServices = useMemo(() => {
     if (!manifestoComplete) return 0;
-    // Use manifestoScrollProgress which tracks scroll after manifesto complete
-    // Transition takes the full scroll range (0 → 1) for smooth, unhurried motion
-    const rawProgress = Math.min(1, manifestoScrollProgress);
+    // Delay start by ~15% of scroll range (one scroll action buffer)
+    const DELAY_START = 0.15;
+    const delayedProgress = Math.max(0, manifestoScrollProgress - DELAY_START) / (1 - DELAY_START);
+    const rawProgress = Math.min(1, delayedProgress);
     // Apply same easeInOutCubic as other transitions for consistent motion
     return easeInOutCubic(rawProgress);
   }, [manifestoComplete, manifestoScrollProgress]);
