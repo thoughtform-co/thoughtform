@@ -933,7 +933,8 @@ function initParticles(config: ParticleSystemConfig): Particle[] {
   // so the impact basin reads as dense + deep.
   {
     const craterCenterX = 0;
-    const craterCenterZ = 8800;
+    // Pull crater forward so we reach the rim during Manifesto and move over it into Services
+    const craterCenterZ = 6000;
     const floorRadius = 520;
     const floorPoints = 850;
 
@@ -1205,8 +1206,9 @@ export function ParticleCanvasV2({
         if (p.type === "terrain") {
           // Morph in as we enter Services so it syncs with the Services transition.
           // (Aligned with the Services-only camera tilt window.)
-          const craterMorphStart = 0.5;
-          const craterMorphEnd = 0.72;
+          // Start forming during Manifesto so we’re already at the rim before Services begins.
+          const craterMorphStart = 0.35;
+          const craterMorphEnd = 0.5;
           const craterMorph = Math.max(
             0,
             Math.min(1, (scrollP - craterMorphStart) / (craterMorphEnd - craterMorphStart))
@@ -1217,7 +1219,7 @@ export function ParticleCanvasV2({
             // Fixed crater center (near the far end of the experience)
             // Keep this within the extended manifold depth.
             const craterCenterX = 0;
-            const craterCenterZ = 8800;
+            const craterCenterZ = 6000;
 
             // Long descent slope (start well before the crater)
             const slopeStartZ = craterCenterZ - 3200;
