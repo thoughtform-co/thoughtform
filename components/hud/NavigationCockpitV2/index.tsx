@@ -858,15 +858,17 @@ the interface for human-AI collaboration`}
             >
               <span
                 data-role="journey-arrows-left"
+                className="journey-arrow-pulse journey-arrow-pulse-left"
                 style={{
                   fontSize: isMobile ? "14px" : "16px",
                   lineHeight: 1,
-                  opacity: tHeroToDef < 0.8 ? 0 : tHeroToDef > 0.9 ? 1 : (tHeroToDef - 0.8) / 0.1,
                   background:
                     "linear-gradient(135deg, rgba(202, 165, 84, 0.9) 0%, rgba(202, 165, 84, 0.6) 50%, rgba(202, 165, 84, 0.8) 100%)",
                   WebkitBackgroundClip: "text",
                   WebkitTextFillColor: "transparent",
                   backgroundClip: "text",
+                  // Only show after morph completes
+                  visibility: tHeroToDef < 0.8 ? "hidden" : "visible",
                 }}
               >
                 ›››
@@ -874,15 +876,17 @@ the interface for human-AI collaboration`}
               <span>START YOUR JOURNEY</span>
               <span
                 data-role="journey-arrows-right"
+                className="journey-arrow-pulse journey-arrow-pulse-right"
                 style={{
                   fontSize: isMobile ? "14px" : "16px",
                   lineHeight: 1,
-                  opacity: tHeroToDef < 0.8 ? 0 : tHeroToDef > 0.9 ? 1 : (tHeroToDef - 0.8) / 0.1,
                   background:
                     "linear-gradient(135deg, rgba(202, 165, 84, 0.9) 0%, rgba(202, 165, 84, 0.6) 50%, rgba(202, 165, 84, 0.8) 100%)",
                   WebkitBackgroundClip: "text",
                   WebkitTextFillColor: "transparent",
                   backgroundClip: "text",
+                  // Only show after morph completes
+                  visibility: tHeroToDef < 0.8 ? "hidden" : "visible",
                 }}
               >
                 ‹‹‹

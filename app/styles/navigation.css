@@ -316,6 +316,29 @@
   }
 }
 
+/* Journey CTA button arrow pulse */
+.journey-arrow-pulse {
+  animation: journey-arrow-pulse 2s ease-in-out infinite;
+}
+
+.journey-arrow-pulse-left {
+  animation-delay: 0s;
+}
+
+.journey-arrow-pulse-right {
+  animation-delay: 0.15s;
+}
+
+@keyframes journey-arrow-pulse {
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
 /* ─── HERO TEXT FRAME ─── */
 .hero-text-frame {
   position: relative;
