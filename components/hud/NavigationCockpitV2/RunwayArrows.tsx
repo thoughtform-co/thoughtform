@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect, useState } from "react";
+
 interface RunwayArrowsProps {
   /** Hero→Definition transition progress (0-1) */
   transitionProgress: number;
@@ -7,37 +9,98 @@ interface RunwayArrowsProps {
   scrollProgress: number;
   /** Click handler to navigate to services section */
   onNavigate: () => void;
+  /** Definition→Manifesto transition progress (0-1) - button fades out during this */
+  tDefToManifesto: number;
+  /** Bridge frame bottom position (for positioning button below frame) */
+  frameBottom?: string;
+  /** Bridge frame left position */
+  frameLeft?: string;
+  /** Bridge frame width */
+  frameWidth?: string;
+  /** Bridge frame transform (for centering) */
+  frameTransform?: string;
+  /** Ref to frame button to get its actual DOM position */
+  frameButtonRef?: React.RefObject<HTMLButtonElement>;
 }
 
 /**
  * Runway arrows that transform from "› › › › › ›" in hero
- * to a framed "SERVICES" button in the interface section bottom-left
+ * to a framed "START YOUR JOURNEY" button in the interface section bottom-left
  */
 export function RunwayArrows({
   transitionProgress,
   scrollProgress,
   onNavigate,
+  tDefToManifesto,
+  frameBottom,
+  frameLeft,
+  frameWidth,
+  frameTransform,
+  frameButtonRef,
 }: RunwayArrowsProps) {
   const t = transitionProgress;
 
+  // Track frame button position
+  const [frameButtonPos, setFrameButtonPos] = useState<{ bottom: number; left: number } | null>(
+    null
+  );
+
+  // Update frame button position when it becomes available
+  useEffect(() => {
+    if (!frameButtonRef?.current || t < 0.7) {
+      setFrameButtonPos(null);
+      return;
+    }
+
+    const updatePosition = () => {
+      if (frameButtonRef.current) {
+        const rect = frameButtonRef.current.getBoundingClientRect();
+        const viewportHeight = window.innerHeight;
+        setFrameButtonPos({
+          bottom: viewportHeight - rect.bottom,
+          left: rect.left,
+        });
+      }
+    };
+
+    updatePosition();
+    const rafId = requestAnimationFrame(updatePosition);
+    window.addEventListener("scroll", updatePosition, { passive: true });
+    window.addEventListener("resize", updatePosition);
+
+    return () => {
+      window.removeEventListener("scroll", updatePosition);
+      window.removeEventListener("resize", updatePosition);
+      cancelAnimationFrame(rafId);
+    };
+  }, [frameButtonRef, t]);
+
   // Visibility timing
-  // Fade out when scrolling past interface section
-  const closeStart = 0.18;
-  const closeEnd = 0.35;
+  // Button stays visible during definition section, fades out when manifesto transition starts
+  // Fade out during manifesto transition (tDefToManifesto 0 → 1)
+  const manifestoFadeStart = 0;
+  const manifestoFadeEnd = 0.3; // Fade out in first 30% of manifesto transition
 
   let exitOpacity = 1;
-  if (scrollProgress >= closeStart && scrollProgress < closeEnd) {
-    exitOpacity = 1 - (scrollProgress - closeStart) / (closeEnd - closeStart);
-  } else if (scrollProgress >= closeEnd) {
+  if (tDefToManifesto > manifestoFadeStart && tDefToManifesto < manifestoFadeEnd) {
+    exitOpacity =
+      1 - (tDefToManifesto - manifestoFadeStart) / (manifestoFadeEnd - manifestoFadeStart);
+  } else if (tDefToManifesto >= manifestoFadeEnd) {
     exitOpacity = 0;
   }
 
   const isVisible = exitOpacity > 0;
-  const isInteractive = t >= 0.85 && scrollProgress < closeStart;
+  // Button is interactive once frame is fully visible (t >= 0.85) and before manifesto starts
+  const isInteractive = t >= 0.85 && tDefToManifesto < 0.1;
 
-  // Transform progress: frame and SERVICES text appear
+  // Transform progress: frame and START YOUR JOURNEY text appear
   // Frame starts appearing at t=0.5, fully visible by t=0.85
-  const frameOpacity = t < 0.5 ? 0 : t < 0.85 ? (t - 0.5) / 0.35 : 1;
+  // Stays visible and fades out as the index.tsx button fades in (cross-fade)
+  const frameOpacity =
+    t < 0.5 ? 0 : t < 0.85 ? (t - 0.5) / 0.35 : Math.max(0, 1 - (t - 0.85) / 0.15);
+
+  // Apply manifesto fade to frame as well
+  const finalFrameOpacity = frameOpacity * exitOpacity;
 
   // Extra arrows (first 3) fade out during transition
   const extraArrowsOpacity = t < 0.3 ? 1 - t / 0.3 : 0;
@@ -45,15 +108,94 @@ export function RunwayArrows({
   // Main arrows fade out as frame appears
   const mainArrowsOpacity = t < 0.5 ? 1 : t < 0.7 ? 1 - (t - 0.5) / 0.2 : 0;
 
+  // Calculate wrapper position
+  // During hero (t < 0.7): original positioning with arrows
+  // During transition (0.7 <= t < 0.85): smoothly move to frame position
+  // At t >= 0.85: button positioned inside frame (fades out as frame button appears)
+  const wrapperStyle: any = {
+    opacity: exitOpacity,
+    visibility: isVisible ? ("visible" as const) : ("hidden" as const),
+    position: "fixed" as const,
+    zIndex: 5,
+  };
+
+  // Calculate transition progress for smooth movement
+  const transitionStart = 0.7;
+  const transitionEnd = 0.85;
+  const transitionT =
+    t < transitionStart
+      ? 0
+      : t > transitionEnd
+        ? 1
+        : (t - transitionStart) / (transitionEnd - transitionStart);
+  const easeT =
+    transitionT < 0.5 ? 2 * transitionT * transitionT : 1 - Math.pow(-2 * transitionT + 2, 2) / 2;
+
+  if (t < transitionStart) {
+    // Hero state: original positioning with arrows
+    wrapperStyle.top = `calc(50% + ${t * 35}vh)`;
+    wrapperStyle.left = `calc(var(--rail-width, 64px) + 120px)`;
+    wrapperStyle.transform = "translateY(-50%)";
+  } else if (frameBottom && frameLeft && frameButtonPos) {
+    // Transition and definition state: use actual DOM position of frame button
+    const buttonBottomFromViewportBottom = frameButtonPos.bottom;
+    const buttonLeftFromViewportLeft = frameButtonPos.left;
+
+    if (transitionT < 1) {
+      // During transition: interpolate between hero and frame button positions
+      const heroTopVh = 50 + 0.7 * 35; // top: calc(50% + 0.7*35 vh) = 74.5vh
+      const heroLeftPx = 120; // left: calc(var(--rail-width) + 120px)
+      const viewportHeight = window.innerHeight;
+      const heroTopPx = (heroTopVh / 100) * viewportHeight;
+      const heroBottomFromViewportBottom = viewportHeight - heroTopPx;
+
+      // Interpolate
+      const currentBottom =
+        heroBottomFromViewportBottom * (1 - easeT) + buttonBottomFromViewportBottom * easeT;
+      const currentLeft = heroLeftPx * (1 - easeT) + (buttonLeftFromViewportLeft - 64) * easeT; // Subtract rail width
+
+      wrapperStyle.bottom = `${currentBottom}px`;
+      wrapperStyle.left = `calc(var(--rail-width, 64px) + ${currentLeft}px)`;
+      wrapperStyle.transform = `translateY(${(1 - easeT) * -50}%) ${frameTransform ? `translateX(${easeT * -50}%)` : ""}`;
+    } else {
+      // At definition state: match frame button position exactly
+      wrapperStyle.bottom = `${buttonBottomFromViewportBottom}px`;
+      wrapperStyle.left = `${buttonLeftFromViewportLeft}px`;
+      wrapperStyle.transform = frameTransform || "none";
+    }
+  } else if (frameBottom && frameLeft) {
+    // Fallback: use calculated position if frame button ref not available
+    const parseCalc = (calcStr: string): { px: number; vh: number; pct?: number } => {
+      const pxMatch = calcStr.match(/([-\d.]+)px/);
+      const vhMatch = calcStr.match(/([-\d.]+)vh/);
+      const pctMatch = calcStr.match(/([-\d.]+)%/);
+      return {
+        px: pxMatch ? parseFloat(pxMatch[1]) : 0,
+        vh: vhMatch ? parseFloat(vhMatch[1]) : 0,
+        pct: pctMatch ? parseFloat(pctMatch[1]) : undefined,
+      };
+    };
+
+    const frameBottomParsed = parseCalc(frameBottom);
+    const frameLeftParsed = parseCalc(frameLeft);
+    const buttonHeight = 50;
+    const targetBottomPx = frameBottomParsed.px + 24 + buttonHeight;
+    const targetBottomVh = frameBottomParsed.vh;
+    const targetLeftPx = frameLeftParsed.px + 24;
+
+    wrapperStyle.bottom = `calc(${targetBottomPx}px + ${targetBottomVh}vh)`;
+    wrapperStyle.left = `calc(var(--rail-width, 64px) + ${targetLeftPx}px)`;
+    wrapperStyle.transform = frameTransform || "none";
+  } else {
+    // Fallback
+    wrapperStyle.top = `calc(50% + ${t * 35}vh)`;
+    wrapperStyle.left = `calc(var(--rail-width, 64px) + 120px)`;
+    wrapperStyle.transform = "translateY(-50%)";
+  }
+
   return (
     <>
-      <div
-        className="runway-arrows-wrapper"
-        style={{
-          opacity: exitOpacity,
-          visibility: isVisible ? "visible" : "hidden",
-        }}
-      >
+      <div className="runway-arrows-wrapper" style={wrapperStyle}>
         {/* Hero state: Individual arrows */}
         <div
           className="hero-arrows"
@@ -87,11 +229,39 @@ export function RunwayArrows({
           className="services-frame"
           onClick={onNavigate}
           style={{
-            opacity: frameOpacity,
-            visibility: frameOpacity > 0 ? "visible" : "hidden",
+            opacity: finalFrameOpacity,
+            visibility: finalFrameOpacity > 0 ? "visible" : "hidden",
             pointerEvents: isInteractive ? "auto" : "none",
             cursor: isInteractive ? "pointer" : "default",
-            transform: `scale(${0.9 + frameOpacity * 0.1})`,
+            position: "absolute",
+            left: "4px",
+            // Smooth transition using bottom positioning throughout to avoid positioning strategy switches
+            // Button height is approximately 50px (padding 14px*2 + content ~22px)
+            // When centered: button bottom is at ~50% of wrapper height
+            // When at bottom: button bottom is at 0
+            // Use calc() to account for button height when transitioning
+            ...(t < transitionStart
+              ? {
+                  // Hero state: centered vertically (temporary top positioning)
+                  top: "50%",
+                  bottom: "auto",
+                  transform: `translateY(-50%) scale(${0.9 + frameOpacity * 0.1})`,
+                }
+              : transitionT < 1
+                ? {
+                    // Transition: use bottom positioning with smooth interpolation
+                    // Start from equivalent of centered position: calc(50% - 25px) ≈ center accounting for button height
+                    // End at 0 (bottom)
+                    top: "auto",
+                    bottom: `calc(${50 * (1 - easeT)}% - ${25 * (1 - easeT)}px)`, // Smoothly interpolate to 0
+                    transform: `scale(${0.9 + frameOpacity * 0.1})`,
+                  }
+                : {
+                    // Definition state: bottom-aligned
+                    top: "auto",
+                    bottom: 0,
+                    transform: `scale(${0.9 + frameOpacity * 0.1})`,
+                  }),
           }}
         >
           {/* Corner brackets */}
@@ -104,7 +274,7 @@ export function RunwayArrows({
           <span className="frame-arrows frame-arrows-left">›››</span>
 
           {/* Text content */}
-          <span className="frame-text">SERVICES</span>
+          <span className="frame-text">START YOUR JOURNEY</span>
 
           {/* Right arrows <<< */}
           <span className="frame-arrows frame-arrows-right">‹‹‹</span>
@@ -116,14 +286,7 @@ export function RunwayArrows({
 
       <style jsx>{`
         .runway-arrows-wrapper {
-          position: fixed;
-          z-index: 5;
-
-          /* Position: starts at vertical center, moves to bottom-left */
-          /* In interface state, aligns with bridge-frame/definition text left edge */
-          top: calc(50% + ${t * 35}vh);
-          left: calc(var(--rail-width, 64px) + 120px);
-          transform: translateY(-50%);
+          /* Positioning handled via inline styles */
         }
 
         /* Hero arrows container */
@@ -152,12 +315,9 @@ export function RunwayArrows({
           }
         }
 
-        /* Framed button - aligned with definition frame above */
+        /* Framed button - positioning handled via inline styles */
         .services-frame {
           position: absolute;
-          top: 50%;
-          left: 4px; /* Align with bridge-frame left edge */
-          transform: translateY(-50%);
 
           display: flex;
           align-items: center;
@@ -165,9 +325,13 @@ export function RunwayArrows({
 
           background: rgba(10, 9, 8, 0.9);
           border: 1px solid rgba(202, 165, 84, 0.25);
-          padding: 10px 16px;
+          padding: 14px 24px; /* Matched to index.tsx button */
 
-          transition: all 0.2s ease;
+          /* No transition - position is driven by JavaScript scroll updates for smooth animation */
+          transition:
+            opacity 0.2s ease,
+            background 0.2s ease,
+            border-color 0.2s ease;
         }
 
         .services-frame:hover {

@@ -97,6 +97,15 @@ interface NavigationBarProps {
   onNavigate: (sectionId: string) => void;
 }
 
+// Section display names and numbers for mobile indicator
+const sectionInfo: Record<string, { number: string; name: string }> = {
+  hero: { number: "01", name: "Home" },
+  definition: { number: "02", name: "Interface" },
+  manifesto: { number: "03", name: "Manifesto" },
+  services: { number: "04", name: "Services" },
+  contact: { number: "05", name: "Contact" },
+};
+
 export const NavigationBar = forwardRef<NavigationBarHandle, NavigationBarProps>(
   function NavigationBar({ activeSection, onNavigate }, ref) {
     const logoRef = useRef<SVGSVGElement>(null);
@@ -155,18 +164,21 @@ export const NavigationBar = forwardRef<NavigationBarHandle, NavigationBarProps>
       window.scrollTo({ top: 0, behavior: "smooth" });
     };
 
+    const currentSection = sectionInfo[activeSection] || sectionInfo.hero;
+
     return (
       <>
-        <div className="navbar-container">
-          <nav className="navbar">
-            {/* Logo on the left */}
-            <a href="#" className="navbar-logo" onClick={handleLogoClick}>
-              <ThoughtformLogo ref={logoRef} size={22} />
-            </a>
+        {/* Desktop: Centered navbar */}
+        {!isMobile && (
+          <div className="navbar-container">
+            <nav className="navbar">
+              {/* Logo on the left */}
+              <a href="#" className="navbar-logo" onClick={handleLogoClick}>
+                <ThoughtformLogo ref={logoRef} size={22} />
+              </a>
 
-            {/* Desktop: Nav links */}
-            {!isMobile &&
-              navItems.map((item) => {
+              {/* Desktop: Nav links */}
+              {navItems.map((item) => {
                 const isActive = activeSection === item.sectionId;
                 return (
                   <a
@@ -179,20 +191,30 @@ export const NavigationBar = forwardRef<NavigationBarHandle, NavigationBarProps>
                   </a>
                 );
               })}
+            </nav>
+          </div>
+        )}
 
-            {/* Mobile: Hamburger button */}
-            {isMobile && (
-              <button
-                className="navbar-hamburger"
-                onClick={() => setIsMenuOpen(!isMenuOpen)}
-                aria-label={isMenuOpen ? "Close menu" : "Open menu"}
-                aria-expanded={isMenuOpen}
-              >
-                <HamburgerIcon isOpen={isMenuOpen} />
-              </button>
-            )}
-          </nav>
-        </div>
+        {/* Mobile: Split layout - section indicator top-left, hamburger top-right */}
+        {isMobile && (
+          <>
+            {/* Top-left: Simple section text */}
+            <div className="mobile-section-text">
+              <span className="mobile-section-number">{currentSection.number}</span>
+              <span className="mobile-section-name">{currentSection.name}</span>
+            </div>
+
+            {/* Top-right: Hamburger button */}
+            <button
+              className="mobile-hamburger"
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              aria-label={isMenuOpen ? "Close menu" : "Open menu"}
+              aria-expanded={isMenuOpen}
+            >
+              <HamburgerIcon isOpen={isMenuOpen} />
+            </button>
+          </>
+        )}
 
         {/* Mobile menu overlay */}
         {isMobile && (
@@ -313,6 +335,64 @@ export const NavigationBar = forwardRef<NavigationBarHandle, NavigationBarProps>
           }
 
           .navbar-hamburger:hover {
+            color: var(--dawn, #ece3d6);
+          }
+
+          /* ═══════════════════════════════════════════════════════════════
+             MOBILE LAYOUT - Section text top-left, hamburger top-right
+             ═══════════════════════════════════════════════════════════════ */
+
+          /* Mobile section text - simple, no frame */
+          .mobile-section-text {
+            position: fixed;
+            top: 20px;
+            left: 16px;
+            z-index: 1000;
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+            pointer-events: none;
+          }
+
+          .mobile-section-number {
+            font-family: var(--font-data, "PT Mono", monospace);
+            font-size: 11px;
+            font-weight: 400;
+            color: var(--gold, #caa554);
+            letter-spacing: 0.08em;
+          }
+
+          .mobile-section-name {
+            font-family: var(--font-data, "PT Mono", monospace);
+            font-size: 11px;
+            font-weight: 400;
+            color: rgba(236, 227, 214, 0.4);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+          }
+
+          /* Mobile hamburger - top right, minimal style */
+          .mobile-hamburger {
+            position: fixed;
+            top: 16px;
+            right: 16px;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 44px;
+            height: 44px;
+            padding: 0;
+            margin: 0;
+            background: transparent;
+            border: none;
+            color: var(--gold, #caa554);
+            cursor: pointer;
+            transition: color 150ms ease;
+            pointer-events: auto;
+          }
+
+          .mobile-hamburger:hover {
             color: var(--dawn, #ece3d6);
           }
 

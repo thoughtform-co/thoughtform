@@ -1014,18 +1014,33 @@ export const cockpitStyles = `
     .bridge-frame {
       left: 50% !important;
       right: auto !important;
-      width: 85vw !important;
-      max-width: 320px !important;
+      width: 90vw !important;
+      max-width: 360px !important;
+    }
+
+    /* Bridge frame during manifesto - wider, fits content */
+    .bridge-frame.manifesto-active {
+      width: 94vw !important;
+      max-width: none !important;
+      bottom: auto !important;
+      top: 10vh !important;
+      height: auto !important;
+      max-height: 85vh !important; /* Prevent overflow off screen */
+      overflow-y: auto !important; /* Allow scrolling if content is long */
+      overflow-x: hidden !important;
+    }
+
+    .bridge-frame.manifesto-active .hero-text-frame {
+      padding: 20px 16px !important;
+      min-height: auto !important;
+      text-align: left !important; /* Align manifesto content left like desktop */
     }
 
     .bridge-frame .hero-text-frame {
       padding: 16px 20px;
       min-height: 70px;
       text-align: center;
-      /* Use CSS variable for smooth fade out during manifesto transition */
-      background: rgba(10, 9, 8, calc(0.85 * var(--frame-opacity, 1)));
-      backdrop-filter: blur(calc(12px * var(--frame-opacity, 1)));
-      -webkit-backdrop-filter: blur(calc(12px * var(--frame-opacity, 1)));
+      /* Background/blur now applied via inline styles on .bridge-frame for proper transition */
     }
 
     /* Center text in bridge frame */

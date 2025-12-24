@@ -1425,6 +1425,11 @@ body {
     max-width: 100%;
   }
 
+  /* Hide section labels on mobile - now shown in fixed header */
+  .section-label {
+    display: none !important;
+  }
+
   .section-content {
     padding-left: var(--space-lg);
   }

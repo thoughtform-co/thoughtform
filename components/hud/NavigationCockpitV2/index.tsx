@@ -67,6 +67,9 @@ function NavigationCockpitInner() {
     useRef<HTMLDivElement>(null),
   ];
 
+  // Ref for frame button to get its actual position
+  const frameButtonRef = useRef<HTMLButtonElement>(null);
+
   // Ref for navbar logo (sigil destination)
   const navbarLogoRef = useRef<NavigationBarHandle>(null);
 
@@ -317,6 +320,12 @@ function NavigationCockpitInner() {
   //
   // Interpolate from definition position to manifesto centered position
   // Memoize expensive calculations - recalculate only when transition progress changes
+  // Card visibility: appears when frame is clearly visible (frame background is visible)
+  // Frame background starts at tHeroToDef > 0.7, but button should wait until frame is more visible
+  // Delay button appearance until tHeroToDef > 0.75 to ensure frame is clearly in view
+  const cardOpacity =
+    tHeroToDef > 0.75 ? Math.min(1, (tHeroToDef - 0.75) / 0.25) * (1 - tDefToManifesto) : 0;
+
   const bridgeFrameStyles = useMemo(() => {
     // Recalculate dependent values inside memo
     const heroBottomPx = 90 * (1 - tHeroToDef);
@@ -335,18 +344,35 @@ function NavigationCockpitInner() {
     // Final bottom position: smooth transition to centered position
     const finalBottom = `calc(${manifestoBottomPxCurrent}px + ${manifestoBottomVhCurrent}vh)`;
 
+    // Card styling: visible during definition state, transitions to terminal
+    // Card background appears when entering definition (tHeroToDef > 0.7)
+    const cardBgOpacity = tHeroToDef > 0.7 ? Math.min(0.85, ((tHeroToDef - 0.7) / 0.3) * 0.85) : 0;
+    // Blend to terminal background during manifesto transition
+    const finalBgOpacity = cardBgOpacity + (0.5 - cardBgOpacity) * tDefToManifesto;
+
+    // Border: card border during definition, terminal border during manifesto
+    const cardBorderOpacity =
+      tHeroToDef > 0.7 ? Math.min(0.2, ((tHeroToDef - 0.7) / 0.3) * 0.2) : 0;
+    const finalBorderOpacity = cardBorderOpacity + (0.1 - cardBorderOpacity) * tDefToManifesto;
+
+    // Calculate frame height
+    // During definition state (tDefToManifesto = 0), content needs ~280px (wordmark + text + button + padding)
+    // During manifesto transition, grow to actualContentHeight (720px)
+    const definitionContentHeight = 280; // Approximate height needed for definition content
+    const frameHeight =
+      tDefToManifesto > 0
+        ? `${definitionContentHeight + growthProgress * (actualContentHeight - definitionContentHeight)}px`
+        : "auto";
+
     return {
       finalBottom,
       left: `calc(${(1 - tDefToManifesto) * 184}px + ${tDefToManifesto * 50}%)`,
       width: `${baseWidth + growthProgress * widthGrowth}px`,
-      height:
-        tDefToManifesto > 0
-          ? `${baseHeight + growthProgress * (actualContentHeight - baseHeight)}px`
-          : "auto",
+      height: frameHeight,
       transform: `translateX(${-50 * tDefToManifesto}%)`,
-      background: `rgba(10, 9, 8, ${0.5 * tDefToManifesto})`,
-      backdropFilter: `blur(${8 * tDefToManifesto}px)`,
-      border: `1px solid rgba(236, 227, 214, ${0.1 * tDefToManifesto})`,
+      background: `rgba(10, 9, 8, ${finalBgOpacity})`,
+      backdropFilter: `blur(${8 * Math.max(tHeroToDef > 0.7 ? ((tHeroToDef - 0.7) / 0.3) * 4 : 0, tDefToManifesto * 8)}px)`,
+      border: `1px solid rgba(202, 165, 84, ${finalBorderOpacity})`,
       "--terminal-opacity": tDefToManifesto,
     };
   }, [
@@ -373,28 +399,33 @@ function NavigationCockpitInner() {
     [scrollTo]
   );
 
-  // Set up section detection with IntersectionObserver
+  // Set up section detection based on scroll progress (matches visual transitions)
+  // This is more accurate than IntersectionObserver because the visual content
+  // is driven by scroll progress, not actual section positions
   useEffect(() => {
-    const sections = document.querySelectorAll(".section[data-section]");
+    // Determine active section based on scroll progress thresholds
+    // These thresholds match the visual transitions
+    let newSection = "hero";
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting && entry.intersectionRatio > 0.3) {
-            const sectionId = entry.target.getAttribute("data-section");
-            if (sectionId) {
-              setActiveSection(sectionId);
-            }
-          }
-        });
-      },
-      { threshold: [0.3, 0.5] }
-    );
+    if (scrollProgress < 0.08) {
+      // Hero section - initial state before any transition
+      newSection = "hero";
+    } else if (scrollProgress < 0.15) {
+      // Definition/Interface section - after hero transition completes
+      newSection = "definition";
+    } else if (scrollProgress < 0.5) {
+      // Manifesto section - after definition→manifesto transition starts
+      newSection = "manifesto";
+    } else if (scrollProgress < 0.75) {
+      // Services section
+      newSection = "services";
+    } else {
+      // Contact section
+      newSection = "contact";
+    }
 
-    sections.forEach((section) => observer.observe(section));
-
-    return () => observer.disconnect();
-  }, []);
+    setActiveSection(newSection);
+  }, [scrollProgress]);
 
   return (
     <>
@@ -423,16 +454,12 @@ function NavigationCockpitInner() {
           Content morphs: Wordmark → particles → WordmarkSans
           ═══════════════════════════════════════════════════════════════════ */}
 
-      {/* Wordmark container - slides from top to above the frame */}
+      {/* Wordmark container - slides from top, fades out when card appears */}
       <div
         className="hero-wordmark-container"
         ref={wordmarkContainerRef}
         style={{
-          // Slide from top (90px) to above the frame with consistent 24px gap
-          // At t=0: top: 90px (hero position at top)
-          // At t=1: top: calc(50vh - 100px) = positioned ~24px above the frame
-          //   Frame is centered at ~50vh with top at ~50vh - 30px
-          //   Wordmark (~40px tall) bottom at 50vh - 60px, creating ~30px gap
+          // Slide from top (90px) during hero transition
           // On mobile, let CSS control positioning
           top: isMobile
             ? undefined
@@ -441,14 +468,16 @@ function NavigationCockpitInner() {
           transform: isMobile ? "translateX(-50%)" : undefined,
           // CSS variable for brandmark fade
           ["--brandmark-opacity" as string]: 1 - tHeroToDef,
-          // Fade out faster - starts at 0.08, completes by 0.25
+          // Fade out when card appears (tHeroToDef > 0.7) - card has its own wordmark
           opacity:
-            scrollProgress < 0.08
-              ? 1
-              : scrollProgress < 0.25
-                ? 1 - (scrollProgress - 0.08) / 0.17
-                : 0,
-          visibility: scrollProgress < 0.25 ? "visible" : "hidden",
+            tHeroToDef < 0.7
+              ? scrollProgress < 0.08
+                ? 1
+                : scrollProgress < 0.15
+                  ? 1 - (scrollProgress - 0.08) / 0.07
+                  : 0
+              : 0,
+          visibility: tHeroToDef < 0.7 && scrollProgress < 0.15 ? "visible" : "hidden",
         }}
       >
         {/* Hero Wordmark - stays visible until particles fully take over */}
@@ -466,36 +495,50 @@ function NavigationCockpitInner() {
         </div>
 
         {/* Definition Wordmark - fades in at end of transition (slower) */}
-        <div
-          className="definition-wordmark-inner"
-          ref={definitionWordmarkRef}
-          style={{
-            position: "absolute",
-            top: 0,
-            left: isMobile ? "50%" : 0,
-            transform: isMobile ? "translateX(-50%)" : undefined,
-            opacity: tHeroToDef > 0.75 ? (tHeroToDef - 0.75) / 0.25 : 0,
-            visibility: tHeroToDef > 0.7 ? "visible" : "hidden",
-          }}
-        >
-          <WordmarkSans color="var(--dawn)" />
-        </div>
+        {/* On mobile, hide this since wordmark is now inside the frame */}
+        {!isMobile && (
+          <div
+            className="definition-wordmark-inner"
+            ref={definitionWordmarkRef}
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              opacity: tHeroToDef > 0.75 ? (tHeroToDef - 0.75) / 0.25 : 0,
+              visibility: tHeroToDef > 0.7 ? "visible" : "hidden",
+            }}
+          >
+            <WordmarkSans color="var(--dawn)" />
+          </div>
+        )}
       </div>
 
-      {/* Particle Wordmark Morph - visible during mid-transition (extended timing) */}
+      {/* Particle Wordmark Morph - visible during mid-transition, cross-fades with wordmark in frame */}
       <ParticleWordmarkMorph
         morphProgress={tHeroToDef < 0.15 ? 0 : tHeroToDef > 0.85 ? 1 : (tHeroToDef - 0.15) / 0.7}
         wordmarkBounds={wordmarkBounds}
         targetBounds={defWordmarkBounds}
-        visible={tHeroToDef > 0.1 && tHeroToDef < 0.9}
+        visible={tHeroToDef > 0.1 && tHeroToDef < 1.05}
+        opacity={
+          // Fade out particles as wordmark in frame fades in (cross-fade)
+          // Wordmark starts at 0.7, full at 1.0
+          // Particles stay at full opacity until 0.7, then fade out to 0 by 1.0
+          tHeroToDef < 0.7 ? 1 : tHeroToDef < 1.0 ? 1 - (tHeroToDef - 0.7) / 0.3 : 0
+        }
       />
 
-      {/* Runway arrows - transform from "› › › › › ›" in hero to ">>> SERVICES <<<" in interface section */}
-      {!isMobile && (
+      {/* Runway arrows - show during hero transition and definition section, hide when manifesto starts */}
+      {!isMobile && tDefToManifesto < 1 && (
         <RunwayArrows
           transitionProgress={tHeroToDef}
           scrollProgress={scrollProgress}
           onNavigate={() => handleNavigate("services")}
+          tDefToManifesto={tDefToManifesto}
+          frameBottom={bridgeFrameStyles.finalBottom}
+          frameLeft={bridgeFrameStyles.left}
+          frameWidth={bridgeFrameStyles.width}
+          frameTransform={bridgeFrameStyles.transform}
+          frameButtonRef={frameButtonRef}
         />
       )}
 
@@ -505,15 +548,26 @@ function NavigationCockpitInner() {
           ═══════════════════════════════════════════════════════════════════ */}
       <div
         ref={bridgeFrameRef}
-        className="bridge-frame"
+        className={`bridge-frame${isMobile && tDefToManifesto > 0.5 ? " manifesto-active" : ""}`}
         style={
           isMobile
             ? {
                 // MOBILE: Frame slides UP from bottom to below wordmark
                 // At t=0: bottom: 8vh (hero position)
-                // At t=1: top: 18vh (below wordmark in definition)
-                bottom: tHeroToDef < 0.5 ? `${8 + tHeroToDef * 30}vh` : undefined,
-                top: tHeroToDef >= 0.5 ? `${48 - (tHeroToDef - 0.5) * 60}vh` : undefined,
+                // At t=1: top: 12vh (moved up for better positioning with wordmark inside)
+                // During manifesto: frame extends from top to bottom
+                ...(tDefToManifesto > 0.5
+                  ? {
+                      // Manifesto state: fit content, positioned near top
+                      top: "10vh",
+                      bottom: "auto",
+                      height: "auto",
+                    }
+                  : {
+                      // Definition state: positioned from top/bottom
+                      bottom: tHeroToDef < 0.5 ? `${8 + tHeroToDef * 30}vh` : undefined,
+                      top: tHeroToDef >= 0.5 ? `${48 - (tHeroToDef - 0.5) * 72}vh` : undefined,
+                    }),
                 // Stay visible throughout transition on mobile
                 opacity: 1,
                 visibility: "visible",
@@ -521,6 +575,36 @@ function NavigationCockpitInner() {
                 // Center horizontally
                 transform: "translateX(-50%)",
                 transformOrigin: "center center",
+                // Mobile background/border - same calculation as desktop
+                // Background opacity: 0.85 during definition, 0.9 during manifesto (slightly darker)
+                background: `rgba(10, 9, 8, ${
+                  tDefToManifesto > 0.5
+                    ? 0.92 // Manifesto: solid dark background
+                    : tHeroToDef > 0.7
+                      ? Math.min(0.85, ((tHeroToDef - 0.7) / 0.3) * 0.85) // Definition: fade in
+                      : 0 // Hero: transparent
+                })`,
+                backdropFilter: `blur(${
+                  tDefToManifesto > 0.5
+                    ? 12 // Manifesto: full blur
+                    : tHeroToDef > 0.7
+                      ? ((tHeroToDef - 0.7) / 0.3) * 12 // Definition: fade in blur
+                      : 0
+                }px)`,
+                WebkitBackdropFilter: `blur(${
+                  tDefToManifesto > 0.5
+                    ? 12
+                    : tHeroToDef > 0.7
+                      ? ((tHeroToDef - 0.7) / 0.3) * 12
+                      : 0
+                }px)`,
+                border: `1px solid rgba(202, 165, 84, ${
+                  tDefToManifesto > 0.5
+                    ? 0.25 // Manifesto: visible gold border
+                    : tHeroToDef > 0.7
+                      ? Math.min(0.2, ((tHeroToDef - 0.7) / 0.3) * 0.2) // Definition: fade in border
+                      : 0
+                })`,
               }
             : {
                 // DESKTOP: Frame moves from hero → definition → manifesto
@@ -530,7 +614,8 @@ function NavigationCockpitInner() {
                 width: bridgeFrameStyles.width,
                 maxWidth: bridgeFrameStyles.width,
                 height: bridgeFrameStyles.height,
-                overflow: tDefToManifesto > 0 ? "hidden" : "visible",
+                minHeight: tDefToManifesto > 0 ? bridgeFrameStyles.height : undefined,
+                overflow: tDefToManifesto > 0.1 ? "hidden" : "visible", // Delay overflow hidden slightly
                 opacity: 1,
                 visibility: "visible",
                 pointerEvents:
@@ -545,33 +630,79 @@ function NavigationCockpitInner() {
               }
         }
       >
-        {/* Text content - hero/definition/question - ONE continuous morph */}
-        {/* Question stays visible when manifesto reveals - text unfolds below */}
+        {/* Card corner brackets - visible during definition state, fade during manifesto */}
+        {/* Show on both desktop and mobile */}
+        {tHeroToDef > 0.7 && (
+          <>
+            <div
+              className="card-corner card-corner-tl"
+              style={{
+                position: "absolute",
+                top: -1,
+                left: -1,
+                width: "16px",
+                height: "16px",
+                borderTop: `1px solid rgba(202, 165, 84, ${cardOpacity * 0.6})`,
+                borderLeft: `1px solid rgba(202, 165, 84, ${cardOpacity * 0.6})`,
+                pointerEvents: "none",
+                zIndex: 5,
+              }}
+            />
+            <div
+              className="card-corner card-corner-br"
+              style={{
+                position: "absolute",
+                bottom: -1,
+                right: -1,
+                width: "16px",
+                height: "16px",
+                borderBottom: `1px solid rgba(202, 165, 84, ${cardOpacity * 0.6})`,
+                borderRight: `1px solid rgba(202, 165, 84, ${cardOpacity * 0.6})`,
+                pointerEvents: "none",
+                zIndex: 5,
+              }}
+            />
+          </>
+        )}
+
+        {/* Card content: Wordmark (top) + Definition text + Services button (bottom) */}
+        {/* During manifesto transition: wordmark & services fade out, text morphs to question */}
         <div
           className="hero-text-frame"
           style={{
-            // Stay visible - question remains as header for manifesto
             opacity: 1,
             visibility: "visible",
-            // Always relative - let parent bridge-frame handle positioning
             position: "relative",
             width: "100%",
             display: "flex",
-            // Switch to column layout when manifesto is showing
-            flexDirection: manifestoRevealProgress > 0 ? "column" : "row",
-            alignItems: manifestoRevealProgress > 0 ? "flex-start" : "center",
+            flexDirection: "column",
+            alignItems: "flex-start",
             justifyContent: "flex-start",
-            // Padding interpolates: hero/definition = 16px top, terminal = 72px top (below header with breathing room)
-            padding: `${16 + 56 * tDefToManifesto}px 24px 16px 24px`,
+            // Padding: 24px when card visible, transitions to terminal padding
+            padding: `${24 + 48 * tDefToManifesto}px 24px ${24 - 8 * tDefToManifesto}px 24px`,
             pointerEvents: "auto",
             cursor: "default",
-            // Higher z-index so text stays on top of terminal chrome
             zIndex: 2,
-            // Gradually fade out frame styling as terminal takes over
-            // The bridge-frame parent already has interpolated terminal background/border
             ["--frame-opacity" as string]: 1 - tDefToManifesto,
+            gap: "20px", // Increased gap for better spacing between elements
           }}
         >
+          {/* Wordmark inside card - appears when entering definition, fades during manifesto */}
+          {/* Show on both desktop and mobile */}
+          {tHeroToDef > 0.7 && tDefToManifesto < 1 && (
+            <div
+              className="card-wordmark"
+              style={{
+                opacity: cardOpacity,
+                visibility: cardOpacity > 0 ? "visible" : "hidden",
+                width: isMobile ? "100%" : "320px",
+                maxWidth: isMobile ? "100%" : "320px",
+                marginBottom: "4px", // Reduced since gap handles spacing
+              }}
+            >
+              <WordmarkSans color="var(--dawn)" />
+            </div>
+          )}
           <div
             className="hero-tagline hero-tagline-v2 hero-tagline-main"
             style={{
@@ -632,6 +763,96 @@ the interface for human-AI collaboration`}
               )}
             </span>
           </div>
+
+          {/* Start Your Journey button - inside frame, below text content */}
+          {/* Show on both desktop and mobile when frame is clearly visible (tHeroToDef > 0.75) */}
+          {tHeroToDef > 0.75 && tDefToManifesto < 1 && (
+            <button
+              ref={frameButtonRef}
+              className="card-journey-btn"
+              onClick={() => handleNavigate("services")}
+              style={{
+                opacity: cardOpacity,
+                visibility: cardOpacity > 0 ? "visible" : "hidden",
+                marginTop: isMobile ? "20px" : "28px", // Slightly less spacing on mobile
+                alignSelf: "flex-start", // Align to left, matching text alignment
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "10px",
+                background:
+                  "linear-gradient(135deg, rgba(202, 165, 84, 0.15) 0%, rgba(202, 165, 84, 0.05) 50%, rgba(202, 165, 84, 0.1) 100%)",
+                border: "1px solid rgba(202, 165, 84, 0.3)",
+                borderRadius: "2px", // Subtle rounded corners
+                padding: isMobile ? "12px 20px" : "14px 24px", // Slightly smaller padding on mobile
+                cursor: "pointer",
+                transition: "all 0.2s ease",
+                fontFamily: "var(--font-data, 'PT Mono', monospace)",
+                fontSize: isMobile ? "12px" : "13px", // Slightly smaller font on mobile
+                fontWeight: 700,
+                letterSpacing: "0.15em",
+                textTransform: "uppercase",
+                color: "var(--gold, #caa554)",
+                lineHeight: 1,
+                whiteSpace: "nowrap",
+                width: isMobile ? "100%" : "auto", // Full width on mobile
+              }}
+              onMouseEnter={(e) => {
+                if (!isMobile) {
+                  e.currentTarget.style.background =
+                    "linear-gradient(135deg, rgba(202, 165, 84, 0.25) 0%, rgba(202, 165, 84, 0.12) 50%, rgba(202, 165, 84, 0.2) 100%)";
+                  e.currentTarget.style.borderColor = "rgba(202, 165, 84, 0.5)";
+                  e.currentTarget.style.transform = "translateY(-1px)";
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!isMobile) {
+                  e.currentTarget.style.background =
+                    "linear-gradient(135deg, rgba(202, 165, 84, 0.15) 0%, rgba(202, 165, 84, 0.05) 50%, rgba(202, 165, 84, 0.1) 100%)";
+                  e.currentTarget.style.borderColor = "rgba(202, 165, 84, 0.3)";
+                  e.currentTarget.style.transform = "translateY(0)";
+                }
+              }}
+              onTouchStart={(e) => {
+                // Touch feedback for mobile
+                e.currentTarget.style.background =
+                  "linear-gradient(135deg, rgba(202, 165, 84, 0.25) 0%, rgba(202, 165, 84, 0.12) 50%, rgba(202, 165, 84, 0.2) 100%)";
+                e.currentTarget.style.borderColor = "rgba(202, 165, 84, 0.5)";
+              }}
+              onTouchEnd={(e) => {
+                e.currentTarget.style.background =
+                  "linear-gradient(135deg, rgba(202, 165, 84, 0.15) 0%, rgba(202, 165, 84, 0.05) 50%, rgba(202, 165, 84, 0.1) 100%)";
+                e.currentTarget.style.borderColor = "rgba(202, 165, 84, 0.3)";
+              }}
+            >
+              <span
+                style={{
+                  fontSize: isMobile ? "14px" : "16px",
+                  lineHeight: 1,
+                  background:
+                    "linear-gradient(135deg, rgba(202, 165, 84, 0.9) 0%, rgba(202, 165, 84, 0.6) 50%, rgba(202, 165, 84, 0.8) 100%)",
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                  backgroundClip: "text",
+                }}
+              >
+                ›››
+              </span>
+              <span>START YOUR JOURNEY</span>
+              <span
+                style={{
+                  fontSize: isMobile ? "14px" : "16px",
+                  lineHeight: 1,
+                  background:
+                    "linear-gradient(135deg, rgba(202, 165, 84, 0.9) 0%, rgba(202, 165, 84, 0.6) 50%, rgba(202, 165, 84, 0.8) 100%)",
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                  backgroundClip: "text",
+                }}
+              >
+                ‹‹‹
+              </span>
+            </button>
+          )}
 
           {/* Manifesto content - appears below question when scrolling */}
           {tDefToManifesto > 0.95 && manifestoRevealProgress > 0 && (
