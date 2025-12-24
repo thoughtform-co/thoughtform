@@ -43,9 +43,7 @@ export function ImageElement({ element, isEditing }: ImageElementProps) {
           "flex flex-col items-center justify-center gap-3"
         )}
       >
-        <div className="font-mono text-2xs uppercase tracking-wider text-dawn-30">
-          Image
-        </div>
+        <div className="font-mono text-2xs uppercase tracking-wider text-dawn-30">Image</div>
         {isEditing && (
           <div className="flex flex-col gap-2 w-full max-w-[240px] px-4">
             <input
@@ -80,6 +78,7 @@ export function ImageElement({ element, isEditing }: ImageElementProps) {
 
   return (
     <div className="relative w-full h-full">
+      {/* eslint-disable-next-line @next/next/no-img-element -- Dynamic user-provided URLs, can't pre-configure domains */}
       <img
         src={content.src}
         alt={content.alt || ""}
@@ -88,7 +87,7 @@ export function ImageElement({ element, isEditing }: ImageElementProps) {
           objectFit: content.objectFit || "cover",
         }}
       />
-      
+
       {/* Edit overlay */}
       {isEditing && (
         <div className="absolute inset-0 bg-void/80 flex flex-col items-center justify-center gap-3 p-4">
@@ -129,4 +128,3 @@ export function ImageElement({ element, isEditing }: ImageElementProps) {
     </div>
   );
 }
-

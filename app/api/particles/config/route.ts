@@ -5,6 +5,7 @@ import {
   mergeWithDefaults,
   type ParticleSystemConfig,
 } from "@/lib/particle-config";
+import { logger } from "@/lib/logger";
 import { createServerClient } from "@/lib/supabase";
 import { isAuthorized } from "@/lib/auth-server";
 
@@ -59,7 +60,7 @@ export async function GET(request: Request) {
       }
     } catch (kvError) {
       // KV not configured, continue to defaults
-      console.warn("Vercel KV not available:", kvError);
+      logger.warn("Vercel KV not available:", kvError);
     }
 
     // 3. Return defaults
@@ -119,7 +120,7 @@ export async function POST(request: Request) {
             message: "Configuration saved successfully to Supabase (user-specific)",
           });
         }
-        console.warn("Supabase user config save failed, falling back:", supabaseError);
+        logger.warn("Supabase user config save failed, falling back:", supabaseError);
       }
 
       // Fall back to global default config (if no user ID or user save failed)
@@ -143,7 +144,7 @@ export async function POST(request: Request) {
             : "Configuration saved successfully to Supabase (global)",
         });
       }
-      console.warn("Supabase save failed, falling back to KV:", supabaseError);
+      logger.warn("Supabase save failed, falling back to KV:", supabaseError);
     }
 
     // 2. Fall back to Vercel KV
@@ -228,7 +229,7 @@ export async function DELETE(request: Request) {
             : "Configuration reset to defaults (global)",
         });
       }
-      console.warn("Supabase delete failed, falling back to KV:", supabaseError);
+      logger.warn("Supabase delete failed, falling back to KV:", supabaseError);
     }
 
     // 2. Fall back to Vercel KV

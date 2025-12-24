@@ -407,6 +407,7 @@ export function ThoughtformSigil({
         cancelAnimationFrame(animationRef.current);
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- onParticlePositions is a stable ref
   }, [size, color]);
 
   return (

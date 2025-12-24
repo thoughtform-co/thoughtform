@@ -7,6 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "prepare": "husky"
@@ -45,19 +48,24 @@
     "zustand": "5.0.0"
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.1",
     "@types/node": "^20",
     "@types/react": "18.3.12",
     "@types/react-dom": "18.3.1",
     "@types/three": "^0.170.0",
+    "@vitejs/plugin-react": "^5.1.2",
     "eslint": "8.57.0",
     "eslint-config-next": "14.2.18",
     "eslint-config-prettier": "^9.1.0",
     "husky": "^9.1.7",
+    "jsdom": "^27.3.0",
     "lint-staged": "^15.2.11",
     "postcss": "8.4.49",
     "prettier": "^3.4.2",
     "tailwindcss": "3.4.14",
-    "typescript": "^5.6.3"
+    "typescript": "^5.6.3",
+    "vitest": "^4.0.16"
   },
   "overrides": {
     "react": "18.3.1",

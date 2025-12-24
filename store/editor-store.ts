@@ -1,7 +1,8 @@
 import { create } from "zustand";
 import { generateId, snapToGrid } from "@/lib/utils";
-import { 
-  updateSection as updateSectionDB, 
+import { logger } from "@/lib/logger";
+import {
+  updateSection as updateSectionDB,
   updateElement as updateElementDB,
   createSection as createSectionDB,
   deleteSection as deleteSectionDB,
@@ -9,10 +10,7 @@ import {
   createElement as createElementDB,
   deleteElement as deleteElementDB,
 } from "@/lib/queries";
-import {
-  DEFAULT_ELEMENT_CONTENT,
-  DEFAULT_ELEMENT_DIMENSIONS,
-} from "@/lib/types";
+import { DEFAULT_ELEMENT_CONTENT, DEFAULT_ELEMENT_DIMENSIONS } from "@/lib/types";
 import type {
   EditorState,
   Page,
@@ -76,7 +74,7 @@ interface EditorStateWithHistory extends EditorState {
   // History
   past: HistoryState[];
   future: HistoryState[];
-  
+
   // History actions
   undo: () => void;
   redo: () => void;
@@ -102,7 +100,7 @@ export const useEditorStore = create<EditorStateWithHistory>((set, get) => ({
   gridSize: 24,
   showGrid: true,
   clipboard: null,
-  
+
   // History state
   past: [],
   future: [],
@@ -122,29 +120,29 @@ export const useEditorStore = create<EditorStateWithHistory>((set, get) => ({
   // Selection Actions (Multi-Select)
   // ─────────────────────────────────────────────────────────────────
   selectElement: (id) => set({ selectedElementIds: [id] }),
-  
+
   selectElements: (ids) => set({ selectedElementIds: ids }),
-  
-  addToSelection: (id) => set((state) => ({
-    selectedElementIds: state.selectedElementIds.includes(id)
-      ? state.selectedElementIds
-      : [...state.selectedElementIds, id],
-  })),
-  
-  removeFromSelection: (id) => set((state) => ({
-    selectedElementIds: state.selectedElementIds.filter((eid) => eid !== id),
-  })),
-  
+
+  addToSelection: (id) =>
+    set((state) => ({
+      selectedElementIds: state.selectedElementIds.includes(id)
+        ? state.selectedElementIds
+        : [...state.selectedElementIds, id],
+    })),
+
+  removeFromSelection: (id) =>
+    set((state) => ({
+      selectedElementIds: state.selectedElementIds.filter((eid) => eid !== id),
+    })),
+
   selectAllInSection: (sectionId) => {
     const section = get().sections.find((s) => s.id === sectionId);
     if (section?.elements) {
-      const ids = section.elements
-        .filter((e) => !e.locked)
-        .map((e) => e.id);
+      const ids = section.elements.filter((e) => !e.locked).map((e) => e.id);
       set({ selectedElementIds: ids });
     }
   },
-  
+
   clearSelection: () => set({ selectedElementIds: [] }),
 
   // ─────────────────────────────────────────────────────────────────
@@ -157,42 +155,42 @@ export const useEditorStore = create<EditorStateWithHistory>((set, get) => ({
       const lastState = past[past.length - 1];
       if (JSON.stringify(lastState.sections) === JSON.stringify(sections)) return;
     }
-    
+
     const newPast = [...past, { sections: JSON.parse(JSON.stringify(sections)) }];
     if (newPast.length > MAX_HISTORY_LENGTH) {
       newPast.shift();
     }
     set({ past: newPast, future: [] });
   },
-  
+
   undo: () => {
     const { past, sections, future } = get();
     if (past.length === 0) return;
-    
+
     const previous = past[past.length - 1];
     const newPast = past.slice(0, -1);
-    
+
     set({
       sections: previous.sections,
       past: newPast,
       future: [{ sections: JSON.parse(JSON.stringify(sections)) }, ...future],
     });
   },
-  
+
   redo: () => {
     const { past, sections, future } = get();
     if (future.length === 0) return;
-    
+
     const next = future[0];
     const newFuture = future.slice(1);
-    
+
     set({
       sections: next.sections,
       past: [...past, { sections: JSON.parse(JSON.stringify(sections)) }],
       future: newFuture,
     });
   },
-  
+
   canUndo: () => get().past.length > 0,
   canRedo: () => get().future.length > 0,
 
@@ -207,7 +205,7 @@ export const useEditorStore = create<EditorStateWithHistory>((set, get) => ({
     const minHeight = type === "hero" ? "100vh" : type === "freeform" ? "50vh" : "auto";
 
     const dbSection = await createSectionDB(page.id, type, newIndex, {}, null, minHeight);
-    
+
     const newSection: Section = dbSection ?? {
       id: generateId(),
       pageId: page.id,
@@ -233,13 +231,13 @@ export const useEditorStore = create<EditorStateWithHistory>((set, get) => ({
     if (dbSection) {
       const sectionIds = updatedSections.map((s) => s.id);
       await reorderSectionsDB(page.id, sectionIds);
-      console.log("✓ Section created and saved to database");
+      logger.success("Section created and saved to database");
     }
   },
 
   updateSection: (id, updates) => {
     get().saveToHistory();
-    
+
     set((state) => ({
       sections: state.sections.map((s) =>
         s.id === id ? { ...s, ...updates, updatedAt: new Date().toISOString() } : s
@@ -254,14 +252,14 @@ export const useEditorStore = create<EditorStateWithHistory>((set, get) => ({
           minHeight: section.minHeight,
           config: section.config,
         });
-        console.log("✓ Section saved to database");
+        logger.success("Section saved to database");
       }
     });
   },
 
   removeSection: async (id) => {
     const { page } = get();
-    
+
     set((state) => {
       const filteredSections = state.sections.filter((s) => s.id !== id);
       const reindexed = filteredSections.map((s, i) => ({
@@ -278,13 +276,13 @@ export const useEditorStore = create<EditorStateWithHistory>((set, get) => ({
     if (deleted && page) {
       const sectionIds = get().sections.map((s) => s.id);
       await reorderSectionsDB(page.id, sectionIds);
-      console.log("✓ Section deleted from database");
+      logger.success("Section deleted from database");
     }
   },
 
   reorderSections: async (fromIndex, toIndex) => {
     const { page } = get();
-    
+
     set((state) => {
       const sections = [...state.sections];
       const [removed] = sections.splice(fromIndex, 1);
@@ -297,7 +295,7 @@ export const useEditorStore = create<EditorStateWithHistory>((set, get) => ({
     if (page) {
       const sectionIds = get().sections.map((s) => s.id);
       await reorderSectionsDB(page.id, sectionIds);
-      console.log("✓ Section order saved to database");
+      logger.success("Section order saved to database");
     }
   },
 
@@ -344,15 +342,13 @@ export const useEditorStore = create<EditorStateWithHistory>((set, get) => ({
 
     set((state) => ({
       sections: state.sections.map((s) =>
-        s.id === sectionId
-          ? { ...s, elements: [...(s.elements ?? []), newElement] }
-          : s
+        s.id === sectionId ? { ...s, elements: [...(s.elements ?? []), newElement] } : s
       ),
       selectedElementIds: [newElement.id],
     }));
 
     if (dbElement) {
-      console.log("✓ Element created and saved to database");
+      logger.success("Element created and saved to database");
     }
   },
 
@@ -377,7 +373,7 @@ export const useEditorStore = create<EditorStateWithHistory>((set, get) => ({
           content: element.content,
           zIndex: element.zIndex,
         });
-        console.log("✓ Element saved to database");
+        logger.success("Element saved to database");
       }
     });
   },
@@ -421,7 +417,7 @@ export const useEditorStore = create<EditorStateWithHistory>((set, get) => ({
 
     const deleted = await deleteElementDB(id);
     if (deleted) {
-      console.log("✓ Element deleted from database");
+      logger.success("Element deleted from database");
     }
   },
 
@@ -436,7 +432,7 @@ export const useEditorStore = create<EditorStateWithHistory>((set, get) => ({
 
     // Delete from database
     await Promise.all(ids.map((id) => deleteElementDB(id)));
-    console.log(`✓ ${ids.length} elements deleted from database`);
+    logger.success(`${ids.length} elements deleted from database`);
   },
 
   moveElement: (id, x, y) => {
@@ -470,7 +466,12 @@ export const useEditorStore = create<EditorStateWithHistory>((set, get) => ({
         ...section,
         elements: section.elements?.map((el) =>
           el.id === id
-            ? { ...el, width: snappedWidth, height: snappedHeight, updatedAt: new Date().toISOString() }
+            ? {
+                ...el,
+                width: snappedWidth,
+                height: snappedHeight,
+                updatedAt: new Date().toISOString(),
+              }
             : el
         ),
       })),
@@ -544,14 +545,12 @@ export const useEditorStore = create<EditorStateWithHistory>((set, get) => ({
 
     set((state) => ({
       sections: state.sections.map((s) =>
-        s.id === sectionId
-          ? { ...s, elements: [...(s.elements ?? []), finalElement] }
-          : s
+        s.id === sectionId ? { ...s, elements: [...(s.elements ?? []), finalElement] } : s
       ),
       selectedElementIds: [finalElement.id],
     }));
 
-    console.log("✓ Element pasted");
+    logger.success("Element pasted");
   },
 
   duplicateElement: async (id) => {
@@ -593,14 +592,12 @@ export const useEditorStore = create<EditorStateWithHistory>((set, get) => ({
 
     set((state) => ({
       sections: state.sections.map((s) =>
-        s.id === section.id
-          ? { ...s, elements: [...(s.elements ?? []), finalElement] }
-          : s
+        s.id === section.id ? { ...s, elements: [...(s.elements ?? []), finalElement] } : s
       ),
       selectedElementIds: [finalElement.id],
     }));
 
-    console.log("✓ Element duplicated");
+    logger.success("Element duplicated");
   },
 
   duplicateElements: async (ids) => {
@@ -652,14 +649,14 @@ export const useEditorStore = create<EditorStateWithHistory>((set, get) => ({
   unlockElement: (id) => get().updateElement(id, { locked: false }),
   hideElement: (id) => get().updateElement(id, { hidden: true }),
   showElement: (id) => get().updateElement(id, { hidden: false }),
-  
+
   toggleLock: (id) => {
     const element = findElement(get().sections, id);
     if (element) {
       get().updateElement(id, { locked: !element.locked });
     }
   },
-  
+
   toggleVisibility: (id) => {
     const element = findElement(get().sections, id);
     if (element) {
@@ -674,7 +671,7 @@ export const useEditorStore = create<EditorStateWithHistory>((set, get) => ({
     if (ids.length < 2) return;
 
     const { sections, gridSize } = get();
-    
+
     // Find all elements and their section
     const elements = ids.map((id) => findElement(sections, id)).filter(Boolean) as Element[];
     if (elements.length < 2) return;
@@ -683,11 +680,11 @@ export const useEditorStore = create<EditorStateWithHistory>((set, get) => ({
     if (!section) return;
 
     // Verify all elements are in the same section
-    const allSameSection = ids.every((id) => 
-      findSectionForElement(sections, id)?.id === section.id
+    const allSameSection = ids.every(
+      (id) => findSectionForElement(sections, id)?.id === section.id
     );
     if (!allSameSection) {
-      console.warn("Cannot group elements from different sections");
+      logger.warn("Cannot group elements from different sections");
       return;
     }
 
@@ -725,14 +722,12 @@ export const useEditorStore = create<EditorStateWithHistory>((set, get) => ({
     // Add container to section
     set((state) => ({
       sections: state.sections.map((s) =>
-        s.id === section.id
-          ? { ...s, elements: [...(s.elements ?? []), container] }
-          : s
+        s.id === section.id ? { ...s, elements: [...(s.elements ?? []), container] } : s
       ),
       selectedElementIds: [container.id],
     }));
 
-    console.log("✓ Elements grouped");
+    logger.success("Elements grouped");
   },
 
   ungroupElement: (containerId) => {
@@ -752,16 +747,16 @@ export const useEditorStore = create<EditorStateWithHistory>((set, get) => ({
     set((state) => ({
       sections: state.sections.map((s) =>
         s.id === section.id
-          ? { 
-              ...s, 
-              elements: s.elements?.filter((e) => e.id !== containerId)
+          ? {
+              ...s,
+              elements: s.elements?.filter((e) => e.id !== containerId),
             }
           : s
       ),
       selectedElementIds: childIds,
     }));
 
-    console.log("✓ Container ungrouped");
+    logger.success("Container ungrouped");
   },
 }));
 
@@ -784,7 +779,7 @@ export const useSelectedElements = () => {
   const sections = useEditorStore((state) => state.sections);
   const selectedIds = useEditorStore((state) => state.selectedElementIds);
   const elements: Element[] = [];
-  
+
   for (const section of sections) {
     for (const element of section.elements ?? []) {
       if (selectedIds.includes(element.id)) {
@@ -792,7 +787,7 @@ export const useSelectedElements = () => {
       }
     }
   }
-  
+
   return elements;
 };
 
@@ -800,9 +795,9 @@ export const useSelectedElements = () => {
 export const useSelectedElement = () => {
   const sections = useEditorStore((state) => state.sections);
   const selectedIds = useEditorStore((state) => state.selectedElementIds);
-  
+
   if (selectedIds.length === 0) return null;
-  
+
   for (const section of sections) {
     const element = section.elements?.find((e) => e.id === selectedIds[0]);
     if (element) return element;

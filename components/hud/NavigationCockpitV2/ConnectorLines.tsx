@@ -349,6 +349,7 @@ export function ConnectorLines({
         cancelAnimationFrame(lineAnimationRef.current);
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- linePathRefs and lineEndCircleRefs are stable refs
   }, [cardRefs, sigilParticlesRef]);
 
   // Use transitionProgress if provided, otherwise fall back to legacy scrollProgress timing

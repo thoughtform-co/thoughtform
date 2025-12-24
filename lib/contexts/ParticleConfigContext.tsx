@@ -19,6 +19,7 @@ import {
   type CameraConfig,
   type SigilConfig,
 } from "@/lib/particle-config";
+import { logger } from "@/lib/logger";
 import { useAuth } from "@/components/auth/AuthProvider";
 
 // localStorage keys
@@ -50,7 +51,7 @@ const setLocalStorage = (config: ParticleSystemConfig): void => {
   try {
     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(config));
   } catch (err) {
-    console.warn("Failed to save to localStorage:", err);
+    logger.warn("Failed to save to localStorage:", err);
   }
 };
 
@@ -103,7 +104,7 @@ const savePresetsToStorage = (presets: ConfigPreset[]): void => {
   try {
     localStorage.setItem(PRESETS_STORAGE_KEY, JSON.stringify(presets));
   } catch (err) {
-    console.warn("Failed to save presets:", err);
+    logger.warn("Failed to save presets:", err);
   }
 };
 
@@ -230,7 +231,7 @@ export function ParticleConfigProvider({ children }: ParticleConfigProviderProps
         loadedFrom = "server";
       }
     } catch (err) {
-      console.warn("Failed to load from server API:", err);
+      logger.warn("Failed to load from server API:", err);
     }
 
     // 2. If server API failed, try localStorage
@@ -293,10 +294,10 @@ export function ParticleConfigProvider({ children }: ParticleConfigProviderProps
           });
 
           if (!response.ok) {
-            console.warn("Failed to auto-save to server:", response.statusText);
+            logger.warn("Failed to auto-save to server:", response.statusText);
           }
         } catch (err) {
-          console.warn("Server auto-save error:", err);
+          logger.warn("Server auto-save error:", err);
         }
       }, 2000); // 2s debounce for server API
     },
@@ -477,7 +478,7 @@ export function ParticleConfigProvider({ children }: ParticleConfigProviderProps
       setError("Saved locally (server unavailable)");
       return true;
     }
-  }, [config, session?.access_token]);
+  }, [config, session?.access_token, user?.id]);
 
   // Reset to defaults
   const resetToDefaults = useCallback(async (): Promise<boolean> => {

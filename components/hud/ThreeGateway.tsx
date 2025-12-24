@@ -781,7 +781,7 @@ function DepthSpiral({
 
     baseDataRef.current = { baseX, baseY, depths };
     return new Float32Array(points);
-  }, []);
+  }, [getPoint]);
 
   useEffect(() => {
     if (!pointsRef.current || !baseDataRef.current) return;

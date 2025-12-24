@@ -150,6 +150,7 @@ function NavigationCockpitInner() {
       window.removeEventListener("resize", handleScroll);
       if (rafId !== null) cancelAnimationFrame(rafId);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- manifestoScrollProgress used for init only, adding would cause infinite loop
   }, [manifestoComplete]);
 
   // ═══════════════════════════════════════════════════════════════════
@@ -384,7 +385,6 @@ function NavigationCockpitInner() {
     manifestoBottomVh,
     baseWidth,
     widthGrowth,
-    baseHeight,
     actualContentHeight,
   ]);
 

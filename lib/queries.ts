@@ -1,5 +1,14 @@
 import { supabase, isSupabaseConfigured } from "./supabase";
-import type { Page, Section, Element, SectionType, ElementType, ElementContent, BackgroundConfig } from "./types";
+import { logger } from "./logger";
+import type {
+  Page,
+  Section,
+  Element,
+  SectionType,
+  ElementType,
+  ElementContent,
+  BackgroundConfig,
+} from "./types";
 
 // ═══════════════════════════════════════════════════════════════════
 // TYPE CONVERTERS (snake_case <-> camelCase)
@@ -52,11 +61,7 @@ function toElement(row: Record<string, unknown>): Element {
 export async function getPageBySlug(slug: string): Promise<Page | null> {
   if (!isSupabaseConfigured || !supabase) return null;
 
-  const { data, error } = await supabase
-    .from("pages")
-    .select("*")
-    .eq("slug", slug)
-    .single();
+  const { data, error } = await supabase.from("pages").select("*").eq("slug", slug).single();
 
   if (error || !data) return null;
   return toPage(data);
@@ -65,17 +70,16 @@ export async function getPageBySlug(slug: string): Promise<Page | null> {
 export async function createPage(slug: string, title?: string): Promise<Page | null> {
   if (!isSupabaseConfigured || !supabase) return null;
 
-  const { data, error } = await supabase
-    .from("pages")
-    .insert({ slug, title })
-    .select()
-    .single();
+  const { data, error } = await supabase.from("pages").insert({ slug, title }).select().single();
 
   if (error || !data) return null;
   return toPage(data);
 }
 
-export async function updatePage(id: string, updates: Partial<Pick<Page, "slug" | "title">>): Promise<Page | null> {
+export async function updatePage(
+  id: string,
+  updates: Partial<Pick<Page, "slug" | "title">>
+): Promise<Page | null> {
   if (!isSupabaseConfigured || !supabase) return null;
 
   const { data, error } = await supabase
@@ -168,7 +172,7 @@ export async function reorderSections(pageId: string, sectionIds: string[]): Pro
   if (!isSupabaseConfigured || !supabase) return false;
 
   const client = supabase; // Local reference for TypeScript
-  
+
   // Update each section's order_index
   const updates = sectionIds.map((id, index) =>
     client.from("sections").update({ order_index: index }).eq("id", id)
@@ -262,7 +266,9 @@ export async function deleteElement(id: string): Promise<boolean> {
 // BATCH OPERATIONS
 // ═══════════════════════════════════════════════════════════════════
 
-export async function getPageWithSections(slug: string): Promise<{ page: Page; sections: Section[] } | null> {
+export async function getPageWithSections(
+  slug: string
+): Promise<{ page: Page; sections: Section[] } | null> {
   const page = await getPageBySlug(slug);
   if (!page) return null;
 
@@ -302,16 +308,16 @@ const DEFAULT_SECTION_TYPES: SectionType[] = [
 
 export async function initializeHomePage(): Promise<{ page: Page; sections: Section[] } | null> {
   if (!isSupabaseConfigured || !supabase) {
-    console.log("Supabase not configured, using local defaults");
+    logger.log("Supabase not configured, using local defaults");
     return null;
   }
 
   // Check if home page exists
   let page = await getPageBySlug("home");
-  
+
   if (!page) {
     // Create home page
-    console.log("Creating home page in database...");
+    logger.log("Creating home page in database...");
     page = await createPage("home", "Thoughtform | Navigate AI for Creative Breakthroughs");
     if (!page) {
       console.error("Failed to create home page");
@@ -324,19 +330,19 @@ export async function initializeHomePage(): Promise<{ page: Page; sections: Sect
 
   // If no sections, create defaults
   if (sections.length === 0) {
-    console.log("Creating default sections in database...");
-    
+    logger.log("Creating default sections in database...");
+
     for (let i = 0; i < DEFAULT_SECTION_TYPES.length; i++) {
       const type = DEFAULT_SECTION_TYPES[i];
       const minHeight = type === "hero" ? "100vh" : "auto";
-      
+
       const section = await createSection(page.id, type, i, {}, null, minHeight);
       if (section) {
         sections.push(section);
       }
     }
-    
-    console.log(`Created ${sections.length} sections`);
+
+    logger.log(`Created ${sections.length} sections`);
   }
 
   // Load elements for each section
@@ -347,8 +353,9 @@ export async function initializeHomePage(): Promise<{ page: Page; sections: Sect
     })
   );
 
-  console.log(`Loaded ${sectionsWithElements.reduce((acc, s) => acc + (s.elements?.length || 0), 0)} elements`);
+  logger.log(
+    `Loaded ${sectionsWithElements.reduce((acc, s) => acc + (s.elements?.length || 0), 0)} elements`
+  );
 
   return { page, sections: sectionsWithElements };
 }
-

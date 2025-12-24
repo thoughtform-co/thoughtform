@@ -64,6 +64,7 @@ function AdminPageContent() {
     if (mounted && !isLoading && !user) {
       bootSequence();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- bootSequence is stable (only uses setState)
   }, [mounted, isLoading, user]);
 
   // Show success when logged in
