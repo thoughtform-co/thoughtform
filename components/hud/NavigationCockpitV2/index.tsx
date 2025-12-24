@@ -1022,23 +1022,23 @@ the interface for human-AI collaboration`}
         <ParticleAdminPanel />
       </AdminGate>
 
-      {/* Manifesto Sources - Fixed left rail, appears with manifesto text, fades out during services */}
+      {/* Manifesto Sources - Fixed left rail, appears with manifesto text, fades out quickly at services start */}
       <div
         style={{
-          opacity: 1 - tManifestoToServices,
-          visibility: tManifestoToServices < 1 ? "visible" : "hidden",
-          transition: "opacity 0.3s ease",
+          // Fade out 3x faster - complete by 33% of transition
+          opacity: Math.max(0, 1 - tManifestoToServices * 3),
+          visibility: tManifestoToServices < 0.35 ? "visible" : "hidden",
         }}
       >
         <ManifestoSources isVisible={manifestoRevealProgress > 0.1} />
       </div>
 
-      {/* Manifesto Video Stack - Fixed right side, appears with manifesto text, fades out during services */}
+      {/* Manifesto Video Stack - Fixed right side, appears with manifesto text, fades out quickly at services start */}
       <div
         style={{
-          opacity: 1 - tManifestoToServices,
-          visibility: tManifestoToServices < 1 ? "visible" : "hidden",
-          transition: "opacity 0.3s ease",
+          // Fade out 3x faster - complete by 33% of transition
+          opacity: Math.max(0, 1 - tManifestoToServices * 3),
+          visibility: tManifestoToServices < 0.35 ? "visible" : "hidden",
         }}
       >
         <ManifestoVideoStack
