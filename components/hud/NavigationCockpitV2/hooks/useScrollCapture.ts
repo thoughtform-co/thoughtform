@@ -75,7 +75,11 @@ export function useScrollCapture({
         return;
       }
 
-      // Prevent default scroll and update progress
+      // Prevent default scroll and update progress.
+      // IMPORTANT: stop Lenis (and any other wheel listeners) from receiving these wheel events,
+      // otherwise momentum gets "banked" and released as an abrupt jump when capture ends.
+      // We rely on registering this handler in the CAPTURE phase (see effect below).
+      e.stopImmediatePropagation();
       e.preventDefault();
       e.stopPropagation();
 
@@ -92,7 +96,8 @@ export function useScrollCapture({
     if (isActive) {
       setIsCapturing(true);
       // Use passive: false to allow preventDefault
-      window.addEventListener("wheel", handleWheel, { passive: false });
+      // Use capture phase so we run before Lenis' wheel handler
+      window.addEventListener("wheel", handleWheel, { passive: false, capture: true });
       // Also capture touchmove for mobile
       const handleTouchMove = (e: TouchEvent) => {
         if (!isActive || progressRef.current >= 1) return;
@@ -102,7 +107,7 @@ export function useScrollCapture({
       window.addEventListener("touchmove", handleTouchMove, { passive: false });
 
       return () => {
-        window.removeEventListener("wheel", handleWheel);
+        window.removeEventListener("wheel", handleWheel, { capture: true });
         window.removeEventListener("touchmove", handleTouchMove);
         setIsCapturing(false);
       };

@@ -1140,7 +1140,10 @@ export function ParticleCanvasV2({
 
       // Add extra "travel" during the manifesto reveal so we arrive at the crater rim
       // exactly when the last line finishes.
-      const MANIFESTO_TRAVEL_Z = 700; // px in world-Z
+      // Travel distance during manifesto reveal so we land on the crater rim at the final line.
+      // With capture starting near scrollP≈0.342 (scrollZ≈3080) and rim at slopeStartZ≈3600,
+      // 520px gets us to the edge without overshooting.
+      const MANIFESTO_TRAVEL_Z = 520; // px in world-Z
       const manifestoTravelFactor = manifestoCompleteRef.current
         ? 1
         : lockActive
