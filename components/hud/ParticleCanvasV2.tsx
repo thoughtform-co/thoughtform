@@ -1206,9 +1206,11 @@ export function ParticleCanvasV2({
         if (p.type === "terrain") {
           // Morph in as we enter Services so it syncs with the Services transition.
           // (Aligned with the Services-only camera tilt window.)
-          // Start forming during Manifesto so we’re already at the rim before Services begins.
-          const craterMorphStart = 0.35;
-          const craterMorphEnd = 0.5;
+          // Start forming near the end of the Manifesto transition so the crater rim
+          // is present once the manifesto is fully revealed, but we don't "move over" it
+          // during the reveal phase.
+          const craterMorphStart = 0.32;
+          const craterMorphEnd = 0.4;
           const craterMorph = Math.max(
             0,
             Math.min(1, (scrollP - craterMorphStart) / (craterMorphEnd - craterMorphStart))
@@ -1222,7 +1224,9 @@ export function ParticleCanvasV2({
             const craterCenterZ = 6000;
 
             // Long descent slope (start well before the crater)
-            const slopeStartZ = craterCenterZ - 3200;
+            // Shorten the approach so the rim/edge aligns with the end of the manifesto reveal.
+            // With craterCenterZ=6000, slopeStartZ≈3600 puts the rim at scrollP≈0.40 (scrollZ≈3600).
+            const slopeStartZ = craterCenterZ - 2400;
             const slopeEndZ = craterCenterZ;
             const slopeT =
               p.z <= slopeStartZ
