@@ -1,0 +1,85 @@
+/* ═══════════════════════════════════════════════════════════════
+   DESIGN TOKENS
+   Thoughtform Design System Variables
+   ═══════════════════════════════════════════════════════════════ */
+
+:root {
+  /* Colors */
+  --void: #0a0908;
+  --void-deep: #050504;
+  --dawn: #ebe3d6;
+  --dawn-90: rgba(235, 227, 214, 0.9);
+  --dawn-70: rgba(235, 227, 214, 0.7);
+  --dawn-50: rgba(235, 227, 214, 0.5);
+  --dawn-30: rgba(235, 227, 214, 0.3);
+  --dawn-15: rgba(235, 227, 214, 0.15);
+  --dawn-08: rgba(235, 227, 214, 0.08);
+  --dawn-04: rgba(235, 227, 214, 0.04);
+  --gold: #caa554;
+  --gold-70: rgba(202, 165, 84, 0.7);
+  --gold-50: rgba(202, 165, 84, 0.5);
+  --gold-30: rgba(202, 165, 84, 0.3);
+  --gold-15: rgba(202, 165, 84, 0.15);
+  --alert: #ff6b35;
+
+  /* Typography */
+  --font-display: "PP Mondwest", serif;
+  --font-body: var(--font-ibm-plex-mono), "IBM Plex Mono", monospace;
+  --font-data: var(--font-ibm-plex-mono), "IBM Plex Mono", monospace;
+
+  /* Spacing (8px grid) */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  --space-2xl: 48px;
+  --space-3xl: 64px;
+  --space-4xl: 96px;
+
+  /* Layout */
+  --hud-padding: clamp(32px, 4vw, 64px);
+  --rail-width: 60px;
+  --content-max-width: 1200px;
+  --corner-size: 40px;
+
+  /* 8-Column Grid System */
+  --grid-columns: 8;
+  --grid-gap: 24px;
+  --content-inset: 40px;
+  --content-start: calc(var(--hud-padding) + var(--rail-width) + var(--content-inset));
+  --content-end: calc(var(--hud-padding) + var(--rail-width) + var(--content-inset));
+
+  /* Animation */
+  --duration-fast: 0.15s;
+  --duration-normal: 0.3s;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   RESPONSIVE VARIABLE OVERRIDES
+   ═══════════════════════════════════════════════════════════════ */
+
+@media (max-width: 900px) {
+  :root {
+    --rail-width: 0px;
+    --corner-size: 30px;
+  }
+}
+
+@media (max-width: 768px) {
+  :root {
+    --hud-padding: 8px;
+    --rail-width: 32px;
+    --corner-size: 20px;
+    --space-2xl: 32px;
+    --space-3xl: 48px;
+    --space-4xl: 64px;
+  }
+}
+
+@media (max-width: 600px) {
+  :root {
+    --corner-size: 24px;
+  }
+}

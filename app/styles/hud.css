@@ -1,0 +1,580 @@
+/* ═══════════════════════════════════════════════════════════════
+   HUD FRAME
+   Retro interface with corners, rails, and navigation
+   ═══════════════════════════════════════════════════════════════ */
+
+.hud-frame {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  pointer-events: none;
+}
+
+.hud-frame > * {
+  pointer-events: auto;
+}
+
+/* ─── CORNER BRACKETS (L-shaped gold corners) ─── */
+.hud-corner {
+  position: absolute;
+  width: var(--corner-size);
+  height: var(--corner-size);
+  pointer-events: none;
+}
+
+.hud-corner::before,
+.hud-corner::after {
+  content: "";
+  position: absolute;
+  background: var(--gold);
+}
+
+/* Top Left Corner */
+.hud-corner-tl {
+  top: var(--hud-padding);
+  left: var(--hud-padding);
+}
+.hud-corner-tl::before {
+  top: 0;
+  left: 0;
+  width: var(--corner-size);
+  height: 2px;
+}
+.hud-corner-tl::after {
+  top: 0;
+  left: 0;
+  width: 2px;
+  height: var(--corner-size);
+}
+
+/* Top Right Corner */
+.hud-corner-tr {
+  top: var(--hud-padding);
+  right: var(--hud-padding);
+}
+.hud-corner-tr::before {
+  top: 0;
+  right: 0;
+  width: var(--corner-size);
+  height: 2px;
+}
+.hud-corner-tr::after {
+  top: 0;
+  right: 0;
+  width: 2px;
+  height: var(--corner-size);
+}
+
+/* Bottom Left Corner */
+.hud-corner-bl {
+  bottom: var(--hud-padding);
+  left: var(--hud-padding);
+}
+.hud-corner-bl::before {
+  bottom: 0;
+  left: 0;
+  width: var(--corner-size);
+  height: 2px;
+}
+.hud-corner-bl::after {
+  bottom: 0;
+  left: 0;
+  width: 2px;
+  height: var(--corner-size);
+}
+
+/* Bottom Right Corner */
+.hud-corner-br {
+  bottom: var(--hud-padding);
+  right: var(--hud-padding);
+}
+.hud-corner-br::before {
+  bottom: 0;
+  right: 0;
+  width: var(--corner-size);
+  height: 2px;
+}
+.hud-corner-br::after {
+  bottom: 0;
+  right: 0;
+  width: 2px;
+  height: var(--corner-size);
+}
+
+/* ─── TOP BAR ─── */
+.hud-top {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 56px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 calc(var(--hud-padding) + 24px);
+  background: linear-gradient(to bottom, var(--void) 60%, transparent);
+}
+
+.hud-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  font-family: var(--font-data);
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.brand-label {
+  color: var(--dawn-70);
+}
+
+.brand-divider {
+  color: var(--dawn-30);
+}
+
+.brand-sector {
+  color: var(--gold);
+}
+
+.hud-nav {
+  display: flex;
+  gap: var(--space-2xl);
+}
+
+.nav-link {
+  font-family: var(--font-data);
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--dawn-50);
+  text-decoration: none;
+  padding: var(--space-sm) 0;
+  position: relative;
+  transition: color var(--duration-fast) var(--ease-out);
+}
+
+.nav-link:hover {
+  color: var(--dawn);
+}
+
+.nav-link.active {
+  color: var(--dawn);
+}
+
+.nav-link.active::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--gold);
+}
+
+.hud-signal {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  font-family: var(--font-data);
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.05em;
+}
+
+.signal-label {
+  color: var(--dawn-30);
+  text-transform: uppercase;
+  font-size: 9px;
+  letter-spacing: 0.08em;
+}
+
+.signal-value {
+  color: var(--gold);
+  padding: 3px 10px;
+  border: 1px solid var(--gold);
+}
+
+/* ─── SIDE RAILS ─── */
+.hud-rail {
+  position: absolute;
+  top: calc(var(--hud-padding) + var(--corner-size) + 20px);
+  bottom: calc(var(--hud-padding) + var(--corner-size) + 20px);
+  width: var(--rail-width);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.hud-rail-left {
+  left: var(--hud-padding);
+  align-items: flex-start;
+}
+
+.hud-rail-right {
+  right: var(--hud-padding);
+  align-items: flex-end;
+}
+
+/* Vertical line for rails */
+.hud-rail-left::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    var(--gold-50) 10%,
+    var(--gold-50) 90%,
+    transparent 100%
+  );
+}
+
+.hud-rail-right::before {
+  content: "";
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    var(--gold-50) 10%,
+    var(--gold-50) 90%,
+    transparent 100%
+  );
+}
+
+/* Scale with ticks */
+.rail-scale {
+  flex: 1;
+  position: relative;
+  width: 100%;
+}
+
+.scale-ticks {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.hud-rail-left .scale-ticks {
+  left: 0;
+}
+
+.hud-rail-right .scale-ticks {
+  right: 0;
+}
+
+/* Individual tick marks */
+.tick {
+  height: 1px;
+  background: var(--gold-50);
+}
+
+.tick-major {
+  width: 20px;
+  background: var(--gold);
+}
+
+.tick-minor {
+  width: 10px;
+  background: var(--gold-50);
+}
+
+.tick-label {
+  font-family: var(--font-data);
+  font-size: 9px;
+  font-weight: 400;
+  color: var(--dawn-30);
+  position: absolute;
+  white-space: nowrap;
+}
+
+.hud-rail-left .tick-label {
+  left: 24px;
+}
+
+.hud-rail-right .tick-label {
+  right: 24px;
+}
+
+/* Depth indicator */
+.scale-indicator {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: var(--gold);
+}
+
+.scale-indicator::before {
+  content: "";
+  position: absolute;
+  left: -5px;
+  top: -4px;
+  width: 10px;
+  height: 10px;
+  background: var(--gold);
+  transform: rotate(45deg);
+}
+
+/* Readouts at bottom of left rail */
+.rail-readouts {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  margin-bottom: var(--space-lg);
+  padding-left: 28px;
+}
+
+.readout {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.readout-label {
+  font-family: var(--font-data);
+  font-size: 9px;
+  font-weight: 400;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--dawn-30);
+}
+
+.readout-value {
+  font-family: var(--font-data);
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--dawn);
+  letter-spacing: 0.02em;
+}
+
+.readout-unit {
+  font-family: var(--font-data);
+  font-size: 10px;
+  font-weight: 300;
+  color: var(--dawn-30);
+  margin-left: 2px;
+}
+
+/* Section markers (right rail) */
+.rail-markers {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  align-items: flex-end;
+  margin-bottom: var(--space-lg);
+  padding-right: 28px;
+}
+
+.section-marker {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  opacity: 0.4;
+  transition: opacity var(--duration-fast) var(--ease-out);
+  cursor: pointer;
+}
+
+.section-marker.active {
+  opacity: 1;
+}
+
+.marker-dot {
+  width: 8px;
+  height: 8px;
+  border: 1px solid var(--dawn-50);
+  transition: all var(--duration-fast) var(--ease-out);
+}
+
+.section-marker.active .marker-dot {
+  background: var(--gold);
+  border-color: var(--gold);
+  box-shadow: 0 0 8px var(--gold-50);
+}
+
+.marker-label {
+  font-family: var(--font-data);
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--dawn-50);
+  letter-spacing: 0.08em;
+}
+
+.section-marker.active .marker-label {
+  color: var(--gold);
+}
+
+/* ─── BOTTOM BAR ─── */
+.hud-bottom {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 56px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 calc(var(--hud-padding) + 24px);
+  background: transparent !important;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.hud-coords {
+  display: flex;
+  gap: var(--space-xl);
+}
+
+.coord {
+  font-family: var(--font-data);
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.03em;
+  color: var(--dawn-30);
+}
+
+.coord span {
+  color: var(--dawn-50);
+}
+
+.hud-instruction {
+  font-family: var(--font-data);
+  font-size: 10px;
+  font-weight: 300;
+  letter-spacing: 0.02em;
+  color: var(--dawn-30);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   HUD RESPONSIVE STYLES
+   ═══════════════════════════════════════════════════════════════ */
+
+@media (max-width: 900px) {
+  .hud-rail {
+    display: none;
+  }
+
+  .hud-nav {
+    gap: var(--space-lg);
+  }
+
+  .nav-link {
+    font-size: 10px;
+  }
+
+  .hud-signal {
+    display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  /* Mobile corner brackets - smaller */
+  .hud-corner {
+    width: var(--corner-size);
+    height: var(--corner-size);
+  }
+
+  .hud-corner-tl {
+    top: var(--hud-padding);
+    left: var(--hud-padding);
+  }
+
+  .hud-corner-tr {
+    top: var(--hud-padding);
+    right: var(--hud-padding);
+  }
+
+  .hud-corner-bl {
+    bottom: var(--hud-padding);
+    left: var(--hud-padding);
+  }
+
+  .hud-corner-br {
+    bottom: var(--hud-padding);
+    right: var(--hud-padding);
+  }
+
+  /* Mobile rails - narrower */
+  .hud-rail {
+    display: flex !important;
+    width: var(--rail-width);
+    top: calc(var(--hud-padding) + var(--corner-size) + 12px);
+    bottom: calc(var(--hud-padding) + var(--corner-size) + 12px);
+  }
+
+  .hud-rail-left {
+    left: var(--hud-padding);
+  }
+
+  .hud-rail-right {
+    right: var(--hud-padding);
+  }
+
+  /* Smaller ticks on mobile */
+  .tick-major {
+    width: 12px;
+  }
+
+  .tick-minor {
+    width: 6px;
+  }
+
+  .tick-label {
+    display: none;
+  }
+
+  .rail-markers {
+    padding-right: 8px;
+    gap: var(--space-md);
+  }
+
+  .section-marker {
+    gap: 4px;
+  }
+
+  .marker-dot {
+    width: 6px;
+    height: 6px;
+  }
+
+  .hud-coords {
+    display: none !important;
+  }
+
+  .hud-bottom {
+    padding: 0 var(--hud-padding);
+    height: 44px;
+  }
+
+  .hud-instruction {
+    font-size: 9px;
+    text-align: center;
+    width: 100%;
+  }
+}
+
+@media (max-width: 600px) {
+  .hud-brand {
+    display: none;
+  }
+
+  .hud-coords {
+    display: none;
+  }
+
+  .hud-nav {
+    gap: var(--space-md);
+  }
+}

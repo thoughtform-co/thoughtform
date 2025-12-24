@@ -1,0 +1,222 @@
+/* ═══════════════════════════════════════════════════════════════
+   GRID SYSTEM
+   8-column grid respecting HUD frame boundaries
+   ═══════════════════════════════════════════════════════════════ */
+
+.grid-container {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: var(--grid-gap);
+  width: 100%;
+  max-width: calc(100vw - var(--content-start) - var(--content-end));
+  margin-left: var(--content-start);
+  margin-right: var(--content-end);
+}
+
+/* Column span utilities */
+.col-span-1 {
+  grid-column: span 1;
+}
+.col-span-2 {
+  grid-column: span 2;
+}
+.col-span-3 {
+  grid-column: span 3;
+}
+.col-span-4 {
+  grid-column: span 4;
+}
+.col-span-5 {
+  grid-column: span 5;
+}
+.col-span-6 {
+  grid-column: span 6;
+}
+.col-span-7 {
+  grid-column: span 7;
+}
+.col-span-8 {
+  grid-column: span 8;
+}
+
+/* Column start utilities */
+.col-start-1 {
+  grid-column-start: 1;
+}
+.col-start-2 {
+  grid-column-start: 2;
+}
+.col-start-3 {
+  grid-column-start: 3;
+}
+.col-start-4 {
+  grid-column-start: 4;
+}
+.col-start-5 {
+  grid-column-start: 5;
+}
+.col-start-6 {
+  grid-column-start: 6;
+}
+.col-start-7 {
+  grid-column-start: 7;
+}
+.col-start-8 {
+  grid-column-start: 8;
+}
+
+/* Common layout patterns */
+.grid-left {
+  grid-column: 1 / 5;
+}
+
+.grid-center {
+  grid-column: 2 / 8;
+}
+
+.grid-center-narrow {
+  grid-column: 3 / 7;
+}
+
+.grid-right {
+  grid-column: 5 / 9;
+}
+
+.grid-full {
+  grid-column: 1 / -1;
+}
+
+/* Grid overlay for debugging */
+.grid-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.grid-overlay.show-grid {
+  opacity: 1;
+}
+
+.grid-overlay-inner {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: var(--grid-gap);
+  height: 100%;
+  margin-left: var(--content-start);
+  margin-right: var(--content-end);
+}
+
+.grid-overlay-column {
+  background: rgba(202, 165, 84, 0.08);
+  border-left: 1px solid rgba(202, 165, 84, 0.15);
+  border-right: 1px solid rgba(202, 165, 84, 0.15);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SECTION LAYOUT
+   ═══════════════════════════════════════════════════════════════ */
+
+.section {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  padding: 100px calc(var(--hud-padding) + var(--rail-width) + 120px);
+  padding-right: 18%;
+  position: relative;
+}
+
+.section * {
+  position: relative;
+  z-index: 1;
+}
+
+.section-layout {
+  width: 100%;
+  max-width: 640px;
+  margin: 0;
+  margin-right: auto;
+  display: block;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   RESPONSIVE GRID
+   ═══════════════════════════════════════════════════════════════ */
+
+@media (max-width: 1100px) {
+  .grid-container {
+    grid-template-columns: repeat(6, 1fr);
+  }
+
+  .grid-left {
+    grid-column: 1 / 4;
+  }
+
+  .grid-center {
+    grid-column: 1 / 7;
+  }
+
+  .grid-center-narrow {
+    grid-column: 2 / 6;
+  }
+
+  .grid-right {
+    grid-column: 4 / 7;
+  }
+
+  .section {
+    padding-right: 20%;
+  }
+}
+
+@media (max-width: 900px) {
+  .grid-container {
+    grid-template-columns: repeat(4, 1fr);
+    margin-left: var(--hud-padding);
+    margin-right: var(--hud-padding);
+    max-width: calc(100vw - var(--hud-padding) * 2);
+  }
+
+  .grid-left,
+  .grid-center,
+  .grid-center-narrow,
+  .grid-right {
+    grid-column: 1 / -1;
+  }
+
+  .grid-overlay-inner {
+    grid-template-columns: repeat(4, 1fr);
+    margin-left: var(--hud-padding);
+    margin-right: var(--hud-padding);
+  }
+
+  .section {
+    padding: 100px var(--hud-padding);
+    padding-right: var(--hud-padding);
+  }
+
+  .section-layout {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .section {
+    padding: 80px 24px !important;
+    min-height: auto;
+  }
+
+  .section-layout {
+    max-width: 100%;
+  }
+
+  .grid-container {
+    grid-template-columns: 1fr;
+    margin-left: 0;
+    margin-right: 0;
+    max-width: 100%;
+    gap: var(--space-md);
+  }
+}
