@@ -388,7 +388,7 @@ function NavigationCockpitInner() {
     // ═══════════════════════════════════════════════════════════════════
     // MANIFESTO → SERVICES: Terminal slides from center to right
     // Manifesto: left: 50%, transform: translateX(-50%) → centered
-    // Services: right side with margin from edge
+    // Services: right: calc(var(--rail-width) + 120px) to match ModuleCards
     // tManifestoToServices is already eased, no double-easing needed
     // ═══════════════════════════════════════════════════════════════════
 
@@ -396,20 +396,39 @@ function NavigationCockpitInner() {
     const manifestoLeftPct = tDefToManifesto * 50; // 0% → 50%
     const manifestoLeftPx = (1 - tDefToManifesto) * 184; // 184px → 0px
 
-    // Services position: slide from center (50%) to right (75%)
-    // This puts the terminal on the right ~25% from right edge
-    const servicesLeftPct = manifestoLeftPct + tManifestoToServices * 25; // 50% → 75%
-
     // Transform: manifesto is translateX(-50%) for centering
-    // Services: translateX(-50%) stays same since we're adjusting left%
-    const transformX = -50 * tDefToManifesto;
+    // As we transition to services, reduce the transform to 0 (right-aligned uses no transform)
+    const transformX = -50 * tDefToManifesto * (1 - tManifestoToServices);
+
+    // Frame width for position calculations
+    const frameWidth = baseWidth + growthProgress * widthGrowth;
+
+    // Services target position: match ModuleCards at right: calc(var(--rail-width) + 120px)
+    // Rail width is 60px, so right edge should be 180px from viewport right
+    // For smooth transition, we interpolate left position to achieve this
+    // At services: left = calc(100vw - 180px - frameWidth)
+    // We blend from centered (left: 50%, translateX: -50%) to right-aligned
+    const servicesRightOffset = 180; // var(--rail-width, 60px) + 120px
+
+    // Calculate the left position that puts right edge at the target
+    // During transition: blend from center to right-aligned position
+    // left goes from "50%" to "calc(100% - 180px - frameWidth)"
+    // But we need to account for the translateX(-50%) going to 0
+
+    // Simpler approach: use right positioning for services
+    const useRightPositioning = tManifestoToServices > 0;
 
     return {
       finalBottom,
-      left: `calc(${manifestoLeftPx}px + ${servicesLeftPct}%)`,
-      width: `${baseWidth + growthProgress * widthGrowth}px`,
+      // During manifesto: use left positioning with translateX for centering
+      // During services transition: blend to right positioning
+      left: useRightPositioning ? "auto" : `calc(${manifestoLeftPx}px + ${manifestoLeftPct}%)`,
+      right: useRightPositioning
+        ? `calc(var(--rail-width, 60px) + 120px + ${(1 - tManifestoToServices) * 50}vw - ${((1 - tManifestoToServices) * frameWidth) / 2}px)`
+        : "auto",
+      width: `${frameWidth}px`,
       height: frameHeight,
-      transform: `translateX(${transformX}%)`,
+      transform: useRightPositioning ? "none" : `translateX(${transformX}%)`,
       background: `rgba(10, 9, 8, ${finalBgOpacity})`,
       backdropFilter: `blur(${8 * Math.max(tHeroToDef > 0.7 ? ((tHeroToDef - 0.7) / 0.3) * 4 : 0, tDefToManifesto * 8)}px)`,
       border: `1px solid rgba(202, 165, 84, ${finalBorderOpacity})`,
@@ -641,10 +660,11 @@ function NavigationCockpitInner() {
                 })`,
               }
             : {
-                // DESKTOP: Frame moves from hero → definition → manifesto
+                // DESKTOP: Frame moves from hero → definition → manifesto → services
                 // Use BOTTOM positioning throughout for smooth, continuous transition
                 bottom: bridgeFrameStyles.finalBottom,
                 left: bridgeFrameStyles.left,
+                right: bridgeFrameStyles.right,
                 width: bridgeFrameStyles.width,
                 maxWidth: bridgeFrameStyles.width,
                 height: bridgeFrameStyles.height,
