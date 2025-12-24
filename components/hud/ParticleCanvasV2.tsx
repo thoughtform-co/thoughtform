@@ -928,6 +928,25 @@ function initParticles(config: ParticleSystemConfig): Particle[] {
     }
   }
 
+  // ─── CRATER FLOOR DENSITY ───
+  // Add extra terrain particles concentrated at the bottom of the crater
+  // so the impact basin reads as dense + deep.
+  {
+    const craterCenterX = 0;
+    const craterCenterZ = 8800;
+    const floorRadius = 520;
+    const floorPoints = 850;
+
+    for (let i = 0; i < floorPoints; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const r = Math.sqrt(Math.random()) * floorRadius; // uniform disk
+      const x = craterCenterX + Math.cos(angle) * r;
+      const z = craterCenterZ + Math.sin(angle) * r * 0.4; // slight squash for perspective
+      const y = getTerrainY(x, z, manifold) - Math.random() * 8;
+      particles.push(createPoint(x, y, z, "terrain", manifoldColorRgb, 0));
+    }
+  }
+
   // ─── LANDMARKS ───
   landmarks.forEach((landmark, index) => {
     if (!landmark.enabled) return;
@@ -1095,8 +1114,21 @@ export function ParticleCanvasV2({
       const cx_geo = width * camera.vanishX;
       const cy = height * camera.vanishY;
 
+      const clamp01 = (v: number) => Math.max(0, Math.min(1, v));
+      const easeInOutCubic = (t: number) =>
+        t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+
+      // Services camera tilt: look slightly more "down" into the crater
+      // Only activates once we start entering services.
+      const servicesTiltRaw = clamp01((scrollP - 0.5) / 0.22);
+      const servicesTilt = easeInOutCubic(servicesTiltRaw);
+      const dynamicPitchDeg = camera.pitch + servicesTilt * 10; // subtle forward tilt
+
+      // Slightly relax terrain clipping during tilt so we can see more of the basin.
+      const dynamicTerrainClipY = Math.max(0, camera.terrainClipY - servicesTilt * 0.12);
+
       // Pre-calculate pitch/yaw/roll transforms
-      const pitchRad = (camera.pitch * Math.PI) / 180;
+      const pitchRad = (dynamicPitchDeg * Math.PI) / 180;
       const yawRad = (camera.yaw * Math.PI) / 180;
       const rollRad = (camera.roll * Math.PI) / 180;
       const cosPitch = Math.cos(pitchRad);
@@ -1286,7 +1318,7 @@ export function ParticleCanvasV2({
 
         if (p.type === "terrain") {
           // Terrain: clip above certain screen percentage
-          if (camera.terrainClipY > 0 && y < height * camera.terrainClipY) return;
+          if (dynamicTerrainClipY > 0 && y < height * dynamicTerrainClipY) return;
 
           // Terrain: scale size based on depth, nearby = bigger
           const sizeMultiplier = Math.min(2.5, 0.6 + scale * 1.2);

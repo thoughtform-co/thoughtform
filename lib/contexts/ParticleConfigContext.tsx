@@ -24,7 +24,8 @@ import { useAuth } from "@/components/auth/AuthProvider";
 
 // localStorage keys
 const LOCAL_STORAGE_KEY = "thoughtform-particle-config";
-const PRESETS_STORAGE_KEY = "thoughtform-gateway-presets";
+const PRESETS_STORAGE_KEY = "thoughtform-particle-presets";
+const LEGACY_PRESETS_STORAGE_KEY = "thoughtform-gateway-presets";
 
 // Preset type - stores entire configuration
 export interface ConfigPreset {
@@ -68,13 +69,14 @@ const clearLocalStorage = (): void => {
 const getPresets = (): ConfigPreset[] => {
   if (typeof window === "undefined") return [];
   try {
-    const stored = localStorage.getItem(PRESETS_STORAGE_KEY);
+    const stored =
+      localStorage.getItem(PRESETS_STORAGE_KEY) || localStorage.getItem(LEGACY_PRESETS_STORAGE_KEY);
     if (!stored) return [];
 
     const parsed = JSON.parse(stored);
 
     // Migrate legacy presets (old format had 'gateway' instead of 'config')
-    return parsed.map((preset: Record<string, unknown>) => {
+    const migrated = parsed.map((preset: Record<string, unknown>) => {
       if (preset.config) {
         return preset as unknown as ConfigPreset;
       }
@@ -94,6 +96,15 @@ const getPresets = (): ConfigPreset[] => {
       // Fallback: assume it's a valid preset structure
       return preset as unknown as ConfigPreset;
     });
+
+    // If we loaded from legacy key, write back to new key for next time
+    try {
+      localStorage.setItem(PRESETS_STORAGE_KEY, JSON.stringify(migrated));
+    } catch {
+      // Ignore
+    }
+
+    return migrated;
   } catch {
     return [];
   }
@@ -103,6 +114,8 @@ const savePresetsToStorage = (presets: ConfigPreset[]): void => {
   if (typeof window === "undefined") return;
   try {
     localStorage.setItem(PRESETS_STORAGE_KEY, JSON.stringify(presets));
+    // Keep legacy key in sync for backwards compatibility
+    localStorage.setItem(LEGACY_PRESETS_STORAGE_KEY, JSON.stringify(presets));
   } catch (err) {
     logger.warn("Failed to save presets:", err);
   }
@@ -197,14 +210,36 @@ export function ParticleConfigProvider({ children }: ParticleConfigProviderProps
   const [isPreviewMode, setIsPreviewMode] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [storageMode, setStorageMode] = useState<"server" | "local">("server");
-  const [presets, setPresets] = useState<ConfigPreset[]>([]);
-  const [activePresetId, setActivePresetId] = useState<string | null>(null);
+  const [presets, setPresets] = useState<ConfigPreset[]>(() => getPresets());
+  const [activePresetId, setActivePresetId] = useState<string | null>(() => getActivePresetId());
 
-  // Load presets and active preset on mount
+  // After the base config loads, if an active preset exists, apply it automatically.
+  // This makes presets feel persistent across refresh (the selected preset becomes the world).
+  const didHydrateFromPresetRef = useRef(false);
   useEffect(() => {
-    setPresets(getPresets());
-    setActivePresetId(getActivePresetId());
-  }, []);
+    if (didHydrateFromPresetRef.current) return;
+    if (isLoading) return;
+
+    if (!activePresetId) {
+      // No active preset to apply
+      didHydrateFromPresetRef.current = true;
+      return;
+    }
+
+    const preset = presets.find((p) => p.id === activePresetId);
+    if (!preset) {
+      // Active preset missing → clear it
+      setActivePresetId(null);
+      saveActivePresetId(null);
+      didHydrateFromPresetRef.current = true;
+      return;
+    }
+
+    const fullConfig = mergeWithDefaults(preset.config || {});
+    setConfig(fullConfig);
+    setSavedConfig(fullConfig);
+    didHydrateFromPresetRef.current = true;
+  }, [isLoading, activePresetId, presets]);
 
   // Check if there are unsaved changes
   const hasChanges = useMemo(() => {

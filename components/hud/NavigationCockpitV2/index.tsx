@@ -475,9 +475,12 @@ function NavigationCockpitInner() {
     } else if (scrollProgress < 0.5) {
       // Manifesto section - after definition→manifesto transition starts
       newSection = "manifesto";
-    } else if (scrollProgress < 0.75) {
+    } else if (scrollProgress < 0.72) {
       // Services section
       newSection = "services";
+    } else if (scrollProgress < 0.88) {
+      // About section (extra scroll runway so contact doesn't appear too quickly)
+      newSection = "about";
     } else {
       // Contact section
       newSection = "contact";
@@ -1218,11 +1221,28 @@ the interface for human-AI collaboration`}
           {/* Scroll anchor - actual content is fixed positioned and animated */}
         </section>
 
-        {/* Section 5: Contact */}
-        <section className="section section-contact" id="contact" data-section="contact">
+        {/* Section 5: About - spacer section to extend runway before contact */}
+        <section className="section section-about" id="about" data-section="about">
           <div className="section-layout">
             <div className="section-label">
               <span className="label-number">05</span>
+              <span className="label-text">About</span>
+            </div>
+
+            <div className="section-content">
+              <div className="section-meta">
+                <span className="meta-label">Landmark:</span>
+                <span className="meta-value">continuum drift / story field</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Section 6: Contact */}
+        <section className="section section-contact" id="contact" data-section="contact">
+          <div className="section-layout">
+            <div className="section-label">
+              <span className="label-number">06</span>
               <span className="label-text">Contact</span>
             </div>
 
