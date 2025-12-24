@@ -109,6 +109,8 @@ interface ParticleWordmarkMorphProps {
   wordmarkBounds?: DOMRect | null;
   targetBounds?: { x: number; y: number; width: number; height: number } | null;
   visible?: boolean;
+  /** External opacity multiplier (0-1) for cross-fade effects */
+  opacity?: number;
 }
 
 function samplePointsFromPaths(
@@ -157,6 +159,7 @@ export function ParticleWordmarkMorph({
   wordmarkBounds,
   targetBounds,
   visible = true,
+  opacity: externalOpacity = 1,
 }: ParticleWordmarkMorphProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number>(0);
@@ -359,7 +362,7 @@ export function ParticleWordmarkMorph({
 
         // Pulsing alpha
         const pulse = 0.85 + Math.sin(time * 0.015 + point.phase) * 0.15;
-        let alpha = point.baseAlpha * pulse * particleOpacity;
+        let alpha = point.baseAlpha * pulse * particleOpacity * externalOpacity;
 
         // Fade edges for smoother look
         if (morphProgress < 0.1) {
@@ -387,7 +390,7 @@ export function ParticleWordmarkMorph({
         cancelAnimationFrame(animationRef.current);
       }
     };
-  }, [morphProgressProp, scrollProgress, wordmarkBounds, targetBounds, visible]);
+  }, [morphProgressProp, scrollProgress, wordmarkBounds, targetBounds, visible, externalOpacity]);
 
   if (!visible) return null;
 

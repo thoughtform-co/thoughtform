@@ -47,9 +47,48 @@ supabase/             # Database schema
 ## Editor Mode
 
 Press the "Edit" button (requires auth) to enter edit mode:
+
 - Select sections to modify backgrounds
 - Add elements (text, images, video)
 - Toggle visibility of template content
+
+## Claude Agent SDK & Skills
+
+This project includes Claude Agent Skills for enhanced AI-assisted development.
+
+### Skills Available
+
+#### Context7 Documentation (`context7-docs`)
+
+Fetches up-to-date, version-specific documentation for any library. Avoids outdated training data.
+
+**Usage in prompts:**
+
+- "use context7 to get Next.js docs"
+- "fetch the latest Supabase authentication docs"
+- "get docs for framer-motion"
+
+**Location:** `.claude/skills/context7/`
+
+### Setting Up Claude Agent SDK
+
+1. **Install Claude Code CLI:**
+
+   ```bash
+   npm install -g @anthropic-ai/claude-code
+   ```
+
+2. **Set API Key:**
+
+   ```bash
+   export ANTHROPIC_API_KEY=your-api-key
+   ```
+
+3. **Skills are auto-discovered** from `.claude/skills/` directory
+
+### Project Memory
+
+The `CLAUDE.md` file at the root contains project context that Claude uses automatically.
 
 ## Roadmap
 
@@ -58,4 +97,3 @@ See [ROADMAP.md](./ROADMAP.md) for the semantic editor vision.
 ## License
 
 Private — Thoughtform © 2024
-
