@@ -279,12 +279,15 @@ function NavigationCockpitInner() {
   // MANIFESTO → SERVICES TRANSITION PROGRESS
   // Terminal slides from center to right, sources/videos fade out
   // Only activates after manifesto reveal is complete
+  // Uses same easing pattern as other transitions for consistent feel
   // ═══════════════════════════════════════════════════════════════════
   const tManifestoToServices = useMemo(() => {
     if (!manifestoComplete) return 0;
     // Use manifestoScrollProgress which tracks scroll after manifesto complete
-    // Transition happens during first 50% of scroll after manifesto
-    return Math.min(1, manifestoScrollProgress * 2);
+    // Transition takes the full scroll range (0 → 1) for smooth, unhurried motion
+    const rawProgress = Math.min(1, manifestoScrollProgress);
+    // Apply same easeInOutCubic as other transitions for consistent motion
+    return easeInOutCubic(rawProgress);
   }, [manifestoComplete, manifestoScrollProgress]);
 
   // Calculate frame position values for manifesto transition
@@ -384,8 +387,8 @@ function NavigationCockpitInner() {
     // MANIFESTO → SERVICES: Terminal slides from center to right
     // Manifesto: left: 50%, transform: translateX(-50%) → centered
     // Services: right side with margin from edge
+    // tManifestoToServices is already eased, no double-easing needed
     // ═══════════════════════════════════════════════════════════════════
-    const easeServices = easeOutCubic(tManifestoToServices);
 
     // Base manifesto left position (centered)
     const manifestoLeftPct = tDefToManifesto * 50; // 0% → 50%
@@ -393,7 +396,7 @@ function NavigationCockpitInner() {
 
     // Services position: slide from center (50%) to right (75%)
     // This puts the terminal on the right ~25% from right edge
-    const servicesLeftPct = manifestoLeftPct + easeServices * 25; // 50% → 75%
+    const servicesLeftPct = manifestoLeftPct + tManifestoToServices * 25; // 50% → 75%
 
     // Transform: manifesto is translateX(-50%) for centering
     // Services: translateX(-50%) stays same since we're adjusting left%
