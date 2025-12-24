@@ -95,9 +95,7 @@ function AdminPageContent() {
           type: "system",
           text: "---------------------------------------------------------------------",
         },
-        { type: "system", text: "" },
         { type: "success", text: `Session active: ${user.email}` },
-        { type: "system", text: "" },
         { type: "prompt", text: "Type 'exit' to sign out or 'home' to return to site" },
       ]);
       setStep("success");
@@ -131,18 +129,15 @@ function AdminPageContent() {
       text: "---------------------------------------------------------------------",
     });
 
-    // Boot sequence with tighter timing
+    // Boot sequence with tighter timing (no excessive blank lines)
     await new Promise((r) => setTimeout(r, 200));
-    addLine({ type: "system", text: "" });
     addLine({ type: "system", text: "Initializing secure connection..." });
 
     await new Promise((r) => setTimeout(r, 400));
     addLine({ type: "success", text: "Connection established." });
 
     await new Promise((r) => setTimeout(r, 200));
-    addLine({ type: "system", text: "" });
     addLine({ type: "system", text: "Authentication required to proceed." });
-    addLine({ type: "system", text: "" });
     addLine({ type: "prompt", text: "Enter email:" });
 
     setStep("email");
@@ -167,12 +162,10 @@ function AdminPageContent() {
           addLine({ type: "system", text: "Redirecting..." });
           router.push("/");
         } else if (value.toLowerCase() === "help") {
-          addLine({ type: "system", text: "" });
           addLine({ type: "system", text: "Available commands:" });
           addLine({ type: "system", text: "  exit  - Sign out and return to login" });
           addLine({ type: "system", text: "  home  - Return to main site" });
           addLine({ type: "system", text: "  help  - Show this message" });
-          addLine({ type: "system", text: "" });
         } else if (value) {
           addLine({ type: "error", text: `Command not found: ${value}` });
           addLine({ type: "system", text: "Type 'help' for available commands." });
@@ -187,7 +180,6 @@ function AdminPageContent() {
         if (!isAllowedUserEmail(value)) {
           addLine({ type: "input", text: `> ${value}` });
           addLine({ type: "error", text: "ACCESS DENIED: Unauthorized user" });
-          addLine({ type: "system", text: "" });
           addLine({ type: "prompt", text: "Enter email:" });
           setCurrentInput("");
           return;
@@ -204,7 +196,6 @@ function AdminPageContent() {
         addLine({ type: "input", text: "> ••••••••" });
         setCurrentInput("");
         setStep("authenticating");
-        addLine({ type: "system", text: "" });
         addLine({ type: "system", text: "Authenticating..." });
 
         try {
@@ -213,7 +204,6 @@ function AdminPageContent() {
         } catch (err) {
           const errorMsg = err instanceof Error ? err.message : "Authentication failed";
           addLine({ type: "error", text: `ERROR: ${errorMsg}` });
-          addLine({ type: "system", text: "" });
           addLine({ type: "prompt", text: "Enter email:" });
           setEmail("");
           setStep("email");

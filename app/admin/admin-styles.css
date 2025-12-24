@@ -202,14 +202,14 @@
 .terminal-line {
   white-space: pre;
   word-break: break-word;
-  min-height: 1.2em;
+  min-height: 1em;
+  line-height: 1.4;
   font-variant-ligatures: none;
 }
 
-/* Empty lines should be shorter */
-.terminal-line:empty,
-.terminal-line:blank {
-  min-height: 0.6em;
+/* Empty lines should be minimal (like a real terminal) */
+.terminal-line:empty {
+  min-height: 0.4em;
 }
 
 .terminal-line.system {
