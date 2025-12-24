@@ -1132,6 +1132,10 @@ export function ParticleCanvasV2({
         } else {
           relZ = p.z - scrollZ;
 
+          // Remove the large circular "Event Horizon" particle motif (sphere)
+          // so the crater/slope reads cleanly.
+          if (p.landmarkId === "horizon") return;
+
           if (p.landmark) {
             const landmarkSection = p.landmark;
             const sectionDist = Math.abs(currentSection - landmarkSection);

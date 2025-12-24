@@ -396,10 +396,6 @@ function NavigationCockpitInner() {
     const manifestoLeftPct = tDefToManifesto * 50; // 0% → 50%
     const manifestoLeftPx = (1 - tDefToManifesto) * 184; // 184px → 0px
 
-    // Transform: manifesto is translateX(-50%) for centering
-    // As we transition to services, reduce the transform to 0 (right-aligned uses no transform)
-    const transformX = -50 * tDefToManifesto * (1 - tManifestoToServices);
-
     // Frame width for position calculations
     const frameWidth = baseWidth + growthProgress * widthGrowth;
 
@@ -415,20 +411,24 @@ function NavigationCockpitInner() {
     // left goes from "50%" to "calc(100% - 180px - frameWidth)"
     // But we need to account for the translateX(-50%) going to 0
 
-    // Simpler approach: use right positioning for services
-    const useRightPositioning = tManifestoToServices > 0;
+    // Keep a single positioning strategy (left + transform) the whole time
+    // to avoid any 1-frame jump when switching between left/right positioning.
+    //
+    // When manifesto is centered: left=50%, transform=-50%
+    // When services: we add extra translateX so the right edge lands at
+    // right: calc(var(--rail-width) + 120px), matching ModuleCards.
+    const baseTransformPct = -50 * tDefToManifesto;
+    const servicesDx =
+      tManifestoToServices === 0
+        ? "0px"
+        : `calc(${tManifestoToServices * 50}vw - ${tManifestoToServices * servicesRightOffset}px - ${tManifestoToServices * (frameWidth / 2)}px)`;
 
     return {
       finalBottom,
-      // During manifesto: use left positioning with translateX for centering
-      // During services transition: blend to right positioning
-      left: useRightPositioning ? "auto" : `calc(${manifestoLeftPx}px + ${manifestoLeftPct}%)`,
-      right: useRightPositioning
-        ? `calc(${(1 - tManifestoToServices) * 50}vw - ${((1 - tManifestoToServices) * frameWidth) / 2}px + ${tManifestoToServices * servicesRightOffset}px)`
-        : "auto",
+      left: `calc(${manifestoLeftPx}px + ${manifestoLeftPct}%)`,
       width: `${frameWidth}px`,
       height: frameHeight,
-      transform: useRightPositioning ? "none" : `translateX(${transformX}%)`,
+      transform: `translateX(calc(${baseTransformPct}% + ${servicesDx}))`,
       background: `rgba(10, 9, 8, ${finalBgOpacity})`,
       backdropFilter: `blur(${8 * Math.max(tHeroToDef > 0.7 ? ((tHeroToDef - 0.7) / 0.3) * 4 : 0, tDefToManifesto * 8)}px)`,
       border: `1px solid rgba(202, 165, 84, ${finalBorderOpacity})`,
@@ -664,7 +664,6 @@ function NavigationCockpitInner() {
                 // Use BOTTOM positioning throughout for smooth, continuous transition
                 bottom: bridgeFrameStyles.finalBottom,
                 left: bridgeFrameStyles.left,
-                right: bridgeFrameStyles.right,
                 width: bridgeFrameStyles.width,
                 maxWidth: bridgeFrameStyles.width,
                 height: bridgeFrameStyles.height,
