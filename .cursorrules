@@ -1,0 +1,57 @@
+# Thoughtform.co - Cursor Rules
+
+## Context7 Documentation
+
+When working with libraries or answering questions about APIs, use Context7 to fetch up-to-date documentation instead of relying on training data.
+
+### Auto-Invoke Context7 For:
+- Next.js App Router, Server Components, Server Actions
+- Supabase authentication, realtime, RLS policies
+- Three.js / React Three Fiber / Drei
+- Framer Motion animations
+- Tailwind CSS utilities
+- Any library where the user asks "how do I..." or "what's the latest way to..."
+
+### How to Use Context7:
+```bash
+# Search for a library
+curl -s "https://context7.com/api/v1/search?query=LIBRARY_NAME"
+
+# Fetch docs (use resolved ID from search)
+curl -s "https://context7.com/api/v1/LIBRARY_ID/llms.txt?tokens=5000"
+```
+
+### Common Library IDs:
+- Next.js: `vercel/next.js`
+- React: `facebook/react`
+- Supabase: `supabase/supabase-js`
+- Tailwind: `tailwindlabs/tailwindcss`
+- Three.js: `mrdoob/three.js`
+- R3F: `pmndrs/react-three-fiber`
+- Drei: `pmndrs/drei`
+- Framer Motion: `framer/motion`
+- Zustand: `pmndrs/zustand`
+- GSAP: `greensock/gsap`
+
+## Project Context
+
+This is the Thoughtform.co website - a Next.js 14 app with:
+- Sophisticated HUD navigation system (`components/hud/NavigationCockpitV2/`)
+- Particle system with Supabase-backed config
+- Scroll-driven animations with progress values 0-1
+- Mobile-first responsive design
+
+## Code Style
+
+- TypeScript strict mode
+- Functional components with hooks
+- CSS variables for theming (--gold, --dawn, --frame-opacity)
+- Follow existing patterns in the codebase
+- Use existing abstractions before creating new ones
+
+## Key Files
+
+- `CLAUDE.md` - Full project memory
+- `.claude/skills/context7/SKILL.md` - Context7 skill details
+- `.claude/skills/context7/LIBRARIES.md` - Library ID reference
+
