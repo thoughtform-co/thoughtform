@@ -1155,6 +1155,47 @@ export function ParticleCanvasV2({
         const breatheX = Math.sin(time * 0.015 + p.phase) * 5;
         const breatheY = Math.cos(time * 0.012 + p.phase * 1.3) * 4;
 
+        // ═══════════════════════════════════════════════════════════════════
+        // CRATER EFFECT - Terrain transforms into meteor crater slope
+        // Activates during services section (scrollP > 0.5)
+        // ═══════════════════════════════════════════════════════════════════
+        let craterOffset = 0;
+        if (p.type === "terrain" && scrollP > 0.45) {
+          // Crater effect progress (0 at scrollP=0.45, 1 at scrollP=0.8)
+          const craterProgress = Math.min(1, (scrollP - 0.45) / 0.35);
+          const easedCrater = craterProgress * craterProgress; // Ease in for dramatic reveal
+
+          // Crater center is ahead of camera (in Z) and centered in X
+          const craterCenterZ = scrollZ + 3000; // Ahead of camera
+          const craterCenterX = 0;
+          const craterRadius = 4000; // Large crater
+
+          // Distance from crater center
+          const dxFromCenter = p.x - craterCenterX;
+          const dzFromCenter = p.z - craterCenterZ;
+          const distFromCenter = Math.sqrt(
+            dxFromCenter * dxFromCenter + dzFromCenter * dzFromCenter * 4
+          ); // Elongated for perspective
+
+          // Crater bowl shape - parabolic depression
+          // Particles near center sink deeper, creating bowl/crater
+          if (distFromCenter < craterRadius) {
+            const normalizedDist = distFromCenter / craterRadius;
+            // Bowl shape: deeper in center, slopes up toward edges
+            // Maximum depth at center, rises to 0 at crater rim
+            const bowlDepth = 600 * easedCrater; // Max depth
+            const bowlCurve = 1 - normalizedDist * normalizedDist; // Parabolic curve
+            craterOffset = bowlDepth * bowlCurve;
+
+            // Add rim effect - slight uplift at the crater edge
+            if (normalizedDist > 0.7) {
+              const rimProgress = (normalizedDist - 0.7) / 0.3;
+              const rimHeight = 100 * easedCrater * Math.sin(rimProgress * Math.PI);
+              craterOffset -= rimHeight; // Negative because Y is inverted
+            }
+          }
+        }
+
         // Get world position with breathing and truck offset
         // Truck moves camera, so we offset particles in opposite direction
         let worldX = p.x + breatheX - camera.truckX;
@@ -1174,8 +1215,9 @@ export function ParticleCanvasV2({
 
         // For pitch: compress vertical spread as we look more top-down
         // Also apply truckY offset (camera moves up = world appears to move down)
+        // Add crater offset for terrain particles during services section
         const pitchFactor = cosPitch;
-        const worldY = (p.y + breatheY - camera.truckY) * pitchFactor;
+        const worldY = (p.y + breatheY + craterOffset - camera.truckY) * pitchFactor;
 
         // Calculate screen position before roll
         const preRollX = cx_geo + worldX * scale;
