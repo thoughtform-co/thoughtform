@@ -534,13 +534,7 @@ function NavigationCockpitInner() {
       {!isMobile && tDefToManifesto < 1 && (
         <RunwayArrows
           transitionProgress={tHeroToDef}
-          scrollProgress={scrollProgress}
-          onNavigate={() => handleNavigate("services")}
           tDefToManifesto={tDefToManifesto}
-          frameBottom={bridgeFrameStyles.finalBottom}
-          frameLeft={bridgeFrameStyles.left}
-          frameWidth={bridgeFrameStyles.width}
-          frameTransform={bridgeFrameStyles.transform}
           frameButtonRef={frameButtonRef}
         />
       )}
@@ -863,9 +857,11 @@ the interface for human-AI collaboration`}
               }}
             >
               <span
+                data-role="journey-arrows-left"
                 style={{
                   fontSize: isMobile ? "14px" : "16px",
                   lineHeight: 1,
+                  opacity: tHeroToDef < 0.8 ? 0 : tHeroToDef > 0.9 ? 1 : (tHeroToDef - 0.8) / 0.1,
                   background:
                     "linear-gradient(135deg, rgba(202, 165, 84, 0.9) 0%, rgba(202, 165, 84, 0.6) 50%, rgba(202, 165, 84, 0.8) 100%)",
                   WebkitBackgroundClip: "text",
@@ -877,9 +873,11 @@ the interface for human-AI collaboration`}
               </span>
               <span>START YOUR JOURNEY</span>
               <span
+                data-role="journey-arrows-right"
                 style={{
                   fontSize: isMobile ? "14px" : "16px",
                   lineHeight: 1,
+                  opacity: tHeroToDef < 0.8 ? 0 : tHeroToDef > 0.9 ? 1 : (tHeroToDef - 0.8) / 0.1,
                   background:
                     "linear-gradient(135deg, rgba(202, 165, 84, 0.9) 0%, rgba(202, 165, 84, 0.6) 50%, rgba(202, 165, 84, 0.8) 100%)",
                   WebkitBackgroundClip: "text",
