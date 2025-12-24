@@ -779,37 +779,66 @@ the interface for human-AI collaboration`}
             </span>
           </div>
 
-          {/* Start Your Journey button - inside frame, below text content */}
-          {/* Show on both desktop and mobile when frame is clearly visible (tHeroToDef > 0.75) */}
-          {tHeroToDef > 0.75 && tDefToManifesto < 1 && !isManifestoTerminalMode && (
+          {/* Manifesto content - appears below question when scrolling */}
+          {tDefToManifesto > 0.95 && manifestoRevealProgress > 0 && (
+            <div
+              style={{
+                marginTop: "24px",
+                width: "100%",
+              }}
+            >
+              <ManifestoTerminal
+                revealProgress={manifestoRevealProgress}
+                isActive={true}
+                onComplete={() => setManifestoComplete(true)}
+              />
+            </div>
+          )}
+        </div>
+
+        {/* Interface CTAs - outside the main frame, aligned to the same width */}
+        {tHeroToDef > 0.75 && tDefToManifesto < 1 && !isManifestoTerminalMode && (
+          <div
+            className="interface-cta-row"
+            style={{
+              opacity: cardOpacity,
+              visibility: cardOpacity > 0 ? "visible" : "hidden",
+              width: "100%",
+              display: "flex",
+              flexDirection: isMobile ? "column" : "row",
+              gap: isMobile ? "10px" : "12px",
+              marginTop: isMobile ? "14px" : "16px",
+              zIndex: 2,
+              pointerEvents: "auto",
+            }}
+          >
+            {/* Primary CTA */}
             <button
               ref={frameButtonRef}
               className="card-journey-btn"
               onClick={() => handleNavigate("services")}
               style={{
-                opacity: cardOpacity,
-                visibility: cardOpacity > 0 ? "visible" : "hidden",
-                marginTop: isMobile ? "20px" : "28px", // Slightly less spacing on mobile
-                alignSelf: "flex-start", // Align to left, matching text alignment
+                flex: "1 1 auto",
                 display: "inline-flex",
                 alignItems: "center",
+                justifyContent: "center",
                 gap: "10px",
                 background:
                   "linear-gradient(135deg, rgba(202, 165, 84, 0.15) 0%, rgba(202, 165, 84, 0.05) 50%, rgba(202, 165, 84, 0.1) 100%)",
                 border: "1px solid rgba(202, 165, 84, 0.3)",
-                borderRadius: "2px", // Subtle rounded corners
-                padding: isMobile ? "12px 20px" : "14px 24px", // Slightly smaller padding on mobile
+                borderRadius: "2px",
+                padding: isMobile ? "12px 16px" : "14px 18px",
                 cursor: "pointer",
                 transition: "all 0.2s ease",
                 fontFamily: "var(--font-data, 'PT Mono', monospace)",
-                fontSize: isMobile ? "12px" : "13px", // Slightly smaller font on mobile
+                fontSize: isMobile ? "12px" : "13px",
                 fontWeight: 700,
                 letterSpacing: "0.15em",
                 textTransform: "uppercase",
                 color: "var(--gold, #caa554)",
                 lineHeight: 1,
                 whiteSpace: "nowrap",
-                width: isMobile ? "100%" : "auto", // Full width on mobile
+                width: "100%",
               }}
               onMouseEnter={(e) => {
                 if (!isMobile) {
@@ -826,17 +855,6 @@ the interface for human-AI collaboration`}
                   e.currentTarget.style.borderColor = "rgba(202, 165, 84, 0.3)";
                   e.currentTarget.style.transform = "translateY(0)";
                 }
-              }}
-              onTouchStart={(e) => {
-                // Touch feedback for mobile
-                e.currentTarget.style.background =
-                  "linear-gradient(135deg, rgba(202, 165, 84, 0.25) 0%, rgba(202, 165, 84, 0.12) 50%, rgba(202, 165, 84, 0.2) 100%)";
-                e.currentTarget.style.borderColor = "rgba(202, 165, 84, 0.5)";
-              }}
-              onTouchEnd={(e) => {
-                e.currentTarget.style.background =
-                  "linear-gradient(135deg, rgba(202, 165, 84, 0.15) 0%, rgba(202, 165, 84, 0.05) 50%, rgba(202, 165, 84, 0.1) 100%)";
-                e.currentTarget.style.borderColor = "rgba(202, 165, 84, 0.3)";
               }}
             >
               <span
@@ -867,24 +885,51 @@ the interface for human-AI collaboration`}
                 ‹‹‹
               </span>
             </button>
-          )}
 
-          {/* Manifesto content - appears below question when scrolling */}
-          {tDefToManifesto > 0.95 && manifestoRevealProgress > 0 && (
-            <div
+            {/* Secondary CTA - semantic dawn frame */}
+            <button
+              type="button"
+              onClick={() => handleNavigate("contact")}
               style={{
-                marginTop: "24px",
+                flex: isMobile ? "1 1 auto" : "0 0 172px",
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                padding: isMobile ? "12px 16px" : "14px 14px",
+                borderRadius: "2px",
+                background: "rgba(10, 9, 8, 0.35)",
+                border: "1px solid rgba(236, 227, 214, 0.28)",
+                color: "var(--dawn, #ece3d6)",
+                cursor: "pointer",
+                transition: "all 0.2s ease",
+                fontFamily: "var(--font-data, 'PT Mono', monospace)",
+                fontSize: isMobile ? "12px" : "13px",
+                fontWeight: 700,
+                letterSpacing: "0.15em",
+                textTransform: "uppercase",
+                lineHeight: 1,
+                whiteSpace: "nowrap",
                 width: "100%",
               }}
+              onMouseEnter={(e) => {
+                if (!isMobile) {
+                  e.currentTarget.style.background = "rgba(236, 227, 214, 0.06)";
+                  e.currentTarget.style.borderColor = "rgba(236, 227, 214, 0.45)";
+                  e.currentTarget.style.transform = "translateY(-1px)";
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!isMobile) {
+                  e.currentTarget.style.background = "rgba(10, 9, 8, 0.35)";
+                  e.currentTarget.style.borderColor = "rgba(236, 227, 214, 0.28)";
+                  e.currentTarget.style.transform = "translateY(0)";
+                }
+              }}
             >
-              <ManifestoTerminal
-                revealProgress={manifestoRevealProgress}
-                isActive={true}
-                onComplete={() => setManifestoComplete(true)}
-              />
-            </div>
-          )}
-        </div>
+              CONTACT
+            </button>
+          </div>
+        )}
 
         {/* Terminal frame elements - appear during manifesto transition (behind text) */}
         <div
