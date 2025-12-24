@@ -876,9 +876,14 @@ function initParticles(config: ParticleSystemConfig): Particle[] {
   const manifoldColorRgb = hexToRgb(manifold.color);
 
   // ─── TERRAIN (Manifold) ───
-  for (let r = 0; r < manifold.rows; r++) {
-    for (let c = 0; c < manifold.columns; c++) {
-      const x = (c - manifold.columns / 2) * (70 * manifold.spreadX);
+  // Extend terrain deeper into the distance so the landscape doesn't "end"
+  // before the later sections (services/contact) and crater descent.
+  const terrainRows = Math.max(manifold.rows, 220);
+  const terrainColumns = manifold.columns;
+
+  for (let r = 0; r < terrainRows; r++) {
+    for (let c = 0; c < terrainColumns; c++) {
+      const x = (c - terrainColumns / 2) * (70 * manifold.spreadX);
       const z = 200 + r * (55 * manifold.spreadZ);
 
       const wavePhase = r * 0.02;
@@ -895,7 +900,7 @@ function initParticles(config: ParticleSystemConfig): Particle[] {
       // Mountains start appearing after row 100 (far back)
       const mountainStart = 100;
       if (r > mountainStart) {
-        const mountainProgress = (r - mountainStart) / (manifold.rows - mountainStart);
+        const mountainProgress = (r - mountainStart) / (terrainRows - mountainStart);
 
         // Create multiple mountain peaks using overlapping sine waves
         const peakFreq1 = 0.08; // Main peaks
@@ -1156,43 +1161,65 @@ export function ParticleCanvasV2({
         const breatheY = Math.cos(time * 0.012 + p.phase * 1.3) * 4;
 
         // ═══════════════════════════════════════════════════════════════════
-        // CRATER EFFECT - Terrain transforms into meteor crater slope
-        // Activates during services section (scrollP > 0.5)
+        // CRATER EFFECT - Manifold turns into a long slope that descends into a crater
+        // This is a TERRAIN MORPH (not camera-relative) so the crater lives "out there"
+        // and the world appears to bend down into it.
         // ═══════════════════════════════════════════════════════════════════
         let craterOffset = 0;
-        if (p.type === "terrain" && scrollP > 0.45) {
-          // Crater effect progress (0 at scrollP=0.45, 1 at scrollP=0.8)
-          const craterProgress = Math.min(1, (scrollP - 0.45) / 0.35);
-          const easedCrater = craterProgress * craterProgress; // Ease in for dramatic reveal
+        if (p.type === "terrain") {
+          // Morph in near the end of the manifesto / into services
+          // (Keep it scroll-driven so it feels like the environment changes.)
+          const craterMorphStart = 0.55;
+          const craterMorphEnd = 0.8;
+          const craterMorph = Math.max(
+            0,
+            Math.min(1, (scrollP - craterMorphStart) / (craterMorphEnd - craterMorphStart))
+          );
+          const easedMorph = craterMorph * craterMorph;
 
-          // Crater center is ahead of camera (in Z) and centered in X
-          const craterCenterZ = scrollZ + 3000; // Ahead of camera
-          const craterCenterX = 0;
-          const craterRadius = 4000; // Large crater
+          if (easedMorph > 0) {
+            // Fixed crater center (near the far end of the experience)
+            // Keep this within the extended manifold depth.
+            const craterCenterX = 0;
+            const craterCenterZ = 8800;
 
-          // Distance from crater center
-          const dxFromCenter = p.x - craterCenterX;
-          const dzFromCenter = p.z - craterCenterZ;
-          const distFromCenter = Math.sqrt(
-            dxFromCenter * dxFromCenter + dzFromCenter * dzFromCenter * 4
-          ); // Elongated for perspective
+            // Long descent slope (start well before the crater)
+            const slopeStartZ = craterCenterZ - 3200;
+            const slopeEndZ = craterCenterZ;
+            const slopeT =
+              p.z <= slopeStartZ
+                ? 0
+                : p.z >= slopeEndZ
+                  ? 1
+                  : (p.z - slopeStartZ) / (slopeEndZ - slopeStartZ);
+            const slopeEase = slopeT * slopeT;
+            const slopeDepth = 1100; // How far the manifold bends downward before the bowl
+            const slopeOffset = slopeEase * slopeDepth;
 
-          // Crater bowl shape - parabolic depression
-          // Particles near center sink deeper, creating bowl/crater
-          if (distFromCenter < craterRadius) {
-            const normalizedDist = distFromCenter / craterRadius;
-            // Bowl shape: deeper in center, slopes up toward edges
-            // Maximum depth at center, rises to 0 at crater rim
-            const bowlDepth = 600 * easedCrater; // Max depth
-            const bowlCurve = 1 - normalizedDist * normalizedDist; // Parabolic curve
-            craterOffset = bowlDepth * bowlCurve;
+            // Crater bowl (adds extra depth near the center)
+            const craterRadius = 3400;
+            const dxFromCenter = p.x - craterCenterX;
+            const dzFromCenter = p.z - craterCenterZ;
+            const distFromCenter = Math.sqrt(
+              dxFromCenter * dxFromCenter + dzFromCenter * dzFromCenter * 4
+            ); // Slightly elongated in Z for perspective
 
-            // Add rim effect - slight uplift at the crater edge
-            if (normalizedDist > 0.7) {
-              const rimProgress = (normalizedDist - 0.7) / 0.3;
-              const rimHeight = 100 * easedCrater * Math.sin(rimProgress * Math.PI);
-              craterOffset -= rimHeight; // Negative because Y is inverted
+            let bowlOffset = 0;
+            if (distFromCenter < craterRadius) {
+              const normalizedDist = distFromCenter / craterRadius;
+              const bowlCurve = 1 - normalizedDist * normalizedDist; // Parabolic
+              const bowlDepth = 1400;
+              bowlOffset = bowlDepth * bowlCurve * bowlCurve;
+
+              // Rim lip (small uplift near the crater edge)
+              if (normalizedDist > 0.78) {
+                const rimT = (normalizedDist - 0.78) / 0.22;
+                const rimHeight = 220 * Math.sin(rimT * Math.PI);
+                bowlOffset -= rimHeight;
+              }
             }
+
+            craterOffset = (slopeOffset + bowlOffset) * easedMorph;
           }
         }
 

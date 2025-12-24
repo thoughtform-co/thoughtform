@@ -424,7 +424,7 @@ function NavigationCockpitInner() {
       // During services transition: blend to right positioning
       left: useRightPositioning ? "auto" : `calc(${manifestoLeftPx}px + ${manifestoLeftPct}%)`,
       right: useRightPositioning
-        ? `calc(var(--rail-width, 60px) + 120px + ${(1 - tManifestoToServices) * 50}vw - ${((1 - tManifestoToServices) * frameWidth) / 2}px)`
+        ? `calc(${(1 - tManifestoToServices) * 50}vw - ${((1 - tManifestoToServices) * frameWidth) / 2}px + ${tManifestoToServices * servicesRightOffset}px)`
         : "auto",
       width: `${frameWidth}px`,
       height: frameHeight,
