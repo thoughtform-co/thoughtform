@@ -1203,10 +1203,10 @@ export function ParticleCanvasV2({
         // ═══════════════════════════════════════════════════════════════════
         let craterOffset = 0;
         if (p.type === "terrain") {
-          // Morph in near the end of the manifesto / into services
-          // (Keep it scroll-driven so it feels like the environment changes.)
-          const craterMorphStart = 0.55;
-          const craterMorphEnd = 0.8;
+          // Morph in as we enter Services so it syncs with the Services transition.
+          // (Aligned with the Services-only camera tilt window.)
+          const craterMorphStart = 0.5;
+          const craterMorphEnd = 0.72;
           const craterMorph = Math.max(
             0,
             Math.min(1, (scrollP - craterMorphStart) / (craterMorphEnd - craterMorphStart))
