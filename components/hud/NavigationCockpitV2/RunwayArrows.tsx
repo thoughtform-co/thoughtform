@@ -102,11 +102,9 @@ export function RunwayArrows({
   // Apply manifesto fade to frame as well
   const finalFrameOpacity = frameOpacity * exitOpacity;
 
-  // Extra arrows (first 3) fade out during transition
-  const extraArrowsOpacity = t < 0.3 ? 1 - t / 0.3 : 0;
-
-  // Main arrows fade out as frame appears
-  const mainArrowsOpacity = t < 0.5 ? 1 : t < 0.7 ? 1 - (t - 0.5) / 0.2 : 0;
+  // Arrows stay visible during the entire transition and split into two groups
+  // They animate into position to form the ››› and ‹‹‹ in the button
+  const arrowsVisible = t < 0.95; // Hide only after fully merged into button
 
   // Calculate wrapper position
   // During hero (t < 0.7): original positioning with arrows
@@ -193,29 +191,78 @@ export function RunwayArrows({
     wrapperStyle.transform = "translateY(-50%)";
   }
 
+  // Calculate arrow animation progress - arrows start moving at t=0.4, fully merged by t=0.85
+  const arrowAnimStart = 0.4;
+  const arrowAnimEnd = 0.85;
+  const arrowAnimT =
+    t < arrowAnimStart
+      ? 0
+      : t > arrowAnimEnd
+        ? 1
+        : (t - arrowAnimStart) / (arrowAnimEnd - arrowAnimStart);
+  // Ease-out-cubic for smooth deceleration
+  const arrowEaseT = 1 - Math.pow(1 - arrowAnimT, 3);
+
+  // Button dimensions for arrow positioning (approximate)
+  const buttonWidth = 280; // Total button width
+  const arrowGroupWidth = 40; // Width of ››› group
+  const textWidth = 180; // Width of "START YOUR JOURNEY" text
+  const arrowSpacing = 38; // Spacing between individual arrows in hero state
+
   return (
     <>
       <div className="runway-arrows-wrapper" style={wrapperStyle}>
-        {/* Hero state: Individual arrows */}
+        {/* Animating arrows - split into left and right groups */}
         <div
           className="hero-arrows"
           style={{
-            opacity: 1 - frameOpacity,
-            visibility: frameOpacity < 1 ? "visible" : "hidden",
+            opacity: arrowsVisible ? 1 : 0,
+            visibility: arrowsVisible ? "visible" : "hidden",
+            // Position relative to allow absolute positioned children
+            position: "relative",
+            width: "230px",
+            height: "32px",
           }}
         >
           {[0, 1, 2, 3, 4, 5].map((i) => {
-            const isExtra = i < 3;
-            const arrowOpacity = isExtra ? extraArrowsOpacity : mainArrowsOpacity;
+            const isLeftGroup = i < 3; // First 3 go to left (›››)
+            const indexInGroup = isLeftGroup ? i : i - 3;
+
+            // Hero state positions (spread out horizontally)
+            const heroX = i * arrowSpacing;
+
+            // Target positions relative to button center
+            // Left group: moves to left side of button, stays as ›
+            // Right group: moves to right side and rotates to become ‹
+            const buttonCenterX = 115; // Center of the 230px hero width
+            const leftGroupTargetX =
+              buttonCenterX - textWidth / 2 - arrowGroupWidth + indexInGroup * 11;
+            const rightGroupTargetX = buttonCenterX + textWidth / 2 + indexInGroup * 11;
+
+            const targetX = isLeftGroup ? leftGroupTargetX : rightGroupTargetX;
+            const currentX = heroX + (targetX - heroX) * arrowEaseT;
+
+            // Right group rotates 180° to become ‹
+            const rotation = isLeftGroup ? 0 : 180 * arrowEaseT;
+
+            // Opacity: fade in early arrows, keep later ones visible
+            // All arrows pulse in hero, become solid as they animate
+            const baseOpacity = 0.6 + 0.4 * arrowEaseT;
 
             return (
               <span
                 key={`arrow-${i}`}
                 className="arrow"
                 style={{
-                  opacity: arrowOpacity * 0.6,
-                  visibility: arrowOpacity > 0 ? "visible" : "hidden",
+                  position: "absolute",
+                  left: `${currentX}px`,
+                  top: "50%",
+                  opacity: baseOpacity,
+                  transform: `translateY(-50%) rotate(${rotation}deg)`,
+                  animationPlayState: arrowAnimT > 0 ? "paused" : "running",
                   animationDelay: `${i * 0.1}s`,
+                  // Tighten letter spacing as they group
+                  letterSpacing: `${-2 * arrowEaseT}px`,
                 }}
               >
                 ›
@@ -224,7 +271,7 @@ export function RunwayArrows({
           })}
         </div>
 
-        {/* Interface state: Framed button with arrows */}
+        {/* Interface state: Framed button (arrows hidden, using the animated ones above) */}
         <button
           className="services-frame"
           onClick={onNavigate}
@@ -270,14 +317,24 @@ export function RunwayArrows({
           <div className="frame-corner frame-corner-bl" />
           <div className="frame-corner frame-corner-br" />
 
-          {/* Left arrows >>> */}
-          <span className="frame-arrows frame-arrows-left">›››</span>
+          {/* Left arrows - fade in as animated arrows merge */}
+          <span
+            className="frame-arrows frame-arrows-left"
+            style={{ opacity: arrowAnimT > 0.8 ? ((arrowAnimT - 0.8) / 0.2) * 0.7 : 0 }}
+          >
+            ›››
+          </span>
 
           {/* Text content */}
           <span className="frame-text">START YOUR JOURNEY</span>
 
-          {/* Right arrows <<< */}
-          <span className="frame-arrows frame-arrows-right">‹‹‹</span>
+          {/* Right arrows - fade in as animated arrows merge */}
+          <span
+            className="frame-arrows frame-arrows-right"
+            style={{ opacity: arrowAnimT > 0.8 ? ((arrowAnimT - 0.8) / 0.2) * 0.7 : 0 }}
+          >
+            ‹‹‹
+          </span>
 
           {/* Subtle glow */}
           <div className="frame-glow" />
@@ -291,18 +348,19 @@ export function RunwayArrows({
 
         /* Hero arrows container */
         .hero-arrows {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
+          position: relative;
           width: 230px;
+          height: 32px;
           transition: opacity 0.3s ease;
         }
 
         .arrow {
+          position: absolute;
           font-size: 32px;
           color: var(--gold, #caa554);
           animation: arrow-pulse 2s ease-in-out infinite;
-          flex-shrink: 0;
+          transform-origin: center center;
+          will-change: transform, left;
         }
 
         @keyframes arrow-pulse {
