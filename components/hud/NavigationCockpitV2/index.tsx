@@ -255,6 +255,9 @@ function NavigationCockpitInner() {
 
   // Scroll capture: when terminal is visible and question is shown, capture scroll to reveal manifesto
   const shouldCaptureScroll = tDefToManifesto > 0.95 && !manifestoComplete;
+  // Keep manifesto terminal layout active for the whole manifesto phase so the question text
+  // doesn't render in the "card" layout and then jump when we flip to terminal.
+  const isManifestoTerminalMode = scrollProgress >= DEF_TO_MANIFESTO_START;
 
   useScrollCapture({
     isActive: shouldCaptureScroll,
@@ -295,7 +298,7 @@ function NavigationCockpitInner() {
   // Manifesto CENTERED position: bottom = 50vh - (actualHeight/2)
   // This keeps the frame vertically centered based on actual content
   const manifestoBottomVh = 50;
-  const manifestoBottomPx = -(actualContentHeight / 2); // -320px for ~640px content
+  const manifestoBottomPx = -(actualContentHeight / 2); // -360px for ~720px content
 
   // Hero→definition bottom calculation (for definition state)
   const heroBottomPx = 90 * (1 - tHeroToDef);
@@ -689,7 +692,7 @@ function NavigationCockpitInner() {
         >
           {/* Wordmark inside card - appears when entering definition, fades during manifesto */}
           {/* Show on both desktop and mobile */}
-          {tHeroToDef > 0.7 && tDefToManifesto < 1 && (
+          {tHeroToDef > 0.7 && tDefToManifesto < 1 && !isManifestoTerminalMode && (
             <div
               className="card-wordmark"
               style={{
@@ -724,6 +727,14 @@ function NavigationCockpitInner() {
               style={{
                 opacity: 1 - tDefToManifesto,
                 visibility: tDefToManifesto >= 1 ? "hidden" : "visible",
+                ...(isManifestoTerminalMode
+                  ? {
+                      position: "absolute",
+                      left: 0,
+                      top: 0,
+                      width: "100%",
+                    }
+                  : {}),
               }}
             >
               <GlitchText
@@ -740,9 +751,13 @@ the interface for human-AI collaboration`}
             {/* Question text - fades in during manifesto transition, positioned absolute to overlap */}
             <span
               style={{
-                position: "absolute",
-                left: 0,
-                top: 0,
+                position: isManifestoTerminalMode ? "relative" : "absolute",
+                ...(isManifestoTerminalMode
+                  ? {}
+                  : {
+                      left: 0,
+                      top: 0,
+                    }),
                 opacity: tDefToManifesto,
                 visibility: tDefToManifesto <= 0 ? "hidden" : "visible",
                 display: "flex",
@@ -766,7 +781,7 @@ the interface for human-AI collaboration`}
 
           {/* Start Your Journey button - inside frame, below text content */}
           {/* Show on both desktop and mobile when frame is clearly visible (tHeroToDef > 0.75) */}
-          {tHeroToDef > 0.75 && tDefToManifesto < 1 && (
+          {tHeroToDef > 0.75 && tDefToManifesto < 1 && !isManifestoTerminalMode && (
             <button
               ref={frameButtonRef}
               className="card-journey-btn"
