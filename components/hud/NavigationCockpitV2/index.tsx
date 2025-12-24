@@ -801,13 +801,18 @@ the interface for human-AI collaboration`}
           <div
             className="interface-cta-row"
             style={{
+              // Position below the frame so it doesn't extend the frame's background panel
+              // (only the logo/pronunciation frame should have the dark background)
+              position: "absolute",
+              left: 0,
+              top: isMobile ? "calc(100% + 10px)" : "calc(100% + 14px)",
               opacity: cardOpacity,
               visibility: cardOpacity > 0 ? "visible" : "hidden",
               width: "100%",
               display: "flex",
               flexDirection: isMobile ? "column" : "row",
-              gap: isMobile ? "10px" : "12px",
-              marginTop: isMobile ? "14px" : "16px",
+              // More breathing room between CTAs on desktop
+              gap: isMobile ? "10px" : "22px",
               zIndex: 2,
               pointerEvents: "auto",
             }}
