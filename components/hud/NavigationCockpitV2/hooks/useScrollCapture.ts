@@ -11,6 +11,12 @@ interface UseScrollCaptureOptions {
   scrollSpeed?: number;
   /** Callback when capture completes (progress reaches 1) */
   onComplete?: () => void;
+  /**
+   * Optional: when the user scrolls past completion in the same wheel gesture,
+   * release that "extra" scroll as a smooth page scroll (Lenis) so we don't hard-stop.
+   * Value is in pixels (wheel delta space).
+   */
+  onReleaseScrollPx?: (scrollByPx: number) => void;
 }
 
 /**
@@ -23,6 +29,7 @@ export function useScrollCapture({
   progress,
   scrollSpeed = 0.002,
   onComplete,
+  onReleaseScrollPx,
 }: UseScrollCaptureOptions) {
   const progressRef = useRef(progress);
   const hasCompletedRef = useRef(false);
@@ -54,10 +61,45 @@ export function useScrollCapture({
 
       if (delta > 0) {
         // Scrolling down - increase progress
-        newProgress = Math.min(1, currentProgress + delta * scrollSpeed);
+        const rawProgress = currentProgress + delta * scrollSpeed;
+        newProgress = Math.min(1, rawProgress);
       } else {
         // Scrolling up - decrease progress (but not below 0)
         newProgress = Math.max(0, currentProgress + delta * scrollSpeed);
+      }
+
+      // If we reached completion in this same wheel event, mark complete immediately
+      // and "release" the remaining wheel delta as a smooth page scroll (Lenis).
+      if (delta > 0 && newProgress >= 1) {
+        // How much of this wheel delta was "used" to reach progress=1?
+        const progressNeeded = 1 - currentProgress;
+        const deltaUsed = progressNeeded > 0 ? progressNeeded / scrollSpeed : 0;
+        const remainderDeltaPx = Math.max(0, delta - deltaUsed);
+
+        // Prevent Lenis from banking the wheel event; we will re-emit remainder ourselves.
+        e.stopImmediatePropagation();
+        e.preventDefault();
+        e.stopPropagation();
+
+        if (currentProgress !== 1) {
+          progressRef.current = 1;
+          onProgressChange(1);
+        }
+
+        if (!hasCompletedRef.current) {
+          hasCompletedRef.current = true;
+          onComplete?.();
+
+          // Provide a little inertia even if remainder is tiny (mouse wheels often land close to exact).
+          // Cap so we don't jump too far.
+          const minCarryPx = Math.min(180, Math.max(0, delta * 0.35));
+          const carryPx = Math.min(560, Math.max(remainderDeltaPx, minCarryPx));
+          if (carryPx > 1) {
+            onReleaseScrollPx?.(carryPx);
+          }
+        }
+
+        return;
       }
 
       // If progress is at 1 and scrolling down, allow normal scroll
@@ -88,7 +130,7 @@ export function useScrollCapture({
         onProgressChange(newProgress);
       }
     },
-    [isActive, scrollSpeed, onProgressChange, onComplete]
+    [isActive, scrollSpeed, onProgressChange, onComplete, onReleaseScrollPx]
   );
 
   // Add/remove wheel listener

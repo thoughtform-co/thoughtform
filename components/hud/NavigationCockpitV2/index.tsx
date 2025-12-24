@@ -265,6 +265,15 @@ function NavigationCockpitInner() {
     onProgressChange: setManifestoRevealProgress,
     scrollSpeed: 0.0015, // Slower for comfortable reading
     onComplete: () => setManifestoComplete(true),
+    onReleaseScrollPx: (carryPx) => {
+      // Continue scrolling smoothly (Lenis) instead of hard-stopping at completion.
+      // This preserves the site's signature scroll feel.
+      if (carryPx <= 0) return;
+      // Defer to next frame so state changes (manifestoComplete) can settle.
+      requestAnimationFrame(() => {
+        scrollTo(window.scrollY + carryPx);
+      });
+    },
   });
 
   // Reset manifesto progress when scrolling back up (leaving terminal view)
