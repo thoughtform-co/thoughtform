@@ -275,6 +275,18 @@ function NavigationCockpitInner() {
     }
   }, [tDefToManifesto, manifestoRevealProgress, manifestoComplete]);
 
+  // ═══════════════════════════════════════════════════════════════════
+  // MANIFESTO → SERVICES TRANSITION PROGRESS
+  // Terminal slides from center to right, sources/videos fade out
+  // Only activates after manifesto reveal is complete
+  // ═══════════════════════════════════════════════════════════════════
+  const tManifestoToServices = useMemo(() => {
+    if (!manifestoComplete) return 0;
+    // Use manifestoScrollProgress which tracks scroll after manifesto complete
+    // Transition happens during first 50% of scroll after manifesto
+    return Math.min(1, manifestoScrollProgress * 2);
+  }, [manifestoComplete, manifestoScrollProgress]);
+
   // Calculate frame position values for manifesto transition
   // Use BOTTOM positioning throughout for smooth, continuous transition
   //
@@ -368,12 +380,31 @@ function NavigationCockpitInner() {
         ? `${definitionContentHeight + growthProgress * (actualContentHeight - definitionContentHeight)}px`
         : "auto";
 
+    // ═══════════════════════════════════════════════════════════════════
+    // MANIFESTO → SERVICES: Terminal slides from center to right
+    // Manifesto: left: 50%, transform: translateX(-50%) → centered
+    // Services: right side with margin from edge
+    // ═══════════════════════════════════════════════════════════════════
+    const easeServices = easeOutCubic(tManifestoToServices);
+
+    // Base manifesto left position (centered)
+    const manifestoLeftPct = tDefToManifesto * 50; // 0% → 50%
+    const manifestoLeftPx = (1 - tDefToManifesto) * 184; // 184px → 0px
+
+    // Services position: slide from center (50%) to right (75%)
+    // This puts the terminal on the right ~25% from right edge
+    const servicesLeftPct = manifestoLeftPct + easeServices * 25; // 50% → 75%
+
+    // Transform: manifesto is translateX(-50%) for centering
+    // Services: translateX(-50%) stays same since we're adjusting left%
+    const transformX = -50 * tDefToManifesto;
+
     return {
       finalBottom,
-      left: `calc(${(1 - tDefToManifesto) * 184}px + ${tDefToManifesto * 50}%)`,
+      left: `calc(${manifestoLeftPx}px + ${servicesLeftPct}%)`,
       width: `${baseWidth + growthProgress * widthGrowth}px`,
       height: frameHeight,
-      transform: `translateX(${-50 * tDefToManifesto}%)`,
+      transform: `translateX(${transformX}%)`,
       background: `rgba(10, 9, 8, ${finalBgOpacity})`,
       backdropFilter: `blur(${8 * Math.max(tHeroToDef > 0.7 ? ((tHeroToDef - 0.7) / 0.3) * 4 : 0, tDefToManifesto * 8)}px)`,
       border: `1px solid rgba(202, 165, 84, ${finalBorderOpacity})`,
@@ -382,6 +413,7 @@ function NavigationCockpitInner() {
   }, [
     tHeroToDef,
     tDefToManifesto,
+    tManifestoToServices,
     defBottomVh,
     defBottomPx,
     manifestoBottomPx,
@@ -987,14 +1019,80 @@ the interface for human-AI collaboration`}
         <ParticleAdminPanel />
       </AdminGate>
 
-      {/* Manifesto Sources - Fixed left rail, appears with manifesto text */}
-      <ManifestoSources isVisible={manifestoRevealProgress > 0.1} />
+      {/* Manifesto Sources - Fixed left rail, appears with manifesto text, fades out during services */}
+      <div
+        style={{
+          opacity: 1 - tManifestoToServices,
+          visibility: tManifestoToServices < 1 ? "visible" : "hidden",
+          transition: "opacity 0.3s ease",
+        }}
+      >
+        <ManifestoSources isVisible={manifestoRevealProgress > 0.1} />
+      </div>
 
-      {/* Manifesto Video Stack - Fixed right side, appears with manifesto text */}
-      <ManifestoVideoStack
-        isVisible={manifestoRevealProgress > 0.1}
-        revealProgress={manifestoRevealProgress}
-      />
+      {/* Manifesto Video Stack - Fixed right side, appears with manifesto text, fades out during services */}
+      <div
+        style={{
+          opacity: 1 - tManifestoToServices,
+          visibility: tManifestoToServices < 1 ? "visible" : "hidden",
+          transition: "opacity 0.3s ease",
+        }}
+      >
+        <ManifestoVideoStack
+          isVisible={manifestoRevealProgress > 0.1}
+          revealProgress={manifestoRevealProgress}
+        />
+      </div>
+
+      {/* Services Section Text - appears on left as terminal slides right (desktop only) */}
+      {!isMobile && tManifestoToServices > 0 && (
+        <div
+          className="services-text-container"
+          style={{
+            position: "fixed",
+            left: "calc(var(--rail-width, 64px) + 120px)",
+            top: "50%",
+            transform: "translateY(-50%)",
+            maxWidth: "500px",
+            opacity: tManifestoToServices,
+            visibility: tManifestoToServices > 0 ? "visible" : "hidden",
+            zIndex: 10,
+            pointerEvents: tManifestoToServices > 0.5 ? "auto" : "none",
+          }}
+        >
+          <p
+            style={{
+              fontFamily: "var(--font-sans, 'EB Garamond', serif)",
+              fontSize: "clamp(24px, 3.5vw, 32px)",
+              fontWeight: 400,
+              lineHeight: 1.4,
+              color: "var(--dawn, #ece3d6)",
+              margin: 0,
+              letterSpacing: "-0.01em",
+            }}
+          >
+            We help teams develop the intuition
+            <br />
+            to navigate AI collaboration.
+          </p>
+          <p
+            style={{
+              fontFamily: "var(--font-data, 'PT Mono', monospace)",
+              fontSize: "13px",
+              fontWeight: 400,
+              lineHeight: 1.6,
+              color: "var(--dawn, #ece3d6)",
+              opacity: 0.7,
+              marginTop: "24px",
+              maxWidth: "400px",
+            }}
+          >
+            Strategic workshops. Custom integrations.
+            <br />
+            Guided expeditions into possibility space.
+          </p>
+        </div>
+      )}
 
       {/* Fixed Thoughtform Sigil - appears centered during definition section
           Animates from brandmark origin (in hero wordmark) to center,
@@ -1091,47 +1189,9 @@ the interface for human-AI collaboration`}
           </div>
         </section>
 
-        {/* Section 4: Services */}
+        {/* Section 4: Services - Content rendered as fixed overlay above */}
         <section className="section section-services" id="services" data-section="services">
-          <div className="section-layout">
-            <div className="section-label">
-              <span className="label-number">04</span>
-              <span className="label-text">Services</span>
-            </div>
-
-            <div className="section-content">
-              <h2 className="headline">Navigation Training</h2>
-
-              <div className="services-grid">
-                <div className="service-card">
-                  <span className="service-id">01</span>
-                  <h3 className="service-title">AI Intuition Workshops</h3>
-                  <p className="service-desc">
-                    Develop the mental models that unlock creative collaboration with AI.
-                  </p>
-                </div>
-                <div className="service-card">
-                  <span className="service-id">02</span>
-                  <h3 className="service-title">Strategic Integration</h3>
-                  <p className="service-desc">
-                    Design AI-augmented workflows for creative and strategic teams.
-                  </p>
-                </div>
-                <div className="service-card">
-                  <span className="service-id">03</span>
-                  <h3 className="service-title">Custom Expeditions</h3>
-                  <p className="service-desc">
-                    Guided exploration of AI capabilities tailored to your domain.
-                  </p>
-                </div>
-              </div>
-
-              <div className="section-meta">
-                <span className="meta-label">Landmark:</span>
-                <span className="meta-value">trajectory grid / vanishing point</span>
-              </div>
-            </div>
-          </div>
+          {/* Scroll anchor - actual content is fixed positioned and animated */}
         </section>
 
         {/* Section 5: Contact */}
