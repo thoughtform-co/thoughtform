@@ -284,8 +284,8 @@ function NavigationCockpitInner() {
   // ═══════════════════════════════════════════════════════════════════
   const tManifestoToServices = useMemo(() => {
     if (!manifestoComplete) return 0;
-    // Delay start by ~15% of scroll range (one scroll action buffer)
-    const DELAY_START = 0.15;
+    // Delay start by ~30% of scroll range (two scroll actions buffer)
+    const DELAY_START = 0.3;
     const delayedProgress = Math.max(0, manifestoScrollProgress - DELAY_START) / (1 - DELAY_START);
     const rawProgress = Math.min(1, delayedProgress);
     // Apply same easeInOutCubic as other transitions for consistent motion
