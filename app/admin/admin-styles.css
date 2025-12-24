@@ -171,7 +171,7 @@
 
 /* Terminal body */
 .terminal-body {
-  padding: 20px 24px;
+  padding: 12px 24px 20px;
   min-height: 300px;
   max-height: 420px;
   overflow-y: auto;
@@ -242,12 +242,12 @@
   text-shadow: 0 0 8px rgba(94, 255, 94, 0.4);
 }
 
-/* ASCII art styling - first 6 lines */
-.terminal-line.system:nth-child(-n + 6) {
-  color: rgba(202, 165, 84, 0.85);
-  text-shadow: 0 0 6px rgba(202, 165, 84, 0.3);
-  font-size: 11px;
-  letter-spacing: 0;
+/* ASCII art styling - first 5 lines (logo + divider) */
+.terminal-line.system:nth-child(-n + 5) {
+  color: rgba(202, 165, 84, 0.9);
+  text-shadow: 0 0 8px rgba(202, 165, 84, 0.4);
+  font-size: 13px;
+  letter-spacing: 0.02em;
 }
 
 /* Input line */
