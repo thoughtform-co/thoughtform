@@ -23,7 +23,7 @@ const ADMIN_CONFIG: ParticleSystemConfig = {
 type TerminalStep = "idle" | "email" | "password" | "authenticating" | "success" | "error";
 
 interface TerminalLine {
-  type: "system" | "prompt" | "input" | "error" | "success";
+  type: "system" | "prompt" | "input" | "error" | "success" | "logo";
   text: string;
   timestamp?: number;
 }
@@ -71,26 +71,8 @@ function AdminPageContent() {
   useEffect(() => {
     if (mounted && !isLoading && user) {
       setLines([
-        {
-          type: "system",
-          text: "▄▄▄▄▄ ▄ ▄ ▄▄▄ ▄ ▄ ▄▄▄ ▄ ▄ ▄▄▄▄▄ ▄▄▄▄ ▄▄▄ ▄▄▄ ▄   ▄",
-        },
-        {
-          type: "system",
-          text: " ▐▌  █▀█▀█ █▀█ █ █ █▀▀ █▀█  ▐▌  █▀▀ █ █ █▀█ █▀▄▀█",
-        },
-        {
-          type: "system",
-          text: " ▐▌  █ ▀ █ █ █ █ █ █ █ █▀█  ▐▌  █▀  █ █ █▀▀ █ ▀ █",
-        },
-        {
-          type: "system",
-          text: " ▐▌  ▀   ▀ ▀▀▀ ▀▀▀ ▀▀▀ ▀ ▀  ▐▌  ▀   ▀▀▀ ▀   ▀   ▀",
-        },
-        {
-          type: "system",
-          text: "─────────────────────────────────────────────────",
-        },
+        { type: "logo", text: "THOUGHTFORM" },
+        { type: "system", text: "───────────────────────────────────────" },
         { type: "success", text: `Session active: ${user.email}` },
         { type: "prompt", text: "Type 'exit' to sign out or 'home' to return to site" },
       ]);
@@ -106,23 +88,9 @@ function AdminPageContent() {
     setLines([]);
     setStep("idle");
 
-    // ASCII art logo - textured block style with depth
-    const asciiLogo = [
-      "▄▄▄▄▄ ▄ ▄ ▄▄▄ ▄ ▄ ▄▄▄ ▄ ▄ ▄▄▄▄▄ ▄▄▄▄ ▄▄▄ ▄▄▄ ▄   ▄",
-      " ▐▌  █▀█▀█ █▀█ █ █ █▀▀ █▀█  ▐▌  █▀▀ █ █ █▀█ █▀▄▀█",
-      " ▐▌  █ ▀ █ █ █ █ █ █ █ █▀█  ▐▌  █▀  █ █ █▀▀ █ ▀ █",
-      " ▐▌  ▀   ▀ ▀▀▀ ▀▀▀ ▀▀▀ ▀ ▀  ▐▌  ▀   ▀▀▀ ▀   ▀   ▀",
-    ];
-
-    // Add ASCII logo instantly
-    for (const line of asciiLogo) {
-      addLine({ type: "system", text: line });
-    }
-
-    addLine({
-      type: "system",
-      text: "─────────────────────────────────────────────────",
-    });
+    // Logo line (rendered specially via CSS)
+    addLine({ type: "logo", text: "THOUGHTFORM" });
+    addLine({ type: "system", text: "───────────────────────────────────────" });
 
     // Boot sequence with tighter timing (no excessive blank lines)
     await new Promise((r) => setTimeout(r, 200));

@@ -171,7 +171,7 @@
 
 /* Terminal body */
 .terminal-body {
-  padding: 12px 24px 20px;
+  padding: 8px 24px 16px;
   min-height: 300px;
   max-height: 420px;
   overflow-y: auto;
@@ -220,6 +220,7 @@
 .terminal-line.prompt {
   color: #caa554;
   text-shadow: 0 0 8px rgba(202, 165, 84, 0.4);
+  margin-bottom: 0;
 }
 
 .terminal-line.prompt::before {
@@ -242,19 +243,24 @@
   text-shadow: 0 0 8px rgba(94, 255, 94, 0.4);
 }
 
-/* ASCII art styling - first 5 lines (logo + divider) */
-.terminal-line.system:nth-child(-n + 5) {
-  color: rgba(202, 165, 84, 0.9);
-  text-shadow: 0 0 8px rgba(202, 165, 84, 0.4);
-  font-size: 13px;
-  letter-spacing: 0.02em;
+/* Logo styling - PP Mondwest */
+.terminal-line.logo {
+  font-family: var(--font-display), "PP Mondwest", serif;
+  font-size: 32px;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  color: #caa554;
+  text-shadow: 0 0 12px rgba(202, 165, 84, 0.5);
+  margin: 8px 0 4px;
 }
 
-/* Input line */
+/* Input line - no extra spacing */
 .terminal-input-line {
   display: flex;
   align-items: center;
   color: #ece3d6;
+  margin-top: 0;
+  line-height: 1.4;
 }
 
 .terminal-prompt {
