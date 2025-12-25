@@ -32,7 +32,7 @@ export async function GET() {
     if (supabase) {
       const { data, error } = await supabase
         .from("particle_config")
-        .select("config, presets")
+        .select("config, presets, active_preset_id")
         .eq("id", "default")
         .single();
 
@@ -41,6 +41,7 @@ export async function GET() {
         return NextResponse.json({
           config,
           presets: data.presets || [],
+          activePresetId: data.active_preset_id || null,
         });
       }
     }
@@ -53,6 +54,7 @@ export async function GET() {
         return NextResponse.json({
           config,
           presets: [],
+          activePresetId: null,
         });
       }
     } catch (kvError) {
@@ -64,12 +66,14 @@ export async function GET() {
     return NextResponse.json({
       config: DEFAULT_CONFIG,
       presets: [],
+      activePresetId: null,
     });
   } catch (error) {
     console.error("Failed to load particle config:", error);
     return NextResponse.json({
       config: DEFAULT_CONFIG,
       presets: [],
+      activePresetId: null,
     });
   }
 }
