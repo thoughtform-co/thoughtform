@@ -123,6 +123,10 @@ function NavigationCockpitInner() {
   // State for manifesto scroll progress (0-1 within manifesto section)
   // Only used for geometric shapes animation after manifesto is complete
   const [manifestoScrollProgress, setManifestoScrollProgress] = useState(0);
+  // When the manifesto finishes revealing, we snapshot the current scroll progress
+  // within the manifesto section so the subsequent "manifesto → services" transition
+  // can start from 0 (avoids the terminal sliding early if progress is already > 0).
+  const manifestoCompleteProgressStartRef = useRef<number | null>(null);
 
   // Manifesto reveal is driven by natural page scroll (no wheel capture / no camera intervention).
   const manifestoRevealProgress = useMemo(() => {
@@ -139,14 +143,17 @@ function NavigationCockpitInner() {
   // Only calculate when manifesto is complete (for geometric shapes animation)
   // Throttle to avoid expensive getBoundingClientRect calls
   useEffect(() => {
-    if (!manifestoRef.current || !manifestoComplete) return;
+    if (!manifestoRef.current || !manifestoComplete) {
+      manifestoCompleteProgressStartRef.current = null;
+      return;
+    }
 
     let rafId: number | null = null;
     let lastProgress = manifestoScrollProgress;
 
-    const updateManifestoProgress = () => {
+    const computeManifestoProgress = (): number | null => {
       const element = manifestoRef.current;
-      if (!element) return;
+      if (!element) return null;
 
       const rect = element.getBoundingClientRect();
       const windowHeight = window.innerHeight;
@@ -157,13 +164,19 @@ function NavigationCockpitInner() {
       const sectionTop = rect.top;
       const scrollRange = sectionHeight + windowHeight;
       const scrollDistance = viewportCenter - sectionTop;
-      const progress = Math.max(0, Math.min(1, scrollDistance / scrollRange));
+      return Math.max(0, Math.min(1, scrollDistance / scrollRange));
+    };
+
+    const updateManifestoProgress = (force = false): number | null => {
+      const progress = computeManifestoProgress();
+      if (progress === null) return null;
 
       // Only update if progress changed significantly (throttle)
-      if (Math.abs(progress - lastProgress) > 0.01) {
+      if (force || Math.abs(progress - lastProgress) > 0.01) {
         setManifestoScrollProgress(progress);
         lastProgress = progress;
       }
+      return progress;
     };
 
     const handleScroll = () => {
@@ -177,7 +190,11 @@ function NavigationCockpitInner() {
     // Only listen when manifesto is complete
     window.addEventListener("scroll", handleScroll, { passive: true });
     window.addEventListener("resize", handleScroll);
-    updateManifestoProgress(); // Initial calculation
+    // Initial calculation + snapshot baseline for post-reveal transitions
+    const initial = updateManifestoProgress(true);
+    if (typeof initial === "number") {
+      manifestoCompleteProgressStartRef.current = initial;
+    }
 
     return () => {
       window.removeEventListener("scroll", handleScroll);
@@ -303,9 +320,17 @@ function NavigationCockpitInner() {
   // ═══════════════════════════════════════════════════════════════════
   const tManifestoToServices = useMemo(() => {
     if (!manifestoComplete) return 0;
-    // Delay start by ~30% of scroll range (two scroll actions buffer)
+    // Normalize progress so it starts at 0 right after the manifesto is fully revealed.
+    const start = manifestoCompleteProgressStartRef.current;
+    const startProgress = typeof start === "number" ? start : manifestoScrollProgress;
+    const normalizedPostReveal = Math.max(
+      0,
+      Math.min(1, (manifestoScrollProgress - startProgress) / Math.max(0.0001, 1 - startProgress))
+    );
+
+    // Delay start by ~30% of the post-reveal scroll range (≈ two scroll actions buffer)
     const DELAY_START = 0.3;
-    const delayedProgress = Math.max(0, manifestoScrollProgress - DELAY_START) / (1 - DELAY_START);
+    const delayedProgress = Math.max(0, normalizedPostReveal - DELAY_START) / (1 - DELAY_START);
     const rawProgress = Math.min(1, delayedProgress);
     // Apply same easeInOutCubic as other transitions for consistent motion
     return easeInOutCubic(rawProgress);
@@ -531,8 +556,9 @@ function NavigationCockpitInner() {
       // Manifesto section - after definition→manifesto transition starts
       newSection = "manifesto";
     } else if (scrollProgress < 0.72) {
-      // Services section
-      newSection = "services";
+      // Keep "manifesto" active until the terminal actually begins sliding to services.
+      // This avoids accidental section changes while the manifesto is still being read.
+      newSection = tManifestoToServices > 0.02 ? "services" : "manifesto";
     } else if (scrollProgress < 0.88) {
       // About section (extra scroll runway so contact doesn't appear too quickly)
       newSection = "about";
@@ -542,7 +568,7 @@ function NavigationCockpitInner() {
     }
 
     setActiveSection(newSection);
-  }, [scrollProgress]);
+  }, [scrollProgress, tManifestoToServices]);
 
   return (
     <>
