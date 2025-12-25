@@ -94,11 +94,14 @@ create trigger update_elements_updated_at
 -- alter table sections enable row level security;
 -- alter table elements enable row level security;
 
--- Particle Config table (for storing particle system configuration per user)
+-- Particle Config table (GLOBAL configuration visible to all visitors)
+-- Only admins can edit; stores config + presets
 create table if not exists particle_config (
-  id text primary key, -- user_id (as text) or 'default' for global
-  user_id uuid references auth.users(id) on delete cascade,
-  config jsonb not null default '{}',
+  id text primary key, -- 'default' for global config
+  user_id uuid references auth.users(id) on delete cascade, -- deprecated, kept for backwards compatibility
+  config jsonb not null default '{}', -- main particle system configuration
+  presets jsonb default '[]'::jsonb, -- array of saved presets [{id, name, config, createdAt, updatedAt}]
+  active_preset_id text default null, -- currently active preset ID
   created_at timestamptz default now(),
   updated_at timestamptz default now(),
   unique(user_id)

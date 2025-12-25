@@ -52,8 +52,32 @@ function NavigationCockpitInner() {
   const { scrollProgress, scrollTo } = useLenis();
   const { config: rawConfig } = useParticleConfig();
   const isMobile = useIsMobile();
+  // Read the CSS-driven rail width so the bridge frame stays aligned with the
+  // same left axis as the wordmark + runway arrows across responsive breakpoints.
+  const [railWidthPx, setRailWidthPx] = useState<number>(() => {
+    if (typeof window === "undefined") return 60;
+    const raw = getComputedStyle(document.documentElement).getPropertyValue("--rail-width").trim();
+    const parsed = Number.parseFloat(raw);
+    return Number.isFinite(parsed) ? parsed : 60;
+  });
+  const hudSideInsetPx = railWidthPx + 120; // Matches: calc(var(--rail-width) + 120px)
   const definitionHeightRef = useRef<number>(280);
   const lastDefinitionHeightMeasureTsRef = useRef(0);
+
+  // Keep rail width in sync on resize (media queries can change --rail-width).
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const readRailWidth = () => {
+      const raw = getComputedStyle(document.documentElement)
+        .getPropertyValue("--rail-width")
+        .trim();
+      const parsed = Number.parseFloat(raw);
+      setRailWidthPx(Number.isFinite(parsed) ? parsed : 60);
+    };
+    readRailWidth();
+    window.addEventListener("resize", readRailWidth);
+    return () => window.removeEventListener("resize", readRailWidth);
+  }, []);
 
   // Refs for tracking element positions
   const wordmarkContainerRef = useRef<HTMLDivElement>(null);
@@ -391,9 +415,12 @@ function NavigationCockpitInner() {
     // ═══════════════════════════════════════════════════════════════════
 
     // Base manifesto left position (centered)
-    // Definition state: left = 180px to align with hero wordmark (rail-width + 120px)
+    // Hero/Definition: left aligns to the same CSS axis as wordmark + runway arrows:
+    //   left = calc(var(--rail-width) + 120px)
+    // Manifesto: left transitions to 50% (centered)
+    const heroLeftPx = hudSideInsetPx;
     const manifestoLeftPct = tDefToManifesto * 50; // 0% → 50%
-    const manifestoLeftPx = (1 - tDefToManifesto) * 180; // 180px → 0px (matches wordmark position)
+    const manifestoLeftPx = (1 - tDefToManifesto) * heroLeftPx; // 180px → 0px (matches wordmark position)
 
     // Frame width for position calculations
     const frameWidth = baseWidth + growthProgress * widthGrowth;
@@ -403,7 +430,7 @@ function NavigationCockpitInner() {
     // For smooth transition, we interpolate left position to achieve this
     // At services: left = calc(100vw - 180px - frameWidth)
     // We blend from centered (left: 50%, translateX: -50%) to right-aligned
-    const servicesRightOffset = 180; // var(--rail-width, 60px) + 120px
+    const servicesRightOffset = heroLeftPx; // var(--rail-width) + 120px
 
     // Calculate the left position that puts right edge at the target
     // During transition: blend from center to right-aligned position
@@ -422,9 +449,16 @@ function NavigationCockpitInner() {
         ? "0px"
         : `calc(${tManifestoToServices * 50}vw - ${tManifestoToServices * servicesRightOffset}px - ${tManifestoToServices * (frameWidth / 2)}px)`;
 
+    // Left positioning: during hero/definition, align to wordmark position
+    // Use CSS calc for proper alignment: calc(var(--rail-width) + 120px)
+    const leftPosition =
+      tDefToManifesto < 0.001
+        ? "calc(var(--rail-width) + 120px)" // Hero/Definition: align with wordmark and arrows
+        : `calc(${manifestoLeftPx}px + ${manifestoLeftPct}%)`; // Manifesto: transition to center
+
     return {
       finalBottom,
-      left: `calc(${manifestoLeftPx}px + ${manifestoLeftPct}%)`,
+      left: leftPosition,
       width: `${frameWidth}px`,
       height: frameHeight,
       transform: `translateX(calc(${baseTransformPct}% + ${servicesDx}))`,
@@ -437,6 +471,7 @@ function NavigationCockpitInner() {
     tHeroToDef,
     tDefToManifesto,
     tManifestoToServices,
+    hudSideInsetPx,
     defBottomVh,
     defBottomPx,
     manifestoBottomPx,
@@ -712,52 +747,91 @@ function NavigationCockpitInner() {
               }
         }
       >
-        {/* Card corner brackets - visible during definition state, fade during manifesto */}
+        {/* Gold corner brackets - visible during hero and definition states */}
+        {/* Hero state: full opacity gold corners (like terminal corners) */}
+        {/* Definition state: card-style corners that fade during manifesto */}
         {/* Show on both desktop and mobile */}
-        {tHeroToDef > 0.7 && (
-          <>
-            {/*
-              Fade the card corners out much faster once the manifesto transition starts
-              to avoid overlapping "frame" cues (card corners + terminal corners + outer border).
-            */}
-            <div
-              className="card-corner card-corner-tl"
-              style={{
-                position: "absolute",
-                top: -1,
-                left: -1,
-                width: "16px",
-                height: "16px",
-                borderTop: `1px solid rgba(202, 165, 84, ${
-                  cardOpacity * 0.6 * Math.max(0, 1 - tDefToManifesto * 6)
-                })`,
-                borderLeft: `1px solid rgba(202, 165, 84, ${
-                  cardOpacity * 0.6 * Math.max(0, 1 - tDefToManifesto * 6)
-                })`,
-                pointerEvents: "none",
-                zIndex: 5,
-              }}
-            />
-            <div
-              className="card-corner card-corner-br"
-              style={{
-                position: "absolute",
-                bottom: -1,
-                right: -1,
-                width: "16px",
-                height: "16px",
-                borderBottom: `1px solid rgba(202, 165, 84, ${
-                  cardOpacity * 0.6 * Math.max(0, 1 - tDefToManifesto * 6)
-                })`,
-                borderRight: `1px solid rgba(202, 165, 84, ${
-                  cardOpacity * 0.6 * Math.max(0, 1 - tDefToManifesto * 6)
-                })`,
-                pointerEvents: "none",
-                zIndex: 5,
-              }}
-            />
-          </>
-        )}
+        <>
+          {/* Hero state corners - visible immediately on page load (before any scroll) */}
+          {tHeroToDef < 0.7 && (
+            <>
+              <div
+                className="terminal-corner terminal-corner-tl"
+                style={{
+                  position: "absolute",
+                  top: -1,
+                  left: -1,
+                  width: "20px",
+                  height: "20px",
+                  borderTop: `2px solid rgba(202, 165, 84, 1)`,
+                  borderLeft: `2px solid rgba(202, 165, 84, 1)`,
+                  pointerEvents: "none",
+                  zIndex: 50,
+                }}
+              />
+              <div
+                className="terminal-corner terminal-corner-br"
+                style={{
+                  position: "absolute",
+                  bottom: -1,
+                  right: -1,
+                  width: "20px",
+                  height: "20px",
+                  borderBottom: `2px solid rgba(202, 165, 84, 1)`,
+                  borderRight: `2px solid rgba(202, 165, 84, 1)`,
+                  pointerEvents: "none",
+                  zIndex: 50,
+                }}
+              />
+            </>
+          )}
+
+          {/* Definition state card corners - fade during manifesto */}
+          {tHeroToDef > 0.7 && (
+            <>
+              {/*
+                Fade the card corners out much faster once the manifesto transition starts
+                to avoid overlapping "frame" cues (card corners + terminal corners + outer border).
+              */}
+              <div
+                className="card-corner card-corner-tl"
+                style={{
+                  position: "absolute",
+                  top: -1,
+                  left: -1,
+                  width: "16px",
+                  height: "16px",
+                  borderTop: `1px solid rgba(202, 165, 84, ${
+                    cardOpacity * 0.6 * Math.max(0, 1 - tDefToManifesto * 6)
+                  })`,
+                  borderLeft: `1px solid rgba(202, 165, 84, ${
+                    cardOpacity * 0.6 * Math.max(0, 1 - tDefToManifesto * 6)
+                  })`,
+                  pointerEvents: "none",
+                  zIndex: 5,
+                }}
+              />
+              <div
+                className="card-corner card-corner-br"
+                style={{
+                  position: "absolute",
+                  bottom: -1,
+                  right: -1,
+                  width: "16px",
+                  height: "16px",
+                  borderBottom: `1px solid rgba(202, 165, 84, ${
+                    cardOpacity * 0.6 * Math.max(0, 1 - tDefToManifesto * 6)
+                  })`,
+                  borderRight: `1px solid rgba(202, 165, 84, ${
+                    cardOpacity * 0.6 * Math.max(0, 1 - tDefToManifesto * 6)
+                  })`,
+                  pointerEvents: "none",
+                  zIndex: 5,
+                }}
+              />
+            </>
+          )}
+        </>
 
         {/* Card content: Wordmark (top) + Definition text + Services button (bottom) */}
         {/* During manifesto transition: wordmark & services fade out, text morphs to question */}
@@ -779,6 +853,18 @@ function NavigationCockpitInner() {
             zIndex: 2,
             ["--frame-opacity" as string]: 1 - tDefToManifesto,
             gap: "20px", // Increased gap for better spacing between elements
+            // Restore frame border and background during hero state (before bridge-frame has its own styling)
+            // Only show when bridge-frame doesn't have its own border/background yet (tHeroToDef < 0.7)
+            // Match opacity/transparency of other sections (same as terminal frame)
+            border:
+              tHeroToDef < 0.7
+                ? `1px solid rgba(236, 227, 214, ${0.1 * (1 - tDefToManifesto)})`
+                : undefined,
+            background:
+              tHeroToDef < 0.7 ? `rgba(10, 9, 8, ${0.25 * (1 - tDefToManifesto)})` : undefined,
+            backdropFilter: tHeroToDef < 0.7 ? `blur(${8 * (1 - tDefToManifesto)}px)` : undefined,
+            WebkitBackdropFilter:
+              tHeroToDef < 0.7 ? `blur(${8 * (1 - tDefToManifesto)}px)` : undefined,
           }}
         >
           {/* Wordmark inside card - appears when entering definition, fades during manifesto */}
@@ -833,7 +919,8 @@ function NavigationCockpitInner() {
 It's a strange intelligence to navigate.
 Thoughtform teaches how.`}
                 finalText={`(θɔːtfɔːrm / THAWT-form)
-the interface for human-AI collaboration`}
+the human-AI interface for
+navigating co-intelligence.`}
                 progress={tHeroToDef}
                 className="bridge-content-glitch"
               />
@@ -858,7 +945,8 @@ the interface for human-AI collaboration`}
             >
               <GlitchText
                 initialText={`(θɔːtfɔːrm / THAWT-form)
-the interface for human-AI collaboration`}
+the human-AI interface for
+navigating co-intelligence.`}
                 finalText={`But why is AI so different?`}
                 progress={tDefToManifesto}
                 className="bridge-content-glitch question-morph"

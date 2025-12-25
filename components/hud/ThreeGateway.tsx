@@ -400,6 +400,12 @@ const geometricShapeGenerators: Record<string, ShapePointFn> = {
     x: Math.cos(t * Math.PI * 2) * radius * 1.4,
     y: Math.sin(t * Math.PI * 2) * radius * 0.75,
   }),
+
+  // Thoughtform Gateway I - circular with framed border
+  thoughtformGateway1: (t, radius) => ({
+    x: Math.cos(t * Math.PI * 2) * radius,
+    y: Math.sin(t * Math.PI * 2) * radius,
+  }),
 };
 
 // Get shape generator - falls back to circle for attractors (they use different rendering)
@@ -1026,6 +1032,251 @@ function GoldDepthMarkers({
   );
 }
 
+// ─── DOTTED MARKER RING ───
+// Creates a ring with dots at specific intervals based on dash pattern
+// Dash pattern is interpreted as relative proportions (not absolute SVG pixels)
+function DottedMarkerRing({
+  opacity,
+  color,
+  density,
+  radius,
+  dashPattern,
+  strokeWidth,
+  dotSize = 0.012,
+}: {
+  opacity: number;
+  color: string;
+  density: number;
+  radius: number;
+  dashPattern: number[]; // [dash, gap, dash, gap, ...] - relative proportions
+  strokeWidth: number;
+  dotSize?: number;
+}) {
+  const pointsRef = useRef<THREE.Points>(null);
+
+  const positions = useMemo(() => {
+    const points: number[] = [];
+
+    // Calculate total pattern length (sum of all dash and gap values)
+    let patternLength = 0;
+    for (let i = 0; i < dashPattern.length; i++) {
+      patternLength += dashPattern[i] || 0;
+    }
+
+    if (patternLength === 0) return new Float32Array(points);
+
+    // Generate dots at dash positions (treating pattern as relative proportions)
+    let currentAngle = 0;
+    const fullCircle = Math.PI * 2;
+
+    for (let i = 0; i < dashPattern.length; i += 2) {
+      const dashValue = dashPattern[i] || 0;
+      const gapValue = dashPattern[i + 1] || 0;
+
+      // Convert pattern values to angle proportions
+      const dashAngleSpan = (dashValue / patternLength) * fullCircle;
+      const gapAngleSpan = (gapValue / patternLength) * fullCircle;
+
+      // Create dots along the dash segment
+      // More dots for longer dashes
+      const dotsInDash = Math.max(2, Math.floor((dashAngleSpan * radius) / (dotSize * 15)));
+
+      for (let j = 0; j < dotsInDash; j++) {
+        const t = j / (dotsInDash - 1);
+        const angle = currentAngle + t * dashAngleSpan;
+        const x = Math.cos(angle) * radius;
+        const y = Math.sin(angle) * radius;
+
+        // Create a small cluster for each dot (makes it more visible/solid)
+        const clusterSize = 4;
+        for (let k = 0; k < clusterSize; k++) {
+          const jitter = (Math.random() - 0.5) * dotSize * 0.4;
+          const jitterAngle = Math.random() * Math.PI * 2;
+          points.push(
+            x + Math.cos(jitterAngle) * jitter,
+            y + Math.sin(jitterAngle) * jitter,
+            (Math.random() - 0.5) * 0.008
+          );
+        }
+      }
+
+      currentAngle += dashAngleSpan + gapAngleSpan;
+    }
+
+    return new Float32Array(points);
+  }, [radius, dashPattern, dotSize]);
+
+  useFrame(() => {
+    if (pointsRef.current) {
+      const material = pointsRef.current.material as THREE.PointsMaterial;
+      material.opacity = opacity * density;
+    }
+  });
+
+  return (
+    <Points ref={pointsRef} positions={positions} stride={3} frustumCulled={false}>
+      <PointMaterial
+        transparent
+        color={color}
+        size={dotSize}
+        sizeAttenuation
+        depthWrite={false}
+        opacity={opacity}
+      />
+    </Points>
+  );
+}
+
+// ─── FRAMED BORDER GATEWAY ───
+// Special rendering for Thoughtform Gateway I with solid architectural border
+function FramedBorderGateway({
+  opacity,
+  primaryColor,
+  accentColor,
+  density,
+  tunnelDepth,
+  tunnelCurve,
+  tunnelWidth,
+}: {
+  opacity: number;
+  primaryColor: string;
+  accentColor: string;
+  density: number;
+  tunnelDepth: number;
+  tunnelCurve: number;
+  tunnelWidth: number;
+}) {
+  // Outer thick solid ring - more dense and architectural
+  const outerRingRef = useRef<THREE.Points>(null);
+  const outerRingPositions = useMemo(() => {
+    const points: number[] = [];
+    const R = 1.0;
+    const thickness = 0.15; // Thicker than default
+    const particleCount = TORUS_PARTICLES * 1.5; // More particles for solid feel
+
+    for (let i = 0; i < particleCount; i++) {
+      const t = i / particleCount;
+      const angle = t * Math.PI * 2;
+      const x = Math.cos(angle) * R;
+      const y = Math.sin(angle) * R;
+
+      // Thicker border with less jitter
+      const thicknessAngle = Math.random() * Math.PI * 2;
+      const thicknessR = thickness * (0.9 + Math.random() * 0.2); // Less variation
+      const jitter = (Math.random() - 0.5) * 0.01; // Reduced jitter
+
+      points.push(
+        x + Math.cos(thicknessAngle) * thicknessR + jitter,
+        y + Math.sin(thicknessAngle) * thicknessR + jitter,
+        thicknessR * Math.sin(thicknessAngle) * 0.2
+      );
+    }
+
+    return new Float32Array(points);
+  }, []);
+
+  // Dash patterns from SVG (normalized)
+  // Outer: stroke-width: 5.67px, dash: 0 17.01 0 85.04 0 141.73
+  // Middle: stroke-width: 3.87px, dash: 0 30.24 0 103.94 0 113.39
+  // Inner: stroke-width: 2.08px, dash: 0 43.46 0 122.83 0 85.04
+  const outerDashPattern = [0, 17.01, 0, 85.04, 0, 141.73];
+  const middleDashPattern = [0, 30.24, 0, 103.94, 0, 113.39];
+  const innerDashPattern = [0, 43.46, 0, 122.83, 0, 85.04];
+
+  useFrame((state) => {
+    if (outerRingRef.current) {
+      const time = state.clock.elapsedTime;
+      outerRingRef.current.scale.setScalar(1 + Math.sin(time * 0.3) * 0.005); // Subtle breathing
+
+      const material = outerRingRef.current.material as THREE.PointsMaterial;
+      material.opacity = 0.95 * opacity * density; // Higher opacity for solid feel
+    }
+  });
+
+  return (
+    <group>
+      {/* Thick outer solid ring */}
+      <Points ref={outerRingRef} positions={outerRingPositions} stride={3} frustumCulled={false}>
+        <PointMaterial
+          transparent
+          color={primaryColor}
+          size={0.018} // Larger particles
+          sizeAttenuation
+          depthWrite={false}
+          opacity={0.95}
+        />
+      </Points>
+
+      {/* Three dotted marker rings at different radii */}
+      <DottedMarkerRing
+        opacity={opacity * 0.9}
+        color={primaryColor}
+        density={density}
+        radius={1.08}
+        dashPattern={outerDashPattern}
+        strokeWidth={5.67}
+        dotSize={0.014}
+      />
+      <DottedMarkerRing
+        opacity={opacity * 0.75}
+        color={primaryColor}
+        density={density}
+        radius={0.95}
+        dashPattern={middleDashPattern}
+        strokeWidth={3.87}
+        dotSize={0.012}
+      />
+      <DottedMarkerRing
+        opacity={opacity * 0.6}
+        color={accentColor}
+        density={density}
+        radius={0.88}
+        dashPattern={innerDashPattern}
+        strokeWidth={2.08}
+        dotSize={0.01}
+      />
+
+      {/* Keep tunnel but reduce interior fill */}
+      <TunnelDepthRings
+        opacity={opacity * 0.7}
+        color={primaryColor}
+        density={density * 0.8}
+        tunnelDepth={tunnelDepth}
+        tunnelCurve={tunnelCurve}
+        tunnelWidth={tunnelWidth}
+        shape="circle"
+      />
+      <DepthSpiral
+        opacity={opacity * 0.6}
+        color={primaryColor}
+        density={density * 0.7}
+        tunnelDepth={tunnelDepth}
+        tunnelCurve={tunnelCurve}
+        tunnelWidth={tunnelWidth}
+        shape="circle"
+      />
+      <InteriorFill
+        opacity={opacity * 0.3}
+        color={primaryColor}
+        density={density * 0.5}
+        tunnelDepth={tunnelDepth}
+        tunnelCurve={tunnelCurve}
+        tunnelWidth={tunnelWidth}
+        shape="circle"
+      />
+      <GoldDepthMarkers
+        opacity={opacity * 0.7}
+        color={accentColor}
+        density={density * 0.8}
+        tunnelDepth={tunnelDepth}
+        tunnelCurve={tunnelCurve}
+        tunnelWidth={tunnelWidth}
+        shape="circle"
+      />
+    </group>
+  );
+}
+
 // ─── FLYING CAMERA ───
 function FlyingCamera({ scrollProgress, gatewayX }: { scrollProgress: number; gatewayX: number }) {
   const { camera } = useThree();
@@ -1397,6 +1648,17 @@ function GatewayScene({ scrollProgress, config }: GatewaySceneProps) {
             accentColor={accentColor}
             density={density}
             shape={shape}
+          />
+        ) : shape === "thoughtformGateway1" ? (
+          // Render Thoughtform Gateway I with framed border
+          <FramedBorderGateway
+            opacity={opacity}
+            primaryColor={primaryColor}
+            accentColor={accentColor}
+            density={density}
+            tunnelDepth={tunnelDepth}
+            tunnelCurve={tunnelCurve}
+            tunnelWidth={tunnelWidth}
           />
         ) : (
           // Render geometric 2D outline with tunnel

@@ -85,6 +85,7 @@ export type GatewayShape =
   | "diamond"
   | "arch"
   | "ellipse"
+  | "thoughtformGateway1"
   // Strange attractors (3D particle systems)
   | "lorenz"
   | "thomas"
@@ -112,6 +113,7 @@ export const GATEWAY_SHAPE_LABELS: Record<GatewayShape, string> = {
   diamond: "Diamond",
   arch: "Arch / Doorway",
   ellipse: "Ellipse (Wide)",
+  thoughtformGateway1: "Thoughtform Gateway I",
   // Strange Attractors
   lorenz: "Lorenz (Butterfly)",
   thomas: "Thomas (Symmetric)",
@@ -139,6 +141,7 @@ export const GATEWAY_SHAPE_IS_ATTRACTOR: Record<GatewayShape, boolean> = {
   diamond: false,
   arch: false,
   ellipse: false,
+  thoughtformGateway1: false,
   lorenz: true,
   thomas: true,
   aizawa: true,

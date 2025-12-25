@@ -11,43 +11,37 @@ import { isAuthorized } from "@/lib/auth-server";
 
 const CONFIG_KEY = "particle-system-config";
 
+// Preset type for storage
+interface ConfigPreset {
+  id: string;
+  name: string;
+  config: ParticleSystemConfig;
+  createdAt: number;
+  updatedAt: number;
+}
+
 /**
  * GET /api/particles/config
- * Returns the current particle system configuration
- * Priority: User-specific Supabase > Global Supabase > Vercel KV > defaults
+ * Returns the GLOBAL particle system configuration (same for all visitors)
+ * Only admin can modify it via POST
  */
-export async function GET(request: Request) {
+export async function GET() {
   try {
-    const { searchParams } = new URL(request.url);
-    const userId = searchParams.get("userId");
-
-    // 1. Try Supabase first (server-side with service role key)
+    // 1. Try Supabase first - always load GLOBAL config
     const supabase = createServerClient();
     if (supabase) {
-      // If user ID provided, try user-specific config first
-      if (userId) {
-        const { data, error } = await supabase
-          .from("particle_config")
-          .select("config")
-          .eq("user_id", userId)
-          .single();
-
-        if (!error && data?.config) {
-          const config = mergeWithDefaults(data.config);
-          return NextResponse.json(config);
-        }
-      }
-
-      // Fall back to global default config
       const { data, error } = await supabase
         .from("particle_config")
-        .select("config")
+        .select("config, presets")
         .eq("id", "default")
         .single();
 
       if (!error && data?.config) {
         const config = mergeWithDefaults(data.config);
-        return NextResponse.json(config);
+        return NextResponse.json({
+          config,
+          presets: data.presets || [],
+        });
       }
     }
 
@@ -56,7 +50,10 @@ export async function GET(request: Request) {
       const storedConfig = await kv.get<ParticleSystemConfig>(CONFIG_KEY);
       if (storedConfig) {
         const config = mergeWithDefaults(storedConfig);
-        return NextResponse.json(config);
+        return NextResponse.json({
+          config,
+          presets: [],
+        });
       }
     } catch (kvError) {
       // KV not configured, continue to defaults
@@ -64,70 +61,58 @@ export async function GET(request: Request) {
     }
 
     // 3. Return defaults
-    return NextResponse.json(DEFAULT_CONFIG);
+    return NextResponse.json({
+      config: DEFAULT_CONFIG,
+      presets: [],
+    });
   } catch (error) {
     console.error("Failed to load particle config:", error);
-    return NextResponse.json(DEFAULT_CONFIG);
+    return NextResponse.json({
+      config: DEFAULT_CONFIG,
+      presets: [],
+    });
   }
 }
 
 /**
  * POST /api/particles/config
- * Saves the particle system configuration
- * Requires admin authentication via Bearer token
+ * Saves the GLOBAL particle system configuration + presets
+ * Requires admin authentication - all visitors will see these changes
  */
 export async function POST(request: Request) {
   try {
     // Check for admin authorization
-    // In dev: allow all. In production: verify Bearer token + email allowlist
     const authorized = await isAuthorized(request);
 
-    // Reject if not authorized
     if (!authorized) {
       return NextResponse.json({ error: "Unauthorized - admin access required" }, { status: 401 });
     }
 
-    // Parse and validate the config
+    // Parse the request body
     const body = await request.json();
-    const userId = body.userId;
-    const config = mergeWithDefaults(body) as ParticleSystemConfig;
-    delete (config as any).userId; // Remove userId from config object
+    const presets: ConfigPreset[] = body.presets || [];
+    const activePresetId: string | null = body.activePresetId || null;
+
+    // Extract and validate config
+    const configData = body.config || body;
+    delete configData.presets;
+    delete configData.activePresetId;
+    delete configData.userId;
+
+    const config = mergeWithDefaults(configData) as ParticleSystemConfig;
 
     // Increment version on save
     config.version = (config.version || 0) + 1;
 
-    // 1. Try to save to Supabase first (server-side with service role key)
+    // 1. Try to save to Supabase first - GLOBAL config only
     const supabase = createServerClient();
     if (supabase) {
-      // If user ID provided, save as user-specific config
-      if (userId) {
-        const { error: supabaseError } = await supabase.from("particle_config").upsert(
-          {
-            id: userId, // Use user ID as primary key (text)
-            user_id: userId,
-            config: config,
-            updated_at: new Date().toISOString(),
-          },
-          {
-            onConflict: "user_id", // Use user_id for conflict resolution
-          }
-        );
-
-        if (!supabaseError) {
-          return NextResponse.json({
-            success: true,
-            config,
-            message: "Configuration saved successfully to Supabase (user-specific)",
-          });
-        }
-        logger.warn("Supabase user config save failed, falling back:", supabaseError);
-      }
-
-      // Fall back to global default config (if no user ID or user save failed)
       const { error: supabaseError } = await supabase.from("particle_config").upsert(
         {
           id: "default",
           config: config,
+          presets: presets,
+          active_preset_id: activePresetId,
           updated_at: new Date().toISOString(),
         },
         {
@@ -139,36 +124,34 @@ export async function POST(request: Request) {
         return NextResponse.json({
           success: true,
           config,
-          message: userId
-            ? "Configuration saved successfully to Supabase (user-specific)"
-            : "Configuration saved successfully to Supabase (global)",
+          presets,
+          activePresetId,
+          message: "Configuration saved globally - all visitors will see this",
         });
       }
       logger.warn("Supabase save failed, falling back to KV:", supabaseError);
     }
 
-    // 2. Fall back to Vercel KV
+    // 2. Fall back to Vercel KV (config only, no presets support)
     try {
       await kv.set(CONFIG_KEY, config);
       return NextResponse.json({
         success: true,
         config,
-        message: "Configuration saved successfully to KV",
+        presets: [],
+        message: "Configuration saved to KV (presets not supported in fallback mode)",
       });
     } catch (kvError) {
-      // If KV also fails, return error
       throw kvError;
     }
   } catch (error) {
     console.error("Failed to save particle config:", error);
 
-    // Check if it's a KV connection error
     if (error instanceof Error && error.message.includes("KV")) {
       return NextResponse.json(
         {
           error: "Vercel KV not configured",
-          message:
-            "Please set up Vercel KV in your project dashboard and link the environment variables.",
+          message: "Please set up Vercel KV or Supabase for storage.",
         },
         { status: 503 }
       );
@@ -180,56 +163,43 @@ export async function POST(request: Request) {
 
 /**
  * DELETE /api/particles/config
- * Resets configuration to defaults
+ * Resets GLOBAL configuration to defaults (clears config and presets)
  */
 export async function DELETE(request: Request) {
   try {
     // Check for admin authorization
-    // In dev: allow all. In production: verify Bearer token + email allowlist
     const authorized = await isAuthorized(request);
 
     if (!authorized) {
       return NextResponse.json({ error: "Unauthorized - admin access required" }, { status: 401 });
     }
 
-    const { searchParams } = new URL(request.url);
-    const userId = searchParams.get("userId");
-
-    // 1. Try to delete from Supabase first
+    // 1. Try to reset in Supabase first
     const supabase = createServerClient();
     if (supabase) {
-      // If user ID provided, delete user-specific config
-      if (userId) {
-        const { error: supabaseError } = await supabase
-          .from("particle_config")
-          .delete()
-          .eq("user_id", userId);
-
-        if (!supabaseError) {
-          return NextResponse.json({
-            success: true,
-            config: DEFAULT_CONFIG,
-            message: "Configuration reset to defaults (user-specific)",
-          });
+      // Reset global config to defaults (keep the row, just reset values)
+      const { error: supabaseError } = await supabase.from("particle_config").upsert(
+        {
+          id: "default",
+          config: DEFAULT_CONFIG,
+          presets: [],
+          active_preset_id: null,
+          updated_at: new Date().toISOString(),
+        },
+        {
+          onConflict: "id",
         }
-      }
-
-      // Fall back to deleting global default
-      const { error: supabaseError } = await supabase
-        .from("particle_config")
-        .delete()
-        .eq("id", "default");
+      );
 
       if (!supabaseError) {
         return NextResponse.json({
           success: true,
           config: DEFAULT_CONFIG,
-          message: userId
-            ? "Configuration reset to defaults (user-specific)"
-            : "Configuration reset to defaults (global)",
+          presets: [],
+          message: "Configuration reset to defaults globally",
         });
       }
-      logger.warn("Supabase delete failed, falling back to KV:", supabaseError);
+      logger.warn("Supabase reset failed, falling back to KV:", supabaseError);
     }
 
     // 2. Fall back to Vercel KV
@@ -238,6 +208,7 @@ export async function DELETE(request: Request) {
       return NextResponse.json({
         success: true,
         config: DEFAULT_CONFIG,
+        presets: [],
         message: "Configuration reset to defaults (KV)",
       });
     } catch (kvError) {

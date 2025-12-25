@@ -22,11 +22,6 @@ import {
 import { logger } from "@/lib/logger";
 import { useAuth } from "@/components/auth/AuthProvider";
 
-// localStorage keys
-const LOCAL_STORAGE_KEY = "thoughtform-particle-config";
-const PRESETS_STORAGE_KEY = "thoughtform-particle-presets";
-const LEGACY_PRESETS_STORAGE_KEY = "thoughtform-gateway-presets";
-
 // Preset type - stores entire configuration
 export interface ConfigPreset {
   id: string;
@@ -36,129 +31,18 @@ export interface ConfigPreset {
   updatedAt: number;
 }
 
-// Helper to safely access localStorage
-const getLocalStorage = (): ParticleSystemConfig | null => {
-  if (typeof window === "undefined") return null;
-  try {
-    const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
-    return stored ? JSON.parse(stored) : null;
-  } catch {
-    return null;
-  }
-};
-
-const setLocalStorage = (config: ParticleSystemConfig): void => {
-  if (typeof window === "undefined") return;
-  try {
-    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(config));
-  } catch (err) {
-    logger.warn("Failed to save to localStorage:", err);
-  }
-};
-
-const clearLocalStorage = (): void => {
-  if (typeof window === "undefined") return;
-  try {
-    localStorage.removeItem(LOCAL_STORAGE_KEY);
-  } catch {
-    // Ignore
-  }
-};
-
-// Preset storage functions
-const getPresets = (): ConfigPreset[] => {
-  if (typeof window === "undefined") return [];
-  try {
-    const stored =
-      localStorage.getItem(PRESETS_STORAGE_KEY) || localStorage.getItem(LEGACY_PRESETS_STORAGE_KEY);
-    if (!stored) return [];
-
-    const parsed = JSON.parse(stored);
-
-    // Migrate legacy presets (old format had 'gateway' instead of 'config')
-    const migrated = parsed.map((preset: Record<string, unknown>) => {
-      if (preset.config) {
-        return preset as unknown as ConfigPreset;
-      }
-      // Legacy preset - convert
-      if (preset.gateway) {
-        return {
-          id: preset.id as string,
-          name: preset.name as string,
-          config: {
-            ...DEFAULT_CONFIG,
-            gateway: preset.gateway as GatewayConfig,
-          },
-          createdAt: (preset.createdAt as number) || Date.now(),
-          updatedAt: (preset.updatedAt as number) || Date.now(),
-        } as ConfigPreset;
-      }
-      // Fallback: assume it's a valid preset structure
-      return preset as unknown as ConfigPreset;
-    });
-
-    // If we loaded from legacy key, write back to new key for next time
-    try {
-      localStorage.setItem(PRESETS_STORAGE_KEY, JSON.stringify(migrated));
-    } catch {
-      // Ignore
-    }
-
-    return migrated;
-  } catch {
-    return [];
-  }
-};
-
-const savePresetsToStorage = (presets: ConfigPreset[]): void => {
-  if (typeof window === "undefined") return;
-  try {
-    localStorage.setItem(PRESETS_STORAGE_KEY, JSON.stringify(presets));
-    // Keep legacy key in sync for backwards compatibility
-    localStorage.setItem(LEGACY_PRESETS_STORAGE_KEY, JSON.stringify(presets));
-  } catch (err) {
-    logger.warn("Failed to save presets:", err);
-  }
-};
-
-const ACTIVE_PRESET_KEY = "thoughtform-active-preset";
-
-const getActivePresetId = (): string | null => {
-  if (typeof window === "undefined") return null;
-  try {
-    return localStorage.getItem(ACTIVE_PRESET_KEY);
-  } catch {
-    return null;
-  }
-};
-
-const saveActivePresetId = (id: string | null): void => {
-  if (typeof window === "undefined") return;
-  try {
-    if (id) {
-      localStorage.setItem(ACTIVE_PRESET_KEY, id);
-    } else {
-      localStorage.removeItem(ACTIVE_PRESET_KEY);
-    }
-  } catch {
-    // Ignore
-  }
-};
-
 interface ParticleConfigContextValue {
-  /** Current configuration */
+  /** Current configuration (GLOBAL - same for all visitors) */
   config: ParticleSystemConfig;
   /** Whether config is loading from server */
   isLoading: boolean;
-  /** Whether there are unsaved changes */
+  /** Whether there are unsaved changes (admin only) */
   hasChanges: boolean;
-  /** Whether the user is in admin/preview mode */
-  isPreviewMode: boolean;
+  /** Whether the user is an admin (can edit) */
+  isAdmin: boolean;
   /** Error message if any */
   error: string | null;
-  /** Storage mode: 'server' (KV) or 'local' (localStorage fallback) */
-  storageMode: "server" | "local";
-  /** Update the entire config (for preview) */
+  /** Update the entire config (admin only - changes visible to all) */
   updateConfig: (config: Partial<ParticleSystemConfig>) => void;
   /** Update manifold settings */
   updateManifold: (manifold: Partial<ManifoldConfig>) => void;
@@ -174,15 +58,13 @@ interface ParticleConfigContextValue {
   addLandmark: (landmark: LandmarkConfig) => void;
   /** Remove a landmark */
   removeLandmark: (id: string) => void;
-  /** Save current config to server */
+  /** Save current config to server (admin only - pushes to all visitors) */
   saveConfig: () => Promise<boolean>;
-  /** Reset to defaults */
+  /** Reset to defaults (admin only) */
   resetToDefaults: () => Promise<boolean>;
   /** Reload config from server */
   reloadConfig: () => Promise<void>;
-  /** Toggle preview mode */
-  setPreviewMode: (enabled: boolean) => void;
-  /** Configuration presets */
+  /** Configuration presets (stored on server) */
   presets: ConfigPreset[];
   /** Currently active preset ID */
   activePresetId: string | null;
@@ -207,109 +89,61 @@ export function ParticleConfigProvider({ children }: ParticleConfigProviderProps
   const [config, setConfig] = useState<ParticleSystemConfig>(DEFAULT_CONFIG);
   const [savedConfig, setSavedConfig] = useState<ParticleSystemConfig>(DEFAULT_CONFIG);
   const [isLoading, setIsLoading] = useState(true);
-  const [isPreviewMode, setIsPreviewMode] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [storageMode, setStorageMode] = useState<"server" | "local">("server");
-  const [presets, setPresets] = useState<ConfigPreset[]>(() => getPresets());
-  const [activePresetId, setActivePresetId] = useState<string | null>(() => getActivePresetId());
+  const [presets, setPresets] = useState<ConfigPreset[]>([]);
+  const [activePresetId, setActivePresetId] = useState<string | null>(null);
 
-  // After the base config loads, if an active preset exists, apply it automatically.
-  // This makes presets feel persistent across refresh (the selected preset becomes the world).
-  const didHydrateFromPresetRef = useRef(false);
-  useEffect(() => {
-    if (didHydrateFromPresetRef.current) return;
-    if (isLoading) return;
-
-    if (!activePresetId) {
-      // No active preset to apply
-      didHydrateFromPresetRef.current = true;
-      return;
-    }
-
-    const preset = presets.find((p) => p.id === activePresetId);
-    if (!preset) {
-      // Active preset missing → clear it
-      setActivePresetId(null);
-      saveActivePresetId(null);
-      didHydrateFromPresetRef.current = true;
-      return;
-    }
-
-    const fullConfig = mergeWithDefaults(preset.config || {});
-    setConfig(fullConfig);
-    setSavedConfig(fullConfig);
-    didHydrateFromPresetRef.current = true;
-  }, [isLoading, activePresetId, presets]);
+  // Admin check - only logged-in users can edit
+  const isAdmin = !!user?.id && !!session?.access_token;
 
   // Check if there are unsaved changes
   const hasChanges = useMemo(() => {
     return JSON.stringify(config) !== JSON.stringify(savedConfig);
   }, [config, savedConfig]);
 
-  // Load config from server on mount, with server API and localStorage fallback
+  // Load GLOBAL config from server on mount (same for all visitors)
   const loadConfig = useCallback(async () => {
     setIsLoading(true);
     setError(null);
 
-    // Priority order: Server API (uses Supabase server-side) > localStorage > defaults
-    let loadedConfig: ParticleSystemConfig | null = null;
-    let loadedFrom: "server" | "local" = "local";
-
-    // 1. Try server API first (which uses Supabase server-side with service role key)
-    // Only load user-specific config if user is logged in
     try {
-      const url = user?.id ? `/api/particles/config?userId=${user.id}` : "/api/particles/config";
-      const response = await fetch(url);
+      // Always load global config (no user-specific config)
+      const response = await fetch("/api/particles/config");
       if (response.ok) {
         const data = await response.json();
-        loadedConfig = mergeWithDefaults(data);
-        loadedFrom = "server";
+        const loadedConfig = mergeWithDefaults(data.config || data);
+        setConfig(loadedConfig);
+        setSavedConfig(loadedConfig);
+        setPresets(data.presets || []);
+        setActivePresetId(data.activePresetId || null);
+      } else {
+        // Fallback to defaults
+        setConfig(DEFAULT_CONFIG);
+        setSavedConfig(DEFAULT_CONFIG);
+        setPresets([]);
       }
     } catch (err) {
       logger.warn("Failed to load from server API:", err);
+      setConfig(DEFAULT_CONFIG);
+      setSavedConfig(DEFAULT_CONFIG);
+      setPresets([]);
     }
 
-    // 2. If server API failed, try localStorage
-    if (!loadedConfig) {
-      const localConfigRaw = getLocalStorage();
-      if (localConfigRaw) {
-        loadedConfig = mergeWithDefaults(localConfigRaw);
-        loadedFrom = "local";
-      }
-    }
-
-    // 3. Fallback to defaults
-    if (!loadedConfig) {
-      loadedConfig = DEFAULT_CONFIG;
-      loadedFrom = "local";
-    }
-
-    setConfig(loadedConfig);
-    setSavedConfig(loadedConfig);
-    setStorageMode(loadedFrom === "server" ? "server" : "local");
     setIsLoading(false);
-  }, [user?.id]);
-
-  // Auto-save debounce timer
-  const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const serverSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
-
-  // Auto-save to localStorage (immediate, debounced)
-  const autoSaveToLocalStorage = useCallback((configToSave: ParticleSystemConfig) => {
-    if (autoSaveTimerRef.current) {
-      clearTimeout(autoSaveTimerRef.current);
-    }
-    autoSaveTimerRef.current = setTimeout(() => {
-      const mergedConfig = mergeWithDefaults(configToSave);
-      setLocalStorage(mergedConfig);
-    }, 300); // 300ms debounce for localStorage
   }, []);
 
-  // Auto-save to server API (which uses Supabase server-side, less frequent, debounced longer)
+  // Auto-save debounce timer (admin only)
+  const serverSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Auto-save to server (admin only - pushes to all visitors)
   const autoSaveToServer = useCallback(
-    async (configToSave: ParticleSystemConfig) => {
-      // Only save if user is logged in
-      if (!user?.id) return;
+    async (
+      configToSave: ParticleSystemConfig,
+      presetsToSave?: ConfigPreset[],
+      activePresetIdToSave?: string | null
+    ) => {
+      // Only save if user is logged in (admin)
+      if (!isAdmin || !session?.access_token) return;
 
       if (serverSaveTimerRef.current) {
         clearTimeout(serverSaveTimerRef.current);
@@ -321,51 +155,50 @@ export function ParticleConfigProvider({ children }: ParticleConfigProviderProps
             method: "POST",
             headers: {
               "Content-Type": "application/json",
+              Authorization: `Bearer ${session.access_token}`,
             },
             body: JSON.stringify({
-              ...mergedConfig,
-              userId: user.id,
+              config: mergedConfig,
+              presets: presetsToSave ?? presets,
+              activePresetId: activePresetIdToSave ?? activePresetId,
             }),
           });
 
-          if (!response.ok) {
+          if (response.ok) {
+            setSavedConfig(mergedConfig);
+          } else {
             logger.warn("Failed to auto-save to server:", response.statusText);
           }
         } catch (err) {
           logger.warn("Server auto-save error:", err);
         }
-      }, 2000); // 2s debounce for server API
+      }, 1500); // 1.5s debounce for server API
     },
-    [user?.id]
+    [isAdmin, session?.access_token, presets, activePresetId]
   );
 
   useEffect(() => {
     loadConfig();
 
-    // Cleanup timers on unmount
+    // Cleanup timer on unmount
     return () => {
-      if (autoSaveTimerRef.current) {
-        clearTimeout(autoSaveTimerRef.current);
-      }
       if (serverSaveTimerRef.current) {
         clearTimeout(serverSaveTimerRef.current);
       }
     };
   }, [loadConfig]);
 
-  // Update entire config
+  // Update entire config (admin only - auto-saves to server)
   const updateConfig = useCallback(
     (updates: Partial<ParticleSystemConfig>) => {
       setConfig((prev) => {
         const newConfig = { ...prev, ...updates };
-        // Auto-save to localStorage
-        autoSaveToLocalStorage(newConfig);
-        // Auto-save to server API (uses Supabase server-side)
+        // Auto-save to server (admin only)
         autoSaveToServer(newConfig);
         return newConfig;
       });
     },
-    [autoSaveToLocalStorage, autoSaveToServer]
+    [autoSaveToServer]
   );
 
   // Update manifold settings
@@ -379,77 +212,116 @@ export function ParticleConfigProvider({ children }: ParticleConfigProviderProps
             ...updates,
           },
         };
-        // Auto-save to localStorage immediately
-        autoSaveToLocalStorage(newConfig);
-        // Auto-save to server API (uses Supabase server-side, debounced)
         autoSaveToServer(newConfig);
         return newConfig;
       });
     },
-    [autoSaveToLocalStorage, autoSaveToServer]
+    [autoSaveToServer]
   );
 
   // Update gateway settings
-  const updateGateway = useCallback((updates: Partial<GatewayConfig>) => {
-    setConfig((prev) => ({
-      ...prev,
-      gateway: {
-        ...prev.gateway,
-        ...updates,
-      },
-    }));
-  }, []);
+  const updateGateway = useCallback(
+    (updates: Partial<GatewayConfig>) => {
+      setConfig((prev) => {
+        const newConfig = {
+          ...prev,
+          gateway: {
+            ...prev.gateway,
+            ...updates,
+          },
+        };
+        autoSaveToServer(newConfig);
+        return newConfig;
+      });
+    },
+    [autoSaveToServer]
+  );
 
   // Update camera settings
-  const updateCamera = useCallback((updates: Partial<CameraConfig>) => {
-    setConfig((prev) => ({
-      ...prev,
-      camera: {
-        ...prev.camera,
-        ...updates,
-      },
-    }));
-  }, []);
+  const updateCamera = useCallback(
+    (updates: Partial<CameraConfig>) => {
+      setConfig((prev) => {
+        const newConfig = {
+          ...prev,
+          camera: {
+            ...prev.camera,
+            ...updates,
+          },
+        };
+        autoSaveToServer(newConfig);
+        return newConfig;
+      });
+    },
+    [autoSaveToServer]
+  );
 
   // Update sigil settings
-  const updateSigil = useCallback((updates: Partial<SigilConfig>) => {
-    setConfig((prev) => ({
-      ...prev,
-      sigil: {
-        ...prev.sigil,
-        ...updates,
-      },
-    }));
-  }, []);
+  const updateSigil = useCallback(
+    (updates: Partial<SigilConfig>) => {
+      setConfig((prev) => {
+        const newConfig = {
+          ...prev,
+          sigil: {
+            ...prev.sigil,
+            ...updates,
+          },
+        };
+        autoSaveToServer(newConfig);
+        return newConfig;
+      });
+    },
+    [autoSaveToServer]
+  );
 
   // Update a specific landmark
-  const updateLandmark = useCallback((id: string, updates: Partial<LandmarkConfig>) => {
-    setConfig((prev) => ({
-      ...prev,
-      landmarks: prev.landmarks.map((l) => (l.id === id ? { ...l, ...updates } : l)),
-    }));
-  }, []);
+  const updateLandmark = useCallback(
+    (id: string, updates: Partial<LandmarkConfig>) => {
+      setConfig((prev) => {
+        const newConfig = {
+          ...prev,
+          landmarks: prev.landmarks.map((l) => (l.id === id ? { ...l, ...updates } : l)),
+        };
+        autoSaveToServer(newConfig);
+        return newConfig;
+      });
+    },
+    [autoSaveToServer]
+  );
 
   // Add a new landmark
-  const addLandmark = useCallback((landmark: LandmarkConfig) => {
-    setConfig((prev) => ({
-      ...prev,
-      landmarks: [...prev.landmarks, landmark],
-    }));
-  }, []);
+  const addLandmark = useCallback(
+    (landmark: LandmarkConfig) => {
+      setConfig((prev) => {
+        const newConfig = {
+          ...prev,
+          landmarks: [...prev.landmarks, landmark],
+        };
+        autoSaveToServer(newConfig);
+        return newConfig;
+      });
+    },
+    [autoSaveToServer]
+  );
 
   // Remove a landmark
-  const removeLandmark = useCallback((id: string) => {
-    setConfig((prev) => ({
-      ...prev,
-      landmarks: prev.landmarks.filter((l) => l.id !== id),
-    }));
-  }, []);
+  const removeLandmark = useCallback(
+    (id: string) => {
+      setConfig((prev) => {
+        const newConfig = {
+          ...prev,
+          landmarks: prev.landmarks.filter((l) => l.id !== id),
+        };
+        autoSaveToServer(newConfig);
+        return newConfig;
+      });
+    },
+    [autoSaveToServer]
+  );
 
-  // Save config to server (with localStorage fallback)
+  // Save config to server (admin only - pushes to all visitors)
   const saveConfig = useCallback(async (): Promise<boolean> => {
-    if (!user?.id || !session?.access_token) {
-      setError("You must be logged in to save configuration");
+    if (!isAdmin || !session?.access_token) {
+      setError("You must be logged in as admin to save configuration");
       return false;
     }
 
@@ -469,66 +341,42 @@ export function ParticleConfigProvider({ children }: ParticleConfigProviderProps
           Authorization: `Bearer ${session.access_token}`,
         },
         body: JSON.stringify({
-          ...configToSave,
-          userId: user.id,
+          config: configToSave,
+          presets,
+          activePresetId,
         }),
       });
 
       if (response.ok) {
         const data = await response.json();
-        // Merge with defaults to ensure all fields exist
-        const savedConfig = mergeWithDefaults(data.config);
-        setConfig(savedConfig);
-        setSavedConfig(savedConfig);
-        setStorageMode("server");
-        // Also save to localStorage as backup
-        setLocalStorage(savedConfig);
+        const savedConfigData = mergeWithDefaults(data.config);
+        setConfig(savedConfigData);
+        setSavedConfig(savedConfigData);
+        if (data.presets) setPresets(data.presets);
         return true;
       } else {
         const errorData = await response.json();
         setError(errorData.error || "Failed to save configuration");
-        // If KV not configured, fall back to localStorage
-        if (errorData.error === "Vercel KV not configured" || response.status === 503) {
-          // Ensure config is merged with defaults before saving
-          const mergedConfig = mergeWithDefaults(configToSave);
-          setLocalStorage(mergedConfig);
-          setConfig(mergedConfig);
-          setSavedConfig(mergedConfig);
-          setStorageMode("local");
-          setError("Saved locally (KV not configured)");
-          return true;
-        }
-        setError(errorData.error || "Failed to save");
         return false;
       }
     } catch (err) {
       console.error("Failed to save particle config:", err);
-      // Fall back to localStorage on network error
-      // Ensure config is merged with defaults before saving
-      const mergedConfig = mergeWithDefaults(configToSave);
-      setLocalStorage(mergedConfig);
-      setConfig(mergedConfig);
-      setSavedConfig(mergedConfig);
-      setStorageMode("local");
-      setError("Saved locally (server unavailable)");
-      return true;
+      setError("Failed to save - server unavailable");
+      return false;
     }
-  }, [config, session?.access_token, user?.id]);
+  }, [config, presets, activePresetId, isAdmin, session?.access_token]);
 
-  // Reset to defaults
+  // Reset to defaults (admin only)
   const resetToDefaults = useCallback(async (): Promise<boolean> => {
-    if (!user?.id || !session?.access_token) {
-      setError("You must be logged in to reset configuration");
+    if (!isAdmin || !session?.access_token) {
+      setError("You must be logged in as admin to reset configuration");
       return false;
     }
 
     setError(null);
 
-    // Always clear localStorage
-    clearLocalStorage();
-
     try {
-      const response = await fetch(`/api/particles/config?userId=${user.id}`, {
+      const response = await fetch("/api/particles/config", {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${session.access_token}`,
@@ -537,39 +385,28 @@ export function ParticleConfigProvider({ children }: ParticleConfigProviderProps
 
       if (response.ok) {
         const data = await response.json();
-        // Merge with defaults to ensure all fields exist
         const resetConfig = mergeWithDefaults(data.config);
         setConfig(resetConfig);
         setSavedConfig(resetConfig);
-        setStorageMode("server");
+        setPresets([]);
+        setActivePresetId(null);
         return true;
       } else {
-        // If server reset fails, just reset locally
-        setConfig(DEFAULT_CONFIG);
-        setSavedConfig(DEFAULT_CONFIG);
-        setStorageMode("local");
-        return true;
+        setError("Failed to reset configuration");
+        return false;
       }
     } catch (err) {
-      // Reset locally on network error
-      setConfig(DEFAULT_CONFIG);
-      setSavedConfig(DEFAULT_CONFIG);
-      setStorageMode("local");
-      return true;
+      setError("Failed to reset - server unavailable");
+      return false;
     }
-  }, [user?.id, session?.access_token]);
+  }, [isAdmin, session?.access_token]);
 
   // Reload config from server
   const reloadConfig = useCallback(async () => {
     await loadConfig();
   }, [loadConfig]);
 
-  // Toggle preview mode
-  const setPreviewMode = useCallback((enabled: boolean) => {
-    setIsPreviewMode(enabled);
-  }, []);
-
-  // Create a new preset from current config
+  // Create a new preset from current config (admin only - saved to server)
   const createPreset = useCallback(
     (name: string) => {
       const newPreset: ConfigPreset = {
@@ -581,12 +418,12 @@ export function ParticleConfigProvider({ children }: ParticleConfigProviderProps
       };
       const updatedPresets = [...presets, newPreset];
       setPresets(updatedPresets);
-      savePresetsToStorage(updatedPresets);
       setActivePresetId(newPreset.id);
-      saveActivePresetId(newPreset.id);
       setSavedConfig(config);
+      // Auto-save to server
+      autoSaveToServer(config, updatedPresets, newPreset.id);
     },
-    [config, presets]
+    [config, presets, autoSaveToServer]
   );
 
   // Save to active preset, or create new if name provided
@@ -598,45 +435,48 @@ export function ParticleConfigProvider({ children }: ParticleConfigProviderProps
           p.id === activePresetId ? { ...p, config: { ...config }, updatedAt: Date.now() } : p
         );
         setPresets(updatedPresets);
-        savePresetsToStorage(updatedPresets);
         setSavedConfig(config);
+        // Auto-save to server
+        autoSaveToServer(config, updatedPresets, activePresetId);
       } else if (name) {
         // Create new preset
         createPreset(name);
       }
     },
-    [activePresetId, config, presets, createPreset]
+    [activePresetId, config, presets, createPreset, autoSaveToServer]
   );
 
-  // Load a preset (makes it active)
+  // Load a preset (makes it active and pushes to all visitors)
   const loadPreset = useCallback(
     (id: string) => {
       const preset = presets.find((p) => p.id === id);
       if (preset) {
-        // Merge with defaults to ensure all fields exist (handles legacy/incomplete presets)
+        // Merge with defaults to ensure all fields exist
         const fullConfig = mergeWithDefaults(preset.config || {});
         setConfig(fullConfig);
         setSavedConfig(fullConfig);
         setActivePresetId(id);
-        saveActivePresetId(id);
+        // Auto-save to server so all visitors see this preset
+        autoSaveToServer(fullConfig, presets, id);
       }
     },
-    [presets]
+    [presets, autoSaveToServer]
   );
 
-  // Delete a preset
+  // Delete a preset (admin only - saved to server)
   const deletePreset = useCallback(
     (id: string) => {
       const updatedPresets = presets.filter((p) => p.id !== id);
       setPresets(updatedPresets);
-      savePresetsToStorage(updatedPresets);
       // If deleting active preset, clear active
+      const newActiveId = activePresetId === id ? null : activePresetId;
       if (activePresetId === id) {
         setActivePresetId(null);
-        saveActivePresetId(null);
       }
+      // Auto-save to server
+      autoSaveToServer(config, updatedPresets, newActiveId);
     },
-    [presets, activePresetId]
+    [presets, activePresetId, config, autoSaveToServer]
   );
 
   const value = useMemo(
@@ -644,9 +484,8 @@ export function ParticleConfigProvider({ children }: ParticleConfigProviderProps
       config,
       isLoading,
       hasChanges,
-      isPreviewMode,
+      isAdmin,
       error,
-      storageMode,
       updateConfig,
       updateManifold,
       updateGateway,
@@ -658,7 +497,6 @@ export function ParticleConfigProvider({ children }: ParticleConfigProviderProps
       saveConfig,
       resetToDefaults,
       reloadConfig,
-      setPreviewMode,
       presets,
       activePresetId,
       saveToPreset,
@@ -670,9 +508,8 @@ export function ParticleConfigProvider({ children }: ParticleConfigProviderProps
       config,
       isLoading,
       hasChanges,
-      isPreviewMode,
+      isAdmin,
       error,
-      storageMode,
       updateConfig,
       updateManifold,
       updateGateway,
@@ -684,7 +521,6 @@ export function ParticleConfigProvider({ children }: ParticleConfigProviderProps
       saveConfig,
       resetToDefaults,
       reloadConfig,
-      setPreviewMode,
       presets,
       activePresetId,
       saveToPreset,

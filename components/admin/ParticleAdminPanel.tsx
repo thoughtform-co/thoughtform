@@ -188,8 +188,8 @@ export function ParticleAdminPanel() {
     config,
     isLoading,
     hasChanges,
+    isAdmin,
     error,
-    storageMode,
     updateManifold,
     updateGateway,
     updateCamera,
@@ -287,10 +287,10 @@ export function ParticleAdminPanel() {
               <span className="drag-icon">⋮⋮</span>
               <h3 className="admin-title">Particles</h3>
               <span
-                className={`storage-badge ${storageMode}`}
-                title={storageMode === "server" ? "Synced to Vercel KV" : "Local storage only"}
+                className="storage-badge server"
+                title={isAdmin ? "Changes sync to all visitors" : "View only"}
               >
-                {storageMode === "server" ? "☁" : "●"}
+                {isAdmin ? "☁" : "👁"}
               </span>
             </div>
             <div className="admin-header-right">
@@ -1216,6 +1216,7 @@ function GatewayControls({ gateway, onUpdate }: GatewayControlsProps) {
                     {shapeKey === "diamond" && "◇"}
                     {shapeKey === "arch" && "⌓"}
                     {shapeKey === "ellipse" && "⬭"}
+                    {shapeKey === "thoughtformGateway1" && "◉"}
                   </span>
                   <span className="shape-name">{GATEWAY_SHAPE_LABELS[shapeKey]}</span>
                 </button>
