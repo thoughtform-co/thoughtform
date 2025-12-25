@@ -161,13 +161,18 @@ export function MorphingCTAButtons({
   const letterSpacing = lerp(0.15, 0.08, tStyle);
   const fontWeight = Math.round(lerp(700, 520, tStyle));
   const paddingY = lerp(14, 6, tStyle);
+  // Both button types converge to same padding for consistent alignment
   const paddingXPrimary = lerp(18, 12, tStyle);
   const paddingXSecondary = lerp(14, 12, tStyle);
 
-  // Content slides from centered → left-aligned as it becomes “telemetry-like”
+  // Content slides from centered → left-aligned as it becomes "telemetry-like"
+  // Both buttons use same left alignment at end state for visual consistency
   const contentLeftPct = lerp(50, 0, tStyle);
   const contentTranslateXPct = lerp(-50, 0, tStyle);
   const contentGap = `${lerp(10, 8, tStyle)}px`;
+
+  // Fixed index width ensures text alignment between both buttons
+  const finalIndexWidth = 38; // Enough for "[00] " with consistent spacing
 
   const baseTextShadow = "0 0 2px rgba(202, 165, 84, 0.35), 0 0 4px rgba(202, 165, 84, 0.18)";
 
@@ -267,16 +272,18 @@ export function MorphingCTAButtons({
               </span>
             )}
 
-            {/* Index reveals (00/01) */}
+            {/* Index reveals (00/01) - fixed width for consistent alignment */}
             <span
               style={{
                 width: `${indexWidth}px`,
+                minWidth: tStyle > 0.7 ? `${finalIndexWidth}px` : undefined,
                 overflow: "hidden",
                 opacity: indexOpacity,
                 fontSize: `${lerp(12, 10, tStyle)}px`,
                 fontWeight: 400,
                 letterSpacing: "0.02em",
                 color: textColor,
+                textAlign: "left",
               }}
               aria-hidden="true"
             >
@@ -319,8 +326,9 @@ export function MorphingCTAButtons({
       <div
         style={{
           position: "fixed",
-          left: "calc(var(--hud-padding, 32px) + var(--rail-width, 60px) + 16px)",
-          bottom: "calc(var(--hud-padding, 32px) + var(--corner-size, 40px) + 16px)",
+          // Position closer to left rail and lower toward corner
+          left: "calc(var(--hud-padding, 32px) + var(--rail-width, 60px) + 8px)",
+          bottom: "calc(var(--hud-padding, 32px) + var(--corner-size, 40px) + 8px)",
           zIndex: -1,
           display: "flex",
           flexDirection: "column",
@@ -349,7 +357,9 @@ export function MorphingCTAButtons({
             whiteSpace: "nowrap",
           }}
         >
-          <span style={{ minWidth: "34px", letterSpacing: "0.02em" }}>[{padIndex(0)}]</span>
+          <span style={{ minWidth: "38px", letterSpacing: "0.02em", textAlign: "left" }}>
+            [{padIndex(0)}]
+          </span>
           <span>START YOUR JOURNEY</span>
         </button>
         <button
@@ -370,7 +380,9 @@ export function MorphingCTAButtons({
             whiteSpace: "nowrap",
           }}
         >
-          <span style={{ minWidth: "34px", letterSpacing: "0.02em" }}>[{padIndex(1)}]</span>
+          <span style={{ minWidth: "38px", letterSpacing: "0.02em", textAlign: "left" }}>
+            [{padIndex(1)}]
+          </span>
           <span>CONTACT</span>
         </button>
       </div>

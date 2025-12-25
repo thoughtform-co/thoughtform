@@ -404,8 +404,9 @@ function NavigationCockpitInner() {
     // ═══════════════════════════════════════════════════════════════════
 
     // Base manifesto left position (centered)
+    // Definition state: left = 180px to align with hero wordmark (rail-width + 120px)
     const manifestoLeftPct = tDefToManifesto * 50; // 0% → 50%
-    const manifestoLeftPx = (1 - tDefToManifesto) * 184; // 184px → 0px
+    const manifestoLeftPx = (1 - tDefToManifesto) * 180; // 180px → 0px (matches wordmark position)
 
     // Frame width for position calculations
     const frameWidth = baseWidth + growthProgress * widthGrowth;
