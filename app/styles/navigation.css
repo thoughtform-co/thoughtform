@@ -96,6 +96,10 @@
   position: fixed;
   left: calc(var(--rail-width) + 120px);
   z-index: 10;
+  /* The raw wordmark SVG has built-in left whitespace in its viewBox.
+     This variable lets us nudge the visible glyphs so they align to the same vertical grid line
+     as the hero text frame + runway arrows. */
+  --wordmark-x-adjust: -12.4%;
 }
 
 .hero-wordmark-topleft {
@@ -105,6 +109,8 @@
 .hero-wordmark-topleft svg {
   width: 100%;
   height: auto;
+  transform: translateX(var(--wordmark-x-adjust, 0%));
+  transform-origin: top left;
 }
 
 .hero-wordmark-topleft svg .st0 {
@@ -1020,6 +1026,8 @@
     top: 12vh !important;
     display: flex;
     justify-content: center;
+    /* Keep centered on mobile */
+    --wordmark-x-adjust: 0%;
   }
 
   .hero-wordmark-topleft {

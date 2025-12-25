@@ -326,8 +326,9 @@ export function MorphingCTAButtons({
       <div
         style={{
           position: "fixed",
-          // Position closer to left rail and lower toward corner
-          left: "calc(var(--hud-padding, 32px) + var(--rail-width, 60px) + 8px)",
+          // Anchor the compact menu to the same vertical grid line as the hero content column
+          // (wordmark / runway arrows / bridge frame use calc(var(--rail-width) + 120px))
+          left: "calc(var(--rail-width, 60px) + 120px)",
           bottom: "calc(var(--hud-padding, 32px) + var(--corner-size, 40px) + 8px)",
           zIndex: -1,
           display: "flex",
