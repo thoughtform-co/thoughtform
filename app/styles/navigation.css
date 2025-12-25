@@ -1161,3 +1161,116 @@
     line-height: 1.75;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   COMPACT CTA MENU - Terminal-style navigation in bottom-left
+   Appears when scrolling past definition section
+   ═══════════════════════════════════════════════════════════════ */
+.compact-cta-menu {
+  position: fixed;
+  bottom: calc(var(--hud-padding, 32px) + var(--corner-size, 40px) + 16px);
+  left: calc(var(--hud-padding, 32px) + var(--rail-width, 60px) + 16px);
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  pointer-events: auto;
+  font-family: var(--font-data, "IBM Plex Mono", monospace);
+}
+
+.compact-cta-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease-out;
+  text-align: left;
+  font-family: inherit;
+  position: relative;
+}
+
+/* Hover background fill effect */
+.compact-cta-item::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--gold, #caa554);
+  opacity: 0;
+  transition: opacity 0.15s ease-out;
+  z-index: -1;
+}
+
+.compact-cta-item:hover::before,
+.compact-cta-item.hovered::before {
+  opacity: 1;
+}
+
+/* Index number styling [0], [1], etc */
+.compact-cta-index {
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  color: var(--gold, #caa554);
+  transition: color 0.15s ease-out;
+  min-width: 24px;
+}
+
+.compact-cta-item:hover .compact-cta-index,
+.compact-cta-item.hovered .compact-cta-index {
+  color: var(--void, #0a0908);
+}
+
+/* Label styling */
+.compact-cta-label {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gold, #caa554);
+  transition: color 0.15s ease-out;
+  white-space: nowrap;
+}
+
+.compact-cta-item:hover .compact-cta-label,
+.compact-cta-item.hovered .compact-cta-label {
+  color: var(--void, #0a0908);
+}
+
+/* CRT glow effect on items */
+.compact-cta-item:hover .compact-cta-label,
+.compact-cta-item:hover .compact-cta-index {
+  text-shadow: none;
+}
+
+.compact-cta-label,
+.compact-cta-index {
+  text-shadow:
+    0 0 2px rgba(202, 165, 84, 0.4),
+    0 0 4px rgba(202, 165, 84, 0.2);
+}
+
+/* Scanline effect overlay on the entire menu */
+.compact-cta-menu::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.03) 2px,
+    rgba(0, 0, 0, 0.03) 4px
+  );
+  opacity: 0.5;
+}
+
+/* Mobile responsive - hide on small screens */
+@media (max-width: 768px) {
+  .compact-cta-menu {
+    display: none;
+  }
+}

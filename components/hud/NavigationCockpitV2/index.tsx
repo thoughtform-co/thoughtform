@@ -25,6 +25,7 @@ import { ManifestoTerminal } from "./ManifestoTerminal";
 import { ManifestoSources } from "./ManifestoSources";
 import { ManifestoVideoStack } from "./ManifestoVideoStack";
 import { RunwayArrows } from "./RunwayArrows";
+import { MorphingCTAButtons } from "./MorphingCTAButtons";
 import { useScrollCapture } from "./hooks/useScrollCapture";
 // Styles consolidated into app/globals.css
 
@@ -69,6 +70,7 @@ function NavigationCockpitInner() {
 
   // Ref for frame button to get its actual position
   const frameButtonRef = useRef<HTMLButtonElement>(null);
+  const contactButtonRef = useRef<HTMLButtonElement>(null);
 
   // Ref for navbar logo (sigil destination)
   const navbarLogoRef = useRef<NavigationBarHandle>(null);
@@ -864,25 +866,24 @@ the interface for human-AI collaboration`}
           )}
         </div>
 
-        {/* Interface CTAs - outside the main frame, aligned to the same width */}
-        {tHeroToDef > 0.75 && tDefToManifesto < 1 && !isManifestoTerminalMode && (
+        {/* Interface CTAs - original buttons (morph overlay takes over as soon as tDefToManifesto > 0) */}
+        {/* Removed !isManifestoTerminalMode to allow smooth transition */}
+        {tHeroToDef > 0.75 && tDefToManifesto < 0.7 && (
           <div
             className="interface-cta-row"
             style={{
-              // Position below the frame so it doesn't extend the frame's background panel
-              // (only the logo/pronunciation frame should have the dark background)
               position: "absolute",
               left: 0,
               top: isMobile ? "calc(100% + 10px)" : "calc(100% + 14px)",
-              opacity: cardOpacity,
+              // Keep in DOM for measurement, but hide + disable interaction once morph begins
+              opacity: tDefToManifesto > 0 ? 0 : cardOpacity,
               visibility: cardOpacity > 0 ? "visible" : "hidden",
               width: "100%",
               display: "flex",
               flexDirection: isMobile ? "column" : "row",
-              // More breathing room between CTAs on desktop
               gap: isMobile ? "10px" : "22px",
               zIndex: 2,
-              pointerEvents: "auto",
+              pointerEvents: tDefToManifesto > 0 ? "none" : "auto",
             }}
           >
             {/* Primary CTA */}
@@ -941,8 +942,9 @@ the interface for human-AI collaboration`}
                   WebkitBackgroundClip: "text",
                   WebkitTextFillColor: "transparent",
                   backgroundClip: "text",
-                  // Only show after morph completes
                   visibility: tHeroToDef < 0.8 ? "hidden" : "visible",
+                  // Fade out faster during morph
+                  opacity: 1 - tDefToManifesto * 3,
                 }}
               >
                 ›››
@@ -959,8 +961,9 @@ the interface for human-AI collaboration`}
                   WebkitBackgroundClip: "text",
                   WebkitTextFillColor: "transparent",
                   backgroundClip: "text",
-                  // Only show after morph completes
                   visibility: tHeroToDef < 0.8 ? "hidden" : "visible",
+                  // Fade out faster during morph
+                  opacity: 1 - tDefToManifesto * 3,
                 }}
               >
                 ‹‹‹
@@ -970,6 +973,7 @@ the interface for human-AI collaboration`}
             {/* Secondary CTA - semantic dawn frame */}
             <button
               type="button"
+              ref={contactButtonRef}
               onClick={() => handleNavigate("contact")}
               style={{
                 flex: isMobile ? "1 1 auto" : "0 0 172px",
@@ -1055,6 +1059,19 @@ the interface for human-AI collaboration`}
         scrollProgress={scrollProgress}
         onNavigate={handleNavigate}
       />
+
+      {/* Morphing CTA Buttons - Evolve from full buttons to compact terminal-style menu
+          Buttons appear in Interface section, then smoothly morph and move to bottom-left corner */}
+      {!isMobile && (
+        <MorphingCTAButtons
+          tHeroToDef={tHeroToDef}
+          tDefToManifesto={tDefToManifesto}
+          isMobile={isMobile}
+          onNavigate={handleNavigate}
+          journeyButtonRef={frameButtonRef}
+          contactButtonRef={contactButtonRef}
+        />
+      )}
 
       {/* Admin Panel - Only visible to authorized users */}
       <AdminGate>
