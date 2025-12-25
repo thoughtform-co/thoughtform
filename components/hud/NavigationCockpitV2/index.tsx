@@ -52,6 +52,8 @@ function NavigationCockpitInner() {
   const { scrollProgress, scrollTo } = useLenis();
   const { config: rawConfig } = useParticleConfig();
   const isMobile = useIsMobile();
+  const definitionHeightRef = useRef<number>(280);
+  const lastDefinitionHeightMeasureTsRef = useRef(0);
 
   // Refs for tracking element positions
   const wordmarkContainerRef = useRef<HTMLDivElement>(null);
@@ -320,8 +322,7 @@ function NavigationCockpitInner() {
   const definitionBottomVh = heroBottomVh;
 
   // Apply smoother easing to growth for more subtle animation
-  const easeOutCubic = (t: number) => 1 - Math.pow(1 - t, 3);
-  const growthProgress = easeOutCubic(tDefToManifesto);
+  const growthProgress = tDefToManifesto;
 
   // Calculate current height during transition
   const currentHeight = baseHeight + growthProgress * heightGrowth;
@@ -347,8 +348,7 @@ function NavigationCockpitInner() {
     const heroBottomOffsetPx = tHeroToDef * defBottomPx;
     const definitionBottomPx = heroBottomPx + heroBottomOffsetPx;
     const definitionBottomVh = heroBottomVh;
-    const easeOutCubic = (t: number) => 1 - Math.pow(1 - t, 3);
-    const growthProgress = easeOutCubic(tDefToManifesto);
+    const growthProgress = tDefToManifesto;
 
     const manifestoBottomPxCurrent =
       definitionBottomPx + (manifestoBottomPx - definitionBottomPx) * tDefToManifesto;
@@ -372,7 +372,12 @@ function NavigationCockpitInner() {
     // Calculate frame height
     // During definition state (tDefToManifesto = 0), content needs ~280px (wordmark + text + button + padding)
     // During manifesto transition, grow to actualContentHeight (720px)
-    const definitionContentHeight = 280; // Approximate height needed for definition content
+    // Use measured definition height (from the live layout) to avoid a sudden snap
+    // when we switch from `height: auto` → fixed height at the start of the transition.
+    const definitionContentHeight = Math.max(
+      160,
+      Math.min(actualContentHeight, definitionHeightRef.current)
+    );
     const frameHeight =
       tDefToManifesto > 0
         ? `${definitionContentHeight + growthProgress * (actualContentHeight - definitionContentHeight)}px`
@@ -440,6 +445,27 @@ function NavigationCockpitInner() {
     widthGrowth,
     actualContentHeight,
   ]);
+
+  // Measure the definition frame height right before the manifesto transition starts.
+  // This prevents the initial "auto → fixed height" snap from feeling sudden.
+  useEffect(() => {
+    if (isMobile) return;
+    if (tHeroToDef < 0.9) return;
+    // Measure only while we're still in definition (before the manifesto transition begins).
+    if (scrollProgress < 0.12 || scrollProgress > 0.15) return;
+    if (!bridgeFrameRef.current) return;
+
+    const now = Date.now();
+    if (now - lastDefinitionHeightMeasureTsRef.current < 250) return;
+    lastDefinitionHeightMeasureTsRef.current = now;
+
+    requestAnimationFrame(() => {
+      const el = bridgeFrameRef.current;
+      if (!el) return;
+      const h = Math.round(el.getBoundingClientRect().height);
+      if (h > 0) definitionHeightRef.current = h;
+    });
+  }, [isMobile, tHeroToDef, scrollProgress]);
 
   // Handle navigation
   const handleNavigate = useCallback(
@@ -690,6 +716,10 @@ function NavigationCockpitInner() {
         {/* Show on both desktop and mobile */}
         {tHeroToDef > 0.7 && (
           <>
+            {/*
+              Fade the card corners out much faster once the manifesto transition starts
+              to avoid overlapping "frame" cues (card corners + terminal corners + outer border).
+            */}
             <div
               className="card-corner card-corner-tl"
               style={{
@@ -698,8 +728,12 @@ function NavigationCockpitInner() {
                 left: -1,
                 width: "16px",
                 height: "16px",
-                borderTop: `1px solid rgba(202, 165, 84, ${cardOpacity * 0.6})`,
-                borderLeft: `1px solid rgba(202, 165, 84, ${cardOpacity * 0.6})`,
+                borderTop: `1px solid rgba(202, 165, 84, ${
+                  cardOpacity * 0.6 * Math.max(0, 1 - tDefToManifesto * 6)
+                })`,
+                borderLeft: `1px solid rgba(202, 165, 84, ${
+                  cardOpacity * 0.6 * Math.max(0, 1 - tDefToManifesto * 6)
+                })`,
                 pointerEvents: "none",
                 zIndex: 5,
               }}
@@ -712,8 +746,12 @@ function NavigationCockpitInner() {
                 right: -1,
                 width: "16px",
                 height: "16px",
-                borderBottom: `1px solid rgba(202, 165, 84, ${cardOpacity * 0.6})`,
-                borderRight: `1px solid rgba(202, 165, 84, ${cardOpacity * 0.6})`,
+                borderBottom: `1px solid rgba(202, 165, 84, ${
+                  cardOpacity * 0.6 * Math.max(0, 1 - tDefToManifesto * 6)
+                })`,
+                borderRight: `1px solid rgba(202, 165, 84, ${
+                  cardOpacity * 0.6 * Math.max(0, 1 - tDefToManifesto * 6)
+                })`,
                 pointerEvents: "none",
                 zIndex: 5,
               }}

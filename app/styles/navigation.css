@@ -152,6 +152,19 @@
   box-sizing: border-box;
   padding: 16px 20px;
   min-height: 100px;
+  /* IMPORTANT: avoid "double frame" (outer bridge-frame border + inner hero-text-frame border) */
+  border: none;
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+/* Also remove hero-text-frame corner pseudo-elements inside the bridge frame.
+   Those corners were drawing an additional gold right/bottom edge (per debug logs). */
+.bridge-frame .hero-text-frame::before,
+.bridge-frame .hero-text-frame::after {
+  content: none;
+  border: none;
 }
 
 .terminal-content-wrapper {
@@ -434,8 +447,9 @@
 }
 
 .terminal-corner-br {
-  bottom: 0;
-  right: 0;
+  /* Align to the outer frame border so we don't create a "double" bottom edge */
+  bottom: -1px;
+  right: -1px;
   border-bottom: 2px solid var(--gold, #caa554);
   border-right: 2px solid var(--gold, #caa554);
 }
