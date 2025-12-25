@@ -88,6 +88,12 @@ export function MorphingCTAButtons({
   const indexOpacity = easeOutCubic(indexT);
   const indexWidth = lerp(0, 34, indexOpacity);
 
+  // Content alignment values - must be before early return
+  const contentLeftPct = lerp(50, 0, tStyle);
+  const contentTranslateXPct = lerp(-50, 0, tStyle);
+  const paddingXPrimary = lerp(18, 12, tStyle);
+  const paddingXSecondary = lerp(14, 12, tStyle);
+
   // Keep source rects warm while we are in Interface state (before the morph begins)
   useLayoutEffect(() => {
     if (!enabled) return;
@@ -161,14 +167,9 @@ export function MorphingCTAButtons({
   const letterSpacing = lerp(0.15, 0.08, tStyle);
   const fontWeight = Math.round(lerp(700, 520, tStyle));
   const paddingY = lerp(14, 6, tStyle);
-  // Both button types converge to same padding for consistent alignment
-  const paddingXPrimary = lerp(18, 12, tStyle);
-  const paddingXSecondary = lerp(14, 12, tStyle);
 
   // Content slides from centered → left-aligned as it becomes "telemetry-like"
   // Both buttons use same left alignment at end state for visual consistency
-  const contentLeftPct = lerp(50, 0, tStyle);
-  const contentTranslateXPct = lerp(-50, 0, tStyle);
   const contentGap = `${lerp(10, 8, tStyle)}px`;
 
   // Fixed index width ensures text alignment between both buttons
@@ -250,8 +251,8 @@ export function MorphingCTAButtons({
               whiteSpace: "nowrap",
             }}
           >
-            {/* Primary arrows (fade + collapse away) */}
-            {isPrimary && (
+            {/* Primary arrows (fade + collapse away) - completely remove when width is 0 */}
+            {isPrimary && arrowWidth > 0.1 && (
               <span
                 className="journey-arrow-pulse"
                 style={{
@@ -265,6 +266,7 @@ export function MorphingCTAButtons({
                   WebkitBackgroundClip: "text",
                   WebkitTextFillColor: "transparent",
                   backgroundClip: "text",
+                  display: "inline-block",
                 }}
                 aria-hidden="true"
               >
@@ -275,8 +277,8 @@ export function MorphingCTAButtons({
             {/* Index reveals (00/01) - fixed width for consistent alignment */}
             <span
               style={{
-                width: `${indexWidth}px`,
-                minWidth: tStyle > 0.7 ? `${finalIndexWidth}px` : undefined,
+                // Use fixed width at end state to ensure alignment
+                width: tStyle > 0.7 ? `${finalIndexWidth}px` : `${indexWidth}px`,
                 overflow: "hidden",
                 opacity: indexOpacity,
                 fontSize: `${lerp(12, 10, tStyle)}px`,
@@ -284,6 +286,7 @@ export function MorphingCTAButtons({
                 letterSpacing: "0.02em",
                 color: textColor,
                 textAlign: "left",
+                display: "inline-block",
               }}
               aria-hidden="true"
             >
@@ -293,8 +296,8 @@ export function MorphingCTAButtons({
             {/* Label stays consistent */}
             <span>{opts.label}</span>
 
-            {/* Right arrows for primary */}
-            {isPrimary && (
+            {/* Right arrows for primary - completely remove when width is 0 */}
+            {isPrimary && arrowWidth > 0.1 && (
               <span
                 className="journey-arrow-pulse"
                 style={{
@@ -308,6 +311,7 @@ export function MorphingCTAButtons({
                   WebkitBackgroundClip: "text",
                   WebkitTextFillColor: "transparent",
                   backgroundClip: "text",
+                  display: "inline-block",
                 }}
                 aria-hidden="true"
               >
@@ -326,10 +330,10 @@ export function MorphingCTAButtons({
       <div
         style={{
           position: "fixed",
-          // Anchor the compact menu to the same vertical grid line as the hero content column
-          // (wordmark / runway arrows / bridge frame use calc(var(--rail-width) + 120px))
-          left: "calc(var(--rail-width, 60px) + 120px)",
-          bottom: "calc(var(--hud-padding, 32px) + var(--corner-size, 40px) + 8px)",
+          // Move diagonally inward: closer to rail (left) and lower (bottom)
+          // Negative bottom offset moves menu further down
+          left: "calc(var(--hud-padding, 32px) + var(--rail-width, 60px) + 0px)",
+          bottom: "calc(var(--hud-padding, 32px) + var(--corner-size, 40px) - 16px)",
           zIndex: -1,
           display: "flex",
           flexDirection: "column",
@@ -341,7 +345,9 @@ export function MorphingCTAButtons({
         aria-hidden="true"
       >
         <button
-          ref={measureJourneyRef}
+          ref={(el) => {
+            measureJourneyRef.current = el;
+          }}
           style={{
             display: "inline-flex",
             alignItems: "center",
@@ -364,7 +370,9 @@ export function MorphingCTAButtons({
           <span>START YOUR JOURNEY</span>
         </button>
         <button
-          ref={measureContactRef}
+          ref={(el) => {
+            measureContactRef.current = el;
+          }}
           style={{
             display: "inline-flex",
             alignItems: "center",
