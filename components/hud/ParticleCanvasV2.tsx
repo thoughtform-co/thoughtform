@@ -877,7 +877,7 @@ function initParticles(config: ParticleSystemConfig): Particle[] {
 
   // ─── TERRAIN (Manifold) ───
   // Extend terrain deeper into the distance so the landscape doesn't "end"
-  // before the later sections (services/contact) and crater descent.
+  // before the later sections (services/contact).
   const terrainRows = Math.max(manifold.rows, 220);
   const terrainColumns = manifold.columns;
 
@@ -924,26 +924,6 @@ function initParticles(config: ParticleSystemConfig): Particle[] {
         y -= Math.random() * mountainHeight * 0.1;
       }
 
-      particles.push(createPoint(x, y, z, "terrain", manifoldColorRgb, 0));
-    }
-  }
-
-  // ─── CRATER FLOOR DENSITY ───
-  // Add extra terrain particles concentrated at the bottom of the crater
-  // so the impact basin reads as dense + deep.
-  {
-    const craterCenterX = 0;
-    // Crater center is positioned so the rim is reached when the manifesto finishes revealing.
-    const craterCenterZ = 6700;
-    const floorRadius = 520;
-    const floorPoints = 850;
-
-    for (let i = 0; i < floorPoints; i++) {
-      const angle = Math.random() * Math.PI * 2;
-      const r = Math.sqrt(Math.random()) * floorRadius; // uniform disk
-      const x = craterCenterX + Math.cos(angle) * r;
-      const z = craterCenterZ + Math.sin(angle) * r * 0.4; // slight squash for perspective
-      const y = getTerrainY(x, z, manifold) - Math.random() * 8;
       particles.push(createPoint(x, y, z, "terrain", manifoldColorRgb, 0));
     }
   }
@@ -1000,6 +980,8 @@ function initParticles(config: ParticleSystemConfig): Particle[] {
     }
   });
 
+  // Pre-sort once by depth (far → near) so the render loop doesn't allocate/sort each frame.
+  particles.sort((a, b) => b.z - a.z);
   return particles;
 }
 
@@ -1126,32 +1108,10 @@ export function ParticleCanvasV2({
       const time = timeRef.current;
       const rawScrollP = scrollProgressRef.current;
 
-      // Lock scroll progress while manifesto scroll-capture is active to avoid Lenis momentum drift
-      // moving the particle world forward before the manifesto is fully revealed.
-      const lockActive = lockScrollProgressRef.current && !manifestoCompleteRef.current;
-      if (lockActive && !wasLockActiveRef.current) {
-        lockedScrollProgressRef.current = rawScrollP;
-        wasLockActiveRef.current = true;
-      } else if (!lockActive && wasLockActiveRef.current) {
-        wasLockActiveRef.current = false;
-      }
-
-      const scrollP = lockActive ? lockedScrollProgressRef.current : rawScrollP;
-
-      // Add extra "travel" during the manifesto reveal so we arrive at the crater rim
-      // exactly when the last line finishes.
-      // Travel distance during manifesto reveal so we land on the crater rim at the final line.
-      // With capture starting near scrollP≈0.342 (scrollZ≈3080) and rim at slopeStartZ≈3600,
-      // 520px gets us to the edge without overshooting.
-      const MANIFESTO_TRAVEL_Z = 520; // px in world-Z
-      const manifestoTravelFactor = manifestoCompleteRef.current
-        ? 1
-        : lockActive
-          ? Math.max(0, Math.min(1, manifestoRevealProgressRef.current))
-          : 0;
-      const extraTravelZ = MANIFESTO_TRAVEL_Z * manifestoTravelFactor;
-
-      const scrollZ = scrollP * 9000 + extraTravelZ;
+      // No manifesto/crater interventions: camera/world travel is always a pure function
+      // of the page's scroll progress.
+      const scrollP = rawScrollP;
+      const scrollZ = scrollP * 9000;
 
       const currentSection = Math.floor(scrollP * 4) + 1;
       const sectionProgress = (scrollP * 4) % 1;
@@ -1171,13 +1131,9 @@ export function ParticleCanvasV2({
       const easeInOutCubic = (t: number) =>
         t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 
-      // Services camera tilt: only after manifesto is fully revealed.
-      const servicesTiltRaw = manifestoCompleteRef.current ? clamp01((scrollP - 0.5) / 0.22) : 0;
-      const servicesTilt = easeInOutCubic(servicesTiltRaw);
-      const dynamicPitchDeg = camera.pitch + servicesTilt * 10; // subtle forward tilt
-
-      // Slightly relax terrain clipping during tilt so we can see more of the basin.
-      const dynamicTerrainClipY = Math.max(0, camera.terrainClipY - servicesTilt * 0.12);
+      // No post-manifesto camera tilt — keep camera motion continuous and uniform.
+      const dynamicPitchDeg = camera.pitch;
+      const dynamicTerrainClipY = camera.terrainClipY;
 
       // Pre-calculate pitch/yaw/roll transforms
       const pitchRad = (dynamicPitchDeg * Math.PI) / 180;
@@ -1190,12 +1146,9 @@ export function ParticleCanvasV2({
       const cosRoll = Math.cos(rollRad);
       const sinRoll = Math.sin(rollRad);
 
-      // Sort by depth
-      const sorted = [...particlesRef.current].sort((a, b) => {
-        return b.z - scrollZ - (a.z - scrollZ);
-      });
-
-      sorted.forEach((p) => {
+      const particles = particlesRef.current;
+      for (let i = 0; i < particles.length; i++) {
+        const p = particles[i];
         let relZ: number;
         let particleAlpha = 1;
         let terrainAlphaMultiplier = 1;
@@ -1212,13 +1165,9 @@ export function ParticleCanvasV2({
         } else if (p.type === "star") {
           // Starfield particles - fixed in space (don't scroll with terrain)
           relZ = p.z; // Stars are at fixed positions
-          particleAlpha = 0.6 + Math.random() * 0.4; // Twinkle effect
+          particleAlpha = 0.8; // Base brightness; twinkle handled later via sine
         } else {
           relZ = p.z - scrollZ;
-
-          // Remove the large circular "Event Horizon" particle motif (sphere)
-          // so the crater/slope reads cleanly.
-          if (p.landmarkId === "horizon") return;
 
           if (p.landmark) {
             const landmarkSection = p.landmark;
@@ -1232,80 +1181,24 @@ export function ParticleCanvasV2({
               particleAlpha = 0.3;
             } else {
               particleAlpha = 0;
-              return;
+              continue;
             }
           }
         }
 
         // Culling
         if (p.type === "terrain") {
-          if (relZ <= 30 || relZ > MAX_DEPTH) return;
+          if (relZ <= 30 || relZ > MAX_DEPTH) continue;
         } else {
-          if (relZ <= 5 || relZ > MAX_DEPTH) return;
+          if (relZ <= 5 || relZ > MAX_DEPTH) continue;
         }
 
         // Breathing animation
         const breatheX = Math.sin(time * 0.015 + p.phase) * 5;
         const breatheY = Math.cos(time * 0.012 + p.phase * 1.3) * 4;
 
-        // ═══════════════════════════════════════════════════════════════════
-        // CRATER EFFECT - Manifold turns into a long slope that descends into a crater
-        // This is a TERRAIN MORPH (not camera-relative) so the crater lives "out there"
-        // and the world appears to bend down into it.
-        // ═══════════════════════════════════════════════════════════════════
-        let craterOffset = 0;
-        if (p.type === "terrain") {
-          // Crater morph is synced to the manifesto typing:
-          // - While scroll-capture is active, we form the crater as text reveals
-          // - At the final line, we're at the rim (see MANIFESTO_TRAVEL_Z)
-          // - Only AFTER the manifesto is complete do we start moving over the crater
-          const easedMorph = manifestoTravelFactor * manifestoTravelFactor;
-
-          if (easedMorph > 0) {
-            // Crater positioned so:
-            // scrollZ ≈ 0.40*9000 + MANIFESTO_TRAVEL_Z (700) = 4300 ⇒ slopeStartZ=4300 ⇒ craterCenterZ=6700
-            const craterCenterX = 0;
-            const craterCenterZ = 6700;
-
-            // Long descent slope (start well before the crater)
-            const slopeStartZ = craterCenterZ - 2400;
-            const slopeEndZ = craterCenterZ;
-            const slopeT =
-              p.z <= slopeStartZ
-                ? 0
-                : p.z >= slopeEndZ
-                  ? 1
-                  : (p.z - slopeStartZ) / (slopeEndZ - slopeStartZ);
-            const slopeEase = slopeT * slopeT;
-            const slopeDepth = 1100; // How far the manifold bends downward before the bowl
-            const slopeOffset = slopeEase * slopeDepth;
-
-            // Crater bowl (adds extra depth near the center)
-            const craterRadius = 3400;
-            const dxFromCenter = p.x - craterCenterX;
-            const dzFromCenter = p.z - craterCenterZ;
-            const distFromCenter = Math.sqrt(
-              dxFromCenter * dxFromCenter + dzFromCenter * dzFromCenter * 4
-            ); // Slightly elongated in Z for perspective
-
-            let bowlOffset = 0;
-            if (distFromCenter < craterRadius) {
-              const normalizedDist = distFromCenter / craterRadius;
-              const bowlCurve = 1 - normalizedDist * normalizedDist; // Parabolic
-              const bowlDepth = 1400;
-              bowlOffset = bowlDepth * bowlCurve * bowlCurve;
-
-              // Rim lip (small uplift near the crater edge)
-              if (normalizedDist > 0.78) {
-                const rimT = (normalizedDist - 0.78) / 0.22;
-                const rimHeight = 220 * Math.sin(rimT * Math.PI);
-                bowlOffset -= rimHeight;
-              }
-            }
-
-            craterOffset = (slopeOffset + bowlOffset) * easedMorph;
-          }
-        }
+        // Crater removed: no terrain morph offsets.
+        const craterOffset = 0;
 
         // Get world position with breathing and truck offset
         // Truck moves camera, so we offset particles in opposite direction
@@ -1319,7 +1212,7 @@ export function ParticleCanvasV2({
         worldZ = rotZ;
 
         // Skip if behind camera after yaw rotation
-        if (worldZ <= 5) return;
+        if (worldZ <= 5) continue;
 
         // Perspective projection
         const scale = FOCAL / worldZ;
@@ -1342,9 +1235,9 @@ export function ParticleCanvasV2({
 
         // Bounds check
         if (p.type === "terrain") {
-          if (x < -150 || x > width + 150 || y < -150 || y > height + 150) return;
+          if (x < -150 || x > width + 150 || y < -150 || y > height + 150) continue;
         } else {
-          if (x < -50 || x > width + 50 || y < -50 || y > height + 50) return;
+          if (x < -50 || x > width + 50 || y < -50 || y > height + 50) continue;
         }
 
         // Depth-based alpha - atmospheric fade creates integration with background
@@ -1366,7 +1259,7 @@ export function ParticleCanvasV2({
 
         if (p.type === "terrain") {
           // Terrain: clip above certain screen percentage
-          if (dynamicTerrainClipY > 0 && y < height * dynamicTerrainClipY) return;
+          if (dynamicTerrainClipY > 0 && y < height * dynamicTerrainClipY) continue;
 
           // Terrain: scale size based on depth, nearby = bigger
           const sizeMultiplier = Math.min(2.5, 0.6 + scale * 1.2);
@@ -1437,10 +1330,10 @@ export function ParticleCanvasV2({
           // STARFIELD RENDERING
           const twinkle = 0.4 + Math.sin(time * 0.05 + p.phase * 10) * 0.3;
           const starAlpha = finalAlpha * twinkle * 0.8;
-          const starSize = GRID * (0.8 + Math.random() * 0.4);
+          const starSize = GRID * (0.8 + (p.size - 1) * 0.8);
           drawPixel(ctx, x, y, p.color, starAlpha, starSize);
         }
-      });
+      }
 
       // Gateway halo effect (visible in hero section) - very subtle, atmospheric
       if (scrollP < 0.25) {

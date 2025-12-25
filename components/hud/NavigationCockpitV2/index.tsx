@@ -26,7 +26,6 @@ import { ManifestoSources } from "./ManifestoSources";
 import { ManifestoVideoStack } from "./ManifestoVideoStack";
 import { RunwayArrows } from "./RunwayArrows";
 import { MorphingCTAButtons } from "./MorphingCTAButtons";
-import { useScrollCapture } from "./hooks/useScrollCapture";
 // Styles consolidated into app/globals.css
 
 // ═══════════════════════════════════════════════════════════════════
@@ -99,9 +98,16 @@ function NavigationCockpitInner() {
   // Only used for geometric shapes animation after manifesto is complete
   const [manifestoScrollProgress, setManifestoScrollProgress] = useState(0);
 
-  // State for manifesto reveal progress (scroll-capture based)
-  const [manifestoRevealProgress, setManifestoRevealProgress] = useState(0);
-  const [manifestoComplete, setManifestoComplete] = useState(false);
+  // Manifesto reveal is driven by natural page scroll (no wheel capture / no camera intervention).
+  const manifestoRevealProgress = useMemo(() => {
+    // Reveal across the manifesto segment of the global scroll range.
+    // 0.35 is where the terminal/question is fully "ready"; 0.50 is where services begins.
+    const REVEAL_START = 0.35;
+    const REVEAL_END = 0.5;
+    const t = (scrollProgress - REVEAL_START) / (REVEAL_END - REVEAL_START);
+    return Math.max(0, Math.min(1, t));
+  }, [scrollProgress]);
+  const manifestoComplete = manifestoRevealProgress >= 1;
 
   // Calculate scroll progress within manifesto section
   // Only calculate when manifesto is complete (for geometric shapes animation)
@@ -255,36 +261,12 @@ function NavigationCockpitInner() {
   );
   const tDefToManifesto = easeInOutCubic(rawTDefToManifesto);
 
-  // Scroll capture: when terminal is visible and question is shown, capture scroll to reveal manifesto
-  const shouldCaptureScroll = tDefToManifesto > 0.95 && !manifestoComplete;
+  // NOTE: Scroll capture intentionally disabled — manifesto reveal is scroll-driven and the
+  // manifold/camera must never pause.
+  const shouldCaptureScroll = false;
   // Keep manifesto terminal layout active for the whole manifesto phase so the question text
   // doesn't render in the "card" layout and then jump when we flip to terminal.
   const isManifestoTerminalMode = scrollProgress >= DEF_TO_MANIFESTO_START;
-
-  useScrollCapture({
-    isActive: shouldCaptureScroll,
-    progress: manifestoRevealProgress,
-    onProgressChange: setManifestoRevealProgress,
-    scrollSpeed: 0.0015, // Slower for comfortable reading
-    onComplete: () => setManifestoComplete(true),
-    onReleaseScrollPx: (carryPx) => {
-      // Continue scrolling smoothly (Lenis) instead of hard-stopping at completion.
-      // This preserves the site's signature scroll feel.
-      if (carryPx <= 0) return;
-      // Defer to next frame so state changes (manifestoComplete) can settle.
-      requestAnimationFrame(() => {
-        scrollTo(window.scrollY + carryPx);
-      });
-    },
-  });
-
-  // Reset manifesto progress when scrolling back up (leaving terminal view)
-  useEffect(() => {
-    if (tDefToManifesto < 0.9 && (manifestoRevealProgress > 0 || manifestoComplete)) {
-      setManifestoRevealProgress(0);
-      setManifestoComplete(false);
-    }
-  }, [tDefToManifesto, manifestoRevealProgress, manifestoComplete]);
 
   // ═══════════════════════════════════════════════════════════════════
   // MANIFESTO → SERVICES TRANSITION PROGRESS
@@ -858,11 +840,7 @@ the interface for human-AI collaboration`}
                 width: "100%",
               }}
             >
-              <ManifestoTerminal
-                revealProgress={manifestoRevealProgress}
-                isActive={true}
-                onComplete={() => setManifestoComplete(true)}
-              />
+              <ManifestoTerminal revealProgress={manifestoRevealProgress} isActive={true} />
             </div>
           )}
         </div>

@@ -34,11 +34,48 @@ export function useScrollCapture({
   const progressRef = useRef(progress);
   const hasCompletedRef = useRef(false);
   const [isCapturing, setIsCapturing] = useState(false);
+  const pendingProgressRef = useRef<number | null>(null);
+  const rafIdRef = useRef<number | null>(null);
 
   // Keep ref in sync with prop
   useEffect(() => {
     progressRef.current = progress;
   }, [progress]);
+
+  // Throttle external progress updates to once per animation frame to avoid
+  // excessive React re-renders during high-frequency wheel/trackpad input.
+  const scheduleProgressUpdate = useCallback(
+    (nextProgress: number) => {
+      pendingProgressRef.current = nextProgress;
+      if (rafIdRef.current !== null) return;
+      rafIdRef.current = requestAnimationFrame(() => {
+        rafIdRef.current = null;
+        const pending = pendingProgressRef.current;
+        if (pending === null) return;
+        pendingProgressRef.current = null;
+        onProgressChange(pending);
+      });
+    },
+    [onProgressChange]
+  );
+
+  // Cleanup any pending RAF on unmount / deactivation
+  useEffect(() => {
+    if (!isActive) {
+      pendingProgressRef.current = null;
+      if (rafIdRef.current !== null) {
+        cancelAnimationFrame(rafIdRef.current);
+        rafIdRef.current = null;
+      }
+    }
+    return () => {
+      pendingProgressRef.current = null;
+      if (rafIdRef.current !== null) {
+        cancelAnimationFrame(rafIdRef.current);
+        rafIdRef.current = null;
+      }
+    };
+  }, [isActive]);
 
   // Reset completion flag when deactivated
   useEffect(() => {
@@ -83,6 +120,12 @@ export function useScrollCapture({
 
         if (currentProgress !== 1) {
           progressRef.current = 1;
+          // Completion should update immediately (we may be about to release scroll to Lenis)
+          pendingProgressRef.current = null;
+          if (rafIdRef.current !== null) {
+            cancelAnimationFrame(rafIdRef.current);
+            rafIdRef.current = null;
+          }
           onProgressChange(1);
         }
 
@@ -127,10 +170,10 @@ export function useScrollCapture({
 
       if (newProgress !== currentProgress) {
         progressRef.current = newProgress;
-        onProgressChange(newProgress);
+        scheduleProgressUpdate(newProgress);
       }
     },
-    [isActive, scrollSpeed, onProgressChange, onComplete, onReleaseScrollPx]
+    [isActive, scrollSpeed, onProgressChange, onComplete, onReleaseScrollPx, scheduleProgressUpdate]
   );
 
   // Add/remove wheel listener
