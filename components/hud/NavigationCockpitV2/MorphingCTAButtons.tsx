@@ -345,9 +345,7 @@ export function MorphingCTAButtons({
         aria-hidden="true"
       >
         <button
-          ref={(el) => {
-            measureJourneyRef.current = el;
-          }}
+          ref={measureJourneyRef}
           style={{
             display: "inline-flex",
             alignItems: "center",
@@ -370,9 +368,7 @@ export function MorphingCTAButtons({
           <span>START YOUR JOURNEY</span>
         </button>
         <button
-          ref={(el) => {
-            measureContactRef.current = el;
-          }}
+          ref={measureContactRef}
           style={{
             display: "inline-flex",
             alignItems: "center",
