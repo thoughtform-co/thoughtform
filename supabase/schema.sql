@@ -116,6 +116,33 @@ create trigger update_particle_config_updated_at
   before update on particle_config
   for each row execute function update_updated_at_column();
 
+-- Service Sigils table (GLOBAL configuration for service card sigils)
+-- Stores sigil configurations for the 3 service cards
+create table if not exists service_sigils (
+  id uuid primary key default gen_random_uuid(),
+  card_index integer not null unique, -- 0, 1, 2 (left, center, right)
+  shape text not null default 'torus',
+  particle_count integer not null default 200,
+  color text not null default '202, 165, 84', -- RGB format
+  animation_params jsonb default '{"drift": 1, "pulse": 1, "glitch": 0.1}'::jsonb,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+-- Apply updated_at trigger to service_sigils
+drop trigger if exists update_service_sigils_updated_at on service_sigils;
+create trigger update_service_sigils_updated_at
+  before update on service_sigils
+  for each row execute function update_updated_at_column();
+
+-- Insert default sigil configs for the 3 service cards
+insert into service_sigils (card_index, shape, particle_count, color, animation_params)
+values 
+  (0, 'gateway', 200, '202, 165, 84', '{"drift": 1, "pulse": 1, "glitch": 0.1}'::jsonb),
+  (1, 'torus', 200, '202, 165, 84', '{"drift": 1, "pulse": 1, "glitch": 0.1}'::jsonb),
+  (2, 'spiral', 200, '202, 165, 84', '{"drift": 1, "pulse": 1, "glitch": 0.1}'::jsonb)
+on conflict (card_index) do nothing;
+
 -- Insert default home page
 insert into pages (slug, title) 
 values ('home', 'Thoughtform | Navigate AI for Creative Breakthroughs')

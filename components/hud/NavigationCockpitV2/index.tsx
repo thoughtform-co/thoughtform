@@ -13,7 +13,9 @@ import type { ParticlePosition } from "../ThoughtformSigil";
 import { useLenis } from "@/lib/hooks/useLenis";
 import { useIsMobile } from "@/lib/hooks/useMediaQuery";
 import { ParticleConfigProvider, useParticleConfig } from "@/lib/contexts/ParticleConfigContext";
+import { SigilConfigProvider, useSigilConfig } from "@/lib/contexts/SigilConfigContext";
 import { AdminGate, ParticleAdminPanel } from "@/components/admin";
+import { useAuth } from "@/components/auth/AuthProvider";
 
 // Extracted components
 import { ModuleCards } from "./ModuleCards";
@@ -26,6 +28,14 @@ import { ManifestoSources } from "./ManifestoSources";
 import { ManifestoVideoStack } from "./ManifestoVideoStack";
 import { RunwayArrows } from "./RunwayArrows";
 import { MorphingCTAButtons } from "./MorphingCTAButtons";
+import {
+  ServicesDeck,
+  SERVICES_CARD_WIDTH,
+  SERVICES_DATA,
+  DEFAULT_SIGIL_CONFIGS,
+} from "./ServicesDeck";
+import { SigilCanvas, type SigilConfig } from "./SigilCanvas";
+import { SigilEditorPanel } from "./SigilEditorPanel";
 // Styles consolidated into app/globals.css
 
 // ═══════════════════════════════════════════════════════════════════
@@ -35,6 +45,9 @@ import { MorphingCTAButtons } from "./MorphingCTAButtons";
 // Fixed scroll thresholds for hero→definition transition
 const HERO_END = 0; // Transition starts immediately on scroll
 const DEF_START = 0.12; // Transition completes by 12% of total scroll
+
+// Services card target height (the manifesto frame shrinks down into this)
+const SERVICES_CARD_HEIGHT = 420;
 
 // Easing function for smooth transition
 function easeInOutCubic(t: number): number {
@@ -52,6 +65,37 @@ function NavigationCockpitInner() {
   const { scrollProgress, scrollTo } = useLenis();
   const { config: rawConfig } = useParticleConfig();
   const isMobile = useIsMobile();
+  const { user } = useAuth();
+  const isAdmin = !!user?.id;
+  const { configs: sigilConfigsContext, updateConfig: updateSigilConfig } = useSigilConfig();
+  const sigilConfigs: SigilConfig[] =
+    sigilConfigsContext.length === 3
+      ? (sigilConfigsContext as SigilConfig[])
+      : (DEFAULT_SIGIL_CONFIGS as SigilConfig[]);
+  const [editingServiceSigilIndex, setEditingServiceSigilIndex] = useState<number | null>(null);
+  const [isBridgeHovered, setIsBridgeHovered] = useState(false);
+
+  const handleOpenSigilEditor = useCallback((cardIndex: number) => {
+    setEditingServiceSigilIndex(cardIndex);
+  }, []);
+
+  const handleCloseSigilEditor = useCallback(() => {
+    setEditingServiceSigilIndex(null);
+  }, []);
+
+  const handleSaveSigilEditor = useCallback(
+    (updates: Partial<SigilConfig>) => {
+      if (editingServiceSigilIndex === null) return;
+      updateSigilConfig(editingServiceSigilIndex, updates);
+    },
+    [editingServiceSigilIndex, updateSigilConfig]
+  );
+
+  // Right-most service content (the bridge-frame morphs into this card)
+  const rightService = SERVICES_DATA[2];
+  const rightTitleParts = rightService.title.split(" // ");
+  const rightLabel = rightTitleParts[0] || "";
+  const rightMainTitle = rightTitleParts[1] || rightService.title;
   // Read the CSS-driven rail width so the bridge frame stays aligned with the
   // same left axis as the wordmark + runway arrows across responsive breakpoints.
   const [railWidthPx, setRailWidthPx] = useState<number>(() => {
@@ -427,10 +471,12 @@ function NavigationCockpitInner() {
       160,
       Math.min(actualContentHeight, definitionHeightRef.current)
     );
-    const frameHeight =
-      tDefToManifesto > 0
-        ? `${definitionContentHeight + growthProgress * (actualContentHeight - definitionContentHeight)}px`
-        : "auto";
+    const manifestoHeightPx =
+      definitionContentHeight + growthProgress * (actualContentHeight - definitionContentHeight);
+    const servicesTargetHeightPx = SERVICES_CARD_HEIGHT;
+    const heightPx =
+      manifestoHeightPx - tManifestoToServices * (manifestoHeightPx - servicesTargetHeightPx);
+    const frameHeight = tDefToManifesto > 0 ? `${heightPx}px` : "auto";
 
     // ═══════════════════════════════════════════════════════════════════
     // MANIFESTO → SERVICES: Terminal slides from center to right
@@ -448,7 +494,12 @@ function NavigationCockpitInner() {
     const manifestoLeftPx = (1 - tDefToManifesto) * heroLeftPx; // 180px → 0px (matches wordmark position)
 
     // Frame width for position calculations
-    const frameWidth = baseWidth + growthProgress * widthGrowth;
+    // During manifesto: grows from 500px → 700px
+    // During services transition: shrinks from 700px → SERVICES_CARD_WIDTH
+    const manifestoFrameWidth = baseWidth + growthProgress * widthGrowth;
+    const servicesTargetWidth = SERVICES_CARD_WIDTH;
+    const frameWidth =
+      manifestoFrameWidth - tManifestoToServices * (manifestoFrameWidth - servicesTargetWidth);
 
     // Services target position: match ModuleCards at right: calc(var(--rail-width) + 120px)
     // Rail width is 60px, so right edge should be 180px from viewport right
@@ -481,15 +532,26 @@ function NavigationCockpitInner() {
         ? "calc(var(--rail-width) + 120px)" // Hero/Definition: align with wordmark and arrows
         : `calc(${manifestoLeftPx}px + ${manifestoLeftPct}%)`; // Manifesto: transition to center
 
+    // Services phase styling: deepen the glass + border for the service card mode
+    const servicesBgOpacity = 0.85;
+    const bgOpacity = finalBgOpacity + (servicesBgOpacity - finalBgOpacity) * tManifestoToServices;
+    const servicesBorderOpacity = 0.15;
+    const borderOpacity =
+      finalBorderOpacity + (servicesBorderOpacity - finalBorderOpacity) * tManifestoToServices;
+    const baseBlurPx =
+      8 * Math.max(tHeroToDef > 0.7 ? ((tHeroToDef - 0.7) / 0.3) * 4 : 0, tDefToManifesto * 8);
+    const servicesBlurPx = 12;
+    const blurPx = baseBlurPx + (servicesBlurPx - baseBlurPx) * tManifestoToServices;
+
     return {
       finalBottom,
       left: leftPosition,
       width: `${frameWidth}px`,
       height: frameHeight,
       transform: `translateX(calc(${baseTransformPct}% + ${servicesDx}))`,
-      background: `rgba(10, 9, 8, ${finalBgOpacity})`,
-      backdropFilter: `blur(${8 * Math.max(tHeroToDef > 0.7 ? ((tHeroToDef - 0.7) / 0.3) * 4 : 0, tDefToManifesto * 8)}px)`,
-      border: `1px solid rgba(202, 165, 84, ${finalBorderOpacity})`,
+      background: `rgba(10, 9, 8, ${bgOpacity})`,
+      backdropFilter: `blur(${blurPx}px)`,
+      border: `1px solid rgba(202, 165, 84, ${borderOpacity})`,
       "--terminal-opacity": tDefToManifesto,
     };
   }, [
@@ -504,6 +566,7 @@ function NavigationCockpitInner() {
     baseWidth,
     widthGrowth,
     actualContentHeight,
+    SERVICES_CARD_HEIGHT,
   ]);
 
   // Measure the definition frame height right before the manifesto transition starts.
@@ -692,6 +755,8 @@ function NavigationCockpitInner() {
       <div
         ref={bridgeFrameRef}
         className={`bridge-frame${isMobile && tDefToManifesto > 0.5 ? " manifesto-active" : ""}`}
+        onMouseEnter={() => setIsBridgeHovered(true)}
+        onMouseLeave={() => setIsBridgeHovered(false)}
         style={
           isMobile
             ? {
@@ -758,7 +823,13 @@ function NavigationCockpitInner() {
                 maxWidth: bridgeFrameStyles.width,
                 height: bridgeFrameStyles.height,
                 minHeight: tDefToManifesto > 0 ? bridgeFrameStyles.height : undefined,
-                overflow: tDefToManifesto > 0.1 ? "hidden" : "visible", // Delay overflow hidden slightly
+                // Manifesto: keep clipped. Services: allow sigil particles to spill beyond the card.
+                overflow:
+                  tManifestoToServices > 0.12
+                    ? "visible"
+                    : tDefToManifesto > 0.1
+                      ? "hidden"
+                      : "visible",
                 opacity: 1,
                 visibility: "visible",
                 pointerEvents:
@@ -859,6 +930,20 @@ function NavigationCockpitInner() {
           )}
         </>
 
+        {/* Services card corners - fade in as manifesto transitions to services */}
+        {!isMobile && tManifestoToServices > 0 && (
+          <>
+            <div
+              className="service-card__corner service-card__corner--tl"
+              style={{ opacity: tManifestoToServices }}
+            />
+            <div
+              className="service-card__corner service-card__corner--br"
+              style={{ opacity: tManifestoToServices }}
+            />
+          </>
+        )}
+
         {/* Card content: Wordmark (top) + Definition text + Services button (bottom) */}
         {/* During manifesto transition: wordmark & services fade out, text morphs to question */}
         <div
@@ -873,7 +958,10 @@ function NavigationCockpitInner() {
             alignItems: "flex-start",
             justifyContent: "flex-start",
             // Padding: 24px when card visible, transitions to terminal padding
-            padding: `${24 + 48 * tDefToManifesto}px 24px ${24 - 8 * tDefToManifesto}px 24px`,
+            // Services mode pulls padding back to the tighter service-card layout.
+            padding: `${24 + 48 * tDefToManifesto * (1 - tManifestoToServices)}px 24px ${
+              24 - 8 * tDefToManifesto * (1 - tManifestoToServices)
+            }px 24px`,
             pointerEvents: "auto",
             cursor: "default",
             zIndex: 2,
@@ -893,106 +981,156 @@ function NavigationCockpitInner() {
               tHeroToDef < 0.7 ? `blur(${8 * (1 - tDefToManifesto)}px)` : undefined,
           }}
         >
-          {/* Wordmark inside card - appears when entering definition, fades during manifesto */}
-          {/* Show on both desktop and mobile */}
-          {tHeroToDef > 0.7 && tDefToManifesto < 1 && !isManifestoTerminalMode && (
-            <div
-              className="card-wordmark"
-              style={{
-                opacity: cardOpacity,
-                visibility: cardOpacity > 0 ? "visible" : "hidden",
-                width: isMobile ? "100%" : "320px",
-                maxWidth: isMobile ? "100%" : "320px",
-                marginBottom: "4px", // Reduced since gap handles spacing
-              }}
-            >
-              <WordmarkSans color="var(--dawn)" />
-            </div>
-          )}
+          {/* Fade out the manifesto/definition content as we morph into services */}
           <div
-            className="hero-tagline hero-tagline-v2 hero-tagline-main"
             style={{
-              // Container for overlapping text - relative positioning
-              position: "relative",
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-              width: "100%",
+              opacity: 1 - tManifestoToServices,
+              pointerEvents: tManifestoToServices > 0.05 ? "none" : "auto",
+              transition: "none",
             }}
           >
-            {/* Two-stage glitch transformation:
+            {/* Wordmark inside card - appears when entering definition, fades during manifesto */}
+            {/* Show on both desktop and mobile */}
+            {tHeroToDef > 0.7 && tDefToManifesto < 1 && !isManifestoTerminalMode && (
+              <div
+                className="card-wordmark"
+                style={{
+                  opacity: cardOpacity,
+                  visibility: cardOpacity > 0 ? "visible" : "hidden",
+                  width: isMobile ? "100%" : "320px",
+                  maxWidth: isMobile ? "100%" : "320px",
+                  marginBottom: "4px", // Reduced since gap handles spacing
+                }}
+              >
+                <WordmarkSans color="var(--dawn)" />
+              </div>
+            )}
+            <div
+              className="hero-tagline hero-tagline-v2 hero-tagline-main"
+              style={{
+                // Container for overlapping text - relative positioning
+                position: "relative",
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                width: "100%",
+              }}
+            >
+              {/* Two-stage glitch transformation:
                 Stage 1 (tHeroToDef): Hero text → Definition text  
                 Stage 2 (tDefToManifesto): Definition text → Question text
                 Pure opacity cross-fade - both elements overlap */}
 
-            {/* Definition text - visible during hero and definition sections */}
-            <span
-              style={{
-                opacity: 1 - tDefToManifesto,
-                visibility: tDefToManifesto >= 1 ? "hidden" : "visible",
-                ...(isManifestoTerminalMode
-                  ? {
-                      position: "absolute",
-                      left: 0,
-                      top: 0,
-                      width: "100%",
-                    }
-                  : {}),
-              }}
-            >
-              <GlitchText
-                initialText={`AI isn't software to command.
+              {/* Definition text - visible during hero and definition sections */}
+              <span
+                style={{
+                  opacity: 1 - tDefToManifesto,
+                  visibility: tDefToManifesto >= 1 ? "hidden" : "visible",
+                  ...(isManifestoTerminalMode
+                    ? {
+                        position: "absolute",
+                        left: 0,
+                        top: 0,
+                        width: "100%",
+                      }
+                    : {}),
+                }}
+              >
+                <GlitchText
+                  initialText={`AI isn't software to command.
 It's a strange intelligence to navigate.
 Thoughtform teaches how.`}
-                finalText={`(θɔːtfɔːrm / THAWT-form)
+                  finalText={`(θɔːtfɔːrm / THAWT-form)
 the human-AI interface for
 navigating co-intelligence.`}
-                progress={tHeroToDef}
-                className="bridge-content-glitch"
-              />
-            </span>
+                  progress={tHeroToDef}
+                  className="bridge-content-glitch"
+                />
+              </span>
 
-            {/* Question text - fades in during manifesto transition, positioned absolute to overlap */}
-            <span
-              style={{
-                position: isManifestoTerminalMode ? "relative" : "absolute",
-                ...(isManifestoTerminalMode
-                  ? {}
-                  : {
-                      left: 0,
-                      top: 0,
-                    }),
-                opacity: tDefToManifesto,
-                visibility: tDefToManifesto <= 0 ? "hidden" : "visible",
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-              }}
-            >
-              <GlitchText
-                initialText={`(θɔːtfɔːrm / THAWT-form)
+              {/* Question text - fades in during manifesto transition, positioned absolute to overlap */}
+              <span
+                style={{
+                  position: isManifestoTerminalMode ? "relative" : "absolute",
+                  ...(isManifestoTerminalMode
+                    ? {}
+                    : {
+                        left: 0,
+                        top: 0,
+                      }),
+                  opacity: tDefToManifesto,
+                  visibility: tDefToManifesto <= 0 ? "hidden" : "visible",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                }}
+              >
+                <GlitchText
+                  initialText={`(θɔːtfɔːrm / THAWT-form)
 the human-AI interface for
 navigating co-intelligence.`}
-                finalText={`But why is AI so different?`}
-                progress={tDefToManifesto}
-                className="bridge-content-glitch question-morph"
-              />
-              {/* Pulsing block cursor - only visible when terminal ready but manifesto not started */}
-              {tDefToManifesto > 0.9 && manifestoRevealProgress === 0 && (
-                <span className="terminal-block-cursor"></span>
-              )}
-            </span>
+                  finalText={`But why is AI so different?`}
+                  progress={tDefToManifesto}
+                  className="bridge-content-glitch question-morph"
+                />
+                {/* Pulsing block cursor - only visible when terminal ready but manifesto not started */}
+                {tDefToManifesto > 0.9 && manifestoRevealProgress === 0 && (
+                  <span className="terminal-block-cursor"></span>
+                )}
+              </span>
+            </div>
+
+            {/* Manifesto content - appears below question when scrolling */}
+            {tDefToManifesto > 0.95 && manifestoRevealProgress > 0 && (
+              <div
+                style={{
+                  marginTop: "24px",
+                  width: "100%",
+                }}
+              >
+                <ManifestoTerminal revealProgress={manifestoRevealProgress} isActive={true} />
+              </div>
+            )}
           </div>
 
-          {/* Manifesto content - appears below question when scrolling */}
-          {tDefToManifesto > 0.95 && manifestoRevealProgress > 0 && (
+          {/* Services card content (right-most card) */}
+          {!isMobile && tManifestoToServices > 0 && (
             <div
               style={{
-                marginTop: "24px",
-                width: "100%",
+                position: "absolute",
+                inset: 0,
+                padding: "24px",
+                display: "flex",
+                flexDirection: "column",
+                gap: "16px",
+                opacity: tManifestoToServices,
+                pointerEvents: tManifestoToServices > 0.5 ? "auto" : "none",
               }}
             >
-              <ManifestoTerminal revealProgress={manifestoRevealProgress} isActive={true} />
+              <div className="service-card__sigil">
+                <SigilCanvas
+                  config={sigilConfigs[2] ?? DEFAULT_SIGIL_CONFIGS[2]}
+                  size={140}
+                  seed={42 + 2 * 1000}
+                  allowSpill={true}
+                />
+              </div>
+              <div className="service-card__content">
+                <div className="service-card__label">{rightLabel}</div>
+                <h3 className="service-card__title">{rightMainTitle}</h3>
+                <p className="service-card__body">{rightService.body}</p>
+              </div>
+
+              {/* Admin edit button (right card) */}
+              {isAdmin && isBridgeHovered && (
+                <button
+                  className="service-card__edit-btn"
+                  onClick={() => handleOpenSigilEditor(2)}
+                  type="button"
+                >
+                  Edit Sigil
+                </button>
+              )}
             </div>
           )}
         </div>
@@ -1207,6 +1345,17 @@ navigating co-intelligence.`}
       {/* Admin Panel - Only visible to authorized users */}
       <AdminGate>
         <ParticleAdminPanel />
+        {editingServiceSigilIndex !== null && (
+          <SigilEditorPanel
+            config={
+              sigilConfigs[editingServiceSigilIndex] ??
+              DEFAULT_SIGIL_CONFIGS[editingServiceSigilIndex]
+            }
+            onSave={handleSaveSigilEditor}
+            onClose={handleCloseSigilEditor}
+            cardIndex={editingServiceSigilIndex}
+          />
+        )}
       </AdminGate>
 
       {/* Manifesto Sources - Fixed left rail, appears with manifesto text, fades out quickly at services start */}
@@ -1234,54 +1383,20 @@ navigating co-intelligence.`}
         />
       </div>
 
-      {/* Services Section Text - appears on left as terminal slides right (desktop only) */}
-      {!isMobile && tManifestoToServices > 0 && (
-        <div
-          className="services-text-container"
-          style={{
-            position: "fixed",
-            left: "calc(var(--rail-width, 64px) + 120px)",
-            top: "50%",
-            transform: "translateY(-50%)",
-            maxWidth: "500px",
-            opacity: tManifestoToServices,
-            visibility: tManifestoToServices > 0 ? "visible" : "hidden",
-            zIndex: 10,
-            pointerEvents: tManifestoToServices > 0.5 ? "auto" : "none",
-          }}
-        >
-          <p
-            style={{
-              fontFamily: "var(--font-sans, 'EB Garamond', serif)",
-              fontSize: "clamp(24px, 3.5vw, 32px)",
-              fontWeight: 400,
-              lineHeight: 1.4,
-              color: "var(--dawn, #ece3d6)",
-              margin: 0,
-              letterSpacing: "-0.01em",
-            }}
-          >
-            We help teams develop the intuition
-            <br />
-            to navigate AI collaboration.
-          </p>
-          <p
-            style={{
-              fontFamily: "var(--font-data, 'PT Mono', monospace)",
-              fontSize: "13px",
-              fontWeight: 400,
-              lineHeight: 1.6,
-              color: "var(--dawn, #ece3d6)",
-              opacity: 0.7,
-              marginTop: "24px",
-              maxWidth: "400px",
-            }}
-          >
-            Strategic workshops. Custom integrations.
-            <br />
-            Guided expeditions into possibility space.
-          </p>
-        </div>
+      {/* Services Deck - Three service cards that fan out (desktop only) */}
+      {!isMobile && (
+        <ServicesDeck
+          progress={tManifestoToServices}
+          anchorBottom={bridgeFrameStyles.finalBottom}
+          anchorLeft={bridgeFrameStyles.left}
+          anchorTransform={bridgeFrameStyles.transform}
+          cardWidthPx={Number.parseFloat(bridgeFrameStyles.width) || SERVICES_CARD_WIDTH}
+          cardHeightPx={Number.parseFloat(bridgeFrameStyles.height) || SERVICES_CARD_HEIGHT}
+          sigilConfigs={sigilConfigs}
+          isAdmin={isAdmin}
+          onEditClick={handleOpenSigilEditor}
+          editingCardIndex={editingServiceSigilIndex}
+        />
       )}
 
       {/* Fixed Thoughtform Sigil - appears centered during definition section
@@ -1436,7 +1551,9 @@ navigating co-intelligence.`}
 export function NavigationCockpitV2() {
   return (
     <ParticleConfigProvider>
-      <NavigationCockpitInner />
+      <SigilConfigProvider>
+        <NavigationCockpitInner />
+      </SigilConfigProvider>
     </ParticleConfigProvider>
   );
 }

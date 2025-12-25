@@ -1296,3 +1296,372 @@
     display: none;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   SERVICES DECK - Three service cards that fan out
+   ═══════════════════════════════════════════════════════════════ */
+.services-deck {
+  pointer-events: none;
+}
+
+.services-deck > * {
+  pointer-events: auto;
+}
+
+/* ─── SERVICE CARD ─── */
+.service-card {
+  position: relative;
+  background: rgba(10, 9, 8, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(202, 165, 84, 0.15);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  transition: all 0.3s ease;
+  overflow: visible; /* Allow sigil particles to spill */
+}
+
+.service-card:hover {
+  background: rgba(10, 9, 8, 0.92);
+  border-color: rgba(202, 165, 84, 0.3);
+}
+
+.service-card--editing {
+  border-color: rgba(202, 165, 84, 0.5);
+  box-shadow: 0 0 20px rgba(202, 165, 84, 0.2);
+}
+
+/* Tensor Gold corners - TL */
+.service-card__corner {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.service-card__corner--tl {
+  top: -1px;
+  left: -1px;
+  border-top: 2px solid var(--gold, #caa554);
+  border-left: 2px solid var(--gold, #caa554);
+}
+
+.service-card__corner--br {
+  bottom: -1px;
+  right: -1px;
+  border-bottom: 2px solid var(--gold, #caa554);
+  border-right: 2px solid var(--gold, #caa554);
+}
+
+/* Sigil container */
+.service-card__sigil {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 140px;
+  overflow: visible;
+  position: relative;
+}
+
+/* Content container */
+.service-card__content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.service-card__label {
+  font-family: var(--font-data, "PT Mono", monospace);
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gold, #caa554);
+  opacity: 0.8;
+}
+
+.service-card__title {
+  font-family: var(--font-display, "PP Mondwest", serif);
+  font-size: 24px;
+  font-weight: 400;
+  color: var(--dawn, #ece3d6);
+  margin: 0;
+  line-height: 1.2;
+}
+
+.service-card__body {
+  font-family: var(--font-display, "PP Mondwest", serif);
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 1.5;
+  color: var(--dawn, #ece3d6);
+  opacity: 0.75;
+  margin: 0;
+}
+
+/* Admin edit button */
+.service-card__edit-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 6px 12px;
+  background: rgba(202, 165, 84, 0.2);
+  border: 1px solid rgba(202, 165, 84, 0.4);
+  color: var(--gold, #caa554);
+  font-family: var(--font-data, "PT Mono", monospace);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: 10;
+}
+
+.service-card__edit-btn:hover {
+  background: rgba(202, 165, 84, 0.3);
+  border-color: var(--gold, #caa554);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SIGIL EDITOR PANEL - Admin panel for editing sigil config
+   ═══════════════════════════════════════════════════════════════ */
+.sigil-editor-panel {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 400px;
+  max-width: 90vw;
+  max-height: 80vh;
+  background: rgba(10, 9, 8, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(202, 165, 84, 0.3);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.sigil-editor-panel__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(202, 165, 84, 0.15);
+}
+
+.sigil-editor-panel__title {
+  font-family: var(--font-data, "PT Mono", monospace);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gold, #caa554);
+  margin: 0;
+}
+
+.sigil-editor-panel__close {
+  background: none;
+  border: none;
+  color: var(--dawn, #ece3d6);
+  font-size: 24px;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  opacity: 0.6;
+  transition: opacity 0.2s ease;
+}
+
+.sigil-editor-panel__close:hover {
+  opacity: 1;
+}
+
+.sigil-editor-panel__content {
+  padding: 20px;
+  overflow-y: auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.sigil-editor-panel__section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sigil-editor-panel__label {
+  font-family: var(--font-data, "PT Mono", monospace);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gold, #caa554);
+}
+
+/* Shape grid */
+.sigil-editor-panel__shape-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+.sigil-editor-panel__shape-btn {
+  padding: 8px 6px;
+  background: rgba(202, 165, 84, 0.1);
+  border: 1px solid rgba(202, 165, 84, 0.2);
+  color: var(--dawn, #ece3d6);
+  font-family: var(--font-data, "PT Mono", monospace);
+  font-size: 9px;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sigil-editor-panel__shape-btn:hover {
+  background: rgba(202, 165, 84, 0.2);
+  border-color: rgba(202, 165, 84, 0.4);
+}
+
+.sigil-editor-panel__shape-btn--active {
+  background: rgba(202, 165, 84, 0.3);
+  border-color: var(--gold, #caa554);
+  color: var(--gold, #caa554);
+}
+
+/* Sliders */
+.sigil-editor-panel__slider {
+  width: 100%;
+  height: 4px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: rgba(202, 165, 84, 0.2);
+  border-radius: 2px;
+  outline: none;
+}
+
+.sigil-editor-panel__slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  background: var(--gold, #caa554);
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.sigil-editor-panel__slider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  background: var(--gold, #caa554);
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
+}
+
+.sigil-editor-panel__slider--small {
+  flex: 1;
+}
+
+/* Color picker */
+.sigil-editor-panel__color-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.sigil-editor-panel__color-picker {
+  width: 40px;
+  height: 28px;
+  border: 1px solid rgba(202, 165, 84, 0.3);
+  background: transparent;
+  cursor: pointer;
+  padding: 0;
+}
+
+.sigil-editor-panel__color-value {
+  font-family: var(--font-data, "PT Mono", monospace);
+  font-size: 11px;
+  color: var(--dawn, #ece3d6);
+  opacity: 0.7;
+}
+
+/* Animation param rows */
+.sigil-editor-panel__param-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.sigil-editor-panel__param-label {
+  font-family: var(--font-data, "PT Mono", monospace);
+  font-size: 10px;
+  color: var(--dawn, #ece3d6);
+  opacity: 0.7;
+  min-width: 50px;
+}
+
+.sigil-editor-panel__param-value {
+  font-family: var(--font-data, "PT Mono", monospace);
+  font-size: 10px;
+  color: var(--gold, #caa554);
+  min-width: 30px;
+  text-align: right;
+}
+
+/* Footer buttons */
+.sigil-editor-panel__footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px 20px;
+  border-top: 1px solid rgba(202, 165, 84, 0.15);
+}
+
+.sigil-editor-panel__btn {
+  padding: 10px 20px;
+  font-family: var(--font-data, "PT Mono", monospace);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sigil-editor-panel__btn--secondary {
+  background: transparent;
+  border: 1px solid rgba(202, 165, 84, 0.3);
+  color: var(--dawn, #ece3d6);
+}
+
+.sigil-editor-panel__btn--secondary:hover {
+  border-color: rgba(202, 165, 84, 0.5);
+}
+
+.sigil-editor-panel__btn--primary {
+  background: rgba(202, 165, 84, 0.2);
+  border: 1px solid var(--gold, #caa554);
+  color: var(--gold, #caa554);
+}
+
+.sigil-editor-panel__btn--primary:hover {
+  background: rgba(202, 165, 84, 0.3);
+}
+
+/* Mobile - hide services deck on small screens */
+@media (max-width: 768px) {
+  .services-deck {
+    display: none;
+  }
+}
