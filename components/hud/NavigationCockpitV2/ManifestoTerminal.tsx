@@ -12,15 +12,15 @@ import { useRef, useMemo } from "react";
 const MANIFESTO_TEXT = `> Most companies struggle because they treat AI like normal software.
 
 > But AI is a strange intelligence that blurs the line between tool and collaborator.
-  It leaps across dimensions we can't fathom. It hallucinates. It surprises.
+> It leaps across dimensions we can't fathom. It hallucinates. It surprises.
 
 > Fight that strangeness, and you drown in mediocrity.
-  Navigate it, learn to move through its terrain, and your thought becomes form.
+> Navigate it, learn to move through its terrain, and your thought becomes form.
 
 > Build what you couldn't build before.
 
 > Not through frameworks, but through building an interface
-  between your intuition and its alien geometry.
+> between your intuition and its alien geometry.
 
 > We teach you how.`;
 
