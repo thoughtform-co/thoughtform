@@ -237,7 +237,7 @@ export function ServicesDeck({
             <ServiceCard
               service={service}
               sigilConfig={sigilConfig}
-              sigilSeed={42 + cardIndex * 1000} // Deterministic seeds for consistent particles
+              sigilSeed={sigilConfig.seed ?? 42 + cardIndex * 1000} // Editable seed with deterministic fallback
               index={cardIndex}
               isAdmin={isAdmin}
               onEditClick={onEditClick}

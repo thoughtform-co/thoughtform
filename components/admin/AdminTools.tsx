@@ -37,7 +37,7 @@ export function AdminTools({
       label: "SHAPE LAB",
       isActive: false,
       hasIndicator: false,
-      href: "/test/shape-lab",
+      href: "/shape-lab",
     },
   ];
 

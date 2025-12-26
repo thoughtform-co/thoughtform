@@ -1,12 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect, useRef } from "react";
-import {
-  SIGIL_SHAPES,
-  SIGIL_SHAPE_LABELS,
-  resolveSigilShape,
-  getSigilShapeOptions,
-} from "@/lib/sigil-geometries";
+import { resolveSigilShape, getSigilShapeOptions } from "@/lib/sigil-geometries";
 import { type SigilConfig, DEFAULT_SIGIL_SIZE } from "./SigilCanvas";
 import { SigilCanvas } from "./SigilCanvas";
 
@@ -18,13 +13,18 @@ import { SigilCanvas } from "./SigilCanvas";
 // Size Control:
 // • Min: 80px (compact)
 // • Default: 140px (standard)
-// • Max: 400px (full bleed - fills card width minus padding)
+// • Max: 750px (extended - allows large/full-bleed experiments)
 //
 // Shape Categories:
 // • thoughtform: New 3D topological shapes
 // • geometric: Basic geometric shapes with depth
 //
-// UX Improvements:
+// Render Modes:
+// • sigil: 2D flat view (default)
+// • landmark: 3D rotating view
+//
+// Features:
+// • Presets: Load saved presets from Shape Lab
 // • Auto-save: Changes are saved automatically (debounced 500ms)
 // • Click outside to close: Clicking the backdrop dismisses the panel
 // • Scroll containment: Scrolling inside panel doesn't scroll the page
@@ -32,13 +32,35 @@ import { SigilCanvas } from "./SigilCanvas";
 
 /** Minimum sigil size (compact) */
 const MIN_SIGIL_SIZE = 80;
-/** Maximum sigil size (full bleed within card) */
-const MAX_SIGIL_SIZE = 400;
+/** Maximum sigil size (extended) */
+const MAX_SIGIL_SIZE = 750;
 /** Position offset range (-50% to +50%) */
 const MIN_OFFSET = -50;
 const MAX_OFFSET = 50;
+/** Seed range */
+const MIN_SEED = 0;
+const MAX_SEED = 9999;
+/** Particle count range */
+const MIN_PARTICLE_COUNT = 50;
+const MAX_PARTICLE_COUNT = 2000;
+/** Density range (particle square size multiplier) */
+const MIN_DENSITY = 0.5;
+const MAX_DENSITY = 2.5;
 /** Debounce delay for auto-save (ms) */
 const AUTO_SAVE_DELAY = 500;
+
+/** Shape preset from Shape Lab */
+interface ShapePreset {
+  id: string;
+  name: string;
+  shapeId: string;
+  seed: number;
+  pointCount: number;
+  category: string;
+}
+
+/** Render mode for sigil */
+export type SigilRenderMode = "sigil" | "landmark";
 
 interface SigilEditorPanelProps {
   config: SigilConfig;
@@ -56,10 +78,69 @@ export function SigilEditorPanel({ config, onSave, onClose, cardIndex }: SigilEd
   });
   const isFirstRender = useRef(true);
 
+  // Presets state
+  const [presets, setPresets] = useState<ShapePreset[]>([]);
+  const [presetsLoading, setPresetsLoading] = useState(true);
+  const [presetsError, setPresetsError] = useState<string | null>(null);
+
+  // Load presets from Shape Lab
+  const loadPresets = useCallback(async () => {
+    try {
+      setPresetsLoading(true);
+      setPresetsError(null);
+
+      // Avoid stale/cached responses (browser/proxy/Next caching)
+      const response = await fetch("/api/shape-presets", { cache: "no-store" });
+
+      if (!response.ok) {
+        const text = await response.text().catch(() => "");
+        throw new Error(
+          `Failed to load presets (HTTP ${response.status})${text ? `: ${text}` : ""}`
+        );
+      }
+
+      const data = await response.json();
+      setPresets(Array.isArray(data.presets) ? data.presets : []);
+    } catch (error) {
+      console.error("Failed to load shape presets:", error);
+      setPresets([]);
+      setPresetsError(error instanceof Error ? error.message : "Failed to load presets");
+    } finally {
+      setPresetsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadPresets();
+  }, [loadPresets]);
+
   // Get shape options grouped by category
   const shapeOptions = getSigilShapeOptions();
   const thoughtformShapes = shapeOptions.filter((s) => s.category === "thoughtform");
   const geometricShapes = shapeOptions.filter((s) => s.category === "geometric");
+  const is3D = (localConfig.renderMode ?? "sigil") === "landmark";
+  const effectiveSeed = localConfig.seed ?? 42 + cardIndex * 1000;
+  const selectedShapeLabel =
+    shapeOptions.find((s) => s.id === localConfig.shape)?.label ?? localConfig.shape;
+
+  // Custom dropdown (native <select> can't be consistently themed across OS/browsers)
+  const shapeDropdownRef = useRef<HTMLDivElement>(null);
+  const [isShapeDropdownOpen, setIsShapeDropdownOpen] = useState(false);
+
+  useEffect(() => {
+    if (!isShapeDropdownOpen) return;
+
+    const handlePointerDown = (e: PointerEvent) => {
+      const el = shapeDropdownRef.current;
+      if (!el) return;
+      if (!el.contains(e.target as Node)) {
+        setIsShapeDropdownOpen(false);
+      }
+    };
+
+    window.addEventListener("pointerdown", handlePointerDown);
+    return () => window.removeEventListener("pointerdown", handlePointerDown);
+  }, [isShapeDropdownOpen]);
 
   // ─────────────────────────────────────────────────────────────────
   // AUTO-SAVE: Debounced save when config changes
@@ -88,12 +169,12 @@ export function SigilEditorPanel({ config, onSave, onClose, cardIndex }: SigilEd
   }, []);
 
   const handleShapeChange = useCallback((shape: string) => {
-    setLocalConfig((prev) => ({ ...prev, shape }));
+    setLocalConfig((prev) => ({ ...prev, shape: resolveSigilShape(shape) }));
   }, []);
 
   const handleParticleCountChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const value = parseInt(e.target.value, 10);
-    if (!isNaN(value) && value >= 50 && value <= 500) {
+    if (!isNaN(value) && value >= MIN_PARTICLE_COUNT && value <= MAX_PARTICLE_COUNT) {
       setLocalConfig((prev) => ({ ...prev, particleCount: value }));
     }
   }, []);
@@ -131,11 +212,33 @@ export function SigilEditorPanel({ config, onSave, onClose, cardIndex }: SigilEd
     }));
   }, []);
 
+  const handleDensityChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = parseFloat(e.target.value);
+    if (!Number.isNaN(value) && value >= MIN_DENSITY && value <= MAX_DENSITY) {
+      setLocalConfig((prev) => ({
+        ...prev,
+        animationParams: { ...prev.animationParams, density: value },
+      }));
+    }
+  }, []);
+
   const handleSizeChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const value = parseInt(e.target.value, 10);
     if (!isNaN(value) && value >= MIN_SIGIL_SIZE && value <= MAX_SIGIL_SIZE) {
       setLocalConfig((prev) => ({ ...prev, size: value }));
     }
+  }, []);
+
+  const handleSeedChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = parseInt(e.target.value, 10);
+    if (!Number.isNaN(value) && value >= MIN_SEED && value <= MAX_SEED) {
+      setLocalConfig((prev) => ({ ...prev, seed: value }));
+    }
+  }, []);
+
+  const handleRandomSeed = useCallback(() => {
+    const next = Math.floor(Math.random() * (MAX_SEED + 1));
+    setLocalConfig((prev) => ({ ...prev, seed: next }));
   }, []);
 
   const handleOffsetXChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -150,6 +253,25 @@ export function SigilEditorPanel({ config, onSave, onClose, cardIndex }: SigilEd
     if (!isNaN(value) && value >= MIN_OFFSET && value <= MAX_OFFSET) {
       setLocalConfig((prev) => ({ ...prev, offsetY: value }));
     }
+  }, []);
+
+  // Apply a preset from Shape Lab
+  const handleApplyPreset = useCallback((preset: ShapePreset) => {
+    setLocalConfig((prev) => ({
+      ...prev,
+      shape: resolveSigilShape(preset.shapeId),
+      particleCount: preset.pointCount,
+      seed: preset.seed,
+    }));
+  }, []);
+
+  // 3D toggle: landmark = 3D rotating, sigil = 2D flat
+  const handle3DToggle = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const enabled = e.target.checked;
+    setLocalConfig((prev) => ({
+      ...prev,
+      renderMode: enabled ? "landmark" : "sigil",
+    }));
   }, []);
 
   // ─────────────────────────────────────────────────────────────────
@@ -175,10 +297,19 @@ export function SigilEditorPanel({ config, onSave, onClose, cardIndex }: SigilEd
   })();
 
   const cardLabels = ["Left (Inspire)", "Center (Practice)", "Right (Transform)"];
+  const backdropPositionClass =
+    cardIndex === 1
+      ? "sigil-editor-panel__backdrop--right"
+      : cardIndex === 2
+        ? "sigil-editor-panel__backdrop--left"
+        : "sigil-editor-panel__backdrop--center";
 
   return (
     // Backdrop: click outside to close
-    <div className="sigil-editor-panel__backdrop" onClick={handleBackdropClick}>
+    <div
+      className={`sigil-editor-panel__backdrop ${backdropPositionClass}`}
+      onClick={handleBackdropClick}
+    >
       <div
         className="sigil-editor-panel"
         onClick={(e) => e.stopPropagation()} // Prevent clicks inside panel from closing
@@ -191,37 +322,219 @@ export function SigilEditorPanel({ config, onSave, onClose, cardIndex }: SigilEd
 
         <div className="sigil-editor-panel__content">
           {/* Live Preview */}
-          <div className="sigil-editor-panel__section">
-            <label className="sigil-editor-panel__label">Preview</label>
+          <div className="sigil-editor-panel__section sigil-editor-panel__section--sticky-preview">
+            <div className="sigil-editor-panel__label-row">
+              <span className="sigil-editor-panel__label">Preview</span>
+              <label className="sigil-editor-panel__toggle" title="Enable 3D rotating view">
+                <input type="checkbox" checked={is3D} onChange={handle3DToggle} />
+                <span className="sigil-editor-panel__toggle-text">3D</span>
+              </label>
+            </div>
             <div className="sigil-editor-panel__preview">
               <SigilCanvas
                 config={localConfig}
                 size={Math.min(localConfig.size ?? DEFAULT_SIGIL_SIZE, 160)}
-                seed={42 + cardIndex * 1000}
+                seed={effectiveSeed}
                 allowSpill={false}
               />
             </div>
           </div>
 
-          {/* Size slider - Full Bleed Control */}
+          {/* Shape Lab Presets */}
           <div className="sigil-editor-panel__section">
-            <label className="sigil-editor-panel__label">
-              Size: {localConfig.size ?? DEFAULT_SIGIL_SIZE}px
-              {(localConfig.size ?? DEFAULT_SIGIL_SIZE) >= 240 && (
-                <span className="sigil-editor-panel__badge">Full Bleed</span>
+            <div className="sigil-editor-panel__label-row">
+              <span className="sigil-editor-panel__label">
+                Shape Lab Presets
+                {presetsLoading && (
+                  <span className="sigil-editor-panel__loading"> (loading...)</span>
+                )}
+              </span>
+              <button
+                type="button"
+                className="sigil-editor-panel__reload-btn"
+                onClick={loadPresets}
+                disabled={presetsLoading}
+                title="Reload presets"
+                aria-label="Reload presets"
+              >
+                Reload
+              </button>
+            </div>
+            {presetsError ? (
+              <div className="sigil-editor-panel__error">{presetsError}</div>
+            ) : presets.length === 0 && !presetsLoading ? (
+              <div className="sigil-editor-panel__hint">
+                No presets saved. Visit{" "}
+                <a
+                  href="/shape-lab"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="sigil-editor-panel__link"
+                >
+                  Shape Lab
+                </a>{" "}
+                to create presets.
+              </div>
+            ) : (
+              <div className="sigil-editor-panel__presets-grid">
+                {presets.map((preset) => (
+                  <button
+                    key={preset.id}
+                    type="button"
+                    className="sigil-editor-panel__preset-btn"
+                    onClick={() => handleApplyPreset(preset)}
+                    title={`${preset.shapeId} · ${preset.pointCount} particles`}
+                  >
+                    {preset.name}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Shape + Seed (variation) */}
+          <div className="sigil-editor-panel__section">
+            <label className="sigil-editor-panel__label">Shape</label>
+            <div className="sigil-editor-panel__select-wrap" ref={shapeDropdownRef}>
+              <button
+                type="button"
+                className={`sigil-editor-panel__select ${isShapeDropdownOpen ? "sigil-editor-panel__select--open" : ""}`}
+                onClick={() => setIsShapeDropdownOpen((v) => !v)}
+                aria-haspopup="listbox"
+                aria-expanded={isShapeDropdownOpen}
+                aria-label="Select shape"
+              >
+                <span className="sigil-editor-panel__select-value">{selectedShapeLabel}</span>
+                <span className="sigil-editor-panel__select-caret" aria-hidden="true">
+                  ▾
+                </span>
+              </button>
+
+              {isShapeDropdownOpen && (
+                <div
+                  className="sigil-editor-panel__select-menu"
+                  role="listbox"
+                  aria-label="Shape options"
+                >
+                  <div className="sigil-editor-panel__select-group-label">Thoughtform</div>
+                  {thoughtformShapes.map((shape) => {
+                    const selected = localConfig.shape === shape.id;
+                    return (
+                      <button
+                        key={shape.id}
+                        type="button"
+                        role="option"
+                        aria-selected={selected}
+                        className={`sigil-editor-panel__select-option ${selected ? "sigil-editor-panel__select-option--selected" : ""}`}
+                        onClick={() => {
+                          handleShapeChange(shape.id);
+                          setIsShapeDropdownOpen(false);
+                        }}
+                      >
+                        {shape.label}
+                      </button>
+                    );
+                  })}
+
+                  <div className="sigil-editor-panel__select-divider" />
+                  <div className="sigil-editor-panel__select-group-label">Geometric</div>
+                  {geometricShapes.map((shape) => {
+                    const selected = localConfig.shape === shape.id;
+                    return (
+                      <button
+                        key={shape.id}
+                        type="button"
+                        role="option"
+                        aria-selected={selected}
+                        className={`sigil-editor-panel__select-option ${selected ? "sigil-editor-panel__select-option--selected" : ""}`}
+                        onClick={() => {
+                          handleShapeChange(shape.id);
+                          setIsShapeDropdownOpen(false);
+                        }}
+                      >
+                        {shape.label}
+                      </button>
+                    );
+                  })}
+                </div>
               )}
-            </label>
-            <input
-              type="range"
-              min={MIN_SIGIL_SIZE}
-              max={MAX_SIGIL_SIZE}
-              step="10"
-              value={localConfig.size ?? DEFAULT_SIGIL_SIZE}
-              onChange={handleSizeChange}
-              className="sigil-editor-panel__slider"
-            />
+            </div>
+
+            <div className="sigil-editor-panel__param-row">
+              <span className="sigil-editor-panel__param-label">Seed:</span>
+              <input
+                type="range"
+                min={MIN_SEED}
+                max={MAX_SEED}
+                step="1"
+                value={effectiveSeed}
+                onChange={handleSeedChange}
+                className="sigil-editor-panel__slider sigil-editor-panel__slider--small"
+              />
+              <span className="sigil-editor-panel__param-value">{effectiveSeed}</span>
+              <button
+                type="button"
+                className="sigil-editor-panel__mini-btn"
+                onClick={handleRandomSeed}
+                title="Randomize seed"
+              >
+                Random
+              </button>
+            </div>
+          </div>
+
+          {/* Particles */}
+          <div className="sigil-editor-panel__section">
+            <label className="sigil-editor-panel__label">Particles</label>
+
+            <div className="sigil-editor-panel__param-row">
+              <span className="sigil-editor-panel__param-label">Size:</span>
+              <input
+                type="range"
+                min={MIN_SIGIL_SIZE}
+                max={MAX_SIGIL_SIZE}
+                step="10"
+                value={localConfig.size ?? DEFAULT_SIGIL_SIZE}
+                onChange={handleSizeChange}
+                className="sigil-editor-panel__slider sigil-editor-panel__slider--small"
+              />
+              <span className="sigil-editor-panel__param-value">
+                {localConfig.size ?? DEFAULT_SIGIL_SIZE}px
+              </span>
+            </div>
+
+            <div className="sigil-editor-panel__param-row">
+              <span className="sigil-editor-panel__param-label">Count:</span>
+              <input
+                type="range"
+                min={MIN_PARTICLE_COUNT}
+                max={MAX_PARTICLE_COUNT}
+                step="25"
+                value={localConfig.particleCount}
+                onChange={handleParticleCountChange}
+                className="sigil-editor-panel__slider sigil-editor-panel__slider--small"
+              />
+              <span className="sigil-editor-panel__param-value">{localConfig.particleCount}</span>
+            </div>
+
+            <div className="sigil-editor-panel__param-row">
+              <span className="sigil-editor-panel__param-label">Density:</span>
+              <input
+                type="range"
+                min={MIN_DENSITY}
+                max={MAX_DENSITY}
+                step="0.05"
+                value={localConfig.animationParams.density ?? 1}
+                onChange={handleDensityChange}
+                className="sigil-editor-panel__slider sigil-editor-panel__slider--small"
+              />
+              <span className="sigil-editor-panel__param-value">
+                {(localConfig.animationParams.density ?? 1).toFixed(2)}
+              </span>
+            </div>
+
             <div className="sigil-editor-panel__hint">
-              80px = compact · 140px = default · 400px = maximum
+              Density controls particle square size (visual “fill”), not count.
             </div>
           </div>
 
@@ -260,63 +573,6 @@ export function SigilEditorPanel({ config, onSave, onClose, cardIndex }: SigilEd
             <div className="sigil-editor-panel__hint">
               0% = centered · negative = left/up · positive = right/down
             </div>
-          </div>
-
-          {/* Shape selector - organized by category */}
-          <div className="sigil-editor-panel__section">
-            <label className="sigil-editor-panel__label">Shape</label>
-
-            {/* Thoughtform shapes (new, 3D) */}
-            <div className="sigil-editor-panel__shape-category">
-              <span className="sigil-editor-panel__shape-category-label">Thoughtform</span>
-              <div className="sigil-editor-panel__shape-grid">
-                {thoughtformShapes.map((shape) => (
-                  <button
-                    key={shape.id}
-                    className={`sigil-editor-panel__shape-btn ${localConfig.shape === shape.id ? "sigil-editor-panel__shape-btn--active" : ""}`}
-                    onClick={() => handleShapeChange(shape.id)}
-                    type="button"
-                    title={shape.label}
-                  >
-                    {shape.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Geometric shapes */}
-            <div className="sigil-editor-panel__shape-category">
-              <span className="sigil-editor-panel__shape-category-label">Geometric</span>
-              <div className="sigil-editor-panel__shape-grid">
-                {geometricShapes.map((shape) => (
-                  <button
-                    key={shape.id}
-                    className={`sigil-editor-panel__shape-btn ${localConfig.shape === shape.id ? "sigil-editor-panel__shape-btn--active" : ""}`}
-                    onClick={() => handleShapeChange(shape.id)}
-                    type="button"
-                    title={shape.label}
-                  >
-                    {shape.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Particle count slider */}
-          <div className="sigil-editor-panel__section">
-            <label className="sigil-editor-panel__label">
-              Particle Count: {localConfig.particleCount}
-            </label>
-            <input
-              type="range"
-              min="50"
-              max="500"
-              step="10"
-              value={localConfig.particleCount}
-              onChange={handleParticleCountChange}
-              className="sigil-editor-panel__slider"
-            />
           </div>
 
           {/* Color picker */}

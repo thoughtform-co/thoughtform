@@ -1246,7 +1246,7 @@ navigating co-intelligence.`}
                   <SigilCanvas
                     config={sigilConfigs[2] ?? DEFAULT_SIGIL_CONFIGS[2]}
                     size={(sigilConfigs[2] ?? DEFAULT_SIGIL_CONFIGS[2]).size ?? DEFAULT_SIGIL_SIZE}
-                    seed={42 + 2 * 1000}
+                    seed={(sigilConfigs[2] ?? DEFAULT_SIGIL_CONFIGS[2]).seed ?? 42 + 2 * 1000}
                     allowSpill={false}
                   />
                 </div>

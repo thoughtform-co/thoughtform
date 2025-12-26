@@ -19,6 +19,9 @@ import { useAuth } from "@/components/auth/AuthProvider";
 // Now supports new Thoughtform shapes with legacy fallback
 // ═══════════════════════════════════════════════════════════════════
 
+/** Render mode for sigil */
+export type SigilRenderMode = "sigil" | "landmark";
+
 export interface SigilConfig {
   shape: string; // Now accepts any shape from registry (with fallback)
   particleCount: number;
@@ -29,10 +32,16 @@ export interface SigilConfig {
   offsetX?: number;
   /** Vertical offset as percentage (-50 to 50, default 0 = centered) */
   offsetY?: number;
+  /** Deterministic seed for particle placement (optional) */
+  seed?: number;
+  /** Render mode: sigil (2D flat) or landmark (3D rotating) */
+  renderMode?: SigilRenderMode;
   animationParams: {
     drift?: number;
     pulse?: number;
     glitch?: number;
+    /** Particle square size multiplier (visual density) */
+    density?: number;
   };
 }
 

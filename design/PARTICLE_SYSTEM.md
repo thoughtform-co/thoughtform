@@ -210,7 +210,7 @@ const sigilPoints = toSigilPoints(points3D, size, {
 
 An internal test page for rapid shape iteration:
 
-**URL**: `/test/shape-lab`
+**URL**: `/shape-lab`
 
 **Features**:
 

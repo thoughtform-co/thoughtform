@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import Link from "next/link";
+import { AdminGate } from "@/components/admin/AdminGate";
+import { useAuth } from "@/components/auth/AuthProvider";
 import {
   getAllShapes,
   getShapeGenerator,
@@ -9,13 +11,26 @@ import {
   type ShapeDefinition,
   type Vec3,
 } from "@/lib/particle-geometry";
+import "./shape-lab.css";
 
 // ═══════════════════════════════════════════════════════════════
-// SHAPE LAB - Internal preview page for particle shapes
+// SHAPE LAB - Admin-only preview page for particle shapes
 // Previews shapes in both Sigil mode and Landmark mode
 // ═══════════════════════════════════════════════════════════════
 
 const GRID = 3;
+
+// Preset type
+interface ShapePreset {
+  id: string;
+  name: string;
+  shapeId: string;
+  seed: number;
+  pointCount: number;
+  category: string;
+  createdAt: string;
+  updatedAt: string;
+}
 
 // Snap to grid (Thoughtform sacred rule)
 function snap(value: number): number {
@@ -265,16 +280,97 @@ function LandmarkPreview({ shapeId, seed, pointCount, size = 300 }: LandmarkPrev
   );
 }
 
-export default function ShapeLabPage() {
+// Main Shape Lab Content
+function ShapeLabContent() {
+  const { user } = useAuth();
   const [mounted, setMounted] = useState(false);
   const [selectedShape, setSelectedShape] = useState<string>("tf_filamentField");
   const [seed, setSeed] = useState(42);
   const [pointCount, setPointCount] = useState(300);
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
 
+  // Preset management state
+  const [presets, setPresets] = useState<ShapePreset[]>([]);
+  const [presetsLoading, setPresetsLoading] = useState(true);
+  const [presetName, setPresetName] = useState("");
+  const [savingPreset, setSavingPreset] = useState(false);
+  const [showSaveForm, setShowSaveForm] = useState(false);
+
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Load presets on mount
+  useEffect(() => {
+    if (mounted) {
+      loadPresets();
+    }
+  }, [mounted]);
+
+  const loadPresets = async () => {
+    try {
+      setPresetsLoading(true);
+      const response = await fetch("/api/shape-presets", { cache: "no-store" });
+      if (response.ok) {
+        const data = await response.json();
+        setPresets(data.presets || []);
+      }
+    } catch (error) {
+      console.error("Failed to load presets:", error);
+    } finally {
+      setPresetsLoading(false);
+    }
+  };
+
+  const savePreset = async () => {
+    if (!presetName.trim()) return;
+
+    try {
+      setSavingPreset(true);
+      const response = await fetch("/api/shape-presets", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: presetName.trim(),
+          shapeId: selectedShape,
+          seed,
+          pointCount,
+          category: categoryFilter === "all" ? "custom" : categoryFilter,
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setPresets((prev) => [...prev, data.preset]);
+        setPresetName("");
+        setShowSaveForm(false);
+      }
+    } catch (error) {
+      console.error("Failed to save preset:", error);
+    } finally {
+      setSavingPreset(false);
+    }
+  };
+
+  const deletePreset = async (presetId: string) => {
+    try {
+      const response = await fetch(`/api/shape-presets?id=${presetId}`, {
+        method: "DELETE",
+      });
+
+      if (response.ok) {
+        setPresets((prev) => prev.filter((p) => p.id !== presetId));
+      }
+    } catch (error) {
+      console.error("Failed to delete preset:", error);
+    }
+  };
+
+  const loadPreset = (preset: ShapePreset) => {
+    setSelectedShape(preset.shapeId);
+    setSeed(preset.seed);
+    setPointCount(preset.pointCount);
+  };
 
   const shapes = useMemo(() => getAllShapes(), []);
 
@@ -301,7 +397,10 @@ export default function ShapeLabPage() {
         <Link href="/" className="shape-lab__back">
           ← Back
         </Link>
-        <h1 className="shape-lab__title">Shape Lab</h1>
+        <div className="shape-lab__header-main">
+          <h1 className="shape-lab__title">Shape Lab</h1>
+          <span className="shape-lab__admin-badge">ADMIN</span>
+        </div>
         <p className="shape-lab__subtitle">Preview particle shapes in Sigil and Landmark modes</p>
       </div>
 
@@ -405,6 +504,75 @@ export default function ShapeLabPage() {
               </div>
             </div>
           )}
+
+          {/* Save Preset Button */}
+          <div className="shape-lab__section">
+            <h3 className="shape-lab__section-title">Save Current</h3>
+            {!showSaveForm ? (
+              <button className="shape-lab__save-btn" onClick={() => setShowSaveForm(true)}>
+                Save as Preset
+              </button>
+            ) : (
+              <div className="shape-lab__save-form">
+                <input
+                  type="text"
+                  value={presetName}
+                  onChange={(e) => setPresetName(e.target.value)}
+                  placeholder="Preset name..."
+                  className="shape-lab__preset-input"
+                  onKeyDown={(e) => e.key === "Enter" && savePreset()}
+                />
+                <div className="shape-lab__save-actions">
+                  <button
+                    className="shape-lab__action-btn shape-lab__action-btn--save"
+                    onClick={savePreset}
+                    disabled={savingPreset || !presetName.trim()}
+                  >
+                    {savingPreset ? "Saving..." : "Save"}
+                  </button>
+                  <button
+                    className="shape-lab__action-btn shape-lab__action-btn--cancel"
+                    onClick={() => {
+                      setShowSaveForm(false);
+                      setPresetName("");
+                    }}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Presets Panel */}
+          <div className="shape-lab__section">
+            <h3 className="shape-lab__section-title">
+              Presets {presetsLoading && <span className="shape-lab__loading">Loading...</span>}
+            </h3>
+            {presets.length === 0 && !presetsLoading ? (
+              <p className="shape-lab__empty-text">No presets saved yet</p>
+            ) : (
+              <div className="shape-lab__presets-list">
+                {presets.map((preset) => (
+                  <div key={preset.id} className="shape-lab__preset-item">
+                    <button className="shape-lab__preset-btn" onClick={() => loadPreset(preset)}>
+                      <span className="shape-lab__preset-name">{preset.name}</span>
+                      <span className="shape-lab__preset-meta">
+                        {preset.shapeId} · {preset.pointCount}pts
+                      </span>
+                    </button>
+                    <button
+                      className="shape-lab__preset-delete"
+                      onClick={() => deletePreset(preset.id)}
+                      title="Delete preset"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Preview Panels */}
@@ -438,274 +606,83 @@ export default function ShapeLabPage() {
           </div>
         </div>
       </div>
-
-      <style jsx>{`
-        .shape-lab {
-          min-height: 100vh;
-          background: #0a0908;
-          color: #ebe3d6;
-          padding: 32px;
-          font-family: var(--font-body, system-ui);
-        }
-
-        .shape-lab__header {
-          max-width: 1200px;
-          margin: 0 auto 40px;
-        }
-
-        .shape-lab__back {
-          display: inline-block;
-          font-family: var(--font-data, monospace);
-          font-size: 12px;
-          color: rgba(202, 165, 84, 0.6);
-          text-decoration: none;
-          margin-bottom: 16px;
-        }
-
-        .shape-lab__back:hover {
-          color: #caa554;
-        }
-
-        .shape-lab__title {
-          font-family: var(--font-display, serif);
-          font-size: 36px;
-          font-weight: 400;
-          color: #caa554;
-          margin: 0 0 8px;
-        }
-
-        .shape-lab__subtitle {
-          font-size: 14px;
-          color: rgba(236, 227, 214, 0.5);
-          margin: 0;
-        }
-
-        .shape-lab__content {
-          max-width: 1200px;
-          margin: 0 auto;
-          display: grid;
-          grid-template-columns: 280px 1fr;
-          gap: 40px;
-        }
-
-        .shape-lab__controls {
-          display: flex;
-          flex-direction: column;
-          gap: 24px;
-        }
-
-        .shape-lab__section {
-          background: rgba(236, 227, 214, 0.03);
-          border: 1px solid rgba(236, 227, 214, 0.1);
-          padding: 16px;
-        }
-
-        .shape-lab__section-title {
-          font-family: var(--font-data, monospace);
-          font-size: 10px;
-          font-weight: 500;
-          letter-spacing: 0.1em;
-          text-transform: uppercase;
-          color: rgba(202, 165, 84, 0.8);
-          margin: 0 0 12px;
-        }
-
-        .shape-lab__category-buttons {
-          display: flex;
-          gap: 8px;
-        }
-
-        .shape-lab__category-btn {
-          flex: 1;
-          padding: 8px;
-          background: rgba(236, 227, 214, 0.05);
-          border: 1px solid rgba(236, 227, 214, 0.15);
-          color: rgba(236, 227, 214, 0.6);
-          font-family: var(--font-data, monospace);
-          font-size: 10px;
-          text-transform: uppercase;
-          letter-spacing: 0.05em;
-          cursor: pointer;
-          transition: all 0.15s;
-        }
-
-        .shape-lab__category-btn:hover {
-          background: rgba(236, 227, 214, 0.1);
-          color: #ebe3d6;
-        }
-
-        .shape-lab__category-btn.active {
-          background: rgba(202, 165, 84, 0.2);
-          border-color: #caa554;
-          color: #caa554;
-        }
-
-        .shape-lab__shape-list {
-          display: flex;
-          flex-direction: column;
-          gap: 4px;
-          max-height: 300px;
-          overflow-y: auto;
-        }
-
-        .shape-lab__shape-btn {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          padding: 8px 12px;
-          background: transparent;
-          border: 1px solid transparent;
-          color: rgba(236, 227, 214, 0.7);
-          cursor: pointer;
-          transition: all 0.15s;
-          text-align: left;
-        }
-
-        .shape-lab__shape-btn:hover {
-          background: rgba(236, 227, 214, 0.05);
-          border-color: rgba(236, 227, 214, 0.2);
-        }
-
-        .shape-lab__shape-btn.active {
-          background: rgba(202, 165, 84, 0.15);
-          border-color: #caa554;
-        }
-
-        .shape-lab__shape-btn.active .shape-lab__shape-name {
-          color: #caa554;
-        }
-
-        .shape-lab__shape-name {
-          font-family: var(--font-body, system-ui);
-          font-size: 13px;
-        }
-
-        .shape-lab__shape-category {
-          font-family: var(--font-data, monospace);
-          font-size: 9px;
-          text-transform: uppercase;
-          color: rgba(236, 227, 214, 0.4);
-        }
-
-        .shape-lab__param {
-          margin-bottom: 16px;
-        }
-
-        .shape-lab__param:last-child {
-          margin-bottom: 0;
-        }
-
-        .shape-lab__param-label {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          font-family: var(--font-data, monospace);
-          font-size: 11px;
-          color: rgba(236, 227, 214, 0.7);
-          margin-bottom: 8px;
-        }
-
-        .shape-lab__randomize {
-          background: none;
-          border: none;
-          cursor: pointer;
-          font-size: 14px;
-          opacity: 0.6;
-          transition: opacity 0.15s;
-        }
-
-        .shape-lab__randomize:hover {
-          opacity: 1;
-        }
-
-        .shape-lab__slider {
-          width: 100%;
-          height: 4px;
-          -webkit-appearance: none;
-          appearance: none;
-          background: rgba(236, 227, 214, 0.15);
-          outline: none;
-        }
-
-        .shape-lab__slider::-webkit-slider-thumb {
-          -webkit-appearance: none;
-          appearance: none;
-          width: 14px;
-          height: 14px;
-          background: #caa554;
-          cursor: pointer;
-        }
-
-        .shape-lab__info {
-          display: flex;
-          flex-direction: column;
-          gap: 8px;
-        }
-
-        .shape-lab__info-row {
-          display: flex;
-          justify-content: space-between;
-          font-family: var(--font-data, monospace);
-          font-size: 11px;
-        }
-
-        .shape-lab__info-row span:first-child {
-          color: rgba(236, 227, 214, 0.5);
-        }
-
-        .shape-lab__info-row code {
-          background: rgba(0, 0, 0, 0.3);
-          padding: 2px 6px;
-          font-size: 10px;
-        }
-
-        .shape-lab__previews {
-          display: grid;
-          grid-template-columns: repeat(2, 1fr);
-          gap: 24px;
-        }
-
-        .shape-lab__preview-panel {
-          background: rgba(236, 227, 214, 0.02);
-          border: 1px solid rgba(236, 227, 214, 0.1);
-          padding: 20px;
-        }
-
-        .shape-lab__preview-title {
-          font-family: var(--font-data, monospace);
-          font-size: 12px;
-          font-weight: 500;
-          letter-spacing: 0.08em;
-          text-transform: uppercase;
-          color: #caa554;
-          margin: 0 0 4px;
-        }
-
-        .shape-lab__preview-desc {
-          font-size: 12px;
-          color: rgba(236, 227, 214, 0.4);
-          margin: 0 0 16px;
-        }
-
-        .shape-lab__canvas-container {
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          background: rgba(0, 0, 0, 0.3);
-          border: 1px solid rgba(236, 227, 214, 0.1);
-          padding: 20px;
-        }
-
-        @media (max-width: 900px) {
-          .shape-lab__content {
-            grid-template-columns: 1fr;
-          }
-
-          .shape-lab__previews {
-            grid-template-columns: 1fr;
-          }
-        }
-      `}</style>
     </div>
   );
+}
+
+// Unauthorized fallback
+function UnauthorizedView() {
+  return (
+    <div className="shape-lab shape-lab--unauthorized">
+      <div className="shape-lab__unauthorized-content">
+        <h1 className="shape-lab__title">Shape Lab</h1>
+        <p className="shape-lab__unauthorized-text">This page is restricted to administrators.</p>
+        <Link href="/" className="shape-lab__back-home">
+          ← Return to Home
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+// Main export with AdminGate protection
+export default function ShapeLabPage() {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return (
+      <div className="shape-lab">
+        <div className="shape-lab__loading-screen">
+          <p>Loading Shape Lab...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <AdminGate>
+        <ShapeLabContent />
+      </AdminGate>
+      {/* Show unauthorized view when AdminGate hides content */}
+      <AdminGateFallback>
+        <UnauthorizedView />
+      </AdminGateFallback>
+    </>
+  );
+}
+
+// Inverse of AdminGate - shows content when NOT admin
+function AdminGateFallback({ children }: { children: React.ReactNode }) {
+  const { user, isLoading } = useAuth();
+  const [isAllowed, setIsAllowed] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    // In development, admin content is shown, so hide fallback
+    if (process.env.NODE_ENV === "development") {
+      setIsAllowed(true);
+      return;
+    }
+
+    if (isLoading) {
+      setIsAllowed(null);
+      return;
+    }
+
+    // Check if user is allowed
+    const allowedEmail = process.env.NEXT_PUBLIC_ALLOWED_EMAIL;
+    const userIsAllowed = user?.email === allowedEmail;
+    setIsAllowed(userIsAllowed);
+  }, [user, isLoading]);
+
+  // Don't render fallback while loading or if user is allowed
+  if (isAllowed === null || isAllowed) {
+    return null;
+  }
+
+  return <>{children}</>;
 }

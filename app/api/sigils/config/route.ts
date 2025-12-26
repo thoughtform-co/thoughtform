@@ -10,6 +10,9 @@ import { resolveSigilShape } from "@/lib/sigil-geometries";
 // Now supports new Thoughtform shapes with legacy fallback
 // ═══════════════════════════════════════════════════════════════════
 
+/** Render mode for sigil */
+type SigilRenderMode = "sigil" | "landmark";
+
 interface SigilConfig {
   shape: string; // Shape ID from registry (with fallback)
   particleCount: number;
@@ -17,10 +20,13 @@ interface SigilConfig {
   size?: number;
   offsetX?: number;
   offsetY?: number;
+  seed?: number;
+  renderMode?: SigilRenderMode;
   animationParams: {
     drift?: number;
     pulse?: number;
     glitch?: number;
+    density?: number;
   };
 }
 
@@ -56,6 +62,8 @@ function resolveConfig(row: {
   size?: number;
   offset_x?: number;
   offset_y?: number;
+  seed?: number;
+  render_mode?: SigilRenderMode;
   animation_params?: Record<string, number>;
 }): SigilConfig {
   return {
@@ -65,6 +73,8 @@ function resolveConfig(row: {
     size: row.size,
     offsetX: row.offset_x,
     offsetY: row.offset_y,
+    seed: row.seed,
+    renderMode: row.render_mode || "sigil",
     animationParams: row.animation_params || { drift: 1, pulse: 1, glitch: 0.1 },
   };
 }
@@ -78,12 +88,24 @@ export async function GET() {
   try {
     const supabase = createServerClient();
     if (supabase) {
-      const { data, error } = await supabase
+      // Prefer the newest schema (includes seed). If the DB hasn't been migrated yet,
+      // gracefully fall back to the older schema selection.
+      const selectWithSeed =
+        "card_index, shape, particle_count, color, size, offset_x, offset_y, seed, render_mode, animation_params";
+      const selectWithoutSeed =
+        "card_index, shape, particle_count, color, size, offset_x, offset_y, render_mode, animation_params";
+
+      let { data, error } = await supabase
         .from("service_sigils")
-        .select(
-          "card_index, shape, particle_count, color, size, offset_x, offset_y, animation_params"
-        )
+        .select(selectWithSeed)
         .order("card_index", { ascending: true });
+
+      if (error) {
+        ({ data, error } = await supabase
+          .from("service_sigils")
+          .select(selectWithoutSeed)
+          .order("card_index", { ascending: true }));
+      }
 
       if (!error && data && data.length === 3) {
         // Resolve legacy shapes during read
@@ -135,22 +157,46 @@ export async function POST(request: Request) {
       const config = configs[i];
       const resolvedShape = resolveSigilShape(config.shape);
 
-      const { error } = await supabase.from("service_sigils").upsert(
-        {
-          card_index: i,
-          shape: resolvedShape, // Save resolved shape
-          particle_count: config.particleCount,
-          color: config.color,
-          size: config.size,
-          offset_x: config.offsetX,
-          offset_y: config.offsetY,
-          animation_params: config.animationParams,
-          updated_at: new Date().toISOString(),
-        },
-        {
-          onConflict: "card_index",
+      const row: Record<string, unknown> = {
+        card_index: i,
+        shape: resolvedShape, // Save resolved shape
+        particle_count: config.particleCount,
+        color: config.color,
+        size: config.size,
+        offset_x: config.offsetX,
+        offset_y: config.offsetY,
+        render_mode: config.renderMode || "sigil",
+        animation_params: config.animationParams,
+        updated_at: new Date().toISOString(),
+      };
+
+      // Only send seed when explicitly set to avoid breaking older schemas.
+      if (typeof config.seed === "number") {
+        row.seed = config.seed;
+      }
+
+      let { error } = await supabase.from("service_sigils").upsert(row, {
+        onConflict: "card_index",
+      });
+
+      // Backwards-compatible retry: if the DB doesn't have the `seed` column yet,
+      // retry the upsert without seed so other changes still persist.
+      if (error && typeof row.seed === "number") {
+        const msg = (error as { message?: string })?.message ?? "";
+        const code = (error as { code?: string })?.code ?? "";
+        const looksLikeMissingSeed =
+          code === "PGRST204" ||
+          msg.includes("Could not find the 'seed' column") ||
+          msg.includes("seed");
+
+        if (looksLikeMissingSeed) {
+          const retryRow: Record<string, unknown> = { ...row };
+          delete retryRow.seed;
+          ({ error } = await supabase.from("service_sigils").upsert(retryRow, {
+            onConflict: "card_index",
+          }));
         }
-      );
+      }
 
       if (error) {
         logger.warn(`Failed to save sigil config for card ${i}:`, error);

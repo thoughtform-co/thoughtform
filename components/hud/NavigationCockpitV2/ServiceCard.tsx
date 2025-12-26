@@ -185,6 +185,7 @@ export function ServiceCard({
           • seed={sigilSeed}: Deterministic particle positions
           • allowSpill={false}: Particles contained within card frame
             (overflow: hidden applied to parent container)
+          • renderMode: "sigil" (2D flat) or "landmark" (3D rotating)
           
           Full Bleed Mode:
           When size >= 240px, sigil expands to fill the container while
@@ -201,6 +202,7 @@ export function ServiceCard({
             size={sigilConfig.size ?? DEFAULT_SIGIL_SIZE}
             seed={sigilSeed}
             allowSpill={false}
+            renderMode={sigilConfig.renderMode}
           />
         </div>
       </div>

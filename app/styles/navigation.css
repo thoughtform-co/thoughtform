@@ -1580,6 +1580,28 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  /* Ensure panel never hugs the viewport edge (also helps left/right positioning) */
+  padding: 24px;
+}
+
+.sigil-editor-panel__backdrop--center {
+  justify-content: center;
+}
+
+.sigil-editor-panel__backdrop--left {
+  justify-content: flex-start;
+}
+
+.sigil-editor-panel__backdrop--right {
+  justify-content: flex-end;
+}
+
+/* On narrower screens, always center the panel to avoid cramped side placement */
+@media (max-width: 1100px) {
+  .sigil-editor-panel__backdrop--left,
+  .sigil-editor-panel__backdrop--right {
+    justify-content: center;
+  }
 }
 
 .sigil-editor-panel {
@@ -1651,6 +1673,193 @@
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--gold, #caa554);
+}
+
+.sigil-editor-panel__label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.sigil-editor-panel__toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-data, "PT Mono", monospace);
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(236, 227, 214, 0.75);
+  cursor: pointer;
+  user-select: none;
+}
+
+.sigil-editor-panel__toggle input {
+  width: 14px;
+  height: 14px;
+  accent-color: var(--gold, #caa554);
+}
+
+.sigil-editor-panel__toggle-text {
+  line-height: 1;
+}
+
+.sigil-editor-panel__select-wrap {
+  position: relative;
+}
+
+/* Custom select trigger (dark, dawn text) */
+.sigil-editor-panel__select {
+  width: 100%;
+  padding: 10px 10px;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(202, 165, 84, 0.2);
+  color: var(--dawn, #ece3d6);
+  font-family: var(--font-data, "PT Mono", monospace);
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  border-radius: 4px;
+  outline: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  text-align: left;
+}
+
+.sigil-editor-panel__select:hover {
+  border-color: rgba(202, 165, 84, 0.45);
+}
+
+.sigil-editor-panel__select:focus-visible,
+.sigil-editor-panel__select--open {
+  border-color: rgba(202, 165, 84, 0.7);
+}
+
+.sigil-editor-panel__select-value {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sigil-editor-panel__select-caret {
+  opacity: 0.65;
+}
+
+/* Custom dropdown menu */
+.sigil-editor-panel__select-menu {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% + 6px);
+  z-index: 30;
+  max-height: 320px;
+  overflow-y: auto;
+  background: rgba(10, 9, 8, 0.98);
+  border: 1px solid rgba(202, 165, 84, 0.28);
+  border-radius: 6px;
+  box-shadow: 0 16px 44px rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  padding: 6px;
+}
+
+.sigil-editor-panel__select-group-label {
+  padding: 8px 10px;
+  font-family: var(--font-data, "PT Mono", monospace);
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(236, 227, 214, 0.55);
+}
+
+.sigil-editor-panel__select-divider {
+  height: 1px;
+  background: rgba(236, 227, 214, 0.08);
+  margin: 6px 6px;
+}
+
+.sigil-editor-panel__select-option {
+  width: 100%;
+  text-align: left;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--dawn, #ece3d6);
+  font-family: var(--font-data, "PT Mono", monospace);
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition:
+    background 0.12s ease,
+    color 0.12s ease;
+}
+
+/* Hover/selected: gold background, black text (as requested) */
+.sigil-editor-panel__select-option:hover,
+.sigil-editor-panel__select-option--selected {
+  background: var(--gold, #caa554);
+  color: rgba(10, 9, 8, 1);
+  font-weight: 600;
+}
+
+.sigil-editor-panel__mini-btn {
+  padding: 6px 10px;
+  background: transparent;
+  border: 1px solid rgba(202, 165, 84, 0.25);
+  color: rgba(236, 227, 214, 0.75);
+  font-family: var(--font-data, "PT Mono", monospace);
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.sigil-editor-panel__mini-btn:hover {
+  border-color: rgba(202, 165, 84, 0.5);
+  color: var(--gold, #caa554);
+}
+
+.sigil-editor-panel__reload-btn {
+  padding: 6px 10px;
+  background: transparent;
+  border: 1px solid rgba(202, 165, 84, 0.25);
+  color: rgba(236, 227, 214, 0.75);
+  font-family: var(--font-data, "PT Mono", monospace);
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.sigil-editor-panel__reload-btn:hover {
+  border-color: rgba(202, 165, 84, 0.5);
+  color: var(--gold, #caa554);
+}
+
+.sigil-editor-panel__reload-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.sigil-editor-panel__error {
+  font-family: var(--font-data, "PT Mono", monospace);
+  font-size: 10px;
+  color: rgba(255, 120, 120, 0.95);
+  border: 1px solid rgba(255, 120, 120, 0.25);
+  background: rgba(255, 120, 120, 0.07);
+  padding: 10px 12px;
+  border-radius: 4px;
 }
 
 /* Shape grid */
@@ -1849,6 +2058,22 @@
   overflow: hidden; /* Contain preview particles */
 }
 
+/* Sticky preview: keep preview frame visible while scrolling panel content */
+.sigil-editor-panel__section--sticky-preview {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  /* Match panel background so content doesn't slide under transparently */
+  background: rgba(10, 9, 8, 0.98);
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(202, 165, 84, 0.12);
+}
+
+/* Ensure sticky preview doesn't “jump” due to the content padding */
+.sigil-editor-panel__section--sticky-preview .sigil-editor-panel__label {
+  padding-top: 4px;
+}
+
 /* ─────────────────────────────────────────────────────────────────
    SIGIL EDITOR - Hint Text
    Helper text below sliders explaining the value range.
@@ -1879,6 +2104,85 @@
   text-transform: uppercase;
   color: var(--gold, #caa554);
   vertical-align: middle;
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   SIGIL EDITOR - Mode Toggle (Sigil / Landmark)
+   Toggle between 2D sigil mode and 3D landmark mode.
+   ───────────────────────────────────────────────────────────────── */
+.sigil-editor-panel__mode-toggle {
+  display: flex;
+  gap: 6px;
+}
+
+.sigil-editor-panel__mode-btn {
+  flex: 1;
+  padding: 8px 12px;
+  background: rgba(202, 165, 84, 0.1);
+  border: 1px solid rgba(202, 165, 84, 0.2);
+  color: var(--dawn, #ece3d6);
+  font-family: var(--font-data, "PT Mono", monospace);
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sigil-editor-panel__mode-btn:hover {
+  background: rgba(202, 165, 84, 0.2);
+  border-color: rgba(202, 165, 84, 0.4);
+}
+
+.sigil-editor-panel__mode-btn--active {
+  background: rgba(202, 165, 84, 0.3);
+  border-color: var(--gold, #caa554);
+  color: var(--gold, #caa554);
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   SIGIL EDITOR - Shape Lab Presets
+   Grid of preset buttons loaded from Shape Lab.
+   ───────────────────────────────────────────────────────────────── */
+.sigil-editor-panel__presets-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.sigil-editor-panel__preset-btn {
+  padding: 6px 10px;
+  background: rgba(202, 165, 84, 0.08);
+  border: 1px solid rgba(202, 165, 84, 0.2);
+  color: var(--dawn, #ece3d6);
+  font-family: var(--font-data, "PT Mono", monospace);
+  font-size: 9px;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.sigil-editor-panel__preset-btn:hover {
+  background: rgba(202, 165, 84, 0.2);
+  border-color: rgba(202, 165, 84, 0.4);
+  color: var(--gold, #caa554);
+}
+
+.sigil-editor-panel__loading {
+  font-weight: 400;
+  opacity: 0.5;
+}
+
+.sigil-editor-panel__link {
+  color: var(--gold, #caa554);
+  text-decoration: none;
+  border-bottom: 1px solid rgba(202, 165, 84, 0.4);
+  transition: border-color 0.2s;
+}
+
+.sigil-editor-panel__link:hover {
+  border-color: var(--gold, #caa554);
 }
 
 /* Mobile - hide services deck on small screens */

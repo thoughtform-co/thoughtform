@@ -124,6 +124,11 @@ create table if not exists service_sigils (
   shape text not null default 'torus',
   particle_count integer not null default 200,
   color text not null default '202, 165, 84', -- RGB format
+  size integer default 140, -- Sigil size in pixels
+  offset_x integer default 0, -- Horizontal offset percentage
+  offset_y integer default 0, -- Vertical offset percentage
+  seed integer, -- Deterministic seed for particle placement (optional)
+  render_mode text default 'sigil', -- 'sigil' (2D) or 'landmark' (3D rotating)
   animation_params jsonb default '{"drift": 1, "pulse": 1, "glitch": 0.1}'::jsonb,
   created_at timestamptz default now(),
   updated_at timestamptz default now()
