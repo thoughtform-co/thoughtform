@@ -1,20 +1,14 @@
 "use client";
 
-import { useEffect, useState, useRef, useMemo } from "react";
+import { useRef, useMemo } from "react";
 
 // ═══════════════════════════════════════════════════════════════════
 // MANIFESTO CONTENT
 // Progressive reveal with typewriter effect - cool-retro-term style
 // ═══════════════════════════════════════════════════════════════════
 
-// ASCII Art title - "AI ISN'T SOFTWARE." - elegant underline style
-const ASCII_TITLE = `▄▀█ █   █ █▀ █▄░█ ▀ ▀█▀   █▀ █▀█ █▀▀ ▀█▀ █░█░█ ▄▀█ █▀█ █▀▀
-█▀█ █   █ ▄█ █░▀█   ░█░   ▄█ █▄█ █▀░ ░█░ ▀▄▀▄▀ █▀█ █▀▄ ██▄.
-`;
-
 // Manifesto content - full text for character-by-character reveal
-const MANIFESTO_TEXT = `
-> Most companies struggle because they treat AI like normal software.
+const MANIFESTO_TEXT = `> Most companies struggle because they treat AI like normal software.
 
 > But AI isn't a tool to command.
 
@@ -27,9 +21,6 @@ const MANIFESTO_TEXT = `
 > Navigate it — learn when to steer, when to think together — and thought becomes form.
 
 > We teach you how.`;
-
-// Combined content for total character count
-const FULL_CONTENT = ASCII_TITLE + MANIFESTO_TEXT;
 
 interface ManifestoTerminalProps {
   /** Progress through the manifesto (0-1) - used for triggering start */
@@ -48,23 +39,19 @@ export function ManifestoTerminal({
   const hasCompletedRef = useRef(false);
 
   // Calculate total characters
-  const totalChars = useMemo(() => FULL_CONTENT.length, []);
-  const asciiLength = useMemo(() => ASCII_TITLE.length, []);
+  const totalChars = useMemo(() => MANIFESTO_TEXT.length, []);
 
   // Memoize displayed text to avoid string operations on every render
-  const { displayedAscii, displayedManifesto, isComplete } = useMemo(() => {
+  const { displayedManifesto, isComplete } = useMemo(() => {
     if (!isActive) {
       return {
-        displayedAscii: "",
         displayedManifesto: "",
         isComplete: false,
       };
     }
 
     const charsToShow = Math.floor(revealProgress * totalChars);
-    const displayedText = FULL_CONTENT.slice(0, charsToShow);
-    const displayedAscii = displayedText.slice(0, asciiLength);
-    const displayedManifesto = displayedText.slice(asciiLength);
+    const displayedManifesto = MANIFESTO_TEXT.slice(0, charsToShow);
     const isComplete = charsToShow >= totalChars;
 
     // Check if complete
@@ -74,19 +61,15 @@ export function ManifestoTerminal({
     }
 
     return {
-      displayedAscii,
       displayedManifesto,
       isComplete,
     };
-  }, [revealProgress, isActive, totalChars, asciiLength, onComplete]);
+  }, [revealProgress, isActive, totalChars, onComplete]);
 
   if (!isActive) return null;
 
   return (
     <div className="manifesto-terminal">
-      {/* ASCII Art Title */}
-      <pre className="ascii-title">{displayedAscii}</pre>
-
       {/* Manifesto content - typewriter character reveal */}
       <div className="manifesto-content">
         <span className="typed-text">{displayedManifesto}</span>
@@ -101,17 +84,6 @@ export function ManifestoTerminal({
           text-align: left;
           position: relative;
           margin-top: -8px; /* Bring closer to question text */
-        }
-
-        /* ASCII Art Title - elegant 2-line style */
-        .ascii-title {
-          font-family: "Iosevka Web", "Iosevka", "IBM Plex Mono", "Fira Code", monospace;
-          font-size: clamp(11px, 1.3vw, 15px);
-          line-height: 1.2;
-          color: var(--gold, #caa554);
-          margin: 0 0 12px 0; /* Reduced gap to manifesto */
-          white-space: pre;
-          overflow: hidden;
         }
 
         .manifesto-content {
