@@ -95,9 +95,12 @@ export function AdminTools({
         }
 
         .admin-tools__item {
-          display: inline-flex;
+          /* Match CTA menu feel: fixed rail width + two-column (label | icon) layout */
+          display: inline-grid;
+          grid-template-columns: 1fr auto;
+          column-gap: 12px;
           align-items: center;
-          gap: 8px;
+          min-width: 192px;
           padding: 6px 12px;
           background: transparent;
           border: none;
@@ -113,8 +116,7 @@ export function AdminTools({
           cursor: pointer;
           transition: color 150ms ease;
           position: relative;
-          justify-content: flex-end;
-          text-align: right;
+          justify-items: start;
         }
 
         .admin-tools__item:hover {
@@ -131,10 +133,13 @@ export function AdminTools({
           letter-spacing: 0.02em;
           text-align: right;
           opacity: 0.8;
+          justify-self: end;
         }
 
         .admin-tools__label {
           font-size: 10px;
+          text-align: left;
+          justify-self: start;
         }
 
         .admin-tools__indicator {
@@ -156,6 +161,8 @@ export function AdminTools({
           .admin-tools__item {
             padding: 4px 8px;
             font-size: 9px;
+            min-width: 156px;
+            column-gap: 10px;
           }
 
           .admin-tools__icon {
