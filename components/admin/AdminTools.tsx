@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useParticleConfig } from "@/lib/contexts/ParticleConfigContext";
 
 interface AdminToolsProps {
   /** Callback when Particle Admin panel is toggled */
@@ -14,7 +13,7 @@ interface AdminToolsProps {
 }
 
 /**
- * Admin tools menu in the bottom-right corner
+ * Admin tools menu in the top-right corner
  * Mirrors the [00]/[01] CTA buttons on the left side
  * Only visible to admin users (via AdminGate wrapper)
  */
@@ -23,12 +22,10 @@ export function AdminTools({
   isParticleOpen,
   hasParticleChanges = false,
 }: AdminToolsProps) {
-  const [hoveredId, setHoveredId] = useState<string | null>(null);
-
   const tools = [
     {
       id: "particles",
-      index: "⚙",
+      icon: "⚙",
       label: "PARTICLES",
       isActive: isParticleOpen,
       hasIndicator: hasParticleChanges,
@@ -36,7 +33,7 @@ export function AdminTools({
     },
     {
       id: "shape-lab",
-      index: "◇",
+      icon: "◇",
       label: "SHAPE LAB",
       isActive: false,
       hasIndicator: false,
@@ -48,13 +45,12 @@ export function AdminTools({
     <>
       <div className="admin-tools">
         {tools.map((tool) => {
-          const isHovered = hoveredId === tool.id;
           const isActive = tool.isActive;
 
           const content = (
             <>
-              <span className="admin-tools__index">{tool.index}</span>
               <span className="admin-tools__label">{tool.label}</span>
+              <span className="admin-tools__icon">{tool.icon}</span>
               {tool.hasIndicator && <span className="admin-tools__indicator" />}
             </>
           );
@@ -65,8 +61,6 @@ export function AdminTools({
                 key={tool.id}
                 href={tool.href}
                 className={`admin-tools__item ${isActive ? "is-active" : ""}`}
-                onMouseEnter={() => setHoveredId(tool.id)}
-                onMouseLeave={() => setHoveredId(null)}
               >
                 {content}
               </Link>
@@ -78,8 +72,6 @@ export function AdminTools({
               key={tool.id}
               className={`admin-tools__item ${isActive ? "is-active" : ""}`}
               onClick={tool.onClick}
-              onMouseEnter={() => setHoveredId(tool.id)}
-              onMouseLeave={() => setHoveredId(null)}
             >
               {content}
             </button>
@@ -90,8 +82,10 @@ export function AdminTools({
       <style jsx>{`
         .admin-tools {
           position: fixed;
-          bottom: calc(var(--hud-padding, 32px) + var(--corner-size, 40px) + 16px);
-          right: calc(var(--hud-padding, 32px) + var(--rail-width, 60px) + 16px);
+          /* Mirror the CTA menu's bottom margin (see MorphingCTAButtons) */
+          top: calc(var(--hud-padding, 32px) + var(--corner-size, 40px) - 16px);
+          /* Mirror CTA spacing from the rail: sit flush against the right rail edge */
+          right: calc(var(--hud-padding, 32px) + var(--rail-width, 60px) + 0px);
           z-index: 50;
           display: flex;
           flex-direction: column;
@@ -119,6 +113,8 @@ export function AdminTools({
           cursor: pointer;
           transition: color 150ms ease;
           position: relative;
+          justify-content: flex-end;
+          text-align: right;
         }
 
         .admin-tools__item:hover {
@@ -129,11 +125,11 @@ export function AdminTools({
           color: var(--dawn, #ebe3d6);
         }
 
-        .admin-tools__index {
+        .admin-tools__icon {
           min-width: 16px;
           font-size: 11px;
           letter-spacing: 0.02em;
-          text-align: center;
+          text-align: right;
           opacity: 0.8;
         }
 
@@ -153,8 +149,8 @@ export function AdminTools({
 
         @media (max-width: 768px) {
           .admin-tools {
-            bottom: calc(var(--hud-padding, 8px) + var(--corner-size, 20px) + 12px);
-            right: calc(var(--hud-padding, 8px) + var(--rail-width, 32px) + 8px);
+            top: calc(var(--hud-padding, 8px) + var(--corner-size, 20px) - 16px);
+            right: calc(var(--hud-padding, 8px) + var(--rail-width, 32px) + 0px);
           }
 
           .admin-tools__item {
@@ -162,7 +158,7 @@ export function AdminTools({
             font-size: 9px;
           }
 
-          .admin-tools__index {
+          .admin-tools__icon {
             font-size: 10px;
           }
         }
