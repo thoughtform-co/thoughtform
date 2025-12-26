@@ -172,6 +172,9 @@ function NavigationCockpitInner() {
   // within the manifesto section so the subsequent "manifesto → services" transition
   // can start from 0 (avoids the terminal sliding early if progress is already > 0).
   const manifestoCompleteProgressStartRef = useRef<number | null>(null);
+  // Services transition should be paced by actual scroll distance (not the bounded section progress)
+  // to avoid compressed/jumpy motion when the manifesto section is viewport-sized.
+  const servicesStartScrollYRef = useRef<number | null>(null);
 
   // Manifesto reveal is driven by natural page scroll (no wheel capture / no camera intervention).
   const manifestoRevealProgress = useMemo(() => {
@@ -196,7 +199,14 @@ function NavigationCockpitInner() {
     let rafId: number | null = null;
     let lastProgress = manifestoScrollProgress;
 
-    const computeManifestoProgress = (): number | null => {
+    const computeManifestoProgress = (): {
+      progress: number;
+      rectTop: number;
+      rectHeight: number;
+      windowHeight: number;
+      scrollRange: number;
+      scrollDistance: number;
+    } | null => {
       const element = manifestoRef.current;
       if (!element) return null;
 
@@ -209,15 +219,27 @@ function NavigationCockpitInner() {
       const sectionTop = rect.top;
       const scrollRange = sectionHeight + windowHeight;
       const scrollDistance = viewportCenter - sectionTop;
-      return Math.max(0, Math.min(1, scrollDistance / scrollRange));
+      const progress = Math.max(0, Math.min(1, scrollDistance / scrollRange));
+      return {
+        progress,
+        rectTop: rect.top,
+        rectHeight: rect.height,
+        windowHeight,
+        scrollRange,
+        scrollDistance,
+      };
     };
 
     const updateManifestoProgress = (force = false): number | null => {
-      const progress = computeManifestoProgress();
-      if (progress === null) return null;
+      const details = computeManifestoProgress();
+      if (details === null) return null;
+      const progress = details.progress;
 
-      // Only update if progress changed significantly (throttle)
-      if (force || Math.abs(progress - lastProgress) > 0.01) {
+      // Only update if progress changed significantly (throttle).
+      // This value directly drives the manifesto→services transition, so keep it smooth.
+      // (0.01 felt steppy/janky; 0.002 keeps motion continuous without spamming renders.)
+      const EPS = 0.002;
+      if (force || Math.abs(progress - lastProgress) > EPS) {
         setManifestoScrollProgress(progress);
         lastProgress = progress;
       }
@@ -247,6 +269,18 @@ function NavigationCockpitInner() {
       if (rafId !== null) cancelAnimationFrame(rafId);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- manifestoScrollProgress used for init only, adding would cause infinite loop
+  }, [manifestoComplete]);
+
+  // Snapshot the scrollY when services becomes eligible (manifesto fully revealed).
+  // This is used to pace the services transition over a consistent scroll distance.
+  useEffect(() => {
+    if (!manifestoComplete) {
+      servicesStartScrollYRef.current = null;
+      return;
+    }
+    if (servicesStartScrollYRef.current === null && typeof window !== "undefined") {
+      servicesStartScrollYRef.current = window.scrollY;
+    }
   }, [manifestoComplete]);
 
   // ═══════════════════════════════════════════════════════════════════
@@ -365,21 +399,60 @@ function NavigationCockpitInner() {
   // ═══════════════════════════════════════════════════════════════════
   const tManifestoToServices = useMemo(() => {
     if (!manifestoComplete) return 0;
-    // Normalize progress so it starts at 0 right after the manifesto is fully revealed.
-    const start = manifestoCompleteProgressStartRef.current;
-    const startProgress = typeof start === "number" ? start : manifestoScrollProgress;
-    const normalizedPostReveal = Math.max(
-      0,
-      Math.min(1, (manifestoScrollProgress - startProgress) / Math.max(0.0001, 1 - startProgress))
-    );
+    if (typeof window === "undefined") return 0;
 
-    // Delay start by ~30% of the post-reveal scroll range (≈ two scroll actions buffer)
-    const DELAY_START = 0.3;
-    const delayedProgress = Math.max(0, normalizedPostReveal - DELAY_START) / (1 - DELAY_START);
-    const rawProgress = Math.min(1, delayedProgress);
-    // Apply same easeInOutCubic as other transitions for consistent motion
+    // Pace by scroll distance so the transition isn't hypersensitive to section-relative progress.
+    const startY = servicesStartScrollYRef.current ?? window.scrollY;
+    const dy = Math.max(0, window.scrollY - startY);
+
+    // Delay the start slightly (feels like “two scroll actions” buffer), then ramp over ~1.2 viewport heights.
+    const delayPx = Math.max(80, window.innerHeight * 0.12);
+    const durationPx = Math.max(1, window.innerHeight * 1.2);
+    const rawProgress = Math.max(0, Math.min(1, (dy - delayPx) / durationPx));
+
     return easeInOutCubic(rawProgress);
-  }, [manifestoComplete, manifestoScrollProgress]);
+  }, [manifestoComplete, scrollProgress]);
+
+  // Services card emergence should feel like the Interface→Manifesto morph:
+  // slightly delayed, slower ramp, no abrupt "pop".
+  // Use exponential smoothing to eliminate jumps from scroll events.
+  const tServicesCardsTarget = useMemo(() => {
+    const raw = Math.max(0, Math.min(1, (tManifestoToServices - 0.08) / 0.92)); // Reduced delay: 0.12 → 0.08
+    return easeInOutCubic(raw);
+  }, [tManifestoToServices]);
+
+  // Smooth tServicesCards with exponential interpolation via RAF to eliminate abrupt jumps
+  const tServicesCardsSmoothedRef = useRef<number>(0);
+  const [tServicesCards, setTServicesCards] = useState<number>(0);
+
+  useEffect(() => {
+    if (!manifestoComplete) {
+      tServicesCardsSmoothedRef.current = 0;
+      setTServicesCards(0);
+      return;
+    }
+
+    let rafId: number | null = null;
+    const smoothing = 0.85; // Slightly more responsive: 0.88 → 0.85 (lower = faster catch-up)
+
+    const smooth = () => {
+      const target = tServicesCardsTarget;
+      const current = tServicesCardsSmoothedRef.current;
+      const smoothed = current + (target - current) * (1 - smoothing);
+      tServicesCardsSmoothedRef.current = smoothed;
+      setTServicesCards(smoothed);
+
+      // Continue smoothing if there's still a meaningful difference
+      if (Math.abs(target - smoothed) > 0.001) {
+        rafId = requestAnimationFrame(smooth);
+      }
+    };
+
+    rafId = requestAnimationFrame(smooth);
+    return () => {
+      if (rafId !== null) cancelAnimationFrame(rafId);
+    };
+  }, [manifestoComplete, tServicesCardsTarget]);
 
   // Calculate frame position values for manifesto transition
   // Use BOTTOM positioning throughout for smooth, continuous transition
@@ -942,11 +1015,11 @@ function NavigationCockpitInner() {
           <>
             <div
               className="service-card__corner service-card__corner--tl"
-              style={{ opacity: tManifestoToServices }}
+              style={{ opacity: tServicesCards }}
             />
             <div
               className="service-card__corner service-card__corner--br"
-              style={{ opacity: tManifestoToServices }}
+              style={{ opacity: tServicesCards }}
             />
           </>
         )}
@@ -991,8 +1064,8 @@ function NavigationCockpitInner() {
           {/* Fade out the manifesto/definition content as we morph into services */}
           <div
             style={{
-              opacity: 1 - tManifestoToServices,
-              pointerEvents: tManifestoToServices > 0.05 ? "none" : "auto",
+              opacity: 1 - tServicesCards,
+              pointerEvents: tServicesCards > 0.05 ? "none" : "auto",
               transition: "none",
             }}
           >
@@ -1110,8 +1183,8 @@ navigating co-intelligence.`}
                 display: "flex",
                 flexDirection: "column",
                 gap: "16px",
-                opacity: tManifestoToServices,
-                pointerEvents: tManifestoToServices > 0.5 ? "auto" : "none",
+                opacity: tServicesCards,
+                pointerEvents: tServicesCards > 0.5 ? "auto" : "none",
                 // GPU acceleration for smooth scroll-driven animation
                 willChange: "opacity",
                 backfaceVisibility: "hidden",
@@ -1396,7 +1469,8 @@ navigating co-intelligence.`}
       {/* Services Deck - Three service cards that fan out (desktop only) */}
       {!isMobile && (
         <ServicesDeck
-          progress={tManifestoToServices}
+          enabled={manifestoComplete}
+          progress={tServicesCards}
           anchorBottom={bridgeFrameStyles.finalBottom}
           anchorLeft={bridgeFrameStyles.left}
           anchorTransform={bridgeFrameStyles.transform}

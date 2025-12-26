@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { ServiceCard, type ServiceData } from "./ServiceCard";
 import { type SigilConfig, DEFAULT_SIGIL_CONFIG } from "./SigilCanvas";
 
@@ -41,6 +41,8 @@ export const DEFAULT_SIGIL_CONFIGS: SigilConfig[] = [
 ];
 
 interface ServicesDeckProps {
+  /** Pre-mount the deck (keeps cards at opacity 0 until progress starts) */
+  enabled?: boolean;
   /** Transition progress from manifesto to services (0-1) */
   progress: number;
   /** Anchor positioning copied from the bridge-frame */
@@ -61,6 +63,7 @@ interface ServicesDeckProps {
 }
 
 export function ServicesDeck({
+  enabled = false,
   progress,
   anchorBottom,
   anchorLeft,
@@ -73,41 +76,36 @@ export function ServicesDeck({
   editingCardIndex = null,
 }: ServicesDeckProps) {
   const cards = useMemo(() => {
-    // Smooth easing function (matches the site-wide easeInOutCubic)
-    const ease = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+    const easeInOutCubic = (t: number) =>
+      t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    const clamp01 = (v: number) => Math.max(0, Math.min(1, v));
 
-    // Delay the fan-out slightly so it feels like cards emerge after the frame starts shrinking.
-    const rawT = Math.max(0, Math.min(1, (progress - 0.05) / 0.95));
-    const t = ease(rawT); // Apply easing for smooth motion
+    // `progress` is the (slower) services-card progress; apply an additional gentle ease per-card
+    // + longer delay so emergence feels like a morph, not a pop.
+    const t = clamp01(progress);
     const spacing = cardWidthPx + SERVICES_CARD_GAP;
 
     // We render only the two cards that should appear from behind the bridge-frame:
     // - Left card: index 0 (Inspire) ends at -2 * spacing
     // - Center card: index 1 (Practice) ends at -1 * spacing
-    return [
-      { cardIndex: 0, offsetMultiplier: -2 },
-      { cardIndex: 1, offsetMultiplier: -1 },
-    ].map(({ cardIndex, offsetMultiplier }) => {
-      // Stagger: left card starts slightly later for a cascading feel
-      const stagger = cardIndex === 0 ? 0.92 : 1;
-      const cardT = Math.min(1, t * stagger + (1 - stagger));
+    const centerT = easeInOutCubic(clamp01((t - 0.14) / 0.86));
+    const leftT = easeInOutCubic(clamp01((t - 0.26) / 0.74));
 
+    return [
+      { cardIndex: 1, offsetMultiplier: -1, cardT: centerT },
+      { cardIndex: 0, offsetMultiplier: -2, cardT: leftT },
+    ].map(({ cardIndex, offsetMultiplier, cardT }) => {
+      // Start fully hidden (no “baseline opacity” pop), then ease in smoothly.
       const offsetX = offsetMultiplier * spacing * cardT;
-      const opacity = 0.15 + 0.85 * cardT;
-      const scale = 0.94 + 0.06 * cardT;
-      const translateY = (1 - cardT) * 8;
-      return {
-        cardIndex,
-        offsetX,
-        opacity,
-        scale,
-        translateY,
-      };
+      const opacity = cardT;
+      const scale = 0.97 + 0.03 * cardT;
+      const translateY = (1 - cardT) * 12;
+      return { cardIndex, offsetX, opacity, scale, translateY };
     });
   }, [progress, cardWidthPx]);
 
   // Don't render until transition starts
-  if (progress <= 0) return null;
+  if (!enabled && progress <= 0) return null;
 
   return (
     <div className="services-deck" aria-hidden={progress < 0.05}>
