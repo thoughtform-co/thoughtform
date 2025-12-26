@@ -94,9 +94,6 @@ function NavigationCockpitInner() {
 
   // Right-most service content (the bridge-frame morphs into this card)
   const rightService = SERVICES_DATA[2];
-  const rightTitleParts = rightService.title.split(" // ");
-  const rightLabel = rightTitleParts[0] || "";
-  const rightMainTitle = rightTitleParts[1] || rightService.title;
   // Read the CSS-driven rail width so the bridge frame stays aligned with the
   // same left axis as the wordmark + runway arrows across responsive breakpoints.
   const [railWidthPx, setRailWidthPx] = useState<number>(() => {
@@ -911,7 +908,7 @@ function NavigationCockpitInner() {
                 // Manifesto: keep clipped. Services: allow sigil particles to spill beyond the card.
                 overflow:
                   tManifestoToServices > 0.12
-                    ? "visible"
+                    ? "hidden"
                     : tDefToManifesto > 0.1
                       ? "hidden"
                       : "visible",
@@ -1038,6 +1035,9 @@ function NavigationCockpitInner() {
             visibility: "visible",
             position: "relative",
             width: "100%",
+            // Once the frame height becomes fixed (manifesto/services), lock inner layout to 100%
+            // so the services overlay doesn't inherit the (still-in-DOM) manifesto content height.
+            height: tDefToManifesto > 0 ? "100%" : "auto",
             display: "flex",
             flexDirection: "column",
             alignItems: "flex-start",
@@ -1188,29 +1188,34 @@ navigating co-intelligence.`}
               style={{
                 position: "absolute",
                 inset: 0,
-                padding: "24px",
                 display: "flex",
                 flexDirection: "column",
-                gap: "16px",
+                gap: 0,
                 opacity: tServicesCards,
                 pointerEvents: tServicesCards > 0.5 ? "auto" : "none",
+                overflow: "hidden",
                 // GPU acceleration for smooth scroll-driven animation
                 willChange: "opacity",
                 backfaceVisibility: "hidden",
               }}
             >
+              {/* Terminal-style header */}
+              <div className="service-card__header">
+                <span className="service-card__header-text">THOUGHTFORM@MANIFESTO:~</span>
+              </div>
+
+              <div className="service-card__content">
+                <h3 className="service-card__title">{rightService.title}</h3>
+                <p className="service-card__body">{rightService.body}</p>
+              </div>
+
               <div className="service-card__sigil">
                 <SigilCanvas
                   config={sigilConfigs[2] ?? DEFAULT_SIGIL_CONFIGS[2]}
                   size={140}
                   seed={42 + 2 * 1000}
-                  allowSpill={true}
+                  allowSpill={false}
                 />
-              </div>
-              <div className="service-card__content">
-                <div className="service-card__label">{rightLabel}</div>
-                <h3 className="service-card__title">{rightMainTitle}</h3>
-                <p className="service-card__body">{rightService.body}</p>
               </div>
 
               {/* Admin edit button (right card) */}

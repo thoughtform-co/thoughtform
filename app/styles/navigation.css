@@ -1309,50 +1309,108 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   SERVICES DECK - Three service cards that fan out
+   SERVICES DECK
+   Container for the 3-card services layout.
+   
+   Layout: Cards fan out from behind the bridge-frame during scroll.
+   See: components/hud/NavigationCockpitV2/ServicesDeck.tsx
+   
+   Deck structure:
+   ┌──────────┐ ┌──────────┐ ┌──────────┐
+   │ Keynotes │ │ Workshop │ │Strategies│  
+   │  340px   │ │  340px   │ │  340px   │
+   └──────────┘ └──────────┘ └──────────┘
+      40px gap    40px gap
+   
+   Total width: 1100px (3×340 + 2×40)
    ═══════════════════════════════════════════════════════════════ */
 .services-deck {
-  pointer-events: none;
+  pointer-events: none; /* Container itself doesn't capture clicks */
 }
 
 .services-deck > * {
-  pointer-events: auto;
+  pointer-events: auto; /* But child cards do */
 }
 
-/* ─── SERVICE CARD ─── */
+/* ═══════════════════════════════════════════════════════════════
+   SERVICE CARD
+   Individual card component with terminal aesthetic.
+   
+   Design System (Thoughtform Brandworld):
+   ─────────────────────────────────────────────────────────────────
+   • SIGNAL anchor: Terminal header "THOUGHTFORM@MANIFESTO:~"
+   • LIVING_GEOMETRY anchor: Sigil particles at bottom
+   • Glass morphism: void background + blur for depth
+   • Tensor Gold (#caa554): Accent color for borders, corners, text
+   • PP Mondwest: Display typography for titles
+   
+   Card Structure:
+   ┌─────────────────────────────────────────┐
+   │ ╔═ corner                               │
+   │ THOUGHTFORM@MANIFESTO:~                 │ ← header
+   │ ─────────────────────────────────────── │ ← border-bottom
+   │                                         │
+   │ Title.                                  │ ← content
+   │ Body text describing the service.      │
+   │                                         │
+   │         ∴ ∴ ∴ ∴                        │ ← sigil
+   │       ∴       ∴                        │
+   │         ∴ ∴ ∴                          │
+   │                               corner ═╝│
+   └─────────────────────────────────────────┘
+   
+   Sentinel Best Practices Applied:
+   ─────────────────────────────────────────────────────────────────
+   • CSS Variables: All colors use --gold, --dawn, --void
+   • GPU Acceleration: will-change + backface-visibility
+   • Overflow: hidden to contain sigil particles
+   • Transitions: Only hover states, not scroll-driven properties
+   ═══════════════════════════════════════════════════════════════ */
 .service-card {
   position: relative;
+  /* Glass morphism: semi-transparent void with blur */
   background: rgba(10, 9, 8, 0.85);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
+  /* Subtle gold border - brightens on hover */
   border: 1px solid rgba(202, 165, 84, 0.15);
-  padding: 24px;
+  padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  /* Only transition hover states, not scroll-driven properties */
+  gap: 0;
+  /* Only transition hover states, not scroll-driven properties
+     (scroll animations use direct style manipulation for 60fps) */
   transition:
     background 0.3s ease,
     border-color 0.3s ease,
     box-shadow 0.3s ease;
-  overflow: visible; /* Allow sigil particles to spill */
-  /* GPU acceleration for smooth scroll-driven animations */
+  /* CRITICAL: Contain sigil particles within the frame
+     Without this, particles with allowSpill=false still render outside */
+  overflow: hidden;
+  /* GPU acceleration for smooth scroll-driven animations
+     See: sentinel/BEST-PRACTICES.md → Canvas & Three.js */
   will-change: transform, opacity;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
 }
 
 .service-card:hover {
-  background: rgba(10, 9, 8, 0.92);
-  border-color: rgba(202, 165, 84, 0.3);
+  background: rgba(10, 9, 8, 0.92); /* Slightly darker on hover */
+  border-color: rgba(202, 165, 84, 0.3); /* Brighter border */
 }
 
 .service-card--editing {
+  /* Admin editing state: prominent glow to indicate selection */
   border-color: rgba(202, 165, 84, 0.5);
   box-shadow: 0 0 20px rgba(202, 165, 84, 0.2);
 }
 
-/* Tensor Gold corners - TL */
+/* ─────────────────────────────────────────────────────────────────
+   TENSOR GOLD CORNER BRACKETS
+   L-shaped 16px corners at TL and BR positions.
+   Creates visual frame without full border - terminal aesthetic.
+   Uses --gold CSS variable with fallback to #caa554.
+   ───────────────────────────────────────────────────────────────── */
 .service-card__corner {
   position: absolute;
   width: 16px;
@@ -1375,36 +1433,65 @@
   border-right: 2px solid var(--gold, #caa554);
 }
 
-/* Sigil container */
-.service-card__sigil {
+/* ─────────────────────────────────────────────────────────────────
+   TERMINAL HEADER
+   SIGNAL anchor: "THOUGHTFORM@MANIFESTO:~" prompt text.
+   Creates visual continuity with manifesto terminal section.
+   Subtle border-bottom separates from content.
+   ───────────────────────────────────────────────────────────────── */
+.service-card__header {
   display: flex;
-  justify-content: center;
   align-items: center;
-  min-height: 140px;
-  overflow: visible;
-  position: relative;
+  padding: 12px 24px;
+  /* Subtle --dawn border at 10% opacity */
+  border-bottom: 1px solid rgba(236, 227, 214, 0.1);
 }
 
-/* Content container */
+.service-card__header-text {
+  font-family: var(--font-mono, "IBM Plex Mono", monospace);
+  font-size: 12px;
+  color: var(--gold, #caa554); /* Tensor Gold for terminal text */
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   CONTENT CONTAINER
+   Holds title + body text. flex: 1 pushes sigil to bottom.
+   ───────────────────────────────────────────────────────────────── */
 .service-card__content {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  padding: 24px;
+  flex: 1; /* Expand to fill available space, pushing sigil down */
 }
 
-.service-card__label {
-  font-family: var(--font-data, "PT Mono", monospace);
-  font-size: 11px;
-  font-weight: 400;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--gold, #caa554);
-  opacity: 0.8;
+/* ─────────────────────────────────────────────────────────────────
+   SIGIL CONTAINER
+   LIVING_GEOMETRY anchor: Contains the particle sigil canvas.
+   Centered horizontally, positioned at card bottom.
+   overflow: hidden ensures particles stay within bounds.
+   ───────────────────────────────────────────────────────────────── */
+.service-card__sigil {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 140px; /* Matches SigilCanvas size prop */
+  overflow: hidden; /* Contain particle spillage */
+  position: relative;
+  padding-top: 8px;
+  padding-bottom: 16px;
 }
 
+/* ─────────────────────────────────────────────────────────────────
+   TYPOGRAPHY
+   Title: PP Mondwest display font, 32px, --dawn color
+   Body: PP Mondwest, 18px, 75% opacity for visual hierarchy
+   ───────────────────────────────────────────────────────────────── */
 .service-card__title {
   font-family: var(--font-display, "PP Mondwest", serif);
-  font-size: 24px;
+  font-size: 32px;
   font-weight: 400;
   color: var(--dawn, #ece3d6);
   margin: 0;
@@ -1413,15 +1500,20 @@
 
 .service-card__body {
   font-family: var(--font-display, "PP Mondwest", serif);
-  font-size: 15px;
+  font-size: 18px;
   font-weight: 400;
   line-height: 1.5;
   color: var(--dawn, #ece3d6);
-  opacity: 0.75;
+  opacity: 0.75; /* Reduced opacity creates hierarchy with title */
   margin: 0;
 }
 
-/* Admin edit button */
+/* ─────────────────────────────────────────────────────────────────
+   ADMIN EDIT BUTTON
+   Appears on hover for authenticated admins.
+   Uses AdminGate pattern from auth system.
+   See: sentinel/BEST-PRACTICES.md → Authentication
+   ───────────────────────────────────────────────────────────────── */
 .service-card__edit-btn {
   position: absolute;
   top: 8px;

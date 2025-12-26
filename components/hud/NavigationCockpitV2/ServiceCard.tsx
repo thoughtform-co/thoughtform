@@ -5,14 +5,49 @@ import { SigilCanvas, type SigilConfig } from "./SigilCanvas";
 
 // ═══════════════════════════════════════════════════════════════════
 // SERVICE CARD
-// Individual service card with particle sigil header
-// Design: Tensor Gold TL/BR corners, glass background, PP Mondwest body
+// ═══════════════════════════════════════════════════════════════════
+//
+// Individual service card component for the Services section deck.
+// Part of the manifesto → services scroll-driven transition.
+//
+// ┌─────────────────────────────────────────────────────────────────┐
+// │ DESIGN SYSTEM (Thoughtform Brandworld)                         │
+// │                                                                 │
+// │ • Terminal Aesthetic: SIGNAL anchor - "THOUGHTFORM@MANIFESTO:~"│
+// │   header evokes command-line interface, connecting to the      │
+// │   manifesto terminal that precedes this section.               │
+// │                                                                 │
+// │ • Tensor Gold (#caa554): Primary accent for terminal elements, │
+// │   corners, and headers. Applied via CSS variables.             │
+// │                                                                 │
+// │ • Glass Morphism: rgba(10,9,8,0.85) + backdrop-blur creates    │
+// │   depth while maintaining the void/dark aesthetic.             │
+// │                                                                 │
+// │ • PP Mondwest: Display font for titles, maintains brand voice. │
+// │                                                                 │
+// │ • Sigil Particles: LIVING_GEOMETRY anchor - each service has   │
+// │   a unique particle configuration (gateway, torus, spiral)     │
+// │   representing different aspects of Thoughtform's offerings.   │
+// └─────────────────────────────────────────────────────────────────┘
+//
+// ┌─────────────────────────────────────────────────────────────────┐
+// │ SENTINEL BEST PRACTICES                                        │
+// │                                                                 │
+// │ • CSS Variables: All colors use --gold, --dawn, --void vars.   │
+// │ • GPU Acceleration: will-change + backface-visibility applied  │
+// │   via CSS for scroll-driven animations.                        │
+// │ • Overflow: Set to hidden to contain sigil particles within    │
+// │   the card frame (allowSpill={false}).                         │
+// └─────────────────────────────────────────────────────────────────┘
+//
 // ═══════════════════════════════════════════════════════════════════
 
 export interface ServiceData {
   id: string;
-  title: string; // e.g., "Inspire // Keynotes"
-  body: string; // Description text
+  /** Display title shown in PP Mondwest font (e.g., "Keynotes.") */
+  title: string;
+  /** Body text describing the service offering */
+  body: string;
 }
 
 export interface ServiceCardProps {
@@ -66,12 +101,6 @@ export function ServiceCard({
     onEditClick?.(index);
   }, [onEditClick, index]);
 
-  // Parse title into label and main title
-  // Format: "Inspire // Keynotes" → label: "Inspire", title: "Keynotes"
-  const titleParts = service.title.split(" // ");
-  const label = titleParts[0] || "";
-  const mainTitle = titleParts[1] || service.title;
-
   return (
     <div
       className={`service-card ${isHovered ? "service-card--hovered" : ""} ${isEditing ? "service-card--editing" : ""}`}
@@ -85,24 +114,58 @@ export function ServiceCard({
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
-      {/* Tensor Gold corners - TL */}
+      {/* ─────────────────────────────────────────────────────────────
+          TENSOR GOLD CORNER BRACKETS
+          Design: 16px L-shaped corners at TL and BR positions.
+          These echo the terminal frame aesthetic and create visual
+          hierarchy without a full border. Uses --gold CSS variable.
+          ───────────────────────────────────────────────────────────── */}
       <div className="service-card__corner service-card__corner--tl" />
-      {/* Tensor Gold corners - BR */}
       <div className="service-card__corner service-card__corner--br" />
 
-      {/* Sigil header */}
-      <div className="service-card__sigil">
-        <SigilCanvas config={sigilConfig} size={140} seed={sigilSeed} allowSpill={true} />
+      {/* ─────────────────────────────────────────────────────────────
+          TERMINAL HEADER
+          SIGNAL anchor: Creates continuity with the manifesto terminal.
+          The "THOUGHTFORM@MANIFESTO:~" prompt-style text reinforces
+          the command-line aesthetic. Separated by a subtle border-bottom
+          (rgba(236,227,214,0.1)) from the content below.
+          ───────────────────────────────────────────────────────────── */}
+      <div className="service-card__header">
+        <span className="service-card__header-text">THOUGHTFORM@MANIFESTO:~</span>
       </div>
 
-      {/* Content */}
+      {/* ─────────────────────────────────────────────────────────────
+          CARD CONTENT
+          Typography: PP Mondwest for titles (32px), body (18px).
+          Color: --dawn for text, 0.75 opacity for body to create
+          visual hierarchy. Content has flex: 1 to push sigil to bottom.
+          ───────────────────────────────────────────────────────────── */}
       <div className="service-card__content">
-        <div className="service-card__label">{label}</div>
-        <h3 className="service-card__title">{mainTitle}</h3>
+        <h3 className="service-card__title">{service.title}</h3>
         <p className="service-card__body">{service.body}</p>
       </div>
 
-      {/* Admin edit button (only visible on hover for admins) */}
+      {/* ─────────────────────────────────────────────────────────────
+          SIGIL PARTICLE SYSTEM
+          LIVING_GEOMETRY anchor: Each card has a unique sigil shape
+          (gateway, torus, spiral) rendered via SigilCanvas.
+          
+          Key settings:
+          • size={140}: Standard sigil size across all cards
+          • seed={sigilSeed}: Deterministic particle positions
+          • allowSpill={false}: Particles contained within card frame
+            (overflow: hidden applied to parent container)
+          ───────────────────────────────────────────────────────────── */}
+      <div className="service-card__sigil">
+        <SigilCanvas config={sigilConfig} size={140} seed={sigilSeed} allowSpill={false} />
+      </div>
+
+      {/* ─────────────────────────────────────────────────────────────
+          ADMIN EDIT BUTTON
+          Only renders for authenticated admins on hover.
+          Uses AdminGate pattern from auth system.
+          See: sentinel/BEST-PRACTICES.md → Authentication
+          ───────────────────────────────────────────────────────────── */}
       {isAdmin && isHovered && (
         <button className="service-card__edit-btn" onClick={handleEditClick} type="button">
           Edit Sigil
