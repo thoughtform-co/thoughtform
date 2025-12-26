@@ -1127,8 +1127,8 @@ function NavigationCockpitInner() {
 It's a strange intelligence to navigate.
 Thoughtform teaches how.`}
                   finalText={`(θɔːtfɔːrm / THAWT-form)
-the human-AI interface for
-navigating co-intelligence.`}
+the interface for navigating
+human-AI collaboration.`}
                   progress={tHeroToDef}
                   className="bridge-content-glitch"
                 />
@@ -1153,8 +1153,8 @@ navigating co-intelligence.`}
               >
                 <GlitchText
                   initialText={`(θɔːtfɔːrm / THAWT-form)
-the human-AI interface for
-navigating co-intelligence.`}
+the interface for navigating
+human-AI collaboration.`}
                   finalText={`But why is AI so different?`}
                   progress={tDefToManifesto}
                   className="bridge-content-glitch question-morph"
