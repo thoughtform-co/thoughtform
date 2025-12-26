@@ -133,9 +133,10 @@ export function AdminTools({
 
         .admin-tools__label {
           font-size: 10px;
-          /* Match width of "PARTICLES" so icons align vertically */
-          min-width: 70px;
+          /* Fixed width so both labels start at the same position */
+          width: 70px;
           text-align: right;
+          display: inline-block;
         }
 
         .admin-tools__indicator {
