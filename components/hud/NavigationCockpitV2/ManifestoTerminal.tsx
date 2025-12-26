@@ -8,17 +8,20 @@ import { useRef, useMemo } from "react";
 // ═══════════════════════════════════════════════════════════════════
 
 // Manifesto content - full text for character-by-character reveal
-const MANIFESTO_TEXT = `> Most companies struggle because they treat AI like normal software.
+const MANIFESTO_TEXT = `AI ISN'T SOFTWARE
 
-> But AI isn't a tool to command.
+> Most companies struggle because they treat AI like normal software.
 
-> It's a strange intelligence we have to learn how
-  to navigate. It leaps across dimensions we can't fathom.
-  It hallucinates. It surprises.
+> But AI is a strange intelligence that blurs the line between tool and collaborator.
+  It leaps across dimensions we can't fathom. It hallucinates. It surprises.
 
 > Fight that strangeness, and you drown in mediocrity.
+  Navigate it, learn to move through its terrain, and your thought becomes form.
 
-> Navigate it — learn when to steer, when to think together — and thought becomes form.
+> Build what you couldn't build before.
+
+> Not through frameworks, but through building an interface
+  between your intuition and its alien geometry.
 
 > We teach you how.`;
 
