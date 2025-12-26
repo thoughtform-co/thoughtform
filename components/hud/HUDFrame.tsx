@@ -77,9 +77,9 @@ export const HUDFrame = forwardRef<NavigationBarHandle, HUDFrameProps>(function 
       instruction = "Defining thoughtform. Calibrating understanding.";
     } else if (p < 0.45) {
       instruction = "Entering the manifesto. Recalibrating perspective.";
-    } else if (p < 0.7) {
+    } else if (p < 0.82) {
       instruction = "Navigation services detected. Plotting course.";
-    } else if (p < 0.9) {
+    } else if (p < 0.94) {
       instruction = "Approaching destination. Signal strengthening.";
     } else {
       instruction = "Arrival imminent. Initiating contact protocols.";

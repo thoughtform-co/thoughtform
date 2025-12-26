@@ -701,11 +701,11 @@ function NavigationCockpitInner() {
     } else if (scrollProgress < 0.5) {
       // Manifesto section - after definition→manifesto transition starts
       newSection = "manifesto";
-    } else if (scrollProgress < 0.72) {
+    } else if (scrollProgress < 0.82) {
       // Keep "manifesto" active until the terminal actually begins sliding to services.
       // This avoids accidental section changes while the manifesto is still being read.
       newSection = tManifestoToServices > 0.02 ? "services" : "manifesto";
-    } else if (scrollProgress < 0.88) {
+    } else if (scrollProgress < 0.94) {
       // About section (extra scroll runway so contact doesn't appear too quickly)
       newSection = "about";
     } else {
