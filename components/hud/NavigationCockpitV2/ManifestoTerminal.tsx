@@ -89,10 +89,10 @@ export function ManifestoTerminal({
         }
 
         .manifesto-content {
-          /* Iosevka - beautiful monospace terminal font */
+          /* System monospace font stack */
           font-family:
-            "Iosevka Web", "Iosevka", "Iosevka Term", "IBM Plex Mono", "Fira Code", monospace;
-          font-size: clamp(14px, 1.5vw, 16px);
+            "SFMono-Regular, Consolas, "Liberation Mono", monospace;
+          font-size: 18px;
           line-height: 1.7;
           font-weight: 400;
           /* Tensor Gold color */
