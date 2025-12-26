@@ -1085,7 +1085,7 @@ function NavigationCockpitInner() {
                   visibility: cardOpacity > 0 ? "visible" : "hidden",
                   width: isMobile ? "100%" : "320px",
                   maxWidth: isMobile ? "100%" : "320px",
-                  marginBottom: "4px", // Reduced since gap handles spacing
+                  marginBottom: "16px", // Space between logo and pronunciation
                 }}
               >
                 <WordmarkSans color="var(--dawn)" />
