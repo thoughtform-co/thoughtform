@@ -52,10 +52,9 @@ const DEFAULT_SIGIL_CONFIGS: SigilConfig[] = [
   },
 ];
 
-/**
- * Resolve config shape (handles legacy shapes)
- */
-function resolveConfig(row: {
+/** Row shape returned from service_sigils table (seed is optional for backwards compat) */
+type ServiceSigilRow = {
+  card_index: number;
   shape: string;
   particle_count: number;
   color: string;
@@ -65,7 +64,12 @@ function resolveConfig(row: {
   seed?: number;
   render_mode?: SigilRenderMode;
   animation_params?: Record<string, number>;
-}): SigilConfig {
+};
+
+/**
+ * Resolve config shape (handles legacy shapes)
+ */
+function resolveConfig(row: ServiceSigilRow): SigilConfig {
   return {
     shape: resolveSigilShape(row.shape), // Resolve legacy → new
     particleCount: row.particle_count,
@@ -95,16 +99,26 @@ export async function GET() {
       const selectWithoutSeed =
         "card_index, shape, particle_count, color, size, offset_x, offset_y, render_mode, animation_params";
 
-      let { data, error } = await supabase
+      let data: ServiceSigilRow[] | null = null;
+      let error: { message: string } | null = null;
+
+      const result1 = await supabase
         .from("service_sigils")
         .select(selectWithSeed)
         .order("card_index", { ascending: true });
 
+      data = result1.data as ServiceSigilRow[] | null;
+      error = result1.error;
+
+      // Fallback if seed column doesn't exist yet
       if (error) {
-        ({ data, error } = await supabase
+        const result2 = await supabase
           .from("service_sigils")
           .select(selectWithoutSeed)
-          .order("card_index", { ascending: true }));
+          .order("card_index", { ascending: true });
+
+        data = result2.data as ServiceSigilRow[] | null;
+        error = result2.error;
       }
 
       if (!error && data && data.length === 3) {
