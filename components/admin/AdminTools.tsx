@@ -93,9 +93,12 @@ export function AdminTools({
         }
 
         .admin-tools__item {
-          display: inline-flex;
+          display: grid;
+          grid-template-columns: 1fr 16px; /* label col, icon col */
           align-items: center;
-          gap: 8px;
+          column-gap: 8px;
+          width: 140px; /* pick a width that fits your longest label */
+          box-sizing: border-box;
           padding: 6px 12px;
           background: transparent;
           border: none;
@@ -111,8 +114,6 @@ export function AdminTools({
           cursor: pointer;
           transition: color 150ms ease;
           position: relative;
-          /* Fixed width so both items align on the left edge */
-          width: 118px;
         }
 
         .admin-tools__item:hover {
@@ -123,20 +124,23 @@ export function AdminTools({
           color: var(--dawn, #ebe3d6);
         }
 
-        .admin-tools__icon {
-          min-width: 16px;
-          font-size: 11px;
-          letter-spacing: 0.02em;
-          text-align: right;
-          opacity: 0.8;
+        .admin-tools__label {
+          width: auto; /* remove the fixed width clamp */
+          text-align: left; /* important: align by left edge now */
+          justify-self: start;
+          font-size: 10px;
         }
 
-        .admin-tools__label {
-          font-size: 10px;
-          /* Fixed width so both labels start at the same position */
-          width: 70px;
-          text-align: right;
-          display: inline-block;
+        .admin-tools__icon {
+          width: 16px; /* make it explicit (not min-width) */
+          height: 16px;
+          display: flex;
+          align-items: center;
+          justify-content: flex-end; /* pins glyph to the right edge */
+          opacity: 0.8;
+          line-height: 1;
+          font-size: 11px;
+          letter-spacing: 0.02em;
         }
 
         .admin-tools__indicator {
@@ -158,14 +162,13 @@ export function AdminTools({
           .admin-tools__item {
             padding: 4px 8px;
             font-size: 9px;
+            width: 120px; /* smaller width for mobile */
           }
 
           .admin-tools__icon {
             font-size: 10px;
-          }
-
-          .admin-tools__label {
-            min-width: 60px;
+            width: 14px;
+            height: 14px;
           }
         }
       `}</style>
