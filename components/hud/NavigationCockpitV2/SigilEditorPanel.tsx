@@ -1,22 +1,28 @@
 "use client";
 
 import { useState, useCallback, useEffect, useRef } from "react";
-import { SIGIL_SHAPES, SIGIL_SHAPE_LABELS, type SigilShape } from "@/lib/sigil-geometries";
+import {
+  SIGIL_SHAPES,
+  SIGIL_SHAPE_LABELS,
+  resolveSigilShape,
+  getSigilShapeOptions,
+} from "@/lib/sigil-geometries";
 import { type SigilConfig, DEFAULT_SIGIL_SIZE } from "./SigilCanvas";
 import { SigilCanvas } from "./SigilCanvas";
 
 // ═══════════════════════════════════════════════════════════════════
 // SIGIL EDITOR PANEL
 // Admin-only panel for editing sigil configuration
-// Similar to ParticleAdminPanel but for individual service card sigils
+// Now supports new Thoughtform shapes with 3D depth
 //
 // Size Control:
-// • Min: 100px (compact)
+// • Min: 80px (compact)
 // • Default: 140px (standard)
-// • Max: 280px (full bleed - fills card width minus padding)
+// • Max: 400px (full bleed - fills card width minus padding)
 //
-// Full bleed means the sigil expands to fill the available container
-// while staying contained (no particles escape the card frame).
+// Shape Categories:
+// • thoughtform: New 3D topological shapes
+// • geometric: Basic geometric shapes with depth
 //
 // UX Improvements:
 // • Auto-save: Changes are saved automatically (debounced 500ms)
@@ -42,8 +48,18 @@ interface SigilEditorPanelProps {
 }
 
 export function SigilEditorPanel({ config, onSave, onClose, cardIndex }: SigilEditorPanelProps) {
-  const [localConfig, setLocalConfig] = useState<SigilConfig>({ ...config });
+  // Resolve legacy shapes to new ones
+  const resolvedShape = resolveSigilShape(config.shape);
+  const [localConfig, setLocalConfig] = useState<SigilConfig>({
+    ...config,
+    shape: resolvedShape, // Use resolved shape
+  });
   const isFirstRender = useRef(true);
+
+  // Get shape options grouped by category
+  const shapeOptions = getSigilShapeOptions();
+  const thoughtformShapes = shapeOptions.filter((s) => s.category === "thoughtform");
+  const geometricShapes = shapeOptions.filter((s) => s.category === "geometric");
 
   // ─────────────────────────────────────────────────────────────────
   // AUTO-SAVE: Debounced save when config changes
@@ -71,7 +87,7 @@ export function SigilEditorPanel({ config, onSave, onClose, cardIndex }: SigilEd
     e.stopPropagation();
   }, []);
 
-  const handleShapeChange = useCallback((shape: SigilShape) => {
+  const handleShapeChange = useCallback((shape: string) => {
     setLocalConfig((prev) => ({ ...prev, shape }));
   }, []);
 
@@ -246,21 +262,44 @@ export function SigilEditorPanel({ config, onSave, onClose, cardIndex }: SigilEd
             </div>
           </div>
 
-          {/* Shape selector */}
+          {/* Shape selector - organized by category */}
           <div className="sigil-editor-panel__section">
             <label className="sigil-editor-panel__label">Shape</label>
-            <div className="sigil-editor-panel__shape-grid">
-              {SIGIL_SHAPES.map((shape) => (
-                <button
-                  key={shape}
-                  className={`sigil-editor-panel__shape-btn ${localConfig.shape === shape ? "sigil-editor-panel__shape-btn--active" : ""}`}
-                  onClick={() => handleShapeChange(shape)}
-                  type="button"
-                  title={SIGIL_SHAPE_LABELS[shape]}
-                >
-                  {SIGIL_SHAPE_LABELS[shape]}
-                </button>
-              ))}
+
+            {/* Thoughtform shapes (new, 3D) */}
+            <div className="sigil-editor-panel__shape-category">
+              <span className="sigil-editor-panel__shape-category-label">Thoughtform</span>
+              <div className="sigil-editor-panel__shape-grid">
+                {thoughtformShapes.map((shape) => (
+                  <button
+                    key={shape.id}
+                    className={`sigil-editor-panel__shape-btn ${localConfig.shape === shape.id ? "sigil-editor-panel__shape-btn--active" : ""}`}
+                    onClick={() => handleShapeChange(shape.id)}
+                    type="button"
+                    title={shape.label}
+                  >
+                    {shape.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Geometric shapes */}
+            <div className="sigil-editor-panel__shape-category">
+              <span className="sigil-editor-panel__shape-category-label">Geometric</span>
+              <div className="sigil-editor-panel__shape-grid">
+                {geometricShapes.map((shape) => (
+                  <button
+                    key={shape.id}
+                    className={`sigil-editor-panel__shape-btn ${localConfig.shape === shape.id ? "sigil-editor-panel__shape-btn--active" : ""}`}
+                    onClick={() => handleShapeChange(shape.id)}
+                    type="button"
+                    title={shape.label}
+                  >
+                    {shape.label}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 

@@ -2,17 +2,21 @@ import { NextResponse } from "next/server";
 import { logger } from "@/lib/logger";
 import { createServerClient } from "@/lib/supabase";
 import { isAuthorized } from "@/lib/auth-server";
-import type { SigilShape } from "@/lib/sigil-geometries";
+import { resolveSigilShape } from "@/lib/sigil-geometries";
 
 // ═══════════════════════════════════════════════════════════════════
 // SIGIL CONFIG API
 // Manages sigil configurations for the 3 service cards
+// Now supports new Thoughtform shapes with legacy fallback
 // ═══════════════════════════════════════════════════════════════════
 
 interface SigilConfig {
-  shape: SigilShape;
+  shape: string; // Shape ID from registry (with fallback)
   particleCount: number;
   color: string;
+  size?: number;
+  offsetX?: number;
+  offsetY?: number;
   animationParams: {
     drift?: number;
     pulse?: number;
@@ -20,21 +24,22 @@ interface SigilConfig {
   };
 }
 
+// New default configs using Thoughtform shapes
 const DEFAULT_SIGIL_CONFIGS: SigilConfig[] = [
   {
-    shape: "gateway",
+    shape: "tf_constellationMesh",
     particleCount: 200,
     color: "202, 165, 84",
     animationParams: { drift: 1, pulse: 1, glitch: 0.1 },
   },
   {
-    shape: "torus",
+    shape: "tf_trefoilKnot",
     particleCount: 200,
     color: "202, 165, 84",
     animationParams: { drift: 1, pulse: 1, glitch: 0.1 },
   },
   {
-    shape: "spiral",
+    shape: "tf_vortexBloom",
     particleCount: 200,
     color: "202, 165, 84",
     animationParams: { drift: 1, pulse: 1, glitch: 0.1 },
@@ -42,8 +47,32 @@ const DEFAULT_SIGIL_CONFIGS: SigilConfig[] = [
 ];
 
 /**
+ * Resolve config shape (handles legacy shapes)
+ */
+function resolveConfig(row: {
+  shape: string;
+  particle_count: number;
+  color: string;
+  size?: number;
+  offset_x?: number;
+  offset_y?: number;
+  animation_params?: Record<string, number>;
+}): SigilConfig {
+  return {
+    shape: resolveSigilShape(row.shape), // Resolve legacy → new
+    particleCount: row.particle_count,
+    color: row.color,
+    size: row.size,
+    offsetX: row.offset_x,
+    offsetY: row.offset_y,
+    animationParams: row.animation_params || { drift: 1, pulse: 1, glitch: 0.1 },
+  };
+}
+
+/**
  * GET /api/sigils/config
  * Returns the GLOBAL sigil configurations for all 3 service cards
+ * Automatically resolves legacy shapes to new Thoughtform shapes
  */
 export async function GET() {
   try {
@@ -51,16 +80,14 @@ export async function GET() {
     if (supabase) {
       const { data, error } = await supabase
         .from("service_sigils")
-        .select("card_index, shape, particle_count, color, animation_params")
+        .select(
+          "card_index, shape, particle_count, color, size, offset_x, offset_y, animation_params"
+        )
         .order("card_index", { ascending: true });
 
       if (!error && data && data.length === 3) {
-        const configs = data.map((row) => ({
-          shape: row.shape as SigilShape,
-          particleCount: row.particle_count,
-          color: row.color,
-          animationParams: row.animation_params || { drift: 1, pulse: 1, glitch: 0.1 },
-        }));
+        // Resolve legacy shapes during read
+        const configs = data.map((row) => resolveConfig(row));
         return NextResponse.json({ configs });
       }
     }
@@ -103,15 +130,20 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Database not configured" }, { status: 503 });
     }
 
-    // Upsert all 3 configs
+    // Upsert all 3 configs (resolving shapes on save as well)
     for (let i = 0; i < 3; i++) {
       const config = configs[i];
+      const resolvedShape = resolveSigilShape(config.shape);
+
       const { error } = await supabase.from("service_sigils").upsert(
         {
           card_index: i,
-          shape: config.shape,
+          shape: resolvedShape, // Save resolved shape
           particle_count: config.particleCount,
           color: config.color,
+          size: config.size,
+          offset_x: config.offsetX,
+          offset_y: config.offsetY,
           animation_params: config.animationParams,
           updated_at: new Date().toISOString(),
         },
@@ -129,9 +161,15 @@ export async function POST(request: Request) {
       }
     }
 
+    // Return with resolved shapes
+    const resolvedConfigs = configs.map((c) => ({
+      ...c,
+      shape: resolveSigilShape(c.shape),
+    }));
+
     return NextResponse.json({
       success: true,
-      configs,
+      configs: resolvedConfigs,
       message: "Sigil configurations saved globally",
     });
   } catch (error) {

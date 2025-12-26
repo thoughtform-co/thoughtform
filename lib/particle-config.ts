@@ -29,20 +29,32 @@ export interface ManifoldConfig {
  * Available landmark shapes
  */
 export type LandmarkShape =
+  // Classic geometric shapes
   | "gateway"
   | "tower"
   | "helix"
   | "sphere"
   | "ring"
   | "ziggurat"
+  // Classic attractors
   | "lorenz"
   | "halvorsen"
   | "rossler"
+  // Decorative
   | "orbit"
   | "gridlines"
   | "contour"
   | "wireframeSphere"
-  | "starfield";
+  | "starfield"
+  // Thoughtform shapes (new topological, alien-looking)
+  | "tf_filamentField"
+  | "tf_foldedFlow"
+  | "tf_vortexBloom"
+  | "tf_trefoilKnot"
+  | "tf_twistedRibbon"
+  | "tf_constellationMesh"
+  | "tf_fractureSpire"
+  | "tf_continuumFold";
 
 /**
  * Configuration for a section landmark
@@ -453,18 +465,60 @@ export const COLOR_PRESETS = {
  * Shape display names
  */
 export const SHAPE_LABELS: Record<LandmarkShape, string> = {
+  // Classic geometric
   gateway: "Circular Gateway",
   tower: "Crystalline Tower",
   helix: "Double Helix",
   sphere: "Sphere/Singularity",
   ring: "Concentric Rings",
   ziggurat: "Ziggurat/Tree",
+  // Classic attractors
   lorenz: "Lorenz Attractor",
   halvorsen: "Halvorsen Attractor",
   rossler: "Rössler Attractor",
+  // Decorative
   orbit: "Orbital Path",
   gridlines: "Grid Lines",
   contour: "Contour Topology",
   wireframeSphere: "Wireframe Sphere",
   starfield: "Starfield",
+  // Thoughtform shapes
+  tf_filamentField: "Filament Field",
+  tf_foldedFlow: "Folded Flow",
+  tf_vortexBloom: "Vortex Bloom",
+  tf_trefoilKnot: "Trefoil Knot",
+  tf_twistedRibbon: "Twisted Ribbon",
+  tf_constellationMesh: "Constellation Mesh",
+  tf_fractureSpire: "Fracture Spire",
+  tf_continuumFold: "Continuum Fold",
+};
+
+/**
+ * Whether a landmark shape is a Thoughtform shape (new 3D topological)
+ */
+export const SHAPE_IS_THOUGHTFORM: Record<LandmarkShape, boolean> = {
+  // Classic shapes
+  gateway: false,
+  tower: false,
+  helix: false,
+  sphere: false,
+  ring: false,
+  ziggurat: false,
+  lorenz: false,
+  halvorsen: false,
+  rossler: false,
+  orbit: false,
+  gridlines: false,
+  contour: false,
+  wireframeSphere: false,
+  starfield: false,
+  // Thoughtform shapes
+  tf_filamentField: true,
+  tf_foldedFlow: true,
+  tf_vortexBloom: true,
+  tf_trefoilKnot: true,
+  tf_twistedRibbon: true,
+  tf_constellationMesh: true,
+  tf_fractureSpire: true,
+  tf_continuumFold: true,
 };

@@ -9,18 +9,18 @@ import React, {
   useMemo,
   useRef,
 } from "react";
-import { type SigilShape } from "@/lib/sigil-geometries";
+import { resolveSigilShape, getDefaultSigilShape } from "@/lib/sigil-geometries";
 import { logger } from "@/lib/logger";
 import { useAuth } from "@/components/auth/AuthProvider";
 
 // ═══════════════════════════════════════════════════════════════════
 // SIGIL CONFIG CONTEXT
 // Manages sigil configurations for the 3 service cards
-// Similar pattern to ParticleConfigContext
+// Now supports new Thoughtform shapes with legacy fallback
 // ═══════════════════════════════════════════════════════════════════
 
 export interface SigilConfig {
-  shape: SigilShape;
+  shape: string; // Now accepts any shape from registry (with fallback)
   particleCount: number;
   color: string; // RGB format: "202, 165, 84"
   /** Sigil size in pixels (default 140, max ~400 for full bleed) */
@@ -40,7 +40,7 @@ export interface SigilConfig {
 export const DEFAULT_SIGIL_SIZE = 140;
 
 export const DEFAULT_SIGIL_CONFIG: SigilConfig = {
-  shape: "torus",
+  shape: "tf_filamentField", // New Thoughtform default
   particleCount: 200,
   color: "202, 165, 84",
   size: DEFAULT_SIGIL_SIZE,
@@ -51,11 +51,11 @@ export const DEFAULT_SIGIL_CONFIG: SigilConfig = {
   },
 };
 
-// Default configs for the 3 cards
+// Default configs for the 3 cards - using new Thoughtform shapes
 export const DEFAULT_SIGIL_CONFIGS: SigilConfig[] = [
-  { ...DEFAULT_SIGIL_CONFIG, shape: "gateway" },
-  { ...DEFAULT_SIGIL_CONFIG, shape: "torus" },
-  { ...DEFAULT_SIGIL_CONFIG, shape: "spiral" },
+  { ...DEFAULT_SIGIL_CONFIG, shape: "tf_constellationMesh" }, // Inspire: networked constellation
+  { ...DEFAULT_SIGIL_CONFIG, shape: "tf_trefoilKnot" }, // Practice: interconnected knot
+  { ...DEFAULT_SIGIL_CONFIG, shape: "tf_vortexBloom" }, // Transform: blooming vortex
 ];
 
 interface SigilConfigContextValue {
@@ -81,6 +81,22 @@ interface SigilConfigProviderProps {
   children: React.ReactNode;
 }
 
+/**
+ * Resolve a config's shape to handle legacy shapes
+ */
+function resolveConfig(config: Partial<SigilConfig>): SigilConfig {
+  const resolvedShape = resolveSigilShape(config.shape || getDefaultSigilShape());
+  return {
+    ...DEFAULT_SIGIL_CONFIG,
+    ...config,
+    shape: resolvedShape, // Always use resolved shape
+    animationParams: {
+      ...DEFAULT_SIGIL_CONFIG.animationParams,
+      ...(config.animationParams || {}),
+    },
+  };
+}
+
 export function SigilConfigProvider({ children }: SigilConfigProviderProps) {
   const { user, session } = useAuth();
   const [configs, setConfigs] = useState<SigilConfig[]>(DEFAULT_SIGIL_CONFIGS);
@@ -90,7 +106,7 @@ export function SigilConfigProvider({ children }: SigilConfigProviderProps) {
   // Admin check - only logged-in users can edit
   const isAdmin = !!user?.id && !!session?.access_token;
 
-  // Load configs from server
+  // Load configs from server (with legacy shape fallback)
   const loadConfigs = useCallback(async () => {
     setIsLoading(true);
     setError(null);
@@ -100,16 +116,8 @@ export function SigilConfigProvider({ children }: SigilConfigProviderProps) {
       if (response.ok) {
         const data = await response.json();
         if (data.configs && Array.isArray(data.configs) && data.configs.length === 3) {
-          setConfigs(
-            data.configs.map((c: Partial<SigilConfig>) => ({
-              ...DEFAULT_SIGIL_CONFIG,
-              ...c,
-              animationParams: {
-                ...DEFAULT_SIGIL_CONFIG.animationParams,
-                ...(c.animationParams || {}),
-              },
-            }))
-          );
+          // Resolve legacy shapes during load
+          setConfigs(data.configs.map((c: Partial<SigilConfig>) => resolveConfig(c)));
         } else {
           setConfigs(DEFAULT_SIGIL_CONFIGS);
         }
@@ -176,9 +184,14 @@ export function SigilConfigProvider({ children }: SigilConfigProviderProps) {
       setConfigs((prev) => {
         const newConfigs = prev.map((config, index) => {
           if (index !== cardIndex) return config;
+
+          // Resolve shape if being updated
+          const shape = updates.shape ? resolveSigilShape(updates.shape) : config.shape;
+
           return {
             ...config,
             ...updates,
+            shape,
             animationParams: {
               ...config.animationParams,
               ...(updates.animationParams || {}),

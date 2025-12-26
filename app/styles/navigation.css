@@ -1687,6 +1687,32 @@
   color: var(--gold, #caa554);
 }
 
+/* ─────────────────────────────────────────────────────────────────
+   SIGIL EDITOR - Shape Category Sections
+   Groups shapes by category (Thoughtform, Geometric) with labels.
+   ───────────────────────────────────────────────────────────────── */
+.sigil-editor-panel__shape-category {
+  margin-bottom: 12px;
+}
+
+.sigil-editor-panel__shape-category:last-child {
+  margin-bottom: 0;
+}
+
+.sigil-editor-panel__shape-category-label {
+  display: block;
+  font-family: var(--font-data, "PT Mono", monospace);
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--dawn, #ece3d6);
+  opacity: 0.5;
+  margin-bottom: 8px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid rgba(236, 227, 214, 0.1);
+}
+
 /* Sliders */
 .sigil-editor-panel__slider {
   width: 100%;

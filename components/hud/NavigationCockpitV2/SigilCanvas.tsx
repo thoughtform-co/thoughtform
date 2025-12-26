@@ -1,18 +1,19 @@
 "use client";
 
 import { useRef, useEffect, useMemo, useCallback } from "react";
-import { generateSigilPoints, type SigilShape, type Point } from "@/lib/sigil-geometries";
+import { generateSigilPoints, resolveSigilShape, type Point } from "@/lib/sigil-geometries";
 
 // ═══════════════════════════════════════════════════════════════════
 // SIGIL CANVAS
-// Particle-based sigil renderer with animation
-// Uses the same aesthetic as ThoughtformSigil (grid-snapped squares)
+// Particle-based sigil renderer with 3D depth and animation
+// Uses the new particle-geometry library for Thoughtform shapes
+// Grid-snapped squares for that sacred Thoughtform aesthetic
 // ═══════════════════════════════════════════════════════════════════
 
 const GRID = 3; // Base unit from Signal System
 
 export interface SigilConfig {
-  shape: SigilShape;
+  shape: string; // Now accepts any shape from the registry
   particleCount: number;
   color: string; // RGB format: "202, 165, 84"
   /** Sigil size in pixels (default 140, max ~300 for full bleed) */
@@ -32,7 +33,7 @@ export interface SigilConfig {
 export const DEFAULT_SIGIL_SIZE = 140;
 
 export const DEFAULT_SIGIL_CONFIG: SigilConfig = {
-  shape: "torus",
+  shape: "tf_filamentField", // New default: Thoughtform shape
   particleCount: 200,
   color: "202, 165, 84", // Tensor Gold
   size: DEFAULT_SIGIL_SIZE,
@@ -46,8 +47,10 @@ export const DEFAULT_SIGIL_CONFIG: SigilConfig = {
 interface Particle {
   x: number;
   y: number;
+  z: number; // Depth for 3D shapes
   baseX: number;
   baseY: number;
+  baseZ: number;
   baseAlpha: number;
   alpha: number;
   size: number;
@@ -94,9 +97,11 @@ export function SigilCanvas({
     configRef.current = config;
   }, [config]);
 
-  // Generate initial points based on shape
+  // Generate initial points based on shape (with legacy fallback)
   const basePoints = useMemo(() => {
-    return generateSigilPoints(config.shape, {
+    // Resolve shape ID (handles legacy → new mapping)
+    const resolvedShape = resolveSigilShape(config.shape);
+    return generateSigilPoints(resolvedShape, {
       size,
       particleCount: config.particleCount,
       seed,
@@ -106,17 +111,26 @@ export function SigilCanvas({
   // Initialize particles from base points
   const initializeParticles = useCallback(() => {
     const center = size / 2;
-    particlesRef.current = basePoints.map((point, i) => {
+    particlesRef.current = basePoints.map((point: Point) => {
+      // Use depth-based alpha if available
       const baseAlpha = point.alpha ?? 0.4 + Math.random() * 0.5;
+      const z = point.z ?? 0.5; // Default to middle depth
+
+      // Size varies slightly based on depth (closer = slightly larger)
+      const depthSizeModifier = 1 + (0.5 - z) * 0.3;
+      const baseSize = (GRID - 1 + Math.random() * 0.5) * depthSizeModifier;
+
       return {
         x: point.x,
         y: point.y,
+        z,
         baseX: point.x - center,
         baseY: point.y - center,
+        baseZ: z,
         baseAlpha,
         alpha: baseAlpha,
-        size: GRID - 1 + Math.random() * 0.5,
-        baseSize: GRID - 1 + Math.random() * 0.5,
+        size: baseSize,
+        baseSize,
         phase: Math.random() * Math.PI * 2,
         noiseOffsetX: Math.random() * 1000,
         noiseOffsetY: Math.random() * 1000,
@@ -158,7 +172,10 @@ export function SigilCanvas({
 
       ctx.clearRect(0, 0, canvasSize, canvasSize);
 
-      particlesRef.current.forEach((particle) => {
+      // Sort particles by depth (back to front) for proper layering
+      const sortedParticles = [...particlesRef.current].sort((a, b) => b.z - a.z);
+
+      sortedParticles.forEach((particle) => {
         // Noise-based wandering
         const noiseX = noise2D(particle.noiseOffsetX, time * 0.1, time);
         const noiseY = noise2D(particle.noiseOffsetY, time * 0.1 + 100, time);
@@ -188,8 +205,12 @@ export function SigilCanvas({
         const distFromBase = Math.sqrt(dx * dx + dy * dy);
         const distanceFade = Math.max(0.3, 1 - distFromBase * 0.01);
 
-        particle.alpha = particle.baseAlpha * breathe * distanceFade;
-        particle.size = particle.baseSize * (0.9 + breathe * 0.1);
+        // Depth-based modulation (farther = more transparent, slightly smaller)
+        const depthAlphaModifier = 0.5 + (1 - particle.baseZ) * 0.5; // 0.5-1.0
+        const depthSizeModifier = 0.8 + (1 - particle.baseZ) * 0.4; // 0.8-1.2
+
+        particle.alpha = particle.baseAlpha * breathe * distanceFade * depthAlphaModifier;
+        particle.size = particle.baseSize * (0.9 + breathe * 0.1) * depthSizeModifier;
 
         // Skip if not visible
         if (particle.alpha < 0.01 || particle.size < 0.5) return;

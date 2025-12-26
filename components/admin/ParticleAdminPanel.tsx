@@ -6,6 +6,7 @@ import { useAuth } from "@/components/auth/AuthProvider";
 import {
   COLOR_PRESETS,
   SHAPE_LABELS,
+  SHAPE_IS_THOUGHTFORM,
   GATEWAY_SHAPE_LABELS,
   GATEWAY_SHAPE_IS_ATTRACTOR,
   type LandmarkShape,
@@ -1976,11 +1977,24 @@ function LandmarksControls({ landmarks, onUpdate, onAdd, onRemove }: LandmarksCo
               onChange={(e) => onUpdate(landmark.id, { shape: e.target.value as LandmarkShape })}
               className="admin-select"
             >
-              {Object.entries(SHAPE_LABELS).map(([value, label]) => (
-                <option key={value} value={value}>
-                  {label}
-                </option>
-              ))}
+              <optgroup label="Thoughtform (3D Topological)">
+                {Object.entries(SHAPE_LABELS)
+                  .filter(([k]) => SHAPE_IS_THOUGHTFORM[k as LandmarkShape])
+                  .map(([value, label]) => (
+                    <option key={value} value={value}>
+                      {label}
+                    </option>
+                  ))}
+              </optgroup>
+              <optgroup label="Classic">
+                {Object.entries(SHAPE_LABELS)
+                  .filter(([k]) => !SHAPE_IS_THOUGHTFORM[k as LandmarkShape])
+                  .map(([value, label]) => (
+                    <option key={value} value={value}>
+                      {label}
+                    </option>
+                  ))}
+              </optgroup>
             </select>
           </div>
 

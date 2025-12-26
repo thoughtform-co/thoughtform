@@ -7,6 +7,7 @@ import {
   hexToRgb,
   DEFAULT_CONFIG,
 } from "@/lib/particle-config";
+import { getShapeGenerator, isValidShape, type Vec3 } from "@/lib/particle-geometry";
 import { useIsMobile } from "@/lib/hooks/useMediaQuery";
 
 // ═══════════════════════════════════════════════════════════════
@@ -865,6 +866,52 @@ function generateStarfieldShape(
   }
 }
 
+/**
+ * Generate Thoughtform shapes using the shared particle-geometry library
+ * These are 3D topological shapes that float above the manifold
+ */
+function generateThoughtformShape(
+  particles: Particle[],
+  landmark: LandmarkConfig,
+  index: number,
+  shapeId: string
+): void {
+  // Check if this is a valid Thoughtform shape
+  if (!isValidShape(shapeId)) return;
+
+  const colorRgb = hexToRgb(landmark.color);
+  const scale = landmark.scale;
+  const density = landmark.density;
+  const centerX = landmark.position.x;
+  const centerY = landmark.position.y;
+  const centerZ = landmark.position.z;
+
+  // Get the generator from the shared library
+  const generator = getShapeGenerator(shapeId);
+
+  // Generate 3D points
+  const pointCount = Math.floor(400 * density);
+  const seed = index * 1000 + shapeId.length * 100;
+  const points3D: Vec3[] = generator({
+    seed,
+    pointCount,
+    size: 1, // Normalized size, we'll scale below
+  });
+
+  // Convert and scale the points
+  const worldScale = 400 * scale; // Base world scale for landmarks
+
+  for (const p of points3D) {
+    // Map normalized coordinates to world space
+    // Points are normalized to [-1, 1] range
+    const x = centerX + p.x * worldScale;
+    const y = centerY + p.y * worldScale; // Above the terrain (negative Y = up in screen)
+    const z = centerZ + p.z * worldScale * 0.5; // Compress Z slightly for depth
+
+    particles.push(createPoint(x, y, z, "geo", colorRgb, index, landmark.id));
+  }
+}
+
 // ═══════════════════════════════════════════════════════════════
 // MAIN INITIALIZATION
 // ═══════════════════════════════════════════════════════════════
@@ -976,6 +1023,17 @@ function initParticles(config: ParticleSystemConfig): Particle[] {
         break;
       case "starfield":
         generateStarfieldShape(particles, landmark, landmarkIndex, manifold);
+        break;
+      // Thoughtform shapes (use shared particle-geometry library)
+      case "tf_filamentField":
+      case "tf_foldedFlow":
+      case "tf_vortexBloom":
+      case "tf_trefoilKnot":
+      case "tf_twistedRibbon":
+      case "tf_constellationMesh":
+      case "tf_fractureSpire":
+      case "tf_continuumFold":
+        generateThoughtformShape(particles, landmark, landmarkIndex, landmark.shape);
         break;
     }
   });
