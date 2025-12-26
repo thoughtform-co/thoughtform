@@ -1564,11 +1564,20 @@
 /* ═══════════════════════════════════════════════════════════════
    SIGIL EDITOR PANEL - Admin panel for editing sigil config
    ═══════════════════════════════════════════════════════════════ */
-.sigil-editor-panel {
+
+/* Backdrop: click outside to close */
+.sigil-editor-panel__backdrop {
   position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  inset: 0;
+  z-index: 999;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sigil-editor-panel {
+  position: relative;
   width: 400px;
   max-width: 90vw;
   max-height: 80vh;
@@ -1580,6 +1589,8 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  /* Prevent scroll from propagating to page */
+  overscroll-behavior: contain;
 }
 
 .sigil-editor-panel__header {
@@ -1600,20 +1611,14 @@
   margin: 0;
 }
 
-.sigil-editor-panel__close {
-  background: none;
-  border: none;
+/* Auto-save indicator */
+.sigil-editor-panel__autosave {
+  font-family: var(--font-data, "PT Mono", monospace);
+  font-size: 9px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
   color: var(--dawn, #ece3d6);
-  font-size: 24px;
-  cursor: pointer;
-  padding: 0;
-  line-height: 1;
-  opacity: 0.6;
-  transition: opacity 0.2s ease;
-}
-
-.sigil-editor-panel__close:hover {
-  opacity: 1;
+  opacity: 0.5;
 }
 
 .sigil-editor-panel__content {
@@ -1623,6 +1628,8 @@
   display: flex;
   flex-direction: column;
   gap: 20px;
+  /* Scroll containment: prevent scroll from propagating to page */
+  overscroll-behavior: contain;
 }
 
 .sigil-editor-panel__section {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { SIGIL_SHAPES, SIGIL_SHAPE_LABELS, type SigilShape } from "@/lib/sigil-geometries";
 import { type SigilConfig, DEFAULT_SIGIL_SIZE } from "./SigilCanvas";
 import { SigilCanvas } from "./SigilCanvas";
@@ -17,12 +17,19 @@ import { SigilCanvas } from "./SigilCanvas";
 //
 // Full bleed means the sigil expands to fill the available container
 // while staying contained (no particles escape the card frame).
+//
+// UX Improvements:
+// • Auto-save: Changes are saved automatically (debounced 500ms)
+// • Click outside to close: Clicking the backdrop dismisses the panel
+// • Scroll containment: Scrolling inside panel doesn't scroll the page
 // ═══════════════════════════════════════════════════════════════════
 
 /** Minimum sigil size (compact) */
 const MIN_SIGIL_SIZE = 100;
 /** Maximum sigil size (full bleed within card) */
 const MAX_SIGIL_SIZE = 280;
+/** Debounce delay for auto-save (ms) */
+const AUTO_SAVE_DELAY = 500;
 
 interface SigilEditorPanelProps {
   config: SigilConfig;
@@ -33,6 +40,47 @@ interface SigilEditorPanelProps {
 
 export function SigilEditorPanel({ config, onSave, onClose, cardIndex }: SigilEditorPanelProps) {
   const [localConfig, setLocalConfig] = useState<SigilConfig>({ ...config });
+  const panelRef = useRef<HTMLDivElement>(null);
+  const isFirstRender = useRef(true);
+
+  // ─────────────────────────────────────────────────────────────────
+  // AUTO-SAVE: Debounced save when config changes
+  // Skips first render to avoid saving initial values
+  // ─────────────────────────────────────────────────────────────────
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      onSave(localConfig);
+    }, AUTO_SAVE_DELAY);
+
+    return () => clearTimeout(timer);
+  }, [localConfig, onSave]);
+
+  // ─────────────────────────────────────────────────────────────────
+  // SCROLL CONTAINMENT: Prevent scroll from propagating to page
+  // ─────────────────────────────────────────────────────────────────
+  useEffect(() => {
+    const panel = panelRef.current;
+    if (!panel) return;
+
+    const handleWheel = (e: WheelEvent) => {
+      const { scrollTop, scrollHeight, clientHeight } = panel;
+      const isAtTop = scrollTop === 0 && e.deltaY < 0;
+      const isAtBottom = scrollTop + clientHeight >= scrollHeight && e.deltaY > 0;
+
+      // Only prevent if we're at the edge and trying to scroll further
+      if (isAtTop || isAtBottom) {
+        e.preventDefault();
+      }
+    };
+
+    panel.addEventListener("wheel", handleWheel, { passive: false });
+    return () => panel.removeEventListener("wheel", handleWheel);
+  }, []);
 
   const handleShapeChange = useCallback((shape: SigilShape) => {
     setLocalConfig((prev) => ({ ...prev, shape }));
@@ -85,10 +133,18 @@ export function SigilEditorPanel({ config, onSave, onClose, cardIndex }: SigilEd
     }
   }, []);
 
-  const handleSave = useCallback(() => {
-    onSave(localConfig);
-    onClose();
-  }, [localConfig, onSave, onClose]);
+  // ─────────────────────────────────────────────────────────────────
+  // CLICK OUTSIDE TO CLOSE: Handle backdrop clicks
+  // ─────────────────────────────────────────────────────────────────
+  const handleBackdropClick = useCallback(
+    (e: React.MouseEvent) => {
+      // Only close if clicking the backdrop itself, not the panel
+      if (e.target === e.currentTarget) {
+        onClose();
+      }
+    },
+    [onClose]
+  );
 
   // Convert RGB string to hex for color picker
   const colorHex = (() => {
@@ -102,172 +158,154 @@ export function SigilEditorPanel({ config, onSave, onClose, cardIndex }: SigilEd
   const cardLabels = ["Left (Inspire)", "Center (Practice)", "Right (Transform)"];
 
   return (
-    <div className="sigil-editor-panel">
-      <div className="sigil-editor-panel__header">
-        <h3 className="sigil-editor-panel__title">Edit Sigil: {cardLabels[cardIndex]}</h3>
-        <button
-          className="sigil-editor-panel__close"
-          onClick={onClose}
-          type="button"
-          aria-label="Close editor"
-        >
-          ×
-        </button>
-      </div>
+    // Backdrop: click outside to close
+    <div className="sigil-editor-panel__backdrop" onClick={handleBackdropClick}>
+      <div
+        className="sigil-editor-panel"
+        onClick={(e) => e.stopPropagation()} // Prevent clicks inside panel from closing
+      >
+        <div className="sigil-editor-panel__header">
+          <h3 className="sigil-editor-panel__title">Edit Sigil: {cardLabels[cardIndex]}</h3>
+          <span className="sigil-editor-panel__autosave">Auto-saving</span>
+        </div>
 
-      <div className="sigil-editor-panel__content">
-        {/* Live Preview */}
-        <div className="sigil-editor-panel__section">
-          <label className="sigil-editor-panel__label">Preview</label>
-          <div className="sigil-editor-panel__preview">
-            <SigilCanvas
-              config={localConfig}
-              size={Math.min(localConfig.size ?? DEFAULT_SIGIL_SIZE, 160)}
-              seed={42 + cardIndex * 1000}
-              allowSpill={false}
-            />
+        <div ref={panelRef} className="sigil-editor-panel__content">
+          {/* Live Preview */}
+          <div className="sigil-editor-panel__section">
+            <label className="sigil-editor-panel__label">Preview</label>
+            <div className="sigil-editor-panel__preview">
+              <SigilCanvas
+                config={localConfig}
+                size={Math.min(localConfig.size ?? DEFAULT_SIGIL_SIZE, 160)}
+                seed={42 + cardIndex * 1000}
+                allowSpill={false}
+              />
+            </div>
           </div>
-        </div>
 
-        {/* Size slider - Full Bleed Control */}
-        <div className="sigil-editor-panel__section">
-          <label className="sigil-editor-panel__label">
-            Size: {localConfig.size ?? DEFAULT_SIGIL_SIZE}px
-            {(localConfig.size ?? DEFAULT_SIGIL_SIZE) >= 240 && (
-              <span className="sigil-editor-panel__badge">Full Bleed</span>
-            )}
-          </label>
-          <input
-            type="range"
-            min={MIN_SIGIL_SIZE}
-            max={MAX_SIGIL_SIZE}
-            step="10"
-            value={localConfig.size ?? DEFAULT_SIGIL_SIZE}
-            onChange={handleSizeChange}
-            className="sigil-editor-panel__slider"
-          />
-          <div className="sigil-editor-panel__hint">
-            100px = compact · 140px = default · 280px = full bleed
-          </div>
-        </div>
-
-        {/* Shape selector */}
-        <div className="sigil-editor-panel__section">
-          <label className="sigil-editor-panel__label">Shape</label>
-          <div className="sigil-editor-panel__shape-grid">
-            {SIGIL_SHAPES.map((shape) => (
-              <button
-                key={shape}
-                className={`sigil-editor-panel__shape-btn ${localConfig.shape === shape ? "sigil-editor-panel__shape-btn--active" : ""}`}
-                onClick={() => handleShapeChange(shape)}
-                type="button"
-                title={SIGIL_SHAPE_LABELS[shape]}
-              >
-                {SIGIL_SHAPE_LABELS[shape]}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Particle count slider */}
-        <div className="sigil-editor-panel__section">
-          <label className="sigil-editor-panel__label">
-            Particle Count: {localConfig.particleCount}
-          </label>
-          <input
-            type="range"
-            min="50"
-            max="500"
-            step="10"
-            value={localConfig.particleCount}
-            onChange={handleParticleCountChange}
-            className="sigil-editor-panel__slider"
-          />
-        </div>
-
-        {/* Color picker */}
-        <div className="sigil-editor-panel__section">
-          <label className="sigil-editor-panel__label">Color</label>
-          <div className="sigil-editor-panel__color-row">
-            <input
-              type="color"
-              value={colorHex}
-              onChange={handleColorChange}
-              className="sigil-editor-panel__color-picker"
-            />
-            <span className="sigil-editor-panel__color-value">RGB({localConfig.color})</span>
-          </div>
-        </div>
-
-        {/* Animation params */}
-        <div className="sigil-editor-panel__section">
-          <label className="sigil-editor-panel__label">Animation</label>
-
-          <div className="sigil-editor-panel__param-row">
-            <span className="sigil-editor-panel__param-label">Drift:</span>
+          {/* Size slider - Full Bleed Control */}
+          <div className="sigil-editor-panel__section">
+            <label className="sigil-editor-panel__label">
+              Size: {localConfig.size ?? DEFAULT_SIGIL_SIZE}px
+              {(localConfig.size ?? DEFAULT_SIGIL_SIZE) >= 240 && (
+                <span className="sigil-editor-panel__badge">Full Bleed</span>
+              )}
+            </label>
             <input
               type="range"
-              min="0"
-              max="2"
-              step="0.1"
-              value={localConfig.animationParams.drift ?? 1}
-              onChange={handleDriftChange}
-              className="sigil-editor-panel__slider sigil-editor-panel__slider--small"
+              min={MIN_SIGIL_SIZE}
+              max={MAX_SIGIL_SIZE}
+              step="10"
+              value={localConfig.size ?? DEFAULT_SIGIL_SIZE}
+              onChange={handleSizeChange}
+              className="sigil-editor-panel__slider"
             />
-            <span className="sigil-editor-panel__param-value">
-              {(localConfig.animationParams.drift ?? 1).toFixed(1)}
-            </span>
+            <div className="sigil-editor-panel__hint">
+              100px = compact · 140px = default · 280px = full bleed
+            </div>
           </div>
 
-          <div className="sigil-editor-panel__param-row">
-            <span className="sigil-editor-panel__param-label">Pulse:</span>
-            <input
-              type="range"
-              min="0"
-              max="2"
-              step="0.1"
-              value={localConfig.animationParams.pulse ?? 1}
-              onChange={handlePulseChange}
-              className="sigil-editor-panel__slider sigil-editor-panel__slider--small"
-            />
-            <span className="sigil-editor-panel__param-value">
-              {(localConfig.animationParams.pulse ?? 1).toFixed(1)}
-            </span>
+          {/* Shape selector */}
+          <div className="sigil-editor-panel__section">
+            <label className="sigil-editor-panel__label">Shape</label>
+            <div className="sigil-editor-panel__shape-grid">
+              {SIGIL_SHAPES.map((shape) => (
+                <button
+                  key={shape}
+                  className={`sigil-editor-panel__shape-btn ${localConfig.shape === shape ? "sigil-editor-panel__shape-btn--active" : ""}`}
+                  onClick={() => handleShapeChange(shape)}
+                  type="button"
+                  title={SIGIL_SHAPE_LABELS[shape]}
+                >
+                  {SIGIL_SHAPE_LABELS[shape]}
+                </button>
+              ))}
+            </div>
           </div>
 
-          <div className="sigil-editor-panel__param-row">
-            <span className="sigil-editor-panel__param-label">Glitch:</span>
+          {/* Particle count slider */}
+          <div className="sigil-editor-panel__section">
+            <label className="sigil-editor-panel__label">
+              Particle Count: {localConfig.particleCount}
+            </label>
             <input
               type="range"
-              min="0"
-              max="1"
-              step="0.05"
-              value={localConfig.animationParams.glitch ?? 0.1}
-              onChange={handleGlitchChange}
-              className="sigil-editor-panel__slider sigil-editor-panel__slider--small"
+              min="50"
+              max="500"
+              step="10"
+              value={localConfig.particleCount}
+              onChange={handleParticleCountChange}
+              className="sigil-editor-panel__slider"
             />
-            <span className="sigil-editor-panel__param-value">
-              {(localConfig.animationParams.glitch ?? 0.1).toFixed(2)}
-            </span>
+          </div>
+
+          {/* Color picker */}
+          <div className="sigil-editor-panel__section">
+            <label className="sigil-editor-panel__label">Color</label>
+            <div className="sigil-editor-panel__color-row">
+              <input
+                type="color"
+                value={colorHex}
+                onChange={handleColorChange}
+                className="sigil-editor-panel__color-picker"
+              />
+              <span className="sigil-editor-panel__color-value">RGB({localConfig.color})</span>
+            </div>
+          </div>
+
+          {/* Animation params */}
+          <div className="sigil-editor-panel__section">
+            <label className="sigil-editor-panel__label">Animation</label>
+
+            <div className="sigil-editor-panel__param-row">
+              <span className="sigil-editor-panel__param-label">Drift:</span>
+              <input
+                type="range"
+                min="0"
+                max="2"
+                step="0.1"
+                value={localConfig.animationParams.drift ?? 1}
+                onChange={handleDriftChange}
+                className="sigil-editor-panel__slider sigil-editor-panel__slider--small"
+              />
+              <span className="sigil-editor-panel__param-value">
+                {(localConfig.animationParams.drift ?? 1).toFixed(1)}
+              </span>
+            </div>
+
+            <div className="sigil-editor-panel__param-row">
+              <span className="sigil-editor-panel__param-label">Pulse:</span>
+              <input
+                type="range"
+                min="0"
+                max="2"
+                step="0.1"
+                value={localConfig.animationParams.pulse ?? 1}
+                onChange={handlePulseChange}
+                className="sigil-editor-panel__slider sigil-editor-panel__slider--small"
+              />
+              <span className="sigil-editor-panel__param-value">
+                {(localConfig.animationParams.pulse ?? 1).toFixed(1)}
+              </span>
+            </div>
+
+            <div className="sigil-editor-panel__param-row">
+              <span className="sigil-editor-panel__param-label">Glitch:</span>
+              <input
+                type="range"
+                min="0"
+                max="1"
+                step="0.05"
+                value={localConfig.animationParams.glitch ?? 0.1}
+                onChange={handleGlitchChange}
+                className="sigil-editor-panel__slider sigil-editor-panel__slider--small"
+              />
+              <span className="sigil-editor-panel__param-value">
+                {(localConfig.animationParams.glitch ?? 0.1).toFixed(2)}
+              </span>
+            </div>
           </div>
         </div>
-      </div>
-
-      <div className="sigil-editor-panel__footer">
-        <button
-          className="sigil-editor-panel__btn sigil-editor-panel__btn--secondary"
-          onClick={onClose}
-          type="button"
-        >
-          Cancel
-        </button>
-        <button
-          className="sigil-editor-panel__btn sigil-editor-panel__btn--primary"
-          onClick={handleSave}
-          type="button"
-        >
-          Save
-        </button>
       </div>
     </div>
   );
