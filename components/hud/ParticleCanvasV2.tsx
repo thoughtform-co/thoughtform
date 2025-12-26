@@ -1174,8 +1174,17 @@ export function ParticleCanvasV2({
       const currentSection = Math.floor(scrollP * 4) + 1;
       const sectionProgress = (scrollP * 4) % 1;
 
-      // Full clear each frame - no trails, no artifacts
-      ctx.fillStyle = "#050504";
+      // Clear each frame (no trails). Use an alpha-graded void so distant layers can live
+      // "behind" the manifold sky while the ground stays opaque.
+      ctx.clearRect(0, 0, width, height);
+      const bg = ctx.createLinearGradient(0, 0, 0, height);
+      // Sky: translucent (reveals distant bodies)
+      bg.addColorStop(0, "rgba(5, 5, 4, 0.35)");
+      // Horizon: mostly opaque (occludes the lower half)
+      bg.addColorStop(0.55, "rgba(5, 5, 4, 0.92)");
+      // Ground: opaque
+      bg.addColorStop(1, "rgba(5, 5, 4, 1)");
+      ctx.fillStyle = bg;
       ctx.fillRect(0, 0, width, height);
 
       // Camera settings from config

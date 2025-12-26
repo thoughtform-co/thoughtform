@@ -1532,7 +1532,7 @@ human-AI collaboration.`}
 
       {/* Fixed Thoughtform Sigil - appears centered during definition section
           Animates from brandmark origin (in hero wordmark) to center,
-          then to navbar logo when leaving definition section */}
+          then recedes into the background as a large "celestial body" as manifesto begins */}
       <SigilSection
         ref={definitionRef}
         scrollProgress={scrollProgress}
