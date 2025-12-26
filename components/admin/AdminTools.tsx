@@ -82,9 +82,7 @@ export function AdminTools({
       <style jsx>{`
         .admin-tools {
           position: fixed;
-          /* Mirror the CTA menu's bottom margin (see MorphingCTAButtons) */
           top: calc(var(--hud-padding, 32px) + var(--corner-size, 40px) - 16px);
-          /* Mirror CTA spacing from the rail: sit flush against the right rail edge */
           right: calc(var(--hud-padding, 32px) + var(--rail-width, 60px) + 0px);
           z-index: 50;
           display: flex;
@@ -95,12 +93,9 @@ export function AdminTools({
         }
 
         .admin-tools__item {
-          /* Match CTA menu feel: fixed rail width + two-column (label | icon) layout */
-          display: inline-grid;
-          grid-template-columns: 1fr auto;
-          column-gap: 12px;
+          display: inline-flex;
           align-items: center;
-          min-width: 192px;
+          gap: 8px;
           padding: 6px 12px;
           background: transparent;
           border: none;
@@ -116,7 +111,6 @@ export function AdminTools({
           cursor: pointer;
           transition: color 150ms ease;
           position: relative;
-          justify-items: start;
         }
 
         .admin-tools__item:hover {
@@ -133,13 +127,13 @@ export function AdminTools({
           letter-spacing: 0.02em;
           text-align: right;
           opacity: 0.8;
-          justify-self: end;
         }
 
         .admin-tools__label {
           font-size: 10px;
-          text-align: left;
-          justify-self: start;
+          /* Match width of "PARTICLES" so icons align vertically */
+          min-width: 70px;
+          text-align: right;
         }
 
         .admin-tools__indicator {
@@ -161,12 +155,14 @@ export function AdminTools({
           .admin-tools__item {
             padding: 4px 8px;
             font-size: 9px;
-            min-width: 156px;
-            column-gap: 10px;
           }
 
           .admin-tools__icon {
             font-size: 10px;
+          }
+
+          .admin-tools__label {
+            min-width: 60px;
           }
         }
       `}</style>
