@@ -32,11 +32,11 @@ import { type SigilConfig, DEFAULT_SIGIL_CONFIG } from "./SigilCanvas";
 // ┌─────────────────────────────────────────────────────────────────┐
 // │ LAYOUT GEOMETRY                                                 │
 // │                                                                 │
-// │ Deck total width = 3 × 340px + 2 × 40px = 1100px               │
+// │ Deck total width = 3 × 380px + 2 × 60px = 1260px               │
 // │                                                                 │
-// │     ┌────────┐  40px  ┌────────┐  40px  ┌────────┐             │
+// │     ┌────────┐  60px  ┌────────┐  60px  ┌────────┐             │
 // │     │Keynotes│  gap   │Workshop│  gap   │Strategy│             │
-// │     │ 340px  │        │ 340px  │        │ 340px  │             │
+// │     │ 380px  │        │ 380px  │        │ 380px  │             │
 // │     └────────┘        └────────┘        └────────┘             │
 // │     index: 0          index: 1          index: 2               │
 // │     (this deck)       (this deck)       (bridge-frame)         │
@@ -50,9 +50,9 @@ import { type SigilConfig, DEFAULT_SIGIL_CONFIG } from "./SigilCanvas";
 // to ensure the 3-card deck aligns properly with the bridge-frame.
 // See: sentinel/BEST-PRACTICES.md → "Sync Animation Timing to Shared Constants"
 // ─────────────────────────────────────────────────────────────────
-export const SERVICES_CARD_WIDTH = 340; // Individual card width (px)
-export const SERVICES_CARD_HEIGHT = 420; // Individual card height (px)
-export const SERVICES_CARD_GAP = 40; // Gap between cards (px)
+export const SERVICES_CARD_WIDTH = 380; // Individual card width (px)
+export const SERVICES_CARD_HEIGHT = 480; // Individual card height (px)
+export const SERVICES_CARD_GAP = 60; // Gap between cards (px)
 
 // ─────────────────────────────────────────────────────────────────
 // SERVICE CONTENT DATA

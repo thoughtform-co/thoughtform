@@ -980,7 +980,7 @@
    NAVIGATION RESPONSIVE STYLES
    ═══════════════════════════════════════════════════════════════ */
 
-@media (max-width: 1100px) {
+@media (max-width: 1300px) {
   .hero-layout {
     max-width: 100%;
   }
@@ -1319,11 +1319,11 @@
    Deck structure:
    ┌──────────┐ ┌──────────┐ ┌──────────┐
    │ Keynotes │ │ Workshop │ │Strategies│  
-   │  340px   │ │  340px   │ │  340px   │
+   │  380px   │ │  380px   │ │  380px   │
    └──────────┘ └──────────┘ └──────────┘
-      40px gap    40px gap
+      60px gap    60px gap
    
-   Total width: 1100px (3×340 + 2×40)
+   Total width: 1260px (3×380 + 2×60)
    ═══════════════════════════════════════════════════════════════ */
 .services-deck {
   pointer-events: none; /* Container itself doesn't capture clicks */
@@ -1597,7 +1597,7 @@
 }
 
 /* On narrower screens, always center the panel to avoid cramped side placement */
-@media (max-width: 1100px) {
+@media (max-width: 1300px) {
   .sigil-editor-panel__backdrop--left,
   .sigil-editor-panel__backdrop--right {
     justify-content: center;

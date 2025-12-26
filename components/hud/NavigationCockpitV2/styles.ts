@@ -768,7 +768,7 @@ export const cockpitStyles = `
     background: rgba(10, 9, 8, 0.94);
     border: 1px solid var(--dawn-15);
     padding: 32px;
-    max-width: 340px;
+    max-width: 380px;
     display: flex;
     flex-direction: column;
     gap: 20px;

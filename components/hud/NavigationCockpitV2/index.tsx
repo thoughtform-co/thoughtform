@@ -48,7 +48,7 @@ const HERO_END = 0; // Transition starts immediately on scroll
 const DEF_START = 0.12; // Transition completes by 12% of total scroll
 
 // Services card target height (the manifesto frame shrinks down into this)
-const SERVICES_CARD_HEIGHT = 420;
+const SERVICES_CARD_HEIGHT = 480;
 
 // Easing function for smooth transition
 function easeInOutCubic(t: number): number {
@@ -587,10 +587,10 @@ function NavigationCockpitInner() {
     // ═══════════════════════════════════════════════════════════════════
     // CENTER THE 3-CARD DECK
     // The right card (bridge-frame) + 2 side cards should form a centered group.
-    // Total deck width = 3 * cardWidth + 2 * gap = 1100px
+    // Total deck width = 3 * cardWidth + 2 * gap = 1260px
     // Right card left edge = deck center + (deckWidth/2 - cardWidth) = center + 210px
     // ═══════════════════════════════════════════════════════════════════
-    const deckTotalWidth = 3 * SERVICES_CARD_WIDTH + 2 * SERVICES_CARD_GAP; // 1100px
+    const deckTotalWidth = 3 * SERVICES_CARD_WIDTH + 2 * SERVICES_CARD_GAP; // 1260px
     // Offset from viewport center to right card's center
     const centeringOffset = deckTotalWidth / 2 - frameWidth / 2;
 
