@@ -121,8 +121,14 @@ function PresetsBar({
   );
 }
 
-export function ParticleAdminPanel() {
-  const [isOpen, setIsOpen] = useState(false);
+interface ParticleAdminPanelProps {
+  /** Whether the panel is open */
+  isOpen: boolean;
+  /** Callback when the panel should close */
+  onClose: () => void;
+}
+
+export function ParticleAdminPanel({ isOpen, onClose }: ParticleAdminPanelProps) {
   const [activeTab, setActiveTab] = useState<Tab>("gateway");
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
@@ -260,204 +266,150 @@ export function ParticleAdminPanel() {
   const { user } = useAuth();
 
   // Only show admin panel for logged-in users
-  if (isLoading || !user) return null;
+  if (isLoading || !user || !isOpen) return null;
 
   return (
     <>
-      {/* Square Toggle Button - Top Left */}
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className={`admin-toggle ${isOpen ? "is-open" : ""}`}
-        title="Particle Admin Panel"
+      <div
+        ref={panelRef}
+        className={`admin-panel ${isDragging ? "dragging" : ""}`}
+        style={{ left: position.x, top: position.y }}
+        onWheel={(e) => e.stopPropagation()}
       >
-        <span className="admin-toggle-icon">{isOpen ? "×" : "⚙"}</span>
-        {hasChanges && <span className="admin-toggle-dot" />}
-      </button>
-
-      {/* Panel */}
-      {isOpen && (
-        <div
-          ref={panelRef}
-          className={`admin-panel ${isDragging ? "dragging" : ""}`}
-          style={{ left: position.x, top: position.y }}
-          onWheel={(e) => e.stopPropagation()}
-        >
-          {/* Compact Header */}
-          <div className="admin-header admin-drag-handle" onMouseDown={handleDragStart}>
-            <div className="admin-header-left">
-              <span className="drag-icon">⋮⋮</span>
-              <h3 className="admin-title">Particles</h3>
-              <span
-                className="storage-badge server"
-                title={isAdmin ? "Changes sync to all visitors" : "View only"}
-              >
-                {isAdmin ? "☁" : "👁"}
-              </span>
-            </div>
-            <div className="admin-header-right">
-              {saveMessage && <span className="admin-message">{saveMessage}</span>}
-              {error && <span className="admin-error">{error}</span>}
-              <button
-                onClick={handleReset}
-                className="admin-icon-btn"
-                disabled={isSaving}
-                title="Reset to defaults"
-              >
-                ↺
-              </button>
-              <button
-                onClick={handleSave}
-                className={`admin-icon-btn save ${hasChanges ? "has-changes" : ""}`}
-                disabled={isSaving || !hasChanges}
-                title={hasChanges ? "Save changes" : "No changes"}
-              >
-                {isSaving ? "…" : "✓"}
-              </button>
-            </div>
+        {/* Compact Header */}
+        <div className="admin-header admin-drag-handle" onMouseDown={handleDragStart}>
+          <div className="admin-header-left">
+            <span className="drag-icon">⋮⋮</span>
+            <h3 className="admin-title">Particles</h3>
+            <span
+              className="storage-badge server"
+              title={isAdmin ? "Changes sync to all visitors" : "View only"}
+            >
+              {isAdmin ? "☁" : "👁"}
+            </span>
           </div>
-
-          {/* Presets Bar */}
-          <PresetsBar
-            presets={presets}
-            activePresetId={activePresetId}
-            onLoadPreset={loadPreset}
-            onDeletePreset={deletePreset}
-            onCreatePreset={createPreset}
-          />
-
-          {/* Save Prompt Modal */}
-          {showSavePrompt && (
-            <div className="save-prompt-overlay" onClick={() => setShowSavePrompt(false)}>
-              <div className="save-prompt" onClick={(e) => e.stopPropagation()}>
-                <div className="save-prompt-title">Save as New Preset</div>
-                <input
-                  type="text"
-                  value={newPresetName}
-                  onChange={(e) => setNewPresetName(e.target.value)}
-                  placeholder="Enter preset name..."
-                  className="save-prompt-input"
-                  autoFocus
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") handleSaveNewPreset();
-                    if (e.key === "Escape") setShowSavePrompt(false);
-                  }}
-                />
-                <div className="save-prompt-actions">
-                  <button className="save-prompt-cancel" onClick={() => setShowSavePrompt(false)}>
-                    Cancel
-                  </button>
-                  <button
-                    className="save-prompt-save"
-                    onClick={handleSaveNewPreset}
-                    disabled={!newPresetName.trim()}
-                  >
-                    Save
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Tabs */}
-          <div className="admin-tabs">
+          <div className="admin-header-right">
+            {saveMessage && <span className="admin-message">{saveMessage}</span>}
+            {error && <span className="admin-error">{error}</span>}
             <button
-              className={`admin-tab ${activeTab === "gateway" ? "active" : ""}`}
-              onClick={() => setActiveTab("gateway")}
+              onClick={handleReset}
+              className="admin-icon-btn"
+              disabled={isSaving}
+              title="Reset to defaults"
             >
-              Gateway
+              ↺
             </button>
             <button
-              className={`admin-tab ${activeTab === "manifold" ? "active" : ""}`}
-              onClick={() => setActiveTab("manifold")}
+              onClick={handleSave}
+              className={`admin-icon-btn save ${hasChanges ? "has-changes" : ""}`}
+              disabled={isSaving || !hasChanges}
+              title={hasChanges ? "Save changes" : "No changes"}
             >
-              Manifold
+              {isSaving ? "…" : "✓"}
             </button>
-            <button
-              className={`admin-tab ${activeTab === "camera" ? "active" : ""}`}
-              onClick={() => setActiveTab("camera")}
-            >
-              Camera
-            </button>
-            <button
-              className={`admin-tab ${activeTab === "landmarks" ? "active" : ""}`}
-              onClick={() => setActiveTab("landmarks")}
-            >
-              Landmarks
-            </button>
-            <button
-              className={`admin-tab ${activeTab === "sigil" ? "active" : ""}`}
-              onClick={() => setActiveTab("sigil")}
-            >
-              Sigil
-            </button>
-          </div>
-
-          {/* Content */}
-          <div className="admin-content">
-            {activeTab === "gateway" && (
-              <GatewayControls gateway={config.gateway} onUpdate={updateGateway} />
-            )}
-            {activeTab === "manifold" && (
-              <ManifoldControls manifold={config.manifold} onUpdate={updateManifold} />
-            )}
-            {activeTab === "camera" && (
-              <CameraControls camera={config.camera} onUpdate={updateCamera} />
-            )}
-            {activeTab === "landmarks" && (
-              <LandmarksControls
-                landmarks={config.landmarks}
-                onUpdate={updateLandmark}
-                onAdd={handleAddLandmark}
-                onRemove={removeLandmark}
-              />
-            )}
-            {activeTab === "sigil" && <SigilControls sigil={config.sigil} onUpdate={updateSigil} />}
           </div>
         </div>
-      )}
+
+        {/* Presets Bar */}
+        <PresetsBar
+          presets={presets}
+          activePresetId={activePresetId}
+          onLoadPreset={loadPreset}
+          onDeletePreset={deletePreset}
+          onCreatePreset={createPreset}
+        />
+
+        {/* Save Prompt Modal */}
+        {showSavePrompt && (
+          <div className="save-prompt-overlay" onClick={() => setShowSavePrompt(false)}>
+            <div className="save-prompt" onClick={(e) => e.stopPropagation()}>
+              <div className="save-prompt-title">Save as New Preset</div>
+              <input
+                type="text"
+                value={newPresetName}
+                onChange={(e) => setNewPresetName(e.target.value)}
+                placeholder="Enter preset name..."
+                className="save-prompt-input"
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleSaveNewPreset();
+                  if (e.key === "Escape") setShowSavePrompt(false);
+                }}
+              />
+              <div className="save-prompt-actions">
+                <button className="save-prompt-cancel" onClick={() => setShowSavePrompt(false)}>
+                  Cancel
+                </button>
+                <button
+                  className="save-prompt-save"
+                  onClick={handleSaveNewPreset}
+                  disabled={!newPresetName.trim()}
+                >
+                  Save
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Tabs */}
+        <div className="admin-tabs">
+          <button
+            className={`admin-tab ${activeTab === "gateway" ? "active" : ""}`}
+            onClick={() => setActiveTab("gateway")}
+          >
+            Gateway
+          </button>
+          <button
+            className={`admin-tab ${activeTab === "manifold" ? "active" : ""}`}
+            onClick={() => setActiveTab("manifold")}
+          >
+            Manifold
+          </button>
+          <button
+            className={`admin-tab ${activeTab === "camera" ? "active" : ""}`}
+            onClick={() => setActiveTab("camera")}
+          >
+            Camera
+          </button>
+          <button
+            className={`admin-tab ${activeTab === "landmarks" ? "active" : ""}`}
+            onClick={() => setActiveTab("landmarks")}
+          >
+            Landmarks
+          </button>
+          <button
+            className={`admin-tab ${activeTab === "sigil" ? "active" : ""}`}
+            onClick={() => setActiveTab("sigil")}
+          >
+            Sigil
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="admin-content">
+          {activeTab === "gateway" && (
+            <GatewayControls gateway={config.gateway} onUpdate={updateGateway} />
+          )}
+          {activeTab === "manifold" && (
+            <ManifoldControls manifold={config.manifold} onUpdate={updateManifold} />
+          )}
+          {activeTab === "camera" && (
+            <CameraControls camera={config.camera} onUpdate={updateCamera} />
+          )}
+          {activeTab === "landmarks" && (
+            <LandmarksControls
+              landmarks={config.landmarks}
+              onUpdate={updateLandmark}
+              onAdd={handleAddLandmark}
+              onRemove={removeLandmark}
+            />
+          )}
+          {activeTab === "sigil" && <SigilControls sigil={config.sigil} onUpdate={updateSigil} />}
+        </div>
+      </div>
 
       <style jsx global>{`
-        .admin-toggle {
-          position: fixed;
-          top: 26px;
-          right: calc(clamp(48px, 8vw, 120px) + 100px);
-          z-index: 1000;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          width: 20px;
-          height: 20px;
-          background: transparent;
-          border: none;
-          color: rgba(202, 165, 84, 0.4);
-          font-family: var(--font-data, "PT Mono", monospace);
-          cursor: pointer;
-          transition: color 150ms ease;
-        }
-
-        .admin-toggle:hover {
-          color: rgba(202, 165, 84, 1);
-        }
-
-        .admin-toggle.is-open {
-          color: var(--dawn, #ebe3d6);
-        }
-
-        .admin-toggle-icon {
-          font-size: 12px;
-          line-height: 1;
-        }
-
-        .admin-toggle-dot {
-          position: absolute;
-          top: 4px;
-          right: 4px;
-          width: 5px;
-          height: 5px;
-          background: #ff6b35;
-          border-radius: 50%;
-        }
-
         .admin-panel {
           position: fixed;
           z-index: 9998;

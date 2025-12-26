@@ -14,7 +14,7 @@ import { useLenis } from "@/lib/hooks/useLenis";
 import { useIsMobile } from "@/lib/hooks/useMediaQuery";
 import { ParticleConfigProvider, useParticleConfig } from "@/lib/contexts/ParticleConfigContext";
 import { SigilConfigProvider, useSigilConfig } from "@/lib/contexts/SigilConfigContext";
-import { AdminGate, ParticleAdminPanel } from "@/components/admin";
+import { AdminGate, ParticleAdminPanel, AdminTools } from "@/components/admin";
 import { useAuth } from "@/components/auth/AuthProvider";
 
 // Extracted components
@@ -64,7 +64,7 @@ function lerp(a: number, b: number, t: number): number {
 function NavigationCockpitInner() {
   const [activeSection, setActiveSection] = useState("hero");
   const { scrollProgress, scrollTo } = useLenis();
-  const { config: rawConfig } = useParticleConfig();
+  const { config: rawConfig, hasChanges: hasParticleChanges } = useParticleConfig();
   const isMobile = useIsMobile();
   const { user } = useAuth();
   const isAdmin = !!user?.id;
@@ -75,6 +75,7 @@ function NavigationCockpitInner() {
       : (DEFAULT_SIGIL_CONFIGS as SigilConfig[]);
   const [editingServiceSigilIndex, setEditingServiceSigilIndex] = useState<number | null>(null);
   const [isBridgeHovered, setIsBridgeHovered] = useState(false);
+  const [isParticleAdminOpen, setIsParticleAdminOpen] = useState(false);
 
   const handleOpenSigilEditor = useCallback((cardIndex: number) => {
     setEditingServiceSigilIndex(cardIndex);
@@ -1463,9 +1464,17 @@ navigating co-intelligence.`}
         />
       )}
 
-      {/* Admin Panel - Only visible to authorized users */}
+      {/* Admin Tools - Only visible to authorized users */}
       <AdminGate>
-        <ParticleAdminPanel />
+        <AdminTools
+          isParticleOpen={isParticleAdminOpen}
+          onParticleToggle={setIsParticleAdminOpen}
+          hasParticleChanges={hasParticleChanges}
+        />
+        <ParticleAdminPanel
+          isOpen={isParticleAdminOpen}
+          onClose={() => setIsParticleAdminOpen(false)}
+        />
         {editingServiceSigilIndex !== null && (
           <SigilEditorPanel
             config={
