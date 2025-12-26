@@ -14,21 +14,19 @@ const ASCII_TITLE = `▄▀█ █   █ █▀ █▄░█ ▀ ▀█▀   █
 
 // Manifesto content - full text for character-by-character reveal
 const MANIFESTO_TEXT = `
-> Most companies struggle with their AI adoption because
-  they treat AI like normal software.
+> Most companies struggle because they treat AI like normal software.
 
 > But AI isn't a tool to command.
 
-> It's a strange, new intelligence we have to learn how
+> It's a strange intelligence we have to learn how
   to navigate. It leaps across dimensions we can't fathom.
   It hallucinates. It surprises.
 
-> In technical work, that strangeness must be constrained.
-  But in creative and strategic work?
-  It's the source of truly novel ideas.
+> Fight that strangeness, and you drown in mediocrity.
 
-> Thoughtform teaches teams to think WITH that intelligence—
-  navigating its strangeness for creative breakthroughs.`;
+> Navigate it — learn when to steer, when to think together — and thought becomes form.
+
+> We teach you how.`;
 
 // Combined content for total character count
 const FULL_CONTENT = ASCII_TITLE + MANIFESTO_TEXT;

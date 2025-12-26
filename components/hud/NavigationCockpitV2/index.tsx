@@ -623,6 +623,10 @@ function NavigationCockpitInner() {
     const servicesBlurPx = 12;
     const blurPx = baseBlurPx + (servicesBlurPx - baseBlurPx) * tManifestoToServices;
 
+    // Calculate scale factor for ManifestoTerminal content to shrink with frame
+    // Scale from 1.0 (full size) down to frameWidth/manifestoFrameWidth as frame shrinks
+    const contentScale = tManifestoToServices > 0 ? frameWidth / manifestoFrameWidth : 1;
+
     return {
       finalBottom,
       left: leftPosition,
@@ -633,6 +637,7 @@ function NavigationCockpitInner() {
       backdropFilter: `blur(${blurPx}px)`,
       border: `1px solid rgba(202, 165, 84, ${borderOpacity})`,
       "--terminal-opacity": tDefToManifesto,
+      contentScale, // Scale factor for terminal content
     };
   }, [
     tHeroToDef,
@@ -1166,6 +1171,10 @@ navigating co-intelligence.`}
                 style={{
                   marginTop: "24px",
                   width: "100%",
+                  transform: `scale(${bridgeFrameStyles.contentScale})`,
+                  transformOrigin: "top left",
+                  opacity: Math.max(0, 1 - tManifestoToServices * 3), // Fade out as services card appears
+                  pointerEvents: tManifestoToServices > 0.3 ? "none" : "auto",
                 }}
               >
                 <ManifestoTerminal revealProgress={manifestoRevealProgress} isActive={true} />
