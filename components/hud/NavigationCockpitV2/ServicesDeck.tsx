@@ -73,8 +73,12 @@ export function ServicesDeck({
   editingCardIndex = null,
 }: ServicesDeckProps) {
   const cards = useMemo(() => {
+    // Smooth easing function (matches the site-wide easeInOutCubic)
+    const ease = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+
     // Delay the fan-out slightly so it feels like cards emerge after the frame starts shrinking.
-    const t = Math.max(0, Math.min(1, (progress - 0.08) / 0.92));
+    const rawT = Math.max(0, Math.min(1, (progress - 0.05) / 0.95));
+    const t = ease(rawT); // Apply easing for smooth motion
     const spacing = cardWidthPx + SERVICES_CARD_GAP;
 
     // We render only the two cards that should appear from behind the bridge-frame:
@@ -84,10 +88,14 @@ export function ServicesDeck({
       { cardIndex: 0, offsetMultiplier: -2 },
       { cardIndex: 1, offsetMultiplier: -1 },
     ].map(({ cardIndex, offsetMultiplier }) => {
-      const offsetX = offsetMultiplier * spacing * t;
-      const opacity = 0.08 + 0.92 * t;
-      const scale = 0.96 + 0.04 * t;
-      const translateY = (1 - t) * 14;
+      // Stagger: left card starts slightly later for a cascading feel
+      const stagger = cardIndex === 0 ? 0.92 : 1;
+      const cardT = Math.min(1, t * stagger + (1 - stagger));
+
+      const offsetX = offsetMultiplier * spacing * cardT;
+      const opacity = 0.15 + 0.85 * cardT;
+      const scale = 0.94 + 0.06 * cardT;
+      const translateY = (1 - cardT) * 8;
       return {
         cardIndex,
         offsetX,
@@ -122,6 +130,9 @@ export function ServicesDeck({
               opacity,
               zIndex: 9, // behind the bridge-frame (z=10)
               pointerEvents: progress > 0.55 ? "auto" : "none",
+              // GPU acceleration + micro-smoothing for scroll-driven animation
+              willChange: "transform, opacity",
+              backfaceVisibility: "hidden",
             }}
           >
             <ServiceCard

@@ -31,6 +31,7 @@ import { MorphingCTAButtons } from "./MorphingCTAButtons";
 import {
   ServicesDeck,
   SERVICES_CARD_WIDTH,
+  SERVICES_CARD_GAP,
   SERVICES_DATA,
   DEFAULT_SIGIL_CONFIGS,
 } from "./ServicesDeck";
@@ -448,8 +449,19 @@ function NavigationCockpitInner() {
     const manifestoBottomVhCurrent =
       definitionBottomVh + (manifestoBottomVh - definitionBottomVh) * tDefToManifesto;
 
+    // Services: vertically center the cards (bottom = 50vh - cardHeight/2)
+    // Interpolate from manifesto position to centered position
+    const servicesBottomVh = 50;
+    const servicesBottomPx = -SERVICES_CARD_HEIGHT / 2; // -210px to center 420px card
+    const finalBottomPx =
+      manifestoBottomPxCurrent +
+      tManifestoToServices * (servicesBottomPx - manifestoBottomPxCurrent);
+    const finalBottomVh =
+      manifestoBottomVhCurrent +
+      tManifestoToServices * (servicesBottomVh - manifestoBottomVhCurrent);
+
     // Final bottom position: smooth transition to centered position
-    const finalBottom = `calc(${manifestoBottomPxCurrent}px + ${manifestoBottomVhCurrent}vh)`;
+    const finalBottom = `calc(${finalBottomPx}px + ${finalBottomVh}vh)`;
 
     // Card styling: visible during definition state, transitions to terminal
     // Card background appears when entering definition (tHeroToDef > 0.7)
@@ -501,29 +513,24 @@ function NavigationCockpitInner() {
     const frameWidth =
       manifestoFrameWidth - tManifestoToServices * (manifestoFrameWidth - servicesTargetWidth);
 
-    // Services target position: match ModuleCards at right: calc(var(--rail-width) + 120px)
-    // Rail width is 60px, so right edge should be 180px from viewport right
-    // For smooth transition, we interpolate left position to achieve this
-    // At services: left = calc(100vw - 180px - frameWidth)
-    // We blend from centered (left: 50%, translateX: -50%) to right-aligned
-    const servicesRightOffset = heroLeftPx; // var(--rail-width) + 120px
-
-    // Calculate the left position that puts right edge at the target
-    // During transition: blend from center to right-aligned position
-    // left goes from "50%" to "calc(100% - 180px - frameWidth)"
-    // But we need to account for the translateX(-50%) going to 0
+    // ═══════════════════════════════════════════════════════════════════
+    // CENTER THE 3-CARD DECK
+    // The right card (bridge-frame) + 2 side cards should form a centered group.
+    // Total deck width = 3 * cardWidth + 2 * gap = 1100px
+    // Right card left edge = deck center + (deckWidth/2 - cardWidth) = center + 210px
+    // ═══════════════════════════════════════════════════════════════════
+    const deckTotalWidth = 3 * SERVICES_CARD_WIDTH + 2 * SERVICES_CARD_GAP; // 1100px
+    // Offset from viewport center to right card's center
+    const centeringOffset = deckTotalWidth / 2 - frameWidth / 2;
 
     // Keep a single positioning strategy (left + transform) the whole time
     // to avoid any 1-frame jump when switching between left/right positioning.
     //
-    // When manifesto is centered: left=50%, transform=-50%
-    // When services: we add extra translateX so the right edge lands at
-    // right: calc(var(--rail-width) + 120px), matching ModuleCards.
+    // When manifesto is centered: left=50%, transform=-50% (so center at 50vw)
+    // When services: transform shifts right so the 3-card deck is centered
     const baseTransformPct = -50 * tDefToManifesto;
     const servicesDx =
-      tManifestoToServices === 0
-        ? "0px"
-        : `calc(${tManifestoToServices * 50}vw - ${tManifestoToServices * servicesRightOffset}px - ${tManifestoToServices * (frameWidth / 2)}px)`;
+      tManifestoToServices === 0 ? "0px" : `${tManifestoToServices * centeringOffset}px`;
 
     // Left positioning: during hero/definition, align to wordmark position
     // Use CSS calc for proper alignment: calc(var(--rail-width) + 120px)
@@ -1105,6 +1112,9 @@ navigating co-intelligence.`}
                 gap: "16px",
                 opacity: tManifestoToServices,
                 pointerEvents: tManifestoToServices > 0.5 ? "auto" : "none",
+                // GPU acceleration for smooth scroll-driven animation
+                willChange: "opacity",
+                backfaceVisibility: "hidden",
               }}
             >
               <div className="service-card__sigil">

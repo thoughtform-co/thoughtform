@@ -144,6 +144,10 @@
   max-width: 500px;
   box-sizing: border-box;
   overflow: visible;
+  /* GPU acceleration for smooth scroll-driven animations */
+  will-change: transform, width, height, opacity;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
 
 .bridge-frame .hero-text-frame {
@@ -1298,6 +1302,13 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════
+   SERVICES SECTION - Extended scroll runway before about section
+   ═══════════════════════════════════════════════════════════════ */
+.section-services {
+  min-height: 200vh; /* Extra scroll runway so about appears later */
+}
+
+/* ═══════════════════════════════════════════════════════════════
    SERVICES DECK - Three service cards that fan out
    ═══════════════════════════════════════════════════════════════ */
 .services-deck {
@@ -1319,8 +1330,16 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
-  transition: all 0.3s ease;
+  /* Only transition hover states, not scroll-driven properties */
+  transition:
+    background 0.3s ease,
+    border-color 0.3s ease,
+    box-shadow 0.3s ease;
   overflow: visible; /* Allow sigil particles to spill */
+  /* GPU acceleration for smooth scroll-driven animations */
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
 
 .service-card:hover {
