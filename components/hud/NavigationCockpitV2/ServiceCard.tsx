@@ -191,12 +191,18 @@ export function ServiceCard({
           staying contained. CSS clipping ensures no particle escape.
           ───────────────────────────────────────────────────────────── */}
       <div className="service-card__sigil">
-        <SigilCanvas
-          config={sigilConfig}
-          size={sigilConfig.size ?? DEFAULT_SIGIL_SIZE}
-          seed={sigilSeed}
-          allowSpill={false}
-        />
+        <div
+          style={{
+            transform: `translate(${sigilConfig.offsetX ?? 0}%, ${sigilConfig.offsetY ?? 0}%)`,
+          }}
+        >
+          <SigilCanvas
+            config={sigilConfig}
+            size={sigilConfig.size ?? DEFAULT_SIGIL_SIZE}
+            seed={sigilSeed}
+            allowSpill={false}
+          />
+        </div>
       </div>
     </div>
   );

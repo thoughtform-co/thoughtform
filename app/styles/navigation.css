@@ -1446,6 +1446,8 @@
   padding: 12px 24px;
   /* Subtle --dawn border at 10% opacity */
   border-bottom: 1px solid rgba(236, 227, 214, 0.1);
+  position: relative;
+  z-index: 1; /* Above sigil */
 }
 
 .service-card__header-text {
@@ -1465,7 +1467,9 @@
   flex-direction: column;
   gap: 8px;
   padding: 24px;
-  flex: 1; /* Expand to fill available space, pushing sigil down */
+  flex: 1; /* Expand to fill available space */
+  position: relative;
+  z-index: 1; /* Above sigil */
 }
 
 /* ─────────────────────────────────────────────────────────────────
@@ -1482,16 +1486,18 @@
    At full bleed, sigil fills the bottom portion of the card
    while remaining clipped to the card frame boundaries.
    ───────────────────────────────────────────────────────────────── */
+/* Sigil container: positioned absolutely to allow full-card coverage
+   The sigil sits BEHIND the text content (z-index: 0) so it can grow
+   upwards and fill the entire card when size is increased. */
 .service-card__sigil {
+  position: absolute;
+  inset: 0;
   display: flex;
   justify-content: center;
-  align-items: center;
-  flex: 1; /* Expand to fill available space for full bleed */
-  min-height: 140px; /* Minimum height for default size */
-  max-height: 300px; /* Cap height to prevent card overflow */
+  align-items: flex-end; /* Anchor to bottom by default */
   overflow: hidden; /* CRITICAL: Contain particle spillage */
-  position: relative;
-  padding: 8px 0 16px 0;
+  z-index: 0; /* Behind text content */
+  padding-bottom: 24px; /* Default bottom padding */
 }
 
 /* ─────────────────────────────────────────────────────────────────

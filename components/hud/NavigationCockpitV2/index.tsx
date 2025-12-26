@@ -1237,12 +1237,18 @@ navigating co-intelligence.`}
               </div>
 
               <div className="service-card__sigil">
-                <SigilCanvas
-                  config={sigilConfigs[2] ?? DEFAULT_SIGIL_CONFIGS[2]}
-                  size={(sigilConfigs[2] ?? DEFAULT_SIGIL_CONFIGS[2]).size ?? DEFAULT_SIGIL_SIZE}
-                  seed={42 + 2 * 1000}
-                  allowSpill={false}
-                />
+                <div
+                  style={{
+                    transform: `translate(${(sigilConfigs[2] ?? DEFAULT_SIGIL_CONFIGS[2]).offsetX ?? 0}%, ${(sigilConfigs[2] ?? DEFAULT_SIGIL_CONFIGS[2]).offsetY ?? 0}%)`,
+                  }}
+                >
+                  <SigilCanvas
+                    config={sigilConfigs[2] ?? DEFAULT_SIGIL_CONFIGS[2]}
+                    size={(sigilConfigs[2] ?? DEFAULT_SIGIL_CONFIGS[2]).size ?? DEFAULT_SIGIL_SIZE}
+                    seed={42 + 2 * 1000}
+                    allowSpill={false}
+                  />
+                </div>
               </div>
             </div>
           )}

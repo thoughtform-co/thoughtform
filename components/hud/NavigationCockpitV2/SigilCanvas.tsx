@@ -17,6 +17,10 @@ export interface SigilConfig {
   color: string; // RGB format: "202, 165, 84"
   /** Sigil size in pixels (default 140, max ~300 for full bleed) */
   size?: number;
+  /** Horizontal offset as percentage (-50 to 50, default 0 = centered) */
+  offsetX?: number;
+  /** Vertical offset as percentage (-50 to 50, default 0 = centered) */
+  offsetY?: number;
   animationParams: {
     drift?: number; // Wander strength (0-2, default 1)
     pulse?: number; // Breathing speed (0-2, default 1)

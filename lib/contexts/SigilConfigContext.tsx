@@ -23,8 +23,12 @@ export interface SigilConfig {
   shape: SigilShape;
   particleCount: number;
   color: string; // RGB format: "202, 165, 84"
-  /** Sigil size in pixels (default 140, max ~300 for full bleed) */
+  /** Sigil size in pixels (default 140, max ~400 for full bleed) */
   size?: number;
+  /** Horizontal offset as percentage (-50 to 50, default 0 = centered) */
+  offsetX?: number;
+  /** Vertical offset as percentage (-50 to 50, default 0 = centered) */
+  offsetY?: number;
   animationParams: {
     drift?: number;
     pulse?: number;

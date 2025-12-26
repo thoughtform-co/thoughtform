@@ -25,9 +25,12 @@ import { SigilCanvas } from "./SigilCanvas";
 // ═══════════════════════════════════════════════════════════════════
 
 /** Minimum sigil size (compact) */
-const MIN_SIGIL_SIZE = 100;
+const MIN_SIGIL_SIZE = 80;
 /** Maximum sigil size (full bleed within card) */
-const MAX_SIGIL_SIZE = 280;
+const MAX_SIGIL_SIZE = 400;
+/** Position offset range (-50% to +50%) */
+const MIN_OFFSET = -50;
+const MAX_OFFSET = 50;
 /** Debounce delay for auto-save (ms) */
 const AUTO_SAVE_DELAY = 500;
 
@@ -40,7 +43,6 @@ interface SigilEditorPanelProps {
 
 export function SigilEditorPanel({ config, onSave, onClose, cardIndex }: SigilEditorPanelProps) {
   const [localConfig, setLocalConfig] = useState<SigilConfig>({ ...config });
-  const panelRef = useRef<HTMLDivElement>(null);
   const isFirstRender = useRef(true);
 
   // ─────────────────────────────────────────────────────────────────
@@ -62,24 +64,11 @@ export function SigilEditorPanel({ config, onSave, onClose, cardIndex }: SigilEd
 
   // ─────────────────────────────────────────────────────────────────
   // SCROLL CONTAINMENT: Prevent scroll from propagating to page
+  // Always stop propagation so page doesn't scroll when hovering panel
   // ─────────────────────────────────────────────────────────────────
-  useEffect(() => {
-    const panel = panelRef.current;
-    if (!panel) return;
-
-    const handleWheel = (e: WheelEvent) => {
-      const { scrollTop, scrollHeight, clientHeight } = panel;
-      const isAtTop = scrollTop === 0 && e.deltaY < 0;
-      const isAtBottom = scrollTop + clientHeight >= scrollHeight && e.deltaY > 0;
-
-      // Only prevent if we're at the edge and trying to scroll further
-      if (isAtTop || isAtBottom) {
-        e.preventDefault();
-      }
-    };
-
-    panel.addEventListener("wheel", handleWheel, { passive: false });
-    return () => panel.removeEventListener("wheel", handleWheel);
+  const handlePanelWheel = useCallback((e: React.WheelEvent) => {
+    // Stop the event from reaching the page
+    e.stopPropagation();
   }, []);
 
   const handleShapeChange = useCallback((shape: SigilShape) => {
@@ -133,6 +122,20 @@ export function SigilEditorPanel({ config, onSave, onClose, cardIndex }: SigilEd
     }
   }, []);
 
+  const handleOffsetXChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = parseInt(e.target.value, 10);
+    if (!isNaN(value) && value >= MIN_OFFSET && value <= MAX_OFFSET) {
+      setLocalConfig((prev) => ({ ...prev, offsetX: value }));
+    }
+  }, []);
+
+  const handleOffsetYChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = parseInt(e.target.value, 10);
+    if (!isNaN(value) && value >= MIN_OFFSET && value <= MAX_OFFSET) {
+      setLocalConfig((prev) => ({ ...prev, offsetY: value }));
+    }
+  }, []);
+
   // ─────────────────────────────────────────────────────────────────
   // CLICK OUTSIDE TO CLOSE: Handle backdrop clicks
   // ─────────────────────────────────────────────────────────────────
@@ -163,13 +166,14 @@ export function SigilEditorPanel({ config, onSave, onClose, cardIndex }: SigilEd
       <div
         className="sigil-editor-panel"
         onClick={(e) => e.stopPropagation()} // Prevent clicks inside panel from closing
+        onWheel={handlePanelWheel} // Prevent scroll from propagating to page
       >
         <div className="sigil-editor-panel__header">
           <h3 className="sigil-editor-panel__title">Edit Sigil: {cardLabels[cardIndex]}</h3>
           <span className="sigil-editor-panel__autosave">Auto-saving</span>
         </div>
 
-        <div ref={panelRef} className="sigil-editor-panel__content">
+        <div className="sigil-editor-panel__content">
           {/* Live Preview */}
           <div className="sigil-editor-panel__section">
             <label className="sigil-editor-panel__label">Preview</label>
@@ -201,7 +205,44 @@ export function SigilEditorPanel({ config, onSave, onClose, cardIndex }: SigilEd
               className="sigil-editor-panel__slider"
             />
             <div className="sigil-editor-panel__hint">
-              100px = compact · 140px = default · 280px = full bleed
+              80px = compact · 140px = default · 400px = maximum
+            </div>
+          </div>
+
+          {/* Position controls */}
+          <div className="sigil-editor-panel__section">
+            <label className="sigil-editor-panel__label">Position</label>
+
+            <div className="sigil-editor-panel__param-row">
+              <span className="sigil-editor-panel__param-label">X:</span>
+              <input
+                type="range"
+                min={MIN_OFFSET}
+                max={MAX_OFFSET}
+                step="5"
+                value={localConfig.offsetX ?? 0}
+                onChange={handleOffsetXChange}
+                className="sigil-editor-panel__slider sigil-editor-panel__slider--small"
+              />
+              <span className="sigil-editor-panel__param-value">{localConfig.offsetX ?? 0}%</span>
+            </div>
+
+            <div className="sigil-editor-panel__param-row">
+              <span className="sigil-editor-panel__param-label">Y:</span>
+              <input
+                type="range"
+                min={MIN_OFFSET}
+                max={MAX_OFFSET}
+                step="5"
+                value={localConfig.offsetY ?? 0}
+                onChange={handleOffsetYChange}
+                className="sigil-editor-panel__slider sigil-editor-panel__slider--small"
+              />
+              <span className="sigil-editor-panel__param-value">{localConfig.offsetY ?? 0}%</span>
+            </div>
+
+            <div className="sigil-editor-panel__hint">
+              0% = centered · negative = left/up · positive = right/down
             </div>
           </div>
 
