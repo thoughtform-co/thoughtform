@@ -8,9 +8,8 @@ import { useRef, useMemo } from "react";
 // ═══════════════════════════════════════════════════════════════════
 
 // Manifesto content - full text for character-by-character reveal
-const MANIFESTO_TEXT = `AI ISN'T SOFTWARE
-
-> Most companies struggle because they treat AI like normal software.
+// Title "AI ISN'T SOFTWARE" appears via GlitchText transition above
+const MANIFESTO_TEXT = `> Most companies struggle because they treat AI like normal software.
 
 > But AI is a strange intelligence that blurs the line between tool and collaborator.
   It leaps across dimensions we can't fathom. It hallucinates. It surprises.

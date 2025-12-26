@@ -1155,7 +1155,7 @@ human-AI collaboration.`}
                   initialText={`(θɔːtfɔːrm / THAWT-form)
 the interface for navigating
 human-AI collaboration.`}
-                  finalText={`But why is AI so different?`}
+                  finalText={`AI ISN'T SOFTWARE`}
                   progress={tDefToManifesto}
                   className="bridge-content-glitch question-morph"
                 />
