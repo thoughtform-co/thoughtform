@@ -111,6 +111,8 @@ export function AdminTools({
           cursor: pointer;
           transition: color 150ms ease;
           position: relative;
+          /* Fixed width so both items align on the left edge */
+          width: 118px;
         }
 
         .admin-tools__item:hover {
