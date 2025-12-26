@@ -23,6 +23,8 @@ export interface SigilConfig {
   shape: SigilShape;
   particleCount: number;
   color: string; // RGB format: "202, 165, 84"
+  /** Sigil size in pixels (default 140, max ~300 for full bleed) */
+  size?: number;
   animationParams: {
     drift?: number;
     pulse?: number;
@@ -30,10 +32,14 @@ export interface SigilConfig {
   };
 }
 
+/** Default sigil size in pixels */
+export const DEFAULT_SIGIL_SIZE = 140;
+
 export const DEFAULT_SIGIL_CONFIG: SigilConfig = {
   shape: "torus",
   particleCount: 200,
   color: "202, 165, 84",
+  size: DEFAULT_SIGIL_SIZE,
   animationParams: {
     drift: 1,
     pulse: 1,

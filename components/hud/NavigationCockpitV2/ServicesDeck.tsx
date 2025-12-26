@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { ServiceCard, type ServiceData } from "./ServiceCard";
 import { type SigilConfig, DEFAULT_SIGIL_CONFIG } from "./SigilCanvas";
 
@@ -220,9 +220,15 @@ export function ServicesDeck({
               transform: `${anchorTransform} translateX(${offsetX}px) translateY(${translateY}px) scale(${scale})`,
               transformOrigin: "center",
               opacity,
-              zIndex: 9, // Behind bridge-frame (z=10) so cards emerge "from behind"
-              // Interaction disabled during emergence (progress < 0.55)
-              pointerEvents: progress > 0.55 ? "auto" : "none",
+              // Must sit above `.scroll-container` (z=10) to receive hover/click.
+              // We keep the bridge-frame above this deck by raising the bridge-frame z-index.
+              zIndex: 11,
+              // Interaction disabled during emergence for normal users to avoid accidental clicks
+              // while the cards are still fanning out.
+              //
+              // Admin override: allow interaction at all times so the "Edit Sigil" affordance
+              // works reliably even when the transition progress is < 0.55.
+              pointerEvents: isAdmin ? "auto" : progress > 0.55 ? "auto" : "none",
               // GPU acceleration for smooth 60fps scroll-driven animation
               willChange: "transform, opacity",
               backfaceVisibility: "hidden",

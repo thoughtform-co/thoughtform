@@ -15,6 +15,8 @@ export interface SigilConfig {
   shape: SigilShape;
   particleCount: number;
   color: string; // RGB format: "202, 165, 84"
+  /** Sigil size in pixels (default 140, max ~300 for full bleed) */
+  size?: number;
   animationParams: {
     drift?: number; // Wander strength (0-2, default 1)
     pulse?: number; // Breathing speed (0-2, default 1)
@@ -22,10 +24,14 @@ export interface SigilConfig {
   };
 }
 
+/** Default sigil size in pixels */
+export const DEFAULT_SIGIL_SIZE = 140;
+
 export const DEFAULT_SIGIL_CONFIG: SigilConfig = {
   shape: "torus",
   particleCount: 200,
   color: "202, 165, 84", // Tensor Gold
+  size: DEFAULT_SIGIL_SIZE,
   animationParams: {
     drift: 1,
     pulse: 1,

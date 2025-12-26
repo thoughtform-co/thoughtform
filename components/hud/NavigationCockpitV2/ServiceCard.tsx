@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { SigilCanvas, type SigilConfig } from "./SigilCanvas";
+import { SigilCanvas, type SigilConfig, DEFAULT_SIGIL_SIZE } from "./SigilCanvas";
 
 // ═══════════════════════════════════════════════════════════════════
 // SERVICE CARD
@@ -124,6 +124,36 @@ export function ServiceCard({
       <div className="service-card__corner service-card__corner--br" />
 
       {/* ─────────────────────────────────────────────────────────────
+          ADMIN EDIT ICON (Sigil)
+          Small pencil icon shown in the top-right corner on hover.
+          ───────────────────────────────────────────────────────────── */}
+      {isAdmin && (
+        <button
+          className={`service-card__edit-btn ${isHovered ? "service-card__edit-btn--visible" : ""}`}
+          onClick={handleEditClick}
+          type="button"
+          aria-label="Edit sigil"
+          title="Edit sigil"
+        >
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+            focusable="false"
+          >
+            <path d="M12 20h9" />
+            <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z" />
+          </svg>
+        </button>
+      )}
+
+      {/* ─────────────────────────────────────────────────────────────
           TERMINAL HEADER
           SIGNAL anchor: Creates continuity with the manifesto terminal.
           The "THOUGHTFORM@MANIFESTO:~" prompt-style text reinforces
@@ -151,26 +181,23 @@ export function ServiceCard({
           (gateway, torus, spiral) rendered via SigilCanvas.
           
           Key settings:
-          • size={140}: Standard sigil size across all cards
+          • size: Configurable via admin panel (100-280px, default 140)
           • seed={sigilSeed}: Deterministic particle positions
           • allowSpill={false}: Particles contained within card frame
             (overflow: hidden applied to parent container)
+          
+          Full Bleed Mode:
+          When size >= 240px, sigil expands to fill the container while
+          staying contained. CSS clipping ensures no particle escape.
           ───────────────────────────────────────────────────────────── */}
       <div className="service-card__sigil">
-        <SigilCanvas config={sigilConfig} size={140} seed={sigilSeed} allowSpill={false} />
+        <SigilCanvas
+          config={sigilConfig}
+          size={sigilConfig.size ?? DEFAULT_SIGIL_SIZE}
+          seed={sigilSeed}
+          allowSpill={false}
+        />
       </div>
-
-      {/* ─────────────────────────────────────────────────────────────
-          ADMIN EDIT BUTTON
-          Only renders for authenticated admins on hover.
-          Uses AdminGate pattern from auth system.
-          See: sentinel/BEST-PRACTICES.md → Authentication
-          ───────────────────────────────────────────────────────────── */}
-      {isAdmin && isHovered && (
-        <button className="service-card__edit-btn" onClick={handleEditClick} type="button">
-          Edit Sigil
-        </button>
-      )}
     </div>
   );
 }

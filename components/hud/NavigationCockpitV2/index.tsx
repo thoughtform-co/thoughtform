@@ -35,7 +35,7 @@ import {
   SERVICES_DATA,
   DEFAULT_SIGIL_CONFIGS,
 } from "./ServicesDeck";
-import { SigilCanvas, type SigilConfig } from "./SigilCanvas";
+import { SigilCanvas, type SigilConfig, DEFAULT_SIGIL_SIZE } from "./SigilCanvas";
 import { SigilEditorPanel } from "./SigilEditorPanel";
 // Styles consolidated into app/globals.css
 
@@ -1204,6 +1204,33 @@ navigating co-intelligence.`}
                 <span className="service-card__header-text">THOUGHTFORM@MANIFESTO:~</span>
               </div>
 
+              {/* Admin edit icon (right card) - top-right, only on hover */}
+              {isAdmin && (
+                <button
+                  className={`service-card__edit-btn ${isBridgeHovered ? "service-card__edit-btn--visible" : ""}`}
+                  onClick={() => handleOpenSigilEditor(2)}
+                  type="button"
+                  aria-label="Edit sigil"
+                  title="Edit sigil"
+                >
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                    focusable="false"
+                  >
+                    <path d="M12 20h9" />
+                    <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z" />
+                  </svg>
+                </button>
+              )}
+
               <div className="service-card__content">
                 <h3 className="service-card__title">{rightService.title}</h3>
                 <p className="service-card__body">{rightService.body}</p>
@@ -1212,22 +1239,11 @@ navigating co-intelligence.`}
               <div className="service-card__sigil">
                 <SigilCanvas
                   config={sigilConfigs[2] ?? DEFAULT_SIGIL_CONFIGS[2]}
-                  size={140}
+                  size={(sigilConfigs[2] ?? DEFAULT_SIGIL_CONFIGS[2]).size ?? DEFAULT_SIGIL_SIZE}
                   seed={42 + 2 * 1000}
                   allowSpill={false}
                 />
               </div>
-
-              {/* Admin edit button (right card) */}
-              {isAdmin && isBridgeHovered && (
-                <button
-                  className="service-card__edit-btn"
-                  onClick={() => handleOpenSigilEditor(2)}
-                  type="button"
-                >
-                  Edit Sigil
-                </button>
-              )}
             </div>
           )}
         </div>
@@ -1398,7 +1414,9 @@ navigating co-intelligence.`}
             // Lower z-index until manifesto starts revealing, then bring to front
             zIndex: manifestoRevealProgress > 0 ? 3 : 1,
             // Don't constrain height - let content flow naturally within overflow:hidden parent
-            pointerEvents: manifestoRevealProgress > 0 ? "auto" : "none",
+            // IMPORTANT: this layer is purely decorative (frame + scanlines). It must never
+            // intercept pointer events, otherwise it can block clicking the Strategies sigil editor.
+            pointerEvents: "none",
           }}
         >
           {/* Gold corner accents */}

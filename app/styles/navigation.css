@@ -139,7 +139,8 @@
 .bridge-frame {
   position: fixed;
   left: calc(var(--rail-width) + 120px);
-  z-index: 10;
+  /* Keep the bridge-frame (right-most services card) above the ServicesDeck cards. */
+  z-index: 12;
   width: 500px;
   max-width: 500px;
   box-sizing: border-box;
@@ -1468,20 +1469,29 @@
 }
 
 /* ─────────────────────────────────────────────────────────────────
-   SIGIL CONTAINER
+   SIGIL CONTAINER - Full Bleed Support
    LIVING_GEOMETRY anchor: Contains the particle sigil canvas.
    Centered horizontally, positioned at card bottom.
-   overflow: hidden ensures particles stay within bounds.
+   
+   Full Bleed Mode:
+   • flex: 1 allows container to expand and fill available space
+   • max-height caps vertical growth to prevent card overflow
+   • overflow: hidden ensures particles stay within bounds
+   
+   Size range: 100px (compact) → 280px (full bleed)
+   At full bleed, sigil fills the bottom portion of the card
+   while remaining clipped to the card frame boundaries.
    ───────────────────────────────────────────────────────────────── */
 .service-card__sigil {
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 140px; /* Matches SigilCanvas size prop */
-  overflow: hidden; /* Contain particle spillage */
+  flex: 1; /* Expand to fill available space for full bleed */
+  min-height: 140px; /* Minimum height for default size */
+  max-height: 300px; /* Cap height to prevent card overflow */
+  overflow: hidden; /* CRITICAL: Contain particle spillage */
   position: relative;
-  padding-top: 8px;
-  padding-bottom: 16px;
+  padding: 8px 0 16px 0;
 }
 
 /* ─────────────────────────────────────────────────────────────────
@@ -1509,32 +1519,46 @@
 }
 
 /* ─────────────────────────────────────────────────────────────────
-   ADMIN EDIT BUTTON
-   Appears on hover for authenticated admins.
+   ADMIN EDIT ICON (Sigil)
+   Small pencil icon in the top-right corner (shown only on hover).
    Uses AdminGate pattern from auth system.
    See: sentinel/BEST-PRACTICES.md → Authentication
    ───────────────────────────────────────────────────────────────── */
 .service-card__edit-btn {
   position: absolute;
-  top: 8px;
-  right: 8px;
-  padding: 6px 12px;
-  background: rgba(202, 165, 84, 0.2);
-  border: 1px solid rgba(202, 165, 84, 0.4);
+  top: 10px;
+  right: 10px;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(10, 9, 8, 0.55);
+  border: 1px solid rgba(202, 165, 84, 0.35);
+  border-radius: 4px;
   color: var(--gold, #caa554);
-  font-family: var(--font-data, "PT Mono", monospace);
-  font-size: 10px;
-  font-weight: 500;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
   cursor: pointer;
-  transition: all 0.2s ease;
-  z-index: 10;
+  transition:
+    opacity 0.15s ease,
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+  z-index: 30;
+  /* Hidden by default, shown on hover */
+  opacity: 0;
+  pointer-events: none;
+}
+
+.service-card__edit-btn--visible {
+  opacity: 1;
+  pointer-events: auto;
 }
 
 .service-card__edit-btn:hover {
-  background: rgba(202, 165, 84, 0.3);
-  border-color: var(--gold, #caa554);
+  background: rgba(202, 165, 84, 0.18);
+  border-color: rgba(202, 165, 84, 0.6);
+  transform: translateY(-1px);
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -1768,6 +1792,54 @@
 
 .sigil-editor-panel__btn--primary:hover {
   background: rgba(202, 165, 84, 0.3);
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   SIGIL EDITOR - Live Preview
+   Shows real-time preview of sigil as user adjusts settings.
+   Capped at 160px to fit within the panel.
+   ───────────────────────────────────────────────────────────────── */
+.sigil-editor-panel__preview {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 180px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(202, 165, 84, 0.15);
+  border-radius: 4px;
+  overflow: hidden; /* Contain preview particles */
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   SIGIL EDITOR - Hint Text
+   Helper text below sliders explaining the value range.
+   ───────────────────────────────────────────────────────────────── */
+.sigil-editor-panel__hint {
+  font-family: var(--font-data, "PT Mono", monospace);
+  font-size: 9px;
+  color: var(--dawn, #ece3d6);
+  opacity: 0.5;
+  margin-top: 4px;
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   SIGIL EDITOR - Badge (e.g., "Full Bleed")
+   Inline badge that appears when size reaches full bleed threshold.
+   ───────────────────────────────────────────────────────────────── */
+.sigil-editor-panel__badge {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 6px;
+  background: rgba(202, 165, 84, 0.2);
+  border: 1px solid rgba(202, 165, 84, 0.4);
+  border-radius: 3px;
+  font-family: var(--font-data, "PT Mono", monospace);
+  font-size: 8px;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--gold, #caa554);
+  vertical-align: middle;
 }
 
 /* Mobile - hide services deck on small screens */

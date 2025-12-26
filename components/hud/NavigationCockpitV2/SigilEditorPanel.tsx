@@ -2,13 +2,27 @@
 
 import { useState, useCallback } from "react";
 import { SIGIL_SHAPES, SIGIL_SHAPE_LABELS, type SigilShape } from "@/lib/sigil-geometries";
-import { type SigilConfig } from "./SigilCanvas";
+import { type SigilConfig, DEFAULT_SIGIL_SIZE } from "./SigilCanvas";
+import { SigilCanvas } from "./SigilCanvas";
 
 // ═══════════════════════════════════════════════════════════════════
 // SIGIL EDITOR PANEL
 // Admin-only panel for editing sigil configuration
 // Similar to ParticleAdminPanel but for individual service card sigils
+//
+// Size Control:
+// • Min: 100px (compact)
+// • Default: 140px (standard)
+// • Max: 280px (full bleed - fills card width minus padding)
+//
+// Full bleed means the sigil expands to fill the available container
+// while staying contained (no particles escape the card frame).
 // ═══════════════════════════════════════════════════════════════════
+
+/** Minimum sigil size (compact) */
+const MIN_SIGIL_SIZE = 100;
+/** Maximum sigil size (full bleed within card) */
+const MAX_SIGIL_SIZE = 280;
 
 interface SigilEditorPanelProps {
   config: SigilConfig;
@@ -64,6 +78,13 @@ export function SigilEditorPanel({ config, onSave, onClose, cardIndex }: SigilEd
     }));
   }, []);
 
+  const handleSizeChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = parseInt(e.target.value, 10);
+    if (!isNaN(value) && value >= MIN_SIGIL_SIZE && value <= MAX_SIGIL_SIZE) {
+      setLocalConfig((prev) => ({ ...prev, size: value }));
+    }
+  }, []);
+
   const handleSave = useCallback(() => {
     onSave(localConfig);
     onClose();
@@ -95,6 +116,41 @@ export function SigilEditorPanel({ config, onSave, onClose, cardIndex }: SigilEd
       </div>
 
       <div className="sigil-editor-panel__content">
+        {/* Live Preview */}
+        <div className="sigil-editor-panel__section">
+          <label className="sigil-editor-panel__label">Preview</label>
+          <div className="sigil-editor-panel__preview">
+            <SigilCanvas
+              config={localConfig}
+              size={Math.min(localConfig.size ?? DEFAULT_SIGIL_SIZE, 160)}
+              seed={42 + cardIndex * 1000}
+              allowSpill={false}
+            />
+          </div>
+        </div>
+
+        {/* Size slider - Full Bleed Control */}
+        <div className="sigil-editor-panel__section">
+          <label className="sigil-editor-panel__label">
+            Size: {localConfig.size ?? DEFAULT_SIGIL_SIZE}px
+            {(localConfig.size ?? DEFAULT_SIGIL_SIZE) >= 240 && (
+              <span className="sigil-editor-panel__badge">Full Bleed</span>
+            )}
+          </label>
+          <input
+            type="range"
+            min={MIN_SIGIL_SIZE}
+            max={MAX_SIGIL_SIZE}
+            step="10"
+            value={localConfig.size ?? DEFAULT_SIGIL_SIZE}
+            onChange={handleSizeChange}
+            className="sigil-editor-panel__slider"
+          />
+          <div className="sigil-editor-panel__hint">
+            100px = compact · 140px = default · 280px = full bleed
+          </div>
+        </div>
+
         {/* Shape selector */}
         <div className="sigil-editor-panel__section">
           <label className="sigil-editor-panel__label">Shape</label>
