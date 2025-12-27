@@ -284,21 +284,18 @@ export const SigilSection = forwardRef<HTMLDivElement, SigilSectionProps>(functi
     return () => window.removeEventListener("resize", updateCenter);
   }, []);
 
-  // Sigil appears during definition section (0.02 to 0.18), then recedes into the
-  // background as a giant "celestial body" during the definition → manifesto morph.
+  // Sigil appears during definition section (0.02 to 0.18), then moves to the navbar logo
+  // when leaving the definition section (definition → manifesto).
   const sigilInStart = 0.02;
   const sigilInEnd = 0.08;
-  const sigilOutStart = 0.15; // Start the celestial recession
-  const sigilOutEnd = 0.4; // Fully "in the sky" by manifesto lock-in
-  const sigilFadeEnd = 0.72; // Fade away after manifesto settles (keeps the "sky body" present longer)
+  const sigilOutStart = 0.15; // Start moving toward navbar
+  const sigilOutEnd = 0.4; // Complete arrival at navbar (slower fade-out)
 
   let sigilOpacity = 0;
   let sigilScrollProgress = 0;
 
-  // Exit progress: 0 = in front (centered), 1 = fully receded (background)
+  // Exit progress: 0 = at center, 1 = at navbar logo
   let exitProgress = 0;
-  // Distant "celestial body": must still read behind the manifold horizon, so keep it bright.
-  const backgroundTargetOpacity = isMobile ? 0.32 : 0.58;
 
   if (scrollProgress < sigilInStart) {
     // Before sigil appears
@@ -315,28 +312,21 @@ export const SigilSection = forwardRef<HTMLDivElement, SigilSectionProps>(functi
     sigilOpacity = 1;
     sigilScrollProgress = sigilInEnd; // Fully formed
   } else if (scrollProgress >= sigilOutStart && scrollProgress < sigilOutEnd) {
-    // Receding into the sky - become a large, distant "celestial" background body
+    // Moving toward navbar logo - stay visible until nearly at destination
     exitProgress = (scrollProgress - sigilOutStart) / (sigilOutEnd - sigilOutStart);
     const easedExit = easeOutCubic(exitProgress);
 
-    // Fade from fully present → subtle background presence
-    sigilOpacity = 1 - easedExit * (1 - backgroundTargetOpacity);
+    // Keep opacity at 1 for 98% of movement, only fade in final 2%
+    // This ensures particles are visible until they're fully inside the navbar icon
+    sigilOpacity = exitProgress < 0.98 ? 1 : 1 - (exitProgress - 0.98) / 0.02;
 
-    // Keep the sigil fully formed (no fold-back) so it reads like a stable celestial body.
-    sigilScrollProgress = sigilInEnd;
+    // Reverse the emergence animation as it moves - particles fold back
+    sigilScrollProgress = sigilInEnd - easedExit * (sigilInEnd - sigilInStart);
   } else {
-    // After the transition completes, keep the celestial body faintly present, then fade out.
-    exitProgress = scrollProgress >= sigilOutEnd ? 1 : 0;
-    sigilScrollProgress = sigilInEnd;
-
-    if (scrollProgress < sigilOutEnd) {
-      sigilOpacity = 1;
-    } else if (scrollProgress >= sigilOutEnd && scrollProgress < sigilFadeEnd) {
-      const fade = (scrollProgress - sigilOutEnd) / (sigilFadeEnd - sigilOutEnd);
-      sigilOpacity = backgroundTargetOpacity * (1 - fade);
-    } else {
-      sigilOpacity = 0;
-    }
+    // After arriving at navbar
+    sigilOpacity = 0;
+    sigilScrollProgress = sigilInStart;
+    exitProgress = 1;
   }
 
   if (config?.enabled === false) {
@@ -346,15 +336,14 @@ export const SigilSection = forwardRef<HTMLDivElement, SigilSectionProps>(functi
   // ═══════════════════════════════════════════════════════════════════
   // SIGIL POSITION ANIMATION
   // Entry: Brandmark → Center (during hero→definition transition)
-  // Exit: Center → Sky (scale up + blur + low opacity)
+  // Exit: Center → Navbar Logo (when leaving definition section)
   // ═══════════════════════════════════════════════════════════════════
   const sigilSize = config?.size ?? 220;
-  const baseScale = isMobile ? 0.7 : 1;
-  const isCelestial = exitProgress > 0;
+  const navbarLogoSize = destinationPos?.width ?? 22;
 
   // Calculate transform based on transition progress and exit progress
-  let transformStyle = `translate(-50%, -50%) scale(${baseScale})`; // Default: centered
-  let scaleValue = baseScale;
+  let transformStyle = "translate(-50%, -50%)"; // Default: centered
+  let scaleValue = 1;
 
   // ═══════════════════════════════════════════════════════════════════
   // ENHANCED TRANSITION EFFECTS
@@ -395,31 +384,26 @@ export const SigilSection = forwardRef<HTMLDivElement, SigilSectionProps>(functi
 
   // Glow intensity for the container (CSS filter) - STRONGER on desktop, reduced on mobile
   const glowIntensity = transitionIntensity * (isMobile ? 15 : 25);
-  // Celestial tuning (independent of hero transitionIntensity)
-  const celestialT = isCelestial ? easeOutCubic(exitProgress) : 0;
-  const celestialParticleSize = boostParticleSize * (1 - celestialT * (isMobile ? 0.35 : 0.45));
-  const celestialOpacity = Math.min(2.6, boostOpacity * (1 + celestialT * 1.4));
 
-  if (exitProgress > 0) {
+  if (exitProgress > 0 && destinationPos) {
     // ═══════════════════════════════════════════════════════════════════
-    // EXIT ANIMATION: Center → Sky (celestial recession)
-    // The sigil scales up and drifts upward, becoming a distant body behind the HUD.
-    // If we have the navbar logo position, we bias toward it (without "landing" in it).
+    // EXIT ANIMATION: Center → Navbar Logo
+    // Sigil moves from viewport center to navbar logo position
     // ═══════════════════════════════════════════════════════════════════
     const easedExit = easeOutCubic(exitProgress);
 
-    // Huge + distant: place it near the manifold horizon (not the navbar).
-    const celestialTargetScale = isMobile ? 3.6 : 5.6;
-    // Keep it near the horizon line (slightly above center) so it reads as a distant sky body.
-    const targetOffsetX = 0;
-    const targetOffsetY = -viewportCenter.y * (isMobile ? 0.06 : 0.12);
+    // Calculate offset from center to navbar logo
+    const destOffsetX = destinationPos.x - viewportCenter.x;
+    const destOffsetY = destinationPos.y - viewportCenter.y;
 
-    // Interpolate from center (0 offset) to sky target offset
-    const currentOffsetX = targetOffsetX * easedExit;
-    const currentOffsetY = targetOffsetY * easedExit;
+    // Interpolate from center (0 offset) to destination offset
+    const currentOffsetX = destOffsetX * easedExit;
+    const currentOffsetY = destOffsetY * easedExit;
 
-    // Scale up to become a huge, distant celestial body
-    scaleValue = baseScale * (1 + (celestialTargetScale - 1) * easedExit);
+    // Scale: shrink from full (1) to navbar logo size ratio
+    // Final scale should match navbar logo size
+    const targetScale = navbarLogoSize / sigilSize;
+    scaleValue = 1 - (1 - targetScale) * easedExit;
 
     // Apply transform
     transformStyle = `translate(calc(-50% + ${currentOffsetX}px), calc(-50% + ${currentOffsetY}px)) scale(${scaleValue})`;
@@ -438,7 +422,7 @@ export const SigilSection = forwardRef<HTMLDivElement, SigilSectionProps>(functi
     const currentOffsetY = originOffsetY * (1 - easedT);
 
     // Scale: start small (0.3) at brandmark, grow to full (1) at center
-    scaleValue = baseScale * (0.3 + 0.7 * easedT);
+    scaleValue = 0.3 + 0.7 * easedT;
 
     // Apply transform
     transformStyle = `translate(calc(-50% + ${currentOffsetX}px), calc(-50% + ${currentOffsetY}px)) scale(${scaleValue})`;
@@ -473,30 +457,10 @@ export const SigilSection = forwardRef<HTMLDivElement, SigilSectionProps>(functi
           pointerEvents: "none",
           transform: transformStyle,
           transformOrigin: "center center",
-          // Manifold (space-background) is z-index: 0 — to feel distant, we must go behind it.
-          zIndex: isCelestial ? -1 : 5,
-          mixBlendMode: isCelestial ? "screen" : undefined,
-          // Fade the bottom so it feels like it's partially occluded by the horizon.
-          WebkitMaskImage: isCelestial
-            ? "linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 52%, rgba(0,0,0,0) 82%, rgba(0,0,0,0) 100%)"
-            : undefined,
-          maskImage: isCelestial
-            ? "linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 52%, rgba(0,0,0,0) 82%, rgba(0,0,0,0) 100%)"
-            : undefined,
-          filter: (() => {
-            if (exitProgress > 0) {
-              const easedExit = easeOutCubic(exitProgress);
-              const blurPx = (isMobile ? 2.5 : 4.5) * easedExit;
-              const halo1 = glowIntensity + (isMobile ? 70 : 130) * easedExit;
-              const halo2 = glowIntensity + (isMobile ? 140 : 260) * easedExit;
-              const bright = 1 + 0.35 * easedExit;
-              return `blur(${blurPx}px) brightness(${bright}) saturate(${1 + 0.15 * easedExit}) drop-shadow(0 0 ${halo1}px rgba(202, 165, 84, 0.85)) drop-shadow(0 0 ${halo2}px rgba(202, 165, 84, 0.25))`;
-            }
-            if (glowIntensity > 0) {
-              return `drop-shadow(0 0 ${glowIntensity}px rgba(202, 165, 84, 0.6))`;
-            }
-            return undefined;
-          })(),
+          filter:
+            glowIntensity > 0
+              ? `drop-shadow(0 0 ${glowIntensity}px rgba(202, 165, 84, 0.6))`
+              : undefined,
         }}
       >
         <ThoughtformSigil
@@ -504,8 +468,8 @@ export const SigilSection = forwardRef<HTMLDivElement, SigilSectionProps>(functi
           particleCount={boostParticleCount}
           color={config?.color ?? "202, 165, 84"}
           scrollProgress={sigilScrollProgress}
-          particleSize={celestialParticleSize}
-          opacity={celestialOpacity}
+          particleSize={boostParticleSize}
+          opacity={boostOpacity}
           wanderStrength={boostWanderStrength}
           pulseSpeed={config?.pulseSpeed ?? 1.0}
           returnStrength={config?.returnStrength ?? 1.0}
