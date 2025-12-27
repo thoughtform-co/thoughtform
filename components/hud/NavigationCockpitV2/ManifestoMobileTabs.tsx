@@ -100,14 +100,7 @@ export function ManifestoMobileTabs({
           <div className="tab-panel tab-panel--manifesto">
             <ManifestoTerminal revealProgress={revealProgress} isActive={true} />
             {onStartJourney && (
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "center",
-                  marginTop: "24px",
-                  marginBottom: "24px",
-                }}
-              >
+              <div className="manifesto-cta-sticky">
                 <button
                   type="button"
                   className="manifesto-journey-btn"
@@ -267,6 +260,28 @@ export function ManifestoMobileTabs({
         /* Manifesto Tab */
         .tab-panel--manifesto {
           padding: 0;
+          /* Ensure the last manifesto lines can scroll above the sticky CTA */
+          padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px));
+          position: relative;
+        }
+
+        /* Sticky CTA that stays visible while manifesto text scrolls */
+        .manifesto-cta-sticky {
+          position: sticky;
+          bottom: 0;
+          z-index: 5;
+          display: flex;
+          justify-content: center;
+          padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
+          /* Fade backdrop so text can scroll beneath while remaining readable */
+          background: linear-gradient(
+            to top,
+            rgba(10, 9, 8, 0.98) 0%,
+            rgba(10, 9, 8, 0.72) 45%,
+            rgba(10, 9, 8, 0) 100%
+          );
+          backdrop-filter: blur(10px);
+          -webkit-backdrop-filter: blur(10px);
         }
 
         /* Sources Tab */

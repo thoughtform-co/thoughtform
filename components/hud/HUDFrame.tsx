@@ -195,25 +195,23 @@ export const HUDFrame = forwardRef<NavigationBarHandle, HUDFrameProps>(function 
         </aside>
       )}
 
-      {/* Bottom Bar: Full coords on desktop, instruction only on mobile */}
-      {showHUD && (
+      {/* Bottom Bar: Desktop only (mobile removes the instruction to free space) */}
+      {showHUD && !isMobile && (
         <footer className="hud-bottom" style={{ opacity: hudOpacity }}>
-          {!isMobile && (
-            <div className="hud-coords">
-              <span className="coord">
-                δ: <span>{hudState.delta}</span>
-              </span>
-              <span className="coord">
-                θ: <span>{hudState.theta}</span>
-              </span>
-              <span className="coord">
-                ρ: <span>{hudState.rho}</span>
-              </span>
-              <span className="coord">
-                ζ: <span>{hudState.zeta}</span>
-              </span>
-            </div>
-          )}
+          <div className="hud-coords">
+            <span className="coord">
+              δ: <span>{hudState.delta}</span>
+            </span>
+            <span className="coord">
+              θ: <span>{hudState.theta}</span>
+            </span>
+            <span className="coord">
+              ρ: <span>{hudState.rho}</span>
+            </span>
+            <span className="coord">
+              ζ: <span>{hudState.zeta}</span>
+            </span>
+          </div>
           <div className="hud-instruction">
             <span>{hudState.instruction}</span>
           </div>

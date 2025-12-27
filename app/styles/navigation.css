@@ -42,7 +42,7 @@
 
 .hero-tagline {
   font-family: var(--font-display);
-  font-size: clamp(20px, 2.5vw, 26px);
+  font-size: var(--type-xl);
   font-weight: 400;
   color: var(--dawn);
   line-height: 1.4;
@@ -51,7 +51,7 @@
 
 .hero-description {
   font-family: var(--font-body);
-  font-size: 14px;
+  font-size: var(--type-base);
   color: var(--dawn-70);
   line-height: 1.7;
   margin-bottom: var(--space-2xl);
@@ -69,7 +69,7 @@
 
 .hero-meta {
   font-family: var(--font-data);
-  font-size: 11px;
+  font-size: var(--type-sm);
   font-weight: 300;
   letter-spacing: 0.03em;
   color: var(--dawn-30);
@@ -125,6 +125,20 @@
 .definition-wordmark-inner svg {
   width: 100%;
   height: auto;
+}
+
+/* Wordmark inside the Interface (definition) frame */
+.card-wordmark {
+  display: flex;
+  justify-content: center;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.card-wordmark svg {
+  width: 100%;
+  height: auto;
+  display: block;
 }
 
 .hero-text-container {
@@ -408,7 +422,7 @@
 }
 
 .hero-tagline-v2 {
-  font-size: clamp(20px, 2.5vw, 28px) !important;
+  font-size: var(--type-xl) !important;
   line-height: 1.2 !important;
   margin: 0 !important;
   color: var(--dawn) !important;
@@ -417,8 +431,8 @@
 
 /* Definition text span wrapper - sized for readability */
 .hero-tagline-v2 > span {
-  font-size: 22px;
-  min-width: 325px;
+  font-size: var(--type-xl);
+  min-width: min(325px, 85vw);
   display: inline-block;
 }
 
@@ -475,7 +489,7 @@
 
 .terminal-title {
   font-family: var(--font-mono, "IBM Plex Mono", monospace);
-  font-size: 12px;
+  font-size: var(--type-sm);
   color: var(--gold, #caa554);
   letter-spacing: 0.05em;
   text-transform: uppercase;
@@ -638,11 +652,11 @@
 
 .typed-title {
   font-family: var(--font-mono, "IBM Plex Mono", monospace);
-  font-size: clamp(18px, 2.5vw, 28px);
+  font-size: var(--type-xl);
   font-weight: 600;
   color: var(--gold, #caa554);
   letter-spacing: 0.1em;
-  margin-bottom: 32px;
+  margin-bottom: var(--space-xl);
   transition: opacity 0.3s ease-out;
 }
 
@@ -654,7 +668,7 @@
 
 .typed-line {
   font-family: var(--font-mono, "IBM Plex Mono", monospace);
-  font-size: clamp(13px, 1.4vw, 15px);
+  font-size: var(--type-base);
   line-height: 1.8;
   color: var(--dawn-80, rgba(236, 227, 214, 0.8));
   margin: 0;
@@ -745,7 +759,7 @@
 
 .terminal-output p {
   font-family: var(--font-mono, "IBM Plex Mono", monospace);
-  font-size: clamp(13px, 1.4vw, 15px);
+  font-size: var(--type-base);
   line-height: 1.9;
   color: var(--dawn-80, rgba(236, 227, 214, 0.8));
   margin: 0;
@@ -927,7 +941,8 @@
 /* ─── MOBILE MODULE TABS ─── */
 .mobile-module-tabs {
   position: fixed;
-  bottom: 90px;
+  /* Sit just above the bottom HUD corner bracket, with safe-area support */
+  bottom: calc(var(--hud-pad-bottom) + var(--corner-size) + 8px);
   left: 50%;
   transform: translateX(-50%);
   width: calc(100% - 48px);
@@ -951,13 +966,14 @@
   background: transparent;
   border: none;
   font-family: var(--font-data, monospace);
-  font-size: 9px;
+  font-size: var(--type-xs);
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--dawn-50, rgba(235, 227, 214, 0.5));
   cursor: pointer;
   transition: all 0.2s ease;
   position: relative;
+  min-height: 44px; /* Touch-friendly */
 }
 
 .mobile-tab-button.active {
@@ -1001,7 +1017,7 @@
 
 .mobile-tab-title {
   font-family: var(--font-body, system-ui);
-  font-size: 14px;
+  font-size: var(--type-base);
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -1011,7 +1027,7 @@
 
 .mobile-tab-desc {
   font-family: var(--font-body, system-ui);
-  font-size: 12px;
+  font-size: var(--type-sm);
   line-height: 1.5;
   color: var(--dawn-70, rgba(235, 227, 214, 0.7));
 }
@@ -1061,8 +1077,8 @@
     min-height: 100vh;
     min-height: 100dvh;
     height: auto;
-    padding-top: 100px !important;
-    padding-right: 24px !important;
+    padding-top: calc(80px + var(--safe-top)) !important;
+    padding-right: var(--frame-pad-x) !important;
   }
 
   .hero-layout {
@@ -1072,7 +1088,7 @@
   }
 
   .hero-tagline {
-    font-size: clamp(18px, 5vw, 22px);
+    font-size: var(--type-lg);
     line-height: 1.35;
   }
 
@@ -1080,9 +1096,9 @@
     left: 50% !important;
     right: auto !important;
     transform: translateX(-50%) !important;
-    width: 85vw;
-    max-width: 340px;
-    top: 10vh !important;
+    width: 75vw;
+    max-width: 280px; /* Smaller logo on mobile */
+    top: calc(8vh + var(--safe-top)) !important;
     display: flex;
     justify-content: center;
     /* Keep centered on mobile */
@@ -1108,21 +1124,17 @@
   .bridge-frame {
     left: 50% !important;
     right: auto !important;
-    width: 92vw !important;
+    width: var(--frame-max-w) !important;
     max-width: 420px !important;
   }
 
   /* Manifesto frame: fill available space between HUD rails on mobile */
   .bridge-frame.manifesto-active {
-    /* More margin from rails: hud-padding (8px) + rail-width (32px) + extra margin (16px) = 56px each side */
-    width: calc(100vw - 2 * (var(--hud-padding) + var(--rail-width) + 16px)) !important;
+    width: var(--frame-max-w) !important;
     max-width: none !important;
     bottom: auto !important;
-    /* Center the manifesto terminal frame in the viewport */
-    top: 50% !important;
-    transform: translate(-50%, -50%) !important;
     height: auto !important;
-    max-height: 85vh !important; /* Increased height */
+    max-height: calc(85vh - var(--safe-top) - var(--safe-bottom)) !important;
     overflow-y: auto !important;
     overflow-x: hidden !important;
     /* Hide scrollbar */
@@ -1135,7 +1147,7 @@
   }
 
   .bridge-frame .hero-text-frame {
-    padding: 16px 20px;
+    padding: var(--frame-pad-y) var(--frame-pad-x);
     min-height: 70px;
     text-align: center;
     background: rgba(10, 9, 8, calc(0.85 * var(--frame-opacity, 1)));
@@ -1153,7 +1165,7 @@
   }
 
   .bridge-frame .hero-tagline-v2 {
-    font-size: clamp(15px, 4vw, 18px) !important;
+    font-size: var(--type-md) !important;
     line-height: 1.4 !important;
   }
 
@@ -1162,13 +1174,13 @@
   }
 
   .hero-tagline-v2 {
-    font-size: clamp(15px, 4.5vw, 20px) !important;
+    font-size: var(--type-lg) !important;
     line-height: 1.3 !important;
     text-align: center !important;
   }
 
   .section-definition {
-    padding: 60px 24px 120px !important;
+    padding: 60px var(--frame-pad-x) calc(100px + var(--safe-bottom)) !important;
     min-height: auto !important;
   }
 
@@ -1190,16 +1202,16 @@
   }
 
   .section-manifesto {
-    padding: 80px 12px !important;
-    padding-top: 100px !important;
+    padding: 80px var(--frame-pad-x) !important;
+    padding-top: calc(80px + var(--safe-top)) !important;
   }
 
   .terminal-header {
-    padding: 10px 14px;
+    padding: 10px var(--frame-pad-x);
   }
 
   .terminal-title {
-    font-size: 10px;
+    font-size: var(--type-xs);
   }
 
   .terminal-tabs {
@@ -1207,30 +1219,33 @@
   }
 
   .terminal-tab {
-    font-size: 8px;
+    font-size: var(--type-xs);
     padding: 2px 3px;
+    min-height: 44px; /* Touch-friendly */
+    display: flex;
+    align-items: center;
   }
 
   .terminal-body {
-    padding: 24px 16px;
+    padding: var(--frame-pad-y) var(--frame-pad-x);
     min-height: auto;
   }
 
   .terminal-question {
-    margin-bottom: 16px;
+    margin-bottom: var(--space-md);
   }
 
   .typed-title {
-    font-size: clamp(14px, 4vw, 18px);
+    font-size: var(--type-sm);
   }
 
   .typed-body {
-    gap: 16px;
+    gap: var(--space-sm);
   }
 
   .typed-line {
-    font-size: 12px;
-    line-height: 1.7;
+    font-size: var(--type-sm);
+    line-height: 1.6;
   }
 
   .geo-shape-1 {
@@ -1249,19 +1264,79 @@
   }
 
   .terminal-line {
-    font-size: 12px;
+    font-size: var(--type-sm);
     gap: 8px;
     margin-bottom: 14px;
   }
 
   .terminal-output {
-    padding-left: 20px;
-    gap: 18px;
+    padding-left: var(--space-lg);
+    gap: var(--space-lg);
   }
 
   .terminal-output p {
-    font-size: 12px;
+    font-size: var(--type-base);
     line-height: 1.75;
+  }
+}
+
+/* ─── PHONE-FOCUSED REFINEMENTS (≤480px) ─── */
+@media (max-width: 480px) {
+  .hero-wordmark-container {
+    width: 70vw;
+    max-width: 260px; /* Even smaller on small phones */
+    top: calc(6vh + var(--safe-top)) !important;
+  }
+
+  .typed-title {
+    font-size: var(--type-xs);
+    margin-bottom: var(--space-md);
+  }
+
+  .typed-line {
+    font-size: var(--type-xs);
+    line-height: 1.55;
+  }
+
+  .typed-body {
+    gap: var(--space-xs);
+  }
+
+  .bridge-frame {
+    max-width: none !important;
+  }
+
+  .bridge-frame.manifesto-active {
+    max-height: calc(80vh - var(--safe-top) - var(--safe-bottom)) !important;
+  }
+
+  .bridge-frame .hero-tagline-v2 {
+    font-size: var(--type-base) !important;
+  }
+
+  .terminal-tab {
+    font-size: 8px;
+    padding: 4px 6px;
+  }
+
+  .mobile-module-tabs {
+    bottom: calc(70px + var(--safe-bottom));
+    width: var(--frame-max-w);
+    max-width: 320px;
+  }
+
+  .mobile-tab-button {
+    font-size: 8px;
+    padding: 10px 4px;
+    min-height: 44px;
+  }
+
+  .mobile-tab-title {
+    font-size: var(--type-base);
+  }
+
+  .mobile-tab-desc {
+    font-size: var(--type-sm);
   }
 }
 
@@ -1271,8 +1346,8 @@
    ═══════════════════════════════════════════════════════════════ */
 .compact-cta-menu {
   position: fixed;
-  bottom: calc(var(--hud-padding, 32px) + var(--corner-size, 40px) + 16px);
-  left: calc(var(--hud-padding, 32px) + var(--rail-width, 60px) + 16px);
+  bottom: calc(var(--hud-pad-bottom, 32px) + var(--corner-size, 40px) + 16px);
+  left: calc(var(--hud-pad-left, 32px) + var(--rail-width, 60px) + 16px);
   z-index: 50;
   display: flex;
   flex-direction: column;
@@ -1313,7 +1388,7 @@
 
 /* Index number styling [0], [1], etc */
 .compact-cta-index {
-  font-size: 10px;
+  font-size: var(--type-xs);
   font-weight: 400;
   letter-spacing: 0.02em;
   color: var(--gold, #caa554);
@@ -1328,7 +1403,7 @@
 
 /* Label styling */
 .compact-cta-label {
-  font-size: 10px;
+  font-size: var(--type-xs);
   font-weight: 500;
   letter-spacing: 0.08em;
   text-transform: uppercase;

@@ -90,16 +90,30 @@ export function ManifestoTerminal({
 
         .manifesto-content {
           /* System monospace font stack */
-          font-family:
-            "SFMono-Regular, Consolas, "Liberation Mono", monospace;
-          font-size: 18px;
-          line-height: 1.7;
+          font-family: SFMono-Regular, Consolas, "Liberation Mono", monospace;
+          /* Evergreen sizing: readable on desktop, compact on mobile so more lines fit */
+          font-size: clamp(12px, 1vw + 9px, 18px);
+          line-height: 1.6;
           font-weight: 400;
           /* Tensor Gold color */
           color: var(--gold, #caa554);
           text-align: left;
           letter-spacing: 0.02em;
           white-space: pre-wrap;
+        }
+
+        @media (max-width: 768px) {
+          .manifesto-content {
+            font-size: clamp(12px, 3.1vw, 14px);
+            line-height: 1.55;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .manifesto-content {
+            font-size: clamp(11px, 3vw, 13px);
+            line-height: 1.5;
+          }
         }
 
         .typed-text {

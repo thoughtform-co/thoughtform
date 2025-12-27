@@ -179,10 +179,8 @@ export const NavigationBar = forwardRef<NavigationBarHandle, NavigationBarProps>
         <nav className="mobile-section-list" aria-label="Section navigation">
           {mobileSectionItems.map((item, index) => {
             const isActive = index === currentSectionIndex;
-            const isPast = index < currentSectionIndex;
-            // Show active section and all subsequent sections
-            // Past sections are hidden for cleaner UI
-            if (isPast) return null;
+            // Mobile: only show the active section for more real estate
+            if (!isActive) return null;
 
             return (
               <button
@@ -332,8 +330,8 @@ export const NavigationBar = forwardRef<NavigationBarHandle, NavigationBarProps>
           /* Mobile section list - vertical nav showing current + subsequent sections */
           .mobile-section-list {
             position: absolute;
-            top: 16px;
-            left: 16px;
+            top: calc(var(--safe-top, 0px) + 16px);
+            left: calc(var(--safe-left, 0px) + 16px);
             z-index: 1000;
             display: none;
             flex-direction: column;
@@ -398,8 +396,8 @@ export const NavigationBar = forwardRef<NavigationBarHandle, NavigationBarProps>
           /* Mobile sigil - top right, replaces hamburger */
           .mobile-sigil {
             position: absolute;
-            top: 16px;
-            right: 16px;
+            top: calc(var(--safe-top, 0px) + 16px);
+            right: calc(var(--safe-right, 0px) + 16px);
             left: auto;
             z-index: 1000;
             display: none;

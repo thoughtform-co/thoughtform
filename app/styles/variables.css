@@ -27,6 +27,19 @@
   --font-body: var(--font-ibm-plex-mono), "IBM Plex Mono", monospace;
   --font-data: var(--font-ibm-plex-mono), "IBM Plex Mono", monospace;
 
+  /* ─── FLUID TYPOGRAPHY SCALE ───
+     Tuned for smooth scaling across 430px–1440px viewports.
+     Uses clamp(min, preferred, max) for evergreen responsiveness.
+  */
+  --type-xs: clamp(9px, 0.5rem + 0.1vw, 10px);
+  --type-sm: clamp(10px, 0.6rem + 0.15vw, 12px);
+  --type-base: clamp(13px, 0.75rem + 0.2vw, 15px);
+  --type-md: clamp(14px, 0.8rem + 0.25vw, 16px);
+  --type-lg: clamp(16px, 0.9rem + 0.4vw, 20px);
+  --type-xl: clamp(18px, 1rem + 0.6vw, 26px);
+  --type-2xl: clamp(22px, 1.2rem + 1vw, 32px);
+  --type-display: clamp(28px, 1.5rem + 2vw, 48px);
+
   /* Spacing (8px grid) */
   --space-xs: 4px;
   --space-sm: 8px;
@@ -37,11 +50,35 @@
   --space-3xl: 64px;
   --space-4xl: 96px;
 
+  /* ─── SAFE AREA INSETS (iOS notch/home indicator) ───
+     Requires viewport-fit=cover in <meta name="viewport">
+  */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+
   /* Layout */
   --hud-padding: clamp(32px, 4vw, 64px);
   --rail-width: 60px;
   --content-max-width: 1200px;
   --corner-size: 40px;
+
+  /* ─── SAFE-AREA DERIVED HUD PADDINGS ───
+     Ensure HUD elements respect device safe areas (notch, home indicator).
+  */
+  --hud-pad-top: max(var(--hud-padding), var(--safe-top));
+  --hud-pad-right: max(var(--hud-padding), var(--safe-right));
+  --hud-pad-bottom: max(var(--hud-padding), var(--safe-bottom));
+  --hud-pad-left: max(var(--hud-padding), var(--safe-left));
+
+  /* ─── FRAME SIZING TOKENS ───
+     Consistent frame dimensions for cards, terminals, bridge frames.
+  */
+  --frame-max-w: min(90vw, 560px);
+  --frame-pad-x: clamp(16px, 4vw, 32px);
+  --frame-pad-y: clamp(16px, 3vw, 24px);
+  --frame-corner: 16px;
 
   /* 8-Column Grid System */
   --grid-columns: 8;
@@ -58,12 +95,14 @@
 
 /* ═══════════════════════════════════════════════════════════════
    RESPONSIVE VARIABLE OVERRIDES
+   Breakpoints: 900px (compact), 768px (tablet/mobile), 480px (phone)
    ═══════════════════════════════════════════════════════════════ */
 
 @media (max-width: 900px) {
   :root {
     --rail-width: 0px;
     --corner-size: 30px;
+    --frame-max-w: min(92vw, 520px);
   }
 }
 
@@ -75,11 +114,40 @@
     --space-2xl: 32px;
     --space-3xl: 48px;
     --space-4xl: 64px;
+
+    /* Frame tokens - tighter on mobile */
+    --frame-max-w: calc(100vw - 2 * (var(--hud-padding) + var(--rail-width) + 12px));
+    --frame-pad-x: clamp(14px, 4vw, 24px);
+    --frame-pad-y: clamp(14px, 3vw, 20px);
+    --frame-corner: 12px;
+
+    /* Typography: slightly larger base for mobile readability */
+    --type-base: clamp(14px, 0.8rem + 0.2vw, 16px);
+    --type-md: clamp(15px, 0.85rem + 0.25vw, 17px);
   }
 }
 
-@media (max-width: 600px) {
+/* ─── PHONE-FOCUSED REFINEMENTS (≤480px) ───
+   Primary target: iPhone Pro Max (≈430px) and similar large phones.
+*/
+@media (max-width: 480px) {
   :root {
-    --corner-size: 24px;
+    --hud-padding: 6px;
+    --rail-width: 28px;
+    --corner-size: 18px;
+
+    /* Tighter spacing on phones */
+    --space-lg: 20px;
+    --space-xl: 28px;
+    --space-2xl: 28px;
+    --space-3xl: 40px;
+
+    /* Frame tokens for phone screens (slightly narrower for better proportion) */
+    --frame-max-w: calc(100vw - 2 * (var(--hud-padding) + var(--rail-width) + 16px));
+    --frame-pad-x: clamp(12px, 3.5vw, 20px);
+    --frame-pad-y: clamp(12px, 2.5vw, 18px);
+    --frame-corner: 10px;
+
+    /* Touch-friendly minimum button heights ensured elsewhere */
   }
 }

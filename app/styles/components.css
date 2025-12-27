@@ -6,11 +6,12 @@
 /* ─── BUTTONS ─── */
 .btn {
   font-family: var(--font-data);
-  font-size: 11px;
+  font-size: var(--type-sm);
   font-weight: 500;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   padding: var(--space-md) var(--space-xl);
+  min-height: 44px; /* Touch-friendly minimum */
   cursor: pointer;
   transition: all var(--duration-fast) var(--ease-out);
   text-decoration: none;
@@ -33,17 +34,18 @@
 
 .btn-large {
   padding: var(--space-md) var(--space-2xl);
-  font-size: 12px;
+  font-size: var(--type-sm);
+  min-height: 48px;
 }
 
 /* ─── TYPOGRAPHY ─── */
 .headline {
   font-family: var(--font-display);
-  font-size: clamp(28px, 4vw, 42px);
+  font-size: var(--type-display);
   font-weight: 400;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: #ebe3d6;
+  color: var(--dawn);
   margin-bottom: var(--space-2xl);
 }
 
@@ -53,7 +55,7 @@
 
 .text {
   font-family: var(--font-body);
-  font-size: 15px;
+  font-size: var(--type-base);
   font-weight: 300;
   line-height: 1.7;
   color: var(--dawn-70);
@@ -66,7 +68,7 @@
 
 .text-emphasis {
   color: var(--dawn);
-  font-size: 16px;
+  font-size: var(--type-md);
   font-weight: 400;
 }
 
@@ -94,7 +96,7 @@
 
 .label-number {
   font-family: var(--font-data);
-  font-size: 11px;
+  font-size: var(--type-sm);
   font-weight: 400;
   color: var(--gold);
   letter-spacing: 0.08em;
@@ -102,7 +104,7 @@
 
 .label-text {
   font-family: var(--font-data);
-  font-size: 11px;
+  font-size: var(--type-sm);
   font-weight: 400;
   color: var(--dawn-30);
   text-transform: uppercase;
@@ -134,9 +136,9 @@
 .terminal-frame {
   background: rgba(10, 9, 8, 0.85);
   border: 1px solid var(--dawn-15);
-  padding: var(--space-2xl) var(--space-2xl) var(--space-2xl);
+  padding: var(--frame-pad-y) var(--frame-pad-x);
   position: relative;
-  max-width: 720px;
+  max-width: var(--frame-max-w);
   margin: 0 auto;
 }
 
@@ -214,7 +216,7 @@
 
 .terminal-title {
   font-family: var(--font-data);
-  font-size: 10px;
+  font-size: var(--type-xs);
   font-weight: 400;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -248,7 +250,7 @@
 
 .terminal-tag {
   font-family: var(--font-data);
-  font-size: 9px;
+  font-size: var(--type-xs);
   font-weight: 400;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -361,7 +363,7 @@
 
 .card-label {
   font-family: var(--font-data);
-  font-size: 11px;
+  font-size: var(--type-sm);
   font-weight: 400;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -370,7 +372,7 @@
 
 .card-title {
   font-family: var(--font-display);
-  font-size: clamp(24px, 3vw, 32px);
+  font-size: var(--type-2xl);
   font-weight: 400;
   letter-spacing: 0.02em;
   color: var(--dawn);
@@ -380,7 +382,7 @@
 
 .card-description {
   color: var(--dawn-70);
-  font-size: 14px;
+  font-size: var(--type-base);
   line-height: 1.65;
 }
 
@@ -402,7 +404,7 @@
 
 .features-label {
   font-family: var(--font-data);
-  font-size: 10px;
+  font-size: var(--type-xs);
   font-weight: 400;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -433,7 +435,7 @@
 
 .feature-text {
   font-family: var(--font-body);
-  font-size: 13px;
+  font-size: var(--type-base);
   font-weight: 400;
   color: var(--dawn);
   letter-spacing: 0.01em;
@@ -448,11 +450,12 @@
   text-decoration: none;
   color: var(--gold);
   font-family: var(--font-data);
-  font-size: 12px;
+  font-size: var(--type-sm);
   font-weight: 400;
   letter-spacing: 0.04em;
   transition: color 0.15s ease;
   cursor: pointer;
+  min-height: 44px; /* Touch-friendly */
 }
 
 .card-cta:hover {
@@ -490,31 +493,14 @@
 
 @media (max-width: 900px) {
   .info-card {
-    padding: 24px;
-    max-width: 100%;
-  }
-
-  .card-title {
-    font-size: clamp(22px, 5vw, 28px);
-  }
-
-  .card-description {
-    font-size: 13px;
-  }
-
-  .feature-text {
-    font-size: 12px;
+    padding: var(--frame-pad-x);
+    max-width: var(--frame-max-w);
   }
 }
 
 @media (max-width: 768px) {
   .headline {
-    font-size: clamp(24px, 7vw, 32px);
     margin-bottom: var(--space-lg);
-  }
-
-  .text {
-    font-size: 14px;
   }
 
   /* Hide section labels on mobile - shown in fixed header */
@@ -536,7 +522,6 @@
   }
 
   .btn {
-    min-height: 44px;
     padding: var(--space-md) var(--space-lg);
   }
 
@@ -546,8 +531,8 @@
   }
 
   .terminal-frame {
-    padding: var(--space-lg);
-    margin: 0 -8px;
+    margin: 0;
+    max-width: var(--frame-max-w);
   }
 
   .terminal-content {
@@ -564,11 +549,26 @@
   }
 
   .contact-email {
-    font-size: 14px;
+    font-size: var(--type-base);
   }
 
   .info-card {
-    padding: 20px;
-    max-width: 100%;
+    padding: var(--frame-pad-x);
+    max-width: var(--frame-max-w);
+  }
+}
+
+/* ─── PHONE-FOCUSED REFINEMENTS (≤480px) ─── */
+@media (max-width: 480px) {
+  .info-card {
+    padding: var(--frame-pad-x) var(--frame-pad-y);
+  }
+
+  .terminal-frame {
+    padding: var(--frame-pad-y) var(--frame-pad-x);
+  }
+
+  .btn-large {
+    font-size: var(--type-sm);
   }
 }

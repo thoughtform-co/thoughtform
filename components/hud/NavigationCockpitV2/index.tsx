@@ -860,28 +860,38 @@ function NavigationCockpitInner() {
         style={
           isMobile
             ? {
+                // Smoothly re-center the frame as we enter manifesto on mobile.
+                // Starts near the definition position (~12vh) and eases toward a true center (50vh + translateY(-50%)).
+                ...(typeof tDefToManifesto === "number" && {
+                  // Ease in a bit after the transition begins to avoid jumpy motion.
+                  ["--manifesto-center-t" as string]: Math.min(
+                    1,
+                    Math.max(0, (tDefToManifesto - 0.15) / 0.85)
+                  ),
+                }),
                 // MOBILE: Frame slides UP from bottom to below wordmark
                 // At t=0: bottom: 8vh (hero position)
                 // At t=1: top: 12vh (moved up for better positioning with wordmark inside)
                 // During manifesto: frame extends from top to bottom
-                ...(tDefToManifesto > 0.5
+                ...(tHeroToDef < 0.5
                   ? {
-                      // Manifesto state: fit content, positioned near top
-                      top: "10vh",
-                      bottom: "auto",
-                      height: "auto",
+                      // Hero→Definition: bottom-based positioning
+                      bottom: `${8 + tHeroToDef * 30}vh`,
+                      top: undefined,
                     }
                   : {
-                      // Definition state: positioned from top/bottom
-                      bottom: tHeroToDef < 0.5 ? `${8 + tHeroToDef * 30}vh` : undefined,
-                      top: tHeroToDef >= 0.5 ? `${48 - (tHeroToDef - 0.5) * 72}vh` : undefined,
+                      // Definition→Manifesto: top-based positioning (interpolates toward center)
+                      bottom: "auto",
+                      top: `calc(${48 - (tHeroToDef - 0.5) * 72}vh + (50vh - ${
+                        48 - (tHeroToDef - 0.5) * 72
+                      }vh) * var(--manifesto-center-t, 0))`,
                     }),
                 // Stay visible throughout transition on mobile
                 opacity: 1,
                 visibility: "visible",
                 pointerEvents: "auto",
                 // Center horizontally
-                transform: "translateX(-50%)",
+                transform: `translate(-50%, calc(-50% * var(--manifesto-center-t, 0)))`,
                 transformOrigin: "center center",
                 // Mobile background/border - same calculation as desktop
                 // Background opacity: 0.85 during definition, 0.9 during manifesto (slightly darker)
@@ -1120,9 +1130,9 @@ function NavigationCockpitInner() {
                 style={{
                   opacity: cardOpacity,
                   visibility: cardOpacity > 0 ? "visible" : "hidden",
-                  width: isMobile ? "100%" : "320px",
-                  maxWidth: isMobile ? "100%" : "320px",
-                  marginBottom: "16px", // Space between logo and pronunciation
+                  width: isMobile ? "min(260px, 70vw)" : "320px",
+                  maxWidth: isMobile ? "min(260px, 70vw)" : "320px",
+                  marginBottom: isMobile ? "12px" : "16px", // Space between logo and pronunciation
                 }}
               >
                 <WordmarkSans color="var(--dawn)" />
