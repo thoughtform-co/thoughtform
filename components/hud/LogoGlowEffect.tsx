@@ -13,7 +13,6 @@ interface LogoGlowEffectProps {
 // Subtle particle glow effect that pulses around the logo
 function GlowParticles({ active }: { active: boolean }) {
   const pointsRef = useRef<THREE.Points>(null);
-  const timeRef = useRef(0);
 
   // Create a ring of particles around the logo
   const positions = useMemo(() => {
@@ -34,8 +33,7 @@ function GlowParticles({ active }: { active: boolean }) {
   useFrame((state) => {
     if (!pointsRef.current || !active) return;
 
-    timeRef.current += state.delta;
-    const time = timeRef.current;
+    const time = state.clock.elapsedTime;
 
     // Gentle pulsing rotation
     pointsRef.current.rotation.z = time * 0.5;
@@ -65,7 +63,6 @@ function GlowParticles({ active }: { active: boolean }) {
 // Shimmer effect - additional particles that sparkle
 function ShimmerParticles({ active }: { active: boolean }) {
   const pointsRef = useRef<THREE.Points>(null);
-  const timeRef = useRef(0);
 
   const positions = useMemo(() => {
     const count = 12;
@@ -86,8 +83,7 @@ function ShimmerParticles({ active }: { active: boolean }) {
   useFrame((state) => {
     if (!pointsRef.current || !active) return;
 
-    timeRef.current += state.delta;
-    const time = timeRef.current;
+    const time = state.clock.elapsedTime;
 
     // Counter-rotation for visual interest
     pointsRef.current.rotation.z = -time * 0.8;
