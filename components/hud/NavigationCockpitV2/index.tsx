@@ -1125,7 +1125,7 @@ function NavigationCockpitInner() {
                 <GlitchText
                   initialText={`AI isn't software to command.
 It's a strange intelligence to navigate.
-Thoughtform teaches how.`}
+Thoughtform is the interface.`}
                   finalText={`(θɔːtfɔːrm / THAWT-form)
 the interface for navigating
 human-AI collaboration.`}
