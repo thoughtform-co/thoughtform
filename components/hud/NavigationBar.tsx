@@ -193,10 +193,10 @@ export const NavigationBar = forwardRef<NavigationBarHandle, NavigationBarProps>
               {/* Logo on the left */}
               <a
                 href="#"
-                className={`navbar-logo ${isLogoGlowing ? "logo-glowing" : ""}`}
+                className={`navbar-logo ${isLogoGlowing ? "logo-glowing" : ""} ${!isLogoGold ? "logo-pulse" : ""}`}
                 onClick={handleLogoClick}
                 style={{
-                  opacity: isLogoGold ? 1 : 0.75,
+                  opacity: isLogoGold ? 1 : undefined,
                   position: "relative",
                 }}
               >
@@ -317,6 +317,21 @@ export const NavigationBar = forwardRef<NavigationBarHandle, NavigationBarProps>
 
           .navbar-logo:hover {
             opacity: 0.8;
+          }
+
+          /* Slow pulsing animation for semantic dawn logo */
+          .navbar-logo.logo-pulse {
+            animation: logoPulse 3s ease-in-out infinite;
+          }
+
+          @keyframes logoPulse {
+            0%,
+            100% {
+              opacity: 0.15;
+            }
+            50% {
+              opacity: 0.65;
+            }
           }
 
           /* Logo scale animation when particles arrive (Three.js handles the glow) */
