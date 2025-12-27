@@ -982,14 +982,14 @@ export const cockpitStyles = `
       min-height: 100dvh;
     }
 
-    /* Wordmark - centered above gateway */
+    /* Wordmark - centered above gateway, LARGER on mobile */
     .hero-wordmark-container {
       left: 50% !important;
       right: auto !important;
       transform: translateX(-50%) !important;
-      width: 80vw;
-      max-width: 280px;
-      top: 12vh !important;
+      width: 85vw;
+      max-width: 340px; /* Increased from 280px for stronger presence */
+      top: 10vh !important; /* Moved up slightly */
       display: flex;
       justify-content: center;
     }
@@ -1010,12 +1010,12 @@ export const cockpitStyles = `
       justify-content: center;
     }
 
-    /* Bridge frame - centered, animates from bottom to below wordmark */
+    /* Bridge frame - centered, LARGER and better designed on mobile */
     .bridge-frame {
       left: 50% !important;
       right: auto !important;
-      width: 90vw !important;
-      max-width: 360px !important;
+      width: 92vw !important;
+      max-width: 400px !important; /* Increased from 360px */
     }
 
     /* Bridge frame during manifesto - wider, fits content */
@@ -1023,22 +1023,27 @@ export const cockpitStyles = `
       width: 94vw !important;
       max-width: none !important;
       bottom: auto !important;
-      top: 10vh !important;
+      top: 8vh !important; /* Moved up slightly */
       height: auto !important;
-      max-height: 85vh !important; /* Prevent overflow off screen */
+      max-height: 88vh !important; /* Increased to show more content */
       overflow-y: auto !important; /* Allow scrolling if content is long */
       overflow-x: hidden !important;
     }
 
     .bridge-frame.manifesto-active .hero-text-frame {
-      padding: 20px 16px !important;
+      padding: 24px 20px !important; /* Increased padding */
       min-height: auto !important;
       text-align: left !important; /* Align manifesto content left like desktop */
     }
 
     .bridge-frame .hero-text-frame {
-      padding: 16px 20px;
-      min-height: 70px;
+      padding: 20px 24px; /* Increased padding */
+      min-height: 80px;
+      /* True centering for hero frame text */
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
       text-align: center;
       /* Background/blur now applied via inline styles on .bridge-frame for proper transition */
     }
@@ -1046,11 +1051,15 @@ export const cockpitStyles = `
     /* Center text in bridge frame */
     .bridge-frame .hero-tagline {
       text-align: center;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
 
     .bridge-frame .hero-tagline-v2 {
-      font-size: clamp(13px, 3.5vw, 16px) !important;
-      line-height: 1.4 !important;
+      font-size: clamp(14px, 4vw, 18px) !important; /* Increased from 13px-16px */
+      line-height: 1.45 !important;
     }
 
     /* Hide runway arrows on mobile */
@@ -1058,10 +1067,10 @@ export const cockpitStyles = `
       display: none !important;
     }
 
-    /* Hero tagline mobile sizing */
+    /* Hero tagline mobile sizing - LARGER */
     .hero-tagline-v2 {
-      font-size: clamp(14px, 4vw, 18px) !important;
-      line-height: 1.3 !important;
+      font-size: clamp(15px, 4.5vw, 20px) !important; /* Increased from 14px-18px */
+      line-height: 1.35 !important;
       text-align: center !important;
     }
 
@@ -1169,16 +1178,17 @@ export const cockpitStyles = `
   /* ═══════════════════════════════════════════════════════════════
      MOBILE MODULE TABS - Tabbed interface for module cards
      Used when desktop ModuleCards are hidden
+     Positioned higher to avoid collision with HUD bottom instruction
      ═══════════════════════════════════════════════════════════════ */
   .mobile-module-tabs {
     position: fixed;
-    bottom: 60px;
+    bottom: 90px; /* Increased from 60px to sit above HUD instruction bar */
     left: 50%;
     transform: translateX(-50%);
-    width: calc(100% - 80px);
-    max-width: 320px;
+    width: calc(100% - 48px); /* Slightly wider: was 100% - 80px */
+    max-width: 340px; /* Increased from 320px */
     z-index: 20;
-    background: rgba(10, 9, 8, 0.9);
+    background: rgba(10, 9, 8, 0.92);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
     border: 1px solid rgba(236, 227, 214, 0.15);

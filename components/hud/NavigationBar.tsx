@@ -1,13 +1,12 @@
 "use client";
 
-import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
-import { useIsMobile } from "@/lib/hooks/useMediaQuery";
+import { forwardRef, useImperativeHandle, useRef, useState } from "react";
 import { LogoGlowEffect } from "./LogoGlowEffect";
 
 // ═══════════════════════════════════════════════════════════════
 // NAVIGATION BAR - Brandworld Specification
 // Fixed top navigation with logo and text links
-// Mobile: Hamburger menu with slide-out panel
+// Mobile: Vertical section list (left) + Thoughtform sigil (right)
 // ═══════════════════════════════════════════════════════════════
 
 interface NavItem {
@@ -50,46 +49,15 @@ const ThoughtformLogo = forwardRef<SVGSVGElement, { size?: number; color?: strin
   }
 );
 
-// Hamburger menu icon
-function HamburgerIcon({ isOpen }: { isOpen: boolean }) {
-  return (
-    <svg
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      strokeLinecap="round"
-      style={{
-        transition: "transform 0.3s ease",
-        transform: isOpen ? "rotate(45deg)" : "rotate(0deg)",
-      }}
-    >
-      <line
-        x1="4"
-        y1="8"
-        x2="20"
-        y2="8"
-        style={{
-          transition: "all 0.3s ease",
-          transform: isOpen ? "translateY(4px)" : "translateY(0)",
-        }}
-      />
-      <line
-        x1="4"
-        y1="16"
-        x2="20"
-        y2="16"
-        style={{
-          transition: "all 0.3s ease",
-          transform: isOpen ? "translateY(-4px) rotate(90deg)" : "translateY(0)",
-          transformOrigin: "center",
-        }}
-      />
-    </svg>
-  );
-}
+// Mobile section list items (ordered for rendering)
+// About is excluded from the HUD sequence per design spec
+const mobileSectionItems = [
+  { sectionId: "hero", number: "01", name: "HOME" },
+  { sectionId: "definition", number: "02", name: "INTERFACE" },
+  { sectionId: "manifesto", number: "03", name: "MANIFESTO" },
+  { sectionId: "services", number: "04", name: "SERVICES" },
+  { sectionId: "contact", number: "05", name: "CONTACT" },
+];
 
 // Export handle type for the NavigationBar ref
 export interface NavigationBarHandle {
@@ -103,56 +71,39 @@ interface NavigationBarProps {
   onNavigate: (sectionId: string) => void;
 }
 
-// Section display names and numbers for mobile indicator
-const sectionInfo: Record<string, { number: string; name: string }> = {
-  hero: { number: "01", name: "Home" },
-  definition: { number: "02", name: "Interface" },
-  manifesto: { number: "03", name: "Manifesto" },
-  services: { number: "04", name: "Services" },
-  contact: { number: "05", name: "Contact" },
-};
+// Get current section index in the mobile list
+function getCurrentSectionIndex(activeSection: string): number {
+  const index = mobileSectionItems.findIndex((item) => item.sectionId === activeSection);
+  // About section isn't in our list, map it to services (closest neighbor)
+  return index >= 0 ? index : mobileSectionItems.findIndex((item) => item.sectionId === "services");
+}
 
 export const NavigationBar = forwardRef<NavigationBarHandle, NavigationBarProps>(
   function NavigationBar({ activeSection, onNavigate }, ref) {
-    const logoRef = useRef<SVGSVGElement>(null);
-    const isMobile = useIsMobile();
-    const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const desktopLogoRef = useRef<SVGSVGElement>(null);
+    const mobileLogoRef = useRef<SVGSVGElement>(null);
     const [isLogoGlowing, setIsLogoGlowing] = useState(false);
     // Logo is semantic dawn until particles arrive, then tensor gold
     const [isLogoGold, setIsLogoGold] = useState(false);
 
-    // Close menu when navigating
-    const handleNavigate = (sectionId: string) => {
-      setIsMenuOpen(false);
-      onNavigate(sectionId);
-    };
-
-    // Close menu on escape key
-    useEffect(() => {
-      const handleEscape = (e: KeyboardEvent) => {
-        if (e.key === "Escape") setIsMenuOpen(false);
-      };
-      window.addEventListener("keydown", handleEscape);
-      return () => window.removeEventListener("keydown", handleEscape);
-    }, []);
-
-    // Prevent body scroll when menu is open
-    useEffect(() => {
-      if (isMenuOpen) {
-        document.body.style.overflow = "hidden";
-      } else {
-        document.body.style.overflow = "";
-      }
-      return () => {
-        document.body.style.overflow = "";
-      };
-    }, [isMenuOpen]);
+    // Get current section index for the mobile list
+    const currentSectionIndex = getCurrentSectionIndex(activeSection);
 
     // Expose logo position and glow trigger through imperative handle
     useImperativeHandle(ref, () => ({
       getLogoPosition: () => {
-        if (!logoRef.current) return null;
-        const rect = logoRef.current.getBoundingClientRect();
+        const getRect = (el: SVGSVGElement | null) => {
+          if (!el) return null;
+          const rect = el.getBoundingClientRect();
+          // If the element is display:none, rect will be 0x0 — treat as unavailable.
+          if (rect.width === 0 || rect.height === 0) return null;
+          return rect;
+        };
+
+        const mobileRect = getRect(mobileLogoRef.current);
+        const desktopRect = getRect(desktopLogoRef.current);
+        const rect = mobileRect ?? desktopRect;
+        if (!rect) return null;
         return {
           x: rect.left + rect.width / 2,
           y: rect.top + rect.height / 2,
@@ -171,116 +122,95 @@ export const NavigationBar = forwardRef<NavigationBarHandle, NavigationBarProps>
       },
     }));
 
-    const handleClick = (e: React.MouseEvent<HTMLAnchorElement>, sectionId: string) => {
+    const handleClick = (
+      e: React.MouseEvent<HTMLAnchorElement | HTMLButtonElement>,
+      sectionId: string
+    ) => {
       e.preventDefault();
-      handleNavigate(sectionId);
+      onNavigate(sectionId);
     };
 
-    const handleLogoClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    const handleLogoClick = (e: React.MouseEvent<HTMLAnchorElement | HTMLButtonElement>) => {
       e.preventDefault();
-      setIsMenuOpen(false);
       window.scrollTo({ top: 0, behavior: "smooth" });
     };
 
-    const currentSection = sectionInfo[activeSection] || sectionInfo.hero;
-
     return (
       <>
-        {/* Desktop: Centered navbar */}
-        {!isMobile && (
-          <div className="navbar-container">
-            <nav className="navbar">
-              {/* Logo on the left */}
-              <a
-                href="#"
-                className={`navbar-logo ${isLogoGlowing ? "logo-glowing" : ""} ${!isLogoGold ? "logo-pulse" : ""}`}
-                onClick={handleLogoClick}
-                style={{
-                  opacity: isLogoGold ? 1 : undefined,
-                  position: "relative",
-                }}
-              >
-                <ThoughtformLogo
-                  ref={logoRef}
-                  size={22}
-                  color={isLogoGold ? "#caa554" : "#ece3d6"}
-                />
-                <LogoGlowEffect active={isLogoGlowing} size={22} />
-              </a>
-
-              {/* Desktop: Nav links */}
-              {navItems.map((item) => {
-                const isActive = activeSection === item.sectionId;
-                return (
-                  <a
-                    key={item.sectionId}
-                    href={`#${item.sectionId}`}
-                    className={`navbar-link ${isActive ? "active" : ""}`}
-                    onClick={(e) => handleClick(e, item.sectionId)}
-                  >
-                    {item.label}
-                  </a>
-                );
-              })}
-            </nav>
-          </div>
-        )}
-
-        {/* Mobile: Split layout - section indicator top-left, hamburger top-right */}
-        {isMobile && (
-          <>
-            {/* Top-left: Simple section text */}
-            <div className="mobile-section-text">
-              <span className="mobile-section-number">{currentSection.number}</span>
-              <span className="mobile-section-name">{currentSection.name}</span>
-            </div>
-
-            {/* Top-right: Hamburger button */}
-            <button
-              className="mobile-hamburger"
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              aria-label={isMenuOpen ? "Close menu" : "Open menu"}
-              aria-expanded={isMenuOpen}
+        {/* Desktop: Centered navbar (CSS-hidden on mobile) */}
+        <div className="navbar-container">
+          <nav className="navbar" aria-label="Primary navigation">
+            {/* Logo on the left */}
+            <a
+              href="#"
+              className={`navbar-logo ${isLogoGlowing ? "logo-glowing" : ""} ${!isLogoGold ? "logo-pulse" : ""}`}
+              onClick={handleLogoClick}
+              style={{
+                opacity: isLogoGold ? 1 : undefined,
+                position: "relative",
+              }}
             >
-              <HamburgerIcon isOpen={isMenuOpen} />
-            </button>
-          </>
-        )}
+              <ThoughtformLogo
+                ref={desktopLogoRef}
+                size={22}
+                color={isLogoGold ? "#caa554" : "#ece3d6"}
+              />
+              <LogoGlowEffect active={isLogoGlowing} size={22} />
+            </a>
 
-        {/* Mobile menu overlay */}
-        {isMobile && (
-          <>
-            <div
-              className={`mobile-menu-backdrop ${isMenuOpen ? "open" : ""}`}
-              onClick={() => setIsMenuOpen(false)}
-            />
-            <div className={`mobile-menu ${isMenuOpen ? "open" : ""}`}>
-              <div className="mobile-menu-content">
-                {navItems.map((item, index) => {
-                  const isActive = activeSection === item.sectionId;
-                  return (
-                    <a
-                      key={item.sectionId}
-                      href={`#${item.sectionId}`}
-                      className={`mobile-menu-link ${isActive ? "active" : ""}`}
-                      onClick={(e) => handleClick(e, item.sectionId)}
-                      style={{
-                        animationDelay: isMenuOpen ? `${index * 50}ms` : "0ms",
-                      }}
-                    >
-                      <span className="mobile-menu-number">0{index + 1}</span>
-                      <span className="mobile-menu-label">{item.label}</span>
-                    </a>
-                  );
-                })}
-              </div>
+            {/* Desktop: Nav links */}
+            {navItems.map((item) => {
+              const isActive = activeSection === item.sectionId;
+              return (
+                <a
+                  key={item.sectionId}
+                  href={`#${item.sectionId}`}
+                  className={`navbar-link ${isActive ? "active" : ""}`}
+                  onClick={(e) => handleClick(e, item.sectionId)}
+                >
+                  {item.label}
+                </a>
+              );
+            })}
+          </nav>
+        </div>
 
-              <div className="mobile-menu-footer">
-                <span className="mobile-menu-email">hello@thoughtform.co</span>
-              </div>
-            </div>
-          </>
-        )}
+        {/* Mobile: Vertical section list (left) + Thoughtform sigil (right) (CSS-hidden on desktop) */}
+        <nav className="mobile-section-list" aria-label="Section navigation">
+          {mobileSectionItems.map((item, index) => {
+            const isActive = index === currentSectionIndex;
+            const isPast = index < currentSectionIndex;
+            // Show active section and all subsequent sections
+            // Past sections are hidden for cleaner UI
+            if (isPast) return null;
+
+            return (
+              <button
+                key={item.sectionId}
+                className={`mobile-section-item ${isActive ? "active" : ""}`}
+                onClick={(e) => handleClick(e, item.sectionId)}
+                aria-current={isActive ? "true" : undefined}
+              >
+                <span className="mobile-section-number">{item.number}</span>
+                <span className="mobile-section-name">{item.name}</span>
+              </button>
+            );
+          })}
+        </nav>
+
+        {/* Top-right: Thoughtform brandmark (replaces hamburger on mobile) */}
+        <button
+          className={`mobile-sigil ${isLogoGlowing ? "logo-glowing" : ""} ${!isLogoGold ? "logo-pulse" : ""}`}
+          onClick={handleLogoClick}
+          aria-label="Scroll to top"
+        >
+          <ThoughtformLogo
+            ref={mobileLogoRef}
+            size={24}
+            color={isLogoGold ? "#caa554" : "#ece3d6"}
+          />
+          <LogoGlowEffect active={isLogoGlowing} size={24} />
+        </button>
 
         <style jsx>{`
           .navbar-container {
@@ -334,6 +264,17 @@ export const NavigationBar = forwardRef<NavigationBarHandle, NavigationBarProps>
             }
           }
 
+          /* Mobile pulse should be more visible than desktop (semantic-dawn state) */
+          @keyframes logoPulseMobile {
+            0%,
+            100% {
+              opacity: 0.4;
+            }
+            50% {
+              opacity: 0.9;
+            }
+          }
+
           /* Logo scale animation when particles arrive (Three.js handles the glow) */
           .navbar-logo.logo-glowing {
             animation: logoGlow 0.8s ease-out forwards;
@@ -384,205 +325,131 @@ export const NavigationBar = forwardRef<NavigationBarHandle, NavigationBarProps>
             background: rgba(236, 227, 214, 0.1);
           }
 
-          /* Mobile hamburger button */
-          .navbar-hamburger {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 44px;
-            height: 44px;
-            padding: 0;
-            margin: 0;
-            background: transparent;
-            border: none;
-            color: var(--gold, #caa554);
-            cursor: pointer;
-            transition: color 150ms ease;
-          }
-
-          .navbar-hamburger:hover {
-            color: var(--dawn, #ece3d6);
-          }
-
           /* ═══════════════════════════════════════════════════════════════
-             MOBILE LAYOUT - Section text top-left, hamburger top-right
+             MOBILE LAYOUT - Section list top-left, sigil top-right
              ═══════════════════════════════════════════════════════════════ */
 
-          /* Mobile section text - simple, no frame */
-          .mobile-section-text {
-            position: fixed;
-            top: 20px;
+          /* Mobile section list - vertical nav showing current + subsequent sections */
+          .mobile-section-list {
+            position: absolute;
+            top: 16px;
             left: 16px;
             z-index: 1000;
+            display: none;
+            flex-direction: column;
+            gap: 2px;
+            pointer-events: auto;
+          }
+
+          .mobile-section-item {
             display: flex;
             align-items: baseline;
             gap: 8px;
-            pointer-events: none;
+            padding: 4px 0;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            transition: all 150ms ease;
+            text-align: left;
+          }
+
+          /* Active section: tensor gold number + name */
+          .mobile-section-item.active .mobile-section-number {
+            color: var(--gold, #caa554);
+          }
+
+          .mobile-section-item.active .mobile-section-name {
+            color: var(--gold, #caa554);
+          }
+
+          /* Inactive sections: grey styling */
+          .mobile-section-item:not(.active) .mobile-section-number {
+            color: rgba(236, 227, 214, 0.35);
+          }
+
+          .mobile-section-item:not(.active) .mobile-section-name {
+            color: rgba(236, 227, 214, 0.25);
+          }
+
+          /* Hover state for inactive items */
+          .mobile-section-item:not(.active):hover .mobile-section-number,
+          .mobile-section-item:not(.active):hover .mobile-section-name {
+            color: rgba(236, 227, 214, 0.5);
           }
 
           .mobile-section-number {
             font-family: var(--font-data, "PT Mono", monospace);
-            font-size: 11px;
+            font-size: 10px;
             font-weight: 400;
-            color: var(--gold, #caa554);
             letter-spacing: 0.08em;
+            min-width: 20px;
+            transition: color 150ms ease;
           }
 
           .mobile-section-name {
             font-family: var(--font-data, "PT Mono", monospace);
-            font-size: 11px;
+            font-size: 10px;
             font-weight: 400;
-            color: rgba(236, 227, 214, 0.4);
             text-transform: uppercase;
             letter-spacing: 0.1em;
+            transition: color 150ms ease;
           }
 
-          /* Mobile hamburger - top right, minimal style */
-          .mobile-hamburger {
-            position: fixed;
+          /* Mobile sigil - top right, replaces hamburger */
+          .mobile-sigil {
+            position: absolute;
             top: 16px;
             right: 16px;
+            left: auto;
             z-index: 1000;
-            display: flex;
+            display: none;
             align-items: center;
             justify-content: center;
-            width: 44px;
-            height: 44px;
+            width: 40px;
+            height: 40px;
             padding: 0;
             margin: 0;
-            background: transparent;
-            border: none;
-            color: var(--gold, #caa554);
+            background: rgba(10, 9, 8, 0.35);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(236, 227, 214, 0.1);
+            border-radius: 999px;
             cursor: pointer;
-            transition: color 150ms ease;
+            transition: opacity 150ms ease;
             pointer-events: auto;
           }
 
-          .mobile-hamburger:hover {
-            color: var(--dawn, #ece3d6);
+          .mobile-sigil:hover {
+            opacity: 0.8;
           }
 
-          /* Mobile menu backdrop */
-          .mobile-menu-backdrop {
-            position: fixed;
-            inset: 0;
-            background: rgba(5, 4, 3, 0.8);
-            opacity: 0;
-            visibility: hidden;
-            transition:
-              opacity 0.3s ease,
-              visibility 0.3s ease;
-            z-index: 999;
+          /* Slow pulsing animation for semantic dawn sigil (mobile) */
+          .mobile-sigil.logo-pulse {
+            animation: logoPulseMobile 3s ease-in-out infinite;
           }
 
-          .mobile-menu-backdrop.open {
-            opacity: 1;
-            visibility: visible;
-          }
-
-          /* Mobile menu panel */
-          .mobile-menu {
-            position: fixed;
-            top: 0;
-            right: 0;
-            bottom: 0;
-            width: min(320px, 85vw);
-            background: rgba(10, 9, 8, 0.98);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border-left: 1px solid rgba(236, 227, 214, 0.1);
-            z-index: 1001;
-            display: flex;
-            flex-direction: column;
-            transform: translateX(100%);
-            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-          }
-
-          .mobile-menu.open {
-            transform: translateX(0);
-          }
-
-          .mobile-menu-content {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            padding: 80px 32px;
-            gap: 8px;
-          }
-
-          .mobile-menu-link {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            padding: 16px 0;
-            text-decoration: none;
-            border-bottom: 1px solid rgba(236, 227, 214, 0.06);
-            opacity: 0;
-            transform: translateX(20px);
-            transition: all 0.2s ease;
-          }
-
-          .mobile-menu.open .mobile-menu-link {
-            opacity: 1;
-            transform: translateX(0);
-            animation: slideIn 0.4s ease forwards;
-          }
-
-          @keyframes slideIn {
-            from {
-              opacity: 0;
-              transform: translateX(20px);
-            }
-            to {
-              opacity: 1;
-              transform: translateX(0);
-            }
-          }
-
-          .mobile-menu-link:hover,
-          .mobile-menu-link.active {
-            border-bottom-color: var(--gold, #caa554);
-          }
-
-          .mobile-menu-number {
-            font-family: var(--font-data, monospace);
-            font-size: 11px;
-            color: var(--gold, #caa554);
-            letter-spacing: 0.1em;
-            min-width: 24px;
-          }
-
-          .mobile-menu-label {
-            font-family: var(--font-data, monospace);
-            font-size: 18px;
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
-            color: var(--dawn-70, rgba(235, 227, 214, 0.7));
-            transition: color 0.2s ease;
-          }
-
-          .mobile-menu-link:hover .mobile-menu-label,
-          .mobile-menu-link.active .mobile-menu-label {
-            color: var(--dawn, #ece3d6);
-          }
-
-          .mobile-menu-footer {
-            padding: 24px 32px;
-            border-top: 1px solid rgba(236, 227, 214, 0.08);
-          }
-
-          .mobile-menu-email {
-            font-family: var(--font-data, monospace);
-            font-size: 12px;
-            letter-spacing: 0.05em;
-            color: var(--dawn-30, rgba(235, 227, 214, 0.3));
+          /* Sigil glow animation when particles arrive (mobile) */
+          .mobile-sigil.logo-glowing {
+            animation: logoGlow 0.8s ease-out forwards;
           }
 
           /* Mobile adjustments */
           @media (max-width: 768px) {
             .navbar-container {
               top: 12px;
+            }
+
+            /* Hide desktop navbar on mobile */
+            .navbar-container {
+              display: none;
+            }
+
+            /* Show mobile nav elements on mobile */
+            .mobile-section-list {
+              display: flex;
+            }
+            .mobile-sigil {
+              display: flex;
             }
           }
         `}</style>

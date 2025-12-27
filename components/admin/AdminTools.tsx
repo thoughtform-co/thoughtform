@@ -157,23 +157,10 @@ export function AdminTools({
           border-radius: 50%;
         }
 
+        /* Hide admin tools on mobile - per design spec */
         @media (max-width: 768px) {
           .admin-tools {
-            top: calc(var(--hud-padding, 8px) + var(--corner-size, 20px) - 16px);
-            right: calc(var(--hud-padding, 8px) + var(--rail-width, 32px) + 0px);
-          }
-
-          .admin-tools__item {
-            padding: 4px 8px;
-            font-size: 9px;
-          }
-
-          .admin-tools__icon {
-            font-size: 10px;
-          }
-
-          .admin-tools__label {
-            min-width: 60px;
+            display: none;
           }
         }
       `}</style>

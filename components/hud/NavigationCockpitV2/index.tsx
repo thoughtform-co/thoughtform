@@ -26,6 +26,7 @@ import { HeroBackgroundSigil } from "./HeroBackgroundSigil";
 import { ManifestoTerminal } from "./ManifestoTerminal";
 import { ManifestoSources } from "./ManifestoSources";
 import { ManifestoVideoStack } from "./ManifestoVideoStack";
+import { ManifestoMobileTabs } from "./ManifestoMobileTabs";
 import { RunwayArrows } from "./RunwayArrows";
 import { MorphingCTAButtons } from "./MorphingCTAButtons";
 import {
@@ -35,6 +36,7 @@ import {
   SERVICES_DATA,
   DEFAULT_SIGIL_CONFIGS,
 } from "./ServicesDeck";
+import { ServicesStackMobile } from "./ServicesStackMobile";
 import { SigilCanvas, type SigilConfig, DEFAULT_SIGIL_SIZE } from "./SigilCanvas";
 import { SigilEditorPanel } from "./SigilEditorPanel";
 // Styles consolidated into app/globals.css
@@ -346,6 +348,20 @@ function NavigationCockpitInner() {
     };
   }, [scrollProgress]);
 
+  // Ensure the navbar logo destination position is correct after hydration / breakpoint changes.
+  // On initial SSR/hydration, media-query hooks may render a different navbar layout first,
+  // so we re-measure once the client has resolved the real viewport.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    let raf = 0;
+    raf = window.requestAnimationFrame(() => {
+      if (!navbarLogoRef.current) return;
+      const logoPos = navbarLogoRef.current.getLogoPosition();
+      if (logoPos) setNavbarLogoPos(logoPos);
+    });
+    return () => window.cancelAnimationFrame(raf);
+  }, [isMobile]);
+
   // Determine if we should show the SVG Vector I
   const showSvgVector = scrollProgress < 0.02;
 
@@ -465,7 +481,7 @@ function NavigationCockpitInner() {
 
   // Frame growth values - define first since used in position calculations
   const baseWidth = 500;
-  const widthGrowth = 200; // 500px → 700px
+  const widthGrowth = 280; // 500px → 780px (increased from 200 for wider manifesto panel)
   const baseHeight = 100;
   const heightGrowth = 300; // 100px → 400px (min-height)
   // Note: Actual content height is ~720px to fit question + manifesto text
@@ -1041,18 +1057,23 @@ function NavigationCockpitInner() {
             height: tDefToManifesto > 0 ? "100%" : "auto",
             display: "flex",
             flexDirection: "column",
-            alignItems: "flex-start",
-            justifyContent: "flex-start",
+            // Mobile: center content in hero state, left-align in manifesto
+            // Desktop: always left-align
+            alignItems: isMobile && tDefToManifesto < 0.5 ? "center" : "flex-start",
+            justifyContent: isMobile && tDefToManifesto < 0.5 ? "center" : "flex-start",
+            textAlign: isMobile && tDefToManifesto < 0.5 ? "center" : "left",
             // Padding: 24px when card visible, transitions to terminal padding
             // Services mode pulls padding back to the tighter service-card layout.
-            padding: `${24 + 48 * tDefToManifesto * (1 - tManifestoToServices)}px 24px ${
-              24 - 8 * tDefToManifesto * (1 - tManifestoToServices)
-            }px 24px`,
+            padding: isMobile
+              ? `${20 + 28 * tDefToManifesto}px ${24 - 4 * tDefToManifesto}px`
+              : `${24 + 48 * tDefToManifesto * (1 - tManifestoToServices)}px 24px ${
+                  24 - 8 * tDefToManifesto * (1 - tManifestoToServices)
+                }px 24px`,
             pointerEvents: "auto",
             cursor: "default",
             zIndex: 2,
             ["--frame-opacity" as string]: 1 - tDefToManifesto,
-            gap: "20px", // Increased gap for better spacing between elements
+            gap: isMobile ? "16px" : "20px",
             // Restore frame border and background during hero state (before bridge-frame has its own styling)
             // Only show when bridge-frame doesn't have its own border/background yet (tHeroToDef < 0.7)
             // Match opacity/transparency of other sections (same as terminal frame)
@@ -1167,18 +1188,30 @@ human-AI collaboration.`}
             </div>
 
             {/* Manifesto content - appears below question when scrolling */}
+            {/* Desktop: Simple terminal. Mobile: Tabbed interface with sources/voices */}
             {tDefToManifesto > 0.95 && manifestoRevealProgress > 0 && (
               <div
                 style={{
-                  marginTop: "24px",
+                  marginTop: isMobile ? "16px" : "24px",
                   width: "100%",
-                  transform: `scale(${bridgeFrameStyles.contentScale})`,
+                  transform: isMobile ? undefined : `scale(${bridgeFrameStyles.contentScale})`,
                   transformOrigin: "top left",
                   opacity: Math.max(0, 1 - tManifestoToServices * 3), // Fade out as services card appears
                   pointerEvents: tManifestoToServices > 0.3 ? "none" : "auto",
+                  // Mobile: fill available space for tabbed content
+                  ...(isMobile && {
+                    flex: 1,
+                    display: "flex",
+                    flexDirection: "column" as const,
+                    minHeight: 0,
+                  }),
                 }}
               >
-                <ManifestoTerminal revealProgress={manifestoRevealProgress} isActive={true} />
+                {isMobile ? (
+                  <ManifestoMobileTabs revealProgress={manifestoRevealProgress} isVisible={true} />
+                ) : (
+                  <ManifestoTerminal revealProgress={manifestoRevealProgress} isActive={true} />
+                )}
               </div>
             )}
           </div>
@@ -1489,29 +1522,35 @@ human-AI collaboration.`}
       </AdminGate>
 
       {/* Manifesto Sources - Fixed left rail, appears with manifesto text, fades out quickly at services start */}
-      <div
-        style={{
-          // Fade out 3x faster - complete by 33% of transition
-          opacity: Math.max(0, 1 - tManifestoToServices * 3),
-          visibility: tManifestoToServices < 0.35 ? "visible" : "hidden",
-        }}
-      >
-        <ManifestoSources isVisible={manifestoRevealProgress > 0.1} />
-      </div>
+      {/* Desktop only - mobile shows sources in tabbed interface */}
+      {!isMobile && (
+        <div
+          style={{
+            // Fade out 3x faster - complete by 33% of transition
+            opacity: Math.max(0, 1 - tManifestoToServices * 3),
+            visibility: tManifestoToServices < 0.35 ? "visible" : "hidden",
+          }}
+        >
+          <ManifestoSources isVisible={manifestoRevealProgress > 0.1} />
+        </div>
+      )}
 
       {/* Manifesto Video Stack - Fixed right side, appears with manifesto text, fades out quickly at services start */}
-      <div
-        style={{
-          // Fade out 3x faster - complete by 33% of transition
-          opacity: Math.max(0, 1 - tManifestoToServices * 3),
-          visibility: tManifestoToServices < 0.35 ? "visible" : "hidden",
-        }}
-      >
-        <ManifestoVideoStack
-          isVisible={manifestoRevealProgress > 0.1}
-          revealProgress={manifestoRevealProgress}
-        />
-      </div>
+      {/* Desktop only - mobile shows voices in tabbed interface */}
+      {!isMobile && (
+        <div
+          style={{
+            // Fade out 3x faster - complete by 33% of transition
+            opacity: Math.max(0, 1 - tManifestoToServices * 3),
+            visibility: tManifestoToServices < 0.35 ? "visible" : "hidden",
+          }}
+        >
+          <ManifestoVideoStack
+            isVisible={manifestoRevealProgress > 0.1}
+            revealProgress={manifestoRevealProgress}
+          />
+        </div>
+      )}
 
       {/* Services Deck - Three service cards that fan out (desktop only) */}
       {!isMobile && (
@@ -1528,6 +1567,28 @@ human-AI collaboration.`}
           onEditClick={handleOpenSigilEditor}
           editingCardIndex={editingServiceSigilIndex}
         />
+      )}
+
+      {/* Mobile Services Stack - Tap-to-cycle stacked cards */}
+      {isMobile && manifestoComplete && (
+        <div
+          className="mobile-services-container"
+          style={{
+            position: "fixed",
+            bottom: "10vh",
+            left: "50%",
+            transform: "translateX(-50%)",
+            width: "calc(100% - 32px)",
+            maxWidth: "360px",
+            zIndex: 30,
+          }}
+        >
+          <ServicesStackMobile
+            progress={tServicesCards}
+            sigilConfigs={sigilConfigs}
+            isVisible={tServicesCards > 0}
+          />
+        </div>
       )}
 
       {/* Fixed Thoughtform Sigil - appears centered during definition section
