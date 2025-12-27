@@ -867,7 +867,7 @@ function NavigationCockpitInner() {
           ═══════════════════════════════════════════════════════════════════ */}
       <div
         ref={bridgeFrameRef}
-        className={`bridge-frame${isMobile && tDefToManifesto > 0.5 ? " manifesto-active" : ""}${isMobile && manifestoComplete && tManifestoToServices > 0 ? " mobile-services-active" : ""}`}
+        className={`bridge-frame${isMobile && tDefToManifesto > 0.5 ? " manifesto-active" : ""}${isMobile && manifestoComplete && tServicesCards > 0.001 ? " mobile-services-active" : ""}`}
         onMouseEnter={() => setIsBridgeHovered(true)}
         onMouseLeave={() => setIsBridgeHovered(false)}
         style={
@@ -1343,7 +1343,7 @@ human-AI collaboration.`}
           )}
 
           {/* Mobile Services Stack - rendered inside bridge-frame during services transition */}
-          {isMobile && manifestoComplete && tManifestoToServices > 0 && (
+          {isMobile && manifestoComplete && tServicesCards > 0.001 && (
             <div
               className="mobile-services-overlay"
               style={{

@@ -106,7 +106,7 @@ export function ServicesStackMobile({
     cycleNext();
   }, [isDragging, isAnimating, cycleNext]);
 
-  if (!isVisible || progress < 0.1) return null;
+  if (!isVisible) return null;
 
   // Calculate opacity based on progress
   const stackOpacity = Math.min(1, progress * 2);
