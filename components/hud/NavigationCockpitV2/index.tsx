@@ -867,7 +867,7 @@ function NavigationCockpitInner() {
           ═══════════════════════════════════════════════════════════════════ */}
       <div
         ref={bridgeFrameRef}
-        className={`bridge-frame${isMobile && tDefToManifesto > 0.5 ? " manifesto-active" : ""}`}
+        className={`bridge-frame${isMobile && tDefToManifesto > 0.5 ? " manifesto-active" : ""}${isMobile && manifestoComplete && tManifestoToServices > 0 ? " mobile-services-active" : ""}`}
         onMouseEnter={() => setIsBridgeHovered(true)}
         onMouseLeave={() => setIsBridgeHovered(false)}
         style={
@@ -1341,6 +1341,33 @@ human-AI collaboration.`}
               </div>
             </div>
           )}
+
+          {/* Mobile Services Stack - rendered inside bridge-frame during services transition */}
+          {isMobile && manifestoComplete && tManifestoToServices > 0 && (
+            <div
+              className="mobile-services-overlay"
+              style={{
+                position: "absolute",
+                inset: 0,
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                padding: "16px",
+                opacity: tServicesCards,
+                pointerEvents: tServicesCards > 0.3 ? "auto" : "none",
+                // GPU acceleration
+                willChange: "opacity",
+                backfaceVisibility: "hidden",
+              }}
+            >
+              <ServicesStackMobile
+                progress={tServicesCards}
+                sigilConfigs={sigilConfigs}
+                isVisible={tServicesCards > 0}
+              />
+            </div>
+          )}
         </div>
 
         {/* Interface CTAs - original buttons (morph overlay takes over as soon as tDefToManifesto > 0) */}
@@ -1666,27 +1693,7 @@ human-AI collaboration.`}
         />
       )}
 
-      {/* Mobile Services Stack - Tap-to-cycle stacked cards */}
-      {isMobile && manifestoComplete && (
-        <div
-          className="mobile-services-container"
-          style={{
-            position: "fixed",
-            bottom: "10vh",
-            left: "50%",
-            transform: "translateX(-50%)",
-            width: "calc(100% - 32px)",
-            maxWidth: "360px",
-            zIndex: 30,
-          }}
-        >
-          <ServicesStackMobile
-            progress={tServicesCards}
-            sigilConfigs={sigilConfigs}
-            isVisible={tServicesCards > 0}
-          />
-        </div>
-      )}
+      {/* Mobile Services Stack is now rendered inside the bridge-frame above */}
 
       {/* Fixed Thoughtform Sigil - appears centered during definition section
           Animates from brandmark origin (in hero wordmark) to center,

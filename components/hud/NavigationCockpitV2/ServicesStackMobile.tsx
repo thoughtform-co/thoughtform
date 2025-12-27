@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
+import { motion, AnimatePresence, type PanInfo } from "framer-motion";
 import { ServiceCard, type ServiceData } from "./ServiceCard";
 import { SERVICES_DATA, DEFAULT_SIGIL_CONFIGS } from "./ServicesDeck";
 import type { SigilConfig } from "./SigilCanvas";
@@ -9,15 +10,22 @@ import type { SigilConfig } from "./SigilCanvas";
 // SERVICES STACK MOBILE
 // ═══════════════════════════════════════════════════════════════════
 //
-// Mobile-only stacked card deck with tap-to-cycle interaction.
+// Mobile-only stacked card deck with vertical swipe interaction.
 // Reuses ServiceCard component with existing styling.
 //
 // Behavior:
 // • 3 cards stacked with offsets creating depth
-// • Tap anywhere on the stack to cycle to next card
-// • Smooth animation on cycle using CSS transforms
+// • Swipe up → next card, swipe down → previous card
+// • Tap anywhere on the stack as fallback to cycle to next card
+// • Smooth animation on cycle using Framer Motion
+// • Respects prefers-reduced-motion
 //
 // ═══════════════════════════════════════════════════════════════════
+
+// Swipe threshold in pixels - must drag at least this far to trigger cycle
+const SWIPE_THRESHOLD = 50;
+// Velocity threshold - fast swipes below distance threshold still count
+const VELOCITY_THRESHOLD = 300;
 
 interface ServicesStackMobileProps {
   /** Progress of the services reveal (0-1) */
@@ -36,25 +44,81 @@ export function ServicesStackMobile({
   // Track which card is at front (0, 1, or 2)
   const [frontCardIndex, setFrontCardIndex] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
 
-  // Cycle to next card on tap
-  const handleTap = useCallback(() => {
+  // Check for reduced motion preference
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    setPrefersReducedMotion(mediaQuery.matches);
+
+    const handler = (e: MediaQueryListEvent) => setPrefersReducedMotion(e.matches);
+    mediaQuery.addEventListener("change", handler);
+    return () => mediaQuery.removeEventListener("change", handler);
+  }, []);
+
+  // Cycle to next card
+  const cycleNext = useCallback(() => {
     if (isAnimating) return;
     setIsAnimating(true);
     setFrontCardIndex((prev) => (prev + 1) % SERVICES_DATA.length);
-    // Reset animation lock after transition completes
-    setTimeout(() => setIsAnimating(false), 350);
-  }, [isAnimating]);
+    setTimeout(() => setIsAnimating(false), prefersReducedMotion ? 50 : 350);
+  }, [isAnimating, prefersReducedMotion]);
+
+  // Cycle to previous card
+  const cyclePrev = useCallback(() => {
+    if (isAnimating) return;
+    setIsAnimating(true);
+    setFrontCardIndex((prev) => (prev - 1 + SERVICES_DATA.length) % SERVICES_DATA.length);
+    setTimeout(() => setIsAnimating(false), prefersReducedMotion ? 50 : 350);
+  }, [isAnimating, prefersReducedMotion]);
+
+  // Handle drag end - determine if swipe was significant enough
+  const handleDragEnd = useCallback(
+    (_event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+      setIsDragging(false);
+
+      const { offset, velocity } = info;
+      const absOffsetY = Math.abs(offset.y);
+      const absVelocityY = Math.abs(velocity.y);
+
+      // Swipe up (negative Y) → next card
+      // Swipe down (positive Y) → previous card
+      const isSignificantSwipe = absOffsetY > SWIPE_THRESHOLD || absVelocityY > VELOCITY_THRESHOLD;
+
+      if (isSignificantSwipe) {
+        if (offset.y < 0 || velocity.y < -VELOCITY_THRESHOLD) {
+          // Swipe up → next
+          cycleNext();
+        } else if (offset.y > 0 || velocity.y > VELOCITY_THRESHOLD) {
+          // Swipe down → previous
+          cyclePrev();
+        }
+      }
+    },
+    [cycleNext, cyclePrev]
+  );
+
+  // Tap fallback (only if not dragging)
+  const handleTap = useCallback(() => {
+    if (isDragging || isAnimating) return;
+    cycleNext();
+  }, [isDragging, isAnimating, cycleNext]);
 
   if (!isVisible || progress < 0.1) return null;
 
   // Calculate opacity based on progress
   const stackOpacity = Math.min(1, progress * 2);
 
+  // Animation variants for reduced motion
+  const cardTransition = prefersReducedMotion
+    ? { duration: 0.05 }
+    : { type: "spring", stiffness: 400, damping: 30 };
+
   return (
     <div
       className="services-stack-mobile"
-      onClick={handleTap}
       style={{
         opacity: stackOpacity,
         transform: `translateY(${(1 - progress) * 30}px)`,
@@ -81,15 +145,36 @@ export function ServicesStackMobile({
           const zIndex = SERVICES_DATA.length - relativePosition;
           const cardOpacity = 1 - relativePosition * 0.15;
 
+          const isFrontCard = relativePosition === 0;
+
           return (
-            <div
+            <motion.div
               key={service.id}
               className="stack-card-wrapper"
-              style={{
-                transform: `translateY(${offsetY}px) translateX(${offsetX}px) scale(${scale})`,
-                zIndex,
+              // Only the front card is draggable
+              drag={isFrontCard && !prefersReducedMotion ? "y" : false}
+              dragConstraints={{ top: -80, bottom: 80 }}
+              dragElastic={0.3}
+              onDragStart={() => setIsDragging(true)}
+              onDragEnd={isFrontCard ? handleDragEnd : undefined}
+              onClick={isFrontCard ? handleTap : undefined}
+              initial={false}
+              animate={{
+                y: offsetY,
+                x: offsetX,
+                scale,
                 opacity: cardOpacity,
+                zIndex,
               }}
+              transition={cardTransition}
+              style={{
+                position: "absolute",
+                inset: 0,
+                transformOrigin: "center bottom",
+                cursor: isFrontCard ? "grab" : "default",
+                touchAction: isFrontCard ? "none" : "auto",
+              }}
+              whileDrag={{ cursor: "grabbing", scale: scale * 1.02 }}
             >
               <ServiceCard
                 service={service}
@@ -102,14 +187,15 @@ export function ServicesStackMobile({
                 opacity={1}
                 zIndex={1}
               />
-            </div>
+            </motion.div>
           );
         })}
       </div>
 
-      {/* Tap hint */}
-      <div className="tap-hint">
-        <span className="tap-hint-text">TAP TO CYCLE</span>
+      {/* Swipe hint */}
+      <div className="swipe-hint">
+        <span className="swipe-hint-icon">↕</span>
+        <span className="swipe-hint-text">{prefersReducedMotion ? "TAP TO CYCLE" : "SWIPE"}</span>
       </div>
 
       <style jsx>{`
@@ -121,7 +207,6 @@ export function ServicesStackMobile({
           align-items: center;
           gap: 16px;
           padding: 0 8px;
-          cursor: pointer;
           transition:
             opacity 0.3s ease,
             transform 0.3s ease;
@@ -154,30 +239,27 @@ export function ServicesStackMobile({
           aspect-ratio: 340 / 420;
         }
 
-        .stack-card-wrapper {
-          position: absolute;
-          inset: 0;
-          transition:
-            transform 0.35s cubic-bezier(0.16, 1, 0.3, 1),
-            opacity 0.35s ease;
-          transform-origin: center bottom;
-        }
-
         /* ServiceCard width override for mobile */
-        .stack-card-wrapper :global(.service-card) {
+        .stack-container :global(.service-card) {
           width: 100% !important;
           height: 100% !important;
         }
 
-        .tap-hint {
+        .swipe-hint {
           display: flex;
           align-items: center;
           justify-content: center;
+          gap: 6px;
           padding: 8px 16px;
           opacity: 0.5;
         }
 
-        .tap-hint-text {
+        .swipe-hint-icon {
+          font-size: 12px;
+          color: rgba(236, 227, 214, 0.5);
+        }
+
+        .swipe-hint-text {
           font-family: var(--font-data, "PT Mono", monospace);
           font-size: 9px;
           letter-spacing: 0.15em;
@@ -185,13 +267,14 @@ export function ServicesStackMobile({
           text-transform: uppercase;
         }
 
-        /* Active state feedback */
-        .services-stack-mobile:active .stack-container {
-          transform: scale(0.98);
-        }
-
-        .services-stack-mobile:active .tap-hint {
-          opacity: 0.8;
+        /* Reduce motion: simpler animations */
+        @media (prefers-reduced-motion: reduce) {
+          .stack-dot {
+            transition: none;
+          }
+          .services-stack-mobile {
+            transition: none;
+          }
         }
       `}</style>
     </div>

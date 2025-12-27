@@ -1139,6 +1139,48 @@
     overflow: hidden !important;
   }
 
+  /* Mobile Services: collapse from tall manifesto to card-sized deck viewport */
+  .bridge-frame.mobile-services-active {
+    /* Card-sized height for the services deck */
+    height: min(520px, calc(70vh - var(--safe-top) - var(--safe-bottom))) !important;
+    max-height: min(520px, calc(70vh - var(--safe-top) - var(--safe-bottom))) !important;
+    /* Constrain width for card-like appearance */
+    width: calc(100% - 32px) !important;
+    max-width: 380px !important;
+    /* Center the deck viewport */
+    top: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    /* Allow stack peek effect */
+    overflow: visible !important;
+    /* Smooth transition from manifesto to services */
+    transition:
+      height 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+      max-height 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+      width 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+      max-width 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+      transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  /* Services overlay: fill the collapsed deck viewport and sit on top */
+  .bridge-frame.mobile-services-active .mobile-services-overlay {
+    padding: 8px !important;
+    z-index: 10 !important;
+    background: rgba(10, 9, 8, 0.95) !important;
+  }
+
+  /* Hide all manifesto content when services is active */
+  .bridge-frame.mobile-services-active .hero-text-frame {
+    opacity: 0 !important;
+    pointer-events: none !important;
+    visibility: hidden !important;
+  }
+
+  /* Hide the terminal header tabs on mobile when services is active */
+  .bridge-frame.mobile-services-active .terminal-header,
+  .bridge-frame.mobile-services-active .terminal-header-mobile {
+    display: none !important;
+  }
+
   .bridge-frame .hero-text-frame {
     padding: var(--frame-pad-y) var(--frame-pad-x);
     min-height: 70px;
@@ -1306,6 +1348,14 @@
   .bridge-frame.manifesto-active {
     height: calc(80vh - var(--safe-top) - var(--safe-bottom)) !important;
     max-height: calc(80vh - var(--safe-top) - var(--safe-bottom)) !important;
+  }
+
+  /* Phone services deck: slightly smaller for compact screens */
+  .bridge-frame.mobile-services-active {
+    height: min(480px, calc(65vh - var(--safe-top) - var(--safe-bottom))) !important;
+    max-height: min(480px, calc(65vh - var(--safe-top) - var(--safe-bottom))) !important;
+    width: calc(100% - 24px) !important;
+    max-width: 340px !important;
   }
 
   .bridge-frame .hero-tagline-v2 {
