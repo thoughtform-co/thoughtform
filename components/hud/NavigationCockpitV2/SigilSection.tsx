@@ -251,6 +251,8 @@ interface SigilSectionProps {
   transitionProgress?: number;
   /** Callback fired when particles have arrived at the navbar logo */
   onParticlesArrived?: () => void;
+  /** Callback fired when scrolling back resets the particle arrival state */
+  onParticlesReset?: () => void;
 }
 
 // Easing function for smooth animation
@@ -267,11 +269,13 @@ export const SigilSection = forwardRef<HTMLDivElement, SigilSectionProps>(functi
     destinationPos,
     transitionProgress = 0,
     onParticlesArrived,
+    onParticlesReset,
   },
   ref
 ) {
   // Track if we've already fired the arrival callback
   const arrivedFiredRef = useRef(false);
+  const overlapStateRef = useRef<boolean | null>(null);
   const isMobile = useIsMobile();
 
   // Track viewport center for animation
@@ -336,7 +340,7 @@ export const SigilSection = forwardRef<HTMLDivElement, SigilSectionProps>(functi
     // particles never reached the logo.
     sigilScrollProgress = sigilInEnd;
   } else {
-    // After arriving at navbar - fire the arrival callback once
+    // After animation completes - ensure callback fired if it hasn't yet
     if (!arrivedFiredRef.current && onParticlesArrived) {
       arrivedFiredRef.current = true;
       onParticlesArrived();
@@ -346,10 +350,56 @@ export const SigilSection = forwardRef<HTMLDivElement, SigilSectionProps>(functi
     exitProgress = 1;
   }
 
-  // Reset the arrival flag if we scroll back up (exitProgress goes back to 0)
-  if (exitProgress === 0) {
-    arrivedFiredRef.current = false;
-  }
+  // Debug: detect the real on-screen "enter/leave" moment by measuring overlap between
+  // `.fixed-sigil-container` and `.navbar-logo svg`.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (!destinationPos) return;
+
+    const sigilEl = document.querySelector(".fixed-sigil-container") as HTMLElement | null;
+    const logoEl = document.querySelector(".navbar-logo svg") as SVGSVGElement | null;
+    if (!sigilEl || !logoEl) return;
+
+    const sigilRect = sigilEl.getBoundingClientRect();
+    const logoRect = logoEl.getBoundingClientRect();
+
+    // Expand logo rect slightly to account for particle size/glow
+    const pad = 3;
+    const expandedLogo = {
+      left: logoRect.left - pad,
+      right: logoRect.right + pad,
+      top: logoRect.top - pad,
+      bottom: logoRect.bottom + pad,
+      width: logoRect.width + pad * 2,
+      height: logoRect.height + pad * 2,
+    };
+
+    const overlaps =
+      sigilRect.left < expandedLogo.right &&
+      sigilRect.right > expandedLogo.left &&
+      sigilRect.top < expandedLogo.bottom &&
+      sigilRect.bottom > expandedLogo.top;
+
+    if (overlapStateRef.current === null) {
+      overlapStateRef.current = overlaps;
+      return;
+    }
+
+    if (overlaps !== overlapStateRef.current) {
+      overlapStateRef.current = overlaps;
+
+      // Tie logo color directly to the particle stream "enter/leave" moment.
+      // Enter overlap → logo turns tensor gold. Leave overlap → logo returns to semantic dawn.
+      if (overlaps && !arrivedFiredRef.current) {
+        arrivedFiredRef.current = true;
+        onParticlesArrived?.();
+      } else if (!overlaps && arrivedFiredRef.current) {
+        arrivedFiredRef.current = false;
+        onParticlesReset?.();
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- overlap detection depends on scroll/exit progress
+  }, [scrollProgress, exitProgress, destinationPos]);
 
   if (config?.enabled === false) {
     return null;
@@ -479,6 +529,8 @@ export const SigilSection = forwardRef<HTMLDivElement, SigilSectionProps>(functi
           pointerEvents: "none",
           transform: transformStyle,
           transformOrigin: "center center",
+          // During exit animation, raise z-index above navbar (1000) so particles land ON the logo
+          zIndex: exitProgress > 0 ? 1001 : undefined,
           filter:
             glowIntensity > 0
               ? `drop-shadow(0 0 ${glowIntensity}px rgba(202, 165, 84, 0.6))`

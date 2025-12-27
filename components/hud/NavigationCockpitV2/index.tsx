@@ -1545,6 +1545,10 @@ human-AI collaboration.`}
           // Trigger logo glow when particles arrive at navbar
           navbarLogoRef.current?.triggerLogoGlow();
         }}
+        onParticlesReset={() => {
+          // Reset logo color when scrolling back up
+          navbarLogoRef.current?.resetLogoColor();
+        }}
       />
 
       {/* Mobile Module Tabs - shown at bottom on mobile only */}

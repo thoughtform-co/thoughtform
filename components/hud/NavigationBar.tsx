@@ -91,6 +91,7 @@ function HamburgerIcon({ isOpen }: { isOpen: boolean }) {
 export interface NavigationBarHandle {
   getLogoPosition: () => { x: number; y: number; width: number; height: number } | null;
   triggerLogoGlow: () => void;
+  resetLogoColor: () => void;
 }
 
 interface NavigationBarProps {
@@ -113,6 +114,8 @@ export const NavigationBar = forwardRef<NavigationBarHandle, NavigationBarProps>
     const isMobile = useIsMobile();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isLogoGlowing, setIsLogoGlowing] = useState(false);
+    // Logo is semantic dawn until particles arrive, then tensor gold
+    const [isLogoGold, setIsLogoGold] = useState(false);
 
     // Close menu when navigating
     const handleNavigate = (sectionId: string) => {
@@ -155,8 +158,12 @@ export const NavigationBar = forwardRef<NavigationBarHandle, NavigationBarProps>
       },
       triggerLogoGlow: () => {
         setIsLogoGlowing(true);
+        setIsLogoGold(true);
         // Reset glow after animation completes
         setTimeout(() => setIsLogoGlowing(false), 800);
+      },
+      resetLogoColor: () => {
+        setIsLogoGold(false);
       },
     }));
 
@@ -185,7 +192,11 @@ export const NavigationBar = forwardRef<NavigationBarHandle, NavigationBarProps>
                 className={`navbar-logo ${isLogoGlowing ? "logo-glowing" : ""}`}
                 onClick={handleLogoClick}
               >
-                <ThoughtformLogo ref={logoRef} size={22} />
+                <ThoughtformLogo
+                  ref={logoRef}
+                  size={22}
+                  color={isLogoGold ? "#caa554" : "#ece3d6"}
+                />
               </a>
 
               {/* Desktop: Nav links */}
