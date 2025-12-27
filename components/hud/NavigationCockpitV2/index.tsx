@@ -492,7 +492,8 @@ function NavigationCockpitInner() {
   // Manifesto CENTERED position: bottom = 50vh - (actualHeight/2)
   // This keeps the frame vertically centered based on actual content
   const manifestoBottomVh = 50;
-  const manifestoBottomPx = -(actualContentHeight / 2); // -360px for ~720px content
+  // NOTE: the px component is computed dynamically (inside `bridgeFrameStyles`) so the terminal
+  // frame can "unroll" with the manifesto text reveal and fold back on reverse scroll.
 
   // Hero→definition bottom calculation (for definition state)
   const heroBottomPx = 90 * (1 - tHeroToDef);
@@ -532,8 +533,24 @@ function NavigationCockpitInner() {
     const definitionBottomVh = heroBottomVh;
     const growthProgress = tDefToManifesto;
 
+    // Frame height should keep unrolling while the manifesto text reveals (and fold back on reverse scroll),
+    // otherwise the text collapses but the terminal frame stays fully expanded.
+    //
+    // Stage A: Definition → Terminal (question-only) height (driven by tDefToManifesto)
+    // Stage B: Terminal height expands as manifesto text reveals (driven by manifestoRevealProgress)
+    const definitionContentHeight = Math.max(
+      160,
+      Math.min(actualContentHeight, definitionHeightRef.current)
+    );
+    const terminalCollapsedHeightPx = Math.max(definitionContentHeight, 400);
+    const terminalRevealT = Math.max(0, Math.min(1, manifestoRevealProgress));
+    const terminalRevealHeightPx =
+      terminalCollapsedHeightPx +
+      terminalRevealT * (actualContentHeight - terminalCollapsedHeightPx);
+
+    const manifestoBottomPxTarget = -(terminalRevealHeightPx / 2);
     const manifestoBottomPxCurrent =
-      definitionBottomPx + (manifestoBottomPx - definitionBottomPx) * tDefToManifesto;
+      definitionBottomPx + (manifestoBottomPxTarget - definitionBottomPx) * tDefToManifesto;
     const manifestoBottomVhCurrent =
       definitionBottomVh + (manifestoBottomVh - definitionBottomVh) * tDefToManifesto;
 
@@ -563,16 +580,12 @@ function NavigationCockpitInner() {
     const finalBorderOpacity = cardBorderOpacity + (0.1 - cardBorderOpacity) * tDefToManifesto;
 
     // Calculate frame height
-    // During definition state (tDefToManifesto = 0), content needs ~280px (wordmark + text + button + padding)
-    // During manifesto transition, grow to actualContentHeight (720px)
-    // Use measured definition height (from the live layout) to avoid a sudden snap
-    // when we switch from `height: auto` → fixed height at the start of the transition.
-    const definitionContentHeight = Math.max(
-      160,
-      Math.min(actualContentHeight, definitionHeightRef.current)
-    );
+    // During definition state (tDefToManifesto = 0), use the measured definition height (avoids snap
+    // when switching `height: auto` → fixed).
+    // During manifesto, grow to the question-only terminal height, then continue "unrolling" as the
+    // manifesto text reveals (terminalRevealHeightPx).
     const manifestoHeightPx =
-      definitionContentHeight + growthProgress * (actualContentHeight - definitionContentHeight);
+      definitionContentHeight + growthProgress * (terminalRevealHeightPx - definitionContentHeight);
     const servicesTargetHeightPx = SERVICES_CARD_HEIGHT;
     const heightPx =
       manifestoHeightPx - tManifestoToServices * (manifestoHeightPx - servicesTargetHeightPx);
@@ -658,10 +671,10 @@ function NavigationCockpitInner() {
     tHeroToDef,
     tDefToManifesto,
     tManifestoToServices,
+    manifestoRevealProgress,
     hudSideInsetPx,
     defBottomVh,
     defBottomPx,
-    manifestoBottomPx,
     manifestoBottomVh,
     baseWidth,
     widthGrowth,
