@@ -1141,8 +1141,8 @@ function NavigationCockpitInner() {
                 style={{
                   opacity: cardOpacity,
                   visibility: cardOpacity > 0 ? "visible" : "hidden",
-                  width: isMobile ? "min(260px, 70vw)" : "320px",
-                  maxWidth: isMobile ? "min(260px, 70vw)" : "320px",
+                  width: isMobile ? "min(210px, 70vw)" : "320px",
+                  maxWidth: isMobile ? "min(210px, 70vw)" : "320px",
                   marginBottom: isMobile ? "12px" : "16px", // Space between logo and pronunciation
                 }}
               >
