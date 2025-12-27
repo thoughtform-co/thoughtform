@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ManifestoTerminal } from "./ManifestoTerminal";
 
 // ═══════════════════════════════════════════════════════════════════
@@ -88,78 +88,42 @@ export function ManifestoMobileTabs({
   onStartJourney,
 }: ManifestoMobileTabsProps) {
   const [expandedVoice, setExpandedVoice] = useState<string | null>(null);
+  const tabContentRef = useRef<HTMLDivElement | null>(null);
+
+  // Force wheel/trackpad scrolling to stay inside the manifesto tab content.
+  // This prevents Lenis / page scroll from "winning" when the user is trying to read the manifesto.
+  useEffect(() => {
+    const tab = tabContentRef.current;
+    if (!tab) return;
+    if (activeTab !== "manifesto") return;
+
+    const onWheelHijack = (e: WheelEvent) => {
+      // Only hijack if this area is actually scrollable.
+      if (tab.scrollHeight <= tab.clientHeight + 1) return;
+
+      // Stop page scroll (Lenis + native) and scroll the tab manually.
+      e.preventDefault();
+      e.stopPropagation();
+
+      const max = Math.max(0, tab.scrollHeight - tab.clientHeight);
+      const next = Math.max(0, Math.min(tab.scrollTop + e.deltaY, max));
+      tab.scrollTop = next;
+    };
+
+    tab.addEventListener("wheel", onWheelHijack, { passive: false });
+    return () => tab.removeEventListener("wheel", onWheelHijack);
+  }, [activeTab]);
 
   if (!isVisible) return null;
 
   return (
     <div className="manifesto-mobile-tabs">
       {/* Content area */}
-      <div className="mobile-tab-content">
+      <div className="mobile-tab-content" ref={tabContentRef}>
         {/* Manifesto Tab */}
         {activeTab === "manifesto" && (
           <div className="tab-panel tab-panel--manifesto">
             <ManifestoTerminal revealProgress={revealProgress} isActive={true} />
-            {onStartJourney && (
-              <div className="manifesto-cta-sticky">
-                <button
-                  type="button"
-                  className="manifesto-journey-btn"
-                  onClick={onStartJourney}
-                  aria-label="Start your journey"
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: "10px",
-                    background:
-                      "linear-gradient(135deg, rgba(202, 165, 84, 0.15) 0%, rgba(202, 165, 84, 0.05) 50%, rgba(202, 165, 84, 0.1) 100%)",
-                    border: "1px solid rgba(202, 165, 84, 0.3)",
-                    borderRadius: "2px",
-                    padding: "12px 24px",
-                    cursor: "pointer",
-                    transition: "all 0.2s ease",
-                    fontFamily: "var(--font-data, 'PT Mono', monospace)",
-                    fontSize: "12px",
-                    fontWeight: 700,
-                    letterSpacing: "0.15em",
-                    textTransform: "uppercase",
-                    color: "var(--gold, #caa554)",
-                    lineHeight: 1,
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  <span
-                    className="journey-arrow-pulse journey-arrow-pulse-left"
-                    style={{
-                      fontSize: "14px",
-                      lineHeight: 1,
-                      background:
-                        "linear-gradient(135deg, rgba(202, 165, 84, 0.9) 0%, rgba(202, 165, 84, 0.6) 50%, rgba(202, 165, 84, 0.8) 100%)",
-                      WebkitBackgroundClip: "text",
-                      WebkitTextFillColor: "transparent",
-                      backgroundClip: "text",
-                    }}
-                  >
-                    ›››
-                  </span>
-                  <span>START YOUR JOURNEY</span>
-                  <span
-                    className="journey-arrow-pulse journey-arrow-pulse-right"
-                    style={{
-                      fontSize: "14px",
-                      lineHeight: 1,
-                      background:
-                        "linear-gradient(135deg, rgba(202, 165, 84, 0.9) 0%, rgba(202, 165, 84, 0.6) 50%, rgba(202, 165, 84, 0.8) 100%)",
-                      WebkitBackgroundClip: "text",
-                      WebkitTextFillColor: "transparent",
-                      backgroundClip: "text",
-                    }}
-                  >
-                    ‹‹‹
-                  </span>
-                </button>
-              </div>
-            )}
           </div>
         )}
 
@@ -215,12 +179,76 @@ export function ManifestoMobileTabs({
         )}
       </div>
 
+      {/* Fixed CTA (outside the scroll container) */}
+      {activeTab === "manifesto" && onStartJourney && (
+        <div className="manifesto-cta-fixed">
+          <button
+            type="button"
+            className="manifesto-journey-btn"
+            onClick={onStartJourney}
+            aria-label="Start your journey"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "10px",
+              background:
+                "linear-gradient(135deg, rgba(202, 165, 84, 0.15) 0%, rgba(202, 165, 84, 0.05) 50%, rgba(202, 165, 84, 0.1) 100%)",
+              border: "1px solid rgba(202, 165, 84, 0.3)",
+              borderRadius: "2px",
+              padding: "12px 24px",
+              cursor: "pointer",
+              transition: "all 0.2s ease",
+              fontFamily: "var(--font-data, 'PT Mono', monospace)",
+              fontSize: "12px",
+              fontWeight: 700,
+              letterSpacing: "0.15em",
+              textTransform: "uppercase",
+              color: "var(--gold, #caa554)",
+              lineHeight: 1,
+              whiteSpace: "nowrap",
+            }}
+          >
+            <span
+              className="journey-arrow-pulse journey-arrow-pulse-left"
+              style={{
+                fontSize: "14px",
+                lineHeight: 1,
+                background:
+                  "linear-gradient(135deg, rgba(202, 165, 84, 0.9) 0%, rgba(202, 165, 84, 0.6) 50%, rgba(202, 165, 84, 0.8) 100%)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                backgroundClip: "text",
+              }}
+            >
+              ›››
+            </span>
+            <span>START YOUR JOURNEY</span>
+            <span
+              className="journey-arrow-pulse journey-arrow-pulse-right"
+              style={{
+                fontSize: "14px",
+                lineHeight: 1,
+                background:
+                  "linear-gradient(135deg, rgba(202, 165, 84, 0.9) 0%, rgba(202, 165, 84, 0.6) 50%, rgba(202, 165, 84, 0.8) 100%)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                backgroundClip: "text",
+              }}
+            >
+              ‹‹‹
+            </span>
+          </button>
+        </div>
+      )}
+
       <style jsx>{`
         .manifesto-mobile-tabs {
           display: flex;
           flex-direction: column;
           width: 100%;
           height: 100%;
+          min-height: 0;
           overflow: hidden;
           margin: 0;
           padding: 0;
@@ -229,9 +257,12 @@ export function ManifestoMobileTabs({
         /* Content Area */
         .mobile-tab-content {
           flex: 1;
+          min-height: 0;
           overflow-y: auto;
           overflow-x: hidden;
           -webkit-overflow-scrolling: touch;
+          overscroll-behavior: contain;
+          touch-action: pan-y;
           /* Hide scrollbar */
           scrollbar-width: none; /* Firefox */
           -ms-overflow-style: none; /* IE and Edge */
@@ -259,16 +290,12 @@ export function ManifestoMobileTabs({
 
         /* Manifesto Tab */
         .tab-panel--manifesto {
-          padding: 0;
-          /* Ensure the last manifesto lines can scroll above the sticky CTA */
-          padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px));
-          position: relative;
+          padding: 0 0 20px 0;
         }
 
-        /* Sticky CTA that stays visible while manifesto text scrolls */
-        .manifesto-cta-sticky {
-          position: sticky;
-          bottom: 0;
+        /* Fixed CTA (separate from the scroll container) */
+        .manifesto-cta-fixed {
+          flex-shrink: 0;
           z-index: 5;
           display: flex;
           justify-content: center;

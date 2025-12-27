@@ -1133,17 +1133,10 @@
     width: var(--frame-max-w) !important;
     max-width: none !important;
     bottom: auto !important;
-    height: auto !important;
+    /* Fixed-height frame so only the manifesto content area scrolls (CTA stays pinned) */
+    height: calc(85vh - var(--safe-top) - var(--safe-bottom)) !important;
     max-height: calc(85vh - var(--safe-top) - var(--safe-bottom)) !important;
-    overflow-y: auto !important;
-    overflow-x: hidden !important;
-    /* Hide scrollbar */
-    scrollbar-width: none !important; /* Firefox */
-    -ms-overflow-style: none !important; /* IE and Edge */
-  }
-
-  .bridge-frame.manifesto-active::-webkit-scrollbar {
-    display: none !important; /* Chrome, Safari, Opera */
+    overflow: hidden !important;
   }
 
   .bridge-frame .hero-text-frame {
@@ -1153,11 +1146,15 @@
     background: rgba(10, 9, 8, calc(0.85 * var(--frame-opacity, 1)));
     backdrop-filter: blur(calc(12px * var(--frame-opacity, 1)));
     -webkit-backdrop-filter: blur(calc(12px * var(--frame-opacity, 1)));
+    /* Allow inner scroll areas (tabs/content) to size correctly within the fixed frame height */
+    min-height: 0;
+    overflow: hidden;
   }
 
-  /* Manifesto active: remove bottom padding so tabs are flush */
+  /* Manifesto active: ensure inner layout can scroll within its content area */
   .bridge-frame.manifesto-active .hero-text-frame {
     padding-bottom: 0 !important;
+    overflow: hidden !important;
   }
 
   .bridge-frame .hero-tagline {
@@ -1307,6 +1304,7 @@
   }
 
   .bridge-frame.manifesto-active {
+    height: calc(80vh - var(--safe-top) - var(--safe-bottom)) !important;
     max-height: calc(80vh - var(--safe-top) - var(--safe-bottom)) !important;
   }
 
@@ -1320,7 +1318,8 @@
   }
 
   .mobile-module-tabs {
-    bottom: calc(70px + var(--safe-bottom));
+    /* Push tabs closer to the bottom for more Interface panel breathing room */
+    bottom: calc(var(--hud-pad-bottom) + 8px);
     width: var(--frame-max-w);
     max-width: 320px;
   }

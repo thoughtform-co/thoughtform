@@ -882,8 +882,8 @@ function NavigationCockpitInner() {
                   : {
                       // Definition→Manifesto: top-based positioning (interpolates toward center)
                       bottom: "auto",
-                      top: `calc(${48 - (tHeroToDef - 0.5) * 72}vh + (50vh - ${
-                        48 - (tHeroToDef - 0.5) * 72
+                      top: `calc(${46 - (tHeroToDef - 0.5) * 72}vh + (50vh - ${
+                        46 - (tHeroToDef - 0.5) * 72
                       }vh) * var(--manifesto-center-t, 0))`,
                     }),
                 // Stay visible throughout transition on mobile
@@ -1120,6 +1120,17 @@ function NavigationCockpitInner() {
               opacity: 1 - tServicesCards,
               pointerEvents: tServicesCards > 0.05 ? "none" : "auto",
               transition: "none",
+              ...(isMobile && tDefToManifesto > 0.95 && manifestoRevealProgress > 0
+                ? {
+                    // Mobile manifesto: make this wrapper a real flex column that fills the fixed-height frame,
+                    // so the manifesto tab content can scroll while the CTA stays pinned.
+                    display: "flex",
+                    flexDirection: "column",
+                    height: "100%",
+                    minHeight: 0,
+                    width: "100%",
+                  }
+                : {}),
             }}
           >
             {/* Wordmark inside card - appears when entering definition, fades during manifesto */}
