@@ -178,17 +178,25 @@ export function ManifestoMobileTabs({ revealProgress, isVisible }: ManifestoMobi
           width: 100%;
           height: 100%;
           overflow: hidden;
+          margin: 0;
+          padding: 0;
         }
 
-        /* Horizontal Tab Bar at bottom */
+        /* Horizontal Tab Bar at bottom - flush with terminal bottom and full width */
         .mobile-tab-bar {
           display: flex;
           flex-direction: row;
           gap: 0;
           padding: 0;
+          margin: 0;
+          margin-left: -20px !important; /* Counteract hero-text-frame horizontal padding */
+          margin-right: -20px !important;
+          margin-top: 0 !important;
           background: transparent;
           border-top: 1px solid rgba(202, 165, 84, 0.2);
           flex-shrink: 0;
+          width: calc(100% + 40px) !important; /* Extend to full width including padding */
+          position: relative;
         }
 
         .mobile-tab-btn {
@@ -246,11 +254,24 @@ export function ManifestoMobileTabs({ revealProgress, isVisible }: ManifestoMobi
           overflow-y: auto;
           overflow-x: hidden;
           -webkit-overflow-scrolling: touch;
+          /* Hide scrollbar */
+          scrollbar-width: none; /* Firefox */
+          -ms-overflow-style: none; /* IE and Edge */
+          padding-bottom: 0; /* No bottom padding - tabs are flush */
+        }
+
+        .mobile-tab-content::-webkit-scrollbar {
+          display: none; /* Chrome, Safari, Opera */
         }
 
         .tab-panel {
           padding: 16px;
+          padding-bottom: 16px; /* Keep side/top padding, but ensure bottom is consistent */
           animation: fadeInPanel 0.3s ease;
+        }
+
+        .tab-panel--manifesto {
+          padding-bottom: 0; /* Manifesto tab has no bottom padding - tabs are flush */
         }
 
         @keyframes fadeInPanel {
