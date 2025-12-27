@@ -94,7 +94,9 @@ export function ServicesStackMobile({
               <ServiceCard
                 service={service}
                 sigilConfig={sigilConfigs[index] || DEFAULT_SIGIL_CONFIGS[index]}
-                sigilSeed={service.id}
+                sigilSeed={
+                  (sigilConfigs[index] || DEFAULT_SIGIL_CONFIGS[index]).seed ?? 42 + index * 1000
+                }
                 index={index}
                 width={undefined} // Let CSS handle width
                 opacity={1}
