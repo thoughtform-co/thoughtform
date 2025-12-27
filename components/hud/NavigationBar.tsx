@@ -2,6 +2,7 @@
 
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
 import { useIsMobile } from "@/lib/hooks/useMediaQuery";
+import { LogoGlowEffect } from "./LogoGlowEffect";
 
 // ═══════════════════════════════════════════════════════════════
 // NAVIGATION BAR - Brandworld Specification
@@ -191,12 +192,17 @@ export const NavigationBar = forwardRef<NavigationBarHandle, NavigationBarProps>
                 href="#"
                 className={`navbar-logo ${isLogoGlowing ? "logo-glowing" : ""}`}
                 onClick={handleLogoClick}
+                style={{
+                  opacity: isLogoGold ? 1 : 0.75,
+                  position: "relative",
+                }}
               >
                 <ThoughtformLogo
                   ref={logoRef}
                   size={22}
                   color={isLogoGold ? "#caa554" : "#ece3d6"}
                 />
+                <LogoGlowEffect active={isLogoGlowing} size={22} />
               </a>
 
               {/* Desktop: Nav links */}
@@ -310,15 +316,9 @@ export const NavigationBar = forwardRef<NavigationBarHandle, NavigationBarProps>
             opacity: 0.8;
           }
 
-          /* Logo glow animation when particles arrive */
+          /* Logo scale animation when particles arrive (Three.js handles the glow) */
           .navbar-logo.logo-glowing {
             animation: logoGlow 0.8s ease-out forwards;
-          }
-
-          .navbar-logo.logo-glowing :global(svg) {
-            filter: drop-shadow(0 0 8px rgba(202, 165, 84, 0.9))
-              drop-shadow(0 0 16px rgba(202, 165, 84, 0.6))
-              drop-shadow(0 0 24px rgba(202, 165, 84, 0.3));
           }
 
           @keyframes logoGlow {
@@ -326,31 +326,13 @@ export const NavigationBar = forwardRef<NavigationBarHandle, NavigationBarProps>
               transform: scale(1);
             }
             20% {
-              transform: scale(1.15);
+              transform: scale(1.1);
             }
             40% {
               transform: scale(1.05);
             }
             100% {
               transform: scale(1);
-            }
-          }
-
-          .navbar-logo.logo-glowing :global(svg) {
-            animation: logoGlowPulse 0.8s ease-out forwards;
-          }
-
-          @keyframes logoGlowPulse {
-            0% {
-              filter: drop-shadow(0 0 2px rgba(202, 165, 84, 0.4));
-            }
-            30% {
-              filter: drop-shadow(0 0 12px rgba(202, 165, 84, 1))
-                drop-shadow(0 0 24px rgba(202, 165, 84, 0.8))
-                drop-shadow(0 0 36px rgba(202, 165, 84, 0.4));
-            }
-            100% {
-              filter: drop-shadow(0 0 2px rgba(202, 165, 84, 0.2));
             }
           }
 
