@@ -474,6 +474,39 @@
   text-transform: uppercase;
 }
 
+/* Compact tabs inside the manifesto terminal header (mobile only via JSX render) */
+.terminal-tabs {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  pointer-events: auto;
+}
+
+.terminal-tab {
+  font-family: var(--font-mono, "IBM Plex Mono", monospace);
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(236, 227, 214, 0.45);
+  background: transparent;
+  border: none;
+  padding: 2px 4px;
+  cursor: pointer;
+  transition:
+    color 150ms ease,
+    background 150ms ease;
+}
+
+.terminal-tab:hover {
+  color: rgba(236, 227, 214, 0.7);
+}
+
+.terminal-tab.active {
+  color: var(--gold, #caa554);
+  background: rgba(202, 165, 84, 0.06);
+}
+
 /* ─── MANIFESTO BACKGROUND ─── */
 .manifesto-bg-shapes {
   position: absolute;
@@ -1126,7 +1159,7 @@
   }
 
   .section-definition {
-    padding: 60px 24px !important;
+    padding: 60px 24px 120px !important;
     min-height: auto !important;
   }
 
@@ -1158,6 +1191,15 @@
 
   .terminal-title {
     font-size: 10px;
+  }
+
+  .terminal-tabs {
+    gap: 8px;
+  }
+
+  .terminal-tab {
+    font-size: 8px;
+    padding: 2px 3px;
   }
 
   .terminal-body {

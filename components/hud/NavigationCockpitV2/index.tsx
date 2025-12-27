@@ -26,7 +26,7 @@ import { HeroBackgroundSigil } from "./HeroBackgroundSigil";
 import { ManifestoTerminal } from "./ManifestoTerminal";
 import { ManifestoSources } from "./ManifestoSources";
 import { ManifestoVideoStack } from "./ManifestoVideoStack";
-import { ManifestoMobileTabs } from "./ManifestoMobileTabs";
+import { ManifestoMobileTabs, type ManifestoMobileTabId } from "./ManifestoMobileTabs";
 import { RunwayArrows } from "./RunwayArrows";
 import { MorphingCTAButtons } from "./MorphingCTAButtons";
 import {
@@ -78,6 +78,7 @@ function NavigationCockpitInner() {
   const [editingServiceSigilIndex, setEditingServiceSigilIndex] = useState<number | null>(null);
   const [isBridgeHovered, setIsBridgeHovered] = useState(false);
   const [isParticleAdminOpen, setIsParticleAdminOpen] = useState(false);
+  const [mobileManifestoTab, setMobileManifestoTab] = useState<ManifestoMobileTabId>("manifesto");
 
   const handleOpenSigilEditor = useCallback((cardIndex: number) => {
     setEditingServiceSigilIndex(cardIndex);
@@ -1208,7 +1209,12 @@ human-AI collaboration.`}
                 }}
               >
                 {isMobile ? (
-                  <ManifestoMobileTabs revealProgress={manifestoRevealProgress} isVisible={true} />
+                  <ManifestoMobileTabs
+                    revealProgress={manifestoRevealProgress}
+                    isVisible={true}
+                    activeTab={mobileManifestoTab}
+                    onStartJourney={() => handleNavigate("services")}
+                  />
                 ) : (
                   <ManifestoTerminal revealProgress={manifestoRevealProgress} isActive={true} />
                 )}
@@ -1464,8 +1470,52 @@ human-AI collaboration.`}
           <div className="terminal-corner terminal-corner-br"></div>
 
           {/* Terminal window frame */}
-          <div className="terminal-header">
+          <div
+            className="terminal-header"
+            style={{
+              // This overlay layer is pointer-events:none, but we need the tab buttons clickable on mobile.
+              pointerEvents:
+                isMobile && tDefToManifesto > 0.95 && manifestoRevealProgress > 0 ? "auto" : "none",
+            }}
+          >
             <span className="terminal-title">thoughtform@manifesto:~</span>
+            {isMobile && tDefToManifesto > 0.95 && manifestoRevealProgress > 0 && (
+              <div className="terminal-tabs" aria-label="Manifesto tabs">
+                <button
+                  type="button"
+                  className={`terminal-tab ${mobileManifestoTab === "manifesto" ? "active" : ""}`}
+                  aria-pressed={mobileManifestoTab === "manifesto"}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setMobileManifestoTab("manifesto");
+                  }}
+                >
+                  MANIFESTO
+                </button>
+                <button
+                  type="button"
+                  className={`terminal-tab ${mobileManifestoTab === "sources" ? "active" : ""}`}
+                  aria-pressed={mobileManifestoTab === "sources"}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setMobileManifestoTab("sources");
+                  }}
+                >
+                  SOURCES
+                </button>
+                <button
+                  type="button"
+                  className={`terminal-tab ${mobileManifestoTab === "voices" ? "active" : ""}`}
+                  aria-pressed={mobileManifestoTab === "voices"}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setMobileManifestoTab("voices");
+                  }}
+                >
+                  VOICES
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Terminal content */}

@@ -68,17 +68,25 @@ const VOICES = [
   },
 ];
 
-type TabId = "manifesto" | "sources" | "voices";
+export type ManifestoMobileTabId = "manifesto" | "sources" | "voices";
 
 interface ManifestoMobileTabsProps {
   /** Reveal progress for manifesto terminal (0-1) */
   revealProgress: number;
   /** Whether the component is visible */
   isVisible: boolean;
+  /** Active tab (controlled by parent so the tabs can live in the terminal header) */
+  activeTab: ManifestoMobileTabId;
+  /** Optional CTA below the manifesto terminal */
+  onStartJourney?: () => void;
 }
 
-export function ManifestoMobileTabs({ revealProgress, isVisible }: ManifestoMobileTabsProps) {
-  const [activeTab, setActiveTab] = useState<TabId>("manifesto");
+export function ManifestoMobileTabs({
+  revealProgress,
+  isVisible,
+  activeTab,
+  onStartJourney,
+}: ManifestoMobileTabsProps) {
   const [expandedVoice, setExpandedVoice] = useState<string | null>(null);
 
   if (!isVisible) return null;
@@ -91,6 +99,74 @@ export function ManifestoMobileTabs({ revealProgress, isVisible }: ManifestoMobi
         {activeTab === "manifesto" && (
           <div className="tab-panel tab-panel--manifesto">
             <ManifestoTerminal revealProgress={revealProgress} isActive={true} />
+            {onStartJourney && (
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  marginTop: "24px",
+                  marginBottom: "24px",
+                }}
+              >
+                <button
+                  type="button"
+                  className="manifesto-journey-btn"
+                  onClick={onStartJourney}
+                  aria-label="Start your journey"
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "10px",
+                    background:
+                      "linear-gradient(135deg, rgba(202, 165, 84, 0.15) 0%, rgba(202, 165, 84, 0.05) 50%, rgba(202, 165, 84, 0.1) 100%)",
+                    border: "1px solid rgba(202, 165, 84, 0.3)",
+                    borderRadius: "2px",
+                    padding: "12px 24px",
+                    cursor: "pointer",
+                    transition: "all 0.2s ease",
+                    fontFamily: "var(--font-data, 'PT Mono', monospace)",
+                    fontSize: "12px",
+                    fontWeight: 700,
+                    letterSpacing: "0.15em",
+                    textTransform: "uppercase",
+                    color: "var(--gold, #caa554)",
+                    lineHeight: 1,
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  <span
+                    className="journey-arrow-pulse journey-arrow-pulse-left"
+                    style={{
+                      fontSize: "14px",
+                      lineHeight: 1,
+                      background:
+                        "linear-gradient(135deg, rgba(202, 165, 84, 0.9) 0%, rgba(202, 165, 84, 0.6) 50%, rgba(202, 165, 84, 0.8) 100%)",
+                      WebkitBackgroundClip: "text",
+                      WebkitTextFillColor: "transparent",
+                      backgroundClip: "text",
+                    }}
+                  >
+                    ›››
+                  </span>
+                  <span>START YOUR JOURNEY</span>
+                  <span
+                    className="journey-arrow-pulse journey-arrow-pulse-right"
+                    style={{
+                      fontSize: "14px",
+                      lineHeight: 1,
+                      background:
+                        "linear-gradient(135deg, rgba(202, 165, 84, 0.9) 0%, rgba(202, 165, 84, 0.6) 50%, rgba(202, 165, 84, 0.8) 100%)",
+                      WebkitBackgroundClip: "text",
+                      WebkitTextFillColor: "transparent",
+                      backgroundClip: "text",
+                    }}
+                  >
+                    ‹‹‹
+                  </span>
+                </button>
+              </div>
+            )}
           </div>
         )}
 
@@ -146,107 +222,15 @@ export function ManifestoMobileTabs({ revealProgress, isVisible }: ManifestoMobi
         )}
       </div>
 
-      {/* Horizontal tab bar at bottom */}
-      <div className="mobile-tab-bar">
-        <button
-          className={`mobile-tab-btn ${activeTab === "manifesto" ? "active" : ""}`}
-          onClick={() => setActiveTab("manifesto")}
-          aria-selected={activeTab === "manifesto"}
-        >
-          <span className="tab-label">MANIFESTO</span>
-        </button>
-        <button
-          className={`mobile-tab-btn ${activeTab === "sources" ? "active" : ""}`}
-          onClick={() => setActiveTab("sources")}
-          aria-selected={activeTab === "sources"}
-        >
-          <span className="tab-label">SOURCES</span>
-        </button>
-        <button
-          className={`mobile-tab-btn ${activeTab === "voices" ? "active" : ""}`}
-          onClick={() => setActiveTab("voices")}
-          aria-selected={activeTab === "voices"}
-        >
-          <span className="tab-label">VOICES</span>
-        </button>
-      </div>
-
       <style jsx>{`
         .manifesto-mobile-tabs {
           display: flex;
           flex-direction: column;
           width: 100%;
           height: 100%;
-          /* Allow the tab bar to extend into the hero-text-frame padding so it can span the full terminal width */
-          overflow: visible;
+          overflow: hidden;
           margin: 0;
           padding: 0;
-        }
-
-        /* Horizontal Tab Bar at bottom - flush with terminal bottom and full width */
-        .mobile-tab-bar {
-          display: flex;
-          flex-direction: row;
-          gap: 0;
-          padding: 0;
-          margin: 0;
-          margin-left: -20px !important; /* Counteract hero-text-frame horizontal padding */
-          margin-right: -20px !important;
-          margin-top: 0 !important;
-          background: transparent;
-          border-top: 1px solid rgba(202, 165, 84, 0.2);
-          flex-shrink: 0;
-          width: calc(100% + 40px) !important; /* Extend to full width including padding */
-          position: relative;
-        }
-
-        .mobile-tab-btn {
-          flex: 1;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          padding: 12px 8px;
-          background: transparent;
-          border: none;
-          border-right: 1px solid rgba(202, 165, 84, 0.1);
-          cursor: pointer;
-          transition: all 150ms ease;
-          position: relative;
-        }
-
-        .mobile-tab-btn:last-child {
-          border-right: none;
-        }
-
-        .mobile-tab-btn .tab-label {
-          font-family: var(--font-data, "PT Mono", monospace);
-          font-size: 9px;
-          letter-spacing: 0.1em;
-          text-transform: uppercase;
-          color: rgba(236, 227, 214, 0.4);
-          transition: color 150ms ease;
-        }
-
-        .mobile-tab-btn.active .tab-label {
-          color: var(--gold, #caa554);
-        }
-
-        .mobile-tab-btn.active {
-          background: rgba(202, 165, 84, 0.06);
-        }
-
-        .mobile-tab-btn.active::before {
-          content: "";
-          position: absolute;
-          top: -1px;
-          left: 0;
-          right: 0;
-          height: 2px;
-          background: var(--gold, #caa554);
-        }
-
-        .mobile-tab-btn:not(.active):hover .tab-label {
-          color: rgba(236, 227, 214, 0.6);
         }
 
         /* Content Area */
@@ -258,7 +242,6 @@ export function ManifestoMobileTabs({ revealProgress, isVisible }: ManifestoMobi
           /* Hide scrollbar */
           scrollbar-width: none; /* Firefox */
           -ms-overflow-style: none; /* IE and Edge */
-          padding-bottom: 0; /* No bottom padding - tabs are flush */
         }
 
         .mobile-tab-content::-webkit-scrollbar {
@@ -267,7 +250,6 @@ export function ManifestoMobileTabs({ revealProgress, isVisible }: ManifestoMobi
 
         .tab-panel {
           padding: 16px;
-          padding-bottom: 16px; /* Keep side/top padding, but ensure bottom is consistent */
           animation: fadeInPanel 0.3s ease;
         }
 
@@ -284,8 +266,7 @@ export function ManifestoMobileTabs({ revealProgress, isVisible }: ManifestoMobi
 
         /* Manifesto Tab */
         .tab-panel--manifesto {
-          /* Add a little breathing room above the bottom tab bar */
-          padding: 0 0 16px;
+          padding: 0;
         }
 
         /* Sources Tab */
