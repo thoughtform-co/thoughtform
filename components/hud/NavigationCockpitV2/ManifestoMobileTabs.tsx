@@ -177,7 +177,8 @@ export function ManifestoMobileTabs({ revealProgress, isVisible }: ManifestoMobi
           flex-direction: column;
           width: 100%;
           height: 100%;
-          overflow: hidden;
+          /* Allow the tab bar to extend into the hero-text-frame padding so it can span the full terminal width */
+          overflow: visible;
           margin: 0;
           padding: 0;
         }
@@ -270,10 +271,6 @@ export function ManifestoMobileTabs({ revealProgress, isVisible }: ManifestoMobi
           animation: fadeInPanel 0.3s ease;
         }
 
-        .tab-panel--manifesto {
-          padding-bottom: 0; /* Manifesto tab has no bottom padding - tabs are flush */
-        }
-
         @keyframes fadeInPanel {
           from {
             opacity: 0;
@@ -287,7 +284,8 @@ export function ManifestoMobileTabs({ revealProgress, isVisible }: ManifestoMobi
 
         /* Manifesto Tab */
         .tab-panel--manifesto {
-          padding: 0;
+          /* Add a little breathing room above the bottom tab bar */
+          padding: 0 0 16px;
         }
 
         /* Sources Tab */
