@@ -1541,6 +1541,10 @@ human-AI collaboration.`}
         originPos={brandmarkOrigin}
         destinationPos={navbarLogoPos}
         transitionProgress={tHeroToDef}
+        onParticlesArrived={() => {
+          // Trigger logo glow when particles arrive at navbar
+          navbarLogoRef.current?.triggerLogoGlow();
+        }}
       />
 
       {/* Mobile Module Tabs - shown at bottom on mobile only */}

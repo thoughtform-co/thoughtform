@@ -17,6 +17,12 @@ export function GlitchText({ initialText, finalText, progress, className = "" }:
   const [displayText, setDisplayText] = useState(initialText);
   const [glitchFrame, setGlitchFrame] = useState(0);
   const frameRef = useRef(0);
+  const [isMounted, setIsMounted] = useState(false);
+
+  // Track mounting to avoid hydration mismatch from random glitch characters
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // Phases - extended for slower, more visible transitions:
   // 0.00 - 0.15: Show initial text (static)
@@ -53,6 +59,17 @@ export function GlitchText({ initialText, finalText, progress, className = "" }:
 
     if (phase === "final") {
       setDisplayText(finalText);
+      return;
+    }
+
+    // Don't run random glitch effects until after hydration to avoid SSR mismatch
+    if (!isMounted) {
+      // During SSR/hydration, show stable text based on progress
+      if (progress < 0.5) {
+        setDisplayText(initialText);
+      } else {
+        setDisplayText(finalText);
+      }
       return;
     }
 
@@ -135,7 +152,7 @@ export function GlitchText({ initialText, finalText, progress, className = "" }:
       setDisplayText(displayRevealed + cursor);
       return;
     }
-  }, [phase, progress, initialText, finalText, glitchFrame]);
+  }, [phase, progress, initialText, finalText, glitchFrame, isMounted]);
 
   // Determine if we should show glitch effects
   const isGlitching = phase === "glitch-out" || phase === "scramble";

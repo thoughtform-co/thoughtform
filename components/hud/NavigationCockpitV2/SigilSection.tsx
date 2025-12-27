@@ -249,6 +249,8 @@ interface SigilSectionProps {
   destinationPos?: { x: number; y: number; width: number; height: number } | null;
   /** Hero→Definition transition progress (0-1) for positioning animation */
   transitionProgress?: number;
+  /** Callback fired when particles have arrived at the navbar logo */
+  onParticlesArrived?: () => void;
 }
 
 // Easing function for smooth animation
@@ -264,9 +266,12 @@ export const SigilSection = forwardRef<HTMLDivElement, SigilSectionProps>(functi
     originPos,
     destinationPos,
     transitionProgress = 0,
+    onParticlesArrived,
   },
   ref
 ) {
+  // Track if we've already fired the arrival callback
+  const arrivedFiredRef = useRef(false);
   const isMobile = useIsMobile();
 
   // Track viewport center for animation
@@ -312,21 +317,38 @@ export const SigilSection = forwardRef<HTMLDivElement, SigilSectionProps>(functi
     sigilOpacity = 1;
     sigilScrollProgress = sigilInEnd; // Fully formed
   } else if (scrollProgress >= sigilOutStart && scrollProgress < sigilOutEnd) {
-    // Moving toward navbar logo - stay visible until nearly at destination
+    // Moving toward navbar logo - stay fully visible until they reach the destination
     exitProgress = (scrollProgress - sigilOutStart) / (sigilOutEnd - sigilOutStart);
     const easedExit = easeOutCubic(exitProgress);
 
-    // Keep opacity at 1 for 98% of movement, only fade in final 2%
-    // This ensures particles are visible until they're fully inside the navbar icon
-    sigilOpacity = exitProgress < 0.98 ? 1 : 1 - (exitProgress - 0.98) / 0.02;
+    // Keep opacity at 1 until particles are actually at the logo (100% progress)
+    // Only start fading in the final 5% of the journey, completing at the logo
+    if (exitProgress < 0.95) {
+      sigilOpacity = 1;
+    } else {
+      // Quick fade only in final 5% - particles fade AS they land on the logo
+      sigilOpacity = 1 - (exitProgress - 0.95) / 0.05;
+    }
 
-    // Reverse the emergence animation as it moves - particles fold back
-    sigilScrollProgress = sigilInEnd - easedExit * (sigilInEnd - sigilInStart);
+    // IMPORTANT: keep the sigil fully "formed" while traveling to the navbar.
+    // Previously we reversed emergence here, which caused most particles to fade out
+    // (alpha is multiplied by emergence inside ThoughtformSigil), making it look like the
+    // particles never reached the logo.
+    sigilScrollProgress = sigilInEnd;
   } else {
-    // After arriving at navbar
+    // After arriving at navbar - fire the arrival callback once
+    if (!arrivedFiredRef.current && onParticlesArrived) {
+      arrivedFiredRef.current = true;
+      onParticlesArrived();
+    }
     sigilOpacity = 0;
     sigilScrollProgress = sigilInStart;
     exitProgress = 1;
+  }
+
+  // Reset the arrival flag if we scroll back up (exitProgress goes back to 0)
+  if (exitProgress === 0) {
+    arrivedFiredRef.current = false;
   }
 
   if (config?.enabled === false) {

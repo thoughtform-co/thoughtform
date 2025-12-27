@@ -90,6 +90,7 @@ function HamburgerIcon({ isOpen }: { isOpen: boolean }) {
 // Export handle type for the NavigationBar ref
 export interface NavigationBarHandle {
   getLogoPosition: () => { x: number; y: number; width: number; height: number } | null;
+  triggerLogoGlow: () => void;
 }
 
 interface NavigationBarProps {
@@ -111,6 +112,7 @@ export const NavigationBar = forwardRef<NavigationBarHandle, NavigationBarProps>
     const logoRef = useRef<SVGSVGElement>(null);
     const isMobile = useIsMobile();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [isLogoGlowing, setIsLogoGlowing] = useState(false);
 
     // Close menu when navigating
     const handleNavigate = (sectionId: string) => {
@@ -139,7 +141,7 @@ export const NavigationBar = forwardRef<NavigationBarHandle, NavigationBarProps>
       };
     }, [isMenuOpen]);
 
-    // Expose logo position through imperative handle
+    // Expose logo position and glow trigger through imperative handle
     useImperativeHandle(ref, () => ({
       getLogoPosition: () => {
         if (!logoRef.current) return null;
@@ -150,6 +152,11 @@ export const NavigationBar = forwardRef<NavigationBarHandle, NavigationBarProps>
           width: rect.width,
           height: rect.height,
         };
+      },
+      triggerLogoGlow: () => {
+        setIsLogoGlowing(true);
+        // Reset glow after animation completes
+        setTimeout(() => setIsLogoGlowing(false), 800);
       },
     }));
 
@@ -173,7 +180,11 @@ export const NavigationBar = forwardRef<NavigationBarHandle, NavigationBarProps>
           <div className="navbar-container">
             <nav className="navbar">
               {/* Logo on the left */}
-              <a href="#" className="navbar-logo" onClick={handleLogoClick}>
+              <a
+                href="#"
+                className={`navbar-logo ${isLogoGlowing ? "logo-glowing" : ""}`}
+                onClick={handleLogoClick}
+              >
                 <ThoughtformLogo ref={logoRef} size={22} />
               </a>
 
@@ -286,6 +297,50 @@ export const NavigationBar = forwardRef<NavigationBarHandle, NavigationBarProps>
 
           .navbar-logo:hover {
             opacity: 0.8;
+          }
+
+          /* Logo glow animation when particles arrive */
+          .navbar-logo.logo-glowing {
+            animation: logoGlow 0.8s ease-out forwards;
+          }
+
+          .navbar-logo.logo-glowing :global(svg) {
+            filter: drop-shadow(0 0 8px rgba(202, 165, 84, 0.9))
+              drop-shadow(0 0 16px rgba(202, 165, 84, 0.6))
+              drop-shadow(0 0 24px rgba(202, 165, 84, 0.3));
+          }
+
+          @keyframes logoGlow {
+            0% {
+              transform: scale(1);
+            }
+            20% {
+              transform: scale(1.15);
+            }
+            40% {
+              transform: scale(1.05);
+            }
+            100% {
+              transform: scale(1);
+            }
+          }
+
+          .navbar-logo.logo-glowing :global(svg) {
+            animation: logoGlowPulse 0.8s ease-out forwards;
+          }
+
+          @keyframes logoGlowPulse {
+            0% {
+              filter: drop-shadow(0 0 2px rgba(202, 165, 84, 0.4));
+            }
+            30% {
+              filter: drop-shadow(0 0 12px rgba(202, 165, 84, 1))
+                drop-shadow(0 0 24px rgba(202, 165, 84, 0.8))
+                drop-shadow(0 0 36px rgba(202, 165, 84, 0.4));
+            }
+            100% {
+              filter: drop-shadow(0 0 2px rgba(202, 165, 84, 0.2));
+            }
           }
 
           .navbar-link {
