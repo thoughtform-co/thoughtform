@@ -1059,10 +1059,25 @@ function NavigationCockpitInner() {
             display: "flex",
             flexDirection: "column",
             // Mobile: center content in hero state, left-align in manifesto
-            // Desktop: always left-align
-            alignItems: isMobile && tDefToManifesto < 0.5 ? "center" : "flex-start",
-            justifyContent: isMobile && tDefToManifesto < 0.5 ? "center" : "flex-start",
-            textAlign: isMobile && tDefToManifesto < 0.5 ? "center" : "left",
+            // Desktop: center content in manifesto state for better visual balance
+            alignItems:
+              isMobile && tDefToManifesto < 0.5
+                ? "center"
+                : tDefToManifesto > 0.5
+                  ? "center"
+                  : "flex-start",
+            justifyContent:
+              isMobile && tDefToManifesto < 0.5
+                ? "center"
+                : tDefToManifesto > 0.5
+                  ? "center"
+                  : "flex-start",
+            textAlign:
+              isMobile && tDefToManifesto < 0.5
+                ? "center"
+                : tDefToManifesto > 0.5
+                  ? "center"
+                  : "left",
             // Padding: 24px when card visible, transitions to terminal padding
             // Services mode pulls padding back to the tighter service-card layout.
             padding: isMobile
@@ -1308,8 +1323,8 @@ human-AI collaboration.`}
               visibility: cardOpacity > 0 ? "visible" : "hidden",
               width: "100%",
               display: "flex",
-              flexDirection: isMobile ? "column" : "row",
-              gap: isMobile ? "10px" : "22px",
+              flexDirection: "row",
+              gap: isMobile ? "8px" : "22px",
               zIndex: 2,
               pointerEvents: tDefToManifesto > 0 ? "none" : "auto",
             }}
@@ -1320,27 +1335,26 @@ human-AI collaboration.`}
               className="card-journey-btn"
               onClick={() => handleNavigate("services")}
               style={{
-                flex: "1 1 auto",
+                flex: isMobile ? "65 1 0" : "1 1 auto",
                 display: "inline-flex",
                 alignItems: "center",
                 justifyContent: "center",
-                gap: "10px",
+                gap: isMobile ? "6px" : "10px",
                 background:
                   "linear-gradient(135deg, rgba(202, 165, 84, 0.15) 0%, rgba(202, 165, 84, 0.05) 50%, rgba(202, 165, 84, 0.1) 100%)",
                 border: "1px solid rgba(202, 165, 84, 0.3)",
                 borderRadius: "2px",
-                padding: isMobile ? "12px 16px" : "14px 18px",
+                padding: isMobile ? "10px 12px" : "14px 18px",
                 cursor: "pointer",
                 transition: "all 0.2s ease",
                 fontFamily: "var(--font-data, 'PT Mono', monospace)",
-                fontSize: isMobile ? "12px" : "13px",
+                fontSize: isMobile ? "9px" : "13px",
                 fontWeight: 700,
-                letterSpacing: "0.15em",
+                letterSpacing: isMobile ? "0.06em" : "0.15em",
                 textTransform: "uppercase",
                 color: "var(--gold, #caa554)",
                 lineHeight: 1,
                 whiteSpace: "nowrap",
-                width: "100%",
               }}
               onMouseEnter={(e) => {
                 if (!isMobile) {
@@ -1363,7 +1377,7 @@ human-AI collaboration.`}
                 data-role="journey-arrows-left"
                 className="journey-arrow-pulse journey-arrow-pulse-left"
                 style={{
-                  fontSize: isMobile ? "14px" : "16px",
+                  fontSize: isMobile ? "10px" : "16px",
                   lineHeight: 1,
                   background:
                     "linear-gradient(135deg, rgba(202, 165, 84, 0.9) 0%, rgba(202, 165, 84, 0.6) 50%, rgba(202, 165, 84, 0.8) 100%)",
@@ -1382,7 +1396,7 @@ human-AI collaboration.`}
                 data-role="journey-arrows-right"
                 className="journey-arrow-pulse journey-arrow-pulse-right"
                 style={{
-                  fontSize: isMobile ? "14px" : "16px",
+                  fontSize: isMobile ? "10px" : "16px",
                   lineHeight: 1,
                   background:
                     "linear-gradient(135deg, rgba(202, 165, 84, 0.9) 0%, rgba(202, 165, 84, 0.6) 50%, rgba(202, 165, 84, 0.8) 100%)",
@@ -1404,11 +1418,11 @@ human-AI collaboration.`}
               ref={contactButtonRef}
               onClick={() => handleNavigate("contact")}
               style={{
-                flex: isMobile ? "1 1 auto" : "0 0 172px",
+                flex: isMobile ? "35 1 0" : "0 0 172px",
                 display: "inline-flex",
                 alignItems: "center",
                 justifyContent: "center",
-                padding: isMobile ? "12px 16px" : "14px 14px",
+                padding: isMobile ? "10px 12px" : "14px 14px",
                 borderRadius: "2px",
                 background: "rgba(10, 9, 8, 0.35)",
                 border: "1px solid rgba(236, 227, 214, 0.28)",
@@ -1416,13 +1430,12 @@ human-AI collaboration.`}
                 cursor: "pointer",
                 transition: "all 0.2s ease",
                 fontFamily: "var(--font-data, 'PT Mono', monospace)",
-                fontSize: isMobile ? "12px" : "13px",
+                fontSize: isMobile ? "10px" : "13px",
                 fontWeight: 700,
-                letterSpacing: "0.15em",
+                letterSpacing: isMobile ? "0.08em" : "0.15em",
                 textTransform: "uppercase",
                 lineHeight: 1,
                 whiteSpace: "nowrap",
-                width: "100%",
               }}
               onMouseEnter={(e) => {
                 if (!isMobile) {

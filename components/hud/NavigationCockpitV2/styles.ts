@@ -270,6 +270,13 @@ export const cockpitStyles = `
     color: var(--dawn) !important;
     font-weight: 300 !important;
   }
+
+  /* Definition text span wrapper - sized for readability */
+  .hero-tagline-v2 > span {
+    font-size: 22px;
+    min-width: 325px;
+    display: inline-block;
+  }
   
   /* Reduce spacing between lines in bridge frame */
   .bridge-frame .hero-tagline-v2 br {

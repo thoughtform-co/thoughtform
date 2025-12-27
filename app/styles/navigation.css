@@ -415,6 +415,13 @@
   font-weight: 300 !important;
 }
 
+/* Definition text span wrapper - sized for readability */
+.hero-tagline-v2 > span {
+  font-size: 22px;
+  min-width: 325px;
+  display: inline-block;
+}
+
 .bridge-frame .hero-tagline-v2 br {
   line-height: 0.8;
 }
@@ -1111,7 +1118,9 @@
     width: calc(100vw - 2 * (var(--hud-padding) + var(--rail-width) + 16px)) !important;
     max-width: none !important;
     bottom: auto !important;
-    top: 10vh !important; /* Slightly higher to accommodate taller frame */
+    /* Center the manifesto terminal frame in the viewport */
+    top: 50% !important;
+    transform: translate(-50%, -50%) !important;
     height: auto !important;
     max-height: 85vh !important; /* Increased height */
     overflow-y: auto !important;
@@ -1144,7 +1153,7 @@
   }
 
   .bridge-frame .hero-tagline-v2 {
-    font-size: clamp(13px, 3.5vw, 16px) !important;
+    font-size: clamp(15px, 4vw, 18px) !important;
     line-height: 1.4 !important;
   }
 
@@ -1153,7 +1162,7 @@
   }
 
   .hero-tagline-v2 {
-    font-size: clamp(14px, 4vw, 18px) !important;
+    font-size: clamp(15px, 4.5vw, 20px) !important;
     line-height: 1.3 !important;
     text-align: center !important;
   }
