@@ -105,7 +105,6 @@ export async function POST(request: Request) {
     const body = await request.json();
     const presets: ConfigPreset[] = body.presets || [];
     const activePresetId: string | null = body.activePresetId || null;
-
     // Extract and validate config
     const configData = body.config || body;
     delete configData.presets;

@@ -115,8 +115,11 @@ export function ParticleConfigProvider({ children, initialConfig }: ParticleConf
   }, [config, savedConfig]);
 
   // Load GLOBAL config from server on mount (same for all visitors)
-  const loadConfig = useCallback(async () => {
-    setIsLoading(true);
+  const loadConfig = useCallback(async (options?: { silent?: boolean }) => {
+    const silent = options?.silent ?? false;
+    if (!silent) {
+      setIsLoading(true);
+    }
     setError(null);
 
     try {
@@ -191,11 +194,9 @@ export function ParticleConfigProvider({ children, initialConfig }: ParticleConf
   );
 
   useEffect(() => {
-    // Skip initial load if we have server-provided config
-    // The server already fetched it, no need to re-fetch
-    if (!initialConfig) {
-      loadConfig();
-    }
+    // Even if we have server-provided config, we still load from the API once to hydrate presets.
+    // This prevents the preset list from being empty after refresh.
+    loadConfig({ silent: !!initialConfig });
 
     // Cleanup timer on unmount
     return () => {
