@@ -110,7 +110,6 @@ export function ServicesStackMobile({
 
   // Calculate opacity based on progress
   const stackOpacity = Math.min(1, progress * 2);
-
   // Animation variants for reduced motion
   const cardTransition = prefersReducedMotion
     ? { duration: 0.05 }
@@ -121,7 +120,6 @@ export function ServicesStackMobile({
       className="services-stack-mobile"
       style={{
         opacity: stackOpacity,
-        transform: `translateY(${(1 - progress) * 30}px)`,
       }}
     >
       {/* Stack indicator dots */}
@@ -202,11 +200,8 @@ export function ServicesStackMobile({
         .services-stack-mobile {
           position: relative;
           width: 100%;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 16px;
-          padding: 0 8px;
+          height: 100%;
+          display: block;
           transition:
             opacity 0.3s ease,
             transform 0.3s ease;
@@ -214,9 +209,14 @@ export function ServicesStackMobile({
         }
 
         .stack-dots {
+          position: absolute;
+          top: 10px;
+          left: 50%;
+          transform: translateX(-50%);
           display: flex;
           gap: 8px;
-          padding: 8px;
+          z-index: 20;
+          pointer-events: none;
         }
 
         .stack-dot {
@@ -233,10 +233,10 @@ export function ServicesStackMobile({
         }
 
         .stack-container {
-          position: relative;
+          position: absolute;
+          inset: 0;
           width: 100%;
-          max-width: 340px;
-          aspect-ratio: 340 / 420;
+          height: 100%;
         }
 
         /* ServiceCard width override for mobile */
@@ -246,12 +246,17 @@ export function ServicesStackMobile({
         }
 
         .swipe-hint {
+          position: absolute;
+          left: 50%;
+          bottom: 10px;
+          transform: translateX(-50%);
           display: flex;
           align-items: center;
           justify-content: center;
           gap: 6px;
-          padding: 8px 16px;
           opacity: 0.5;
+          z-index: 20;
+          pointer-events: none;
         }
 
         .swipe-hint-icon {

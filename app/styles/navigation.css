@@ -1133,20 +1133,21 @@
     width: var(--frame-max-w) !important;
     max-width: none !important;
     bottom: auto !important;
-    /* Fixed-height frame so only the manifesto content area scrolls (CTA stays pinned) */
-    height: calc(85vh - var(--safe-top) - var(--safe-bottom)) !important;
+    /* IMPORTANT (H10): avoid an abrupt jump to a fixed 85vh height as soon as manifesto-active toggles.
+       Let the frame grow naturally with content and clamp via max-height. */
     max-height: calc(85vh - var(--safe-top) - var(--safe-bottom)) !important;
-    overflow: hidden !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
   }
 
   /* Mobile Services: collapse from tall manifesto to card-sized deck viewport */
   .bridge-frame.mobile-services-active {
-    /* Card-sized height for the services deck */
-    height: min(520px, calc(70vh - var(--safe-top) - var(--safe-bottom))) !important;
-    max-height: min(520px, calc(70vh - var(--safe-top) - var(--safe-bottom))) !important;
-    /* Constrain width for card-like appearance */
-    width: calc(100% - 32px) !important;
-    max-width: 380px !important;
+    /* Match the actual ServiceCard footprint so the manifesto morph lands on the FRONT card (not a larger viewport). */
+    /* Avoid CSS min() so older mobile browsers still apply these overrides (min() would drop the whole rule). */
+    height: 420px !important;
+    max-height: calc(70vh - var(--safe-top) - var(--safe-bottom)) !important;
+    width: 340px !important;
+    max-width: calc(100% - 24px) !important;
     /* Center the deck viewport */
     top: 50% !important;
     transform: translate(-50%, -50%) !important;
@@ -1163,21 +1164,20 @@
 
   /* Services overlay: fill the collapsed deck viewport and sit on top */
   .bridge-frame.mobile-services-active .mobile-services-overlay {
-    padding: 8px !important;
+    padding: 0 !important;
     z-index: 10 !important;
-    background: rgba(10, 9, 8, 0.95) !important;
+    /* Let the cards provide the glass; avoid a second large panel behind the stack */
+    background: transparent !important;
   }
 
   /* Hide all manifesto content when services is active */
   .bridge-frame.mobile-services-active .hero-text-frame {
-    opacity: 0 !important;
     pointer-events: none !important;
-    visibility: hidden !important;
   }
 
-  /* Hide the terminal header tabs on mobile when services is active */
-  .bridge-frame.mobile-services-active .terminal-header,
-  .bridge-frame.mobile-services-active .terminal-header-mobile {
+  /* Hide leftover frame corners when the mobile services deck is active */
+  .bridge-frame.mobile-services-active .terminal-corner,
+  .bridge-frame.mobile-services-active .card-corner {
     display: none !important;
   }
 
@@ -1260,9 +1260,7 @@
   .terminal-tab {
     font-size: var(--type-xs);
     padding: 2px 3px;
-    min-height: 44px; /* Touch-friendly */
-    display: flex;
-    align-items: center;
+    /* H10 evidence: min-height 44px makes the manifesto tabs feel bulky. Keep them subtle. */
   }
 
   .terminal-body {
@@ -1346,16 +1344,18 @@
   }
 
   .bridge-frame.manifesto-active {
-    height: calc(80vh - var(--safe-top) - var(--safe-bottom)) !important;
+    /* PHONE: Only use max-height clamp; let content determine actual height for smooth transition */
     max-height: calc(80vh - var(--safe-top) - var(--safe-bottom)) !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
   }
 
   /* Phone services deck: slightly smaller for compact screens */
   .bridge-frame.mobile-services-active {
-    height: min(480px, calc(65vh - var(--safe-top) - var(--safe-bottom))) !important;
-    max-height: min(480px, calc(65vh - var(--safe-top) - var(--safe-bottom))) !important;
-    width: calc(100% - 24px) !important;
-    max-width: 340px !important;
+    height: 420px !important;
+    max-height: calc(65vh - var(--safe-top) - var(--safe-bottom)) !important;
+    width: 340px !important;
+    max-width: calc(100% - 24px) !important;
   }
 
   .bridge-frame .hero-tagline-v2 {

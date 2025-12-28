@@ -469,6 +469,19 @@ function NavigationCockpitInner() {
     };
   }, [manifestoComplete, tServicesCardsTarget]);
 
+  // Mobile-only: services deck is "active" once the cards have begun fading in.
+  // Important: when this is true, we should NOT also apply `.manifesto-active` styles,
+  // otherwise mobile manifesto sizing rules can override the intended card-sized deck.
+  const isMobileServicesActive = isMobile && manifestoComplete && tServicesCards > 0.001;
+
+  // Visual crossfade for manifesto → services on mobile:
+  // Use the *target* (not the smoothed value) so we don't "fade manifesto out" while the deck is still ~invisible.
+  // (H1/H9 show tServicesCards can lag behind tServicesCardsTarget early in the transition.)
+  const tServicesCardsVisual = useMemo(() => {
+    const raw = Math.max(tServicesCardsTarget, tServicesCards);
+    return Math.min(1, raw * 4); // faster early ramp to avoid a perceived "pop"
+  }, [tServicesCardsTarget, tServicesCards]);
+
   // Calculate frame position values for manifesto transition
   // Use BOTTOM positioning throughout for smooth, continuous transition
   //
@@ -867,7 +880,7 @@ function NavigationCockpitInner() {
           ═══════════════════════════════════════════════════════════════════ */}
       <div
         ref={bridgeFrameRef}
-        className={`bridge-frame${isMobile && tDefToManifesto > 0.5 ? " manifesto-active" : ""}${isMobile && manifestoComplete && tServicesCards > 0.001 ? " mobile-services-active" : ""}`}
+        className={`bridge-frame${isMobile && tDefToManifesto > 0.9 && !isMobileServicesActive ? " manifesto-active" : ""}${isMobileServicesActive ? " mobile-services-active" : ""}`}
         onMouseEnter={() => setIsBridgeHovered(true)}
         onMouseLeave={() => setIsBridgeHovered(false)}
         style={
@@ -906,36 +919,50 @@ function NavigationCockpitInner() {
                 // Center horizontally
                 transform: `translate(-50%, calc(-50% * var(--manifesto-center-t, 0)))`,
                 transformOrigin: "center center",
-                // Mobile background/border - same calculation as desktop
-                // Background opacity: 0.85 during definition, 0.9 during manifesto (slightly darker)
-                background: `rgba(10, 9, 8, ${
-                  tDefToManifesto > 0.5
-                    ? 0.92 // Manifesto: solid dark background
-                    : tHeroToDef > 0.7
-                      ? Math.min(0.85, ((tHeroToDef - 0.7) / 0.3) * 0.85) // Definition: fade in
-                      : 0 // Hero: transparent
-                })`,
-                backdropFilter: `blur(${
-                  tDefToManifesto > 0.5
-                    ? 12 // Manifesto: full blur
-                    : tHeroToDef > 0.7
-                      ? ((tHeroToDef - 0.7) / 0.3) * 12 // Definition: fade in blur
-                      : 0
-                }px)`,
-                WebkitBackdropFilter: `blur(${
-                  tDefToManifesto > 0.5
-                    ? 12
-                    : tHeroToDef > 0.7
-                      ? ((tHeroToDef - 0.7) / 0.3) * 12
-                      : 0
-                }px)`,
-                border: `1px solid rgba(202, 165, 84, ${
-                  tDefToManifesto > 0.5
-                    ? 0.25 // Manifesto: visible gold border
-                    : tHeroToDef > 0.7
-                      ? Math.min(0.2, ((tHeroToDef - 0.7) / 0.3) * 0.2) // Definition: fade in border
-                      : 0
-                })`,
+                // Mobile background/border - smooth transitions from hero → definition → manifesto
+                // Hero: transparent → Definition: 0.85 → Manifesto: 0.92 (interpolated smoothly)
+                background: (() => {
+                  const servicesFade = manifestoComplete
+                    ? 1 - Math.min(1, Math.max(0, tServicesCards * 2))
+                    : 1;
+                  // Phase 1: Hero→Definition (fade in from 0 to 0.85)
+                  const defOpacity =
+                    tHeroToDef > 0.7 ? Math.min(0.85, ((tHeroToDef - 0.7) / 0.3) * 0.85) : 0;
+                  // Phase 2: Definition→Manifesto (smooth from 0.85 to 0.92)
+                  const manifestoOpacity = 0.85 + 0.07 * tDefToManifesto;
+                  const finalOpacity = tHeroToDef >= 1 ? manifestoOpacity : defOpacity;
+                  return `rgba(10, 9, 8, ${servicesFade * finalOpacity})`;
+                })(),
+                backdropFilter: (() => {
+                  const servicesFade = manifestoComplete
+                    ? 1 - Math.min(1, Math.max(0, tServicesCards * 2))
+                    : 1;
+                  // Phase 1: Hero→Definition (fade in blur from 0 to 12)
+                  const defBlur = tHeroToDef > 0.7 ? ((tHeroToDef - 0.7) / 0.3) * 12 : 0;
+                  // Phase 2: Definition→Manifesto (stays at 12, no change needed)
+                  const finalBlur = tHeroToDef >= 1 ? 12 : defBlur;
+                  return `blur(${servicesFade * finalBlur}px)`;
+                })(),
+                WebkitBackdropFilter: (() => {
+                  const servicesFade = manifestoComplete
+                    ? 1 - Math.min(1, Math.max(0, tServicesCards * 2))
+                    : 1;
+                  const defBlur = tHeroToDef > 0.7 ? ((tHeroToDef - 0.7) / 0.3) * 12 : 0;
+                  const finalBlur = tHeroToDef >= 1 ? 12 : defBlur;
+                  return `blur(${servicesFade * finalBlur}px)`;
+                })(),
+                border: (() => {
+                  const servicesFade = manifestoComplete
+                    ? 1 - Math.min(1, Math.max(0, tServicesCards * 2))
+                    : 1;
+                  // Phase 1: Hero→Definition (fade in border from 0 to 0.2)
+                  const defBorder =
+                    tHeroToDef > 0.7 ? Math.min(0.2, ((tHeroToDef - 0.7) / 0.3) * 0.2) : 0;
+                  // Phase 2: Definition→Manifesto (smooth from 0.2 to 0.25)
+                  const manifestoBorder = 0.2 + 0.05 * tDefToManifesto;
+                  const finalBorder = tHeroToDef >= 1 ? manifestoBorder : defBorder;
+                  return `1px solid rgba(202, 165, 84, ${servicesFade * finalBorder})`;
+                })(),
               }
             : {
                 // DESKTOP: Frame moves from hero → definition → manifesto → services
@@ -1130,7 +1157,7 @@ function NavigationCockpitInner() {
           {/* Fade out the manifesto/definition content as we morph into services */}
           <div
             style={{
-              opacity: 1 - tServicesCards,
+              opacity: 1 - tServicesCardsVisual,
               pointerEvents: tServicesCards > 0.05 ? "none" : "auto",
               transition: "none",
               ...(isMobile && tDefToManifesto > 0.95 && manifestoRevealProgress > 0
@@ -1246,8 +1273,17 @@ human-AI collaboration.`}
                   width: "100%",
                   transform: isMobile ? undefined : `scale(${bridgeFrameStyles.contentScale})`,
                   transformOrigin: "top left",
-                  opacity: Math.max(0, 1 - tManifestoToServices * 3), // Fade out as services card appears
-                  pointerEvents: tManifestoToServices > 0.3 ? "none" : "auto",
+                  // Mobile: keep manifesto content visible until the services deck is actually fading in.
+                  opacity: isMobile
+                    ? 1 - tServicesCardsVisual
+                    : Math.max(0, 1 - tManifestoToServices * 3),
+                  pointerEvents: isMobile
+                    ? tServicesCardsVisual > 0.3
+                      ? "none"
+                      : "auto"
+                    : tManifestoToServices > 0.3
+                      ? "none"
+                      : "auto",
                   // Mobile: fill available space for tabbed content
                   ...(isMobile && {
                     flex: 1,
@@ -1341,34 +1377,34 @@ human-AI collaboration.`}
               </div>
             </div>
           )}
-
-          {/* Mobile Services Stack - rendered inside bridge-frame during services transition */}
-          {isMobile && manifestoComplete && tServicesCards > 0.001 && (
-            <div
-              className="mobile-services-overlay"
-              style={{
-                position: "absolute",
-                inset: 0,
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-                padding: "16px",
-                opacity: tServicesCards,
-                pointerEvents: tServicesCards > 0.3 ? "auto" : "none",
-                // GPU acceleration
-                willChange: "opacity",
-                backfaceVisibility: "hidden",
-              }}
-            >
-              <ServicesStackMobile
-                progress={tServicesCards}
-                sigilConfigs={sigilConfigs}
-                isVisible={tServicesCards > 0}
-              />
-            </div>
-          )}
         </div>
+
+        {/* Mobile Services Stack - rendered inside bridge-frame during services transition */}
+        {/* IMPORTANT: must live OUTSIDE .hero-text-frame because we hide that subtree in mobile-services-active */}
+        {isMobile && manifestoComplete && tServicesCards > 0.001 && (
+          <div
+            className="mobile-services-overlay"
+            style={{
+              position: "absolute",
+              inset: 0,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "stretch",
+              justifyContent: "stretch",
+              opacity: tServicesCardsVisual,
+              pointerEvents: tServicesCards > 0.3 ? "auto" : "none",
+              // GPU acceleration
+              willChange: "opacity",
+              backfaceVisibility: "hidden",
+            }}
+          >
+            <ServicesStackMobile
+              progress={tServicesCards}
+              sigilConfigs={sigilConfigs}
+              isVisible={tServicesCards > 0}
+            />
+          </div>
+        )}
 
         {/* Interface CTAs - original buttons (morph overlay takes over as soon as tDefToManifesto > 0) */}
         {/* Removed !isManifestoTerminalMode to allow smooth transition */}
@@ -1523,8 +1559,13 @@ human-AI collaboration.`}
           className="terminal-content-wrapper"
           style={{
             // Cross-fade in during transition
-            opacity: tDefToManifesto,
-            visibility: tDefToManifesto > 0 ? "visible" : "hidden",
+            opacity:
+              tDefToManifesto * (isMobile ? 1 - Math.min(1, Math.max(0, tServicesCards * 2)) : 1),
+            visibility:
+              tDefToManifesto > 0 &&
+              (!isMobile || 1 - Math.min(1, Math.max(0, tServicesCards * 2)) > 0.05)
+                ? "visible"
+                : "hidden",
             // Keep absolute positioning - frame height is controlled by parent's height style
             position: "absolute",
             top: 0,
@@ -1549,7 +1590,12 @@ human-AI collaboration.`}
             style={{
               // This overlay layer is pointer-events:none, but we need the tab buttons clickable on mobile.
               pointerEvents:
-                isMobile && tDefToManifesto > 0.95 && manifestoRevealProgress > 0 ? "auto" : "none",
+                isMobile &&
+                tDefToManifesto > 0.95 &&
+                manifestoRevealProgress > 0 &&
+                tServicesCards < 0.05
+                  ? "auto"
+                  : "none",
             }}
           >
             <span className="terminal-title">thoughtform@manifesto:~</span>
