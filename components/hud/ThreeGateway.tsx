@@ -1618,7 +1618,8 @@ interface GatewaySceneProps {
 function GatewayScene({ scrollProgress, config }: GatewaySceneProps) {
   const opacity = scrollProgress > 0.06 ? Math.max(0, 1 - (scrollProgress - 0.06) * 10) : 1;
 
-  if (opacity <= 0) return null;
+  // Don't return null - keep the scene mounted but invisible to avoid re-initialization costs
+  // The parent container handles visibility
 
   const primaryColor = config.primaryColor || DEFAULT_PRIMARY;
   const accentColor = config.accentColor || DEFAULT_ACCENT;
@@ -1744,7 +1745,13 @@ export function ThreeGateway({ scrollProgress, config, children }: ThreeGatewayP
   // The caller (NavigationCockpitV2) is responsible for passing the effective config
   const gatewayConfig = { ...DEFAULT_GATEWAY, ...config };
 
-  if (!gatewayConfig.enabled || scrollProgress > 0.2) return null;
+  // If disabled, don't render at all
+  if (!gatewayConfig.enabled) return null;
+
+  // IMPORTANT: Keep the component mounted but hidden when scrolled past.
+  // Returning null would unmount Three.js, causing expensive re-initialization
+  // when scrolling back. Instead, use visibility/opacity to hide.
+  const shouldHide = scrollProgress > 0.2;
 
   // Calculate screen position offset based on 3D gateway position
   // Camera FOV = 60, gateway is at z = 4
@@ -1772,6 +1779,9 @@ export function ThreeGateway({ scrollProgress, config, children }: ThreeGatewayP
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
+        // Hide when scrolled past, but keep mounted to avoid re-initialization
+        visibility: shouldHide ? "hidden" : "visible",
+        opacity: shouldHide ? 0 : 1,
       }}
     >
       <Canvas
