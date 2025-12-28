@@ -275,7 +275,7 @@ export class GPGPUParticleSimulation {
   }
 
   private fillPositionTexture(texture: THREE.DataTexture, initialPositions: Float32Array): void {
-    const data = texture.image.data as Float32Array;
+    const data = texture.image.data as unknown as Float32Array;
     const count = this.textureSize * this.textureSize;
 
     for (let i = 0; i < count; i++) {
@@ -299,7 +299,7 @@ export class GPGPUParticleSimulation {
   }
 
   private fillVelocityTexture(texture: THREE.DataTexture): void {
-    const data = texture.image.data as Float32Array;
+    const data = texture.image.data as unknown as Float32Array;
     const count = this.textureSize * this.textureSize;
 
     for (let i = 0; i < count; i++) {
