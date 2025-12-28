@@ -386,34 +386,32 @@ const LayeredParticleMaterial = shaderMaterial(
 // Extend Three.js with our custom material
 extend({ LayeredParticleMaterial });
 
-// Type declaration
+// Type declaration for custom R3F material
 declare global {
   namespace JSX {
     interface IntrinsicElements {
-      layeredParticleMaterial: React.DetailedHTMLProps<
-        React.HTMLAttributes<HTMLElement> & {
-          uTime?: number;
-          uPrimaryColor?: THREE.Color;
-          uAccentColor?: THREE.Color;
-          uOpacity?: number;
-          uPointSize?: number;
-          uPointer?: THREE.Vector3;
-          uInteractionStrength?: number;
-          uTurbulenceStrength?: number;
-          uLayerOpacity?: THREE.Vector3;
-          uLayerSize?: THREE.Vector3;
-          uLayerColorMode?: THREE.Vector3;
-          uContrastGamma?: THREE.Vector2;
-          uLumaThreshold?: number;
-          uSigilMode?: number;
-          uSigilGridSize?: number;
-          attach?: string;
-          transparent?: boolean;
-          depthWrite?: boolean;
-          blending?: THREE.Blending;
-        },
-        HTMLElement
-      >;
+      layeredParticleMaterial: {
+        ref?: React.Ref<THREE.ShaderMaterial>;
+        uTime?: number;
+        uPrimaryColor?: THREE.Color;
+        uAccentColor?: THREE.Color;
+        uOpacity?: number;
+        uPointSize?: number;
+        uPointer?: THREE.Vector3;
+        uInteractionStrength?: number;
+        uTurbulenceStrength?: number;
+        uLayerOpacity?: THREE.Vector3;
+        uLayerSize?: THREE.Vector3;
+        uLayerColorMode?: THREE.Vector3;
+        uContrastGamma?: THREE.Vector2;
+        uLumaThreshold?: number;
+        uSigilMode?: number;
+        uSigilGridSize?: number;
+        attach?: string;
+        transparent?: boolean;
+        depthWrite?: boolean;
+        blending?: THREE.Blending;
+      };
     }
   }
 }
