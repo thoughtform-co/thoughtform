@@ -262,17 +262,6 @@ export const NavigationBar = forwardRef<NavigationBarHandle, NavigationBarProps>
             }
           }
 
-          /* Mobile pulse should be more visible than desktop (semantic-dawn state) */
-          @keyframes logoPulseMobile {
-            0%,
-            100% {
-              opacity: 0.4;
-            }
-            50% {
-              opacity: 0.9;
-            }
-          }
-
           /* Logo scale animation when particles arrive (Three.js handles the glow) */
           .navbar-logo.logo-glowing {
             animation: logoGlow 0.8s ease-out forwards;
@@ -393,25 +382,22 @@ export const NavigationBar = forwardRef<NavigationBarHandle, NavigationBarProps>
             transition: color 150ms ease;
           }
 
-          /* Mobile sigil - top right, replaces hamburger */
+          /* Mobile sigil - top right, clean logo without container (matches desktop aesthetic) */
           .mobile-sigil {
             position: absolute;
             top: calc(var(--safe-top, 0px) + 16px);
-            right: calc(var(--safe-right, 0px) + 16px);
+            right: calc(var(--safe-right, 0px) + 32px);
             left: auto;
             z-index: 1000;
             display: none;
             align-items: center;
             justify-content: center;
-            width: 40px;
-            height: 40px;
+            width: 32px;
+            height: 32px;
             padding: 0;
             margin: 0;
-            background: rgba(10, 9, 8, 0.35);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(236, 227, 214, 0.1);
-            border-radius: 999px;
+            background: transparent;
+            border: none;
             cursor: pointer;
             transition: opacity 150ms ease;
             pointer-events: auto;
@@ -421,9 +407,9 @@ export const NavigationBar = forwardRef<NavigationBarHandle, NavigationBarProps>
             opacity: 0.8;
           }
 
-          /* Slow pulsing animation for semantic dawn sigil (mobile) */
+          /* Slow pulsing animation for semantic dawn sigil (mobile) - same as desktop */
           .mobile-sigil.logo-pulse {
-            animation: logoPulseMobile 3s ease-in-out infinite;
+            animation: logoPulse 3s ease-in-out infinite;
           }
 
           /* Sigil glow animation when particles arrive (mobile) */

@@ -340,24 +340,33 @@ export const SigilSection = forwardRef<HTMLDivElement, SigilSectionProps>(functi
     // particles never reached the logo.
     sigilScrollProgress = sigilInEnd;
   } else {
-    // After animation completes - ensure callback fired if it hasn't yet
-    if (!arrivedFiredRef.current && onParticlesArrived) {
-      arrivedFiredRef.current = true;
-      onParticlesArrived();
-    }
+    // After animation completes
     sigilOpacity = 0;
     sigilScrollProgress = sigilInStart;
     exitProgress = 1;
   }
 
-  // Debug: detect the real on-screen "enter/leave" moment by measuring overlap between
-  // `.fixed-sigil-container` and `.navbar-logo svg`.
+  // Track when animation completes and fire callback in useEffect (not during render)
+  const animationComplete = scrollProgress >= sigilOutEnd;
+  useEffect(() => {
+    if (animationComplete && !arrivedFiredRef.current && onParticlesArrived) {
+      arrivedFiredRef.current = true;
+      onParticlesArrived();
+    }
+  }, [animationComplete, onParticlesArrived]);
+
+  // Detect the real on-screen "enter/leave" moment by measuring overlap between
+  // `.fixed-sigil-container` and the navbar logo (desktop or mobile).
   useEffect(() => {
     if (typeof window === "undefined") return;
     if (!destinationPos) return;
 
     const sigilEl = document.querySelector(".fixed-sigil-container") as HTMLElement | null;
-    const logoEl = document.querySelector(".navbar-logo svg") as SVGSVGElement | null;
+    // Try desktop navbar logo first, fall back to mobile sigil
+    let logoEl = document.querySelector(".navbar-logo svg") as SVGSVGElement | null;
+    if (!logoEl || logoEl.getBoundingClientRect().width === 0) {
+      logoEl = document.querySelector(".mobile-sigil svg") as SVGSVGElement | null;
+    }
     if (!sigilEl || !logoEl) return;
 
     const sigilRect = sigilEl.getBoundingClientRect();
