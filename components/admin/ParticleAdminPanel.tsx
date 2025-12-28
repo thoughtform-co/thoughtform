@@ -11,6 +11,7 @@ import {
   GATEWAY_SHAPE_LABELS,
   GATEWAY_SHAPE_IS_ATTRACTOR,
   DEFAULT_MOBILE_GATEWAY,
+  DEFAULT_KEY_VISUAL_OVERLAY,
   getMobileEffectiveConfig,
   type LandmarkShape,
   type GatewayShape,
@@ -19,6 +20,8 @@ import {
   type GatewayConfig,
   type CameraConfig,
   type SigilConfig,
+  type KeyVisualOverlayConfig,
+  type KeyVisualLayerKind,
 } from "@/lib/particle-config";
 
 type Tab = "gateway" | "manifold" | "camera" | "landmarks" | "sigil";
@@ -1605,6 +1608,495 @@ function GatewayControls({ gateway, onUpdate }: GatewayControlsProps) {
           )}
         </div>
       )}
+
+      {/* Key Visual Overlay Section */}
+      <div className="admin-section">
+        <div className="admin-section-title">Key Visual Overlay (Layered Particles)</div>
+        <div className="admin-field">
+          <label className="landmark-toggle">
+            <input
+              type="checkbox"
+              checked={gateway.keyVisualOverlay?.enabled || false}
+              onChange={(e) =>
+                onUpdate({
+                  keyVisualOverlay: {
+                    ...(gateway.keyVisualOverlay || DEFAULT_KEY_VISUAL_OVERLAY),
+                    enabled: e.target.checked,
+                  },
+                })
+              }
+              className="admin-checkbox"
+            />
+            <span className="admin-label" style={{ margin: 0 }}>
+              Enable Key Visual Overlay
+            </span>
+          </label>
+          <div className="admin-hint" style={{ marginTop: "8px", fontSize: "11px", opacity: 0.6 }}>
+            Overlays a particle cloud from an image+depth map on top of the gateway
+          </div>
+        </div>
+
+        {gateway.keyVisualOverlay?.enabled && (
+          <>
+            {/* Mode Selection */}
+            <div className="admin-field">
+              <div className="admin-label">Mode</div>
+              <div className="shape-selector" style={{ gridTemplateColumns: "repeat(2, 1fr)" }}>
+                <button
+                  className={`shape-btn ${gateway.keyVisualOverlay?.mode === "dynamic" ? "active" : ""}`}
+                  onClick={() =>
+                    onUpdate({
+                      keyVisualOverlay: {
+                        ...(gateway.keyVisualOverlay || DEFAULT_KEY_VISUAL_OVERLAY),
+                        mode: "dynamic",
+                      },
+                    })
+                  }
+                >
+                  <span className="shape-icon">⚡</span>
+                  <span className="shape-name">Dynamic</span>
+                </button>
+                <button
+                  className={`shape-btn ${gateway.keyVisualOverlay?.mode === "baked" ? "active" : ""}`}
+                  onClick={() =>
+                    onUpdate({
+                      keyVisualOverlay: {
+                        ...(gateway.keyVisualOverlay || DEFAULT_KEY_VISUAL_OVERLAY),
+                        mode: "baked",
+                      },
+                    })
+                  }
+                >
+                  <span className="shape-icon">📦</span>
+                  <span className="shape-name">Baked</span>
+                </button>
+              </div>
+              <div className="admin-hint">
+                Dynamic: samples from images at runtime | Baked: loads pre-computed TFPC file
+              </div>
+            </div>
+
+            {/* Image Sources (Dynamic Mode) */}
+            {gateway.keyVisualOverlay?.mode === "dynamic" && (
+              <>
+                <div className="admin-field">
+                  <div className="admin-label">Image Source</div>
+                  <input
+                    type="text"
+                    value={gateway.keyVisualOverlay?.imageSrc || ""}
+                    onChange={(e) =>
+                      onUpdate({
+                        keyVisualOverlay: {
+                          ...(gateway.keyVisualOverlay || DEFAULT_KEY_VISUAL_OVERLAY),
+                          imageSrc: e.target.value,
+                        },
+                      })
+                    }
+                    placeholder="/images/gateway/your-image.png"
+                    className="admin-input"
+                  />
+                </div>
+                <div className="admin-field">
+                  <div className="admin-label">Depth Map Source</div>
+                  <input
+                    type="text"
+                    value={gateway.keyVisualOverlay?.depthMapSrc || ""}
+                    onChange={(e) =>
+                      onUpdate({
+                        keyVisualOverlay: {
+                          ...(gateway.keyVisualOverlay || DEFAULT_KEY_VISUAL_OVERLAY),
+                          depthMapSrc: e.target.value,
+                        },
+                      })
+                    }
+                    placeholder="/images/gateway/your-depth.png"
+                    className="admin-input"
+                  />
+                </div>
+              </>
+            )}
+
+            {/* Baked Source */}
+            {gateway.keyVisualOverlay?.mode === "baked" && (
+              <div className="admin-field">
+                <div className="admin-label">Baked TFPC Source</div>
+                <input
+                  type="text"
+                  value={gateway.keyVisualOverlay?.bakedSrc || ""}
+                  onChange={(e) =>
+                    onUpdate({
+                      keyVisualOverlay: {
+                        ...(gateway.keyVisualOverlay || DEFAULT_KEY_VISUAL_OVERLAY),
+                        bakedSrc: e.target.value,
+                      },
+                    })
+                  }
+                  placeholder="URL to .tfpc file"
+                  className="admin-input"
+                />
+                <div className="admin-hint">Use Shape Lab to bake and upload TFPC files</div>
+              </div>
+            )}
+
+            {/* Particle Settings */}
+            <div className="admin-field">
+              <div className="admin-label">
+                <span>Max Particles</span>
+                <span className="admin-value">
+                  {((gateway.keyVisualOverlay?.maxParticles || 50000) / 1000).toFixed(0)}K
+                </span>
+              </div>
+              <input
+                type="range"
+                min="5000"
+                max="100000"
+                step="5000"
+                value={gateway.keyVisualOverlay?.maxParticles || 50000}
+                onChange={(e) =>
+                  onUpdate({
+                    keyVisualOverlay: {
+                      ...(gateway.keyVisualOverlay || DEFAULT_KEY_VISUAL_OVERLAY),
+                      maxParticles: parseInt(e.target.value),
+                    },
+                  })
+                }
+                className="admin-slider"
+              />
+            </div>
+
+            <div className="admin-field">
+              <div className="admin-label">
+                <span>Particle Size</span>
+                <span className="admin-value">
+                  {(gateway.keyVisualOverlay?.particleSize || 1.2).toFixed(1)}x
+                </span>
+              </div>
+              <input
+                type="range"
+                min="50"
+                max="300"
+                value={(gateway.keyVisualOverlay?.particleSize || 1.2) * 100}
+                onChange={(e) =>
+                  onUpdate({
+                    keyVisualOverlay: {
+                      ...(gateway.keyVisualOverlay || DEFAULT_KEY_VISUAL_OVERLAY),
+                      particleSize: parseInt(e.target.value) / 100,
+                    },
+                  })
+                }
+                className="admin-slider"
+              />
+            </div>
+
+            {/* Art Direction */}
+            <div className="admin-section-title" style={{ marginTop: "16px" }}>
+              Art Direction
+            </div>
+
+            <div className="admin-field">
+              <div className="admin-label">
+                <span>Contrast</span>
+                <span className="admin-value">
+                  {(gateway.keyVisualOverlay?.artDirection?.contrast || 1.0).toFixed(1)}
+                </span>
+              </div>
+              <input
+                type="range"
+                min="50"
+                max="200"
+                value={(gateway.keyVisualOverlay?.artDirection?.contrast || 1.0) * 100}
+                onChange={(e) =>
+                  onUpdate({
+                    keyVisualOverlay: {
+                      ...(gateway.keyVisualOverlay || DEFAULT_KEY_VISUAL_OVERLAY),
+                      artDirection: {
+                        ...(gateway.keyVisualOverlay?.artDirection ||
+                          DEFAULT_KEY_VISUAL_OVERLAY.artDirection),
+                        contrast: parseInt(e.target.value) / 100,
+                      },
+                    },
+                  })
+                }
+                className="admin-slider"
+              />
+            </div>
+
+            <div className="admin-field">
+              <div className="admin-label">
+                <span>Gamma</span>
+                <span className="admin-value">
+                  {(gateway.keyVisualOverlay?.artDirection?.gamma || 1.0).toFixed(1)}
+                </span>
+              </div>
+              <input
+                type="range"
+                min="50"
+                max="200"
+                value={(gateway.keyVisualOverlay?.artDirection?.gamma || 1.0) * 100}
+                onChange={(e) =>
+                  onUpdate({
+                    keyVisualOverlay: {
+                      ...(gateway.keyVisualOverlay || DEFAULT_KEY_VISUAL_OVERLAY),
+                      artDirection: {
+                        ...(gateway.keyVisualOverlay?.artDirection ||
+                          DEFAULT_KEY_VISUAL_OVERLAY.artDirection),
+                        gamma: parseInt(e.target.value) / 100,
+                      },
+                    },
+                  })
+                }
+                className="admin-slider"
+              />
+            </div>
+
+            <div className="admin-field">
+              <div className="admin-label">
+                <span>Depth Scale</span>
+                <span className="admin-value">
+                  {(gateway.keyVisualOverlay?.artDirection?.depthScale || 0.8).toFixed(1)}
+                </span>
+              </div>
+              <input
+                type="range"
+                min="0"
+                max="200"
+                value={(gateway.keyVisualOverlay?.artDirection?.depthScale || 0.8) * 100}
+                onChange={(e) =>
+                  onUpdate({
+                    keyVisualOverlay: {
+                      ...(gateway.keyVisualOverlay || DEFAULT_KEY_VISUAL_OVERLAY),
+                      artDirection: {
+                        ...(gateway.keyVisualOverlay?.artDirection ||
+                          DEFAULT_KEY_VISUAL_OVERLAY.artDirection),
+                        depthScale: parseInt(e.target.value) / 100,
+                      },
+                    },
+                  })
+                }
+                className="admin-slider"
+              />
+            </div>
+
+            <div className="admin-field">
+              <label className="landmark-toggle">
+                <input
+                  type="checkbox"
+                  checked={gateway.keyVisualOverlay?.artDirection?.depthInvert || false}
+                  onChange={(e) =>
+                    onUpdate({
+                      keyVisualOverlay: {
+                        ...(gateway.keyVisualOverlay || DEFAULT_KEY_VISUAL_OVERLAY),
+                        artDirection: {
+                          ...(gateway.keyVisualOverlay?.artDirection ||
+                            DEFAULT_KEY_VISUAL_OVERLAY.artDirection),
+                          depthInvert: e.target.checked,
+                        },
+                      },
+                    })
+                  }
+                  className="admin-checkbox"
+                />
+                <span className="admin-label" style={{ margin: 0 }}>
+                  Invert Depth
+                </span>
+              </label>
+            </div>
+
+            {/* Layer Controls */}
+            <div className="admin-section-title" style={{ marginTop: "16px" }}>
+              Layers
+            </div>
+
+            {(["contour", "fill", "highlight"] as KeyVisualLayerKind[]).map((layerKind) => {
+              const layerConfig =
+                gateway.keyVisualOverlay?.layers?.[layerKind] ||
+                DEFAULT_KEY_VISUAL_OVERLAY.layers[layerKind];
+              return (
+                <div key={layerKind} style={{ marginBottom: "12px" }}>
+                  <div className="admin-field">
+                    <label className="landmark-toggle">
+                      <input
+                        type="checkbox"
+                        checked={layerConfig.enabled}
+                        onChange={(e) =>
+                          onUpdate({
+                            keyVisualOverlay: {
+                              ...(gateway.keyVisualOverlay || DEFAULT_KEY_VISUAL_OVERLAY),
+                              layers: {
+                                ...(gateway.keyVisualOverlay?.layers ||
+                                  DEFAULT_KEY_VISUAL_OVERLAY.layers),
+                                [layerKind]: {
+                                  ...layerConfig,
+                                  enabled: e.target.checked,
+                                },
+                              },
+                            },
+                          })
+                        }
+                        className="admin-checkbox"
+                      />
+                      <span
+                        className="admin-label"
+                        style={{ margin: 0, textTransform: "capitalize" }}
+                      >
+                        {layerKind} Layer
+                      </span>
+                    </label>
+                  </div>
+
+                  {layerConfig.enabled && (
+                    <>
+                      <div className="admin-field">
+                        <div className="admin-label">
+                          <span>Density</span>
+                          <span className="admin-value">
+                            {Math.round(layerConfig.density * 100)}%
+                          </span>
+                        </div>
+                        <input
+                          type="range"
+                          min="0"
+                          max="100"
+                          value={layerConfig.density * 100}
+                          onChange={(e) =>
+                            onUpdate({
+                              keyVisualOverlay: {
+                                ...(gateway.keyVisualOverlay || DEFAULT_KEY_VISUAL_OVERLAY),
+                                layers: {
+                                  ...(gateway.keyVisualOverlay?.layers ||
+                                    DEFAULT_KEY_VISUAL_OVERLAY.layers),
+                                  [layerKind]: {
+                                    ...layerConfig,
+                                    density: parseInt(e.target.value) / 100,
+                                  },
+                                },
+                              },
+                            })
+                          }
+                          className="admin-slider"
+                        />
+                      </div>
+
+                      <div className="admin-field">
+                        <div className="admin-label">
+                          <span>Opacity</span>
+                          <span className="admin-value">
+                            {(layerConfig.opacityMultiplier * 100).toFixed(0)}%
+                          </span>
+                        </div>
+                        <input
+                          type="range"
+                          min="0"
+                          max="150"
+                          value={layerConfig.opacityMultiplier * 100}
+                          onChange={(e) =>
+                            onUpdate({
+                              keyVisualOverlay: {
+                                ...(gateway.keyVisualOverlay || DEFAULT_KEY_VISUAL_OVERLAY),
+                                layers: {
+                                  ...(gateway.keyVisualOverlay?.layers ||
+                                    DEFAULT_KEY_VISUAL_OVERLAY.layers),
+                                  [layerKind]: {
+                                    ...layerConfig,
+                                    opacityMultiplier: parseInt(e.target.value) / 100,
+                                  },
+                                },
+                              },
+                            })
+                          }
+                          className="admin-slider"
+                        />
+                      </div>
+
+                      <div className="admin-field">
+                        <div className="admin-label">
+                          <span>Size</span>
+                          <span className="admin-value">
+                            {layerConfig.sizeMultiplier.toFixed(1)}x
+                          </span>
+                        </div>
+                        <input
+                          type="range"
+                          min="30"
+                          max="300"
+                          value={layerConfig.sizeMultiplier * 100}
+                          onChange={(e) =>
+                            onUpdate({
+                              keyVisualOverlay: {
+                                ...(gateway.keyVisualOverlay || DEFAULT_KEY_VISUAL_OVERLAY),
+                                layers: {
+                                  ...(gateway.keyVisualOverlay?.layers ||
+                                    DEFAULT_KEY_VISUAL_OVERLAY.layers),
+                                  [layerKind]: {
+                                    ...layerConfig,
+                                    sizeMultiplier: parseInt(e.target.value) / 100,
+                                  },
+                                },
+                              },
+                            })
+                          }
+                          className="admin-slider"
+                        />
+                      </div>
+
+                      <div className="admin-field">
+                        <div className="admin-label">Color Mode</div>
+                        <div
+                          className="shape-selector"
+                          style={{ gridTemplateColumns: "repeat(2, 1fr)" }}
+                        >
+                          <button
+                            className={`shape-btn ${layerConfig.colorMode === "image" ? "active" : ""}`}
+                            onClick={() =>
+                              onUpdate({
+                                keyVisualOverlay: {
+                                  ...(gateway.keyVisualOverlay || DEFAULT_KEY_VISUAL_OVERLAY),
+                                  layers: {
+                                    ...(gateway.keyVisualOverlay?.layers ||
+                                      DEFAULT_KEY_VISUAL_OVERLAY.layers),
+                                    [layerKind]: {
+                                      ...layerConfig,
+                                      colorMode: "image",
+                                    },
+                                  },
+                                },
+                              })
+                            }
+                            style={{ padding: "6px" }}
+                          >
+                            <span className="shape-name">Image</span>
+                          </button>
+                          <button
+                            className={`shape-btn ${layerConfig.colorMode === "tint" ? "active" : ""}`}
+                            onClick={() =>
+                              onUpdate({
+                                keyVisualOverlay: {
+                                  ...(gateway.keyVisualOverlay || DEFAULT_KEY_VISUAL_OVERLAY),
+                                  layers: {
+                                    ...(gateway.keyVisualOverlay?.layers ||
+                                      DEFAULT_KEY_VISUAL_OVERLAY.layers),
+                                    [layerKind]: {
+                                      ...layerConfig,
+                                      colorMode: "tint",
+                                    },
+                                  },
+                                },
+                              })
+                            }
+                            style={{ padding: "6px" }}
+                          >
+                            <span className="shape-name">Tint</span>
+                          </button>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
+              );
+            })}
+          </>
+        )}
+      </div>
     </div>
   );
 }

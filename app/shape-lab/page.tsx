@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef, Suspense } from "react";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { AdminGate } from "@/components/admin/AdminGate";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { isAllowedUserEmail } from "@/lib/auth/allowed-user";
@@ -13,6 +14,12 @@ import {
   type Vec3,
 } from "@/lib/particle-geometry";
 import "./shape-lab.css";
+
+// Dynamically import Three.js components to avoid SSR issues
+const GatewayLabTab = dynamic(() => import("./GatewayLabTab"), {
+  ssr: false,
+  loading: () => <div className="shape-lab__loading-screen">Loading Gateway Lab...</div>,
+});
 
 // ═══════════════════════════════════════════════════════════════
 // SHAPE LAB - Admin-only preview page for particle shapes
@@ -281,10 +288,14 @@ function LandmarkPreview({ shapeId, seed, pointCount, size = 300 }: LandmarkPrev
   );
 }
 
+// Tab type
+type LabTab = "particles" | "gateway";
+
 // Main Shape Lab Content
 function ShapeLabContent() {
   const { user } = useAuth();
   const [mounted, setMounted] = useState(false);
+  const [activeTab, setActiveTab] = useState<LabTab>("particles");
   const [selectedShape, setSelectedShape] = useState<string>("tf_filamentField");
   const [seed, setSeed] = useState(42);
   const [pointCount, setPointCount] = useState(300);
@@ -402,211 +413,242 @@ function ShapeLabContent() {
           <h1 className="shape-lab__title">Shape Lab</h1>
           <span className="shape-lab__admin-badge">ADMIN</span>
         </div>
-        <p className="shape-lab__subtitle">Preview particle shapes in Sigil and Landmark modes</p>
+        <p className="shape-lab__subtitle">
+          {activeTab === "particles"
+            ? "Preview particle shapes in Sigil and Landmark modes"
+            : "Create gateway portals from images with depth maps"}
+        </p>
+
+        {/* Tab Navigation */}
+        <div className="shape-lab__tabs">
+          <button
+            className={`shape-lab__tab ${activeTab === "particles" ? "active" : ""}`}
+            onClick={() => setActiveTab("particles")}
+          >
+            <span className="shape-lab__tab-icon">◇</span>
+            Particles
+          </button>
+          <button
+            className={`shape-lab__tab ${activeTab === "gateway" ? "active" : ""}`}
+            onClick={() => setActiveTab("gateway")}
+          >
+            <span className="shape-lab__tab-icon">◉</span>
+            Gateway
+          </button>
+        </div>
       </div>
 
-      <div className="shape-lab__content">
-        {/* Controls Panel */}
-        <div className="shape-lab__controls">
-          {/* Category Filter */}
-          <div className="shape-lab__section">
-            <h3 className="shape-lab__section-title">Category</h3>
-            <div className="shape-lab__category-buttons">
-              <button
-                className={`shape-lab__category-btn ${categoryFilter === "all" ? "active" : ""}`}
-                onClick={() => setCategoryFilter("all")}
-              >
-                All
-              </button>
-              <button
-                className={`shape-lab__category-btn ${categoryFilter === "thoughtform" ? "active" : ""}`}
-                onClick={() => setCategoryFilter("thoughtform")}
-              >
-                Thoughtform
-              </button>
-              <button
-                className={`shape-lab__category-btn ${categoryFilter === "geometric" ? "active" : ""}`}
-                onClick={() => setCategoryFilter("geometric")}
-              >
-                Geometric
-              </button>
-            </div>
-          </div>
-
-          {/* Shape Selector */}
-          <div className="shape-lab__section">
-            <h3 className="shape-lab__section-title">Shape</h3>
-            <div className="shape-lab__shape-list">
-              {filteredShapes.map((shape) => (
-                <button
-                  key={shape.id}
-                  className={`shape-lab__shape-btn ${selectedShape === shape.id ? "active" : ""}`}
-                  onClick={() => setSelectedShape(shape.id)}
-                >
-                  <span className="shape-lab__shape-name">{shape.label}</span>
-                  <span className="shape-lab__shape-category">{shape.category}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Parameters */}
-          <div className="shape-lab__section">
-            <h3 className="shape-lab__section-title">Parameters</h3>
-
-            <div className="shape-lab__param">
-              <label className="shape-lab__param-label">
-                Seed: {seed}
-                <button className="shape-lab__randomize" onClick={handleRandomSeed}>
-                  🎲
-                </button>
-              </label>
-              <input
-                type="range"
-                min="0"
-                max="9999"
-                value={seed}
-                onChange={(e) => setSeed(parseInt(e.target.value))}
-                className="shape-lab__slider"
-              />
-            </div>
-
-            <div className="shape-lab__param">
-              <label className="shape-lab__param-label">Point Count: {pointCount}</label>
-              <input
-                type="range"
-                min="50"
-                max="800"
-                step="50"
-                value={pointCount}
-                onChange={(e) => setPointCount(parseInt(e.target.value))}
-                className="shape-lab__slider"
-              />
-            </div>
-          </div>
-
-          {/* Shape Info */}
-          {selectedShapeInfo && (
+      {/* Tab Content */}
+      {activeTab === "gateway" ? (
+        <Suspense
+          fallback={<div className="shape-lab__loading-screen">Loading Gateway Lab...</div>}
+        >
+          <GatewayLabTab />
+        </Suspense>
+      ) : (
+        <div className="shape-lab__content">
+          {/* Controls Panel */}
+          <div className="shape-lab__controls">
+            {/* Category Filter */}
             <div className="shape-lab__section">
-              <h3 className="shape-lab__section-title">Info</h3>
-              <div className="shape-lab__info">
-                <div className="shape-lab__info-row">
-                  <span>ID:</span>
-                  <code>{selectedShapeInfo.id}</code>
-                </div>
-                <div className="shape-lab__info-row">
-                  <span>Category:</span>
-                  <span>{selectedShapeInfo.category}</span>
-                </div>
-                <div className="shape-lab__info-row">
-                  <span>3D Depth:</span>
-                  <span>{selectedShapeInfo.has3DDepth ? "Yes" : "No"}</span>
-                </div>
+              <h3 className="shape-lab__section-title">Category</h3>
+              <div className="shape-lab__category-buttons">
+                <button
+                  className={`shape-lab__category-btn ${categoryFilter === "all" ? "active" : ""}`}
+                  onClick={() => setCategoryFilter("all")}
+                >
+                  All
+                </button>
+                <button
+                  className={`shape-lab__category-btn ${categoryFilter === "thoughtform" ? "active" : ""}`}
+                  onClick={() => setCategoryFilter("thoughtform")}
+                >
+                  Thoughtform
+                </button>
+                <button
+                  className={`shape-lab__category-btn ${categoryFilter === "geometric" ? "active" : ""}`}
+                  onClick={() => setCategoryFilter("geometric")}
+                >
+                  Geometric
+                </button>
               </div>
             </div>
-          )}
 
-          {/* Save Preset Button */}
-          <div className="shape-lab__section">
-            <h3 className="shape-lab__section-title">Save Current</h3>
-            {!showSaveForm ? (
-              <button className="shape-lab__save-btn" onClick={() => setShowSaveForm(true)}>
-                Save as Preset
-              </button>
-            ) : (
-              <div className="shape-lab__save-form">
-                <input
-                  type="text"
-                  value={presetName}
-                  onChange={(e) => setPresetName(e.target.value)}
-                  placeholder="Preset name..."
-                  className="shape-lab__preset-input"
-                  onKeyDown={(e) => e.key === "Enter" && savePreset()}
-                />
-                <div className="shape-lab__save-actions">
+            {/* Shape Selector */}
+            <div className="shape-lab__section">
+              <h3 className="shape-lab__section-title">Shape</h3>
+              <div className="shape-lab__shape-list">
+                {filteredShapes.map((shape) => (
                   <button
-                    className="shape-lab__action-btn shape-lab__action-btn--save"
-                    onClick={savePreset}
-                    disabled={savingPreset || !presetName.trim()}
+                    key={shape.id}
+                    className={`shape-lab__shape-btn ${selectedShape === shape.id ? "active" : ""}`}
+                    onClick={() => setSelectedShape(shape.id)}
                   >
-                    {savingPreset ? "Saving..." : "Save"}
+                    <span className="shape-lab__shape-name">{shape.label}</span>
+                    <span className="shape-lab__shape-category">{shape.category}</span>
                   </button>
-                  <button
-                    className="shape-lab__action-btn shape-lab__action-btn--cancel"
-                    onClick={() => {
-                      setShowSaveForm(false);
-                      setPresetName("");
-                    }}
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Presets Panel */}
-          <div className="shape-lab__section">
-            <h3 className="shape-lab__section-title">
-              Presets {presetsLoading && <span className="shape-lab__loading">Loading...</span>}
-            </h3>
-            {presets.length === 0 && !presetsLoading ? (
-              <p className="shape-lab__empty-text">No presets saved yet</p>
-            ) : (
-              <div className="shape-lab__presets-list">
-                {presets.map((preset) => (
-                  <div key={preset.id} className="shape-lab__preset-item">
-                    <button className="shape-lab__preset-btn" onClick={() => loadPreset(preset)}>
-                      <span className="shape-lab__preset-name">{preset.name}</span>
-                      <span className="shape-lab__preset-meta">
-                        {preset.shapeId} · {preset.pointCount}pts
-                      </span>
-                    </button>
-                    <button
-                      className="shape-lab__preset-delete"
-                      onClick={() => deletePreset(preset.id)}
-                      title="Delete preset"
-                    >
-                      ×
-                    </button>
-                  </div>
                 ))}
               </div>
+            </div>
+
+            {/* Parameters */}
+            <div className="shape-lab__section">
+              <h3 className="shape-lab__section-title">Parameters</h3>
+
+              <div className="shape-lab__param">
+                <label className="shape-lab__param-label">
+                  Seed: {seed}
+                  <button className="shape-lab__randomize" onClick={handleRandomSeed}>
+                    🎲
+                  </button>
+                </label>
+                <input
+                  type="range"
+                  min="0"
+                  max="9999"
+                  value={seed}
+                  onChange={(e) => setSeed(parseInt(e.target.value))}
+                  className="shape-lab__slider"
+                />
+              </div>
+
+              <div className="shape-lab__param">
+                <label className="shape-lab__param-label">Point Count: {pointCount}</label>
+                <input
+                  type="range"
+                  min="50"
+                  max="800"
+                  step="50"
+                  value={pointCount}
+                  onChange={(e) => setPointCount(parseInt(e.target.value))}
+                  className="shape-lab__slider"
+                />
+              </div>
+            </div>
+
+            {/* Shape Info */}
+            {selectedShapeInfo && (
+              <div className="shape-lab__section">
+                <h3 className="shape-lab__section-title">Info</h3>
+                <div className="shape-lab__info">
+                  <div className="shape-lab__info-row">
+                    <span>ID:</span>
+                    <code>{selectedShapeInfo.id}</code>
+                  </div>
+                  <div className="shape-lab__info-row">
+                    <span>Category:</span>
+                    <span>{selectedShapeInfo.category}</span>
+                  </div>
+                  <div className="shape-lab__info-row">
+                    <span>3D Depth:</span>
+                    <span>{selectedShapeInfo.has3DDepth ? "Yes" : "No"}</span>
+                  </div>
+                </div>
+              </div>
             )}
-          </div>
-        </div>
 
-        {/* Preview Panels */}
-        <div className="shape-lab__previews">
-          {/* Sigil Mode Preview */}
-          <div className="shape-lab__preview-panel">
-            <h3 className="shape-lab__preview-title">Sigil Mode</h3>
-            <p className="shape-lab__preview-desc">200×200px, for service cards</p>
-            <div className="shape-lab__canvas-container">
-              <SigilPreview
-                shapeId={selectedShape}
-                seed={seed}
-                pointCount={pointCount}
-                size={200}
-              />
+            {/* Save Preset Button */}
+            <div className="shape-lab__section">
+              <h3 className="shape-lab__section-title">Save Current</h3>
+              {!showSaveForm ? (
+                <button className="shape-lab__save-btn" onClick={() => setShowSaveForm(true)}>
+                  Save as Preset
+                </button>
+              ) : (
+                <div className="shape-lab__save-form">
+                  <input
+                    type="text"
+                    value={presetName}
+                    onChange={(e) => setPresetName(e.target.value)}
+                    placeholder="Preset name..."
+                    className="shape-lab__preset-input"
+                    onKeyDown={(e) => e.key === "Enter" && savePreset()}
+                  />
+                  <div className="shape-lab__save-actions">
+                    <button
+                      className="shape-lab__action-btn shape-lab__action-btn--save"
+                      onClick={savePreset}
+                      disabled={savingPreset || !presetName.trim()}
+                    >
+                      {savingPreset ? "Saving..." : "Save"}
+                    </button>
+                    <button
+                      className="shape-lab__action-btn shape-lab__action-btn--cancel"
+                      onClick={() => {
+                        setShowSaveForm(false);
+                        setPresetName("");
+                      }}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Presets Panel */}
+            <div className="shape-lab__section">
+              <h3 className="shape-lab__section-title">
+                Presets {presetsLoading && <span className="shape-lab__loading">Loading...</span>}
+              </h3>
+              {presets.length === 0 && !presetsLoading ? (
+                <p className="shape-lab__empty-text">No presets saved yet</p>
+              ) : (
+                <div className="shape-lab__presets-list">
+                  {presets.map((preset) => (
+                    <div key={preset.id} className="shape-lab__preset-item">
+                      <button className="shape-lab__preset-btn" onClick={() => loadPreset(preset)}>
+                        <span className="shape-lab__preset-name">{preset.name}</span>
+                        <span className="shape-lab__preset-meta">
+                          {preset.shapeId} · {preset.pointCount}pts
+                        </span>
+                      </button>
+                      <button
+                        className="shape-lab__preset-delete"
+                        onClick={() => deletePreset(preset.id)}
+                        title="Delete preset"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 
-          {/* Landmark Mode Preview */}
-          <div className="shape-lab__preview-panel">
-            <h3 className="shape-lab__preview-title">Landmark Mode</h3>
-            <p className="shape-lab__preview-desc">3D rotating view, for manifold landmarks</p>
-            <div className="shape-lab__canvas-container">
-              <LandmarkPreview
-                shapeId={selectedShape}
-                seed={seed}
-                pointCount={pointCount}
-                size={300}
-              />
+          {/* Preview Panels */}
+          <div className="shape-lab__previews">
+            {/* Sigil Mode Preview */}
+            <div className="shape-lab__preview-panel">
+              <h3 className="shape-lab__preview-title">Sigil Mode</h3>
+              <p className="shape-lab__preview-desc">200×200px, for service cards</p>
+              <div className="shape-lab__canvas-container">
+                <SigilPreview
+                  shapeId={selectedShape}
+                  seed={seed}
+                  pointCount={pointCount}
+                  size={200}
+                />
+              </div>
+            </div>
+
+            {/* Landmark Mode Preview */}
+            <div className="shape-lab__preview-panel">
+              <h3 className="shape-lab__preview-title">Landmark Mode</h3>
+              <p className="shape-lab__preview-desc">3D rotating view, for manifold landmarks</p>
+              <div className="shape-lab__canvas-container">
+                <LandmarkPreview
+                  shapeId={selectedShape}
+                  seed={seed}
+                  pointCount={pointCount}
+                  size={300}
+                />
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

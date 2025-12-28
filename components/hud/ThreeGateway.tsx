@@ -13,6 +13,11 @@ import {
 } from "@/lib/particle-config";
 import { useIsMobile } from "@/lib/hooks/useMediaQuery";
 import { KeyVisualPortal } from "./KeyVisualPortal";
+import {
+  KeyVisualOverlayPortal,
+  type KeyVisualOverlayConfig,
+  DEFAULT_OVERLAY_CONFIG,
+} from "./KeyVisualOverlayPortal";
 
 // ═══════════════════════════════════════════════════════════════
 // THREE.JS GATEWAY - SOLID ARCHITECTURAL PORTAL
@@ -1636,6 +1641,11 @@ function GatewayScene({ scrollProgress, config }: GatewaySceneProps) {
   // Check if this is the keyVisual shape (image-based particle cloud)
   const isKeyVisual = shape === "keyVisual";
 
+  // Check if key visual overlay is enabled
+  const overlayConfig = config.keyVisualOverlay;
+  const overlayEnabled =
+    overlayConfig?.enabled && (overlayConfig?.imageSrc || overlayConfig?.bakedSrc);
+
   return (
     <>
       <FlyingCamera scrollProgress={scrollProgress} gatewayX={config.positionX} />
@@ -1747,6 +1757,37 @@ function GatewayScene({ scrollProgress, config }: GatewaySceneProps) {
               />
             )}
           </>
+        )}
+
+        {/* Key Visual Overlay - renders on top of existing gateway */}
+        {overlayEnabled && overlayConfig && (
+          <KeyVisualOverlayPortal
+            config={{
+              ...DEFAULT_OVERLAY_CONFIG,
+              ...overlayConfig,
+              primaryColor: primaryColor,
+              accentColor: accentColor,
+              scale: 1.0, // Scale handled by parent group
+              opacity: opacity,
+              artDirection: {
+                ...DEFAULT_OVERLAY_CONFIG.artDirection,
+                ...overlayConfig.artDirection,
+              },
+              layers: {
+                contour: {
+                  ...DEFAULT_OVERLAY_CONFIG.layers.contour,
+                  ...overlayConfig.layers?.contour,
+                },
+                fill: { ...DEFAULT_OVERLAY_CONFIG.layers.fill, ...overlayConfig.layers?.fill },
+                highlight: {
+                  ...DEFAULT_OVERLAY_CONFIG.layers.highlight,
+                  ...overlayConfig.layers?.highlight,
+                },
+              },
+            }}
+            scrollProgress={scrollProgress}
+            visible={opacity > 0}
+          />
         )}
       </group>
     </>

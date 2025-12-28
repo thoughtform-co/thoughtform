@@ -176,6 +176,80 @@ export const GATEWAY_SHAPE_IS_ATTRACTOR: Record<GatewayShape, boolean> = {
 };
 
 /**
+ * Layer kind for key visual overlay
+ */
+export type KeyVisualLayerKind = "contour" | "fill" | "highlight";
+
+/**
+ * Per-layer configuration for key visual overlay
+ */
+export interface KeyVisualLayerConfig {
+  enabled: boolean;
+  /** Relative weight (share of maxParticles) */
+  weight: number;
+  /** Runtime density multiplier (0-1) */
+  density: number;
+  /** Opacity multiplier */
+  opacityMultiplier: number;
+  /** Size multiplier */
+  sizeMultiplier: number;
+  /** Color mode: "image" uses original colors, "tint" uses primary/accent */
+  colorMode: "image" | "tint";
+}
+
+/**
+ * Art-direction controls for key visual overlay
+ */
+export interface KeyVisualArtDirection {
+  /** Luma contrast (1 = neutral, >1 = more contrast) */
+  contrast: number;
+  /** Luma gamma (1 = linear, <1 = brighter mids) */
+  gamma: number;
+  /** Depth scale multiplier */
+  depthScale: number;
+  /** Depth gamma curve */
+  depthGamma: number;
+  /** Invert depth (swap near/far) */
+  depthInvert: boolean;
+  /** Global luma threshold */
+  lumaThreshold: number;
+  /** Global alpha threshold */
+  alphaThreshold: number;
+}
+
+/**
+ * Configuration for key visual overlay (image→particle cloud overlay on gateway)
+ */
+export interface KeyVisualOverlayConfig {
+  /** Whether the overlay is enabled */
+  enabled: boolean;
+  /** Mode: dynamic samples from images, baked loads TFPC file */
+  mode: "dynamic" | "baked";
+  /** Source image URL (for dynamic mode) */
+  imageSrc: string;
+  /** Depth map URL (for dynamic mode) */
+  depthMapSrc: string;
+  /** Baked TFPC file URL (for baked mode) */
+  bakedSrc: string;
+  /** Maximum particles */
+  maxParticles: number;
+  /** Sampling step (higher = fewer particles) */
+  sampleStep: number;
+  /** Base particle size */
+  particleSize: number;
+  /** Interaction strength (pointer attract/repel) */
+  interactionStrength: number;
+  /** Turbulence/noise strength */
+  turbulenceStrength: number;
+  /** Art direction settings */
+  artDirection: KeyVisualArtDirection;
+  /** Per-layer settings */
+  layers: Record<KeyVisualLayerKind, KeyVisualLayerConfig>;
+  /** Base opacity */
+  opacity: number;
+}
+
+/**
  * Configuration for the Three.js Gateway (hero section)
  */
 export interface GatewayConfig {
@@ -220,6 +294,8 @@ export interface GatewayConfig {
   keyVisualInteractionStrength?: number;
   /** Turbulence/noise strength (0-0.2, default 0.02) */
   keyVisualTurbulence?: number;
+  /** Key visual overlay configuration (layered image→particle overlay) */
+  keyVisualOverlay?: KeyVisualOverlayConfig;
 }
 
 /**
@@ -369,6 +445,68 @@ export const DEFAULT_LANDMARKS: LandmarkConfig[] = [
 ];
 
 /**
+ * Default art direction for key visual overlay
+ */
+export const DEFAULT_KEY_VISUAL_ART_DIRECTION: KeyVisualArtDirection = {
+  contrast: 1.0,
+  gamma: 1.0,
+  depthScale: 0.8,
+  depthGamma: 1.0,
+  depthInvert: false,
+  lumaThreshold: 0.03,
+  alphaThreshold: 0.1,
+};
+
+/**
+ * Default layer configs for key visual overlay
+ */
+export const DEFAULT_KEY_VISUAL_LAYERS: Record<KeyVisualLayerKind, KeyVisualLayerConfig> = {
+  contour: {
+    enabled: true,
+    weight: 0.45,
+    density: 1.0,
+    opacityMultiplier: 1.0,
+    sizeMultiplier: 0.8,
+    colorMode: "tint",
+  },
+  fill: {
+    enabled: true,
+    weight: 0.45,
+    density: 1.0,
+    opacityMultiplier: 0.7,
+    sizeMultiplier: 1.2,
+    colorMode: "image",
+  },
+  highlight: {
+    enabled: true,
+    weight: 0.1,
+    density: 1.0,
+    opacityMultiplier: 1.2,
+    sizeMultiplier: 1.5,
+    colorMode: "tint",
+  },
+};
+
+/**
+ * Default key visual overlay configuration
+ */
+export const DEFAULT_KEY_VISUAL_OVERLAY: KeyVisualOverlayConfig = {
+  enabled: false,
+  mode: "dynamic",
+  imageSrc: "",
+  depthMapSrc: "",
+  bakedSrc: "",
+  maxParticles: 50000,
+  sampleStep: 2,
+  particleSize: 1.2,
+  interactionStrength: 0.15,
+  turbulenceStrength: 0.015,
+  artDirection: DEFAULT_KEY_VISUAL_ART_DIRECTION,
+  layers: DEFAULT_KEY_VISUAL_LAYERS,
+  opacity: 1.0,
+};
+
+/**
  * Default gateway configuration
  * Solid, iconic portal that invites you to travel through
  * Higher density and brighter colors for architectural presence
@@ -389,6 +527,7 @@ export const DEFAULT_GATEWAY: GatewayConfig = {
   algorithmicEffects: false, // Disabled by default
   algorithmicIntensity: 1.0, // Default intensity
   algorithmicPattern: "all", // Use all patterns combined
+  keyVisualOverlay: DEFAULT_KEY_VISUAL_OVERLAY,
 };
 
 /**
@@ -434,6 +573,27 @@ export const DEFAULT_CONFIG: ParticleSystemConfig = {
 };
 
 /**
+ * Deep merge key visual overlay config with defaults
+ */
+function mergeKeyVisualOverlay(partial?: Partial<KeyVisualOverlayConfig>): KeyVisualOverlayConfig {
+  if (!partial) return DEFAULT_KEY_VISUAL_OVERLAY;
+
+  return {
+    ...DEFAULT_KEY_VISUAL_OVERLAY,
+    ...partial,
+    artDirection: {
+      ...DEFAULT_KEY_VISUAL_ART_DIRECTION,
+      ...(partial.artDirection || {}),
+    },
+    layers: {
+      contour: { ...DEFAULT_KEY_VISUAL_LAYERS.contour, ...(partial.layers?.contour || {}) },
+      fill: { ...DEFAULT_KEY_VISUAL_LAYERS.fill, ...(partial.layers?.fill || {}) },
+      highlight: { ...DEFAULT_KEY_VISUAL_LAYERS.highlight, ...(partial.layers?.highlight || {}) },
+    },
+  };
+}
+
+/**
  * Validate and merge partial config with defaults
  */
 export function mergeWithDefaults(partial: Partial<ParticleSystemConfig>): ParticleSystemConfig {
@@ -446,6 +606,7 @@ export function mergeWithDefaults(partial: Partial<ParticleSystemConfig>): Parti
     gateway: {
       ...DEFAULT_GATEWAY,
       ...(partial.gateway || {}),
+      keyVisualOverlay: mergeKeyVisualOverlay(partial.gateway?.keyVisualOverlay),
     },
     camera: {
       ...DEFAULT_CAMERA,
@@ -472,16 +633,67 @@ export const DEFAULT_MOBILE_GATEWAY: Partial<GatewayConfig> = {
 };
 
 /**
+ * Default mobile overlay overrides (reduced particles, disabled highlight layer)
+ */
+export const DEFAULT_MOBILE_KEY_VISUAL_OVERLAY: Partial<KeyVisualOverlayConfig> = {
+  maxParticles: 25000, // Reduced for performance
+  layers: {
+    contour: {
+      enabled: true,
+      weight: 0.5,
+      density: 0.8,
+      opacityMultiplier: 1.0,
+      sizeMultiplier: 0.8,
+      colorMode: "tint",
+    },
+    fill: {
+      enabled: true,
+      weight: 0.5,
+      density: 0.6,
+      opacityMultiplier: 0.7,
+      sizeMultiplier: 1.2,
+      colorMode: "image",
+    },
+    highlight: {
+      enabled: false,
+      weight: 0.0,
+      density: 0.0,
+      opacityMultiplier: 1.0,
+      sizeMultiplier: 1.0,
+      colorMode: "tint",
+    }, // Disabled on mobile
+  },
+};
+
+/**
  * Get the effective config for mobile (merges mobile overrides with base config)
  * Order: base config → mobile defaults → user mobile overrides
  */
 export function getMobileEffectiveConfig(config: ParticleSystemConfig): ParticleSystemConfig {
+  const baseOverlay = config.gateway.keyVisualOverlay || DEFAULT_KEY_VISUAL_OVERLAY;
+
   return {
     ...config,
     gateway: {
       ...config.gateway,
       ...DEFAULT_MOBILE_GATEWAY,
       ...(config.mobileGateway || {}),
+      keyVisualOverlay: {
+        ...baseOverlay,
+        ...DEFAULT_MOBILE_KEY_VISUAL_OVERLAY,
+        artDirection: baseOverlay.artDirection,
+        layers: {
+          contour: {
+            ...baseOverlay.layers.contour,
+            ...DEFAULT_MOBILE_KEY_VISUAL_OVERLAY.layers?.contour,
+          },
+          fill: { ...baseOverlay.layers.fill, ...DEFAULT_MOBILE_KEY_VISUAL_OVERLAY.layers?.fill },
+          highlight: {
+            ...baseOverlay.layers.highlight,
+            ...DEFAULT_MOBILE_KEY_VISUAL_OVERLAY.layers?.highlight,
+          },
+        },
+      },
     },
     manifold: {
       ...config.manifold,
