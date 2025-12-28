@@ -1133,11 +1133,9 @@
     width: var(--frame-max-w) !important;
     max-width: none !important;
     bottom: auto !important;
-    /* IMPORTANT (H10): avoid an abrupt jump to a fixed 85vh height as soon as manifesto-active toggles.
-       Let the frame grow naturally with content and clamp via max-height. */
-    max-height: calc(85vh - var(--safe-top) - var(--safe-bottom));
-    overflow-y: auto !important;
-    overflow-x: hidden !important;
+    /* Inner manifesto tabs handle scrolling; keep the outer frame clipped so the CTA can pin */
+    max-height: calc(80vh - var(--safe-top) - var(--safe-bottom));
+    overflow: hidden !important;
   }
 
   /* Mobile Services: Dimensions and positioning are now handled via inline styles in index.tsx */
@@ -1308,8 +1306,7 @@
   .bridge-frame.manifesto-active {
     /* PHONE: Only use max-height clamp; let content determine actual height for smooth transition */
     max-height: calc(80vh - var(--safe-top) - var(--safe-bottom));
-    overflow-y: auto !important;
-    overflow-x: hidden !important;
+    overflow: hidden !important;
   }
 
   /* Phone services deck: slightly smaller for compact screens */

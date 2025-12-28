@@ -79,6 +79,8 @@ interface ManifestoMobileTabsProps {
   activeTab: ManifestoMobileTabId;
   /** Optional CTA below the manifesto terminal */
   onStartJourney?: () => void;
+  /** Services card transition progress (0-1) - used to hide scrollbar and fade button */
+  tServicesCards?: number;
 }
 
 export function ManifestoMobileTabs({
@@ -86,6 +88,7 @@ export function ManifestoMobileTabs({
   isVisible,
   activeTab,
   onStartJourney,
+  tServicesCards = 0,
 }: ManifestoMobileTabsProps) {
   const [expandedVoice, setExpandedVoice] = useState<string | null>(null);
   const tabContentRef = useRef<HTMLDivElement | null>(null);
@@ -118,8 +121,15 @@ export function ManifestoMobileTabs({
 
   return (
     <div className="manifesto-mobile-tabs">
-      {/* Content area */}
-      <div className="mobile-tab-content" ref={tabContentRef}>
+      {/* Content area - H2 FIX: hide overflow during services transition to prevent scrollbar */}
+      <div
+        className="mobile-tab-content"
+        ref={tabContentRef}
+        style={{
+          // When services transition starts, hide overflow to prevent scrollbar appearing
+          overflow: tServicesCards > 0 ? "hidden" : undefined,
+        }}
+      >
         {/* Manifesto Tab */}
         {activeTab === "manifesto" && (
           <div className="tab-panel tab-panel--manifesto">
@@ -179,9 +189,18 @@ export function ManifestoMobileTabs({
         )}
       </div>
 
-      {/* Fixed CTA (outside the scroll container) */}
+      {/* Fixed CTA (outside the scroll container) - H5 FIX: fade during services transition */}
       {activeTab === "manifesto" && onStartJourney && (
-        <div className="manifesto-cta-fixed">
+        <div
+          className="manifesto-cta-fixed"
+          style={{
+            // Fade out button as services transition progresses
+            opacity: Math.max(0, 1 - tServicesCards * 2),
+            // Hide completely when mostly faded
+            visibility: tServicesCards > 0.5 ? "hidden" : "visible",
+            transition: "opacity 0.15s ease-out, visibility 0.15s ease-out",
+          }}
+        >
           <button
             type="button"
             className="manifesto-journey-btn"

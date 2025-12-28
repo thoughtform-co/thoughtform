@@ -46,8 +46,13 @@ import { SigilEditorPanel } from "./SigilEditorPanel";
 // ═══════════════════════════════════════════════════════════════════
 
 // Fixed scroll thresholds for hero→definition transition
-const HERO_END = 0; // Transition starts immediately on scroll
-const DEF_START = 0.12; // Transition completes by 12% of total scroll
+// Desktop timings (existing behavior)
+const HERO_END_DESKTOP = 0; // Transition starts immediately on scroll
+const DEF_START_DESKTOP = 0.12; // Transition completes by 12% of total scroll
+
+// Mobile timings (H1): delay start more noticeably while still completing before manifesto begins (0.15)
+const HERO_END_MOBILE = 0.06; // Start after 6% scroll (noticeable delay)
+const DEF_START_MOBILE = 0.14; // Complete by 14% scroll (before DEF_TO_MANIFESTO_START=0.15)
 
 // Services card target height (the manifesto frame shrinks down into this)
 const SERVICES_CARD_HEIGHT = 480;
@@ -77,6 +82,11 @@ function NavigationCockpitInner() {
   const { user } = useAuth();
   const isAdmin = !!user?.id;
   const { configs: sigilConfigsContext, updateConfig: updateSigilConfig } = useSigilConfig();
+
+  // Mobile manifesto sizing: capture the "interface frame" height before manifesto starts so we can
+  // interpolate smoothly into the fixed-height manifesto terminal (prevents a snap/jump).
+  const manifestoStartHeightPxRef = useRef<number | null>(null);
+  const manifestoTargetHeightPxRef = useRef<number | null>(null);
   const sigilConfigs: SigilConfig[] =
     sigilConfigsContext.length === 3
       ? (sigilConfigsContext as SigilConfig[])
@@ -387,7 +397,9 @@ function NavigationCockpitInner() {
   // HERO → DEFINITION TRANSITION PROGRESS
   // Single normalized value (0→1) driving all transition animations
   // ═══════════════════════════════════════════════════════════════════
-  const rawT = Math.max(0, Math.min(1, (scrollProgress - HERO_END) / (DEF_START - HERO_END)));
+  const heroEnd = isMobile ? HERO_END_MOBILE : HERO_END_DESKTOP;
+  const defStart = isMobile ? DEF_START_MOBILE : DEF_START_DESKTOP;
+  const rawT = Math.max(0, Math.min(1, (scrollProgress - heroEnd) / (defStart - heroEnd)));
   const tHeroToDef = easeInOutCubic(rawT);
 
   // ═══════════════════════════════════════════════════════════════════
@@ -405,6 +417,41 @@ function NavigationCockpitInner() {
     )
   );
   const tDefToManifesto = easeInOutCubic(rawTDefToManifesto);
+
+  // Capture mobile manifesto target height (80vh minus safe insets) and the pre-manifesto frame height
+  // so we can smoothly interpolate height during the Interface→Manifesto morph (prevents a snap).
+  useEffect(() => {
+    if (!isMobile) return;
+    if (typeof window === "undefined") return;
+
+    const computeTarget = () => {
+      const root = window.getComputedStyle(document.documentElement);
+      const safeTop = parseFloat(root.getPropertyValue("--safe-top")) || 0;
+      const safeBottom = parseFloat(root.getPropertyValue("--safe-bottom")) || 0;
+      const target = Math.max(0, window.innerHeight * 0.8 - safeTop - safeBottom);
+      manifestoTargetHeightPxRef.current = target;
+    };
+
+    computeTarget();
+    window.addEventListener("resize", computeTarget, { passive: true });
+    return () => window.removeEventListener("resize", computeTarget);
+  }, [isMobile]);
+
+  useEffect(() => {
+    if (!isMobile) return;
+    if (typeof window === "undefined") return;
+    // NOTE: Avoid referencing `isManifestoTerminalMode` here (it is declared later in this file).
+    // Derive from scrollProgress to prevent a TDZ runtime error.
+    const manifestoMode = scrollProgress >= DEF_TO_MANIFESTO_START;
+    if (manifestoMode) return; // stop updating once manifesto starts
+    if (tHeroToDef < 0.95) return; // only once the interface frame is fully formed
+    if (scrollProgress >= DEF_TO_MANIFESTO_START) return;
+
+    const frame = bridgeFrameRef.current;
+    if (!frame) return;
+    const h = frame.getBoundingClientRect().height;
+    if (h > 0) manifestoStartHeightPxRef.current = h;
+  }, [isMobile, tHeroToDef, scrollProgress]);
 
   // NOTE: Scroll capture intentionally disabled — manifesto reveal is scroll-driven and the
   // manifold/camera must never pause.
@@ -883,7 +930,9 @@ function NavigationCockpitInner() {
           ═══════════════════════════════════════════════════════════════════ */}
       <div
         ref={bridgeFrameRef}
-        className={`bridge-frame${isMobile && tHeroToDef >= 1 && tServicesCards < 0.05 ? " manifesto-active" : ""}`}
+        className={`bridge-frame${
+          isMobile && isManifestoTerminalMode && tServicesCards < 0.05 ? " manifesto-active" : ""
+        }`}
         onMouseEnter={() => setIsBridgeHovered(true)}
         onMouseLeave={() => setIsBridgeHovered(false)}
         style={
@@ -947,15 +996,25 @@ function NavigationCockpitInner() {
                 // Use max-height for smooth shrinking (prevents growth if manifesto < 620px due to CSS constraints)
                 // Interpolate from the CSS constraint (80vh) to the final card height (420px)
                 maxHeight:
-                  isMobile && tHeroToDef >= 1
-                    ? manifestoComplete && tServicesCards > 0
-                      ? `calc(420px + (1 - ${tServicesCards}) * (80vh - var(--safe-top) - var(--safe-bottom) - 420px))`
-                      : "calc(80vh - var(--safe-top) - var(--safe-bottom))"
+                  isMobile && isManifestoTerminalMode
+                    ? "calc(80vh - var(--safe-top) - var(--safe-bottom))"
                     : undefined,
-                // Only apply height at the end (t > 0.8) to lock in final card size
+                // H7/H8: Smooth Interface→Manifesto height morph (prevents snap), then shrink to services card.
                 height:
-                  manifestoComplete && tServicesCards > 0.8
-                    ? `${420 + (1 - tServicesCards) * 200}px`
+                  isMobile && isManifestoTerminalMode
+                    ? (() => {
+                        if (typeof window === "undefined") return undefined;
+                        const target =
+                          manifestoTargetHeightPxRef.current ??
+                          Math.max(0, window.innerHeight * 0.8);
+                        const start = manifestoStartHeightPxRef.current ?? target;
+                        const manifestoH = start + (target - start) * tDefToManifesto;
+                        // tServicesCards only starts after manifestoComplete, so this keeps the pre-services morph intact.
+                        const h = manifestoComplete
+                          ? manifestoH + (420 - manifestoH) * tServicesCards
+                          : manifestoH;
+                        return `${Math.max(0, h)}px`;
+                      })()
                     : undefined,
                 // Allow overflow for stack peek effect during services
                 overflow: manifestoComplete && tServicesCards > 0.1 ? "visible" : undefined,
@@ -1340,6 +1399,7 @@ human-AI collaboration.`}
                     isVisible={true}
                     activeTab={mobileManifestoTab}
                     onStartJourney={() => handleNavigate("services")}
+                    tServicesCards={tServicesCards}
                   />
                 ) : (
                   <ManifestoTerminal revealProgress={manifestoRevealProgress} isActive={true} />
