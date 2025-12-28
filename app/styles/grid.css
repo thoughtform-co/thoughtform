@@ -121,6 +121,7 @@
 
 .section {
   min-height: 100vh;
+  min-height: 100dvh; /* Dynamic viewport for mobile browser chrome */
   display: flex;
   align-items: center;
   padding: 100px calc(var(--hud-padding) + var(--rail-width) + 120px);

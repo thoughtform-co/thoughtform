@@ -1,9 +1,25 @@
 "use client";
 
 import { useEffect, useState, useCallback, useRef, useMemo } from "react";
-import { ParticleCanvasV2 } from "../ParticleCanvasV2";
-import { ThreeGateway } from "../ThreeGateway";
+import dynamic from "next/dynamic";
 import { CanvasErrorBoundary } from "../CanvasErrorBoundary";
+
+// ═══════════════════════════════════════════════════════════════════
+// DYNAMIC IMPORTS - Code-split heavy WebGL components
+// These are lazy-loaded to reduce initial bundle size
+// ═══════════════════════════════════════════════════════════════════
+const ParticleCanvasV2 = dynamic(
+  () => import("../ParticleCanvasV2").then((m) => m.ParticleCanvasV2),
+  {
+    ssr: false,
+    loading: () => null, // No visual placeholder - canvas appears smoothly
+  }
+);
+
+const ThreeGateway = dynamic(() => import("../ThreeGateway").then((m) => m.ThreeGateway), {
+  ssr: false,
+  loading: () => null,
+});
 import { HUDFrame, NavigationBarHandle } from "../HUDFrame";
 import { Wordmark } from "../Wordmark";
 import { WordmarkSans } from "../WordmarkSans";
@@ -57,15 +73,8 @@ const DEF_START_MOBILE = 0.14; // Complete by 14% scroll (before DEF_TO_MANIFEST
 // Services card target height (the manifesto frame shrinks down into this)
 const SERVICES_CARD_HEIGHT = 480;
 
-// Easing function for smooth transition
-function easeInOutCubic(t: number): number {
-  return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
-}
-
-// Linear interpolation helper
-function lerp(a: number, b: number, t: number): number {
-  return a + (b - a) * t;
-}
+// Math utilities extracted to lib/utils.ts for reuse
+import { easeInOutCubic, lerp } from "@/lib/utils";
 
 // Inner component that uses the config context
 function NavigationCockpitInner() {

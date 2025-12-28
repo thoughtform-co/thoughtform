@@ -1,8 +1,10 @@
 import type { Metadata, Viewport } from "next";
 import { IBM_Plex_Sans, IBM_Plex_Mono } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 import { Providers } from "@/components/Providers";
 
+// Google Fonts
 const ibmPlex = IBM_Plex_Sans({
   subsets: ["latin"],
   weight: ["300", "400", "500"],
@@ -15,6 +17,14 @@ const ibmPlexMono = IBM_Plex_Mono({
   weight: ["300", "400", "500"],
   variable: "--font-ibm-plex-mono",
   display: "swap",
+});
+
+// Local Fonts
+const ppMondwest = localFont({
+  src: "../public/fonts/ppmondwest-regular.otf",
+  variable: "--font-mondwest",
+  display: "swap",
+  weight: "400",
 });
 
 // Viewport config for iOS safe-area support
@@ -52,24 +62,10 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${ibmPlex.variable} ${ibmPlexMono.variable}`}>
-      <head>
-        {/* PP Mondwest font - add your font files to /public/fonts/ */}
-        <style
-          dangerouslySetInnerHTML={{
-            __html: `
-              @font-face {
-                font-family: 'PP Mondwest';
-                src: url('/fonts/PPMondwest-Regular.woff2') format('woff2'),
-                     url('/fonts/PPMondwest-Regular.woff') format('woff');
-                font-weight: 400;
-                font-style: normal;
-                font-display: swap;
-              }
-            `,
-          }}
-        />
-      </head>
+    <html
+      lang="en"
+      className={`${ibmPlex.variable} ${ibmPlexMono.variable} ${ppMondwest.variable}`}
+    >
       <body>
         <Providers>{children}</Providers>
       </body>

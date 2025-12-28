@@ -3,11 +3,16 @@
    Hero section, bridge frame, manifesto terminal, glitch effects
    ═══════════════════════════════════════════════════════════════ */
 
+/* Import modular navigation components */
+@import "./navigation/index.css";
+
 /* ─── HERO SECTION ─── */
 .section-hero {
   position: relative;
   min-height: 100vh;
+  min-height: 100dvh; /* Dynamic viewport for mobile browser chrome */
   height: 100vh;
+  height: 100dvh;
   padding-top: 140px;
   padding-right: 22%;
 }
@@ -16,6 +21,7 @@
   position: relative;
   width: 100%;
   height: 100vh;
+  height: 100dvh;
   display: grid;
   grid-template-columns: 1fr;
   gap: var(--space-4xl);
@@ -455,6 +461,7 @@
   align-items: center !important;
   display: flex !important;
   min-height: 100vh !important;
+  min-height: 100dvh !important;
 }
 
 .terminal-corner {
@@ -926,6 +933,7 @@
 .section-definition {
   position: relative;
   min-height: 100vh !important;
+  min-height: 100dvh !important;
   display: flex !important;
   flex-direction: column !important;
   justify-content: center !important;

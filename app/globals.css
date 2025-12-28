@@ -8,9 +8,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Iosevka Web Font - Terminal aesthetic monospace */
-@import url("https://cdn.jsdelivr.net/npm/iosevka-webfont@11.2.2/iosevka/iosevka.css");
-
 /* ═══════════════════════════════════════════════════════════════
    MODULAR CSS IMPORTS
    Import order matters - variables must come first

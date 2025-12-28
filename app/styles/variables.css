@@ -22,10 +22,11 @@
   --gold-15: rgba(202, 165, 84, 0.15);
   --alert: #ff6b35;
 
-  /* Typography */
-  --font-display: "PP Mondwest", serif;
+  /* Typography - Uses CSS variables from next/font in app/layout.tsx */
+  --font-display: var(--font-mondwest), "PP Mondwest", serif;
   --font-body: var(--font-ibm-plex-mono), "IBM Plex Mono", monospace;
   --font-data: var(--font-ibm-plex-mono), "IBM Plex Mono", monospace;
+  --font-mono: var(--font-ibm-plex-mono), "IBM Plex Mono", monospace;
 
   /* ─── FLUID TYPOGRAPHY SCALE ───
      Tuned for smooth scaling across 430px–1440px viewports.

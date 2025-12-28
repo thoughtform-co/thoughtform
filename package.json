@@ -7,9 +7,12 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "analyze": "cross-env ANALYZE=true next build",
     "test": "vitest",
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",
+    "test:visual": "playwright test",
+    "test:visual:update": "playwright test --update-snapshots",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "prepare": "husky"
@@ -48,6 +51,8 @@
     "zustand": "5.0.0"
   },
   "devDependencies": {
+    "@next/bundle-analyzer": "^16.1.1",
+    "@playwright/test": "^1.57.0",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.1",
     "@types/node": "^20",
@@ -55,6 +60,7 @@
     "@types/react-dom": "18.3.1",
     "@types/three": "^0.170.0",
     "@vitejs/plugin-react": "^5.1.2",
+    "cross-env": "^10.1.0",
     "eslint": "8.57.0",
     "eslint-config-next": "14.2.18",
     "eslint-config-prettier": "^9.1.0",

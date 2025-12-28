@@ -1,0 +1,17 @@
+/* ═══════════════════════════════════════════════════════════════
+   NAVIGATION SYSTEM - Modular CSS Index
+   Import order matters for cascade
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Navigation Bar (desktop + mobile) */
+@import "./_navbar.css";
+
+/* 
+  Future modules (when splitting navigation.css):
+  @import "./_hero.css";
+  @import "./_bridge.css";
+  @import "./_manifesto.css";
+  @import "./_services.css";
+  @import "./_sigil.css";
+  @import "./_modules.css";
+*/
