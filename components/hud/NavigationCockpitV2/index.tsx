@@ -79,6 +79,7 @@ function NavigationCockpitInner() {
   const [isBridgeHovered, setIsBridgeHovered] = useState(false);
   const [isParticleAdminOpen, setIsParticleAdminOpen] = useState(false);
   const [mobileManifestoTab, setMobileManifestoTab] = useState<ManifestoMobileTabId>("manifesto");
+  const [mobileFrontCardIndex, setMobileFrontCardIndex] = useState<number>(2); // Start with Strategies (index 2)
 
   const handleOpenSigilEditor = useCallback((cardIndex: number) => {
     setEditingServiceSigilIndex(cardIndex);
@@ -468,11 +469,6 @@ function NavigationCockpitInner() {
       if (rafId !== null) cancelAnimationFrame(rafId);
     };
   }, [manifestoComplete, tServicesCardsTarget]);
-
-  // Mobile-only: services deck is "active" once the cards have begun fading in.
-  // Important: when this is true, we should NOT also apply `.manifesto-active` styles,
-  // otherwise mobile manifesto sizing rules can override the intended card-sized deck.
-  const isMobileServicesActive = isMobile && manifestoComplete && tServicesCards > 0.001;
 
   // Visual crossfade for manifesto → services on mobile:
   // Use the *target* (not the smoothed value) so we don't "fade manifesto out" while the deck is still ~invisible.
@@ -880,7 +876,7 @@ function NavigationCockpitInner() {
           ═══════════════════════════════════════════════════════════════════ */}
       <div
         ref={bridgeFrameRef}
-        className={`bridge-frame${isMobile && tDefToManifesto > 0.9 && !isMobileServicesActive ? " manifesto-active" : ""}${isMobileServicesActive ? " mobile-services-active" : ""}`}
+        className={`bridge-frame${isMobile && tHeroToDef >= 1 && tServicesCards < 0.05 ? " manifesto-active" : ""}`}
         onMouseEnter={() => setIsBridgeHovered(true)}
         onMouseLeave={() => setIsBridgeHovered(false)}
         style={
@@ -899,69 +895,107 @@ function NavigationCockpitInner() {
                 // At t=0: bottom: 8vh (hero position)
                 // At t=1: top: 12vh (moved up for better positioning with wordmark inside)
                 // During manifesto: frame extends from top to bottom
+                // During services: morph to centered card (50% top, translateY(-50%))
                 ...(tHeroToDef < 0.5
                   ? {
                       // Hero→Definition: bottom-based positioning
                       bottom: `${8 + tHeroToDef * 30}vh`,
                       top: undefined,
+                      transform: "translateX(-50%)", // Fix: Center horizontally during hero
                     }
-                  : {
-                      // Definition→Manifesto: top-based positioning (interpolates toward center)
-                      bottom: "auto",
-                      top: `calc(${46 - (tHeroToDef - 0.5) * 72}vh + (50vh - ${
-                        46 - (tHeroToDef - 0.5) * 72
-                      }vh) * var(--manifesto-center-t, 0))`,
-                    }),
+                  : manifestoComplete && tServicesCards > 0
+                    ? {
+                        // Services: stay centered - manifesto ends at 50%/translate(-50%,-50%)
+                        // Keep position stable, only size morphs
+                        bottom: "auto",
+                        top: "50%",
+                        transform: "translate(-50%, -50%)",
+                      }
+                    : {
+                        // Definition→Manifesto: top-based positioning (interpolates toward center)
+                        bottom: "auto",
+                        top: `calc(${46 - (tHeroToDef - 0.5) * 72}vh + (50vh - ${
+                          46 - (tHeroToDef - 0.5) * 72
+                        }vh) * var(--manifesto-center-t, 0))`,
+                        transform: `translate(-50%, calc(-50% * var(--manifesto-center-t, 0)))`,
+                      }),
                 // Stay visible throughout transition on mobile
                 opacity: 1,
                 visibility: "visible",
                 pointerEvents: "auto",
-                // Center horizontally
-                transform: `translate(-50%, calc(-50% * var(--manifesto-center-t, 0)))`,
                 transformOrigin: "center center",
-                // Mobile background/border - smooth transitions from hero → definition → manifesto
-                // Hero: transparent → Definition: 0.85 → Manifesto: 0.92 (interpolated smoothly)
+                // Interpolate width: manifesto width (~380px) → 340px (SERVICES_CARD_WIDTH)
+                // Start from 0 to avoid discontinuity
+                width:
+                  manifestoComplete && tServicesCards > 0
+                    ? `${340 + (1 - tServicesCards) * 40}px`
+                    : undefined,
+                maxWidth:
+                  manifestoComplete && tServicesCards > 0
+                    ? `${340 + (1 - tServicesCards) * 40}px`
+                    : undefined,
+                // Interpolate height: manifesto → 420px using max-height to prevent growth
+                // CSS manifesto-active has max-height ~80vh (~590px), so using height would cause brief growth
+                // Using max-height ensures frame can only shrink, never grow
+                // Use max-height for smooth shrinking (prevents growth if manifesto < 620px due to CSS constraints)
+                // Interpolate from the CSS constraint (80vh) to the final card height (420px)
+                maxHeight:
+                  isMobile && tHeroToDef >= 1
+                    ? manifestoComplete && tServicesCards > 0
+                      ? `calc(420px + (1 - ${tServicesCards}) * (80vh - var(--safe-top) - var(--safe-bottom) - 420px))`
+                      : "calc(80vh - var(--safe-top) - var(--safe-bottom))"
+                    : undefined,
+                // Only apply height at the end (t > 0.8) to lock in final card size
+                height:
+                  manifestoComplete && tServicesCards > 0.8
+                    ? `${420 + (1 - tServicesCards) * 200}px`
+                    : undefined,
+                // Allow overflow for stack peek effect during services
+                overflow: manifestoComplete && tServicesCards > 0.1 ? "visible" : undefined,
+                // Mobile background/border - smooth transitions from hero → definition → manifesto → services
+                // Hero: transparent → Definition: 0.85 → Manifesto: 0.92 → Services: 0.85 (service card aesthetic)
                 background: (() => {
-                  const servicesFade = manifestoComplete
-                    ? 1 - Math.min(1, Math.max(0, tServicesCards * 2))
-                    : 1;
                   // Phase 1: Hero→Definition (fade in from 0 to 0.85)
                   const defOpacity =
                     tHeroToDef > 0.7 ? Math.min(0.85, ((tHeroToDef - 0.7) / 0.3) * 0.85) : 0;
                   // Phase 2: Definition→Manifesto (smooth from 0.85 to 0.92)
                   const manifestoOpacity = 0.85 + 0.07 * tDefToManifesto;
-                  const finalOpacity = tHeroToDef >= 1 ? manifestoOpacity : defOpacity;
-                  return `rgba(10, 9, 8, ${servicesFade * finalOpacity})`;
+                  const baseOpacity = tHeroToDef >= 1 ? manifestoOpacity : defOpacity;
+                  // Phase 3: Manifesto→Services (interpolate to service card: 0.85)
+                  const servicesOpacity = 0.85;
+                  const finalOpacity =
+                    manifestoComplete && tServicesCards > 0
+                      ? baseOpacity + (servicesOpacity - baseOpacity) * tServicesCards
+                      : baseOpacity;
+                  return `rgba(10, 9, 8, ${finalOpacity})`;
                 })(),
                 backdropFilter: (() => {
-                  const servicesFade = manifestoComplete
-                    ? 1 - Math.min(1, Math.max(0, tServicesCards * 2))
-                    : 1;
                   // Phase 1: Hero→Definition (fade in blur from 0 to 12)
                   const defBlur = tHeroToDef > 0.7 ? ((tHeroToDef - 0.7) / 0.3) * 12 : 0;
-                  // Phase 2: Definition→Manifesto (stays at 12, no change needed)
-                  const finalBlur = tHeroToDef >= 1 ? 12 : defBlur;
-                  return `blur(${servicesFade * finalBlur}px)`;
+                  // Phase 2: Definition→Manifesto (stays at 12)
+                  const manifestoBlur = tHeroToDef >= 1 ? 12 : defBlur;
+                  // Phase 3: Manifesto→Services (stays at 12, no change)
+                  return `blur(${manifestoBlur}px)`;
                 })(),
                 WebkitBackdropFilter: (() => {
-                  const servicesFade = manifestoComplete
-                    ? 1 - Math.min(1, Math.max(0, tServicesCards * 2))
-                    : 1;
                   const defBlur = tHeroToDef > 0.7 ? ((tHeroToDef - 0.7) / 0.3) * 12 : 0;
-                  const finalBlur = tHeroToDef >= 1 ? 12 : defBlur;
-                  return `blur(${servicesFade * finalBlur}px)`;
+                  const manifestoBlur = tHeroToDef >= 1 ? 12 : defBlur;
+                  return `blur(${manifestoBlur}px)`;
                 })(),
                 border: (() => {
-                  const servicesFade = manifestoComplete
-                    ? 1 - Math.min(1, Math.max(0, tServicesCards * 2))
-                    : 1;
                   // Phase 1: Hero→Definition (fade in border from 0 to 0.2)
                   const defBorder =
                     tHeroToDef > 0.7 ? Math.min(0.2, ((tHeroToDef - 0.7) / 0.3) * 0.2) : 0;
                   // Phase 2: Definition→Manifesto (smooth from 0.2 to 0.25)
                   const manifestoBorder = 0.2 + 0.05 * tDefToManifesto;
-                  const finalBorder = tHeroToDef >= 1 ? manifestoBorder : defBorder;
-                  return `1px solid rgba(202, 165, 84, ${servicesFade * finalBorder})`;
+                  const baseBorder = tHeroToDef >= 1 ? manifestoBorder : defBorder;
+                  // Phase 3: Manifesto→Services (interpolate to service card: 0.15)
+                  const servicesBorder = 0.15;
+                  const finalBorder =
+                    manifestoComplete && tServicesCards > 0
+                      ? baseBorder + (servicesBorder - baseBorder) * tServicesCards
+                      : baseBorder;
+                  return `1px solid rgba(202, 165, 84, ${finalBorder})`;
                 })(),
               }
             : {
@@ -1307,7 +1341,7 @@ human-AI collaboration.`}
             )}
           </div>
 
-          {/* Services card content (right-most card) */}
+          {/* Services card content (Strategies card) - Desktop */}
           {!isMobile && tManifestoToServices > 0 && (
             <div
               style={{
@@ -1379,32 +1413,93 @@ human-AI collaboration.`}
           )}
         </div>
 
-        {/* Mobile Services Stack - rendered inside bridge-frame during services transition */}
-        {/* IMPORTANT: must live OUTSIDE .hero-text-frame because we hide that subtree in mobile-services-active */}
+        {/* Mobile Services: Strategies card content (front card) - renders inside bridge-frame */}
         {isMobile && manifestoComplete && tServicesCards > 0.001 && (
           <div
-            className="mobile-services-overlay"
             style={{
               position: "absolute",
               inset: 0,
               display: "flex",
               flexDirection: "column",
-              alignItems: "stretch",
-              justifyContent: "stretch",
+              gap: 0,
               opacity: tServicesCardsVisual,
               pointerEvents: tServicesCards > 0.3 ? "auto" : "none",
-              // GPU acceleration
+              overflow: "hidden",
+              // GPU acceleration for smooth scroll-driven animation
               willChange: "opacity",
               backfaceVisibility: "hidden",
+              zIndex: 2,
             }}
           >
-            <ServicesStackMobile
-              progress={tServicesCards}
-              sigilConfigs={sigilConfigs}
-              isVisible={tServicesCards > 0}
-            />
+            {/* Terminal-style header */}
+            <div className="service-card__header">
+              <span className="service-card__header-text">THOUGHTFORM@MANIFESTO:~</span>
+            </div>
+
+            {/* Admin edit icon - top-right, only on hover */}
+            {isAdmin && (
+              <button
+                className={`service-card__edit-btn ${isBridgeHovered ? "service-card__edit-btn--visible" : ""}`}
+                onClick={() => handleOpenSigilEditor(mobileFrontCardIndex)}
+                type="button"
+                aria-label="Edit sigil"
+                title="Edit sigil"
+              >
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                  focusable="false"
+                >
+                  <path d="M12 20h9" />
+                  <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z" />
+                </svg>
+              </button>
+            )}
+
+            <div className="service-card__content">
+              <h3 className="service-card__title">{SERVICES_DATA[mobileFrontCardIndex].title}</h3>
+              <p className="service-card__body">{SERVICES_DATA[mobileFrontCardIndex].body}</p>
+            </div>
+
+            <div className="service-card__sigil">
+              <div
+                style={{
+                  transform: `translate(${(sigilConfigs[mobileFrontCardIndex] ?? DEFAULT_SIGIL_CONFIGS[mobileFrontCardIndex]).offsetX ?? 0}%, ${(sigilConfigs[mobileFrontCardIndex] ?? DEFAULT_SIGIL_CONFIGS[mobileFrontCardIndex]).offsetY ?? 0}%)`,
+                }}
+              >
+                <SigilCanvas
+                  config={
+                    sigilConfigs[mobileFrontCardIndex] ??
+                    DEFAULT_SIGIL_CONFIGS[mobileFrontCardIndex]
+                  }
+                  size={
+                    (
+                      sigilConfigs[mobileFrontCardIndex] ??
+                      DEFAULT_SIGIL_CONFIGS[mobileFrontCardIndex]
+                    ).size ?? DEFAULT_SIGIL_SIZE
+                  }
+                  seed={
+                    (
+                      sigilConfigs[mobileFrontCardIndex] ??
+                      DEFAULT_SIGIL_CONFIGS[mobileFrontCardIndex]
+                    ).seed ?? 42 + mobileFrontCardIndex * 1000
+                  }
+                  allowSpill={false}
+                />
+              </div>
+            </div>
           </div>
         )}
+
+        {/* Mobile Services: Back cards stack (Keynotes, Workshop) - rendered behind bridge-frame */}
+        {/* Positioned outside bridge-frame so it can use fixed positioning */}
 
         {/* Interface CTAs - original buttons (morph overlay takes over as soon as tDefToManifesto > 0) */}
         {/* Removed !isManifestoTerminalMode to allow smooth transition */}
@@ -1645,6 +1740,31 @@ human-AI collaboration.`}
           </div>
         </div>
       </div>
+
+      {/* Mobile Services: Back cards stack (Keynotes, Workshop) - positioned behind bridge-frame */}
+      {isMobile && manifestoComplete && tServicesCards > 0.001 && (
+        <ServicesStackMobile
+          progress={tServicesCards}
+          sigilConfigs={sigilConfigs}
+          isVisible={tServicesCards > 0}
+          frontCardIndex={mobileFrontCardIndex}
+          onFrontCardChange={setMobileFrontCardIndex}
+          bridgeFrameTop={manifestoComplete && tServicesCards > 0 ? "50%" : undefined}
+          bridgeFrameTransform={
+            manifestoComplete && tServicesCards > 0 ? "translate(-50%, -50%)" : undefined
+          }
+          bridgeFrameWidth={
+            manifestoComplete && tServicesCards > 0
+              ? `${340 + (1 - tServicesCards) * 40}px`
+              : undefined
+          }
+          bridgeFrameHeight={
+            manifestoComplete && tServicesCards > 0
+              ? `calc(420px + (1 - ${tServicesCards}) * (80vh - var(--safe-top) - var(--safe-bottom) - 420px))`
+              : undefined
+          }
+        />
+      )}
 
       {/* Fixed HUD Frame - Navigation Cockpit */}
       <HUDFrame

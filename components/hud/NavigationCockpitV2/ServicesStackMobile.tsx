@@ -7,18 +7,24 @@ import { SERVICES_DATA, DEFAULT_SIGIL_CONFIGS } from "./ServicesDeck";
 import type { SigilConfig } from "./SigilCanvas";
 
 // ═══════════════════════════════════════════════════════════════════
-// SERVICES STACK MOBILE
+// SERVICES STACK MOBILE - BACK CARDS ONLY
 // ═══════════════════════════════════════════════════════════════════
 //
-// Mobile-only stacked card deck with vertical swipe interaction.
-// Reuses ServiceCard component with existing styling.
+// Mobile-only component that renders Keynotes (0) and Workshop (1)
+// cards stacked behind the bridge-frame (which becomes Strategies card).
+//
+// Architecture:
+// • Front card (Strategies, index 2) renders inside bridge-frame
+// • Back cards (Keynotes, Workshop) render here with stack offsets
+// • Swipe interaction cycles which card is "front" (moves content to bridge-frame)
 //
 // Behavior:
-// • 3 cards stacked with offsets creating depth
+// • Cards stack with offsets creating depth
 // • Swipe up → next card, swipe down → previous card
 // • Tap anywhere on the stack as fallback to cycle to next card
 // • Smooth animation on cycle using Framer Motion
 // • Respects prefers-reduced-motion
+// • Only enables swipe after morph is complete (progress >= 0.95)
 //
 // ═══════════════════════════════════════════════════════════════════
 
@@ -34,18 +40,39 @@ interface ServicesStackMobileProps {
   sigilConfigs?: SigilConfig[];
   /** Whether the stack is visible */
   isVisible: boolean;
+  /** Which card index is currently at front (rendered in bridge-frame) */
+  frontCardIndex: number;
+  /** Callback when front card changes (for parent to update bridge-frame content) */
+  onFrontCardChange?: (index: number) => void;
+  /** Bridge-frame position props (to align back cards behind it) */
+  bridgeFrameTop?: string;
+  bridgeFrameTransform?: string;
+  bridgeFrameWidth?: string | number;
+  bridgeFrameHeight?: string | number;
 }
 
 export function ServicesStackMobile({
   progress,
   sigilConfigs = DEFAULT_SIGIL_CONFIGS,
   isVisible,
+  frontCardIndex: controlledFrontCardIndex,
+  onFrontCardChange,
+  bridgeFrameTop,
+  bridgeFrameTransform,
+  bridgeFrameWidth,
+  bridgeFrameHeight,
 }: ServicesStackMobileProps) {
-  // Track which card is at front (0, 1, or 2)
-  const [frontCardIndex, setFrontCardIndex] = useState(0);
+  // Use controlled frontCardIndex if provided, otherwise manage internally
+  const [internalFrontCardIndex, setInternalFrontCardIndex] = useState(2); // Start with Strategies (index 2)
+  const frontCardIndex = controlledFrontCardIndex ?? internalFrontCardIndex;
+  const setFrontCardIndex = onFrontCardChange ?? setInternalFrontCardIndex;
+
   const [isAnimating, setIsAnimating] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+
+  // Only enable swipe interaction after morph is complete
+  const canSwipe = progress >= 0.95;
 
   // Check for reduced motion preference
   useEffect(() => {
@@ -60,19 +87,21 @@ export function ServicesStackMobile({
 
   // Cycle to next card
   const cycleNext = useCallback(() => {
-    if (isAnimating) return;
+    if (isAnimating || !canSwipe) return;
     setIsAnimating(true);
-    setFrontCardIndex((prev) => (prev + 1) % SERVICES_DATA.length);
+    const next = (frontCardIndex + 1) % SERVICES_DATA.length;
+    setFrontCardIndex(next);
     setTimeout(() => setIsAnimating(false), prefersReducedMotion ? 50 : 350);
-  }, [isAnimating, prefersReducedMotion]);
+  }, [isAnimating, prefersReducedMotion, canSwipe, frontCardIndex, setFrontCardIndex]);
 
   // Cycle to previous card
   const cyclePrev = useCallback(() => {
-    if (isAnimating) return;
+    if (isAnimating || !canSwipe) return;
     setIsAnimating(true);
-    setFrontCardIndex((prev) => (prev - 1 + SERVICES_DATA.length) % SERVICES_DATA.length);
+    const prev = (frontCardIndex - 1 + SERVICES_DATA.length) % SERVICES_DATA.length;
+    setFrontCardIndex(prev);
     setTimeout(() => setIsAnimating(false), prefersReducedMotion ? 50 : 350);
-  }, [isAnimating, prefersReducedMotion]);
+  }, [isAnimating, prefersReducedMotion, canSwipe, frontCardIndex, setFrontCardIndex]);
 
   // Handle drag end - determine if swipe was significant enough
   const handleDragEnd = useCallback(
@@ -100,26 +129,82 @@ export function ServicesStackMobile({
     [cycleNext, cyclePrev]
   );
 
-  // Tap fallback (only if not dragging)
+  // Tap fallback (only if not dragging and swipe is enabled)
   const handleTap = useCallback(() => {
-    if (isDragging || isAnimating) return;
+    if (isDragging || isAnimating || !canSwipe) return;
     cycleNext();
-  }, [isDragging, isAnimating, cycleNext]);
+  }, [isDragging, isAnimating, canSwipe, cycleNext]);
 
   if (!isVisible) return null;
 
-  // Calculate opacity based on progress
-  const stackOpacity = Math.min(1, progress * 2);
+  // Calculate opacity for back cards based on progress
+  // Back cards start appearing as soon as we start the transition
+  const backCardsOpacity = Math.min(1, progress / 0.3);
+
   // Animation variants for reduced motion
   const cardTransition = prefersReducedMotion
     ? { duration: 0.05 }
     : { type: "spring", stiffness: 400, damping: 30 };
 
+  // Only render back cards (Keynotes=0, Workshop=1)
+  // Front card (Strategies=2) is rendered in bridge-frame
+  const backCards = [0, 1]
+    .map((index) => {
+      const service = SERVICES_DATA[index];
+      // Calculate position relative to front card
+      const relativePosition =
+        (index - frontCardIndex + SERVICES_DATA.length) % SERVICES_DATA.length;
+
+      // If this card is front, it's not rendered here (it's in bridge-frame)
+      if (relativePosition === 0) return null;
+
+      // Stack offsets: cards behind front have larger offsets to be seen
+      // Offset UPWARDS to peek from the top
+      const offsetY = -relativePosition * 36;
+      const offsetX = 0; // Keep horizontal centered
+      const scale = 1 - relativePosition * 0.04;
+      const zIndex = SERVICES_DATA.length - relativePosition;
+      const cardOpacity = (1 - relativePosition * 0.1) * backCardsOpacity;
+
+      return { index, service, relativePosition, offsetY, offsetX, scale, zIndex, cardOpacity };
+    })
+    .filter(Boolean) as Array<{
+    index: number;
+    service: ServiceData;
+    relativePosition: number;
+    offsetY: number;
+    offsetX: number;
+    scale: number;
+    zIndex: number;
+    cardOpacity: number;
+  }>;
+
+  // Top back card is the one closest to front (smallest relativePosition)
+  const topBackCardRelativePosition =
+    backCards.length > 0 ? Math.min(...backCards.map((c) => c.relativePosition)) : Infinity;
+
   return (
     <div
-      className="services-stack-mobile"
+      className="services-stack-mobile-back-cards"
       style={{
-        opacity: stackOpacity,
+        position: "fixed",
+        left: "50%",
+        top: bridgeFrameTop ?? "50%",
+        transform: bridgeFrameTransform ?? "translate(-50%, -50%)",
+        width: bridgeFrameWidth
+          ? typeof bridgeFrameWidth === "number"
+            ? `${bridgeFrameWidth}px`
+            : bridgeFrameWidth
+          : "340px",
+        height: bridgeFrameHeight
+          ? typeof bridgeFrameHeight === "number"
+            ? `${bridgeFrameHeight}px`
+            : bridgeFrameHeight
+          : "420px",
+        pointerEvents: isVisible ? "auto" : "none",
+        opacity: backCardsOpacity,
+        zIndex: 11, // Behind bridge-frame (z-index 12)
+        display: "block",
       }}
     >
       {/* Stack indicator dots */}
@@ -129,33 +214,23 @@ export function ServicesStackMobile({
         ))}
       </div>
 
-      {/* Card stack */}
-      <div className="stack-container">
-        {SERVICES_DATA.map((service, index) => {
-          // Calculate position relative to front card
-          const relativePosition =
-            (index - frontCardIndex + SERVICES_DATA.length) % SERVICES_DATA.length;
-
-          // Stack offsets: front card has no offset, others are stacked behind
-          const offsetY = relativePosition * 8;
-          const offsetX = relativePosition * 4;
-          const scale = 1 - relativePosition * 0.03;
-          const zIndex = SERVICES_DATA.length - relativePosition;
-          const cardOpacity = 1 - relativePosition * 0.15;
-
-          const isFrontCard = relativePosition === 0;
+      {/* Back cards stack */}
+      {backCards.map(
+        ({ index, service, relativePosition, offsetY, offsetX, scale, zIndex, cardOpacity }) => {
+          // Top back card is the one closest to front (smallest relativePosition)
+          const isTopBackCard = relativePosition === topBackCardRelativePosition;
 
           return (
             <motion.div
               key={service.id}
               className="stack-card-wrapper"
-              // Only the front card is draggable
-              drag={isFrontCard && !prefersReducedMotion ? "y" : false}
+              // Only the top back card is draggable (closest to front)
+              drag={isTopBackCard && canSwipe && !prefersReducedMotion ? "y" : false}
               dragConstraints={{ top: -80, bottom: 80 }}
               dragElastic={0.3}
               onDragStart={() => setIsDragging(true)}
-              onDragEnd={isFrontCard ? handleDragEnd : undefined}
-              onClick={isFrontCard ? handleTap : undefined}
+              onDragEnd={isTopBackCard ? handleDragEnd : undefined}
+              onClick={isTopBackCard && canSwipe ? handleTap : undefined}
               initial={false}
               animate={{
                 y: offsetY,
@@ -169,10 +244,10 @@ export function ServicesStackMobile({
                 position: "absolute",
                 inset: 0,
                 transformOrigin: "center bottom",
-                cursor: isFrontCard ? "grab" : "default",
-                touchAction: isFrontCard ? "none" : "auto",
+                cursor: isTopBackCard && canSwipe ? "grab" : "default",
+                touchAction: isTopBackCard && canSwipe ? "none" : "auto",
               }}
-              whileDrag={{ cursor: "grabbing", scale: scale * 1.02 }}
+              whileDrag={isTopBackCard ? { cursor: "grabbing", scale: scale * 1.02 } : undefined}
             >
               <ServiceCard
                 service={service}
@@ -187,8 +262,8 @@ export function ServicesStackMobile({
               />
             </motion.div>
           );
-        })}
-      </div>
+        }
+      )}
 
       {/* Swipe hint */}
       <div className="swipe-hint">
@@ -197,11 +272,7 @@ export function ServicesStackMobile({
       </div>
 
       <style jsx>{`
-        .services-stack-mobile {
-          position: relative;
-          width: 100%;
-          height: 100%;
-          display: block;
+        .services-stack-mobile-back-cards {
           transition:
             opacity 0.3s ease,
             transform 0.3s ease;
@@ -277,7 +348,7 @@ export function ServicesStackMobile({
           .stack-dot {
             transition: none;
           }
-          .services-stack-mobile {
+          .services-stack-mobile-back-cards {
             transition: none;
           }
         }

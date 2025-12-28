@@ -1135,51 +1135,13 @@
     bottom: auto !important;
     /* IMPORTANT (H10): avoid an abrupt jump to a fixed 85vh height as soon as manifesto-active toggles.
        Let the frame grow naturally with content and clamp via max-height. */
-    max-height: calc(85vh - var(--safe-top) - var(--safe-bottom)) !important;
+    max-height: calc(85vh - var(--safe-top) - var(--safe-bottom));
     overflow-y: auto !important;
     overflow-x: hidden !important;
   }
 
-  /* Mobile Services: collapse from tall manifesto to card-sized deck viewport */
-  .bridge-frame.mobile-services-active {
-    /* Match the actual ServiceCard footprint so the manifesto morph lands on the FRONT card (not a larger viewport). */
-    /* Avoid CSS min() so older mobile browsers still apply these overrides (min() would drop the whole rule). */
-    height: 420px !important;
-    max-height: calc(70vh - var(--safe-top) - var(--safe-bottom)) !important;
-    width: 340px !important;
-    max-width: calc(100% - 24px) !important;
-    /* Center the deck viewport */
-    top: 50% !important;
-    transform: translate(-50%, -50%) !important;
-    /* Allow stack peek effect */
-    overflow: visible !important;
-    /* Smooth transition from manifesto to services */
-    transition:
-      height 0.4s cubic-bezier(0.16, 1, 0.3, 1),
-      max-height 0.4s cubic-bezier(0.16, 1, 0.3, 1),
-      width 0.4s cubic-bezier(0.16, 1, 0.3, 1),
-      max-width 0.4s cubic-bezier(0.16, 1, 0.3, 1),
-      transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-  }
-
-  /* Services overlay: fill the collapsed deck viewport and sit on top */
-  .bridge-frame.mobile-services-active .mobile-services-overlay {
-    padding: 0 !important;
-    z-index: 10 !important;
-    /* Let the cards provide the glass; avoid a second large panel behind the stack */
-    background: transparent !important;
-  }
-
-  /* Hide all manifesto content when services is active */
-  .bridge-frame.mobile-services-active .hero-text-frame {
-    pointer-events: none !important;
-  }
-
-  /* Hide leftover frame corners when the mobile services deck is active */
-  .bridge-frame.mobile-services-active .terminal-corner,
-  .bridge-frame.mobile-services-active .card-corner {
-    display: none !important;
-  }
+  /* Mobile Services: Dimensions and positioning are now handled via inline styles in index.tsx */
+  /* This allows smooth interpolation from manifesto to services card dimensions */
 
   .bridge-frame .hero-text-frame {
     padding: var(--frame-pad-y) var(--frame-pad-x);
@@ -1345,7 +1307,7 @@
 
   .bridge-frame.manifesto-active {
     /* PHONE: Only use max-height clamp; let content determine actual height for smooth transition */
-    max-height: calc(80vh - var(--safe-top) - var(--safe-bottom)) !important;
+    max-height: calc(80vh - var(--safe-top) - var(--safe-bottom));
     overflow-y: auto !important;
     overflow-x: hidden !important;
   }
