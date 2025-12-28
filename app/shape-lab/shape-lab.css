@@ -211,10 +211,17 @@
   position: absolute;
   top: 0;
   bottom: 0;
-  left: 0;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+}
+
+.shape-lab .hud-rail-left .scale-ticks {
+  left: 0;
+}
+
+.shape-lab .hud-rail-right .scale-ticks {
+  right: 0;
 }
 
 .shape-lab .tick {
@@ -403,58 +410,21 @@
 .particles-tab {
   flex: 1;
   display: flex;
-  position: relative;
   gap: 0;
-}
-
-/* ─── PANEL TOGGLES ─── */
-.panel-toggle {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 20px;
-  height: 48px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(10, 9, 8, 0.8);
-  border: 1px solid var(--dawn-08);
-  font-family: var(--font-mono);
-  font-size: 10px;
-  color: var(--dawn-30);
-  cursor: pointer;
-  transition: all 0.15s ease;
-  z-index: 50;
-}
-
-.panel-toggle:hover {
-  color: var(--gold);
-  border-color: var(--gold-30);
-}
-
-.panel-toggle--left {
-  left: 0;
-  border-left: none;
-}
-
-.panel-toggle--right {
-  right: 0;
-  border-right: none;
+  min-width: 0; /* Prevent flex overflow */
 }
 
 /* ─── PANELS ─── */
 .lab-panel {
   width: 200px;
+  min-width: 200px;
+  max-width: 200px;
   display: flex;
   flex-direction: column;
   background: rgba(10, 9, 8, 0.4);
   border: 1px solid var(--dawn-08);
-  overflow: hidden;
-  flex-shrink: 0;
-}
-
-.lab-panel:hover {
   overflow-y: auto;
+  flex-shrink: 0;
 }
 
 .lab-panel::-webkit-scrollbar {

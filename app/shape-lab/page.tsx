@@ -6,12 +6,7 @@ import dynamic from "next/dynamic";
 import { AdminGate } from "@/components/admin/AdminGate";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { isAllowedUserEmail } from "@/lib/auth/allowed-user";
-import {
-  getAllShapes,
-  getShapeGenerator,
-  getShapesByCategory,
-  type Vec3,
-} from "@/lib/particle-geometry";
+import { getAllShapes, getShapeGenerator, type Vec3 } from "@/lib/particle-geometry";
 import "./shape-lab.css";
 
 const GatewayLabTab = dynamic(() => import("./GatewayLabTab"), {
@@ -420,10 +415,18 @@ function ParticlesTab() {
 
   const [presets, setPresets] = useState<ShapePreset[]>([]);
   const [presetName, setPresetName] = useState("");
-  const [showLeftPanel, setShowLeftPanel] = useState(true);
-  const [showRightPanel, setShowRightPanel] = useState(true);
 
-  const shapesByCategory = useMemo(() => getShapesByCategory(), []);
+  // Group shapes by category
+  const shapesByCategory = useMemo(() => {
+    const allShapes = getAllShapes();
+    const grouped: Record<string, typeof allShapes> = {};
+    for (const shape of allShapes) {
+      const cat = shape.category || "Other";
+      if (!grouped[cat]) grouped[cat] = [];
+      grouped[cat].push(shape);
+    }
+    return grouped;
+  }, []);
 
   // Load presets
   useEffect(() => {
@@ -476,74 +479,63 @@ function ParticlesTab() {
 
   return (
     <div className="particles-tab">
-      {/* Left Panel Toggle */}
-      <button
-        className={`panel-toggle panel-toggle--left ${showLeftPanel ? "active" : ""}`}
-        onClick={() => setShowLeftPanel(!showLeftPanel)}
-        aria-label="Toggle left panel"
-      >
-        {showLeftPanel ? "◂" : "▸"}
-      </button>
-
       {/* Left Panel - Presets & Shapes */}
-      {showLeftPanel && (
-        <aside className="lab-panel lab-panel--left">
+      <aside className="lab-panel lab-panel--left">
+        <div className="panel-section">
+          <div className="lab__save-preset">
+            <input
+              type="text"
+              value={presetName}
+              onChange={(e) => setPresetName(e.target.value)}
+              placeholder="Preset name..."
+              onKeyDown={(e) => e.key === "Enter" && savePreset()}
+            />
+            <button onClick={savePreset} disabled={!presetName.trim()}>
+              +
+            </button>
+          </div>
+        </div>
+
+        {presets.length > 0 && (
           <div className="panel-section">
-            <div className="lab__save-preset">
-              <input
-                type="text"
-                value={presetName}
-                onChange={(e) => setPresetName(e.target.value)}
-                placeholder="Preset name..."
-                onKeyDown={(e) => e.key === "Enter" && savePreset()}
-              />
-              <button onClick={savePreset} disabled={!presetName.trim()}>
-                +
-              </button>
+            <div className="panel-label">Saved</div>
+            <div className="preset-list">
+              {presets.map((p) => (
+                <div key={p.id} className="preset-item">
+                  <button className="preset-load" onClick={() => loadPreset(p)}>
+                    {p.name}
+                  </button>
+                  <button className="preset-delete" onClick={() => deletePreset(p.id)}>
+                    ×
+                  </button>
+                </div>
+              ))}
             </div>
           </div>
+        )}
 
-          {presets.length > 0 && (
-            <div className="panel-section">
-              <div className="panel-label">Saved</div>
-              <div className="preset-list">
-                {presets.map((p) => (
-                  <div key={p.id} className="preset-item">
-                    <button className="preset-load" onClick={() => loadPreset(p)}>
-                      {p.name}
-                    </button>
-                    <button className="preset-delete" onClick={() => deletePreset(p.id)}>
-                      ×
-                    </button>
-                  </div>
-                ))}
-              </div>
+        {Object.entries(shapesByCategory).map(([category, shapes]) => (
+          <div key={category} className="panel-section">
+            <div className="panel-label">{category}</div>
+            <div className="shape-list">
+              {shapes.map((shape) => (
+                <button
+                  key={shape.id}
+                  className={`shape-btn ${shapeId === shape.id ? "active" : ""}`}
+                  onClick={() => setShapeId(shape.id)}
+                >
+                  {shape.label}
+                </button>
+              ))}
             </div>
-          )}
-
-          {Object.entries(shapesByCategory).map(([category, shapes]) => (
-            <div key={category} className="panel-section">
-              <div className="panel-label">{category}</div>
-              <div className="shape-list">
-                {shapes.map((shape) => (
-                  <button
-                    key={shape.id}
-                    className={`shape-btn ${shapeId === shape.id ? "active" : ""}`}
-                    onClick={() => setShapeId(shape.id)}
-                  >
-                    {shape.name}
-                  </button>
-                ))}
-              </div>
-            </div>
-          ))}
-        </aside>
-      )}
+          </div>
+        ))}
+      </aside>
 
       {/* Canvas Area */}
       <main className="lab-main">
         <div className="lab-main__header">
-          <span className="shape-name">{currentShape?.name || shapeId}</span>
+          <span className="shape-name">{currentShape?.label || shapeId}</span>
         </div>
         <InfiniteCanvas
           shapeId={shapeId}
@@ -564,135 +556,118 @@ function ParticlesTab() {
         />
       </main>
 
-      {/* Right Panel Toggle */}
-      <button
-        className={`panel-toggle panel-toggle--right ${showRightPanel ? "active" : ""}`}
-        onClick={() => setShowRightPanel(!showRightPanel)}
-        aria-label="Toggle right panel"
-      >
-        {showRightPanel ? "▸" : "◂"}
-      </button>
-
       {/* Right Panel - Parameters */}
-      {showRightPanel && (
-        <aside className="lab-panel lab-panel--right">
-          <div className="panel-section">
-            <div className="panel-label">Seed</div>
-            <div className="seed-row">
-              <Slider label="" value={seed} min={1} max={999} onChange={setSeed} />
-              <button
-                className="icon-btn"
-                onClick={() => setSeed(Math.floor(Math.random() * 999) + 1)}
-              >
-                🎲
-              </button>
-            </div>
+      <aside className="lab-panel lab-panel--right">
+        <div className="panel-section">
+          <div className="panel-label">Seed</div>
+          <div className="seed-row">
+            <Slider label="" value={seed} min={1} max={999} onChange={setSeed} />
+            <button
+              className="icon-btn"
+              onClick={() => setSeed(Math.floor(Math.random() * 999) + 1)}
+            >
+              🎲
+            </button>
           </div>
+        </div>
 
-          <div className="panel-section">
-            <div className="panel-label">Parameters</div>
+        <div className="panel-section">
+          <div className="panel-label">Parameters</div>
+          <Slider label="Points" value={pointCount} min={50} max={2000} onChange={setPointCount} />
+          <Slider
+            label="Density"
+            value={density}
+            min={0.1}
+            max={3}
+            step={0.1}
+            onChange={setDensity}
+            suffix="x"
+          />
+          <Slider
+            label="Size"
+            value={particleSize}
+            min={0.5}
+            max={3}
+            step={0.1}
+            onChange={setParticleSize}
+            suffix="x"
+          />
+          <Toggle label="Grid Snap" checked={gridSnap} onChange={setGridSnap} />
+        </div>
+
+        <div className="panel-section">
+          <div className="panel-label">Rotation</div>
+          <Toggle label="Auto Rotate" checked={autoRotate} onChange={setAutoRotate} />
+          {autoRotate && (
             <Slider
-              label="Points"
-              value={pointCount}
-              min={50}
-              max={2000}
-              onChange={setPointCount}
-            />
-            <Slider
-              label="Density"
-              value={density}
+              label="Speed"
+              value={rotationSpeed}
               min={0.1}
               max={3}
               step={0.1}
-              onChange={setDensity}
+              onChange={setRotationSpeed}
               suffix="x"
             />
-            <Slider
-              label="Size"
-              value={particleSize}
-              min={0.5}
-              max={3}
-              step={0.1}
-              onChange={setParticleSize}
-              suffix="x"
-            />
-            <Toggle label="Grid Snap" checked={gridSnap} onChange={setGridSnap} />
-          </div>
+          )}
+          <Slider
+            label="X"
+            value={rotationX}
+            min={-Math.PI}
+            max={Math.PI}
+            step={0.01}
+            onChange={setRotationX}
+          />
+          <Slider
+            label="Y"
+            value={rotationY}
+            min={-Math.PI}
+            max={Math.PI}
+            step={0.01}
+            onChange={setRotationY}
+          />
+        </div>
 
-          <div className="panel-section">
-            <div className="panel-label">Rotation</div>
-            <Toggle label="Auto Rotate" checked={autoRotate} onChange={setAutoRotate} />
-            {autoRotate && (
+        <div className="panel-section">
+          <div className="panel-label">VFX</div>
+          <Toggle label="Enable" checked={vfxEnabled} onChange={setVfxEnabled} />
+          {vfxEnabled && (
+            <>
               <Slider
-                label="Speed"
-                value={rotationSpeed}
-                min={0.1}
-                max={3}
+                label="Glow"
+                value={glowIntensity}
+                min={0}
+                max={1}
                 step={0.1}
-                onChange={setRotationSpeed}
-                suffix="x"
+                onChange={setGlowIntensity}
               />
-            )}
-            <Slider
-              label="X"
-              value={rotationX}
-              min={-Math.PI}
-              max={Math.PI}
-              step={0.01}
-              onChange={setRotationX}
-            />
-            <Slider
-              label="Y"
-              value={rotationY}
-              min={-Math.PI}
-              max={Math.PI}
-              step={0.01}
-              onChange={setRotationY}
-            />
-          </div>
-
-          <div className="panel-section">
-            <div className="panel-label">VFX</div>
-            <Toggle label="Enable" checked={vfxEnabled} onChange={setVfxEnabled} />
-            {vfxEnabled && (
-              <>
-                <Slider
-                  label="Glow"
-                  value={glowIntensity}
-                  min={0}
-                  max={1}
-                  step={0.1}
-                  onChange={setGlowIntensity}
-                />
-                <Slider
-                  label="Softness"
-                  value={softness}
-                  min={0.1}
-                  max={1}
-                  step={0.1}
-                  onChange={setSoftness}
-                />
-                <Slider
-                  label="Bloom"
-                  value={bloomRadius}
-                  min={0}
-                  max={1}
-                  step={0.1}
-                  onChange={setBloomRadius}
-                />
-                <Slider
-                  label="Trail"
-                  value={trailLength}
-                  min={0}
-                  max={5}
-                  step={0.5}
-                  onChange={setTrailLength}
-                />
-              </>
-            )}
-          </div>
-        </aside>
-      )}
+              <Slider
+                label="Softness"
+                value={softness}
+                min={0.1}
+                max={1}
+                step={0.1}
+                onChange={setSoftness}
+              />
+              <Slider
+                label="Bloom"
+                value={bloomRadius}
+                min={0}
+                max={1}
+                step={0.1}
+                onChange={setBloomRadius}
+              />
+              <Slider
+                label="Trail"
+                value={trailLength}
+                min={0}
+                max={5}
+                step={0.5}
+                onChange={setTrailLength}
+              />
+            </>
+          )}
+        </div>
+      </aside>
     </div>
   );
 }
@@ -725,6 +700,13 @@ function ShapeLabContent() {
 
       {/* Right Rail */}
       <aside className="hud-rail hud-rail-right">
+        <div className="rail-scale">
+          <div className="scale-ticks">
+            {Array.from({ length: 21 }).map((_, i) => (
+              <div key={i} className={`tick ${i % 5 === 0 ? "tick-major" : "tick-minor"}`} />
+            ))}
+          </div>
+        </div>
         <div className="rail-markers">
           {[
             { id: "particles", label: "01" },
