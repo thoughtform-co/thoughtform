@@ -1740,17 +1740,9 @@ interface ThreeGatewayProps {
 export function ThreeGateway({ scrollProgress, config, children }: ThreeGatewayProps) {
   const isMobile = useIsMobile();
 
-  // On mobile: center the gateway and reduce density for performance
-  const mobileConfig: Partial<GatewayConfig> = isMobile
-    ? {
-        positionX: 0, // Center on mobile
-        positionY: 0,
-        scale: 0.85, // Slightly smaller on mobile
-        density: 0.5, // Half density for performance
-      }
-    : {};
-
-  const gatewayConfig = { ...DEFAULT_GATEWAY, ...config, ...mobileConfig };
+  // Use config as passed - mobile overrides should be applied via ParticleConfigContext
+  // The caller (NavigationCockpitV2) is responsible for passing the effective config
+  const gatewayConfig = { ...DEFAULT_GATEWAY, ...config };
 
   if (!gatewayConfig.enabled || scrollProgress > 0.2) return null;
 

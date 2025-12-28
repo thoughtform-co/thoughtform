@@ -1,14 +1,17 @@
 "use client";
 
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import { useParticleConfig, type ConfigPreset } from "@/lib/contexts/ParticleConfigContext";
 import { useAuth } from "@/components/auth/AuthProvider";
+import { useIsMobile } from "@/lib/hooks/useMediaQuery";
 import {
   COLOR_PRESETS,
   SHAPE_LABELS,
   SHAPE_IS_THOUGHTFORM,
   GATEWAY_SHAPE_LABELS,
   GATEWAY_SHAPE_IS_ATTRACTOR,
+  DEFAULT_MOBILE_GATEWAY,
+  getMobileEffectiveConfig,
   type LandmarkShape,
   type GatewayShape,
   type LandmarkConfig,
@@ -133,6 +136,9 @@ export function ParticleAdminPanel({ isOpen, onClose }: ParticleAdminPanelProps)
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
 
+  // Detect if on mobile device - edits will be routed to mobile-specific config
+  const isMobile = useIsMobile();
+
   // Draggable panel state - starts near the toggle button (top-right)
   const [position, setPosition] = useState({ x: 500, y: 74 });
   const [hasSetInitialPosition, setHasSetInitialPosition] = useState(false);
@@ -197,10 +203,12 @@ export function ParticleAdminPanel({ isOpen, onClose }: ParticleAdminPanelProps)
     hasChanges,
     isAdmin,
     error,
-    updateManifold,
-    updateGateway,
+    updateManifold: updateManifoldDesktop,
+    updateGateway: updateGatewayDesktop,
     updateCamera,
     updateSigil,
+    updateMobileGateway,
+    updateMobileManifold,
     updateLandmark,
     addLandmark,
     removeLandmark,
@@ -213,6 +221,34 @@ export function ParticleAdminPanel({ isOpen, onClose }: ParticleAdminPanelProps)
     deletePreset,
     createPreset,
   } = useParticleConfig();
+
+  // Get effective config for current device (applies mobile overrides when on mobile)
+  const effectiveConfig = useMemo(() => {
+    return isMobile ? getMobileEffectiveConfig(config) : config;
+  }, [config, isMobile]);
+
+  // Wrapper functions that route to correct update function based on device
+  const updateGateway = useCallback(
+    (updates: Partial<GatewayConfig>) => {
+      if (isMobile) {
+        updateMobileGateway(updates);
+      } else {
+        updateGatewayDesktop(updates);
+      }
+    },
+    [isMobile, updateMobileGateway, updateGatewayDesktop]
+  );
+
+  const updateManifold = useCallback(
+    (updates: Partial<ManifoldConfig>) => {
+      if (isMobile) {
+        updateMobileManifold(updates);
+      } else {
+        updateManifoldDesktop(updates);
+      }
+    },
+    [isMobile, updateMobileManifold, updateManifoldDesktop]
+  );
 
   const [showSavePrompt, setShowSavePrompt] = useState(false);
   const [newPresetName, setNewPresetName] = useState("");
@@ -265,8 +301,8 @@ export function ParticleAdminPanel({ isOpen, onClose }: ParticleAdminPanelProps)
 
   const { user } = useAuth();
 
-  // Only show admin panel for logged-in users
-  if (isLoading || !user || !isOpen) return null;
+  // Show panel if open (logged-in users can save, others can view/test locally)
+  if (isLoading || !isOpen) return null;
 
   return (
     <>
@@ -281,6 +317,12 @@ export function ParticleAdminPanel({ isOpen, onClose }: ParticleAdminPanelProps)
           <div className="admin-header-left">
             <span className="drag-icon">⋮⋮</span>
             <h3 className="admin-title">Particles</h3>
+            <span
+              className={`device-badge ${isMobile ? "mobile" : "desktop"}`}
+              title={isMobile ? "Editing MOBILE settings" : "Editing DESKTOP settings"}
+            >
+              {isMobile ? "📱" : "🖥️"}
+            </span>
             <span
               className="storage-badge server"
               title={isAdmin ? "Changes sync to all visitors" : "View only"}
@@ -388,11 +430,27 @@ export function ParticleAdminPanel({ isOpen, onClose }: ParticleAdminPanelProps)
 
         {/* Content */}
         <div className="admin-content">
+          {/* Device mode indicator */}
+          {(activeTab === "gateway" || activeTab === "manifold") && (
+            <div className={`device-mode-banner ${isMobile ? "mobile" : "desktop"}`}>
+              {isMobile ? (
+                <>
+                  📱 Editing <strong>MOBILE</strong> settings - changes only affect mobile visitors
+                </>
+              ) : (
+                <>
+                  🖥️ Editing <strong>DESKTOP</strong> settings - changes only affect desktop
+                  visitors
+                </>
+              )}
+            </div>
+          )}
+
           {activeTab === "gateway" && (
-            <GatewayControls gateway={config.gateway} onUpdate={updateGateway} />
+            <GatewayControls gateway={effectiveConfig.gateway} onUpdate={updateGateway} />
           )}
           {activeTab === "manifold" && (
-            <ManifoldControls manifold={config.manifold} onUpdate={updateManifold} />
+            <ManifoldControls manifold={effectiveConfig.manifold} onUpdate={updateManifold} />
           )}
           {activeTab === "camera" && (
             <CameraControls camera={config.camera} onUpdate={updateCamera} />
@@ -422,6 +480,22 @@ export function ParticleAdminPanel({ isOpen, onClose }: ParticleAdminPanelProps)
           overflow: hidden;
           box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
           overscroll-behavior: contain;
+        }
+
+        /* Mobile: full-width panel at bottom of screen */
+        @media (max-width: 768px) {
+          .admin-panel {
+            width: calc(100vw - 16px);
+            max-width: 100vw;
+            left: 8px !important;
+            top: auto !important;
+            bottom: 8px;
+            max-height: 75vh;
+            border-radius: 8px;
+            background: rgba(10, 9, 8, 0.5);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+          }
         }
 
         .admin-panel.dragging {
@@ -486,6 +560,47 @@ export function ParticleAdminPanel({ isOpen, onClose }: ParticleAdminPanelProps)
 
         .storage-badge.local {
           color: #caa554;
+        }
+
+        .device-badge {
+          font-size: 12px;
+          padding: 2px 6px;
+          border-radius: 4px;
+        }
+
+        .device-badge.mobile {
+          background: rgba(202, 165, 84, 0.2);
+          color: var(--gold, #caa554);
+        }
+
+        .device-badge.desktop {
+          background: rgba(91, 168, 130, 0.2);
+          color: #5ba882;
+        }
+
+        .device-mode-banner {
+          padding: 8px 12px;
+          margin-bottom: 16px;
+          border-radius: 4px;
+          font-family: var(--font-data, monospace);
+          font-size: 10px;
+          text-align: center;
+        }
+
+        .device-mode-banner.mobile {
+          background: rgba(202, 165, 84, 0.1);
+          border: 1px solid rgba(202, 165, 84, 0.3);
+          color: var(--gold, #caa554);
+        }
+
+        .device-mode-banner.desktop {
+          background: rgba(91, 168, 130, 0.1);
+          border: 1px solid rgba(91, 168, 130, 0.3);
+          color: #5ba882;
+        }
+
+        .device-mode-banner strong {
+          font-weight: 600;
         }
 
         .admin-icon-btn {

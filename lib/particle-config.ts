@@ -266,6 +266,10 @@ export interface ParticleSystemConfig {
   sigil: SigilConfig;
   /** Config version for migrations */
   version: number;
+  /** Mobile-specific gateway overrides (merged with gateway when on mobile) */
+  mobileGateway?: Partial<GatewayConfig>;
+  /** Mobile-specific manifold overrides (merged with manifold when on mobile) */
+  mobileManifold?: Partial<ManifoldConfig>;
 }
 
 /**
@@ -435,6 +439,37 @@ export function mergeWithDefaults(partial: Partial<ParticleSystemConfig>): Parti
       ...(partial.sigil || {}),
     },
     version: partial.version || DEFAULT_CONFIG.version,
+    mobileGateway: partial.mobileGateway,
+    mobileManifold: partial.mobileManifold,
+  };
+}
+
+/**
+ * Default mobile gateway overrides (centered, smaller, less dense for performance)
+ */
+export const DEFAULT_MOBILE_GATEWAY: Partial<GatewayConfig> = {
+  positionX: 0, // Center on mobile
+  positionY: 0, // Center vertically
+  scale: 0.85, // Slightly smaller for mobile screens
+  density: 0.5, // Half density for performance
+};
+
+/**
+ * Get the effective config for mobile (merges mobile overrides with base config)
+ * Order: base config → mobile defaults → user mobile overrides
+ */
+export function getMobileEffectiveConfig(config: ParticleSystemConfig): ParticleSystemConfig {
+  return {
+    ...config,
+    gateway: {
+      ...config.gateway,
+      ...DEFAULT_MOBILE_GATEWAY,
+      ...(config.mobileGateway || {}),
+    },
+    manifold: {
+      ...config.manifold,
+      ...(config.mobileManifold || {}),
+    },
   };
 }
 

@@ -66,8 +66,14 @@ function lerp(a: number, b: number, t: number): number {
 function NavigationCockpitInner() {
   const [activeSection, setActiveSection] = useState("hero");
   const { scrollProgress, scrollTo } = useLenis();
-  const { config: rawConfig, hasChanges: hasParticleChanges } = useParticleConfig();
+  const {
+    config: rawConfig,
+    getMobileConfig,
+    hasChanges: hasParticleChanges,
+  } = useParticleConfig();
   const isMobile = useIsMobile();
+  // Use mobile-effective config when on mobile (applies mobile overrides to gateway/manifold)
+  const effectiveConfig = isMobile ? getMobileConfig() : rawConfig;
   const { user } = useAuth();
   const isAdmin = !!user?.id;
   const { configs: sigilConfigsContext, updateConfig: updateSigilConfig } = useSigilConfig();
@@ -369,8 +375,9 @@ function NavigationCockpitInner() {
 
   // Force-disable the canvas gateway since we're using Three.js gateway
   // Also disable Lorenz attractor since it's now rendered by ParticleVectorMorph
+  // Use effectiveConfig to apply mobile overrides to manifold
   const config = {
-    ...rawConfig,
+    ...effectiveConfig,
     landmarks: rawConfig.landmarks.map((l) =>
       l.shape === "gateway" || l.shape === "lorenz" ? { ...l, enabled: false } : l
     ),
@@ -773,7 +780,7 @@ function NavigationCockpitInner() {
 
       {/* Three.js Gateway Overlay - only in hero section, fades out on scroll */}
       <CanvasErrorBoundary>
-        <ThreeGateway scrollProgress={scrollProgress} config={rawConfig.gateway} />
+        <ThreeGateway scrollProgress={scrollProgress} config={effectiveConfig.gateway} />
       </CanvasErrorBoundary>
 
       {/* ═══════════════════════════════════════════════════════════════════

@@ -12,6 +12,7 @@ import React, {
 import {
   DEFAULT_CONFIG,
   mergeWithDefaults,
+  getMobileEffectiveConfig,
   type ParticleSystemConfig,
   type ManifoldConfig,
   type LandmarkConfig,
@@ -34,6 +35,8 @@ export interface ConfigPreset {
 interface ParticleConfigContextValue {
   /** Current configuration (GLOBAL - same for all visitors) */
   config: ParticleSystemConfig;
+  /** Get effective config for mobile (with mobile overrides applied) */
+  getMobileConfig: () => ParticleSystemConfig;
   /** Whether config is loading from server */
   isLoading: boolean;
   /** Whether there are unsaved changes (admin only) */
@@ -52,6 +55,10 @@ interface ParticleConfigContextValue {
   updateCamera: (camera: Partial<CameraConfig>) => void;
   /** Update sigil settings */
   updateSigil: (sigil: Partial<SigilConfig>) => void;
+  /** Update mobile-specific gateway settings (overrides desktop on mobile) */
+  updateMobileGateway: (gateway: Partial<GatewayConfig>) => void;
+  /** Update mobile-specific manifold settings (overrides desktop on mobile) */
+  updateMobileManifold: (manifold: Partial<ManifoldConfig>) => void;
   /** Update a specific landmark */
   updateLandmark: (id: string, updates: Partial<LandmarkConfig>) => void;
   /** Add a new landmark */
@@ -273,6 +280,47 @@ export function ParticleConfigProvider({ children }: ParticleConfigProviderProps
     [autoSaveToServer]
   );
 
+  // Update mobile-specific gateway settings
+  const updateMobileGateway = useCallback(
+    (updates: Partial<GatewayConfig>) => {
+      setConfig((prev) => {
+        const newConfig = {
+          ...prev,
+          mobileGateway: {
+            ...(prev.mobileGateway || {}),
+            ...updates,
+          },
+        };
+        autoSaveToServer(newConfig);
+        return newConfig;
+      });
+    },
+    [autoSaveToServer]
+  );
+
+  // Update mobile-specific manifold settings
+  const updateMobileManifold = useCallback(
+    (updates: Partial<ManifoldConfig>) => {
+      setConfig((prev) => {
+        const newConfig = {
+          ...prev,
+          mobileManifold: {
+            ...(prev.mobileManifold || {}),
+            ...updates,
+          },
+        };
+        autoSaveToServer(newConfig);
+        return newConfig;
+      });
+    },
+    [autoSaveToServer]
+  );
+
+  // Get effective config for mobile (merges mobile overrides with base config)
+  const getMobileConfig = useCallback(() => {
+    return getMobileEffectiveConfig(config);
+  }, [config]);
+
   // Update a specific landmark
   const updateLandmark = useCallback(
     (id: string, updates: Partial<LandmarkConfig>) => {
@@ -491,6 +539,9 @@ export function ParticleConfigProvider({ children }: ParticleConfigProviderProps
       updateGateway,
       updateCamera,
       updateSigil,
+      updateMobileGateway,
+      updateMobileManifold,
+      getMobileConfig,
       updateLandmark,
       addLandmark,
       removeLandmark,
@@ -515,6 +566,9 @@ export function ParticleConfigProvider({ children }: ParticleConfigProviderProps
       updateGateway,
       updateCamera,
       updateSigil,
+      updateMobileGateway,
+      updateMobileManifold,
+      getMobileConfig,
       updateLandmark,
       addLandmark,
       removeLandmark,
