@@ -32,6 +32,14 @@ export function AdminTools({
       onClick: () => onParticleToggle(!isParticleOpen),
     },
     {
+      id: "voices",
+      icon: "◆",
+      label: "VOICES",
+      isActive: false,
+      hasIndicator: false,
+      href: "/admin/voices",
+    },
+    {
       id: "shape-lab",
       icon: "◇",
       label: "SHAPE LAB",
