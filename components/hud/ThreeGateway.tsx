@@ -12,6 +12,7 @@ import {
   DEFAULT_GATEWAY,
 } from "@/lib/particle-config";
 import { useIsMobile } from "@/lib/hooks/useMediaQuery";
+import { KeyVisualPortal } from "./KeyVisualPortal";
 
 // ═══════════════════════════════════════════════════════════════
 // THREE.JS GATEWAY - SOLID ARCHITECTURAL PORTAL
@@ -1632,6 +1633,9 @@ function GatewayScene({ scrollProgress, config }: GatewaySceneProps) {
   // Check if this is an attractor shape (3D point cloud) vs geometric (2D outline)
   const isAttractor = isAttractorShape(shape);
 
+  // Check if this is the keyVisual shape (image-based particle cloud)
+  const isKeyVisual = shape === "keyVisual";
+
   return (
     <>
       <FlyingCamera scrollProgress={scrollProgress} gatewayX={config.positionX} />
@@ -1641,7 +1645,25 @@ function GatewayScene({ scrollProgress, config }: GatewaySceneProps) {
         rotation={[0.1, config.rotationY, 0]}
         scale={config.scale}
       >
-        {isAttractor ? (
+        {isKeyVisual ? (
+          // Render PNG-based key visual particle cloud
+          <KeyVisualPortal
+            config={{
+              imageSrc: config.keyVisualSrc || "/images/key-visual.png",
+              depthMapSrc: config.keyVisualDepthSrc,
+              primaryColor: primaryColor,
+              accentColor: accentColor,
+              scale: 1.0, // Scale handled by parent group
+              maxParticles: config.keyVisualMaxParticles || 30000,
+              particleSize: density,
+              interactionStrength: config.keyVisualInteractionStrength || 0.3,
+              turbulenceStrength: config.keyVisualTurbulence || 0.02,
+              opacity: opacity,
+            }}
+            scrollProgress={scrollProgress}
+            visible={opacity > 0}
+          />
+        ) : isAttractor ? (
           // Render 3D strange attractor
           <AttractorPortal
             opacity={opacity}

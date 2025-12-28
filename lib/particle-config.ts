@@ -88,6 +88,7 @@ export interface LandmarkConfig {
  * Available gateway portal shapes
  * Geometric: 2D polygon outlines
  * Attractors: 3D mathematical chaos systems
+ * KeyVisual: PNG-sampled particle cloud
  */
 export type GatewayShape =
   // Geometric shapes (2D outlines)
@@ -112,7 +113,9 @@ export type GatewayShape =
   | "vortex"
   | "spiralTorus"
   | "mobius"
-  | "hypersphere";
+  | "hypersphere"
+  // Image-based particle cloud
+  | "keyVisual";
 
 /**
  * Labels for gateway shapes (for admin panel)
@@ -141,6 +144,8 @@ export const GATEWAY_SHAPE_LABELS: Record<GatewayShape, string> = {
   spiralTorus: "Spiral Torus (Twisted Donut)",
   mobius: "Möbius (Twisted Portal)",
   hypersphere: "Hypersphere (4D Portal)",
+  // Image-based
+  keyVisual: "Key Visual (PNG → Particles)",
 };
 
 /**
@@ -167,6 +172,7 @@ export const GATEWAY_SHAPE_IS_ATTRACTOR: Record<GatewayShape, boolean> = {
   spiralTorus: true,
   mobius: true,
   hypersphere: true,
+  keyVisual: false, // Image-based, not an attractor
 };
 
 /**
@@ -203,6 +209,17 @@ export interface GatewayConfig {
   algorithmicIntensity: number;
   /** Pattern type for algorithmic effects */
   algorithmicPattern: "spiral" | "lissajous" | "fieldLines" | "particleStreams" | "all";
+  // Key Visual specific options (only used when shape === "keyVisual")
+  /** Path to key visual image (for keyVisual shape) */
+  keyVisualSrc?: string;
+  /** Path to depth map image (for keyVisual shape, optional) */
+  keyVisualDepthSrc?: string;
+  /** Max particles for key visual (default 30000) */
+  keyVisualMaxParticles?: number;
+  /** Interaction strength for pointer (0-2, default 0.3) */
+  keyVisualInteractionStrength?: number;
+  /** Turbulence/noise strength (0-0.2, default 0.02) */
+  keyVisualTurbulence?: number;
 }
 
 /**

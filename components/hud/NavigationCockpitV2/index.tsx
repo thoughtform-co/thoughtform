@@ -1434,11 +1434,6 @@ human-AI collaboration.`}
                 backfaceVisibility: "hidden",
               }}
             >
-              {/* Terminal-style header */}
-              <div className="service-card__header">
-                <span className="service-card__header-text">THOUGHTFORM@MANIFESTO:~</span>
-              </div>
-
               {/* Admin edit icon (right card) - top-right, only on hover */}
               {isAdmin && (
                 <button
@@ -1507,11 +1502,6 @@ human-AI collaboration.`}
               zIndex: 2,
             }}
           >
-            {/* Terminal-style header */}
-            <div className="service-card__header">
-              <span className="service-card__header-text">THOUGHTFORM@MANIFESTO:~</span>
-            </div>
-
             {/* Admin edit icon - top-right, only on hover */}
             {isAdmin && (
               <button
@@ -1767,6 +1757,11 @@ human-AI collaboration.`}
                 tServicesCards < 0.05
                   ? "auto"
                   : "none",
+              // Fade out header text and border as we transition to services
+              opacity: Math.max(0, 1 - tServicesCardsVisual * 1.5), // Faster fade: 1.5x multiplier
+              // Fade out border by reducing border opacity
+              borderBottomColor: `rgba(236, 227, 214, ${0.1 * Math.max(0, 1 - tServicesCardsVisual * 1.5)})`,
+              transition: "none", // No CSS transitions - controlled by scroll-driven animation
             }}
           >
             <span className="terminal-title">thoughtform@manifesto:~</span>

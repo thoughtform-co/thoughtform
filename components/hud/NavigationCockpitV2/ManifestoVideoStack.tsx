@@ -2,11 +2,13 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
+import { useVoices } from "@/lib/hooks/useVoices";
 
 // ═══════════════════════════════════════════════════════════════════
 // MANIFESTO VIDEO STACK - Atlas Entity Card Style (Exact Match)
 // Stacked video cards that play on hover, with expanded modal view
 // Following: atlas/src/components/constellation/EntityCard.tsx
+// Now fetches data from Supabase via /api/voices
 // ═══════════════════════════════════════════════════════════════════
 
 interface VideoCard {
@@ -27,47 +29,10 @@ interface VideoCard {
   type?: string;
 }
 
-// Placeholder cards - replace with actual video content
-const PLACEHOLDER_CARDS: VideoCard[] = [
-  {
-    id: "card-1",
-    videoUrl: "",
-    thumbnail: "",
-    title: "AI as Intelligence",
-    description: "It leaps across dimensions we can't fathom.",
-    fullText:
-      "AI isn't just a tool—it's a strange, new intelligence that leaps across dimensions we can't fully comprehend. It sees patterns in places we've never looked.",
-    role: "Manifesto",
-    type: "Voice",
-  },
-  {
-    id: "card-2",
-    videoUrl: "",
-    thumbnail: "",
-    title: "Navigate Strangeness",
-    description: "The source of truly novel ideas.",
-    fullText:
-      "In technical work, AI's strangeness must be constrained. But in creative and strategic work, that strangeness becomes the source of truly novel ideas.",
-    role: "Manifesto",
-    type: "Voice",
-  },
-  {
-    id: "card-3",
-    videoUrl: "",
-    thumbnail: "",
-    title: "Think WITH AI",
-    description: "Navigating its strangeness for creative breakthroughs.",
-    fullText:
-      "Thoughtform teaches teams to think WITH that intelligence—not against it, not around it—navigating its strangeness for creative breakthroughs.",
-    role: "Manifesto",
-    type: "Voice",
-  },
-];
-
 interface ManifestoVideoStackProps {
   /** Whether the stack is visible */
   isVisible: boolean;
-  /** Cards to display (defaults to placeholder) */
+  /** Optional: override cards (if not provided, fetches from API) */
   cards?: VideoCard[];
   /** Optional: reveal progress for staggered entrance */
   revealProgress?: number;
@@ -75,9 +40,14 @@ interface ManifestoVideoStackProps {
 
 export function ManifestoVideoStack({
   isVisible,
-  cards = PLACEHOLDER_CARDS,
+  cards: cardsProp,
   revealProgress = 1,
 }: ManifestoVideoStackProps) {
+  // Fetch voices from API (uses fallback data if API unavailable)
+  const { cards: fetchedCards } = useVoices();
+
+  // Use prop cards if provided, otherwise use fetched cards
+  const cards = cardsProp || fetchedCards;
   const [hoveredCard, setHoveredCard] = useState<string | null>(null);
   const [expandedCard, setExpandedCard] = useState<VideoCard | null>(null);
   const [elapsedTime, setElapsedTime] = useState(0);

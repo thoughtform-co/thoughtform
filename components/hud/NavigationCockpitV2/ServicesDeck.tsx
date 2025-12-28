@@ -79,7 +79,7 @@ export const SERVICES_DATA: ServiceData[] = [
   },
   {
     id: "transform",
-    title: "Strategies:",
+    title: "Strategies.",
     body: "Build a culture where AI amplifies human potential.",
   },
 ];

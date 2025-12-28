@@ -2,6 +2,7 @@
 export { ParticleCanvasV2 } from "./ParticleCanvasV2";
 export { ImageParticleGateway } from "./ImageParticleGateway";
 export { ThreeGateway } from "./ThreeGateway";
+export { KeyVisualPortal } from "./KeyVisualPortal";
 export { HUDFrame } from "./HUDFrame";
 export { NavigationBar } from "./NavigationBar";
 export { Wordmark } from "./Wordmark";

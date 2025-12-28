@@ -1628,15 +1628,17 @@
 /* ─────────────────────────────────────────────────────────────────
    CONTENT CONTAINER
    Holds title + body text. flex: 1 pushes sigil to bottom.
+   Top padding reduced since terminal header was removed.
    ───────────────────────────────────────────────────────────────── */
 .service-card__content {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  padding: 24px;
+  padding: 24px 24px 24px;
   flex: 1; /* Expand to fill available space */
   position: relative;
   z-index: 1; /* Above sigil */
+  text-align: left; /* Ensure all cards align text to the left */
 }
 
 /* ─────────────────────────────────────────────────────────────────

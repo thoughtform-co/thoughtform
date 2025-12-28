@@ -13,10 +13,6 @@ import { SigilCanvas, type SigilConfig, DEFAULT_SIGIL_SIZE } from "./SigilCanvas
 // ┌─────────────────────────────────────────────────────────────────┐
 // │ DESIGN SYSTEM (Thoughtform Brandworld)                         │
 // │                                                                 │
-// │ • Terminal Aesthetic: SIGNAL anchor - "THOUGHTFORM@MANIFESTO:~"│
-// │   header evokes command-line interface, connecting to the      │
-// │   manifesto terminal that precedes this section.               │
-// │                                                                 │
 // │ • Tensor Gold (#caa554): Primary accent for terminal elements, │
 // │   corners, and headers. Applied via CSS variables.             │
 // │                                                                 │
@@ -152,17 +148,6 @@ export function ServiceCard({
           </svg>
         </button>
       )}
-
-      {/* ─────────────────────────────────────────────────────────────
-          TERMINAL HEADER
-          SIGNAL anchor: Creates continuity with the manifesto terminal.
-          The "THOUGHTFORM@MANIFESTO:~" prompt-style text reinforces
-          the command-line aesthetic. Separated by a subtle border-bottom
-          (rgba(236,227,214,0.1)) from the content below.
-          ───────────────────────────────────────────────────────────── */}
-      <div className="service-card__header">
-        <span className="service-card__header-text">THOUGHTFORM@MANIFESTO:~</span>
-      </div>
 
       {/* ─────────────────────────────────────────────────────────────
           CARD CONTENT

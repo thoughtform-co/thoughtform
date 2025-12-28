@@ -2,11 +2,13 @@
 
 import { useEffect, useRef, useState } from "react";
 import { ManifestoTerminal } from "./ManifestoTerminal";
+import { useVoices } from "@/lib/hooks/useVoices";
 
 // ═══════════════════════════════════════════════════════════════════
 // MANIFESTO MOBILE TABS
 // Single panel with vertical tabs: MANIFESTO / SOURCES / VOICES
 // Used on mobile to replace fixed left/right rails
+// Now fetches voices data from Supabase via /api/voices
 // ═══════════════════════════════════════════════════════════════════
 
 // Source data (duplicated from ManifestoSources for mobile)
@@ -43,31 +45,6 @@ const SOURCES = [
   },
 ];
 
-// Voice data (duplicated from ManifestoVideoStack for mobile)
-const VOICES = [
-  {
-    id: "card-1",
-    title: "AI as Intelligence",
-    description: "It leaps across dimensions we can't fathom.",
-    fullText:
-      "AI isn't just a tool—it's a strange, new intelligence that leaps across dimensions we can't fully comprehend. It sees patterns in places we've never looked.",
-  },
-  {
-    id: "card-2",
-    title: "Navigate Strangeness",
-    description: "The source of truly novel ideas.",
-    fullText:
-      "In technical work, AI's strangeness must be constrained. But in creative and strategic work, that strangeness becomes the source of truly novel ideas.",
-  },
-  {
-    id: "card-3",
-    title: "Think WITH AI",
-    description: "Navigating its strangeness for creative breakthroughs.",
-    fullText:
-      "Thoughtform teaches teams to think WITH that intelligence—not against it, not around it—navigating its strangeness for creative breakthroughs.",
-  },
-];
-
 export type ManifestoMobileTabId = "manifesto" | "sources" | "voices";
 
 interface ManifestoMobileTabsProps {
@@ -92,6 +69,9 @@ export function ManifestoMobileTabs({
 }: ManifestoMobileTabsProps) {
   const [expandedVoice, setExpandedVoice] = useState<string | null>(null);
   const tabContentRef = useRef<HTMLDivElement | null>(null);
+
+  // Fetch voices from API (uses fallback data if API unavailable)
+  const { cards: voices } = useVoices();
 
   // Force wheel/trackpad scrolling to stay inside the manifesto tab content.
   // This prevents Lenis / page scroll from "winning" when the user is trying to read the manifesto.
@@ -164,7 +144,7 @@ export function ManifestoMobileTabs({
         {activeTab === "voices" && (
           <div className="tab-panel tab-panel--voices">
             <div className="voices-list-mobile">
-              {VOICES.map((voice) => {
+              {voices.map((voice) => {
                 const isExpanded = expandedVoice === voice.id;
                 return (
                   <button
