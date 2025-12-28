@@ -37,7 +37,16 @@ export async function GET() {
         .single();
 
       if (!error && data?.config) {
-        const config = mergeWithDefaults(data.config);
+        // Ensure mobileGateway and mobileManifold are preserved from saved config
+        const loadedConfig = data.config as any;
+        const config = mergeWithDefaults({
+          ...loadedConfig,
+          // Explicitly preserve mobile overrides (even if empty objects)
+          mobileGateway:
+            loadedConfig.mobileGateway !== undefined ? loadedConfig.mobileGateway : undefined,
+          mobileManifold:
+            loadedConfig.mobileManifold !== undefined ? loadedConfig.mobileManifold : undefined,
+        });
         return NextResponse.json({
           config,
           presets: data.presets || [],
@@ -104,6 +113,15 @@ export async function POST(request: Request) {
     delete configData.userId;
 
     const config = mergeWithDefaults(configData) as ParticleSystemConfig;
+
+    // Ensure mobileGateway and mobileManifold are explicitly included in saved config
+    // (even if they're empty objects, so they persist across refreshes)
+    if (configData.mobileGateway !== undefined) {
+      config.mobileGateway = configData.mobileGateway;
+    }
+    if (configData.mobileManifold !== undefined) {
+      config.mobileManifold = configData.mobileManifold;
+    }
 
     // Increment version on save
     config.version = (config.version || 0) + 1;

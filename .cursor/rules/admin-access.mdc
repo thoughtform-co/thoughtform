@@ -1,0 +1,120 @@
+# Admin Access Control
+
+## Overview
+
+Thoughtform.co uses a single-admin model where only `vince@thoughtform.co` has admin privileges. All admin-only UI and API routes must be properly gated.
+
+## Environment Variable
+
+```env
+NEXT_PUBLIC_ALLOWED_EMAIL=vince@thoughtform.co
+```
+
+This is intentionally a **public** env var (just an email address, not a secret).
+
+**IMPORTANT:** This must be configured in:
+- `.env.local` for local development
+- Vercel Dashboard → Settings → Environment Variables for production
+
+## Development vs Production Behavior
+
+| Environment | `AdminGate` Behavior |
+|-------------|---------------------|
+| Development (`NODE_ENV === "development"`) | **Always shows** admin tools for faster iteration |
+| Production | Only shows if user is logged in AND email matches `NEXT_PUBLIC_ALLOWED_EMAIL` |
+
+This means:
+- Local dev: Admin tools visible to everyone (by design)
+- Production: Admin tools only visible to `vince@thoughtform.co`
+
+## Centralized Check: `isAllowedUserEmail()`
+
+**Always use the centralized function** from `lib/auth/allowed-user.ts`:
+
+```typescript
+import { isAllowedUserEmail } from "@/lib/auth/allowed-user";
+
+// ✅ GOOD: Centralized check
+if (isAllowedUserEmail(user?.email)) {
+  // Admin-only logic
+}
+
+// ❌ BAD: Inline check (duplicated logic)
+if (user?.email === process.env.NEXT_PUBLIC_ALLOWED_EMAIL) {
+  // ...
+}
+```
+
+## Client-Side Gating: `AdminGate`
+
+For admin-only UI components, wrap them in `<AdminGate>`:
+
+```tsx
+import { AdminGate } from "@/components/admin";
+
+// ✅ GOOD: Admin tools only visible to admin
+<AdminGate>
+  <AdminTools />
+  <ParticleAdminPanel />
+</AdminGate>
+
+// ❌ BAD: Admin panel visible to everyone
+<AdminTools />
+```
+
+**Behavior:**
+- **Development (`NODE_ENV === "development"`)**: Always renders children for faster iteration
+- **Production**: Only renders if logged-in user's email matches `NEXT_PUBLIC_ALLOWED_EMAIL`
+
+## Server-Side Validation
+
+Never trust client-side state for protected operations. Always validate server-side:
+
+```typescript
+// ✅ GOOD: Server validates token
+export async function POST(request: Request) {
+  const { authorized, email } = await isAuthorized(request);
+  if (!authorized || !isAllowedUserEmail(email)) {
+    return new Response("Unauthorized", { status: 401 });
+  }
+  // Safe to proceed
+}
+
+// ❌ BAD: Trusting client assertion
+export async function POST(request: Request) {
+  const { isAdmin } = await request.json();
+  if (isAdmin) { // INSECURE - client can spoof this!
+    // ...
+  }
+}
+```
+
+## Context Hooks: `isAdmin`
+
+Config contexts like `ParticleConfigContext` and `SigilConfigContext` expose `isAdmin`:
+
+```typescript
+const { isAdmin } = useParticleConfig();
+
+// isAdmin is derived from checking user's email against allowlist
+// Use for display-only purposes (e.g., showing "View only" badge)
+// DO NOT use for actual access control - server must validate
+```
+
+## Admin-Only Features
+
+These features are gated to admin only:
+
+| Feature | Gate | Location |
+|---------|------|----------|
+| Particles Panel | `AdminGate` + `AdminTools` | `NavigationCockpitV2` |
+| Shape Lab | Page-level `ProtectedFallback` | `app/shape-lab/page.tsx` |
+| Config Save APIs | Server-side token validation | `app/api/particles/config` |
+| Sigil Editor | `AdminGate` | `NavigationCockpitV2` |
+
+## Quick Checklist
+
+- [ ] Using `isAllowedUserEmail()` (not inline email checks)?
+- [ ] Admin UI wrapped in `<AdminGate>`?
+- [ ] Server validates token + email for mutations?
+- [ ] No admin features visible to non-admin in production?

@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import Link from "next/link";
 import { AdminGate } from "@/components/admin/AdminGate";
 import { useAuth } from "@/components/auth/AuthProvider";
+import { isAllowedUserEmail } from "@/lib/auth/allowed-user";
 import {
   getAllShapes,
   getShapeGenerator,
@@ -673,9 +674,8 @@ function AdminGateFallback({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    // Check if user is allowed
-    const allowedEmail = process.env.NEXT_PUBLIC_ALLOWED_EMAIL;
-    const userIsAllowed = user?.email === allowedEmail;
+    // Check if user is allowed using centralized function
+    const userIsAllowed = isAllowedUserEmail(user?.email);
     setIsAllowed(userIsAllowed);
   }, [user, isLoading]);
 
