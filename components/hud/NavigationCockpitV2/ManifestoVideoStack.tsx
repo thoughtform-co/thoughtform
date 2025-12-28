@@ -167,6 +167,7 @@ export function ManifestoVideoStack({
                       loop
                       muted
                       playsInline
+                      preload="auto"
                       className="card-video"
                     />
                   ) : (
@@ -645,9 +646,9 @@ export function ManifestoVideoStack({
           align-items: center;
           justify-content: center;
           padding: 40px;
-          background: rgba(5, 4, 3, 0.3);
-          backdrop-filter: blur(12px);
-          -webkit-backdrop-filter: blur(12px);
+          background: rgba(5, 4, 3, 0.2);
+          backdrop-filter: blur(6px);
+          -webkit-backdrop-filter: blur(6px);
           animation: modalFadeIn 0.3s ease-out forwards;
         }
 
@@ -772,19 +773,19 @@ export function ManifestoVideoStack({
           pointer-events: none;
         }
 
-        /* Header - exact Atlas EntityCardPreview.module.css */
+        /* Header - reduced blur for cleaner look */
         .modal-header {
           grid-column: 1 / -1;
-          background: rgba(10, 9, 8, 0.1);
-          backdrop-filter: blur(12px);
-          -webkit-backdrop-filter: blur(12px);
+          background: rgba(10, 9, 8, 0.05);
+          backdrop-filter: blur(4px);
+          -webkit-backdrop-filter: blur(4px);
           display: flex;
           align-items: center;
           padding: 0 12px;
           font-size: 9px;
           letter-spacing: 0.1em;
           gap: 12px;
-          border-bottom: 1px solid rgba(236, 227, 214, 0.12);
+          border-bottom: 1px solid rgba(236, 227, 214, 0.08);
           position: relative;
           z-index: 10;
         }
@@ -829,28 +830,28 @@ export function ManifestoVideoStack({
           color: rgba(236, 227, 214, 0.8);
         }
 
-        /* Left Column - exact DenizenModalV3 glassmorphism */
+        /* Left Column - reduced blur for cleaner look */
         .modal-left-col {
           display: flex;
           flex-direction: column;
           gap: 1px;
           position: relative;
           z-index: 10;
-          background: rgba(5, 4, 3, 0.03);
-          backdrop-filter: blur(12px);
-          -webkit-backdrop-filter: blur(12px);
-          border-right: 1px solid rgba(236, 227, 214, 0.08);
+          background: rgba(5, 4, 3, 0.02);
+          backdrop-filter: blur(4px);
+          -webkit-backdrop-filter: blur(4px);
+          border-right: 1px solid rgba(236, 227, 214, 0.06);
         }
 
-        /* Readout panels - exact DenizenModalV3 styling */
+        /* Readout panels - reduced opacity for cleaner look */
         .modal-readout {
-          background: rgba(5, 4, 3, 0.03);
+          background: rgba(5, 4, 3, 0.01);
           padding: 8px;
           display: flex;
           flex-direction: column;
           flex: 1;
           min-height: 0;
-          border-bottom: 1px solid rgba(236, 227, 214, 0.06);
+          border-bottom: 1px solid rgba(236, 227, 214, 0.04);
         }
 
         .readout-label {
@@ -925,28 +926,28 @@ export function ManifestoVideoStack({
           color: rgba(236, 227, 214, 0.5);
         }
 
-        /* Right Column - exact DenizenModalV3 glassmorphism */
+        /* Right Column - reduced blur for cleaner look */
         .modal-right-col {
           display: flex;
           flex-direction: column;
           gap: 1px;
           position: relative;
           z-index: 10;
-          background: rgba(5, 4, 3, 0.03);
-          backdrop-filter: blur(12px);
-          -webkit-backdrop-filter: blur(12px);
-          border-left: 1px solid rgba(236, 227, 214, 0.08);
+          background: rgba(5, 4, 3, 0.02);
+          backdrop-filter: blur(4px);
+          -webkit-backdrop-filter: blur(4px);
+          border-left: 1px solid rgba(236, 227, 214, 0.06);
         }
 
-        /* Footer - exact DenizenModalV3 glassmorphism */
+        /* Footer - reduced blur for cleaner look */
         .modal-footer {
           grid-column: 1 / -1;
           position: relative;
           z-index: 10;
-          background: rgba(10, 9, 8, 0.1);
-          backdrop-filter: blur(12px);
-          -webkit-backdrop-filter: blur(12px);
-          border-top: 1px solid rgba(236, 227, 214, 0.12);
+          background: rgba(10, 9, 8, 0.05);
+          backdrop-filter: blur(4px);
+          -webkit-backdrop-filter: blur(4px);
+          border-top: 1px solid rgba(236, 227, 214, 0.08);
           padding: 12px 28px;
           display: grid;
           grid-template-columns: 180px 1fr;
@@ -960,11 +961,11 @@ export function ManifestoVideoStack({
         }
 
         .modal-name {
-          font-family: var(--font-mono, "PT Mono", monospace);
-          font-size: 24px;
+          font-family: var(--font-display, "PP Mondwest", serif);
+          font-size: 20px;
           color: var(--gold, #caa554);
-          letter-spacing: 0.1em;
-          line-height: 1;
+          letter-spacing: 0.02em;
+          line-height: 1.1;
           text-transform: uppercase;
         }
 

@@ -1,0 +1,176 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry.json",
+  "name": "thoughtform",
+  "homepage": "https://thoughtform.co",
+  "items": [
+    {
+      "name": "button",
+      "type": "registry:component",
+      "title": "Button",
+      "description": "Thoughtform button with ghost, solid, and outline variants",
+      "dependencies": ["clsx"],
+      "files": [
+        {
+          "path": "registry/thoughtform/ui/button.tsx",
+          "type": "registry:component"
+        }
+      ]
+    },
+    {
+      "name": "card-frame",
+      "type": "registry:component",
+      "title": "CardFrame",
+      "description": "Unified card component with content, terminal, and data tiers",
+      "dependencies": ["clsx"],
+      "files": [
+        {
+          "path": "registry/thoughtform/cards/card-frame.tsx",
+          "type": "registry:component"
+        }
+      ]
+    },
+    {
+      "name": "stack",
+      "type": "registry:component",
+      "title": "Stack",
+      "description": "Flexbox stack layout component with gap control",
+      "dependencies": ["clsx"],
+      "files": [
+        {
+          "path": "registry/thoughtform/ui/stack.tsx",
+          "type": "registry:component"
+        }
+      ]
+    },
+    {
+      "name": "slider",
+      "type": "registry:component",
+      "title": "Slider",
+      "description": "Range input with Thoughtform styling and label",
+      "dependencies": ["clsx"],
+      "files": [
+        {
+          "path": "registry/thoughtform/ui/slider.tsx",
+          "type": "registry:component"
+        }
+      ]
+    },
+    {
+      "name": "label",
+      "type": "registry:component",
+      "title": "Label",
+      "description": "Form label with mono typography",
+      "dependencies": ["clsx"],
+      "files": [
+        {
+          "path": "registry/thoughtform/ui/label.tsx",
+          "type": "registry:component"
+        }
+      ]
+    },
+    {
+      "name": "toggle",
+      "type": "registry:component",
+      "title": "Toggle",
+      "description": "Boolean toggle switch with gold accent",
+      "dependencies": ["clsx"],
+      "files": [
+        {
+          "path": "registry/thoughtform/ui/toggle.tsx",
+          "type": "registry:component"
+        }
+      ]
+    },
+    {
+      "name": "select",
+      "type": "registry:component",
+      "title": "Select",
+      "description": "Dropdown select with Thoughtform styling",
+      "dependencies": ["clsx"],
+      "files": [
+        {
+          "path": "registry/thoughtform/ui/select.tsx",
+          "type": "registry:component"
+        }
+      ]
+    },
+    {
+      "name": "accordion",
+      "type": "registry:component",
+      "title": "Accordion",
+      "description": "Collapsible panel group for organizing controls",
+      "dependencies": ["clsx"],
+      "files": [
+        {
+          "path": "registry/thoughtform/ui/accordion.tsx",
+          "type": "registry:component"
+        }
+      ]
+    },
+    {
+      "name": "hud-frame",
+      "type": "registry:component",
+      "title": "HUDFrame",
+      "description": "Full-viewport HUD container with corner decorations",
+      "dependencies": ["clsx"],
+      "registryDependencies": ["navigation-bar"],
+      "files": [
+        {
+          "path": "registry/thoughtform/hud/hud-frame.tsx",
+          "type": "registry:component"
+        }
+      ]
+    },
+    {
+      "name": "navigation-bar",
+      "type": "registry:component",
+      "title": "NavigationBar",
+      "description": "Top navigation with wordmark and links",
+      "dependencies": ["clsx"],
+      "files": [
+        {
+          "path": "registry/thoughtform/hud/navigation-bar.tsx",
+          "type": "registry:component"
+        }
+      ]
+    },
+    {
+      "name": "glitch-text",
+      "type": "registry:component",
+      "title": "GlitchText",
+      "description": "Text with glitch animation effect",
+      "dependencies": ["clsx"],
+      "files": [
+        {
+          "path": "registry/thoughtform/ui/glitch-text.tsx",
+          "type": "registry:component"
+        }
+      ]
+    },
+    {
+      "name": "glow-layer",
+      "type": "registry:component",
+      "title": "GlowLayer",
+      "description": "Canvas rendering layer with bloom and glow effects",
+      "dependencies": ["clsx"],
+      "files": [
+        {
+          "path": "registry/thoughtform/vfx/glow-layer.tsx",
+          "type": "registry:component"
+        }
+      ]
+    },
+    {
+      "name": "point-light",
+      "type": "registry:component",
+      "title": "PointLight",
+      "description": "2D point light influence for canvas rendering",
+      "files": [
+        {
+          "path": "registry/thoughtform/vfx/point-light.ts",
+          "type": "registry:lib"
+        }
+      ]
+    }
+  ]
+}

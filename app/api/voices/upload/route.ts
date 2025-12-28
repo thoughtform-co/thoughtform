@@ -7,7 +7,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase";
-import { isAuthorized, getServerUser } from "@/lib/auth-server";
+import { isAuthorized } from "@/lib/auth-server";
 
 const BUCKET_NAME = "voices-media";
 
@@ -16,13 +16,12 @@ const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif
 const ALLOWED_VIDEO_TYPES = ["video/mp4", "video/webm", "video/quicktime"];
 const ALLOWED_TYPES = [...ALLOWED_IMAGE_TYPES, ...ALLOWED_VIDEO_TYPES];
 
-// Max file sizes
-const MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10MB
-const MAX_VIDEO_SIZE = 100 * 1024 * 1024; // 100MB
+// NOTE: No file size limits enforced here - Supabase Storage handles its own limits
+// For large files, prefer direct client-side uploads to Supabase (bypasses Vercel limits)
 
 // Configure route for larger uploads
 export const runtime = "nodejs";
-export const maxDuration = 60;
+export const maxDuration = 300; // 5 minutes for large uploads
 
 /**
  * POST /api/voices/upload
@@ -36,9 +35,6 @@ export async function POST(request: NextRequest) {
       console.log("[voices/upload] Unauthorized request");
       return NextResponse.json({ error: "Unauthorized - admin access required" }, { status: 401 });
     }
-
-    const user = await getServerUser(request);
-    const userId = user?.email || "admin";
 
     // Parse form data
     const formData = await request.formData();
@@ -57,17 +53,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate file size
     const isVideo = ALLOWED_VIDEO_TYPES.includes(file.type);
-    const maxSize = isVideo ? MAX_VIDEO_SIZE : MAX_IMAGE_SIZE;
-
-    if (file.size > maxSize) {
-      const maxSizeMB = maxSize / (1024 * 1024);
-      return NextResponse.json(
-        { error: `File too large. Maximum size: ${maxSizeMB}MB` },
-        { status: 400 }
-      );
-    }
+    // No file size limits - Supabase handles its own limits
 
     const supabase = createServerClient();
     if (!supabase) {

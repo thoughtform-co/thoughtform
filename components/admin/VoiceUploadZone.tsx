@@ -1,7 +1,9 @@
 "use client";
 
 import { useState, useRef, useCallback } from "react";
-import { useAuth } from "@/components/auth/AuthProvider";
+import { supabase } from "@/lib/supabase";
+
+const BUCKET_NAME = "voices-media";
 
 interface VoiceUploadZoneProps {
   /** Callback when media is uploaded - provides URLs */
@@ -90,9 +92,8 @@ export function VoiceUploadZone({
   const [uploadProgress, setUploadProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { session } = useAuth();
 
-  // Handle file selection
+  // Handle file selection - uploads directly to Supabase (no file size limits)
   const handleFileSelect = useCallback(
     async (file: File) => {
       setError(null);
@@ -113,23 +114,22 @@ export function VoiceUploadZone({
         return;
       }
 
-      // Validate file size
-      const isVideo = file.type.startsWith("video/");
-      const maxSize = isVideo ? 100 * 1024 * 1024 : 10 * 1024 * 1024;
-
-      if (file.size > maxSize) {
-        const maxMB = maxSize / (1024 * 1024);
-        setError(`File too large. Maximum: ${maxMB}MB`);
+      // Check Supabase is configured
+      if (!supabase) {
+        setError("Storage not configured. Please check Supabase setup.");
         return;
       }
+
+      const isVideo = file.type.startsWith("video/");
 
       setIsUploading(true);
       setUploadProgress(10);
 
       try {
         let thumbnailUrl: string | undefined;
+        const timestamp = Date.now();
 
-        // For videos, extract thumbnail first
+        // For videos, extract and upload thumbnail first
         if (isVideo) {
           setUploadProgress(15);
           const thumbnailBlob = await extractVideoThumbnail(file);
@@ -137,69 +137,70 @@ export function VoiceUploadZone({
           if (thumbnailBlob) {
             setUploadProgress(25);
 
-            // Upload thumbnail
-            const thumbFormData = new FormData();
-            const thumbFile = new File(
-              [thumbnailBlob],
-              `thumb_${file.name.replace(/\.[^.]+$/, ".jpg")}`,
-              { type: "image/jpeg" }
+            // Upload thumbnail directly to Supabase
+            const thumbName = `thumb_${file.name.replace(/\.[^.]+$/, ".jpg")}`.replace(
+              /[^a-zA-Z0-9.-]/g,
+              "_"
             );
-            thumbFormData.append("file", thumbFile);
-            thumbFormData.append("fileType", "thumbnail");
+            const thumbPath = `uploads/${timestamp}_${thumbName}`;
 
-            const thumbResponse = await fetch("/api/voices/upload", {
-              method: "POST",
-              headers: {
-                Authorization: `Bearer ${session?.access_token}`,
-              },
-              body: thumbFormData,
-            });
+            const { data: thumbData, error: thumbError } = await supabase.storage
+              .from(BUCKET_NAME)
+              .upload(thumbPath, thumbnailBlob, {
+                contentType: "image/jpeg",
+                upsert: false,
+              });
 
-            if (thumbResponse.ok) {
-              const thumbData = await thumbResponse.json();
-              thumbnailUrl = thumbData.publicUrl;
+            if (!thumbError && thumbData) {
+              const { data: thumbUrlData } = supabase.storage
+                .from(BUCKET_NAME)
+                .getPublicUrl(thumbData.path);
+              thumbnailUrl = thumbUrlData.publicUrl;
             } else {
-              console.warn("Thumbnail upload failed, continuing without thumbnail");
+              console.warn("Thumbnail upload failed, continuing without thumbnail:", thumbError);
             }
           }
         }
 
         setUploadProgress(50);
 
-        // Upload main file
-        const formData = new FormData();
-        formData.append("file", file);
-        formData.append("fileType", isVideo ? "video" : "thumbnail");
+        // Upload main file directly to Supabase
+        const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_");
+        const filePath = `uploads/${timestamp}_${sanitizedName}`;
 
-        const response = await fetch("/api/voices/upload", {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${session?.access_token}`,
-          },
-          body: formData,
-        });
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from(BUCKET_NAME)
+          .upload(filePath, file, {
+            contentType: file.type,
+            upsert: false,
+          });
 
         setUploadProgress(80);
 
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || "Upload failed");
+        if (uploadError) {
+          throw new Error(uploadError.message || "Upload failed");
         }
 
-        const data = await response.json();
+        if (!uploadData) {
+          throw new Error("Upload failed: No data returned");
+        }
+
+        // Get public URL
+        const { data: urlData } = supabase.storage.from(BUCKET_NAME).getPublicUrl(uploadData.path);
+
         setUploadProgress(100);
 
         setUploadedFile({
           name: file.name,
-          videoUrl: isVideo ? data.publicUrl : "",
-          thumbnailUrl: isVideo ? thumbnailUrl : data.publicUrl,
+          videoUrl: isVideo ? urlData.publicUrl : "",
+          thumbnailUrl: isVideo ? thumbnailUrl : urlData.publicUrl,
           type: file.type,
         });
 
         // Call callback with URLs
         onMediaUploaded({
-          videoUrl: isVideo ? data.publicUrl : undefined,
-          thumbnailUrl: isVideo ? thumbnailUrl : data.publicUrl,
+          videoUrl: isVideo ? urlData.publicUrl : undefined,
+          thumbnailUrl: isVideo ? thumbnailUrl : urlData.publicUrl,
         });
 
         setIsUploading(false);
@@ -210,7 +211,7 @@ export function VoiceUploadZone({
         setIsUploading(false);
       }
     },
-    [onMediaUploaded, setIsUploading, session]
+    [onMediaUploaded, setIsUploading]
   );
 
   // Drag and drop handlers
