@@ -67,48 +67,268 @@ function ThoughtformLogo({ size = 24, color = "#caa554" }: { size?: number; colo
 }
 
 // ═══════════════════════════════════════════════════════════════
-// NAVIGATION BAR
+// INFINITE CANVAS
 // ═══════════════════════════════════════════════════════════════
 
-function LabNavbar() {
-  return (
-    <div className="lab-navbar">
-      <nav className="lab-navbar__inner">
-        <Link href="/" className="lab-navbar__logo">
-          <ThoughtformLogo size={22} color="#caa554" />
-        </Link>
-        <Link href="/" className="lab-navbar__link">
-          Home
-        </Link>
-        <span className="lab-navbar__link lab-navbar__link--active">Shape Lab</span>
-        <span className="lab-navbar__badge">ADMIN</span>
-      </nav>
-    </div>
-  );
+interface InfiniteCanvasProps {
+  shapeId: string;
+  seed: number;
+  pointCount: number;
+  density: number;
+  particleSize: number;
+  trailLength: number;
+  autoRotate: boolean;
+  rotationSpeed: number;
+  rotationX: number;
+  rotationY: number;
+  gridSnap: boolean;
+  vfxEnabled: boolean;
+  glowIntensity: number;
+  softness: number;
+  bloomRadius: number;
 }
 
-// ═══════════════════════════════════════════════════════════════
-// COLLAPSIBLE SECTION
-// ═══════════════════════════════════════════════════════════════
+function InfiniteCanvas({
+  shapeId,
+  seed,
+  pointCount,
+  density,
+  particleSize,
+  trailLength,
+  autoRotate,
+  rotationSpeed,
+  rotationX,
+  rotationY,
+  gridSnap,
+  vfxEnabled,
+  glowIntensity,
+  softness,
+  bloomRadius,
+}: InfiniteCanvasProps) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const animationRef = useRef<number>(0);
+  const timeRef = useRef(0);
+  const zoomRef = useRef(1);
+  const panRef = useRef({ x: 0, y: 0 });
+  const isDraggingRef = useRef(false);
+  const lastMouseRef = useRef({ x: 0, y: 0 });
+  const particlesRef = useRef<
+    Array<{
+      x: number;
+      y: number;
+      z: number;
+      baseX: number;
+      baseY: number;
+      baseZ: number;
+      vx: number;
+      vy: number;
+      phase: number;
+      energy: number;
+    }>
+  >([]);
 
-function Section({
-  title,
-  expanded,
-  onToggle,
-  children,
-}: {
-  title: string;
-  expanded: boolean;
-  onToggle: () => void;
-  children: React.ReactNode;
-}) {
+  // Generate particles
+  useEffect(() => {
+    const generator = getShapeGenerator(shapeId);
+    const points3D: Vec3[] = generator({ seed, pointCount, size: 1 });
+
+    particlesRef.current = points3D.map((p) => ({
+      x: p.x,
+      y: p.y,
+      z: p.z,
+      baseX: p.x,
+      baseY: p.y,
+      baseZ: p.z,
+      vx: 0,
+      vy: 0,
+      phase: Math.random() * Math.PI * 2,
+      energy: 0.5 + Math.random() * 0.5,
+    }));
+  }, [shapeId, seed, pointCount]);
+
+  // Canvas setup and rendering
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    const container = containerRef.current;
+    if (!canvas || !container) return;
+
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    const resize = () => {
+      const rect = container.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      canvas.style.width = `${rect.width}px`;
+      canvas.style.height = `${rect.height}px`;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    };
+
+    const resizeObserver = new ResizeObserver(resize);
+    resizeObserver.observe(container);
+    resize();
+
+    // Wheel zoom
+    const handleWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      const zoomDelta = e.deltaY > 0 ? 0.9 : 1.1;
+      zoomRef.current = Math.max(0.3, Math.min(5, zoomRef.current * zoomDelta));
+    };
+
+    // Pan
+    const handleMouseDown = (e: MouseEvent) => {
+      isDraggingRef.current = true;
+      lastMouseRef.current = { x: e.clientX, y: e.clientY };
+    };
+
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isDraggingRef.current) return;
+      const dx = e.clientX - lastMouseRef.current.x;
+      const dy = e.clientY - lastMouseRef.current.y;
+      panRef.current.x += dx;
+      panRef.current.y += dy;
+      lastMouseRef.current = { x: e.clientX, y: e.clientY };
+    };
+
+    const handleMouseUp = () => {
+      isDraggingRef.current = false;
+    };
+
+    canvas.addEventListener("wheel", handleWheel, { passive: false });
+    canvas.addEventListener("mousedown", handleMouseDown);
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mouseup", handleMouseUp);
+
+    function render() {
+      if (!ctx || !canvas) return;
+      const time = timeRef.current;
+      const width = canvas.width / (window.devicePixelRatio || 1);
+      const height = canvas.height / (window.devicePixelRatio || 1);
+
+      // Clear
+      if (vfxEnabled && trailLength > 0) {
+        ctx.fillStyle = `rgba(10, 10, 12, ${1 - trailLength * 0.1})`;
+        ctx.fillRect(0, 0, width, height);
+        if (time % 60 === 0) {
+          ctx.fillStyle = "#0a0a0c";
+          ctx.fillRect(0, 0, width, height);
+        }
+      } else {
+        ctx.fillStyle = "#0a0a0c";
+        ctx.fillRect(0, 0, width, height);
+      }
+
+      const cx = width / 2 + panRef.current.x;
+      const cy = height / 2 + panRef.current.y;
+      const baseScale = Math.min(width, height) * 0.35 * zoomRef.current;
+
+      const rotY = autoRotate ? time * 0.01 * rotationSpeed : rotationY;
+      const rotX = rotationX;
+      const cosY = Math.cos(rotY);
+      const sinY = Math.sin(rotY);
+      const cosX = Math.cos(rotX);
+      const sinX = Math.sin(rotX);
+
+      const particles = particlesRef.current;
+      const projected: Array<{ x: number; y: number; z: number; energy: number }> = [];
+
+      for (const p of particles) {
+        let x = p.baseX;
+        let y = p.baseY;
+        let z = p.baseZ;
+
+        // Y rotation
+        const x1 = x * cosY - z * sinY;
+        const z1 = x * sinY + z * cosY;
+        // X rotation
+        const y2 = y * cosX - z1 * sinX;
+        const z2 = y * sinX + z1 * cosX;
+
+        const scale = 1 / (1 + z2 * 0.3);
+        let screenX = cx + x1 * baseScale * scale;
+        let screenY = cy + y2 * baseScale * scale;
+
+        if (gridSnap) {
+          screenX = snap(screenX);
+          screenY = snap(screenY);
+        }
+
+        projected.push({ x: screenX, y: screenY, z: z2, energy: p.energy });
+      }
+
+      // Sort by z
+      projected.sort((a, b) => a.z - b.z);
+
+      // Draw particles
+      for (const p of projected) {
+        const depth = (p.z + 1) / 2;
+        const alpha = 0.3 + depth * 0.7;
+        const size = (1 + depth * 1.5) * particleSize * density;
+
+        if (vfxEnabled) {
+          // Enhanced glow
+          const gradient = ctx.createRadialGradient(
+            p.x,
+            p.y,
+            0,
+            p.x,
+            p.y,
+            size * (2 + bloomRadius * 3)
+          );
+          gradient.addColorStop(0, `rgba(202, 165, 84, ${alpha * p.energy * glowIntensity})`);
+          gradient.addColorStop(
+            0.3 * softness,
+            `rgba(202, 165, 84, ${alpha * 0.5 * glowIntensity})`
+          );
+          gradient.addColorStop(1, "rgba(202, 165, 84, 0)");
+          ctx.fillStyle = gradient;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, size * (2 + bloomRadius * 3), 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Core particle
+        ctx.fillStyle = `rgba(235, 227, 214, ${alpha})`;
+        ctx.fillRect(p.x - size / 2, p.y - size / 2, size, size);
+      }
+
+      timeRef.current++;
+      animationRef.current = requestAnimationFrame(render);
+    }
+
+    render();
+
+    return () => {
+      cancelAnimationFrame(animationRef.current);
+      resizeObserver.disconnect();
+      canvas.removeEventListener("wheel", handleWheel);
+      canvas.removeEventListener("mousedown", handleMouseDown);
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [
+    shapeId,
+    seed,
+    pointCount,
+    density,
+    particleSize,
+    trailLength,
+    autoRotate,
+    rotationSpeed,
+    rotationX,
+    rotationY,
+    gridSnap,
+    vfxEnabled,
+    glowIntensity,
+    softness,
+    bloomRadius,
+  ]);
+
   return (
-    <div className="lab-section">
-      <button className="lab-section__header" onClick={onToggle}>
-        <span>{title}</span>
-        <span className="lab-section__icon">{expanded ? "−" : "+"}</span>
-      </button>
-      {expanded && <div className="lab-section__content">{children}</div>}
+    <div ref={containerRef} className="lab-canvas">
+      <canvas ref={canvasRef} />
     </div>
   );
 }
@@ -178,517 +398,155 @@ function Toggle({
 }
 
 // ═══════════════════════════════════════════════════════════════
-// INFINITE CANVAS (Scroll to Zoom)
-// ═══════════════════════════════════════════════════════════════
-
-interface InfiniteCanvasProps {
-  shapeId: string;
-  seed: number;
-  pointCount: number;
-  density: number;
-  particleSize: number;
-  trailLength: number;
-  autoRotate: boolean;
-  rotationSpeed: number;
-  rotationX: number;
-  rotationY: number;
-  gridSnap: boolean;
-  vfxEnabled: boolean;
-  glowIntensity: number;
-  softness: number;
-  bloomRadius: number;
-}
-
-function InfiniteCanvas({
-  shapeId,
-  seed,
-  pointCount,
-  density,
-  particleSize,
-  trailLength,
-  autoRotate,
-  rotationSpeed,
-  rotationX,
-  rotationY,
-  gridSnap,
-  vfxEnabled,
-  glowIntensity,
-  softness,
-  bloomRadius,
-}: InfiniteCanvasProps) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const animationRef = useRef<number>(0);
-  const timeRef = useRef(0);
-  const zoomRef = useRef(1);
-  const panRef = useRef({ x: 0, y: 0 });
-  const isDraggingRef = useRef(false);
-  const lastMouseRef = useRef({ x: 0, y: 0 });
-  const particlesRef = useRef<
-    Array<{
-      x: number;
-      y: number;
-      z: number;
-      baseX: number;
-      baseY: number;
-      baseZ: number;
-      vx: number;
-      vy: number;
-      phase: number;
-      energy: number;
-    }>
-  >([]);
-
-  // Generate particles when shape/seed/pointCount changes
-  useEffect(() => {
-    const generator = getShapeGenerator(shapeId);
-    const points3D: Vec3[] = generator({ seed, pointCount, size: 1 });
-
-    particlesRef.current = points3D.map((p) => ({
-      x: p.x,
-      y: p.y,
-      z: p.z,
-      baseX: p.x,
-      baseY: p.y,
-      baseZ: p.z,
-      vx: 0,
-      vy: 0,
-      phase: Math.random() * Math.PI * 2,
-      energy: 0.5 + Math.random() * 0.5,
-    }));
-  }, [shapeId, seed, pointCount]);
-
-  // Canvas setup and rendering
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    const container = containerRef.current;
-    if (!canvas || !container) return;
-
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    // Resize handler
-    const resize = () => {
-      const rect = container.getBoundingClientRect();
-      const dpr = window.devicePixelRatio || 1;
-      canvas.width = rect.width * dpr;
-      canvas.height = rect.height * dpr;
-      canvas.style.width = `${rect.width}px`;
-      canvas.style.height = `${rect.height}px`;
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    };
-
-    const resizeObserver = new ResizeObserver(resize);
-    resizeObserver.observe(container);
-    resize();
-
-    // Wheel zoom
-    const handleWheel = (e: WheelEvent) => {
-      e.preventDefault();
-      const zoomDelta = e.deltaY > 0 ? 0.9 : 1.1;
-      zoomRef.current = Math.max(0.3, Math.min(5, zoomRef.current * zoomDelta));
-    };
-
-    // Pan with mouse drag
-    const handleMouseDown = (e: MouseEvent) => {
-      isDraggingRef.current = true;
-      lastMouseRef.current = { x: e.clientX, y: e.clientY };
-    };
-
-    const handleMouseMove = (e: MouseEvent) => {
-      if (!isDraggingRef.current) return;
-      const dx = e.clientX - lastMouseRef.current.x;
-      const dy = e.clientY - lastMouseRef.current.y;
-      panRef.current.x += dx;
-      panRef.current.y += dy;
-      lastMouseRef.current = { x: e.clientX, y: e.clientY };
-    };
-
-    const handleMouseUp = () => {
-      isDraggingRef.current = false;
-    };
-
-    canvas.addEventListener("wheel", handleWheel, { passive: false });
-    canvas.addEventListener("mousedown", handleMouseDown);
-    window.addEventListener("mousemove", handleMouseMove);
-    window.addEventListener("mouseup", handleMouseUp);
-
-    // Render loop
-    function render() {
-      if (!ctx || !canvas) return;
-      const time = timeRef.current;
-      const width = canvas.width / (window.devicePixelRatio || 1);
-      const height = canvas.height / (window.devicePixelRatio || 1);
-
-      // Clear with trail effect
-      if (vfxEnabled && trailLength > 0) {
-        ctx.fillStyle = `rgba(10, 10, 12, ${1 - trailLength * 0.1})`;
-        ctx.fillRect(0, 0, width, height);
-        if (time % 60 === 0) {
-          ctx.fillStyle = "#0a0a0c";
-          ctx.fillRect(0, 0, width, height);
-        }
-      } else {
-        ctx.fillStyle = "#0a0a0c";
-        ctx.fillRect(0, 0, width, height);
-      }
-
-      const zoom = zoomRef.current;
-      const panX = panRef.current.x;
-      const panY = panRef.current.y;
-      const centerX = width / 2 + panX;
-      const centerY = height / 2 + panY;
-      const scale = Math.min(width, height) * 0.28 * zoom;
-
-      // Rotation
-      const rotY = autoRotate ? time * 0.003 * rotationSpeed + rotationY : rotationY;
-      const rotXVal = autoRotate ? rotationX + Math.sin(time * 0.001) * 0.05 : rotationX;
-
-      const cosY = Math.cos(rotY);
-      const sinY = Math.sin(rotY);
-      const cosX = Math.cos(rotXVal);
-      const sinX = Math.sin(rotXVal);
-
-      const projected: Array<{
-        x: number;
-        y: number;
-        z: number;
-        alpha: number;
-        size: number;
-        energy: number;
-      }> = [];
-
-      for (const p of particlesRef.current) {
-        // Subtle animation
-        const noiseX = Math.sin(time * 0.008 + p.phase) * 0.015;
-        const noiseY = Math.cos(time * 0.006 + p.phase * 1.3) * 0.015;
-
-        const dx = p.baseX - p.x;
-        const dy = p.baseY - p.y;
-        p.vx += dx * 0.02 + noiseX;
-        p.vy += dy * 0.02 + noiseY;
-        p.x += p.vx;
-        p.y += p.vy;
-        p.z = p.baseZ + Math.sin(time * 0.007 + p.phase * 0.7) * 0.02;
-        p.vx *= 0.92;
-        p.vy *= 0.92;
-        p.energy = 0.5 + Math.sin(time * 0.02 + p.phase) * 0.3 + Math.random() * 0.2;
-
-        // 3D rotation
-        let x = p.x * cosY + p.z * sinY;
-        let z = -p.x * sinY + p.z * cosY;
-        let y = p.y * cosX - z * sinX;
-        const newZ = p.y * sinX + z * cosX;
-        z = newZ;
-
-        const depth = z + 2.5;
-        if (depth <= 0.2) continue;
-
-        const perspectiveScale = 2 / depth;
-        const screenX = centerX + x * scale * perspectiveScale;
-        const screenY = centerY - y * scale * perspectiveScale;
-        const normalizedZ = Math.max(0, Math.min(1, (z + 1.5) / 3));
-        const depthAlpha = 0.2 + (1 - normalizedZ) * 0.8;
-
-        const baseSize = (2 + (1 - normalizedZ) * 3) * particleSize * density;
-
-        projected.push({
-          x: screenX,
-          y: screenY,
-          z: normalizedZ,
-          alpha: depthAlpha,
-          size: baseSize * p.energy,
-          energy: p.energy,
-        });
-      }
-
-      projected.sort((a, b) => b.z - a.z);
-
-      if (vfxEnabled) {
-        ctx.globalCompositeOperation = "lighter";
-      }
-
-      for (const p of projected) {
-        const goldR = 212,
-          goldG = 175,
-          goldB = 55;
-
-        // Glow effect
-        if (vfxEnabled && glowIntensity > 0) {
-          ctx.save();
-          ctx.shadowColor = `rgba(${goldR}, ${goldG}, ${goldB}, ${p.alpha * glowIntensity})`;
-          ctx.shadowBlur = p.size * (2 + bloomRadius * 6);
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, p.size * 0.3, 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(${goldR}, ${goldG}, ${goldB}, ${p.alpha * 0.3})`;
-          ctx.fill();
-          ctx.restore();
-        }
-
-        // Soft particle
-        if (vfxEnabled && softness > 0) {
-          const gradient = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size * softness);
-          gradient.addColorStop(0, `rgba(${goldR}, ${goldG}, ${goldB}, ${p.alpha})`);
-          gradient.addColorStop(0.4, `rgba(${goldR}, ${goldG}, ${goldB}, ${p.alpha * 0.5})`);
-          gradient.addColorStop(1, `rgba(${goldR}, ${goldG}, ${goldB}, 0)`);
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, p.size * softness, 0, Math.PI * 2);
-          ctx.fillStyle = gradient;
-          ctx.fill();
-        }
-
-        // Core particle
-        const coreR = Math.min(255, goldR + 50);
-        const coreG = Math.min(255, goldG + 50);
-        const coreB = Math.min(255, goldB + 30);
-
-        ctx.fillStyle = `rgba(${coreR}, ${coreG}, ${coreB}, ${p.alpha})`;
-
-        if (gridSnap) {
-          const px = snap(p.x);
-          const py = snap(p.y);
-          const coreSize = vfxEnabled
-            ? Math.max(GRID - 1, p.size * (1 - softness) * 0.5)
-            : GRID - 1;
-          ctx.fillRect(px, py, coreSize, coreSize);
-        } else {
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, p.size * 0.4, 0, Math.PI * 2);
-          ctx.fill();
-        }
-      }
-
-      ctx.globalCompositeOperation = "source-over";
-      timeRef.current++;
-      animationRef.current = requestAnimationFrame(render);
-    }
-
-    render();
-
-    return () => {
-      if (animationRef.current) cancelAnimationFrame(animationRef.current);
-      resizeObserver.disconnect();
-      canvas.removeEventListener("wheel", handleWheel);
-      canvas.removeEventListener("mousedown", handleMouseDown);
-      window.removeEventListener("mousemove", handleMouseMove);
-      window.removeEventListener("mouseup", handleMouseUp);
-    };
-  }, [
-    autoRotate,
-    rotationSpeed,
-    rotationX,
-    rotationY,
-    gridSnap,
-    vfxEnabled,
-    glowIntensity,
-    softness,
-    bloomRadius,
-    particleSize,
-    density,
-    trailLength,
-  ]);
-
-  return (
-    <div ref={containerRef} className="lab-canvas">
-      <canvas ref={canvasRef} />
-    </div>
-  );
-}
-
-// ═══════════════════════════════════════════════════════════════
-// PARTICLES TAB
+// PARTICLES TAB CONTENT
 // ═══════════════════════════════════════════════════════════════
 
 function ParticlesTab() {
-  const [selectedShape, setSelectedShape] = useState("tf_filamentField");
-
-  // Seed
+  const [shapeId, setShapeId] = useState("filament-field");
   const [seed, setSeed] = useState(42);
-
-  // Parameters
   const [pointCount, setPointCount] = useState(400);
   const [density, setDensity] = useState(1);
   const [particleSize, setParticleSize] = useState(1);
   const [trailLength, setTrailLength] = useState(0);
-
-  // 3D & Rotation
   const [autoRotate, setAutoRotate] = useState(false);
   const [rotationSpeed, setRotationSpeed] = useState(1);
   const [rotationX, setRotationX] = useState(0.3);
-  const [rotationY, setRotationY] = useState(0);
+  const [rotationY, setRotationY] = useState(-0.04);
   const [gridSnap, setGridSnap] = useState(true);
-
-  // VFX
   const [vfxEnabled, setVfxEnabled] = useState(false);
   const [glowIntensity, setGlowIntensity] = useState(0.6);
   const [softness, setSoftness] = useState(0.7);
   const [bloomRadius, setBloomRadius] = useState(0.4);
 
-  // Expanded sections
-  const [expanded, setExpanded] = useState({
-    seed: true,
-    parameters: true,
-    rotation: true,
-    vfx: false,
-  });
-
-  const toggleSection = (key: keyof typeof expanded) => {
-    setExpanded((s) => ({ ...s, [key]: !s[key] }));
-  };
-
-  // Presets
   const [presets, setPresets] = useState<ShapePreset[]>([]);
-  const [presetsLoading, setPresetsLoading] = useState(true);
   const [presetName, setPresetName] = useState("");
-  const [savingPreset, setSavingPreset] = useState(false);
+  const [showLeftPanel, setShowLeftPanel] = useState(true);
+  const [showRightPanel, setShowRightPanel] = useState(true);
 
+  const shapesByCategory = useMemo(() => getShapesByCategory(), []);
+
+  // Load presets
   useEffect(() => {
-    loadPresets();
+    fetch("/api/shape-presets")
+      .then((r) => r.json())
+      .then((data) => setPresets(data.presets || []))
+      .catch(console.error);
   }, []);
 
-  const loadPresets = async () => {
-    try {
-      setPresetsLoading(true);
-      const res = await fetch("/api/shape-presets", { cache: "no-store" });
-      if (res.ok) {
-        const data = await res.json();
-        setPresets(data.presets || []);
-      }
-    } catch (e) {
-      console.error("Failed to load presets:", e);
-    } finally {
-      setPresetsLoading(false);
-    }
-  };
-
-  const savePreset = async () => {
+  const savePreset = useCallback(async () => {
     if (!presetName.trim()) return;
     try {
-      setSavingPreset(true);
       const res = await fetch("/api/shape-presets", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name: presetName.trim(),
-          shapeId: selectedShape,
+          name: presetName,
+          shapeId,
           seed,
           pointCount,
           category: "custom",
         }),
       });
-      if (res.ok) {
-        const data = await res.json();
+      const data = await res.json();
+      if (data.preset) {
         setPresets((prev) => [...prev, data.preset]);
         setPresetName("");
       }
     } catch (e) {
-      console.error("Failed to save preset:", e);
-    } finally {
-      setSavingPreset(false);
+      console.error(e);
     }
-  };
+  }, [presetName, shapeId, seed, pointCount]);
 
-  const deletePreset = async (id: string) => {
-    try {
-      const res = await fetch(`/api/shape-presets?id=${id}`, { method: "DELETE" });
-      if (res.ok) setPresets((prev) => prev.filter((p) => p.id !== id));
-    } catch (e) {
-      console.error("Failed to delete preset:", e);
-    }
-  };
-
-  const loadPreset = (preset: ShapePreset) => {
-    setSelectedShape(preset.shapeId);
+  const loadPreset = useCallback((preset: ShapePreset) => {
+    setShapeId(preset.shapeId);
     setSeed(preset.seed);
     setPointCount(preset.pointCount);
-  };
+  }, []);
 
-  const shapes = useMemo(() => getAllShapes(), []);
-  const thoughtformShapes = useMemo(() => getShapesByCategory("thoughtform"), []);
-  const geometricShapes = useMemo(() => getShapesByCategory("geometric"), []);
-  const selectedShapeInfo = useMemo(
-    () => shapes.find((s) => s.id === selectedShape),
-    [shapes, selectedShape]
-  );
+  const deletePreset = useCallback(async (id: string) => {
+    try {
+      await fetch(`/api/shape-presets?id=${id}`, { method: "DELETE" });
+      setPresets((prev) => prev.filter((p) => p.id !== id));
+    } catch (e) {
+      console.error(e);
+    }
+  }, []);
 
-  const handleRandomSeed = useCallback(() => setSeed(Math.floor(Math.random() * 10000)), []);
+  const currentShape = getAllShapes().find((s) => s.id === shapeId);
 
   return (
-    <div className="lab__workspace">
-      {/* LEFT PANEL: Library */}
-      <aside className="lab__panel lab__panel--left">
-        {/* Save Preset */}
-        <div className="lab__panel-section">
-          <div className="lab__save-preset">
-            <input
-              type="text"
-              value={presetName}
-              onChange={(e) => setPresetName(e.target.value)}
-              placeholder="Preset name..."
-              onKeyDown={(e) => e.key === "Enter" && savePreset()}
-            />
-            <button onClick={savePreset} disabled={savingPreset || !presetName.trim()}>
-              Save
-            </button>
-          </div>
-        </div>
+    <div className="particles-tab">
+      {/* Left Panel Toggle */}
+      <button
+        className={`panel-toggle panel-toggle--left ${showLeftPanel ? "active" : ""}`}
+        onClick={() => setShowLeftPanel(!showLeftPanel)}
+        aria-label="Toggle left panel"
+      >
+        {showLeftPanel ? "◂" : "▸"}
+      </button>
 
-        {/* Saved Presets */}
-        {presets.length > 0 && (
-          <div className="lab__panel-section">
-            <h4 className="lab__panel-label">Saved</h4>
-            <div className="lab__preset-list">
-              {presets.map((preset) => (
-                <div key={preset.id} className="lab__preset-item">
-                  <button className="lab__preset-load" onClick={() => loadPreset(preset)}>
-                    {preset.name}
-                  </button>
-                  <button className="lab__preset-delete" onClick={() => deletePreset(preset.id)}>
-                    ×
-                  </button>
-                </div>
-              ))}
+      {/* Left Panel - Presets & Shapes */}
+      {showLeftPanel && (
+        <aside className="lab-panel lab-panel--left">
+          <div className="panel-section">
+            <div className="lab__save-preset">
+              <input
+                type="text"
+                value={presetName}
+                onChange={(e) => setPresetName(e.target.value)}
+                placeholder="Preset name..."
+                onKeyDown={(e) => e.key === "Enter" && savePreset()}
+              />
+              <button onClick={savePreset} disabled={!presetName.trim()}>
+                +
+              </button>
             </div>
           </div>
-        )}
 
-        {/* Thoughtform Shapes */}
-        <div className="lab__panel-section">
-          <h4 className="lab__panel-label">Thoughtform</h4>
-          <div className="lab__shape-list">
-            {thoughtformShapes.map((shape) => (
-              <button
-                key={shape.id}
-                className={`lab__shape-btn ${selectedShape === shape.id ? "lab__shape-btn--active" : ""}`}
-                onClick={() => setSelectedShape(shape.id)}
-              >
-                {shape.label}
-              </button>
-            ))}
-          </div>
+          {presets.length > 0 && (
+            <div className="panel-section">
+              <div className="panel-label">Saved</div>
+              <div className="preset-list">
+                {presets.map((p) => (
+                  <div key={p.id} className="preset-item">
+                    <button className="preset-load" onClick={() => loadPreset(p)}>
+                      {p.name}
+                    </button>
+                    <button className="preset-delete" onClick={() => deletePreset(p.id)}>
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {Object.entries(shapesByCategory).map(([category, shapes]) => (
+            <div key={category} className="panel-section">
+              <div className="panel-label">{category}</div>
+              <div className="shape-list">
+                {shapes.map((shape) => (
+                  <button
+                    key={shape.id}
+                    className={`shape-btn ${shapeId === shape.id ? "active" : ""}`}
+                    onClick={() => setShapeId(shape.id)}
+                  >
+                    {shape.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ))}
+        </aside>
+      )}
+
+      {/* Canvas Area */}
+      <main className="lab-main">
+        <div className="lab-main__header">
+          <span className="shape-name">{currentShape?.name || shapeId}</span>
         </div>
-
-        {/* Geometric Shapes */}
-        <div className="lab__panel-section">
-          <h4 className="lab__panel-label">Geometric</h4>
-          <div className="lab__shape-list">
-            {geometricShapes.map((shape) => (
-              <button
-                key={shape.id}
-                className={`lab__shape-btn ${selectedShape === shape.id ? "lab__shape-btn--active" : ""}`}
-                onClick={() => setSelectedShape(shape.id)}
-              >
-                {shape.label}
-              </button>
-            ))}
-          </div>
-        </div>
-      </aside>
-
-      {/* CENTER: Infinite Canvas */}
-      <main className="lab__main">
         <InfiniteCanvas
-          shapeId={selectedShape}
+          shapeId={shapeId}
           seed={seed}
           pointCount={pointCount}
           density={density}
@@ -704,259 +562,278 @@ function ParticlesTab() {
           softness={softness}
           bloomRadius={bloomRadius}
         />
-        {/* Shape name overlay */}
-        <div className="lab__shape-overlay">
-          <span className="lab__shape-name">{selectedShapeInfo?.label}</span>
-        </div>
       </main>
 
-      {/* RIGHT PANEL: Settings */}
-      <aside className="lab__panel lab__panel--right">
-        {/* Seed Section */}
-        <Section title="Seed" expanded={expanded.seed} onToggle={() => toggleSection("seed")}>
-          <div className="lab__param-row">
-            <Slider label="Seed" value={seed} min={0} max={9999} step={1} onChange={setSeed} />
-            <button className="lab__icon-btn" onClick={handleRandomSeed} title="Randomize">
-              🎲
-            </button>
+      {/* Right Panel Toggle */}
+      <button
+        className={`panel-toggle panel-toggle--right ${showRightPanel ? "active" : ""}`}
+        onClick={() => setShowRightPanel(!showRightPanel)}
+        aria-label="Toggle right panel"
+      >
+        {showRightPanel ? "▸" : "◂"}
+      </button>
+
+      {/* Right Panel - Parameters */}
+      {showRightPanel && (
+        <aside className="lab-panel lab-panel--right">
+          <div className="panel-section">
+            <div className="panel-label">Seed</div>
+            <div className="seed-row">
+              <Slider label="" value={seed} min={1} max={999} onChange={setSeed} />
+              <button
+                className="icon-btn"
+                onClick={() => setSeed(Math.floor(Math.random() * 999) + 1)}
+              >
+                🎲
+              </button>
+            </div>
           </div>
-        </Section>
 
-        {/* Parameters Section */}
-        <Section
-          title="Parameters"
-          expanded={expanded.parameters}
-          onToggle={() => toggleSection("parameters")}
-        >
-          <Slider
-            label="Point Count"
-            value={pointCount}
-            min={50}
-            max={1000}
-            step={25}
-            onChange={setPointCount}
-          />
-          <Slider
-            label="Density"
-            value={density}
-            min={0.2}
-            max={2}
-            step={0.1}
-            suffix="x"
-            onChange={setDensity}
-          />
-          <Slider
-            label="Particle Size"
-            value={particleSize}
-            min={0.2}
-            max={3}
-            step={0.1}
-            suffix="x"
-            onChange={setParticleSize}
-          />
-          <Slider
-            label="Trail Length"
-            value={trailLength}
-            min={0}
-            max={1}
-            step={0.1}
-            onChange={setTrailLength}
-          />
-          <Toggle label="Grid Snap (Sigil Mode)" checked={gridSnap} onChange={setGridSnap} />
-        </Section>
-
-        {/* 3D & Rotation Section */}
-        <Section
-          title="3D & Rotation"
-          expanded={expanded.rotation}
-          onToggle={() => toggleSection("rotation")}
-        >
-          <Toggle label="Auto Rotate" checked={autoRotate} onChange={setAutoRotate} />
-          {autoRotate && (
+          <div className="panel-section">
+            <div className="panel-label">Parameters</div>
             <Slider
-              label="Rotation Speed"
-              value={rotationSpeed}
-              min={0}
+              label="Points"
+              value={pointCount}
+              min={50}
+              max={2000}
+              onChange={setPointCount}
+            />
+            <Slider
+              label="Density"
+              value={density}
+              min={0.1}
               max={3}
               step={0.1}
+              onChange={setDensity}
               suffix="x"
-              onChange={setRotationSpeed}
             />
-          )}
-          <Slider
-            label="X Rotation"
-            value={rotationX}
-            min={-1.5}
-            max={1.5}
-            step={0.05}
-            onChange={setRotationX}
-          />
-          <Slider
-            label="Y Rotation"
-            value={rotationY}
-            min={-3.14}
-            max={3.14}
-            step={0.1}
-            onChange={setRotationY}
-          />
-        </Section>
+            <Slider
+              label="Size"
+              value={particleSize}
+              min={0.5}
+              max={3}
+              step={0.1}
+              onChange={setParticleSize}
+              suffix="x"
+            />
+            <Toggle label="Grid Snap" checked={gridSnap} onChange={setGridSnap} />
+          </div>
 
-        {/* VFX Section */}
-        <Section title="VFX" expanded={expanded.vfx} onToggle={() => toggleSection("vfx")}>
-          <Toggle label="Enable VFX" checked={vfxEnabled} onChange={setVfxEnabled} />
-          {vfxEnabled && (
-            <>
+          <div className="panel-section">
+            <div className="panel-label">Rotation</div>
+            <Toggle label="Auto Rotate" checked={autoRotate} onChange={setAutoRotate} />
+            {autoRotate && (
               <Slider
-                label="Glow Intensity"
-                value={glowIntensity}
-                min={0}
-                max={1}
-                step={0.05}
-                onChange={setGlowIntensity}
+                label="Speed"
+                value={rotationSpeed}
+                min={0.1}
+                max={3}
+                step={0.1}
+                onChange={setRotationSpeed}
+                suffix="x"
               />
-              <Slider
-                label="Softness"
-                value={softness}
-                min={0}
-                max={1}
-                step={0.05}
-                onChange={setSoftness}
-              />
-              <Slider
-                label="Bloom Radius"
-                value={bloomRadius}
-                min={0}
-                max={1}
-                step={0.05}
-                onChange={setBloomRadius}
-              />
-            </>
-          )}
-        </Section>
-      </aside>
+            )}
+            <Slider
+              label="X"
+              value={rotationX}
+              min={-Math.PI}
+              max={Math.PI}
+              step={0.01}
+              onChange={setRotationX}
+            />
+            <Slider
+              label="Y"
+              value={rotationY}
+              min={-Math.PI}
+              max={Math.PI}
+              step={0.01}
+              onChange={setRotationY}
+            />
+          </div>
+
+          <div className="panel-section">
+            <div className="panel-label">VFX</div>
+            <Toggle label="Enable" checked={vfxEnabled} onChange={setVfxEnabled} />
+            {vfxEnabled && (
+              <>
+                <Slider
+                  label="Glow"
+                  value={glowIntensity}
+                  min={0}
+                  max={1}
+                  step={0.1}
+                  onChange={setGlowIntensity}
+                />
+                <Slider
+                  label="Softness"
+                  value={softness}
+                  min={0.1}
+                  max={1}
+                  step={0.1}
+                  onChange={setSoftness}
+                />
+                <Slider
+                  label="Bloom"
+                  value={bloomRadius}
+                  min={0}
+                  max={1}
+                  step={0.1}
+                  onChange={setBloomRadius}
+                />
+                <Slider
+                  label="Trail"
+                  value={trailLength}
+                  min={0}
+                  max={5}
+                  step={0.5}
+                  onChange={setTrailLength}
+                />
+              </>
+            )}
+          </div>
+        </aside>
+      )}
     </div>
   );
 }
 
 // ═══════════════════════════════════════════════════════════════
-// LANDMARKS TAB (placeholder)
-// ═══════════════════════════════════════════════════════════════
-
-function LandmarksTab() {
-  return (
-    <div className="lab__placeholder">
-      <div className="lab__placeholder-icon">◈</div>
-      <h3>Landmarks Lab</h3>
-      <p>3D rotating particle landmarks with scroll animations.</p>
-      <p className="lab__placeholder-note">Coming soon...</p>
-    </div>
-  );
-}
-
-// ═══════════════════════════════════════════════════════════════
-// SHAPE LAB CONTENT
+// MAIN SHAPE LAB
 // ═══════════════════════════════════════════════════════════════
 
 function ShapeLabContent() {
   const [activeTab, setActiveTab] = useState<LabTab>("particles");
 
   return (
-    <div className="lab">
-      <LabNavbar />
+    <div className="shape-lab">
+      {/* HUD Frame Elements */}
+      <div className="hud-corner hud-corner-tl" />
+      <div className="hud-corner hud-corner-tr" />
+      <div className="hud-corner hud-corner-bl" />
+      <div className="hud-corner hud-corner-br" />
 
-      {/* Tab Navigation */}
-      <nav className="lab__tabs">
-        <button
-          className={`lab__tab ${activeTab === "particles" ? "lab__tab--active" : ""}`}
-          onClick={() => setActiveTab("particles")}
-        >
-          <span className="lab__tab-icon">◇</span>
-          Particles
-        </button>
-        <button
-          className={`lab__tab ${activeTab === "gateway" ? "lab__tab--active" : ""}`}
-          onClick={() => setActiveTab("gateway")}
-        >
-          <span className="lab__tab-icon">◉</span>
-          Gateway
-        </button>
-        <button
-          className={`lab__tab ${activeTab === "landmarks" ? "lab__tab--active" : ""}`}
-          onClick={() => setActiveTab("landmarks")}
-        >
-          <span className="lab__tab-icon">◈</span>
-          Landmarks
-        </button>
+      {/* Left Rail */}
+      <aside className="hud-rail hud-rail-left">
+        <div className="rail-scale">
+          <div className="scale-ticks">
+            {Array.from({ length: 21 }).map((_, i) => (
+              <div key={i} className={`tick ${i % 5 === 0 ? "tick-major" : "tick-minor"}`} />
+            ))}
+          </div>
+        </div>
+      </aside>
+
+      {/* Right Rail */}
+      <aside className="hud-rail hud-rail-right">
+        <div className="rail-markers">
+          {[
+            { id: "particles", label: "01" },
+            { id: "gateway", label: "02" },
+            { id: "landmarks", label: "03" },
+          ].map((marker) => (
+            <button
+              key={marker.id}
+              className={`section-marker ${activeTab === marker.id ? "active" : ""}`}
+              onClick={() => setActiveTab(marker.id as LabTab)}
+            >
+              <span className="marker-label">{marker.label}</span>
+              <span className="marker-dot" />
+            </button>
+          ))}
+        </div>
+      </aside>
+
+      {/* Navigation Bar */}
+      <nav className="lab-nav">
+        <Link href="/" className="lab-nav__logo">
+          <ThoughtformLogo size={22} color="#caa554" />
+        </Link>
+        <div className="lab-nav__tabs">
+          <button
+            className={`lab-nav__tab ${activeTab === "particles" ? "active" : ""}`}
+            onClick={() => setActiveTab("particles")}
+          >
+            <span className="tab-icon">◇</span>
+            <span>Particles</span>
+          </button>
+          <button
+            className={`lab-nav__tab ${activeTab === "gateway" ? "active" : ""}`}
+            onClick={() => setActiveTab("gateway")}
+          >
+            <span className="tab-icon">◉</span>
+            <span>Gateway</span>
+          </button>
+          <button
+            className={`lab-nav__tab ${activeTab === "landmarks" ? "active" : ""}`}
+            onClick={() => setActiveTab("landmarks")}
+          >
+            <span className="tab-icon">◈</span>
+            <span>Landmarks</span>
+          </button>
+        </div>
+        <div className="lab-nav__badge">Shape Lab</div>
       </nav>
 
-      {/* Tab Content */}
-      {activeTab === "particles" && <ParticlesTab />}
-      {activeTab === "gateway" && (
-        <Suspense fallback={<div className="lab__loading">Loading...</div>}>
-          <GatewayLabTab />
-        </Suspense>
-      )}
-      {activeTab === "landmarks" && <LandmarksTab />}
+      {/* Content Area */}
+      <div className="lab-content">
+        {activeTab === "particles" && <ParticlesTab />}
+        {activeTab === "gateway" && (
+          <Suspense fallback={<div className="lab__loading">Loading...</div>}>
+            <GatewayLabTab />
+          </Suspense>
+        )}
+        {activeTab === "landmarks" && (
+          <div className="lab-placeholder">
+            <span className="placeholder-icon">◈</span>
+            <h3>Landmarks Lab</h3>
+            <p>3D rotating particle landmarks</p>
+            <p className="placeholder-note">Coming soon...</p>
+          </div>
+        )}
+      </div>
+
+      {/* Bottom Status */}
+      <footer className="lab-footer">
+        <div className="footer-coords">
+          <span>δ: 0.42</span>
+          <span>θ: 45.0°</span>
+        </div>
+        <div className="footer-hint">Scroll to zoom • Drag to pan</div>
+      </footer>
     </div>
   );
 }
 
 // ═══════════════════════════════════════════════════════════════
-// ADMIN GATE & EXPORT
+// EXPORT WITH AUTH
 // ═══════════════════════════════════════════════════════════════
 
-function UnauthorizedView() {
-  return (
-    <div className="lab lab--unauthorized">
-      <h1>Shape Lab</h1>
-      <p>This page is restricted to administrators.</p>
-      <Link href="/" className="lab__btn">
-        ← Return Home
-      </Link>
-    </div>
-  );
-}
-
-function AdminGateFallback({ children }: { children: React.ReactNode }) {
+export default function ShapeLab() {
   const { user, isLoading } = useAuth();
-  const [isAllowed, setIsAllowed] = useState<boolean | null>(null);
 
-  useEffect(() => {
-    if (process.env.NODE_ENV === "development") {
-      setIsAllowed(true);
-      return;
-    }
-    if (isLoading) {
-      setIsAllowed(null);
-      return;
-    }
-    setIsAllowed(isAllowedUserEmail(user?.email));
-  }, [user, isLoading]);
-
-  if (isAllowed === null || isAllowed) return null;
-  return <>{children}</>;
-}
-
-export default function ShapeLabPage() {
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
-
-  if (!mounted) {
+  if (isLoading) {
     return (
       <div className="lab lab--loading">
-        <p>Loading Shape Lab...</p>
+        <span className="lab__loading">Loading...</span>
+      </div>
+    );
+  }
+
+  if (!user?.email || !isAllowedUserEmail(user.email)) {
+    return (
+      <div className="lab lab--unauthorized">
+        <h1>Shape Lab</h1>
+        <p>This tool requires authentication.</p>
+        <Link href="/" className="lab__btn">
+          Return Home
+        </Link>
       </div>
     );
   }
 
   return (
-    <>
-      <AdminGate>
-        <ShapeLabContent />
-      </AdminGate>
-      <AdminGateFallback>
-        <UnauthorizedView />
-      </AdminGateFallback>
-    </>
+    <AdminGate>
+      <ShapeLabContent />
+    </AdminGate>
   );
 }
