@@ -252,27 +252,26 @@ const KeyVisualParticleMaterial = shaderMaterial(
 extend({ KeyVisualParticleMaterial });
 
 // Type declaration for the custom material
+// Type declaration for custom R3F material
 declare global {
   namespace JSX {
     interface IntrinsicElements {
-      keyVisualParticleMaterial: React.DetailedHTMLProps<
-        React.HTMLAttributes<HTMLElement> & {
-          uTime?: number;
-          uColor?: THREE.Color;
-          uAccentColor?: THREE.Color;
-          uOpacity?: number;
-          uPointSize?: number;
-          uPointer?: THREE.Vector3;
-          uInteractionStrength?: number;
-          uTurbulenceStrength?: number;
-          uUseImageColors?: number;
-          attach?: string;
-          transparent?: boolean;
-          depthWrite?: boolean;
-          blending?: THREE.Blending;
-        },
-        HTMLElement
-      >;
+      keyVisualParticleMaterial: {
+        ref?: React.Ref<THREE.ShaderMaterial>;
+        uTime?: number;
+        uColor?: THREE.Color;
+        uAccentColor?: THREE.Color;
+        uOpacity?: number;
+        uPointSize?: number;
+        uPointer?: THREE.Vector3;
+        uInteractionStrength?: number;
+        uTurbulenceStrength?: number;
+        uUseImageColors?: number;
+        attach?: string;
+        transparent?: boolean;
+        depthWrite?: boolean;
+        blending?: THREE.Blending;
+      };
     }
   }
 }
