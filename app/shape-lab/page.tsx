@@ -26,6 +26,8 @@ interface ShapePreset {
   shapeId: string;
   seed: number;
   pointCount: number;
+  density?: number;
+  particleSize?: number;
   category: string;
   createdAt: string;
   updatedAt: string;
@@ -416,6 +418,17 @@ function ParticlesTab() {
   const [presets, setPresets] = useState<ShapePreset[]>([]);
   const [presetName, setPresetName] = useState("");
 
+  // Default values
+  const DEFAULT_POINT_COUNT = 400;
+  const DEFAULT_DENSITY = 1.0;
+  const DEFAULT_PARTICLE_SIZE = 1.0;
+
+  const resetToDefaults = useCallback(() => {
+    setPointCount(DEFAULT_POINT_COUNT);
+    setDensity(DEFAULT_DENSITY);
+    setParticleSize(DEFAULT_PARTICLE_SIZE);
+  }, []);
+
   // Group shapes by category
   const shapesByCategory = useMemo(() => {
     const allShapes = getAllShapes();
@@ -447,6 +460,8 @@ function ParticlesTab() {
           shapeId,
           seed,
           pointCount,
+          density,
+          particleSize,
           category: "custom",
         }),
       });
@@ -458,12 +473,14 @@ function ParticlesTab() {
     } catch (e) {
       console.error(e);
     }
-  }, [presetName, shapeId, seed, pointCount]);
+  }, [presetName, shapeId, seed, pointCount, density, particleSize]);
 
   const loadPreset = useCallback((preset: ShapePreset) => {
     setShapeId(preset.shapeId);
     setSeed(preset.seed);
     setPointCount(preset.pointCount);
+    if (preset.density !== undefined) setDensity(preset.density);
+    if (preset.particleSize !== undefined) setParticleSize(preset.particleSize);
   }, []);
 
   const deletePreset = useCallback(async (id: string) => {
@@ -479,6 +496,27 @@ function ParticlesTab() {
 
   return (
     <div className="particles-tab">
+      {/* Full-screen Canvas Background */}
+      <div className="lab-canvas">
+        <InfiniteCanvas
+          shapeId={shapeId}
+          seed={seed}
+          pointCount={pointCount}
+          density={density}
+          particleSize={particleSize}
+          trailLength={trailLength}
+          autoRotate={autoRotate}
+          rotationSpeed={rotationSpeed}
+          rotationX={rotationX}
+          rotationY={rotationY}
+          gridSnap={gridSnap}
+          vfxEnabled={vfxEnabled}
+          glowIntensity={glowIntensity}
+          softness={softness}
+          bloomRadius={bloomRadius}
+        />
+      </div>
+
       {/* Left Panel - Presets & Shapes */}
       <aside className="lab-panel lab-panel--left">
         <div className="panel-section">
@@ -494,6 +532,9 @@ function ParticlesTab() {
               +
             </button>
           </div>
+          <button className="lab__reset-btn" onClick={resetToDefaults}>
+            Reset to Default
+          </button>
         </div>
 
         {presets.length > 0 && (
@@ -532,28 +573,11 @@ function ParticlesTab() {
         ))}
       </aside>
 
-      {/* Canvas Area */}
+      {/* Canvas Area - Header Only */}
       <main className="lab-main">
         <div className="lab-main__header">
           <span className="shape-name">{currentShape?.label || shapeId}</span>
         </div>
-        <InfiniteCanvas
-          shapeId={shapeId}
-          seed={seed}
-          pointCount={pointCount}
-          density={density}
-          particleSize={particleSize}
-          trailLength={trailLength}
-          autoRotate={autoRotate}
-          rotationSpeed={rotationSpeed}
-          rotationX={rotationX}
-          rotationY={rotationY}
-          gridSnap={gridSnap}
-          vfxEnabled={vfxEnabled}
-          glowIntensity={glowIntensity}
-          softness={softness}
-          bloomRadius={bloomRadius}
-        />
       </main>
 
       {/* Right Panel - Parameters */}
@@ -753,7 +777,6 @@ function ShapeLabContent() {
             <span>Landmarks</span>
           </button>
         </div>
-        <div className="lab-nav__badge">Shape Lab</div>
       </nav>
 
       {/* Content Area */}

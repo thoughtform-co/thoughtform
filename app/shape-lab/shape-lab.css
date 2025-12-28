@@ -291,15 +291,15 @@
 /* ─── NAVIGATION BAR ─── */
 .lab-nav {
   position: absolute;
-  top: var(--hud-padding, 32px);
+  top: 20px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
   align-items: center;
-  background: rgba(10, 9, 8, 0.6);
+  background: rgba(10, 9, 8, 0.25);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid var(--dawn-08);
+  border: 1px solid rgba(236, 227, 214, 0.1);
   height: 44px;
   z-index: 200;
 }
@@ -354,18 +354,6 @@
   font-size: 12px;
 }
 
-.lab-nav__badge {
-  padding: 0 16px;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  font-family: var(--font-mono);
-  font-size: 9px;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-  color: var(--dawn-30);
-}
-
 /* ─── CONTENT AREA (inside HUD frame) ─── */
 .lab-content {
   position: absolute;
@@ -374,6 +362,7 @@
   left: calc(var(--hud-padding, 32px) + var(--rail-width, 60px) + var(--content-inset, 40px));
   right: calc(var(--hud-padding, 32px) + var(--rail-width, 60px) + var(--content-inset, 40px));
   display: flex;
+  z-index: 1;
 }
 
 /* ─── FOOTER ─── */
@@ -425,6 +414,8 @@
   border: 1px solid var(--dawn-08);
   overflow-y: auto;
   flex-shrink: 0;
+  position: relative;
+  z-index: 2;
 }
 
 .lab-panel::-webkit-scrollbar {
@@ -512,6 +503,28 @@
   cursor: not-allowed;
 }
 
+/* ─── RESET BUTTON ─── */
+.lab__reset-btn {
+  width: 100%;
+  margin-top: 8px;
+  padding: 6px 8px;
+  background: transparent;
+  border: 1px solid var(--dawn-15);
+  font-family: var(--font-mono);
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--dawn-50);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.lab__reset-btn:hover {
+  background: var(--dawn-04);
+  border-color: var(--gold-30);
+  color: var(--gold);
+}
+
 /* ─── PRESET LIST ─── */
 .preset-list {
   display: flex;
@@ -596,6 +609,8 @@
   flex-direction: column;
   position: relative;
   min-width: 0;
+  z-index: 1;
+  pointer-events: none;
 }
 
 .lab-main__header {
@@ -604,6 +619,7 @@
   left: 50%;
   transform: translateX(-50%);
   z-index: 10;
+  pointer-events: auto;
 }
 
 .shape-name {
@@ -615,8 +631,11 @@
 }
 
 .lab-canvas {
-  flex: 1;
+  position: fixed;
+  inset: 0;
+  z-index: 0;
   cursor: grab;
+  pointer-events: auto;
 }
 
 .lab-canvas:active {
@@ -1352,10 +1371,6 @@
 
 @media (max-width: 768px) {
   .lab-nav__tabs {
-    display: none;
-  }
-
-  .lab-nav__badge {
     display: none;
   }
 

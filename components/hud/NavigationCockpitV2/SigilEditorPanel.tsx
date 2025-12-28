@@ -56,6 +56,8 @@ interface ShapePreset {
   shapeId: string;
   seed: number;
   pointCount: number;
+  density?: number;
+  particleSize?: number;
   category: string;
 }
 
@@ -262,6 +264,10 @@ export function SigilEditorPanel({ config, onSave, onClose, cardIndex }: SigilEd
       shape: resolveSigilShape(preset.shapeId),
       particleCount: preset.pointCount,
       seed: preset.seed,
+      animationParams: {
+        ...prev.animationParams,
+        ...(preset.density !== undefined && { density: preset.density }),
+      },
     }));
   }, []);
 

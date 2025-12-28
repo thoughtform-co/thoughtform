@@ -51,6 +51,8 @@ export async function GET() {
       shapeId: preset.shape_id,
       seed: preset.seed,
       pointCount: preset.point_count,
+      density: preset.density ?? 1.0,
+      particleSize: preset.particle_size ?? 1.0,
       category: preset.category,
       createdAt: preset.created_at,
       updatedAt: preset.updated_at,
@@ -76,7 +78,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { name, shapeId, seed, pointCount, category } = body;
+    const { name, shapeId, seed, pointCount, density, particleSize, category } = body;
 
     // Validate required fields
     if (!name || !shapeId || seed === undefined || pointCount === undefined) {
@@ -93,6 +95,8 @@ export async function POST(request: NextRequest) {
         shape_id: shapeId,
         seed,
         point_count: pointCount,
+        density: density ?? 1.0,
+        particle_size: particleSize ?? 1.0,
         category: category || "custom",
       })
       .select()
@@ -110,6 +114,8 @@ export async function POST(request: NextRequest) {
       shapeId: data.shape_id,
       seed: data.seed,
       pointCount: data.point_count,
+      density: data.density ?? 1.0,
+      particleSize: data.particle_size ?? 1.0,
       category: data.category,
       createdAt: data.created_at,
       updatedAt: data.updated_at,
@@ -162,7 +168,7 @@ export async function PUT(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { id, name, shapeId, seed, pointCount, category } = body;
+    const { id, name, shapeId, seed, pointCount, density, particleSize, category } = body;
 
     if (!id) {
       return NextResponse.json({ error: "Missing preset ID" }, { status: 400 });
@@ -173,6 +179,8 @@ export async function PUT(request: NextRequest) {
     if (shapeId !== undefined) updateData.shape_id = shapeId;
     if (seed !== undefined) updateData.seed = seed;
     if (pointCount !== undefined) updateData.point_count = pointCount;
+    if (density !== undefined) updateData.density = density;
+    if (particleSize !== undefined) updateData.particle_size = particleSize;
     if (category !== undefined) updateData.category = category;
 
     const { data, error } = await supabase
@@ -194,6 +202,8 @@ export async function PUT(request: NextRequest) {
       shapeId: data.shape_id,
       seed: data.seed,
       pointCount: data.point_count,
+      density: data.density ?? 1.0,
+      particleSize: data.particle_size ?? 1.0,
       category: data.category,
       createdAt: data.created_at,
       updatedAt: data.updated_at,
