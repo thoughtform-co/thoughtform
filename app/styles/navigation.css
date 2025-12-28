@@ -1145,7 +1145,7 @@
     padding: var(--frame-pad-y) var(--frame-pad-x);
     min-height: 70px;
     text-align: center;
-    background: rgba(10, 9, 8, calc(0.85 * var(--frame-opacity, 1)));
+    background: rgba(10, 9, 8, calc(0.92 * var(--frame-opacity, 1)));
     backdrop-filter: blur(calc(12px * var(--frame-opacity, 1)));
     -webkit-backdrop-filter: blur(calc(12px * var(--frame-opacity, 1)));
     /* Allow inner scroll areas (tabs/content) to size correctly within the fixed frame height */

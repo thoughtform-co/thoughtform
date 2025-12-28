@@ -2084,10 +2084,18 @@ human-AI collaboration.`}
   );
 }
 
+// Import types for props
+import type { ParticleSystemConfig } from "@/lib/particle-config";
+
+interface NavigationCockpitV2Props {
+  /** Initial particle config from server-side fetch (prevents flash) */
+  initialParticleConfig?: ParticleSystemConfig;
+}
+
 // Main component with provider wrapper
-export function NavigationCockpitV2() {
+export function NavigationCockpitV2({ initialParticleConfig }: NavigationCockpitV2Props) {
   return (
-    <ParticleConfigProvider>
+    <ParticleConfigProvider initialConfig={initialParticleConfig}>
       <SigilConfigProvider>
         <NavigationCockpitInner />
       </SigilConfigProvider>

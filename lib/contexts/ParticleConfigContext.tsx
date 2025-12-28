@@ -89,13 +89,19 @@ const ParticleConfigContext = createContext<ParticleConfigContextValue | null>(n
 
 interface ParticleConfigProviderProps {
   children: React.ReactNode;
+  /** Initial config from server-side fetch (prevents flash of default values) */
+  initialConfig?: ParticleSystemConfig;
 }
 
-export function ParticleConfigProvider({ children }: ParticleConfigProviderProps) {
+export function ParticleConfigProvider({ children, initialConfig }: ParticleConfigProviderProps) {
   const { user, session } = useAuth();
-  const [config, setConfig] = useState<ParticleSystemConfig>(DEFAULT_CONFIG);
-  const [savedConfig, setSavedConfig] = useState<ParticleSystemConfig>(DEFAULT_CONFIG);
-  const [isLoading, setIsLoading] = useState(true);
+  // Use initialConfig if provided (from server), otherwise use defaults
+  const [config, setConfig] = useState<ParticleSystemConfig>(initialConfig ?? DEFAULT_CONFIG);
+  const [savedConfig, setSavedConfig] = useState<ParticleSystemConfig>(
+    initialConfig ?? DEFAULT_CONFIG
+  );
+  // If we have initialConfig, we're not loading (server already fetched it)
+  const [isLoading, setIsLoading] = useState(!initialConfig);
   const [error, setError] = useState<string | null>(null);
   const [presets, setPresets] = useState<ConfigPreset[]>([]);
   const [activePresetId, setActivePresetId] = useState<string | null>(null);
@@ -185,7 +191,11 @@ export function ParticleConfigProvider({ children }: ParticleConfigProviderProps
   );
 
   useEffect(() => {
-    loadConfig();
+    // Skip initial load if we have server-provided config
+    // The server already fetched it, no need to re-fetch
+    if (!initialConfig) {
+      loadConfig();
+    }
 
     // Cleanup timer on unmount
     return () => {
@@ -193,7 +203,7 @@ export function ParticleConfigProvider({ children }: ParticleConfigProviderProps
         clearTimeout(serverSaveTimerRef.current);
       }
     };
-  }, [loadConfig]);
+  }, [loadConfig, initialConfig]);
 
   // Update entire config (admin only - auto-saves to server)
   const updateConfig = useCallback(
