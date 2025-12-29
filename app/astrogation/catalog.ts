@@ -185,8 +185,8 @@ export const COMPONENTS: ComponentDef[] = [
       { name: "cornerColor", type: "color", default: "#caa554" },
       { name: "cornerThickness", type: "number", default: 1.5, min: 0, max: 4, step: 0.5 },
     ],
-    defaultWidth: 400,
-    defaultHeight: 64,
+    defaultWidth: 800,
+    defaultHeight: 80,
   },
 
   // Frames
@@ -213,8 +213,8 @@ export const COMPONENTS: ComponentDef[] = [
       { name: "cornerColor", type: "color", default: "#caa554" },
       { name: "cornerThickness", type: "number", default: 1.5, min: 0, max: 4, step: 0.5 },
     ],
-    defaultWidth: 280,
-    defaultHeight: 180,
+    defaultWidth: 500,
+    defaultHeight: 300,
   },
   {
     id: "card-frame-terminal",
@@ -238,8 +238,8 @@ export const COMPONENTS: ComponentDef[] = [
       { name: "cornerSize", type: "number", default: 16, min: 8, max: 32 },
       { name: "cornerThickness", type: "number", default: 1.5, min: 0, max: 4, step: 0.5 },
     ],
-    defaultWidth: 320,
-    defaultHeight: 220,
+    defaultWidth: 500,
+    defaultHeight: 300,
   },
   {
     id: "card-frame-data",
@@ -288,8 +288,8 @@ export const COMPONENTS: ComponentDef[] = [
       { name: "cornerColor", type: "color", default: "#caa554" },
       { name: "cornerThickness", type: "number", default: 1.5, min: 0, max: 4, step: 0.5 },
     ],
-    defaultWidth: 120,
-    defaultHeight: 44,
+    defaultWidth: 240,
+    defaultHeight: 60,
   },
 
   // Inputs

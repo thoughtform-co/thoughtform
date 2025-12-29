@@ -944,7 +944,7 @@ function HUDWrapper({
 
   return (
     <div className={`hud-wrapper ${className}`} style={{ ...style, position: "relative" }}>
-      {/* Main thin border */}
+      {/* Main thin border - Put on top with pointer-events: none */}
       <div
         className="hud-wrapper__border"
         style={{
@@ -952,10 +952,10 @@ function HUDWrapper({
           inset: 0,
           border: `${borderThickness}px solid ${borderColor}`,
           pointerEvents: "none",
-          zIndex: 0,
+          zIndex: 10,
         }}
       />
-      {/* Individual corner brackets using background gradients */}
+      {/* Individual corner brackets - Also on top */}
       {showCorners.tl && <div style={cornerStyle("tl")} />}
       {showCorners.tr && <div style={cornerStyle("tr")} />}
       {showCorners.bl && <div style={cornerStyle("bl")} />}
