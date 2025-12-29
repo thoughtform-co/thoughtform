@@ -11,6 +11,44 @@
   overflow: hidden;
 }
 
+/* Starfield background */
+.astrogation::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image:
+    radial-gradient(1px 1px at 10% 20%, rgba(235, 227, 214, 0.4) 0%, transparent 100%),
+    radial-gradient(1px 1px at 30% 15%, rgba(235, 227, 214, 0.3) 0%, transparent 100%),
+    radial-gradient(1px 1px at 50% 35%, rgba(235, 227, 214, 0.25) 0%, transparent 100%),
+    radial-gradient(1px 1px at 70% 10%, rgba(235, 227, 214, 0.35) 0%, transparent 100%),
+    radial-gradient(1px 1px at 90% 25%, rgba(235, 227, 214, 0.2) 0%, transparent 100%),
+    radial-gradient(1px 1px at 15% 60%, rgba(235, 227, 214, 0.3) 0%, transparent 100%),
+    radial-gradient(1px 1px at 35% 80%, rgba(235, 227, 214, 0.25) 0%, transparent 100%),
+    radial-gradient(1px 1px at 55% 50%, rgba(235, 227, 214, 0.4) 0%, transparent 100%),
+    radial-gradient(1px 1px at 75% 70%, rgba(235, 227, 214, 0.2) 0%, transparent 100%),
+    radial-gradient(1px 1px at 95% 55%, rgba(235, 227, 214, 0.35) 0%, transparent 100%),
+    radial-gradient(1px 1px at 5% 90%, rgba(235, 227, 214, 0.3) 0%, transparent 100%),
+    radial-gradient(1px 1px at 25% 95%, rgba(235, 227, 214, 0.25) 0%, transparent 100%),
+    radial-gradient(1px 1px at 45% 75%, rgba(235, 227, 214, 0.2) 0%, transparent 100%),
+    radial-gradient(1px 1px at 65% 85%, rgba(235, 227, 214, 0.35) 0%, transparent 100%),
+    radial-gradient(1px 1px at 85% 90%, rgba(235, 227, 214, 0.3) 0%, transparent 100%),
+    radial-gradient(0.5px 0.5px at 8% 45%, rgba(235, 227, 214, 0.15) 0%, transparent 100%),
+    radial-gradient(0.5px 0.5px at 22% 38%, rgba(235, 227, 214, 0.2) 0%, transparent 100%),
+    radial-gradient(0.5px 0.5px at 42% 62%, rgba(235, 227, 214, 0.15) 0%, transparent 100%),
+    radial-gradient(0.5px 0.5px at 62% 42%, rgba(235, 227, 214, 0.2) 0%, transparent 100%),
+    radial-gradient(0.5px 0.5px at 82% 58%, rgba(235, 227, 214, 0.15) 0%, transparent 100%),
+    radial-gradient(0.5px 0.5px at 12% 78%, rgba(235, 227, 214, 0.2) 0%, transparent 100%),
+    radial-gradient(0.5px 0.5px at 32% 22%, rgba(235, 227, 214, 0.15) 0%, transparent 100%),
+    radial-gradient(0.5px 0.5px at 52% 88%, rgba(235, 227, 214, 0.2) 0%, transparent 100%),
+    radial-gradient(0.5px 0.5px at 72% 32%, rgba(235, 227, 214, 0.15) 0%, transparent 100%),
+    radial-gradient(0.5px 0.5px at 92% 72%, rgba(235, 227, 214, 0.2) 0%, transparent 100%);
+  pointer-events: none;
+  z-index: 0;
+}
+
 .astrogation--loading,
 .astrogation--unauthorized {
   display: flex;
@@ -332,6 +370,12 @@
   max-width: 280px;
   background: transparent;
   position: relative;
+  overflow: visible;
+  padding-top: 40px; /* Space for the tab */
+}
+
+.astrogation-panel--left:hover {
+  overflow: visible;
 }
 
 /* HUD Panel Frame */
@@ -346,6 +390,33 @@
   background: rgba(10, 9, 8, 0.9);
   pointer-events: none;
   z-index: 0;
+}
+
+/* Panel content scrollable area */
+.panel-content {
+  position: relative;
+  z-index: 2;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.panel-content::-webkit-scrollbar {
+  width: 3px;
+}
+
+.panel-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.panel-content::-webkit-scrollbar-thumb {
+  background: var(--gold-15, rgba(202, 165, 84, 0.15));
+}
+
+.panel-content::-webkit-scrollbar-thumb:hover {
+  background: var(--gold-30, rgba(202, 165, 84, 0.3));
 }
 
 /* Corner accents */
@@ -393,7 +464,9 @@
 
 /* ─── PANEL HEADER TAB ─── */
 .panel-header {
-  position: relative;
+  position: absolute;
+  top: 0;
+  left: 0;
   width: fit-content;
   padding: 8px 20px;
   background: var(--gold-08, rgba(202, 165, 84, 0.08));
@@ -406,7 +479,7 @@
   color: var(--gold, #caa554);
   text-align: left;
   flex-shrink: 0;
-  z-index: 2;
+  z-index: 3;
 }
 
 /* ─── PANEL SECTIONS ─── */

@@ -751,134 +751,137 @@ function CatalogPanel({
       {/* Panel Header */}
       <div className="panel-header">COMPONENTS</div>
 
-      {/* Save Preset */}
-      <div className="astrogation-section astrogation-section--save">
-        <div className="save-preset-form">
-          <input
-            type="text"
-            placeholder="Save preset..."
-            value={presetName}
-            onChange={(e) => onPresetNameChange(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && canSave && onSavePreset()}
-          />
-          <button onClick={onSavePreset} disabled={!canSave} className="save-btn">
-            Save
-          </button>
-        </div>
-      </div>
-
-      {/* Search */}
-      <div className="astrogation-section">
-        <input
-          type="text"
-          className="astrogation-search"
-          placeholder="Search components..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-        />
-      </div>
-
-      {/* Search Results */}
-      {filteredComponents && (
-        <div className="astrogation-section">
-          <div className="astrogation-section__label">Results ({filteredComponents.length})</div>
-          {filteredComponents.map((comp) => (
-            <button
-              key={comp.id}
-              className={`catalog-item ${selectedComponentId === comp.id ? "selected" : ""}`}
-              onClick={() => onSelectComponent(comp.id)}
-            >
-              {comp.name}
+      {/* Scrollable content area */}
+      <div className="panel-content">
+        {/* Save Preset */}
+        <div className="astrogation-section astrogation-section--save">
+          <div className="save-preset-form">
+            <input
+              type="text"
+              placeholder="Save preset..."
+              value={presetName}
+              onChange={(e) => onPresetNameChange(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && canSave && onSavePreset()}
+            />
+            <button onClick={onSavePreset} disabled={!canSave} className="save-btn">
+              Save
             </button>
-          ))}
-        </div>
-      )}
-
-      {/* Categories with expandable component lists */}
-      {!filteredComponents && (
-        <div className="astrogation-section astrogation-section--categories">
-          {CATEGORIES.map((cat) => {
-            const isExpanded = expandedCategories.has(cat.id);
-            const components = getComponentsByCategory(cat.id);
-            const subcategoryComponents =
-              cat.subcategories?.flatMap((sub) => getComponentsByCategory(cat.id, sub.id)) || [];
-            const allComponents = [...components, ...subcategoryComponents];
-
-            return (
-              <div key={cat.id} className={`catalog-category ${isExpanded ? "expanded" : ""}`}>
-                {/* Category header with corner bracket */}
-                <button
-                  className={`catalog-category-btn ${isExpanded ? "expanded" : ""}`}
-                  onClick={() => toggleCategory(cat.id)}
-                >
-                  <span className="catalog-corner" />
-                  <span className="catalog-category-btn__name">{cat.name.toUpperCase()}</span>
-                  <span className="catalog-category-btn__count">{allComponents.length}</span>
-                </button>
-
-                {isExpanded && (
-                  <div className="catalog-category__items">
-                    {/* Direct components under category */}
-                    {components.map((comp) => (
-                      <button
-                        key={comp.id}
-                        className={`catalog-item ${selectedComponentId === comp.id ? "selected" : ""}`}
-                        onClick={() => onSelectComponent(comp.id)}
-                      >
-                        <span className="catalog-item__corner" />
-                        {comp.name}
-                      </button>
-                    ))}
-
-                    {/* Subcategories with nested corner brackets */}
-                    {cat.subcategories?.map((sub) => {
-                      const subComps = getComponentsByCategory(cat.id, sub.id);
-                      if (subComps.length === 0) return null;
-                      return (
-                        <div key={sub.id} className="catalog-subcategory">
-                          <div className="catalog-subcategory__label">
-                            <span className="catalog-corner catalog-corner--small" />
-                            {sub.name.toUpperCase()}
-                          </div>
-                          {subComps.map((comp) => (
-                            <button
-                              key={comp.id}
-                              className={`catalog-item catalog-item--nested ${selectedComponentId === comp.id ? "selected" : ""}`}
-                              onClick={() => onSelectComponent(comp.id)}
-                            >
-                              <span className="catalog-item__corner" />
-                              {comp.name}
-                            </button>
-                          ))}
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      )}
-
-      {/* Saved Presets */}
-      {presets.length > 0 && (
-        <div className="astrogation-section">
-          <div className="astrogation-section__label">Saved Presets</div>
-          <div className="preset-list">
-            {presets.map((preset) => (
-              <div key={preset.id} className="preset-item">
-                <button className="preset-item__load" onClick={() => onLoadPreset(preset)}>
-                  {preset.name}
-                </button>
-                <button className="preset-item__delete" onClick={() => onDeletePreset(preset.id)}>
-                  ×
-                </button>
-              </div>
-            ))}
           </div>
         </div>
-      )}
+
+        {/* Search */}
+        <div className="astrogation-section">
+          <input
+            type="text"
+            className="astrogation-search"
+            placeholder="Search components..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
+
+        {/* Search Results */}
+        {filteredComponents && (
+          <div className="astrogation-section">
+            <div className="astrogation-section__label">Results ({filteredComponents.length})</div>
+            {filteredComponents.map((comp) => (
+              <button
+                key={comp.id}
+                className={`catalog-item ${selectedComponentId === comp.id ? "selected" : ""}`}
+                onClick={() => onSelectComponent(comp.id)}
+              >
+                {comp.name}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Categories with expandable component lists */}
+        {!filteredComponents && (
+          <div className="astrogation-section astrogation-section--categories">
+            {CATEGORIES.map((cat) => {
+              const isExpanded = expandedCategories.has(cat.id);
+              const components = getComponentsByCategory(cat.id);
+              const subcategoryComponents =
+                cat.subcategories?.flatMap((sub) => getComponentsByCategory(cat.id, sub.id)) || [];
+              const allComponents = [...components, ...subcategoryComponents];
+
+              return (
+                <div key={cat.id} className={`catalog-category ${isExpanded ? "expanded" : ""}`}>
+                  {/* Category header with corner bracket */}
+                  <button
+                    className={`catalog-category-btn ${isExpanded ? "expanded" : ""}`}
+                    onClick={() => toggleCategory(cat.id)}
+                  >
+                    <span className="catalog-corner" />
+                    <span className="catalog-category-btn__name">{cat.name.toUpperCase()}</span>
+                    <span className="catalog-category-btn__count">{allComponents.length}</span>
+                  </button>
+
+                  {isExpanded && (
+                    <div className="catalog-category__items">
+                      {/* Direct components under category */}
+                      {components.map((comp) => (
+                        <button
+                          key={comp.id}
+                          className={`catalog-item ${selectedComponentId === comp.id ? "selected" : ""}`}
+                          onClick={() => onSelectComponent(comp.id)}
+                        >
+                          <span className="catalog-item__corner" />
+                          {comp.name}
+                        </button>
+                      ))}
+
+                      {/* Subcategories with nested corner brackets */}
+                      {cat.subcategories?.map((sub) => {
+                        const subComps = getComponentsByCategory(cat.id, sub.id);
+                        if (subComps.length === 0) return null;
+                        return (
+                          <div key={sub.id} className="catalog-subcategory">
+                            <div className="catalog-subcategory__label">
+                              <span className="catalog-corner catalog-corner--small" />
+                              {sub.name.toUpperCase()}
+                            </div>
+                            {subComps.map((comp) => (
+                              <button
+                                key={comp.id}
+                                className={`catalog-item catalog-item--nested ${selectedComponentId === comp.id ? "selected" : ""}`}
+                                onClick={() => onSelectComponent(comp.id)}
+                              >
+                                <span className="catalog-item__corner" />
+                                {comp.name}
+                              </button>
+                            ))}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Saved Presets */}
+        {presets.length > 0 && (
+          <div className="astrogation-section">
+            <div className="astrogation-section__label">Saved Presets</div>
+            <div className="preset-list">
+              {presets.map((preset) => (
+                <div key={preset.id} className="preset-item">
+                  <button className="preset-item__load" onClick={() => onLoadPreset(preset)}>
+                    {preset.name}
+                  </button>
+                  <button className="preset-item__delete" onClick={() => onDeletePreset(preset.id)}>
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
     </aside>
   );
 }
