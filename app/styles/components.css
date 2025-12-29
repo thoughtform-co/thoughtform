@@ -356,6 +356,152 @@
   border-right: 2px solid var(--gold);
 }
 
+/* ─── UNIFIED CORNER BRACKETS ───
+   CSS-only implementation using background gradients.
+   More consistent rendering than border-based approach.
+   
+   Usage:
+   1. Add class to parent: has-corners, has-corners--[preset]
+   2. Optionally customize via CSS variables:
+      --cb-arm: arm length
+      --cb-thickness: stroke thickness  
+      --cb-color: bracket color
+      --cb-offset: position offset from edge
+*/
+
+/* Container setup - required for corner positioning */
+.has-corners {
+  position: relative;
+}
+
+/* Base corner styling */
+.has-corners::before,
+.has-corners::after {
+  content: "";
+  position: absolute;
+  width: var(--cb-arm, 16px);
+  height: var(--cb-arm, 16px);
+  pointer-events: none;
+  z-index: 5;
+}
+
+/* Top-left + Bottom-right corners (::before) */
+.has-corners::before {
+  /* Top-left corner */
+  top: var(--cb-offset, -1px);
+  left: var(--cb-offset, -1px);
+  background:
+    linear-gradient(var(--cb-color, var(--gold)), var(--cb-color, var(--gold))) 0 0 /
+      var(--cb-arm, 16px) var(--cb-thickness, 2px) no-repeat,
+    linear-gradient(var(--cb-color, var(--gold)), var(--cb-color, var(--gold))) 0 0 /
+      var(--cb-thickness, 2px) var(--cb-arm, 16px) no-repeat;
+}
+
+.has-corners::after {
+  /* Bottom-right corner */
+  bottom: var(--cb-offset, -1px);
+  right: var(--cb-offset, -1px);
+  background:
+    linear-gradient(var(--cb-color, var(--gold)), var(--cb-color, var(--gold))) 100% 100% /
+      var(--cb-arm, 16px) var(--cb-thickness, 2px) no-repeat,
+    linear-gradient(var(--cb-color, var(--gold)), var(--cb-color, var(--gold))) 100% 100% /
+      var(--cb-thickness, 2px) var(--cb-arm, 16px) no-repeat;
+}
+
+/* Four corners mode - uses additional elements */
+.has-corners--four .cb-tr,
+.has-corners--four .cb-bl {
+  position: absolute;
+  width: var(--cb-arm, 16px);
+  height: var(--cb-arm, 16px);
+  pointer-events: none;
+  z-index: 5;
+}
+
+.has-corners--four .cb-tr {
+  top: var(--cb-offset, -1px);
+  right: var(--cb-offset, -1px);
+  background:
+    linear-gradient(var(--cb-color, var(--gold)), var(--cb-color, var(--gold))) 100% 0 /
+      var(--cb-arm, 16px) var(--cb-thickness, 2px) no-repeat,
+    linear-gradient(var(--cb-color, var(--gold)), var(--cb-color, var(--gold))) 100% 0 /
+      var(--cb-thickness, 2px) var(--cb-arm, 16px) no-repeat;
+}
+
+.has-corners--four .cb-bl {
+  bottom: var(--cb-offset, -1px);
+  left: var(--cb-offset, -1px);
+  background:
+    linear-gradient(var(--cb-color, var(--gold)), var(--cb-color, var(--gold))) 0 100% /
+      var(--cb-arm, 16px) var(--cb-thickness, 2px) no-repeat,
+    linear-gradient(var(--cb-color, var(--gold)), var(--cb-color, var(--gold))) 0 100% /
+      var(--cb-thickness, 2px) var(--cb-arm, 16px) no-repeat;
+}
+
+/* ─── CORNER PRESET SIZES ─── */
+
+/* Subtle - for small labels, delicate frames */
+.has-corners--subtle {
+  --cb-arm: var(--corner-arm-xs, 10px);
+  --cb-thickness: var(--corner-thickness-hairline, 1px);
+}
+
+/* Card - standard content cards */
+.has-corners--card {
+  --cb-arm: var(--corner-arm-sm, 16px);
+  --cb-thickness: var(--corner-thickness-default, 2px);
+}
+
+/* Frame - bridge frame, terminals */
+.has-corners--frame {
+  --cb-arm: var(--corner-arm-md, 20px);
+  --cb-thickness: var(--corner-thickness-default, 2px);
+}
+
+/* Panel - editor panels, modals */
+.has-corners--panel {
+  --cb-arm: var(--corner-arm-lg, 24px);
+  --cb-thickness: var(--corner-thickness-thin, 1.5px);
+}
+
+/* HUD - viewport corner brackets */
+.has-corners--hud {
+  --cb-arm: var(--corner-arm-xl, 40px);
+  --cb-thickness: var(--corner-thickness-default, 2px);
+}
+
+/* ─── DIAGONAL MODES ─── */
+
+/* Diagonal primary: top-right + bottom-left only */
+.has-corners--diagonal-primary::before {
+  /* Top-right corner instead of top-left */
+  top: var(--cb-offset, -1px);
+  left: auto;
+  right: var(--cb-offset, -1px);
+  background:
+    linear-gradient(var(--cb-color, var(--gold)), var(--cb-color, var(--gold))) 100% 0 /
+      var(--cb-arm, 16px) var(--cb-thickness, 2px) no-repeat,
+    linear-gradient(var(--cb-color, var(--gold)), var(--cb-color, var(--gold))) 100% 0 /
+      var(--cb-thickness, 2px) var(--cb-arm, 16px) no-repeat;
+}
+
+.has-corners--diagonal-primary::after {
+  /* Bottom-left corner instead of bottom-right */
+  bottom: var(--cb-offset, -1px);
+  right: auto;
+  left: var(--cb-offset, -1px);
+  background:
+    linear-gradient(var(--cb-color, var(--gold)), var(--cb-color, var(--gold))) 0 100% /
+      var(--cb-arm, 16px) var(--cb-thickness, 2px) no-repeat,
+    linear-gradient(var(--cb-color, var(--gold)), var(--cb-color, var(--gold))) 0 100% /
+      var(--cb-thickness, 2px) var(--cb-arm, 16px) no-repeat;
+}
+
+/* Diagonal secondary: top-left + bottom-right (default ::before/::after behavior) */
+.has-corners--diagonal-secondary {
+  /* Uses default positioning - no override needed */
+}
+
 .card-header {
   display: flex;
   align-items: center;

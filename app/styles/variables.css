@@ -65,6 +65,33 @@
   --content-max-width: 1200px;
   --corner-size: 40px;
 
+  /* ─── CORNER BRACKET TOKENS ───
+     Unified system for corner brackets across all frames.
+     Arm length = how far the bracket extends along each edge.
+     Thickness = stroke weight of the bracket lines.
+     
+     Optical correction: Larger frames need thicker lines to maintain
+     visual weight. The ratio (thickness/arm) stays roughly consistent.
+  */
+  --corner-arm-xs: 10px; /* Delicate: small labels, subtle frames */
+  --corner-arm-sm: 16px; /* Cards: content cards, panels */
+  --corner-arm-md: 20px; /* Standard: bridge frame, terminals */
+  --corner-arm-lg: 24px; /* Emphasis: editor panels, modals */
+  --corner-arm-xl: 40px; /* HUD: viewport corner brackets */
+
+  /* Thickness tokens - optically weighted for visual consistency */
+  --corner-thickness-hairline: 1px; /* For xs arms (ratio ~0.10) */
+  --corner-thickness-thin: 1.5px; /* For sm/md arms (ratio ~0.08) */
+  --corner-thickness-default: 2px; /* Standard weight (ratio ~0.08-0.10) */
+  --corner-thickness-bold: 3px; /* For lg/xl arms (ratio ~0.08) */
+
+  /* Shorthand presets combining arm + thickness for common use cases */
+  --corner-preset-subtle: 10px 1px; /* xs arm, hairline */
+  --corner-preset-card: 16px 2px; /* sm arm, default */
+  --corner-preset-frame: 20px 2px; /* md arm, default */
+  --corner-preset-panel: 24px 1.5px; /* lg arm, thin */
+  --corner-preset-hud: 40px 2px; /* xl arm, default */
+
   /* ─── SAFE-AREA DERIVED HUD PADDINGS ───
      Ensure HUD elements respect device safe areas (notch, home indicator).
   */
