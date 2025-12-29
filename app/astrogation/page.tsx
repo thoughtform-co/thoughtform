@@ -754,7 +754,59 @@ function generateJSXCode(componentId: string, props: Record<string, unknown>): s
 
 // ─── HELPERS & SUBCOMPONENTS ───
 
-type CornerToken = "four" | "tr-bl" | "tl-br";
+type CornerToken =
+  | "four"
+  | "tr-bl"
+  | "tl-br"
+  | "none"
+  | "tl"
+  | "tr"
+  | "bl"
+  | "br"
+  | "tl-tr"
+  | "bl-br"
+  | "tl-bl"
+  | "tr-br";
+
+// Convert active corners array to token
+function cornersToToken(corners: Set<string>): CornerToken {
+  const sorted = [...corners].sort().join("-");
+  if (corners.size === 4) return "four";
+  if (corners.size === 0) return "none";
+  // Map common patterns
+  const mapping: Record<string, CornerToken> = {
+    "bl-tr": "tr-bl",
+    "br-tl": "tl-br",
+    tl: "tl",
+    tr: "tr",
+    bl: "bl",
+    br: "br",
+    "tl-tr": "tl-tr",
+    "bl-br": "bl-br",
+    "bl-tl": "tl-bl",
+    "br-tr": "tr-br",
+  };
+  return mapping[sorted] || "four";
+}
+
+// Convert token to active corners set
+function tokenToCorners(token: CornerToken): Set<string> {
+  const mapping: Record<CornerToken, string[]> = {
+    four: ["tl", "tr", "bl", "br"],
+    none: [],
+    "tr-bl": ["tr", "bl"],
+    "tl-br": ["tl", "br"],
+    tl: ["tl"],
+    tr: ["tr"],
+    bl: ["bl"],
+    br: ["br"],
+    "tl-tr": ["tl", "tr"],
+    "bl-br": ["bl", "br"],
+    "tl-bl": ["tl", "bl"],
+    "tr-br": ["tr", "br"],
+  };
+  return new Set(mapping[token] || ["tl", "tr", "bl", "br"]);
+}
 
 function CornerSelector({
   value,
@@ -763,30 +815,33 @@ function CornerSelector({
   value: CornerToken;
   onChange: (value: CornerToken) => void;
 }) {
-  const options: { id: CornerToken; label: string; activeCorners: string[] }[] = [
-    { id: "four", label: "Four Corners", activeCorners: ["tl", "tr", "bl", "br"] },
-    { id: "tr-bl", label: "Top Right & Bottom Left", activeCorners: ["tr", "bl"] },
-    { id: "tl-br", label: "Top Left & Bottom Right", activeCorners: ["tl", "br"] },
-  ];
+  const activeCorners = tokenToCorners(value);
+
+  const toggleCorner = (corner: string) => {
+    const newCorners = new Set(activeCorners);
+    if (newCorners.has(corner)) {
+      newCorners.delete(corner);
+    } else {
+      newCorners.add(corner);
+    }
+    onChange(cornersToToken(newCorners));
+  };
+
+  const corners = ["tl", "tr", "bl", "br"] as const;
 
   return (
     <div className="corner-selector">
-      <div className="corner-selector__grid">
-        {options.map((opt) => (
+      <div className="corner-selector__frame">
+        {/* Frame outline */}
+        <div className="corner-frame__border" />
+        {/* Clickable corners */}
+        {corners.map((corner) => (
           <button
-            key={opt.id}
-            className={`corner-option ${value === opt.id ? "active" : ""}`}
-            onClick={() => onChange(opt.id)}
-            title={opt.label}
-          >
-            <div className="corner-mockup">
-              {opt.activeCorners.includes("tl") && <div className="mock-corner tl" />}
-              {opt.activeCorners.includes("tr") && <div className="mock-corner tr" />}
-              {opt.activeCorners.includes("bl") && <div className="mock-corner bl" />}
-              {opt.activeCorners.includes("br") && <div className="mock-corner br" />}
-            </div>
-            <span className="corner-option__label">{opt.label}</span>
-          </button>
+            key={corner}
+            className={`corner-toggle corner-toggle--${corner} ${activeCorners.has(corner) ? "active" : ""}`}
+            onClick={() => toggleCorner(corner)}
+            title={`Toggle ${corner.toUpperCase()} corner`}
+          />
         ))}
       </div>
     </div>
@@ -1305,9 +1360,9 @@ function DialsPanel({
       }
 
       case "corners":
+        // Corner selector is self-explanatory, no label needed
         return (
-          <div className="dial-group">
-            <div className="dial-group__label">{propDef.name}</div>
+          <div className="dial-group dial-group--corners">
             <CornerSelector
               value={currentValue as CornerToken}
               onChange={(val) => onPropsChange({ ...componentProps, [propDef.name]: val })}
@@ -1334,12 +1389,31 @@ function DialsPanel({
     );
   }
 
+  // Prop ordering within categories
+  const propOrder: Record<string, string[]> = {
+    corners: ["cornerToken", "cornerColor", "cornerSize", "cornerThickness"],
+    borders: ["borderStyle", "borderColor", "borderThickness"],
+  };
+
   // Group props by category
   const groupedProps: Record<string, PropDef[]> = {};
   def.props.forEach((propDef) => {
     const category = categorizeProp(propDef.name);
     if (!groupedProps[category]) groupedProps[category] = [];
     groupedProps[category].push(propDef);
+  });
+
+  // Sort props within categories that have a defined order
+  Object.keys(propOrder).forEach((category) => {
+    if (groupedProps[category]) {
+      const order = propOrder[category];
+      groupedProps[category].sort((a, b) => {
+        const aIndex = order.indexOf(a.name);
+        const bIndex = order.indexOf(b.name);
+        // Props not in order list go to the end
+        return (aIndex === -1 ? 999 : aIndex) - (bIndex === -1 ? 999 : bIndex);
+      });
+    }
   });
 
   return (
