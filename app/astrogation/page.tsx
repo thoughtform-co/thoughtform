@@ -1131,15 +1131,17 @@ function categorizeProp(propName: string): string {
   // Style props
   if (["variant", "size", "accent", "accentcolor", "position", "orientation"].includes(name))
     return "style";
-  // Color props
-  if (name.includes("color") || name.includes("fill")) return "colors";
-  // Frame/Corner props
+  // General color props (background, text, fill)
   if (
-    ["cornertoken", "borderthickness", "cornerthickness", "borderstyle", "cornersize"].includes(
-      name
-    )
+    ["backgroundcolor", "textcolor", "fillcolor"].includes(name) ||
+    (name.includes("fill") && !name.includes("border") && !name.includes("corner"))
   )
-    return "frame";
+    return "colors";
+  // Border props (including borderColor)
+  if (["borderthickness", "borderstyle", "bordercolor"].includes(name)) return "borders";
+  // Corner props (including cornerColor)
+  if (["cornertoken", "cornerthickness", "cornercolor", "cornersize"].includes(name))
+    return "corners";
   // Toggle/boolean props
   if (name.startsWith("show") || ["checked", "disabled"].includes(name)) return "toggles";
   // Dimension props
@@ -1156,7 +1158,8 @@ const PROP_CATEGORY_ORDER = [
   "content",
   "style",
   "colors",
-  "frame",
+  "borders",
+  "corners",
   "toggles",
   "dimensions",
   "other",
@@ -1165,7 +1168,8 @@ const PROP_CATEGORY_LABELS: Record<string, string> = {
   content: "Content",
   style: "Style",
   colors: "Colors",
-  frame: "Frame & Corners",
+  borders: "Borders",
+  corners: "Corners",
   toggles: "Options",
   dimensions: "Dimensions",
   other: "Other",
