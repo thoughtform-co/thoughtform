@@ -1661,7 +1661,7 @@
   align-items: center;
   gap: 6px;
   width: 100%;
-  padding: 6px 8px;
+  padding: 6px 4px; /* Reduced left padding since expander is hidden */
   background: transparent;
   border: none;
   font-family: var(--font-mono);
@@ -1681,25 +1681,9 @@
   color: var(--gold, #caa554);
 }
 
-/* Expander (chevron) */
+/* Expander (chevron) - HIDDEN, using icon for expand state instead */
 .tree-expander {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 12px;
-  font-size: 8px;
-  color: var(--dawn-30, rgba(235, 227, 214, 0.3));
-  transition: transform 0.15s ease;
-  flex-shrink: 0;
-}
-
-.tree-expander--expanded {
-  transform: rotate(90deg);
-  color: var(--gold, #caa554);
-}
-
-.tree-expander--empty {
-  visibility: hidden;
+  display: none;
 }
 
 /* Icon */
@@ -1737,7 +1721,8 @@
 /* Content (children container) */
 .tree-node-content {
   position: relative;
-  margin-left: 19px; /* Indent children: 12px (expander) + 6px (gap) + 1px (line alignment) */
+  margin-left: 20px; /* Indent children - space for vertical line */
+  padding-left: 12px; /* Space between vertical line and content */
   overflow: visible; /* Allow lines to extend beyond container */
 }
 
@@ -1749,11 +1734,11 @@
   overflow: visible !important; /* Ensure lines aren't clipped */
 }
 
-/* Vertical line positioned close to child expanders */
+/* Vertical line connecting parent to children - positioned at left padding edge */
 .tree-node-content--lines::before {
   content: "";
   position: absolute;
-  left: -6px; /* Position closer to child expanders (6px from content left, aligning with expander center) */
+  left: 0; /* At left edge of padding */
   top: 0;
   bottom: 0;
   width: 1px;
@@ -1761,13 +1746,13 @@
   z-index: 1;
 }
 
-/* Horizontal line connecting from vertical line to each child's expander */
+/* Horizontal line connecting from vertical line to each child's icon */
 .tree-node-content--lines > .tree-node > .tree-node-trigger::before {
   content: "";
   position: absolute;
-  left: -6px; /* Start from vertical line */
+  left: -12px; /* Start from vertical line (padding-left distance) */
   top: 50%; /* Center vertically on the trigger */
-  width: 14px; /* Extend to child's expander (expander starts at 8px padding + center at 6px = 14px from trigger left) */
+  width: 12px; /* Extend to trigger left edge */
   height: 1px;
   background: var(--dawn-20, rgba(235, 227, 214, 0.2));
   z-index: 1;
@@ -1777,8 +1762,8 @@
 .tree-node-content--lines > .tree-node--last::after {
   content: "";
   position: absolute;
-  left: -6px;
-  top: 50%; /* Start at the horizontal line (same as the horizontal line's top) */
+  left: -12px;
+  top: 50%; /* Start at the horizontal line */
   bottom: -100vh; /* Extend far down to cover the vertical line continuation */
   width: 1px;
   background: var(--void, #0a0908); /* Match background to hide the line */
