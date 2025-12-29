@@ -85,38 +85,23 @@ function ThoughtformLogo({ size = 24, color = "#caa554" }: { size?: number; colo
 function ComponentPreview({
   componentId,
   props,
-  style,
   fullSize = false,
 }: {
   componentId: string;
   props: Record<string, unknown>;
-  style?: StyleConfig;
+  style?: StyleConfig; // Kept for compatibility but not used - styling is via component props
   fullSize?: boolean;
 }) {
   const def = getComponentById(componentId);
   if (!def) return <div className="preview-error">Unknown component</div>;
 
-  // Build wrapper style from style config
-  const wrapperStyle: React.CSSProperties = {};
-  if (style) {
-    // Border
-    if (style.borderStyle !== "none") {
-      wrapperStyle.border = `${style.borderWidth}px ${style.borderStyle} ${style.borderColor}`;
-    }
-    // Fill
-    if (style.fillType === "solid") {
-      wrapperStyle.background = style.fillColor;
-    } else if (style.fillType === "gradient") {
-      wrapperStyle.background = `linear-gradient(${style.gradientAngle}deg, ${style.gradientFrom}, ${style.gradientTo})`;
-    }
-  }
-
+  // Components are styled through their own props (borderStyle, borderColor, backgroundColor, etc.)
+  // No wrapper styling - this follows shadcn/ui pattern where components own their appearance
   const content = renderComponent(componentId, props, def, fullSize);
 
   return (
     <div
       className={`component-preview-wrapper ${fullSize ? "component-preview-wrapper--full" : ""}`}
-      style={wrapperStyle}
     >
       {content}
     </div>
@@ -176,6 +161,10 @@ function renderComponent(
     case "button": {
       const variant = (props.variant as string) || "ghost";
       const btnSize = (props.size as string) || "md";
+      const customBg = props.backgroundColor as string;
+      const customText = props.textColor as string;
+      const customBorder = props.borderColor as string;
+
       const sizeStyles = {
         sm: fullSize ? "12px 24px" : "6px 12px",
         md: fullSize ? "16px 32px" : "10px 20px",
@@ -183,19 +172,19 @@ function renderComponent(
       };
       const variantStyles = {
         ghost: {
-          background: "transparent",
-          border: "1px solid var(--dawn-15)",
-          color: "var(--dawn-70)",
+          background: customBg && customBg !== "transparent" ? customBg : "transparent",
+          border: `1px solid ${customBorder || "var(--dawn-15)"}`,
+          color: customText || "var(--dawn-70)",
         },
         solid: {
-          background: "var(--gold)",
-          border: "1px solid var(--gold)",
-          color: "var(--void)",
+          background: customBg && customBg !== "transparent" ? customBg : "var(--gold)",
+          border: `1px solid ${customBorder || "var(--gold)"}`,
+          color: customText || "var(--void)",
         },
         outline: {
-          background: "transparent",
-          border: "1px solid var(--gold)",
-          color: "var(--gold)",
+          background: customBg && customBg !== "transparent" ? customBg : "transparent",
+          border: `1px solid ${customBorder || "var(--gold)"}`,
+          color: customText || "var(--gold)",
         },
       };
       return (
@@ -218,12 +207,14 @@ function renderComponent(
     case "card-frame-content": {
       const borderStyle = (props.borderStyle as string) || "solid";
       const borderColor = (props.borderColor as string) || "rgba(235, 227, 214, 0.08)";
+      const bgColor = (props.backgroundColor as string) || "transparent";
       return (
         <div
           className={`preview-card preview-card--content ${fullSize ? "preview-card--full" : ""}`}
           style={{
             ...(fullSize ? { minWidth: "320px", padding: "24px" } : {}),
             border: borderStyle !== "none" ? `1px ${borderStyle} ${borderColor}` : "none",
+            background: bgColor !== "transparent" ? bgColor : undefined,
           }}
         >
           {props.accent !== "none" && (
@@ -258,12 +249,14 @@ function renderComponent(
       const cornerSize = ((props.cornerSize as number) || 16) * scale;
       const borderStyle = (props.borderStyle as string) || "solid";
       const borderColor = (props.borderColor as string) || "rgba(235, 227, 214, 0.15)";
+      const bgColor = (props.backgroundColor as string) || "transparent";
       return (
         <div
           className={`preview-card preview-card--terminal ${fullSize ? "preview-card--full" : ""}`}
           style={{
             ...(fullSize ? { minWidth: "360px", padding: "32px" } : {}),
             border: borderStyle !== "none" ? `1px ${borderStyle} ${borderColor}` : "none",
+            background: bgColor !== "transparent" ? bgColor : undefined,
           }}
         >
           <div className="preview-card__corners">
@@ -304,12 +297,14 @@ function renderComponent(
     case "card-frame-data": {
       const borderStyle = (props.borderStyle as string) || "solid";
       const borderColor = (props.borderColor as string) || "rgba(235, 227, 214, 0.08)";
+      const bgColor = (props.backgroundColor as string) || "transparent";
       return (
         <div
           className={`preview-card preview-card--data ${fullSize ? "preview-card--full" : ""}`}
           style={{
             ...(fullSize ? { minWidth: "200px", padding: "20px" } : {}),
             border: borderStyle !== "none" ? `1px ${borderStyle} ${borderColor}` : "none",
+            background: bgColor !== "transparent" ? bgColor : undefined,
           }}
         >
           <div
@@ -940,15 +935,11 @@ function ComponentCanvas({
 
 function DialsPanel({
   selectedComponentId,
-  style,
-  onStyleChange,
   componentProps,
   onPropsChange,
   onCopyCode,
 }: {
   selectedComponentId: string | null;
-  style: StyleConfig;
-  onStyleChange: (style: StyleConfig) => void;
   componentProps: Record<string, unknown>;
   onPropsChange: (props: Record<string, unknown>) => void;
   onCopyCode: () => void;
@@ -1086,115 +1077,6 @@ function DialsPanel({
           ))}
         </div>
       )}
-
-      {/* Background Fill Controls */}
-      <div className="astrogation-section">
-        <div className="astrogation-section__label">Background</div>
-
-        <div className="dial-group">
-          <div className="dial-group__label">Type</div>
-          <select
-            className="dial-select"
-            value={style.fillType}
-            onChange={(e) =>
-              onStyleChange({ ...style, fillType: e.target.value as StyleConfig["fillType"] })
-            }
-          >
-            <option value="none">None</option>
-            <option value="solid">Solid</option>
-            <option value="gradient">Gradient</option>
-          </select>
-        </div>
-
-        {style.fillType === "solid" && (
-          <div className="dial-group">
-            <div className="dial-group__label">Color</div>
-            <div className="color-picker">
-              <input
-                type="color"
-                value={style.fillColor}
-                onChange={(e) => onStyleChange({ ...style, fillColor: e.target.value })}
-              />
-              <div className="color-swatches">
-                {BRAND_COLORS.map((c) => (
-                  <button
-                    key={c.name}
-                    className="color-swatch"
-                    style={{ background: c.value }}
-                    title={c.name}
-                    onClick={() => onStyleChange({ ...style, fillColor: c.value })}
-                  />
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {style.fillType === "gradient" && (
-          <>
-            <div className="dial-group">
-              <div className="dial-group__label">From</div>
-              <div className="color-picker">
-                <input
-                  type="color"
-                  value={style.gradientFrom}
-                  onChange={(e) => onStyleChange({ ...style, gradientFrom: e.target.value })}
-                />
-                <div className="color-swatches">
-                  {BRAND_COLORS.slice(0, 4).map((c) => (
-                    <button
-                      key={c.name}
-                      className="color-swatch"
-                      style={{ background: c.value }}
-                      title={c.name}
-                      onClick={() => onStyleChange({ ...style, gradientFrom: c.value })}
-                    />
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            <div className="dial-group">
-              <div className="dial-group__label">To</div>
-              <div className="color-picker">
-                <input
-                  type="color"
-                  value={style.gradientTo}
-                  onChange={(e) => onStyleChange({ ...style, gradientTo: e.target.value })}
-                />
-                <div className="color-swatches">
-                  {BRAND_COLORS.slice(0, 4).map((c) => (
-                    <button
-                      key={c.name}
-                      className="color-swatch"
-                      style={{ background: c.value }}
-                      title={c.name}
-                      onClick={() => onStyleChange({ ...style, gradientTo: c.value })}
-                    />
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            <div className="dial-group">
-              <div className="dial-group__header">
-                <span className="dial-group__label">Angle</span>
-                <span className="dial-group__value">{style.gradientAngle}°</span>
-              </div>
-              <input
-                type="range"
-                className="dial-slider"
-                min={0}
-                max={360}
-                value={style.gradientAngle}
-                onChange={(e) =>
-                  onStyleChange({ ...style, gradientAngle: parseInt(e.target.value) })
-                }
-              />
-            </div>
-          </>
-        )}
-      </div>
 
       {/* Actions */}
       <div className="astrogation-section">
@@ -1393,8 +1275,6 @@ function AstrogationContent() {
 
         <DialsPanel
           selectedComponentId={selectedComponentId}
-          style={style}
-          onStyleChange={setStyle}
           componentProps={componentProps}
           onPropsChange={setComponentProps}
           onCopyCode={handleCopyCode}
