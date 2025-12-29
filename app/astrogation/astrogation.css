@@ -286,7 +286,7 @@
   position: absolute;
   top: calc(var(--hud-padding, 32px) + 60px);
   bottom: calc(var(--hud-padding, 32px) + 40px);
-  left: calc(var(--hud-padding, 32px) + var(--rail-width, 60px) + 20px);
+  left: calc(var(--hud-padding, 32px) + var(--rail-width, 60px) + 4px);
   right: calc(var(--hud-padding, 32px) + var(--rail-width, 60px) + 20px);
   display: flex;
   gap: 0;
