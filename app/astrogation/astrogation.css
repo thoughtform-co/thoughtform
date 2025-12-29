@@ -399,14 +399,15 @@
 .astrogation-panel--right::after {
   content: "";
   position: absolute;
-  top: 38px; /* Slightly above to prevent top clipping */
-  left: -1px;
-  right: -1px;
-  bottom: -1px;
+  top: 40px; /* Align exactly with the frame */
+  left: 0;
+  right: 0;
+  bottom: 0;
   background: transparent;
   border: 1.5px solid var(--gold, #caa554);
   pointer-events: none;
   z-index: 1;
+  box-sizing: border-box; /* Keep border inside the box */
 }
 
 /* Panel content scrollable area */
@@ -446,13 +447,14 @@
     calc(100% - 1.5px) 24px,
     calc(100% - 1.5px) 1.5px,
     calc(100% - 24px) 1.5px,
-    /* Bridge - hidden along inner edge */ 1.5px 1.5px,
+    /* Hidden bridge along the top inner edge */ 1.5px 1.5px,
     /* Bottom Left */ 1.5px calc(100% - 24px),
     0 calc(100% - 24px),
     0 100%,
     24px 100%,
     24px calc(100% - 1.5px),
-    1.5px calc(100% - 1.5px)
+    1.5px calc(100% - 1.5px),
+    /* Close polygon */ 1.5px 1.5px
   );
 }
 
@@ -479,13 +481,14 @@
     1.5px 1.5px,
     1.5px 24px,
     0 24px,
-    /* Bridge - hidden along inner edge */ calc(100% - 1.5px) calc(100% - 1.5px),
+    /* Hidden bridge along the bottom inner edge */ calc(100% - 1.5px) calc(100% - 1.5px),
     /* Bottom Right */ calc(100% - 1.5px) calc(100% - 24px),
     100% calc(100% - 24px),
     100% 100%,
     calc(100% - 24px) 100%,
     calc(100% - 24px) calc(100% - 1.5px),
-    calc(100% - 1.5px) calc(100% - 1.5px)
+    calc(100% - 1.5px) calc(100% - 1.5px),
+    /* Close polygon */ calc(100% - 1.5px) calc(100% - 1.5px)
   );
 }
 
