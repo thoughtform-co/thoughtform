@@ -1,47 +1,23 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
 import { AdminGate } from "@/components/admin/AdminGate";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { isAllowedUserEmail } from "@/lib/auth/allowed-user";
 import {
   CATEGORIES,
-  COMPONENTS,
   getComponentsByCategory,
   getComponentById,
   searchComponents,
   type ComponentDef,
   type PropDef,
 } from "./catalog";
-import {
-  createHistory,
-  pushState,
-  undo as historyUndo,
-  redo as historyRedo,
-  canUndo,
-  canRedo,
-  type HistoryState,
-} from "./history";
-import { useKeyboardShortcuts } from "./useKeyboardShortcuts";
 import "./astrogation.css";
 
 // ═══════════════════════════════════════════════════════════════
 // TYPES
 // ═══════════════════════════════════════════════════════════════
-
-interface ComponentInstance {
-  id: string;
-  componentId: string;
-  x: number;
-  y: number;
-  props: Record<string, unknown>;
-}
-
-interface CanvasState {
-  instances: ComponentInstance[];
-  selectedId: string | null;
-}
 
 interface UIComponentPreset {
   id: string;
@@ -51,6 +27,32 @@ interface UIComponentPreset {
   created_at: string;
   updated_at: string;
 }
+
+interface StyleConfig {
+  // Border
+  borderStyle: "none" | "solid" | "dashed" | "dotted" | "double";
+  borderWidth: number;
+  borderColor: string;
+  // Fill
+  fillType: "none" | "solid" | "gradient";
+  fillColor: string;
+  gradientFrom: string;
+  gradientTo: string;
+  gradientAngle: number;
+  // Custom props
+  props: Record<string, unknown>;
+}
+
+// Brand colors for picker
+const BRAND_COLORS = [
+  { name: "Gold", value: "#caa554", variable: "--gold" },
+  { name: "Dawn", value: "#ebe3d6", variable: "--dawn" },
+  { name: "Void", value: "#0a0908", variable: "--void" },
+  { name: "Verde", value: "#39ff14", variable: "--verde" },
+  { name: "Alert", value: "#ff6b35", variable: "--alert" },
+  { name: "Dawn 50%", value: "rgba(235, 227, 214, 0.5)", variable: "--dawn-50" },
+  { name: "Gold 50%", value: "rgba(202, 165, 84, 0.5)", variable: "--gold-50" },
+];
 
 // ═══════════════════════════════════════════════════════════════
 // THOUGHTFORM LOGO
@@ -83,27 +85,58 @@ function ThoughtformLogo({ size = 24, color = "#caa554" }: { size?: number; colo
 function ComponentPreview({
   componentId,
   props,
+  style,
+  fullSize = false,
 }: {
   componentId: string;
   props: Record<string, unknown>;
+  style?: StyleConfig;
+  fullSize?: boolean;
 }) {
   const def = getComponentById(componentId);
   if (!def) return <div className="preview-error">Unknown component</div>;
 
+  // Build wrapper style from style config
+  const wrapperStyle: React.CSSProperties = {};
+  if (style) {
+    // Border
+    if (style.borderStyle !== "none") {
+      wrapperStyle.border = `${style.borderWidth}px ${style.borderStyle} ${style.borderColor}`;
+    }
+    // Fill
+    if (style.fillType === "solid") {
+      wrapperStyle.background = style.fillColor;
+    } else if (style.fillType === "gradient") {
+      wrapperStyle.background = `linear-gradient(${style.gradientAngle}deg, ${style.gradientFrom}, ${style.gradientTo})`;
+    }
+  }
+
+  const content = renderComponent(componentId, props, def, fullSize);
+
+  return (
+    <div
+      className={`component-preview-wrapper ${fullSize ? "component-preview-wrapper--full" : ""}`}
+      style={wrapperStyle}
+    >
+      {content}
+    </div>
+  );
+}
+
+function renderComponent(
+  componentId: string,
+  props: Record<string, unknown>,
+  def: ComponentDef,
+  fullSize = false
+): React.ReactNode {
+  // Scale factor for full-size preview
+  const scale = fullSize ? 2 : 1;
   switch (componentId) {
     case "brand-mark":
       return (
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            width: "100%",
-            height: "100%",
-          }}
-        >
+        <div className="preview-center">
           <ThoughtformLogo
-            size={(props.size as number) || 48}
+            size={((props.size as number) || 48) * scale}
             color={(props.color as string) || "#caa554"}
           />
         </div>
@@ -111,19 +144,11 @@ function ComponentPreview({
 
     case "brand-mark-outline":
       return (
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            width: "100%",
-            height: "100%",
-          }}
-        >
+        <div className="preview-center">
           <svg
             viewBox="0 0 430.99 436"
-            width={(props.size as number) || 48}
-            height={(props.size as number) || 48}
+            width={((props.size as number) || 48) * scale}
+            height={((props.size as number) || 48) * scale}
             fill="none"
             stroke={(props.color as string) || "#caa554"}
             strokeWidth="8"
@@ -138,7 +163,7 @@ function ComponentPreview({
         <div
           style={{
             fontFamily: "var(--font-mono)",
-            fontSize: (props.size as number) || 24,
+            fontSize: ((props.size as number) || 24) * scale,
             color: (props.color as string) || "#caa554",
             textTransform: "uppercase",
             letterSpacing: "0.2em",
@@ -148,17 +173,25 @@ function ComponentPreview({
         </div>
       );
 
-    case "button":
+    case "button": {
       const variant = (props.variant as string) || "ghost";
-      const size = (props.size as string) || "md";
-      const sizeStyles = { sm: "6px 12px", md: "10px 20px", lg: "14px 28px" };
+      const btnSize = (props.size as string) || "md";
+      const sizeStyles = {
+        sm: fullSize ? "12px 24px" : "6px 12px",
+        md: fullSize ? "16px 32px" : "10px 20px",
+        lg: fullSize ? "20px 40px" : "14px 28px",
+      };
       const variantStyles = {
         ghost: {
           background: "transparent",
           border: "1px solid var(--dawn-15)",
           color: "var(--dawn-70)",
         },
-        solid: { background: "var(--gold)", border: "1px solid var(--gold)", color: "var(--void)" },
+        solid: {
+          background: "var(--gold)",
+          border: "1px solid var(--gold)",
+          color: "var(--void)",
+        },
         outline: {
           background: "transparent",
           border: "1px solid var(--gold)",
@@ -168,10 +201,10 @@ function ComponentPreview({
       return (
         <button
           style={{
-            padding: sizeStyles[size as keyof typeof sizeStyles],
+            padding: sizeStyles[btnSize as keyof typeof sizeStyles],
             ...variantStyles[variant as keyof typeof variantStyles],
             fontFamily: "var(--font-mono)",
-            fontSize: "11px",
+            fontSize: fullSize ? "14px" : "11px",
             textTransform: "uppercase",
             letterSpacing: "0.1em",
             cursor: "pointer",
@@ -180,26 +213,18 @@ function ComponentPreview({
           {(props.label as string) || "Button"}
         </button>
       );
+    }
 
     case "card-frame-content":
       return (
         <div
-          style={{
-            background: "var(--surface-1, rgba(10,9,8,0.6))",
-            border: "1px solid var(--dawn-08)",
-            padding: "16px",
-            width: "100%",
-            height: "100%",
-            position: "relative",
-          }}
+          className={`preview-card preview-card--content ${fullSize ? "preview-card--full" : ""}`}
+          style={fullSize ? { minWidth: "320px", padding: "24px" } : undefined}
         >
           {props.accent !== "none" && (
             <div
+              className={`preview-card__accent preview-card__accent--${props.accent}`}
               style={{
-                position: "absolute",
-                ...(props.accent === "top"
-                  ? { top: 0, left: 0, right: 0, height: "3px" }
-                  : { top: 0, left: 0, bottom: 0, width: "3px" }),
                 background:
                   props.accentColor === "dawn"
                     ? "var(--dawn)"
@@ -210,17 +235,13 @@ function ComponentPreview({
             />
           )}
           <div
-            style={{
-              fontFamily: "var(--font-mono)",
-              fontSize: "9px",
-              color: "var(--gold)",
-              marginBottom: "8px",
-            }}
+            className="preview-card__index"
+            style={fullSize ? { fontSize: "12px", marginBottom: "12px" } : undefined}
           >
             {String(props.index || "01")} ·{" "}
-            <span style={{ color: "var(--dawn-30)" }}>{String(props.label || "Label")}</span>
+            <span className="preview-card__label">{String(props.label || "Label")}</span>
           </div>
-          <div style={{ fontFamily: "var(--font-mono)", fontSize: "13px", color: "var(--dawn)" }}>
+          <div className="preview-card__title" style={fullSize ? { fontSize: "18px" } : undefined}>
             {(props.title as string) || "Card Title"}
           </div>
         </div>
@@ -229,87 +250,38 @@ function ComponentPreview({
     case "card-frame-terminal":
       return (
         <div
-          style={{
-            background: "var(--void)",
-            border: "1px solid var(--dawn-15)",
-            padding: "24px",
-            width: "100%",
-            height: "100%",
-            position: "relative",
-          }}
+          className={`preview-card preview-card--terminal ${fullSize ? "preview-card--full" : ""}`}
+          style={fullSize ? { minWidth: "360px", padding: "32px" } : undefined}
         >
-          {/* Corner brackets */}
+          <div className="preview-card__corners">
+            <div
+              className="corner corner--tl"
+              style={fullSize ? { width: "20px", height: "20px" } : undefined}
+            />
+            <div
+              className="corner corner--tr"
+              style={fullSize ? { width: "20px", height: "20px" } : undefined}
+            />
+            <div
+              className="corner corner--bl"
+              style={fullSize ? { width: "20px", height: "20px" } : undefined}
+            />
+            <div
+              className="corner corner--br"
+              style={fullSize ? { width: "20px", height: "20px" } : undefined}
+            />
+          </div>
           <div
-            style={{
-              position: "absolute",
-              top: 0,
-              left: 0,
-              width: "16px",
-              height: "16px",
-              borderTop: "2px solid var(--gold)",
-              borderLeft: "2px solid var(--gold)",
-            }}
-          />
-          <div
-            style={{
-              position: "absolute",
-              top: 0,
-              right: 0,
-              width: "16px",
-              height: "16px",
-              borderTop: "2px solid var(--gold)",
-              borderRight: "2px solid var(--gold)",
-            }}
-          />
-          <div
-            style={{
-              position: "absolute",
-              bottom: 0,
-              left: 0,
-              width: "16px",
-              height: "16px",
-              borderBottom: "2px solid var(--gold)",
-              borderLeft: "2px solid var(--gold)",
-            }}
-          />
-          <div
-            style={{
-              position: "absolute",
-              bottom: 0,
-              right: 0,
-              width: "16px",
-              height: "16px",
-              borderBottom: "2px solid var(--gold)",
-              borderRight: "2px solid var(--gold)",
-            }}
-          />
-          <div
-            style={{
-              fontFamily: "var(--font-mono)",
-              fontSize: "9px",
-              color: "var(--dawn-50)",
-              marginBottom: "12px",
-            }}
+            className="preview-card__header"
+            style={fullSize ? { fontSize: "12px", marginBottom: "16px" } : undefined}
           >
             <span
-              style={{
-                display: "inline-block",
-                width: "8px",
-                height: "8px",
-                background: "var(--gold)",
-                marginRight: "8px",
-              }}
+              className="preview-card__dot"
+              style={fullSize ? { width: "10px", height: "10px" } : undefined}
             />
             {(props.label as string) || "Terminal"}
           </div>
-          <div
-            style={{
-              fontFamily: "var(--font-display)",
-              fontSize: "18px",
-              color: "var(--dawn)",
-              textAlign: "center",
-            }}
-          >
+          <div className="preview-card__body" style={fullSize ? { fontSize: "24px" } : undefined}>
             {(props.title as string) || "Terminal Title"}
           </div>
         </div>
@@ -318,31 +290,25 @@ function ComponentPreview({
     case "card-frame-data":
       return (
         <div
-          style={{
-            background: "var(--surface-1, rgba(10,9,8,0.6))",
-            border: "1px solid var(--dawn-08)",
-            padding: "12px",
-            width: "100%",
-            height: "100%",
-          }}
+          className={`preview-card preview-card--data ${fullSize ? "preview-card--full" : ""}`}
+          style={fullSize ? { minWidth: "200px", padding: "20px" } : undefined}
         >
           <div
-            style={{
-              fontFamily: "var(--font-mono)",
-              fontSize: "9px",
-              color: "var(--dawn-30)",
-              marginBottom: "4px",
-            }}
+            className="preview-card__metric-label"
+            style={fullSize ? { fontSize: "12px" } : undefined}
           >
             {(props.label as string) || "Metric"}
           </div>
-          <div style={{ fontFamily: "var(--font-mono)", fontSize: "24px", color: "var(--gold)" }}>
+          <div
+            className="preview-card__metric-value"
+            style={fullSize ? { fontSize: "48px" } : undefined}
+          >
             {(props.title as string) || "42"}
           </div>
         </div>
       );
 
-    case "hud-corner":
+    case "hud-corner": {
       const position = (props.position as string) || "top-left";
       const cornerSize = (props.size as number) || 24;
       const cornerColor = (props.color as string) || "#caa554";
@@ -373,19 +339,14 @@ function ComponentPreview({
           }}
         />
       );
+    }
 
     case "slider":
       return (
         <div style={{ width: "100%" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "4px" }}>
-            <span
-              style={{ fontFamily: "var(--font-mono)", fontSize: "9px", color: "var(--dawn-50)" }}
-            >
-              {(props.label as string) || "Value"}
-            </span>
-            <span style={{ fontFamily: "var(--font-mono)", fontSize: "9px", color: "var(--gold)" }}>
-              {(props.value as number) || 50}
-            </span>
+          <div className="preview-slider__header">
+            <span>{(props.label as string) || "Value"}</span>
+            <span className="preview-slider__value">{(props.value as number) || 50}</span>
           </div>
           <input
             type="range"
@@ -393,180 +354,74 @@ function ComponentPreview({
             max={(props.max as number) || 100}
             value={(props.value as number) || 50}
             readOnly
-            style={{ width: "100%", accentColor: "var(--gold)" }}
+            className="preview-slider__input"
           />
         </div>
       );
 
     case "toggle":
       return (
-        <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}>
-          <input
-            type="checkbox"
-            checked={(props.checked as boolean) || false}
-            readOnly
-            style={{ accentColor: "var(--gold)" }}
-          />
-          <span
-            style={{ fontFamily: "var(--font-mono)", fontSize: "10px", color: "var(--dawn-50)" }}
-          >
-            {(props.label as string) || "Option"}
-          </span>
+        <label className="preview-toggle">
+          <input type="checkbox" checked={(props.checked as boolean) || false} readOnly />
+          <span>{(props.label as string) || "Option"}</span>
         </label>
       );
 
     case "select":
       return (
         <div style={{ width: "100%" }}>
-          <div
-            style={{
-              fontFamily: "var(--font-mono)",
-              fontSize: "9px",
-              color: "var(--dawn-50)",
-              marginBottom: "4px",
-            }}
-          >
-            {(props.label as string) || "Select"}
-          </div>
-          <select
-            style={{
-              width: "100%",
-              padding: "6px 8px",
-              background: "var(--void)",
-              border: "1px solid var(--dawn-15)",
-              fontFamily: "var(--font-mono)",
-              fontSize: "10px",
-              color: "var(--dawn)",
-            }}
-          >
+          <div className="preview-select__label">{(props.label as string) || "Select"}</div>
+          <select className="preview-select__input">
             <option>{(props.placeholder as string) || "Choose option..."}</option>
           </select>
         </div>
       );
 
     case "glitch-text":
-      return (
-        <div
-          style={{
-            fontFamily: "var(--font-mono)",
-            fontSize: "16px",
-            color: "var(--gold)",
-            textTransform: "uppercase",
-            letterSpacing: "0.2em",
-          }}
-        >
-          {(props.text as string) || "THOUGHTFORM"}
-        </div>
-      );
+      return <div className="preview-glitch-text">{(props.text as string) || "THOUGHTFORM"}</div>;
 
     case "hud-frame":
       return (
         <div
+          className="preview-hud-frame"
           style={{
-            width: (props.width as number) || 300,
-            height: (props.height as number) || 200,
-            position: "relative",
-            background: "var(--void)",
+            width: ((props.width as number) || 200) * scale,
+            height: ((props.height as number) || 120) * scale,
             border: props.showBorder ? "1px solid var(--dawn-08)" : "none",
           }}
         >
           {Boolean(props.showCorners) && (
-            <>
+            <div className="preview-hud-frame__corners">
               <div
-                style={{
-                  position: "absolute",
-                  top: 0,
-                  left: 0,
-                  width: "16px",
-                  height: "16px",
-                  borderTop: "2px solid var(--gold)",
-                  borderLeft: "2px solid var(--gold)",
-                }}
+                className="corner corner--tl"
+                style={fullSize ? { width: "24px", height: "24px" } : undefined}
               />
               <div
-                style={{
-                  position: "absolute",
-                  top: 0,
-                  right: 0,
-                  width: "16px",
-                  height: "16px",
-                  borderTop: "2px solid var(--gold)",
-                  borderRight: "2px solid var(--gold)",
-                }}
+                className="corner corner--tr"
+                style={fullSize ? { width: "24px", height: "24px" } : undefined}
               />
               <div
-                style={{
-                  position: "absolute",
-                  bottom: 0,
-                  left: 0,
-                  width: "16px",
-                  height: "16px",
-                  borderBottom: "2px solid var(--gold)",
-                  borderLeft: "2px solid var(--gold)",
-                }}
+                className="corner corner--bl"
+                style={fullSize ? { width: "24px", height: "24px" } : undefined}
               />
               <div
-                style={{
-                  position: "absolute",
-                  bottom: 0,
-                  right: 0,
-                  width: "16px",
-                  height: "16px",
-                  borderBottom: "2px solid var(--gold)",
-                  borderRight: "2px solid var(--gold)",
-                }}
+                className="corner corner--br"
+                style={fullSize ? { width: "24px", height: "24px" } : undefined}
               />
-            </>
+            </div>
           )}
         </div>
       );
 
     case "navigation-bar":
       return (
-        <div
-          style={{
-            width: "100%",
-            height: "48px",
-            background: "var(--void)",
-            borderBottom: "1px solid var(--dawn-08)",
-            display: "flex",
-            alignItems: "center",
-            padding: "0 16px",
-          }}
-        >
-          {Boolean(props.showLogo) && (
-            <span
-              style={{
-                fontFamily: "var(--font-mono)",
-                fontSize: "11px",
-                color: "var(--dawn)",
-                textTransform: "uppercase",
-                letterSpacing: "0.1em",
-              }}
-            >
-              Thoughtform
-            </span>
-          )}
+        <div className="preview-navbar">
+          {Boolean(props.showLogo) && <span className="preview-navbar__logo">Thoughtform</span>}
         </div>
       );
 
     default:
-      return (
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            width: "100%",
-            height: "100%",
-            fontFamily: "var(--font-mono)",
-            fontSize: "10px",
-            color: "var(--dawn-30)",
-          }}
-        >
-          {def.name}
-        </div>
-      );
+      return <div className="preview-default">{def.name}</div>;
   }
 }
 
@@ -597,13 +452,11 @@ function generateJSXCode(componentId: string, props: Record<string, unknown>): s
 
   const componentName = componentNames[componentId] || def.name.replace(/\s+/g, "");
 
-  // Build props string
   const propsEntries = Object.entries(props).filter(([key, value]) => {
     const propDef = def.props.find((p) => p.name === key);
     return propDef && value !== propDef.default;
   });
 
-  // Add tier prop for CardFrame variants
   if (componentId === "card-frame-terminal") {
     propsEntries.push(["tier", "terminal"]);
   } else if (componentId === "card-frame-data") {
@@ -618,7 +471,6 @@ function generateJSXCode(componentId: string, props: Record<string, unknown>): s
     })
     .join(" ");
 
-  // Handle children for button
   if (componentId === "button" && props.label) {
     const filteredProps = propsEntries.filter(([k]) => k !== "label");
     const filteredPropsString = filteredProps
@@ -635,25 +487,37 @@ function generateJSXCode(componentId: string, props: Record<string, unknown>): s
 }
 
 // ═══════════════════════════════════════════════════════════════
-// CATALOG PANEL
+// LEFT PANEL - CATALOG
 // ═══════════════════════════════════════════════════════════════
 
 function CatalogPanel({
-  onAddComponent,
+  selectedCategory,
+  onSelectCategory,
+  selectedComponentId,
+  onSelectComponent,
   presets,
   onLoadPreset,
   onDeletePreset,
+  onSavePreset,
+  presetName,
+  onPresetNameChange,
+  canSave,
 }: {
-  onAddComponent: (componentId: string) => void;
+  selectedCategory: string | null;
+  onSelectCategory: (id: string) => void;
+  selectedComponentId: string | null;
+  onSelectComponent: (id: string) => void;
   presets: UIComponentPreset[];
   onLoadPreset: (preset: UIComponentPreset) => void;
   onDeletePreset: (id: string) => void;
+  onSavePreset: () => void;
+  presetName: string;
+  onPresetNameChange: (name: string) => void;
+  canSave: boolean;
 }) {
   const [searchQuery, setSearchQuery] = useState("");
-  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(
-    new Set(["buttons", "frames"])
-  );
-  const [expandedSubcategories, setExpandedSubcategories] = useState<Set<string>>(new Set());
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set(["brand"]));
+  const filteredComponents = searchQuery ? searchComponents(searchQuery) : null;
 
   const toggleCategory = (id: string) => {
     setExpandedCategories((prev) => {
@@ -662,21 +526,27 @@ function CatalogPanel({
       else next.add(id);
       return next;
     });
+    onSelectCategory(id);
   };
-
-  const toggleSubcategory = (id: string) => {
-    setExpandedSubcategories((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  };
-
-  const filteredComponents = searchQuery ? searchComponents(searchQuery) : null;
 
   return (
     <aside className="astrogation-panel astrogation-panel--left">
+      {/* Save Preset (above search) */}
+      <div className="astrogation-section astrogation-section--save">
+        <div className="save-preset-form">
+          <input
+            type="text"
+            placeholder="Save preset..."
+            value={presetName}
+            onChange={(e) => onPresetNameChange(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && canSave && onSavePreset()}
+          />
+          <button onClick={onSavePreset} disabled={!canSave} className="save-btn">
+            Save
+          </button>
+        </div>
+      </div>
+
       {/* Search */}
       <div className="astrogation-section">
         <input
@@ -693,83 +563,77 @@ function CatalogPanel({
         <div className="astrogation-section">
           <div className="astrogation-section__label">Results ({filteredComponents.length})</div>
           {filteredComponents.map((comp) => (
-            <button key={comp.id} className="catalog-item" onClick={() => onAddComponent(comp.id)}>
-              <span className="catalog-item__icon">+</span>
+            <button
+              key={comp.id}
+              className={`catalog-item ${selectedComponentId === comp.id ? "selected" : ""}`}
+              onClick={() => onSelectComponent(comp.id)}
+            >
               {comp.name}
             </button>
           ))}
         </div>
       )}
 
-      {/* Categories */}
-      {!filteredComponents &&
-        CATEGORIES.map((cat) => {
-          const isExpanded = expandedCategories.has(cat.id);
-          const components = getComponentsByCategory(cat.id);
+      {/* Categories with expandable component lists */}
+      {!filteredComponents && (
+        <div className="astrogation-section astrogation-section--categories">
+          <div className="astrogation-section__label">Components</div>
+          {CATEGORIES.map((cat) => {
+            const isExpanded = expandedCategories.has(cat.id);
+            const components = getComponentsByCategory(cat.id);
+            const subcategoryComponents =
+              cat.subcategories?.flatMap((sub) => getComponentsByCategory(cat.id, sub.id)) || [];
+            const allComponents = [...components, ...subcategoryComponents];
 
-          return (
-            <div key={cat.id} className="catalog-category">
-              <button
-                className={`catalog-category__header ${isExpanded ? "expanded" : ""}`}
-                onClick={() => toggleCategory(cat.id)}
-              >
-                <span className="catalog-category__icon">▸</span>
-                <span>{cat.icon}</span>
-                <span>{cat.name}</span>
-              </button>
+            return (
+              <div key={cat.id} className="catalog-category">
+                <button
+                  className={`catalog-category-btn ${isExpanded ? "expanded" : ""}`}
+                  onClick={() => toggleCategory(cat.id)}
+                >
+                  <span className="catalog-category-btn__chevron">{isExpanded ? "▾" : "▸"}</span>
+                  <span className="catalog-category-btn__icon">{cat.icon}</span>
+                  <span className="catalog-category-btn__name">{cat.name}</span>
+                  <span className="catalog-category-btn__count">{allComponents.length}</span>
+                </button>
 
-              {isExpanded && (
-                <div className="catalog-category__items">
-                  {/* Direct components */}
-                  {components.map((comp) => (
-                    <button
-                      key={comp.id}
-                      className="catalog-item"
-                      onClick={() => onAddComponent(comp.id)}
-                    >
-                      <span className="catalog-item__icon">+</span>
-                      {comp.name}
-                    </button>
-                  ))}
+                {isExpanded && (
+                  <div className="catalog-category__items">
+                    {components.map((comp) => (
+                      <button
+                        key={comp.id}
+                        className={`catalog-item ${selectedComponentId === comp.id ? "selected" : ""}`}
+                        onClick={() => onSelectComponent(comp.id)}
+                      >
+                        {comp.name}
+                      </button>
+                    ))}
 
-                  {/* Subcategories */}
-                  {cat.subcategories?.map((sub) => {
-                    const subKey = `${cat.id}-${sub.id}`;
-                    const subExpanded = expandedSubcategories.has(subKey);
-                    const subComponents = getComponentsByCategory(cat.id, sub.id);
-
-                    return (
-                      <div key={sub.id} className="catalog-category">
-                        <button
-                          className={`catalog-category__header ${subExpanded ? "expanded" : ""}`}
-                          onClick={() => toggleSubcategory(subKey)}
-                        >
-                          <span className="catalog-category__icon">▸</span>
-                          <span>{sub.name}</span>
-                        </button>
-
-                        {subExpanded && (
-                          <div className="catalog-category__items">
-                            {subComponents.map((comp) => (
-                              <button
-                                key={comp.id}
-                                className="catalog-item"
-                                onClick={() => onAddComponent(comp.id)}
-                              >
-                                <span className="catalog-item__icon">+</span>
-                                {comp.name}
-                              </button>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          );
-        })}
+                    {cat.subcategories?.map((sub) => {
+                      const subComps = getComponentsByCategory(cat.id, sub.id);
+                      if (subComps.length === 0) return null;
+                      return (
+                        <div key={sub.id} className="catalog-subcategory">
+                          <div className="catalog-subcategory__label">{sub.name}</div>
+                          {subComps.map((comp) => (
+                            <button
+                              key={comp.id}
+                              className={`catalog-item ${selectedComponentId === comp.id ? "selected" : ""}`}
+                              onClick={() => onSelectComponent(comp.id)}
+                            >
+                              {comp.name}
+                            </button>
+                          ))}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       {/* Saved Presets */}
       {presets.length > 0 && (
@@ -794,197 +658,80 @@ function CatalogPanel({
 }
 
 // ═══════════════════════════════════════════════════════════════
-// INFINITE CANVAS
+// CENTER PANEL - COMPONENT CANVAS (Full-size preview)
 // ═══════════════════════════════════════════════════════════════
 
-function InfiniteCanvas({
-  instances,
-  selectedId,
-  onSelect,
-  onMove,
-  onDelete,
-  zoom,
-  pan,
-  onZoomChange,
-  onPanChange,
+function ComponentCanvas({
+  selectedComponentId,
+  componentProps,
+  style,
 }: {
-  instances: ComponentInstance[];
-  selectedId: string | null;
-  onSelect: (id: string | null) => void;
-  onMove: (id: string, x: number, y: number) => void;
-  onDelete: (id: string) => void;
-  zoom: number;
-  pan: { x: number; y: number };
-  onZoomChange: (zoom: number) => void;
-  onPanChange: (pan: { x: number; y: number }) => void;
+  selectedComponentId: string | null;
+  componentProps: Record<string, unknown>;
+  style: StyleConfig;
 }) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const isPanningRef = useRef(false);
-  const isDraggingRef = useRef(false);
-  const dragOffsetRef = useRef({ x: 0, y: 0 });
-  const lastMouseRef = useRef({ x: 0, y: 0 });
-  const draggedIdRef = useRef<string | null>(null);
+  const def = selectedComponentId ? getComponentById(selectedComponentId) : null;
 
-  // Handle wheel zoom
-  const handleWheel = useCallback(
-    (e: React.WheelEvent) => {
-      e.preventDefault();
-      const delta = e.deltaY > 0 ? 0.9 : 1.1;
-      const newZoom = Math.max(0.25, Math.min(4, zoom * delta));
-      onZoomChange(newZoom);
-    },
-    [zoom, onZoomChange]
-  );
-
-  // Handle mouse down for panning or instance dragging
-  const handleMouseDown = useCallback(
-    (e: React.MouseEvent) => {
-      const target = e.target as HTMLElement;
-      const instanceEl = target.closest("[data-instance-id]") as HTMLElement;
-
-      if (instanceEl) {
-        // Start dragging an instance
-        const instanceId = instanceEl.dataset.instanceId!;
-        const instance = instances.find((i) => i.id === instanceId);
-        if (instance) {
-          isDraggingRef.current = true;
-          draggedIdRef.current = instanceId;
-          const rect = instanceEl.getBoundingClientRect();
-          dragOffsetRef.current = {
-            x: e.clientX - rect.left,
-            y: e.clientY - rect.top,
-          };
-          onSelect(instanceId);
-        }
-      } else {
-        // Start panning
-        isPanningRef.current = true;
-        lastMouseRef.current = { x: e.clientX, y: e.clientY };
-        onSelect(null);
-      }
-    },
-    [instances, onSelect]
-  );
-
-  const handleMouseMove = useCallback(
-    (e: React.MouseEvent) => {
-      if (isPanningRef.current) {
-        const dx = e.clientX - lastMouseRef.current.x;
-        const dy = e.clientY - lastMouseRef.current.y;
-        onPanChange({ x: pan.x + dx, y: pan.y + dy });
-        lastMouseRef.current = { x: e.clientX, y: e.clientY };
-      } else if (isDraggingRef.current && draggedIdRef.current && containerRef.current) {
-        const rect = containerRef.current.getBoundingClientRect();
-        const x = (e.clientX - rect.left - pan.x - dragOffsetRef.current.x) / zoom;
-        const y = (e.clientY - rect.top - pan.y - dragOffsetRef.current.y) / zoom;
-        onMove(draggedIdRef.current, x, y);
-      }
-    },
-    [pan, zoom, onPanChange, onMove]
-  );
-
-  const handleMouseUp = useCallback(() => {
-    isPanningRef.current = false;
-    isDraggingRef.current = false;
-    draggedIdRef.current = null;
-  }, []);
+  if (!selectedComponentId || !def) {
+    return (
+      <div className="canvas canvas--empty">
+        <div className="canvas__empty-state">
+          <span className="canvas__icon">⬡</span>
+          <p>Select a component from the left panel</p>
+          <span className="canvas__hint">
+            Click any component in the catalog to preview it here
+          </span>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div
-      ref={containerRef}
-      className="infinite-canvas"
-      onWheel={handleWheel}
-      onMouseDown={handleMouseDown}
-      onMouseMove={handleMouseMove}
-      onMouseUp={handleMouseUp}
-      onMouseLeave={handleMouseUp}
-    >
-      <div
-        className="infinite-canvas__transform"
-        style={{
-          transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
-        }}
-      >
-        {instances.map((instance) => {
-          const def = getComponentById(instance.componentId);
-          return (
-            <div
-              key={instance.id}
-              data-instance-id={instance.id}
-              className={`canvas-instance ${selectedId === instance.id ? "selected" : ""}`}
-              style={{
-                left: instance.x,
-                top: instance.y,
-                width: def?.defaultWidth || 100,
-                minHeight: def?.defaultHeight || 50,
-              }}
-            >
-              <ComponentPreview componentId={instance.componentId} props={instance.props} />
-              {selectedId === instance.id && (
-                <button
-                  className="canvas-instance__delete"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onDelete(instance.id);
-                  }}
-                >
-                  ×
-                </button>
-              )}
-            </div>
-          );
-        })}
+    <div className="canvas">
+      {/* Component Label */}
+      <div className="canvas__label">
+        <span className="canvas__label-name">{def.name}</span>
+        <span className="canvas__label-category">{def.category}</span>
       </div>
 
-      {/* Canvas Controls */}
-      <div className="canvas-controls">
-        <button onClick={() => onZoomChange(Math.min(4, zoom * 1.2))}>+</button>
-        <span className="canvas-controls__zoom">{Math.round(zoom * 100)}%</span>
-        <button onClick={() => onZoomChange(Math.max(0.25, zoom / 1.2))}>-</button>
-        <button
-          onClick={() => {
-            onZoomChange(1);
-            onPanChange({ x: 0, y: 0 });
-          }}
-        >
-          Reset
-        </button>
+      {/* Full-size Preview Area */}
+      <div className="canvas__preview">
+        <ComponentPreview
+          componentId={selectedComponentId}
+          props={componentProps}
+          style={style}
+          fullSize
+        />
       </div>
 
-      {instances.length === 0 && (
-        <div className="empty-state">
-          <span className="empty-state__icon">⬡</span>
-          <p className="empty-state__text">
-            Click a component in the catalog to add it to the canvas
-          </p>
-        </div>
-      )}
+      {/* Bottom info */}
+      <div className="canvas__info">
+        <span>Click to interact • Edit properties in the right panel</span>
+      </div>
     </div>
   );
 }
 
 // ═══════════════════════════════════════════════════════════════
-// DIALS PANEL
+// RIGHT PANEL - DIALS / EDITOR
 // ═══════════════════════════════════════════════════════════════
 
 function DialsPanel({
-  selectedInstance,
-  onUpdateProps,
+  selectedComponentId,
+  style,
+  onStyleChange,
+  componentProps,
+  onPropsChange,
   onCopyCode,
-  onSave,
-  presetName,
-  onPresetNameChange,
-  canSave,
 }: {
-  selectedInstance: ComponentInstance | null;
-  onUpdateProps: (props: Record<string, unknown>) => void;
+  selectedComponentId: string | null;
+  style: StyleConfig;
+  onStyleChange: (style: StyleConfig) => void;
+  componentProps: Record<string, unknown>;
+  onPropsChange: (props: Record<string, unknown>) => void;
   onCopyCode: () => void;
-  onSave: () => void;
-  presetName: string;
-  onPresetNameChange: (name: string) => void;
-  canSave: boolean;
 }) {
-  const def = selectedInstance ? getComponentById(selectedInstance.componentId) : null;
+  const def = selectedComponentId ? getComponentById(selectedComponentId) : null;
 
   const renderPropControl = (propDef: PropDef, value: unknown) => {
     const currentValue = value ?? propDef.default;
@@ -992,34 +739,33 @@ function DialsPanel({
     switch (propDef.type) {
       case "string":
         return (
-          <input
-            type="text"
-            className="astrogation-search"
-            value={currentValue as string}
-            onChange={(e) =>
-              onUpdateProps({ ...selectedInstance!.props, [propDef.name]: e.target.value })
-            }
-          />
+          <div className="dial-group">
+            <div className="dial-group__label">{propDef.name}</div>
+            <input
+              type="text"
+              className="dial-input"
+              value={currentValue as string}
+              onChange={(e) => onPropsChange({ ...componentProps, [propDef.name]: e.target.value })}
+            />
+          </div>
         );
 
       case "number":
         return (
-          <div className="dial-slider">
-            <div className="dial-slider__header">
-              <label>{propDef.name}</label>
-              <span className="dial-slider__value">{currentValue as number}</span>
+          <div className="dial-group">
+            <div className="dial-group__header">
+              <span className="dial-group__label">{propDef.name}</span>
+              <span className="dial-group__value">{currentValue as number}</span>
             </div>
             <input
               type="range"
+              className="dial-slider"
               min={propDef.min ?? 0}
               max={propDef.max ?? 100}
               step={propDef.step ?? 1}
               value={currentValue as number}
               onChange={(e) =>
-                onUpdateProps({
-                  ...selectedInstance!.props,
-                  [propDef.name]: parseFloat(e.target.value),
-                })
+                onPropsChange({ ...componentProps, [propDef.name]: parseFloat(e.target.value) })
               }
             />
           </div>
@@ -1032,7 +778,7 @@ function DialsPanel({
               type="checkbox"
               checked={currentValue as boolean}
               onChange={(e) =>
-                onUpdateProps({ ...selectedInstance!.props, [propDef.name]: e.target.checked })
+                onPropsChange({ ...componentProps, [propDef.name]: e.target.checked })
               }
             />
             <span>{propDef.name}</span>
@@ -1046,9 +792,7 @@ function DialsPanel({
             <select
               className="dial-select"
               value={currentValue as string}
-              onChange={(e) =>
-                onUpdateProps({ ...selectedInstance!.props, [propDef.name]: e.target.value })
-              }
+              onChange={(e) => onPropsChange({ ...componentProps, [propDef.name]: e.target.value })}
             >
               {propDef.options?.map((opt) => (
                 <option key={opt} value={opt}>
@@ -1063,19 +807,26 @@ function DialsPanel({
         return (
           <div className="dial-group">
             <div className="dial-group__label">{propDef.name}</div>
-            <input
-              type="color"
-              value={currentValue as string}
-              onChange={(e) =>
-                onUpdateProps({ ...selectedInstance!.props, [propDef.name]: e.target.value })
-              }
-              style={{
-                width: "100%",
-                height: "32px",
-                border: "1px solid var(--dawn-15)",
-                background: "transparent",
-              }}
-            />
+            <div className="color-picker">
+              <input
+                type="color"
+                value={currentValue as string}
+                onChange={(e) =>
+                  onPropsChange({ ...componentProps, [propDef.name]: e.target.value })
+                }
+              />
+              <div className="color-swatches">
+                {BRAND_COLORS.slice(0, 5).map((c) => (
+                  <button
+                    key={c.name}
+                    className="color-swatch"
+                    style={{ background: c.value }}
+                    title={c.name}
+                    onClick={() => onPropsChange({ ...componentProps, [propDef.name]: c.value })}
+                  />
+                ))}
+              </div>
+            </div>
           </div>
         );
 
@@ -1084,82 +835,261 @@ function DialsPanel({
     }
   };
 
+  if (!selectedComponentId || !def) {
+    return (
+      <aside className="astrogation-panel astrogation-panel--right">
+        <div className="panel-empty-state">
+          <span className="panel-empty-state__icon">◇</span>
+          <p>Select a component to edit</p>
+        </div>
+      </aside>
+    );
+  }
+
   return (
     <aside className="astrogation-panel astrogation-panel--right">
-      {selectedInstance && def ? (
-        <>
-          {/* Component Info */}
-          <div className="astrogation-section">
-            <div className="astrogation-section__label">{def.name}</div>
-          </div>
+      {/* Component Name */}
+      <div className="astrogation-section">
+        <div className="astrogation-section__title">{def.name}</div>
+      </div>
 
-          {/* Props */}
-          <div className="astrogation-section">
-            <div className="astrogation-section__label">Properties</div>
-            {def.props.map((propDef) => (
-              <div key={propDef.name} style={{ marginBottom: "8px" }}>
-                {renderPropControl(propDef, selectedInstance.props[propDef.name])}
+      {/* Border Controls */}
+      <div className="astrogation-section">
+        <div className="astrogation-section__label">Border</div>
+
+        <div className="dial-group">
+          <div className="dial-group__label">Style</div>
+          <select
+            className="dial-select"
+            value={style.borderStyle}
+            onChange={(e) =>
+              onStyleChange({ ...style, borderStyle: e.target.value as StyleConfig["borderStyle"] })
+            }
+          >
+            <option value="none">None</option>
+            <option value="solid">Solid</option>
+            <option value="dashed">Dashed</option>
+            <option value="dotted">Dotted</option>
+            <option value="double">Double</option>
+          </select>
+        </div>
+
+        {style.borderStyle !== "none" && (
+          <>
+            <div className="dial-group">
+              <div className="dial-group__header">
+                <span className="dial-group__label">Width</span>
+                <span className="dial-group__value">{style.borderWidth}px</span>
               </div>
-            ))}
-          </div>
-
-          {/* Actions */}
-          <div className="astrogation-section">
-            <div className="astrogation-section__label">Actions</div>
-            <button className="action-btn" onClick={onCopyCode}>
-              Copy Code
-            </button>
-          </div>
-
-          {/* Save Preset */}
-          <div className="astrogation-section">
-            <div className="astrogation-section__label">Save Preset</div>
-            <div className="save-preset-form">
               <input
-                type="text"
-                placeholder="Preset name..."
-                value={presetName}
-                onChange={(e) => onPresetNameChange(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && canSave && onSave()}
+                type="range"
+                className="dial-slider"
+                min={1}
+                max={8}
+                value={style.borderWidth}
+                onChange={(e) => onStyleChange({ ...style, borderWidth: parseInt(e.target.value) })}
               />
-              <button onClick={onSave} disabled={!canSave}>
-                +
-              </button>
+            </div>
+
+            <div className="dial-group">
+              <div className="dial-group__label">Color</div>
+              <div className="color-picker">
+                <input
+                  type="color"
+                  value={style.borderColor}
+                  onChange={(e) => onStyleChange({ ...style, borderColor: e.target.value })}
+                />
+                <div className="color-swatches">
+                  {BRAND_COLORS.map((c) => (
+                    <button
+                      key={c.name}
+                      className="color-swatch"
+                      style={{ background: c.value }}
+                      title={c.name}
+                      onClick={() => onStyleChange({ ...style, borderColor: c.value })}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* Fill Controls */}
+      <div className="astrogation-section">
+        <div className="astrogation-section__label">Fill</div>
+
+        <div className="dial-group">
+          <div className="dial-group__label">Type</div>
+          <select
+            className="dial-select"
+            value={style.fillType}
+            onChange={(e) =>
+              onStyleChange({ ...style, fillType: e.target.value as StyleConfig["fillType"] })
+            }
+          >
+            <option value="none">None</option>
+            <option value="solid">Solid</option>
+            <option value="gradient">Gradient</option>
+          </select>
+        </div>
+
+        {style.fillType === "solid" && (
+          <div className="dial-group">
+            <div className="dial-group__label">Color</div>
+            <div className="color-picker">
+              <input
+                type="color"
+                value={style.fillColor}
+                onChange={(e) => onStyleChange({ ...style, fillColor: e.target.value })}
+              />
+              <div className="color-swatches">
+                {BRAND_COLORS.map((c) => (
+                  <button
+                    key={c.name}
+                    className="color-swatch"
+                    style={{ background: c.value }}
+                    title={c.name}
+                    onClick={() => onStyleChange({ ...style, fillColor: c.value })}
+                  />
+                ))}
+              </div>
             </div>
           </div>
-        </>
-      ) : (
-        <div className="empty-state">
-          <span className="empty-state__icon">◇</span>
-          <p className="empty-state__text">
-            Select a component on the canvas to edit its properties
-          </p>
+        )}
+
+        {style.fillType === "gradient" && (
+          <>
+            <div className="dial-group">
+              <div className="dial-group__label">From</div>
+              <div className="color-picker">
+                <input
+                  type="color"
+                  value={style.gradientFrom}
+                  onChange={(e) => onStyleChange({ ...style, gradientFrom: e.target.value })}
+                />
+                <div className="color-swatches">
+                  {BRAND_COLORS.slice(0, 4).map((c) => (
+                    <button
+                      key={c.name}
+                      className="color-swatch"
+                      style={{ background: c.value }}
+                      title={c.name}
+                      onClick={() => onStyleChange({ ...style, gradientFrom: c.value })}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="dial-group">
+              <div className="dial-group__label">To</div>
+              <div className="color-picker">
+                <input
+                  type="color"
+                  value={style.gradientTo}
+                  onChange={(e) => onStyleChange({ ...style, gradientTo: e.target.value })}
+                />
+                <div className="color-swatches">
+                  {BRAND_COLORS.slice(0, 4).map((c) => (
+                    <button
+                      key={c.name}
+                      className="color-swatch"
+                      style={{ background: c.value }}
+                      title={c.name}
+                      onClick={() => onStyleChange({ ...style, gradientTo: c.value })}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="dial-group">
+              <div className="dial-group__header">
+                <span className="dial-group__label">Angle</span>
+                <span className="dial-group__value">{style.gradientAngle}°</span>
+              </div>
+              <input
+                type="range"
+                className="dial-slider"
+                min={0}
+                max={360}
+                value={style.gradientAngle}
+                onChange={(e) =>
+                  onStyleChange({ ...style, gradientAngle: parseInt(e.target.value) })
+                }
+              />
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* Component Props */}
+      {def.props.length > 0 && (
+        <div className="astrogation-section">
+          <div className="astrogation-section__label">Properties</div>
+          {def.props.map((propDef) => (
+            <div key={propDef.name} style={{ marginBottom: "8px" }}>
+              {renderPropControl(propDef, componentProps[propDef.name])}
+            </div>
+          ))}
         </div>
       )}
+
+      {/* Actions */}
+      <div className="astrogation-section">
+        <button className="action-btn action-btn--full" onClick={onCopyCode}>
+          Copy Code
+        </button>
+      </div>
     </aside>
   );
 }
 
 // ═══════════════════════════════════════════════════════════════
-// MAIN BUILDER TAB
+// MAIN ASTROGATION CONTENT
 // ═══════════════════════════════════════════════════════════════
 
-function BuilderTab() {
-  // Canvas state with history
-  const [history, setHistory] = useState<HistoryState<CanvasState>>(() =>
-    createHistory({ instances: [], selectedId: null })
-  );
-  const state = history.present;
+function AstrogationContent() {
+  // Selection state
+  const [selectedCategory, setSelectedCategory] = useState<string | null>("brand");
+  const [selectedComponentId, setSelectedComponentId] = useState<string | null>(null);
 
-  // UI state
-  const [zoom, setZoom] = useState(1);
-  const [pan, setPan] = useState({ x: 0, y: 0 });
-  const [presetName, setPresetName] = useState("");
+  // Style state (for selected component)
+  const [style, setStyle] = useState<StyleConfig>({
+    borderStyle: "none",
+    borderWidth: 1,
+    borderColor: "#caa554",
+    fillType: "none",
+    fillColor: "#0a0908",
+    gradientFrom: "#caa554",
+    gradientTo: "#0a0908",
+    gradientAngle: 135,
+    props: {},
+  });
+
+  // Component props state
+  const [componentProps, setComponentProps] = useState<Record<string, unknown>>({});
+
+  // Presets state
   const [presets, setPresets] = useState<UIComponentPreset[]>([]);
+  const [presetName, setPresetName] = useState("");
   const [toast, setToast] = useState<string | null>(null);
 
-  // Derived state
-  const selectedInstance = state.instances.find((i) => i.id === state.selectedId) || null;
+  // Reset props when component changes
+  useEffect(() => {
+    if (selectedComponentId) {
+      const def = getComponentById(selectedComponentId);
+      if (def) {
+        const defaultProps: Record<string, unknown> = {};
+        def.props.forEach((p) => {
+          defaultProps[p.name] = p.default;
+        });
+        setComponentProps(defaultProps);
+      }
+    }
+  }, [selectedComponentId]);
 
   // Show toast
   const showToast = useCallback((message: string) => {
@@ -1167,124 +1097,13 @@ function BuilderTab() {
     setTimeout(() => setToast(null), 2000);
   }, []);
 
-  // State update helpers
-  const updateState = useCallback((newState: CanvasState) => {
-    setHistory((prev) => pushState(prev, newState));
-  }, []);
-
-  const setSelectedId = useCallback(
-    (id: string | null) => {
-      updateState({ ...state, selectedId: id });
-    },
-    [state, updateState]
-  );
-
-  // Undo/Redo
-  const handleUndo = useCallback(() => {
-    if (canUndo(history)) {
-      setHistory(historyUndo(history));
-      showToast("Undo");
-    }
-  }, [history, showToast]);
-
-  const handleRedo = useCallback(() => {
-    if (canRedo(history)) {
-      setHistory(historyRedo(history));
-      showToast("Redo");
-    }
-  }, [history, showToast]);
-
-  // Add component
-  const handleAddComponent = useCallback(
-    (componentId: string) => {
-      const def = getComponentById(componentId);
-      if (!def) return;
-
-      const defaultProps: Record<string, unknown> = {};
-      def.props.forEach((p) => {
-        defaultProps[p.name] = p.default;
-      });
-
-      const newInstance: ComponentInstance = {
-        id: `inst-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-        componentId,
-        x: (-pan.x + 200) / zoom,
-        y: (-pan.y + 150) / zoom,
-        props: defaultProps,
-      };
-
-      updateState({
-        instances: [...state.instances, newInstance],
-        selectedId: newInstance.id,
-      });
-    },
-    [state, pan, zoom, updateState]
-  );
-
-  // Move instance
-  const handleMoveInstance = useCallback(
-    (id: string, x: number, y: number) => {
-      updateState({
-        ...state,
-        instances: state.instances.map((inst) => (inst.id === id ? { ...inst, x, y } : inst)),
-      });
-    },
-    [state, updateState]
-  );
-
-  // Delete instance
-  const handleDeleteInstance = useCallback(
-    (id: string) => {
-      updateState({
-        instances: state.instances.filter((inst) => inst.id !== id),
-        selectedId: state.selectedId === id ? null : state.selectedId,
-      });
-    },
-    [state, updateState]
-  );
-
-  // Delete selected
-  const handleDeleteSelected = useCallback(() => {
-    if (state.selectedId) {
-      handleDeleteInstance(state.selectedId);
-    }
-  }, [state.selectedId, handleDeleteInstance]);
-
-  // Update props
-  const handleUpdateProps = useCallback(
-    (props: Record<string, unknown>) => {
-      if (!state.selectedId) return;
-      updateState({
-        ...state,
-        instances: state.instances.map((inst) =>
-          inst.id === state.selectedId ? { ...inst, props } : inst
-        ),
-      });
-    },
-    [state, updateState]
-  );
-
   // Copy code
   const handleCopyCode = useCallback(() => {
-    if (!selectedInstance) return;
-    const code = generateJSXCode(selectedInstance.componentId, selectedInstance.props);
+    if (!selectedComponentId) return;
+    const code = generateJSXCode(selectedComponentId, componentProps);
     navigator.clipboard.writeText(code);
     showToast("Code copied to clipboard");
-  }, [selectedInstance, showToast]);
-
-  // Escape to deselect
-  const handleEscape = useCallback(() => {
-    setSelectedId(null);
-  }, [setSelectedId]);
-
-  // Keyboard shortcuts
-  useKeyboardShortcuts({
-    onDelete: handleDeleteSelected,
-    onUndo: handleUndo,
-    onRedo: handleRedo,
-    onEscape: handleEscape,
-    onCopy: handleCopyCode,
-  });
+  }, [selectedComponentId, componentProps, showToast]);
 
   // Load presets from API
   useEffect(() => {
@@ -1296,7 +1115,7 @@ function BuilderTab() {
 
   // Save preset
   const handleSavePreset = useCallback(async () => {
-    if (!selectedInstance || !presetName.trim()) return;
+    if (!selectedComponentId || !presetName.trim()) return;
 
     try {
       const res = await fetch("/api/ui-component-presets", {
@@ -1304,8 +1123,8 @@ function BuilderTab() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: presetName,
-          component_key: selectedInstance.componentId,
-          config: selectedInstance.props,
+          component_key: selectedComponentId,
+          config: { ...componentProps, __style: style },
         }),
       });
       const data = await res.json();
@@ -1318,26 +1137,20 @@ function BuilderTab() {
       console.error(e);
       showToast("Failed to save preset");
     }
-  }, [selectedInstance, presetName, showToast]);
+  }, [selectedComponentId, componentProps, style, presetName, showToast]);
 
   // Load preset
   const handleLoadPreset = useCallback(
     (preset: UIComponentPreset) => {
-      const newInstance: ComponentInstance = {
-        id: `inst-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-        componentId: preset.component_key,
-        x: (-pan.x + 200) / zoom,
-        y: (-pan.y + 150) / zoom,
-        props: preset.config,
-      };
-
-      updateState({
-        instances: [...state.instances, newInstance],
-        selectedId: newInstance.id,
-      });
+      setSelectedComponentId(preset.component_key);
+      const { __style, ...props } = preset.config as Record<string, unknown>;
+      setComponentProps(props);
+      if (__style) {
+        setStyle(__style as StyleConfig);
+      }
       showToast(`Loaded: ${preset.name}`);
     },
-    [state, pan, zoom, updateState, showToast]
+    [showToast]
   );
 
   // Delete preset
@@ -1356,47 +1169,6 @@ function BuilderTab() {
     [showToast]
   );
 
-  return (
-    <div className="builder-tab">
-      <CatalogPanel
-        onAddComponent={handleAddComponent}
-        presets={presets}
-        onLoadPreset={handleLoadPreset}
-        onDeletePreset={handleDeletePreset}
-      />
-
-      <InfiniteCanvas
-        instances={state.instances}
-        selectedId={state.selectedId}
-        onSelect={setSelectedId}
-        onMove={handleMoveInstance}
-        onDelete={handleDeleteInstance}
-        zoom={zoom}
-        pan={pan}
-        onZoomChange={setZoom}
-        onPanChange={setPan}
-      />
-
-      <DialsPanel
-        selectedInstance={selectedInstance}
-        onUpdateProps={handleUpdateProps}
-        onCopyCode={handleCopyCode}
-        onSave={handleSavePreset}
-        presetName={presetName}
-        onPresetNameChange={setPresetName}
-        canSave={!!selectedInstance && !!presetName.trim()}
-      />
-
-      {toast && <div className="toast">{toast}</div>}
-    </div>
-  );
-}
-
-// ═══════════════════════════════════════════════════════════════
-// MAIN ASTROGATION CONTENT
-// ═══════════════════════════════════════════════════════════════
-
-function AstrogationContent() {
   return (
     <div className="astrogation">
       {/* HUD Frame Elements */}
@@ -1440,18 +1212,45 @@ function AstrogationContent() {
 
       {/* Content Area */}
       <div className="astrogation-content">
-        <BuilderTab />
+        <CatalogPanel
+          selectedCategory={selectedCategory}
+          onSelectCategory={setSelectedCategory}
+          selectedComponentId={selectedComponentId}
+          onSelectComponent={setSelectedComponentId}
+          presets={presets}
+          onLoadPreset={handleLoadPreset}
+          onDeletePreset={handleDeletePreset}
+          onSavePreset={handleSavePreset}
+          presetName={presetName}
+          onPresetNameChange={setPresetName}
+          canSave={!!selectedComponentId && !!presetName.trim()}
+        />
+
+        <ComponentCanvas
+          selectedComponentId={selectedComponentId}
+          componentProps={componentProps}
+          style={style}
+        />
+
+        <DialsPanel
+          selectedComponentId={selectedComponentId}
+          style={style}
+          onStyleChange={setStyle}
+          componentProps={componentProps}
+          onPropsChange={setComponentProps}
+          onCopyCode={handleCopyCode}
+        />
       </div>
 
       {/* Footer */}
       <footer className="astrogation-footer">
         <div className="astrogation-footer__left">
-          <span>⌘Z Undo</span>
-          <span>⌘⇧Z Redo</span>
-          <span>⌫ Delete</span>
+          <span>Select category → View components → Edit properties</span>
         </div>
-        <div className="astrogation-footer__right">Drag to pan • Scroll to zoom</div>
+        <div className="astrogation-footer__right">Astrogation v1.0</div>
       </footer>
+
+      {toast && <div className="toast">{toast}</div>}
     </div>
   );
 }
