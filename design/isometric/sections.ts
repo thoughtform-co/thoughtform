@@ -1,65 +1,73 @@
-export type IsometricSectionId =
-  | "overview"
-  | "city_f01"
-  | "ridge_west"
-  | "basin_south"
-  | "farfield_east";
+export type IsometricSectionId = "system_online" | "orbital_scan" | "target_acquired" | "deep_core";
 
 export type IsometricSection = {
   id: IsometricSectionId;
   label: string;
+  sublabel: string;
   /**
    * Normalized scroll range within the page (0..1).
    * Larger ranges = slower travel through that segment.
    */
   range: readonly [start: number, end: number];
   /**
-   * Camera focus target within the isometric map (world units).
-   * The camera stays at a fixed isometric offset and looks at this target.
+   * Scene rotation in radians (Y-axis orbit around center).
+   * Allows 90° rotation during scroll like Gemini reference.
    */
-  target: readonly [x: number, y: number, z: number];
+  rotationY: number;
+  /**
+   * Camera height / vertical position.
+   * Higher = bird's eye, lower = ground-level close-up.
+   */
+  cameraY: number;
   /** Orthographic zoom at this section (higher = closer). */
   zoom: number;
+  /** Z travel position (depth into the terrain). */
+  travelZ: number;
 };
 
 /**
  * Scroll-aligned fly-through path for the isometric manifold mockup.
- * Edit ranges + targets to tune section alignment and travel speed.
+ * Inspired by Gemini's scroll journey: zoom in → rotate 90° → drop camera → close-up.
  */
 export const ISOMETRIC_SECTIONS: readonly IsometricSection[] = [
   {
-    id: "overview",
-    label: "Overview",
+    id: "system_online",
+    label: "SYSTEM ONLINE",
+    sublabel: "SECTOR 7G // WIDE VIEW",
     range: [0, 0.25],
-    target: [0, -2, 0],
-    zoom: 9,
+    rotationY: 0,
+    cameraY: 20,
+    zoom: 1.0,
+    travelZ: 1200,
   },
   {
-    id: "city_f01",
-    label: "City F01",
-    range: [0.25, 0.5],
-    target: [0, -2, 0],
-    zoom: 12,
+    id: "orbital_scan",
+    label: "ORBITAL SCAN",
+    sublabel: "ROTATING 90°",
+    range: [0.25, 0.55],
+    rotationY: Math.PI / 2, // 90° rotation
+    cameraY: 18,
+    zoom: 1.8,
+    travelZ: 3500,
   },
   {
-    id: "ridge_west",
-    label: "Ridge West",
-    range: [0.5, 0.75],
-    target: [-22, -2, -12],
-    zoom: 11,
+    id: "target_acquired",
+    label: "TARGET ACQUIRED",
+    sublabel: "CITY CORE F01 // ZOOM 4X",
+    range: [0.55, 0.85],
+    rotationY: Math.PI / 2,
+    cameraY: 8,
+    zoom: 3.2,
+    travelZ: 5200,
   },
   {
-    id: "basin_south",
-    label: "Basin South",
-    range: [0.75, 1],
-    target: [10, -2, 18],
-    zoom: 10.5,
-  },
-  {
-    id: "farfield_east",
-    label: "Farfield East",
-    range: [1, 1],
-    target: [28, -2, -6],
-    zoom: 10,
+    id: "deep_core",
+    label: "DEEP CORE",
+    sublabel: "ARTIFACT LOCK // MAXIMUM DETAIL",
+    range: [0.85, 1],
+    rotationY: Math.PI / 2,
+    cameraY: 5,
+    zoom: 4.0,
+    travelZ: 5200,
   },
 ] as const;
