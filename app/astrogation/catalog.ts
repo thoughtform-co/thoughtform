@@ -27,7 +27,6 @@ export interface ComponentDef {
 export interface CategoryDef {
   id: string;
   name: string;
-  icon: string;
   subcategories?: { id: string; name: string }[];
 }
 
@@ -36,39 +35,32 @@ export const CATEGORIES: CategoryDef[] = [
   {
     id: "brand",
     name: "Brand Elements",
-    icon: "◆",
   },
   {
     id: "grids",
     name: "Grids",
-    icon: "▦",
     subcategories: [{ id: "huds", name: "HUDs" }],
   },
   {
     id: "navbars",
     name: "Navbars",
-    icon: "═",
   },
   {
     id: "frames",
     name: "Frames",
-    icon: "▢",
     subcategories: [{ id: "terminals", name: "Terminals" }],
   },
   {
     id: "buttons",
     name: "Buttons",
-    icon: "▣",
   },
   {
     id: "inputs",
     name: "Inputs",
-    icon: "▤",
   },
   {
     id: "typography",
     name: "Typography",
-    icon: "T",
   },
 ];
 

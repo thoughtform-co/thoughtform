@@ -803,41 +803,48 @@ function CatalogPanel({
             const allComponents = [...components, ...subcategoryComponents];
 
             return (
-              <div key={cat.id} className="catalog-category">
+              <div key={cat.id} className={`catalog-category ${isExpanded ? "expanded" : ""}`}>
+                {/* Category header with corner bracket */}
                 <button
                   className={`catalog-category-btn ${isExpanded ? "expanded" : ""}`}
                   onClick={() => toggleCategory(cat.id)}
                 >
-                  <span className="catalog-category-btn__chevron">{isExpanded ? "▾" : "▸"}</span>
-                  <span className="catalog-category-btn__icon">{cat.icon}</span>
-                  <span className="catalog-category-btn__name">{cat.name}</span>
+                  <span className="catalog-corner" />
+                  <span className="catalog-category-btn__name">{cat.name.toUpperCase()}</span>
                   <span className="catalog-category-btn__count">{allComponents.length}</span>
                 </button>
 
                 {isExpanded && (
                   <div className="catalog-category__items">
+                    {/* Direct components under category */}
                     {components.map((comp) => (
                       <button
                         key={comp.id}
                         className={`catalog-item ${selectedComponentId === comp.id ? "selected" : ""}`}
                         onClick={() => onSelectComponent(comp.id)}
                       >
+                        <span className="catalog-item__corner" />
                         {comp.name}
                       </button>
                     ))}
 
+                    {/* Subcategories with nested corner brackets */}
                     {cat.subcategories?.map((sub) => {
                       const subComps = getComponentsByCategory(cat.id, sub.id);
                       if (subComps.length === 0) return null;
                       return (
                         <div key={sub.id} className="catalog-subcategory">
-                          <div className="catalog-subcategory__label">{sub.name}</div>
+                          <div className="catalog-subcategory__label">
+                            <span className="catalog-corner catalog-corner--small" />
+                            {sub.name.toUpperCase()}
+                          </div>
                           {subComps.map((comp) => (
                             <button
                               key={comp.id}
-                              className={`catalog-item ${selectedComponentId === comp.id ? "selected" : ""}`}
+                              className={`catalog-item catalog-item--nested ${selectedComponentId === comp.id ? "selected" : ""}`}
                               onClick={() => onSelectComponent(comp.id)}
                             >
+                              <span className="catalog-item__corner" />
                               {comp.name}
                             </button>
                           ))}
