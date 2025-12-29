@@ -947,19 +947,19 @@
 
 .preview-card--content {
   background: rgba(10, 9, 8, 0.6);
-  border: 1px solid var(--dawn-08);
+  border: none; /* HUDWrapper handles borders */
   padding: 12px;
 }
 
 .preview-card--terminal {
   background: var(--void);
-  border: 1px solid var(--dawn-15);
+  border: none; /* HUDWrapper handles borders */
   padding: 16px;
 }
 
 .preview-card--data {
   background: rgba(10, 9, 8, 0.6);
-  border: 1px solid var(--dawn-08);
+  border: none; /* HUDWrapper handles borders */
   padding: 10px;
 }
 
