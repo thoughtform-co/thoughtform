@@ -440,21 +440,20 @@
 /* Corner accents - LEFT panel: top-right and bottom-left */
 .astrogation-panel--left::after {
   /* Show only the top-right and bottom-left corners */
+  /* Bridge goes diagonally through center to avoid showing border along edges */
   clip-path: polygon(
-    /* Top Right */ calc(100% - 24px) 0,
+    /* Top Right L - start at inner point */ calc(100% - 24px) 1.5px,
+    calc(100% - 24px) 0,
     100% 0,
     100% 24px,
     calc(100% - 1.5px) 24px,
     calc(100% - 1.5px) 1.5px,
-    calc(100% - 24px) 1.5px,
-    /* Hidden bridge along the top inner edge */ 1.5px 1.5px,
-    /* Bottom Left */ 1.5px calc(100% - 24px),
-    0 calc(100% - 24px),
-    0 100%,
-    24px 100%,
-    24px calc(100% - 1.5px),
+    /* Diagonal through interior to bottom-left L */ 1.5px calc(100% - 24px),
     1.5px calc(100% - 1.5px),
-    /* Close polygon */ 1.5px 1.5px
+    24px calc(100% - 1.5px),
+    24px 100%,
+    0 100%,
+    0 calc(100% - 24px) /* Auto-closes diagonally through interior back to start */
   );
 }
 
@@ -474,21 +473,21 @@
 /* Corner accents - RIGHT panel: top-left and bottom-right */
 .astrogation-panel--right::after {
   /* Show only the top-left and bottom-right corners */
+  /* Bridge goes diagonally through center to avoid showing border along edges */
   clip-path: polygon(
-    /* Top Left */ 0 0,
+    /* Top Left L - start at inner point */ 1.5px 24px,
+    0 24px,
+    0 0,
     24px 0,
     24px 1.5px,
     1.5px 1.5px,
-    1.5px 24px,
-    0 24px,
-    /* Hidden bridge along the bottom inner edge */ calc(100% - 1.5px) calc(100% - 1.5px),
-    /* Bottom Right */ calc(100% - 1.5px) calc(100% - 24px),
-    100% calc(100% - 24px),
-    100% 100%,
+    /* Diagonal through interior to bottom-right L */ calc(100% - 24px) calc(100% - 1.5px),
     calc(100% - 24px) 100%,
-    calc(100% - 24px) calc(100% - 1.5px),
-    calc(100% - 1.5px) calc(100% - 1.5px),
-    /* Close polygon */ calc(100% - 1.5px) calc(100% - 1.5px)
+    100% 100%,
+    100% calc(100% - 24px),
+    calc(100% - 1.5px) calc(100% - 24px),
+    calc(100% - 1.5px) calc(100% - 1.5px)
+      /* Auto-closes diagonally through interior back to start */
   );
 }
 
