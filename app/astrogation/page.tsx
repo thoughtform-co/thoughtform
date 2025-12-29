@@ -880,7 +880,7 @@ function CornerSelector({
 function HUDWrapper({
   children,
   cornerToken = "four",
-  borderThickness = 1,
+  borderThickness = 0,
   cornerThickness = 1.5,
   borderColor = "rgba(202, 165, 84, 0.15)",
   cornerColor = "#caa554",
@@ -944,17 +944,19 @@ function HUDWrapper({
 
   return (
     <div className={`hud-wrapper ${className}`} style={{ ...style, position: "relative" }}>
-      {/* Main thin border - Put on top with pointer-events: none */}
-      <div
-        className="hud-wrapper__border"
-        style={{
-          position: "absolute",
-          inset: 0,
-          border: `${borderThickness}px solid ${borderColor}`,
-          pointerEvents: "none",
-          zIndex: 10,
-        }}
-      />
+      {/* Main thin border - Only render if borderThickness > 0 */}
+      {borderThickness > 0 && (
+        <div
+          className="hud-wrapper__border"
+          style={{
+            position: "absolute",
+            inset: 0,
+            border: `${borderThickness}px solid ${borderColor}`,
+            pointerEvents: "none",
+            zIndex: 10,
+          }}
+        />
+      )}
       {/* Individual corner brackets - Also on top */}
       {showCorners.tl && <div style={cornerStyle("tl")} />}
       {showCorners.tr && <div style={cornerStyle("tr")} />}
