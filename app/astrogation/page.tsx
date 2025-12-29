@@ -215,11 +215,16 @@ function renderComponent(
       );
     }
 
-    case "card-frame-content":
+    case "card-frame-content": {
+      const borderStyle = (props.borderStyle as string) || "solid";
+      const borderColor = (props.borderColor as string) || "rgba(235, 227, 214, 0.08)";
       return (
         <div
           className={`preview-card preview-card--content ${fullSize ? "preview-card--full" : ""}`}
-          style={fullSize ? { minWidth: "320px", padding: "24px" } : undefined}
+          style={{
+            ...(fullSize ? { minWidth: "320px", padding: "24px" } : {}),
+            border: borderStyle !== "none" ? `1px ${borderStyle} ${borderColor}` : "none",
+          }}
         >
           {props.accent !== "none" && (
             <div
@@ -246,29 +251,37 @@ function renderComponent(
           </div>
         </div>
       );
+    }
 
-    case "card-frame-terminal":
+    case "card-frame-terminal": {
+      const cornerColor = (props.cornerColor as string) || "#caa554";
+      const cornerSize = ((props.cornerSize as number) || 16) * scale;
+      const borderStyle = (props.borderStyle as string) || "solid";
+      const borderColor = (props.borderColor as string) || "rgba(235, 227, 214, 0.15)";
       return (
         <div
           className={`preview-card preview-card--terminal ${fullSize ? "preview-card--full" : ""}`}
-          style={fullSize ? { minWidth: "360px", padding: "32px" } : undefined}
+          style={{
+            ...(fullSize ? { minWidth: "360px", padding: "32px" } : {}),
+            border: borderStyle !== "none" ? `1px ${borderStyle} ${borderColor}` : "none",
+          }}
         >
           <div className="preview-card__corners">
             <div
               className="corner corner--tl"
-              style={fullSize ? { width: "20px", height: "20px" } : undefined}
+              style={{ width: cornerSize, height: cornerSize, borderColor: cornerColor }}
             />
             <div
               className="corner corner--tr"
-              style={fullSize ? { width: "20px", height: "20px" } : undefined}
+              style={{ width: cornerSize, height: cornerSize, borderColor: cornerColor }}
             />
             <div
               className="corner corner--bl"
-              style={fullSize ? { width: "20px", height: "20px" } : undefined}
+              style={{ width: cornerSize, height: cornerSize, borderColor: cornerColor }}
             />
             <div
               className="corner corner--br"
-              style={fullSize ? { width: "20px", height: "20px" } : undefined}
+              style={{ width: cornerSize, height: cornerSize, borderColor: cornerColor }}
             />
           </div>
           <div
@@ -286,12 +299,18 @@ function renderComponent(
           </div>
         </div>
       );
+    }
 
-    case "card-frame-data":
+    case "card-frame-data": {
+      const borderStyle = (props.borderStyle as string) || "solid";
+      const borderColor = (props.borderColor as string) || "rgba(235, 227, 214, 0.08)";
       return (
         <div
           className={`preview-card preview-card--data ${fullSize ? "preview-card--full" : ""}`}
-          style={fullSize ? { minWidth: "200px", padding: "20px" } : undefined}
+          style={{
+            ...(fullSize ? { minWidth: "200px", padding: "20px" } : {}),
+            border: borderStyle !== "none" ? `1px ${borderStyle} ${borderColor}` : "none",
+          }}
         >
           <div
             className="preview-card__metric-label"
@@ -307,27 +326,29 @@ function renderComponent(
           </div>
         </div>
       );
+    }
 
     case "hud-corner": {
       const position = (props.position as string) || "top-left";
-      const cornerSize = (props.size as number) || 24;
+      const cornerSize = ((props.size as number) || 40) * scale;
+      const thickness = (props.thickness as number) || 2;
       const cornerColor = (props.color as string) || "#caa554";
       const cornerStyle = {
         "top-left": {
-          borderTop: `2px solid ${cornerColor}`,
-          borderLeft: `2px solid ${cornerColor}`,
+          borderTop: `${thickness}px solid ${cornerColor}`,
+          borderLeft: `${thickness}px solid ${cornerColor}`,
         },
         "top-right": {
-          borderTop: `2px solid ${cornerColor}`,
-          borderRight: `2px solid ${cornerColor}`,
+          borderTop: `${thickness}px solid ${cornerColor}`,
+          borderRight: `${thickness}px solid ${cornerColor}`,
         },
         "bottom-left": {
-          borderBottom: `2px solid ${cornerColor}`,
-          borderLeft: `2px solid ${cornerColor}`,
+          borderBottom: `${thickness}px solid ${cornerColor}`,
+          borderLeft: `${thickness}px solid ${cornerColor}`,
         },
         "bottom-right": {
-          borderBottom: `2px solid ${cornerColor}`,
-          borderRight: `2px solid ${cornerColor}`,
+          borderBottom: `${thickness}px solid ${cornerColor}`,
+          borderRight: `${thickness}px solid ${cornerColor}`,
         },
       };
       return (
@@ -338,6 +359,219 @@ function renderComponent(
             ...cornerStyle[position as keyof typeof cornerStyle],
           }}
         />
+      );
+    }
+
+    case "hud-rail": {
+      const orientation = (props.orientation as string) || "vertical";
+      const showTicks = props.showTicks !== false;
+      const tickCount = (props.tickCount as number) || 11;
+      const length = ((props.length as number) || 200) * scale;
+      const railColor = (props.color as string) || "#caa554";
+      const isVertical = orientation === "vertical";
+
+      return (
+        <div
+          style={{
+            position: "relative",
+            width: isVertical ? 60 * scale : length,
+            height: isVertical ? length : 60 * scale,
+            display: "flex",
+            flexDirection: isVertical ? "column" : "row",
+          }}
+        >
+          {/* Main rail line */}
+          <div
+            style={{
+              position: "absolute",
+              [isVertical ? "left" : "top"]: 0,
+              [isVertical ? "top" : "left"]: 0,
+              [isVertical ? "bottom" : "right"]: 0,
+              [isVertical ? "width" : "height"]: "1px",
+              background: `linear-gradient(${isVertical ? "to bottom" : "to right"}, transparent 0%, ${railColor}80 10%, ${railColor}80 90%, transparent 100%)`,
+            }}
+          />
+          {/* Tick marks */}
+          {showTicks && (
+            <div
+              style={{
+                position: "absolute",
+                [isVertical ? "left" : "top"]: 0,
+                [isVertical ? "top" : "left"]: 0,
+                [isVertical ? "bottom" : "right"]: 0,
+                display: "flex",
+                flexDirection: isVertical ? "column" : "row",
+                justifyContent: "space-between",
+              }}
+            >
+              {Array.from({ length: tickCount }).map((_, i) => {
+                const isMajor = i % 5 === 0;
+                return (
+                  <div
+                    key={i}
+                    style={{
+                      [isVertical ? "width" : "height"]: isMajor ? 16 * scale : 8 * scale,
+                      [isVertical ? "height" : "width"]: "1px",
+                      background: isMajor ? railColor : `${railColor}80`,
+                    }}
+                  />
+                );
+              })}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    case "hud-frame-complete": {
+      const showCorners = props.showCorners !== false;
+      const showRails = props.showRails !== false;
+      const showTicks = props.showTicks !== false;
+      const cornerSize = ((props.cornerSize as number) || 40) * scale;
+      const cornerColor = (props.cornerColor as string) || "#caa554";
+      const frameWidth = ((props.width as number) || 400) * scale;
+      const frameHeight = ((props.height as number) || 300) * scale;
+      const tickCount = 11;
+
+      return (
+        <div
+          style={{
+            position: "relative",
+            width: frameWidth,
+            height: frameHeight,
+          }}
+        >
+          {/* Corners */}
+          {showCorners && (
+            <>
+              <div
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  width: cornerSize,
+                  height: cornerSize,
+                  borderTop: `2px solid ${cornerColor}`,
+                  borderLeft: `2px solid ${cornerColor}`,
+                }}
+              />
+              <div
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  right: 0,
+                  width: cornerSize,
+                  height: cornerSize,
+                  borderTop: `2px solid ${cornerColor}`,
+                  borderRight: `2px solid ${cornerColor}`,
+                }}
+              />
+              <div
+                style={{
+                  position: "absolute",
+                  bottom: 0,
+                  left: 0,
+                  width: cornerSize,
+                  height: cornerSize,
+                  borderBottom: `2px solid ${cornerColor}`,
+                  borderLeft: `2px solid ${cornerColor}`,
+                }}
+              />
+              <div
+                style={{
+                  position: "absolute",
+                  bottom: 0,
+                  right: 0,
+                  width: cornerSize,
+                  height: cornerSize,
+                  borderBottom: `2px solid ${cornerColor}`,
+                  borderRight: `2px solid ${cornerColor}`,
+                }}
+              />
+            </>
+          )}
+
+          {/* Left Rail */}
+          {showRails && (
+            <div
+              style={{
+                position: "absolute",
+                left: 0,
+                top: cornerSize + 20,
+                bottom: cornerSize + 20,
+                width: 1,
+                background: `linear-gradient(to bottom, transparent 0%, ${cornerColor}80 10%, ${cornerColor}80 90%, transparent 100%)`,
+              }}
+            />
+          )}
+
+          {/* Right Rail */}
+          {showRails && (
+            <div
+              style={{
+                position: "absolute",
+                right: 0,
+                top: cornerSize + 20,
+                bottom: cornerSize + 20,
+                width: 1,
+                background: `linear-gradient(to bottom, transparent 0%, ${cornerColor}80 10%, ${cornerColor}80 90%, transparent 100%)`,
+              }}
+            />
+          )}
+
+          {/* Left Ticks */}
+          {showTicks && (
+            <div
+              style={{
+                position: "absolute",
+                left: 0,
+                top: cornerSize + 20,
+                bottom: cornerSize + 20,
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "space-between",
+              }}
+            >
+              {Array.from({ length: tickCount }).map((_, i) => (
+                <div
+                  key={i}
+                  style={{
+                    width: i % 5 === 0 ? 16 : 8,
+                    height: 1,
+                    background: i % 5 === 0 ? cornerColor : `${cornerColor}80`,
+                  }}
+                />
+              ))}
+            </div>
+          )}
+
+          {/* Right Ticks */}
+          {showTicks && (
+            <div
+              style={{
+                position: "absolute",
+                right: 0,
+                top: cornerSize + 20,
+                bottom: cornerSize + 20,
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "space-between",
+                alignItems: "flex-end",
+              }}
+            >
+              {Array.from({ length: tickCount }).map((_, i) => (
+                <div
+                  key={i}
+                  style={{
+                    width: i % 5 === 0 ? 16 : 8,
+                    height: 1,
+                    background: i % 5 === 0 ? cornerColor : `${cornerColor}80`,
+                  }}
+                />
+              ))}
+            </div>
+          )}
+        </div>
       );
     }
 
@@ -381,44 +615,30 @@ function renderComponent(
       return <div className="preview-glitch-text">{(props.text as string) || "THOUGHTFORM"}</div>;
 
     case "hud-frame":
-      return (
-        <div
-          className="preview-hud-frame"
-          style={{
-            width: ((props.width as number) || 200) * scale,
-            height: ((props.height as number) || 120) * scale,
-            border: props.showBorder ? "1px solid var(--dawn-08)" : "none",
-          }}
-        >
-          {Boolean(props.showCorners) && (
-            <div className="preview-hud-frame__corners">
-              <div
-                className="corner corner--tl"
-                style={fullSize ? { width: "24px", height: "24px" } : undefined}
-              />
-              <div
-                className="corner corner--tr"
-                style={fullSize ? { width: "24px", height: "24px" } : undefined}
-              />
-              <div
-                className="corner corner--bl"
-                style={fullSize ? { width: "24px", height: "24px" } : undefined}
-              />
-              <div
-                className="corner corner--br"
-                style={fullSize ? { width: "24px", height: "24px" } : undefined}
-              />
-            </div>
-          )}
-        </div>
+      // Legacy - use hud-frame-complete instead
+      return renderComponent(
+        "hud-frame-complete",
+        { ...props, showRails: false, showTicks: false },
+        def,
+        fullSize
       );
 
-    case "navigation-bar":
+    case "navigation-bar": {
+      const showBorder = props.showBorder !== false;
+      const borderColor = (props.borderColor as string) || "rgba(235, 227, 214, 0.08)";
+      const backgroundColor = (props.backgroundColor as string) || "#0a0908";
       return (
-        <div className="preview-navbar">
-          {Boolean(props.showLogo) && <span className="preview-navbar__logo">Thoughtform</span>}
+        <div
+          className="preview-navbar"
+          style={{
+            borderBottom: showBorder ? `1px solid ${borderColor}` : "none",
+            background: backgroundColor,
+          }}
+        >
+          {Boolean(props.showLogo) && <span className="preview-navbar__logo">THOUGHTFORM</span>}
         </div>
       );
+    }
 
     default:
       return <div className="preview-default">{def.name}</div>;
@@ -442,7 +662,9 @@ function generateJSXCode(componentId: string, props: Record<string, unknown>): s
     "card-frame-terminal": "CardFrame",
     "card-frame-data": "CardFrame",
     "hud-frame": "HUDFrame",
+    "hud-frame-complete": "HUDFrame",
     "hud-corner": "HUDCorner",
+    "hud-rail": "HUDRail",
     "navigation-bar": "NavigationBar",
     slider: "Slider",
     toggle: "Toggle",
@@ -853,72 +1075,21 @@ function DialsPanel({
         <div className="astrogation-section__title">{def.name}</div>
       </div>
 
-      {/* Border Controls */}
-      <div className="astrogation-section">
-        <div className="astrogation-section__label">Border</div>
-
-        <div className="dial-group">
-          <div className="dial-group__label">Style</div>
-          <select
-            className="dial-select"
-            value={style.borderStyle}
-            onChange={(e) =>
-              onStyleChange({ ...style, borderStyle: e.target.value as StyleConfig["borderStyle"] })
-            }
-          >
-            <option value="none">None</option>
-            <option value="solid">Solid</option>
-            <option value="dashed">Dashed</option>
-            <option value="dotted">Dotted</option>
-            <option value="double">Double</option>
-          </select>
+      {/* Component Props (includes borders for components that have them) */}
+      {def.props.length > 0 && (
+        <div className="astrogation-section">
+          <div className="astrogation-section__label">Properties</div>
+          {def.props.map((propDef) => (
+            <div key={propDef.name} style={{ marginBottom: "8px" }}>
+              {renderPropControl(propDef, componentProps[propDef.name])}
+            </div>
+          ))}
         </div>
+      )}
 
-        {style.borderStyle !== "none" && (
-          <>
-            <div className="dial-group">
-              <div className="dial-group__header">
-                <span className="dial-group__label">Width</span>
-                <span className="dial-group__value">{style.borderWidth}px</span>
-              </div>
-              <input
-                type="range"
-                className="dial-slider"
-                min={1}
-                max={8}
-                value={style.borderWidth}
-                onChange={(e) => onStyleChange({ ...style, borderWidth: parseInt(e.target.value) })}
-              />
-            </div>
-
-            <div className="dial-group">
-              <div className="dial-group__label">Color</div>
-              <div className="color-picker">
-                <input
-                  type="color"
-                  value={style.borderColor}
-                  onChange={(e) => onStyleChange({ ...style, borderColor: e.target.value })}
-                />
-                <div className="color-swatches">
-                  {BRAND_COLORS.map((c) => (
-                    <button
-                      key={c.name}
-                      className="color-swatch"
-                      style={{ background: c.value }}
-                      title={c.name}
-                      onClick={() => onStyleChange({ ...style, borderColor: c.value })}
-                    />
-                  ))}
-                </div>
-              </div>
-            </div>
-          </>
-        )}
-      </div>
-
-      {/* Fill Controls */}
+      {/* Background Fill Controls */}
       <div className="astrogation-section">
-        <div className="astrogation-section__label">Fill</div>
+        <div className="astrogation-section__label">Background</div>
 
         <div className="dial-group">
           <div className="dial-group__label">Type</div>
@@ -1024,18 +1195,6 @@ function DialsPanel({
           </>
         )}
       </div>
-
-      {/* Component Props */}
-      {def.props.length > 0 && (
-        <div className="astrogation-section">
-          <div className="astrogation-section__label">Properties</div>
-          {def.props.map((propDef) => (
-            <div key={propDef.name} style={{ marginBottom: "8px" }}>
-              {renderPropControl(propDef, componentProps[propDef.name])}
-            </div>
-          ))}
-        </div>
-      )}
 
       {/* Actions */}
       <div className="astrogation-section">

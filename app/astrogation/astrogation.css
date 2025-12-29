@@ -340,7 +340,8 @@
 }
 
 .astrogation-section--save {
-  background: rgba(202, 165, 84, 0.05);
+  background: transparent;
+  border-bottom: 1px solid var(--dawn-04);
 }
 
 .astrogation-section__label {
@@ -407,24 +408,24 @@
 
 .save-btn {
   padding: 8px 12px;
-  background: var(--gold);
-  border: 1px solid var(--gold);
+  background: transparent;
+  border: 1px solid var(--dawn-15);
   font-family: var(--font-mono);
   font-size: 9px;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: var(--void);
+  color: var(--dawn-50);
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .save-btn:hover:not(:disabled) {
-  background: transparent;
+  border-color: var(--gold);
   color: var(--gold);
 }
 
 .save-btn:disabled {
-  opacity: 0.3;
+  opacity: 0.2;
   cursor: not-allowed;
 }
 
@@ -777,29 +778,41 @@
 .corner--tl {
   top: 0;
   left: 0;
-  border-top: 2px solid var(--gold);
-  border-left: 2px solid var(--gold);
+  border-top-width: 2px;
+  border-top-style: solid;
+  border-left-width: 2px;
+  border-left-style: solid;
+  border-color: var(--gold);
 }
 
 .corner--tr {
   top: 0;
   right: 0;
-  border-top: 2px solid var(--gold);
-  border-right: 2px solid var(--gold);
+  border-top-width: 2px;
+  border-top-style: solid;
+  border-right-width: 2px;
+  border-right-style: solid;
+  border-color: var(--gold);
 }
 
 .corner--bl {
   bottom: 0;
   left: 0;
-  border-bottom: 2px solid var(--gold);
-  border-left: 2px solid var(--gold);
+  border-bottom-width: 2px;
+  border-bottom-style: solid;
+  border-left-width: 2px;
+  border-left-style: solid;
+  border-color: var(--gold);
 }
 
 .corner--br {
   bottom: 0;
   right: 0;
-  border-bottom: 2px solid var(--gold);
-  border-right: 2px solid var(--gold);
+  border-bottom-width: 2px;
+  border-bottom-style: solid;
+  border-right-width: 2px;
+  border-right-style: solid;
+  border-color: var(--gold);
 }
 
 .preview-card__header {
