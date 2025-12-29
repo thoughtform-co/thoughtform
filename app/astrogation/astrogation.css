@@ -336,6 +336,21 @@
   border-right: none;
 }
 
+/* ─── PANEL HEADER (CODEX/DIALS style) ─── */
+.panel-header {
+  width: 100%;
+  padding: 10px 16px;
+  background: var(--gold);
+  border: none;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  color: var(--void);
+  text-align: left;
+  flex-shrink: 0;
+}
+
 /* ─── PANEL SECTIONS ─── */
 .astrogation-section {
   padding: 12px;

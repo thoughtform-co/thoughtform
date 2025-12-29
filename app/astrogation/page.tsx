@@ -748,7 +748,10 @@ function CatalogPanel({
 
   return (
     <aside className="astrogation-panel astrogation-panel--left">
-      {/* Save Preset (above search) */}
+      {/* Panel Header */}
+      <div className="panel-header">COMPONENTS</div>
+
+      {/* Save Preset */}
       <div className="astrogation-section astrogation-section--save">
         <div className="save-preset-form">
           <input
@@ -794,7 +797,6 @@ function CatalogPanel({
       {/* Categories with expandable component lists */}
       {!filteredComponents && (
         <div className="astrogation-section astrogation-section--categories">
-          <div className="astrogation-section__label">Components</div>
           {CATEGORIES.map((cat) => {
             const isExpanded = expandedCategories.has(cat.id);
             const components = getComponentsByCategory(cat.id);
