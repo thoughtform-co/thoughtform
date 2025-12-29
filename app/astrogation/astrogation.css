@@ -1392,9 +1392,9 @@
 
 .dials-category__label {
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 11px;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.08em;
   color: var(--gold, #caa554);
 }
 
