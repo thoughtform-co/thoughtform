@@ -15,3 +15,13 @@ export {
 export { FlowNode } from "./FlowNode";
 export { Navigation } from "./Navigation";
 export { SectionHeader } from "./SectionHeader";
+export {
+  TreeProvider,
+  TreeView,
+  TreeNode,
+  TreeNodeTrigger,
+  TreeExpander,
+  TreeIcon,
+  TreeLabel,
+  TreeNodeContent,
+} from "./Tree";

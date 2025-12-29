@@ -379,35 +379,16 @@
   overflow: visible !important;
 }
 
-/* Shared HUD Panel Frame base */
+/* Shared HUD Panel Frame base - hidden for cleaner look */
 .astrogation-panel--left::before,
 .astrogation-panel--right::before {
-  content: "";
-  position: absolute;
-  top: 40px; /* Below the tab */
-  left: 0;
-  right: 0;
-  bottom: 0;
-  border: 1px solid var(--gold-30, rgba(202, 165, 84, 0.3));
-  background: rgba(10, 9, 8, 0.9);
-  pointer-events: none;
-  z-index: -1;
+  display: none;
 }
 
-/* Shared corner accents base */
+/* Shared corner accents base - hidden for cleaner look */
 .astrogation-panel--left::after,
 .astrogation-panel--right::after {
-  content: "";
-  position: absolute;
-  top: 40px; /* Align exactly with the frame */
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: transparent;
-  border: 1.5px solid var(--gold, #caa554);
-  pointer-events: none;
-  z-index: 1;
-  box-sizing: border-box; /* Keep border inside the box */
+  display: none;
 }
 
 /* Panel content scrollable area */
@@ -495,7 +476,7 @@
 /* ─── PANEL HEADER TAB ─── */
 .panel-header {
   position: absolute;
-  top: 0;
+  top: -8px;
   left: 0;
   right: 0;
   width: 100%;
@@ -625,11 +606,11 @@
 /* ─── CATALOG CATEGORY ─── */
 .catalog-category {
   position: relative;
-  margin-bottom: 2px;
+  margin-bottom: 8px;
 }
 
 .catalog-category.expanded {
-  margin-bottom: 8px;
+  margin-bottom: 12px;
 }
 
 .catalog-category-btn {
@@ -637,7 +618,7 @@
   display: flex;
   align-items: center;
   padding: 10px 8px;
-  background: rgba(202, 165, 84, 0.08);
+  background: transparent;
   border: none;
   font-family: var(--font-mono);
   font-size: 14px;
@@ -648,14 +629,28 @@
   text-align: left;
 }
 
+/* Triangle indicator */
+.catalog-category-btn::after {
+  content: "";
+  width: 0;
+  height: 0;
+  border-left: 5px solid currentColor;
+  border-top: 4px solid transparent;
+  border-bottom: 4px solid transparent;
+  margin-left: auto;
+  transition: transform 0.15s ease;
+}
+
 .catalog-category-btn:hover {
   color: var(--gold, #caa554);
-  background: rgba(202, 165, 84, 0.12);
 }
 
 .catalog-category-btn.expanded {
   color: var(--gold, #caa554);
-  background: rgba(202, 165, 84, 0.15);
+}
+
+.catalog-category-btn.expanded::after {
+  transform: rotate(90deg);
 }
 
 .catalog-category-btn__name {
@@ -664,13 +659,7 @@
 }
 
 .catalog-category-btn__count {
-  font-size: 9px;
-  color: var(--dawn-30, rgba(235, 227, 214, 0.3));
-  margin-left: 8px;
-}
-
-.catalog-category-btn.expanded .catalog-category-btn__count {
-  color: var(--gold-50, rgba(202, 165, 84, 0.5));
+  display: none;
 }
 
 /* ─── CATALOG ITEMS CONTAINER ─── */
@@ -697,14 +686,7 @@
 }
 
 .catalog-subcategory__corner {
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  border-left: 1px solid var(--dawn, #ece3d6);
-  border-bottom: 1px solid var(--dawn, #ece3d6);
-  margin-right: 8px;
-  margin-bottom: -2px;
-  flex-shrink: 0;
+  display: none;
 }
 
 /* ─── CATALOG ITEM ─── */
@@ -725,12 +707,7 @@
 }
 
 .catalog-item__prefix {
-  font-family: var(--font-mono);
-  font-size: 12px;
-  color: var(--gold-30, rgba(202, 165, 84, 0.3));
-  margin-right: 8px;
-  flex-shrink: 0;
-  transition: color 0.15s ease;
+  display: none;
 }
 
 .catalog-item:hover {
@@ -1193,8 +1170,7 @@
 }
 
 .dial-group__label::before {
-  content: "// ";
-  color: var(--gold-30, rgba(202, 165, 84, 0.3));
+  display: none;
 }
 
 .dial-group__header {
@@ -1361,7 +1337,7 @@
 
 /* ─── DIALS CATEGORIES ─── */
 .dials-category {
-  margin-bottom: 14px;
+  margin-bottom: 20px;
 }
 
 .dials-category__header {
@@ -1370,7 +1346,7 @@
   align-items: center;
   padding: 10px 8px;
   margin-bottom: 6px;
-  background: rgba(202, 165, 84, 0.08);
+  background: transparent;
 }
 
 .dials-category__label {
@@ -1572,6 +1548,152 @@
 .corner-toggle.active::before,
 .corner-toggle.active::after {
   background: var(--gold, #caa554);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   TREE COMPONENT
+   ═══════════════════════════════════════════════════════════════ */
+
+.tree-view {
+  display: flex;
+  flex-direction: column;
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.tree-node {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.tree-node-trigger {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 6px 8px;
+  background: transparent;
+  border: none;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--dawn-50, rgba(235, 227, 214, 0.5));
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  position: relative;
+}
+
+.tree-node-trigger:hover {
+  color: var(--dawn, #ebe3d6);
+}
+
+.tree-node-trigger--selected {
+  color: var(--gold, #caa554);
+}
+
+/* Expander (chevron) */
+.tree-expander {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 12px;
+  font-size: 8px;
+  color: var(--dawn-30, rgba(235, 227, 214, 0.3));
+  transition: transform 0.15s ease;
+  flex-shrink: 0;
+}
+
+.tree-expander--expanded {
+  transform: rotate(90deg);
+  color: var(--gold, #caa554);
+}
+
+.tree-expander--empty {
+  visibility: hidden;
+}
+
+/* Icon */
+.tree-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  font-size: 10px;
+  color: var(--dawn-30, rgba(235, 227, 214, 0.3));
+  flex-shrink: 0;
+}
+
+.tree-icon--folder {
+  color: var(--gold-50, rgba(202, 165, 84, 0.5));
+}
+
+.tree-node-trigger:hover .tree-icon--folder,
+.tree-node-trigger--selected .tree-icon--folder {
+  color: var(--gold, #caa554);
+}
+
+.tree-icon--file {
+  font-size: 6px;
+}
+
+/* Label */
+.tree-label {
+  flex: 1;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 14px; /* Larger font size for better readability */
+}
+
+/* Content (children container) */
+.tree-node-content {
+  position: relative;
+  margin-left: 19px; /* Indent children: 12px (expander) + 6px (gap) + 1px (line alignment) */
+  overflow: visible; /* Allow lines to extend beyond container */
+}
+
+.astrogation-section--categories {
+  overflow: visible; /* Allow tree lines to extend */
+}
+
+.panel-content {
+  overflow: visible !important; /* Ensure lines aren't clipped */
+}
+
+/* Vertical line positioned close to child expanders */
+.tree-node-content--lines::before {
+  content: "";
+  position: absolute;
+  left: -6px; /* Position closer to child expanders (6px from content left, aligning with expander center) */
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--dawn-20, rgba(235, 227, 214, 0.2));
+  z-index: 1;
+}
+
+/* Horizontal line connecting from vertical line to each child's expander */
+.tree-node-content--lines > .tree-node > .tree-node-trigger::before {
+  content: "";
+  position: absolute;
+  left: -6px; /* Start from vertical line */
+  top: 50%; /* Center vertically on the trigger */
+  width: 14px; /* Extend to child's expander (expander starts at 8px padding + center at 6px = 14px from trigger left) */
+  height: 1px;
+  background: var(--dawn-20, rgba(235, 227, 214, 0.2));
+  z-index: 1;
+}
+
+/* For the last child, stop the vertical line at the horizontal connection */
+.tree-node-content--lines > .tree-node--last::after {
+  content: "";
+  position: absolute;
+  left: -6px;
+  top: 50%; /* Start at the horizontal line (same as the horizontal line's top) */
+  bottom: -100vh; /* Extend far down to cover the vertical line continuation */
+  width: 1px;
+  background: var(--void, #0a0908); /* Match background to hide the line */
+  z-index: 2; /* Higher z-index to cover the vertical line */
 }
 
 /* ─── RESPONSIVE ─── */

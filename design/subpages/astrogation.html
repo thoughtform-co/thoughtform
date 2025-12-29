@@ -1,0 +1,1028 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Astrogation │ UI Component Builder</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=PT+Mono&display=swap" rel="stylesheet">
+  
+  <style>
+    /* ═══════════════════════════════════════════════════════════════════
+       CSS VARIABLES - ASTROLABE DESIGN TOKENS
+       ═══════════════════════════════════════════════════════════════════ */
+    :root {
+      /* Background Layers */
+      --void: #0a0908;
+      --surface-0: #0d0b07;
+      --surface-1: #141210;
+      --surface-2: #1a1814;
+      
+      /* Dawn (Text) */
+      --dawn: #ebe3d6;
+      --dawn-70: rgba(235, 227, 214, 0.7);
+      --dawn-50: rgba(235, 227, 214, 0.5);
+      --dawn-30: rgba(235, 227, 214, 0.3);
+      --dawn-15: rgba(235, 227, 214, 0.15);
+      --dawn-08: rgba(235, 227, 214, 0.08);
+      --dawn-04: rgba(235, 227, 214, 0.04);
+      
+      /* Gold (Accent) */
+      --gold: #caa554;
+      --gold-70: rgba(202, 165, 84, 0.7);
+      --gold-50: rgba(202, 165, 84, 0.5);
+      --gold-30: rgba(202, 165, 84, 0.3);
+      --gold-15: rgba(202, 165, 84, 0.15);
+      --gold-08: rgba(202, 165, 84, 0.08);
+      
+      /* Typography */
+      --font-sans: 'IBM Plex Sans', system-ui, sans-serif;
+      --font-mono: 'PT Mono', ui-monospace, monospace;
+      
+      /* HUD Layout */
+      --hud-padding: 32px;
+      --corner-size: 40px;
+      --rail-width: 60px;
+    }
+    
+    /* ═══════════════════════════════════════════════════════════════════
+       RESET & BASE
+       ═══════════════════════════════════════════════════════════════════ */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      background: var(--void);
+      color: var(--dawn-70);
+      font-family: var(--font-sans);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      overflow: hidden;
+    }
+    
+    /* ═══════════════════════════════════════════════════════════════════
+       ASTROGATION CONTAINER
+       ═══════════════════════════════════════════════════════════════════ */
+    .astrogation {
+      position: fixed;
+      inset: 0;
+      background: var(--void);
+      color: var(--dawn);
+      overflow: hidden;
+    }
+    
+    /* ═══════════════════════════════════════════════════════════════════
+       HUD CORNERS
+       ═══════════════════════════════════════════════════════════════════ */
+    .hud-corner {
+      position: absolute;
+      width: var(--corner-size);
+      height: var(--corner-size);
+      pointer-events: none;
+      z-index: 200;
+    }
+    
+    .hud-corner::before,
+    .hud-corner::after {
+      content: "";
+      position: absolute;
+      background: var(--gold);
+    }
+    
+    .hud-corner-tl {
+      top: var(--hud-padding);
+      left: var(--hud-padding);
+    }
+    .hud-corner-tl::before {
+      top: 0; left: 0;
+      width: var(--corner-size);
+      height: 2px;
+    }
+    .hud-corner-tl::after {
+      top: 0; left: 0;
+      width: 2px;
+      height: var(--corner-size);
+    }
+    
+    .hud-corner-tr {
+      top: var(--hud-padding);
+      right: var(--hud-padding);
+    }
+    .hud-corner-tr::before {
+      top: 0; right: 0;
+      width: var(--corner-size);
+      height: 2px;
+    }
+    .hud-corner-tr::after {
+      top: 0; right: 0;
+      width: 2px;
+      height: var(--corner-size);
+    }
+    
+    .hud-corner-bl {
+      bottom: var(--hud-padding);
+      left: var(--hud-padding);
+    }
+    .hud-corner-bl::before {
+      bottom: 0; left: 0;
+      width: var(--corner-size);
+      height: 2px;
+    }
+    .hud-corner-bl::after {
+      bottom: 0; left: 0;
+      width: 2px;
+      height: var(--corner-size);
+    }
+    
+    .hud-corner-br {
+      bottom: var(--hud-padding);
+      right: var(--hud-padding);
+    }
+    .hud-corner-br::before {
+      bottom: 0; right: 0;
+      width: var(--corner-size);
+      height: 2px;
+    }
+    .hud-corner-br::after {
+      bottom: 0; right: 0;
+      width: 2px;
+      height: var(--corner-size);
+    }
+    
+    /* ═══════════════════════════════════════════════════════════════════
+       HUD RAILS
+       ═══════════════════════════════════════════════════════════════════ */
+    .hud-rail {
+      position: absolute;
+      top: calc(var(--hud-padding) + var(--corner-size) + 20px);
+      bottom: calc(var(--hud-padding) + var(--corner-size) + 20px);
+      width: var(--rail-width);
+      display: flex;
+      flex-direction: column;
+      z-index: 150;
+    }
+    
+    .hud-rail-left {
+      left: var(--hud-padding);
+      align-items: flex-start;
+    }
+    
+    .hud-rail-right {
+      right: var(--hud-padding);
+      align-items: flex-end;
+    }
+    
+    .hud-rail-left::before,
+    .hud-rail-right::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 1px;
+      background: linear-gradient(
+        to bottom,
+        transparent 0%,
+        var(--gold-50) 10%,
+        var(--gold-50) 90%,
+        transparent 100%
+      );
+    }
+    
+    .hud-rail-left::before { left: 0; }
+    .hud-rail-right::before { right: 0; }
+    
+    .scale-ticks {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    
+    .hud-rail-left .scale-ticks { left: 0; }
+    .hud-rail-right .scale-ticks { right: 0; }
+    
+    .tick {
+      height: 1px;
+      background: var(--gold-50);
+    }
+    
+    .tick-major {
+      width: 16px;
+      background: var(--gold);
+    }
+    
+    .tick-minor {
+      width: 8px;
+    }
+    
+    /* ═══════════════════════════════════════════════════════════════════
+       NAVIGATION BAR
+       ═══════════════════════════════════════════════════════════════════ */
+    .nav-bar {
+      position: absolute;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      background: rgba(10, 9, 8, 0.25);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--dawn-08);
+      height: 44px;
+      z-index: 200;
+    }
+    
+    .nav-bar__logo {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 14px;
+      height: 100%;
+      border-right: 1px solid var(--dawn-08);
+    }
+    
+    .nav-bar__tabs {
+      display: flex;
+      height: 100%;
+    }
+    
+    .nav-bar__tab {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0 20px;
+      height: 100%;
+      background: none;
+      border: none;
+      border-right: 1px solid var(--dawn-08);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--dawn-50);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    
+    .nav-bar__tab:hover {
+      color: var(--dawn);
+    }
+    
+    .nav-bar__tab.active {
+      color: var(--gold);
+      background: rgba(202, 165, 84, 0.08);
+    }
+    
+    /* ═══════════════════════════════════════════════════════════════════
+       CONTENT AREA
+       ═══════════════════════════════════════════════════════════════════ */
+    .astrogation-content {
+      position: absolute;
+      top: calc(var(--hud-padding) + 60px);
+      bottom: var(--hud-padding);
+      left: calc(var(--hud-padding) + var(--rail-width) + 40px);
+      right: calc(var(--hud-padding) + var(--rail-width) + 40px);
+      display: flex;
+      gap: 0;
+      z-index: 1;
+    }
+    
+    /* ═══════════════════════════════════════════════════════════════════
+       PANELS
+       ═══════════════════════════════════════════════════════════════════ */
+    .astrogation-panel {
+      width: 280px;
+      min-width: 280px;
+      max-width: 280px;
+      display: flex;
+      flex-direction: column;
+      background: transparent;
+      overflow: visible;
+      flex-shrink: 0;
+      position: relative;
+      z-index: 10;
+      padding-top: 40px;
+    }
+    
+    /* Panel frame (border around content) */
+    .astrogation-panel::before {
+      content: "";
+      position: absolute;
+      top: 40px;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      border: 1px solid var(--gold-30);
+      background: rgba(10, 9, 8, 0.9);
+      pointer-events: none;
+      z-index: -1;
+    }
+    
+    /* Golden corner accents */
+    .astrogation-panel::after {
+      content: "";
+      position: absolute;
+      top: 40px;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: transparent;
+      border: 1.5px solid var(--gold);
+      pointer-events: none;
+      z-index: 1;
+      box-sizing: border-box;
+    }
+    
+    /* Left panel corners: top-right and bottom-left */
+    .astrogation-panel--left::after {
+      clip-path: polygon(
+        calc(100% - 24px) 1.5px,
+        calc(100% - 24px) 0,
+        100% 0,
+        100% 24px,
+        calc(100% - 1.5px) 24px,
+        calc(100% - 1.5px) 1.5px,
+        1.5px calc(100% - 24px),
+        1.5px calc(100% - 1.5px),
+        24px calc(100% - 1.5px),
+        24px 100%,
+        0 100%,
+        0 calc(100% - 24px)
+      );
+    }
+    
+    /* Right panel corners: top-left and bottom-right */
+    .astrogation-panel--right::after {
+      clip-path: polygon(
+        1.5px 24px,
+        0 24px,
+        0 0,
+        24px 0,
+        24px 1.5px,
+        1.5px 1.5px,
+        calc(100% - 24px) calc(100% - 1.5px),
+        calc(100% - 24px) 100%,
+        100% 100%,
+        100% calc(100% - 24px),
+        calc(100% - 1.5px) calc(100% - 24px),
+        calc(100% - 1.5px) calc(100% - 1.5px)
+      );
+    }
+    
+    /* Panel header tab */
+    .panel-header {
+      position: absolute;
+      top: -8px;
+      left: 0;
+      right: 0;
+      width: 100%;
+      padding: 10px 8px;
+      background: var(--gold-08);
+      border: 1px solid var(--gold-30);
+      font-family: var(--font-mono);
+      font-size: 14px;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      color: var(--gold);
+      text-align: left;
+      flex-shrink: 0;
+    }
+    
+    .astrogation-panel--right .panel-header {
+      text-align: right;
+    }
+    
+    /* Panel content */
+    .panel-content {
+      position: relative;
+      z-index: 2;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 8px;
+      overflow-y: auto;
+    }
+    
+    .panel-content::-webkit-scrollbar {
+      width: 3px;
+    }
+    
+    .panel-content::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    
+    .panel-content::-webkit-scrollbar-thumb {
+      background: var(--gold-15);
+    }
+    
+    /* ═══════════════════════════════════════════════════════════════════
+       CATALOG CATEGORIES
+       ═══════════════════════════════════════════════════════════════════ */
+    .catalog-category {
+      position: relative;
+      margin-bottom: 2px;
+    }
+    
+    .catalog-category.expanded {
+      margin-bottom: 8px;
+    }
+    
+    .catalog-category-btn {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      padding: 10px 8px;
+      background: var(--gold-08);
+      border: none;
+      font-family: var(--font-mono);
+      font-size: 14px;
+      letter-spacing: 0.08em;
+      color: var(--dawn-50);
+      cursor: pointer;
+      transition: all 0.15s ease;
+      text-align: left;
+    }
+    
+    .catalog-category-btn:hover {
+      color: var(--gold);
+      background: rgba(202, 165, 84, 0.12);
+    }
+    
+    .catalog-category-btn.expanded {
+      color: var(--gold);
+      background: rgba(202, 165, 84, 0.15);
+    }
+    
+    .catalog-category-btn__icon {
+      width: 12px;
+      margin-right: 8px;
+      font-size: 10px;
+      color: var(--dawn-30);
+      transition: transform 0.15s ease;
+    }
+    
+    .catalog-category-btn.expanded .catalog-category-btn__icon {
+      transform: rotate(90deg);
+      color: var(--gold);
+    }
+    
+    .catalog-category-btn__name {
+      flex: 1;
+      font-weight: 500;
+    }
+    
+    .catalog-category-btn__count {
+      font-size: 9px;
+      color: var(--dawn-30);
+      margin-left: 8px;
+    }
+    
+    /* Category items */
+    .catalog-category__items {
+      padding: 4px 0 4px 12px;
+      border-left: 1px solid var(--gold-08);
+      margin-left: 8px;
+    }
+    
+    .catalog-item {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      padding: 8px 12px;
+      background: transparent;
+      border: none;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--dawn-50);
+      cursor: pointer;
+      transition: all 0.15s ease;
+      text-align: left;
+    }
+    
+    .catalog-item:hover {
+      color: var(--dawn);
+      background: var(--dawn-04);
+    }
+    
+    .catalog-item.selected {
+      color: var(--gold);
+      background: var(--gold-08);
+    }
+    
+    .catalog-item__prefix {
+      width: 24px;
+      font-size: 9px;
+      color: var(--dawn-30);
+    }
+    
+    /* ═══════════════════════════════════════════════════════════════════
+       GALLERY (CENTER)
+       ═══════════════════════════════════════════════════════════════════ */
+    .gallery {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: var(--void);
+      border: 1px solid var(--dawn-08);
+      min-width: 0;
+      position: relative;
+    }
+    
+    .gallery__header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--dawn-08);
+      background: rgba(10, 9, 8, 0.6);
+    }
+    
+    .gallery__title {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--dawn-50);
+    }
+    
+    .gallery__actions {
+      display: flex;
+      gap: 8px;
+    }
+    
+    .gallery__btn {
+      padding: 6px 12px;
+      background: transparent;
+      border: 1px solid var(--dawn-15);
+      font-family: var(--font-mono);
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--dawn-50);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    
+    .gallery__btn:hover {
+      border-color: var(--gold-30);
+      color: var(--gold);
+    }
+    
+    .gallery__btn--primary {
+      background: var(--gold);
+      border-color: var(--gold);
+      color: var(--void);
+    }
+    
+    .gallery__btn--primary:hover {
+      background: var(--gold-70);
+    }
+    
+    .gallery__content {
+      flex: 1;
+      padding: 24px;
+      overflow-y: auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    /* Component Preview */
+    .preview-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 24px;
+    }
+    
+    .preview-card {
+      position: relative;
+      padding: 48px;
+      background: var(--surface-1);
+      border: 1px solid var(--dawn-08);
+      min-width: 300px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .preview-card__corners {
+      position: absolute;
+      inset: 0;
+    }
+    
+    .corner {
+      position: absolute;
+      width: 12px;
+      height: 12px;
+    }
+    
+    .corner--tl { top: 0; left: 0; border-top: 2px solid var(--gold); border-left: 2px solid var(--gold); }
+    .corner--tr { top: 0; right: 0; border-top: 2px solid var(--gold); border-right: 2px solid var(--gold); }
+    .corner--bl { bottom: 0; left: 0; border-bottom: 2px solid var(--gold); border-left: 2px solid var(--gold); }
+    .corner--br { bottom: 0; right: 0; border-bottom: 2px solid var(--gold); border-right: 2px solid var(--gold); }
+    
+    .preview-component {
+      padding: 12px 24px;
+      background: transparent;
+      border: 1px solid var(--dawn-15);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--dawn-70);
+    }
+    
+    .preview-label {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--dawn-30);
+    }
+    
+    /* ═══════════════════════════════════════════════════════════════════
+       DIALS PANEL (RIGHT)
+       ═══════════════════════════════════════════════════════════════════ */
+    .dial-section {
+      padding: 12px 0;
+      border-bottom: 1px solid var(--gold-08);
+    }
+    
+    .dial-section:last-child {
+      border-bottom: none;
+    }
+    
+    .dial-section__label {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: var(--dawn-30);
+      margin-bottom: 12px;
+      padding: 0 8px;
+    }
+    
+    .dial-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 8px;
+    }
+    
+    .dial-row__label {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--dawn-50);
+    }
+    
+    .dial-row__value {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--gold);
+    }
+    
+    .dial-slider {
+      width: 100%;
+      height: 2px;
+      -webkit-appearance: none;
+      background: var(--dawn-15);
+      cursor: pointer;
+      margin: 8px 0;
+    }
+    
+    .dial-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 10px;
+      height: 10px;
+      background: var(--gold);
+      border-radius: 0;
+      transform: rotate(45deg);
+      cursor: pointer;
+    }
+    
+    .dial-toggle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 8px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--dawn-50);
+      cursor: pointer;
+    }
+    
+    .dial-toggle input {
+      width: 12px;
+      height: 12px;
+      accent-color: var(--gold);
+    }
+    
+    /* Color picker */
+    .color-picker {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      padding: 8px;
+    }
+    
+    .color-swatch {
+      width: 24px;
+      height: 24px;
+      border: 1px solid var(--dawn-15);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    
+    .color-swatch:hover {
+      border-color: var(--dawn-50);
+      transform: scale(1.1);
+    }
+    
+    .color-swatch.selected {
+      border-color: var(--gold);
+      box-shadow: 0 0 0 2px var(--void), 0 0 0 3px var(--gold);
+    }
+    
+    /* ═══════════════════════════════════════════════════════════════════
+       FOOTER
+       ═══════════════════════════════════════════════════════════════════ */
+    .astrogation-footer {
+      position: absolute;
+      bottom: var(--hud-padding);
+      left: calc(var(--hud-padding) + var(--corner-size) + 20px);
+      right: calc(var(--hud-padding) + var(--corner-size) + 20px);
+      display: flex;
+      justify-content: space-between;
+      font-family: var(--font-mono);
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--dawn-30);
+      z-index: 100;
+    }
+    
+    .astrogation-footer__left,
+    .astrogation-footer__right {
+      display: flex;
+      gap: 16px;
+    }
+  </style>
+</head>
+<body>
+  <div class="astrogation">
+    <!-- HUD Frame Corners -->
+    <div class="hud-corner hud-corner-tl"></div>
+    <div class="hud-corner hud-corner-tr"></div>
+    <div class="hud-corner hud-corner-bl"></div>
+    <div class="hud-corner hud-corner-br"></div>
+    
+    <!-- Left Rail -->
+    <aside class="hud-rail hud-rail-left">
+      <div class="scale-ticks">
+        <div class="tick tick-major"></div>
+        <div class="tick tick-minor"></div>
+        <div class="tick tick-minor"></div>
+        <div class="tick tick-minor"></div>
+        <div class="tick tick-minor"></div>
+        <div class="tick tick-major"></div>
+        <div class="tick tick-minor"></div>
+        <div class="tick tick-minor"></div>
+        <div class="tick tick-minor"></div>
+        <div class="tick tick-minor"></div>
+        <div class="tick tick-major"></div>
+        <div class="tick tick-minor"></div>
+        <div class="tick tick-minor"></div>
+        <div class="tick tick-minor"></div>
+        <div class="tick tick-minor"></div>
+        <div class="tick tick-major"></div>
+        <div class="tick tick-minor"></div>
+        <div class="tick tick-minor"></div>
+        <div class="tick tick-minor"></div>
+        <div class="tick tick-minor"></div>
+        <div class="tick tick-major"></div>
+      </div>
+    </aside>
+    
+    <!-- Right Rail -->
+    <aside class="hud-rail hud-rail-right">
+      <div class="scale-ticks">
+        <div class="tick tick-major"></div>
+        <div class="tick tick-minor"></div>
+        <div class="tick tick-minor"></div>
+        <div class="tick tick-minor"></div>
+        <div class="tick tick-minor"></div>
+        <div class="tick tick-major"></div>
+        <div class="tick tick-minor"></div>
+        <div class="tick tick-minor"></div>
+        <div class="tick tick-minor"></div>
+        <div class="tick tick-minor"></div>
+        <div class="tick tick-major"></div>
+        <div class="tick tick-minor"></div>
+        <div class="tick tick-minor"></div>
+        <div class="tick tick-minor"></div>
+        <div class="tick tick-minor"></div>
+        <div class="tick tick-major"></div>
+        <div class="tick tick-minor"></div>
+        <div class="tick tick-minor"></div>
+        <div class="tick tick-minor"></div>
+        <div class="tick tick-minor"></div>
+        <div class="tick tick-major"></div>
+      </div>
+    </aside>
+    
+    <!-- Navigation Bar -->
+    <nav class="nav-bar">
+      <a href="../mockup.html" class="nav-bar__logo">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 430.99 436" width="22" height="22" fill="#caa554">
+          <path d="M336.78,99.43c18.82,18.93,33.41,41.16,43.78,66.63,5.03,12.35,8.81,24.86,11.42,37.57h19.62c-1.91-18.99-6.54-37.52-13.79-55.54-10.01-24.71-24.56-46.73-43.78-66.02-19.17-19.29-41.16-33.97-65.92-43.99-7.9-3.24-15.9-5.92-23.95-8.1l-1.36,7.49-.9,4.91-1.41,7.49c2.87,1.11,5.79,2.28,8.65,3.54,25.51,10.99,48.06,26.33,67.63,46.02h.01Z"/>
+          <path d="M383.13,314.65c-8.61,22.23-21.59,41.97-38.85,59.38-16.91,16.61-35.23,29.06-55,37.36-19.78,8.3-40.21,12.45-61.29,12.45-11.68,0-23.35-1.22-34.92-3.7-2.47-.46-4.93-1.01-7.4-1.67-2.42-.61-4.88-1.27-7.3-2.02-7.4-2.18-14.74-4.91-22.14-8.1-1.21-.51-2.47-1.06-3.67-1.62-1.16-.51-2.31-1.06-3.42-1.62-2.37-1.11-4.73-2.28-7.05-3.49-20.78-10.83-39.75-24.86-56.91-42.07-19.98-19.69-35.63-42.88-46.9-69.56-5.38-12.61-9.46-25.36-12.28-38.22-.6-2.53-1.11-5.06-1.56-7.59s-.85-5.06-1.21-7.59c-.81-5.87-1.41-11.85-1.71-17.77-.1-2.53-.2-5.06-.2-7.59-.05-.96-.05-1.92-.05-2.89,0-1.57,0-3.14.1-4.71.45-21.06,4.48-41.21,11.98-60.45,8.1-20.66,20.53-39.49,37.44-56.45,16.86-17.01,35.48-29.57,55.86-37.67,20.33-8.1,41.62-12.2,63.91-12.2,5.99,0,11.93.25,17.86.81l2.72-14.68c-26.82,0-53.19,5.32-79,15.95-25.92,10.63-49.06,26.12-69.39,46.63-20.73,20.81-36.38,43.99-46.95,69.51-6.59,15.85-11.12,32.05-13.59,48.55-.35,2.53-.7,5.06-.96,7.59-.3,2.53-.5,5.06-.7,7.59-.35,5.01-.55,10.02-.55,15.04,0,.91,0,1.82.05,2.73,0,2.53.1,5.06.25,7.59.1,2.53.25,5.06.5,7.59,1.76,19.9,6.49,39.24,14.14,57.97,9.96,24.3,24.56,46.12,43.78,65.41,19.93,19.74,42.57,34.78,67.93,45.21,3.72,1.52,7.5,2.99,11.27,4.25,2.42.86,4.83,1.67,7.25,2.38,2.42.76,4.88,1.47,7.3,2.13,7.5,2.03,15.1,3.59,22.74,4.71,2.52.35,5.03.71,7.55.96,2.52.3,5.03.51,7.55.66,4.88.41,9.76.56,14.64.56,26.87,0,52.84-5.11,78-15.34,25.16-10.23,47.71-25.41,67.68-45.51,20.33-20.81,35.78-44.2,46.35-70.07,7.1-17.42,11.78-35.18,14.09-53.31h-15.1c-.71,21.82-4.98,42.78-12.83,62.88h-.01Z"/>
+          <path d="M430.98,218.81l-5.23,17.77h-184.93l-10.32.05-2.47,13.72h-18.52l-30.34,158.46c-7.2-2.23-14.44-4.96-21.59-8.1l24.05-132.9h-8.86l3.12-17.42h-20.73l2.57-13.77H30.87c-.86-5.87-1.46-11.8-1.76-17.77h132.09l10.32-.05,2.47-13.72h18.52l29.54-157.85,1.36-7.49,1.41-7.44.2-1.21,1.41-7.49,1.36-7.44L230.76.06h23.6l-3.52,19.14-1.36,7.44-1.41,7.49-.65,3.44-1.36,7.49-1.41,7.54-23.9,129.71h.6l13.49.1-4.78,21.52h17.01l-.2,1.16-2.57,13.77h186.69v-.05h-.01Z"/>
+        </svg>
+      </a>
+      <div class="nav-bar__tabs">
+        <button class="nav-bar__tab active">
+          <span>◇</span>
+          <span>Components</span>
+        </button>
+        <button class="nav-bar__tab">
+          <span>◈</span>
+          <span>Patterns</span>
+        </button>
+        <button class="nav-bar__tab">
+          <span>◎</span>
+          <span>Tokens</span>
+        </button>
+      </div>
+    </nav>
+    
+    <!-- Content Area -->
+    <div class="astrogation-content">
+      <!-- Left Panel: Component Catalog -->
+      <aside class="astrogation-panel astrogation-panel--left">
+        <div class="panel-header">COMPONENTS</div>
+        <div class="panel-content">
+          <!-- Brand Category -->
+          <div class="catalog-category expanded">
+            <button class="catalog-category-btn expanded">
+              <span class="catalog-category-btn__icon">▶</span>
+              <span class="catalog-category-btn__name">BRAND</span>
+              <span class="catalog-category-btn__count">3</span>
+            </button>
+            <div class="catalog-category__items">
+              <button class="catalog-item selected">
+                <span class="catalog-item__prefix">01</span>
+                Brand Mark
+              </button>
+              <button class="catalog-item">
+                <span class="catalog-item__prefix">02</span>
+                Brand Mark Outline
+              </button>
+              <button class="catalog-item">
+                <span class="catalog-item__prefix">03</span>
+                Word Mark
+              </button>
+            </div>
+          </div>
+          
+          <!-- Interactive Category -->
+          <div class="catalog-category">
+            <button class="catalog-category-btn">
+              <span class="catalog-category-btn__icon">▶</span>
+              <span class="catalog-category-btn__name">INTERACTIVE</span>
+              <span class="catalog-category-btn__count">5</span>
+            </button>
+          </div>
+          
+          <!-- Layout Category -->
+          <div class="catalog-category">
+            <button class="catalog-category-btn">
+              <span class="catalog-category-btn__icon">▶</span>
+              <span class="catalog-category-btn__name">LAYOUT</span>
+              <span class="catalog-category-btn__count">4</span>
+            </button>
+          </div>
+          
+          <!-- Navigation Category -->
+          <div class="catalog-category">
+            <button class="catalog-category-btn">
+              <span class="catalog-category-btn__icon">▶</span>
+              <span class="catalog-category-btn__name">NAVIGATION</span>
+              <span class="catalog-category-btn__count">3</span>
+            </button>
+          </div>
+        </div>
+      </aside>
+      
+      <!-- Center: Gallery -->
+      <main class="gallery">
+        <div class="gallery__header">
+          <span class="gallery__title">Preview: Brand Mark</span>
+          <div class="gallery__actions">
+            <button class="gallery__btn">Copy Code</button>
+            <button class="gallery__btn gallery__btn--primary">Save Preset</button>
+          </div>
+        </div>
+        <div class="gallery__content">
+          <div class="preview-container">
+            <div class="preview-card">
+              <div class="preview-card__corners">
+                <div class="corner corner--tl"></div>
+                <div class="corner corner--tr"></div>
+                <div class="corner corner--bl"></div>
+                <div class="corner corner--br"></div>
+              </div>
+              <!-- Sample component preview -->
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 430.99 436" width="96" height="96" fill="#caa554">
+                <path d="M336.78,99.43c18.82,18.93,33.41,41.16,43.78,66.63,5.03,12.35,8.81,24.86,11.42,37.57h19.62c-1.91-18.99-6.54-37.52-13.79-55.54-10.01-24.71-24.56-46.73-43.78-66.02-19.17-19.29-41.16-33.97-65.92-43.99-7.9-3.24-15.9-5.92-23.95-8.1l-1.36,7.49-.9,4.91-1.41,7.49c2.87,1.11,5.79,2.28,8.65,3.54,25.51,10.99,48.06,26.33,67.63,46.02h.01Z"/>
+                <path d="M383.13,314.65c-8.61,22.23-21.59,41.97-38.85,59.38-16.91,16.61-35.23,29.06-55,37.36-19.78,8.3-40.21,12.45-61.29,12.45-11.68,0-23.35-1.22-34.92-3.7-2.47-.46-4.93-1.01-7.4-1.67-2.42-.61-4.88-1.27-7.3-2.02-7.4-2.18-14.74-4.91-22.14-8.1-1.21-.51-2.47-1.06-3.67-1.62-1.16-.51-2.31-1.06-3.42-1.62-2.37-1.11-4.73-2.28-7.05-3.49-20.78-10.83-39.75-24.86-56.91-42.07-19.98-19.69-35.63-42.88-46.9-69.56-5.38-12.61-9.46-25.36-12.28-38.22-.6-2.53-1.11-5.06-1.56-7.59s-.85-5.06-1.21-7.59c-.81-5.87-1.41-11.85-1.71-17.77-.1-2.53-.2-5.06-.2-7.59-.05-.96-.05-1.92-.05-2.89,0-1.57,0-3.14.1-4.71.45-21.06,4.48-41.21,11.98-60.45,8.1-20.66,20.53-39.49,37.44-56.45,16.86-17.01,35.48-29.57,55.86-37.67,20.33-8.1,41.62-12.2,63.91-12.2,5.99,0,11.93.25,17.86.81l2.72-14.68c-26.82,0-53.19,5.32-79,15.95-25.92,10.63-49.06,26.12-69.39,46.63-20.73,20.81-36.38,43.99-46.95,69.51-6.59,15.85-11.12,32.05-13.59,48.55-.35,2.53-.7,5.06-.96,7.59-.3,2.53-.5,5.06-.7,7.59-.35,5.01-.55,10.02-.55,15.04,0,.91,0,1.82.05,2.73,0,2.53.1,5.06.25,7.59.1,2.53.25,5.06.5,7.59,1.76,19.9,6.49,39.24,14.14,57.97,9.96,24.3,24.56,46.12,43.78,65.41,19.93,19.74,42.57,34.78,67.93,45.21,3.72,1.52,7.5,2.99,11.27,4.25,2.42.86,4.83,1.67,7.25,2.38,2.42.76,4.88,1.47,7.3,2.13,7.5,2.03,15.1,3.59,22.74,4.71,2.52.35,5.03.71,7.55.96,2.52.3,5.03.51,7.55.66,4.88.41,9.76.56,14.64.56,26.87,0,52.84-5.11,78-15.34,25.16-10.23,47.71-25.41,67.68-45.51,20.33-20.81,35.78-44.2,46.35-70.07,7.1-17.42,11.78-35.18,14.09-53.31h-15.1c-.71,21.82-4.98,42.78-12.83,62.88h-.01Z"/>
+                <path d="M430.98,218.81l-5.23,17.77h-184.93l-10.32.05-2.47,13.72h-18.52l-30.34,158.46c-7.2-2.23-14.44-4.96-21.59-8.1l24.05-132.9h-8.86l3.12-17.42h-20.73l2.57-13.77H30.87c-.86-5.87-1.46-11.8-1.76-17.77h132.09l10.32-.05,2.47-13.72h18.52l29.54-157.85,1.36-7.49,1.41-7.44.2-1.21,1.41-7.49,1.36-7.44L230.76.06h23.6l-3.52,19.14-1.36,7.44-1.41,7.49-.65,3.44-1.36,7.49-1.41,7.54-23.9,129.71h.6l13.49.1-4.78,21.52h17.01l-.2,1.16-2.57,13.77h186.69v-.05h-.01Z"/>
+              </svg>
+            </div>
+            <span class="preview-label">Brand Mark · 96px · Gold</span>
+          </div>
+        </div>
+      </main>
+      
+      <!-- Right Panel: Dials -->
+      <aside class="astrogation-panel astrogation-panel--right">
+        <div class="panel-header">DIALS</div>
+        <div class="panel-content">
+          <!-- Size Section -->
+          <div class="dial-section">
+            <div class="dial-section__label">Size</div>
+            <div class="dial-row">
+              <span class="dial-row__label">Size</span>
+              <span class="dial-row__value">96px</span>
+            </div>
+            <input type="range" class="dial-slider" min="24" max="200" value="96">
+          </div>
+          
+          <!-- Color Section -->
+          <div class="dial-section">
+            <div class="dial-section__label">Color</div>
+            <div class="color-picker">
+              <div class="color-swatch selected" style="background: #caa554;"></div>
+              <div class="color-swatch" style="background: #ebe3d6;"></div>
+              <div class="color-swatch" style="background: #0a0908;"></div>
+              <div class="color-swatch" style="background: #39ff14;"></div>
+              <div class="color-swatch" style="background: #ff6b35;"></div>
+              <div class="color-swatch" style="background: rgba(235, 227, 214, 0.5);"></div>
+              <div class="color-swatch" style="background: rgba(202, 165, 84, 0.5);"></div>
+            </div>
+          </div>
+          
+          <!-- Border Section -->
+          <div class="dial-section">
+            <div class="dial-section__label">Border</div>
+            <div class="dial-row">
+              <span class="dial-row__label">Style</span>
+              <span class="dial-row__value">None</span>
+            </div>
+            <div class="dial-row">
+              <span class="dial-row__label">Width</span>
+              <span class="dial-row__value">1px</span>
+            </div>
+            <input type="range" class="dial-slider" min="0" max="4" value="1">
+          </div>
+          
+          <!-- Corners Section -->
+          <div class="dial-section">
+            <div class="dial-section__label">Corners</div>
+            <label class="dial-toggle">
+              <input type="checkbox" checked>
+              <span>Show Corners</span>
+            </label>
+            <div class="dial-row">
+              <span class="dial-row__label">Thickness</span>
+              <span class="dial-row__value">1.5px</span>
+            </div>
+            <input type="range" class="dial-slider" min="1" max="4" value="1.5" step="0.5">
+          </div>
+        </div>
+      </aside>
+    </div>
+    
+    <!-- Footer -->
+    <footer class="astrogation-footer">
+      <div class="astrogation-footer__left">
+        <span>ASTROGATION v1.0</span>
+        <span>UI Component Builder</span>
+      </div>
+      <div class="astrogation-footer__right">
+        <span>Components: 15</span>
+        <span>Presets: 0</span>
+      </div>
+    </footer>
+  </div>
+</body>
+</html>
+

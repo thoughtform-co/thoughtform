@@ -13,6 +13,16 @@ import {
   type ComponentDef,
   type PropDef,
 } from "./catalog";
+import {
+  TreeProvider,
+  TreeView,
+  TreeNode,
+  TreeNodeTrigger,
+  TreeExpander,
+  TreeIcon,
+  TreeLabel,
+  TreeNodeContent,
+} from "@/components/ui/Tree";
 import "./astrogation.css";
 
 // ═══════════════════════════════════════════════════════════════
@@ -998,18 +1008,10 @@ function CatalogPanel({
   canSave: boolean;
 }) {
   const [searchQuery, setSearchQuery] = useState("");
-  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set(["brand"]));
   const filteredComponents = searchQuery ? searchComponents(searchQuery) : null;
 
-  const toggleCategory = (id: string) => {
-    setExpandedCategories((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-    onSelectCategory(id);
-  };
+  // Build initial expanded IDs
+  const defaultExpandedIds = ["brand"];
 
   return (
     <aside className="astrogation-panel astrogation-panel--left">
@@ -1061,69 +1063,103 @@ function CatalogPanel({
           </div>
         )}
 
-        {/* Categories with expandable component lists */}
+        {/* Component Tree */}
         {!filteredComponents && (
           <div className="astrogation-section astrogation-section--categories">
-            {CATEGORIES.map((cat) => {
-              const isExpanded = expandedCategories.has(cat.id);
-              const components = getComponentsByCategory(cat.id);
-              const subcategoryComponents =
-                cat.subcategories?.flatMap((sub) => getComponentsByCategory(cat.id, sub.id)) || [];
-              const allComponents = [...components, ...subcategoryComponents];
+            <TreeProvider
+              defaultExpandedIds={defaultExpandedIds}
+              selectedId={selectedComponentId}
+              onSelectionChange={onSelectComponent}
+            >
+              <TreeView>
+                {CATEGORIES.map((cat, catIndex) => {
+                  const components = getComponentsByCategory(cat.id);
+                  const hasSubcategories = cat.subcategories && cat.subcategories.length > 0;
+                  const hasChildren = components.length > 0 || hasSubcategories;
+                  const isLastCategory = catIndex === CATEGORIES.length - 1;
 
-              return (
-                <div key={cat.id} className={`catalog-category ${isExpanded ? "expanded" : ""}`}>
-                  {/* Category header with corner bracket */}
-                  <button
-                    className={`catalog-category-btn ${isExpanded ? "expanded" : ""}`}
-                    onClick={() => toggleCategory(cat.id)}
-                  >
-                    <span className="catalog-category-btn__name">{cat.name.toUpperCase()}</span>
-                    <span className="catalog-category-btn__count">{allComponents.length}</span>
-                  </button>
+                  return (
+                    <TreeNode key={cat.id} nodeId={cat.id} isLast={isLastCategory}>
+                      <TreeNodeTrigger nodeId={cat.id} hasChildren={hasChildren}>
+                        <TreeExpander nodeId={cat.id} hasChildren={hasChildren} />
+                        <TreeIcon hasChildren nodeId={cat.id} />
+                        <TreeLabel>{cat.name}</TreeLabel>
+                      </TreeNodeTrigger>
 
-                  {isExpanded && (
-                    <div className="catalog-category__items">
-                      {/* Direct components under category */}
-                      {components.map((comp) => (
-                        <button
-                          key={comp.id}
-                          className={`catalog-item ${selectedComponentId === comp.id ? "selected" : ""}`}
-                          onClick={() => onSelectComponent(comp.id)}
-                        >
-                          <span className="catalog-item__prefix">{"//"}</span>
-                          {comp.name}
-                        </button>
-                      ))}
-
-                      {/* Subcategories with nested corner brackets */}
-                      {cat.subcategories?.map((sub) => {
-                        const subComps = getComponentsByCategory(cat.id, sub.id);
-                        if (subComps.length === 0) return null;
-                        return (
-                          <div key={sub.id} className="catalog-subcategory">
-                            <div className="catalog-subcategory__label">
-                              <span className="catalog-subcategory__corner" />
-                              {sub.name.toUpperCase()}
-                            </div>
-                            {subComps.map((comp) => (
-                              <button
-                                key={comp.id}
-                                className={`catalog-item catalog-item--nested ${selectedComponentId === comp.id ? "selected" : ""}`}
+                      <TreeNodeContent nodeId={cat.id} hasChildren={hasChildren}>
+                        {/* Direct components under category */}
+                        {components.map((comp, compIndex) => {
+                          const isLast = compIndex === components.length - 1 && !hasSubcategories;
+                          return (
+                            <TreeNode key={comp.id} nodeId={comp.id} level={1} isLast={isLast}>
+                              <TreeNodeTrigger
+                                nodeId={comp.id}
                                 onClick={() => onSelectComponent(comp.id)}
                               >
-                                <span className="catalog-item__prefix">{"//"}</span>
-                                {comp.name}
-                              </button>
-                            ))}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
+                                <TreeExpander nodeId={comp.id} />
+                                <TreeIcon />
+                                <TreeLabel>{comp.name}</TreeLabel>
+                              </TreeNodeTrigger>
+                            </TreeNode>
+                          );
+                        })}
+
+                        {/* Subcategories */}
+                        {cat.subcategories?.map((sub, subIndex) => {
+                          const subComps = getComponentsByCategory(cat.id, sub.id);
+                          if (subComps.length === 0) return null;
+                          const isLastSub = subIndex === (cat.subcategories?.length || 0) - 1;
+
+                          return (
+                            <TreeNode
+                              key={sub.id}
+                              nodeId={`${cat.id}-${sub.id}`}
+                              level={1}
+                              isLast={isLastSub}
+                            >
+                              <TreeNodeTrigger
+                                nodeId={`${cat.id}-${sub.id}`}
+                                hasChildren={subComps.length > 0}
+                              >
+                                <TreeExpander
+                                  nodeId={`${cat.id}-${sub.id}`}
+                                  hasChildren={subComps.length > 0}
+                                />
+                                <TreeIcon hasChildren nodeId={`${cat.id}-${sub.id}`} />
+                                <TreeLabel>{sub.name}</TreeLabel>
+                              </TreeNodeTrigger>
+
+                              <TreeNodeContent
+                                nodeId={`${cat.id}-${sub.id}`}
+                                hasChildren={subComps.length > 0}
+                              >
+                                {subComps.map((comp, compIdx) => (
+                                  <TreeNode
+                                    key={comp.id}
+                                    nodeId={comp.id}
+                                    level={2}
+                                    isLast={compIdx === subComps.length - 1}
+                                  >
+                                    <TreeNodeTrigger
+                                      nodeId={comp.id}
+                                      onClick={() => onSelectComponent(comp.id)}
+                                    >
+                                      <TreeExpander nodeId={comp.id} />
+                                      <TreeIcon />
+                                      <TreeLabel>{comp.name}</TreeLabel>
+                                    </TreeNodeTrigger>
+                                  </TreeNode>
+                                ))}
+                              </TreeNodeContent>
+                            </TreeNode>
+                          );
+                        })}
+                      </TreeNodeContent>
+                    </TreeNode>
+                  );
+                })}
+              </TreeView>
+            </TreeProvider>
           </div>
         )}
 
