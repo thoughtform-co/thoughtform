@@ -1461,7 +1461,6 @@ function DialsPanel({
           return (
             <div key={category} className="dials-category">
               <div className="dials-category__header">
-                <span className="dials-category__corner" />
                 <span className="dials-category__label">{PROP_CATEGORY_LABELS[category]}</span>
               </div>
               <div className="dials-category__content">

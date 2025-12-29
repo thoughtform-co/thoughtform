@@ -419,7 +419,7 @@
   flex-direction: column;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 12px;
+  padding: 12px 8px 12px 6px;
 }
 
 .panel-content::-webkit-scrollbar {
@@ -499,13 +499,13 @@
   left: 0;
   right: 0;
   width: 100%;
-  padding: 8px 16px;
-  background: var(--gold-08, rgba(202, 165, 84, 0.08));
+  padding: 10px 8px;
+  background: rgba(202, 165, 84, 0.08);
   border: 1px solid var(--gold-30, rgba(202, 165, 84, 0.3));
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 14px;
   font-weight: 500;
-  letter-spacing: 0.15em;
+  letter-spacing: 0.08em;
   color: var(--gold, #caa554);
   text-align: left;
   flex-shrink: 0;
@@ -519,7 +519,7 @@
 
 /* ─── PANEL SECTIONS ─── */
 .astrogation-section {
-  padding: 12px;
+  padding: 12px 0;
   border-bottom: 1px solid var(--gold-08, rgba(202, 165, 84, 0.08));
   position: relative;
   z-index: 2;
@@ -636,13 +636,8 @@
   width: 100%;
   display: flex;
   align-items: center;
-  padding: 8px 12px;
-  background: linear-gradient(
-    to right,
-    rgba(235, 227, 214, 0.08) 0%,
-    rgba(235, 227, 214, 0.03) 60%,
-    transparent 100%
-  );
+  padding: 10px 8px;
+  background: rgba(202, 165, 84, 0.08);
   border: none;
   font-family: var(--font-mono);
   font-size: 14px;
@@ -655,22 +650,12 @@
 
 .catalog-category-btn:hover {
   color: var(--gold, #caa554);
-  background: linear-gradient(
-    to right,
-    rgba(202, 165, 84, 0.12) 0%,
-    rgba(202, 165, 84, 0.04) 60%,
-    transparent 100%
-  );
+  background: rgba(202, 165, 84, 0.12);
 }
 
 .catalog-category-btn.expanded {
   color: var(--gold, #caa554);
-  background: linear-gradient(
-    to right,
-    rgba(202, 165, 84, 0.15) 0%,
-    rgba(202, 165, 84, 0.05) 60%,
-    transparent 100%
-  );
+  background: rgba(202, 165, 84, 0.15);
 }
 
 .catalog-category-btn__name {
@@ -690,9 +675,9 @@
 
 /* ─── CATALOG ITEMS CONTAINER ─── */
 .catalog-category__items {
-  padding: 4px 0 4px 20px;
+  padding: 4px 0 4px 12px;
   border-left: 1px solid var(--gold-08, rgba(202, 165, 84, 0.08));
-  margin-left: 17px;
+  margin-left: 8px;
 }
 
 /* ─── CATALOG SUBCATEGORY ─── */
@@ -736,6 +721,7 @@
   cursor: pointer;
   transition: all 0.15s ease;
   text-align: left;
+  text-transform: uppercase;
 }
 
 .catalog-item__prefix {
@@ -1200,9 +1186,15 @@
 
 .dial-group__label {
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: 12px;
+  text-transform: uppercase;
   color: var(--dawn-50);
   margin-bottom: 4px;
+}
+
+.dial-group__label::before {
+  content: "// ";
+  color: var(--gold-30, rgba(202, 165, 84, 0.3));
 }
 
 .dial-group__header {
@@ -1373,34 +1365,27 @@
 }
 
 .dials-category__header {
+  width: 100%;
   display: flex;
   align-items: center;
-  padding: 4px 0;
+  padding: 10px 8px;
   margin-bottom: 6px;
-  border-bottom: 1px solid var(--gold-08, rgba(202, 165, 84, 0.08));
-}
-
-.dials-category__corner {
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  border-left: 1px solid var(--gold-30, rgba(202, 165, 84, 0.3));
-  border-bottom: 1px solid var(--gold-30, rgba(202, 165, 84, 0.3));
-  margin-right: 10px;
-  flex-shrink: 0;
+  background: rgba(202, 165, 84, 0.08);
 }
 
 .dials-category__label {
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 14px;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--gold, #caa554);
+  flex: 1;
 }
 
 .dials-category__content {
-  padding-left: 18px;
-  padding-right: 4px;
+  padding-left: 12px;
+  margin-left: 8px;
+  border-left: 1px solid var(--gold-08, rgba(202, 165, 84, 0.08));
   display: flex;
   flex-direction: column;
   gap: 10px;
