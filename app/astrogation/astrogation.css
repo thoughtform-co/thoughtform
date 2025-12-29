@@ -428,22 +428,22 @@
   right: 0;
   bottom: 0;
   background: transparent;
-  border: 3px solid var(--gold, #caa554);
+  border: 1.5px solid var(--gold, #caa554);
   /* Show only the top-right and bottom-left corners */
   clip-path: polygon(
     /* Top Right */ calc(100% - 24px) 0,
     100% 0,
     100% 24px,
-    calc(100% - 3px) 24px,
-    calc(100% - 3px) 3px,
-    calc(100% - 24px) 3px,
-    /* Bridge - hidden along inner edge */ 3px 3px,
-    /* Bottom Left */ 3px calc(100% - 24px),
+    calc(100% - 1.5px) 24px,
+    calc(100% - 1.5px) 1.5px,
+    calc(100% - 24px) 1.5px,
+    /* Bridge - hidden along inner edge */ 1.5px 1.5px,
+    /* Bottom Left */ 1.5px calc(100% - 24px),
     0 calc(100% - 24px),
     0 100%,
     24px 100%,
-    24px calc(100% - 3px),
-    3px calc(100% - 3px)
+    24px calc(100% - 1.5px),
+    1.5px calc(100% - 1.5px)
   );
   pointer-events: none;
   z-index: 1;
