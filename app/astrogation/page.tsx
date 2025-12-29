@@ -814,19 +814,47 @@ function HUDWrapper({
   className?: string;
   style?: React.CSSProperties;
 }) {
-  const s = cornerLength;
+  const arm = cornerLength;
+  const t = cornerThickness;
 
-  const getClipPath = (token: CornerToken, t: number) => {
-    // We use a polygon that "diips in" to only show the relevant corner parts of the border
-    const tl = `0 0, ${s}px 0, ${s}px ${t}px, ${t}px ${t}px, ${t}px ${s}px, 0 ${s}px`;
-    const tr = `calc(100% - ${s}px) 0, 100% 0, 100% ${s}px, calc(100% - ${t}px) ${s}px, calc(100% - ${t}px) ${t}px, calc(100% - ${s}px) ${t}px`;
-    const br = `100% calc(100% - ${s}px), 100% 100%, calc(100% - ${s}px) 100%, calc(100% - ${s}px) calc(100% - ${t}px), calc(100% - ${t}px) calc(100% - ${t}px), calc(100% - ${t}px) calc(100% - ${s}px)`;
-    const bl = `0 calc(100% - ${s}px), ${t}px calc(100% - ${s}px), ${t}px calc(100% - ${t}px), ${s}px calc(100% - ${t}px), ${s}px 100%, 0 100%`;
+  // Determine which corners to show based on token
+  const showCorners = {
+    tl: cornerToken === "four" || cornerToken === "tl-br",
+    tr: cornerToken === "four" || cornerToken === "tr-bl",
+    bl: cornerToken === "four" || cornerToken === "tr-bl",
+    br: cornerToken === "four" || cornerToken === "tl-br",
+  };
 
-    if (token === "four") return `polygon(${tl}, ${tr}, ${br}, ${bl})`;
-    if (token === "tr-bl") return `polygon(${tr}, ${bl})`;
-    if (token === "tl-br") return `polygon(${tl}, ${br})`;
-    return "none";
+  // Corner styles using background gradients (clean, consistent rendering)
+  const cornerStyle = (position: "tl" | "tr" | "bl" | "br"): React.CSSProperties => {
+    const base: React.CSSProperties = {
+      position: "absolute",
+      width: arm,
+      height: arm,
+      pointerEvents: "none",
+      zIndex: 2,
+    };
+
+    // Each corner uses two gradient bars forming an L-shape
+    const gradients: Record<string, string> = {
+      tl: `linear-gradient(${cornerColor}, ${cornerColor}) 0 0 / ${arm}px ${t}px no-repeat, linear-gradient(${cornerColor}, ${cornerColor}) 0 0 / ${t}px ${arm}px no-repeat`,
+      tr: `linear-gradient(${cornerColor}, ${cornerColor}) 100% 0 / ${arm}px ${t}px no-repeat, linear-gradient(${cornerColor}, ${cornerColor}) 100% 0 / ${t}px ${arm}px no-repeat`,
+      bl: `linear-gradient(${cornerColor}, ${cornerColor}) 0 100% / ${arm}px ${t}px no-repeat, linear-gradient(${cornerColor}, ${cornerColor}) 0 100% / ${t}px ${arm}px no-repeat`,
+      br: `linear-gradient(${cornerColor}, ${cornerColor}) 100% 100% / ${arm}px ${t}px no-repeat, linear-gradient(${cornerColor}, ${cornerColor}) 100% 100% / ${t}px ${arm}px no-repeat`,
+    };
+
+    const positions: Record<string, React.CSSProperties> = {
+      tl: { top: 0, left: 0 },
+      tr: { top: 0, right: 0 },
+      bl: { bottom: 0, left: 0 },
+      br: { bottom: 0, right: 0 },
+    };
+
+    return {
+      ...base,
+      ...positions[position],
+      background: gradients[position],
+    };
   };
 
   return (
@@ -842,19 +870,13 @@ function HUDWrapper({
           zIndex: 0,
         }}
       />
-      {/* Thick corners */}
-      <div
-        className="hud-wrapper__corners"
-        style={{
-          position: "absolute",
-          inset: 0,
-          border: `${cornerThickness}px solid ${cornerColor}`,
-          clipPath: getClipPath(cornerToken, cornerThickness),
-          pointerEvents: "none",
-          zIndex: 1,
-        }}
-      />
-      <div style={{ position: "relative", zIndex: 2 }}>{children}</div>
+      {/* Individual corner brackets using background gradients */}
+      {showCorners.tl && <div style={cornerStyle("tl")} />}
+      {showCorners.tr && <div style={cornerStyle("tr")} />}
+      {showCorners.bl && <div style={cornerStyle("bl")} />}
+      {showCorners.br && <div style={cornerStyle("br")} />}
+      {/* Content */}
+      <div style={{ position: "relative", zIndex: 1 }}>{children}</div>
     </div>
   );
 }
