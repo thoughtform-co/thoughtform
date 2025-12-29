@@ -1184,32 +1184,55 @@ function DialsPanel({
           </div>
         );
 
-      case "color":
+      case "color": {
+        const currentColor = currentValue as string;
+        // Check if "transparent" or "none" are valid options for this prop
+        const supportsTransparent =
+          propDef.name.toLowerCase().includes("background") ||
+          propDef.name.toLowerCase().includes("fill");
+
         return (
           <div className="dial-group">
             <div className="dial-group__label">{propDef.name}</div>
             <div className="color-picker">
-              <input
-                type="color"
-                value={currentValue as string}
-                onChange={(e) =>
-                  onPropsChange({ ...componentProps, [propDef.name]: e.target.value })
-                }
-              />
+              {/* Swatches only - no long color bar */}
               <div className="color-swatches">
-                {BRAND_COLORS.slice(0, 5).map((c) => (
+                {/* Transparent/None option for backgrounds */}
+                {supportsTransparent && (
+                  <button
+                    className={`color-swatch color-swatch--none ${currentColor === "transparent" ? "active" : ""}`}
+                    title="None / Transparent"
+                    onClick={() =>
+                      onPropsChange({ ...componentProps, [propDef.name]: "transparent" })
+                    }
+                  >
+                    <span className="swatch-x">✕</span>
+                  </button>
+                )}
+                {BRAND_COLORS.map((c) => (
                   <button
                     key={c.name}
-                    className="color-swatch"
+                    className={`color-swatch ${currentColor === c.value ? "active" : ""}`}
                     style={{ background: c.value }}
                     title={c.name}
-                    onClick={() => onPropsChange({ ...componentProps, [propDef.name]: c.value })}
+                    onClick={() => {
+                      // Toggle: clicking same color removes it (sets transparent for backgrounds, or default for borders)
+                      if (currentColor === c.value) {
+                        const fallback = supportsTransparent
+                          ? "transparent"
+                          : (propDef.default as string);
+                        onPropsChange({ ...componentProps, [propDef.name]: fallback });
+                      } else {
+                        onPropsChange({ ...componentProps, [propDef.name]: c.value });
+                      }
+                    }}
                   />
                 ))}
               </div>
             </div>
           </div>
         );
+      }
 
       case "corners":
         return (
@@ -1312,202 +1335,6 @@ function AstrogationContent() {
       }
     }
   }, [selectedComponentId]);
-
-  // #region agent log - Debug right panel clipping
-  useEffect(() => {
-    const inspectRightPanel = () => {
-      const rightPanel = document.querySelector(".astrogation-panel--right");
-      if (!rightPanel) {
-        fetch("http://127.0.0.1:7245/ingest/016d7ddb-dff0-4507-889a-e79ef3328873", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            location: "page.tsx:1315",
-            message: "Right panel not found",
-            data: {},
-            timestamp: Date.now(),
-            sessionId: "debug-session",
-            runId: "run1",
-            hypothesisId: "A",
-          }),
-        }).catch(() => {});
-        return;
-      }
-
-      const computed = window.getComputedStyle(rightPanel);
-      const rect = rightPanel.getBoundingClientRect();
-      const parent = rightPanel.parentElement;
-      const grandparent = parent?.parentElement;
-      const root = document.querySelector(".astrogation");
-
-      fetch("http://127.0.0.1:7245/ingest/016d7ddb-dff0-4507-889a-e79ef3328873", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          location: "page.tsx:1320",
-          message: "Right panel computed styles",
-          data: {
-            overflow: computed.overflow,
-            overflowX: computed.overflowX,
-            overflowY: computed.overflowY,
-            position: computed.position,
-            zIndex: computed.zIndex,
-            top: computed.top,
-            left: computed.left,
-            width: computed.width,
-            height: computed.height,
-            rectTop: rect.top,
-            rectLeft: rect.left,
-          },
-          timestamp: Date.now(),
-          sessionId: "debug-session",
-          runId: "run1",
-          hypothesisId: "A",
-        }),
-      }).catch(() => {});
-
-      if (parent) {
-        const parentComputed = window.getComputedStyle(parent);
-        const parentRect = parent.getBoundingClientRect();
-        fetch("http://127.0.0.1:7245/ingest/016d7ddb-dff0-4507-889a-e79ef3328873", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            location: "page.tsx:1325",
-            message: "Parent (.astrogation-content) computed styles",
-            data: {
-              overflow: parentComputed.overflow,
-              overflowX: parentComputed.overflowX,
-              overflowY: parentComputed.overflowY,
-              position: parentComputed.position,
-              zIndex: parentComputed.zIndex,
-              rectTop: parentRect.top,
-              rectLeft: parentRect.left,
-              rectWidth: parentRect.width,
-              rectHeight: parentRect.height,
-            },
-            timestamp: Date.now(),
-            sessionId: "debug-session",
-            runId: "run1",
-            hypothesisId: "B",
-          }),
-        }).catch(() => {});
-      }
-
-      if (grandparent) {
-        const grandparentComputed = window.getComputedStyle(grandparent);
-        fetch("http://127.0.0.1:7245/ingest/016d7ddb-dff0-4507-889a-e79ef3328873", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            location: "page.tsx:1330",
-            message: "Grandparent computed styles",
-            data: {
-              overflow: grandparentComputed.overflow,
-              overflowX: grandparentComputed.overflowX,
-              overflowY: grandparentComputed.overflowY,
-              position: grandparentComputed.position,
-              zIndex: grandparentComputed.zIndex,
-              className: grandparent.className,
-            },
-            timestamp: Date.now(),
-            sessionId: "debug-session",
-            runId: "run1",
-            hypothesisId: "B",
-          }),
-        }).catch(() => {});
-      }
-
-      if (root) {
-        const rootComputed = window.getComputedStyle(root);
-        const rootRect = root.getBoundingClientRect();
-        fetch("http://127.0.0.1:7245/ingest/016d7ddb-dff0-4507-889a-e79ef3328873", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            location: "page.tsx:1335",
-            message: "Root (.astrogation) computed styles",
-            data: {
-              overflow: rootComputed.overflow,
-              overflowX: rootComputed.overflowX,
-              overflowY: rootComputed.overflowY,
-              position: rootComputed.position,
-              zIndex: rootComputed.zIndex,
-              rectTop: rootRect.top,
-              rectLeft: rootRect.left,
-              rectWidth: rootRect.width,
-              rectHeight: rootRect.height,
-            },
-            timestamp: Date.now(),
-            sessionId: "debug-session",
-            runId: "run1",
-            hypothesisId: "A",
-          }),
-        }).catch(() => {});
-      }
-
-      // Check panel header
-      const panelHeader = rightPanel.querySelector(".panel-header");
-      if (panelHeader) {
-        const headerComputed = window.getComputedStyle(panelHeader);
-        const headerRect = panelHeader.getBoundingClientRect();
-        fetch("http://127.0.0.1:7245/ingest/016d7ddb-dff0-4507-889a-e79ef3328873", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            location: "page.tsx:1340",
-            message: "Panel header computed styles",
-            data: {
-              position: headerComputed.position,
-              zIndex: headerComputed.zIndex,
-              top: headerComputed.top,
-              left: headerComputed.left,
-              width: headerComputed.width,
-              height: headerComputed.height,
-              rectTop: headerRect.top,
-              rectLeft: headerRect.left,
-            },
-            timestamp: Date.now(),
-            sessionId: "debug-session",
-            runId: "run1",
-            hypothesisId: "C",
-          }),
-        }).catch(() => {});
-      }
-
-      // Check ::after pseudo-element via computed styles
-      const afterStyles = window.getComputedStyle(rightPanel, "::after");
-      fetch("http://127.0.0.1:7245/ingest/016d7ddb-dff0-4507-889a-e79ef3328873", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          location: "page.tsx:1345",
-          message: "::after pseudo-element computed styles",
-          data: {
-            content: afterStyles.content,
-            position: afterStyles.position,
-            top: afterStyles.top,
-            left: afterStyles.left,
-            right: afterStyles.right,
-            bottom: afterStyles.bottom,
-            borderWidth: afterStyles.borderWidth,
-            borderColor: afterStyles.borderColor,
-            clipPath: afterStyles.clipPath,
-            zIndex: afterStyles.zIndex,
-          },
-          timestamp: Date.now(),
-          sessionId: "debug-session",
-          runId: "run1",
-          hypothesisId: "D",
-        }),
-      }).catch(() => {});
-    };
-
-    // Run inspection after a short delay to ensure DOM is ready
-    const timeoutId = setTimeout(inspectRightPanel, 100);
-    return () => clearTimeout(timeoutId);
-  }, []);
-  // #endregion
 
   // Show toast
   const showToast = useCallback((message: string) => {

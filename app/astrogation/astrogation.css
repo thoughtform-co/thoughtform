@@ -1272,39 +1272,50 @@
   gap: 6px;
 }
 
-.color-picker input[type="color"] {
-  width: 100%;
-  height: 28px;
-  border: 1px solid var(--dawn-15);
-  background: transparent;
-  cursor: pointer;
-}
-
-.color-picker input[type="color"]::-webkit-color-swatch-wrapper {
-  padding: 2px;
-}
-
-.color-picker input[type="color"]::-webkit-color-swatch {
-  border: none;
-}
-
 .color-swatches {
   display: flex;
-  gap: 4px;
+  gap: 6px;
   flex-wrap: wrap;
 }
 
 .color-swatch {
-  width: 20px;
-  height: 20px;
+  width: 24px;
+  height: 24px;
   border: 1px solid var(--dawn-15);
   cursor: pointer;
   transition: all 0.15s ease;
+  position: relative;
 }
 
 .color-swatch:hover {
   border-color: var(--dawn);
   transform: scale(1.1);
+}
+
+/* Active/selected swatch */
+.color-swatch.active {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 2px var(--gold-50);
+  transform: scale(1.1);
+}
+
+/* None/Transparent swatch */
+.color-swatch--none {
+  background: var(--void);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.color-swatch--none .swatch-x {
+  color: var(--dawn-50);
+  font-size: 12px;
+  line-height: 1;
+}
+
+.color-swatch--none:hover .swatch-x,
+.color-swatch--none.active .swatch-x {
+  color: var(--gold);
 }
 
 /* Action Buttons */
