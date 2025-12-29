@@ -416,13 +416,14 @@
   max-width: 280px;
   background: transparent;
   position: relative;
-  overflow: visible !important;
-  padding-top: 40px; /* Space for the tab */
+  overflow: hidden; /* Clip content to panel bounds */
+  padding-top: 0; /* No padding - header is part of panel */
   z-index: 10;
-}
-
-.astrogation-panel--left:hover {
-  overflow: visible !important;
+  display: flex;
+  flex-direction: column;
+  /* Fixed height to enable scrolling within */
+  height: calc(100vh - var(--hud-padding, 32px) * 2 - 80px);
+  max-height: calc(100vh - var(--hud-padding, 32px) * 2 - 80px);
 }
 
 /* Shared HUD Panel Frame base - hidden for cleaner look */
@@ -442,14 +443,13 @@
   position: relative;
   z-index: 2;
   flex: 1;
-  display: flex;
-  flex-direction: column;
+  min-height: 0; /* Critical: allows flex child to shrink below content size */
   overflow-y: auto;
   overflow-x: hidden;
   padding: 12px 8px 12px 6px;
 }
 
-/* Frame with border for panel content */
+/* Frame with border for panel content - connects seamlessly to header */
 .panel-content::before {
   content: "";
   position: absolute;
@@ -457,16 +457,16 @@
   left: 0;
   right: 0;
   bottom: 0;
-  border: 1px solid var(--gold-15, rgba(202, 165, 84, 0.15));
+  border-left: 1px solid var(--gold-30, rgba(202, 165, 84, 0.3));
+  border-right: 1px solid var(--gold-30, rgba(202, 165, 84, 0.3));
+  border-bottom: 1px solid var(--gold-30, rgba(202, 165, 84, 0.3));
+  border-top: none; /* No top border - seamless with header */
   background: transparent;
   pointer-events: none;
   z-index: -1;
 }
 
-/* Corner accents for panel content - DISABLED due to diagonal artifact
-   The clip-path polygon auto-closes through the center creating a visible diagonal line.
-   TODO: Use separate corner elements instead of clip-path for proper L-shaped corners.
-*/
+/* No corner accents - clean connected panel */
 .panel-content::after {
   display: none;
 }
@@ -487,24 +487,9 @@
   background: var(--gold-30, rgba(202, 165, 84, 0.3));
 }
 
-/* Corner accents - LEFT panel: top-right and bottom-left */
+/* Corner accents - LEFT panel: DISABLED for unified header+content look */
 .astrogation-panel--left::after {
-  /* Show only the top-right and bottom-left corners */
-  /* Bridge goes diagonally through center to avoid showing border along edges */
-  clip-path: polygon(
-    /* Top Right L - start at inner point */ calc(100% - 24px) 1.5px,
-    calc(100% - 24px) 0,
-    100% 0,
-    100% 24px,
-    calc(100% - 1.5px) 24px,
-    calc(100% - 1.5px) 1.5px,
-    /* Diagonal through interior to bottom-left L */ 1.5px calc(100% - 24px),
-    1.5px calc(100% - 1.5px),
-    24px calc(100% - 1.5px),
-    24px 100%,
-    0 100%,
-    0 calc(100% - 24px) /* Auto-closes diagonally through interior back to start */
-  );
+  display: none !important;
 }
 
 /* RIGHT panel layout */
@@ -520,37 +505,19 @@
   z-index: 10;
 }
 
-/* Corner accents - RIGHT panel: top-left and bottom-right */
+/* Corner accents - RIGHT panel: DISABLED for clean look */
 .astrogation-panel--right::after {
-  /* Show only the top-left and bottom-right corners */
-  /* Bridge goes diagonally through center to avoid showing border along edges */
-  clip-path: polygon(
-    /* Top Left L - start at inner point */ 1.5px 24px,
-    0 24px,
-    0 0,
-    24px 0,
-    24px 1.5px,
-    1.5px 1.5px,
-    /* Diagonal through interior to bottom-right L */ calc(100% - 24px) calc(100% - 1.5px),
-    calc(100% - 24px) 100%,
-    100% 100%,
-    100% calc(100% - 24px),
-    calc(100% - 1.5px) calc(100% - 24px),
-    calc(100% - 1.5px) calc(100% - 1.5px)
-      /* Auto-closes diagonally through interior back to start */
-  );
+  display: none !important;
 }
 
 /* ─── PANEL HEADER TAB ─── */
 .panel-header {
-  position: absolute;
-  top: -8px;
-  left: 0;
-  right: 0;
+  position: relative;
   width: 100%;
   padding: 10px 8px;
   background: rgba(202, 165, 84, 0.08);
   border: 1px solid var(--gold-30, rgba(202, 165, 84, 0.3));
+  border-bottom: none; /* Connect to content below */
   font-family: var(--font-mono);
   font-size: 14px;
   font-weight: 500;
@@ -1726,12 +1693,20 @@
   overflow: visible; /* Allow lines to extend beyond container */
 }
 
-.astrogation-section--categories {
-  overflow: visible; /* Allow tree lines to extend */
+/* Categories section - flows naturally, no special flex needed */
+
+/* Panel content scrolls - with invisible scrollbar */
+.astrogation-panel--left .panel-content {
+  flex: 1;
+  min-height: 0; /* Critical for flex scrolling */
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
 }
 
-.panel-content {
-  overflow: visible !important; /* Ensure lines aren't clipped */
+.astrogation-panel--left .panel-content::-webkit-scrollbar {
+  display: none; /* Chrome/Safari */
 }
 
 /* Vertical line connecting parent to children - positioned at left padding edge */
@@ -1758,14 +1733,15 @@
   z-index: 1;
 }
 
-/* For the last child, stop the vertical line at the horizontal connection */
-.tree-node-content--lines > .tree-node--last::after {
+/* For the last child, cover the vertical line below the horizontal connection */
+.tree-node-content--lines > .tree-node:last-child::after {
   content: "";
   position: absolute;
   left: -12px;
   top: 50%; /* Start at the horizontal line */
-  bottom: -100vh; /* Extend far down to cover the vertical line continuation */
-  width: 1px;
+  bottom: 0;
+  height: 50%; /* Cover from horizontal line to bottom of this item */
+  width: 2px; /* Slightly wider to ensure coverage */
   background: var(--void, #0a0908); /* Match background to hide the line */
   z-index: 2; /* Higher z-index to cover the vertical line */
 }

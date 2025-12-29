@@ -23,7 +23,7 @@ import {
   TreeLabel,
   TreeNodeContent,
 } from "@/components/ui/Tree";
-import { CornerBracket } from "@/components/ui/CornerBracket";
+// CornerBracket import removed - not used in unified panel design
 import "./astrogation.css";
 
 // ═══════════════════════════════════════════════════════════════
@@ -1194,8 +1194,7 @@ function CatalogPanel({
           </div>
         )}
 
-        {/* Golden corner accents - top-right + bottom-left */}
-        <CornerBracket mode="diagonal-primary" armLength={24} thickness={1.5} offset={0} />
+        {/* Corner accents removed for unified panel look */}
       </div>
     </aside>
   );
