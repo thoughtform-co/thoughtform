@@ -213,7 +213,7 @@ function SliderControl({
         step={step}
         value={value}
         onChange={(e) => onChange(parseFloat(e.target.value))}
-        className="shape-lab__slider"
+        className="orrery__slider"
         disabled={disabled}
       />
     </div>
@@ -706,8 +706,8 @@ export default function GatewayLabTab() {
             </div>
 
             {/* Image Upload Section - Always visible */}
-            <div className="shape-lab__section">
-              <h3 className="shape-lab__section-title">Source Images</h3>
+            <div className="orrery__section">
+              <h3 className="orrery__section-title">Source Images</h3>
 
               <div className="gateway-lab__upload-grid">
                 <ImageUploader
@@ -759,8 +759,8 @@ export default function GatewayLabTab() {
             </div>
 
             {/* Presets Section */}
-            <div className="shape-lab__section">
-              <h3 className="shape-lab__section-title">Presets</h3>
+            <div className="orrery__section">
+              <h3 className="orrery__section-title">Presets</h3>
               <div className="gateway-lab__presets">
                 {GATEWAY_PRESETS.map((preset) => (
                   <button
@@ -775,8 +775,8 @@ export default function GatewayLabTab() {
             </div>
 
             {/* Render Style - Organic vs Sigil */}
-            <div className={`shape-lab__section ${!hasParticles ? "disabled" : ""}`}>
-              <h3 className="shape-lab__section-title">Render Style</h3>
+            <div className={`orrery__section ${!hasParticles ? "disabled" : ""}`}>
+              <h3 className="orrery__section-title">Render Style</h3>
               <div className="gateway-lab__mode-selector">
                 <button
                   className={!config.sigilMode ? "active" : ""}
@@ -814,8 +814,8 @@ export default function GatewayLabTab() {
             </div>
 
             {/* Particle Settings - Only enabled after generation */}
-            <div className={`shape-lab__section ${controlsDisabled ? "disabled" : ""}`}>
-              <h3 className="shape-lab__section-title">
+            <div className={`orrery__section ${controlsDisabled ? "disabled" : ""}`}>
+              <h3 className="orrery__section-title">
                 Particle Settings
                 {controlsDisabled && (
                   <span className="gateway-lab__section-hint">(generate first)</span>
@@ -879,8 +879,8 @@ export default function GatewayLabTab() {
             </div>
 
             {/* Art Direction - Only enabled after generation */}
-            <div className={`shape-lab__section ${controlsDisabled ? "disabled" : ""}`}>
-              <h3 className="shape-lab__section-title">Art Direction</h3>
+            <div className={`orrery__section ${controlsDisabled ? "disabled" : ""}`}>
+              <h3 className="orrery__section-title">Art Direction</h3>
 
               <SliderControl
                 label="Contrast"
@@ -941,8 +941,8 @@ export default function GatewayLabTab() {
             </div>
 
             {/* Layer Controls - Only enabled after generation */}
-            <div className={`shape-lab__section ${controlsDisabled ? "disabled" : ""}`}>
-              <h3 className="shape-lab__section-title">Layers</h3>
+            <div className={`orrery__section ${controlsDisabled ? "disabled" : ""}`}>
+              <h3 className="orrery__section-title">Layers</h3>
 
               <LayerControls
                 layerKind="contour"
@@ -967,8 +967,8 @@ export default function GatewayLabTab() {
             </div>
 
             {/* Colors - Real-time updates */}
-            <div className={`shape-lab__section ${!hasParticles ? "disabled" : ""}`}>
-              <h3 className="shape-lab__section-title">Colors</h3>
+            <div className={`orrery__section ${!hasParticles ? "disabled" : ""}`}>
+              <h3 className="orrery__section-title">Colors</h3>
               <div className="gateway-lab__colors">
                 <div className="gateway-lab__color-input">
                   <label>Primary</label>
@@ -1002,8 +1002,8 @@ export default function GatewayLabTab() {
             </div>
 
             {/* Motion Settings - Real-time updates */}
-            <div className={`shape-lab__section ${!hasParticles ? "disabled" : ""}`}>
-              <h3 className="shape-lab__section-title">Motion</h3>
+            <div className={`orrery__section ${!hasParticles ? "disabled" : ""}`}>
+              <h3 className="orrery__section-title">Motion</h3>
 
               <SliderControl
                 label="Turbulence"
@@ -1027,8 +1027,8 @@ export default function GatewayLabTab() {
             </div>
 
             {/* Scroll Simulation */}
-            <div className={`shape-lab__section ${!hasParticles ? "disabled" : ""}`}>
-              <h3 className="shape-lab__section-title">Scroll Simulation</h3>
+            <div className={`orrery__section ${!hasParticles ? "disabled" : ""}`}>
+              <h3 className="orrery__section-title">Scroll Simulation</h3>
               <SliderControl
                 label="Scroll Progress"
                 value={scrollProgress}
@@ -1042,8 +1042,8 @@ export default function GatewayLabTab() {
 
             {/* Bake & Export - Only after particles are generated */}
             {hasParticles && (
-              <div className="shape-lab__section">
-                <h3 className="shape-lab__section-title">Bake & Export</h3>
+              <div className="orrery__section">
+                <h3 className="orrery__section-title">Bake & Export</h3>
 
                 <div className="gateway-lab__bake-info">
                   <span>Est. file size: {formatFileSize(estimatedSize)}</span>
@@ -1092,7 +1092,7 @@ export default function GatewayLabTab() {
             )}
 
             {/* Debug Toggle */}
-            <div className="shape-lab__section">
+            <div className="orrery__section">
               <button
                 onClick={() => setShowStats((s) => !s)}
                 className={`gateway-lab__toggle-btn ${showStats ? "active" : ""}`}

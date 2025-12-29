@@ -6,7 +6,7 @@ import { isAllowedUserEmail } from "@/lib/auth/allowed-user";
 export const dynamic = "force-dynamic";
 
 // ═══════════════════════════════════════════════════════════════════
-// SHAPE PRESETS API - CRUD for shape lab presets
+// SHAPE PRESETS API - CRUD for Orrery presets
 // Admin-only endpoint for managing shape configurations
 // ═══════════════════════════════════════════════════════════════════
 

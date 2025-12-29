@@ -40,12 +40,12 @@ export function AdminTools({
       href: "/admin/voices",
     },
     {
-      id: "shape-lab",
+      id: "orrery",
       icon: "◇",
-      label: "SHAPE LAB",
+      label: "ORRERY",
       isActive: false,
       hasIndicator: false,
-      href: "/shape-lab",
+      href: "/orrery",
     },
   ];
 
@@ -123,7 +123,7 @@ export function AdminTools({
           width: 118px;
         }
 
-        .admin-tools__item--shape-lab {
+        .admin-tools__item--orrery {
           margin-top: -25px;
         }
 
@@ -179,7 +179,7 @@ export function AdminTools({
             width: auto;
           }
 
-          .admin-tools__item--shape-lab {
+          .admin-tools__item--orrery {
             margin-top: 0;
           }
 

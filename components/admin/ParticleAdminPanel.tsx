@@ -1734,7 +1734,7 @@ function GatewayControls({ gateway, onUpdate }: GatewayControlsProps) {
                   placeholder="URL to .tfpc file"
                   className="admin-input"
                 />
-                <div className="admin-hint">Use Shape Lab to bake and upload TFPC files</div>
+                <div className="admin-hint">Use Orrery to bake and upload TFPC files</div>
               </div>
             )}
 

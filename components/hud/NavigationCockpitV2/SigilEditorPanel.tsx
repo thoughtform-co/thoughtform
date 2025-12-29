@@ -24,7 +24,7 @@ import { SigilCanvas } from "./SigilCanvas";
 // • landmark: 3D rotating view
 //
 // Features:
-// • Presets: Load saved presets from Shape Lab
+// • Presets: Load saved presets from Orrery
 // • Auto-save: Changes are saved automatically (debounced 500ms)
 // • Click outside to close: Clicking the backdrop dismisses the panel
 // • Scroll containment: Scrolling inside panel doesn't scroll the page
@@ -49,7 +49,7 @@ const MAX_DENSITY = 2.5;
 /** Debounce delay for auto-save (ms) */
 const AUTO_SAVE_DELAY = 500;
 
-/** Shape preset from Shape Lab */
+/** Shape preset from Orrery */
 interface ShapePreset {
   id: string;
   name: string;
@@ -85,7 +85,7 @@ export function SigilEditorPanel({ config, onSave, onClose, cardIndex }: SigilEd
   const [presetsLoading, setPresetsLoading] = useState(true);
   const [presetsError, setPresetsError] = useState<string | null>(null);
 
-  // Load presets from Shape Lab
+  // Load presets from Orrery
   const loadPresets = useCallback(async () => {
     try {
       setPresetsLoading(true);
@@ -257,7 +257,7 @@ export function SigilEditorPanel({ config, onSave, onClose, cardIndex }: SigilEd
     }
   }, []);
 
-  // Apply a preset from Shape Lab
+  // Apply a preset from Orrery
   const handleApplyPreset = useCallback((preset: ShapePreset) => {
     setLocalConfig((prev) => ({
       ...prev,
@@ -346,11 +346,11 @@ export function SigilEditorPanel({ config, onSave, onClose, cardIndex }: SigilEd
             </div>
           </div>
 
-          {/* Shape Lab Presets */}
+          {/* Orrery Presets */}
           <div className="sigil-editor-panel__section">
             <div className="sigil-editor-panel__label-row">
               <span className="sigil-editor-panel__label">
-                Shape Lab Presets
+                Orrery Presets
                 {presetsLoading && (
                   <span className="sigil-editor-panel__loading"> (loading...)</span>
                 )}
@@ -372,12 +372,12 @@ export function SigilEditorPanel({ config, onSave, onClose, cardIndex }: SigilEd
               <div className="sigil-editor-panel__hint">
                 No presets saved. Visit{" "}
                 <a
-                  href="/shape-lab"
+                  href="/orrery"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="sigil-editor-panel__link"
                 >
-                  Shape Lab
+                  Orrery
                 </a>{" "}
                 to create presets.
               </div>

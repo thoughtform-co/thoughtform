@@ -1,6 +1,6 @@
 -- ═══════════════════════════════════════════════════════════════════
 -- SHAPE PRESETS TABLE
--- Stores saved shape configurations from Shape Lab
+-- Stores saved shape configurations from Orrery
 -- ═══════════════════════════════════════════════════════════════════
 
 -- Shape Presets table
@@ -27,7 +27,7 @@ create trigger update_shape_presets_updated_at
   for each row execute function update_updated_at_column();
 
 -- Comment on table
-comment on table shape_presets is 'Saved shape configurations from Shape Lab admin tool';
+comment on table shape_presets is 'Saved shape configurations from Orrery admin tool';
 comment on column shape_presets.shape_id is 'References shape registry ID (e.g., tf_filamentField, torus)';
 comment on column shape_presets.seed is 'Random seed for deterministic shape generation';
 comment on column shape_presets.point_count is 'Number of particles in the shape';

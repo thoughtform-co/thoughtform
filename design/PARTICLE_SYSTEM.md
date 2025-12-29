@@ -206,11 +206,11 @@ const sigilPoints = toSigilPoints(points3D, size, {
 
 ## Testing
 
-### Shape Lab
+### Orrery
 
 An internal test page for rapid shape iteration:
 
-**URL**: `/shape-lab`
+**URL**: `/orrery`
 
 **Features**:
 
@@ -263,7 +263,7 @@ components/
 
 app/
 └── test/
-    └── shape-lab/page.tsx         # Shape testing page (NEW)
+    └── orrery/page.tsx             # Orrery particle testing page
 ```
 
 ## Migration Notes

@@ -1,10 +1,10 @@
 /* ═══════════════════════════════════════════════════════════════
-   SHAPE LAB
+   ORRERY
    Uses HUD frame design primitives from landing page
    ═══════════════════════════════════════════════════════════════ */
 
 /* ─── BASE ─── */
-.shape-lab {
+.orrery {
   position: fixed;
   inset: 0;
   background: var(--void, #0a0908);
@@ -63,7 +63,7 @@
 }
 
 /* ─── HUD CORNERS (same as landing) ─── */
-.shape-lab .hud-corner {
+.orrery .hud-corner {
   position: absolute;
   width: var(--corner-size, 40px);
   height: var(--corner-size, 40px);
@@ -71,75 +71,75 @@
   z-index: 200;
 }
 
-.shape-lab .hud-corner::before,
-.shape-lab .hud-corner::after {
+.orrery .hud-corner::before,
+.orrery .hud-corner::after {
   content: "";
   position: absolute;
   background: var(--gold);
 }
 
-.shape-lab .hud-corner-tl {
+.orrery .hud-corner-tl {
   top: var(--hud-padding, 32px);
   left: var(--hud-padding, 32px);
 }
-.shape-lab .hud-corner-tl::before {
+.orrery .hud-corner-tl::before {
   top: 0;
   left: 0;
   width: var(--corner-size, 40px);
   height: 2px;
 }
-.shape-lab .hud-corner-tl::after {
+.orrery .hud-corner-tl::after {
   top: 0;
   left: 0;
   width: 2px;
   height: var(--corner-size, 40px);
 }
 
-.shape-lab .hud-corner-tr {
+.orrery .hud-corner-tr {
   top: var(--hud-padding, 32px);
   right: var(--hud-padding, 32px);
 }
-.shape-lab .hud-corner-tr::before {
+.orrery .hud-corner-tr::before {
   top: 0;
   right: 0;
   width: var(--corner-size, 40px);
   height: 2px;
 }
-.shape-lab .hud-corner-tr::after {
+.orrery .hud-corner-tr::after {
   top: 0;
   right: 0;
   width: 2px;
   height: var(--corner-size, 40px);
 }
 
-.shape-lab .hud-corner-bl {
+.orrery .hud-corner-bl {
   bottom: var(--hud-padding, 32px);
   left: var(--hud-padding, 32px);
 }
-.shape-lab .hud-corner-bl::before {
+.orrery .hud-corner-bl::before {
   bottom: 0;
   left: 0;
   width: var(--corner-size, 40px);
   height: 2px;
 }
-.shape-lab .hud-corner-bl::after {
+.orrery .hud-corner-bl::after {
   bottom: 0;
   left: 0;
   width: 2px;
   height: var(--corner-size, 40px);
 }
 
-.shape-lab .hud-corner-br {
+.orrery .hud-corner-br {
   bottom: var(--hud-padding, 32px);
   right: var(--hud-padding, 32px);
 }
-.shape-lab .hud-corner-br::before {
+.orrery .hud-corner-br::before {
   bottom: 0;
   right: 0;
   width: var(--corner-size, 40px);
   height: 2px;
 }
-.shape-lab .hud-corner-br::after {
+.orrery .hud-corner-br::after {
   bottom: 0;
   right: 0;
   width: 2px;
@@ -147,7 +147,7 @@
 }
 
 /* ─── HUD RAILS (same as landing) ─── */
-.shape-lab .hud-rail {
+.orrery .hud-rail {
   position: absolute;
   top: calc(var(--hud-padding, 32px) + var(--corner-size, 40px) + 20px);
   bottom: calc(var(--hud-padding, 32px) + var(--corner-size, 40px) + 20px);
@@ -157,18 +157,18 @@
   z-index: 150;
 }
 
-.shape-lab .hud-rail-left {
+.orrery .hud-rail-left {
   left: var(--hud-padding, 32px);
   align-items: flex-start;
 }
 
-.shape-lab .hud-rail-right {
+.orrery .hud-rail-right {
   right: var(--hud-padding, 32px);
   align-items: flex-end;
 }
 
 /* Rail vertical lines */
-.shape-lab .hud-rail-left::before {
+.orrery .hud-rail-left::before {
   content: "";
   position: absolute;
   left: 0;
@@ -184,7 +184,7 @@
   );
 }
 
-.shape-lab .hud-rail-right::before {
+.orrery .hud-rail-right::before {
   content: "";
   position: absolute;
   right: 0;
@@ -201,13 +201,13 @@
 }
 
 /* Scale ticks */
-.shape-lab .rail-scale {
+.orrery .rail-scale {
   flex: 1;
   position: relative;
   width: 100%;
 }
 
-.shape-lab .scale-ticks {
+.orrery .scale-ticks {
   position: absolute;
   top: 0;
   bottom: 0;
@@ -216,30 +216,30 @@
   justify-content: space-between;
 }
 
-.shape-lab .hud-rail-left .scale-ticks {
+.orrery .hud-rail-left .scale-ticks {
   left: 0;
 }
 
-.shape-lab .hud-rail-right .scale-ticks {
+.orrery .hud-rail-right .scale-ticks {
   right: 0;
 }
 
-.shape-lab .tick {
+.orrery .tick {
   height: 1px;
   background: var(--gold-50);
 }
 
-.shape-lab .tick-major {
+.orrery .tick-major {
   width: 16px;
   background: var(--gold);
 }
 
-.shape-lab .tick-minor {
+.orrery .tick-minor {
   width: 8px;
 }
 
 /* Section markers (right rail) */
-.shape-lab .rail-markers {
+.orrery .rail-markers {
   display: flex;
   flex-direction: column;
   gap: var(--space-lg, 24px);
@@ -247,7 +247,7 @@
   padding-right: 16px;
 }
 
-.shape-lab .section-marker {
+.orrery .section-marker {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -259,30 +259,30 @@
   padding: 4px 0;
 }
 
-.shape-lab .section-marker:hover,
-.shape-lab .section-marker.active {
+.orrery .section-marker:hover,
+.orrery .section-marker.active {
   opacity: 1;
 }
 
-.shape-lab .marker-label {
+.orrery .marker-label {
   font-family: var(--font-mono);
   font-size: 10px;
   letter-spacing: 0.1em;
   color: var(--dawn-50);
 }
 
-.shape-lab .section-marker.active .marker-label {
+.orrery .section-marker.active .marker-label {
   color: var(--gold);
 }
 
-.shape-lab .marker-dot {
+.orrery .marker-dot {
   width: 8px;
   height: 8px;
   border: 1px solid var(--dawn-50);
   transition: all 0.15s ease;
 }
 
-.shape-lab .section-marker.active .marker-dot {
+.orrery .section-marker.active .marker-dot {
   background: var(--gold);
   border-color: var(--gold);
   box-shadow: 0 0 8px var(--gold-50);
@@ -830,13 +830,13 @@
   background: var(--void);
 }
 
-/* Gateway Lab sections use shape-lab styling */
-.gateway-lab .shape-lab__section {
+/* Gateway Lab sections use orrery styling */
+.gateway-lab .orrery__section {
   padding: 12px;
   border-bottom: 1px solid var(--dawn-08);
 }
 
-.gateway-lab .shape-lab__section-title {
+.gateway-lab .orrery__section-title {
   font-family: var(--font-mono);
   font-size: 9px;
   font-weight: 400;
@@ -1303,8 +1303,8 @@
 }
 
 /* Disabled section */
-.shape-lab__section.disabled,
-.gateway-lab .shape-lab__section.disabled {
+.orrery__section.disabled,
+.gateway-lab .orrery__section.disabled {
   opacity: 0.4;
   pointer-events: none;
 }
@@ -1350,7 +1350,7 @@
    ═══════════════════════════════════════════════════════════════ */
 
 @media (max-width: 900px) {
-  .shape-lab .hud-rail {
+  .orrery .hud-rail {
     display: none;
   }
 

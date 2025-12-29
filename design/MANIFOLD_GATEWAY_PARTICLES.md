@@ -462,9 +462,9 @@ export const DEFAULT_MOBILE_GATEWAY: Partial<GatewayConfig> = {
 
 ---
 
-## Shape Lab: Gateway Tab
+## Orrery: Gateway Tab
 
-The Shape Lab (`/shape-lab`) includes a dedicated **Gateway** tab for experimenting with image-based particle gateways.
+The Orrery (`/orrery`) includes a dedicated **Gateway** tab for experimenting with image-based particle gateways.
 
 ### Features
 
@@ -542,8 +542,8 @@ Both the manifold and gateway are configurable via the admin panel with live pre
 | `components/hud/ThreeGateway.tsx`         | Three.js 3D gateway portal                    |
 | `components/hud/KeyVisualPortal.tsx`      | Image-based particle gateway (Three.js)       |
 | `lib/key-visual/sampler.ts`               | PNG → particle sampling with edge detection   |
-| `app/shape-lab/page.tsx`                  | Shape Lab with Particles & Gateway tabs       |
-| `app/shape-lab/GatewayLabTab.tsx`         | Gateway Lab interactive testing interface     |
+| `app/orrery/page.tsx`                     | Orrery with Particles & Gateway tabs          |
+| `app/orrery/GatewayLabTab.tsx`            | Gateway Lab interactive testing interface     |
 | `components/admin/ParticleAdminPanel.tsx` | Admin configuration UI                        |
 | `lib/particle-geometry/`                  | Shared geometry library for shapes            |
 

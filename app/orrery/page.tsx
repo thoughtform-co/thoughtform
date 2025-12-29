@@ -7,7 +7,7 @@ import { AdminGate } from "@/components/admin/AdminGate";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { isAllowedUserEmail } from "@/lib/auth/allowed-user";
 import { getAllShapes, getShapeGenerator, type Vec3 } from "@/lib/particle-geometry";
-import "./shape-lab.css";
+import "./orrery.css";
 
 const GatewayLabTab = dynamic(() => import("./GatewayLabTab"), {
   ssr: false,
@@ -697,14 +697,14 @@ function ParticlesTab() {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// MAIN SHAPE LAB
+// MAIN ORRERY
 // ═══════════════════════════════════════════════════════════════
 
-function ShapeLabContent() {
+function OrreryContent() {
   const [activeTab, setActiveTab] = useState<LabTab>("particles");
 
   return (
-    <div className="shape-lab">
+    <div className="orrery">
       {/* HUD Frame Elements */}
       <div className="hud-corner hud-corner-tl" />
       <div className="hud-corner hud-corner-tr" />
@@ -813,7 +813,7 @@ function ShapeLabContent() {
 // EXPORT WITH AUTH
 // ═══════════════════════════════════════════════════════════════
 
-export default function ShapeLab() {
+export default function Orrery() {
   const { user, isLoading } = useAuth();
 
   if (isLoading) {
@@ -827,7 +827,7 @@ export default function ShapeLab() {
   if (!user?.email || !isAllowedUserEmail(user.email)) {
     return (
       <div className="lab lab--unauthorized">
-        <h1>Shape Lab</h1>
+        <h1>Orrery</h1>
         <p>This tool requires authentication.</p>
         <Link href="/" className="lab__btn">
           Return Home
@@ -838,7 +838,7 @@ export default function ShapeLab() {
 
   return (
     <AdminGate>
-      <ShapeLabContent />
+      <OrreryContent />
     </AdminGate>
   );
 }
