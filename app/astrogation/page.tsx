@@ -23,6 +23,7 @@ import {
   TreeLabel,
   TreeNodeContent,
 } from "@/components/ui/Tree";
+import { CornerBracket } from "@/components/ui/CornerBracket";
 import "./astrogation.css";
 
 // ═══════════════════════════════════════════════════════════════
@@ -1022,29 +1023,40 @@ function CatalogPanel({
       <div className="panel-content">
         {/* Save Preset */}
         <div className="astrogation-section astrogation-section--save">
-          <div className="save-preset-form">
+          <div className="input-group">
+            <div className="input-group__addon input-group__addon--start">
+              <span className="input-group__icon">●</span>
+            </div>
             <input
               type="text"
+              className="input-group__input"
               placeholder="Save preset..."
               value={presetName}
               onChange={(e) => onPresetNameChange(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && canSave && onSavePreset()}
             />
-            <button onClick={onSavePreset} disabled={!canSave} className="save-btn">
-              Save
-            </button>
+            <div className="input-group__addon input-group__addon--end">
+              <button onClick={onSavePreset} disabled={!canSave} className="input-group__button">
+                Save
+              </button>
+            </div>
           </div>
         </div>
 
         {/* Search */}
         <div className="astrogation-section">
-          <input
-            type="text"
-            className="astrogation-search"
-            placeholder="Search components..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
+          <div className="input-group">
+            <div className="input-group__addon input-group__addon--start">
+              <span className="input-group__icon">○</span>
+            </div>
+            <input
+              type="text"
+              className="input-group__input"
+              placeholder="Search components..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
         </div>
 
         {/* Search Results */}
@@ -1181,6 +1193,9 @@ function CatalogPanel({
             </div>
           </div>
         )}
+
+        {/* Golden corner accents - top-right + bottom-left */}
+        <CornerBracket mode="diagonal-primary" armLength={24} thickness={1.5} offset={0} />
       </div>
     </aside>
   );

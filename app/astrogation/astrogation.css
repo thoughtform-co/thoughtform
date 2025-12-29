@@ -49,6 +49,52 @@
   z-index: 0;
 }
 
+/* Subtle grid overlay */
+.astrogation::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 1;
+
+  /* Grid lines */
+  background-image:
+    /* Vertical lines */
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 79px,
+      rgba(202, 165, 84, 0.04) 79px,
+      rgba(202, 165, 84, 0.04) 80px
+    ),
+    /* Horizontal lines */
+    repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 79px,
+        rgba(202, 165, 84, 0.04) 79px,
+        rgba(202, 165, 84, 0.04) 80px
+      ),
+    /* Intersection dots - slightly brighter */
+    radial-gradient(
+        circle at center,
+        rgba(202, 165, 84, 0.08) 0%,
+        rgba(202, 165, 84, 0.08) 1px,
+        transparent 1px
+      );
+  background-size:
+    80px 80px,
+    80px 80px,
+    80px 80px;
+  background-position:
+    0 0,
+    0 0,
+    0 0;
+}
+
 .astrogation--loading,
 .astrogation--unauthorized {
   display: flex;
@@ -403,6 +449,28 @@
   padding: 12px 8px 12px 6px;
 }
 
+/* Frame with border for panel content */
+.panel-content::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border: 1px solid var(--gold-15, rgba(202, 165, 84, 0.15));
+  background: transparent;
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* Corner accents for panel content - DISABLED due to diagonal artifact
+   The clip-path polygon auto-closes through the center creating a visible diagonal line.
+   TODO: Use separate corner elements instead of clip-path for proper L-shaped corners.
+*/
+.panel-content::after {
+  display: none;
+}
+
 .panel-content::-webkit-scrollbar {
   width: 3px;
 }
@@ -495,7 +563,7 @@
 }
 
 .astrogation-panel--right .panel-header {
-  text-align: right;
+  text-align: left;
 }
 
 /* ─── PANEL SECTIONS ─── */
@@ -529,54 +597,75 @@
 }
 
 /* ─── SEARCH ─── */
-.astrogation-search {
+/* ═══════════════════════════════════════════════════════════════
+   INPUT GROUP (inspired by shadcn/ui)
+   ═══════════════════════════════════════════════════════════════ */
+
+.input-group {
+  display: flex;
+  align-items: stretch;
   width: 100%;
-  padding: 8px 10px;
-  background: rgba(0, 0, 0, 0.3);
   border: 1px solid var(--gold-15, rgba(202, 165, 84, 0.15));
-  font-family: var(--font-mono);
-  font-size: 10px;
-  color: var(--dawn, #ebe3d6);
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 0; /* No rounded corners */
+  transition: border-color 0.15s ease;
 }
 
-.astrogation-search::placeholder {
-  color: var(--dawn-30, rgba(235, 227, 214, 0.3));
-}
-
-.astrogation-search:focus {
-  outline: none;
+.input-group:focus-within {
   border-color: var(--gold-50, rgba(202, 165, 84, 0.5));
 }
 
-/* ─── SAVE PRESET FORM ─── */
-.save-preset-form {
-  display: flex;
-  gap: 6px;
-}
-
-.save-preset-form input {
+.input-group__input {
   flex: 1;
   padding: 8px 10px;
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid var(--gold-15, rgba(202, 165, 84, 0.15));
+  background: transparent;
+  border: none;
   font-family: var(--font-mono);
   font-size: 10px;
   color: var(--dawn, #ebe3d6);
+  outline: none;
+  min-width: 0; /* Allow flex shrinking */
 }
 
-.save-preset-form input::placeholder {
+.input-group__input::placeholder {
   color: var(--dawn-30, rgba(235, 227, 214, 0.3));
 }
 
-.save-preset-form input:focus {
-  outline: none;
-  border-color: var(--gold-50, rgba(202, 165, 84, 0.5));
+.input-group__addon {
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+  background: transparent;
+  border: none;
+  flex-shrink: 0;
 }
 
-.save-btn {
-  padding: 8px 12px;
+.input-group__addon--start {
+  border-right: 1px solid var(--gold-15, rgba(202, 165, 84, 0.15));
+  padding-left: 10px;
+  padding-right: 8px;
+}
+
+.input-group__addon--end {
+  border-left: 1px solid var(--gold-15, rgba(202, 165, 84, 0.15));
+  padding-left: 8px;
+  padding-right: 10px;
+}
+
+.input-group__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  color: var(--dawn-30, rgba(235, 227, 214, 0.3));
+  width: 14px;
+  height: 14px;
+}
+
+.input-group__button {
+  padding: 0;
   background: transparent;
-  border: 1px solid var(--gold-15, rgba(202, 165, 84, 0.15));
+  border: none;
   font-family: var(--font-mono);
   font-size: 9px;
   text-transform: uppercase;
@@ -584,14 +673,14 @@
   color: var(--dawn-50, rgba(235, 227, 214, 0.5));
   cursor: pointer;
   transition: all 0.15s ease;
+  white-space: nowrap;
 }
 
-.save-btn:hover:not(:disabled) {
-  border-color: var(--gold, #caa554);
+.input-group__button:hover:not(:disabled) {
   color: var(--gold, #caa554);
 }
 
-.save-btn:disabled {
+.input-group__button:disabled {
   opacity: 0.2;
   cursor: not-allowed;
 }
