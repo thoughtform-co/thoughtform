@@ -47,6 +47,14 @@ export function AdminTools({
       hasIndicator: false,
       href: "/orrery",
     },
+    {
+      id: "astrogation",
+      icon: "⬡",
+      label: "ASTROGATION",
+      isActive: false,
+      hasIndicator: false,
+      href: "/astrogation",
+    },
   ];
 
   return (
@@ -119,11 +127,12 @@ export function AdminTools({
           cursor: pointer;
           transition: color 150ms ease;
           position: relative;
-          /* Fixed width so both items align on the left edge */
-          width: 118px;
+          /* Fixed width so all items align on the left edge */
+          width: 133px;
         }
 
-        .admin-tools__item--orrery {
+        .admin-tools__item--orrery,
+        .admin-tools__item--astrogation {
           margin-top: -25px;
         }
 
@@ -148,8 +157,8 @@ export function AdminTools({
 
         .admin-tools__label {
           font-size: 10px;
-          /* Fixed width so both labels end at the same position */
-          width: 70px;
+          /* Fixed width so all labels end at the same position */
+          width: 85px;
           text-align: right;
           display: inline-block;
           flex-shrink: 0;
@@ -179,7 +188,8 @@ export function AdminTools({
             width: auto;
           }
 
-          .admin-tools__item--orrery {
+          .admin-tools__item--orrery,
+          .admin-tools__item--astrogation {
             margin-top: 0;
           }
 
