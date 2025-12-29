@@ -1,27 +1,3 @@
----
-name: Best Practices Audit
-overview: Audit of current Next.js/TypeScript project structure with recommendations for scalability, maintainability, and developer experience improvements.
-todos:
-  - id: add-sentinel
-    content: Add .sentinel.md with development best practices and troubleshooting patterns
-    status: completed
-  - id: add-prettier
-    content: Add Prettier, eslint-config-prettier, husky, and lint-staged for consistent formatting
-    status: completed
-  - id: add-env-example
-    content: Create .env.example documenting all required environment variables
-    status: completed
-  - id: split-types
-    content: Split lib/types.ts into domain-specific files (editor, content, database, ui)
-    status: completed
-  - id: extract-constants
-    content: Move DEFAULT_* and SECTION_TEMPLATES to constants/ directory
-    status: completed
-  - id: split-cockpit
-    content: Split NavigationCockpitV2.tsx into smaller focused components
-    status: completed
----
-
 # Next.js/TypeScript Best Practices Recommendations
 
 ## Current State Assessment
@@ -61,7 +37,7 @@ This is invaluable documentation that prevents entire classes of bugs before the
 
 Your [`lib/types.ts`](lib/types.ts) is 632 lines. Split by domain:
 
-```javascript
+````javascript
 types/
 ├── index.ts          # Re-exports everything
 ├── editor.ts         # EditorState, Element, Section types
@@ -222,4 +198,5 @@ Your codebase is **healthy for a lean site**. The main wins would be:
 2. Adding Prettier + pre-commit hooks (immediate code quality)
 3. Environment documentation (onboarding)
 
-The sentinel file is particularly valuable as it captures lessons learned from real bugs and prevents entire classes of issues before they happen.
+
+````

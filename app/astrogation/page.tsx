@@ -1078,7 +1078,6 @@ function CatalogPanel({
                     className={`catalog-category-btn ${isExpanded ? "expanded" : ""}`}
                     onClick={() => toggleCategory(cat.id)}
                   >
-                    <span className="catalog-corner" />
                     <span className="catalog-category-btn__name">{cat.name.toUpperCase()}</span>
                     <span className="catalog-category-btn__count">{allComponents.length}</span>
                   </button>
@@ -1092,7 +1091,7 @@ function CatalogPanel({
                           className={`catalog-item ${selectedComponentId === comp.id ? "selected" : ""}`}
                           onClick={() => onSelectComponent(comp.id)}
                         >
-                          <span className="catalog-item__corner" />
+                          <span className="catalog-item__prefix">{"//"}</span>
                           {comp.name}
                         </button>
                       ))}
@@ -1104,7 +1103,7 @@ function CatalogPanel({
                         return (
                           <div key={sub.id} className="catalog-subcategory">
                             <div className="catalog-subcategory__label">
-                              <span className="catalog-corner catalog-corner--small" />
+                              <span className="catalog-subcategory__corner" />
                               {sub.name.toUpperCase()}
                             </div>
                             {subComps.map((comp) => (
@@ -1113,7 +1112,7 @@ function CatalogPanel({
                                 className={`catalog-item catalog-item--nested ${selectedComponentId === comp.id ? "selected" : ""}`}
                                 onClick={() => onSelectComponent(comp.id)}
                               >
-                                <span className="catalog-item__corner" />
+                                <span className="catalog-item__prefix">{"//"}</span>
                                 {comp.name}
                               </button>
                             ))}
