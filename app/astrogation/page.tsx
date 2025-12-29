@@ -766,27 +766,38 @@ type CornerToken =
   | "tl-tr"
   | "bl-br"
   | "tl-bl"
-  | "tr-br";
+  | "tr-br"
+  | "no-tl"
+  | "no-tr"
+  | "no-bl"
+  | "no-br";
 
 // Convert active corners array to token
 function cornersToToken(corners: Set<string>): CornerToken {
   const sorted = [...corners].sort().join("-");
   if (corners.size === 4) return "four";
   if (corners.size === 0) return "none";
-  // Map common patterns
+  // Map all patterns (1, 2, and 3 corners)
   const mapping: Record<string, CornerToken> = {
-    "bl-tr": "tr-bl",
-    "br-tl": "tl-br",
+    // Single corners
     tl: "tl",
     tr: "tr",
     bl: "bl",
     br: "br",
+    // Two corners
+    "bl-tl": "tl-bl",
     "tl-tr": "tl-tr",
     "bl-br": "bl-br",
-    "bl-tl": "tl-bl",
     "br-tr": "tr-br",
+    "bl-tr": "tr-bl",
+    "br-tl": "tl-br",
+    // Three corners (missing one)
+    "bl-br-tl": "no-tr",
+    "bl-br-tr": "no-tl",
+    "bl-tl-tr": "no-br",
+    "br-tl-tr": "no-bl",
   };
-  return mapping[sorted] || "four";
+  return mapping[sorted] || "none";
 }
 
 // Convert token to active corners set
@@ -794,16 +805,24 @@ function tokenToCorners(token: CornerToken): Set<string> {
   const mapping: Record<CornerToken, string[]> = {
     four: ["tl", "tr", "bl", "br"],
     none: [],
+    // Two corners - diagonal
     "tr-bl": ["tr", "bl"],
     "tl-br": ["tl", "br"],
+    // Single corners
     tl: ["tl"],
     tr: ["tr"],
     bl: ["bl"],
     br: ["br"],
+    // Two corners - adjacent
     "tl-tr": ["tl", "tr"],
     "bl-br": ["bl", "br"],
     "tl-bl": ["tl", "bl"],
     "tr-br": ["tr", "br"],
+    // Three corners (missing one)
+    "no-tl": ["tr", "bl", "br"],
+    "no-tr": ["tl", "bl", "br"],
+    "no-bl": ["tl", "tr", "br"],
+    "no-br": ["tl", "tr", "bl"],
   };
   return new Set(mapping[token] || ["tl", "tr", "bl", "br"]);
 }
@@ -872,12 +891,13 @@ function HUDWrapper({
   const arm = cornerLength;
   const t = cornerThickness;
 
-  // Determine which corners to show based on token
+  // Determine which corners to show based on token (use the same mapping function)
+  const activeCorners = tokenToCorners(cornerToken);
   const showCorners = {
-    tl: cornerToken === "four" || cornerToken === "tl-br",
-    tr: cornerToken === "four" || cornerToken === "tr-bl",
-    bl: cornerToken === "four" || cornerToken === "tr-bl",
-    br: cornerToken === "four" || cornerToken === "tl-br",
+    tl: activeCorners.has("tl"),
+    tr: activeCorners.has("tr"),
+    bl: activeCorners.has("bl"),
+    br: activeCorners.has("br"),
   };
 
   // Corner styles using background gradients (clean, consistent rendering)
