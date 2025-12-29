@@ -427,32 +427,30 @@
   left: 0;
   right: 0;
   bottom: 0;
-  border: 2px solid var(--gold, rgba(202, 165, 84, 0.8));
+  background: transparent;
+  border: 3px solid var(--gold, #caa554);
+  /* Show only the corners of the thick border by "dipping in" along each edge */
   clip-path: polygon(
     0 0,
     24px 0,
-    24px 2px,
-    2px 2px,
-    2px 24px,
-    0 24px,
-    0 calc(100% - 24px),
-    2px calc(100% - 24px),
-    2px calc(100% - 2px),
-    24px calc(100% - 2px),
-    24px 100%,
-    0 100%,
+    24px 3px,
+    calc(100% - 24px) 3px,
+    calc(100% - 24px) 0,
+    100% 0,
+    100% 24px,
+    calc(100% - 3px) 24px,
+    calc(100% - 3px) calc(100% - 24px),
+    100% calc(100% - 24px),
     100% 100%,
     calc(100% - 24px) 100%,
-    calc(100% - 24px) calc(100% - 2px),
-    calc(100% - 2px) calc(100% - 2px),
-    calc(100% - 2px) calc(100% - 24px),
-    100% calc(100% - 24px),
-    100% 24px,
-    calc(100% - 2px) 24px,
-    calc(100% - 2px) 2px,
-    calc(100% - 24px) 2px,
-    calc(100% - 24px) 0,
-    100% 0
+    calc(100% - 24px) calc(100% - 3px),
+    24px calc(100% - 3px),
+    24px 100%,
+    0 100%,
+    0 calc(100% - 24px),
+    3px calc(100% - 24px),
+    3px 24px,
+    0 24px
   );
   pointer-events: none;
   z-index: 1;
