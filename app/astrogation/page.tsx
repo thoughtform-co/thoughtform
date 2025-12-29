@@ -163,10 +163,13 @@ function renderComponent(
       const btnSize = (props.size as string) || "md";
       const customBg = props.backgroundColor as string;
       const customText = props.textColor as string;
-      const customBorder = props.borderColor as string;
+      const borderStyle = (props.borderStyle as string) || "solid";
+      const borderColor = (props.borderColor as string) || "#caa554";
       const cornerToken = (props.cornerToken as CornerToken) || "four";
+      const cornerColor = (props.cornerColor as string) || "#caa554";
       const borderThickness = (props.borderThickness as number) ?? 1;
       const cornerThickness = (props.cornerThickness as number) ?? 1.5;
+      const hasBorder = borderStyle !== "none";
 
       const sizeStyles = {
         sm: fullSize ? "12px 24px" : "6px 12px",
@@ -191,10 +194,10 @@ function renderComponent(
       return (
         <HUDWrapper
           cornerToken={cornerToken}
-          borderThickness={borderThickness}
-          cornerThickness={cornerThickness}
-          borderColor={customBorder || "rgba(202, 165, 84, 0.15)"}
-          cornerColor={customBorder || "#caa554"}
+          borderThickness={hasBorder ? borderThickness : 0}
+          cornerThickness={hasBorder ? cornerThickness : 0}
+          borderColor={borderColor}
+          cornerColor={cornerColor}
           cornerLength={fullSize ? 16 : 8}
         >
           <button
@@ -220,16 +223,18 @@ function renderComponent(
       const borderColor = (props.borderColor as string) || "rgba(235, 227, 214, 0.08)";
       const bgColor = (props.backgroundColor as string) || "transparent";
       const cornerToken = (props.cornerToken as CornerToken) || "four";
+      const cornerColor = (props.cornerColor as string) || "#caa554";
       const borderThickness = (props.borderThickness as number) ?? 1;
       const cornerThickness = (props.cornerThickness as number) ?? 1.5;
+      const hasBorder = borderStyle !== "none";
 
       return (
         <HUDWrapper
           cornerToken={cornerToken}
-          borderThickness={borderStyle !== "none" ? borderThickness : 0}
-          cornerThickness={borderStyle !== "none" ? cornerThickness : 0}
+          borderThickness={hasBorder ? borderThickness : 0}
+          cornerThickness={hasBorder ? cornerThickness : 0}
           borderColor={borderColor}
-          cornerColor={borderColor}
+          cornerColor={cornerColor}
           cornerLength={fullSize ? 24 : 12}
         >
           <div
@@ -272,20 +277,21 @@ function renderComponent(
     }
 
     case "card-frame-terminal": {
-      const cornerColor = (props.cornerColor as string) || "#caa554";
-      const cornerSize = ((props.cornerSize as number) || 16) * scale;
       const borderStyle = (props.borderStyle as string) || "solid";
       const borderColor = (props.borderColor as string) || "rgba(235, 227, 214, 0.15)";
       const bgColor = (props.backgroundColor as string) || "transparent";
       const cornerToken = (props.cornerToken as CornerToken) || "four";
+      const cornerColor = (props.cornerColor as string) || "#caa554";
+      const cornerSize = ((props.cornerSize as number) || 16) * scale;
       const borderThickness = (props.borderThickness as number) ?? 1;
       const cornerThickness = (props.cornerThickness as number) ?? 1.5;
+      const hasBorder = borderStyle !== "none";
 
       return (
         <HUDWrapper
           cornerToken={cornerToken}
-          borderThickness={borderStyle !== "none" ? borderThickness : 0}
-          cornerThickness={borderStyle !== "none" ? cornerThickness : 0}
+          borderThickness={hasBorder ? borderThickness : 0}
+          cornerThickness={hasBorder ? cornerThickness : 0}
           borderColor={borderColor}
           cornerColor={cornerColor}
           cornerLength={cornerSize}
@@ -321,16 +327,18 @@ function renderComponent(
       const borderColor = (props.borderColor as string) || "rgba(235, 227, 214, 0.08)";
       const bgColor = (props.backgroundColor as string) || "transparent";
       const cornerToken = (props.cornerToken as CornerToken) || "four";
+      const cornerColor = (props.cornerColor as string) || "#caa554";
       const borderThickness = (props.borderThickness as number) ?? 1;
       const cornerThickness = (props.cornerThickness as number) ?? 1.5;
+      const hasBorder = borderStyle !== "none";
 
       return (
         <HUDWrapper
           cornerToken={cornerToken}
-          borderThickness={borderStyle !== "none" ? borderThickness : 0}
-          cornerThickness={borderStyle !== "none" ? cornerThickness : 0}
+          borderThickness={hasBorder ? borderThickness : 0}
+          cornerThickness={hasBorder ? cornerThickness : 0}
           borderColor={borderColor}
-          cornerColor={borderColor}
+          cornerColor={cornerColor}
           cornerLength={fullSize ? 20 : 10}
         >
           <div
@@ -654,20 +662,22 @@ function renderComponent(
       );
 
     case "navigation-bar": {
-      const showBorder = props.showBorder !== false;
+      const borderStyle = (props.borderStyle as string) || "solid";
       const borderColor = (props.borderColor as string) || "rgba(235, 227, 214, 0.08)";
       const backgroundColor = (props.backgroundColor as string) || "#0a0908";
       const cornerToken = (props.cornerToken as CornerToken) || "four";
+      const cornerColor = (props.cornerColor as string) || "#caa554";
       const borderThickness = (props.borderThickness as number) ?? 1;
       const cornerThickness = (props.cornerThickness as number) ?? 1.5;
+      const hasBorder = borderStyle !== "none";
 
       return (
         <HUDWrapper
           cornerToken={cornerToken}
-          borderThickness={showBorder ? borderThickness : 0}
-          cornerThickness={showBorder ? cornerThickness : 0}
+          borderThickness={hasBorder ? borderThickness : 0}
+          cornerThickness={hasBorder ? cornerThickness : 0}
           borderColor={borderColor}
-          cornerColor={borderColor}
+          cornerColor={cornerColor}
           cornerLength={fullSize ? 20 : 10}
           style={{ width: "100%" }}
         >
@@ -1409,10 +1419,11 @@ function DialsPanel({
     );
   }
 
-  // Prop ordering within categories
+  // Prop ordering within categories (consistent across all components)
   const propOrder: Record<string, string[]> = {
-    corners: ["cornerToken", "cornerColor", "cornerSize", "cornerThickness"],
+    colors: ["backgroundColor", "textColor", "fillColor"],
     borders: ["borderStyle", "borderColor", "borderThickness"],
+    corners: ["cornerToken", "cornerColor", "cornerSize", "cornerThickness"],
   };
 
   // Group props by category
