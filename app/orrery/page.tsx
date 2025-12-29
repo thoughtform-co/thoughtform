@@ -517,6 +517,9 @@ function ParticlesTab() {
         />
       </div>
 
+      {/* Codex Button - Above Left Panel */}
+      <button className="codex-btn">CODEX</button>
+
       {/* Left Panel - Presets & Shapes */}
       <aside className="lab-panel lab-panel--left">
         <div className="panel-section">
@@ -579,6 +582,9 @@ function ParticlesTab() {
           <span className="shape-name">{currentShape?.label || shapeId}</span>
         </div>
       </main>
+
+      {/* Dials Button - Above Right Panel */}
+      <button className="dials-btn">DIALS</button>
 
       {/* Right Panel - Parameters */}
       <aside className="lab-panel lab-panel--right">
