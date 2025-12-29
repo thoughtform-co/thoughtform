@@ -2,7 +2,7 @@
 // CATALOG - Component definitions for Astrogation
 // ═══════════════════════════════════════════════════════════════
 
-export type PropType = "string" | "number" | "boolean" | "select" | "color";
+export type PropType = "string" | "number" | "boolean" | "select" | "color" | "corners";
 
 export interface PropDef {
   name: string;
@@ -175,6 +175,9 @@ export const COMPONENTS: ComponentDef[] = [
       { name: "showBorder", type: "boolean", default: true },
       { name: "borderColor", type: "color", default: "rgba(235, 227, 214, 0.08)" },
       { name: "backgroundColor", type: "color", default: "#0a0908" },
+      { name: "cornerToken", type: "corners", default: "four" },
+      { name: "borderThickness", type: "number", default: 1, min: 0, max: 4, step: 0.5 },
+      { name: "cornerThickness", type: "number", default: 1.5, min: 0, max: 4, step: 0.5 },
     ],
     defaultWidth: 400,
     defaultHeight: 64,
@@ -199,6 +202,9 @@ export const COMPONENTS: ComponentDef[] = [
       },
       { name: "borderColor", type: "color", default: "rgba(235, 227, 214, 0.08)" },
       { name: "backgroundColor", type: "color", default: "transparent" },
+      { name: "cornerToken", type: "corners", default: "four" },
+      { name: "borderThickness", type: "number", default: 1, min: 0, max: 4, step: 0.5 },
+      { name: "cornerThickness", type: "number", default: 1.5, min: 0, max: 4, step: 0.5 },
     ],
     defaultWidth: 280,
     defaultHeight: 180,
@@ -221,6 +227,9 @@ export const COMPONENTS: ComponentDef[] = [
       },
       { name: "borderColor", type: "color", default: "rgba(235, 227, 214, 0.15)" },
       { name: "backgroundColor", type: "color", default: "transparent" },
+      { name: "cornerToken", type: "corners", default: "four" },
+      { name: "borderThickness", type: "number", default: 1, min: 0, max: 4, step: 0.5 },
+      { name: "cornerThickness", type: "number", default: 1.5, min: 0, max: 4, step: 0.5 },
     ],
     defaultWidth: 320,
     defaultHeight: 220,
@@ -240,6 +249,9 @@ export const COMPONENTS: ComponentDef[] = [
       },
       { name: "borderColor", type: "color", default: "rgba(235, 227, 214, 0.08)" },
       { name: "backgroundColor", type: "color", default: "transparent" },
+      { name: "cornerToken", type: "corners", default: "four" },
+      { name: "borderThickness", type: "number", default: 1, min: 0, max: 4, step: 0.5 },
+      { name: "cornerThickness", type: "number", default: 1.5, min: 0, max: 4, step: 0.5 },
     ],
     defaultWidth: 160,
     defaultHeight: 100,
@@ -257,6 +269,9 @@ export const COMPONENTS: ComponentDef[] = [
       { name: "backgroundColor", type: "color", default: "transparent" },
       { name: "textColor", type: "color", default: "#caa554" },
       { name: "borderColor", type: "color", default: "#caa554" },
+      { name: "cornerToken", type: "corners", default: "four" },
+      { name: "borderThickness", type: "number", default: 1, min: 0, max: 4, step: 0.5 },
+      { name: "cornerThickness", type: "number", default: 1.5, min: 0, max: 4, step: 0.5 },
     ],
     defaultWidth: 120,
     defaultHeight: 44,

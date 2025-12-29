@@ -164,6 +164,9 @@ function renderComponent(
       const customBg = props.backgroundColor as string;
       const customText = props.textColor as string;
       const customBorder = props.borderColor as string;
+      const cornerToken = (props.cornerToken as CornerToken) || "four";
+      const borderThickness = (props.borderThickness as number) ?? 1;
+      const cornerThickness = (props.cornerThickness as number) ?? 1.5;
 
       const sizeStyles = {
         sm: fullSize ? "12px 24px" : "6px 12px",
@@ -173,34 +176,42 @@ function renderComponent(
       const variantStyles = {
         ghost: {
           background: customBg && customBg !== "transparent" ? customBg : "transparent",
-          border: `1px solid ${customBorder || "var(--dawn-15)"}`,
           color: customText || "var(--dawn-70)",
         },
         solid: {
           background: customBg && customBg !== "transparent" ? customBg : "var(--gold)",
-          border: `1px solid ${customBorder || "var(--gold)"}`,
           color: customText || "var(--void)",
         },
         outline: {
           background: customBg && customBg !== "transparent" ? customBg : "transparent",
-          border: `1px solid ${customBorder || "var(--gold)"}`,
           color: customText || "var(--gold)",
         },
       };
+
       return (
-        <button
-          style={{
-            padding: sizeStyles[btnSize as keyof typeof sizeStyles],
-            ...variantStyles[variant as keyof typeof variantStyles],
-            fontFamily: "var(--font-mono)",
-            fontSize: fullSize ? "14px" : "11px",
-            textTransform: "uppercase",
-            letterSpacing: "0.1em",
-            cursor: "pointer",
-          }}
+        <HUDWrapper
+          cornerToken={cornerToken}
+          borderThickness={borderThickness}
+          cornerThickness={cornerThickness}
+          borderColor={customBorder || "rgba(202, 165, 84, 0.15)"}
+          cornerColor={customBorder || "#caa554"}
+          cornerLength={fullSize ? 16 : 8}
         >
-          {(props.label as string) || "Button"}
-        </button>
+          <button
+            style={{
+              padding: sizeStyles[btnSize as keyof typeof sizeStyles],
+              ...variantStyles[variant as keyof typeof variantStyles],
+              border: "none",
+              fontFamily: "var(--font-mono)",
+              fontSize: fullSize ? "14px" : "11px",
+              textTransform: "uppercase",
+              letterSpacing: "0.1em",
+              cursor: "pointer",
+            }}
+          >
+            {(props.label as string) || "Button"}
+          </button>
+        </HUDWrapper>
       );
     }
 
@@ -208,39 +219,55 @@ function renderComponent(
       const borderStyle = (props.borderStyle as string) || "solid";
       const borderColor = (props.borderColor as string) || "rgba(235, 227, 214, 0.08)";
       const bgColor = (props.backgroundColor as string) || "transparent";
+      const cornerToken = (props.cornerToken as CornerToken) || "four";
+      const borderThickness = (props.borderThickness as number) ?? 1;
+      const cornerThickness = (props.cornerThickness as number) ?? 1.5;
+
       return (
-        <div
-          className={`preview-card preview-card--content ${fullSize ? "preview-card--full" : ""}`}
-          style={{
-            ...(fullSize ? { minWidth: "320px", padding: "24px" } : {}),
-            border: borderStyle !== "none" ? `1px ${borderStyle} ${borderColor}` : "none",
-            background: bgColor !== "transparent" ? bgColor : undefined,
-          }}
+        <HUDWrapper
+          cornerToken={cornerToken}
+          borderThickness={borderStyle !== "none" ? borderThickness : 0}
+          cornerThickness={borderStyle !== "none" ? cornerThickness : 0}
+          borderColor={borderColor}
+          cornerColor={borderColor}
+          cornerLength={fullSize ? 24 : 12}
         >
-          {props.accent !== "none" && (
-            <div
-              className={`preview-card__accent preview-card__accent--${props.accent}`}
-              style={{
-                background:
-                  props.accentColor === "dawn"
-                    ? "var(--dawn)"
-                    : props.accentColor === "verde"
-                      ? "var(--verde)"
-                      : "var(--gold)",
-              }}
-            />
-          )}
           <div
-            className="preview-card__index"
-            style={fullSize ? { fontSize: "12px", marginBottom: "12px" } : undefined}
+            className={`preview-card preview-card--content ${fullSize ? "preview-card--full" : ""}`}
+            style={{
+              ...(fullSize ? { minWidth: "320px", padding: "24px" } : {}),
+              border: "none", // HUDWrapper handles it
+              background: bgColor !== "transparent" ? bgColor : undefined,
+            }}
           >
-            {String(props.index || "01")} ·{" "}
-            <span className="preview-card__label">{String(props.label || "Label")}</span>
+            {props.accent !== "none" && (
+              <div
+                className={`preview-card__accent preview-card__accent--${props.accent}`}
+                style={{
+                  background:
+                    props.accentColor === "dawn"
+                      ? "var(--dawn)"
+                      : props.accentColor === "verde"
+                        ? "var(--verde)"
+                        : "var(--gold)",
+                }}
+              />
+            )}
+            <div
+              className="preview-card__index"
+              style={fullSize ? { fontSize: "12px", marginBottom: "12px" } : undefined}
+            >
+              {String(props.index || "01")} ·{" "}
+              <span className="preview-card__label">{String(props.label || "Label")}</span>
+            </div>
+            <div
+              className="preview-card__title"
+              style={fullSize ? { fontSize: "18px" } : undefined}
+            >
+              {(props.title as string) || "Card Title"}
+            </div>
           </div>
-          <div className="preview-card__title" style={fullSize ? { fontSize: "18px" } : undefined}>
-            {(props.title as string) || "Card Title"}
-          </div>
-        </div>
+        </HUDWrapper>
       );
     }
 
@@ -250,47 +277,42 @@ function renderComponent(
       const borderStyle = (props.borderStyle as string) || "solid";
       const borderColor = (props.borderColor as string) || "rgba(235, 227, 214, 0.15)";
       const bgColor = (props.backgroundColor as string) || "transparent";
+      const cornerToken = (props.cornerToken as CornerToken) || "four";
+      const borderThickness = (props.borderThickness as number) ?? 1;
+      const cornerThickness = (props.cornerThickness as number) ?? 1.5;
+
       return (
-        <div
-          className={`preview-card preview-card--terminal ${fullSize ? "preview-card--full" : ""}`}
-          style={{
-            ...(fullSize ? { minWidth: "360px", padding: "32px" } : {}),
-            border: borderStyle !== "none" ? `1px ${borderStyle} ${borderColor}` : "none",
-            background: bgColor !== "transparent" ? bgColor : undefined,
-          }}
+        <HUDWrapper
+          cornerToken={cornerToken}
+          borderThickness={borderStyle !== "none" ? borderThickness : 0}
+          cornerThickness={borderStyle !== "none" ? cornerThickness : 0}
+          borderColor={borderColor}
+          cornerColor={cornerColor}
+          cornerLength={cornerSize}
         >
-          <div className="preview-card__corners">
-            <div
-              className="corner corner--tl"
-              style={{ width: cornerSize, height: cornerSize, borderColor: cornerColor }}
-            />
-            <div
-              className="corner corner--tr"
-              style={{ width: cornerSize, height: cornerSize, borderColor: cornerColor }}
-            />
-            <div
-              className="corner corner--bl"
-              style={{ width: cornerSize, height: cornerSize, borderColor: cornerColor }}
-            />
-            <div
-              className="corner corner--br"
-              style={{ width: cornerSize, height: cornerSize, borderColor: cornerColor }}
-            />
-          </div>
           <div
-            className="preview-card__header"
-            style={fullSize ? { fontSize: "12px", marginBottom: "16px" } : undefined}
+            className={`preview-card preview-card--terminal ${fullSize ? "preview-card--full" : ""}`}
+            style={{
+              ...(fullSize ? { minWidth: "360px", padding: "32px" } : {}),
+              border: "none", // HUDWrapper handles it
+              background: bgColor !== "transparent" ? bgColor : undefined,
+            }}
           >
-            <span
-              className="preview-card__dot"
-              style={fullSize ? { width: "10px", height: "10px" } : undefined}
-            />
-            {(props.label as string) || "Terminal"}
+            <div
+              className="preview-card__header"
+              style={fullSize ? { fontSize: "12px", marginBottom: "16px" } : undefined}
+            >
+              <span
+                className="preview-card__dot"
+                style={fullSize ? { width: "10px", height: "10px" } : undefined}
+              />
+              {(props.label as string) || "Terminal"}
+            </div>
+            <div className="preview-card__body" style={fullSize ? { fontSize: "24px" } : undefined}>
+              {(props.title as string) || "Terminal Title"}
+            </div>
           </div>
-          <div className="preview-card__body" style={fullSize ? { fontSize: "24px" } : undefined}>
-            {(props.title as string) || "Terminal Title"}
-          </div>
-        </div>
+        </HUDWrapper>
       );
     }
 
@@ -298,28 +320,41 @@ function renderComponent(
       const borderStyle = (props.borderStyle as string) || "solid";
       const borderColor = (props.borderColor as string) || "rgba(235, 227, 214, 0.08)";
       const bgColor = (props.backgroundColor as string) || "transparent";
+      const cornerToken = (props.cornerToken as CornerToken) || "four";
+      const borderThickness = (props.borderThickness as number) ?? 1;
+      const cornerThickness = (props.cornerThickness as number) ?? 1.5;
+
       return (
-        <div
-          className={`preview-card preview-card--data ${fullSize ? "preview-card--full" : ""}`}
-          style={{
-            ...(fullSize ? { minWidth: "200px", padding: "20px" } : {}),
-            border: borderStyle !== "none" ? `1px ${borderStyle} ${borderColor}` : "none",
-            background: bgColor !== "transparent" ? bgColor : undefined,
-          }}
+        <HUDWrapper
+          cornerToken={cornerToken}
+          borderThickness={borderStyle !== "none" ? borderThickness : 0}
+          cornerThickness={borderStyle !== "none" ? cornerThickness : 0}
+          borderColor={borderColor}
+          cornerColor={borderColor}
+          cornerLength={fullSize ? 20 : 10}
         >
           <div
-            className="preview-card__metric-label"
-            style={fullSize ? { fontSize: "12px" } : undefined}
+            className={`preview-card preview-card--data ${fullSize ? "preview-card--full" : ""}`}
+            style={{
+              ...(fullSize ? { minWidth: "200px", padding: "20px" } : {}),
+              border: "none", // HUDWrapper handles it
+              background: bgColor !== "transparent" ? bgColor : undefined,
+            }}
           >
-            {(props.label as string) || "Metric"}
+            <div
+              className="preview-card__metric-label"
+              style={fullSize ? { fontSize: "12px" } : undefined}
+            >
+              {(props.label as string) || "Metric"}
+            </div>
+            <div
+              className="preview-card__metric-value"
+              style={fullSize ? { fontSize: "48px" } : undefined}
+            >
+              {(props.title as string) || "42"}
+            </div>
           </div>
-          <div
-            className="preview-card__metric-value"
-            style={fullSize ? { fontSize: "48px" } : undefined}
-          >
-            {(props.title as string) || "42"}
-          </div>
-        </div>
+        </HUDWrapper>
       );
     }
 
@@ -622,16 +657,30 @@ function renderComponent(
       const showBorder = props.showBorder !== false;
       const borderColor = (props.borderColor as string) || "rgba(235, 227, 214, 0.08)";
       const backgroundColor = (props.backgroundColor as string) || "#0a0908";
+      const cornerToken = (props.cornerToken as CornerToken) || "four";
+      const borderThickness = (props.borderThickness as number) ?? 1;
+      const cornerThickness = (props.cornerThickness as number) ?? 1.5;
+
       return (
-        <div
-          className="preview-navbar"
-          style={{
-            borderBottom: showBorder ? `1px solid ${borderColor}` : "none",
-            background: backgroundColor,
-          }}
+        <HUDWrapper
+          cornerToken={cornerToken}
+          borderThickness={showBorder ? borderThickness : 0}
+          cornerThickness={showBorder ? cornerThickness : 0}
+          borderColor={borderColor}
+          cornerColor={borderColor}
+          cornerLength={fullSize ? 20 : 10}
+          style={{ width: "100%" }}
         >
-          {Boolean(props.showLogo) && <span className="preview-navbar__logo">THOUGHTFORM</span>}
-        </div>
+          <div
+            className="preview-navbar"
+            style={{
+              background: backgroundColor,
+              borderBottom: "none", // HUDWrapper handles it
+            }}
+          >
+            {Boolean(props.showLogo) && <span className="preview-navbar__logo">THOUGHTFORM</span>}
+          </div>
+        </HUDWrapper>
       );
     }
 
@@ -701,6 +750,113 @@ function generateJSXCode(componentId: string, props: Record<string, unknown>): s
   }
 
   return `<${componentName}${propsString ? " " + propsString : ""} />`;
+}
+
+// ─── HELPERS & SUBCOMPONENTS ───
+
+type CornerToken = "four" | "tr-bl" | "tl-br";
+
+function CornerSelector({
+  value,
+  onChange,
+}: {
+  value: CornerToken;
+  onChange: (value: CornerToken) => void;
+}) {
+  const options: { id: CornerToken; label: string; activeCorners: string[] }[] = [
+    { id: "four", label: "Four Corners", activeCorners: ["tl", "tr", "bl", "br"] },
+    { id: "tr-bl", label: "Top Right & Bottom Left", activeCorners: ["tr", "bl"] },
+    { id: "tl-br", label: "Top Left & Bottom Right", activeCorners: ["tl", "br"] },
+  ];
+
+  return (
+    <div className="corner-selector">
+      <div className="corner-selector__grid">
+        {options.map((opt) => (
+          <button
+            key={opt.id}
+            className={`corner-option ${value === opt.id ? "active" : ""}`}
+            onClick={() => onChange(opt.id)}
+            title={opt.label}
+          >
+            <div className="corner-mockup">
+              {opt.activeCorners.includes("tl") && <div className="mock-corner tl" />}
+              {opt.activeCorners.includes("tr") && <div className="mock-corner tr" />}
+              {opt.activeCorners.includes("bl") && <div className="mock-corner bl" />}
+              {opt.activeCorners.includes("br") && <div className="mock-corner br" />}
+            </div>
+            <span className="corner-option__label">{opt.label}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function HUDWrapper({
+  children,
+  cornerToken = "four",
+  borderThickness = 1,
+  cornerThickness = 1.5,
+  borderColor = "rgba(202, 165, 84, 0.15)",
+  cornerColor = "#caa554",
+  cornerLength = 24,
+  className = "",
+  style = {},
+}: {
+  children: React.ReactNode;
+  cornerToken?: CornerToken;
+  borderThickness?: number;
+  cornerThickness?: number;
+  borderColor?: string;
+  cornerColor?: string;
+  cornerLength?: number;
+  className?: string;
+  style?: React.CSSProperties;
+}) {
+  const s = cornerLength;
+
+  const getClipPath = (token: CornerToken, t: number) => {
+    // We use a polygon that "diips in" to only show the relevant corner parts of the border
+    const tl = `0 0, ${s}px 0, ${s}px ${t}px, ${t}px ${t}px, ${t}px ${s}px, 0 ${s}px`;
+    const tr = `calc(100% - ${s}px) 0, 100% 0, 100% ${s}px, calc(100% - ${t}px) ${s}px, calc(100% - ${t}px) ${t}px, calc(100% - ${s}px) ${t}px`;
+    const br = `100% calc(100% - ${s}px), 100% 100%, calc(100% - ${s}px) 100%, calc(100% - ${s}px) calc(100% - ${t}px), calc(100% - ${t}px) calc(100% - ${t}px), calc(100% - ${t}px) calc(100% - ${s}px)`;
+    const bl = `0 calc(100% - ${s}px), ${t}px calc(100% - ${s}px), ${t}px calc(100% - ${t}px), ${s}px calc(100% - ${t}px), ${s}px 100%, 0 100%`;
+
+    if (token === "four") return `polygon(${tl}, ${tr}, ${br}, ${bl})`;
+    if (token === "tr-bl") return `polygon(${tr}, ${bl})`;
+    if (token === "tl-br") return `polygon(${tl}, ${br})`;
+    return "none";
+  };
+
+  return (
+    <div className={`hud-wrapper ${className}`} style={{ ...style, position: "relative" }}>
+      {/* Main thin border */}
+      <div
+        className="hud-wrapper__border"
+        style={{
+          position: "absolute",
+          inset: 0,
+          border: `${borderThickness}px solid ${borderColor}`,
+          pointerEvents: "none",
+          zIndex: 0,
+        }}
+      />
+      {/* Thick corners */}
+      <div
+        className="hud-wrapper__corners"
+        style={{
+          position: "absolute",
+          inset: 0,
+          border: `${cornerThickness}px solid ${cornerColor}`,
+          clipPath: getClipPath(cornerToken, cornerThickness),
+          pointerEvents: "none",
+          zIndex: 1,
+        }}
+      />
+      <div style={{ position: "relative", zIndex: 2 }}>{children}</div>
+    </div>
+  );
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -1055,6 +1211,17 @@ function DialsPanel({
           </div>
         );
 
+      case "corners":
+        return (
+          <div className="dial-group">
+            <div className="dial-group__label">{propDef.name}</div>
+            <CornerSelector
+              value={currentValue as CornerToken}
+              onChange={(val) => onPropsChange({ ...componentProps, [propDef.name]: val })}
+            />
+          </div>
+        );
+
       default:
         return null;
     }
@@ -1063,9 +1230,12 @@ function DialsPanel({
   if (!selectedComponentId || !def) {
     return (
       <aside className="astrogation-panel astrogation-panel--right">
-        <div className="panel-empty-state">
-          <span className="panel-empty-state__icon">◇</span>
-          <p>Select a component to edit</p>
+        <div className="panel-header">DIALS</div>
+        <div className="panel-content">
+          <div className="panel-empty-state">
+            <span className="panel-empty-state__icon">◇</span>
+            <p>Select a component to edit</p>
+          </div>
         </div>
       </aside>
     );
@@ -1073,28 +1243,27 @@ function DialsPanel({
 
   return (
     <aside className="astrogation-panel astrogation-panel--right">
-      {/* Component Name */}
-      <div className="astrogation-section">
-        <div className="astrogation-section__title">{def.name}</div>
-      </div>
+      <div className="panel-header">{def.name.toUpperCase()}</div>
 
-      {/* Component Props (includes borders for components that have them) */}
-      {def.props.length > 0 && (
+      <div className="panel-content">
+        {/* Component Props (includes borders for components that have them) */}
+        {def.props.length > 0 && (
+          <div className="astrogation-section">
+            <div className="astrogation-section__label">Properties</div>
+            {def.props.map((propDef) => (
+              <div key={propDef.name} style={{ marginBottom: "8px" }}>
+                {renderPropControl(propDef, componentProps[propDef.name])}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Actions */}
         <div className="astrogation-section">
-          <div className="astrogation-section__label">Properties</div>
-          {def.props.map((propDef) => (
-            <div key={propDef.name} style={{ marginBottom: "8px" }}>
-              {renderPropControl(propDef, componentProps[propDef.name])}
-            </div>
-          ))}
+          <button className="action-btn action-btn--full" onClick={onCopyCode}>
+            Copy JSX Code
+          </button>
         </div>
-      )}
-
-      {/* Actions */}
-      <div className="astrogation-section">
-        <button className="action-btn action-btn--full" onClick={onCopyCode}>
-          Copy Code
-        </button>
       </div>
     </aside>
   );
