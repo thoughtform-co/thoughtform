@@ -370,12 +370,13 @@
   max-width: 280px;
   background: transparent;
   position: relative;
-  overflow: visible;
+  overflow: visible !important;
   padding-top: 40px; /* Space for the tab */
+  z-index: 10;
 }
 
 .astrogation-panel--left:hover {
-  overflow: visible;
+  overflow: visible !important;
 }
 
 /* HUD Panel Frame - thin main border */
@@ -389,7 +390,7 @@
   border: 1px solid var(--gold-30, rgba(202, 165, 84, 0.3));
   background: rgba(10, 9, 8, 0.9);
   pointer-events: none;
-  z-index: 0;
+  z-index: -1;
 }
 
 /* Panel content scrollable area */
@@ -456,8 +457,9 @@
   max-width: 280px;
   background: transparent;
   position: relative;
-  overflow: visible;
+  overflow: visible !important;
   padding-top: 40px; /* Space for the tab */
+  z-index: 10;
 }
 
 /* HUD Panel Frame - right */
@@ -471,7 +473,7 @@
   border: 1px solid var(--gold-15, rgba(202, 165, 84, 0.15));
   background: rgba(10, 9, 8, 0.9);
   pointer-events: none;
-  z-index: 0;
+  z-index: -1;
 }
 
 /* Corner accents - right (thick, prominent) */
@@ -479,9 +481,9 @@
   content: "";
   position: absolute;
   top: 40px;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  left: -1px;
+  right: -1px;
+  bottom: -1px;
   border: 1.5px solid var(--gold, rgba(202, 165, 84, 0.8));
   clip-path: polygon(
     /* Top Left */ 0 0,
