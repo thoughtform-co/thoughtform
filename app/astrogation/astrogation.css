@@ -1196,7 +1196,7 @@
 
 /* Dial Groups */
 .dial-group {
-  margin-bottom: 12px;
+  margin-bottom: 0;
 }
 
 .dial-group__label {
@@ -1341,6 +1341,50 @@
 
 .action-btn--full {
   width: 100%;
+}
+
+/* ─── DIALS CATEGORIES ─── */
+.dials-category {
+  margin-bottom: 16px;
+}
+
+.dials-category__header {
+  display: flex;
+  align-items: center;
+  padding: 6px 0;
+  margin-bottom: 8px;
+  border-bottom: 1px solid var(--gold-08, rgba(202, 165, 84, 0.08));
+}
+
+.dials-category__corner {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-left: 1px solid var(--gold-30, rgba(202, 165, 84, 0.3));
+  border-bottom: 1px solid var(--gold-30, rgba(202, 165, 84, 0.3));
+  margin-right: 10px;
+  flex-shrink: 0;
+}
+
+.dials-category__label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--gold, #caa554);
+}
+
+.dials-category__content {
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dials-actions {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--gold-08, rgba(202, 165, 84, 0.08));
 }
 
 /* ─── FOOTER ─── */

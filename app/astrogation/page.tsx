@@ -1123,6 +1123,54 @@ function ComponentCanvas({
 // RIGHT PANEL - DIALS / EDITOR
 // ═══════════════════════════════════════════════════════════════
 
+// Group props by category for organized display
+function categorizeProp(propName: string): string {
+  const name = propName.toLowerCase();
+  // Content props
+  if (["label", "title", "text", "index", "placeholder", "name"].includes(name)) return "content";
+  // Style props
+  if (["variant", "size", "accent", "accentcolor", "position", "orientation"].includes(name))
+    return "style";
+  // Color props
+  if (name.includes("color") || name.includes("fill")) return "colors";
+  // Frame/Corner props
+  if (
+    ["cornertoken", "borderthickness", "cornerthickness", "borderstyle", "cornersize"].includes(
+      name
+    )
+  )
+    return "frame";
+  // Toggle/boolean props
+  if (name.startsWith("show") || ["checked", "disabled"].includes(name)) return "toggles";
+  // Dimension props
+  if (
+    ["width", "height", "length", "tickcount", "min", "max", "step", "value", "intensity"].includes(
+      name
+    )
+  )
+    return "dimensions";
+  return "other";
+}
+
+const PROP_CATEGORY_ORDER = [
+  "content",
+  "style",
+  "colors",
+  "frame",
+  "toggles",
+  "dimensions",
+  "other",
+];
+const PROP_CATEGORY_LABELS: Record<string, string> = {
+  content: "Content",
+  style: "Style",
+  colors: "Colors",
+  frame: "Frame & Corners",
+  toggles: "Options",
+  dimensions: "Dimensions",
+  other: "Other",
+};
+
 function DialsPanel({
   selectedComponentId,
   componentProps,
@@ -1136,7 +1184,7 @@ function DialsPanel({
 }) {
   const def = selectedComponentId ? getComponentById(selectedComponentId) : null;
 
-  const renderPropControl = (propDef: PropDef, value: unknown) => {
+  const renderPropControl = (propDef: PropDef, value: unknown, compact = false) => {
     const currentValue = value ?? propDef.default;
 
     switch (propDef.type) {
@@ -1208,7 +1256,6 @@ function DialsPanel({
 
       case "color": {
         const currentColor = currentValue as string;
-        // Check if "transparent" or "none" are valid options for this prop
         const supportsTransparent =
           propDef.name.toLowerCase().includes("background") ||
           propDef.name.toLowerCase().includes("fill");
@@ -1217,9 +1264,7 @@ function DialsPanel({
           <div className="dial-group">
             <div className="dial-group__label">{propDef.name}</div>
             <div className="color-picker">
-              {/* Swatches only - no long color bar */}
               <div className="color-swatches">
-                {/* Transparent/None option for backgrounds */}
                 {supportsTransparent && (
                   <button
                     className={`color-swatch color-swatch--none ${currentColor === "transparent" ? "active" : ""}`}
@@ -1238,7 +1283,6 @@ function DialsPanel({
                     style={{ background: c.value }}
                     title={c.name}
                     onClick={() => {
-                      // Toggle: clicking same color removes it (sets transparent for backgrounds, or default for borders)
                       if (currentColor === c.value) {
                         const fallback = supportsTransparent
                           ? "transparent"
@@ -1286,25 +1330,43 @@ function DialsPanel({
     );
   }
 
+  // Group props by category
+  const groupedProps: Record<string, PropDef[]> = {};
+  def.props.forEach((propDef) => {
+    const category = categorizeProp(propDef.name);
+    if (!groupedProps[category]) groupedProps[category] = [];
+    groupedProps[category].push(propDef);
+  });
+
   return (
     <aside className="astrogation-panel astrogation-panel--right">
       <div className="panel-header">{def.name.toUpperCase()}</div>
 
       <div className="panel-content">
-        {/* Component Props (includes borders for components that have them) */}
-        {def.props.length > 0 && (
-          <div className="astrogation-section">
-            <div className="astrogation-section__label">Properties</div>
-            {def.props.map((propDef) => (
-              <div key={propDef.name} style={{ marginBottom: "8px" }}>
-                {renderPropControl(propDef, componentProps[propDef.name])}
+        {/* Render props grouped by category */}
+        {PROP_CATEGORY_ORDER.map((category) => {
+          const props = groupedProps[category];
+          if (!props || props.length === 0) return null;
+
+          return (
+            <div key={category} className="dials-category">
+              <div className="dials-category__header">
+                <span className="dials-category__corner" />
+                <span className="dials-category__label">{PROP_CATEGORY_LABELS[category]}</span>
               </div>
-            ))}
-          </div>
-        )}
+              <div className="dials-category__content">
+                {props.map((propDef) => (
+                  <div key={propDef.name}>
+                    {renderPropControl(propDef, componentProps[propDef.name])}
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        })}
 
         {/* Actions */}
-        <div className="astrogation-section">
+        <div className="dials-actions">
           <button className="action-btn action-btn--full" onClick={onCopyCode}>
             Copy JSX Code
           </button>
