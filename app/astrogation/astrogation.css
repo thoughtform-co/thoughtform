@@ -1247,19 +1247,21 @@
 
 .dial-slider::-webkit-slider-thumb {
   -webkit-appearance: none;
-  width: 12px;
-  height: 12px;
+  width: 10px;
+  height: 10px;
   background: var(--gold);
-  border-radius: 50%;
+  border-radius: 0;
+  transform: rotate(45deg);
   cursor: pointer;
 }
 
 .dial-slider::-moz-range-thumb {
-  width: 12px;
-  height: 12px;
+  width: 10px;
+  height: 10px;
   background: var(--gold);
-  border-radius: 50%;
+  border-radius: 0;
   border: none;
+  transform: rotate(45deg);
   cursor: pointer;
 }
 

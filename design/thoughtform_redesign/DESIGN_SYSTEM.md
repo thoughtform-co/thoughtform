@@ -17,12 +17,12 @@ Thoughtform's mission is helping people **navigate AI's latent space**. The webs
 
 ### Inspiration Sources
 
-| Source | What We Took |
-|--------|-------------|
-| Star Atlas | Parallax zoom, orbital rings, chapter navigation |
-| Flight HUDs | Radar ticks, readouts, targeting reticles |
+| Source       | What We Took                                     |
+| ------------ | ------------------------------------------------ |
+| Star Atlas   | Parallax zoom, orbital rings, chapter navigation |
+| Flight HUDs  | Radar ticks, readouts, targeting reticles        |
 | Terminal UIs | Monospace data, sharp frames, minimal decoration |
-| Astrolabes | Brass/gold accents, measurement instruments |
+| Astrolabes   | Brass/gold accents, measurement instruments      |
 
 ---
 
@@ -70,12 +70,12 @@ Corners     →  Gold L-brackets
 
 ### Spacing Rules
 
-| Element | Distance from Edge |
-|---------|-------------------|
+| Element         | Distance from Edge             |
+| --------------- | ------------------------------ |
 | Corner brackets | `var(--hud-padding)` (32-64px) |
-| Top/bottom bars | `var(--hud-padding) + 24px` |
-| Side rails | `var(--hud-padding) + 16px` |
-| Content | Clears rails + 48px padding |
+| Top/bottom bars | `var(--hud-padding) + 24px`    |
+| Side rails      | `var(--hud-padding) + 16px`    |
+| Content         | Clears rails + 48px padding    |
 
 **Rationale**: Elements should never hug the corner brackets. There should always be breathing room.
 
@@ -94,8 +94,8 @@ Corners     →  Gold L-brackets
 The key innovation is using **two vanishing points**:
 
 ```javascript
-const cx_stars = width * 0.5;   // Stars: center
-const cx_geo = width * 0.72;    // Landmarks: right side
+const cx_stars = width * 0.5; // Stars: center
+const cx_geo = width * 0.72; // Landmarks: right side
 ```
 
 This creates the sensation of **flying past** landmarks rather than through them.
@@ -104,30 +104,30 @@ This creates the sensation of **flying past** landmarks rather than through them
 
 Each landmark represents a conceptual territory:
 
-| Landmark | Concept | Visual Language |
-|----------|---------|-----------------|
-| Semantic Terrain | Meaning as topology | Wireframe mountain, sine waves |
-| Polar Orbit | Circular thinking, cycles | Concentric rings, spiral |
-| Trajectory Tunnel | Direction, purpose | Receding rectangles, helix |
-| Event Horizon | Destination, singularity | Sphere, gravitational pull |
+| Landmark          | Concept                   | Visual Language                |
+| ----------------- | ------------------------- | ------------------------------ |
+| Semantic Terrain  | Meaning as topology       | Wireframe mountain, sine waves |
+| Polar Orbit       | Circular thinking, cycles | Concentric rings, spiral       |
+| Trajectory Tunnel | Direction, purpose        | Receding rectangles, helix     |
+| Event Horizon     | Destination, singularity  | Sphere, gravitational pull     |
 
 ### ASCII Characters
 
 Close particles display semantic characters:
 
 ```javascript
-const CHARS = ['λ', 'δ', 'θ', 'φ', 'ψ', 'Σ', 'π', '∇', '∞', '∂', '⟨', '⟩'];
+const CHARS = ["λ", "δ", "θ", "φ", "ψ", "Σ", "π", "∇", "∞", "∂", "⟨", "⟩"];
 ```
 
 **Why**: Reinforces "navigating language/meaning" — particles ARE symbols.
 
 ### Color Coding
 
-| Element | Color | Hex |
-|---------|-------|-----|
-| Stars | Dawn (white) | `#ebe3d6` |
-| Most landmarks | Gold | `#caa554` |
-| Tunnel helix | White | `#ffffff` |
+| Element              | Color          | Hex       |
+| -------------------- | -------------- | --------- |
+| Stars                | Dawn (white)   | `#ebe3d6` |
+| Most landmarks       | Gold           | `#caa554` |
+| Tunnel helix         | White          | `#ffffff` |
 | Event Horizon sphere | Alert (orange) | `#ff6b35` |
 
 ---
@@ -181,8 +181,8 @@ Everything animates based on scroll position:
 ScrollTrigger.create({
   onUpdate: (self) => {
     const progress = self.progress; // 0 to 1
-    scrollZ = progress * 7500;      // Z position
-  }
+    scrollZ = progress * 7500; // Z position
+  },
 });
 ```
 
@@ -195,7 +195,7 @@ gsap.from(element, {
   opacity: 0,
   y: 25,
   duration: 0.6,
-  ease: 'power3.out'
+  ease: "power3.out",
 });
 ```
 
@@ -210,7 +210,7 @@ gsap.to(hudElement, {
   onComplete: () => {
     hudElement.textContent = newValue;
     gsap.to(hudElement, { duration: 0.2, opacity: 1 });
-  }
+  },
 });
 ```
 
@@ -220,11 +220,11 @@ gsap.to(hudElement, {
 
 ### Breakpoints
 
-| Breakpoint | Changes |
-|------------|---------|
+| Breakpoint | Changes                                              |
+| ---------- | ---------------------------------------------------- |
 | `< 1100px` | Single-column layout, hide visualization placeholder |
-| `< 900px` | Hide side rails, reduce nav spacing |
-| `< 600px` | Hide brand text, hide coordinates |
+| `< 900px`  | Hide side rails, reduce nav spacing                  |
+| `< 600px`  | Hide brand text, hide coordinates                    |
 
 ### Mobile Philosophy
 
@@ -232,7 +232,55 @@ On mobile, the **particle system remains** but landmarks are centered. The HUD s
 
 ---
 
-## 8. Brand Alignment Checklist
+## 8. Shape Principles
+
+### Core Rule: No Rounded Objects
+
+Thoughtform's visual language is **angular and precise**. Every shape should feel like it was machined or crystalline—never soft or organic.
+
+| Element         | ❌ Avoid                          | ✅ Use Instead                   |
+| --------------- | --------------------------------- | -------------------------------- |
+| Buttons         | Rounded corners (`border-radius`) | Sharp corners or corner brackets |
+| Toggles/Sliders | Circular thumb                    | Diamond thumb (`rotate(45deg)`)  |
+| Icons           | Circular indicators               | Diamond markers (◇)              |
+| Badges/Tags     | Pills (`border-radius: 9999px`)   | Rectangular with corner accents  |
+| Progress bars   | Rounded ends                      | Sharp terminals                  |
+| Cards           | `border-radius: 8px`              | Corner brackets, no radius       |
+
+### Why Diamonds?
+
+The diamond (◇) is a recurring motif because:
+
+1. **45° rotation** of a square — derived from our grid system
+2. **Echoes navigation markers** — waypoints, coordinates
+3. **Suggests precision** — measurement instruments use similar shapes
+4. **Distinct from consumer UI** — immediately feels "not generic"
+
+### Implementation
+
+```css
+/* Slider thumb — diamond */
+.slider::-webkit-slider-thumb {
+  width: 10px;
+  height: 10px;
+  border-radius: 0;
+  transform: rotate(45deg);
+}
+
+/* Marker icon */
+.marker::before {
+  content: "◇";
+}
+
+/* Corner bracket pattern (L-shaped, not curved) */
+.frame::after {
+  clip-path: polygon(0 0, 24px 0, 24px 2px, 2px 2px, 2px 24px, 0 24px);
+}
+```
+
+---
+
+## 9. Brand Alignment Checklist
 
 ### ✅ Following
 
@@ -240,6 +288,7 @@ On mobile, the **particle system remains** but landmarks are centered. The HUD s
 - [x] Dawn text with opacity variants
 - [x] Gold accent for navigation
 - [x] Sharp geometry (no rounded corners)
+- [x] Diamond shapes for interactive elements
 - [x] Grid-snapped particles (`GRID = 3`)
 - [x] Token-driven design (CSS variables)
 - [x] Restraint over decoration
@@ -247,7 +296,9 @@ On mobile, the **particle system remains** but landmarks are centered. The HUD s
 ### ❌ Avoided
 
 - [x] Purple gradients
-- [x] Rounded corners
+- [x] Rounded corners (`border-radius > 0`)
+- [x] Circular sliders/toggles
+- [x] Pill-shaped buttons/badges
 - [x] Box shadows
 - [x] System fonts
 - [x] Pure black/white
@@ -255,7 +306,7 @@ On mobile, the **particle system remains** but landmarks are centered. The HUD s
 
 ---
 
-## 9. Future Considerations
+## 10. Future Considerations
 
 ### Potential Enhancements
 
@@ -273,7 +324,7 @@ On mobile, the **particle system remains** but landmarks are centered. The HUD s
 
 ---
 
-## 10. Implementation Notes
+## 11. Implementation Notes
 
 ### Font Loading
 
@@ -281,8 +332,8 @@ PP Mondwest requires local font files:
 
 ```css
 @font-face {
-  font-family: 'PP Mondwest';
-  src: url('/fonts/PPMondwest-Regular.woff2') format('woff2');
+  font-family: "PP Mondwest";
+  src: url("/fonts/PPMondwest-Regular.woff2") format("woff2");
   font-display: swap;
 }
 ```
@@ -290,6 +341,7 @@ PP Mondwest requires local font files:
 ### Canvas Performance
 
 The particle system uses:
+
 - Single canvas (not multiple)
 - Trail effect (semi-transparent clear)
 - Depth sorting for proper layering
@@ -303,6 +355,6 @@ Lenis provides buttery smooth scrolling:
 const lenis = new Lenis({
   duration: 1.2,
   easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-  smoothWheel: true
+  smoothWheel: true,
 });
 ```
