@@ -358,38 +358,11 @@
 .lab-content {
   position: absolute;
   top: calc(var(--hud-padding, 32px) + 60px);
-  bottom: calc(var(--hud-padding, 32px) + 40px);
-  left: calc(var(--hud-padding, 32px) + var(--rail-width, 60px) + var(--content-inset, 40px));
-  right: calc(var(--hud-padding, 32px) + var(--rail-width, 60px) + var(--content-inset, 40px));
-  display: flex;
-  z-index: 1;
-}
-
-/* ─── FOOTER ─── */
-.lab-footer {
-  position: absolute;
   bottom: var(--hud-padding, 32px);
   left: calc(var(--hud-padding, 32px) + var(--rail-width, 60px) + var(--content-inset, 40px));
   right: calc(var(--hud-padding, 32px) + var(--rail-width, 60px) + var(--content-inset, 40px));
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  height: 32px;
-  z-index: 100;
-}
-
-.footer-coords {
-  display: flex;
-  gap: 24px;
-  font-family: var(--font-mono);
-  font-size: 10px;
-  color: var(--dawn-30);
-}
-
-.footer-hint {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  color: var(--dawn-30);
+  z-index: 1;
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -407,9 +380,9 @@
 /* ─── CODEX BUTTON ─── */
 .codex-btn {
   position: absolute;
-  top: -36px;
+  top: -44px;
   left: 0;
-  width: 200px;
+  width: 260px;
   height: 32px;
   background: var(--gold, #caa554);
   border: 1px solid var(--gold, #caa554);
@@ -432,9 +405,9 @@
 /* ─── DIALS BUTTON ─── */
 .dials-btn {
   position: absolute;
-  top: -36px;
+  top: -44px;
   right: 0;
-  width: 200px;
+  width: 260px;
   height: 32px;
   background: var(--gold, #caa554);
   border: 1px solid var(--gold, #caa554);
@@ -456,9 +429,9 @@
 
 /* ─── PANELS ─── */
 .lab-panel {
-  width: 200px;
-  min-width: 200px;
-  max-width: 200px;
+  width: 260px;
+  min-width: 260px;
+  max-width: 260px;
   display: flex;
   flex-direction: column;
   background: rgba(10, 9, 8, 0.4);
@@ -489,6 +462,59 @@
   border-right: none;
 }
 
+/* Golden corner accents for panels */
+.lab-panel--left::after,
+.lab-panel--right::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: transparent;
+  border: 1.5px solid var(--gold, #caa554);
+  pointer-events: none;
+  z-index: 10;
+  box-sizing: border-box;
+}
+
+.lab-panel--left::after {
+  /* Show only the top-right and bottom-left corners */
+  clip-path: polygon(
+    /* Top Right L - start at inner point */ calc(100% - 24px) 1.5px,
+    calc(100% - 24px) 0,
+    100% 0,
+    100% 24px,
+    calc(100% - 1.5px) 24px,
+    calc(100% - 1.5px) 1.5px,
+    /* Diagonal through interior to bottom-left L */ 1.5px calc(100% - 24px),
+    1.5px calc(100% - 1.5px),
+    24px calc(100% - 1.5px),
+    24px 100%,
+    0 100%,
+    0 calc(100% - 24px) /* Auto-closes diagonally through interior back to start */
+  );
+}
+
+.lab-panel--right::after {
+  /* Show only the top-left and bottom-right corners */
+  clip-path: polygon(
+    /* Top Left L - start at inner point */ 1.5px 24px,
+    0 24px,
+    0 0,
+    24px 0,
+    24px 1.5px,
+    1.5px 1.5px,
+    /* Diagonal through interior to bottom-right L */ calc(100% - 24px) calc(100% - 1.5px),
+    calc(100% - 24px) 100%,
+    100% 100%,
+    100% calc(100% - 24px),
+    calc(100% - 1.5px) calc(100% - 24px),
+    calc(100% - 1.5px) calc(100% - 1.5px)
+      /* Auto-closes diagonally through interior back to start */
+  );
+}
+
 /* ─── PANEL SECTIONS ─── */
 .panel-section {
   padding: 12px;
@@ -501,7 +527,7 @@
 
 .panel-label {
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 400;
   text-transform: uppercase;
   letter-spacing: 0.15em;
@@ -1410,13 +1436,15 @@
     right: var(--hud-padding, 32px);
   }
 
-  .lab-footer {
-    left: var(--hud-padding, 32px);
-    right: var(--hud-padding, 32px);
+  .lab-panel {
+    width: 220px;
+    min-width: 220px;
+    max-width: 220px;
   }
 
-  .lab-panel {
-    width: 180px;
+  .codex-btn,
+  .dials-btn {
+    width: 220px;
   }
 }
 
@@ -1426,7 +1454,14 @@
   }
 
   .lab-panel {
-    width: 160px;
+    width: 180px;
+    min-width: 180px;
+    max-width: 180px;
+  }
+
+  .codex-btn,
+  .dials-btn {
+    width: 180px;
   }
 
   .particles-tab {
@@ -1436,8 +1471,15 @@
   .lab-panel--left,
   .lab-panel--right {
     width: 100%;
+    min-width: 100%;
+    max-width: 100%;
     max-height: 150px;
     border: 1px solid var(--dawn-08);
+  }
+
+  .codex-btn,
+  .dials-btn {
+    width: 50%;
   }
 
   .lab-main {
@@ -1445,10 +1487,6 @@
   }
 
   .panel-toggle {
-    display: none;
-  }
-
-  .footer-coords {
     display: none;
   }
 }

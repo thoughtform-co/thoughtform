@@ -802,15 +802,6 @@ function OrreryContent() {
           </div>
         )}
       </div>
-
-      {/* Bottom Status */}
-      <footer className="lab-footer">
-        <div className="footer-coords">
-          <span>δ: 0.42</span>
-          <span>θ: 45.0°</span>
-        </div>
-        <div className="footer-hint">Scroll to zoom • Drag to pan</div>
-      </footer>
     </div>
   );
 }
