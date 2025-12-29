@@ -917,7 +917,7 @@ function HUDWrapper({
       width: arm,
       height: arm,
       pointerEvents: "none",
-      zIndex: 2,
+      zIndex: 15, // Corners should be above border
     };
 
     // Each corner uses two gradient bars forming an L-shape
@@ -953,7 +953,7 @@ function HUDWrapper({
             inset: 0,
             border: `${borderThickness}px solid ${borderColor}`,
             pointerEvents: "none",
-            zIndex: 10,
+            zIndex: 5, // Border below corners but above content
           }}
         />
       )}
