@@ -78,13 +78,11 @@ interface StyleConfig {
   props: Record<string, unknown>;
 }
 
-// Brand colors for picker - includes subtle variants for borders
+// Primary brand colors for dials - only core colors, no secondary
 const BRAND_COLORS = [
   { name: "Gold", value: "#caa554", variable: "--gold" },
   { name: "Dawn", value: "#ebe3d6", variable: "--dawn" },
   { name: "Void", value: "#0a0908", variable: "--void" },
-  { name: "Verde", value: "#39ff14", variable: "--verde" },
-  { name: "Alert", value: "#ff6b35", variable: "--alert" },
   { name: "Dawn 50%", value: "rgba(235, 227, 214, 0.5)", variable: "--dawn-50" },
   { name: "Gold 50%", value: "rgba(202, 165, 84, 0.5)", variable: "--gold-50" },
 ];
