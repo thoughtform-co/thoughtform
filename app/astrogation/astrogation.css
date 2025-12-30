@@ -2080,116 +2080,133 @@
   align-items: center;
 }
 
-/* Component Specification Styles */
-.vault__spec {
-  margin-bottom: 40px;
-  background: rgba(235, 227, 214, 0.02);
-  border: 1px solid rgba(235, 227, 214, 0.05);
-  border-radius: 4px;
-  padding: 24px;
+.vault__empty-preview {
+  text-align: center;
+  color: var(--dawn-30);
 }
 
-.vault__spec-header {
+.vault__preview {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 32px;
+  min-height: 0;
+  background: rgba(10, 9, 8, 0.2);
+  border: 1px solid rgba(235, 227, 214, 0.05);
+  border-radius: 4px;
   margin-bottom: 24px;
 }
 
-.vault__spec-title {
+/* Spec Panel (Right Sidebar) */
+.spec-panel {
   display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 8px;
+  flex-direction: column;
+  gap: 24px;
 }
 
-.vault__spec-icon {
-  font-size: 20px;
-  color: var(--gold);
+.spec-panel__header {
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(235, 227, 214, 0.1);
 }
 
-.vault__spec-title h2 {
+.spec-panel__title {
   font-family: var(--font-mono);
-  font-size: 18px;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
+  font-size: 16px;
   color: var(--gold);
-  margin: 0;
+  margin: 0 0 8px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
-.vault__spec-desc {
-  font-size: 14px;
+.spec-panel__desc {
+  font-size: 12px;
   color: var(--dawn-70);
   line-height: 1.5;
   margin: 0;
 }
 
-.vault__spec-section {
-  margin-bottom: 20px;
+.spec-panel__section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
-.vault__spec-label {
+.spec-panel__label {
   font-family: var(--font-mono);
   font-size: 10px;
   text-transform: uppercase;
   letter-spacing: 0.1em;
   color: var(--dawn-30);
-  margin-bottom: 8px;
 }
 
-.vault__spec-value {
-  font-size: 14px;
+.spec-panel__value {
+  font-size: 12px;
   color: var(--dawn);
 }
 
-.vault__spec-value--mono {
+.spec-panel__value--mono {
   font-family: var(--font-mono);
   color: var(--gold);
 }
 
-/* Table Styles */
-.vault__table-wrapper {
-  overflow-x: auto;
+.spec-panel__props {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
-.vault__table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 12px;
+.spec-prop {
+  background: rgba(235, 227, 214, 0.03);
+  border: 1px solid rgba(235, 227, 214, 0.08);
+  border-radius: 4px;
+  padding: 10px;
 }
 
-.vault__table th {
-  text-align: left;
-  padding: 10px 12px;
-  border-bottom: 1px solid rgba(235, 227, 214, 0.1);
+.spec-prop__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.spec-prop__name {
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 11px;
+  color: var(--gold);
+}
+
+.spec-prop__type {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: #569cd6;
   text-transform: uppercase;
-  color: var(--dawn-50);
 }
 
-.vault__table td {
-  padding: 12px;
-  border-bottom: 1px solid rgba(235, 227, 214, 0.05);
-  color: var(--dawn-70);
-  vertical-align: top;
+.spec-prop__details {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
-.vault__table-name {
-  font-family: var(--font-mono);
-  color: var(--gold);
-  font-weight: 500;
+.spec-prop__row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
 }
 
-.vault__table-type {
-  font-family: var(--font-mono);
-  color: #569cd6; /* Blueish for types */
-}
-
-.vault__table-default {
-  font-family: var(--font-mono);
-}
-
-.vault__table-constraints {
+.spec-prop__detail-label {
   color: var(--dawn-40);
-  font-style: italic;
+}
+
+.spec-prop__detail-value {
+  color: var(--dawn-70);
+  font-family: var(--font-mono);
+}
+
+/* Clean up old vault spec styles */
+.vault__spec {
+  display: none;
 }
 
 /* Rest of Vault Styles */

@@ -1341,6 +1341,8 @@ function CenterPanel({
         {activeTab === "vault" ? (
           <VaultView
             selectedComponentId={selectedComponentId}
+            componentProps={componentProps}
+            style={style}
             presets={presets}
             onLoadPreset={onLoadPreset}
             onDeletePreset={onDeletePreset}
@@ -1363,16 +1365,20 @@ function CenterPanel({
 }
 
 // ═══════════════════════════════════════════════════════════════
-// VAULT VIEW - Saved Elements & Static Data
+// VAULT VIEW - Saved Elements & Preview
 // ═══════════════════════════════════════════════════════════════
 
 function VaultView({
   selectedComponentId,
+  componentProps,
+  style,
   presets,
   onLoadPreset,
   onDeletePreset,
 }: {
   selectedComponentId: string | null;
+  componentProps: Record<string, unknown>;
+  style: StyleConfig;
   presets: UIComponentPreset[];
   onLoadPreset: (preset: UIComponentPreset) => void;
   onDeletePreset: (id: string) => void;
@@ -1397,61 +1403,24 @@ function VaultView({
 
   return (
     <div className="vault">
-      {/* Component Specification (Static Data) */}
-      {def && (
-        <div className="vault__spec">
-          <div className="vault__spec-header">
-            <div className="vault__spec-title">
-              <span className="vault__spec-icon">◇</span>
-              <h2>{def.name} Specification</h2>
-            </div>
-            <p className="vault__spec-desc">{def.description}</p>
+      {/* Component Preview Area (Static like before) */}
+      <div className="vault__preview">
+        {def ? (
+          <TargetReticle label={def.name.toUpperCase()}>
+            <ComponentPreview
+              componentId={selectedComponentId!}
+              props={componentProps}
+              style={style}
+              fullSize
+            />
+          </TargetReticle>
+        ) : (
+          <div className="vault__empty-preview">
+            <span className="vault__icon">◇</span>
+            <p>Select a component to preview its specifications</p>
           </div>
-
-          <div className="vault__spec-section">
-            <div className="vault__spec-label">Component ID</div>
-            <div className="vault__spec-value vault__spec-value--mono">{def.id}</div>
-          </div>
-
-          <div className="vault__spec-section">
-            <div className="vault__spec-label">Properties & Schema</div>
-            <div className="vault__table-wrapper">
-              <table className="vault__table">
-                <thead>
-                  <tr>
-                    <th>Property</th>
-                    <th>Type</th>
-                    <th>Default</th>
-                    <th>Constraints</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {def.props.map((prop) => (
-                    <tr key={prop.name}>
-                      <td className="vault__table-name">{prop.name}</td>
-                      <td className="vault__table-type">{prop.type}</td>
-                      <td className="vault__table-default">{String(prop.default ?? "—")}</td>
-                      <td className="vault__table-constraints">
-                        {prop.type === "number" && (
-                          <span>
-                            Range: {prop.min ?? 0}–{prop.max ?? 100}
-                            {prop.step ? ` (Step: ${prop.step})` : ""}
-                          </span>
-                        )}
-                        {prop.type === "select" && <span>Options: {prop.options?.join(", ")}</span>}
-                        {prop.type === "color" && <span>Semantic HEX / CSS Var</span>}
-                        {prop.type !== "number" &&
-                          prop.type !== "select" &&
-                          prop.type !== "color" && <span className="opacity-40">—</span>}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Saved Elements Section */}
       <div className="vault__header">
@@ -1499,6 +1468,82 @@ function VaultView({
         </div>
       )}
     </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SPEC PANEL - Static Data / Documentation
+// ═══════════════════════════════════════════════════════════════
+
+function SpecPanel({ selectedComponentId }: { selectedComponentId: string | null }) {
+  const def = selectedComponentId ? getComponentById(selectedComponentId) : null;
+
+  if (!def) {
+    return (
+      <aside className="astrogation-panel astrogation-panel--right">
+        <div className="panel-header">SPECIFICATIONS</div>
+        <div className="panel-content panel-content--empty">
+          <div className="empty-state">
+            <span className="empty-state__icon">◇</span>
+            <p>Select a component to edit</p>
+          </div>
+        </div>
+      </aside>
+    );
+  }
+
+  return (
+    <aside className="astrogation-panel astrogation-panel--right">
+      <div className="panel-header">SPECIFICATIONS</div>
+      <div className="panel-content">
+        <div className="spec-panel">
+          <div className="spec-panel__header">
+            <h2 className="spec-panel__title">{def.name}</h2>
+            <p className="spec-panel__desc">{def.description}</p>
+          </div>
+
+          <div className="spec-panel__section">
+            <div className="spec-panel__label">Component ID</div>
+            <div className="spec-panel__value spec-panel__value--mono">{def.id}</div>
+          </div>
+
+          <div className="spec-panel__section">
+            <div className="spec-panel__label">Properties & Schema</div>
+            <div className="spec-panel__props">
+              {def.props.map((prop) => (
+                <div key={prop.name} className="spec-prop">
+                  <div className="spec-prop__header">
+                    <span className="spec-prop__name">{prop.name}</span>
+                    <span className="spec-prop__type">{prop.type}</span>
+                  </div>
+                  <div className="spec-prop__details">
+                    <div className="spec-prop__row">
+                      <span className="spec-prop__detail-label">Default:</span>
+                      <span className="spec-prop__detail-value">{String(prop.default ?? "—")}</span>
+                    </div>
+                    {prop.type === "number" && (
+                      <div className="spec-prop__row">
+                        <span className="spec-prop__detail-label">Range:</span>
+                        <span className="spec-prop__detail-value">
+                          {prop.min ?? 0}–{prop.max ?? 100}
+                          {prop.step ? ` (Step: ${prop.step})` : ""}
+                        </span>
+                      </div>
+                    )}
+                    {prop.type === "select" && (
+                      <div className="spec-prop__row">
+                        <span className="spec-prop__detail-label">Options:</span>
+                        <span className="spec-prop__detail-value">{prop.options?.join(", ")}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </aside>
   );
 }
 
@@ -2082,13 +2127,15 @@ function AstrogationContent() {
           canSave={!!selectedComponentId && !!presetName.trim()}
         />
 
-        {activeTab === "foundry" && (
+        {activeTab === "foundry" ? (
           <DialsPanel
             selectedComponentId={selectedComponentId}
             componentProps={componentProps}
             onPropsChange={setComponentProps}
             onCopyCode={handleCopyCode}
           />
+        ) : (
+          <SpecPanel selectedComponentId={selectedComponentId} />
         )}
       </div>
 
