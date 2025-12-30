@@ -1593,7 +1593,7 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   TREE COMPONENT
+   TREE COMPONENT - ELEGANT KIBO-UI STYLE LINES
    ═══════════════════════════════════════════════════════════════ */
 
 .tree-view {
@@ -1609,17 +1609,17 @@
   position: relative;
 }
 
-/* Vertical spacing between category-level tree nodes */
+/* Vertical spacing only for top-level categories */
 .tree-view > .tree-node {
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 }
 
 .tree-node-trigger {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   width: 100%;
-  padding: 6px 4px; /* Reduced left padding since expander is hidden */
+  padding: 6px 8px;
   background: transparent;
   border: none;
   font-family: var(--font-mono);
@@ -1629,122 +1629,108 @@
   cursor: pointer;
   transition: all 0.15s ease;
   position: relative;
+  z-index: 2;
 }
 
-/* Frame border only for category-level tree nodes (top level) */
+/* Category frames */
 .tree-view > .tree-node > .tree-node-trigger {
-  border-left: 1px solid var(--gold-30, rgba(202, 165, 84, 0.3));
-  border-right: 1px solid var(--gold-30, rgba(202, 165, 84, 0.3));
-  border-bottom: 1px solid var(--gold-30, rgba(202, 165, 84, 0.3));
-  border-top: 1px solid var(--gold-30, rgba(202, 165, 84, 0.3));
+  border: 1px solid var(--gold-30, rgba(202, 165, 84, 0.3));
   background: rgba(202, 165, 84, 0.08);
+  margin-bottom: 4px;
+}
+
+/* Subcategory frames (Grey theme) - Target folders only (like HUDS, TERMINALS) */
+.tree-node-content > .tree-node > .tree-node-trigger:has(.tree-icon--folder) {
+  border: 1px solid rgba(235, 227, 214, 0.1);
+  background: rgba(235, 227, 214, 0.03);
+  margin-top: 8px;
+  margin-bottom: 4px;
+  padding: 4px 8px;
+}
+
+.tree-node-content > .tree-node > .tree-node-trigger:has(.tree-icon--folder):hover {
+  background: rgba(235, 227, 214, 0.06);
+}
+
+.tree-node-content
+  > .tree-node
+  > .tree-node-trigger.tree-node-trigger--selected:has(.tree-icon--folder) {
+  border-color: var(--gold-50);
+  background: rgba(235, 227, 214, 0.08) !important;
+}
+
+/* Items (Files) - Keep transparent/clean */
+.tree-node-content > .tree-node > .tree-node-trigger:not(:has(.tree-icon--folder)) {
+  border: none;
+  background: transparent !important;
 }
 
 .tree-node-trigger:hover {
   color: var(--dawn, #ebe3d6);
+  background: rgba(235, 227, 214, 0.04);
 }
 
 .tree-node-trigger--selected {
   color: var(--gold, #caa554);
+  background: rgba(202, 165, 84, 0.08) !important;
 }
 
-/* Expander (chevron) - HIDDEN, using icon for expand state instead */
-.tree-expander {
-  display: none;
-}
-
-/* Icon */
 .tree-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 14px;
+  width: 16px;
+  height: 16px;
   font-size: 10px;
   color: var(--dawn-30, rgba(235, 227, 214, 0.3));
   flex-shrink: 0;
+  z-index: 2;
 }
 
 .tree-icon--folder {
   color: var(--gold-50, rgba(202, 165, 84, 0.5));
 }
 
-.tree-node-trigger:hover .tree-icon--folder,
-.tree-node-trigger--selected .tree-icon--folder {
-  color: var(--gold, #caa554);
-}
-
-.tree-icon--file {
-  font-size: 6px;
-}
-
-/* Label */
 .tree-label {
   flex: 1;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  font-size: 14px; /* Larger font size for better readability */
+  font-size: 13px;
 }
 
-/* Content (children container) */
+/* --- HIERARCHY --- */
+
 .tree-node-content {
   position: relative;
-  margin-left: 20px; /* Indent children - space for vertical line */
-  padding-left: 12px; /* Space between vertical line and content */
-  padding-top: 8px; /* Space between category header and content */
-  overflow: visible; /* Allow lines to extend beyond container */
+  margin-left: 24px; /* Maintain indentation for hierarchy */
+  padding-left: 0;
+  display: flex;
+  flex-direction: column;
 }
 
-/* Categories section - flows naturally, no special flex needed */
+/* Connectors removed for a cleaner look */
+.tree-node-content--lines::before,
+.tree-node-content--lines > .tree-node > .tree-node-trigger::before {
+  display: none;
+}
 
-/* Panel content scrolls - with invisible scrollbar */
+/* Expander (chevron) */
+.tree-expander {
+  display: none;
+}
+
+/* Panel content scrolls */
 .astrogation-panel--left .panel-content {
   flex: 1;
-  min-height: 0; /* Critical for flex scrolling */
+  min-height: 0;
   overflow-y: auto !important;
   overflow-x: hidden !important;
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE/Edge */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
 .astrogation-panel--left .panel-content::-webkit-scrollbar {
-  display: none; /* Chrome/Safari */
-}
-
-/* Vertical line connecting parent to children - aligned with parent icon center */
-.tree-node-content--lines::before {
-  content: "";
-  position: absolute;
-  left: -9px; /* Aligned with parent icon center: parent icon at 11px, minus content margin-left (20px) = -9px */
-  top: 0;
-  bottom: 0;
-  width: 1px;
-  background: var(--dawn-20, rgba(235, 227, 214, 0.2));
-  z-index: 1;
-}
-
-/* Horizontal line connecting from vertical line to each child's icon */
-.tree-node-content--lines > .tree-node > .tree-node-trigger::before {
-  content: "";
-  position: absolute;
-  left: -21px; /* Start from vertical line position: -9px - padding-left (12px) = -21px from trigger left */
-  top: 50%; /* Center vertically on the trigger */
-  width: 25px; /* Extend from vertical line to icon left edge: 21px + trigger padding (4px) = 25px */
-  height: 1px;
-  background: var(--dawn-20, rgba(235, 227, 214, 0.2));
-  z-index: 1;
-}
-
-/* For the last child, cover the vertical line below the horizontal connection */
-.tree-node-content--lines > .tree-node:last-child::after {
-  content: "";
-  position: absolute;
-  left: -21px; /* Positioned at vertical line: matches horizontal line start */
-  top: 50%; /* Start at the horizontal line */
-  bottom: 0;
-  height: 50%; /* Cover from horizontal line to bottom of this item */
-  width: 2px; /* Slightly wider to ensure coverage */
-  background: var(--void, #0a0908); /* Match background to hide the line */
-  z-index: 2; /* Higher z-index to cover the vertical line */
+  display: none;
 }
 
 /* ─── RESPONSIVE ─── */
