@@ -1720,8 +1720,9 @@
   display: none;
 }
 
-/* Panel content scrolls */
-.astrogation-panel--left .panel-content {
+/* Panel content scrolls - with invisible scrollbar */
+.astrogation-panel--left .panel-content,
+.astrogation-panel--right .panel-content {
   flex: 1;
   min-height: 0;
   overflow-y: auto !important;
@@ -1730,7 +1731,8 @@
   -ms-overflow-style: none;
 }
 
-.astrogation-panel--left .panel-content::-webkit-scrollbar {
+.astrogation-panel--left .panel-content::-webkit-scrollbar,
+.astrogation-panel--right .panel-content::-webkit-scrollbar {
   display: none;
 }
 
