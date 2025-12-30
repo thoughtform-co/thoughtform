@@ -451,6 +451,23 @@
   overflow-y: auto;
   overflow-x: hidden;
   padding: 12px 8px 12px 6px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Right panel content - allow save section at bottom */
+.astrogation-panel--right .panel-content {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; /* Let scrollable handle scrolling */
+}
+
+.panel-content__scrollable {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-bottom: 12px;
 }
 
 /* No corner accents - clean connected panel */
@@ -1378,6 +1395,68 @@
   width: 100%;
 }
 
+/* ─── DIALS SAVE SECTION ─── */
+.dials-save {
+  flex-shrink: 0;
+  padding: 16px 0 0 0;
+  border-top: 1px solid rgba(235, 227, 214, 0.08);
+  background: rgba(10, 9, 8, 0.3);
+  margin: 0 -8px -12px -6px;
+  padding: 16px 8px 12px 6px;
+}
+
+.dials-save__group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dials-save__input {
+  width: 100%;
+  padding: 10px 14px;
+  background: rgba(10, 9, 8, 0.6);
+  border: 1px solid rgba(235, 227, 214, 0.1);
+  border-radius: 3px;
+  color: var(--dawn);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.dials-save__input:focus {
+  border-color: rgba(202, 165, 84, 0.4);
+}
+
+.dials-save__input::placeholder {
+  color: rgba(235, 227, 214, 0.3);
+}
+
+.dials-save__btn {
+  width: 100%;
+  padding: 10px 20px;
+  background: rgba(202, 165, 84, 0.1);
+  border: 1px solid rgba(202, 165, 84, 0.3);
+  border-radius: 3px;
+  color: var(--gold);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.dials-save__btn:hover:not(:disabled) {
+  background: rgba(202, 165, 84, 0.2);
+  border-color: rgba(202, 165, 84, 0.5);
+}
+
+.dials-save__btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
 /* ─── DIALS CATEGORIES ─── */
 .dials-category {
   margin-bottom: 20px;
@@ -1971,19 +2050,136 @@
   width: 100%;
 }
 
+.preview-vectors {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .preview-vectors__grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 24px;
-  padding: 16px;
+  gap: 48px;
+  padding: 32px;
+  position: relative;
+  z-index: 2;
+  transition:
+    opacity 0.3s ease,
+    filter 0.3s ease;
 }
 
 .preview-vectors__item {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
   aspect-ratio: 1;
-  padding: 12px;
+  padding: 20px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+  border: 1px solid transparent;
+}
+
+.preview-vectors__item-content {
+  transition: transform 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.preview-vectors__item:hover:not(.preview-vectors__item--blurred) {
+  background: rgba(202, 165, 84, 0.05);
+  border-color: rgba(202, 165, 84, 0.2);
+}
+
+/* Individual item blur state (not used when grid is blurred) */
+.preview-vectors__item--blurred {
+  pointer-events: none;
+}
+
+/* When has focus, blur the entire grid but keep it visible */
+.preview-vectors--has-focus .preview-vectors__grid {
+  opacity: 0.4;
+  filter: blur(2px);
+  pointer-events: none;
+}
+
+/* Focused element overlay - centered in the preview area */
+.preview-vectors__focused-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  animation: vectorFocusIn 0.3s ease-out;
+}
+
+@keyframes vectorFocusIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+.preview-vectors__focused-content {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 64px;
+  background: rgba(10, 9, 8, 0.95);
+  border: 1px dashed rgba(235, 227, 214, 0.3);
+  border-radius: 8px;
+  cursor: pointer;
+  box-shadow:
+    0 0 0 1px rgba(235, 227, 214, 0.05),
+    0 0 60px rgba(202, 165, 84, 0.1),
+    0 30px 80px rgba(0, 0, 0, 0.6);
+}
+
+.preview-vectors__focused-content svg {
+  width: auto;
+  height: auto;
+  max-width: 200px;
+  max-height: 200px;
+  transform: scale(2);
+}
+
+.preview-vectors__focused-label {
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 4px 16px;
+  background: rgba(10, 9, 8, 0.95);
+  border: 1px solid rgba(235, 227, 214, 0.2);
+  border-radius: 2px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  color: rgba(235, 227, 214, 0.8);
+  white-space: nowrap;
+}
+
+/* Backdrop when element is focused - subtle darkening */
+.preview-vectors__backdrop {
+  position: absolute;
+  inset: -200px;
+  background: rgba(10, 9, 8, 0.3);
+  z-index: 5;
+  cursor: pointer;
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -2472,4 +2668,24 @@
   letter-spacing: 0.08em;
   color: rgba(235, 227, 214, 0.25);
   text-transform: uppercase;
+}
+
+/* Focus Mode Styles */
+.foundry--focused {
+  position: relative;
+  z-index: 10;
+}
+
+.foundry__preview--focused {
+  cursor: zoom-out;
+}
+
+.foundry__preview:not(.foundry__preview--focused) {
+  cursor: zoom-in;
+}
+
+/* Ensure center panel is properly positioned */
+.center-panel {
+  position: relative;
+  z-index: 6;
 }

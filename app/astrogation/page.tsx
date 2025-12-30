@@ -404,71 +404,148 @@ function renderComponent(
 
     case "vectors": {
       const color = "#caa554";
-      const iconSize = fullSize ? 48 : 32;
+      const iconSize = fullSize ? 64 : 40;
+      const focusedElementId = (props._focusedElementId as string) || null;
+      const onElementFocus = props._onElementFocus as ((id: string | null) => void) | undefined;
+
+      const vectors = [
+        {
+          id: "vector-1",
+          name: "Slash",
+          svg: (
+            <svg viewBox="0 0 1348.57 720" width={iconSize * 1.5} height={iconSize} fill={color}>
+              <path d="M1348.15,334.39l-8.04,27.09h-300.11l-3.81,21.16h-28.36l-65.19,337.35h-36.4l58.41-310.69h-13.55l4.66-26.67h-31.75l3.81-21.16H0l8.04-27.09h941.38l3.81-21.16h28.36L1040.42,0h36.4l-52.06,286.56h13.55l-4.66,26.67h31.75l-3.81,21.16h286.98-.42Z" />
+            </svg>
+          ),
+        },
+        {
+          id: "vector-2",
+          name: "Cross",
+          svg: (
+            <svg viewBox="0 0 857.08 872.8" width={iconSize} height={iconSize} fill={color}>
+              <polygon points="857.08 405.29 847.33 438.2 502.71 438.2 502.71 438.3 483.49 438.3 478.9 463.71 444.39 463.71 365.59 872.8 321.61 872.8 392.44 496.06 375.93 496.06 381.75 463.8 343.11 463.71 347.9 438.2 0 438.2 9.75 405.29 354.37 405.29 354.37 405.19 373.59 405.19 378.18 379.78 412.69 379.78 483.96 0 527.94 0 464.64 347.43 481.15 347.43 475.33 379.69 513.97 379.78 509.18 405.29 857.08 405.29" />
+            </svg>
+          ),
+        },
+        {
+          id: "vector-3",
+          name: "Arrows",
+          svg: (
+            <svg viewBox="0 0 702.44 699.76" width={iconSize} height={iconSize} fill={color}>
+              <path d="M257.44,222.89c4.6,4.6,9.71,8.29,14.78,12.07l-35.14,35.14c-3.11-4.17-5.95-8.5-9.62-12.35L7.2,37.49,39.63,5.06l217.83,217.83h-.02Z" />
+              <path d="M438.98,468.32l231.44,231.44,32.02-32.02-231.44-231.44c-2.26-2.26-3.89-4.89-5.95-7.28l-33.34,33.34c2.38,2.06,5.01,3.7,7.27,5.96Z" />
+              <g>
+                <path d="M438.98,217.83c-4.6,4.6-9.71,8.29-14.78,12.07l35.14,35.14c3.11-4.17,5.95-8.5,9.62-12.35l79.48-79.48-32.43-32.43-77.05,77.05h.02Z" />
+                <rect
+                  x="546.1"
+                  y="45.86"
+                  width="148.7"
+                  height="45.86"
+                  transform="translate(133.08 458.87) rotate(-45)"
+                />
+                <rect
+                  x="556.7"
+                  y="148.92"
+                  width="50.39"
+                  height="44.19"
+                  transform="translate(49.51 461.55) rotate(-45)"
+                />
+              </g>
+              <path d="M250.24,471.38c4.6-4.6,9.71-8.29,14.78-12.07l-35.14-35.14c-3.11,4.17-5.95,8.5-9.62,12.35L0,656.78l32.43,32.43,217.83-217.83h-.02Z" />
+            </svg>
+          ),
+        },
+        {
+          id: "vector-4",
+          name: "Plus",
+          svg: (
+            <svg viewBox="0 0 928.84 948.1" width={iconSize} height={iconSize} fill={color}>
+              <path d="M443.67,312.4c0,8.3-.96,16.37-2.44,24.26h50.73c-1.48-7.88-2.44-15.96-2.44-24.26v-132.5h-45.85v132.5Z" />
+              <rect x="443.67" width="45.85" height="63.99" />
+              <path d="M443.67,620.79v327.31h45.28v-327.31c0-3.2.71-6.21.94-9.35h-47.15c.23,3.14.93,6.15.93,9.35h0Z" />
+              <rect x="397.29" y="63.99" width="46.38" height="115.91" />
+              <path d="M308.05,489.49c6.51,0,12.73,1,18.98,1.92v-49.7c-5.15.75-10.21,1.8-15.54,1.93H0v45.86h308.05Z" />
+              <path d="M620.79,489.49c-6.51,0-12.73,1-18.98,1.92v-49.7c5.15.75,10.21,1.8,15.54,1.93h311.49v45.86h-308.05Z" />
+            </svg>
+          ),
+        },
+        {
+          id: "vector-5",
+          name: "Star",
+          svg: (
+            <svg viewBox="0 0 690.68 690.68" width={iconSize} height={iconSize} fill={color}>
+              <polygon points="690.68 655.83 445.72 410.87 472.51 384.09 450.03 361.61 467.29 344.36 451.48 328.55 476.91 303.11 449.66 275.86 690.68 34.84 655.83 0 414.81 241.02 387.52 213.72 362.08 239.15 346.22 223.29 328.97 240.55 306.54 218.12 279.76 244.91 34.85 0 0 34.84 244.91 279.75 218.13 306.54 240.55 328.96 225.16 344.36 241.02 360.22 213.72 387.51 241.02 414.81 0 655.83 34.85 690.68 275.87 449.66 303.12 476.91 330.41 449.61 346.22 465.42 361.62 450.03 384.09 472.5 410.88 445.72 655.83 690.68 690.68 655.83" />
+            </svg>
+          ),
+        },
+        {
+          id: "vector-6",
+          name: "Compass",
+          svg: (
+            <svg viewBox="0 0 927.48 927.48" width={iconSize} height={iconSize} fill={color}>
+              <path d="M576.48,490.64c7.2-1.48,14.65-2.25,22.28-2.25h328.72v-49.28h-328.72c-7.63,0-15.08-.78-22.28-2.25v-33.17h-14.42c4.14-6.37,8.99-12.41,14.57-17.99l232.44-232.44-34.85-34.85-232.44,232.44c-5.39,5.39-11.2,10.11-17.33,14.15v-19.31h-34.78c-.85-5.53-1.31-11.19-1.31-16.96V0h-49.28v328.72c0,5.77-.45,11.43-1.31,16.96h-34.78v19.31c-6.12-4.04-11.93-8.76-17.33-14.15L153.22,118.4l-34.85,34.85,232.44,232.44c5.59,5.58,10.44,11.62,14.57,17.99h-14.42v33.17c-7.2,1.48-14.65,2.25-22.28,2.25H0v49.28h328.72c7.63,0,15.08.78,22.28,2.25v33.17h14.42c-4.14,6.37-8.99,12.41-14.57,17.99l-232.44,232.44,34.85,34.85,232.44-232.44c5.39-5.39,11.2-10.11,17.33-14.15v19.31h34.78c.85,5.53,1.31,11.19,1.31,16.96v328.72h49.28v-328.72c0-5.77.45-11.43,1.31-16.96h34.78v-19.31c6.12,4.04,11.93,8.76,17.33,14.15l232.44,232.44,34.85-34.85-232.44-232.44c-5.59-5.59-10.44-11.62-14.57-17.99h14.42v-33.17h-.04Z" />
+            </svg>
+          ),
+        },
+      ];
+
+      const hasFocusedElement = focusedElementId !== null;
+      const focusedVector = hasFocusedElement
+        ? vectors.find((v) => v.id === focusedElementId)
+        : null;
+
       return (
-        <div className="preview-vectors">
+        <div className={`preview-vectors ${hasFocusedElement ? "preview-vectors--has-focus" : ""}`}>
+          {/* Grid of all vectors */}
           <div className="preview-vectors__grid">
-            {/* Vector 1 - Slash */}
-            <div className="preview-vectors__item">
-              <svg viewBox="0 0 1348.57 720" width={iconSize * 1.5} height={iconSize} fill={color}>
-                <path d="M1348.15,334.39l-8.04,27.09h-300.11l-3.81,21.16h-28.36l-65.19,337.35h-36.4l58.41-310.69h-13.55l4.66-26.67h-31.75l3.81-21.16H0l8.04-27.09h941.38l3.81-21.16h28.36L1040.42,0h36.4l-52.06,286.56h13.55l-4.66,26.67h31.75l-3.81,21.16h286.98-.42Z" />
-              </svg>
-            </div>
-            {/* Vector 2 - Cross */}
-            <div className="preview-vectors__item">
-              <svg viewBox="0 0 857.08 872.8" width={iconSize} height={iconSize} fill={color}>
-                <polygon points="857.08 405.29 847.33 438.2 502.71 438.2 502.71 438.3 483.49 438.3 478.9 463.71 444.39 463.71 365.59 872.8 321.61 872.8 392.44 496.06 375.93 496.06 381.75 463.8 343.11 463.71 347.9 438.2 0 438.2 9.75 405.29 354.37 405.29 354.37 405.19 373.59 405.19 378.18 379.78 412.69 379.78 483.96 0 527.94 0 464.64 347.43 481.15 347.43 475.33 379.69 513.97 379.78 509.18 405.29 857.08 405.29" />
-              </svg>
-            </div>
-            {/* Vector 3 - Arrows */}
-            <div className="preview-vectors__item">
-              <svg viewBox="0 0 702.44 699.76" width={iconSize} height={iconSize} fill={color}>
-                <path d="M257.44,222.89c4.6,4.6,9.71,8.29,14.78,12.07l-35.14,35.14c-3.11-4.17-5.95-8.5-9.62-12.35L7.2,37.49,39.63,5.06l217.83,217.83h-.02Z" />
-                <path d="M438.98,468.32l231.44,231.44,32.02-32.02-231.44-231.44c-2.26-2.26-3.89-4.89-5.95-7.28l-33.34,33.34c2.38,2.06,5.01,3.7,7.27,5.96Z" />
-                <g>
-                  <path d="M438.98,217.83c-4.6,4.6-9.71,8.29-14.78,12.07l35.14,35.14c3.11-4.17,5.95-8.5,9.62-12.35l79.48-79.48-32.43-32.43-77.05,77.05h.02Z" />
-                  <rect
-                    x="546.1"
-                    y="45.86"
-                    width="148.7"
-                    height="45.86"
-                    transform="translate(133.08 458.87) rotate(-45)"
-                  />
-                  <rect
-                    x="556.7"
-                    y="148.92"
-                    width="50.39"
-                    height="44.19"
-                    transform="translate(49.51 461.55) rotate(-45)"
-                  />
-                </g>
-                <path d="M250.24,471.38c4.6-4.6,9.71-8.29,14.78-12.07l-35.14-35.14c-3.11,4.17-5.95,8.5-9.62,12.35L0,656.78l32.43,32.43,217.83-217.83h-.02Z" />
-              </svg>
-            </div>
-            {/* Vector 4 - Plus */}
-            <div className="preview-vectors__item">
-              <svg viewBox="0 0 928.84 948.1" width={iconSize} height={iconSize} fill={color}>
-                <path d="M443.67,312.4c0,8.3-.96,16.37-2.44,24.26h50.73c-1.48-7.88-2.44-15.96-2.44-24.26v-132.5h-45.85v132.5Z" />
-                <rect x="443.67" width="45.85" height="63.99" />
-                <path d="M443.67,620.79v327.31h45.28v-327.31c0-3.2.71-6.21.94-9.35h-47.15c.23,3.14.93,6.15.93,9.35h0Z" />
-                <rect x="397.29" y="63.99" width="46.38" height="115.91" />
-                <path d="M308.05,489.49c6.51,0,12.73,1,18.98,1.92v-49.7c-5.15.75-10.21,1.8-15.54,1.93H0v45.86h308.05Z" />
-                <path d="M620.79,489.49c-6.51,0-12.73,1-18.98,1.92v-49.7c5.15.75,10.21,1.8,15.54,1.93h311.49v45.86h-308.05Z" />
-              </svg>
-            </div>
-            {/* Vector 5 - Star */}
-            <div className="preview-vectors__item">
-              <svg viewBox="0 0 690.68 690.68" width={iconSize} height={iconSize} fill={color}>
-                <polygon points="690.68 655.83 445.72 410.87 472.51 384.09 450.03 361.61 467.29 344.36 451.48 328.55 476.91 303.11 449.66 275.86 690.68 34.84 655.83 0 414.81 241.02 387.52 213.72 362.08 239.15 346.22 223.29 328.97 240.55 306.54 218.12 279.76 244.91 34.85 0 0 34.84 244.91 279.75 218.13 306.54 240.55 328.96 225.16 344.36 241.02 360.22 213.72 387.51 241.02 414.81 0 655.83 34.85 690.68 275.87 449.66 303.12 476.91 330.41 449.61 346.22 465.42 361.62 450.03 384.09 472.5 410.88 445.72 655.83 690.68 690.68 655.83" />
-              </svg>
-            </div>
-            {/* Vector 6 - Compass */}
-            <div className="preview-vectors__item">
-              <svg viewBox="0 0 927.48 927.48" width={iconSize} height={iconSize} fill={color}>
-                <path d="M576.48,490.64c7.2-1.48,14.65-2.25,22.28-2.25h328.72v-49.28h-328.72c-7.63,0-15.08-.78-22.28-2.25v-33.17h-14.42c4.14-6.37,8.99-12.41,14.57-17.99l232.44-232.44-34.85-34.85-232.44,232.44c-5.39,5.39-11.2,10.11-17.33,14.15v-19.31h-34.78c-.85-5.53-1.31-11.19-1.31-16.96V0h-49.28v328.72c0,5.77-.45,11.43-1.31,16.96h-34.78v19.31c-6.12-4.04-11.93-8.76-17.33-14.15L153.22,118.4l-34.85,34.85,232.44,232.44c5.59,5.58,10.44,11.62,14.57,17.99h-14.42v33.17c-7.2,1.48-14.65,2.25-22.28,2.25H0v49.28h328.72c7.63,0,15.08.78,22.28,2.25v33.17h14.42c-4.14,6.37-8.99,12.41-14.57,17.99l-232.44,232.44,34.85,34.85,232.44-232.44c5.39-5.39,11.2-10.11,17.33-14.15v19.31h34.78c.85,5.53,1.31,11.19,1.31,16.96v328.72h49.28v-328.72c0-5.77.45-11.43,1.31-16.96h34.78v-19.31c6.12,4.04,11.93,8.76,17.33,14.15l232.44,232.44,34.85-34.85-232.44-232.44c-5.59-5.59-10.44-11.62-14.57-17.99h14.42v-33.17h-.04Z" />
-              </svg>
-            </div>
+            {vectors.map((vector) => {
+              const isBlurred = hasFocusedElement;
+
+              return (
+                <div
+                  key={vector.id}
+                  className={`preview-vectors__item ${isBlurred ? "preview-vectors__item--blurred" : ""}`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (onElementFocus) {
+                      onElementFocus(vector.id);
+                    }
+                  }}
+                >
+                  <div className="preview-vectors__item-content">{vector.svg}</div>
+                </div>
+              );
+            })}
           </div>
+
+          {/* Backdrop when element is focused */}
+          {hasFocusedElement && (
+            <div
+              className="preview-vectors__backdrop"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (onElementFocus) onElementFocus(null);
+              }}
+            />
+          )}
+
+          {/* Centered focused element overlay */}
+          {focusedVector && (
+            <div className="preview-vectors__focused-overlay">
+              <div
+                className="preview-vectors__focused-content"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (onElementFocus) onElementFocus(null);
+                }}
+              >
+                <span className="preview-vectors__focused-label">
+                  {focusedVector.name.toUpperCase()}
+                </span>
+                {focusedVector.svg}
+              </div>
+            </div>
+          )}
         </div>
       );
     }
@@ -1300,6 +1377,8 @@ function CenterPanel({
   presetName,
   onPresetNameChange,
   canSave,
+  isFocused,
+  onFocusChange,
 }: {
   activeTab: WorkspaceTab;
   onTabChange: (tab: WorkspaceTab) => void;
@@ -1313,6 +1392,8 @@ function CenterPanel({
   presetName: string;
   onPresetNameChange: (name: string) => void;
   canSave: boolean;
+  isFocused: boolean;
+  onFocusChange: (focused: boolean) => void;
 }) {
   const def = selectedComponentId ? (getComponentById(selectedComponentId) ?? null) : null;
 
@@ -1357,6 +1438,8 @@ function CenterPanel({
             presetName={presetName}
             onPresetNameChange={onPresetNameChange}
             canSave={canSave}
+            isFocused={isFocused}
+            onFocusChange={onFocusChange}
           />
         )}
       </div>
@@ -1560,6 +1643,8 @@ function FoundryView({
   presetName,
   onPresetNameChange,
   canSave,
+  isFocused,
+  onFocusChange,
 }: {
   selectedComponentId: string | null;
   componentProps: Record<string, unknown>;
@@ -1569,9 +1654,13 @@ function FoundryView({
   presetName: string;
   onPresetNameChange: (name: string) => void;
   canSave: boolean;
+  isFocused: boolean;
+  onFocusChange: (focused: boolean) => void;
 }) {
   // Zoom state for the preview
   const [zoom, setZoom] = useState(1);
+  // Track which element within a multi-element component is focused
+  const [focusedElementId, setFocusedElementId] = useState<string | null>(null);
 
   // Handle wheel zoom on preview area
   const handleWheel = useCallback((e: React.WheelEvent) => {
@@ -1586,10 +1675,64 @@ function FoundryView({
     setZoom((prev) => Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, prev + delta)));
   }, []);
 
-  // Reset zoom when component changes
+  // Handle element focus for multi-element components (like vectors)
+  // Note: For multi-element components, we DON'T set the parent focus state
+  // because we don't want to blur the side panels - focus is contained within the preview
+  const handleElementFocus = useCallback((elementId: string | null) => {
+    setFocusedElementId(elementId);
+    // Don't call onFocusChange - keep panel blur separate from element focus
+  }, []);
+
+  // Check if this is a multi-element component
+  const isMultiElement = selectedComponentId === "vectors";
+
+  // Handle click to focus/unfocus (for single-element components)
+  const handlePreviewClick = useCallback(
+    (e: React.MouseEvent) => {
+      // Don't toggle if clicking on a specific element within vectors
+      const target = e.target as HTMLElement;
+      if (target.closest(".preview-vectors__item")) {
+        return; // Let the item's own handler manage focus
+      }
+
+      e.stopPropagation();
+      if (focusedElementId) {
+        // If an element is focused (multi-element), clicking outside unfocuses it
+        setFocusedElementId(null);
+      } else if (!isMultiElement) {
+        // Only toggle parent focus for single-element components
+        onFocusChange(!isFocused);
+      }
+    },
+    [isFocused, focusedElementId, isMultiElement, onFocusChange]
+  );
+
+  // Handle click outside to unfocus
+  useEffect(() => {
+    if (!isFocused && !focusedElementId) return;
+
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest(".foundry__preview")) {
+        // Clear element focus (for multi-element components)
+        setFocusedElementId(null);
+        // Clear parent focus (for single-element components)
+        if (isFocused) {
+          onFocusChange(false);
+        }
+      }
+    };
+
+    document.addEventListener("click", handleClickOutside);
+    return () => document.removeEventListener("click", handleClickOutside);
+  }, [isFocused, focusedElementId, onFocusChange]);
+
+  // Reset zoom and element focus when component changes
   useEffect(() => {
     setZoom(1);
-  }, [selectedComponentId]);
+    setFocusedElementId(null);
+    onFocusChange(false);
+  }, [selectedComponentId, onFocusChange]);
 
   if (!selectedComponentId || !def) {
     return (
@@ -1605,42 +1748,54 @@ function FoundryView({
     );
   }
 
+  // Calculate zoom - only apply focus zoom for single-element components
+  const hasFocus = isFocused || focusedElementId !== null;
+  // For multi-element components, individual elements handle their own zoom
+  const focusZoom = hasFocus && !isMultiElement ? 1.5 : 1;
+  const totalZoom = zoom * focusZoom;
+
   return (
-    <div className="foundry">
+    <div className={`foundry ${hasFocus && !isMultiElement ? "foundry--focused" : ""}`}>
       {/* Preview Area */}
-      <div className="foundry__preview" onWheel={handleWheel}>
+      <div
+        className={`foundry__preview ${hasFocus && !isMultiElement ? "foundry__preview--focused" : ""}`}
+        onWheel={handleWheel}
+        onClick={handlePreviewClick}
+      >
         <div
           className="foundry__preview-content"
-          style={{ transform: `scale(${zoom})`, transformOrigin: "center center" }}
+          style={{
+            transform: `scale(${isMultiElement ? zoom : totalZoom})`,
+            transformOrigin: "center center",
+            transition: hasFocus ? "transform 0.3s ease-out" : "transform 0.2s ease-out",
+          }}
         >
-          <TargetReticle label={def.name.toUpperCase()}>
+          {isMultiElement ? (
+            // For multi-element components, don't wrap in TargetReticle
             <ComponentPreview
               componentId={selectedComponentId}
-              props={componentProps}
+              props={{
+                ...componentProps,
+                _focusedElementId: focusedElementId,
+                _onElementFocus: handleElementFocus,
+              }}
               style={style}
               fullSize
             />
-          </TargetReticle>
+          ) : (
+            // For single-element components, wrap in TargetReticle
+            <TargetReticle label={def.name.toUpperCase()}>
+              <ComponentPreview
+                componentId={selectedComponentId}
+                props={componentProps}
+                style={style}
+                fullSize
+              />
+            </TargetReticle>
+          )}
         </div>
         {/* Zoom indicator */}
         {zoom !== 1 && <div className="foundry__zoom-indicator">{Math.round(zoom * 100)}%</div>}
-      </div>
-
-      {/* Save Section */}
-      <div className="foundry__save">
-        <div className="foundry__save-group">
-          <input
-            type="text"
-            className="foundry__save-input"
-            placeholder="Name your creation..."
-            value={presetName}
-            onChange={(e) => onPresetNameChange(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && canSave && onSavePreset()}
-          />
-          <button className="foundry__save-btn" onClick={onSavePreset} disabled={!canSave}>
-            Save to Vault
-          </button>
-        </div>
       </div>
 
       {/* Info */}
@@ -1712,11 +1867,19 @@ function DialsPanel({
   componentProps,
   onPropsChange,
   onCopyCode,
+  onSavePreset,
+  presetName,
+  onPresetNameChange,
+  canSave,
 }: {
   selectedComponentId: string | null;
   componentProps: Record<string, unknown>;
   onPropsChange: (props: Record<string, unknown>) => void;
   onCopyCode: () => void;
+  onSavePreset: () => void;
+  presetName: string;
+  onPresetNameChange: (name: string) => void;
+  canSave: boolean;
 }) {
   const def = selectedComponentId ? getComponentById(selectedComponentId) : null;
 
@@ -1902,32 +2065,51 @@ function DialsPanel({
       <div className="panel-header">DIALS</div>
 
       <div className="panel-content">
-        {/* Render props grouped by category */}
-        {PROP_CATEGORY_ORDER.map((category) => {
-          const props = groupedProps[category];
-          if (!props || props.length === 0) return null;
+        <div className="panel-content__scrollable">
+          {/* Render props grouped by category */}
+          {PROP_CATEGORY_ORDER.map((category) => {
+            const props = groupedProps[category];
+            if (!props || props.length === 0) return null;
 
-          return (
-            <div key={category} className="dials-category">
-              <div className="dials-category__header">
-                <span className="dials-category__label">{PROP_CATEGORY_LABELS[category]}</span>
+            return (
+              <div key={category} className="dials-category">
+                <div className="dials-category__header">
+                  <span className="dials-category__label">{PROP_CATEGORY_LABELS[category]}</span>
+                </div>
+                <div className="dials-category__content">
+                  {props.map((propDef) => (
+                    <div key={propDef.name}>
+                      {renderPropControl(propDef, componentProps[propDef.name])}
+                    </div>
+                  ))}
+                </div>
               </div>
-              <div className="dials-category__content">
-                {props.map((propDef) => (
-                  <div key={propDef.name}>
-                    {renderPropControl(propDef, componentProps[propDef.name])}
-                  </div>
-                ))}
-              </div>
-            </div>
-          );
-        })}
+            );
+          })}
 
-        {/* Actions */}
-        <div className="dials-actions">
-          <button className="action-btn action-btn--full" onClick={onCopyCode}>
-            Copy JSX Code
-          </button>
+          {/* Actions */}
+          <div className="dials-actions">
+            <button className="action-btn action-btn--full" onClick={onCopyCode}>
+              Copy JSX Code
+            </button>
+          </div>
+        </div>
+
+        {/* Save Section - Fixed at bottom */}
+        <div className="dials-save">
+          <div className="dials-save__group">
+            <input
+              type="text"
+              className="dials-save__input"
+              placeholder="Name your creation..."
+              value={presetName}
+              onChange={(e) => onPresetNameChange(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && canSave && onSavePreset()}
+            />
+            <button className="dials-save__btn" onClick={onSavePreset} disabled={!canSave}>
+              Save to Vault
+            </button>
+          </div>
         </div>
       </div>
     </aside>
@@ -1945,6 +2127,9 @@ function AstrogationContent() {
 
   // Workspace tab state
   const [activeTab, setActiveTab] = useState<WorkspaceTab>("foundry");
+
+  // Focus state for Foundry mode
+  const [isFocused, setIsFocused] = useState(false);
 
   // Style state (for selected component)
   const [style, setStyle] = useState<StyleConfig>({
@@ -2125,6 +2310,8 @@ function AstrogationContent() {
           presetName={presetName}
           onPresetNameChange={setPresetName}
           canSave={!!selectedComponentId && !!presetName.trim()}
+          isFocused={isFocused}
+          onFocusChange={setIsFocused}
         />
 
         {activeTab === "foundry" ? (
@@ -2133,6 +2320,10 @@ function AstrogationContent() {
             componentProps={componentProps}
             onPropsChange={setComponentProps}
             onCopyCode={handleCopyCode}
+            onSavePreset={handleSavePreset}
+            presetName={presetName}
+            onPresetNameChange={setPresetName}
+            canSave={!!selectedComponentId && !!presetName.trim()}
           />
         ) : (
           <SpecPanel selectedComponentId={selectedComponentId} />
