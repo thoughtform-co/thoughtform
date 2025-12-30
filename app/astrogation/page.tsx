@@ -1314,7 +1314,7 @@ function CenterPanel({
   onPresetNameChange: (name: string) => void;
   canSave: boolean;
 }) {
-  const def = selectedComponentId ? getComponentById(selectedComponentId) : null;
+  const def = selectedComponentId ? (getComponentById(selectedComponentId) ?? null) : null;
 
   return (
     <div className="center-panel">
@@ -1463,6 +1463,27 @@ function FoundryView({
   onPresetNameChange: (name: string) => void;
   canSave: boolean;
 }) {
+  // Zoom state for the preview
+  const [zoom, setZoom] = useState(1);
+
+  // Handle wheel zoom on preview area
+  const handleWheel = useCallback((e: React.WheelEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const MIN_ZOOM = 0.25;
+    const MAX_ZOOM = 4;
+    const ZOOM_STEP = 0.1;
+
+    const delta = e.deltaY > 0 ? -ZOOM_STEP : ZOOM_STEP;
+    setZoom((prev) => Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, prev + delta)));
+  }, []);
+
+  // Reset zoom when component changes
+  useEffect(() => {
+    setZoom(1);
+  }, [selectedComponentId]);
+
   if (!selectedComponentId || !def) {
     return (
       <div className="foundry foundry--empty">
@@ -1480,15 +1501,22 @@ function FoundryView({
   return (
     <div className="foundry">
       {/* Preview Area */}
-      <div className="foundry__preview">
-        <TargetReticle label={def.name.toUpperCase()}>
-          <ComponentPreview
-            componentId={selectedComponentId}
-            props={componentProps}
-            style={style}
-            fullSize
-          />
-        </TargetReticle>
+      <div className="foundry__preview" onWheel={handleWheel}>
+        <div
+          className="foundry__preview-content"
+          style={{ transform: `scale(${zoom})`, transformOrigin: "center center" }}
+        >
+          <TargetReticle label={def.name.toUpperCase()}>
+            <ComponentPreview
+              componentId={selectedComponentId}
+              props={componentProps}
+              style={style}
+              fullSize
+            />
+          </TargetReticle>
+        </div>
+        {/* Zoom indicator */}
+        {zoom !== 1 && <div className="foundry__zoom-indicator">{Math.round(zoom * 100)}%</div>}
       </div>
 
       {/* Save Section */}
