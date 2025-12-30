@@ -48,7 +48,7 @@ export function TargetReticle({
 }: TargetReticleProps) {
   // Subtle dawn color for selection - not competing with gold
   const frameColor = dawn[15];
-  const labelColor = dawn[40];
+  const labelColor = dawn[50];
   const frameOffset = 20;
 
   return (
