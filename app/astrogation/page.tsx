@@ -1231,12 +1231,6 @@ function ComponentCanvas({
 
   return (
     <div className="canvas">
-      {/* Component Label - centered, category above name */}
-      <div className="canvas__label">
-        <span className="canvas__label-category">{def.category}</span>
-        <span className="canvas__label-name">{def.name}</span>
-      </div>
-
       {/* Full-size Preview Area */}
       <div className="canvas__preview">
         <ComponentPreview
