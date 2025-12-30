@@ -1730,9 +1730,7 @@ function AstrogationContent() {
 
       {/* Footer */}
       <footer className="astrogation-footer">
-        <div className="astrogation-footer__left">
-          <span>Select category → View components → Edit properties</span>
-        </div>
+        <div className="astrogation-footer__left"></div>
         <div className="astrogation-footer__right">Astrogation v1.0</div>
       </footer>
 
