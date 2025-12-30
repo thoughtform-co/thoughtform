@@ -1523,50 +1523,56 @@ function VaultView({
         )}
       </div>
 
-      {/* Saved Elements Section */}
-      <div className="vault__header">
-        <span className="vault__count">
-          {def
-            ? `Saved Variants for ${def.name}`
-            : `${presets.length} saved element${presets.length !== 1 ? "s" : ""}`}
-        </span>
-      </div>
+      {/* Saved Elements Section - Only show if there are variants or no component selected */}
+      {(filteredPresets.length > 0 || !def) && (
+        <>
+          <div className="vault__header">
+            <span className="vault__count">
+              {def
+                ? `Saved Variants for ${def.name}`
+                : `${presets.length} saved element${presets.length !== 1 ? "s" : ""}`}
+            </span>
+          </div>
 
-      {filteredPresets.length === 0 ? (
-        <div className="vault__empty-state vault__empty-state--inline">
-          <p>No saved variants found{def ? ` for ${def.name}` : ""}</p>
-        </div>
-      ) : (
-        <div className="vault__grid">
-          {Object.entries(groupedPresets).map(([componentKey, componentPresets]) => {
-            const compDef = getComponentById(componentKey);
-            return (
-              <div key={componentKey} className="vault__group">
-                {!def && <div className="vault__group-header">{compDef?.name || componentKey}</div>}
-                <div className="vault__items">
-                  {componentPresets.map((preset) => (
-                    <div key={preset.id} className="vault__item">
-                      <button
-                        className="vault__item-load"
-                        onClick={() => onLoadPreset(preset)}
-                        title={`Load ${preset.name}`}
-                      >
-                        <span className="vault__item-name">{preset.name}</span>
-                      </button>
-                      <button
-                        className="vault__item-delete"
-                        onClick={() => onDeletePreset(preset.id)}
-                        title="Delete preset"
-                      >
-                        ×
-                      </button>
+          {filteredPresets.length === 0 ? (
+            <div className="vault__empty-state vault__empty-state--inline">
+              <p>No saved variants found</p>
+            </div>
+          ) : (
+            <div className="vault__grid">
+              {Object.entries(groupedPresets).map(([componentKey, componentPresets]) => {
+                const compDef = getComponentById(componentKey);
+                return (
+                  <div key={componentKey} className="vault__group">
+                    {!def && (
+                      <div className="vault__group-header">{compDef?.name || componentKey}</div>
+                    )}
+                    <div className="vault__items">
+                      {componentPresets.map((preset) => (
+                        <div key={preset.id} className="vault__item">
+                          <button
+                            className="vault__item-load"
+                            onClick={() => onLoadPreset(preset)}
+                            title={`Load ${preset.name}`}
+                          >
+                            <span className="vault__item-name">{preset.name}</span>
+                          </button>
+                          <button
+                            className="vault__item-delete"
+                            onClick={() => onDeletePreset(preset.id)}
+                            title="Delete preset"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-              </div>
-            );
-          })}
-        </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </>
       )}
     </div>
   );
