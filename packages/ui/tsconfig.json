@@ -11,19 +11,17 @@
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "jsx": "preserve",
+    "jsx": "react-jsx",
     "incremental": true,
-    "plugins": [
-      {
-        "name": "next"
-      }
-    ],
+    "declaration": true,
+    "declarationMap": true,
+    "composite": true,
+    "baseUrl": ".",
     "paths": {
-      "@/*": ["./*"],
-      "@thoughtform/ui": ["./packages/ui/src/index.ts"],
-      "@thoughtform/ui/*": ["./packages/ui/src/*"]
+      "@thoughtform/ui": ["./src/index.ts"],
+      "@thoughtform/ui/*": ["./src/*"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
-  "exclude": ["node_modules", "legacy"]
+  "include": ["src/**/*.ts", "src/**/*.tsx"],
+  "exclude": ["node_modules"]
 }
