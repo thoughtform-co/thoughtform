@@ -1340,6 +1340,7 @@ function CenterPanel({
       <div className="workspace-content">
         {activeTab === "vault" ? (
           <VaultView
+            selectedComponentId={selectedComponentId}
             presets={presets}
             onLoadPreset={onLoadPreset}
             onDeletePreset={onDeletePreset}
@@ -1362,20 +1363,29 @@ function CenterPanel({
 }
 
 // ═══════════════════════════════════════════════════════════════
-// VAULT VIEW - Saved Elements Library
+// VAULT VIEW - Saved Elements & Static Data
 // ═══════════════════════════════════════════════════════════════
 
 function VaultView({
+  selectedComponentId,
   presets,
   onLoadPreset,
   onDeletePreset,
 }: {
+  selectedComponentId: string | null;
   presets: UIComponentPreset[];
   onLoadPreset: (preset: UIComponentPreset) => void;
   onDeletePreset: (id: string) => void;
 }) {
-  // Group presets by component type
-  const groupedPresets = presets.reduce(
+  const def = selectedComponentId ? getComponentById(selectedComponentId) : null;
+
+  // Filter presets if a component is selected, otherwise show all
+  const filteredPresets = selectedComponentId
+    ? presets.filter((p) => p.component_key === selectedComponentId)
+    : presets;
+
+  // Group presets by component type for the "All Presets" view
+  const groupedPresets = filteredPresets.reduce(
     (acc, preset) => {
       const key = preset.component_key;
       if (!acc[key]) acc[key] = [];
@@ -1385,57 +1395,109 @@ function VaultView({
     {} as Record<string, UIComponentPreset[]>
   );
 
-  if (presets.length === 0) {
-    return (
-      <div className="vault vault--empty">
-        <div className="vault__empty-state">
-          <span className="vault__icon">◇</span>
-          <p>Your Vault is empty</p>
-          <span className="vault__hint">
-            Save components from the Foundry to build your library
-          </span>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="vault">
+      {/* Component Specification (Static Data) */}
+      {def && (
+        <div className="vault__spec">
+          <div className="vault__spec-header">
+            <div className="vault__spec-title">
+              <span className="vault__spec-icon">◇</span>
+              <h2>{def.name} Specification</h2>
+            </div>
+            <p className="vault__spec-desc">{def.description}</p>
+          </div>
+
+          <div className="vault__spec-section">
+            <div className="vault__spec-label">Component ID</div>
+            <div className="vault__spec-value vault__spec-value--mono">{def.id}</div>
+          </div>
+
+          <div className="vault__spec-section">
+            <div className="vault__spec-label">Properties & Schema</div>
+            <div className="vault__table-wrapper">
+              <table className="vault__table">
+                <thead>
+                  <tr>
+                    <th>Property</th>
+                    <th>Type</th>
+                    <th>Default</th>
+                    <th>Constraints</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {def.props.map((prop) => (
+                    <tr key={prop.name}>
+                      <td className="vault__table-name">{prop.name}</td>
+                      <td className="vault__table-type">{prop.type}</td>
+                      <td className="vault__table-default">{String(prop.default ?? "—")}</td>
+                      <td className="vault__table-constraints">
+                        {prop.type === "number" && (
+                          <span>
+                            Range: {prop.min ?? 0}–{prop.max ?? 100}
+                            {prop.step ? ` (Step: ${prop.step})` : ""}
+                          </span>
+                        )}
+                        {prop.type === "select" && <span>Options: {prop.options?.join(", ")}</span>}
+                        {prop.type === "color" && <span>Semantic HEX / CSS Var</span>}
+                        {prop.type !== "number" &&
+                          prop.type !== "select" &&
+                          prop.type !== "color" && <span className="opacity-40">—</span>}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Saved Elements Section */}
       <div className="vault__header">
         <span className="vault__count">
-          {presets.length} saved element{presets.length !== 1 ? "s" : ""}
+          {def
+            ? `Saved Variants for ${def.name}`
+            : `${presets.length} saved element${presets.length !== 1 ? "s" : ""}`}
         </span>
       </div>
-      <div className="vault__grid">
-        {Object.entries(groupedPresets).map(([componentKey, componentPresets]) => {
-          const compDef = getComponentById(componentKey);
-          return (
-            <div key={componentKey} className="vault__group">
-              <div className="vault__group-header">{compDef?.name || componentKey}</div>
-              <div className="vault__items">
-                {componentPresets.map((preset) => (
-                  <div key={preset.id} className="vault__item">
-                    <button
-                      className="vault__item-load"
-                      onClick={() => onLoadPreset(preset)}
-                      title={`Load ${preset.name}`}
-                    >
-                      <span className="vault__item-name">{preset.name}</span>
-                    </button>
-                    <button
-                      className="vault__item-delete"
-                      onClick={() => onDeletePreset(preset.id)}
-                      title="Delete preset"
-                    >
-                      ×
-                    </button>
-                  </div>
-                ))}
+
+      {filteredPresets.length === 0 ? (
+        <div className="vault__empty-state vault__empty-state--inline">
+          <p>No saved variants found{def ? ` for ${def.name}` : ""}</p>
+        </div>
+      ) : (
+        <div className="vault__grid">
+          {Object.entries(groupedPresets).map(([componentKey, componentPresets]) => {
+            const compDef = getComponentById(componentKey);
+            return (
+              <div key={componentKey} className="vault__group">
+                {!def && <div className="vault__group-header">{compDef?.name || componentKey}</div>}
+                <div className="vault__items">
+                  {componentPresets.map((preset) => (
+                    <div key={preset.id} className="vault__item">
+                      <button
+                        className="vault__item-load"
+                        onClick={() => onLoadPreset(preset)}
+                        title={`Load ${preset.name}`}
+                      >
+                        <span className="vault__item-name">{preset.name}</span>
+                      </button>
+                      <button
+                        className="vault__item-delete"
+                        onClick={() => onDeletePreset(preset.id)}
+                        title="Delete preset"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
@@ -1860,7 +1922,7 @@ function AstrogationContent() {
   const [presetName, setPresetName] = useState("");
   const [toast, setToast] = useState<string | null>(null);
 
-  // Reset props when component changes and switch to Foundry
+  // Reset props when component changes
   useEffect(() => {
     if (selectedComponentId) {
       const def = getComponentById(selectedComponentId);
@@ -1870,8 +1932,7 @@ function AstrogationContent() {
           defaultProps[p.name] = p.default;
         });
         setComponentProps(defaultProps);
-        // Auto-switch to Foundry when selecting a component
-        setActiveTab("foundry");
+        // Removed auto-switch to Foundry to make it optional as per user request
       }
     }
   }, [selectedComponentId]);
@@ -2021,12 +2082,14 @@ function AstrogationContent() {
           canSave={!!selectedComponentId && !!presetName.trim()}
         />
 
-        <DialsPanel
-          selectedComponentId={selectedComponentId}
-          componentProps={componentProps}
-          onPropsChange={setComponentProps}
-          onCopyCode={handleCopyCode}
-        />
+        {activeTab === "foundry" && (
+          <DialsPanel
+            selectedComponentId={selectedComponentId}
+            componentProps={componentProps}
+            onPropsChange={setComponentProps}
+            onCopyCode={handleCopyCode}
+          />
+        )}
       </div>
 
       {/* Footer */}
