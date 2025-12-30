@@ -1193,6 +1193,69 @@
   letter-spacing: 0.1em;
 }
 
+/* Real Navbar Preview - Matches actual site navbar */
+.preview-navbar-real {
+  display: flex;
+  align-items: center;
+  height: 44px;
+  background: rgba(10, 9, 8, 0.25);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(236, 227, 214, 0.1);
+  width: auto;
+}
+
+.preview-navbar-real__logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 14px;
+  height: 100%;
+  border-right: 1px solid rgba(236, 227, 214, 0.08);
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.preview-navbar-real__logo:hover {
+  opacity: 0.8;
+}
+
+.preview-navbar-real__links {
+  display: flex;
+  align-items: center;
+  height: 100%;
+}
+
+.preview-navbar-real__link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 16px;
+  height: 100%;
+  font-family: var(--font-data, "PT Mono", monospace);
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: all 0.15s ease;
+  cursor: pointer;
+  border-right: 1px solid rgba(236, 227, 214, 0.08);
+}
+
+.preview-navbar-real__link:last-child {
+  border-right: none;
+}
+
+.preview-navbar-real__link:hover {
+  color: rgba(202, 165, 84, 0.8) !important;
+}
+
+.preview-navbar-real__link--active {
+  color: var(--dawn, #ebe3d6) !important;
+  background: rgba(236, 227, 214, 0.1);
+}
+
 /* ─── DIALS PANEL ─── */
 .panel-empty-state {
   display: flex;

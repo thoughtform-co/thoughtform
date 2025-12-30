@@ -804,26 +804,44 @@ function renderComponent(
     // ORGANISMS - Navigation
     // ═══════════════════════════════════════════════════════════════
     case "navbar": {
-      const corners = (props.corners as CornerToken) || "four";
-      const borderThickness = (props.borderThickness as number) ?? 1.5;
-      const cornerColor = (props.cornerColor as string) || "#caa554";
-      const title = (props.title as string) || "ASTROGATION";
+      const showLogo = props.showLogo !== false;
+      const activeLink = (props.activeLink as string) || "interface";
+      const logoColor = (props.logoColor as string) || "#ebe3d6";
+      const linkColor = (props.linkColor as string) || "rgba(235, 227, 214, 0.5)";
+      const activeLinkColor = (props.activeLinkColor as string) || "#ebe3d6";
+
+      const navLinks = [
+        { id: "interface", label: "Interface" },
+        { id: "manifesto", label: "Manifesto" },
+        { id: "services", label: "Services" },
+        { id: "about", label: "About" },
+        { id: "contact", label: "Contact" },
+      ];
 
       return (
-        <HUDWrapper
-          cornerToken={corners}
-          borderThickness={borderThickness}
-          cornerThickness={borderThickness}
-          borderColor="rgba(235, 227, 214, 0.08)"
-          cornerColor={cornerColor}
-          cornerLength={fullSize ? 20 : 10}
-          style={{ width: "100%" }}
-        >
-          <div className="preview-navbar">
-            {Boolean(props.showLogo) && <ThoughtformLogo size={20} />}
-            <span className="preview-navbar__title">{title}</span>
+        <div className="preview-navbar-real">
+          {/* Logo */}
+          {showLogo && (
+            <div className="preview-navbar-real__logo">
+              <ThoughtformLogo size={fullSize ? 22 : 18} color={logoColor} />
+            </div>
+          )}
+
+          {/* Navigation Links */}
+          <div className="preview-navbar-real__links">
+            {navLinks.map((link) => (
+              <span
+                key={link.id}
+                className={`preview-navbar-real__link ${activeLink === link.id ? "preview-navbar-real__link--active" : ""}`}
+                style={{
+                  color: activeLink === link.id ? activeLinkColor : linkColor,
+                }}
+              >
+                {link.label}
+              </span>
+            ))}
           </div>
-        </HUDWrapper>
+        </div>
       );
     }
 
