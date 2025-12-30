@@ -1494,7 +1494,7 @@ function DialsPanel({
 
   return (
     <aside className="astrogation-panel astrogation-panel--right">
-      <div className="panel-header">{def.name.toUpperCase()}</div>
+      <div className="panel-header">DIALS</div>
 
       <div className="panel-content">
         {/* Render props grouped by category */}
