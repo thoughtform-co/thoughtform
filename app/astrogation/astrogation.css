@@ -2355,6 +2355,15 @@
   border: 1px solid rgba(235, 227, 214, 0.05);
   border-radius: 4px;
   margin-bottom: 24px;
+  overflow: auto;
+  max-height: 60vh;
+}
+
+/* Ensure previewed components fit within containers */
+.vault__preview > *,
+.foundry__preview-content > * {
+  max-width: 100%;
+  flex-shrink: 0;
 }
 
 /* Spec Panel (Right Sidebar) */

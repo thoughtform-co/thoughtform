@@ -846,10 +846,12 @@ function renderComponent(
     case "hud-frame": {
       const showCorners = props.showCorners !== false;
       const showRails = props.showRails !== false;
-      const cornerSize = ((props.cornerSize as number) || 40) * scale;
+      // Use smaller scale for HUD frame to prevent overflow
+      const hudScale = fullSize ? 1.2 : 1;
+      const cornerSize = ((props.cornerSize as number) || 40) * hudScale;
       const cornerColor = (props.cornerColor as string) || "#caa554";
-      const frameWidth = 400 * scale;
-      const frameHeight = 300 * scale;
+      const frameWidth = 400 * hudScale;
+      const frameHeight = 300 * hudScale;
       const tickCount = 11;
 
       return (
