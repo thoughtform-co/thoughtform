@@ -503,7 +503,7 @@
   width: 100%;
   padding: 10px 8px;
   background: transparent;
-  border: 1px solid var(--gold-30, rgba(202, 165, 84, 0.3));
+  border: none;
   font-family: var(--font-mono);
   font-size: 18px;
   font-weight: 500;
@@ -513,11 +513,12 @@
   flex-shrink: 0;
   z-index: 3;
   box-sizing: border-box;
-  margin-bottom: 8px; /* Spacing below the header frame */
+  margin-bottom: 8px;
 }
 
 .astrogation-panel--right .panel-header {
   text-align: center;
+  border: 1px solid var(--gold-30, rgba(202, 165, 84, 0.3));
 }
 
 /* ─── PANEL SECTIONS ─── */
