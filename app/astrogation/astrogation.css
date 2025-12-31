@@ -410,14 +410,14 @@
 }
 
 .astrogation-panel--left {
-  border: none;
+  border: 1px solid rgba(202, 165, 84, 0.15);
   width: 280px;
   min-width: 280px;
   max-width: 280px;
-  background: transparent;
+  background: rgba(10, 9, 8, 0.4);
   position: relative;
   overflow: hidden; /* Clip content to panel bounds */
-  padding-top: 0; /* No padding - header is part of panel */
+  padding: 12px; /* Padding inside frame */
   z-index: 10;
   display: flex;
   flex-direction: column;
@@ -426,18 +426,36 @@
   max-height: calc(100vh - var(--hud-padding, 32px) * 2 - 80px);
 }
 
-/* Frame with border for panel content - removed */
+/* Corner brackets for left panel frame */
+.astrogation-panel--left::before,
+.astrogation-panel--left::after {
+  content: "";
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border-color: var(--gold, #caa554);
+  border-style: solid;
+  border-width: 0;
+  pointer-events: none;
+  z-index: 20;
+}
+
 .astrogation-panel--left::before {
-  display: none;
+  top: -1px;
+  left: -1px;
+  border-top-width: 2px;
+  border-left-width: 2px;
 }
 
-/* Shared HUD Panel Frame base - hidden for right panel */
-.astrogation-panel--right::before {
-  display: none;
+.astrogation-panel--left::after {
+  bottom: -1px;
+  right: -1px;
+  border-bottom-width: 2px;
+  border-right-width: 2px;
 }
 
-/* Shared corner accents base - hidden for cleaner look */
-.astrogation-panel--left::after,
+/* Hide frame elements on right panel */
+.astrogation-panel--right::before,
 .astrogation-panel--right::after {
   display: none;
 }
@@ -491,9 +509,31 @@
   background: var(--gold-30, rgba(202, 165, 84, 0.3));
 }
 
-/* Corner accents - LEFT panel: DISABLED for unified header+content look */
-.astrogation-panel--left::after {
-  display: none !important;
+/* Additional corner brackets for left panel (top-right and bottom-left) */
+.astrogation-panel--left .panel-corner-tr,
+.astrogation-panel--left .panel-corner-bl {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border-color: var(--gold, #caa554);
+  border-style: solid;
+  border-width: 0;
+  pointer-events: none;
+  z-index: 20;
+}
+
+.astrogation-panel--left .panel-corner-tr {
+  top: -1px;
+  right: -1px;
+  border-top-width: 2px;
+  border-right-width: 2px;
+}
+
+.astrogation-panel--left .panel-corner-bl {
+  bottom: -1px;
+  left: -1px;
+  border-bottom-width: 2px;
+  border-left-width: 2px;
 }
 
 /* RIGHT panel layout */

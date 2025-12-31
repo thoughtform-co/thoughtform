@@ -1283,6 +1283,10 @@ function CatalogPanel({
 
   return (
     <aside className="astrogation-panel astrogation-panel--left">
+      {/* Corner brackets */}
+      <div className="panel-corner-tr" />
+      <div className="panel-corner-bl" />
+
       {/* Panel Header */}
       <div className="panel-header">BRAND SYSTEM</div>
 
