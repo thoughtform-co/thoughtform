@@ -1836,13 +1836,17 @@
   position: relative;
 }
 
-/* Vertical spacing only for top-level categories - consistent spacing between all sections */
-.tree-view > .tree-node {
+/* Vertical spacing for top-level category wrappers - consistent spacing between all sections */
+.tree-view > div {
   margin-bottom: 8px;
 }
 
+.tree-view > div:last-child {
+  margin-bottom: 0;
+}
+
 /* Ensure consistent spacing after last item in category */
-.tree-view > .tree-node:last-child .tree-node-content {
+.tree-view > div:last-child .tree-node-content {
   padding-bottom: 0;
 }
 
