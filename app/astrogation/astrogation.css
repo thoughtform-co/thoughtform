@@ -501,15 +501,15 @@
 .panel-header {
   position: relative;
   width: 100%;
-  padding: 10px 8px;
+  padding: 10px 0;
   background: transparent;
   border: none;
   font-family: var(--font-mono);
-  font-size: 18px;
+  font-size: 24px;
   font-weight: 500;
   letter-spacing: 0.08em;
   color: var(--gold, #caa554);
-  text-align: center;
+  text-align: left;
   flex-shrink: 0;
   z-index: 3;
   box-sizing: border-box;

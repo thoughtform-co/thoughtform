@@ -1284,7 +1284,7 @@ function CatalogPanel({
   return (
     <aside className="astrogation-panel astrogation-panel--left">
       {/* Panel Header */}
-      <div className="panel-header">BRAND SYSTEM</div>
+      <div className="panel-header">{"// BRAND SYSTEM"}</div>
 
       {/* Scrollable content area */}
       <div className="panel-content">
