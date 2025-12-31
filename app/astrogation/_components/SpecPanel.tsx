@@ -27,7 +27,7 @@ function ImplementationDependencies({
     if (notes) {
       const varMatches = notes.match(/--[\w-]+/g);
       if (varMatches) {
-        deps.tokens = [...new Set(varMatches)]; // Remove duplicates
+        deps.tokens = [...new Set(varMatches)];
       }
 
       // Extract patterns from notes
@@ -45,43 +45,30 @@ function ImplementationDependencies({
         deps.patterns.push("css-techniques");
     }
 
-    // Fallback to type-based inference if no notes or insufficient data
+    // Fallback to type-based inference
     if (deps.tokens.length === 0) {
       if (id.includes("nav") || id === "navbar") {
         deps.tokens = ["--dawn", "--gold", "--gold-30", "--dawn-08"];
-        if (deps.patterns.length === 0) {
+        if (deps.patterns.length === 0)
           deps.patterns = ["backdrop-filter", "fixed-position", "semantic-html"];
-        }
       } else if (id.includes("button")) {
         deps.tokens = ["--gold", "--dawn", "--void", "--gold-15"];
-        if (deps.patterns.length === 0) {
-          deps.patterns = ["corner-brackets", "hover-states", "focus-states"];
-        }
+        if (deps.patterns.length === 0) deps.patterns = ["corner-brackets", "interactive-states"];
       } else if (id.includes("frame") || id.includes("card")) {
         deps.tokens = ["--dawn-08", "--dawn-15", "--gold", "--gold-30"];
-        if (deps.patterns.length === 0) {
-          deps.patterns = ["corner-brackets", "border-variants"];
-        }
+        if (deps.patterns.length === 0) deps.patterns = ["corner-brackets", "border-variants"];
       } else if (id.includes("slider") || id.includes("toggle")) {
         deps.tokens = ["--gold", "--dawn-15", "--dawn-30"];
-        if (deps.patterns.length === 0) {
-          deps.patterns = ["diamond-handle", "track-styling"];
-        }
+        if (deps.patterns.length === 0) deps.patterns = ["diamond-handle", "track-styling"];
       } else if (id.includes("color")) {
         deps.tokens = ["--void", "--dawn", "--gold"];
-        if (deps.patterns.length === 0) {
-          deps.patterns = ["opacity-scale", "css-variables"];
-        }
+        if (deps.patterns.length === 0) deps.patterns = ["opacity-scale", "css-variables"];
       } else if (id.includes("type") || id.includes("font")) {
         deps.tokens = ["--font-display", "--font-body", "--font-mono"];
-        if (deps.patterns.length === 0) {
-          deps.patterns = ["type-scale", "line-height", "letter-spacing"];
-        }
+        if (deps.patterns.length === 0) deps.patterns = ["type-scale", "line-height"];
       } else {
         deps.tokens = ["--dawn", "--gold", "--void"];
-        if (deps.patterns.length === 0) {
-          deps.patterns = ["css-variables", "design-tokens"];
-        }
+        if (deps.patterns.length === 0) deps.patterns = ["css-variables", "design-tokens"];
       }
     }
 
@@ -102,7 +89,6 @@ function ImplementationDependencies({
 
   const dependencies = getDependencies(componentId, frontendNotes);
 
-  // Don't show if no dependencies found
   if (
     dependencies.tokens.length === 0 &&
     dependencies.patterns.length === 0 &&
@@ -113,53 +99,32 @@ function ImplementationDependencies({
 
   return (
     <div className="spec-implementation-deps">
-      {dependencies.tokens.length > 0 && (
-        <div className="spec-implementation-deps__group">
-          <div className="spec-implementation-deps__label">Design Tokens</div>
-          <div className="spec-implementation-deps__tags">
-            {dependencies.tokens.map((token) => (
-              <span
-                key={token}
-                className="spec-implementation-deps__tag spec-implementation-deps__tag--token"
-              >
-                {token.replace("--", "")}
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {dependencies.patterns.length > 0 && (
-        <div className="spec-implementation-deps__group">
-          <div className="spec-implementation-deps__label">Patterns</div>
-          <div className="spec-implementation-deps__tags">
-            {dependencies.patterns.map((pattern) => (
-              <span
-                key={pattern}
-                className="spec-implementation-deps__tag spec-implementation-deps__tag--pattern"
-              >
-                {pattern.replace(/-/g, " ")}
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {dependencies.properties.length > 0 && (
-        <div className="spec-implementation-deps__group">
-          <div className="spec-implementation-deps__label">Properties</div>
-          <div className="spec-implementation-deps__tags">
-            {dependencies.properties.map((prop) => (
-              <span
-                key={prop}
-                className="spec-implementation-deps__tag spec-implementation-deps__tag--property"
-              >
-                {prop}
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
+      <div className="spec-implementation-deps__tags">
+        {dependencies.tokens.map((token) => (
+          <span
+            key={token}
+            className="spec-implementation-deps__tag spec-implementation-deps__tag--token"
+          >
+            {token.replace("--", "")}
+          </span>
+        ))}
+        {dependencies.patterns.map((pattern) => (
+          <span
+            key={pattern}
+            className="spec-implementation-deps__tag spec-implementation-deps__tag--pattern"
+          >
+            {pattern.replace(/-/g, " ")}
+          </span>
+        ))}
+        {dependencies.properties.map((prop) => (
+          <span
+            key={prop}
+            className="spec-implementation-deps__tag spec-implementation-deps__tag--property"
+          >
+            {prop}
+          </span>
+        ))}
+      </div>
     </div>
   );
 }
@@ -301,35 +266,35 @@ function SpecPanelInner({ selectedComponentId }: SpecPanelProps) {
               )}
             </section>
 
-            {/* ─── IMPLEMENTATION BLUEPRINT ─── */}
-            <section className="spec-section spec-blueprint">
+            {/* ─── FRONTEND (Notes + Primitives) ─── */}
+            <section className="spec-section spec-frontend">
               <div className="spec-section__label">
-                <span className="spec-section__label-text">Implementation</span>
+                <span className="spec-section__label-text">Frontend</span>
                 <span className="spec-section__label-line" />
               </div>
-
-              {/* Implementation Dependencies */}
-              <ImplementationDependencies componentId={def.id} frontendNotes={def.frontendNotes} />
-
-              {/* Props Visualization */}
-              {def.props.length > 0 && (
-                <div className="spec-blueprint__props">
-                  <div className="spec-blueprint__props-header">
-                    <span>Props Interface</span>
-                    <span className="spec-blueprint__props-count">{def.props.length}</span>
-                  </div>
-                  <PropsDiagram props={def.props} />
-                </div>
-              )}
 
               {/* Frontend Notes */}
               {def.frontendNotes && (
                 <div className="spec-blueprint__notes">
-                  <div className="spec-blueprint__notes-header">
-                    <span className="spec-blueprint__notes-icon">{">"}_</span>
-                    Frontend Notes
-                  </div>
                   <div className="spec-blueprint__notes-content">{def.frontendNotes}</div>
+                </div>
+              )}
+
+              {/* Implementation Dependencies (System Primitives) */}
+              <ImplementationDependencies componentId={def.id} frontendNotes={def.frontendNotes} />
+            </section>
+
+            {/* ─── COMPONENT (Interface + ID) ─── */}
+            <section className="spec-section spec-component">
+              <div className="spec-section__label">
+                <span className="spec-section__label-text">Component</span>
+                <span className="spec-section__label-line" />
+              </div>
+
+              {/* Props Visualization */}
+              {def.props.length > 0 && (
+                <div className="spec-blueprint__props">
+                  <PropsDiagram props={def.props} />
                 </div>
               )}
 
@@ -339,9 +304,9 @@ function SpecPanelInner({ selectedComponentId }: SpecPanelProps) {
                 onClick={handleCopyId}
                 title="Copy component ID"
               >
-                <span className="spec-blueprint__id-label">Component ID</span>
+                <span className="spec-blueprint__id-label">Ref ID</span>
                 <span className="spec-blueprint__id-value">{def.id}</span>
-                <span className="spec-blueprint__id-action">{copied ? "✓ copied" : "copy"}</span>
+                <span className="spec-blueprint__id-action">{copied ? "✓" : "copy"}</span>
               </button>
             </section>
           </div>
