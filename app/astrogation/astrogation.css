@@ -504,10 +504,10 @@
   padding: 10px 0;
   background: transparent;
   border: none;
-  font-family: var(--font-display, "PP Mondwest", serif);
+  font-family: var(--font-data, "PT Mono", monospace);
   font-size: 30px;
   font-weight: 400;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.05em;
   color: var(--gold, #caa554);
   text-align: left;
   flex-shrink: 0;
