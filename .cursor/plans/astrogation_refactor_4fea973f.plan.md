@@ -7,12 +7,12 @@ todos:
     status: completed
   - id: extract-components
     content: Extract major inline components from `app/astrogation/page.tsx` into `app/astrogation/_components/*` (mechanical move only, no behavior changes).
-    status: in_progress
+    status: completed
     dependencies:
       - baseline-checklist
   - id: state-reducer
     content: Introduce `app/astrogation/_state/astrogationReducer.ts` and migrate selection/tab/focus into a typed reducer; keep behavior identical.
-    status: pending
+    status: in_progress
     dependencies:
       - extract-components
   - id: presets-hook
@@ -82,6 +82,7 @@ todos:
 - Actions like: `selectComponent`, `setTab`, `setFocus`, `setElementFocus`, `setProps`, `loadPresets`, `presetSaved`, `presetDeleted`, `toastShown`.
 - Keep side effects (fetch/save/delete presets) inside `usePresets()` to isolate network + error handling.
 - Make focus explicit (reduces edge cases):
+
 ```mermaid
 flowchart TD
   userClick[UserClick] --> focusDecision{FocusType}
@@ -93,7 +94,6 @@ flowchart TD
   userClick -->|backdropClick| clearFocus[ClearFocus]
   clearFocus --> uiState
 ```
-
 
 ### CSS refactor (robust + scalable)
 

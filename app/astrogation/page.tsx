@@ -1,18 +1,14 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useReducer, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { AdminGate } from "@/components/admin/AdminGate";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { isAllowedUserEmail } from "@/lib/auth/allowed-user";
-import { getComponentById } from "./catalog";
 
 // Import from extracted components
 import {
   type UIComponentPreset,
-  type StyleConfig,
-  type WorkspaceTab,
-  DEFAULT_STYLE,
   ThoughtformLogo,
   CatalogPanel,
   CenterPanel,
@@ -21,6 +17,9 @@ import {
   generateJSXCode,
 } from "./_components";
 
+// Import state management
+import { astrogationReducer, initialState, actions } from "./_state/astrogationReducer";
+
 import "./astrogation.css";
 
 // ═══════════════════════════════════════════════════════════════
@@ -28,45 +27,60 @@ import "./astrogation.css";
 // ═══════════════════════════════════════════════════════════════
 
 function AstrogationContent() {
-  // Selection state
-  const [selectedCategory, setSelectedCategory] = useState<string | null>("brand");
-  const [selectedComponentId, setSelectedComponentId] = useState<string | null>(null);
+  // Centralized state using reducer
+  const [state, dispatch] = useReducer(astrogationReducer, initialState);
 
-  // Workspace tab state
-  const [activeTab, setActiveTab] = useState<WorkspaceTab>("foundry");
+  const {
+    selectedCategory,
+    selectedComponentId,
+    activeTab,
+    isFocused,
+    componentProps,
+    style,
+    presets,
+    presetName,
+    toast,
+  } = state;
 
-  // Focus state for Foundry mode
-  const [isFocused, setIsFocused] = useState(false);
-
-  // Style state (for selected component)
-  const [style, setStyle] = useState<StyleConfig>(DEFAULT_STYLE);
-
-  // Component props state
-  const [componentProps, setComponentProps] = useState<Record<string, unknown>>({});
-
-  // Presets state
-  const [presets, setPresets] = useState<UIComponentPreset[]>([]);
-  const [presetName, setPresetName] = useState("");
-  const [toast, setToast] = useState<string | null>(null);
-
-  // Reset props when component changes
+  // Load presets from API on mount
   useEffect(() => {
-    if (selectedComponentId) {
-      const def = getComponentById(selectedComponentId);
-      if (def) {
-        const defaultProps: Record<string, unknown> = {};
-        def.props.forEach((p) => {
-          defaultProps[p.name] = p.default;
-        });
-        setComponentProps(defaultProps);
-      }
-    }
-  }, [selectedComponentId]);
+    fetch("/api/ui-component-presets")
+      .then((r) => r.json())
+      .then((data) => dispatch(actions.loadPresets(data.presets || [])))
+      .catch(console.error);
+  }, []);
 
-  // Show toast
-  const showToast = useCallback((message: string) => {
-    setToast(message);
-    setTimeout(() => setToast(null), 2000);
+  // Auto-hide toast after 2 seconds
+  useEffect(() => {
+    if (toast) {
+      const timer = setTimeout(() => dispatch(actions.hideToast()), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [toast]);
+
+  // Handlers
+  const handleSelectCategory = useCallback((id: string) => {
+    dispatch(actions.selectCategory(id));
+  }, []);
+
+  const handleSelectComponent = useCallback((id: string) => {
+    dispatch(actions.selectComponent(id));
+  }, []);
+
+  const handleTabChange = useCallback((tab: "vault" | "foundry") => {
+    dispatch(actions.setTab(tab));
+  }, []);
+
+  const handleFocusChange = useCallback((focused: boolean) => {
+    dispatch(actions.setFocus(focused));
+  }, []);
+
+  const handlePropsChange = useCallback((props: Record<string, unknown>) => {
+    dispatch(actions.setProps(props));
+  }, []);
+
+  const handlePresetNameChange = useCallback((name: string) => {
+    dispatch(actions.setPresetName(name));
   }, []);
 
   // Copy code
@@ -74,16 +88,8 @@ function AstrogationContent() {
     if (!selectedComponentId) return;
     const code = generateJSXCode(selectedComponentId, componentProps);
     navigator.clipboard.writeText(code);
-    showToast("Code copied to clipboard");
-  }, [selectedComponentId, componentProps, showToast]);
-
-  // Load presets from API
-  useEffect(() => {
-    fetch("/api/ui-component-presets")
-      .then((r) => r.json())
-      .then((data) => setPresets(data.presets || []))
-      .catch(console.error);
-  }, []);
+    dispatch(actions.showToast("Code copied to clipboard"));
+  }, [selectedComponentId, componentProps]);
 
   // Save preset
   const handleSavePreset = useCallback(async () => {
@@ -101,47 +107,33 @@ function AstrogationContent() {
       });
       const data = await res.json();
       if (data.preset) {
-        setPresets((prev) => [...prev, data.preset]);
-        setPresetName("");
-        showToast("Preset saved");
+        dispatch(actions.presetSaved(data.preset));
+        dispatch(actions.showToast("Preset saved"));
       }
     } catch (e) {
       console.error(e);
-      showToast("Failed to save preset");
+      dispatch(actions.showToast("Failed to save preset"));
     }
-  }, [selectedComponentId, componentProps, style, presetName, showToast]);
+  }, [selectedComponentId, componentProps, style, presetName]);
 
   // Load preset
-  const handleLoadPreset = useCallback(
-    (preset: UIComponentPreset) => {
-      setSelectedComponentId(preset.component_key);
-      const { __style, ...props } = preset.config as Record<string, unknown>;
-      setComponentProps(props);
-      if (__style) {
-        setStyle(__style as StyleConfig);
-      }
-      // Switch to Foundry to show the loaded preset
-      setActiveTab("foundry");
-      showToast(`Loaded: ${preset.name}`);
-    },
-    [showToast]
-  );
+  const handleLoadPreset = useCallback((preset: UIComponentPreset) => {
+    dispatch(actions.loadPreset(preset));
+    dispatch(actions.showToast(`Loaded: ${preset.name}`));
+  }, []);
 
   // Delete preset
-  const handleDeletePreset = useCallback(
-    async (id: string) => {
-      if (!confirm("Delete this preset?")) return;
-      try {
-        await fetch(`/api/ui-component-presets?id=${id}`, { method: "DELETE" });
-        setPresets((prev) => prev.filter((p) => p.id !== id));
-        showToast("Preset deleted");
-      } catch (e) {
-        console.error(e);
-        showToast("Failed to delete preset");
-      }
-    },
-    [showToast]
-  );
+  const handleDeletePreset = useCallback(async (id: string) => {
+    if (!confirm("Delete this preset?")) return;
+    try {
+      await fetch(`/api/ui-component-presets?id=${id}`, { method: "DELETE" });
+      dispatch(actions.presetDeleted(id));
+      dispatch(actions.showToast("Preset deleted"));
+    } catch (e) {
+      console.error(e);
+      dispatch(actions.showToast("Failed to delete preset"));
+    }
+  }, []);
 
   return (
     <div className={`astrogation ${isFocused ? "has-focus" : ""}`}>
@@ -188,14 +180,14 @@ function AstrogationContent() {
       <div className="astrogation-content">
         <CatalogPanel
           selectedCategory={selectedCategory}
-          onSelectCategory={setSelectedCategory}
+          onSelectCategory={handleSelectCategory}
           selectedComponentId={selectedComponentId}
-          onSelectComponent={setSelectedComponentId}
+          onSelectComponent={handleSelectComponent}
         />
 
         <CenterPanel
           activeTab={activeTab}
-          onTabChange={setActiveTab}
+          onTabChange={handleTabChange}
           selectedComponentId={selectedComponentId}
           componentProps={componentProps}
           style={style}
@@ -204,21 +196,21 @@ function AstrogationContent() {
           onDeletePreset={handleDeletePreset}
           onSavePreset={handleSavePreset}
           presetName={presetName}
-          onPresetNameChange={setPresetName}
+          onPresetNameChange={handlePresetNameChange}
           canSave={!!selectedComponentId && !!presetName.trim()}
           isFocused={isFocused}
-          onFocusChange={setIsFocused}
+          onFocusChange={handleFocusChange}
         />
 
         {activeTab === "foundry" ? (
           <DialsPanel
             selectedComponentId={selectedComponentId}
             componentProps={componentProps}
-            onPropsChange={setComponentProps}
+            onPropsChange={handlePropsChange}
             onCopyCode={handleCopyCode}
             onSavePreset={handleSavePreset}
             presetName={presetName}
-            onPresetNameChange={setPresetName}
+            onPresetNameChange={handlePresetNameChange}
             canSave={!!selectedComponentId && !!presetName.trim()}
           />
         ) : (
