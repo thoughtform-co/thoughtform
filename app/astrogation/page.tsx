@@ -8,7 +8,6 @@ import { isAllowedUserEmail } from "@/lib/auth/allowed-user";
 
 // Import from extracted components
 import {
-  type UIComponentPreset,
   ThoughtformLogo,
   CatalogPanel,
   CenterPanel,
@@ -19,6 +18,9 @@ import {
 
 // Import state management
 import { astrogationReducer, initialState, actions } from "./_state/astrogationReducer";
+
+// Import hooks
+import { usePresets } from "./_hooks/usePresets";
 
 import "./astrogation.css";
 
@@ -42,13 +44,14 @@ function AstrogationContent() {
     toast,
   } = state;
 
-  // Load presets from API on mount
-  useEffect(() => {
-    fetch("/api/ui-component-presets")
-      .then((r) => r.json())
-      .then((data) => dispatch(actions.loadPresets(data.presets || [])))
-      .catch(console.error);
-  }, []);
+  // Presets management (CRUD + toast)
+  const { savePreset, loadPreset, deletePreset, canSave } = usePresets({
+    dispatch,
+    selectedComponentId,
+    componentProps,
+    style,
+    presetName,
+  });
 
   // Auto-hide toast after 2 seconds
   useEffect(() => {
@@ -90,50 +93,6 @@ function AstrogationContent() {
     navigator.clipboard.writeText(code);
     dispatch(actions.showToast("Code copied to clipboard"));
   }, [selectedComponentId, componentProps]);
-
-  // Save preset
-  const handleSavePreset = useCallback(async () => {
-    if (!selectedComponentId || !presetName.trim()) return;
-
-    try {
-      const res = await fetch("/api/ui-component-presets", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: presetName,
-          component_key: selectedComponentId,
-          config: { ...componentProps, __style: style },
-        }),
-      });
-      const data = await res.json();
-      if (data.preset) {
-        dispatch(actions.presetSaved(data.preset));
-        dispatch(actions.showToast("Preset saved"));
-      }
-    } catch (e) {
-      console.error(e);
-      dispatch(actions.showToast("Failed to save preset"));
-    }
-  }, [selectedComponentId, componentProps, style, presetName]);
-
-  // Load preset
-  const handleLoadPreset = useCallback((preset: UIComponentPreset) => {
-    dispatch(actions.loadPreset(preset));
-    dispatch(actions.showToast(`Loaded: ${preset.name}`));
-  }, []);
-
-  // Delete preset
-  const handleDeletePreset = useCallback(async (id: string) => {
-    if (!confirm("Delete this preset?")) return;
-    try {
-      await fetch(`/api/ui-component-presets?id=${id}`, { method: "DELETE" });
-      dispatch(actions.presetDeleted(id));
-      dispatch(actions.showToast("Preset deleted"));
-    } catch (e) {
-      console.error(e);
-      dispatch(actions.showToast("Failed to delete preset"));
-    }
-  }, []);
 
   return (
     <div className={`astrogation ${isFocused ? "has-focus" : ""}`}>
@@ -192,12 +151,12 @@ function AstrogationContent() {
           componentProps={componentProps}
           style={style}
           presets={presets}
-          onLoadPreset={handleLoadPreset}
-          onDeletePreset={handleDeletePreset}
-          onSavePreset={handleSavePreset}
+          onLoadPreset={loadPreset}
+          onDeletePreset={deletePreset}
+          onSavePreset={savePreset}
           presetName={presetName}
           onPresetNameChange={handlePresetNameChange}
-          canSave={!!selectedComponentId && !!presetName.trim()}
+          canSave={canSave}
           isFocused={isFocused}
           onFocusChange={handleFocusChange}
         />
@@ -208,10 +167,10 @@ function AstrogationContent() {
             componentProps={componentProps}
             onPropsChange={handlePropsChange}
             onCopyCode={handleCopyCode}
-            onSavePreset={handleSavePreset}
+            onSavePreset={savePreset}
             presetName={presetName}
             onPresetNameChange={handlePresetNameChange}
-            canSave={!!selectedComponentId && !!presetName.trim()}
+            canSave={canSave}
           />
         ) : (
           <SpecPanel selectedComponentId={selectedComponentId} />

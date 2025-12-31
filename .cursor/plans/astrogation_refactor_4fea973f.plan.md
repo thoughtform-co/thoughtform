@@ -12,12 +12,12 @@ todos:
       - baseline-checklist
   - id: state-reducer
     content: Introduce `app/astrogation/_state/astrogationReducer.ts` and migrate selection/tab/focus into a typed reducer; keep behavior identical.
-    status: in_progress
+    status: completed
     dependencies:
       - extract-components
   - id: presets-hook
     content: Move presets CRUD + toast wiring into `app/astrogation/_hooks/usePresets.ts` to isolate side effects and simplify views.
-    status: pending
+    status: in_progress
     dependencies:
       - state-reducer
   - id: css-dedupe-vars
@@ -62,14 +62,14 @@ todos:
 - Keep the route entry in [`app/astrogation/page.tsx`](app/astrogation/page.tsx) as a thin orchestrator.
 - Add route-local modules:
 - `app/astrogation/_components/`
-  - `AstrogationShell.tsx` (layout + rails/nav/footer)
-  - `CatalogPanel.tsx`
-  - `CenterPanel.tsx` (tabs)
-  - `VaultView.tsx`, `FoundryView.tsx`
-  - `SpecPanel.tsx`, `DialsPanel.tsx`
-  - `previews/ComponentPreview.tsx`
-  - `previews/VectorsPreview.tsx`, `previews/WordmarksPreview.tsx`
-  - `DynamicSVG.tsx`, `ThoughtformLogo.tsx`
+- `AstrogationShell.tsx` (layout + rails/nav/footer)
+- `CatalogPanel.tsx`
+- `CenterPanel.tsx` (tabs)
+- `VaultView.tsx`, `FoundryView.tsx`
+- `SpecPanel.tsx`, `DialsPanel.tsx`
+- `previews/ComponentPreview.tsx`
+- `previews/VectorsPreview.tsx`, `previews/WordmarksPreview.tsx`
+- `DynamicSVG.tsx`, `ThoughtformLogo.tsx`
 - `app/astrogation/_state/astrogationReducer.ts`
 - `app/astrogation/_hooks/usePresets.ts`
 
@@ -82,7 +82,6 @@ todos:
 - Actions like: `selectComponent`, `setTab`, `setFocus`, `setElementFocus`, `setProps`, `loadPresets`, `presetSaved`, `presetDeleted`, `toastShown`.
 - Keep side effects (fetch/save/delete presets) inside `usePresets()` to isolate network + error handling.
 - Make focus explicit (reduces edge cases):
-
 ```mermaid
 flowchart TD
   userClick[UserClick] --> focusDecision{FocusType}
@@ -95,13 +94,14 @@ flowchart TD
   clearFocus --> uiState
 ```
 
+
 ### CSS refactor (robust + scalable)
 
 - Keep [`app/astrogation/astrogation.css`](app/astrogation/astrogation.css) but **dedupe + parameterize**:
 - Introduce page-scoped CSS vars on `.astrogation` for focus system:
-  - `--focus-overlay-bg`, `--focus-overlay-blur`, `--focus-bg-opacity`, `--focus-bg-blur`
+- `--focus-overlay-bg`, `--focus-overlay-blur`, `--focus-bg-opacity`, `--focus-bg-blur`
 - Consolidate shared “asset grid” patterns across vectors/wordmarks:
-  - Shared rules for `__grid`, `__focused-content`, `__focused-overlay`, `__backdrop`, and `--has-focus`.
+- Shared rules for `__grid`, `__focused-content`, `__focused-overlay`, `__backdrop`, and `--has-focus`.
 - Audit and remove any remaining duplicate selectors (this is what caused the Word Mark focus mismatch recently).
 
 ### Performance wins (safe, low-risk)
@@ -112,5 +112,3 @@ flowchart TD
 - Optional (if profiling shows benefit): add a small in-memory cache in `DynamicSVG` for fetched SVG text keyed by `src`.
 
 ### Validation
-
-- Run TypeScript + lint checks.
