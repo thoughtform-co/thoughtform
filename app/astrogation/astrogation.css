@@ -2189,7 +2189,7 @@
   align-items: center;
   justify-content: center;
   padding: 64px 80px;
-  background: rgba(10, 9, 8, 0.45); /* Increased transparency from 0.85 to 0.45 */
+  background: rgba(10, 9, 8, 0.2); /* Increased transparency further from 0.45 to 0.2 */
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: 1px dashed rgba(235, 227, 214, 0.3);
