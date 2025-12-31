@@ -390,6 +390,23 @@
   flex-shrink: 0;
   position: relative;
   z-index: 2;
+  transition: all 0.3s ease; /* Added transition for smooth blur */
+}
+
+/* Global focus state: blur panels and background UI */
+.astrogation.has-focus .astrogation-panel,
+.astrogation.has-focus .astrogation-nav,
+.astrogation.has-focus .astrogation-footer,
+.astrogation.has-focus .hud-rail {
+  opacity: 0.6;
+  filter: blur(4px);
+  pointer-events: none;
+}
+
+.astrogation.has-focus .center-panel {
+  filter: none;
+  opacity: 1;
+  pointer-events: auto;
 }
 
 /* Scroll on hover */
@@ -2293,13 +2310,6 @@
 }
 
 .preview-wordmarks__item--blurred {
-  pointer-events: none;
-}
-
-/* When has focus, blur the entire grid but keep it visible */
-.preview-wordmarks--has-focus .preview-wordmarks__grid {
-  opacity: 0.4;
-  filter: blur(2px);
   pointer-events: none;
 }
 

@@ -1545,6 +1545,7 @@ function CenterPanel({
             presets={presets}
             onLoadPreset={onLoadPreset}
             onDeletePreset={onDeletePreset}
+            onFocusChange={onFocusChange}
           />
         ) : (
           <FoundryView
@@ -1576,6 +1577,7 @@ function VaultView({
   presets,
   onLoadPreset,
   onDeletePreset,
+  onFocusChange,
 }: {
   selectedComponentId: string | null;
   componentProps: Record<string, unknown>;
@@ -1583,6 +1585,7 @@ function VaultView({
   presets: UIComponentPreset[];
   onLoadPreset: (preset: UIComponentPreset) => void;
   onDeletePreset: (id: string) => void;
+  onFocusChange: (focused: boolean) => void;
 }) {
   const def = selectedComponentId ? getComponentById(selectedComponentId) : null;
 
@@ -1593,14 +1596,20 @@ function VaultView({
   const isMultiElement = selectedComponentId === "vectors" || selectedComponentId === "word-mark";
 
   // Handle element focus for multi-element components
-  const handleElementFocus = useCallback((id: string | null) => {
-    setFocusedElementId(id);
-  }, []);
+  const handleElementFocus = useCallback(
+    (id: string | null) => {
+      setFocusedElementId(id);
+      // Synchronize with global focus state so the entire interface responds
+      onFocusChange(!!id);
+    },
+    [onFocusChange]
+  );
 
   // Reset focus when component changes
   useEffect(() => {
     setFocusedElementId(null);
-  }, [selectedComponentId]);
+    onFocusChange(false);
+  }, [selectedComponentId, onFocusChange]);
 
   // Filter presets if a component is selected, otherwise show all
   const filteredPresets = selectedComponentId
@@ -1831,12 +1840,14 @@ function FoundryView({
   }, []);
 
   // Handle element focus for multi-element components (like vectors)
-  // Note: For multi-element components, we DON'T set the parent focus state
-  // because we don't want to blur the side panels - focus is contained within the preview
-  const handleElementFocus = useCallback((elementId: string | null) => {
-    setFocusedElementId(elementId);
-    // Don't call onFocusChange - keep panel blur separate from element focus
-  }, []);
+  const handleElementFocus = useCallback(
+    (elementId: string | null) => {
+      setFocusedElementId(elementId);
+      // Notify parent of focus state to blur background UI
+      onFocusChange(!!elementId);
+    },
+    [onFocusChange]
+  );
 
   // Check if this is a multi-element component
   const isMultiElement = selectedComponentId === "vectors" || selectedComponentId === "word-mark";
@@ -2403,7 +2414,7 @@ function AstrogationContent() {
   );
 
   return (
-    <div className="astrogation">
+    <div className={`astrogation ${isFocused ? "has-focus" : ""}`}>
       {/* HUD Frame Elements */}
       <div className="hud-corner hud-corner-tl" />
       <div className="hud-corner hud-corner-tr" />
