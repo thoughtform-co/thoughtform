@@ -2,6 +2,25 @@
    ASTROGATION - Component Gallery & Editor
    ═══════════════════════════════════════════════════════════════ */
 
+/* ─── FOCUS SYSTEM VARIABLES ─── */
+.astrogation {
+  /* Focus overlay appearance */
+  --focus-overlay-bg: rgba(10, 9, 8, 0.2);
+  --focus-overlay-blur: 12px;
+  --focus-overlay-border: rgba(235, 227, 214, 0.3);
+
+  /* Background grid when focused */
+  --focus-bg-opacity: 0.7;
+  --focus-bg-blur: 4px;
+
+  /* Global UI dim when focused */
+  --focus-global-opacity: 0.6;
+  --focus-global-blur: 4px;
+
+  /* Backdrop overlay */
+  --focus-backdrop-bg: rgba(10, 9, 8, 0.3);
+}
+
 /* ─── BASE ─── */
 .astrogation {
   position: fixed;
@@ -398,9 +417,10 @@
 .astrogation.has-focus .astrogation-nav,
 .astrogation.has-focus .astrogation-footer,
 .astrogation.has-focus .hud-rail {
-  opacity: 0.6;
-  filter: blur(4px);
+  opacity: var(--focus-global-opacity);
+  filter: blur(var(--focus-global-blur));
   pointer-events: none;
+  transition: all 0.3s ease;
 }
 
 .astrogation.has-focus .center-panel {
@@ -2111,10 +2131,6 @@
    ═══════════════════════════════════════════════════════════════ */
 
 .preview-vectors {
-  width: 100%;
-}
-
-.preview-vectors {
   position: relative;
   width: 100%;
   height: 100%;
@@ -2168,8 +2184,8 @@
 /* When has focus, blur the entire grid but keep it visible */
 .preview-vectors--has-focus .preview-vectors__grid,
 .preview-wordmarks--has-focus .preview-wordmarks__grid {
-  opacity: 0.7; /* Increased from 0.4 so background items don't "disappear" */
-  filter: blur(4px); /* Increased from 2px for better separation */
+  opacity: var(--focus-bg-opacity);
+  filter: blur(var(--focus-bg-blur));
   pointer-events: none;
 }
 
@@ -2206,10 +2222,10 @@
   align-items: center;
   justify-content: center;
   padding: 64px 80px;
-  background: rgba(10, 9, 8, 0.2); /* Increased transparency further from 0.45 to 0.2 */
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px dashed rgba(235, 227, 214, 0.3);
+  background: var(--focus-overlay-bg);
+  backdrop-filter: blur(var(--focus-overlay-blur));
+  -webkit-backdrop-filter: blur(var(--focus-overlay-blur));
+  border: 1px dashed var(--focus-overlay-border);
   border-radius: 8px;
   cursor: pointer;
   box-shadow:
@@ -2260,7 +2276,7 @@
 .preview-wordmarks__backdrop {
   position: absolute;
   inset: -200px;
-  background: rgba(10, 9, 8, 0.3);
+  background: var(--focus-backdrop-bg);
   z-index: 5;
   cursor: pointer;
 }

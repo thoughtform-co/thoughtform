@@ -17,12 +17,12 @@ todos:
       - extract-components
   - id: presets-hook
     content: Move presets CRUD + toast wiring into `app/astrogation/_hooks/usePresets.ts` to isolate side effects and simplify views.
-    status: in_progress
+    status: completed
     dependencies:
       - state-reducer
   - id: css-dedupe-vars
     content: Refactor `app/astrogation/astrogation.css` to use focus-related CSS vars and consolidate shared asset-grid styles; remove remaining duplicate selectors.
-    status: pending
+    status: in_progress
     dependencies:
       - extract-components
   - id: perf-pass
@@ -82,6 +82,7 @@ todos:
 - Actions like: `selectComponent`, `setTab`, `setFocus`, `setElementFocus`, `setProps`, `loadPresets`, `presetSaved`, `presetDeleted`, `toastShown`.
 - Keep side effects (fetch/save/delete presets) inside `usePresets()` to isolate network + error handling.
 - Make focus explicit (reduces edge cases):
+
 ```mermaid
 flowchart TD
   userClick[UserClick] --> focusDecision{FocusType}
@@ -93,7 +94,6 @@ flowchart TD
   userClick -->|backdropClick| clearFocus[ClearFocus]
   clearFocus --> uiState
 ```
-
 
 ### CSS refactor (robust + scalable)
 
@@ -109,6 +109,3 @@ flowchart TD
 - Make static data lists (vectors/wordmarks definitions) **module constants** (not recreated on each render).
 - Wrap heavier leaf components with `React.memo` where prop stability is clear.
 - Use `useMemo`/`useCallback` to stabilize props passed deep into the tree.
-- Optional (if profiling shows benefit): add a small in-memory cache in `DynamicSVG` for fetched SVG text keyed by `src`.
-
-### Validation
