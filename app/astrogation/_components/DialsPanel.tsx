@@ -273,32 +273,43 @@ function DialsPanelInner({
 
       <div className="panel-content">
         <div className="panel-content__scrollable">
-          {/* Render props grouped by category */}
-          {PROP_CATEGORY_ORDER.map((category) => {
-            const props = groupedProps[category];
-            if (!props || props.length === 0) return null;
+          <div className="spec-panel-v2">
+            {/* ─── HEADER (Harmonized with Vault) ─── */}
+            <header className="spec-header">
+              <h2 className="spec-header__title">{def.name}</h2>
+              <p className="spec-header__desc">{def.description}</p>
+            </header>
 
-            return (
-              <div key={category} className="dials-category">
-                <div className="dials-category__header">
-                  <span className="dials-category__label">{PROP_CATEGORY_LABELS[category]}</span>
-                </div>
-                <div className="dials-category__content">
-                  {props.map((propDef) => (
-                    <div key={propDef.name}>
-                      {renderPropControl(propDef, componentProps[propDef.name])}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            );
-          })}
+            {/* Render props grouped by category */}
+            {PROP_CATEGORY_ORDER.map((category) => {
+              const props = groupedProps[category];
+              if (!props || props.length === 0) return null;
 
-          {/* Actions */}
-          <div className="dials-actions">
-            <button className="action-btn action-btn--full" onClick={onCopyCode}>
-              Copy JSX Code
-            </button>
+              return (
+                <div key={category} className="spec-section">
+                  <div className="spec-section__label">
+                    <span className="spec-section__label-text">
+                      {PROP_CATEGORY_LABELS[category]}
+                    </span>
+                    <span className="spec-section__label-line" />
+                  </div>
+                  <div className="dials-category__content">
+                    {props.map((propDef) => (
+                      <div key={propDef.name}>
+                        {renderPropControl(propDef, componentProps[propDef.name])}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+
+            {/* Actions */}
+            <div className="dials-actions">
+              <button className="action-btn action-btn--full" onClick={onCopyCode}>
+                Copy JSX Code
+              </button>
+            </div>
           </div>
         </div>
 

@@ -1626,88 +1626,16 @@
   cursor: not-allowed;
 }
 
-/* ─── DIALS CATEGORIES ─── */
-.dials-category {
-  margin-bottom: 24px;
-  padding-bottom: 24px;
-  border-bottom: 1px solid var(--gold-15, rgba(202, 165, 84, 0.15));
-  position: relative;
-}
-
-.dials-category:last-child {
-  margin-bottom: 0;
-  padding-bottom: 0;
-  border-bottom: none;
-}
-
-/* Subtle line accent */
-.dials-category::after {
-  content: "";
-  position: absolute;
-  bottom: -1px;
-  left: 0;
-  width: 30px;
-  height: 1px;
-  background: var(--gold);
-  box-shadow: 0 0 5px var(--gold-50);
-}
-
-.dials-category__header {
-  width: 100%;
-  margin-bottom: 12px;
-  display: flex;
-  align-items: center;
-  padding: 4px 0;
-  border: none !important;
-  background: transparent !important;
-  transition: none;
-  cursor: default;
-}
-
-.dials-category__header:hover {
-  background: transparent !important;
-  border: none !important;
-}
-
-.dials-category__label {
-  font-family: var(--font-data, "PT Mono", monospace);
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  color: var(--gold, #caa554);
-  flex: 1;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.dials-category__label::before {
-  content: "»";
-  font-size: 12px;
-  color: var(--gold);
-  opacity: 0.8;
-}
-
-.dials-category__label::after {
-  content: "NET_PROTO_88.S";
-  font-size: 8px;
-  opacity: 0.2;
-  margin-left: auto;
-  letter-spacing: 0.05em;
-}
-
+/* ─── DIALS PANEL SPECIFIC ─── */
 .dials-category__content {
-  padding-left: 4px;
-  margin-left: 0;
-  margin-top: 8px;
   display: flex;
   flex-direction: column;
   gap: 0;
 }
 
 .dials-actions {
-  margin-top: 24px;
-  padding-top: 20px;
+  margin-top: 32px;
+  padding-top: 24px;
   border-top: 1px dashed var(--gold-15);
 }
 
@@ -3072,4 +3000,525 @@
 .center-panel {
   position: relative;
   z-index: 6;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SPEC PANEL V2 - Enhanced Documentation View
+   Design Primitives for Brand System
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Empty State */
+.spec-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 40px 20px;
+  text-align: center;
+}
+
+.spec-empty-state__visual {
+  width: 80px;
+  height: 80px;
+  margin-bottom: 20px;
+  animation: specEmptyPulse 3s ease-in-out infinite;
+}
+
+@keyframes specEmptyPulse {
+  0%,
+  100% {
+    opacity: 0.4;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(1.02);
+  }
+}
+
+.spec-empty-state__icon {
+  width: 100%;
+  height: 100%;
+}
+
+.spec-empty-state__text {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--dawn-50);
+  margin: 0 0 4px 0;
+  letter-spacing: 0.05em;
+}
+
+.spec-empty-state__hint {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--dawn-30);
+  letter-spacing: 0.08em;
+}
+
+/* Main Spec Panel V2 Container */
+.spec-panel-v2 {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+/* ─── SPEC HEADER ─── */
+.spec-header {
+  position: relative;
+  padding-bottom: 20px;
+}
+
+.spec-header::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, var(--gold) 0%, var(--gold-30) 30%, transparent 100%);
+}
+
+.spec-header__title {
+  font-family: var(--font-data, "PT Mono", monospace);
+  font-size: 15px;
+  font-weight: 400;
+  color: var(--gold);
+  margin: 0 0 10px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.spec-header__title::before {
+  content: "»";
+  font-size: 14px;
+  color: var(--gold-70);
+}
+
+.spec-header__desc {
+  font-size: 12px;
+  color: var(--dawn-60);
+  line-height: 1.6;
+  margin: 0;
+  max-width: 280px;
+}
+
+/* ─── SPEC SECTIONS ─── */
+.spec-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.spec-section__label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.spec-section__label-text {
+  font-family: var(--font-data, "PT Mono", monospace);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--gold-70);
+  white-space: nowrap;
+}
+
+.spec-section__label-line {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, var(--gold-30) 0%, transparent 100%);
+}
+
+/* ─── DESIGN INTENT SECTION ─── */
+.spec-intent__philosophy {
+  font-size: 12px;
+  line-height: 1.75;
+  color: var(--dawn-70);
+  font-style: italic;
+  padding: 0 0 0 16px;
+  margin: 0;
+  border-left: 2px solid var(--gold-30);
+  position: relative;
+}
+
+.spec-intent__philosophy::before {
+  content: "◇";
+  position: absolute;
+  left: -5px;
+  top: 0;
+  font-size: 8px;
+  color: var(--gold);
+  font-style: normal;
+}
+
+.spec-intent__sources {
+  margin-top: 12px;
+}
+
+.spec-intent__sources-label {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--dawn-30);
+  margin-bottom: 10px;
+}
+
+/* ─── INSPIRATION TAGS ─── */
+.inspiration-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.inspiration-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px 4px 6px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--dawn-50);
+  background: rgba(202, 165, 84, 0.04);
+  border: 1px solid var(--gold-15);
+  transition: all 0.2s ease;
+  cursor: default;
+}
+
+.inspiration-tag:hover {
+  background: rgba(202, 165, 84, 0.08);
+  border-color: var(--gold-30);
+  color: var(--dawn-70);
+}
+
+.inspiration-tag__diamond {
+  font-size: 6px;
+  color: var(--gold-50);
+  transition: color 0.2s ease;
+}
+
+.inspiration-tag:hover .inspiration-tag__diamond {
+  color: var(--gold);
+}
+
+/* ─── IMPLEMENTATION BLUEPRINT SECTION ─── */
+.spec-blueprint {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Implementation Dependencies - Simple Tag-Based Display */
+.spec-implementation-deps {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.spec-implementation-deps__group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.spec-implementation-deps__label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--dawn-30);
+}
+
+.spec-implementation-deps__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.spec-implementation-deps__tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--dawn-50);
+  background: rgba(202, 165, 84, 0.04);
+  border: 1px solid var(--gold-15);
+  transition: all 0.2s ease;
+  cursor: default;
+}
+
+.spec-implementation-deps__tag:hover {
+  background: rgba(202, 165, 84, 0.08);
+  border-color: var(--gold-30);
+  color: var(--dawn-70);
+}
+
+.spec-implementation-deps__tag--token {
+  /* Slightly different styling for tokens */
+  background: rgba(235, 227, 214, 0.03);
+  border-color: var(--dawn-15);
+}
+
+.spec-implementation-deps__tag--token:hover {
+  background: rgba(235, 227, 214, 0.06);
+  border-color: var(--dawn-30);
+}
+
+.spec-implementation-deps__tag--pattern {
+  /* Gold tint for patterns */
+  background: rgba(202, 165, 84, 0.05);
+  border-color: var(--gold-20);
+}
+
+.spec-implementation-deps__tag--pattern:hover {
+  background: rgba(202, 165, 84, 0.1);
+  border-color: var(--gold-30);
+}
+
+.spec-implementation-deps__tag--property {
+  /* Muted for properties */
+  background: rgba(235, 227, 214, 0.02);
+  border-color: var(--dawn-08);
+  color: var(--dawn-40);
+}
+
+.spec-implementation-deps__tag--property:hover {
+  background: rgba(235, 227, 214, 0.04);
+  border-color: var(--dawn-15);
+  color: var(--dawn-60);
+}
+
+/* Props Diagram */
+.spec-blueprint__props {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.spec-blueprint__props-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--dawn-40);
+}
+
+.spec-blueprint__props-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 6px;
+  background: var(--gold-08);
+  border: 1px solid var(--gold-15);
+  color: var(--gold);
+  font-size: 9px;
+}
+
+/* Props Empty State */
+.spec-props-empty {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  background: rgba(235, 227, 214, 0.02);
+  border: 1px dashed var(--dawn-08);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--dawn-30);
+}
+
+.spec-props-empty__icon {
+  font-size: 8px;
+  color: var(--dawn-15);
+}
+
+/* Props Diagram Nodes */
+.spec-props-diagram {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  position: relative;
+  padding-left: 12px;
+}
+
+/* Vertical connector line */
+.spec-props-diagram::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 8px;
+  bottom: 8px;
+  width: 1px;
+  background: linear-gradient(to bottom, var(--gold-30), var(--gold-15));
+}
+
+.spec-prop-node {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  position: relative;
+}
+
+.spec-prop-node__connector {
+  position: absolute;
+  left: -12px;
+  width: 12px;
+  height: 1px;
+  background: var(--gold-20);
+}
+
+.spec-prop-node__connector::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%) rotate(45deg);
+  width: 4px;
+  height: 4px;
+  background: var(--gold);
+}
+
+.spec-prop-node__name {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--dawn-70);
+  flex: 1;
+}
+
+.spec-prop-node__type {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: #569cd6;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  background: rgba(86, 156, 214, 0.1);
+}
+
+.spec-prop-node--more .spec-prop-node__name {
+  color: var(--dawn-40);
+  font-style: italic;
+}
+
+.spec-prop-node--more .spec-prop-node__connector::after {
+  background: var(--dawn-30);
+}
+
+/* Frontend Notes */
+.spec-blueprint__notes {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.spec-blueprint__notes-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--dawn-40);
+}
+
+.spec-blueprint__notes-icon {
+  color: var(--gold-50);
+  font-size: 10px;
+}
+
+.spec-blueprint__notes-content {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.7;
+  color: var(--dawn-50);
+  padding: 14px;
+  background: 
+    /* Subtle scanlines */
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(202, 165, 84, 0.02) 2px,
+      rgba(202, 165, 84, 0.02) 3px
+    ),
+    rgba(10, 9, 8, 0.5);
+  border: 1px solid var(--gold-08);
+  border-left: 2px solid var(--gold-30);
+}
+
+/* Component ID Button */
+.spec-blueprint__id {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  margin-top: 8px;
+  background: rgba(10, 9, 8, 0.4);
+  border: 1px solid var(--dawn-08);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
+  text-align: left;
+}
+
+.spec-blueprint__id:hover {
+  background: rgba(202, 165, 84, 0.06);
+  border-color: var(--gold-30);
+}
+
+.spec-blueprint__id--copied {
+  border-color: var(--gold);
+  background: rgba(202, 165, 84, 0.1);
+}
+
+.spec-blueprint__id-label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--dawn-30);
+}
+
+.spec-blueprint__id-value {
+  flex: 1;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--gold);
+  letter-spacing: 0.02em;
+}
+
+.spec-blueprint__id-action {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--dawn-30);
+  padding: 3px 8px;
+  background: var(--dawn-08);
+  transition: all 0.2s ease;
+}
+
+.spec-blueprint__id:hover .spec-blueprint__id-action {
+  background: var(--gold-15);
+  color: var(--gold);
+}
+
+.spec-blueprint__id--copied .spec-blueprint__id-action {
+  background: var(--gold);
+  color: var(--void);
 }
