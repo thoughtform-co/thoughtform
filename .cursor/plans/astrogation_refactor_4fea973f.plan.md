@@ -22,12 +22,12 @@ todos:
       - state-reducer
   - id: css-dedupe-vars
     content: Refactor `app/astrogation/astrogation.css` to use focus-related CSS vars and consolidate shared asset-grid styles; remove remaining duplicate selectors.
-    status: in_progress
+    status: completed
     dependencies:
       - extract-components
   - id: perf-pass
     content: Apply safe performance improvements (memoization, stable callbacks, optional `DynamicSVG` caching) and verify no interaction regressions.
-    status: pending
+    status: in_progress
     dependencies:
       - state-reducer
       - css-dedupe-vars

@@ -1,5 +1,6 @@
 "use client";
 
+import { memo, useCallback } from "react";
 import { getComponentById, type PropDef } from "../catalog";
 import type { CornerToken } from "@thoughtform/ui";
 import { BRAND_COLORS, BORDER_COLORS } from "./types";
@@ -77,7 +78,7 @@ export interface DialsPanelProps {
   canSave: boolean;
 }
 
-export function DialsPanel({
+function DialsPanelInner({
   selectedComponentId,
   componentProps,
   onPropsChange,
@@ -321,3 +322,6 @@ export function DialsPanel({
     </aside>
   );
 }
+
+// Memoized export - prevents re-renders when parent changes but props don't
+export const DialsPanel = memo(DialsPanelInner);

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, memo, useMemo } from "react";
 
 // ═══════════════════════════════════════════════════════════════
 // SVG LOADER COMPONENT
@@ -15,8 +15,21 @@ export interface DynamicSVGProps {
   preserveAspectRatio?: string;
 }
 
+// Simple in-memory cache for fetched SVG text
+// Avoids re-fetching the same SVG multiple times
+const svgCache = new Map<string, string>();
+
+// Process SVG text with color replacement
+function processSVGText(text: string, color: string): string {
+  return text
+    .replace(/fill="#?[Cc][Aa][Aa]554"/g, `fill="${color}"`)
+    .replace(/fill="currentColor"/g, `fill="${color}"`)
+    .replace(/fill="none"/g, `fill="none"`)
+    .replace(/#?[Cc][Aa][Aa]554/g, color); // Catch style blocks and other hex mentions
+}
+
 // Component to load SVG files and apply dynamic colors
-export function DynamicSVG({
+function DynamicSVGInner({
   src,
   color = "#caa554",
   width,
@@ -24,36 +37,38 @@ export function DynamicSVG({
   className,
   preserveAspectRatio = "xMidYMid meet",
 }: DynamicSVGProps) {
-  const [svgContent, setSvgContent] = useState<string | null>(null);
-  const [viewBox, setViewBox] = useState<string>("0 0 100 100");
+  const [rawSVG, setRawSVG] = useState<string | null>(() => svgCache.get(src) ?? null);
+  const [isLoading, setIsLoading] = useState(!svgCache.has(src));
 
+  // Fetch SVG if not cached
   useEffect(() => {
+    if (svgCache.has(src)) {
+      setRawSVG(svgCache.get(src)!);
+      setIsLoading(false);
+      return;
+    }
+
+    setIsLoading(true);
     fetch(src)
       .then((res) => res.text())
       .then((text) => {
-        // Extract viewBox from SVG
-        const viewBoxMatch = text.match(/viewBox=["']([^"']+)["']/);
-        if (viewBoxMatch) {
-          setViewBox(viewBoxMatch[1]);
-        }
-
-        // Replace fill colors with dynamic color
-        // Replace both fill="#CAA554" and fill="#caa554" and fill="currentColor"
-        // Also handle the brand color in CSS style blocks
-        let processed = text
-          .replace(/fill="#?[Cc][Aa][Aa]554"/g, `fill="${color}"`)
-          .replace(/fill="currentColor"/g, `fill="${color}"`)
-          .replace(/fill="none"/g, `fill="none"`)
-          .replace(/#?[Cc][Aa][Aa]554/g, color); // Catch style blocks and other hex mentions
-
-        setSvgContent(processed);
+        svgCache.set(src, text);
+        setRawSVG(text);
+        setIsLoading(false);
       })
       .catch((err) => {
         console.error(`Failed to load SVG: ${src}`, err);
+        setIsLoading(false);
       });
-  }, [src, color]);
+  }, [src]);
 
-  if (!svgContent) {
+  // Process SVG with color replacement (memoized)
+  const svgContent = useMemo(() => {
+    if (!rawSVG) return null;
+    return processSVGText(rawSVG, color);
+  }, [rawSVG, color]);
+
+  if (isLoading || !svgContent) {
     return (
       <div
         style={{
@@ -89,3 +104,6 @@ export function DynamicSVG({
     />
   );
 }
+
+// Memoized export - prevents re-renders when parent changes but props don't
+export const DynamicSVG = memo(DynamicSVGInner);

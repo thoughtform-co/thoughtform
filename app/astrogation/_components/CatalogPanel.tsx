@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, memo, useCallback } from "react";
 import {
   CATEGORIES,
   HIERARCHY_BREAKS,
@@ -29,7 +29,7 @@ export interface CatalogPanelProps {
   onSelectComponent: (id: string) => void;
 }
 
-export function CatalogPanel({
+function CatalogPanelInner({
   selectedCategory,
   onSelectCategory,
   selectedComponentId,
@@ -135,3 +135,6 @@ export function CatalogPanel({
     </aside>
   );
 }
+
+// Memoized export - prevents re-renders when parent changes but props don't
+export const CatalogPanel = memo(CatalogPanelInner);

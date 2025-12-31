@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import { getComponentById } from "../catalog";
 
 // ═══════════════════════════════════════════════════════════════
@@ -10,7 +11,7 @@ export interface SpecPanelProps {
   selectedComponentId: string | null;
 }
 
-export function SpecPanel({ selectedComponentId }: SpecPanelProps) {
+function SpecPanelInner({ selectedComponentId }: SpecPanelProps) {
   const def = selectedComponentId ? getComponentById(selectedComponentId) : null;
 
   if (!def) {
@@ -81,3 +82,6 @@ export function SpecPanel({ selectedComponentId }: SpecPanelProps) {
     </aside>
   );
 }
+
+// Memoized export - prevents re-renders when parent changes but props don't
+export const SpecPanel = memo(SpecPanelInner);
