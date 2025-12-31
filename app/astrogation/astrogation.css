@@ -408,7 +408,7 @@
 }
 
 .astrogation-panel--left {
-  border: 1px solid rgba(202, 165, 84, 0.15);
+  border: 1px solid rgba(202, 165, 84, 0.25);
   width: 280px;
   min-width: 280px;
   max-width: 280px;
@@ -424,6 +424,11 @@
   /* Fixed height to enable scrolling within */
   height: calc(100vh - var(--hud-padding, 32px) * 2 - 80px);
   max-height: calc(100vh - var(--hud-padding, 32px) * 2 - 80px);
+  /* Soft glow effect - hand terminal style */
+  box-shadow:
+    0 0 20px rgba(202, 165, 84, 0.15),
+    0 0 40px rgba(202, 165, 84, 0.08),
+    inset 0 0 30px rgba(202, 165, 84, 0.03);
 }
 
 /* Corner brackets for left panel - disabled */
