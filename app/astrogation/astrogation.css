@@ -397,16 +397,14 @@
   overflow-y: auto;
 }
 
+/* Hide scrollbars on panels */
+.astrogation-panel {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
 .astrogation-panel::-webkit-scrollbar {
-  width: 3px;
-}
-
-.astrogation-panel::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.astrogation-panel::-webkit-scrollbar-thumb {
-  background: var(--dawn-15);
+  display: none;
 }
 
 .astrogation-panel--left {
@@ -493,20 +491,14 @@
   display: none;
 }
 
+/* Hide scrollbars on panel content */
+.panel-content {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
 .panel-content::-webkit-scrollbar {
-  width: 3px;
-}
-
-.panel-content::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.panel-content::-webkit-scrollbar-thumb {
-  background: var(--gold-15, rgba(202, 165, 84, 0.15));
-}
-
-.panel-content::-webkit-scrollbar-thumb:hover {
-  background: var(--gold-30, rgba(202, 165, 84, 0.3));
+  display: none;
 }
 
 /* Additional corner brackets for left panel (top-right and bottom-left) */
