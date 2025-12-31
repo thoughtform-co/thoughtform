@@ -51,9 +51,6 @@ function CatalogPanelInner({
         {/* Search */}
         <div className="astrogation-section">
           <div className="input-group">
-            <div className="input-group__addon input-group__addon--start">
-              <span className="input-group__icon">○</span>
-            </div>
             <input
               type="text"
               className="input-group__input"
