@@ -49,12 +49,6 @@ import {
 } from "@thoughtform/ui";
 
 import "./astrogation.css";
-import dynamic from "next/dynamic";
-
-// Dynamic import for WebGL glow effect (SSR disabled)
-const PanelGlow = dynamic(() => import("@/components/hud/PanelGlow").then((m) => m.PanelGlow), {
-  ssr: false,
-});
 
 // ═══════════════════════════════════════════════════════════════
 // TYPES
@@ -1289,19 +1283,6 @@ function CatalogPanel({
 
   return (
     <aside className="astrogation-panel astrogation-panel--left">
-      {/* WebGL Bloom Glow */}
-      <PanelGlow
-        width={280}
-        height={600}
-        color="#caa554"
-        intensity={0.12}
-        bloomIntensity={2}
-        bloomRadius={0.9}
-        showEdges={true}
-        pulseSpeed={0.3}
-        pulseAmount={0.03}
-      />
-
       {/* Panel Header */}
       <div className="panel-header">BRAND SYSTEM</div>
 
