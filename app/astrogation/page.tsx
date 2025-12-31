@@ -2045,7 +2045,7 @@ function DialsPanel({
   if (!selectedComponentId || !def) {
     return (
       <aside className="astrogation-panel astrogation-panel--right">
-        <div className="panel-header">DIALS</div>
+        <div className="panel-header">{"// DIALS"}</div>
         <div className="panel-content">
           <div className="panel-empty-state">
             <span className="panel-empty-state__icon">◇</span>
@@ -2086,7 +2086,7 @@ function DialsPanel({
 
   return (
     <aside className="astrogation-panel astrogation-panel--right">
-      <div className="panel-header">DIALS</div>
+      <div className="panel-header">{"// DIALS"}</div>
 
       <div className="panel-content">
         <div className="panel-content__scrollable">
