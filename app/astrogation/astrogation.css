@@ -3077,7 +3077,7 @@
   left: 0;
   right: 0;
   height: 1px;
-  background: linear-gradient(90deg, var(--gold) 0%, var(--gold-30) 30%, transparent 100%);
+  background: var(--gold-30);
 }
 
 .spec-header__title {
@@ -3132,7 +3132,7 @@
 .spec-section__label-line {
   flex: 1;
   height: 1px;
-  background: linear-gradient(90deg, var(--gold-30) 0%, transparent 100%);
+  background: var(--gold-15);
 }
 
 /* ─── DESIGN INTENT SECTION ─── */
