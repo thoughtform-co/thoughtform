@@ -2149,9 +2149,10 @@
 }
 
 /* When has focus, blur the entire grid but keep it visible */
-.preview-vectors--has-focus .preview-vectors__grid {
-  opacity: 0.4;
-  filter: blur(2px);
+.preview-vectors--has-focus .preview-vectors__grid,
+.preview-wordmarks--has-focus .preview-wordmarks__grid {
+  opacity: 0.7; /* Increased from 0.4 so background items don't "disappear" */
+  filter: blur(4px); /* Increased from 2px for better separation */
   pointer-events: none;
 }
 
@@ -2187,8 +2188,10 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 64px 80px; /* Increased padding for much more breathing room */
-  background: rgba(10, 9, 8, 0.95);
+  padding: 64px 80px;
+  background: rgba(10, 9, 8, 0.85); /* Slightly more transparent to benefit from blur */
+  backdrop-filter: blur(12px); /* Added requested blur to pop-up window */
+  -webkit-backdrop-filter: blur(12px);
   border: 1px dashed rgba(235, 227, 214, 0.3);
   border-radius: 8px;
   cursor: pointer;
