@@ -2124,7 +2124,7 @@
   align-items: center;
   justify-content: center;
   aspect-ratio: 1;
-  padding: 20px;
+  padding: 32px; /* Increased from 20px for more breathing room */
   cursor: pointer;
   border-radius: 4px;
   transition: all 0.3s ease;
@@ -2155,8 +2155,8 @@
   pointer-events: none;
 }
 
-/* Focused element overlay - centered in the preview area */
-.preview-vectors__focused-overlay {
+.preview-vectors__focused-overlay,
+.preview-wordmarks__focused-overlay {
   position: absolute;
   top: 50%;
   left: 50%;
@@ -2166,10 +2166,10 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  animation: vectorFocusIn 0.3s ease-out;
+  animation: assetFocusIn 0.3s ease-out;
 }
 
-@keyframes vectorFocusIn {
+@keyframes assetFocusIn {
   from {
     opacity: 0;
     transform: translate(-50%, -50%) scale(0.8);
@@ -2180,17 +2180,14 @@
   }
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   SHARED ASSET FOCUS FRAME - Adaptive to content shape
-   ═══════════════════════════════════════════════════════════════ */
-
-.asset-focus-frame {
+.preview-vectors__focused-content,
+.preview-wordmarks__focused-content {
   position: relative;
   display: inline-flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 48px 64px;
+  padding: 64px 80px; /* Increased padding for much more breathing room */
   background: rgba(10, 9, 8, 0.95);
   border: 1px dashed rgba(235, 227, 214, 0.3);
   border-radius: 8px;
@@ -2201,7 +2198,8 @@
     0 30px 80px rgba(0, 0, 0, 0.6);
 }
 
-.asset-focus-frame__label {
+.preview-vectors__focused-label,
+.preview-wordmarks__focused-label {
   position: absolute;
   top: -10px;
   left: 50%;
@@ -2222,65 +2220,24 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 600px; /* Increased from 400px for a more expansive feel */
+  height: 400px; /* Increased from 200px to give square assets plenty of vertical space */
+  padding: 64px; /* Internal padding to ensure no asset touches the dashed line */
+  box-sizing: border-box;
 }
 
 /* SVG sizing - adaptive based on natural aspect ratio */
 .asset-focus-frame__content svg {
-  width: auto;
-  height: auto;
+  width: 100%;
+  height: 100%;
   max-width: min(500px, 60vw);
   max-height: min(300px, 50vh);
-}
-
-/* Legacy support - redirect old classes to shared system */
-.preview-vectors__focused-content {
-  position: relative;
-  display: inline-flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 48px 64px;
-  background: rgba(10, 9, 8, 0.95);
-  border: 1px dashed rgba(235, 227, 214, 0.3);
-  border-radius: 8px;
-  cursor: pointer;
-  box-shadow:
-    0 0 0 1px rgba(235, 227, 214, 0.05),
-    0 0 60px rgba(202, 165, 84, 0.1),
-    0 30px 80px rgba(0, 0, 0, 0.6);
-}
-
-.preview-vectors__focused-content > div {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.preview-vectors__focused-content svg {
-  width: auto;
-  height: auto;
-  max-width: min(500px, 60vw);
-  max-height: min(300px, 50vh);
-}
-
-.preview-vectors__focused-label {
-  position: absolute;
-  top: -10px;
-  left: 50%;
-  transform: translateX(-50%);
-  padding: 4px 16px;
-  background: rgba(10, 9, 8, 0.95);
-  border: 1px solid rgba(235, 227, 214, 0.2);
-  border-radius: 2px;
-  font-family: var(--font-mono);
-  font-size: 10px;
-  letter-spacing: 0.12em;
-  color: rgba(235, 227, 214, 0.8);
-  white-space: nowrap;
+  display: block;
 }
 
 /* Backdrop when element is focused - subtle darkening */
-.preview-vectors__backdrop {
+.preview-vectors__backdrop,
+.preview-wordmarks__backdrop {
   position: absolute;
   inset: -200px;
   background: rgba(10, 9, 8, 0.3);
@@ -2319,7 +2276,7 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
-  padding: 24px;
+  padding: 32px; /* Increased from 24px for more breathing room */
   border: 1px solid rgba(235, 227, 214, 0.1);
   border-radius: 4px;
   background: rgba(10, 9, 8, 0.3);

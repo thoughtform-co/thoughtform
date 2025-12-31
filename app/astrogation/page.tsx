@@ -133,14 +133,12 @@ function DynamicSVG({
 
         // Replace fill colors with dynamic color
         // Replace both fill="#CAA554" and fill="#caa554" and fill="currentColor"
+        // Also handle the brand color in CSS style blocks
         let processed = text
           .replace(/fill="#?[Cc][Aa][Aa]554"/g, `fill="${color}"`)
-          .replace(/fill="#?[Cc][Aa][Aa]554"/g, `fill="${color}"`)
           .replace(/fill="currentColor"/g, `fill="${color}"`)
-          .replace(/fill="none"/g, `fill="none"`); // Keep none as none
-
-        // Also handle fill attributes without quotes
-        processed = processed.replace(/fill=([Cc][Aa][Aa]554)/g, `fill="${color}"`);
+          .replace(/fill="none"/g, `fill="none"`)
+          .replace(/#?[Cc][Aa][Aa]554/g, color); // Catch style blocks and other hex mentions
 
         setSvgContent(processed);
       })
@@ -534,7 +532,7 @@ function renderComponent(
                   {focusedWordmark.name.toUpperCase()}
                 </span>
                 <div className="asset-focus-frame__content">
-                  <DynamicSVG src={focusedWordmark.src} color={color} />
+                  <DynamicSVG src={focusedWordmark.src} color={color} width="100%" height="100%" />
                 </div>
               </div>
             </div>
@@ -638,7 +636,7 @@ function renderComponent(
                   {focusedVector.name.toUpperCase()}
                 </span>
                 <div className="asset-focus-frame__content">
-                  <DynamicSVG src={focusedVector.src} color={color} />
+                  <DynamicSVG src={focusedVector.src} color={color} width="100%" height="100%" />
                 </div>
               </div>
             </div>
@@ -1599,6 +1597,11 @@ function VaultView({
     setFocusedElementId(id);
   }, []);
 
+  // Reset focus when component changes
+  useEffect(() => {
+    setFocusedElementId(null);
+  }, [selectedComponentId]);
+
   // Filter presets if a component is selected, otherwise show all
   const filteredPresets = selectedComponentId
     ? presets.filter((p) => p.component_key === selectedComponentId)
@@ -1841,9 +1844,9 @@ function FoundryView({
   // Handle click to focus/unfocus (for single-element components)
   const handlePreviewClick = useCallback(
     (e: React.MouseEvent) => {
-      // Don't toggle if clicking on a specific element within vectors
+      // Don't toggle if clicking on a specific element within multi-element components
       const target = e.target as HTMLElement;
-      if (target.closest(".preview-vectors__item")) {
+      if (target.closest(".preview-vectors__item") || target.closest(".preview-wordmarks__item")) {
         return; // Let the item's own handler manage focus
       }
 
