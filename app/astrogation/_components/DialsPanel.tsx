@@ -228,7 +228,7 @@ function DialsPanelInner({
   if (!selectedComponentId || !def) {
     return (
       <aside className="astrogation-panel astrogation-panel--right">
-        <div className="panel-header">{"// DIALS"}</div>
+        <div className="panel-header panel-header--filled">DIALS</div>
         <div className="panel-content">
           <div className="panel-empty-state">
             <span className="panel-empty-state__icon">◇</span>
@@ -269,7 +269,7 @@ function DialsPanelInner({
 
   return (
     <aside className="astrogation-panel astrogation-panel--right">
-      <div className="panel-header">{"// DIALS"}</div>
+      <div className="panel-header panel-header--filled">DIALS</div>
 
       <div className="panel-content">
         <div className="panel-content__scrollable">

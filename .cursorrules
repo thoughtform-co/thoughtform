@@ -49,6 +49,25 @@ This is the Thoughtform.co website - a Next.js 14 app with:
 - Follow existing patterns in the codebase
 - Use existing abstractions before creating new ones
 
+## Development Server Port
+
+**CRITICAL: Thoughtform.co uses port 3003 exclusively.**
+
+- The dev server is configured to run on port 3003 in `package.json`
+- **Never change this port** - it's assigned to prevent conflicts with other projects
+- When running `npm run dev`, the server will start on `http://localhost:3003`
+- If port 3003 is in use, the server will fail to start (this is intentional - don't auto-select another port)
+- This ensures multiple Cursor projects can run simultaneously without interference
+
+**Port Assignment:**
+- Thoughtform.co: Port 3003 (this project)
+- Other projects: Use different ports (e.g., 3000, 3001, 3002, 3004+)
+
+**Configuration Location:**
+- `package.json` - `dev` and `start` scripts include `-p 3003` flag
+- `playwright.config.ts` - Test configuration uses port 3003
+- `README.md` and `CLAUDE.md` - Documentation references port 3003
+
 ## Key Files
 
 - `CLAUDE.md` - Full project memory

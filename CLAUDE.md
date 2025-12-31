@@ -50,7 +50,7 @@ supabase/              # Database schema and migrations
 ## Development Commands
 
 ```bash
-npm run dev      # Start development server (localhost:3000)
+npm run dev      # Start development server (localhost:3003)
 npm run build    # Production build
 npm run lint     # Run ESLint
 npm run format   # Format with Prettier
@@ -62,6 +62,11 @@ npm run format   # Format with Prettier
 
 Use "context7" or "get docs for [library]" to fetch up-to-date documentation.
 Example: "use context7 to get the latest Next.js App Router docs"
+
+### Frontend Design
+
+Use when optimizing front-end, designing components, or improving responsive design. Guides design decisions while maintaining the HUD aesthetic and avoiding generic patterns.
+Example: "optimize the front-end design", "make this component responsive", "design a new component"
 
 ## Conventions
 

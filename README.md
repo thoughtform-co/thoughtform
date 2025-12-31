@@ -18,7 +18,7 @@ npm install
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000)
+Open [http://localhost:3003](http://localhost:3003)
 
 ## Environment Variables
 
@@ -69,6 +69,27 @@ Fetches up-to-date, version-specific documentation for any library. Avoids outda
 - "get docs for framer-motion"
 
 **Location:** `.claude/skills/context7/`
+
+#### Frontend Design (`frontend-design`)
+
+Guides front-end design decisions, focusing on component aesthetics, responsive design, and maintaining the HUD aesthetic while avoiding generic AI-generated patterns.
+
+**Usage in prompts:**
+
+- "optimize the front-end design"
+- "make this component more responsive"
+- "improve the mobile layout"
+- "design a new component following our patterns"
+
+**Location:** `.claude/skills/frontend-design/`
+
+**Key Features:**
+
+- Builds on existing design patterns
+- Maintains HUD aesthetic (corner brackets, frames, monospace typography)
+- Mobile-first responsive design guidance
+- Performance-aware design recommendations
+- Avoids generic "AI slop" patterns
 
 ### Setting Up Claude Agent SDK
 

@@ -177,12 +177,6 @@ function AstrogationContent() {
         )}
       </div>
 
-      {/* Footer */}
-      <footer className="astrogation-footer">
-        <div className="astrogation-footer__left"></div>
-        <div className="astrogation-footer__right">Astrogation v1.0</div>
-      </footer>
-
       {toast && <div className="toast">{toast}</div>}
     </div>
   );

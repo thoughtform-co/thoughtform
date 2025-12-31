@@ -420,7 +420,7 @@
 }
 
 /* Global focus state: blur panels and background UI */
-.astrogation.has-focus .astrogation-panel,
+.astrogation.has-focus .astrogation-panel:not(.astrogation-panel--right),
 .astrogation.has-focus .astrogation-nav,
 .astrogation.has-focus .astrogation-footer,
 .astrogation.has-focus .hud-rail {
@@ -430,7 +430,8 @@
   transition: all 0.3s ease;
 }
 
-.astrogation.has-focus .center-panel {
+.astrogation.has-focus .center-panel,
+.astrogation.has-focus .astrogation-panel--right {
   filter: none;
   opacity: 1;
   pointer-events: auto;
@@ -452,20 +453,41 @@
 }
 
 .astrogation-panel--left {
-  border: none;
-  width: 280px;
-  min-width: 280px;
-  max-width: 280px;
-  background: transparent;
+  border: 1px solid var(--gold-30, rgba(202, 165, 84, 0.3));
+  width: 340px;
+  min-width: 340px;
+  max-width: 340px;
+  /* Soft gradient background with raster lines */
+  background: 
+    /* Raster lines pattern */
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 1px,
+      rgba(202, 165, 84, 0.05) 1px,
+      rgba(202, 165, 84, 0.05) 2px
+    ),
+    /* Soft gradient overlay - increased opacity for better visibility */
+    linear-gradient(
+        135deg,
+        rgba(10, 9, 8, 0.75) 0%,
+        rgba(10, 9, 8, 0.55) 50%,
+        rgba(10, 9, 8, 0.65) 100%
+      );
+  /* Subtle backdrop blur for depth */
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   position: relative;
   overflow: visible !important; /* Allow title to extend above panel - must stay visible */
   padding: 0;
   z-index: 10;
   display: flex;
   flex-direction: column;
+  /* Lower the top of the frame */
+  margin-top: 40px;
   /* Fixed height to enable scrolling within */
-  height: calc(100vh - var(--hud-padding, 32px) * 2 - 80px);
-  max-height: calc(100vh - var(--hud-padding, 32px) * 2 - 80px);
+  height: calc(100vh - var(--hud-padding, 32px) * 2 - 120px);
+  max-height: calc(100vh - var(--hud-padding, 32px) * 2 - 120px);
 }
 
 /* Keep left panel overflow visible on hover to prevent header clipping */
@@ -530,14 +552,38 @@
 
 /* RIGHT panel layout */
 .astrogation-panel--right {
-  border: none;
-  width: 280px;
-  min-width: 280px;
-  max-width: 280px;
-  background: transparent;
+  border: 1px solid var(--gold-30, rgba(202, 165, 84, 0.3));
+  width: 340px;
+  min-width: 340px;
+  max-width: 340px;
+  /* Soft gradient background with raster lines - matching left panel */
+  background: 
+    /* Raster lines pattern */
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 1px,
+      rgba(202, 165, 84, 0.05) 1px,
+      rgba(202, 165, 84, 0.05) 2px
+    ),
+    /* Soft gradient overlay - increased opacity for better visibility */
+    linear-gradient(
+        135deg,
+        rgba(10, 9, 8, 0.75) 0%,
+        rgba(10, 9, 8, 0.55) 50%,
+        rgba(10, 9, 8, 0.65) 100%
+      );
+  /* Subtle backdrop blur for depth */
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   position: relative;
   overflow: visible !important;
   padding-top: 0; /* Aligned with left panel */
+  /* Lower the top of the frame - matching left panel */
+  margin-top: 40px;
+  /* Fixed height to enable scrolling within - matching left panel */
+  height: calc(100vh - var(--hud-padding, 32px) * 2 - 120px);
+  max-height: calc(100vh - var(--hud-padding, 32px) * 2 - 120px);
   z-index: 10;
 }
 
@@ -562,13 +608,13 @@
   flex-shrink: 0;
   z-index: 3;
   box-sizing: border-box;
-  margin-top: -50px;
+  margin-top: -67px;
   margin-bottom: 8px;
 }
 
 .astrogation-panel--right .panel-header {
   text-align: left;
-  border: none;
+  /* border: none removed to allow panel-header--filled to set border */
 }
 
 /* Gold-filled panel header variant */
@@ -582,6 +628,7 @@
   transition: none;
   z-index: 100;
   position: relative;
+  margin-bottom: 12px; /* Gap between title and panel border */
 }
 
 /* ─── PANEL SECTIONS ─── */
@@ -1573,12 +1620,32 @@
 }
 
 .dials-category__header {
-  width: 100%;
+  width: calc(100% - 24px);
+  margin-left: 12px;
+  margin-bottom: 4px;
   display: flex;
   align-items: center;
-  padding: 10px 8px;
-  margin-bottom: 6px;
-  background: transparent;
+  padding: 6px 8px;
+  /* Frame styling matching left panel categories */
+  border: 1px solid var(--gold-30, rgba(202, 165, 84, 0.3)) !important;
+  background: linear-gradient(
+    135deg,
+    rgba(202, 165, 84, 0.12) 0%,
+    rgba(202, 165, 84, 0.06) 50%,
+    rgba(202, 165, 84, 0.03) 100%
+  ) !important;
+  transition: all 0.15s ease;
+  cursor: default;
+}
+
+.dials-category__header:hover {
+  border-color: var(--gold-50, rgba(202, 165, 84, 0.5)) !important;
+  background: linear-gradient(
+    135deg,
+    rgba(202, 165, 84, 0.18) 0%,
+    rgba(202, 165, 84, 0.1) 50%,
+    rgba(202, 165, 84, 0.05) 100%
+  ) !important;
 }
 
 .dials-category__label {
@@ -1592,8 +1659,8 @@
 
 .dials-category__content {
   padding-left: 12px;
-  margin-left: 8px;
-  border-left: 1px solid var(--gold-08, rgba(202, 165, 84, 0.08));
+  margin-left: 12px;
+  margin-top: 4px;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -1808,7 +1875,8 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  width: 100%;
+  width: calc(100% - 24px); /* Decreased width */
+  margin-left: 12px; /* Centered with breathing room */
   padding: 6px 8px;
   background: transparent;
   border: none;
