@@ -27,7 +27,7 @@ todos:
       - extract-components
   - id: perf-pass
     content: Apply safe performance improvements (memoization, stable callbacks, optional `DynamicSVG` caching) and verify no interaction regressions.
-    status: in_progress
+    status: completed
     dependencies:
       - state-reducer
       - css-dedupe-vars

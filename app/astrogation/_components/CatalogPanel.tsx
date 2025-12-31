@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, memo, useCallback } from "react";
+import { useState, memo } from "react";
 import {
   CATEGORIES,
   HIERARCHY_BREAKS,
@@ -44,7 +44,7 @@ function CatalogPanelInner({
   return (
     <aside className="astrogation-panel astrogation-panel--left">
       {/* Panel Header */}
-      <div className="panel-header">{"// BRAND SYSTEM"}</div>
+      <div className="panel-header panel-header--filled">BRAND SYSTEM</div>
 
       {/* Scrollable content area */}
       <div className="panel-content">

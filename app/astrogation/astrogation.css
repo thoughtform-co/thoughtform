@@ -409,7 +409,14 @@
   flex-shrink: 0;
   position: relative;
   z-index: 2;
-  transition: all 0.3s ease; /* Added transition for smooth blur */
+  transition:
+    opacity 0.3s ease,
+    filter 0.3s ease; /* Only transition opacity and filter, not all properties */
+}
+
+/* Exclude panel header from panel transitions */
+.astrogation-panel > .panel-header {
+  transition: none !important;
 }
 
 /* Global focus state: blur panels and background UI */
@@ -429,8 +436,8 @@
   pointer-events: auto;
 }
 
-/* Scroll on hover */
-.astrogation-panel:hover {
+/* Scroll on hover - but NOT for left panel which needs overflow: visible for header */
+.astrogation-panel:hover:not(.astrogation-panel--left) {
   overflow-y: auto;
 }
 
@@ -451,7 +458,7 @@
   max-width: 280px;
   background: transparent;
   position: relative;
-  overflow: hidden; /* Clip content to panel bounds */
+  overflow: visible !important; /* Allow title to extend above panel - must stay visible */
   padding: 0;
   z-index: 10;
   display: flex;
@@ -459,6 +466,11 @@
   /* Fixed height to enable scrolling within */
   height: calc(100vh - var(--hud-padding, 32px) * 2 - 80px);
   max-height: calc(100vh - var(--hud-padding, 32px) * 2 - 80px);
+}
+
+/* Keep left panel overflow visible on hover to prevent header clipping */
+.astrogation-panel--left:hover {
+  overflow: visible !important;
 }
 
 /* Corner brackets for left panel - disabled */
@@ -550,12 +562,26 @@
   flex-shrink: 0;
   z-index: 3;
   box-sizing: border-box;
+  margin-top: -50px;
   margin-bottom: 8px;
 }
 
 .astrogation-panel--right .panel-header {
   text-align: left;
   border: none;
+}
+
+/* Gold-filled panel header variant */
+.panel-header--filled {
+  background: var(--gold, #caa554);
+  color: var(--void, #0a0908);
+  border: 1px solid var(--gold, #caa554);
+  padding: 8px 12px;
+  display: inline-block;
+  width: auto;
+  transition: none;
+  z-index: 100;
+  position: relative;
 }
 
 /* ─── PANEL SECTIONS ─── */
