@@ -4017,6 +4017,86 @@
 }
 
 /* Compact select style */
+.spec-select__dropdown--nested {
+  display: flex;
+  flex-direction: row;
+  padding: 0;
+  width: auto;
+  min-width: 320px;
+  right: auto; /* Remove right: 0 constraint */
+  max-height: none; /* Let children handle their own height */
+  overflow: visible; /* Prevent clipping of submenus */
+}
+
+.spec-select__categories {
+  width: 160px;
+  border-right: 1px solid var(--dawn-08);
+  padding: 4px 0;
+  background: rgba(10, 9, 8, 0.95);
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.spec-select__submenu {
+  flex: 1;
+  padding: 4px 0;
+  background: rgba(15, 14, 12, 0.98);
+  max-height: 300px;
+  min-height: 100%; /* Ensure submenu fills parent height */
+  overflow-y: auto;
+}
+
+.spec-select__category-item {
+  width: 100%;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--dawn-50);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.spec-select__category-item:hover,
+.spec-select__category-item--active {
+  background: rgba(235, 227, 214, 0.05);
+  color: var(--dawn);
+}
+
+.spec-select__category-item--selected {
+  color: var(--gold);
+}
+
+.spec-select__arrow-right {
+  font-size: 8px;
+  opacity: 0.5;
+}
+
+.spec-select__option {
+  width: 100%;
+  padding: 8px 16px;
+  background: none;
+  border: none;
+  text-align: left;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--dawn-70);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.spec-select__option:hover {
+  background: rgba(202, 165, 84, 0.1);
+  color: var(--gold);
+}
+
+.spec-select__option--selected {
+  color: var(--gold);
+  background: rgba(202, 165, 84, 0.05);
+}
+
 .spec-select--compact {
   --select-padding: 8px 10px;
   --select-font-size: 11px;

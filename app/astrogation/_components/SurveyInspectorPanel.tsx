@@ -3,7 +3,7 @@
 import { useState, useCallback, memo, useEffect, useRef } from "react";
 import type { SurveyItem, SurveyItemSource, SurveyAnnotation } from "./types";
 import { CATEGORIES, getComponentsByCategory } from "../catalog";
-import { Select } from "./Select";
+import { NestedSelect } from "./NestedSelect";
 import { SurveyUploadModal } from "./SurveyUploadModal";
 import type { PipelineStatus } from "../_hooks/useSurvey";
 
@@ -520,42 +520,22 @@ function SurveyInspectorPanelInner({
               </div>
             </section>
 
-            {/* ═══ SECTION 2: Category + Component ═══ */}
-            <section className="spec-section spec-section--row">
-              <div className="spec-section__half">
-                <div className="spec-section__label">
-                  <span className="spec-section__label-text">Category</span>
-                </div>
-                <Select
-                  value={effectiveItem?.category_id || ""}
-                  onChange={(value) => handleFieldChange("category_id", value || null)}
-                  options={[
-                    { value: "", label: "Category..." },
-                    ...CATEGORIES.map((cat) => ({ value: cat.id, label: cat.name })),
-                  ]}
-                  className="spec-select--compact"
-                />
+            {/* ═══ SECTION 2: Component Classification (Nested) ═══ */}
+            <section className="spec-section">
+              <div className="spec-section__label">
+                <span className="spec-section__label-text">Component Class</span>
+                <span className="spec-section__label-line" />
               </div>
-              <div className="spec-section__half">
-                <div className="spec-section__label">
-                  <span className="spec-section__label-text">Component</span>
-                </div>
-                <Select
-                  value={effectiveItem?.component_key || ""}
-                  onChange={(value) => handleFieldChange("component_key", value || null)}
-                  options={[
-                    { value: "", label: "Component..." },
-                    ...(effectiveItem?.category_id
-                      ? getComponentsByCategory(effectiveItem.category_id).map((comp) => ({
-                          value: comp.id,
-                          label: comp.name,
-                        }))
-                      : []),
-                  ]}
-                  disabled={!effectiveItem?.category_id}
-                  className="spec-select--compact"
-                />
-              </div>
+              <NestedSelect
+                categoryId={effectiveItem?.category_id || null}
+                componentKey={effectiveItem?.component_key || null}
+                onChange={(catId, compKey) => {
+                  handleFieldChange("category_id", catId);
+                  handleFieldChange("component_key", compKey);
+                }}
+                placeholder="Assign to brand system..."
+                className="spec-select--compact"
+              />
             </section>
 
             {/* ═══ SECTION 3: Tags ═══ */}
