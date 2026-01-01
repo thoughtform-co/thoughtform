@@ -32,6 +32,53 @@ export interface SurveyInspectorPanelProps {
 
 type InspectorTab = "fields" | "chat";
 
+// Convert markdown to concise plain text - extract only essential parts
+function formatBriefingText(markdown: string | null | undefined): string {
+  if (!markdown) return "";
+
+  // Extract Reference Summary section (most important)
+  const summaryMatch = markdown.match(/##\s*Reference Summary\s*\n([\s\S]*?)(?=\n##|$)/i);
+  const summary = summaryMatch ? summaryMatch[1].trim() : "";
+
+  // Extract first 2-3 key visual elements
+  const keyElementsMatch = markdown.match(/##\s*Key Visual Elements\s*\n([\s\S]*?)(?=\n##|$)/i);
+  let keyElements = "";
+  if (keyElementsMatch) {
+    const elements = keyElementsMatch[1]
+      .split(/\n/)
+      .filter((line) => line.trim().startsWith("-") || line.trim().startsWith("*"))
+      .slice(0, 3) // Take first 3 bullets
+      .map((line) => line.replace(/^[\s]*[-*]\s+/, "").trim())
+      .filter((line) => line.length > 0);
+    keyElements = elements.length > 0 ? "\n\n" + elements.map((el) => `• ${el}`).join("\n") : "";
+  }
+
+  // Combine summary + key elements
+  let concise = summary;
+  if (keyElements) {
+    concise += keyElements;
+  }
+
+  // If no summary found, fall back to first paragraph of the briefing
+  if (!concise.trim()) {
+    // Remove all markdown formatting and get first meaningful paragraph
+    let text = markdown.replace(/^#{1,6}\s+/gm, "");
+    text = text.replace(/\*\*([^*]+)\*\*/g, "$1");
+    text = text.replace(/\*([^*]+)\*/g, "$1");
+    text = text.replace(/\[([^\]]+)\]\([^\)]+\)/g, "$1");
+    text = text.replace(/```[\s\S]*?```/g, "");
+    text = text.replace(/`([^`]+)`/g, "$1");
+
+    const firstParagraph = text.split("\n\n").find((p) => p.trim().length > 50);
+    concise = firstParagraph ? firstParagraph.trim() : text.substring(0, 200).trim();
+  }
+
+  // Clean up extra whitespace
+  concise = concise.replace(/\n{3,}/g, "\n\n").trim();
+
+  return concise;
+}
+
 function SurveyInspectorPanelInner({
   item,
   onUpdate,
@@ -333,397 +380,438 @@ function SurveyInspectorPanelInner({
         <div className="panel-header panel-header--survey">
           <span className="panel-header__title">INSPECTOR</span>
         </div>
-        {onUpload && (
-          <button
-            className="panel-header__upload-btn"
-            onClick={() => setIsUploadModalOpen(true)}
-            title="Upload reference"
-          >
-            + Upload
-          </button>
-        )}
-      </div>
-
-      {/* Inspector Tabs */}
-      <div className="inspector-tabs">
-        <button
-          className={`inspector-tab ${activeTab === "fields" ? "inspector-tab--active" : ""}`}
-          onClick={() => setActiveTab("fields")}
-        >
-          FIELDS
-        </button>
-        <button
-          className={`inspector-tab ${activeTab === "chat" ? "inspector-tab--active" : ""}`}
-          onClick={() => setActiveTab("chat")}
-        >
-          CHAT
-        </button>
       </div>
 
       <div className="panel-content">
-        {activeTab === "fields" ? (
-          <div className="panel-content__scrollable">
-            <div className="spec-panel-v2">
-              {/* ═══ SECTION 1: Title + Sources ═══ */}
-              <section className="spec-section">
-                <div className="spec-section__label">
-                  <span className="spec-section__label-text">Title</span>
-                  <span className="spec-section__label-line" />
-                </div>
-                <input
-                  type="text"
-                  className="spec-section__input"
-                  value={effectiveItem?.title || ""}
-                  onChange={(e) => handleFieldChange("title", e.target.value)}
-                  placeholder="Reference title..."
-                />
-                {/* Sources - compact under title */}
-                <div className="spec-sources spec-sources--compact">
-                  {(effectiveItem?.sources || []).map((source, i) => (
-                    <div key={i} className="spec-source spec-source--inline">
-                      <input
-                        type="text"
-                        className="spec-source__input"
-                        value={source.label}
-                        onChange={(e) => handleSourceChange(i, "label", e.target.value)}
-                        placeholder="Label..."
-                      />
-                      <input
-                        type="url"
-                        className="spec-source__input"
-                        value={source.url || ""}
-                        onChange={(e) => handleSourceChange(i, "url", e.target.value)}
-                        placeholder="URL..."
-                      />
-                      <button
-                        className="spec-source__remove"
-                        onClick={() => handleRemoveSource(i)}
-                        title="Remove source"
-                      >
-                        ×
-                      </button>
-                    </div>
-                  ))}
-                  <button className="spec-add-btn spec-add-btn--small" onClick={handleAddSource}>
-                    + Source
-                  </button>
-                </div>
-              </section>
-
-              {/* ═══ SECTION 2: Category + Component ═══ */}
-              <section className="spec-section spec-section--row">
-                <div className="spec-section__half">
-                  <div className="spec-section__label">
-                    <span className="spec-section__label-text">Category</span>
-                  </div>
-                  <Select
-                    value={effectiveItem?.category_id || ""}
-                    onChange={(value) => handleFieldChange("category_id", value || null)}
-                    options={[
-                      { value: "", label: "Category..." },
-                      ...CATEGORIES.map((cat) => ({ value: cat.id, label: cat.name })),
-                    ]}
-                    className="spec-select--compact"
+        {/* Subtle Toolbar Bar - fixed at top of content */}
+        <div className="inspector-toolbar">
+          <div className="inspector-toolbar__content">
+            {onUpload && (
+              <button
+                className="inspector-toolbar__btn inspector-toolbar__btn--upload"
+                onClick={() => setIsUploadModalOpen(true)}
+                title="Upload reference"
+              >
+                + Upload
+              </button>
+            )}
+            <div className="inspector-toolbar__spacer" />
+            <div className="inspector-toolbar__actions">
+              <button
+                className="inspector-toolbar__btn inspector-toolbar__btn--save"
+                onClick={handleSave}
+                disabled={!hasChanges || isSaving}
+                title="Save changes"
+              >
+                <svg
+                  width="12"
+                  height="12"
+                  viewBox="0 0 12 12"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M10 2H8V0H2V2H0V12H10V2Z"
+                    stroke="currentColor"
+                    strokeWidth="1"
+                    fill="none"
                   />
-                </div>
-                <div className="spec-section__half">
-                  <div className="spec-section__label">
-                    <span className="spec-section__label-text">Component</span>
-                  </div>
-                  <Select
-                    value={effectiveItem?.component_key || ""}
-                    onChange={(value) => handleFieldChange("component_key", value || null)}
-                    options={[
-                      { value: "", label: "Component..." },
-                      ...(effectiveItem?.category_id
-                        ? getComponentsByCategory(effectiveItem.category_id).map((comp) => ({
-                            value: comp.id,
-                            label: comp.name,
-                          }))
-                        : []),
-                    ]}
-                    disabled={!effectiveItem?.category_id}
-                    className="spec-select--compact"
+                  <path
+                    d="M3 6H9M3 9H9"
+                    stroke="currentColor"
+                    strokeWidth="1"
+                    strokeLinecap="round"
                   />
-                </div>
-              </section>
-
-              {/* ═══ SECTION 3: Tags ═══ */}
-              <section className="spec-section">
-                <div className="spec-section__label">
-                  <span className="spec-section__label-text">Tags</span>
-                  <span className="spec-section__label-line" />
-                </div>
-                <div className="spec-tags-input" onClick={() => tagInputRef.current?.focus()}>
-                  {(effectiveItem?.tags || []).map((tag) => (
-                    <span key={tag} className="spec-tag-chip">
-                      {tag}
-                      <button
-                        type="button"
-                        className="spec-tag-chip__remove"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleRemoveTag(tag);
-                        }}
-                      >
-                        ×
-                      </button>
-                    </span>
-                  ))}
-                  <input
-                    ref={tagInputRef}
-                    type="text"
-                    className="spec-tags-input__field"
-                    value={tagInput}
-                    onChange={(e) => setTagInput(e.target.value)}
-                    onKeyDown={handleTagInputKeyDown}
-                    onBlur={handleTagInputBlur}
-                    placeholder={(effectiveItem?.tags?.length || 0) === 0 ? "Add tags..." : ""}
+                </svg>
+              </button>
+              <button
+                className="inspector-toolbar__btn inspector-toolbar__btn--delete"
+                onClick={handleDelete}
+                title="Delete reference"
+              >
+                <svg
+                  width="12"
+                  height="12"
+                  viewBox="0 0 12 12"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M2 3H10M4.5 3V2C4.5 1.4 5 1 5.5 1H6.5C7 1 7.5 1.4 7.5 2V3M4.5 5.5V9.5M7.5 5.5V9.5M3 3L3.5 10C3.5 10.5 4 11 4.5 11H7.5C8 11 8.5 10.5 8.5 10L9 3"
+                    stroke="currentColor"
+                    strokeWidth="1"
+                    strokeLinecap="round"
                   />
-                </div>
-                {/* Suggested tags from AI - clickable to add */}
-                {effectiveItem?.analysis?.tags && effectiveItem.analysis.tags.length > 0 && (
-                  <div className="spec-suggested-tags">
-                    <span className="spec-suggested-tags__label">Suggested:</span>
-                    {effectiveItem.analysis.tags
-                      .filter((tag) => !(effectiveItem?.tags || []).includes(tag.toLowerCase()))
-                      .map((tag, i) => (
-                        <button
-                          key={i}
-                          type="button"
-                          className="spec-suggested-tags__tag"
-                          onClick={() => handleAddTag(tag)}
-                          title="Click to add"
-                        >
-                          + {tag}
-                        </button>
-                      ))}
-                  </div>
-                )}
-              </section>
+                </svg>
+              </button>
+              <button
+                className="inspector-toolbar__btn inspector-toolbar__btn--reset"
+                onClick={handleReset}
+                disabled={!hasChanges}
+                title="Reset changes"
+              >
+                <svg
+                  width="12"
+                  height="12"
+                  viewBox="0 0 12 12"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M2 5C2 3.5 3 2 4.5 2C5.5 2 6 2.5 6.5 3M10 7C10 8.5 9 10 7.5 10C6.5 10 6 9.5 5.5 9"
+                    stroke="currentColor"
+                    strokeWidth="1"
+                    strokeLinecap="round"
+                  />
+                  <path
+                    d="M2 2L4 4L2 6M10 10L8 8L10 6"
+                    stroke="currentColor"
+                    strokeWidth="1"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
 
-              {/* ═══ SECTION 4: Briefing (combined section) ═══ */}
-              <section className="spec-section spec-section--briefing-flow">
-                <div className="spec-section__label">
-                  <span className="spec-section__label-text">Briefing</span>
-                  <span className="spec-section__label-line" />
-                </div>
-
-                {/* Pipeline Status - shown when processing */}
-                {pipelineStatus !== "idle" && pipelineStatus !== "done" && (
-                  <div className="spec-pipeline-status spec-pipeline-status--inline">
-                    <div
-                      className={`spec-pipeline-status__indicator spec-pipeline-status__indicator--${pipelineStatus}`}
+        <div className="panel-content__scrollable">
+          <div className="spec-panel-v2">
+            {/* ═══ SECTION 1: Title + Sources ═══ */}
+            <section className="spec-section">
+              <input
+                type="text"
+                className="spec-section__input"
+                value={effectiveItem?.title || ""}
+                onChange={(e) => handleFieldChange("title", e.target.value)}
+                placeholder="Reference title..."
+              />
+              {/* Sources - compact under title */}
+              <div className="spec-sources spec-sources--compact">
+                {(effectiveItem?.sources || []).map((source, i) => (
+                  <div key={i} className="spec-source spec-source--inline">
+                    <input
+                      type="text"
+                      className="spec-source__input"
+                      value={source.label}
+                      onChange={(e) => handleSourceChange(i, "label", e.target.value)}
+                      placeholder="Label..."
+                    />
+                    <input
+                      type="url"
+                      className="spec-source__input"
+                      value={source.url || ""}
+                      onChange={(e) => handleSourceChange(i, "url", e.target.value)}
+                      placeholder="URL..."
+                    />
+                    <button
+                      className="spec-source__remove"
+                      onClick={() => handleRemoveSource(i)}
+                      title="Remove source"
                     >
-                      {pipelineStatus === "analyzing" && (
-                        <>
-                          <span className="spec-pipeline-status__icon">◇</span>
-                          Analyzing image...
-                        </>
-                      )}
-                      {pipelineStatus === "briefing" && (
-                        <>
-                          <span className="spec-pipeline-status__icon">◇</span>
-                          Generating briefing...
-                        </>
-                      )}
-                      {pipelineStatus === "error" && (
-                        <>
-                          <span className="spec-pipeline-status__icon spec-pipeline-status__icon--error">
-                            ⚠
-                          </span>
-                          Pipeline error
-                        </>
-                      )}
-                    </div>
+                      ×
+                    </button>
                   </div>
-                )}
+                ))}
+                <button className="spec-add-btn spec-add-btn--small" onClick={handleAddSource}>
+                  + Source
+                </button>
+              </div>
+            </section>
 
-                <div className="spec-briefing-flow">
-                  {/* Flow Step 1: Analysis (AI) */}
-                  <div className="spec-flow-item">
-                    <div className="spec-flow-item__header">
-                      <span className="spec-flow-item__label">
-                        Analysis
-                        <span className="spec-section__label-badge">AI</span>
-                      </span>
-                      {effectiveItem?.analysis && (
+            {/* ═══ SECTION 2: Category + Component ═══ */}
+            <section className="spec-section spec-section--row">
+              <div className="spec-section__half">
+                <div className="spec-section__label">
+                  <span className="spec-section__label-text">Category</span>
+                </div>
+                <Select
+                  value={effectiveItem?.category_id || ""}
+                  onChange={(value) => handleFieldChange("category_id", value || null)}
+                  options={[
+                    { value: "", label: "Category..." },
+                    ...CATEGORIES.map((cat) => ({ value: cat.id, label: cat.name })),
+                  ]}
+                  className="spec-select--compact"
+                />
+              </div>
+              <div className="spec-section__half">
+                <div className="spec-section__label">
+                  <span className="spec-section__label-text">Component</span>
+                </div>
+                <Select
+                  value={effectiveItem?.component_key || ""}
+                  onChange={(value) => handleFieldChange("component_key", value || null)}
+                  options={[
+                    { value: "", label: "Component..." },
+                    ...(effectiveItem?.category_id
+                      ? getComponentsByCategory(effectiveItem.category_id).map((comp) => ({
+                          value: comp.id,
+                          label: comp.name,
+                        }))
+                      : []),
+                  ]}
+                  disabled={!effectiveItem?.category_id}
+                  className="spec-select--compact"
+                />
+              </div>
+            </section>
+
+            {/* ═══ SECTION 3: Tags ═══ */}
+            <section className="spec-section">
+              <div className="spec-section__label">
+                <span className="spec-section__label-text">Tags</span>
+                <span className="spec-section__label-line" />
+              </div>
+              <div className="spec-tags-input" onClick={() => tagInputRef.current?.focus()}>
+                {(effectiveItem?.tags || []).map((tag) => (
+                  <span key={tag} className="spec-tag-chip">
+                    {tag}
+                    <button
+                      type="button"
+                      className="spec-tag-chip__remove"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleRemoveTag(tag);
+                      }}
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))}
+                <input
+                  ref={tagInputRef}
+                  type="text"
+                  className="spec-tags-input__field"
+                  value={tagInput}
+                  onChange={(e) => setTagInput(e.target.value)}
+                  onKeyDown={handleTagInputKeyDown}
+                  onBlur={handleTagInputBlur}
+                  placeholder={(effectiveItem?.tags?.length || 0) === 0 ? "Add tags..." : ""}
+                />
+              </div>
+              {/* Suggested tags from AI - clickable to add */}
+              {effectiveItem?.analysis?.tags && effectiveItem.analysis.tags.length > 0 && (
+                <div className="spec-suggested-tags">
+                  <span className="spec-suggested-tags__label">Suggested:</span>
+                  {effectiveItem.analysis.tags
+                    .filter((tag) => !(effectiveItem?.tags || []).includes(tag.toLowerCase()))
+                    .map((tag, i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        className="spec-suggested-tags__tag"
+                        onClick={() => handleAddTag(tag)}
+                        title="Click to add"
+                      >
+                        + {tag}
+                      </button>
+                    ))}
+                </div>
+              )}
+            </section>
+
+            {/* ═══ SECTION 4: Briefing (combined section) ═══ */}
+            <section className="spec-section spec-section--briefing-flow">
+              <div className="spec-section__label">
+                <span className="spec-section__label-text">Briefing</span>
+                <span className="spec-section__label-line" />
+              </div>
+
+              {/* Pipeline Status - shown when processing */}
+              {pipelineStatus !== "idle" && pipelineStatus !== "done" && (
+                <div className="spec-pipeline-status spec-pipeline-status--inline">
+                  <div
+                    className={`spec-pipeline-status__indicator spec-pipeline-status__indicator--${pipelineStatus}`}
+                  >
+                    {pipelineStatus === "analyzing" && (
+                      <>
+                        <span className="spec-pipeline-status__icon">◇</span>
+                        Analyzing image...
+                      </>
+                    )}
+                    {pipelineStatus === "briefing" && (
+                      <>
+                        <span className="spec-pipeline-status__icon">◇</span>
+                        Generating briefing...
+                      </>
+                    )}
+                    {pipelineStatus === "error" && (
+                      <>
+                        <span className="spec-pipeline-status__icon spec-pipeline-status__icon--error">
+                          ⚠
+                        </span>
+                        Pipeline error
+                      </>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              <div className="spec-briefing-flow">
+                {/* Flow Step 1: Analysis (AI) */}
+                <div className="spec-flow-item">
+                  <div className="spec-flow-item__header">
+                    <span className="spec-flow-item__label">
+                      Analysis
+                      <span className="spec-section__label-badge">AI</span>
+                    </span>
+                    {effectiveItem?.analysis && (
+                      <button
+                        className="spec-flow-item__action"
+                        onClick={onAnalyze}
+                        disabled={isAnalyzing}
+                      >
+                        {isAnalyzing ? "..." : "Re-analyze"}
+                      </button>
+                    )}
+                  </div>
+                  {effectiveItem?.analysis?.transferNotes ? (
+                    <p className="spec-flow-item__content">
+                      {effectiveItem.analysis.transferNotes}
+                    </p>
+                  ) : (
+                    <div className="spec-flow-item__empty">
+                      {!effectiveItem?.analysis ? (
                         <button
-                          className="spec-flow-item__action"
+                          className="spec-flow-item__trigger"
                           onClick={onAnalyze}
                           disabled={isAnalyzing}
                         >
-                          {isAnalyzing ? "..." : "Re-analyze"}
+                          {isAnalyzing ? "Analyzing..." : "◇ Run Analysis"}
                         </button>
-                      )}
-                    </div>
-                    {effectiveItem?.analysis?.transferNotes ? (
-                      <p className="spec-flow-item__content">
-                        {effectiveItem.analysis.transferNotes}
-                      </p>
-                    ) : (
-                      <div className="spec-flow-item__empty">
-                        {!effectiveItem?.analysis ? (
-                          <button
-                            className="spec-flow-item__trigger"
-                            onClick={onAnalyze}
-                            disabled={isAnalyzing}
-                          >
-                            {isAnalyzing ? "Analyzing..." : "◇ Run Analysis"}
-                          </button>
-                        ) : (
-                          <span className="spec-flow-item__hint">No transfer notes</span>
-                        )}
-                      </div>
-                    )}
-                    <div className="spec-flow-connector" />
-                  </div>
-
-                  {/* Flow Step 2: Notes (User) */}
-                  <div className="spec-flow-item">
-                    <div className="spec-flow-item__header">
-                      <span className="spec-flow-item__label">Notes</span>
-                    </div>
-                    <textarea
-                      className="spec-flow-item__textarea"
-                      value={effectiveItem?.notes || ""}
-                      onChange={(e) => handleFieldChange("notes", e.target.value)}
-                      placeholder="Your observations..."
-                      rows={2}
-                    />
-                    <div className="spec-flow-connector" />
-                  </div>
-
-                  {/* Flow Step 3: Annotations */}
-                  <div className="spec-flow-item">
-                    <div className="spec-flow-item__header">
-                      <span className="spec-flow-item__label">
-                        Annotations
-                        {annotationCount > 0 && (
-                          <span className="spec-section__label-count">({annotationCount})</span>
-                        )}
-                      </span>
-                    </div>
-                    {annotationCount === 0 ? (
-                      <div className="spec-flow-item__empty">
-                        <span className="spec-flow-item__hint">Draw on the image to add</span>
-                      </div>
-                    ) : (
-                      <div className="spec-annotations-list spec-annotations-list--compact">
-                        {(effectiveItem?.annotations || []).map((annotation, index) => (
-                          <div
-                            key={annotation.id}
-                            className="spec-annotation spec-annotation--compact"
-                          >
-                            <span className="spec-annotation__index">#{index + 1}</span>
-                            {editingAnnotationId === annotation.id ? (
-                              <div className="spec-annotation__edit spec-annotation__edit--inline">
-                                <input
-                                  type="text"
-                                  className="spec-annotation__input"
-                                  value={annotationNote}
-                                  onChange={(e) => setAnnotationNote(e.target.value)}
-                                  placeholder="Add note..."
-                                  autoFocus
-                                  onKeyDown={(e) => {
-                                    if (e.key === "Enter") handleSaveAnnotationNote();
-                                    if (e.key === "Escape") {
-                                      setEditingAnnotationId(null);
-                                      setAnnotationNote("");
-                                    }
-                                  }}
-                                  onBlur={handleSaveAnnotationNote}
-                                />
-                              </div>
-                            ) : (
-                              <span
-                                className="spec-annotation__note spec-annotation__note--inline"
-                                onClick={() => handleEditAnnotation(annotation)}
-                              >
-                                {annotation.note || "Click to add note..."}
-                              </span>
-                            )}
-                            <button
-                              className="spec-annotation__delete"
-                              onClick={() => handleDeleteAnnotation(annotation.id)}
-                              title="Delete"
-                            >
-                              ×
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                    <div className="spec-flow-connector" />
-                  </div>
-
-                  {/* Flow Step 4: Generate Briefing Button */}
-                  <div className="spec-flow-item spec-flow-item--action">
-                    {onGenerateBriefing && (
-                      <button
-                        className="spec-btn spec-btn--briefing"
-                        onClick={onGenerateBriefing}
-                        disabled={isBriefing || !effectiveItem?.analysis}
-                        title={!effectiveItem?.analysis ? "Run analysis first" : undefined}
-                      >
-                        {isBriefing
-                          ? "Generating..."
-                          : effectiveItem?.briefing
-                            ? "Regenerate Briefing"
-                            : "Generate Briefing"}
-                      </button>
-                    )}
-                    {effectiveItem?.briefing &&
-                      effectiveItem.briefing_updated_at &&
-                      effectiveItem.updated_at &&
-                      new Date(effectiveItem.updated_at) >
-                        new Date(effectiveItem.briefing_updated_at) && (
-                        <span className="spec-section__stale-indicator">◇ May be outdated</span>
-                      )}
-                  </div>
-
-                  {/* Flow Step 5: Generated Briefing Output */}
-                  {(effectiveItem?.briefing || pipelineStatus === "briefing") && (
-                    <div className="spec-flow-item spec-flow-item--output">
-                      <div className="spec-flow-item__header">
-                        <span className="spec-flow-item__label">
-                          Generated Briefing
-                          <span className="spec-section__label-badge">AI</span>
-                        </span>
-                      </div>
-                      {pipelineStatus === "briefing" && !effectiveItem?.briefing ? (
-                        <div className="spec-section__ai-loading">
-                          <span className="spec-section__ai-loading-icon">◇</span>
-                          Generating...
-                        </div>
                       ) : (
-                        <div className="spec-section__briefing-text">{effectiveItem?.briefing}</div>
+                        <span className="spec-flow-item__hint">No transfer notes</span>
                       )}
                     </div>
                   )}
+                  <div className="spec-flow-connector" />
                 </div>
-              </section>
 
-              {/* ═══ ACTIONS ═══ */}
-              <div className="spec-actions">
-                {!isResizing && (
-                  <div className="spec-actions__row">
+                {/* Flow Step 2: Notes (User) */}
+                <div className="spec-flow-item">
+                  <div className="spec-flow-item__header">
+                    <span className="spec-flow-item__label">Notes</span>
+                  </div>
+                  <textarea
+                    className="spec-flow-item__textarea"
+                    value={effectiveItem?.notes || ""}
+                    onChange={(e) => handleFieldChange("notes", e.target.value)}
+                    placeholder="Your observations..."
+                    rows={2}
+                  />
+                  <div className="spec-flow-connector" />
+                </div>
+
+                {/* Flow Step 3: Annotations */}
+                <div className="spec-flow-item">
+                  <div className="spec-flow-item__header">
+                    <span className="spec-flow-item__label">
+                      Annotations
+                      {annotationCount > 0 && (
+                        <span className="spec-section__label-count">({annotationCount})</span>
+                      )}
+                    </span>
+                  </div>
+                  {annotationCount === 0 ? (
+                    <div className="spec-flow-item__empty">
+                      <span className="spec-flow-item__hint">Draw on the image to add</span>
+                    </div>
+                  ) : (
+                    <div className="spec-annotations-list spec-annotations-list--compact">
+                      {(effectiveItem?.annotations || []).map((annotation, index) => (
+                        <div
+                          key={annotation.id}
+                          className="spec-annotation spec-annotation--compact"
+                        >
+                          <span className="spec-annotation__index">#{index + 1}</span>
+                          {editingAnnotationId === annotation.id ? (
+                            <div className="spec-annotation__edit spec-annotation__edit--inline">
+                              <input
+                                type="text"
+                                className="spec-annotation__input"
+                                value={annotationNote}
+                                onChange={(e) => setAnnotationNote(e.target.value)}
+                                placeholder="Add note..."
+                                autoFocus
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter") handleSaveAnnotationNote();
+                                  if (e.key === "Escape") {
+                                    setEditingAnnotationId(null);
+                                    setAnnotationNote("");
+                                  }
+                                }}
+                                onBlur={handleSaveAnnotationNote}
+                              />
+                            </div>
+                          ) : (
+                            <span
+                              className="spec-annotation__note spec-annotation__note--inline"
+                              onClick={() => handleEditAnnotation(annotation)}
+                            >
+                              {annotation.note || "Click to add note..."}
+                            </span>
+                          )}
+                          <button
+                            className="spec-annotation__delete"
+                            onClick={() => handleDeleteAnnotation(annotation.id)}
+                            title="Delete"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <div className="spec-flow-connector" />
+                </div>
+
+                {/* Flow Step 4: Generate Briefing Button */}
+                <div className="spec-flow-item spec-flow-item--action">
+                  {onGenerateBriefing && (
                     <button
-                      className="spec-btn spec-btn--primary"
-                      onClick={handleSave}
-                      disabled={!hasChanges || isSaving}
+                      className="spec-btn spec-btn--briefing"
+                      onClick={onGenerateBriefing}
+                      disabled={isBriefing || !effectiveItem?.analysis}
+                      title={!effectiveItem?.analysis ? "Run analysis first" : undefined}
                     >
-                      {isSaving ? "Saving..." : "Save"}
+                      {isBriefing
+                        ? "Generating..."
+                        : effectiveItem?.briefing
+                          ? "Regenerate Briefing"
+                          : "Generate Briefing"}
                     </button>
-                    <button
-                      className="spec-btn spec-btn--ghost"
-                      onClick={handleReset}
-                      disabled={!hasChanges}
-                    >
-                      Reset
-                    </button>
+                  )}
+                </div>
+
+                {/* Flow Step 5: Generated Briefing Output */}
+                {(effectiveItem?.briefing || pipelineStatus === "briefing") && (
+                  <div className="spec-flow-item spec-flow-item--output">
+                    <div className="spec-flow-item__header">
+                      <span className="spec-flow-item__label">
+                        Generated Briefing
+                        <span className="spec-section__label-badge">AI</span>
+                      </span>
+                    </div>
+                    {pipelineStatus === "briefing" && !effectiveItem?.briefing ? (
+                      <div className="spec-section__ai-loading">
+                        <span className="spec-section__ai-loading-icon">◇</span>
+                        Generating...
+                      </div>
+                    ) : (
+                      <div className="spec-section__briefing-text">
+                        {formatBriefingText(effectiveItem?.briefing)}
+                      </div>
+                    )}
                   </div>
                 )}
+              </div>
+            </section>
+
+            {/* ═══ ACTIONS (Embed only - other actions moved to toolbar) ═══ */}
+            {!isResizing && (
+              <div className="spec-actions">
                 <div className="spec-actions__row">
                   <button
                     className="spec-btn spec-btn--outline"
@@ -734,70 +822,10 @@ function SurveyInspectorPanelInner({
                     {isEmbedding ? "Embedding..." : "Embed"}
                   </button>
                 </div>
-                <div className="spec-actions__row spec-actions__row--danger">
-                  <button className="spec-btn spec-btn--danger" onClick={handleDelete}>
-                    Delete
-                  </button>
-                </div>
               </div>
-            </div>
+            )}
           </div>
-        ) : (
-          <div className="inspector-chat">
-            {/* Chat Messages */}
-            <div className="inspector-chat__messages">
-              {chatMessages.length === 0 ? (
-                <div className="inspector-chat__empty">
-                  <span className="inspector-chat__empty-icon">◇</span>
-                  <p>Ask questions about this reference</p>
-                  <span className="inspector-chat__empty-hint">
-                    Get design suggestions, compare with your system, etc.
-                  </span>
-                </div>
-              ) : (
-                chatMessages.map((msg, i) => (
-                  <div
-                    key={i}
-                    className={`inspector-chat__message inspector-chat__message--${msg.role}`}
-                  >
-                    <div className="inspector-chat__message-content">{msg.content}</div>
-                  </div>
-                ))
-              )}
-              {isChatLoading && (
-                <div className="inspector-chat__message inspector-chat__message--assistant">
-                  <div className="inspector-chat__message-content inspector-chat__message-content--loading">
-                    <span>◇</span> Thinking...
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Chat Input */}
-            <div className="inspector-chat__input-area">
-              <textarea
-                className="inspector-chat__input"
-                value={chatInput}
-                onChange={(e) => setChatInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault();
-                    handleChatSubmit();
-                  }
-                }}
-                placeholder="Ask about this reference..."
-                rows={2}
-              />
-              <button
-                className="inspector-chat__send"
-                onClick={handleChatSubmit}
-                disabled={!chatInput.trim() || isChatLoading}
-              >
-                Send
-              </button>
-            </div>
-          </div>
-        )}
+        </div>
       </div>
 
       {/* Upload Modal */}

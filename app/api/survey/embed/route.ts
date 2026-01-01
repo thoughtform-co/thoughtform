@@ -11,7 +11,7 @@ import { isAuthorized } from "@/lib/auth-server";
 
 const BUCKET_NAME = "survey-media";
 const VOYAGE_API_URL = "https://api.voyageai.com/v1/embeddings";
-const DEFAULT_MODEL = "voyage-3-lite"; // 1024 dimensions
+const DEFAULT_MODEL = "voyage-3"; // 1024 dimensions (voyage-3-lite is 512)
 
 interface SurveyItemForEmbedding {
   title?: string | null;

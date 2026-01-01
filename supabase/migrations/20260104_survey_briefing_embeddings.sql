@@ -14,7 +14,7 @@ ADD COLUMN IF NOT EXISTS briefing text;
 ALTER TABLE survey_items
 ADD COLUMN IF NOT EXISTS briefing_updated_at timestamptz;
 
--- Add briefing embedding columns (1024 dimensions for voyage-3-lite)
+-- Add briefing embedding columns (1024 dimensions for voyage-3)
 ALTER TABLE survey_items
 ADD COLUMN IF NOT EXISTS briefing_embedding vector(1024);
 

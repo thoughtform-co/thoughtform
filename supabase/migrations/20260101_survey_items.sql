@@ -30,9 +30,9 @@ CREATE TABLE IF NOT EXISTS survey_items (
   analysis jsonb DEFAULT '{}'::jsonb,
   
   -- Embeddings (Voyage AI)
-  -- Using 1024 dimensions for voyage-3-lite (default model)
+  -- Using 1024 dimensions for voyage-3 (default model)
   embedding vector(1024),
-  embedding_model text,                      -- e.g., 'voyage-3-lite'
+  embedding_model text,                      -- e.g., 'voyage-3'
   embedding_text text,                       -- Text used to generate embedding
   
   -- Timestamps
