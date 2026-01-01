@@ -703,12 +703,23 @@ function renderComponent(
     case "hud-frame": {
       const showCorners = props.showCorners !== false;
       const showRails = props.showRails !== false;
-      const hudScale = fullSize ? 1.2 : 1;
-      const cornerSize = ((props.cornerSize as number) || 40) * hudScale;
+      const hudScale = fullSize ? 1.3 : 1;
       const cornerColor = (props.cornerColor as string) || "#caa554";
-      const frameWidth = 400 * hudScale;
-      const frameHeight = 300 * hudScale;
-      const tickCount = 11;
+      const frameWidth = 550 * hudScale;
+      const frameHeight = 420 * hudScale;
+      const tickCount = 21; // Match actual HUDFrame implementation
+
+      // Production ratios (based on 1080px viewport with 40px corners, 20px rail gap):
+      // Corner: 40/1080 = 0.037, Rail gap: 20/1080 = 0.0185
+      // Apply these ratios to preview frame height for proportional scaling
+      const cornerRatio = 0.037;
+      const railGapRatio = 0.0185;
+      const cornerSize = (props.cornerSize as number) ?? Math.round(frameHeight * cornerRatio);
+      const railGap = Math.round(frameHeight * railGapRatio);
+
+      // Proportional tick widths (production: 20px major, 8px minor at 1080px)
+      const tickMajorWidth = Math.round(frameHeight * 0.0185);
+      const tickMinorWidth = Math.round(frameHeight * 0.0074);
 
       return (
         <div style={{ position: "relative", width: frameWidth, height: frameHeight }}>
@@ -766,8 +777,8 @@ function renderComponent(
                 style={{
                   position: "absolute",
                   left: 0,
-                  top: cornerSize + 20,
-                  bottom: cornerSize + 20,
+                  top: cornerSize + railGap,
+                  bottom: cornerSize + railGap,
                   width: 1,
                   background: `linear-gradient(to bottom, transparent 0%, ${cornerColor}80 10%, ${cornerColor}80 90%, transparent 100%)`,
                 }}
@@ -776,8 +787,8 @@ function renderComponent(
                 style={{
                   position: "absolute",
                   right: 0,
-                  top: cornerSize + 20,
-                  bottom: cornerSize + 20,
+                  top: cornerSize + railGap,
+                  bottom: cornerSize + railGap,
                   width: 1,
                   background: `linear-gradient(to bottom, transparent 0%, ${cornerColor}80 10%, ${cornerColor}80 90%, transparent 100%)`,
                 }}
@@ -786,8 +797,8 @@ function renderComponent(
                 style={{
                   position: "absolute",
                   left: 0,
-                  top: cornerSize + 20,
-                  bottom: cornerSize + 20,
+                  top: cornerSize + railGap,
+                  bottom: cornerSize + railGap,
                   display: "flex",
                   flexDirection: "column",
                   justifyContent: "space-between",
@@ -797,7 +808,29 @@ function renderComponent(
                   <div
                     key={i}
                     style={{
-                      width: i % 5 === 0 ? 16 : 8,
+                      width: i % 5 === 0 ? tickMajorWidth : tickMinorWidth,
+                      height: 1,
+                      background: i % 5 === 0 ? cornerColor : `${cornerColor}80`,
+                    }}
+                  />
+                ))}
+              </div>
+              <div
+                style={{
+                  position: "absolute",
+                  right: 0,
+                  top: cornerSize + railGap,
+                  bottom: cornerSize + railGap,
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "space-between",
+                }}
+              >
+                {Array.from({ length: tickCount }).map((_, i) => (
+                  <div
+                    key={i}
+                    style={{
+                      width: i % 5 === 0 ? tickMajorWidth : tickMinorWidth,
                       height: 1,
                       background: i % 5 === 0 ? cornerColor : `${cornerColor}80`,
                     }}

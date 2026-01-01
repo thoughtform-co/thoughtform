@@ -47,21 +47,29 @@ export function CenterPanel({
   return (
     <div className="center-panel">
       {/* Tab Header */}
-      <div className="workspace-tabs">
-        <button
+      <div className="workspace-tabs" role="tablist">
+        <div
           className={`workspace-tab ${activeTab === "vault" ? "workspace-tab--active" : ""}`}
           onClick={() => onTabChange("vault")}
+          role="tab"
+          aria-selected={activeTab === "vault"}
+          tabIndex={0}
+          onKeyDown={(e) => e.key === "Enter" && onTabChange("vault")}
         >
           <span className="workspace-tab__icon">◇</span>
-          <span>VAULT</span>
-        </button>
-        <button
+          <span className="workspace-tab__label">VAULT</span>
+        </div>
+        <div
           className={`workspace-tab ${activeTab === "foundry" ? "workspace-tab--active" : ""}`}
           onClick={() => onTabChange("foundry")}
+          role="tab"
+          aria-selected={activeTab === "foundry"}
+          tabIndex={0}
+          onKeyDown={(e) => e.key === "Enter" && onTabChange("foundry")}
         >
           <span className="workspace-tab__icon">⬡</span>
-          <span>FOUNDRY</span>
-        </button>
+          <span className="workspace-tab__label">FOUNDRY</span>
+        </div>
       </div>
 
       {/* Tab Content */}
