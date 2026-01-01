@@ -393,7 +393,9 @@
   top: calc(var(--hud-padding, 32px) + 60px);
   bottom: calc(var(--hud-padding, 32px) + 40px);
   left: calc(var(--hud-padding, 32px) + var(--rail-width, 60px) + 4px);
-  right: calc(var(--hud-padding, 32px) + var(--rail-width, 60px) + 20px);
+  right: calc(
+    var(--hud-padding, 32px) + var(--rail-width, 60px) + 4px
+  ); /* Symmetrical with left side */
   display: flex;
   gap: 0;
   z-index: 1;
@@ -587,15 +589,19 @@
 .panel-header {
   position: relative;
   width: 100%;
-  padding: 10px 0;
+  height: 54px; /* Explicit height to match SURVEY FILTER */
+  padding: 8px 12px;
   background: transparent;
   border: none;
   font-family: var(--font-data, "PT Mono", monospace);
   font-size: 24px;
   font-weight: 400;
+  line-height: 1.5;
   letter-spacing: 0.05em;
   color: var(--gold, #caa554);
   text-align: left;
+  display: flex; /* Ensure flex alignment for height consistency */
+  align-items: center;
   flex-shrink: 0;
   z-index: 3;
   box-sizing: border-box;
@@ -608,17 +614,27 @@
   color: var(--gold);
   border: none;
   padding: 8px 0;
+  height: auto; /* Dials/Spec headers are different */
   margin-bottom: 24px;
 }
 
-/* Override for survey header - ensure it doesn't inherit wrong styles */
+/* Override for survey header - ensure it matches filled style and height */
 .astrogation-panel--right .panel-header--survey {
-  background: transparent !important;
-  border: none !important;
-  color: var(--gold, #caa554) !important;
+  background: var(--gold, #caa554) !important;
+  color: var(--void, #0a0908) !important;
+  border: 1px solid var(--gold, #caa554) !important;
   padding: 8px 12px !important;
+  height: 54px !important; /* Explicitly match left panel */
   margin-top: 0 !important;
   margin-bottom: 0 !important;
+  line-height: 1.5 !important;
+  clip-path: polygon(
+    0% 0%,
+    100% 0%,
+    100% calc(100% - 12px),
+    calc(100% - 12px) 100%,
+    0% 100%
+  ) !important;
 }
 
 /* Gold-filled panel header variant */
@@ -627,8 +643,10 @@
   color: var(--void, #0a0908);
   border: 1px solid var(--gold, #caa554);
   padding: 8px 12px;
-  display: inline-block;
-  width: auto;
+  display: inline-flex;
+  align-items: center;
+  width: 100%; /* Fill panel width like SURVEY FILTER */
+  height: 54px;
   transition: none;
   z-index: 100;
   position: relative;
@@ -643,10 +661,12 @@
   align-items: stretch; /* Make both children same height */
   gap: 0; /* No gap - they sit flush */
   margin-top: -67px; /* Pull the whole group up to align with left panel */
-  margin-bottom: 8px;
+  margin-bottom: 12px; /* Consistent gap with left panel header */
   position: relative;
   z-index: 100;
-  width: 100%; /* Match SURVEY FILTER which fills the panel */
+  width: calc(100% - 2px); /* Account for 1px gap on each side to match left panel inner width */
+  margin-left: 1px;
+  margin-right: 1px;
   max-width: 100%;
   box-sizing: border-box;
 }
@@ -654,12 +674,13 @@
 /* Survey panel header - gold border frame with 45-degree angle */
 .panel-header--survey {
   padding: 8px 12px;
-  background: transparent !important;
-  border: none !important;
-  color: var(--gold, #caa554) !important;
+  background: var(--gold, #caa554) !important;
+  color: var(--void, #0a0908) !important;
+  border: 1px solid var(--gold, #caa554) !important;
   font-family: var(--font-data, "PT Mono", monospace);
   font-size: 24px;
   font-weight: 400;
+  height: 54px !important;
   letter-spacing: 0.05em;
   position: relative;
   display: flex !important;
@@ -669,37 +690,10 @@
   box-sizing: border-box;
 }
 
-/* Draw the chamfered border using SVG */
-.panel-header--survey::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  /* SVG chamfered border - top, left, bottom (partial), diagonal, right (partial) */
-  background: 
-    /* Top border */
-    linear-gradient(to right, var(--gold) 0%, var(--gold) 100%) top left / 100% 1px no-repeat,
-    /* Left border */ linear-gradient(to bottom, var(--gold) 0%, var(--gold) 100%) top left / 1px
-      100% no-repeat,
-    /* Right border (stops 14px from bottom) */
-    linear-gradient(to bottom, var(--gold) 0%, var(--gold) 100%) top right / 1px calc(100% - 14px)
-      no-repeat,
-    /* Bottom border (stops 14px from right) */
-    linear-gradient(to right, var(--gold) 0%, var(--gold) 100%) bottom left / calc(100% - 14px) 1px
-      no-repeat;
-}
-
-/* Diagonal chamfer line */
+/* Remove custom pseudo-element borders */
+.panel-header--survey::before,
 .panel-header--survey::after {
-  content: "";
-  position: absolute;
-  bottom: 6px;
-  right: 6px;
-  width: 20px;
-  height: 1px;
-  background: var(--gold, #caa554);
-  transform: rotate(-45deg);
-  pointer-events: none;
+  display: none !important;
 }
 
 .panel-header__title {
@@ -715,6 +709,7 @@
   font-family: var(--font-data, "PT Mono", monospace);
   font-size: 14px;
   font-weight: 400;
+  height: 54px; /* Explicitly match Inspector height */
   letter-spacing: 0.05em;
   cursor: pointer;
   transition: background 0.2s ease;
