@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
 
     // Get authenticated user
     const user = await getServerUser(request);
-    if (!user?.id && process.env.NODE_ENV !== "development") {
+    if ((!user || !("id" in user) || !user.id) && process.env.NODE_ENV !== "development") {
       return NextResponse.json({ error: "User not authenticated" }, { status: 401 });
     }
 
@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
     // When using service role key, we see all items unless we filter explicitly
     let query = supabase.from("survey_items").select("*").order("created_at", { ascending: false });
 
-    if (user?.id) {
+    if (user && "id" in user && user.id) {
       query = query.eq("user_id", user.id);
     }
 
@@ -145,17 +145,18 @@ export async function POST(request: NextRequest) {
 
     // Get authenticated user
     const user = await getServerUser(request);
-    if (!user?.id && process.env.NODE_ENV !== "development") {
+    if ((!user || !("id" in user) || !user.id) && process.env.NODE_ENV !== "development") {
       // Clean up uploaded file
       await supabase.storage.from(BUCKET_NAME).remove([uploadData.path]);
       return NextResponse.json({ error: "User not authenticated" }, { status: 401 });
     }
 
     // Insert database record with user_id
+    const userId = user && "id" in user ? user.id : null;
     const { data: item, error: dbError } = await supabase
       .from("survey_items")
       .insert({
-        user_id: user?.id || null,
+        user_id: userId,
         category_id: categoryId || null,
         component_key: componentKey || null,
         image_path: uploadData.path,

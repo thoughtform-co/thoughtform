@@ -28,6 +28,9 @@ import { astrogationReducer, initialState, actions } from "./_state/astrogationR
 import { usePresets } from "./_hooks/usePresets";
 import { useSurvey } from "./_hooks/useSurvey";
 
+// Import StatusBar
+import { StatusBar } from "@/components/hud/StatusBar";
+
 import "./astrogation.css";
 
 // ═══════════════════════════════════════════════════════════════
@@ -319,7 +322,7 @@ function AstrogationContent() {
         )}
       </div>
 
-      {toast && <div className="toast">{toast}</div>}
+      <StatusBar toast={toast} onToastHide={() => dispatch(actions.hideToast())} />
     </div>
   );
 }

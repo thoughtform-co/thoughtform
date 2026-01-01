@@ -11,6 +11,7 @@ export { ThoughtformSigil } from "./ThoughtformSigil";
 export { GlitchText } from "./GlitchText";
 export { NavigationCockpitV2 } from "./NavigationCockpitV2";
 export { CanvasErrorBoundary } from "./CanvasErrorBoundary";
+export { StatusBar } from "./StatusBar";
 
 // Legacy components moved to legacy/hud/
 // - ParticleCanvas (V1) → use ParticleCanvasV2

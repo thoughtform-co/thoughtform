@@ -1815,7 +1815,91 @@
   gap: 16px;
 }
 
-/* ─── TOAST ─── */
+/* ─── STATUS BAR ─── */
+.status-bar {
+  position: fixed;
+  top: 20px;
+  right: calc(clamp(48px, 8vw, 120px) + 140px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  pointer-events: none;
+  font-family: var(--font-mono);
+}
+
+/* Save Icon - Minimal indicator */
+.status-bar__save-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+}
+
+.status-bar__save-icon.animating {
+  animation: save-icon-fade-in 0.4s ease;
+}
+
+.status-bar__save-icon-symbol {
+  font-size: 10px;
+  color: rgba(91, 138, 122, 0.6);
+  line-height: 1;
+  font-weight: 300;
+}
+
+.status-bar__save-icon.visible {
+  opacity: 1;
+}
+
+@keyframes save-icon-fade-in {
+  0% {
+    opacity: 0;
+    transform: translateY(-2px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Separator between elements */
+.status-bar__separator {
+  color: rgba(236, 227, 214, 0.2);
+  font-size: 10px;
+  line-height: 1;
+  margin: 0 4px;
+}
+
+/* Toast Message - Minimal text */
+.status-bar__toast {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: rgba(236, 227, 214, 0.5);
+  white-space: nowrap;
+  animation: toast-fade-in 0.3s ease;
+  pointer-events: none;
+  font-weight: 300;
+  text-transform: uppercase;
+}
+
+.status-bar__toast-text {
+  display: block;
+}
+
+@keyframes toast-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-1px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ─── TOAST (Legacy - keeping for backwards compatibility) ─── */
 .toast {
   position: fixed;
   bottom: 80px;
@@ -2275,7 +2359,7 @@
 .preview-palette__color {
   width: 56px;
   height: 40px;
-  border-radius: 2px;
+  border-radius: 0;
 }
 
 .preview-palette__swatch--small .preview-palette__color {
@@ -2422,7 +2506,7 @@
   aspect-ratio: 1;
   padding: 32px; /* Increased from 20px for more breathing room */
   cursor: pointer;
-  border-radius: 4px;
+  border-radius: 0;
   transition: all 0.3s ease;
   border: 1px solid transparent;
 }
@@ -2489,7 +2573,7 @@
   backdrop-filter: blur(var(--focus-overlay-blur));
   -webkit-backdrop-filter: blur(var(--focus-overlay-blur));
   border: 1px dashed var(--focus-overlay-border);
-  border-radius: 8px;
+  border-radius: 0;
   cursor: pointer;
   box-shadow:
     0 0 0 1px rgba(235, 227, 214, 0.05),
@@ -2506,7 +2590,7 @@
   padding: 4px 16px;
   background: rgba(10, 9, 8, 0.95);
   border: 1px solid rgba(235, 227, 214, 0.2);
-  border-radius: 2px;
+  border-radius: 0;
   font-family: var(--font-mono);
   font-size: 10px;
   letter-spacing: 0.12em;
@@ -2577,7 +2661,7 @@
   gap: 16px;
   padding: 32px; /* Increased from 24px for more breathing room */
   border: 1px solid rgba(235, 227, 214, 0.1);
-  border-radius: 4px;
+  border-radius: 0;
   background: rgba(10, 9, 8, 0.3);
   transition: all 0.3s ease;
   cursor: pointer;
@@ -2880,7 +2964,7 @@
 .spec-prop {
   background: rgba(235, 227, 214, 0.03);
   border: 1px solid rgba(235, 227, 214, 0.08);
-  border-radius: 4px;
+  border-radius: 0;
   padding: 10px;
 }
 
@@ -2940,7 +3024,7 @@
   padding: 32px;
   background: rgba(235, 227, 214, 0.02);
   border: 1px dashed rgba(235, 227, 214, 0.1);
-  border-radius: 4px;
+  border-radius: 0;
 }
 
 .vault__icon {
@@ -2989,7 +3073,7 @@
 .vault__group {
   background: rgba(235, 227, 214, 0.02);
   border: 1px solid rgba(235, 227, 214, 0.05);
-  border-radius: 4px;
+  border-radius: 0;
   padding: 12px;
 }
 
@@ -3016,7 +3100,7 @@
   align-items: center;
   background: rgba(10, 9, 8, 0.5);
   border: 1px solid rgba(235, 227, 214, 0.08);
-  border-radius: 3px;
+  border-radius: 0;
   overflow: hidden;
 }
 
@@ -3118,7 +3202,7 @@
   padding: 6px 12px;
   background: rgba(10, 9, 8, 0.8);
   border: 1px solid rgba(202, 165, 84, 0.2);
-  border-radius: 3px;
+  border-radius: 0;
   font-family: var(--font-mono);
   font-size: 11px;
   color: var(--gold);
@@ -3144,7 +3228,7 @@
   padding: 10px 14px;
   background: rgba(10, 9, 8, 0.6);
   border: 1px solid rgba(235, 227, 214, 0.1);
-  border-radius: 3px;
+  border-radius: 0;
   color: var(--dawn);
   font-family: var(--font-mono);
   font-size: 12px;
@@ -3164,7 +3248,7 @@
   padding: 10px 20px;
   background: rgba(202, 165, 84, 0.1);
   border: 1px solid rgba(202, 165, 84, 0.3);
-  border-radius: 3px;
+  border-radius: 0;
   color: var(--gold);
   font-family: var(--font-mono);
   font-size: 11px;
@@ -4244,19 +4328,32 @@
   background: var(--void);
   border: 1px solid var(--gold-30);
   border-radius: 50%;
+  z-index: 2;
 }
 
-/* Connector line between items */
+/* Connector line between items - connects from circle to circle */
 .spec-flow-connector {
   position: absolute;
-  left: 6px;
-  top: 12px;
-  bottom: -12px;
+  left: 6.5px; /* Center of the 6px circle (4px + 3px = 7px center, minus 0.5px for 1px line) */
+  top: 12px; /* Bottom of current circle (6px top + 6px height = 12px) */
+  bottom: -6px; /* Extend to top of next circle (next circle top is 6px, so -6px from item bottom) */
   width: 1px;
-  background: linear-gradient(to bottom, var(--gold-30) 0%, var(--gold-15) 50%, transparent 100%);
+  background: var(--gold-30);
+  z-index: 1;
 }
 
+/* Hide connector on last item and output item (output has no circle) */
 .spec-flow-item:last-child .spec-flow-connector,
+.spec-flow-item--output .spec-flow-connector {
+  display: none;
+}
+
+/* Hide connector on items that are followed by an action item (stops at annotations) */
+.spec-flow-item:has(+ .spec-flow-item--action) .spec-flow-connector {
+  display: none;
+}
+
+/* Action item doesn't have a connector */
 .spec-flow-item--action .spec-flow-connector {
   display: none;
 }
@@ -4920,35 +5017,34 @@
 /* Canvas annotations */
 .survey-canvas__annotation {
   position: absolute;
-  border: 2px solid var(--gold-50);
-  background: rgba(202, 165, 84, 0.08);
+  border: 1px dashed var(--dawn-30);
+  background: transparent;
   cursor: move;
-  transition: all 0.15s ease;
+  transition: border-color 0.15s ease;
+  box-sizing: border-box;
 }
 
 .survey-canvas__annotation:hover {
-  border-color: var(--gold);
-  background: rgba(202, 165, 84, 0.15);
+  border-color: var(--dawn-50);
+  border-style: dashed;
   z-index: 10;
-  /* Keep border thickness the same on hover */
-  border-width: 2px;
 }
 
 /* Close button */
 .survey-canvas__annotation-close {
   position: absolute;
-  top: -8px;
-  right: -8px;
-  width: 18px;
-  height: 18px;
+  top: -6px;
+  right: -6px;
+  width: 14px;
+  height: 14px;
   display: none;
   align-items: center;
   justify-content: center;
-  background: var(--void);
-  border: 1px solid var(--gold-50);
-  color: var(--gold);
+  background: transparent;
+  border: none;
+  color: var(--dawn-30);
   font-family: var(--font-mono);
-  font-size: 14px;
+  font-size: 12px;
   line-height: 1;
   cursor: pointer;
   z-index: 12;
@@ -4960,17 +5056,15 @@
 }
 
 .survey-canvas__annotation-close:hover {
-  background: var(--gold);
-  color: var(--void);
-  border-color: var(--gold);
+  color: var(--gold);
+  transform: scale(1.1);
 }
 
-/* Resize handles */
+/* Resize handles - Invisible but functional hit areas */
 .survey-canvas__annotation-resize-handle {
   position: absolute;
-  background: var(--gold);
+  background: transparent;
   opacity: 0;
-  transition: opacity 0.15s ease;
   z-index: 11;
 }
 
@@ -5044,19 +5138,96 @@
 
 .survey-canvas__annotation-note {
   position: absolute;
-  bottom: -24px;
-  left: 0;
-  padding: 2px 8px;
-  background: var(--void);
-  border: 1px solid var(--gold-30);
-  font-family: var(--font-mono);
-  font-size: 9px;
-  color: var(--gold-70);
-  white-space: nowrap;
-  max-width: 180px;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  bottom: -32px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0;
+  background: transparent;
+  border: none;
+  cursor: pointer;
   z-index: 11;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.survey-canvas__annotation-note-icon {
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(202, 165, 84, 0.1);
+  border: 1px solid var(--gold-30);
+  font-size: 9px;
+  color: var(--gold-50);
+  line-height: 1;
+  transition: all 0.15s ease;
+}
+
+.survey-canvas__annotation-note:hover .survey-canvas__annotation-note-icon {
+  border-color: var(--gold-50);
+  color: var(--gold);
+  background: rgba(202, 165, 84, 0.15);
+}
+
+.survey-canvas__annotation-note--expanded {
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0;
+  min-width: auto;
+  min-height: auto;
+}
+
+.survey-canvas__annotation-note--expanded .survey-canvas__annotation-note-icon {
+  display: none;
+}
+
+.survey-canvas__annotation-note-text {
+  display: block;
+  padding: 8px 12px;
+  background: var(--void-95, rgba(10, 9, 8, 0.95));
+  border: 1px solid var(--dawn-15);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  line-height: 1.5;
+  color: var(--dawn-70);
+  white-space: normal;
+  max-width: 280px;
+  min-width: 120px;
+  word-wrap: break-word;
+  text-align: left;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  position: relative;
+}
+
+/* Tooltip arrow pointing up to annotation */
+.survey-canvas__annotation-note-text::before {
+  content: "";
+  position: absolute;
+  top: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-bottom: 6px solid var(--dawn-15);
+}
+
+.survey-canvas__annotation-note-text::after {
+  content: "";
+  position: absolute;
+  top: -5px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-bottom: 5px solid var(--void);
 }
 
 .survey-canvas__drawing {
@@ -5788,7 +5959,7 @@
   font-family: var(--font-mono);
   font-size: 9px;
   color: var(--gold-50);
-  border-radius: 2px;
+  border-radius: 0;
 }
 
 /* Catalog item count */

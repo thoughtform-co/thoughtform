@@ -52,6 +52,7 @@ function AnnotationBox({ annotation, onDelete, onResize, onResizingChange }: Ann
   const [resizeHandle, setResizeHandle] = useState<string | null>(null);
   const [startPos, setStartPos] = useState({ x: 0, y: 0 });
   const [startBounds, setStartBounds] = useState({ x: 0, y: 0, width: 0, height: 0 });
+  const [isExpanded, setIsExpanded] = useState(false);
   const boxRef = useRef<HTMLDivElement>(null);
 
   // Notify parent of resizing state changes
@@ -144,21 +145,15 @@ function AnnotationBox({ annotation, onDelete, onResize, onResizingChange }: Ann
         width: `${annotation.width}%`,
         height: `${annotation.height}%`,
       }}
-      title={annotation.note || "Click to add note"}
+      title={annotation.note || "Double-click to view note"}
+      onDoubleClick={(e) => {
+        e.stopPropagation();
+        if (annotation.note) {
+          setIsExpanded(!isExpanded);
+        }
+      }}
     >
-      {/* Close button */}
-      <button
-        className="survey-canvas__annotation-close"
-        onClick={(e) => {
-          e.stopPropagation();
-          onDelete();
-        }}
-        title="Delete annotation"
-      >
-        ×
-      </button>
-
-      {/* Resize handles */}
+      {/* Resize handles - kept for utility but very subtle via CSS */}
       <div
         className="survey-canvas__annotation-resize-handle survey-canvas__annotation-resize-handle--n"
         onMouseDown={(e) => handleResizeStart(e, "n")}
@@ -192,7 +187,17 @@ function AnnotationBox({ annotation, onDelete, onResize, onResizingChange }: Ann
         onMouseDown={(e) => handleResizeStart(e, "se")}
       />
 
-      {annotation.note && <div className="survey-canvas__annotation-note">{annotation.note}</div>}
+      {annotation.note && isExpanded && (
+        <div
+          className="survey-canvas__annotation-note survey-canvas__annotation-note--expanded"
+          onClick={(e) => {
+            e.stopPropagation();
+            setIsExpanded(false);
+          }}
+        >
+          <span className="survey-canvas__annotation-note-text">{annotation.note}</span>
+        </div>
+      )}
     </div>
   );
 }
