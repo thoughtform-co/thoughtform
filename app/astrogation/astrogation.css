@@ -4384,282 +4384,7 @@
   font-size: 9px;
 }
 
-/* ─── BRIEFING FLOW SECTION ─── */
-
-.spec-section--briefing-flow {
-  position: relative;
-}
-
-.spec-briefing-flow {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-  position: relative;
-}
-
-/* Flow Item - Each step in the briefing flow */
-.spec-flow-item {
-  position: relative;
-  padding-left: 16px;
-  padding-bottom: 12px;
-}
-
-.spec-flow-item::before {
-  content: "";
-  position: absolute;
-  left: -3px;
-  top: 4px; /* Center with 16px label height: label center at 8px, circle center at 4+4=8px */
-  width: 6px;
-  height: 6px;
-  background: var(--void);
-  border: 1px solid var(--dawn-30); /* Semantic color for steps */
-  border-radius: 50%;
-  z-index: 2;
-  box-sizing: content-box; /* Ensure border is outside the 6px */
-}
-
-/* Align output circle with its padded header */
-.spec-flow-item--output::before {
-  top: 16px; /* 12px padding-top + 4px offset */
-  border-color: var(--gold-50);
-}
-
-/* Connector line between items - connects from circle to circle */
-.spec-flow-connector {
-  position: absolute;
-  left: 0px; /* Center of circle: -3px + 3px (half of 6px) = 0px */
-  top: 12px; /* Bottom of circle: 4px + 8px = 12px */
-  bottom: -4px; /* Reach top of next circle at 4px */
-  width: 1px;
-  background: var(--dawn-50); /* More visible color */
-  z-index: 1;
-}
-
-/* Hide connector on last item */
-.spec-flow-item:last-child .spec-flow-connector {
-  display: none;
-}
-
-/* The line connecting TO the generated briefing should be gold */
-.spec-flow-item:has(+ .spec-flow-item--action) .spec-flow-connector,
-.spec-flow-item:has(+ .spec-flow-item--output) .spec-flow-connector {
-  display: block;
-  background: var(--gold-50);
-}
-
-/* Connector from item before action spans through action to reach output circle */
-.spec-flow-item:has(+ .spec-flow-item--action) .spec-flow-connector {
-  /* Connect to top edge of output circle (accounting for 1px border)
-     Action item height: ~52px + Output circle at 16px + border overlap */
-  bottom: -72px;
-}
-
-/* Connector from item directly before output */
-.spec-flow-item:has(+ .spec-flow-item--output) .spec-flow-connector {
-  bottom: -16px; /* Reach output circle at top: 16px */
-}
-
-.spec-flow-item {
-  position: relative;
-  padding-left: 16px;
-  padding-bottom: 12px;
-  overflow: visible; /* Ensure connectors aren't clipped */
-}
-
-/* Flow item header */
-.spec-flow-item__header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 6px;
-}
-
-.spec-flow-item__label {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-family: var(--font-mono);
-  font-size: 10px;
-  letter-spacing: 0.05em;
-  color: var(--dawn-50);
-  text-transform: uppercase;
-}
-
-.spec-flow-item__action {
-  padding: 2px 6px;
-  background: none;
-  border: 1px solid var(--dawn-15);
-  font-family: var(--font-mono);
-  font-size: 8px;
-  color: var(--dawn-40);
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.spec-flow-item__action:hover:not(:disabled) {
-  border-color: var(--gold-30);
-  color: var(--gold);
-}
-
-.spec-flow-item__action:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-/* Flow item content */
-.spec-flow-item__content {
-  font-size: 11px;
-  line-height: 1.6;
-  color: var(--dawn-60);
-  margin: 0;
-  padding: 8px 10px;
-  background: rgba(235, 227, 214, 0.03);
-  border-left: 2px solid var(--gold-20);
-}
-
-.spec-flow-item__textarea {
-  width: 100%;
-  padding: 8px 10px;
-  background: rgba(235, 227, 214, 0.04);
-  border: 1px solid var(--dawn-15);
-  font-family: var(--font-body);
-  font-size: 11px;
-  line-height: 1.5;
-  color: var(--dawn-70);
-  resize: vertical;
-}
-
-.spec-flow-item__textarea:focus {
-  outline: none;
-  border-color: var(--gold-30);
-  background: rgba(235, 227, 214, 0.06);
-}
-
-.spec-flow-item__textarea::placeholder {
-  color: var(--dawn-30);
-}
-
-.spec-flow-item__empty {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.spec-flow-item__hint {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  color: var(--dawn-30);
-  font-style: italic;
-}
-
-.spec-flow-item__trigger {
-  padding: 6px 12px;
-  background: rgba(202, 165, 84, 0.06);
-  border: 1px dashed var(--gold-30);
-  font-family: var(--font-mono);
-  font-size: 10px;
-  color: var(--gold-70);
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.spec-flow-item__trigger:hover:not(:disabled) {
-  background: var(--gold-08);
-  border-style: solid;
-  color: var(--gold);
-}
-
-.spec-flow-item__trigger:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-/* Action item (Generate button) */
-.spec-flow-item--action {
-  padding-left: 16px; /* Align with other flow items */
-  padding-top: 8px;
-  padding-bottom: 8px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-/* Hide circle on action item - it's just a button, not a flow step */
-.spec-flow-item--action::before {
-  display: none;
-}
-
-/* Hide connector on action item - the previous item's connector goes directly to output */
-.spec-flow-item--action .spec-flow-connector {
-  display: none;
-}
-
-.spec-btn--briefing {
-  flex: 1;
-  padding: 10px 16px;
-  background: linear-gradient(135deg, rgba(202, 165, 84, 0.12) 0%, rgba(202, 165, 84, 0.05) 100%);
-  border: 1px solid var(--gold-50);
-  font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.05em;
-  color: var(--gold);
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.spec-btn--briefing:hover:not(:disabled) {
-  background: linear-gradient(135deg, rgba(202, 165, 84, 0.2) 0%, rgba(202, 165, 84, 0.1) 100%);
-  border-color: var(--gold);
-  color: #fff;
-}
-
-.spec-btn--briefing:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-/* Briefing button loading state */
-.spec-btn--briefing-loading {
-  position: relative;
-  color: var(--gold-50);
-}
-
-.spec-btn__spinner {
-  display: inline-block;
-  width: 12px;
-  height: 12px;
-  margin-right: 8px;
-  border: 1.5px solid var(--gold-30);
-  border-top-color: var(--gold);
-  border-radius: 50%;
-  animation: briefingSpinner 0.8s linear infinite;
-  vertical-align: middle;
-}
-
-@keyframes briefingSpinner {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.spec-btn__text--loading {
-  opacity: 0.7;
-}
-
-/* Output item (Generated briefing) */
-.spec-flow-item--output {
-  padding-top: 12px;
-}
-
-.spec-flow-item--output .spec-flow-item__label {
-  color: var(--gold);
-}
-
-.spec-flow-item--output .spec-flow-item__header {
-  margin-bottom: 10px;
-}
-
-/* Compact annotations list for flow */
+/* ─── COMPACT ANNOTATIONS LIST (used within FlowConnector) ─── */
 .spec-annotations-list--compact {
   display: flex;
   flex-direction: column;
@@ -7073,4 +6798,335 @@
   color: var(--dawn-30);
   text-align: center;
   border-top: 1px solid var(--dawn-08);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   FLOW CONNECTOR - Clean vertical flow with connected nodes
+   A simple, reusable component for displaying connected steps in a flow.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.flow-connector {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+/* Individual node in the flow */
+.flow-connector__node {
+  position: relative;
+  display: grid;
+  grid-template-columns: 20px 1fr;
+  gap: 0;
+  padding-bottom: 16px;
+  /* Marker/line geometry tuning */
+  --flow-marker-size: 8px;
+  /* Slightly lower than before to align with the label line visually */
+  --flow-marker-offset: 6px;
+}
+
+/* Circle marker - positioned in left column */
+.flow-connector__marker {
+  position: relative;
+  width: var(--flow-marker-size);
+  height: var(--flow-marker-size);
+  margin-top: var(--flow-marker-offset); /* Align with label text */
+  margin-left: 4px;
+  background: var(--void);
+  /* NOTE: Some global styles were zeroing border width/style at runtime.
+     Use !important so the marker ring always renders. */
+  border: 1px solid var(--dawn-40) !important;
+  border-radius: 50%;
+  z-index: 2;
+}
+
+/* Vertical connector line ABOVE the marker (fills the offset space so lines touch circles) */
+.flow-connector__line-above {
+  position: absolute;
+  left: 7px;
+  top: 0;
+  height: var(--flow-marker-offset);
+  width: 1px;
+  background: var(--dawn-30);
+  z-index: 1;
+}
+
+.flow-connector__node:first-child .flow-connector__line-above {
+  display: none;
+}
+
+.flow-connector__node--gold .flow-connector__line-above {
+  background: linear-gradient(to bottom, var(--dawn-30) 0%, var(--gold-60) 100%);
+}
+
+/* Gold variant marker */
+.flow-connector__node--gold .flow-connector__marker {
+  border-color: var(--gold) !important;
+  box-shadow: 0 0 6px rgba(202, 165, 84, 0.3);
+}
+
+/* Vertical connector line */
+.flow-connector__line {
+  position: absolute;
+  left: 7px; /* Center of 8px marker + 4px margin = 8px, half = 4px + 3px offset */
+  top: calc(var(--flow-marker-offset) + var(--flow-marker-size)); /* Touch marker bottom edge */
+  bottom: 0;
+  width: 1px;
+  background: var(--dawn-30);
+  z-index: 1;
+}
+
+/* Gold line before gold nodes */
+.flow-connector__node--gold .flow-connector__line,
+.flow-connector__node:has(+ .flow-connector__node--gold) .flow-connector__line {
+  background: linear-gradient(to bottom, var(--dawn-30) 0%, var(--gold-60) 100%);
+}
+
+/* Content column */
+.flow-connector__content {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-left: 4px;
+}
+
+/* Header with label and action */
+.flow-connector__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 16px;
+}
+
+/* Label text */
+.flow-connector__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  color: var(--dawn-50);
+  text-transform: uppercase;
+}
+
+/* Gold variant label */
+.flow-connector__node--gold .flow-connector__label {
+  color: var(--gold);
+}
+
+/* Badge (e.g., "AI") */
+.flow-connector__badge {
+  padding: 1px 4px;
+  background: var(--gold-15);
+  border: 1px solid var(--gold-30);
+  font-family: var(--font-mono);
+  font-size: 8px;
+  letter-spacing: 0.08em;
+  color: var(--gold);
+}
+
+/* Action button area */
+.flow-connector__action {
+  display: flex;
+  align-items: center;
+}
+
+.flow-connector__action button {
+  padding: 2px 6px;
+  background: none;
+  border: 1px solid var(--dawn-15);
+  font-family: var(--font-mono);
+  font-size: 8px;
+  color: var(--dawn-40);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.flow-connector__action button:hover:not(:disabled) {
+  border-color: var(--gold-30);
+  color: var(--gold);
+}
+
+.flow-connector__action button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Body content area */
+.flow-connector__body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Empty state */
+.flow-connector__empty {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--dawn-30);
+  font-style: italic;
+}
+
+/* Trigger button for empty states */
+.flow-connector__trigger {
+  padding: 6px 12px;
+  background: rgba(202, 165, 84, 0.06);
+  border: 1px dashed var(--gold-30);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--gold-70);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.flow-connector__trigger:hover:not(:disabled) {
+  background: var(--gold-08);
+  border-style: solid;
+  color: var(--gold);
+}
+
+.flow-connector__trigger:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Content text */
+.flow-connector__text {
+  font-size: 11px;
+  line-height: 1.6;
+  color: var(--dawn-60);
+  margin: 0;
+  padding: 8px 10px;
+  background: rgba(235, 227, 214, 0.03);
+  border-left: 2px solid var(--gold-20);
+}
+
+/* Textarea for editable content */
+.flow-connector__textarea {
+  width: 100%;
+  padding: 8px 10px;
+  background: rgba(235, 227, 214, 0.04);
+  border: 1px solid var(--dawn-15);
+  font-family: var(--font-body);
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--dawn-70);
+  resize: vertical;
+}
+
+.flow-connector__textarea:focus {
+  outline: none;
+  border-color: var(--gold-30);
+  background: rgba(235, 227, 214, 0.06);
+}
+
+.flow-connector__textarea::placeholder {
+  color: var(--dawn-30);
+}
+
+/* Generate button styling */
+.flow-connector__generate-btn {
+  width: 100%;
+  padding: 10px 16px;
+  background: linear-gradient(135deg, rgba(202, 165, 84, 0.12) 0%, rgba(202, 165, 84, 0.05) 100%);
+  border: 1px solid var(--gold-50);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  color: var(--gold);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.flow-connector__generate-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, rgba(202, 165, 84, 0.2) 0%, rgba(202, 165, 84, 0.1) 100%);
+  border-color: var(--gold);
+  color: #fff;
+}
+
+.flow-connector__generate-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.flow-connector__generate-btn--loading {
+  position: relative;
+  color: var(--gold-50);
+}
+
+.flow-connector__spinner {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  margin-right: 8px;
+  border: 1.5px solid var(--gold-30);
+  border-top-color: var(--gold);
+  border-radius: 50%;
+  animation: flowSpinner 0.8s linear infinite;
+  vertical-align: middle;
+}
+
+@keyframes flowSpinner {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Loading state for briefing output */
+.flow-connector__loading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  background: rgba(235, 227, 214, 0.03);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--dawn-40);
+}
+
+.flow-connector__loading-icon {
+  animation: flowPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes flowPulse {
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 1;
+    color: var(--gold);
+  }
+}
+
+/* Briefing output text */
+.flow-connector__briefing {
+  font-size: 11px;
+  line-height: 1.7;
+  color: var(--dawn-70);
+}
+
+.flow-connector__node--gold .flow-connector__briefing {
+  padding: 10px 12px;
+  background: linear-gradient(
+    135deg,
+    rgba(202, 165, 84, 0.14) 0%,
+    rgba(202, 165, 84, 0.06) 55%,
+    rgba(235, 227, 214, 0.02) 100%
+  );
+  box-shadow:
+    inset 0 0 0 1px var(--gold-30),
+    0 0 18px rgba(202, 165, 84, 0.08);
+  border-radius: 8px;
+}
+
+.flow-connector__briefing p {
+  margin: 0 0 8px 0;
+}
+
+.flow-connector__briefing p:last-child {
+  margin-bottom: 0;
 }

@@ -9,17 +9,29 @@
   --void-deep: #050504;
   --dawn: #ebe3d6;
   --dawn-90: rgba(235, 227, 214, 0.9);
+  --dawn-80: rgba(235, 227, 214, 0.8);
   --dawn-70: rgba(235, 227, 214, 0.7);
+  --dawn-60: rgba(235, 227, 214, 0.6);
   --dawn-50: rgba(235, 227, 214, 0.5);
+  --dawn-40: rgba(235, 227, 214, 0.4);
+  --dawn-35: rgba(235, 227, 214, 0.35);
   --dawn-30: rgba(235, 227, 214, 0.3);
+  --dawn-25: rgba(235, 227, 214, 0.25);
+  --dawn-20: rgba(235, 227, 214, 0.2);
   --dawn-15: rgba(235, 227, 214, 0.15);
+  --dawn-10: rgba(235, 227, 214, 0.1);
   --dawn-08: rgba(235, 227, 214, 0.08);
   --dawn-04: rgba(235, 227, 214, 0.04);
   --gold: #caa554;
   --gold-70: rgba(202, 165, 84, 0.7);
+  --gold-60: rgba(202, 165, 84, 0.6);
   --gold-50: rgba(202, 165, 84, 0.5);
+  --gold-40: rgba(202, 165, 84, 0.4);
   --gold-30: rgba(202, 165, 84, 0.3);
+  --gold-20: rgba(202, 165, 84, 0.2);
   --gold-15: rgba(202, 165, 84, 0.15);
+  --gold-10: rgba(202, 165, 84, 0.1);
+  --gold-08: rgba(202, 165, 84, 0.08);
   --alert: #ff6b35;
 
   /* Typography - Uses CSS variables from next/font in app/layout.tsx */

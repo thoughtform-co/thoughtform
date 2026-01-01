@@ -5,6 +5,7 @@ import type { SurveyItem, SurveyItemSource, SurveyAnnotation } from "./types";
 import { NestedSelect } from "./NestedSelect";
 import { SurveyUploadModal } from "./SurveyUploadModal";
 import { formatBriefingText } from "./utils/formatBriefingText";
+import { FlowConnector } from "./FlowConnector";
 import type { PipelineStatus } from "../_hooks/useSurvey";
 
 // ═══════════════════════════════════════════════════════════════
@@ -545,8 +546,8 @@ function SurveyInspectorPanelInner({
               )}
             </section>
 
-            {/* ═══ SECTION 4: Briefing (combined section) ═══ */}
-            <section className="spec-section spec-section--briefing-flow">
+            {/* ═══ SECTION 4: Briefing Flow ═══ */}
+            <section className="spec-section">
               <div className="spec-section__label">
                 <span className="spec-section__label-text">Briefing</span>
                 <span className="spec-section__label-line" />
@@ -582,74 +583,56 @@ function SurveyInspectorPanelInner({
                 </div>
               )}
 
-              <div className="spec-briefing-flow">
-                {/* Flow Step 1: Analysis (AI) */}
-                <div className="spec-flow-item">
-                  <div className="spec-flow-item__header">
-                    <span className="spec-flow-item__label">
-                      Analysis
-                      <span className="spec-section__label-badge">AI</span>
-                    </span>
-                    {effectiveItem?.analysis && (
-                      <button
-                        className="spec-flow-item__action"
-                        onClick={onAnalyze}
-                        disabled={isAnalyzing}
-                      >
+              <FlowConnector>
+                {/* Analysis (AI) */}
+                <FlowConnector.Node
+                  label="Analysis"
+                  badge="AI"
+                  action={
+                    effectiveItem?.analysis && (
+                      <button onClick={onAnalyze} disabled={isAnalyzing}>
                         {isAnalyzing ? "..." : "Re-analyze"}
                       </button>
-                    )}
-                  </div>
+                    )
+                  }
+                >
                   {effectiveItem?.analysis?.transferNotes ? (
-                    <p className="spec-flow-item__content">
-                      {effectiveItem.analysis.transferNotes}
-                    </p>
+                    <p className="flow-connector__text">{effectiveItem.analysis.transferNotes}</p>
                   ) : (
-                    <div className="spec-flow-item__empty">
+                    <div className="flow-connector__empty">
                       {!effectiveItem?.analysis ? (
                         <button
-                          className="spec-flow-item__trigger"
+                          className="flow-connector__trigger"
                           onClick={onAnalyze}
                           disabled={isAnalyzing}
                         >
                           {isAnalyzing ? "Analyzing..." : "◇ Run Analysis"}
                         </button>
                       ) : (
-                        <span className="spec-flow-item__hint">No transfer notes</span>
+                        <span>No transfer notes</span>
                       )}
                     </div>
                   )}
-                  <div className="spec-flow-connector" />
-                </div>
+                </FlowConnector.Node>
 
-                {/* Flow Step 2: Notes (User) */}
-                <div className="spec-flow-item">
-                  <div className="spec-flow-item__header">
-                    <span className="spec-flow-item__label">Notes</span>
-                  </div>
+                {/* Notes (User) */}
+                <FlowConnector.Node label="Notes">
                   <textarea
-                    className="spec-flow-item__textarea"
+                    className="flow-connector__textarea"
                     value={effectiveItem?.notes || ""}
                     onChange={(e) => handleFieldChange("notes", e.target.value)}
                     placeholder="Your observations..."
                     rows={2}
                   />
-                  <div className="spec-flow-connector" />
-                </div>
+                </FlowConnector.Node>
 
-                {/* Flow Step 3: Annotations */}
-                <div className="spec-flow-item">
-                  <div className="spec-flow-item__header">
-                    <span className="spec-flow-item__label">
-                      Annotations
-                      {annotationCount > 0 && (
-                        <span className="spec-section__label-count">({annotationCount})</span>
-                      )}
-                    </span>
-                  </div>
+                {/* Annotations */}
+                <FlowConnector.Node
+                  label={`Annotations${annotationCount > 0 ? ` (${annotationCount})` : ""}`}
+                >
                   {annotationCount === 0 ? (
-                    <div className="spec-flow-item__empty">
-                      <span className="spec-flow-item__hint">Draw on the image to add</span>
+                    <div className="flow-connector__empty">
+                      <span>Draw on the image to add</span>
                     </div>
                   ) : (
                     <div className="spec-annotations-list spec-annotations-list--compact">
@@ -697,65 +680,63 @@ function SurveyInspectorPanelInner({
                       ))}
                     </div>
                   )}
-                  <div className="spec-flow-connector" />
-                </div>
+                </FlowConnector.Node>
 
-                {/* Flow Step 4: Generate Briefing Button */}
-                <div className="spec-flow-item spec-flow-item--action">
-                  {onGenerateBriefing && (
-                    <button
-                      className={`spec-btn spec-btn--briefing ${isBriefing ? "spec-btn--briefing-loading" : ""}`}
-                      onClick={onGenerateBriefing}
-                      disabled={isBriefing || !effectiveItem?.analysis}
-                      title={!effectiveItem?.analysis ? "Run analysis first" : undefined}
-                    >
-                      {isBriefing && <span className="spec-btn__spinner" />}
-                      <span className={isBriefing ? "spec-btn__text--loading" : ""}>
-                        GENERATE BRIEFING
-                      </span>
-                    </button>
-                  )}
-                </div>
-
-                {/* Flow Step 5: Generated Briefing Output */}
-                {(effectiveItem?.briefing || pipelineStatus === "briefing") && (
-                  <div className="spec-flow-item spec-flow-item--output">
-                    <div className="spec-flow-item__header">
-                      <span className="spec-flow-item__label">
-                        Generated Briefing
-                        <span className="spec-section__label-badge">AI</span>
-                      </span>
+                {/* Briefing Output - Always visible */}
+                <FlowConnector.Node
+                  label="Briefing"
+                  badge="AI"
+                  variant="gold"
+                  action={
+                    <div style={{ display: "flex", gap: 8 }}>
+                      <button
+                        onClick={() => void onEmbed()}
+                        disabled={isEmbedding || !effectiveItem?.briefing}
+                        title={!effectiveItem?.briefing ? "Generate briefing first" : undefined}
+                      >
+                        {isEmbedding ? "..." : "Embed"}
+                      </button>
+                      {effectiveItem?.briefing && onGenerateBriefing ? (
+                        <button
+                          onClick={onGenerateBriefing}
+                          disabled={isBriefing || !effectiveItem?.analysis}
+                          title={!effectiveItem?.analysis ? "Run analysis first" : undefined}
+                        >
+                          {isBriefing ? "..." : "Regenerate"}
+                        </button>
+                      ) : null}
                     </div>
-                    {pipelineStatus === "briefing" && !effectiveItem?.briefing ? (
-                      <div className="spec-section__ai-loading">
-                        <span className="spec-section__ai-loading-icon">◇</span>
-                        Generating...
-                      </div>
-                    ) : (
-                      <div className="spec-section__briefing-text">
-                        {formatBriefingText(effectiveItem?.briefing)}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
+                  }
+                >
+                  {pipelineStatus === "briefing" && !effectiveItem?.briefing ? (
+                    <div className="flow-connector__loading">
+                      <span className="flow-connector__loading-icon">◇</span>
+                      Generating...
+                    </div>
+                  ) : effectiveItem?.briefing ? (
+                    <div className="flow-connector__briefing">
+                      {formatBriefingText(effectiveItem?.briefing)}
+                    </div>
+                  ) : (
+                    <>
+                      {onGenerateBriefing && (
+                        <button
+                          className={`flow-connector__generate-btn ${isBriefing ? "flow-connector__generate-btn--loading" : ""}`}
+                          onClick={onGenerateBriefing}
+                          disabled={isBriefing || !effectiveItem?.analysis}
+                          title={!effectiveItem?.analysis ? "Run analysis first" : undefined}
+                        >
+                          {isBriefing && <span className="flow-connector__spinner" />}
+                          GENERATE BRIEFING
+                        </button>
+                      )}
+                    </>
+                  )}
+                </FlowConnector.Node>
+              </FlowConnector>
             </section>
 
-            {/* ═══ ACTIONS (Embed only - other actions moved to toolbar) ═══ */}
-            {!isResizing && (
-              <div className="spec-actions">
-                <div className="spec-actions__row">
-                  <button
-                    className="spec-btn spec-btn--outline"
-                    onClick={onEmbed}
-                    disabled={isEmbedding || !effectiveItem?.briefing}
-                    title={!effectiveItem?.briefing ? "Generate briefing first" : undefined}
-                  >
-                    {isEmbedding ? "Embedding..." : "Embed"}
-                  </button>
-                </div>
-              </div>
-            )}
+            {/* Embed moved into Briefing header (kept above the briefing content) */}
           </div>
         </div>
       </div>
