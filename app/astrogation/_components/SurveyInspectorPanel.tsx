@@ -67,9 +67,16 @@ function SurveyInspectorPanelInner({
 
   // Track previously seen annotations to detect new ones
   const prevAnnotationIdsRef = useRef<Set<string>>(new Set());
+  const prevItemIdRef = useRef<string | null>(null);
 
   // Auto-open new annotation notes
   useEffect(() => {
+    // Reset annotation tracking when item changes
+    if (item?.id !== prevItemIdRef.current) {
+      prevAnnotationIdsRef.current = new Set();
+      prevItemIdRef.current = item?.id || null;
+    }
+
     if (!item?.annotations) return;
 
     const currentIds = new Set(item.annotations.map((a) => a.id));
@@ -86,7 +93,7 @@ function SurveyInspectorPanelInner({
     }
 
     prevAnnotationIdsRef.current = currentIds;
-  }, [item?.annotations]);
+  }, [item?.id, item?.annotations]);
 
   // Sync local state when item changes
   const effectiveItem = localItem !== null ? { ...item, ...localItem } : item;
@@ -439,6 +446,11 @@ function SurveyInspectorPanelInner({
                 type="text"
                 className="spec-section__input"
                 value={effectiveItem?.title || ""}
+                disabled={isResizing}
+                onClick={(e) => {
+                  // Explicitly focus the input to ensure it receives focus
+                  e.currentTarget.focus();
+                }}
                 onChange={(e) => handleFieldChange("title", e.target.value)}
                 placeholder="Reference title..."
               />
@@ -705,39 +717,32 @@ function SurveyInspectorPanelInner({
                   )}
                 </FlowConnector.Node>
 
-                {/* Embed Button - Standalone between Annotations and Briefing */}
-                <div className="flow-connector__embed-section">
-                  <button
-                    className="flow-connector__embed-btn"
-                    onClick={() => void onEmbed()}
-                    disabled={isEmbedding || !effectiveItem?.briefing}
-                    title={!effectiveItem?.briefing ? "Generate briefing first" : undefined}
-                  >
-                    {isEmbedding ? (
-                      <>
-                        <span className="flow-connector__spinner" />
-                        Embedding...
-                      </>
-                    ) : (
-                      "EMBED"
-                    )}
-                  </button>
-                </div>
-
                 {/* Briefing Output - Always visible */}
                 <FlowConnector.Node
                   label="Briefing"
                   badge="AI"
                   className="flow-connector__node--briefing flow-connector__node--no-line-above"
                   action={
-                    effectiveItem?.briefing && onGenerateBriefing ? (
-                      <button
-                        onClick={onGenerateBriefing}
-                        disabled={isBriefing || !effectiveItem?.analysis}
-                        title={!effectiveItem?.analysis ? "Run analysis first" : undefined}
-                      >
-                        {isBriefing ? "..." : "Regenerate"}
-                      </button>
+                    onGenerateBriefing ? (
+                      <div style={{ display: "flex", gap: 8 }}>
+                        <button
+                          className="flow-connector__action-btn flow-connector__action-btn--generate"
+                          onClick={onGenerateBriefing}
+                          disabled={isBriefing || !effectiveItem?.analysis}
+                          title={!effectiveItem?.analysis ? "Run analysis first" : undefined}
+                        >
+                          {isBriefing ? "..." : "Generate"}
+                        </button>
+                        {effectiveItem?.briefing && (
+                          <button
+                            onClick={onGenerateBriefing}
+                            disabled={isBriefing || !effectiveItem?.analysis}
+                            title={!effectiveItem?.analysis ? "Run analysis first" : undefined}
+                          >
+                            {isBriefing ? "..." : "Regenerate"}
+                          </button>
+                        )}
+                      </div>
                     ) : null
                   }
                 >
@@ -751,21 +756,31 @@ function SurveyInspectorPanelInner({
                       {formatBriefingText(effectiveItem?.briefing)}
                     </div>
                   ) : (
-                    <>
-                      {onGenerateBriefing && (
-                        <button
-                          className={`flow-connector__generate-btn ${isBriefing ? "flow-connector__generate-btn--loading" : ""}`}
-                          onClick={onGenerateBriefing}
-                          disabled={isBriefing || !effectiveItem?.analysis}
-                          title={!effectiveItem?.analysis ? "Run analysis first" : undefined}
-                        >
-                          {isBriefing && <span className="flow-connector__spinner" />}
-                          GENERATE BRIEFING
-                        </button>
-                      )}
-                    </>
+                    <div className="flow-connector__empty">
+                      <span>Generate briefing to view content</span>
+                    </div>
                   )}
                 </FlowConnector.Node>
+
+                {/* Embed Button - Final step after Briefing */}
+                {effectiveItem?.briefing && (
+                  <div className="flow-connector__embed-section">
+                    <button
+                      className="flow-connector__embed-btn"
+                      onClick={() => void onEmbed()}
+                      disabled={isEmbedding}
+                    >
+                      {isEmbedding ? (
+                        <>
+                          <span className="flow-connector__spinner" />
+                          Embedding...
+                        </>
+                      ) : (
+                        "EMBED"
+                      )}
+                    </button>
+                  </div>
+                )}
               </FlowConnector>
             </section>
 
