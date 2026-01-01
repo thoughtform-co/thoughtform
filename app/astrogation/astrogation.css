@@ -3829,10 +3829,58 @@
 }
 
 /* Survey Sources in Spec Section */
+/* Sources Toggle Button */
+.spec-sources-toggle {
+  margin-top: 8px;
+}
+
+.spec-sources-toggle__btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 0;
+  background: none;
+  border: none;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--dawn-40);
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.spec-sources-toggle__btn:hover {
+  color: var(--dawn-60);
+}
+
+.spec-sources-toggle__triangle {
+  display: inline-block;
+  font-size: 8px;
+  color: var(--dawn-30);
+  transition: transform 0.2s ease;
+  transform: rotate(0deg);
+}
+
+.spec-sources-toggle__triangle--expanded {
+  transform: rotate(90deg);
+}
+
+.spec-sources-toggle__label {
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.spec-sources-toggle__count {
+  color: var(--dawn-30);
+  font-size: 9px;
+}
+
 .spec-sources {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--dawn-08);
 }
 
 .spec-source {
@@ -4362,7 +4410,7 @@
 /* ─── SOURCES COMPACT ─── */
 
 .spec-sources--compact {
-  margin-top: 10px;
+  margin-top: 0;
   padding-top: 8px;
   border-top: 1px dashed var(--dawn-08);
 }
@@ -6817,7 +6865,7 @@
   display: grid;
   grid-template-columns: 20px 1fr;
   gap: 0;
-  padding-bottom: 16px;
+  padding-bottom: 24px;
   /* Marker/line geometry tuning */
   --flow-marker-size: 8px;
   /* Slightly lower than before to align with the label line visually */
@@ -6875,6 +6923,16 @@
   z-index: 1;
 }
 
+/* Hide connector line for nodes that shouldn't have it */
+.flow-connector__node--no-line .flow-connector__line {
+  display: none;
+}
+
+/* Hide line-above for nodes that shouldn't have it */
+.flow-connector__node--no-line-above .flow-connector__line-above {
+  display: none;
+}
+
 /* Gold line before gold nodes */
 .flow-connector__node--gold .flow-connector__line,
 .flow-connector__node:has(+ .flow-connector__node--gold) .flow-connector__line {
@@ -6886,7 +6944,8 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
-  padding-left: 4px;
+  padding-left: 16px;
+  padding-right: 12px;
 }
 
 /* Header with label and action */
@@ -6911,6 +6970,11 @@
 
 /* Gold variant label */
 .flow-connector__node--gold .flow-connector__label {
+  color: var(--gold);
+}
+
+/* Briefing node label (gold without connector line) */
+.flow-connector__node--briefing .flow-connector__label {
   color: var(--gold);
 }
 
@@ -7107,9 +7171,6 @@
   font-size: 11px;
   line-height: 1.7;
   color: var(--dawn-70);
-}
-
-.flow-connector__node--gold .flow-connector__briefing {
   padding: 10px 12px;
   background: linear-gradient(
     135deg,
@@ -7129,4 +7190,44 @@
 
 .flow-connector__briefing p:last-child {
   margin-bottom: 0;
+}
+
+/* Embed button section - standalone between Annotations and Briefing */
+.flow-connector__embed-section {
+  display: flex;
+  align-items: center;
+  margin-left: 20px; /* Skip the vertical line column */
+  margin-top: -24px; /* Offset the padding-bottom of the previous node for symmetrical control */
+  padding: 32px 12px 32px 16px; /* Equalized vertical spacing (32px top/bottom) */
+}
+
+.flow-connector__embed-btn {
+  width: 100%;
+  padding: 12px 20px;
+  background: linear-gradient(135deg, rgba(202, 165, 84, 0.15) 0%, rgba(202, 165, 84, 0.08) 100%);
+  border: 1px solid var(--gold-40);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: var(--gold);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-transform: uppercase;
+}
+
+.flow-connector__embed-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, rgba(202, 165, 84, 0.25) 0%, rgba(202, 165, 84, 0.15) 100%);
+  border-color: var(--gold);
+  color: #fff;
+  box-shadow: 0 0 12px rgba(202, 165, 84, 0.2);
+}
+
+.flow-connector__embed-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  border-color: var(--dawn-15);
 }

@@ -54,6 +54,7 @@ function SurveyInspectorPanelInner({
   const [activeTab, setActiveTab] = useState<InspectorTab>("fields");
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [localItem, setLocalItem] = useState<Partial<SurveyItem> | null>(null);
+  const [isSourcesExpanded, setIsSourcesExpanded] = useState(false);
   const [chatMessages, setChatMessages] = useState<
     Array<{ role: "user" | "assistant"; content: string }>
   >([]);
@@ -441,36 +442,57 @@ function SurveyInspectorPanelInner({
                 onChange={(e) => handleFieldChange("title", e.target.value)}
                 placeholder="Reference title..."
               />
-              {/* Sources - compact under title */}
-              <div className="spec-sources spec-sources--compact">
-                {(effectiveItem?.sources || []).map((source, i) => (
-                  <div key={i} className="spec-source spec-source--inline">
-                    <input
-                      type="text"
-                      className="spec-source__input"
-                      value={source.label}
-                      onChange={(e) => handleSourceChange(i, "label", e.target.value)}
-                      placeholder="Label..."
-                    />
-                    <input
-                      type="url"
-                      className="spec-source__input"
-                      value={source.url || ""}
-                      onChange={(e) => handleSourceChange(i, "url", e.target.value)}
-                      placeholder="URL..."
-                    />
-                    <button
-                      className="spec-source__remove"
-                      onClick={() => handleRemoveSource(i)}
-                      title="Remove source"
-                    >
-                      ×
+              {/* Sources - collapsible */}
+              <div className="spec-sources-toggle">
+                <button
+                  className="spec-sources-toggle__btn"
+                  onClick={() => setIsSourcesExpanded(!isSourcesExpanded)}
+                  type="button"
+                >
+                  <span
+                    className={`spec-sources-toggle__triangle ${isSourcesExpanded ? "spec-sources-toggle__triangle--expanded" : ""}`}
+                  >
+                    ▶
+                  </span>
+                  <span className="spec-sources-toggle__label">Sources</span>
+                  {(effectiveItem?.sources || []).length > 0 && (
+                    <span className="spec-sources-toggle__count">
+                      ({(effectiveItem?.sources || []).length})
+                    </span>
+                  )}
+                </button>
+                {isSourcesExpanded && (
+                  <div className="spec-sources spec-sources--compact">
+                    {(effectiveItem?.sources || []).map((source, i) => (
+                      <div key={i} className="spec-source spec-source--inline">
+                        <input
+                          type="text"
+                          className="spec-source__input"
+                          value={source.label}
+                          onChange={(e) => handleSourceChange(i, "label", e.target.value)}
+                          placeholder="Label..."
+                        />
+                        <input
+                          type="url"
+                          className="spec-source__input"
+                          value={source.url || ""}
+                          onChange={(e) => handleSourceChange(i, "url", e.target.value)}
+                          placeholder="URL..."
+                        />
+                        <button
+                          className="spec-source__remove"
+                          onClick={() => handleRemoveSource(i)}
+                          title="Remove source"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                    <button className="spec-add-btn spec-add-btn--small" onClick={handleAddSource}>
+                      + Source
                     </button>
                   </div>
-                ))}
-                <button className="spec-add-btn spec-add-btn--small" onClick={handleAddSource}>
-                  + Source
-                </button>
+                )}
               </div>
             </section>
 
@@ -629,6 +651,7 @@ function SurveyInspectorPanelInner({
                 {/* Annotations */}
                 <FlowConnector.Node
                   label={`Annotations${annotationCount > 0 ? ` (${annotationCount})` : ""}`}
+                  className="flow-connector__node--no-line"
                 >
                   {annotationCount === 0 ? (
                     <div className="flow-connector__empty">
@@ -682,30 +705,40 @@ function SurveyInspectorPanelInner({
                   )}
                 </FlowConnector.Node>
 
+                {/* Embed Button - Standalone between Annotations and Briefing */}
+                <div className="flow-connector__embed-section">
+                  <button
+                    className="flow-connector__embed-btn"
+                    onClick={() => void onEmbed()}
+                    disabled={isEmbedding || !effectiveItem?.briefing}
+                    title={!effectiveItem?.briefing ? "Generate briefing first" : undefined}
+                  >
+                    {isEmbedding ? (
+                      <>
+                        <span className="flow-connector__spinner" />
+                        Embedding...
+                      </>
+                    ) : (
+                      "EMBED"
+                    )}
+                  </button>
+                </div>
+
                 {/* Briefing Output - Always visible */}
                 <FlowConnector.Node
                   label="Briefing"
                   badge="AI"
-                  variant="gold"
+                  className="flow-connector__node--briefing flow-connector__node--no-line-above"
                   action={
-                    <div style={{ display: "flex", gap: 8 }}>
+                    effectiveItem?.briefing && onGenerateBriefing ? (
                       <button
-                        onClick={() => void onEmbed()}
-                        disabled={isEmbedding || !effectiveItem?.briefing}
-                        title={!effectiveItem?.briefing ? "Generate briefing first" : undefined}
+                        onClick={onGenerateBriefing}
+                        disabled={isBriefing || !effectiveItem?.analysis}
+                        title={!effectiveItem?.analysis ? "Run analysis first" : undefined}
                       >
-                        {isEmbedding ? "..." : "Embed"}
+                        {isBriefing ? "..." : "Regenerate"}
                       </button>
-                      {effectiveItem?.briefing && onGenerateBriefing ? (
-                        <button
-                          onClick={onGenerateBriefing}
-                          disabled={isBriefing || !effectiveItem?.analysis}
-                          title={!effectiveItem?.analysis ? "Run analysis first" : undefined}
-                        >
-                          {isBriefing ? "..." : "Regenerate"}
-                        </button>
-                      ) : null}
-                    </div>
+                    ) : null
                   }
                 >
                   {pipelineStatus === "briefing" && !effectiveItem?.briefing ? (
