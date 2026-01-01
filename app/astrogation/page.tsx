@@ -74,12 +74,17 @@ function AstrogationContent() {
     updateItem,
     deleteItem,
     analyzeItem,
+    generateBriefing,
     embedItem,
     semanticSearch,
     itemCounts,
     isAnalyzing,
     isEmbedding,
+    isBriefing,
     isSaving,
+    pipelineStatus,
+    searchSpace,
+    setSearchSpace,
   } = useSurvey({
     dispatch,
     surveyCategoryId,
@@ -149,23 +154,33 @@ function AstrogationContent() {
   const handleSurveySearch = useCallback(
     async (query: string) => {
       if (query.trim()) {
-        await semanticSearch(query.trim(), "query");
+        await semanticSearch(query.trim(), "query", searchSpace);
       } else {
         // Empty query = reload recent items
         await loadItems();
       }
     },
-    [semanticSearch, loadItems]
+    [semanticSearch, loadItems, searchSpace]
   );
 
-  // Handle annotation changes from canvas
+  // Handle annotation changes from canvas with optimistic updates
   const handleSurveyAnnotationsChange = useCallback(
     async (annotations: SurveyAnnotation[]) => {
       if (!surveySelectedItemId) return;
-      // Update locally and persist
-      await updateItem({ id: surveySelectedItemId, annotations });
+
+      // Optimistic update: immediately update local state
+      const optimisticItem = surveyItems.find((item) => item.id === surveySelectedItemId);
+      if (optimisticItem) {
+        dispatch(actions.surveyUpdateItem({ ...optimisticItem, annotations }));
+      }
+
+      // Persist to server (no need to await for UI)
+      updateItem({ id: surveySelectedItemId, annotations }).catch(() => {
+        // On error, the server response will restore the correct state
+        dispatch(actions.showToast("Failed to save annotations"));
+      });
     },
-    [surveySelectedItemId, updateItem]
+    [surveySelectedItemId, surveyItems, updateItem, dispatch]
   );
 
   // Track annotation resizing state
@@ -225,6 +240,11 @@ function AstrogationContent() {
             selectedComponentKey={surveyComponentKey}
             onSelectComponent={handleSurveyComponentChange}
             itemCounts={itemCounts}
+            searchQuery={surveySearchQuery}
+            onSearchQueryChange={handleSurveySearchQueryChange}
+            onSearch={handleSurveySearch}
+            searchSpace={searchSpace}
+            onSearchSpaceChange={setSearchSpace}
           />
         ) : (
           <CatalogPanel
@@ -270,15 +290,18 @@ function AstrogationContent() {
             item={selectedSurveyItem}
             onUpdate={updateItem}
             onDelete={deleteItem}
-            onAnalyze={analyzeItem}
-            onEmbed={embedItem}
+            onAnalyze={() => analyzeItem()}
+            onGenerateBriefing={() => generateBriefing()}
+            onEmbed={() => embedItem()}
             onUpload={uploadItem}
             selectedCategoryId={surveyCategoryId}
             selectedComponentKey={surveyComponentKey}
             isAnalyzing={isAnalyzing}
             isEmbedding={isEmbedding}
+            isBriefing={isBriefing}
             isSaving={isSaving}
             isResizing={isAnnotationResizing}
+            pipelineStatus={pipelineStatus}
           />
         ) : activeTab === "foundry" ? (
           <DialsPanel

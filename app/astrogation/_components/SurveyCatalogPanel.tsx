@@ -17,6 +17,7 @@ import {
   TreeLabel,
   TreeNodeContent,
 } from "@/components/ui/Tree";
+import type { SearchSpace } from "../_hooks/useSurvey";
 
 // ═══════════════════════════════════════════════════════════════
 // SURVEY CATALOG PANEL - Filter references by category/component
@@ -30,7 +31,9 @@ export interface SurveyCatalogPanelProps {
   itemCounts?: Record<string, number>;
   searchQuery?: string;
   onSearchQueryChange?: (query: string) => void;
-  onSearch?: (query: string) => Promise<void>;
+  onSearch?: (query: string, space?: SearchSpace) => Promise<void>;
+  searchSpace?: SearchSpace;
+  onSearchSpaceChange?: (space: SearchSpace) => void;
 }
 
 function SurveyCatalogPanelInner({
@@ -42,6 +45,8 @@ function SurveyCatalogPanelInner({
   searchQuery: externalSearchQuery = "",
   onSearchQueryChange,
   onSearch,
+  searchSpace = "briefing",
+  onSearchSpaceChange,
 }: SurveyCatalogPanelProps) {
   const [localSearchQuery, setLocalSearchQuery] = useState("");
   const searchQuery = externalSearchQuery || localSearchQuery;
@@ -55,8 +60,13 @@ function SurveyCatalogPanelInner({
   const handleSearchSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (onSearch && searchQuery.trim()) {
-      await onSearch(searchQuery.trim());
+      await onSearch(searchQuery.trim(), searchSpace);
     }
+  };
+
+  const handleSearchSpaceToggle = () => {
+    const newSpace: SearchSpace = searchSpace === "briefing" ? "full" : "briefing";
+    onSearchSpaceChange?.(newSpace);
   };
 
   // Build initial expanded IDs based on selection
@@ -106,7 +116,7 @@ function SurveyCatalogPanelInner({
 
       {/* Scrollable content area */}
       <div className="panel-content">
-        {/* Search - Unified search for survey items */}
+        {/* Search - Semantic search for survey items */}
         <div className="astrogation-section">
           <form className="input-group" onSubmit={handleSearchSubmit}>
             <input
@@ -127,6 +137,28 @@ function SurveyCatalogPanelInner({
               </button>
             )}
           </form>
+
+          {/* Search Space Toggle */}
+          {onSearchSpaceChange && (
+            <div className="search-space-toggle">
+              <button
+                type="button"
+                className={`search-space-toggle__btn ${searchSpace === "briefing" ? "search-space-toggle__btn--active" : ""}`}
+                onClick={() => onSearchSpaceChange("briefing")}
+                title="Search by implementation briefing (focused)"
+              >
+                Briefing
+              </button>
+              <button
+                type="button"
+                className={`search-space-toggle__btn ${searchSpace === "full" ? "search-space-toggle__btn--active" : ""}`}
+                onClick={() => onSearchSpaceChange("full")}
+                title="Search by full context (notes, annotations, analysis)"
+              >
+                Full
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Search Results */}

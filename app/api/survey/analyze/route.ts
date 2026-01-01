@@ -41,6 +41,7 @@ Our aesthetic pillars:
 
 Respond ONLY with valid JSON matching this schema:
 {
+  "description": "1-3 short paragraphs describing what's visible in the image and what's most salient (colors, composition, unique elements). This is a visual inventory.",
   "suggestedCategoryId": "string | null - one of our category IDs",
   "suggestedComponentKey": "string | null - one of our component IDs",
   "tags": ["array of relevant tags"],
@@ -192,15 +193,21 @@ export async function POST(request: NextRequest) {
     // Keep only last 5 analyses
     const trimmedHistory = history.slice(0, 5);
 
+    // Extract description from analysis (it's stored separately for easier access)
+    const { description, ...analysisWithoutDescription } = analysis;
+
     const updatedAnalysis = {
-      ...analysis,
+      ...analysisWithoutDescription,
       history: trimmedHistory,
     };
 
-    // Update item with analysis
+    // Update item with analysis AND description
     const { data: updatedItem, error: updateError } = await supabase
       .from("survey_items")
-      .update({ analysis: updatedAnalysis })
+      .update({
+        analysis: updatedAnalysis,
+        description: description || null,
+      })
       .eq("id", itemId)
       .select()
       .single();

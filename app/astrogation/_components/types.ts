@@ -82,6 +82,9 @@ export interface SurveyItem {
   component_key: string | null;
   title: string | null;
   notes: string | null;
+  description: string | null; // AI-generated visual analysis
+  briefing: string | null; // AI-generated implementation brief
+  briefing_updated_at: string | null;
   sources: SurveyItemSource[];
   tags: string[];
   image_path: string;
@@ -92,6 +95,9 @@ export interface SurveyItem {
   annotations: SurveyAnnotation[] | null;
   embedding_model: string | null;
   embedding_text: string | null;
+  briefing_embedding_model: string | null;
+  briefing_embedding_text: string | null;
+  user_id: string | null;
   created_at: string;
   updated_at: string;
   // Client-side additions

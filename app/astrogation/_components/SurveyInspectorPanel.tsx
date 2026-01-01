@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useCallback, memo } from "react";
+import { useState, useCallback, memo, useEffect, useRef } from "react";
 import type { SurveyItem, SurveyItemSource, SurveyAnnotation } from "./types";
 import { CATEGORIES, getComponentsByCategory } from "../catalog";
 import { Select } from "./Select";
 import { SurveyUploadModal } from "./SurveyUploadModal";
+import type { PipelineStatus } from "../_hooks/useSurvey";
 
 // ═══════════════════════════════════════════════════════════════
 // SURVEY INSPECTOR PANEL - Edit metadata & AI chat
@@ -15,15 +16,18 @@ export interface SurveyInspectorPanelProps {
   onUpdate: (updates: Partial<SurveyItem>) => Promise<void>;
   onDelete: () => Promise<void>;
   onAnalyze: () => Promise<void>;
+  onGenerateBriefing?: () => Promise<void>;
   onEmbed: () => Promise<void>;
   onUpload?: (file: File, categoryId: string | null, componentKey: string | null) => Promise<void>;
   selectedCategoryId?: string | null;
   selectedComponentKey?: string | null;
   isAnalyzing?: boolean;
   isEmbedding?: boolean;
+  isBriefing?: boolean;
   isSaving?: boolean;
   isResizing?: boolean;
   isUploading?: boolean;
+  pipelineStatus?: PipelineStatus;
 }
 
 type InspectorTab = "fields" | "chat";
@@ -33,15 +37,18 @@ function SurveyInspectorPanelInner({
   onUpdate,
   onDelete,
   onAnalyze,
+  onGenerateBriefing,
   onEmbed,
   isAnalyzing = false,
   isEmbedding = false,
+  isBriefing = false,
   isSaving = false,
   isResizing = false,
   onUpload,
   selectedCategoryId = null,
   selectedComponentKey = null,
   isUploading = false,
+  pipelineStatus = "idle",
 }: SurveyInspectorPanelProps) {
   const [activeTab, setActiveTab] = useState<InspectorTab>("fields");
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
@@ -53,6 +60,31 @@ function SurveyInspectorPanelInner({
   const [isChatLoading, setIsChatLoading] = useState(false);
   const [editingAnnotationId, setEditingAnnotationId] = useState<string | null>(null);
   const [annotationNote, setAnnotationNote] = useState("");
+  const [tagInput, setTagInput] = useState("");
+  const tagInputRef = useRef<HTMLInputElement>(null);
+
+  // Track previously seen annotations to detect new ones
+  const prevAnnotationIdsRef = useRef<Set<string>>(new Set());
+
+  // Auto-open new annotation notes
+  useEffect(() => {
+    if (!item?.annotations) return;
+
+    const currentIds = new Set(item.annotations.map((a) => a.id));
+    const prevIds = prevAnnotationIdsRef.current;
+
+    // Find newly added annotations
+    const newAnnotations = item.annotations.filter((a) => !prevIds.has(a.id));
+
+    if (newAnnotations.length > 0) {
+      // Auto-open the newest annotation for editing
+      const newest = newAnnotations[newAnnotations.length - 1];
+      setEditingAnnotationId(newest.id);
+      setAnnotationNote(newest.note || "");
+    }
+
+    prevAnnotationIdsRef.current = currentIds;
+  }, [item?.annotations]);
 
   // Sync local state when item changes
   const effectiveItem = localItem !== null ? { ...item, ...localItem } : item;
@@ -106,17 +138,48 @@ function SurveyInspectorPanelInner({
     [effectiveItem?.sources, handleFieldChange]
   );
 
-  // Handle tags
-  const handleTagsChange = useCallback(
-    (tagsString: string) => {
-      const tags = tagsString
-        .split(",")
-        .map((t) => t.trim())
-        .filter((t) => t.length > 0);
+  // Handle tags - chip-based input
+  const handleAddTag = useCallback(
+    (tag: string) => {
+      const trimmedTag = tag.trim().toLowerCase();
+      if (!trimmedTag) return;
+
+      const currentTags = effectiveItem?.tags || [];
+      if (currentTags.includes(trimmedTag)) return; // Prevent duplicates
+
+      handleFieldChange("tags", [...currentTags, trimmedTag]);
+      setTagInput("");
+    },
+    [effectiveItem?.tags, handleFieldChange]
+  );
+
+  const handleRemoveTag = useCallback(
+    (tagToRemove: string) => {
+      const tags = (effectiveItem?.tags || []).filter((t) => t !== tagToRemove);
       handleFieldChange("tags", tags);
     },
-    [handleFieldChange]
+    [effectiveItem?.tags, handleFieldChange]
   );
+
+  const handleTagInputKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === "Enter" || e.key === ",") {
+        e.preventDefault();
+        handleAddTag(tagInput);
+      } else if (e.key === "Backspace" && !tagInput && (effectiveItem?.tags?.length || 0) > 0) {
+        // Remove last tag on backspace when input is empty
+        const tags = effectiveItem?.tags || [];
+        handleRemoveTag(tags[tags.length - 1]);
+      }
+    },
+    [tagInput, effectiveItem?.tags, handleAddTag, handleRemoveTag]
+  );
+
+  const handleTagInputBlur = useCallback(() => {
+    if (tagInput.trim()) {
+      handleAddTag(tagInput);
+    }
+  }, [tagInput, handleAddTag]);
 
   // Handle annotation editing
   const handleEditAnnotation = useCallback((annotation: SurveyAnnotation) => {
@@ -124,15 +187,39 @@ function SurveyInspectorPanelInner({
     setAnnotationNote(annotation.note);
   }, []);
 
-  const handleSaveAnnotationNote = useCallback(() => {
-    if (!editingAnnotationId) return;
-    const annotations = (effectiveItem?.annotations || []).map((a) =>
-      a.id === editingAnnotationId ? { ...a, note: annotationNote } : a
-    );
-    handleFieldChange("annotations", annotations);
+  const handleSaveAnnotationNote = useCallback(async () => {
+    if (!editingAnnotationId || !item) return;
+
+    // If note is empty for a NEW annotation, delete it
+    const existingAnnotation = (item.annotations || []).find((a) => a.id === editingAnnotationId);
+    if (!annotationNote.trim() && existingAnnotation && !existingAnnotation.note) {
+      // Delete the annotation
+      const annotations = (effectiveItem?.annotations || []).filter(
+        (a) => a.id !== editingAnnotationId
+      );
+      handleFieldChange("annotations", annotations);
+      // Immediately persist
+      await onUpdate({ id: item.id, annotations });
+    } else {
+      // Update the note
+      const annotations = (effectiveItem?.annotations || []).map((a) =>
+        a.id === editingAnnotationId ? { ...a, note: annotationNote } : a
+      );
+      handleFieldChange("annotations", annotations);
+      // Immediately persist annotation changes
+      await onUpdate({ id: item.id, annotations });
+    }
+
     setEditingAnnotationId(null);
     setAnnotationNote("");
-  }, [editingAnnotationId, annotationNote, effectiveItem?.annotations, handleFieldChange]);
+  }, [
+    editingAnnotationId,
+    annotationNote,
+    effectiveItem?.annotations,
+    handleFieldChange,
+    item,
+    onUpdate,
+  ]);
 
   const handleDeleteAnnotation = useCallback(
     (annotationId: string) => {
@@ -277,7 +364,7 @@ function SurveyInspectorPanelInner({
         {activeTab === "fields" ? (
           <div className="panel-content__scrollable">
             <div className="spec-panel-v2">
-              {/* Title */}
+              {/* ═══ SECTION 1: Title + Sources ═══ */}
               <section className="spec-section">
                 <div className="spec-section__label">
                   <span className="spec-section__label-text">Title</span>
@@ -290,154 +377,10 @@ function SurveyInspectorPanelInner({
                   onChange={(e) => handleFieldChange("title", e.target.value)}
                   placeholder="Reference title..."
                 />
-              </section>
-
-              {/* Category */}
-              <section className="spec-section">
-                <div className="spec-section__label">
-                  <span className="spec-section__label-text">Category</span>
-                  <span className="spec-section__label-line" />
-                </div>
-                <Select
-                  value={effectiveItem?.category_id || ""}
-                  onChange={(value) => handleFieldChange("category_id", value || null)}
-                  options={[
-                    { value: "", label: "Select category..." },
-                    ...CATEGORIES.map((cat) => ({ value: cat.id, label: cat.name })),
-                  ]}
-                />
-              </section>
-
-              {/* Component */}
-              <section className="spec-section">
-                <div className="spec-section__label">
-                  <span className="spec-section__label-text">Component</span>
-                  <span className="spec-section__label-line" />
-                </div>
-                <Select
-                  value={effectiveItem?.component_key || ""}
-                  onChange={(value) => handleFieldChange("component_key", value || null)}
-                  options={[
-                    { value: "", label: "Select component..." },
-                    ...(effectiveItem?.category_id
-                      ? getComponentsByCategory(effectiveItem.category_id).map((comp) => ({
-                          value: comp.id,
-                          label: comp.name,
-                        }))
-                      : []),
-                  ]}
-                  disabled={!effectiveItem?.category_id}
-                />
-              </section>
-
-              {/* Tags */}
-              <section className="spec-section">
-                <div className="spec-section__label">
-                  <span className="spec-section__label-text">Tags</span>
-                  <span className="spec-section__label-line" />
-                </div>
-                <input
-                  type="text"
-                  className="spec-section__input"
-                  value={(effectiveItem?.tags || []).join(", ")}
-                  onChange={(e) => handleTagsChange(e.target.value)}
-                  placeholder="hud, frame, terminal, ..."
-                />
-              </section>
-
-              {/* Notes */}
-              <section className="spec-section">
-                <div className="spec-section__label">
-                  <span className="spec-section__label-text">Notes</span>
-                  <span className="spec-section__label-line" />
-                </div>
-                <textarea
-                  className="spec-section__textarea"
-                  value={effectiveItem?.notes || ""}
-                  onChange={(e) => handleFieldChange("notes", e.target.value)}
-                  placeholder="Your observations, what you like about it..."
-                  rows={3}
-                />
-              </section>
-
-              {/* Annotations */}
-              <section className="spec-section">
-                <div className="spec-section__label">
-                  <span className="spec-section__label-text">
-                    Annotations
-                    {annotationCount > 0 && (
-                      <span className="spec-section__label-count">({annotationCount})</span>
-                    )}
-                  </span>
-                  <span className="spec-section__label-line" />
-                </div>
-                {annotationCount === 0 ? (
-                  <div className="spec-section__hint">Draw on the image to add annotations</div>
-                ) : (
-                  <div className="spec-annotations-list">
-                    {(effectiveItem?.annotations || []).map((annotation, index) => (
-                      <div key={annotation.id} className="spec-annotation">
-                        <div className="spec-annotation__header">
-                          <span className="spec-annotation__index">#{index + 1}</span>
-                          <button
-                            className="spec-annotation__delete"
-                            onClick={() => handleDeleteAnnotation(annotation.id)}
-                            title="Delete annotation"
-                          >
-                            ×
-                          </button>
-                        </div>
-                        {editingAnnotationId === annotation.id ? (
-                          <div className="spec-annotation__edit">
-                            <input
-                              type="text"
-                              className="spec-annotation__input"
-                              value={annotationNote}
-                              onChange={(e) => setAnnotationNote(e.target.value)}
-                              placeholder="Add note..."
-                              autoFocus
-                            />
-                            <div className="spec-annotation__edit-actions">
-                              <button
-                                className="spec-annotation__save"
-                                onClick={handleSaveAnnotationNote}
-                              >
-                                Save
-                              </button>
-                              <button
-                                className="spec-annotation__cancel"
-                                onClick={() => {
-                                  setEditingAnnotationId(null);
-                                  setAnnotationNote("");
-                                }}
-                              >
-                                Cancel
-                              </button>
-                            </div>
-                          </div>
-                        ) : (
-                          <div
-                            className="spec-annotation__note"
-                            onClick={() => handleEditAnnotation(annotation)}
-                          >
-                            {annotation.note || "Click to add note..."}
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </section>
-
-              {/* Sources */}
-              <section className="spec-section">
-                <div className="spec-section__label">
-                  <span className="spec-section__label-text">Sources</span>
-                  <span className="spec-section__label-line" />
-                </div>
-                <div className="spec-sources">
+                {/* Sources - compact under title */}
+                <div className="spec-sources spec-sources--compact">
                   {(effectiveItem?.sources || []).map((source, i) => (
-                    <div key={i} className="spec-source">
+                    <div key={i} className="spec-source spec-source--inline">
                       <input
                         type="text"
                         className="spec-source__input"
@@ -461,38 +404,307 @@ function SurveyInspectorPanelInner({
                       </button>
                     </div>
                   ))}
-                  <button className="spec-add-btn" onClick={handleAddSource}>
-                    + Add Source
+                  <button className="spec-add-btn spec-add-btn--small" onClick={handleAddSource}>
+                    + Source
                   </button>
                 </div>
               </section>
 
-              {/* Analysis Preview */}
-              {effectiveItem?.analysis && Object.keys(effectiveItem.analysis).length > 0 && (
-                <section className="spec-section">
+              {/* ═══ SECTION 2: Category + Component ═══ */}
+              <section className="spec-section spec-section--row">
+                <div className="spec-section__half">
                   <div className="spec-section__label">
-                    <span className="spec-section__label-text">AI Analysis</span>
-                    <span className="spec-section__label-line" />
+                    <span className="spec-section__label-text">Category</span>
                   </div>
-                  <div className="spec-analysis">
-                    {effectiveItem.analysis.transferNotes && (
-                      <p className="spec-analysis__notes">{effectiveItem.analysis.transferNotes}</p>
-                    )}
-                    {effectiveItem.analysis.tags && effectiveItem.analysis.tags.length > 0 && (
-                      <div className="spec-analysis__tags">
-                        <span className="spec-analysis__label">Suggested:</span>
-                        {effectiveItem.analysis.tags.map((tag, i) => (
-                          <span key={i} className="spec-analysis__tag">
-                            {tag}
+                  <Select
+                    value={effectiveItem?.category_id || ""}
+                    onChange={(value) => handleFieldChange("category_id", value || null)}
+                    options={[
+                      { value: "", label: "Category..." },
+                      ...CATEGORIES.map((cat) => ({ value: cat.id, label: cat.name })),
+                    ]}
+                    className="spec-select--compact"
+                  />
+                </div>
+                <div className="spec-section__half">
+                  <div className="spec-section__label">
+                    <span className="spec-section__label-text">Component</span>
+                  </div>
+                  <Select
+                    value={effectiveItem?.component_key || ""}
+                    onChange={(value) => handleFieldChange("component_key", value || null)}
+                    options={[
+                      { value: "", label: "Component..." },
+                      ...(effectiveItem?.category_id
+                        ? getComponentsByCategory(effectiveItem.category_id).map((comp) => ({
+                            value: comp.id,
+                            label: comp.name,
+                          }))
+                        : []),
+                    ]}
+                    disabled={!effectiveItem?.category_id}
+                    className="spec-select--compact"
+                  />
+                </div>
+              </section>
+
+              {/* ═══ SECTION 3: Tags ═══ */}
+              <section className="spec-section">
+                <div className="spec-section__label">
+                  <span className="spec-section__label-text">Tags</span>
+                  <span className="spec-section__label-line" />
+                </div>
+                <div className="spec-tags-input" onClick={() => tagInputRef.current?.focus()}>
+                  {(effectiveItem?.tags || []).map((tag) => (
+                    <span key={tag} className="spec-tag-chip">
+                      {tag}
+                      <button
+                        type="button"
+                        className="spec-tag-chip__remove"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleRemoveTag(tag);
+                        }}
+                      >
+                        ×
+                      </button>
+                    </span>
+                  ))}
+                  <input
+                    ref={tagInputRef}
+                    type="text"
+                    className="spec-tags-input__field"
+                    value={tagInput}
+                    onChange={(e) => setTagInput(e.target.value)}
+                    onKeyDown={handleTagInputKeyDown}
+                    onBlur={handleTagInputBlur}
+                    placeholder={(effectiveItem?.tags?.length || 0) === 0 ? "Add tags..." : ""}
+                  />
+                </div>
+                {/* Suggested tags from AI - clickable to add */}
+                {effectiveItem?.analysis?.tags && effectiveItem.analysis.tags.length > 0 && (
+                  <div className="spec-suggested-tags">
+                    <span className="spec-suggested-tags__label">Suggested:</span>
+                    {effectiveItem.analysis.tags
+                      .filter((tag) => !(effectiveItem?.tags || []).includes(tag.toLowerCase()))
+                      .map((tag, i) => (
+                        <button
+                          key={i}
+                          type="button"
+                          className="spec-suggested-tags__tag"
+                          onClick={() => handleAddTag(tag)}
+                          title="Click to add"
+                        >
+                          + {tag}
+                        </button>
+                      ))}
+                  </div>
+                )}
+              </section>
+
+              {/* ═══ SECTION 4: Briefing (combined section) ═══ */}
+              <section className="spec-section spec-section--briefing-flow">
+                <div className="spec-section__label">
+                  <span className="spec-section__label-text">Briefing</span>
+                  <span className="spec-section__label-line" />
+                </div>
+
+                {/* Pipeline Status - shown when processing */}
+                {pipelineStatus !== "idle" && pipelineStatus !== "done" && (
+                  <div className="spec-pipeline-status spec-pipeline-status--inline">
+                    <div
+                      className={`spec-pipeline-status__indicator spec-pipeline-status__indicator--${pipelineStatus}`}
+                    >
+                      {pipelineStatus === "analyzing" && (
+                        <>
+                          <span className="spec-pipeline-status__icon">◇</span>
+                          Analyzing image...
+                        </>
+                      )}
+                      {pipelineStatus === "briefing" && (
+                        <>
+                          <span className="spec-pipeline-status__icon">◇</span>
+                          Generating briefing...
+                        </>
+                      )}
+                      {pipelineStatus === "error" && (
+                        <>
+                          <span className="spec-pipeline-status__icon spec-pipeline-status__icon--error">
+                            ⚠
                           </span>
+                          Pipeline error
+                        </>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                <div className="spec-briefing-flow">
+                  {/* Flow Step 1: Analysis (AI) */}
+                  <div className="spec-flow-item">
+                    <div className="spec-flow-item__header">
+                      <span className="spec-flow-item__label">
+                        Analysis
+                        <span className="spec-section__label-badge">AI</span>
+                      </span>
+                      {effectiveItem?.analysis && (
+                        <button
+                          className="spec-flow-item__action"
+                          onClick={onAnalyze}
+                          disabled={isAnalyzing}
+                        >
+                          {isAnalyzing ? "..." : "Re-analyze"}
+                        </button>
+                      )}
+                    </div>
+                    {effectiveItem?.analysis?.transferNotes ? (
+                      <p className="spec-flow-item__content">
+                        {effectiveItem.analysis.transferNotes}
+                      </p>
+                    ) : (
+                      <div className="spec-flow-item__empty">
+                        {!effectiveItem?.analysis ? (
+                          <button
+                            className="spec-flow-item__trigger"
+                            onClick={onAnalyze}
+                            disabled={isAnalyzing}
+                          >
+                            {isAnalyzing ? "Analyzing..." : "◇ Run Analysis"}
+                          </button>
+                        ) : (
+                          <span className="spec-flow-item__hint">No transfer notes</span>
+                        )}
+                      </div>
+                    )}
+                    <div className="spec-flow-connector" />
+                  </div>
+
+                  {/* Flow Step 2: Notes (User) */}
+                  <div className="spec-flow-item">
+                    <div className="spec-flow-item__header">
+                      <span className="spec-flow-item__label">Notes</span>
+                    </div>
+                    <textarea
+                      className="spec-flow-item__textarea"
+                      value={effectiveItem?.notes || ""}
+                      onChange={(e) => handleFieldChange("notes", e.target.value)}
+                      placeholder="Your observations..."
+                      rows={2}
+                    />
+                    <div className="spec-flow-connector" />
+                  </div>
+
+                  {/* Flow Step 3: Annotations */}
+                  <div className="spec-flow-item">
+                    <div className="spec-flow-item__header">
+                      <span className="spec-flow-item__label">
+                        Annotations
+                        {annotationCount > 0 && (
+                          <span className="spec-section__label-count">({annotationCount})</span>
+                        )}
+                      </span>
+                    </div>
+                    {annotationCount === 0 ? (
+                      <div className="spec-flow-item__empty">
+                        <span className="spec-flow-item__hint">Draw on the image to add</span>
+                      </div>
+                    ) : (
+                      <div className="spec-annotations-list spec-annotations-list--compact">
+                        {(effectiveItem?.annotations || []).map((annotation, index) => (
+                          <div
+                            key={annotation.id}
+                            className="spec-annotation spec-annotation--compact"
+                          >
+                            <span className="spec-annotation__index">#{index + 1}</span>
+                            {editingAnnotationId === annotation.id ? (
+                              <div className="spec-annotation__edit spec-annotation__edit--inline">
+                                <input
+                                  type="text"
+                                  className="spec-annotation__input"
+                                  value={annotationNote}
+                                  onChange={(e) => setAnnotationNote(e.target.value)}
+                                  placeholder="Add note..."
+                                  autoFocus
+                                  onKeyDown={(e) => {
+                                    if (e.key === "Enter") handleSaveAnnotationNote();
+                                    if (e.key === "Escape") {
+                                      setEditingAnnotationId(null);
+                                      setAnnotationNote("");
+                                    }
+                                  }}
+                                  onBlur={handleSaveAnnotationNote}
+                                />
+                              </div>
+                            ) : (
+                              <span
+                                className="spec-annotation__note spec-annotation__note--inline"
+                                onClick={() => handleEditAnnotation(annotation)}
+                              >
+                                {annotation.note || "Click to add note..."}
+                              </span>
+                            )}
+                            <button
+                              className="spec-annotation__delete"
+                              onClick={() => handleDeleteAnnotation(annotation.id)}
+                              title="Delete"
+                            >
+                              ×
+                            </button>
+                          </div>
                         ))}
                       </div>
                     )}
+                    <div className="spec-flow-connector" />
                   </div>
-                </section>
-              )}
 
-              {/* Actions */}
+                  {/* Flow Step 4: Generate Briefing Button */}
+                  <div className="spec-flow-item spec-flow-item--action">
+                    {onGenerateBriefing && (
+                      <button
+                        className="spec-btn spec-btn--briefing"
+                        onClick={onGenerateBriefing}
+                        disabled={isBriefing || !effectiveItem?.analysis}
+                        title={!effectiveItem?.analysis ? "Run analysis first" : undefined}
+                      >
+                        {isBriefing
+                          ? "Generating..."
+                          : effectiveItem?.briefing
+                            ? "Regenerate Briefing"
+                            : "Generate Briefing"}
+                      </button>
+                    )}
+                    {effectiveItem?.briefing &&
+                      effectiveItem.briefing_updated_at &&
+                      effectiveItem.updated_at &&
+                      new Date(effectiveItem.updated_at) >
+                        new Date(effectiveItem.briefing_updated_at) && (
+                        <span className="spec-section__stale-indicator">◇ May be outdated</span>
+                      )}
+                  </div>
+
+                  {/* Flow Step 5: Generated Briefing Output */}
+                  {(effectiveItem?.briefing || pipelineStatus === "briefing") && (
+                    <div className="spec-flow-item spec-flow-item--output">
+                      <div className="spec-flow-item__header">
+                        <span className="spec-flow-item__label">
+                          Generated Briefing
+                          <span className="spec-section__label-badge">AI</span>
+                        </span>
+                      </div>
+                      {pipelineStatus === "briefing" && !effectiveItem?.briefing ? (
+                        <div className="spec-section__ai-loading">
+                          <span className="spec-section__ai-loading-icon">◇</span>
+                          Generating...
+                        </div>
+                      ) : (
+                        <div className="spec-section__briefing-text">{effectiveItem?.briefing}</div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </section>
+
+              {/* ═══ ACTIONS ═══ */}
               <div className="spec-actions">
                 {!isResizing && (
                   <div className="spec-actions__row">
@@ -515,17 +727,11 @@ function SurveyInspectorPanelInner({
                 <div className="spec-actions__row">
                   <button
                     className="spec-btn spec-btn--outline"
-                    onClick={onAnalyze}
-                    disabled={isAnalyzing}
-                  >
-                    {isAnalyzing ? "Analyzing..." : "Analyze (Claude)"}
-                  </button>
-                  <button
-                    className="spec-btn spec-btn--outline"
                     onClick={onEmbed}
-                    disabled={isEmbedding}
+                    disabled={isEmbedding || !effectiveItem?.briefing}
+                    title={!effectiveItem?.briefing ? "Generate briefing first" : undefined}
                   >
-                    {isEmbedding ? "Embedding..." : "Embed (Voyage)"}
+                    {isEmbedding ? "Embedding..." : "Embed"}
                   </button>
                 </div>
                 <div className="spec-actions__row spec-actions__row--danger">
