@@ -35,7 +35,12 @@ export interface CenterPanelProps {
   surveyItems?: SurveyItem[];
   surveySelectedItemId?: string | null;
   surveyLoading?: boolean;
+  surveySearchQuery?: string;
+  surveyIsSearching?: boolean;
   onSurveySelectItem?: (id: string | null) => void;
+  onSurveyUpload?: (file: File) => Promise<void>;
+  onSurveySearchQueryChange?: (query: string) => void;
+  onSurveySearch?: (query: string) => Promise<void>;
   onSurveyAnnotationsChange?: (annotations: SurveyAnnotation[]) => void;
   onSurveyResizingChange?: (isResizing: boolean) => void;
 }
@@ -59,7 +64,12 @@ export function CenterPanel({
   surveyItems = [],
   surveySelectedItemId = null,
   surveyLoading = false,
+  surveySearchQuery = "",
+  surveyIsSearching = false,
   onSurveySelectItem,
+  onSurveyUpload,
+  onSurveySearchQueryChange,
+  onSurveySearch,
   onSurveyAnnotationsChange,
   onSurveyResizingChange,
 }: CenterPanelProps) {
@@ -136,7 +146,12 @@ export function CenterPanel({
             items={surveyItems}
             selectedItemId={surveySelectedItemId}
             loading={surveyLoading}
+            searchQuery={surveySearchQuery}
+            isSearching={surveyIsSearching}
             onSelectItem={onSurveySelectItem}
+            onUpload={onSurveyUpload}
+            onSearchQueryChange={onSurveySearchQueryChange}
+            onSearch={onSurveySearch}
             onAnnotationsChange={onSurveyAnnotationsChange}
             onResizingChange={onSurveyResizingChange}
           />
