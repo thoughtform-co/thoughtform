@@ -2,13 +2,13 @@
 
 import { useState, useCallback, memo, useEffect, useRef } from "react";
 import type { SurveyItem, SurveyItemSource, SurveyAnnotation } from "./types";
-import { CATEGORIES, getComponentsByCategory } from "../catalog";
 import { NestedSelect } from "./NestedSelect";
 import { SurveyUploadModal } from "./SurveyUploadModal";
+import { formatBriefingText } from "./utils/formatBriefingText";
 import type { PipelineStatus } from "../_hooks/useSurvey";
 
 // ═══════════════════════════════════════════════════════════════
-// SURVEY INSPECTOR PANEL - Edit metadata & AI chat
+// SURVEY INSPECTOR PANEL - Edit metadata & AI analysis
 // ═══════════════════════════════════════════════════════════════
 
 export interface SurveyInspectorPanelProps {
@@ -31,53 +31,6 @@ export interface SurveyInspectorPanelProps {
 }
 
 type InspectorTab = "fields" | "chat";
-
-// Convert markdown to concise plain text - extract only essential parts
-function formatBriefingText(markdown: string | null | undefined): string {
-  if (!markdown) return "";
-
-  // Extract Reference Summary section (most important)
-  const summaryMatch = markdown.match(/##\s*Reference Summary\s*\n([\s\S]*?)(?=\n##|$)/i);
-  const summary = summaryMatch ? summaryMatch[1].trim() : "";
-
-  // Extract first 2-3 key visual elements
-  const keyElementsMatch = markdown.match(/##\s*Key Visual Elements\s*\n([\s\S]*?)(?=\n##|$)/i);
-  let keyElements = "";
-  if (keyElementsMatch) {
-    const elements = keyElementsMatch[1]
-      .split(/\n/)
-      .filter((line) => line.trim().startsWith("-") || line.trim().startsWith("*"))
-      .slice(0, 3) // Take first 3 bullets
-      .map((line) => line.replace(/^[\s]*[-*]\s+/, "").trim())
-      .filter((line) => line.length > 0);
-    keyElements = elements.length > 0 ? "\n\n" + elements.map((el) => `• ${el}`).join("\n") : "";
-  }
-
-  // Combine summary + key elements
-  let concise = summary;
-  if (keyElements) {
-    concise += keyElements;
-  }
-
-  // If no summary found, fall back to first paragraph of the briefing
-  if (!concise.trim()) {
-    // Remove all markdown formatting and get first meaningful paragraph
-    let text = markdown.replace(/^#{1,6}\s+/gm, "");
-    text = text.replace(/\*\*([^*]+)\*\*/g, "$1");
-    text = text.replace(/\*([^*]+)\*/g, "$1");
-    text = text.replace(/\[([^\]]+)\]\([^\)]+\)/g, "$1");
-    text = text.replace(/```[\s\S]*?```/g, "");
-    text = text.replace(/`([^`]+)`/g, "$1");
-
-    const firstParagraph = text.split("\n\n").find((p) => p.trim().length > 50);
-    concise = firstParagraph ? firstParagraph.trim() : text.substring(0, 200).trim();
-  }
-
-  // Clean up extra whitespace
-  concise = concise.replace(/\n{3,}/g, "\n\n").trim();
-
-  return concise;
-}
 
 function SurveyInspectorPanelInner({
   item,
@@ -751,16 +704,15 @@ function SurveyInspectorPanelInner({
                 <div className="spec-flow-item spec-flow-item--action">
                   {onGenerateBriefing && (
                     <button
-                      className="spec-btn spec-btn--briefing"
+                      className={`spec-btn spec-btn--briefing ${isBriefing ? "spec-btn--briefing-loading" : ""}`}
                       onClick={onGenerateBriefing}
                       disabled={isBriefing || !effectiveItem?.analysis}
                       title={!effectiveItem?.analysis ? "Run analysis first" : undefined}
                     >
-                      {isBriefing
-                        ? "Generating..."
-                        : effectiveItem?.briefing
-                          ? "Regenerate Briefing"
-                          : "Generate Briefing"}
+                      {isBriefing && <span className="spec-btn__spinner" />}
+                      <span className={isBriefing ? "spec-btn__text--loading" : ""}>
+                        GENERATE BRIEFING
+                      </span>
                     </button>
                   )}
                 </div>

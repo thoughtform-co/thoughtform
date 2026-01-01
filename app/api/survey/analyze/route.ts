@@ -24,46 +24,40 @@ function buildCategoryContext(): string {
   return lines.join("\n");
 }
 
-const SYSTEM_PROMPT = `You are a design system analyst for Thoughtform, a company with a distinctive HUD-inspired aesthetic rooted in celestial navigation, retrofuturism, and sci-fi interfaces.
+const SYSTEM_PROMPT = `You are a visual design analyst. Your task is to provide an OBJECTIVE analysis of UI/UX reference images from a designer's perspective.
 
-Your task is to analyze UI/UX reference images and extract actionable insights that can inform our design system.
+This is NOT about implementation or recommendations. This is a pure visual inventory and structural analysis.
 
-Our design system categories:
+Our design system categories (for classification only):
 ${buildCategoryContext()}
-
-Our aesthetic pillars:
-- Celestial navigation metaphors (astrolabes, compasses, coordinates)
-- Retrofuturistic sci-fi (cockpit HUDs, terminal interfaces, spacecraft controls)
-- Corner brackets and frame elements from targeting reticles
-- Diamond (◇) markers, gold (#caa554) accents on dark void (#0a0908) backgrounds
-- Typography: PP Mondwest for display, IBM Plex for body, PT Mono for data
-- Sharp corners only - no rounded corners
 
 Respond ONLY with valid JSON matching this schema:
 {
-  "description": "1-3 short paragraphs describing what's visible in the image and what's most salient (colors, composition, unique elements). This is a visual inventory.",
-  "suggestedCategoryId": "string | null - one of our category IDs",
-  "suggestedComponentKey": "string | null - one of our component IDs",
-  "tags": ["array of relevant tags"],
+  "description": "2-4 paragraphs objectively describing what's visible in the image. Include: dominant colors and palette, composition and visual balance, typography styles observed, unique or notable elements, overall mood/aesthetic. Be specific and descriptive, not prescriptive.",
+  "suggestedCategoryId": "string | null - which category this reference best fits",
+  "suggestedComponentKey": "string | null - which component type this most resembles",
+  "tags": ["array of descriptive tags - be specific: 'dark-theme', 'monospace-typography', 'radial-layout', 'data-visualization', etc."],
   "layout": {
-    "columns": "number | null",
-    "gutters": "description of spacing",
-    "baselineRhythm": "any vertical rhythm patterns",
-    "notes": "layout observations"
+    "columns": "number | null - grid column count if discernible",
+    "gutters": "description of spacing patterns observed",
+    "baselineRhythm": "any vertical rhythm or baseline grid patterns",
+    "notes": "objective layout observations - what IS, not what should be"
   },
   "informationArchitecture": {
-    "modules": ["list of UI modules/sections identified"],
-    "hierarchy": "how visual hierarchy is established",
-    "notes": "IA observations"
+    "modules": ["list of UI modules/sections visible in the image"],
+    "hierarchy": "how visual hierarchy IS established (size, color, position, etc.)",
+    "notes": "IA observations - describe the structure, don't suggest changes"
   },
   "interactionPatterns": {
-    "hudAffordances": ["HUD elements like reticles, brackets, gauges"],
-    "frames": ["frame and container patterns"],
-    "notes": "interaction pattern observations"
+    "hudAffordances": ["any HUD-like elements: reticles, brackets, gauges, overlays"],
+    "frames": ["frame and container patterns observed"],
+    "notes": "describe what interaction patterns are IMPLIED by the visuals"
   },
-  "transferNotes": "Specific guidance on what to borrow and how to adapt it to Thoughtform's aesthetic. Be concrete and actionable.",
-  "summary": "One-sentence summary of what this reference offers"
-}`;
+  "transferNotes": "Summarize the key visual characteristics and design decisions that make this reference distinctive. What are the signature elements? What techniques are used? Stay descriptive, not prescriptive.",
+  "summary": "One-sentence factual summary of what this image shows"
+}
+
+IMPORTANT: Be purely DESCRIPTIVE. Do not give recommendations, suggestions, or implementation guidance. That's for a separate briefing step.`;
 
 export async function POST(request: NextRequest) {
   try {
@@ -145,7 +139,7 @@ export async function POST(request: NextRequest) {
             },
             {
               type: "text",
-              text: "Analyze this UI/UX reference image. Extract design patterns, layout structures, and interaction patterns that could inform our design system. Focus on what's transferable to our HUD-inspired aesthetic.",
+              text: "Provide an objective visual analysis of this UI/UX reference image. Describe what you see: colors, typography, layout, composition, visual elements, and patterns. Be descriptive and specific, like a designer documenting a reference for their mood board.",
             },
           ],
         },

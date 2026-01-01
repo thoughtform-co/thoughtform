@@ -47,6 +47,76 @@ export interface UseSurveyReturn {
   setSearchSpace: (space: SearchSpace) => void;
 }
 
+// ═══════════════════════════════════════════════════════════════
+// FETCH HELPERS - Centralized request handling
+// ═══════════════════════════════════════════════════════════════
+
+interface FetchOptions {
+  method?: "GET" | "POST" | "PATCH" | "DELETE";
+  body?: unknown;
+  signal?: AbortSignal;
+}
+
+/**
+ * Creates a typed fetch helper with auth headers
+ */
+function createFetcher(accessToken: string | undefined) {
+  const baseHeaders: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+  if (accessToken) {
+    baseHeaders["Authorization"] = `Bearer ${accessToken}`;
+  }
+
+  return async <T>(endpoint: string, options: FetchOptions = {}): Promise<T> => {
+    const { method = "GET", body, signal } = options;
+
+    const res = await fetch(endpoint, {
+      method,
+      headers: baseHeaders,
+      body: body ? JSON.stringify(body) : undefined,
+      signal,
+    });
+
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({}));
+      throw new Error(errorData.error || `Request failed: ${res.status}`);
+    }
+
+    return res.json();
+  };
+}
+
+/**
+ * Creates a FormData fetch helper (for file uploads)
+ */
+function createFormFetcher(accessToken: string | undefined) {
+  return async <T>(endpoint: string, formData: FormData, signal?: AbortSignal): Promise<T> => {
+    const headers: Record<string, string> = {};
+    if (accessToken) {
+      headers["Authorization"] = `Bearer ${accessToken}`;
+    }
+
+    const res = await fetch(endpoint, {
+      method: "POST",
+      headers,
+      body: formData,
+      signal,
+    });
+
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({}));
+      throw new Error(errorData.error || `Upload failed: ${res.status}`);
+    }
+
+    return res.json();
+  };
+}
+
+// ═══════════════════════════════════════════════════════════════
+// MAIN HOOK
+// ═══════════════════════════════════════════════════════════════
+
 export function useSurvey({
   dispatch,
   surveyCategoryId,
@@ -54,6 +124,8 @@ export function useSurvey({
   surveySelectedItemId,
 }: UseSurveyOptions): UseSurveyReturn {
   const { session } = useAuth();
+
+  // Loading states
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isEmbedding, setIsEmbedding] = useState(false);
   const [isBriefing, setIsBriefing] = useState(false);
@@ -62,51 +134,68 @@ export function useSurvey({
   const [searchSpace, setSearchSpace] = useState<SearchSpace>("briefing");
   const [allItems, setAllItems] = useState<SurveyItem[]>([]);
 
-  // Keep a ref to the selected item ID for use in callbacks
+  // Refs for stable callback access
   const selectedItemIdRef = useRef(surveySelectedItemId);
   selectedItemIdRef.current = surveySelectedItemId;
 
-  // Helper to get auth headers
-  const getHeaders = useCallback(() => {
-    const headers: Record<string, string> = {
-      "Content-Type": "application/json",
-    };
-    if (session?.access_token) {
-      headers["Authorization"] = `Bearer ${session.access_token}`;
-    }
-    return headers;
-  }, [session?.access_token]);
+  // AbortController ref for cancelling stale requests
+  const loadAbortRef = useRef<AbortController | null>(null);
+  const searchAbortRef = useRef<AbortController | null>(null);
 
-  // Load items from server
+  // Create stable fetchers
+  const fetcher = useMemo(() => createFetcher(session?.access_token), [session?.access_token]);
+  const formFetcher = useMemo(
+    () => createFormFetcher(session?.access_token),
+    [session?.access_token]
+  );
+
+  // ═══════════════════════════════════════════════════════════════
+  // LOAD ITEMS - With stale request cancellation
+  // ═══════════════════════════════════════════════════════════════
+
   const loadItems = useCallback(async () => {
+    // Cancel any in-flight load request
+    loadAbortRef.current?.abort();
+    loadAbortRef.current = new AbortController();
+
     dispatch(actions.surveySetLoading(true));
+
     try {
       const params = new URLSearchParams();
       if (surveyCategoryId) params.set("category_id", surveyCategoryId);
       if (surveyComponentKey) params.set("component_key", surveyComponentKey);
 
-      const res = await fetch(`/api/survey/items?${params}`, {
-        headers: getHeaders(),
-      });
+      const data = await fetcher<{ items: SurveyItem[]; allItems?: SurveyItem[] }>(
+        `/api/survey/items?${params}`,
+        { signal: loadAbortRef.current.signal }
+      );
 
-      if (!res.ok) throw new Error("Failed to load items");
-
-      const data = await res.json();
       dispatch(actions.surveyLoadItems(data.items || []));
       setAllItems(data.allItems || data.items || []);
     } catch (error) {
+      // Ignore abort errors (expected when request is cancelled)
+      if (error instanceof Error && error.name === "AbortError") return;
+
       console.error("Failed to load survey items:", error);
       dispatch(actions.showToast("Failed to load references"));
       dispatch(actions.surveySetLoading(false));
     }
-  }, [dispatch, surveyCategoryId, surveyComponentKey, getHeaders]);
+  }, [dispatch, surveyCategoryId, surveyComponentKey, fetcher]);
 
   // Load items on mount and when filters change
   useEffect(() => {
     loadItems();
+
+    // Cleanup: abort on unmount or filter change
+    return () => {
+      loadAbortRef.current?.abort();
+    };
   }, [loadItems]);
 
-  // Calculate item counts per category/component
+  // ═══════════════════════════════════════════════════════════════
+  // ITEM COUNTS - Computed from all items
+  // ═══════════════════════════════════════════════════════════════
+
   const itemCounts = useMemo(() => {
     const counts: Record<string, number> = {};
     for (const item of allItems) {
@@ -120,8 +209,10 @@ export function useSurvey({
     return counts;
   }, [allItems]);
 
-  // Analyze item with Claude
-  // NOTE: Must be defined before uploadItem due to dependency
+  // ═══════════════════════════════════════════════════════════════
+  // ANALYZE ITEM
+  // ═══════════════════════════════════════════════════════════════
+
   const analyzeItem = useCallback(
     async (explicitItemId?: string) => {
       const itemId = explicitItemId || selectedItemIdRef.current;
@@ -129,33 +220,29 @@ export function useSurvey({
 
       setIsAnalyzing(true);
       try {
-        const res = await fetch("/api/survey/analyze", {
+        const data = await fetcher<{ item: SurveyItem }>("/api/survey/analyze", {
           method: "POST",
-          headers: getHeaders(),
-          body: JSON.stringify({ itemId }),
+          body: { itemId },
         });
 
-        if (!res.ok) throw new Error("Failed to analyze");
-
-        const data = await res.json();
         dispatch(actions.surveyUpdateItem(data.item));
         dispatch(actions.showToast("Analysis complete"));
-
-        // Update allItems
         setAllItems((prev) => prev.map((item) => (item.id === data.item.id ? data.item : item)));
       } catch (error) {
         console.error("Failed to analyze:", error);
         dispatch(actions.showToast("Failed to analyze"));
-        throw error; // Re-throw for pipeline handling
+        throw error;
       } finally {
         setIsAnalyzing(false);
       }
     },
-    [dispatch, getHeaders]
+    [dispatch, fetcher]
   );
 
-  // Generate briefing with Claude
-  // NOTE: Must be defined before uploadItem due to dependency
+  // ═══════════════════════════════════════════════════════════════
+  // GENERATE BRIEFING
+  // ═══════════════════════════════════════════════════════════════
+
   const generateBriefing = useCallback(
     async (explicitItemId?: string, force = false) => {
       const itemId = explicitItemId || selectedItemIdRef.current;
@@ -165,7 +252,10 @@ export function useSurvey({
       try {
         const res = await fetch("/api/survey/briefing", {
           method: "POST",
-          headers: getHeaders(),
+          headers: {
+            "Content-Type": "application/json",
+            ...(session?.access_token && { Authorization: `Bearer ${session.access_token}` }),
+          },
           body: JSON.stringify({ itemId, force }),
         });
 
@@ -175,7 +265,6 @@ export function useSurvey({
         if (res.status === 409 && data.requiresConfirmation) {
           const confirmed = confirm("A briefing already exists. Overwrite it?");
           if (confirmed) {
-            // Retry with force=true
             setIsBriefing(false);
             return generateBriefing(itemId, true);
           }
@@ -186,98 +275,70 @@ export function useSurvey({
 
         dispatch(actions.surveyUpdateItem(data.item));
         dispatch(actions.showToast("Briefing generated"));
-
-        // Update allItems
         setAllItems((prev) => prev.map((item) => (item.id === data.item.id ? data.item : item)));
       } catch (error) {
         console.error("Failed to generate briefing:", error);
         dispatch(actions.showToast("Failed to generate briefing"));
-        throw error; // Re-throw for pipeline handling
+        throw error;
       } finally {
         setIsBriefing(false);
       }
     },
-    [dispatch, getHeaders]
+    [dispatch, session?.access_token]
   );
 
-  // Upload a new item with auto-pipeline (analyze → briefing)
+  // ═══════════════════════════════════════════════════════════════
+  // UPLOAD ITEM - With auto-analysis (briefing is manual)
+  // ═══════════════════════════════════════════════════════════════
+
   const uploadItem = useCallback(
     async (file: File, categoryId?: string | null, componentKey?: string | null) => {
       const formData = new FormData();
       formData.append("file", file);
-      // Use provided category/component, or fall back to current selection
+
       const finalCategoryId = categoryId !== undefined ? categoryId : surveyCategoryId;
       const finalComponentKey = componentKey !== undefined ? componentKey : surveyComponentKey;
+
       if (finalCategoryId) formData.append("category_id", finalCategoryId);
       if (finalComponentKey) formData.append("component_key", finalComponentKey);
 
-      const headers: Record<string, string> = {};
-      if (session?.access_token) {
-        headers["Authorization"] = `Bearer ${session.access_token}`;
-      }
-
-      const res = await fetch("/api/survey/items", {
-        method: "POST",
-        headers,
-        body: formData,
-      });
-
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || "Failed to upload");
-      }
-
-      const data = await res.json();
+      const data = await formFetcher<{ item: SurveyItem }>("/api/survey/items", formData);
       const newItemId = data.item.id;
 
       dispatch(actions.surveyAddItem(data.item));
       dispatch(actions.showToast("Reference uploaded"));
-
-      // Update all items for counts
       setAllItems((prev) => [data.item, ...prev]);
 
-      // Auto-run pipeline: analyze → briefing
+      // Auto-run analysis only (briefing is triggered manually)
       setPipelineStatus("analyzing");
       try {
         await analyzeItem(newItemId);
-        setPipelineStatus("briefing");
-        await generateBriefing(newItemId);
         setPipelineStatus("done");
-        dispatch(actions.showToast("Analysis and briefing complete"));
+        dispatch(actions.showToast("Analysis complete"));
       } catch (error) {
-        console.error("Pipeline error:", error);
+        console.error("Analysis error:", error);
         setPipelineStatus("error");
-        // Don't throw - the upload succeeded, just the pipeline failed
+        // Don't throw - upload succeeded, just analysis failed
       }
     },
-    [
-      dispatch,
-      session?.access_token,
-      surveyCategoryId,
-      surveyComponentKey,
-      analyzeItem,
-      generateBriefing,
-    ]
+    [dispatch, surveyCategoryId, surveyComponentKey, formFetcher, analyzeItem]
   );
 
-  // Update an item
+  // ═══════════════════════════════════════════════════════════════
+  // UPDATE ITEM
+  // ═══════════════════════════════════════════════════════════════
+
   const updateItem = useCallback(
     async (updates: Partial<SurveyItem>) => {
       setIsSaving(true);
       try {
-        const res = await fetch("/api/survey/items", {
+        const data = await fetcher<{ item: SurveyItem }>("/api/survey/items", {
           method: "PATCH",
-          headers: getHeaders(),
-          body: JSON.stringify(updates),
+          body: updates,
         });
 
-        if (!res.ok) throw new Error("Failed to update");
-
-        const data = await res.json();
         dispatch(actions.surveyUpdateItem(data.item));
         dispatch(actions.showToast("Saved"));
-
-        // Update all items for counts
         setAllItems((prev) => prev.map((item) => (item.id === data.item.id ? data.item : item)));
       } catch (error) {
         console.error("Failed to update item:", error);
@@ -286,27 +347,30 @@ export function useSurvey({
         setIsSaving(false);
       }
     },
-    [dispatch, getHeaders]
+    [dispatch, fetcher]
   );
 
-  // Delete the selected item
+  // ═══════════════════════════════════════════════════════════════
+  // DELETE ITEM
+  // ═══════════════════════════════════════════════════════════════
+
   const deleteItem = useCallback(async () => {
     const itemId = selectedItemIdRef.current;
     if (!itemId) return;
 
-    const res = await fetch(`/api/survey/items?id=${itemId}`, {
+    await fetcher<{ success: boolean }>(`/api/survey/items?id=${itemId}`, {
       method: "DELETE",
-      headers: getHeaders(),
     });
-
-    if (!res.ok) throw new Error("Failed to delete");
 
     dispatch(actions.surveyDeleteItem(itemId));
     dispatch(actions.showToast("Reference deleted"));
     setAllItems((prev) => prev.filter((item) => item.id !== itemId));
-  }, [dispatch, getHeaders]);
+  }, [dispatch, fetcher]);
 
-  // Embed item with Voyage (dual embeddings)
+  // ═══════════════════════════════════════════════════════════════
+  // EMBED ITEM
+  // ═══════════════════════════════════════════════════════════════
+
   const embedItem = useCallback(
     async (explicitItemId?: string) => {
       const itemId = explicitItemId || selectedItemIdRef.current;
@@ -314,43 +378,44 @@ export function useSurvey({
 
       setIsEmbedding(true);
       try {
-        const res = await fetch("/api/survey/embed", {
+        const data = await fetcher<{ item: SurveyItem }>("/api/survey/embed", {
           method: "POST",
-          headers: getHeaders(),
-          body: JSON.stringify({ itemId }),
+          body: { itemId },
         });
 
-        if (!res.ok) throw new Error("Failed to embed");
-
-        const data = await res.json();
         dispatch(actions.surveyUpdateItem(data.item));
         dispatch(actions.showToast("Embeddings complete"));
-
-        // Update allItems
         setAllItems((prev) => prev.map((item) => (item.id === data.item.id ? data.item : item)));
       } catch (error) {
         console.error("Failed to embed:", error);
         dispatch(actions.showToast("Failed to embed"));
-        throw error; // Re-throw for pipeline handling
+        throw error;
       } finally {
         setIsEmbedding(false);
       }
     },
-    [dispatch, getHeaders]
+    [dispatch, fetcher]
   );
 
-  // Semantic search using Voyage embeddings
+  // ═══════════════════════════════════════════════════════════════
+  // SEMANTIC SEARCH - With stale request cancellation
+  // ═══════════════════════════════════════════════════════════════
+
   const semanticSearch = useCallback(
     async (query: string | null, mode: "query" | "similar", space?: SearchSpace) => {
+      // Cancel any in-flight search request
+      searchAbortRef.current?.abort();
+      searchAbortRef.current = new AbortController();
+
       dispatch(actions.surveySetSearching(true));
       dispatch(actions.surveySetLoading(true));
 
-      // Use provided space or fall back to state
       const effectiveSpace = space || searchSpace;
 
       try {
-        // For "similar" mode, use the selected item's embedding_text or build a query from its fields
         let searchQuery = query;
+
+        // For "similar" mode, build query from selected item
         if (mode === "similar") {
           const itemId = selectedItemIdRef.current;
           if (!itemId) {
@@ -358,28 +423,22 @@ export function useSurvey({
             return;
           }
 
-          // Find the selected item to build a query from its content
           const selectedItem = allItems.find((item) => item.id === itemId);
           if (!selectedItem) {
             dispatch(actions.showToast("Selected item not found"));
             return;
           }
 
-          // Build query from item's content (use briefing if available for cleaner search)
+          // Build query from item content
           const parts: string[] = [];
           if (selectedItem.briefing) {
             parts.push(selectedItem.briefing);
           } else {
             if (selectedItem.title) parts.push(selectedItem.title);
             if (selectedItem.notes) parts.push(selectedItem.notes);
-            if (selectedItem.tags && selectedItem.tags.length > 0) {
-              parts.push(selectedItem.tags.join(", "));
-            }
-            if (selectedItem.analysis && typeof selectedItem.analysis === "object") {
-              const analysis = selectedItem.analysis as Record<string, unknown>;
-              if (analysis.transferNotes) {
-                parts.push(String(analysis.transferNotes));
-              }
+            if (selectedItem.tags?.length) parts.push(selectedItem.tags.join(", "));
+            if (selectedItem.analysis?.transferNotes) {
+              parts.push(selectedItem.analysis.transferNotes);
             }
           }
 
@@ -390,50 +449,56 @@ export function useSurvey({
           }
         }
 
-        if (!searchQuery || !searchQuery.trim()) {
+        if (!searchQuery?.trim()) {
           dispatch(actions.showToast("Search query is required"));
           return;
         }
 
-        const res = await fetch("/api/survey/search", {
-          method: "POST",
-          headers: getHeaders(),
-          body: JSON.stringify({
-            query: searchQuery,
-            categoryId: surveyCategoryId || undefined,
-            componentKey: surveyComponentKey || undefined,
-            limit: 20,
-            threshold: 0.3,
-            space: effectiveSpace,
-          }),
-        });
+        const data = await fetcher<{ items: (SurveyItem & { similarity?: number })[] }>(
+          "/api/survey/search",
+          {
+            method: "POST",
+            body: {
+              query: searchQuery,
+              categoryId: surveyCategoryId || undefined,
+              componentKey: surveyComponentKey || undefined,
+              limit: 20,
+              threshold: 0.3,
+              space: effectiveSpace,
+            },
+            signal: searchAbortRef.current.signal,
+          }
+        );
 
-        if (!res.ok) {
-          const errorData = await res.json().catch(() => ({}));
-          throw new Error(errorData.error || "Search failed");
-        }
-
-        const data = await res.json();
-        const items = (data.items || []).map((item: SurveyItem & { similarity?: number }) => ({
+        const items = (data.items || []).map((item) => ({
           ...item,
-          // Preserve similarity score if present
           similarity: item.similarity,
         }));
 
         dispatch(actions.surveyLoadItems(items));
         dispatch(actions.showToast(`Found ${items.length} similar items (${effectiveSpace})`));
       } catch (error) {
+        // Ignore abort errors
+        if (error instanceof Error && error.name === "AbortError") return;
+
         console.error("Semantic search failed:", error);
         dispatch(actions.showToast(error instanceof Error ? error.message : "Search failed"));
-        // On error, reload regular items
         await loadItems();
       } finally {
         dispatch(actions.surveySetSearching(false));
         dispatch(actions.surveySetLoading(false));
       }
     },
-    [dispatch, surveyCategoryId, surveyComponentKey, getHeaders, allItems, loadItems, searchSpace]
+    [dispatch, surveyCategoryId, surveyComponentKey, fetcher, allItems, loadItems, searchSpace]
   );
+
+  // Cleanup abort controllers on unmount
+  useEffect(() => {
+    return () => {
+      loadAbortRef.current?.abort();
+      searchAbortRef.current?.abort();
+    };
+  }, []);
 
   return {
     loadItems,

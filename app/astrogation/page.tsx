@@ -16,8 +16,8 @@ import {
   SurveyCatalogPanel,
   SurveyInspectorPanel,
   generateJSXCode,
-  type SurveyItem,
   type SurveyAnnotation,
+  type SurveyViewBundledProps,
   type WorkspaceTab,
 } from "./_components";
 
@@ -192,6 +192,21 @@ function AstrogationContent() {
   // Get selected survey item
   const selectedSurveyItem = surveyItems.find((item) => item.id === surveySelectedItemId) || null;
 
+  // Bundle Survey props for cleaner component API
+  const surveyProps: SurveyViewBundledProps = {
+    items: surveyItems,
+    selectedItemId: surveySelectedItemId,
+    loading: surveyLoading,
+    searchQuery: surveySearchQuery,
+    isSearching: surveyIsSearching,
+    onSelectItem: handleSurveySelectItem,
+    onUpload: uploadItem,
+    onSearchQueryChange: handleSurveySearchQueryChange,
+    onSearch: handleSurveySearch,
+    onAnnotationsChange: handleSurveyAnnotationsChange,
+    onResizingChange: setIsAnnotationResizing,
+  };
+
   return (
     <div className={`astrogation ${isFocused ? "has-focus" : ""}`}>
       {/* HUD Frame Elements */}
@@ -273,18 +288,7 @@ function AstrogationContent() {
           canSave={canSave}
           isFocused={isFocused}
           onFocusChange={handleFocusChange}
-          // Survey props
-          surveyItems={surveyItems}
-          surveySelectedItemId={surveySelectedItemId}
-          surveyLoading={surveyLoading}
-          surveySearchQuery={surveySearchQuery}
-          surveyIsSearching={surveyIsSearching}
-          onSurveySelectItem={handleSurveySelectItem}
-          onSurveyUpload={uploadItem}
-          onSurveySearchQueryChange={handleSurveySearchQueryChange}
-          onSurveySearch={handleSurveySearch}
-          onSurveyAnnotationsChange={handleSurveyAnnotationsChange}
-          onSurveyResizingChange={setIsAnnotationResizing}
+          survey={surveyProps}
         />
 
         {/* Right Panel - switches based on active tab */}

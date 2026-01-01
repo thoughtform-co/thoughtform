@@ -104,6 +104,24 @@ export interface SurveyItem {
   image_url?: string; // Signed URL for display
 }
 
+// ═══════════════════════════════════════════════════════════════
+// SURVEY PROPS BUNDLE - Reduces prop plumbing through components
+// ═══════════════════════════════════════════════════════════════
+
+export interface SurveyViewBundledProps {
+  items: SurveyItem[];
+  selectedItemId: string | null;
+  loading: boolean;
+  searchQuery: string;
+  isSearching: boolean;
+  onSelectItem: (id: string | null) => void;
+  onUpload: (file: File) => Promise<void>;
+  onSearchQueryChange: (query: string) => void;
+  onSearch: (query: string) => Promise<void>;
+  onAnnotationsChange: (annotations: SurveyAnnotation[]) => void;
+  onResizingChange: (isResizing: boolean) => void;
+}
+
 // Primary brand colors for dials - only core colors, no secondary
 export const BRAND_COLORS = [
   { name: "Gold", value: "#caa554", variable: "--gold" },

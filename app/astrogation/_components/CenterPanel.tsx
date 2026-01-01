@@ -1,13 +1,7 @@
 "use client";
 
 import { getComponentById } from "../catalog";
-import type {
-  UIComponentPreset,
-  StyleConfig,
-  WorkspaceTab,
-  SurveyItem,
-  SurveyAnnotation,
-} from "./types";
+import type { UIComponentPreset, StyleConfig, WorkspaceTab, SurveyViewBundledProps } from "./types";
 import { VaultView } from "./VaultView";
 import { FoundryView } from "./FoundryView";
 import { SurveyView } from "./SurveyView";
@@ -31,18 +25,8 @@ export interface CenterPanelProps {
   canSave: boolean;
   isFocused: boolean;
   onFocusChange: (focused: boolean) => void;
-  // Survey props
-  surveyItems?: SurveyItem[];
-  surveySelectedItemId?: string | null;
-  surveyLoading?: boolean;
-  surveySearchQuery?: string;
-  surveyIsSearching?: boolean;
-  onSurveySelectItem?: (id: string | null) => void;
-  onSurveyUpload?: (file: File) => Promise<void>;
-  onSurveySearchQueryChange?: (query: string) => void;
-  onSurveySearch?: (query: string) => Promise<void>;
-  onSurveyAnnotationsChange?: (annotations: SurveyAnnotation[]) => void;
-  onSurveyResizingChange?: (isResizing: boolean) => void;
+  // Survey props bundled for cleaner API
+  survey?: SurveyViewBundledProps;
 }
 
 export function CenterPanel({
@@ -60,18 +44,7 @@ export function CenterPanel({
   canSave,
   isFocused,
   onFocusChange,
-  // Survey props
-  surveyItems = [],
-  surveySelectedItemId = null,
-  surveyLoading = false,
-  surveySearchQuery = "",
-  surveyIsSearching = false,
-  onSurveySelectItem,
-  onSurveyUpload,
-  onSurveySearchQueryChange,
-  onSurveySearch,
-  onSurveyAnnotationsChange,
-  onSurveyResizingChange,
+  survey,
 }: CenterPanelProps) {
   const def = selectedComponentId ? (getComponentById(selectedComponentId) ?? null) : null;
 
@@ -141,19 +114,19 @@ export function CenterPanel({
             onFocusChange={onFocusChange}
           />
         )}
-        {activeTab === "survey" && (
+        {activeTab === "survey" && survey && (
           <SurveyView
-            items={surveyItems}
-            selectedItemId={surveySelectedItemId}
-            loading={surveyLoading}
-            searchQuery={surveySearchQuery}
-            isSearching={surveyIsSearching}
-            onSelectItem={onSurveySelectItem}
-            onUpload={onSurveyUpload}
-            onSearchQueryChange={onSurveySearchQueryChange}
-            onSearch={onSurveySearch}
-            onAnnotationsChange={onSurveyAnnotationsChange}
-            onResizingChange={onSurveyResizingChange}
+            items={survey.items}
+            selectedItemId={survey.selectedItemId}
+            loading={survey.loading}
+            searchQuery={survey.searchQuery}
+            isSearching={survey.isSearching}
+            onSelectItem={survey.onSelectItem}
+            onUpload={survey.onUpload}
+            onSearchQueryChange={survey.onSearchQueryChange}
+            onSearch={survey.onSearch}
+            onAnnotationsChange={survey.onAnnotationsChange}
+            onResizingChange={survey.onResizingChange}
           />
         )}
       </div>

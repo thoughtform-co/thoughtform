@@ -110,13 +110,9 @@ export function SurveyUploadModal({
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
-      onClick={(e) => {
-        if (e.target === e.currentTarget) {
-          onClose();
-        }
-      }}
     >
-      <div className="survey-upload-modal__content">
+      <div className="survey-upload-modal__backdrop" onClick={onClose} />
+      <div className="survey-upload-modal__content" onClick={(e) => e.stopPropagation()}>
         <div className="survey-upload-modal__header">
           <h2 className="survey-upload-modal__title">Upload Reference</h2>
           <button className="survey-upload-modal__close" onClick={onClose} title="Close">

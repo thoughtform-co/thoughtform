@@ -2,10 +2,10 @@
 
 import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import type { SurveyItem, SurveyAnnotation } from "./types";
+import { AnnotationBox } from "./AnnotationBox";
 
 // ═══════════════════════════════════════════════════════════════
-// SURVEY VIEW - Upload, Browse & Preview Design References
-// Redesigned: Large preview canvas + thumbnail strip
+// SURVEY VIEW - Pinterest-style grid with detail overlay
 // ═══════════════════════════════════════════════════════════════
 
 export interface SurveyViewProps {
@@ -31,232 +31,97 @@ interface DrawingState {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// ANNOTATION BOX - Resizable annotation with close button
+// MASONRY GRID ITEM
 // ═══════════════════════════════════════════════════════════════
 
-interface AnnotationBoxProps {
-  annotation: SurveyAnnotation;
-  onDelete: () => void;
-  onResize: (x: number, y: number, width: number, height: number) => void;
+interface GridItemProps {
+  item: SurveyItem;
+  onClick: () => void;
 }
 
-interface AnnotationBoxProps {
-  annotation: SurveyAnnotation;
-  onDelete: () => void;
-  onResize: (x: number, y: number, width: number, height: number) => void;
-  onResizingChange?: (isResizing: boolean) => void;
-}
-
-function AnnotationBox({ annotation, onDelete, onResize, onResizingChange }: AnnotationBoxProps) {
-  const [isResizing, setIsResizing] = useState(false);
-  const [resizeHandle, setResizeHandle] = useState<string | null>(null);
-  const [startPos, setStartPos] = useState({ x: 0, y: 0 });
-  const [startBounds, setStartBounds] = useState({ x: 0, y: 0, width: 0, height: 0 });
-  const [isExpanded, setIsExpanded] = useState(false);
-  const boxRef = useRef<HTMLDivElement>(null);
-
-  // Notify parent of resizing state changes
-  useEffect(() => {
-    onResizingChange?.(isResizing);
-  }, [isResizing, onResizingChange]);
-
-  const handleResizeStart = useCallback(
-    (e: React.MouseEvent, handle: string) => {
-      e.stopPropagation();
-      setIsResizing(true);
-      setResizeHandle(handle);
-      setStartPos({ x: e.clientX, y: e.clientY });
-      setStartBounds({
-        x: annotation.x,
-        y: annotation.y,
-        width: annotation.width,
-        height: annotation.height,
-      });
-    },
-    [annotation]
-  );
-
-  useEffect(() => {
-    if (!isResizing || !resizeHandle) return;
-
-    const handleMouseMove = (e: MouseEvent) => {
-      const parent = boxRef.current?.parentElement;
-      if (!parent) return;
-
-      const deltaX = ((e.clientX - startPos.x) / parent.clientWidth) * 100;
-      const deltaY = ((e.clientY - startPos.y) / parent.clientHeight) * 100;
-
-      let newX = startBounds.x;
-      let newY = startBounds.y;
-      let newWidth = startBounds.width;
-      let newHeight = startBounds.height;
-
-      // Handle different resize handles
-      if (resizeHandle.includes("n")) {
-        newY = Math.max(
-          0,
-          Math.min(startBounds.y + startBounds.height - 5, startBounds.y + deltaY)
-        );
-        newHeight = startBounds.height - deltaY;
-      }
-      if (resizeHandle.includes("s")) {
-        newHeight = Math.max(5, startBounds.height + deltaY);
-      }
-      if (resizeHandle.includes("w")) {
-        newX = Math.max(0, Math.min(startBounds.x + startBounds.width - 5, startBounds.x + deltaX));
-        newWidth = startBounds.width - deltaX;
-      }
-      if (resizeHandle.includes("e")) {
-        newWidth = Math.max(5, startBounds.width + deltaX);
-      }
-
-      // Ensure bounds
-      if (newX + newWidth > 100) {
-        newWidth = 100 - newX;
-      }
-      if (newY + newHeight > 100) {
-        newHeight = 100 - newY;
-      }
-
-      onResize(newX, newY, newWidth, newHeight);
-    };
-
-    const handleMouseUp = () => {
-      setIsResizing(false);
-      setResizeHandle(null);
-    };
-
-    document.addEventListener("mousemove", handleMouseMove);
-    document.addEventListener("mouseup", handleMouseUp);
-
-    return () => {
-      document.removeEventListener("mousemove", handleMouseMove);
-      document.removeEventListener("mouseup", handleMouseUp);
-    };
-  }, [isResizing, resizeHandle, startPos, startBounds, onResize]);
-
+function GridItem({ item, onClick }: GridItemProps) {
   return (
-    <div
-      ref={boxRef}
-      className="survey-canvas__annotation"
-      style={{
-        left: `${annotation.x}%`,
-        top: `${annotation.y}%`,
-        width: `${annotation.width}%`,
-        height: `${annotation.height}%`,
-      }}
-      title={annotation.note || "Double-click to view note"}
-      onDoubleClick={(e) => {
-        e.stopPropagation();
-        if (annotation.note) {
-          setIsExpanded(!isExpanded);
-        }
-      }}
-    >
-      {/* Resize handles - kept for utility but very subtle via CSS */}
-      <div
-        className="survey-canvas__annotation-resize-handle survey-canvas__annotation-resize-handle--n"
-        onMouseDown={(e) => handleResizeStart(e, "n")}
-      />
-      <div
-        className="survey-canvas__annotation-resize-handle survey-canvas__annotation-resize-handle--s"
-        onMouseDown={(e) => handleResizeStart(e, "s")}
-      />
-      <div
-        className="survey-canvas__annotation-resize-handle survey-canvas__annotation-resize-handle--w"
-        onMouseDown={(e) => handleResizeStart(e, "w")}
-      />
-      <div
-        className="survey-canvas__annotation-resize-handle survey-canvas__annotation-resize-handle--e"
-        onMouseDown={(e) => handleResizeStart(e, "e")}
-      />
-      <div
-        className="survey-canvas__annotation-resize-handle survey-canvas__annotation-resize-handle--nw"
-        onMouseDown={(e) => handleResizeStart(e, "nw")}
-      />
-      <div
-        className="survey-canvas__annotation-resize-handle survey-canvas__annotation-resize-handle--ne"
-        onMouseDown={(e) => handleResizeStart(e, "ne")}
-      />
-      <div
-        className="survey-canvas__annotation-resize-handle survey-canvas__annotation-resize-handle--sw"
-        onMouseDown={(e) => handleResizeStart(e, "sw")}
-      />
-      <div
-        className="survey-canvas__annotation-resize-handle survey-canvas__annotation-resize-handle--se"
-        onMouseDown={(e) => handleResizeStart(e, "se")}
-      />
-
-      {annotation.note && isExpanded && (
-        <div
-          className="survey-canvas__annotation-note survey-canvas__annotation-note--expanded"
-          onClick={(e) => {
-            e.stopPropagation();
-            setIsExpanded(false);
-          }}
-        >
-          <span className="survey-canvas__annotation-note-text">{annotation.note}</span>
+    <button className="survey-grid__item" onClick={onClick}>
+      {item.image_url ? (
+        <img
+          src={item.image_url}
+          alt={item.title || "Reference"}
+          className="survey-grid__item-image"
+          loading="lazy"
+        />
+      ) : (
+        <div className="survey-grid__item-placeholder">
+          <span>◇</span>
         </div>
       )}
-    </div>
+      {/* Hover overlay with title */}
+      <div className="survey-grid__item-overlay">
+        <span className="survey-grid__item-title">{item.title || "Untitled"}</span>
+        {item.tags && item.tags.length > 0 && (
+          <div className="survey-grid__item-tags">
+            {item.tags.slice(0, 3).map((tag) => (
+              <span key={tag} className="survey-grid__item-tag">
+                {tag}
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
+      {/* Annotation indicator */}
+      {item.annotations && item.annotations.length > 0 && (
+        <div className="survey-grid__item-badge" title={`${item.annotations.length} annotations`}>
+          {item.annotations.length}
+        </div>
+      )}
+    </button>
   );
 }
 
-export function SurveyView({
-  items,
-  selectedItemId,
-  loading,
-  onSelectItem,
+// ═══════════════════════════════════════════════════════════════
+// DETAIL VIEW (Canvas + Annotations)
+// ═══════════════════════════════════════════════════════════════
+
+interface DetailViewProps {
+  item: SurveyItem;
+  annotations: SurveyAnnotation[];
+  onAnnotationsChange?: (annotations: SurveyAnnotation[]) => void;
+  onResizingChange?: (isResizing: boolean) => void;
+  onClose: () => void;
+}
+
+function DetailView({
+  item,
+  annotations,
   onAnnotationsChange,
   onResizingChange,
-}: SurveyViewProps) {
+  onClose,
+}: DetailViewProps) {
   const [drawing, setDrawing] = useState<DrawingState | null>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
-  const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
-  // Local annotations state for instant updates during resize
-  const [localAnnotations, setLocalAnnotations] = useState<SurveyAnnotation[] | null>(null);
-  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [localAnnotations, setLocalAnnotations] = useState<SurveyAnnotation[]>(annotations);
+  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [isAnyAnnotationResizing, setIsAnyAnnotationResizing] = useState(false);
 
-  const selectedItem = items.find((item) => item.id === selectedItemId);
-
-  // Sync local annotations when selected item changes
+  // Sync local annotations when prop changes
   useEffect(() => {
-    if (selectedItem?.annotations) {
-      setLocalAnnotations(selectedItem.annotations);
-    } else {
-      setLocalAnnotations([]);
-    }
-  }, [selectedItem?.id, selectedItem?.annotations]);
+    setLocalAnnotations(annotations);
+  }, [annotations]);
 
-  // Get effective annotations (local if available, otherwise from item)
-  const effectiveAnnotations = useMemo(
-    () => (localAnnotations !== null ? localAnnotations : selectedItem?.annotations || []),
-    [localAnnotations, selectedItem?.annotations]
-  );
-
-  // Track canvas size for annotation calculations
+  // Notify parent of resizing state
   useEffect(() => {
-    if (!canvasRef.current) return;
-    const observer = new ResizeObserver((entries) => {
-      const entry = entries[0];
-      if (entry) {
-        setCanvasSize({
-          width: entry.contentRect.width,
-          height: entry.contentRect.height,
-        });
+    onResizingChange?.(isAnyAnnotationResizing);
+  }, [isAnyAnnotationResizing, onResizingChange]);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
       }
-    });
-    observer.observe(canvasRef.current);
-    return () => observer.disconnect();
+    };
   }, []);
 
-  // File selection removed - handled by upload modal
-
-  // Remove drag/drop and paste handlers - upload is now via modal
-
-  // Annotation drawing handlers
   const pixelToPercent = useCallback((pixelX: number, pixelY: number) => {
     const img = imageRef.current;
     if (!img) return { x: 0, y: 0 };
@@ -266,36 +131,32 @@ export function SurveyView({
     };
   }, []);
 
-  const handleCanvasMouseDown = useCallback(
-    (e: React.MouseEvent) => {
-      if (!selectedItem || !canvasRef.current || !imageRef.current) return;
+  const handleCanvasMouseDown = useCallback((e: React.MouseEvent) => {
+    if (!canvasRef.current || !imageRef.current) return;
 
-      const rect = imageRef.current.getBoundingClientRect();
-      const canvasRect = canvasRef.current.getBoundingClientRect();
+    const rect = imageRef.current.getBoundingClientRect();
 
-      // Check if click is within the image bounds
-      if (
-        e.clientX < rect.left ||
-        e.clientX > rect.right ||
-        e.clientY < rect.top ||
-        e.clientY > rect.bottom
-      ) {
-        return;
-      }
+    // Check if click is within the image bounds
+    if (
+      e.clientX < rect.left ||
+      e.clientX > rect.right ||
+      e.clientY < rect.top ||
+      e.clientY > rect.bottom
+    ) {
+      return;
+    }
 
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
 
-      setDrawing({
-        isDrawing: true,
-        startX: x,
-        startY: y,
-        currentX: x,
-        currentY: y,
-      });
-    },
-    [selectedItem]
-  );
+    setDrawing({
+      isDrawing: true,
+      startX: x,
+      startY: y,
+      currentX: x,
+      currentY: y,
+    });
+  }, []);
 
   const handleCanvasMouseMove = useCallback(
     (e: React.MouseEvent) => {
@@ -311,7 +172,7 @@ export function SurveyView({
   );
 
   const handleCanvasMouseUp = useCallback(() => {
-    if (!drawing?.isDrawing || !selectedItem || !onAnnotationsChange) {
+    if (!drawing?.isDrawing || !onAnnotationsChange) {
       setDrawing(null);
       return;
     }
@@ -337,45 +198,28 @@ export function SurveyView({
         created_at: new Date().toISOString(),
       };
 
-      const updatedAnnotations = [...effectiveAnnotations, newAnnotation];
+      const updatedAnnotations = [...localAnnotations, newAnnotation];
       setLocalAnnotations(updatedAnnotations);
-      // Save immediately for new annotations
       onAnnotationsChange(updatedAnnotations);
     }
 
     setDrawing(null);
-  }, [drawing, selectedItem, onAnnotationsChange, pixelToPercent, effectiveAnnotations]);
+  }, [drawing, onAnnotationsChange, pixelToPercent, localAnnotations]);
 
-  // Debounced save function
   const debouncedSave = useCallback(
-    (annotations: SurveyAnnotation[]) => {
+    (updatedAnnotations: SurveyAnnotation[]) => {
       if (saveTimeoutRef.current) {
         clearTimeout(saveTimeoutRef.current);
       }
       saveTimeoutRef.current = setTimeout(() => {
-        onAnnotationsChange?.(annotations);
-      }, 300); // 300ms debounce
+        onAnnotationsChange?.(updatedAnnotations);
+      }, 300);
     },
     [onAnnotationsChange]
   );
 
-  // Cleanup timeout on unmount
-  useEffect(() => {
-    return () => {
-      if (saveTimeoutRef.current) {
-        clearTimeout(saveTimeoutRef.current);
-      }
-    };
-  }, []);
-
-  // Notify parent of resizing state
-  useEffect(() => {
-    onResizingChange?.(isAnyAnnotationResizing);
-  }, [isAnyAnnotationResizing, onResizingChange]);
-
-  // Get drawing rectangle for preview
   const getDrawingRect = () => {
-    if (!drawing || !imageRef.current) return null;
+    if (!drawing) return null;
     const { startX, startY, currentX, currentY } = drawing;
     return {
       left: Math.min(startX, currentX),
@@ -387,47 +231,72 @@ export function SurveyView({
 
   const drawingRect = getDrawingRect();
 
+  // Handle Escape key to close
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        onClose();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onClose]);
+
+  // Calculate aspect ratio for responsive sizing
+  const aspectRatio = useMemo(() => {
+    if (item.image_width && item.image_height) {
+      return item.image_width / item.image_height;
+    }
+    return 16 / 9; // Default aspect ratio
+  }, [item.image_width, item.image_height]);
+
   return (
-    <div className="survey-view">
-      {/* Large Preview Canvas */}
-      <div
-        ref={canvasRef}
-        className="survey-canvas"
-        onMouseDown={handleCanvasMouseDown}
-        onMouseMove={handleCanvasMouseMove}
-        onMouseUp={handleCanvasMouseUp}
-        onMouseLeave={handleCanvasMouseUp}
-      >
-        {selectedItem?.image_url ? (
-          <div className="survey-canvas__image-container">
+    <div className="survey-detail-focused">
+      {/* Label on top */}
+      <span className="survey-detail-focused__label">
+        {(item.title || "Untitled").toUpperCase()}
+      </span>
+
+      {/* Content frame */}
+      <div className="survey-detail-focused__content">
+        {/* Canvas */}
+        <div
+          ref={canvasRef}
+          className="survey-detail-focused__canvas"
+          onMouseDown={handleCanvasMouseDown}
+          onMouseMove={handleCanvasMouseMove}
+          onMouseUp={handleCanvasMouseUp}
+          onMouseLeave={handleCanvasMouseUp}
+        >
+          <div
+            className="survey-detail-focused__image-container"
+            style={{
+              aspectRatio: aspectRatio.toString(),
+            }}
+          >
             <img
               ref={imageRef}
-              src={selectedItem.image_url}
-              alt={selectedItem.title || "Reference"}
-              className="survey-canvas__image"
+              src={item.image_url}
+              alt={item.title || "Reference"}
+              className="survey-detail-focused__image"
               draggable={false}
             />
 
-            {/* Existing annotations */}
-            {effectiveAnnotations.map((annotation) => (
+            {/* Annotations */}
+            {localAnnotations.map((annotation) => (
               <AnnotationBox
                 key={annotation.id}
                 annotation={annotation}
                 onDelete={() => {
-                  const updatedAnnotations = effectiveAnnotations.filter(
-                    (a) => a.id !== annotation.id
-                  );
+                  const updatedAnnotations = localAnnotations.filter((a) => a.id !== annotation.id);
                   setLocalAnnotations(updatedAnnotations);
-                  // Save immediately for delete
                   onAnnotationsChange?.(updatedAnnotations);
                 }}
                 onResize={(x, y, width, height) => {
-                  // Update local state instantly for fluid resizing
-                  const updatedAnnotations = effectiveAnnotations.map((a) =>
+                  const updatedAnnotations = localAnnotations.map((a) =>
                     a.id === annotation.id ? { ...a, x, y, width, height } : a
                   );
                   setLocalAnnotations(updatedAnnotations);
-                  // Debounce the save to database
                   debouncedSave(updatedAnnotations);
                 }}
                 onResizingChange={setIsAnyAnnotationResizing}
@@ -447,57 +316,153 @@ export function SurveyView({
               />
             )}
           </div>
-        ) : (
-          <div className="survey-canvas__empty">
-            {items.length === 0 ? (
-              <>
-                <span className="survey-canvas__empty-icon">◇</span>
-                <span className="survey-canvas__empty-text">No references yet</span>
-                <span className="survey-canvas__empty-hint">
-                  Click &ldquo;Upload&rdquo; in the Inspector panel to add your first reference
-                </span>
-              </>
-            ) : (
-              <>
-                <span className="survey-canvas__empty-icon">◇</span>
-                <span className="survey-canvas__empty-text">Select a reference</span>
-              </>
-            )}
-          </div>
-        )}
 
-        {/* Annotation hint */}
-        {selectedItem && <div className="survey-canvas__hint">Drag to annotate</div>}
-      </div>
-
-      {/* Thumbnail Strip - Recent Uploads */}
-      <div className="survey-thumbnails">
-        <div className="survey-thumbnails__list">
-          {loading ? (
-            <div className="survey-thumbnails__loading">
-              <span>◇</span> Loading...
-            </div>
-          ) : items.length === 0 ? (
-            <div className="survey-thumbnails__empty">
-              <span>No references yet</span>
-            </div>
-          ) : (
-            items.map((item) => (
-              <button
-                key={item.id}
-                className={`survey-thumbnail ${selectedItemId === item.id ? "survey-thumbnail--selected" : ""}`}
-                onClick={() => onSelectItem?.(item.id)}
-              >
-                {item.image_url ? (
-                  <img src={item.image_url} alt={item.title || "Reference"} loading="lazy" />
-                ) : (
-                  <span className="survey-thumbnail__placeholder">◇</span>
-                )}
-              </button>
-            ))
-          )}
+          {/* Annotation hint */}
+          <div className="survey-detail-focused__hint">Drag to annotate · Esc to close</div>
         </div>
       </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
+// MAIN SURVEY VIEW
+// ═══════════════════════════════════════════════════════════════
+
+export function SurveyView({
+  items,
+  selectedItemId,
+  loading,
+  onSelectItem,
+  onUpload,
+  onAnnotationsChange,
+  onResizingChange,
+}: SurveyViewProps) {
+  const selectedItem = items.find((item) => item.id === selectedItemId);
+
+  // Filter to show only inspected items (items with annotations)
+  const inspectedItems = useMemo(
+    () => items.filter((item) => item.annotations && item.annotations.length > 0),
+    [items]
+  );
+
+  // Handle item click in grid
+  const handleItemClick = useCallback(
+    (itemId: string) => {
+      onSelectItem?.(itemId);
+    },
+    [onSelectItem]
+  );
+
+  // Handle closing detail view
+  const handleCloseDetail = useCallback(() => {
+    onSelectItem?.(null);
+  }, [onSelectItem]);
+
+  // Handle paste to upload images
+  useEffect(() => {
+    if (!onUpload) return;
+
+    const handlePaste = async (e: ClipboardEvent) => {
+      const clipboardItems = e.clipboardData?.items;
+      if (!clipboardItems) return;
+
+      for (let i = 0; i < clipboardItems.length; i++) {
+        if (clipboardItems[i].type.startsWith("image/")) {
+          const file = clipboardItems[i].getAsFile();
+          if (file) {
+            // Validate file type
+            const validTypes = ["image/png", "image/jpeg", "image/webp", "image/gif"];
+            if (!validTypes.includes(file.type)) {
+              console.warn("Invalid image type:", file.type);
+              return;
+            }
+            // Upload the file
+            await onUpload(file);
+          }
+          break;
+        }
+      }
+    };
+
+    document.addEventListener("paste", handlePaste);
+    return () => document.removeEventListener("paste", handlePaste);
+  }, [onUpload]);
+
+  // Handle Escape key to close overlay
+  useEffect(() => {
+    if (!selectedItemId) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        handleCloseDetail();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [selectedItemId, handleCloseDetail]);
+
+  // Get effective annotations
+  const effectiveAnnotations = useMemo(
+    () => selectedItem?.annotations || [],
+    [selectedItem?.annotations]
+  );
+
+  return (
+    <div className="survey-view">
+      {/* ─── GRID VIEW (Always visible) ─── */}
+      <div className="survey-grid">
+        {loading ? (
+          <div className="survey-grid__loading">
+            <span className="survey-grid__loading-icon">◇</span>
+            <span>Loading references...</span>
+          </div>
+        ) : inspectedItems.length === 0 ? (
+          <div className="survey-grid__empty">
+            <span className="survey-grid__empty-icon">◇</span>
+            <span className="survey-grid__empty-text">No inspected items yet</span>
+            <span className="survey-grid__empty-hint">
+              Add annotations to items to see them in the survey overview
+            </span>
+          </div>
+        ) : (
+          <>
+            <div className="survey-grid__header">
+              <span className="survey-grid__header-title">Inspected Items</span>
+              <span className="survey-grid__header-count">
+                {inspectedItems.length} item{inspectedItems.length !== 1 ? "s" : ""}
+              </span>
+            </div>
+            <div className="survey-grid__masonry">
+              {inspectedItems.map((item) => (
+                <GridItem key={item.id} item={item} onClick={() => handleItemClick(item.id)} />
+              ))}
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* ─── DETAIL VIEW OVERLAY (Pop-up) ─── */}
+      {selectedItem && (
+        <div className="survey-detail-overlay">
+          <div className="survey-detail-overlay__backdrop" onClick={handleCloseDetail} />
+          <div
+            className="survey-detail-overlay__focused-overlay"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="survey-detail-overlay__focused-content">
+              <DetailView
+                item={selectedItem}
+                annotations={effectiveAnnotations}
+                onAnnotationsChange={onAnnotationsChange}
+                onResizingChange={onResizingChange}
+                onClose={handleCloseDetail}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
