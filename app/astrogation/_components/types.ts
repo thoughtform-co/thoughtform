@@ -26,7 +26,77 @@ export interface StyleConfig {
   props: Record<string, unknown>;
 }
 
-export type WorkspaceTab = "vault" | "foundry";
+export type WorkspaceTab = "vault" | "foundry" | "survey";
+
+// ═══════════════════════════════════════════════════════════════
+// SURVEY TYPES
+// ═══════════════════════════════════════════════════════════════
+
+export interface SurveyItemSource {
+  label: string;
+  url?: string;
+  note?: string;
+}
+
+export interface SurveyAnalysis {
+  suggestedCategoryId?: string;
+  suggestedComponentKey?: string;
+  tags?: string[];
+  layout?: {
+    columns?: number;
+    gutters?: string;
+    baselineRhythm?: string;
+    notes?: string;
+  };
+  informationArchitecture?: {
+    modules?: string[];
+    hierarchy?: string;
+    notes?: string;
+  };
+  interactionPatterns?: {
+    hudAffordances?: string[];
+    frames?: string[];
+    notes?: string;
+  };
+  transferNotes?: string;
+  summary?: string;
+  history?: Array<{
+    timestamp: string;
+    analysis: Omit<SurveyAnalysis, "history">;
+  }>;
+}
+
+export interface SurveyAnnotation {
+  id: string;
+  x: number; // Percentage of image width (0-100)
+  y: number; // Percentage of image height (0-100)
+  width: number; // Percentage of image width (0-100)
+  height: number; // Percentage of image height (0-100)
+  note: string;
+  created_at: string;
+}
+
+export interface SurveyItem {
+  id: string;
+  category_id: string | null;
+  component_key: string | null;
+  title: string | null;
+  notes: string | null;
+  sources: SurveyItemSource[];
+  tags: string[];
+  image_path: string;
+  image_mime: string | null;
+  image_width: number | null;
+  image_height: number | null;
+  analysis: SurveyAnalysis | null;
+  annotations: SurveyAnnotation[] | null;
+  embedding_model: string | null;
+  embedding_text: string | null;
+  created_at: string;
+  updated_at: string;
+  // Client-side additions
+  image_url?: string; // Signed URL for display
+}
 
 // Primary brand colors for dials - only core colors, no secondary
 export const BRAND_COLORS = [

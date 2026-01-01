@@ -1,12 +1,19 @@
 "use client";
 
 import { getComponentById } from "../catalog";
-import type { UIComponentPreset, StyleConfig, WorkspaceTab } from "./types";
+import type {
+  UIComponentPreset,
+  StyleConfig,
+  WorkspaceTab,
+  SurveyItem,
+  SurveyAnnotation,
+} from "./types";
 import { VaultView } from "./VaultView";
 import { FoundryView } from "./FoundryView";
+import { SurveyView } from "./SurveyView";
 
 // ═══════════════════════════════════════════════════════════════
-// CENTER PANEL - VAULT / FOUNDRY TABS
+// CENTER PANEL - VAULT / FOUNDRY / SURVEY TABS
 // ═══════════════════════════════════════════════════════════════
 
 export interface CenterPanelProps {
@@ -24,6 +31,13 @@ export interface CenterPanelProps {
   canSave: boolean;
   isFocused: boolean;
   onFocusChange: (focused: boolean) => void;
+  // Survey props
+  surveyItems?: SurveyItem[];
+  surveySelectedItemId?: string | null;
+  surveyLoading?: boolean;
+  onSurveySelectItem?: (id: string | null) => void;
+  onSurveyAnnotationsChange?: (annotations: SurveyAnnotation[]) => void;
+  onSurveyResizingChange?: (isResizing: boolean) => void;
 }
 
 export function CenterPanel({
@@ -41,6 +55,13 @@ export function CenterPanel({
   canSave,
   isFocused,
   onFocusChange,
+  // Survey props
+  surveyItems = [],
+  surveySelectedItemId = null,
+  surveyLoading = false,
+  onSurveySelectItem,
+  onSurveyAnnotationsChange,
+  onSurveyResizingChange,
 }: CenterPanelProps) {
   const def = selectedComponentId ? (getComponentById(selectedComponentId) ?? null) : null;
 
@@ -70,11 +91,22 @@ export function CenterPanel({
           <span className="workspace-tab__icon">⬡</span>
           <span className="workspace-tab__label">FOUNDRY</span>
         </div>
+        <div
+          className={`workspace-tab ${activeTab === "survey" ? "workspace-tab--active" : ""}`}
+          onClick={() => onTabChange("survey")}
+          role="tab"
+          aria-selected={activeTab === "survey"}
+          tabIndex={0}
+          onKeyDown={(e) => e.key === "Enter" && onTabChange("survey")}
+        >
+          <span className="workspace-tab__icon">⎔</span>
+          <span className="workspace-tab__label">SURVEY</span>
+        </div>
       </div>
 
       {/* Tab Content */}
       <div className="workspace-content">
-        {activeTab === "vault" ? (
+        {activeTab === "vault" && (
           <VaultView
             selectedComponentId={selectedComponentId}
             componentProps={componentProps}
@@ -84,7 +116,8 @@ export function CenterPanel({
             onDeletePreset={onDeletePreset}
             onFocusChange={onFocusChange}
           />
-        ) : (
+        )}
+        {activeTab === "foundry" && (
           <FoundryView
             selectedComponentId={selectedComponentId}
             componentProps={componentProps}
@@ -96,6 +129,16 @@ export function CenterPanel({
             canSave={canSave}
             isFocused={isFocused}
             onFocusChange={onFocusChange}
+          />
+        )}
+        {activeTab === "survey" && (
+          <SurveyView
+            items={surveyItems}
+            selectedItemId={surveySelectedItemId}
+            loading={surveyLoading}
+            onSelectItem={onSurveySelectItem}
+            onAnnotationsChange={onSurveyAnnotationsChange}
+            onResizingChange={onSurveyResizingChange}
           />
         )}
       </div>

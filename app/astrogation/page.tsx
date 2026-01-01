@@ -1,6 +1,6 @@
 "use client";
 
-import { useReducer, useEffect, useCallback } from "react";
+import { useReducer, useEffect, useCallback, useState } from "react";
 import Link from "next/link";
 import { AdminGate } from "@/components/admin/AdminGate";
 import { useAuth } from "@/components/auth/AuthProvider";
@@ -13,7 +13,12 @@ import {
   CenterPanel,
   DialsPanel,
   SpecPanel,
+  SurveyCatalogPanel,
+  SurveyInspectorPanel,
   generateJSXCode,
+  type SurveyItem,
+  type SurveyAnnotation,
+  type WorkspaceTab,
 } from "./_components";
 
 // Import state management
@@ -21,6 +26,7 @@ import { astrogationReducer, initialState, actions } from "./_state/astrogationR
 
 // Import hooks
 import { usePresets } from "./_hooks/usePresets";
+import { useSurvey } from "./_hooks/useSurvey";
 
 import "./astrogation.css";
 
@@ -42,6 +48,14 @@ function AstrogationContent() {
     presets,
     presetName,
     toast,
+    // Survey state
+    surveyCategoryId,
+    surveyComponentKey,
+    surveySelectedItemId,
+    surveyItems,
+    surveyLoading,
+    surveySearchQuery,
+    surveyIsSearching,
   } = state;
 
   // Presets management (CRUD + toast)
@@ -51,6 +65,26 @@ function AstrogationContent() {
     componentProps,
     style,
     presetName,
+  });
+
+  // Survey management
+  const {
+    loadItems,
+    uploadItem,
+    updateItem,
+    deleteItem,
+    analyzeItem,
+    embedItem,
+    semanticSearch,
+    itemCounts,
+    isAnalyzing,
+    isEmbedding,
+    isSaving,
+  } = useSurvey({
+    dispatch,
+    surveyCategoryId,
+    surveyComponentKey,
+    surveySelectedItemId,
   });
 
   // Auto-hide toast after 2 seconds
@@ -70,7 +104,7 @@ function AstrogationContent() {
     dispatch(actions.selectComponent(id));
   }, []);
 
-  const handleTabChange = useCallback((tab: "vault" | "foundry") => {
+  const handleTabChange = useCallback((tab: WorkspaceTab) => {
     dispatch(actions.setTab(tab));
   }, []);
 
@@ -93,6 +127,52 @@ function AstrogationContent() {
     navigator.clipboard.writeText(code);
     dispatch(actions.showToast("Code copied to clipboard"));
   }, [selectedComponentId, componentProps]);
+
+  // Survey handlers
+  const handleSurveyCategoryChange = useCallback((id: string | null) => {
+    dispatch(actions.surveySetCategory(id));
+  }, []);
+
+  const handleSurveyComponentChange = useCallback((key: string | null) => {
+    dispatch(actions.surveySetComponent(key));
+  }, []);
+
+  const handleSurveySelectItem = useCallback((id: string | null) => {
+    dispatch(actions.surveySelectItem(id));
+  }, []);
+
+  // Survey search handlers
+  const handleSurveySearchQueryChange = useCallback((query: string) => {
+    dispatch(actions.surveySetSearchQuery(query));
+  }, []);
+
+  const handleSurveySearch = useCallback(
+    async (query: string) => {
+      if (query.trim()) {
+        await semanticSearch(query.trim(), "query");
+      } else {
+        // Empty query = reload recent items
+        await loadItems();
+      }
+    },
+    [semanticSearch, loadItems]
+  );
+
+  // Handle annotation changes from canvas
+  const handleSurveyAnnotationsChange = useCallback(
+    async (annotations: SurveyAnnotation[]) => {
+      if (!surveySelectedItemId) return;
+      // Update locally and persist
+      await updateItem({ id: surveySelectedItemId, annotations });
+    },
+    [surveySelectedItemId, updateItem]
+  );
+
+  // Track annotation resizing state
+  const [isAnnotationResizing, setIsAnnotationResizing] = useState(false);
+
+  // Get selected survey item
+  const selectedSurveyItem = surveyItems.find((item) => item.id === surveySelectedItemId) || null;
 
   return (
     <div className={`astrogation ${isFocused ? "has-focus" : ""}`}>
@@ -137,12 +217,23 @@ function AstrogationContent() {
 
       {/* Content Area */}
       <div className="astrogation-content">
-        <CatalogPanel
-          selectedCategory={selectedCategory}
-          onSelectCategory={handleSelectCategory}
-          selectedComponentId={selectedComponentId}
-          onSelectComponent={handleSelectComponent}
-        />
+        {/* Left Panel - switches based on active tab */}
+        {activeTab === "survey" ? (
+          <SurveyCatalogPanel
+            selectedCategoryId={surveyCategoryId}
+            onSelectCategory={handleSurveyCategoryChange}
+            selectedComponentKey={surveyComponentKey}
+            onSelectComponent={handleSurveyComponentChange}
+            itemCounts={itemCounts}
+          />
+        ) : (
+          <CatalogPanel
+            selectedCategory={selectedCategory}
+            onSelectCategory={handleSelectCategory}
+            selectedComponentId={selectedComponentId}
+            onSelectComponent={handleSelectComponent}
+          />
+        )}
 
         <CenterPanel
           activeTab={activeTab}
@@ -159,9 +250,37 @@ function AstrogationContent() {
           canSave={canSave}
           isFocused={isFocused}
           onFocusChange={handleFocusChange}
+          // Survey props
+          surveyItems={surveyItems}
+          surveySelectedItemId={surveySelectedItemId}
+          surveyLoading={surveyLoading}
+          surveySearchQuery={surveySearchQuery}
+          surveyIsSearching={surveyIsSearching}
+          onSurveySelectItem={handleSurveySelectItem}
+          onSurveyUpload={uploadItem}
+          onSurveySearchQueryChange={handleSurveySearchQueryChange}
+          onSurveySearch={handleSurveySearch}
+          onSurveyAnnotationsChange={handleSurveyAnnotationsChange}
+          onSurveyResizingChange={setIsAnnotationResizing}
         />
 
-        {activeTab === "foundry" ? (
+        {/* Right Panel - switches based on active tab */}
+        {activeTab === "survey" ? (
+          <SurveyInspectorPanel
+            item={selectedSurveyItem}
+            onUpdate={updateItem}
+            onDelete={deleteItem}
+            onAnalyze={analyzeItem}
+            onEmbed={embedItem}
+            onUpload={uploadItem}
+            selectedCategoryId={surveyCategoryId}
+            selectedComponentKey={surveyComponentKey}
+            isAnalyzing={isAnalyzing}
+            isEmbedding={isEmbedding}
+            isSaving={isSaving}
+            isResizing={isAnnotationResizing}
+          />
+        ) : activeTab === "foundry" ? (
           <DialsPanel
             selectedComponentId={selectedComponentId}
             componentProps={componentProps}

@@ -36,6 +36,20 @@ export type { SpecPanelProps } from "./SpecPanel";
 export { DialsPanel } from "./DialsPanel";
 export type { DialsPanelProps } from "./DialsPanel";
 
+// Survey Panels
+export { SurveyView } from "./SurveyView";
+export type { SurveyViewProps } from "./SurveyView";
+
+export { SurveyCatalogPanel } from "./SurveyCatalogPanel";
+export type { SurveyCatalogPanelProps } from "./SurveyCatalogPanel";
+
+export { SurveyInspectorPanel } from "./SurveyInspectorPanel";
+export type { SurveyInspectorPanelProps } from "./SurveyInspectorPanel";
+export { Select } from "./Select";
+export type { SelectProps, SelectOption } from "./Select";
+export { SurveyUploadModal } from "./SurveyUploadModal";
+export type { SurveyUploadModalProps } from "./SurveyUploadModal";
+
 // Previews
 export { ComponentPreview } from "./previews/ComponentPreview";
 export type { ComponentPreviewProps } from "./previews/ComponentPreview";

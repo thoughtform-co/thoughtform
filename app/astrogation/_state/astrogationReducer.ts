@@ -1,4 +1,9 @@
-import type { UIComponentPreset, StyleConfig, WorkspaceTab } from "../_components/types";
+import type {
+  UIComponentPreset,
+  StyleConfig,
+  WorkspaceTab,
+  SurveyItem,
+} from "../_components/types";
 import { DEFAULT_STYLE } from "../_components/types";
 import { getComponentById } from "../catalog";
 
@@ -27,6 +32,15 @@ export interface AstrogationState {
 
   // Toast notification
   toast: string | null;
+
+  // Survey state
+  surveyCategoryId: string | null;
+  surveyComponentKey: string | null;
+  surveySelectedItemId: string | null;
+  surveyItems: SurveyItem[];
+  surveyLoading: boolean;
+  surveySearchQuery: string;
+  surveyIsSearching: boolean;
 }
 
 export const initialState: AstrogationState = {
@@ -39,6 +53,14 @@ export const initialState: AstrogationState = {
   presets: [],
   presetName: "",
   toast: null,
+  // Survey defaults
+  surveyCategoryId: null,
+  surveyComponentKey: null,
+  surveySelectedItemId: null,
+  surveyItems: [],
+  surveyLoading: false,
+  surveySearchQuery: "",
+  surveyIsSearching: false,
 };
 
 // ═══════════════════════════════════════════════════════════════
@@ -70,7 +92,19 @@ export type AstrogationAction =
 
   // Toast
   | { type: "SHOW_TOAST"; payload: string }
-  | { type: "HIDE_TOAST" };
+  | { type: "HIDE_TOAST" }
+
+  // Survey
+  | { type: "SURVEY_SET_CATEGORY"; payload: string | null }
+  | { type: "SURVEY_SET_COMPONENT"; payload: string | null }
+  | { type: "SURVEY_SELECT_ITEM"; payload: string | null }
+  | { type: "SURVEY_LOAD_ITEMS"; payload: SurveyItem[] }
+  | { type: "SURVEY_ADD_ITEM"; payload: SurveyItem }
+  | { type: "SURVEY_UPDATE_ITEM"; payload: SurveyItem }
+  | { type: "SURVEY_DELETE_ITEM"; payload: string }
+  | { type: "SURVEY_SET_LOADING"; payload: boolean }
+  | { type: "SURVEY_SET_SEARCH_QUERY"; payload: string }
+  | { type: "SURVEY_SET_SEARCHING"; payload: boolean };
 
 // ═══════════════════════════════════════════════════════════════
 // REDUCER
@@ -169,6 +203,55 @@ export function astrogationReducer(
     case "HIDE_TOAST":
       return { ...state, toast: null };
 
+    // Survey
+    case "SURVEY_SET_CATEGORY":
+      return {
+        ...state,
+        surveyCategoryId: action.payload,
+        surveyComponentKey: null, // Reset component when category changes
+      };
+
+    case "SURVEY_SET_COMPONENT":
+      return { ...state, surveyComponentKey: action.payload };
+
+    case "SURVEY_SELECT_ITEM":
+      return { ...state, surveySelectedItemId: action.payload };
+
+    case "SURVEY_LOAD_ITEMS":
+      return { ...state, surveyItems: action.payload, surveyLoading: false };
+
+    case "SURVEY_ADD_ITEM":
+      return {
+        ...state,
+        surveyItems: [action.payload, ...state.surveyItems],
+        surveySelectedItemId: action.payload.id,
+      };
+
+    case "SURVEY_UPDATE_ITEM":
+      return {
+        ...state,
+        surveyItems: state.surveyItems.map((item) =>
+          item.id === action.payload.id ? action.payload : item
+        ),
+      };
+
+    case "SURVEY_DELETE_ITEM":
+      return {
+        ...state,
+        surveyItems: state.surveyItems.filter((item) => item.id !== action.payload),
+        surveySelectedItemId:
+          state.surveySelectedItemId === action.payload ? null : state.surveySelectedItemId,
+      };
+
+    case "SURVEY_SET_LOADING":
+      return { ...state, surveyLoading: action.payload };
+
+    case "SURVEY_SET_SEARCH_QUERY":
+      return { ...state, surveySearchQuery: action.payload };
+
+    case "SURVEY_SET_SEARCHING":
+      return { ...state, surveyIsSearching: action.payload };
+
     default:
       return state;
   }
@@ -207,4 +290,46 @@ export const actions = {
   }),
   showToast: (message: string): AstrogationAction => ({ type: "SHOW_TOAST", payload: message }),
   hideToast: (): AstrogationAction => ({ type: "HIDE_TOAST" }),
+
+  // Survey actions
+  surveySetCategory: (id: string | null): AstrogationAction => ({
+    type: "SURVEY_SET_CATEGORY",
+    payload: id,
+  }),
+  surveySetComponent: (key: string | null): AstrogationAction => ({
+    type: "SURVEY_SET_COMPONENT",
+    payload: key,
+  }),
+  surveySelectItem: (id: string | null): AstrogationAction => ({
+    type: "SURVEY_SELECT_ITEM",
+    payload: id,
+  }),
+  surveyLoadItems: (items: SurveyItem[]): AstrogationAction => ({
+    type: "SURVEY_LOAD_ITEMS",
+    payload: items,
+  }),
+  surveyAddItem: (item: SurveyItem): AstrogationAction => ({
+    type: "SURVEY_ADD_ITEM",
+    payload: item,
+  }),
+  surveyUpdateItem: (item: SurveyItem): AstrogationAction => ({
+    type: "SURVEY_UPDATE_ITEM",
+    payload: item,
+  }),
+  surveyDeleteItem: (id: string): AstrogationAction => ({
+    type: "SURVEY_DELETE_ITEM",
+    payload: id,
+  }),
+  surveySetLoading: (loading: boolean): AstrogationAction => ({
+    type: "SURVEY_SET_LOADING",
+    payload: loading,
+  }),
+  surveySetSearchQuery: (query: string): AstrogationAction => ({
+    type: "SURVEY_SET_SEARCH_QUERY",
+    payload: query,
+  }),
+  surveySetSearching: (searching: boolean): AstrogationAction => ({
+    type: "SURVEY_SET_SEARCHING",
+    payload: searching,
+  }),
 };
