@@ -80,7 +80,35 @@ function createFetcher(accessToken: string | undefined) {
 
     if (!res.ok) {
       const errorData = await res.json().catch(() => ({}));
-      throw new Error(errorData.error || `Request failed: ${res.status}`);
+      const errorMessage = errorData.error || `Request failed: ${res.status}`;
+
+      // #region agent log (debug-session)
+      fetch("http://127.0.0.1:7245/ingest/016d7ddb-dff0-4507-889a-e79ef3328873", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sessionId: "debug-session",
+          runId: "pre-fix",
+          hypothesisId: "H1-auth",
+          location: "app/astrogation/_hooks/useSurvey.ts:createFetcher",
+          message: "API request failed",
+          data: {
+            endpoint,
+            method,
+            status: res.status,
+            hasAuthHeader: Boolean(baseHeaders.Authorization),
+          },
+          timestamp: Date.now(),
+        }),
+      }).catch(() => {});
+      // #endregion
+
+      // Provide more helpful error messages
+      if (res.status === 401) {
+        throw new Error("Authentication required. Please sign in to view your items.");
+      }
+
+      throw new Error(errorMessage);
     }
 
     return res.json();
@@ -154,6 +182,14 @@ export function useSurvey({
   // ═══════════════════════════════════════════════════════════════
 
   const loadItems = useCallback(async () => {
+    // Check if user is authenticated - API requires auth token
+    if (!session?.access_token) {
+      console.warn("No session token available - user may need to sign in");
+      dispatch(actions.showToast("Please sign in to view your items"));
+      dispatch(actions.surveySetLoading(false));
+      return;
+    }
+
     // Cancel any in-flight load request
     loadAbortRef.current?.abort();
     loadAbortRef.current = new AbortController();
@@ -177,10 +213,11 @@ export function useSurvey({
       if (error instanceof Error && error.name === "AbortError") return;
 
       console.error("Failed to load survey items:", error);
-      dispatch(actions.showToast("Failed to load references"));
+      const errorMessage = error instanceof Error ? error.message : "Failed to load references";
+      dispatch(actions.showToast(errorMessage));
       dispatch(actions.surveySetLoading(false));
     }
-  }, [dispatch, surveyCategoryId, surveyComponentKey, fetcher]);
+  }, [dispatch, surveyCategoryId, surveyComponentKey, fetcher, session?.access_token]);
 
   // Load items on mount and when filters change
   useEffect(() => {

@@ -37,8 +37,18 @@ export async function GET(request: NextRequest) {
     // When using service role key, we see all items unless we filter explicitly
     let query = supabase.from("survey_items").select("*").order("created_at", { ascending: false });
 
-    if (user && "id" in user && user.id) {
-      query = query.eq("user_id", user.id);
+    const userIdForQuery =
+      user &&
+      typeof user === "object" &&
+      user !== null &&
+      "id" in user &&
+      (user as { id?: unknown }).id
+        ? String((user as { id: unknown }).id)
+        : null;
+
+    // Include legacy rows created in dev (user_id IS NULL) so they remain visible when signed in.
+    if (userIdForQuery) {
+      query = query.or(`user_id.eq.${userIdForQuery},user_id.is.null`);
     }
 
     if (categoryId) {
@@ -69,9 +79,11 @@ export async function GET(request: NextRequest) {
     );
 
     // Also fetch all items for counts (without filters)
-    const { data: allData } = await supabase
-      .from("survey_items")
-      .select("id, category_id, component_key");
+    let allItemsQuery = supabase.from("survey_items").select("id, category_id, component_key");
+    if (userIdForQuery) {
+      allItemsQuery = allItemsQuery.or(`user_id.eq.${userIdForQuery},user_id.is.null`);
+    }
+    const { data: allData } = await allItemsQuery;
 
     return NextResponse.json({
       items: itemsWithUrls,

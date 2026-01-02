@@ -8,17 +8,17 @@ import { isAllowedUserEmail } from "./auth/allowed-user";
  * @param request - The incoming request with Authorization header
  */
 export async function getServerUser(request: Request) {
-  // In development, allow all (for easier testing)
-  if (process.env.NODE_ENV === "development") {
+  const authHeader = request.headers.get("Authorization");
+  const bearerToken = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null;
+
+  // In development, allow all (for easier testing), but if a real token is present,
+  // return the actual Supabase user so created rows get a stable user_id.
+  if (process.env.NODE_ENV === "development" && !bearerToken) {
     return { email: process.env.NEXT_PUBLIC_ALLOWED_EMAIL || "dev@example.com" };
   }
 
-  const authHeader = request.headers.get("Authorization");
-  if (!authHeader?.startsWith("Bearer ")) {
-    return null;
-  }
-
-  const token = authHeader.slice(7);
+  if (!bearerToken) return null;
+  const token = bearerToken;
   const supabase = createServerClient();
   if (!supabase) {
     return null;
