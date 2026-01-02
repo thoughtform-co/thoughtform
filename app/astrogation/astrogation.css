@@ -7780,10 +7780,10 @@
 .foundry__template-item {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  gap: 2px;
-  padding: 8px 12px;
-  background: rgba(10, 9, 8, 0.4);
+  align-items: center;
+  gap: 6px;
+  padding: 8px;
+  background: rgba(10, 9, 8, 0.6);
   border: 1px solid var(--dawn-08);
   cursor: pointer;
   transition: all 0.15s ease;
@@ -7805,12 +7805,51 @@
   color: var(--gold);
 }
 
+/* Thumbnail variant for preset previews */
+.foundry__template-item--thumbnail {
+  width: 88px;
+  height: auto;
+  padding: 6px;
+  align-items: center;
+}
+
+.foundry__template-thumbnail {
+  width: 72px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: rgba(10, 9, 8, 0.95);
+  border: 1px solid var(--dawn-15);
+  border-radius: 3px;
+  position: relative;
+}
+
+/* Scale down the component preview to fit thumbnail */
+.foundry__template-thumbnail > * {
+  transform: scale(0.22);
+  transform-origin: center center;
+  pointer-events: none;
+  position: absolute;
+  min-width: 280px;
+  min-height: 180px;
+}
+
 .foundry__template-item-name {
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 9px;
   letter-spacing: 0.02em;
   color: var(--dawn-70);
   transition: color 0.15s ease;
+  max-width: 72px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center;
+}
+
+.foundry__template-item:hover .foundry__template-item-name {
+  color: var(--gold);
 }
 
 .foundry__template-item-category {
@@ -7819,6 +7858,18 @@
   letter-spacing: 0.05em;
   color: var(--dawn-30);
   text-transform: uppercase;
+}
+
+/* Empty state when no presets */
+.foundry__template-empty {
+  display: flex;
+  align-items: center;
+  padding: 8px 16px;
+  color: var(--dawn-30);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  font-style: italic;
 }
 
 /* ─── STAGE FRAME (ChamferedFrame wrapper for preview) ─── */

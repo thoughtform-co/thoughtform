@@ -1,9 +1,8 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import type { ComponentDef } from "../catalog";
-import { COMPONENTS } from "../catalog";
-import type { StyleConfig, FoundryFrameConfig } from "./types";
+import type { StyleConfig, FoundryFrameConfig, UIComponentPreset } from "./types";
 import { ComponentPreview } from "./previews/ComponentPreview";
 import { TargetReticle, ChamferedFrame } from "@thoughtform/ui";
 
@@ -17,6 +16,8 @@ export interface FoundryViewProps {
   style: StyleConfig;
   foundryFrame: FoundryFrameConfig;
   def: ComponentDef | null;
+  presets: UIComponentPreset[];
+  onLoadPreset: (preset: UIComponentPreset) => void;
   onSavePreset: () => void;
   presetName: string;
   onPresetNameChange: (name: string) => void;
@@ -32,6 +33,8 @@ export function FoundryView({
   style,
   foundryFrame,
   def,
+  presets,
+  onLoadPreset,
   onSavePreset,
   presetName,
   onPresetNameChange,
@@ -118,6 +121,12 @@ export function FoundryView({
     setFocusedElementId(null);
     onFocusChange(false);
   }, [selectedComponentId, onFocusChange]);
+
+  // Filter presets to only show ones for the selected component
+  const filteredPresets = useMemo(() => {
+    if (!selectedComponentId) return [];
+    return presets.filter((p) => p.component_key === selectedComponentId);
+  }, [presets, selectedComponentId]);
 
   if (!selectedComponentId || !def) {
     return (
@@ -208,25 +217,42 @@ export function FoundryView({
         {zoom !== 1 && <div className="foundry__zoom-indicator">{Math.round(zoom * 100)}%</div>}
       </div>
 
-      {/* Template Tray - horizontal scrollable bar at the bottom */}
+      {/* Template Tray - horizontal scrollable bar at the bottom showing presets for selected component */}
       <div className="foundry__template-tray">
-        <div className="foundry__template-tray-label">TEMPLATES</div>
+        <div className="foundry__template-tray-label">
+          {filteredPresets.length > 0 ? "PRESETS" : "NO PRESETS"}
+        </div>
         <div className="foundry__template-tray-scroll">
-          {COMPONENTS.filter(
-            (c) =>
-              // Filter to showable components (have default dimensions or are visual)
-              c.category !== "colors" && c.category !== "typography"
-          ).map((component) => (
-            <button
-              key={component.id}
-              className={`foundry__template-item ${selectedComponentId === component.id ? "foundry__template-item--active" : ""}`}
-              onClick={() => onSelectComponent(component.id)}
-              title={component.description}
-            >
-              <span className="foundry__template-item-name">{component.name}</span>
-              <span className="foundry__template-item-category">{component.category}</span>
-            </button>
-          ))}
+          {filteredPresets.length > 0 ? (
+            filteredPresets.map((preset) => {
+              // Extract props from preset config (excluding internal keys)
+              const { __style, __foundryFrame, ...presetProps } = preset.config as Record<
+                string,
+                unknown
+              >;
+              return (
+                <button
+                  key={preset.id}
+                  className="foundry__template-item foundry__template-item--thumbnail"
+                  onClick={() => onLoadPreset(preset)}
+                  title={preset.name}
+                >
+                  <div className="foundry__template-thumbnail">
+                    <ComponentPreview
+                      componentId={selectedComponentId}
+                      props={presetProps}
+                      style={(__style as StyleConfig) || style}
+                    />
+                  </div>
+                  <span className="foundry__template-item-name">{preset.name}</span>
+                </button>
+              );
+            })
+          ) : (
+            <div className="foundry__template-empty">
+              <span>Save presets in the inspector to see them here</span>
+            </div>
+          )}
         </div>
       </div>
 

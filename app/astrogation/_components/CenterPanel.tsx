@@ -117,6 +117,8 @@ export function CenterPanel({
             style={style}
             foundryFrame={foundryFrame}
             def={def}
+            presets={presets}
+            onLoadPreset={onLoadPreset}
             onSavePreset={onSavePreset}
             presetName={presetName}
             onPresetNameChange={onPresetNameChange}
