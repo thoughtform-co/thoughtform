@@ -397,6 +397,38 @@ const NAVIGATION_COMPONENTS: ComponentDef[] = [
     defaultWidth: 400,
     defaultHeight: 300,
   },
+  {
+    id: "panel",
+    name: "Panel",
+    category: "frames",
+    description: "Chamfered panel with ticket notch for titles",
+    designRationale:
+      "The Panel is the inspector's canvas—a chamfered frame with a distinctive ticket notch that creates a step-down area for titles. The angled corner suggests torn paper, a ticket stub, or a folded document corner. This shape provides both aesthetic distinction and functional affordance: the title slot is clearly separated from content, creating hierarchy without additional borders.",
+    inspiration:
+      "Torn ticket stubs, folded document corners, the chamfered edges of industrial control panels, and the angled data readouts in spacecraft interfaces.",
+    frontendNotes:
+      "Built on ChamferedFrame component with SVG-driven geometry. Uses ResizeObserver for responsive polygon calculation. Shape presets include inspectorTicket (default) and cutCorners variants. Title slot appears in the step-down area; toolbar slot in the opposite corner.",
+    props: [
+      {
+        name: "shape",
+        type: "select",
+        default: "inspectorTicket",
+        options: [
+          "inspectorTicket",
+          "inspectorTicketCompact",
+          "cutCornersSm",
+          "cutCornersMd",
+          "cutCornersTopRight",
+        ],
+      },
+      { name: "title", type: "string", default: "PANEL TITLE" },
+      { name: "strokeColor", type: "color", default: "rgba(202, 165, 84, 0.3)" },
+      { name: "fillColor", type: "color", default: "rgba(10, 9, 8, 0.4)" },
+      { name: "strokeWidth", type: "number", default: 1, min: 0.5, max: 3, step: 0.5 },
+    ],
+    defaultWidth: 320,
+    defaultHeight: 240,
+  },
 ];
 
 // ═══════════════════════════════════════════════════════════════

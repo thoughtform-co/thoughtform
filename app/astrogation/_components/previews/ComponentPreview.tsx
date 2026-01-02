@@ -8,8 +8,10 @@ import { HUDWrapper } from "../helpers";
 import {
   CornerBracket,
   CornerBrackets,
+  ChamferedFrame,
   type CornerToken,
   type CornerPosition,
+  type ShapePreset,
 } from "@thoughtform/ui";
 
 // ═══════════════════════════════════════════════════════════════
@@ -840,6 +842,53 @@ function renderComponent(
             </>
           )}
         </div>
+      );
+    }
+
+    case "panel": {
+      const shape = (props.shape as ShapePreset) || "inspectorTicket";
+      const title = (props.title as string) || "PANEL TITLE";
+      const strokeColor = (props.strokeColor as string) || "rgba(202, 165, 84, 0.3)";
+      const fillColor = (props.fillColor as string) || "rgba(10, 9, 8, 0.4)";
+      const strokeWidth = (props.strokeWidth as number) ?? 1;
+      const panelScale = fullSize ? 1.5 : 1;
+
+      return (
+        <ChamferedFrame
+          shape={shape}
+          strokeColor={strokeColor}
+          fillColor={fillColor}
+          strokeWidth={strokeWidth}
+          titleSlot={
+            <span
+              style={{
+                fontFamily: "var(--font-mono)",
+                fontSize: fullSize ? "11px" : "9px",
+                letterSpacing: "0.1em",
+                color: "var(--gold)",
+                textTransform: "uppercase",
+              }}
+            >
+              {title}
+            </span>
+          }
+          style={{
+            width: 280 * panelScale,
+            height: 200 * panelScale,
+          }}
+          contentPadding="md"
+        >
+          <div
+            style={{
+              color: "var(--dawn-50)",
+              fontSize: fullSize ? "13px" : "11px",
+              lineHeight: 1.6,
+            }}
+          >
+            Panel content area. This component uses SVG-driven geometry with ResizeObserver for
+            responsive chamfered corners and ticket notch shapes.
+          </div>
+        </ChamferedFrame>
       );
     }
 
