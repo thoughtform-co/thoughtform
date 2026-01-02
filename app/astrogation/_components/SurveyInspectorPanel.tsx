@@ -299,7 +299,6 @@ function SurveyInspectorPanelInner({
           <ChamferedFrame
             shape="inspectorTicket"
             className="inspector-frame inspector-frame--empty"
-            contentPadding="none"
           >
             <div className="spec-empty-state">
               <div className="spec-empty-state__visual">
@@ -429,7 +428,6 @@ function SurveyInspectorPanelInner({
               </button>
             </>
           }
-          contentPadding="none"
         >
           <div className="spec-panel-v2">
             {/* ═══ SECTION 1: Sources ═══ */}

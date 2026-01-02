@@ -216,7 +216,6 @@ function SpecPanelInner({ selectedComponentId }: SpecPanelProps) {
           <ChamferedFrame
             shape="inspectorTicket"
             className="inspector-frame inspector-frame--empty"
-            contentPadding="none"
           >
             <div className="spec-empty-state">
               <div className="spec-empty-state__visual">
@@ -258,7 +257,6 @@ function SpecPanelInner({ selectedComponentId }: SpecPanelProps) {
           shape="inspectorTicket"
           className="inspector-frame"
           titleSlot={<span className="inspector-frame__title">{def.name}</span>}
-          contentPadding="none"
         >
           <div className="spec-panel-v2">
             {/* ─── HEADER ─── */}

@@ -237,7 +237,6 @@ function DialsPanelInner({
           <ChamferedFrame
             shape="inspectorTicket"
             className="inspector-frame inspector-frame--empty"
-            contentPadding="none"
           >
             <div className="panel-empty-state">
               <span className="panel-empty-state__icon">◇</span>
@@ -290,7 +289,6 @@ function DialsPanelInner({
           shape="inspectorTicket"
           className="inspector-frame"
           titleSlot={<span className="inspector-frame__title">{def.name}</span>}
-          contentPadding="none"
         >
           <div className="spec-panel-v2">
             {/* ─── HEADER (Harmonized with Vault) ─── */}
