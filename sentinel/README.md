@@ -40,6 +40,8 @@ Add to Sentinel when you:
 - [Auth Centralization](decisions/003-auth-centralization.md)
 - [Legacy Code Archival](decisions/004-legacy-code-archival.md)
 - [Scroll-Captured Content Reveal](decisions/005-scroll-captured-content-reveal.md)
+- [Focus Overlay System](decisions/006-focus-overlay-system.md)
+- [Chamfered Card Polygon Design](decisions/007-chamfered-card-polygon-design.md)
 
 ---
 

@@ -233,6 +233,88 @@ if (isAllowedEmail(email)) { ... }
 
 ## 🎨 CSS & Styling
 
+### Polygon Cards: Separate Background from Border
+
+When using `clip-path` for non-rectangular shapes, the border gets clipped too. Use separate layers:
+
+```css
+/* ❌ BAD: Border disappears on chamfered edge */
+.card {
+  clip-path: polygon(0% 20px, 80% 20px, 100% 0%, 100% 100%, 0% 100%);
+  border: 1px solid var(--gold-30);
+  background: rgba(10, 9, 8, 0.4);
+}
+
+/* ✅ GOOD: Background via ::before, border via SVG */
+.card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(10, 9, 8, 0.4);
+  clip-path: polygon(0% 20px, 80% 20px, 100% 0%, 100% 100%, 0% 100%);
+  z-index: 0;
+}
+
+/* SVG in markup traces the polygon */
+.card__border polygon {
+  fill: none;
+  stroke: var(--gold-30);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+```
+
+**Why it matters:** CSS `clip-path` clips everything including borders. SVG gives precise stroke control.
+
+---
+
+### Scroll Clipping vs Decorative Clipping
+
+When content scrolls inside a non-rectangular shape, clip content at a **horizontal line**, not the decorative polygon:
+
+```css
+/* ❌ BAD: Content follows chamfer (appears in corners when scrolling) */
+.content {
+  clip-path: polygon(0% 32px, 80% 32px, 100% 0%, 100% 100%, 0% 100%);
+}
+
+/* ✅ GOOD: Content clips at horizontal line */
+.content {
+  clip-path: inset(38px 0 0 0); /* 32px step + 6px safety margin */
+}
+```
+
+**Why it matters:** Users expect scroll content to disappear at a consistent horizontal edge, not follow decorative angles.
+
+---
+
+### Use CSS Variables for Geometry Tokens
+
+Non-rectangular shapes should define geometry as variables:
+
+```css
+/* ✅ GOOD: Single source of truth */
+.card {
+  --notch-w: 220px; /* where diagonal starts from left */
+  --notch-h: 32px; /* how far down the step goes */
+}
+
+.card::before {
+  clip-path: polygon(
+    0% var(--notch-h),
+    calc(var(--notch-w) - var(--notch-h)) var(--notch-h),
+    var(--notch-w) 0%,
+    100% 0%,
+    100% 100%,
+    0% 100%
+  );
+}
+```
+
+**Why it matters:** Easy to tune, documents intent, keeps SVG and CSS in sync.
+
+---
+
 ### Use CSS Variables for Animation Values
 
 Values that might change should be CSS variables:
@@ -305,7 +387,9 @@ Terminal/manifesto text uses Tensor Gold with CRT glow:
 - [ ] Magic numbers extracted to variables?
 - [ ] Terminal text uses Tensor Gold?
 - [ ] Vendor prefixes for newer properties?
+- [ ] Polygon shapes: background and border separated?
+- [ ] Scroll clipping uses horizontal line (not decorative polygon)?
 
 ---
 
-_Last updated: 2024-12_
+_Last updated: 2026-01_
