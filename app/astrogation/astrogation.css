@@ -7852,6 +7852,15 @@
   color: var(--gold);
 }
 
+/* Highlight templates matching current component */
+.foundry__template-item--current {
+  border-color: var(--gold-30);
+}
+
+.foundry__template-item--current .foundry__template-item-name {
+  color: var(--gold);
+}
+
 .foundry__template-item-category {
   font-family: var(--font-mono);
   font-size: 9px;

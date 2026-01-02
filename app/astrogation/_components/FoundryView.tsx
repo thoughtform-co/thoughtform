@@ -122,11 +122,11 @@ export function FoundryView({
     onFocusChange(false);
   }, [selectedComponentId, onFocusChange]);
 
-  // Filter presets to only show ones for the selected component
-  const filteredPresets = useMemo(() => {
-    if (!selectedComponentId) return [];
-    return presets.filter((p) => p.component_key === selectedComponentId);
-  }, [presets, selectedComponentId]);
+  // Show all presets from the Vault as templates
+  // These are saved configurations that can be loaded and modified
+  const vaultTemplates = useMemo(() => {
+    return presets;
+  }, [presets]);
 
   if (!selectedComponentId || !def) {
     return (
@@ -217,29 +217,30 @@ export function FoundryView({
         {zoom !== 1 && <div className="foundry__zoom-indicator">{Math.round(zoom * 100)}%</div>}
       </div>
 
-      {/* Template Tray - horizontal scrollable bar at the bottom showing presets for selected component */}
+      {/* Template Tray - horizontal scrollable bar showing Vault templates */}
       <div className="foundry__template-tray">
         <div className="foundry__template-tray-label">
-          {filteredPresets.length > 0 ? "PRESETS" : "NO PRESETS"}
+          {vaultTemplates.length > 0 ? "VAULT" : "NO TEMPLATES"}
         </div>
         <div className="foundry__template-tray-scroll">
-          {filteredPresets.length > 0 ? (
-            filteredPresets.map((preset) => {
+          {vaultTemplates.length > 0 ? (
+            vaultTemplates.map((preset) => {
               // Extract props from preset config (excluding internal keys)
               const { __style, __foundryFrame, ...presetProps } = preset.config as Record<
                 string,
                 unknown
               >;
+              const isCurrentComponent = preset.component_key === selectedComponentId;
               return (
                 <button
                   key={preset.id}
-                  className="foundry__template-item foundry__template-item--thumbnail"
+                  className={`foundry__template-item foundry__template-item--thumbnail ${isCurrentComponent ? "foundry__template-item--current" : ""}`}
                   onClick={() => onLoadPreset(preset)}
-                  title={preset.name}
+                  title={`${preset.name} (${preset.component_key})`}
                 >
                   <div className="foundry__template-thumbnail">
                     <ComponentPreview
-                      componentId={selectedComponentId}
+                      componentId={preset.component_key}
                       props={presetProps}
                       style={(__style as StyleConfig) || style}
                     />
@@ -250,7 +251,7 @@ export function FoundryView({
             })
           ) : (
             <div className="foundry__template-empty">
-              <span>Save presets in the inspector to see them here</span>
+              <span>Save templates in the Vault to see them here</span>
             </div>
           )}
         </div>
