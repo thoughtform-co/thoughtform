@@ -54,6 +54,7 @@ function AstrogationContent() {
     componentProps,
     style,
     foundryFrame,
+    foundryVariants,
     presets,
     presetName,
     toast,
@@ -197,6 +198,48 @@ function AstrogationContent() {
         dispatch(actions.setFoundryFrame(patch.setFrame));
       }
       dispatch(actions.showToast("Changes applied"));
+    },
+    [componentProps]
+  );
+
+  // Create variant from assistant suggestion
+  const handleCreateVariant = useCallback(
+    (variant: {
+      id: string;
+      name: string;
+      description: string;
+      props: Record<string, unknown>;
+      frame?: Partial<FoundryFrameConfig>;
+    }) => {
+      if (!selectedComponentId) {
+        dispatch(actions.showToast("Select a component first"));
+        return;
+      }
+      dispatch(
+        actions.addFoundryVariant({
+          ...variant,
+          componentId: selectedComponentId,
+          createdAt: new Date().toISOString(),
+        })
+      );
+      dispatch(actions.showToast(`Variant "${variant.name}" added`));
+    },
+    [selectedComponentId]
+  );
+
+  // Remove a variant from the comparison grid
+  const handleRemoveVariant = useCallback((id: string) => {
+    dispatch(actions.removeFoundryVariant(id));
+  }, []);
+
+  // Apply a variant to the main preview
+  const handleApplyVariant = useCallback(
+    (variant: { props: Record<string, unknown>; frame?: Partial<FoundryFrameConfig> }) => {
+      dispatch(actions.setProps({ ...componentProps, ...variant.props }));
+      if (variant.frame) {
+        dispatch(actions.setFoundryFrame(variant.frame));
+      }
+      dispatch(actions.showToast("Variant applied"));
     },
     [componentProps]
   );
@@ -393,8 +436,11 @@ function AstrogationContent() {
           style={style}
           foundryFrame={foundryFrame}
           presets={presets}
+          variants={foundryVariants}
           onLoadPreset={loadPreset}
           onDeletePreset={deletePreset}
+          onRemoveVariant={handleRemoveVariant}
+          onApplyVariant={handleApplyVariant}
           onSavePreset={savePreset}
           presetName={presetName}
           onPresetNameChange={handlePresetNameChange}
@@ -444,6 +490,7 @@ function AstrogationContent() {
               componentProps={componentProps}
               foundryFrame={foundryFrame}
               onApplyPatch={handleApplyPatch}
+              onCreateVariant={handleCreateVariant}
               getAuthToken={getAuthToken}
             />
           </DialsPanel>

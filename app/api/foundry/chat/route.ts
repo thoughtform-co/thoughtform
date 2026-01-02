@@ -1,12 +1,17 @@
 // ═══════════════════════════════════════════════════════════════
 // FOUNDRY ASSISTANT CHAT API
 // AI assistant for styling and modifying components in Foundry
+// Now with Survey embedding search and variant generation
 // ═══════════════════════════════════════════════════════════════
 
 import { NextRequest, NextResponse } from "next/server";
 import { isAuthorized } from "@/lib/auth-server";
 import Anthropic from "@anthropic-ai/sdk";
+import { createServerClient } from "@/lib/supabase";
 import { COMPONENTS, getComponentById, type PropDef } from "@/app/astrogation/catalog";
+
+const VOYAGE_API_URL = "https://api.voyageai.com/v1/embeddings";
+const DEFAULT_MODEL = "voyage-3";
 
 // System prompt grounding the assistant in Thoughtform's design language
 const SYSTEM_PROMPT = `You are a design assistant for Thoughtform's Foundry - a component workbench for building and styling UI components.
@@ -50,12 +55,34 @@ When the user asks you to modify a component:
 2. Suggest specific prop or frame changes that align with our design language
 3. Return a structured patch that can be applied to the component
 
-IMPORTANT: When returning a patch, use the exact prop names from the component schema.
-Return JSON patches in this format:
+## Creating Variants
+
+When the user asks for variants, alternatives, or multiple options:
+1. Generate 2-4 distinct variants that explore different aesthetic directions
+2. Each variant should have a unique name and clear description
+3. Draw inspiration from the Survey references if provided
+4. Ensure all variants stay true to Thoughtform's design language
+
+Return variants in this JSON format inside a code block:
+\`\`\`variants
+[
+  {
+    "id": "variant-1",
+    "name": "Minimal Terminal",
+    "description": "Clean, sparse aesthetic with subtle stroke",
+    "props": { "title": "SYSTEM", "strokeColor": "var(--dawn-30)" },
+    "frame": { "shape": "cutCornersSm", "strokeWidth": 1 }
+  }
+]
+\`\`\`
+
+IMPORTANT: When returning a patch for direct changes, use this format:
+\`\`\`json
 {
   "setProps": { "propName": value },
   "setFrame": { "shape": "inspectorTicket", "strokeColor": "#caa554" }
 }
+\`\`\`
 
 Only include properties you want to change. Be specific and actionable.
 Keep your explanations concise but insightful.`;
@@ -80,6 +107,116 @@ interface RequestBody {
   props: Record<string, unknown>;
   frame: FoundryFrameConfig;
   history?: ChatMessage[];
+  includeVariants?: boolean;
+  searchSurvey?: boolean;
+}
+
+interface SurveyReference {
+  id: string;
+  title?: string;
+  briefing?: string;
+  tags?: string[];
+  similarity?: number;
+}
+
+interface ComponentVariant {
+  id: string;
+  name: string;
+  description: string;
+  props: Record<string, unknown>;
+  frame?: Partial<FoundryFrameConfig>;
+}
+
+// Helper to search Survey embeddings for design inspiration
+async function searchSurveyReferences(
+  query: string,
+  authHeader: string | null
+): Promise<SurveyReference[]> {
+  try {
+    const voyageApiKey = process.env.VOYAGE_API_KEY;
+    if (!voyageApiKey) {
+      console.warn("VOYAGE_API_KEY not configured, skipping Survey search");
+      return [];
+    }
+
+    const supabase = createServerClient();
+    if (!supabase) {
+      console.warn("Supabase not configured, skipping Survey search");
+      return [];
+    }
+
+    // Generate embedding for the query
+    const model = process.env.VOYAGE_EMBED_MODEL || DEFAULT_MODEL;
+    const voyageResponse = await fetch(VOYAGE_API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${voyageApiKey}`,
+      },
+      body: JSON.stringify({
+        model,
+        input: query,
+        input_type: "query",
+      }),
+    });
+
+    if (!voyageResponse.ok) {
+      console.error("Voyage API error during Survey search");
+      return [];
+    }
+
+    const voyageData = await voyageResponse.json();
+    const queryEmbedding = voyageData.data?.[0]?.embedding;
+
+    if (!queryEmbedding || !Array.isArray(queryEmbedding)) {
+      return [];
+    }
+
+    // Format embedding for pgvector
+    const embeddingStr = `[${queryEmbedding.join(",")}]`;
+
+    // Search using briefing embeddings
+    const { data: results, error } = await supabase.rpc("match_survey_items_briefing", {
+      query_embedding: embeddingStr,
+      match_threshold: 0.3,
+      match_count: 5,
+      filter_category_id: null,
+      filter_component_key: null,
+    });
+
+    if (error) {
+      // Try fallback to legacy RPC
+      const { data: fallbackResults } = await supabase.rpc("match_survey_items", {
+        query_embedding: embeddingStr,
+        match_threshold: 0.3,
+        match_count: 5,
+        filter_category_id: null,
+        filter_component_key: null,
+      });
+
+      if (fallbackResults) {
+        return fallbackResults.map((item: Record<string, unknown>) => ({
+          id: item.id as string,
+          title: item.title as string | undefined,
+          briefing: item.briefing as string | undefined,
+          tags: item.tags as string[] | undefined,
+          similarity: item.similarity as number | undefined,
+        }));
+      }
+      return [];
+    }
+
+    return (results || []).map((item: Record<string, unknown>) => ({
+      id: item.id as string,
+      title: item.title as string | undefined,
+      briefing: item.briefing as string | undefined,
+      tags: item.tags as string[] | undefined,
+      similarity: item.similarity as number | undefined,
+    }));
+  } catch (error) {
+    console.error("Error searching Survey references:", error);
+    return [];
+  }
 }
 
 export async function POST(request: NextRequest) {
@@ -96,7 +233,15 @@ export async function POST(request: NextRequest) {
     }
 
     const body: RequestBody = await request.json();
-    const { message, componentId, props, frame, history = [] } = body;
+    const {
+      message,
+      componentId,
+      props,
+      frame,
+      history = [],
+      includeVariants = false,
+      searchSurvey = false,
+    } = body;
 
     if (!message) {
       return NextResponse.json({ error: "Missing message" }, { status: 400 });
@@ -153,6 +298,45 @@ ${COMPONENTS.map((c) => `- ${c.id}: ${c.name} (${c.category})`).join("\n")}
 `;
     }
 
+    // Search Survey for design inspiration if requested
+    let surveyContext = "";
+    if (searchSurvey) {
+      const authHeader = request.headers.get("authorization");
+      const surveyRefs = await searchSurveyReferences(message, authHeader);
+
+      if (surveyRefs.length > 0) {
+        surveyContext = `
+
+## Design References from Survey (for inspiration)
+
+The following design references were found relevant to this request. Use them as inspiration for your suggestions:
+
+${surveyRefs
+  .map(
+    (ref, i) => `
+### Reference ${i + 1}${ref.title ? `: ${ref.title}` : ""} (similarity: ${((ref.similarity || 0) * 100).toFixed(0)}%)
+${ref.briefing || "No briefing available"}
+${ref.tags?.length ? `Tags: ${ref.tags.join(", ")}` : ""}
+`
+  )
+  .join("\n")}
+
+Draw inspiration from these references when suggesting modifications or variants.
+`;
+      }
+    }
+
+    // Add variant instruction if requested
+    let variantInstruction = "";
+    if (includeVariants) {
+      variantInstruction = `
+
+## IMPORTANT: The user is asking for variants/alternatives.
+
+Please generate 2-4 distinct variants that explore different aesthetic directions while staying true to Thoughtform's design language. Return them in a \`\`\`variants code block as shown in the system prompt.
+`;
+    }
+
     // Initialize Anthropic
     const anthropic = new Anthropic({ apiKey: anthropicApiKey });
 
@@ -162,17 +346,19 @@ ${COMPONENTS.map((c) => `- ${c.id}: ${c.name} (${c.category})`).join("\n")}
       content: msg.content,
     }));
 
-    // Add current message
+    // Add current message with additional context
+    const enhancedMessage = variantInstruction ? `${message}${variantInstruction}` : message;
+
     const messages: Anthropic.MessageParam[] = [
       ...previousMessages,
-      { role: "user", content: message },
+      { role: "user", content: enhancedMessage },
     ];
 
     // Call Anthropic
     const response = await anthropic.messages.create({
       model: "claude-sonnet-4-20250514",
-      max_tokens: 1024,
-      system: SYSTEM_PROMPT + componentContext,
+      max_tokens: 2048, // Increased for variant generation
+      system: SYSTEM_PROMPT + componentContext + surveyContext,
       messages,
     });
 
@@ -189,7 +375,7 @@ ${COMPONENTS.map((c) => `- ${c.id}: ${c.name} (${c.category})`).join("\n")}
       setFrame?: Partial<FoundryFrameConfig>;
     } | null = null;
 
-    // Look for JSON block in response
+    // Look for JSON block in response (for direct modifications)
     const jsonMatch = responseText.match(/```json\s*([\s\S]*?)\s*```/);
     if (jsonMatch) {
       try {
@@ -264,9 +450,31 @@ ${COMPONENTS.map((c) => `- ${c.id}: ${c.name} (${c.category})`).join("\n")}
       }
     }
 
+    // Try to extract variants from response
+    let variants: ComponentVariant[] | null = null;
+    const variantsMatch = responseText.match(/```variants\s*([\s\S]*?)\s*```/);
+    if (variantsMatch) {
+      try {
+        const parsedVariants = JSON.parse(variantsMatch[1]);
+        if (Array.isArray(parsedVariants)) {
+          variants = parsedVariants.map((v: Record<string, unknown>, i: number) => ({
+            id: (v.id as string) || `variant-${i + 1}`,
+            name: (v.name as string) || `Variant ${i + 1}`,
+            description: (v.description as string) || "",
+            props: (v.props as Record<string, unknown>) || {},
+            frame: v.frame as Partial<FoundryFrameConfig> | undefined,
+          }));
+        }
+      } catch {
+        // Variants parsing failed
+        variants = null;
+      }
+    }
+
     return NextResponse.json({
       response: responseText,
       patch,
+      variants,
     });
   } catch (error) {
     console.error("POST /api/foundry/chat error:", error);

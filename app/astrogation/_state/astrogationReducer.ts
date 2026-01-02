@@ -4,6 +4,7 @@ import type {
   WorkspaceTab,
   SurveyItem,
   FoundryFrameConfig,
+  FoundryVariant,
 } from "../_components/types";
 import { DEFAULT_STYLE, DEFAULT_FOUNDRY_FRAME } from "../_components/types";
 import { getComponentById } from "../catalog";
@@ -30,6 +31,9 @@ export interface AstrogationState {
   // Foundry frame config (for stage framing around component preview)
   foundryFrame: FoundryFrameConfig;
 
+  // Foundry variants (for comparison grid)
+  foundryVariants: FoundryVariant[];
+
   // Presets
   presets: UIComponentPreset[];
   presetName: string;
@@ -55,6 +59,7 @@ export const initialState: AstrogationState = {
   componentProps: {},
   style: DEFAULT_STYLE,
   foundryFrame: DEFAULT_FOUNDRY_FRAME,
+  foundryVariants: [],
   presets: [],
   presetName: "",
   toast: null,
@@ -88,6 +93,11 @@ export type AstrogationAction =
   | { type: "SET_STYLE"; payload: StyleConfig }
   | { type: "RESET_PROPS_FOR_COMPONENT"; payload: string }
   | { type: "SET_FOUNDRY_FRAME"; payload: Partial<FoundryFrameConfig> }
+
+  // Foundry variants
+  | { type: "ADD_FOUNDRY_VARIANT"; payload: FoundryVariant }
+  | { type: "REMOVE_FOUNDRY_VARIANT"; payload: string }
+  | { type: "CLEAR_FOUNDRY_VARIANTS" }
 
   // Presets
   | { type: "LOAD_PRESETS"; payload: UIComponentPreset[] }
@@ -175,6 +185,25 @@ export function astrogationReducer(
       return {
         ...state,
         foundryFrame: { ...state.foundryFrame, ...action.payload },
+      };
+
+    // Foundry variants
+    case "ADD_FOUNDRY_VARIANT":
+      return {
+        ...state,
+        foundryVariants: [...state.foundryVariants, action.payload],
+      };
+
+    case "REMOVE_FOUNDRY_VARIANT":
+      return {
+        ...state,
+        foundryVariants: state.foundryVariants.filter((v) => v.id !== action.payload),
+      };
+
+    case "CLEAR_FOUNDRY_VARIANTS":
+      return {
+        ...state,
+        foundryVariants: [],
       };
 
     // Presets
@@ -310,6 +339,17 @@ export const actions = {
   setFoundryFrame: (frame: Partial<FoundryFrameConfig>): AstrogationAction => ({
     type: "SET_FOUNDRY_FRAME",
     payload: frame,
+  }),
+  addFoundryVariant: (variant: FoundryVariant): AstrogationAction => ({
+    type: "ADD_FOUNDRY_VARIANT",
+    payload: variant,
+  }),
+  removeFoundryVariant: (id: string): AstrogationAction => ({
+    type: "REMOVE_FOUNDRY_VARIANT",
+    payload: id,
+  }),
+  clearFoundryVariants: (): AstrogationAction => ({
+    type: "CLEAR_FOUNDRY_VARIANTS",
   }),
   loadPresets: (presets: UIComponentPreset[]): AstrogationAction => ({
     type: "LOAD_PRESETS",

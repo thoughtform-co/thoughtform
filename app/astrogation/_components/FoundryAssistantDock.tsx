@@ -1,11 +1,12 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import type { FoundryFrameConfig } from "./types";
+import type { FoundryFrameConfig, SurveyItem } from "./types";
 
 // ═══════════════════════════════════════════════════════════════
 // FOUNDRY ASSISTANT DOCK
 // Floating AI assistant button + translucent drawer for Foundry
+// Supports per-component chat history and generative capabilities
 // ═══════════════════════════════════════════════════════════════
 
 interface ChatMessage {
@@ -16,6 +17,26 @@ interface ChatMessage {
     setProps?: Record<string, unknown>;
     setFrame?: Partial<FoundryFrameConfig>;
   } | null;
+  // Variant suggestions from the assistant
+  variants?: ComponentVariant[] | null;
+}
+
+// A component variant that can be rendered in the canvas
+export interface ComponentVariant {
+  id: string;
+  name: string;
+  description: string;
+  props: Record<string, unknown>;
+  frame?: Partial<FoundryFrameConfig>;
+}
+
+// Survey reference item used for inspiration
+interface SurveyReference {
+  id: string;
+  title?: string;
+  briefing?: string;
+  tags?: string[];
+  similarity?: number;
 }
 
 export interface FoundryAssistantDockProps {
@@ -26,22 +47,43 @@ export interface FoundryAssistantDockProps {
     setProps?: Record<string, unknown>;
     setFrame?: Partial<FoundryFrameConfig>;
   }) => void;
+  onCreateVariant?: (variant: ComponentVariant) => void;
   getAuthToken?: () => Promise<string | null>;
 }
+
+// Store chat history per component (persists across re-renders)
+const chatHistoryStore = new Map<string, ChatMessage[]>();
 
 export function FoundryAssistantDock({
   componentId,
   componentProps,
   foundryFrame,
   onApplyPatch,
+  onCreateVariant,
   getAuthToken,
 }: FoundryAssistantDockProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Per-component chat history
+  const historyKey = componentId || "__no_component__";
+  const [messages, setMessages] = useState<ChatMessage[]>(() => {
+    return chatHistoryStore.get(historyKey) || [];
+  });
+
+  // Update store when messages change
+  useEffect(() => {
+    chatHistoryStore.set(historyKey, messages);
+  }, [historyKey, messages]);
+
+  // Switch history when component changes
+  useEffect(() => {
+    const stored = chatHistoryStore.get(historyKey) || [];
+    setMessages(stored);
+  }, [historyKey]);
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -89,10 +131,11 @@ export function FoundryAssistantDock({
       };
 
       // Add auth token if available
+      let authToken: string | null = null;
       if (getAuthToken) {
-        const token = await getAuthToken();
-        if (token) {
-          headers["Authorization"] = `Bearer ${token}`;
+        authToken = await getAuthToken();
+        if (authToken) {
+          headers["Authorization"] = `Bearer ${authToken}`;
         }
       }
 
@@ -101,6 +144,12 @@ export function FoundryAssistantDock({
         role: m.role,
         content: m.content,
       }));
+
+      // Detect if user is asking for variants/inspiration
+      const wantsVariants =
+        /variant|variation|alternative|version|option|create|generate|suggest|inspire/i.test(
+          userMessage.content
+        );
 
       const response = await fetch("/api/foundry/chat", {
         method: "POST",
@@ -111,6 +160,8 @@ export function FoundryAssistantDock({
           props: componentProps,
           frame: foundryFrame,
           history,
+          includeVariants: wantsVariants,
+          searchSurvey: wantsVariants, // Search Survey for inspiration when creating variants
         }),
       });
 
@@ -125,6 +176,7 @@ export function FoundryAssistantDock({
         role: "assistant",
         content: data.response,
         patch: data.patch,
+        variants: data.variants || null,
       };
 
       setMessages((prev) => [...prev, assistantMessage]);
@@ -257,6 +309,43 @@ export function FoundryAssistantDock({
                 >
                   ◇ Apply Changes
                 </button>
+              )}
+              {/* Variant suggestions */}
+              {message.variants && message.variants.length > 0 && (
+                <div className="foundry-assistant-variants">
+                  <span className="foundry-assistant-variants__label">Suggested Variants</span>
+                  <div className="foundry-assistant-variants__grid">
+                    {message.variants.map((variant) => (
+                      <div key={variant.id} className="foundry-assistant-variant">
+                        <span className="foundry-assistant-variant__name">{variant.name}</span>
+                        <p className="foundry-assistant-variant__desc">{variant.description}</p>
+                        <div className="foundry-assistant-variant__actions">
+                          <button
+                            className="foundry-assistant-variant__apply"
+                            onClick={() =>
+                              handleApplyPatch({
+                                setProps: variant.props,
+                                setFrame: variant.frame,
+                              })
+                            }
+                            title="Apply to current component"
+                          >
+                            ◇ Apply
+                          </button>
+                          {onCreateVariant && (
+                            <button
+                              className="foundry-assistant-variant__create"
+                              onClick={() => onCreateVariant(variant)}
+                              title="Create as new variant in canvas"
+                            >
+                              + Create Variant
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               )}
             </div>
           ))}

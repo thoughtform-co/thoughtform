@@ -65,6 +65,20 @@ export const DEFAULT_FOUNDRY_FRAME: FoundryFrameConfig = {
 };
 
 // ═══════════════════════════════════════════════════════════════
+// FOUNDRY VARIANT - For comparison grid
+// ═══════════════════════════════════════════════════════════════
+
+export interface FoundryVariant {
+  id: string;
+  name: string;
+  description: string;
+  componentId: string;
+  props: Record<string, unknown>;
+  frame?: Partial<FoundryFrameConfig>;
+  createdAt: string;
+}
+
+// ═══════════════════════════════════════════════════════════════
 // SURVEY TYPES
 // ═══════════════════════════════════════════════════════════════
 

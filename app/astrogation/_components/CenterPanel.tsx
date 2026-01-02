@@ -7,6 +7,7 @@ import type {
   WorkspaceTab,
   SurveyViewBundledProps,
   FoundryFrameConfig,
+  FoundryVariant,
 } from "./types";
 import { VaultView } from "./VaultView";
 import { FoundryView } from "./FoundryView";
@@ -24,8 +25,11 @@ export interface CenterPanelProps {
   style: StyleConfig;
   foundryFrame: FoundryFrameConfig;
   presets: UIComponentPreset[];
+  variants: FoundryVariant[];
   onLoadPreset: (preset: UIComponentPreset) => void;
   onDeletePreset: (id: string) => void;
+  onRemoveVariant: (id: string) => void;
+  onApplyVariant: (variant: FoundryVariant) => void;
   onSavePreset: () => void;
   presetName: string;
   onPresetNameChange: (name: string) => void;
@@ -45,8 +49,11 @@ export function CenterPanel({
   style,
   foundryFrame,
   presets,
+  variants,
   onLoadPreset,
   onDeletePreset,
+  onRemoveVariant,
+  onApplyVariant,
   onSavePreset,
   presetName,
   onPresetNameChange,
@@ -118,7 +125,10 @@ export function CenterPanel({
             foundryFrame={foundryFrame}
             def={def}
             presets={presets}
+            variants={variants}
             onLoadPreset={onLoadPreset}
+            onRemoveVariant={onRemoveVariant}
+            onApplyVariant={onApplyVariant}
             onSavePreset={onSavePreset}
             presetName={presetName}
             onPresetNameChange={onPresetNameChange}

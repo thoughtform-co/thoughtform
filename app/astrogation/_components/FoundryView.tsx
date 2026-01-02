@@ -2,12 +2,13 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 import type { ComponentDef } from "../catalog";
-import type { StyleConfig, FoundryFrameConfig, UIComponentPreset } from "./types";
+import type { StyleConfig, FoundryFrameConfig, UIComponentPreset, FoundryVariant } from "./types";
 import { ComponentPreview } from "./previews/ComponentPreview";
 import { TargetReticle, ChamferedFrame } from "@thoughtform/ui";
 
 // ═══════════════════════════════════════════════════════════════
 // FOUNDRY VIEW - Component Editor & Preview
+// With comparison grid for variants
 // ═══════════════════════════════════════════════════════════════
 
 export interface FoundryViewProps {
@@ -17,7 +18,10 @@ export interface FoundryViewProps {
   foundryFrame: FoundryFrameConfig;
   def: ComponentDef | null;
   presets: UIComponentPreset[];
+  variants: FoundryVariant[];
   onLoadPreset: (preset: UIComponentPreset) => void;
+  onRemoveVariant: (id: string) => void;
+  onApplyVariant: (variant: FoundryVariant) => void;
   onSavePreset: () => void;
   presetName: string;
   onPresetNameChange: (name: string) => void;
@@ -34,7 +38,10 @@ export function FoundryView({
   foundryFrame,
   def,
   presets,
+  variants,
   onLoadPreset,
+  onRemoveVariant,
+  onApplyVariant,
   onSavePreset,
   presetName,
   onPresetNameChange,
@@ -216,6 +223,55 @@ export function FoundryView({
         {/* Zoom indicator */}
         {zoom !== 1 && <div className="foundry__zoom-indicator">{Math.round(zoom * 100)}%</div>}
       </div>
+
+      {/* Variants Comparison Grid - shows AI-generated alternatives */}
+      {variants.length > 0 && (
+        <div className="foundry__variants-grid">
+          <div className="foundry__variants-header">
+            <span className="foundry__variants-label">◇ GENERATED VARIANTS</span>
+            <span className="foundry__variants-count">
+              {variants.length} variant{variants.length !== 1 ? "s" : ""}
+            </span>
+          </div>
+          <div className="foundry__variants-scroll">
+            {variants.map((variant) => {
+              // Merge variant props with default props for the component
+              const variantProps = { ...componentProps, ...variant.props };
+              return (
+                <div key={variant.id} className="foundry__variant-card">
+                  <div className="foundry__variant-preview">
+                    <ComponentPreview
+                      componentId={variant.componentId}
+                      props={variantProps}
+                      style={style}
+                    />
+                  </div>
+                  <div className="foundry__variant-info">
+                    <span className="foundry__variant-name">{variant.name}</span>
+                    <p className="foundry__variant-desc">{variant.description}</p>
+                  </div>
+                  <div className="foundry__variant-actions">
+                    <button
+                      className="foundry__variant-apply"
+                      onClick={() => onApplyVariant(variant)}
+                      title="Apply this variant to main preview"
+                    >
+                      Apply
+                    </button>
+                    <button
+                      className="foundry__variant-remove"
+                      onClick={() => onRemoveVariant(variant.id)}
+                      title="Remove this variant"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Template Tray - horizontal scrollable bar showing Vault templates */}
       <div className="foundry__template-tray">
