@@ -341,11 +341,8 @@ export function SurveyView({
 }: SurveyViewProps) {
   const selectedItem = items.find((item) => item.id === selectedItemId);
 
-  // Filter to show only inspected items (items with annotations)
-  const inspectedItems = useMemo(
-    () => items.filter((item) => item.annotations && item.annotations.length > 0),
-    [items]
-  );
+  // Show all items (not just annotated ones)
+  const inspectedItems = useMemo(() => items, [items]);
 
   // Handle item click in grid
   const handleItemClick = useCallback(
@@ -422,15 +419,13 @@ export function SurveyView({
         ) : inspectedItems.length === 0 ? (
           <div className="survey-grid__empty">
             <span className="survey-grid__empty-icon">◇</span>
-            <span className="survey-grid__empty-text">No inspected items yet</span>
-            <span className="survey-grid__empty-hint">
-              Add annotations to items to see them in the survey overview
-            </span>
+            <span className="survey-grid__empty-text">No items yet</span>
+            <span className="survey-grid__empty-hint">Upload images to get started</span>
           </div>
         ) : (
           <>
             <div className="survey-grid__header">
-              <span className="survey-grid__header-title">Inspected Items</span>
+              <span className="survey-grid__header-title">All Items</span>
               <span className="survey-grid__header-count">
                 {inspectedItems.length} item{inspectedItems.length !== 1 ? "s" : ""}
               </span>
