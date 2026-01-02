@@ -97,7 +97,12 @@ export const CATEGORIES: CategoryDef[] = [
     name: "Inputs",
     description: "Diamond-marked controls for precise measurement",
   },
-  // --- Level 4: Frames & Containers ---
+  // --- Level 4: Navigation & Layout ---
+  {
+    id: "navigation",
+    name: "Navigation",
+    description: "Wayfinding instruments for traversing the interface",
+  },
   {
     id: "frames",
     name: "Frames",
@@ -270,14 +275,14 @@ const BRAND_COMPONENTS: ComponentDef[] = [
 ];
 
 // ═══════════════════════════════════════════════════════════════
-// FRAMES - Navigation, Frames, Cards, HUD
+// NAVIGATION & FRAMES - Wayfinding and Structural Containers
 // ═══════════════════════════════════════════════════════════════
 
 const NAVIGATION_COMPONENTS: ComponentDef[] = [
   {
     id: "navbar",
     name: "Navigation Bar",
-    category: "frames",
+    category: "navigation",
     description: "Top navigation with logo and nav links",
     designRationale:
       "The navigation bar is the cockpit's primary instrument—always visible, always oriented. It establishes identity (logo), position (active link highlighting), and available trajectories (navigation links). The muted gold for inactive links creates depth; the bright Dawn for active states marks current position like a beacon.",
