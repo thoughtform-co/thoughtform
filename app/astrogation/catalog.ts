@@ -97,11 +97,11 @@ export const CATEGORIES: CategoryDef[] = [
     name: "Inputs",
     description: "Diamond-marked controls for precise measurement",
   },
-  // --- Level 4: Navigation & Layout ---
+  // --- Level 4: Frames & Containers ---
   {
-    id: "navigation",
-    name: "Navigation",
-    description: "HUD instruments for traversing the interface",
+    id: "frames",
+    name: "Frames",
+    description: "Structural containers and HUD elements",
   },
 ];
 
@@ -270,14 +270,14 @@ const BRAND_COMPONENTS: ComponentDef[] = [
 ];
 
 // ═══════════════════════════════════════════════════════════════
-// NAVIGATION - Navigation, Frames, Cards, HUD
+// FRAMES - Navigation, Frames, Cards, HUD
 // ═══════════════════════════════════════════════════════════════
 
 const NAVIGATION_COMPONENTS: ComponentDef[] = [
   {
     id: "navbar",
     name: "Navigation Bar",
-    category: "navigation",
+    category: "frames",
     description: "Top navigation with logo and nav links",
     designRationale:
       "The navigation bar is the cockpit's primary instrument—always visible, always oriented. It establishes identity (logo), position (active link highlighting), and available trajectories (navigation links). The muted gold for inactive links creates depth; the bright Dawn for active states marks current position like a beacon.",
@@ -303,7 +303,7 @@ const NAVIGATION_COMPONENTS: ComponentDef[] = [
   {
     id: "frame-basic",
     name: "Frame (Basic)",
-    category: "navigation",
+    category: "frames",
     description: "Surface with optional border and corners",
     designRationale:
       "The Frame is our fundamental container—a surface defined not by fill but by edge. Corner brackets (L-shaped markers at each corner) derive from technical drawing conventions and HUD targeting systems. They suggest precision measurement, containment, and focus. Sharp corners are mandatory; rounded corners belong to consumer interfaces, not instruments.",
@@ -330,7 +330,7 @@ const NAVIGATION_COMPONENTS: ComponentDef[] = [
   {
     id: "card-content",
     name: "Card (Content)",
-    category: "navigation",
+    category: "frames",
     description: "Content card with index, label, and title",
     designRationale:
       "Content Cards are waypoint markers—each containing a discrete piece of information with clear hierarchy. The index (01, 02, etc.) establishes sequence and position; the label provides category context; the title delivers the payload. Accent bars (top or left) in Gold create visual anchors, guiding the eye through information landscapes.",
@@ -354,7 +354,7 @@ const NAVIGATION_COMPONENTS: ComponentDef[] = [
   {
     id: "card-data",
     name: "Card (Data)",
-    category: "navigation",
+    category: "frames",
     description: "Compact metric display card",
     designRationale:
       "Data Cards distill information to its essence: a value and its label. They function like instrument readouts—glanceable, unambiguous, and hierarchically clear. The large numeric value draws the eye; the smaller label provides context. These are the gauges and meters of our interface.",
@@ -375,7 +375,7 @@ const NAVIGATION_COMPONENTS: ComponentDef[] = [
   {
     id: "hud-frame",
     name: "HUD Frame",
-    category: "navigation",
+    category: "frames",
     description: "Full viewport HUD with corners and rails",
     designRationale:
       "The HUD Frame is the master instrument—a fixed viewport overlay that remains constant while content scrolls beneath it. This creates the sensation of piloting through information rather than merely reading it. Corner brackets anchor the viewport; side rails provide depth scales and section markers; the bottom bar displays coordinates and status. The HUD IS the interface; everything else is the territory it reveals.",
