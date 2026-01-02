@@ -343,25 +343,25 @@ function DialsPanelInner({
                     Copy JSX Code
                   </button>
                 </div>
+
+                {/* Save Section */}
+                <div className="dials-save">
+                  <div className="dials-save__group">
+                    <input
+                      type="text"
+                      className="dials-save__input"
+                      placeholder="Name your creation..."
+                      value={presetName}
+                      onChange={(e) => onPresetNameChange(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && canSave && onSavePreset()}
+                    />
+                    <button className="dials-save__btn" onClick={onSavePreset} disabled={!canSave}>
+                      Save to Vault
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-        </div>
-
-        {/* Save Section - Fixed at bottom */}
-        <div className="dials-save">
-          <div className="dials-save__group">
-            <input
-              type="text"
-              className="dials-save__input"
-              placeholder="Name your creation..."
-              value={presetName}
-              onChange={(e) => onPresetNameChange(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && canSave && onSavePreset()}
-            />
-            <button className="dials-save__btn" onClick={onSavePreset} disabled={!canSave}>
-              Save to Vault
-            </button>
           </div>
         </div>
       </div>

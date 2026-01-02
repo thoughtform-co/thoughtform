@@ -1959,10 +1959,9 @@
 
 /* ─── DIALS SAVE SECTION ─── */
 .dials-save {
-  flex-shrink: 0;
-  padding: 20px 16px;
-  border-top: 1px solid var(--gold-15, rgba(202, 165, 84, 0.15));
-  background: rgba(10, 9, 8, 0.4);
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px dashed var(--gold-15, rgba(202, 165, 84, 0.15));
 }
 
 .dials-save__group {
