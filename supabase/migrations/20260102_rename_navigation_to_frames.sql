@@ -1,19 +1,18 @@
 -- ═══════════════════════════════════════════════════════════════
--- RENAME CATEGORY: navigation → frames
+-- CATEGORY STRUCTURE UPDATE: Navigation & Frames
 -- ═══════════════════════════════════════════════════════════════
--- Updates survey_items.category_id from 'navigation' to 'frames'
--- to match the catalog.ts category rename
+-- As of this migration, we have TWO categories:
+--   - 'navigation' → For Navigation Bar component
+--   - 'frames'     → For Frame, Card, HUD components
+--
+-- No data migration needed - both categories now exist.
+-- If you previously had items tagged 'navigation' that should be
+-- 'frames' (e.g., Frame or Card references), update them manually:
+--
+-- UPDATE survey_items 
+-- SET category_id = 'frames' 
+-- WHERE category_id = 'navigation' 
+--   AND component_key IN ('frame-basic', 'card-content', 'card-data', 'hud-frame');
 
-UPDATE survey_items 
-SET category_id = 'frames' 
-WHERE category_id = 'navigation';
-
--- Log the migration
-DO $$
-DECLARE
-  updated_count integer;
-BEGIN
-  GET DIAGNOSTICS updated_count = ROW_COUNT;
-  RAISE NOTICE 'Updated % survey items from category navigation to frames', updated_count;
-END $$;
+SELECT 'Migration 20260102: Navigation and Frames are now separate categories' AS status;
 
