@@ -2,7 +2,7 @@
 
 import { memo, useCallback } from "react";
 import { getComponentById, type PropDef } from "../catalog";
-import type { CornerToken } from "@thoughtform/ui";
+import { ChamferedFrame, type CornerToken } from "@thoughtform/ui";
 import { BRAND_COLORS, BORDER_COLORS } from "./types";
 import { CornerSelector } from "./helpers";
 
@@ -234,22 +234,16 @@ function DialsPanelInner({
           </div>
         </div>
         <div className="panel-content panel-content--empty">
-          <div className="inspector-frame inspector-frame--empty">
-            {/* SVG border that traces the chamfered polygon */}
-            <div className="inspector-frame__border">
-              <svg viewBox="0 0 340 734" preserveAspectRatio="none">
-                <polygon points="0,32 188,32 220,0 340,0 340,734 0,734" />
-              </svg>
+          <ChamferedFrame
+            shape="inspectorTicket"
+            className="inspector-frame inspector-frame--empty"
+            contentPadding="none"
+          >
+            <div className="panel-empty-state">
+              <span className="panel-empty-state__icon">◇</span>
+              <p>Select a component to edit</p>
             </div>
-            <div className="inspector-frame__content">
-              <div className="inspector-frame__scrollable">
-                <div className="panel-empty-state">
-                  <span className="panel-empty-state__icon">◇</span>
-                  <p>Select a component to edit</p>
-                </div>
-              </div>
-            </div>
-          </div>
+          </ChamferedFrame>
         </div>
       </aside>
     );
@@ -292,78 +286,67 @@ function DialsPanelInner({
       </div>
 
       <div className="panel-content">
-        <div className="inspector-frame">
-          {/* SVG border that traces the chamfered polygon */}
-          <div className="inspector-frame__border">
-            <svg viewBox="0 0 340 734" preserveAspectRatio="none">
-              <polygon points="0,32 188,32 220,0 340,0 340,734 0,734" />
-            </svg>
-          </div>
+        <ChamferedFrame
+          shape="inspectorTicket"
+          className="inspector-frame"
+          titleSlot={<span className="inspector-frame__title">{def.name}</span>}
+          contentPadding="none"
+        >
+          <div className="spec-panel-v2">
+            {/* ─── HEADER (Harmonized with Vault) ─── */}
+            <header className="spec-header">
+              <p className="spec-header__desc">{def.description}</p>
+            </header>
 
-          {/* Title in step-down area */}
-          <div className="inspector-frame__title-row">
-            <span className="inspector-frame__title">{def.name}</span>
-          </div>
+            {/* Render props grouped by category */}
+            {PROP_CATEGORY_ORDER.map((category) => {
+              const props = groupedProps[category];
+              if (!props || props.length === 0) return null;
 
-          <div className="inspector-frame__content">
-            <div className="inspector-frame__scrollable">
-              <div className="spec-panel-v2">
-                {/* ─── HEADER (Harmonized with Vault) ─── */}
-                <header className="spec-header">
-                  <p className="spec-header__desc">{def.description}</p>
-                </header>
-
-                {/* Render props grouped by category */}
-                {PROP_CATEGORY_ORDER.map((category) => {
-                  const props = groupedProps[category];
-                  if (!props || props.length === 0) return null;
-
-                  return (
-                    <div key={category} className="spec-section">
-                      <div className="spec-section__label">
-                        <span className="spec-section__label-text">
-                          {PROP_CATEGORY_LABELS[category]}
-                        </span>
-                        <span className="spec-section__label-line" />
+              return (
+                <div key={category} className="spec-section">
+                  <div className="spec-section__label">
+                    <span className="spec-section__label-text">
+                      {PROP_CATEGORY_LABELS[category]}
+                    </span>
+                    <span className="spec-section__label-line" />
+                  </div>
+                  <div className="dials-category__content">
+                    {props.map((propDef) => (
+                      <div key={propDef.name}>
+                        {renderPropControl(propDef, componentProps[propDef.name])}
                       </div>
-                      <div className="dials-category__content">
-                        {props.map((propDef) => (
-                          <div key={propDef.name}>
-                            {renderPropControl(propDef, componentProps[propDef.name])}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  );
-                })}
-
-                {/* Actions */}
-                <div className="dials-actions">
-                  <button className="action-btn action-btn--full" onClick={onCopyCode}>
-                    Copy JSX Code
-                  </button>
-                </div>
-
-                {/* Save Section */}
-                <div className="dials-save">
-                  <div className="dials-save__group">
-                    <input
-                      type="text"
-                      className="dials-save__input"
-                      placeholder="Name your creation..."
-                      value={presetName}
-                      onChange={(e) => onPresetNameChange(e.target.value)}
-                      onKeyDown={(e) => e.key === "Enter" && canSave && onSavePreset()}
-                    />
-                    <button className="dials-save__btn" onClick={onSavePreset} disabled={!canSave}>
-                      Save to Vault
-                    </button>
+                    ))}
                   </div>
                 </div>
+              );
+            })}
+
+            {/* Actions */}
+            <div className="dials-actions">
+              <button className="action-btn action-btn--full" onClick={onCopyCode}>
+                Copy JSX Code
+              </button>
+            </div>
+
+            {/* Save Section */}
+            <div className="dials-save">
+              <div className="dials-save__group">
+                <input
+                  type="text"
+                  className="dials-save__input"
+                  placeholder="Name your creation..."
+                  value={presetName}
+                  onChange={(e) => onPresetNameChange(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && canSave && onSavePreset()}
+                />
+                <button className="dials-save__btn" onClick={onSavePreset} disabled={!canSave}>
+                  Save to Vault
+                </button>
               </div>
             </div>
           </div>
-        </div>
+        </ChamferedFrame>
       </div>
     </aside>
   );

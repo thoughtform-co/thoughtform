@@ -2,6 +2,7 @@
 // =============================================================================
 
 export * from "./Frame";
+export * from "./ChamferedFrame";
 export * from "./InputGroup";
 export * from "./Badge";
 export * from "./SectionHeader";

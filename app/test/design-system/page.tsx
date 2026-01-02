@@ -4,6 +4,7 @@ import {
   // Tokens
   gold,
   dawn,
+  chamferColors,
   // Atoms
   CornerBracket,
   CornerBrackets,
@@ -15,6 +16,7 @@ import {
   TargetReticle,
   // Molecules
   Frame,
+  ChamferedFrame,
   Badge,
   SectionHeader,
   // Organisms
@@ -142,8 +144,186 @@ export default function DesignSystemTest() {
         </div>
       </div>
 
+      {/* ChamferedFrame Section */}
+      <SectionHeader index="04" label="ChamferedFrame" showLine />
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))",
+          gap: "32px",
+          marginBottom: "48px",
+        }}
+      >
+        {/* Inspector Ticket (default) */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+          <Label text="inspectorTicket (default)" />
+          <ChamferedFrame
+            shape="inspectorTicket"
+            titleSlot={
+              <span
+                style={{
+                  fontFamily: "var(--font-data, 'PT Mono', monospace)",
+                  fontSize: "11px",
+                  fontWeight: 700,
+                  letterSpacing: "0.05em",
+                  color: gold.DEFAULT,
+                  textTransform: "uppercase",
+                }}
+              >
+                PANEL TITLE
+              </span>
+            }
+            toolbarSlot={
+              <button
+                style={{
+                  background: "transparent",
+                  border: "none",
+                  color: dawn[50],
+                  cursor: "pointer",
+                  padding: "2px 6px",
+                }}
+              >
+                ×
+              </button>
+            }
+            style={{ height: "280px" }}
+          >
+            <div style={{ fontSize: "12px", color: dawn[50] }}>
+              <p style={{ marginBottom: "12px" }}>
+                This is the default inspector ticket frame, matching the Astrogation inspector panel
+                geometry.
+              </p>
+              <p style={{ marginBottom: "12px" }}>
+                The step-down notch on top-right creates a title zone, with toolbar buttons in the
+                opposite corner.
+              </p>
+              <p>Content scrolls and clips below the notch area automatically.</p>
+            </div>
+          </ChamferedFrame>
+        </div>
+
+        {/* Inspector Ticket Compact */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+          <Label text="inspectorTicketCompact" />
+          <ChamferedFrame
+            shape="inspectorTicketCompact"
+            titleSlot={
+              <span
+                style={{
+                  fontFamily: "var(--font-data, 'PT Mono', monospace)",
+                  fontSize: "10px",
+                  fontWeight: 700,
+                  letterSpacing: "0.05em",
+                  color: gold.DEFAULT,
+                  textTransform: "uppercase",
+                }}
+              >
+                COMPACT
+              </span>
+            }
+            style={{ height: "280px" }}
+          >
+            <div style={{ fontSize: "12px", color: dawn[50] }}>
+              <p>Smaller notch variant for tighter layouts.</p>
+            </div>
+          </ChamferedFrame>
+        </div>
+
+        {/* Custom: Danger stroke */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+          <Label text="Danger variant (custom stroke)" />
+          <ChamferedFrame
+            shape="inspectorTicket"
+            strokeColor={chamferColors.strokeDanger}
+            titleSlot={
+              <span
+                style={{
+                  fontFamily: "var(--font-data, 'PT Mono', monospace)",
+                  fontSize: "11px",
+                  fontWeight: 700,
+                  letterSpacing: "0.05em",
+                  color: "#ff6b35",
+                  textTransform: "uppercase",
+                }}
+              >
+                ⚠ ALERT
+              </span>
+            }
+            style={{ height: "280px" }}
+          >
+            <div style={{ fontSize: "12px", color: dawn[50] }}>
+              <p>
+                Custom stroke color for alert/danger states. No baked glow — use CSS drop-shadow if
+                needed.
+              </p>
+            </div>
+          </ChamferedFrame>
+        </div>
+
+        {/* Cut Corners Medium */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+          <Label text="cutCornersMd" />
+          <ChamferedFrame shape="cutCornersMd" style={{ height: "280px" }}>
+            <div style={{ fontSize: "12px", color: dawn[50] }}>
+              <p style={{ marginBottom: "12px" }}>
+                Four-corner chamfer variant with no step-down. Good for cards and dialogs.
+              </p>
+              <p>All corners get a 16px 45-degree cut.</p>
+            </div>
+          </ChamferedFrame>
+        </div>
+
+        {/* Cut Corners Small */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+          <Label text="cutCornersSm" />
+          <ChamferedFrame
+            shape="cutCornersSm"
+            strokeColor={chamferColors.strokeMuted}
+            style={{ height: "280px" }}
+          >
+            <div style={{ fontSize: "12px", color: dawn[50] }}>
+              <p>Small 8px corner cuts with muted stroke. Subtle asymmetry for cards.</p>
+            </div>
+          </ChamferedFrame>
+        </div>
+
+        {/* Custom shape: Top-Left notch */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+          <Label text="Custom: Top-Left notch" />
+          <ChamferedFrame
+            shape={{
+              kind: "ticketNotch",
+              corner: "tl",
+              notchWidthPx: 200,
+              notchHeightPx: 28,
+            }}
+            titleSlot={
+              <span
+                style={{
+                  fontFamily: "var(--font-data, 'PT Mono', monospace)",
+                  fontSize: "11px",
+                  fontWeight: 700,
+                  letterSpacing: "0.05em",
+                  color: gold.DEFAULT,
+                  textTransform: "uppercase",
+                }}
+              >
+                MIRRORED
+              </span>
+            }
+            style={{ height: "280px" }}
+          >
+            <div style={{ fontSize: "12px", color: dawn[50] }}>
+              <p>
+                Notch on top-left corner instead of top-right. Title and toolbar positions swap.
+              </p>
+            </div>
+          </ChamferedFrame>
+        </div>
+      </div>
+
       {/* Organisms Section */}
-      <SectionHeader index="04" label="Organisms" showLine />
+      <SectionHeader index="05" label="Organisms" showLine />
       <div
         style={{
           display: "flex",
@@ -173,7 +353,7 @@ export default function DesignSystemTest() {
       </div>
 
       {/* Target Reticle Section */}
-      <SectionHeader index="05" label="Target Reticle" showLine />
+      <SectionHeader index="06" label="Target Reticle" showLine />
       <div
         style={{
           display: "flex",
