@@ -3,8 +3,9 @@ import type {
   StyleConfig,
   WorkspaceTab,
   SurveyItem,
+  FoundryFrameConfig,
 } from "../_components/types";
-import { DEFAULT_STYLE } from "../_components/types";
+import { DEFAULT_STYLE, DEFAULT_FOUNDRY_FRAME } from "../_components/types";
 import { getComponentById } from "../catalog";
 
 // ═══════════════════════════════════════════════════════════════
@@ -25,6 +26,9 @@ export interface AstrogationState {
   // Component editing
   componentProps: Record<string, unknown>;
   style: StyleConfig;
+
+  // Foundry frame config (for stage framing around component preview)
+  foundryFrame: FoundryFrameConfig;
 
   // Presets
   presets: UIComponentPreset[];
@@ -50,6 +54,7 @@ export const initialState: AstrogationState = {
   isFocused: false,
   componentProps: {},
   style: DEFAULT_STYLE,
+  foundryFrame: DEFAULT_FOUNDRY_FRAME,
   presets: [],
   presetName: "",
   toast: null,
@@ -82,6 +87,7 @@ export type AstrogationAction =
   | { type: "SET_PROPS"; payload: Record<string, unknown> }
   | { type: "SET_STYLE"; payload: StyleConfig }
   | { type: "RESET_PROPS_FOR_COMPONENT"; payload: string }
+  | { type: "SET_FOUNDRY_FRAME"; payload: Partial<FoundryFrameConfig> }
 
   // Presets
   | { type: "LOAD_PRESETS"; payload: UIComponentPreset[] }
@@ -165,6 +171,12 @@ export function astrogationReducer(
       return { ...state, componentProps: defaultProps };
     }
 
+    case "SET_FOUNDRY_FRAME":
+      return {
+        ...state,
+        foundryFrame: { ...state.foundryFrame, ...action.payload },
+      };
+
     // Presets
     case "LOAD_PRESETS":
       return { ...state, presets: action.payload };
@@ -186,12 +198,19 @@ export function astrogationReducer(
       return { ...state, presetName: action.payload };
 
     case "LOAD_PRESET": {
-      const { __style, ...props } = action.payload.config as Record<string, unknown>;
+      const { __style, __foundryFrame, ...props } = action.payload.config as Record<
+        string,
+        unknown
+      >;
       return {
         ...state,
         selectedComponentId: action.payload.component_key,
         componentProps: props,
         style: __style ? (__style as StyleConfig) : state.style,
+        // Restore foundry frame if saved, otherwise keep current (backward compatible)
+        foundryFrame: __foundryFrame
+          ? { ...DEFAULT_FOUNDRY_FRAME, ...(__foundryFrame as Partial<FoundryFrameConfig>) }
+          : state.foundryFrame,
         activeTab: "foundry", // Switch to foundry when loading a preset
       };
     }
@@ -288,6 +307,10 @@ export const actions = {
     payload: props,
   }),
   setStyle: (style: StyleConfig): AstrogationAction => ({ type: "SET_STYLE", payload: style }),
+  setFoundryFrame: (frame: Partial<FoundryFrameConfig>): AstrogationAction => ({
+    type: "SET_FOUNDRY_FRAME",
+    payload: frame,
+  }),
   loadPresets: (presets: UIComponentPreset[]): AstrogationAction => ({
     type: "LOAD_PRESETS",
     payload: presets,

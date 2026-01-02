@@ -1,7 +1,13 @@
 "use client";
 
 import { getComponentById } from "../catalog";
-import type { UIComponentPreset, StyleConfig, WorkspaceTab, SurveyViewBundledProps } from "./types";
+import type {
+  UIComponentPreset,
+  StyleConfig,
+  WorkspaceTab,
+  SurveyViewBundledProps,
+  FoundryFrameConfig,
+} from "./types";
 import { VaultView } from "./VaultView";
 import { FoundryView } from "./FoundryView";
 import { SurveyView } from "./SurveyView";
@@ -16,6 +22,7 @@ export interface CenterPanelProps {
   selectedComponentId: string | null;
   componentProps: Record<string, unknown>;
   style: StyleConfig;
+  foundryFrame: FoundryFrameConfig;
   presets: UIComponentPreset[];
   onLoadPreset: (preset: UIComponentPreset) => void;
   onDeletePreset: (id: string) => void;
@@ -25,6 +32,7 @@ export interface CenterPanelProps {
   canSave: boolean;
   isFocused: boolean;
   onFocusChange: (focused: boolean) => void;
+  onSelectComponent: (id: string) => void;
   // Survey props bundled for cleaner API
   survey?: SurveyViewBundledProps;
 }
@@ -35,6 +43,7 @@ export function CenterPanel({
   selectedComponentId,
   componentProps,
   style,
+  foundryFrame,
   presets,
   onLoadPreset,
   onDeletePreset,
@@ -44,6 +53,7 @@ export function CenterPanel({
   canSave,
   isFocused,
   onFocusChange,
+  onSelectComponent,
   survey,
 }: CenterPanelProps) {
   const def = selectedComponentId ? (getComponentById(selectedComponentId) ?? null) : null;
@@ -105,6 +115,7 @@ export function CenterPanel({
             selectedComponentId={selectedComponentId}
             componentProps={componentProps}
             style={style}
+            foundryFrame={foundryFrame}
             def={def}
             onSavePreset={onSavePreset}
             presetName={presetName}
@@ -112,6 +123,7 @@ export function CenterPanel({
             canSave={canSave}
             isFocused={isFocused}
             onFocusChange={onFocusChange}
+            onSelectComponent={onSelectComponent}
           />
         )}
         {activeTab === "survey" && survey && (

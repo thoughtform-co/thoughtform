@@ -29,6 +29,42 @@ export interface StyleConfig {
 export type WorkspaceTab = "vault" | "foundry" | "survey";
 
 // ═══════════════════════════════════════════════════════════════
+// FOUNDRY FRAME CONFIG
+// ═══════════════════════════════════════════════════════════════
+
+export type FoundryShapePreset =
+  | "inspectorTicket"
+  | "inspectorTicketCompact"
+  | "cutCornersSm"
+  | "cutCornersMd"
+  | "cutCornersTopRight"
+  | "none";
+
+export interface FoundryFrameConfig {
+  /** Shape preset or "none" for no frame */
+  shape: FoundryShapePreset;
+  /** Custom notch width (only for ticketNotch shapes) */
+  notchWidthPx: number;
+  /** Custom notch height (only for ticketNotch shapes) */
+  notchHeightPx: number;
+  /** Stroke color for the frame border */
+  strokeColor: string;
+  /** Stroke width in pixels */
+  strokeWidth: number;
+  /** Fill color for the frame background */
+  fillColor: string;
+}
+
+export const DEFAULT_FOUNDRY_FRAME: FoundryFrameConfig = {
+  shape: "none",
+  notchWidthPx: 220,
+  notchHeightPx: 32,
+  strokeColor: "rgba(202, 165, 84, 0.3)",
+  strokeWidth: 1,
+  fillColor: "rgba(10, 9, 8, 0.4)",
+};
+
+// ═══════════════════════════════════════════════════════════════
 // SURVEY TYPES
 // ═══════════════════════════════════════════════════════════════
 

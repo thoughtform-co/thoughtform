@@ -19,7 +19,9 @@ import {
   type SurveyAnnotation,
   type SurveyViewBundledProps,
   type WorkspaceTab,
+  type FoundryFrameConfig,
 } from "./_components";
+import { FoundryAssistantDock } from "./_components/FoundryAssistantDock";
 
 // Import state management
 import { astrogationReducer, initialState, actions } from "./_state/astrogationReducer";
@@ -30,6 +32,9 @@ import { useSurvey } from "./_hooks/useSurvey";
 
 // Import StatusBar
 import { StatusBar } from "@/components/hud/StatusBar";
+
+// Import auth utilities
+import { supabase } from "@/lib/supabase";
 
 import "./astrogation.css";
 
@@ -48,6 +53,7 @@ function AstrogationContent() {
     isFocused,
     componentProps,
     style,
+    foundryFrame,
     presets,
     presetName,
     toast,
@@ -67,6 +73,7 @@ function AstrogationContent() {
     selectedComponentId,
     componentProps,
     style,
+    foundryFrame,
     presetName,
   });
 
@@ -150,6 +157,62 @@ function AstrogationContent() {
     navigator.clipboard.writeText(code);
     dispatch(actions.showToast("Code copied to clipboard"));
   }, [selectedComponentId, componentProps]);
+
+  // Copy framed code (wraps component in ChamferedFrame)
+  const handleCopyFramedCode = useCallback(() => {
+    if (!selectedComponentId) return;
+    const componentCode = generateJSXCode(selectedComponentId, componentProps);
+
+    // Generate ChamferedFrame wrapper
+    const frameCode = `<ChamferedFrame
+  shape={{
+    kind: "ticketNotch",
+    corner: "tr",
+    notchWidthPx: ${foundryFrame.notchWidthPx},
+    notchHeightPx: ${foundryFrame.notchHeightPx},
+  }}
+  strokeColor="${foundryFrame.strokeColor}"
+  strokeWidth={${foundryFrame.strokeWidth}}
+  fillColor="${foundryFrame.fillColor}"
+>
+  ${componentCode.split("\n").join("\n  ")}
+</ChamferedFrame>`;
+
+    navigator.clipboard.writeText(frameCode);
+    dispatch(actions.showToast("Framed code copied to clipboard"));
+  }, [selectedComponentId, componentProps, foundryFrame]);
+
+  // Foundry frame change handler
+  const handleFoundryFrameChange = useCallback((frame: Partial<FoundryFrameConfig>) => {
+    dispatch(actions.setFoundryFrame(frame));
+  }, []);
+
+  // Apply patch from assistant
+  const handleApplyPatch = useCallback(
+    (patch: { setProps?: Record<string, unknown>; setFrame?: Partial<FoundryFrameConfig> }) => {
+      if (patch.setProps) {
+        dispatch(actions.setProps({ ...componentProps, ...patch.setProps }));
+      }
+      if (patch.setFrame) {
+        dispatch(actions.setFoundryFrame(patch.setFrame));
+      }
+      dispatch(actions.showToast("Changes applied"));
+    },
+    [componentProps]
+  );
+
+  // Get auth token for assistant requests
+  const getAuthToken = useCallback(async () => {
+    try {
+      if (!supabase) return null;
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      return session?.access_token || null;
+    } catch {
+      return null;
+    }
+  }, []);
 
   // Survey handlers
   const handleSurveyCategoryChange = useCallback((id: string | null) => {
@@ -328,6 +391,7 @@ function AstrogationContent() {
           selectedComponentId={selectedComponentId}
           componentProps={componentProps}
           style={style}
+          foundryFrame={foundryFrame}
           presets={presets}
           onLoadPreset={loadPreset}
           onDeletePreset={deletePreset}
@@ -337,6 +401,7 @@ function AstrogationContent() {
           canSave={canSave}
           isFocused={isFocused}
           onFocusChange={handleFocusChange}
+          onSelectComponent={handleSelectComponent}
           survey={surveyProps}
         />
 
@@ -365,11 +430,23 @@ function AstrogationContent() {
             componentProps={componentProps}
             onPropsChange={handlePropsChange}
             onCopyCode={handleCopyCode}
+            onCopyFramedCode={handleCopyFramedCode}
             onSavePreset={savePreset}
             presetName={presetName}
             onPresetNameChange={handlePresetNameChange}
             canSave={canSave}
-          />
+            foundryFrame={foundryFrame}
+            onFoundryFrameChange={handleFoundryFrameChange}
+          >
+            {/* Foundry Assistant Dock - anchored to the right panel */}
+            <FoundryAssistantDock
+              componentId={selectedComponentId}
+              componentProps={componentProps}
+              foundryFrame={foundryFrame}
+              onApplyPatch={handleApplyPatch}
+              getAuthToken={getAuthToken}
+            />
+          </DialsPanel>
         ) : (
           <SpecPanel selectedComponentId={selectedComponentId} />
         )}

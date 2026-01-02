@@ -2,9 +2,10 @@
 
 import { useState, useEffect, useCallback } from "react";
 import type { ComponentDef } from "../catalog";
-import type { StyleConfig } from "./types";
+import { COMPONENTS } from "../catalog";
+import type { StyleConfig, FoundryFrameConfig } from "./types";
 import { ComponentPreview } from "./previews/ComponentPreview";
-import { TargetReticle } from "@thoughtform/ui";
+import { TargetReticle, ChamferedFrame } from "@thoughtform/ui";
 
 // ═══════════════════════════════════════════════════════════════
 // FOUNDRY VIEW - Component Editor & Preview
@@ -14,6 +15,7 @@ export interface FoundryViewProps {
   selectedComponentId: string | null;
   componentProps: Record<string, unknown>;
   style: StyleConfig;
+  foundryFrame: FoundryFrameConfig;
   def: ComponentDef | null;
   onSavePreset: () => void;
   presetName: string;
@@ -21,12 +23,14 @@ export interface FoundryViewProps {
   canSave: boolean;
   isFocused: boolean;
   onFocusChange: (focused: boolean) => void;
+  onSelectComponent: (id: string) => void;
 }
 
 export function FoundryView({
   selectedComponentId,
   componentProps,
   style,
+  foundryFrame,
   def,
   onSavePreset,
   presetName,
@@ -34,6 +38,7 @@ export function FoundryView({
   canSave,
   isFocused,
   onFocusChange,
+  onSelectComponent,
 }: FoundryViewProps) {
   // Zoom state for the preview
   const [zoom, setZoom] = useState(1);
@@ -134,6 +139,53 @@ export function FoundryView({
   const focusZoom = hasFocus && !isMultiElement ? 1.5 : 1;
   const totalZoom = zoom * focusZoom;
 
+  // Render preview content with optional ChamferedFrame wrapper
+  const renderPreviewContent = () => {
+    const preview = isMultiElement ? (
+      <ComponentPreview
+        componentId={selectedComponentId}
+        props={{
+          ...componentProps,
+          _focusedElementId: focusedElementId,
+          _onElementFocus: handleElementFocus,
+        }}
+        style={style}
+        fullSize
+      />
+    ) : (
+      <TargetReticle>
+        <ComponentPreview
+          componentId={selectedComponentId}
+          props={componentProps}
+          style={style}
+          fullSize
+        />
+      </TargetReticle>
+    );
+
+    // Wrap in ChamferedFrame if shape is not "none"
+    if (foundryFrame.shape !== "none") {
+      return (
+        <ChamferedFrame
+          shape={{
+            kind: "ticketNotch",
+            corner: "tr",
+            notchWidthPx: foundryFrame.notchWidthPx,
+            notchHeightPx: foundryFrame.notchHeightPx,
+          }}
+          strokeColor={foundryFrame.strokeColor}
+          strokeWidth={foundryFrame.strokeWidth}
+          fillColor={foundryFrame.fillColor}
+          className="foundry__stage-frame"
+        >
+          <div className="foundry__stage-frame-content">{preview}</div>
+        </ChamferedFrame>
+      );
+    }
+
+    return preview;
+  };
+
   return (
     <div className={`foundry ${hasFocus && !isMultiElement ? "foundry--focused" : ""}`}>
       {/* Preview Area */}
@@ -150,32 +202,32 @@ export function FoundryView({
             transition: hasFocus ? "transform 0.3s ease-out" : "transform 0.2s ease-out",
           }}
         >
-          {isMultiElement ? (
-            // For multi-element components, don't wrap in TargetReticle
-            <ComponentPreview
-              componentId={selectedComponentId}
-              props={{
-                ...componentProps,
-                _focusedElementId: focusedElementId,
-                _onElementFocus: handleElementFocus,
-              }}
-              style={style}
-              fullSize
-            />
-          ) : (
-            // For single-element components, wrap in TargetReticle
-            <TargetReticle>
-              <ComponentPreview
-                componentId={selectedComponentId}
-                props={componentProps}
-                style={style}
-                fullSize
-              />
-            </TargetReticle>
-          )}
+          {renderPreviewContent()}
         </div>
         {/* Zoom indicator */}
         {zoom !== 1 && <div className="foundry__zoom-indicator">{Math.round(zoom * 100)}%</div>}
+      </div>
+
+      {/* Template Tray - horizontal scrollable bar at the bottom */}
+      <div className="foundry__template-tray">
+        <div className="foundry__template-tray-label">TEMPLATES</div>
+        <div className="foundry__template-tray-scroll">
+          {COMPONENTS.filter(
+            (c) =>
+              // Filter to showable components (have default dimensions or are visual)
+              c.category !== "colors" && c.category !== "typography"
+          ).map((component) => (
+            <button
+              key={component.id}
+              className={`foundry__template-item ${selectedComponentId === component.id ? "foundry__template-item--active" : ""}`}
+              onClick={() => onSelectComponent(component.id)}
+              title={component.description}
+            >
+              <span className="foundry__template-item-name">{component.name}</span>
+              <span className="foundry__template-item-category">{component.category}</span>
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Info */}

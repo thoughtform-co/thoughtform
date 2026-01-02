@@ -1,9 +1,32 @@
 "use client";
 
 import { useEffect, useCallback } from "react";
-import type { UIComponentPreset, StyleConfig } from "../_components/types";
+import type { UIComponentPreset, StyleConfig, FoundryFrameConfig } from "../_components/types";
 import type { AstrogationAction } from "../_state/astrogationReducer";
 import { actions } from "../_state/astrogationReducer";
+import { supabase } from "@/lib/supabase";
+
+// Helper to get auth headers for production
+async function getAuthHeaders(): Promise<HeadersInit> {
+  const headers: HeadersInit = {
+    "Content-Type": "application/json",
+  };
+
+  try {
+    if (supabase) {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (session?.access_token) {
+        headers["Authorization"] = `Bearer ${session.access_token}`;
+      }
+    }
+  } catch {
+    // In dev mode or if auth fails, proceed without token
+  }
+
+  return headers;
+}
 
 // ═══════════════════════════════════════════════════════════════
 // PRESETS HOOK
@@ -14,6 +37,7 @@ export interface UsePresetsOptions {
   selectedComponentId: string | null;
   componentProps: Record<string, unknown>;
   style: StyleConfig;
+  foundryFrame: FoundryFrameConfig;
   presetName: string;
 }
 
@@ -34,12 +58,14 @@ export function usePresets({
   selectedComponentId,
   componentProps,
   style,
+  foundryFrame,
   presetName,
 }: UsePresetsOptions): UsePresetsReturn {
   // Load presets from server on mount
   const loadPresetsFromServer = useCallback(async () => {
     try {
-      const res = await fetch("/api/ui-component-presets");
+      const headers = await getAuthHeaders();
+      const res = await fetch("/api/ui-component-presets", { headers });
       const data = await res.json();
       dispatch(actions.loadPresets(data.presets || []));
     } catch (e) {
@@ -57,13 +83,14 @@ export function usePresets({
     if (!selectedComponentId || !presetName.trim()) return;
 
     try {
+      const headers = await getAuthHeaders();
       const res = await fetch("/api/ui-component-presets", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({
           name: presetName,
           component_key: selectedComponentId,
-          config: { ...componentProps, __style: style },
+          config: { ...componentProps, __style: style, __foundryFrame: foundryFrame },
         }),
       });
       const data = await res.json();
@@ -75,7 +102,7 @@ export function usePresets({
       console.error("Failed to save preset:", e);
       dispatch(actions.showToast("Failed to save preset"));
     }
-  }, [selectedComponentId, componentProps, style, presetName, dispatch]);
+  }, [selectedComponentId, componentProps, style, foundryFrame, presetName, dispatch]);
 
   // Load preset into state
   const loadPreset = useCallback(
@@ -91,7 +118,8 @@ export function usePresets({
     async (id: string) => {
       if (!confirm("Delete this preset?")) return;
       try {
-        await fetch(`/api/ui-component-presets?id=${id}`, { method: "DELETE" });
+        const headers = await getAuthHeaders();
+        await fetch(`/api/ui-component-presets?id=${id}`, { method: "DELETE", headers });
         dispatch(actions.presetDeleted(id));
         dispatch(actions.showToast("Preset deleted"));
       } catch (e) {
