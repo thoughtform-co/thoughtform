@@ -36,6 +36,12 @@ Add to Sentinel when you:
 
 ## Quick Links
 
+### Best Practices
+
+- [State Update Order](BEST-PRACTICES.md#-order-matters-update-dependent-state-before-dependent-state) - Prevent state resets from overwriting dependent values
+
+### Architecture Decisions
+
 - [Scroll Animation Architecture](decisions/002-scroll-animation-architecture.md)
 - [Auth Centralization](decisions/003-auth-centralization.md)
 - [Legacy Code Archival](decisions/004-legacy-code-archival.md)

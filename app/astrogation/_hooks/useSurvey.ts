@@ -82,27 +82,6 @@ function createFetcher(accessToken: string | undefined) {
       const errorData = await res.json().catch(() => ({}));
       const errorMessage = errorData.error || `Request failed: ${res.status}`;
 
-      // #region agent log (debug-session)
-      fetch("http://127.0.0.1:7245/ingest/016d7ddb-dff0-4507-889a-e79ef3328873", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          sessionId: "debug-session",
-          runId: "pre-fix",
-          hypothesisId: "H1-auth",
-          location: "app/astrogation/_hooks/useSurvey.ts:createFetcher",
-          message: "API request failed",
-          data: {
-            endpoint,
-            method,
-            status: res.status,
-            hasAuthHeader: Boolean(baseHeaders.Authorization),
-          },
-          timestamp: Date.now(),
-        }),
-      }).catch(() => {});
-      // #endregion
-
       // Provide more helpful error messages
       if (res.status === 401) {
         throw new Error("Authentication required. Please sign in to view your items.");

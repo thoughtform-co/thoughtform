@@ -231,6 +231,42 @@ if (isAllowedEmail(email)) { ... }
 
 ---
 
+## 🔄 State Management
+
+### Order Matters: Update Dependent State Before Dependent State
+
+When dispatching multiple actions that have dependencies, dispatch them in the correct order. If Action A resets a value that Action B sets, dispatch A first:
+
+```typescript
+// ❌ BAD: Component selection gets immediately cleared
+const handleComponentClick = (componentId: string, parentCategoryId: string) => {
+  onSelectComponent(componentId); // Sets surveyComponentKey = componentId
+  onSelectCategory(parentCategoryId); // Sets surveyCategoryId AND resets surveyComponentKey = null
+  // Result: surveyComponentKey is null (lost!)
+};
+
+// ✅ GOOD: Update parent state first, then dependent state
+const handleComponentClick = (componentId: string, parentCategoryId: string) => {
+  // Only update category if it's changing
+  if (parentCategoryId !== selectedCategoryId) {
+    onSelectCategory(parentCategoryId); // Sets surveyCategoryId first
+  }
+  onSelectComponent(componentId); // Now sets surveyComponentKey (won't be cleared)
+};
+```
+
+**Why it matters:** Reducers often reset dependent state when parent state changes. If you dispatch actions in the wrong order, the second dispatch can overwrite the first.
+
+**Pattern to watch for:**
+
+- Reducer case `SET_PARENT` resets `childState = null`
+- You dispatch `SET_CHILD(value)` then `SET_PARENT(id)`
+- Result: `childState` ends up as `null` instead of `value`
+
+**Solution:** Check if parent needs updating, update it first, then update child.
+
+---
+
 ## 🎨 CSS & Styling
 
 ### Polygon Cards: Separate Background from Border
@@ -382,6 +418,12 @@ Terminal/manifesto text uses Tensor Gold with CRT glow:
 - [ ] Using centralized `isAllowedEmail()`?
 - [ ] Bearer token passed in API requests?
 
+### Before Committing State Management Code
+
+- [ ] Multiple dispatches ordered correctly (parent before child)?
+- [ ] Reducer doesn't reset dependent state unexpectedly?
+- [ ] State updates are idempotent (safe to call multiple times)?
+
 ### Before Committing CSS
 
 - [ ] Magic numbers extracted to variables?
@@ -392,4 +434,4 @@ Terminal/manifesto text uses Tensor Gold with CRT glow:
 
 ---
 
-_Last updated: 2026-01_
+_Last updated: 2026-01-28_

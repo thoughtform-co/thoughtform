@@ -96,10 +96,23 @@ function SurveyCatalogPanelInner({
         // Deselect component but keep category
         onSelectComponent(null);
       } else {
-        onSelectComponent(nodeId);
-        if (parentCategory) {
+        // ═══════════════════════════════════════════════════════════════
+        // SENTINEL BEST PRACTICE: State Update Order
+        // ═══════════════════════════════════════════════════════════════
+        // When dispatching multiple actions with dependencies, dispatch parent
+        // state updates BEFORE dependent state updates.
+        //
+        // CRITICAL: SURVEY_SET_CATEGORY resets surveyComponentKey to null.
+        // If we dispatch onSelectComponent() then onSelectCategory(), the
+        // component selection gets immediately cleared.
+        //
+        // Solution: Update category first (only if changing), then component.
+        // See: sentinel/BEST-PRACTICES.md → "Order Matters: Update Dependent State"
+        // ═══════════════════════════════════════════════════════════════
+        if (parentCategory && parentCategory.id !== selectedCategoryId) {
           onSelectCategory(parentCategory.id);
         }
+        onSelectComponent(nodeId);
       }
     }
   };

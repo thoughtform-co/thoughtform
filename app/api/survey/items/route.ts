@@ -51,10 +51,11 @@ export async function GET(request: NextRequest) {
       query = query.or(`user_id.eq.${userIdForQuery},user_id.is.null`);
     }
 
-    if (categoryId) {
+    // Apply filters - only if values are provided and not empty
+    if (categoryId && categoryId.trim() !== "") {
       query = query.eq("category_id", categoryId);
     }
-    if (componentKey) {
+    if (componentKey && componentKey.trim() !== "") {
       query = query.eq("component_key", componentKey);
     }
 

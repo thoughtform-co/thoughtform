@@ -205,14 +205,28 @@ export function astrogationReducer(
 
     // Survey
     case "SURVEY_SET_CATEGORY":
+      // ═══════════════════════════════════════════════════════════════
+      // SENTINEL WARNING: This action resets surveyComponentKey to null.
+      // ═══════════════════════════════════════════════════════════════
+      // When updating both category and component, dispatch SURVEY_SET_CATEGORY
+      // FIRST, then SURVEY_SET_COMPONENT. Otherwise the component selection
+      // will be immediately cleared.
+      //
+      // See: sentinel/BEST-PRACTICES.md → "Order Matters: Update Dependent State"
+      // ═══════════════════════════════════════════════════════════════
       return {
         ...state,
         surveyCategoryId: action.payload,
         surveyComponentKey: null, // Reset component when category changes
+        surveySelectedItemId: null, // Clear selected item when filter changes
       };
 
     case "SURVEY_SET_COMPONENT":
-      return { ...state, surveyComponentKey: action.payload };
+      return {
+        ...state,
+        surveyComponentKey: action.payload,
+        surveySelectedItemId: null, // Clear selected item when filter changes
+      };
 
     case "SURVEY_SELECT_ITEM":
       return { ...state, surveySelectedItemId: action.payload };
