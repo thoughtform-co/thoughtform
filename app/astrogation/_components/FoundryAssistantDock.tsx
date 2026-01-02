@@ -184,14 +184,16 @@ export function FoundryAssistantDock({
             // Close icon - X
             <path d="M6 18L18 6M6 6l12 12" strokeLinecap="round" strokeLinejoin="round" />
           ) : (
-            // Futuristic AI/terminal sparkle icon
+            // Chat bubble icon
             <>
-              <path d="M12 3v3m0 12v3M3 12h3m12 0h3" strokeLinecap="round" />
               <path
-                d="M5.636 5.636l2.122 2.122m8.484 8.484l2.122 2.122M5.636 18.364l2.122-2.122m8.484-8.484l2.122-2.122"
+                d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"
                 strokeLinecap="round"
+                strokeLinejoin="round"
               />
-              <circle cx="12" cy="12" r="3" />
+              <circle cx="12" cy="11" r="1" fill="currentColor" stroke="none" />
+              <circle cx="8" cy="11" r="1" fill="currentColor" stroke="none" />
+              <circle cx="16" cy="11" r="1" fill="currentColor" stroke="none" />
             </>
           )}
         </svg>

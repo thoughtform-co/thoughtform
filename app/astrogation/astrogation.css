@@ -7899,7 +7899,7 @@
 /* ─── FOUNDRY ASSISTANT DOCK ─── */
 .foundry-assistant-dock {
   position: absolute;
-  bottom: 24px;
+  bottom: 0; /* Aligned with the bottom edge of the right panel frame */
   left: -56px; /* Positions to the left of the right panel */
   z-index: 100;
 }
