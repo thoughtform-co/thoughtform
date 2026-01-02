@@ -34,11 +34,23 @@ export interface FlowNodeProps {
   children: React.ReactNode;
   className?: string;
   isLast?: boolean;
+  stepNumber?: number;
 }
 
 function FlowConnectorRoot({ children, className = "" }: FlowConnectorProps) {
-  // Count valid children to know which is last
+  // Count valid children to know which is last and assign step numbers
   const childArray = React.Children.toArray(children).filter(Boolean);
+
+  // First pass: count only FlowNode components (identified by having 'label' prop) to get step numbers
+  let stepNumber = 0;
+  const stepNumbers = new Map<number, number>();
+
+  childArray.forEach((child, index) => {
+    if (React.isValidElement<FlowNodeProps>(child) && "label" in child.props) {
+      stepNumber++;
+      stepNumbers.set(index, stepNumber);
+    }
+  });
 
   return (
     <div className={`flow-connector ${className}`}>
@@ -47,6 +59,7 @@ function FlowConnectorRoot({ children, className = "" }: FlowConnectorProps) {
           return React.cloneElement(child, {
             key: child.key || index,
             isLast: index === childArray.length - 1,
+            stepNumber: stepNumbers.get(index),
           });
         }
         return child;
@@ -63,6 +76,7 @@ function FlowNode({
   children,
   className = "",
   isLast = false,
+  stepNumber,
 }: FlowNodeProps) {
   const variantClass = variant === "gold" ? "flow-connector__node--gold" : "";
 
@@ -71,8 +85,12 @@ function FlowNode({
       {/* Line segment above the marker (hidden for first node via CSS) */}
       <div className="flow-connector__line-above" />
 
-      {/* Circle marker */}
-      <div className="flow-connector__marker" />
+      {/* Diamond marker with step number */}
+      <div className="flow-connector__marker">
+        {stepNumber !== undefined && (
+          <span className="flow-connector__marker-number">{stepNumber}</span>
+        )}
+      </div>
 
       {/* Vertical connector line (hidden on last item) */}
       {!isLast && <div className="flow-connector__line" />}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useRef, useEffect, useMemo } from "react";
+import { Network } from "lucide-react";
 import type { SurveyItem, SurveyAnnotation } from "./types";
 import { AnnotationBox } from "./AnnotationBox";
 
@@ -67,10 +68,10 @@ function GridItem({ item, onClick }: GridItemProps) {
           </div>
         )}
       </div>
-      {/* Annotation indicator */}
-      {item.annotations && item.annotations.length > 0 && (
-        <div className="survey-grid__item-badge" title={`${item.annotations.length} annotations`}>
-          {item.annotations.length}
+      {/* Embedded indicator */}
+      {item.briefing_embedding_text && (
+        <div className="survey-grid__item-embedded" title="Embedded in vector space">
+          <Network size={12} strokeWidth={1.5} />
         </div>
       )}
     </button>

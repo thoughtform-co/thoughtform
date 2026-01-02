@@ -387,6 +387,25 @@
   color: var(--gold);
 }
 
+/* Upload button in nav */
+.astrogation-nav__upload-btn {
+  margin-left: auto;
+  padding: 6px 12px;
+  background: var(--gold, #caa554);
+  color: var(--void, #0a0908);
+  border: none;
+  font-family: var(--font-data, "PT Mono", monospace);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.astrogation-nav__upload-btn:hover {
+  background: var(--gold-70, rgba(202, 165, 84, 0.7));
+}
+
 /* ─── CONTENT AREA ─── */
 .astrogation-content {
   position: absolute;
@@ -530,7 +549,7 @@
   min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 16px 16px 24px 16px; /* Consistent internal padding */
+  padding: 16px 16px 0 16px; /* Top and sides only - let content handle bottom spacing */
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE and Edge */
 }
@@ -579,6 +598,11 @@
   flex-direction: column;
 }
 
+/* Survey inspector: remove outer rectangular border so the inner polygon frame reads correctly */
+.astrogation-panel--right.astrogation-panel--survey {
+  border: none;
+}
+
 /* Right panel content frame - no border here, border is on panel now */
 .astrogation-panel--right .panel-content {
   border: none;
@@ -593,6 +617,181 @@
 /* Corner accents - RIGHT panel: DISABLED for clean look */
 .astrogation-panel--right::after {
   display: none !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SURVEY PANEL FRAME - Stepped notch corner with title
+   Based on game UI card design (MAGNUM 650 reference)
+   ═══════════════════════════════════════════════════════════════ */
+.survey-panel-frame {
+  /* Geometry tokens */
+  --survey-notch-w: 220px; /* diagonal position from left */
+  --survey-notch-h: 32px; /* height of the step-down (title area) */
+  --survey-title-strip: 0px; /* title is now INSIDE the card, not above */
+
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.survey-panel-frame--empty {
+  /* Empty state uses same geometry */
+}
+
+/* Polygon frame BACKGROUND (clipped, no border - border is drawn via SVG) */
+.survey-panel-frame::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(10, 9, 8, 0.4);
+  pointer-events: none;
+  z-index: 0;
+
+  /* Ticket-stub / index-tab cut — chamfer on TOP-RIGHT */
+  clip-path: polygon(
+    0% var(--survey-notch-h),
+    calc(var(--survey-notch-w) - var(--survey-notch-h)) var(--survey-notch-h),
+    var(--survey-notch-w) 0%,
+    100% 0%,
+    100% 100%,
+    0% 100%
+  );
+}
+
+/* SVG border element - positioned to match the polygon */
+.survey-panel-frame__border {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  overflow: visible;
+}
+
+.survey-panel-frame__border svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.survey-panel-frame__border polygon {
+  fill: none;
+  stroke: var(--gold-30, rgba(202, 165, 84, 0.3));
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+/* Title row: title label INSIDE the card's step-down area (left side) */
+.survey-panel-frame__title-row {
+  position: absolute;
+  top: 4px;
+  left: 8px;
+  /* Title area extends up to the diagonal start point */
+  width: calc(var(--survey-notch-w) - var(--survey-notch-h) - 16px);
+  height: calc(var(--survey-notch-h) - 8px);
+  display: flex;
+  align-items: center;
+  z-index: 3; /* Above the polygon frame */
+  background: transparent;
+}
+
+.survey-panel-frame__title {
+  font-family: var(--font-data, "PT Mono", monospace);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  color: var(--void, #0a0908);
+  line-height: 1.2;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.survey-panel-frame__subtitle {
+  font-family: var(--font-data, "PT Mono", monospace);
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  color: var(--dawn-70, rgba(210, 200, 180, 0.7));
+  text-transform: uppercase;
+  margin-top: 2px;
+  line-height: 1.2;
+}
+
+/* Title input - editable title in the step-down area */
+.survey-panel-frame__title-input {
+  font-family: var(--font-data, "PT Mono", monospace);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--gold, #caa554);
+  line-height: 1.2;
+  text-transform: uppercase;
+  background: transparent;
+  border: none;
+  outline: none;
+  width: 100%;
+  padding: 0;
+  margin: 0;
+  resize: none;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.survey-panel-frame__title-input::placeholder {
+  color: rgba(202, 165, 84, 0.45);
+}
+
+.survey-panel-frame__title-input:focus {
+  background: rgba(202, 165, 84, 0.08);
+}
+
+/* Main content area with notched corner */
+.survey-panel-frame__content {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  z-index: 1; /* Above the clipped frame pseudo-element */
+  /* Clip content at horizontal line with safety margin.
+     Content disappears a few px before the title/icons row. */
+  clip-path: inset(calc(var(--survey-notch-h) + 6px) 0 0 0);
+}
+
+/* Inner scrollable content */
+.survey-panel-frame__scrollable {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: calc(var(--survey-notch-h) + 8px) 12px 12px 12px; /* clears title/notch area */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.survey-panel-frame__scrollable::-webkit-scrollbar {
+  display: none;
+}
+
+/* Toolbar actions - INSIDE the card, top-right corner */
+.survey-panel-frame__toolbar {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  z-index: 3;
+}
+
+/* Empty state variant: no toolbar/title, so reduce top padding while keeping polygon frame */
+.survey-panel-frame--empty .survey-panel-frame__scrollable {
+  padding-top: 24px;
 }
 
 /* ─── PANEL HEADER TAB ─── */
@@ -636,13 +835,7 @@
   padding: 8px 12px !important;
   height: 54px !important; /* Explicitly match left panel */
   line-height: 1.5 !important;
-  clip-path: polygon(
-    0% 0%,
-    100% 0%,
-    100% calc(100% - 12px),
-    calc(100% - 12px) 100%,
-    0% 100%
-  ) !important;
+  clip-path: polygon(0% 0%, calc(100% - 12px) 0%, 100% 12px, 100% 100%, 0% 100%) !important;
 }
 
 /* Gold-filled panel header variant */
@@ -5493,6 +5686,28 @@
 }
 
 /* Annotation badge */
+/* Embedded indicator icon */
+.survey-grid__item-embedded {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  background: rgba(10, 9, 8, 0.6);
+  border: 1px solid var(--gold-30);
+  color: var(--gold);
+  z-index: 10;
+  pointer-events: none;
+}
+
+.survey-grid__item-embedded svg {
+  width: 12px;
+  height: 12px;
+}
+
 .survey-grid__item-badge {
   position: absolute;
   top: 8px;
@@ -5887,46 +6102,39 @@
 .inspector-toolbar__btn--save,
 .inspector-toolbar__btn--delete,
 .inspector-toolbar__btn--reset {
-  padding: 5px;
-  min-width: 24px;
-  width: 24px;
-  height: 24px;
+  padding: 4px;
+  min-width: 20px;
+  width: 20px;
+  height: 20px;
+  border: none;
+  background: transparent;
 }
 
 .inspector-toolbar__btn--save {
-  color: rgba(91, 138, 122, 0.8);
-  border-color: rgba(91, 138, 122, 0.4);
-  background: linear-gradient(135deg, rgba(91, 138, 122, 0.15) 0%, rgba(91, 138, 122, 0.08) 100%);
+  color: rgba(91, 138, 122, 0.7);
 }
 
 .inspector-toolbar__btn--save:hover:not(:disabled) {
   color: rgba(91, 138, 122, 1);
-  border-color: rgba(91, 138, 122, 0.6);
-  background: linear-gradient(135deg, rgba(91, 138, 122, 0.25) 0%, rgba(91, 138, 122, 0.15) 100%);
+  background: transparent;
 }
 
 .inspector-toolbar__btn--delete {
-  color: rgba(255, 100, 100, 0.8);
-  border-color: rgba(255, 100, 100, 0.4);
-  background: linear-gradient(135deg, rgba(255, 100, 100, 0.15) 0%, rgba(255, 100, 100, 0.08) 100%);
+  color: rgba(255, 100, 100, 0.7);
 }
 
 .inspector-toolbar__btn--delete:hover:not(:disabled) {
   color: rgba(255, 100, 100, 1);
-  border-color: rgba(255, 100, 100, 0.6);
-  background: linear-gradient(135deg, rgba(255, 100, 100, 0.25) 0%, rgba(255, 100, 100, 0.15) 100%);
+  background: transparent;
 }
 
 .inspector-toolbar__btn--reset {
-  color: var(--dawn-70);
-  border-color: var(--gold-50);
-  background: linear-gradient(135deg, rgba(202, 165, 84, 0.15) 0%, rgba(202, 165, 84, 0.08) 100%);
+  color: var(--dawn-50);
 }
 
 .inspector-toolbar__btn--reset:hover:not(:disabled) {
-  color: var(--dawn-90);
-  border-color: var(--gold);
-  background: linear-gradient(135deg, rgba(202, 165, 84, 0.25) 0%, rgba(202, 165, 84, 0.15) 100%);
+  color: var(--dawn-80);
+  background: transparent;
 }
 
 .inspector-toolbar__separator {
@@ -6867,30 +7075,42 @@
   gap: 0;
   padding-bottom: 24px;
   /* Marker/line geometry tuning */
-  --flow-marker-size: 8px;
-  /* Slightly lower than before to align with the label line visually */
-  --flow-marker-offset: 6px;
+  /* Aligned with the center of the 16px header (4px offset + 7px half-diamond = 11px, adjusted to 4px) */
+  --flow-marker-offset: 4px;
 }
 
-/* Circle marker - positioned in left column */
+/* Diamond marker - positioned in left column */
 .flow-connector__marker {
   position: relative;
-  width: var(--flow-marker-size);
-  height: var(--flow-marker-size);
+  width: 14px;
+  height: 14px;
   margin-top: var(--flow-marker-offset); /* Align with label text */
-  margin-left: 4px;
+  margin-left: 3px;
   background: var(--void);
-  /* NOTE: Some global styles were zeroing border width/style at runtime.
-     Use !important so the marker ring always renders. */
   border: 1px solid var(--dawn-40) !important;
-  border-radius: 50%;
+  transform: rotate(45deg);
   z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-/* Vertical connector line ABOVE the marker (fills the offset space so lines touch circles) */
+/* Step number inside diamond */
+.flow-connector__marker-number {
+  position: absolute;
+  transform: rotate(-45deg); /* Counter-rotate the number to be upright */
+  font-family: var(--font-mono);
+  font-size: 8px;
+  font-weight: 500;
+  color: var(--dawn-50);
+  line-height: 1;
+  z-index: 3;
+}
+
+/* Vertical connector line ABOVE the marker (fills the offset space so lines touch diamonds) */
 .flow-connector__line-above {
   position: absolute;
-  left: 7px;
+  left: 10px; /* Center of 14px diamond + 3px margin = 10px */
   top: 0;
   height: var(--flow-marker-offset);
   width: 1px;
@@ -6912,11 +7132,15 @@
   box-shadow: 0 0 6px rgba(202, 165, 84, 0.3);
 }
 
+.flow-connector__node--gold .flow-connector__marker-number {
+  color: var(--gold);
+}
+
 /* Vertical connector line */
 .flow-connector__line {
   position: absolute;
-  left: 7px; /* Center of 8px marker + 4px margin = 8px, half = 4px + 3px offset */
-  top: calc(var(--flow-marker-offset) + var(--flow-marker-size)); /* Touch marker bottom edge */
+  left: 10px; /* Center of 14px diamond + 3px margin = 10px */
+  top: calc(var(--flow-marker-offset) + 14px); /* Touch diamond bottom edge */
   bottom: 0;
   width: 1px;
   background: var(--dawn-30);
@@ -6928,8 +7152,26 @@
   display: none;
 }
 
+/* Exception: Show gold line from Annotations to Briefing */
+.flow-connector__node--no-line:has(+ .flow-connector__node--briefing) .flow-connector__line {
+  display: block;
+}
+
 /* Hide line-above for nodes that shouldn't have it */
 .flow-connector__node--no-line-above .flow-connector__line-above {
+  display: none;
+}
+
+/* Exception: Show gold line-above for Briefing to connect with gold line from Annotations */
+.flow-connector__node--briefing .flow-connector__line-above {
+  display: block;
+  background: var(--gold);
+  box-shadow: 0 0 4px rgba(202, 165, 84, 0.4);
+}
+
+/* Hide line below for nodes that shouldn't have it (like Briefing) */
+.flow-connector__node--no-line-below .flow-connector__line,
+.flow-connector__node--briefing .flow-connector__line {
   display: none;
 }
 
@@ -6937,6 +7179,15 @@
 .flow-connector__node--gold .flow-connector__line,
 .flow-connector__node:has(+ .flow-connector__node--gold) .flow-connector__line {
   background: linear-gradient(to bottom, var(--dawn-30) 0%, var(--gold-60) 100%);
+}
+
+/* Tensor gold line connecting Annotations (step 3) to Briefing (step 4) */
+.flow-connector__node--no-line:has(+ .flow-connector__node--briefing) .flow-connector__line,
+.flow-connector__node:has(+ .flow-connector__node--briefing) .flow-connector__line {
+  background: var(--gold);
+  box-shadow: 0 0 4px rgba(202, 165, 84, 0.4);
+  bottom: auto;
+  height: calc(100% - 14px - var(--flow-marker-offset)); /* Extend to just before Briefing marker */
 }
 
 /* Content column */
@@ -6978,6 +7229,21 @@
   color: var(--gold);
 }
 
+/* Briefing node marker (gold) */
+.flow-connector__node--briefing .flow-connector__marker {
+  border-color: var(--gold) !important;
+  box-shadow: 0 0 6px rgba(202, 165, 84, 0.3);
+}
+
+/* Add padding above Briefing section */
+.flow-connector__node--briefing {
+  padding-top: 16px;
+}
+
+.flow-connector__node--briefing .flow-connector__marker-number {
+  color: var(--gold);
+}
+
 /* Badge (e.g., "AI") */
 .flow-connector__badge {
   padding: 1px 4px;
@@ -7000,7 +7266,9 @@
   background: none;
   border: 1px solid var(--dawn-15);
   font-family: var(--font-mono);
-  font-size: 8px;
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
   color: var(--dawn-40);
   cursor: pointer;
   transition: all 0.15s ease;
@@ -7014,6 +7282,18 @@
 .flow-connector__action button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+/* Generate button with tensor gold styling */
+.flow-connector__action-btn--generate {
+  border-color: var(--gold) !important;
+  color: var(--gold) !important;
+}
+
+.flow-connector__action-btn--generate:hover:not(:disabled) {
+  border-color: var(--gold) !important;
+  color: var(--gold) !important;
+  background: rgba(202, 165, 84, 0.08) !important;
 }
 
 /* Body content area */
@@ -7181,7 +7461,6 @@
   box-shadow:
     inset 0 0 0 1px var(--gold-30),
     0 0 18px rgba(202, 165, 84, 0.08);
-  border-radius: 8px;
 }
 
 .flow-connector__briefing p {
@@ -7198,7 +7477,8 @@
   align-items: center;
   margin-left: 20px; /* Skip the vertical line column */
   margin-top: -24px; /* Offset the padding-bottom of the previous node for symmetrical control */
-  padding: 32px 12px 32px 16px; /* Equalized vertical spacing (32px top/bottom) */
+  padding: 32px 12px 24px 16px; /* Top: 32px, Bottom: 24px to match header-to-toolbar spacing */
+  margin-bottom: 24px; /* Add bottom margin to match top spacing (12px header + 12px toolbar = 24px) */
 }
 
 .flow-connector__embed-btn {

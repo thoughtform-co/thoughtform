@@ -1,6 +1,6 @@
 "use client";
 
-import { useReducer, useEffect, useCallback, useState } from "react";
+import { useReducer, useEffect, useCallback, useState, useRef } from "react";
 import Link from "next/link";
 import { AdminGate } from "@/components/admin/AdminGate";
 import { useAuth } from "@/components/auth/AuthProvider";
@@ -94,6 +94,20 @@ function AstrogationContent() {
     surveyComponentKey,
     surveySelectedItemId,
   });
+
+  // File input ref for navbar upload
+  const navUploadRef = useRef<HTMLInputElement>(null);
+
+  const handleNavUpload = useCallback(
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      await uploadItem(file, surveyCategoryId, surveyComponentKey);
+      // Reset input so same file can be re-uploaded
+      if (navUploadRef.current) navUploadRef.current.value = "";
+    },
+    [uploadItem, surveyCategoryId, surveyComponentKey]
+  );
 
   // Auto-hide toast after 2 seconds
   useEffect(() => {
@@ -246,6 +260,25 @@ function AstrogationContent() {
           <span className="title-icon">⬡</span>
           <span>Astrogation</span>
         </div>
+        {/* Upload button - visible on survey tab */}
+        {activeTab === "survey" && (
+          <>
+            <input
+              ref={navUploadRef}
+              type="file"
+              accept="image/png,image/jpeg,image/webp,image/gif"
+              onChange={handleNavUpload}
+              style={{ display: "none" }}
+            />
+            <button
+              className="astrogation-nav__upload-btn"
+              onClick={() => navUploadRef.current?.click()}
+              title="Upload reference image"
+            >
+              + Upload
+            </button>
+          </>
+        )}
       </nav>
 
       {/* Content Area */}
