@@ -2498,7 +2498,15 @@
 }
 
 /* Panel content scrolls - with invisible scrollbar */
-.astrogation-panel--left .panel-content,
+.astrogation-panel--left .panel-content {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
 .astrogation-panel--right .panel-content {
   flex: 1;
   min-height: 0;
