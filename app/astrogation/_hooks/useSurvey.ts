@@ -22,6 +22,7 @@ export interface UseSurveyOptions {
 
 export interface UseSurveyReturn {
   loadItems: () => Promise<void>;
+  loadItemFullData: (itemId: string) => Promise<void>;
   uploadItem: (
     file: File,
     categoryId?: string | null,
@@ -132,6 +133,9 @@ export function useSurvey({
 }: UseSurveyOptions): UseSurveyReturn {
   const { session } = useAuth();
 
+  // Get current survey items from state - we'll use a ref to track them
+  const surveyItemsRef = useRef<SurveyItem[]>([]);
+
   // Loading states
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isEmbedding, setIsEmbedding] = useState(false);
@@ -186,6 +190,7 @@ export function useSurvey({
       );
 
       dispatch(actions.surveyLoadItems(data.items || []));
+      surveyItemsRef.current = data.items || [];
       setAllItems(data.allItems || data.items || []);
     } catch (error) {
       // Ignore abort errors (expected when request is cancelled)
@@ -197,6 +202,37 @@ export function useSurvey({
       dispatch(actions.surveySetLoading(false));
     }
   }, [dispatch, surveyCategoryId, surveyComponentKey, fetcher, session?.access_token]);
+
+  // ═══════════════════════════════════════════════════════════════
+  // LOAD FULL ITEM DATA - For detail view (includes large text fields)
+  // ═══════════════════════════════════════════════════════════════
+  // Fetches full item data including briefing, description, and embedding_text
+  // when detail view opens. This is a performance optimization - initial load
+  // excludes these large fields to improve grid view load time.
+
+  const loadItemFullData = useCallback(
+    async (itemId: string) => {
+      if (!session?.access_token) return;
+
+      try {
+        // Fetch full item data including large text fields
+        const data = await fetcher<{ item: SurveyItem }>(`/api/survey/items/${itemId}`);
+
+        if (data.item) {
+          // Update the item in the items array with full data
+          const updatedItems = surveyItemsRef.current.map((item) =>
+            item.id === itemId ? data.item : item
+          );
+          surveyItemsRef.current = updatedItems;
+          dispatch(actions.surveyLoadItems(updatedItems));
+        }
+      } catch (error) {
+        console.error("Failed to load full item data:", error);
+        // Silently fail - grid data is already available
+      }
+    },
+    [dispatch, fetcher, session?.access_token]
+  );
 
   // Load items on mount and when filters change
   useEffect(() => {
@@ -518,6 +554,7 @@ export function useSurvey({
 
   return {
     loadItems,
+    loadItemFullData,
     uploadItem,
     updateItem,
     deleteItem,

@@ -33,9 +33,22 @@ export async function GET(request: NextRequest) {
     const categoryId = searchParams.get("category_id");
     const componentKey = searchParams.get("component_key");
 
-    // Build query - RLS will automatically filter by user_id
-    // When using service role key, we see all items unless we filter explicitly
-    let query = supabase.from("survey_items").select("*").order("created_at", { ascending: false });
+    // ═══════════════════════════════════════════════════════════════
+    // PERFORMANCE OPTIMIZATION: Exclude large text fields from initial load
+    // ═══════════════════════════════════════════════════════════════
+    // Exclude large text fields (briefing, description, embedding_text) that aren't
+    // needed for grid view. This significantly reduces payload size and improves load time.
+    // These fields are typically several KB each and aren't displayed in the grid.
+    // Detail view will fetch full data when an item is selected via loadItemFullData().
+    // ═══════════════════════════════════════════════════════════════
+    // Note: We still include annotations and analysis as they're needed for detail view
+    // and are typically smaller. briefing_embedding_text is included for the embedded indicator.
+    let query = supabase
+      .from("survey_items")
+      .select(
+        "id, image_path, image_mime, image_width, image_height, title, notes, tags, category_id, component_key, sources, analysis, annotations, briefing_embedding_text, briefing_embedding_model, created_at, updated_at"
+      )
+      .order("created_at", { ascending: false });
 
     const userIdForQuery =
       user &&

@@ -73,6 +73,7 @@ function AstrogationContent() {
   // Survey management
   const {
     loadItems,
+    loadItemFullData,
     uploadItem,
     updateItem,
     deleteItem,
@@ -203,8 +204,23 @@ function AstrogationContent() {
   // Track annotation resizing state
   const [isAnnotationResizing, setIsAnnotationResizing] = useState(false);
 
-  // Get selected survey item
+  // Get selected survey item and load full data if needed
   const selectedSurveyItem = surveyItems.find((item) => item.id === surveySelectedItemId) || null;
+
+  // Load full item data when detail view opens (includes large text fields)
+  useEffect(() => {
+    if (
+      surveySelectedItemId &&
+      selectedSurveyItem &&
+      !selectedSurveyItem.briefing &&
+      !selectedSurveyItem.description
+    ) {
+      // Item doesn't have full data yet, fetch it
+      loadItemFullData(surveySelectedItemId).catch(() => {
+        // Silently fail - grid data is already available
+      });
+    }
+  }, [surveySelectedItemId, selectedSurveyItem, loadItemFullData]);
 
   // Bundle Survey props for cleaner component API
   const surveyProps: SurveyViewBundledProps = {
