@@ -285,15 +285,15 @@ function SurveyInspectorPanelInner({
           </div>
         </div>
         <div className="panel-content panel-content--empty">
-          <div className="survey-panel-frame survey-panel-frame--empty">
+          <div className="inspector-frame inspector-frame--empty">
             {/* SVG border that traces the chamfered polygon (chamfer TOP-RIGHT, empty state) */}
-            <div className="survey-panel-frame__border">
+            <div className="inspector-frame__border">
               <svg viewBox="0 0 340 734" preserveAspectRatio="none">
                 <polygon points="0,32 188,32 220,0 340,0 340,734 0,734" />
               </svg>
             </div>
-            <div className="survey-panel-frame__content">
-              <div className="survey-panel-frame__scrollable">
+            <div className="inspector-frame__content">
+              <div className="inspector-frame__scrollable">
                 <div className="spec-empty-state">
                   <div className="spec-empty-state__visual">
                     <svg viewBox="0 0 80 80" className="spec-empty-state__icon">
@@ -349,18 +349,18 @@ function SurveyInspectorPanelInner({
 
       <div className="panel-content">
         {/* Survey Panel Frame with notched corner */}
-        <div className="survey-panel-frame">
+        <div className="inspector-frame">
           {/* SVG border that traces the chamfered polygon (chamfer TOP-RIGHT) */}
-          <div className="survey-panel-frame__border">
+          <div className="inspector-frame__border">
             <svg viewBox="0 0 340 734" preserveAspectRatio="none">
               <polygon points="0,32 188,32 220,0 340,0 340,734 0,734" />
             </svg>
           </div>
           {/* Title label INSIDE the card's step-down area (left side) */}
-          <div className="survey-panel-frame__title-row">
+          <div className="inspector-frame__title-row">
             <input
               type="text"
-              className="survey-panel-frame__title-input"
+              className="inspector-frame__title-input"
               value={effectiveItem?.title || ""}
               disabled={isResizing}
               onClick={(e) => e.currentTarget.focus()}
@@ -370,7 +370,7 @@ function SurveyInspectorPanelInner({
           </div>
 
           {/* Toolbar buttons INSIDE the card, top-right corner */}
-          <div className="survey-panel-frame__toolbar">
+          <div className="inspector-frame__toolbar">
             <button
               className="inspector-toolbar__btn inspector-toolbar__btn--save"
               onClick={handleSave}
@@ -431,9 +431,9 @@ function SurveyInspectorPanelInner({
           </div>
 
           {/* Main content with notched corner */}
-          <div className="survey-panel-frame__content">
+          <div className="inspector-frame__content">
             {/* Scrollable content */}
-            <div className="survey-panel-frame__scrollable">
+            <div className="inspector-frame__scrollable">
               <div className="spec-panel-v2">
                 {/* ═══ SECTION 1: Sources ═══ */}
                 <section className="spec-section">

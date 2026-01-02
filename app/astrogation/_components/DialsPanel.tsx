@@ -227,12 +227,28 @@ function DialsPanelInner({
 
   if (!selectedComponentId || !def) {
     return (
-      <aside className="astrogation-panel astrogation-panel--right">
-        <div className="panel-header panel-header--filled">DIALS</div>
-        <div className="panel-content">
-          <div className="panel-empty-state">
-            <span className="panel-empty-state__icon">◇</span>
-            <p>Select a component to edit</p>
+      <aside className="astrogation-panel astrogation-panel--right astrogation-panel--inspector">
+        <div className="panel-header-wrapper">
+          <div className="panel-header panel-header--inspector">
+            <span className="panel-header__title">FOUNDRY</span>
+          </div>
+        </div>
+        <div className="panel-content panel-content--empty">
+          <div className="inspector-frame inspector-frame--empty">
+            {/* SVG border that traces the chamfered polygon */}
+            <div className="inspector-frame__border">
+              <svg viewBox="0 0 340 734" preserveAspectRatio="none">
+                <polygon points="0,32 188,32 220,0 340,0 340,734 0,734" />
+              </svg>
+            </div>
+            <div className="inspector-frame__content">
+              <div className="inspector-frame__scrollable">
+                <div className="panel-empty-state">
+                  <span className="panel-empty-state__icon">◇</span>
+                  <p>Select a component to edit</p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </aside>
@@ -268,47 +284,66 @@ function DialsPanelInner({
   });
 
   return (
-    <aside className="astrogation-panel astrogation-panel--right">
-      <div className="panel-header panel-header--filled">DIALS</div>
+    <aside className="astrogation-panel astrogation-panel--right astrogation-panel--inspector">
+      <div className="panel-header-wrapper">
+        <div className="panel-header panel-header--inspector">
+          <span className="panel-header__title">FOUNDRY</span>
+        </div>
+      </div>
 
       <div className="panel-content">
-        <div className="panel-content__scrollable">
-          <div className="spec-panel-v2">
-            {/* ─── HEADER (Harmonized with Vault) ─── */}
-            <header className="spec-header">
-              <h2 className="spec-header__title">{def.name}</h2>
-              <p className="spec-header__desc">{def.description}</p>
-            </header>
+        <div className="inspector-frame">
+          {/* SVG border that traces the chamfered polygon */}
+          <div className="inspector-frame__border">
+            <svg viewBox="0 0 340 734" preserveAspectRatio="none">
+              <polygon points="0,32 188,32 220,0 340,0 340,734 0,734" />
+            </svg>
+          </div>
 
-            {/* Render props grouped by category */}
-            {PROP_CATEGORY_ORDER.map((category) => {
-              const props = groupedProps[category];
-              if (!props || props.length === 0) return null;
+          {/* Title in step-down area */}
+          <div className="inspector-frame__title-row">
+            <span className="inspector-frame__title">{def.name}</span>
+          </div>
 
-              return (
-                <div key={category} className="spec-section">
-                  <div className="spec-section__label">
-                    <span className="spec-section__label-text">
-                      {PROP_CATEGORY_LABELS[category]}
-                    </span>
-                    <span className="spec-section__label-line" />
-                  </div>
-                  <div className="dials-category__content">
-                    {props.map((propDef) => (
-                      <div key={propDef.name}>
-                        {renderPropControl(propDef, componentProps[propDef.name])}
+          <div className="inspector-frame__content">
+            <div className="inspector-frame__scrollable">
+              <div className="spec-panel-v2">
+                {/* ─── HEADER (Harmonized with Vault) ─── */}
+                <header className="spec-header">
+                  <p className="spec-header__desc">{def.description}</p>
+                </header>
+
+                {/* Render props grouped by category */}
+                {PROP_CATEGORY_ORDER.map((category) => {
+                  const props = groupedProps[category];
+                  if (!props || props.length === 0) return null;
+
+                  return (
+                    <div key={category} className="spec-section">
+                      <div className="spec-section__label">
+                        <span className="spec-section__label-text">
+                          {PROP_CATEGORY_LABELS[category]}
+                        </span>
+                        <span className="spec-section__label-line" />
                       </div>
-                    ))}
-                  </div>
-                </div>
-              );
-            })}
+                      <div className="dials-category__content">
+                        {props.map((propDef) => (
+                          <div key={propDef.name}>
+                            {renderPropControl(propDef, componentProps[propDef.name])}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
 
-            {/* Actions */}
-            <div className="dials-actions">
-              <button className="action-btn action-btn--full" onClick={onCopyCode}>
-                Copy JSX Code
-              </button>
+                {/* Actions */}
+                <div className="dials-actions">
+                  <button className="action-btn action-btn--full" onClick={onCopyCode}>
+                    Copy JSX Code
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>

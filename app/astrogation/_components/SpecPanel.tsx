@@ -205,30 +205,46 @@ function SpecPanelInner({ selectedComponentId }: SpecPanelProps) {
 
   if (!def) {
     return (
-      <aside className="astrogation-panel astrogation-panel--right">
-        <div className="panel-header panel-header--filled">SPECIFICATIONS</div>
+      <aside className="astrogation-panel astrogation-panel--right astrogation-panel--inspector">
+        <div className="panel-header-wrapper">
+          <div className="panel-header panel-header--inspector">
+            <span className="panel-header__title">VAULT</span>
+          </div>
+        </div>
         <div className="panel-content panel-content--empty">
-          <div className="spec-empty-state">
-            <div className="spec-empty-state__visual">
-              <svg viewBox="0 0 80 80" className="spec-empty-state__icon">
-                <polygon
-                  points="40,8 72,40 40,72 8,40"
-                  fill="none"
-                  stroke="var(--dawn-15)"
-                  strokeWidth="1"
-                  strokeDasharray="3 3"
-                />
-                <polygon
-                  points="40,20 60,40 40,60 20,40"
-                  fill="none"
-                  stroke="var(--dawn-08)"
-                  strokeWidth="1"
-                />
-                <circle cx="40" cy="40" r="4" fill="var(--dawn-08)" />
+          <div className="inspector-frame inspector-frame--empty">
+            {/* SVG border that traces the chamfered polygon */}
+            <div className="inspector-frame__border">
+              <svg viewBox="0 0 340 734" preserveAspectRatio="none">
+                <polygon points="0,32 188,32 220,0 340,0 340,734 0,734" />
               </svg>
             </div>
-            <p className="spec-empty-state__text">Select a component</p>
-            <span className="spec-empty-state__hint">to view specifications</span>
+            <div className="inspector-frame__content">
+              <div className="inspector-frame__scrollable">
+                <div className="spec-empty-state">
+                  <div className="spec-empty-state__visual">
+                    <svg viewBox="0 0 80 80" className="spec-empty-state__icon">
+                      <polygon
+                        points="40,8 72,40 40,72 8,40"
+                        fill="none"
+                        stroke="var(--dawn-15)"
+                        strokeWidth="1"
+                        strokeDasharray="3 3"
+                      />
+                      <polygon
+                        points="40,20 60,40 40,60 20,40"
+                        fill="none"
+                        stroke="var(--dawn-08)"
+                        strokeWidth="1"
+                      />
+                      <circle cx="40" cy="40" r="4" fill="var(--dawn-08)" />
+                    </svg>
+                  </div>
+                  <p className="spec-empty-state__text">Select a component</p>
+                  <span className="spec-empty-state__hint">to view specifications</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </aside>
@@ -236,79 +252,102 @@ function SpecPanelInner({ selectedComponentId }: SpecPanelProps) {
   }
 
   return (
-    <aside className="astrogation-panel astrogation-panel--right">
-      <div className="panel-header panel-header--filled">SPECIFICATIONS</div>
+    <aside className="astrogation-panel astrogation-panel--right astrogation-panel--inspector">
+      <div className="panel-header-wrapper">
+        <div className="panel-header panel-header--inspector">
+          <span className="panel-header__title">VAULT</span>
+        </div>
+      </div>
       <div className="panel-content">
-        <div className="panel-content__scrollable">
-          <div className="spec-panel-v2">
-            {/* ─── HEADER ─── */}
-            <header className="spec-header">
-              <h2 className="spec-header__title">{def.name}</h2>
-              <p className="spec-header__desc">{def.description}</p>
-            </header>
+        <div className="inspector-frame">
+          {/* SVG border that traces the chamfered polygon */}
+          <div className="inspector-frame__border">
+            <svg viewBox="0 0 340 734" preserveAspectRatio="none">
+              <polygon points="0,32 188,32 220,0 340,0 340,734 0,734" />
+            </svg>
+          </div>
 
-            {/* ─── DESIGN INTENT (Philosophy + Inspiration Combined) ─── */}
-            <section className="spec-section spec-intent">
-              <div className="spec-section__label">
-                <span className="spec-section__label-text">Design Intent</span>
-                <span className="spec-section__label-line" />
+          {/* Title in step-down area */}
+          <div className="inspector-frame__title-row">
+            <span className="inspector-frame__title">{def.name}</span>
+          </div>
+
+          <div className="inspector-frame__content">
+            <div className="inspector-frame__scrollable">
+              <div className="spec-panel-v2">
+                {/* ─── HEADER ─── */}
+                <header className="spec-header">
+                  <p className="spec-header__desc">{def.description}</p>
+                </header>
+
+                {/* ─── DESIGN INTENT (Philosophy + Inspiration Combined) ─── */}
+                <section className="spec-section spec-intent">
+                  <div className="spec-section__label">
+                    <span className="spec-section__label-text">Design Intent</span>
+                    <span className="spec-section__label-line" />
+                  </div>
+
+                  <blockquote className="spec-intent__philosophy">
+                    {def.designRationale ||
+                      "Technical specification pending detailed design analysis."}
+                  </blockquote>
+
+                  {def.inspiration && (
+                    <div className="spec-intent__sources">
+                      <span className="spec-intent__sources-label">Inspiration Sources</span>
+                      <InspirationTags inspiration={def.inspiration} />
+                    </div>
+                  )}
+                </section>
+
+                {/* ─── FRONTEND (Notes + Primitives) ─── */}
+                <section className="spec-section spec-frontend">
+                  <div className="spec-section__label">
+                    <span className="spec-section__label-text">Frontend</span>
+                    <span className="spec-section__label-line" />
+                  </div>
+
+                  {/* Frontend Notes */}
+                  {def.frontendNotes && (
+                    <div className="spec-blueprint__notes">
+                      <div className="spec-blueprint__notes-content">{def.frontendNotes}</div>
+                    </div>
+                  )}
+
+                  {/* Implementation Dependencies (System Primitives) */}
+                  <ImplementationDependencies
+                    componentId={def.id}
+                    frontendNotes={def.frontendNotes}
+                  />
+                </section>
+
+                {/* ─── COMPONENT (Interface + ID) ─── */}
+                <section className="spec-section spec-component">
+                  <div className="spec-section__label">
+                    <span className="spec-section__label-text">Component</span>
+                    <span className="spec-section__label-line" />
+                  </div>
+
+                  {/* Props Visualization */}
+                  {def.props.length > 0 && (
+                    <div className="spec-blueprint__props">
+                      <PropsDiagram props={def.props} />
+                    </div>
+                  )}
+
+                  {/* Component ID with copy */}
+                  <button
+                    className={`spec-blueprint__id ${copied ? "spec-blueprint__id--copied" : ""}`}
+                    onClick={handleCopyId}
+                    title="Copy component ID"
+                  >
+                    <span className="spec-blueprint__id-label">Ref ID</span>
+                    <span className="spec-blueprint__id-value">{def.id}</span>
+                    <span className="spec-blueprint__id-action">{copied ? "✓" : "copy"}</span>
+                  </button>
+                </section>
               </div>
-
-              <blockquote className="spec-intent__philosophy">
-                {def.designRationale || "Technical specification pending detailed design analysis."}
-              </blockquote>
-
-              {def.inspiration && (
-                <div className="spec-intent__sources">
-                  <span className="spec-intent__sources-label">Inspiration Sources</span>
-                  <InspirationTags inspiration={def.inspiration} />
-                </div>
-              )}
-            </section>
-
-            {/* ─── FRONTEND (Notes + Primitives) ─── */}
-            <section className="spec-section spec-frontend">
-              <div className="spec-section__label">
-                <span className="spec-section__label-text">Frontend</span>
-                <span className="spec-section__label-line" />
-              </div>
-
-              {/* Frontend Notes */}
-              {def.frontendNotes && (
-                <div className="spec-blueprint__notes">
-                  <div className="spec-blueprint__notes-content">{def.frontendNotes}</div>
-                </div>
-              )}
-
-              {/* Implementation Dependencies (System Primitives) */}
-              <ImplementationDependencies componentId={def.id} frontendNotes={def.frontendNotes} />
-            </section>
-
-            {/* ─── COMPONENT (Interface + ID) ─── */}
-            <section className="spec-section spec-component">
-              <div className="spec-section__label">
-                <span className="spec-section__label-text">Component</span>
-                <span className="spec-section__label-line" />
-              </div>
-
-              {/* Props Visualization */}
-              {def.props.length > 0 && (
-                <div className="spec-blueprint__props">
-                  <PropsDiagram props={def.props} />
-                </div>
-              )}
-
-              {/* Component ID with copy */}
-              <button
-                className={`spec-blueprint__id ${copied ? "spec-blueprint__id--copied" : ""}`}
-                onClick={handleCopyId}
-                title="Copy component ID"
-              >
-                <span className="spec-blueprint__id-label">Ref ID</span>
-                <span className="spec-blueprint__id-value">{def.id}</span>
-                <span className="spec-blueprint__id-action">{copied ? "✓" : "copy"}</span>
-              </button>
-            </section>
+            </div>
           </div>
         </div>
       </div>

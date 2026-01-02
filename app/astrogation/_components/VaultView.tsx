@@ -88,7 +88,7 @@ export function VaultView({
             />
           ) : (
             // For single-element components, wrap in TargetReticle
-            <TargetReticle label={def.name.toUpperCase()}>
+            <TargetReticle>
               <ComponentPreview
                 componentId={selectedComponentId!}
                 props={componentProps}
