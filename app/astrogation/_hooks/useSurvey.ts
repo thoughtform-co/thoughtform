@@ -153,6 +153,15 @@ export function useSurvey({
   const loadAbortRef = useRef<AbortController | null>(null);
   const searchAbortRef = useRef<AbortController | null>(null);
 
+  // ═══════════════════════════════════════════════════════════════
+  // RACE CONDITION PROTECTION - Preserve optimistic updates during reloads
+  // ═══════════════════════════════════════════════════════════════
+  // Track recently added/deleted items to preserve optimistic state during
+  // loadItems race conditions. Session token refresh can trigger loadItems
+  // to run with stale data, overwriting optimistic updates.
+  const recentlyAddedItemsRef = useRef<Map<string, SurveyItem>>(new Map());
+  const recentlyDeletedIdsRef = useRef<Set<string>>(new Set());
+
   // Create stable fetchers
   const fetcher = useMemo(() => createFetcher(session?.access_token), [session?.access_token]);
   const formFetcher = useMemo(
@@ -189,9 +198,62 @@ export function useSurvey({
         { signal: loadAbortRef.current.signal }
       );
 
-      dispatch(actions.surveyLoadItems(data.items || []));
-      surveyItemsRef.current = data.items || [];
-      setAllItems(data.allItems || data.items || []);
+      // ═══════════════════════════════════════════════════════════════
+      // MERGE PROTECTION - Preserve optimistic updates during reload
+      // ═══════════════════════════════════════════════════════════════
+      let mergedItems = data.items || [];
+
+      // 1. Filter out recently deleted items (server might still have them)
+      if (recentlyDeletedIdsRef.current.size > 0) {
+        const beforeCount = mergedItems.length;
+        mergedItems = mergedItems.filter((item) => {
+          if (recentlyDeletedIdsRef.current.has(item.id)) {
+            return false; // Exclude - was recently deleted
+          }
+          return true;
+        });
+        const filteredCount = beforeCount - mergedItems.length;
+        if (filteredCount > 0) {
+          console.log(
+            `[useSurvey] Filtering out ${filteredCount} recently deleted items during reload`
+          );
+        }
+      }
+
+      // 2. Merge in recently added items that aren't in server response
+      if (recentlyAddedItemsRef.current.size > 0) {
+        const loadedIds = new Set(mergedItems.map((item) => item.id));
+        const itemsToPreserve: SurveyItem[] = [];
+
+        for (const [id, item] of recentlyAddedItemsRef.current) {
+          if (!loadedIds.has(id)) {
+            // Item was just added but not in server response - preserve it
+            itemsToPreserve.push(item);
+          } else {
+            // Item is now in server response - remove from tracking
+            recentlyAddedItemsRef.current.delete(id);
+          }
+        }
+
+        if (itemsToPreserve.length > 0) {
+          console.log(
+            `[useSurvey] Preserving ${itemsToPreserve.length} recently added items during reload`
+          );
+          mergedItems = [...itemsToPreserve, ...mergedItems];
+        }
+      }
+
+      dispatch(actions.surveyLoadItems(mergedItems));
+      surveyItemsRef.current = mergedItems;
+
+      // Also filter allItems for counts
+      let filteredAllItems = data.allItems || mergedItems || [];
+      if (recentlyDeletedIdsRef.current.size > 0) {
+        filteredAllItems = filteredAllItems.filter(
+          (item) => !recentlyDeletedIdsRef.current.has(item.id)
+        );
+      }
+      setAllItems(filteredAllItems);
     } catch (error) {
       // Ignore abort errors (expected when request is cancelled)
       if (error instanceof Error && error.name === "AbortError") return;
@@ -277,6 +339,11 @@ export function useSurvey({
           body: { itemId },
         });
 
+        // Update tracking if this item is being protected from race conditions
+        if (recentlyAddedItemsRef.current.has(data.item.id)) {
+          recentlyAddedItemsRef.current.set(data.item.id, data.item);
+        }
+
         dispatch(actions.surveyUpdateItem(data.item));
         dispatch(actions.showToast("Analysis complete"));
         setAllItems((prev) => prev.map((item) => (item.id === data.item.id ? data.item : item)));
@@ -357,6 +424,18 @@ export function useSurvey({
       const data = await formFetcher<{ item: SurveyItem }>("/api/survey/items", formData);
       const newItemId = data.item.id;
 
+      // ═══════════════════════════════════════════════════════════════
+      // RACE CONDITION PROTECTION
+      // ═══════════════════════════════════════════════════════════════
+      // Track this item to preserve it if loadItems races with this upload.
+      // Session token refresh can trigger loadItems to reload with stale data.
+      recentlyAddedItemsRef.current.set(newItemId, data.item);
+
+      // Clean up tracking after 30 seconds (item should be in DB by then)
+      setTimeout(() => {
+        recentlyAddedItemsRef.current.delete(newItemId);
+      }, 30000);
+
       dispatch(actions.surveyAddItem(data.item));
       dispatch(actions.showToast("Reference uploaded"));
       setAllItems((prev) => [data.item, ...prev]);
@@ -410,13 +489,38 @@ export function useSurvey({
     const itemId = selectedItemIdRef.current;
     if (!itemId) return;
 
-    await fetcher<{ success: boolean }>(`/api/survey/items?id=${itemId}`, {
-      method: "DELETE",
-    });
+    // ═══════════════════════════════════════════════════════════════
+    // RACE CONDITION PROTECTION
+    // ═══════════════════════════════════════════════════════════════
+    // Track this deletion to prevent the item from reappearing if loadItems
+    // races with this delete (e.g., due to session token refresh).
+    recentlyDeletedIdsRef.current.add(itemId);
 
+    // Also remove from recently added if it was there
+    recentlyAddedItemsRef.current.delete(itemId);
+
+    // Clean up tracking after 30 seconds
+    setTimeout(() => {
+      recentlyDeletedIdsRef.current.delete(itemId);
+    }, 30000);
+
+    // ═══════════════════════════════════════════════════════════════
+    // OPTIMISTIC DELETION - Update UI immediately, then persist
+    // ═══════════════════════════════════════════════════════════════
     dispatch(actions.surveyDeleteItem(itemId));
     dispatch(actions.showToast("Reference deleted"));
     setAllItems((prev) => prev.filter((item) => item.id !== itemId));
+
+    // Persist to server (errors are logged but don't revert UI)
+    try {
+      await fetcher<{ success: boolean }>(`/api/survey/items?id=${itemId}`, {
+        method: "DELETE",
+      });
+    } catch (error) {
+      console.error("Failed to delete item from server:", error);
+      // Note: We don't revert the UI - the item is already gone from view.
+      // If the delete truly failed, a page refresh will restore it.
+    }
   }, [dispatch, fetcher]);
 
   // ═══════════════════════════════════════════════════════════════
