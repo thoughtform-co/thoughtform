@@ -30,13 +30,8 @@ export interface CenterPanelProps {
   onDeletePreset: (id: string) => void;
   onRemoveVariant: (id: string) => void;
   onApplyVariant: (variant: FoundryVariant) => void;
-  onSavePreset: () => void;
-  presetName: string;
-  onPresetNameChange: (name: string) => void;
-  canSave: boolean;
   isFocused: boolean;
   onFocusChange: (focused: boolean) => void;
-  onSelectComponent: (id: string) => void;
   // Survey props bundled for cleaner API
   survey?: SurveyViewBundledProps;
 }
@@ -54,13 +49,8 @@ export function CenterPanel({
   onDeletePreset,
   onRemoveVariant,
   onApplyVariant,
-  onSavePreset,
-  presetName,
-  onPresetNameChange,
-  canSave,
   isFocused,
   onFocusChange,
-  onSelectComponent,
   survey,
 }: CenterPanelProps) {
   const def = selectedComponentId ? (getComponentById(selectedComponentId) ?? null) : null;
@@ -124,18 +114,11 @@ export function CenterPanel({
             style={style}
             foundryFrame={foundryFrame}
             def={def}
-            presets={presets}
             variants={variants}
-            onLoadPreset={onLoadPreset}
             onRemoveVariant={onRemoveVariant}
             onApplyVariant={onApplyVariant}
-            onSavePreset={onSavePreset}
-            presetName={presetName}
-            onPresetNameChange={onPresetNameChange}
-            canSave={canSave}
             isFocused={isFocused}
             onFocusChange={onFocusChange}
-            onSelectComponent={onSelectComponent}
           />
         )}
         {activeTab === "survey" && survey && (

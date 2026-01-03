@@ -66,7 +66,11 @@ function SurveyInspectorPanelInner({
   const [annotationNote, setAnnotationNote] = useState("");
   const [tagInput, setTagInput] = useState("");
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [newSourceUrl, setNewSourceUrl] = useState("");
+  const [editingSourceIndex, setEditingSourceIndex] = useState<number | null>(null);
+  const [editingSourceUrl, setEditingSourceUrl] = useState("");
   const tagInputRef = useRef<HTMLInputElement>(null);
+  const sourceInputRef = useRef<HTMLInputElement>(null);
 
   // Track previously seen annotations to detect new ones
   const prevAnnotationIdsRef = useRef<Set<string>>(new Set());
@@ -135,20 +139,107 @@ function SurveyInspectorPanelInner({
     setIsDeleteDialogOpen(false);
   }, []);
 
-  // Handle source changes
-  const handleSourceChange = useCallback(
-    (index: number, field: keyof SurveyItemSource, value: string) => {
-      const sources = [...(effectiveItem?.sources || [])];
-      sources[index] = { ...sources[index], [field]: value };
+  // Extract domain name from URL (e.g., "https://www.behance.net/gallery/..." → "BEHANCE")
+  const extractDomainLabel = useCallback((url: string): string => {
+    try {
+      const hostname = new URL(url).hostname;
+      // Remove common prefixes like www., m., etc.
+      const cleanHost = hostname.replace(/^(www\.|m\.|mobile\.)/i, "");
+      // Get the main domain part (e.g., "behance" from "behance.net")
+      const parts = cleanHost.split(".");
+      // Return the main part in uppercase
+      return parts[0].toUpperCase();
+    } catch {
+      // If URL parsing fails, just return a cleaned version
+      return url
+        .replace(/^https?:\/\/(www\.)?/i, "")
+        .split("/")[0]
+        .toUpperCase();
+    }
+  }, []);
+
+  // Handle adding a new source via URL input
+  const handleAddSourceFromUrl = useCallback(
+    (url: string) => {
+      const trimmedUrl = url.trim();
+      if (!trimmedUrl) return;
+
+      // Auto-add protocol if missing
+      let normalizedUrl = trimmedUrl;
+      if (!/^https?:\/\//i.test(trimmedUrl)) {
+        normalizedUrl = `https://${trimmedUrl}`;
+      }
+
+      const label = extractDomainLabel(normalizedUrl);
+      const sources = [...(effectiveItem?.sources || []), { label, url: normalizedUrl, note: "" }];
       handleFieldChange("sources", sources);
+      setNewSourceUrl("");
     },
-    [effectiveItem?.sources, handleFieldChange]
+    [effectiveItem?.sources, handleFieldChange, extractDomainLabel]
   );
 
-  const handleAddSource = useCallback(() => {
-    const sources = [...(effectiveItem?.sources || []), { label: "", url: "", note: "" }];
-    handleFieldChange("sources", sources);
-  }, [effectiveItem?.sources, handleFieldChange]);
+  // Handle source URL input keydown
+  const handleSourceInputKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        handleAddSourceFromUrl(newSourceUrl);
+      }
+    },
+    [handleAddSourceFromUrl, newSourceUrl]
+  );
+
+  // Handle editing an existing source
+  const handleStartEditSource = useCallback((index: number, currentUrl: string) => {
+    setEditingSourceIndex(index);
+    setEditingSourceUrl(currentUrl);
+  }, []);
+
+  // Handle saving edited source
+  const handleSaveEditSource = useCallback(() => {
+    if (editingSourceIndex === null) return;
+
+    const trimmedUrl = editingSourceUrl.trim();
+    if (!trimmedUrl) {
+      // If empty, remove the source
+      const sources = (effectiveItem?.sources || []).filter((_, i) => i !== editingSourceIndex);
+      handleFieldChange("sources", sources);
+    } else {
+      // Auto-add protocol if missing
+      let normalizedUrl = trimmedUrl;
+      if (!/^https?:\/\//i.test(trimmedUrl)) {
+        normalizedUrl = `https://${trimmedUrl}`;
+      }
+
+      const label = extractDomainLabel(normalizedUrl);
+      const sources = [...(effectiveItem?.sources || [])];
+      sources[editingSourceIndex] = { ...sources[editingSourceIndex], label, url: normalizedUrl };
+      handleFieldChange("sources", sources);
+    }
+
+    setEditingSourceIndex(null);
+    setEditingSourceUrl("");
+  }, [
+    editingSourceIndex,
+    editingSourceUrl,
+    effectiveItem?.sources,
+    handleFieldChange,
+    extractDomainLabel,
+  ]);
+
+  // Handle edit source keydown
+  const handleEditSourceKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        handleSaveEditSource();
+      } else if (e.key === "Escape") {
+        setEditingSourceIndex(null);
+        setEditingSourceUrl("");
+      }
+    },
+    [handleSaveEditSource]
+  );
 
   const handleRemoveSource = useCallback(
     (index: number) => {
@@ -452,34 +543,71 @@ function SurveyInspectorPanelInner({
                 </button>
                 {isSourcesExpanded && (
                   <div className="spec-sources spec-sources--compact">
-                    {(effectiveItem?.sources || []).map((source, i) => (
-                      <div key={i} className="spec-source spec-source--inline">
-                        <input
-                          type="text"
-                          className="spec-source__input"
-                          value={source.label}
-                          onChange={(e) => handleSourceChange(i, "label", e.target.value)}
-                          placeholder="Label..."
-                        />
-                        <input
-                          type="url"
-                          className="spec-source__input"
-                          value={source.url || ""}
-                          onChange={(e) => handleSourceChange(i, "url", e.target.value)}
-                          placeholder="URL..."
-                        />
-                        <button
-                          className="spec-source__remove"
-                          onClick={() => handleRemoveSource(i)}
-                          title="Remove source"
-                        >
-                          ×
-                        </button>
-                      </div>
-                    ))}
-                    <button className="spec-add-btn spec-add-btn--small" onClick={handleAddSource}>
-                      + Source
-                    </button>
+                    {/* Existing sources as link chips */}
+                    <div className="spec-source-chips">
+                      {(effectiveItem?.sources || []).map((source, i) => (
+                        <div key={i} className="spec-source-chip">
+                          {editingSourceIndex === i ? (
+                            <input
+                              type="url"
+                              className="spec-source-chip__edit-input"
+                              value={editingSourceUrl}
+                              onChange={(e) => setEditingSourceUrl(e.target.value)}
+                              onKeyDown={handleEditSourceKeyDown}
+                              onBlur={handleSaveEditSource}
+                              autoFocus
+                              placeholder="Enter URL..."
+                            />
+                          ) : (
+                            <>
+                              <a
+                                href={source.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="spec-source-chip__link"
+                                title={source.url}
+                              >
+                                {source.label || extractDomainLabel(source.url || "")}
+                              </a>
+                              <div className="spec-source-chip__actions">
+                                <button
+                                  className="spec-source-chip__btn spec-source-chip__btn--edit"
+                                  onClick={() => handleStartEditSource(i, source.url || "")}
+                                  title="Edit source"
+                                >
+                                  <svg width="10" height="10" viewBox="0 0 12 12" fill="none">
+                                    <path
+                                      d="M8.5 1.5L10.5 3.5M1 11L1.5 8.5L9 1L11 3L3.5 10.5L1 11Z"
+                                      stroke="currentColor"
+                                      strokeWidth="1"
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                    />
+                                  </svg>
+                                </button>
+                                <button
+                                  className="spec-source-chip__btn spec-source-chip__btn--delete"
+                                  onClick={() => handleRemoveSource(i)}
+                                  title="Remove source"
+                                >
+                                  ×
+                                </button>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                    {/* Add new source input */}
+                    <input
+                      ref={sourceInputRef}
+                      type="url"
+                      className="spec-source-add-input"
+                      value={newSourceUrl}
+                      onChange={(e) => setNewSourceUrl(e.target.value)}
+                      onKeyDown={handleSourceInputKeyDown}
+                      placeholder="Paste URL and press Enter..."
+                    />
                   </div>
                 )}
               </div>

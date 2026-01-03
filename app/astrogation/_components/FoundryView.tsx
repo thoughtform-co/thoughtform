@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback } from "react";
 import type { ComponentDef } from "../catalog";
-import type { StyleConfig, FoundryFrameConfig, UIComponentPreset, FoundryVariant } from "./types";
+import type { StyleConfig, FoundryFrameConfig, FoundryVariant } from "./types";
 import { ComponentPreview } from "./previews/ComponentPreview";
 import { TargetReticle, ChamferedFrame } from "@thoughtform/ui";
 
@@ -17,18 +17,11 @@ export interface FoundryViewProps {
   style: StyleConfig;
   foundryFrame: FoundryFrameConfig;
   def: ComponentDef | null;
-  presets: UIComponentPreset[];
   variants: FoundryVariant[];
-  onLoadPreset: (preset: UIComponentPreset) => void;
   onRemoveVariant: (id: string) => void;
   onApplyVariant: (variant: FoundryVariant) => void;
-  onSavePreset: () => void;
-  presetName: string;
-  onPresetNameChange: (name: string) => void;
-  canSave: boolean;
   isFocused: boolean;
   onFocusChange: (focused: boolean) => void;
-  onSelectComponent: (id: string) => void;
 }
 
 export function FoundryView({
@@ -37,18 +30,11 @@ export function FoundryView({
   style,
   foundryFrame,
   def,
-  presets,
   variants,
-  onLoadPreset,
   onRemoveVariant,
   onApplyVariant,
-  onSavePreset,
-  presetName,
-  onPresetNameChange,
-  canSave,
   isFocused,
   onFocusChange,
-  onSelectComponent,
 }: FoundryViewProps) {
   // Zoom state for the preview
   const [zoom, setZoom] = useState(1);
@@ -128,12 +114,6 @@ export function FoundryView({
     setFocusedElementId(null);
     onFocusChange(false);
   }, [selectedComponentId, onFocusChange]);
-
-  // Show all presets from the Vault as templates
-  // These are saved configurations that can be loaded and modified
-  const vaultTemplates = useMemo(() => {
-    return presets;
-  }, [presets]);
 
   if (!selectedComponentId || !def) {
     return (
@@ -272,46 +252,6 @@ export function FoundryView({
           </div>
         </div>
       )}
-
-      {/* Template Tray - horizontal scrollable bar showing Vault templates */}
-      <div className="foundry__template-tray">
-        <div className="foundry__template-tray-label">
-          {vaultTemplates.length > 0 ? "VAULT" : "NO TEMPLATES"}
-        </div>
-        <div className="foundry__template-tray-scroll">
-          {vaultTemplates.length > 0 ? (
-            vaultTemplates.map((preset) => {
-              // Extract props from preset config (excluding internal keys)
-              const { __style, __foundryFrame, ...presetProps } = preset.config as Record<
-                string,
-                unknown
-              >;
-              const isCurrentComponent = preset.component_key === selectedComponentId;
-              return (
-                <button
-                  key={preset.id}
-                  className={`foundry__template-item foundry__template-item--thumbnail ${isCurrentComponent ? "foundry__template-item--current" : ""}`}
-                  onClick={() => onLoadPreset(preset)}
-                  title={`${preset.name} (${preset.component_key})`}
-                >
-                  <div className="foundry__template-thumbnail">
-                    <ComponentPreview
-                      componentId={preset.component_key}
-                      props={presetProps}
-                      style={(__style as StyleConfig) || style}
-                    />
-                  </div>
-                  <span className="foundry__template-item-name">{preset.name}</span>
-                </button>
-              );
-            })
-          ) : (
-            <div className="foundry__template-empty">
-              <span>Save templates in the Vault to see them here</span>
-            </div>
-          )}
-        </div>
-      </div>
 
       {/* Info */}
       <div className="foundry__info">

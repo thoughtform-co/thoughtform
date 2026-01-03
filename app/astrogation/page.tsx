@@ -441,13 +441,8 @@ function AstrogationContent() {
           onDeletePreset={deletePreset}
           onRemoveVariant={handleRemoveVariant}
           onApplyVariant={handleApplyVariant}
-          onSavePreset={savePreset}
-          presetName={presetName}
-          onPresetNameChange={handlePresetNameChange}
-          canSave={canSave}
           isFocused={isFocused}
           onFocusChange={handleFocusChange}
-          onSelectComponent={handleSelectComponent}
           survey={surveyProps}
         />
 

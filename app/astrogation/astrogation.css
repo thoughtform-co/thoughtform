@@ -4707,6 +4707,116 @@
   border-top: 1px dashed var(--dawn-08);
 }
 
+/* Source chips container */
+.spec-source-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+/* Individual source chip */
+.spec-source-chip {
+  display: inline-flex;
+  align-items: center;
+  position: relative;
+}
+
+.spec-source-chip__link {
+  display: inline-block;
+  padding: 2px 0;
+  background: none;
+  border: none;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  color: var(--gold-70);
+  text-decoration: none;
+  text-transform: uppercase;
+  transition: color 0.15s ease;
+}
+
+.spec-source-chip__link:hover {
+  color: var(--gold);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* Hover actions */
+.spec-source-chip__actions {
+  display: none;
+  gap: 2px;
+  margin-left: 4px;
+}
+
+.spec-source-chip:hover .spec-source-chip__actions {
+  display: flex;
+}
+
+.spec-source-chip__btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  padding: 0;
+  background: none;
+  border: none;
+  color: var(--dawn-30);
+  cursor: pointer;
+  font-size: 9px;
+  transition: color 0.15s ease;
+}
+
+.spec-source-chip__btn:hover {
+  color: var(--dawn-70);
+}
+
+.spec-source-chip__btn--delete:hover {
+  color: rgba(255, 100, 100, 0.8);
+}
+
+/* Edit input for inline editing */
+.spec-source-chip__edit-input {
+  padding: 4px 8px;
+  background: rgba(10, 9, 8, 0.95);
+  border: 1px solid var(--gold-40);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--dawn-70);
+  min-width: 180px;
+  max-width: 280px;
+}
+
+.spec-source-chip__edit-input:focus {
+  outline: none;
+  border-color: var(--gold);
+}
+
+/* Add new source input */
+.spec-source-add-input {
+  width: 100%;
+  padding: 6px 10px;
+  background: rgba(235, 227, 214, 0.03);
+  border: 1px dashed var(--dawn-15);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--dawn-60);
+  transition: all 0.15s ease;
+}
+
+.spec-source-add-input::placeholder {
+  color: var(--dawn-30);
+}
+
+.spec-source-add-input:focus {
+  outline: none;
+  background: rgba(235, 227, 214, 0.05);
+  border-color: var(--gold-30);
+  border-style: solid;
+}
+
+/* Legacy styles - keep for backward compat */
 .spec-source--inline {
   display: flex;
   gap: 6px;
@@ -7902,144 +8012,6 @@
   background: rgba(235, 227, 214, 0.05);
   border-color: var(--dawn-30);
   color: var(--dawn);
-}
-
-/* ─── TEMPLATE TRAY ─── */
-.foundry__template-tray {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 16px;
-  background: linear-gradient(180deg, rgba(10, 9, 8, 0.6) 0%, rgba(10, 9, 8, 0.8) 100%);
-  border-top: 1px solid var(--dawn-08);
-  flex-shrink: 0;
-}
-
-.foundry__template-tray-label {
-  font-family: var(--font-mono);
-  font-size: 9px;
-  letter-spacing: 0.15em;
-  color: var(--dawn-30);
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-
-.foundry__template-tray-scroll {
-  display: flex;
-  gap: 8px;
-  overflow-x: auto;
-  overflow-y: hidden;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-  padding: 4px 0;
-}
-
-.foundry__template-tray-scroll::-webkit-scrollbar {
-  display: none;
-}
-
-.foundry__template-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  padding: 8px;
-  background: rgba(10, 9, 8, 0.6);
-  border: 1px solid var(--dawn-08);
-  cursor: pointer;
-  transition: all 0.15s ease;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-
-.foundry__template-item:hover {
-  background: rgba(202, 165, 84, 0.08);
-  border-color: var(--gold-30);
-}
-
-.foundry__template-item--active {
-  background: rgba(202, 165, 84, 0.12);
-  border-color: var(--gold-50);
-}
-
-.foundry__template-item--active .foundry__template-item-name {
-  color: var(--gold);
-}
-
-/* Thumbnail variant for preset previews */
-.foundry__template-item--thumbnail {
-  width: 88px;
-  height: auto;
-  padding: 6px;
-  align-items: center;
-}
-
-.foundry__template-thumbnail {
-  width: 72px;
-  height: 52px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  background: rgba(10, 9, 8, 0.95);
-  border: 1px solid var(--dawn-15);
-  border-radius: 3px;
-  position: relative;
-}
-
-/* Scale down the component preview to fit thumbnail */
-.foundry__template-thumbnail > * {
-  transform: scale(0.22);
-  transform-origin: center center;
-  pointer-events: none;
-  position: absolute;
-  min-width: 280px;
-  min-height: 180px;
-}
-
-.foundry__template-item-name {
-  font-family: var(--font-mono);
-  font-size: 9px;
-  letter-spacing: 0.02em;
-  color: var(--dawn-70);
-  transition: color 0.15s ease;
-  max-width: 72px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  text-align: center;
-}
-
-.foundry__template-item:hover .foundry__template-item-name {
-  color: var(--gold);
-}
-
-/* Highlight templates matching current component */
-.foundry__template-item--current {
-  border-color: var(--gold-30);
-}
-
-.foundry__template-item--current .foundry__template-item-name {
-  color: var(--gold);
-}
-
-.foundry__template-item-category {
-  font-family: var(--font-mono);
-  font-size: 9px;
-  letter-spacing: 0.05em;
-  color: var(--dawn-30);
-  text-transform: uppercase;
-}
-
-/* Empty state when no presets */
-.foundry__template-empty {
-  display: flex;
-  align-items: center;
-  padding: 8px 16px;
-  color: var(--dawn-30);
-  font-family: var(--font-mono);
-  font-size: 10px;
-  letter-spacing: 0.05em;
-  font-style: italic;
 }
 
 /* ─── STAGE FRAME (ChamferedFrame wrapper for preview) ─── */
