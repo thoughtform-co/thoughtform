@@ -422,6 +422,8 @@ const NAVIGATION_COMPONENTS: ComponentDef[] = [
         ],
       },
       { name: "title", type: "string", default: "PANEL TITLE" },
+      { name: "notchWidthPx", type: "number", default: 220, min: 80, max: 320, step: 10 },
+      { name: "notchHeightPx", type: "number", default: 32, min: 16, max: 64, step: 4 },
       { name: "strokeColor", type: "color", default: "rgba(202, 165, 84, 0.3)" },
       { name: "fillColor", type: "color", default: "rgba(10, 9, 8, 0.4)" },
       { name: "strokeWidth", type: "number", default: 1, min: 0.5, max: 3, step: 0.5 },

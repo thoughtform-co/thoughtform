@@ -12,6 +12,8 @@ import {
   type CornerToken,
   type CornerPosition,
   type ShapePreset,
+  type FrameShape,
+  shapePresets,
 } from "@thoughtform/ui";
 
 // ═══════════════════════════════════════════════════════════════
@@ -846,16 +848,35 @@ function renderComponent(
     }
 
     case "panel": {
-      const shape = (props.shape as ShapePreset) || "inspectorTicket";
+      const shapePreset = (props.shape as ShapePreset) || "inspectorTicket";
       const title = (props.title as string) || "PANEL TITLE";
       const strokeColor = (props.strokeColor as string) || "rgba(202, 165, 84, 0.3)";
       const fillColor = (props.fillColor as string) || "rgba(10, 9, 8, 0.4)";
       const strokeWidth = (props.strokeWidth as number) ?? 1;
       const panelScale = fullSize ? 1.5 : 1;
 
+      // Build the shape - use custom notch dimensions if provided for ticketNotch shapes
+      let resolvedShape: ShapePreset | FrameShape = shapePreset;
+      const isTicketNotch = shapePreset.startsWith("inspector");
+      if (isTicketNotch) {
+        const customWidth = props.notchWidthPx as number | undefined;
+        const customHeight = props.notchHeightPx as number | undefined;
+        // Get the base preset to determine the corner
+        const baseShape = shapePresets[shapePreset];
+        if (baseShape.kind === "ticketNotch" && (customWidth || customHeight)) {
+          // Create a custom shape with the custom dimensions
+          resolvedShape = {
+            kind: "ticketNotch",
+            corner: baseShape.corner,
+            notchWidthPx: customWidth ?? baseShape.notchWidthPx,
+            notchHeightPx: customHeight ?? baseShape.notchHeightPx,
+          };
+        }
+      }
+
       return (
         <ChamferedFrame
-          shape={shape}
+          shape={resolvedShape}
           strokeColor={strokeColor}
           fillColor={fillColor}
           strokeWidth={strokeWidth}

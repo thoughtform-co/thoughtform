@@ -8,10 +8,18 @@ import {
   BORDER_COLORS,
   NOTCH_ENABLED_COMPONENTS,
   NO_FRAME_CONTROLS_COMPONENTS,
-  CHAMFER_POSITIONS,
-  type ChamferPosition,
 } from "./types";
 import { CornerSelector } from "./helpers";
+
+// Helper to check if a shape is a notch type
+function isNotchShape(shape: string): boolean {
+  return shape?.startsWith("inspector") || false;
+}
+
+// Helper to check if a shape is a chamfer type
+function isChamferShape(shape: string): boolean {
+  return shape?.startsWith("cutCorners") || false;
+}
 
 // Fill colors for frame backgrounds
 const FILL_COLORS = [
@@ -56,7 +64,7 @@ function categorizeProp(propName: string): string {
     return "content";
   }
 
-  // Dimension props - CONTENT section
+  // Dimension props - CONTENT section (but NOT notch dimensions)
   if (
     ["width", "height", "length", "tickcount", "min", "max", "step", "intensity"].includes(name)
   ) {
@@ -68,8 +76,8 @@ function categorizeProp(propName: string): string {
     return "frame";
   }
 
-  // Shape props (for Panel component) - FRAME section
-  if (["shape"].includes(name)) {
+  // Shape and notch props (for Panel component) - FRAME section (handled specially)
+  if (["shape", "notchwidthpx", "notchheightpx"].includes(name)) {
     return "frame";
   }
 
@@ -136,12 +144,13 @@ function DialsPanelInner({
     );
   }, [selectedComponentId]);
 
-  // State for notch/chamfer/corner toggles (derived from props)
-  const notchEnabled = (componentProps.notchEnabled as boolean) ?? false;
-  const chamferEnabled = (componentProps.chamferEnabled as boolean) ?? false;
-  const cornerEnabled =
-    (componentProps.cornerEnabled as boolean) ??
-    (componentProps.corners !== "none" && componentProps.corners !== undefined);
+  // Derive notch/chamfer state from the shape prop (for Panel component)
+  const currentShape = (componentProps.shape as string) || "";
+  const notchEnabled = isNotchShape(currentShape);
+  const chamferEnabled = isChamferShape(currentShape);
+
+  // Corner enabled state
+  const cornerEnabled = componentProps.corners !== "none" && componentProps.corners !== undefined;
 
   const handlePropChange = useCallback(
     (propName: string, value: unknown) => {
@@ -402,22 +411,33 @@ function DialsPanelInner({
                     </div>
                   )}
 
-                  {/* Shape selector for Panel */}
-                  {shapeProp && renderPropControl(shapeProp, componentProps[shapeProp.name])}
+                  {/* Shape selector for Panel - hidden, we use Notch/Chamfer toggles instead */}
+                  {shapeProp && (
+                    <div className="dial-group" style={{ display: "none" }}>
+                      {renderPropControl(shapeProp, componentProps[shapeProp.name])}
+                    </div>
+                  )}
 
-                  {/* Notch Toggle - only for notch-enabled components */}
-                  {supportsNotch && (
+                  {/* Notch Toggle - only for notch-enabled components (Panel, Cards, Frame) */}
+                  {supportsNotch && shapeProp && (
                     <>
                       <label className="dial-toggle">
                         <input
                           type="checkbox"
                           checked={notchEnabled}
-                          onChange={(e) => handlePropChange("notchEnabled", e.target.checked)}
+                          onChange={(e) => {
+                            // Toggle between notch and chamfer shapes
+                            if (e.target.checked) {
+                              handlePropChange("shape", "inspectorTicket");
+                            } else {
+                              handlePropChange("shape", "cutCornersSm");
+                            }
+                          }}
                         />
                         <span>Notch</span>
                       </label>
 
-                      {/* Notch controls - shown when enabled */}
+                      {/* Notch controls - shown when shape is a notch type */}
                       {notchEnabled && (
                         <div className="dial-group--nested">
                           <div className="dial-group">
@@ -463,34 +483,43 @@ function DialsPanelInner({
                     </>
                   )}
 
-                  {/* Chamfer Toggle */}
-                  <label className="dial-toggle">
-                    <input
-                      type="checkbox"
-                      checked={chamferEnabled}
-                      onChange={(e) => handlePropChange("chamferEnabled", e.target.checked)}
-                    />
-                    <span>Chamfer</span>
-                  </label>
+                  {/* Chamfer Toggle - only for components with shape prop */}
+                  {supportsNotch && shapeProp && (
+                    <>
+                      <label className="dial-toggle">
+                        <input
+                          type="checkbox"
+                          checked={chamferEnabled}
+                          onChange={(e) => {
+                            // Toggle between chamfer and notch shapes
+                            if (e.target.checked) {
+                              handlePropChange("shape", "cutCornersSm");
+                            } else {
+                              handlePropChange("shape", "inspectorTicket");
+                            }
+                          }}
+                        />
+                        <span>Chamfer</span>
+                      </label>
 
-                  {/* Chamfer position - shown when enabled */}
-                  {chamferEnabled && (
-                    <div className="dial-group--nested">
-                      <div className="dial-group">
-                        <div className="dial-group__label">Position</div>
-                        <select
-                          className="dial-select"
-                          value={(componentProps.chamferPosition as ChamferPosition) ?? "top-right"}
-                          onChange={(e) => handlePropChange("chamferPosition", e.target.value)}
-                        >
-                          {CHAMFER_POSITIONS.map((pos) => (
-                            <option key={pos.value} value={pos.value}>
-                              {pos.label}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
+                      {/* Chamfer size selector - shown when shape is a chamfer type */}
+                      {chamferEnabled && (
+                        <div className="dial-group--nested">
+                          <div className="dial-group">
+                            <div className="dial-group__label">Size</div>
+                            <select
+                              className="dial-select"
+                              value={currentShape}
+                              onChange={(e) => handlePropChange("shape", e.target.value)}
+                            >
+                              <option value="cutCornersSm">Small</option>
+                              <option value="cutCornersMd">Medium</option>
+                              <option value="cutCornersTopRight">Top Right Only</option>
+                            </select>
+                          </div>
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
               </div>
