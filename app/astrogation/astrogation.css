@@ -1872,22 +1872,77 @@
 
 .dial-toggle {
   display: flex;
-  align-items: center;
-  gap: 10px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
   font-family: var(--font-mono);
   font-size: 11px;
   color: var(--dawn-50);
   cursor: pointer;
-  padding: 4px 0;
+  padding: 0;
   transition: color 0.15s ease;
+  position: relative;
 }
 
 .dial-toggle:hover {
   color: var(--dawn);
 }
 
+/* Hide default checkbox */
 .dial-toggle input {
-  accent-color: var(--gold);
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+/* Label text on top */
+.dial-toggle span {
+  order: -1;
+}
+
+/* Toggle switch container */
+.dial-toggle::after {
+  content: "";
+  width: 24px;
+  height: 12px;
+  background: rgba(10, 9, 8, 0.8);
+  border: 1px solid var(--dawn-15);
+  flex-shrink: 0;
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+/* Checked state - track */
+.dial-toggle:has(input:checked)::after {
+  background: rgba(202, 165, 84, 0.2);
+  border-color: var(--gold-50);
+}
+
+/* Hover states */
+.dial-toggle:hover::after {
+  border-color: var(--dawn-30);
+}
+
+.dial-toggle:has(input:checked):hover::after {
+  border-color: var(--gold);
+}
+
+/* Toggle knob element */
+.dial-toggle span::after {
+  content: "";
+  position: absolute;
+  left: 3px;
+  bottom: 3px;
+  width: 6px;
+  height: 6px;
+  background: var(--dawn-30);
+  transition: all 0.2s ease;
+}
+
+.dial-toggle:has(input:checked) span::after {
+  left: 15px;
+  background: var(--gold);
 }
 
 /* Nested dial group - indented controls revealed by checkboxes */
@@ -1907,55 +1962,116 @@
   margin-bottom: 0;
 }
 
-/* Color Picker */
-.color-picker {
+/* Color Picker Dropdown (Figma-style) */
+.dial-group--color {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  align-items: flex-start;
+  gap: 8px;
 }
 
-.color-swatches {
+.color-picker-dropdown {
+  position: relative;
+}
+
+.color-picker-dropdown__trigger {
   display: flex;
-  gap: 4px;
-  flex-wrap: wrap;
+  align-items: center;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
 }
 
-.color-swatch {
+.color-picker-dropdown__preview {
   width: 20px;
   height: 20px;
   border: 1px solid var(--dawn-15);
-  cursor: pointer;
-  transition: all 0.15s ease;
-  position: relative;
-  flex-shrink: 0;
+  transition: border-color 0.15s ease;
 }
 
-.color-swatch:hover {
-  border-color: var(--dawn);
+.color-picker-dropdown__trigger:hover .color-picker-dropdown__preview {
+  border-color: var(--dawn-50);
 }
 
-/* Active/selected swatch */
-.color-swatch.active {
-  border-color: var(--gold);
-  box-shadow: 0 0 0 1px var(--gold-50);
-}
-
-/* None/Transparent swatch */
-.color-swatch--none {
+.color-picker-dropdown__preview--none {
   background: var(--void);
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.color-swatch--none .swatch-x {
-  color: var(--dawn-50);
+.color-picker-dropdown__x {
+  color: var(--dawn-30);
   font-size: 10px;
   line-height: 1;
 }
 
-.color-swatch--none:hover .swatch-x,
-.color-swatch--none.active .swatch-x {
+.color-picker-dropdown__trigger:hover .color-picker-dropdown__x {
+  color: var(--dawn-50);
+}
+
+.color-picker-dropdown__menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 100;
+  min-width: 140px;
+  background: rgba(10, 9, 8, 0.95);
+  border: 1px solid var(--dawn-15);
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  backdrop-filter: blur(8px);
+}
+
+.color-picker-dropdown__option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: background 0.1s ease;
+  text-align: left;
+}
+
+.color-picker-dropdown__option:hover {
+  background: var(--dawn-08);
+}
+
+.color-picker-dropdown__option.active {
+  background: var(--gold-08);
+}
+
+.color-picker-dropdown__option-swatch {
+  width: 16px;
+  height: 16px;
+  border: 1px solid var(--dawn-15);
+  flex-shrink: 0;
+}
+
+.color-picker-dropdown__option-swatch--none {
+  background: var(--void);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.color-picker-dropdown__option-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--dawn-70);
+  white-space: nowrap;
+}
+
+.color-picker-dropdown__option:hover .color-picker-dropdown__option-label {
+  color: var(--dawn);
+}
+
+.color-picker-dropdown__option.active .color-picker-dropdown__option-label {
   color: var(--gold);
 }
 
@@ -3773,8 +3889,9 @@
 
 .spec-section__label {
   display: flex;
-  align-items: center;
-  gap: 12px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
 }
 
 .spec-section__label-text {
@@ -3787,7 +3904,7 @@
 }
 
 .spec-section__label-line {
-  flex: 1;
+  width: 100%;
   height: 1px;
   background: var(--gold-15);
 }

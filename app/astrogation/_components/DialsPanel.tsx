@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useCallback, useMemo } from "react";
+import { memo, useCallback, useMemo, useState, useRef, useEffect } from "react";
 import { getComponentById, type PropDef } from "../catalog";
 import { ChamferedFrame, type CornerToken } from "@thoughtform/ui";
 import {
@@ -41,6 +41,99 @@ const STROKE_COLORS = [
   { name: "Dawn 30%", value: "rgba(235, 227, 214, 0.30)" },
   { name: "Dawn", value: "#ebe3d6" },
 ];
+
+// ═══════════════════════════════════════════════════════════════
+// COLOR PICKER DROPDOWN (Figma-style)
+// ═══════════════════════════════════════════════════════════════
+
+interface ColorOption {
+  name: string;
+  value: string;
+}
+
+interface ColorPickerDropdownProps {
+  value: string;
+  options: ColorOption[];
+  onChange: (value: string) => void;
+  supportsTransparent?: boolean;
+}
+
+function ColorPickerDropdown({
+  value,
+  options,
+  onChange,
+  supportsTransparent = false,
+}: ColorPickerDropdownProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Close on click outside
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isOpen]);
+
+  const isTransparent = value === "transparent";
+  const selectedOption = options.find((o) => o.value === value);
+
+  return (
+    <div className="color-picker-dropdown" ref={containerRef}>
+      <button
+        className="color-picker-dropdown__trigger"
+        onClick={() => setIsOpen(!isOpen)}
+        title={isTransparent ? "None / Transparent" : selectedOption?.name || "Select color"}
+      >
+        <span
+          className={`color-picker-dropdown__preview ${isTransparent ? "color-picker-dropdown__preview--none" : ""}`}
+          style={isTransparent ? undefined : { background: value }}
+        >
+          {isTransparent && <span className="color-picker-dropdown__x">✕</span>}
+        </span>
+      </button>
+
+      {isOpen && (
+        <div className="color-picker-dropdown__menu">
+          {supportsTransparent && (
+            <button
+              className={`color-picker-dropdown__option ${isTransparent ? "active" : ""}`}
+              onClick={() => {
+                onChange("transparent");
+                setIsOpen(false);
+              }}
+            >
+              <span className="color-picker-dropdown__option-swatch color-picker-dropdown__option-swatch--none">
+                <span className="color-picker-dropdown__x">✕</span>
+              </span>
+              <span className="color-picker-dropdown__option-label">None</span>
+            </button>
+          )}
+          {options.map((opt) => (
+            <button
+              key={opt.name}
+              className={`color-picker-dropdown__option ${value === opt.value ? "active" : ""}`}
+              onClick={() => {
+                onChange(opt.value);
+                setIsOpen(false);
+              }}
+            >
+              <span
+                className="color-picker-dropdown__option-swatch"
+                style={{ background: opt.value }}
+              />
+              <span className="color-picker-dropdown__option-label">{opt.name}</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 // ═══════════════════════════════════════════════════════════════
 // PROP CATEGORIZATION
@@ -248,30 +341,14 @@ function DialsPanelInner({
         const colorOptions = isBorderColor ? BORDER_COLORS : BRAND_COLORS;
 
         return (
-          <div className="dial-group">
+          <div className="dial-group dial-group--color">
             <div className="dial-group__label">{propDef.name}</div>
-            <div className="color-picker">
-              <div className="color-swatches">
-                {supportsTransparent && (
-                  <button
-                    className={`color-swatch color-swatch--none ${currentColor === "transparent" ? "active" : ""}`}
-                    title="None / Transparent"
-                    onClick={() => handlePropChange(propDef.name, "transparent")}
-                  >
-                    <span className="swatch-x">✕</span>
-                  </button>
-                )}
-                {colorOptions.map((c) => (
-                  <button
-                    key={c.name}
-                    className={`color-swatch ${currentColor === c.value ? "active" : ""}`}
-                    style={{ background: c.value }}
-                    title={c.name}
-                    onClick={() => handlePropChange(propDef.name, c.value)}
-                  />
-                ))}
-              </div>
-            </div>
+            <ColorPickerDropdown
+              value={currentColor}
+              options={colorOptions}
+              onChange={(v) => handlePropChange(propDef.name, v)}
+              supportsTransparent={supportsTransparent}
+            />
           </div>
         );
       }
@@ -416,25 +493,14 @@ function DialsPanelInner({
 
                   {/* If no fillColor prop exists but component supports frame, add a generic one */}
                   {!fillColorProp && (
-                    <div className="dial-group">
+                    <div className="dial-group dial-group--color">
                       <div className="dial-group__label">Fill Color</div>
-                      <div className="color-picker">
-                        <div className="color-swatches">
-                          {FILL_COLORS.map((c) => (
-                            <button
-                              key={c.name}
-                              className={`color-swatch ${componentProps.fillColor === c.value ? "active" : ""} ${c.name === "None" ? "color-swatch--none" : ""}`}
-                              style={{
-                                background: c.value === "transparent" ? undefined : c.value,
-                              }}
-                              title={c.name}
-                              onClick={() => handlePropChange("fillColor", c.value)}
-                            >
-                              {c.name === "None" && <span className="swatch-x">✕</span>}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
+                      <ColorPickerDropdown
+                        value={(componentProps.fillColor as string) || "transparent"}
+                        options={FILL_COLORS.filter((c) => c.name !== "None")}
+                        onChange={(v) => handlePropChange("fillColor", v)}
+                        supportsTransparent={true}
+                      />
                     </div>
                   )}
 
@@ -592,21 +658,15 @@ function DialsPanelInner({
                           }
                         />
                       </div>
-                      <div className="dial-group">
+                      <div className="dial-group dial-group--color">
                         <div className="dial-group__label">Stroke Color</div>
-                        <div className="color-picker">
-                          <div className="color-swatches">
-                            {STROKE_COLORS.map((c) => (
-                              <button
-                                key={c.name}
-                                className={`color-swatch ${componentProps.strokeColor === c.value ? "active" : ""}`}
-                                style={{ background: c.value }}
-                                title={c.name}
-                                onClick={() => handlePropChange("strokeColor", c.value)}
-                              />
-                            ))}
-                          </div>
-                        </div>
+                        <ColorPickerDropdown
+                          value={
+                            (componentProps.strokeColor as string) || "rgba(202, 165, 84, 0.3)"
+                          }
+                          options={STROKE_COLORS}
+                          onChange={(v) => handlePropChange("strokeColor", v)}
+                        />
                       </div>
                     </>
                   )}
