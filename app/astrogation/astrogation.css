@@ -4680,29 +4680,8 @@
   min-width: 24px;
   height: 1px;
   background: var(--gold);
-  position: relative;
   flex-shrink: 0;
   align-self: center;
-}
-
-/* Small diamond endpoints on the connector */
-.component-node__connector::before,
-.component-node__connector::after {
-  content: "";
-  position: absolute;
-  width: 4px;
-  height: 4px;
-  transform: rotate(45deg);
-  top: -1.5px;
-  background: var(--gold);
-}
-
-.component-node__connector::before {
-  left: -3px;
-}
-
-.component-node__connector::after {
-  right: -3px;
 }
 
 /* ─── TAG CHIPS INPUT ─── */
