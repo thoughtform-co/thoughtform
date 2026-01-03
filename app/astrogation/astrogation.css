@@ -4679,7 +4679,7 @@
   width: 24px;
   min-width: 24px;
   height: 1px;
-  background: linear-gradient(90deg, var(--dawn-40) 0%, var(--gold) 100%);
+  background: var(--gold);
   position: relative;
   flex-shrink: 0;
   align-self: center;
@@ -4694,16 +4694,15 @@
   height: 4px;
   transform: rotate(45deg);
   top: -1.5px;
+  background: var(--gold);
 }
 
 .component-node__connector::before {
   left: -3px;
-  background: var(--dawn-40);
 }
 
 .component-node__connector::after {
   right: -3px;
-  background: var(--gold);
 }
 
 /* ─── TAG CHIPS INPUT ─── */
