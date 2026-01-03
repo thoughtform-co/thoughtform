@@ -1,7 +1,7 @@
 "use client";
 
 import { memo, useCallback, useMemo, useState, useRef, useEffect } from "react";
-import { getComponentById, type PropDef } from "../catalog";
+import { getComponentById, getComponentsByCategory, CATEGORIES, type PropDef } from "../catalog";
 import { ChamferedFrame, type CornerToken } from "@thoughtform/ui";
 import {
   BRAND_COLORS,
@@ -231,6 +231,11 @@ function DialsPanelInner({
   // Get the current category from the component definition
   const currentCategoryId = def?.category || null;
 
+  // Derived values for breadcrumb
+  const selectedCategory = CATEGORIES.find((cat) => cat.id === currentCategoryId);
+  const components = currentCategoryId ? getComponentsByCategory(currentCategoryId) : [];
+  const selectedComponent = components.find((comp) => comp.id === selectedComponentId);
+
   // Check if this component supports various features
   const supportsNotch = useMemo(() => {
     return (
@@ -438,54 +443,56 @@ function DialsPanelInner({
           titleSlot={<span className="inspector-frame__title">{def.name}</span>}
         >
           <div className="spec-panel-v2">
-            {/* ─── HEADER ─── */}
+            {/* ─── HEADER with Breadcrumb ─── */}
             <header className="spec-header">
+              {/* Breadcrumb navigation for Category / Component */}
+              <nav className="spec-breadcrumb">
+                <div className="spec-breadcrumb__item">
+                  <span className="spec-breadcrumb__text">
+                    {selectedCategory?.name || "Category"}
+                  </span>
+                  <div className="spec-breadcrumb__dropdown">
+                    {CATEGORIES.map((cat) => (
+                      <button
+                        key={cat.id}
+                        className={`spec-breadcrumb__option ${currentCategoryId === cat.id ? "spec-breadcrumb__option--active" : ""}`}
+                        onClick={() => {
+                          const categoryComponents = getComponentsByCategory(cat.id);
+                          const firstComponent = categoryComponents[0];
+                          if (firstComponent) {
+                            onComponentChange(cat.id, firstComponent.id);
+                          }
+                        }}
+                      >
+                        {cat.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <span className="spec-breadcrumb__separator">/</span>
+                <div className="spec-breadcrumb__item spec-breadcrumb__item--active">
+                  <span className="spec-breadcrumb__text">
+                    {selectedComponent?.name || "Component"}
+                  </span>
+                  <div className="spec-breadcrumb__dropdown">
+                    {components.map((comp) => (
+                      <button
+                        key={comp.id}
+                        className={`spec-breadcrumb__option ${selectedComponentId === comp.id ? "spec-breadcrumb__option--active" : ""}`}
+                        onClick={() => {
+                          if (currentCategoryId) {
+                            onComponentChange(currentCategoryId, comp.id);
+                          }
+                        }}
+                      >
+                        {comp.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </nav>
               <p className="spec-header__desc">{def.description}</p>
             </header>
-
-            {/* ═══════════════════════════════════════════════════════════════
-                COMPONENT CLASS SECTION - Node-based category → component flow
-                ═══════════════════════════════════════════════════════════════ */}
-            <div className="spec-section">
-              <div className="spec-section__label">
-                <span className="spec-section__label-text">Component Class</span>
-                <span className="spec-section__label-line" />
-              </div>
-              <div className="component-node-flow">
-                {/* Category Node */}
-                <div className="component-node component-node--category">
-                  <NestedSelect
-                    categoryId={currentCategoryId}
-                    componentKey={selectedComponentId}
-                    onChange={(catId, compKey) => {
-                      if (catId && compKey) {
-                        onComponentChange(catId, compKey);
-                      }
-                    }}
-                    placeholder="Select..."
-                    className="spec-select--node"
-                    mode="category"
-                  />
-                </div>
-                {/* Connector Line */}
-                <div className="component-node__connector" />
-                {/* Component Node */}
-                <div className="component-node component-node--component">
-                  <NestedSelect
-                    categoryId={currentCategoryId}
-                    componentKey={selectedComponentId}
-                    onChange={(catId, compKey) => {
-                      if (catId && compKey) {
-                        onComponentChange(catId, compKey);
-                      }
-                    }}
-                    placeholder="Select..."
-                    className="spec-select--node"
-                    mode="component"
-                  />
-                </div>
-              </div>
-            </div>
 
             {/* ═══════════════════════════════════════════════════════════════
                 CONTENT SECTION - Text, labels, toggles, dimensions

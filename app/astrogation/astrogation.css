@@ -3890,6 +3890,81 @@
   color: var(--gold-70);
 }
 
+/* ─── SPEC BREADCRUMB ─── */
+.spec-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+.spec-breadcrumb__item {
+  position: relative;
+  cursor: pointer;
+}
+
+.spec-breadcrumb__text {
+  color: var(--dawn-50);
+  transition: color 0.15s ease;
+  padding: 4px 0;
+}
+
+.spec-breadcrumb__item:hover .spec-breadcrumb__text {
+  color: var(--gold);
+}
+
+.spec-breadcrumb__item--active .spec-breadcrumb__text {
+  color: var(--gold);
+}
+
+.spec-breadcrumb__separator {
+  color: var(--dawn-30);
+}
+
+/* Dropdown menu - hidden by default, shown on hover */
+.spec-breadcrumb__dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 100;
+  min-width: 140px;
+  background: var(--void-95);
+  border: 1px solid var(--gold-30);
+  padding: 4px 0;
+  display: none;
+  flex-direction: column;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  margin-top: 4px;
+}
+
+.spec-breadcrumb__item:hover .spec-breadcrumb__dropdown {
+  display: flex;
+}
+
+.spec-breadcrumb__option {
+  padding: 8px 12px;
+  background: none;
+  border: none;
+  text-align: left;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--dawn-60);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.spec-breadcrumb__option:hover {
+  background: rgba(202, 165, 84, 0.1);
+  color: var(--gold);
+}
+
+.spec-breadcrumb__option--active {
+  color: var(--gold);
+  background: rgba(202, 165, 84, 0.05);
+}
+
 .spec-header__desc {
   font-size: 11px;
   line-height: 1.7;
@@ -4636,52 +4711,6 @@
   display: flex;
   flex-direction: column;
   min-width: 120px;
-}
-
-/* Node-style select for component flow */
-.spec-select--node {
-  flex: 1;
-}
-
-.spec-select--node .spec-select__trigger {
-  padding: 6px 10px;
-  font-size: 11px;
-  background: rgba(10, 9, 8, 0.6);
-  border: 1px solid var(--gold-30);
-}
-
-.spec-select--node .spec-select__value {
-  font-family: var(--font-mono);
-  letter-spacing: 0.02em;
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   COMPONENT NODE FLOW - Horizontal category → class node graph
-   ═══════════════════════════════════════════════════════════════ */
-
-.component-node-flow {
-  display: flex;
-  align-items: center;
-  gap: 0;
-  margin-top: 12px;
-}
-
-.component-node {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  flex: 1;
-  position: relative;
-}
-
-/* Horizontal connector line between dropdowns */
-.component-node__connector {
-  width: 24px;
-  min-width: 24px;
-  height: 1px;
-  background: var(--gold);
-  flex-shrink: 0;
-  align-self: center;
 }
 
 /* ─── TAG CHIPS INPUT ─── */
