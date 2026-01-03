@@ -4670,23 +4670,8 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
   flex: 1;
   position: relative;
-}
-
-.component-node__marker {
-  width: 10px;
-  height: 10px;
-  border: 1px solid var(--dawn-40);
-  transform: rotate(45deg);
-  background: var(--void);
-  position: relative;
-}
-
-.component-node__marker--gold {
-  border-color: var(--gold);
-  box-shadow: 0 0 8px rgba(202, 165, 84, 0.4);
 }
 
 /* Horizontal connector line between dropdowns */
@@ -4698,7 +4683,6 @@
   position: relative;
   flex-shrink: 0;
   align-self: center;
-  margin-top: 16px; /* Align with center of dropdowns */
 }
 
 /* Small diamond endpoints on the connector */
