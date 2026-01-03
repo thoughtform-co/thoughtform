@@ -444,24 +444,51 @@ function DialsPanelInner({
             </header>
 
             {/* ═══════════════════════════════════════════════════════════════
-                COMPONENT CLASS SECTION - Reassign to different category
+                COMPONENT CLASS SECTION - Node-based category → component flow
                 ═══════════════════════════════════════════════════════════════ */}
             <div className="spec-section">
               <div className="spec-section__label">
                 <span className="spec-section__label-text">Component Class</span>
                 <span className="spec-section__label-line" />
               </div>
-              <NestedSelect
-                categoryId={currentCategoryId}
-                componentKey={selectedComponentId}
-                onChange={(catId, compKey) => {
-                  if (catId && compKey) {
-                    onComponentChange(catId, compKey);
-                  }
-                }}
-                placeholder="Select component..."
-                className="spec-select--compact"
-              />
+              <div className="component-node-flow">
+                {/* Category Node */}
+                <div className="component-node component-node--category">
+                  <div className="component-node__marker">◇</div>
+                  <div className="component-node__label">CATEGORY</div>
+                  <NestedSelect
+                    categoryId={currentCategoryId}
+                    componentKey={selectedComponentId}
+                    onChange={(catId, compKey) => {
+                      if (catId && compKey) {
+                        onComponentChange(catId, compKey);
+                      }
+                    }}
+                    placeholder="Select..."
+                    className="spec-select--node"
+                    mode="category"
+                  />
+                </div>
+                {/* Connector Line */}
+                <div className="component-node__connector" />
+                {/* Component Node */}
+                <div className="component-node component-node--component">
+                  <div className="component-node__marker component-node__marker--gold">◇</div>
+                  <div className="component-node__label">CLASS</div>
+                  <NestedSelect
+                    categoryId={currentCategoryId}
+                    componentKey={selectedComponentId}
+                    onChange={(catId, compKey) => {
+                      if (catId && compKey) {
+                        onComponentChange(catId, compKey);
+                      }
+                    }}
+                    placeholder="Select..."
+                    className="spec-select--node"
+                    mode="component"
+                  />
+                </div>
+              </div>
             </div>
 
             {/* ═══════════════════════════════════════════════════════════════

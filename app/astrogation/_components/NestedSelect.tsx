@@ -10,6 +10,10 @@ import {
 
 // ═══════════════════════════════════════════════════════════════
 // NESTED SELECT - Single dropdown with category -> component submenus
+// Supports three modes:
+// - "full" (default): nested category → component selection
+// - "category": only category selection
+// - "component": only component selection within current category
 // ═══════════════════════════════════════════════════════════════
 
 export interface NestedSelectProps {
@@ -19,6 +23,7 @@ export interface NestedSelectProps {
   placeholder?: string;
   disabled?: boolean;
   className?: string;
+  mode?: "full" | "category" | "component";
 }
 
 export function NestedSelect({
@@ -28,6 +33,7 @@ export function NestedSelect({
   placeholder = "Select Component...",
   disabled = false,
   className = "",
+  mode = "full",
 }: NestedSelectProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
@@ -69,7 +75,19 @@ export function NestedSelect({
     (catId: string, compKey: string) => {
       onChange(catId, compKey);
       setIsOpen(false);
-      // Don't reset activeCategory here, let useEffect handle it if needed
+    },
+    [onChange]
+  );
+
+  const handleSelectCategory = useCallback(
+    (catId: string) => {
+      // When selecting a category in "category" mode, select the first component
+      const categoryComponents = getComponentsByCategory(catId);
+      const firstComponent = categoryComponents[0];
+      if (firstComponent) {
+        onChange(catId, firstComponent.id);
+      }
+      setIsOpen(false);
     },
     [onChange]
   );
@@ -83,12 +101,89 @@ export function NestedSelect({
     }
   }, [isOpen, categoryId]);
 
-  const displayValue = selectedComponent
-    ? `${selectedCategory?.name} / ${selectedComponent.name}`
-    : selectedCategory
-      ? selectedCategory.name
-      : placeholder;
+  // Determine display value based on mode
+  const displayValue =
+    mode === "category"
+      ? selectedCategory?.name || placeholder
+      : mode === "component"
+        ? selectedComponent?.name || placeholder
+        : selectedComponent
+          ? `${selectedCategory?.name} / ${selectedComponent.name}`
+          : selectedCategory
+            ? selectedCategory.name
+            : placeholder;
 
+  // Category-only mode
+  if (mode === "category") {
+    return (
+      <div
+        className={`spec-select ${className} ${disabled ? "spec-select--disabled" : ""}`}
+        ref={containerRef}
+      >
+        <button
+          type="button"
+          className={`spec-select__trigger ${isOpen ? "spec-select__trigger--open" : ""}`}
+          onClick={() => !disabled && setIsOpen(!isOpen)}
+          disabled={disabled}
+        >
+          <span className="spec-select__value">{displayValue}</span>
+          <span className="spec-select__arrow">▼</span>
+        </button>
+
+        {isOpen && (
+          <div className="spec-select__dropdown spec-select__dropdown--simple">
+            {CATEGORIES.map((cat) => (
+              <button
+                key={cat.id}
+                type="button"
+                className={`spec-select__option ${categoryId === cat.id ? "spec-select__option--selected" : ""}`}
+                onClick={() => handleSelectCategory(cat.id)}
+              >
+                {cat.name}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Component-only mode
+  if (mode === "component") {
+    return (
+      <div
+        className={`spec-select ${className} ${disabled ? "spec-select--disabled" : ""}`}
+        ref={containerRef}
+      >
+        <button
+          type="button"
+          className={`spec-select__trigger ${isOpen ? "spec-select__trigger--open" : ""}`}
+          onClick={() => !disabled && setIsOpen(!isOpen)}
+          disabled={disabled}
+        >
+          <span className="spec-select__value">{displayValue}</span>
+          <span className="spec-select__arrow">▼</span>
+        </button>
+
+        {isOpen && categoryId && (
+          <div className="spec-select__dropdown spec-select__dropdown--simple">
+            {components.map((comp) => (
+              <button
+                key={comp.id}
+                type="button"
+                className={`spec-select__option ${componentKey === comp.id ? "spec-select__option--selected" : ""}`}
+                onClick={() => handleSelectComponent(categoryId, comp.id)}
+              >
+                {comp.name}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Full nested mode (default)
   return (
     <div
       className={`spec-select ${className} ${disabled ? "spec-select--disabled" : ""}`}
