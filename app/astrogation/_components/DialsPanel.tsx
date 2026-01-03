@@ -62,7 +62,7 @@ interface ColorOption {
 
 interface ColorPickerDropdownProps {
   value: string;
-  options: ColorOption[];
+  options: readonly ColorOption[];
   onChange: (value: string) => void;
   supportsTransparent?: boolean;
 }
