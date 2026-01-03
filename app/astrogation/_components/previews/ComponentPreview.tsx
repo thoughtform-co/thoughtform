@@ -590,7 +590,7 @@ function renderComponent(
     // ═══════════════════════════════════════════════════════════════
     // ORGANISMS - Cards
     // ═══════════════════════════════════════════════════════════════
-    case "card-content": {
+    case "card-landscape": {
       const corners = (props.corners as CornerToken) || "four";
       const borderThickness = (props.borderThickness as number) ?? 1.5;
       const cornerColor = (props.cornerColor as string) || "#caa554";
@@ -602,10 +602,10 @@ function renderComponent(
           cornerThickness={borderThickness}
           borderColor="rgba(235, 227, 214, 0.08)"
           cornerColor={cornerColor}
-          cornerLength={fullSize ? 24 : 12}
+          cornerLength={fullSize ? 24 : 16}
         >
           <div
-            className={`preview-card preview-card--content ${fullSize ? "preview-card--full" : ""}`}
+            className={`preview-card preview-card--landscape ${fullSize ? "preview-card--full" : ""}`}
           >
             {props.accent !== "none" && (
               <div
@@ -622,14 +622,14 @@ function renderComponent(
             )}
             <div
               className="preview-card__index"
-              style={fullSize ? { fontSize: "12px", marginBottom: "12px" } : undefined}
+              style={fullSize ? { fontSize: "14px", marginBottom: "16px" } : undefined}
             >
               {String(props.index || "01")} ·{" "}
               <span className="preview-card__label">{String(props.label || "Label")}</span>
             </div>
             <div
               className="preview-card__title"
-              style={fullSize ? { fontSize: "18px" } : undefined}
+              style={fullSize ? { fontSize: "24px" } : undefined}
             >
               {(props.title as string) || "Card Title"}
             </div>
@@ -995,7 +995,8 @@ function renderComponent(
     // LEGACY ALIASES (backward compatibility)
     // ═══════════════════════════════════════════════════════════════
     case "card-frame-content":
-      return renderComponent("card-content", props, def, fullSize);
+    case "card-content": // legacy alias
+      return renderComponent("card-landscape", props, def, fullSize);
     case "card-frame-terminal":
       return renderComponent("frame-terminal", props, def, fullSize);
     case "card-frame-data":

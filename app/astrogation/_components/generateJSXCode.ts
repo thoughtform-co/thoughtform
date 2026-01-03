@@ -26,7 +26,7 @@ const COMPONENT_NAMES: Record<string, string> = {
   "frame-basic": "Frame",
   "frame-terminal": "Frame",
   // Organisms
-  "card-content": "Card",
+  "card-landscape": "Card",
   "card-data": "Card",
   navbar: "NavigationBar",
   "hud-frame": "HUDFrame",

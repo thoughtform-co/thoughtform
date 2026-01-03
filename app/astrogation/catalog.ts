@@ -333,8 +333,8 @@ const NAVIGATION_COMPONENTS: ComponentDef[] = [
     defaultHeight: 180,
   },
   {
-    id: "card-content",
-    name: "Card (Content)",
+    id: "card-landscape",
+    name: "Card (Landscape)",
     category: "frames",
     description: "Content card with index, label, and title",
     designRationale:
@@ -353,8 +353,8 @@ const NAVIGATION_COMPONENTS: ComponentDef[] = [
       { name: "borderThickness", type: "number", default: 1.5, min: 0.5, max: 4, step: 0.5 },
       { name: "cornerColor", type: "color", default: "#caa554" },
     ],
-    defaultWidth: 400,
-    defaultHeight: 200,
+    defaultWidth: 500,
+    defaultHeight: 260,
   },
   {
     id: "card-data",

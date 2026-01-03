@@ -36,7 +36,7 @@ export type WorkspaceTab = "vault" | "foundry" | "survey";
 // Components that support the notch feature (Panel-style ticket notch)
 export const NOTCH_ENABLED_COMPONENTS = [
   "panel",
-  "card-content",
+  "card-landscape",
   "card-data",
   "frame-basic",
 ] as const;

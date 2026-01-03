@@ -1475,10 +1475,10 @@
   position: relative;
 }
 
-.preview-card--content {
+.preview-card--landscape {
   background: rgba(10, 9, 8, 0.6);
   border: none; /* HUDWrapper handles borders */
-  padding: 12px;
+  padding: 20px 24px;
 }
 
 .preview-card--terminal {
@@ -1501,21 +1501,21 @@
   top: 0;
   left: 0;
   right: 0;
-  height: 3px;
+  height: 4px;
 }
 
 .preview-card__accent--left {
   top: 0;
   left: 0;
   bottom: 0;
-  width: 3px;
+  width: 4px;
 }
 
 .preview-card__index {
   font-family: var(--font-mono);
-  font-size: 8px;
+  font-size: 11px;
   color: var(--gold);
-  margin-bottom: 6px;
+  margin-bottom: 10px;
 }
 
 .preview-card__label {
@@ -1524,7 +1524,7 @@
 
 .preview-card__title {
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 16px;
   color: var(--dawn);
 }
 
