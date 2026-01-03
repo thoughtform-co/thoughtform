@@ -603,10 +603,26 @@
   flex-direction: column;
 }
 
-/* Inspector panels: remove outer rectangular border so the inner polygon frame reads correctly */
+/* Inspector panels: border matching left panel, respecting the notch area */
 .astrogation-panel--right.astrogation-panel--survey,
 .astrogation-panel--right.astrogation-panel--inspector {
-  border: none;
+  border: 1px solid var(--gold-30, rgba(202, 165, 84, 0.3));
+  border-top: none;
+  border-left: none;
+}
+
+/* Left border starting below the PANEL notch title area */
+.astrogation-panel--right.astrogation-panel--inspector::after {
+  content: "" !important;
+  display: block !important;
+  position: absolute;
+  left: -1px;
+  top: 32px; /* Align with bottom of the notch (--survey-notch-h) */
+  bottom: 0;
+  width: 1px;
+  background: var(--gold-30, rgba(202, 165, 84, 0.3));
+  z-index: 100;
+  pointer-events: none;
 }
 
 /* Right panel content frame - no border here, border is on panel now */
@@ -620,8 +636,8 @@
   position: relative;
 }
 
-/* Corner accents - RIGHT panel: DISABLED for clean look */
-.astrogation-panel--right::after {
+/* Corner accents - RIGHT panel: DISABLED for clean look (except inspector left border) */
+.astrogation-panel--right:not(.astrogation-panel--inspector)::after {
   display: none !important;
 }
 
@@ -1780,9 +1796,8 @@
 .dial-group__label {
   font-family: var(--font-data, "PT Mono", monospace);
   font-size: 10px;
-  text-transform: uppercase;
   letter-spacing: 0.1em;
-  color: var(--dawn-30, rgba(235, 227, 214, 0.3));
+  color: var(--dawn-60);
   margin-bottom: 8px;
   display: block;
 }
@@ -1836,8 +1851,8 @@
 
 .dial-slider::-webkit-slider-thumb {
   -webkit-appearance: none;
-  width: 12px;
-  height: 12px;
+  width: 8px;
+  height: 8px;
   background: var(--gold);
   border-radius: 0;
   transform: rotate(45deg);
@@ -1845,8 +1860,8 @@
 }
 
 .dial-slider::-moz-range-thumb {
-  width: 12px;
-  height: 12px;
+  width: 8px;
+  height: 8px;
   background: var(--gold);
   border-radius: 0;
   border: none;
@@ -1872,16 +1887,18 @@
 
 .dial-toggle {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 8px;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
   font-family: var(--font-mono);
   font-size: 11px;
-  color: var(--dawn-50);
+  color: var(--dawn-60);
   cursor: pointer;
   padding: 0;
   transition: color 0.15s ease;
   position: relative;
+  width: 100%;
 }
 
 .dial-toggle:hover {
@@ -1896,9 +1913,9 @@
   height: 0;
 }
 
-/* Label text on top */
+/* Label text on left */
 .dial-toggle span {
-  order: -1;
+  order: 0;
 }
 
 /* Toggle switch container */
@@ -1932,8 +1949,9 @@
 .dial-toggle span::after {
   content: "";
   position: absolute;
-  left: 3px;
-  bottom: 3px;
+  right: 15px;
+  top: 50%;
+  transform: translateY(-50%);
   width: 6px;
   height: 6px;
   background: var(--dawn-30);
@@ -1941,15 +1959,15 @@
 }
 
 .dial-toggle:has(input:checked) span::after {
-  left: 15px;
+  right: 3px;
   background: var(--gold);
 }
 
 /* Nested dial group - indented controls revealed by checkboxes */
 .dial-group--nested {
-  margin-left: 20px;
-  padding-left: 12px;
-  border-left: 1px solid var(--dawn-08);
+  margin-left: 0;
+  padding-left: 0;
+  border-left: none;
   margin-top: 8px;
   margin-bottom: 12px;
 }

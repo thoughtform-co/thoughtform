@@ -22,6 +22,15 @@ function isChamferShape(shape: string): boolean {
   return shape?.startsWith("cutCorners") || false;
 }
 
+// Helper to format label text: camelCase → TITLE CASE with spaces
+function formatLabel(name: string): string {
+  // Insert space before capital letters, then uppercase everything
+  return name
+    .replace(/([a-z])([A-Z])/g, "$1 $2")
+    .replace(/([A-Z])([A-Z][a-z])/g, "$1 $2")
+    .toUpperCase();
+}
+
 // Fill colors for frame backgrounds
 const FILL_COLORS = [
   { name: "None", value: "transparent" },
@@ -199,7 +208,6 @@ export interface DialsPanelProps {
   componentProps: Record<string, unknown>;
   onPropsChange: (props: Record<string, unknown>) => void;
   onComponentChange: (categoryId: string, componentKey: string) => void;
-  onCopyCode: () => void;
   onSavePreset: () => void;
   presetName: string;
   onPresetNameChange: (name: string) => void;
@@ -212,7 +220,6 @@ function DialsPanelInner({
   componentProps,
   onPropsChange,
   onComponentChange,
-  onCopyCode,
   onSavePreset,
   presetName,
   onPresetNameChange,
@@ -265,7 +272,7 @@ function DialsPanelInner({
       case "string":
         return (
           <div className="dial-group">
-            <div className="dial-group__label">{propDef.name}</div>
+            <div className="dial-group__label">{formatLabel(propDef.name)}</div>
             <input
               type="text"
               className="dial-input"
@@ -279,7 +286,7 @@ function DialsPanelInner({
         return (
           <div className="dial-group">
             <div className="dial-group__header">
-              <span className="dial-group__label">{propDef.name}</span>
+              <span className="dial-group__label">{formatLabel(propDef.name)}</span>
               <span className="dial-group__value">
                 {currentValue as number}
                 {propDef.name.toLowerCase().includes("thickness") ||
@@ -308,14 +315,14 @@ function DialsPanelInner({
               checked={currentValue as boolean}
               onChange={(e) => handlePropChange(propDef.name, e.target.checked)}
             />
-            <span>{propDef.name}</span>
+            <span>{formatLabel(propDef.name)}</span>
           </label>
         );
 
       case "select":
         return (
           <div className="dial-group">
-            <div className="dial-group__label">{propDef.name}</div>
+            <div className="dial-group__label">{formatLabel(propDef.name)}</div>
             <select
               className="dial-select"
               value={currentValue as string}
@@ -342,7 +349,7 @@ function DialsPanelInner({
 
         return (
           <div className="dial-group dial-group--color">
-            <div className="dial-group__label">{propDef.name}</div>
+            <div className="dial-group__label">{formatLabel(propDef.name)}</div>
             <ColorPickerDropdown
               value={currentColor}
               options={colorOptions}
@@ -494,7 +501,7 @@ function DialsPanelInner({
                   {/* If no fillColor prop exists but component supports frame, add a generic one */}
                   {!fillColorProp && (
                     <div className="dial-group dial-group--color">
-                      <div className="dial-group__label">Fill Color</div>
+                      <div className="dial-group__label">FILL COLOR</div>
                       <ColorPickerDropdown
                         value={(componentProps.fillColor as string) || "transparent"}
                         options={FILL_COLORS.filter((c) => c.name !== "None")}
@@ -527,7 +534,7 @@ function DialsPanelInner({
                             }
                           }}
                         />
-                        <span>Notch</span>
+                        <span>NOTCH</span>
                       </label>
 
                       {/* Notch controls - shown when shape is a notch type */}
@@ -535,7 +542,7 @@ function DialsPanelInner({
                         <div className="dial-group--nested">
                           <div className="dial-group">
                             <div className="dial-group__header">
-                              <span className="dial-group__label">Notch Width</span>
+                              <span className="dial-group__label">NOTCH WIDTH</span>
                               <span className="dial-group__value">
                                 {(componentProps.notchWidthPx as number) ?? 220}px
                               </span>
@@ -554,7 +561,7 @@ function DialsPanelInner({
                           </div>
                           <div className="dial-group">
                             <div className="dial-group__header">
-                              <span className="dial-group__label">Notch Height</span>
+                              <span className="dial-group__label">NOTCH HEIGHT</span>
                               <span className="dial-group__value">
                                 {(componentProps.notchHeightPx as number) ?? 32}px
                               </span>
@@ -592,7 +599,7 @@ function DialsPanelInner({
                             }
                           }}
                         />
-                        <span>Chamfer</span>
+                        <span>CHAMFER</span>
                       </label>
 
                       {/* Chamfer size selector - shown when shape is a chamfer type */}
@@ -641,7 +648,7 @@ function DialsPanelInner({
                     <>
                       <div className="dial-group">
                         <div className="dial-group__header">
-                          <span className="dial-group__label">Stroke Width</span>
+                          <span className="dial-group__label">STROKE WIDTH</span>
                           <span className="dial-group__value">
                             {(componentProps.strokeWidth as number) ?? 1}px
                           </span>
@@ -659,7 +666,7 @@ function DialsPanelInner({
                         />
                       </div>
                       <div className="dial-group dial-group--color">
-                        <div className="dial-group__label">Stroke Color</div>
+                        <div className="dial-group__label">STROKE COLOR</div>
                         <ColorPickerDropdown
                           value={
                             (componentProps.strokeColor as string) || "rgba(202, 165, 84, 0.3)"
@@ -686,7 +693,7 @@ function DialsPanelInner({
                             }
                           }}
                         />
-                        <span>Corners</span>
+                        <span>CORNERS</span>
                       </label>
 
                       {/* Corner controls - shown when enabled */}
@@ -721,13 +728,6 @@ function DialsPanelInner({
                 </div>
               </div>
             )}
-
-            {/* Actions */}
-            <div className="dials-actions">
-              <button className="action-btn action-btn--full" onClick={onCopyCode}>
-                Copy JSX Code
-              </button>
-            </div>
 
             {/* Save Section */}
             <div className="dials-save">

@@ -437,7 +437,6 @@ function AstrogationContent() {
             componentProps={componentProps}
             onPropsChange={handlePropsChange}
             onComponentChange={handleComponentClassChange}
-            onCopyCode={handleCopyCode}
             onSavePreset={savePreset}
             presetName={presetName}
             onPresetNameChange={handlePresetNameChange}
