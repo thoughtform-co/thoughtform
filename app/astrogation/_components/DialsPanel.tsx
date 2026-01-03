@@ -10,6 +10,7 @@ import {
   NO_FRAME_CONTROLS_COMPONENTS,
 } from "./types";
 import { CornerSelector } from "./helpers";
+import { NestedSelect } from "./NestedSelect";
 
 // Helper to check if a shape is a notch type
 function isNotchShape(shape: string): boolean {
@@ -104,6 +105,7 @@ export interface DialsPanelProps {
   selectedComponentId: string | null;
   componentProps: Record<string, unknown>;
   onPropsChange: (props: Record<string, unknown>) => void;
+  onComponentChange: (categoryId: string, componentKey: string) => void;
   onCopyCode: () => void;
   onSavePreset: () => void;
   presetName: string;
@@ -116,6 +118,7 @@ function DialsPanelInner({
   selectedComponentId,
   componentProps,
   onPropsChange,
+  onComponentChange,
   onCopyCode,
   onSavePreset,
   presetName,
@@ -124,6 +127,9 @@ function DialsPanelInner({
   children,
 }: DialsPanelProps) {
   const def = selectedComponentId ? getComponentById(selectedComponentId) : null;
+
+  // Get the current category from the component definition
+  const currentCategoryId = def?.category || null;
 
   // Check if this component supports various features
   const supportsNotch = useMemo(() => {
@@ -352,6 +358,27 @@ function DialsPanelInner({
             <header className="spec-header">
               <p className="spec-header__desc">{def.description}</p>
             </header>
+
+            {/* ═══════════════════════════════════════════════════════════════
+                COMPONENT CLASS SECTION - Reassign to different category
+                ═══════════════════════════════════════════════════════════════ */}
+            <div className="spec-section">
+              <div className="spec-section__label">
+                <span className="spec-section__label-text">Component Class</span>
+                <span className="spec-section__label-line" />
+              </div>
+              <NestedSelect
+                categoryId={currentCategoryId}
+                componentKey={selectedComponentId}
+                onChange={(catId, compKey) => {
+                  if (catId && compKey) {
+                    onComponentChange(catId, compKey);
+                  }
+                }}
+                placeholder="Select component..."
+                className="spec-select--compact"
+              />
+            </div>
 
             {/* ═══════════════════════════════════════════════════════════════
                 CONTENT SECTION - Text, labels, toggles, dimensions

@@ -132,6 +132,12 @@ function AstrogationContent() {
     dispatch(actions.selectComponent(id));
   }, []);
 
+  // Handle component class change from the Foundry inspector
+  const handleComponentClassChange = useCallback((categoryId: string, componentKey: string) => {
+    dispatch(actions.selectCategory(categoryId));
+    dispatch(actions.selectComponent(componentKey));
+  }, []);
+
   const handleTabChange = useCallback((tab: WorkspaceTab) => {
     dispatch(actions.setTab(tab));
   }, []);
@@ -430,6 +436,7 @@ function AstrogationContent() {
             selectedComponentId={selectedComponentId}
             componentProps={componentProps}
             onPropsChange={handlePropsChange}
+            onComponentChange={handleComponentClassChange}
             onCopyCode={handleCopyCode}
             onSavePreset={savePreset}
             presetName={presetName}
