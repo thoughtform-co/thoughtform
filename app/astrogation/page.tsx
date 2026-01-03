@@ -19,7 +19,6 @@ import {
   type SurveyAnnotation,
   type SurveyViewBundledProps,
   type WorkspaceTab,
-  type FoundryFrameConfig,
 } from "./_components";
 import { FoundryAssistantDock } from "./_components/FoundryAssistantDock";
 
@@ -53,7 +52,6 @@ function AstrogationContent() {
     isFocused,
     componentProps,
     style,
-    foundryFrame,
     foundryVariants,
     presets,
     presetName,
@@ -74,7 +72,6 @@ function AstrogationContent() {
     selectedComponentId,
     componentProps,
     style,
-    foundryFrame,
     presetName,
   });
 
@@ -159,43 +156,11 @@ function AstrogationContent() {
     dispatch(actions.showToast("Code copied to clipboard"));
   }, [selectedComponentId, componentProps]);
 
-  // Copy framed code (wraps component in ChamferedFrame)
-  const handleCopyFramedCode = useCallback(() => {
-    if (!selectedComponentId) return;
-    const componentCode = generateJSXCode(selectedComponentId, componentProps);
-
-    // Generate ChamferedFrame wrapper
-    const frameCode = `<ChamferedFrame
-  shape={{
-    kind: "ticketNotch",
-    corner: "tr",
-    notchWidthPx: ${foundryFrame.notchWidthPx},
-    notchHeightPx: ${foundryFrame.notchHeightPx},
-  }}
-  strokeColor="${foundryFrame.strokeColor}"
-  strokeWidth={${foundryFrame.strokeWidth}}
-  fillColor="${foundryFrame.fillColor}"
->
-  ${componentCode.split("\n").join("\n  ")}
-</ChamferedFrame>`;
-
-    navigator.clipboard.writeText(frameCode);
-    dispatch(actions.showToast("Framed code copied to clipboard"));
-  }, [selectedComponentId, componentProps, foundryFrame]);
-
-  // Foundry frame change handler
-  const handleFoundryFrameChange = useCallback((frame: Partial<FoundryFrameConfig>) => {
-    dispatch(actions.setFoundryFrame(frame));
-  }, []);
-
   // Apply patch from assistant
   const handleApplyPatch = useCallback(
-    (patch: { setProps?: Record<string, unknown>; setFrame?: Partial<FoundryFrameConfig> }) => {
+    (patch: { setProps?: Record<string, unknown> }) => {
       if (patch.setProps) {
         dispatch(actions.setProps({ ...componentProps, ...patch.setProps }));
-      }
-      if (patch.setFrame) {
-        dispatch(actions.setFoundryFrame(patch.setFrame));
       }
       dispatch(actions.showToast("Changes applied"));
     },
@@ -209,7 +174,6 @@ function AstrogationContent() {
       name: string;
       description: string;
       props: Record<string, unknown>;
-      frame?: Partial<FoundryFrameConfig>;
     }) => {
       if (!selectedComponentId) {
         dispatch(actions.showToast("Select a component first"));
@@ -234,11 +198,8 @@ function AstrogationContent() {
 
   // Apply a variant to the main preview
   const handleApplyVariant = useCallback(
-    (variant: { props: Record<string, unknown>; frame?: Partial<FoundryFrameConfig> }) => {
+    (variant: { props: Record<string, unknown> }) => {
       dispatch(actions.setProps({ ...componentProps, ...variant.props }));
-      if (variant.frame) {
-        dispatch(actions.setFoundryFrame(variant.frame));
-      }
       dispatch(actions.showToast("Variant applied"));
     },
     [componentProps]
@@ -434,7 +395,6 @@ function AstrogationContent() {
           selectedComponentId={selectedComponentId}
           componentProps={componentProps}
           style={style}
-          foundryFrame={foundryFrame}
           presets={presets}
           variants={foundryVariants}
           onLoadPreset={loadPreset}
@@ -471,19 +431,15 @@ function AstrogationContent() {
             componentProps={componentProps}
             onPropsChange={handlePropsChange}
             onCopyCode={handleCopyCode}
-            onCopyFramedCode={handleCopyFramedCode}
             onSavePreset={savePreset}
             presetName={presetName}
             onPresetNameChange={handlePresetNameChange}
             canSave={canSave}
-            foundryFrame={foundryFrame}
-            onFoundryFrameChange={handleFoundryFrameChange}
           >
             {/* Foundry Assistant Dock - anchored to the right panel */}
             <FoundryAssistantDock
               componentId={selectedComponentId}
               componentProps={componentProps}
-              foundryFrame={foundryFrame}
               onApplyPatch={handleApplyPatch}
               onCreateVariant={handleCreateVariant}
               getAuthToken={getAuthToken}

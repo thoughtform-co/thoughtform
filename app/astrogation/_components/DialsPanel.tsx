@@ -1,28 +1,30 @@
 "use client";
 
-import { memo, useCallback } from "react";
+import { memo, useCallback, useMemo } from "react";
 import { getComponentById, type PropDef } from "../catalog";
 import { ChamferedFrame, type CornerToken } from "@thoughtform/ui";
 import {
   BRAND_COLORS,
   BORDER_COLORS,
-  type FoundryFrameConfig,
-  type FoundryShapePreset,
+  NOTCH_ENABLED_COMPONENTS,
+  NO_FRAME_CONTROLS_COMPONENTS,
+  CHAMFER_POSITIONS,
+  type ChamferPosition,
 } from "./types";
 import { CornerSelector } from "./helpers";
 
-// Shape preset options for the Frame controls
-const SHAPE_PRESETS: { value: FoundryShapePreset; label: string }[] = [
-  { value: "none", label: "No Frame" },
-  { value: "inspectorTicket", label: "Inspector Ticket" },
-  { value: "inspectorTicketCompact", label: "Ticket Compact" },
-  { value: "cutCornersSm", label: "Cut Corners (Sm)" },
-  { value: "cutCornersMd", label: "Cut Corners (Md)" },
-  { value: "cutCornersTopRight", label: "Cut Top Right" },
+// Fill colors for frame backgrounds
+const FILL_COLORS = [
+  { name: "None", value: "transparent" },
+  { name: "Void 40%", value: "rgba(10, 9, 8, 0.4)" },
+  { name: "Void 60%", value: "rgba(10, 9, 8, 0.6)" },
+  { name: "Void 80%", value: "rgba(10, 9, 8, 0.8)" },
+  { name: "Void", value: "#0a0908" },
+  { name: "Gold 15%", value: "rgba(202, 165, 84, 0.15)" },
 ];
 
-// Frame stroke colors (same as border colors plus transparent)
-const FRAME_STROKE_COLORS = [
+// Stroke colors
+const STROKE_COLORS = [
   { name: "Gold 30%", value: "rgba(202, 165, 84, 0.3)" },
   { name: "Gold 50%", value: "rgba(202, 165, 84, 0.5)" },
   { name: "Gold", value: "#caa554" },
@@ -31,71 +33,60 @@ const FRAME_STROKE_COLORS = [
   { name: "Dawn", value: "#ebe3d6" },
 ];
 
-// Frame fill colors
-const FRAME_FILL_COLORS = [
-  { name: "Void 40%", value: "rgba(10, 9, 8, 0.4)" },
-  { name: "Void 60%", value: "rgba(10, 9, 8, 0.6)" },
-  { name: "Void 80%", value: "rgba(10, 9, 8, 0.8)" },
-  { name: "Void", value: "#0a0908" },
-  { name: "None", value: "transparent" },
-];
-
 // ═══════════════════════════════════════════════════════════════
 // PROP CATEGORIZATION
 // ═══════════════════════════════════════════════════════════════
 
-// Group props by category for organized display
+// Group props by the new simplified categories
 function categorizeProp(propName: string): string {
   const name = propName.toLowerCase();
-  // Content props
-  if (["label", "title", "text", "index", "placeholder", "name"].includes(name)) return "content";
-  // Style props
-  if (["variant", "size", "accent", "accentcolor", "position", "orientation"].includes(name))
-    return "style";
-  // General color props (background, text, fill)
+
+  // Content props - text/labels that go in CONTENT section
+  if (["label", "title", "text", "index", "placeholder", "name", "value"].includes(name)) {
+    return "content";
+  }
+
+  // Style/variant props - also in CONTENT section
+  if (["variant", "size", "accent", "accentcolor", "position", "orientation"].includes(name)) {
+    return "content";
+  }
+
+  // Toggle/boolean props - also in CONTENT section (except notch/chamfer/corner controls)
+  if (name.startsWith("show") || ["checked", "disabled"].includes(name)) {
+    return "content";
+  }
+
+  // Dimension props - CONTENT section
   if (
-    ["backgroundcolor", "textcolor", "fillcolor"].includes(name) ||
-    (name.includes("fill") && !name.includes("border") && !name.includes("corner"))
-  )
-    return "colors";
-  // Border props (including borderColor)
-  if (["borderthickness", "borderstyle", "bordercolor"].includes(name)) return "borders";
-  // Corner props (including cornerColor)
-  if (["cornertoken", "cornerthickness", "cornercolor", "cornersize"].includes(name))
+    ["width", "height", "length", "tickcount", "min", "max", "step", "intensity"].includes(name)
+  ) {
+    return "content";
+  }
+
+  // Fill/background colors - FRAME section
+  if (["backgroundcolor", "fillcolor"].includes(name)) {
+    return "frame";
+  }
+
+  // Shape props (for Panel component) - FRAME section
+  if (["shape"].includes(name)) {
+    return "frame";
+  }
+
+  // Stroke/border props - STROKE section
+  if (
+    ["borderthickness", "bordercolor", "borderstyle", "strokecolor", "strokewidth"].includes(name)
+  ) {
+    return "stroke";
+  }
+
+  // Corner props - STROKE section (will be shown under Corner checkbox)
+  if (["cornertoken", "cornerthickness", "cornercolor", "cornersize", "corners"].includes(name)) {
     return "corners";
-  // Toggle/boolean props
-  if (name.startsWith("show") || ["checked", "disabled"].includes(name)) return "toggles";
-  // Dimension props
-  if (
-    ["width", "height", "length", "tickcount", "min", "max", "step", "value", "intensity"].includes(
-      name
-    )
-  )
-    return "dimensions";
-  return "other";
+  }
+
+  return "content"; // Default to content
 }
-
-const PROP_CATEGORY_ORDER = [
-  "content",
-  "style",
-  "colors",
-  "borders",
-  "corners",
-  "toggles",
-  "dimensions",
-  "other",
-];
-
-const PROP_CATEGORY_LABELS: Record<string, string> = {
-  content: "Content",
-  style: "Style",
-  colors: "Colors",
-  borders: "Borders",
-  corners: "Corners",
-  toggles: "Options",
-  dimensions: "Dimensions",
-  other: "Other",
-};
 
 // ═══════════════════════════════════════════════════════════════
 // DIALS PANEL
@@ -106,13 +97,10 @@ export interface DialsPanelProps {
   componentProps: Record<string, unknown>;
   onPropsChange: (props: Record<string, unknown>) => void;
   onCopyCode: () => void;
-  onCopyFramedCode?: () => void;
   onSavePreset: () => void;
   presetName: string;
   onPresetNameChange: (name: string) => void;
   canSave: boolean;
-  foundryFrame: FoundryFrameConfig;
-  onFoundryFrameChange: (frame: Partial<FoundryFrameConfig>) => void;
   children?: React.ReactNode;
 }
 
@@ -121,16 +109,46 @@ function DialsPanelInner({
   componentProps,
   onPropsChange,
   onCopyCode,
-  onCopyFramedCode,
   onSavePreset,
   presetName,
   onPresetNameChange,
   canSave,
-  foundryFrame,
-  onFoundryFrameChange,
   children,
 }: DialsPanelProps) {
   const def = selectedComponentId ? getComponentById(selectedComponentId) : null;
+
+  // Check if this component supports various features
+  const supportsNotch = useMemo(() => {
+    return (
+      selectedComponentId &&
+      NOTCH_ENABLED_COMPONENTS.includes(
+        selectedComponentId as (typeof NOTCH_ENABLED_COMPONENTS)[number]
+      )
+    );
+  }, [selectedComponentId]);
+
+  const supportsFrameControls = useMemo(() => {
+    return (
+      selectedComponentId &&
+      !NO_FRAME_CONTROLS_COMPONENTS.includes(
+        selectedComponentId as (typeof NO_FRAME_CONTROLS_COMPONENTS)[number]
+      )
+    );
+  }, [selectedComponentId]);
+
+  // State for notch/chamfer/corner toggles (derived from props)
+  const notchEnabled = (componentProps.notchEnabled as boolean) ?? false;
+  const chamferEnabled = (componentProps.chamferEnabled as boolean) ?? false;
+  const cornerEnabled =
+    (componentProps.cornerEnabled as boolean) ??
+    (componentProps.corners !== "none" && componentProps.corners !== undefined);
+
+  const handlePropChange = useCallback(
+    (propName: string, value: unknown) => {
+      onPropsChange({ ...componentProps, [propName]: value });
+    },
+    [componentProps, onPropsChange]
+  );
 
   const renderPropControl = (propDef: PropDef, value: unknown) => {
     const currentValue = value ?? propDef.default;
@@ -144,7 +162,7 @@ function DialsPanelInner({
               type="text"
               className="dial-input"
               value={currentValue as string}
-              onChange={(e) => onPropsChange({ ...componentProps, [propDef.name]: e.target.value })}
+              onChange={(e) => handlePropChange(propDef.name, e.target.value)}
             />
           </div>
         );
@@ -154,7 +172,13 @@ function DialsPanelInner({
           <div className="dial-group">
             <div className="dial-group__header">
               <span className="dial-group__label">{propDef.name}</span>
-              <span className="dial-group__value">{currentValue as number}</span>
+              <span className="dial-group__value">
+                {currentValue as number}
+                {propDef.name.toLowerCase().includes("thickness") ||
+                propDef.name.toLowerCase().includes("width")
+                  ? "px"
+                  : ""}
+              </span>
             </div>
             <input
               type="range"
@@ -163,9 +187,7 @@ function DialsPanelInner({
               max={propDef.max ?? 100}
               step={propDef.step ?? 1}
               value={currentValue as number}
-              onChange={(e) =>
-                onPropsChange({ ...componentProps, [propDef.name]: parseFloat(e.target.value) })
-              }
+              onChange={(e) => handlePropChange(propDef.name, parseFloat(e.target.value))}
             />
           </div>
         );
@@ -176,9 +198,7 @@ function DialsPanelInner({
             <input
               type="checkbox"
               checked={currentValue as boolean}
-              onChange={(e) =>
-                onPropsChange({ ...componentProps, [propDef.name]: e.target.checked })
-              }
+              onChange={(e) => handlePropChange(propDef.name, e.target.checked)}
             />
             <span>{propDef.name}</span>
           </label>
@@ -191,7 +211,7 @@ function DialsPanelInner({
             <select
               className="dial-select"
               value={currentValue as string}
-              onChange={(e) => onPropsChange({ ...componentProps, [propDef.name]: e.target.value })}
+              onChange={(e) => handlePropChange(propDef.name, e.target.value)}
             >
               {propDef.options?.map((opt) => (
                 <option key={opt} value={opt}>
@@ -207,8 +227,9 @@ function DialsPanelInner({
         const supportsTransparent =
           propDef.name.toLowerCase().includes("background") ||
           propDef.name.toLowerCase().includes("fill");
-        // Use subtle border colors for border properties
-        const isBorderColor = propDef.name.toLowerCase().includes("bordercolor");
+        const isBorderColor =
+          propDef.name.toLowerCase().includes("bordercolor") ||
+          propDef.name.toLowerCase().includes("strokecolor");
         const colorOptions = isBorderColor ? BORDER_COLORS : BRAND_COLORS;
 
         return (
@@ -220,9 +241,7 @@ function DialsPanelInner({
                   <button
                     className={`color-swatch color-swatch--none ${currentColor === "transparent" ? "active" : ""}`}
                     title="None / Transparent"
-                    onClick={() =>
-                      onPropsChange({ ...componentProps, [propDef.name]: "transparent" })
-                    }
+                    onClick={() => handlePropChange(propDef.name, "transparent")}
                   >
                     <span className="swatch-x">✕</span>
                   </button>
@@ -233,16 +252,7 @@ function DialsPanelInner({
                     className={`color-swatch ${currentColor === c.value ? "active" : ""}`}
                     style={{ background: c.value }}
                     title={c.name}
-                    onClick={() => {
-                      if (currentColor === c.value) {
-                        const fallback = supportsTransparent
-                          ? "transparent"
-                          : (propDef.default as string);
-                        onPropsChange({ ...componentProps, [propDef.name]: fallback });
-                      } else {
-                        onPropsChange({ ...componentProps, [propDef.name]: c.value });
-                      }
-                    }}
+                    onClick={() => handlePropChange(propDef.name, c.value)}
                   />
                 ))}
               </div>
@@ -252,15 +262,8 @@ function DialsPanelInner({
       }
 
       case "corners":
-        // Corner selector is self-explanatory, no label needed
-        return (
-          <div className="dial-group dial-group--corners">
-            <CornerSelector
-              value={currentValue as CornerToken}
-              onChange={(val) => onPropsChange({ ...componentProps, [propDef.name]: val })}
-            />
-          </div>
-        );
+        // Corner selector - rendered separately in STROKE section
+        return null;
 
       default:
         return null;
@@ -290,33 +293,36 @@ function DialsPanelInner({
     );
   }
 
-  // Prop ordering within categories (consistent across all components)
-  const propOrder: Record<string, string[]> = {
-    colors: ["backgroundColor", "textColor", "fillColor"],
-    borders: ["borderStyle", "borderColor", "borderThickness"],
-    corners: ["cornerToken", "cornerColor", "cornerSize", "cornerThickness"],
+  // Group props by category
+  const groupedProps: Record<string, PropDef[]> = {
+    content: [],
+    frame: [],
+    stroke: [],
+    corners: [],
   };
 
-  // Group props by category
-  const groupedProps: Record<string, PropDef[]> = {};
   def.props.forEach((propDef) => {
     const category = categorizeProp(propDef.name);
-    if (!groupedProps[category]) groupedProps[category] = [];
-    groupedProps[category].push(propDef);
-  });
-
-  // Sort props within categories that have a defined order
-  Object.keys(propOrder).forEach((category) => {
     if (groupedProps[category]) {
-      const order = propOrder[category];
-      groupedProps[category].sort((a, b) => {
-        const aIndex = order.indexOf(a.name);
-        const bIndex = order.indexOf(b.name);
-        // Props not in order list go to the end
-        return (aIndex === -1 ? 999 : aIndex) - (bIndex === -1 ? 999 : bIndex);
-      });
+      groupedProps[category].push(propDef);
+    } else {
+      groupedProps.content.push(propDef);
     }
   });
+
+  // Find specific props for special handling
+  const cornerTokenProp = groupedProps.corners.find(
+    (p) => p.name.toLowerCase() === "corners" || p.name.toLowerCase() === "cornertoken"
+  );
+  const cornerColorProp = groupedProps.corners.find((p) => p.name.toLowerCase() === "cornercolor");
+  const cornerThicknessProp = groupedProps.corners.find(
+    (p) => p.name.toLowerCase() === "cornerthickness"
+  );
+  const cornerSizeProp = groupedProps.corners.find((p) => p.name.toLowerCase() === "cornersize");
+  const fillColorProp = groupedProps.frame.find(
+    (p) => p.name.toLowerCase() === "fillcolor" || p.name.toLowerCase() === "backgroundcolor"
+  );
+  const shapeProp = groupedProps.frame.find((p) => p.name.toLowerCase() === "shape");
 
   return (
     <aside className="astrogation-panel astrogation-panel--right astrogation-panel--inspector">
@@ -333,172 +339,278 @@ function DialsPanelInner({
           titleSlot={<span className="inspector-frame__title">{def.name}</span>}
         >
           <div className="spec-panel-v2">
-            {/* ─── HEADER (Harmonized with Vault) ─── */}
+            {/* ─── HEADER ─── */}
             <header className="spec-header">
               <p className="spec-header__desc">{def.description}</p>
             </header>
 
-            {/* ─── FRAME CONTROLS ─── */}
-            <div className="spec-section spec-section--frame">
-              <div className="spec-section__label">
-                <span className="spec-section__label-text">Frame</span>
-                <span className="spec-section__label-line" />
+            {/* ═══════════════════════════════════════════════════════════════
+                CONTENT SECTION - Text, labels, toggles, dimensions
+                ═══════════════════════════════════════════════════════════════ */}
+            {groupedProps.content.length > 0 && (
+              <div className="spec-section">
+                <div className="spec-section__label">
+                  <span className="spec-section__label-text">Content</span>
+                  <span className="spec-section__label-line" />
+                </div>
+                <div className="dials-category__content">
+                  {groupedProps.content.map((propDef) => (
+                    <div key={propDef.name}>
+                      {renderPropControl(propDef, componentProps[propDef.name])}
+                    </div>
+                  ))}
+                </div>
               </div>
-              <div className="dials-category__content">
-                {/* Shape Preset */}
-                <div className="dial-group">
-                  <div className="dial-group__label">Shape</div>
-                  <select
-                    className="dial-select"
-                    value={foundryFrame.shape}
-                    onChange={(e) =>
-                      onFoundryFrameChange({ shape: e.target.value as FoundryShapePreset })
-                    }
-                  >
-                    {SHAPE_PRESETS.map((preset) => (
-                      <option key={preset.value} value={preset.value}>
-                        {preset.label}
-                      </option>
-                    ))}
-                  </select>
+            )}
+
+            {/* ═══════════════════════════════════════════════════════════════
+                FRAME SECTION - Fill, Notch, Chamfer
+                Only shown for components that support frame controls
+                ═══════════════════════════════════════════════════════════════ */}
+            {supportsFrameControls && (
+              <div className="spec-section">
+                <div className="spec-section__label">
+                  <span className="spec-section__label-text">Frame</span>
+                  <span className="spec-section__label-line" />
                 </div>
+                <div className="dials-category__content">
+                  {/* Fill Color */}
+                  {fillColorProp &&
+                    renderPropControl(fillColorProp, componentProps[fillColorProp.name])}
 
-                {/* Notch controls - only show for ticket shapes */}
-                {foundryFrame.shape.startsWith("inspector") && (
-                  <>
+                  {/* If no fillColor prop exists but component supports frame, add a generic one */}
+                  {!fillColorProp && (
                     <div className="dial-group">
-                      <div className="dial-group__header">
-                        <span className="dial-group__label">Notch Width</span>
-                        <span className="dial-group__value">{foundryFrame.notchWidthPx}px</span>
+                      <div className="dial-group__label">Fill Color</div>
+                      <div className="color-picker">
+                        <div className="color-swatches">
+                          {FILL_COLORS.map((c) => (
+                            <button
+                              key={c.name}
+                              className={`color-swatch ${componentProps.fillColor === c.value ? "active" : ""} ${c.name === "None" ? "color-swatch--none" : ""}`}
+                              style={{
+                                background: c.value === "transparent" ? undefined : c.value,
+                              }}
+                              title={c.name}
+                              onClick={() => handlePropChange("fillColor", c.value)}
+                            >
+                              {c.name === "None" && <span className="swatch-x">✕</span>}
+                            </button>
+                          ))}
+                        </div>
                       </div>
-                      <input
-                        type="range"
-                        className="dial-slider"
-                        min={80}
-                        max={320}
-                        step={10}
-                        value={foundryFrame.notchWidthPx}
-                        onChange={(e) =>
-                          onFoundryFrameChange({ notchWidthPx: parseInt(e.target.value) })
-                        }
-                      />
                     </div>
-                    <div className="dial-group">
-                      <div className="dial-group__header">
-                        <span className="dial-group__label">Notch Height</span>
-                        <span className="dial-group__value">{foundryFrame.notchHeightPx}px</span>
-                      </div>
-                      <input
-                        type="range"
-                        className="dial-slider"
-                        min={16}
-                        max={64}
-                        step={4}
-                        value={foundryFrame.notchHeightPx}
-                        onChange={(e) =>
-                          onFoundryFrameChange({ notchHeightPx: parseInt(e.target.value) })
-                        }
-                      />
-                    </div>
-                  </>
-                )}
+                  )}
 
-                {/* Stroke Width */}
-                <div className="dial-group">
-                  <div className="dial-group__header">
-                    <span className="dial-group__label">Stroke Width</span>
-                    <span className="dial-group__value">{foundryFrame.strokeWidth}px</span>
-                  </div>
-                  <input
-                    type="range"
-                    className="dial-slider"
-                    min={0.5}
-                    max={4}
-                    step={0.5}
-                    value={foundryFrame.strokeWidth}
-                    onChange={(e) =>
-                      onFoundryFrameChange({ strokeWidth: parseFloat(e.target.value) })
-                    }
-                  />
-                </div>
+                  {/* Shape selector for Panel */}
+                  {shapeProp && renderPropControl(shapeProp, componentProps[shapeProp.name])}
 
-                {/* Stroke Color */}
-                <div className="dial-group">
-                  <div className="dial-group__label">Stroke Color</div>
-                  <div className="color-picker">
-                    <div className="color-swatches">
-                      {FRAME_STROKE_COLORS.map((c) => (
-                        <button
-                          key={c.name}
-                          className={`color-swatch ${foundryFrame.strokeColor === c.value ? "active" : ""}`}
-                          style={{ background: c.value }}
-                          title={c.name}
-                          onClick={() => onFoundryFrameChange({ strokeColor: c.value })}
+                  {/* Notch Toggle - only for notch-enabled components */}
+                  {supportsNotch && (
+                    <>
+                      <label className="dial-toggle">
+                        <input
+                          type="checkbox"
+                          checked={notchEnabled}
+                          onChange={(e) => handlePropChange("notchEnabled", e.target.checked)}
                         />
-                      ))}
-                    </div>
-                  </div>
-                </div>
+                        <span>Notch</span>
+                      </label>
 
-                {/* Fill Color */}
-                <div className="dial-group">
-                  <div className="dial-group__label">Fill Color</div>
-                  <div className="color-picker">
-                    <div className="color-swatches">
-                      {FRAME_FILL_COLORS.map((c) => (
-                        <button
-                          key={c.name}
-                          className={`color-swatch ${foundryFrame.fillColor === c.value ? "active" : ""} ${c.name === "None" ? "color-swatch--none" : ""}`}
-                          style={{ background: c.value === "transparent" ? undefined : c.value }}
-                          title={c.name}
-                          onClick={() => onFoundryFrameChange({ fillColor: c.value })}
+                      {/* Notch controls - shown when enabled */}
+                      {notchEnabled && (
+                        <div className="dial-group--nested">
+                          <div className="dial-group">
+                            <div className="dial-group__header">
+                              <span className="dial-group__label">Notch Width</span>
+                              <span className="dial-group__value">
+                                {(componentProps.notchWidthPx as number) ?? 220}px
+                              </span>
+                            </div>
+                            <input
+                              type="range"
+                              className="dial-slider"
+                              min={80}
+                              max={320}
+                              step={10}
+                              value={(componentProps.notchWidthPx as number) ?? 220}
+                              onChange={(e) =>
+                                handlePropChange("notchWidthPx", parseInt(e.target.value))
+                              }
+                            />
+                          </div>
+                          <div className="dial-group">
+                            <div className="dial-group__header">
+                              <span className="dial-group__label">Notch Height</span>
+                              <span className="dial-group__value">
+                                {(componentProps.notchHeightPx as number) ?? 32}px
+                              </span>
+                            </div>
+                            <input
+                              type="range"
+                              className="dial-slider"
+                              min={16}
+                              max={64}
+                              step={4}
+                              value={(componentProps.notchHeightPx as number) ?? 32}
+                              onChange={(e) =>
+                                handlePropChange("notchHeightPx", parseInt(e.target.value))
+                              }
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  )}
+
+                  {/* Chamfer Toggle */}
+                  <label className="dial-toggle">
+                    <input
+                      type="checkbox"
+                      checked={chamferEnabled}
+                      onChange={(e) => handlePropChange("chamferEnabled", e.target.checked)}
+                    />
+                    <span>Chamfer</span>
+                  </label>
+
+                  {/* Chamfer position - shown when enabled */}
+                  {chamferEnabled && (
+                    <div className="dial-group--nested">
+                      <div className="dial-group">
+                        <div className="dial-group__label">Position</div>
+                        <select
+                          className="dial-select"
+                          value={(componentProps.chamferPosition as ChamferPosition) ?? "top-right"}
+                          onChange={(e) => handlePropChange("chamferPosition", e.target.value)}
                         >
-                          {c.name === "None" && <span className="swatch-x">✕</span>}
-                        </button>
-                      ))}
+                          {CHAMFER_POSITIONS.map((pos) => (
+                            <option key={pos.value} value={pos.value}>
+                              {pos.label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               </div>
-            </div>
+            )}
 
-            {/* Render props grouped by category */}
-            {PROP_CATEGORY_ORDER.map((category) => {
-              const props = groupedProps[category];
-              if (!props || props.length === 0) return null;
-
-              return (
-                <div key={category} className="spec-section">
-                  <div className="spec-section__label">
-                    <span className="spec-section__label-text">
-                      {PROP_CATEGORY_LABELS[category]}
-                    </span>
-                    <span className="spec-section__label-line" />
-                  </div>
-                  <div className="dials-category__content">
-                    {props.map((propDef) => (
-                      <div key={propDef.name}>
-                        {renderPropControl(propDef, componentProps[propDef.name])}
-                      </div>
-                    ))}
-                  </div>
+            {/* ═══════════════════════════════════════════════════════════════
+                STROKE SECTION - Border/stroke styling + Corners
+                Only shown for components that support frame controls
+                ═══════════════════════════════════════════════════════════════ */}
+            {supportsFrameControls && (
+              <div className="spec-section">
+                <div className="spec-section__label">
+                  <span className="spec-section__label-text">Stroke</span>
+                  <span className="spec-section__label-line" />
                 </div>
-              );
-            })}
+                <div className="dials-category__content">
+                  {/* Render stroke props from the component */}
+                  {groupedProps.stroke.map((propDef) => (
+                    <div key={propDef.name}>
+                      {renderPropControl(propDef, componentProps[propDef.name])}
+                    </div>
+                  ))}
+
+                  {/* If no stroke props exist, add generic stroke width/color */}
+                  {groupedProps.stroke.length === 0 && (
+                    <>
+                      <div className="dial-group">
+                        <div className="dial-group__header">
+                          <span className="dial-group__label">Stroke Width</span>
+                          <span className="dial-group__value">
+                            {(componentProps.strokeWidth as number) ?? 1}px
+                          </span>
+                        </div>
+                        <input
+                          type="range"
+                          className="dial-slider"
+                          min={0.5}
+                          max={4}
+                          step={0.5}
+                          value={(componentProps.strokeWidth as number) ?? 1}
+                          onChange={(e) =>
+                            handlePropChange("strokeWidth", parseFloat(e.target.value))
+                          }
+                        />
+                      </div>
+                      <div className="dial-group">
+                        <div className="dial-group__label">Stroke Color</div>
+                        <div className="color-picker">
+                          <div className="color-swatches">
+                            {STROKE_COLORS.map((c) => (
+                              <button
+                                key={c.name}
+                                className={`color-swatch ${componentProps.strokeColor === c.value ? "active" : ""}`}
+                                style={{ background: c.value }}
+                                title={c.name}
+                                onClick={() => handlePropChange("strokeColor", c.value)}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </>
+                  )}
+
+                  {/* Corner Toggle - only if component has corner props */}
+                  {(cornerTokenProp || cornerColorProp) && (
+                    <>
+                      <label className="dial-toggle">
+                        <input
+                          type="checkbox"
+                          checked={cornerEnabled}
+                          onChange={(e) => {
+                            handlePropChange("cornerEnabled", e.target.checked);
+                            // When disabling, set corners to none
+                            if (!e.target.checked && cornerTokenProp) {
+                              handlePropChange(cornerTokenProp.name, "none");
+                            }
+                          }}
+                        />
+                        <span>Corners</span>
+                      </label>
+
+                      {/* Corner controls - shown when enabled */}
+                      {cornerEnabled && (
+                        <div className="dial-group--nested">
+                          {cornerTokenProp && (
+                            <div className="dial-group dial-group--corners">
+                              <CornerSelector
+                                value={
+                                  (componentProps[cornerTokenProp.name] as CornerToken) ?? "four"
+                                }
+                                onChange={(val) => handlePropChange(cornerTokenProp.name, val)}
+                              />
+                            </div>
+                          )}
+                          {cornerColorProp &&
+                            renderPropControl(
+                              cornerColorProp,
+                              componentProps[cornerColorProp.name]
+                            )}
+                          {cornerThicknessProp &&
+                            renderPropControl(
+                              cornerThicknessProp,
+                              componentProps[cornerThicknessProp.name]
+                            )}
+                          {cornerSizeProp &&
+                            renderPropControl(cornerSizeProp, componentProps[cornerSizeProp.name])}
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
 
             {/* Actions */}
             <div className="dials-actions">
               <button className="action-btn action-btn--full" onClick={onCopyCode}>
                 Copy JSX Code
               </button>
-              {foundryFrame.shape !== "none" && onCopyFramedCode && (
-                <button
-                  className="action-btn action-btn--full action-btn--secondary"
-                  onClick={onCopyFramedCode}
-                >
-                  Copy Framed JSX
-                </button>
-              )}
             </div>
 
             {/* Save Section */}

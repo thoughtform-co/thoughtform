@@ -6,7 +6,6 @@ import type {
   StyleConfig,
   WorkspaceTab,
   SurveyViewBundledProps,
-  FoundryFrameConfig,
   FoundryVariant,
 } from "./types";
 import { VaultView } from "./VaultView";
@@ -23,7 +22,6 @@ export interface CenterPanelProps {
   selectedComponentId: string | null;
   componentProps: Record<string, unknown>;
   style: StyleConfig;
-  foundryFrame: FoundryFrameConfig;
   presets: UIComponentPreset[];
   variants: FoundryVariant[];
   onLoadPreset: (preset: UIComponentPreset) => void;
@@ -42,7 +40,6 @@ export function CenterPanel({
   selectedComponentId,
   componentProps,
   style,
-  foundryFrame,
   presets,
   variants,
   onLoadPreset,
@@ -112,7 +109,6 @@ export function CenterPanel({
             selectedComponentId={selectedComponentId}
             componentProps={componentProps}
             style={style}
-            foundryFrame={foundryFrame}
             def={def}
             variants={variants}
             onRemoveVariant={onRemoveVariant}

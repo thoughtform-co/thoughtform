@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useCallback } from "react";
-import type { UIComponentPreset, StyleConfig, FoundryFrameConfig } from "../_components/types";
+import type { UIComponentPreset, StyleConfig } from "../_components/types";
 import type { AstrogationAction } from "../_state/astrogationReducer";
 import { actions } from "../_state/astrogationReducer";
 import { supabase } from "@/lib/supabase";
@@ -37,7 +37,6 @@ export interface UsePresetsOptions {
   selectedComponentId: string | null;
   componentProps: Record<string, unknown>;
   style: StyleConfig;
-  foundryFrame: FoundryFrameConfig;
   presetName: string;
 }
 
@@ -58,7 +57,6 @@ export function usePresets({
   selectedComponentId,
   componentProps,
   style,
-  foundryFrame,
   presetName,
 }: UsePresetsOptions): UsePresetsReturn {
   // Load presets from server on mount
@@ -90,7 +88,7 @@ export function usePresets({
         body: JSON.stringify({
           name: presetName,
           component_key: selectedComponentId,
-          config: { ...componentProps, __style: style, __foundryFrame: foundryFrame },
+          config: { ...componentProps, __style: style },
         }),
       });
       const data = await res.json();
@@ -102,7 +100,7 @@ export function usePresets({
       console.error("Failed to save preset:", e);
       dispatch(actions.showToast("Failed to save preset"));
     }
-  }, [selectedComponentId, componentProps, style, foundryFrame, presetName, dispatch]);
+  }, [selectedComponentId, componentProps, style, presetName, dispatch]);
 
   // Load preset into state
   const loadPreset = useCallback(

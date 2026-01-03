@@ -2,9 +2,9 @@
 
 import { useState, useEffect, useCallback } from "react";
 import type { ComponentDef } from "../catalog";
-import type { StyleConfig, FoundryFrameConfig, FoundryVariant } from "./types";
+import type { StyleConfig, FoundryVariant } from "./types";
 import { ComponentPreview } from "./previews/ComponentPreview";
-import { TargetReticle, ChamferedFrame } from "@thoughtform/ui";
+import { TargetReticle } from "@thoughtform/ui";
 
 // ═══════════════════════════════════════════════════════════════
 // FOUNDRY VIEW - Component Editor & Preview
@@ -15,7 +15,6 @@ export interface FoundryViewProps {
   selectedComponentId: string | null;
   componentProps: Record<string, unknown>;
   style: StyleConfig;
-  foundryFrame: FoundryFrameConfig;
   def: ComponentDef | null;
   variants: FoundryVariant[];
   onRemoveVariant: (id: string) => void;
@@ -28,7 +27,6 @@ export function FoundryView({
   selectedComponentId,
   componentProps,
   style,
-  foundryFrame,
   def,
   variants,
   onRemoveVariant,
@@ -135,20 +133,24 @@ export function FoundryView({
   const focusZoom = hasFocus && !isMultiElement ? 1.5 : 1;
   const totalZoom = zoom * focusZoom;
 
-  // Render preview content with optional ChamferedFrame wrapper
+  // Render preview content
   const renderPreviewContent = () => {
-    const preview = isMultiElement ? (
-      <ComponentPreview
-        componentId={selectedComponentId}
-        props={{
-          ...componentProps,
-          _focusedElementId: focusedElementId,
-          _onElementFocus: handleElementFocus,
-        }}
-        style={style}
-        fullSize
-      />
-    ) : (
+    if (isMultiElement) {
+      return (
+        <ComponentPreview
+          componentId={selectedComponentId}
+          props={{
+            ...componentProps,
+            _focusedElementId: focusedElementId,
+            _onElementFocus: handleElementFocus,
+          }}
+          style={style}
+          fullSize
+        />
+      );
+    }
+
+    return (
       <TargetReticle>
         <ComponentPreview
           componentId={selectedComponentId}
@@ -158,28 +160,6 @@ export function FoundryView({
         />
       </TargetReticle>
     );
-
-    // Wrap in ChamferedFrame if shape is not "none"
-    if (foundryFrame.shape !== "none") {
-      return (
-        <ChamferedFrame
-          shape={{
-            kind: "ticketNotch",
-            corner: "tr",
-            notchWidthPx: foundryFrame.notchWidthPx,
-            notchHeightPx: foundryFrame.notchHeightPx,
-          }}
-          strokeColor={foundryFrame.strokeColor}
-          strokeWidth={foundryFrame.strokeWidth}
-          fillColor={foundryFrame.fillColor}
-          className="foundry__stage-frame"
-        >
-          <div className="foundry__stage-frame-content">{preview}</div>
-        </ChamferedFrame>
-      );
-    }
-
-    return preview;
   };
 
   return (

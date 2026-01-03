@@ -409,7 +409,9 @@
 /* ─── CONTENT AREA ─── */
 .astrogation-content {
   position: absolute;
-  top: calc(var(--hud-padding, 32px) + 70px); /* Aligned with upper tick mark */
+  top: calc(
+    var(--hud-padding, 32px) + 60px
+  ); /* Panel header centers aligned with upper tick mark */
   bottom: calc(var(--hud-padding, 32px) + 40px);
   left: calc(var(--hud-padding, 32px) + var(--rail-width, 60px) + 4px);
   right: calc(
@@ -550,7 +552,7 @@
   min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 16px 16px 0 16px; /* Top and sides only - let content handle bottom spacing */
+  padding: 24px 16px 0 16px; /* Extra top padding to lower content below header */
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE and Edge */
 }
@@ -575,6 +577,7 @@
 }
 
 .astrogation-panel--right .panel-content__scrollable {
+  padding-top: 24px; /* Extra top padding to lower content below header */
   padding-left: 12px;
   padding-right: 12px;
 }
@@ -836,6 +839,7 @@
   background: var(--gold, #caa554) !important;
   color: var(--void, #0a0908) !important;
   border: 1px solid var(--gold, #caa554) !important;
+  border-bottom: none !important; /* Prevent double border with frame below */
   padding: 8px 12px !important;
   height: 54px !important; /* Explicitly match left panel */
   line-height: 1.5 !important;
@@ -907,6 +911,7 @@
   background: var(--gold, #caa554) !important;
   color: var(--void, #0a0908) !important;
   border: 1px solid var(--gold, #caa554) !important;
+  border-bottom: none !important; /* Prevent double border with frame below */
   font-family: var(--font-data, "PT Mono", monospace);
   font-size: 24px;
   font-weight: 400;
@@ -929,6 +934,7 @@
   background: var(--gold, #caa554) !important;
   color: var(--void, #0a0908) !important;
   border: 1px solid var(--gold, #caa554) !important;
+  border-bottom: none !important; /* Prevent double border with frame below */
   padding: 8px 12px !important;
   height: 54px !important;
   line-height: 1.5 !important;
@@ -1882,6 +1888,23 @@
 
 .dial-toggle input {
   accent-color: var(--gold);
+}
+
+/* Nested dial group - indented controls revealed by checkboxes */
+.dial-group--nested {
+  margin-left: 20px;
+  padding-left: 12px;
+  border-left: 1px solid var(--dawn-08);
+  margin-top: 8px;
+  margin-bottom: 12px;
+}
+
+.dial-group--nested .dial-group {
+  margin-bottom: 12px;
+}
+
+.dial-group--nested .dial-group:last-child {
+  margin-bottom: 0;
 }
 
 /* Color Picker */
@@ -8012,21 +8035,6 @@
   background: rgba(235, 227, 214, 0.05);
   border-color: var(--dawn-30);
   color: var(--dawn);
-}
-
-/* ─── STAGE FRAME (ChamferedFrame wrapper for preview) ─── */
-.foundry__stage-frame {
-  min-width: 200px; /* Reduced to allow better responsive behavior */
-  min-height: 200px;
-  padding: 24px;
-}
-
-.foundry__stage-frame-content {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
 /* ─── FOUNDRY ASSISTANT DOCK ─── */

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import type { FoundryFrameConfig, SurveyItem } from "./types";
 
 // ═══════════════════════════════════════════════════════════════
 // FOUNDRY ASSISTANT DOCK
@@ -15,7 +14,6 @@ interface ChatMessage {
   content: string;
   patch?: {
     setProps?: Record<string, unknown>;
-    setFrame?: Partial<FoundryFrameConfig>;
   } | null;
   // Variant suggestions from the assistant
   variants?: ComponentVariant[] | null;
@@ -27,26 +25,12 @@ export interface ComponentVariant {
   name: string;
   description: string;
   props: Record<string, unknown>;
-  frame?: Partial<FoundryFrameConfig>;
-}
-
-// Survey reference item used for inspiration
-interface SurveyReference {
-  id: string;
-  title?: string;
-  briefing?: string;
-  tags?: string[];
-  similarity?: number;
 }
 
 export interface FoundryAssistantDockProps {
   componentId: string | null;
   componentProps: Record<string, unknown>;
-  foundryFrame: FoundryFrameConfig;
-  onApplyPatch: (patch: {
-    setProps?: Record<string, unknown>;
-    setFrame?: Partial<FoundryFrameConfig>;
-  }) => void;
+  onApplyPatch: (patch: { setProps?: Record<string, unknown> }) => void;
   onCreateVariant?: (variant: ComponentVariant) => void;
   getAuthToken?: () => Promise<string | null>;
 }
@@ -57,7 +41,6 @@ const chatHistoryStore = new Map<string, ChatMessage[]>();
 export function FoundryAssistantDock({
   componentId,
   componentProps,
-  foundryFrame,
   onApplyPatch,
   onCreateVariant,
   getAuthToken,
@@ -158,7 +141,6 @@ export function FoundryAssistantDock({
           message: userMessage.content,
           componentId,
           props: componentProps,
-          frame: foundryFrame,
           history,
           includeVariants: wantsVariants,
           searchSurvey: wantsVariants, // Search Survey for inspiration when creating variants
@@ -191,7 +173,7 @@ export function FoundryAssistantDock({
     } finally {
       setIsLoading(false);
     }
-  }, [inputValue, isLoading, componentId, componentProps, foundryFrame, messages, getAuthToken]);
+  }, [inputValue, isLoading, componentId, componentProps, messages, getAuthToken]);
 
   // Handle keyboard shortcuts
   const handleKeyDown = useCallback(
@@ -206,7 +188,7 @@ export function FoundryAssistantDock({
 
   // Handle apply patch
   const handleApplyPatch = useCallback(
-    (patch: { setProps?: Record<string, unknown>; setFrame?: Partial<FoundryFrameConfig> }) => {
+    (patch: { setProps?: Record<string, unknown> }) => {
       onApplyPatch(patch);
     },
     [onApplyPatch]
@@ -227,26 +209,21 @@ export function FoundryAssistantDock({
       >
         <svg
           className="foundry-assistant-btn__icon"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.5"
+          viewBox="0 0 690.68 690.68"
+          fill="currentColor"
         >
           {isOpen ? (
-            // Close icon - X
-            <path d="M6 18L18 6M6 6l12 12" strokeLinecap="round" strokeLinejoin="round" />
+            // Close icon - X (simplified for this viewBox)
+            <path
+              d="M517.76 172.92L172.92 517.76L138.07 482.91L482.91 138.07L517.76 172.92ZM172.92 172.92L138.07 207.77L482.91 552.61L517.76 517.76L172.92 172.92Z"
+              fill="currentColor"
+            />
           ) : (
-            // Chat bubble icon
-            <>
-              <path
-                d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              <circle cx="12" cy="11" r="1" fill="currentColor" stroke="none" />
-              <circle cx="8" cy="11" r="1" fill="currentColor" stroke="none" />
-              <circle cx="16" cy="11" r="1" fill="currentColor" stroke="none" />
-            </>
+            // Thoughtform brand mark
+            <polygon
+              points="690.68 655.83 445.72 410.87 472.51 384.09 450.03 361.61 467.29 344.36 451.48 328.55 476.91 303.11 449.66 275.86 690.68 34.84 655.83 0 414.81 241.02 387.52 213.72 362.08 239.15 346.22 223.29 328.97 240.55 306.54 218.12 279.76 244.91 34.85 0 0 34.84 244.91 279.75 218.13 306.54 240.55 328.96 225.16 344.36 241.02 360.22 213.72 387.51 241.02 414.81 0 655.83 34.85 690.68 275.87 449.66 303.12 476.91 330.41 449.61 346.22 465.42 361.62 450.03 384.09 472.5 410.88 445.72 655.83 690.68 690.68 655.83"
+              fill="currentColor"
+            />
           )}
         </svg>
       </button>
@@ -325,7 +302,6 @@ export function FoundryAssistantDock({
                             onClick={() =>
                               handleApplyPatch({
                                 setProps: variant.props,
-                                setFrame: variant.frame,
                               })
                             }
                             title="Apply to current component"

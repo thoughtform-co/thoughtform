@@ -29,40 +29,44 @@ export interface StyleConfig {
 export type WorkspaceTab = "vault" | "foundry" | "survey";
 
 // ═══════════════════════════════════════════════════════════════
-// FOUNDRY FRAME CONFIG
+// FOUNDRY COMPONENT CATEGORIES
+// Defines which components support which frame/stroke features
 // ═══════════════════════════════════════════════════════════════
 
-export type FoundryShapePreset =
-  | "inspectorTicket"
-  | "inspectorTicketCompact"
-  | "cutCornersSm"
-  | "cutCornersMd"
-  | "cutCornersTopRight"
-  | "none";
+// Components that support the notch feature (Panel-style ticket notch)
+export const NOTCH_ENABLED_COMPONENTS = [
+  "panel",
+  "card-content",
+  "card-data",
+  "frame-basic",
+] as const;
 
-export interface FoundryFrameConfig {
-  /** Shape preset or "none" for no frame */
-  shape: FoundryShapePreset;
-  /** Custom notch width (only for ticketNotch shapes) */
-  notchWidthPx: number;
-  /** Custom notch height (only for ticketNotch shapes) */
-  notchHeightPx: number;
-  /** Stroke color for the frame border */
-  strokeColor: string;
-  /** Stroke width in pixels */
-  strokeWidth: number;
-  /** Fill color for the frame background */
-  fillColor: string;
-}
+// Components that should NOT show chamfer/corner options
+// (Brand Elements, Colors, Typography)
+export const NO_FRAME_CONTROLS_COMPONENTS = [
+  // Colors
+  "color-palette",
+  "color-palette-opacity",
+  // Typography
+  "type-display",
+  "type-body",
+  "type-data",
+  "type-scale",
+  // Brand Elements
+  "brand-mark",
+  "word-mark",
+  "vectors",
+] as const;
 
-export const DEFAULT_FOUNDRY_FRAME: FoundryFrameConfig = {
-  shape: "none",
-  notchWidthPx: 220,
-  notchHeightPx: 32,
-  strokeColor: "rgba(202, 165, 84, 0.3)",
-  strokeWidth: 1,
-  fillColor: "rgba(10, 9, 8, 0.4)",
-};
+// Chamfer position options
+export type ChamferPosition = "top-right" | "top-left" | "bottom-right" | "bottom-left";
+
+export const CHAMFER_POSITIONS: { value: ChamferPosition; label: string }[] = [
+  { value: "top-right", label: "Top Right" },
+  { value: "top-left", label: "Top Left" },
+  { value: "bottom-right", label: "Bottom Right" },
+  { value: "bottom-left", label: "Bottom Left" },
+];
 
 // ═══════════════════════════════════════════════════════════════
 // FOUNDRY VARIANT - For comparison grid
@@ -74,7 +78,6 @@ export interface FoundryVariant {
   description: string;
   componentId: string;
   props: Record<string, unknown>;
-  frame?: Partial<FoundryFrameConfig>;
   createdAt: string;
 }
 
