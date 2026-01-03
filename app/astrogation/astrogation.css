@@ -4661,24 +4661,23 @@
 
 .component-node-flow {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 0;
   margin-top: 12px;
-  padding: 12px 0;
 }
 
 .component-node {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   flex: 1;
   position: relative;
 }
 
 .component-node__marker {
-  width: 12px;
-  height: 12px;
+  width: 10px;
+  height: 10px;
   border: 1px solid var(--dawn-40);
   transform: rotate(45deg);
   background: var(--void);
@@ -4690,28 +4689,16 @@
   box-shadow: 0 0 8px rgba(202, 165, 84, 0.4);
 }
 
-.component-node__label {
-  font-family: var(--font-mono);
-  font-size: 9px;
-  letter-spacing: 0.1em;
-  color: var(--dawn-40);
-  text-transform: uppercase;
-  text-align: center;
-}
-
-.component-node--component .component-node__label {
-  color: var(--gold-60);
-}
-
-/* Horizontal connector line between nodes */
+/* Horizontal connector line between dropdowns */
 .component-node__connector {
-  width: 32px;
-  min-width: 32px;
+  width: 24px;
+  min-width: 24px;
   height: 1px;
   background: linear-gradient(90deg, var(--dawn-40) 0%, var(--gold) 100%);
-  margin-top: 6px; /* Align with center of diamond markers */
   position: relative;
   flex-shrink: 0;
+  align-self: center;
+  margin-top: 16px; /* Align with center of dropdowns */
 }
 
 /* Small diamond endpoints on the connector */

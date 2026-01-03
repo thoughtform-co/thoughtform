@@ -455,7 +455,6 @@ function DialsPanelInner({
                 {/* Category Node */}
                 <div className="component-node component-node--category">
                   <div className="component-node__marker">◇</div>
-                  <div className="component-node__label">CATEGORY</div>
                   <NestedSelect
                     categoryId={currentCategoryId}
                     componentKey={selectedComponentId}
@@ -474,7 +473,6 @@ function DialsPanelInner({
                 {/* Component Node */}
                 <div className="component-node component-node--component">
                   <div className="component-node__marker component-node__marker--gold">◇</div>
-                  <div className="component-node__label">CLASS</div>
                   <NestedSelect
                     categoryId={currentCategoryId}
                     componentKey={selectedComponentId}
