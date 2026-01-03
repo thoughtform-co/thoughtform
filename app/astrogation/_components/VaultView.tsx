@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { getComponentById } from "../catalog";
 import type { UIComponentPreset, StyleConfig } from "./types";
 import { ComponentPreview } from "./previews/ComponentPreview";
@@ -8,12 +8,13 @@ import { TargetReticle } from "@thoughtform/ui";
 
 // ═══════════════════════════════════════════════════════════════
 // VAULT VIEW - Saved Elements & Preview
-// Shows ONLY saved presets, not the Foundry working copy
+// Shows component with DEFAULT props or selected saved preset
+// Does NOT show Foundry working copy
 // ═══════════════════════════════════════════════════════════════
 
 export interface VaultViewProps {
   selectedComponentId: string | null;
-  componentProps: Record<string, unknown>;
+  componentProps: Record<string, unknown>; // Not used - kept for interface compatibility
   style: StyleConfig;
   presets: UIComponentPreset[];
   onLoadPreset: (preset: UIComponentPreset) => void;
@@ -23,7 +24,6 @@ export interface VaultViewProps {
 
 export function VaultView({
   selectedComponentId,
-  componentProps,
   style,
   presets,
   onLoadPreset,
@@ -36,22 +36,41 @@ export function VaultView({
   // Focus state for multi-element components
   const [focusedElementId, setFocusedElementId] = useState<string | null>(null);
 
-  // Get the currently selected preset (for preview)
+  // Get component definition for the selected component
+  const def = selectedComponentId ? getComponentById(selectedComponentId) : null;
+
+  // Get the currently selected preset (for preview override)
   const selectedPreset = selectedPresetId ? presets.find((p) => p.id === selectedPresetId) : null;
 
-  // Determine what to show: the selected preset's component, or nothing
-  const previewComponentId = selectedPreset?.component_key || null;
-  const previewProps = selectedPreset?.config
-    ? (({ __style, ...rest }) => rest)(selectedPreset.config as Record<string, unknown>)
-    : {};
+  // Build DEFAULT props from catalog definition
+  const defaultProps = useMemo(() => {
+    if (!def?.props) return {};
+    const defaults: Record<string, unknown> = {};
+    for (const [key, propDef] of Object.entries(def.props)) {
+      if (propDef.default !== undefined) {
+        defaults[key] = propDef.default;
+      }
+    }
+    return defaults;
+  }, [def]);
+
+  // Determine what props to show:
+  // - If a preset is selected, use its config
+  // - Otherwise, use default props from catalog
+  const previewProps = useMemo(() => {
+    if (selectedPreset?.config) {
+      const { __style, ...rest } = selectedPreset.config as Record<string, unknown>;
+      return rest;
+    }
+    return defaultProps;
+  }, [selectedPreset, defaultProps]);
+
   const previewStyle = selectedPreset?.config?.__style
     ? (selectedPreset.config.__style as StyleConfig)
     : style;
 
-  const def = previewComponentId ? getComponentById(previewComponentId) : null;
-
   // Check if this is a multi-element component
-  const isMultiElement = previewComponentId === "vectors" || previewComponentId === "word-mark";
+  const isMultiElement = selectedComponentId === "vectors" || selectedComponentId === "word-mark";
 
   // Handle element focus for multi-element components
   const handleElementFocus = useCallback(
@@ -100,12 +119,12 @@ export function VaultView({
 
   return (
     <div className="vault">
-      {/* Component Preview Area - Shows selected SAVED preset only */}
+      {/* Component Preview Area - Shows default props OR selected preset */}
       <div className="vault__preview">
-        {selectedPreset && def ? (
+        {def && selectedComponentId ? (
           isMultiElement ? (
             <ComponentPreview
-              componentId={previewComponentId!}
+              componentId={selectedComponentId}
               props={{
                 ...previewProps,
                 _focusedElementId: focusedElementId,
@@ -117,7 +136,7 @@ export function VaultView({
           ) : (
             <TargetReticle>
               <ComponentPreview
-                componentId={previewComponentId!}
+                componentId={selectedComponentId}
                 props={previewProps}
                 style={previewStyle}
                 fullSize
@@ -127,11 +146,7 @@ export function VaultView({
         ) : (
           <div className="vault__empty-preview">
             <span className="vault__icon">◇</span>
-            <p>
-              {presets.length > 0
-                ? "Click a saved preset below to preview"
-                : "No saved presets yet. Create one in the Foundry."}
-            </p>
+            <p>Select a component to preview its specifications</p>
           </div>
         )}
       </div>
@@ -177,7 +192,7 @@ export function VaultView({
       )}
 
       {/* Show hint when filtering but no presets exist for this component */}
-      {selectedComponentId && filteredPresets.length === 0 && presets.length > 0 && (
+      {selectedComponentId && filteredPresets.length === 0 && (
         <div className="vault__empty-state">
           <p>No saved presets for this component type.</p>
           <p className="vault__empty-hint">
