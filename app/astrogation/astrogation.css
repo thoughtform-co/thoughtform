@@ -4164,18 +4164,6 @@
   font-weight: 500;
 }
 
-.spec-select__option--selected::before {
-  content: "◇";
-  position: absolute;
-  left: 8px;
-  font-size: 8px;
-  color: var(--gold);
-}
-
-.spec-select__option--selected {
-  padding-left: 24px;
-}
-
 .spec-select__option--disabled {
   opacity: 0.4;
   cursor: not-allowed;
