@@ -27,6 +27,7 @@ export interface CatalogPanelProps {
   onSelectCategory: (id: string) => void;
   selectedComponentId: string | null;
   onSelectComponent: (id: string) => void;
+  onOpenForge: () => void;
 }
 
 function CatalogPanelInner({
@@ -34,6 +35,7 @@ function CatalogPanelInner({
   onSelectCategory,
   selectedComponentId,
   onSelectComponent,
+  onOpenForge,
 }: CatalogPanelProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const filteredComponents = searchQuery ? searchComponents(searchQuery) : null;
@@ -59,6 +61,15 @@ function CatalogPanelInner({
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
+        </div>
+
+        {/* Forge Button */}
+        <div className="astrogation-section">
+          <button className="forge-btn" onClick={onOpenForge}>
+            <span className="forge-btn__icon">⬡</span>
+            <span className="forge-btn__label">FORGE</span>
+            <span className="forge-btn__hint">Create new assets</span>
+          </button>
         </div>
 
         {/* Search Results */}

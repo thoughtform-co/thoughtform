@@ -7,6 +7,7 @@ import type {
   WorkspaceTab,
   SurveyViewBundledProps,
   FoundryVariant,
+  VectorDocument,
 } from "./types";
 import { VaultView } from "./VaultView";
 import { FoundryView } from "./FoundryView";
@@ -30,8 +31,15 @@ export interface CenterPanelProps {
   onApplyVariant: (variant: FoundryVariant) => void;
   isFocused: boolean;
   onFocusChange: (focused: boolean) => void;
+  onPropsChange: (props: Record<string, unknown>) => void;
   // Survey props bundled for cleaner API
   survey?: SurveyViewBundledProps;
+  // Forge mode props
+  isForgeMode?: boolean;
+  forgeDoc?: VectorDocument | null;
+  forgeSvg?: string | null;
+  onForgeDocChange?: (doc: VectorDocument, svg: string) => void;
+  onForgeClose?: () => void;
 }
 
 export function CenterPanel({
@@ -48,7 +56,13 @@ export function CenterPanel({
   onApplyVariant,
   isFocused,
   onFocusChange,
+  onPropsChange,
   survey,
+  isForgeMode,
+  forgeDoc,
+  forgeSvg,
+  onForgeDocChange,
+  onForgeClose,
 }: CenterPanelProps) {
   const def = selectedComponentId ? (getComponentById(selectedComponentId) ?? null) : null;
 
@@ -115,6 +129,12 @@ export function CenterPanel({
             onApplyVariant={onApplyVariant}
             isFocused={isFocused}
             onFocusChange={onFocusChange}
+            onPropsChange={onPropsChange}
+            isForgeMode={isForgeMode}
+            forgeDoc={forgeDoc}
+            forgeSvg={forgeSvg}
+            onForgeDocChange={onForgeDocChange}
+            onForgeClose={onForgeClose}
           />
         )}
         {activeTab === "survey" && survey && (

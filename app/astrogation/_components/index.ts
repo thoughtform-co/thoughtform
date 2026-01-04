@@ -53,3 +53,7 @@ export type { SurveyUploadModalProps } from "./SurveyUploadModal";
 // Previews
 export { ComponentPreview } from "./previews/ComponentPreview";
 export type { ComponentPreviewProps } from "./previews/ComponentPreview";
+
+// Vector Editor
+export { VectorEditor } from "./vector-editor";
+export type { VectorEditorProps, VectorDocument, EditorTool } from "./vector-editor";

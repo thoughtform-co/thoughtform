@@ -16,9 +16,11 @@ import {
   SurveyCatalogPanel,
   SurveyInspectorPanel,
   generateJSXCode,
+  VectorEditor,
   type SurveyAnnotation,
   type SurveyViewBundledProps,
   type WorkspaceTab,
+  type VectorDocument,
 } from "./_components";
 import { FoundryAssistantDock } from "./_components/FoundryAssistantDock";
 
@@ -103,6 +105,26 @@ function AstrogationContent() {
 
   // File input ref for navbar upload
   const navUploadRef = useRef<HTMLInputElement>(null);
+
+  // Forge state - forge is a special "mode" that shows the vector editor in the center panel
+  const [isForgeMode, setIsForgeMode] = useState(false);
+  const [forgeDoc, setForgeDoc] = useState<VectorDocument | null>(null);
+  const [forgeSvg, setForgeSvg] = useState<string | null>(null);
+
+  const handleOpenForge = useCallback(() => {
+    // Clear any selected component - forge is its own mode
+    dispatch(actions.selectComponent(null));
+    setIsForgeMode(true);
+  }, [dispatch]);
+
+  const handleCloseForge = useCallback(() => {
+    setIsForgeMode(false);
+  }, []);
+
+  const handleForgeDocChange = useCallback((doc: VectorDocument, svg: string) => {
+    setForgeDoc(doc);
+    setForgeSvg(svg);
+  }, []);
 
   const handleNavUpload = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -392,6 +414,7 @@ function AstrogationContent() {
             onSelectCategory={handleSelectCategory}
             selectedComponentId={selectedComponentId}
             onSelectComponent={handleSelectComponent}
+            onOpenForge={handleOpenForge}
           />
         )}
 
@@ -409,7 +432,13 @@ function AstrogationContent() {
           onApplyVariant={handleApplyVariant}
           isFocused={isFocused}
           onFocusChange={handleFocusChange}
+          onPropsChange={handlePropsChange}
           survey={surveyProps}
+          isForgeMode={isForgeMode}
+          forgeDoc={forgeDoc}
+          forgeSvg={forgeSvg}
+          onForgeDocChange={handleForgeDocChange}
+          onForgeClose={handleCloseForge}
         />
 
         {/* Right Panel - switches based on active tab */}

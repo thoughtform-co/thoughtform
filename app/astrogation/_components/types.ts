@@ -2,6 +2,9 @@
 // ASTROGATION TYPES
 // ═══════════════════════════════════════════════════════════════
 
+// Re-export vector editor types
+export type { VectorDocument } from "./vector-editor/types";
+
 export interface UIComponentPreset {
   id: string;
   name: string;

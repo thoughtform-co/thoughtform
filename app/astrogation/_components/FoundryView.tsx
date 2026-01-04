@@ -2,13 +2,14 @@
 
 import { useState, useEffect, useCallback } from "react";
 import type { ComponentDef } from "../catalog";
-import type { StyleConfig, FoundryVariant } from "./types";
+import type { StyleConfig, FoundryVariant, VectorDocument } from "./types";
 import { ComponentPreview } from "./previews/ComponentPreview";
 import { TargetReticle } from "@thoughtform/ui";
+import { VectorEditor } from "./vector-editor";
 
 // ═══════════════════════════════════════════════════════════════
 // FOUNDRY VIEW - Component Editor & Preview
-// With comparison grid for variants
+// With comparison grid for variants and Forge mode for vector editing
 // ═══════════════════════════════════════════════════════════════
 
 export interface FoundryViewProps {
@@ -21,6 +22,13 @@ export interface FoundryViewProps {
   onApplyVariant: (variant: FoundryVariant) => void;
   isFocused: boolean;
   onFocusChange: (focused: boolean) => void;
+  onPropsChange: (props: Record<string, unknown>) => void;
+  // Forge mode props
+  isForgeMode?: boolean;
+  forgeDoc?: VectorDocument | null;
+  forgeSvg?: string | null;
+  onForgeDocChange?: (doc: VectorDocument, svg: string) => void;
+  onForgeClose?: () => void;
 }
 
 export function FoundryView({
@@ -33,6 +41,11 @@ export function FoundryView({
   onApplyVariant,
   isFocused,
   onFocusChange,
+  onPropsChange,
+  isForgeMode,
+  forgeDoc,
+  onForgeDocChange,
+  onForgeClose,
 }: FoundryViewProps) {
   // Zoom state for the preview
   const [zoom, setZoom] = useState(1);
@@ -112,6 +125,22 @@ export function FoundryView({
     setFocusedElementId(null);
     onFocusChange(false);
   }, [selectedComponentId, onFocusChange]);
+
+  // ═══════════════════════════════════════════════════════════════
+  // FORGE MODE - Full-screen vector editor
+  // ═══════════════════════════════════════════════════════════════
+
+  if (isForgeMode) {
+    return (
+      <div className="foundry foundry--forge">
+        <VectorEditor
+          vectorDoc={forgeDoc}
+          onDocumentChange={onForgeDocChange || (() => {})}
+          onClose={onForgeClose}
+        />
+      </div>
+    );
+  }
 
   if (!selectedComponentId || !def) {
     return (
