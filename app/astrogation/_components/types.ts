@@ -139,6 +139,35 @@ export interface SurveyAnnotation {
   crop_caption?: string; // AI-generated caption for embeddings
 }
 
+export interface SurveySegment {
+  id: string;
+  survey_item_id: string;
+  segment_index: number;
+  // Bounding box in pixels
+  bbox_x: number;
+  bbox_y: number;
+  bbox_width: number;
+  bbox_height: number;
+  // Crop bbox with padding
+  crop_x: number;
+  crop_y: number;
+  crop_width: number;
+  crop_height: number;
+  // Metrics
+  area: number;
+  predicted_iou: number;
+  stability_score: number;
+  // Labels
+  label: string | null;
+  ai_label: string | null;
+  ai_description: string | null;
+  // State
+  is_visible: boolean;
+  is_selected: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface SurveyItem {
   id: string;
   category_id: string | null;
@@ -165,6 +194,8 @@ export interface SurveyItem {
   updated_at: string;
   // Client-side additions
   image_url?: string; // Signed URL for display
+  has_segments?: boolean;
+  segments?: SurveySegment[]; // Loaded on demand
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -185,6 +216,10 @@ export interface SurveyViewBundledProps {
   onAnnotationsChange: (annotations: SurveyAnnotation[]) => void;
   onAnnotationSelect?: (annotationId: string | null) => void;
   onResizingChange: (isResizing: boolean) => void;
+  // Segmentation
+  segments?: SurveySegment[];
+  showSegments?: boolean;
+  onUpdateSegmentLabel?: (segmentId: string, label: string) => void;
 }
 
 // Primary brand colors for dials - only core colors, no secondary

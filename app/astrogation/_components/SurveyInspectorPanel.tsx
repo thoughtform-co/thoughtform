@@ -33,6 +33,12 @@ export interface SurveyInspectorPanelProps {
   isResizing?: boolean;
   isUploading?: boolean;
   pipelineStatus?: PipelineStatus;
+  // Segmentation
+  onGenerateSegments?: () => void;
+  onToggleSegments?: () => void;
+  isSegmenting?: boolean;
+  showSegments?: boolean;
+  segmentCount?: number;
 }
 
 type InspectorTab = "fields" | "chat";
@@ -56,6 +62,11 @@ function SurveyInspectorPanelInner({
   onAnnotationSelect,
   isUploading = false,
   pipelineStatus = "idle",
+  onGenerateSegments,
+  onToggleSegments,
+  isSegmenting = false,
+  showSegments = false,
+  segmentCount = 0,
 }: SurveyInspectorPanelProps) {
   const [activeTab, setActiveTab] = useState<InspectorTab>("fields");
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
@@ -804,74 +815,29 @@ function SurveyInspectorPanelInner({
                           className={`spec-annotation spec-annotation--compact ${selectedAnnotationId === annotation.id ? "spec-annotation--selected" : ""}`}
                           onClick={() => onAnnotationSelect?.(annotation.id)}
                         >
-                          <div className="spec-annotation__header">
-                            <span className="spec-annotation__index">#{index + 1}</span>
-                            {/* Top-right action: Save when editing, Delete otherwise */}
-                            {editingAnnotationId === annotation.id ? (
-                              <button
-                                className="spec-annotation__action spec-annotation__action--save"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleSaveAnnotationNote();
-                                }}
-                                title="Save"
-                              >
-                                <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                                  <path
-                                    d="M10 2.5L4.5 8L2 5.5"
-                                    stroke="currentColor"
-                                    strokeWidth="1.5"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                  />
-                                </svg>
-                                Save
-                              </button>
-                            ) : (
-                              <button
-                                className="spec-annotation__action spec-annotation__action--delete"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleDeleteAnnotation(annotation.id);
-                                }}
-                                title="Delete annotation"
-                              >
-                                <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                                  <path
-                                    d="M2 3H10M4 3V2C4 1.5 4.5 1 5 1H7C7.5 1 8 1.5 8 2V3M4.5 5V9M7.5 5V9M3 3L3.5 10C3.5 10.5 4 11 4.5 11H7.5C8 11 8.5 10.5 8.5 10L9 3"
-                                    stroke="currentColor"
-                                    strokeWidth="1"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                  />
-                                </svg>
-                                Delete
-                              </button>
-                            )}
-                          </div>
-                          {/* Note content */}
+                          {/* Index on left */}
+                          <span className="spec-annotation__index">#{index + 1}</span>
+                          {/* Note content in middle (grows to fill) */}
                           {editingAnnotationId === annotation.id ? (
-                            <div className="spec-annotation__edit">
-                              <input
-                                type="text"
-                                className="spec-annotation__input"
-                                value={annotationNote}
-                                onChange={(e) => setAnnotationNote(e.target.value)}
-                                placeholder="Add note..."
-                                autoFocus
-                                onClick={(e) => e.stopPropagation()}
-                                onKeyDown={(e) => {
-                                  if (e.key === "Enter") handleSaveAnnotationNote();
-                                  if (e.key === "Escape") {
-                                    setEditingAnnotationId(null);
-                                    setAnnotationNote("");
-                                  }
-                                }}
-                              />
-                            </div>
+                            <input
+                              type="text"
+                              className="spec-annotation__input spec-annotation__input--inline"
+                              value={annotationNote}
+                              onChange={(e) => setAnnotationNote(e.target.value)}
+                              placeholder="Add note..."
+                              autoFocus
+                              onClick={(e) => e.stopPropagation()}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") handleSaveAnnotationNote();
+                                if (e.key === "Escape") {
+                                  setEditingAnnotationId(null);
+                                  setAnnotationNote("");
+                                }
+                              }}
+                            />
                           ) : (
                             <span
-                              className="spec-annotation__note"
+                              className="spec-annotation__note spec-annotation__note--inline"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 handleEditAnnotation(annotation);
@@ -880,7 +846,47 @@ function SurveyInspectorPanelInner({
                               {annotation.note || "Click to add note..."}
                             </span>
                           )}
-                          {/* Bottom-right crop thumbnail (shows when crop exists) */}
+                          {/* Action icon on far right: Save when editing, Delete otherwise */}
+                          {editingAnnotationId === annotation.id ? (
+                            <button
+                              className="spec-annotation__action-icon spec-annotation__action-icon--save"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleSaveAnnotationNote();
+                              }}
+                              title="Save"
+                            >
+                              <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                                <path
+                                  d="M10 2.5L4.5 8L2 5.5"
+                                  stroke="currentColor"
+                                  strokeWidth="1.5"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                />
+                              </svg>
+                            </button>
+                          ) : (
+                            <button
+                              className="spec-annotation__action-icon spec-annotation__action-icon--delete"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteAnnotation(annotation.id);
+                              }}
+                              title="Delete annotation"
+                            >
+                              <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                                <path
+                                  d="M2 3H10M4 3V2C4 1.5 4.5 1 5 1H7C7.5 1 8 1.5 8 2V3M4.5 5V9M7.5 5V9M3 3L3.5 10C3.5 10.5 4 11 4.5 11H7.5C8 11 8.5 10.5 8.5 10L9 3"
+                                  stroke="currentColor"
+                                  strokeWidth="1"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                />
+                              </svg>
+                            </button>
+                          )}
+                          {/* Crop thumbnail (shows when crop exists) */}
                           {annotation.crop_path && (
                             <button
                               className="spec-annotation__crop-thumb"
@@ -983,6 +989,49 @@ function SurveyInspectorPanelInner({
                     </button>
                   </div>
                 )}
+
+                {/* Segment Section - SAM-based UI element extraction */}
+                <FlowConnector.Node
+                  id="segments"
+                  label={`SEGMENTS${segmentCount > 0 ? ` (${segmentCount})` : ""}`}
+                  status={isSegmenting ? "pending" : segmentCount > 0 ? "ready" : "empty"}
+                >
+                  <div className="flow-connector__segment-section">
+                    <div className="flow-connector__segment-actions">
+                      <button
+                        className="flow-connector__segment-btn"
+                        onClick={onGenerateSegments}
+                        disabled={isSegmenting}
+                        title="Generate segments using SAM"
+                      >
+                        {isSegmenting ? (
+                          <>
+                            <span className="flow-connector__spinner" />
+                            Segmenting...
+                          </>
+                        ) : (
+                          "SEGMENT"
+                        )}
+                      </button>
+                      {segmentCount > 0 && (
+                        <button
+                          className={`flow-connector__toggle-btn ${showSegments ? "flow-connector__toggle-btn--active" : ""}`}
+                          onClick={onToggleSegments}
+                          title={showSegments ? "Hide segments" : "Show segments"}
+                        >
+                          {showSegments ? "HIDE" : "SHOW"}
+                        </button>
+                      )}
+                    </div>
+                    {segmentCount > 0 && (
+                      <div className="flow-connector__segment-info">
+                        <span>
+                          {segmentCount} UI element{segmentCount !== 1 ? "s" : ""} detected
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </FlowConnector.Node>
               </FlowConnector>
             </section>
 

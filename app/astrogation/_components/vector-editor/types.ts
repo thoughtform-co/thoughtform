@@ -2,7 +2,7 @@
 // VECTOR EDITOR TYPES
 // ═══════════════════════════════════════════════════════════════
 
-export type EditorTool = "select" | "rect" | "ellipse" | "line" | "pen" | "text";
+export type EditorTool = "select" | "rect" | "line" | "pen" | "text";
 
 export interface VectorDocument {
   version: string;

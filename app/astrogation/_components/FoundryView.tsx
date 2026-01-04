@@ -81,6 +81,9 @@ export function FoundryView({
   // Handle click to focus/unfocus (for single-element components)
   const handlePreviewClick = useCallback(
     (e: React.MouseEvent) => {
+      // Don't handle clicks in Forge mode - let the editor manage its own interactions
+      if (isForgeMode) return;
+
       // Don't toggle if clicking on a specific element within multi-element components
       const target = e.target as HTMLElement;
       if (target.closest(".preview-vectors__item") || target.closest(".preview-wordmarks__item")) {
@@ -96,11 +99,12 @@ export function FoundryView({
         onFocusChange(!isFocused);
       }
     },
-    [isFocused, focusedElementId, isMultiElement, onFocusChange]
+    [isFocused, focusedElementId, isMultiElement, isForgeMode, onFocusChange]
   );
 
-  // Handle click outside to unfocus
+  // Handle click outside to unfocus (disabled in Forge mode)
   useEffect(() => {
+    if (isForgeMode) return; // Don't interfere with Forge mode
     if (!isFocused && !focusedElementId) return;
 
     const handleClickOutside = (e: MouseEvent) => {
@@ -117,32 +121,16 @@ export function FoundryView({
 
     document.addEventListener("click", handleClickOutside);
     return () => document.removeEventListener("click", handleClickOutside);
-  }, [isFocused, focusedElementId, onFocusChange]);
+  }, [isFocused, focusedElementId, isForgeMode, onFocusChange]);
 
-  // Reset zoom and element focus when component changes
+  // reset zoom and element focus when component changes
   useEffect(() => {
     setZoom(1);
     setFocusedElementId(null);
     onFocusChange(false);
   }, [selectedComponentId, onFocusChange]);
 
-  // ═══════════════════════════════════════════════════════════════
-  // FORGE MODE - Full-screen vector editor
-  // ═══════════════════════════════════════════════════════════════
-
-  if (isForgeMode) {
-    return (
-      <div className="foundry foundry--forge">
-        <VectorEditor
-          vectorDoc={forgeDoc}
-          onDocumentChange={onForgeDocChange || (() => {})}
-          onClose={onForgeClose}
-        />
-      </div>
-    );
-  }
-
-  if (!selectedComponentId || !def) {
+  if (!isForgeMode && (!selectedComponentId || !def)) {
     return (
       <div className="foundry foundry--empty">
         <div className="foundry__empty-state">
@@ -156,14 +144,24 @@ export function FoundryView({
     );
   }
 
-  // Calculate zoom - only apply focus zoom for single-element components
-  const hasFocus = isFocused || focusedElementId !== null;
+  // Calculate zoom - only apply focus zoom for single-element components (never in Forge mode)
+  const hasFocus = !isForgeMode && (isFocused || focusedElementId !== null);
   // For multi-element components, individual elements handle their own zoom
   const focusZoom = hasFocus && !isMultiElement ? 1.5 : 1;
   const totalZoom = zoom * focusZoom;
 
   // Render preview content
   const renderPreviewContent = () => {
+    if (isForgeMode) {
+      return (
+        <VectorEditor
+          vectorDoc={forgeDoc}
+          onDocumentChange={onForgeDocChange || (() => {})}
+          onClose={onForgeClose}
+        />
+      );
+    }
+
     if (isMultiElement) {
       return (
         <ComponentPreview
@@ -192,7 +190,9 @@ export function FoundryView({
   };
 
   return (
-    <div className={`foundry ${hasFocus && !isMultiElement ? "foundry--focused" : ""}`}>
+    <div
+      className={`foundry ${hasFocus && !isMultiElement ? "foundry--focused" : ""} ${isForgeMode ? "foundry--forge" : ""}`}
+    >
       {/* Preview Area */}
       <div
         className={`foundry__preview ${hasFocus && !isMultiElement ? "foundry__preview--focused" : ""}`}
@@ -202,19 +202,23 @@ export function FoundryView({
         <div
           className="foundry__preview-content"
           style={{
-            transform: `scale(${isMultiElement ? zoom : totalZoom})`,
+            transform: isForgeMode ? "none" : `scale(${isMultiElement ? zoom : totalZoom})`,
             transformOrigin: "center center",
             transition: hasFocus ? "transform 0.3s ease-out" : "transform 0.2s ease-out",
+            width: isForgeMode ? "100%" : "auto",
+            height: isForgeMode ? "100%" : "auto",
           }}
         >
           {renderPreviewContent()}
         </div>
         {/* Zoom indicator */}
-        {zoom !== 1 && <div className="foundry__zoom-indicator">{Math.round(zoom * 100)}%</div>}
+        {!isForgeMode && zoom !== 1 && (
+          <div className="foundry__zoom-indicator">{Math.round(zoom * 100)}%</div>
+        )}
       </div>
 
       {/* Variants Comparison Grid - shows AI-generated alternatives */}
-      {variants.length > 0 && (
+      {!isForgeMode && variants.length > 0 && (
         <div className="foundry__variants-grid">
           <div className="foundry__variants-header">
             <span className="foundry__variants-label">◇ GENERATED VARIANTS</span>
@@ -263,9 +267,11 @@ export function FoundryView({
       )}
 
       {/* Info */}
-      <div className="foundry__info">
-        <span>Click to interact • Edit properties in the right panel</span>
-      </div>
+      {!isForgeMode && (
+        <div className="foundry__info">
+          <span>Click to interact • Edit properties in the right panel</span>
+        </div>
+      )}
     </div>
   );
 }

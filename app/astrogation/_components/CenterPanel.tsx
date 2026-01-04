@@ -141,6 +141,7 @@ export function CenterPanel({
           <SurveyView
             items={survey.items}
             selectedItemId={survey.selectedItemId}
+            selectedAnnotationId={survey.selectedAnnotationId}
             loading={survey.loading}
             searchQuery={survey.searchQuery}
             isSearching={survey.isSearching}
@@ -149,7 +150,11 @@ export function CenterPanel({
             onSearchQueryChange={survey.onSearchQueryChange}
             onSearch={survey.onSearch}
             onAnnotationsChange={survey.onAnnotationsChange}
+            onAnnotationSelect={survey.onAnnotationSelect}
             onResizingChange={survey.onResizingChange}
+            segments={survey.segments}
+            showSegments={survey.showSegments}
+            onUpdateSegmentLabel={survey.onUpdateSegmentLabel}
           />
         )}
       </div>

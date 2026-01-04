@@ -1,11 +1,15 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
+import type { SurveyItem } from "./types";
+import { useReferenceMatch, type MatchResult } from "../_hooks/useReferenceMatch";
+import { extractDesignTokens, tokensToDescription } from "./utils";
 
 // ═══════════════════════════════════════════════════════════════
 // FOUNDRY ASSISTANT DOCK
 // Floating AI assistant button + translucent drawer for Foundry
 // Supports per-component chat history and generative capabilities
+// Now with Survey reference integration for style transfer
 // ═══════════════════════════════════════════════════════════════
 
 interface ChatMessage {
@@ -17,6 +21,8 @@ interface ChatMessage {
   } | null;
   // Variant suggestions from the assistant
   variants?: ComponentVariant[] | null;
+  // Reference match results
+  matchResult?: MatchResult | null;
 }
 
 // A component variant that can be rendered in the canvas
@@ -33,6 +39,9 @@ export interface FoundryAssistantDockProps {
   onApplyPatch: (patch: { setProps?: Record<string, unknown> }) => void;
   onCreateVariant?: (variant: ComponentVariant) => void;
   getAuthToken?: () => Promise<string | null>;
+  // Survey integration for reference-based styling
+  surveyItems?: SurveyItem[];
+  onLoadSurveyItems?: () => Promise<void>;
 }
 
 // Store chat history per component (persists across re-renders)
@@ -44,12 +53,19 @@ export function FoundryAssistantDock({
   onApplyPatch,
   onCreateVariant,
   getAuthToken,
+  surveyItems = [],
+  onLoadSurveyItems,
 }: FoundryAssistantDockProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [showReferencePanel, setShowReferencePanel] = useState(false);
+  const [selectedReferenceId, setSelectedReferenceId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Reference matching hook
+  const { matchReference, matchFromDescription, isMatching, lastResult } = useReferenceMatch();
 
   // Per-component chat history
   const historyKey = componentId || "__no_component__";
@@ -194,10 +210,71 @@ export function FoundryAssistantDock({
     [onApplyPatch]
   );
 
+  // Handle apply from Survey reference
+  const handleApplyFromReference = useCallback(
+    async (item: SurveyItem) => {
+      if (!componentId) return;
+
+      setIsLoading(true);
+      try {
+        const result = await matchReference(item, componentId);
+
+        if (result && Object.keys(result.componentProps).length > 0) {
+          // Apply the extracted props
+          onApplyPatch({ setProps: result.componentProps });
+
+          // Add a message showing what was applied
+          const applyMessage: ChatMessage = {
+            id: `reference-${Date.now()}`,
+            role: "assistant",
+            content: `Applied style from "${item.title || "reference"}"\n\nExtracted: ${result.query}\n\nPatterns detected: ${result.suggestedPatterns.join(", ") || "none"}`,
+            patch: { setProps: result.componentProps },
+            matchResult: result,
+          };
+          setMessages((prev) => [...prev, applyMessage]);
+        } else {
+          // Show what was detected even if no direct props could be applied
+          const infoMessage: ChatMessage = {
+            id: `reference-info-${Date.now()}`,
+            role: "assistant",
+            content: `Analyzed "${item.title || "reference"}":\n\n${result?.query || "No patterns detected"}\n\nSuggested patterns: ${result?.suggestedPatterns.join(", ") || "none"}\nSuggested tokens: ${result?.suggestedTokens.join(", ") || "none"}\n\nTry asking me to apply specific patterns like "make it more industrial" or "add corner brackets".`,
+            matchResult: result,
+          };
+          setMessages((prev) => [...prev, infoMessage]);
+        }
+
+        setShowReferencePanel(false);
+        setSelectedReferenceId(null);
+      } catch (error) {
+        console.error("Failed to apply reference:", error);
+        const errorMessage: ChatMessage = {
+          id: `error-${Date.now()}`,
+          role: "assistant",
+          content:
+            "Sorry, I couldn't extract style information from that reference. Please try another.",
+        };
+        setMessages((prev) => [...prev, errorMessage]);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [componentId, matchReference, onApplyPatch]
+  );
+
+  // Load survey items when reference panel opens
+  useEffect(() => {
+    if (showReferencePanel && onLoadSurveyItems && surveyItems.length === 0) {
+      onLoadSurveyItems();
+    }
+  }, [showReferencePanel, onLoadSurveyItems, surveyItems.length]);
+
   // Clean up message content for display (remove JSON blocks)
   const cleanMessageContent = (content: string) => {
     return content.replace(/```json\s*[\s\S]*?\s*```/g, "").trim();
   };
+
+  // Get selected reference
+  const selectedReference = surveyItems.find((item) => item.id === selectedReferenceId);
 
   return (
     <div className="foundry-assistant-dock">
@@ -338,8 +415,105 @@ export function FoundryAssistantDock({
           <div ref={messagesEndRef} />
         </div>
 
+        {/* Reference Panel (collapsible) */}
+        {showReferencePanel && (
+          <div className="foundry-assistant-references">
+            <div className="foundry-assistant-references__header">
+              <span className="foundry-assistant-references__title">
+                Apply from Survey Reference
+              </span>
+              <button
+                className="foundry-assistant-references__close"
+                onClick={() => {
+                  setShowReferencePanel(false);
+                  setSelectedReferenceId(null);
+                }}
+              >
+                ×
+              </button>
+            </div>
+            <div className="foundry-assistant-references__grid">
+              {surveyItems.length === 0 ? (
+                <div className="foundry-assistant-references__empty">
+                  No references available. Upload references in the Survey tab first.
+                </div>
+              ) : (
+                surveyItems.slice(0, 12).map((item) => (
+                  <button
+                    key={item.id}
+                    className={`foundry-assistant-reference ${
+                      selectedReferenceId === item.id ? "foundry-assistant-reference--selected" : ""
+                    }`}
+                    onClick={() => setSelectedReferenceId(item.id)}
+                  >
+                    {item.image_url ? (
+                      <img
+                        src={item.image_url}
+                        alt={item.title || "Reference"}
+                        className="foundry-assistant-reference__image"
+                      />
+                    ) : (
+                      <div className="foundry-assistant-reference__placeholder">◇</div>
+                    )}
+                    <span className="foundry-assistant-reference__title">
+                      {item.title || "Untitled"}
+                    </span>
+                  </button>
+                ))
+              )}
+            </div>
+            {selectedReference && (
+              <div className="foundry-assistant-references__preview">
+                <div className="foundry-assistant-references__preview-info">
+                  <strong>{selectedReference.title || "Untitled"}</strong>
+                  {selectedReference.analysis?.summary && (
+                    <p>{selectedReference.analysis.summary}</p>
+                  )}
+                  {selectedReference.tags.length > 0 && (
+                    <div className="foundry-assistant-references__tags">
+                      {selectedReference.tags.slice(0, 5).map((tag) => (
+                        <span key={tag} className="foundry-assistant-references__tag">
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <button
+                  className="foundry-assistant-references__apply-btn"
+                  onClick={() => handleApplyFromReference(selectedReference)}
+                  disabled={isMatching || !componentId}
+                >
+                  {isMatching ? "Analyzing..." : "◇ Apply Style"}
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Input */}
         <div className="foundry-assistant-input">
+          {/* Reference toggle button */}
+          <button
+            className={`foundry-assistant-input__reference-btn ${
+              showReferencePanel ? "foundry-assistant-input__reference-btn--active" : ""
+            }`}
+            onClick={() => setShowReferencePanel(!showReferencePanel)}
+            title="Apply from Survey reference"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              width="16"
+              height="16"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <rect x="3" y="3" width="18" height="18" rx="2" />
+              <circle cx="8.5" cy="8.5" r="1.5" fill="currentColor" />
+              <path d="M21 15l-5-5L5 21" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
           <textarea
             ref={textareaRef}
             className="foundry-assistant-input__textarea"

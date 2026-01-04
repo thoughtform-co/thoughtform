@@ -25,7 +25,6 @@ interface ToolbarProps {
 const TOOLS: { id: EditorTool; label: string; icon: string; shortcut: string }[] = [
   { id: "select", label: "Select", icon: "⬦", shortcut: "V" },
   { id: "rect", label: "Rectangle", icon: "▢", shortcut: "R" },
-  { id: "ellipse", label: "Ellipse", icon: "○", shortcut: "O" },
   { id: "line", label: "Line", icon: "╱", shortcut: "L" },
   { id: "pen", label: "Pen", icon: "✎", shortcut: "P" },
   { id: "text", label: "Text", icon: "T", shortcut: "T" },
@@ -53,6 +52,7 @@ function ToolbarInner({
             key={tool.id}
             className={`forge-toolbar__btn ${activeTool === tool.id ? "forge-toolbar__btn--active" : ""}`}
             onClick={() => onToolChange(tool.id)}
+            onMouseDown={(e) => e.preventDefault()}
             title={`${tool.label} (${tool.shortcut})`}
             aria-label={tool.label}
             aria-pressed={activeTool === tool.id}
@@ -71,6 +71,7 @@ function ToolbarInner({
         <button
           className={`forge-toolbar__btn ${grid.enabled ? "forge-toolbar__btn--active" : ""}`}
           onClick={() => onGridChange({ ...grid, enabled: !grid.enabled })}
+          onMouseDown={(e) => e.preventDefault()}
           title="Toggle Grid"
           aria-label="Toggle Grid"
           aria-pressed={grid.enabled}
@@ -81,6 +82,7 @@ function ToolbarInner({
         <button
           className={`forge-toolbar__btn ${grid.snap ? "forge-toolbar__btn--active" : ""}`}
           onClick={() => onGridChange({ ...grid, snap: !grid.snap })}
+          onMouseDown={(e) => e.preventDefault()}
           title="Snap to Grid"
           aria-label="Snap to Grid"
           aria-pressed={grid.snap}
@@ -93,6 +95,7 @@ function ToolbarInner({
           className="forge-toolbar__select"
           value={grid.size}
           onChange={(e) => onGridChange({ ...grid, size: parseInt(e.target.value) })}
+          onMouseDown={(e) => e.stopPropagation()}
           title="Grid Size"
           aria-label="Grid Size"
         >
@@ -111,6 +114,7 @@ function ToolbarInner({
         <button
           className="forge-toolbar__btn"
           onClick={onUndo}
+          onMouseDown={(e) => e.preventDefault()}
           disabled={!canUndo}
           title="Undo (Ctrl+Z)"
           aria-label="Undo"
@@ -121,6 +125,7 @@ function ToolbarInner({
         <button
           className="forge-toolbar__btn"
           onClick={onRedo}
+          onMouseDown={(e) => e.preventDefault()}
           disabled={!canRedo}
           title="Redo (Ctrl+Shift+Z)"
           aria-label="Redo"
@@ -137,6 +142,7 @@ function ToolbarInner({
         <button
           className="forge-toolbar__btn"
           onClick={onDuplicate}
+          onMouseDown={(e) => e.preventDefault()}
           title="Duplicate (Ctrl+D)"
           aria-label="Duplicate"
         >
@@ -146,6 +152,7 @@ function ToolbarInner({
         <button
           className="forge-toolbar__btn forge-toolbar__btn--danger"
           onClick={onDelete}
+          onMouseDown={(e) => e.preventDefault()}
           title="Delete (Del)"
           aria-label="Delete"
         >
@@ -161,6 +168,7 @@ function ToolbarInner({
         <button
           className="forge-toolbar__btn forge-toolbar__btn--primary"
           onClick={onCopySVG}
+          onMouseDown={(e) => e.preventDefault()}
           title="Copy SVG to clipboard"
           aria-label="Copy SVG"
         >

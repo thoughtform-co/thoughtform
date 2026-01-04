@@ -447,6 +447,113 @@ const expensiveValue = useMemo(() => compute(), [deps]);
 }
 ```
 
+## Panel Template System
+
+Astrogation uses a unified panel template structure inspired by Starfield and Alien Romulus UI patterns.
+
+### Zone Structure
+
+```
+┌─────────────────────────────────────────┐
+│ HEADER   │ Title Text │ [icon] [icon]  │ ← Toolbar zone (right-aligned)
+├─────────────────────────────────────────┤
+│                                         │
+│ CONTENT                                 │ ← Scrollable, fills remaining space
+│                                         │
+├─────────────────────────────────────────┤
+│ FOOTER (optional)                       │ ← Status/actions
+└─────────────────────────────────────────┘
+```
+
+### CSS Classes
+
+```css
+.panel-template                    /* Container with zone tokens */
+.panel-template__header            /* Header zone with title + toolbar */
+.panel-template__title             /* Title text styling */
+.panel-template__toolbar           /* Toolbar container */
+.panel-template__toolbar-btn       /* Toolbar icon button */
+.panel-template__toolbar-btn--primary  /* Primary action button */
+.panel-template__toolbar-sep       /* Toolbar separator */
+.panel-template__content           /* Scrollable content zone */
+.panel-template__content--flush    /* No padding variant */
+.panel-template__footer            /* Footer zone */
+```
+
+### Zone Tokens
+
+```css
+--panel-header-height: 38px;
+--panel-toolbar-gap: 4px;
+--panel-toolbar-btn-size: 28px;
+--panel-content-padding: 12px;
+--panel-footer-height: 40px;
+```
+
+### Variants
+
+- `--compact`: Smaller header/buttons for dense UIs
+- `--dense`: Reduced padding for data-heavy content
+- `--notched`: Chamfered header matching inspector frames
+
+### Implementation Example
+
+```tsx
+<aside className="panel-template">
+  <div className="panel-template__header">
+    <span className="panel-template__title">PANEL NAME</span>
+    <div className="panel-template__toolbar">
+      {/* Conditional toolbar buttons based on context */}
+      {showAction && (
+        <button className="panel-template__toolbar-btn">
+          <Icon />
+        </button>
+      )}
+    </div>
+  </div>
+  <div className="panel-template__content">{/* Panel content */}</div>
+</aside>
+```
+
+### Design Rationale
+
+This pattern is derived from Starfield's "SHIP SYSTEMS" panels and Alien Romulus industrial terminals:
+
+- **Labeled zones**: Clear uppercase titles in header
+- **Toolbar integration**: Actions live in the header, not floating
+- **Industrial precision**: Every element has a designated slot
+- **Contextual actions**: Toolbar buttons change based on active view
+
+## Reference-Based Styling
+
+The Foundry Assistant Dock supports applying styles from Survey references:
+
+### Flow
+
+1. Upload reference images to Survey tab
+2. Run analysis pipeline (Claude vision analysis)
+3. In Foundry, click reference icon to open reference panel
+4. Select a reference and click "Apply Style"
+5. System extracts tokens and patterns, applies to current component
+
+### Extraction Utilities
+
+- `extractDesignTokens(item)`: Parse Survey analysis → design tokens
+- `tokensToDescription(tokens)`: Convert tokens to MCP query
+- `tokensToComponentProps(tokens, componentId)`: Generate component props
+
+### Token Categories
+
+```typescript
+interface ExtractedTokens {
+  colors: { primary, accent, background, text, border, tokenMappings };
+  typography: { family, weight, style, size, letterSpacing, casing };
+  geometry: { borderRadius, chamferAngle, chamferCorners, borderWidth, hasNotch };
+  patterns: { patterns: string[], confidence: Record<string, number> };
+  mood: { primary, secondary[], warmth, density, animation };
+}
+```
+
 ## File Locations Reference
 
 - **Component Styles**: `app/styles/components.css`
@@ -457,3 +564,6 @@ const expensiveValue = useMemo(() => compute(), [deps]);
 - **UI Components**: `components/ui/`
 - **HUD Components**: `components/hud/`
 - **Complex Examples**: `app/astrogation/`
+- **Panel Template CSS**: `app/astrogation/astrogation.css` (search for "PANEL TEMPLATE SYSTEM")
+- **Token Extraction**: `app/astrogation/_components/utils/extractDesignTokens.ts`
+- **Reference Matching Hook**: `app/astrogation/_hooks/useReferenceMatch.ts`

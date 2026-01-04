@@ -1,0 +1,20 @@
+version: "3.8"
+services:
+  sam-segmenter:
+    build: .
+    ports:
+      - "8001:8001"
+    volumes:
+      - ./checkpoints:/app/checkpoints
+    environment:
+      - SAM_MODEL_TYPE=vit_b
+      - SAM_CHECKPOINT_PATH=/app/checkpoints/sam_vit_b.pth
+    # Uncomment below if you have an NVIDIA GPU and want to use it
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
+

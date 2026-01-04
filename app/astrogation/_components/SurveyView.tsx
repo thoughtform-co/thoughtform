@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import { Network, Eye, EyeOff } from "lucide-react";
-import type { SurveyItem, SurveyAnnotation } from "./types";
+import type { SurveyItem, SurveyAnnotation, SurveySegment } from "./types";
 import { AnnotationBox } from "./AnnotationBox";
 
 // ═══════════════════════════════════════════════════════════════
@@ -23,6 +23,13 @@ export interface SurveyViewProps {
   onAnnotationsChange?: (annotations: SurveyAnnotation[]) => void;
   onAnnotationSelect?: (annotationId: string | null) => void;
   onResizingChange?: (isResizing: boolean) => void;
+  // Segmentation props
+  segments?: SurveySegment[];
+  showSegments?: boolean;
+  isSegmenting?: boolean;
+  onGenerateSegments?: () => void;
+  onToggleSegments?: () => void;
+  onUpdateSegmentLabel?: (segmentId: string, label: string) => void;
 }
 
 interface DrawingState {
@@ -60,15 +67,6 @@ function GridItem({ item, onClick }: GridItemProps) {
       {/* Hover overlay with title */}
       <div className="survey-grid__item-overlay">
         <span className="survey-grid__item-title">{item.title || "Untitled"}</span>
-        {item.tags && item.tags.length > 0 && (
-          <div className="survey-grid__item-tags">
-            {item.tags.slice(0, 3).map((tag) => (
-              <span key={tag} className="survey-grid__item-tag">
-                {tag}
-              </span>
-            ))}
-          </div>
-        )}
       </div>
       {/* Embedded indicator */}
       {item.briefing_embedding_text && (
@@ -92,6 +90,10 @@ interface DetailViewProps {
   onAnnotationSelect?: (annotationId: string | null) => void;
   onResizingChange?: (isResizing: boolean) => void;
   onClose: () => void;
+  // Segmentation
+  segments?: SurveySegment[];
+  showSegments?: boolean;
+  onUpdateSegmentLabel?: (segmentId: string, label: string) => void;
 }
 
 function DetailView({
@@ -102,6 +104,9 @@ function DetailView({
   onAnnotationSelect,
   onResizingChange,
   onClose,
+  segments = [],
+  showSegments = false,
+  onUpdateSegmentLabel,
 }: DetailViewProps) {
   const [drawing, setDrawing] = useState<DrawingState | null>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -112,6 +117,12 @@ function DetailView({
   const [isAnyAnnotationResizing, setIsAnyAnnotationResizing] = useState(false);
   const [showAnnotations, setShowAnnotations] = useState(true);
   const [zoom, setZoom] = useState(1);
+  const [pan, setPan] = useState({ x: 0, y: 0 });
+  const [isPanning, setIsPanning] = useState(false);
+  const panStartRef = useRef({ x: 0, y: 0, panX: 0, panY: 0 });
+  const [hoveredSegmentId, setHoveredSegmentId] = useState<string | null>(null);
+  const [editingSegmentId, setEditingSegmentId] = useState<string | null>(null);
+  const [editingSegmentLabel, setEditingSegmentLabel] = useState("");
 
   // Sync local annotations when prop changes
   useEffect(() => {
@@ -143,35 +154,66 @@ function DetailView({
     };
   }, []);
 
-  const handleCanvasMouseDown = useCallback((e: React.MouseEvent) => {
-    if (!canvasRef.current || !imageRef.current) return;
+  const handleCanvasMouseDown = useCallback(
+    (e: React.MouseEvent) => {
+      if (!canvasRef.current || !imageRef.current) return;
 
-    const rect = imageRef.current.getBoundingClientRect();
+      // Middle mouse button (wheel click) = panning
+      if (e.button === 1) {
+        e.preventDefault();
+        setIsPanning(true);
+        panStartRef.current = {
+          x: e.clientX,
+          y: e.clientY,
+          panX: pan.x,
+          panY: pan.y,
+        };
+        return;
+      }
 
-    // Check if click is within the image bounds
-    if (
-      e.clientX < rect.left ||
-      e.clientX > rect.right ||
-      e.clientY < rect.top ||
-      e.clientY > rect.bottom
-    ) {
-      return;
-    }
+      // Left click = drawing annotations
+      if (e.button !== 0) return;
 
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+      const rect = imageRef.current.getBoundingClientRect();
 
-    setDrawing({
-      isDrawing: true,
-      startX: x,
-      startY: y,
-      currentX: x,
-      currentY: y,
-    });
-  }, []);
+      // Check if click is within the image bounds
+      if (
+        e.clientX < rect.left ||
+        e.clientX > rect.right ||
+        e.clientY < rect.top ||
+        e.clientY > rect.bottom
+      ) {
+        return;
+      }
+
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+
+      setDrawing({
+        isDrawing: true,
+        startX: x,
+        startY: y,
+        currentX: x,
+        currentY: y,
+      });
+    },
+    [pan.x, pan.y]
+  );
 
   const handleCanvasMouseMove = useCallback(
     (e: React.MouseEvent) => {
+      // Handle panning with middle mouse button
+      if (isPanning) {
+        const deltaX = e.clientX - panStartRef.current.x;
+        const deltaY = e.clientY - panStartRef.current.y;
+        setPan({
+          x: panStartRef.current.panX + deltaX,
+          y: panStartRef.current.panY + deltaY,
+        });
+        return;
+      }
+
+      // Handle annotation drawing
       if (!drawing?.isDrawing || !imageRef.current) return;
 
       const rect = imageRef.current.getBoundingClientRect();
@@ -180,10 +222,16 @@ function DetailView({
 
       setDrawing((prev) => (prev ? { ...prev, currentX: x, currentY: y } : null));
     },
-    [drawing?.isDrawing]
+    [drawing?.isDrawing, isPanning]
   );
 
   const handleCanvasMouseUp = useCallback(() => {
+    // Stop panning
+    if (isPanning) {
+      setIsPanning(false);
+      return;
+    }
+
     if (!drawing?.isDrawing || !onAnnotationsChange) {
       setDrawing(null);
       return;
@@ -227,7 +275,7 @@ function DetailView({
     }
 
     setDrawing(null);
-  }, [drawing, onAnnotationsChange, localAnnotations]);
+  }, [drawing, onAnnotationsChange, localAnnotations, isPanning]);
 
   const debouncedSave = useCallback(
     (updatedAnnotations: SurveyAnnotation[]) => {
@@ -273,7 +321,14 @@ function DetailView({
   const handleWheel = useCallback((e: React.WheelEvent) => {
     e.preventDefault();
     const delta = e.deltaY > 0 ? -0.1 : 0.1;
-    setZoom((prev) => Math.min(3, Math.max(1, prev + delta)));
+    setZoom((prev) => {
+      const newZoom = Math.min(3, Math.max(1, prev + delta));
+      // Reset pan when zooming back to 1
+      if (newZoom === 1) {
+        setPan({ x: 0, y: 0 });
+      }
+      return newZoom;
+    });
   }, []);
 
   // Calculate aspect ratio for responsive sizing
@@ -298,24 +353,24 @@ function DetailView({
 
   return (
     <div className="survey-detail-focused">
-      {/* Label on top */}
-      <span className="survey-detail-focused__label">
-        {(item.title || "Untitled").toUpperCase()}
-      </span>
-
-      {/* Top toolbar */}
-      <div className="survey-detail-focused__toolbar">
+      {/* Top bar: title left, eye icon right */}
+      <div className="survey-detail-focused__top-bar">
+        <span className="survey-detail-focused__label">
+          {(item.title || "Untitled").toUpperCase()}
+        </span>
         <button
-          className={`survey-detail-focused__toolbar-btn ${showAnnotations ? "survey-detail-focused__toolbar-btn--active" : ""}`}
+          className="survey-detail-focused__eye-btn"
           onClick={() => setShowAnnotations((prev) => !prev)}
           title={showAnnotations ? "Hide annotations" : "Show annotations"}
         >
           {showAnnotations ? <Eye size={16} /> : <EyeOff size={16} />}
         </button>
-        {zoom !== 1 && (
-          <span className="survey-detail-focused__zoom-indicator">{Math.round(zoom * 100)}%</span>
-        )}
       </div>
+
+      {/* Bottom right: zoom indicator */}
+      {zoom !== 1 && (
+        <span className="survey-detail-focused__zoom-indicator">{Math.round(zoom * 100)}%</span>
+      )}
 
       {/* Content frame */}
       <div className="survey-detail-focused__content">
@@ -328,13 +383,14 @@ function DetailView({
           onMouseUp={handleCanvasMouseUp}
           onMouseLeave={handleCanvasMouseUp}
           onWheel={handleWheel}
+          onAuxClick={(e) => e.preventDefault()}
         >
           <div
             ref={imageContainerRef}
-            className="survey-detail-focused__image-container"
+            className={`survey-detail-focused__image-container ${isPanning ? "survey-detail-focused__image-container--panning" : ""}`}
             style={{
               aspectRatio: aspectRatio.toString(),
-              transform: `scale(${zoom})`,
+              transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
               transformOrigin: "center center",
             }}
           >
@@ -379,6 +435,80 @@ function DetailView({
                 />
               ))}
 
+            {/* Segment overlays */}
+            {showSegments && segments.length > 0 && (
+              <>
+                {segments.map((segment) => {
+                  // Convert pixel bbox to percentage
+                  const imgWidth = item.image_width || 1;
+                  const imgHeight = item.image_height || 1;
+                  const left = (segment.bbox_x / imgWidth) * 100;
+                  const top = (segment.bbox_y / imgHeight) * 100;
+                  const width = (segment.bbox_width / imgWidth) * 100;
+                  const height = (segment.bbox_height / imgHeight) * 100;
+                  const isHovered = hoveredSegmentId === segment.id;
+                  const isEditing = editingSegmentId === segment.id;
+                  const displayLabel =
+                    segment.label || segment.ai_label || `Segment ${segment.segment_index + 1}`;
+
+                  return (
+                    <div
+                      key={segment.id}
+                      className={`survey-segment-overlay ${isHovered ? "survey-segment-overlay--hovered" : ""}`}
+                      style={{
+                        position: "absolute",
+                        left: `${left}%`,
+                        top: `${top}%`,
+                        width: `${width}%`,
+                        height: `${height}%`,
+                        pointerEvents: "auto",
+                      }}
+                      onMouseEnter={() => setHoveredSegmentId(segment.id)}
+                      onMouseLeave={() => setHoveredSegmentId(null)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (!isEditing) {
+                          setEditingSegmentId(segment.id);
+                          setEditingSegmentLabel(segment.label || segment.ai_label || "");
+                        }
+                      }}
+                    >
+                      {/* Label tooltip on hover */}
+                      {(isHovered || isEditing) && (
+                        <div className="survey-segment-overlay__label">
+                          {isEditing ? (
+                            <input
+                              type="text"
+                              className="survey-segment-overlay__input"
+                              value={editingSegmentLabel}
+                              onChange={(e) => setEditingSegmentLabel(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                  onUpdateSegmentLabel?.(segment.id, editingSegmentLabel);
+                                  setEditingSegmentId(null);
+                                } else if (e.key === "Escape") {
+                                  setEditingSegmentId(null);
+                                }
+                              }}
+                              onBlur={() => {
+                                onUpdateSegmentLabel?.(segment.id, editingSegmentLabel);
+                                setEditingSegmentId(null);
+                              }}
+                              onClick={(e) => e.stopPropagation()}
+                              autoFocus
+                              placeholder="Enter label..."
+                            />
+                          ) : (
+                            <span>{displayLabel}</span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </>
+            )}
+
             {/* Drawing preview */}
             {drawingRect && showAnnotations && (
               <div
@@ -391,11 +521,6 @@ function DetailView({
                 }}
               />
             )}
-          </div>
-
-          {/* Annotation hint */}
-          <div className="survey-detail-focused__hint">
-            Drag to annotate · Scroll to zoom · Esc to close
           </div>
         </div>
       </div>
@@ -417,6 +542,9 @@ export function SurveyView({
   onAnnotationsChange,
   onAnnotationSelect,
   onResizingChange,
+  segments = [],
+  showSegments = false,
+  onUpdateSegmentLabel,
 }: SurveyViewProps) {
   const selectedItem = items.find((item) => item.id === selectedItemId);
 
@@ -535,6 +663,9 @@ export function SurveyView({
                 onAnnotationSelect={onAnnotationSelect}
                 onResizingChange={onResizingChange}
                 onClose={handleCloseDetail}
+                segments={segments}
+                showSegments={showSegments}
+                onUpdateSegmentLabel={onUpdateSegmentLabel}
               />
             </div>
           </div>

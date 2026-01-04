@@ -4541,7 +4541,44 @@
   letter-spacing: 0.05em;
 }
 
-/* Action button (Save/Delete) in top-right */
+/* Action icon button (Save/Delete) in top-right - icon only */
+.spec-annotation__action-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  margin-left: auto;
+}
+
+.spec-annotation__action-icon svg {
+  width: 12px;
+  height: 12px;
+}
+
+.spec-annotation__action-icon--delete {
+  color: var(--dawn-30);
+}
+
+.spec-annotation__action-icon--delete:hover {
+  color: #dc5050;
+}
+
+.spec-annotation__action-icon--save {
+  color: var(--gold);
+}
+
+.spec-annotation__action-icon--save:hover {
+  color: var(--gold-70);
+}
+
+/* Legacy action button (keeping for backwards compat) */
 .spec-annotation__action {
   display: flex;
   align-items: center;
@@ -5415,13 +5452,46 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 4px 8px;
+  padding: 6px 8px;
   background: rgba(235, 227, 214, 0.03);
   border: 1px solid var(--dawn-08);
 }
 
 .spec-annotation--compact .spec-annotation__index {
   flex-shrink: 0;
+}
+
+/* Inline note in compact mode - grows to fill space */
+.spec-annotation__note--inline {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Inline input in compact mode - grows to fill space */
+.spec-annotation__input--inline {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--gold-30);
+  color: var(--gold);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  padding: 2px 0;
+  outline: none;
+}
+
+.spec-annotation__input--inline:focus {
+  border-bottom-color: var(--gold);
+}
+
+/* Action icon in compact mode - stays on far right */
+.spec-annotation--compact .spec-annotation__action-icon {
+  flex-shrink: 0;
+  margin-left: auto;
   font-family: var(--font-mono);
   font-size: 9px;
   color: var(--gold-50);
@@ -6197,44 +6267,87 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   ANNOTATION NUMBER BADGE - Outside the annotation box
+   SEGMENT OVERLAYS - SAM-generated UI element boxes
    ═══════════════════════════════════════════════════════════════ */
 
-.survey-canvas__annotation-number {
+.survey-segment-overlay {
+  border: 1px solid rgba(202, 165, 84, 0.3);
+  background: transparent;
+  cursor: pointer;
+  z-index: 3;
+  transition: all 0.15s ease;
+}
+
+.survey-segment-overlay:hover,
+.survey-segment-overlay--hovered {
+  border-color: var(--gold);
+  background: rgba(202, 165, 84, 0.08);
+}
+
+.survey-segment-overlay__label {
   position: absolute;
-  width: 20px;
-  height: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  top: -24px;
+  left: 0;
+  padding: 2px 8px;
   background: rgba(10, 9, 8, 0.9);
   border: 1px solid var(--gold-30);
   font-family: var(--font-mono);
   font-size: 10px;
-  color: var(--gold);
+  letter-spacing: 0.04em;
+  color: var(--dawn-70);
+  white-space: nowrap;
+  z-index: 10;
+}
+
+.survey-segment-overlay__input {
+  background: transparent;
+  border: none;
+  color: var(--dawn);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  outline: none;
+  width: 120px;
+}
+
+.survey-segment-overlay__input::placeholder {
+  color: var(--dawn-30);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ANNOTATION NUMBER BADGE - Outside the annotation box
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Annotation number badge - always visible, subtle dawn white */
+.survey-canvas__annotation-number {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--dawn-60);
   cursor: pointer;
   z-index: 15;
-  opacity: 0;
-  transition: all 0.15s ease;
-  pointer-events: none;
-}
-
-.survey-canvas__annotation-number--visible,
-.survey-canvas__annotation-number--active {
   opacity: 1;
+  transition: color 0.15s ease;
   pointer-events: auto;
-}
-
-.survey-canvas__annotation-number--active {
-  background: var(--gold);
-  color: var(--void);
-  border-color: var(--gold);
+  padding: 2px 4px;
+  background: transparent;
+  border: none;
 }
 
 .survey-canvas__annotation-number:hover {
-  background: var(--gold);
-  color: var(--void);
-  border-color: var(--gold);
+  color: var(--dawn);
+}
+
+.survey-canvas__annotation-number--active {
+  color: var(--dawn);
+}
+
+/* Keep these for backwards compat but no longer needed */
+.survey-canvas__annotation-number--visible {
+  opacity: 1;
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -6641,7 +6754,7 @@
 }
 
 .survey-grid__item:hover {
-  border-color: var(--gold-30);
+  border-color: var(--dawn-30);
   transform: translateY(-2px);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
 }
@@ -6651,6 +6764,11 @@
   height: auto;
   display: block;
   object-fit: cover;
+  transition: opacity 0.2s ease;
+}
+
+.survey-grid__item:hover .survey-grid__item-image {
+  opacity: 0.8;
 }
 
 .survey-grid__item-placeholder {
@@ -6688,9 +6806,10 @@
 
 .survey-grid__item-title {
   font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--dawn-80);
-  letter-spacing: 0.02em;
+  font-size: 10px;
+  color: var(--dawn);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -6698,24 +6817,9 @@
 }
 
 .survey-grid__item-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  margin-top: 6px;
+  display: none; /* Hide tags on hover as requested */
 }
 
-.survey-grid__item-tag {
-  font-family: var(--font-mono);
-  font-size: 8px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--gold-70);
-  background: rgba(202, 165, 84, 0.15);
-  padding: 2px 6px;
-  border: 1px solid var(--gold-20);
-}
-
-/* Annotation badge */
 /* Embedded indicator icon */
 .survey-grid__item-embedded {
   position: absolute;
@@ -6726,11 +6830,12 @@
   justify-content: center;
   width: 20px;
   height: 20px;
-  background: rgba(10, 9, 8, 0.6);
-  border: 1px solid var(--gold-30);
-  color: var(--gold);
+  background: transparent;
+  border: none;
+  color: var(--dawn);
   z-index: 10;
   pointer-events: none;
+  opacity: 0.6;
 }
 
 .survey-grid__item-embedded svg {
@@ -6959,13 +7064,14 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 48px 64px;
+  padding: 0; /* Remove padding to allow children to reach corners */
   background: var(--focus-overlay-bg);
   backdrop-filter: blur(var(--focus-overlay-blur));
   -webkit-backdrop-filter: blur(var(--focus-overlay-blur));
   border: 1px dashed var(--focus-overlay-border);
   border-radius: 0;
   cursor: pointer;
+  overflow: hidden; /* Keep zoomed image within dotted frame */
   box-shadow:
     0 0 0 1px rgba(235, 227, 214, 0.05),
     0 0 60px rgba(202, 165, 84, 0.1),
@@ -6985,21 +7091,52 @@
   justify-content: center;
 }
 
-.survey-detail-focused__label {
+/* Top bar: title left, eye icon right */
+.survey-detail-focused__top-bar {
   position: absolute;
-  top: -10px;
-  left: 50%;
-  transform: translateX(-50%);
-  padding: 4px 16px;
-  background: rgba(10, 9, 8, 0.95);
-  border: 1px solid rgba(235, 227, 214, 0.2);
-  border-radius: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px; /* Standard UI padding for headers */
+  z-index: 20;
+  pointer-events: none;
+  border-bottom: 1px solid var(--dawn-15);
+  background: rgba(10, 9, 8, 0.2); /* Very subtle fill to anchor the header */
+}
+
+.survey-detail-focused__top-bar > * {
+  pointer-events: auto;
+}
+
+.survey-detail-focused__label {
   font-family: var(--font-mono);
   font-size: 10px;
   letter-spacing: 0.12em;
-  color: rgba(235, 227, 214, 0.8);
+  color: var(--dawn);
   white-space: nowrap;
-  z-index: 1;
+  margin-left: 16px; /* Standardized margin for corner alignment */
+}
+
+/* Eye button - minimal, no frame */
+.survey-detail-focused__eye-btn {
+  background: transparent;
+  border: none;
+  color: var(--dawn);
+  cursor: pointer;
+  padding: 4px;
+  margin-right: 12px; /* Balanced spacing with the left title */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.7;
+  transition: opacity 0.15s ease;
+}
+
+.survey-detail-focused__eye-btn:hover {
+  opacity: 1;
 }
 
 .survey-detail-focused__content {
@@ -7017,7 +7154,8 @@
   align-items: center;
   justify-content: center;
   position: relative;
-  padding: 32px;
+  padding: 48px 64px; /* Restored padding here to keep image centered */
+  overflow: hidden; /* Keep zoomed image within frame */
 }
 
 .survey-detail-focused__image-container {
@@ -7029,6 +7167,12 @@
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
+  transition: transform 0.05s ease-out;
+}
+
+.survey-detail-focused__image-container--panning {
+  cursor: grabbing;
+  transition: none;
 }
 
 .survey-detail-focused__image {
@@ -7039,48 +7183,16 @@
   display: block;
 }
 
-/* Toolbar in detail overlay */
-.survey-detail-focused__toolbar {
-  position: absolute;
-  top: -10px;
-  right: 8px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  z-index: 20;
-}
-
-.survey-detail-focused__toolbar-btn {
-  width: 28px;
-  height: 28px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(10, 9, 8, 0.9);
-  border: 1px solid var(--dawn-15);
-  color: var(--dawn-50);
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.survey-detail-focused__toolbar-btn:hover {
-  border-color: var(--gold-50);
-  color: var(--gold);
-}
-
-.survey-detail-focused__toolbar-btn--active {
-  background: rgba(202, 165, 84, 0.15);
-  border-color: var(--gold-30);
-  color: var(--gold);
-}
-
+/* Zoom indicator - bottom right */
 .survey-detail-focused__zoom-indicator {
+  position: absolute;
+  bottom: 12px;
+  right: 16px; /* Aligned with standardized 16px horizontal gutter */
   font-family: var(--font-mono);
   font-size: 10px;
+  letter-spacing: 0.08em;
   color: var(--dawn-50);
-  padding: 4px 8px;
-  background: rgba(10, 9, 8, 0.8);
-  border: 1px solid var(--dawn-08);
+  z-index: 20;
 }
 
 .survey-detail-focused__hint {
@@ -8712,6 +8824,76 @@
   opacity: 0.4;
   cursor: not-allowed;
   border-color: var(--dawn-15);
+}
+
+/* ─── SEGMENT SECTION ─── */
+.flow-connector__segment-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.flow-connector__segment-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.flow-connector__segment-btn {
+  flex: 1;
+  padding: 10px 16px;
+  background: linear-gradient(135deg, rgba(202, 165, 84, 0.1) 0%, rgba(202, 165, 84, 0.05) 100%);
+  border: 1px solid var(--gold-30);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: var(--gold);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-transform: uppercase;
+}
+
+.flow-connector__segment-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, rgba(202, 165, 84, 0.2) 0%, rgba(202, 165, 84, 0.1) 100%);
+  border-color: var(--gold);
+}
+
+.flow-connector__segment-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.flow-connector__toggle-btn {
+  padding: 10px 16px;
+  background: transparent;
+  border: 1px solid var(--dawn-15);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: var(--dawn-50);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.flow-connector__toggle-btn:hover {
+  border-color: var(--dawn-30);
+  color: var(--dawn-70);
+}
+
+.flow-connector__toggle-btn--active {
+  background: rgba(202, 165, 84, 0.1);
+  border-color: var(--gold-30);
+  color: var(--gold);
+}
+
+.flow-connector__segment-info {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  color: var(--dawn-40);
 }
 
 /* ═══════════════════════════════════════════════════════════════

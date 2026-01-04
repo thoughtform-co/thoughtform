@@ -88,6 +88,11 @@ function AstrogationContent() {
     generateBriefing,
     embedItem,
     semanticSearch,
+    generateSegments,
+    loadSegments,
+    updateSegmentLabel,
+    isSegmenting,
+    segments,
     itemCounts,
     isAnalyzing,
     isEmbedding,
@@ -103,17 +108,56 @@ function AstrogationContent() {
     surveySelectedItemId,
   });
 
-  // File input ref for navbar upload
-  const navUploadRef = useRef<HTMLInputElement>(null);
+  // Segment visibility toggle
+  const [showSegments, setShowSegments] = useState(false);
+
+  // Get user for Supabase persistence
+  const { user } = useAuth();
 
   // Forge state - forge is a special "mode" that shows the vector editor in the center panel
   const [isForgeMode, setIsForgeMode] = useState(false);
   const [forgeDoc, setForgeDoc] = useState<VectorDocument | null>(null);
   const [forgeSvg, setForgeSvg] = useState<string | null>(null);
+  const [forgeDocId, setForgeDocId] = useState<string | null>(null);
+  const forgeSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Load forge data from Supabase on mount
+  useEffect(() => {
+    async function loadForgeData() {
+      if (!user?.id) return;
+
+      try {
+        const { data, error } = await supabase
+          .from("forge_documents")
+          .select("id, document, svg")
+          .eq("user_id", user.id)
+          .order("updated_at", { ascending: false })
+          .limit(1)
+          .single();
+
+        if (error && error.code !== "PGRST116") {
+          // PGRST116 = no rows returned, which is fine for new users
+          console.error("Failed to load forge data:", error);
+          return;
+        }
+
+        if (data) {
+          setForgeDocId(data.id);
+          setForgeDoc(data.document as VectorDocument);
+          setForgeSvg(data.svg);
+        }
+      } catch (e) {
+        console.error("Failed to load forge data from Supabase:", e);
+      }
+    }
+
+    loadForgeData();
+  }, [user?.id]);
 
   const handleOpenForge = useCallback(() => {
-    // Clear any selected component - forge is its own mode
+    // Clear any selected component and focus state - forge is its own mode
     dispatch(actions.selectComponent(null));
+    dispatch(actions.setFocus(false));
     setIsForgeMode(true);
   }, [dispatch]);
 
@@ -121,20 +165,49 @@ function AstrogationContent() {
     setIsForgeMode(false);
   }, []);
 
-  const handleForgeDocChange = useCallback((doc: VectorDocument, svg: string) => {
-    setForgeDoc(doc);
-    setForgeSvg(svg);
-  }, []);
+  const handleForgeDocChange = useCallback(
+    (doc: VectorDocument, svg: string) => {
+      setForgeDoc(doc);
+      setForgeSvg(svg);
 
-  const handleNavUpload = useCallback(
-    async (e: React.ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0];
-      if (!file) return;
-      await uploadItem(file, surveyCategoryId, surveyComponentKey);
-      // Reset input so same file can be re-uploaded
-      if (navUploadRef.current) navUploadRef.current.value = "";
+      // Debounce Supabase save (500ms)
+      if (forgeSaveTimerRef.current) {
+        clearTimeout(forgeSaveTimerRef.current);
+      }
+
+      forgeSaveTimerRef.current = setTimeout(async () => {
+        if (!user?.id) return;
+
+        try {
+          if (forgeDocId) {
+            // Update existing document
+            await supabase
+              .from("forge_documents")
+              .update({ document: doc, svg, updated_at: new Date().toISOString() })
+              .eq("id", forgeDocId);
+          } else {
+            // Create new document
+            const { data, error } = await supabase
+              .from("forge_documents")
+              .insert({ user_id: user.id, document: doc, svg })
+              .select("id")
+              .single();
+
+            if (error) {
+              console.error("Failed to create forge document:", error);
+              return;
+            }
+
+            if (data) {
+              setForgeDocId(data.id);
+            }
+          }
+        } catch (e) {
+          console.error("Failed to save forge data to Supabase:", e);
+        }
+      }, 500);
     },
-    [uploadItem, surveyCategoryId, surveyComponentKey]
+    [user?.id, forgeDocId]
   );
 
   // Auto-hide toast after 2 seconds
@@ -146,13 +219,25 @@ function AstrogationContent() {
   }, [toast]);
 
   // Handlers
-  const handleSelectCategory = useCallback((id: string) => {
-    dispatch(actions.selectCategory(id));
-  }, []);
+  const handleSelectCategory = useCallback(
+    (id: string) => {
+      dispatch(actions.selectCategory(id));
+      if (isForgeMode) {
+        setIsForgeMode(false);
+      }
+    },
+    [isForgeMode, dispatch]
+  );
 
-  const handleSelectComponent = useCallback((id: string) => {
-    dispatch(actions.selectComponent(id));
-  }, []);
+  const handleSelectComponent = useCallback(
+    (id: string) => {
+      dispatch(actions.selectComponent(id));
+      if (isForgeMode) {
+        setIsForgeMode(false);
+      }
+    },
+    [isForgeMode, dispatch]
+  );
 
   // Handle component class change from the Foundry inspector
   const handleComponentClassChange = useCallback((categoryId: string, componentKey: string) => {
@@ -299,6 +384,14 @@ function AstrogationContent() {
   // Track annotation resizing state
   const [isAnnotationResizing, setIsAnnotationResizing] = useState(false);
 
+  // Track selected annotation (for syncing canvas <-> inspector)
+  const [selectedAnnotationId, setSelectedAnnotationId] = useState<string | null>(null);
+
+  // Clear annotation selection when item changes
+  useEffect(() => {
+    setSelectedAnnotationId(null);
+  }, [surveySelectedItemId]);
+
   // Get selected survey item and load full data if needed
   const selectedSurveyItem = surveyItems.find((item) => item.id === surveySelectedItemId) || null;
 
@@ -317,10 +410,32 @@ function AstrogationContent() {
     }
   }, [surveySelectedItemId, selectedSurveyItem, loadItemFullData]);
 
+  // Load segments when a survey item is selected
+  useEffect(() => {
+    if (surveySelectedItemId) {
+      loadSegments(surveySelectedItemId).catch(() => {
+        // Silently fail if segments can't be loaded
+      });
+    }
+  }, [surveySelectedItemId, loadSegments]);
+
+  // Handle generating segments for current item
+  const handleGenerateSegments = useCallback(() => {
+    if (surveySelectedItemId) {
+      generateSegments(surveySelectedItemId);
+    }
+  }, [surveySelectedItemId, generateSegments]);
+
+  // Handle toggling segment visibility
+  const handleToggleSegments = useCallback(() => {
+    setShowSegments((prev) => !prev);
+  }, []);
+
   // Bundle Survey props for cleaner component API
-  const surveyProps: SurveyViewBundledProps = {
+  const surveyProps = {
     items: surveyItems,
     selectedItemId: surveySelectedItemId,
+    selectedAnnotationId,
     loading: surveyLoading,
     searchQuery: surveySearchQuery,
     isSearching: surveyIsSearching,
@@ -329,7 +444,12 @@ function AstrogationContent() {
     onSearchQueryChange: handleSurveySearchQueryChange,
     onSearch: handleSurveySearch,
     onAnnotationsChange: handleSurveyAnnotationsChange,
+    onAnnotationSelect: setSelectedAnnotationId,
     onResizingChange: setIsAnnotationResizing,
+    // Segmentation
+    segments,
+    showSegments,
+    onUpdateSegmentLabel: updateSegmentLabel,
   };
 
   return (
@@ -371,25 +491,63 @@ function AstrogationContent() {
           <span className="title-icon">⬡</span>
           <span>Astrogation</span>
         </div>
-        {/* Upload button - visible on survey tab */}
-        {activeTab === "survey" && (
-          <>
-            <input
-              ref={navUploadRef}
-              type="file"
-              accept="image/png,image/jpeg,image/webp,image/gif"
-              onChange={handleNavUpload}
-              style={{ display: "none" }}
-            />
-            <button
-              className="astrogation-nav__upload-btn"
-              onClick={() => navUploadRef.current?.click()}
-              title="Upload reference image"
+        {/* Action buttons - right side of navbar */}
+        <div className="astrogation-nav__actions">
+          <input
+            type="file"
+            id="nav-upload-input"
+            accept="image/png,image/jpeg,image/webp,image/gif"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) {
+                uploadItem(file, surveyCategoryId, surveyComponentKey);
+                e.target.value = "";
+              }
+            }}
+            style={{ display: "none" }}
+          />
+          <button
+            className="nav-action-btn"
+            onClick={() => document.getElementById("nav-upload-input")?.click()}
+            title="Upload reference image"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              width="16"
+              height="16"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
             >
-              + Upload
-            </button>
-          </>
-        )}
+              <path
+                d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </button>
+          <button
+            className="nav-action-btn"
+            onClick={handleOpenForge}
+            title="Open Forge (Vector Editor)"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              width="16"
+              height="16"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+            >
+              <path
+                d="M12 2L21.5 7.5V16.5L12 22L2.5 16.5V7.5L12 2Z"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <path d="M12 8V16M8 10V14M16 10V14" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+        </div>
       </nav>
 
       {/* Content Area */}
@@ -414,7 +572,6 @@ function AstrogationContent() {
             onSelectCategory={handleSelectCategory}
             selectedComponentId={selectedComponentId}
             onSelectComponent={handleSelectComponent}
-            onOpenForge={handleOpenForge}
           />
         )}
 
@@ -453,12 +610,19 @@ function AstrogationContent() {
             onUpload={uploadItem}
             selectedCategoryId={surveyCategoryId}
             selectedComponentKey={surveyComponentKey}
+            selectedAnnotationId={selectedAnnotationId}
+            onAnnotationSelect={setSelectedAnnotationId}
             isAnalyzing={isAnalyzing}
             isEmbedding={isEmbedding}
             isBriefing={isBriefing}
             isSaving={isSaving}
             isResizing={isAnnotationResizing}
             pipelineStatus={pipelineStatus}
+            onGenerateSegments={handleGenerateSegments}
+            onToggleSegments={handleToggleSegments}
+            isSegmenting={isSegmenting}
+            showSegments={showSegments}
+            segmentCount={segments.length}
           />
         ) : activeTab === "foundry" ? (
           <DialsPanel

@@ -289,12 +289,12 @@ export function AnnotationBox({
         />
       </div>
 
-      {/* Number badge - outside the annotation box, top-right */}
+      {/* Number badge - outside the annotation box, top-right, always visible */}
       <button
-        className={`survey-canvas__annotation-number ${isPopoverOpen || isSelected ? "survey-canvas__annotation-number--active" : ""} ${isHovered ? "survey-canvas__annotation-number--visible" : ""}`}
+        className={`survey-canvas__annotation-number ${isPopoverOpen || isSelected ? "survey-canvas__annotation-number--active" : ""}`}
         style={{
           left: `calc(${annotation.x + annotation.width}% + 4px)`,
-          top: `calc(${annotation.y}% - 12px)`,
+          top: `calc(${annotation.y}% - 4px)`,
         }}
         onClick={handleBadgeClick}
         title={`Annotation #${index}`}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useCallback, useState, useMemo, useRef } from "react";
-import type { SurveyItem } from "../_components/types";
+import type { SurveyItem, SurveySegment } from "../_components/types";
 import type { AstrogationAction } from "../_state/astrogationReducer";
 import { actions } from "../_state/astrogationReducer";
 import { useAuth } from "@/components/auth/AuthProvider";
@@ -43,6 +43,12 @@ export interface UseSurveyReturn {
     annotationId: string,
     bounds?: { x: number; y: number; width: number; height: number }
   ) => Promise<unknown>;
+  // Segmentation
+  generateSegments: (itemId: string) => Promise<SurveySegment[] | null>;
+  loadSegments: (itemId: string) => Promise<SurveySegment[]>;
+  updateSegmentLabel: (segmentId: string, label: string) => Promise<void>;
+  isSegmenting: boolean;
+  segments: SurveySegment[];
   itemCounts: Record<string, number>;
   isAnalyzing: boolean;
   isEmbedding: boolean;
@@ -149,6 +155,8 @@ export function useSurvey({
   const [pipelineStatus, setPipelineStatus] = useState<PipelineStatus>("idle");
   const [searchSpace, setSearchSpace] = useState<SearchSpace>("briefing");
   const [allItems, setAllItems] = useState<SurveyItem[]>([]);
+  const [isSegmenting, setIsSegmenting] = useState(false);
+  const [segments, setSegments] = useState<SurveySegment[]>([]);
 
   // Refs for stable callback access
   const selectedItemIdRef = useRef(surveySelectedItemId);
@@ -442,6 +450,7 @@ export function useSurvey({
       }, 30000);
 
       dispatch(actions.surveyAddItem(data.item));
+      dispatch(actions.surveySelectItem(data.item.id)); // Auto-select the new item
       dispatch(actions.showToast("Reference uploaded"));
       setAllItems((prev) => [data.item, ...prev]);
 
@@ -681,6 +690,71 @@ export function useSurvey({
     [fetcher, loadItemFullData]
   );
 
+  // ═══════════════════════════════════════════════════════════════
+  // SEGMENTATION - SAM-based UI element extraction
+  // ═══════════════════════════════════════════════════════════════
+
+  const loadSegments = useCallback(
+    async (itemId: string): Promise<SurveySegment[]> => {
+      try {
+        const data = await fetcher<{ segments: SurveySegment[] }>(
+          `/api/survey/segments?itemId=${itemId}`
+        );
+        setSegments(data.segments || []);
+        return data.segments || [];
+      } catch (error) {
+        console.error("Failed to load segments:", error);
+        setSegments([]);
+        return [];
+      }
+    },
+    [fetcher]
+  );
+
+  const generateSegments = useCallback(
+    async (itemId: string): Promise<SurveySegment[] | null> => {
+      setIsSegmenting(true);
+      dispatch(actions.showToast("Generating segments..."));
+
+      try {
+        const data = await fetcher<{ segments: SurveySegment[] }>("/api/survey/segments/generate", {
+          method: "POST",
+          body: { itemId },
+        });
+
+        setSegments(data.segments || []);
+        dispatch(actions.showToast(`Found ${data.segments?.length || 0} segments`));
+        return data.segments || [];
+      } catch (error) {
+        console.error("Failed to generate segments:", error);
+        dispatch(actions.showToast("Failed to generate segments"));
+        return null;
+      } finally {
+        setIsSegmenting(false);
+      }
+    },
+    [dispatch, fetcher]
+  );
+
+  const updateSegmentLabel = useCallback(
+    async (segmentId: string, label: string): Promise<void> => {
+      try {
+        await fetcher<{ segment: SurveySegment }>(`/api/survey/segments`, {
+          method: "PATCH",
+          body: { segmentId, updates: { label } },
+        });
+
+        // Update local state
+        setSegments((prev) => prev.map((s) => (s.id === segmentId ? { ...s, label } : s)));
+        dispatch(actions.showToast("Segment label saved"));
+      } catch (error) {
+        console.error("Failed to update segment label:", error);
+        dispatch(actions.showToast("Failed to save segment label"));
+      }
+    },
+    [dispatch, fetcher]
+  );
+
   // Cleanup abort controllers on unmount
   useEffect(() => {
     return () => {
@@ -700,6 +774,12 @@ export function useSurvey({
     embedItem,
     semanticSearch,
     generateAnnotationCrop,
+    // Segmentation
+    generateSegments,
+    loadSegments,
+    updateSegmentLabel,
+    isSegmenting,
+    segments,
     itemCounts,
     isAnalyzing,
     isEmbedding,

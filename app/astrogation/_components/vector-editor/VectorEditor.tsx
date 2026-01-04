@@ -17,7 +17,7 @@ import type {
 // Default colors from Thoughtform palette
 const DEFAULT_FILL = "#caa554";
 const DEFAULT_STROKE = "rgba(235, 227, 214, 0.5)";
-const CANVAS_BG = "#0a0908";
+const CANVAS_BG = "transparent";
 
 // Type definitions for Fabric.js v6
 type FabricCanvas = InstanceType<typeof import("fabric").Canvas>;
@@ -31,16 +31,19 @@ export function VectorEditor({ vectorDoc, onDocumentChange, onClose }: VectorEdi
 
   // Use refs for values that need to be accessed in event callbacks
   const activeToolRef = useRef<EditorTool>("select");
-  const gridRef = useRef<GridSettings>({ enabled: true, size: 20, snap: true });
+  const gridRef = useRef<GridSettings>({ enabled: false, size: 20, snap: true });
   const isDrawingRef = useRef(false);
   const drawStartRef = useRef<{ x: number; y: number } | null>(null);
   const activeShapeRef = useRef<FabricObject | null>(null);
   const isLoadingRef = useRef(false);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastLoadedDocRef = useRef<string | null>(null);
+  const lastSavedDocRef = useRef<string | null>(null);
 
   // State for UI (these trigger re-renders)
   const [activeTool, setActiveTool] = useState<EditorTool>("select");
-  const [grid, setGrid] = useState<GridSettings>({ enabled: true, size: 20, snap: true });
+  // Grid disabled by default - use foundry background grid instead
+  const [grid, setGrid] = useState<GridSettings>({ enabled: false, size: 20, snap: true });
   const [history, setHistory] = useState<HistoryState>({ past: [], future: [] });
   const [fabricLoaded, setFabricLoaded] = useState(false);
   const [canvasSize, setCanvasSize] = useState({ width: 800, height: 600 });
@@ -61,10 +64,10 @@ export function VectorEditor({ vectorDoc, onDocumentChange, onClose }: VectorEdi
     function updateSize() {
       if (containerRef.current) {
         const rect = containerRef.current.getBoundingClientRect();
-        // Leave space for toolbar (64px) and some padding
+        // Fill the entire space - toolbar floats on top
         setCanvasSize({
-          width: Math.floor(rect.width - 48),
-          height: Math.floor(rect.height - 48),
+          width: Math.floor(rect.width),
+          height: Math.floor(rect.height),
         });
       }
     }
@@ -115,6 +118,10 @@ export function VectorEditor({ vectorDoc, onDocumentChange, onClose }: VectorEdi
         objects: json.objects || [],
         background: json.background,
       };
+
+      // Track what we're saving to prevent reload loop
+      const docString = JSON.stringify(doc);
+      lastSavedDocRef.current = docString;
 
       const { width, height } = canvasSize;
       const svg = canvas.toSVG({
@@ -251,20 +258,6 @@ export function VectorEditor({ vectorDoc, onDocumentChange, onClose }: VectorEdi
               });
               break;
 
-            case "ellipse":
-              shape = new fabric.Ellipse({
-                left: x,
-                top: y,
-                rx: 1,
-                ry: 1,
-                fill: DEFAULT_FILL,
-                stroke: DEFAULT_STROKE,
-                strokeWidth: 1,
-                originX: "left",
-                originY: "top",
-              });
-              break;
-
             case "line":
               shape = new fabric.Line([x, y, x, y], {
                 stroke: DEFAULT_FILL,
@@ -328,15 +321,6 @@ export function VectorEditor({ vectorDoc, onDocumentChange, onClose }: VectorEdi
               shape.set({ left, top, width: width || 1, height: height || 1 });
               break;
 
-            case "ellipse":
-              (shape as InstanceType<typeof import("fabric").Ellipse>).set({
-                left,
-                top,
-                rx: width / 2 || 1,
-                ry: height / 2 || 1,
-              });
-              break;
-
             case "line":
               (shape as InstanceType<typeof import("fabric").Line>).set({
                 x2: currentX,
@@ -376,13 +360,13 @@ export function VectorEditor({ vectorDoc, onDocumentChange, onClose }: VectorEdi
         if (vectorDoc) {
           isLoadingRef.current = true;
           const jsonDoc = typeof vectorDoc === "string" ? JSON.parse(vectorDoc) : vectorDoc;
+          // Track that we loaded this document to prevent re-loading
+          lastLoadedDocRef.current =
+            typeof vectorDoc === "string" ? vectorDoc : JSON.stringify(vectorDoc);
           canvas.loadFromJSON(jsonDoc).then(() => {
             canvas.renderAll();
             isLoadingRef.current = false;
-            drawGrid();
           });
-        } else {
-          drawGrid();
         }
 
         setFabricLoaded(true);
@@ -405,6 +389,36 @@ export function VectorEditor({ vectorDoc, onDocumentChange, onClose }: VectorEdi
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // ─────────────────────────────────────────────────────────────
+  // Load document when vectorDoc prop changes
+  // ─────────────────────────────────────────────────────────────
+
+  useEffect(() => {
+    // Skip if canvas not ready
+    if (!fabricRef.current || !fabricLoaded) return;
+    if (!vectorDoc) return;
+
+    // Create a hash of the document to detect changes
+    const docString = typeof vectorDoc === "string" ? vectorDoc : JSON.stringify(vectorDoc);
+
+    // Skip if we already loaded this exact document
+    if (lastLoadedDocRef.current === docString) return;
+
+    // Skip if this is a document we just saved (prevent reload loop)
+    if (lastSavedDocRef.current === docString) return;
+
+    lastLoadedDocRef.current = docString;
+
+    const canvas = fabricRef.current;
+    isLoadingRef.current = true;
+
+    const jsonDoc = typeof vectorDoc === "string" ? JSON.parse(vectorDoc) : vectorDoc;
+    canvas.loadFromJSON(jsonDoc).then(() => {
+      canvas.renderAll();
+      isLoadingRef.current = false;
+    });
+  }, [vectorDoc, fabricLoaded]);
 
   // ─────────────────────────────────────────────────────────────
   // Tool actions
@@ -446,7 +460,12 @@ export function VectorEditor({ vectorDoc, onDocumentChange, onClose }: VectorEdi
     const activeObjects = canvas.getActiveObjects();
 
     if (activeObjects.length > 0) {
-      saveToHistory();
+      // Save history before deleting
+      const json = JSON.stringify(canvas.toJSON());
+      setHistory((prev) => ({
+        past: [...prev.past.slice(-19), json],
+        future: [],
+      }));
       activeObjects.forEach((obj: FabricObject) => canvas.remove(obj));
       canvas.discardActiveObject();
       canvas.renderAll();
@@ -460,7 +479,12 @@ export function VectorEditor({ vectorDoc, onDocumentChange, onClose }: VectorEdi
     const activeObject = canvas.getActiveObject();
 
     if (activeObject) {
-      saveToHistory();
+      // Save history before duplicating
+      const json = JSON.stringify(canvas.toJSON());
+      setHistory((prev) => ({
+        past: [...prev.past.slice(-19), json],
+        future: [],
+      }));
       activeObject.clone().then((cloned: FabricObject) => {
         cloned.set({
           left: (cloned.left || 0) + 20,
@@ -476,15 +500,6 @@ export function VectorEditor({ vectorDoc, onDocumentChange, onClose }: VectorEdi
   // ─────────────────────────────────────────────────────────────
   // History
   // ─────────────────────────────────────────────────────────────
-
-  const saveToHistory = useCallback(() => {
-    if (!fabricRef.current) return;
-    const json = JSON.stringify(fabricRef.current.toJSON());
-    setHistory((prev) => ({
-      past: [...prev.past.slice(-19), json],
-      future: [],
-    }));
-  }, []);
 
   const handleUndo = useCallback(() => {
     if (!fabricRef.current || history.past.length === 0) return;
@@ -582,9 +597,6 @@ export function VectorEditor({ vectorDoc, onDocumentChange, onClose }: VectorEdi
           case "r":
             handleToolChange("rect");
             break;
-          case "o":
-            handleToolChange("ellipse");
-            break;
           case "l":
             handleToolChange("line");
             break;
@@ -666,20 +678,6 @@ export function VectorEditor({ vectorDoc, onDocumentChange, onClose }: VectorEdi
 
   return (
     <div className="vector-editor" ref={containerRef} tabIndex={0}>
-      {/* Header with close button */}
-      <div className="vector-editor__header">
-        <div className="vector-editor__title">
-          <span className="vector-editor__title-icon">⬡</span>
-          <span>FORGE</span>
-        </div>
-        {onClose && (
-          <button className="vector-editor__close" onClick={onClose} title="Close (Esc)">
-            <span className="vector-editor__close-icon">←</span>
-            <span>Back to Catalog</span>
-          </button>
-        )}
-      </div>
-
       {/* Canvas area */}
       <div className="vector-editor__canvas-area">
         <canvas ref={canvasRef} />
