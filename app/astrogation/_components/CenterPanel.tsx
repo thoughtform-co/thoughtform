@@ -154,6 +154,9 @@ export function CenterPanel({
             onResizingChange={survey.onResizingChange}
             segments={survey.segments}
             showSegments={survey.showSegments}
+            isSegmenting={survey.isSegmenting}
+            onGenerateSegments={survey.onGenerateSegments}
+            onToggleSegments={survey.onToggleSegments}
             onUpdateSegmentLabel={survey.onUpdateSegmentLabel}
           />
         )}

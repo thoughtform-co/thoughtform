@@ -91,7 +91,9 @@ function AstrogationContent() {
     generateSegments,
     loadSegments,
     updateSegmentLabel,
+    labelSegments,
     isSegmenting,
+    isLabelingSegments,
     segments,
     itemCounts,
     isAnalyzing,
@@ -125,6 +127,7 @@ function AstrogationContent() {
   useEffect(() => {
     async function loadForgeData() {
       if (!user?.id) return;
+      if (!supabase) return;
 
       try {
         const { data, error } = await supabase
@@ -177,6 +180,7 @@ function AstrogationContent() {
 
       forgeSaveTimerRef.current = setTimeout(async () => {
         if (!user?.id) return;
+        if (!supabase) return;
 
         try {
           if (forgeDocId) {
@@ -422,6 +426,8 @@ function AstrogationContent() {
   // Handle generating segments for current item
   const handleGenerateSegments = useCallback(() => {
     if (surveySelectedItemId) {
+      // Auto-show the overlay so results are immediately visible in the popup.
+      setShowSegments(true);
       generateSegments(surveySelectedItemId);
     }
   }, [surveySelectedItemId, generateSegments]);
@@ -430,6 +436,12 @@ function AstrogationContent() {
   const handleToggleSegments = useCallback(() => {
     setShowSegments((prev) => !prev);
   }, []);
+
+  const handleLabelSegments = useCallback(() => {
+    if (surveySelectedItemId) {
+      labelSegments(surveySelectedItemId);
+    }
+  }, [surveySelectedItemId, labelSegments]);
 
   // Bundle Survey props for cleaner component API
   const surveyProps = {
@@ -449,6 +461,9 @@ function AstrogationContent() {
     // Segmentation
     segments,
     showSegments,
+    isSegmenting,
+    onGenerateSegments: handleGenerateSegments,
+    onToggleSegments: handleToggleSegments,
     onUpdateSegmentLabel: updateSegmentLabel,
   };
 
@@ -620,7 +635,9 @@ function AstrogationContent() {
             pipelineStatus={pipelineStatus}
             onGenerateSegments={handleGenerateSegments}
             onToggleSegments={handleToggleSegments}
+            onLabelSegments={handleLabelSegments}
             isSegmenting={isSegmenting}
+            isLabelingSegments={isLabelingSegments}
             showSegments={showSegments}
             segmentCount={segments.length}
           />

@@ -7,10 +7,16 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase";
 import { isAuthorized } from "@/lib/auth-server";
 import Replicate from "replicate";
+import sharp from "sharp";
 
 const BUCKET_NAME = "survey-media";
 const SEGMENTER_URL = process.env.SEGMENTER_URL || "http://localhost:8001";
 const REPLICATE_API_TOKEN = process.env.REPLICATE_API_TOKEN;
+// Allow overriding the model/version via env for easy hotfixes without redeploy.
+// Default version copied from Replicate's API page (Node.js example).
+const REPLICATE_SAM2_MODEL =
+  process.env.REPLICATE_SAM2_MODEL ||
+  "meta/sam-2:fe97b453a6455861e3bac769b441ca1f1086110da7466dbb65cf1eecfd60dc83";
 
 // Initialize Replicate if token is available
 const replicate = REPLICATE_API_TOKEN ? new Replicate({ auth: REPLICATE_API_TOKEN }) : null;
@@ -41,6 +47,66 @@ interface GenerateRequest {
   stabilityScoreThresh?: number;
   minMaskRegionArea?: number;
   maxSegments?: number;
+}
+
+type MaskStats = {
+  width: number;
+  height: number;
+  area: number;
+  bbox: [number, number, number, number]; // [x, y, w, h]
+};
+
+async function computeMaskStatsFromUrl(maskUrl: string): Promise<MaskStats | null> {
+  const res = await fetch(maskUrl);
+  if (!res.ok) {
+    throw new Error(`Failed to fetch mask (${res.status})`);
+  }
+
+  const arrayBuffer = await res.arrayBuffer();
+  const buffer = Buffer.from(arrayBuffer);
+
+  const { data, info } = await sharp(buffer)
+    .ensureAlpha()
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+
+  const width = info.width;
+  const height = info.height;
+  let minX = width;
+  let minY = height;
+  let maxX = -1;
+  let maxY = -1;
+  let area = 0;
+
+  // Heuristic: treat "on-mask" pixels as bright pixels (white) with any alpha.
+  // This works for both (a) white-on-black masks and (b) white-on-transparent masks.
+  const ON_THRESHOLD = 127;
+
+  for (let y = 0; y < height; y++) {
+    const rowOffset = y * width * 4;
+    for (let x = 0; x < width; x++) {
+      const idx = rowOffset + x * 4;
+      const r = data[idx] ?? 0;
+      const g = data[idx + 1] ?? 0;
+      const b = data[idx + 2] ?? 0;
+      const a = data[idx + 3] ?? 0;
+
+      if (a > 0 && (r + g + b) / 3 > ON_THRESHOLD) {
+        area++;
+        if (x < minX) minX = x;
+        if (y < minY) minY = y;
+        if (x > maxX) maxX = x;
+        if (y > maxY) maxY = y;
+      }
+    }
+  }
+
+  if (area === 0 || maxX < minX || maxY < minY) {
+    return null;
+  }
+
+  const bbox: [number, number, number, number] = [minX, minY, maxX - minX + 1, maxY - minY + 1];
+  return { width, height, area, bbox };
 }
 
 export async function POST(request: NextRequest) {
@@ -95,72 +161,89 @@ export async function POST(request: NextRequest) {
     if (replicate) {
       console.log("Using Replicate for segmentation...");
       try {
-        // Run SAM-2 on Replicate
-        // Version hash from https://replicate.com/meta/sam-2/api
+        // Run SAM-2 on Replicate.
+        // NOTE: This model returns mask image URLs (combined_mask, individual_masks), not bbox objects.
         const output = (await replicate.run(
-          "meta/sam-2:fe97b453a6455861e3bac769b441ca1f1086119da7466dbb65cf1eecfd00dc83",
+          REPLICATE_SAM2_MODEL as `${string}/${string}` | `${string}/${string}:${string}`,
           {
             input: {
               image: signedData.signedUrl,
+              use_m2m: true,
+              points_per_side: pointsPerSide,
+              pred_iou_thresh: predIouThresh,
+              stability_score_thresh: stabilityScoreThresh,
             },
           }
         )) as any;
 
         console.log("Replicate output keys:", Object.keys(output || {}));
 
-        // Replicate's SAM-2 output format can vary. It usually includes masks or segments.
-        const rawSegments =
-          output?.masks || output?.segments || output?.output?.masks || output?.output?.segments;
-
-        if (!rawSegments || !Array.isArray(rawSegments)) {
+        const rawMasks = output?.individual_masks;
+        if (!rawMasks || !Array.isArray(rawMasks) || rawMasks.length === 0) {
           console.error(
             "Replicate returned unexpected format:",
             JSON.stringify(output).substring(0, 500)
           );
-          throw new Error("Replicate returned no valid segments or masks");
+          throw new Error("Replicate returned no individual_masks");
         }
 
-        const segments: SAMSegment[] = rawSegments.map((mask: any, index: number) => {
-          // Bbox in Replicate is usually [x, y, w, h] or [y1, x1, y2, x2]
-          let x = 0,
-            y = 0,
-            w = 0,
-            h = 0;
+        // Compute bbox + area from each returned mask image.
+        // To avoid huge CPU/network costs, we process a capped number of masks then take the top areas.
+        const maxMasksToProcess = Math.min(rawMasks.length, Math.max(maxSegments * 4, maxSegments));
+        const maskUrls: string[] = rawMasks.slice(0, maxMasksToProcess);
+        const computed: Array<{ stats: MaskStats; maskUrl: string }> = [];
 
-          if (Array.isArray(mask.bbox)) {
-            if (mask.bbox.length === 4) {
-              [x, y, w, h] = mask.bbox;
-            }
-          } else if (mask.box_2d) {
-            // Some models use box_2d
-            [y, x, h, w] = mask.box_2d; // Some models use [y1, x1, y2, x2]
-            w = w - x;
-            h = h - y;
+        // Small concurrency to keep memory stable.
+        const CONCURRENCY = 3;
+        for (let i = 0; i < maskUrls.length; i += CONCURRENCY) {
+          const batch = maskUrls.slice(i, i + CONCURRENCY);
+          const batchResults = await Promise.all(
+            batch.map(async (maskUrl) => {
+              const stats = await computeMaskStatsFromUrl(maskUrl);
+              return stats ? { stats, maskUrl } : null;
+            })
+          );
+          for (const r of batchResults) {
+            if (r) computed.push(r);
           }
+        }
 
-          return {
-            id: index,
-            area: mask.area || w * h,
-            bbox: [x, y, w, h],
-            predicted_iou: mask.predicted_iou || 0.95,
-            stability_score: mask.stability_score || 0.95,
-            crop_bbox: [x, y, w, h], // Simple crop for now
-          };
-        });
+        if (computed.length === 0) {
+          throw new Error("Replicate returned masks, but none contained any on-pixels");
+        }
+
+        computed.sort((a, b) => b.stats.area - a.stats.area);
+        const top = computed.slice(0, maxSegments);
+
+        const segments: SAMSegment[] = top.map(({ stats }, index) => ({
+          id: index,
+          area: stats.area,
+          bbox: [...stats.bbox],
+          predicted_iou: predIouThresh,
+          stability_score: stabilityScoreThresh,
+          crop_bbox: [...stats.bbox], // Simple crop for now
+        }));
 
         samResponse = {
           success: true,
-          image_width: item.image_width || 0,
-          image_height: item.image_height || 0,
+          image_width: item.image_width || top[0]!.stats.width || 0,
+          image_height: item.image_height || top[0]!.stats.height || 0,
           segment_count: segments.length,
           segments,
-          model_used: "sam-2 (replicate)",
+          model_used: `sam-2 (replicate)`,
         };
       } catch (replicateError) {
-        console.error("Replicate SAM-2 error:", replicateError);
+        // IMPORTANT: do not log the full Replicate error object because it can contain the auth header.
+        const message =
+          replicateError instanceof Error ? replicateError.message : String(replicateError);
+        console.error("Replicate SAM-2 error:", message);
         return NextResponse.json(
           {
-            error: `Replicate segmentation failed: ${replicateError instanceof Error ? replicateError.message : "Unknown error"}`,
+            error: `Replicate segmentation failed: ${message}`,
+            hint:
+              message.includes("Invalid version") || message.includes("not permitted")
+                ? "Check REPLICATE_SAM2_MODEL (or use the default from Replicate's API page)."
+                : undefined,
           },
           { status: 502 }
         );

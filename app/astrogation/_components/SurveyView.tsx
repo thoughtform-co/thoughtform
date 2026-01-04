@@ -93,6 +93,9 @@ interface DetailViewProps {
   // Segmentation
   segments?: SurveySegment[];
   showSegments?: boolean;
+  isSegmenting?: boolean;
+  onGenerateSegments?: () => void;
+  onToggleSegments?: () => void;
   onUpdateSegmentLabel?: (segmentId: string, label: string) => void;
 }
 
@@ -106,6 +109,9 @@ function DetailView({
   onClose,
   segments = [],
   showSegments = false,
+  isSegmenting = false,
+  onGenerateSegments,
+  onToggleSegments,
   onUpdateSegmentLabel,
 }: DetailViewProps) {
   const [drawing, setDrawing] = useState<DrawingState | null>(null);
@@ -123,11 +129,80 @@ function DetailView({
   const [hoveredSegmentId, setHoveredSegmentId] = useState<string | null>(null);
   const [editingSegmentId, setEditingSegmentId] = useState<string | null>(null);
   const [editingSegmentLabel, setEditingSegmentLabel] = useState("");
+  const [imageNaturalSize, setImageNaturalSize] = useState<{
+    width: number;
+    height: number;
+  } | null>(null);
+  const [scanFrames, setScanFrames] = useState<
+    Array<{
+      id: string;
+      left: number;
+      top: number;
+      width: number;
+      height: number;
+      createdAt: number;
+    }>
+  >([]);
+
+  const canToggleSegments = Boolean(onToggleSegments) && segments.length > 0;
+  const eyeIsOn = canToggleSegments ? showSegments : showAnnotations;
+  const eyeTitle = canToggleSegments
+    ? showSegments
+      ? "Hide segments"
+      : "Show segments"
+    : showAnnotations
+      ? "Hide annotations"
+      : "Show annotations";
+
+  // Sci-fi scan frames while segmenting
+  useEffect(() => {
+    if (!isSegmenting) {
+      setScanFrames([]);
+      return;
+    }
+
+    const TTL_MS = 700;
+    const TICK_MS = 120;
+    const MAX_FRAMES = 24;
+
+    const interval = setInterval(() => {
+      setScanFrames((prev) => {
+        const now = Date.now();
+        const alive = prev.filter((f) => now - f.createdAt < TTL_MS);
+
+        // Generate 1-2 random frames per tick
+        const spawnCount = Math.random() > 0.65 ? 2 : 1;
+        const spawned = Array.from({ length: spawnCount }).map(() => {
+          const w = 8 + Math.random() * 28; // %
+          const h = 6 + Math.random() * 24; // %
+          const left = Math.random() * (100 - w);
+          const top = Math.random() * (100 - h);
+          return {
+            id: crypto.randomUUID(),
+            left,
+            top,
+            width: w,
+            height: h,
+            createdAt: now,
+          };
+        });
+
+        return [...alive, ...spawned].slice(-MAX_FRAMES);
+      });
+    }, TICK_MS);
+
+    return () => clearInterval(interval);
+  }, [isSegmenting]);
 
   // Sync local annotations when prop changes
   useEffect(() => {
     setLocalAnnotations(annotations);
   }, [annotations]);
+
+  // Reset image size when changing items
+  useEffect(() => {
+    setImageNaturalSize(null);
+  }, [item.id]);
 
   // Notify parent of resizing state
   useEffect(() => {
@@ -333,11 +408,14 @@ function DetailView({
 
   // Calculate aspect ratio for responsive sizing
   const aspectRatio = useMemo(() => {
+    if (imageNaturalSize?.width && imageNaturalSize?.height) {
+      return imageNaturalSize.width / imageNaturalSize.height;
+    }
     if (item.image_width && item.image_height) {
       return item.image_width / item.image_height;
     }
     return 16 / 9; // Default aspect ratio
-  }, [item.image_width, item.image_height]);
+  }, [imageNaturalSize?.width, imageNaturalSize?.height, item.image_width, item.image_height]);
 
   // Handle annotation note change
   const handleAnnotationNoteChange = useCallback(
@@ -360,10 +438,16 @@ function DetailView({
         </span>
         <button
           className="survey-detail-focused__eye-btn"
-          onClick={() => setShowAnnotations((prev) => !prev)}
-          title={showAnnotations ? "Hide annotations" : "Show annotations"}
+          onClick={() => {
+            if (canToggleSegments) {
+              onToggleSegments?.();
+              return;
+            }
+            setShowAnnotations((prev) => !prev);
+          }}
+          title={eyeTitle}
         >
-          {showAnnotations ? <Eye size={16} /> : <EyeOff size={16} />}
+          {eyeIsOn ? <Eye size={16} /> : <EyeOff size={16} />}
         </button>
       </div>
 
@@ -400,6 +484,12 @@ function DetailView({
               alt={item.title || "Reference"}
               className="survey-detail-focused__image"
               draggable={false}
+              onLoad={() => {
+                const img = imageRef.current;
+                if (img?.naturalWidth && img.naturalHeight) {
+                  setImageNaturalSize({ width: img.naturalWidth, height: img.naturalHeight });
+                }
+              }}
             />
 
             {/* Annotations */}
@@ -440,8 +530,8 @@ function DetailView({
               <>
                 {segments.map((segment) => {
                   // Convert pixel bbox to percentage
-                  const imgWidth = item.image_width || 1;
-                  const imgHeight = item.image_height || 1;
+                  const imgWidth = imageNaturalSize?.width || item.image_width || 1;
+                  const imgHeight = imageNaturalSize?.height || item.image_height || 1;
                   const left = (segment.bbox_x / imgWidth) * 100;
                   const top = (segment.bbox_y / imgHeight) * 100;
                   const width = (segment.bbox_width / imgWidth) * 100;
@@ -509,6 +599,26 @@ function DetailView({
               </>
             )}
 
+            {/* Segmentation loading overlay (sci-fi scan) */}
+            {isSegmenting && (
+              <div className="survey-segmentation-scan" aria-hidden="true">
+                <div className="survey-segmentation-scan__scanline" />
+                <div className="survey-segmentation-scan__hud-label">SEGMENTING…</div>
+                {scanFrames.map((frame) => (
+                  <div
+                    key={frame.id}
+                    className="survey-segmentation-scan__frame"
+                    style={{
+                      left: `${frame.left}%`,
+                      top: `${frame.top}%`,
+                      width: `${frame.width}%`,
+                      height: `${frame.height}%`,
+                    }}
+                  />
+                ))}
+              </div>
+            )}
+
             {/* Drawing preview */}
             {drawingRect && showAnnotations && (
               <div
@@ -544,6 +654,9 @@ export function SurveyView({
   onResizingChange,
   segments = [],
   showSegments = false,
+  isSegmenting = false,
+  onGenerateSegments,
+  onToggleSegments,
   onUpdateSegmentLabel,
 }: SurveyViewProps) {
   const selectedItem = items.find((item) => item.id === selectedItemId);
@@ -665,6 +778,9 @@ export function SurveyView({
                 onClose={handleCloseDetail}
                 segments={segments}
                 showSegments={showSegments}
+                isSegmenting={isSegmenting}
+                onGenerateSegments={onGenerateSegments}
+                onToggleSegments={onToggleSegments}
                 onUpdateSegmentLabel={onUpdateSegmentLabel}
               />
             </div>

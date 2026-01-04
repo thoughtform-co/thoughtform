@@ -47,7 +47,9 @@ export interface UseSurveyReturn {
   generateSegments: (itemId: string) => Promise<SurveySegment[] | null>;
   loadSegments: (itemId: string) => Promise<SurveySegment[]>;
   updateSegmentLabel: (segmentId: string, label: string) => Promise<void>;
+  labelSegments: (itemId: string) => Promise<SurveySegment[] | null>;
   isSegmenting: boolean;
+  isLabelingSegments: boolean;
   segments: SurveySegment[];
   itemCounts: Record<string, number>;
   isAnalyzing: boolean;
@@ -156,6 +158,7 @@ export function useSurvey({
   const [searchSpace, setSearchSpace] = useState<SearchSpace>("briefing");
   const [allItems, setAllItems] = useState<SurveyItem[]>([]);
   const [isSegmenting, setIsSegmenting] = useState(false);
+  const [isLabelingSegments, setIsLabelingSegments] = useState(false);
   const [segments, setSegments] = useState<SurveySegment[]>([]);
 
   // Refs for stable callback access
@@ -755,6 +758,38 @@ export function useSurvey({
     [dispatch, fetcher]
   );
 
+  const labelSegments = useCallback(
+    async (itemId: string): Promise<SurveySegment[] | null> => {
+      setIsLabelingSegments(true);
+      dispatch(actions.showToast("Labeling segments..."));
+
+      try {
+        const data = await fetcher<{ segments: SurveySegment[]; labeled?: number }>(
+          "/api/survey/segments/label",
+          {
+            method: "POST",
+            body: { itemId },
+          }
+        );
+
+        setSegments(data.segments || []);
+        const labeledCount =
+          typeof data.labeled === "number" ? data.labeled : (data.segments?.length ?? 0);
+        dispatch(
+          actions.showToast(`Labeled ${labeledCount} segment${labeledCount === 1 ? "" : "s"}`)
+        );
+        return data.segments || [];
+      } catch (error) {
+        console.error("Failed to label segments:", error);
+        dispatch(actions.showToast("Failed to label segments"));
+        return null;
+      } finally {
+        setIsLabelingSegments(false);
+      }
+    },
+    [dispatch, fetcher]
+  );
+
   // Cleanup abort controllers on unmount
   useEffect(() => {
     return () => {
@@ -778,7 +813,9 @@ export function useSurvey({
     generateSegments,
     loadSegments,
     updateSegmentLabel,
+    labelSegments,
     isSegmenting,
+    isLabelingSegments,
     segments,
     itemCounts,
     isAnalyzing,

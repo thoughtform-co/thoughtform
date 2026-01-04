@@ -219,6 +219,9 @@ export interface SurveyViewBundledProps {
   // Segmentation
   segments?: SurveySegment[];
   showSegments?: boolean;
+  isSegmenting?: boolean;
+  onGenerateSegments?: () => void;
+  onToggleSegments?: () => void;
   onUpdateSegmentLabel?: (segmentId: string, label: string) => void;
 }
 

@@ -162,6 +162,11 @@ export function FoundryView({
       );
     }
 
+    // selectedComponentId is guaranteed to be non-null here due to early return above
+    if (!selectedComponentId) {
+      return null;
+    }
+
     if (isMultiElement) {
       return (
         <ComponentPreview

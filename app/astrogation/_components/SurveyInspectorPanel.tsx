@@ -36,7 +36,9 @@ export interface SurveyInspectorPanelProps {
   // Segmentation
   onGenerateSegments?: () => void;
   onToggleSegments?: () => void;
+  onLabelSegments?: () => void;
   isSegmenting?: boolean;
+  isLabelingSegments?: boolean;
   showSegments?: boolean;
   segmentCount?: number;
 }
@@ -64,7 +66,9 @@ function SurveyInspectorPanelInner({
   pipelineStatus = "idle",
   onGenerateSegments,
   onToggleSegments,
+  onLabelSegments,
   isSegmenting = false,
+  isLabelingSegments = false,
   showSegments = false,
   segmentCount = 0,
 }: SurveyInspectorPanelProps) {
@@ -992,16 +996,21 @@ function SurveyInspectorPanelInner({
 
                 {/* Segment Section - SAM-based UI element extraction */}
                 <FlowConnector.Node
-                  id="segments"
                   label={`SEGMENTS${segmentCount > 0 ? ` (${segmentCount})` : ""}`}
-                  status={isSegmenting ? "pending" : segmentCount > 0 ? "ready" : "empty"}
+                  className={
+                    isSegmenting
+                      ? "flow-connector__node--pending"
+                      : segmentCount > 0
+                        ? "flow-connector__node--ready"
+                        : "flow-connector__node--empty"
+                  }
                 >
                   <div className="flow-connector__segment-section">
                     <div className="flow-connector__segment-actions">
                       <button
                         className="flow-connector__segment-btn"
                         onClick={onGenerateSegments}
-                        disabled={isSegmenting}
+                        disabled={isSegmenting || isLabelingSegments}
                         title="Generate segments using SAM"
                       >
                         {isSegmenting ? (
@@ -1013,6 +1022,23 @@ function SurveyInspectorPanelInner({
                           "SEGMENT"
                         )}
                       </button>
+                      {segmentCount > 0 && (
+                        <button
+                          className="flow-connector__segment-btn"
+                          onClick={onLabelSegments}
+                          disabled={isSegmenting || isLabelingSegments}
+                          title="Use Claude to label segments (ai_label)"
+                        >
+                          {isLabelingSegments ? (
+                            <>
+                              <span className="flow-connector__spinner" />
+                              Labeling...
+                            </>
+                          ) : (
+                            "LABEL"
+                          )}
+                        </button>
+                      )}
                       {segmentCount > 0 && (
                         <button
                           className={`flow-connector__toggle-btn ${showSegments ? "flow-connector__toggle-btn--active" : ""}`}

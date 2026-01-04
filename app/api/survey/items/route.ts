@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase";
 import { isAuthorized, getServerUser } from "@/lib/auth-server";
+import sharp from "sharp";
 
 const BUCKET_NAME = "survey-media";
 const SIGNED_URL_EXPIRY = 3600; // 1 hour
@@ -168,6 +169,14 @@ export async function POST(request: NextRequest) {
     // Get image dimensions (basic approach - could be enhanced)
     let imageWidth: number | null = null;
     let imageHeight: number | null = null;
+    try {
+      const metadata = await sharp(buffer).metadata();
+      imageWidth = typeof metadata.width === "number" ? metadata.width : null;
+      imageHeight = typeof metadata.height === "number" ? metadata.height : null;
+    } catch (e) {
+      // Non-critical; overlays can fall back to natural image sizes on the client.
+      console.warn("Failed to read uploaded image dimensions:", e);
+    }
 
     // Get authenticated user
     const user = await getServerUser(request);
