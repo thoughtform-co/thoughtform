@@ -28,6 +28,8 @@ const SYSTEM_PROMPT = `You are a visual design analyst. Your task is to provide 
 
 This is NOT about implementation or recommendations. This is a pure visual inventory and structural analysis.
 
+You may receive information about automatically detected UI segments (e.g., "profile icon", "close button", "search input") - these are AI-identified interface elements that can help you understand the structure of the design. Reference these when relevant to your analysis, but also use your own visual analysis of the full image.
+
 Our design system categories (for classification only):
 ${buildCategoryContext()}
 
@@ -119,6 +121,32 @@ export async function POST(request: NextRequest) {
       | "image/gif"
       | "image/webp";
 
+    // Load segments (detected UI elements) for context
+    const { data: segments } = await supabase
+      .from("survey_segments")
+      .select("id, ai_label, ai_description, label")
+      .eq("survey_item_id", itemId)
+      .order("area", { ascending: false })
+      .limit(50); // Limit to top 50 by area
+
+    // Build context text with segment information
+    const contextParts: string[] = [];
+    if (segments && segments.length > 0) {
+      const segmentLabels = segments
+        .filter((s) => s.ai_label || s.label)
+        .map((s) => {
+          const label = s.ai_label || s.label || "unlabeled";
+          const desc = s.ai_description ? ` (${s.ai_description})` : "";
+          return `  - ${label}${desc}`;
+        })
+        .join("\n");
+      if (segmentLabels) {
+        contextParts.push(`Detected UI Elements (${segments.length} segments):\n${segmentLabels}`);
+      }
+    }
+
+    const segmentContext = contextParts.length > 0 ? `\n\n${contextParts.join("\n\n")}` : "";
+
     // Call Claude
     const anthropic = new Anthropic({ apiKey: anthropicApiKey });
 
@@ -139,7 +167,7 @@ export async function POST(request: NextRequest) {
             },
             {
               type: "text",
-              text: "Provide an objective visual analysis of this UI/UX reference image. Describe what you see: colors, typography, layout, composition, visual elements, and patterns. Be descriptive and specific, like a designer documenting a reference for their mood board.",
+              text: `Provide an objective visual analysis of this UI/UX reference image. Describe what you see: colors, typography, layout, composition, visual elements, and patterns. Be descriptive and specific, like a designer documenting a reference for their mood board.${segmentContext}`,
             },
           ],
         },

@@ -33,8 +33,13 @@ Your task is to synthesize all available information about a design reference in
 You will receive:
 1. The main reference image showing the full design
 2. Optionally, cropped annotation images highlighting specific areas the user found notable or inspiring
+3. Optionally, detected UI segments with AI-generated labels (e.g., "profile icon", "close button", "search input") - these are automatically detected interface elements
 
-Pay special attention to the annotated areas - these represent specific elements the user wants to capture or adapt. Consider what makes each annotated element effective and how it could translate to Thoughtform's design system.
+Pay special attention to:
+- The annotated areas - these represent specific elements the user wants to capture or adapt
+- The detected UI segments - these provide a structured inventory of interface elements present in the design
+
+Consider what makes each annotated element and detected segment effective and how it could translate to Thoughtform's design system.
 
 Thoughtform's aesthetic:
 - Celestial navigation metaphors (astrolabes, compasses, star maps)
@@ -57,6 +62,12 @@ One paragraph summarizing what this reference offers and how it relates to Thoug
 ## Annotated Highlights
 If annotation crops were provided, describe what makes each highlighted area notable and how to adapt it:
 - For each annotation, explain the design pattern and suggest implementation approach
+
+## Detected UI Elements
+If segments were detected, reference the automatically identified UI elements in your briefing:
+- Mention notable patterns in the detected elements (e.g., "The interface uses a consistent set of icon styles...")
+- Reference specific detected elements when relevant to implementation
+- Note how these elements relate to Thoughtform's component library
 
 ## Component Recommendations
 If this reference suggests specific components:
@@ -253,6 +264,28 @@ export async function POST(request: NextRequest) {
         .join("\n");
       if (annotationNotes) {
         contextParts.push(`Annotation Notes:\n${annotationNotes}`);
+      }
+    }
+
+    // Load and include segments (detected UI elements) in context
+    const { data: segments } = await supabase
+      .from("survey_segments")
+      .select("id, ai_label, ai_description, label")
+      .eq("survey_item_id", itemId)
+      .order("area", { ascending: false })
+      .limit(50); // Limit to top 50 by area
+
+    if (segments && segments.length > 0) {
+      const segmentLabels = segments
+        .filter((s) => s.ai_label || s.label)
+        .map((s) => {
+          const label = s.ai_label || s.label || "unlabeled";
+          const desc = s.ai_description ? ` (${s.ai_description})` : "";
+          return `  - ${label}${desc}`;
+        })
+        .join("\n");
+      if (segmentLabels) {
+        contextParts.push(`Detected UI Elements (${segments.length} segments):\n${segmentLabels}`);
       }
     }
 
