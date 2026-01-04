@@ -130,6 +130,13 @@ export interface SurveyAnnotation {
   height: number; // Percentage of image height (0-100)
   note: string;
   created_at: string;
+  // Crop screenshot (populated after annotation is saved)
+  crop_path?: string; // Storage path for cropped image
+  crop_url?: string; // Signed URL (injected at fetch time)
+  crop_mime?: string;
+  crop_width?: number;
+  crop_height?: number;
+  crop_caption?: string; // AI-generated caption for embeddings
 }
 
 export interface SurveyItem {
@@ -167,6 +174,7 @@ export interface SurveyItem {
 export interface SurveyViewBundledProps {
   items: SurveyItem[];
   selectedItemId: string | null;
+  selectedAnnotationId?: string | null;
   loading: boolean;
   searchQuery: string;
   isSearching: boolean;
@@ -175,6 +183,7 @@ export interface SurveyViewBundledProps {
   onSearchQueryChange: (query: string) => void;
   onSearch: (query: string) => Promise<void>;
   onAnnotationsChange: (annotations: SurveyAnnotation[]) => void;
+  onAnnotationSelect?: (annotationId: string | null) => void;
   onResizingChange: (isResizing: boolean) => void;
 }
 

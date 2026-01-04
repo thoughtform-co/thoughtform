@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useRef, useEffect, useMemo } from "react";
-import { Network } from "lucide-react";
+import { Network, Eye, EyeOff } from "lucide-react";
 import type { SurveyItem, SurveyAnnotation } from "./types";
 import { AnnotationBox } from "./AnnotationBox";
 
@@ -12,6 +12,7 @@ import { AnnotationBox } from "./AnnotationBox";
 export interface SurveyViewProps {
   items: SurveyItem[];
   selectedItemId: string | null;
+  selectedAnnotationId?: string | null;
   loading: boolean;
   searchQuery?: string;
   isSearching?: boolean;
@@ -20,6 +21,7 @@ export interface SurveyViewProps {
   onSearchQueryChange?: (query: string) => void;
   onSearch?: (query: string) => Promise<void>;
   onAnnotationsChange?: (annotations: SurveyAnnotation[]) => void;
+  onAnnotationSelect?: (annotationId: string | null) => void;
   onResizingChange?: (isResizing: boolean) => void;
 }
 
@@ -85,7 +87,9 @@ function GridItem({ item, onClick }: GridItemProps) {
 interface DetailViewProps {
   item: SurveyItem;
   annotations: SurveyAnnotation[];
+  selectedAnnotationId?: string | null;
   onAnnotationsChange?: (annotations: SurveyAnnotation[]) => void;
+  onAnnotationSelect?: (annotationId: string | null) => void;
   onResizingChange?: (isResizing: boolean) => void;
   onClose: () => void;
 }
@@ -93,16 +97,21 @@ interface DetailViewProps {
 function DetailView({
   item,
   annotations,
+  selectedAnnotationId,
   onAnnotationsChange,
+  onAnnotationSelect,
   onResizingChange,
   onClose,
 }: DetailViewProps) {
   const [drawing, setDrawing] = useState<DrawingState | null>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
+  const imageContainerRef = useRef<HTMLDivElement>(null);
   const [localAnnotations, setLocalAnnotations] = useState<SurveyAnnotation[]>(annotations);
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [isAnyAnnotationResizing, setIsAnyAnnotationResizing] = useState(false);
+  const [showAnnotations, setShowAnnotations] = useState(true);
+  const [zoom, setZoom] = useState(1);
 
   // Sync local annotations when prop changes
   useEffect(() => {
@@ -126,9 +135,11 @@ function DetailView({
   const pixelToPercent = useCallback((pixelX: number, pixelY: number) => {
     const img = imageRef.current;
     if (!img) return { x: 0, y: 0 };
+    // Use getBoundingClientRect for accurate dimensions under zoom
+    const rect = img.getBoundingClientRect();
     return {
-      x: (pixelX / img.clientWidth) * 100,
-      y: (pixelY / img.clientHeight) * 100,
+      x: (pixelX / rect.width) * 100,
+      y: (pixelY / rect.height) * 100,
     };
   }, []);
 
@@ -178,23 +189,34 @@ function DetailView({
       return;
     }
 
+    const img = imageRef.current;
+    if (!img) {
+      setDrawing(null);
+      return;
+    }
+
+    const rect = img.getBoundingClientRect();
     const { startX, startY, currentX, currentY } = drawing;
     const minX = Math.min(startX, currentX);
     const minY = Math.min(startY, currentY);
     const width = Math.abs(currentX - startX);
     const height = Math.abs(currentY - startY);
 
-    // Only create annotation if it's large enough
-    if (width > 20 && height > 20) {
-      const startPercent = pixelToPercent(minX, minY);
-      const endPercent = pixelToPercent(minX + width, minY + height);
+    // Minimum size threshold (in rendered pixels)
+    const minSize = 20;
+    if (width > minSize && height > minSize) {
+      // Convert to percentages using actual rendered size
+      const percentX = (minX / rect.width) * 100;
+      const percentY = (minY / rect.height) * 100;
+      const percentWidth = (width / rect.width) * 100;
+      const percentHeight = (height / rect.height) * 100;
 
       const newAnnotation: SurveyAnnotation = {
         id: crypto.randomUUID(),
-        x: startPercent.x,
-        y: startPercent.y,
-        width: endPercent.x - startPercent.x,
-        height: endPercent.y - startPercent.y,
+        x: percentX,
+        y: percentY,
+        width: percentWidth,
+        height: percentHeight,
         note: "",
         created_at: new Date().toISOString(),
       };
@@ -205,7 +227,7 @@ function DetailView({
     }
 
     setDrawing(null);
-  }, [drawing, onAnnotationsChange, pixelToPercent, localAnnotations]);
+  }, [drawing, onAnnotationsChange, localAnnotations]);
 
   const debouncedSave = useCallback(
     (updatedAnnotations: SurveyAnnotation[]) => {
@@ -222,11 +244,15 @@ function DetailView({
   const getDrawingRect = () => {
     if (!drawing) return null;
     const { startX, startY, currentX, currentY } = drawing;
+    // Convert drawing coordinates to percentages for display
+    const img = imageRef.current;
+    if (!img) return null;
+    const rect = img.getBoundingClientRect();
     return {
-      left: Math.min(startX, currentX),
-      top: Math.min(startY, currentY),
-      width: Math.abs(currentX - startX),
-      height: Math.abs(currentY - startY),
+      left: (Math.min(startX, currentX) / rect.width) * 100,
+      top: (Math.min(startY, currentY) / rect.height) * 100,
+      width: (Math.abs(currentX - startX) / rect.width) * 100,
+      height: (Math.abs(currentY - startY) / rect.height) * 100,
     };
   };
 
@@ -243,6 +269,13 @@ function DetailView({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [onClose]);
 
+  // Handle wheel for zoom
+  const handleWheel = useCallback((e: React.WheelEvent) => {
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? -0.1 : 0.1;
+    setZoom((prev) => Math.min(3, Math.max(1, prev + delta)));
+  }, []);
+
   // Calculate aspect ratio for responsive sizing
   const aspectRatio = useMemo(() => {
     if (item.image_width && item.image_height) {
@@ -251,12 +284,38 @@ function DetailView({
     return 16 / 9; // Default aspect ratio
   }, [item.image_width, item.image_height]);
 
+  // Handle annotation note change
+  const handleAnnotationNoteChange = useCallback(
+    (annotationId: string, note: string) => {
+      const updatedAnnotations = localAnnotations.map((a) =>
+        a.id === annotationId ? { ...a, note } : a
+      );
+      setLocalAnnotations(updatedAnnotations);
+      onAnnotationsChange?.(updatedAnnotations);
+    },
+    [localAnnotations, onAnnotationsChange]
+  );
+
   return (
     <div className="survey-detail-focused">
       {/* Label on top */}
       <span className="survey-detail-focused__label">
         {(item.title || "Untitled").toUpperCase()}
       </span>
+
+      {/* Top toolbar */}
+      <div className="survey-detail-focused__toolbar">
+        <button
+          className={`survey-detail-focused__toolbar-btn ${showAnnotations ? "survey-detail-focused__toolbar-btn--active" : ""}`}
+          onClick={() => setShowAnnotations((prev) => !prev)}
+          title={showAnnotations ? "Hide annotations" : "Show annotations"}
+        >
+          {showAnnotations ? <Eye size={16} /> : <EyeOff size={16} />}
+        </button>
+        {zoom !== 1 && (
+          <span className="survey-detail-focused__zoom-indicator">{Math.round(zoom * 100)}%</span>
+        )}
+      </div>
 
       {/* Content frame */}
       <div className="survey-detail-focused__content">
@@ -268,11 +327,15 @@ function DetailView({
           onMouseMove={handleCanvasMouseMove}
           onMouseUp={handleCanvasMouseUp}
           onMouseLeave={handleCanvasMouseUp}
+          onWheel={handleWheel}
         >
           <div
+            ref={imageContainerRef}
             className="survey-detail-focused__image-container"
             style={{
               aspectRatio: aspectRatio.toString(),
+              transform: `scale(${zoom})`,
+              transformOrigin: "center center",
             }}
           >
             <img
@@ -284,42 +347,56 @@ function DetailView({
             />
 
             {/* Annotations */}
-            {localAnnotations.map((annotation) => (
-              <AnnotationBox
-                key={annotation.id}
-                annotation={annotation}
-                onDelete={() => {
-                  const updatedAnnotations = localAnnotations.filter((a) => a.id !== annotation.id);
-                  setLocalAnnotations(updatedAnnotations);
-                  onAnnotationsChange?.(updatedAnnotations);
-                }}
-                onResize={(x, y, width, height) => {
-                  const updatedAnnotations = localAnnotations.map((a) =>
-                    a.id === annotation.id ? { ...a, x, y, width, height } : a
-                  );
-                  setLocalAnnotations(updatedAnnotations);
-                  debouncedSave(updatedAnnotations);
-                }}
-                onResizingChange={setIsAnyAnnotationResizing}
-              />
-            ))}
+            {showAnnotations &&
+              localAnnotations.map((annotation, idx) => (
+                <AnnotationBox
+                  key={annotation.id}
+                  annotation={annotation}
+                  index={idx + 1}
+                  isSelected={selectedAnnotationId === annotation.id}
+                  onSelect={() => onAnnotationSelect?.(annotation.id)}
+                  onDelete={() => {
+                    const updatedAnnotations = localAnnotations.filter(
+                      (a) => a.id !== annotation.id
+                    );
+                    setLocalAnnotations(updatedAnnotations);
+                    onAnnotationsChange?.(updatedAnnotations);
+                    // Clear selection if deleted annotation was selected
+                    if (selectedAnnotationId === annotation.id) {
+                      onAnnotationSelect?.(null);
+                    }
+                  }}
+                  onResize={(x, y, width, height) => {
+                    const updatedAnnotations = localAnnotations.map((a) =>
+                      a.id === annotation.id ? { ...a, x, y, width, height } : a
+                    );
+                    setLocalAnnotations(updatedAnnotations);
+                    debouncedSave(updatedAnnotations);
+                  }}
+                  onResizingChange={setIsAnyAnnotationResizing}
+                  onNoteChange={(note) => handleAnnotationNoteChange(annotation.id, note)}
+                  containerScale={zoom}
+                />
+              ))}
 
             {/* Drawing preview */}
-            {drawingRect && (
+            {drawingRect && showAnnotations && (
               <div
                 className="survey-canvas__drawing"
                 style={{
-                  left: `${drawingRect.left}px`,
-                  top: `${drawingRect.top}px`,
-                  width: `${drawingRect.width}px`,
-                  height: `${drawingRect.height}px`,
+                  left: `${drawingRect.left}%`,
+                  top: `${drawingRect.top}%`,
+                  width: `${drawingRect.width}%`,
+                  height: `${drawingRect.height}%`,
                 }}
               />
             )}
           </div>
 
           {/* Annotation hint */}
-          <div className="survey-detail-focused__hint">Drag to annotate · Esc to close</div>
+          <div className="survey-detail-focused__hint">
+            Drag to annotate · Scroll to zoom · Esc to close
+          </div>
         </div>
       </div>
     </div>
@@ -333,10 +410,12 @@ function DetailView({
 export function SurveyView({
   items,
   selectedItemId,
+  selectedAnnotationId,
   loading,
   onSelectItem,
   onUpload,
   onAnnotationsChange,
+  onAnnotationSelect,
   onResizingChange,
 }: SurveyViewProps) {
   const selectedItem = items.find((item) => item.id === selectedItemId);
@@ -451,7 +530,9 @@ export function SurveyView({
               <DetailView
                 item={selectedItem}
                 annotations={effectiveAnnotations}
+                selectedAnnotationId={selectedAnnotationId}
                 onAnnotationsChange={onAnnotationsChange}
+                onAnnotationSelect={onAnnotationSelect}
                 onResizingChange={onResizingChange}
                 onClose={handleCloseDetail}
               />

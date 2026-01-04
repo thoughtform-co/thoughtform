@@ -1,6 +1,7 @@
 // ═══════════════════════════════════════════════════════════════
 // SURVEY BRIEFING API
 // Generate implementation-ready frontend briefing from analysis
+// Now includes annotation crops for focused design inspiration
 // ═══════════════════════════════════════════════════════════════
 
 import { NextRequest, NextResponse } from "next/server";
@@ -9,10 +10,31 @@ import { isAuthorized } from "@/lib/auth-server";
 import Anthropic from "@anthropic-ai/sdk";
 
 const BUCKET_NAME = "survey-media";
+const MAX_ANNOTATION_CROPS = 3; // Maximum number of annotation crops to include
+
+interface AnnotationWithCrop {
+  id: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  note?: string;
+  created_at?: string;
+  crop_path?: string;
+  crop_mime?: string;
+  crop_width?: number;
+  crop_height?: number;
+}
 
 const SYSTEM_PROMPT = `You are a senior frontend engineer writing implementation briefings for a design system team at Thoughtform.
 
 Your task is to synthesize all available information about a design reference into a concise, actionable implementation briefing. The briefing should be written for another engineer who will implement components inspired by this reference.
+
+You will receive:
+1. The main reference image showing the full design
+2. Optionally, cropped annotation images highlighting specific areas the user found notable or inspiring
+
+Pay special attention to the annotated areas - these represent specific elements the user wants to capture or adapt. Consider what makes each annotated element effective and how it could translate to Thoughtform's design system.
 
 Thoughtform's aesthetic:
 - Celestial navigation metaphors (astrolabes, compasses, star maps)
@@ -31,6 +53,10 @@ One paragraph summarizing what this reference offers and how it relates to Thoug
 ## Key Visual Elements
 - Bullet list of the most important visual patterns to capture
 - Focus on transferable techniques, not literal copying
+
+## Annotated Highlights
+If annotation crops were provided, describe what makes each highlighted area notable and how to adapt it:
+- For each annotation, explain the design pattern and suggest implementation approach
 
 ## Component Recommendations
 If this reference suggests specific components:
@@ -98,7 +124,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get signed URL for the image
+    // Get signed URL for the main image
     const { data: signedData, error: signError } = await supabase.storage
       .from(BUCKET_NAME)
       .createSignedUrl(item.image_path, 300);
@@ -107,7 +133,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Failed to access image" }, { status: 500 });
     }
 
-    // Download image and convert to base64
+    // Download main image and convert to base64
     const imageResponse = await fetch(signedData.signedUrl);
     if (!imageResponse.ok) {
       return NextResponse.json({ error: "Failed to fetch image" }, { status: 500 });
@@ -122,6 +148,66 @@ export async function POST(request: NextRequest) {
       | "image/png"
       | "image/gif"
       | "image/webp";
+
+    // Collect annotation crops (prioritize those with notes, then by recency)
+    const annotations = (item.annotations || []) as AnnotationWithCrop[];
+    const annotationsWithCrops = annotations
+      .filter((a) => a.crop_path)
+      .sort((a, b) => {
+        // Prioritize annotations with notes
+        const aHasNote = a.note ? 1 : 0;
+        const bHasNote = b.note ? 1 : 0;
+        if (aHasNote !== bHasNote) return bHasNote - aHasNote;
+        // Then by creation date (most recent first)
+        const aDate = a.created_at ? new Date(a.created_at).getTime() : 0;
+        const bDate = b.created_at ? new Date(b.created_at).getTime() : 0;
+        return bDate - aDate;
+      })
+      .slice(0, MAX_ANNOTATION_CROPS);
+
+    // Fetch annotation crop images in parallel
+    const cropImages: Array<{
+      index: number;
+      note: string;
+      base64: string;
+      mediaType: "image/jpeg" | "image/png" | "image/gif" | "image/webp";
+    }> = [];
+
+    if (annotationsWithCrops.length > 0) {
+      const cropPromises = annotationsWithCrops.map(async (annotation, idx) => {
+        try {
+          const { data: cropSignedData } = await supabase.storage
+            .from(BUCKET_NAME)
+            .createSignedUrl(annotation.crop_path!, 60);
+
+          if (!cropSignedData?.signedUrl) return null;
+
+          const cropResponse = await fetch(cropSignedData.signedUrl);
+          if (!cropResponse.ok) return null;
+
+          const cropBuffer = await cropResponse.arrayBuffer();
+          const cropBase64 = Buffer.from(cropBuffer).toString("base64");
+
+          return {
+            index: idx + 1,
+            note: annotation.note || "(No note)",
+            base64: cropBase64,
+            mediaType: (annotation.crop_mime || "image/png") as
+              | "image/jpeg"
+              | "image/png"
+              | "image/gif"
+              | "image/webp",
+          };
+        } catch {
+          return null;
+        }
+      });
+
+      const results = await Promise.all(cropPromises);
+      results.forEach((r) => {
+        if (r) cropImages.push(r);
+      });
+    }
 
     // Build context from all available fields
     const contextParts: string[] = [];
@@ -159,8 +245,9 @@ export async function POST(request: NextRequest) {
       contextParts.push(`User Notes:\n${item.notes}`);
     }
 
-    if (item.annotations && Array.isArray(item.annotations)) {
-      const annotationNotes = (item.annotations as Array<{ note?: string }>)
+    // Include annotation notes in context
+    if (annotations.length > 0) {
+      const annotationNotes = annotations
         .filter((a) => a.note)
         .map((a, i) => `  ${i + 1}. ${a.note}`)
         .join("\n");
@@ -175,6 +262,52 @@ export async function POST(request: NextRequest) {
 
     const contextText = contextParts.join("\n\n");
 
+    // Build the message content with main image + annotation crops
+    const messageContent: Anthropic.MessageParam["content"] = [
+      // Main reference image
+      {
+        type: "image",
+        source: {
+          type: "base64",
+          media_type: mediaType,
+          data: base64Image,
+        },
+      },
+      {
+        type: "text",
+        text: "This is the main reference image.",
+      },
+    ];
+
+    // Add annotation crop images with context
+    for (const crop of cropImages) {
+      messageContent.push({
+        type: "image",
+        source: {
+          type: "base64",
+          media_type: crop.mediaType,
+          data: crop.base64,
+        },
+      });
+      messageContent.push({
+        type: "text",
+        text: `Annotation #${crop.index}: "${crop.note}" - This cropped area highlights a specific element the user found notable.`,
+      });
+    }
+
+    // Add the main prompt
+    messageContent.push({
+      type: "text",
+      text: `Generate an implementation briefing for this design reference.
+
+${cropImages.length > 0 ? `The user has annotated ${cropImages.length} specific area(s) they find particularly inspiring or relevant. Pay special attention to these highlighted elements.` : ""}
+
+Available context:
+${contextText || "(No additional context provided)"}
+
+Write a concise, actionable briefing that another engineer could use to implement components inspired by this reference. Focus on what's transferable to Thoughtform's HUD-inspired aesthetic.`,
+    });
+
     // Call Claude with image + context
     const anthropic = new Anthropic({ apiKey: anthropicApiKey });
 
@@ -184,25 +317,7 @@ export async function POST(request: NextRequest) {
       messages: [
         {
           role: "user",
-          content: [
-            {
-              type: "image",
-              source: {
-                type: "base64",
-                media_type: mediaType,
-                data: base64Image,
-              },
-            },
-            {
-              type: "text",
-              text: `Generate an implementation briefing for this design reference.
-
-Available context:
-${contextText || "(No additional context provided)"}
-
-Write a concise, actionable briefing that another engineer could use to implement components inspired by this reference. Focus on what's transferable to Thoughtform's HUD-inspired aesthetic.`,
-            },
-          ],
+          content: messageContent,
         },
       ],
       system: SYSTEM_PROMPT,
@@ -240,6 +355,7 @@ Write a concise, actionable briefing that another engineer could use to implemen
     return NextResponse.json({
       item: { ...updatedItem, image_url: responseSignedData?.signedUrl },
       briefing,
+      annotationCropsIncluded: cropImages.length,
     });
   } catch (error) {
     console.error("POST /api/survey/briefing error:", error);

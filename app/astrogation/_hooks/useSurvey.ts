@@ -38,6 +38,11 @@ export interface UseSurveyReturn {
     mode: "query" | "similar",
     space?: SearchSpace
   ) => Promise<void>;
+  generateAnnotationCrop: (
+    itemId: string,
+    annotationId: string,
+    bounds?: { x: number; y: number; width: number; height: number }
+  ) => Promise<unknown>;
   itemCounts: Record<string, number>;
   isAnalyzing: boolean;
   isEmbedding: boolean;
@@ -648,6 +653,34 @@ export function useSurvey({
     [dispatch, surveyCategoryId, surveyComponentKey, fetcher, allItems, loadItems, searchSpace]
   );
 
+  // ═══════════════════════════════════════════════════════════════
+  // GENERATE ANNOTATION CROP
+  // ═══════════════════════════════════════════════════════════════
+
+  const generateAnnotationCrop = useCallback(
+    async (
+      itemId: string,
+      annotationId: string,
+      bounds?: { x: number; y: number; width: number; height: number }
+    ) => {
+      try {
+        const data = await fetcher<{ annotation: unknown }>("/api/survey/annotations/crop", {
+          method: "POST",
+          body: { itemId, annotationId, bounds },
+        });
+
+        // Refresh item data to get updated annotation with crop URL
+        await loadItemFullData(itemId);
+
+        return data.annotation;
+      } catch (error) {
+        console.error("Failed to generate annotation crop:", error);
+        // Don't throw - crop generation is non-critical
+      }
+    },
+    [fetcher, loadItemFullData]
+  );
+
   // Cleanup abort controllers on unmount
   useEffect(() => {
     return () => {
@@ -666,6 +699,7 @@ export function useSurvey({
     generateBriefing,
     embedItem,
     semanticSearch,
+    generateAnnotationCrop,
     itemCounts,
     isAnalyzing,
     isEmbedding,

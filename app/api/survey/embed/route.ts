@@ -3,6 +3,7 @@
 // Generate dual Voyage embeddings for semantic search
 // - Briefing embedding: clean semantic retrieval
 // - Full-context embedding: deep similarity with all context
+// Now includes annotation crop captions for enriched embeddings
 // ═══════════════════════════════════════════════════════════════
 
 import { NextRequest, NextResponse } from "next/server";
@@ -13,6 +14,13 @@ const BUCKET_NAME = "survey-media";
 const VOYAGE_API_URL = "https://api.voyageai.com/v1/embeddings";
 const DEFAULT_MODEL = "voyage-3"; // 1024 dimensions (voyage-3-lite is 512)
 
+interface AnnotationWithCrop {
+  id: string;
+  note?: string;
+  crop_path?: string;
+  crop_caption?: string;
+}
+
 interface SurveyItemForEmbedding {
   title?: string | null;
   notes?: string | null;
@@ -22,7 +30,7 @@ interface SurveyItemForEmbedding {
   sources?: Array<{ label?: string; note?: string }>;
   category_id?: string | null;
   component_key?: string | null;
-  annotations?: Array<{ note?: string }>;
+  annotations?: AnnotationWithCrop[];
   analysis?: {
     transferNotes?: string;
     summary?: string;
@@ -99,14 +107,20 @@ function buildFullEmbeddingText(item: SurveyItemForEmbedding): string {
     parts.push(`User Notes:\n${item.notes}`);
   }
 
-  // Annotation notes
+  // Annotation notes AND captions
   if (item.annotations && item.annotations.length > 0) {
-    const annotationNotes = item.annotations
-      .filter((a) => a.note)
-      .map((a) => a.note)
+    const annotationDetails = item.annotations
+      .filter((a) => a.note || a.crop_caption)
+      .map((a, idx) => {
+        const parts: string[] = [];
+        if (a.note) parts.push(`Note: ${a.note}`);
+        if (a.crop_caption) parts.push(`Visual: ${a.crop_caption}`);
+        return `  ${idx + 1}. ${parts.join(" | ")}`;
+      })
       .join("\n");
-    if (annotationNotes) {
-      parts.push(`Annotation Notes:\n${annotationNotes}`);
+
+    if (annotationDetails) {
+      parts.push(`Annotated Elements:\n${annotationDetails}`);
     }
   }
 
@@ -220,6 +234,11 @@ export async function POST(request: NextRequest) {
       full?: { dimensions: number; text: string };
     } = {};
 
+    // Count annotation captions for reporting
+    const annotationCaptionCount = (item.annotations || []).filter(
+      (a: AnnotationWithCrop) => a.crop_caption
+    ).length;
+
     // Generate briefing embedding (if briefing content exists)
     if (briefingText.trim()) {
       const briefingEmbedding = await generateEmbedding(briefingText, model, voyageApiKey);
@@ -299,6 +318,7 @@ export async function POST(request: NextRequest) {
       item: { ...(updatedItem || item), image_url: signedData?.signedUrl },
       embeddings: results,
       model,
+      annotationCaptionsIncluded: annotationCaptionCount,
     });
   } catch (error) {
     console.error("POST /api/survey/embed error:", error);
