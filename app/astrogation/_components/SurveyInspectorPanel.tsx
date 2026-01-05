@@ -472,7 +472,9 @@ function SurveyInspectorPanelInner({
   }
 
   return (
-    <aside className="astrogation-panel astrogation-panel--right astrogation-panel--survey">
+    <aside
+      className={`astrogation-panel astrogation-panel--right astrogation-panel--survey ${isEmbedding ? "astrogation-panel--embedding" : ""}`}
+    >
       <div className="panel-header-wrapper">
         <div className="panel-header panel-header--survey">
           <span className="panel-header__title">INSPECTOR</span>
@@ -722,7 +724,58 @@ function SurveyInspectorPanelInner({
               )}
             </section>
 
-            {/* ═══ SECTION 4: Briefing Flow ═══ */}
+            {/* ═══ SECTION 4: Segmentation ═══ */}
+            <section className="spec-section">
+              <div className="spec-section__label">
+                <span className="spec-section__label-text">Segmentation</span>
+                <span className="spec-section__label-line" />
+              </div>
+              <div className="flow-connector__segment-section">
+                <div className="flow-connector__segment-actions">
+                  <button
+                    className="flow-connector__segment-btn"
+                    onClick={onGenerateSegments}
+                    disabled={isSegmenting || isLabelingSegments}
+                    title="Generate segments using SAM"
+                  >
+                    {isSegmenting ? (
+                      <>
+                        <span className="flow-connector__spinner" />
+                        Segmenting...
+                      </>
+                    ) : (
+                      "SEGMENT"
+                    )}
+                  </button>
+                  {segmentCount > 0 && (
+                    <button
+                      className="flow-connector__segment-btn"
+                      onClick={onLabelSegments}
+                      disabled={isSegmenting || isLabelingSegments}
+                      title="Use Claude to label segments (ai_label)"
+                    >
+                      {isLabelingSegments ? (
+                        <>
+                          <span className="flow-connector__spinner" />
+                          Labeling...
+                        </>
+                      ) : (
+                        "LABEL"
+                      )}
+                    </button>
+                  )}
+                </div>
+                {segmentCount > 0 && (
+                  <div className="flow-connector__segment-info">
+                    <span>
+                      {segmentCount} UI element{segmentCount !== 1 ? "s" : ""} detected
+                    </span>
+                  </div>
+                )}
+              </div>
+            </section>
+
+            {/* ═══ SECTION 5: Briefing Flow ═══ */}
             <section className="spec-section">
               <div className="spec-section__label">
                 <span className="spec-section__label-text">Briefing</span>
@@ -936,25 +989,14 @@ function SurveyInspectorPanelInner({
                   className="flow-connector__node--briefing flow-connector__node--no-line-above"
                   action={
                     onGenerateBriefing ? (
-                      <div style={{ display: "flex", gap: 8 }}>
-                        <button
-                          className="flow-connector__action-btn flow-connector__action-btn--generate"
-                          onClick={onGenerateBriefing}
-                          disabled={isBriefing || !effectiveItem?.analysis}
-                          title={!effectiveItem?.analysis ? "Run analysis first" : undefined}
-                        >
-                          {isBriefing ? "..." : "Generate"}
-                        </button>
-                        {effectiveItem?.briefing && (
-                          <button
-                            onClick={onGenerateBriefing}
-                            disabled={isBriefing || !effectiveItem?.analysis}
-                            title={!effectiveItem?.analysis ? "Run analysis first" : undefined}
-                          >
-                            {isBriefing ? "..." : "Regenerate"}
-                          </button>
-                        )}
-                      </div>
+                      <button
+                        className="flow-connector__action-btn flow-connector__action-btn--generate"
+                        onClick={onGenerateBriefing}
+                        disabled={isBriefing || !effectiveItem?.analysis}
+                        title={!effectiveItem?.analysis ? "Run analysis first" : undefined}
+                      >
+                        {isBriefing ? "..." : "Generate"}
+                      </button>
                     ) : null
                   }
                 >
@@ -964,7 +1006,9 @@ function SurveyInspectorPanelInner({
                       Generating...
                     </div>
                   ) : effectiveItem?.briefing ? (
-                    <div className="flow-connector__briefing">
+                    <div
+                      className={`flow-connector__briefing ${isBriefing ? "flow-connector__briefing--glitching" : ""}`}
+                    >
                       {formatBriefingText(effectiveItem?.briefing)}
                     </div>
                   ) : (
@@ -993,71 +1037,6 @@ function SurveyInspectorPanelInner({
                     </button>
                   </div>
                 )}
-
-                {/* Segment Section - SAM-based UI element extraction */}
-                <FlowConnector.Node
-                  label={`SEGMENTS${segmentCount > 0 ? ` (${segmentCount})` : ""}`}
-                  className={
-                    isSegmenting
-                      ? "flow-connector__node--pending"
-                      : segmentCount > 0
-                        ? "flow-connector__node--ready"
-                        : "flow-connector__node--empty"
-                  }
-                >
-                  <div className="flow-connector__segment-section">
-                    <div className="flow-connector__segment-actions">
-                      <button
-                        className="flow-connector__segment-btn"
-                        onClick={onGenerateSegments}
-                        disabled={isSegmenting || isLabelingSegments}
-                        title="Generate segments using SAM"
-                      >
-                        {isSegmenting ? (
-                          <>
-                            <span className="flow-connector__spinner" />
-                            Segmenting...
-                          </>
-                        ) : (
-                          "SEGMENT"
-                        )}
-                      </button>
-                      {segmentCount > 0 && (
-                        <button
-                          className="flow-connector__segment-btn"
-                          onClick={onLabelSegments}
-                          disabled={isSegmenting || isLabelingSegments}
-                          title="Use Claude to label segments (ai_label)"
-                        >
-                          {isLabelingSegments ? (
-                            <>
-                              <span className="flow-connector__spinner" />
-                              Labeling...
-                            </>
-                          ) : (
-                            "LABEL"
-                          )}
-                        </button>
-                      )}
-                      {segmentCount > 0 && (
-                        <button
-                          className={`flow-connector__toggle-btn ${showSegments ? "flow-connector__toggle-btn--active" : ""}`}
-                          onClick={onToggleSegments}
-                          title={showSegments ? "Hide segments" : "Show segments"}
-                        >
-                          {showSegments ? "HIDE" : "SHOW"}
-                        </button>
-                      )}
-                    </div>
-                    {segmentCount > 0 && (
-                      <div className="flow-connector__segment-info">
-                        <span>
-                          {segmentCount} UI element{segmentCount !== 1 ? "s" : ""} detected
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                </FlowConnector.Node>
               </FlowConnector>
             </section>
 

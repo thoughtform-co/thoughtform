@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useRef, useEffect, useMemo } from "react";
-import { Network, Eye, EyeOff } from "lucide-react";
+import { Network, Eye, EyeOff, Grid3X3, Check, Trash2 } from "lucide-react";
 import type { SurveyItem, SurveyAnnotation, SurveySegment } from "./types";
 import { AnnotationBox } from "./AnnotationBox";
 
@@ -30,6 +30,7 @@ export interface SurveyViewProps {
   onGenerateSegments?: () => void;
   onToggleSegments?: () => void;
   onUpdateSegmentLabel?: (segmentId: string, label: string) => void;
+  onDeleteSegment?: (segmentId: string) => Promise<void>;
 }
 
 interface DrawingState {
@@ -97,6 +98,7 @@ interface DetailViewProps {
   onGenerateSegments?: () => void;
   onToggleSegments?: () => void;
   onUpdateSegmentLabel?: (segmentId: string, label: string) => void;
+  onDeleteSegment?: (segmentId: string) => Promise<void>;
 }
 
 function DetailView({
@@ -113,6 +115,7 @@ function DetailView({
   onGenerateSegments,
   onToggleSegments,
   onUpdateSegmentLabel,
+  onDeleteSegment,
 }: DetailViewProps) {
   const [drawing, setDrawing] = useState<DrawingState | null>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -129,6 +132,7 @@ function DetailView({
   const [hoveredSegmentId, setHoveredSegmentId] = useState<string | null>(null);
   const [editingSegmentId, setEditingSegmentId] = useState<string | null>(null);
   const [editingSegmentLabel, setEditingSegmentLabel] = useState("");
+  const [deletingSegmentId, setDeletingSegmentId] = useState<string | null>(null);
   const [imageNaturalSize, setImageNaturalSize] = useState<{
     width: number;
     height: number;
@@ -429,13 +433,35 @@ function DetailView({
     [localAnnotations, onAnnotationsChange]
   );
 
+  // Status indicators
+  const hasSegments = segments.length > 0;
+  const hasEmbedding = Boolean(item.briefing_embedding_text);
+
   return (
     <div className="survey-detail-focused">
-      {/* Top bar: title left, eye icon right */}
+      {/* Top bar: title left, status icons center, eye icon right */}
       <div className="survey-detail-focused__top-bar">
         <span className="survey-detail-focused__label">
           {(item.title || "Untitled").toUpperCase()}
         </span>
+        <div className="survey-detail-focused__status-icons">
+          <span
+            className={`survey-detail-focused__status-icon ${hasSegments ? "survey-detail-focused__status-icon--active" : ""}`}
+            title={
+              hasSegments
+                ? `${segments.length} segments detected`
+                : "No segments - run segmentation"
+            }
+          >
+            <Grid3X3 size={14} strokeWidth={1.5} />
+          </span>
+          <span
+            className={`survey-detail-focused__status-icon ${hasEmbedding ? "survey-detail-focused__status-icon--active" : ""}`}
+            title={hasEmbedding ? "Embedded in vector space" : "Not embedded - run embed"}
+          >
+            <Network size={14} strokeWidth={1.5} />
+          </span>
+        </div>
         <button
           className="survey-detail-focused__eye-btn"
           onClick={() => {
@@ -538,13 +564,14 @@ function DetailView({
                   const height = (segment.bbox_height / imgHeight) * 100;
                   const isHovered = hoveredSegmentId === segment.id;
                   const isEditing = editingSegmentId === segment.id;
+                  const isDeleting = deletingSegmentId === segment.id;
                   const displayLabel =
                     segment.label || segment.ai_label || `Segment ${segment.segment_index + 1}`;
 
                   return (
                     <div
                       key={segment.id}
-                      className={`survey-segment-overlay ${isHovered ? "survey-segment-overlay--hovered" : ""}`}
+                      className={`survey-segment-overlay ${isHovered || isEditing ? "survey-segment-overlay--hovered" : ""}`}
                       style={{
                         position: "absolute",
                         left: `${left}%`,
@@ -554,42 +581,124 @@ function DetailView({
                         pointerEvents: "auto",
                       }}
                       onMouseEnter={() => setHoveredSegmentId(segment.id)}
-                      onMouseLeave={() => setHoveredSegmentId(null)}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (!isEditing) {
-                          setEditingSegmentId(segment.id);
-                          setEditingSegmentLabel(segment.label || segment.ai_label || "");
+                      onMouseLeave={() => {
+                        // Don't clear hover if editing or deleting this segment
+                        if (!isEditing && !isDeleting) {
+                          setHoveredSegmentId(null);
                         }
                       }}
                     >
-                      {/* Label tooltip on hover */}
-                      {(isHovered || isEditing) && (
-                        <div className="survey-segment-overlay__label">
+                      {/* Label tooltip - stays visible when hovering over it */}
+                      {(isHovered || isEditing || isDeleting) && (
+                        <div
+                          className="survey-segment-overlay__label"
+                          onMouseEnter={() => setHoveredSegmentId(segment.id)}
+                          onMouseLeave={() => {
+                            if (!isEditing && !isDeleting) {
+                              setHoveredSegmentId(null);
+                            }
+                          }}
+                        >
                           {isEditing ? (
-                            <input
-                              type="text"
-                              className="survey-segment-overlay__input"
-                              value={editingSegmentLabel}
-                              onChange={(e) => setEditingSegmentLabel(e.target.value)}
-                              onKeyDown={(e) => {
-                                if (e.key === "Enter") {
+                            <>
+                              <input
+                                type="text"
+                                className="survey-segment-overlay__input"
+                                value={editingSegmentLabel}
+                                onChange={(e) => setEditingSegmentLabel(e.target.value)}
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter") {
+                                    onUpdateSegmentLabel?.(segment.id, editingSegmentLabel);
+                                    setEditingSegmentId(null);
+                                  } else if (e.key === "Escape") {
+                                    setEditingSegmentId(null);
+                                  }
+                                }}
+                                onClick={(e) => e.stopPropagation()}
+                                autoFocus
+                                placeholder="Enter label..."
+                              />
+                              <button
+                                className="survey-segment-overlay__action-btn survey-segment-overlay__action-btn--save"
+                                onClick={(e) => {
+                                  e.stopPropagation();
                                   onUpdateSegmentLabel?.(segment.id, editingSegmentLabel);
                                   setEditingSegmentId(null);
-                                } else if (e.key === "Escape") {
-                                  setEditingSegmentId(null);
-                                }
-                              }}
-                              onBlur={() => {
-                                onUpdateSegmentLabel?.(segment.id, editingSegmentLabel);
-                                setEditingSegmentId(null);
-                              }}
-                              onClick={(e) => e.stopPropagation()}
-                              autoFocus
-                              placeholder="Enter label..."
-                            />
+                                }}
+                                title="Save label"
+                              >
+                                <Check size={12} strokeWidth={2} />
+                              </button>
+                            </>
                           ) : (
-                            <span>{displayLabel}</span>
+                            <>
+                              <span
+                                className="survey-segment-overlay__text"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setEditingSegmentId(segment.id);
+                                  setEditingSegmentLabel(segment.label || segment.ai_label || "");
+                                }}
+                              >
+                                {displayLabel}
+                              </span>
+                              <button
+                                className="survey-segment-overlay__action-btn survey-segment-overlay__action-btn--delete"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setDeletingSegmentId(segment.id);
+                                }}
+                                title="Delete segment"
+                              >
+                                <Trash2 size={12} strokeWidth={2} />
+                              </button>
+                            </>
+                          )}
+
+                          {/* Delete confirmation popup */}
+                          {isDeleting && (
+                            <div
+                              className="survey-segment-overlay__delete-confirm"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <span className="survey-segment-overlay__delete-confirm-text">
+                                Delete segment?
+                              </span>
+                              <div className="survey-segment-overlay__delete-confirm-actions">
+                                <button
+                                  className="survey-segment-overlay__delete-confirm-btn survey-segment-overlay__delete-confirm-btn--cancel"
+                                  onClick={() => setDeletingSegmentId(null)}
+                                >
+                                  Cancel
+                                </button>
+                                <button
+                                  className="survey-segment-overlay__delete-confirm-btn survey-segment-overlay__delete-confirm-btn--confirm"
+                                  onClick={async () => {
+                                    // Delete the segment via callback or API
+                                    try {
+                                      if (onDeleteSegment) {
+                                        await onDeleteSegment(segment.id);
+                                      } else {
+                                        await fetch(
+                                          `/api/survey/segments?segmentId=${segment.id}`,
+                                          {
+                                            method: "DELETE",
+                                          }
+                                        );
+                                        window.location.reload();
+                                      }
+                                      setDeletingSegmentId(null);
+                                      setHoveredSegmentId(null);
+                                    } catch (err) {
+                                      console.error("Failed to delete segment:", err);
+                                      setDeletingSegmentId(null);
+                                    }
+                                  }}
+                                >
+                                  Delete
+                                </button>
+                              </div>
+                            </div>
                           )}
                         </div>
                       )}
@@ -658,6 +767,7 @@ export function SurveyView({
   onGenerateSegments,
   onToggleSegments,
   onUpdateSegmentLabel,
+  onDeleteSegment,
 }: SurveyViewProps) {
   const selectedItem = items.find((item) => item.id === selectedItemId);
 
@@ -782,6 +892,7 @@ export function SurveyView({
                 onGenerateSegments={onGenerateSegments}
                 onToggleSegments={onToggleSegments}
                 onUpdateSegmentLabel={onUpdateSegmentLabel}
+                onDeleteSegment={onDeleteSegment}
               />
             </div>
           </div>

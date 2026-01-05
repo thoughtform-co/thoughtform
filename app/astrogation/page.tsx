@@ -91,6 +91,7 @@ function AstrogationContent() {
     generateSegments,
     loadSegments,
     updateSegmentLabel,
+    deleteSegment,
     labelSegments,
     isSegmenting,
     isLabelingSegments,
@@ -465,6 +466,7 @@ function AstrogationContent() {
     onGenerateSegments: handleGenerateSegments,
     onToggleSegments: handleToggleSegments,
     onUpdateSegmentLabel: updateSegmentLabel,
+    onDeleteSegment: deleteSegment,
   };
 
   return (

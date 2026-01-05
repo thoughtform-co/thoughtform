@@ -158,6 +158,7 @@ export function CenterPanel({
             onGenerateSegments={survey.onGenerateSegments}
             onToggleSegments={survey.onToggleSegments}
             onUpdateSegmentLabel={survey.onUpdateSegmentLabel}
+            onDeleteSegment={survey.onDeleteSegment}
           />
         )}
       </div>

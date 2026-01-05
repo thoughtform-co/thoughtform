@@ -47,6 +47,7 @@ export interface UseSurveyReturn {
   generateSegments: (itemId: string) => Promise<SurveySegment[] | null>;
   loadSegments: (itemId: string) => Promise<SurveySegment[]>;
   updateSegmentLabel: (segmentId: string, label: string) => Promise<void>;
+  deleteSegment: (segmentId: string) => Promise<void>;
   labelSegments: (itemId: string) => Promise<SurveySegment[] | null>;
   isSegmenting: boolean;
   isLabelingSegments: boolean;
@@ -790,6 +791,25 @@ export function useSurvey({
     [dispatch, fetcher]
   );
 
+  const deleteSegment = useCallback(
+    async (segmentId: string): Promise<void> => {
+      try {
+        await fetcher(`/api/survey/segments?segmentId=${segmentId}`, {
+          method: "DELETE",
+        });
+
+        // Update local state
+        setSegments((prev) => prev.filter((s) => s.id !== segmentId));
+        dispatch(actions.showToast("Segment deleted"));
+      } catch (error) {
+        console.error("Failed to delete segment:", error);
+        dispatch(actions.showToast("Failed to delete segment"));
+        throw error;
+      }
+    },
+    [dispatch, fetcher]
+  );
+
   // Cleanup abort controllers on unmount
   useEffect(() => {
     return () => {
@@ -813,6 +833,7 @@ export function useSurvey({
     generateSegments,
     loadSegments,
     updateSegmentLabel,
+    deleteSegment,
     labelSegments,
     isSegmenting,
     isLabelingSegments,

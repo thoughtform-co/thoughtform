@@ -223,6 +223,7 @@ export interface SurveyViewBundledProps {
   onGenerateSegments?: () => void;
   onToggleSegments?: () => void;
   onUpdateSegmentLabel?: (segmentId: string, label: string) => void;
+  onDeleteSegment?: (segmentId: string) => Promise<void>;
 }
 
 // Primary brand colors for dials - only core colors, no secondary
