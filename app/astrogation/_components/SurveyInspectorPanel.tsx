@@ -95,6 +95,9 @@ function SurveyInspectorPanelInner({
   const prevAnnotationIdsRef = useRef<Set<string>>(new Set());
   const prevItemIdRef = useRef<string | null>(null);
 
+  // Derived view of the item that includes local (unsaved) edits
+  const effectiveItem = localItem !== null ? { ...item, ...localItem } : item;
+
   // Auto-open new annotation notes
   useEffect(() => {
     // Reset annotation tracking when item changes
@@ -136,9 +139,6 @@ function SurveyInspectorPanelInner({
       }
     }
   }, [selectedAnnotationId, item?.annotations]);
-
-  // Sync local state when item changes
-  const effectiveItem = localItem !== null ? { ...item, ...localItem } : item;
 
   // Handle field changes locally
   const handleFieldChange = useCallback((field: keyof SurveyItem, value: unknown) => {
@@ -869,112 +869,116 @@ function SurveyInspectorPanelInner({
                       {(effectiveItem?.annotations || []).map((annotation, index) => (
                         <div
                           key={annotation.id}
+                          data-annotation-id={annotation.id}
                           className={`spec-annotation spec-annotation--compact ${selectedAnnotationId === annotation.id ? "spec-annotation--selected" : ""}`}
                           onClick={() => onAnnotationSelect?.(annotation.id)}
                         >
-                          {/* Index on left */}
-                          <span className="spec-annotation__index">#{index + 1}</span>
-                          {/* Note content in middle (grows to fill) */}
+                          {/* Header row: index + actions */}
+                          <div className="spec-annotation__header">
+                            <span className="spec-annotation__index">#{index + 1}</span>
+                            {/* Action icons - visible on hover */}
+                            <div className="spec-annotation__actions">
+                              <button
+                                className="spec-annotation__action-icon spec-annotation__action-icon--save"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleSaveAnnotationNote();
+                                }}
+                                title="Save"
+                              >
+                                <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                                  <path
+                                    d="M10 2.5L4.5 8L2 5.5"
+                                    stroke="currentColor"
+                                    strokeWidth="1.5"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                  />
+                                </svg>
+                              </button>
+                              <button
+                                className="spec-annotation__action-icon spec-annotation__action-icon--delete"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteAnnotation(annotation.id);
+                                }}
+                                title="Delete annotation"
+                              >
+                                <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                                  <path
+                                    d="M2 3H10M4 3V2C4 1.5 4.5 1 5 1H7C7.5 1 8 1.5 8 2V3M4.5 5V9M7.5 5V9M3 3L3.5 10C3.5 10.5 4 11 4.5 11H7.5C8 11 8.5 10.5 8.5 10L9 3"
+                                    stroke="currentColor"
+                                    strokeWidth="1"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                  />
+                                </svg>
+                              </button>
+                              {/* Crop thumbnail (shows when crop exists) */}
+                              {annotation.crop_path && (
+                                <button
+                                  className="spec-annotation__action-icon spec-annotation__action-icon--crop"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (annotation.crop_url) {
+                                      window.open(annotation.crop_url, "_blank");
+                                    }
+                                  }}
+                                  title="View annotation crop"
+                                >
+                                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                                    <rect
+                                      x="1"
+                                      y="1"
+                                      width="10"
+                                      height="10"
+                                      rx="1"
+                                      stroke="currentColor"
+                                      strokeWidth="1"
+                                    />
+                                    <path
+                                      d="M3 5L5 7L9 3"
+                                      stroke="currentColor"
+                                      strokeWidth="1"
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                    />
+                                  </svg>
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                          {/* Note content - reuse flow-connector__textarea styling */}
                           {editingAnnotationId === annotation.id ? (
-                            <input
-                              type="text"
-                              className="spec-annotation__input spec-annotation__input--inline"
+                            <textarea
+                              className="flow-connector__textarea"
                               value={annotationNote}
                               onChange={(e) => setAnnotationNote(e.target.value)}
                               placeholder="Add note..."
                               autoFocus
                               onClick={(e) => e.stopPropagation()}
                               onKeyDown={(e) => {
-                                if (e.key === "Enter") handleSaveAnnotationNote();
+                                if (e.key === "Enter" && !e.shiftKey) {
+                                  e.preventDefault();
+                                  handleSaveAnnotationNote();
+                                }
                                 if (e.key === "Escape") {
                                   setEditingAnnotationId(null);
                                   setAnnotationNote("");
                                 }
                               }}
+                              rows={2}
                             />
                           ) : (
-                            <span
-                              className="spec-annotation__note spec-annotation__note--inline"
+                            <div
+                              className={`flow-connector__textarea spec-annotation__note-view ${!annotation.note ? "spec-annotation__note-view--placeholder" : ""}`}
                               onClick={(e) => {
                                 e.stopPropagation();
                                 handleEditAnnotation(annotation);
                               }}
                             >
                               {annotation.note || "Click to add note..."}
-                            </span>
-                          )}
-                          {/* Action icon on far right: Save when editing, Delete otherwise */}
-                          {editingAnnotationId === annotation.id ? (
-                            <button
-                              className="spec-annotation__action-icon spec-annotation__action-icon--save"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleSaveAnnotationNote();
-                              }}
-                              title="Save"
-                            >
-                              <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                                <path
-                                  d="M10 2.5L4.5 8L2 5.5"
-                                  stroke="currentColor"
-                                  strokeWidth="1.5"
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                />
-                              </svg>
-                            </button>
-                          ) : (
-                            <button
-                              className="spec-annotation__action-icon spec-annotation__action-icon--delete"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleDeleteAnnotation(annotation.id);
-                              }}
-                              title="Delete annotation"
-                            >
-                              <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                                <path
-                                  d="M2 3H10M4 3V2C4 1.5 4.5 1 5 1H7C7.5 1 8 1.5 8 2V3M4.5 5V9M7.5 5V9M3 3L3.5 10C3.5 10.5 4 11 4.5 11H7.5C8 11 8.5 10.5 8.5 10L9 3"
-                                  stroke="currentColor"
-                                  strokeWidth="1"
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                />
-                              </svg>
-                            </button>
-                          )}
-                          {/* Crop thumbnail (shows when crop exists) */}
-                          {annotation.crop_path && (
-                            <button
-                              className="spec-annotation__crop-thumb"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                // Open crop in new tab when crop_url is available
-                                if (annotation.crop_url) {
-                                  window.open(annotation.crop_url, "_blank");
-                                }
-                              }}
-                              title="View annotation crop"
-                            >
-                              <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                                <rect
-                                  x="1"
-                                  y="1"
-                                  width="10"
-                                  height="10"
-                                  rx="1"
-                                  stroke="currentColor"
-                                  strokeWidth="1"
-                                />
-                                <path
-                                  d="M3 5L5 7L9 3"
-                                  stroke="currentColor"
-                                  strokeWidth="1"
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                />
-                              </svg>
-                            </button>
+                            </div>
                           )}
                         </div>
                       ))}
