@@ -171,6 +171,13 @@ export function useSurvey({
   const searchAbortRef = useRef<AbortController | null>(null);
 
   // ═══════════════════════════════════════════════════════════════
+  // UPLOAD LOCK - Prevent loadItems during active upload
+  // ═══════════════════════════════════════════════════════════════
+  // When uploading, we don't want loadItems to run because the newly uploaded
+  // item might not be in the database yet, causing it to disappear from the UI.
+  const isUploadingRef = useRef(false);
+
+  // ═══════════════════════════════════════════════════════════════
   // RACE CONDITION PROTECTION - Preserve optimistic updates during reloads
   // ═══════════════════════════════════════════════════════════════
   // Track recently added/deleted items to preserve optimistic state during
@@ -196,6 +203,16 @@ export function useSurvey({
       console.warn("No session token available - user may need to sign in");
       dispatch(actions.showToast("Please sign in to view your items"));
       dispatch(actions.surveySetLoading(false));
+      return;
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // UPLOAD LOCK: Skip loading during active upload
+    // ═══════════════════════════════════════════════════════════════
+    // If an upload is in progress, skip this load request to prevent
+    // race conditions where the newly uploaded item disappears from UI.
+    if (isUploadingRef.current) {
+      console.log("[useSurvey] Skipping loadItems - upload in progress");
       return;
     }
 
@@ -429,45 +446,57 @@ export function useSurvey({
 
   const uploadItem = useCallback(
     async (file: File, categoryId?: string | null, componentKey?: string | null) => {
-      const formData = new FormData();
-      formData.append("file", file);
-
-      const finalCategoryId = categoryId !== undefined ? categoryId : surveyCategoryId;
-      const finalComponentKey = componentKey !== undefined ? componentKey : surveyComponentKey;
-
-      if (finalCategoryId) formData.append("category_id", finalCategoryId);
-      if (finalComponentKey) formData.append("component_key", finalComponentKey);
-
-      const data = await formFetcher<{ item: SurveyItem }>("/api/survey/items", formData);
-      const newItemId = data.item.id;
-
       // ═══════════════════════════════════════════════════════════════
-      // RACE CONDITION PROTECTION
+      // UPLOAD LOCK: Prevent loadItems during upload flow
       // ═══════════════════════════════════════════════════════════════
-      // Track this item to preserve it if loadItems races with this upload.
-      // Session token refresh can trigger loadItems to reload with stale data.
-      recentlyAddedItemsRef.current.set(newItemId, data.item);
+      isUploadingRef.current = true;
 
-      // Clean up tracking after 30 seconds (item should be in DB by then)
-      setTimeout(() => {
-        recentlyAddedItemsRef.current.delete(newItemId);
-      }, 30000);
-
-      dispatch(actions.surveyAddItem(data.item));
-      dispatch(actions.surveySelectItem(data.item.id)); // Auto-select the new item
-      dispatch(actions.showToast("Reference uploaded"));
-      setAllItems((prev) => [data.item, ...prev]);
-
-      // Auto-run analysis only (briefing is triggered manually)
-      setPipelineStatus("analyzing");
       try {
-        await analyzeItem(newItemId);
-        setPipelineStatus("done");
-        dispatch(actions.showToast("Analysis complete"));
-      } catch (error) {
-        console.error("Analysis error:", error);
-        setPipelineStatus("error");
-        // Don't throw - upload succeeded, just analysis failed
+        const formData = new FormData();
+        formData.append("file", file);
+
+        const finalCategoryId = categoryId !== undefined ? categoryId : surveyCategoryId;
+        const finalComponentKey = componentKey !== undefined ? componentKey : surveyComponentKey;
+
+        if (finalCategoryId) formData.append("category_id", finalCategoryId);
+        if (finalComponentKey) formData.append("component_key", finalComponentKey);
+
+        const data = await formFetcher<{ item: SurveyItem }>("/api/survey/items", formData);
+        const newItemId = data.item.id;
+
+        // ═══════════════════════════════════════════════════════════════
+        // RACE CONDITION PROTECTION
+        // ═══════════════════════════════════════════════════════════════
+        // Track this item to preserve it if loadItems races with this upload.
+        // Session token refresh can trigger loadItems to reload with stale data.
+        recentlyAddedItemsRef.current.set(newItemId, data.item);
+
+        // Clean up tracking after 30 seconds (item should be in DB by then)
+        setTimeout(() => {
+          recentlyAddedItemsRef.current.delete(newItemId);
+        }, 30000);
+
+        dispatch(actions.surveyAddItem(data.item));
+        dispatch(actions.surveySelectItem(data.item.id)); // Auto-select the new item
+        dispatch(actions.showToast("Reference uploaded"));
+        setAllItems((prev) => [data.item, ...prev]);
+
+        // Auto-run analysis only (briefing is triggered manually)
+        setPipelineStatus("analyzing");
+        try {
+          await analyzeItem(newItemId);
+          setPipelineStatus("done");
+          dispatch(actions.showToast("Analysis complete"));
+        } catch (error) {
+          console.error("Analysis error:", error);
+          setPipelineStatus("error");
+          // Don't throw - upload succeeded, just analysis failed
+        }
+      } finally {
+        // ═══════════════════════════════════════════════════════════════
+        // UPLOAD LOCK: Release lock after upload flow completes
+        // ═══════════════════════════════════════════════════════════════
+        isUploadingRef.current = false;
       }
     },
     [dispatch, surveyCategoryId, surveyComponentKey, formFetcher, analyzeItem]

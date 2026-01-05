@@ -833,6 +833,20 @@
   padding: calc(var(--survey-notch-h) + 16px) 12px 12px 12px; /* clears title/notch area with margin */
   scrollbar-width: none;
   -ms-overflow-style: none;
+  /* Ensure children don't overflow horizontally */
+  max-width: 100%;
+}
+
+/* Global text overflow protection for inspector panel */
+.inspector-frame__scrollable * {
+  max-width: 100%;
+}
+
+.inspector-frame__scrollable p,
+.inspector-frame__scrollable span:not(.spec-section__label-text):not(.spec-annotation__index),
+.inspector-frame__scrollable div:not([class*="__label"]):not([class*="__header"]) {
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 .inspector-frame__scrollable::-webkit-scrollbar {
@@ -2898,10 +2912,13 @@
 .astrogation-panel--right .panel-content {
   flex: 1;
   min-height: 0;
+  min-width: 0; /* Allow shrinking in flex context */
   overflow-y: hidden;
   overflow-x: hidden;
   scrollbar-width: none;
   -ms-overflow-style: none;
+  /* Ensure all children respect container width */
+  max-width: 100%;
 }
 
 .astrogation-panel--left .panel-content::-webkit-scrollbar,
@@ -4218,6 +4235,10 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
+  /* Prevent content overflow */
+  overflow: hidden;
+  max-width: 100%;
+  min-width: 0;
 }
 
 .spec-section__label {
@@ -4516,6 +4537,9 @@
   padding: 10px;
   cursor: pointer;
   transition: all 0.15s ease;
+  /* Prevent content overflow */
+  overflow: hidden;
+  max-width: 100%;
 }
 
 .spec-annotation:hover {
@@ -4636,6 +4660,10 @@
   cursor: pointer;
   padding: 4px 0;
   display: block;
+  /* Prevent text overflow */
+  word-break: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
 }
 
 .spec-annotation__note:hover {
@@ -5153,6 +5181,11 @@
   padding: 10px 12px;
   background: rgba(202, 165, 84, 0.04);
   border-left: 2px solid var(--gold-30);
+  /* Prevent text overflow */
+  word-break: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+  max-width: 100%;
 }
 
 .spec-section__ai-loading {
@@ -5222,6 +5255,10 @@
   white-space: pre-wrap;
   max-height: 480px; /* Increased from 240px */
   overflow-y: auto;
+  overflow-x: hidden;
+  /* Prevent text overflow */
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 .spec-section__briefing-text::-webkit-scrollbar {
@@ -5456,19 +5493,12 @@
   padding: 6px 8px;
   background: rgba(235, 227, 214, 0.03);
   border: 1px solid var(--dawn-08);
+  box-sizing: border-box;
+  width: 100%;
 }
 
 .spec-annotation--compact .spec-annotation__index {
   flex-shrink: 0;
-}
-
-/* Inline note in compact mode - grows to fill space */
-.spec-annotation__note--inline {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 /* Inline input in compact mode - grows to fill space */
@@ -5480,9 +5510,11 @@
   border-bottom: 1px solid var(--gold-30);
   color: var(--gold);
   font-family: var(--font-mono);
-  font-size: 10px;
-  padding: 2px 0;
+  font-size: 11px; /* Match .spec-annotation__note--inline */
+  padding: 0;
   outline: none;
+  box-sizing: border-box;
+  width: 100%;
 }
 
 .spec-annotation__input--inline:focus {
@@ -5503,6 +5535,16 @@
   font-size: 11px;
   color: var(--dawn-60);
   cursor: pointer;
+  /* Prevent overflow for single-line display */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 0;
+  /* Match input border-bottom to prevent height change on edit/save */
+  border-bottom: 1px solid transparent;
+  font-family: var(--font-mono);
 }
 
 .spec-annotation__note--inline:hover {
@@ -5511,12 +5553,14 @@
 
 .spec-annotation__edit--inline {
   flex: 1;
+  min-width: 0;
 }
 
 .spec-annotation__edit--inline .spec-annotation__input {
   width: 100%;
-  padding: 4px 8px;
+  padding: 0; /* Match inline note - no extra padding */
   font-size: 11px;
+  box-sizing: border-box;
 }
 
 .spec-annotation--compact .spec-annotation__delete {
@@ -7319,6 +7363,10 @@
   color: var(--dawn);
   white-space: nowrap;
   margin-left: 16px; /* Standardized margin for corner alignment */
+  /* Prevent overflow - truncate with ellipsis */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: calc(50% - 60px); /* Leave space for center icons and eye button */
 }
 
 /* Status icons - center of top bar */
@@ -8614,6 +8662,9 @@
   /* Marker/line geometry tuning */
   /* Aligned with the center of the 16px header (4px offset + 7px half-diamond = 11px, adjusted to 4px) */
   --flow-marker-offset: 4px;
+  /* Prevent content overflow */
+  overflow: hidden;
+  min-width: 0;
 }
 
 /* Diamond marker - positioned in left column */
