@@ -449,6 +449,7 @@ export function useSurvey({
       // ═══════════════════════════════════════════════════════════════
       // UPLOAD LOCK: Prevent loadItems during upload flow
       // ═══════════════════════════════════════════════════════════════
+      const wasUploading = isUploadingRef.current;
       isUploadingRef.current = true;
 
       try {
@@ -476,10 +477,19 @@ export function useSurvey({
           recentlyAddedItemsRef.current.delete(newItemId);
         }, 30000);
 
+        // Keep the local ref in sync so follow-up calls (like loadItemFullData) can't overwrite
+        // state with a stale list that excludes the newly uploaded item.
+        surveyItemsRef.current = [
+          data.item,
+          ...surveyItemsRef.current.filter((it) => it.id !== newItemId),
+        ];
+
         dispatch(actions.surveyAddItem(data.item));
         dispatch(actions.surveySelectItem(data.item.id)); // Auto-select the new item
         dispatch(actions.showToast("Reference uploaded"));
         setAllItems((prev) => [data.item, ...prev]);
+        // Sync ref immediately so loadItemFullData can't overwrite with stale data
+        surveyItemsRef.current = [data.item, ...surveyItemsRef.current];
 
         // Auto-run analysis only (briefing is triggered manually)
         setPipelineStatus("analyzing");
@@ -515,6 +525,16 @@ export function useSurvey({
           body: updates,
         });
 
+        // Keep the local ref in sync so subsequent loadItemFullData calls can't overwrite
+        // recent edits (like title) with stale data.
+        const hasInRef = surveyItemsRef.current.some((it) => it.id === data.item.id);
+        surveyItemsRef.current = hasInRef
+          ? surveyItemsRef.current.map((it) => (it.id === data.item.id ? data.item : it))
+          : [data.item, ...surveyItemsRef.current];
+        // If this item is being protected as "recently added", keep that copy fresh too.
+        if (recentlyAddedItemsRef.current.has(data.item.id)) {
+          recentlyAddedItemsRef.current.set(data.item.id, data.item);
+        }
         dispatch(actions.surveyUpdateItem(data.item));
         dispatch(actions.showToast("Saved"));
         setAllItems((prev) => prev.map((item) => (item.id === data.item.id ? data.item : item)));

@@ -653,7 +653,7 @@ function SurveyInspectorPanelInner({
             </section>
 
             {/* ═══ SECTION 2: Component Classification (Nested) ═══ */}
-            <section className="spec-section">
+            <section className="spec-section spec-section--overflow-visible">
               <div className="spec-section__label">
                 <span className="spec-section__label-text">Component Class</span>
                 <span className="spec-section__label-line" />

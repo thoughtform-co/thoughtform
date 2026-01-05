@@ -4241,6 +4241,11 @@
   min-width: 0;
 }
 
+/* Allow overlays (like dropdown menus) to escape the section box when needed */
+.spec-section--overflow-visible {
+  overflow: visible;
+}
+
 .spec-section__label {
   display: flex;
   flex-direction: column;
