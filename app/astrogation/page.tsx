@@ -96,6 +96,8 @@ function AstrogationContent() {
     isSegmenting,
     isLabelingSegments,
     segments,
+    collections,
+    createCollection,
     itemCounts,
     isAnalyzing,
     isEmbedding,
@@ -418,7 +420,7 @@ function AstrogationContent() {
     }
   }, [surveySelectedItemId, loadSegments]);
 
-  // Handle generating segments for current item
+  // Handle generating segments for current item (segment only, no auto-label)
   const handleGenerateSegments = useCallback(() => {
     if (surveySelectedItemId) {
       // Auto-show the overlay so results are immediately visible in the popup.
@@ -426,6 +428,18 @@ function AstrogationContent() {
       generateSegments(surveySelectedItemId);
     }
   }, [surveySelectedItemId, generateSegments]);
+
+  // Combined segment + label action: generates segments then automatically labels them
+  const handleSegmentAndLabel = useCallback(async () => {
+    if (surveySelectedItemId) {
+      setShowSegments(true);
+      const newSegments = await generateSegments(surveySelectedItemId);
+      // Auto-label if we got segments
+      if (newSegments && newSegments.length > 0) {
+        await labelSegments(surveySelectedItemId);
+      }
+    }
+  }, [surveySelectedItemId, generateSegments, labelSegments]);
 
   // Handle toggling segment visibility
   const handleToggleSegments = useCallback(() => {
@@ -618,7 +632,15 @@ function AstrogationContent() {
             allItems={surveyItems}
             onAnalyze={() => analyzeItem().catch(() => {})}
             onGenerateBriefing={() => generateBriefing().catch(() => {})}
-            onEmbed={() => embedItem().catch(() => {})}
+            onEmbed={async () => {
+              try {
+                await embedItem();
+                // Close popup and return to grid view after successful embed
+                handleSurveySelectItem(null);
+              } catch {
+                // Error already handled in embedItem
+              }
+            }}
             onUpload={uploadItem}
             selectedCategoryId={surveyCategoryId}
             selectedComponentKey={surveyComponentKey}
@@ -630,13 +652,16 @@ function AstrogationContent() {
             isSaving={isSaving}
             isResizing={isAnnotationResizing}
             pipelineStatus={pipelineStatus}
-            onGenerateSegments={handleGenerateSegments}
+            onSegmentAndLabel={handleSegmentAndLabel}
+            onReSegment={handleGenerateSegments}
             onToggleSegments={handleToggleSegments}
-            onLabelSegments={handleLabelSegments}
+            onReLabelSegments={handleLabelSegments}
             isSegmenting={isSegmenting}
             isLabelingSegments={isLabelingSegments}
             showSegments={showSegments}
             segmentCount={segments.length}
+            collections={collections}
+            onCreateCollection={createCollection}
           />
         ) : activeTab === "foundry" ? (
           <DialsPanel

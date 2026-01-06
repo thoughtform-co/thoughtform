@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
     let query = supabase
       .from("survey_items")
       .select(
-        "id, image_path, image_mime, image_width, image_height, title, notes, tags, category_id, component_key, sources, analysis, annotations, briefing_embedding_text, briefing_embedding_model, created_at, updated_at"
+        "id, image_path, image_mime, image_width, image_height, title, notes, tags, category_id, component_key, collection_id, sources, analysis, annotations, briefing_embedding_text, briefing_embedding_model, created_at, updated_at"
       )
       .order("created_at", { ascending: false });
 
@@ -250,6 +250,7 @@ export async function PATCH(request: NextRequest) {
     const allowedFields = [
       "category_id",
       "component_key",
+      "collection_id",
       "title",
       "notes",
       "sources",

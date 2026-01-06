@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useCallback, useState, useMemo, useRef } from "react";
-import type { SurveyItem, SurveySegment } from "../_components/types";
+import type { SurveyItem, SurveySegment, SurveyCollection } from "../_components/types";
 import type { AstrogationAction } from "../_state/astrogationReducer";
 import { actions } from "../_state/astrogationReducer";
 import { useAuth } from "@/components/auth/AuthProvider";
@@ -52,6 +52,17 @@ export interface UseSurveyReturn {
   isSegmenting: boolean;
   isLabelingSegments: boolean;
   segments: SurveySegment[];
+  // Collections
+  collections: SurveyCollection[];
+  loadCollections: () => Promise<void>;
+  createCollection: (
+    name: string,
+    description?: string,
+    color?: string
+  ) => Promise<SurveyCollection>;
+  updateCollection: (id: string, updates: Partial<SurveyCollection>) => Promise<void>;
+  deleteCollection: (id: string) => Promise<void>;
+  // Stats
   itemCounts: Record<string, number>;
   isAnalyzing: boolean;
   isEmbedding: boolean;
@@ -161,6 +172,7 @@ export function useSurvey({
   const [isSegmenting, setIsSegmenting] = useState(false);
   const [isLabelingSegments, setIsLabelingSegments] = useState(false);
   const [segments, setSegments] = useState<SurveySegment[]>([]);
+  const [collections, setCollections] = useState<SurveyCollection[]>([]);
 
   // Refs for stable callback access
   const selectedItemIdRef = useRef(surveySelectedItemId);
@@ -883,6 +895,67 @@ export function useSurvey({
     [dispatch, fetcher]
   );
 
+  // ═══════════════════════════════════════════════════════════════
+  // COLLECTIONS - Group related survey items
+  // ═══════════════════════════════════════════════════════════════
+
+  const loadCollections = useCallback(async () => {
+    if (!session?.access_token) return;
+
+    try {
+      const data = await fetcher<{ collections: SurveyCollection[] }>("/api/survey/collections");
+      setCollections(data.collections || []);
+    } catch (error) {
+      console.error("Failed to load collections:", error);
+    }
+  }, [session?.access_token, fetcher]);
+
+  const createCollection = useCallback(
+    async (name: string, description?: string, color?: string): Promise<SurveyCollection> => {
+      const data = await fetcher<{ collection: SurveyCollection }>("/api/survey/collections", {
+        method: "POST",
+        body: { name, description, color },
+      });
+
+      const newCollection = data.collection;
+      setCollections((prev) => [...prev, newCollection]);
+      dispatch(actions.showToast(`Created collection: ${name}`));
+      return newCollection;
+    },
+    [fetcher, dispatch]
+  );
+
+  const updateCollection = useCallback(
+    async (id: string, updates: Partial<SurveyCollection>): Promise<void> => {
+      await fetcher(`/api/survey/collections?id=${id}`, {
+        method: "PATCH",
+        body: updates,
+      });
+
+      setCollections((prev) => prev.map((c) => (c.id === id ? { ...c, ...updates } : c)));
+    },
+    [fetcher]
+  );
+
+  const deleteCollection = useCallback(
+    async (id: string): Promise<void> => {
+      await fetcher(`/api/survey/collections?id=${id}`, {
+        method: "DELETE",
+      });
+
+      setCollections((prev) => prev.filter((c) => c.id !== id));
+      dispatch(actions.showToast("Collection deleted"));
+    },
+    [fetcher, dispatch]
+  );
+
+  // Load collections when session is available
+  useEffect(() => {
+    if (session?.access_token) {
+      loadCollections();
+    }
+  }, [session?.access_token, loadCollections]);
+
   // Cleanup abort controllers on unmount
   useEffect(() => {
     return () => {
@@ -911,6 +984,13 @@ export function useSurvey({
     isSegmenting,
     isLabelingSegments,
     segments,
+    // Collections
+    collections,
+    loadCollections,
+    createCollection,
+    updateCollection,
+    deleteCollection,
+    // Stats
     itemCounts,
     isAnalyzing,
     isEmbedding,

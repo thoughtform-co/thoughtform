@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, memo, useEffect, useRef, useMemo } from "react";
-import type { SurveyItem, SurveyItemSource, SurveyAnnotation } from "./types";
+import type { SurveyItem, SurveyItemSource, SurveyAnnotation, SurveyCollection } from "./types";
 import { NestedSelect } from "./NestedSelect";
 import { SurveyUploadModal } from "./SurveyUploadModal";
 import { ConfirmDialog } from "./ConfirmDialog";
@@ -34,15 +34,19 @@ export interface SurveyInspectorPanelProps {
   isUploading?: boolean;
   pipelineStatus?: PipelineStatus;
   // Segmentation
-  onGenerateSegments?: () => void;
+  onSegmentAndLabel?: () => void; // Combined action: segment then auto-label
+  onReSegment?: () => void; // Manual re-segment only
   onToggleSegments?: () => void;
-  onLabelSegments?: () => void;
+  onReLabelSegments?: () => void; // Manual re-label only
   isSegmenting?: boolean;
   isLabelingSegments?: boolean;
   showSegments?: boolean;
   segmentCount?: number;
   // For tag autocomplete
   allItems?: SurveyItem[];
+  // Collections
+  collections?: SurveyCollection[];
+  onCreateCollection?: (name: string) => Promise<SurveyCollection>;
 }
 
 type InspectorTab = "fields" | "chat";
@@ -66,14 +70,17 @@ function SurveyInspectorPanelInner({
   onAnnotationSelect,
   isUploading = false,
   pipelineStatus = "idle",
-  onGenerateSegments,
+  onSegmentAndLabel,
+  onReSegment,
   onToggleSegments,
-  onLabelSegments,
+  onReLabelSegments,
   isSegmenting = false,
   isLabelingSegments = false,
   showSegments = false,
   segmentCount = 0,
   allItems = [],
+  collections = [],
+  onCreateCollection,
 }: SurveyInspectorPanelProps) {
   const [activeTab, setActiveTab] = useState<InspectorTab>("fields");
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
@@ -89,6 +96,8 @@ function SurveyInspectorPanelInner({
   const [tagInput, setTagInput] = useState("");
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [newSourceUrl, setNewSourceUrl] = useState("");
+  const [collectionInput, setCollectionInput] = useState("");
+  const [showCollectionDropdown, setShowCollectionDropdown] = useState(false);
   const [editingSourceIndex, setEditingSourceIndex] = useState<number | null>(null);
   const [editingSourceUrl, setEditingSourceUrl] = useState("");
   const [tagSuggestions, setTagSuggestions] = useState<string[]>([]);
@@ -97,6 +106,7 @@ function SurveyInspectorPanelInner({
   const tagInputRef = useRef<HTMLInputElement>(null);
   const sourceInputRef = useRef<HTMLInputElement>(null);
   const tagSuggestionsRef = useRef<HTMLDivElement>(null);
+  const collectionDropdownRef = useRef<HTMLDivElement>(null);
   const autosaveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Track previously seen annotations to detect new ones
@@ -165,10 +175,11 @@ function SurveyInspectorPanelInner({
       clearTimeout(autosaveTimeoutRef.current);
     }
 
-    // Only autosave title and tags (other fields like notes can still use manual save)
+    // Only autosave title, tags, and collection_id (other fields like notes can still use manual save)
     const hasTitleChange = "title" in localItem;
     const hasTagsChange = "tags" in localItem;
-    if (!hasTitleChange && !hasTagsChange) return;
+    const hasCollectionChange = "collection_id" in localItem;
+    if (!hasTitleChange && !hasTagsChange && !hasCollectionChange) return;
 
     // Build update object with only the fields that changed
     const updates: Partial<SurveyItem> = { id: item.id };
@@ -177,6 +188,9 @@ function SurveyInspectorPanelInner({
     }
     if (hasTagsChange) {
       updates.tags = localItem.tags ?? [];
+    }
+    if (hasCollectionChange) {
+      updates.collection_id = localItem.collection_id ?? null;
     }
 
     // Set new timeout for autosave (1.5 seconds after last change)
@@ -189,6 +203,7 @@ function SurveyInspectorPanelInner({
           const next = { ...prev };
           if (hasTitleChange) delete next.title;
           if (hasTagsChange) delete next.tags;
+          if (hasCollectionChange) delete next.collection_id;
           return Object.keys(next).length > 1 ? next : null; // Keep if there are other unsaved changes
         });
       } catch (error) {
@@ -462,6 +477,78 @@ function SurveyInspectorPanelInner({
     },
     [handleAddTag]
   );
+
+  // Handle collection selection
+  const handleSelectCollection = useCallback(
+    async (collectionId: string | null) => {
+      if (!item) return;
+
+      // Update local state immediately for UI responsiveness
+      setLocalItem((prev) => ({
+        ...(prev || {}),
+        collection_id: collectionId,
+      }));
+      setShowCollectionDropdown(false);
+      setCollectionInput("");
+
+      // Save immediately (collection selection is a deliberate action)
+      try {
+        await onUpdate({ id: item.id, collection_id: collectionId });
+        // Clear collection_id from localItem since it's been saved
+        setLocalItem((prev) => {
+          if (!prev) return null;
+          const next = { ...prev };
+          delete next.collection_id;
+          return Object.keys(next).length > 1 ? next : null;
+        });
+      } catch (error) {
+        console.error("Failed to save collection:", error);
+      }
+    },
+    [item, onUpdate]
+  );
+
+  const handleCreateCollection = useCallback(async () => {
+    if (!collectionInput.trim() || !onCreateCollection) return;
+
+    try {
+      const newCollection = await onCreateCollection(collectionInput.trim());
+      // Use handleSelectCollection to save immediately
+      await handleSelectCollection(newCollection.id);
+    } catch (error) {
+      console.error("Failed to create collection:", error);
+    }
+  }, [collectionInput, onCreateCollection, handleSelectCollection]);
+
+  // Filter collections based on input
+  const filteredCollections = useMemo(() => {
+    if (!collectionInput.trim()) return collections;
+    const search = collectionInput.toLowerCase();
+    return collections.filter((c) => c.name.toLowerCase().includes(search));
+  }, [collections, collectionInput]);
+
+  // Get current collection
+  const currentCollection = useMemo(() => {
+    if (!effectiveItem?.collection_id) return null;
+    return collections.find((c) => c.id === effectiveItem.collection_id) || null;
+  }, [effectiveItem?.collection_id, collections]);
+
+  // Close collection dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        collectionDropdownRef.current &&
+        !collectionDropdownRef.current.contains(e.target as Node)
+      ) {
+        setShowCollectionDropdown(false);
+      }
+    };
+
+    if (showCollectionDropdown) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showCollectionDropdown]);
 
   // Handle annotation editing
   const handleEditAnnotation = useCallback((annotation: SurveyAnnotation) => {
@@ -806,170 +893,187 @@ function SurveyInspectorPanelInner({
               />
             </section>
 
-            {/* ═══ SECTION 3: Tags ═══ */}
+            {/* ═══ SECTION 3: Classification (Tags + Collection) ═══ */}
             <section className="spec-section" style={{ position: "relative" }}>
               <div className="spec-section__label">
-                <span className="spec-section__label-text">Tags</span>
+                <span className="spec-section__label-text">Classification</span>
                 <span className="spec-section__label-line" />
               </div>
-              <div className="spec-tags-input" onClick={() => tagInputRef.current?.focus()}>
-                {(effectiveItem?.tags || []).map((tag) => (
-                  <span key={tag} className="spec-tag-chip">
-                    {tag}
-                    <button
-                      type="button"
-                      className="spec-tag-chip__remove"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleRemoveTag(tag);
-                      }}
-                    >
-                      ×
-                    </button>
-                  </span>
-                ))}
-                <input
-                  ref={tagInputRef}
-                  type="text"
-                  className="spec-tags-input__field"
-                  value={tagInput}
-                  onChange={(e) => setTagInput(e.target.value)}
-                  onKeyDown={handleTagInputKeyDown}
-                  onBlur={handleTagInputBlur}
-                  onFocus={() => {
-                    if (tagSuggestions.length > 0) {
-                      setShowTagSuggestions(true);
-                    }
-                  }}
-                  placeholder={(effectiveItem?.tags?.length || 0) === 0 ? "Add tags..." : ""}
-                />
-              </div>
-              {/* Tag autocomplete suggestions */}
-              {showTagSuggestions && tagSuggestions.length > 0 && (
-                <div ref={tagSuggestionsRef} className="spec-tag-suggestions">
-                  {tagSuggestions.map((suggestion, index) => (
-                    <button
-                      key={suggestion}
-                      type="button"
-                      className={`spec-tag-suggestion ${
-                        index === selectedSuggestionIndex ? "spec-tag-suggestion--selected" : ""
-                      }`}
-                      onClick={() => handleTagSuggestionClick(suggestion)}
-                      onMouseEnter={() => setSelectedSuggestionIndex(index)}
-                    >
-                      {suggestion}
-                    </button>
-                  ))}
-                </div>
-              )}
-              {/* Suggested tags from AI - clickable to add */}
-              {effectiveItem?.analysis?.tags && effectiveItem.analysis.tags.length > 0 && (
-                <div className="spec-suggested-tags">
-                  <span className="spec-suggested-tags__label">Suggested:</span>
-                  {effectiveItem.analysis.tags
-                    .filter((tag) => !(effectiveItem?.tags || []).includes(tag.toLowerCase()))
-                    .map((tag, i) => (
+
+              {/* Tags subsection */}
+              <div className="spec-subsection">
+                <div className="spec-subsection__label">Tags</div>
+                <div className="spec-tags-input" onClick={() => tagInputRef.current?.focus()}>
+                  {(effectiveItem?.tags || []).map((tag) => (
+                    <span key={tag} className="spec-tag-chip">
+                      {tag}
                       <button
-                        key={i}
                         type="button"
-                        className="spec-suggested-tags__tag"
-                        onClick={() => handleAddTag(tag)}
-                        title="Click to add"
+                        className="spec-tag-chip__remove"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleRemoveTag(tag);
+                        }}
                       >
-                        + {tag}
+                        ×
+                      </button>
+                    </span>
+                  ))}
+                  <input
+                    ref={tagInputRef}
+                    type="text"
+                    className="spec-tags-input__field"
+                    value={tagInput}
+                    onChange={(e) => setTagInput(e.target.value)}
+                    onKeyDown={handleTagInputKeyDown}
+                    onBlur={handleTagInputBlur}
+                    onFocus={() => {
+                      if (tagSuggestions.length > 0) {
+                        setShowTagSuggestions(true);
+                      }
+                    }}
+                    placeholder={(effectiveItem?.tags?.length || 0) === 0 ? "Add tags..." : ""}
+                  />
+                </div>
+                {/* Tag autocomplete suggestions */}
+                {showTagSuggestions && tagSuggestions.length > 0 && (
+                  <div ref={tagSuggestionsRef} className="spec-tag-suggestions">
+                    {tagSuggestions.map((suggestion, index) => (
+                      <button
+                        key={suggestion}
+                        type="button"
+                        className={`spec-tag-suggestion ${
+                          index === selectedSuggestionIndex ? "spec-tag-suggestion--selected" : ""
+                        }`}
+                        onClick={() => handleTagSuggestionClick(suggestion)}
+                        onMouseEnter={() => setSelectedSuggestionIndex(index)}
+                      >
+                        {suggestion}
                       </button>
                     ))}
-                </div>
-              )}
-            </section>
-
-            {/* ═══ SECTION 4: Segmentation ═══ */}
-            <section className="spec-section">
-              <div className="spec-section__label">
-                <span className="spec-section__label-text">Segmentation</span>
-                <span className="spec-section__label-line" />
-              </div>
-              <div className="flow-connector__segment-section">
-                <div className="flow-connector__segment-actions">
-                  <button
-                    className="flow-connector__segment-btn"
-                    onClick={onGenerateSegments}
-                    disabled={isSegmenting || isLabelingSegments}
-                    title="Generate segments using SAM"
-                  >
-                    {isSegmenting ? (
-                      <>
-                        <span className="flow-connector__spinner" />
-                        Segmenting...
-                      </>
-                    ) : (
-                      "SEGMENT"
-                    )}
-                  </button>
-                  {segmentCount > 0 && (
-                    <button
-                      className="flow-connector__segment-btn"
-                      onClick={onLabelSegments}
-                      disabled={isSegmenting || isLabelingSegments}
-                      title="Use Claude to label segments (ai_label)"
-                    >
-                      {isLabelingSegments ? (
-                        <>
-                          <span className="flow-connector__spinner" />
-                          Labeling...
-                        </>
-                      ) : (
-                        "LABEL"
-                      )}
-                    </button>
-                  )}
-                </div>
-                {segmentCount > 0 && (
-                  <div className="flow-connector__segment-info">
-                    <span>
-                      {segmentCount} UI element{segmentCount !== 1 ? "s" : ""} detected
-                    </span>
+                  </div>
+                )}
+                {/* Suggested tags from AI - clickable to add */}
+                {effectiveItem?.analysis?.tags && effectiveItem.analysis.tags.length > 0 && (
+                  <div className="spec-suggested-tags">
+                    <span className="spec-suggested-tags__label">Suggested:</span>
+                    {effectiveItem.analysis.tags
+                      .filter((tag) => !(effectiveItem?.tags || []).includes(tag.toLowerCase()))
+                      .map((tag, i) => (
+                        <button
+                          key={i}
+                          type="button"
+                          className="spec-suggested-tags__tag"
+                          onClick={() => handleAddTag(tag)}
+                          title="Click to add"
+                        >
+                          + {tag}
+                        </button>
+                      ))}
                   </div>
                 )}
               </div>
+
+              {/* Collection subsection */}
+              <div className="spec-subsection">
+                <div className="spec-subsection__label">Collection</div>
+                <div
+                  ref={collectionDropdownRef}
+                  className="spec-collection-select"
+                  style={{ position: "relative" }}
+                >
+                  {currentCollection ? (
+                    <div className="spec-collection-selected">
+                      <span className="spec-collection-selected__name">
+                        {currentCollection.name}
+                      </span>
+                      <button
+                        type="button"
+                        className="spec-collection-selected__clear"
+                        onClick={() => handleSelectCollection(null)}
+                        title="Remove from collection"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      className="spec-collection-trigger"
+                      onClick={() => setShowCollectionDropdown(!showCollectionDropdown)}
+                    >
+                      <span className="spec-collection-trigger__text">
+                        {collections.length > 0 ? "Select collection..." : "Create collection..."}
+                      </span>
+                      <span className="spec-collection-trigger__icon">▼</span>
+                    </button>
+                  )}
+
+                  {showCollectionDropdown && (
+                    <div className="spec-collection-dropdown">
+                      <div className="spec-collection-dropdown__input">
+                        <input
+                          type="text"
+                          value={collectionInput}
+                          onChange={(e) => setCollectionInput(e.target.value)}
+                          placeholder="Search or create..."
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" && collectionInput.trim()) {
+                              // If there's no matching collection, create one
+                              const exactMatch = collections.find(
+                                (c) => c.name.toLowerCase() === collectionInput.toLowerCase()
+                              );
+                              if (exactMatch) {
+                                handleSelectCollection(exactMatch.id);
+                              } else {
+                                handleCreateCollection();
+                              }
+                            }
+                          }}
+                          autoFocus
+                        />
+                      </div>
+                      <div className="spec-collection-dropdown__list">
+                        {filteredCollections.map((collection) => (
+                          <button
+                            key={collection.id}
+                            type="button"
+                            className="spec-collection-dropdown__item"
+                            onClick={() => handleSelectCollection(collection.id)}
+                          >
+                            {collection.name}
+                          </button>
+                        ))}
+                        {collectionInput.trim() &&
+                          !collections.some(
+                            (c) => c.name.toLowerCase() === collectionInput.toLowerCase()
+                          ) && (
+                            <button
+                              type="button"
+                              className="spec-collection-dropdown__item spec-collection-dropdown__item--create"
+                              onClick={handleCreateCollection}
+                            >
+                              + Create &ldquo;{collectionInput.trim()}&rdquo;
+                            </button>
+                          )}
+                        {filteredCollections.length === 0 && !collectionInput.trim() && (
+                          <div className="spec-collection-dropdown__empty">
+                            Type to create a collection
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
             </section>
 
-            {/* ═══ SECTION 5: Briefing Flow ═══ */}
+            {/* ═══ SECTION 4: Briefing Flow ═══ */}
             <section className="spec-section">
               <div className="spec-section__label">
                 <span className="spec-section__label-text">Briefing</span>
                 <span className="spec-section__label-line" />
               </div>
-
-              {/* Pipeline Status - shown when processing */}
-              {pipelineStatus !== "idle" && pipelineStatus !== "done" && (
-                <div className="spec-pipeline-status spec-pipeline-status--inline">
-                  <div
-                    className={`spec-pipeline-status__indicator spec-pipeline-status__indicator--${pipelineStatus}`}
-                  >
-                    {pipelineStatus === "analyzing" && (
-                      <>
-                        <span className="spec-pipeline-status__icon">◇</span>
-                        Analyzing image...
-                      </>
-                    )}
-                    {pipelineStatus === "briefing" && (
-                      <>
-                        <span className="spec-pipeline-status__icon">◇</span>
-                        Generating briefing...
-                      </>
-                    )}
-                    {pipelineStatus === "error" && (
-                      <>
-                        <span className="spec-pipeline-status__icon spec-pipeline-status__icon--error">
-                          ⚠
-                        </span>
-                        Pipeline error
-                      </>
-                    )}
-                  </div>
-                </div>
-              )}
 
               <FlowConnector>
                 {/* Analysis (AI) */}
@@ -977,28 +1081,74 @@ function SurveyInspectorPanelInner({
                   label="Analysis"
                   badge="AI"
                   action={
-                    effectiveItem?.analysis && (
-                      <button onClick={onAnalyze} disabled={isAnalyzing}>
-                        {isAnalyzing ? "..." : "Re-analyze"}
+                    <button onClick={onAnalyze} disabled={isAnalyzing}>
+                      {effectiveItem?.analysis ? "Re-analyze" : "Analyze"}
+                    </button>
+                  }
+                >
+                  {isAnalyzing || pipelineStatus === "analyzing" ? (
+                    <div className="flow-connector__loading flow-connector__loading--gold">
+                      <span className="flow-connector__loading-icon">◇</span>
+                      Analyzing image...
+                    </div>
+                  ) : effectiveItem?.analysis?.transferNotes ? (
+                    <p className="flow-connector__text">{effectiveItem.analysis.transferNotes}</p>
+                  ) : effectiveItem?.analysis ? (
+                    <div className="flow-connector__empty">
+                      <span>No transfer notes</span>
+                    </div>
+                  ) : (
+                    <div className="flow-connector__empty">
+                      <span>Click Analyze to begin</span>
+                    </div>
+                  )}
+                </FlowConnector.Node>
+
+                {/* Segmentation (AI) - segment + label combined */}
+                <FlowConnector.Node
+                  label="Segmentation"
+                  badge="AI"
+                  action={
+                    segmentCount > 0 ? (
+                      <div className="flow-connector__action-group">
+                        <button
+                          onClick={onReSegment}
+                          disabled={isSegmenting || isLabelingSegments}
+                          title="Re-run segmentation"
+                        >
+                          Re-segment
+                        </button>
+                        <button
+                          onClick={onReLabelSegments}
+                          disabled={isSegmenting || isLabelingSegments}
+                          title="Re-label segments"
+                        >
+                          Re-label
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={onSegmentAndLabel}
+                        disabled={isSegmenting || isLabelingSegments || !effectiveItem?.analysis}
+                        title={!effectiveItem?.analysis ? "Run analysis first" : undefined}
+                      >
+                        Segment
                       </button>
                     )
                   }
                 >
-                  {effectiveItem?.analysis?.transferNotes ? (
-                    <p className="flow-connector__text">{effectiveItem.analysis.transferNotes}</p>
+                  {isSegmenting || isLabelingSegments ? (
+                    <div className="flow-connector__loading">
+                      <span className="flow-connector__loading-icon">◇</span>
+                      {isSegmenting ? "Segmenting..." : "Labeling..."}
+                    </div>
+                  ) : segmentCount > 0 ? (
+                    <p className="flow-connector__text">
+                      {segmentCount} UI element{segmentCount !== 1 ? "s" : ""} detected
+                    </p>
                   ) : (
                     <div className="flow-connector__empty">
-                      {!effectiveItem?.analysis ? (
-                        <button
-                          className="flow-connector__trigger"
-                          onClick={onAnalyze}
-                          disabled={isAnalyzing}
-                        >
-                          {isAnalyzing ? "Analyzing..." : "◇ Run Analysis"}
-                        </button>
-                      ) : (
-                        <span>No transfer notes</span>
-                      )}
+                      <span>Click Segment to detect UI elements</span>
                     </div>
                   )}
                 </FlowConnector.Node>
@@ -1149,34 +1299,31 @@ function SurveyInspectorPanelInner({
                 <FlowConnector.Node
                   label="Briefing"
                   badge="AI"
-                  className="flow-connector__node--briefing flow-connector__node--no-line-above"
+                  className="flow-connector__node--briefing"
                   action={
                     onGenerateBriefing ? (
                       <button
-                        className="flow-connector__action-btn flow-connector__action-btn--generate"
                         onClick={onGenerateBriefing}
                         disabled={isBriefing || !effectiveItem?.analysis}
                         title={!effectiveItem?.analysis ? "Run analysis first" : undefined}
                       >
-                        {isBriefing ? "..." : "Generate"}
+                        {effectiveItem?.briefing ? "Re-generate" : "Generate"}
                       </button>
                     ) : null
                   }
                 >
-                  {pipelineStatus === "briefing" && !effectiveItem?.briefing ? (
-                    <div className="flow-connector__loading">
+                  {isBriefing || pipelineStatus === "briefing" ? (
+                    <div className="flow-connector__loading flow-connector__loading--gold">
                       <span className="flow-connector__loading-icon">◇</span>
-                      Generating...
+                      Generating briefing...
                     </div>
                   ) : effectiveItem?.briefing ? (
-                    <div
-                      className={`flow-connector__briefing ${isBriefing ? "flow-connector__briefing--glitching" : ""}`}
-                    >
+                    <div className="flow-connector__briefing">
                       {formatBriefingText(effectiveItem?.briefing)}
                     </div>
                   ) : (
                     <div className="flow-connector__empty">
-                      <span>Generate briefing to view content</span>
+                      <span>Click Generate to create briefing</span>
                     </div>
                   )}
                 </FlowConnector.Node>

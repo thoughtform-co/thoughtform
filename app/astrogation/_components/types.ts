@@ -364,10 +364,21 @@ export interface SurveySegment {
   updated_at: string;
 }
 
+export interface SurveyCollection {
+  id: string;
+  name: string;
+  description: string | null;
+  color: string | null; // Optional accent color for visual distinction
+  user_id: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface SurveyItem {
   id: string;
   category_id: string | null;
   component_key: string | null;
+  collection_id: string | null; // Link to collection (same brand/website/campaign)
   title: string | null;
   notes: string | null;
   description: string | null; // AI-generated visual analysis
@@ -393,6 +404,7 @@ export interface SurveyItem {
   has_full_data?: boolean; // Indicates large text fields have been fetched at least once
   has_segments?: boolean;
   segments?: SurveySegment[]; // Loaded on demand
+  collection?: SurveyCollection; // Loaded on demand with item
 }
 
 // ═══════════════════════════════════════════════════════════════

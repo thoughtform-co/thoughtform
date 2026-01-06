@@ -5328,6 +5328,168 @@
   color: var(--gold);
 }
 
+/* ─── SUBSECTIONS ─── */
+
+.spec-subsection {
+  margin-top: 12px;
+}
+
+.spec-subsection:first-child {
+  margin-top: 0;
+}
+
+.spec-subsection__label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--dawn-40);
+  margin-bottom: 6px;
+}
+
+/* ─── COLLECTION SELECTOR ─── */
+
+.spec-collection-select {
+  position: relative;
+}
+
+.spec-collection-trigger {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 8px 10px;
+  background: rgba(235, 227, 214, 0.04);
+  border: 1px solid var(--dawn-15);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--dawn-50);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.spec-collection-trigger:hover {
+  background: rgba(235, 227, 214, 0.06);
+  border-color: var(--gold-30);
+}
+
+.spec-collection-trigger__text {
+  flex: 1;
+  text-align: left;
+}
+
+.spec-collection-trigger__icon {
+  font-size: 8px;
+  color: var(--dawn-30);
+}
+
+.spec-collection-selected {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  background: var(--gold-08);
+  border: 1px solid var(--gold-30);
+}
+
+.spec-collection-selected__name {
+  flex: 1;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--gold);
+}
+
+.spec-collection-selected__clear {
+  padding: 2px 6px;
+  background: none;
+  border: none;
+  font-size: 14px;
+  color: var(--dawn-40);
+  cursor: pointer;
+  line-height: 1;
+}
+
+.spec-collection-selected__clear:hover {
+  color: var(--dawn);
+}
+
+.spec-collection-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: 4px;
+  background: var(--void);
+  border: 1px solid var(--dawn-20);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  z-index: 100;
+}
+
+.spec-collection-dropdown__input {
+  padding: 8px;
+  border-bottom: 1px solid var(--dawn-10);
+}
+
+.spec-collection-dropdown__input input {
+  width: 100%;
+  padding: 6px 8px;
+  background: rgba(235, 227, 214, 0.04);
+  border: 1px solid var(--dawn-15);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--dawn);
+}
+
+.spec-collection-dropdown__input input:focus {
+  outline: none;
+  border-color: var(--gold-30);
+}
+
+.spec-collection-dropdown__input input::placeholder {
+  color: var(--dawn-30);
+}
+
+.spec-collection-dropdown__list {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.spec-collection-dropdown__item {
+  display: block;
+  width: 100%;
+  padding: 8px 12px;
+  background: none;
+  border: none;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--dawn-70);
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.1s ease;
+}
+
+.spec-collection-dropdown__item:hover {
+  background: rgba(235, 227, 214, 0.08);
+  color: var(--dawn);
+}
+
+.spec-collection-dropdown__item--create {
+  color: var(--gold);
+  border-top: 1px solid var(--dawn-10);
+}
+
+.spec-collection-dropdown__item--create:hover {
+  background: var(--gold-08);
+}
+
+.spec-collection-dropdown__empty {
+  padding: 12px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--dawn-30);
+  text-align: center;
+}
+
 /* ─── SOURCES COMPACT ─── */
 
 .spec-sources--compact {
@@ -8751,11 +8913,11 @@
   display: none;
 }
 
-/* Exception: Show gold line-above for Briefing to connect with gold line from Annotations */
+/* Show line-above for Briefing to connect with line from Annotations */
+/* Height extended to account for the 16px padding-top on Briefing node */
 .flow-connector__node--briefing .flow-connector__line-above {
   display: block;
-  background: var(--gold);
-  box-shadow: 0 0 4px rgba(202, 165, 84, 0.4);
+  height: calc(var(--flow-marker-offset) + 16px);
 }
 
 /* Hide line below for nodes that shouldn't have it (like Briefing) */
@@ -8770,13 +8932,10 @@
   background: linear-gradient(to bottom, var(--dawn-30) 0%, var(--gold-60) 100%);
 }
 
-/* Tensor gold line connecting Annotations (step 3) to Briefing (step 4) */
+/* Line connecting node before Briefing - standard styling */
 .flow-connector__node--no-line:has(+ .flow-connector__node--briefing) .flow-connector__line,
 .flow-connector__node:has(+ .flow-connector__node--briefing) .flow-connector__line {
-  background: var(--gold);
-  box-shadow: 0 0 4px rgba(202, 165, 84, 0.4);
-  bottom: auto;
-  height: calc(100% - 14px - var(--flow-marker-offset)); /* Extend to just before Briefing marker */
+  /* Uses default line styling */
 }
 
 /* Content column */
@@ -8815,15 +8974,14 @@
   color: var(--gold);
 }
 
-/* Briefing node label (gold without connector line) */
+/* Briefing node - same styling as other nodes for consistency */
 .flow-connector__node--briefing .flow-connector__label {
-  color: var(--gold);
+  /* Uses default label color */
 }
 
-/* Briefing node marker (gold) */
+/* Briefing node marker - same as other nodes */
 .flow-connector__node--briefing .flow-connector__marker {
-  border-color: var(--gold) !important;
-  box-shadow: 0 0 6px rgba(202, 165, 84, 0.3);
+  /* Uses default marker styling */
 }
 
 /* Add padding above Briefing section */
@@ -8832,7 +8990,7 @@
 }
 
 .flow-connector__node--briefing .flow-connector__marker-number {
-  color: var(--gold);
+  /* Uses default number styling */
 }
 
 /* Badge (e.g., "AI") */
@@ -8875,16 +9033,39 @@
   cursor: not-allowed;
 }
 
-/* Generate button with tensor gold styling */
-.flow-connector__action-btn--generate {
-  border-color: var(--gold) !important;
-  color: var(--gold) !important;
+/* Multiple action buttons in a group */
+.flow-connector__action-group {
+  display: flex;
+  gap: 6px;
+  align-items: center;
 }
 
-.flow-connector__action-btn--generate:hover:not(:disabled) {
-  border-color: var(--gold) !important;
-  color: var(--gold) !important;
-  background: rgba(202, 165, 84, 0.08) !important;
+.flow-connector__action-group button {
+  padding: 2px 6px;
+  background: none;
+  border: 1px solid var(--dawn-15);
+  font-family: var(--font-mono);
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--dawn-50);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.flow-connector__action-group button:hover:not(:disabled) {
+  border-color: var(--gold-30);
+  color: var(--gold);
+}
+
+.flow-connector__action-group button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Action buttons (Analyze, Segment, Generate) - same style as other buttons */
+.flow-connector__action-btn--generate {
+  /* Uses default button styles - grey with gold on hover */
 }
 
 /* Body content area */
@@ -9020,6 +9201,33 @@
   font-family: var(--font-mono);
   font-size: 10px;
   color: var(--dawn-40);
+}
+
+/* Gold loading state - for Analysis step */
+.flow-connector__loading--gold {
+  background: linear-gradient(
+    90deg,
+    rgba(202, 165, 84, 0.08) 0%,
+    rgba(202, 165, 84, 0.15) 50%,
+    rgba(202, 165, 84, 0.08) 100%
+  );
+  background-size: 200% 100%;
+  animation: goldShimmer 2s ease-in-out infinite;
+  color: var(--gold);
+  border: 1px solid var(--gold-15);
+}
+
+.flow-connector__loading--gold .flow-connector__loading-icon {
+  color: var(--gold);
+}
+
+@keyframes goldShimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
 }
 
 .flow-connector__loading-icon {
