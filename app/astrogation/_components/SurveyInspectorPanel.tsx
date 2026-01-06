@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, memo, useEffect, useRef } from "react";
+import { useState, useCallback, memo, useEffect, useRef, useMemo } from "react";
 import type { SurveyItem, SurveyItemSource, SurveyAnnotation } from "./types";
 import { NestedSelect } from "./NestedSelect";
 import { SurveyUploadModal } from "./SurveyUploadModal";
@@ -41,6 +41,8 @@ export interface SurveyInspectorPanelProps {
   isLabelingSegments?: boolean;
   showSegments?: boolean;
   segmentCount?: number;
+  // For tag autocomplete
+  allItems?: SurveyItem[];
 }
 
 type InspectorTab = "fields" | "chat";
@@ -71,6 +73,7 @@ function SurveyInspectorPanelInner({
   isLabelingSegments = false,
   showSegments = false,
   segmentCount = 0,
+  allItems = [],
 }: SurveyInspectorPanelProps) {
   const [activeTab, setActiveTab] = useState<InspectorTab>("fields");
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
@@ -88,8 +91,13 @@ function SurveyInspectorPanelInner({
   const [newSourceUrl, setNewSourceUrl] = useState("");
   const [editingSourceIndex, setEditingSourceIndex] = useState<number | null>(null);
   const [editingSourceUrl, setEditingSourceUrl] = useState("");
+  const [tagSuggestions, setTagSuggestions] = useState<string[]>([]);
+  const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState<number>(-1);
+  const [showTagSuggestions, setShowTagSuggestions] = useState(false);
   const tagInputRef = useRef<HTMLInputElement>(null);
   const sourceInputRef = useRef<HTMLInputElement>(null);
+  const tagSuggestionsRef = useRef<HTMLDivElement>(null);
+  const autosaveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Track previously seen annotations to detect new ones
   const prevAnnotationIdsRef = useRef<Set<string>>(new Set());
@@ -147,6 +155,54 @@ function SurveyInspectorPanelInner({
       [field]: value,
     }));
   }, []);
+
+  // Autosave: debounced save for title and tags
+  useEffect(() => {
+    if (!localItem || !item || isSaving || isAnalyzing) return;
+
+    // Clear existing timeout
+    if (autosaveTimeoutRef.current) {
+      clearTimeout(autosaveTimeoutRef.current);
+    }
+
+    // Only autosave title and tags (other fields like notes can still use manual save)
+    const hasTitleChange = "title" in localItem;
+    const hasTagsChange = "tags" in localItem;
+    if (!hasTitleChange && !hasTagsChange) return;
+
+    // Build update object with only the fields that changed
+    const updates: Partial<SurveyItem> = { id: item.id };
+    if (hasTitleChange) {
+      updates.title = localItem.title ?? null;
+    }
+    if (hasTagsChange) {
+      updates.tags = localItem.tags ?? [];
+    }
+
+    // Set new timeout for autosave (1.5 seconds after last change)
+    autosaveTimeoutRef.current = setTimeout(async () => {
+      try {
+        await onUpdate(updates);
+        // Only clear the fields that were saved
+        setLocalItem((prev) => {
+          if (!prev) return null;
+          const next = { ...prev };
+          if (hasTitleChange) delete next.title;
+          if (hasTagsChange) delete next.tags;
+          return Object.keys(next).length > 1 ? next : null; // Keep if there are other unsaved changes
+        });
+      } catch (error) {
+        console.error("Autosave failed:", error);
+        // Keep localItem so user can retry with manual save
+      }
+    }, 1500);
+
+    return () => {
+      if (autosaveTimeoutRef.current) {
+        clearTimeout(autosaveTimeoutRef.current);
+      }
+    };
+  }, [localItem, item, onUpdate, isSaving, isAnalyzing]);
 
   // Save changes
   const handleSave = useCallback(async () => {
@@ -284,6 +340,36 @@ function SurveyInspectorPanelInner({
     [effectiveItem?.sources, handleFieldChange]
   );
 
+  // Extract all unique tags from all items for autocomplete
+  const allTags = useMemo(() => {
+    const tagSet = new Set<string>();
+    allItems.forEach((item) => {
+      if (item.tags && Array.isArray(item.tags)) {
+        item.tags.forEach((tag) => tagSet.add(tag.toLowerCase()));
+      }
+    });
+    return Array.from(tagSet).sort();
+  }, [allItems]);
+
+  // Filter tag suggestions based on input
+  useEffect(() => {
+    if (!tagInput.trim()) {
+      setTagSuggestions([]);
+      setShowTagSuggestions(false);
+      return;
+    }
+
+    const inputLower = tagInput.toLowerCase();
+    const currentTags = effectiveItem?.tags || [];
+    const filtered = allTags
+      .filter((tag) => tag.includes(inputLower) && !currentTags.includes(tag))
+      .slice(0, 10); // Limit to 10 suggestions
+
+    setTagSuggestions(filtered);
+    setShowTagSuggestions(filtered.length > 0);
+    setSelectedSuggestionIndex(-1);
+  }, [tagInput, allTags, effectiveItem?.tags]);
+
   // Handle tags - chip-based input
   const handleAddTag = useCallback(
     (tag: string) => {
@@ -295,6 +381,8 @@ function SurveyInspectorPanelInner({
 
       handleFieldChange("tags", [...currentTags, trimmedTag]);
       setTagInput("");
+      setShowTagSuggestions(false);
+      setSelectedSuggestionIndex(-1);
     },
     [effectiveItem?.tags, handleFieldChange]
   );
@@ -309,23 +397,71 @@ function SurveyInspectorPanelInner({
 
   const handleTagInputKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (showTagSuggestions && tagSuggestions.length > 0) {
+        if (e.key === "ArrowDown") {
+          e.preventDefault();
+          setSelectedSuggestionIndex((prev) =>
+            prev < tagSuggestions.length - 1 ? prev + 1 : prev
+          );
+          return;
+        } else if (e.key === "ArrowUp") {
+          e.preventDefault();
+          setSelectedSuggestionIndex((prev) => (prev > 0 ? prev - 1 : -1));
+          return;
+        } else if (e.key === "Enter" && selectedSuggestionIndex >= 0) {
+          e.preventDefault();
+          handleAddTag(tagSuggestions[selectedSuggestionIndex]);
+          return;
+        } else if (e.key === "Escape") {
+          e.preventDefault();
+          setShowTagSuggestions(false);
+          setSelectedSuggestionIndex(-1);
+          return;
+        }
+      }
+
       if (e.key === "Enter" || e.key === ",") {
         e.preventDefault();
-        handleAddTag(tagInput);
+        if (selectedSuggestionIndex >= 0 && tagSuggestions[selectedSuggestionIndex]) {
+          handleAddTag(tagSuggestions[selectedSuggestionIndex]);
+        } else {
+          handleAddTag(tagInput);
+        }
       } else if (e.key === "Backspace" && !tagInput && (effectiveItem?.tags?.length || 0) > 0) {
         // Remove last tag on backspace when input is empty
         const tags = effectiveItem?.tags || [];
         handleRemoveTag(tags[tags.length - 1]);
       }
     },
-    [tagInput, effectiveItem?.tags, handleAddTag, handleRemoveTag]
+    [
+      tagInput,
+      effectiveItem?.tags,
+      handleAddTag,
+      handleRemoveTag,
+      showTagSuggestions,
+      tagSuggestions,
+      selectedSuggestionIndex,
+    ]
   );
 
   const handleTagInputBlur = useCallback(() => {
-    if (tagInput.trim()) {
-      handleAddTag(tagInput);
-    }
+    // Delay to allow click events on suggestions to fire first
+    setTimeout(() => {
+      if (tagInput.trim()) {
+        handleAddTag(tagInput);
+      }
+      setShowTagSuggestions(false);
+      setSelectedSuggestionIndex(-1);
+    }, 200);
   }, [tagInput, handleAddTag]);
+
+  const handleTagSuggestionClick = useCallback(
+    (suggestion: string) => {
+      handleAddTag(suggestion);
+      tagInputRef.current?.focus();
+    },
+    [handleAddTag]
+  );
 
   // Handle annotation editing
   const handleEditAnnotation = useCallback((annotation: SurveyAnnotation) => {
@@ -671,7 +807,7 @@ function SurveyInspectorPanelInner({
             </section>
 
             {/* ═══ SECTION 3: Tags ═══ */}
-            <section className="spec-section">
+            <section className="spec-section" style={{ position: "relative" }}>
               <div className="spec-section__label">
                 <span className="spec-section__label-text">Tags</span>
                 <span className="spec-section__label-line" />
@@ -700,9 +836,32 @@ function SurveyInspectorPanelInner({
                   onChange={(e) => setTagInput(e.target.value)}
                   onKeyDown={handleTagInputKeyDown}
                   onBlur={handleTagInputBlur}
+                  onFocus={() => {
+                    if (tagSuggestions.length > 0) {
+                      setShowTagSuggestions(true);
+                    }
+                  }}
                   placeholder={(effectiveItem?.tags?.length || 0) === 0 ? "Add tags..." : ""}
                 />
               </div>
+              {/* Tag autocomplete suggestions */}
+              {showTagSuggestions && tagSuggestions.length > 0 && (
+                <div ref={tagSuggestionsRef} className="spec-tag-suggestions">
+                  {tagSuggestions.map((suggestion, index) => (
+                    <button
+                      key={suggestion}
+                      type="button"
+                      className={`spec-tag-suggestion ${
+                        index === selectedSuggestionIndex ? "spec-tag-suggestion--selected" : ""
+                      }`}
+                      onClick={() => handleTagSuggestionClick(suggestion)}
+                      onMouseEnter={() => setSelectedSuggestionIndex(index)}
+                    >
+                      {suggestion}
+                    </button>
+                  ))}
+                </div>
+              )}
               {/* Suggested tags from AI - clickable to add */}
               {effectiveItem?.analysis?.tags && effectiveItem.analysis.tags.length > 0 && (
                 <div className="spec-suggested-tags">

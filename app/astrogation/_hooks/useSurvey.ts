@@ -277,6 +277,21 @@ export function useSurvey({
         }
       }
 
+      // 3. Preserve locally-loaded full fields (briefing/description/etc.) and client flags
+      // loadItems intentionally omits large fields; we merge them back in for any items that
+      // were already loaded in full to avoid "missing fields" + re-fetch loops.
+      if (surveyItemsRef.current.length > 0) {
+        const existingById = new Map(surveyItemsRef.current.map((it) => [it.id, it]));
+        mergedItems = mergedItems.map((it) => {
+          const existing = existingById.get(it.id);
+          if (!existing) return it;
+          if (existing.has_full_data) {
+            return { ...existing, ...it, has_full_data: true };
+          }
+          return it;
+        });
+      }
+
       dispatch(actions.surveyLoadItems(mergedItems));
       surveyItemsRef.current = mergedItems;
 
@@ -315,9 +330,10 @@ export function useSurvey({
         const data = await fetcher<{ item: SurveyItem }>(`/api/survey/items/${itemId}`);
 
         if (data.item) {
+          const fullItem: SurveyItem = { ...data.item, has_full_data: true };
           // Update the item in the items array with full data
           const updatedItems = surveyItemsRef.current.map((item) =>
-            item.id === itemId ? data.item : item
+            item.id === itemId ? fullItem : item
           );
           surveyItemsRef.current = updatedItems;
           dispatch(actions.surveyLoadItems(updatedItems));
@@ -373,14 +389,22 @@ export function useSurvey({
           body: { itemId },
         });
 
+        const existing = surveyItemsRef.current.find((it) => it.id === data.item.id) || null;
+        const mergedItem: SurveyItem = { ...existing, ...data.item, has_full_data: true };
         // Update tracking if this item is being protected from race conditions
         if (recentlyAddedItemsRef.current.has(data.item.id)) {
-          recentlyAddedItemsRef.current.set(data.item.id, data.item);
+          recentlyAddedItemsRef.current.set(data.item.id, mergedItem);
         }
 
-        dispatch(actions.surveyUpdateItem(data.item));
+        // Keep the local ref in sync
+        const hasInRef = surveyItemsRef.current.some((it) => it.id === mergedItem.id);
+        surveyItemsRef.current = hasInRef
+          ? surveyItemsRef.current.map((it) => (it.id === mergedItem.id ? mergedItem : it))
+          : [mergedItem, ...surveyItemsRef.current];
+
+        dispatch(actions.surveyUpdateItem(mergedItem));
         dispatch(actions.showToast("Analysis complete"));
-        setAllItems((prev) => prev.map((item) => (item.id === data.item.id ? data.item : item)));
+        setAllItems((prev) => prev.map((item) => (item.id === mergedItem.id ? mergedItem : item)));
       } catch (error) {
         console.error("Failed to analyze:", error);
         dispatch(actions.showToast("Failed to analyze"));
@@ -488,8 +512,6 @@ export function useSurvey({
         dispatch(actions.surveySelectItem(data.item.id)); // Auto-select the new item
         dispatch(actions.showToast("Reference uploaded"));
         setAllItems((prev) => [data.item, ...prev]);
-        // Sync ref immediately so loadItemFullData can't overwrite with stale data
-        surveyItemsRef.current = [data.item, ...surveyItemsRef.current];
 
         // Auto-run analysis only (briefing is triggered manually)
         setPipelineStatus("analyzing");
@@ -525,19 +547,21 @@ export function useSurvey({
           body: updates,
         });
 
+        const existing = surveyItemsRef.current.find((it) => it.id === data.item.id) || null;
+        const mergedItem: SurveyItem = { ...existing, ...data.item, has_full_data: true };
         // Keep the local ref in sync so subsequent loadItemFullData calls can't overwrite
         // recent edits (like title) with stale data.
-        const hasInRef = surveyItemsRef.current.some((it) => it.id === data.item.id);
+        const hasInRef = surveyItemsRef.current.some((it) => it.id === mergedItem.id);
         surveyItemsRef.current = hasInRef
-          ? surveyItemsRef.current.map((it) => (it.id === data.item.id ? data.item : it))
-          : [data.item, ...surveyItemsRef.current];
+          ? surveyItemsRef.current.map((it) => (it.id === mergedItem.id ? mergedItem : it))
+          : [mergedItem, ...surveyItemsRef.current];
         // If this item is being protected as "recently added", keep that copy fresh too.
         if (recentlyAddedItemsRef.current.has(data.item.id)) {
-          recentlyAddedItemsRef.current.set(data.item.id, data.item);
+          recentlyAddedItemsRef.current.set(data.item.id, mergedItem);
         }
-        dispatch(actions.surveyUpdateItem(data.item));
+        dispatch(actions.surveyUpdateItem(mergedItem));
         dispatch(actions.showToast("Saved"));
-        setAllItems((prev) => prev.map((item) => (item.id === data.item.id ? data.item : item)));
+        setAllItems((prev) => prev.map((item) => (item.id === mergedItem.id ? mergedItem : item)));
       } catch (error) {
         console.error("Failed to update item:", error);
         dispatch(actions.showToast("Failed to save"));

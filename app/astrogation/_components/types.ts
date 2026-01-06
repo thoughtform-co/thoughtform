@@ -194,6 +194,7 @@ export interface SurveyItem {
   updated_at: string;
   // Client-side additions
   image_url?: string; // Signed URL for display
+  has_full_data?: boolean; // Indicates large text fields have been fetched at least once
   has_segments?: boolean;
   segments?: SurveySegment[]; // Loaded on demand
 }

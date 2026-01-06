@@ -137,10 +137,9 @@ function AstrogationContent() {
           .eq("user_id", user.id)
           .order("updated_at", { ascending: false })
           .limit(1)
-          .single();
+          .maybeSingle();
 
-        if (error && error.code !== "PGRST116") {
-          // PGRST116 = no rows returned, which is fine for new users
+        if (error) {
           console.error("Failed to load forge data:", error);
           return;
         }
@@ -402,12 +401,7 @@ function AstrogationContent() {
 
   // Load full item data when detail view opens (includes large text fields)
   useEffect(() => {
-    if (
-      surveySelectedItemId &&
-      selectedSurveyItem &&
-      !selectedSurveyItem.briefing &&
-      !selectedSurveyItem.description
-    ) {
+    if (surveySelectedItemId && selectedSurveyItem && !selectedSurveyItem.has_full_data) {
       // Item doesn't have full data yet, fetch it
       loadItemFullData(surveySelectedItemId).catch(() => {
         // Silently fail - grid data is already available
@@ -621,9 +615,10 @@ function AstrogationContent() {
             item={selectedSurveyItem}
             onUpdate={updateItem}
             onDelete={deleteItem}
-            onAnalyze={() => analyzeItem()}
-            onGenerateBriefing={() => generateBriefing()}
-            onEmbed={() => embedItem()}
+            allItems={surveyItems}
+            onAnalyze={() => analyzeItem().catch(() => {})}
+            onGenerateBriefing={() => generateBriefing().catch(() => {})}
+            onEmbed={() => embedItem().catch(() => {})}
             onUpload={uploadItem}
             selectedCategoryId={surveyCategoryId}
             selectedComponentKey={surveyComponentKey}

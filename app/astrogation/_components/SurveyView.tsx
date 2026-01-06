@@ -771,8 +771,17 @@ export function SurveyView({
 }: SurveyViewProps) {
   const selectedItem = items.find((item) => item.id === selectedItemId);
 
-  // Show all items (not just annotated ones)
-  const inspectedItems = useMemo(() => items, [items]);
+  // Show all items (not just annotated ones) - deduplicate by ID
+  const inspectedItems = useMemo(() => {
+    const seen = new Set<string>();
+    return items.filter((item) => {
+      if (seen.has(item.id)) {
+        return false;
+      }
+      seen.add(item.id);
+      return true;
+    });
+  }, [items]);
 
   // Handle item click in grid
   const handleItemClick = useCallback(

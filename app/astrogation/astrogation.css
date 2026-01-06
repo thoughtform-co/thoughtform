@@ -5104,6 +5104,40 @@
   color: var(--dawn-30);
 }
 
+/* Tag autocomplete suggestions */
+.spec-tag-suggestions {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: 4px;
+  background: var(--void);
+  border: 1px solid var(--dawn-15);
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+}
+
+.spec-tag-suggestion {
+  padding: 8px 12px;
+  background: none;
+  border: none;
+  text-align: left;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--dawn-70);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.spec-tag-suggestion:hover,
+.spec-tag-suggestion--selected {
+  background: rgba(202, 165, 84, 0.1);
+  color: var(--gold);
+}
+
 /* ─── AI CONTENT SECTIONS (Description, Briefing) ─── */
 
 .spec-section__label-badge {

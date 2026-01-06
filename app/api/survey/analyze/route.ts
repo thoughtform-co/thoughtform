@@ -8,6 +8,7 @@ import { createServerClient } from "@/lib/supabase";
 import { isAuthorized } from "@/lib/auth-server";
 import Anthropic from "@anthropic-ai/sdk";
 import { CATEGORIES, getComponentsByCategory } from "@/app/astrogation/catalog";
+import { prepareImageForAnthropic } from "../_utils/prepareImageForAnthropic";
 
 const BUCKET_NAME = "survey-media";
 
@@ -111,15 +112,24 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Failed to fetch image" }, { status: 500 });
     }
 
-    const imageBuffer = await imageResponse.arrayBuffer();
-    const base64Image = Buffer.from(imageBuffer).toString("base64");
+    const rawBuffer = Buffer.from(await imageResponse.arrayBuffer());
 
-    // Determine media type
-    const mediaType = (item.image_mime || "image/png") as
-      | "image/jpeg"
-      | "image/png"
-      | "image/gif"
-      | "image/webp";
+    let base64Image: string;
+    let mediaType: "image/jpeg" | "image/png" | "image/gif" | "image/webp";
+    try {
+      const prepared = await prepareImageForAnthropic({
+        buffer: rawBuffer,
+        mediaType: item.image_mime,
+      });
+      base64Image = prepared.base64;
+      mediaType = prepared.mediaType;
+    } catch {
+      const mb = Math.round((rawBuffer.length / 1024 / 1024) * 10) / 10;
+      return NextResponse.json(
+        { error: `Image is too large to analyze (${mb}MB). Please upload a smaller image.` },
+        { status: 413 }
+      );
+    }
 
     // Load segments (detected UI elements) for context
     const { data: segments } = await supabase
