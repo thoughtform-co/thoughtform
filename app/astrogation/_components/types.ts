@@ -32,6 +32,202 @@ export interface StyleConfig {
 export type WorkspaceTab = "vault" | "foundry" | "survey";
 
 // ═══════════════════════════════════════════════════════════════
+// SLIDE TEMPLATE TYPES (Arc Editor Format - 16:9, 1920x1080)
+// ═══════════════════════════════════════════════════════════════
+
+export const SLIDE_WIDTH = 1920;
+export const SLIDE_HEIGHT = 1080;
+
+export interface SlideTextStyle {
+  fontFamily: string;
+  fontSize: number;
+  fontWeight: "normal" | "bold" | "light";
+  fontStyle: "normal" | "italic";
+  textDecoration: "none" | "underline" | "strikethrough";
+  color: string;
+  textAlign: "left" | "center" | "right";
+  lineHeight: number;
+  letterSpacing: number;
+}
+
+export interface SlideBounds {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+export interface SlideTextElement {
+  id: string;
+  type: "text";
+  name: string;
+  bounds: SlideBounds;
+  rotation: number;
+  opacity: number;
+  locked: boolean;
+  visible: boolean;
+  zIndex: number;
+  content: string;
+  style: SlideTextStyle;
+}
+
+export interface SlideImageElement {
+  id: string;
+  type: "image";
+  name: string;
+  bounds: SlideBounds;
+  rotation: number;
+  opacity: number;
+  locked: boolean;
+  visible: boolean;
+  zIndex: number;
+  src?: string;
+  fit: "fill" | "contain" | "cover" | "none";
+  isBackground?: boolean;
+}
+
+export interface SlideShapeElement {
+  id: string;
+  type: "shape";
+  name: string;
+  bounds: SlideBounds;
+  rotation: number;
+  opacity: number;
+  locked: boolean;
+  visible: boolean;
+  zIndex: number;
+  shapeType: "rectangle" | "ellipse" | "line";
+  fill: string;
+  stroke: string;
+  strokeWidth: number;
+  borderRadius?: number;
+}
+
+export type SlideElement = SlideTextElement | SlideImageElement | SlideShapeElement;
+
+export interface SlideData {
+  mode: "standard" | "interactive";
+  backgroundColor: string;
+  backgroundImage?: {
+    src: string;
+    fit: "fill" | "contain" | "cover" | "none";
+    opacity: number;
+  };
+  elements: SlideElement[];
+  notes: string;
+}
+
+export interface SlideTemplate {
+  id: string;
+  name: string;
+  category:
+    | "title"
+    | "content"
+    | "quote"
+    | "image"
+    | "two-column"
+    | "data"
+    | "section"
+    | "closing"
+    | "custom";
+  thumbnail?: string;
+  slide: SlideData;
+  hudConfig?: HUDConfig;
+  createdAt: string;
+  isBuiltIn: boolean;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// HUD CONFIG TYPES (Navigation Grid - from Astrolabe Arc Editor)
+// ═══════════════════════════════════════════════════════════════
+
+export interface HUDConfig {
+  /** Show corner brackets */
+  cornerBrackets: boolean;
+  /** Corner bracket size in pixels */
+  cornerSize: number;
+  /** Show left rail */
+  leftRail: boolean;
+  /** Show right rail */
+  rightRail: boolean;
+  /** Rail width */
+  railWidth: number;
+  /** HUD padding from edges */
+  hudPadding: number;
+  /** Show tick marks on rails */
+  tickMarks: boolean;
+  /** Number of tick marks */
+  tickCount: number;
+  /** Show position indicator (diamond) */
+  positionIndicator: boolean;
+  /** Show coordinate readout */
+  coordinateReadout: boolean;
+  /** Custom readouts */
+  readouts: Array<{
+    label: string;
+    value: string;
+    highlight?: boolean;
+    pulse?: boolean;
+  }>;
+  /** Location label (bottom-left) */
+  location?: string;
+  /** Status label (top-right) */
+  status?: string;
+  /** Title (near left rail) */
+  title?: string;
+  /** Subtitle */
+  subtitle?: string;
+  /** Rail color (CSS color) */
+  railColor: string;
+  /** Rail opacity (0-1) */
+  railOpacity: number;
+  /** Bracket color */
+  bracketColor: string;
+  /** Animation: breathing effect */
+  breathing: boolean;
+  /** Animation speed */
+  animationSpeed: number;
+}
+
+export const DEFAULT_HUD_CONFIG: HUDConfig = {
+  cornerBrackets: true,
+  cornerSize: 40,
+  leftRail: true,
+  rightRail: true,
+  railWidth: 60,
+  hudPadding: 48,
+  tickMarks: true,
+  tickCount: 20,
+  positionIndicator: true,
+  coordinateReadout: false,
+  readouts: [],
+  railColor: "rgba(202, 165, 84, 0.5)",
+  railOpacity: 0.5,
+  bracketColor: "#CAA554",
+  breathing: false,
+  animationSpeed: 1,
+};
+
+export const EMPTY_HUD_CONFIG: HUDConfig = {
+  cornerBrackets: false,
+  cornerSize: 40,
+  leftRail: false,
+  rightRail: false,
+  railWidth: 60,
+  hudPadding: 48,
+  tickMarks: false,
+  tickCount: 20,
+  positionIndicator: false,
+  coordinateReadout: false,
+  readouts: [],
+  railColor: "rgba(202, 165, 84, 0.5)",
+  railOpacity: 0.5,
+  bracketColor: "#CAA554",
+  breathing: false,
+  animationSpeed: 1,
+};
+
+// ═══════════════════════════════════════════════════════════════
 // FOUNDRY COMPONENT CATEGORIES
 // Defines which components support which frame/stroke features
 // ═══════════════════════════════════════════════════════════════

@@ -66,7 +66,7 @@ export interface CategoryDef {
 // ═══════════════════════════════════════════════════════════════
 
 // Hierarchy levels for visual grouping (separators between levels)
-export const HIERARCHY_BREAKS = ["typography", "brand", "inputs"]; // Add separator after these
+export const HIERARCHY_BREAKS = ["typography", "brand", "inputs", "frames"]; // Add separator after these
 
 export const CATEGORIES: CategoryDef[] = [
   // --- Level 1: Design Tokens ---
@@ -107,6 +107,12 @@ export const CATEGORIES: CategoryDef[] = [
     id: "frames",
     name: "Frames",
     description: "Structural containers and HUD elements",
+  },
+  // --- Level 5: Presentation ---
+  {
+    id: "slides",
+    name: "Slides",
+    description: "Keynote templates in 16:9 aspect ratio for the Arc Editor",
   },
 ];
 
@@ -506,6 +512,28 @@ const INPUT_COMPONENTS: ComponentDef[] = [
 ];
 
 // ═══════════════════════════════════════════════════════════════
+// SLIDES - Arc Editor Templates (16:9 aspect ratio, 1920x1080)
+// ═══════════════════════════════════════════════════════════════
+
+const SLIDE_COMPONENTS: ComponentDef[] = [
+  {
+    id: "slide-main",
+    name: "Main Slide",
+    category: "slides",
+    description: "Base slide template in 16:9 aspect ratio",
+    designRationale:
+      "The main slide is the foundational canvas for keynote presentations. A void background provides the stage; content elements are added via the toolbar. This is the starting point for all presentation slides.",
+    inspiration:
+      "The Astrolabe Arc Editor canvas, Figma artboards, and the clean slate philosophy of professional presentation tools.",
+    frontendNotes:
+      "1920x1080 canvas (16:9 aspect ratio). Void (#070604) background. Elements are added via the toolbar at the bottom of the editor.",
+    props: [{ name: "backgroundColor", type: "color", default: "#070604" }],
+    defaultWidth: 1920,
+    defaultHeight: 1080,
+  },
+];
+
+// ═══════════════════════════════════════════════════════════════
 // COMBINED COMPONENTS
 // ═══════════════════════════════════════════════════════════════
 
@@ -516,6 +544,7 @@ export const COMPONENTS: ComponentDef[] = [
   ...BUTTON_COMPONENTS,
   ...INPUT_COMPONENTS,
   ...NAVIGATION_COMPONENTS,
+  ...SLIDE_COMPONENTS,
 ];
 
 // ═══════════════════════════════════════════════════════════════

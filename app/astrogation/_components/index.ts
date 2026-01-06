@@ -50,6 +50,15 @@ export type { SelectProps, SelectOption } from "./Select";
 export { SurveyUploadModal } from "./SurveyUploadModal";
 export type { SurveyUploadModalProps } from "./SurveyUploadModal";
 
+// Slide Templates (used by ComponentPreview for rendering slide previews)
+export {
+  BUILT_IN_SLIDE_TEMPLATES,
+  SLIDE_TEMPLATE_CATEGORIES,
+  getSlideTemplatesByCategory,
+  getSlideTemplateById,
+} from "./slideTemplates";
+export type { SlideTemplateCategory } from "./slideTemplates";
+
 // Previews
 export { ComponentPreview } from "./previews/ComponentPreview";
 export type { ComponentPreviewProps } from "./previews/ComponentPreview";

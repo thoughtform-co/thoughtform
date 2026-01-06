@@ -1,10 +1,12 @@
 "use client";
 
 import { getComponentById, type ComponentDef } from "../../catalog";
-import type { StyleConfig } from "../types";
+import type { StyleConfig, SlideTextElement, SlideShapeElement, SlideElement } from "../types";
 import { DynamicSVG } from "../DynamicSVG";
 import { ThoughtformLogo } from "../ThoughtformLogo";
 import { HUDWrapper } from "../helpers";
+import { getSlideTemplateById } from "../slideTemplates";
+import { SlideHUDOverlay } from "./SlideHUDOverlay";
 import {
   CornerBracket,
   CornerBrackets,
@@ -1027,7 +1029,188 @@ function renderComponent(
     case "glitch-text":
       return <div className="preview-default">{def.name}</div>;
 
+    // ═══════════════════════════════════════════════════════════════
+    // SLIDES - Arc Editor Templates (16:9 aspect ratio)
+    // ═══════════════════════════════════════════════════════════════
+    case "slide-main": {
+      const template = getSlideTemplateById("builtin-main");
+
+      if (!template) {
+        return <div className="preview-default">{def.name}</div>;
+      }
+
+      // Calculate scale to fit preview area (base width ~400px)
+      const CANVAS_WIDTH = 1920;
+      const CANVAS_HEIGHT = 1080;
+      const previewWidth = fullSize ? 600 : 400;
+      const slideScale = previewWidth / CANVAS_WIDTH;
+      const scaledHeight = CANVAS_HEIGHT * slideScale;
+
+      // Sort elements by zIndex
+      const sortedElements = [...template.slide.elements].sort((a, b) => a.zIndex - b.zIndex);
+
+      return (
+        <div className="preview-slide">
+          <div
+            className="preview-slide__canvas"
+            style={{
+              position: "relative",
+              width: previewWidth,
+              height: scaledHeight,
+              backgroundColor: template.slide.backgroundColor,
+              overflow: "hidden",
+              boxShadow: "0 4px 24px rgba(0, 0, 0, 0.4)",
+              border: "1px solid rgba(202, 165, 84, 0.15)",
+            }}
+          >
+            {/* Slide content elements */}
+            {sortedElements.map((element) => renderSlideElement(element, slideScale))}
+
+            {/* HUD Overlay - Navigation Grid */}
+            {template.hudConfig && (
+              <SlideHUDOverlay
+                config={template.hudConfig}
+                width={CANVAS_WIDTH}
+                height={CANVAS_HEIGHT}
+                scale={slideScale}
+              />
+            )}
+
+            {/* Aspect ratio indicator */}
+            <div
+              style={{
+                position: "absolute",
+                bottom: 4 * slideScale,
+                right: 8 * slideScale,
+                fontFamily: "var(--font-mono)",
+                fontSize: Math.max(8, 9 * slideScale),
+                color: "rgba(202, 165, 84, 0.25)",
+                letterSpacing: 1,
+                zIndex: 101,
+              }}
+            >
+              16:9
+            </div>
+          </div>
+
+          {/* Template info */}
+          <div className="preview-slide__info">
+            <span className="preview-slide__category">{template.category.toUpperCase()}</span>
+            <span className="preview-slide__name">{template.name}</span>
+          </div>
+        </div>
+      );
+    }
+
     default:
       return <div className="preview-default">{def.name}</div>;
   }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SLIDE ELEMENT RENDERER
+// ═══════════════════════════════════════════════════════════════
+
+function renderSlideElement(element: SlideElement, scale: number): React.ReactNode {
+  const baseStyle: React.CSSProperties = {
+    position: "absolute",
+    left: element.bounds.x * scale,
+    top: element.bounds.y * scale,
+    width: element.bounds.width * scale,
+    height: element.bounds.height * scale,
+    opacity: element.opacity,
+    transform: element.rotation ? `rotate(${element.rotation}deg)` : undefined,
+    pointerEvents: "none",
+  };
+
+  if (element.type === "text") {
+    const textElement = element as SlideTextElement;
+    return (
+      <div
+        key={element.id}
+        style={{
+          ...baseStyle,
+          fontFamily: textElement.style.fontFamily,
+          fontSize: textElement.style.fontSize * scale,
+          fontWeight: textElement.style.fontWeight,
+          fontStyle: textElement.style.fontStyle,
+          color: textElement.style.color,
+          textAlign: textElement.style.textAlign,
+          lineHeight: textElement.style.lineHeight,
+          letterSpacing: textElement.style.letterSpacing * scale,
+          textDecoration:
+            textElement.style.textDecoration === "none"
+              ? undefined
+              : textElement.style.textDecoration,
+          display: "flex",
+          alignItems: "flex-start",
+          justifyContent:
+            textElement.style.textAlign === "center"
+              ? "center"
+              : textElement.style.textAlign === "right"
+                ? "flex-end"
+                : "flex-start",
+          overflow: "hidden",
+          whiteSpace: "pre-wrap",
+          wordBreak: "break-word",
+        }}
+      >
+        {textElement.content}
+      </div>
+    );
+  }
+
+  if (element.type === "shape") {
+    const shapeElement = element as SlideShapeElement;
+    return (
+      <div
+        key={element.id}
+        style={{
+          ...baseStyle,
+          backgroundColor: shapeElement.fill,
+          border:
+            shapeElement.strokeWidth > 0
+              ? `${Math.max(1, shapeElement.strokeWidth * scale)}px solid ${shapeElement.stroke}`
+              : undefined,
+          borderRadius:
+            shapeElement.shapeType === "ellipse"
+              ? "50%"
+              : shapeElement.borderRadius
+                ? shapeElement.borderRadius * scale
+                : undefined,
+        }}
+      />
+    );
+  }
+
+  // Image placeholder
+  if (element.type === "image") {
+    return (
+      <div
+        key={element.id}
+        style={{
+          ...baseStyle,
+          backgroundColor: "rgba(202, 165, 84, 0.08)",
+          border: "1px dashed rgba(202, 165, 84, 0.25)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <span
+          style={{
+            fontFamily: "var(--font-mono)",
+            fontSize: Math.max(8, 10 * scale),
+            color: "rgba(202, 165, 84, 0.4)",
+            textTransform: "uppercase",
+            letterSpacing: 1,
+          }}
+        >
+          Image
+        </span>
+      </div>
+    );
+  }
+
+  return null;
 }

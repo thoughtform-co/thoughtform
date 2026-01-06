@@ -10639,3 +10639,251 @@
   left: unset !important;
   top: unset !important;
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   SLIDE VIEW - 16:9 Keynote Template Preview
+   ═══════════════════════════════════════════════════════════════ */
+
+.slide-view {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  width: 100%;
+  height: 100%;
+  padding: 32px;
+  gap: 24px;
+  overflow-y: auto;
+}
+
+.slide-view__canvas-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 900px;
+}
+
+.slide-canvas {
+  transition: box-shadow 0.2s ease;
+}
+
+.slide-canvas:hover {
+  box-shadow:
+    0 12px 48px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(202, 165, 84, 0.25);
+}
+
+/* ─── Slide Empty State ─── */
+
+.slide-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  padding: 48px;
+  text-align: center;
+  gap: 16px;
+}
+
+.slide-empty-state__icon {
+  font-size: 48px;
+  color: var(--gold-30);
+  margin-bottom: 8px;
+}
+
+.slide-empty-state__title {
+  font-family: var(--font-mono);
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--dawn);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+.slide-empty-state__text {
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--dawn-50);
+  max-width: 300px;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.slide-empty-state__info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+  padding: 8px 16px;
+  background: rgba(202, 165, 84, 0.08);
+  border: 1px solid var(--gold-15);
+}
+
+.slide-empty-state__label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--gold-50);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.slide-empty-state__value {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--gold);
+  letter-spacing: 1px;
+}
+
+/* ─── Slide Info Panel ─── */
+
+.slide-info-panel {
+  width: 100%;
+  max-width: 800px;
+  padding: 16px 20px;
+  background: rgba(10, 9, 8, 0.6);
+  border: 1px solid var(--dawn-08);
+}
+
+.slide-info-panel__header {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.slide-info-panel__category {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--gold);
+  letter-spacing: 2px;
+  padding: 2px 8px;
+  background: var(--gold-08);
+  border: 1px solid var(--gold-15);
+}
+
+.slide-info-panel__name {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  color: var(--dawn);
+  font-weight: 500;
+  letter-spacing: 1px;
+}
+
+.slide-info-panel__meta {
+  display: flex;
+  gap: 24px;
+}
+
+.slide-info-panel__stat {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.slide-info-panel__stat-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--dawn-50);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.slide-info-panel__stat-value {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--dawn);
+}
+
+.slide-info-panel__stat-color {
+  width: 14px;
+  height: 14px;
+  border: 1px solid var(--dawn-15);
+}
+
+/* ─── Slide Catalog Info ─── */
+
+.slide-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: rgba(202, 165, 84, 0.06);
+  border: 1px solid var(--gold-15);
+  margin: 0 12px;
+}
+
+.slide-info__label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--gold-50);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.slide-info__value {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--gold);
+  letter-spacing: 1px;
+}
+
+/* ─── Catalog Item Badge ─── */
+
+.catalog-item__badge {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  color: var(--gold-50);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  background: var(--gold-08);
+  border: 1px solid var(--gold-15);
+  margin-left: auto;
+}
+
+/* ─── Slide Preview (in ComponentPreview) ─── */
+
+.preview-slide {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+}
+
+.preview-slide__canvas {
+  transition: box-shadow 0.2s ease;
+}
+
+.preview-slide__canvas:hover {
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(202, 165, 84, 0.25);
+}
+
+.preview-slide__info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.preview-slide__category {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--gold);
+  letter-spacing: 2px;
+  padding: 2px 8px;
+  background: var(--gold-08);
+  border: 1px solid var(--gold-15);
+}
+
+.preview-slide__name {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--dawn);
+  letter-spacing: 1px;
+}
