@@ -1077,20 +1077,6 @@ function renderComponent(
             )}
 
             {/* Aspect ratio indicator */}
-            <div
-              style={{
-                position: "absolute",
-                bottom: 4 * slideScale,
-                right: 8 * slideScale,
-                fontFamily: "var(--font-mono)",
-                fontSize: Math.max(8, 9 * slideScale),
-                color: "rgba(202, 165, 84, 0.25)",
-                letterSpacing: 1,
-                zIndex: 101,
-              }}
-            >
-              16:9
-            </div>
           </div>
 
           {/* Template info */}

@@ -32,16 +32,6 @@ export function SlideHUDOverlay({ config, width, height, scale }: SlideHUDOverla
   const tickCount = config.tickCount;
   const strokeWidth = Math.max(1, 2 * scale);
 
-  // Generate tick labels
-  const tickLabels: Record<number, string> = {};
-  const step = Math.ceil(tickCount / 4);
-  for (let i = 0; i <= 4; i++) {
-    const tickIdx = i * step;
-    if (tickIdx <= tickCount) {
-      tickLabels[tickIdx] = String(i * 2.5);
-    }
-  }
-
   // Breathing animation styles
   const breathingStyle = config.breathing
     ? {
@@ -249,20 +239,6 @@ export function SlideHUDOverlay({ config, width, height, scale }: SlideHUDOverla
                         background: i % 5 === 0 ? bracketColor : `${bracketColor}80`,
                       }}
                     />
-                  )}
-                  {tickLabels[i] && i > 0 && (
-                    <span
-                      style={{
-                        position: "absolute",
-                        top: -4 * scale,
-                        left: 28 * scale,
-                        fontFamily: "var(--font-mono)",
-                        fontSize: Math.max(6, 9 * scale),
-                        color: "rgba(236, 227, 214, 0.3)",
-                      }}
-                    >
-                      {tickLabels[i]}
-                    </span>
                   )}
                 </div>
               ))}
