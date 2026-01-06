@@ -13,6 +13,15 @@ import { useAuth } from "@/components/auth/AuthProvider";
 export type PipelineStatus = "idle" | "analyzing" | "briefing" | "done" | "error";
 export type SearchSpace = "briefing" | "full";
 
+export interface UpdateItemOptions {
+  /** Suppress success toast (recommended for autosave / high-frequency updates). */
+  silent?: boolean;
+  /** Override error toast message. */
+  errorToast?: string;
+  /** Override success toast message (ignored when silent=true). */
+  successToast?: string;
+}
+
 export interface UseSurveyOptions {
   dispatch: React.Dispatch<AstrogationAction>;
   surveyCategoryId: string | null;
@@ -28,7 +37,7 @@ export interface UseSurveyReturn {
     categoryId?: string | null,
     componentKey?: string | null
   ) => Promise<void>;
-  updateItem: (updates: Partial<SurveyItem>) => Promise<void>;
+  updateItem: (updates: Partial<SurveyItem>, options?: UpdateItemOptions) => Promise<void>;
   deleteItem: () => Promise<void>;
   analyzeItem: (itemId?: string) => Promise<void>;
   generateBriefing: (itemId?: string, force?: boolean) => Promise<void>;
@@ -551,7 +560,7 @@ export function useSurvey({
   // ═══════════════════════════════════════════════════════════════
 
   const updateItem = useCallback(
-    async (updates: Partial<SurveyItem>) => {
+    async (updates: Partial<SurveyItem>, options: UpdateItemOptions = {}) => {
       setIsSaving(true);
       try {
         const data = await fetcher<{ item: SurveyItem }>("/api/survey/items", {
@@ -572,11 +581,18 @@ export function useSurvey({
           recentlyAddedItemsRef.current.set(data.item.id, mergedItem);
         }
         dispatch(actions.surveyUpdateItem(mergedItem));
-        dispatch(actions.showToast("Saved"));
+        if (!options.silent) {
+          dispatch(actions.showToast(options.successToast ?? "Saved"));
+        }
         setAllItems((prev) => prev.map((item) => (item.id === mergedItem.id ? mergedItem : item)));
       } catch (error) {
         console.error("Failed to update item:", error);
-        dispatch(actions.showToast("Failed to save"));
+        dispatch(
+          actions.showToast(
+            options.errorToast ?? (options.silent ? "Auto-save failed" : "Failed to save")
+          )
+        );
+        throw error;
       } finally {
         setIsSaving(false);
       }

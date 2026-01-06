@@ -7,16 +7,18 @@ import { SurveyUploadModal } from "./SurveyUploadModal";
 import { ConfirmDialog } from "./ConfirmDialog";
 import { formatBriefingText } from "./utils/formatBriefingText";
 import { FlowConnector } from "./FlowConnector";
-import type { PipelineStatus } from "../_hooks/useSurvey";
+import type { PipelineStatus, UpdateItemOptions } from "../_hooks/useSurvey";
 import { ChamferedFrame } from "@thoughtform/ui";
 
 // ═══════════════════════════════════════════════════════════════
 // SURVEY INSPECTOR PANEL - Edit metadata & AI analysis
 // ═══════════════════════════════════════════════════════════════
 
+const AUTOSAVE_DEBOUNCE_MS = 650;
+
 export interface SurveyInspectorPanelProps {
   item: SurveyItem | null;
-  onUpdate: (updates: Partial<SurveyItem>) => Promise<void>;
+  onUpdate: (updates: Partial<SurveyItem>, options?: UpdateItemOptions) => Promise<void>;
   onDelete: () => Promise<void>;
   onAnalyze: () => Promise<void>;
   onGenerateBriefing?: () => Promise<void>;
@@ -100,12 +102,8 @@ function SurveyInspectorPanelInner({
   const [showCollectionDropdown, setShowCollectionDropdown] = useState(false);
   const [editingSourceIndex, setEditingSourceIndex] = useState<number | null>(null);
   const [editingSourceUrl, setEditingSourceUrl] = useState("");
-  const [tagSuggestions, setTagSuggestions] = useState<string[]>([]);
-  const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState<number>(-1);
-  const [showTagSuggestions, setShowTagSuggestions] = useState(false);
   const tagInputRef = useRef<HTMLInputElement>(null);
   const sourceInputRef = useRef<HTMLInputElement>(null);
-  const tagSuggestionsRef = useRef<HTMLDivElement>(null);
   const collectionDropdownRef = useRef<HTMLDivElement>(null);
   const autosaveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -145,6 +143,10 @@ function SurveyInspectorPanelInner({
   // Reset local state when switching to a different item
   useEffect(() => {
     setLocalItem(null);
+    if (autosaveTimeoutRef.current) {
+      clearTimeout(autosaveTimeoutRef.current);
+      autosaveTimeoutRef.current = null;
+    }
   }, [item?.id]);
 
   // Sync annotation editing when canvas selection changes
@@ -166,69 +168,74 @@ function SurveyInspectorPanelInner({
     }));
   }, []);
 
-  // Autosave: debounced save for title and tags
+  // Autosave: debounced save for ANY inspector edits (Save button stays as fallback)
   useEffect(() => {
-    if (!localItem || !item || isSaving || isAnalyzing) return;
+    if (!localItem || !item || isSaving) return;
 
     // Clear existing timeout
     if (autosaveTimeoutRef.current) {
       clearTimeout(autosaveTimeoutRef.current);
     }
 
-    // Only autosave title, tags, and collection_id (other fields like notes can still use manual save)
-    const hasTitleChange = "title" in localItem;
-    const hasTagsChange = "tags" in localItem;
-    const hasCollectionChange = "collection_id" in localItem;
-    if (!hasTitleChange && !hasTagsChange && !hasCollectionChange) return;
+    const snapshot = localItem;
+    const snapshotKeys = Object.keys(snapshot) as Array<keyof SurveyItem>;
+    if (snapshotKeys.length === 0) return;
 
-    // Build update object with only the fields that changed
-    const updates: Partial<SurveyItem> = { id: item.id };
-    if (hasTitleChange) {
-      updates.title = localItem.title ?? null;
-    }
-    if (hasTagsChange) {
-      updates.tags = localItem.tags ?? [];
-    }
-    if (hasCollectionChange) {
-      updates.collection_id = localItem.collection_id ?? null;
-    }
-
-    // Set new timeout for autosave (1.5 seconds after last change)
+    // Set new timeout for autosave (short delay after last change)
     autosaveTimeoutRef.current = setTimeout(async () => {
       try {
-        await onUpdate(updates);
-        // Only clear the fields that were saved
+        await onUpdate({ id: item.id, ...snapshot }, { silent: true });
+        // Only clear the fields that were saved AND haven't changed since the save was scheduled
         setLocalItem((prev) => {
           if (!prev) return null;
-          const next = { ...prev };
-          if (hasTitleChange) delete next.title;
-          if (hasTagsChange) delete next.tags;
-          if (hasCollectionChange) delete next.collection_id;
-          return Object.keys(next).length > 1 ? next : null; // Keep if there are other unsaved changes
+          const next: Partial<SurveyItem> = { ...prev };
+          for (const key of snapshotKeys) {
+            if (
+              key in next &&
+              (next as Record<string, unknown>)[key as string] ===
+                (snapshot as Record<string, unknown>)[key as string]
+            ) {
+              delete (next as Record<string, unknown>)[key as string];
+            }
+          }
+          return Object.keys(next).length > 0 ? next : null;
         });
       } catch (error) {
         console.error("Autosave failed:", error);
         // Keep localItem so user can retry with manual save
       }
-    }, 1500);
+    }, AUTOSAVE_DEBOUNCE_MS);
 
     return () => {
       if (autosaveTimeoutRef.current) {
         clearTimeout(autosaveTimeoutRef.current);
       }
     };
-  }, [localItem, item, onUpdate, isSaving, isAnalyzing]);
+  }, [localItem, item, onUpdate, isSaving]);
 
   // Save changes
   const handleSave = useCallback(async () => {
     if (!localItem || !item) return;
-    await onUpdate({ ...localItem, id: item.id });
-    setLocalItem(null);
+    if (autosaveTimeoutRef.current) {
+      clearTimeout(autosaveTimeoutRef.current);
+      autosaveTimeoutRef.current = null;
+    }
+    try {
+      await onUpdate({ ...localItem, id: item.id });
+      setLocalItem(null);
+    } catch (error) {
+      // Keep localItem so user can retry
+      console.error("Manual save failed:", error);
+    }
   }, [localItem, item, onUpdate]);
 
   // Reset local changes
   const handleReset = useCallback(() => {
     setLocalItem(null);
+    if (autosaveTimeoutRef.current) {
+      clearTimeout(autosaveTimeoutRef.current);
+      autosaveTimeoutRef.current = null;
+    }
   }, []);
 
   // Handle delete - show styled confirmation dialog
@@ -366,24 +373,24 @@ function SurveyInspectorPanelInner({
     return Array.from(tagSet).sort();
   }, [allItems]);
 
-  // Filter tag suggestions based on input
-  useEffect(() => {
-    if (!tagInput.trim()) {
-      setTagSuggestions([]);
-      setShowTagSuggestions(false);
-      return;
-    }
-
-    const inputLower = tagInput.toLowerCase();
+  // Inline tag suggestion (ghost completion) based on existing tags
+  const inlineTagSuggestion = useMemo(() => {
+    const query = tagInput.toLowerCase();
+    if (!query || query.trim() === "") return null;
     const currentTags = effectiveItem?.tags || [];
-    const filtered = allTags
-      .filter((tag) => tag.includes(inputLower) && !currentTags.includes(tag))
-      .slice(0, 10); // Limit to 10 suggestions
-
-    setTagSuggestions(filtered);
-    setShowTagSuggestions(filtered.length > 0);
-    setSelectedSuggestionIndex(-1);
+    return (
+      allTags.find((tag) => tag.startsWith(query) && !currentTags.includes(tag) && tag !== query) ||
+      null
+    );
   }, [tagInput, allTags, effectiveItem?.tags]);
+
+  const inlineTagRemainder = useMemo(() => {
+    if (!inlineTagSuggestion) return "";
+    const query = tagInput.toLowerCase();
+    if (!query) return "";
+    if (!inlineTagSuggestion.startsWith(query)) return "";
+    return inlineTagSuggestion.slice(query.length);
+  }, [inlineTagSuggestion, tagInput]);
 
   // Handle tags - chip-based input
   const handleAddTag = useCallback(
@@ -396,8 +403,6 @@ function SurveyInspectorPanelInner({
 
       handleFieldChange("tags", [...currentTags, trimmedTag]);
       setTagInput("");
-      setShowTagSuggestions(false);
-      setSelectedSuggestionIndex(-1);
     },
     [effectiveItem?.tags, handleFieldChange]
   );
@@ -412,71 +417,51 @@ function SurveyInspectorPanelInner({
 
   const handleTagInputKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLInputElement>) => {
-      if (showTagSuggestions && tagSuggestions.length > 0) {
-        if (e.key === "ArrowDown") {
-          e.preventDefault();
-          setSelectedSuggestionIndex((prev) =>
-            prev < tagSuggestions.length - 1 ? prev + 1 : prev
-          );
-          return;
-        } else if (e.key === "ArrowUp") {
-          e.preventDefault();
-          setSelectedSuggestionIndex((prev) => (prev > 0 ? prev - 1 : -1));
-          return;
-        } else if (e.key === "Enter" && selectedSuggestionIndex >= 0) {
-          e.preventDefault();
-          handleAddTag(tagSuggestions[selectedSuggestionIndex]);
-          return;
-        } else if (e.key === "Escape") {
-          e.preventDefault();
-          setShowTagSuggestions(false);
-          setSelectedSuggestionIndex(-1);
-          return;
-        }
+      // Accept ghost completion with Tab / ArrowRight (when caret is at end)
+      if (
+        inlineTagSuggestion &&
+        (e.key === "Tab" ||
+          (e.key === "ArrowRight" &&
+            (e.currentTarget.selectionStart ?? 0) === tagInput.length &&
+            (e.currentTarget.selectionEnd ?? 0) === tagInput.length))
+      ) {
+        e.preventDefault();
+        setTagInput(inlineTagSuggestion);
+        requestAnimationFrame(() => {
+          const el = tagInputRef.current;
+          if (el) el.setSelectionRange(inlineTagSuggestion.length, inlineTagSuggestion.length);
+        });
+        return;
       }
 
       if (e.key === "Enter" || e.key === ",") {
         e.preventDefault();
-        if (selectedSuggestionIndex >= 0 && tagSuggestions[selectedSuggestionIndex]) {
-          handleAddTag(tagSuggestions[selectedSuggestionIndex]);
-        } else {
-          handleAddTag(tagInput);
-        }
+        const toAdd =
+          inlineTagSuggestion && inlineTagSuggestion.startsWith(tagInput.toLowerCase())
+            ? inlineTagSuggestion
+            : tagInput;
+        handleAddTag(toAdd);
       } else if (e.key === "Backspace" && !tagInput && (effectiveItem?.tags?.length || 0) > 0) {
         // Remove last tag on backspace when input is empty
         const tags = effectiveItem?.tags || [];
         handleRemoveTag(tags[tags.length - 1]);
       }
     },
-    [
-      tagInput,
-      effectiveItem?.tags,
-      handleAddTag,
-      handleRemoveTag,
-      showTagSuggestions,
-      tagSuggestions,
-      selectedSuggestionIndex,
-    ]
+    [tagInput, effectiveItem?.tags, handleAddTag, handleRemoveTag, inlineTagSuggestion]
   );
 
   const handleTagInputBlur = useCallback(() => {
-    // Delay to allow click events on suggestions to fire first
+    // Delay to allow click events on nearby controls to fire first
     setTimeout(() => {
       if (tagInput.trim()) {
-        handleAddTag(tagInput);
+        const toAdd =
+          inlineTagSuggestion && inlineTagSuggestion.startsWith(tagInput.toLowerCase())
+            ? inlineTagSuggestion
+            : tagInput;
+        handleAddTag(toAdd);
       }
-      setShowTagSuggestions(false);
-      setSelectedSuggestionIndex(-1);
     }, 200);
-  }, [tagInput, handleAddTag]);
-
-  const handleTagSuggestionClick = useCallback(
-    (suggestion: string) => {
-      handleAddTag(suggestion);
-      tagInputRef.current?.focus();
-    },
-    [handleAddTag]
-  );
+  }, [tagInput, inlineTagSuggestion, handleAddTag]);
 
   // Handle collection selection
   const handleSelectCollection = useCallback(
@@ -498,8 +483,10 @@ function SurveyInspectorPanelInner({
         setLocalItem((prev) => {
           if (!prev) return null;
           const next = { ...prev };
-          delete next.collection_id;
-          return Object.keys(next).length > 1 ? next : null;
+          if (next.collection_id === collectionId) {
+            delete next.collection_id;
+          }
+          return Object.keys(next).length > 0 ? next : null;
         });
       } catch (error) {
         console.error("Failed to save collection:", error);
@@ -559,29 +546,52 @@ function SurveyInspectorPanelInner({
   const handleSaveAnnotationNote = useCallback(async () => {
     if (!editingAnnotationId || !item) return;
 
-    // If note is empty for a NEW annotation, delete it
-    const existingAnnotation = (item.annotations || []).find((a) => a.id === editingAnnotationId);
-    if (!annotationNote.trim() && existingAnnotation && !existingAnnotation.note) {
-      // Delete the annotation
-      const annotations = (effectiveItem?.annotations || []).filter(
-        (a) => a.id !== editingAnnotationId
-      );
-      handleFieldChange("annotations", annotations);
-      // Immediately persist
-      await onUpdate({ id: item.id, annotations });
-    } else {
-      // Update the note
-      const annotations = (effectiveItem?.annotations || []).map((a) =>
-        a.id === editingAnnotationId ? { ...a, note: annotationNote } : a
-      );
-      handleFieldChange("annotations", annotations);
-      // Immediately persist annotation changes
-      await onUpdate({ id: item.id, annotations });
-    }
+    try {
+      // If note is empty for a NEW annotation, delete it
+      const existingAnnotation = (item.annotations || []).find((a) => a.id === editingAnnotationId);
+      if (!annotationNote.trim() && existingAnnotation && !existingAnnotation.note) {
+        // Delete the annotation
+        const annotations = (effectiveItem?.annotations || []).filter(
+          (a) => a.id !== editingAnnotationId
+        );
+        handleFieldChange("annotations", annotations);
+        // Immediately persist
+        await onUpdate({ id: item.id, annotations });
+        // Clear saved change from localItem (prevents redundant autosave)
+        setLocalItem((prev) => {
+          if (!prev) return null;
+          const next = { ...prev };
+          if (next.annotations === annotations) {
+            delete next.annotations;
+          }
+          return Object.keys(next).length > 0 ? next : null;
+        });
+      } else {
+        // Update the note
+        const annotations = (effectiveItem?.annotations || []).map((a) =>
+          a.id === editingAnnotationId ? { ...a, note: annotationNote } : a
+        );
+        handleFieldChange("annotations", annotations);
+        // Immediately persist annotation changes
+        await onUpdate({ id: item.id, annotations });
+        // Clear saved change from localItem (prevents redundant autosave)
+        setLocalItem((prev) => {
+          if (!prev) return null;
+          const next = { ...prev };
+          if (next.annotations === annotations) {
+            delete next.annotations;
+          }
+          return Object.keys(next).length > 0 ? next : null;
+        });
+      }
 
-    setEditingAnnotationId(null);
-    setAnnotationNote("");
-    onAnnotationSelect?.(null); // Clear canvas selection
+      setEditingAnnotationId(null);
+      setAnnotationNote("");
+      onAnnotationSelect?.(null); // Clear canvas selection
+    } catch (error) {
+      console.error("Failed to save annotation:", error);
+      // Keep edit state so user can retry
+    }
   }, [
     editingAnnotationId,
     annotationNote,
@@ -919,40 +929,27 @@ function SurveyInspectorPanelInner({
                       </button>
                     </span>
                   ))}
-                  <input
-                    ref={tagInputRef}
-                    type="text"
-                    className="spec-tags-input__field"
-                    value={tagInput}
-                    onChange={(e) => setTagInput(e.target.value)}
-                    onKeyDown={handleTagInputKeyDown}
-                    onBlur={handleTagInputBlur}
-                    onFocus={() => {
-                      if (tagSuggestions.length > 0) {
-                        setShowTagSuggestions(true);
-                      }
-                    }}
-                    placeholder={(effectiveItem?.tags?.length || 0) === 0 ? "Add tags..." : ""}
-                  />
-                </div>
-                {/* Tag autocomplete suggestions */}
-                {showTagSuggestions && tagSuggestions.length > 0 && (
-                  <div ref={tagSuggestionsRef} className="spec-tag-suggestions">
-                    {tagSuggestions.map((suggestion, index) => (
-                      <button
-                        key={suggestion}
-                        type="button"
-                        className={`spec-tag-suggestion ${
-                          index === selectedSuggestionIndex ? "spec-tag-suggestion--selected" : ""
-                        }`}
-                        onClick={() => handleTagSuggestionClick(suggestion)}
-                        onMouseEnter={() => setSelectedSuggestionIndex(index)}
-                      >
-                        {suggestion}
-                      </button>
-                    ))}
+                  <div className="spec-tags-input__input-wrap">
+                    {inlineTagRemainder && tagInput && (
+                      <div className="spec-tags-input__ghost" aria-hidden="true">
+                        <span className="spec-tags-input__ghost-typed">{tagInput}</span>
+                        <span className="spec-tags-input__ghost-suggestion">
+                          {inlineTagRemainder}
+                        </span>
+                      </div>
+                    )}
+                    <input
+                      ref={tagInputRef}
+                      type="text"
+                      className="spec-tags-input__field"
+                      value={tagInput}
+                      onChange={(e) => setTagInput(e.target.value)}
+                      onKeyDown={handleTagInputKeyDown}
+                      onBlur={handleTagInputBlur}
+                      placeholder={(effectiveItem?.tags?.length || 0) === 0 ? "Add tags..." : ""}
+                    />
                   </div>
-                )}
+                </div>
                 {/* Suggested tags from AI - clickable to add */}
                 {effectiveItem?.analysis?.tags && effectiveItem.analysis.tags.length > 0 && (
                   <div className="spec-suggested-tags">

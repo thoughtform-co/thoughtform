@@ -379,9 +379,11 @@ function AstrogationContent() {
       }
 
       // Persist to server (no need to await for UI)
-      updateItem({ id: surveySelectedItemId, annotations }).catch(() => {
-        // On error, the server response will restore the correct state
-        dispatch(actions.showToast("Failed to save annotations"));
+      updateItem(
+        { id: surveySelectedItemId, annotations },
+        { silent: true, errorToast: "Failed to save annotations" }
+      ).catch(() => {
+        // Error toast handled in updateItem; keep optimistic UI.
       });
     },
     [surveySelectedItemId, surveyItems, updateItem, dispatch]
