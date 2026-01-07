@@ -27,6 +27,8 @@ export interface CatalogPanelProps {
   onSelectCategory: (id: string) => void;
   selectedComponentId: string | null;
   onSelectComponent: (id: string) => void;
+  // Filter props
+  filterCategoryId?: string | null;
 }
 
 function CatalogPanelInner({
@@ -34,6 +36,7 @@ function CatalogPanelInner({
   onSelectCategory,
   selectedComponentId,
   onSelectComponent,
+  filterCategoryId = null,
 }: CatalogPanelProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const filteredComponents = searchQuery ? searchComponents(searchQuery) : null;
@@ -86,44 +89,53 @@ function CatalogPanelInner({
               onSelectionChange={onSelectComponent}
             >
               <TreeView>
-                {CATEGORIES.map((cat, catIndex) => {
-                  const components = getComponentsByCategory(cat.id);
-                  const hasChildren = components.length > 0;
-                  const isLastCategory = catIndex === CATEGORIES.length - 1;
-                  const showSeparator = HIERARCHY_BREAKS.includes(cat.id);
+                {(() => {
+                  const filteredCategories = CATEGORIES.filter((cat) => {
+                    // Filter by category if filterCategoryId is set
+                    if (filterCategoryId !== null) {
+                      return cat.id === filterCategoryId;
+                    }
+                    return true;
+                  });
+                  return filteredCategories.map((cat, catIndex) => {
+                    const components = getComponentsByCategory(cat.id);
+                    const hasChildren = components.length > 0;
+                    const isLastCategory = catIndex === filteredCategories.length - 1;
+                    const showSeparator = HIERARCHY_BREAKS.includes(cat.id);
 
-                  return (
-                    <div key={cat.id}>
-                      <TreeNode nodeId={cat.id} isLast={isLastCategory}>
-                        <TreeNodeTrigger nodeId={cat.id} hasChildren={hasChildren}>
-                          <TreeExpander nodeId={cat.id} hasChildren={hasChildren} />
-                          <TreeIcon hasChildren nodeId={cat.id} />
-                          <TreeLabel>{cat.name}</TreeLabel>
-                        </TreeNodeTrigger>
+                    return (
+                      <div key={cat.id}>
+                        <TreeNode nodeId={cat.id} isLast={isLastCategory}>
+                          <TreeNodeTrigger nodeId={cat.id} hasChildren={hasChildren}>
+                            <TreeExpander nodeId={cat.id} hasChildren={hasChildren} />
+                            <TreeIcon hasChildren nodeId={cat.id} />
+                            <TreeLabel>{cat.name}</TreeLabel>
+                          </TreeNodeTrigger>
 
-                        <TreeNodeContent nodeId={cat.id} hasChildren={hasChildren}>
-                          {components.map((comp, compIndex) => {
-                            const isLast = compIndex === components.length - 1;
-                            return (
-                              <TreeNode key={comp.id} nodeId={comp.id} level={1} isLast={isLast}>
-                                <TreeNodeTrigger
-                                  nodeId={comp.id}
-                                  onClick={() => onSelectComponent(comp.id)}
-                                >
-                                  <TreeExpander nodeId={comp.id} />
-                                  <TreeIcon />
-                                  <TreeLabel>{comp.name}</TreeLabel>
-                                </TreeNodeTrigger>
-                              </TreeNode>
-                            );
-                          })}
-                        </TreeNodeContent>
-                      </TreeNode>
-                      {/* Hierarchy separator */}
-                      {showSeparator && <div className="hierarchy-separator" />}
-                    </div>
-                  );
-                })}
+                          <TreeNodeContent nodeId={cat.id} hasChildren={hasChildren}>
+                            {components.map((comp, compIndex) => {
+                              const isLast = compIndex === components.length - 1;
+                              return (
+                                <TreeNode key={comp.id} nodeId={comp.id} level={1} isLast={isLast}>
+                                  <TreeNodeTrigger
+                                    nodeId={comp.id}
+                                    onClick={() => onSelectComponent(comp.id)}
+                                  >
+                                    <TreeExpander nodeId={comp.id} />
+                                    <TreeIcon />
+                                    <TreeLabel>{comp.name}</TreeLabel>
+                                  </TreeNodeTrigger>
+                                </TreeNode>
+                              );
+                            })}
+                          </TreeNodeContent>
+                        </TreeNode>
+                        {/* Hierarchy separator */}
+                        {showSeparator && <div className="hierarchy-separator" />}
+                      </div>
+                    );
+                  });
+                })()}
               </TreeView>
             </TreeProvider>
           </div>

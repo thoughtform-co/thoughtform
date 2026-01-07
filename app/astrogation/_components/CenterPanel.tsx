@@ -12,6 +12,7 @@ import type {
 import { VaultView } from "./VaultView";
 import { FoundryView } from "./FoundryView";
 import { SurveyView } from "./SurveyView";
+import type { FilterState } from "./FilterButton";
 
 // ═══════════════════════════════════════════════════════════════
 // CENTER PANEL - VAULT / FOUNDRY / SURVEY TABS
@@ -40,6 +41,10 @@ export interface CenterPanelProps {
   forgeSvg?: string | null;
   onForgeDocChange?: (doc: VectorDocument, svg: string) => void;
   onForgeClose?: () => void;
+  // Filter props
+  filters?: FilterState;
+  onFiltersChange?: (filters: FilterState) => void;
+  projects?: Array<{ id: string; name: string }>;
 }
 
 export function CenterPanel({
@@ -63,6 +68,9 @@ export function CenterPanel({
   forgeSvg,
   onForgeDocChange,
   onForgeClose,
+  filters = { categoryId: null, projectId: null },
+  onFiltersChange,
+  projects = [],
 }: CenterPanelProps) {
   const def = selectedComponentId ? (getComponentById(selectedComponentId) ?? null) : null;
 
@@ -159,6 +167,9 @@ export function CenterPanel({
             onToggleSegments={survey.onToggleSegments}
             onUpdateSegmentLabel={survey.onUpdateSegmentLabel}
             onDeleteSegment={survey.onDeleteSegment}
+            filters={filters}
+            onFiltersChange={onFiltersChange}
+            projects={projects}
           />
         )}
       </div>

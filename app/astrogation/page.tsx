@@ -116,6 +116,15 @@ function AstrogationContent() {
   // Segment visibility toggle
   const [showSegments, setShowSegments] = useState(false);
 
+  // Filter state for survey filtering
+  const [surveyFilters, setSurveyFilters] = useState<{
+    categoryId: string | null;
+    projectId: string | null;
+  }>({
+    categoryId: null,
+    projectId: null,
+  });
+
   // Get user for Supabase persistence
   const { user } = useAuth();
 
@@ -345,6 +354,21 @@ function AstrogationContent() {
   const handleSurveyComponentChange = useCallback((key: string | null) => {
     dispatch(actions.surveySetComponent(key));
   }, []);
+
+  // Handle survey filter changes - map filter category to survey category
+  const handleSurveyFiltersChange = useCallback(
+    (filters: { categoryId: string | null; projectId: string | null }) => {
+      setSurveyFilters(filters);
+      // Map filter categoryId to survey category_id
+      // The filter uses catalog category IDs, which should match survey category_id
+      if (filters.categoryId) {
+        handleSurveyCategoryChange(filters.categoryId);
+      } else {
+        handleSurveyCategoryChange(null);
+      }
+    },
+    [handleSurveyCategoryChange]
+  );
 
   const handleSurveySelectItem = useCallback((id: string | null) => {
     dispatch(actions.surveySelectItem(id));
@@ -599,6 +623,7 @@ function AstrogationContent() {
             onSelectCategory={handleSelectCategory}
             selectedComponentId={selectedComponentId}
             onSelectComponent={handleSelectComponent}
+            filterCategoryId={null}
           />
         )}
 
@@ -623,6 +648,9 @@ function AstrogationContent() {
           forgeSvg={forgeSvg}
           onForgeDocChange={handleForgeDocChange}
           onForgeClose={handleCloseForge}
+          filters={surveyFilters}
+          onFiltersChange={handleSurveyFiltersChange}
+          projects={[]}
         />
 
         {/* Right Panel - switches based on active tab */}

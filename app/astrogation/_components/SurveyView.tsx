@@ -4,6 +4,7 @@ import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import { Network, Eye, EyeOff, Grid3X3, Check, Trash2 } from "lucide-react";
 import type { SurveyItem, SurveyAnnotation, SurveySegment } from "./types";
 import { AnnotationBox } from "./AnnotationBox";
+import { FilterButton, type FilterState } from "./FilterButton";
 
 // ═══════════════════════════════════════════════════════════════
 // SURVEY VIEW - Pinterest-style grid with detail overlay
@@ -31,6 +32,10 @@ export interface SurveyViewProps {
   onToggleSegments?: () => void;
   onUpdateSegmentLabel?: (segmentId: string, label: string) => void;
   onDeleteSegment?: (segmentId: string) => Promise<void>;
+  // Filter props
+  filters?: FilterState;
+  onFiltersChange?: (filters: FilterState) => void;
+  projects?: Array<{ id: string; name: string }>;
 }
 
 interface DrawingState {
@@ -768,6 +773,9 @@ export function SurveyView({
   onToggleSegments,
   onUpdateSegmentLabel,
   onDeleteSegment,
+  filters = { categoryId: null, projectId: null },
+  onFiltersChange,
+  projects = [],
 }: SurveyViewProps) {
   const selectedItem = items.find((item) => item.id === selectedItemId);
 
@@ -850,6 +858,25 @@ export function SurveyView({
     <div className="survey-view">
       {/* ─── GRID VIEW (Always visible) ─── */}
       <div className="survey-grid">
+        {/* Header with filter - always visible except during loading */}
+        {!loading && (
+          <div className="survey-grid__header">
+            <div className="survey-grid__header-left">
+              <span className="survey-grid__header-title">All Items</span>
+            </div>
+            {onFiltersChange && (
+              <div className="survey-grid__header-filter">
+                <FilterButton
+                  filters={filters}
+                  onFiltersChange={onFiltersChange}
+                  projects={projects}
+                />
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Content */}
         {loading ? (
           <div className="survey-grid__loading">
             <span className="survey-grid__loading-icon">◇</span>
@@ -862,19 +889,11 @@ export function SurveyView({
             <span className="survey-grid__empty-hint">Upload images to get started</span>
           </div>
         ) : (
-          <>
-            <div className="survey-grid__header">
-              <span className="survey-grid__header-title">All Items</span>
-              <span className="survey-grid__header-count">
-                {inspectedItems.length} item{inspectedItems.length !== 1 ? "s" : ""}
-              </span>
-            </div>
-            <div className="survey-grid__masonry">
-              {inspectedItems.map((item) => (
-                <GridItem key={item.id} item={item} onClick={() => handleItemClick(item.id)} />
-              ))}
-            </div>
-          </>
+          <div className="survey-grid__masonry">
+            {inspectedItems.map((item) => (
+              <GridItem key={item.id} item={item} onClick={() => handleItemClick(item.id)} />
+            ))}
+          </div>
         )}
       </div>
 

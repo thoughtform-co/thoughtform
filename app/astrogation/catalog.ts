@@ -114,6 +114,12 @@ export const CATEGORIES: CategoryDef[] = [
     name: "Slides",
     description: "Keynote templates in 16:9 aspect ratio for the Arc Editor",
   },
+  // --- Level 6: Website Sections ---
+  {
+    id: "sections",
+    name: "Sections",
+    description: "Full-page website sections and layouts",
+  },
 ];
 
 // ═══════════════════════════════════════════════════════════════
@@ -534,6 +540,38 @@ const SLIDE_COMPONENTS: ComponentDef[] = [
 ];
 
 // ═══════════════════════════════════════════════════════════════
+// SECTIONS - Website Sections and Full-Page Layouts
+// ═══════════════════════════════════════════════════════════════
+
+const SECTIONS_COMPONENTS: ComponentDef[] = [
+  {
+    id: "hero",
+    name: "Hero",
+    category: "sections",
+    description: "Hero section for landing pages and key content areas",
+    designRationale:
+      "The Hero section is the first waypoint—the entry point that establishes context and intent. It combines display typography (Mondwest) for impact with body text (IBM Plex) for clarity. The hero functions as both announcement and navigation, signaling what territory lies ahead while providing immediate action paths.",
+    inspiration:
+      "Landing page hero sections, the opening sequences of science fiction interfaces, and the way spacecraft cockpits present mission-critical information at first glance.",
+    frontendNotes:
+      "Full-width section with responsive padding. Use clamp() for fluid typography scaling. Hero content should be centered or left-aligned depending on layout. Include optional CTA buttons and background elements (particles, gradients) to create depth.",
+    props: [
+      { name: "title", type: "string", default: "THOUGHTFORM" },
+      { name: "subtitle", type: "string", default: "Navigate Intelligence" },
+      {
+        name: "description",
+        type: "string",
+        default: "Building interfaces that bridge human thought and computational form.",
+      },
+      { name: "showCTA", type: "boolean", default: true },
+      { name: "ctaLabel", type: "string", default: "Begin" },
+    ],
+    defaultWidth: 1200,
+    defaultHeight: 600,
+  },
+];
+
+// ═══════════════════════════════════════════════════════════════
 // COMBINED COMPONENTS
 // ═══════════════════════════════════════════════════════════════
 
@@ -545,6 +583,7 @@ export const COMPONENTS: ComponentDef[] = [
   ...INPUT_COMPONENTS,
   ...NAVIGATION_COMPONENTS,
   ...SLIDE_COMPONENTS,
+  ...SECTIONS_COMPONENTS,
 ];
 
 // ═══════════════════════════════════════════════════════════════
