@@ -286,13 +286,18 @@ function AstrogationContent() {
 
   // Apply patch from assistant
   const handleApplyPatch = useCallback(
-    (patch: { setProps?: Record<string, unknown> }) => {
+    (patch: { setProps?: Record<string, unknown>; setStyleVars?: Record<string, string> }) => {
       if (patch.setProps) {
         dispatch(actions.setProps({ ...componentProps, ...patch.setProps }));
       }
+      if (patch.setStyleVars) {
+        dispatch(
+          actions.setStyle({ ...style, styleVars: { ...style.styleVars, ...patch.setStyleVars } })
+        );
+      }
       dispatch(actions.showToast("Changes applied"));
     },
-    [componentProps]
+    [componentProps, style]
   );
 
   // Create variant from assistant suggestion

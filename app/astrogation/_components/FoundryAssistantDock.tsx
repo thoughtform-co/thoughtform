@@ -18,9 +18,12 @@ interface ChatMessage {
   content: string;
   patch?: {
     setProps?: Record<string, unknown>;
+    setStyleVars?: Record<string, string>;
   } | null;
   // Variant suggestions from the assistant
   variants?: ComponentVariant[] | null;
+  // Procedural variants from StyleSpace
+  proceduralVariants?: ComponentVariant[] | null;
   // Reference match results
   matchResult?: MatchResult | null;
 }
@@ -31,12 +34,16 @@ export interface ComponentVariant {
   name: string;
   description: string;
   props: Record<string, unknown>;
+  styleVars?: Record<string, string>;
 }
 
 export interface FoundryAssistantDockProps {
   componentId: string | null;
   componentProps: Record<string, unknown>;
-  onApplyPatch: (patch: { setProps?: Record<string, unknown> }) => void;
+  onApplyPatch: (patch: {
+    setProps?: Record<string, unknown>;
+    setStyleVars?: Record<string, string>;
+  }) => void;
   onCreateVariant?: (variant: ComponentVariant) => void;
   getAuthToken?: () => Promise<string | null>;
   // Survey integration for reference-based styling
@@ -159,7 +166,7 @@ export function FoundryAssistantDock({
           props: componentProps,
           history,
           includeVariants: wantsVariants,
-          searchSurvey: wantsVariants, // Search Survey for inspiration when creating variants
+          searchSurvey: true, // Always search Survey for ambient design inspiration
         }),
       });
 
@@ -175,6 +182,7 @@ export function FoundryAssistantDock({
         content: data.response,
         patch: data.patch,
         variants: data.variants || null,
+        proceduralVariants: data.proceduralVariants || null,
       };
 
       setMessages((prev) => [...prev, assistantMessage]);
@@ -204,7 +212,7 @@ export function FoundryAssistantDock({
 
   // Handle apply patch
   const handleApplyPatch = useCallback(
-    (patch: { setProps?: Record<string, unknown> }) => {
+    (patch: { setProps?: Record<string, unknown>; setStyleVars?: Record<string, string> }) => {
       onApplyPatch(patch);
     },
     [onApplyPatch]
@@ -379,9 +387,49 @@ export function FoundryAssistantDock({
                             onClick={() =>
                               handleApplyPatch({
                                 setProps: variant.props,
+                                setStyleVars: variant.styleVars,
                               })
                             }
                             title="Apply to current component"
+                          >
+                            ◇ Apply
+                          </button>
+                          {onCreateVariant && (
+                            <button
+                              className="foundry-assistant-variant__create"
+                              onClick={() => onCreateVariant(variant)}
+                              title="Create as new variant in canvas"
+                            >
+                              + Create Variant
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {/* Procedural StyleSpace variants */}
+              {message.proceduralVariants && message.proceduralVariants.length > 0 && (
+                <div className="foundry-assistant-variants foundry-assistant-variants--procedural">
+                  <span className="foundry-assistant-variants__label">◇ StyleSpace Variants</span>
+                  <div className="foundry-assistant-variants__grid">
+                    {message.proceduralVariants.map((variant) => (
+                      <div
+                        key={variant.id}
+                        className="foundry-assistant-variant foundry-assistant-variant--procedural"
+                      >
+                        <span className="foundry-assistant-variant__name">{variant.name}</span>
+                        <p className="foundry-assistant-variant__desc">{variant.description}</p>
+                        <div className="foundry-assistant-variant__actions">
+                          <button
+                            className="foundry-assistant-variant__apply"
+                            onClick={() =>
+                              handleApplyPatch({
+                                setStyleVars: variant.styleVars,
+                              })
+                            }
+                            title="Apply style vars to current component"
                           >
                             ◇ Apply
                           </button>

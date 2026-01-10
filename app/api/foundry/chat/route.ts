@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════════════
 // FOUNDRY ASSISTANT CHAT API
 // AI assistant for styling and modifying components in Foundry
-// Now with Survey embedding search and variant generation
+// Now with Survey embedding search, StyleSpace integration, and variant generation
 // ═══════════════════════════════════════════════════════════════
 
 import { NextRequest, NextResponse } from "next/server";
@@ -9,6 +9,16 @@ import { isAuthorized } from "@/lib/auth-server";
 import Anthropic from "@anthropic-ai/sdk";
 import { createServerClient } from "@/lib/supabase";
 import { COMPONENTS, getComponentById, type PropDef } from "@/app/astrogation/catalog";
+import {
+  type StyleParams,
+  type StyleSignature,
+  mixStyleVectors,
+  sampleVariants,
+  vectorToStyleParams,
+  styleParamsToVars,
+  generateVariantName,
+  describeVariant,
+} from "@/app/astrogation/_foundry/styleSpace";
 
 const VOYAGE_API_URL = "https://api.voyageai.com/v1/embeddings";
 const DEFAULT_MODEL = "voyage-3";
@@ -80,9 +90,26 @@ IMPORTANT: When returning a patch for direct changes, use this format:
 \`\`\`json
 {
   "setProps": { "propName": value },
-  "setFrame": { "shape": "inspectorTicket", "strokeColor": "#caa554" }
+  "setFrame": { "shape": "inspectorTicket", "strokeColor": "#caa554" },
+  "setStyleVars": { "--style-border": "var(--gold-30)", "--style-glow-opacity": "0.1" }
 }
 \`\`\`
+
+## Style Variables (setStyleVars)
+
+You can apply ambient styling through CSS variables without modifying component props:
+- \`--style-background\`: Background token (e.g., "var(--void)")
+- \`--style-surface\`: Surface token (e.g., "var(--dawn-08)")
+- \`--style-border\`: Border token (e.g., "var(--gold-30)")
+- \`--style-accent\`: Accent token (e.g., "var(--gold)")
+- \`--style-text\`: Text token (e.g., "var(--dawn)")
+- \`--style-noise-opacity\`: 0-0.1 for noise texture
+- \`--style-scanline-opacity\`: 0-0.15 for scanline effect
+- \`--style-glow-opacity\`: 0-0.3 for glow effect
+- \`--style-border-width\`: e.g., "1px", "1.5px", "2px"
+- \`--style-chamfer\`: e.g., "0px", "6px", "12px"
+
+Use style variables to apply texture, density, and ambient effects derived from StyleSpace analysis.
 
 Only include properties you want to change. Be specific and actionable.
 Keep your explanations concise but insightful.`;
@@ -117,6 +144,7 @@ interface SurveyReference {
   briefing?: string;
   tags?: string[];
   similarity?: number;
+  styleSignature?: StyleSignature;
 }
 
 interface ComponentVariant {
@@ -125,6 +153,7 @@ interface ComponentVariant {
   description: string;
   props: Record<string, unknown>;
   frame?: Partial<FoundryFrameConfig>;
+  styleVars?: Record<string, string>;
 }
 
 // Helper to search Survey embeddings for design inspiration
@@ -184,6 +213,8 @@ async function searchSurveyReferences(
       filter_component_key: null,
     });
 
+    let surveyItems: SurveyReference[] = [];
+
     if (error) {
       // Try fallback to legacy RPC
       const { data: fallbackResults } = await supabase.rpc("match_survey_items", {
@@ -195,7 +226,7 @@ async function searchSurveyReferences(
       });
 
       if (fallbackResults) {
-        return fallbackResults.map((item: Record<string, unknown>) => ({
+        surveyItems = fallbackResults.map((item: Record<string, unknown>) => ({
           id: item.id as string,
           title: item.title as string | undefined,
           briefing: item.briefing as string | undefined,
@@ -203,20 +234,135 @@ async function searchSurveyReferences(
           similarity: item.similarity as number | undefined,
         }));
       }
-      return [];
+    } else {
+      surveyItems = (results || []).map((item: Record<string, unknown>) => ({
+        id: item.id as string,
+        title: item.title as string | undefined,
+        briefing: item.briefing as string | undefined,
+        tags: item.tags as string[] | undefined,
+        similarity: item.similarity as number | undefined,
+      }));
     }
 
-    return (results || []).map((item: Record<string, unknown>) => ({
-      id: item.id as string,
-      title: item.title as string | undefined,
-      briefing: item.briefing as string | undefined,
-      tags: item.tags as string[] | undefined,
-      similarity: item.similarity as number | undefined,
-    }));
+    // Fetch StyleSignatures for the returned items
+    if (surveyItems.length > 0) {
+      const itemIds = surveyItems.map((item) => item.id);
+      const { data: styleSignatures } = await supabase
+        .from("survey_style_signatures")
+        .select("id, survey_item_id, style_params, style_vector")
+        .in("survey_item_id", itemIds);
+
+      if (styleSignatures && styleSignatures.length > 0) {
+        const signaturesMap = new Map(styleSignatures.map((sig) => [sig.survey_item_id, sig]));
+
+        surveyItems = surveyItems.map((item) => ({
+          ...item,
+          styleSignature: signaturesMap.get(item.id) as StyleSignature | undefined,
+        }));
+      }
+    }
+
+    return surveyItems;
   } catch (error) {
     console.error("Error searching Survey references:", error);
     return [];
   }
+}
+
+// Helper to generate StyleSpace context from StyleSignatures
+function buildStyleSpaceContext(refs: SurveyReference[]): string {
+  const signaturesWithParams = refs.filter((r) => r.styleSignature?.style_params);
+  if (signaturesWithParams.length === 0) return "";
+
+  const parts: string[] = ["\n\n## StyleSpace Analysis (derived from references)\n"];
+
+  // Mix the style vectors weighted by similarity
+  const vectorsWithWeights = signaturesWithParams
+    .filter((r) => r.styleSignature?.style_vector)
+    .map((r) => ({
+      vector: r.styleSignature!.style_vector as unknown as number[],
+      weight: r.similarity || 0.5,
+    }));
+
+  if (vectorsWithWeights.length > 0) {
+    const mixedVector = mixStyleVectors(vectorsWithWeights);
+    const mixedParams = vectorToStyleParams(mixedVector);
+
+    parts.push("### Synthesized Style Profile (from mixing references)\n");
+    parts.push(
+      `- **Motifs**: brackets=${mixedParams.motifs.brackets}, reticles=${mixedParams.motifs.reticles}, grids=${mixedParams.motifs.grids}`
+    );
+    parts.push(
+      `- **Geometry**: sharpness=${mixedParams.geometry.sharpness.toFixed(2)}, corners=${mixedParams.geometry.corner_language}, weight=${mixedParams.geometry.line_weight}`
+    );
+    parts.push(
+      `- **Composition**: density=${mixedParams.composition.density.toFixed(2)}, rhythm=${mixedParams.composition.spacing_rhythm}, layering=${mixedParams.composition.layering_depth.toFixed(2)}`
+    );
+    parts.push(
+      `- **Texture**: scanlines=${mixedParams.texture.scanlines.toFixed(2)}, glow=${mixedParams.texture.glow.toFixed(2)}, noise=${mixedParams.texture.noise.toFixed(2)}`
+    );
+    parts.push(
+      `- **Brand Tokens**: border=${mixedParams.brand_projection.border}, accent=${mixedParams.brand_projection.accent}, text=${mixedParams.brand_projection.text}`
+    );
+  }
+
+  // Individual reference style summaries
+  parts.push("\n### Individual Reference Styles\n");
+  for (const ref of signaturesWithParams) {
+    const params = ref.styleSignature!.style_params as StyleParams;
+    parts.push(
+      `**${ref.title || "Reference"}** (${((ref.similarity || 0) * 100).toFixed(0)}% match):`
+    );
+    parts.push(
+      `  Motifs: ${params.motifs.brackets} brackets, ${params.motifs.label_styles} labels`
+    );
+    parts.push(
+      `  Geometry: ${params.geometry.corner_language}, ${params.geometry.line_weight} weight`
+    );
+    parts.push(
+      `  Composition: ${params.composition.spacing_rhythm} rhythm, ${params.composition.panel_hierarchy} hierarchy`
+    );
+  }
+
+  parts.push(
+    "\n**Use these style parameters to inform your suggestions. Apply brand tokens, not source colors.**"
+  );
+
+  return parts.join("\n");
+}
+
+// Helper to generate procedural variants from StyleSpace
+function generateProceduralVariants(
+  refs: SurveyReference[],
+  count: number = 4
+): ComponentVariant[] {
+  const signaturesWithParams = refs.filter((r) => r.styleSignature?.style_vector);
+  if (signaturesWithParams.length === 0) return [];
+
+  // Mix the style vectors
+  const vectorsWithWeights = signaturesWithParams.map((r) => ({
+    vector: r.styleSignature!.style_vector as unknown as number[],
+    weight: r.similarity || 0.5,
+  }));
+
+  const baseVector = mixStyleVectors(vectorsWithWeights);
+  const seed = Date.now();
+  const variantVectors = sampleVariants(baseVector, count, seed);
+
+  return variantVectors.map((vec, i) => {
+    const params = vectorToStyleParams(vec);
+    const styleVars = styleParamsToVars(params);
+    const name = generateVariantName(i, seed);
+    const description = describeVariant(params);
+
+    return {
+      id: `stylespace-variant-${i + 1}`,
+      name,
+      description,
+      props: {},
+      styleVars,
+    };
+  });
 }
 
 export async function POST(request: NextRequest) {
@@ -300,9 +446,10 @@ ${COMPONENTS.map((c) => `- ${c.id}: ${c.name} (${c.category})`).join("\n")}
 
     // Search Survey for design inspiration if requested
     let surveyContext = "";
+    let surveyRefs: SurveyReference[] = [];
     if (searchSurvey) {
       const authHeader = request.headers.get("authorization");
-      const surveyRefs = await searchSurveyReferences(message, authHeader);
+      surveyRefs = await searchSurveyReferences(message, authHeader);
 
       if (surveyRefs.length > 0) {
         surveyContext = `
@@ -323,6 +470,12 @@ ${ref.tags?.length ? `Tags: ${ref.tags.join(", ")}` : ""}
 
 Draw inspiration from these references when suggesting modifications or variants.
 `;
+
+        // Add StyleSpace context if StyleSignatures are available
+        const styleSpaceContext = buildStyleSpaceContext(surveyRefs);
+        if (styleSpaceContext) {
+          surveyContext += styleSpaceContext;
+        }
       }
     }
 
@@ -373,6 +526,7 @@ Please generate 2-4 distinct variants that explore different aesthetic direction
     let patch: {
       setProps?: Record<string, unknown>;
       setFrame?: Partial<FoundryFrameConfig>;
+      setStyleVars?: Record<string, string>;
     } | null = null;
 
     // Look for JSON block in response (for direct modifications)
@@ -381,7 +535,7 @@ Please generate 2-4 distinct variants that explore different aesthetic direction
       try {
         const parsed = JSON.parse(jsonMatch[1]);
         // Validate patch structure
-        if (parsed.setProps || parsed.setFrame) {
+        if (parsed.setProps || parsed.setFrame || parsed.setStyleVars) {
           patch = {};
 
           // Validate setProps against schema
@@ -439,8 +593,36 @@ Please generate 2-4 distinct variants that explore different aesthetic direction
             }
           }
 
+          // Validate setStyleVars (CSS variable overrides)
+          if (parsed.setStyleVars && typeof parsed.setStyleVars === "object") {
+            const validStyleVars: Record<string, string> = {};
+            const allowedVars = [
+              "--style-background",
+              "--style-surface",
+              "--style-border",
+              "--style-accent",
+              "--style-text",
+              "--style-noise-opacity",
+              "--style-scanline-opacity",
+              "--style-glow-opacity",
+              "--style-grain-opacity",
+              "--style-border-width",
+              "--style-chamfer",
+              "--style-density",
+              "--style-layer-depth",
+            ];
+            for (const [key, value] of Object.entries(parsed.setStyleVars)) {
+              if (allowedVars.includes(key) && typeof value === "string") {
+                validStyleVars[key] = value;
+              }
+            }
+            if (Object.keys(validStyleVars).length > 0) {
+              patch.setStyleVars = validStyleVars;
+            }
+          }
+
           // Clear patch if nothing valid was extracted
-          if (!patch.setProps && !patch.setFrame) {
+          if (!patch.setProps && !patch.setFrame && !patch.setStyleVars) {
             patch = null;
           }
         }
@@ -463,6 +645,7 @@ Please generate 2-4 distinct variants that explore different aesthetic direction
             description: (v.description as string) || "",
             props: (v.props as Record<string, unknown>) || {},
             frame: v.frame as Partial<FoundryFrameConfig> | undefined,
+            styleVars: v.styleVars as Record<string, string> | undefined,
           }));
         }
       } catch {
@@ -471,10 +654,17 @@ Please generate 2-4 distinct variants that explore different aesthetic direction
       }
     }
 
+    // Generate procedural StyleSpace variants if we have StyleSignatures
+    let proceduralVariants: ComponentVariant[] | null = null;
+    if (includeVariants && surveyRefs.length > 0) {
+      proceduralVariants = generateProceduralVariants(surveyRefs, 4);
+    }
+
     return NextResponse.json({
       response: responseText,
       patch,
       variants,
+      proceduralVariants,
     });
   } catch (error) {
     console.error("POST /api/foundry/chat error:", error);

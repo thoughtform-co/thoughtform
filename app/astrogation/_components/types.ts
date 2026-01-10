@@ -27,6 +27,8 @@ export interface StyleConfig {
   gradientAngle: number;
   // Custom props
   props: Record<string, unknown>;
+  // StyleSpace CSS variable overrides (applied to wrapper element)
+  styleVars?: Record<string, string>;
 }
 
 export type WorkspaceTab = "vault" | "foundry" | "survey";
@@ -466,4 +468,5 @@ export const DEFAULT_STYLE: StyleConfig = {
   gradientTo: "#0a0908",
   gradientAngle: 135,
   props: {},
+  styleVars: {},
 };

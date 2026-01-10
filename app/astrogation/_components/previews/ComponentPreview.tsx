@@ -88,15 +88,26 @@ export interface ComponentPreviewProps {
   fullSize?: boolean;
 }
 
-export function ComponentPreview({ componentId, props, fullSize = false }: ComponentPreviewProps) {
+export function ComponentPreview({
+  componentId,
+  props,
+  style,
+  fullSize = false,
+}: ComponentPreviewProps) {
   const def = getComponentById(componentId);
   if (!def) return <div className="preview-error">Unknown component</div>;
 
   const content = renderComponent(componentId, props, def, fullSize);
 
+  // Apply styleVars as CSS custom properties if present
+  const wrapperStyle: React.CSSProperties | undefined = style?.styleVars
+    ? (style.styleVars as unknown as React.CSSProperties)
+    : undefined;
+
   return (
     <div
       className={`component-preview-wrapper ${fullSize ? "component-preview-wrapper--full" : ""}`}
+      style={wrapperStyle}
     >
       {content}
     </div>
