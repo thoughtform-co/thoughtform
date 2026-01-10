@@ -1099,6 +1099,184 @@ function renderComponent(
       );
     }
 
+    // ═══════════════════════════════════════════════════════════════
+    // SECTIONS - Hero
+    // ═══════════════════════════════════════════════════════════════
+    case "hero": {
+      const title = (props.title as string) || "THOUGHTFORM";
+      const subtitle = (props.subtitle as string) || "Navigate Intelligence";
+      const description =
+        (props.description as string) ||
+        "Building interfaces that bridge human thought and computational form.";
+      const showCTA = props.showCTA !== false;
+      const ctaLabel = (props.ctaLabel as string) || "Begin";
+
+      const heroScale = fullSize ? 1 : 0.6;
+
+      return (
+        <div
+          className="preview-hero"
+          style={{
+            width: "100%",
+            minHeight: 400 * heroScale,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: `${60 * heroScale}px ${40 * heroScale}px`,
+            background: "var(--void)",
+            position: "relative",
+            overflow: "hidden",
+          }}
+        >
+          {/* Background grid effect */}
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              backgroundImage: `
+                linear-gradient(rgba(202, 165, 84, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(202, 165, 84, 0.03) 1px, transparent 1px)
+              `,
+              backgroundSize: `${40 * heroScale}px ${40 * heroScale}px`,
+              pointerEvents: "none",
+            }}
+          />
+
+          {/* Corner brackets */}
+          <div
+            style={{
+              position: "absolute",
+              top: 20 * heroScale,
+              left: 20 * heroScale,
+              width: 40 * heroScale,
+              height: 40 * heroScale,
+              borderTop: "2px solid var(--gold)",
+              borderLeft: "2px solid var(--gold)",
+            }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              top: 20 * heroScale,
+              right: 20 * heroScale,
+              width: 40 * heroScale,
+              height: 40 * heroScale,
+              borderTop: "2px solid var(--gold)",
+              borderRight: "2px solid var(--gold)",
+            }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              bottom: 20 * heroScale,
+              left: 20 * heroScale,
+              width: 40 * heroScale,
+              height: 40 * heroScale,
+              borderBottom: "2px solid var(--gold)",
+              borderLeft: "2px solid var(--gold)",
+            }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              bottom: 20 * heroScale,
+              right: 20 * heroScale,
+              width: 40 * heroScale,
+              height: 40 * heroScale,
+              borderBottom: "2px solid var(--gold)",
+              borderRight: "2px solid var(--gold)",
+            }}
+          />
+
+          {/* Content */}
+          <div
+            style={{
+              position: "relative",
+              zIndex: 1,
+              textAlign: "center",
+              maxWidth: 800 * heroScale,
+            }}
+          >
+            {/* Title */}
+            <h1
+              style={{
+                fontFamily: "var(--font-display)",
+                fontSize: `${fullSize ? 64 : 38}px`,
+                color: "var(--dawn)",
+                letterSpacing: "0.1em",
+                marginBottom: 16 * heroScale,
+                textTransform: "uppercase",
+              }}
+            >
+              {title}
+            </h1>
+
+            {/* Subtitle */}
+            <p
+              style={{
+                fontFamily: "var(--font-body)",
+                fontSize: `${fullSize ? 24 : 16}px`,
+                color: "var(--gold)",
+                marginBottom: 24 * heroScale,
+                letterSpacing: "0.05em",
+              }}
+            >
+              {subtitle}
+            </p>
+
+            {/* Description */}
+            <p
+              style={{
+                fontFamily: "var(--font-body)",
+                fontSize: `${fullSize ? 18 : 13}px`,
+                color: "var(--dawn-70)",
+                lineHeight: 1.6,
+                marginBottom: 32 * heroScale,
+                maxWidth: 600 * heroScale,
+                margin: "0 auto",
+              }}
+            >
+              {description}
+            </p>
+
+            {/* CTA Button */}
+            {showCTA && (
+              <button
+                style={{
+                  marginTop: 32 * heroScale,
+                  padding: `${12 * heroScale}px ${32 * heroScale}px`,
+                  fontFamily: "var(--font-mono)",
+                  fontSize: `${fullSize ? 14 : 11}px`,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.15em",
+                  color: "var(--void)",
+                  background: "var(--gold)",
+                  border: "none",
+                  cursor: "pointer",
+                }}
+              >
+                ◇ {ctaLabel}
+              </button>
+            )}
+          </div>
+
+          {/* Diamond marker */}
+          <div
+            style={{
+              position: "absolute",
+              bottom: 40 * heroScale,
+              left: "50%",
+              transform: "translateX(-50%) rotate(45deg)",
+              width: 8 * heroScale,
+              height: 8 * heroScale,
+              border: "1px solid var(--gold-30)",
+            }}
+          />
+        </div>
+      );
+    }
+
     default:
       return <div className="preview-default">{def.name}</div>;
   }

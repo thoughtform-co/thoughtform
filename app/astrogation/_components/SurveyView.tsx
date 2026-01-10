@@ -858,23 +858,21 @@ export function SurveyView({
     <div className="survey-view">
       {/* ─── GRID VIEW (Always visible) ─── */}
       <div className="survey-grid">
-        {/* Header with filter - always visible except during loading */}
-        {!loading && (
-          <div className="survey-grid__header">
-            <div className="survey-grid__header-left">
-              <span className="survey-grid__header-title">All Items</span>
-            </div>
-            {onFiltersChange && (
-              <div className="survey-grid__header-filter">
-                <FilterButton
-                  filters={filters}
-                  onFiltersChange={onFiltersChange}
-                  projects={projects}
-                />
-              </div>
-            )}
+        {/* Header with filter - always visible */}
+        <div className="survey-grid__header">
+          <div className="survey-grid__header-left">
+            <span className="survey-grid__header-title">All Items</span>
           </div>
-        )}
+          {onFiltersChange && (
+            <div className="survey-grid__header-filter">
+              <FilterButton
+                filters={filters}
+                onFiltersChange={onFiltersChange}
+                projects={projects}
+              />
+            </div>
+          )}
+        </div>
 
         {/* Content */}
         {loading ? (

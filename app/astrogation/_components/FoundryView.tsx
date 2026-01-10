@@ -31,6 +31,26 @@ export interface FoundryViewProps {
   onForgeClose?: () => void;
 }
 
+// Chevron icon component for variants toggle
+function ChevronIcon({ direction }: { direction: "up" | "down" }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width="14"
+      height="14"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      style={{
+        transform: direction === "up" ? "rotate(180deg)" : "rotate(0deg)",
+        transition: "transform 0.2s ease",
+      }}
+    >
+      <path d="M6 9l6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 export function FoundryView({
   selectedComponentId,
   componentProps,
@@ -49,6 +69,8 @@ export function FoundryView({
 }: FoundryViewProps) {
   // Zoom state for the preview
   const [zoom, setZoom] = useState(1);
+  // Variants panel collapsed state
+  const [variantsCollapsed, setVariantsCollapsed] = useState(false);
   // Track which element within a multi-element component is focused
   const [focusedElementId, setFocusedElementId] = useState<string | null>(null);
 
@@ -224,57 +246,59 @@ export function FoundryView({
 
       {/* Variants Comparison Grid - shows AI-generated alternatives */}
       {!isForgeMode && variants.length > 0 && (
-        <div className="foundry__variants-grid">
-          <div className="foundry__variants-header">
-            <span className="foundry__variants-label">◇ GENERATED VARIANTS</span>
-            <span className="foundry__variants-count">
-              {variants.length} variant{variants.length !== 1 ? "s" : ""}
-            </span>
-          </div>
-          <div className="foundry__variants-scroll">
-            {variants.map((variant) => {
-              // Merge variant props with default props for the component
-              const variantProps = { ...componentProps, ...variant.props };
-              return (
-                <div key={variant.id} className="foundry__variant-card">
-                  <div className="foundry__variant-preview">
-                    <ComponentPreview
-                      componentId={variant.componentId}
-                      props={variantProps}
-                      style={style}
-                    />
-                  </div>
-                  <div className="foundry__variant-info">
-                    <span className="foundry__variant-name">{variant.name}</span>
-                    <p className="foundry__variant-desc">{variant.description}</p>
-                  </div>
-                  <div className="foundry__variant-actions">
-                    <button
-                      className="foundry__variant-apply"
-                      onClick={() => onApplyVariant(variant)}
-                      title="Apply this variant to main preview"
-                    >
-                      Apply
-                    </button>
-                    <button
-                      className="foundry__variant-remove"
-                      onClick={() => onRemoveVariant(variant.id)}
-                      title="Remove this variant"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
+        <div
+          className={`foundry__variants-dock ${variantsCollapsed ? "foundry__variants-dock--collapsed" : ""}`}
+        >
+          {/* Toggle button */}
+          <button
+            className="foundry__variants-toggle"
+            onClick={() => setVariantsCollapsed(!variantsCollapsed)}
+            title={variantsCollapsed ? "Expand variants" : "Collapse variants"}
+          >
+            <span className="foundry__variants-toggle-label">◇ VARIANTS ({variants.length})</span>
+            <ChevronIcon direction={variantsCollapsed ? "up" : "down"} />
+          </button>
 
-      {/* Info */}
-      {!isForgeMode && (
-        <div className="foundry__info">
-          <span>Click to interact • Edit properties in the right panel</span>
+          {/* Collapsible content */}
+          <div className="foundry__variants-content">
+            <div className="foundry__variants-scroll">
+              {variants.map((variant) => {
+                // Merge variant props with default props for the component
+                const variantProps = { ...componentProps, ...variant.props };
+                return (
+                  <div key={variant.id} className="foundry__variant-card">
+                    <div className="foundry__variant-preview">
+                      <ComponentPreview
+                        componentId={variant.componentId}
+                        props={variantProps}
+                        style={style}
+                      />
+                    </div>
+                    <div className="foundry__variant-info">
+                      <span className="foundry__variant-name">{variant.name}</span>
+                      <p className="foundry__variant-desc">{variant.description}</p>
+                    </div>
+                    <div className="foundry__variant-actions">
+                      <button
+                        className="foundry__variant-apply"
+                        onClick={() => onApplyVariant(variant)}
+                        title="Apply this variant to main preview"
+                      >
+                        Apply
+                      </button>
+                      <button
+                        className="foundry__variant-remove"
+                        onClick={() => onRemoveVariant(variant.id)}
+                        title="Remove this variant"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         </div>
       )}
     </div>
