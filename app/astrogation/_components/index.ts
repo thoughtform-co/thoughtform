@@ -21,6 +21,9 @@ export { generateJSXCode } from "./generateJSXCode";
 export { CatalogPanel } from "./CatalogPanel";
 export type { CatalogPanelProps } from "./CatalogPanel";
 
+export { FoundryTemplatesPanel } from "./FoundryTemplatesPanel";
+export type { FoundryTemplatesPanelProps } from "./FoundryTemplatesPanel";
+
 export { CenterPanel } from "./CenterPanel";
 export type { CenterPanelProps } from "./CenterPanel";
 
@@ -29,6 +32,9 @@ export type { VaultViewProps } from "./VaultView";
 
 export { FoundryView } from "./FoundryView";
 export type { FoundryViewProps } from "./FoundryView";
+
+export { FoundryCanvas } from "./FoundryCanvas";
+export type { FoundryCanvasProps } from "./FoundryCanvas";
 
 export { SpecPanel } from "./SpecPanel";
 export type { SpecPanelProps } from "./SpecPanel";

@@ -2,10 +2,18 @@
 
 import { useState, useEffect, useCallback } from "react";
 import type { ComponentDef } from "../catalog";
-import type { StyleConfig, FoundryVariant, VectorDocument } from "./types";
+import type {
+  StyleConfig,
+  FoundryVariant,
+  VectorDocument,
+  FoundryCanvasDocument,
+  FoundryViewport,
+} from "./types";
+import { EMPTY_FOUNDRY_DOCUMENT } from "./types";
 import { ComponentPreview } from "./previews/ComponentPreview";
 import { TargetReticle } from "@thoughtform/ui";
 import { VectorEditor } from "./vector-editor";
+import { FoundryCanvas } from "./FoundryCanvas";
 
 // ═══════════════════════════════════════════════════════════════
 // FOUNDRY VIEW - Component Editor & Preview
@@ -29,6 +37,17 @@ export interface FoundryViewProps {
   forgeSvg?: string | null;
   onForgeDocChange?: (doc: VectorDocument, svg: string) => void;
   onForgeClose?: () => void;
+  // ═══════════════════════════════════════════════════════════════
+  // FOUNDRY CANVAS PROPS (Phase 1)
+  // ═══════════════════════════════════════════════════════════════
+  foundryDocument?: FoundryCanvasDocument;
+  foundrySelectedItemId?: string | null;
+  onFoundrySelectItem?: (id: string | null) => void;
+  onFoundryMoveItem?: (id: string, x: number, y: number) => void;
+  onFoundryResizeItem?: (id: string, w: number, h: number) => void;
+  onFoundryDeleteItem?: (id: string) => void;
+  onFoundryDuplicateItem?: (id: string) => void;
+  onFoundrySetViewport?: (viewport: Partial<FoundryViewport>) => void;
 }
 
 // Chevron icon component for variants toggle
@@ -66,6 +85,15 @@ export function FoundryView({
   forgeDoc,
   onForgeDocChange,
   onForgeClose,
+  // Foundry canvas props
+  foundryDocument = EMPTY_FOUNDRY_DOCUMENT,
+  foundrySelectedItemId,
+  onFoundrySelectItem,
+  onFoundryMoveItem,
+  onFoundryResizeItem,
+  onFoundryDeleteItem,
+  onFoundryDuplicateItem,
+  onFoundrySetViewport,
 }: FoundryViewProps) {
   // Zoom state for the preview
   const [zoom, setZoom] = useState(1);
@@ -152,7 +180,113 @@ export function FoundryView({
     onFocusChange(false);
   }, [selectedComponentId, onFocusChange]);
 
-  if (!isForgeMode && (!selectedComponentId || !def)) {
+  // ═══════════════════════════════════════════════════════════════
+  // CANVAS MODE - Multi-item Figma-like canvas (Phase 1)
+  // ═══════════════════════════════════════════════════════════════
+  const useCanvasMode = !!(
+    onFoundrySelectItem &&
+    onFoundryMoveItem &&
+    onFoundryResizeItem &&
+    onFoundryDeleteItem &&
+    onFoundryDuplicateItem &&
+    onFoundrySetViewport
+  );
+
+  // Forge mode takes priority (full-screen vector editor)
+  if (isForgeMode) {
+    return (
+      <div className="foundry foundry--forge">
+        <div className="foundry__preview" style={{ width: "100%", height: "100%" }}>
+          <div className="foundry__preview-content" style={{ width: "100%", height: "100%" }}>
+            <VectorEditor
+              vectorDoc={forgeDoc}
+              onDocumentChange={onForgeDocChange || (() => {})}
+              onClose={onForgeClose}
+            />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Canvas mode (Phase 1)
+  if (useCanvasMode) {
+    return (
+      <div className="foundry">
+        <FoundryCanvas
+          document={foundryDocument}
+          selectedItemId={foundrySelectedItemId ?? null}
+          onSelectItem={onFoundrySelectItem}
+          onMoveItem={onFoundryMoveItem}
+          onResizeItem={onFoundryResizeItem}
+          onDeleteItem={onFoundryDeleteItem}
+          onDuplicateItem={onFoundryDuplicateItem}
+          onSetViewport={onFoundrySetViewport}
+        />
+
+        {/* Variants Comparison Grid - shows AI-generated alternatives */}
+        {variants.length > 0 && (
+          <div
+            className={`foundry__variants-dock ${variantsCollapsed ? "foundry__variants-dock--collapsed" : ""}`}
+          >
+            {/* Toggle button */}
+            <button
+              className="foundry__variants-toggle"
+              onClick={() => setVariantsCollapsed(!variantsCollapsed)}
+              title={variantsCollapsed ? "Expand variants" : "Collapse variants"}
+            >
+              <span className="foundry__variants-toggle-label">◇ VARIANTS ({variants.length})</span>
+              <ChevronIcon direction={variantsCollapsed ? "up" : "down"} />
+            </button>
+
+            {/* Collapsible content */}
+            <div className="foundry__variants-content">
+              <div className="foundry__variants-scroll">
+                {variants.map((variant) => {
+                  // Merge variant props with default props for the component
+                  const variantProps = { ...componentProps, ...variant.props };
+                  return (
+                    <div key={variant.id} className="foundry__variant-card">
+                      <div className="foundry__variant-preview">
+                        <ComponentPreview
+                          componentId={variant.componentId}
+                          props={variantProps}
+                          style={style}
+                        />
+                      </div>
+                      <div className="foundry__variant-info">
+                        <span className="foundry__variant-name">{variant.name}</span>
+                        <p className="foundry__variant-desc">{variant.description}</p>
+                      </div>
+                      <div className="foundry__variant-actions">
+                        <button
+                          className="foundry__variant-apply"
+                          onClick={() => onApplyVariant(variant)}
+                          title="Apply this variant to main preview"
+                        >
+                          Apply
+                        </button>
+                        <button
+                          className="foundry__variant-remove"
+                          onClick={() => onRemoveVariant(variant.id)}
+                          title="Remove this variant"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Legacy single-component mode (fallback when canvas not enabled)
+  if (!selectedComponentId || !def) {
     return (
       <div className="foundry foundry--empty">
         <div className="foundry__empty-state">
@@ -172,18 +306,8 @@ export function FoundryView({
   const focusZoom = hasFocus && !isMultiElement ? 1.5 : 1;
   const totalZoom = zoom * focusZoom;
 
-  // Render preview content
+  // Render preview content (legacy single-component mode)
   const renderPreviewContent = () => {
-    if (isForgeMode) {
-      return (
-        <VectorEditor
-          vectorDoc={forgeDoc}
-          onDocumentChange={onForgeDocChange || (() => {})}
-          onClose={onForgeClose}
-        />
-      );
-    }
-
     // selectedComponentId is guaranteed to be non-null here due to early return above
     if (!selectedComponentId) {
       return null;

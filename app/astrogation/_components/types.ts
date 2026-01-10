@@ -283,6 +283,64 @@ export interface FoundryVariant {
 }
 
 // ═══════════════════════════════════════════════════════════════
+// FOUNDRY CANVAS TYPES - Multi-mockup canvas document
+// ═══════════════════════════════════════════════════════════════
+
+/** Viewport state for pan/zoom */
+export interface FoundryViewport {
+  panX: number;
+  panY: number;
+  zoom: number;
+}
+
+/** Frame position and dimensions for a canvas item */
+export interface FoundryItemFrame {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  z: number; // z-index for layering
+}
+
+/** A single item on the Foundry canvas */
+export interface FoundryCanvasItem {
+  id: string;
+  name: string;
+  componentId: string; // maps to catalog.ts component key
+  props: Record<string, unknown>;
+  styleVars?: Record<string, string>;
+  frame: FoundryItemFrame;
+  locked?: boolean;
+}
+
+/** The full canvas document (persisted per-user) */
+export interface FoundryCanvasDocument {
+  version: number;
+  viewport: FoundryViewport;
+  items: FoundryCanvasItem[];
+}
+
+/** Default empty canvas document */
+export const EMPTY_FOUNDRY_DOCUMENT: FoundryCanvasDocument = {
+  version: 1,
+  viewport: { panX: 0, panY: 0, zoom: 1 },
+  items: [],
+};
+
+/** A saved template (draft, before Vault approval) */
+export interface FoundryTemplate {
+  id: string;
+  user_id?: string;
+  name: string;
+  component_key: string;
+  category_id?: string;
+  config: Record<string, unknown>; // props + styleVars + frame preferences
+  thumbnail?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+// ═══════════════════════════════════════════════════════════════
 // SURVEY TYPES
 // ═══════════════════════════════════════════════════════════════
 

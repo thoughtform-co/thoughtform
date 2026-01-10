@@ -8,6 +8,8 @@ import type {
   SurveyViewBundledProps,
   FoundryVariant,
   VectorDocument,
+  FoundryCanvasDocument,
+  FoundryViewport,
 } from "./types";
 import { VaultView } from "./VaultView";
 import { FoundryView } from "./FoundryView";
@@ -45,6 +47,17 @@ export interface CenterPanelProps {
   filters?: FilterState;
   onFiltersChange?: (filters: FilterState) => void;
   projects?: Array<{ id: string; name: string }>;
+  // ═══════════════════════════════════════════════════════════════
+  // FOUNDRY CANVAS PROPS (Phase 1)
+  // ═══════════════════════════════════════════════════════════════
+  foundryDocument?: FoundryCanvasDocument;
+  foundrySelectedItemId?: string | null;
+  onFoundrySelectItem?: (id: string | null) => void;
+  onFoundryMoveItem?: (id: string, x: number, y: number) => void;
+  onFoundryResizeItem?: (id: string, w: number, h: number) => void;
+  onFoundryDeleteItem?: (id: string) => void;
+  onFoundryDuplicateItem?: (id: string) => void;
+  onFoundrySetViewport?: (viewport: Partial<FoundryViewport>) => void;
 }
 
 export function CenterPanel({
@@ -71,6 +84,15 @@ export function CenterPanel({
   filters = { categoryId: null, projectId: null },
   onFiltersChange,
   projects = [],
+  // Foundry canvas props
+  foundryDocument,
+  foundrySelectedItemId,
+  onFoundrySelectItem,
+  onFoundryMoveItem,
+  onFoundryResizeItem,
+  onFoundryDeleteItem,
+  onFoundryDuplicateItem,
+  onFoundrySetViewport,
 }: CenterPanelProps) {
   const def = selectedComponentId ? (getComponentById(selectedComponentId) ?? null) : null;
 
@@ -143,6 +165,15 @@ export function CenterPanel({
             forgeSvg={forgeSvg}
             onForgeDocChange={onForgeDocChange}
             onForgeClose={onForgeClose}
+            // Foundry canvas props
+            foundryDocument={foundryDocument}
+            foundrySelectedItemId={foundrySelectedItemId}
+            onFoundrySelectItem={onFoundrySelectItem}
+            onFoundryMoveItem={onFoundryMoveItem}
+            onFoundryResizeItem={onFoundryResizeItem}
+            onFoundryDeleteItem={onFoundryDeleteItem}
+            onFoundryDuplicateItem={onFoundryDuplicateItem}
+            onFoundrySetViewport={onFoundrySetViewport}
           />
         )}
         {activeTab === "survey" && survey && (

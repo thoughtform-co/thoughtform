@@ -11381,3 +11381,329 @@
   color: var(--dawn);
   letter-spacing: 1px;
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   FOUNDRY CANVAS - Multi-mockup Figma-like canvas (Phase 1)
+   ═══════════════════════════════════════════════════════════════ */
+
+.foundry-canvas {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  background: rgba(10, 9, 8, 0.95);
+  /* Subtle grid background */
+  background-image:
+    linear-gradient(rgba(235, 227, 214, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(235, 227, 214, 0.03) 1px, transparent 1px);
+  background-size: 20px 20px;
+  cursor: grab;
+}
+
+.foundry-canvas:active {
+  cursor: grabbing;
+}
+
+/* Transform container for pan/zoom */
+.foundry-canvas__content {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 10000px;
+  height: 10000px;
+  will-change: transform;
+}
+
+/* Grid inside the transform layer (scales with zoom) */
+.foundry-canvas__grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(235, 227, 214, 0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(235, 227, 214, 0.02) 1px, transparent 1px);
+  pointer-events: none;
+}
+
+/* ─── CANVAS ITEM ─── */
+
+.foundry-canvas__item {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(10, 9, 8, 0.8);
+  border: 1px solid rgba(235, 227, 214, 0.1);
+  transition:
+    box-shadow 0.15s ease,
+    border-color 0.15s ease;
+  user-select: none;
+}
+
+.foundry-canvas__item:hover:not(.foundry-canvas__item--selected) {
+  border-color: rgba(235, 227, 214, 0.2);
+  box-shadow: 0 0 0 1px rgba(235, 227, 214, 0.1);
+}
+
+.foundry-canvas__item--selected {
+  border-color: var(--gold);
+  box-shadow:
+    0 0 0 1px var(--gold),
+    0 4px 20px rgba(202, 165, 84, 0.2);
+}
+
+.foundry-canvas__item--locked {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.foundry-canvas__item--locked:hover {
+  border-color: rgba(235, 227, 214, 0.1);
+  box-shadow: none;
+}
+
+/* Preview wrapper inside item */
+.foundry-canvas__item-preview {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.foundry-canvas__item-preview > * {
+  max-width: 100%;
+  max-height: 100%;
+  flex-shrink: 0;
+}
+
+/* Selection frame (decorative border) */
+.foundry-canvas__item-frame {
+  position: absolute;
+  inset: -1px;
+  border: 1px dashed var(--gold-50);
+  pointer-events: none;
+  animation: foundry-frame-pulse 2s ease-in-out infinite;
+}
+
+@keyframes foundry-frame-pulse {
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* Resize handles */
+.foundry-canvas__resize-handle {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: var(--gold);
+  border: 1px solid var(--void);
+  z-index: 10;
+  cursor: nwse-resize;
+}
+
+.foundry-canvas__resize-handle--se {
+  bottom: -5px;
+  right: -5px;
+  cursor: nwse-resize;
+}
+
+.foundry-canvas__resize-handle--sw {
+  bottom: -5px;
+  left: -5px;
+  cursor: nesw-resize;
+}
+
+.foundry-canvas__resize-handle--ne {
+  top: -5px;
+  right: -5px;
+  cursor: nesw-resize;
+}
+
+.foundry-canvas__resize-handle--nw {
+  top: -5px;
+  left: -5px;
+  cursor: nwse-resize;
+}
+
+.foundry-canvas__resize-handle:hover {
+  background: var(--dawn);
+  transform: scale(1.2);
+}
+
+/* Item label */
+.foundry-canvas__item-label {
+  position: absolute;
+  top: -20px;
+  left: 0;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--dawn-50);
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 150px;
+  padding: 2px 4px;
+  background: rgba(10, 9, 8, 0.9);
+  border: 1px solid rgba(235, 227, 214, 0.1);
+  pointer-events: none;
+}
+
+.foundry-canvas__item--selected .foundry-canvas__item-label {
+  color: var(--gold);
+  border-color: var(--gold-30);
+}
+
+.foundry-canvas__item-lock-icon {
+  margin-right: 4px;
+  font-size: 8px;
+}
+
+/* ─── ZOOM INDICATOR ─── */
+
+.foundry-canvas__zoom-indicator {
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--dawn-50);
+  letter-spacing: 1px;
+  padding: 4px 8px;
+  background: rgba(10, 9, 8, 0.9);
+  border: 1px solid rgba(235, 227, 214, 0.15);
+  pointer-events: none;
+}
+
+/* ─── EMPTY STATE ─── */
+
+.foundry-canvas__empty {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  color: rgba(235, 227, 214, 0.3);
+  pointer-events: none;
+}
+
+.foundry-canvas__empty-icon {
+  display: block;
+  font-size: 48px;
+  opacity: 0.3;
+  margin-bottom: 16px;
+}
+
+.foundry-canvas__empty p {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+}
+
+.foundry-canvas__empty-hint {
+  display: block;
+  font-size: 11px;
+  opacity: 0.5;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   FOUNDRY TEMPLATES PANEL - Left panel styles for Foundry tab
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Tab switcher */
+.foundry-templates__tabs {
+  display: flex;
+  gap: 4px;
+  background: rgba(10, 9, 8, 0.6);
+  padding: 4px;
+  border: 1px solid rgba(235, 227, 214, 0.1);
+}
+
+.foundry-templates__tab {
+  flex: 1;
+  padding: 8px 12px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.5px;
+  color: var(--dawn-50);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.foundry-templates__tab:hover {
+  color: var(--dawn);
+  background: rgba(235, 227, 214, 0.05);
+}
+
+.foundry-templates__tab--active {
+  color: var(--gold);
+  background: rgba(202, 165, 84, 0.1);
+}
+
+/* Loading state */
+.foundry-templates__loading {
+  padding: 24px;
+  text-align: center;
+  color: var(--dawn-50);
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+/* Empty state */
+.foundry-templates__empty {
+  padding: 32px 16px;
+  text-align: center;
+  color: rgba(235, 227, 214, 0.3);
+}
+
+.foundry-templates__empty-icon {
+  display: block;
+  font-size: 32px;
+  opacity: 0.3;
+  margin-bottom: 12px;
+}
+
+.foundry-templates__empty p {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+}
+
+.foundry-templates__empty-hint {
+  display: block;
+  font-size: 10px;
+  opacity: 0.5;
+}
+
+/* Category group */
+.foundry-templates__category {
+  margin-bottom: 16px;
+}
+
+/* Add icon in catalog items */
+.catalog-item__add-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  margin-right: 6px;
+  font-size: 12px;
+  color: var(--gold-50);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.catalog-item:hover .catalog-item__add-icon {
+  opacity: 1;
+}

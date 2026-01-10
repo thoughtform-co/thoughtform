@@ -15,12 +15,17 @@ import {
   SpecPanel,
   SurveyCatalogPanel,
   SurveyInspectorPanel,
+  FoundryTemplatesPanel,
   generateJSXCode,
   VectorEditor,
   type SurveyAnnotation,
   type SurveyViewBundledProps,
   type WorkspaceTab,
   type VectorDocument,
+  type FoundryCanvasDocument,
+  type FoundryCanvasItem,
+  type FoundryViewport,
+  EMPTY_FOUNDRY_DOCUMENT,
 } from "./_components";
 import { FoundryAssistantDock } from "./_components/FoundryAssistantDock";
 
@@ -55,6 +60,11 @@ function AstrogationContent() {
     componentProps,
     style,
     foundryVariants,
+    // Foundry canvas state
+    foundryDocument,
+    foundrySelectedItemId,
+    foundryDocumentDirty,
+    // Presets
     presets,
     presetName,
     toast,
@@ -135,6 +145,10 @@ function AstrogationContent() {
   const [forgeDocId, setForgeDocId] = useState<string | null>(null);
   const forgeSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Foundry canvas persistence
+  const [foundryDocId, setFoundryDocId] = useState<string | null>(null);
+  const foundrySaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   // Load forge data from Supabase on mount
   useEffect(() => {
     async function loadForgeData() {
@@ -167,6 +181,116 @@ function AstrogationContent() {
 
     loadForgeData();
   }, [user?.id]);
+
+  // ═══════════════════════════════════════════════════════════════
+  // FOUNDRY CANVAS PERSISTENCE (Phase 1)
+  // ═══════════════════════════════════════════════════════════════
+
+  // Load foundry canvas from Supabase on mount (or localStorage fallback)
+  useEffect(() => {
+    async function loadFoundryData() {
+      // Try localStorage first if no user (dev mode)
+      if (!user?.id) {
+        try {
+          const stored = localStorage.getItem("foundry_document");
+          if (stored) {
+            const doc = JSON.parse(stored) as FoundryCanvasDocument;
+            dispatch(actions.foundryLoadDocument(doc));
+          }
+        } catch (e) {
+          console.warn("Failed to load foundry doc from localStorage:", e);
+        }
+        return;
+      }
+
+      if (!supabase) return;
+
+      try {
+        const { data, error } = await supabase
+          .from("foundry_documents")
+          .select("id, document")
+          .eq("user_id", user.id)
+          .order("updated_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (error) {
+          console.error("Failed to load foundry canvas:", error);
+          return;
+        }
+
+        if (data) {
+          setFoundryDocId(data.id);
+          dispatch(actions.foundryLoadDocument(data.document as FoundryCanvasDocument));
+        }
+      } catch (e) {
+        console.error("Failed to load foundry canvas from Supabase:", e);
+      }
+    }
+
+    loadFoundryData();
+  }, [user?.id]);
+
+  // Autosave foundry canvas (debounced) when dirty
+  useEffect(() => {
+    if (!foundryDocumentDirty) return;
+
+    // Clear previous timer
+    if (foundrySaveTimerRef.current) {
+      clearTimeout(foundrySaveTimerRef.current);
+    }
+
+    foundrySaveTimerRef.current = setTimeout(async () => {
+      // localStorage fallback if no user
+      if (!user?.id) {
+        try {
+          localStorage.setItem("foundry_document", JSON.stringify(foundryDocument));
+          dispatch(actions.foundryMarkClean());
+        } catch (e) {
+          console.warn("Failed to save foundry doc to localStorage:", e);
+        }
+        return;
+      }
+
+      if (!supabase) return;
+
+      try {
+        if (foundryDocId) {
+          // Update existing document
+          await supabase
+            .from("foundry_documents")
+            .update({ document: foundryDocument, updated_at: new Date().toISOString() })
+            .eq("id", foundryDocId);
+        } else {
+          // Create new document
+          const { data, error } = await supabase
+            .from("foundry_documents")
+            .insert({ user_id: user.id, document: foundryDocument })
+            .select("id")
+            .single();
+
+          if (error) {
+            console.error("Failed to create foundry document:", error);
+            return;
+          }
+
+          if (data) {
+            setFoundryDocId(data.id);
+          }
+        }
+
+        dispatch(actions.foundryMarkClean());
+      } catch (e) {
+        console.error("Failed to save foundry canvas to Supabase:", e);
+      }
+    }, 500); // Debounce 500ms
+
+    return () => {
+      if (foundrySaveTimerRef.current) {
+        clearTimeout(foundrySaveTimerRef.current);
+      }
+    };
+  }, [foundryDocumentDirty, foundryDocument, foundryDocId, user?.id]);
 
   const handleOpenForge = useCallback(() => {
     // Clear any selected component and focus state - forge is its own mode
@@ -336,6 +460,71 @@ function AstrogationContent() {
       dispatch(actions.showToast("Variant applied"));
     },
     [componentProps]
+  );
+
+  // ═══════════════════════════════════════════════════════════════
+  // FOUNDRY CANVAS HANDLERS (Phase 1)
+  // ═══════════════════════════════════════════════════════════════
+
+  const handleFoundrySelectItem = useCallback((id: string | null) => {
+    dispatch(actions.foundrySelectItem(id));
+  }, []);
+
+  const handleFoundryMoveItem = useCallback((id: string, x: number, y: number) => {
+    dispatch(actions.foundryMoveItem(id, x, y));
+  }, []);
+
+  const handleFoundryResizeItem = useCallback((id: string, w: number, h: number) => {
+    dispatch(actions.foundryResizeItem(id, w, h));
+  }, []);
+
+  const handleFoundryDeleteItem = useCallback((id: string) => {
+    dispatch(actions.foundryDeleteItem(id));
+  }, []);
+
+  const handleFoundryDuplicateItem = useCallback((id: string) => {
+    dispatch(actions.foundryDuplicateItem(id));
+  }, []);
+
+  const handleFoundrySetViewport = useCallback((viewport: Partial<FoundryViewport>) => {
+    dispatch(actions.foundrySetViewport(viewport));
+  }, []);
+
+  // Add item to canvas (from template or catalog)
+  const handleFoundryAddToCanvas = useCallback(
+    (item: Omit<FoundryCanvasItem, "id" | "frame">) => {
+      // Generate unique ID and position
+      const id = crypto.randomUUID();
+      const maxZ =
+        foundryDocument.items.length > 0
+          ? Math.max(...foundryDocument.items.map((i) => i.frame.z))
+          : 0;
+
+      // Calculate center position based on current viewport
+      const { panX, panY, zoom } = foundryDocument.viewport;
+      // Place new item roughly in the visible area center
+      const x = (-panX + 400) / zoom;
+      const y = (-panY + 200) / zoom;
+
+      const newItem: FoundryCanvasItem = {
+        id,
+        name: item.name,
+        componentId: item.componentId,
+        props: item.props,
+        styleVars: item.styleVars,
+        frame: {
+          x,
+          y,
+          w: 320,
+          h: 240,
+          z: maxZ + 1,
+        },
+      };
+
+      dispatch(actions.foundryAddItem(newItem));
+      dispatch(actions.showToast(`Added ${item.name} to canvas`));
+    },
+    [foundryDocument]
   );
 
   // Get auth token for assistant requests
@@ -622,6 +811,8 @@ function AstrogationContent() {
             searchSpace={searchSpace}
             onSearchSpaceChange={setSearchSpace}
           />
+        ) : activeTab === "foundry" ? (
+          <FoundryTemplatesPanel userId={user?.id} onAddToCanvas={handleFoundryAddToCanvas} />
         ) : (
           <CatalogPanel
             selectedCategory={selectedCategory}
@@ -656,6 +847,15 @@ function AstrogationContent() {
           filters={surveyFilters}
           onFiltersChange={handleSurveyFiltersChange}
           projects={[]}
+          // Foundry canvas props
+          foundryDocument={foundryDocument}
+          foundrySelectedItemId={foundrySelectedItemId}
+          onFoundrySelectItem={handleFoundrySelectItem}
+          onFoundryMoveItem={handleFoundryMoveItem}
+          onFoundryResizeItem={handleFoundryResizeItem}
+          onFoundryDeleteItem={handleFoundryDeleteItem}
+          onFoundryDuplicateItem={handleFoundryDuplicateItem}
+          onFoundrySetViewport={handleFoundrySetViewport}
         />
 
         {/* Right Panel - switches based on active tab */}
