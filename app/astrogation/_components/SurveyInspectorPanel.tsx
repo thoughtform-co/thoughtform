@@ -94,6 +94,7 @@ function SurveyInspectorPanelInner({
   const [chatInput, setChatInput] = useState("");
   const [isChatLoading, setIsChatLoading] = useState(false);
   const [editingAnnotationId, setEditingAnnotationId] = useState<string | null>(null);
+  const [isEditingNotes, setIsEditingNotes] = useState(false);
   const [annotationNote, setAnnotationNote] = useState("");
   const [tagInput, setTagInput] = useState("");
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -749,6 +750,7 @@ function SurveyInspectorPanelInner({
                     d="M3 6H9M3 9H9"
                     stroke="currentColor"
                     strokeWidth="1"
+                    fill="none"
                     strokeLinecap="round"
                   />
                 </svg>
@@ -1152,13 +1154,33 @@ function SurveyInspectorPanelInner({
 
                 {/* Notes (User) */}
                 <FlowConnector.Node label="Notes">
-                  <textarea
-                    className="flow-connector__textarea"
-                    value={effectiveItem?.notes || ""}
-                    onChange={(e) => handleFieldChange("notes", e.target.value)}
-                    placeholder="Your observations..."
-                    rows={2}
-                  />
+                  {isEditingNotes ? (
+                    <textarea
+                      className="flow-connector__textarea"
+                      value={effectiveItem?.notes || ""}
+                      onChange={(e) => handleFieldChange("notes", e.target.value)}
+                      onBlur={() => setIsEditingNotes(false)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && !e.shiftKey) {
+                          e.preventDefault();
+                          setIsEditingNotes(false);
+                        }
+                        if (e.key === "Escape") {
+                          setIsEditingNotes(false);
+                        }
+                      }}
+                      placeholder="Your observations..."
+                      rows={2}
+                      autoFocus
+                    />
+                  ) : (
+                    <p
+                      className={`flow-connector__text flow-connector__text--selectable ${!effectiveItem?.notes ? "flow-connector__text--placeholder" : ""}`}
+                      onClick={() => setIsEditingNotes(true)}
+                    >
+                      {effectiveItem?.notes || "Add note..."}
+                    </p>
+                  )}
                 </FlowConnector.Node>
 
                 {/* Annotations */}
@@ -1176,7 +1198,7 @@ function SurveyInspectorPanelInner({
                         <div
                           key={annotation.id}
                           data-annotation-id={annotation.id}
-                          className={`spec-annotation spec-annotation--compact ${selectedAnnotationId === annotation.id ? "spec-annotation--selected" : ""}`}
+                          className="spec-annotation spec-annotation--compact"
                           onClick={() => onAnnotationSelect?.(annotation.id)}
                         >
                           {/* Header row: index + actions */}
@@ -1254,7 +1276,7 @@ function SurveyInspectorPanelInner({
                               )}
                             </div>
                           </div>
-                          {/* Note content - reuse flow-connector__textarea styling */}
+                          {/* Note content - reuse flow-connector__text styling for view mode */}
                           {editingAnnotationId === annotation.id ? (
                             <textarea
                               className="flow-connector__textarea"
@@ -1276,15 +1298,15 @@ function SurveyInspectorPanelInner({
                               rows={2}
                             />
                           ) : (
-                            <div
-                              className={`flow-connector__textarea spec-annotation__note-view ${!annotation.note ? "spec-annotation__note-view--placeholder" : ""}`}
+                            <p
+                              className={`flow-connector__text flow-connector__text--selectable spec-annotation__note-view ${selectedAnnotationId === annotation.id ? "flow-connector__text--selected" : ""} ${!annotation.note ? "flow-connector__text--placeholder" : ""}`}
                               onClick={(e) => {
                                 e.stopPropagation();
                                 handleEditAnnotation(annotation);
                               }}
                             >
                               {annotation.note || "Click to add note..."}
-                            </div>
+                            </p>
                           )}
                         </div>
                       ))}
@@ -1324,32 +1346,24 @@ function SurveyInspectorPanelInner({
                     </div>
                   )}
                 </FlowConnector.Node>
-
-                {/* Embed Button - Final step after Briefing */}
-                {effectiveItem?.briefing && (
-                  <div className="flow-connector__embed-section">
-                    <button
-                      className="flow-connector__embed-btn"
-                      onClick={() => void onEmbed()}
-                      disabled={isEmbedding}
-                    >
-                      {isEmbedding ? (
-                        <>
-                          <span className="flow-connector__spinner" />
-                          Embedding...
-                        </>
-                      ) : (
-                        "EMBED"
-                      )}
-                    </button>
-                  </div>
-                )}
               </FlowConnector>
             </section>
-
-            {/* Embed moved into Briefing header (kept above the briefing content) */}
           </div>
         </ChamferedFrame>
+
+        {/* Sticky Embed Footer - Industrial "JUMP" style button */}
+        <div className="inspector-footer">
+          <button
+            className={`inspector-footer__embed-btn ${effectiveItem?.briefing ? "inspector-footer__embed-btn--ready" : ""}`}
+            onClick={() => void onEmbed()}
+            disabled={!effectiveItem?.briefing || isEmbedding}
+          >
+            <span className="inspector-footer__embed-label">
+              {isEmbedding ? "EMBEDDING..." : "EMBED"}
+            </span>
+            <span className="inspector-footer__embed-shortcut">E</span>
+          </button>
+        </div>
       </div>
 
       {/* Upload Modal */}
