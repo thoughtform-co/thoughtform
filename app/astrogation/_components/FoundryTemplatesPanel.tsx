@@ -18,8 +18,13 @@ import {
   TreeLabel,
   TreeNodeContent,
 } from "@/components/ui/Tree";
-import type { FoundryTemplate, FoundryCanvasItem } from "./types";
+import type { FoundryTemplate, FoundryCanvasItem, ComponentSource } from "./types";
 import { supabase } from "@/lib/supabase";
+import {
+  getRegistryKeyForCatalog,
+  isRegistryComponent,
+  getRegistryComponent,
+} from "./registry-map";
 
 // ═══════════════════════════════════════════════════════════════
 // FOUNDRY TEMPLATES PANEL - Left panel for Foundry tab
@@ -29,7 +34,10 @@ import { supabase } from "@/lib/supabase";
 export interface FoundryTemplatesPanelProps {
   /** User ID for fetching templates (null = localStorage fallback) */
   userId?: string | null;
-  /** Callback when a template or component is selected to add to canvas */
+  /**
+   * Callback when a template or component is selected to add to canvas
+   * Now supports ComponentSource model with source, registryKey, args
+   */
   onAddToCanvas: (item: Omit<FoundryCanvasItem, "id" | "frame">) => void;
 }
 
@@ -107,17 +115,36 @@ function FoundryTemplatesPanelInner({ userId, onAddToCanvas }: FoundryTemplatesP
       const def = getComponentById(componentId);
       if (!def) return;
 
-      // Build default props from component definition
+      // Check if this component has a registry mapping
+      const registryKey = getRegistryKeyForCatalog(componentId);
+      const hasRegistry = registryKey && isRegistryComponent(registryKey);
+
+      // Build default props from component definition (legacy)
       const defaultProps: Record<string, unknown> = {};
       def.props.forEach((p) => {
         defaultProps[p.name] = p.default;
       });
 
-      onAddToCanvas({
-        name: def.name,
-        componentId: def.id,
-        props: defaultProps,
-      });
+      // If registry component exists, use args-based approach
+      if (hasRegistry) {
+        const registryDef = getRegistryComponent(registryKey);
+        onAddToCanvas({
+          name: def.name,
+          source: "registry" as ComponentSource,
+          registryKey,
+          componentId: def.id,
+          args: registryDef?.defaultArgs || defaultProps,
+          props: defaultProps, // Keep for backwards compat
+        });
+      } else {
+        // Legacy preview mode
+        onAddToCanvas({
+          name: def.name,
+          source: "legacyPreview" as ComponentSource,
+          componentId: def.id,
+          props: defaultProps,
+        });
+      }
     },
     [onAddToCanvas]
   );
@@ -125,14 +152,33 @@ function FoundryTemplatesPanelInner({ userId, onAddToCanvas }: FoundryTemplatesP
   // Handle adding a template to canvas
   const handleAddTemplate = useCallback(
     (template: FoundryTemplate) => {
-      const { __style, ...props } = template.config as Record<string, unknown>;
+      // Extract args and styleVars from config
+      const { args, styleVars, __style, ...legacyProps } = template.config;
+
+      // Determine source - prefer registry if available
+      const effectiveSource =
+        template.source || (template.registry_key ? "registry" : "legacyPreview");
+      const effectiveRegistryKey =
+        template.registry_key || getRegistryKeyForCatalog(template.component_key);
+
+      // Merge args (new) with legacy props
+      const effectiveArgs = args || legacyProps;
+
+      // Extract styleVars from __style (legacy) or direct styleVars
+      const effectiveStyleVars =
+        styleVars ||
+        (__style
+          ? ((__style as { styleVars?: Record<string, string> }).styleVars ?? undefined)
+          : undefined);
+
       onAddToCanvas({
         name: template.name,
+        source: effectiveSource as ComponentSource,
+        registryKey: effectiveRegistryKey,
         componentId: template.component_key,
-        props,
-        styleVars: __style
-          ? ((__style as { styleVars?: Record<string, string> }).styleVars ?? undefined)
-          : undefined,
+        args: effectiveArgs as Record<string, unknown>,
+        props: legacyProps as Record<string, unknown>, // Keep for backwards compat
+        styleVars: effectiveStyleVars,
       });
     },
     [onAddToCanvas]

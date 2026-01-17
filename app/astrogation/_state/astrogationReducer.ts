@@ -11,6 +11,16 @@ import type {
 import { DEFAULT_STYLE, EMPTY_FOUNDRY_DOCUMENT } from "../_components/types";
 import { getComponentById } from "../catalog";
 
+function sanitizeArgs(args: Record<string, unknown>): Record<string, unknown> {
+  // Foundry documents are persisted as JSON (Supabase jsonb + localStorage).
+  // Strip any non-serializable values (functions, undefined, etc) defensively.
+  try {
+    return JSON.parse(JSON.stringify(args)) as Record<string, unknown>;
+  } catch {
+    return {};
+  }
+}
+
 // ═══════════════════════════════════════════════════════════════
 // STATE TYPE
 // ═══════════════════════════════════════════════════════════════
@@ -124,6 +134,8 @@ export type AstrogationAction =
   | { type: "FOUNDRY_MOVE_ITEM"; payload: { id: string; x: number; y: number } }
   /** Resize an item */
   | { type: "FOUNDRY_RESIZE_ITEM"; payload: { id: string; w: number; h: number } }
+  /** Set item args (args-first source of truth; used by registry + legacy previews) */
+  | { type: "FOUNDRY_SET_ITEM_ARGS"; payload: { id: string; args: Record<string, unknown> } }
   /** Update item props */
   | { type: "FOUNDRY_UPDATE_ITEM_PROPS"; payload: { id: string; props: Record<string, unknown> } }
   /** Update item styleVars */
@@ -294,7 +306,14 @@ export function astrogationReducer(
     case "FOUNDRY_LOAD_DOCUMENT":
       return {
         ...state,
-        foundryDocument: action.payload,
+        foundryDocument: {
+          ...action.payload,
+          items: (action.payload.items || []).map((item) => ({
+            ...item,
+            args: item.args ? sanitizeArgs(item.args) : item.args,
+            props: sanitizeArgs(item.props || {}),
+          })),
+        },
         foundrySelectedItemId: null,
         foundryDocumentDirty: false,
       };
@@ -304,7 +323,14 @@ export function astrogationReducer(
         ...state,
         foundryDocument: {
           ...state.foundryDocument,
-          items: [...state.foundryDocument.items, action.payload],
+          items: [
+            ...state.foundryDocument.items,
+            {
+              ...action.payload,
+              args: action.payload.args ? sanitizeArgs(action.payload.args) : action.payload.args,
+              props: sanitizeArgs(action.payload.props || {}),
+            },
+          ],
         },
         foundrySelectedItemId: action.payload.id,
         foundryDocumentDirty: true,
@@ -339,6 +365,26 @@ export function astrogationReducer(
           items: state.foundryDocument.items.map((item) =>
             item.id === action.payload.id
               ? { ...item, frame: { ...item.frame, w: action.payload.w, h: action.payload.h } }
+              : item
+          ),
+        },
+        foundryDocumentDirty: true,
+      };
+
+    case "FOUNDRY_SET_ITEM_ARGS":
+      return {
+        ...state,
+        foundryDocument: {
+          ...state.foundryDocument,
+          items: state.foundryDocument.items.map((item) =>
+            item.id === action.payload.id
+              ? {
+                  ...item,
+                  args: sanitizeArgs(action.payload.args),
+                  // Keep legacy props in sync for backwards compatibility.
+                  // ComponentPreview merges { ...props, ...args }, so args remains canonical.
+                  props: sanitizeArgs(action.payload.args),
+                }
               : item
           ),
         },
@@ -680,6 +726,10 @@ export const actions = {
   foundryResizeItem: (id: string, w: number, h: number): AstrogationAction => ({
     type: "FOUNDRY_RESIZE_ITEM",
     payload: { id, w, h },
+  }),
+  foundrySetItemArgs: (id: string, args: Record<string, unknown>): AstrogationAction => ({
+    type: "FOUNDRY_SET_ITEM_ARGS",
+    payload: { id, args },
   }),
   foundryUpdateItemProps: (id: string, props: Record<string, unknown>): AstrogationAction => ({
     type: "FOUNDRY_UPDATE_ITEM_PROPS",

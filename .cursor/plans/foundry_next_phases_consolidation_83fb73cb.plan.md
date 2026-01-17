@@ -4,22 +4,22 @@ overview: "Consolidate Phases 2–4 around a single component spine: shadcn regi
 todos:
   - id: phase2-render-registry
     content: Refactor Foundry items to render registry components (introduce ComponentSource + args-based items).
-    status: pending
+    status: completed
   - id: phase2-storybook-schema
     content: Set up Storybook and StoryIndex; generate Foundry inspector from argTypes/args.
-    status: pending
+    status: completed
   - id: phase2-vault-insert
     content: Implement Vault insert overlay + Vault-as-library left panel; translate presets into args-based items.
-    status: pending
+    status: completed
   - id: phase2-templates-args
     content: Make templates args-based; implement draft→approve workflow cleanly.
-    status: pending
+    status: completed
   - id: phase3-universal-assistant
     content: Right-click entry + chat persistence + args-first apply-to-canvas operations.
-    status: pending
+    status: completed
   - id: phase3-mcp-ui-cards
-    content: Implement mcp-ui-compatible “design cards” with previews and Apply actions.
-    status: pending
+    content: Implement mcp-ui-compatible "design cards" with previews and Apply actions.
+    status: completed
   - id: phase4-agent-sdk-rag
     content: "Design Agent architecture: tool calling, strict RAG budgets, dev-agent integration path."
     status: pending
@@ -31,16 +31,16 @@ todos:
 
 - **Canonical implementation**: shadcn-first, `registry/thoughtform/*` is the source of runtime components.
 - **Canonical schema**: Storybook stories (`args`/`argTypes`) define the editable surface.
-- **Catalog role**: keep [`app/astrogation/catalog.ts`](app/astrogation/catalog.ts) as taxonomy + design memory + pointers (e.g. `registryName`/`storyId`), and gradually remove duplicate “prop schema as truth.”
+- **Catalog role**: keep [`app/astrogation/catalog.ts`](app/astrogation/catalog.ts) as taxonomy + design memory + pointers (e.g. `registryName`/`storyId`), and gradually remove duplicate "prop schema as truth."
 
 ## Why consolidate
 
 Today the system risks drift in two places:
 
-- **Two implementations** of “Thoughtform UI” (`packages/ui` vs `registry/thoughtform`) with overlapping components (e.g. Buttons). We will converge on **registry**.
-- **Two schemas** for what is editable (catalog prop defs vs the “real” component). We will converge on **Storybook args/argTypes**.
+- **Two implementations** of "Thoughtform UI" (`packages/ui` vs `registry/thoughtform`) with overlapping components (e.g. Buttons). We will converge on **registry**.
+- **Two schemas** for what is editable (catalog prop defs vs the "real" component). We will converge on **Storybook args/argTypes**.
 
-This consolidation directly supports the “off-the-shelf components” strategy: build and tune components in Storybook using shadcn/Tailwind primitives, then assemble in Foundry; the Assistant operates on args patches and can render interactive proposal cards.
+This consolidation directly supports the "off-the-shelf components" strategy: build and tune components in Storybook using shadcn/Tailwind primitives, then assemble in Foundry; the Assistant operates on args patches and can render interactive proposal cards.
 
 ## Phase 2 (consolidated): Component Workbench + Vault insertion
 
@@ -59,11 +59,11 @@ This consolidation directly supports the “off-the-shelf components” strategy
 - [`app/astrogation/_components/previews/ComponentPreview.tsx`](app/astrogation/_components/previews/ComponentPreview.tsx)
 - `registry/thoughtform/*` (ensure exports are stable)
 
-### 2.2 Storybook becomes the canonical “editable schema”
+### 2.2 Storybook becomes the canonical "editable schema"
 
 - Add Storybook configuration (new `.storybook/` folder) and define stories for:
 - Thoughtform registry components (`registry/thoughtform/*`).
-- A small curated set of shadcn “building blocks” we want to use heavily.
+- A small curated set of shadcn "building blocks" we want to use heavily.
 - Create a lightweight **StoryIndex** module inside the repo that can be used by Foundry at runtime:
 - Exports `listComponents()`, `getArgTypes(storyId)`, `getDefaultArgs(storyId)`.
 - This avoids coupling Foundry runtime to Storybook runtime.
@@ -75,7 +75,7 @@ This consolidation directly supports the “off-the-shelf components” strategy
 - Implement the Vault picker overlay described in Phase 2A of the existing plan:
 - Uses existing preset API [`app/api/ui-component-presets/route.ts`](app/api/ui-component-presets/route.ts)
 - Inserts a new canvas item by translating preset config into `args/styleVars`.
-- Restructure Vault left panel into an “approved library” view (Phase 2B).
+- Restructure Vault left panel into an "approved library" view (Phase 2B).
 
 ### 2.4 Templates (drafts) are args-based and promote cleanly
 
@@ -86,14 +86,14 @@ This consolidation directly supports the “off-the-shelf components” strategy
 - **Save as Template (Draft)** writes a draft template.
 - **Promote to Vault** writes a `ui_component_preset` (approved).
 
-## Phase 3 (consolidated): Universal Assistant + mcp-ui “design cards”
+## Phase 3 (consolidated): Universal Assistant + mcp-ui "design cards"
 
 ### 3.1 Universal entry + chat persistence
 
 - Remove Foundry-only entry UI (`FoundryAssistantDock`) and replace with right-click → Assistant entry on the Astrogation root.
 - Add `assistant_conversations` + `assistant_messages` tables and fast list APIs.
 
-### 3.2 Assistant “apply to canvas” contract becomes args-first
+### 3.2 Assistant "apply to canvas" contract becomes args-first
 
 - Operations should target:
 - `updateItemArgs({ itemId, patch })`
@@ -106,7 +106,7 @@ This consolidation directly supports the “off-the-shelf components” strategy
 
 ### 3.3 mcp-ui is treated as the interaction layer (minimal, non-bloat)
 
-- Implement “design cards” in the Assistant UI that preview changes and have explicit Apply buttons.
+- Implement "design cards" in the Assistant UI that preview changes and have explicit Apply buttons.
 - Structure the payload to be compatible with mcp-ui concepts (UI resources + actions), even if initial implementation is an in-app renderer.
 
 ## Phase 4 (consolidated): Design Agent (Agent SDK + strict RAG budgets)
@@ -126,7 +126,7 @@ This consolidation directly supports the “off-the-shelf components” strategy
 
 - No new prop schemas should be added to `catalog.ts` once Storybook argTypes exist.
 - When a registry component gains/changes a prop, update the Storybook story (schema) in the same PR.
-- `packages/ui` should not introduce overlapping “app-level” components if registry is canonical; it should trend toward tokens/primitives.
+- `packages/ui` should not introduce overlapping "app-level" components if registry is canonical; it should trend toward tokens/primitives.
 
 ## Test plan (for consolidated Phase 2/3)
 

@@ -58,6 +58,7 @@ export interface CenterPanelProps {
   onFoundryDeleteItem?: (id: string) => void;
   onFoundryDuplicateItem?: (id: string) => void;
   onFoundrySetViewport?: (viewport: Partial<FoundryViewport>) => void;
+  onFoundryUpdateItemArgs?: (id: string, nextArgs: Record<string, unknown>) => void;
 }
 
 export function CenterPanel({
@@ -93,6 +94,7 @@ export function CenterPanel({
   onFoundryDeleteItem,
   onFoundryDuplicateItem,
   onFoundrySetViewport,
+  onFoundryUpdateItemArgs,
 }: CenterPanelProps) {
   const def = selectedComponentId ? (getComponentById(selectedComponentId) ?? null) : null;
 
@@ -174,6 +176,7 @@ export function CenterPanel({
             onFoundryDeleteItem={onFoundryDeleteItem}
             onFoundryDuplicateItem={onFoundryDuplicateItem}
             onFoundrySetViewport={onFoundrySetViewport}
+            onFoundryUpdateItemArgs={onFoundryUpdateItemArgs}
           />
         )}
         {activeTab === "survey" && survey && (

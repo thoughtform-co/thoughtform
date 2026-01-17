@@ -428,6 +428,7 @@
   display: flex;
   gap: 0;
   z-index: 10;
+  overflow: visible; /* Allow selection tick to extend to HUD rail */
 }
 
 /* ─── PANELS (with scroll-on-hover) ─── */
@@ -487,22 +488,12 @@
 }
 
 .astrogation-panel--left {
-  border: 1px solid var(--gold-30, rgba(202, 165, 84, 0.3));
+  border: none;
   width: 340px;
   min-width: 180px; /* Minimum readable width */
   max-width: 340px;
   flex-shrink: 1; /* Allow shrinking when space is constrained */
-  /* Transparent background with subtle raster lines overlay */
-  background: 
-    /* Raster lines pattern */
-    repeating-linear-gradient(
-      0deg,
-      transparent,
-      transparent 1px,
-      rgba(202, 165, 84, 0.03) 1px,
-      rgba(202, 165, 84, 0.03) 2px
-    ),
-    /* Transparent base */ transparent;
+  background: transparent;
   position: relative;
   overflow: visible !important; /* Allow title to extend above panel - must stay visible */
   padding: 0;
@@ -516,9 +507,29 @@
   max-height: calc(100vh - var(--hud-padding, 32px) * 2 - 120px);
 }
 
-/* Keep left panel overflow visible on hover to prevent header clipping */
-.astrogation-panel--left:hover {
-  overflow: visible !important;
+/* Left panel header - default transparent for unfilled headers */
+.astrogation-panel--left .panel-header:not(.panel-header--filled) {
+  background: transparent;
+  border: none;
+  color: var(--gold);
+  padding-left: 12px;
+  clip-path: none;
+  margin-top: -40px; /* Adjust for removed panel border */
+}
+
+/* Left panel filled header - restore tensor gold frame */
+.astrogation-panel--left .panel-header--filled {
+  background: var(--gold, #caa554);
+  color: var(--void, #0a0908);
+  border: 1px solid var(--gold, #caa554);
+  clip-path: polygon(0% 0%, calc(100% - 12px) 0%, 100% 12px, 100% 100%, 0% 100%);
+  margin-top: 0;
+  padding-left: 12px;
+}
+
+.astrogation-panel--left .astrogation-section {
+  border-bottom: none;
+  padding: 8px 0;
 }
 
 /* Corner brackets for left panel - disabled */
@@ -2668,12 +2679,15 @@
   flex-direction: column;
   font-family: var(--font-mono);
   font-size: 12px;
+  position: relative;
+  overflow: visible; /* Allow selection tick to extend beyond */
 }
 
 .tree-node {
   display: flex;
   flex-direction: column;
   position: relative;
+  overflow: visible; /* Allow selection tick to extend beyond */
 }
 
 /* Vertical spacing for top-level category wrappers - consistent spacing between all sections */
@@ -2720,23 +2734,6 @@
   ) !important;
   margin-bottom: 0;
   position: relative;
-}
-
-/* Vertical line from category bar - extends through items */
-.tree-node[data-level="0"] {
-  position: relative;
-}
-
-.tree-node[data-level="0"]::after {
-  content: "";
-  position: absolute;
-  top: 45px; /* Starts just below the category trigger bar */
-  left: 28px; /* Perfectly aligned with the center of the category icon (12px margin + 8px padding + 8px half-width) */
-  width: 1px;
-  bottom: 8px; /* Don't touch the bottom of the node */
-  background: var(--gold-15, rgba(202, 165, 84, 0.15));
-  pointer-events: none;
-  z-index: 0;
 }
 
 .tree-node[data-level="0"] > .tree-node-trigger:hover {
@@ -2794,7 +2791,10 @@
 .tree-node-trigger--selected {
   color: var(--gold, #caa554);
   background: rgba(202, 165, 84, 0.08) !important;
+  position: relative;
 }
+
+/* Selection connector line is now rendered by the SelectionConnector React component */
 
 .tree-icon {
   display: inline-flex;
@@ -2842,17 +2842,17 @@
 
 .tree-node-content {
   position: relative;
-  margin-left: 24px; /* Items sit clear of the line with balanced indentation */
+  margin-left: 20px;
   padding-left: 0;
-  padding-top: 12px; /* Breathing room above the first item */
-  padding-bottom: 8px; /* Consistent spacing after last item in category */
+  padding-top: 8px;
+  padding-bottom: 8px;
   display: flex;
   flex-direction: column;
+  overflow: visible; /* Allow selection tick to extend */
 }
 
-/* Connectors removed for a cleaner look */
-.tree-node-content--lines::before,
-.tree-node-content--lines > .tree-node > .tree-node-trigger::before {
+/* Remove nested connectors for a cleaner Spider-Man style HUD */
+.tree-node-content--lines::before {
   display: none;
 }
 
@@ -5987,16 +5987,6 @@
   margin: 0;
   border-left: 2px solid var(--gold-30);
   position: relative;
-}
-
-.spec-intent__philosophy::before {
-  content: "◇";
-  position: absolute;
-  left: -5px;
-  top: 0;
-  font-size: 8px;
-  color: var(--gold);
-  font-style: normal;
 }
 
 .spec-intent__sources {

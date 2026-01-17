@@ -48,6 +48,8 @@ export interface FoundryViewProps {
   onFoundryDeleteItem?: (id: string) => void;
   onFoundryDuplicateItem?: (id: string) => void;
   onFoundrySetViewport?: (viewport: Partial<FoundryViewport>) => void;
+  /** Update item args when interacting with real components on the canvas */
+  onFoundryUpdateItemArgs?: (id: string, nextArgs: Record<string, unknown>) => void;
 }
 
 // Chevron icon component for variants toggle
@@ -94,6 +96,7 @@ export function FoundryView({
   onFoundryDeleteItem,
   onFoundryDuplicateItem,
   onFoundrySetViewport,
+  onFoundryUpdateItemArgs,
 }: FoundryViewProps) {
   // Zoom state for the preview
   const [zoom, setZoom] = useState(1);
@@ -222,6 +225,7 @@ export function FoundryView({
           onDeleteItem={onFoundryDeleteItem}
           onDuplicateItem={onFoundryDuplicateItem}
           onSetViewport={onFoundrySetViewport}
+          onUpdateItemArgs={onFoundryUpdateItemArgs}
         />
 
         {/* Variants Comparison Grid - shows AI-generated alternatives */}

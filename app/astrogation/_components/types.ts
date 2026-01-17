@@ -302,12 +302,61 @@ export interface FoundryItemFrame {
   z: number; // z-index for layering
 }
 
+// ═══════════════════════════════════════════════════════════════
+// COMPONENT SOURCE MODEL (Phase 2.1)
+// ═══════════════════════════════════════════════════════════════
+// Defines where a component comes from:
+// - "registry": shadcn-style registry components (canonical implementation)
+// - "legacyPreview": switch-based preview renderer (brand elements, etc.)
+// ═══════════════════════════════════════════════════════════════
+
+export type ComponentSource = "registry" | "legacyPreview";
+
+/**
+ * Registry component definition - maps to Storybook story
+ * Used when source = "registry"
+ */
+export interface RegistryComponentRef {
+  /** Registry component key (e.g., "button", "card-frame", "navigation-bar") */
+  registryKey: string;
+  /** Storybook story ID for schema lookup (e.g., "thoughtform-ui-button") */
+  storyId?: string;
+}
+
 /** A single item on the Foundry canvas */
 export interface FoundryCanvasItem {
   id: string;
   name: string;
-  componentId: string; // maps to catalog.ts component key
+  /**
+   * Component source determines how the item is rendered:
+   * - "registry": Use registry component map with args
+   * - "legacyPreview": Use switch-based ComponentPreview (default for backwards compat)
+   */
+  source?: ComponentSource;
+  /**
+   * Registry component key (when source = "registry")
+   * Maps to registry/thoughtform/* component exports
+   */
+  registryKey?: string;
+  /**
+   * Legacy component ID (maps to catalog.ts component key)
+   * Used when source = "legacyPreview" or for backwards compatibility
+   */
+  componentId: string;
+  /**
+   * Component args (Storybook-compatible)
+   * Used for both registry and legacy components
+   */
+  args?: Record<string, unknown>;
+  /**
+   * Legacy props (deprecated, use args instead)
+   * Maintained for backwards compatibility
+   */
   props: Record<string, unknown>;
+  /**
+   * StyleSpace CSS variable overrides
+   * Applied to wrapper element for theming
+   */
   styleVars?: Record<string, string>;
   frame: FoundryItemFrame;
   locked?: boolean;
@@ -332,9 +381,35 @@ export interface FoundryTemplate {
   id: string;
   user_id?: string;
   name: string;
+  /**
+   * Component source: "registry" or "legacyPreview"
+   * Templates default to registry when possible
+   */
+  source?: ComponentSource;
+  /**
+   * Registry component key (when source = "registry")
+   */
+  registry_key?: string;
+  /**
+   * Storybook story ID for schema lookup
+   */
+  story_id?: string;
+  /**
+   * Legacy component key (catalog.ts)
+   * Kept for backwards compatibility
+   */
   component_key: string;
   category_id?: string;
-  config: Record<string, unknown>; // props + styleVars + frame preferences
+  /**
+   * Args-based configuration (Storybook-compatible)
+   * Contains: args (component props) + styleVars (CSS variables)
+   */
+  config: {
+    args?: Record<string, unknown>;
+    styleVars?: Record<string, string>;
+    /** Legacy: props stored at root level for backwards compat */
+    [key: string]: unknown;
+  };
   thumbnail?: string;
   created_at: string;
   updated_at: string;

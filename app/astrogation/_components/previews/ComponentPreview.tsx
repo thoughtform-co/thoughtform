@@ -1,7 +1,13 @@
 "use client";
 
 import { getComponentById, type ComponentDef } from "../../catalog";
-import type { StyleConfig, SlideTextElement, SlideShapeElement, SlideElement } from "../types";
+import type {
+  StyleConfig,
+  SlideTextElement,
+  SlideShapeElement,
+  SlideElement,
+  ComponentSource,
+} from "../types";
 import { DynamicSVG } from "../DynamicSVG";
 import { ThoughtformLogo } from "../ThoughtformLogo";
 import { HUDWrapper } from "../helpers";
@@ -17,6 +23,12 @@ import {
   type FrameShape,
   shapePresets,
 } from "@thoughtform/ui";
+import {
+  getRegistryComponent,
+  isRegistryComponent,
+  getRegistryKeyForCatalog,
+  renderRegistryComponent,
+} from "../registry-map";
 
 // ═══════════════════════════════════════════════════════════════
 // STATIC DATA (moved outside component to prevent recreation)
@@ -79,30 +91,88 @@ const NAV_LINKS = [
 
 // ═══════════════════════════════════════════════════════════════
 // COMPONENT PREVIEW
+// Phase 2.1: Now supports both registry and legacy preview modes
 // ═══════════════════════════════════════════════════════════════
 
 export interface ComponentPreviewProps {
+  /**
+   * Component source: "registry" or "legacyPreview"
+   * Defaults to "legacyPreview" for backwards compatibility
+   */
+  source?: ComponentSource;
+  /**
+   * Registry component key (when source = "registry")
+   * e.g., "button", "card-frame", "navigation-bar"
+   */
+  registryKey?: string;
+  /**
+   * Legacy component ID (catalog.ts key)
+   * Used when source = "legacyPreview" or for backwards compat
+   */
   componentId: string;
+  /**
+   * Component args (Storybook-compatible)
+   * Used for both registry and legacy components
+   */
+  args?: Record<string, unknown>;
+  /**
+   * Legacy props (deprecated, use args instead)
+   */
   props: Record<string, unknown>;
   style?: StyleConfig;
   fullSize?: boolean;
 }
 
 export function ComponentPreview({
+  source,
+  registryKey,
   componentId,
+  args,
   props,
   style,
   fullSize = false,
 }: ComponentPreviewProps) {
-  const def = getComponentById(componentId);
-  if (!def) return <div className="preview-error">Unknown component</div>;
-
-  const content = renderComponent(componentId, props, def, fullSize);
-
   // Apply styleVars as CSS custom properties if present
   const wrapperStyle: React.CSSProperties | undefined = style?.styleVars
     ? (style.styleVars as unknown as React.CSSProperties)
     : undefined;
+
+  // Merge args and props (args takes precedence)
+  const mergedProps = { ...props, ...args };
+
+  // ─────────────────────────────────────────────────────────────
+  // REGISTRY COMPONENT RENDERING (Phase 2.1)
+  // ─────────────────────────────────────────────────────────────
+  // If source is "registry", render from the registry map
+  // Also try auto-detection if registryKey is provided or componentId maps to registry
+  const effectiveRegistryKey = registryKey || getRegistryKeyForCatalog(componentId);
+  const shouldUseRegistry =
+    source === "registry" || (effectiveRegistryKey && isRegistryComponent(effectiveRegistryKey));
+
+  if (shouldUseRegistry && effectiveRegistryKey) {
+    const registryDef = getRegistryComponent(effectiveRegistryKey);
+    if (registryDef) {
+      const content = renderRegistryComponent(effectiveRegistryKey, mergedProps);
+      if (content) {
+        return (
+          <div
+            className={`component-preview-wrapper component-preview-wrapper--registry ${fullSize ? "component-preview-wrapper--full" : ""}`}
+            style={wrapperStyle}
+          >
+            {content}
+          </div>
+        );
+      }
+    }
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // LEGACY PREVIEW RENDERING
+  // ─────────────────────────────────────────────────────────────
+  const def = getComponentById(componentId);
+  if (!def) return <div className="preview-error">Unknown component: {componentId}</div>;
+
+  const content = renderComponent(componentId, mergedProps, def, fullSize);
 
   return (
     <div

@@ -18,6 +18,11 @@ export interface FoundryCanvasProps {
   onDeleteItem: (id: string) => void;
   onDuplicateItem: (id: string) => void;
   onSetViewport: (viewport: Partial<FoundryViewport>) => void;
+  /**
+   * Optional: update an item's args as the user interacts with the real component
+   * (e.g. slider/toggle/select changes).
+   */
+  onUpdateItemArgs?: (id: string, nextArgs: Record<string, unknown>) => void;
 }
 
 // Constants
@@ -36,6 +41,7 @@ interface CanvasItemProps {
   zoom: number;
   onSelect: () => void;
   onDragStart: (e: React.PointerEvent) => void;
+  onUpdateItemArgs?: (id: string, nextArgs: Record<string, unknown>) => void;
 }
 
 const CanvasItem = memo(function CanvasItem({
@@ -44,7 +50,27 @@ const CanvasItem = memo(function CanvasItem({
   zoom,
   onSelect,
   onDragStart,
+  onUpdateItemArgs,
 }: CanvasItemProps) {
+  // Build runtime args for interactive components (do NOT persist handlers).
+  const baseArgs = (item.args || item.props || {}) as Record<string, unknown>;
+  let runtimeArgs = baseArgs;
+
+  if (onUpdateItemArgs && item.source === "registry" && item.registryKey) {
+    const update = (patch: Record<string, unknown>) => {
+      onUpdateItemArgs(item.id, { ...baseArgs, ...patch });
+    };
+
+    // Common interactive registry components
+    if (item.registryKey === "slider") {
+      runtimeArgs = { ...baseArgs, onChange: (value: number) => update({ value }) };
+    } else if (item.registryKey === "toggle") {
+      runtimeArgs = { ...baseArgs, onChange: (checked: boolean) => update({ checked }) };
+    } else if (item.registryKey === "select") {
+      runtimeArgs = { ...baseArgs, onChange: (value: string) => update({ value }) };
+    }
+  }
+
   return (
     <div
       className={`foundry-canvas__item ${isSelected ? "foundry-canvas__item--selected" : ""} ${item.locked ? "foundry-canvas__item--locked" : ""}`}
@@ -55,7 +81,7 @@ const CanvasItem = memo(function CanvasItem({
         width: item.frame.w,
         height: item.frame.h,
         zIndex: item.frame.z,
-        cursor: item.locked ? "not-allowed" : "move",
+        cursor: item.locked ? "not-allowed" : "default",
       }}
       onClick={(e) => {
         e.stopPropagation();
@@ -63,15 +89,30 @@ const CanvasItem = memo(function CanvasItem({
       }}
       onPointerDown={(e) => {
         if (item.locked) return;
-        e.stopPropagation();
-        onSelect();
-        onDragStart(e);
+        // Only initiate drag/resize when explicitly requested:
+        // - resize handles
+        // - the item label (acts as a grab handle)
+        // - Alt-drag anywhere (escape hatch)
+        //
+        // Otherwise, allow interacting with the underlying component (buttons, inputs, etc).
+        const target = e.target as HTMLElement;
+        const isResizeHandle = !!target.closest(".foundry-canvas__resize-handle");
+        const isLabelHandle = !!target.closest(".foundry-canvas__item-label");
+
+        if (isResizeHandle || isLabelHandle || e.altKey) {
+          e.stopPropagation();
+          onSelect();
+          onDragStart(e);
+        }
       }}
     >
       {/* Component Preview */}
       <div className="foundry-canvas__item-preview">
         <ComponentPreview
+          source={item.source}
+          registryKey={item.registryKey}
           componentId={item.componentId}
+          args={runtimeArgs}
           props={item.props}
           style={
             item.styleVars
@@ -92,10 +133,11 @@ const CanvasItem = memo(function CanvasItem({
         />
       </div>
 
-      {/* Selection frame & resize handles */}
-      {isSelected && !item.locked && (
-        <>
-          <div className="foundry-canvas__item-frame" />
+      {/* Selection frame & resize handles (hidden by default, shown on hover) */}
+      {!item.locked && (
+        <div
+          className={`foundry-canvas__handles ${isSelected ? "foundry-canvas__handles--visible" : ""}`}
+        >
           <div
             className="foundry-canvas__resize-handle foundry-canvas__resize-handle--se"
             data-handle="se"
@@ -112,11 +154,13 @@ const CanvasItem = memo(function CanvasItem({
             className="foundry-canvas__resize-handle foundry-canvas__resize-handle--nw"
             data-handle="nw"
           />
-        </>
+        </div>
       )}
 
-      {/* Item label */}
-      <div className="foundry-canvas__item-label">
+      {/* Item label (hidden by default, shown on hover) */}
+      <div
+        className={`foundry-canvas__item-label ${isSelected ? "foundry-canvas__item-label--visible" : ""}`}
+      >
         {item.locked && <span className="foundry-canvas__item-lock-icon">🔒</span>}
         {item.name}
       </div>
@@ -137,6 +181,7 @@ export function FoundryCanvas({
   onDeleteItem,
   onDuplicateItem,
   onSetViewport,
+  onUpdateItemArgs,
 }: FoundryCanvasProps) {
   const canvasRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -257,7 +302,7 @@ export function FoundryCanvas({
           h: item.frame.h,
         });
         setLocalItemSize({ w: item.frame.w, h: item.frame.h });
-        (e.target as HTMLElement).setPointerCapture(e.pointerId);
+        (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
         return;
       }
 
@@ -269,7 +314,7 @@ export function FoundryCanvas({
         y: e.clientY - rect.top,
       });
       setLocalItemPos({ x: item.frame.x, y: item.frame.y });
-      (e.target as HTMLElement).setPointerCapture(e.pointerId);
+      (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
     },
     [items]
   );
@@ -420,6 +465,7 @@ export function FoundryCanvas({
               zoom={viewport.zoom}
               onSelect={() => onSelectItem(item.id)}
               onDragStart={handleItemDragStart(item.id)}
+              onUpdateItemArgs={onUpdateItemArgs}
             />
           );
         })}

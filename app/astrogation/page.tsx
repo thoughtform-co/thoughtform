@@ -16,6 +16,8 @@ import {
   SurveyCatalogPanel,
   SurveyInspectorPanel,
   FoundryTemplatesPanel,
+  VaultPickerOverlay,
+  SelectionConnector,
   generateJSXCode,
   VectorEditor,
   type SurveyAnnotation,
@@ -144,6 +146,9 @@ function AstrogationContent() {
   const [forgeSvg, setForgeSvg] = useState<string | null>(null);
   const [forgeDocId, setForgeDocId] = useState<string | null>(null);
   const forgeSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Vault picker overlay state (Phase 2.3)
+  const [isVaultPickerOpen, setIsVaultPickerOpen] = useState(false);
 
   // Foundry canvas persistence
   const [foundryDocId, setFoundryDocId] = useState<string | null>(null);
@@ -392,9 +397,17 @@ function AstrogationContent() {
     dispatch(actions.setFocus(focused));
   }, []);
 
-  const handlePropsChange = useCallback((props: Record<string, unknown>) => {
-    dispatch(actions.setProps(props));
-  }, []);
+  const handlePropsChange = useCallback(
+    (props: Record<string, unknown>) => {
+      dispatch(actions.setProps(props));
+
+      // In Foundry tab, props edits should persist onto the selected canvas item (args-first)
+      if (activeTab === "foundry" && foundrySelectedItemId) {
+        dispatch(actions.foundrySetItemArgs(foundrySelectedItemId, props));
+      }
+    },
+    [activeTab, foundrySelectedItemId]
+  );
 
   const handlePresetNameChange = useCallback((name: string) => {
     dispatch(actions.setPresetName(name));
@@ -411,17 +424,27 @@ function AstrogationContent() {
   // Apply patch from assistant
   const handleApplyPatch = useCallback(
     (patch: { setProps?: Record<string, unknown>; setStyleVars?: Record<string, string> }) => {
+      const nextProps = patch.setProps ? { ...componentProps, ...patch.setProps } : componentProps;
+      const nextStyleVars = patch.setStyleVars
+        ? { ...(style.styleVars || {}), ...patch.setStyleVars }
+        : style.styleVars || {};
+
       if (patch.setProps) {
-        dispatch(actions.setProps({ ...componentProps, ...patch.setProps }));
+        dispatch(actions.setProps(nextProps));
+        if (activeTab === "foundry" && foundrySelectedItemId) {
+          dispatch(actions.foundrySetItemArgs(foundrySelectedItemId, nextProps));
+        }
       }
+
       if (patch.setStyleVars) {
-        dispatch(
-          actions.setStyle({ ...style, styleVars: { ...style.styleVars, ...patch.setStyleVars } })
-        );
+        dispatch(actions.setStyle({ ...style, styleVars: nextStyleVars }));
+        if (activeTab === "foundry" && foundrySelectedItemId) {
+          dispatch(actions.foundryUpdateItemStyleVars(foundrySelectedItemId, nextStyleVars));
+        }
       }
       dispatch(actions.showToast("Changes applied"));
     },
-    [componentProps, style]
+    [activeTab, foundrySelectedItemId, componentProps, style]
   );
 
   // Create variant from assistant suggestion
@@ -456,10 +479,15 @@ function AstrogationContent() {
   // Apply a variant to the main preview
   const handleApplyVariant = useCallback(
     (variant: { props: Record<string, unknown> }) => {
-      dispatch(actions.setProps({ ...componentProps, ...variant.props }));
+      const nextProps = { ...componentProps, ...variant.props };
+      dispatch(actions.setProps(nextProps));
+
+      if (activeTab === "foundry" && foundrySelectedItemId) {
+        dispatch(actions.foundrySetItemArgs(foundrySelectedItemId, nextProps));
+      }
       dispatch(actions.showToast("Variant applied"));
     },
-    [componentProps]
+    [activeTab, foundrySelectedItemId, componentProps]
   );
 
   // ═══════════════════════════════════════════════════════════════
@@ -490,7 +518,48 @@ function AstrogationContent() {
     dispatch(actions.foundrySetViewport(viewport));
   }, []);
 
-  // Add item to canvas (from template or catalog)
+  // Update item args directly from canvas interactions (e.g. slider/toggle/select)
+  const handleFoundryUpdateItemArgs = useCallback(
+    (id: string, nextArgs: Record<string, unknown>) => {
+      dispatch(actions.foundrySetItemArgs(id, nextArgs));
+      // Keep inspector state synced when the interacted item is selected
+      if (activeTab === "foundry" && foundrySelectedItemId === id) {
+        dispatch(actions.setProps(nextArgs));
+      }
+    },
+    [activeTab, foundrySelectedItemId]
+  );
+
+  // Keep the right-panel inspector in sync with the selected Foundry canvas item.
+  // In Foundry tab, `selectedComponentId/componentProps/styleVars` should reflect the selected item,
+  // so you can edit real components (registry-backed) without interacting with "just a frame".
+  const lastSyncedFoundrySelectionRef = useRef<string | null | undefined>(undefined);
+  useEffect(() => {
+    if (activeTab !== "foundry") return;
+
+    // Only sync when the selected item changes (avoid loops from unrelated re-renders)
+    if (lastSyncedFoundrySelectionRef.current === foundrySelectedItemId) return;
+    lastSyncedFoundrySelectionRef.current = foundrySelectedItemId;
+
+    const selectedItem = foundrySelectedItemId
+      ? foundryDocument.items.find((i) => i.id === foundrySelectedItemId) || null
+      : null;
+
+    if (!selectedItem) {
+      dispatch(actions.selectComponent(null));
+      dispatch(actions.setProps({}));
+      dispatch(actions.setStyle({ ...style, styleVars: {} }));
+      return;
+    }
+
+    const nextProps = (selectedItem.args || selectedItem.props || {}) as Record<string, unknown>;
+    dispatch(actions.selectComponent(selectedItem.componentId));
+    dispatch(actions.setProps(nextProps));
+    dispatch(actions.setStyle({ ...style, styleVars: selectedItem.styleVars || {} }));
+  }, [activeTab, foundrySelectedItemId, foundryDocument.items, style]);
+
+  // Add item to canvas (from template, catalog, or vault)
+  // Phase 2.1: Now supports ComponentSource model (source, registryKey, args)
   const handleFoundryAddToCanvas = useCallback(
     (item: Omit<FoundryCanvasItem, "id" | "frame">) => {
       // Generate unique ID and position
@@ -509,7 +578,11 @@ function AstrogationContent() {
       const newItem: FoundryCanvasItem = {
         id,
         name: item.name,
+        // Phase 2.1: ComponentSource model
+        source: item.source,
+        registryKey: item.registryKey,
         componentId: item.componentId,
+        args: item.args,
         props: item.props,
         styleVars: item.styleVars,
         frame: {
@@ -526,6 +599,16 @@ function AstrogationContent() {
     },
     [foundryDocument]
   );
+
+  // Open vault picker overlay (Phase 2.3)
+  const handleOpenVaultPicker = useCallback(() => {
+    setIsVaultPickerOpen(true);
+  }, []);
+
+  // Close vault picker overlay
+  const handleCloseVaultPicker = useCallback(() => {
+    setIsVaultPickerOpen(false);
+  }, []);
 
   // Get auth token for assistant requests
   const getAuthToken = useCallback(async () => {
@@ -727,6 +810,9 @@ function AstrogationContent() {
         </div>
       </aside>
 
+      {/* Selection Connector - Spider-Man style tick from rail to selected item */}
+      <SelectionConnector selector=".tree-node-trigger--selected" railX={64} />
+
       {/* Navigation Bar */}
       <nav className="astrogation-nav">
         <Link href="/" className="astrogation-nav__logo">
@@ -771,6 +857,30 @@ function AstrogationContent() {
               />
             </svg>
           </button>
+          {/* Vault Picker Button (Phase 2.3) */}
+          {activeTab === "foundry" && (
+            <button
+              className="nav-action-btn"
+              onClick={handleOpenVaultPicker}
+              title="Insert from Vault"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                width="16"
+                height="16"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <path d="M12 2L2 7l10 5 10-5-10-5z" strokeLinecap="round" strokeLinejoin="round" />
+                <path
+                  d="M2 17l10 5 10-5M2 12l10 5 10-5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </button>
+          )}
           <button
             className="nav-action-btn"
             onClick={handleOpenForge}
@@ -856,6 +966,7 @@ function AstrogationContent() {
           onFoundryDeleteItem={handleFoundryDeleteItem}
           onFoundryDuplicateItem={handleFoundryDuplicateItem}
           onFoundrySetViewport={handleFoundrySetViewport}
+          onFoundryUpdateItemArgs={handleFoundryUpdateItemArgs}
         />
 
         {/* Right Panel - switches based on active tab */}
@@ -922,6 +1033,14 @@ function AstrogationContent() {
           <SpecPanel selectedComponentId={selectedComponentId} />
         )}
       </div>
+
+      {/* Vault Picker Overlay (Phase 2.3) */}
+      <VaultPickerOverlay
+        isOpen={isVaultPickerOpen}
+        presets={presets}
+        onClose={handleCloseVaultPicker}
+        onInsert={handleFoundryAddToCanvas}
+      />
 
       <StatusBar toast={toast} onToastHide={() => dispatch(actions.hideToast())} />
     </div>

@@ -30,6 +30,9 @@ export type { CenterPanelProps } from "./CenterPanel";
 export { VaultView } from "./VaultView";
 export type { VaultViewProps } from "./VaultView";
 
+export { VaultPickerOverlay } from "./VaultPickerOverlay";
+export type { VaultPickerOverlayProps } from "./VaultPickerOverlay";
+
 export { FoundryView } from "./FoundryView";
 export type { FoundryViewProps } from "./FoundryView";
 
@@ -69,6 +72,37 @@ export type { SlideTemplateCategory } from "./slideTemplates";
 export { ComponentPreview } from "./previews/ComponentPreview";
 export type { ComponentPreviewProps } from "./previews/ComponentPreview";
 
+// Registry Map (Phase 2.1)
+export {
+  REGISTRY_MAP,
+  getRegistryComponent,
+  isRegistryComponent,
+  getRegistryKeys,
+  getRegistryComponentsByCategory,
+  getRegistryCategories,
+  renderRegistryComponent,
+  CATALOG_TO_REGISTRY_MAP,
+  getRegistryKeyForCatalog,
+} from "./registry-map";
+export type { RegistryComponentDef } from "./registry-map";
+
 // Vector Editor
 export { VectorEditor } from "./vector-editor";
 export type { VectorEditorProps, VectorDocument, EditorTool } from "./vector-editor";
+
+// Design Cards (Phase 3: mcp-ui compatible proposals)
+export {
+  DesignCard,
+  DesignCardList,
+  createProposalFromPatch,
+  createProposalFromVariant,
+} from "./DesignCard";
+export type {
+  DesignOperation,
+  DesignCardProposal,
+  DesignCardProps,
+  DesignCardListProps,
+} from "./DesignCard";
+
+// Selection Connector (Spider-Man style rail tick)
+export { SelectionConnector } from "./SelectionConnector";
