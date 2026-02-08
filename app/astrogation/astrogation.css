@@ -12344,3 +12344,718 @@
   flex-direction: column;
   gap: 8px;
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   BRIDGE TAB - Figma Bridge Integration
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ─── Browser Controls ─── */
+.bridge-browser-controls {
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border-bottom: 1px solid var(--dawn-08);
+}
+
+.bridge-search-input {
+  width: 100%;
+  padding: 6px 10px;
+  background: var(--dawn-04);
+  border: 1px solid var(--dawn-08);
+  color: var(--dawn);
+  font-family: var(--font-data);
+  font-size: var(--type-xs);
+  letter-spacing: 0.04em;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.bridge-search-input::placeholder {
+  color: var(--dawn-30);
+}
+
+.bridge-search-input:focus {
+  border-color: var(--gold-30);
+}
+
+.bridge-filter-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.bridge-filter-toggle input {
+  accent-color: var(--gold);
+}
+
+.bridge-filter-label {
+  font-family: var(--font-data);
+  font-size: var(--type-xs);
+  color: var(--dawn-50);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* ─── File Info ─── */
+.bridge-file-info {
+  padding: 8px 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--dawn-08);
+}
+
+.bridge-file-name {
+  font-family: var(--font-data);
+  font-size: var(--type-xs);
+  color: var(--dawn-70);
+  font-weight: 500;
+  letter-spacing: 0.04em;
+}
+
+.bridge-file-date {
+  font-family: var(--font-data);
+  font-size: var(--type-xs);
+  color: var(--dawn-30);
+}
+
+/* ─── Tree ─── */
+.bridge-tree {
+  padding: 4px 0;
+}
+
+.bridge-tree-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  cursor: pointer;
+  transition: background 0.1s;
+  min-height: 28px;
+}
+
+.bridge-tree-row:hover {
+  background: var(--dawn-04);
+}
+
+.bridge-tree-row--selected {
+  background: var(--gold-08);
+  border-right: 2px solid var(--gold);
+}
+
+.bridge-tree-expander {
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: var(--dawn-40);
+  cursor: pointer;
+  font-size: 10px;
+  flex-shrink: 0;
+  padding: 0;
+}
+
+.bridge-tree-expander:hover {
+  color: var(--dawn-70);
+}
+
+.bridge-tree-spacer {
+  width: 16px;
+  flex-shrink: 0;
+}
+
+.bridge-tree-icon {
+  font-size: 10px;
+  color: var(--dawn-40);
+  width: 14px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.bridge-tree-icon--component {
+  color: var(--gold);
+}
+
+.bridge-tree-name {
+  font-family: var(--font-data);
+  font-size: var(--type-xs);
+  color: var(--dawn-70);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  min-width: 0;
+}
+
+.bridge-tree-row--selected .bridge-tree-name {
+  color: var(--dawn);
+}
+
+.bridge-tree-count {
+  font-family: var(--font-data);
+  font-size: 9px;
+  color: var(--dawn-30);
+  flex-shrink: 0;
+}
+
+/* ─── Loading / Error / Empty ─── */
+.bridge-loading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 12px;
+  font-family: var(--font-data);
+  font-size: var(--type-xs);
+  color: var(--dawn-50);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.bridge-loading-dot {
+  width: 6px;
+  height: 6px;
+  background: var(--gold);
+  border-radius: 50%;
+  animation: bridgePulse 1s ease-in-out infinite;
+}
+
+@keyframes bridgePulse {
+  0%,
+  100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.bridge-error {
+  padding: 16px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.bridge-error-title {
+  font-family: var(--font-data);
+  font-size: var(--type-xs);
+  color: var(--alert);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.bridge-error-message {
+  font-family: var(--font-data);
+  font-size: var(--type-xs);
+  color: var(--dawn-50);
+  line-height: 1.5;
+}
+
+.bridge-retry-btn {
+  align-self: flex-start;
+  padding: 4px 12px;
+  background: var(--dawn-08);
+  border: 1px solid var(--dawn-15);
+  color: var(--dawn-70);
+  font-family: var(--font-data);
+  font-size: var(--type-xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.bridge-retry-btn:hover {
+  background: var(--dawn-15);
+  border-color: var(--dawn-30);
+  color: var(--dawn);
+}
+
+.bridge-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  text-align: center;
+  gap: 12px;
+}
+
+.bridge-empty-icon {
+  font-size: 32px;
+  color: var(--dawn-20);
+}
+
+.bridge-empty-title {
+  font-family: var(--font-data);
+  font-size: var(--type-sm);
+  color: var(--dawn-50);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.bridge-empty-desc {
+  font-family: var(--font-data);
+  font-size: var(--type-xs);
+  color: var(--dawn-30);
+  line-height: 1.6;
+  max-width: 280px;
+}
+
+/* ─── Preview Panel ─── */
+.bridge-preview-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.bridge-subtabs {
+  display: flex;
+  border-bottom: 1px solid var(--dawn-08);
+  flex-shrink: 0;
+}
+
+.bridge-subtab {
+  flex: 1;
+  padding: 8px 12px;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--dawn-40);
+  font-family: var(--font-data);
+  font-size: var(--type-xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.bridge-subtab:hover {
+  color: var(--dawn-70);
+}
+
+.bridge-subtab--active {
+  color: var(--gold);
+  border-bottom-color: var(--gold);
+}
+
+.bridge-preview-content,
+.bridge-tokens-content,
+.bridge-components-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px;
+}
+
+/* ─── Preview Image ─── */
+.bridge-preview-image-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.bridge-preview-image {
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--dawn-08);
+  background: var(--void-deep);
+}
+
+.bridge-preview-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* ─── Action Buttons ─── */
+.bridge-action-btn {
+  padding: 6px 14px;
+  background: var(--dawn-04);
+  border: 1px solid var(--dawn-15);
+  color: var(--dawn-70);
+  font-family: var(--font-data);
+  font-size: var(--type-xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.bridge-action-btn:hover {
+  background: var(--gold-08);
+  border-color: var(--gold-30);
+  color: var(--dawn);
+}
+
+.bridge-action-btn--sm {
+  padding: 3px 8px;
+  font-size: 9px;
+}
+
+/* ─── SVG Preview ─── */
+.bridge-svg-preview {
+  margin-top: 12px;
+}
+
+.bridge-svg-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+  font-family: var(--font-data);
+  font-size: var(--type-xs);
+  color: var(--dawn-50);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.bridge-svg-code {
+  background: var(--void-deep);
+  border: 1px solid var(--dawn-08);
+  padding: 12px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--dawn-50);
+  line-height: 1.5;
+  overflow-x: auto;
+  max-height: 300px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.bridge-svg-truncated {
+  color: var(--dawn-30);
+  font-style: italic;
+}
+
+/* ─── Token Diff ─── */
+.bridge-token-summary {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.bridge-token-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px 8px;
+  background: var(--dawn-04);
+  border: 1px solid var(--dawn-08);
+}
+
+.bridge-token-stat-value {
+  font-family: var(--font-data);
+  font-size: var(--type-lg);
+  font-weight: 500;
+}
+
+.bridge-token-stat--matched .bridge-token-stat-value {
+  color: #39ff14;
+}
+.bridge-token-stat--drifted .bridge-token-stat-value {
+  color: var(--alert);
+}
+.bridge-token-stat--figma .bridge-token-stat-value {
+  color: var(--gold);
+}
+.bridge-token-stat--code .bridge-token-stat-value {
+  color: var(--dawn-50);
+}
+
+.bridge-token-stat-label {
+  font-family: var(--font-data);
+  font-size: 9px;
+  color: var(--dawn-40);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-top: 4px;
+}
+
+.bridge-token-section {
+  margin-bottom: 16px;
+}
+
+.bridge-token-section-title {
+  font-family: var(--font-data);
+  font-size: var(--type-xs);
+  color: var(--dawn-50);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 8px 0 4px;
+  border-bottom: 1px solid var(--dawn-08);
+  margin-bottom: 4px;
+}
+
+.bridge-token-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--dawn-04);
+  gap: 8px;
+}
+
+.bridge-token-name {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--dawn-70);
+  flex-shrink: 0;
+}
+
+.bridge-token-value,
+.bridge-token-figma-val,
+.bridge-token-code-val {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--dawn-50);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.bridge-token-values {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.bridge-token-arrow {
+  color: var(--dawn-30);
+  font-size: 10px;
+}
+
+.bridge-token-swatch {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border: 1px solid var(--dawn-15);
+  flex-shrink: 0;
+}
+
+.bridge-token-row--drifted .bridge-token-name {
+  color: var(--alert);
+}
+
+.bridge-token-row--matched .bridge-token-name {
+  color: var(--dawn-50);
+}
+
+.bridge-token-more {
+  font-family: var(--font-data);
+  font-size: var(--type-xs);
+  color: var(--dawn-30);
+  padding: 8px 0;
+  text-align: center;
+}
+
+/* ─── Components List ─── */
+.bridge-component-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.bridge-component-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 10px;
+  cursor: pointer;
+  transition: background 0.1s;
+  border: 1px solid transparent;
+}
+
+.bridge-component-item:hover {
+  background: var(--dawn-04);
+  border-color: var(--dawn-08);
+}
+
+.bridge-component-icon {
+  color: var(--gold);
+  font-size: 12px;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.bridge-component-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.bridge-component-name {
+  font-family: var(--font-data);
+  font-size: var(--type-xs);
+  color: var(--dawn-70);
+  letter-spacing: 0.04em;
+}
+
+.bridge-component-desc {
+  font-family: var(--font-data);
+  font-size: 9px;
+  color: var(--dawn-40);
+  line-height: 1.4;
+}
+
+.bridge-component-page {
+  font-family: var(--font-data);
+  font-size: 9px;
+  color: var(--dawn-25);
+}
+
+/* ─── Inspector ─── */
+.bridge-inspector-empty {
+  padding: 24px 12px;
+  text-align: center;
+}
+
+.bridge-inspector-empty-text {
+  font-family: var(--font-data);
+  font-size: var(--type-xs);
+  color: var(--dawn-30);
+  line-height: 1.6;
+}
+
+.bridge-inspector-header {
+  padding: 12px;
+  border-bottom: 1px solid var(--dawn-08);
+}
+
+.bridge-inspector-name {
+  display: block;
+  font-family: var(--font-data);
+  font-size: var(--type-sm);
+  color: var(--dawn);
+  letter-spacing: 0.04em;
+  margin-bottom: 4px;
+}
+
+.bridge-inspector-type {
+  font-family: var(--font-data);
+  font-size: var(--type-xs);
+  color: var(--dawn-40);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.bridge-inspector-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 12px;
+  border-bottom: 1px solid var(--dawn-08);
+}
+
+.bridge-export-section {
+  padding: 12px;
+  border-bottom: 1px solid var(--dawn-08);
+}
+
+.bridge-section-title {
+  font-family: var(--font-data);
+  font-size: 9px;
+  color: var(--dawn-40);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.bridge-export-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.bridge-export-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.bridge-export-label {
+  font-family: var(--font-data);
+  font-size: var(--type-xs);
+  color: var(--dawn-50);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.bridge-export-select {
+  padding: 4px 8px;
+  background: var(--dawn-04);
+  border: 1px solid var(--dawn-15);
+  color: var(--dawn-70);
+  font-family: var(--font-data);
+  font-size: var(--type-xs);
+  cursor: pointer;
+}
+
+.bridge-export-select:focus {
+  outline: none;
+  border-color: var(--gold-30);
+}
+
+/* ─── Properties ─── */
+.bridge-properties {
+  padding: 12px;
+}
+
+.bridge-prop-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 0;
+  border-bottom: 1px solid var(--dawn-04);
+}
+
+.bridge-prop-label {
+  font-family: var(--font-data);
+  font-size: 9px;
+  color: var(--dawn-40);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+.bridge-prop-value {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--dawn-60);
+  text-align: right;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 180px;
+}
+
+.bridge-subsection-title {
+  font-family: var(--font-data);
+  font-size: 9px;
+  color: var(--dawn-30);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-top: 8px;
+  margin-bottom: 4px;
+}
+
+.bridge-fill-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 0;
+}
+
+.bridge-fill-value {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--dawn-50);
+}

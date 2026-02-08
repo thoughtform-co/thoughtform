@@ -30,6 +30,9 @@ import {
   EMPTY_FOUNDRY_DOCUMENT,
 } from "./_components";
 import { FoundryAssistantDock } from "./_components/FoundryAssistantDock";
+import { BridgeBrowserPanel } from "./_components/bridge/BridgeBrowserPanel";
+import { BridgePreviewPanel } from "./_components/bridge/BridgePreviewPanel";
+import { BridgeInspectorPanel } from "./_components/bridge/BridgeInspectorPanel";
 
 // Import state management
 import { astrogationReducer, initialState, actions } from "./_state/astrogationReducer";
@@ -659,13 +662,13 @@ function AstrogationContent() {
   const handleSurveySearch = useCallback(
     async (query: string) => {
       if (query.trim()) {
-        await semanticSearch(query.trim(), "query", searchSpace);
+        await semanticSearch(query.trim(), "query", "briefing");
       } else {
         // Empty query = reload recent items
         await loadItems();
       }
     },
-    [semanticSearch, loadItems, searchSpace]
+    [semanticSearch, loadItems]
   );
 
   // Handle annotation changes from canvas with optimistic updates
@@ -918,9 +921,9 @@ function AstrogationContent() {
             searchQuery={surveySearchQuery}
             onSearchQueryChange={handleSurveySearchQueryChange}
             onSearch={handleSurveySearch}
-            searchSpace={searchSpace}
-            onSearchSpaceChange={setSearchSpace}
           />
+        ) : activeTab === "bridge" ? (
+          <BridgeBrowserPanel />
         ) : activeTab === "foundry" ? (
           <FoundryTemplatesPanel userId={user?.id} onAddToCanvas={handleFoundryAddToCanvas} />
         ) : (
@@ -1009,6 +1012,8 @@ function AstrogationContent() {
             collections={collections}
             onCreateCollection={createCollection}
           />
+        ) : activeTab === "bridge" ? (
+          <BridgeInspectorPanel />
         ) : activeTab === "foundry" ? (
           <DialsPanel
             selectedComponentId={selectedComponentId}

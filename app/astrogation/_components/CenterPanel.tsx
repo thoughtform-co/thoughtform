@@ -1,6 +1,7 @@
 "use client";
 
 import { getComponentById } from "../catalog";
+import { BridgePreviewPanel } from "./bridge/BridgePreviewPanel";
 import type {
   UIComponentPreset,
   StyleConfig,
@@ -135,6 +136,17 @@ export function CenterPanel({
           <span className="workspace-tab__icon">⎔</span>
           <span className="workspace-tab__label">SURVEY</span>
         </div>
+        <div
+          className={`workspace-tab ${activeTab === "bridge" ? "workspace-tab--active" : ""}`}
+          onClick={() => onTabChange("bridge")}
+          role="tab"
+          aria-selected={activeTab === "bridge"}
+          tabIndex={0}
+          onKeyDown={(e) => e.key === "Enter" && onTabChange("bridge")}
+        >
+          <span className="workspace-tab__icon">⬘</span>
+          <span className="workspace-tab__label">BRIDGE</span>
+        </div>
       </div>
 
       {/* Tab Content */}
@@ -206,6 +218,7 @@ export function CenterPanel({
             projects={projects}
           />
         )}
+        {activeTab === "bridge" && <BridgePreviewPanel />}
       </div>
     </div>
   );

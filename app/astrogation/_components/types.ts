@@ -31,7 +31,7 @@ export interface StyleConfig {
   styleVars?: Record<string, string>;
 }
 
-export type WorkspaceTab = "vault" | "foundry" | "survey";
+export type WorkspaceTab = "vault" | "foundry" | "survey" | "bridge";
 
 // ═══════════════════════════════════════════════════════════════
 // SLIDE TEMPLATE TYPES (Arc Editor Format - 16:9, 1920x1080)
