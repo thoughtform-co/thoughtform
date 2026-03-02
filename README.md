@@ -1,6 +1,6 @@
 # Thoughtform
 
-> AI isn't software to command. It's a strange intelligence to navigate. Thoughtform is the interface.
+> Thoughtform is the discipline of navigating the intelligence between thought and form. As the Navigator, I use this repository to make that philosophy tangible as a public navigation surface.
 
 For years I wanted to build a full Three.js interactive website for Thoughtform, but never had the budget or the technical ability to do it solo. That changed at the end of 2025 when a new generation of LLMs arrived that were not only smarter, but genuinely better at frontend and design work. I could finally build the thing I had been seeing in my head.
 
