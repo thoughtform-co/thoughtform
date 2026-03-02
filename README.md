@@ -63,12 +63,7 @@ npm run dev
 
 Open [http://localhost:3003](http://localhost:3003)
 
-Create `.env.local` with your Supabase credentials:
-
-```
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
-```
+Configure your local project settings with your database and auth credentials. See the repo's configuration example for required fields.
 
 Additional commands:
 
