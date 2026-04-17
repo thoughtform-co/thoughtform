@@ -49,6 +49,8 @@ import { ManifestoVideoStack } from "./ManifestoVideoStack";
 import { ManifestoMobileTabs, type ManifestoMobileTabId } from "./ManifestoMobileTabs";
 import { RunwayArrows } from "./RunwayArrows";
 import { MorphingCTAButtons } from "./MorphingCTAButtons";
+import { HeroContent } from "./HeroContent";
+import { CanonicalRail } from "./CanonicalRail";
 import {
   ServicesDeck,
   SERVICES_CARD_WIDTH,
@@ -824,6 +826,9 @@ function NavigationCockpitInner() {
 
   return (
     <>
+      {/* Canonical HUD rail (Brand Codex Grid New spec) — /v3 only */}
+      <CanonicalRail />
+
       {/* Fixed Background - V2 Particle System (Manifold) */}
       <CanvasErrorBoundary>
         <ParticleCanvasV2
@@ -935,6 +940,16 @@ function NavigationCockpitInner() {
           tDefToManifesto={tDefToManifesto}
           frameButtonRef={frameButtonRef}
         />
+      )}
+
+      {/* v2-flavored hero overlay — tagline + CTA + readouts anchored under
+          the wordmark so the left column reads as one editorial composition.
+          Positioned independently of the bridge-frame, which keeps its own
+          role for the GlitchText description + definition/manifesto morph. */}
+      {!isMobile && (
+        <div className="hero-v2-anchor">
+          <HeroContent tHeroToDef={tHeroToDef} tDefToManifesto={tDefToManifesto} />
+        </div>
       )}
 
       {/* ═══════════════════════════════════════════════════════════════════
@@ -1107,45 +1122,10 @@ function NavigationCockpitInner() {
               }
         }
       >
-        {/* Gold corner brackets - visible during hero and definition states */}
-        {/* Hero state: full opacity gold corners (like terminal corners) */}
-        {/* Definition state: card-style corners that fade during manifesto */}
-        {/* Show on both desktop and mobile */}
+        {/* Hero state: no frame. Copy sits in negative space anchored by the
+             canonical rail. Corner brackets only appear from the definition
+             phase onward (where they frame the morphed definition/manifesto card). */}
         <>
-          {/* Hero state corners - visible immediately on page load (before any scroll) */}
-          {tHeroToDef < 0.7 && (
-            <>
-              <div
-                className="terminal-corner terminal-corner-tl"
-                style={{
-                  position: "absolute",
-                  top: -1,
-                  left: -1,
-                  width: "20px",
-                  height: "20px",
-                  borderTop: `2px solid rgba(202, 165, 84, 1)`,
-                  borderLeft: `2px solid rgba(202, 165, 84, 1)`,
-                  pointerEvents: "none",
-                  zIndex: 50,
-                }}
-              />
-              <div
-                className="terminal-corner terminal-corner-br"
-                style={{
-                  position: "absolute",
-                  bottom: -1,
-                  right: -1,
-                  width: "20px",
-                  height: "20px",
-                  borderBottom: `2px solid rgba(202, 165, 84, 1)`,
-                  borderRight: `2px solid rgba(202, 165, 84, 1)`,
-                  pointerEvents: "none",
-                  zIndex: 50,
-                }}
-              />
-            </>
-          )}
-
           {/* Definition state card corners - fade during manifesto */}
           {tHeroToDef > 0.7 && (
             <>
@@ -1253,18 +1233,9 @@ function NavigationCockpitInner() {
             zIndex: 2,
             ["--frame-opacity" as string]: 1 - tDefToManifesto,
             gap: isMobile ? "16px" : "20px",
-            // Restore frame border and background during hero state (before bridge-frame has its own styling)
-            // Only show when bridge-frame doesn't have its own border/background yet (tHeroToDef < 0.7)
-            // Match opacity/transparency of other sections (same as terminal frame)
-            border:
-              tHeroToDef < 0.7
-                ? `1px solid rgba(236, 227, 214, ${0.1 * (1 - tDefToManifesto)})`
-                : undefined,
-            background:
-              tHeroToDef < 0.7 ? `rgba(10, 9, 8, ${0.25 * (1 - tDefToManifesto)})` : undefined,
-            backdropFilter: tHeroToDef < 0.7 ? `blur(${8 * (1 - tDefToManifesto)}px)` : undefined,
-            WebkitBackdropFilter:
-              tHeroToDef < 0.7 ? `blur(${8 * (1 - tDefToManifesto)}px)` : undefined,
+            // Hero state intentionally renders in negative space — no frame,
+            // no backdrop, no blur. The bridge-frame itself takes over its
+            // own styling from the definition phase onward.
           }}
         >
           {/* Fade out the manifesto/definition content as we morph into services */}
@@ -1334,12 +1305,8 @@ function NavigationCockpitInner() {
                 }}
               >
                 <GlitchText
-                  initialText={`AI isn't software to command.
-It's a strange intelligence to navigate.
-Thoughtform is the interface.`}
-                  finalText={`(θɔːtfɔːrm / THAWT-form)
-the interface for navigating
-human-AI collaboration.`}
+                  initialText={`AI isn't software to command — it's an intelligence to navigate.`}
+                  finalText={`A new intelligence asks for a new grammar. This is the grammar.`}
                   progress={tHeroToDef}
                   className="bridge-content-glitch"
                 />
