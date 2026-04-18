@@ -1,0 +1,139 @@
+/* ═══════════════════════════════════════════════════════════════════
+   /v3 MANIFESTO PHASE — Continuum statement + Tool ↔ Collaborator spectrum
+   v5 Clean Bridge section-3 absorbed into the widened bridge-frame.
+   Scoped under .v4-landing.
+   ═══════════════════════════════════════════════════════════════════ */
+
+.v4-landing .continuum {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(32px, 4vh, 56px);
+  width: 100%;
+}
+
+/* ── Big statement ── */
+.v4-landing .continuum__statement {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 780px;
+}
+
+.v4-landing .continuum__headline {
+  font-family: var(--font-ibm-plex, "IBM Plex Sans", system-ui, sans-serif);
+  font-weight: 400;
+  font-size: clamp(26px, 3.2vw, 40px);
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  color: var(--dawn);
+  margin: 0;
+  text-wrap: balance;
+}
+
+.v4-landing .continuum__headline em {
+  font-style: italic;
+  color: var(--gold);
+}
+
+.v4-landing .continuum__sub {
+  font-family: var(--font-ibm-plex, "IBM Plex Sans", system-ui, sans-serif);
+  font-size: clamp(13px, 1.05vw, 16px);
+  line-height: 1.6;
+  color: var(--dawn-50, rgba(235, 227, 214, 0.5));
+  margin: 0;
+  max-width: 62ch;
+}
+
+/* ── Horizontal spectrum rail ── */
+.v4-landing .continuum__spectrum {
+  position: relative;
+  padding-top: 20px;
+}
+
+/* v4: rail + diamond markers are rendered as particle formations in the R3F
+   scene (components/hud/r3f/ContinuumSpectrumField.tsx) — hiding the CSS
+   overlays so the particle crystallization reads clean. */
+.v4-landing .continuum__rail,
+.v4-landing .continuum__diamond,
+.v4-landing .continuum__diamond--l,
+.v4-landing .continuum__diamond--r,
+.v4-landing .continuum__diamond--c {
+  display: none;
+}
+
+/* Preserve the rail's vertical space so the 3-column layout below keeps its
+   rhythm with the headline and doesn't collapse. */
+.v4-landing .continuum__spectrum {
+  min-height: 48px;
+}
+
+/* ── Three columns ── */
+.v4-landing .continuum__cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: clamp(20px, 3vw, 48px);
+  margin-top: 20px;
+}
+
+.v4-landing .continuum__col {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 32ch;
+}
+
+.v4-landing .continuum__col--center {
+  text-align: center;
+  margin: 0 auto;
+}
+
+.v4-landing .continuum__col--right {
+  text-align: right;
+  margin-left: auto;
+}
+
+.v4-landing .continuum__col-label {
+  font-family: var(--font-ibm-plex-mono, "IBM Plex Mono", ui-monospace, monospace);
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+.v4-landing .continuum__col-title {
+  font-family: var(--font-ibm-plex, "IBM Plex Sans", system-ui, sans-serif);
+  font-weight: 500;
+  font-size: clamp(14px, 1.15vw, 17px);
+  line-height: 1.25;
+  letter-spacing: -0.005em;
+  color: var(--dawn);
+}
+
+.v4-landing .continuum__col-desc {
+  font-family: var(--font-ibm-plex, "IBM Plex Sans", system-ui, sans-serif);
+  font-size: clamp(12px, 0.95vw, 14px);
+  line-height: 1.6;
+  color: var(--dawn-50, rgba(235, 227, 214, 0.5));
+}
+
+/* ── Mobile fallback: stack vertically, drop the horizontal rail ── */
+@media (max-width: 900px) {
+  .v4-landing .continuum__spectrum {
+    padding-top: 0;
+  }
+  .v4-landing .continuum__rail {
+    display: none;
+  }
+  .v4-landing .continuum__cols {
+    grid-template-columns: 1fr;
+    gap: 24px;
+    margin-top: 0;
+  }
+  .v4-landing .continuum__col,
+  .v4-landing .continuum__col--center,
+  .v4-landing .continuum__col--right {
+    text-align: left;
+    margin: 0;
+    max-width: 100%;
+  }
+}
