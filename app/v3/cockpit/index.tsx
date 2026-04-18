@@ -42,14 +42,14 @@ import { MobileModuleTabs } from "./MobileModuleTabs";
 import { ConnectorLines } from "./ConnectorLines";
 import { SigilSection } from "./SigilSection";
 import { HeroBackgroundSigil } from "./HeroBackgroundSigil";
-import { ManifestoTerminal } from "./ManifestoTerminal";
-import { ManifestoSources } from "./ManifestoSources";
-import { ManifestoVideoStack } from "./ManifestoVideoStack";
-import { ManifestoMobileTabs, type ManifestoMobileTabId } from "./ManifestoMobileTabs";
+// ManifestoTerminal / ManifestoSources / ManifestoVideoStack / ManifestoMobileTabs
+// are no longer mounted — the manifesto phase was replaced by the Continuum
+// spectrum (Commit C). Files remain on disk for reference / potential revisit.
 import { RunwayArrows } from "./RunwayArrows";
 import { MorphingCTAButtons } from "./MorphingCTAButtons";
 import { HeroContent } from "./HeroContent";
 import { TfBrand } from "./TfBrand";
+import { ContinuumSpectrum } from "./ContinuumSpectrum";
 import { CanonicalRail } from "./CanonicalRail";
 import {
   ServicesDeck,
@@ -109,7 +109,6 @@ function NavigationCockpitInner() {
   const [editingServiceSigilIndex, setEditingServiceSigilIndex] = useState<number | null>(null);
   const [isBridgeHovered, setIsBridgeHovered] = useState(false);
   const [isParticleAdminOpen, setIsParticleAdminOpen] = useState(false);
-  const [mobileManifestoTab, setMobileManifestoTab] = useState<ManifestoMobileTabId>("manifesto");
   const [mobileFrontCardIndex, setMobileFrontCardIndex] = useState<number>(2); // Start with Strategies (index 2)
 
   const handleOpenSigilEditor = useCallback((cardIndex: number) => {
@@ -560,12 +559,12 @@ function NavigationCockpitInner() {
 
   // Frame growth values - define first since used in position calculations
   const baseWidth = 500;
-  const widthGrowth = 280; // 500px → 780px (increased from 200 for wider manifesto panel)
+  const widthGrowth = 400; // 500px → 900px (Commit C: widen for Continuum spectrum 3-col row)
   const baseHeight = 100;
   const heightGrowth = 300; // 100px → 400px (min-height)
-  // Note: Actual content height is ~720px to fit question + manifesto text
-  // Use actual content height for centering calculation
-  const actualContentHeight = 720;
+  // Actual target content height for the Continuum statement + spectrum
+  // (v3-landing .continuum statement ~180px + spectrum rail + 3-column row ~280px + gaps)
+  const actualContentHeight = 560;
 
   // Manifesto CENTERED position: bottom = 50vh - (actualHeight/2)
   // This keeps the frame vertically centered based on actual content
@@ -1314,14 +1313,10 @@ function NavigationCockpitInner() {
                         }),
                     }}
                   >
-                    {tDefToManifesto > 0.95 && manifestoRevealProgress > 0 && (
+                    {tDefToManifesto > 0.3 && (
                       <div
                         style={{
                           width: "100%",
-                          transform: isMobile
-                            ? undefined
-                            : `scale(${bridgeFrameStyles.contentScale})`,
-                          transformOrigin: "top left",
                           opacity: isMobile
                             ? 1 - tServicesCardsVisual
                             : Math.max(0, 1 - tManifestoToServices * 3),
@@ -1332,28 +1327,9 @@ function NavigationCockpitInner() {
                             : tManifestoToServices > 0.3
                               ? "none"
                               : "auto",
-                          ...(isMobile && {
-                            flex: 1,
-                            display: "flex",
-                            flexDirection: "column" as const,
-                            minHeight: 0,
-                          }),
                         }}
                       >
-                        {isMobile ? (
-                          <ManifestoMobileTabs
-                            revealProgress={manifestoRevealProgress}
-                            isVisible={true}
-                            activeTab={mobileManifestoTab}
-                            onStartJourney={() => handleNavigate("services")}
-                            tServicesCards={tServicesCards}
-                          />
-                        ) : (
-                          <ManifestoTerminal
-                            revealProgress={manifestoRevealProgress}
-                            isActive={true}
-                          />
-                        )}
+                        <ContinuumSpectrum />
                       </div>
                     )}
                   </div>
@@ -1660,101 +1636,11 @@ function NavigationCockpitInner() {
           </div>
         )}
 
-        {/* Terminal frame elements - appear during manifesto transition (behind text) */}
-        <div
-          className="terminal-content-wrapper"
-          style={{
-            // Cross-fade in during transition
-            opacity:
-              tDefToManifesto * (isMobile ? 1 - Math.min(1, Math.max(0, tServicesCards * 2)) : 1),
-            visibility:
-              tDefToManifesto > 0 &&
-              (!isMobile || 1 - Math.min(1, Math.max(0, tServicesCards * 2)) > 0.05)
-                ? "visible"
-                : "hidden",
-            // Keep absolute positioning - frame height is controlled by parent's height style
-            position: "absolute",
-            top: 0,
-            left: 0,
-            width: "100%",
-            height: "100%",
-            // Lower z-index until manifesto starts revealing, then bring to front
-            zIndex: manifestoRevealProgress > 0 ? 3 : 1,
-            // Don't constrain height - let content flow naturally within overflow:hidden parent
-            // IMPORTANT: this layer is purely decorative (frame + scanlines). It must never
-            // intercept pointer events, otherwise it can block clicking the Strategies sigil editor.
-            pointerEvents: "none",
-          }}
-        >
-          {/* Gold corner accents */}
-          <div className="terminal-corner terminal-corner-tl"></div>
-          <div className="terminal-corner terminal-corner-br"></div>
-
-          {/* Terminal window frame */}
-          <div
-            className="terminal-header"
-            style={{
-              // This overlay layer is pointer-events:none, but we need the tab buttons clickable on mobile.
-              pointerEvents:
-                isMobile &&
-                tDefToManifesto > 0.95 &&
-                manifestoRevealProgress > 0 &&
-                tServicesCards < 0.05
-                  ? "auto"
-                  : "none",
-              // Fade out header text and border as we transition to services
-              opacity: Math.max(0, 1 - tServicesCardsVisual * 1.5), // Faster fade: 1.5x multiplier
-              // Fade out border by reducing border opacity
-              borderBottomColor: `rgba(236, 227, 214, ${0.1 * Math.max(0, 1 - tServicesCardsVisual * 1.5)})`,
-              transition: "none", // No CSS transitions - controlled by scroll-driven animation
-            }}
-          >
-            <span className="terminal-title">thoughtform@manifesto:~</span>
-            {isMobile && tDefToManifesto > 0.95 && manifestoRevealProgress > 0 && (
-              <div className="terminal-tabs" aria-label="Manifesto tabs">
-                <button
-                  type="button"
-                  className={`terminal-tab ${mobileManifestoTab === "manifesto" ? "active" : ""}`}
-                  aria-pressed={mobileManifestoTab === "manifesto"}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setMobileManifestoTab("manifesto");
-                  }}
-                >
-                  MANIFESTO
-                </button>
-                <button
-                  type="button"
-                  className={`terminal-tab ${mobileManifestoTab === "sources" ? "active" : ""}`}
-                  aria-pressed={mobileManifestoTab === "sources"}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setMobileManifestoTab("sources");
-                  }}
-                >
-                  SOURCES
-                </button>
-                <button
-                  type="button"
-                  className={`terminal-tab ${mobileManifestoTab === "voices" ? "active" : ""}`}
-                  aria-pressed={mobileManifestoTab === "voices"}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setMobileManifestoTab("voices");
-                  }}
-                >
-                  VOICES
-                </button>
-              </div>
-            )}
-          </div>
-
-          {/* Terminal content */}
-          <div className="terminal-body">
-            {/* Scanlines overlay */}
-            <div className="terminal-scanlines"></div>
-          </div>
-        </div>
+        {/* Commit C removed the terminal-content-wrapper (header + scanlines +
+            mobile manifesto tabs). The Continuum spectrum renders as the
+            manifesto-phase content and doesn't need the decorative terminal
+            chrome. See ManifestoTerminal / ManifestoMobileTabs files for
+            reference — they're no longer mounted. */}
       </div>
 
       {/* Mobile Services: Back cards stack (Keynotes, Workshop) - positioned behind bridge-frame */}
@@ -1827,36 +1713,10 @@ function NavigationCockpitInner() {
         )}
       </AdminGate>
 
-      {/* Manifesto Sources - Fixed left rail, appears with manifesto text, fades out quickly at services start */}
-      {/* Desktop only - mobile shows sources in tabbed interface */}
-      {!isMobile && (
-        <div
-          style={{
-            // Fade out 3x faster - complete by 33% of transition
-            opacity: Math.max(0, 1 - tManifestoToServices * 3),
-            visibility: tManifestoToServices < 0.35 ? "visible" : "hidden",
-          }}
-        >
-          <ManifestoSources isVisible={manifestoRevealProgress > 0.1} />
-        </div>
-      )}
-
-      {/* Manifesto Video Stack - Fixed right side, appears with manifesto text, fades out quickly at services start */}
-      {/* Desktop only - mobile shows voices in tabbed interface */}
-      {!isMobile && (
-        <div
-          style={{
-            // Fade out 3x faster - complete by 33% of transition
-            opacity: Math.max(0, 1 - tManifestoToServices * 3),
-            visibility: tManifestoToServices < 0.35 ? "visible" : "hidden",
-          }}
-        >
-          <ManifestoVideoStack
-            isVisible={manifestoRevealProgress > 0.1}
-            revealProgress={manifestoRevealProgress}
-          />
-        </div>
-      )}
+      {/* Commit C removed the ManifestoSources (left sidebar) and
+          ManifestoVideoStack (right sidebar). v5 Clean Bridge's continuum
+          section doesn't have these — spectrum speaks for itself. Files
+          stay on disk for reference. */}
 
       {/* Services Deck - Three service cards that fan out (desktop only) */}
       {!isMobile && (
