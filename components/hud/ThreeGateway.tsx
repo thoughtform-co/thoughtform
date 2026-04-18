@@ -1284,15 +1284,23 @@ function FramedBorderGateway({
 }
 
 // ─── FLYING CAMERA ───
-function FlyingCamera({ scrollProgress, gatewayX }: { scrollProgress: number; gatewayX: number }) {
+// Camera is locked to the portal's (x, y) so scrolling flies straight through
+// the wormhole center instead of grazing its left edge.
+function FlyingCamera({
+  scrollProgress,
+  gatewayX,
+  gatewayY,
+}: {
+  scrollProgress: number;
+  gatewayX: number;
+  gatewayY: number;
+}) {
   const { camera } = useThree();
 
   useFrame(() => {
     const z = scrollProgress * 18 * 5;
-    const x = scrollProgress < 0.08 ? gatewayX * (scrollProgress / 0.08) : gatewayX;
-
-    camera.position.set(x, 0.15, z);
-    camera.lookAt(gatewayX, 0.15, z + 10);
+    camera.position.set(gatewayX, gatewayY, z);
+    camera.lookAt(gatewayX, gatewayY, z + 10);
   });
 
   return null;
@@ -1648,7 +1656,11 @@ function GatewayScene({ scrollProgress, config }: GatewaySceneProps) {
 
   return (
     <>
-      <FlyingCamera scrollProgress={scrollProgress} gatewayX={config.positionX} />
+      <FlyingCamera
+        scrollProgress={scrollProgress}
+        gatewayX={config.positionX}
+        gatewayY={config.positionY + 0.05}
+      />
 
       <group
         position={[config.positionX, config.positionY + 0.05, 4]}
