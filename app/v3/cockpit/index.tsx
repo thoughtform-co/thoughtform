@@ -49,6 +49,7 @@ import { ManifestoMobileTabs, type ManifestoMobileTabId } from "./ManifestoMobil
 import { RunwayArrows } from "./RunwayArrows";
 import { MorphingCTAButtons } from "./MorphingCTAButtons";
 import { HeroContent } from "./HeroContent";
+import { TfBrand } from "./TfBrand";
 import { CanonicalRail } from "./CanonicalRail";
 import {
   ServicesDeck,
@@ -138,7 +139,7 @@ function NavigationCockpitInner() {
     return Number.isFinite(parsed) ? parsed : 60;
   });
   const hudSideInsetPx = railWidthPx + 120; // Matches: calc(var(--rail-width) + 120px)
-  const definitionHeightRef = useRef<number>(280);
+  const definitionHeightRef = useRef<number>(420);
   const lastDefinitionHeightMeasureTsRef = useRef(0);
 
   // Keep rail width in sync on resize (media queries can change --rail-width).
@@ -616,7 +617,7 @@ function NavigationCockpitInner() {
     // Stage A: Definition → Terminal (question-only) height (driven by tDefToManifesto)
     // Stage B: Terminal height expands as manifesto text reveals (driven by manifestoRevealProgress)
     const definitionContentHeight = Math.max(
-      160,
+      360,
       Math.min(actualContentHeight, definitionHeightRef.current)
     );
     const terminalCollapsedHeightPx = Math.max(definitionContentHeight, 400);
@@ -1260,7 +1261,7 @@ function NavigationCockpitInner() {
               const defActive = fadeDef > 0.5 && tDefToManifesto < 0.05;
               const manifestoActive = fadeManifesto > 0.5;
               return (
-                <>
+                <div className="bridge-phase-stack">
                   {/* HERO PHASE — bottom-left v2 hero block */}
                   <div
                     className="bridge-phase bridge-phase--hero"
@@ -1268,25 +1269,18 @@ function NavigationCockpitInner() {
                     style={{
                       opacity: fadeHero,
                       visibility: fadeHero > 0.01 ? "visible" : "hidden",
-                      position: "relative",
-                      width: "100%",
                     }}
                   >
                     <HeroContent />
                   </div>
 
-                  {/* DEFINITION PHASE — Commit B will swap this placeholder for TfBrand */}
+                  {/* DEFINITION PHASE — TfBrand block with WordmarkSans above */}
                   <div
                     className="bridge-phase bridge-phase--def"
                     data-active={defActive ? "true" : "false"}
                     style={{
                       opacity: fadeDef,
                       visibility: fadeDef > 0.01 ? "visible" : "hidden",
-                      position: "absolute",
-                      inset: 0,
-                      padding: "inherit",
-                      display: "flex",
-                      flexDirection: "column",
                       gap: isMobile ? "12px" : "16px",
                     }}
                   >
@@ -1294,18 +1288,15 @@ function NavigationCockpitInner() {
                       <div
                         className="card-wordmark"
                         style={{
-                          width: isMobile ? "min(210px, 70vw)" : "320px",
-                          maxWidth: isMobile ? "min(210px, 70vw)" : "320px",
+                          width: isMobile ? "min(210px, 70vw)" : "280px",
+                          maxWidth: isMobile ? "min(210px, 70vw)" : "280px",
+                          marginBottom: "4px",
                         }}
                       >
                         <WordmarkSans color="var(--dawn)" />
                       </div>
                     )}
-                    <p className="bridge-def-placeholder">
-                      A new intelligence asks for a new grammar.
-                      <br />
-                      This is the grammar.
-                    </p>
+                    <TfBrand />
                   </div>
 
                   {/* MANIFESTO PHASE — Commit C replaces ManifestoTerminal with the Continuum spectrum */}
@@ -1315,11 +1306,6 @@ function NavigationCockpitInner() {
                     style={{
                       opacity: fadeManifesto,
                       visibility: fadeManifesto > 0.01 ? "visible" : "hidden",
-                      position: "absolute",
-                      inset: 0,
-                      padding: "inherit",
-                      display: "flex",
-                      flexDirection: "column",
                       // Mobile: allow inner scroll
                       ...(isMobile &&
                         tDefToManifesto > 0.95 &&
@@ -1371,7 +1357,7 @@ function NavigationCockpitInner() {
                       </div>
                     )}
                   </div>
-                </>
+                </div>
               );
             })()}
           </div>

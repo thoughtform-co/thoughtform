@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { NavigationCockpitV2 } from "./cockpit";
 import { getParticleConfig } from "@/lib/particle-config-server";
 import "./cockpit/hero-v2.css";
+import "./cockpit/tf-brand.css";
 import "./cockpit/canonical-rail.css";
 
 export const metadata: Metadata = {

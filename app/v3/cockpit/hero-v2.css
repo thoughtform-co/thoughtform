@@ -5,14 +5,18 @@
    Scoped under .v3-landing so /, /v2 stay untouched.
    ═══════════════════════════════════════════════════════════════════ */
 
-/* Bridge-frame phase wrappers — three cross-fading blocks that share the same
-   bottom-left footprint inside the bridge-frame. Parent controls opacity; each
-   block fills the frame while its opacity > 0, goes non-interactive when it
-   drops. */
+/* Bridge-frame phase stack — three cross-fading blocks share the same grid
+   cell so the frame sizes to the tallest visible phase. Parent controls
+   opacity via inline styles; only the active phase is interactive. */
+.v3-landing .bridge-phase-stack {
+  display: grid;
+  grid-template-columns: 1fr;
+  width: 100%;
+}
+
 .v3-landing .bridge-phase {
-  position: absolute;
-  inset: 0;
-  padding: inherit;
+  grid-column: 1;
+  grid-row: 1;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
