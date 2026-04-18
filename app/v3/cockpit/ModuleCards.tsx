@@ -6,6 +6,7 @@ interface ModuleCardProps {
   id: string;
   title: string;
   description: string;
+  tag?: string;
 }
 
 interface ModuleCardsProps {
@@ -17,19 +18,25 @@ interface ModuleCardsProps {
 
 const MODULE_CARDS_DATA: ModuleCardProps[] = [
   {
-    id: "VECTOR_01",
-    title: "NAVIGATE",
-    description: "Meaning is geometry. Navigate it.",
+    id: "AEB_01",
+    title: "ADOPT",
+    description:
+      "Give people capable tools and show them what AI actually is — not a rollout, a navigation lesson.",
+    tag: "See",
   },
   {
-    id: "VECTOR_02",
-    title: "COLLABORATE",
-    description: "Tool and partner blur. Develop intuition for both.",
+    id: "AEB_02",
+    title: "ENCODE",
+    description:
+      "Turn individual intuition into reusable AI Skills. Knowledge moves, people don't have to.",
+    tag: "Crystallize",
   },
   {
-    id: "VECTOR_03",
+    id: "AEB_03",
     title: "BUILD",
-    description: "Thought becomes form. Build anything.",
+    description:
+      "The encoded knowledge reveals what to build. Domain experts ship software in days instead of months.",
+    tag: "Ship",
   },
 ];
 
@@ -114,7 +121,10 @@ export const ModuleCards = forwardRef<HTMLDivElement, ModuleCardsProps>(function
             }}
           >
             <div className="module-connect" />
-            <h3 className="module-title">{card.title}</h3>
+            <div className="module-head">
+              <h3 className="module-title">{card.title}</h3>
+              {card.tag && <span className="module-tag">{card.tag}</span>}
+            </div>
             <p className="module-desc">{card.description}</p>
           </div>
         );

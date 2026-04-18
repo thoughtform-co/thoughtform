@@ -5,24 +5,51 @@
    Scoped under .v3-landing so /, /v2 stay untouched.
    ═══════════════════════════════════════════════════════════════════ */
 
-/* Fixed anchor — places the hero copy in the upper-left content zone,
-   directly beneath the wordmark, aligned to the same left rail + 120px axis. */
-.v3-landing .hero-v2-anchor {
-  position: fixed;
-  left: calc(var(--rail-width, 60px) + 120px);
-  top: clamp(220px, 26vh, 280px);
-  z-index: 10;
+/* Bridge-frame phase wrappers — three cross-fading blocks that share the same
+   bottom-left footprint inside the bridge-frame. Parent controls opacity; each
+   block fills the frame while its opacity > 0, goes non-interactive when it
+   drops. */
+.v3-landing .bridge-phase {
+  position: absolute;
+  inset: 0;
+  padding: inherit;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
   pointer-events: none;
+  transition: opacity 120ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.v3-landing .hero-v2-anchor > * {
+.v3-landing .bridge-phase[data-active="true"] {
   pointer-events: auto;
 }
 
-@media (max-width: 960px) {
-  .v3-landing .hero-v2-anchor {
-    display: none;
-  }
+/* Temporary placeholder in the definition phase — Commit B swaps for TfBrand */
+.v3-landing .bridge-def-placeholder {
+  font-family: var(--font-ibm-plex, "IBM Plex Sans", system-ui, sans-serif);
+  font-weight: 300;
+  font-size: clamp(16px, 1.3vw, 20px);
+  line-height: 1.4;
+  color: var(--dawn-70, rgba(235, 227, 214, 0.7));
+  margin: 0;
+  max-width: 36ch;
+  text-wrap: balance;
+}
+
+/* Module-card tag chip — renders next to the ADOPT / ENCODE / BUILD title */
+.v3-landing .module-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+.v3-landing .module-tag {
+  font-family: var(--font-ibm-plex-mono, "IBM Plex Mono", ui-monospace, monospace);
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--gold);
+  opacity: 0.7;
 }
 
 .v3-landing .hero-v2 {

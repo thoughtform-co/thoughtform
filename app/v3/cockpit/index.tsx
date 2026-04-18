@@ -27,7 +27,6 @@ const ThreeGateway = dynamic(
 import { HUDFrame, NavigationBarHandle } from "@/components/hud/HUDFrame";
 import { Wordmark } from "@/components/hud/Wordmark";
 import { WordmarkSans } from "@/components/hud/WordmarkSans";
-import { GlitchText } from "@/components/hud/GlitchText";
 import { ParticleWordmarkMorph } from "@/components/hud/ParticleWordmarkMorph";
 import type { ParticlePosition } from "@/components/hud/ThoughtformSigil";
 import { useLenis } from "@/lib/hooks/useLenis";
@@ -942,16 +941,6 @@ function NavigationCockpitInner() {
         />
       )}
 
-      {/* v2-flavored hero overlay — tagline + CTA + readouts anchored under
-          the wordmark so the left column reads as one editorial composition.
-          Positioned independently of the bridge-frame, which keeps its own
-          role for the GlitchText description + definition/manifesto morph. */}
-      {!isMobile && (
-        <div className="hero-v2-anchor">
-          <HeroContent tHeroToDef={tHeroToDef} tDefToManifesto={tDefToManifesto} />
-        </div>
-      )}
-
       {/* ═══════════════════════════════════════════════════════════════════
           BRIDGE FRAME - Unified text container that transitions from hero to definition
           SAME FRAME slides UP from bottom to center, only text content changes
@@ -1257,135 +1246,134 @@ function NavigationCockpitInner() {
                 : {}),
             }}
           >
-            {/* Wordmark inside card - appears when entering definition, fades during manifesto */}
-            {/* Show on both desktop and mobile */}
-            {tHeroToDef > 0.7 && tDefToManifesto < 1 && !isManifestoTerminalMode && (
-              <div
-                className="card-wordmark"
-                style={{
-                  opacity: cardOpacity,
-                  visibility: cardOpacity > 0 ? "visible" : "hidden",
-                  width: isMobile ? "min(210px, 70vw)" : "320px",
-                  maxWidth: isMobile ? "min(210px, 70vw)" : "320px",
-                  marginBottom: isMobile ? "12px" : "16px", // Space between logo and pronunciation
-                }}
-              >
-                <WordmarkSans color="var(--dawn)" />
-              </div>
-            )}
-            <div
-              className="hero-tagline hero-tagline-v2 hero-tagline-main"
-              style={{
-                // Container for overlapping text - relative positioning
-                position: "relative",
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-                width: "100%",
-              }}
-            >
-              {/* Two-stage glitch transformation:
-                Stage 1 (tHeroToDef): Hero text → Definition text  
-                Stage 2 (tDefToManifesto): Definition text → Question text
-                Pure opacity cross-fade - both elements overlap */}
+            {/* ═══════════════════════════════════════════════════════════════════
+                THREE CROSS-FADING PHASE BLOCKS
+                hero (tHeroToDef < 0.7) → def (tHeroToDef > 0.7) → manifesto (tDefToManifesto > 0)
+                Each phase is absolutely positioned and fades on its own opacity.
+                ═══════════════════════════════════════════════════════════════════ */}
+            {(() => {
+              const fadeHero = Math.max(0, 1 - tHeroToDef / 0.7) * (1 - tDefToManifesto);
+              const fadeDef =
+                Math.max(0, Math.min(1, (tHeroToDef - 0.7) / 0.3)) * (1 - tDefToManifesto);
+              const fadeManifesto = tDefToManifesto;
+              const heroActive = fadeHero > 0.5 && tDefToManifesto < 0.05;
+              const defActive = fadeDef > 0.5 && tDefToManifesto < 0.05;
+              const manifestoActive = fadeManifesto > 0.5;
+              return (
+                <>
+                  {/* HERO PHASE — bottom-left v2 hero block */}
+                  <div
+                    className="bridge-phase bridge-phase--hero"
+                    data-active={heroActive ? "true" : "false"}
+                    style={{
+                      opacity: fadeHero,
+                      visibility: fadeHero > 0.01 ? "visible" : "hidden",
+                      position: "relative",
+                      width: "100%",
+                    }}
+                  >
+                    <HeroContent />
+                  </div>
 
-              {/* Definition text - visible during hero and definition sections */}
-              <span
-                style={{
-                  opacity: 1 - tDefToManifesto,
-                  visibility: tDefToManifesto >= 1 ? "hidden" : "visible",
-                  ...(isManifestoTerminalMode
-                    ? {
-                        position: "absolute",
-                        left: 0,
-                        top: 0,
-                        width: "100%",
-                      }
-                    : {}),
-                }}
-              >
-                <GlitchText
-                  initialText={`AI isn't software to command — it's an intelligence to navigate.`}
-                  finalText={`A new intelligence asks for a new grammar. This is the grammar.`}
-                  progress={tHeroToDef}
-                  className="bridge-content-glitch"
-                />
-              </span>
+                  {/* DEFINITION PHASE — Commit B will swap this placeholder for TfBrand */}
+                  <div
+                    className="bridge-phase bridge-phase--def"
+                    data-active={defActive ? "true" : "false"}
+                    style={{
+                      opacity: fadeDef,
+                      visibility: fadeDef > 0.01 ? "visible" : "hidden",
+                      position: "absolute",
+                      inset: 0,
+                      padding: "inherit",
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: isMobile ? "12px" : "16px",
+                    }}
+                  >
+                    {!isManifestoTerminalMode && (
+                      <div
+                        className="card-wordmark"
+                        style={{
+                          width: isMobile ? "min(210px, 70vw)" : "320px",
+                          maxWidth: isMobile ? "min(210px, 70vw)" : "320px",
+                        }}
+                      >
+                        <WordmarkSans color="var(--dawn)" />
+                      </div>
+                    )}
+                    <p className="bridge-def-placeholder">
+                      A new intelligence asks for a new grammar.
+                      <br />
+                      This is the grammar.
+                    </p>
+                  </div>
 
-              {/* Question text - fades in during manifesto transition, positioned absolute to overlap */}
-              <span
-                style={{
-                  position: isManifestoTerminalMode ? "relative" : "absolute",
-                  ...(isManifestoTerminalMode
-                    ? {}
-                    : {
-                        left: 0,
-                        top: 0,
-                      }),
-                  opacity: tDefToManifesto,
-                  visibility: tDefToManifesto <= 0 ? "hidden" : "visible",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
-                }}
-              >
-                <GlitchText
-                  initialText={`(θɔːtfɔːrm / THAWT-form)
-the interface for navigating
-human-AI collaboration.`}
-                  finalText={`AI ISN'T SOFTWARE`}
-                  progress={tDefToManifesto}
-                  className="bridge-content-glitch question-morph"
-                />
-                {/* Pulsing block cursor - only visible when terminal ready but manifesto not started */}
-                {tDefToManifesto > 0.9 && manifestoRevealProgress === 0 && (
-                  <span className="terminal-block-cursor"></span>
-                )}
-              </span>
-            </div>
-
-            {/* Manifesto content - appears below question when scrolling */}
-            {/* Desktop: Simple terminal. Mobile: Tabbed interface with sources/voices */}
-            {tDefToManifesto > 0.95 && manifestoRevealProgress > 0 && (
-              <div
-                style={{
-                  marginTop: isMobile ? "16px" : "24px",
-                  width: "100%",
-                  transform: isMobile ? undefined : `scale(${bridgeFrameStyles.contentScale})`,
-                  transformOrigin: "top left",
-                  // Mobile: keep manifesto content visible until the services deck is actually fading in.
-                  opacity: isMobile
-                    ? 1 - tServicesCardsVisual
-                    : Math.max(0, 1 - tManifestoToServices * 3),
-                  pointerEvents: isMobile
-                    ? tServicesCardsVisual > 0.3
-                      ? "none"
-                      : "auto"
-                    : tManifestoToServices > 0.3
-                      ? "none"
-                      : "auto",
-                  // Mobile: fill available space for tabbed content
-                  ...(isMobile && {
-                    flex: 1,
-                    display: "flex",
-                    flexDirection: "column" as const,
-                    minHeight: 0,
-                  }),
-                }}
-              >
-                {isMobile ? (
-                  <ManifestoMobileTabs
-                    revealProgress={manifestoRevealProgress}
-                    isVisible={true}
-                    activeTab={mobileManifestoTab}
-                    onStartJourney={() => handleNavigate("services")}
-                    tServicesCards={tServicesCards}
-                  />
-                ) : (
-                  <ManifestoTerminal revealProgress={manifestoRevealProgress} isActive={true} />
-                )}
-              </div>
-            )}
+                  {/* MANIFESTO PHASE — Commit C replaces ManifestoTerminal with the Continuum spectrum */}
+                  <div
+                    className="bridge-phase bridge-phase--manifesto"
+                    data-active={manifestoActive ? "true" : "false"}
+                    style={{
+                      opacity: fadeManifesto,
+                      visibility: fadeManifesto > 0.01 ? "visible" : "hidden",
+                      position: "absolute",
+                      inset: 0,
+                      padding: "inherit",
+                      display: "flex",
+                      flexDirection: "column",
+                      // Mobile: allow inner scroll
+                      ...(isMobile &&
+                        tDefToManifesto > 0.95 &&
+                        manifestoRevealProgress > 0 && {
+                          minHeight: 0,
+                        }),
+                    }}
+                  >
+                    {tDefToManifesto > 0.95 && manifestoRevealProgress > 0 && (
+                      <div
+                        style={{
+                          width: "100%",
+                          transform: isMobile
+                            ? undefined
+                            : `scale(${bridgeFrameStyles.contentScale})`,
+                          transformOrigin: "top left",
+                          opacity: isMobile
+                            ? 1 - tServicesCardsVisual
+                            : Math.max(0, 1 - tManifestoToServices * 3),
+                          pointerEvents: isMobile
+                            ? tServicesCardsVisual > 0.3
+                              ? "none"
+                              : "auto"
+                            : tManifestoToServices > 0.3
+                              ? "none"
+                              : "auto",
+                          ...(isMobile && {
+                            flex: 1,
+                            display: "flex",
+                            flexDirection: "column" as const,
+                            minHeight: 0,
+                          }),
+                        }}
+                      >
+                        {isMobile ? (
+                          <ManifestoMobileTabs
+                            revealProgress={manifestoRevealProgress}
+                            isVisible={true}
+                            activeTab={mobileManifestoTab}
+                            onStartJourney={() => handleNavigate("services")}
+                            tServicesCards={tServicesCards}
+                          />
+                        ) : (
+                          <ManifestoTerminal
+                            revealProgress={manifestoRevealProgress}
+                            isActive={true}
+                          />
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </>
+              );
+            })()}
           </div>
 
           {/* Services card content (Strategies card) - Desktop */}

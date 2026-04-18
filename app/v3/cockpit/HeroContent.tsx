@@ -1,32 +1,15 @@
 "use client";
 
-interface HeroContentProps {
-  tHeroToDef: number;
-  tDefToManifesto: number;
-}
-
 /**
- * Hero overlay rendered inside the bridge-frame during the hero phase.
+ * Hero block — Origin · 01 eyebrow + tagline + ghost CTA + readouts.
  *
- * Follows the Thoughtform design doctrine for the .co variant: *editorial,
- * sparse, atmospheric*. No boxed frame — copy anchors to the lower-left
- * quadrant and lets the gateway portal + rails do the visual framing.
- *
- * Hierarchy (per frontend-design skill):
- *   eyebrow (mono, dawn-50, diamond marker)
- *   tagline (sans-serif, dawn, gold italic emphasis on one phrase)
- *   ghost CTA (gold border, not filled — gold is wayfinding, not UI)
- *   readout strip (mono, thin divider above)
- *
- * Fades out as scroll advances the bridge-frame from hero → definition so
- * the existing morph flow stays intact.
+ * Renders inside the bridge-frame at the bottom-left during the hero phase.
+ * The parent controls visibility (opacity + pointer-events) via a wrapper —
+ * HeroContent is now pure layout with no fade logic of its own.
  */
-export function HeroContent({ tHeroToDef, tDefToManifesto }: HeroContentProps) {
-  const fade = Math.max(0, 1 - tHeroToDef / 0.4) * (1 - tDefToManifesto);
-  if (fade <= 0) return null;
-
+export function HeroContent() {
   return (
-    <div className="hero-v2" style={{ opacity: fade }} aria-hidden={fade < 0.5}>
+    <div className="hero-v2">
       <div className="hero-v2__eyebrow">
         <span className="hero-v2__eyebrow-diamond" aria-hidden="true" />
         <span className="hero-v2__eyebrow-label">Origin</span>
