@@ -56,12 +56,16 @@
   opacity: 0.7;
 }
 
+/* Pull the whole hero block 20px left so its contents align to the same
+   vertical grid as the wordmark + runway arrows, stepping outside the
+   .hero-text-frame's 20px horizontal padding. */
 .v3-landing .hero-v2 {
   display: flex;
   flex-direction: column;
   gap: 20px;
-  width: 100%;
-  max-width: 460px;
+  width: calc(100% + 20px);
+  max-width: 480px;
+  margin-left: -20px;
   pointer-events: auto;
 }
 

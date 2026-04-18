@@ -133,11 +133,12 @@
   height: auto;
 }
 
-/* Wordmark inside the Interface (definition) frame */
+/* Wordmark inside the Interface (definition) frame — left-aligned so it
+   lines up with the TfBrand label, headline, body, and CTAs below it. */
 .card-wordmark {
   display: flex;
-  justify-content: center;
-  margin-left: auto;
+  justify-content: flex-start;
+  margin-left: 0;
   margin-right: auto;
 }
 
