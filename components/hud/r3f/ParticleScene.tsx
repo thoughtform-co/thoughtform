@@ -1,6 +1,7 @@
 "use client";
 
 import { SceneBinder } from "./SceneBinder";
+import { SceneAnchors } from "./SceneAnchors";
 import { CameraRig } from "./CameraRig";
 import { Terrain } from "./Terrain";
 import { ContinuumSpectrumField } from "./ContinuumSpectrumField";
@@ -16,6 +17,7 @@ export function ParticleScene() {
   return (
     <>
       <SceneBinder />
+      <SceneAnchors />
       <CameraRig />
       <Terrain />
       <ContinuumSpectrumField />

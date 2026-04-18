@@ -5,6 +5,7 @@ import "./cockpit/hero-v2.css";
 import "./cockpit/tf-brand.css";
 import "./cockpit/continuum-spectrum.css";
 import "./cockpit/canonical-rail.css";
+import "./cockpit/field-surfaces.css";
 
 export const metadata: Metadata = {
   title: "Thoughtform — Navigate Intelligence · v4",

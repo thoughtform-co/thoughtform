@@ -104,10 +104,10 @@ interface ServicesDeckProps {
   enabled?: boolean;
   /** Transition progress from manifesto to services (0-1) */
   progress: number;
-  /** Anchor positioning copied from the bridge-frame */
-  anchorBottom: string; // CSS calc string
-  anchorLeft: string; // CSS string (e.g. "calc(...)")
-  anchorTransform: string; // CSS transform string
+  /** Screen-space anchor copied from the R3F scene projection */
+  anchorX: number;
+  anchorY: number;
+  anchorVisible?: boolean;
   /** Current card width/height (matches bridge-frame during services morph) */
   cardWidthPx: number;
   cardHeightPx: number;
@@ -124,9 +124,9 @@ interface ServicesDeckProps {
 export function ServicesDeck({
   enabled = false,
   progress,
-  anchorBottom,
-  anchorLeft,
-  anchorTransform,
+  anchorX,
+  anchorY,
+  anchorVisible = true,
   cardWidthPx,
   cardHeightPx,
   sigilConfigs,
@@ -211,15 +211,15 @@ export function ServicesDeck({
             key={service.id}
             style={{
               position: "fixed",
-              bottom: anchorBottom,
-              left: anchorLeft,
+              top: `${anchorY}px`,
+              left: `${anchorX}px`,
               width: `${cardWidthPx}px`,
               height: `${cardHeightPx}px`,
               maxWidth: `${cardWidthPx}px`,
-              // Transform order matters: anchor translation first, then card-specific offsets
-              transform: `${anchorTransform} translateX(${offsetX}px) translateY(${translateY}px) scale(${scale})`,
+              // Anchor to the right-most monolith, then fan the deck out leftwards.
+              transform: `translate(-50%, -50%) translateX(${offsetX}px) translateY(${translateY}px) scale(${scale})`,
               transformOrigin: "center",
-              opacity,
+              opacity: anchorVisible ? opacity : 0,
               // Must sit above `.scroll-container` (z=10) to receive hover/click.
               // We keep the bridge-frame above this deck by raising the bridge-frame z-index.
               zIndex: 11,
@@ -228,7 +228,13 @@ export function ServicesDeck({
               //
               // Admin override: allow interaction at all times so the "Edit Sigil" affordance
               // works reliably even when the transition progress is < 0.55.
-              pointerEvents: isAdmin ? "auto" : progress > 0.55 ? "auto" : "none",
+              pointerEvents: anchorVisible
+                ? isAdmin
+                  ? "auto"
+                  : progress > 0.55
+                    ? "auto"
+                    : "none"
+                : "none",
               // GPU acceleration for smooth 60fps scroll-driven animation
               willChange: "transform, opacity",
               backfaceVisibility: "hidden",

@@ -1,0 +1,115 @@
+/* v4 field-integrated surfaces and readouts.
+   Scoped under .v4-landing so the production homepage remains untouched. */
+
+.v4-landing {
+  --v4-surface-aura: rgba(202, 165, 84, 0.12);
+  --v4-surface-grid: rgba(236, 227, 214, 0.05);
+  --v4-surface-edge: rgba(236, 227, 214, 0.12);
+}
+
+.v4-landing .v4-anchored-surface {
+  isolation: isolate;
+  filter: saturate(1.03);
+}
+
+.v4-landing .v4-anchored-surface::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    linear-gradient(180deg, rgba(236, 227, 214, 0.03), transparent 28%),
+    repeating-linear-gradient(
+      180deg,
+      transparent 0,
+      transparent 17px,
+      rgba(236, 227, 214, 0.018) 18px
+    );
+  opacity: 0.6;
+}
+
+.v4-landing .v4-anchored-surface::after {
+  content: "";
+  position: absolute;
+  inset: -64px;
+  pointer-events: none;
+  z-index: -1;
+  background:
+    radial-gradient(circle at 52% 50%, var(--v4-surface-aura) 0%, rgba(202, 165, 84, 0) 72%),
+    radial-gradient(circle at 25% 30%, rgba(91, 122, 78, 0.08) 0%, rgba(91, 122, 78, 0) 56%);
+  opacity: 0.9;
+}
+
+.v4-landing .v4-anchored-surface .hero-text-frame {
+  position: relative;
+  z-index: 1;
+}
+
+.v4-landing .v4-control-cluster {
+  position: fixed;
+  z-index: 14;
+  display: flex;
+  align-items: center;
+}
+
+.v4-landing .v4-control-cluster::before {
+  content: "";
+  position: absolute;
+  inset: auto 0 calc(100% + 10px) 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    rgba(202, 165, 84, 0),
+    rgba(202, 165, 84, 0.45),
+    rgba(202, 165, 84, 0)
+  );
+  pointer-events: none;
+}
+
+.v4-field-label {
+  position: fixed;
+  z-index: 13;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-data, "IBM Plex Mono", monospace);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  transition:
+    opacity 120ms linear,
+    transform 120ms linear;
+}
+
+.v4-field-label--gold {
+  color: rgba(202, 165, 84, 0.88);
+}
+
+.v4-field-label--dawn {
+  color: rgba(236, 227, 214, 0.78);
+}
+
+.v4-field-label__line {
+  width: 42px;
+  height: 1px;
+  background: currentColor;
+  opacity: 0.55;
+}
+
+.v4-field-label__diamond {
+  width: 7px;
+  height: 7px;
+  border: 1px solid currentColor;
+  transform: rotate(45deg);
+  opacity: 0.9;
+}
+
+.v4-field-label__index {
+  color: rgba(236, 227, 214, 0.6);
+}
+
+.v4-field-label__text {
+  color: currentColor;
+}

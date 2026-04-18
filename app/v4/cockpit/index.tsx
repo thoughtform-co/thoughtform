@@ -4,7 +4,12 @@ import { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import dynamic from "next/dynamic";
 import { CanvasErrorBoundary } from "@/components/hud/CanvasErrorBoundary";
 import { ParticleSceneProvider } from "@/lib/contexts/ParticleSceneContext";
+import {
+  type AnchorScreenState,
+  useParticleAnchorById,
+} from "@/components/hud/r3f/hooks/useParticleAnchor";
 import { useSceneTransition } from "@/components/hud/r3f/hooks/useSceneTransition";
+import { getV4ActiveSection, V4_SCENE_THRESHOLDS, V4_TRANSITIONS } from "@/lib/v4/timeline";
 
 // ═══════════════════════════════════════════════════════════════════
 // DYNAMIC IMPORTS - Code-split heavy WebGL components
@@ -30,9 +35,6 @@ import { GateOverlay } from "./GateOverlay";
 
 // v4 feature flags
 const ENABLE_GATE = true;
-// Scene transition band centered at the manifesto→services threshold.
-const TRANSITION_THRESHOLD = 0.575;
-const TRANSITION_BAND = 0.05;
 
 import { HUDFrame, NavigationBarHandle } from "@/components/hud/HUDFrame";
 import { Wordmark } from "@/components/hud/Wordmark";
@@ -61,6 +63,7 @@ import { HeroContent } from "./HeroContent";
 import { TfBrand } from "./TfBrand";
 import { ContinuumSpectrum } from "./ContinuumSpectrum";
 import { CanonicalRail } from "./CanonicalRail";
+import { SceneFieldLabel } from "./SceneFieldLabel";
 import {
   ServicesDeck,
   SERVICES_CARD_WIDTH,
@@ -73,24 +76,41 @@ import { SigilCanvas, type SigilConfig, DEFAULT_SIGIL_SIZE } from "./SigilCanvas
 import { SigilEditorPanel } from "./SigilEditorPanel";
 // Styles consolidated into app/globals.css
 
-// ═══════════════════════════════════════════════════════════════════
-// HERO → DEFINITION TRANSITION
-// ═══════════════════════════════════════════════════════════════════
-
-// Fixed scroll thresholds for hero→definition transition
-// Desktop timings (existing behavior)
-const HERO_END_DESKTOP = 0; // Transition starts immediately on scroll
-const DEF_START_DESKTOP = 0.12; // Transition completes by 12% of total scroll
-
-// Mobile timings (H1): delay start more noticeably while still completing before manifesto begins (0.15)
-const HERO_END_MOBILE = 0.06; // Start after 6% scroll (noticeable delay)
-const DEF_START_MOBILE = 0.14; // Complete by 14% scroll (before DEF_TO_MANIFESTO_START=0.15)
-
 // Services card target height (the manifesto frame shrinks down into this)
 const SERVICES_CARD_HEIGHT = 480;
 
 // Math utilities extracted to lib/utils.ts for reuse
 import { easeInOutCubic, lerp } from "@/lib/utils";
+
+const DEFAULT_SCREEN_ANCHOR: AnchorScreenState = {
+  screenX: 0,
+  screenY: 0,
+  scale: 1,
+  visible: false,
+};
+
+function clamp01(value: number) {
+  return Math.max(0, Math.min(1, value));
+}
+
+function mixAnchorStates(
+  from: AnchorScreenState,
+  to: AnchorScreenState,
+  progress: number
+): AnchorScreenState {
+  const t = clamp01(progress);
+
+  if (!from.visible && !to.visible) return DEFAULT_SCREEN_ANCHOR;
+  if (!from.visible) return to;
+  if (!to.visible) return from;
+
+  return {
+    screenX: lerp(from.screenX, to.screenX, t),
+    screenY: lerp(from.screenY, to.screenY, t),
+    scale: lerp(from.scale, to.scale, t),
+    visible: true,
+  };
+}
 
 // Inner component that uses the config context
 function NavigationCockpitV4Inner() {
@@ -99,8 +119,8 @@ function NavigationCockpitV4Inner() {
   // v4: scene transition driving panel blur + crossfade at manifesto→services.
   const sceneTransition = useSceneTransition(
     scrollProgress,
-    TRANSITION_THRESHOLD,
-    TRANSITION_BAND,
+    V4_TRANSITIONS.SCENE_TRANSITION_THRESHOLD,
+    V4_TRANSITIONS.SCENE_TRANSITION_BAND,
     10
   );
   const {
@@ -127,6 +147,10 @@ function NavigationCockpitV4Inner() {
   const [isBridgeHovered, setIsBridgeHovered] = useState(false);
   const [isParticleAdminOpen, setIsParticleAdminOpen] = useState(false);
   const [mobileFrontCardIndex, setMobileFrontCardIndex] = useState<number>(2); // Start with Strategies (index 2)
+  const definitionSurfaceAnchor = useParticleAnchorById("definitionSurface");
+  const continuumSurfaceAnchor = useParticleAnchorById("continuumRail");
+  const servicesDeckAnchor = useParticleAnchorById("servicesDeck");
+  const ctaClusterAnchor = useParticleAnchorById("ctaCluster");
 
   const handleOpenSigilEditor = useCallback((cardIndex: number) => {
     setEditingServiceSigilIndex(cardIndex);
@@ -229,8 +253,8 @@ function NavigationCockpitV4Inner() {
   const manifestoRevealProgress = useMemo(() => {
     // Reveal across the manifesto segment of the global scroll range.
     // 0.35 is where the terminal/question is fully "ready"; 0.50 is where services begins.
-    const REVEAL_START = 0.35;
-    const REVEAL_END = 0.5;
+    const REVEAL_START = V4_TRANSITIONS.MANIFESTO_REVEAL_START;
+    const REVEAL_END = V4_TRANSITIONS.MANIFESTO_REVEAL_END;
     const t = (scrollProgress - REVEAL_START) / (REVEAL_END - REVEAL_START);
     return Math.max(0, Math.min(1, t));
   }, [scrollProgress]);
@@ -428,8 +452,8 @@ function NavigationCockpitV4Inner() {
   // HERO → DEFINITION TRANSITION PROGRESS
   // Single normalized value (0→1) driving all transition animations
   // ═══════════════════════════════════════════════════════════════════
-  const heroEnd = isMobile ? HERO_END_MOBILE : HERO_END_DESKTOP;
-  const defStart = isMobile ? DEF_START_MOBILE : DEF_START_DESKTOP;
+  const heroEnd = isMobile ? V4_TRANSITIONS.HERO_END_MOBILE : V4_TRANSITIONS.HERO_END_DESKTOP;
+  const defStart = isMobile ? V4_TRANSITIONS.DEF_START_MOBILE : V4_TRANSITIONS.DEF_START_DESKTOP;
   const rawT = Math.max(0, Math.min(1, (scrollProgress - heroEnd) / (defStart - heroEnd)));
   const tHeroToDef = easeInOutCubic(rawT);
 
@@ -438,8 +462,8 @@ function NavigationCockpitV4Inner() {
   // Frame transforms from definition position to manifesto terminal
   // Synced with sigil exit animation (0.15 → 0.40)
   // ═══════════════════════════════════════════════════════════════════
-  const DEF_TO_MANIFESTO_START = 0.15; // Start transforming at 15% (synced with sigil exit)
-  const DEF_TO_MANIFESTO_END = 0.4; // Complete transformation by 40% (synced with sigil arrival)
+  const DEF_TO_MANIFESTO_START = V4_TRANSITIONS.DEFINITION_TO_MANIFESTO_START;
+  const DEF_TO_MANIFESTO_END = V4_TRANSITIONS.DEFINITION_TO_MANIFESTO_END;
   const rawTDefToManifesto = Math.max(
     0,
     Math.min(
@@ -482,7 +506,7 @@ function NavigationCockpitV4Inner() {
     if (!frame) return;
     const h = frame.getBoundingClientRect().height;
     if (h > 0) manifestoStartHeightPxRef.current = h;
-  }, [isMobile, tHeroToDef, scrollProgress]);
+  }, [DEF_TO_MANIFESTO_START, isMobile, tHeroToDef, scrollProgress]);
 
   // NOTE: Scroll capture intentionally disabled — manifesto reveal is scroll-driven and the
   // manifold/camera must never pause.
@@ -501,6 +525,7 @@ function NavigationCockpitV4Inner() {
   const tManifestoToServices = useMemo(() => {
     if (!manifestoComplete) return 0;
     if (typeof window === "undefined") return 0;
+    if (scrollProgress < V4_SCENE_THRESHOLDS.MANIFESTO_END) return 0;
 
     // Pace by scroll distance so the transition isn't hypersensitive to section-relative progress.
     const startY = servicesStartScrollYRef.current ?? window.scrollY;
@@ -562,6 +587,41 @@ function NavigationCockpitV4Inner() {
     const raw = Math.max(tServicesCardsTarget, tServicesCards);
     return Math.min(1, raw * 4); // faster early ramp to avoid a perceived "pop"
   }, [tServicesCardsTarget, tServicesCards]);
+
+  const desktopContinuumOpacity = !isMobile ? Math.max(0, 1 - tManifestoToServices * 3) : 0;
+  const desktopManifestoFrameOpacity =
+    !isMobile && tDefToManifesto > 0.35 ? Math.min(1, tManifestoToServices * 3.5) : 1;
+
+  const desktopBridgeAnchor = useMemo(() => {
+    if (isMobile) return DEFAULT_SCREEN_ANCHOR;
+    if (tManifestoToServices > 0.001) {
+      return mixAnchorStates(continuumSurfaceAnchor, servicesDeckAnchor, tManifestoToServices);
+    }
+    if (tDefToManifesto > 0.001) {
+      return mixAnchorStates(definitionSurfaceAnchor, continuumSurfaceAnchor, tDefToManifesto);
+    }
+    return tHeroToDef > 0.82 ? definitionSurfaceAnchor : DEFAULT_SCREEN_ANCHOR;
+  }, [
+    continuumSurfaceAnchor,
+    definitionSurfaceAnchor,
+    isMobile,
+    servicesDeckAnchor,
+    tDefToManifesto,
+    tHeroToDef,
+    tManifestoToServices,
+  ]);
+
+  const desktopServicesAnchor = useMemo(() => {
+    if (isMobile) return DEFAULT_SCREEN_ANCHOR;
+    return servicesDeckAnchor.visible ? servicesDeckAnchor : desktopBridgeAnchor;
+  }, [desktopBridgeAnchor, isMobile, servicesDeckAnchor]);
+
+  const desktopCtaAnchor = useMemo(() => {
+    if (isMobile || tHeroToDef <= 0.74 || tDefToManifesto >= 0.7) {
+      return DEFAULT_SCREEN_ANCHOR;
+    }
+    return ctaClusterAnchor.visible ? ctaClusterAnchor : definitionSurfaceAnchor;
+  }, [ctaClusterAnchor, definitionSurfaceAnchor, isMobile, tDefToManifesto, tHeroToDef]);
 
   // Calculate frame position values for manifesto transition
   // Use BOTTOM positioning throughout for smooth, continuous transition
@@ -665,13 +725,18 @@ function NavigationCockpitV4Inner() {
     // Card styling: visible during definition state, transitions to terminal
     // Card background appears when entering definition (tHeroToDef > 0.7)
     const cardBgOpacity = tHeroToDef > 0.7 ? Math.min(0.85, ((tHeroToDef - 0.7) / 0.3) * 0.85) : 0;
-    // Blend to terminal background during manifesto transition
-    const finalBgOpacity = cardBgOpacity + (0.5 - cardBgOpacity) * tDefToManifesto;
+    // On desktop, dissolve the glass panel during manifesto so the rail-native
+    // continuum copy floats directly over the particle field instead of sitting
+    // inside a framed surface. Mobile keeps its opaque frame.
+    const manifestoBgTarget = isMobile ? 0.5 : 0;
+    const finalBgOpacity = cardBgOpacity + (manifestoBgTarget - cardBgOpacity) * tDefToManifesto;
 
     // Border: card border during definition, terminal border during manifesto
     const cardBorderOpacity =
       tHeroToDef > 0.7 ? Math.min(0.2, ((tHeroToDef - 0.7) / 0.3) * 0.2) : 0;
-    const finalBorderOpacity = cardBorderOpacity + (0.1 - cardBorderOpacity) * tDefToManifesto;
+    const manifestoBorderTarget = isMobile ? 0.1 : 0;
+    const finalBorderOpacity =
+      cardBorderOpacity + (manifestoBorderTarget - cardBorderOpacity) * tDefToManifesto;
 
     // Calculate frame height
     // During definition state (tDefToManifesto = 0), use the measured definition height (avoids snap
@@ -740,8 +805,9 @@ function NavigationCockpitV4Inner() {
     const servicesBorderOpacity = 0.15;
     const borderOpacity =
       finalBorderOpacity + (servicesBorderOpacity - finalBorderOpacity) * tManifestoToServices;
-    const baseBlurPx =
-      8 * Math.max(tHeroToDef > 0.7 ? ((tHeroToDef - 0.7) / 0.3) * 4 : 0, tDefToManifesto * 8);
+    const defBlurContrib = tHeroToDef > 0.7 ? ((tHeroToDef - 0.7) / 0.3) * 4 : 0;
+    const manifestoBlurTarget = isMobile ? 8 : 0;
+    const baseBlurPx = 8 * Math.max(defBlurContrib, tDefToManifesto * manifestoBlurTarget);
     const servicesBlurPx = 12;
     const blurPx = baseBlurPx + (servicesBlurPx - baseBlurPx) * tManifestoToServices;
 
@@ -773,7 +839,7 @@ function NavigationCockpitV4Inner() {
     baseWidth,
     widthGrowth,
     actualContentHeight,
-    SERVICES_CARD_HEIGHT,
+    isMobile,
   ]);
 
   // Measure the definition frame height right before the manifesto transition starts.
@@ -812,32 +878,7 @@ function NavigationCockpitV4Inner() {
   // This is more accurate than IntersectionObserver because the visual content
   // is driven by scroll progress, not actual section positions
   useEffect(() => {
-    // Determine active section based on scroll progress thresholds
-    // These thresholds match the visual transitions
-    let newSection = "hero";
-
-    if (scrollProgress < 0.08) {
-      // Hero section - initial state before any transition
-      newSection = "hero";
-    } else if (scrollProgress < 0.15) {
-      // Definition/Interface section - after hero transition completes
-      newSection = "definition";
-    } else if (scrollProgress < 0.5) {
-      // Manifesto section - after definition→manifesto transition starts
-      newSection = "manifesto";
-    } else if (scrollProgress < 0.82) {
-      // Keep "manifesto" active until the terminal actually begins sliding to services.
-      // This avoids accidental section changes while the manifesto is still being read.
-      newSection = tManifestoToServices > 0.02 ? "services" : "manifesto";
-    } else if (scrollProgress < 0.94) {
-      // About section (extra scroll runway so contact doesn't appear too quickly)
-      newSection = "about";
-    } else {
-      // Contact section
-      newSection = "contact";
-    }
-
-    setActiveSection(newSection);
+    setActiveSection(getV4ActiveSection(scrollProgress, tManifestoToServices));
   }, [scrollProgress, tManifestoToServices]);
 
   return (
@@ -938,6 +979,38 @@ function NavigationCockpitV4Inner() {
         />
       )}
 
+      {!isMobile && (
+        <>
+          <SceneFieldLabel
+            anchorId="definitionSurface"
+            index="02"
+            label="Field Surface"
+            active={tHeroToDef > 0.78 && tDefToManifesto < 0.32}
+            offsetX={-250}
+            offsetY={-190}
+            tone="dawn"
+          />
+          <SceneFieldLabel
+            anchorId="continuumRail"
+            index="03"
+            label="Continuum Rail"
+            active={
+              scrollProgress > V4_SCENE_THRESHOLDS.DEFINITION_END && tManifestoToServices < 0.42
+            }
+            offsetX={-300}
+            offsetY={-150}
+          />
+          <SceneFieldLabel
+            anchorId="servicesDeck"
+            index="04"
+            label="Service Monoliths"
+            active={tManifestoToServices > 0.08}
+            offsetX={-250}
+            offsetY={-210}
+          />
+        </>
+      )}
+
       {/* ═══════════════════════════════════════════════════════════════════
           BRIDGE FRAME - Unified text container that transitions from hero to definition
           SAME FRAME slides UP from bottom to center, only text content changes
@@ -946,7 +1019,7 @@ function NavigationCockpitV4Inner() {
         ref={bridgeFrameRef}
         className={`bridge-frame${
           isMobile && isManifestoTerminalMode && tServicesCards < 0.05 ? " manifesto-active" : ""
-        }`}
+        }${!isMobile && tHeroToDef > 0.72 && tDefToManifesto < 0.5 ? " v4-anchored-surface" : ""}`}
         onMouseEnter={() => setIsBridgeHovered(true)}
         onMouseLeave={() => setIsBridgeHovered(false)}
         style={
@@ -1079,10 +1152,18 @@ function NavigationCockpitV4Inner() {
                 })(),
               }
             : {
-                // DESKTOP: Frame moves from hero → definition → manifesto → services
-                // Use BOTTOM positioning throughout for smooth, continuous transition
-                bottom: bridgeFrameStyles.finalBottom,
-                left: bridgeFrameStyles.left,
+                // DESKTOP: once the field surface exists, let the R3F anchor own
+                // the placement so the panel feels projected from the world.
+                ...(desktopBridgeAnchor.visible
+                  ? {
+                      top: `${desktopBridgeAnchor.screenY}px`,
+                      bottom: "auto",
+                      left: `${desktopBridgeAnchor.screenX}px`,
+                    }
+                  : {
+                      bottom: bridgeFrameStyles.finalBottom,
+                      left: bridgeFrameStyles.left,
+                    }),
                 width: bridgeFrameStyles.width,
                 maxWidth: bridgeFrameStyles.width,
                 height: bridgeFrameStyles.height,
@@ -1094,15 +1175,22 @@ function NavigationCockpitV4Inner() {
                     : tDefToManifesto > 0.1
                       ? "hidden"
                       : "visible",
-                opacity: 1,
+                opacity: desktopManifestoFrameOpacity,
                 visibility: "visible",
                 pointerEvents:
-                  tHeroToDef > 0.95 || tHeroToDef < 0.05 || tDefToManifesto > 0 ? "auto" : "none",
-                transform: bridgeFrameStyles.transform,
+                  desktopManifestoFrameOpacity < 0.04
+                    ? "none"
+                    : tHeroToDef > 0.95 || tHeroToDef < 0.05 || tDefToManifesto > 0
+                      ? "auto"
+                      : "none",
+                transform: desktopBridgeAnchor.visible
+                  ? `translate(-50%, -50%) scale(${Math.min(1.04, Math.max(0.94, desktopBridgeAnchor.scale * 0.96))})`
+                  : bridgeFrameStyles.transform,
                 transformOrigin: "center",
                 ["--terminal-opacity" as string]: bridgeFrameStyles["--terminal-opacity"],
                 background: bridgeFrameStyles.background,
                 backdropFilter: bridgeFrameStyles.backdropFilter,
+                WebkitBackdropFilter: bridgeFrameStyles.backdropFilter,
                 border: bridgeFrameStyles.border,
                 transition: "none", // We're animating via scroll, not CSS transitions
               }
@@ -1331,7 +1419,7 @@ function NavigationCockpitV4Inner() {
                           }),
                       }}
                     >
-                      {tDefToManifesto > 0.3 && (
+                      {isMobile && tDefToManifesto > 0.3 && (
                         <div
                           style={{
                             width: "100%",
@@ -1345,8 +1433,8 @@ function NavigationCockpitV4Inner() {
                               : tManifestoToServices > 0.3
                                 ? "none"
                                 : "auto",
-                            // v4: soften the panel as we pass through the
-                            // manifesto→services transition band.
+                            // Mobile only: soften the stacked editorial version
+                            // as we pass through the manifesto→services band.
                             filter: sceneTransition.active
                               ? `blur(${sceneTransition.blur}px)`
                               : undefined,
@@ -1517,20 +1605,36 @@ function NavigationCockpitV4Inner() {
         {/* Removed !isManifestoTerminalMode to allow smooth transition */}
         {tHeroToDef > 0.75 && tDefToManifesto < 0.7 && (
           <div
-            className="interface-cta-row"
+            className={`interface-cta-row${!isMobile ? " v4-control-cluster" : ""}`}
             style={{
-              position: "absolute",
-              left: 0,
-              top: isMobile ? "calc(100% + 10px)" : "calc(100% + 14px)",
+              position: isMobile ? "absolute" : "fixed",
+              left: isMobile
+                ? 0
+                : desktopCtaAnchor.visible
+                  ? `${desktopCtaAnchor.screenX}px`
+                  : `calc(var(--rail-width) + 220px)`,
+              top: isMobile
+                ? "calc(100% + 10px)"
+                : desktopCtaAnchor.visible
+                  ? `${desktopCtaAnchor.screenY}px`
+                  : "calc(50vh + 180px)",
               // Keep in DOM for measurement, but hide + disable interaction once morph begins
               opacity: tDefToManifesto > 0 ? 0 : cardOpacity,
               visibility: cardOpacity > 0 ? "visible" : "hidden",
-              width: "100%",
+              width: isMobile ? "100%" : "min(420px, 38vw)",
               display: "flex",
               flexDirection: "row",
               gap: isMobile ? "8px" : "22px",
               zIndex: 2,
               pointerEvents: tDefToManifesto > 0 ? "none" : "auto",
+              transform: isMobile
+                ? undefined
+                : desktopCtaAnchor.visible
+                  ? `translate(-50%, -50%) scale(${Math.min(
+                      1.06,
+                      Math.max(0.92, desktopCtaAnchor.scale * 0.92)
+                    )})`
+                  : "translate(-50%, -50%)",
             }}
           >
             {/* Primary CTA */}
@@ -1547,7 +1651,7 @@ function NavigationCockpitV4Inner() {
                 background:
                   "linear-gradient(135deg, rgba(202, 165, 84, 0.15) 0%, rgba(202, 165, 84, 0.05) 50%, rgba(202, 165, 84, 0.1) 100%)",
                 border: "1px solid rgba(202, 165, 84, 0.3)",
-                borderRadius: "2px",
+                borderRadius: 0,
                 padding: isMobile ? "10px 12px" : "14px 18px",
                 cursor: "pointer",
                 transition: "all 0.2s ease",
@@ -1627,7 +1731,7 @@ function NavigationCockpitV4Inner() {
                 alignItems: "center",
                 justifyContent: "center",
                 padding: isMobile ? "10px 12px" : "14px 14px",
-                borderRadius: "2px",
+                borderRadius: 0,
                 background: "rgba(10, 9, 8, 0.35)",
                 border: "1px solid rgba(236, 227, 214, 0.28)",
                 color: "var(--dawn, #ece3d6)",
@@ -1667,6 +1771,22 @@ function NavigationCockpitV4Inner() {
             chrome. See ManifestoTerminal / ManifestoMobileTabs files for
             reference — they're no longer mounted. */}
       </div>
+
+      {!isMobile && tDefToManifesto > 0.3 && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 13,
+            opacity: desktopContinuumOpacity,
+            filter: sceneTransition.active ? `blur(${sceneTransition.blur}px)` : undefined,
+            transition: "filter 60ms linear",
+            pointerEvents: "none",
+          }}
+        >
+          <ContinuumSpectrum />
+        </div>
+      )}
 
       {/* Mobile Services: Back cards stack (Keynotes, Workshop) - positioned behind bridge-frame */}
       {isMobile && manifestoComplete && tServicesCards > 0.001 && (
@@ -1758,9 +1878,9 @@ function NavigationCockpitV4Inner() {
           <ServicesDeck
             enabled={manifestoComplete}
             progress={tServicesCards}
-            anchorBottom={bridgeFrameStyles.finalBottom}
-            anchorLeft={bridgeFrameStyles.left}
-            anchorTransform={bridgeFrameStyles.transform}
+            anchorX={desktopServicesAnchor.screenX}
+            anchorY={desktopServicesAnchor.screenY}
+            anchorVisible={desktopServicesAnchor.visible}
             cardWidthPx={Number.parseFloat(bridgeFrameStyles.width) || SERVICES_CARD_WIDTH}
             cardHeightPx={Number.parseFloat(bridgeFrameStyles.height) || SERVICES_CARD_HEIGHT}
             sigilConfigs={sigilConfigs}
