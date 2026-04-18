@@ -3,9 +3,16 @@
   "configurations": [
     {
       "name": "thoughtform-dev",
-      "runtimeExecutable": "npx",
-      "runtimeArgs": ["next", "dev"],
-      "autoPort": true
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "port": 3003,
+      "autoPort": false
+    },
+    {
+      "name": "Storybook",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "storybook"],
+      "port": 6006
     }
   ]
 }
