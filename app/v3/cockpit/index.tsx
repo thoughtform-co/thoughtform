@@ -899,23 +899,9 @@ function NavigationCockpitInner() {
           <Wordmark hideVectorI={!showSvgVector} />
         </div>
 
-        {/* Definition Wordmark - fades in at end of transition (slower) */}
-        {/* On mobile, hide this since wordmark is now inside the frame */}
-        {!isMobile && (
-          <div
-            className="definition-wordmark-inner"
-            ref={definitionWordmarkRef}
-            style={{
-              position: "absolute",
-              top: 0,
-              left: 0,
-              opacity: tHeroToDef > 0.75 ? (tHeroToDef - 0.75) / 0.25 : 0,
-              visibility: tHeroToDef > 0.7 ? "visible" : "hidden",
-            }}
-          >
-            <WordmarkSans color="var(--dawn)" />
-          </div>
-        )}
+        {/* Definition wordmark was previously a hidden tracker here — now the
+            ref lives on the visible panel WordmarkSans inside the bridge-frame
+            (hero-text-frame). Particles target the panel position directly. */}
       </div>
 
       {/* Particle Wordmark Morph - visible during mid-transition, cross-fades with wordmark in frame */}
@@ -1259,81 +1245,103 @@ function NavigationCockpitInner() {
               const heroActive = fadeHero > 0.5 && tDefToManifesto < 0.05;
               const defActive = fadeDef > 0.5 && tDefToManifesto < 0.05;
               const manifestoActive = fadeManifesto > 0.5;
+
+              // Panel wordmark fade: slower than the def phase so it persists
+              // through the whole definition state and only drops late during
+              // the def→manifesto morph (smoothstepped 0.55 → 0.95).
+              const wordmarkFadeIn = Math.max(0, Math.min(1, (tHeroToDef - 0.7) / 0.3));
+              const wordmarkFadeOutRaw = Math.max(
+                0,
+                Math.min(1, 1 - (tDefToManifesto - 0.55) / 0.4)
+              );
+              const wordmarkFadeOut =
+                wordmarkFadeOutRaw * wordmarkFadeOutRaw * (3 - 2 * wordmarkFadeOutRaw);
+              const wordmarkOpacity = wordmarkFadeIn * wordmarkFadeOut;
+
               return (
-                <div className="bridge-phase-stack">
-                  {/* HERO PHASE — bottom-left v2 hero block */}
-                  <div
-                    className="bridge-phase bridge-phase--hero"
-                    data-active={heroActive ? "true" : "false"}
-                    style={{
-                      opacity: fadeHero,
-                      visibility: fadeHero > 0.01 ? "visible" : "hidden",
-                    }}
-                  >
-                    <HeroContent />
-                  </div>
+                <>
+                  {/* Persistent panel wordmark — lives outside the phase stack so its
+                      opacity is decoupled from the def-phase fade. It's also the
+                      landing target for ParticleWordmarkMorph. */}
+                  {wordmarkOpacity > 0.01 && (
+                    <div
+                      className="card-wordmark"
+                      ref={definitionWordmarkRef}
+                      style={{
+                        opacity: wordmarkOpacity,
+                        width: isMobile ? "min(210px, 70vw)" : "280px",
+                        maxWidth: isMobile ? "min(210px, 70vw)" : "280px",
+                        marginBottom: isMobile ? "12px" : "16px",
+                        pointerEvents: "none",
+                      }}
+                    >
+                      <WordmarkSans color="var(--dawn)" />
+                    </div>
+                  )}
 
-                  {/* DEFINITION PHASE — TfBrand block with WordmarkSans above */}
-                  <div
-                    className="bridge-phase bridge-phase--def"
-                    data-active={defActive ? "true" : "false"}
-                    style={{
-                      opacity: fadeDef,
-                      visibility: fadeDef > 0.01 ? "visible" : "hidden",
-                      gap: isMobile ? "12px" : "16px",
-                    }}
-                  >
-                    {!isManifestoTerminalMode && (
-                      <div
-                        className="card-wordmark"
-                        style={{
-                          width: isMobile ? "min(210px, 70vw)" : "280px",
-                          maxWidth: isMobile ? "min(210px, 70vw)" : "280px",
-                          marginBottom: "4px",
-                        }}
-                      >
-                        <WordmarkSans color="var(--dawn)" />
-                      </div>
-                    )}
-                    <TfBrand />
-                  </div>
+                  <div className="bridge-phase-stack">
+                    {/* HERO PHASE — bottom-left v2 hero block */}
+                    <div
+                      className="bridge-phase bridge-phase--hero"
+                      data-active={heroActive ? "true" : "false"}
+                      style={{
+                        opacity: fadeHero,
+                        visibility: fadeHero > 0.01 ? "visible" : "hidden",
+                      }}
+                    >
+                      <HeroContent />
+                    </div>
 
-                  {/* MANIFESTO PHASE — Commit C replaces ManifestoTerminal with the Continuum spectrum */}
-                  <div
-                    className="bridge-phase bridge-phase--manifesto"
-                    data-active={manifestoActive ? "true" : "false"}
-                    style={{
-                      opacity: fadeManifesto,
-                      visibility: fadeManifesto > 0.01 ? "visible" : "hidden",
-                      // Mobile: allow inner scroll
-                      ...(isMobile &&
-                        tDefToManifesto > 0.95 &&
-                        manifestoRevealProgress > 0 && {
-                          minHeight: 0,
-                        }),
-                    }}
-                  >
-                    {tDefToManifesto > 0.3 && (
-                      <div
-                        style={{
-                          width: "100%",
-                          opacity: isMobile
-                            ? 1 - tServicesCardsVisual
-                            : Math.max(0, 1 - tManifestoToServices * 3),
-                          pointerEvents: isMobile
-                            ? tServicesCardsVisual > 0.3
-                              ? "none"
-                              : "auto"
-                            : tManifestoToServices > 0.3
-                              ? "none"
-                              : "auto",
-                        }}
-                      >
-                        <ContinuumSpectrum />
-                      </div>
-                    )}
+                    {/* DEFINITION PHASE — TfBrand (wordmark now rendered outside this wrapper) */}
+                    <div
+                      className="bridge-phase bridge-phase--def"
+                      data-active={defActive ? "true" : "false"}
+                      style={{
+                        opacity: fadeDef,
+                        visibility: fadeDef > 0.01 ? "visible" : "hidden",
+                        gap: isMobile ? "12px" : "16px",
+                      }}
+                    >
+                      <TfBrand />
+                    </div>
+
+                    {/* MANIFESTO PHASE — Commit C replaces ManifestoTerminal with the Continuum spectrum */}
+                    <div
+                      className="bridge-phase bridge-phase--manifesto"
+                      data-active={manifestoActive ? "true" : "false"}
+                      style={{
+                        opacity: fadeManifesto,
+                        visibility: fadeManifesto > 0.01 ? "visible" : "hidden",
+                        // Mobile: allow inner scroll
+                        ...(isMobile &&
+                          tDefToManifesto > 0.95 &&
+                          manifestoRevealProgress > 0 && {
+                            minHeight: 0,
+                          }),
+                      }}
+                    >
+                      {tDefToManifesto > 0.3 && (
+                        <div
+                          style={{
+                            width: "100%",
+                            opacity: isMobile
+                              ? 1 - tServicesCardsVisual
+                              : Math.max(0, 1 - tManifestoToServices * 3),
+                            pointerEvents: isMobile
+                              ? tServicesCardsVisual > 0.3
+                                ? "none"
+                                : "auto"
+                              : tManifestoToServices > 0.3
+                                ? "none"
+                                : "auto",
+                          }}
+                        >
+                          <ContinuumSpectrum />
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
+                </>
               );
             })()}
           </div>
