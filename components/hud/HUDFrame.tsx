@@ -1,8 +1,9 @@
 "use client";
 
-import { useMemo, forwardRef } from "react";
+import { useMemo, useRef, useEffect, useState, forwardRef } from "react";
 import { NavigationBar, NavigationBarHandle } from "./NavigationBar";
 import { useIsMobile } from "@/lib/hooks/useMediaQuery";
+import { TerminalReveal } from "@/components/ui/TerminalReveal";
 
 interface SectionData {
   sector: string;
@@ -64,6 +65,16 @@ export const HUDFrame = forwardRef<NavigationBarHandle, HUDFrameProps>(function 
   ref
 ) {
   const isMobile = useIsMobile();
+
+  // Track section changes for TerminalReveal triggers
+  const prevSectionRef = useRef(activeSection);
+  const [sectorTriggerKey, setSectorTriggerKey] = useState(0);
+  useEffect(() => {
+    if (activeSection !== prevSectionRef.current) {
+      prevSectionRef.current = activeSection;
+      setSectorTriggerKey((k) => k + 1);
+    }
+  }, [activeSection]);
 
   // Compute HUD state directly from props (no useState to avoid loops)
   const hudState = useMemo(() => {
@@ -213,7 +224,13 @@ export const HUDFrame = forwardRef<NavigationBarHandle, HUDFrameProps>(function 
             </span>
           </div>
           <div className="hud-instruction">
-            <span>{hudState.instruction}</span>
+            <TerminalReveal
+              key={`instr-${sectorTriggerKey}`}
+              text={hudState.instruction}
+              triggered={true}
+              speed={20}
+              iterations={1}
+            />
           </div>
         </footer>
       )}

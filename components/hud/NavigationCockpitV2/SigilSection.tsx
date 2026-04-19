@@ -502,8 +502,8 @@ export const SigilSection = forwardRef<HTMLDivElement, SigilSectionProps>(functi
     const currentOffsetX = originOffsetX * (1 - easedT);
     const currentOffsetY = originOffsetY * (1 - easedT);
 
-    // Scale: start small (0.3) at brandmark, grow to full (1) at center
-    scaleValue = 0.3 + 0.7 * easedT;
+    // Scale: subtle zoom-in as the brandmark settles to center
+    scaleValue = 0.85 + 0.15 * easedT;
 
     // Apply transform
     transformStyle = `translate(calc(-50% + ${currentOffsetX}px), calc(-50% + ${currentOffsetY}px)) scale(${scaleValue})`;
@@ -538,7 +538,6 @@ export const SigilSection = forwardRef<HTMLDivElement, SigilSectionProps>(functi
           pointerEvents: "none",
           transform: transformStyle,
           transformOrigin: "center center",
-          // During exit animation, raise z-index above navbar (1000) so particles land ON the logo
           zIndex: exitProgress > 0 ? 1001 : undefined,
           filter:
             glowIntensity > 0

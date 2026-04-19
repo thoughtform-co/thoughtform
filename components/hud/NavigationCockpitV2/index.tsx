@@ -56,6 +56,7 @@ import {
 import { ServicesStackMobile } from "./ServicesStackMobile";
 import { SigilCanvas, type SigilConfig, DEFAULT_SIGIL_SIZE } from "./SigilCanvas";
 import { SigilEditorPanel } from "./SigilEditorPanel";
+import { TerminalReveal, usePrefersReducedMotion } from "@/components/ui/TerminalReveal";
 // Styles consolidated into app/globals.css
 
 // ═══════════════════════════════════════════════════════════════════
@@ -106,6 +107,19 @@ function NavigationCockpitInner() {
   const [isParticleAdminOpen, setIsParticleAdminOpen] = useState(false);
   const [mobileManifestoTab, setMobileManifestoTab] = useState<ManifestoMobileTabId>("manifesto");
   const [mobileFrontCardIndex, setMobileFrontCardIndex] = useState<number>(2); // Start with Strategies (index 2)
+
+  const prefersReducedMotion = usePrefersReducedMotion();
+
+  // Hero mount entrance - drives initial fade-up for bridge-frame text/buttons
+  const [heroMounted, setHeroMounted] = useState(false);
+  useEffect(() => {
+    if (prefersReducedMotion) {
+      setHeroMounted(true);
+      return;
+    }
+    const id = setTimeout(() => setHeroMounted(true), 300);
+    return () => clearTimeout(id);
+  }, [prefersReducedMotion]);
 
   const handleOpenSigilEditor = useCallback((cardIndex: number) => {
     setEditingServiceSigilIndex(cardIndex);
@@ -1209,17 +1223,13 @@ function NavigationCockpitInner() {
         <div
           className="hero-text-frame"
           style={{
-            opacity: 1,
+            opacity: tHeroToDef < 0.3 && !prefersReducedMotion ? (heroMounted ? 1 : 0) : 1,
             visibility: "visible",
             position: "relative",
             width: "100%",
-            // Once the frame height becomes fixed (manifesto/services), lock inner layout to 100%
-            // so the services overlay doesn't inherit the (still-in-DOM) manifesto content height.
             height: tDefToManifesto > 0 ? "100%" : "auto",
             display: "flex",
             flexDirection: "column",
-            // Mobile: center content in hero state, left-align in manifesto
-            // Desktop: center content in manifesto state for better visual balance
             alignItems:
               isMobile && tDefToManifesto < 0.5
                 ? "center"
@@ -1238,8 +1248,6 @@ function NavigationCockpitInner() {
                 : tDefToManifesto > 0.5
                   ? "center"
                   : "left",
-            // Padding: 24px when card visible, transitions to terminal padding
-            // Services mode pulls padding back to the tighter service-card layout.
             padding: isMobile
               ? `${20 + 28 * tDefToManifesto}px ${24 - 4 * tDefToManifesto}px`
               : `${24 + 48 * tDefToManifesto * (1 - tManifestoToServices)}px 24px ${
@@ -1250,9 +1258,15 @@ function NavigationCockpitInner() {
             zIndex: 2,
             ["--frame-opacity" as string]: 1 - tDefToManifesto,
             gap: isMobile ? "16px" : "20px",
-            // Restore frame border and background during hero state (before bridge-frame has its own styling)
-            // Only show when bridge-frame doesn't have its own border/background yet (tHeroToDef < 0.7)
-            // Match opacity/transparency of other sections (same as terminal frame)
+            // Mount entrance: translateY(40px) → 0, decoupled from scroll so it completes even if user scrolls early
+            transform:
+              !prefersReducedMotion && tHeroToDef < 0.3
+                ? `translateY(${heroMounted ? 0 : 40}px)`
+                : undefined,
+            transition:
+              !prefersReducedMotion && tHeroToDef < 0.3
+                ? "opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1)"
+                : "none",
             border:
               tHeroToDef < 0.7
                 ? `1px solid rgba(236, 227, 214, ${0.1 * (1 - tDefToManifesto)})`
@@ -1283,26 +1297,35 @@ function NavigationCockpitInner() {
                 : {}),
             }}
           >
-            {/* Wordmark inside card - appears when entering definition, fades during manifesto */}
-            {/* Show on both desktop and mobile */}
-            {tHeroToDef > 0.7 && tDefToManifesto < 1 && !isManifestoTerminalMode && (
-              <div
-                className="card-wordmark"
-                style={{
-                  opacity: cardOpacity,
-                  visibility: cardOpacity > 0 ? "visible" : "hidden",
-                  width: isMobile ? "min(210px, 70vw)" : "320px",
-                  maxWidth: isMobile ? "min(210px, 70vw)" : "320px",
-                  marginBottom: isMobile ? "12px" : "16px", // Space between logo and pronunciation
-                }}
-              >
-                <WordmarkSans color="var(--dawn)" />
-              </div>
-            )}
+            {/* Wordmark inside card - emerges from left as definition content reveals */}
+            {tHeroToDef > 0.55 &&
+              tDefToManifesto < 1 &&
+              !isManifestoTerminalMode &&
+              (() => {
+                // Dedicated left-panel reveal: opacity 0->1 + translateX(-80->0)
+                const revealRaw = Math.min(1, Math.max(0, (tHeroToDef - 0.6) / 0.4));
+                const reveal = 1 - Math.pow(1 - revealRaw, 3);
+                const translateX = prefersReducedMotion ? 0 : (1 - reveal) * -80;
+                const opacity = reveal * (1 - tDefToManifesto);
+                return (
+                  <div
+                    className="card-wordmark"
+                    style={{
+                      opacity,
+                      visibility: opacity > 0 ? "visible" : "hidden",
+                      width: isMobile ? "min(210px, 70vw)" : "320px",
+                      maxWidth: isMobile ? "min(210px, 70vw)" : "320px",
+                      marginBottom: isMobile ? "12px" : "16px",
+                      transform: prefersReducedMotion ? undefined : `translateX(${translateX}px)`,
+                    }}
+                  >
+                    <WordmarkSans color="var(--dawn)" />
+                  </div>
+                );
+              })()}
             <div
               className="hero-tagline hero-tagline-v2 hero-tagline-main"
               style={{
-                // Container for overlapping text - relative positioning
                 position: "relative",
                 display: "flex",
                 alignItems: "center",
@@ -1462,25 +1485,54 @@ human-AI collaboration.`}
                 </button>
               )}
 
-              <div className="service-card__content">
-                <h3 className="service-card__title">{rightService.title}</h3>
-                <p className="service-card__body">{rightService.body}</p>
-              </div>
+              {(() => {
+                // Staged inner reveal for the Strategies card, matching ServiceCard behavior
+                const cr = Math.min(1, Math.max(0, (tServicesCards - 0.6) / 0.4));
+                const titleReveal = Math.min(1, cr / 0.35);
+                const bodyReveal = Math.min(1, Math.max(0, (cr - 0.25) / 0.35));
+                const sigilReveal = Math.min(1, Math.max(0, (cr - 0.5) / 0.35));
+                return (
+                  <>
+                    <div className="service-card__content">
+                      <h3
+                        className="service-card__title"
+                        style={{
+                          opacity: titleReveal,
+                          transform: `translateY(${(1 - titleReveal) * 20}px)`,
+                        }}
+                      >
+                        {rightService.title}
+                      </h3>
+                      <p
+                        className="service-card__body"
+                        style={{
+                          opacity: bodyReveal,
+                          transform: `translateY(${(1 - bodyReveal) * 20}px)`,
+                        }}
+                      >
+                        {rightService.body}
+                      </p>
+                    </div>
 
-              <div className="service-card__sigil">
-                <div
-                  style={{
-                    transform: `translate(${(sigilConfigs[2] ?? DEFAULT_SIGIL_CONFIGS[2]).offsetX ?? 0}%, ${(sigilConfigs[2] ?? DEFAULT_SIGIL_CONFIGS[2]).offsetY ?? 0}%)`,
-                  }}
-                >
-                  <SigilCanvas
-                    config={sigilConfigs[2] ?? DEFAULT_SIGIL_CONFIGS[2]}
-                    size={(sigilConfigs[2] ?? DEFAULT_SIGIL_CONFIGS[2]).size ?? DEFAULT_SIGIL_SIZE}
-                    seed={(sigilConfigs[2] ?? DEFAULT_SIGIL_CONFIGS[2]).seed ?? 42 + 2 * 1000}
-                    allowSpill={false}
-                  />
-                </div>
-              </div>
+                    <div className="service-card__sigil" style={{ opacity: sigilReveal }}>
+                      <div
+                        style={{
+                          transform: `translate(${(sigilConfigs[2] ?? DEFAULT_SIGIL_CONFIGS[2]).offsetX ?? 0}%, ${(sigilConfigs[2] ?? DEFAULT_SIGIL_CONFIGS[2]).offsetY ?? 0}%)`,
+                        }}
+                      >
+                        <SigilCanvas
+                          config={sigilConfigs[2] ?? DEFAULT_SIGIL_CONFIGS[2]}
+                          size={
+                            (sigilConfigs[2] ?? DEFAULT_SIGIL_CONFIGS[2]).size ?? DEFAULT_SIGIL_SIZE
+                          }
+                          seed={(sigilConfigs[2] ?? DEFAULT_SIGIL_CONFIGS[2]).seed ?? 42 + 2 * 1000}
+                          allowSpill={false}
+                        />
+                      </div>
+                    </div>
+                  </>
+                );
+              })()}
             </div>
           )}
         </div>
@@ -1568,159 +1620,166 @@ human-AI collaboration.`}
         {/* Mobile Services: Back cards stack (Keynotes, Workshop) - rendered behind bridge-frame */}
         {/* Positioned outside bridge-frame so it can use fixed positioning */}
 
-        {/* Interface CTAs - original buttons (morph overlay takes over as soon as tDefToManifesto > 0) */}
-        {/* Removed !isManifestoTerminalMode to allow smooth transition */}
-        {tHeroToDef > 0.75 && tDefToManifesto < 0.7 && (
-          <div
-            className="interface-cta-row"
-            style={{
-              position: "absolute",
-              left: 0,
-              top: isMobile ? "calc(100% + 10px)" : "calc(100% + 14px)",
-              // Keep in DOM for measurement, but hide + disable interaction once morph begins
-              opacity: tDefToManifesto > 0 ? 0 : cardOpacity,
-              visibility: cardOpacity > 0 ? "visible" : "hidden",
-              width: "100%",
-              display: "flex",
-              flexDirection: "row",
-              gap: isMobile ? "8px" : "22px",
-              zIndex: 2,
-              pointerEvents: tDefToManifesto > 0 ? "none" : "auto",
-            }}
-          >
-            {/* Primary CTA */}
-            <button
-              ref={frameButtonRef}
-              className="card-journey-btn"
-              onClick={() => handleNavigate("services")}
-              style={{
-                flex: isMobile ? "65 1 0" : "1 1 auto",
-                display: "inline-flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: isMobile ? "6px" : "10px",
-                background:
-                  "linear-gradient(135deg, rgba(202, 165, 84, 0.15) 0%, rgba(202, 165, 84, 0.05) 50%, rgba(202, 165, 84, 0.1) 100%)",
-                border: "1px solid rgba(202, 165, 84, 0.3)",
-                borderRadius: "2px",
-                padding: isMobile ? "10px 12px" : "14px 18px",
-                cursor: "pointer",
-                transition: "all 0.2s ease",
-                fontFamily: "var(--font-data, 'PT Mono', monospace)",
-                fontSize: isMobile ? "9px" : "13px",
-                fontWeight: 700,
-                letterSpacing: isMobile ? "0.06em" : "0.15em",
-                textTransform: "uppercase",
-                color: "var(--gold, #caa554)",
-                lineHeight: 1,
-                whiteSpace: "nowrap",
-              }}
-              onMouseEnter={(e) => {
-                if (!isMobile) {
-                  e.currentTarget.style.background =
-                    "linear-gradient(135deg, rgba(202, 165, 84, 0.25) 0%, rgba(202, 165, 84, 0.12) 50%, rgba(202, 165, 84, 0.2) 100%)";
-                  e.currentTarget.style.borderColor = "rgba(202, 165, 84, 0.5)";
-                  e.currentTarget.style.transform = "translateY(-1px)";
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (!isMobile) {
-                  e.currentTarget.style.background =
-                    "linear-gradient(135deg, rgba(202, 165, 84, 0.15) 0%, rgba(202, 165, 84, 0.05) 50%, rgba(202, 165, 84, 0.1) 100%)";
-                  e.currentTarget.style.borderColor = "rgba(202, 165, 84, 0.3)";
-                  e.currentTarget.style.transform = "translateY(0)";
-                }
-              }}
-            >
-              <span
-                data-role="journey-arrows-left"
-                className="journey-arrow-pulse journey-arrow-pulse-left"
+        {/* Interface CTAs - emerge from left with stagger after wordmark */}
+        {tHeroToDef > 0.7 &&
+          tDefToManifesto < 0.7 &&
+          (() => {
+            // Stagger CTA after wordmark: starts at 0.7 (wordmark starts 0.6)
+            const revealRaw = Math.min(1, Math.max(0, (tHeroToDef - 0.7) / 0.3));
+            const reveal = 1 - Math.pow(1 - revealRaw, 3);
+            const translateX = prefersReducedMotion ? 0 : (1 - reveal) * -80;
+            const baseOpacity = tDefToManifesto > 0 ? 0 : reveal;
+            return (
+              <div
+                className="interface-cta-row"
                 style={{
-                  fontSize: isMobile ? "10px" : "16px",
-                  lineHeight: 1,
-                  background:
-                    "linear-gradient(135deg, rgba(202, 165, 84, 0.9) 0%, rgba(202, 165, 84, 0.6) 50%, rgba(202, 165, 84, 0.8) 100%)",
-                  WebkitBackgroundClip: "text",
-                  WebkitTextFillColor: "transparent",
-                  backgroundClip: "text",
-                  visibility: tHeroToDef < 0.8 ? "hidden" : "visible",
-                  // Fade out faster during morph
-                  opacity: 1 - tDefToManifesto * 3,
+                  position: "absolute",
+                  left: 0,
+                  top: isMobile ? "calc(100% + 10px)" : "calc(100% + 14px)",
+                  opacity: baseOpacity,
+                  visibility: baseOpacity > 0 ? "visible" : "hidden",
+                  width: "100%",
+                  display: "flex",
+                  flexDirection: "row",
+                  gap: isMobile ? "8px" : "22px",
+                  zIndex: 2,
+                  pointerEvents: tDefToManifesto > 0 || reveal < 0.8 ? "none" : "auto",
+                  transform: prefersReducedMotion ? undefined : `translateX(${translateX}px)`,
                 }}
               >
-                ›››
-              </span>
-              <span>START YOUR JOURNEY</span>
-              <span
-                data-role="journey-arrows-right"
-                className="journey-arrow-pulse journey-arrow-pulse-right"
-                style={{
-                  fontSize: isMobile ? "10px" : "16px",
-                  lineHeight: 1,
-                  background:
-                    "linear-gradient(135deg, rgba(202, 165, 84, 0.9) 0%, rgba(202, 165, 84, 0.6) 50%, rgba(202, 165, 84, 0.8) 100%)",
-                  WebkitBackgroundClip: "text",
-                  WebkitTextFillColor: "transparent",
-                  backgroundClip: "text",
-                  visibility: tHeroToDef < 0.8 ? "hidden" : "visible",
-                  // Fade out faster during morph
-                  opacity: 1 - tDefToManifesto * 3,
-                }}
-              >
-                ‹‹‹
-              </span>
-            </button>
+                {/* Primary CTA */}
+                <button
+                  ref={frameButtonRef}
+                  className="card-journey-btn"
+                  onClick={() => handleNavigate("services")}
+                  style={{
+                    flex: isMobile ? "65 1 0" : "1 1 auto",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: isMobile ? "6px" : "10px",
+                    background:
+                      "linear-gradient(135deg, rgba(202, 165, 84, 0.15) 0%, rgba(202, 165, 84, 0.05) 50%, rgba(202, 165, 84, 0.1) 100%)",
+                    border: "1px solid rgba(202, 165, 84, 0.3)",
+                    borderRadius: "2px",
+                    padding: isMobile ? "10px 12px" : "14px 18px",
+                    cursor: "pointer",
+                    transition: "all 0.2s ease",
+                    fontFamily: "var(--font-data, 'PT Mono', monospace)",
+                    fontSize: isMobile ? "9px" : "13px",
+                    fontWeight: 700,
+                    letterSpacing: isMobile ? "0.06em" : "0.15em",
+                    textTransform: "uppercase",
+                    color: "var(--gold, #caa554)",
+                    lineHeight: 1,
+                    whiteSpace: "nowrap",
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isMobile) {
+                      e.currentTarget.style.background =
+                        "linear-gradient(135deg, rgba(202, 165, 84, 0.25) 0%, rgba(202, 165, 84, 0.12) 50%, rgba(202, 165, 84, 0.2) 100%)";
+                      e.currentTarget.style.borderColor = "rgba(202, 165, 84, 0.5)";
+                      e.currentTarget.style.transform = "translateY(-1px)";
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isMobile) {
+                      e.currentTarget.style.background =
+                        "linear-gradient(135deg, rgba(202, 165, 84, 0.15) 0%, rgba(202, 165, 84, 0.05) 50%, rgba(202, 165, 84, 0.1) 100%)";
+                      e.currentTarget.style.borderColor = "rgba(202, 165, 84, 0.3)";
+                      e.currentTarget.style.transform = "translateY(0)";
+                    }
+                  }}
+                >
+                  <span
+                    data-role="journey-arrows-left"
+                    className="journey-arrow-pulse journey-arrow-pulse-left"
+                    style={{
+                      fontSize: isMobile ? "10px" : "16px",
+                      lineHeight: 1,
+                      background:
+                        "linear-gradient(135deg, rgba(202, 165, 84, 0.9) 0%, rgba(202, 165, 84, 0.6) 50%, rgba(202, 165, 84, 0.8) 100%)",
+                      WebkitBackgroundClip: "text",
+                      WebkitTextFillColor: "transparent",
+                      backgroundClip: "text",
+                      visibility: tHeroToDef < 0.8 ? "hidden" : "visible",
+                      // Fade out faster during morph
+                      opacity: 1 - tDefToManifesto * 3,
+                    }}
+                  >
+                    ›››
+                  </span>
+                  <span>START YOUR JOURNEY</span>
+                  <span
+                    data-role="journey-arrows-right"
+                    className="journey-arrow-pulse journey-arrow-pulse-right"
+                    style={{
+                      fontSize: isMobile ? "10px" : "16px",
+                      lineHeight: 1,
+                      background:
+                        "linear-gradient(135deg, rgba(202, 165, 84, 0.9) 0%, rgba(202, 165, 84, 0.6) 50%, rgba(202, 165, 84, 0.8) 100%)",
+                      WebkitBackgroundClip: "text",
+                      WebkitTextFillColor: "transparent",
+                      backgroundClip: "text",
+                      visibility: tHeroToDef < 0.8 ? "hidden" : "visible",
+                      // Fade out faster during morph
+                      opacity: 1 - tDefToManifesto * 3,
+                    }}
+                  >
+                    ‹‹‹
+                  </span>
+                </button>
 
-            {/* Secondary CTA - semantic dawn frame */}
-            <button
-              type="button"
-              ref={contactButtonRef}
-              onClick={() => handleNavigate("contact")}
-              style={{
-                flex: isMobile ? "35 1 0" : "0 0 172px",
-                display: "inline-flex",
-                alignItems: "center",
-                justifyContent: "center",
-                padding: isMobile ? "10px 12px" : "14px 14px",
-                borderRadius: "2px",
-                background: "rgba(10, 9, 8, 0.35)",
-                border: "1px solid rgba(236, 227, 214, 0.28)",
-                color: "var(--dawn, #ece3d6)",
-                cursor: "pointer",
-                transition: "all 0.2s ease",
-                fontFamily: "var(--font-data, 'PT Mono', monospace)",
-                fontSize: isMobile ? "10px" : "13px",
-                fontWeight: 700,
-                letterSpacing: isMobile ? "0.08em" : "0.15em",
-                textTransform: "uppercase",
-                lineHeight: 1,
-                whiteSpace: "nowrap",
-              }}
-              onMouseEnter={(e) => {
-                if (!isMobile) {
-                  e.currentTarget.style.background = "rgba(236, 227, 214, 0.06)";
-                  e.currentTarget.style.borderColor = "rgba(236, 227, 214, 0.45)";
-                  e.currentTarget.style.transform = "translateY(-1px)";
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (!isMobile) {
-                  e.currentTarget.style.background = "rgba(10, 9, 8, 0.35)";
-                  e.currentTarget.style.borderColor = "rgba(236, 227, 214, 0.28)";
-                  e.currentTarget.style.transform = "translateY(0)";
-                }
-              }}
-            >
-              CONTACT
-            </button>
-          </div>
-        )}
+                {/* Secondary CTA - semantic dawn frame */}
+                <button
+                  type="button"
+                  ref={contactButtonRef}
+                  onClick={() => handleNavigate("contact")}
+                  style={{
+                    flex: isMobile ? "35 1 0" : "0 0 172px",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    padding: isMobile ? "10px 12px" : "14px 14px",
+                    borderRadius: "2px",
+                    background: "rgba(10, 9, 8, 0.35)",
+                    border: "1px solid rgba(236, 227, 214, 0.28)",
+                    color: "var(--dawn, #ece3d6)",
+                    cursor: "pointer",
+                    transition: "all 0.2s ease",
+                    fontFamily: "var(--font-data, 'PT Mono', monospace)",
+                    fontSize: isMobile ? "10px" : "13px",
+                    fontWeight: 700,
+                    letterSpacing: isMobile ? "0.08em" : "0.15em",
+                    textTransform: "uppercase",
+                    lineHeight: 1,
+                    whiteSpace: "nowrap",
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isMobile) {
+                      e.currentTarget.style.background = "rgba(236, 227, 214, 0.06)";
+                      e.currentTarget.style.borderColor = "rgba(236, 227, 214, 0.45)";
+                      e.currentTarget.style.transform = "translateY(-1px)";
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isMobile) {
+                      e.currentTarget.style.background = "rgba(10, 9, 8, 0.35)";
+                      e.currentTarget.style.borderColor = "rgba(236, 227, 214, 0.28)";
+                      e.currentTarget.style.transform = "translateY(0)";
+                    }
+                  }}
+                >
+                  CONTACT
+                </button>
+              </div>
+            );
+          })()}
 
         {/* Terminal frame elements - appear during manifesto transition (behind text) */}
         <div
           className="terminal-content-wrapper"
           style={{
-            // Cross-fade in during transition
             opacity:
               tDefToManifesto * (isMobile ? 1 - Math.min(1, Math.max(0, tServicesCards * 2)) : 1),
             visibility:
@@ -1728,18 +1787,24 @@ human-AI collaboration.`}
               (!isMobile || 1 - Math.min(1, Math.max(0, tServicesCards * 2)) > 0.05)
                 ? "visible"
                 : "hidden",
-            // Keep absolute positioning - frame height is controlled by parent's height style
             position: "absolute",
             top: 0,
             left: 0,
             width: "100%",
             height: "100%",
-            // Lower z-index until manifesto starts revealing, then bring to front
             zIndex: manifestoRevealProgress > 0 ? 3 : 1,
-            // Don't constrain height - let content flow naturally within overflow:hidden parent
-            // IMPORTANT: this layer is purely decorative (frame + scanlines). It must never
-            // intercept pointer events, otherwise it can block clicking the Strategies sigil editor.
             pointerEvents: "none",
+            // Boot-up: scale 0.93 → 1.0 over first 50% + brief brightness pulse at initialization
+            transform:
+              !prefersReducedMotion && tDefToManifesto < 0.5
+                ? `scale(${0.93 + 0.07 * (tDefToManifesto / 0.5)})`
+                : undefined,
+            transformOrigin: "center center",
+            // Brief brightness flare at boot (peaks around tDefToManifesto ~0.15, then fades)
+            filter:
+              !prefersReducedMotion && tDefToManifesto > 0 && tDefToManifesto < 0.35
+                ? `brightness(${1 + 0.15 * Math.sin((tDefToManifesto / 0.35) * Math.PI)})`
+                : undefined,
           }}
         >
           {/* Gold corner accents */}
@@ -1807,8 +1872,13 @@ human-AI collaboration.`}
 
           {/* Terminal content */}
           <div className="terminal-body">
-            {/* Scanlines overlay */}
-            <div className="terminal-scanlines"></div>
+            {/* Scanlines overlay - visible ramp during boot, settles to subtle steady state */}
+            <div
+              className="terminal-scanlines"
+              style={{
+                opacity: tDefToManifesto < 0.5 ? (tDefToManifesto / 0.5) * 0.25 : 0.12,
+              }}
+            ></div>
           </div>
         </div>
       </div>
@@ -2042,48 +2112,122 @@ human-AI collaboration.`}
         </section>
 
         {/* Section 5: About - spacer section to extend runway before contact */}
-        <section className="section section-about" id="about" data-section="about">
-          <div className="section-layout">
-            <div className="section-label">
-              <span className="label-number">05</span>
-              <span className="label-text">About</span>
-            </div>
+        {(() => {
+          // Wider band: 10% of scroll (was 6%) so content doesn't rush in
+          const tAbout = Math.min(1, Math.max(0, (scrollProgress - 0.82) / 0.1));
+          return (
+            <section className="section section-about" id="about" data-section="about">
+              <div className="section-layout">
+                <div className="section-label">
+                  <span className="label-number">
+                    <TerminalReveal text="05" triggered={scrollProgress > 0.82} speed={40} />
+                  </span>
+                  <span className="label-text">
+                    <TerminalReveal text="About" triggered={scrollProgress > 0.82} speed={35} />
+                  </span>
+                </div>
 
-            <div className="section-content">
-              <div className="section-meta">
-                <span className="meta-label">Landmark:</span>
-                <span className="meta-value">continuum drift / story field</span>
+                <div
+                  className="section-content"
+                  style={{
+                    opacity: tAbout,
+                    transform: prefersReducedMotion
+                      ? undefined
+                      : `translateY(${(1 - tAbout) * 24}px)`,
+                  }}
+                >
+                  <div className="section-meta">
+                    <span className="meta-label">Landmark:</span>
+                    <span className="meta-value">continuum drift / story field</span>
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
-        </section>
+            </section>
+          );
+        })()}
 
         {/* Section 6: Contact */}
-        <section className="section section-contact" id="contact" data-section="contact">
-          <div className="section-layout">
-            <div className="section-label">
-              <span className="label-number">06</span>
-              <span className="label-text">Contact</span>
-            </div>
+        {(() => {
+          // Wider stagger bands (was 2% each, now 3%) with clear separation between elements
+          const tHeadline = Math.min(1, Math.max(0, (scrollProgress - 0.93) / 0.03));
+          const tCta = Math.min(1, Math.max(0, (scrollProgress - 0.95) / 0.03));
+          const tEmail = Math.min(1, Math.max(0, (scrollProgress - 0.97) / 0.03));
+          return (
+            <section className="section section-contact" id="contact" data-section="contact">
+              <div className="section-layout">
+                <div className="section-label">
+                  <span className="label-number">
+                    <TerminalReveal text="06" triggered={scrollProgress > 0.93} speed={40} />
+                  </span>
+                  <span className="label-text">
+                    <TerminalReveal text="Contact" triggered={scrollProgress > 0.93} speed={35} />
+                  </span>
+                </div>
 
-            <div className="section-content section-content-centered">
-              <h2 className="headline">Plot Your Course</h2>
+                <div className="section-content section-content-centered">
+                  <h2
+                    className="headline"
+                    style={{
+                      opacity: tHeadline,
+                      transform: prefersReducedMotion
+                        ? undefined
+                        : `translateY(${(1 - tHeadline) * 30}px)`,
+                    }}
+                  >
+                    Plot Your Course
+                  </h2>
 
-              <p className="text text-center">Ready to navigate intelligence with your team?</p>
+                  <p
+                    className="text text-center"
+                    style={{
+                      opacity: tCta,
+                      transform: prefersReducedMotion
+                        ? undefined
+                        : `translateY(${(1 - tCta) * 24}px)`,
+                    }}
+                  >
+                    Ready to navigate intelligence with your team?
+                  </p>
 
-              <a href="mailto:hello@thoughtform.co" className="btn btn-primary btn-large">
-                Initiate Contact
-              </a>
+                  <a
+                    href="mailto:hello@thoughtform.co"
+                    className="btn btn-primary btn-large"
+                    style={{
+                      opacity: tCta,
+                      transform: prefersReducedMotion
+                        ? undefined
+                        : `translateY(${(1 - tCta) * 24}px)`,
+                    }}
+                  >
+                    Initiate Contact
+                  </a>
 
-              <div className="contact-email">hello@thoughtform.co</div>
+                  <div
+                    className="contact-email"
+                    style={{
+                      opacity: tEmail,
+                      transform: prefersReducedMotion
+                        ? undefined
+                        : `translateY(${(1 - tEmail) * 16}px)`,
+                    }}
+                  >
+                    hello@thoughtform.co
+                  </div>
 
-              <div className="section-meta">
-                <span className="meta-label">Landmark:</span>
-                <span className="meta-value">event horizon / destination lock</span>
+                  <div
+                    className="section-meta"
+                    style={{
+                      opacity: tEmail,
+                    }}
+                  >
+                    <span className="meta-label">Landmark:</span>
+                    <span className="meta-value">event horizon / destination lock</span>
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
-        </section>
+            </section>
+          );
+        })()}
       </main>
     </>
   );

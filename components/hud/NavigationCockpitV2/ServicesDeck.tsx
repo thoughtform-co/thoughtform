@@ -177,10 +177,12 @@ export function ServicesDeck({
       { cardIndex: 0, offsetMultiplier: -2, cardT: leftT },
     ].map(({ cardIndex, offsetMultiplier, cardT }) => {
       const offsetX = offsetMultiplier * spacing * cardT;
-      const opacity = cardT; // Opacity syncs with position (no pop)
-      const scale = 0.97 + 0.03 * cardT; // 3% scale growth
-      const translateY = (1 - cardT) * 12; // 12px lift that settles to 0
-      return { cardIndex, offsetX, opacity, scale, translateY };
+      const opacity = cardT;
+      const scale = 0.97 + 0.03 * cardT;
+      const translateY = (1 - cardT) * 12;
+      // Content reveal starts after card reaches ~75% of its travel for clearer staging
+      const contentReveal = Math.min(1, Math.max(0, (cardT - 0.75) / 0.25));
+      return { cardIndex, offsetX, opacity, scale, translateY, contentReveal };
     });
   }, [progress, cardWidthPx]);
 
@@ -192,7 +194,7 @@ export function ServicesDeck({
 
   return (
     <div className="services-deck" aria-hidden={progress < 0.05}>
-      {cards.map(({ cardIndex, offsetX, opacity, scale, translateY }) => {
+      {cards.map(({ cardIndex, offsetX, opacity, scale, translateY, contentReveal }) => {
         const service = SERVICES_DATA[cardIndex];
         const sigilConfig = sigilConfigs[cardIndex] ?? DEFAULT_SIGIL_CONFIGS[cardIndex];
 
@@ -237,15 +239,16 @@ export function ServicesDeck({
             <ServiceCard
               service={service}
               sigilConfig={sigilConfig}
-              sigilSeed={sigilConfig.seed ?? 42 + cardIndex * 1000} // Editable seed with deterministic fallback
+              sigilSeed={sigilConfig.seed ?? 42 + cardIndex * 1000}
               index={cardIndex}
               isAdmin={isAdmin}
               onEditClick={onEditClick}
               width={cardWidthPx}
               height={cardHeightPx}
-              opacity={1} // Card handles its own internal opacity
+              opacity={1}
               zIndex={9}
               isEditing={editingCardIndex === cardIndex}
+              contentReveal={contentReveal}
             />
           </div>
         );

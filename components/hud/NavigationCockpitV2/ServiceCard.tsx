@@ -67,6 +67,8 @@ export interface ServiceCardProps {
   transform?: string;
   /** Whether this card is currently being edited */
   isEditing?: boolean;
+  /** 0-1 progress for inner content reveal (title, body, sigil stagger in) */
+  contentReveal?: number;
 }
 
 export function ServiceCard({
@@ -82,6 +84,7 @@ export function ServiceCard({
   zIndex = 1,
   transform,
   isEditing = false,
+  contentReveal = 1,
 }: ServiceCardProps) {
   const [isHovered, setIsHovered] = useState(false);
 
@@ -156,8 +159,24 @@ export function ServiceCard({
           visual hierarchy. Content has flex: 1 to push sigil to bottom.
           ───────────────────────────────────────────────────────────── */}
       <div className="service-card__content">
-        <h3 className="service-card__title">{service.title}</h3>
-        <p className="service-card__body">{service.body}</p>
+        <h3
+          className="service-card__title"
+          style={{
+            opacity: Math.min(1, Math.max(0, contentReveal / 0.35)),
+            transform: `translateY(${(1 - Math.min(1, contentReveal / 0.35)) * 20}px)`,
+          }}
+        >
+          {service.title}
+        </h3>
+        <p
+          className="service-card__body"
+          style={{
+            opacity: Math.min(1, Math.max(0, (contentReveal - 0.25) / 0.35)),
+            transform: `translateY(${(1 - Math.min(1, Math.max(0, (contentReveal - 0.25) / 0.35))) * 20}px)`,
+          }}
+        >
+          {service.body}
+        </p>
       </div>
 
       {/* ─────────────────────────────────────────────────────────────
@@ -176,7 +195,12 @@ export function ServiceCard({
           When size >= 240px, sigil expands to fill the container while
           staying contained. CSS clipping ensures no particle escape.
           ───────────────────────────────────────────────────────────── */}
-      <div className="service-card__sigil">
+      <div
+        className="service-card__sigil"
+        style={{
+          opacity: Math.min(1, Math.max(0, (contentReveal - 0.3) / 0.4)),
+        }}
+      >
         <div
           style={{
             transform: `translate(${sigilConfig.offsetX ?? 0}%, ${sigilConfig.offsetY ?? 0}%)`,

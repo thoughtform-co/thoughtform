@@ -113,11 +113,15 @@ export function ManifestoVideoStack({
 
   if (!isVisible) return null;
 
-  // Calculate staggered reveal for each card
-  const getCardOpacity = (index: number) => {
+  // Calculate staggered reveal for each card (opacity + slide-from-right, stronger travel)
+  const getCardReveal = (index: number) => {
     const cardRevealStart = index * 0.15;
-    const cardProgress = Math.max(0, (revealProgress - cardRevealStart) / 0.3);
-    return Math.min(1, cardProgress);
+    const cardProgress = Math.min(1, Math.max(0, (revealProgress - cardRevealStart) / 0.35));
+    const eased = 1 - Math.pow(1 - cardProgress, 3);
+    return {
+      opacity: eased,
+      translateX: (1 - eased) * 50,
+    };
   };
 
   return (
@@ -126,9 +130,9 @@ export function ManifestoVideoStack({
       <div className="video-stack">
         {cards.map((card, index) => {
           const isHovered = hoveredCard === card.id;
-          const stackOffset = index * 4; // Offset for stack effect (matching Atlas stacked hint)
-          const rotation = (index % 2 === 0 ? 1 : -1) * 0.8; // Slight rotation like Atlas
-          const cardOpacity = getCardOpacity(index);
+          const stackOffset = index * 4;
+          const rotation = (index % 2 === 0 ? 1 : -1) * 0.8;
+          const reveal = getCardReveal(index);
 
           return (
             <article
@@ -137,9 +141,9 @@ export function ManifestoVideoStack({
               style={{
                 left: `${stackOffset}px`,
                 top: `${stackOffset}px`,
-                transform: `rotate(${rotation}deg) ${isHovered ? "translateY(-2px)" : ""}`,
+                transform: `rotate(${rotation}deg) translateX(${reveal.translateX}px) ${isHovered ? "translateY(-2px)" : ""}`,
                 zIndex: isHovered ? 50 : cards.length - index,
-                opacity: cardOpacity,
+                opacity: reveal.opacity,
               }}
               onMouseEnter={() => setHoveredCard(card.id)}
               onMouseLeave={() => setHoveredCard(null)}
@@ -363,17 +367,24 @@ export function ManifestoVideoStack({
           flex-direction: column;
           align-items: flex-end;
           gap: 16px;
-          animation: fadeIn 0.5s ease-out forwards;
+          animation: videoStackFadeIn 0.6s ease-out forwards;
         }
 
-        @keyframes fadeIn {
+        @keyframes videoStackFadeIn {
           from {
             opacity: 0;
-            transform: translateY(-50%) translateX(20px);
+            transform: translateY(-50%) translateX(30px);
           }
           to {
             opacity: 1;
             transform: translateY(-50%) translateX(0);
+          }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .video-stack-container {
+            animation: none;
+            opacity: 1;
           }
         }
 

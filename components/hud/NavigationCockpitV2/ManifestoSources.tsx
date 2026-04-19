@@ -103,10 +103,10 @@ export function ManifestoSources({ isVisible }: ManifestoSourcesProps) {
           display: flex;
           flex-direction: row;
           align-items: stretch;
-          animation: fadeIn 0.5s ease-out forwards;
+          animation: sourcesFadeIn 0.5s ease-out forwards;
         }
 
-        @keyframes fadeIn {
+        @keyframes sourcesFadeIn {
           from {
             opacity: 0;
           }
@@ -115,7 +115,7 @@ export function ManifestoSources({ isVisible }: ManifestoSourcesProps) {
           }
         }
 
-        /* Solid vertical line */
+        /* Solid vertical line - draws downward on entrance */
         .sources-line {
           width: 1px;
           background: linear-gradient(
@@ -127,6 +127,17 @@ export function ManifestoSources({ isVisible }: ManifestoSourcesProps) {
           );
           margin-right: 16px;
           flex-shrink: 0;
+          animation: sourcesLineDraw 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+          transform-origin: top center;
+        }
+
+        @keyframes sourcesLineDraw {
+          from {
+            transform: scaleY(0);
+          }
+          to {
+            transform: scaleY(1);
+          }
         }
 
         /* Content container */
@@ -171,14 +182,29 @@ export function ManifestoSources({ isVisible }: ManifestoSourcesProps) {
 
         /* Individual source item */
         .source-item {
-          animation: slideIn 0.4s ease-out forwards;
+          animation: sourcesSlideIn 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
           opacity: 0;
         }
 
-        @keyframes slideIn {
+        @media (prefers-reduced-motion: reduce) {
+          .source-item {
+            animation: none;
+            opacity: 1;
+          }
+          .sources-line {
+            animation: none;
+            transform: scaleY(1);
+          }
+          .sources-rail {
+            animation: none;
+            opacity: 1;
+          }
+        }
+
+        @keyframes sourcesSlideIn {
           from {
             opacity: 0;
-            transform: translateX(-8px);
+            transform: translateX(-40px);
           }
           to {
             opacity: 1;

@@ -1,6 +1,6 @@
 "use client";
 
-import { forwardRef } from "react";
+import { forwardRef, useState, useEffect } from "react";
 
 interface ModuleCardProps {
   id: string;
@@ -37,36 +37,34 @@ export const ModuleCards = forwardRef<HTMLDivElement, ModuleCardsProps>(function
   { scrollProgress, transitionProgress, cardRefs },
   ref
 ) {
-  // Use transitionProgress if provided, otherwise fall back to legacy scrollProgress timing
-  let opacity: number;
+  const [reducedMotion, setReducedMotion] = useState(false);
+  useEffect(() => {
+    setReducedMotion(window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+  }, []);
+  // Container visibility + interactivity. Per-card opacity is computed below with stagger.
+  let containerOpacity: number;
   let isVisible: boolean;
   let isInteractive: boolean;
 
   if (transitionProgress !== undefined) {
-    // New timing: appear when tHeroToDef > 0.7 (as sigil settles)
-    // Fade in from t=0.7 to t=0.85, then close inward (no fade) as we scroll to next section
     const t = transitionProgress;
-    // Close synced with sigil exit animation: starts at 0.15, completes by 0.40
     const closeStart = 0.15;
     const closeEnd = 0.4;
     if (scrollProgress < closeStart) {
-      // Still in definition section - normal visibility (fade in only)
-      opacity = t < 0.7 ? 0 : t < 0.85 ? (t - 0.7) / 0.15 : 1;
-      isVisible = t >= 0.7;
+      // Container visible throughout the definition reveal window; per-card opacity handles the stagger
+      containerOpacity = t >= 0.55 ? 1 : 0;
+      isVisible = t >= 0.55;
     } else if (scrollProgress >= closeStart && scrollProgress < closeEnd) {
-      // Closing inward - fade opacity to sync with sigil movement
       const closeProgress = (scrollProgress - closeStart) / (closeEnd - closeStart);
-      opacity = t < 0.7 ? 0 : t < 0.85 ? (t - 0.7) / 0.15 : 1 - closeProgress;
-      isVisible = t >= 0.7;
+      containerOpacity = 1 - closeProgress;
+      isVisible = true;
     } else {
-      // Fully closed - hide completely
-      opacity = 0;
+      containerOpacity = 0;
       isVisible = false;
     }
-    isInteractive = t >= 0.85 && scrollProgress <= closeStart;
+    isInteractive = t >= 0.95 && scrollProgress <= closeStart;
   } else {
-    // Legacy timing
-    opacity =
+    containerOpacity =
       scrollProgress < 0.08
         ? 0
         : scrollProgress < 0.18
@@ -89,18 +87,34 @@ export const ModuleCards = forwardRef<HTMLDivElement, ModuleCardsProps>(function
       ref={ref}
       className="definition-modules"
       style={{
-        opacity,
+        opacity: containerOpacity,
         visibility: isVisible ? "visible" : "hidden",
         pointerEvents: isInteractive ? "auto" : "none",
       }}
     >
       {MODULE_CARDS_DATA.map((card, index) => {
-        // Stagger each card's close animation slightly
-        const cardCloseDelay = index * 0.15; // Each card starts closing 15% later
+        // Close/exit animation (on scroll past definition)
+        const cardCloseDelay = index * 0.15;
         const cardCloseProgress = Math.max(
           0,
           Math.min(1, (closeProgress - cardCloseDelay) / (1 - cardCloseDelay))
         );
+
+        // Right-panel entrance: opacity 0->1 + translateX(+80->0), staggered per card
+        // Top card (NAVIGATE) leads, bottom card (BUILD) arrives last
+        const staggerDelay = index * 0.08;
+        const entranceStart = 0.6 + staggerDelay;
+        const entranceEnd = 0.9 + staggerDelay;
+        const t = transitionProgress ?? 0;
+        const entranceRaw =
+          t < entranceStart
+            ? 0
+            : t > entranceEnd
+              ? 1
+              : (t - entranceStart) / (entranceEnd - entranceStart);
+        const eased = 1 - Math.pow(1 - entranceRaw, 3);
+        const slideX = reducedMotion ? 0 : (1 - eased) * 80;
+        const cardOpacity = eased;
 
         return (
           <div
@@ -108,8 +122,13 @@ export const ModuleCards = forwardRef<HTMLDivElement, ModuleCardsProps>(function
             ref={cardRefs[index]}
             className="module-card"
             style={{
-              // Close inward effect - scale down proportionately (borders scale too)
-              transform: cardCloseProgress > 0 ? `scale(${1 - cardCloseProgress})` : "scale(1)",
+              opacity: cardOpacity,
+              transform:
+                cardCloseProgress > 0
+                  ? `scale(${1 - cardCloseProgress})`
+                  : reducedMotion
+                    ? undefined
+                    : `translateX(${slideX}px)`,
               transformOrigin: "center center",
             }}
           >
