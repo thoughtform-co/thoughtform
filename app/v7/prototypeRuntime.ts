@@ -327,9 +327,7 @@ function initializePrototypeRuntime(root: ShadowRoot, docEl: HTMLElement) {
     tagIfEmpty(query(".hero__tagline", heroContent), "body");
     tagIfEmpty(query(".hero__desc", heroContent), "body");
     tagIfEmpty(query(".hero__cta", heroContent), "body");
-    tagIfEmpty(query(".hero__meta", heroContent), "frame");
   }
-  tagIfEmpty(query(".hero__viz"), "instrument");
 
   const tri = query<HTMLElement>(".tri");
   if (tri) {
@@ -375,7 +373,7 @@ function initializePrototypeRuntime(root: ShadowRoot, docEl: HTMLElement) {
   }
 
   const parallaxMap: Array<[string, number]> = [
-    [".hero__viz", 0.05],
+    [".hero__video", 0.03],
     [".tri__center", 0.04],
     [".about__dial", 0.06],
     [".hud__corner--tl", 0.015],
