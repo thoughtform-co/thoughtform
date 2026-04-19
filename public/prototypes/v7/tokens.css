@@ -1,0 +1,173 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   THOUGHTFORM DESIGN SYSTEM — Tokens
+   Canonical source for colors, typography, spacing, motion.
+   Derived from the Brand Codex and synchronized with thoughtform-co repo.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* ── Fonts ───────────────────────────────────────────────────────────── */
+@font-face {
+  font-family: 'PP Neue Montreal';
+  src: url('fonts/PPNeueMontreal-Light.otf') format('opentype');
+  font-weight: 300; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: 'PP Neue Montreal';
+  src: url('fonts/PPNeueMontreal-Book.otf') format('opentype');
+  font-weight: 400; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: 'PP Neue Montreal';
+  src: url('fonts/PPNeueMontreal-Medium.otf') format('opentype');
+  font-weight: 500; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: 'PP Neue Montreal';
+  src: url('fonts/PPNeueMontreal-Bold.otf') format('opentype');
+  font-weight: 700; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: 'PP Neue Montreal';
+  src: url('fonts/PPNeueMontreal-Italic.otf') format('opentype');
+  font-weight: 400; font-style: italic; font-display: swap;
+}
+@font-face {
+  font-family: 'PT Mono';
+  src: url('fonts/PTMono-Regular.ttf') format('truetype');
+  font-weight: 400; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: 'PT Mono';
+  src: url('fonts/PTMono-Bold.ttf') format('truetype');
+  font-weight: 700; font-style: normal; font-display: swap;
+}
+
+:root {
+  /* ── Core palette ─────────────────────────────────────────────────── */
+  --void: #050403;
+  --ink: #110F09;
+  --dawn: #ECE3D6;
+  --gold: #CAA554;
+  --gold-light: #9A7A2E;      /* light-mode gold */
+  --atreides-mid: #3D4B33;
+  --atreides-light: #5B7A4E;
+  --atreides-glow: #7A9E6A;
+  --alert: #FF6B35;
+  --verde: #39FF14;
+
+  /* Surfaces (dark mode) */
+  --surface-0: #0A0908;
+  --surface-1: #0F0E0C;
+  --surface-2: #141311;
+
+  /* Dawn opacity scale */
+  --dawn-80: rgba(236,227,214,0.80);
+  --dawn-70: rgba(236,227,214,0.70);
+  --dawn-50: rgba(236,227,214,0.50);
+  --dawn-40: rgba(236,227,214,0.40);
+  --dawn-30: rgba(236,227,214,0.30);
+  --dawn-15: rgba(236,227,214,0.15);
+  --dawn-08: rgba(236,227,214,0.08);
+  --dawn-04: rgba(236,227,214,0.04);
+
+  /* Gold opacity scale */
+  --gold-40: rgba(202,165,84,0.40);
+  --gold-15: rgba(202,165,84,0.15);
+  --gold-10: rgba(202,165,84,0.10);
+  --gold-05: rgba(202,165,84,0.05);
+
+  /* Atreides opacity scale */
+  --atreides-30: rgba(61,75,51,0.30);
+  --atreides-15: rgba(61,75,51,0.15);
+
+  /* Semantic aliases (dark) */
+  --bg: var(--void);
+  --text: var(--dawn-70);
+  --text-strong: var(--dawn-80);
+  --text-muted: var(--dawn-30);
+  --border: var(--dawn-08);
+  --border-hover: var(--dawn-15);
+
+  /* ── Typography ───────────────────────────────────────────────────── */
+  --font-pt-mono: 'PT Mono', ui-monospace, Menlo, monospace;
+  --font-pp-neue-montreal: 'PP Neue Montreal', system-ui, sans-serif;
+
+  --type-xs: clamp(9px, 0.5rem + 0.1vw, 10px);
+  --type-sm: clamp(10px, 0.6rem + 0.15vw, 12px);
+  --type-base: clamp(13px, 0.75rem + 0.2vw, 15px);
+  --type-md: clamp(14px, 0.8rem + 0.25vw, 16px);
+  --type-lg: clamp(16px, 0.9rem + 0.4vw, 20px);
+  --type-xl: clamp(18px, 1rem + 0.6vw, 26px);
+  --type-2xl: clamp(22px, 1.2rem + 1vw, 32px);
+  --type-display: clamp(28px, 1.5rem + 2vw, 48px);
+
+  /* Tracking */
+  --track-tight: 0.02em;
+  --track-normal: 0.04em;
+  --track-wide: 0.08em;
+  --track-wider: 0.1em;
+  --track-widest: 0.15em;
+
+  /* ── Spacing (8px base) ───────────────────────────────────────────── */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  --space-2xl: 48px;
+  --space-3xl: 64px;
+  --space-4xl: 96px;
+
+  /* Content rhythm (semantic, fixed) */
+  --tf-rhythm-inline: 15px;
+  --tf-rhythm-compact: 20px;
+  --tf-rhythm-default: 28px;
+  --tf-rhythm-large: 36px;
+  --tf-rhythm-relaxed: 45px;
+  --tf-panel-padding: 53px;
+
+  /* HUD geometry */
+  --hud-margin: clamp(16px, min(2.8125vw, 5vmin), 54px);
+  --hud-rail-top: clamp(32px, min(2.604vw, 4.63vmin), 50px);
+  --hud-rail-bottom: clamp(32px, min(2.604vw, 4.63vmin), 50px);
+  --hud-rail-width: clamp(48px, 4.27vw, 82px);
+  --hud-rail-guide-inset: clamp(5px, 0.47vw, 9px);
+  --hud-corner-zone: clamp(28px, 4.17vmin, 45px);
+
+  /* Motion */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --duration-fast: 80ms;
+  --duration-normal: 120ms;
+  --duration-slow: 150ms;
+}
+
+/* Light mode override */
+[data-theme="light"] {
+  --bg: var(--dawn);
+  --surface-0: #E4DAC9;
+  --surface-1: #DDD2C0;
+  --surface-2: #F2EAE0;
+  --gold: var(--gold-light);
+  --text: rgba(17,15,9,0.70);
+  --text-strong: rgba(17,15,9,0.80);
+  --text-muted: rgba(17,15,9,0.30);
+  --border: rgba(17,15,9,0.08);
+  --border-hover: rgba(17,15,9,0.15);
+}
+
+/* ── Global reset (brand-safe) ──────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-pp-neue-montreal);
+  font-size: var(--type-base);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Zero-radius law */
+button, input, select, textarea, .card, .panel, .btn {
+  border-radius: 0;
+}

@@ -1,143 +1,61 @@
-/* ═══════════════════════════════════════════════════════════════
-   V7 LANDING — Scoped Tokens & Base Layout
-   Extends the global Thoughtform design system with v7-specific
-   semantic aliases and typography. Scoped to .v7-landing to avoid
-   interference with the production homepage.
-   ═══════════════════════════════════════════════════════════════ */
+/* Route-level shell only.
+   The imported v7 prototype markup and its full token/CSS stack render
+   inside a shadow root to avoid leaking generic selectors into the rest
+   of the site while the current homepage remains live. */
 
-/* ── V7 Font Faces ──────────────────────────────────────────── */
-
-@font-face {
-  font-family: "PP Neue Montreal";
-  src: url("/fonts/PPNeueMontreal-Light.otf") format("opentype");
-  font-weight: 300;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: "PP Neue Montreal";
-  src: url("/fonts/PPNeueMontreal-Book.otf") format("opentype");
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: "PP Neue Montreal";
-  src: url("/fonts/PPNeueMontreal-Medium.otf") format("opentype");
-  font-weight: 500;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: "PP Neue Montreal";
-  src: url("/fonts/PPNeueMontreal-Bold.otf") format("opentype");
-  font-weight: 700;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "PT Mono";
-  src: url("/fonts/PTMono-Regular.ttf") format("truetype");
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: "PT Mono";
-  src: url("/fonts/PTMono-Bold.ttf") format("truetype");
-  font-weight: 700;
-  font-style: normal;
-  font-display: swap;
-}
-
-/* ── V7 Scoped Tokens ──────────────────────────────────────── */
-
-.v7-landing {
-  --v7-font-sans: "PP Neue Montreal", system-ui, sans-serif;
-  --v7-font-mono: "PT Mono", ui-monospace, Menlo, monospace;
-
-  /* Semantic surface aliases */
-  --v7-bg: var(--void, #0a0908);
-  --v7-surface-0: #0a0908;
-  --v7-surface-1: #0f0e0c;
-  --v7-surface-2: #141311;
-
-  /* Semantic text aliases */
-  --v7-text: var(--dawn-70, rgba(236, 227, 214, 0.7));
-  --v7-text-strong: var(--dawn-80, rgba(236, 227, 214, 0.8));
-  --v7-text-muted: var(--dawn-30, rgba(236, 227, 214, 0.3));
-
-  /* Semantic border aliases */
-  --v7-border: var(--dawn-08, rgba(236, 227, 214, 0.08));
-  --v7-border-hover: var(--dawn-15, rgba(236, 227, 214, 0.15));
-
-  /* Content rhythm (fixed, not fluid) */
-  --v7-rhythm-inline: 15px;
-  --v7-rhythm-compact: 20px;
-  --v7-rhythm-default: 28px;
-  --v7-rhythm-large: 36px;
-  --v7-rhythm-relaxed: 45px;
-  --v7-panel-padding: 53px;
-
-  /* Tracking */
-  --v7-track-tight: 0.02em;
-  --v7-track-normal: 0.04em;
-  --v7-track-wide: 0.08em;
-  --v7-track-wider: 0.1em;
-  --v7-track-widest: 0.15em;
-
-  /* Motion */
-  --v7-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
-  --v7-duration-fast: 80ms;
-  --v7-duration-normal: 120ms;
-  --v7-duration-slow: 150ms;
-}
-
-/* ── V7 Base Layout ────────────────────────────────────────── */
-
-.v7-landing {
-  background: var(--v7-bg);
-  color: var(--v7-text);
-  font-family: var(--v7-font-sans);
-  font-size: var(--type-base);
-  line-height: 1.6;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  min-height: 100vh;
-}
-
-.v7-stations {
+.v7-shell {
   position: relative;
-}
-
-.v7-station {
   min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-bottom: 1px solid var(--v7-border);
+  background:
+    radial-gradient(circle at 50% 40%, rgba(202, 165, 84, 0.08), transparent 32%), #050403;
 }
 
-.v7-station__inner {
-  text-align: center;
-}
-
-.v7-station__number {
+.v7-shell__host {
   display: block;
-  font-family: var(--v7-font-mono);
-  font-size: var(--type-xs);
-  letter-spacing: var(--v7-track-widest);
-  color: var(--gold, #caa554);
-  text-transform: uppercase;
-  margin-bottom: var(--space-sm);
+  min-height: 100vh;
 }
 
-.v7-station__label {
-  font-family: var(--v7-font-sans);
-  font-size: var(--type-display);
-  font-weight: 300;
-  color: var(--v7-text-strong);
-  letter-spacing: var(--v7-track-tight);
+.v7-shell__status {
+  position: fixed;
+  inset: auto auto 24px 24px;
+  z-index: 40;
+  width: min(420px, calc(100vw - 48px));
+  padding: 20px 22px;
+  border: 1px solid rgba(235, 227, 214, 0.12);
+  background: rgba(10, 9, 8, 0.82);
+  backdrop-filter: blur(12px);
+  color: rgba(236, 227, 214, 0.78);
+  box-shadow:
+    0 0 0 1px rgba(235, 227, 214, 0.04),
+    0 18px 48px rgba(0, 0, 0, 0.38);
+}
+
+.v7-shell__status--error {
+  border-color: rgba(255, 107, 53, 0.32);
+}
+
+.v7-shell__eyebrow {
+  margin-bottom: 10px;
+  color: rgba(202, 165, 84, 0.82);
+  font-family: var(--font-ibm-plex-mono), "IBM Plex Mono", monospace;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.v7-shell__title {
+  margin: 0 0 10px;
+  color: rgba(236, 227, 214, 0.9);
+  font-family: var(--font-ibm-plex), "IBM Plex Sans", sans-serif;
+  font-size: clamp(22px, 2.2vw, 28px);
+  font-weight: 400;
+  letter-spacing: 0.01em;
+}
+
+.v7-shell__copy {
   margin: 0;
+  color: rgba(236, 227, 214, 0.64);
+  font-family: var(--font-ibm-plex), "IBM Plex Sans", sans-serif;
+  font-size: 14px;
+  line-height: 1.55;
 }
