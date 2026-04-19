@@ -16,13 +16,14 @@ const SHADOW_BOOTSTRAP_CSS = `
 :host {
   display: block;
   min-height: 100vh;
-  background: #050403;
+  background: #0d0b09;
 }
 
 .v7-doc {
   position: relative;
   min-height: 100vh;
   --depth: 0;
+  --hero-cover: 0;
 }
 `;
 
@@ -144,6 +145,8 @@ function initializePrototypeRuntime(root: ShadowRoot, docEl: HTMLElement) {
   const coordT = query<HTMLElement>("#coordT");
   const coordR = query<HTMLElement>("#coordR");
   const coordZ = query<HTMLElement>("#coordZ");
+  const heroEl = query<HTMLElement>("#hero");
+  const defEl = query<HTMLElement>("#definition");
 
   const sectors: Record<string, string> = {
     hero: "Origin",
@@ -201,6 +204,13 @@ function initializePrototypeRuntime(root: ShadowRoot, docEl: HTMLElement) {
       }
 
       docEl.style.setProperty("--depth", Math.min(1, progress * 1.2).toFixed(4));
+
+      if (heroEl && defEl) {
+        const defTop = defEl.getBoundingClientRect().top;
+        const vh = window.innerHeight;
+        const cover = Math.max(0, Math.min(1, 1 - defTop / vh));
+        heroEl.style.setProperty("--hero-cover", cover.toFixed(4));
+      }
 
       const viewportMid = window.scrollY + window.innerHeight / 2;
       let activeStation = stations[0];

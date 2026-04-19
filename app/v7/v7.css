@@ -7,7 +7,7 @@
   position: relative;
   min-height: 100vh;
   background:
-    radial-gradient(circle at 50% 40%, rgba(202, 165, 84, 0.08), transparent 32%), #050403;
+    radial-gradient(circle at 50% 40%, rgba(202, 165, 84, 0.08), transparent 32%), #0d0b09;
 }
 
 .v7-shell__host {

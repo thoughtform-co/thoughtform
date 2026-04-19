@@ -11,7 +11,7 @@
    A scrolling navigation cockpit. Fixed HUD chrome, content as stations.
    ═══════════════════════════════════════════════════════════════════ */
 
-html, body { overflow-x: hidden; background: var(--void); }
+html, body { overflow-x: clip; background: var(--void); }
 body { color: var(--dawn-70); }
 
 /* ── Custom scrollbar (sparse, instrument-feel) ─────────────────────── */
@@ -37,7 +37,6 @@ body { color: var(--dawn-70); }
   opacity: calc(1 - var(--depth, 0) * 0.35);
   transition: transform 40ms linear, opacity 40ms linear;
   will-change: transform, opacity;
-}
   pointer-events: none;
   overflow: hidden;
   background:
@@ -254,8 +253,8 @@ body { color: var(--dawn-70); }
   position: relative;
   z-index: 10;
   padding: 0 clamp(96px, 8vw + 40px, 140px);
-  /* padding inside rails (64 + gutter) */
 }
+
 .station {
   min-height: 100vh;
   padding: 180px 0 180px;
@@ -305,10 +304,12 @@ body { color: var(--dawn-70); }
   margin: 0 0 var(--space-2xl);
 }
 
-/* ═══════════ 01 HERO — full-viewport video ═══════════ */
+/* ═══════════ 01 HERO — full-viewport video (pinned stage) ═══════════ */
 .hero {
-  position: relative;
-  min-height: 100vh;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -318,9 +319,10 @@ body { color: var(--dawn-70); }
   margin-right: calc(50% - 50vw);
   padding:
     clamp(96px, 14vh, 156px)
-    clamp(32px, 6vw, 128px)
+    clamp(96px, 8vw + 40px, 140px)
     clamp(56px, 8vh, 104px);
   overflow: hidden;
+  z-index: 1;
 }
 
 .hero__video {
@@ -393,10 +395,40 @@ body { color: var(--dawn-70); }
   transition: none;
 }
 
+/* Post-hero stations sit above the pinned hero and must be full-bleed
+   (100vw) so they physically cover it edge-to-edge as the user scrolls.
+   They break out of the .stations horizontal padding with matched
+   negative margins, then restore the inset padding on themselves so
+   content still aligns with the rails/gutter. */
+.station:not(.hero) {
+  background: var(--void);
+  z-index: 2;
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+  padding-left: clamp(96px, 8vw + 40px, 140px);
+  padding-right: clamp(96px, 8vw + 40px, 140px);
+}
+@media (max-width: 960px) {
+  .station:not(.hero) {
+    padding-left: 32px;
+    padding-right: 32px;
+  }
+}
+
 #definition {
   position: relative;
   z-index: 2;
-  box-shadow: 0 -40px 80px rgba(5, 4, 3, 0.6);
+  box-shadow: 0 -40px 80px rgba(5, 4, 3, 0.8);
+}
+#definition::before {
+  content: '';
+  position: absolute;
+  top: -1px; left: 0; right: 0;
+  height: 120px;
+  background: linear-gradient(to bottom, var(--void) 0%, transparent 100%);
+  pointer-events: none;
+  z-index: 1;
 }
 
 @media (max-width: 640px) {
@@ -407,6 +439,13 @@ body { color: var(--dawn-70); }
   .hero__content { max-width: 100%; }
   .hero__wordmark img { max-width: 240px; }
   .hero__video video { object-position: 68% center; }
+}
+
+@media (max-width: 960px) {
+  .hero {
+    padding-left: 32px;
+    padding-right: 32px;
+  }
 }
 
 @keyframes fadeUp {
@@ -1073,6 +1112,7 @@ body { color: var(--dawn-70); }
 .foot {
   padding: 40px clamp(96px, 8vw + 40px, 140px) 100px;
   position: relative; z-index: 10;
+  background: var(--void);
   border-top: 1px solid var(--dawn-08);
   display: grid;
   grid-template-columns: 1fr auto 1fr;
@@ -1647,9 +1687,9 @@ body.theme-latent .station__idx { color: var(--atreides-light); }
 body.theme-latent .station__idx::before { background: var(--atreides-light); }
 body.theme-latent .panel__label { color: var(--atreides-light); }
 
-/* Density variants */
-body.density-spacious .station { min-height: 115vh; padding: 220px 0; }
-body.density-dense .station { min-height: 85vh; padding: 120px 0; }
+/* Density variants (hero is pinned at 100vh — exclude from density scaling) */
+body.density-spacious .station:not(.hero) { min-height: 115vh; padding: 220px 0; }
+body.density-dense .station:not(.hero) { min-height: 85vh; padding: 120px 0; }
 
 /* ═══════════ RESPONSIVE ═══════════ */
 @media (max-width: 960px) {
@@ -1939,12 +1979,17 @@ body.density-dense .station { min-height: 85vh; padding: 120px 0; }
 }
 
 /* Hero video depth: scroll pushes it back, creating the "inward" feel
-   as the next section scrolls over. --depth is 0→1 from JS. */
+   as the next section scrolls over. --hero-cover is 0→1 from JS,
+   tied to definition entering the viewport (not full-page scroll). */
 .hero__video {
-  transform: scale(calc(1 + var(--depth, 0) * 0.08));
-  opacity: calc(1 - var(--depth, 0) * 0.4);
+  transform: scale(calc(1 + var(--hero-cover, 0) * 0.12));
+  opacity: calc(1 - var(--hero-cover, 0) * 0.5);
   transition: transform 60ms linear, opacity 60ms linear;
   will-change: transform, opacity;
+}
+.hero__content {
+  opacity: calc(1 - var(--hero-cover, 0) * 1.4);
+  transition: opacity 60ms linear;
 }
 
 /* Gateway depth layers — slight additional drift for depth cue.
@@ -2456,7 +2501,7 @@ html { scroll-behavior: smooth; }
 <!-- ═══ CONTENT STATIONS ═══ -->
 <main class="stations">
 
-  <!-- ═══════════ 01 HERO ═══════════ -->
+  <!-- ═══════════ 01 HERO (pinned stage) ═══════════ -->
   <section class="station hero" id="hero" data-station="hero" data-screen-label="01 Hero">
     <div class="hero__video" aria-hidden="true">
       <video autoplay muted loop playsinline preload="auto"
@@ -3225,6 +3270,8 @@ html { scroll-behavior: smooth; }
   const coordT = document.getElementById('coordT');
   const coordR = document.getElementById('coordR');
   const coordZ = document.getElementById('coordZ');
+  const heroEl = document.getElementById('hero');
+  const defEl = document.getElementById('definition');
 
   const SECTORS = {
     hero: 'Origin',
@@ -3274,6 +3321,14 @@ html { scroll-behavior: smooth; }
       // Past the hero, push the gateway back; dampened so motion stays subtle.
       const depth = Math.min(1, p * 1.2);
       document.documentElement.style.setProperty('--depth', depth.toFixed(4));
+
+      // hero-cover: 0→1 as #definition enters the viewport bottom edge
+      if (heroEl && defEl) {
+        const defTop = defEl.getBoundingClientRect().top;
+        const vh = window.innerHeight;
+        const cover = Math.max(0, Math.min(1, 1 - defTop / vh));
+        heroEl.style.setProperty('--hero-cover', cover.toFixed(4));
+      }
 
       // active station
       const viewportMid = window.scrollY + window.innerHeight/2;
