@@ -23,6 +23,9 @@ export {
 // - components/editor/* → legacy/editor/
 // - components/canvas/* → legacy/canvas/
 // - store/* → legacy/store/
+// - app/v2/* → legacy/landing-v2/
+// - app/v3/* → legacy/landing-v3/
+// - app/v4/* + components/hud/r3f/* + lib/v4/* → legacy/landing-v4/
 //
 // These are kept for reference but not actively compiled.
 // Import directly from legacy/ if needed for testing.

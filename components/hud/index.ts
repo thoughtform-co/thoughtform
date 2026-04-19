@@ -16,3 +16,4 @@ export { StatusBar } from "./StatusBar";
 // Legacy components moved to legacy/hud/
 // - ParticleCanvas (V1) → use ParticleCanvasV2
 // - NavigationCockpit (V1) → use NavigationCockpitV2
+// - r3f/* (R3F particle experiment) → legacy/landing-v4/r3f/
