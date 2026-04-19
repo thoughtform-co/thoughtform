@@ -101,6 +101,42 @@
   height: var(--corner-size);
 }
 
+/* ─── BOTTOM-LEFT BRANDMARK ANCHOR ───
+   Always-on anchor per the Thoughtform web canonical (see
+   .claude/skills/thoughtform-design/references/web-format-patterns.md §5).
+   Single logo touchpoint; navbar holds section links only.
+   Uses @keyframes logoPulse / logoGlow defined in _navbar.css. */
+.hud-brandmark-anchor {
+  position: fixed;
+  bottom: var(--hud-pad-bottom, 32px);
+  left: var(--hud-pad-left, 32px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  margin: 0;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: opacity 150ms ease;
+  pointer-events: auto;
+}
+
+.hud-brandmark-anchor:hover {
+  opacity: 0.8;
+}
+
+.hud-brandmark-anchor.logo-pulse {
+  animation: logoPulse 3s ease-in-out infinite;
+}
+
+.hud-brandmark-anchor.logo-glowing {
+  animation: logoGlow 0.8s ease-out forwards;
+}
+
 /* ─── TOP BAR ─── */
 .hud-top {
   position: absolute;
@@ -536,6 +572,17 @@
     display: none;
   }
 
+  /* Shrink the bottom-left brandmark anchor on mobile to match rail scale.
+     Let the SVG scale to the container (width/height attributes yield to CSS). */
+  .hud-brandmark-anchor {
+    width: 32px;
+    height: 32px;
+  }
+  .hud-brandmark-anchor > svg {
+    width: 100%;
+    height: 100%;
+  }
+
   .rail-markers {
     padding-right: 8px;
     gap: var(--space-md);
@@ -578,5 +625,13 @@
 
   .hud-nav {
     gap: var(--space-md);
+  }
+}
+
+@media (max-width: 480px) {
+  /* Micro mobile: shrink brandmark anchor further */
+  .hud-brandmark-anchor {
+    width: 28px;
+    height: 28px;
   }
 }

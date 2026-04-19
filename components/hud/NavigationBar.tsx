@@ -87,8 +87,7 @@ function getCurrentSectionIndex(activeSection: string): number {
 
 export const NavigationBar = forwardRef<NavigationBarHandle, NavigationBarProps>(
   function NavigationBar({ activeSection, onNavigate }, ref) {
-    const desktopLogoRef = useRef<SVGSVGElement>(null);
-    const mobileLogoRef = useRef<SVGSVGElement>(null);
+    const brandmarkRef = useRef<SVGSVGElement>(null);
     const [isLogoGlowing, setIsLogoGlowing] = useState(false);
     // Logo is semantic dawn until particles arrive, then tensor gold
     const [isLogoGold, setIsLogoGold] = useState(false);
@@ -99,18 +98,10 @@ export const NavigationBar = forwardRef<NavigationBarHandle, NavigationBarProps>
     // Expose logo position and glow trigger through imperative handle
     useImperativeHandle(ref, () => ({
       getLogoPosition: () => {
-        const getRect = (el: SVGSVGElement | null) => {
-          if (!el) return null;
-          const rect = el.getBoundingClientRect();
-          // If the element is display:none, rect will be 0x0 — treat as unavailable.
-          if (rect.width === 0 || rect.height === 0) return null;
-          return rect;
-        };
-
-        const mobileRect = getRect(mobileLogoRef.current);
-        const desktopRect = getRect(desktopLogoRef.current);
-        const rect = mobileRect ?? desktopRect;
-        if (!rect) return null;
+        const el = brandmarkRef.current;
+        if (!el) return null;
+        const rect = el.getBoundingClientRect();
+        if (rect.width === 0 || rect.height === 0) return null;
         return {
           x: rect.left + rect.width / 2,
           y: rect.top + rect.height / 2,
@@ -144,28 +135,9 @@ export const NavigationBar = forwardRef<NavigationBarHandle, NavigationBarProps>
 
     return (
       <>
-        {/* Desktop: Centered navbar (CSS-hidden on mobile) */}
+        {/* Desktop: Centered navbar (CSS-hidden on mobile) — nav links only, no logo */}
         <div className="navbar-container">
           <nav className="navbar" aria-label="Primary navigation">
-            {/* Logo on the left */}
-            <a
-              href="#"
-              className={`navbar-logo ${isLogoGlowing ? "logo-glowing" : ""} ${!isLogoGold ? "logo-pulse" : ""}`}
-              onClick={handleLogoClick}
-              style={{
-                opacity: isLogoGold ? 1 : undefined,
-                position: "relative",
-              }}
-            >
-              <ThoughtformLogo
-                ref={desktopLogoRef}
-                size={22}
-                color={isLogoGold ? "#caa554" : "#ece3d6"}
-              />
-              <LogoGlowEffect active={isLogoGlowing} size={22} />
-            </a>
-
-            {/* Desktop: Nav links */}
             {navItems.map((item) => {
               const isActive = activeSection === item.sectionId;
               return (
@@ -182,7 +154,7 @@ export const NavigationBar = forwardRef<NavigationBarHandle, NavigationBarProps>
           </nav>
         </div>
 
-        {/* Mobile: Vertical section list (left) + Thoughtform sigil (right) (CSS-hidden on desktop) */}
+        {/* Mobile: Vertical section list (left) (CSS-hidden on desktop) */}
         <nav className="mobile-section-list" aria-label="Section navigation">
           {mobileSectionItems.map((item, index) => {
             const isActive = index === currentSectionIndex;
@@ -203,20 +175,19 @@ export const NavigationBar = forwardRef<NavigationBarHandle, NavigationBarProps>
           })}
         </nav>
 
-        {/* Top-right: Thoughtform brandmark (replaces hamburger on mobile) */}
+        {/* Bottom-left HUD brandmark anchor — single touchpoint across desktop and mobile */}
         <button
-          className={`mobile-sigil ${isLogoGlowing ? "logo-glowing" : ""} ${!isLogoGold ? "logo-pulse" : ""}`}
+          className={`hud-brandmark-anchor ${isLogoGlowing ? "logo-glowing" : ""} ${!isLogoGold ? "logo-pulse" : ""}`}
           onClick={handleLogoClick}
           aria-label="Scroll to top"
         >
           <ThoughtformLogo
-            ref={mobileLogoRef}
-            size={24}
+            ref={brandmarkRef}
+            size={40}
             color={isLogoGold ? "#caa554" : "#ece3d6"}
           />
-          <LogoGlowEffect active={isLogoGlowing} size={24} />
+          <LogoGlowEffect active={isLogoGlowing} size={40} />
         </button>
-        {/* Styles moved to app/styles/navigation/_navbar.css */}
       </>
     );
   }
