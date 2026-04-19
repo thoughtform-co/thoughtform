@@ -101,52 +101,83 @@ function initializePrototypeRuntime(root: ShadowRoot, docEl: HTMLElement) {
   Object.entries(defaultTweaks).forEach(([key, value]) => applyTweak(key, value));
   const currentTweaks = { ...defaultTweaks };
 
-  const buildTicks = (containerId: string, count = 24) => {
+  // 21-position depth gauge (canonical web shell)
+  const TICK_COUNT = 20;
+  const TICK_LABELS: Record<number, string> = { 0: "0", 5: "2", 10: "5", 15: "7", 20: "10" };
+
+  const buildDepthTicks = (containerId: string) => {
     const container = query<HTMLElement>(`#${containerId}`);
     if (!container) return;
     container.innerHTML = "";
 
-    for (let i = 0; i < count; i += 1) {
+    for (let i = 0; i <= TICK_COUNT; i += 1) {
       const tick = document.createElement("div");
-      tick.className = "hud__rail__tick" + (i % 4 === 0 ? " hud__rail__tick--major" : "");
-      tick.style.top = `${(i / (count - 1)) * 100}%`;
+      const isMajor = i % 5 === 0;
+      tick.className = "hud__rail__tick" + (isMajor ? " hud__rail__tick--major" : "");
+      tick.style.top = `${(i / TICK_COUNT) * 100}%`;
       container.appendChild(tick);
 
-      if (i % 4 !== 0) continue;
-
-      const label = document.createElement("div");
-      label.className = "hud__rail__label";
-      label.style.top = `${(i / (count - 1)) * 100}%`;
-      label.style.transform = "translateY(-50%)";
-
-      if (containerId === "leftTicks") {
-        label.textContent = String(i * 2).padStart(2, "0");
-      } else {
-        const idx = Math.floor(i / 4) + 1;
-        label.textContent = String(idx).padStart(2, "0");
+      if (isMajor && TICK_LABELS[i] !== undefined) {
+        const label = document.createElement("div");
+        label.className = "hud__rail__label";
+        label.style.top = `${(i / TICK_COUNT) * 100}%`;
+        label.style.transform = "translateY(-50%)";
+        label.textContent = TICK_LABELS[i];
+        container.appendChild(label);
       }
-
-      container.appendChild(label);
     }
   };
 
-  buildTicks("leftTicks");
-  buildTicks("rightTicks");
+  buildDepthTicks("leftTicks");
+  buildDepthTicks("rightTicks");
+
+  // Section markers on right rail
+  const SECTION_MARKERS = [
+    { station: "hero", label: "01" },
+    { station: "definition", label: "02" },
+    { station: "continuum", label: "03" },
+    { station: "practice", label: "04" },
+    { station: "services", label: "05" },
+    { station: "products", label: "06" },
+    { station: "about", label: "07" },
+    { station: "contact", label: "08" },
+  ];
+
+  const markersContainer = query<HTMLElement>("#rightMarkers");
+  const markerEls: Array<{ el: HTMLElement; station: string }> = [];
+  if (markersContainer) {
+    markersContainer.innerHTML = "";
+    SECTION_MARKERS.forEach((m, i) => {
+      const el = document.createElement("div");
+      el.className = "hud__marker";
+      el.setAttribute("data-station", m.station);
+      el.style.top = `${(i / Math.max(1, SECTION_MARKERS.length - 1)) * 100}%`;
+      el.style.transform = "translateY(-50%)";
+
+      const dot = document.createElement("span");
+      dot.className = "hud__marker__dot";
+      const label = document.createElement("span");
+      label.className = "hud__marker__label";
+      label.textContent = m.label;
+
+      el.appendChild(dot);
+      el.appendChild(label);
+      markersContainer.appendChild(el);
+      markerEls.push({ el, station: m.station });
+    });
+  }
 
   const stations = queryAll<HTMLElement>(".station");
   const navLinks = queryAll<HTMLAnchorElement>("#hudNav a");
   const depthIndicator = query<HTMLElement>("#depthIndicator");
-  const progressBar = query<HTMLElement>("#progressBar");
-  const hudProgress = query<HTMLElement>("#hudProgress");
   const hudSector = query<HTMLElement>("#hudSector");
-  const hudSignalValue = query<HTMLElement>("#hudSignalV");
-  const hudStatus = query<HTMLElement>("#hudStatus");
-  const coordD = query<HTMLElement>("#coordD");
-  const coordT = query<HTMLElement>("#coordT");
-  const coordR = query<HTMLElement>("#coordR");
-  const coordZ = query<HTMLElement>("#coordZ");
   const heroEl = query<HTMLElement>("#hero");
   const defEl = query<HTMLElement>("#definition");
+  const contEl = query<HTMLElement>("#continuum");
+  const sigilMark = query<HTMLElement>(".sigil__mark");
+  const hudBrandmark = query<HTMLElement>("#hudBrandmark");
+  const hudBrandmarkOverlay = query<HTMLElement>("#hudBrandmarkOverlay");
+  let brandmarkHandoffComplete = false;
 
   const sectors: Record<string, string> = {
     hero: "Origin",
@@ -159,17 +190,6 @@ function initializePrototypeRuntime(root: ShadowRoot, docEl: HTMLElement) {
     contact: "Horizon",
   };
 
-  const statuses: Record<string, string> = {
-    hero: "Scroll to descend · the window stays · the world changes",
-    definition: "Locating the sigil · adopt · encode · build",
-    continuum: "Reading the spectrum · tool ↔ collaborator",
-    practice: "Surveying practice · adopt → encode → build",
-    services: "Approaching service triad · three instruments mapped",
-    products: "Fleet constellation · 4 instruments in deck",
-    about: "Telemetry nominal · crew identity resolved",
-    contact: "Event horizon · awaiting handshake",
-  };
-
   let scrollRafId: number | null = null;
   const onScroll = () => {
     if (scrollRafId) return;
@@ -179,28 +199,8 @@ function initializePrototypeRuntime(root: ShadowRoot, docEl: HTMLElement) {
       const scrollMax = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
       const progress = Math.max(0, Math.min(1, window.scrollY / scrollMax));
 
-      progressBar?.style.setProperty("--p", `${(progress * 100).toFixed(1)}%`);
-      if (hudProgress) {
-        hudProgress.textContent = `${String(Math.round(progress * 100)).padStart(2, "0")}%`;
-      }
-
       if (depthIndicator) {
-        depthIndicator.style.top = `${4 + progress * 92}%`;
-      }
-
-      if (coordD) coordD.textContent = (0.2 + progress * 0.55).toFixed(2);
-      if (coordT) {
-        coordT.textContent = `${String(Math.round(progress * 359)).padStart(
-          3,
-          "0"
-        )}.${String(Math.round((progress * 10) % 10))}°`;
-      }
-      if (coordR) {
-        coordR.textContent = (0.4 + Math.sin(progress * 6) * 0.25 + 0.3).toFixed(2);
-      }
-      if (coordZ) coordZ.textContent = (1.2 + progress * 5.8).toFixed(1);
-      if (hudSignalValue) {
-        hudSignalValue.textContent = (0.72 + Math.sin(progress * 4) * 0.12 + 0.05).toFixed(2);
+        depthIndicator.style.top = `${progress * 100}%`;
       }
 
       docEl.style.setProperty("--depth", Math.min(1, progress * 1.2).toFixed(4));
@@ -221,13 +221,69 @@ function initializePrototypeRuntime(root: ShadowRoot, docEl: HTMLElement) {
       }
 
       const activeKey = activeStation?.getAttribute("data-station") || activeStation?.id || "hero";
+      const stationOrder = stations.map((s) => s.getAttribute("data-station") || s.id);
+      const activeIdx = stationOrder.indexOf(activeKey);
 
       navLinks.forEach((link) =>
         link.classList.toggle("is-active", link.getAttribute("data-station") === activeKey)
       );
 
+      // Update right-rail section markers
+      markerEls.forEach((m) => {
+        const mIdx = stationOrder.indexOf(m.station);
+        m.el.classList.toggle("is-active", m.station === activeKey);
+        m.el.classList.toggle("is-past", mIdx < activeIdx);
+      });
+
       if (hudSector) hudSector.textContent = sectors[activeKey] || "Field";
-      if (hudStatus) hudStatus.textContent = statuses[activeKey] || statuses.hero;
+
+      // Brandmark handoff: section-2 sigil → bottom-left HUD anchor
+      if (defEl && contEl && sigilMark && hudBrandmark && hudBrandmarkOverlay) {
+        const defRect = defEl.getBoundingClientRect();
+        const contRect = contEl.getBoundingClientRect();
+        const vh = window.innerHeight;
+
+        // Compute a 0→1 transition progress: 0 when continuum top is at viewport bottom,
+        // 1 when continuum top reaches viewport top
+        const handoffT = Math.max(0, Math.min(1, 1 - contRect.top / vh));
+
+        if (handoffT <= 0) {
+          // Before transition: hide overlay and anchor
+          hudBrandmarkOverlay.style.display = "none";
+          hudBrandmark.classList.remove("is-visible");
+          brandmarkHandoffComplete = false;
+        } else if (handoffT < 1 && !brandmarkHandoffComplete) {
+          // During transition: animate the overlay clone from sigil position to BL anchor
+          const srcRect = sigilMark.getBoundingClientRect();
+          const dstRect = hudBrandmark.getBoundingClientRect();
+
+          const srcX = srcRect.left + srcRect.width / 2;
+          const srcY = srcRect.top + srcRect.height / 2;
+          const dstX = dstRect.left + dstRect.width / 2;
+          const dstY = dstRect.top + dstRect.height / 2;
+
+          const eased = handoffT * handoffT * (3 - 2 * handoffT); // smoothstep
+          const cx = srcX + (dstX - srcX) * eased;
+          const cy = srcY + (dstY - srcY) * eased;
+          const srcSize = srcRect.width;
+          const dstSize = dstRect.width;
+          const size = srcSize + (dstSize - srcSize) * eased;
+
+          hudBrandmarkOverlay.style.display = "block";
+          hudBrandmarkOverlay.style.width = `${size}px`;
+          hudBrandmarkOverlay.style.height = `${size}px`;
+          hudBrandmarkOverlay.style.left = `${cx - size / 2}px`;
+          hudBrandmarkOverlay.style.top = `${cy - size / 2}px`;
+          hudBrandmarkOverlay.style.opacity = String(Math.min(1, handoffT * 2));
+
+          hudBrandmark.classList.remove("is-visible");
+        } else {
+          // After transition: show anchor, hide overlay
+          hudBrandmarkOverlay.style.display = "none";
+          hudBrandmark.classList.add("is-visible");
+          brandmarkHandoffComplete = true;
+        }
+      }
     });
   };
 
@@ -255,6 +311,16 @@ function initializePrototypeRuntime(root: ShadowRoot, docEl: HTMLElement) {
 
     link.addEventListener("click", onClick);
     addCleanup(() => link.removeEventListener("click", onClick));
+  });
+
+  markerEls.forEach(({ el, station }) => {
+    const onMarkerClick = () => {
+      const target = query<HTMLElement>(`#${station}`);
+      if (!target) return;
+      window.scrollTo({ top: target.offsetTop - 20, behavior: "smooth" });
+    };
+    el.addEventListener("click", onMarkerClick);
+    addCleanup(() => el.removeEventListener("click", onMarkerClick));
   });
 
   const tweaksEl = query<HTMLElement>("#tweaks");

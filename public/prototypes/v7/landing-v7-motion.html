@@ -80,15 +80,13 @@ body { color: var(--dawn-70); }
 
 /* Corner brackets */
 .hud__corner {
-  position: absolute; width: 28px; height: 28px; pointer-events: none;
+  position: absolute; width: var(--hud-corner-zone); height: var(--hud-corner-zone); pointer-events: none;
 }
-.hud__corner--tl { top: 18px; left: 18px;
+.hud__corner--tl { top: var(--hud-margin); left: var(--hud-margin);
   border-top: 1px solid var(--dawn-30); border-left: 1px solid var(--dawn-30); }
-.hud__corner--tr { top: 18px; right: 18px;
+.hud__corner--tr { top: var(--hud-margin); right: var(--hud-margin);
   border-top: 1px solid var(--dawn-30); border-right: 1px solid var(--dawn-30); }
-.hud__corner--bl { bottom: 18px; left: 18px;
-  border-bottom: 1px solid var(--dawn-30); border-left: 1px solid var(--dawn-30); }
-.hud__corner--br { bottom: 18px; right: 18px;
+.hud__corner--br { bottom: var(--hud-margin); right: var(--hud-margin);
   border-bottom: 1px solid var(--dawn-30); border-right: 1px solid var(--dawn-30); }
 
 /* Top bar */
@@ -152,99 +150,116 @@ body { color: var(--dawn-70); }
 }
 @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
 
-/* Left rail — depth scale */
+/* Left rail — depth scale (tokenized, scales on smaller laptops).
+   Rails clear the corner brackets above and the brandmark below. */
 .hud__rail {
   position: absolute;
-  top: 90px; bottom: 90px;
-  width: 64px;
+  top: calc(var(--hud-margin) + var(--hud-corner-zone) + clamp(16px, 1.8vw, 32px));
+  bottom: calc(var(--hud-margin) + clamp(24px, 2.5vw, 40px) + clamp(16px, 1.8vw, 32px));
+  width: var(--hud-rail-width);
   display: flex; flex-direction: column;
 }
-.hud__rail--l { left: 18px; }
-.hud__rail--r { right: 18px; }
+.hud__rail--l { left: var(--hud-margin); }
+.hud__rail--r { right: var(--hud-margin); }
 .hud__rail__track {
   position: absolute; top: 0; bottom: 0;
   width: 1px;
   background: linear-gradient(to bottom, transparent, var(--dawn-30) 8%, var(--dawn-30) 92%, transparent);
 }
-.hud__rail--l .hud__rail__track { right: 14px; }
-.hud__rail--r .hud__rail__track { left: 14px; }
+/* Track aligns with the vertical leg of the corner brackets (at --hud-margin). */
+.hud__rail--l .hud__rail__track { left: 0; }
+.hud__rail--r .hud__rail__track { right: 0; }
 
 .hud__rail__tick {
-  position: absolute; height: 1px; background: var(--dawn-30);
+  position: absolute; height: 1px; background: var(--gold-40);
 }
-.hud__rail--l .hud__rail__tick { right: 14px; width: 7px; }
-.hud__rail--l .hud__rail__tick--major { width: 18px; background: var(--dawn-50); }
-.hud__rail--r .hud__rail__tick { left: 14px; width: 7px; }
-.hud__rail--r .hud__rail__tick--major { width: 18px; background: var(--dawn-50); }
+/* Ticks extend INWARD from the outer guide line. */
+.hud__rail--l .hud__rail__tick { left: 0; width: 10px; }
+.hud__rail--l .hud__rail__tick--major { width: 20px; background: var(--gold); }
+.hud__rail--r .hud__rail__tick { right: 0; width: 10px; }
+.hud__rail--r .hud__rail__tick--major { width: 20px; background: var(--gold); }
 
 .hud__rail__label {
   position: absolute;
   font-family: var(--font-pt-mono); font-size: 9px;
-  color: var(--dawn-50); letter-spacing: var(--track-wider);
+  color: var(--dawn-30); letter-spacing: var(--track-wider);
 }
-.hud__rail--l .hud__rail__label { right: 36px; }
-.hud__rail--r .hud__rail__label { left: 36px; }
+/* Labels sit inward of the ticks. */
+.hud__rail--l .hud__rail__label { left: 28px; }
+.hud__rail--r .hud__rail__label { right: 28px; }
 
-/* Depth indicator (moves with scroll) */
+/* Scroll chevron — angular bracket pointing inward along the left rail.
+   Two 1px gold segments meet at a point, forming a ›-shaped indicator. */
 .hud__depth {
-  position: absolute; right: 6px;
-  width: 17px; height: 17px;
-  transition: top 120ms var(--ease-out);
+  position: absolute; left: -2px;
+  width: 14px; height: 14px;
+  transition: top 60ms linear;
+  transform: translateY(-50%);
 }
-.hud__depth::before {
-  content: ''; position: absolute; inset: 0;
+.hud__depth::before,
+.hud__depth::after {
+  content: ''; position: absolute;
+  width: 10px; height: 1px;
   background: var(--gold);
-  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
-  opacity: 0.9;
+  left: 0;
+  transform-origin: left center;
 }
+.hud__depth::before { top: 3px; transform: rotate(30deg); }
+.hud__depth::after  { bottom: 3px; transform: rotate(-30deg); }
 
-/* Bottom bar — coordinates */
-.hud__bottom {
-  position: absolute; bottom: 0; left: 0; right: 0;
-  height: 60px;
-  display: grid; grid-template-columns: auto 1fr auto;
-  align-items: center;
-  padding: 0 clamp(28px, 4vw, 64px);
-  border-top: 1px solid var(--dawn-08);
-  background: linear-gradient(to top, rgba(5,4,3,0.85), rgba(5,4,3,0.4));
-  backdrop-filter: blur(10px);
+/* Right-rail section markers — align to the outer guide line with a small gap. */
+.hud__marker {
+  position: absolute;
+  right: 4px;
+  display: flex; align-items: center; gap: 8px;
+  flex-direction: row-reverse;
+  cursor: pointer;
+  opacity: 0.35;
+  transition: opacity var(--duration-normal) var(--ease-out);
 }
-.hud__coords {
-  display: flex; gap: 20px; flex-wrap: wrap;
-  font-family: var(--font-pt-mono); font-size: 10px;
-  letter-spacing: var(--track-wide); color: var(--dawn-50);
+.hud__marker.is-active { opacity: 1; }
+.hud__marker.is-past { opacity: 0.6; }
+.hud__marker__dot {
+  width: 8px; height: 8px;
+  border: 1px solid var(--dawn-50);
+  transform: rotate(45deg);
+  transition: all var(--duration-normal) var(--ease-out);
 }
-.hud__coords .k { color: var(--gold); margin-right: 4px; }
+.hud__marker.is-active .hud__marker__dot {
+  background: var(--gold); border-color: var(--gold);
+  box-shadow: 0 0 8px var(--gold-40);
+}
+.hud__marker__label {
+  font-family: var(--font-pt-mono); font-size: 9px;
+  letter-spacing: var(--track-wider); color: var(--dawn-50);
+}
+.hud__marker.is-active .hud__marker__label { color: var(--gold); }
 
-.hud__status {
-  font-family: var(--font-pt-mono); font-size: 10px;
-  letter-spacing: var(--track-wide); text-transform: uppercase;
-  color: var(--dawn-30);
-  text-align: center;
+/* Bottom-left brandmark anchor */
+.hud__brandmark {
+  position: absolute;
+  bottom: var(--hud-margin);
+  left: var(--hud-margin);
+  width: clamp(24px, 2.5vw, 40px); height: clamp(24px, 2.5vw, 40px);
+  opacity: 0; pointer-events: none;
+  transition: opacity 300ms var(--ease-out);
+  z-index: 2;
 }
-.hud__status .cursor {
-  display: inline-block; width: 7px; height: 10px;
-  background: var(--gold); vertical-align: baseline;
-  animation: blink 1.2s steps(2) infinite;
-  margin-left: 4px;
+.hud__brandmark.is-visible {
+  opacity: 1; pointer-events: auto;
 }
-@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+.hud__brandmark img { width: 100%; height: 100%; display: block; }
 
-.hud__progress {
-  font-family: var(--font-pt-mono); font-size: 10px;
-  letter-spacing: var(--track-wide); color: var(--dawn-50);
-  text-align: right;
+/* Brandmark handoff overlay — animated clone that travels from sigil to BL anchor */
+.hud__brandmark-overlay {
+  position: fixed;
+  pointer-events: none;
+  z-index: 25;
+  transition: none;
 }
-.hud__progress .bar {
-  display: inline-block; width: 80px; height: 3px;
-  background: var(--dawn-08); margin: 0 10px;
-  vertical-align: middle; position: relative;
-}
-.hud__progress .bar::before {
-  content: ''; position: absolute; left: 0; top: 0; bottom: 0;
-  width: var(--p, 0%); background: var(--gold);
-  transition: width 120ms var(--ease-out);
-}
+.hud__brandmark-overlay img { width: 100%; height: 100%; display: block; }
+
+/* Bottom bar removed — scroll state conveyed by chevron + section markers. */
 
 /* ═══════════════════════════════════════════════════════════════════
    CONTENT — stations along the scroll
@@ -419,16 +434,6 @@ body { color: var(--dawn-70); }
 #definition {
   position: relative;
   z-index: 2;
-  box-shadow: 0 -40px 80px rgba(5, 4, 3, 0.8);
-}
-#definition::before {
-  content: '';
-  position: absolute;
-  top: -1px; left: 0; right: 0;
-  height: 120px;
-  background: linear-gradient(to bottom, var(--void) 0%, transparent 100%);
-  pointer-events: none;
-  z-index: 1;
 }
 
 @media (max-width: 640px) {
@@ -1692,17 +1697,20 @@ body.density-spacious .station:not(.hero) { min-height: 115vh; padding: 220px 0;
 body.density-dense .station:not(.hero) { min-height: 85vh; padding: 120px 0; }
 
 /* ═══════════ RESPONSIVE ═══════════ */
+@media (max-width: 1100px) {
+  .hud__rail__label { display: none; }
+  .hud__marker__label { display: none; }
+}
 @media (max-width: 960px) {
   .hud__rail { display: none; }
+  .hud__brandmark { display: none; }
+  .hud__brandmark-overlay { display: none; }
   .stations, .foot { padding-left: 32px; padding-right: 32px; }
   .hud__nav a .num { display: none; }
   .hud__top { grid-template-columns: auto 1fr auto; padding: 0 20px; }
   .hud__signal { display: none; }
-  .hud__coords { display: none; }
 }
 @media (max-width: 640px) {
-  .hud__bottom { grid-template-columns: 1fr; }
-  .hud__status, .hud__progress { display: none; }
   .station__title { font-size: clamp(32px, 9vw, 48px); }
 }
 
@@ -2441,13 +2449,11 @@ html { scroll-behavior: smooth; }
 <div class="hud" aria-hidden="false">
   <div class="hud__corner hud__corner--tl"></div>
   <div class="hud__corner hud__corner--tr"></div>
-  <div class="hud__corner hud__corner--bl"></div>
   <div class="hud__corner hud__corner--br"></div>
 
   <!-- Top bar -->
   <header class="hud__top">
     <div class="hud__brand">
-      <img src="assets/logos/Thoughtform_Brandmark.svg" alt=""/>
       <span>Thoughtform</span>
       <span class="div">/</span>
       <span class="sector" id="hudSector">Origin</span>
@@ -2479,23 +2485,19 @@ html { scroll-behavior: smooth; }
   <aside class="hud__rail hud__rail--r">
     <div class="hud__rail__track"></div>
     <div id="rightTicks"></div>
+    <div id="rightMarkers"></div>
   </aside>
 
-  <!-- Bottom bar -->
-  <footer class="hud__bottom">
-    <div class="hud__coords">
-      <span><span class="k">δ</span><span id="coordD">0.27</span></span>
-      <span><span class="k">θ</span><span id="coordT">058.1°</span></span>
-      <span><span class="k">ρ</span><span id="coordR">0.63</span></span>
-      <span><span class="k">ζ</span><span id="coordZ">2.4</span></span>
-    </div>
-    <div class="hud__status">
-      <span id="hudStatus">Scroll to descend. The window stays. The world changes.</span><span class="cursor"></span>
-    </div>
-    <div class="hud__progress">
-      <span id="hudProgress">00%</span><span class="bar" id="progressBar"></span><span>TOTAL</span>
-    </div>
-  </footer>
+  <!-- Bottom-left brandmark anchor (dormant until section-2→3 handoff) -->
+  <div class="hud__brandmark" id="hudBrandmark">
+    <img src="assets/logos/Thoughtform_Brandmark.svg" alt="Thoughtform" />
+  </div>
+
+  <!-- Brandmark handoff overlay (animated clone, created by runtime) -->
+  <div class="hud__brandmark-overlay" id="hudBrandmarkOverlay" style="display:none">
+    <img src="assets/logos/Thoughtform_Brandmark.svg" alt="" />
+  </div>
+
 </div>
 
 <!-- ═══ CONTENT STATIONS ═══ -->
