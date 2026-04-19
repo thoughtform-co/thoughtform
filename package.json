@@ -10,6 +10,7 @@
     "build": "next build",
     "start": "next start -p 3003",
     "lint": "next lint",
+    "video:optimize": "node scripts/optimize-video.mjs",
     "registry:build": "npx shadcn build",
     "analyze": "cross-env ANALYZE=true next build",
     "test": "vitest",

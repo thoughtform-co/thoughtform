@@ -26,7 +26,7 @@ The Navigation HUD (corner brackets, telemetry rails, compass anchor, bearing la
 
 ## The constellation
 
-This is the third repo in the Thoughtform brand world. It inherited the particle system from Atlas and the Dawn-on-Void palette from Astrolabe. It contributed the Navigation HUD pattern now present across all repos, crystallized the brand architecture into formal Cursor skills (thoughtform-brand-architect, thoughtform-design), and established the Storybook integration for component documentation.
+This is the third repo in the Thoughtform brand world. It inherited the particle system from Atlas and the Dawn-on-Void palette from Astrolabe. It contributed the Navigation HUD pattern now present across all repos, crystallized the brand architecture into the canonical global Cursor skill **thoughtform-design** (Navigation UI Grammar + identity/tokens/motion/voice in one skill), and established the Storybook integration for component documentation.
 
 The Astrogation module built here taught me how to articulate what exactly inspires me about dozens of retrofuturistic UI references I had been curating. That process, while it did not yield a scalable design system on its own, directly informed the more refined architecture that emerged in Sigil.
 

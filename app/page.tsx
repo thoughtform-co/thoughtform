@@ -1,9 +1,20 @@
-import { NavigationCockpitV2 } from "@/components/hud";
-import { getParticleConfig } from "@/lib/particle-config-server";
+import type { Metadata } from "next";
+import { getV7Content } from "./v7-parse";
+import { V7Landing } from "./V7Landing";
 
-export default async function Home() {
-  // Fetch particle config server-side for instant render (no flash of defaults)
-  const initialParticleConfig = await getParticleConfig();
+export const metadata: Metadata = {
+  title: "Thoughtform — Navigate Intelligence",
+  description:
+    "Thoughtform pioneers intuitive human-AI collaboration. We teach teams how to navigate AI for creative and strategic work.",
+};
 
-  return <NavigationCockpitV2 initialParticleConfig={initialParticleConfig} />;
+export default function Home() {
+  const { bodyHtml, bodyClass, scopedCss } = getV7Content();
+
+  return (
+    <>
+      <style dangerouslySetInnerHTML={{ __html: scopedCss }} />
+      <V7Landing bodyHtml={bodyHtml} bodyClass={bodyClass} />
+    </>
+  );
 }

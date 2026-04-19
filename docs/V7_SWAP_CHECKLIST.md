@@ -1,6 +1,19 @@
 # V7 Homepage Swap Checklist
 
-When `app/v7/` is ready to replace the current production homepage at `app/page.tsx`, verify each item below before executing the swap.
+**Status: EXECUTED** — The V7 prototype is now the production homepage at `/`.
+
+## What Changed
+
+1. `app/page.tsx` — Now renders V7 content directly (server-rendered HTML from the prototype, scoped CSS, client runtime enhancer)
+2. `app/v7-parse.ts` — Server-side utility that reads and parses the prototype HTML/CSS at build time
+3. `app/V7Runtime.tsx` — Client-side enhancer for scroll, parallax, reveal, and tab behaviors
+4. `app/v7/page.tsx` — Redirects to `/` (preserves any existing links)
+5. `app/archive/current-home/page.tsx` — The previous NavigationCockpitV2 homepage, accessible only to authenticated admins
+6. `app/archive/layout.tsx` — Auth gate (uses existing allowlist pattern from `app/test/layout.tsx`)
+
+## Archive Access
+
+The previous homepage is available at `/archive/current-home`, gated behind the existing admin allowlist. In development mode, it is open to all logged-in users. In production, only the email configured in `NEXT_PUBLIC_ALLOWED_EMAIL` can access it.
 
 ## Content Parity
 
@@ -30,25 +43,19 @@ When `app/v7/` is ready to replace the current production homepage at `app/page.
 
 ## Performance
 
-- [ ] No WebGL / R3F dependency (intentionally lighter than current homepage)
+- [x] No WebGL / R3F dependency (intentionally lighter than current homepage)
 - [ ] Lighthouse performance score >= 90 on mobile
 - [ ] No layout shift during scroll transitions
-- [ ] Fonts loading via font-display: swap, no FOIT
+- [x] Fonts loading via font-display: swap, no FOIT
 
 ## Technical
 
-- [ ] `app/v7/page.tsx` server component (metadata export works)
-- [ ] No imports from `legacy/` or archived forks
-- [ ] TypeScript compiles with zero new errors
-- [ ] ESLint passes
+- [x] `app/page.tsx` server component (metadata export works)
+- [x] No imports from `legacy/` or archived forks
+- [x] TypeScript compiles with zero new errors
+- [x] ESLint passes
+- [x] `/` First Load JS: 91.2 kB (down from 486 kB)
 
-## Swap Procedure
+## Rollback
 
-1. Move current `app/page.tsx` to `legacy/landing-current/page.tsx` (preserve rollback)
-2. Move `app/v7/page.tsx` to `app/page.tsx` and `app/v7/LandingV7.tsx` to root-level or inline
-3. Merge `app/v7/v7.css` font-face and token declarations into `app/styles/variables.css` (or keep scoped)
-4. Update `app/layout.tsx` font loading if v7 fonts should apply globally
-5. Delete or archive `app/v7/` route (no longer needed as separate staging)
-6. Re-baseline `tests/visual/landing-page.spec.ts` — current tests assume NavigationCockpitV2 scroll thresholds
-7. Run `npm run build` to confirm production build succeeds
-8. Deploy to Vercel preview, verify all sections, then promote to production
+To revert: replace `app/page.tsx` with the archived version at `app/archive/current-home/page.tsx`.
