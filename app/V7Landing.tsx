@@ -1,6 +1,10 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+gsap.registerPlugin(ScrollTrigger);
 
 interface V7LandingProps {
   bodyHtml: string;
@@ -15,11 +19,215 @@ function queryAll<T extends Element>(selector: string, scope: ParentNode): T[] {
   return Array.from(scope.querySelectorAll<T>(selector));
 }
 
+function initSigilChoreography(docEl: HTMLElement): () => void {
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  const defEl = query<HTMLElement>("#definition", docEl);
+  const contEl = query<HTMLElement>("#continuum", docEl);
+  const sigilOrbits = query<HTMLElement>(".sigil__orbits", docEl);
+  const sigilHalo = query<HTMLElement>(".sigil__halo", docEl);
+  const sigilMark = query<HTMLElement>(".sigil__mark", docEl);
+  const sigilCap = query<HTMLElement>(".sigil__cap", docEl);
+  const triLeft = query<HTMLElement>(".tri__left", docEl);
+  const triRight = query<HTMLElement>(".tri__right", docEl);
+  const hudBrandmark = query<HTMLElement>("#hudBrandmark", docEl);
+
+  if (!defEl || !contEl || !sigilOrbits || !sigilMark || !hudBrandmark) {
+    return () => {};
+  }
+
+  const section2Els = [sigilOrbits, sigilHalo, sigilMark, sigilCap, triLeft, triRight].filter(
+    Boolean
+  ) as HTMLElement[];
+  section2Els.forEach((el) => {
+    el.removeAttribute("data-m");
+    el.classList.add("is-in");
+  });
+
+  if (reduceMotion) {
+    gsap.set([sigilOrbits, sigilHalo, sigilMark, sigilCap, triLeft, triRight].filter(Boolean), {
+      opacity: 1,
+      scale: 1,
+      y: 0,
+      clearProps: "transform",
+    });
+    hudBrandmark.classList.add("is-visible");
+    return () => {};
+  }
+
+  const sigilImg = query<HTMLImageElement>(".sigil__mark img", docEl);
+  const travelMark = document.createElement("div");
+  travelMark.setAttribute("aria-hidden", "true");
+  Object.assign(travelMark.style, {
+    position: "fixed",
+    left: "0px",
+    top: "0px",
+    width: "0px",
+    height: "0px",
+    opacity: "0",
+    pointerEvents: "none",
+    zIndex: "24",
+    willChange: "left, top, width, height, opacity",
+  });
+  if (sigilImg) {
+    const travelImg = sigilImg.cloneNode(true) as HTMLImageElement;
+    Object.assign(travelImg.style, {
+      width: "100%",
+      height: "100%",
+      display: "block",
+      filter: "drop-shadow(0 0 24px rgba(202,165,84,0.25))",
+    });
+    travelMark.appendChild(travelImg);
+  }
+  docEl.appendChild(travelMark);
+
+  const ctx = gsap.context(() => {
+    gsap.set([sigilOrbits, sigilHalo], { opacity: 0, scale: 0.6, rotation: -8 });
+    gsap.set(sigilMark, { opacity: 0, scale: 0.7 });
+    gsap.set([sigilCap, triLeft, triRight].filter(Boolean), { opacity: 0, y: 16 });
+
+    const entranceTl = gsap.timeline({
+      scrollTrigger: {
+        trigger: defEl,
+        start: "top 85%",
+        end: "top 35%",
+        scrub: 0.6,
+      },
+    });
+
+    entranceTl
+      .to(
+        [sigilOrbits, sigilHalo].filter(Boolean),
+        {
+          opacity: 1,
+          scale: 1,
+          rotation: 0,
+          duration: 0.5,
+          ease: "power3.out",
+        },
+        0
+      )
+      .to(
+        sigilMark,
+        {
+          opacity: 1,
+          scale: 1,
+          duration: 0.4,
+          ease: "power3.out",
+        },
+        0.15
+      )
+      .to(
+        [sigilCap].filter(Boolean),
+        {
+          opacity: 1,
+          y: 0,
+          duration: 0.35,
+          ease: "power3.out",
+        },
+        0.3
+      )
+      .to(
+        [triLeft, triRight].filter(Boolean),
+        {
+          opacity: 1,
+          y: 0,
+          duration: 0.4,
+          ease: "power3.out",
+          stagger: 0.08,
+        },
+        0.25
+      );
+
+    let handoffStartRect: DOMRect | null = null;
+    let handoffTargetRect: DOMRect | null = null;
+
+    const captureHandoffRects = () => {
+      handoffStartRect = sigilMark.getBoundingClientRect();
+      handoffTargetRect = hudBrandmark.getBoundingClientRect();
+    };
+
+    const applyHandoff = (p: number) => {
+      const eased = p * p * (3 - 2 * p);
+      const hideOriginal = p > 0;
+
+      gsap.set(sigilMark, {
+        opacity: hideOriginal ? 0 : 1,
+        "--frame-opacity": hideOriginal ? 0 : 1,
+      });
+
+      if (p <= 0) {
+        handoffStartRect = null;
+        handoffTargetRect = null;
+        gsap.set(travelMark, { opacity: 0 });
+        hudBrandmark.classList.remove("is-visible");
+        return;
+      }
+
+      if (!handoffStartRect || !handoffTargetRect) {
+        captureHandoffRects();
+      }
+
+      const srcRect = handoffStartRect!;
+      const dstRect = handoffTargetRect!;
+      const left = srcRect.left + (dstRect.left - srcRect.left) * eased;
+      const top = srcRect.top + (dstRect.top - srcRect.top) * eased;
+      const width = srcRect.width + (dstRect.width - srcRect.width) * eased;
+      const height = srcRect.height + (dstRect.height - srcRect.height) * eased;
+
+      gsap.set(travelMark, {
+        left,
+        top,
+        width,
+        height,
+        opacity: 1,
+      });
+      hudBrandmark.classList.remove("is-visible");
+    };
+
+    const handoffTl = gsap.timeline({
+      scrollTrigger: {
+        trigger: contEl,
+        start: "top 100%",
+        end: "top 50%",
+        scrub: 0.6,
+        onEnter: () => captureHandoffRects(),
+        onEnterBack: () => captureHandoffRects(),
+        onRefresh: (self) => {
+          if (self.progress <= 0) {
+            captureHandoffRects();
+          }
+          applyHandoff(self.progress);
+        },
+        onUpdate: (self) => applyHandoff(self.progress),
+      },
+    });
+
+    handoffTl.to(
+      [sigilOrbits, sigilHalo, sigilCap].filter(Boolean),
+      {
+        opacity: 0,
+        scale: 0.7,
+        duration: 0.5,
+        ease: "power3.in",
+      },
+      0
+    );
+  }, docEl);
+
+  return () => {
+    ctx.revert();
+    travelMark.remove();
+  };
+}
+
 function initV7Runtime(docEl: HTMLElement): () => void {
   const cleanups: Array<() => void> = [];
   const addCleanup = (fn: (() => void) | void) => {
     if (typeof fn === "function") cleanups.push(fn);
   };
+
+  addCleanup(initSigilChoreography(docEl));
 
   const applyTweak = (key: string, value: string) => {
     if (key === "theme") {
@@ -37,9 +245,6 @@ function initV7Runtime(docEl: HTMLElement): () => void {
   Object.entries(defaultTweaks).forEach(([k, v]) => applyTweak(k, v));
   const currentTweaks = { ...defaultTweaks };
 
-  // Ticks and section markers are pre-rendered server-side in v7-parse.ts
-  // so React's reconciliation cannot wipe them. We only attach event handlers
-  // and track references for the scroll-driven active-state logic.
   const markerEls: Array<{ el: HTMLElement; station: string }> = queryAll<HTMLElement>(
     "#rightMarkers .hud__marker",
     docEl
@@ -51,11 +256,6 @@ function initV7Runtime(docEl: HTMLElement): () => void {
   const hudSector = query<HTMLElement>("#hudSector", docEl);
   const heroEl = query<HTMLElement>("#hero", docEl);
   const defEl = query<HTMLElement>("#definition", docEl);
-  const contEl = query<HTMLElement>("#continuum", docEl);
-  const sigilMark = query<HTMLElement>(".sigil__mark", docEl);
-  const hudBrandmark = query<HTMLElement>("#hudBrandmark", docEl);
-  const hudBrandmarkOverlay = query<HTMLElement>("#hudBrandmarkOverlay", docEl);
-  let brandmarkHandoffComplete = false;
 
   const sectors: Record<string, string> = {
     hero: "Origin",
@@ -107,41 +307,6 @@ function initV7Runtime(docEl: HTMLElement): () => void {
         m.el.classList.toggle("is-past", mIdx < activeIdx);
       });
       if (hudSector) hudSector.textContent = sectors[activeKey] || "Field";
-
-      if (defEl && contEl && sigilMark && hudBrandmark && hudBrandmarkOverlay) {
-        const contRect = contEl.getBoundingClientRect();
-        const vh = window.innerHeight;
-        const handoffT = Math.max(0, Math.min(1, 1 - contRect.top / vh));
-        if (handoffT <= 0) {
-          hudBrandmarkOverlay.style.display = "none";
-          hudBrandmark.classList.remove("is-visible");
-          brandmarkHandoffComplete = false;
-        } else if (handoffT < 1 && !brandmarkHandoffComplete) {
-          const srcRect = sigilMark.getBoundingClientRect();
-          const dstRect = hudBrandmark.getBoundingClientRect();
-          const eased = handoffT * handoffT * (3 - 2 * handoffT);
-          const cx =
-            srcRect.left +
-            srcRect.width / 2 +
-            (dstRect.left + dstRect.width / 2 - srcRect.left - srcRect.width / 2) * eased;
-          const cy =
-            srcRect.top +
-            srcRect.height / 2 +
-            (dstRect.top + dstRect.height / 2 - srcRect.top - srcRect.height / 2) * eased;
-          const size = srcRect.width + (dstRect.width - srcRect.width) * eased;
-          hudBrandmarkOverlay.style.display = "block";
-          hudBrandmarkOverlay.style.width = `${size}px`;
-          hudBrandmarkOverlay.style.height = `${size}px`;
-          hudBrandmarkOverlay.style.left = `${cx - size / 2}px`;
-          hudBrandmarkOverlay.style.top = `${cy - size / 2}px`;
-          hudBrandmarkOverlay.style.opacity = String(Math.min(1, handoffT * 2));
-          hudBrandmark.classList.remove("is-visible");
-        } else {
-          hudBrandmarkOverlay.style.display = "none";
-          hudBrandmark.classList.add("is-visible");
-          brandmarkHandoffComplete = true;
-        }
-      }
     });
   };
 

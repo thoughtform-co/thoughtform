@@ -250,14 +250,6 @@ body { color: var(--dawn-70); }
 }
 .hud__brandmark img { width: 100%; height: 100%; display: block; }
 
-/* Brandmark handoff overlay — animated clone that travels from sigil to BL anchor */
-.hud__brandmark-overlay {
-  position: fixed;
-  pointer-events: none;
-  z-index: 25;
-  transition: none;
-}
-.hud__brandmark-overlay img { width: 100%; height: 100%; display: block; }
 
 /* Bottom bar removed — scroll state conveyed by chevron + section markers. */
 
@@ -300,7 +292,7 @@ body { color: var(--dawn-70); }
 .station__title {
   font-family: var(--font-pt-mono);
   font-weight: 700;
-  font-size: clamp(36px, 5.5vw, 72px);
+  font-size: var(--type-display-section);
   letter-spacing: -0.02em;
   text-transform: uppercase;
   color: var(--dawn);
@@ -317,8 +309,8 @@ body { color: var(--dawn-70); }
 .station__lede {
   font-family: var(--font-pp-neue-montreal);
   font-weight: 300;
-  font-size: clamp(18px, 1.4vw, 22px);
-  line-height: 1.5;
+  font-size: var(--type-lede);
+  line-height: 1.45;
   color: var(--dawn-70);
   opacity: 1 !important;
   transform: none !important;
@@ -392,7 +384,7 @@ body { color: var(--dawn-70); }
 .hero__tagline {
   font-family: var(--font-pp-neue-montreal);
   font-weight: 300;
-  font-size: clamp(22px, 2vw, 30px);
+  font-size: var(--type-lede-lg);
   line-height: 1.3;
   color: var(--dawn);
   margin: 0 0 var(--space-md);
@@ -402,7 +394,7 @@ body { color: var(--dawn-70); }
 
 .hero__desc {
   font-family: var(--font-pp-neue-montreal);
-  font-size: 16px; line-height: 1.6;
+  font-size: var(--type-body-lg); line-height: 1.6;
   color: var(--dawn-80);
   max-width: 48ch;
   margin: 0 0 var(--space-lg);
@@ -1097,7 +1089,7 @@ body { color: var(--dawn-70); }
 }
 .contact__title {
   font-family: var(--font-pt-mono); font-weight: 700;
-  font-size: clamp(44px, 7vw, 96px);
+  font-size: var(--type-display-xl);
   letter-spacing: -0.02em;
   text-transform: uppercase;
   color: var(--dawn); line-height: 0.95;
@@ -1106,7 +1098,7 @@ body { color: var(--dawn-70); }
 .contact__title em { font-style: normal; color: var(--gold); }
 .contact__desc {
   font-family: var(--font-pp-neue-montreal);
-  font-size: 18px; line-height: 1.5;
+  font-size: var(--type-lede); line-height: 1.45;
   color: var(--dawn-70); margin: 0 auto var(--space-2xl);
   max-width: 44ch; text-wrap: pretty;
 }
@@ -1272,7 +1264,7 @@ body { color: var(--dawn-70); }
 .sigil__mark::before {
   content: ''; position: absolute; inset: -24px;
   border: 1px solid var(--gold);
-  opacity: 0.25;
+  opacity: calc(0.25 * var(--frame-opacity, 1));
   transform: rotate(45deg);
   pointer-events: none;
 }
@@ -1375,7 +1367,7 @@ body { color: var(--dawn-70); }
 .station--centered { text-align: center; }
 .station--centered .station__idx { /* keep idx/landmark on the rails */ }
 .station__title--compact {
-  font-size: clamp(28px, 3.6vw, 52px) !important;
+  font-size: var(--type-display-compact) !important;
   line-height: 1.08;
   max-width: 22ch;
 }
@@ -1449,8 +1441,8 @@ body { color: var(--dawn-70); }
 }
 .continuum__thesis {
   font-family: var(--font-pp-neue-montreal);
-  font-size: clamp(17px, 1.4vw, 20px);
-  line-height: 1.55;
+  font-size: var(--type-lede);
+  line-height: 1.45;
   color: var(--dawn);
   margin: 0 0 16px;
 }
@@ -1713,14 +1705,13 @@ body.density-dense .station:not(.hero) { min-height: 85vh; padding: 120px 0; }
 @media (max-width: 960px) {
   .hud__rail { display: none; }
   .hud__brandmark { display: none; }
-  .hud__brandmark-overlay { display: none; }
   .stations, .foot { padding-left: 32px; padding-right: 32px; }
   .hud__nav a .num { display: none; }
   .hud__top { grid-template-columns: auto 1fr auto; padding: 0 20px; }
   .hud__signal { display: none; }
 }
 @media (max-width: 640px) {
-  .station__title { font-size: clamp(32px, 9vw, 48px); }
+  .station__title { font-size: clamp(30px, 9vw, 50px); }
 }
 
 /* Reduce motion */
@@ -1751,13 +1742,7 @@ body.density-dense .station:not(.hero) { min-height: 85vh; padding: 120px 0; }
   flex-shrink: 0;
 }
 
-/* ── Section titles: more consistent tracking ────────────────────── */
-.station__title em {
-  font-style: italic;
-  font-family: 'PP Neue Montreal', system-ui, serif;
-  font-weight: 300;
-  letter-spacing: -0.01em;
-}
+/* ── Section titles: em stays PT Mono, differentiated by color ──── */
 
 /* ── Hero polish ──────────────────────────────────────────────────── */
 .hero__tagline { text-wrap: balance; }
@@ -1995,18 +1980,23 @@ body.density-dense .station:not(.hero) { min-height: 85vh; padding: 120px 0; }
   will-change: transform;
 }
 
-/* Hero video depth: scroll pushes it back, creating the "inward" feel
-   as the next section scrolls over. --hero-cover is 0→1 from JS,
+/* Hero zoom: as section 02 enters, the background pushes in harder and
+   the copy scales forward slightly. --hero-cover is 0→1 from JS,
    tied to definition entering the viewport (not full-page scroll). */
 .hero__video {
-  transform: scale(calc(1 + var(--hero-cover, 0) * 0.12));
-  opacity: calc(1 - var(--hero-cover, 0) * 0.5);
+  transform: scale(calc(1 + var(--hero-cover, 0) * 0.18));
+  opacity: calc(1 - var(--hero-cover, 0) * 0.45);
   transition: transform 60ms linear, opacity 60ms linear;
   will-change: transform, opacity;
 }
 .hero__content {
+  transform:
+    translateY(clamp(-18px, -3vh, -32px))
+    scale(calc(1 + var(--hero-cover, 0) * 0.035));
+  transform-origin: left center;
   opacity: calc(1 - var(--hero-cover, 0) * 1.4);
-  transition: opacity 60ms linear;
+  transition: transform 60ms linear, opacity 60ms linear;
+  will-change: transform, opacity;
 }
 
 /* Gateway depth layers — slight additional drift for depth cue.
@@ -2502,10 +2492,6 @@ html { scroll-behavior: smooth; }
     <img src="assets/logos/Thoughtform_Brandmark.svg" alt="Thoughtform" />
   </div>
 
-  <!-- Brandmark handoff overlay (animated clone, created by runtime) -->
-  <div class="hud__brandmark-overlay" id="hudBrandmarkOverlay" style="display:none">
-    <img src="assets/logos/Thoughtform_Brandmark.svg" alt="" />
-  </div>
 
 </div>
 
@@ -2531,7 +2517,7 @@ html { scroll-behavior: smooth; }
     </div>
     <div class="hero__content">
       <div class="hero__wordmark">
-        <img src="assets/logos/Thoughtform_Wordmark_Lockup-Vertical.svg" alt="Thoughtform" />
+        <img src="assets/logos/Thoughtform_Wordmark_Lockup-Vertical%20%28Dual%29.svg" alt="Thoughtform" />
       </div>
       <p class="hero__tagline">
         The interface for navigating <em>human–AI collaboration.</em>
@@ -2752,7 +2738,7 @@ html { scroll-behavior: smooth; }
   <!-- ═══════════ 04 PRACTICE ═══════════ -->
   <section class="station" id="practice" data-station="practice" data-screen-label="04 Practice">
     <div class="station__idx">Section 04 · Thoughtform in Practice<span class="landmark">Landmark · adopt → encode → build</span></div>
-    <h2 class="station__title">Adopt. <em>Encode.</em><br>Build.</h2>
+    <h2 class="station__title station__title--compact">Adopt. <em>Encode.</em><br>Build.</h2>
     <p class="station__lede">
       Navigation is the skill that runs through all of it. Each phase creates
       the conditions for the next. Here's what that looks like — with the
