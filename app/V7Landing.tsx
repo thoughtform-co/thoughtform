@@ -139,65 +139,78 @@ function initSigilChoreography(docEl: HTMLElement): () => void {
         0.25
       );
 
+    // Cinematic ease curve — slow start, accelerate through middle, slow settle.
+    // Matches the shape designers reach for in After Effects / Premiere.
+    const handoffEase = gsap.parseEase("power3.inOut");
+
     let handoffStartRect: DOMRect | null = null;
     let handoffTargetRect: DOMRect | null = null;
+    let handoffArmed = false;
 
     const captureHandoffRects = () => {
+      // Ensure the original sigil is visible for an accurate measurement,
+      // even if it was left hidden by a previous forward pass.
+      gsap.set(sigilMark, { opacity: 1, "--frame-opacity": 1 });
       handoffStartRect = sigilMark.getBoundingClientRect();
       handoffTargetRect = hudBrandmark.getBoundingClientRect();
     };
 
+    const resetHandoff = () => {
+      handoffArmed = false;
+      handoffStartRect = null;
+      handoffTargetRect = null;
+      gsap.set(travelMark, { opacity: 0 });
+      gsap.set(sigilMark, { opacity: 1, "--frame-opacity": 1 });
+      hudBrandmark.classList.remove("is-visible");
+    };
+
     const applyHandoff = (p: number) => {
-      const eased = p * p * (3 - 2 * p);
-      const hideOriginal = p > 0;
-
-      gsap.set(sigilMark, {
-        opacity: hideOriginal ? 0 : 1,
-        "--frame-opacity": hideOriginal ? 0 : 1,
-      });
-
+      if (!handoffArmed || !handoffStartRect || !handoffTargetRect) {
+        return;
+      }
       if (p <= 0) {
-        handoffStartRect = null;
-        handoffTargetRect = null;
         gsap.set(travelMark, { opacity: 0 });
-        hudBrandmark.classList.remove("is-visible");
+        gsap.set(sigilMark, { opacity: 1, "--frame-opacity": 1 });
         return;
       }
 
-      if (!handoffStartRect || !handoffTargetRect) {
-        captureHandoffRects();
-      }
-
-      const srcRect = handoffStartRect!;
-      const dstRect = handoffTargetRect!;
-      const left = srcRect.left + (dstRect.left - srcRect.left) * eased;
-      const top = srcRect.top + (dstRect.top - srcRect.top) * eased;
-      const width = srcRect.width + (dstRect.width - srcRect.width) * eased;
-      const height = srcRect.height + (dstRect.height - srcRect.height) * eased;
+      const eased = handoffEase(p);
+      const src = handoffStartRect;
+      const dst = handoffTargetRect;
 
       gsap.set(travelMark, {
-        left,
-        top,
-        width,
-        height,
+        left: src.left + (dst.left - src.left) * eased,
+        top: src.top + (dst.top - src.top) * eased,
+        width: src.width + (dst.width - src.width) * eased,
+        height: src.height + (dst.height - src.height) * eased,
         opacity: 1,
       });
-      hudBrandmark.classList.remove("is-visible");
+      gsap.set(sigilMark, { opacity: 0, "--frame-opacity": 0 });
     };
 
     const handoffTl = gsap.timeline({
       scrollTrigger: {
         trigger: contEl,
-        start: "top 100%",
-        end: "top 50%",
-        scrub: 0.6,
-        onEnter: () => captureHandoffRects(),
-        onEnterBack: () => captureHandoffRects(),
+        start: "top 80%",
+        end: "top 5%",
+        scrub: 1.8,
+        onEnter: () => {
+          captureHandoffRects();
+          handoffArmed = true;
+        },
+        onEnterBack: () => {
+          captureHandoffRects();
+          handoffArmed = true;
+        },
+        onLeaveBack: () => resetHandoff(),
         onRefresh: (self) => {
-          if (self.progress <= 0) {
+          if (self.progress > 0) {
             captureHandoffRects();
+            handoffArmed = true;
+            applyHandoff(self.progress);
+          } else {
+            resetHandoff();
           }
-          applyHandoff(self.progress);
         },
         onUpdate: (self) => applyHandoff(self.progress),
       },
@@ -208,8 +221,8 @@ function initSigilChoreography(docEl: HTMLElement): () => void {
       {
         opacity: 0,
         scale: 0.7,
-        duration: 0.5,
-        ease: "power3.in",
+        duration: 0.6,
+        ease: "power2.inOut",
       },
       0
     );

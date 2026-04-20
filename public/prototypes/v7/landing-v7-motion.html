@@ -1389,8 +1389,18 @@ body { color: var(--dawn-70); }
 .continuum__spectrum--wide { max-width: 100%; }
 .crail--large { padding-top: 72px; margin-top: clamp(48px, 6vw, 88px); }
 .crail--large .crail__line { top: 80px; left: calc(100%/6); right: calc(100%/6); height: 2px; }
-.crail--large .crail__dot { top: 80px; width: 26px; height: 26px; box-shadow: 0 0 32px rgba(202,165,84,0.6); }
-.crail--large .crail__dot::after { inset: 5px; }
+.crail--large .crail__dot {
+  top: 80px;
+  width: 28px; height: 28px;
+  background: transparent;
+  box-shadow: none;
+  transform: translate(-50%, -50%);
+}
+.crail--large .crail__dot::after { display: none; }
+.crail--large .crail__dot img {
+  width: 100%; height: 100%; display: block;
+  filter: drop-shadow(0 0 18px rgba(202,165,84,0.55));
+}
 /* override the sliding animation to match the new endpoints */
 .crail--large .crail__dot { animation: crailSlideLarge 7s var(--ease-out) infinite; }
 @keyframes crailSlideLarge {
@@ -1407,7 +1417,7 @@ body { color: var(--dawn-70); }
 .crail--large .crail__stop {
   /* neutralize the float-era rules */
   display: block; width: auto; float: none !important;
-  padding-top: 56px;
+  padding-top: clamp(88px, 7vw, 112px);
   text-align: center;
 }
 .crail--large { display: block; }
@@ -2694,7 +2704,9 @@ html { scroll-behavior: smooth; }
         <!-- horizontal rail with three stops -->
         <div class="crail crail--large">
           <div class="crail__line"></div>
-          <div class="crail__dot" id="crailDot" aria-hidden="true"></div>
+          <div class="crail__dot" id="crailDot" aria-hidden="true">
+            <img src="assets/logos/Thoughtform_Vector-5.svg" alt="" />
+          </div>
 
           <div class="crail__stops-grid">
             <div class="crail__stop crail__stop--l">
