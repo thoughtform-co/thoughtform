@@ -24,6 +24,7 @@ export function useSigilChoreography(rootRef: React.RefObject<HTMLElement | null
     const sigilCap = query<HTMLElement>(".sigil__cap", docEl);
     const triLeft = query<HTMLElement>(".tri__left", docEl);
     const triRight = query<HTMLElement>(".tri__right", docEl);
+    const hudEl = query<HTMLElement>(".hud", docEl);
     const hudBrandmark = query<HTMLElement>("#hudBrandmark", docEl);
 
     if (!defEl || !contEl || !sigilOrbits || !sigilMark || !hudBrandmark) {
@@ -46,6 +47,7 @@ export function useSigilChoreography(rootRef: React.RefObject<HTMLElement | null
         clearProps: "transform",
       });
       hudBrandmark.classList.add("is-visible");
+      hudEl?.classList.add("hud--brandmark-active");
       return;
     }
 
@@ -152,6 +154,7 @@ export function useSigilChoreography(rootRef: React.RefObject<HTMLElement | null
         gsap.set(travelMark, { opacity: 0 });
         gsap.set(sigilMark, { opacity: 1, "--frame-opacity": 1 });
         hudBrandmark.classList.remove("is-visible");
+        hudEl?.classList.remove("hud--brandmark-active");
       };
 
       const applyHandoff = (p: number) => {
@@ -161,19 +164,26 @@ export function useSigilChoreography(rootRef: React.RefObject<HTMLElement | null
         if (p <= 0) {
           gsap.set(travelMark, { opacity: 0 });
           gsap.set(sigilMark, { opacity: 1, "--frame-opacity": 1 });
+          hudBrandmark.classList.remove("is-visible");
+          hudEl?.classList.remove("hud--brandmark-active");
           return;
         }
 
         const eased = handoffEase(p);
         const src = handoffStartRect;
         const dst = handoffTargetRect;
+        const cornerRetired = p >= 0.82;
+        const docked = p >= 0.995;
+
+        hudEl?.classList.toggle("hud--brandmark-active", cornerRetired);
+        hudBrandmark.classList.toggle("is-visible", docked);
 
         gsap.set(travelMark, {
           left: src.left + (dst.left - src.left) * eased,
           top: src.top + (dst.top - src.top) * eased,
           width: src.width + (dst.width - src.width) * eased,
           height: src.height + (dst.height - src.height) * eased,
-          opacity: 1,
+          opacity: docked ? 0 : 1,
         });
         gsap.set(sigilMark, { opacity: 0, "--frame-opacity": 0 });
       };
@@ -219,6 +229,8 @@ export function useSigilChoreography(rootRef: React.RefObject<HTMLElement | null
     }, docEl);
 
     return () => {
+      hudBrandmark.classList.remove("is-visible");
+      hudEl?.classList.remove("hud--brandmark-active");
       ctx.revert();
       travelMark.remove();
     };

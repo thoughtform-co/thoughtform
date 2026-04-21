@@ -76,6 +76,7 @@
   --atreides-15: rgba(61, 75, 51, 0.15);
   --gold-05: rgba(202, 165, 84, 0.05);
   --dawn-04: rgba(236, 227, 214, 0.04);
+  --hud-content-inset: calc(var(--hud-margin) + var(--hud-rail-width) + clamp(24px, 3vw, 56px));
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -202,6 +203,9 @@
   left: var(--hud-margin);
   border-bottom: 1px solid var(--dawn-30);
   border-left: 1px solid var(--dawn-30);
+  transition:
+    border-bottom-color 0.35s var(--ease-out),
+    border-left-color 0.35s var(--ease-out);
 }
 .hud__corner--br {
   bottom: var(--hud-margin);
@@ -540,7 +544,7 @@
 .stations {
   position: relative;
   z-index: 10;
-  padding: 0 clamp(96px, 8vw + 40px, 140px);
+  padding: 0 var(--hud-content-inset);
 }
 .station {
   min-height: 100vh;
@@ -716,8 +720,8 @@
   width: 100vw;
   margin-left: calc(50% - 50vw);
   margin-right: calc(50% - 50vw);
-  padding-left: clamp(96px, 8vw + 40px, 140px);
-  padding-right: clamp(96px, 8vw + 40px, 140px);
+  padding-left: var(--hud-content-inset);
+  padding-right: var(--hud-content-inset);
   content-visibility: auto;
   contain-intrinsic-size: auto 100vh;
 }
@@ -1854,7 +1858,7 @@
 
 /* ═══════════ FOOTER ═══════════ */
 .foot {
-  padding: 40px clamp(96px, 8vw + 40px, 140px) 100px;
+  padding: 40px var(--hud-content-inset) 100px;
   position: relative;
   z-index: 10;
   border-top: 1px solid var(--dawn-08);
@@ -2800,6 +2804,9 @@ body.density-dense .station {
   }
 }
 @media (max-width: 960px) {
+  :root {
+    --hud-content-inset: clamp(24px, 6vw, 40px);
+  }
   .hud__rail {
     display: none;
   }
@@ -3294,6 +3301,13 @@ body.density-dense .station {
   to {
     opacity: 1;
   }
+}
+
+/* Once the sigil docks into the HUD brand slot, retire the bracket lines
+   underneath it so the mark sits cleanly in the corner. */
+.hud--brandmark-active .hud__corner--bl {
+  border-bottom-color: transparent;
+  border-left-color: transparent;
 }
 
 /* Title clip-reveal gets a 1-frame gold flash on the wipe-out edge,
@@ -3822,8 +3836,8 @@ html {
 /* Station container override — break out of the .stations 96-140px
    padding. The outer <section> still uses .station padding-y. */
 .station--fullbleed {
-  margin-left: calc(-1 * clamp(96px, 8vw + 40px, 140px));
-  margin-right: calc(-1 * clamp(96px, 8vw + 40px, 140px));
+  margin-left: calc(-1 * var(--hud-content-inset));
+  margin-right: calc(-1 * var(--hud-content-inset));
   padding-left: clamp(40px, 4vw + 8px, 80px);
   padding-right: clamp(40px, 4vw + 8px, 80px);
 }
@@ -4751,19 +4765,28 @@ html {
 
 /* ── CTA · centered funnel variant ── */
 .practice-cta--funnel {
+  --practice-funnel-gap: clamp(26px, 3vw, 44px);
   grid-template-columns: 1fr;
   justify-items: center;
   text-align: center;
-  padding-top: clamp(88px, 9vw, 140px);
-  padding-bottom: clamp(48px, 6vw, 80px);
+  margin-top: var(--practice-funnel-gap);
+  padding: clamp(122px, 12vw, 172px) 0 clamp(48px, 6vw, 80px);
+  border: none;
+  overflow: visible;
 }
-.practice-cta__lines {
+.practice-cta--funnel::before,
+.practice-cta--funnel::after,
+.practice-cta--funnel > .br,
+.practice-cta--funnel > .bl {
+  display: none;
+}
+.practice-cta--funnel .practice-cta__lines {
   position: absolute;
-  top: 0;
+  top: calc(-1 * var(--practice-funnel-gap));
   left: 0;
   right: 0;
   width: 100%;
-  height: 120px;
+  height: clamp(148px, 15vw, 188px);
   pointer-events: none;
   opacity: 0.9;
 }
@@ -4774,6 +4797,8 @@ html {
 .practice-cta__copy--center {
   max-width: 54ch;
   margin: 0 auto;
+  position: relative;
+  z-index: 1;
 }
 .practice-cta__copy--center .practice-cta__eyebrow {
   justify-content: center;
@@ -4803,6 +4828,15 @@ html {
   height: 5px;
   background: var(--gold);
   transform: rotate(45deg);
+}
+@media (max-width: 960px) {
+  .practice-cta--funnel {
+    margin-top: 28px;
+    padding-top: 40px;
+  }
+  .practice-cta--funnel .practice-cta__lines {
+    display: none;
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -5158,13 +5192,14 @@ html {
 .celestial-connector {
   position: relative;
   z-index: 2;
+  --connector-track-width: min(100%, clamp(560px, 68vw, 960px));
   /* Must be opaque: masks both the sticky .hero (z:1) and the fixed
      .gateway gold/green radial tint (z:0) that sits behind all content.
      Transparent here reveals the hero video and the warm ambient glow. */
   background: var(--void);
   width: 100vw;
   margin-left: calc(50% - 50vw);
-  padding: clamp(12px, 1.5vw, 20px) clamp(96px, 8vw + 40px, 140px);
+  padding: clamp(12px, 1.5vw, 20px) var(--hud-content-inset);
   display: grid;
   grid-template-rows: clamp(32px, 4vw, 56px) auto clamp(32px, 4vw, 56px);
   justify-items: center;
@@ -5183,13 +5218,13 @@ html {
 }
 .celestial-connector > .br {
   top: 10px;
-  right: 10px;
+  right: calc(50% - (var(--connector-track-width) / 2) + 10px);
   border-left: none;
   border-bottom: none;
 }
 .celestial-connector > .bl {
   bottom: 10px;
-  left: 10px;
+  left: calc(50% - (var(--connector-track-width) / 2) + 10px);
   border-right: none;
   border-top: none;
 }
@@ -5209,25 +5244,25 @@ html {
 }
 .celestial-connector__label--tl {
   top: 18px;
-  left: 20px;
+  left: calc(50% - (var(--connector-track-width) / 2) + 20px);
 }
 .celestial-connector__label--tr {
   top: 18px;
-  right: 20px;
+  right: calc(50% - (var(--connector-track-width) / 2) + 20px);
   text-align: right;
 }
 .celestial-connector__label--bl {
   bottom: 18px;
-  left: 20px;
+  left: calc(50% - (var(--connector-track-width) / 2) + 20px);
 }
 .celestial-connector__label--br {
   bottom: 18px;
-  right: 20px;
+  right: calc(50% - (var(--connector-track-width) / 2) + 20px);
   text-align: right;
 }
 
 .celestial-connector__lines {
-  width: 100%;
+  width: var(--connector-track-width);
   height: 100%;
   display: block;
 }
@@ -5278,8 +5313,27 @@ html {
 
 @media (max-width: 700px) {
   .celestial-connector {
+    --connector-track-width: 100%;
     grid-template-rows: 24px auto 24px;
     padding: 10px 16px;
+  }
+  .celestial-connector > .br {
+    right: 10px;
+  }
+  .celestial-connector > .bl {
+    left: 10px;
+  }
+  .celestial-connector__label--tl {
+    left: 20px;
+  }
+  .celestial-connector__label--tr {
+    right: 20px;
+  }
+  .celestial-connector__label--bl {
+    left: 20px;
+  }
+  .celestial-connector__label--br {
+    right: 20px;
   }
   .celestial-connector__diagram {
     width: 110px;
