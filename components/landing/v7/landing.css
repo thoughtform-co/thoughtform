@@ -5157,13 +5157,13 @@ html {
    ═══════════════════════════════════════════════════════════════════ */
 .celestial-connector {
   position: relative;
-  z-index: 5;
-  background: var(--void);
+  z-index: 2;
+  background: transparent;
   width: 100vw;
   margin-left: calc(50% - 50vw);
-  padding: clamp(24px, 3vw, 40px) clamp(96px, 8vw + 40px, 140px);
+  padding: clamp(12px, 1.5vw, 20px) clamp(96px, 8vw + 40px, 140px);
   display: grid;
-  grid-template-rows: clamp(60px, 7vw, 96px) auto clamp(60px, 7vw, 96px);
+  grid-template-rows: clamp(32px, 4vw, 56px) auto clamp(32px, 4vw, 56px);
   justify-items: center;
   align-items: center;
   gap: 0;
@@ -5270,13 +5270,13 @@ html {
   aspect-ratio: 1;
 }
 .celestial-connector--hero-orb {
-  grid-template-rows: clamp(80px, 8vw, 120px) auto clamp(80px, 8vw, 120px);
+  grid-template-rows: clamp(40px, 5vw, 72px) auto clamp(40px, 5vw, 72px);
 }
 
 @media (max-width: 700px) {
   .celestial-connector {
-    grid-template-rows: 48px auto 48px;
-    padding: 20px 16px;
+    grid-template-rows: 24px auto 24px;
+    padding: 10px 16px;
   }
   .celestial-connector__diagram {
     width: 110px;
@@ -5295,12 +5295,11 @@ html {
   }
 }
 
-/* Sections adjacent to connectors: remove the dashed border and tighten
-   vertical padding so there's no pixel gap for the hero to bleed through. */
+/* Sections adjacent to connectors: suppress the dashed border so the
+   connector diagram reads as continuous with the station above/below. */
 .station--to-connector {
-  padding-bottom: clamp(40px, 5vw, 72px);
   border-bottom: none;
 }
 .station--from-connector {
-  padding-top: clamp(40px, 5vw, 72px);
+  /* no override needed — standard station padding applies */
 }
