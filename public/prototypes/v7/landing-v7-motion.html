@@ -81,178 +81,73 @@ body { color: var(--dawn-70); }
 
 /* Corner brackets */
 .hud__corner {
-  position: absolute; width: 28px; height: 28px; pointer-events: none;
+  position: absolute; width: var(--hud-corner-zone); height: var(--hud-corner-zone); pointer-events: none;
 }
-.hud__corner--tl { top: 18px; left: 18px;
+.hud__corner--tl { top: var(--hud-margin); left: var(--hud-margin);
   border-top: 1px solid var(--dawn-30); border-left: 1px solid var(--dawn-30); }
-.hud__corner--tr { top: 18px; right: 18px;
-  border-top: 1px solid var(--dawn-30); border-right: 1px solid var(--dawn-30); }
-.hud__corner--bl { bottom: 18px; left: 18px;
+.hud__corner--bl { bottom: var(--hud-margin); left: var(--hud-margin);
   border-bottom: 1px solid var(--dawn-30); border-left: 1px solid var(--dawn-30); }
-.hud__corner--br { bottom: 18px; right: 18px;
+.hud__corner--br { bottom: var(--hud-margin); right: var(--hud-margin);
   border-bottom: 1px solid var(--dawn-30); border-right: 1px solid var(--dawn-30); }
 
 /* ─────────────────────────────────────────────────────────────────
-   Top bar — v12.1 MINIMAL TERMINAL CHIPS
-   No full-width bar. Two compact floating chips anchored to the
-   top-left (brand) and top-right (nav + signal), rendered as if
-   they were two processes surfacing on a retrofuturistic console.
+   Top bar — minimal, no visual weight
    ───────────────────────────────────────────────────────────────── */
 .hud__top {
-  position: absolute; top: 0; left: 0; right: 0;
-  display: flex; justify-content: flex-end;
-  align-items: start;
-  padding: 28px 14px 0 clamp(64px, 6vw, 96px);
-  gap: 16px;
+  position: absolute; top: 0; right: 0;
+  display: flex; align-items: flex-start;
+  padding: var(--hud-margin);
   pointer-events: none;
+  z-index: 21;
 }
 .hud__top > * { pointer-events: auto; }
 
-/* ── BRAND chip (top-left) ────────────────────────────────────── */
-.hud__brand {
-  display: inline-flex; align-items: center; gap: 10px;
-  padding: 7px 12px 7px 10px;
-  font-family: var(--font-pt-mono); font-size: 10.5px;
-  letter-spacing: var(--track-wider); text-transform: uppercase;
-  color: var(--dawn);
-  background: rgba(5,4,3,0.72);
-  border: 1px solid var(--dawn-08);
-  backdrop-filter: blur(6px);
-  position: relative;
-}
-/* Left "[" / right "]" terminal brackets as gold accents */
-.hud__brand::before, .hud__brand::after {
-  content: ''; position: absolute; top: -1px; bottom: -1px;
-  width: 5px;
-  border: 1px solid var(--gold);
-}
-.hud__brand::before { left: -1px; border-right: none; }
-.hud__brand::after  { right: -1px; border-left: none; }
-.hud__brand img { width: 14px; height: 14px; }
-.hud__brand .div { color: var(--dawn-30); margin: 0 2px; }
-.hud__brand .sector {
-  color: var(--gold); min-width: 0;
-  display: inline-flex; align-items: center; gap: 6px;
-}
-.hud__brand .sector::before {
-  content: ''; width: 5px; height: 5px; background: var(--gold);
-  transform: rotate(45deg);
-  animation: pulse 2.2s var(--ease-out) infinite;
-}
-
-/* ── NAV · hamburger button (top-right, aligned with right rail) ── */
+/* ── NAV · bare three-line trigger, aligned with the right rail ── */
 .hud__nav {
-  justify-self: end;
   position: relative;
   font-family: var(--font-pt-mono); font-size: 10px;
   letter-spacing: var(--track-wider); text-transform: uppercase;
   color: var(--dawn-70);
-  background: transparent;
-  border: 0;
-  padding: 0;
-  display: flex; align-items: flex-start;
-  gap: 10px;
-  min-width: 0;
 }
-.hud__nav::before, .hud__nav::after { content: none; }
 
-/* readout label to the LEFT of the button */
-.hud__nav__readout {
-  display: flex; align-items: center; gap: 8px;
-  padding: 12px 14px 12px 14px;
-  height: 40px;
-  cursor: pointer;
-  user-select: none;
-  white-space: nowrap;
-  background: rgba(5,4,3,0.72);
-  border: 1px solid var(--dawn-08);
-  backdrop-filter: blur(6px);
-  position: relative;
-  transition: background 200ms var(--ease-out), border-color 200ms var(--ease-out);
-}
-.hud__nav__readout::before, .hud__nav__readout::after {
-  content: ''; position: absolute; top: -1px; bottom: -1px;
-  width: 5px;
-  border: 1px solid var(--gold);
-  opacity: 0.8;
-}
-.hud__nav__readout::before { left: -1px; border-right: none; }
-.hud__nav__readout::after  { right: -1px; border-left: none; }
-.hud__nav__readout .caret { display: none; }
-.hud__nav__readout .idx { color: var(--dawn-30); }
-.hud__nav__readout .idx .cur { color: var(--gold); }
-.hud__nav__readout .sep { color: var(--dawn-15); }
-.hud__nav__readout .label {
-  color: var(--dawn);
-  display: inline-flex; align-items: center;
-}
-.hud__nav__readout .label::after { content: none; }
-
-/* the hamburger button itself — square, aligned to the right rail */
 .hud__nav__btn {
-  width: 40px; height: 40px;
-  display: inline-flex; align-items: center; justify-content: center;
-  background: rgba(5,4,3,0.78);
-  border: 1px solid var(--dawn-15);
+  display: flex; align-items: center; justify-content: center;
+  width: 44px; height: 44px;
+  margin: -12px -12px 0 0;
+  background: none;
+  border: 0;
   color: var(--dawn);
   cursor: pointer;
-  position: relative;
-  flex: none;
-  backdrop-filter: blur(6px);
-  transition: border-color 200ms var(--ease-out), color 200ms var(--ease-out), background 200ms var(--ease-out);
   padding: 0;
-  font-family: inherit;
+  position: relative;
 }
-.hud__nav__btn::before, .hud__nav__btn::after {
-  content: ''; position: absolute; width: 6px; height: 6px;
-  border: 1px solid var(--gold);
-  pointer-events: none;
-}
-.hud__nav__btn::before {
-  top: -1px; left: -1px;
-  border-right: none; border-bottom: none;
-}
-.hud__nav__btn::after {
-  bottom: -1px; right: -1px;
-  border-left: none; border-top: none;
-}
-.hud__nav__btn:hover,
-.hud__nav.is-open .hud__nav__btn {
-  border-color: var(--gold);
-  background: rgba(12,10,8,0.9);
-  color: var(--gold);
-}
-.hud__nav:hover .hud__nav__readout,
-.hud__nav.is-open .hud__nav__readout {
-  border-color: var(--gold-15);
-}
-
-/* Three lines → X */
 .hud__nav__btn .bars {
   position: relative;
-  width: 16px; height: 12px;
+  width: 20px; height: 14px;
   display: block;
 }
 .hud__nav__btn .bars span {
   position: absolute; left: 0; right: 0;
   height: 1px; background: currentColor;
-  transition: transform 260ms var(--ease-out), opacity 180ms var(--ease-out), top 260ms var(--ease-out);
+  transition: transform 260ms var(--ease-out), opacity 180ms var(--ease-out), top 260ms var(--ease-out), width 260ms var(--ease-out);
 }
-.hud__nav__btn .bars span:nth-child(1) { top: 1px; }
+.hud__nav__btn .bars span:nth-child(1) { top: 0; }
 .hud__nav__btn .bars span:nth-child(2) { top: 50%; transform: translateY(-50%); width: 70%; }
-.hud__nav__btn .bars span:nth-child(3) { top: calc(100% - 2px); }
+.hud__nav__btn .bars span:nth-child(3) { bottom: 0; top: auto; }
+.hud__nav__btn:hover { color: var(--gold); }
+
 .hud__nav.is-open .hud__nav__btn .bars span:nth-child(1) { top: 50%; transform: translateY(-50%) rotate(45deg); }
 .hud__nav.is-open .hud__nav__btn .bars span:nth-child(2) { opacity: 0; }
-.hud__nav.is-open .hud__nav__btn .bars span:nth-child(3) { top: 50%; transform: translateY(-50%) rotate(-45deg); width: 100%; }
+.hud__nav.is-open .hud__nav__btn .bars span:nth-child(3) { top: 50%; bottom: auto; transform: translateY(-50%) rotate(-45deg); width: 100%; }
 
-/* Expanded list — drops from the button, right-aligned to the rail */
+/* Expanded list — opens leftward from the trigger */
 .hud__nav__list {
-  position: absolute; top: calc(100% + 8px); right: 0;
+  position: absolute; top: -10px; right: calc(100% + 16px);
   width: 280px;
   background: rgba(5,4,3,0.94);
   border: 1px solid var(--dawn-08);
   backdrop-filter: blur(10px);
-  opacity: 0; transform: translateY(-6px) scaleY(0.96);
+  opacity: 0; transform: translateX(8px);
   transform-origin: top right;
   pointer-events: none;
   transition: opacity 220ms var(--m-ease-instr),
@@ -260,15 +155,7 @@ body { color: var(--dawn-70); }
   padding: 10px 0;
   z-index: 30;
 }
-.hud__nav__list::before, .hud__nav__list::after {
-  content: ''; position: absolute; top: -1px; bottom: -1px;
-  width: 5px;
-  border: 1px solid var(--gold);
-}
-.hud__nav__list::before { left: -1px; border-right: none; }
-.hud__nav__list::after  { right: -1px; border-left: none; }
 
-/* decorative header row inside the menu */
 .hud__nav__list__head {
   display: flex; justify-content: space-between; align-items: center;
   padding: 4px 18px 10px;
@@ -280,11 +167,9 @@ body { color: var(--dawn-70); }
 }
 .hud__nav__list__head .k { color: var(--gold); }
 
-.hud__nav:hover .hud__nav__list,
-.hud__nav:focus-within .hud__nav__list,
 .hud__nav.is-open .hud__nav__list {
   opacity: 1;
-  transform: translateY(0) scaleY(1);
+  transform: translateX(0);
   pointer-events: auto;
 }
 
@@ -311,53 +196,57 @@ body { color: var(--dawn-70); }
 .hud__nav a .num { color: var(--dawn-30); margin-right: 2px; display: inline !important; font-size: 10px; }
 .hud__nav a.is-active .num { color: var(--gold); }
 
-/* ── SIGNAL micro-readout (moves under nav on mobile, hidden on narrow) ── */
-.hud__signal {
-  display: none; /* folded into the nav chip now — keep markup for accessibility */
+/* Status readouts folded inside the menu */
+.hud__nav__status {
+  padding: 10px 18px 4px;
+  border-top: 1px dashed var(--dawn-08);
+  margin-top: 6px;
+  font-family: var(--font-pt-mono); font-size: 9px;
+  letter-spacing: var(--track-wider); text-transform: uppercase;
+  color: var(--dawn-30);
+  display: flex; flex-direction: column; gap: 4px;
 }
+.hud__nav__status .k { color: var(--gold); margin-right: 4px; }
+
 @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
 
-@media (max-width: 820px) {
-  .hud__top { padding: 20px 14px 0 28px; }
-  .hud__nav__readout { display: none; }
-}
-
-/* Left rail — depth scale */
+/* Rails — clear the corner brackets above and the brandmark below */
 .hud__rail {
   position: absolute;
-  top: 90px; bottom: 90px;
-  width: 64px;
+  top: calc(var(--hud-margin) + var(--hud-corner-zone) + clamp(16px, 1.8vw, 32px));
+  bottom: calc(var(--hud-margin) + clamp(24px, 2.5vw, 40px) + clamp(16px, 1.8vw, 32px));
+  width: var(--hud-rail-width);
   display: flex; flex-direction: column;
 }
-.hud__rail--l { left: 18px; }
-.hud__rail--r { right: 18px; }
+.hud__rail--l { left: var(--hud-margin); }
+.hud__rail--r { right: var(--hud-margin); }
 .hud__rail__track {
   position: absolute; top: 0; bottom: 0;
   width: 1px;
   background: linear-gradient(to bottom, transparent, var(--dawn-30) 8%, var(--dawn-30) 92%, transparent);
 }
-.hud__rail--l .hud__rail__track { right: 14px; }
-.hud__rail--r .hud__rail__track { left: 14px; }
+.hud__rail--l .hud__rail__track { left: 0; }
+.hud__rail--r .hud__rail__track { right: 0; }
 
 .hud__rail__tick {
-  position: absolute; height: 1px; background: var(--dawn-30);
+  position: absolute; height: 1px; background: var(--gold-40, var(--dawn-30));
 }
-.hud__rail--l .hud__rail__tick { right: 14px; width: 7px; }
-.hud__rail--l .hud__rail__tick--major { width: 18px; background: var(--dawn-50); }
-.hud__rail--r .hud__rail__tick { left: 14px; width: 7px; }
-.hud__rail--r .hud__rail__tick--major { width: 18px; background: var(--dawn-50); }
+.hud__rail--l .hud__rail__tick { left: 0; width: 10px; }
+.hud__rail--l .hud__rail__tick--major { width: 20px; background: var(--gold); }
+.hud__rail--r .hud__rail__tick { right: 0; width: 10px; }
+.hud__rail--r .hud__rail__tick--major { width: 20px; background: var(--gold); }
 
 .hud__rail__label {
   position: absolute;
   font-family: var(--font-pt-mono); font-size: 9px;
   color: var(--dawn-50); letter-spacing: var(--track-wider);
 }
-.hud__rail--l .hud__rail__label { right: 36px; }
-.hud__rail--r .hud__rail__label { left: 36px; }
+.hud__rail--l .hud__rail__label { left: 28px; }
+.hud__rail--r .hud__rail__label { right: 28px; }
 
-/* Depth indicator (moves with scroll) */
+/* Scroll chevron (gold diamond on the left rail) */
 .hud__depth {
-  position: absolute; right: 6px;
+  position: absolute; left: -4px;
   width: 17px; height: 17px;
   transition: top 120ms var(--ease-out);
 }
@@ -371,64 +260,16 @@ body { color: var(--dawn-70); }
 /* Brandmark anchor — bottom left, dormant until sigil handoff */
 .hud__brandmark {
   position: absolute;
-  bottom: calc(18px + 60px + 14px);
-  left: 22px;
-  width: 28px; height: 28px;
+  bottom: var(--hud-margin);
+  left: var(--hud-margin);
+  width: clamp(24px, 2.5vw, 40px); height: clamp(24px, 2.5vw, 40px);
   opacity: 0;
   transition: opacity 0.5s var(--ease-out);
   pointer-events: none;
   z-index: 22;
 }
-.hud__brandmark.is-visible { opacity: 1; }
-.hud__brandmark img { width: 100%; height: 100%; display: block; filter: drop-shadow(0 0 12px rgba(202,165,84,0.3)); }
-
-/* Bottom bar — coordinates */
-.hud__bottom {
-  position: absolute; bottom: 0; left: 0; right: 0;
-  height: 60px;
-  display: grid; grid-template-columns: auto 1fr auto;
-  align-items: center;
-  padding: 0 clamp(28px, 4vw, 64px);
-  border-top: 1px solid var(--dawn-08);
-  background: linear-gradient(to top, rgba(5,4,3,0.85), rgba(5,4,3,0.4));
-  backdrop-filter: blur(10px);
-}
-.hud__coords {
-  display: flex; gap: 20px; flex-wrap: wrap;
-  font-family: var(--font-pt-mono); font-size: 10px;
-  letter-spacing: var(--track-wide); color: var(--dawn-50);
-}
-.hud__coords .k { color: var(--gold); margin-right: 4px; }
-
-.hud__status {
-  font-family: var(--font-pt-mono); font-size: 10px;
-  letter-spacing: var(--track-wide); text-transform: uppercase;
-  color: var(--dawn-30);
-  text-align: center;
-}
-.hud__status .cursor {
-  display: inline-block; width: 7px; height: 10px;
-  background: var(--gold); vertical-align: baseline;
-  animation: blink 1.2s steps(2) infinite;
-  margin-left: 4px;
-}
-@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
-
-.hud__progress {
-  font-family: var(--font-pt-mono); font-size: 10px;
-  letter-spacing: var(--track-wide); color: var(--dawn-50);
-  text-align: right;
-}
-.hud__progress .bar {
-  display: inline-block; width: 80px; height: 3px;
-  background: var(--dawn-08); margin: 0 10px;
-  vertical-align: middle; position: relative;
-}
-.hud__progress .bar::before {
-  content: ''; position: absolute; left: 0; top: 0; bottom: 0;
-  width: var(--p, 0%); background: var(--gold);
-  transition: width 120ms var(--ease-out);
-}
+.hud__brandmark.is-visible { opacity: 1; pointer-events: auto; }
+.hud__brandmark img { width: 100%; height: 100%; display: block; }
 
 /* ═══════════════════════════════════════════════════════════════════
    CONTENT — stations along the scroll
@@ -1876,17 +1717,16 @@ body.density-spacious .station { min-height: 115vh; padding: 220px 0; }
 body.density-dense .station { min-height: 85vh; padding: 120px 0; }
 
 /* ═══════════ RESPONSIVE ═══════════ */
+@media (max-width: 1100px) {
+  .hud__rail__label { display: none; }
+}
 @media (max-width: 960px) {
   .hud__rail { display: none; }
+  .hud__brandmark { display: none; }
   .stations, .foot { padding-left: 32px; padding-right: 32px; }
   .hud__nav a .num { display: none; }
-  .hud__top { grid-template-columns: auto 1fr auto; padding: 0 20px; }
-  .hud__signal { display: none; }
-  .hud__coords { display: none; }
 }
 @media (max-width: 640px) {
-  .hud__bottom { grid-template-columns: 1fr; }
-  .hud__status, .hud__progress { display: none; }
   .station__title { font-size: clamp(32px, 9vw, 48px); }
 }
 
@@ -2241,7 +2081,6 @@ body.density-dense .station { min-height: 85vh; padding: 120px 0; }
 /* Corner brackets draw in once on first reveal */
 
 .hud__corner { opacity: 0; animation: cornerDraw 520ms var(--m-ease-instr) 180ms forwards; }
-.hud__corner--tr { animation-delay: 230ms; }
 .hud__corner--bl { animation-delay: 280ms; }
 .hud__corner--br { animation-delay: 330ms; }
 @keyframes cornerDraw { to { opacity: 1; } }
@@ -3636,17 +3475,9 @@ html { scroll-behavior: smooth; }
   <div class="hud__corner hud__corner--bl"></div>
   <div class="hud__corner hud__corner--br"></div>
 
-  <!-- Top bar -->
+  <!-- Nav trigger — bare three lines, top-right -->
   <header class="hud__top">
-    <div class="hud__brand" hidden aria-hidden="true">
-      <span class="sector" id="hudSector">Origin</span>
-    </div>
     <nav class="hud__nav" id="hudNav">
-      <div class="hud__nav__readout">
-        <span class="idx"><span class="cur" id="hudNavCur">01</span>/07</span>
-        <span class="sep">·</span>
-        <span class="label" id="hudNavLabel">Interface</span>
-      </div>
       <button class="hud__nav__btn" aria-label="Navigation menu" type="button">
         <span class="bars"><span></span><span></span><span></span></span>
       </button>
@@ -3661,47 +3492,32 @@ html { scroll-behavior: smooth; }
         <a href="#about" data-station="about"><span class="num">05</span>About</a>
         <a href="#products" data-station="products"><span class="num">06</span>Products</a>
         <a href="#contact" data-station="contact"><span class="num">07</span>Contact</a>
+        <div class="hud__nav__status">
+          <span><span class="k">δ</span><span id="coordD">0.27</span> <span class="k">θ</span><span id="coordT">058.1°</span></span>
+          <span><span class="k">Sector</span> <span id="hudSector">Origin</span></span>
+          <span><span class="k">Depth</span> <span id="hudProgress">00%</span></span>
+        </div>
       </div>
     </nav>
-    <div class="hud__signal" aria-hidden="true">
-      <span><span class="dot"></span><span class="l">Signal</span><span class="v" id="hudSignalV">0.84</span></span>
-      <span><span class="l">Tier</span><span class="v">Canonical</span></span>
-    </div>
   </header>
 
-  <!-- Left rail: depth -->
+  <!-- Left rail: depth gauge -->
   <aside class="hud__rail hud__rail--l">
     <div class="hud__rail__track"></div>
     <div id="leftTicks"></div>
     <div class="hud__depth" id="depthIndicator" style="top: 4%"></div>
   </aside>
 
-  <!-- Right rail: section markers -->
+  <!-- Right rail -->
   <aside class="hud__rail hud__rail--r">
     <div class="hud__rail__track"></div>
     <div id="rightTicks"></div>
   </aside>
 
-  <!-- Bottom-left brandmark anchor (dormant until section-2→3 handoff) -->
+  <!-- Bottom-left brandmark anchor (dormant until sigil handoff) -->
   <div class="hud__brandmark" id="hudBrandmark">
     <img src="assets/logos/Thoughtform_Brandmark.svg" alt="Thoughtform" />
   </div>
-
-  <!-- Bottom bar -->
-  <footer class="hud__bottom">
-    <div class="hud__coords">
-      <span><span class="k">δ</span><span id="coordD">0.27</span></span>
-      <span><span class="k">θ</span><span id="coordT">058.1°</span></span>
-      <span><span class="k">ρ</span><span id="coordR">0.63</span></span>
-      <span><span class="k">ζ</span><span id="coordZ">2.4</span></span>
-    </div>
-    <div class="hud__status">
-      <span id="hudStatus">Scroll to descend. The window stays. The world changes.</span><span class="cursor"></span>
-    </div>
-    <div class="hud__progress">
-      <span id="hudProgress">00%</span><span class="bar" id="progressBar"></span><span>TOTAL</span>
-    </div>
-  </footer>
 </div>
 
 <!-- ═══ CONTENT STATIONS ═══ -->
@@ -5238,15 +5054,11 @@ html { scroll-behavior: smooth; }
     tagIfEmpty(contact.querySelector('.contact__email'), 'body');
   }
 
-  /* Parallax declarations — apply to decorative elements only */
+  /* Parallax declarations — apply to decorative content elements only */
   const parallaxMap = [
     ['.hero__viz', 0.05],
     ['.tri__center', 0.04],
     ['.about__dial', 0.06],
-    ['.hud__corner--tl', 0.015],
-    ['.hud__corner--tr', 0.015],
-    ['.hud__corner--bl', -0.015],
-    ['.hud__corner--br', -0.015],
   ];
   parallaxMap.forEach(([sel, speed]) => {
     document.querySelectorAll(sel).forEach(el => {

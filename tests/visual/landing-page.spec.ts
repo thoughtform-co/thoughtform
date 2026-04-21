@@ -8,8 +8,13 @@ import { test, expect } from "@playwright/test";
  * sections. Section boundaries are controlled by the V7Runtime scroll
  * handler; no NavigationCockpitV2 scroll thresholds apply.
  *
- * IMPORTANT: After the V17 migration, all snapshot baselines need
- * re-capturing:  npm run test:visual:update
+ * HUD shell restored to the b27eef1 canonical alignment model:
+ * corners/rails/brandmark use --hud-margin variables, no bottom bar,
+ * bare three-line hamburger opening leftward. Corner brackets are
+ * fixed (no parallax).
+ *
+ * IMPORTANT: After any HUD shell change, re-capture all baselines:
+ *   npm run test:visual:update
  */
 
 async function scrollToPercentage(page: any, percentage: number) {
@@ -82,6 +87,14 @@ test.describe("Component Visual Regression", () => {
     const corner = page.locator(".hud__corner--tl").first();
     if (await corner.isVisible()) {
       await expect(corner).toHaveScreenshot("hud-corner-tl.png");
+    }
+  });
+
+  test("HUD brandmark anchor after scroll", async ({ page }) => {
+    await scrollToPercentage(page, 40);
+    const brandmark = page.locator(".hud__brandmark").first();
+    if (await brandmark.isVisible()) {
+      await expect(brandmark).toHaveScreenshot("hud-brandmark-bl.png");
     }
   });
 });

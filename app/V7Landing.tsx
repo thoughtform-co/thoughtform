@@ -262,16 +262,9 @@ function initV7Runtime(docEl: HTMLElement): () => void {
   const navLinks = queryAll<HTMLAnchorElement>("#hudNav a", docEl);
   const depthIndicator = query<HTMLElement>("#depthIndicator", docEl);
   const hudSector = query<HTMLElement>("#hudSector", docEl);
-  const hudNavCur = query<HTMLElement>("#hudNavCur", docEl);
-  const hudNavLabel = query<HTMLElement>("#hudNavLabel", docEl);
-  const hudStatus = query<HTMLElement>("#hudStatus", docEl);
   const hudProgress = query<HTMLElement>("#hudProgress", docEl);
-  const progressBar = query<HTMLElement>("#progressBar", docEl);
-  const hudSignalV = query<HTMLElement>("#hudSignalV", docEl);
   const coordD = query<HTMLElement>("#coordD", docEl);
   const coordT = query<HTMLElement>("#coordT", docEl);
-  const coordR = query<HTMLElement>("#coordR", docEl);
-  const coordZ = query<HTMLElement>("#coordZ", docEl);
   const heroEl = query<HTMLElement>("#hero", docEl);
   const defEl = query<HTMLElement>("#definition", docEl);
 
@@ -283,26 +276,6 @@ function initV7Runtime(docEl: HTMLElement): () => void {
     about: "Story",
     products: "Fleet",
     contact: "Horizon",
-  };
-
-  const statusMessages: Record<string, string> = {
-    hero: "Scroll to descend \u00b7 the window stays \u00b7 the world changes",
-    definition: "Locating the sigil \u00b7 adopt \u00b7 encode \u00b7 build",
-    continuum: "Reading the spectrum \u00b7 tool \u2194 collaborator",
-    practice: "Surveying practice \u00b7 adopt \u2192 encode \u2192 build",
-    about: "Telemetry nominal \u00b7 crew identity resolved",
-    products: "Fleet constellation \u00b7 4 instruments in deck",
-    contact: "Event horizon \u00b7 awaiting handshake",
-  };
-
-  const NAV_LABELS: Record<string, string> = {
-    hero: "Interface",
-    definition: "Thoughtform",
-    continuum: "Continuum",
-    practice: "Practice",
-    about: "About",
-    products: "Products",
-    contact: "Contact",
   };
 
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -326,7 +299,6 @@ function initV7Runtime(docEl: HTMLElement): () => void {
     const progress = Math.max(0, Math.min(1, scrollY / scrollMax));
 
     if (depthIndicator) depthIndicator.style.top = `${progress * 100}%`;
-    if (progressBar) progressBar.style.setProperty("--p", `${(progress * 100).toFixed(1)}%`);
     if (hudProgress)
       hudProgress.textContent = `${String(Math.round(progress * 100)).padStart(2, "0")}%`;
     docEl.style.setProperty("--depth", Math.min(1, progress * 1.2).toFixed(4));
@@ -334,10 +306,6 @@ function initV7Runtime(docEl: HTMLElement): () => void {
     if (coordD) coordD.textContent = (0.2 + progress * 0.55).toFixed(2);
     if (coordT)
       coordT.textContent = `${String(Math.round(progress * 359)).padStart(3, "0")}.${String(Math.round((progress * 10) % 10))}\u00b0`;
-    if (coordR) coordR.textContent = (0.4 + Math.sin(progress * 6) * 0.25 + 0.3).toFixed(2);
-    if (coordZ) coordZ.textContent = (1.2 + progress * 5.8).toFixed(1);
-    if (hudSignalV)
-      hudSignalV.textContent = (0.72 + Math.sin(progress * 4) * 0.12 + 0.05).toFixed(2);
 
     if (heroEl && defEl) {
       const defTop = defEl.getBoundingClientRect().top;
@@ -354,18 +322,11 @@ function initV7Runtime(docEl: HTMLElement): () => void {
 
     const activeKey = activeStation?.getAttribute("data-station") || activeStation?.id || "hero";
 
-    navLinks.forEach((link, i) => {
+    navLinks.forEach((link) => {
       const isActive = link.getAttribute("data-station") === activeKey;
       link.classList.toggle("is-active", isActive);
-      if (isActive) {
-        if (hudNavCur) hudNavCur.textContent = String(i + 1).padStart(2, "0");
-        if (hudNavLabel)
-          hudNavLabel.textContent =
-            NAV_LABELS[activeKey] || link.textContent?.replace(/\d+/, "").trim() || "";
-      }
     });
     if (hudSector) hudSector.textContent = sectors[activeKey] || "Field";
-    if (hudStatus) hudStatus.textContent = statusMessages[activeKey] || statusMessages.hero;
 
     if (!reduceMotion && scrollY !== lastScrollY) {
       lastScrollY = scrollY;
@@ -512,9 +473,6 @@ function initV7Runtime(docEl: HTMLElement): () => void {
     [".hero__video", 0.03],
     [".tri__center", 0.04],
     [".voidwalker__orbit", 0.06],
-    [".hud__corner--tl", 0.015],
-    [".hud__corner--bl", -0.015],
-    [".hud__corner--br", -0.015],
   ];
   parallaxMap.forEach(([selector, speed]) => {
     queryAll<HTMLElement>(selector, docEl).forEach((element) => {
