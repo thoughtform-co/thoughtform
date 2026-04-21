@@ -305,66 +305,97 @@ function initV7Runtime(docEl: HTMLElement): () => void {
     contact: "Contact",
   };
 
-  let scrollRafId: number | null = null;
-  const onScroll = () => {
-    if (scrollRafId) return;
-    scrollRafId = window.requestAnimationFrame(() => {
-      scrollRafId = null;
-      const scrollMax = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
-      const progress = Math.max(0, Math.min(1, window.scrollY / scrollMax));
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-      if (depthIndicator) depthIndicator.style.top = `${progress * 100}%`;
-      if (progressBar) progressBar.style.setProperty("--p", `${(progress * 100).toFixed(1)}%`);
-      if (hudProgress)
-        hudProgress.textContent = `${String(Math.round(progress * 100)).padStart(2, "0")}%`;
-      docEl.style.setProperty("--depth", Math.min(1, progress * 1.2).toFixed(4));
-
-      if (coordD) coordD.textContent = (0.2 + progress * 0.55).toFixed(2);
-      if (coordT)
-        coordT.textContent = `${String(Math.round(progress * 359)).padStart(3, "0")}.${String(Math.round((progress * 10) % 10))}\u00b0`;
-      if (coordR) coordR.textContent = (0.4 + Math.sin(progress * 6) * 0.25 + 0.3).toFixed(2);
-      if (coordZ) coordZ.textContent = (1.2 + progress * 5.8).toFixed(1);
-      if (hudSignalV)
-        hudSignalV.textContent = (0.72 + Math.sin(progress * 4) * 0.12 + 0.05).toFixed(2);
-
-      if (heroEl && defEl) {
-        const defTop = defEl.getBoundingClientRect().top;
-        const vh = window.innerHeight;
-        heroEl.style.setProperty(
-          "--hero-cover",
-          Math.max(0, Math.min(1, 1 - defTop / vh)).toFixed(4)
-        );
-      }
-
-      const viewportMid = window.scrollY + window.innerHeight / 2;
-      let activeStation = stations[0];
-      for (const station of stations) {
-        if (station.offsetTop <= viewportMid) activeStation = station;
-      }
-
-      const activeKey = activeStation?.getAttribute("data-station") || activeStation?.id || "hero";
-
-      navLinks.forEach((link, i) => {
-        const isActive = link.getAttribute("data-station") === activeKey;
-        link.classList.toggle("is-active", isActive);
-        if (isActive) {
-          if (hudNavCur) hudNavCur.textContent = String(i + 1).padStart(2, "0");
-          if (hudNavLabel)
-            hudNavLabel.textContent =
-              NAV_LABELS[activeKey] || link.textContent?.replace(/\d+/, "").trim() || "";
-        }
-      });
-      if (hudSector) hudSector.textContent = sectors[activeKey] || "Field";
-      if (hudStatus) hudStatus.textContent = statusMessages[activeKey] || statusMessages.hero;
-    });
+  const parallaxCache: Array<{ el: HTMLElement; speed: number; top: number; height: number }> = [];
+  const rebuildParallaxCache = () => {
+    parallaxCache.length = 0;
+    for (const el of queryAll<HTMLElement>("[data-parallax]", docEl)) {
+      const speed = parseFloat(el.dataset.parallax || "0") || 0;
+      parallaxCache.push({ el, speed, top: el.offsetTop, height: el.offsetHeight });
+    }
   };
 
-  onScroll();
+  let lastScrollY = -1;
+  let scrollRafId: number | null = null;
+  const onScrollFrame = () => {
+    scrollRafId = null;
+    const scrollY = window.scrollY;
+    const viewportHeight = window.innerHeight;
+    const scrollMax = Math.max(1, document.documentElement.scrollHeight - viewportHeight);
+    const progress = Math.max(0, Math.min(1, scrollY / scrollMax));
+
+    if (depthIndicator) depthIndicator.style.top = `${progress * 100}%`;
+    if (progressBar) progressBar.style.setProperty("--p", `${(progress * 100).toFixed(1)}%`);
+    if (hudProgress)
+      hudProgress.textContent = `${String(Math.round(progress * 100)).padStart(2, "0")}%`;
+    docEl.style.setProperty("--depth", Math.min(1, progress * 1.2).toFixed(4));
+
+    if (coordD) coordD.textContent = (0.2 + progress * 0.55).toFixed(2);
+    if (coordT)
+      coordT.textContent = `${String(Math.round(progress * 359)).padStart(3, "0")}.${String(Math.round((progress * 10) % 10))}\u00b0`;
+    if (coordR) coordR.textContent = (0.4 + Math.sin(progress * 6) * 0.25 + 0.3).toFixed(2);
+    if (coordZ) coordZ.textContent = (1.2 + progress * 5.8).toFixed(1);
+    if (hudSignalV)
+      hudSignalV.textContent = (0.72 + Math.sin(progress * 4) * 0.12 + 0.05).toFixed(2);
+
+    if (heroEl && defEl) {
+      const defTop = defEl.getBoundingClientRect().top;
+      const heroCoverVal = Math.max(0, Math.min(1, 1 - defTop / viewportHeight));
+      heroEl.style.setProperty("--hero-cover", heroCoverVal.toFixed(4));
+      heroEl.style.visibility = heroCoverVal >= 1 ? "hidden" : "";
+    }
+
+    const viewportMid = scrollY + viewportHeight / 2;
+    let activeStation = stations[0];
+    for (const station of stations) {
+      if (station.offsetTop <= viewportMid) activeStation = station;
+    }
+
+    const activeKey = activeStation?.getAttribute("data-station") || activeStation?.id || "hero";
+
+    navLinks.forEach((link, i) => {
+      const isActive = link.getAttribute("data-station") === activeKey;
+      link.classList.toggle("is-active", isActive);
+      if (isActive) {
+        if (hudNavCur) hudNavCur.textContent = String(i + 1).padStart(2, "0");
+        if (hudNavLabel)
+          hudNavLabel.textContent =
+            NAV_LABELS[activeKey] || link.textContent?.replace(/\d+/, "").trim() || "";
+      }
+    });
+    if (hudSector) hudSector.textContent = sectors[activeKey] || "Field";
+    if (hudStatus) hudStatus.textContent = statusMessages[activeKey] || statusMessages.hero;
+
+    if (!reduceMotion && scrollY !== lastScrollY) {
+      lastScrollY = scrollY;
+      const viewportCenter = scrollY + viewportHeight / 2;
+      for (const item of parallaxCache) {
+        const elementCenter = item.top + item.height / 2;
+        item.el.style.setProperty(
+          "--py",
+          `${(-(elementCenter - viewportCenter) * item.speed).toFixed(1)}px`
+        );
+      }
+    }
+  };
+
+  const onScroll = () => {
+    if (scrollRafId) return;
+    scrollRafId = window.requestAnimationFrame(onScrollFrame);
+  };
+
+  const onResize = () => {
+    rebuildParallaxCache();
+    onScroll();
+  };
+
+  onScrollFrame();
   window.addEventListener("scroll", onScroll, { passive: true });
-  window.addEventListener("resize", onScroll);
+  window.addEventListener("resize", onResize);
   addCleanup(() => {
     window.removeEventListener("scroll", onScroll);
-    window.removeEventListener("resize", onScroll);
+    window.removeEventListener("resize", onResize);
     if (scrollRafId) window.cancelAnimationFrame(scrollRafId);
   });
 
@@ -421,7 +452,6 @@ function initV7Runtime(docEl: HTMLElement): () => void {
     });
   }
 
-  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const tagIfEmpty = (element: Element | null, role: string) => {
     if (element && !element.hasAttribute("data-m")) element.setAttribute("data-m", role);
   };
@@ -538,36 +568,7 @@ function initV7Runtime(docEl: HTMLElement): () => void {
     window.clearTimeout(safetySlow);
   });
 
-  if (!reduceMotion) {
-    const parallaxItems = queryAll<HTMLElement>("[data-parallax]", docEl);
-    let parallaxTicking = false;
-    const updateParallax = () => {
-      parallaxTicking = false;
-      const viewportHeight = window.innerHeight;
-      const viewportCenter = window.scrollY + viewportHeight / 2;
-      for (const element of parallaxItems) {
-        const speed = parseFloat(element.dataset.parallax || "0") || 0;
-        const rect = element.getBoundingClientRect();
-        const elementCenter = window.scrollY + rect.top + rect.height / 2;
-        element.style.setProperty(
-          "--py",
-          `${(-(elementCenter - viewportCenter) * speed).toFixed(1)}px`
-        );
-      }
-    };
-    const onParallaxScroll = () => {
-      if (parallaxTicking) return;
-      parallaxTicking = true;
-      window.requestAnimationFrame(updateParallax);
-    };
-    updateParallax();
-    window.addEventListener("scroll", onParallaxScroll, { passive: true });
-    window.addEventListener("resize", onParallaxScroll);
-    addCleanup(() => {
-      window.removeEventListener("scroll", onParallaxScroll);
-      window.removeEventListener("resize", onParallaxScroll);
-    });
-  }
+  rebuildParallaxCache();
 
   if ("IntersectionObserver" in window && stations.length) {
     const stationObserver = new IntersectionObserver(

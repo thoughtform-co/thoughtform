@@ -11,7 +11,7 @@
    A scrolling navigation cockpit. Fixed HUD chrome, content as stations.
    ═══════════════════════════════════════════════════════════════════ */
 
-html, body { overflow-x: hidden; background: var(--void); }
+html, body { overflow-x: clip; background: var(--void); }
 body { color: var(--dawn-70); }
 
 /* ── Custom scrollbar (sparse, instrument-feel) ─────────────────────── */
@@ -437,7 +437,6 @@ body { color: var(--dawn-70); }
   position: relative;
   z-index: 10;
   padding: 0 clamp(96px, 8vw + 40px, 140px);
-  /* padding inside rails (64 + gutter) */
 }
 .station {
   min-height: 100vh;
@@ -593,6 +592,8 @@ body { color: var(--dawn-70); }
   margin-right: calc(50% - 50vw);
   padding-left: clamp(96px, 8vw + 40px, 140px);
   padding-right: clamp(96px, 8vw + 40px, 140px);
+  content-visibility: auto;
+  contain-intrinsic-size: auto 100vh;
 }
 @media (max-width: 960px) {
   .station:not(.hero) {
@@ -1929,25 +1930,17 @@ body.density-dense .station { min-height: 85vh; padding: 120px 0; }
 .hero__tagline { text-wrap: balance; }
 .hero__desc { max-width: 54ch; }
 .hero__video {
-  transform:
-    translate3d(0, calc(var(--hero-cover, 0) * -36px), 0)
-    scale(calc(1 + var(--hero-cover, 0) * 0.48));
-  opacity: calc(1 - var(--hero-cover, 0) * 0.68);
-  filter:
-    brightness(calc(1 - (var(--hero-cover, 0) * 0.16)))
-    blur(calc(var(--hero-cover, 0) * 1.2px));
-  transition: transform 80ms linear, opacity 80ms linear, filter 80ms linear;
-  will-change: transform, opacity, filter;
+  transform: scale(calc(1 + var(--hero-cover, 0) * 0.18));
+  opacity: calc(1 - var(--hero-cover, 0) * 0.45);
+  will-change: transform, opacity;
 }
 .hero__content {
   transform:
-    translateY(calc(clamp(-18px, -3vh, -32px) - (var(--hero-cover, 0) * 56px)))
-    scale(calc(1 + var(--hero-cover, 0) * 0.14));
+    translateY(clamp(-18px, -3vh, -32px))
+    scale(calc(1 + var(--hero-cover, 0) * 0.035));
   transform-origin: left center;
-  opacity: calc(1 - var(--hero-cover, 0) * 2.4);
-  filter: blur(calc(var(--hero-cover, 0) * 1.4px));
-  transition: transform 80ms linear, opacity 80ms linear, filter 80ms linear;
-  will-change: transform, opacity, filter;
+  opacity: calc(1 - var(--hero-cover, 0) * 1.4);
+  will-change: transform, opacity;
 }
 .hero__meta {
   border-top: 1px dashed var(--dawn-08);
@@ -2186,31 +2179,24 @@ body.density-dense .station { min-height: 85vh; padding: 120px 0; }
   .hero__viz__scanline, .hud__status .cursor, .gateway__grain {
     animation: none !important;
   }
-  [data-parallax] { transform: none !important; }
+  [data-parallax] { translate: none !important; }
 }
 
 /* ───────────────────────────────────────────────────────────────────
-   PARALLAX — driven by a single --sy scroll value (0..1) on <html>.
-   Speed is set per-element via --pspeed; unit is "vh per full scroll".
-   Elements compose a Y transform that doesn't collide with anything
-   else; we route parallax through a dedicated --py variable and
-   compose it onto transform: translate3d(0, var(--py), 0).
+   PARALLAX — uses the CSS `translate` property so it composes with
+   `transform` (set by the reveal system). `translate` and `transform`
+   are independent CSS properties; both apply without overriding.
    ─────────────────────────────────────────────────────────────────── */
 [data-parallax] {
-  transform: translate3d(0, var(--py, 0px), 0);
-  will-change: transform;
+  translate: 0 var(--py, 0px);
+  will-change: translate;
 }
 
 /* Hero cover motion must come after the generic [data-parallax] rule so
    the pinned video can still zoom/recede as section 02 enters. */
 .hero__video {
-  transform:
-    translate3d(0, calc(var(--py, 0px) + (var(--hero-cover, 0) * -36px)), 0)
-    scale(calc(1 + var(--hero-cover, 0) * 0.48));
-  opacity: calc(1 - var(--hero-cover, 0) * 0.68);
-  filter:
-    brightness(calc(1 - (var(--hero-cover, 0) * 0.16)))
-    blur(calc(var(--hero-cover, 0) * 1.2px));
+  transform: scale(calc(1 + var(--hero-cover, 0) * 0.18));
+  opacity: calc(1 - var(--hero-cover, 0) * 0.45);
 }
 
 /* Gateway depth layers — slight additional drift for depth cue.
@@ -3163,10 +3149,7 @@ html { scroll-behavior: smooth; }
   margin: clamp(72px, 8vw, 120px) clamp(32px, 4vw, 64px) 0;
   padding: clamp(40px, 5vw, 64px) clamp(32px, 5vw, 64px);
   border: 1px solid var(--dawn-08);
-  background:
-    radial-gradient(ellipse 60% 100% at 100% 50%, rgba(202,165,84,0.06), transparent 65%),
-    radial-gradient(ellipse 80% 100% at 0% 50%,   rgba(202,165,84,0.04), transparent 60%),
-    rgba(8,7,6,0.55);
+  background: transparent;
   display: grid;
   grid-template-columns: 1fr auto;
   align-items: center;
@@ -3509,16 +3492,17 @@ html { scroll-behavior: smooth; }
    ═══════════════════════════════════════════════════════════════════ */
 .celestial-connector {
   position: relative;
-  width: min(100%, 1200px);
-  margin: 0 auto;
-  padding: clamp(24px, 3vw, 40px) clamp(16px, 4vw, 48px);
+  z-index: 5;
+  background: var(--void);
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  padding: clamp(24px, 3vw, 40px) clamp(96px, 8vw + 40px, 140px);
   display: grid;
   grid-template-rows: clamp(60px, 7vw, 96px) auto clamp(60px, 7vw, 96px);
   justify-items: center;
   align-items: center;
   gap: 0;
   pointer-events: none;
-  z-index: 5;
 }
 /* Reuse the corner-bracket grammar from .practice-cta--funnel */
 .celestial-connector > .br,
@@ -3598,8 +3582,9 @@ html { scroll-behavior: smooth; }
   .celestial-connector__diagram svg { animation: none !important; }
 }
 
-/* Tighten trailing/leading gaps on sections adjacent to a connector */
-.station--to-continuum { padding-bottom: clamp(40px, 5vw, 72px); }
+/* Sections adjacent to connectors: remove the dashed border and tighten
+   vertical padding so there's no pixel gap for the hero to bleed through. */
+.station--to-connector { padding-bottom: clamp(40px, 5vw, 72px); border-bottom: none; }
 .station--from-connector { padding-top: clamp(40px, 5vw, 72px); }
 
 </style>
@@ -3759,7 +3744,7 @@ html { scroll-behavior: smooth; }
   </section>
 
   <!-- ═══════════ 02 THOUGHTFORM — WHAT WE DO (sigil at center) ═══════════ -->
-  <section class="station" id="definition" data-station="definition" data-screen-label="02 Thoughtform">
+  <section class="station station--to-connector" id="definition" data-station="definition" data-screen-label="02 Thoughtform">
     <div class="station__idx">Section 02 · Thoughtform<span class="landmark">Landmark · north star / navigational sigil</span></div>
 
     <div class="tri">
@@ -3979,7 +3964,7 @@ html { scroll-behavior: smooth; }
   </div>
 
   <!-- ═══════════ 03 CONTINUUM — the tool ↔ collaborator spectrum ═══════════ -->
-  <section class="station station--centered station--from-connector" id="continuum" data-station="continuum" data-screen-label="03 Continuum">
+  <section class="station station--centered station--from-connector station--to-connector" id="continuum" data-station="continuum" data-screen-label="03 Continuum">
     <div class="station__idx">Section 03 · Continuum<span class="landmark">Landmark · tool ↔ collaborator / the navigation thesis</span></div>
     <h2 class="station__title station__title--compact station__title--centered">
       AI isn't software to command.<br><em>It's intelligence to navigate.</em>
@@ -4140,7 +4125,7 @@ html { scroll-behavior: smooth; }
   </div>
 
   <!-- ═══════════ 04 PRACTICE — v12 full-bleed chamber ═══════════ -->
-  <section class="station station--fullbleed station--from-connector" id="practice" data-station="practice" data-screen-label="04 Practice">
+  <section class="station station--fullbleed station--from-connector station--to-connector" id="practice" data-station="practice" data-screen-label="04 Practice">
     <div class="station__idx" style="padding: 0 clamp(32px, 4vw, 64px);">Section 04 · Thoughtform in Practice<span class="landmark">Landmark · adopt → encode → build</span></div>
     <h2 class="station__title" style="padding: 0 clamp(32px, 4vw, 64px);">Adopt. <em>Encode.</em><br>Build.</h2>
     <p class="station__lede" style="padding: 0 clamp(32px, 4vw, 64px);">
