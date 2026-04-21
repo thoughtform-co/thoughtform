@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getV7Content } from "./v7-parse";
-import { V7Landing } from "./V7Landing";
+import { LandingPage } from "@/components/landing/v7";
+import "@/components/landing/v7/landing.css";
 
 export const metadata: Metadata = {
   title: "Thoughtform — Navigate Intelligence",
@@ -9,12 +10,7 @@ export const metadata: Metadata = {
 };
 
 export default function Home() {
-  const { bodyHtml, bodyClass, scopedCss } = getV7Content();
+  const { bodyHtml, bodyClass } = getV7Content();
 
-  return (
-    <>
-      <style dangerouslySetInnerHTML={{ __html: scopedCss }} />
-      <V7Landing bodyHtml={bodyHtml} bodyClass={bodyClass} />
-    </>
-  );
+  return <LandingPage bodyHtml={bodyHtml} bodyClass={bodyClass} />;
 }

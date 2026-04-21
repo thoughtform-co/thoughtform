@@ -1,19 +1,14 @@
 import { test, expect } from "@playwright/test";
 
 /**
- * Visual Regression Tests for Thoughtform Landing Page (V17)
+ * Visual Regression Tests for Thoughtform Landing Page
  *
- * The homepage is the V17 scroll-driven prototype with 7 stations
- * (services absorbed into practice) and celestial connectors between
- * sections. Section boundaries are controlled by the V7Runtime scroll
- * handler; no NavigationCockpitV2 scroll thresholds apply.
+ * Componentized V7 architecture: React hooks drive scroll/motion/phase
+ * behavior; CSS loaded as a proper import; useLayoutEffect prevents
+ * hero flash on first paint. The prototype HTML body is still
+ * server-extracted but rendered inside a real component tree.
  *
- * HUD shell restored to the b27eef1 canonical alignment model:
- * corners/rails/brandmark use --hud-margin variables, no bottom bar,
- * bare three-line hamburger opening leftward. Corner brackets are
- * fixed (no parallax).
- *
- * IMPORTANT: After any HUD shell change, re-capture all baselines:
+ * IMPORTANT: After any visual change, re-capture baselines:
  *   npm run test:visual:update
  */
 
@@ -96,5 +91,57 @@ test.describe("Component Visual Regression", () => {
     if (await brandmark.isVisible()) {
       await expect(brandmark).toHaveScreenshot("hud-brandmark-bl.png");
     }
+  });
+});
+
+test.describe("Hero Flash Prevention", () => {
+  test("hero is not visible when page loads scrolled to definition", async ({ page }) => {
+    await page.goto("/");
+    await page.waitForLoadState("networkidle");
+    await scrollToPercentage(page, 15);
+    await page.waitForTimeout(300);
+    const hero = page.locator("#hero").first();
+    const visibility = await hero.evaluate((el) => getComputedStyle(el).visibility);
+    expect(visibility).toBe("hidden");
+  });
+
+  test("no hero bleed at connector boundary", async ({ page }) => {
+    await page.goto("/");
+    await page.waitForLoadState("networkidle");
+    await page.waitForTimeout(1000);
+    await scrollToPercentage(page, 18);
+    await page.waitForTimeout(300);
+    await expect(page).toHaveScreenshot("connector-02-03-boundary.png", {
+      fullPage: false,
+    });
+  });
+});
+
+test.describe("Connector Transitions", () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto("/");
+    await page.waitForLoadState("networkidle");
+    await page.waitForTimeout(1000);
+  });
+
+  test("Connector 02-03 (definition to continuum)", async ({ page }) => {
+    await scrollToPercentage(page, 20);
+    await expect(page).toHaveScreenshot("connector-02-03.png", {
+      fullPage: false,
+    });
+  });
+
+  test("Connector 03-04 (continuum to practice)", async ({ page }) => {
+    await scrollToPercentage(page, 32);
+    await expect(page).toHaveScreenshot("connector-03-04.png", {
+      fullPage: false,
+    });
+  });
+
+  test("Connector 04-07 (practice to about)", async ({ page }) => {
+    await scrollToPercentage(page, 55);
+    await expect(page).toHaveScreenshot("connector-04-07.png", {
+      fullPage: false,
+    });
   });
 });
