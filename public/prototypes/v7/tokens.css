@@ -43,7 +43,7 @@
 
 :root {
   /* ── Core palette ─────────────────────────────────────────────────── */
-  --void: #0d0b09;
+  --void: #050403;
   --ink: #110F09;
   --dawn: #ECE3D6;
   --gold: #CAA554;
@@ -99,20 +99,6 @@
   --type-xl: clamp(18px, 1rem + 0.6vw, 26px);
   --type-2xl: clamp(22px, 1.2rem + 1vw, 32px);
   --type-display: clamp(28px, 1.5rem + 2vw, 48px);
-
-  /* ── Homepage semantic type scale (÷5 anchor endpoints) ──────
-     Brand rule: font sizes divisible by 5 on fixed canvases.
-     Web adaptation: clamp() min/max anchored to ÷5 values;
-     fluid middle optimises for readability between breakpoints.
-     ─────────────────────────────────────────────────────────── */
-  --type-display-xl:      clamp(45px, 7vw, 100px);
-  --type-display-section: clamp(35px, 5.5vw, 75px);
-  --type-display-compact: clamp(30px, 3.6vw, 55px);
-  --type-lede-lg:         clamp(25px, 2vw, 30px);
-  --type-lede:            clamp(20px, 1.5vw, 25px);
-  --type-body-lg:         clamp(15px, 1vw, 20px);
-  --type-eyebrow:         10px;
-  --type-micro:           9px;
 
   /* Tracking */
   --track-tight: 0.02em;

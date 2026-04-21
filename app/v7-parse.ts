@@ -48,39 +48,12 @@ function buildDepthTicksHtml(): string {
   return html;
 }
 
-// Build the right-rail section markers HTML (8 stations).
-function buildSectionMarkersHtml(): string {
-  const markers = [
-    { station: "hero", label: "01" },
-    { station: "definition", label: "02" },
-    { station: "continuum", label: "03" },
-    { station: "practice", label: "04" },
-    { station: "services", label: "05" },
-    { station: "products", label: "06" },
-    { station: "about", label: "07" },
-    { station: "contact", label: "08" },
-  ];
-  let html = "";
-  markers.forEach((m, i) => {
-    const topPct = ((i / Math.max(1, markers.length - 1)) * 100).toFixed(4);
-    const activeClass = m.station === "hero" ? " is-active" : "";
-    html += `<div class="hud__marker${activeClass}" data-station="${m.station}" style="top:${topPct}%;transform:translateY(-50%)">`;
-    html += `<span class="hud__marker__dot"></span>`;
-    html += `<span class="hud__marker__label">${m.label}</span>`;
-    html += `</div>`;
-  });
-  return html;
-}
-
 function injectStaticHudChildren(html: string): string {
   const ticksHtml = buildDepthTicksHtml();
-  const markersHtml = buildSectionMarkersHtml();
 
-  // Containers are empty in the source; inject their children before </div>
   return html
     .replace(/<div id="leftTicks"><\/div>/, `<div id="leftTicks">${ticksHtml}</div>`)
-    .replace(/<div id="rightTicks"><\/div>/, `<div id="rightTicks">${ticksHtml}</div>`)
-    .replace(/<div id="rightMarkers"><\/div>/, `<div id="rightMarkers">${markersHtml}</div>`);
+    .replace(/<div id="rightTicks"><\/div>/, `<div id="rightTicks">${ticksHtml}</div>`);
 }
 
 export function getV7Content(): V7Content {
@@ -100,6 +73,10 @@ export function getV7Content(): V7Content {
 
   bodyHtml = bodyHtml.replace(/<script[\s\S]*?<\/script>/gi, "");
   bodyHtml = bodyHtml.replace(/src="assets\/logos\//g, 'src="/logos/');
+  bodyHtml = bodyHtml.replace(
+    /src="assets\/vince-portrait\.jpg"/g,
+    'src="/images/vince-portrait.jpg"'
+  );
   bodyHtml = bodyHtml.replace(/href="#manifesto"/g, 'href="#definition"');
 
   bodyHtml = injectStaticHudChildren(bodyHtml);

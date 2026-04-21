@@ -258,15 +258,20 @@ function initV7Runtime(docEl: HTMLElement): () => void {
   Object.entries(defaultTweaks).forEach(([k, v]) => applyTweak(k, v));
   const currentTweaks = { ...defaultTweaks };
 
-  const markerEls: Array<{ el: HTMLElement; station: string }> = queryAll<HTMLElement>(
-    "#rightMarkers .hud__marker",
-    docEl
-  ).map((el) => ({ el, station: el.getAttribute("data-station") || "" }));
-
   const stations = queryAll<HTMLElement>(".station", docEl);
   const navLinks = queryAll<HTMLAnchorElement>("#hudNav a", docEl);
   const depthIndicator = query<HTMLElement>("#depthIndicator", docEl);
   const hudSector = query<HTMLElement>("#hudSector", docEl);
+  const hudNavCur = query<HTMLElement>("#hudNavCur", docEl);
+  const hudNavLabel = query<HTMLElement>("#hudNavLabel", docEl);
+  const hudStatus = query<HTMLElement>("#hudStatus", docEl);
+  const hudProgress = query<HTMLElement>("#hudProgress", docEl);
+  const progressBar = query<HTMLElement>("#progressBar", docEl);
+  const hudSignalV = query<HTMLElement>("#hudSignalV", docEl);
+  const coordD = query<HTMLElement>("#coordD", docEl);
+  const coordT = query<HTMLElement>("#coordT", docEl);
+  const coordR = query<HTMLElement>("#coordR", docEl);
+  const coordZ = query<HTMLElement>("#coordZ", docEl);
   const heroEl = query<HTMLElement>("#hero", docEl);
   const defEl = query<HTMLElement>("#definition", docEl);
 
@@ -275,10 +280,29 @@ function initV7Runtime(docEl: HTMLElement): () => void {
     definition: "North star",
     continuum: "Continuum",
     practice: "Field",
-    services: "Runway",
-    products: "Fleet",
     about: "Story",
+    products: "Fleet",
     contact: "Horizon",
+  };
+
+  const statusMessages: Record<string, string> = {
+    hero: "Scroll to descend \u00b7 the window stays \u00b7 the world changes",
+    definition: "Locating the sigil \u00b7 adopt \u00b7 encode \u00b7 build",
+    continuum: "Reading the spectrum \u00b7 tool \u2194 collaborator",
+    practice: "Surveying practice \u00b7 adopt \u2192 encode \u2192 build",
+    about: "Telemetry nominal \u00b7 crew identity resolved",
+    products: "Fleet constellation \u00b7 4 instruments in deck",
+    contact: "Event horizon \u00b7 awaiting handshake",
+  };
+
+  const NAV_LABELS: Record<string, string> = {
+    hero: "Interface",
+    definition: "Thoughtform",
+    continuum: "Continuum",
+    practice: "Practice",
+    about: "About",
+    products: "Products",
+    contact: "Contact",
   };
 
   let scrollRafId: number | null = null;
@@ -290,7 +314,18 @@ function initV7Runtime(docEl: HTMLElement): () => void {
       const progress = Math.max(0, Math.min(1, window.scrollY / scrollMax));
 
       if (depthIndicator) depthIndicator.style.top = `${progress * 100}%`;
+      if (progressBar) progressBar.style.setProperty("--p", `${(progress * 100).toFixed(1)}%`);
+      if (hudProgress)
+        hudProgress.textContent = `${String(Math.round(progress * 100)).padStart(2, "0")}%`;
       docEl.style.setProperty("--depth", Math.min(1, progress * 1.2).toFixed(4));
+
+      if (coordD) coordD.textContent = (0.2 + progress * 0.55).toFixed(2);
+      if (coordT)
+        coordT.textContent = `${String(Math.round(progress * 359)).padStart(3, "0")}.${String(Math.round((progress * 10) % 10))}\u00b0`;
+      if (coordR) coordR.textContent = (0.4 + Math.sin(progress * 6) * 0.25 + 0.3).toFixed(2);
+      if (coordZ) coordZ.textContent = (1.2 + progress * 5.8).toFixed(1);
+      if (hudSignalV)
+        hudSignalV.textContent = (0.72 + Math.sin(progress * 4) * 0.12 + 0.05).toFixed(2);
 
       if (heroEl && defEl) {
         const defTop = defEl.getBoundingClientRect().top;
@@ -308,18 +343,19 @@ function initV7Runtime(docEl: HTMLElement): () => void {
       }
 
       const activeKey = activeStation?.getAttribute("data-station") || activeStation?.id || "hero";
-      const stationOrder = stations.map((s) => s.getAttribute("data-station") || s.id);
-      const activeIdx = stationOrder.indexOf(activeKey);
 
-      navLinks.forEach((link) =>
-        link.classList.toggle("is-active", link.getAttribute("data-station") === activeKey)
-      );
-      markerEls.forEach((m) => {
-        const mIdx = stationOrder.indexOf(m.station);
-        m.el.classList.toggle("is-active", m.station === activeKey);
-        m.el.classList.toggle("is-past", mIdx < activeIdx);
+      navLinks.forEach((link, i) => {
+        const isActive = link.getAttribute("data-station") === activeKey;
+        link.classList.toggle("is-active", isActive);
+        if (isActive) {
+          if (hudNavCur) hudNavCur.textContent = String(i + 1).padStart(2, "0");
+          if (hudNavLabel)
+            hudNavLabel.textContent =
+              NAV_LABELS[activeKey] || link.textContent?.replace(/\d+/, "").trim() || "";
+        }
       });
       if (hudSector) hudSector.textContent = sectors[activeKey] || "Field";
+      if (hudStatus) hudStatus.textContent = statusMessages[activeKey] || statusMessages.hero;
     });
   };
 
@@ -332,6 +368,15 @@ function initV7Runtime(docEl: HTMLElement): () => void {
     if (scrollRafId) window.cancelAnimationFrame(scrollRafId);
   });
 
+  // Hamburger menu toggle
+  const hudNav = query<HTMLElement>(".hud__nav", docEl);
+  const hudNavBtn = query<HTMLButtonElement>(".hud__nav__btn", docEl);
+  if (hudNav && hudNavBtn) {
+    const toggleMenu = () => hudNav.classList.toggle("is-open");
+    hudNavBtn.addEventListener("click", toggleMenu);
+    addCleanup(() => hudNavBtn.removeEventListener("click", toggleMenu));
+  }
+
   navLinks.forEach((link) => {
     const onClick = (event: MouseEvent) => {
       const href = link.getAttribute("href");
@@ -339,20 +384,11 @@ function initV7Runtime(docEl: HTMLElement): () => void {
       const target = query<HTMLElement>(href, docEl);
       if (!target) return;
       event.preventDefault();
+      if (hudNav) hudNav.classList.remove("is-open");
       window.scrollTo({ top: target.offsetTop - 20, behavior: "smooth" });
     };
     link.addEventListener("click", onClick);
     addCleanup(() => link.removeEventListener("click", onClick));
-  });
-
-  markerEls.forEach(({ el, station }) => {
-    const onMarkerClick = () => {
-      const target = query<HTMLElement>(`#${station}`, docEl);
-      if (!target) return;
-      window.scrollTo({ top: target.offsetTop - 20, behavior: "smooth" });
-    };
-    el.addEventListener("click", onMarkerClick);
-    addCleanup(() => el.removeEventListener("click", onMarkerClick));
   });
 
   const tweaksEl = query<HTMLElement>("#tweaks", docEl);
@@ -415,24 +451,21 @@ function initV7Runtime(docEl: HTMLElement): () => void {
   }
   tagIfEmpty(query(".crail--large", docEl), "instrument");
   tagIfEmpty(query(".continuum__close", docEl), "body");
-  const practiceNav = query<HTMLElement>(".practice-nav", docEl);
-  if (practiceNav) practiceNav.setAttribute("data-m", "fade");
 
-  [".services__deck", ".products", ".principles", ".about__stats"].forEach((sel) => {
+  [".exec__grid", ".products", ".about__stats"].forEach((sel) => {
     queryAll<HTMLElement>(sel, docEl).forEach((grid) => {
       grid.setAttribute("data-m-group", "");
       Array.from(grid.children).forEach((child) => tagIfEmpty(child, "frame"));
     });
   });
 
-  const about = query<HTMLElement>(".about", docEl);
-  if (about) {
-    about.setAttribute("data-m-group", "");
-    const dial = query(".about__dial", about);
-    if (dial) dial.setAttribute("data-m", "instrument");
-    Array.from(about.children).forEach((child) => {
-      if (child !== dial) tagIfEmpty(child, "body");
-    });
+  const voidwalker = query<HTMLElement>(".voidwalker", docEl);
+  if (voidwalker) {
+    voidwalker.setAttribute("data-m-group", "");
+    const orbit = query(".voidwalker__orbit", voidwalker);
+    if (orbit) orbit.setAttribute("data-m", "instrument");
+    const copy = query(".voidwalker__copy", voidwalker);
+    if (copy) tagIfEmpty(copy, "body");
   }
 
   const contact = query<HTMLElement>(".contact", docEl);
@@ -448,9 +481,8 @@ function initV7Runtime(docEl: HTMLElement): () => void {
   const parallaxMap: Array<[string, number]> = [
     [".hero__video", 0.03],
     [".tri__center", 0.04],
-    [".about__dial", 0.06],
+    [".voidwalker__orbit", 0.06],
     [".hud__corner--tl", 0.015],
-    [".hud__corner--tr", 0.015],
     [".hud__corner--bl", -0.015],
     [".hud__corner--br", -0.015],
   ];
@@ -549,25 +581,36 @@ function initV7Runtime(docEl: HTMLElement): () => void {
     addCleanup(() => stationObserver.disconnect());
   }
 
-  const pnav = query<HTMLElement>(".pnav", docEl);
-  if (pnav) {
-    const tabs = queryAll<HTMLButtonElement>('[role="tab"]', pnav);
-    const panels = queryAll<HTMLElement>(".pdetail__panel", docEl);
+  // Phasebar controller (Adopt / Encode / Build tabs in the practice chamber)
+  const phasebar = query<HTMLElement>("#phasebar", docEl);
+  if (phasebar) {
+    const tabs = queryAll<HTMLButtonElement>('[role="tab"]', phasebar);
+    const phases = queryAll<HTMLElement>(".chamber__phase", docEl);
+    const cases = queryAll<HTMLElement>(".chamber__case", docEl);
+    const scrubber = query<HTMLElement>("#chamberScrubber", docEl);
+    const phaseIdx = query<HTMLElement>("#chamberPhaseIdx", docEl);
+    const idxMeta = query<HTMLElement>("#chamberIdxMeta", docEl);
+
+    const scrubberPositions = ["16%", "50%", "84%"];
     const activate = (index: number, options: { focus?: boolean } = {}) => {
-      tabs.forEach((tab, ti) => {
-        tab.setAttribute("aria-selected", ti === index ? "true" : "false");
-        tab.tabIndex = ti === index ? 0 : -1;
+      tabs.forEach((t, i) => {
+        const on = i === index;
+        t.setAttribute("aria-selected", on ? "true" : "false");
+        t.tabIndex = on ? 0 : -1;
       });
-      panels.forEach((panel, pi) =>
-        panel.setAttribute("data-active", pi === index ? "true" : "false")
-      );
-      const horizontal = window.matchMedia("(min-width: 821px)").matches;
+      phases.forEach((p, i) => p.setAttribute("data-active", i === index ? "true" : "false"));
+      cases.forEach((c, i) => c.setAttribute("data-active", i === index ? "true" : "false"));
+      if (scrubber) scrubber.style.setProperty("--scrubber-y", scrubberPositions[index] || "50%");
+      if (phaseIdx)
+        phaseIdx.textContent = `${String(index + 1).padStart(2, "0")} / ${String(tabs.length).padStart(2, "0")}`;
+      if (idxMeta) idxMeta.textContent = String(index + 1).padStart(2, "0");
+      const horizontal = window.matchMedia("(min-width: 721px)").matches;
       if (horizontal) {
-        pnav.style.setProperty("--pnav-x", `${index * 100}%`);
-        pnav.style.removeProperty("--pnav-y");
+        phasebar.style.setProperty("--pbar-x", `${index * 100}%`);
+        phasebar.style.removeProperty("--pbar-y");
       } else {
-        pnav.style.setProperty("--pnav-y", `${index * 100}%`);
-        pnav.style.removeProperty("--pnav-x");
+        phasebar.style.setProperty("--pbar-y", `${index * 100}%`);
+        phasebar.style.removeProperty("--pbar-x");
       }
       if (options.focus) tabs[index]?.focus();
     };
@@ -602,6 +645,15 @@ function initV7Runtime(docEl: HTMLElement): () => void {
     window.addEventListener("resize", onTabsResize);
     addCleanup(() => window.removeEventListener("resize", onTabsResize));
     activate(0);
+  }
+
+  // Generate chamber gutter ticks
+  const chamberTicks = query<HTMLElement>("#chamberTicks", docEl);
+  if (chamberTicks && !chamberTicks.children.length) {
+    for (let i = 0; i < 21; i++) {
+      const tick = document.createElement("span");
+      chamberTicks.appendChild(tick);
+    }
   }
 
   return () => {
