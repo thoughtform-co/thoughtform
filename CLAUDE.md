@@ -140,3 +140,9 @@ All clickable grid items should use:
 - `box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4)` on hover
 
 See `sentinel/decisions/006-focus-overlay-system.md` for full documentation.
+
+### Landing v7 Compositing (ADR-008)
+
+When editing anything under `components/landing/v7/**` or `landing.css`, the page is a layered composite with a `position: fixed` gateway glow (z:0), a `position: sticky` hero video (z:1), and opaque shield sections/connectors (z:2) stacked inside `.stations` (z:10). Full-bleed elements at z≥2 must declare `background: var(--void)`, and `opacity` reveals must never be applied to a wrapper that shields the gateway/hero — move the reveal to the inner content instead.
+
+Rules, pre-merge checklist, and a runtime debugging recipe: `.claude/skills/landing-v7-compositing/SKILL.md`. Architectural record and regression history: `sentinel/decisions/008-landing-v7-background-layers.md`.

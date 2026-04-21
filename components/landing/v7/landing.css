@@ -5158,7 +5158,10 @@ html {
 .celestial-connector {
   position: relative;
   z-index: 2;
-  background: transparent;
+  /* Must be opaque: masks both the sticky .hero (z:1) and the fixed
+     .gateway gold/green radial tint (z:0) that sits behind all content.
+     Transparent here reveals the hero video and the warm ambient glow. */
+  background: var(--void);
   width: 100vw;
   margin-left: calc(50% - 50vw);
   padding: clamp(12px, 1.5vw, 20px) clamp(96px, 8vw + 40px, 140px);
@@ -5302,4 +5305,41 @@ html {
 }
 .station--from-connector {
   /* no override needed — standard station padding applies */
+}
+
+/* Reveal decoupling — the connector wrapper carries `data-m="instrument"`,
+   whose default reveal state (opacity: 0, scale 0.97, translateY 8px, blur)
+   is meant for inline instrument visuals, not a 100vw opaque background
+   panel. Applied to the wrapper it makes the void background semi-transparent
+   during the 880ms reveal (bleeding the fixed .gateway gold gradient
+   through) and also scales/translates a 100vw block which exposes strips
+   on the sides. Force the wrapper to stay fully painted, and move the
+   reveal onto the inner diagram where it belongs. */
+.celestial-connector[data-m="instrument"],
+.celestial-connector[data-m="instrument"].is-in {
+  opacity: 1;
+  transform: none;
+  filter: none;
+  clip-path: none;
+}
+.celestial-connector .celestial-connector__diagram {
+  opacity: 0;
+  transform: translateY(8px) scale(0.97);
+  filter: blur(2px);
+  transition-property: opacity, transform, filter;
+  transition-duration: var(--m-dur-slow);
+  transition-timing-function: var(--m-ease-long);
+  will-change: opacity, transform, filter;
+}
+.celestial-connector.is-in .celestial-connector__diagram {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  filter: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .celestial-connector .celestial-connector__diagram {
+    transform: none;
+    filter: none;
+    transition-duration: 200ms;
+  }
 }
