@@ -3852,8 +3852,8 @@ html {
 .station--fullbleed {
   margin-left: calc(-1 * var(--hud-content-inset));
   margin-right: calc(-1 * var(--hud-content-inset));
-  padding-left: clamp(40px, 4vw + 8px, 80px);
-  padding-right: clamp(40px, 4vw + 8px, 80px);
+  padding-left: var(--hud-content-inset);
+  padding-right: var(--hud-content-inset);
 }
 
 .chamber__topbar {
