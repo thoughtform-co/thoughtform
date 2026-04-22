@@ -1,3 +1,6 @@
+"use client";
+
+import { useCallback } from "react";
 import type { CelestialConfig } from "@/lib/celestial/schema";
 import { LinesSvg } from "./LinesSvg";
 import { DiagramSvg } from "./DiagramSvg";
@@ -38,8 +41,36 @@ export function CelestialConnector({ config, slotId }: CelestialConnectorProps) 
 
   const needsInner = preset === "heroOrb";
 
+  // Reveal: the global useRevealMotion observer in LandingPage queries
+  // [data-m] once at mount, before these portal-mounted connectors exist.
+  // A callback ref attached to this wrapper runs synchronously on commit
+  // and sets up a per-instance IntersectionObserver that adds `.is-in`
+  // when the connector enters view, unlocking the inner diagram reveal.
+  const attachReveal = useCallback((el: HTMLDivElement | null) => {
+    if (!el) return;
+    if (el.classList.contains("is-in")) return;
+
+    if (typeof IntersectionObserver === "undefined") {
+      el.classList.add("is-in");
+      return;
+    }
+
+    const obs = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue;
+          entry.target.classList.add("is-in");
+          obs.unobserve(entry.target);
+        }
+      },
+      { threshold: 0.1, rootMargin: "0px 0px -4% 0px" }
+    );
+    obs.observe(el);
+  }, []);
+
   return (
     <div
+      ref={attachReveal}
       className={wrapperCls}
       aria-hidden="true"
       data-m="instrument"

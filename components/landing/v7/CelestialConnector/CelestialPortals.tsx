@@ -13,6 +13,10 @@ interface CelestialPortalsProps {
 /**
  * Mounts a <CelestialConnector/> into each [data-celestial-slot] placeholder
  * found inside the dangerouslySetInnerHTML container. Cleans up on unmount.
+ *
+ * Reveal is handled inside <CelestialConnector/> itself via a callback ref,
+ * so portal-mounted connectors are observed independently of the global
+ * useRevealMotion hook (which ran before they existed).
  */
 export function CelestialPortals({ slots, containerRef }: CelestialPortalsProps) {
   const rootsRef = useRef<Map<string, Root>>(new Map());
@@ -22,15 +26,12 @@ export function CelestialPortals({ slots, containerRef }: CelestialPortalsProps)
     if (!container) return;
 
     const slotEls = container.querySelectorAll<HTMLElement>("[data-celestial-slot]");
-    const mounted = new Set<string>();
 
     slotEls.forEach((el) => {
       const slotId = el.dataset.celestialSlot;
       if (!slotId) return;
       const assignment = slots[slotId];
       if (!assignment || !assignment.enabled) return;
-
-      mounted.add(slotId);
 
       let root = rootsRef.current.get(slotId);
       if (!root) {
@@ -41,7 +42,7 @@ export function CelestialPortals({ slots, containerRef }: CelestialPortalsProps)
     });
 
     return () => {
-      rootsRef.current.forEach((root, id) => {
+      rootsRef.current.forEach((root) => {
         root.unmount();
       });
       rootsRef.current.clear();
