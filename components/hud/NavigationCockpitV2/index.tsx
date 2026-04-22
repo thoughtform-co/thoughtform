@@ -9,24 +9,27 @@ import { CanvasErrorBoundary } from "../CanvasErrorBoundary";
 // These are lazy-loaded to reduce initial bundle size
 // ═══════════════════════════════════════════════════════════════════
 const ParticleCanvasV2 = dynamic(
-  () => import("../ParticleCanvasV2").then((m) => m.ParticleCanvasV2),
+  () => import("@/components/particles/ParticleCanvasV2").then((m) => m.ParticleCanvasV2),
   {
     ssr: false,
-    loading: () => null, // No visual placeholder - canvas appears smoothly
+    loading: () => null,
   }
 );
 
-const ThreeGateway = dynamic(() => import("../ThreeGateway").then((m) => m.ThreeGateway), {
-  ssr: false,
-  loading: () => null,
-});
+const ThreeGateway = dynamic(
+  () => import("@/components/gateway/ThreeGateway").then((m) => m.ThreeGateway),
+  {
+    ssr: false,
+    loading: () => null,
+  }
+);
 
 import { HUDFrame, NavigationBarHandle } from "../HUDFrame";
 import { Wordmark } from "../Wordmark";
 import { WordmarkSans } from "../WordmarkSans";
 import { GlitchText } from "../GlitchText";
-import { ParticleWordmarkMorph } from "../ParticleWordmarkMorph";
-import type { ParticlePosition } from "../ThoughtformSigil";
+import { ParticleWordmarkMorph } from "@/components/particles/ParticleWordmarkMorph";
+import type { ParticlePosition } from "@/components/particles/ThoughtformSigil";
 import { useLenis } from "@/lib/hooks/useLenis";
 import { useIsMobile } from "@/lib/hooks/useMediaQuery";
 import { ParticleConfigProvider, useParticleConfig } from "@/lib/contexts/ParticleConfigContext";

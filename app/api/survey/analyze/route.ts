@@ -7,7 +7,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase";
 import { isAuthorized } from "@/lib/auth-server";
 import Anthropic from "@anthropic-ai/sdk";
-import { CATEGORIES, getComponentsByCategory } from "@/app/astrogation/catalog";
+import { CATEGORIES, getComponentsByCategory } from "@/app/(admin)/astrogation/catalog";
 import { prepareImageForAnthropic } from "../_utils/prepareImageForAnthropic";
 
 const BUCKET_NAME = "survey-media";

@@ -1,6 +1,17 @@
 // ═══════════════════════════════════════════════════════════════
-// ACTIVE COMPONENTS - Used by the main landing page
+// HISTORICAL BARREL — compatibility layer only (see ADR-004)
+//
+// Do NOT add new exports here. Import from feature barrels:
+//   @/components/hud      — HUD navigation & chrome
+//   @/components/gateway   — Gateway visuals (ImageParticle, ThreeGateway)
+//   @/components/particles — Particle system (Canvas, Sigil, Morph)
+//   @/components/landing/v7 — V7 landing page + celestial connectors
+//   @/components/admin     — Admin overlays (CelestialEditor, AdminGate)
+//   @/components/auth      — AuthProvider
+//   @/components/ui        — Shared UI primitives
 // ═══════════════════════════════════════════════════════════════
+
+// ── Legacy exports kept for backward compatibility ────────────
 
 // UI Components
 export { Button } from "./ui/Button";

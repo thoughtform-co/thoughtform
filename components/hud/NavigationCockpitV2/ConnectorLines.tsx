@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import type { ParticlePosition } from "../ThoughtformSigil";
+import type { ParticlePosition } from "@/components/particles/ThoughtformSigil";
 
 interface ConnectorLinesProps {
   scrollProgress: number;

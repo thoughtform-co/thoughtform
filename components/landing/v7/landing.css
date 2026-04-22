@@ -2245,6 +2245,20 @@
   margin-right: auto;
   text-wrap: balance;
 }
+.station__title--practice {
+  font-weight: 400 !important;
+  font-size: clamp(24px, 2.1vw, 32px) !important;
+  line-height: 1.22 !important;
+  letter-spacing: -0.015em !important;
+  text-transform: none !important;
+  max-width: 28ch;
+  text-wrap: pretty;
+}
+.station__title--practice em {
+  font-weight: 500;
+  font-style: italic;
+  color: var(--gold);
+}
 .station__lede--centered {
   margin-left: auto;
   margin-right: auto;
@@ -4455,25 +4469,18 @@ html {
   }
 }
 .exec__header {
-  display: grid;
-  grid-template-columns: 220px 1fr;
-  gap: clamp(24px, 4vw, 72px);
-  align-items: end;
+  display: block;
   padding-bottom: 28px;
   border-bottom: 1px solid var(--dawn-08);
   margin-bottom: 28px;
-}
-@media (max-width: 760px) {
-  .exec__header {
-    grid-template-columns: 1fr;
-    gap: 12px;
-  }
 }
 .exec__eyebrow {
   font-family: var(--font-pt-mono);
   font-size: 11px;
   letter-spacing: var(--track-widest);
   text-transform: uppercase;
+  white-space: nowrap;
+  margin-bottom: 12px;
   color: var(--gold);
   display: flex;
   align-items: center;
@@ -5396,4 +5403,40 @@ html {
     filter: none;
     transition-duration: 200ms;
   }
+}
+
+/* Variant: vertical orientation — rotate the connector 90° so transit lines
+   run vertically and the diagram sits beside them. Grid switches from rows
+   to columns; line SVGs rotate to span height instead of width. */
+.celestial-connector--vertical {
+  grid-template-rows: none;
+  grid-template-columns: clamp(32px, 4vw, 56px) auto clamp(32px, 4vw, 56px);
+  grid-template-rows: auto;
+  min-height: clamp(180px, 22vw, 320px);
+}
+.celestial-connector--vertical .celestial-connector__lines {
+  width: 100%;
+  height: var(--connector-track-width);
+  transform: rotate(90deg);
+  transform-origin: center center;
+}
+.celestial-connector--vertical .celestial-connector__label--tl {
+  top: 18px;
+  left: 20px;
+  right: auto;
+}
+.celestial-connector--vertical .celestial-connector__label--tr {
+  top: 18px;
+  right: 20px;
+  left: auto;
+}
+.celestial-connector--vertical .celestial-connector__label--bl {
+  bottom: 18px;
+  left: 20px;
+  right: auto;
+}
+.celestial-connector--vertical .celestial-connector__label--br {
+  bottom: 18px;
+  right: 20px;
+  left: auto;
 }

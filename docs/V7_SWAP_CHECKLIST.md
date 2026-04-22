@@ -2,18 +2,30 @@
 
 **Status: EXECUTED** — The V7 prototype is now the production homepage at `/`.
 
-## What Changed
+## Current File Locations (post-restructure)
 
-1. `app/page.tsx` — Now renders V7 content directly (server-rendered HTML from the prototype, scoped CSS, client runtime enhancer)
-2. `app/v7-parse.ts` — Server-side utility that reads and parses the prototype HTML/CSS at build time
-3. `app/V7Runtime.tsx` — Client-side enhancer for scroll, parallax, reveal, and tab behaviors
-4. `app/v7/page.tsx` — Redirects to `/` (preserves any existing links)
-5. `app/archive/current-home/page.tsx` — The previous NavigationCockpitV2 homepage, accessible only to authenticated admins
-6. `app/archive/layout.tsx` — Auth gate (uses existing allowlist pattern from `app/test/layout.tsx`)
+| Concern                  | Path                                           |
+| ------------------------ | ---------------------------------------------- |
+| Marketing home (RSC)     | `app/(marketing)/page.tsx`                     |
+| V7 parser (server)       | `lib/v7-parse.ts`                              |
+| Landing client component | `components/landing/v7/LandingPage.tsx`        |
+| Celestial connectors     | `components/landing/v7/CelestialConnector/`    |
+| Prototype HTML source    | `public/prototypes/v7/landing-v7-motion.html`  |
+| Archive (previous home)  | `app/(internal)/archive/current-home/page.tsx` |
+| Archive layout gate      | `app/(internal)/archive/layout.tsx`            |
+
+## Original Changes (historical reference)
+
+1. `app/page.tsx` (now `app/(marketing)/page.tsx`) — Renders V7 content directly via server fetch
+2. `app/v7-parse.ts` (now `lib/v7-parse.ts`) — Server-side utility that reads and parses the prototype HTML/CSS at build time
+3. `app/V7Runtime.tsx` — Replaced by hooks in `components/landing/v7/hooks/` (useLandingScroll, useRevealMotion, useSigilChoreography)
+4. `app/v7/page.tsx` — Removed (redirect no longer needed)
+5. `app/archive/current-home/page.tsx` (now under `app/(internal)/`) — Previous NavigationCockpitV2 homepage
+6. `app/archive/layout.tsx` (now under `app/(internal)/`) — Auth gate
 
 ## Archive Access
 
-The previous homepage is available at `/archive/current-home`, gated behind the existing admin allowlist. In development mode, it is open to all logged-in users. In production, only the email configured in `NEXT_PUBLIC_ALLOWED_EMAIL` can access it.
+The previous homepage is available at `/archive/current-home`, gated behind the `(internal)` route group. In development mode, it is open to all logged-in users. In production, internal routes are blocked by `middleware.ts` (rewritten to 404).
 
 ## Content Parity
 
@@ -58,4 +70,4 @@ The previous homepage is available at `/archive/current-home`, gated behind the 
 
 ## Rollback
 
-To revert: replace `app/page.tsx` with the archived version at `app/archive/current-home/page.tsx`.
+To revert: replace `app/(marketing)/page.tsx` with the archived version at `app/(internal)/archive/current-home/page.tsx`.

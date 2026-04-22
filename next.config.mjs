@@ -11,6 +11,11 @@ const nextConfig = {
   experimental: {
     instrumentationHook: false,
   },
+  async redirects() {
+    return [
+      { source: "/v7", destination: "/", permanent: true },
+    ];
+  },
   // Suppress OpenTelemetry warnings
   webpack: (config, { isServer }) => {
     if (!isServer) {

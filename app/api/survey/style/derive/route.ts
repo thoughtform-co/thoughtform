@@ -9,7 +9,7 @@ import { createServerClient } from "@/lib/supabase";
 import { isAuthorized } from "@/lib/auth-server";
 import Anthropic from "@anthropic-ai/sdk";
 import { prepareImageForAnthropic } from "../../_utils/prepareImageForAnthropic";
-import { styleParamsToVector } from "@/app/astrogation/_foundry/styleSpace";
+import { styleParamsToVector } from "@/app/(admin)/astrogation/_foundry/styleSpace";
 import crypto from "crypto";
 
 const BUCKET_NAME = "survey-media";

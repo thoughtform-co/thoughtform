@@ -8,7 +8,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { isAuthorized } from "@/lib/auth-server";
 import Anthropic from "@anthropic-ai/sdk";
 import { createServerClient } from "@/lib/supabase";
-import { COMPONENTS, getComponentById, type PropDef } from "@/app/astrogation/catalog";
+import { COMPONENTS, getComponentById, type PropDef } from "@/app/(admin)/astrogation/catalog";
 import {
   type StyleParams,
   type StyleSignature,
@@ -18,7 +18,7 @@ import {
   styleParamsToVars,
   generateVariantName,
   describeVariant,
-} from "@/app/astrogation/_foundry/styleSpace";
+} from "@/app/(admin)/astrogation/_foundry/styleSpace";
 
 const VOYAGE_API_URL = "https://api.voyageai.com/v1/embeddings";
 const DEFAULT_MODEL = "voyage-3";

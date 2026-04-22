@@ -1,19 +1,18 @@
-// Active components
-export { ParticleCanvasV2 } from "./ParticleCanvasV2";
-export { ImageParticleGateway } from "./ImageParticleGateway";
-export { ThreeGateway } from "./ThreeGateway";
-export { KeyVisualPortal } from "./KeyVisualPortal";
+// HUD navigation & chrome
 export { HUDFrame } from "./HUDFrame";
 export { NavigationBar } from "./NavigationBar";
 export { Wordmark } from "./Wordmark";
 export { WordmarkSans } from "./WordmarkSans";
-export { ThoughtformSigil } from "./ThoughtformSigil";
 export { GlitchText } from "./GlitchText";
 export { NavigationCockpitV2 } from "./NavigationCockpitV2";
 export { CanvasErrorBoundary } from "./CanvasErrorBoundary";
 export { StatusBar } from "./StatusBar";
+export { PanelGlow } from "./PanelGlow";
 
-// Legacy components moved to legacy/hud/
-// - ParticleCanvas (V1) → use ParticleCanvasV2
-// - NavigationCockpit (V1) → use NavigationCockpitV2
-// - r3f/* (R3F particle experiment) → legacy/landing-v4/r3f/
+// Re-exports from extracted modules (backward compatibility)
+export { ParticleCanvasV2 } from "@/components/particles";
+export { ThoughtformSigil } from "@/components/particles";
+export { ParticleWordmarkMorph } from "@/components/particles";
+export { ImageParticleGateway } from "@/components/gateway";
+export { ThreeGateway } from "@/components/gateway";
+export { KeyVisualPortal } from "@/components/gateway";

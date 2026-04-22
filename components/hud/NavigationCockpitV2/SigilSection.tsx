@@ -1,7 +1,7 @@
 "use client";
 
 import { forwardRef, useEffect, useState, useRef } from "react";
-import { ThoughtformSigil, type ParticlePosition } from "../ThoughtformSigil";
+import { ThoughtformSigil, type ParticlePosition } from "@/components/particles/ThoughtformSigil";
 import { useIsMobile } from "@/lib/hooks/useMediaQuery";
 
 // Spark particle for transition effect

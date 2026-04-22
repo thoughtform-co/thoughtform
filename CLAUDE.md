@@ -15,16 +15,23 @@ This is the Thoughtform.co website, a Next.js application with a sophisticated p
 ## Project Structure
 
 ```
-app/                    # Next.js App Router pages
+app/
+  (marketing)/          # Public landing page (V7 prototype composite)
+  (admin)/              # Gated tools: /admin, /astrogation, /orrery
+  (internal)/           # Dev-only routes: /test/*, /archive/*
+  api/                  # API routes (celestial, particles, survey, etc.)
 components/
-  ├── hud/             # HUD navigation system (NavigationCockpitV2, etc.)
-  ├── canvas/          # Canvas-based backgrounds
-  ├── sections/        # Page sections (Hero, Services, etc.)
-  ├── editor/          # Visual editor components
-  └── ui/              # Reusable UI components
-lib/                   # Utilities, hooks, types
-constants/             # Configuration defaults
-supabase/              # Database schema and migrations
+  landing/v7/           # V7 landing: LandingPage, CelestialConnector
+  hud/                  # Navigation HUD (NavigationCockpitV2, bars, chrome)
+  gateway/              # ImageParticleGateway, ThreeGateway, KeyVisualPortal
+  particles/            # ParticleCanvasV2, ThoughtformSigil, WordmarkMorph
+  admin/                # Admin overlays (CelestialEditor, AdminGate)
+  auth/                 # AuthProvider
+  ui/                   # Shared UI primitives
+lib/                    # Utilities, hooks, domain modules (celestial/, auth/, etc.)
+constants/              # Configuration defaults
+supabase/               # Database schema and migrations
+legacy/                 # Archived code (excluded from TypeScript build)
 ```
 
 ## Key Components
@@ -37,15 +44,23 @@ supabase/              # Database schema and migrations
 
 ### Particle System
 
-- `ParticleCanvasV2.tsx` - Main particle canvas
+- `components/particles/ParticleCanvasV2.tsx` - Main particle canvas
 - Config stored in Supabase `particle_config` table
 - Admin panel at `/admin` for live editing
+
+### Landing Page (V7)
+
+- `app/(marketing)/page.tsx` - Server component that fetches V7 content and celestial slot data
+- `lib/v7-parse.ts` - Reads and parses `public/prototypes/v7/landing-v7-motion.html` at build time
+- `components/landing/v7/LandingPage.tsx` - Client component: scroll, reveal, sigil choreography
+- `components/landing/v7/CelestialConnector/` - Parametric celestial diagrams between sections
 
 ## Database
 
 - Uses Supabase with Row Level Security (RLS)
-- Tables: `pages`, `sections`, `elements`, `design_log`, `particle_config`
+- Key tables: `particle_config`, `service_sigils`, `celestial_designs`, `celestial_slots`, `survey_items`
 - Schema in `supabase/schema.sql`, RLS policies in `supabase/auth-rls.sql`
+- Migrations in `supabase/migrations/` (timestamp-prefixed)
 
 ## Development Commands
 
@@ -75,6 +90,24 @@ Example: "optimize the front-end design", "make this component responsive", "des
 - Mobile-first responsive design
 - CSS variables for theming (--gold, --dawn, etc.)
 - Scroll-driven animations with progress values 0-1
+
+### Imports and barrels
+
+- **Feature barrels** (`components/hud/index.ts`, `components/gateway/index.ts`, `lib/celestial/index.ts`) are kept current and are the preferred import path for that feature's public API.
+- **Root barrel** (`components/index.ts`) is a historical compatibility layer documenting legacy moves per ADR-004. Do not add new exports there; import from feature barrels directly.
+- Prefer `@/components/feature` or `@/lib/module` over deep path imports when a barrel exists.
+
+### Supabase migrations
+
+- New migration files must use the `YYYYMMDD_descriptive_name.sql` naming convention (e.g. `20260421_celestial_connectors.sql`).
+- Older files without date prefixes (`add_presets_to_particle_config.sql`, etc.) are legacy; do not rename them as they are already in the remote migration history.
+
+### Route groups
+
+- `(marketing)` — public-facing pages (the landing page).
+- `(admin)` — tools gated by `AdminGate` + `useAuth` (admin login, astrogation, orrery).
+- `(internal)` — dev-only routes blocked by `middleware.ts` in production (test pages, archive).
+- New public pages go in `(marketing)`. New admin tools go in `(admin)` with `AdminGate`. New dev/test pages go in `(internal)`.
 
 ## Design System Patterns
 

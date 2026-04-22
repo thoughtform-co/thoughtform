@@ -36,19 +36,47 @@ The Astrogation module built here taught me how to articulate what exactly inspi
 
 Next.js 14 (App Router), Tailwind CSS, Framer Motion, Three.js, Supabase (Postgres), Zustand for state, deployed on Vercel. Workspace structure with `packages/*`.
 
+### Repo structure
+
 ```
-app/                  # Next.js pages
+app/
+  (marketing)/        # Public landing page (V7 prototype composite)
+  (admin)/            # Gated tools: /admin, /astrogation, /orrery
+  (internal)/         # Dev-only routes: /test/*, /archive/*
+  api/                # API routes (celestial, particles, survey, etc.)
 components/
-  sections/           # Page sections (Hero, Services, About, etc.)
-  editor/             # Visual editor components
-  canvas/             # Animation backgrounds (2D/3D)
+  landing/v7/         # V7 landing page: LandingPage, CelestialConnector
+  hud/                # Navigation HUD (NavigationCockpitV2, bars, chrome)
+  gateway/            # ImageParticleGateway, ThreeGateway, KeyVisualPortal
+  particles/          # ParticleCanvasV2, ThoughtformSigil, WordmarkMorph
+  admin/              # Admin overlays (CelestialEditor, AdminGate)
+  auth/               # AuthProvider
   ui/                 # Shared UI primitives
-lib/                  # Utilities, types, queries
-store/                # Zustand state management
-packages/ui/          # Shared UI package
-public/logos/         # Brand assets
-supabase/             # Database schema
+lib/
+  celestial/          # Celestial connector schema, queries, seed data
+  auth/               # Allowed-user list, auth helpers
+  particle-geometry/  # Particle shape math
+  key-visual/         # Key visual pipeline
+public/
+  prototypes/v7/      # V7 prototype HTML + tokens (read by lib/v7-parse.ts)
+  logos/, fonts/, images/, videos/
+supabase/
+  migrations/         # Timestamped SQL migrations
+  config.toml         # Supabase CLI config
+packages/ui/          # Shared UI package (@thoughtform/ui)
+legacy/               # Archived code (excluded from TypeScript build)
 ```
+
+### Root documents
+
+| File         | Purpose                                                      |
+| ------------ | ------------------------------------------------------------ |
+| `README.md`  | Repo map, setup, and architecture                            |
+| `CLAUDE.md`  | Agent project memory and coding conventions                  |
+| `DESIGN.md`  | Design tokens, color palette, typography, and motion         |
+| `ROADMAP.md` | Active planning and exploration direction                    |
+| `docs/`      | Implementation reference (swap checklists, migration guides) |
+| `sentinel/`  | Architectural decisions (ADRs) and best practices            |
 
 ## Reliability
 

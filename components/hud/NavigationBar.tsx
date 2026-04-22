@@ -5,10 +5,13 @@ import dynamic from "next/dynamic";
 
 // Dynamic import for LogoGlowEffect (uses Three.js/R3F)
 // This reduces initial bundle size - the glow effect only loads when triggered
-const LogoGlowEffect = dynamic(() => import("./LogoGlowEffect").then((m) => m.LogoGlowEffect), {
-  ssr: false,
-  loading: () => null,
-});
+const LogoGlowEffect = dynamic(
+  () => import("@/components/gateway/LogoGlowEffect").then((m) => m.LogoGlowEffect),
+  {
+    ssr: false,
+    loading: () => null,
+  }
+);
 
 // ═══════════════════════════════════════════════════════════════
 // NAVIGATION BAR - Brandworld Specification

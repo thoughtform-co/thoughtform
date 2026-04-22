@@ -1392,6 +1392,15 @@ body { color: var(--dawn-70); }
   margin-left: auto; margin-right: auto;
   text-wrap: balance;
 }
+.station__title--practice {
+  font-weight: 400;
+  font-size: clamp(24px, 2.1vw, 32px);
+  line-height: 1.22;
+  letter-spacing: -0.015em;
+  text-transform: none;
+  max-width: 28ch;
+  text-wrap: pretty;
+}
 .station__lede--centered {
   margin-left: auto; margin-right: auto;
   max-width: 60ch;
@@ -2881,19 +2890,17 @@ html { scroll-behavior: smooth; }
 }
 @media (max-width: 760px) { .exec__funnel { display: none; } }
 .exec__header {
-  display: grid;
-  grid-template-columns: 220px 1fr;
-  gap: clamp(24px, 4vw, 72px);
-  align-items: end;
+  display: block;
   padding-bottom: 28px;
   border-bottom: 1px solid var(--dawn-08);
   margin-bottom: 28px;
 }
-@media (max-width: 760px) { .exec__header { grid-template-columns: 1fr; gap: 12px; } }
 .exec__eyebrow {
   font-family: var(--font-pt-mono); font-size: 11px;
   letter-spacing: var(--track-widest); text-transform: uppercase;
   color: var(--gold); display: flex; align-items: center; gap: 10px;
+  white-space: nowrap;
+  margin-bottom: 12px;
 }
 .exec__eyebrow::before {
   content: ''; width: 8px; height: 8px; background: var(--gold);
@@ -3561,7 +3568,7 @@ html { scroll-behavior: smooth; }
 
   <!-- ═══════════ 02 THOUGHTFORM — WHAT WE DO (sigil at center) ═══════════ -->
   <section class="station station--to-connector" id="definition" data-station="definition" data-screen-label="02 Thoughtform">
-    <div class="station__idx">Section 02 · Thoughtform<span class="landmark">Landmark · north star / navigational sigil</span></div>
+    <div class="station__idx">Thoughtform<span class="landmark">Landmark · north star / navigational sigil</span></div>
 
     <div class="tri">
       <!-- LEFT: What Thoughtform is / does -->
@@ -3697,91 +3704,12 @@ html { scroll-behavior: smooth; }
     </div>
   </section>
 
-  <!-- ═══════════ CONNECTOR · 02 → 03 (celestial descent) ═══════════ -->
-  <!-- ═══════════ CONNECTOR · 02 → 03 (Meridian funnel) ═══════════ -->
-  <div class="celestial-connector" aria-hidden="true" data-m="instrument">
-    <span class="br"></span><span class="bl"></span>
-    <span class="celestial-connector__label celestial-connector__label--tl"><span class="k">Transit</span> · 02 → 03</span>
-    <span class="celestial-connector__label celestial-connector__label--tr"><span class="k">δ</span> 0.34 · Meridian</span>
-    <span class="celestial-connector__label celestial-connector__label--bl">N · 180 · LOCK</span>
-    <span class="celestial-connector__label celestial-connector__label--br"><span class="k">Fig</span> · 02b / Descent</span>
-
-    <!-- top: converging V-lines descending from field above -->
-    <svg class="celestial-connector__lines celestial-connector__lines--top" viewBox="0 0 1200 120" preserveAspectRatio="none" aria-hidden="true">
-      <g stroke="var(--gold)" stroke-opacity="0.35" stroke-width="0.8" fill="none">
-        <path d="M260 0 L600 120"/>
-        <path d="M600 0 L600 120"/>
-        <path d="M940 0 L600 120"/>
-      </g>
-      <g stroke="var(--dawn-15)" stroke-width="0.4" fill="none" stroke-dasharray="1 4">
-        <path d="M260 0 L260 60 L600 88"/>
-        <path d="M940 0 L940 60 L600 88"/>
-      </g>
-      <circle cx="600" cy="120" r="3" fill="var(--gold)"/>
-    </svg>
-
-    <!-- center: the small ringed sigil -->
-    <div class="celestial-connector__diagram" aria-hidden="true">
-      <svg viewBox="-120 -120 240 240" fill="none">
-        <g stroke-width="0.6" fill="none">
-          <circle r="110" stroke="var(--dawn-15)" stroke-dasharray="1 5"/>
-          <circle r="92"  stroke="var(--dawn-08)"/>
-          <circle r="74"  stroke="var(--gold)" stroke-opacity="0.22" stroke-dasharray="2 6"/>
-          <circle r="56"  stroke="var(--gold)" stroke-opacity="0.35"/>
-        </g>
-        <g stroke="var(--dawn-30)" stroke-width="0.5">
-          <path d="M0 -110 L0 -102"/>
-          <path d="M0 110 L0 102"/>
-          <path d="M-110 0 L-102 0"/>
-          <path d="M110 0 L102 0"/>
-          <path d="M0 -110 L0 -104" transform="rotate(45)"/>
-          <path d="M0 -110 L0 -104" transform="rotate(135)"/>
-          <path d="M0 -110 L0 -104" transform="rotate(225)"/>
-          <path d="M0 -110 L0 -104" transform="rotate(315)"/>
-        </g>
-        <!-- single descending axis (meridian) -->
-        <g stroke="var(--gold)" stroke-opacity="0.5" stroke-width="0.6">
-          <path d="M0 -74 L0 74"/>
-        </g>
-        <g style="transform-origin:0 0; animation: rotate 28s linear infinite;">
-          <rect x="-4" y="-78" width="8" height="8" fill="var(--gold)" transform="rotate(45 0 -74)"/>
-        </g>
-        <g style="transform-origin:0 0; animation: rotateRev 42s linear infinite;">
-          <circle cx="0" cy="-92" r="1.6" fill="var(--dawn)" opacity="0.7"/>
-        </g>
-        <g font-family="var(--font-pt-mono)" font-size="8" fill="var(--gold)" text-anchor="middle" letter-spacing="2">
-          <text x="-74" y="4">N</text>
-          <text x="74"  y="4">S</text>
-        </g>
-        <g>
-          <circle r="14" fill="var(--void)" stroke="var(--gold)"/>
-          <path d="M0 -7 L7 0 L0 7 L-7 0 Z" fill="var(--gold)"/>
-        </g>
-        <g font-family="var(--font-pt-mono)" font-size="6" fill="var(--dawn-50)" letter-spacing="1.5">
-          <text x="-108" y="-106">N · 180</text>
-          <text x="108"  y="112" text-anchor="end">DESC</text>
-        </g>
-      </svg>
-    </div>
-
-    <!-- bottom: V-lines splaying outward into continuum spectrum -->
-    <svg class="celestial-connector__lines celestial-connector__lines--bot" viewBox="0 0 1200 120" preserveAspectRatio="none" aria-hidden="true">
-      <g stroke="var(--gold)" stroke-opacity="0.35" stroke-width="0.8" fill="none">
-        <path d="M600 0 L260 120"/>
-        <path d="M600 0 L600 120"/>
-        <path d="M600 0 L940 120"/>
-      </g>
-      <g stroke="var(--dawn-15)" stroke-width="0.4" fill="none" stroke-dasharray="1 4">
-        <path d="M260 120 L260 60 L600 32"/>
-        <path d="M940 120 L940 60 L600 32"/>
-      </g>
-      <circle cx="600" cy="0" r="3" fill="var(--gold)"/>
-    </svg>
-  </div>
+  <!-- ═══════════ CONNECTOR · 02 → 03 (slot: React portal mount) ═══════════ -->
+  <div data-celestial-slot="definition-to-continuum"></div>
 
   <!-- ═══════════ 03 CONTINUUM — the tool ↔ collaborator spectrum ═══════════ -->
   <section class="station station--centered station--from-connector station--to-connector" id="continuum" data-station="continuum" data-screen-label="03 Continuum">
-    <div class="station__idx">Section 03 · Continuum<span class="landmark">Landmark · tool ↔ collaborator / the navigation thesis</span></div>
+    <div class="station__idx">Continuum<span class="landmark">Landmark · tool ↔ collaborator / the navigation thesis</span></div>
     <h2 class="station__title station__title--compact station__title--centered">
       AI isn't software to command.<br><em>It's intelligence to navigate.</em>
     </h2>
@@ -3842,111 +3770,15 @@ html { scroll-behavior: smooth; }
     </div>
   </section>
 
-  <!-- ═══════════ CONNECTOR · 03 → 04 (square · ring · orbit cascade) ═══════════ -->
-  <!-- ═══════════ CONNECTOR · 03 → 04 (Cascade funnel) ═══════════ -->
-  <div class="celestial-connector celestial-connector--square" aria-hidden="true" data-m="instrument">
-    <span class="br"></span><span class="bl"></span>
-    <span class="celestial-connector__label celestial-connector__label--tl"><span class="k">Transit</span> · 03 → 04</span>
-    <span class="celestial-connector__label celestial-connector__label--tr"><span class="k">ρ</span> 0.58 · Cascade</span>
-    <span class="celestial-connector__label celestial-connector__label--bl"><span class="k">Ch</span> · 03 / Practice</span>
-    <span class="celestial-connector__label celestial-connector__label--br"><span class="k">Fig</span> · 03c / Lock</span>
-
-    <!-- top: wide V gathering in from the spectrum rail (left + right + center) -->
-    <svg class="celestial-connector__lines celestial-connector__lines--top" viewBox="0 0 1200 120" preserveAspectRatio="none" aria-hidden="true">
-      <g stroke="var(--gold)" stroke-opacity="0.35" stroke-width="0.8" fill="none">
-        <path d="M120 0 L600 120"/>
-        <path d="M600 0 L600 120"/>
-        <path d="M1080 0 L600 120"/>
-      </g>
-      <g stroke="var(--dawn-15)" stroke-width="0.4" fill="none" stroke-dasharray="1 4">
-        <path d="M120 0 L120 60 L600 92"/>
-        <path d="M1080 0 L1080 60 L600 92"/>
-        <path d="M360 0 L360 40 L600 92"/>
-        <path d="M840 0 L840 40 L600 92"/>
-      </g>
-      <circle cx="600" cy="120" r="3" fill="var(--gold)"/>
-    </svg>
-
-    <!-- center: sigil with a square frame (echoes 04's chamber grammar) -->
-    <div class="celestial-connector__diagram" aria-hidden="true">
-      <svg viewBox="-120 -120 240 240" fill="none">
-        <g stroke-width="0.6" fill="none">
-          <circle r="110" stroke="var(--dawn-15)" stroke-dasharray="1 5"/>
-          <!-- outer rotated square (chamber frame) -->
-          <rect x="-84" y="-84" width="168" height="168" stroke="var(--gold)" stroke-opacity="0.3" stroke-dasharray="2 6" transform="rotate(45)"/>
-          <!-- inner straight square -->
-          <rect x="-62" y="-62" width="124" height="124" stroke="var(--gold)" stroke-opacity="0.4"/>
-          <circle r="56" stroke="var(--gold)" stroke-opacity="0.35"/>
-          <circle r="32" stroke="var(--gold)" stroke-opacity="0.2" stroke-dasharray="1 3"/>
-        </g>
-        <!-- corner register marks on inner square -->
-        <g stroke="var(--gold)" stroke-opacity="0.7" stroke-width="0.6" fill="none">
-          <path d="M-68 -62 L-56 -62 M-62 -68 L-62 -56"/>
-          <path d="M68 -62 L56 -62 M62 -68 L62 -56"/>
-          <path d="M-68 62 L-56 62 M-62 68 L-62 56"/>
-          <path d="M68 62 L56 62 M62 68 L62 56"/>
-        </g>
-        <!-- bearing ticks -->
-        <g stroke="var(--dawn-30)" stroke-width="0.5">
-          <path d="M0 -110 L0 -102"/>
-          <path d="M0 110 L0 102"/>
-          <path d="M-110 0 L-102 0"/>
-          <path d="M110 0 L102 0"/>
-        </g>
-        <!-- three radial lines A · E · B -->
-        <g stroke="var(--gold)" stroke-opacity="0.5" stroke-width="0.6">
-          <path d="M0 0 L0 -56" transform="rotate(-60)"/>
-          <path d="M0 0 L0 -56" transform="rotate(60)"/>
-          <path d="M0 0 L0 -56" transform="rotate(180)"/>
-        </g>
-        <g style="transform-origin:0 0; animation: rotate 22s linear infinite;">
-          <circle cx="0" cy="-56" r="3.2" fill="var(--gold)"/>
-        </g>
-        <g style="transform-origin:0 0; animation: rotateRev 34s linear infinite;">
-          <circle cx="0" cy="-74" r="1.6" fill="var(--dawn)" opacity="0.7"/>
-        </g>
-        <g font-family="var(--font-pt-mono)" font-size="8" fill="var(--gold)" text-anchor="middle" letter-spacing="2">
-          <text x="-48" y="-22">A</text>
-          <text x="48"  y="-22">E</text>
-          <text x="0"   y="62">B</text>
-        </g>
-        <g>
-          <circle r="14" fill="var(--void)" stroke="var(--gold)"/>
-          <path d="M0 -7 L7 0 L0 7 L-7 0 Z" fill="var(--gold)"/>
-        </g>
-        <g font-family="var(--font-pt-mono)" font-size="6" fill="var(--dawn-50)" letter-spacing="1.5">
-          <text x="-108" y="-106">Ch · 03</text>
-          <text x="108"  y="112" text-anchor="end">LOCK</text>
-        </g>
-      </svg>
-    </div>
-
-    <!-- bottom: converging V down into practice chamber (3 arrowheads = A·E·B locking in) -->
-    <svg class="celestial-connector__lines celestial-connector__lines--bot" viewBox="0 0 1200 120" preserveAspectRatio="none" aria-hidden="true">
-      <g stroke="var(--gold)" stroke-opacity="0.35" stroke-width="0.8" fill="none">
-        <path d="M600 0 L320 120"/>
-        <path d="M600 0 L600 120"/>
-        <path d="M600 0 L880 120"/>
-      </g>
-      <g stroke="var(--dawn-15)" stroke-width="0.4" fill="none" stroke-dasharray="1 4">
-        <path d="M320 120 L320 70 L600 30"/>
-        <path d="M880 120 L880 70 L600 30"/>
-      </g>
-      <g fill="var(--gold)">
-        <path d="M320 120 L316 112 L324 112 Z"/>
-        <path d="M600 120 L596 112 L604 112 Z"/>
-        <path d="M880 120 L876 112 L884 112 Z"/>
-      </g>
-    </svg>
-  </div>
+  <!-- ═══════════ CONNECTOR · 03 → 04 (slot: React portal mount) ═══════════ -->
+  <div data-celestial-slot="continuum-to-practice"></div>
 
   <!-- ═══════════ 04 PRACTICE — v12 full-bleed chamber ═══════════ -->
   <section class="station station--fullbleed station--from-connector station--to-connector" id="practice" data-station="practice" data-screen-label="04 Practice">
-    <div class="station__idx" style="padding: 0 clamp(32px, 4vw, 64px);">Section 04 · Thoughtform in Practice<span class="landmark">Landmark · adopt → encode → build</span></div>
-    <h2 class="station__title" style="padding: 0 clamp(32px, 4vw, 64px);">Adopt. <em>Encode.</em><br>Build.</h2>
-    <p class="station__lede" style="padding: 0 clamp(32px, 4vw, 64px);">
-      The skill runs through all three. Here it is with the receipts.
-    </p>
+    <div class="station__idx" style="padding: 0 clamp(32px, 4vw, 64px);">Thoughtform in Practice<span class="landmark">Landmark · adopt → encode → build</span></div>
+    <h2 class="station__title station__title--practice" style="padding: 0 clamp(32px, 4vw, 64px);">
+      The skill runs through all three. Here it is <em>with the receipts.</em>
+    </h2>
 
     <!-- Monospace topbar — "how does it work?" register -->
     <div class="chamber__topbar" style="padding-left: clamp(32px, 4vw, 64px); padding-right: clamp(32px, 4vw, 64px);">
@@ -4221,7 +4053,7 @@ html { scroll-behavior: smooth; }
     <!-- ── Execution strip — Keynotes · Workshops · Strategy ── -->
     <div class="exec" aria-labelledby="execTitle">
       <div class="exec__header">
-        <div class="exec__eyebrow" id="execTitle">/ Services &nbsp; · &nbsp; how we run it</div>
+        <div class="exec__eyebrow" id="execTitle">/ Services - How we run it</div>
         <p class="exec__lede">
           Three ways to bring the practice in — <em>inspire</em> the room,
           <em>train</em> the team, <em>shape</em> the roadmap.
@@ -4347,109 +4179,8 @@ html { scroll-behavior: smooth; }
     </div>
   </section>
 
-  <!-- ═══════════ CONNECTOR · 04 → 07 (About transit) ═══════════ -->
-  <div class="celestial-connector celestial-connector--hero-orb" aria-hidden="true" data-m="instrument">
-    <span class="br"></span><span class="bl"></span>
-    <span class="celestial-connector__label celestial-connector__label--tl"><span class="k">Transit</span> · 04 → 07</span>
-    <span class="celestial-connector__label celestial-connector__label--tr"><span class="k">λ</span> 0.72 · About</span>
-    <span class="celestial-connector__label celestial-connector__label--bl"><span class="k">Ch</span> · 07 / Voidwalker</span>
-    <span class="celestial-connector__label celestial-connector__label--br"><span class="k">Fig</span> · 04e / Author</span>
-
-    <svg class="celestial-connector__lines celestial-connector__lines--top" viewBox="0 0 1200 120" preserveAspectRatio="none" aria-hidden="true">
-      <g stroke="var(--gold)" stroke-opacity="0.32" stroke-width="0.8" fill="none">
-        <path d="M600 0 L320 120"/>
-        <path d="M600 0 L600 120"/>
-        <path d="M600 0 L880 120"/>
-      </g>
-      <g stroke="var(--dawn-15)" stroke-width="0.4" fill="none" stroke-dasharray="1 4">
-        <path d="M320 120 L320 60 L600 30"/>
-        <path d="M880 120 L880 60 L600 30"/>
-      </g>
-      <circle cx="600" cy="0" r="3" fill="var(--gold)"/>
-    </svg>
-
-      <div class="celestial-connector__diagram celestial-connector__diagram--large" aria-hidden="true">
-        <div class="celestial-connector__diagram-inner" aria-hidden="true">
-          <svg viewBox="-120 -120 240 240" fill="none">
-            <!-- outer rings -->
-            <g stroke-width="0.6" fill="none">
-              <circle r="110" stroke="var(--dawn-15)" stroke-dasharray="1 5"/>
-              <circle r="92"  stroke="var(--dawn-08)"/>
-              <circle r="74"  stroke="var(--gold)" stroke-opacity="0.22" stroke-dasharray="2 6"/>
-              <circle r="56"  stroke="var(--gold)" stroke-opacity="0.35"/>
-            </g>
-
-            <!-- bearing ticks -->
-            <g stroke="var(--dawn-30)" stroke-width="0.5">
-              <path d="M0 -110 L0 -102"/>
-              <path d="M0 110 L0 102"/>
-              <path d="M-110 0 L-102 0"/>
-              <path d="M110 0 L102 0"/>
-              <path d="M0 -110 L0 -104" transform="rotate(30)"/>
-              <path d="M0 -110 L0 -104" transform="rotate(60)"/>
-              <path d="M0 -110 L0 -104" transform="rotate(120)"/>
-              <path d="M0 -110 L0 -104" transform="rotate(150)"/>
-              <path d="M0 -110 L0 -104" transform="rotate(210)"/>
-              <path d="M0 -110 L0 -104" transform="rotate(240)"/>
-              <path d="M0 -110 L0 -104" transform="rotate(300)"/>
-              <path d="M0 -110 L0 -104" transform="rotate(330)"/>
-            </g>
-
-            <!-- three radial lines for A · E · B -->
-            <g stroke="var(--gold)" stroke-opacity="0.5" stroke-width="0.6">
-              <path d="M0 0 L0 -74" transform="rotate(-60)"/>
-              <path d="M0 0 L0 -74" transform="rotate(60)"/>
-              <path d="M0 0 L0 -74" transform="rotate(180)"/>
-            </g>
-
-            <!-- orbiting node -->
-            <g style="transform-origin:0 0; animation: rotate 24s linear infinite;">
-              <circle cx="0" cy="-74" r="4" fill="var(--gold)"/>
-            </g>
-            <g style="transform-origin:0 0; animation: rotateRev 36s linear infinite;">
-              <circle cx="0" cy="-92" r="1.6" fill="var(--dawn)" opacity="0.7"/>
-            </g>
-
-            <!-- phase glyphs -->
-            <g font-family="var(--font-pt-mono)" font-size="8" fill="var(--gold)"
-               text-anchor="middle" letter-spacing="2">
-              <text x="-64" y="-32">A</text>
-              <text x="64"  y="-32">E</text>
-              <text x="0"   y="80">B</text>
-            </g>
-
-            <!-- inner diamond -->
-            <g>
-              <circle r="14" fill="var(--void)" stroke="var(--gold)"/>
-              <path d="M0 -7 L7 0 L0 7 L-7 0 Z" fill="var(--gold)"/>
-            </g>
-
-            <!-- crosshair label -->
-            <g font-family="var(--font-pt-mono)" font-size="6" fill="var(--dawn-50)" letter-spacing="1.5">
-              <text x="-108" y="-106">N · 000</text>
-              <text x="108"  y="112" text-anchor="end">LOCK</text>
-            </g>
-          </svg>
-      </div>
-      </div>
-
-    <svg class="celestial-connector__lines celestial-connector__lines--bot" viewBox="0 0 1200 120" preserveAspectRatio="none" aria-hidden="true">
-      <g stroke="var(--gold)" stroke-opacity="0.28" stroke-width="0.7" fill="none">
-        <path d="M600 0 L140 120"/>
-        <path d="M600 0 L1060 120"/>
-        <path d="M600 0 L600 120"/>
-      </g>
-      <g stroke="var(--dawn-15)" stroke-width="0.4" fill="none" stroke-dasharray="1 4">
-        <path d="M140 120 L140 70 L600 30"/>
-        <path d="M1060 120 L1060 70 L600 30"/>
-      </g>
-      <g fill="var(--gold)" fill-opacity="0.85">
-        <path d="M140 120 L136 112 L144 112 Z"/>
-        <path d="M600 120 L596 112 L604 112 Z"/>
-        <path d="M1060 120 L1056 112 L1064 112 Z"/>
-      </g>
-    </svg>
-  </div>
+  <!-- ═══════════ CONNECTOR · 04 → 07 (slot: React portal mount) ═══════════ -->
+  <div data-celestial-slot="practice-to-about"></div>
 
 
   <!-- ═══════════ 05 SERVICES (absorbed into Practice) ═══════════ -->
@@ -4458,7 +4189,7 @@ html { scroll-behavior: smooth; }
 
   <!-- ═══════════ 07 ABOUT · VINCE BUYSSENS // VOIDWALKER ═══════════ -->
   <section class="station" id="about" data-station="about" data-screen-label="07 About">
-    <div class="station__idx">Section 07 · About<span class="landmark">Landmark · the navigator · who runs the practice</span></div>
+    <div class="station__idx">About<span class="landmark">Landmark · the navigator · who runs the practice</span></div>
 
     <div class="voidwalker">
       <!-- LEFT · bio -->
@@ -4639,7 +4370,7 @@ html { scroll-behavior: smooth; }
 
   <!-- ═══════════ 06 PRODUCTS ═══════════ -->
   <section class="station" id="products" data-station="products" data-screen-label="06 Products">
-    <div class="station__idx">Section 06 · Products<span class="landmark">Landmark · instrument constellation</span></div>
+    <div class="station__idx">Products<span class="landmark">Landmark · instrument constellation</span></div>
     <h2 class="station__title">Instruments<br>in the <em>deck.</em></h2>
     <p class="station__lede">
       Our own interfaces for navigating latent space — quiet tools, built for
@@ -4706,7 +4437,7 @@ html { scroll-behavior: smooth; }
   <!-- ═══════════ 08 CONTACT ═══════════ -->
   <section class="station" id="contact" data-station="contact" data-screen-label="08 Contact">
     <div class="contact">
-      <div class="station__idx" style="justify-content:center">Section 08 · Contact<span class="landmark" style="margin-left:0">Event horizon · destination lock</span></div>
+      <div class="station__idx" style="justify-content:center">Contact<span class="landmark" style="margin-left:0">Event horizon · destination lock</span></div>
       <h2 class="contact__title">Plot your<br><em>course.</em></h2>
       <p class="contact__desc">
         Ready to navigate intelligence with your team? Send a signal. We'll

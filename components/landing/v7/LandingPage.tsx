@@ -1,16 +1,20 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, useCallback } from "react";
 import { useLandingScroll } from "./hooks/useLandingScroll";
 import { useRevealMotion } from "./hooks/useRevealMotion";
 import { useSigilChoreography } from "./hooks/useSigilChoreography";
+import { CelestialPortals } from "./CelestialConnector/CelestialPortals";
+import { CelestialEditorOverlay } from "@/components/admin/CelestialEditor";
+import type { SlotsMap } from "@/lib/celestial/schema";
 
 interface LandingPageProps {
   bodyHtml: string;
   bodyClass: string;
+  celestialSlots?: SlotsMap;
 }
 
-export function LandingPage({ bodyHtml, bodyClass }: LandingPageProps) {
+export function LandingPage({ bodyHtml, bodyClass, celestialSlots }: LandingPageProps) {
   const rootRef = useRef<HTMLDivElement>(null);
   const [navOpen, setNavOpen] = useState(false);
 
@@ -144,8 +148,11 @@ export function LandingPage({ bodyHtml, bodyClass }: LandingPageProps) {
     return () => cleanups.reverse().forEach((fn) => fn());
   }, []);
 
-  // Tag motion roles on first mount (replaces the imperative tagging from initV7Runtime)
-  useEffect(() => {
+  // Tag motion roles on first mount (replaces the imperative tagging from initV7Runtime).
+  // MUST be useLayoutEffect: runs before useRevealMotion's useEffect so the
+  // IntersectionObserver sees all [data-m] elements. Otherwise auto-tagged
+  // titles/bodies stay at opacity:0 until a reflow triggers them.
+  useLayoutEffect(() => {
     const root = rootRef.current;
     if (!root) return;
 
@@ -219,20 +226,24 @@ export function LandingPage({ bodyHtml, bodyClass }: LandingPageProps) {
   }, []);
 
   return (
-    <div
-      ref={rootRef}
-      className={bodyClass}
-      data-theme="dark"
-      style={
-        {
-          position: "relative",
-          minHeight: "100vh",
-          "--depth": 0,
-          "--hero-cover": 0,
-        } as React.CSSProperties
-      }
-      suppressHydrationWarning
-      dangerouslySetInnerHTML={{ __html: bodyHtml }}
-    />
+    <>
+      <div
+        ref={rootRef}
+        className={bodyClass}
+        data-theme="dark"
+        style={
+          {
+            position: "relative",
+            minHeight: "100vh",
+            "--depth": 0,
+            "--hero-cover": 0,
+          } as React.CSSProperties
+        }
+        suppressHydrationWarning
+        dangerouslySetInnerHTML={{ __html: bodyHtml }}
+      />
+      {celestialSlots && <CelestialPortals slots={celestialSlots} containerRef={rootRef} />}
+      <CelestialEditorOverlay />
+    </>
   );
 }
