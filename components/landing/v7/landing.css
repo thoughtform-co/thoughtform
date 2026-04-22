@@ -1920,7 +1920,7 @@
 .tri__eyebrow {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   font-family: var(--font-pt-mono);
   font-size: 10px;
   letter-spacing: var(--track-widest);
@@ -1928,17 +1928,21 @@
   color: var(--gold);
   margin-bottom: 14px;
 }
-.tri__eyebrow .d {
-  width: 6px;
-  height: 6px;
+.tri__eyebrow::before {
+  content: "";
+  width: 24px;
+  height: 1px;
   background: var(--gold);
-  transform: rotate(45deg);
+  flex-shrink: 0;
+}
+.tri__eyebrow .d {
+  display: none;
 }
 .tri__eyebrow--end {
   justify-content: flex-end;
   text-align: right;
 }
-.tri__eyebrow--end .d {
+.tri__eyebrow--end::before {
   order: 2;
 }
 .tri__ipa {
@@ -4488,11 +4492,11 @@ html {
 }
 .exec__eyebrow::before {
   content: "";
-  width: 8px;
-  height: 8px;
+  width: 24px;
+  height: 1px;
   background: var(--gold);
-  transform: rotate(45deg);
   display: inline-block;
+  flex-shrink: 0;
 }
 .exec__lede {
   font-family: var(--font-pp-neue-montreal);
