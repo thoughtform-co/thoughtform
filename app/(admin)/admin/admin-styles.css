@@ -1,7 +1,8 @@
 /* ═══════════════════════════════════════════════════════════════
-   CELESTIAL LOGIN — Centered observatory terminal
-   Terminal card at the heart of a Voidwalker-style orbital diagram.
-   Borrows the sigil/orbit grammar from the landing about section.
+   CELESTIAL LOGIN — Centered reticle terminal
+   A targeting-instrument composition: rotated-square frame + crosshair
+   + bearing arc, with viewport-anchored telemetry readouts.
+   Distinct from the Voidwalker about-section orbit grammar.
    ═══════════════════════════════════════════════════════════════ */
 
 /* ─── PAGE CONTAINER ─── */
@@ -20,7 +21,7 @@
   position: absolute;
   inset: 0;
   z-index: 0;
-  opacity: 0.5;
+  opacity: 0.45;
 }
 
 /* ─── ATMOSPHERIC WASH (z:1) ─── */
@@ -30,11 +31,95 @@
   z-index: 1;
   pointer-events: none;
   background:
-    radial-gradient(ellipse 60% 55% at 50% 45%, rgba(202, 165, 84, 0.05) 0%, transparent 65%),
-    radial-gradient(ellipse 70% 70% at 80% 80%, rgba(91, 122, 78, 0.03) 0%, transparent 65%);
+    radial-gradient(ellipse 55% 50% at 50% 48%, rgba(202, 165, 84, 0.05) 0%, transparent 65%),
+    radial-gradient(ellipse 70% 80% at 50% 100%, rgba(91, 122, 78, 0.025) 0%, transparent 70%);
 }
 
-/* ─── CENTERED STAGE (z:10) ─── */
+/* ═══════════════════════════════════════════════════════════════
+   VIEWPORT-ANCHORED TELEMETRY READOUTS
+   Float at the corners of the viewport, not inside the instrument,
+   so they always have breathing room. Horizontal layout — no stacking.
+   ═══════════════════════════════════════════════════════════════ */
+
+.cel-login__readout {
+  position: fixed;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--dawn-50);
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.cel-login__readout .k {
+  color: var(--gold);
+  position: relative;
+  padding-left: 22px;
+}
+
+.cel-login__readout .k::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 14px;
+  height: 1px;
+  background: var(--gold);
+  opacity: 0.5;
+}
+
+.cel-login__readout .v {
+  color: var(--dawn-60);
+}
+
+.cel-login__readout--tl {
+  top: clamp(20px, 3vw, 40px);
+  left: clamp(20px, 3vw, 40px);
+}
+
+.cel-login__readout--tr {
+  top: clamp(20px, 3vw, 40px);
+  right: clamp(20px, 3vw, 40px);
+  flex-direction: row-reverse;
+}
+
+.cel-login__readout--tr .k {
+  padding-left: 0;
+  padding-right: 22px;
+}
+
+.cel-login__readout--tr .k::before {
+  left: auto;
+  right: 0;
+}
+
+.cel-login__readout--bl {
+  bottom: clamp(20px, 3vw, 40px);
+  left: clamp(20px, 3vw, 40px);
+}
+
+.cel-login__readout--br {
+  bottom: clamp(20px, 3vw, 40px);
+  right: clamp(20px, 3vw, 40px);
+  flex-direction: row-reverse;
+}
+
+.cel-login__readout--br .k {
+  padding-left: 0;
+  padding-right: 22px;
+}
+
+.cel-login__readout--br .k::before {
+  left: auto;
+  right: 0;
+}
+
+/* ─── CENTERED STAGE ─── */
 .cel-login__stage {
   position: relative;
   z-index: 10;
@@ -43,16 +128,14 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: clamp(20px, 4vw, 48px);
+  padding: clamp(80px, 10vw, 120px) clamp(20px, 4vw, 48px);
 }
 
-/* ─── INSTRUMENT WRAPPER ───
-   Holds the orbital diagram with the terminal card at its center.
-*/
+/* ─── INSTRUMENT WRAPPER ── holds the reticle + terminal ── */
 .cel-login__instrument {
   position: relative;
   width: 100%;
-  max-width: clamp(420px, 62vmin, 720px);
+  max-width: clamp(420px, 62vmin, 680px);
   aspect-ratio: 1;
   display: flex;
   align-items: center;
@@ -60,38 +143,29 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   ORBITAL INSTRUMENT — concentric rings + bearing readouts
-   Mirrors .voidwalker__orbit from components/landing/v7/landing.css
+   RETICLE — rotated square + crosshair + bearing arc
    ═══════════════════════════════════════════════════════════════ */
 
-.cel-login__orbit {
+.cel-reticle {
   position: absolute;
   inset: 0;
   pointer-events: none;
 }
 
-.cel-login__orbit-svg {
+.cel-reticle__svg {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
 }
 
-/* ─── rotating orbit groups ─── */
-.cel-login__orbit-rot {
+/* single slow drift mark on the reticle */
+.cel-reticle__rotor {
   transform-origin: 0 0;
-  animation: cel-orbit-rot 50s linear infinite;
+  animation: cel-reticle-rotor 45s linear infinite;
 }
 
-.cel-login__orbit-rot--rev {
-  animation: cel-orbit-rot-rev 90s linear infinite;
-}
-
-.cel-login__orbit-rot--slowest {
-  animation: cel-orbit-rot 120s linear infinite;
-}
-
-@keyframes cel-orbit-rot {
+@keyframes cel-reticle-rotor {
   from {
     transform: rotate(0deg);
   }
@@ -100,92 +174,14 @@
   }
 }
 
-@keyframes cel-orbit-rot-rev {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(-360deg);
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .cel-login__orbit-rot,
-  .cel-login__orbit-rot--rev,
-  .cel-login__orbit-rot--slowest {
+  .cel-reticle__rotor {
     animation: none;
   }
 }
 
-/* ─── static particle halo (sigil grammar) ─── */
-.cel-login__orbit-halo {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-}
-
-.cel-login__orbit-halo span {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 3px;
-  height: 3px;
-  background: var(--gold);
-  border-radius: 50%;
-  transform: translate(-50%, -50%) rotate(var(--a, 0deg)) translateY(calc(var(--r, 40%) * -1));
-  opacity: var(--o, 0.8);
-  box-shadow: 0 0 6px rgba(202, 165, 84, 0.55);
-}
-
-.cel-login__orbit-halo span.d {
-  background: var(--dawn);
-  box-shadow: none;
-  opacity: 0.5;
-  width: 2px;
-  height: 2px;
-}
-
-/* ─── corner readouts ─── */
-.cel-login__readout {
-  position: absolute;
-  font-family: var(--font-mono);
-  font-size: 9px;
-  letter-spacing: 0.2em;
-  line-height: 1.5;
-  text-transform: uppercase;
-  color: var(--dawn-50);
-  pointer-events: none;
-}
-
-.cel-login__readout .k {
-  color: var(--gold);
-}
-
-.cel-login__readout--tl {
-  top: 4%;
-  left: 4%;
-}
-
-.cel-login__readout--tr {
-  top: 4%;
-  right: 4%;
-  text-align: right;
-}
-
-.cel-login__readout--bl {
-  bottom: 4%;
-  left: 4%;
-}
-
-.cel-login__readout--br {
-  bottom: 4%;
-  right: 4%;
-  text-align: right;
-}
-
 /* ═══════════════════════════════════════════════════════════════
-   TERMINAL — sits at the center of the orbit
-   Like the voidwalker portrait but holds the auth form.
+   TERMINAL — sits at the center of the reticle
    ═══════════════════════════════════════════════════════════════ */
 
 .cel-login__terminal {
@@ -195,8 +191,6 @@
   max-width: calc(100% - clamp(40px, 10vw, 120px));
 }
 
-/* Override the celestial-auth max-width — the instrument wrapper
-   already constrains the terminal proportions. */
 .cel-login__terminal .cel-auth {
   max-width: 100%;
 }
@@ -241,23 +235,34 @@
 
 /* ═══════════════════════════════════════════════════════════════
    RESPONSIVE
-   On tablet: shrink the orbit, pull the readouts toward the edges.
-   On phone: hide the orbit rings (keep the wash + particles),
-             let the terminal expand cleanly without constraint.
    ═══════════════════════════════════════════════════════════════ */
 
 @media (max-width: 900px) {
   .cel-login__instrument {
-    max-width: clamp(360px, 86vmin, 560px);
-  }
-
-  .cel-login__readout {
-    font-size: 8px;
-    letter-spacing: 0.15em;
+    max-width: clamp(380px, 88vmin, 560px);
   }
 
   .cel-login__terminal {
     width: clamp(300px, 56vmin, 400px);
+  }
+
+  .cel-login__readout {
+    font-size: 9px;
+    letter-spacing: 0.16em;
+  }
+
+  .cel-login__readout .k {
+    padding-left: 16px;
+  }
+
+  .cel-login__readout .k::before {
+    width: 10px;
+  }
+
+  .cel-login__readout--tr .k,
+  .cel-login__readout--br .k {
+    padding-left: 0;
+    padding-right: 16px;
   }
 }
 
@@ -268,17 +273,32 @@
     height: auto;
   }
 
-  .cel-login__orbit,
-  .cel-login__orbit-halo {
+  .cel-reticle {
     display: none;
   }
 
-  .cel-login__readout {
+  /* Keep telemetry but reduce to top-left + bottom-right for breathing room */
+  .cel-login__readout--tr,
+  .cel-login__readout--bl {
     display: none;
   }
 
   .cel-login__terminal {
     width: 100%;
     max-width: 420px;
+  }
+
+  .cel-login__stage {
+    padding: 70px 16px;
+  }
+}
+
+@media (max-width: 420px) {
+  .cel-login__readout {
+    display: none;
+  }
+
+  .cel-login__stage {
+    padding: 40px 12px;
   }
 }

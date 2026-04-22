@@ -21,149 +21,138 @@ const ADMIN_CONFIG: ParticleSystemConfig = {
 };
 
 /**
- * Orbital instrument surrounding the terminal — mirrors the Voidwalker
- * orbit grammar from the landing page about section.
+ * Reticle instrument — rotated square + crosshair + bearing arc.
+ * Distinct from the Voidwalker orbit; reads as a targeting / auth lock
+ * rather than an orbital portrait.
  */
-function OrbitalInstrument() {
+function ReticleInstrument() {
   return (
-    <div className="cel-login__orbit" aria-hidden="true">
+    <div className="cel-reticle" aria-hidden="true">
       <svg
-        className="cel-login__orbit-svg"
+        className="cel-reticle__svg"
         viewBox="-200 -200 400 400"
         fill="none"
         preserveAspectRatio="xMidYMid meet"
       >
-        {/* concentric rings */}
-        <g fill="none" strokeWidth="0.7">
-          <circle r="192" stroke="var(--dawn-15)" strokeDasharray="1 7" />
-          <circle r="172" stroke="var(--dawn-08)" />
-          <circle r="150" stroke="var(--gold)" strokeOpacity="0.18" strokeDasharray="2 8" />
-          <circle r="124" stroke="var(--gold)" strokeOpacity="0.3" />
-          <circle r="104" stroke="var(--gold)" strokeOpacity="0.15" strokeDasharray="1 3" />
-          <circle r="82" stroke="var(--dawn-30)" strokeDasharray="1 4" />
+        {/* rotated square (diamond) — the primary frame */}
+        <g transform="rotate(45)">
+          <rect
+            x="-125"
+            y="-125"
+            width="250"
+            height="250"
+            stroke="var(--gold)"
+            strokeOpacity="0.22"
+            strokeWidth="0.8"
+            fill="none"
+          />
+          <rect
+            x="-145"
+            y="-145"
+            width="290"
+            height="290"
+            stroke="var(--dawn-08)"
+            strokeWidth="0.5"
+            fill="none"
+            strokeDasharray="2 6"
+          />
         </g>
 
-        {/* cardinal bearing ticks */}
-        <g stroke="var(--dawn-50)" strokeWidth="0.8">
-          <path d="M0 -192 L0 -178" />
-          <path d="M0 192 L0 178" />
-          <path d="M-192 0 L-178 0" />
-          <path d="M192 0 L178 0" />
+        {/* crosshair — horizontal + vertical meridians */}
+        <g stroke="var(--gold)" strokeOpacity="0.25" strokeWidth="0.5">
+          <line x1="-195" y1="0" x2="-140" y2="0" />
+          <line x1="140" y1="0" x2="195" y2="0" />
+          <line x1="0" y1="-195" x2="0" y2="-140" />
+          <line x1="0" y1="140" x2="0" y2="195" />
         </g>
 
-        {/* fine bearing ticks */}
+        {/* inner dawn crosshair close to terminal edges */}
         <g stroke="var(--dawn-30)" strokeWidth="0.5">
-          {[
-            15, 30, 45, 60, 75, 105, 120, 135, 150, 165, 195, 210, 225, 240, 255, 285, 300, 315,
-            330, 345,
-          ].map((deg) => (
-            <path key={deg} d="M0 -192 L0 -184" transform={`rotate(${deg})`} />
-          ))}
+          <line x1="-130" y1="0" x2="-108" y2="0" />
+          <line x1="108" y1="0" x2="130" y2="0" />
+          <line x1="0" y1="-130" x2="0" y2="-108" />
+          <line x1="0" y1="108" x2="0" y2="130" />
         </g>
 
-        {/* radial spokes */}
-        <g stroke="var(--gold)" strokeOpacity="0.22" strokeWidth="0.5">
-          <path d="M0 -150 L0 -82" />
-          <path d="M0 150 L0 82" />
-          <path d="M-150 0 L-82 0" />
-          <path d="M150 0 L82 0" />
+        {/* bearing arc — top */}
+        <g stroke="var(--gold)" strokeOpacity="0.3" strokeWidth="0.6">
+          <path d="M -160 -100 A 188 188 0 0 1 160 -100" fill="none" />
+        </g>
+        <g stroke="var(--dawn-50)" strokeWidth="0.5">
+          {[-60, -45, -30, -15, 0, 15, 30, 45, 60].map((deg) => {
+            const rad = ((deg - 90) * Math.PI) / 180;
+            const r1 = 188;
+            const r2 = deg % 30 === 0 ? 176 : 182;
+            return (
+              <line
+                key={deg}
+                x1={Math.cos(rad) * r1}
+                y1={Math.sin(rad) * r1}
+                x2={Math.cos(rad) * r2}
+                y2={Math.sin(rad) * r2}
+              />
+            );
+          })}
         </g>
 
-        {/* rotating orbit nodes */}
-        <g className="cel-login__orbit-rot cel-login__orbit-rot--slow">
-          <circle cx="0" cy="-150" r="3.5" fill="var(--gold)" />
+        {/* bearing labels on arc */}
+        <g
+          fontFamily="var(--font-mono)"
+          fontSize="7"
+          fill="var(--dawn-40)"
+          textAnchor="middle"
+          letterSpacing="1.2"
+        >
+          <text x="0" y="-164">
+            N · 000
+          </text>
+          <text x="-93" y="-138">
+            330
+          </text>
+          <text x="93" y="-138">
+            030
+          </text>
+        </g>
+
+        {/* measurement ticks — bottom linear gauge */}
+        <g stroke="var(--gold)" strokeOpacity="0.3" strokeWidth="0.5">
+          <line x1="-140" y1="175" x2="140" y2="175" />
+          {Array.from({ length: 21 }).map((_, i) => {
+            const x = -140 + (i / 20) * 280;
+            const isMajor = i % 5 === 0;
+            return (
+              <line
+                key={i}
+                x1={x}
+                y1="175"
+                x2={x}
+                y2={isMajor ? 183 : 179}
+                strokeOpacity={isMajor ? 0.5 : 0.25}
+              />
+            );
+          })}
+        </g>
+
+        {/* diamond corner markers — gold ticks at the rotated square points */}
+        <g fill="var(--gold)" fillOpacity="0.7">
+          <circle cx="0" cy="-176" r="2" />
+          <circle cx="176" cy="0" r="2" />
+          <circle cx="0" cy="176" r="2" />
+          <circle cx="-176" cy="0" r="2" />
+        </g>
+
+        {/* rotating drift mark — single slow pulse along the diamond */}
+        <g className="cel-reticle__rotor">
           <rect
             x="-3"
-            y="147"
+            y="-179"
             width="6"
             height="6"
             fill="var(--gold)"
-            transform="rotate(45 0 150)"
+            transform="rotate(45 0 -176)"
           />
         </g>
-        <g className="cel-login__orbit-rot cel-login__orbit-rot--rev">
-          <circle cx="172" cy="0" r="1.8" fill="var(--dawn)" opacity="0.6" />
-          <circle cx="-172" cy="0" r="1.4" fill="var(--dawn)" opacity="0.4" />
-        </g>
-        <g className="cel-login__orbit-rot cel-login__orbit-rot--slowest">
-          <circle cx="124" cy="0" r="1.6" fill="var(--gold)" opacity="0.7" />
-        </g>
-
-        {/* bearing labels */}
-        <g
-          fontFamily="var(--font-mono)"
-          fontSize="8"
-          fill="var(--dawn-50)"
-          textAnchor="middle"
-          letterSpacing="1.5"
-        >
-          <text x="0" y="-198">
-            N · 000
-          </text>
-          <text x="198" y="3" textAnchor="start">
-            090
-          </text>
-          <text x="0" y="205">
-            180
-          </text>
-          <text x="-198" y="3" textAnchor="end">
-            270
-          </text>
-        </g>
-
-        {/* edge notes */}
-        <g fontFamily="var(--font-mono)" fontSize="6" fill="var(--dawn-30)" letterSpacing="1.2">
-          <text x="-188" y="-156">
-            FIG · 04a
-          </text>
-          <text x="120" y="-172">
-            AUTH · FIELD MAP
-          </text>
-          <text x="-188" y="178">
-            CH · 01 / TERMINAL
-          </text>
-          <text x="120" y="188">
-            ∂ · 0.001
-          </text>
-        </g>
       </svg>
-
-      {/* static particle halo, sigil grammar */}
-      <div className="cel-login__orbit-halo" aria-hidden="true">
-        <span style={{ "--a": "12deg", "--r": "46%", "--o": 0.8 } as React.CSSProperties} />
-        <span className="d" style={{ "--a": "38deg", "--r": "42%" } as React.CSSProperties} />
-        <span style={{ "--a": "68deg", "--r": "48%", "--o": 0.6 } as React.CSSProperties} />
-        <span className="d" style={{ "--a": "96deg", "--r": "40%" } as React.CSSProperties} />
-        <span style={{ "--a": "126deg", "--r": "45%", "--o": 0.7 } as React.CSSProperties} />
-        <span className="d" style={{ "--a": "158deg", "--r": "43%" } as React.CSSProperties} />
-        <span style={{ "--a": "192deg", "--r": "47%", "--o": 0.9 } as React.CSSProperties} />
-        <span className="d" style={{ "--a": "224deg", "--r": "41%" } as React.CSSProperties} />
-        <span style={{ "--a": "256deg", "--r": "46%", "--o": 0.6 } as React.CSSProperties} />
-        <span className="d" style={{ "--a": "288deg", "--r": "44%" } as React.CSSProperties} />
-        <span style={{ "--a": "318deg", "--r": "48%", "--o": 0.75 } as React.CSSProperties} />
-        <span className="d" style={{ "--a": "348deg", "--r": "42%" } as React.CSSProperties} />
-      </div>
-
-      {/* corner readouts */}
-      <div className="cel-login__readout cel-login__readout--tl">
-        <span className="k">SUBJECT</span>
-        <br />
-        AUTH · 0001
-      </div>
-      <div className="cel-login__readout cel-login__readout--tr">
-        <span className="k">BEARING</span>
-        <br />N · 000 · lock
-      </div>
-      <div className="cel-login__readout cel-login__readout--bl">
-        <span className="k">FIELD</span>
-        <br />
-        TERMINAL
-      </div>
-      <div className="cel-login__readout cel-login__readout--br">
-        <span className="k">MODE</span>
-        <br />
-        navigate
-      </div>
     </div>
   );
 }
@@ -202,7 +191,7 @@ function AdminPageContent() {
 
   return (
     <div className="cel-login">
-      {/* Layer 0 — living particle field */}
+      {/* Layer 0 — particle field */}
       <div className="cel-login__particles">
         <ParticleCanvasV2 scrollProgress={0.15} config={ADMIN_CONFIG} />
       </div>
@@ -210,10 +199,28 @@ function AdminPageContent() {
       {/* Layer 1 — atmospheric wash */}
       <div className="cel-login__wash" aria-hidden="true" />
 
-      {/* Layer 10 — centered stage with orbital instrument around the terminal */}
+      {/* Viewport-anchored telemetry readouts (outside the instrument) */}
+      <div className="cel-login__readout cel-login__readout--tl" aria-hidden="true">
+        <span className="k">SUBJECT</span>
+        <span className="v">AUTH · 0001</span>
+      </div>
+      <div className="cel-login__readout cel-login__readout--tr" aria-hidden="true">
+        <span className="k">BEARING</span>
+        <span className="v">N · 000 · LOCK</span>
+      </div>
+      <div className="cel-login__readout cel-login__readout--bl" aria-hidden="true">
+        <span className="k">FIELD</span>
+        <span className="v">TERMINAL</span>
+      </div>
+      <div className="cel-login__readout cel-login__readout--br" aria-hidden="true">
+        <span className="k">MODE</span>
+        <span className="v">NAVIGATE</span>
+      </div>
+
+      {/* Stage — reticle + terminal */}
       <div className="cel-login__stage">
         <div className="cel-login__instrument">
-          <OrbitalInstrument />
+          <ReticleInstrument />
           <div className="cel-login__terminal">
             {!isReady ? (
               <div className="cel-auth">
