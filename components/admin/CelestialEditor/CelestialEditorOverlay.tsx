@@ -40,14 +40,20 @@ export function CelestialEditorOverlay() {
     }
   }, []);
 
-  const handleSave = async (name: string, config: CelestialConfig, id?: string) => {
+  const handleSave = async (
+    name: string,
+    config: CelestialConfig,
+    id?: string
+  ): Promise<{ ok: boolean; designId?: string }> => {
     const res = await fetch("/api/celestial/designs", {
       method: "POST",
       headers: authHeaders(),
       body: JSON.stringify({ id, name, config }),
     });
-    if (res.ok) await fetchDesigns();
-    return res;
+    if (!res.ok) return { ok: false };
+    const json = await res.json();
+    await fetchDesigns();
+    return { ok: true, designId: json.design?.id };
   };
 
   const handleDelete = async (id: string) => {

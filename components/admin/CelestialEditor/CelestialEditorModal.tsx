@@ -20,16 +20,148 @@ import {
   CENTER_SHAPES,
   DEFAULT_CONFIG,
 } from "@/lib/celestial/schema";
+import type { Preset, LabelEntry } from "@/lib/celestial/schema";
 import { DiagramSvg } from "@/components/landing/v7/CelestialConnector/DiagramSvg";
 import { useCelestialDrafts } from "./useCelestialDrafts";
 import { randomizeConfig } from "./randomize";
 import "./celestial-editor.css";
 
+type PresetOverrides = Partial<Pick<CelestialConfig, "labels" | "lines" | "size">> & {
+  diagram?: Partial<CelestialConfig["diagram"]>;
+};
+
+const PRESET_DEFAULTS: Partial<Record<Preset, PresetOverrides>> = {
+  meridian: {
+    labels: {
+      tl: { emphasis: "N · 180", text: "meridian" },
+      tr: { text: "" },
+      bl: { text: "" },
+      br: { emphasis: "DESC", text: "bearing" },
+    },
+    lines: { topPattern: "v-converge", bottomPattern: "v-diverge" },
+  },
+  squareCascade: {
+    labels: {
+      tl: { emphasis: "Ch · 03", text: "lock" },
+      tr: { text: "" },
+      bl: { text: "" },
+      br: { emphasis: "FRAME", text: "signal" },
+    },
+    lines: { topPattern: "parallel-3", bottomPattern: "parallel-3" },
+  },
+  heroOrb: {
+    labels: {
+      tl: { emphasis: "N · 000", text: "origin" },
+      tr: { text: "" },
+      bl: { text: "" },
+      br: { emphasis: "LOCK", text: "waypoint" },
+    },
+    lines: { topPattern: "v-converge", bottomPattern: "v-diverge" },
+    size: "lg",
+  },
+  reticle: {
+    labels: {
+      tl: { emphasis: "TARGET", text: "sector" },
+      tr: { text: "" },
+      bl: { text: "" },
+      br: { emphasis: "LOCK", text: "mark" },
+    },
+    lines: { topPattern: "single", bottomPattern: "single" },
+  },
+  compassRose: {
+    labels: {
+      tl: { emphasis: "AZIMUTH", text: "field" },
+      tr: { text: "" },
+      bl: { text: "" },
+      br: { emphasis: "BEARING", text: "gate" },
+    },
+    lines: { topPattern: "v-converge", bottomPattern: "v-diverge" },
+  },
+  orbital: {
+    labels: {
+      tl: { emphasis: "APOGEE", text: "orbit" },
+      tr: { text: "" },
+      bl: { text: "" },
+      br: { emphasis: "PERIGEE", text: "passage" },
+    },
+    lines: { topPattern: "single", bottomPattern: "single" },
+  },
+  registerMarks: {
+    labels: {
+      tl: { emphasis: "FIG · 01", text: "register" },
+      tr: { text: "" },
+      bl: { text: "" },
+      br: { emphasis: "MARK", text: "void" },
+    },
+    lines: { topPattern: "parallel-3", bottomPattern: "parallel-3" },
+  },
+  constellation: {
+    labels: {
+      tl: { emphasis: "ASC", text: "field" },
+      tr: { text: "" },
+      bl: { text: "" },
+      br: { emphasis: "NODE", text: "passage" },
+    },
+    lines: { topPattern: "single", bottomPattern: "none" },
+    diagram: {
+      constellation: { seed: Math.floor(Math.random() * 99999), points: 7, density: "sparse" },
+    },
+  },
+  ecliptic: {
+    labels: {
+      tl: { emphasis: "ECLIPTIC", text: "transit" },
+      tr: { text: "" },
+      bl: { text: "" },
+      br: { emphasis: "VERNAL", text: "threshold" },
+    },
+    lines: { topPattern: "v-converge", bottomPattern: "v-diverge" },
+    diagram: { ecliptic: { seed: Math.floor(Math.random() * 99999), tilt: 23, phaseCount: 2 } },
+  },
+  phase: {
+    labels: {
+      tl: { emphasis: "PHASE", text: "terminus" },
+      tr: { text: "" },
+      bl: { text: "" },
+      br: { emphasis: "NODE", text: "descent" },
+    },
+    lines: { topPattern: "single", bottomPattern: "single" },
+    diagram: { phase: { seed: Math.floor(Math.random() * 99999), coverage: 0.35 } },
+  },
+  sigil: {
+    labels: {
+      tl: { emphasis: "SIGIL", text: "seal" },
+      tr: { text: "" },
+      bl: { text: "" },
+      br: { emphasis: "∂ · 001", text: "gate" },
+    },
+    lines: { topPattern: "none", bottomPattern: "none" },
+    diagram: { glyphRing: { seed: Math.floor(Math.random() * 99999), radius: "md" } },
+  },
+  astrolabe: {
+    labels: {
+      tl: { emphasis: "ASTROLABE", text: "instrument" },
+      tr: { emphasis: "θ · 058", text: "" },
+      bl: { text: "" },
+      br: { emphasis: "∂ · 001", text: "sector" },
+    },
+    lines: { topPattern: "v-converge", bottomPattern: "v-diverge" },
+    size: "lg",
+    diagram: {
+      glyphRing: { seed: Math.floor(Math.random() * 99999), radius: "lg" },
+      ecliptic: { seed: Math.floor(Math.random() * 99999), tilt: 18, phaseCount: 2 },
+    },
+  },
+};
+
 interface CelestialEditorModalProps {
   initialConfig?: CelestialConfig;
   designs: CelestialDesign[];
   activeSlotId: string | null;
-  onSave: (name: string, config: CelestialConfig, id?: string) => Promise<Response>;
+  onSave: (
+    name: string,
+    config: CelestialConfig,
+    id?: string
+  ) => Promise<{ ok: boolean; designId?: string }>;
   onDelete: (id: string) => Promise<void>;
   onApplyToSlot: (slotId: string, designId: string) => Promise<void>;
   onClose: () => void;
@@ -96,6 +228,21 @@ export function CelestialEditorModal({
     setConfig((prev) => ({ ...prev, lines: { ...prev.lines, [field]: value } }));
   }, []);
 
+  const applyPreset = useCallback((p: Preset) => {
+    const defaults = PRESET_DEFAULTS[p];
+    setConfig((prev) => ({
+      ...prev,
+      preset: p,
+      ...(defaults?.labels ? { labels: defaults.labels as CelestialConfig["labels"] } : {}),
+      ...(defaults?.lines ? { lines: defaults.lines as CelestialConfig["lines"] } : {}),
+      ...(defaults?.size ? { size: defaults.size } : {}),
+      diagram: {
+        ...prev.diagram,
+        ...(defaults?.diagram ?? {}),
+      },
+    }));
+  }, []);
+
   // ── drag handling ──
   const onDragStart = useCallback((e: React.MouseEvent) => {
     if ((e.target as HTMLElement).tagName === "BUTTON") return;
@@ -130,15 +277,12 @@ export function CelestialEditorModal({
     setSaving(true);
     try {
       const name = designName?.trim() || `:slot:${activeSlotId}`;
-      const res = await onSave(name, config, activeDesignId ?? undefined);
-      if (!res.ok) return;
-      const json = await res.json();
-      const savedId = json.design?.id;
-      if (savedId) {
-        setActiveDesignId(savedId);
-        await onApplyToSlot(activeSlotId, savedId);
-        clearDraft(activeSlotId);
-      }
+      const result = await onSave(name, config, activeDesignId ?? undefined);
+      if (!result.ok || !result.designId) return;
+      setActiveDesignId(result.designId);
+      await onApplyToSlot(activeSlotId, result.designId);
+      // Keep the draft alive so the page doesn't snap back to the old
+      // server-rendered config. The draft matches the saved config exactly.
     } finally {
       setSaving(false);
     }
@@ -198,7 +342,7 @@ export function CelestialEditorModal({
             <button
               key={p}
               className={`celestial-editor__preset-tile ${config.preset === p ? "celestial-editor__preset-tile--active" : ""}`}
-              onClick={() => patch({ preset: p })}
+              onClick={() => applyPreset(p)}
               title={p}
             >
               <DiagramSvg config={{ ...config, preset: p }} />
