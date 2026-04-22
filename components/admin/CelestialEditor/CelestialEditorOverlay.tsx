@@ -1,54 +1,28 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { isAllowedUserEmail } from "@/lib/auth/allowed-user";
 import type { CelestialConfig, CelestialDesign } from "@/lib/celestial/schema";
 import { CelestialEditorModal } from "./CelestialEditorModal";
+import { useCelestialDrafts } from "./useCelestialDrafts";
 import "./celestial-editor.css";
 
 /**
- * Floating admin overlay for celestial connectors.
- * Activates when an admin user presses Cmd+Shift+K or visits ?edit=celestial.
- * Adds "Edit" chips over each [data-celestial-slot] element.
+ * Admin overlay for celestial connectors.
+ * Always active for admins — hover any connector to see a subtle Edit chip.
+ * Clicking the chip opens the editor panel pre-targeted at that slot.
  */
 export function CelestialEditorOverlay() {
   const { user, session } = useAuth();
-  const [active, setActive] = useState(false);
   const [designs, setDesigns] = useState<CelestialDesign[]>([]);
   const [activeSlotId, setActiveSlotId] = useState<string | null>(null);
   const [editConfig, setEditConfig] = useState<CelestialConfig | undefined>();
+  const chipsRef = useRef<HTMLElement[]>([]);
 
   const isAdmin = process.env.NODE_ENV === "development" || isAllowedUserEmail(user?.email);
   const token = session?.access_token;
-
-  // Keyboard shortcut: Cmd+Shift+K
-  useEffect(() => {
-    if (!isAdmin) return;
-
-    const handleKey = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === "K") {
-        e.preventDefault();
-        setActive((prev) => !prev);
-      }
-    };
-    window.addEventListener("keydown", handleKey);
-    return () => window.removeEventListener("keydown", handleKey);
-  }, [isAdmin]);
-
-  // URL param activation
-  useEffect(() => {
-    if (!isAdmin) return;
-    if (new URLSearchParams(window.location.search).get("edit") === "celestial") {
-      setActive(true);
-    }
-  }, [isAdmin]);
-
-  // Fetch designs when overlay activates
-  useEffect(() => {
-    if (!active) return;
-    fetchDesigns();
-  }, [active]);
+  const clearDraft = useCelestialDrafts((s) => s.clearDraft);
 
   const authHeaders = useCallback((): HeadersInit => {
     const h: HeadersInit = { "Content-Type": "application/json" };
@@ -56,7 +30,7 @@ export function CelestialEditorOverlay() {
     return h;
   }, [token]);
 
-  const fetchDesigns = async () => {
+  const fetchDesigns = useCallback(async () => {
     try {
       const res = await fetch("/api/celestial/designs");
       const json = await res.json();
@@ -64,7 +38,7 @@ export function CelestialEditorOverlay() {
     } catch {
       console.error("Failed to fetch celestial designs");
     }
-  };
+  }, []);
 
   const handleSave = async (name: string, config: CelestialConfig, id?: string) => {
     const res = await fetch("/api/celestial/designs", {
@@ -73,6 +47,7 @@ export function CelestialEditorOverlay() {
       body: JSON.stringify({ id, name, config }),
     });
     if (res.ok) await fetchDesigns();
+    return res;
   };
 
   const handleDelete = async (id: string) => {
@@ -91,37 +66,69 @@ export function CelestialEditorOverlay() {
     });
   };
 
-  const handleSlotClick = (slotId: string) => {
-    setActiveSlotId(slotId);
+  const handleClose = () => {
+    if (activeSlotId) clearDraft(activeSlotId);
+    setActiveSlotId(null);
+    setEditConfig(undefined);
   };
 
-  // Add edit chips over slots when active
+  // Fetch designs on first admin mount
   useEffect(() => {
-    if (!active) return;
+    if (!isAdmin) return;
+    fetchDesigns();
+  }, [isAdmin, fetchDesigns]);
 
-    const slots = document.querySelectorAll<HTMLElement>("[data-celestial-slot]");
-    const chips: HTMLElement[] = [];
+  // Inject hover-revealed edit chips over every slot element
+  useEffect(() => {
+    if (!isAdmin) return;
 
-    slots.forEach((el) => {
-      const slotId = el.dataset.celestialSlot;
-      if (!slotId) return;
+    const injectChips = () => {
+      chipsRef.current.forEach((c) => c.remove());
+      chipsRef.current = [];
 
-      el.style.position = "relative";
+      const slots = document.querySelectorAll<HTMLElement>("[data-celestial-slot]");
+      slots.forEach((el) => {
+        const slotId = el.dataset.celestialSlot;
+        if (!slotId) return;
 
-      const chip = document.createElement("button");
-      chip.className = "celestial-slot-chip";
-      chip.textContent = `Edit · ${slotId}`;
-      chip.addEventListener("click", () => handleSlotClick(slotId));
-      el.appendChild(chip);
-      chips.push(chip);
+        if (getComputedStyle(el).position === "static") {
+          el.style.position = "relative";
+        }
+
+        const chip = document.createElement("button");
+        chip.className = "celestial-slot-chip";
+        chip.textContent = "Edit";
+        chip.addEventListener("click", () => {
+          fetchDesigns();
+          setActiveSlotId(slotId);
+        });
+        el.appendChild(chip);
+        chipsRef.current.push(chip);
+      });
+    };
+
+    // Connectors are portal-mounted, so they may appear after initial render.
+    // A short delay + MutationObserver cover both cases.
+    const timer = setTimeout(injectChips, 600);
+
+    const observer = new MutationObserver(() => {
+      const slotsOnPage = document.querySelectorAll("[data-celestial-slot]").length;
+      if (slotsOnPage !== chipsRef.current.length) {
+        injectChips();
+      }
     });
+    observer.observe(document.body, { childList: true, subtree: true });
 
     return () => {
-      chips.forEach((c) => c.remove());
+      clearTimeout(timer);
+      observer.disconnect();
+      chipsRef.current.forEach((c) => c.remove());
+      chipsRef.current = [];
     };
-  }, [active]);
+  }, [isAdmin, fetchDesigns]);
 
-  if (!isAdmin || !active) return null;
+  if (!isAdmin) return null;
+  if (!activeSlotId) return null;
 
   return (
     <CelestialEditorModal
@@ -131,7 +138,7 @@ export function CelestialEditorOverlay() {
       onSave={handleSave}
       onDelete={handleDelete}
       onApplyToSlot={handleApplyToSlot}
-      onClose={() => setActive(false)}
+      onClose={handleClose}
       onLoadDesign={(d) => setEditConfig(d.config)}
     />
   );

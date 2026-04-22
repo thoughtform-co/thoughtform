@@ -4,7 +4,6 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import type {
   CelestialConfig,
   CelestialDesign,
-  Preset,
   LinePattern,
   Orientation,
   Size,
@@ -21,15 +20,15 @@ import {
   CENTER_SHAPES,
   DEFAULT_CONFIG,
 } from "@/lib/celestial/schema";
-import { CelestialConnector } from "@/components/landing/v7/CelestialConnector";
 import { DiagramSvg } from "@/components/landing/v7/CelestialConnector/DiagramSvg";
+import { useCelestialDrafts } from "./useCelestialDrafts";
 import "./celestial-editor.css";
 
 interface CelestialEditorModalProps {
   initialConfig?: CelestialConfig;
   designs: CelestialDesign[];
   activeSlotId: string | null;
-  onSave: (name: string, config: CelestialConfig, id?: string) => Promise<void>;
+  onSave: (name: string, config: CelestialConfig, id?: string) => Promise<Response>;
   onDelete: (id: string) => Promise<void>;
   onApplyToSlot: (slotId: string, designId: string) => Promise<void>;
   onClose: () => void;
@@ -50,6 +49,10 @@ export function CelestialEditorModal({
   const [designName, setDesignName] = useState("Untitled");
   const [activeDesignId, setActiveDesignId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [showLibrary, setShowLibrary] = useState(false);
+
+  const setDraft = useCelestialDrafts((s) => s.setDraft);
+  const clearDraft = useCelestialDrafts((s) => s.clearDraft);
 
   // Drag state
   const panelRef = useRef<HTMLDivElement>(null);
@@ -59,6 +62,13 @@ export function CelestialEditorModal({
   useEffect(() => {
     if (initialConfig) setConfig(initialConfig);
   }, [initialConfig]);
+
+  // Push every config change into the draft store for live preview
+  useEffect(() => {
+    if (activeSlotId) {
+      setDraft(activeSlotId, config);
+    }
+  }, [config, activeSlotId, setDraft]);
 
   const patch = useCallback((partial: Partial<CelestialConfig>) => {
     setConfig((prev) => ({ ...prev, ...partial }));
@@ -113,8 +123,28 @@ export function CelestialEditorModal({
     };
   }, [dragging]);
 
-  // ── handlers ──
-  const handleSave = async (asNew: boolean) => {
+  // ── Save to section (one-click: save design + bind to slot) ──
+  const handleSaveToSection = async () => {
+    if (!activeSlotId) return;
+    setSaving(true);
+    try {
+      const name = designName?.trim() || `:slot:${activeSlotId}`;
+      const res = await onSave(name, config, activeDesignId ?? undefined);
+      if (!res.ok) return;
+      const json = await res.json();
+      const savedId = json.design?.id;
+      if (savedId) {
+        setActiveDesignId(savedId);
+        await onApplyToSlot(activeSlotId, savedId);
+        clearDraft(activeSlotId);
+      }
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // ── Library handlers ──
+  const handleLibrarySave = async (asNew: boolean) => {
     setSaving(true);
     try {
       await onSave(designName, config, asNew ? undefined : (activeDesignId ?? undefined));
@@ -130,9 +160,15 @@ export function CelestialEditorModal({
     onLoadDesign(d);
   };
 
-  const handleApply = async () => {
+  const handleLibraryApply = async () => {
     if (!activeSlotId || !activeDesignId) return;
-    await onApplyToSlot(activeSlotId, activeDesignId);
+    setSaving(true);
+    try {
+      await onApplyToSlot(activeSlotId, activeDesignId);
+      clearDraft(activeSlotId);
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -142,17 +178,15 @@ export function CelestialEditorModal({
     >
       {/* Header */}
       <div className="celestial-editor__header" onMouseDown={onDragStart}>
-        <span className="celestial-editor__title">Celestial Editor</span>
+        <span className="celestial-editor__title">
+          Celestial Editor
+          {activeSlotId && (
+            <span style={{ color: "var(--dawn-30)", marginLeft: 8 }}>· {activeSlotId}</span>
+          )}
+        </span>
         <button className="celestial-editor__close" onClick={onClose}>
           &times;
         </button>
-      </div>
-
-      {/* Live preview */}
-      <div className="celestial-editor__preview">
-        <div className="celestial-editor__preview-inner">
-          <CelestialConnector config={config} />
-        </div>
       </div>
 
       {/* Preset picker */}
@@ -222,7 +256,6 @@ export function CelestialEditorModal({
       <div className="celestial-editor__section">
         <div className="celestial-editor__section-label">Diagram</div>
 
-        {/* Rings */}
         <div className="celestial-editor__row">
           <label>Rings</label>
           <select
@@ -279,7 +312,6 @@ export function CelestialEditorModal({
           <span>Show meridian axis</span>
         </div>
 
-        {/* Square options (conditional) */}
         {(config.preset === "squareCascade" || config.preset === "registerMarks") && (
           <>
             <div className="celestial-editor__checkbox">
@@ -342,7 +374,6 @@ export function CelestialEditorModal({
           </>
         )}
 
-        {/* Center shape */}
         <div className="celestial-editor__row">
           <label>Center</label>
           <select
@@ -364,7 +395,6 @@ export function CelestialEditorModal({
           </select>
         </div>
 
-        {/* Orbital size */}
         <div className="celestial-editor__row">
           <label>Orbital</label>
           <select
@@ -455,73 +485,97 @@ export function CelestialEditorModal({
         </div>
       </div>
 
-      {/* Design library */}
-      <div className="celestial-editor__section">
-        <div className="celestial-editor__section-label">Design Library</div>
-        <div className="celestial-editor__row">
-          <label>Name</label>
-          <input type="text" value={designName} onChange={(e) => setDesignName(e.target.value)} />
-        </div>
-        <div className="celestial-editor__library">
-          {designs.map((d) => (
-            <div
-              key={d.id}
-              className={`celestial-editor__library-item ${activeDesignId === d.id ? "celestial-editor__library-item--active" : ""}`}
-              onClick={() => handleLoadDesign(d)}
-            >
-              <span className="celestial-editor__library-name">{d.name}</span>
-              <div className="celestial-editor__library-actions">
-                <button
-                  title="Delete"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onDelete(d.id);
-                  }}
-                >
-                  &times;
-                </button>
-              </div>
-            </div>
-          ))}
-          {designs.length === 0 && (
-            <div style={{ padding: "8px 0", color: "var(--dawn-30)" }}>No saved designs yet</div>
-          )}
-        </div>
-      </div>
-
-      {/* Slot assignment info */}
+      {/* Primary action: Save to section */}
       {activeSlotId && (
-        <div className="celestial-editor__slot-bar">
-          Editing slot: <span>{activeSlotId}</span>
+        <div className="celestial-editor__actions">
+          <button
+            className="celestial-editor__btn celestial-editor__btn--primary"
+            onClick={handleSaveToSection}
+            disabled={saving}
+            style={{ flex: 2 }}
+          >
+            {saving ? "Saving..." : "Save to Section"}
+          </button>
+          <button className="celestial-editor__btn" onClick={onClose}>
+            Cancel
+          </button>
         </div>
       )}
 
-      {/* Action buttons */}
-      <div className="celestial-editor__actions">
-        <button
-          className="celestial-editor__btn"
-          onClick={() => handleSave(true)}
-          disabled={saving}
-        >
-          Save New
+      {/* Design library (collapsible secondary section) */}
+      <div className="celestial-editor__section">
+        <button className="celestial-editor__disclosure" onClick={() => setShowLibrary((v) => !v)}>
+          <span className="celestial-editor__section-label" style={{ marginBottom: 0 }}>
+            Design Library
+          </span>
+          <span style={{ color: "var(--dawn-30)", fontSize: 10 }}>{showLibrary ? "▲" : "▼"}</span>
         </button>
-        {activeDesignId && (
-          <button
-            className="celestial-editor__btn"
-            onClick={() => handleSave(false)}
-            disabled={saving}
-          >
-            Update
-          </button>
-        )}
-        {activeSlotId && activeDesignId && (
-          <button
-            className="celestial-editor__btn celestial-editor__btn--primary"
-            onClick={handleApply}
-            disabled={saving}
-          >
-            Apply
-          </button>
+
+        {showLibrary && (
+          <>
+            <div className="celestial-editor__row" style={{ marginTop: 8 }}>
+              <label>Name</label>
+              <input
+                type="text"
+                value={designName}
+                onChange={(e) => setDesignName(e.target.value)}
+              />
+            </div>
+            <div className="celestial-editor__library">
+              {designs.map((d) => (
+                <div
+                  key={d.id}
+                  className={`celestial-editor__library-item ${activeDesignId === d.id ? "celestial-editor__library-item--active" : ""}`}
+                  onClick={() => handleLoadDesign(d)}
+                >
+                  <span className="celestial-editor__library-name">{d.name}</span>
+                  <div className="celestial-editor__library-actions">
+                    <button
+                      title="Delete"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDelete(d.id);
+                      }}
+                    >
+                      &times;
+                    </button>
+                  </div>
+                </div>
+              ))}
+              {designs.length === 0 && (
+                <div style={{ padding: "8px 0", color: "var(--dawn-30)" }}>
+                  No saved designs yet
+                </div>
+              )}
+            </div>
+            <div className="celestial-editor__actions" style={{ borderTop: "none", paddingTop: 6 }}>
+              <button
+                className="celestial-editor__btn"
+                onClick={() => handleLibrarySave(true)}
+                disabled={saving}
+              >
+                Save New
+              </button>
+              {activeDesignId && (
+                <button
+                  className="celestial-editor__btn"
+                  onClick={() => handleLibrarySave(false)}
+                  disabled={saving}
+                >
+                  Update
+                </button>
+              )}
+              {activeSlotId && activeDesignId && (
+                <button
+                  className="celestial-editor__btn"
+                  onClick={handleLibraryApply}
+                  disabled={saving}
+                >
+                  Apply
+                </button>
+              )}
+            </div>
+          </>
         )}
       </div>
     </div>

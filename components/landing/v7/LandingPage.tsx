@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, useCallback, useMemo } from "react";
 import { useLandingScroll } from "./hooks/useLandingScroll";
 import { useRevealMotion } from "./hooks/useRevealMotion";
 import { useSigilChoreography } from "./hooks/useSigilChoreography";
 import { CelestialPortals } from "./CelestialConnector/CelestialPortals";
 import { CelestialEditorOverlay } from "@/components/admin/CelestialEditor";
+import { useCelestialDrafts } from "@/components/admin/CelestialEditor/useCelestialDrafts";
 import type { SlotsMap } from "@/lib/celestial/schema";
 
 interface LandingPageProps {
@@ -225,6 +226,30 @@ export function LandingPage({ bodyHtml, bodyClass, celestialSlots }: LandingPage
     });
   }, []);
 
+  // Merge admin drafts over the persisted slot configs so the page
+  // live-previews editor changes before they are saved.
+  const drafts = useCelestialDrafts((s) => s.drafts);
+  const mergedSlots = useMemo<SlotsMap | undefined>(() => {
+    if (!celestialSlots) return undefined;
+    const hasDrafts = Object.keys(drafts).length > 0;
+    if (!hasDrafts) return celestialSlots;
+
+    const merged = { ...celestialSlots };
+    for (const [slotId, draftConfig] of Object.entries(drafts)) {
+      if (merged[slotId]) {
+        merged[slotId] = { ...merged[slotId], config: draftConfig };
+      } else {
+        merged[slotId] = {
+          slot_id: slotId,
+          config: draftConfig,
+          orientation: "horizontal",
+          enabled: true,
+        };
+      }
+    }
+    return merged;
+  }, [celestialSlots, drafts]);
+
   return (
     <>
       <div
@@ -242,7 +267,7 @@ export function LandingPage({ bodyHtml, bodyClass, celestialSlots }: LandingPage
         suppressHydrationWarning
         dangerouslySetInnerHTML={{ __html: bodyHtml }}
       />
-      {celestialSlots && <CelestialPortals slots={celestialSlots} containerRef={rootRef} />}
+      {mergedSlots && <CelestialPortals slots={mergedSlots} containerRef={rootRef} />}
       <CelestialEditorOverlay />
     </>
   );

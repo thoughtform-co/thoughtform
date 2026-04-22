@@ -2,29 +2,41 @@
    CELESTIAL EDITOR — floating admin overlay on the landing page
    ═══════════════════════════════════════════════════════════════ */
 
-/* ── Slot edit chips (inline on the page) ──────────────────── */
+/* ── Slot edit chips — hidden until parent connector is hovered ── */
 .celestial-slot-chip {
   position: absolute;
-  top: 8px;
-  right: 8px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) translateY(-2px);
   z-index: 9999;
-  padding: 4px 10px;
+  padding: 5px 14px;
   font-family: var(--font-pt-mono, "PT Mono", monospace);
-  font-size: 10px;
-  letter-spacing: 0.12em;
+  font-size: 9px;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--gold, #c9a84c);
-  background: rgba(10, 9, 8, 0.85);
-  border: 1px solid rgba(201, 168, 76, 0.4);
+  background: rgba(10, 9, 8, 0.92);
+  border: 1px solid rgba(201, 168, 76, 0.25);
   cursor: pointer;
-  pointer-events: all;
+  pointer-events: none;
+  opacity: 0;
   transition:
-    border-color 0.2s,
-    background 0.2s;
+    opacity 120ms var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1)),
+    transform 120ms var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1)),
+    border-color 80ms var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1));
 }
+
+[data-celestial-slot]:hover .celestial-slot-chip,
+[data-celestial-slot]:focus-within .celestial-slot-chip,
+.celestial-slot-chip:focus-visible {
+  opacity: 1;
+  pointer-events: all;
+  transform: translate(-50%, -50%);
+}
+
 .celestial-slot-chip:hover {
   border-color: var(--gold, #c9a84c);
-  background: rgba(10, 9, 8, 0.95);
+  box-shadow: 0 0 10px rgba(201, 168, 76, 0.12);
 }
 
 /* ── Modal panel ───────────────────────────────────────────── */
@@ -294,6 +306,20 @@
 }
 .celestial-editor__slot-bar span {
   color: var(--gold, #c9a84c);
+}
+
+/* ── Disclosure toggle for library ─────────────────────────── */
+.celestial-editor__disclosure {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: inherit;
+  font-family: inherit;
 }
 
 /* ── Dragging ──────────────────────────────────────────────── */
