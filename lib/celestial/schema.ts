@@ -35,10 +35,14 @@ export type Rotation = (typeof ROTATIONS)[number];
 export const TICK_DENSITIES = [0, 4, 8, 12, 16, 24, 48] as const;
 export type TickDensity = (typeof TICK_DENSITIES)[number];
 
+export const STROKE_WEIGHTS = [0.3, 0.5, 0.7, 1, 1.5, 2] as const;
+export type StrokeWeight = (typeof STROKE_WEIGHTS)[number];
+
 export interface RingsConfig {
   count: 1 | 2 | 3 | 4 | 5;
   tickDensity: TickDensity;
   showMeridian: boolean;
+  strokeWeight?: StrokeWeight;
 }
 
 export interface SquareConfig {

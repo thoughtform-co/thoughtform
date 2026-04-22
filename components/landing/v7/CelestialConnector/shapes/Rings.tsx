@@ -15,8 +15,9 @@ interface RingsProps {
 
 export function Rings({ config }: RingsProps) {
   const count = Math.min(config.count, RING_RADII.length);
+  const sw = config.strokeWeight ?? 0.6;
   return (
-    <g strokeWidth="0.6" fill="none">
+    <g strokeWidth={sw} fill="none">
       {RING_RADII.slice(0, count).map((r, i) => {
         const s = RING_STYLES[i];
         return (

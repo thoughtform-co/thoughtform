@@ -86,6 +86,7 @@ export function randomizeConfig(): CelestialConfig {
         count: ringCount,
         tickDensity,
         showMeridian: Math.random() > 0.4,
+        strokeWeight: pick([0.3, 0.5, 0.7, 1, 1.5, 2] as const),
       },
       square: {
         rotated: Math.random() > 0.3,

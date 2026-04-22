@@ -456,6 +456,29 @@ export function CelestialEditorModal({
           />
           <span>Show meridian axis</span>
         </div>
+        <div className="celestial-editor__row">
+          <label>Weight</label>
+          <input
+            type="range"
+            min="0.3"
+            max="2"
+            step="0.1"
+            value={config.diagram.rings?.strokeWeight ?? 0.6}
+            onChange={(e) =>
+              patchDiagram({
+                rings: {
+                  ...(config.diagram.rings ?? { count: 3, tickDensity: 8, showMeridian: true }),
+                  strokeWeight: parseFloat(
+                    e.target.value
+                  ) as import("@/lib/celestial/schema").StrokeWeight,
+                },
+              })
+            }
+          />
+          <span style={{ minWidth: 28, textAlign: "right", color: "var(--dawn-50)", fontSize: 10 }}>
+            {(config.diagram.rings?.strokeWeight ?? 0.6).toFixed(1)}
+          </span>
+        </div>
 
         {(config.preset === "squareCascade" || config.preset === "registerMarks") && (
           <>

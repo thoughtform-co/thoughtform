@@ -176,6 +176,33 @@
   border-color: var(--gold, #c9a84c);
 }
 
+/* Range slider */
+.celestial-editor__row input[type="range"] {
+  flex: 1;
+  appearance: none;
+  height: 2px;
+  background: rgba(201, 168, 76, 0.2);
+  outline: none;
+  cursor: pointer;
+}
+.celestial-editor__row input[type="range"]::-webkit-slider-thumb {
+  appearance: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 0;
+  background: var(--gold, #c9a84c);
+  border: none;
+  cursor: pointer;
+}
+.celestial-editor__row input[type="range"]::-moz-range-thumb {
+  width: 10px;
+  height: 10px;
+  border-radius: 0;
+  background: var(--gold, #c9a84c);
+  border: none;
+  cursor: pointer;
+}
+
 /* Toggle buttons (orientation, H/V) */
 .celestial-editor__toggle-group {
   display: flex;
