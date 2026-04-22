@@ -9,6 +9,11 @@ export const PRESETS = [
   "compassRose",
   "orbital",
   "registerMarks",
+  "constellation",
+  "ecliptic",
+  "phase",
+  "sigil",
+  "astrolabe",
 ] as const;
 export type Preset = (typeof PRESETS)[number];
 
@@ -52,6 +57,28 @@ export interface OrbitalConfig {
   size: Size;
 }
 
+export interface ConstellationConfig {
+  seed: number;
+  points: 5 | 7 | 9 | 11;
+  density: "sparse" | "dense";
+}
+
+export interface EclipticConfig {
+  seed: number;
+  tilt: number;
+  phaseCount: 1 | 2;
+}
+
+export interface PhaseConfig {
+  seed: number;
+  coverage: number;
+}
+
+export interface GlyphRingConfig {
+  seed: number;
+  radius: "sm" | "md" | "lg";
+}
+
 export interface LabelEntry {
   text: string;
   emphasis?: string;
@@ -68,6 +95,10 @@ export interface CelestialConfig {
     square?: SquareConfig;
     reticle?: ReticleConfig;
     orbital?: OrbitalConfig;
+    constellation?: ConstellationConfig;
+    ecliptic?: EclipticConfig;
+    phase?: PhaseConfig;
+    glyphRing?: GlyphRingConfig;
   };
   lines: {
     topPattern: LinePattern;
@@ -79,6 +110,7 @@ export interface CelestialConfig {
     bl: LabelEntry;
     br: LabelEntry;
   };
+  /** @deprecated Kept for backwards-compat with stored configs; no longer rendered. */
   cornerBrackets: boolean;
 }
 

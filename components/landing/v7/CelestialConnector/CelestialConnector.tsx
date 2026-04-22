@@ -25,7 +25,7 @@ const SIZE_CLASS: Record<string, string> = {
  * blocks so all landing.css styles apply without changes.
  */
 export function CelestialConnector({ config, slotId }: CelestialConnectorProps) {
-  const { labels, lines, cornerBrackets, orientation, size, preset } = config;
+  const { labels, lines, orientation, size, preset } = config;
 
   const wrapperCls = [
     "celestial-connector",
@@ -77,13 +77,6 @@ export function CelestialConnector({ config, slotId }: CelestialConnectorProps) 
       data-celestial-slot={slotId}
       data-orientation={orientation}
     >
-      {cornerBrackets && (
-        <>
-          <span className="br" />
-          <span className="bl" />
-        </>
-      )}
-
       <Label position="tl" entry={labels.tl} />
       <Label position="tr" entry={labels.tr} />
       <Label position="bl" entry={labels.bl} />

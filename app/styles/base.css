@@ -6,6 +6,7 @@
 html {
   font-size: 16px;
   -webkit-font-smoothing: antialiased;
+  color-scheme: dark;
 }
 
 html.lenis,
@@ -19,6 +20,18 @@ body {
   color: var(--dawn);
   line-height: 1.6;
   overflow-x: hidden;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image: radial-gradient(circle, rgba(235, 227, 214, 0.045) 1px, transparent 1.2px);
+  background-size: 24px 24px;
+  mask-image: radial-gradient(ellipse 80% 80% at 50% 40%, #000 60%, transparent 100%);
+  -webkit-mask-image: radial-gradient(ellipse 80% 80% at 50% 40%, #000 60%, transparent 100%);
 }
 
 /* ─── SELECTION ─── */

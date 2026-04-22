@@ -7,3 +7,7 @@ export { OrbitalMarker } from "./OrbitalMarker";
 export { CompassRose } from "./CompassRose";
 export { RegisterMarks } from "./RegisterMarks";
 export { DiagramLabels } from "./DiagramLabels";
+export { Constellation } from "./Constellation";
+export { EclipticArc } from "./EclipticArc";
+export { PhaseDisk } from "./PhaseDisk";
+export { GlyphRing } from "./GlyphRing";

@@ -22,6 +22,7 @@ import {
 } from "@/lib/celestial/schema";
 import { DiagramSvg } from "@/components/landing/v7/CelestialConnector/DiagramSvg";
 import { useCelestialDrafts } from "./useCelestialDrafts";
+import { randomizeConfig } from "./randomize";
 import "./celestial-editor.css";
 
 interface CelestialEditorModalProps {
@@ -475,14 +476,6 @@ export function CelestialEditorModal({
             </div>
           </div>
         ))}
-        <div className="celestial-editor__checkbox">
-          <input
-            type="checkbox"
-            checked={config.cornerBrackets}
-            onChange={(e) => patch({ cornerBrackets: e.target.checked })}
-          />
-          <span>Corner brackets</span>
-        </div>
       </div>
 
       {/* Primary action: Save to section */}
@@ -495,6 +488,13 @@ export function CelestialEditorModal({
             style={{ flex: 2 }}
           >
             {saving ? "Saving..." : "Save to Section"}
+          </button>
+          <button
+            className="celestial-editor__btn"
+            onClick={() => setConfig(randomizeConfig())}
+            title="Re-roll a new celestial composition"
+          >
+            ↻ Randomize
           </button>
           <button className="celestial-editor__btn" onClick={onClose}>
             Cancel
