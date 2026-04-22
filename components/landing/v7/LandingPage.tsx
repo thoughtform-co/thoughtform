@@ -62,24 +62,24 @@ export function LandingPage({ bodyHtml, bodyClass, celestialSlots }: LandingPage
     };
   }, []);
 
-  // Practice phasebar — wire imperatively since markup comes from HTML
+  // Practice phasebar — event-delegated so handlers survive DOM re-paints.
+  // Re-queries nodes inside every handler instead of capturing stale refs.
   useEffect(() => {
     const root = rootRef.current;
     if (!root) return;
 
-    const phasebar = root.querySelector<HTMLElement>("#phasebar");
-    if (!phasebar) return;
-
-    const tabs = Array.from(phasebar.querySelectorAll<HTMLButtonElement>('[role="tab"]'));
-    const phases = Array.from(root.querySelectorAll<HTMLElement>(".chamber__phase"));
-    const cases = Array.from(root.querySelectorAll<HTMLElement>(".chamber__case"));
-    const scrubber = root.querySelector<HTMLElement>("#chamberScrubber");
-    const phaseIdx = root.querySelector<HTMLElement>("#chamberPhaseIdx");
-    const idxMeta = root.querySelector<HTMLElement>("#chamberIdxMeta");
-
     const scrubberPositions = ["16%", "50%", "84%"];
 
     const activate = (index: number, options: { focus?: boolean } = {}) => {
+      const phasebar = root.querySelector<HTMLElement>("#phasebar");
+      if (!phasebar) return;
+      const tabs = Array.from(phasebar.querySelectorAll<HTMLButtonElement>('[role="tab"]'));
+      const phases = Array.from(root.querySelectorAll<HTMLElement>(".chamber__phase"));
+      const cases = Array.from(root.querySelectorAll<HTMLElement>(".chamber__case"));
+      const scrubber = root.querySelector<HTMLElement>("#chamberScrubber");
+      const phaseIdx = root.querySelector<HTMLElement>("#chamberPhaseIdx");
+      const idxMeta = root.querySelector<HTMLElement>("#chamberIdxMeta");
+
       tabs.forEach((t, i) => {
         const on = i === index;
         t.setAttribute("aria-selected", on ? "true" : "false");
@@ -102,39 +102,51 @@ export function LandingPage({ bodyHtml, bodyClass, celestialSlots }: LandingPage
       if (options.focus) tabs[index]?.focus();
     };
 
-    const cleanups: Array<() => void> = [];
+    const onClick = (e: Event) => {
+      const tab = (e.target as HTMLElement).closest<HTMLButtonElement>('[role="tab"]');
+      if (!tab) return;
+      const phasebar = root.querySelector<HTMLElement>("#phasebar");
+      if (!phasebar) return;
+      const tabs = Array.from(phasebar.querySelectorAll<HTMLButtonElement>('[role="tab"]'));
+      const index = tabs.indexOf(tab);
+      if (index >= 0) activate(index);
+    };
 
-    tabs.forEach((tab, index) => {
-      const onClick = () => activate(index);
-      const onKeydown = (event: KeyboardEvent) => {
-        if (event.key === "ArrowRight" || event.key === "ArrowDown") {
-          event.preventDefault();
-          activate((index + 1) % tabs.length, { focus: true });
-        } else if (event.key === "ArrowLeft" || event.key === "ArrowUp") {
-          event.preventDefault();
-          activate((index - 1 + tabs.length) % tabs.length, { focus: true });
-        } else if (event.key === "Home") {
-          event.preventDefault();
-          activate(0, { focus: true });
-        } else if (event.key === "End") {
-          event.preventDefault();
-          activate(tabs.length - 1, { focus: true });
-        }
-      };
-      tab.addEventListener("click", onClick);
-      tab.addEventListener("keydown", onKeydown);
-      cleanups.push(() => {
-        tab.removeEventListener("click", onClick);
-        tab.removeEventListener("keydown", onKeydown);
-      });
-    });
+    const onKeydown = (e: Event) => {
+      const ke = e as KeyboardEvent;
+      const tab = (ke.target as HTMLElement).closest<HTMLButtonElement>('[role="tab"]');
+      if (!tab) return;
+      const phasebar = root.querySelector<HTMLElement>("#phasebar");
+      if (!phasebar) return;
+      const tabs = Array.from(phasebar.querySelectorAll<HTMLButtonElement>('[role="tab"]'));
+      const index = tabs.indexOf(tab);
+      if (index < 0) return;
+      if (ke.key === "ArrowRight" || ke.key === "ArrowDown") {
+        ke.preventDefault();
+        activate((index + 1) % tabs.length, { focus: true });
+      } else if (ke.key === "ArrowLeft" || ke.key === "ArrowUp") {
+        ke.preventDefault();
+        activate((index - 1 + tabs.length) % tabs.length, { focus: true });
+      } else if (ke.key === "Home") {
+        ke.preventDefault();
+        activate(0, { focus: true });
+      } else if (ke.key === "End") {
+        ke.preventDefault();
+        activate(tabs.length - 1, { focus: true });
+      }
+    };
+
+    root.addEventListener("click", onClick);
+    root.addEventListener("keydown", onKeydown);
 
     const onResize = () => {
+      const phasebar = root.querySelector<HTMLElement>("#phasebar");
+      if (!phasebar) return;
+      const tabs = Array.from(phasebar.querySelectorAll<HTMLButtonElement>('[role="tab"]'));
       const currentIndex = tabs.findIndex((t) => t.getAttribute("aria-selected") === "true");
       activate(Math.max(0, currentIndex));
     };
     window.addEventListener("resize", onResize);
-    cleanups.push(() => window.removeEventListener("resize", onResize));
 
     activate(0);
 
@@ -146,7 +158,11 @@ export function LandingPage({ bodyHtml, bodyClass, celestialSlots }: LandingPage
       }
     }
 
-    return () => cleanups.reverse().forEach((fn) => fn());
+    return () => {
+      root.removeEventListener("click", onClick);
+      root.removeEventListener("keydown", onKeydown);
+      window.removeEventListener("resize", onResize);
+    };
   }, []);
 
   // Tag motion roles on first mount (replaces the imperative tagging from initV7Runtime).
