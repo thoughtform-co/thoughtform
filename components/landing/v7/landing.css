@@ -1952,6 +1952,12 @@
   color: var(--dawn-50);
   margin-bottom: 18px;
 }
+.tri__ipa-name {
+  color: var(--gold);
+  letter-spacing: var(--track-widest);
+  text-transform: uppercase;
+  margin-right: 6px;
+}
 .tri__title {
   font-family: var(--font-pp-neue-montreal);
   font-weight: 400;
@@ -4457,7 +4463,7 @@ html {
    A thin bridge between the phases above and the CTA below.
    ═══════════════════════════════════════════════════════════════════ */
 .exec {
-  margin: clamp(72px, 9vw, 112px) clamp(32px, 4vw, 64px) 0;
+  margin: clamp(72px, 9vw, 112px) 0 0;
   position: relative;
 }
 .exec__funnel {
@@ -4480,7 +4486,7 @@ html {
 }
 .exec__eyebrow {
   font-family: var(--font-pt-mono);
-  font-size: 11px;
+  font-size: 10px;
   letter-spacing: var(--track-widest);
   text-transform: uppercase;
   white-space: nowrap;
@@ -4488,7 +4494,7 @@ html {
   color: var(--gold);
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
 }
 .exec__eyebrow::before {
   content: "";
