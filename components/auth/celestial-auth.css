@@ -1,0 +1,406 @@
+/* ═══════════════════════════════════════════════════════════════
+   CELESTIAL AUTH SHELL
+   Shared terminal chrome for login surfaces.
+   Uses Thoughtform tokens from app/styles/variables.css.
+   ═══════════════════════════════════════════════════════════════ */
+
+.cel-auth {
+  --_arm: var(--corner-arm-lg);
+  --_thick: var(--corner-thickness-hairline);
+  --_gold: var(--gold);
+  --_gold-dim: var(--gold-20);
+  --_dawn: var(--dawn);
+  --_dawn-dim: var(--dawn-50);
+  --_void: var(--void);
+  --_mono: var(--font-mono);
+  --_display: var(--font-display);
+
+  width: 100%;
+  max-width: 440px;
+}
+
+.cel-auth--compact {
+  max-width: 380px;
+}
+
+/* ─── FRAME ─── */
+.cel-auth__frame {
+  position: relative;
+  background: rgba(8, 8, 6, 0.94);
+  border: 1px solid var(--_gold-dim);
+  box-shadow:
+    0 0 60px rgba(202, 165, 84, 0.04),
+    inset 0 0 60px rgba(0, 0, 0, 0.3);
+}
+
+/* ─── SCANLINES ─── */
+.cel-auth__scanlines {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.05) 0px,
+    rgba(0, 0, 0, 0.05) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+  pointer-events: none;
+  z-index: 50;
+  animation: cel-scanlines 14s linear infinite;
+}
+
+@keyframes cel-scanlines {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(6px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cel-auth__scanlines {
+    animation: none;
+  }
+}
+
+/* ─── CORNER BRACKETS ─── */
+.cel-auth__corner {
+  position: absolute;
+  width: var(--_arm);
+  height: var(--_arm);
+  z-index: 51;
+  pointer-events: none;
+}
+
+.cel-auth__corner--tl {
+  top: -1px;
+  left: -1px;
+  border-top: var(--_thick) solid var(--_gold);
+  border-left: var(--_thick) solid var(--_gold);
+}
+
+.cel-auth__corner--tr {
+  top: -1px;
+  right: -1px;
+  border-top: var(--_thick) solid var(--_gold);
+  border-right: var(--_thick) solid var(--_gold);
+}
+
+.cel-auth__corner--bl {
+  bottom: -1px;
+  left: -1px;
+  border-bottom: var(--_thick) solid var(--_gold);
+  border-left: var(--_thick) solid var(--_gold);
+}
+
+.cel-auth__corner--br {
+  bottom: -1px;
+  right: -1px;
+  border-bottom: var(--_thick) solid var(--_gold);
+  border-right: var(--_thick) solid var(--_gold);
+}
+
+/* ─── HEADER ─── */
+.cel-auth__header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 20px 24px 8px;
+}
+
+.cel-auth__rule {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--_gold-dim) 20%,
+    var(--_gold-dim) 80%,
+    transparent 100%
+  );
+}
+
+.cel-auth__title {
+  font-family: var(--_mono);
+  font-size: var(--type-xs);
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--_gold);
+  white-space: nowrap;
+  text-shadow: 0 0 8px rgba(202, 165, 84, 0.35);
+}
+
+/* ─── MODE SWITCH ─── */
+.cel-auth__mode-switch {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 24px 4px;
+}
+
+.cel-auth__mode-btn {
+  background: none;
+  border: none;
+  font-family: var(--_mono);
+  font-size: var(--type-xs);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--dawn-30);
+  cursor: pointer;
+  padding: 4px 8px;
+  transition:
+    color var(--duration-fast) var(--ease-out),
+    border-color var(--duration-fast) var(--ease-out);
+  border-bottom: 1px solid transparent;
+}
+
+.cel-auth__mode-btn:hover {
+  color: var(--dawn-60);
+}
+
+.cel-auth__mode-btn--active {
+  color: var(--_gold);
+  border-bottom-color: var(--_gold);
+}
+
+.cel-auth__mode-sep {
+  font-family: var(--_mono);
+  font-size: var(--type-xs);
+  color: var(--dawn-20);
+  user-select: none;
+}
+
+/* ─── DIVIDERS ─── */
+.cel-auth__divider {
+  text-align: center;
+  padding: 6px 24px;
+  font-family: var(--_mono);
+  font-size: 7px;
+  letter-spacing: 0.4em;
+  color: var(--gold-15);
+  user-select: none;
+}
+
+.cel-auth__divider--bottom {
+  padding-top: 8px;
+  padding-bottom: 18px;
+}
+
+/* ─── BODY ─── */
+.cel-auth__body {
+  padding: 12px 28px 14px;
+}
+
+/* ─── FORM ─── */
+.cel-auth__form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.cel-auth__field {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.cel-auth__label {
+  font-family: var(--_mono);
+  font-size: var(--type-xs);
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--_gold);
+  text-shadow: 0 0 4px rgba(202, 165, 84, 0.2);
+  min-width: 56px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.cel-auth__input {
+  flex: 1;
+  min-width: 0;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--dawn-10);
+  padding: 10px 14px;
+  font-family: var(--_mono);
+  font-size: var(--type-sm);
+  color: var(--_dawn);
+  outline: none;
+  transition:
+    border-color var(--duration-fast) var(--ease-out),
+    box-shadow var(--duration-fast) var(--ease-out);
+}
+
+.cel-auth__input::placeholder {
+  color: var(--dawn-20);
+}
+
+.cel-auth__input:focus {
+  border-color: var(--gold-40);
+  box-shadow: 0 0 10px rgba(202, 165, 84, 0.08);
+}
+
+.cel-auth__input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ─── ERROR ─── */
+.cel-auth__error {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-family: var(--_mono);
+  font-size: var(--type-xs);
+  color: var(--alert);
+  padding: 4px 0;
+  text-shadow: 0 0 6px rgba(255, 107, 53, 0.3);
+}
+
+.cel-auth__error-marker {
+  color: var(--alert);
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+/* ─── BUTTONS ─── */
+.cel-auth__actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 4px;
+  justify-content: center;
+}
+
+.cel-auth__btn {
+  padding: 10px 24px;
+  font-family: var(--_mono);
+  font-size: var(--type-xs);
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition:
+    color var(--duration-fast) var(--ease-out),
+    border-color var(--duration-fast) var(--ease-out),
+    background var(--duration-fast) var(--ease-out);
+}
+
+.cel-auth__btn--primary {
+  background: transparent;
+  border: 1px solid var(--gold-30);
+  color: var(--_gold);
+}
+
+.cel-auth__btn--primary:hover:not(:disabled) {
+  border-color: var(--_gold);
+  background: var(--gold-08);
+  box-shadow: 0 0 12px rgba(202, 165, 84, 0.1);
+}
+
+.cel-auth__btn--primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.cel-auth__btn--ghost {
+  background: transparent;
+  border: 1px solid var(--dawn-10);
+  color: var(--dawn-40);
+}
+
+.cel-auth__btn--ghost:hover {
+  border-color: var(--dawn-25);
+  color: var(--dawn-60);
+}
+
+/* ─── MAGIC LINK SENT ─── */
+.cel-auth__beacon {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.cel-auth__beacon-icon {
+  width: 48px;
+  height: 48px;
+  animation: cel-beacon-pulse 3s ease-in-out infinite;
+}
+
+@keyframes cel-beacon-pulse {
+  0%,
+  100% {
+    opacity: 0.7;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cel-auth__beacon-icon {
+    animation: none;
+    opacity: 1;
+  }
+}
+
+.cel-auth__sent-msg {
+  font-family: var(--_mono);
+  font-size: var(--type-xs);
+  color: var(--dawn-60);
+  text-align: center;
+  line-height: 1.7;
+  margin-bottom: 16px;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   RESPONSIVE
+   ═══════════════════════════════════════════════════════════════ */
+
+@media (max-width: 640px) {
+  .cel-auth {
+    max-width: 100%;
+  }
+
+  .cel-auth__header {
+    padding: 16px 16px 6px;
+    gap: 10px;
+  }
+
+  .cel-auth__body {
+    padding: 10px 16px 12px;
+  }
+
+  .cel-auth__field {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 5px;
+  }
+
+  .cel-auth__label {
+    min-width: auto;
+    text-align: left;
+  }
+
+  .cel-auth__input {
+    font-size: 16px; /* prevent iOS zoom */
+    padding: 12px 14px;
+  }
+
+  .cel-auth__actions {
+    flex-direction: column;
+  }
+
+  .cel-auth__btn {
+    width: 100%;
+    text-align: center;
+    min-height: 44px;
+  }
+
+  .cel-auth__divider {
+    letter-spacing: 0.3em;
+  }
+}

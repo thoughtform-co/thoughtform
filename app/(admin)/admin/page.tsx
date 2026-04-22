@@ -1,17 +1,18 @@
 "use client";
 
-import { useState, useEffect, useRef, Suspense } from "react";
+import { Suspense } from "react";
 import { useRouter } from "next/navigation";
-import { signInWithEmail, signOut } from "@/lib/auth";
+import { signOut } from "@/lib/auth";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { ParticleCanvasV2 } from "@/components/particles/ParticleCanvasV2";
 import { ThoughtformSigil } from "@/components/particles/ThoughtformSigil";
 import { DEFAULT_CONFIG, ParticleSystemConfig } from "@/lib/particle-config";
 import { supabase } from "@/lib/supabase";
-import { isAllowedUserEmail } from "@/lib/auth/allowed-user";
+import { CelestialAuthShell } from "@/components/auth/CelestialAuthShell";
+import { SessionActiveShell } from "@/components/auth/SessionActiveShell";
+import "@/components/auth/celestial-auth.css";
 import "./admin-styles.css";
 
-// Custom config for admin page - manifold only, no Lorenz attractor
 const ADMIN_CONFIG: ParticleSystemConfig = {
   ...DEFAULT_CONFIG,
   landmarks: DEFAULT_CONFIG.landmarks.map((landmark) => ({
@@ -23,228 +24,202 @@ const ADMIN_CONFIG: ParticleSystemConfig = {
 function AdminPageContent() {
   const router = useRouter();
   const { user, isLoading } = useAuth();
-  const [mounted, setMounted] = useState(false);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [isAuthenticating, setIsAuthenticating] = useState(false);
-  const emailRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
-    if (mounted && !isLoading && !user && emailRef.current) {
-      emailRef.current.focus();
-    }
-  }, [mounted, isLoading, user]);
-
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-
-    if (!email.trim()) return;
-
-    if (!isAllowedUserEmail(email)) {
-      setError("ACCESS DENIED: Unauthorized user");
-      return;
-    }
-
-    if (!password.trim()) return;
-
-    setIsAuthenticating(true);
-
-    try {
-      await signInWithEmail(email, password);
-    } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : "Authentication failed";
-      setError(errorMsg);
-      setIsAuthenticating(false);
-    }
-  };
 
   const handleSignOut = async () => {
     await signOut();
-    setEmail("");
-    setPassword("");
   };
 
-  // Loading state
-  if (!mounted || isLoading) {
+  if (!user && !isLoading && !supabase) {
     return (
-      <div className="admin-container">
-        <div className="admin-background">
-          <ParticleCanvasV2 scrollProgress={0.15} config={ADMIN_CONFIG} />
-        </div>
-        <div className="admin-sigil">
-          <ThoughtformSigil
-            size={600}
-            color="202, 165, 84"
-            particleCount={600}
-            scrollProgress={1}
-            particleSize={1.5}
-            opacity={0.8}
-            wanderStrength={0.8}
-          />
-        </div>
-        <div className="login-panel">
-          <div className="panel-content">
-            <div className="status-text">Initializing</div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // No Supabase configured
-  if (!supabase) {
-    return (
-      <div className="admin-container">
-        <div className="admin-background">
+      <div className="cel-login">
+        <div className="cel-login__particles">
           <ParticleCanvasV2 scrollProgress={0.15} config={DEFAULT_CONFIG} />
         </div>
-        <div className="login-panel">
-          <div className="panel-content">
-            <div className="error-text">FATAL: Supabase not configured</div>
+        <div className="cel-login__terminal">
+          <div className="cel-auth">
+            <div className="cel-auth__frame">
+              <div className="cel-auth__body">
+                <div className="cel-auth__error">
+                  <span className="cel-auth__error-marker">!</span>
+                  FATAL — Navigation system offline. Supabase not configured.
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
     );
   }
 
-  // Logged in state
-  if (user) {
-    return (
-      <div className="admin-container">
-        <div className="admin-background">
-          <ParticleCanvasV2 scrollProgress={0.15} config={ADMIN_CONFIG} />
-        </div>
-        <div className="admin-sigil">
-          <ThoughtformSigil
-            size={600}
-            color="202, 165, 84"
-            particleCount={600}
-            scrollProgress={1}
-            particleSize={1.5}
-            opacity={0.8}
-            wanderStrength={0.8}
-          />
-        </div>
-        <div className="login-panel">
-          <div className="corner corner-tl" />
-          <div className="corner corner-tr" />
-          <div className="corner corner-bl" />
-          <div className="corner corner-br" />
+  const isReady = !isLoading;
 
-          <div className="panel-header">
-            <span className="header-line" />
-            <span className="header-title">Session Active</span>
-            <span className="header-line" />
-          </div>
-
-          <div className="decorative-row">■ ■ ■ ■ ■ ■ ■ ■ ■ ■ ■ ■ ■ ■ ■ ■ ■ ■ ■ ■</div>
-
-          <div className="panel-content">
-            <div className="welcome-text">
-              <strong>Welcome back</strong> — Authenticated as {user.email}
-            </div>
-
-            <div className="action-buttons">
-              <button onClick={() => router.push("/")} className="panel-button">
-                [Home]
-              </button>
-              <button onClick={handleSignOut} className="panel-button">
-                [Sign Out]
-              </button>
-            </div>
-          </div>
-
-          <div className="decorative-row bottom">■ ■ ■ ■ ■ ■ ■ ■ ■ ■ ■ ■ ■ ■ ■ ■ ■ ■ ■ ■</div>
-        </div>
-      </div>
-    );
-  }
-
-  // Login form
   return (
-    <div className="admin-container">
-      <div className="admin-background">
+    <div className="cel-login">
+      {/* Layer 0 — living particle field */}
+      <div className="cel-login__particles">
         <ParticleCanvasV2 scrollProgress={0.15} config={ADMIN_CONFIG} />
       </div>
 
-      <div className="admin-sigil">
+      {/* Layer 1 — sigil glow */}
+      <div className="cel-login__sigil">
         <ThoughtformSigil
           size={600}
           color="202, 165, 84"
           particleCount={600}
           scrollProgress={1}
           particleSize={1.5}
-          opacity={0.8}
+          opacity={0.7}
           wanderStrength={0.8}
         />
       </div>
 
-      <div className="login-panel">
-        <div className="corner corner-tl" />
-        <div className="corner corner-tr" />
-        <div className="corner corner-bl" />
-        <div className="corner corner-br" />
+      {/* Layer 2 — atmospheric washes */}
+      <div className="cel-login__wash" aria-hidden="true" />
 
-        {/* Header */}
-        <div className="panel-header">
-          <span className="header-line" />
-          <span className="header-title">Connection Established</span>
-          <span className="header-line" />
-        </div>
+      {/* Layer 3 — decorative HUD rail (left) */}
+      <aside className="cel-login__rail cel-login__rail--left" aria-hidden="true">
+        <div className="cel-login__rail-guide" />
+        {Array.from({ length: 21 }).map((_, i) => (
+          <div
+            key={i}
+            className={`cel-login__tick ${i % 5 === 0 ? "cel-login__tick--major" : ""}`}
+            style={{ top: `${(i / 20) * 100}%` }}
+          />
+        ))}
+      </aside>
 
-        {/* Top decorative row */}
-        <div className="decorative-row">■ ■ ■ ■ ■ ■ ■ ■ ■ ■ ■ ■ ■ ■ ■ ■ ■ ■ ■ ■</div>
+      {/* Layer 3 — decorative HUD rail (right) */}
+      <aside className="cel-login__rail cel-login__rail--right" aria-hidden="true">
+        <div className="cel-login__rail-guide" />
+        {Array.from({ length: 21 }).map((_, i) => (
+          <div
+            key={i}
+            className={`cel-login__tick ${i % 5 === 0 ? "cel-login__tick--major" : ""}`}
+            style={{ top: `${(i / 20) * 100}%` }}
+          />
+        ))}
+      </aside>
 
-        {/* Main content */}
-        <div className="panel-content">
-          <div className="welcome-text">
-            <strong>Welcome to Thoughtform</strong> — Enter your credentials to access the admin
-            console.
+      {/* Layer 4 — celestial diagram */}
+      <div className="cel-login__diagram" aria-hidden="true">
+        <svg viewBox="0 0 280 280" className="cel-login__diagram-svg">
+          {/* Outer orbital ring */}
+          <circle cx="140" cy="140" r="130" fill="none" stroke="var(--gold-10)" strokeWidth="0.5" />
+          {/* Inner orbital ring */}
+          <circle
+            cx="140"
+            cy="140"
+            r="90"
+            fill="none"
+            stroke="var(--gold-15)"
+            strokeWidth="0.5"
+            strokeDasharray="6 4"
+          />
+          {/* Mid ring */}
+          <circle cx="140" cy="140" r="50" fill="none" stroke="var(--gold-10)" strokeWidth="0.5" />
+          {/* Rotated square frame */}
+          <rect
+            x="100"
+            y="100"
+            width="80"
+            height="80"
+            fill="none"
+            stroke="var(--gold-15)"
+            strokeWidth="0.5"
+            transform="rotate(45 140 140)"
+          />
+          {/* Cross meridians */}
+          <line x1="140" y1="10" x2="140" y2="270" stroke="var(--gold-08)" strokeWidth="0.5" />
+          <line x1="10" y1="140" x2="270" y2="140" stroke="var(--gold-08)" strokeWidth="0.5" />
+          {/* Bearing ticks on meridians */}
+          {[30, 60, 90, 120, 180, 210, 240, 250].map((y) => (
+            <line
+              key={`h-${y}`}
+              x1="136"
+              y1={y}
+              x2="144"
+              y2={y}
+              stroke="var(--gold-15)"
+              strokeWidth="0.5"
+            />
+          ))}
+          {[30, 60, 90, 120, 180, 210, 240, 250].map((x) => (
+            <line
+              key={`v-${x}`}
+              x1={x}
+              y1="136"
+              x2={x}
+              y2="144"
+              stroke="var(--gold-15)"
+              strokeWidth="0.5"
+            />
+          ))}
+          {/* Compass diamond */}
+          <rect
+            x="135"
+            y="135"
+            width="10"
+            height="10"
+            fill="var(--gold-20)"
+            stroke="var(--gold-40)"
+            strokeWidth="0.5"
+            transform="rotate(45 140 140)"
+          />
+          {/* Orbital markers */}
+          {[0, 60, 120, 180, 240, 300].map((deg) => {
+            const rad = (deg * Math.PI) / 180;
+            const cx = 140 + Math.cos(rad) * 90;
+            const cy = 140 + Math.sin(rad) * 90;
+            return (
+              <circle
+                key={deg}
+                cx={cx}
+                cy={cy}
+                r="2"
+                fill="none"
+                stroke="var(--gold-30)"
+                strokeWidth="0.5"
+              />
+            );
+          })}
+        </svg>
+      </div>
+
+      {/* Layer 5 — corner brackets */}
+      <div className="cel-login__corner cel-login__corner--tl" aria-hidden="true" />
+      <div className="cel-login__corner cel-login__corner--tr" aria-hidden="true" />
+      <div className="cel-login__corner cel-login__corner--bl" aria-hidden="true" />
+      <div className="cel-login__corner cel-login__corner--br" aria-hidden="true" />
+
+      {/* Telemetry labels */}
+      <div className="cel-login__telemetry cel-login__telemetry--tl" aria-hidden="true">
+        <span className="cel-login__tele-rule" />
+        <span className="cel-login__tele-label">Sector 01</span>
+      </div>
+      <div className="cel-login__telemetry cel-login__telemetry--br" aria-hidden="true">
+        <span className="cel-login__tele-label">Auth Terminal</span>
+        <span className="cel-login__tele-rule" />
+      </div>
+
+      {/* Layer 10 — terminal content */}
+      <div className="cel-login__terminal">
+        {!isReady ? (
+          <div className="cel-auth">
+            <div className="cel-auth__frame">
+              <div className="cel-auth__body">
+                <p className="cel-auth__sent-msg">Initializing navigation systems...</p>
+              </div>
+            </div>
           </div>
-
-          <form onSubmit={handleLogin} className="login-form">
-            <div className="form-row">
-              <label className="form-label">Login:</label>
-              <input
-                ref={emailRef}
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="user@example.com"
-                className="form-input"
-                autoComplete="email"
-                disabled={isAuthenticating}
-              />
-            </div>
-
-            <div className="form-row">
-              <label className="form-label">Password:</label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="form-input"
-                autoComplete="current-password"
-                disabled={isAuthenticating}
-              />
-            </div>
-
-            {error && <div className="error-message">{error}</div>}
-
-            <button type="submit" className="login-button" disabled={isAuthenticating}>
-              {isAuthenticating ? "[Authenticating...]" : "[Login]"}
-            </button>
-          </form>
-        </div>
-
-        {/* Bottom decorative row */}
-        <div className="decorative-row bottom">■ ■ ■ ■ ■ ■ ■ ■ ■ ■ ■ ■ ■ ■ ■ ■ ■ ■ ■ ■</div>
+        ) : user ? (
+          <SessionActiveShell
+            user={user}
+            onNavigateHome={() => router.push("/")}
+            onSignOut={handleSignOut}
+          />
+        ) : (
+          <CelestialAuthShell variant="full" />
+        )}
       </div>
     </div>
   );
@@ -254,10 +229,14 @@ export default function AdminPage() {
   return (
     <Suspense
       fallback={
-        <div className="admin-container">
-          <div className="login-panel">
-            <div className="panel-content">
-              <div className="status-text">Loading...</div>
+        <div className="cel-login">
+          <div className="cel-login__terminal">
+            <div className="cel-auth">
+              <div className="cel-auth__frame">
+                <div className="cel-auth__body">
+                  <p className="cel-auth__sent-msg">Loading...</p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
