@@ -154,7 +154,7 @@
 .celestial-editor__row input[type="text"],
 .celestial-editor__row input[type="number"] {
   flex: 1;
-  background: rgba(201, 168, 76, 0.06);
+  background-color: #0d0c0a;
   border: 1px solid rgba(201, 168, 76, 0.2);
   color: var(--dawn, #ebe3d6);
   font-family: inherit;
@@ -165,11 +165,22 @@
 }
 .celestial-editor__row select {
   appearance: none;
+  -webkit-appearance: none;
   padding-right: 22px;
+  background-color: #0d0c0a;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' fill='none'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23c9a84c' stroke-width='1.2'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 6px center;
   cursor: pointer;
+}
+.celestial-editor__row select option {
+  background: #0d0c0a;
+  color: #ebe3d6;
+}
+.celestial-editor__row select option:checked,
+.celestial-editor__row select option:hover {
+  background: rgba(201, 168, 76, 0.2);
+  color: #ebe3d6;
 }
 .celestial-editor__row select:focus,
 .celestial-editor__row input:focus {
