@@ -4506,15 +4506,18 @@ html {
 }
 .exec__lede {
   font-family: var(--font-pp-neue-montreal);
-  font-size: clamp(18px, 1.6vw, 22px);
-  line-height: 1.45;
+  font-size: clamp(24px, 2.1vw, 32px);
+  font-weight: 400;
+  line-height: 1.22;
+  letter-spacing: -0.015em;
   color: var(--dawn);
   margin: 0;
-  max-width: 68ch;
+  max-width: 32ch;
   text-wrap: pretty;
 }
 .exec__lede em {
-  font-style: normal;
+  font-weight: 500;
+  font-style: italic;
   color: var(--gold);
 }
 
@@ -4608,10 +4611,6 @@ html {
   max-width: 40ch;
 }
 .exec__card p em {
-  font-style: normal;
-  color: var(--gold);
-}
-.exec__lede em {
   font-style: normal;
   color: var(--gold);
 }
