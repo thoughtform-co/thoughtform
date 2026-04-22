@@ -24,13 +24,27 @@
 }
 
 /* ─── FRAME ─── */
+/* Voidwalker portrait grammar — subtle void-on-void layering,
+   no sharp gold L-brackets. The orbital instrument is the frame. */
 .cel-auth__frame {
   position: relative;
-  background: rgba(8, 8, 6, 0.94);
-  border: 1px solid var(--_gold-dim);
+  background: var(--void);
+  border: 1px solid var(--gold-15);
   box-shadow:
-    0 0 60px rgba(202, 165, 84, 0.04),
-    inset 0 0 60px rgba(0, 0, 0, 0.3);
+    0 30px 60px -10px rgba(0, 0, 0, 0.9),
+    0 0 0 6px rgba(10, 9, 8, 0.85),
+    0 0 0 7px var(--dawn-08);
+}
+
+.cel-auth__frame::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, transparent 60%, rgba(0, 0, 0, 0.35) 100%),
+    radial-gradient(ellipse 100% 60% at 50% 100%, rgba(202, 165, 84, 0.08), transparent 70%);
+  pointer-events: none;
+  z-index: 1;
 }
 
 /* ─── SCANLINES ─── */
@@ -64,13 +78,11 @@
   }
 }
 
-/* ─── CORNER BRACKETS ─── */
+/* ─── CORNER BRACKETS (hidden by default) ───
+   The Voidwalker portrait treatment on .cel-auth__frame replaces
+   sharp gold L-brackets. Keep markup for legacy variants / future use. */
 .cel-auth__corner {
-  position: absolute;
-  width: var(--_arm);
-  height: var(--_arm);
-  z-index: 51;
-  pointer-events: none;
+  display: none;
 }
 
 .cel-auth__corner--tl {
@@ -99,6 +111,16 @@
   right: -1px;
   border-bottom: var(--_thick) solid var(--_gold);
   border-right: var(--_thick) solid var(--_gold);
+}
+
+/* ─── CONTENT LAYER ───
+   Lift all form regions above the .cel-auth__frame::after vignette. */
+.cel-auth__header,
+.cel-auth__mode-switch,
+.cel-auth__divider,
+.cel-auth__body {
+  position: relative;
+  z-index: 2;
 }
 
 /* ─── HEADER ─── */

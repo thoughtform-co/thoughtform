@@ -1,6 +1,7 @@
 /* ═══════════════════════════════════════════════════════════════
-   CELESTIAL LOGIN — Full-page observatory terminal
-   Asymmetric HUD layout with depth-gauge rails and diagram zone
+   CELESTIAL LOGIN — Centered observatory terminal
+   Terminal card at the heart of a Voidwalker-style orbital diagram.
+   Borrows the sigil/orbit grammar from the landing about section.
    ═══════════════════════════════════════════════════════════════ */
 
 /* ─── PAGE CONTAINER ─── */
@@ -19,206 +20,185 @@
   position: absolute;
   inset: 0;
   z-index: 0;
-  opacity: 0.6;
+  opacity: 0.5;
 }
 
-/* ─── SIGIL GLOW (z:1) ─── */
-.cel-login__sigil {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0.18;
-  pointer-events: none;
-}
-
-/* ─── ATMOSPHERIC WASH (z:2) ─── */
+/* ─── ATMOSPHERIC WASH (z:1) ─── */
 .cel-login__wash {
   position: absolute;
   inset: 0;
-  z-index: 2;
+  z-index: 1;
   pointer-events: none;
   background:
-    radial-gradient(ellipse 70% 50% at 30% 45%, rgba(202, 165, 84, 0.03) 0%, transparent 70%),
-    radial-gradient(ellipse 50% 60% at 75% 60%, rgba(100, 130, 80, 0.02) 0%, transparent 60%);
+    radial-gradient(ellipse 60% 55% at 50% 45%, rgba(202, 165, 84, 0.05) 0%, transparent 65%),
+    radial-gradient(ellipse 70% 70% at 80% 80%, rgba(91, 122, 78, 0.03) 0%, transparent 65%);
+}
+
+/* ─── CENTERED STAGE (z:10) ─── */
+.cel-login__stage {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(20px, 4vw, 48px);
+}
+
+/* ─── INSTRUMENT WRAPPER ───
+   Holds the orbital diagram with the terminal card at its center.
+*/
+.cel-login__instrument {
+  position: relative;
+  width: 100%;
+  max-width: clamp(420px, 62vmin, 720px);
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   DEPTH-GAUGE RAILS
-   Decorative rails that mirror the HUDFrame's depth-gauge variant
+   ORBITAL INSTRUMENT — concentric rings + bearing readouts
+   Mirrors .voidwalker__orbit from components/landing/v7/landing.css
    ═══════════════════════════════════════════════════════════════ */
 
-.cel-login__rail {
-  position: absolute;
-  z-index: 3;
-  top: clamp(40px, 8vh, 100px);
-  bottom: clamp(40px, 8vh, 100px);
-  width: 1px;
-  pointer-events: none;
-}
-
-.cel-login__rail--left {
-  left: clamp(24px, 4vw, 54px);
-}
-
-.cel-login__rail--right {
-  right: clamp(24px, 4vw, 54px);
-}
-
-.cel-login__rail-guide {
+.cel-login__orbit {
   position: absolute;
   inset: 0;
-  width: 1px;
-  background: var(--gold-10);
-}
-
-.cel-login__tick {
-  position: absolute;
-  left: 0;
-  height: 1px;
-  width: 10px;
-  background: var(--gold-30);
-  transform: translateX(-4px);
-}
-
-.cel-login__tick--major {
-  width: 20px;
-  background: var(--gold-50);
-  transform: translateX(-9px);
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   CELESTIAL DIAGRAM
-   Quiet decorative instrument — off-axis, opposite the terminal
-   ═══════════════════════════════════════════════════════════════ */
-
-.cel-login__diagram {
-  position: absolute;
-  z-index: 3;
-  width: clamp(200px, 22vw, 320px);
-  height: clamp(200px, 22vw, 320px);
-  right: 10%;
-  top: 50%;
-  transform: translateY(-50%);
   pointer-events: none;
-  opacity: 0.5;
-  animation: cel-diagram-drift 40s ease-in-out infinite alternate;
 }
 
-@keyframes cel-diagram-drift {
-  from {
-    transform: translateY(-50%) rotate(0deg);
-  }
-  to {
-    transform: translateY(-50%) rotate(8deg);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .cel-login__diagram {
-    animation: none;
-  }
-}
-
-.cel-login__diagram-svg {
+.cel-login__orbit-svg {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   VIEWPORT CORNER BRACKETS
-   ═══════════════════════════════════════════════════════════════ */
+/* ─── rotating orbit groups ─── */
+.cel-login__orbit-rot {
+  transform-origin: 0 0;
+  animation: cel-orbit-rot 50s linear infinite;
+}
 
-.cel-login__corner {
+.cel-login__orbit-rot--rev {
+  animation: cel-orbit-rot-rev 90s linear infinite;
+}
+
+.cel-login__orbit-rot--slowest {
+  animation: cel-orbit-rot 120s linear infinite;
+}
+
+@keyframes cel-orbit-rot {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes cel-orbit-rot-rev {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(-360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cel-login__orbit-rot,
+  .cel-login__orbit-rot--rev,
+  .cel-login__orbit-rot--slowest {
+    animation: none;
+  }
+}
+
+/* ─── static particle halo (sigil grammar) ─── */
+.cel-login__orbit-halo {
   position: absolute;
-  z-index: 4;
-  width: var(--corner-arm-xl);
-  height: var(--corner-arm-xl);
+  inset: 0;
   pointer-events: none;
 }
 
-.cel-login__corner--tl {
-  top: clamp(16px, 3vw, 40px);
-  left: clamp(16px, 3vw, 40px);
-  border-top: 1px solid var(--gold-30);
-  border-left: 1px solid var(--gold-30);
-}
-
-.cel-login__corner--tr {
-  top: clamp(16px, 3vw, 40px);
-  right: clamp(16px, 3vw, 40px);
-  border-top: 1px solid var(--gold-30);
-  border-right: 1px solid var(--gold-30);
-}
-
-.cel-login__corner--bl {
-  bottom: clamp(16px, 3vw, 40px);
-  left: clamp(16px, 3vw, 40px);
-  border-bottom: 1px solid var(--gold-30);
-  border-left: 1px solid var(--gold-30);
-}
-
-.cel-login__corner--br {
-  bottom: clamp(16px, 3vw, 40px);
-  right: clamp(16px, 3vw, 40px);
-  border-bottom: 1px solid var(--gold-30);
-  border-right: 1px solid var(--gold-30);
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   TELEMETRY LABELS — small anchor text at corners
-   ═══════════════════════════════════════════════════════════════ */
-
-.cel-login__telemetry {
+.cel-login__orbit-halo span {
   position: absolute;
-  z-index: 5;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  pointer-events: none;
+  left: 50%;
+  top: 50%;
+  width: 3px;
+  height: 3px;
+  background: var(--gold);
+  border-radius: 50%;
+  transform: translate(-50%, -50%) rotate(var(--a, 0deg)) translateY(calc(var(--r, 40%) * -1));
+  opacity: var(--o, 0.8);
+  box-shadow: 0 0 6px rgba(202, 165, 84, 0.55);
 }
 
-.cel-login__telemetry--tl {
-  top: clamp(22px, 3.5vw, 50px);
-  left: clamp(60px, 7vw, 110px);
+.cel-login__orbit-halo span.d {
+  background: var(--dawn);
+  box-shadow: none;
+  opacity: 0.5;
+  width: 2px;
+  height: 2px;
 }
 
-.cel-login__telemetry--br {
-  bottom: clamp(22px, 3.5vw, 50px);
-  right: clamp(60px, 7vw, 110px);
-}
-
-.cel-login__tele-rule {
-  display: block;
-  width: 30px;
-  height: 1px;
-  background: var(--gold-30);
-}
-
-.cel-login__tele-label {
+/* ─── corner readouts ─── */
+.cel-login__readout {
+  position: absolute;
   font-family: var(--font-mono);
-  font-size: var(--type-xs);
-  letter-spacing: 0.18em;
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  line-height: 1.5;
   text-transform: uppercase;
-  color: var(--gold-40);
+  color: var(--dawn-50);
+  pointer-events: none;
+}
+
+.cel-login__readout .k {
+  color: var(--gold);
+}
+
+.cel-login__readout--tl {
+  top: 4%;
+  left: 4%;
+}
+
+.cel-login__readout--tr {
+  top: 4%;
+  right: 4%;
+  text-align: right;
+}
+
+.cel-login__readout--bl {
+  bottom: 4%;
+  left: 4%;
+}
+
+.cel-login__readout--br {
+  bottom: 4%;
+  right: 4%;
+  text-align: right;
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   TERMINAL ZONE — holds the auth shell
-   Off-center left for asymmetry on wide screens
+   TERMINAL — sits at the center of the orbit
+   Like the voidwalker portrait but holds the auth form.
    ═══════════════════════════════════════════════════════════════ */
 
 .cel-login__terminal {
   position: relative;
-  z-index: 10;
-  padding: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh;
-  width: 100%;
+  z-index: 2;
+  width: clamp(320px, 44vmin, 440px);
+  max-width: calc(100% - clamp(40px, 10vw, 120px));
+}
+
+/* Override the celestial-auth max-width — the instrument wrapper
+   already constrains the terminal proportions. */
+.cel-login__terminal .cel-auth {
+  max-width: 100%;
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -260,67 +240,45 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   DESKTOP ASYMMETRY
-   On wide screens, push the terminal left of center and let
-   the diagram float in the right half.
-   ═══════════════════════════════════════════════════════════════ */
-
-@media (min-width: 1100px) {
-  .cel-login__terminal {
-    justify-content: flex-start;
-    padding-left: clamp(100px, 12vw, 220px);
-  }
-
-  .cel-login__diagram {
-    right: 12%;
-    opacity: 0.6;
-  }
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   RESPONSIVE — tablet and below
+   RESPONSIVE
+   On tablet: shrink the orbit, pull the readouts toward the edges.
+   On phone: hide the orbit rings (keep the wash + particles),
+             let the terminal expand cleanly without constraint.
    ═══════════════════════════════════════════════════════════════ */
 
 @media (max-width: 900px) {
-  .cel-login__rail {
-    display: none;
+  .cel-login__instrument {
+    max-width: clamp(360px, 86vmin, 560px);
   }
 
-  .cel-login__diagram {
-    width: 160px;
-    height: 160px;
-    right: 5%;
-    top: 8%;
-    transform: none;
-    opacity: 0.25;
-  }
-
-  .cel-login__telemetry {
-    display: none;
-  }
-
-  .cel-login__corner {
-    width: 24px;
-    height: 24px;
+  .cel-login__readout {
+    font-size: 8px;
+    letter-spacing: 0.15em;
   }
 
   .cel-login__terminal {
-    justify-content: center;
-    padding: 16px;
+    width: clamp(300px, 56vmin, 400px);
   }
 }
 
-@media (max-width: 480px) {
-  .cel-login__diagram {
+@media (max-width: 600px) {
+  .cel-login__instrument {
+    max-width: 100%;
+    aspect-ratio: auto;
+    height: auto;
+  }
+
+  .cel-login__orbit,
+  .cel-login__orbit-halo {
     display: none;
   }
 
-  .cel-login__corner {
-    width: 18px;
-    height: 18px;
+  .cel-login__readout {
+    display: none;
   }
 
   .cel-login__terminal {
-    padding: 12px;
+    width: 100%;
+    max-width: 420px;
   }
 }
