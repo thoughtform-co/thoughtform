@@ -152,6 +152,27 @@ export function useSigilChoreography(rootRef: React.RefObject<HTMLElement | null
     };
     window.addEventListener("resize", onResize);
 
+    // When the tab is hidden, requestAnimationFrame pauses, scroll events
+    // may queue, and the browser can shift layout (font swaps, image
+    // decode). ScrollTrigger's cached positions and the captured handoff
+    // rects can go stale. On resume, force a full refresh — this re-runs
+    // onRefresh for every trigger, which recaptures rects and
+    // re-syncs progress with current scroll position.
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        ScrollTrigger.refresh();
+      }
+    };
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    // Some browsers fire pageshow (e.g. returning from bfcache) without
+    // a visibilitychange — cover that path too.
+    const onPageShow = (event: PageTransitionEvent) => {
+      if (event.persisted) {
+        ScrollTrigger.refresh();
+      }
+    };
+    window.addEventListener("pageshow", onPageShow);
+
     const ctx = gsap.context(() => {
       gsap.set([sigilOrbits, sigilHalo], { opacity: 0, scale: 0.6, rotation: -8 });
       gsap.set(sigilMark, { opacity: 0, scale: 0.7 });
@@ -257,6 +278,8 @@ export function useSigilChoreography(rootRef: React.RefObject<HTMLElement | null
 
     return () => {
       window.removeEventListener("resize", onResize);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+      window.removeEventListener("pageshow", onPageShow);
       hudBrandmark.classList.remove("is-visible");
       hudEl?.classList.remove("hud--brandmark-active");
       ctx.revert();
