@@ -3926,53 +3926,220 @@ html {
   flex-shrink: 0;
 }
 
-/* ═══ SPINE: celestial navigation strip ═══ */
+/* ═══ SPINE: celestial transit column ═══ */
 .approach__spine {
   position: relative;
-  border-left: 1px solid var(--dawn-08);
-  border-right: 1px solid var(--dawn-08);
   overflow: visible;
-}
-.approach__spine::before,
-.approach__spine::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 1px;
-  border-left: 1px dashed var(--dawn-15);
+  isolation: isolate;
 }
 .approach__spine::before {
-  left: 12px;
+  content: "";
+  position: absolute;
+  top: 18px;
+  bottom: 18px;
+  left: 50%;
+  width: 1px;
+  transform: translateX(-50%);
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    var(--dawn-15) 10%,
+    var(--gold-30, rgba(202, 165, 84, 0.3)) 50%,
+    var(--dawn-15) 90%,
+    transparent 100%
+  );
 }
-.approach__spine::after {
-  right: 12px;
+/* Sigil constellation — asymmetric celestial marks scattered along the meridian */
+.approach__spine__sigils {
+  position: absolute;
+  inset: 24px 0;
+  left: 50%;
+  width: 0;
+  transform: translateX(-50%);
+  pointer-events: none;
+  z-index: 0;
+}
+.approach__spine__sigils .sig {
+  position: absolute;
+  left: 0;
+  top: var(--y);
+  transform: translate(calc(-50% + var(--x, 0px)), -50%) rotate(var(--r, 0deg));
+  color: var(--gold);
+  opacity: var(--o, 0.45);
+  box-sizing: border-box;
+}
+.sig--bracket-tl {
+  width: 8px;
+  height: 8px;
+  border-top: 1px solid currentColor;
+  border-left: 1px solid currentColor;
+}
+.sig--bracket-tr {
+  width: 8px;
+  height: 8px;
+  border-top: 1px solid currentColor;
+  border-right: 1px solid currentColor;
+}
+.sig--bracket-bl {
+  width: 8px;
+  height: 8px;
+  border-bottom: 1px solid currentColor;
+  border-left: 1px solid currentColor;
+}
+.sig--bracket-br {
+  width: 8px;
+  height: 8px;
+  border-bottom: 1px solid currentColor;
+  border-right: 1px solid currentColor;
+}
+.sig--frame {
+  width: 10px;
+  height: 10px;
+  border: 1px solid currentColor;
+}
+.sig--diamond-outline {
+  width: 8px;
+  height: 8px;
+  border: 1px solid currentColor;
+  --r: 45deg;
+}
+.sig--diamond-solid {
+  width: 5px;
+  height: 5px;
+  background: currentColor;
+  --r: 45deg;
+}
+.sig--ring {
+  width: 7px;
+  height: 7px;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+}
+.sig--dot {
+  width: 3px;
+  height: 3px;
+  background: currentColor;
+  border-radius: 50%;
+}
+.sig--plus {
+  width: 9px;
+  height: 9px;
+}
+.sig--plus::before,
+.sig--plus::after {
+  content: "";
+  position: absolute;
+  background: currentColor;
+}
+.sig--plus::before {
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  transform: translateY(-50%);
+}
+.sig--plus::after {
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 1px;
+  transform: translateX(-50%);
+}
+.sig--half-frame {
+  width: 14px;
+  height: 14px;
+}
+.sig--half-frame::before,
+.sig--half-frame::after {
+  content: "";
+  position: absolute;
+  width: 5px;
+  height: 5px;
+}
+.sig--half-frame::before {
+  top: 0;
+  left: 0;
+  border-top: 1px solid currentColor;
+  border-left: 1px solid currentColor;
+}
+.sig--half-frame::after {
+  bottom: 0;
+  right: 0;
+  border-bottom: 1px solid currentColor;
+  border-right: 1px solid currentColor;
+}
+.sig--half-frame-alt::before {
+  top: 0;
+  left: auto;
+  right: 0;
+  border-left: none;
+  border-right: 1px solid currentColor;
+}
+.sig--half-frame-alt::after {
+  bottom: 0;
+  right: auto;
+  left: 0;
+  border-right: none;
+  border-left: 1px solid currentColor;
 }
 
-/* Ticks */
+/* Waypoint marks */
 .approach__spine__ticks {
   position: absolute;
-  top: 24px;
-  bottom: 24px;
+  top: 32px;
+  bottom: 32px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  align-items: center;
+  width: 36px;
+  z-index: 1;
 }
 .approach__spine__ticks span {
+  position: relative;
   display: block;
-  width: 8px;
-  height: 1px;
-  background: var(--dawn-30);
+  width: 18px;
+  height: 8px;
+  opacity: 0.5;
+}
+.approach__spine__ticks span:nth-child(odd) {
+  transform: translateX(-4px);
+}
+.approach__spine__ticks span:nth-child(even) {
+  transform: translateX(4px);
+}
+.approach__spine__ticks span::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 4px;
+  height: 4px;
+  background: var(--void);
+  border: 1px solid var(--dawn-30);
+  transform: translate(-50%, -50%) rotate(45deg);
 }
 .approach__spine__ticks span.is-major {
-  width: 16px;
-  background: var(--dawn-50);
+  width: 24px;
+  opacity: 0.72;
+}
+.approach__spine__ticks span.is-major::after {
+  width: 5px;
+  height: 5px;
+  border-color: var(--gold-40, rgba(202, 165, 84, 0.4));
 }
 .approach__spine__ticks span.is-bearing {
-  width: 20px;
-  background: var(--gold-40, rgba(202, 165, 84, 0.4));
+  width: 30px;
+  opacity: 0.95;
+  transform: translateX(0);
+}
+.approach__spine__ticks span.is-bearing::after {
+  width: 7px;
+  height: 7px;
+  background: var(--gold);
+  border-color: var(--gold);
 }
 
 /* Scrubber + reticle */
@@ -3980,8 +4147,8 @@ html {
   position: absolute;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
   color: var(--gold);
   top: var(--scrubber-y, 50%);
   transition: top 480ms var(--m-ease-instr);
@@ -3991,44 +4158,47 @@ html {
   content: "";
   position: absolute;
   inset: 0;
-  background: currentColor;
+  border: 1px solid currentColor;
   clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
   opacity: 0.9;
 }
 .approach__spine__scrubber::after {
   content: "";
   position: absolute;
-  inset: 5px;
-  background: var(--void);
+  inset: 7px;
+  background: currentColor;
   clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
 }
 .approach__spine__reticle {
   position: absolute;
-  inset: -9px;
+  inset: -12px;
   pointer-events: none;
 }
 .approach__spine__reticle::before,
 .approach__spine__reticle::after {
   content: "";
   position: absolute;
-  border: 1px solid var(--gold);
-  opacity: 0.6;
-}
-.approach__spine__reticle::before {
-  top: 0;
-  left: 0;
-  right: 50%;
-  bottom: 50%;
-  border-right: none;
-  border-bottom: none;
-}
-.approach__spine__reticle::after {
-  bottom: 0;
-  right: 0;
   left: 50%;
   top: 50%;
-  border-left: none;
-  border-top: none;
+  background: linear-gradient(
+    to right,
+    transparent,
+    var(--gold-30, rgba(202, 165, 84, 0.3)) 18%,
+    var(--gold) 50%,
+    var(--gold-30, rgba(202, 165, 84, 0.3)) 82%,
+    transparent
+  );
+  opacity: 0.55;
+}
+.approach__spine__reticle::before {
+  width: 28px;
+  height: 1px;
+  transform: translate(-50%, -50%);
+}
+.approach__spine__reticle::after {
+  width: 1px;
+  height: 28px;
+  transform: translate(-50%, -50%);
 }
 
 /* Constellation anchors */
@@ -4036,21 +4206,29 @@ html {
   position: absolute;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 6px;
-  height: 6px;
-  background: var(--gold);
+  width: 8px;
+  height: 8px;
+  border: 1px solid var(--gold);
+  background: var(--void);
   clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
   pointer-events: none;
+}
+.approach__spine__anchor::before {
+  content: "";
+  position: absolute;
+  inset: 2px;
+  background: var(--gold);
+  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
 }
 .approach__spine__anchor::after {
   content: "";
   position: absolute;
-  top: -10px;
-  left: -10px;
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  border: 1px dashed var(--dawn-15);
+  top: -9px;
+  left: -9px;
+  width: 24px;
+  height: 24px;
+  border: 1px dashed rgba(236, 227, 214, 0.16);
+  transform: rotate(45deg);
 }
 .approach__spine__anchor--1 {
   top: var(--anchor-1-y, 17%);
@@ -4066,7 +4244,10 @@ html {
 .approach__spine__transit {
   position: absolute;
   left: 50%;
-  transform: translateX(-50%) rotate(-90deg);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transform: translate(-50%, -50%);
   white-space: nowrap;
   font-family: var(--font-pt-mono);
   font-size: 7px;
@@ -4074,7 +4255,25 @@ html {
   text-transform: uppercase;
   color: var(--dawn-30);
   pointer-events: none;
-  transform-origin: center center;
+  padding: 0 4px;
+  background: linear-gradient(
+    to right,
+    transparent,
+    rgba(5, 4, 3, 0.9) 18%,
+    rgba(5, 4, 3, 0.9) 82%,
+    transparent
+  );
+}
+.approach__spine__transit::before {
+  content: "";
+  width: 8px;
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    transparent,
+    var(--gold-30, rgba(202, 165, 84, 0.3)),
+    transparent
+  );
 }
 .approach__spine__transit--t1 {
   top: var(--transit-1-y, 33%);

@@ -93,17 +93,6 @@ export function LandingPage({ bodyHtml, bodyClass, celestialSlots }: LandingPage
     );
     phases.forEach((p) => io.observe(p));
 
-    // Generate spine ticks (41 ticks, classified)
-    const chamberTicks = root.querySelector<HTMLElement>("#chamberTicks");
-    if (chamberTicks && !chamberTicks.children.length) {
-      for (let i = 0; i < 41; i++) {
-        const span = document.createElement("span");
-        if (i % 10 === 0) span.classList.add("is-bearing");
-        else if (i % 5 === 0) span.classList.add("is-major");
-        chamberTicks.appendChild(span);
-      }
-    }
-
     // Compute anchor + transit y-positions from phase layout
     const spine = root.querySelector<HTMLElement>(".approach__spine");
     if (spine && phases.length) {
