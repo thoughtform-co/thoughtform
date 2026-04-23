@@ -4749,18 +4749,6 @@ html {
   margin: clamp(72px, 9vw, 112px) 0 0;
   position: relative;
 }
-.exec__funnel {
-  width: 100%;
-  height: 54px;
-  display: block;
-  margin: 6px 0 18px;
-  opacity: 0.9;
-}
-@media (max-width: 760px) {
-  .exec__funnel {
-    display: none;
-  }
-}
 .exec__header {
   display: block;
   padding-bottom: 28px;
