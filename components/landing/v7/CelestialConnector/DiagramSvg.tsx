@@ -8,6 +8,8 @@ import type {
   EclipticConfig,
   PhaseConfig,
   GlyphRingConfig,
+  CrystalConfig,
+  ArmatureConfig,
   TickDensity,
 } from "@/lib/celestial/schema";
 import {
@@ -24,6 +26,8 @@ import {
   EclipticArc,
   PhaseDisk,
   GlyphRing,
+  CrystalFacet,
+  Armature,
 } from "./shapes";
 
 interface DiagramSvgProps {
@@ -55,6 +59,16 @@ export function DiagramSvg({ config }: DiagramSvgProps) {
     seed: 42,
     radius: "md",
   };
+  const crystalConfig: CrystalConfig = diagram.crystal ?? {
+    seed: 42,
+    facets: 6,
+    inset: 0.55,
+  };
+  const armatureConfig: ArmatureConfig = diagram.armature ?? {
+    seed: 42,
+    crossbars: 3,
+    diamondJoints: 4,
+  };
   const tickDensity: TickDensity = rings?.tickDensity ?? 8;
 
   return (
@@ -69,6 +83,8 @@ export function DiagramSvg({ config }: DiagramSvgProps) {
           eclipticConfig,
           phaseConfig,
           glyphRingConfig,
+          crystalConfig,
+          armatureConfig,
           tickDensity,
         })}
       </g>
@@ -85,6 +101,8 @@ interface PresetParts {
   eclipticConfig: EclipticConfig;
   phaseConfig: PhaseConfig;
   glyphRingConfig: GlyphRingConfig;
+  crystalConfig: CrystalConfig;
+  armatureConfig: ArmatureConfig;
   tickDensity: TickDensity;
 }
 
@@ -226,6 +244,30 @@ function renderPreset(preset: string, parts: PresetParts) {
           <MeridianAxis showLabels />
           <Reticle config={parts.reticleConfig} />
           <DiagramLabels topLeft="ASTROLABE" bottomRight="∂ · 001" />
+        </>
+      );
+
+    // ── Phase glyph presets (Navigate/Encode/Build) ──
+
+    case "crystallize":
+      return (
+        <>
+          {parts.rings && <Rings config={parts.rings} />}
+          <CrystalFacet config={parts.crystalConfig} />
+          <GlyphRing config={parts.glyphRingConfig} />
+          <Reticle config={{ ...parts.reticleConfig, centerShape: "diamond" }} />
+        </>
+      );
+
+    case "armature":
+      return (
+        <>
+          {parts.rings && <Rings config={parts.rings} />}
+          {parts.square && <RotatedSquare config={parts.square} />}
+          <Armature config={parts.armatureConfig} />
+          <RegisterMarks />
+          <BearingTicks density={parts.tickDensity || 4} />
+          <Reticle config={{ ...parts.reticleConfig, centerShape: "diamond" }} />
         </>
       );
 

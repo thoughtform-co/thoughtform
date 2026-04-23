@@ -11,3 +11,5 @@ export { Constellation } from "./Constellation";
 export { EclipticArc } from "./EclipticArc";
 export { PhaseDisk } from "./PhaseDisk";
 export { GlyphRing } from "./GlyphRing";
+export { CrystalFacet } from "./CrystalFacet";
+export { Armature } from "./Armature";

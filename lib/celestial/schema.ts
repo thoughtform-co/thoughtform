@@ -14,6 +14,8 @@ export const PRESETS = [
   "phase",
   "sigil",
   "astrolabe",
+  "crystallize",
+  "armature",
 ] as const;
 export type Preset = (typeof PRESETS)[number];
 
@@ -83,6 +85,18 @@ export interface GlyphRingConfig {
   radius: "sm" | "md" | "lg";
 }
 
+export interface CrystalConfig {
+  seed: number;
+  facets: 4 | 6 | 8;
+  inset: number;
+}
+
+export interface ArmatureConfig {
+  seed: number;
+  crossbars: 2 | 3 | 4;
+  diamondJoints: 3 | 4 | 5;
+}
+
 export interface LabelEntry {
   text: string;
   emphasis?: string;
@@ -103,6 +117,8 @@ export interface CelestialConfig {
     ecliptic?: EclipticConfig;
     phase?: PhaseConfig;
     glyphRing?: GlyphRingConfig;
+    crystal?: CrystalConfig;
+    armature?: ArmatureConfig;
   };
   lines: {
     topPattern: LinePattern;
@@ -233,6 +249,22 @@ export function validateConfig(v: unknown): {
       if (typeof o.angle !== "number" || o.angle < 0 || o.angle > 360)
         errors.push("orbital.angle must be 0-360");
       if (!includes(SIZES, o.size)) errors.push(`Invalid orbital.size: ${o.size}`);
+    }
+    if (d.crystal !== undefined) {
+      const cr = d.crystal as Record<string, unknown>;
+      if (typeof cr.seed !== "number") errors.push("crystal.seed must be a number");
+      if (![4, 6, 8].includes(cr.facets as number))
+        errors.push("crystal.facets must be 4, 6, or 8");
+      if (typeof cr.inset !== "number" || (cr.inset as number) < 0 || (cr.inset as number) > 1)
+        errors.push("crystal.inset must be 0-1");
+    }
+    if (d.armature !== undefined) {
+      const ar = d.armature as Record<string, unknown>;
+      if (typeof ar.seed !== "number") errors.push("armature.seed must be a number");
+      if (![2, 3, 4].includes(ar.crossbars as number))
+        errors.push("armature.crossbars must be 2, 3, or 4");
+      if (![3, 4, 5].includes(ar.diamondJoints as number))
+        errors.push("armature.diamondJoints must be 3, 4, or 5");
     }
   }
 
