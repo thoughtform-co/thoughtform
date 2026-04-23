@@ -81,6 +81,76 @@ function initSigilChoreography(docEl: HTMLElement): () => void {
   }
   docEl.appendChild(travelMark);
 
+  const handoffEase = gsap.parseEase("power3.inOut");
+  let handoffStartRect: DOMRect | null = null;
+  let handoffTargetRect: DOMRect | null = null;
+  let handoffArmed = false;
+
+  const captureHandoffRects = () => {
+    gsap.set(sigilMark, {
+      opacity: 1,
+      scale: 1,
+      "--frame-opacity": 1,
+      clearProps: "rotation",
+    });
+    handoffStartRect = sigilMark.getBoundingClientRect();
+    handoffTargetRect = hudBrandmark.getBoundingClientRect();
+  };
+
+  const dock = () => {
+    gsap.set(travelMark, { opacity: 0 });
+    gsap.set(sigilMark, { opacity: 0, "--frame-opacity": 0 });
+    hudBrandmark.classList.add("is-visible");
+  };
+
+  const resetHandoff = () => {
+    handoffArmed = false;
+    handoffStartRect = null;
+    handoffTargetRect = null;
+    gsap.set(travelMark, { opacity: 0 });
+    gsap.set(sigilMark, { opacity: 1, "--frame-opacity": 1 });
+    hudBrandmark.classList.remove("is-visible");
+  };
+
+  const applyHandoff = (p: number) => {
+    if (!handoffArmed || !handoffStartRect || !handoffTargetRect) {
+      return;
+    }
+    if (p <= 0) {
+      gsap.set(travelMark, { opacity: 0 });
+      gsap.set(sigilMark, { opacity: 1, "--frame-opacity": 1 });
+      hudBrandmark.classList.remove("is-visible");
+      return;
+    }
+
+    if (p >= 0.995) {
+      dock();
+      return;
+    }
+
+    const eased = handoffEase(p);
+    const src = handoffStartRect;
+    const dst = handoffTargetRect;
+
+    hudBrandmark.classList.remove("is-visible");
+
+    gsap.set(travelMark, {
+      left: src.left + (dst.left - src.left) * eased,
+      top: src.top + (dst.top - src.top) * eased,
+      width: src.width + (dst.width - src.width) * eased,
+      height: src.height + (dst.height - src.height) * eased,
+      opacity: 1,
+    });
+    gsap.set(sigilMark, { opacity: 0, "--frame-opacity": 0 });
+  };
+
+  const onResize = () => {
+    if (handoffArmed) {
+      handoffTargetRect = hudBrandmark.getBoundingClientRect();
+    }
+  };
+  window.addEventListener("resize", onResize);
+
   const ctx = gsap.context(() => {
     gsap.set([sigilOrbits, sigilHalo], { opacity: 0, scale: 0.6, rotation: -8 });
     gsap.set(sigilMark, { opacity: 0, scale: 0.7 });
@@ -139,55 +209,6 @@ function initSigilChoreography(docEl: HTMLElement): () => void {
         0.25
       );
 
-    // Cinematic ease curve — slow start, accelerate through middle, slow settle.
-    // Matches the shape designers reach for in After Effects / Premiere.
-    const handoffEase = gsap.parseEase("power3.inOut");
-
-    let handoffStartRect: DOMRect | null = null;
-    let handoffTargetRect: DOMRect | null = null;
-    let handoffArmed = false;
-
-    const captureHandoffRects = () => {
-      // Ensure the original sigil is visible for an accurate measurement,
-      // even if it was left hidden by a previous forward pass.
-      gsap.set(sigilMark, { opacity: 1, "--frame-opacity": 1 });
-      handoffStartRect = sigilMark.getBoundingClientRect();
-      handoffTargetRect = hudBrandmark.getBoundingClientRect();
-    };
-
-    const resetHandoff = () => {
-      handoffArmed = false;
-      handoffStartRect = null;
-      handoffTargetRect = null;
-      gsap.set(travelMark, { opacity: 0 });
-      gsap.set(sigilMark, { opacity: 1, "--frame-opacity": 1 });
-      hudBrandmark.classList.remove("is-visible");
-    };
-
-    const applyHandoff = (p: number) => {
-      if (!handoffArmed || !handoffStartRect || !handoffTargetRect) {
-        return;
-      }
-      if (p <= 0) {
-        gsap.set(travelMark, { opacity: 0 });
-        gsap.set(sigilMark, { opacity: 1, "--frame-opacity": 1 });
-        return;
-      }
-
-      const eased = handoffEase(p);
-      const src = handoffStartRect;
-      const dst = handoffTargetRect;
-
-      gsap.set(travelMark, {
-        left: src.left + (dst.left - src.left) * eased,
-        top: src.top + (dst.top - src.top) * eased,
-        width: src.width + (dst.width - src.width) * eased,
-        height: src.height + (dst.height - src.height) * eased,
-        opacity: 1,
-      });
-      gsap.set(sigilMark, { opacity: 0, "--frame-opacity": 0 });
-    };
-
     const handoffTl = gsap.timeline({
       scrollTrigger: {
         trigger: contEl,
@@ -202,9 +223,14 @@ function initSigilChoreography(docEl: HTMLElement): () => void {
           captureHandoffRects();
           handoffArmed = true;
         },
+        onLeave: () => dock(),
         onLeaveBack: () => resetHandoff(),
         onRefresh: (self) => {
-          if (self.progress > 0) {
+          if (self.progress >= 0.995) {
+            captureHandoffRects();
+            handoffArmed = true;
+            dock();
+          } else if (self.progress > 0) {
             captureHandoffRects();
             handoffArmed = true;
             applyHandoff(self.progress);
@@ -229,6 +255,7 @@ function initSigilChoreography(docEl: HTMLElement): () => void {
   }, docEl);
 
   return () => {
+    window.removeEventListener("resize", onResize);
     ctx.revert();
     travelMark.remove();
   };
