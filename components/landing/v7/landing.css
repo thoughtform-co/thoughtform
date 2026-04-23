@@ -2287,28 +2287,143 @@
 .continuum__spectrum--wide {
   max-width: 100%;
 }
+/* ── crail--large: instrument-readout variant ── */
 .crail--large {
+  display: block;
+  position: relative;
   padding-top: 72px;
   margin-top: clamp(48px, 6vw, 88px);
 }
+
+/* Register-mark corner brackets */
+.crail__frame {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border: 1px solid var(--dawn-30);
+  pointer-events: none;
+  z-index: 1;
+}
+.crail__frame--tl {
+  top: 36px;
+  left: calc(100% / 6 - 24px);
+  border-right: none;
+  border-bottom: none;
+}
+.crail__frame--tr {
+  top: 36px;
+  right: calc(100% / 6 - 24px);
+  border-left: none;
+  border-bottom: none;
+}
+.crail__frame--bl {
+  bottom: -8px;
+  left: calc(100% / 6 - 24px);
+  border-right: none;
+  border-top: none;
+}
+.crail__frame--br {
+  bottom: -8px;
+  right: calc(100% / 6 - 24px);
+  border-left: none;
+  border-top: none;
+}
+
+/* Bearing ticks: 12 evenly-spaced micro ticks along the rail */
+.crail--large .crail__bearings {
+  position: absolute;
+  top: 80px;
+  left: calc(100% / 6);
+  right: calc(100% / 6);
+  height: 1px;
+}
+.crail--large .crail__bearings::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    to right,
+    var(--dawn-30) 0px,
+    var(--dawn-30) 1px,
+    transparent 1px,
+    transparent calc(100% / 12)
+  );
+  mask-image: repeating-linear-gradient(
+    to right,
+    black 0px,
+    black 1px,
+    transparent 1px,
+    transparent calc(100% / 12)
+  );
+  height: 10px;
+  top: -5px;
+}
+
+/* Guide rail: dashed dawn-30 line */
 .crail--large .crail__line {
   top: 80px;
   left: calc(100% / 6);
   right: calc(100% / 6);
-  height: 2px;
+  height: 1px;
+  background: none;
+  border-top: 1px dashed var(--dawn-30);
 }
-.crail--large .crail__dot {
+/* End markers: outlined diamonds (stroked, not filled) */
+.crail--large .crail__line::before,
+.crail--large .crail__line::after {
+  width: 8px;
+  height: 8px;
+  top: 50%;
+  background: transparent;
+  border: 1px solid var(--dawn-30);
+}
+.crail--large .crail__line::before {
+  left: -4px;
+}
+.crail--large .crail__line::after {
+  right: -4px;
+  border-color: var(--dawn-30);
+}
+
+/* Traveling gold signal trail */
+.crail--large .crail__trail {
+  position: absolute;
   top: 80px;
-  width: 26px;
-  height: 26px;
-  box-shadow: 0 0 32px rgba(202, 165, 84, 0.6);
+  height: 1px;
+  width: 14%;
+  background: linear-gradient(
+    to right,
+    transparent 0%,
+    var(--gold) 40%,
+    var(--gold) 60%,
+    transparent 100%
+  );
+  opacity: 0.6;
+  z-index: 2;
+  animation: crailTrailLarge 7s var(--ease-out) infinite;
+  pointer-events: none;
 }
-.crail--large .crail__dot::after {
-  inset: 5px;
+@keyframes crailTrailLarge {
+  0%,
+  100% {
+    left: calc(100% / 6 - 7%);
+  }
+  50% {
+    left: calc(500% / 6 - 7%);
+  }
 }
-/* override the sliding animation to match the new endpoints */
-.crail--large .crail__dot {
+
+/* Reticle (replaces .crail__dot) */
+.crail--large .crail__reticle {
+  position: absolute;
+  top: 80px;
+  left: 50%;
+  width: 28px;
+  height: 28px;
+  transform: translate(-50%, -50%);
+  z-index: 3;
   animation: crailSlideLarge 7s var(--ease-out) infinite;
+  pointer-events: none;
 }
 @keyframes crailSlideLarge {
   0%,
@@ -2319,34 +2434,93 @@
     left: calc(500% / 6);
   }
 }
-.crail--large .crail__line::before,
-.crail--large .crail__line::after {
-  width: 12px;
-  height: 12px;
+.crail__reticle__ring {
+  position: absolute;
+  inset: 0;
+  border: 1px solid var(--gold);
+  border-radius: 0;
+  transform: rotate(45deg);
+  box-shadow: 0 0 20px rgba(202, 165, 84, 0.35);
+}
+.crail__reticle__ring::after {
+  content: "";
+  position: absolute;
+  inset: 3px;
+  background: var(--void);
+}
+.crail__reticle__cross {
+  position: absolute;
+  inset: 0;
+}
+.crail__reticle__cross::before,
+.crail__reticle__cross::after {
+  content: "";
+  position: absolute;
+  background: var(--gold);
+  opacity: 0.4;
+}
+.crail__reticle__cross::before {
   top: 50%;
+  left: -10px;
+  right: -10px;
+  height: 1px;
+  transform: translateY(-0.5px);
 }
-.crail--large .crail__line::before {
-  left: -6px;
+.crail__reticle__cross::after {
+  left: 50%;
+  top: -10px;
+  bottom: -10px;
+  width: 1px;
+  transform: translateX(-0.5px);
 }
-.crail--large .crail__line::after {
-  right: -6px;
-}
-.crail--large .crail__tick {
-  height: 40px;
-  width: 2px;
+.crail__reticle__diamond {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  background: var(--gold);
+  transform: translate(-50%, -50%) rotate(45deg);
 }
 
-/* v5: grid-based stops — replaces the float layout so stops sit under their tick */
+/* Bearing readout */
+.crail__readout {
+  text-align: center;
+  font-family: var(--font-pt-mono);
+  font-size: 9px;
+  letter-spacing: var(--track-widest);
+  text-transform: uppercase;
+  color: var(--dawn-30);
+  margin-top: 16px;
+  position: relative;
+  top: 18px;
+}
+
+/* Stop ticks: diamond + crossbar anchors */
+.crail--large .crail__tick {
+  height: 40px;
+  width: 1px;
+  background: var(--dawn-30);
+}
+.crail--large .crail__tick::before {
+  content: "";
+  position: absolute;
+  bottom: -1px;
+  left: 50%;
+  width: 6px;
+  height: 6px;
+  border: 1px solid var(--dawn-30);
+  transform: translate(-50%, 50%) rotate(45deg);
+  background: var(--void);
+}
+
+/* Grid-based stops */
 .crail--large .crail__stop {
-  /* neutralize the float-era rules */
   display: block;
   width: auto;
   float: none !important;
   padding-top: 56px;
   text-align: center;
-}
-.crail--large {
-  display: block;
 }
 .crail--large .crail__stops-grid {
   display: grid;
@@ -2378,28 +2552,11 @@
 
 .continuum__close {
   clear: both;
-  margin-top: clamp(64px, 7vw, 104px);
-  padding-top: var(--space-xl);
-  border-top: 1px solid var(--dawn-08);
+  margin-top: clamp(48px, 5vw, 72px);
   max-width: 68ch;
 }
-.continuum__thesis {
-  font-family: var(--font-pp-neue-montreal);
-  font-size: clamp(17px, 1.4vw, 20px);
-  line-height: 1.55;
-  color: var(--dawn);
-  margin: 0 0 16px;
-}
-.continuum__thesis em {
-  font-style: normal;
-  color: var(--gold);
-}
-.continuum__thesis--muted {
-  color: var(--dawn-50);
-  font-size: 15px;
-}
 .continuum__cta {
-  margin-top: 24px;
+  margin-top: 0;
 }
 
 .c-eyebrow {
@@ -2616,7 +2773,9 @@
     right: auto;
     width: 1px;
     height: 100%;
-    background: linear-gradient(to bottom, var(--gold), var(--gold-40), var(--atreides-light));
+    background: none;
+    border-top: none;
+    border-left: 1px dashed var(--dawn-30);
   }
   .crail__line::before {
     top: -4px;
@@ -2628,7 +2787,11 @@
     bottom: -4px;
     top: auto;
   }
-  .crail__dot {
+  .crail__reticle,
+  .crail__trail,
+  .crail__bearings,
+  .crail__frame,
+  .crail__readout {
     display: none;
   }
 }
@@ -3220,7 +3383,8 @@ body.density-dense .station {
     transition-delay: 0ms !important;
   }
   .sigil__orbits,
-  .crail__dot,
+  .crail__reticle,
+  .crail__trail,
   .spectrum__dot,
   .hud__signal .dot,
   .hero__viz__scanline,
@@ -3345,13 +3509,15 @@ body.density-dense .station {
 .is-offscreen .sigil__orbits,
 .is-offscreen .sigil__halo .p,
 .is-offscreen .hero__viz__scanline,
-.is-offscreen .crail__dot,
+.is-offscreen .crail__reticle,
+.is-offscreen .crail__trail,
 .is-offscreen .spectrum__dot {
   animation-play-state: paused;
 }
 
-/* Spectrum/crail dots re-ease on section entry */
-.crail__dot,
+/* Spectrum/crail reticle re-ease on section entry */
+.crail__reticle,
+.crail__trail,
 .spectrum__dot {
   animation-timing-function: var(--m-ease-long);
 }
