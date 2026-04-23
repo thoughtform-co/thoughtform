@@ -687,7 +687,7 @@ body { color: var(--dawn-70); }
 .spectrum__point--end .l { color: var(--atreides-light); }
 .spectrum__point--end .l::before { background: var(--atreides-light); }
 
-/* ═══════════ 03 PRACTICE (Adopt → Encode → Build) ═══════════ */
+/* ═══════════ 03 PRACTICE (Navigate → Encode → Build) ═══════════ */
 .practice {
   display: flex; flex-direction: column;
   gap: 0;
@@ -1301,7 +1301,7 @@ body { color: var(--dawn-70); }
   color: var(--dawn-50); text-transform: lowercase;
 }
 
-/* RIGHT — Strategy frames (Adopt/Encode/Build) */
+/* RIGHT — Strategy frames (Navigate/Encode/Build) */
 .tri__right {
   display: flex; flex-direction: column;
   gap: 14px;
@@ -2451,23 +2451,14 @@ html { scroll-behavior: smooth; }
 }
 
 /* ═══════════════════════════════════════════════════════════════════
-   PRACTICE · v12 — FULL-BLEED TWO-PANEL CHAMBER
+   PRACTICE · v17 — TWO-COLUMN APPROACH + CELESTIAL SPINE
    ───────────────────────────────────────────────────────────────────
-   Inspired by the zkpass "perceive" station but translated into our
-   dawn/gold/void palette and PT Mono + PP Neue Montreal system.
-   The section escapes the .stations inner gutter and spans the full
-   HUD-bounded viewport, with:
-     • monospace title bar ("HOW DOES IT WORK?")
-     • two equal panels divided by a vertical tick-mark gutter
-     • `+` crosses at each panel corner (navigational "register marks")
-     • LEFT — phase info (big display title, tag, condensed body, index)
-     • RIGHT — the case (Loop Earplugs, shown as a signal/visual)
-     • phase tabs below, driving which phase shows in the chamber
-   Copy is significantly condensed vs. v7.
+   Left: sticky pitch + CTA. Right: three HUD cards with inline
+   SVG symbols. Middle: a celestial navigation strip — dual corridor,
+   bearing ticks, coordinate labels, constellation anchors, reticle
+   scrubber. Opens cold on "Three moves. One skill." — no topbar.
    ═══════════════════════════════════════════════════════════════════ */
 
-/* Station container override — break out of the .stations 96-140px
-   padding. The outer <section> still uses .station padding-y. */
 .station--fullbleed {
   margin-left:  calc(-1 * clamp(96px, 8vw + 40px, 140px));
   margin-right: calc(-1 * clamp(96px, 8vw + 40px, 140px));
@@ -2475,37 +2466,177 @@ html { scroll-behavior: smooth; }
   padding-right: clamp(40px, 4vw + 8px, 80px);
 }
 
-.chamber__topbar {
-  display: flex; align-items: center; justify-content: space-between;
-  gap: 24px;
-  padding: 18px 0 22px;
-  border-bottom: 1px solid var(--dawn-08);
+/* ─── Two-column grid ─── */
+.approach {
+  display: grid;
+  grid-template-columns: minmax(280px, 1fr) 56px minmax(380px, 1.4fr);
+  gap: 0;
+  margin: 0 clamp(32px, 4vw, 64px);
+  padding: clamp(48px, 6vw, 88px) 0 clamp(32px, 4vw, 56px);
+}
+
+/* ─── LEFT: sticky intro ─── */
+.approach__intro {
+  position: sticky;
+  top: clamp(80px, 10vh, 120px);
+  align-self: start;
+  padding: 0 clamp(24px, 3vw, 48px) 0 0;
+  display: flex;
+  flex-direction: column;
+}
+.approach__intro__title {
+  font-family: var(--font-pp-neue-montreal);
+  font-weight: 700;
+  font-size: clamp(36px, 4.5vw, 64px);
+  line-height: 0.92;
+  letter-spacing: -0.035em;
+  color: var(--dawn);
+  margin: 0 0 clamp(18px, 2vw, 28px);
+}
+.approach__intro__lede {
+  font-family: var(--font-pp-neue-montreal);
+  font-weight: 300;
+  font-size: clamp(15px, 1.1vw, 17px);
+  line-height: 1.6;
+  color: var(--dawn-70);
+  margin: 0 0 clamp(28px, 3vw, 44px);
+  max-width: 38ch;
+}
+.approach__intro__lede em { font-style: normal; color: var(--gold); }
+
+.approach__cta {
+  display: inline-flex; align-items: center; gap: 10px;
+  padding: 14px 24px;
+  background: var(--gold);
+  color: var(--void);
   font-family: var(--font-pt-mono);
-  font-size: 10px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: var(--track-wide);
+  text-transform: uppercase;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  transition: background 220ms var(--m-ease-instr), transform 120ms var(--m-ease-instr);
+  align-self: flex-start;
+}
+.approach__cta:hover { background: var(--gold-bright, #d4b44e); transform: translateY(-1px); }
+.approach__cta svg { flex-shrink: 0; }
+
+/* ═══ SPINE: celestial navigation strip ═══ */
+.approach__spine {
+  position: relative;
+  border-left: 1px solid var(--dawn-08);
+  border-right: 1px solid var(--dawn-08);
+  overflow: visible;
+}
+.approach__spine::before,
+.approach__spine::after {
+  content: '';
+  position: absolute;
+  top: 0; bottom: 0;
+  width: 1px;
+  border-left: 1px dashed var(--dawn-15);
+}
+.approach__spine::before { left: 12px; }
+.approach__spine::after  { right: 12px; }
+
+/* Ticks */
+.approach__spine__ticks {
+  position: absolute; top: 24px; bottom: 24px;
+  left: 50%; transform: translateX(-50%);
+  display: flex; flex-direction: column; justify-content: space-between;
+}
+.approach__spine__ticks span {
+  display: block; width: 8px; height: 1px;
+  background: var(--dawn-30);
+}
+.approach__spine__ticks span.is-major {
+  width: 16px; background: var(--dawn-50);
+}
+.approach__spine__ticks span.is-bearing {
+  width: 20px; background: var(--gold-40, rgba(202,165,84,0.4));
+}
+
+/* Scrubber + reticle */
+.approach__spine__scrubber {
+  position: absolute; left: 50%; transform: translate(-50%, -50%);
+  width: 18px; height: 18px;
+  color: var(--gold);
+  top: var(--scrubber-y, 50%);
+  transition: top 480ms var(--m-ease-instr);
+  z-index: 2;
+}
+.approach__spine__scrubber::before {
+  content: ''; position: absolute; inset: 0;
+  background: currentColor;
+  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+  opacity: 0.9;
+}
+.approach__spine__scrubber::after {
+  content: ''; position: absolute; inset: 5px;
+  background: var(--void);
+  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+}
+.approach__spine__reticle {
+  position: absolute;
+  inset: -9px;
+  pointer-events: none;
+}
+.approach__spine__reticle::before,
+.approach__spine__reticle::after {
+  content: '';
+  position: absolute;
+  border: 1px solid var(--gold);
+  opacity: 0.6;
+}
+.approach__spine__reticle::before {
+  top: 0; left: 0; right: 50%; bottom: 50%;
+  border-right: none; border-bottom: none;
+}
+.approach__spine__reticle::after {
+  bottom: 0; right: 0; left: 50%; top: 50%;
+  border-left: none; border-top: none;
+}
+
+/* Constellation anchors at phase midpoints */
+.approach__spine__anchor {
+  position: absolute;
+  left: 50%; transform: translate(-50%, -50%);
+  width: 6px; height: 6px;
+  background: var(--gold);
+  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+  pointer-events: none;
+}
+.approach__spine__anchor::after {
+  content: '';
+  position: absolute;
+  top: -10px; left: -10px;
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  border: 1px dashed var(--dawn-15);
+}
+.approach__spine__anchor--1 { top: var(--anchor-1-y, 17%); }
+.approach__spine__anchor--2 { top: var(--anchor-2-y, 50%); }
+.approach__spine__anchor--3 { top: var(--anchor-3-y, 83%); }
+
+/* Transit labels */
+.approach__spine__transit {
+  position: absolute;
+  left: 50%; transform: translateX(-50%) rotate(-90deg);
+  white-space: nowrap;
+  font-family: var(--font-pt-mono);
+  font-size: 7px;
   letter-spacing: var(--track-widest);
   text-transform: uppercase;
-  color: var(--dawn-50);
+  color: var(--dawn-30);
+  pointer-events: none;
+  transform-origin: center center;
 }
-.chamber__topbar .l { color: var(--dawn); }
-.chamber__topbar .r { color: var(--dawn-30); display: flex; gap: 20px; }
-.chamber__topbar .r em { font-style: normal; color: var(--gold); }
+.approach__spine__transit--t1 { top: var(--transit-1-y, 33%); }
+.approach__spine__transit--t2 { top: var(--transit-2-y, 66%); }
 
-/* ═══ The chamber — two panels + gutter ═══ */
-.chamber {
-  position: relative;
-  display: grid;
-  grid-template-columns: 1fr 28px 1fr;
-  min-height: clamp(520px, 62vh, 680px);
-  margin-top: 22px;
-  border: 1px solid var(--dawn-08);
-  background: rgba(5,4,3,0.35);
-}
-@media (max-width: 700px) {
-  .chamber { grid-template-columns: 1fr; grid-template-rows: auto 28px auto;
-             min-height: 0; }
-}
-
-/* `+` register marks at every corner of each panel */
+/* ─── Register marks (shared) ─── */
 .reg {
   position: absolute;
   width: 11px; height: 11px;
@@ -2518,346 +2649,158 @@ html { scroll-behavior: smooth; }
 }
 .reg::before { left: 50%; top: 0; bottom: 0; width: 1px; transform: translateX(-50%); }
 .reg::after  { top: 50%; left: 0; right: 0; height: 1px; transform: translateY(-50%); }
+.reg--tl { top: 10px; left: 10px; }
+.reg--tr { top: 10px; right: 10px; }
+.reg--bl { bottom: 10px; left: 10px; }
+.reg--br { bottom: 10px; right: 10px; }
 .reg--gold { color: var(--gold); }
 
-/* Vertical tick-mark gutter that separates the two panels */
-.chamber__gutter {
-  position: relative;
-  border-left: 1px solid var(--dawn-08);
-  border-right: 1px solid var(--dawn-08);
-  overflow: hidden;
-}
-.chamber__gutter__ticks {
-  position: absolute; top: 24px; bottom: 24px;
-  left: 50%; transform: translateX(-50%);
-  display: flex; flex-direction: column; justify-content: space-between;
-}
-.chamber__gutter__ticks span {
-  display: block;
-  width: 10px; height: 1px;
-  background: var(--dawn-30);
-}
-.chamber__gutter__ticks span:nth-child(5n+1) { background: var(--dawn-50); width: 14px; }
-.chamber__gutter__scrubber {
-  position: absolute; left: 50%; transform: translate(-50%, -50%);
-  width: 18px; height: 18px;
-  color: var(--gold);
-  top: var(--scrubber-y, 50%);
-  transition: top 480ms var(--m-ease-instr);
-}
-.chamber__gutter__scrubber::before {
-  content: ''; position: absolute; inset: 0;
-  background: currentColor;
-  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
-  opacity: 0.9;
-}
-.chamber__gutter__scrubber::after {
-  content: ''; position: absolute; inset: 5px;
-  background: var(--void);
-  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
-}
-@media (max-width: 700px) {
-  .chamber__gutter {
-    border-left: none; border-right: none;
-    border-top: 1px solid var(--dawn-08);
-    border-bottom: 1px solid var(--dawn-08);
-  }
-  .chamber__gutter__ticks { flex-direction: row; top: 50%; left: 24px; right: 24px; bottom: auto;
-                             transform: translateY(-50%); }
-  .chamber__gutter__ticks span { width: 1px; height: 10px; }
-  .chamber__gutter__ticks span:nth-child(5n+1) { height: 14px; width: 1px; }
-  .chamber__gutter__scrubber { display: none; }
-}
-
-/* ═══ LEFT panel — phase content ═══ */
-.chamber__left {
-  position: relative;
-  padding: clamp(40px, 5vw, 72px) clamp(32px, 4vw, 64px);
+/* ═══ RIGHT: phase cards ═══ */
+.approach__list {
+  padding: 0 0 0 clamp(24px, 3vw, 48px);
   display: flex; flex-direction: column;
-  justify-content: center;
-  min-height: clamp(480px, 60vh, 640px);
+  gap: clamp(32px, 4vw, 56px);
 }
-.chamber__left .reg--tl { top: 10px; left: 10px; }
-.chamber__left .reg--br { bottom: 10px; right: 10px; }
 
-/* Decorative dot cluster top-left (echoes the zkpass corner detail,
-   translated into our navigational "grid" motif) */
-.chamber__dots {
-  position: absolute; top: 48px; left: clamp(32px, 4vw, 64px);
-  display: grid;
-  grid-template-columns: repeat(4, 4px);
-  gap: 6px;
-  opacity: 0.8;
-}
-.chamber__dots span {
-  width: 4px; height: 4px; background: var(--gold);
-  transform: rotate(45deg);
-}
-.chamber__dots span:nth-child(3n) { background: var(--gold); opacity: 0.35; }
-.chamber__dots span:nth-child(4n) { background: var(--dawn-30); }
-
-/* Phase stack — panels overlay, only active visible */
-.chamber__phase {
+.approach__phase {
   position: relative;
-  opacity: 0;
-  transform: translateY(8px);
-  transition: opacity 460ms var(--m-ease-instr),
-              transform 460ms var(--m-ease-instr);
-  pointer-events: none;
-  grid-area: 1/1;
+  padding: clamp(32px, 3.5vw, 48px);
+  border: 1px solid var(--dawn-08);
+  background: linear-gradient(180deg, rgba(10,8,6,0.65) 0%, rgba(5,4,3,0.4) 100%);
 }
-.chamber__phases {
-  display: grid;
-  grid-template-areas: "stack";
-  margin-top: 40px; /* leave room for dot cluster */
-}
-.chamber__phases > .chamber__phase { grid-area: stack; }
-.chamber__phase[data-active="true"] {
-  opacity: 1; transform: translateY(0); pointer-events: auto;
+.approach__phase[data-active="true"] {
+  border-color: rgba(202,165,84,0.2);
+  background: linear-gradient(180deg, rgba(14,12,8,0.7) 0%, rgba(5,4,3,0.45) 100%);
 }
 
-/* The giant phase title — the "PERCEIVE"-scale display word */
-.chamber__tag {
-  display: inline-flex; align-items: center; gap: 8px;
+.approach__phase__head {
+  display: flex; align-items: flex-start; gap: 18px;
+  margin-bottom: clamp(16px, 2vw, 24px);
+}
+
+.approach__phase__num {
+  width: 44px; height: 44px;
+  flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--gold);
+  color: var(--void);
+  font-family: var(--font-pt-mono);
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 1;
+  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+}
+
+.approach__phase__title {
+  font-family: var(--font-pp-neue-montreal);
+  font-weight: 700;
+  font-size: clamp(24px, 2.8vw, 36px);
+  line-height: 1;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+  color: var(--dawn);
+  margin: 0 0 6px;
+}
+
+.approach__phase__verb {
+  font-family: var(--font-pt-mono);
+  font-size: 11px;
+  letter-spacing: var(--track-widest);
+  text-transform: uppercase;
+  color: var(--gold);
+  display: flex; align-items: center; gap: 10px;
+}
+.approach__phase__verb::before {
+  content: ''; width: 16px; height: 1px; background: var(--gold);
+}
+
+.approach__phase__tag {
+  margin-left: auto;
   padding: 4px 10px;
   background: var(--gold);
   color: var(--void);
   font-family: var(--font-pt-mono);
-  font-size: 10px; letter-spacing: var(--track-widest);
+  font-size: 9px; letter-spacing: var(--track-widest);
   text-transform: uppercase;
   font-weight: 700;
-  margin-bottom: clamp(16px, 2vw, 24px);
+  white-space: nowrap;
   align-self: flex-start;
-  width: fit-content;
-}
-.chamber__title {
-  font-family: var(--font-pp-neue-montreal);
-  font-weight: 700;
-  font-size: clamp(56px, 9vw, 128px);
-  line-height: 0.88;
-  letter-spacing: -0.045em;
-  text-transform: uppercase;
-  color: var(--dawn);
-  margin: 0 0 clamp(22px, 2.2vw, 32px);
-}
-.chamber__verb {
-  font-family: var(--font-pt-mono);
-  font-size: 11px; letter-spacing: var(--track-widest);
-  text-transform: uppercase;
-  color: var(--gold);
-  margin-bottom: 14px;
-  display: flex; align-items: center; gap: 10px;
-}
-.chamber__verb::before {
-  content: ''; width: 24px; height: 1px; background: var(--gold);
-}
-.chamber__body {
-  font-family: var(--font-pp-neue-montreal);
-  font-weight: 300;
-  font-size: 16px;
-  line-height: 1.55;
-  letter-spacing: 0;
-  color: var(--dawn-70);
-  margin: 0;
-  max-width: 44ch;
-}
-.chamber__body em { font-style: normal; color: var(--gold); }
-
-/* Bottom-row meta row — index + meta text, sits at the foot of the left panel */
-.chamber__metarow {
-  position: absolute;
-  left: clamp(32px, 4vw, 64px);
-  right: clamp(32px, 4vw, 64px);
-  bottom: clamp(22px, 2.5vw, 34px);
-  display: flex; align-items: baseline; justify-content: space-between;
-  font-family: var(--font-pt-mono); font-size: 10px;
-  letter-spacing: var(--track-wider); text-transform: uppercase;
-  color: var(--dawn-30);
-}
-.chamber__metarow .idx {
-  color: var(--gold); font-weight: 700;
-  letter-spacing: var(--track-wider);
 }
 
-/* ═══ RIGHT panel — the case ═══ */
-.chamber__right {
-  position: relative;
-  padding: clamp(40px, 5vw, 72px) clamp(32px, 4vw, 64px);
-  display: flex; flex-direction: column;
-  min-height: clamp(480px, 60vh, 640px);
-}
-.chamber__right .reg--tl { top: 10px; left: 10px; color: var(--dawn-30); }
-.chamber__right .reg--tr { top: 10px; right: 10px; color: var(--dawn-30); }
-.chamber__right .reg--bl { bottom: 10px; left: 10px; color: var(--dawn-30); }
-.chamber__right .reg--br { bottom: 10px; right: 10px; color: var(--dawn-30); }
-
-.chamber__case {
-  position: relative;
-  opacity: 0;
-  transform: translateY(8px);
-  transition: opacity 460ms var(--m-ease-instr) 80ms,
-              transform 460ms var(--m-ease-instr) 80ms;
-  pointer-events: none;
-  grid-area: 1/1;
-  display: flex; flex-direction: column;
-  height: 100%;
-}
-.chamber__cases {
-  display: grid;
-  grid-template-areas: "stack";
-  flex: 1;
-  min-height: 0;
-}
-.chamber__cases > .chamber__case { grid-area: stack; }
-.chamber__case[data-active="true"] {
-  opacity: 1; transform: translateY(0); pointer-events: auto;
-}
-
-.chamber__case__head {
-  display: flex; justify-content: space-between; align-items: baseline;
-  margin-bottom: 6px;
-  font-family: var(--font-pt-mono);
-  font-size: 10px; letter-spacing: var(--track-wider);
-  text-transform: uppercase;
-  color: var(--dawn-50);
-}
-.chamber__case__head .k { color: var(--gold); }
-.chamber__case__client {
-  font-family: var(--font-pt-mono);
-  font-size: 13px; letter-spacing: var(--track-wide);
-  text-transform: uppercase; color: var(--dawn);
-  margin-bottom: 18px;
-}
-.chamber__case__client em { color: var(--gold); font-style: normal; }
-
-/* The visual: a centered navigational "signal" — fills the panel middle */
-.chamber__viz {
-  flex: 1;
+/* Inline symbol viz */
+.approach__phase__viz {
   position: relative;
   display: flex; align-items: center; justify-content: center;
-  margin: 8px 0;
-  min-height: 220px;
+  min-height: clamp(140px, 16vw, 200px);
+  margin: clamp(12px, 1.5vw, 20px) 0;
 }
-.chamber__viz svg { width: 72%; max-width: 360px; height: auto; display: block; }
-.chamber__viz__scan {
+.approach__phase__viz svg {
+  width: 60%; max-width: 280px; height: auto; display: block;
+}
+.approach__phase__viz__scan {
   position: absolute; left: 12%; right: 12%;
   height: 1px; top: 50%;
-  background: linear-gradient(to right, transparent, var(--gold-40), transparent);
-  animation: chamberScan 7s linear infinite;
+  background: linear-gradient(to right, transparent, var(--gold-40, rgba(202,165,84,0.4)), transparent);
+  animation: approachScan 7s linear infinite;
   pointer-events: none;
 }
-@keyframes chamberScan {
-  0% { top: 22%; opacity: 0; }
-  10% { opacity: 1; }
-  90% { opacity: 1; }
+@keyframes approachScan {
+  0%   { top: 22%; opacity: 0; }
+  10%  { opacity: 1; }
+  90%  { opacity: 1; }
   100% { top: 78%; opacity: 0; }
 }
 
-/* Stat strip at the bottom of the right panel — lives inside the panel */
-.chamber__case__stats {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1px;
-  background: var(--dawn-08);
-  border: 1px solid var(--dawn-08);
-  margin-top: 14px;
+/* Bullet rules */
+.approach__phase__rules {
+  list-style: none;
+  margin: 0; padding: 0;
 }
-.chamber__case__stats.is-two { grid-template-columns: repeat(2, 1fr); }
-.chamber__case__stats > div {
-  background: rgba(5,4,3,0.8);
-  padding: 14px 12px;
+.approach__phase__rules li {
+  padding: 14px 0;
+  border-top: 1px solid var(--dawn-08);
+  font-family: var(--font-pp-neue-montreal);
+  font-weight: 300;
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--dawn-70);
 }
-.chamber__case__stat-v {
-  font-family: var(--font-pt-mono); font-weight: 700;
-  font-size: clamp(18px, 1.6vw, 22px);
-  color: var(--gold); line-height: 1;
-  margin-bottom: 6px;
-  letter-spacing: -0.01em;
+.approach__phase__rules li.is-receipt {
+  font-family: var(--font-pt-mono);
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: var(--track-wide);
+  text-transform: uppercase;
+  color: var(--dawn);
+  line-height: 1.45;
 }
-.chamber__case__stat-l {
-  font-family: var(--font-pt-mono); font-size: 9px;
-  line-height: 1.35; color: var(--dawn-50);
-  letter-spacing: var(--track-wide); text-transform: uppercase;
+.approach__phase__rules li.is-receipt::before {
+  content: '◆ ';
+  color: var(--gold);
+  font-size: 8px;
+  vertical-align: 1px;
 }
 
-/* Phase-selector strip — replaces the old .pnav for this layout.
-   Sits below the chamber as a numbered step rail. */
-.phasebar {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0;
-  margin-top: 28px;
-  border: 1px solid var(--dawn-08);
-  position: relative;
-}
-.phasebar__stop {
-  position: relative;
-  display: flex; align-items: center; gap: 18px;
-  padding: 18px 22px;
-  background: transparent;
-  border: none;
-  border-left: 1px solid var(--dawn-08);
-  text-align: left;
-  color: var(--dawn-50);
-  cursor: pointer;
-  font-family: inherit;
-  transition: background 220ms var(--m-ease-instr), color 220ms var(--m-ease-instr);
-}
-.phasebar__stop:first-child { border-left: none; }
-.phasebar__stop:hover:not([aria-selected="true"]) {
-  background: rgba(202,165,84,0.04);
-  color: var(--dawn);
-}
-.phasebar__stop[aria-selected="true"] {
-  background: rgba(202,165,84,0.06);
-  color: var(--dawn);
-}
-.phasebar__num {
-  font-family: var(--font-pt-mono); font-weight: 700;
-  font-size: 20px; line-height: 1;
-  color: var(--dawn-30);
-  letter-spacing: -0.01em;
-  min-width: 30px;
-}
-.phasebar__stop[aria-selected="true"] .phasebar__num { color: var(--gold); }
-.phasebar__name {
-  font-family: var(--font-pt-mono); font-weight: 700;
-  font-size: 14px; letter-spacing: var(--track-wide);
+.approach__phase__cta {
+  display: inline-flex; align-items: center; gap: 8px;
+  margin-top: 14px;
+  font-family: var(--font-pt-mono);
+  font-size: 11px;
+  letter-spacing: var(--track-wide);
   text-transform: uppercase;
-  color: inherit;
-}
-.phasebar__verb {
-  margin-left: auto;
-  font-family: var(--font-pt-mono); font-size: 10px;
-  letter-spacing: var(--track-widest); text-transform: uppercase;
   color: var(--dawn-30);
+  text-decoration: none;
+  cursor: default;
 }
-.phasebar__stop[aria-selected="true"] .phasebar__verb { color: var(--gold); }
-.phasebar__bar {
-  position: absolute;
-  left: 0; bottom: -1px;
-  width: calc(100% / 3);
-  height: 2px;
-  background: var(--gold);
-  box-shadow: 0 0 18px rgba(202,165,84,0.5);
-  transform: translateX(var(--pbar-x, 0%));
-  transition: transform 480ms var(--m-ease-instr);
+.approach__phase__cta[aria-disabled="true"] {
+  opacity: 0.4;
   pointer-events: none;
 }
-@media (max-width: 720px) {
-  .phasebar { grid-template-columns: 1fr; }
-  .phasebar__stop { border-left: none; border-top: 1px solid var(--dawn-08); }
-  .phasebar__stop:first-child { border-top: none; }
-  .phasebar__bar {
-    width: 2px; height: calc(100% / 3);
-    top: 0; left: 0; bottom: auto;
-    transform: translateY(var(--pbar-y, 0%));
-  }
-}
+.approach__phase__cta svg { flex-shrink: 0; }
 
-/* Through-line caption at the very bottom */
-.chamber__throughline {
-  margin-top: 22px;
+/* ─── Through-line ─── */
+.approach__throughline {
+  margin: clamp(24px, 3vw, 40px) clamp(32px, 4vw, 64px) 0;
   padding-top: 18px;
   border-top: 1px dashed var(--dawn-08);
   display: flex;
@@ -2867,11 +2810,31 @@ html { scroll-behavior: smooth; }
   color: var(--dawn-50);
   text-transform: uppercase;
 }
-.chamber__throughline strong {
+.approach__throughline strong {
   color: var(--dawn); font-weight: 700;
   letter-spacing: var(--track-wider);
 }
-.chamber__throughline em { font-style: normal; color: var(--gold); }
+.approach__throughline em { font-style: normal; color: var(--gold); }
+
+/* ─── Mobile: single column ─── */
+@media (max-width: 860px) {
+  .approach {
+    grid-template-columns: 1fr;
+    gap: 0;
+    margin-left: 16px; margin-right: 16px;
+  }
+  .approach__intro {
+    position: static;
+    padding: 0 0 clamp(32px, 4vw, 48px);
+    border-bottom: 1px solid var(--dawn-08);
+  }
+  .approach__spine { display: none; }
+  .approach__list { padding: 0; gap: clamp(20px, 3vw, 32px); }
+  .approach__throughline { margin-left: 16px; margin-right: 16px; }
+  .approach__phase__num { width: 36px; height: 36px; font-size: 12px; }
+  .approach__phase { padding: clamp(24px, 3vw, 36px); }
+  .approach__phase__viz { min-height: clamp(100px, 14vw, 160px); }
+}
 
 /* ═══════════════════════════════════════════════════════════════════
    v14 — PRACTICE · EXECUTION STRIP (services absorbed into practice)
@@ -3660,14 +3623,14 @@ html { scroll-behavior: smooth; }
         </div>
       </div>
 
-      <!-- RIGHT: Adopt / Encode / Build (concise summary, strategy frames) -->
+      <!-- RIGHT: Navigate / Encode / Build (concise summary, strategy frames) -->
       <aside class="tri__right" aria-label="Strategy">
         <div class="tri__eyebrow tri__eyebrow--end"><span class="d"></span>Strategy · A · E · B</div>
 
         <a href="#practice" class="strat">
           <div class="strat__head">
             <span class="strat__num">01</span>
-            <span class="strat__name">Adopt</span>
+            <span class="strat__name">Navigate</span>
             <span class="strat__tag">See</span>
           </div>
           <p class="strat__desc">
@@ -3772,279 +3735,196 @@ html { scroll-behavior: smooth; }
   <!-- ═══════════ CONNECTOR · 03 → 04 (slot: React portal mount) ═══════════ -->
   <div data-celestial-slot="continuum-to-practice"></div>
 
-  <!-- ═══════════ 04 PRACTICE — v12 full-bleed chamber ═══════════ -->
+  <!-- ═══════════ 04 PRACTICE — v16 two-column approach ═══════════ -->
   <section class="station station--fullbleed station--from-connector station--to-connector" id="practice" data-station="practice" data-screen-label="04 Practice">
-    <div class="station__idx">Thoughtform in Practice<span class="landmark">Landmark · adopt → encode → build</span></div>
-    <h2 class="station__title station__title--practice">
-      The skill runs through all three. Here it is <em>with the receipts.</em>
-    </h2>
+    <div class="station__idx">Thoughtform in Practice<span class="landmark">Landmark · navigate → encode → build</span></div>
+    <!-- Two-column approach: sticky intro + celestial spine + card phases -->
+    <div class="approach" id="approach">
 
-    <!-- Monospace topbar — "how does it work?" register -->
-    <div class="chamber__topbar" style="padding-left: clamp(32px, 4vw, 64px); padding-right: clamp(32px, 4vw, 64px);">
-      <span class="l">How does it work?</span>
-      <span class="r">
-        <span>Phase · <em id="chamberPhaseIdx">01 / 03</em></span>
-        <span>Signal · <em>locked</em></span>
-        <span>Mode · receipts</span>
-      </span>
-    </div>
+      <!-- LEFT — sticky intro pitch + CTA -->
+      <div class="approach__intro">
+        <h3 class="approach__intro__title">Three moves.<br>One skill.</h3>
+        <p class="approach__intro__lede">
+          Fluency first. Then leverage. Then tools. Every durable AI practice
+          we've seen in the wild runs this loop — not as a program, but as
+          a <em>way of working.</em>
+        </p>
+        <a class="approach__cta" href="#execTitle">
+          See how we run it
+          <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M3 7h8M8 4l3 3-3 3" stroke="currentColor" stroke-width="1.2" fill="none"/></svg>
+        </a>
+      </div>
 
-    <!-- Phase selector strip -->
-    <div class="phasebar" role="tablist" aria-label="Thoughtform in Practice" id="phasebar"
-         style="margin-left: clamp(32px, 4vw, 64px); margin-right: clamp(32px, 4vw, 64px); margin-top: 22px;">
-      <button class="phasebar__stop" role="tab" aria-selected="true"
-              aria-controls="phase-adopt" data-phase="adopt">
-        <span class="phasebar__num">01</span>
-        <span class="phasebar__name">Adopt</span>
-        <span class="phasebar__verb">See</span>
-      </button>
-      <button class="phasebar__stop" role="tab" aria-selected="false"
-              aria-controls="phase-encode" data-phase="encode">
-        <span class="phasebar__num">02</span>
-        <span class="phasebar__name">Encode</span>
-        <span class="phasebar__verb">Crystallize</span>
-      </button>
-      <button class="phasebar__stop" role="tab" aria-selected="false"
-              aria-controls="phase-build" data-phase="build">
-        <span class="phasebar__num">03</span>
-        <span class="phasebar__name">Build</span>
-        <span class="phasebar__verb">Ship</span>
-      </button>
-      <span class="phasebar__bar" aria-hidden="true"></span>
-    </div>
-
-    <!-- The chamber: two panels + tick-mark gutter -->
-    <div class="chamber" id="chamber" style="margin-left: clamp(32px, 4vw, 64px); margin-right: clamp(32px, 4vw, 64px);">
-
-      <!-- LEFT panel — phase teaching -->
-      <div class="chamber__left">
+      <!-- SPINE — celestial navigation strip -->
+      <div class="approach__spine" aria-hidden="true">
         <span class="reg reg--tl reg--gold"></span>
         <span class="reg reg--br"></span>
-
-        <div class="chamber__dots" aria-hidden="true">
-          <span></span><span></span><span></span><span></span>
-          <span></span><span></span><span></span><span></span>
-          <span></span><span></span><span></span><span></span>
+        <div class="approach__spine__ticks" id="chamberTicks"></div>
+        <div class="approach__spine__scrubber" id="chamberScrubber" style="--scrubber-y: 8%;">
+          <span class="approach__spine__reticle"></span>
         </div>
-
-        <div class="chamber__phases">
-          <!-- PHASE 01 · ADOPT -->
-          <article class="chamber__phase" data-phase="adopt" data-active="true">
-            <span class="chamber__tag">Fluency</span>
-            <h3 class="chamber__title">Adopt</h3>
-            <div class="chamber__verb">See · give people capable tools</div>
-            <p class="chamber__body">
-              Not a rollout. A <em>navigation lesson.</em> Show people what AI
-              actually is, let momentum build organically — the gap isn't
-              access, it's knowing how to explain your work to AI the way
-              you'd explain it to <em>a brilliant colleague.</em>
-            </p>
-          </article>
-
-          <!-- PHASE 02 · ENCODE -->
-          <article class="chamber__phase" data-phase="encode" data-active="false">
-            <span class="chamber__tag">Leverage</span>
-            <h3 class="chamber__title">Encode</h3>
-            <div class="chamber__verb">Crystallize · intuition into skills</div>
-            <p class="chamber__body">
-              Individual knowledge compounds, but it lives in people's heads.
-              Skills <em>encode</em> brand voice, domain rules, and taste into
-              reusable packages. What one person knows, the whole team can
-              <em>navigate.</em>
-            </p>
-          </article>
-
-          <!-- PHASE 03 · BUILD -->
-          <article class="chamber__phase" data-phase="build" data-active="false">
-            <span class="chamber__tag">Software</span>
-            <h3 class="chamber__title">Build</h3>
-            <div class="chamber__verb">Ship · domain experts as builders</div>
-            <p class="chamber__body">
-              Encoded knowledge reveals what to build. Too specific to buy,
-              too small to outsource. Domain experts ship working software
-              in <em>days instead of months</em> — creative thinking turned
-              into <em>production tooling.</em>
-            </p>
-          </article>
-        </div>
-
-        <div class="chamber__metarow">
-          <span><span class="idx" id="chamberIdxMeta">01</span> · PRACTICE / PHASE</span>
-          <span>Thoughtform · method</span>
-        </div>
+        <span class="approach__spine__anchor approach__spine__anchor--1"></span>
+        <span class="approach__spine__anchor approach__spine__anchor--2"></span>
+        <span class="approach__spine__anchor approach__spine__anchor--3"></span>
+        <span class="approach__spine__transit approach__spine__transit--t1">Transit · δ 0.34 · 01 → 02 · Lock</span>
+        <span class="approach__spine__transit approach__spine__transit--t2">Transit · ρ 0.58 · 02 → 03 · Lock</span>
       </div>
 
-      <!-- GUTTER — vertical ticks + moving scrubber -->
-      <div class="chamber__gutter" aria-hidden="true">
-        <div class="chamber__gutter__ticks" id="chamberTicks"></div>
-        <div class="chamber__gutter__scrubber" id="chamberScrubber" style="--scrubber-y: 16%;"></div>
-      </div>
+      <!-- RIGHT — three phase cards -->
+      <div class="approach__list">
 
-      <!-- RIGHT panel — case evidence -->
-      <div class="chamber__right">
-        <span class="reg reg--tl"></span>
-        <span class="reg reg--tr"></span>
-        <span class="reg reg--bl"></span>
-        <span class="reg reg--br"></span>
-
-        <div class="chamber__cases">
-          <!-- CASE · ADOPT -->
-          <article class="chamber__case" data-phase="adopt" data-active="true">
-            <div class="chamber__case__head">
-              <span><span class="k">Case · 01</span> / Field</span>
-              <span>Loop Earplugs · Studio</span>
+        <!-- ═══ 01 · NAVIGATE ═══ -->
+        <article class="approach__phase" data-phase="navigate" data-active="true">
+          <span class="reg reg--tl reg--gold"></span>
+          <span class="reg reg--tr"></span>
+          <span class="reg reg--bl"></span>
+          <span class="reg reg--br"></span>
+          <header class="approach__phase__head">
+            <div class="approach__phase__num"><span>01</span></div>
+            <div>
+              <h4 class="approach__phase__title">Navigate</h4>
+              <div class="approach__phase__verb">See · fluency through doing</div>
             </div>
-            <div class="chamber__case__client">AI across <em>creative production</em></div>
+            <span class="approach__phase__tag">Fluency</span>
+          </header>
 
-            <div class="chamber__viz">
-              <div class="chamber__viz__scan"></div>
-              <svg viewBox="-100 -100 200 200" fill="none">
-                <!-- six-node constellation — creative pipeline as graph -->
-                <g stroke="var(--gold)" stroke-width="0.8" opacity="0.35">
-                  <path d="M-60 -40 L0 0"/>
-                  <path d="M60 -40 L0 0"/>
-                  <path d="M-60 40 L0 0"/>
-                  <path d="M60 40 L0 0"/>
-                  <path d="M0 -70 L0 0"/>
-                  <path d="M0 70 L0 0"/>
-                </g>
-                <g stroke="var(--dawn-30)" stroke-width="0.4" stroke-dasharray="1 3" opacity="0.6">
-                  <circle r="80"/>
-                  <circle r="56"/>
-                </g>
-                <!-- six satellite nodes -->
-                <g>
-                  <rect x="-68" y="-48" width="16" height="16" fill="var(--gold)" transform="rotate(45 -60 -40)"/>
-                  <rect x="52" y="-48" width="16" height="16" fill="var(--gold)" transform="rotate(45 60 -40)"/>
-                  <rect x="-68" y="32" width="16" height="16" fill="var(--gold)" transform="rotate(45 -60 40)"/>
-                  <rect x="52" y="32" width="16" height="16" fill="var(--gold)" transform="rotate(45 60 40)"/>
-                  <rect x="-8" y="-78" width="16" height="16" fill="var(--gold)" transform="rotate(45 0 -70)"/>
-                  <rect x="-8" y="62" width="16" height="16" fill="var(--gold)" transform="rotate(45 0 70)"/>
-                </g>
-                <!-- center node -->
-                <circle r="16" fill="var(--gold)"/>
-                <circle r="8" fill="var(--void)"/>
-                <path d="M0 -4 L4 0 L0 4 L-4 0 Z" fill="var(--gold)"/>
-              </svg>
-            </div>
+          <div class="approach__phase__viz" aria-hidden="true">
+            <div class="approach__phase__viz__scan"></div>
+            <svg viewBox="-100 -100 200 200" fill="none">
+              <g stroke="var(--gold)" stroke-width="0.8" opacity="0.35">
+                <path d="M-60 -40 L0 0"/><path d="M60 -40 L0 0"/>
+                <path d="M-60 40 L0 0"/><path d="M60 40 L0 0"/>
+                <path d="M0 -70 L0 0"/><path d="M0 70 L0 0"/>
+              </g>
+              <g stroke="var(--dawn-30)" stroke-width="0.4" stroke-dasharray="1 3" opacity="0.6">
+                <circle r="80"/><circle r="56"/>
+              </g>
+              <g>
+                <rect x="-68" y="-48" width="16" height="16" fill="var(--gold)" transform="rotate(45 -60 -40)"/>
+                <rect x="52" y="-48" width="16" height="16" fill="var(--gold)" transform="rotate(45 60 -40)"/>
+                <rect x="-68" y="32" width="16" height="16" fill="var(--gold)" transform="rotate(45 -60 40)"/>
+                <rect x="52" y="32" width="16" height="16" fill="var(--gold)" transform="rotate(45 60 40)"/>
+                <rect x="-8" y="-78" width="16" height="16" fill="var(--gold)" transform="rotate(45 0 -70)"/>
+                <rect x="-8" y="62" width="16" height="16" fill="var(--gold)" transform="rotate(45 0 70)"/>
+              </g>
+              <circle r="16" fill="var(--gold)"/>
+              <circle r="8" fill="var(--void)"/>
+              <path d="M0 -4 L4 0 L0 4 L-4 0 Z" fill="var(--gold)"/>
+            </svg>
+          </div>
 
-            <div class="chamber__case__stats">
-              <div>
-                <div class="chamber__case__stat-v">90%</div>
-                <div class="chamber__case__stat-l">Briefings<br>AI-assisted</div>
-              </div>
-              <div>
-                <div class="chamber__case__stat-v">6.1×</div>
-                <div class="chamber__case__stat-l">ROAS on<br>navigated work</div>
-              </div>
-              <div>
-                <div class="chamber__case__stat-v">5 → 69</div>
-                <div class="chamber__case__stat-l">Seats, organic<br>growth</div>
-              </div>
-            </div>
-          </article>
+          <ul class="approach__phase__rules">
+            <li>Not a rollout. A navigation lesson — show people what AI actually is, alongside the work.</li>
+            <li>The gap is not access. It is knowing how to explain your work to a brilliant colleague.</li>
+            <li class="is-receipt">Loop Earplugs — 90% of briefings AI-assisted · 6.1× ROAS on navigated work</li>
+          </ul>
+          <a class="approach__phase__cta" aria-disabled="true">
+            Deep dive
+            <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M3 7h8M8 4l3 3-3 3" stroke="currentColor" stroke-width="1.2" fill="none"/></svg>
+          </a>
+        </article>
 
-          <!-- CASE · ENCODE -->
-          <article class="chamber__case" data-phase="encode" data-active="false">
-            <div class="chamber__case__head">
-              <span><span class="k">Case · 02</span> / Field</span>
-              <span>Loop Earplugs · Studio</span>
+        <!-- ═══ 02 · ENCODE ═══ -->
+        <article class="approach__phase" data-phase="encode" data-active="false">
+          <span class="reg reg--tl reg--gold"></span>
+          <span class="reg reg--tr"></span>
+          <span class="reg reg--bl"></span>
+          <span class="reg reg--br"></span>
+          <header class="approach__phase__head">
+            <div class="approach__phase__num"><span>02</span></div>
+            <div>
+              <h4 class="approach__phase__title">Encode</h4>
+              <div class="approach__phase__verb">Crystallize · intuition into skills</div>
             </div>
-            <div class="chamber__case__client">Intuition <em>as instrument</em></div>
+            <span class="approach__phase__tag">Leverage</span>
+          </header>
 
-            <div class="chamber__viz">
-              <div class="chamber__viz__scan"></div>
-              <svg viewBox="-100 -100 200 200" fill="none">
-                <!-- stacked bars "crystallizing" — skills as a growing stack -->
-                <g stroke="var(--dawn-30)" stroke-width="0.4" stroke-dasharray="1 3" opacity="0.6">
-                  <path d="M-85 -85 L85 -85 L85 85 L-85 85 Z"/>
-                </g>
-                <g fill="var(--gold)">
-                  <rect x="-68" y="40"  width="12" height="32"/>
-                  <rect x="-50" y="16"  width="12" height="56"/>
-                  <rect x="-32" y="-4"  width="12" height="76"/>
-                  <rect x="-14" y="-28" width="12" height="100"/>
-                  <rect x="4"   y="-16" width="12" height="88"/>
-                  <rect x="22"  y="-40" width="12" height="112"/>
-                  <rect x="40"  y="-56" width="12" height="128"/>
-                  <rect x="58"  y="-36" width="12" height="108"/>
-                </g>
-                <!-- scan line at the "current" skill -->
-                <path d="M-85 -40 L85 -40" stroke="var(--gold)" stroke-width="0.6" stroke-dasharray="2 3" opacity="0.8"/>
-                <!-- diamond pointer -->
-                <path d="M52 -40 L62 -32 L52 -24 L42 -32 Z" fill="var(--gold)"/>
-              </svg>
-            </div>
+          <div class="approach__phase__viz" aria-hidden="true">
+            <div class="approach__phase__viz__scan"></div>
+            <svg viewBox="-100 -100 200 200" fill="none">
+              <g stroke="var(--dawn-30)" stroke-width="0.4" stroke-dasharray="1 3" opacity="0.6">
+                <path d="M-85 -85 L85 -85 L85 85 L-85 85 Z"/>
+              </g>
+              <g fill="var(--gold)">
+                <rect x="-68" y="40"  width="12" height="32"/>
+                <rect x="-50" y="16"  width="12" height="56"/>
+                <rect x="-32" y="-4"  width="12" height="76"/>
+                <rect x="-14" y="-28" width="12" height="100"/>
+                <rect x="4"   y="-16" width="12" height="88"/>
+                <rect x="22"  y="-40" width="12" height="112"/>
+                <rect x="40"  y="-56" width="12" height="128"/>
+                <rect x="58"  y="-36" width="12" height="108"/>
+              </g>
+              <path d="M-85 -40 L85 -40" stroke="var(--gold)" stroke-width="0.6" stroke-dasharray="2 3" opacity="0.8"/>
+              <path d="M52 -40 L62 -32 L52 -24 L42 -32 Z" fill="var(--gold)"/>
+            </svg>
+          </div>
 
-            <div class="chamber__case__stats is-two">
-              <div>
-                <div class="chamber__case__stat-v">10+</div>
-                <div class="chamber__case__stat-l">Skills encoding<br>institutional knowledge</div>
-              </div>
-              <div>
-                <div class="chamber__case__stat-v">5</div>
-                <div class="chamber__case__stat-l">Teams building<br>their own</div>
-              </div>
-            </div>
-          </article>
+          <ul class="approach__phase__rules">
+            <li>Fluency compounds in one head, then stops. Encoding moves it into the system.</li>
+            <li>Skills capture brand voice, domain rules, taste — reusable across every tool you build next.</li>
+            <li class="is-receipt">Loop Earplugs — 10+ skills encoding institutional knowledge · 5 teams building their own</li>
+          </ul>
+          <a class="approach__phase__cta" aria-disabled="true">
+            Deep dive
+            <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M3 7h8M8 4l3 3-3 3" stroke="currentColor" stroke-width="1.2" fill="none"/></svg>
+          </a>
+        </article>
 
-          <!-- CASE · BUILD -->
-          <article class="chamber__case" data-phase="build" data-active="false">
-            <div class="chamber__case__head">
-              <span><span class="k">Case · 03</span> / Field</span>
-              <span>Loop Earplugs · Studio</span>
+        <!-- ═══ 03 · BUILD ═══ -->
+        <article class="approach__phase" data-phase="build" data-active="false">
+          <span class="reg reg--tl reg--gold"></span>
+          <span class="reg reg--tr"></span>
+          <span class="reg reg--bl"></span>
+          <span class="reg reg--br"></span>
+          <header class="approach__phase__head">
+            <div class="approach__phase__num"><span>03</span></div>
+            <div>
+              <h4 class="approach__phase__title">Build</h4>
+              <div class="approach__phase__verb">Ship · domain experts as builders</div>
             </div>
-            <div class="chamber__case__client">Production tools, <em>team of one</em></div>
+            <span class="approach__phase__tag">Software</span>
+          </header>
 
-            <div class="chamber__viz">
-              <div class="chamber__viz__scan"></div>
-              <svg viewBox="-100 -100 200 200" fill="none">
-                <!-- 3 stacked panels representing shipped tools -->
-                <g>
-                  <rect x="-72" y="-60" width="144" height="34" fill="none" stroke="var(--gold)" stroke-width="1" opacity="0.55"/>
-                  <rect x="-72" y="-18" width="144" height="34" fill="none" stroke="var(--gold)" stroke-width="1" opacity="0.8"/>
-                  <rect x="-72" y="24"  width="144" height="34" fill="var(--gold)"/>
-                </g>
-                <!-- internal details on the bottom "active" panel -->
-                <g fill="var(--void)">
-                  <rect x="-64" y="32" width="24" height="4"/>
-                  <rect x="-64" y="40" width="48" height="4"/>
-                  <rect x="-64" y="48" width="16" height="4"/>
-                  <rect x="40" y="32" width="16" height="18"/>
-                </g>
-                <!-- tick marks on the stacked panels -->
-                <g stroke="var(--gold)" stroke-width="0.6" opacity="0.7">
-                  <path d="M-60 -52 L-40 -52"/><path d="M-60 -44 L-28 -44"/>
-                  <path d="M-60 -10 L-36 -10"/><path d="M-60 -2 L-22 -2"/>
-                </g>
-                <!-- ship arrow to the right -->
-                <path d="M76 40 L90 40 M86 36 L90 40 L86 44" stroke="var(--gold)" stroke-width="1.2"/>
-              </svg>
-            </div>
+          <div class="approach__phase__viz" aria-hidden="true">
+            <div class="approach__phase__viz__scan"></div>
+            <svg viewBox="-100 -100 200 200" fill="none">
+              <g>
+                <rect x="-72" y="-60" width="144" height="34" fill="none" stroke="var(--gold)" stroke-width="1" opacity="0.55"/>
+                <rect x="-72" y="-18" width="144" height="34" fill="none" stroke="var(--gold)" stroke-width="1" opacity="0.8"/>
+                <rect x="-72" y="24"  width="144" height="34" fill="var(--gold)"/>
+              </g>
+              <g fill="var(--void)">
+                <rect x="-64" y="32" width="24" height="4"/>
+                <rect x="-64" y="40" width="48" height="4"/>
+                <rect x="-64" y="48" width="16" height="4"/>
+                <rect x="40" y="32" width="16" height="18"/>
+              </g>
+              <g stroke="var(--gold)" stroke-width="0.6" opacity="0.7">
+                <path d="M-60 -52 L-40 -52"/><path d="M-60 -44 L-28 -44"/>
+                <path d="M-60 -10 L-36 -10"/><path d="M-60 -2 L-22 -2"/>
+              </g>
+              <path d="M76 40 L90 40 M86 36 L90 40 L86 44" stroke="var(--gold)" stroke-width="1.2"/>
+            </svg>
+          </div>
 
-            <div class="chamber__case__stats">
-              <div>
-                <div class="chamber__case__stat-v">6+</div>
-                <div class="chamber__case__stat-l">Production tools<br>built internally</div>
-              </div>
-              <div>
-                <div class="chamber__case__stat-v">Days</div>
-                <div class="chamber__case__stat-l">From friction<br>to prototype</div>
-              </div>
-              <div>
-                <div class="chamber__case__stat-v">1</div>
-                <div class="chamber__case__stat-l">Domain expert<br>as builder</div>
-              </div>
-            </div>
-          </article>
-        </div>
+          <ul class="approach__phase__rules">
+            <li>Too specific to buy, too small to outsource. The people closest to the work ship it.</li>
+            <li>Encoded knowledge reveals what to build; days instead of months, no specs handed off.</li>
+            <li class="is-receipt">Loop Earplugs — 6+ production tools built internally · prototype to production in days</li>
+          </ul>
+          <a class="approach__phase__cta" aria-disabled="true">
+            Deep dive
+            <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M3 7h8M8 4l3 3-3 3" stroke="currentColor" stroke-width="1.2" fill="none"/></svg>
+          </a>
+        </article>
       </div>
     </div>
 
     <!-- Through-line -->
-    <div class="chamber__throughline" style="margin-left: clamp(32px, 4vw, 64px); margin-right: clamp(32px, 4vw, 64px);">
+    <div class="approach__throughline">
       <strong>The through-line</strong>
-      <span>→ Adopt gives <em>fluency.</em></span>
+      <span>→ Navigate gives <em>fluency.</em></span>
       <span>Encode turns fluency into <em>leverage.</em></span>
       <span>Build turns leverage into <em>software.</em></span>
     </div>
@@ -4081,7 +3961,7 @@ html { scroll-behavior: smooth; }
         <div class="exec__card" role="button" tabindex="0">
           <div class="exec__card__head">
             <span class="k">Svc · 01</span>
-            <span class="exec__card__phase">Adopt</span>
+            <span class="exec__card__phase">Navigate</span>
           </div>
           <div class="exec__card__kicker">Inspire //</div>
           <h3>Keynotes</h3>
@@ -4098,7 +3978,7 @@ html { scroll-behavior: smooth; }
         <div class="exec__card exec__card--lead" role="button" tabindex="0">
           <div class="exec__card__head">
             <span class="k">Svc · 02</span>
-            <span class="exec__card__phase">Adopt · Encode</span>
+            <span class="exec__card__phase">Navigate · Encode</span>
           </div>
           <div class="exec__card__kicker">Practice //</div>
           <h3>Workshops</h3>
@@ -4575,9 +4455,9 @@ html { scroll-behavior: smooth; }
   };
   const STATUS = {
     hero: 'Scroll to descend · the window stays · the world changes',
-    definition: 'Locating the sigil · adopt · encode · build',
+    definition: 'Locating the sigil · navigate · encode · build',
     continuum: 'Reading the spectrum · tool ↔ collaborator',
-    practice: 'Surveying practice · adopt → encode → build',
+    practice: 'Surveying practice · navigate → encode → build',
     services: 'Approaching service triad · three instruments mapped',
     products: 'Fleet constellation · 4 instruments in deck',
     about: 'Telemetry nominal · crew identity resolved',
@@ -4884,64 +4764,55 @@ html { scroll-behavior: smooth; }
     stations.forEach(s => io2.observe(s));
   }
 
-  /* 6. Phase-bar navigator — drives the v12 chamber (phases + cases)
-     plus the gutter scrubber and the topbar phase counter.         */
-  const phasebar = document.querySelector('#phasebar');
-  if (phasebar) {
-    const tabs = Array.from(phasebar.querySelectorAll('[role="tab"]'));
-    const phases = Array.from(document.querySelectorAll('.chamber__phase'));
-    const cases = Array.from(document.querySelectorAll('.chamber__case'));
+  /* 6. Approach scroll-driven phase controller — IntersectionObserver
+     watches .approach__phase elements and updates the scrubber. */
+  const approachPhases = Array.from(document.querySelectorAll('.approach__phase'));
+  if (approachPhases.length) {
     const scrubber = document.getElementById('chamberScrubber');
-    const phaseIdxEl = document.getElementById('chamberPhaseIdx');
-    const metaIdxEl = document.getElementById('chamberIdxMeta');
-    // scrubber y-positions for each phase (along the gutter)
-    const scrubberYs = ['16%', '50%', '84%'];
+    const spine = document.querySelector('.approach__spine');
+    const total = approachPhases.length;
 
-    const activate = (idx, {focus = false} = {}) => {
-      tabs.forEach((t, i) => {
-        const on = i === idx;
-        t.setAttribute('aria-selected', on ? 'true' : 'false');
-        t.tabIndex = on ? 0 : -1;
-      });
-      phases.forEach((p, i) => p.setAttribute('data-active', i === idx ? 'true' : 'false'));
-      cases.forEach((c, i) => c.setAttribute('data-active', i === idx ? 'true' : 'false'));
-      const horiz = window.matchMedia('(min-width: 721px)').matches;
-      if (horiz) {
-        phasebar.style.setProperty('--pbar-x', (idx * 100) + '%');
-        phasebar.style.removeProperty('--pbar-y');
-      } else {
-        phasebar.style.setProperty('--pbar-y', (idx * 100) + '%');
-        phasebar.style.removeProperty('--pbar-x');
+    const io = new IntersectionObserver((entries) => {
+      const top = entries
+        .filter(e => e.isIntersecting)
+        .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+      if (!top) return;
+      const i = approachPhases.indexOf(top.target);
+      if (i < 0) return;
+      approachPhases.forEach((p, j) => p.setAttribute('data-active', j === i ? 'true' : 'false'));
+      if (scrubber) {
+        const pct = total > 1 ? (i / (total - 1)) * 84 + 8 : 50;
+        scrubber.style.setProperty('--scrubber-y', pct + '%');
       }
-      if (scrubber) scrubber.style.setProperty('--scrubber-y', scrubberYs[idx]);
-      if (phaseIdxEl) phaseIdxEl.textContent = String(idx+1).padStart(2,'0') + ' / 03';
-      if (metaIdxEl) metaIdxEl.textContent = String(idx+1).padStart(2,'0');
-      if (focus) tabs[idx].focus();
-    };
-    tabs.forEach((t, i) => {
-      t.addEventListener('click', () => activate(i));
-      t.addEventListener('keydown', (e) => {
-        if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
-          e.preventDefault(); activate((i + 1) % tabs.length, {focus: true});
-        } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
-          e.preventDefault(); activate((i - 1 + tabs.length) % tabs.length, {focus: true});
-        } else if (e.key === 'Home') {
-          e.preventDefault(); activate(0, {focus: true});
-        } else if (e.key === 'End') {
-          e.preventDefault(); activate(tabs.length - 1, {focus: true});
-        }
-      });
-    });
-    window.addEventListener('resize', () => {
-      const cur = tabs.findIndex(t => t.getAttribute('aria-selected') === 'true');
-      activate(Math.max(0, cur));
-    });
-    activate(0);
+    }, { threshold: [0.3, 0.5], rootMargin: '-20% 0px -40% 0px' });
+    approachPhases.forEach(p => io.observe(p));
 
-    // Build the gutter ticks (22 ticks feels right at common heights)
+    // Build the spine ticks (41 ticks, classified)
     const ticksEl = document.getElementById('chamberTicks');
     if (ticksEl) {
-      for (let i = 0; i < 22; i++) { ticksEl.appendChild(document.createElement('span')); }
+      for (let i = 0; i < 41; i++) {
+        const s = document.createElement('span');
+        if (i % 10 === 0) s.className = 'is-bearing';
+        else if (i % 5 === 0) s.className = 'is-major';
+        ticksEl.appendChild(s);
+      }
+    }
+
+    // Compute transit-label + anchor y-positions from phase boundaries
+    if (spine && approachPhases.length > 1) {
+      const spineRect = spine.getBoundingClientRect();
+      const spineH = spineRect.height || 1;
+      approachPhases.forEach((p, idx) => {
+        const r = p.getBoundingClientRect();
+        const mid = r.top + r.height / 2 - spineRect.top;
+        spine.style.setProperty('--anchor-' + (idx+1) + '-y', (mid / spineH * 100) + '%');
+      });
+      for (let t = 0; t < approachPhases.length - 1; t++) {
+        const phaseRect = approachPhases[t].getBoundingClientRect();
+        const boundary = phaseRect.bottom - spineRect.top;
+        const pct = (boundary / spineH) * 100;
+        spine.style.setProperty('--transit-' + (t+1) + '-y', pct + '%');
+      }
     }
   }
 })();

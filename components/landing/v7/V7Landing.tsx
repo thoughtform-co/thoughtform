@@ -540,77 +540,59 @@ function initV7Runtime(docEl: HTMLElement): () => void {
     addCleanup(() => stationObserver.disconnect());
   }
 
-  // Phasebar controller (Adopt / Encode / Build tabs in the practice chamber)
-  const phasebar = query<HTMLElement>("#phasebar", docEl);
-  if (phasebar) {
-    const tabs = queryAll<HTMLButtonElement>('[role="tab"]', phasebar);
-    const phases = queryAll<HTMLElement>(".chamber__phase", docEl);
-    const cases = queryAll<HTMLElement>(".chamber__case", docEl);
+  // Approach controller (Navigate / Encode / Build phases in the practice approach)
+  // IntersectionObserver watches .approach__phase elements and updates the
+  // spine scrubber as the user scrolls.
+  const approachPhases = queryAll<HTMLElement>(".approach__phase", docEl);
+  if (approachPhases.length) {
     const scrubber = query<HTMLElement>("#chamberScrubber", docEl);
-    const phaseIdx = query<HTMLElement>("#chamberPhaseIdx", docEl);
-    const idxMeta = query<HTMLElement>("#chamberIdxMeta", docEl);
+    const spine = query<HTMLElement>(".approach__spine", docEl);
+    const total = approachPhases.length;
 
-    const scrubberPositions = ["16%", "50%", "84%"];
-    const activate = (index: number, options: { focus?: boolean } = {}) => {
-      tabs.forEach((t, i) => {
-        const on = i === index;
-        t.setAttribute("aria-selected", on ? "true" : "false");
-        t.tabIndex = on ? 0 : -1;
-      });
-      phases.forEach((p, i) => p.setAttribute("data-active", i === index ? "true" : "false"));
-      cases.forEach((c, i) => c.setAttribute("data-active", i === index ? "true" : "false"));
-      if (scrubber) scrubber.style.setProperty("--scrubber-y", scrubberPositions[index] || "50%");
-      if (phaseIdx)
-        phaseIdx.textContent = `${String(index + 1).padStart(2, "0")} / ${String(tabs.length).padStart(2, "0")}`;
-      if (idxMeta) idxMeta.textContent = String(index + 1).padStart(2, "0");
-      const horizontal = window.matchMedia("(min-width: 721px)").matches;
-      if (horizontal) {
-        phasebar.style.setProperty("--pbar-x", `${index * 100}%`);
-        phasebar.style.removeProperty("--pbar-y");
-      } else {
-        phasebar.style.setProperty("--pbar-y", `${index * 100}%`);
-        phasebar.style.removeProperty("--pbar-x");
-      }
-      if (options.focus) tabs[index]?.focus();
-    };
-    tabs.forEach((tab, index) => {
-      const onTabClick = () => activate(index);
-      const onTabKeydown = (event: KeyboardEvent) => {
-        if (event.key === "ArrowRight" || event.key === "ArrowDown") {
-          event.preventDefault();
-          activate((index + 1) % tabs.length, { focus: true });
-        } else if (event.key === "ArrowLeft" || event.key === "ArrowUp") {
-          event.preventDefault();
-          activate((index - 1 + tabs.length) % tabs.length, { focus: true });
-        } else if (event.key === "Home") {
-          event.preventDefault();
-          activate(0, { focus: true });
-        } else if (event.key === "End") {
-          event.preventDefault();
-          activate(tabs.length - 1, { focus: true });
+    const io = new IntersectionObserver(
+      (entries) => {
+        const top = entries
+          .filter((e) => e.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+        if (!top) return;
+        const i = approachPhases.indexOf(top.target as HTMLElement);
+        if (i < 0) return;
+        approachPhases.forEach((p, j) => p.setAttribute("data-active", j === i ? "true" : "false"));
+        if (scrubber) {
+          const pct = total > 1 ? (i / (total - 1)) * 84 + 8 : 50;
+          scrubber.style.setProperty("--scrubber-y", `${pct}%`);
         }
-      };
-      tab.addEventListener("click", onTabClick);
-      tab.addEventListener("keydown", onTabKeydown);
-      addCleanup(() => {
-        tab.removeEventListener("click", onTabClick);
-        tab.removeEventListener("keydown", onTabKeydown);
+      },
+      { threshold: [0.3, 0.5], rootMargin: "-20% 0px -40% 0px" }
+    );
+    approachPhases.forEach((p) => io.observe(p));
+    addCleanup(() => io.disconnect());
+
+    // Compute anchor + transit y-positions from phase layout
+    if (spine && approachPhases.length) {
+      const spineRect = spine.getBoundingClientRect();
+      const spineH = spineRect.height || 1;
+      approachPhases.forEach((phase, idx) => {
+        const r = phase.getBoundingClientRect();
+        const mid = r.top + r.height / 2 - spineRect.top;
+        spine.style.setProperty(`--anchor-${idx + 1}-y`, `${(mid / spineH) * 100}%`);
       });
-    });
-    const onTabsResize = () => {
-      const currentIndex = tabs.findIndex((t) => t.getAttribute("aria-selected") === "true");
-      activate(Math.max(0, currentIndex));
-    };
-    window.addEventListener("resize", onTabsResize);
-    addCleanup(() => window.removeEventListener("resize", onTabsResize));
-    activate(0);
+      for (let t = 0; t < approachPhases.length - 1; t++) {
+        const phaseRect = approachPhases[t].getBoundingClientRect();
+        const boundary = phaseRect.bottom - spineRect.top;
+        const pct = (boundary / spineH) * 100;
+        spine.style.setProperty(`--transit-${t + 1}-y`, `${pct}%`);
+      }
+    }
   }
 
-  // Generate chamber gutter ticks
+  // Generate spine ticks (41 ticks, classified)
   const chamberTicks = query<HTMLElement>("#chamberTicks", docEl);
   if (chamberTicks && !chamberTicks.children.length) {
-    for (let i = 0; i < 21; i++) {
+    for (let i = 0; i < 41; i++) {
       const tick = document.createElement("span");
+      if (i % 10 === 0) tick.classList.add("is-bearing");
+      else if (i % 5 === 0) tick.classList.add("is-major");
       chamberTicks.appendChild(tick);
     }
   }

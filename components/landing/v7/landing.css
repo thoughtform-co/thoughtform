@@ -1168,7 +1168,7 @@
   background: var(--atreides-light);
 }
 
-/* ═══════════ 03 PRACTICE (Adopt → Encode → Build) ═══════════ */
+/* ═══════════ 03 PRACTICE (Navigate → Encode → Build) ═══════════ */
 .practice {
   display: flex;
   flex-direction: column;
@@ -2126,7 +2126,7 @@
   text-transform: lowercase;
 }
 
-/* RIGHT — Strategy frames (Adopt/Encode/Build) */
+/* RIGHT — Strategy frames (Navigate/Encode/Build) */
 .tri__right {
   display: flex;
   flex-direction: column;
@@ -3842,23 +3842,14 @@ html {
 }
 
 /* ═══════════════════════════════════════════════════════════════════
-   PRACTICE · v12 — FULL-BLEED TWO-PANEL CHAMBER
+   PRACTICE · v17 — TWO-COLUMN APPROACH + CELESTIAL SPINE
    ───────────────────────────────────────────────────────────────────
-   Inspired by the zkpass "perceive" station but translated into our
-   dawn/gold/void palette and PT Mono + PP Neue Montreal system.
-   The section escapes the .stations inner gutter and spans the full
-   HUD-bounded viewport, with:
-     • monospace title bar ("HOW DOES IT WORK?")
-     • two equal panels divided by a vertical tick-mark gutter
-     • `+` crosses at each panel corner (navigational "register marks")
-     • LEFT — phase info (big display title, tag, condensed body, index)
-     • RIGHT — the case (Loop Earplugs, shown as a signal/visual)
-     • phase tabs below, driving which phase shows in the chamber
-   Copy is significantly condensed vs. v7.
+   Left: sticky pitch + CTA. Right: three HUD cards with inline
+   SVG symbols. Middle: a celestial navigation strip — dual corridor,
+   bearing ticks, coordinate labels, constellation anchors, reticle
+   scrubber. Opens cold on "Three moves. One skill." — no topbar.
    ═══════════════════════════════════════════════════════════════════ */
 
-/* Station container override — break out of the .stations 96-140px
-   padding. The outer <section> still uses .station padding-y. */
 .station--fullbleed {
   margin-left: calc(-1 * var(--hud-content-inset));
   margin-right: calc(-1 * var(--hud-content-inset));
@@ -3866,51 +3857,233 @@ html {
   padding-right: var(--hud-content-inset);
 }
 
-.chamber__topbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 24px;
-  padding: 18px 0 22px;
-  border-bottom: 1px solid var(--dawn-08);
-  font-family: var(--font-pt-mono);
-  font-size: 10px;
-  letter-spacing: var(--track-widest);
-  text-transform: uppercase;
-  color: var(--dawn-50);
+/* ─── Two-column grid ─── */
+.approach {
+  display: grid;
+  grid-template-columns: minmax(280px, 1fr) 56px minmax(380px, 1.4fr);
+  gap: 0;
+  margin: 0 clamp(32px, 4vw, 64px);
+  padding: clamp(48px, 6vw, 88px) 0 clamp(32px, 4vw, 56px);
 }
-.chamber__topbar .l {
+
+/* ─── LEFT: sticky intro ─── */
+.approach__intro {
+  position: sticky;
+  top: clamp(80px, 10vh, 120px);
+  align-self: start;
+  padding: 0 clamp(24px, 3vw, 48px) 0 0;
+  display: flex;
+  flex-direction: column;
+}
+.approach__intro__title {
+  font-family: var(--font-pp-neue-montreal);
+  font-weight: 700;
+  font-size: clamp(36px, 4.5vw, 64px);
+  line-height: 0.92;
+  letter-spacing: -0.035em;
   color: var(--dawn);
+  margin: 0 0 clamp(18px, 2vw, 28px);
 }
-.chamber__topbar .r {
-  color: var(--dawn-30);
-  display: flex;
-  gap: 20px;
+.approach__intro__lede {
+  font-family: var(--font-pp-neue-montreal);
+  font-weight: 300;
+  font-size: clamp(15px, 1.1vw, 17px);
+  line-height: 1.6;
+  color: var(--dawn-70);
+  margin: 0 0 clamp(28px, 3vw, 44px);
+  max-width: 38ch;
 }
-.chamber__topbar .r em {
+.approach__intro__lede em {
   font-style: normal;
   color: var(--gold);
 }
 
-/* ═══ The chamber — two panels + gutter ═══ */
-.chamber {
-  position: relative;
-  display: grid;
-  grid-template-columns: 1fr 28px 1fr;
-  min-height: clamp(520px, 62vh, 680px);
-  margin-top: 22px;
-  border: 1px solid var(--dawn-08);
-  background: rgba(5, 4, 3, 0.35);
+.approach__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 24px;
+  background: var(--gold);
+  color: var(--void);
+  font-family: var(--font-pt-mono);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: var(--track-wide);
+  text-transform: uppercase;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  transition:
+    background 220ms var(--m-ease-instr),
+    transform 120ms var(--m-ease-instr);
+  align-self: flex-start;
 }
-@media (max-width: 700px) {
-  .chamber {
-    grid-template-columns: 1fr;
-    grid-template-rows: auto 28px auto;
-    min-height: 0;
-  }
+.approach__cta:hover {
+  background: var(--gold-bright, #d4b44e);
+  transform: translateY(-1px);
+}
+.approach__cta svg {
+  flex-shrink: 0;
 }
 
-/* `+` register marks at every corner of each panel */
+/* ═══ SPINE: celestial navigation strip ═══ */
+.approach__spine {
+  position: relative;
+  border-left: 1px solid var(--dawn-08);
+  border-right: 1px solid var(--dawn-08);
+  overflow: visible;
+}
+.approach__spine::before,
+.approach__spine::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  border-left: 1px dashed var(--dawn-15);
+}
+.approach__spine::before {
+  left: 12px;
+}
+.approach__spine::after {
+  right: 12px;
+}
+
+/* Ticks */
+.approach__spine__ticks {
+  position: absolute;
+  top: 24px;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.approach__spine__ticks span {
+  display: block;
+  width: 8px;
+  height: 1px;
+  background: var(--dawn-30);
+}
+.approach__spine__ticks span.is-major {
+  width: 16px;
+  background: var(--dawn-50);
+}
+.approach__spine__ticks span.is-bearing {
+  width: 20px;
+  background: var(--gold-40, rgba(202, 165, 84, 0.4));
+}
+
+/* Scrubber + reticle */
+.approach__spine__scrubber {
+  position: absolute;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 18px;
+  height: 18px;
+  color: var(--gold);
+  top: var(--scrubber-y, 50%);
+  transition: top 480ms var(--m-ease-instr);
+  z-index: 2;
+}
+.approach__spine__scrubber::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: currentColor;
+  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+  opacity: 0.9;
+}
+.approach__spine__scrubber::after {
+  content: "";
+  position: absolute;
+  inset: 5px;
+  background: var(--void);
+  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+}
+.approach__spine__reticle {
+  position: absolute;
+  inset: -9px;
+  pointer-events: none;
+}
+.approach__spine__reticle::before,
+.approach__spine__reticle::after {
+  content: "";
+  position: absolute;
+  border: 1px solid var(--gold);
+  opacity: 0.6;
+}
+.approach__spine__reticle::before {
+  top: 0;
+  left: 0;
+  right: 50%;
+  bottom: 50%;
+  border-right: none;
+  border-bottom: none;
+}
+.approach__spine__reticle::after {
+  bottom: 0;
+  right: 0;
+  left: 50%;
+  top: 50%;
+  border-left: none;
+  border-top: none;
+}
+
+/* Constellation anchors */
+.approach__spine__anchor {
+  position: absolute;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 6px;
+  height: 6px;
+  background: var(--gold);
+  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+  pointer-events: none;
+}
+.approach__spine__anchor::after {
+  content: "";
+  position: absolute;
+  top: -10px;
+  left: -10px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1px dashed var(--dawn-15);
+}
+.approach__spine__anchor--1 {
+  top: var(--anchor-1-y, 17%);
+}
+.approach__spine__anchor--2 {
+  top: var(--anchor-2-y, 50%);
+}
+.approach__spine__anchor--3 {
+  top: var(--anchor-3-y, 83%);
+}
+
+/* Transit labels */
+.approach__spine__transit {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%) rotate(-90deg);
+  white-space: nowrap;
+  font-family: var(--font-pt-mono);
+  font-size: 7px;
+  letter-spacing: var(--track-widest);
+  text-transform: uppercase;
+  color: var(--dawn-30);
+  pointer-events: none;
+  transform-origin: center center;
+}
+.approach__spine__transit--t1 {
+  top: var(--transit-1-y, 33%);
+}
+.approach__spine__transit--t2 {
+  top: var(--transit-2-y, 66%);
+}
+
+/* ─── Register marks (shared) ─── */
 .reg {
   position: absolute;
   width: 11px;
@@ -3938,349 +4111,141 @@ html {
   height: 1px;
   transform: translateY(-50%);
 }
+.reg--tl {
+  top: 10px;
+  left: 10px;
+}
+.reg--tr {
+  top: 10px;
+  right: 10px;
+}
+.reg--bl {
+  bottom: 10px;
+  left: 10px;
+}
+.reg--br {
+  bottom: 10px;
+  right: 10px;
+}
 .reg--gold {
   color: var(--gold);
 }
 
-/* Vertical tick-mark gutter that separates the two panels */
-.chamber__gutter {
-  position: relative;
-  border-left: 1px solid var(--dawn-08);
-  border-right: 1px solid var(--dawn-08);
-  overflow: hidden;
-}
-.chamber__gutter__ticks {
-  position: absolute;
-  top: 24px;
-  bottom: 24px;
-  left: 50%;
-  transform: translateX(-50%);
+/* ═══ RIGHT: phase cards ═══ */
+.approach__list {
+  padding: 0 0 0 clamp(24px, 3vw, 48px);
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-}
-.chamber__gutter__ticks span {
-  display: block;
-  width: 10px;
-  height: 1px;
-  background: var(--dawn-30);
-}
-.chamber__gutter__ticks span:nth-child(5n + 1) {
-  background: var(--dawn-50);
-  width: 14px;
-}
-.chamber__gutter__scrubber {
-  position: absolute;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 18px;
-  height: 18px;
-  color: var(--gold);
-  top: var(--scrubber-y, 50%);
-  transition: top 480ms var(--m-ease-instr);
-}
-.chamber__gutter__scrubber::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: currentColor;
-  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
-  opacity: 0.9;
-}
-.chamber__gutter__scrubber::after {
-  content: "";
-  position: absolute;
-  inset: 5px;
-  background: var(--void);
-  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
-}
-@media (max-width: 700px) {
-  .chamber__gutter {
-    border-left: none;
-    border-right: none;
-    border-top: 1px solid var(--dawn-08);
-    border-bottom: 1px solid var(--dawn-08);
-  }
-  .chamber__gutter__ticks {
-    flex-direction: row;
-    top: 50%;
-    left: 24px;
-    right: 24px;
-    bottom: auto;
-    transform: translateY(-50%);
-  }
-  .chamber__gutter__ticks span {
-    width: 1px;
-    height: 10px;
-  }
-  .chamber__gutter__ticks span:nth-child(5n + 1) {
-    height: 14px;
-    width: 1px;
-  }
-  .chamber__gutter__scrubber {
-    display: none;
-  }
+  gap: clamp(32px, 4vw, 56px);
 }
 
-/* ═══ LEFT panel — phase content ═══ */
-.chamber__left {
+.approach__phase {
   position: relative;
-  padding: clamp(40px, 5vw, 72px) clamp(32px, 4vw, 64px);
+  padding: clamp(32px, 3.5vw, 48px);
+  border: 1px solid var(--dawn-08);
+  background: linear-gradient(180deg, rgba(10, 8, 6, 0.65) 0%, rgba(5, 4, 3, 0.4) 100%);
+}
+.approach__phase[data-active="true"] {
+  border-color: rgba(202, 165, 84, 0.2);
+  background: linear-gradient(180deg, rgba(14, 12, 8, 0.7) 0%, rgba(5, 4, 3, 0.45) 100%);
+}
+
+.approach__phase__head {
   display: flex;
-  flex-direction: column;
-  justify-content: center;
-  min-height: clamp(480px, 60vh, 640px);
-}
-.chamber__left .reg--tl {
-  top: 10px;
-  left: 10px;
-}
-.chamber__left .reg--br {
-  bottom: 10px;
-  right: 10px;
+  align-items: flex-start;
+  gap: 18px;
+  margin-bottom: clamp(16px, 2vw, 24px);
 }
 
-/* Decorative dot cluster top-left (echoes the zkpass corner detail,
-   translated into our navigational "grid" motif) */
-.chamber__dots {
-  position: absolute;
-  top: 48px;
-  left: clamp(32px, 4vw, 64px);
-  display: grid;
-  grid-template-columns: repeat(4, 4px);
-  gap: 6px;
-  opacity: 0.8;
-}
-.chamber__dots span {
-  width: 4px;
-  height: 4px;
-  background: var(--gold);
-  transform: rotate(45deg);
-}
-.chamber__dots span:nth-child(3n) {
-  background: var(--gold);
-  opacity: 0.35;
-}
-.chamber__dots span:nth-child(4n) {
-  background: var(--dawn-30);
-}
-
-/* Phase stack — panels overlay, only active visible */
-.chamber__phase {
-  position: relative;
-  opacity: 0;
-  transform: translateY(8px);
-  transition:
-    opacity 460ms var(--m-ease-instr),
-    transform 460ms var(--m-ease-instr);
-  pointer-events: none;
-  grid-area: 1/1;
-}
-.chamber__phases {
-  display: grid;
-  grid-template-areas: "stack";
-  margin-top: 40px; /* leave room for dot cluster */
-}
-.chamber__phases > .chamber__phase {
-  grid-area: stack;
-}
-.chamber__phase[data-active="true"] {
-  opacity: 1;
-  transform: translateY(0);
-  pointer-events: auto;
-}
-
-/* The giant phase title — the "PERCEIVE"-scale display word */
-.chamber__tag {
-  display: inline-flex;
+.approach__phase__num {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 4px 10px;
+  justify-content: center;
   background: var(--gold);
   color: var(--void);
   font-family: var(--font-pt-mono);
-  font-size: 10px;
-  letter-spacing: var(--track-widest);
-  text-transform: uppercase;
   font-weight: 700;
-  margin-bottom: clamp(16px, 2vw, 24px);
-  align-self: flex-start;
-  width: fit-content;
+  font-size: 14px;
+  line-height: 1;
+  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
 }
-.chamber__title {
+
+.approach__phase__title {
   font-family: var(--font-pp-neue-montreal);
   font-weight: 700;
-  font-size: clamp(56px, 9vw, 128px);
-  line-height: 0.88;
-  letter-spacing: -0.045em;
+  font-size: clamp(24px, 2.8vw, 36px);
+  line-height: 1;
+  letter-spacing: -0.02em;
   text-transform: uppercase;
   color: var(--dawn);
-  margin: 0 0 clamp(22px, 2.2vw, 32px);
+  margin: 0 0 6px;
 }
-.chamber__verb {
+
+.approach__phase__verb {
   font-family: var(--font-pt-mono);
   font-size: 11px;
   letter-spacing: var(--track-widest);
   text-transform: uppercase;
   color: var(--gold);
-  margin-bottom: 14px;
   display: flex;
   align-items: center;
   gap: 10px;
 }
-.chamber__verb::before {
+.approach__phase__verb::before {
   content: "";
-  width: 24px;
+  width: 16px;
   height: 1px;
   background: var(--gold);
 }
-.chamber__body {
-  font-family: var(--font-pp-neue-montreal);
-  font-weight: 300;
-  font-size: 16px;
-  line-height: 1.55;
-  letter-spacing: 0;
-  color: var(--dawn-70);
-  margin: 0;
-  max-width: 44ch;
-}
-.chamber__body em {
-  font-style: normal;
-  color: var(--gold);
-}
 
-/* Bottom-row meta row — index + meta text, sits at the foot of the left panel */
-.chamber__metarow {
-  position: absolute;
-  left: clamp(32px, 4vw, 64px);
-  right: clamp(32px, 4vw, 64px);
-  bottom: clamp(22px, 2.5vw, 34px);
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
+.approach__phase__tag {
+  margin-left: auto;
+  padding: 4px 10px;
+  background: var(--gold);
+  color: var(--void);
   font-family: var(--font-pt-mono);
-  font-size: 10px;
-  letter-spacing: var(--track-wider);
+  font-size: 9px;
+  letter-spacing: var(--track-widest);
   text-transform: uppercase;
-  color: var(--dawn-30);
-}
-.chamber__metarow .idx {
-  color: var(--gold);
   font-weight: 700;
-  letter-spacing: var(--track-wider);
+  white-space: nowrap;
+  align-self: flex-start;
 }
 
-/* ═══ RIGHT panel — the case ═══ */
-.chamber__right {
-  position: relative;
-  padding: clamp(40px, 5vw, 72px) clamp(32px, 4vw, 64px);
-  display: flex;
-  flex-direction: column;
-  min-height: clamp(480px, 60vh, 640px);
-}
-.chamber__right .reg--tl {
-  top: 10px;
-  left: 10px;
-  color: var(--dawn-30);
-}
-.chamber__right .reg--tr {
-  top: 10px;
-  right: 10px;
-  color: var(--dawn-30);
-}
-.chamber__right .reg--bl {
-  bottom: 10px;
-  left: 10px;
-  color: var(--dawn-30);
-}
-.chamber__right .reg--br {
-  bottom: 10px;
-  right: 10px;
-  color: var(--dawn-30);
-}
-
-.chamber__case {
-  position: relative;
-  opacity: 0;
-  transform: translateY(8px);
-  transition:
-    opacity 460ms var(--m-ease-instr) 80ms,
-    transform 460ms var(--m-ease-instr) 80ms;
-  pointer-events: none;
-  grid-area: 1/1;
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-}
-.chamber__cases {
-  display: grid;
-  grid-template-areas: "stack";
-  flex: 1;
-  min-height: 0;
-}
-.chamber__cases > .chamber__case {
-  grid-area: stack;
-}
-.chamber__case[data-active="true"] {
-  opacity: 1;
-  transform: translateY(0);
-  pointer-events: auto;
-}
-
-.chamber__case__head {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  margin-bottom: 6px;
-  font-family: var(--font-pt-mono);
-  font-size: 10px;
-  letter-spacing: var(--track-wider);
-  text-transform: uppercase;
-  color: var(--dawn-50);
-}
-.chamber__case__head .k {
-  color: var(--gold);
-}
-.chamber__case__client {
-  font-family: var(--font-pt-mono);
-  font-size: 13px;
-  letter-spacing: var(--track-wide);
-  text-transform: uppercase;
-  color: var(--dawn);
-  margin-bottom: 18px;
-}
-.chamber__case__client em {
-  color: var(--gold);
-  font-style: normal;
-}
-
-/* The visual: a centered navigational "signal" — fills the panel middle */
-.chamber__viz {
-  flex: 1;
+/* Inline symbol viz */
+.approach__phase__viz {
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 8px 0;
-  min-height: 220px;
+  min-height: clamp(140px, 16vw, 200px);
+  margin: clamp(12px, 1.5vw, 20px) 0;
 }
-.chamber__viz svg {
-  width: 72%;
-  max-width: 360px;
+.approach__phase__viz svg {
+  width: 60%;
+  max-width: 280px;
   height: auto;
   display: block;
 }
-.chamber__viz__scan {
+.approach__phase__viz__scan {
   position: absolute;
   left: 12%;
   right: 12%;
   height: 1px;
   top: 50%;
-  background: linear-gradient(to right, transparent, var(--gold-40), transparent);
-  animation: chamberScan 7s linear infinite;
+  background: linear-gradient(
+    to right,
+    transparent,
+    var(--gold-40, rgba(202, 165, 84, 0.4)),
+    transparent
+  );
+  animation: approachScan 7s linear infinite;
   pointer-events: none;
 }
-@keyframes chamberScan {
+@keyframes approachScan {
   0% {
     top: 22%;
     opacity: 0;
@@ -4297,145 +4262,61 @@ html {
   }
 }
 
-/* Stat strip at the bottom of the right panel — lives inside the panel */
-.chamber__case__stats {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1px;
-  background: var(--dawn-08);
-  border: 1px solid var(--dawn-08);
-  margin-top: 14px;
+/* Bullet rules */
+.approach__phase__rules {
+  list-style: none;
+  margin: 0;
+  padding: 0;
 }
-.chamber__case__stats.is-two {
-  grid-template-columns: repeat(2, 1fr);
+.approach__phase__rules li {
+  padding: 14px 0;
+  border-top: 1px solid var(--dawn-08);
+  font-family: var(--font-pp-neue-montreal);
+  font-weight: 300;
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--dawn-70);
 }
-.chamber__case__stats > div {
-  background: rgba(5, 4, 3, 0.8);
-  padding: 14px 12px;
-}
-.chamber__case__stat-v {
+.approach__phase__rules li.is-receipt {
   font-family: var(--font-pt-mono);
-  font-weight: 700;
-  font-size: clamp(18px, 1.6vw, 22px);
-  color: var(--gold);
-  line-height: 1;
-  margin-bottom: 6px;
-  letter-spacing: -0.01em;
-}
-.chamber__case__stat-l {
-  font-family: var(--font-pt-mono);
-  font-size: 9px;
-  line-height: 1.35;
-  color: var(--dawn-50);
+  font-size: 11px;
+  font-weight: 400;
   letter-spacing: var(--track-wide);
   text-transform: uppercase;
+  color: var(--dawn);
+  line-height: 1.45;
+}
+.approach__phase__rules li.is-receipt::before {
+  content: "\25C6 ";
+  color: var(--gold);
+  font-size: 8px;
+  vertical-align: 1px;
 }
 
-/* Phase-selector strip — replaces the old .pnav for this layout.
-   Sits below the chamber as a numbered step rail. */
-.phasebar {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0;
-  margin-top: 28px;
-  border: 1px solid var(--dawn-08);
-  position: relative;
-}
-.phasebar__stop {
-  position: relative;
-  display: flex;
+.approach__phase__cta {
+  display: inline-flex;
   align-items: center;
-  gap: 18px;
-  padding: 18px 22px;
-  background: transparent;
-  border: none;
-  border-left: 1px solid var(--dawn-08);
-  text-align: left;
-  color: var(--dawn-50);
-  cursor: pointer;
-  font-family: inherit;
-  transition:
-    background 220ms var(--m-ease-instr),
-    color 220ms var(--m-ease-instr);
-}
-.phasebar__stop:first-child {
-  border-left: none;
-}
-.phasebar__stop:hover:not([aria-selected="true"]) {
-  background: rgba(202, 165, 84, 0.04);
-  color: var(--dawn);
-}
-.phasebar__stop[aria-selected="true"] {
-  background: rgba(202, 165, 84, 0.06);
-  color: var(--dawn);
-}
-.phasebar__num {
+  gap: 8px;
+  margin-top: 14px;
   font-family: var(--font-pt-mono);
-  font-weight: 700;
-  font-size: 20px;
-  line-height: 1;
-  color: var(--dawn-30);
-  letter-spacing: -0.01em;
-  min-width: 30px;
-}
-.phasebar__stop[aria-selected="true"] .phasebar__num {
-  color: var(--gold);
-}
-.phasebar__name {
-  font-family: var(--font-pt-mono);
-  font-weight: 700;
-  font-size: 14px;
+  font-size: 11px;
   letter-spacing: var(--track-wide);
   text-transform: uppercase;
-  color: inherit;
-}
-.phasebar__verb {
-  margin-left: auto;
-  font-family: var(--font-pt-mono);
-  font-size: 10px;
-  letter-spacing: var(--track-widest);
-  text-transform: uppercase;
   color: var(--dawn-30);
+  text-decoration: none;
+  cursor: default;
 }
-.phasebar__stop[aria-selected="true"] .phasebar__verb {
-  color: var(--gold);
-}
-.phasebar__bar {
-  position: absolute;
-  left: 0;
-  bottom: -1px;
-  width: calc(100% / 3);
-  height: 2px;
-  background: var(--gold);
-  box-shadow: 0 0 18px rgba(202, 165, 84, 0.5);
-  transform: translateX(var(--pbar-x, 0%));
-  transition: transform 480ms var(--m-ease-instr);
+.approach__phase__cta[aria-disabled="true"] {
+  opacity: 0.4;
   pointer-events: none;
 }
-@media (max-width: 720px) {
-  .phasebar {
-    grid-template-columns: 1fr;
-  }
-  .phasebar__stop {
-    border-left: none;
-    border-top: 1px solid var(--dawn-08);
-  }
-  .phasebar__stop:first-child {
-    border-top: none;
-  }
-  .phasebar__bar {
-    width: 2px;
-    height: calc(100% / 3);
-    top: 0;
-    left: 0;
-    bottom: auto;
-    transform: translateY(var(--pbar-y, 0%));
-  }
+.approach__phase__cta svg {
+  flex-shrink: 0;
 }
 
-/* Through-line caption at the very bottom */
-.chamber__throughline {
-  margin-top: 22px;
+/* ─── Through-line ─── */
+.approach__throughline {
+  margin: clamp(24px, 3vw, 40px) clamp(32px, 4vw, 64px) 0;
   padding-top: 18px;
   border-top: 1px dashed var(--dawn-08);
   display: flex;
@@ -4448,14 +4329,51 @@ html {
   color: var(--dawn-50);
   text-transform: uppercase;
 }
-.chamber__throughline strong {
+.approach__throughline strong {
   color: var(--dawn);
   font-weight: 700;
   letter-spacing: var(--track-wider);
 }
-.chamber__throughline em {
+.approach__throughline em {
   font-style: normal;
   color: var(--gold);
+}
+
+/* ─── Mobile: single column ─── */
+@media (max-width: 860px) {
+  .approach {
+    grid-template-columns: 1fr;
+    gap: 0;
+    margin-left: 16px;
+    margin-right: 16px;
+  }
+  .approach__intro {
+    position: static;
+    padding: 0 0 clamp(32px, 4vw, 48px);
+    border-bottom: 1px solid var(--dawn-08);
+  }
+  .approach__spine {
+    display: none;
+  }
+  .approach__list {
+    padding: 0;
+    gap: clamp(20px, 3vw, 32px);
+  }
+  .approach__throughline {
+    margin-left: 16px;
+    margin-right: 16px;
+  }
+  .approach__phase__num {
+    width: 36px;
+    height: 36px;
+    font-size: 12px;
+  }
+  .approach__phase {
+    padding: clamp(24px, 3vw, 36px);
+  }
+  .approach__phase__viz {
+    min-height: clamp(100px, 14vw, 160px);
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════════════

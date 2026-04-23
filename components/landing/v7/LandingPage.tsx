@@ -62,106 +62,67 @@ export function LandingPage({ bodyHtml, bodyClass, celestialSlots }: LandingPage
     };
   }, []);
 
-  // Practice phasebar — event-delegated so handlers survive DOM re-paints.
-  // Re-queries nodes inside every handler instead of capturing stale refs.
+  // Approach scroll-driven phase controller — IntersectionObserver watches
+  // .approach__phase elements and updates the scrubber position on the spine.
   useEffect(() => {
     const root = rootRef.current;
     if (!root) return;
 
-    const scrubberPositions = ["16%", "50%", "84%"];
+    const phases = Array.from(root.querySelectorAll<HTMLElement>(".approach__phase"));
+    const scrubber = root.querySelector<HTMLElement>("#chamberScrubber");
+    const total = phases.length;
 
-    const activate = (index: number, options: { focus?: boolean } = {}) => {
-      const phasebar = root.querySelector<HTMLElement>("#phasebar");
-      if (!phasebar) return;
-      const tabs = Array.from(phasebar.querySelectorAll<HTMLButtonElement>('[role="tab"]'));
-      const phases = Array.from(root.querySelectorAll<HTMLElement>(".chamber__phase"));
-      const cases = Array.from(root.querySelectorAll<HTMLElement>(".chamber__case"));
-      const scrubber = root.querySelector<HTMLElement>("#chamberScrubber");
-      const phaseIdx = root.querySelector<HTMLElement>("#chamberPhaseIdx");
-      const idxMeta = root.querySelector<HTMLElement>("#chamberIdxMeta");
+    if (!phases.length) return;
 
-      tabs.forEach((t, i) => {
-        const on = i === index;
-        t.setAttribute("aria-selected", on ? "true" : "false");
-        t.tabIndex = on ? 0 : -1;
-      });
-      phases.forEach((p, i) => p.setAttribute("data-active", i === index ? "true" : "false"));
-      cases.forEach((c, i) => c.setAttribute("data-active", i === index ? "true" : "false"));
-      if (scrubber) scrubber.style.setProperty("--scrubber-y", scrubberPositions[index] || "50%");
-      if (phaseIdx)
-        phaseIdx.textContent = `${String(index + 1).padStart(2, "0")} / ${String(tabs.length).padStart(2, "0")}`;
-      if (idxMeta) idxMeta.textContent = String(index + 1).padStart(2, "0");
-      const horizontal = window.matchMedia("(min-width: 721px)").matches;
-      if (horizontal) {
-        phasebar.style.setProperty("--pbar-x", `${index * 100}%`);
-        phasebar.style.removeProperty("--pbar-y");
-      } else {
-        phasebar.style.setProperty("--pbar-y", `${index * 100}%`);
-        phasebar.style.removeProperty("--pbar-x");
-      }
-      if (options.focus) tabs[index]?.focus();
-    };
+    const io = new IntersectionObserver(
+      (entries) => {
+        const top = entries
+          .filter((e) => e.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+        if (!top) return;
+        const i = phases.indexOf(top.target as HTMLElement);
+        if (i < 0) return;
+        phases.forEach((p, j) => p.setAttribute("data-active", j === i ? "true" : "false"));
+        if (scrubber) {
+          const pct = total > 1 ? (i / (total - 1)) * 84 + 8 : 50;
+          scrubber.style.setProperty("--scrubber-y", `${pct}%`);
+        }
+      },
+      { threshold: [0.3, 0.5], rootMargin: "-20% 0px -40% 0px" }
+    );
+    phases.forEach((p) => io.observe(p));
 
-    const onClick = (e: Event) => {
-      const tab = (e.target as HTMLElement).closest<HTMLButtonElement>('[role="tab"]');
-      if (!tab) return;
-      const phasebar = root.querySelector<HTMLElement>("#phasebar");
-      if (!phasebar) return;
-      const tabs = Array.from(phasebar.querySelectorAll<HTMLButtonElement>('[role="tab"]'));
-      const index = tabs.indexOf(tab);
-      if (index >= 0) activate(index);
-    };
-
-    const onKeydown = (e: Event) => {
-      const ke = e as KeyboardEvent;
-      const tab = (ke.target as HTMLElement).closest<HTMLButtonElement>('[role="tab"]');
-      if (!tab) return;
-      const phasebar = root.querySelector<HTMLElement>("#phasebar");
-      if (!phasebar) return;
-      const tabs = Array.from(phasebar.querySelectorAll<HTMLButtonElement>('[role="tab"]'));
-      const index = tabs.indexOf(tab);
-      if (index < 0) return;
-      if (ke.key === "ArrowRight" || ke.key === "ArrowDown") {
-        ke.preventDefault();
-        activate((index + 1) % tabs.length, { focus: true });
-      } else if (ke.key === "ArrowLeft" || ke.key === "ArrowUp") {
-        ke.preventDefault();
-        activate((index - 1 + tabs.length) % tabs.length, { focus: true });
-      } else if (ke.key === "Home") {
-        ke.preventDefault();
-        activate(0, { focus: true });
-      } else if (ke.key === "End") {
-        ke.preventDefault();
-        activate(tabs.length - 1, { focus: true });
-      }
-    };
-
-    root.addEventListener("click", onClick);
-    root.addEventListener("keydown", onKeydown);
-
-    const onResize = () => {
-      const phasebar = root.querySelector<HTMLElement>("#phasebar");
-      if (!phasebar) return;
-      const tabs = Array.from(phasebar.querySelectorAll<HTMLButtonElement>('[role="tab"]'));
-      const currentIndex = tabs.findIndex((t) => t.getAttribute("aria-selected") === "true");
-      activate(Math.max(0, currentIndex));
-    };
-    window.addEventListener("resize", onResize);
-
-    activate(0);
-
-    // Generate chamber gutter ticks
+    // Generate spine ticks (41 ticks, classified)
     const chamberTicks = root.querySelector<HTMLElement>("#chamberTicks");
     if (chamberTicks && !chamberTicks.children.length) {
-      for (let i = 0; i < 21; i++) {
-        chamberTicks.appendChild(document.createElement("span"));
+      for (let i = 0; i < 41; i++) {
+        const span = document.createElement("span");
+        if (i % 10 === 0) span.classList.add("is-bearing");
+        else if (i % 5 === 0) span.classList.add("is-major");
+        chamberTicks.appendChild(span);
+      }
+    }
+
+    // Compute anchor + transit y-positions from phase layout
+    const spine = root.querySelector<HTMLElement>(".approach__spine");
+    if (spine && phases.length) {
+      const spineRect = spine.getBoundingClientRect();
+      const spineH = spineRect.height || 1;
+      phases.forEach((phase, idx) => {
+        const r = phase.getBoundingClientRect();
+        const mid = r.top + r.height / 2 - spineRect.top;
+        spine.style.setProperty(`--anchor-${idx + 1}-y`, `${(mid / spineH) * 100}%`);
+      });
+      for (let t = 0; t < phases.length - 1; t++) {
+        const phaseRect = phases[t].getBoundingClientRect();
+        const boundary = phaseRect.bottom - spineRect.top;
+        const pct = (boundary / spineH) * 100;
+        spine.style.setProperty(`--transit-${t + 1}-y`, `${pct}%`);
       }
     }
 
     return () => {
-      root.removeEventListener("click", onClick);
-      root.removeEventListener("keydown", onKeydown);
-      window.removeEventListener("resize", onResize);
+      io.disconnect();
     };
   }, []);
 
