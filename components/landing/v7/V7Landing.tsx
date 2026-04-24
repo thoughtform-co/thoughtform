@@ -29,14 +29,14 @@ function initSigilChoreography(docEl: HTMLElement): () => void {
   const sigilMark = query<HTMLElement>(".sigil__mark", docEl);
   const sigilCap = query<HTMLElement>(".sigil__cap", docEl);
   const triLeft = query<HTMLElement>(".tri__left", docEl);
-  const triRight = query<HTMLElement>(".tri__right", docEl);
+  const sigilLegend = query<HTMLElement>(".sigil__legend", docEl);
   const hudBrandmark = query<HTMLElement>("#hudBrandmark", docEl);
 
   if (!defEl || !contEl || !sigilOrbits || !sigilMark || !hudBrandmark) {
     return () => {};
   }
 
-  const section2Els = [sigilOrbits, sigilHalo, sigilMark, sigilCap, triLeft, triRight].filter(
+  const section2Els = [sigilOrbits, sigilHalo, sigilMark, sigilCap, sigilLegend, triLeft].filter(
     Boolean
   ) as HTMLElement[];
   section2Els.forEach((el) => {
@@ -45,7 +45,7 @@ function initSigilChoreography(docEl: HTMLElement): () => void {
   });
 
   if (reduceMotion) {
-    gsap.set([sigilOrbits, sigilHalo, sigilMark, sigilCap, triLeft, triRight].filter(Boolean), {
+    gsap.set([sigilOrbits, sigilHalo, sigilMark, sigilCap, sigilLegend, triLeft].filter(Boolean), {
       opacity: 1,
       scale: 1,
       y: 0,
@@ -154,7 +154,7 @@ function initSigilChoreography(docEl: HTMLElement): () => void {
   const ctx = gsap.context(() => {
     gsap.set([sigilOrbits, sigilHalo], { opacity: 0, scale: 0.6, rotation: -8 });
     gsap.set(sigilMark, { opacity: 0, scale: 0.7 });
-    gsap.set([sigilCap, triLeft, triRight].filter(Boolean), { opacity: 0, y: 16 });
+    gsap.set([sigilCap, sigilLegend, triLeft].filter(Boolean), { opacity: 0, y: 16 });
 
     const entranceTl = gsap.timeline({
       scrollTrigger: {
@@ -188,23 +188,23 @@ function initSigilChoreography(docEl: HTMLElement): () => void {
         0.15
       )
       .to(
-        [sigilCap].filter(Boolean),
+        [sigilCap, sigilLegend].filter(Boolean),
         {
           opacity: 1,
           y: 0,
           duration: 0.35,
           ease: "power3.out",
+          stagger: 0.06,
         },
         0.3
       )
       .to(
-        [triLeft, triRight].filter(Boolean),
+        [triLeft].filter(Boolean),
         {
           opacity: 1,
           y: 0,
           duration: 0.4,
           ease: "power3.out",
-          stagger: 0.08,
         },
         0.25
       );
@@ -243,7 +243,7 @@ function initSigilChoreography(docEl: HTMLElement): () => void {
     });
 
     handoffTl.to(
-      [sigilOrbits, sigilHalo, sigilCap].filter(Boolean),
+      [sigilOrbits, sigilHalo, sigilCap, sigilLegend].filter(Boolean),
       {
         opacity: 0,
         scale: 0.7,
@@ -465,7 +465,6 @@ function initV7Runtime(docEl: HTMLElement): () => void {
     tri.setAttribute("data-m-group", "");
     tagIfEmpty(query(".tri__left", tri), "body");
     tagIfEmpty(query(".tri__center", tri), "instrument");
-    tagIfEmpty(query(".tri__right", tri), "frame");
   }
   tagIfEmpty(query(".crail--large", docEl), "instrument");
   tagIfEmpty(query(".continuum__close", docEl), "body");

@@ -410,7 +410,6 @@ function initializePrototypeRuntime(root: ShadowRoot, docEl: HTMLElement) {
     tri.setAttribute("data-m-group", "");
     tagIfEmpty(query(".tri__left", tri), "body");
     tagIfEmpty(query(".tri__center", tri), "instrument");
-    tagIfEmpty(query(".tri__right", tri), "frame");
   }
 
   tagIfEmpty(query(".crail--large"), "instrument");

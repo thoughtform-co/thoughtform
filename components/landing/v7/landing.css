@@ -1898,12 +1898,16 @@
   color: var(--gold);
 }
 
-/* ═══════════ 02 TRI — What/Sigil/Strategy (new layout) ═══════════ */
+/* ═══════════ 02 TRI — What we do / orbit sigil (paired instrument) ═══════════
+   Tight-coupled composition: copy + sigil bind as a single centered unit,
+   flanked by negative space. Distinct from hero's viewport-spanning split and
+   from continuum's horizontal spectrum axis. */
 .tri {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(420px, 620px) minmax(0, 0.72fr);
-  column-gap: clamp(28px, 3.5vw, 64px);
+  grid-template-columns: minmax(0, 400px) minmax(440px, 680px);
+  column-gap: clamp(8px, 1.2vw, 20px);
   align-items: center;
+  justify-content: center;
   margin-top: var(--space-xl);
   min-height: 660px;
 }
@@ -1911,6 +1915,7 @@
   .tri {
     grid-template-columns: 1fr;
     row-gap: 56px;
+    justify-content: stretch;
   }
   .tri__center {
     order: -1;
@@ -1944,6 +1949,11 @@
 }
 .tri__eyebrow--end::before {
   order: 2;
+}
+
+/* ── Sigil overflow — let orbit phase labels extend beyond the ring SVG ── */
+.sigil__orbits {
+  overflow: visible;
 }
 .tri__ipa {
   font-family: var(--font-pt-mono);
@@ -1997,14 +2007,14 @@
   margin-top: var(--space-lg);
 }
 
-/* CENTER — the sigil */
+/* CENTER — the sigil (primary composition surface) */
 .tri__center {
   position: relative;
   aspect-ratio: 1;
   min-height: 440px;
-  max-height: 640px;
+  max-height: 680px;
   width: 100%;
-  max-width: 620px;
+  max-width: 680px;
   justify-self: center;
   display: flex;
   align-items: center;
@@ -2126,93 +2136,47 @@
   text-transform: lowercase;
 }
 
-/* RIGHT — Strategy frames (Navigate/Encode/Build) */
-.tri__right {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-.strat {
-  display: block;
-  position: relative;
-  padding: 18px 20px 18px;
-  border: 1px solid var(--dawn-08);
-  background: rgba(10, 9, 8, 0.55);
-  backdrop-filter: blur(8px);
-  text-decoration: none;
-  transition:
-    border-color var(--duration-normal) var(--ease-out),
-    transform var(--duration-normal) var(--ease-out),
-    background var(--duration-normal) var(--ease-out);
-}
-.strat::before,
-.strat::after {
-  content: "";
+/* LEGEND — phase summary beneath the sigil caption */
+.sigil__legend {
   position: absolute;
-  width: 10px;
-  height: 10px;
-  transition: border-color var(--duration-normal) var(--ease-out);
+  bottom: -6%;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: clamp(16px, 2.5vw, 32px);
+  font-family: var(--font-pt-mono);
+  white-space: nowrap;
 }
-.strat::before {
-  top: -1px;
-  right: -1px;
-  border-top: 1.5px solid var(--dawn-30);
-  border-right: 1.5px solid var(--dawn-30);
-}
-.strat::after {
-  bottom: -1px;
-  left: -1px;
-  border-bottom: 1.5px solid var(--dawn-30);
-  border-left: 1.5px solid var(--dawn-30);
-}
-.strat:hover {
-  border-color: var(--gold-15);
-  background: rgba(10, 9, 8, 0.75);
-  transform: translateX(-3px);
-}
-.strat:hover::before,
-.strat:hover::after {
-  border-color: var(--gold);
-}
-.strat__head {
+.sigil__legend-item {
   display: flex;
   align-items: baseline;
-  gap: 12px;
-  margin-bottom: 8px;
+  gap: 6px;
 }
-.strat__num {
-  font-family: var(--font-pt-mono);
+.sigil__legend-num {
+  font-size: 9px;
   font-weight: 700;
-  font-size: 20px;
   color: var(--gold);
-  letter-spacing: -0.01em;
+  letter-spacing: var(--track-wider);
 }
-.strat__name {
-  font-family: var(--font-pt-mono);
+.sigil__legend-name {
+  font-size: 10px;
   font-weight: 700;
-  font-size: 16px;
-  letter-spacing: -0.005em;
+  letter-spacing: var(--track-wide);
   text-transform: uppercase;
   color: var(--dawn);
 }
-.strat__tag {
-  margin-left: auto;
-  font-family: var(--font-pt-mono);
+.sigil__legend-desc {
   font-size: 9px;
-  letter-spacing: var(--track-wider);
-  text-transform: uppercase;
+  letter-spacing: var(--track-wide);
   color: var(--dawn-30);
 }
-.strat__desc {
-  font-family: var(--font-pp-neue-montreal);
-  font-size: 13px;
-  line-height: 1.55;
-  color: var(--dawn-70);
-  margin: 0;
-}
-.strat__desc em {
-  font-style: normal;
-  color: var(--gold);
+@media (max-width: 700px) {
+  .sigil__legend {
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    bottom: -12%;
+  }
 }
 
 /* ═══════════ 03 CONTINUUM — spectrum + collapsed distances ═══════════ */
@@ -3110,18 +3074,6 @@ body.density-dense .station {
   }
 }
 
-/* ── Definition (02): strat card hover refinement ─────────────────── */
-.strat {
-  transition:
-    border-color var(--duration-normal) var(--ease-out),
-    background var(--duration-normal) var(--ease-out),
-    transform var(--duration-normal) var(--ease-out);
-}
-.strat:hover {
-  transform: translateX(-2px);
-  border-color: var(--gold-40) !important;
-}
-
 /* ── Practice (04): case card lift + stat dividers ───────────────── */
 .case {
   transition:
@@ -3270,7 +3222,6 @@ body.density-dense .station {
 
 /* ── Responsive: prevent polish hovers from breaking mobile ──────── */
 @media (hover: none) {
-  .strat:hover,
   .case,
   .service-card:hover,
   .product-cell:hover,
@@ -3542,11 +3493,10 @@ body.density-dense .station {
     transform 260ms var(--m-ease-instr);
 }
 
-/* Service cards & strat links: parallax-esque hover lift that matches
+/* Service cards: parallax-esque hover lift that matches
    the overall scroll system (small, decelerating, no bounce) */
 .service-card,
-.product-cell,
-.strat {
+.product-cell {
   transition:
     transform 380ms var(--m-ease-instr),
     border-color 380ms var(--m-ease-instr),

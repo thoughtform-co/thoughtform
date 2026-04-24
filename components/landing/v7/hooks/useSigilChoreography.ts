@@ -23,7 +23,7 @@ export function useSigilChoreography(rootRef: React.RefObject<HTMLElement | null
     const sigilMark = query<HTMLElement>(".sigil__mark", docEl);
     const sigilCap = query<HTMLElement>(".sigil__cap", docEl);
     const triLeft = query<HTMLElement>(".tri__left", docEl);
-    const triRight = query<HTMLElement>(".tri__right", docEl);
+    const sigilLegend = query<HTMLElement>(".sigil__legend", docEl);
     const hudEl = query<HTMLElement>(".hud", docEl);
     const hudBrandmark = query<HTMLElement>("#hudBrandmark", docEl);
 
@@ -31,7 +31,7 @@ export function useSigilChoreography(rootRef: React.RefObject<HTMLElement | null
       return;
     }
 
-    const section2Els = [sigilOrbits, sigilHalo, sigilMark, sigilCap, triLeft, triRight].filter(
+    const section2Els = [sigilOrbits, sigilHalo, sigilMark, sigilCap, sigilLegend, triLeft].filter(
       Boolean
     ) as HTMLElement[];
     section2Els.forEach((el) => {
@@ -40,12 +40,15 @@ export function useSigilChoreography(rootRef: React.RefObject<HTMLElement | null
     });
 
     if (reduceMotion) {
-      gsap.set([sigilOrbits, sigilHalo, sigilMark, sigilCap, triLeft, triRight].filter(Boolean), {
-        opacity: 1,
-        scale: 1,
-        y: 0,
-        clearProps: "transform",
-      });
+      gsap.set(
+        [sigilOrbits, sigilHalo, sigilMark, sigilCap, sigilLegend, triLeft].filter(Boolean),
+        {
+          opacity: 1,
+          scale: 1,
+          y: 0,
+          clearProps: "transform",
+        }
+      );
       hudBrandmark.classList.add("is-visible");
       hudEl?.classList.add("hud--brandmark-active");
       return;
@@ -176,7 +179,7 @@ export function useSigilChoreography(rootRef: React.RefObject<HTMLElement | null
     const ctx = gsap.context(() => {
       gsap.set([sigilOrbits, sigilHalo], { opacity: 0, scale: 0.6, rotation: -8 });
       gsap.set(sigilMark, { opacity: 0, scale: 0.7 });
-      gsap.set([sigilCap, triLeft, triRight].filter(Boolean), { opacity: 0, y: 16 });
+      gsap.set([sigilCap, sigilLegend, triLeft].filter(Boolean), { opacity: 0, y: 16 });
 
       const entranceTl = gsap.timeline({
         scrollTrigger: {
@@ -210,23 +213,23 @@ export function useSigilChoreography(rootRef: React.RefObject<HTMLElement | null
           0.15
         )
         .to(
-          [sigilCap].filter(Boolean),
+          [sigilCap, sigilLegend].filter(Boolean),
           {
             opacity: 1,
             y: 0,
             duration: 0.35,
             ease: "power3.out",
+            stagger: 0.06,
           },
           0.3
         )
         .to(
-          [triLeft, triRight].filter(Boolean),
+          [triLeft].filter(Boolean),
           {
             opacity: 1,
             y: 0,
             duration: 0.4,
             ease: "power3.out",
-            stagger: 0.08,
           },
           0.25
         );
@@ -265,7 +268,7 @@ export function useSigilChoreography(rootRef: React.RefObject<HTMLElement | null
       });
 
       handoffTl.to(
-        [sigilOrbits, sigilHalo, sigilCap].filter(Boolean),
+        [sigilOrbits, sigilHalo, sigilCap, sigilLegend].filter(Boolean),
         {
           opacity: 0,
           scale: 0.7,

@@ -1153,12 +1153,13 @@ body { color: var(--dawn-70); }
 .foot__r a { color: var(--dawn-50); text-decoration: none; margin-left: 16px; }
 .foot__r a:hover { color: var(--gold); }
 
-/* ═══════════ 02 TRI — What/Sigil/Strategy (new layout) ═══════════ */
+/* ═══════════ 02 TRI — What/Sigil (paired instrument, centered) ═══════════ */
 .tri {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(420px, 620px) minmax(0, 0.72fr);
-  column-gap: clamp(28px, 3.5vw, 64px);
+  grid-template-columns: minmax(0, 400px) minmax(440px, 680px);
+  column-gap: clamp(8px, 1.2vw, 20px);
   align-items: center;
+  justify-content: center;
   margin-top: var(--space-xl);
   min-height: 660px;
 }
@@ -1166,6 +1167,7 @@ body { color: var(--dawn-70); }
   .tri {
     grid-template-columns: 1fr;
     row-gap: 56px;
+    justify-content: stretch;
   }
   .tri__center { order: -1; }
 }
@@ -1225,9 +1227,9 @@ body { color: var(--dawn-70); }
   position: relative;
   aspect-ratio: 1;
   min-height: 440px;
-  max-height: 640px;
+  max-height: 680px;
   width: 100%;
-  max-width: 620px;
+  max-width: 680px;
   justify-self: center;
   display: flex; align-items: center; justify-content: center;
 }
@@ -1239,6 +1241,7 @@ body { color: var(--dawn-70); }
 .sigil__orbits {
   position: absolute; inset: 0;
   width: 100%; height: 100%;
+  overflow: visible;
   animation: sigilBreath 12s ease-in-out infinite;
 }
 @keyframes sigilBreath {
@@ -1301,64 +1304,18 @@ body { color: var(--dawn-70); }
   color: var(--dawn-50); text-transform: lowercase;
 }
 
-/* RIGHT — Strategy frames (Navigate/Encode/Build) */
-.tri__right {
-  display: flex; flex-direction: column;
-  gap: 14px;
+/* LEGEND — phase summary beneath the sigil caption */
+.sigil__legend {
+  position: absolute;
+  bottom: -6%; left: 50%;
+  transform: translateX(-50%);
+  display: flex; gap: clamp(16px, 2.5vw, 32px);
+  font-family: var(--font-pt-mono); white-space: nowrap;
 }
-.strat {
-  display: block;
-  position: relative;
-  padding: 18px 20px 18px;
-  border: 1px solid var(--dawn-08);
-  background: rgba(10,9,8,0.55);
-  backdrop-filter: blur(8px);
-  text-decoration: none;
-  transition: border-color var(--duration-normal) var(--ease-out),
-              transform var(--duration-normal) var(--ease-out),
-              background var(--duration-normal) var(--ease-out);
-}
-.strat::before, .strat::after {
-  content: ''; position: absolute; width: 10px; height: 10px;
-  transition: border-color var(--duration-normal) var(--ease-out);
-}
-.strat::before { top: -1px; right: -1px;
-  border-top: 1.5px solid var(--dawn-30); border-right: 1.5px solid var(--dawn-30); }
-.strat::after { bottom: -1px; left: -1px;
-  border-bottom: 1.5px solid var(--dawn-30); border-left: 1.5px solid var(--dawn-30); }
-.strat:hover {
-  border-color: var(--gold-15);
-  background: rgba(10,9,8,0.75);
-  transform: translateX(-3px);
-}
-.strat:hover::before, .strat:hover::after { border-color: var(--gold); }
-.strat__head {
-  display: flex; align-items: baseline; gap: 12px;
-  margin-bottom: 8px;
-}
-.strat__num {
-  font-family: var(--font-pt-mono); font-weight: 700;
-  font-size: 20px; color: var(--gold);
-  letter-spacing: -0.01em;
-}
-.strat__name {
-  font-family: var(--font-pt-mono); font-weight: 700;
-  font-size: 16px; letter-spacing: -0.005em;
-  text-transform: uppercase; color: var(--dawn);
-}
-.strat__tag {
-  margin-left: auto;
-  font-family: var(--font-pt-mono); font-size: 9px;
-  letter-spacing: var(--track-wider); text-transform: uppercase;
-  color: var(--dawn-30);
-}
-.strat__desc {
-  font-family: var(--font-pp-neue-montreal);
-  font-size: 13px; line-height: 1.55;
-  color: var(--dawn-70);
-  margin: 0;
-}
-.strat__desc em { font-style: normal; color: var(--gold); }
+.sigil__legend-item { display: flex; align-items: baseline; gap: 6px; }
+.sigil__legend-num { font-size: 9px; font-weight: 700; color: var(--gold); letter-spacing: var(--track-wider); }
+.sigil__legend-name { font-size: 10px; font-weight: 700; letter-spacing: var(--track-wide); text-transform: uppercase; color: var(--dawn); }
+.sigil__legend-desc { font-size: 9px; letter-spacing: var(--track-wide); color: var(--dawn-30); }
 
 /* ═══════════ 03 CONTINUUM — spectrum + collapsed distances ═══════════ */
 .continuum {
@@ -1969,17 +1926,6 @@ body.density-dense .station { min-height: 85vh; padding: 120px 0; }
   50% { opacity: 0.5; transform: scale(0.7); }
 }
 
-/* ── Definition (02): strat card hover refinement ─────────────────── */
-.strat {
-  transition: border-color var(--duration-normal) var(--ease-out),
-              background var(--duration-normal) var(--ease-out),
-              transform var(--duration-normal) var(--ease-out);
-}
-.strat:hover {
-  transform: translateX(-2px);
-  border-color: var(--gold-40) !important;
-}
-
 /* ── Practice (04): case card lift + stat dividers ───────────────── */
 .case {
   transition: border-color var(--duration-normal) var(--ease-out),
@@ -2091,7 +2037,7 @@ body.density-dense .station { min-height: 85vh; padding: 120px 0; }
 
 /* ── Responsive: prevent polish hovers from breaking mobile ──────── */
 @media (hover: none) {
-  .strat:hover, .case, .service-card:hover, .product-cell:hover,
+  .case, .service-card:hover, .product-cell:hover,
   .btn--solid:hover, .btn:not(.btn--solid):hover {
     transform: none !important;
   }
@@ -2283,9 +2229,9 @@ body.density-dense .station { min-height: 85vh; padding: 120px 0; }
                     color var(--m-dur-fast) var(--m-ease-instr),
                     transform 260ms var(--m-ease-instr); }
 
-/* Service cards & strat links: parallax-esque hover lift that matches
+/* Service cards: parallax-esque hover lift that matches
    the overall scroll system (small, decelerating, no bounce) */
-.service-card, .product-cell, .strat {
+.service-card, .product-cell {
   transition: transform 380ms var(--m-ease-instr),
               border-color 380ms var(--m-ease-instr),
               background 380ms var(--m-ease-instr);
@@ -3818,7 +3764,7 @@ html { scroll-behavior: smooth; }
       <div class="tri__center" aria-hidden="true">
         <div class="sigil">
           <!-- orbital rings behind -->
-          <svg class="sigil__orbits" viewBox="-160 -160 320 320">
+          <svg class="sigil__orbits" viewBox="-160 -160 320 320" overflow="visible">
             <g fill="none" stroke-width="0.6">
               <circle r="150" stroke="var(--dawn-15)" stroke-dasharray="1 5"/>
               <circle r="126" stroke="var(--dawn-08)"/>
@@ -3846,12 +3792,23 @@ html { scroll-behavior: smooth; }
               <path d="M0 -150 L0 -144" transform="rotate(300)"/>
               <path d="M0 -150 L0 -144" transform="rotate(330)"/>
             </g>
-            <!-- bearing labels -->
-            <g font-family="var(--font-pt-mono)" font-size="7" fill="var(--dawn-30)" text-anchor="middle" letter-spacing="1">
-              <text x="0" y="-156">N · 000</text>
-              <text x="156" y="2" text-anchor="start">090</text>
-              <text x="0" y="165">180</text>
-              <text x="-156" y="2" text-anchor="end">270</text>
+            <!-- phase orbit labels (Navigate / Encode / Build) -->
+            <g class="sigil__phase-labels" font-family="var(--font-pt-mono)" letter-spacing="0.8">
+              <!-- Navigate — outer ring (r≈150), compass ~325° -->
+              <circle cx="-86" cy="-123" r="2.5" fill="var(--gold)" opacity="0.85"/>
+              <line x1="-86" y1="-123" x2="-96" y2="-136" stroke="var(--dawn-30)" stroke-width="0.4"/>
+              <text x="-100" y="-140" font-size="7.5" fill="var(--dawn)" text-anchor="end" font-weight="700">NAVIGATE</text>
+              <text x="-100" y="-131" font-size="5.5" fill="var(--dawn-30)" text-anchor="end">See</text>
+              <!-- Encode — second ring (r≈126), compass ~205° -->
+              <circle cx="-53" cy="114" r="2" fill="var(--gold)" opacity="0.7"/>
+              <line x1="-53" y1="114" x2="-61" y2="127" stroke="var(--dawn-30)" stroke-width="0.4"/>
+              <text x="-65" y="131" font-size="7.5" fill="var(--dawn)" text-anchor="end" font-weight="700">ENCODE</text>
+              <text x="-65" y="140" font-size="5.5" fill="var(--dawn-30)" text-anchor="end">Crystallize</text>
+              <!-- Build — third ring (r≈104), compass ~80° -->
+              <circle cx="102" cy="-18" r="2" fill="var(--gold)" opacity="0.7"/>
+              <line x1="102" y1="-18" x2="114" y2="-24" stroke="var(--dawn-30)" stroke-width="0.4"/>
+              <text x="118" y="-27" font-size="7.5" fill="var(--dawn)" text-anchor="start" font-weight="700">BUILD</text>
+              <text x="118" y="-18" font-size="5.5" fill="var(--dawn-30)" text-anchor="start">Ship</text>
             </g>
           </svg>
 
@@ -3879,49 +3836,27 @@ html { scroll-behavior: smooth; }
             <span class="k">North star</span>
             <span class="v">the interface, not the algorithm</span>
           </div>
+
+          <!-- phase legend (compact, below caption) -->
+          <div class="sigil__legend">
+            <div class="sigil__legend-item">
+              <span class="sigil__legend-num">01</span>
+              <span class="sigil__legend-name">Navigate</span>
+              <span class="sigil__legend-desc">see the terrain</span>
+            </div>
+            <div class="sigil__legend-item">
+              <span class="sigil__legend-num">02</span>
+              <span class="sigil__legend-name">Encode</span>
+              <span class="sigil__legend-desc">crystallize knowledge</span>
+            </div>
+            <div class="sigil__legend-item">
+              <span class="sigil__legend-num">03</span>
+              <span class="sigil__legend-name">Build</span>
+              <span class="sigil__legend-desc">ship from expertise</span>
+            </div>
+          </div>
         </div>
       </div>
-
-      <!-- RIGHT: Navigate / Encode / Build (concise summary, strategy frames) -->
-      <aside class="tri__right" aria-label="Strategy">
-        <div class="tri__eyebrow tri__eyebrow--end"><span class="d"></span>Strategy · A · E · B</div>
-
-        <a href="#practice" class="strat">
-          <div class="strat__head">
-            <span class="strat__num">01</span>
-            <span class="strat__name">Navigate</span>
-            <span class="strat__tag">See</span>
-          </div>
-          <p class="strat__desc">
-            Give people capable tools and show them what AI actually is — not a
-            rollout, a <em>navigation lesson.</em>
-          </p>
-        </a>
-
-        <a href="#practice" class="strat">
-          <div class="strat__head">
-            <span class="strat__num">02</span>
-            <span class="strat__name">Encode</span>
-            <span class="strat__tag">Crystallize</span>
-          </div>
-          <p class="strat__desc">
-            Turn individual intuition into reusable AI Skills. Knowledge moves,
-            <em>people don't have to.</em>
-          </p>
-        </a>
-
-        <a href="#practice" class="strat">
-          <div class="strat__head">
-            <span class="strat__num">03</span>
-            <span class="strat__name">Build</span>
-            <span class="strat__tag">Ship</span>
-          </div>
-          <p class="strat__desc">
-            The encoded knowledge reveals what to build. Domain experts ship
-            software in <em>days instead of months.</em>
-          </p>
-        </a>
-      </aside>
     </div>
   </section>
 
@@ -4761,11 +4696,9 @@ html { scroll-behavior: smooth; }
   if (tri) {
     tri.setAttribute('data-m-group', '');
     const L = tri.querySelector('.tri__left'),
-          R = tri.querySelector('.tri__right'),
           C = tri.querySelector('.tri__center');
     if (L) L.setAttribute('data-m','body');
     if (C) C.setAttribute('data-m','instrument');
-    if (R) R.setAttribute('data-m','frame');
   }
 
   // Continuum crail + close

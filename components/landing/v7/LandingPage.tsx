@@ -149,7 +149,6 @@ export function LandingPage({ bodyHtml, bodyClass, celestialSlots }: LandingPage
       tri.setAttribute("data-m-group", "");
       tagIfEmpty(tri.querySelector(".tri__left"), "body");
       tagIfEmpty(tri.querySelector(".tri__center"), "instrument");
-      tagIfEmpty(tri.querySelector(".tri__right"), "frame");
     }
     tagIfEmpty(root.querySelector(".crail--large"), "instrument");
     tagIfEmpty(root.querySelector(".continuum__close"), "body");
