@@ -8,7 +8,6 @@ import { CelestialPortals } from "./CelestialConnector/CelestialPortals";
 import { PhaseGlyphPortals } from "./PhaseGlyph";
 import { CelestialEditorOverlay } from "@/components/admin/CelestialEditor";
 import { useCelestialDrafts } from "@/components/admin/CelestialEditor/useCelestialDrafts";
-import { ProductsWebGLPortal } from "./ProductsWebGLPortal";
 import type { SlotsMap } from "@/lib/celestial/schema";
 
 interface LandingPageProps {
@@ -237,7 +236,6 @@ export function LandingPage({ bodyHtml, bodyClass, celestialSlots }: LandingPage
       />
       {mergedSlots && <CelestialPortals slots={mergedSlots} containerRef={rootRef} />}
       <PhaseGlyphPortals containerRef={rootRef} />
-      <ProductsWebGLPortal containerRef={rootRef} />
       <CelestialEditorOverlay />
     </>
   );

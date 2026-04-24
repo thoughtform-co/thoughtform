@@ -3713,15 +3713,14 @@ html { scroll-behavior: smooth; }
       </button>
       <div class="hud__nav__list">
         <div class="hud__nav__list__head">
-          <span class="k">Navigate</span><span>Stations · 07</span>
+          <span class="k">Navigate</span><span>Stations · 06</span>
         </div>
         <a href="#hero" data-station="hero" class="is-active"><span class="num">01</span>Interface</a>
         <a href="#definition" data-station="definition"><span class="num">02</span>Thoughtform</a>
         <a href="#continuum" data-station="continuum"><span class="num">03</span>Continuum</a>
-        <a href="#products" data-station="products"><span class="num">04</span>Instruments</a>
-        <a href="#practice" data-station="practice"><span class="num">05</span>Practice</a>
-        <a href="#about" data-station="about"><span class="num">06</span>About</a>
-        <a href="#contact" data-station="contact"><span class="num">07</span>Contact</a>
+        <a href="#practice" data-station="practice"><span class="num">04</span>Practice</a>
+        <a href="#about" data-station="about"><span class="num">05</span>About</a>
+        <a href="#contact" data-station="contact"><span class="num">06</span>Contact</a>
         <div class="hud__nav__status">
           <span><span class="k">δ</span><span id="coordD">0.27</span> <span class="k">θ</span><span id="coordT">058.1°</span></span>
           <span><span class="k">Sector</span> <span id="hudSector">Origin</span></span>
@@ -4000,24 +3999,10 @@ html { scroll-behavior: smooth; }
   </section>
 
   <!-- ═══════════ CONNECTOR · 03 → 04 (slot: React portal mount) ═══════════ -->
-  <div data-celestial-slot="continuum-to-products"></div>
+  <div data-celestial-slot="continuum-to-practice"></div>
 
-  <!-- ═══════════ 04 PRODUCTS — WebGL proof gallery ═══════════ -->
-  <section class="station station--fullbleed station--products-webgl" id="products" data-station="products" data-screen-label="04 Products">
-    <div class="station__idx">Instruments<span class="landmark">Landmark · instrument constellation</span></div>
-    <h2 class="station__title">Instruments<br>in the <em>deck.</em></h2>
-    <p class="station__lede">
-      Our own interfaces for navigating latent space — quiet tools, built for
-      practitioners. Each is a lens on a different axis of the work.
-    </p>
-    <div class="products-webgl-mount" data-products-webgl></div>
-  </section>
-
-  <!-- ═══════════ CONNECTOR · 04 → 05 (slot: React portal mount) ═══════════ -->
-  <div data-celestial-slot="products-to-practice"></div>
-
-  <!-- ═══════════ 05 PRACTICE — v16 two-column approach ═══════════ -->
-  <section class="station station--fullbleed station--from-connector station--to-connector" id="practice" data-station="practice" data-screen-label="05 Practice">
+  <!-- ═══════════ 04 PRACTICE — v16 two-column approach ═══════════ -->
+  <section class="station station--fullbleed station--from-connector station--to-connector" id="practice" data-station="practice" data-screen-label="04 Practice">
     <div class="station__idx">Thoughtform in Practice<span class="landmark">Landmark · navigate → encode → build</span></div>
     <!-- Two-column approach: sticky intro + celestial spine + card phases -->
     <div class="approach" id="approach">
@@ -4287,7 +4272,7 @@ html { scroll-behavior: smooth; }
     </div>
   </section>
 
-  <!-- ═══════════ CONNECTOR · 05 → 06 (slot: React portal mount) ═══════════ -->
+  <!-- ═══════════ CONNECTOR · 04 → 05 (slot: React portal mount) ═══════════ -->
   <div data-celestial-slot="practice-to-about"></div>
 
 
@@ -4295,8 +4280,8 @@ html { scroll-behavior: smooth; }
   <!-- ═══════════ 05 SERVICES · anchor only — content now lives inside Section 04 Practice ═══════════ -->
   <a id="services" aria-hidden="true" style="display:block;height:0;overflow:hidden"></a>
 
-  <!-- ═══════════ 06 ABOUT · VINCE BUYSSENS // VOIDWALKER ═══════════ -->
-  <section class="station" id="about" data-station="about" data-screen-label="06 About">
+  <!-- ═══════════ 05 ABOUT · VINCE BUYSSENS // VOIDWALKER ═══════════ -->
+  <section class="station" id="about" data-station="about" data-screen-label="05 About">
     <div class="station__idx">About<span class="landmark">Landmark · the navigator · who runs the practice</span></div>
 
     <div class="voidwalker">
@@ -4475,7 +4460,7 @@ html { scroll-behavior: smooth; }
     </div>
   </section>
 
-  <!-- ═══════════ 07 CONTACT ═══════════ -->
+  <!-- ═══════════ 06 CONTACT ═══════════ -->
   <section class="station" id="contact" data-station="contact" data-screen-label="08 Contact">
     <div class="contact">
       <div class="station__idx" style="justify-content:center">Contact<span class="landmark" style="margin-left:0">Event horizon · destination lock</span></div>
