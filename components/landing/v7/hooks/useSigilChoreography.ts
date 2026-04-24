@@ -24,12 +24,28 @@ export function useSigilChoreography(rootRef: React.RefObject<HTMLElement | null
     const sigilCap = query<HTMLElement>(".sigil__cap", docEl);
     const triLeft = query<HTMLElement>(".tri__left", docEl);
     const sigilLegend = query<HTMLElement>(".sigil__legend", docEl);
-    const hudEl = query<HTMLElement>(".hud", docEl);
-    const hudBrandmark = query<HTMLElement>("#hudBrandmark", docEl);
+    // hudEl / hudBrandmark can be replaced by React re-running
+    // dangerouslySetInnerHTML on the injected prototype markup (e.g. after a
+    // hidden-tab Fast Refresh). Use `let` + ensureFreshHudRefs() to re-query
+    // when the captured reference detaches so handoff callbacks always act
+    // on the live DOM node.
+    let hudEl = query<HTMLElement>(".hud", docEl);
+    let hudBrandmark = query<HTMLElement>("#hudBrandmark", docEl);
 
     if (!defEl || !contEl || !sigilOrbits || !sigilMark || !hudBrandmark) {
       return;
     }
+
+    const ensureFreshHudRefs = () => {
+      if (!hudBrandmark || !docEl.contains(hudBrandmark)) {
+        const fresh = query<HTMLElement>("#hudBrandmark", docEl);
+        if (fresh) hudBrandmark = fresh;
+      }
+      if (!hudEl || !docEl.contains(hudEl)) {
+        const fresh = query<HTMLElement>(".hud", docEl);
+        if (fresh) hudEl = fresh;
+      }
+    };
 
     const section2Els = [sigilOrbits, sigilHalo, sigilMark, sigilCap, sigilLegend, triLeft].filter(
       Boolean
@@ -86,17 +102,55 @@ export function useSigilChoreography(rootRef: React.RefObject<HTMLElement | null
     let handoffArmed = false;
 
     const captureHandoffRects = () => {
+      ensureFreshHudRefs();
       gsap.set(sigilMark, {
         opacity: 1,
         scale: 1,
         "--frame-opacity": 1,
         clearProps: "rotation",
       });
-      handoffStartRect = sigilMark.getBoundingClientRect();
-      handoffTargetRect = hudBrandmark.getBoundingClientRect();
+      const sigilRect = sigilMark.getBoundingClientRect();
+      const hudRect = hudBrandmark!.getBoundingClientRect();
+      const vh = window.innerHeight;
+      // Only (re)capture the start rect when the sigil is actually visible.
+      // onEnterBack / onRefresh can fire while the user is already past
+      // Section 02 (after a tab switch, ScrollTrigger refresh, or cold-load
+      // at a restored scroll position past the continuum). Capturing an
+      // off-screen rect there would make the travelMark fly in from above
+      // the viewport and the user perceives it as "no animation, brandmark
+      // just snaps in".
+      const isSigilVisible = sigilRect.bottom > 0 && sigilRect.top < vh;
+      if (isSigilVisible) {
+        handoffStartRect = sigilRect;
+      } else if (!handoffStartRect) {
+        // Cold-start with the sigil off-screen. Compute the sigil's natural
+        // viewport position at the scroll where the handoff is meant to
+        // begin (trigger.start = "top 80%" -> continuum top at 0.8 * vh),
+        // so the travelMark starts inside the viewport.
+        const liveCont =
+          contEl && docEl.contains(contEl)
+            ? contEl
+            : docEl.querySelector<HTMLElement>("#continuum");
+        if (liveCont) {
+          const sigilDocY = sigilRect.top + window.scrollY;
+          const contDocY = liveCont.getBoundingClientRect().top + window.scrollY;
+          const fallbackTop = sigilDocY - (contDocY - vh * 0.8);
+          handoffStartRect = new DOMRect(
+            sigilRect.left,
+            fallbackTop,
+            sigilRect.width,
+            sigilRect.height
+          );
+        } else {
+          handoffStartRect = sigilRect;
+        }
+      }
+      handoffTargetRect = hudRect;
     };
 
     const dock = () => {
+      ensureFreshHudRefs();
+      if (!hudBrandmark) return;
       gsap.set(travelMark, { opacity: 0 });
       gsap.set(sigilMark, { opacity: 0, "--frame-opacity": 0 });
       hudBrandmark.classList.add("is-visible");
@@ -104,12 +158,13 @@ export function useSigilChoreography(rootRef: React.RefObject<HTMLElement | null
     };
 
     const resetHandoff = () => {
+      ensureFreshHudRefs();
       handoffArmed = false;
       handoffStartRect = null;
       handoffTargetRect = null;
       gsap.set(travelMark, { opacity: 0 });
       gsap.set(sigilMark, { opacity: 1, "--frame-opacity": 1 });
-      hudBrandmark.classList.remove("is-visible");
+      hudBrandmark?.classList.remove("is-visible");
       hudEl?.classList.remove("hud--brandmark-active");
     };
 
@@ -117,10 +172,11 @@ export function useSigilChoreography(rootRef: React.RefObject<HTMLElement | null
       if (!handoffArmed || !handoffStartRect || !handoffTargetRect) {
         return;
       }
+      ensureFreshHudRefs();
       if (p <= 0) {
         gsap.set(travelMark, { opacity: 0 });
         gsap.set(sigilMark, { opacity: 1, "--frame-opacity": 1 });
-        hudBrandmark.classList.remove("is-visible");
+        hudBrandmark?.classList.remove("is-visible");
         hudEl?.classList.remove("hud--brandmark-active");
         return;
       }
@@ -136,7 +192,7 @@ export function useSigilChoreography(rootRef: React.RefObject<HTMLElement | null
       const cornerRetired = p >= 0.82;
 
       hudEl?.classList.toggle("hud--brandmark-active", cornerRetired);
-      hudBrandmark.classList.remove("is-visible");
+      hudBrandmark?.classList.remove("is-visible");
 
       gsap.set(travelMark, {
         left: src.left + (dst.left - src.left) * eased,
@@ -150,7 +206,8 @@ export function useSigilChoreography(rootRef: React.RefObject<HTMLElement | null
 
     const onResize = () => {
       if (handoffArmed) {
-        handoffTargetRect = hudBrandmark.getBoundingClientRect();
+        ensureFreshHudRefs();
+        if (hudBrandmark) handoffTargetRect = hudBrandmark.getBoundingClientRect();
       }
     };
     window.addEventListener("resize", onResize);
@@ -159,16 +216,16 @@ export function useSigilChoreography(rootRef: React.RefObject<HTMLElement | null
     // may queue, and the browser can shift layout (font swaps, image
     // decode). ScrollTrigger's cached positions and the captured handoff
     // rects can go stale. On resume, force a full refresh — this re-runs
-    // onRefresh for every trigger, which recaptures rects and
-    // re-syncs progress with current scroll position.
+    // onRefresh for every trigger, which recaptures rects and re-syncs
+    // progress with current scroll position.
     const onVisibilityChange = () => {
       if (document.visibilityState === "visible") {
         ScrollTrigger.refresh();
       }
     };
     document.addEventListener("visibilitychange", onVisibilityChange);
-    // Some browsers fire pageshow (e.g. returning from bfcache) without
-    // a visibilitychange — cover that path too.
+    // Some browsers fire pageshow (e.g. returning from bfcache) without a
+    // visibilitychange — cover that path too.
     const onPageShow = (event: PageTransitionEvent) => {
       if (event.persisted) {
         ScrollTrigger.refresh();
@@ -283,7 +340,7 @@ export function useSigilChoreography(rootRef: React.RefObject<HTMLElement | null
       window.removeEventListener("resize", onResize);
       document.removeEventListener("visibilitychange", onVisibilityChange);
       window.removeEventListener("pageshow", onPageShow);
-      hudBrandmark.classList.remove("is-visible");
+      hudBrandmark?.classList.remove("is-visible");
       hudEl?.classList.remove("hud--brandmark-active");
       ctx.revert();
       travelMark.remove();
