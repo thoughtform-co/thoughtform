@@ -13,7 +13,7 @@ export const PHASE_GLYPH_CONFIGS: Record<"navigate" | "encode" | "build", Celest
     schemaVersion: 1,
     preset: "compassRose",
     orientation: "horizontal",
-    size: "md",
+    size: "sm",
     diagram: {
       rotation: 0,
       rings: { count: 3, tickDensity: 12, showMeridian: true, strokeWeight: 0.5 },
@@ -29,7 +29,7 @@ export const PHASE_GLYPH_CONFIGS: Record<"navigate" | "encode" | "build", Celest
     schemaVersion: 1,
     preset: "crystallize",
     orientation: "horizontal",
-    size: "md",
+    size: "sm",
     diagram: {
       rotation: 0,
       rings: { count: 1, tickDensity: 0, showMeridian: false, strokeWeight: 0.3 },
@@ -46,7 +46,7 @@ export const PHASE_GLYPH_CONFIGS: Record<"navigate" | "encode" | "build", Celest
     schemaVersion: 1,
     preset: "armature",
     orientation: "horizontal",
-    size: "md",
+    size: "sm",
     diagram: {
       rotation: 0,
       rings: { count: 1, tickDensity: 4, showMeridian: false, strokeWeight: 0.3 },

@@ -3958,12 +3958,11 @@ html {
 }
 
 /* ═══════════════════════════════════════════════════════════════════
-   PRACTICE · v17 — TWO-COLUMN APPROACH + CELESTIAL SPINE
+   PRACTICE · v18 — CELESTIAL MAP (centered thesis + meridian + zigzag)
    ───────────────────────────────────────────────────────────────────
-   Left: sticky pitch + CTA. Right: three HUD cards with inline
-   SVG symbols. Middle: a celestial navigation strip — dual corridor,
-   bearing ticks, coordinate labels, constellation anchors, reticle
-   scrubber. Opens cold on "Three moves. One skill." — no topbar.
+   Centered pitch, then a 3-column grid: phase cards alternate L / R / L
+   around a fixed meridian (spine). Cards stay compact; chart ornaments
+   sit under HUD content (z-stacked). Mobile stacks and hides meridian.
    ═══════════════════════════════════════════════════════════════════ */
 
 .station--fullbleed {
@@ -3973,41 +3972,44 @@ html {
   padding-right: var(--hud-content-inset);
 }
 
-/* ─── Two-column grid ─── */
+/* ─── Section stack ─── */
 .approach {
-  display: grid;
-  grid-template-columns: minmax(280px, 1fr) 56px minmax(380px, 1.4fr);
-  gap: 0;
-  margin: 0 clamp(32px, 4vw, 64px);
-  padding: clamp(48px, 6vw, 88px) 0 clamp(32px, 4vw, 56px);
-}
-
-/* ─── LEFT: sticky intro ─── */
-.approach__intro {
-  position: sticky;
-  top: clamp(80px, 10vh, 120px);
-  align-self: start;
-  padding: 0 clamp(24px, 3vw, 48px) 0 0;
   display: flex;
   flex-direction: column;
+  align-items: stretch;
+  margin: 0 clamp(32px, 4vw, 64px);
+  padding: clamp(40px, 5vw, 72px) 0 clamp(28px, 3.5vw, 48px);
+  gap: clamp(28px, 4vw, 48px);
+}
+
+/* ─── Centered intro ─── */
+.approach__intro {
+  position: static;
+  align-self: center;
+  max-width: min(52rem, 100%);
+  padding: 0 clamp(12px, 2vw, 24px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
 }
 .approach__intro__title {
   font-family: var(--font-pp-neue-montreal);
   font-weight: 700;
-  font-size: clamp(36px, 4.5vw, 64px);
+  font-size: clamp(32px, 4.2vw, 56px);
   line-height: 0.92;
   letter-spacing: -0.035em;
   color: var(--dawn);
-  margin: 0 0 clamp(18px, 2vw, 28px);
+  margin: 0 0 clamp(14px, 1.8vw, 22px);
 }
 .approach__intro__lede {
   font-family: var(--font-pp-neue-montreal);
   font-weight: 300;
-  font-size: clamp(15px, 1.1vw, 17px);
-  line-height: 1.6;
+  font-size: clamp(14px, 1.05vw, 17px);
+  line-height: 1.55;
   color: var(--dawn-70);
-  margin: 0 0 clamp(28px, 3vw, 44px);
-  max-width: 38ch;
+  margin: 0 0 clamp(20px, 2.5vw, 32px);
+  max-width: 42ch;
 }
 .approach__intro__lede em {
   font-style: normal;
@@ -4032,7 +4034,7 @@ html {
   transition:
     background 220ms var(--m-ease-instr),
     transform 120ms var(--m-ease-instr);
-  align-self: flex-start;
+  align-self: center;
 }
 .approach__cta:hover {
   background: var(--gold-bright, #d4b44e);
@@ -4042,11 +4044,27 @@ html {
   flex-shrink: 0;
 }
 
+/* ─── Map: meridian column + alternating card slots ─── */
+.approach__map {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(52px, 76px) minmax(0, 1fr);
+  grid-template-rows: auto auto auto;
+  align-items: start;
+  column-gap: clamp(6px, 1.2vw, 16px);
+  row-gap: clamp(22px, 3.5vw, 44px);
+}
+
 /* ═══ SPINE: celestial transit column ═══ */
 .approach__spine {
   position: relative;
   overflow: visible;
   isolation: isolate;
+  grid-column: 2;
+  grid-row: 1 / -1;
+  width: 100%;
+  min-height: 100%;
+  justify-self: center;
+  align-self: stretch;
 }
 .approach__spine::before {
   content: "";
@@ -4446,35 +4464,178 @@ html {
   color: var(--gold);
 }
 
-/* ═══ RIGHT: phase cards ═══ */
+/* ═══ Phase list: participates in map grid (desktop) ═══ */
 .approach__list {
-  padding: 0 0 0 clamp(24px, 3vw, 48px);
-  display: flex;
-  flex-direction: column;
-  gap: clamp(32px, 4vw, 56px);
+  display: contents;
 }
 
 .approach__phase {
   position: relative;
-  padding: clamp(32px, 3.5vw, 48px);
+  padding: clamp(18px, 2.2vw, 28px) clamp(20px, 2.4vw, 32px);
   border: 1px solid var(--dawn-08);
   background: linear-gradient(180deg, rgba(10, 8, 6, 0.65) 0%, rgba(5, 4, 3, 0.4) 100%);
 }
+
+.approach__phase[data-phase="navigate"] {
+  grid-column: 1;
+  grid-row: 1;
+  justify-self: end;
+  width: min(100%, clamp(260px, 34vw, 440px));
+  margin-right: clamp(0px, 0.6vw, 10px);
+}
+
+.approach__phase[data-phase="encode"] {
+  grid-column: 3;
+  grid-row: 2;
+  justify-self: start;
+  width: min(100%, clamp(260px, 34vw, 440px));
+  margin-left: clamp(0px, 0.6vw, 10px);
+}
+
+.approach__phase[data-phase="build"] {
+  grid-column: 1;
+  grid-row: 3;
+  justify-self: end;
+  width: min(100%, clamp(260px, 34vw, 440px));
+  margin-right: clamp(0px, 0.6vw, 10px);
+}
+
+/* Hairline course toward the meridian */
+.approach__phase[data-phase="navigate"]::after,
+.approach__phase[data-phase="build"]::after {
+  content: "";
+  position: absolute;
+  top: 40%;
+  right: 0;
+  width: clamp(12px, 3.2vw, 30px);
+  height: 1px;
+  background: linear-gradient(to right, var(--gold-30, rgba(202, 165, 84, 0.4)), transparent);
+  pointer-events: none;
+  z-index: 3;
+  opacity: 0.75;
+}
+
+.approach__phase[data-phase="encode"]::after {
+  content: "";
+  position: absolute;
+  top: 40%;
+  left: 0;
+  width: clamp(12px, 3.2vw, 30px);
+  height: 1px;
+  background: linear-gradient(to left, var(--gold-30, rgba(202, 165, 84, 0.4)), transparent);
+  pointer-events: none;
+  z-index: 3;
+  opacity: 0.75;
+}
+
 .approach__phase[data-active="true"] {
   border-color: rgba(202, 165, 84, 0.2);
   background: linear-gradient(180deg, rgba(14, 12, 8, 0.7) 0%, rgba(5, 4, 3, 0.45) 100%);
 }
 
+/* Per-card star chart / bearing layer (under HUD chrome) */
+.approach__phase__chart {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.approach__phase__bearing {
+  position: absolute;
+  top: 12px;
+  font-family: var(--font-pt-mono);
+  font-size: 8px;
+  letter-spacing: var(--track-widest);
+  text-transform: uppercase;
+  color: var(--gold-30, rgba(202, 165, 84, 0.55));
+}
+
+.approach__phase[data-phase="navigate"] .approach__phase__bearing,
+.approach__phase[data-phase="build"] .approach__phase__bearing {
+  right: 12px;
+  text-align: right;
+}
+
+.approach__phase[data-phase="encode"] .approach__phase__bearing {
+  left: 12px;
+}
+
+.approach__phase__arc {
+  position: absolute;
+  top: 7%;
+  width: 44%;
+  height: 32%;
+  border: 1px solid var(--dawn-08);
+  border-bottom: none;
+  opacity: 0.4;
+  border-radius: 100% 100% 0 0 / 100% 100% 0 0;
+}
+
+.approach__phase[data-phase="navigate"] .approach__phase__arc,
+.approach__phase[data-phase="build"] .approach__phase__arc {
+  right: 5%;
+  left: auto;
+}
+
+.approach__phase[data-phase="encode"] .approach__phase__arc {
+  left: 5%;
+  right: auto;
+}
+
+.approach__phase__ticks {
+  position: absolute;
+  bottom: 12%;
+  width: 1px;
+  height: 30%;
+  background: repeating-linear-gradient(to bottom, var(--dawn-30) 0 1px, transparent 1px 7px);
+  opacity: 0.35;
+  left: calc(12% + var(--t, 0.5) * 38%);
+}
+
+.approach__phase[data-phase="encode"] .approach__phase__ticks {
+  left: auto;
+  right: calc(12% + var(--t, 0.5) * 38%);
+}
+
+.approach__phase__sigils {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.approach__phase__sigils .sig {
+  position: absolute;
+  left: var(--sx);
+  top: var(--sy);
+  transform: translate(-50%, -50%);
+  color: var(--gold);
+  opacity: var(--o, 0.45);
+  box-sizing: border-box;
+}
+
+.approach__phase > .reg,
+.approach__phase > header,
+.approach__phase > .approach__phase__viz,
+.approach__phase > .approach__phase__rules,
+.approach__phase > .approach__phase__cta {
+  position: relative;
+  z-index: 1;
+}
+
 .approach__phase__head {
   display: flex;
   align-items: flex-start;
-  gap: 18px;
-  margin-bottom: clamp(16px, 2vw, 24px);
+  gap: 12px;
+  margin-bottom: clamp(10px, 1.4vw, 16px);
 }
 
 .approach__phase__num {
-  width: 44px;
-  height: 44px;
+  width: 36px;
+  height: 36px;
   flex-shrink: 0;
   display: flex;
   align-items: center;
@@ -4483,7 +4644,7 @@ html {
   color: var(--void);
   font-family: var(--font-pt-mono);
   font-weight: 700;
-  font-size: 14px;
+  font-size: 12px;
   line-height: 1;
   clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
 }
@@ -4491,12 +4652,12 @@ html {
 .approach__phase__title {
   font-family: var(--font-pp-neue-montreal);
   font-weight: 700;
-  font-size: clamp(24px, 2.8vw, 36px);
+  font-size: clamp(18px, 2vw, 26px);
   line-height: 1;
   letter-spacing: -0.02em;
   text-transform: uppercase;
   color: var(--dawn);
-  margin: 0 0 6px;
+  margin: 0 0 4px;
 }
 
 .approach__phase__verb {
@@ -4511,14 +4672,14 @@ html {
 }
 .approach__phase__verb::before {
   content: "";
-  width: 16px;
+  width: 12px;
   height: 1px;
   background: var(--gold);
 }
 
 .approach__phase__tag {
   margin-left: auto;
-  padding: 4px 10px;
+  padding: 3px 8px;
   background: var(--gold);
   color: var(--void);
   font-family: var(--font-pt-mono);
@@ -4536,12 +4697,12 @@ html {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: clamp(140px, 16vw, 200px);
-  margin: clamp(12px, 1.5vw, 20px) 0;
+  min-height: clamp(96px, 11vw, 132px);
+  margin: clamp(8px, 1.2vw, 14px) 0;
 }
 .approach__phase__viz svg {
-  width: 60%;
-  max-width: 280px;
+  width: 52%;
+  max-width: 200px;
   height: auto;
   display: block;
 }
@@ -4584,17 +4745,17 @@ html {
   padding: 0;
 }
 .approach__phase__rules li {
-  padding: 14px 0;
+  padding: 10px 0;
   border-top: 1px solid var(--dawn-08);
   font-family: var(--font-pp-neue-montreal);
   font-weight: 300;
-  font-size: 15px;
-  line-height: 1.5;
+  font-size: clamp(13px, 1.05vw, 15px);
+  line-height: 1.45;
   color: var(--dawn-70);
 }
 .approach__phase__rules li.is-receipt {
   font-family: var(--font-pt-mono);
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 400;
   letter-spacing: var(--track-wide);
   text-transform: uppercase;
@@ -4657,37 +4818,60 @@ html {
 /* ─── Mobile: single column ─── */
 @media (max-width: 860px) {
   .approach {
-    grid-template-columns: 1fr;
-    gap: 0;
     margin-left: 16px;
     margin-right: 16px;
+    gap: clamp(18px, 4vw, 28px);
   }
   .approach__intro {
-    position: static;
-    padding: 0 0 clamp(32px, 4vw, 48px);
+    align-items: flex-start;
+    text-align: left;
+    max-width: none;
+    padding: 0 0 clamp(22px, 4vw, 36px);
     border-bottom: 1px solid var(--dawn-08);
+  }
+  .approach__cta {
+    align-self: flex-start;
+  }
+  .approach__map {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(18px, 3vw, 28px);
   }
   .approach__spine {
     display: none;
   }
   .approach__list {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(18px, 3vw, 28px);
     padding: 0;
-    gap: clamp(20px, 3vw, 32px);
+  }
+  .approach__phase[data-phase="navigate"],
+  .approach__phase[data-phase="encode"],
+  .approach__phase[data-phase="build"] {
+    grid-column: auto;
+    grid-row: auto;
+    justify-self: stretch;
+    width: 100%;
+    margin: 0;
+  }
+  .approach__phase::after {
+    display: none;
   }
   .approach__throughline {
-    margin-left: 16px;
-    margin-right: 16px;
+    margin-left: 0;
+    margin-right: 0;
   }
   .approach__phase__num {
-    width: 36px;
-    height: 36px;
-    font-size: 12px;
+    width: 34px;
+    height: 34px;
+    font-size: 11px;
   }
   .approach__phase {
-    padding: clamp(24px, 3vw, 36px);
+    padding: clamp(18px, 3vw, 28px);
   }
   .approach__phase__viz {
-    min-height: clamp(100px, 14vw, 160px);
+    min-height: clamp(92px, 22vw, 140px);
   }
 }
 

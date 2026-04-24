@@ -93,9 +93,10 @@ export function LandingPage({ bodyHtml, bodyClass, celestialSlots }: LandingPage
     );
     phases.forEach((p) => io.observe(p));
 
-    // Compute anchor + transit y-positions from phase layout
     const spine = root.querySelector<HTMLElement>(".approach__spine");
-    if (spine && phases.length) {
+
+    const measureSpineAnchors = () => {
+      if (!spine || !phases.length) return;
       const spineRect = spine.getBoundingClientRect();
       const spineH = spineRect.height || 1;
       phases.forEach((phase, idx) => {
@@ -109,10 +110,35 @@ export function LandingPage({ bodyHtml, bodyClass, celestialSlots }: LandingPage
         const pct = (boundary / spineH) * 100;
         spine.style.setProperty(`--transit-${t + 1}-y`, `${pct}%`);
       }
+    };
+
+    let raf = 0;
+    const scheduleMeasure = () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {
+        measureSpineAnchors();
+      });
+    };
+
+    measureSpineAnchors();
+
+    const ro =
+      typeof ResizeObserver !== "undefined"
+        ? new ResizeObserver(() => {
+            scheduleMeasure();
+          })
+        : null;
+    if (ro && spine) {
+      ro.observe(spine);
+      phases.forEach((p) => ro.observe(p));
     }
+    window.addEventListener("resize", scheduleMeasure);
 
     return () => {
       io.disconnect();
+      window.removeEventListener("resize", scheduleMeasure);
+      cancelAnimationFrame(raf);
+      ro?.disconnect();
     };
   }, []);
 
