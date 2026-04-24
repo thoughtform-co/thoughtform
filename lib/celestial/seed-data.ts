@@ -81,6 +81,7 @@ export const SEED_CONFIGS: Record<string, CelestialConfig> = {
 
 export const SEED_SLOT_ASSIGNMENTS: Record<string, string> = {
   "definition-to-continuum": "Meridian",
-  "continuum-to-practice": "Square Cascade",
+  "continuum-to-products": "Square Cascade",
+  "products-to-practice": "Square Cascade",
   "practice-to-about": "Hero Orb",
 };

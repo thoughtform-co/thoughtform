@@ -3718,9 +3718,9 @@ html { scroll-behavior: smooth; }
         <a href="#hero" data-station="hero" class="is-active"><span class="num">01</span>Interface</a>
         <a href="#definition" data-station="definition"><span class="num">02</span>Thoughtform</a>
         <a href="#continuum" data-station="continuum"><span class="num">03</span>Continuum</a>
-        <a href="#practice" data-station="practice"><span class="num">04</span>Practice</a>
-        <a href="#about" data-station="about"><span class="num">05</span>About</a>
-        <a href="#products" data-station="products"><span class="num">06</span>Products</a>
+        <a href="#products" data-station="products"><span class="num">04</span>Instruments</a>
+        <a href="#practice" data-station="practice"><span class="num">05</span>Practice</a>
+        <a href="#about" data-station="about"><span class="num">06</span>About</a>
         <a href="#contact" data-station="contact"><span class="num">07</span>Contact</a>
         <div class="hud__nav__status">
           <span><span class="k">δ</span><span id="coordD">0.27</span> <span class="k">θ</span><span id="coordT">058.1°</span></span>
@@ -4000,10 +4000,24 @@ html { scroll-behavior: smooth; }
   </section>
 
   <!-- ═══════════ CONNECTOR · 03 → 04 (slot: React portal mount) ═══════════ -->
-  <div data-celestial-slot="continuum-to-practice"></div>
+  <div data-celestial-slot="continuum-to-products"></div>
 
-  <!-- ═══════════ 04 PRACTICE — v16 two-column approach ═══════════ -->
-  <section class="station station--fullbleed station--from-connector station--to-connector" id="practice" data-station="practice" data-screen-label="04 Practice">
+  <!-- ═══════════ 04 PRODUCTS — WebGL proof gallery ═══════════ -->
+  <section class="station station--fullbleed station--products-webgl" id="products" data-station="products" data-screen-label="04 Products">
+    <div class="station__idx">Instruments<span class="landmark">Landmark · instrument constellation</span></div>
+    <h2 class="station__title">Instruments<br>in the <em>deck.</em></h2>
+    <p class="station__lede">
+      Our own interfaces for navigating latent space — quiet tools, built for
+      practitioners. Each is a lens on a different axis of the work.
+    </p>
+    <div class="products-webgl-mount" data-products-webgl></div>
+  </section>
+
+  <!-- ═══════════ CONNECTOR · 04 → 05 (slot: React portal mount) ═══════════ -->
+  <div data-celestial-slot="products-to-practice"></div>
+
+  <!-- ═══════════ 05 PRACTICE — v16 two-column approach ═══════════ -->
+  <section class="station station--fullbleed station--from-connector station--to-connector" id="practice" data-station="practice" data-screen-label="05 Practice">
     <div class="station__idx">Thoughtform in Practice<span class="landmark">Landmark · navigate → encode → build</span></div>
     <!-- Two-column approach: sticky intro + celestial spine + card phases -->
     <div class="approach" id="approach">
@@ -4273,7 +4287,7 @@ html { scroll-behavior: smooth; }
     </div>
   </section>
 
-  <!-- ═══════════ CONNECTOR · 04 → 07 (slot: React portal mount) ═══════════ -->
+  <!-- ═══════════ CONNECTOR · 05 → 06 (slot: React portal mount) ═══════════ -->
   <div data-celestial-slot="practice-to-about"></div>
 
 
@@ -4281,8 +4295,8 @@ html { scroll-behavior: smooth; }
   <!-- ═══════════ 05 SERVICES · anchor only — content now lives inside Section 04 Practice ═══════════ -->
   <a id="services" aria-hidden="true" style="display:block;height:0;overflow:hidden"></a>
 
-  <!-- ═══════════ 07 ABOUT · VINCE BUYSSENS // VOIDWALKER ═══════════ -->
-  <section class="station" id="about" data-station="about" data-screen-label="07 About">
+  <!-- ═══════════ 06 ABOUT · VINCE BUYSSENS // VOIDWALKER ═══════════ -->
+  <section class="station" id="about" data-station="about" data-screen-label="06 About">
     <div class="station__idx">About<span class="landmark">Landmark · the navigator · who runs the practice</span></div>
 
     <div class="voidwalker">
@@ -4461,73 +4475,7 @@ html { scroll-behavior: smooth; }
     </div>
   </section>
 
-  <!-- ═══════════ 06 PRODUCTS ═══════════ -->
-  <section class="station" id="products" data-station="products" data-screen-label="06 Products">
-    <div class="station__idx">Products<span class="landmark">Landmark · instrument constellation</span></div>
-    <h2 class="station__title">Instruments<br>in the <em>deck.</em></h2>
-    <p class="station__lede">
-      Our own interfaces for navigating latent space — quiet tools, built for
-      practitioners. Each is a lens on a different axis of the work.
-    </p>
-
-    <div class="products">
-      <div class="product-cell">
-        <div class="product-cell__head">
-          <span class="product-cell__tag">Astrolabe</span>
-          <span class="product-cell__status">Live · beta</span>
-        </div>
-        <h3 class="product-cell__name">Astrolabe</h3>
-        <p class="product-cell__desc">
-          Between algorithm and insight, navigation is what remains. A workbench
-          for semantic exploration — reference, style, strategy, all in one
-          frame.
-        </p>
-        <div class="product-cell__foot"><span>thoughtform.co/astrolabe</span><span>→</span></div>
-      </div>
-
-      <div class="product-cell">
-        <div class="product-cell__head">
-          <span class="product-cell__tag">Atlas</span>
-          <span class="product-cell__status">Live · beta</span>
-        </div>
-        <h3 class="product-cell__name">Atlas</h3>
-        <p class="product-cell__desc">
-          A catalogue of beings that dwell where meaning bleeds into geometry.
-          Name the creatures of latent space so you can work with them.
-        </p>
-        <div class="product-cell__foot"><span>thoughtform.co/atlas</span><span>→</span></div>
-      </div>
-
-      <div class="product-cell">
-        <div class="product-cell__head">
-          <span class="product-cell__tag">Sigil</span>
-          <span class="product-cell__status product-cell__status--wip">Preview</span>
-        </div>
-        <h3 class="product-cell__name">Sigil</h3>
-        <p class="product-cell__desc">
-          Render identity as geometry. Particle marks and service crests that
-          feel hand-drawn by the system itself.
-        </p>
-        <div class="product-cell__foot"><span>thoughtform.co/sigil</span><span>→</span></div>
-      </div>
-
-      <div class="product-cell">
-        <div class="product-cell__head">
-          <span class="product-cell__tag">Sybil</span>
-          <span class="product-cell__status product-cell__status--wip">In forge</span>
-        </div>
-        <h3 class="product-cell__name">Sybil</h3>
-        <p class="product-cell__desc">
-          She reads the schedules of mortals and whispers what approaches.
-          Ambient intelligence for teams who share a calendar with the future.
-        </p>
-        <div class="product-cell__foot"><span>thoughtform.co/sybil</span><span>→</span></div>
-      </div>
-    </div>
-  </section>
-
-
-  <!-- ═══════════ 08 CONTACT ═══════════ -->
+  <!-- ═══════════ 07 CONTACT ═══════════ -->
   <section class="station" id="contact" data-station="contact" data-screen-label="08 Contact">
     <div class="contact">
       <div class="station__idx" style="justify-content:center">Contact<span class="landmark" style="margin-left:0">Event horizon · destination lock</span></div>

@@ -8,6 +8,7 @@ import { CelestialPortals } from "./CelestialConnector/CelestialPortals";
 import { PhaseGlyphPortals } from "./PhaseGlyph";
 import { CelestialEditorOverlay } from "@/components/admin/CelestialEditor";
 import { useCelestialDrafts } from "@/components/admin/CelestialEditor/useCelestialDrafts";
+import { ProductsWebGLPortal } from "./ProductsWebGLPortal";
 import type { SlotsMap } from "@/lib/celestial/schema";
 
 interface LandingPageProps {
@@ -154,7 +155,7 @@ export function LandingPage({ bodyHtml, bodyClass, celestialSlots }: LandingPage
     tagIfEmpty(root.querySelector(".crail--large"), "instrument");
     tagIfEmpty(root.querySelector(".continuum__close"), "body");
 
-    [".exec__grid", ".products", ".about__stats"].forEach((sel) => {
+    [".exec__grid", ".about__stats"].forEach((sel) => {
       root.querySelectorAll<HTMLElement>(sel).forEach((grid) => {
         grid.setAttribute("data-m-group", "");
         Array.from(grid.children).forEach((child) => tagIfEmpty(child, "frame"));
@@ -236,6 +237,7 @@ export function LandingPage({ bodyHtml, bodyClass, celestialSlots }: LandingPage
       />
       {mergedSlots && <CelestialPortals slots={mergedSlots} containerRef={rootRef} />}
       <PhaseGlyphPortals containerRef={rootRef} />
+      <ProductsWebGLPortal containerRef={rootRef} />
       <CelestialEditorOverlay />
     </>
   );
