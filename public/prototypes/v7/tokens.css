@@ -132,6 +132,8 @@
   --hud-rail-width: clamp(48px, 4.27vw, 82px);
   --hud-rail-guide-inset: clamp(5px, 0.47vw, 9px);
   --hud-corner-zone: clamp(28px, 4.17vmin, 45px);
+  /* Content column inset (rails + breathing room) — matches components/landing/v7/landing.css */
+  --hud-content-inset: calc(var(--hud-margin) + var(--hud-rail-width) + clamp(24px, 3vw, 56px));
 
   /* Motion */
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);

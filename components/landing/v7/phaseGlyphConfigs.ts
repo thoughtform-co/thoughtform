@@ -5,20 +5,19 @@ const EMPTY_LABELS = { tl: EMPTY_LABEL, tr: EMPTY_LABEL, bl: EMPTY_LABEL, br: EM
 
 /**
  * Tuned CelestialConfig objects for the three approach phases.
- * Labels empty — these are inline glyphs, not connectors.
- * Lines set to "none" — no connecting wires above/below.
+ * Full-card halos — larger rings / denser ticks so each reads as its own field.
  */
 export const PHASE_GLYPH_CONFIGS: Record<"navigate" | "encode" | "build", CelestialConfig> = {
   navigate: {
     schemaVersion: 1,
     preset: "compassRose",
     orientation: "horizontal",
-    size: "sm",
+    size: "lg",
     diagram: {
       rotation: 0,
-      rings: { count: 3, tickDensity: 12, showMeridian: true, strokeWeight: 0.5 },
+      rings: { count: 4, tickDensity: 48, showMeridian: true, strokeWeight: 0.5 },
       reticle: { crosshair: true, centerShape: "diamond" },
-      orbital: { angle: 42, size: "md" },
+      orbital: { angle: 42, size: "lg" },
     },
     lines: { topPattern: "none", bottomPattern: "none" },
     labels: EMPTY_LABELS,
@@ -29,12 +28,12 @@ export const PHASE_GLYPH_CONFIGS: Record<"navigate" | "encode" | "build", Celest
     schemaVersion: 1,
     preset: "crystallize",
     orientation: "horizontal",
-    size: "sm",
+    size: "lg",
     diagram: {
       rotation: 0,
-      rings: { count: 1, tickDensity: 0, showMeridian: false, strokeWeight: 0.3 },
+      rings: { count: 2, tickDensity: 0, showMeridian: false, strokeWeight: 0.35 },
       glyphRing: { seed: 7, radius: "lg" },
-      crystal: { seed: 7, facets: 6, inset: 0.55 },
+      crystal: { seed: 7, facets: 8, inset: 0.52 },
       reticle: { crosshair: false, centerShape: "diamond" },
     },
     lines: { topPattern: "none", bottomPattern: "none" },
@@ -46,12 +45,12 @@ export const PHASE_GLYPH_CONFIGS: Record<"navigate" | "encode" | "build", Celest
     schemaVersion: 1,
     preset: "armature",
     orientation: "horizontal",
-    size: "sm",
+    size: "lg",
     diagram: {
       rotation: 0,
-      rings: { count: 1, tickDensity: 4, showMeridian: false, strokeWeight: 0.3 },
+      rings: { count: 2, tickDensity: 8, showMeridian: false, strokeWeight: 0.35 },
       square: { rotated: true, nested: true, registerMarks: true },
-      armature: { seed: 3, crossbars: 3, diamondJoints: 4 },
+      armature: { seed: 3, crossbars: 4, diamondJoints: 4 },
       reticle: { crosshair: false, centerShape: "diamond" },
     },
     lines: { topPattern: "none", bottomPattern: "none" },

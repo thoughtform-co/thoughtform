@@ -37,7 +37,6 @@ body { color: var(--dawn-70); }
   opacity: calc(1 - var(--depth, 0) * 0.35);
   transition: transform 40ms linear, opacity 40ms linear;
   will-change: transform, opacity;
-}
   pointer-events: none;
   overflow: hidden;
   background:
@@ -2556,14 +2555,15 @@ html { scroll-behavior: smooth; }
 }
 
 /* ═══════════════════════════════════════════════════════════════════
-   PRACTICE · v18 — CELESTIAL MAP (see landing.css for production parity)
+   PRACTICE · v19 — CELESTIAL MAP + PHASE HALOS + LATENT HORIZON
+   (keep in sync with components/landing/v7/landing.css)
    ═══════════════════════════════════════════════════════════════════ */
 
 .station--fullbleed {
-  margin-left:  calc(-1 * clamp(96px, 8vw + 40px, 140px));
-  margin-right: calc(-1 * clamp(96px, 8vw + 40px, 140px));
-  padding-left:  clamp(40px, 4vw + 8px, 80px);
-  padding-right: clamp(40px, 4vw + 8px, 80px);
+  margin-left: calc(-1 * var(--hud-content-inset));
+  margin-right: calc(-1 * var(--hud-content-inset));
+  padding-left: var(--hud-content-inset);
+  padding-right: var(--hud-content-inset);
 }
 
 .approach {
@@ -2879,23 +2879,29 @@ html { scroll-behavior: smooth; }
 .reg--br { bottom: 10px; right: 10px; }
 .reg--gold { color: var(--gold); }
 
-/* ═══ Phase list: participates in map grid (desktop) ═══ */
+/* ═══ Phase list: grid participants (desktop) ═══ */
 .approach__list {
   display: contents;
 }
 
+/* ═══ Phase shells — diagram halo + word (no card chrome) ═══ */
 .approach__phase {
   position: relative;
-  padding: clamp(18px, 2.2vw, 28px) clamp(20px, 2.4vw, 32px);
-  border: 1px solid var(--dawn-08);
-  background: linear-gradient(180deg, rgba(10, 8, 6, 0.65) 0%, rgba(5, 4, 3, 0.4) 100%);
+  border: none;
+  background: transparent;
+  padding: clamp(14px, 1.8vw, 24px) clamp(6px, 1vw, 12px);
+  min-height: clamp(220px, 28vw, 360px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: visible;
 }
 
 .approach__phase[data-phase="navigate"] {
   grid-column: 1;
   grid-row: 1;
   justify-self: end;
-  width: min(100%, clamp(260px, 34vw, 440px));
+  width: min(100%, clamp(280px, 32vw, 440px));
   margin-right: clamp(0px, 0.6vw, 10px);
 }
 
@@ -2903,7 +2909,7 @@ html { scroll-behavior: smooth; }
   grid-column: 3;
   grid-row: 2;
   justify-self: start;
-  width: min(100%, clamp(260px, 34vw, 440px));
+  width: min(100%, clamp(280px, 32vw, 440px));
   margin-left: clamp(0px, 0.6vw, 10px);
 }
 
@@ -2911,167 +2917,96 @@ html { scroll-behavior: smooth; }
   grid-column: 1;
   grid-row: 3;
   justify-self: end;
-  width: min(100%, clamp(260px, 34vw, 440px));
+  width: min(100%, clamp(280px, 32vw, 440px));
   margin-right: clamp(0px, 0.6vw, 10px);
 }
 
-/* Hairline course toward the meridian */
-.approach__phase[data-phase="navigate"]::after,
-.approach__phase[data-phase="build"]::after {
-  content: "";
-  position: absolute;
-  top: 40%;
-  right: 0;
-  width: clamp(12px, 3.2vw, 30px);
-  height: 1px;
-  background: linear-gradient(
-    to right,
-    var(--gold-30, rgba(202, 165, 84, 0.4)),
-    transparent
-  );
-  pointer-events: none;
-  z-index: 3;
-  opacity: 0.75;
+.approach__phase[data-active="true"] .approach__phase__title {
+  text-shadow: 0 0 32px rgba(202, 165, 84, 0.14);
 }
 
-.approach__phase[data-phase="encode"]::after {
-  content: "";
-  position: absolute;
-  top: 40%;
-  left: 0;
-  width: clamp(12px, 3.2vw, 30px);
-  height: 1px;
-  background: linear-gradient(
-    to left,
-    var(--gold-30, rgba(202, 165, 84, 0.4)),
-    transparent
-  );
-  pointer-events: none;
-  z-index: 3;
-  opacity: 0.75;
+.approach__phase[data-active="true"] .approach__phase__halo svg {
+  opacity: 0.86;
+  filter: drop-shadow(0 0 16px rgba(202, 165, 84, 0.09));
 }
 
-.approach__phase[data-active="true"] {
-  border-color: rgba(202, 165, 84, 0.2);
-  background: linear-gradient(180deg, rgba(14, 12, 8, 0.7) 0%, rgba(5, 4, 3, 0.45) 100%);
-}
-
-/* Per-card star chart / bearing layer (under HUD chrome) */
-.approach__phase__chart {
+.approach__phase__halo {
   position: absolute;
-  inset: 0;
-  pointer-events: none;
+  inset: clamp(-36px, -4.5vw, -72px);
   z-index: 0;
-  overflow: hidden;
-}
-
-.approach__phase__bearing {
-  position: absolute;
-  top: 12px;
-  font-family: var(--font-pt-mono);
-  font-size: 8px;
-  letter-spacing: var(--track-widest);
-  text-transform: uppercase;
-  color: var(--gold-30, rgba(202, 165, 84, 0.55));
-}
-
-.approach__phase[data-phase="navigate"] .approach__phase__bearing,
-.approach__phase[data-phase="build"] .approach__phase__bearing {
-  right: 12px;
-  text-align: right;
-}
-
-.approach__phase[data-phase="encode"] .approach__phase__bearing {
-  left: 12px;
-}
-
-.approach__phase__arc {
-  position: absolute;
-  top: 7%;
-  width: 44%;
-  height: 32%;
-  border: 1px solid var(--dawn-08);
-  border-bottom: none;
-  opacity: 0.4;
-  border-radius: 100% 100% 0 0 / 100% 100% 0 0;
-}
-
-.approach__phase[data-phase="navigate"] .approach__phase__arc,
-.approach__phase[data-phase="build"] .approach__phase__arc {
-  right: 5%;
-  left: auto;
-}
-
-.approach__phase[data-phase="encode"] .approach__phase__arc {
-  left: 5%;
-  right: auto;
-}
-
-.approach__phase__ticks {
-  position: absolute;
-  bottom: 12%;
-  width: 1px;
-  height: 30%;
-  background: repeating-linear-gradient(
-    to bottom,
-    var(--dawn-30) 0 1px,
-    transparent 1px 7px
-  );
-  opacity: 0.35;
-  left: calc(12% + var(--t, 0.5) * 38%);
-}
-
-.approach__phase[data-phase="encode"] .approach__phase__ticks {
-  left: auto;
-  right: calc(12% + var(--t, 0.5) * 38%);
-}
-
-.approach__phase__sigils {
-  position: absolute;
-  inset: 0;
+  display: grid;
+  place-items: center;
   pointer-events: none;
-  z-index: 0;
-  overflow: hidden;
-}
-
-.approach__phase__sigils .sig {
-  position: absolute;
-  left: var(--sx);
-  top: var(--sy);
-  transform: translate(-50%, -50%);
   color: var(--gold);
-  opacity: var(--o, 0.45);
-  box-sizing: border-box;
 }
 
-.approach__phase > .reg,
-.approach__phase > header,
-.approach__phase > .approach__phase__viz,
-.approach__phase > .approach__phase__rules,
-.approach__phase > .approach__phase__cta {
+.approach__phase__halo svg {
+  width: min(135%, 460px);
+  height: auto;
+  max-width: none;
+  opacity: 0.62;
+  -webkit-mask-image: radial-gradient(
+    ellipse at center,
+    transparent 0 22%,
+    rgba(0, 0, 0, 0.16) 29%,
+    rgba(0, 0, 0, 0.72) 39%,
+    #000 52%
+  );
+  mask-image: radial-gradient(
+    ellipse at center,
+    transparent 0 22%,
+    rgba(0, 0, 0, 0.16) 29%,
+    rgba(0, 0, 0, 0.72) 39%,
+    #000 52%
+  );
+  transition:
+    opacity 420ms var(--m-ease-instr),
+    filter 420ms var(--m-ease-instr);
+}
+
+.approach__phase > .reg {
+  z-index: 2;
+}
+
+.approach__phase__core {
   position: relative;
   z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: clamp(18px, 2.2vw, 28px) clamp(10px, 1.5vw, 18px) clamp(8px, 1vw, 14px);
+  max-width: 26ch;
 }
 
-.approach__phase__head {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  margin-bottom: clamp(10px, 1.4vw, 16px);
+.approach__phase__core::before {
+  content: "";
+  position: absolute;
+  inset: clamp(-10px, -1.2vw, -18px) clamp(-14px, -2vw, -28px);
+  z-index: -1;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(5, 4, 3, 0.62) 0%,
+    rgba(5, 4, 3, 0.34) 46%,
+    rgba(5, 4, 3, 0) 76%
+  );
+  pointer-events: none;
 }
 
 .approach__phase__num {
-  width: 36px;
-  height: 36px;
-  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--gold);
-  color: var(--void);
+  width: 30px;
+  height: 30px;
+  margin: 0 0 12px;
+  border: 1px solid rgba(202, 165, 84, 0.45);
+  background: transparent;
+  color: var(--gold);
   font-family: var(--font-pt-mono);
   font-weight: 700;
-  font-size: 12px;
+  font-size: 10px;
+  letter-spacing: var(--track-wide);
   line-height: 1;
   clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
 }
@@ -3079,147 +3014,220 @@ html { scroll-behavior: smooth; }
 .approach__phase__title {
   font-family: var(--font-pp-neue-montreal);
   font-weight: 700;
-  font-size: clamp(18px, 2vw, 26px);
-  line-height: 1;
-  letter-spacing: -0.02em;
+  font-size: clamp(22px, 3vw, 36px);
+  line-height: 0.95;
+  letter-spacing: -0.03em;
   text-transform: uppercase;
   color: var(--dawn);
-  margin: 0 0 4px;
+  margin: 0;
 }
 
 .approach__phase__verb {
+  margin-top: 8px;
   font-family: var(--font-pt-mono);
-  font-size: 11px;
+  font-size: 10px;
   letter-spacing: var(--track-widest);
   text-transform: uppercase;
-  color: var(--gold);
-  display: flex;
-  align-items: center;
-  gap: 10px;
+  color: rgba(236, 227, 214, 0.42);
 }
+
 .approach__phase__verb::before {
-  content: "";
-  width: 12px;
-  height: 1px;
-  background: var(--gold);
+  display: none;
 }
 
-.approach__phase__tag {
-  margin-left: auto;
-  padding: 3px 8px;
-  background: var(--gold);
-  color: var(--void);
-  font-family: var(--font-pt-mono);
-  font-size: 9px;
-  letter-spacing: var(--track-widest);
-  text-transform: uppercase;
-  font-weight: 700;
-  white-space: nowrap;
-  align-self: flex-start;
-}
-
-/* Inline symbol viz */
-.approach__phase__viz {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: clamp(96px, 11vw, 132px);
-  margin: clamp(8px, 1.2vw, 14px) 0;
-}
-.approach__phase__viz svg {
-  width: 52%;
-  max-width: 200px;
-  height: auto;
-  display: block;
-}
-.approach__phase__viz__scan {
-  position: absolute;
-  left: 12%;
-  right: 12%;
-  height: 1px;
-  top: 50%;
-  background: linear-gradient(
-    to right,
-    transparent,
-    var(--gold-40, rgba(202, 165, 84, 0.4)),
-    transparent
-  );
-  animation: approachScan 7s linear infinite;
-  pointer-events: none;
-}
-@keyframes approachScan {
-  0% {
-    top: 22%;
-    opacity: 0;
-  }
-  10% {
-    opacity: 1;
-  }
-  90% {
-    opacity: 1;
-  }
-  100% {
-    top: 78%;
-    opacity: 0;
-  }
-}
-
-/* Bullet rules */
-.approach__phase__rules {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-.approach__phase__rules li {
-  padding: 10px 0;
-  border-top: 1px solid var(--dawn-08);
+.approach__phase__line {
+  margin: 14px 0 0;
+  max-width: 24ch;
   font-family: var(--font-pp-neue-montreal);
   font-weight: 300;
   font-size: clamp(13px, 1.05vw, 15px);
   line-height: 1.45;
   color: var(--dawn-70);
 }
-.approach__phase__rules li.is-receipt {
-  font-family: var(--font-pt-mono);
-  font-size: 10px;
-  font-weight: 400;
-  letter-spacing: var(--track-wide);
-  text-transform: uppercase;
-  color: var(--dawn);
-  line-height: 1.45;
-}
-.approach__phase__rules li.is-receipt::before {
-  content: "\25C6 ";
-  color: var(--gold);
-  font-size: 8px;
-  vertical-align: 1px;
-}
 
-.approach__phase__cta {
+.approach__phase__tag {
+  position: absolute;
+  top: 7%;
+  right: 6%;
+  z-index: 2;
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  margin-top: 14px;
+  font-family: var(--font-pt-mono);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: var(--track-widest);
+  text-transform: uppercase;
+  color: rgba(202, 165, 84, 0.65);
+  pointer-events: none;
+}
+
+.approach__phase__tag::before {
+  content: "";
+  width: 12px;
+  height: 1px;
+  background: linear-gradient(to right, var(--gold-30, rgba(202, 165, 84, 0.35)), transparent);
+}
+
+.approach__phase[data-phase="encode"] .approach__phase__tag {
+  right: auto;
+  left: 6%;
+  flex-direction: row-reverse;
+}
+
+.approach__phase[data-phase="encode"] .approach__phase__tag::before {
+  background: linear-gradient(to left, var(--gold-30, rgba(202, 165, 84, 0.35)), transparent);
+}
+
+/* Latent horizon codetta (opaque shield; reveal on inner only) */
+.approach__horizon {
+  position: relative;
+  margin-top: clamp(40px, 5vw, 72px);
+  margin-left: calc(-1 * var(--hud-content-inset));
+  margin-right: calc(-1 * var(--hud-content-inset));
+  width: 100vw;
+  padding: clamp(16px, 2vw, 26px) var(--hud-content-inset) clamp(22px, 3vw, 36px);
+  background: var(--void);
+  overflow: hidden;
+  z-index: 2;
+}
+
+.approach__horizon__reveal {
+  position: relative;
+  min-height: clamp(100px, 14vw, 160px);
+}
+
+.approach__horizon__svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  color: var(--gold);
+  -webkit-mask-image: radial-gradient(
+    ellipse 68% 120% at 50% 100%,
+    #000 38%,
+    rgba(0, 0, 0, 0.75) 62%,
+    rgba(0, 0, 0, 0.25) 86%,
+    transparent 100%
+  );
+  mask-image: radial-gradient(
+    ellipse 68% 120% at 50% 100%,
+    #000 38%,
+    rgba(0, 0, 0, 0.75) 62%,
+    rgba(0, 0, 0, 0.25) 86%,
+    transparent 100%
+  );
+}
+
+.approach__horizon__label {
+  position: absolute;
+  z-index: 1;
+  bottom: clamp(8px, 1.2vw, 14px);
+  font-family: var(--font-pt-mono);
+  font-size: 9px;
+  letter-spacing: var(--track-widest);
+  text-transform: uppercase;
+  color: var(--dawn-50);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.approach__horizon__label::before {
+  content: "";
+  width: 12px;
+  height: 1px;
+  background: linear-gradient(to right, var(--dawn-30), transparent);
+}
+
+.approach__horizon__label--l {
+  left: var(--hud-content-inset);
+}
+
+.approach__horizon__label--r {
+  right: var(--hud-content-inset);
+  flex-direction: row-reverse;
+}
+
+.approach__horizon__label--r::before {
+  background: linear-gradient(to left, var(--dawn-30), transparent);
+}
+
+.approach__horizon__reveal[data-m="instrument"],
+.approach__horizon__reveal[data-m="instrument"].is-in {
+  opacity: 1;
+  transform: none;
+  filter: none;
+  clip-path: none;
+}
+
+.approach__horizon__reveal .approach__horizon__svg,
+.approach__horizon__reveal .approach__horizon__label {
+  opacity: 0;
+  transform: translateY(8px);
+  filter: blur(2px);
+  transition-property: opacity, transform, filter;
+  transition-duration: var(--m-dur-slow);
+  transition-timing-function: var(--m-ease-long);
+}
+
+.approach__horizon__reveal.is-in .approach__horizon__svg,
+.approach__horizon__reveal.is-in .approach__horizon__label {
+  opacity: 1;
+  transform: translateY(0);
+  filter: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .approach__horizon__reveal .approach__horizon__svg,
+  .approach__horizon__reveal .approach__horizon__label {
+    transition-duration: 200ms;
+    filter: none !important;
+  }
+}
+
+.approach__see-cases {
+  align-self: center;
+  margin-top: clamp(10px, 1.6vw, 18px);
+  margin-bottom: clamp(4px, 1vw, 10px);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   font-family: var(--font-pt-mono);
   font-size: 11px;
+  font-weight: 700;
   letter-spacing: var(--track-wide);
   text-transform: uppercase;
   color: var(--dawn-30);
   text-decoration: none;
-  cursor: default;
+  transition: color 180ms var(--m-ease-instr);
 }
-.approach__phase__cta[aria-disabled="true"] {
-  opacity: 0.4;
-  pointer-events: none;
+
+.approach__see-cases__lead {
+  color: var(--dawn-50);
+  transition: color 180ms var(--m-ease-instr);
 }
-.approach__phase__cta svg {
-  flex-shrink: 0;
+
+.approach__see-cases:hover {
+  color: var(--gold);
+}
+
+.approach__see-cases:hover .approach__see-cases__lead {
+  color: var(--gold);
+}
+
+.approach__see-cases__soon {
+  color: var(--dawn-50);
+  font-weight: 400;
+}
+
+.approach__see-cases:hover .approach__see-cases__soon {
+  color: var(--gold-30, rgba(202, 165, 84, 0.55));
 }
 
 /* ─── Through-line ─── */
 .approach__throughline {
-  margin: clamp(24px, 3vw, 40px) clamp(32px, 4vw, 64px) 0;
+  margin: clamp(32px, 4vw, 52px) clamp(32px, 4vw, 64px) 0;
   padding-top: 18px;
   border-top: 1px dashed var(--dawn-08);
   display: flex;
@@ -3281,24 +3289,32 @@ html { scroll-behavior: smooth; }
     justify-self: stretch;
     width: 100%;
     margin: 0;
-  }
-  .approach__phase::after {
-    display: none;
+    min-height: clamp(200px, 52vw, 280px);
   }
   .approach__throughline {
     margin-left: 0;
     margin-right: 0;
   }
   .approach__phase__num {
-    width: 34px;
-    height: 34px;
-    font-size: 11px;
+    width: 28px;
+    height: 28px;
+    font-size: 9px;
   }
   .approach__phase {
-    padding: clamp(18px, 3vw, 28px);
+    padding: clamp(14px, 3vw, 22px) clamp(8px, 2vw, 14px);
   }
-  .approach__phase__viz {
-    min-height: clamp(92px, 22vw, 140px);
+  .approach__horizon {
+    margin-left: -16px;
+    margin-right: -16px;
+    width: calc(100% + 32px);
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+  .approach__horizon__label--l {
+    left: 16px;
+  }
+  .approach__horizon__label--r {
+    right: 16px;
   }
 }
 
@@ -4244,125 +4260,104 @@ html { scroll-behavior: smooth; }
 
         <!-- ═══ 01 · NAVIGATE ═══ -->
         <article class="approach__phase" data-phase="navigate" data-active="true">
-          <div class="approach__phase__chart" aria-hidden="true">
-            <span class="approach__phase__bearing">N · 01</span>
-            <span class="approach__phase__arc"></span>
-            <span class="approach__phase__ticks" style="--t: 0.22"></span>
-          </div>
-          <div class="approach__phase__sigils" aria-hidden="true">
-            <span class="sig sig--diamond-outline" style="--sx: 8%; --sy: 18%; --o: 0.5;"></span>
-            <span class="sig sig--bracket-tl" style="--sx: 92%; --sy: 12%; --o: 0.45;"></span>
-            <span class="sig sig--half-frame" style="--sx: 6%; --sy: 78%; --o: 0.35;"></span>
-          </div>
+          <div class="approach__phase__halo" data-phase-glyph="navigate" aria-hidden="true"></div>
           <span class="reg reg--tl reg--gold"></span>
           <span class="reg reg--tr"></span>
           <span class="reg reg--bl"></span>
           <span class="reg reg--br"></span>
-          <header class="approach__phase__head">
-            <div class="approach__phase__num"><span>01</span></div>
-            <div>
-              <h4 class="approach__phase__title">Navigate</h4>
-              <div class="approach__phase__verb">See · fluency through doing</div>
-            </div>
-            <span class="approach__phase__tag">Fluency</span>
-          </header>
-
-          <div class="approach__phase__viz" aria-hidden="true">
-            <div class="approach__phase__viz__scan"></div>
-            <div data-phase-glyph="navigate"></div>
+          <span class="approach__phase__tag">Fluency</span>
+          <div class="approach__phase__core">
+            <span class="approach__phase__num" aria-hidden="true"><span>01</span></span>
+            <h4 class="approach__phase__title">Navigate</h4>
+            <div class="approach__phase__verb">See · fluency through doing</div>
+            <p class="approach__phase__line">See intelligence in motion — fluency before tools.</p>
           </div>
-
-          <ul class="approach__phase__rules">
-            <li>Orientation in latent space — not a rollout deck, a bearing fix on what the model is and how your work meets it.</li>
-            <li class="is-receipt">Receipts &amp; case depth live downstream — this is the chart, not the log.</li>
-          </ul>
-          <a class="approach__phase__cta" aria-disabled="true">
-            Deep dive
-            <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M3 7h8M8 4l3 3-3 3" stroke="currentColor" stroke-width="1.2" fill="none"/></svg>
-          </a>
         </article>
 
         <!-- ═══ 02 · ENCODE ═══ -->
         <article class="approach__phase" data-phase="encode" data-active="false">
-          <div class="approach__phase__chart" aria-hidden="true">
-            <span class="approach__phase__bearing">δ · 02</span>
-            <span class="approach__phase__arc approach__phase__arc--mirror"></span>
-            <span class="approach__phase__ticks" style="--t: 0.55"></span>
-          </div>
-          <div class="approach__phase__sigils" aria-hidden="true">
-            <span class="sig sig--diamond-solid" style="--sx: 10%; --sy: 22%; --o: 0.55;"></span>
-            <span class="sig sig--ring" style="--sx: 88%; --sy: 70%; --o: 0.4;"></span>
-            <span class="sig sig--bracket-br" style="--sx: 14%; --sy: 82%; --o: 0.45;"></span>
-          </div>
+          <div class="approach__phase__halo" data-phase-glyph="encode" aria-hidden="true"></div>
           <span class="reg reg--tl reg--gold"></span>
           <span class="reg reg--tr"></span>
           <span class="reg reg--bl"></span>
           <span class="reg reg--br"></span>
-          <header class="approach__phase__head">
-            <div class="approach__phase__num"><span>02</span></div>
-            <div>
-              <h4 class="approach__phase__title">Encode</h4>
-              <div class="approach__phase__verb">Crystallize · intuition into skills</div>
-            </div>
-            <span class="approach__phase__tag">Leverage</span>
-          </header>
-
-          <div class="approach__phase__viz" aria-hidden="true">
-            <div class="approach__phase__viz__scan"></div>
-            <div data-phase-glyph="encode"></div>
+          <span class="approach__phase__tag">Leverage</span>
+          <div class="approach__phase__core">
+            <span class="approach__phase__num" aria-hidden="true"><span>02</span></span>
+            <h4 class="approach__phase__title">Encode</h4>
+            <div class="approach__phase__verb">Crystallize · intuition into skills</div>
+            <p class="approach__phase__line">Crystallize the work into reusable skills.</p>
           </div>
-
-          <ul class="approach__phase__rules">
-            <li>Turn taste and constraints into reusable skills — leverage that survives tool churn.</li>
-            <li class="is-receipt">Playbooks &amp; receipts follow in execution — here we lock the constellation.</li>
-          </ul>
-          <a class="approach__phase__cta" aria-disabled="true">
-            Deep dive
-            <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M3 7h8M8 4l3 3-3 3" stroke="currentColor" stroke-width="1.2" fill="none"/></svg>
-          </a>
         </article>
 
         <!-- ═══ 03 · BUILD ═══ -->
         <article class="approach__phase" data-phase="build" data-active="false">
-          <div class="approach__phase__chart" aria-hidden="true">
-            <span class="approach__phase__bearing">ρ · 03</span>
-            <span class="approach__phase__arc"></span>
-            <span class="approach__phase__ticks" style="--t: 0.38"></span>
-          </div>
-          <div class="approach__phase__sigils" aria-hidden="true">
-            <span class="sig sig--plus" style="--sx: 86%; --sy: 20%; --o: 0.4;"></span>
-            <span class="sig sig--frame" style="--sx: 12%; --sy: 68%; --o: 0.38;"></span>
-            <span class="sig sig--dot" style="--sx: 90%; --sy: 84%; --o: 0.55;"></span>
-          </div>
+          <div class="approach__phase__halo" data-phase-glyph="build" aria-hidden="true"></div>
           <span class="reg reg--tl reg--gold"></span>
           <span class="reg reg--tr"></span>
           <span class="reg reg--bl"></span>
           <span class="reg reg--br"></span>
-          <header class="approach__phase__head">
-            <div class="approach__phase__num"><span>03</span></div>
-            <div>
-              <h4 class="approach__phase__title">Build</h4>
-              <div class="approach__phase__verb">Ship · domain experts as builders</div>
-            </div>
-            <span class="approach__phase__tag">Software</span>
-          </header>
-
-          <div class="approach__phase__viz" aria-hidden="true">
-            <div class="approach__phase__viz__scan"></div>
-            <div data-phase-glyph="build"></div>
+          <span class="approach__phase__tag">Software</span>
+          <div class="approach__phase__core">
+            <span class="approach__phase__num" aria-hidden="true"><span>03</span></span>
+            <h4 class="approach__phase__title">Build</h4>
+            <div class="approach__phase__verb">Ship · domain experts as builders</div>
+            <p class="approach__phase__line">Ship small instruments from encoded knowledge.</p>
           </div>
-
-          <ul class="approach__phase__rules">
-            <li>Ship small instruments from encoded knowledge — the people on the work own the gateway.</li>
-            <li class="is-receipt">Production stories sit with services — this waypoint is course, not cargo.</li>
-          </ul>
-          <a class="approach__phase__cta" aria-disabled="true">
-            Deep dive
-            <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M3 7h8M8 4l3 3-3 3" stroke="currentColor" stroke-width="1.2" fill="none"/></svg>
-          </a>
         </article>
       </div>
       </div>
+
+      <!-- Latent horizon — diagram codetta toward cases (void shield; reveal on inner) -->
+      <div class="approach__horizon">
+        <div class="approach__horizon__reveal" data-m="instrument">
+          <span class="approach__horizon__label approach__horizon__label--l">δ · LATENT HORIZON</span>
+          <span class="approach__horizon__label approach__horizon__label--r">→ CASES</span>
+          <svg class="approach__horizon__svg" viewBox="-700 -24 1400 200" preserveAspectRatio="xMidYMax meet" aria-hidden="true">
+            <g fill="none" stroke="var(--gold)" stroke-linecap="round">
+              <circle cx="0" cy="430" r="268" stroke-width="0.45" stroke-opacity="0.12" />
+              <circle cx="0" cy="430" r="328" stroke-width="0.45" stroke-opacity="0.14" />
+              <circle cx="0" cy="430" r="398" stroke-width="0.5" stroke-opacity="0.16" />
+              <circle cx="0" cy="430" r="478" stroke-width="0.55" stroke-opacity="0.18" />
+              <circle cx="0" cy="430" r="568" stroke-width="0.6" stroke-opacity="0.16" />
+              <circle cx="0" cy="430" r="672" stroke-width="0.65" stroke-opacity="0.13" />
+              <circle cx="0" cy="430" r="790" stroke-width="0.7" stroke-opacity="0.1" />
+              <circle cx="0" cy="430" r="920" stroke-width="0.75" stroke-opacity="0.08" />
+              <circle cx="0" cy="430" r="1060" stroke-width="0.8" stroke-opacity="0.06" />
+            </g>
+
+            <g>
+              <path d="M-253 20 L-249 24 L-253 28 L-257 24 Z" fill="var(--gold)" fill-opacity="0.48" stroke="var(--gold)" stroke-width="0.35" stroke-opacity="0.55" />
+              <path d="M253 20 L257 24 L253 28 L249 24 Z" fill="var(--gold)" fill-opacity="0.48" stroke="var(--gold)" stroke-width="0.35" stroke-opacity="0.55" />
+              <path d="M-422 46 L-419 50 L-422 54 L-425 50 Z" fill="none" stroke="var(--dawn-30)" stroke-width="0.35" stroke-opacity="0.8" />
+              <path d="M422 46 L425 50 L422 54 L419 50 Z" fill="none" stroke="var(--dawn-30)" stroke-width="0.35" stroke-opacity="0.8" />
+            </g>
+
+            <g stroke="var(--dawn-30)" stroke-width="0.35" stroke-linecap="round">
+              <line x1="-338" y1="83" x2="-342" y2="87" stroke-opacity="0.55" />
+              <line x1="338" y1="83" x2="342" y2="87" stroke-opacity="0.55" />
+              <line x1="-198" y1="34" x2="-196" y2="36" stroke-opacity="0.5" />
+              <line x1="198" y1="34" x2="196" y2="36" stroke-opacity="0.5" />
+            </g>
+
+            <g>
+              <circle cx="-103" cy="46" r="1.3" fill="var(--gold)" fill-opacity="0.55" />
+              <circle cx="103" cy="46" r="1.3" fill="var(--gold)" fill-opacity="0.55" />
+              <circle cx="-256" cy="125" r="1" fill="var(--gold)" fill-opacity="0.42" />
+              <circle cx="256" cy="125" r="1" fill="var(--gold)" fill-opacity="0.42" />
+              <circle cx="-139" cy="133" r="1.1" fill="var(--dawn)" fill-opacity="0.38" />
+              <circle cx="139" cy="133" r="1.1" fill="var(--dawn)" fill-opacity="0.38" />
+              <circle cx="-582" cy="94" r="0.9" fill="var(--gold)" fill-opacity="0.3" />
+              <circle cx="582" cy="94" r="0.9" fill="var(--gold)" fill-opacity="0.3" />
+            </g>
+
+            <line x1="0" y1="36" x2="0" y2="156" stroke="var(--dawn-15)" stroke-width="0.55" stroke-opacity="0.9" />
+            <path d="M0 148 L7 162 L0 176 L-7 162 Z" fill="var(--gold)" fill-opacity="0.22" stroke="var(--gold)" stroke-width="0.45" stroke-opacity="0.55" />
+          </svg>
+        </div>
+      </div>
+
+      <a class="approach__see-cases" href="#about"><span class="approach__see-cases__lead" aria-hidden="true">→</span> See the cases <span class="approach__see-cases__soon">(soon)</span></a>
     </div>
 
     <!-- Through-line -->
