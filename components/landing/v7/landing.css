@@ -4190,6 +4190,20 @@ html {
   padding-right: var(--hud-content-inset);
 }
 
+/* `.station:not(.hero)` opts every section into `content-visibility: auto`
+   with a 100vh `contain-intrinsic-size` placeholder. That is great for
+   off-screen perf, but it makes the browser report a tiny placeholder
+   size for the offscreen section. ScrollTrigger caches that placeholder
+   size when it computes start/end positions on first refresh, which
+   breaks the practice entry/exit math (the section is actually taller
+   than 100vh once its chamber + sticky orbit lay out).
+   Disable the optimization for #practice so its real content height is
+   always available to ScrollTrigger. */
+#practice.station {
+  content-visibility: visible;
+  contain-intrinsic-size: auto;
+}
+
 /* ─── Section stack ─── */
 .approach {
   display: flex;
@@ -4198,6 +4212,13 @@ html {
   margin: 0 clamp(32px, 4vw, 64px);
   padding: clamp(40px, 5vw, 72px) 0 clamp(28px, 3.5vw, 48px);
   gap: clamp(28px, 4vw, 48px);
+  /* `.station` is a flex column with `justify-content: center`, which lets
+     children shrink to its min-height (~100vh) and overflow visually.
+     `flex-shrink: 0` forces the chamber to claim its full intrinsic
+     height inside the section so #practice grows to fit. Otherwise
+     ScrollTrigger reads a stale 1585px section height and the orbit
+     entry/exit triggers fire at the wrong scroll positions. */
+  flex-shrink: 0;
 }
 
 /* ─── Chamber: two-column composition (sticky orbit + copy) ───
