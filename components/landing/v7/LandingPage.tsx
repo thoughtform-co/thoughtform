@@ -63,23 +63,32 @@ export function LandingPage({ bodyHtml, bodyClass, celestialSlots }: LandingPage
     };
   }, []);
 
-  // Practice section choreography. Two layers:
+  // Practice section choreography. Three coupled layers, all driven
+  // from a single rAF-throttled scroll handler:
   //
   //   (1) section observer — toggles `data-practice-active` on the root
   //       element while `#practice` is engaged with the viewport. CSS
-  //       reads this to crossfade the bottom-left HUD brandmark from its
-  //       filled rendering to the outline rendering (the SVG filter
-  //       defs live next to this component in the React tree).
+  //       reads this to crossfade the bottom-left HUD brandmark from
+  //       its filled rendering to the dawn-toned outline asset.
   //
-  //   (2) scroll-driven phase selector — on each scroll frame (rAF
-  //       throttled) picks the `.approach__phase` whose center is
-  //       closest to ~40% of the viewport (the natural reading focus)
-  //       and writes `data-active-phase` on `.approach` plus
-  //       `data-active` on each phase. CSS uses these to highlight the
-  //       matching orbit lane / label and crossfade the matching phase
-  //       glyph. This pattern avoids IntersectionObserver dead zones
-  //       that can leave the active phase stale on mobile, where each
-  //       phase is 100vh tall and may never cross a fixed ratio band.
+  //   (2) phase selector — on each scroll frame picks the
+  //       `.approach__phase` whose center is closest to ~40% of the
+  //       viewport (the natural reading focus) and writes
+  //       `data-active-phase` on `.approach` plus `data-active` on each
+  //       phase. CSS uses these to drive the cumulative orbit-glyph
+  //       ladder (compass / crystal / armature stack with decaying
+  //       opacity) and the orbit-lane / label / readout highlights.
+  //       This pattern avoids IntersectionObserver dead zones that
+  //       leave the active phase stale on mobile, where each phase is
+  //       100vh tall and may never cross a fixed ratio band.
+  //
+  //   (3) telemetry tick — on the same frame, writes scroll progress
+  //       through #practice (0..1) to `--practice-progress` on
+  //       `.approach`, the active phase's compass position to
+  //       `--focus-x` / `--focus-y` on `.approach__orbit__focus`, and
+  //       updates the BRG / DPT / TGT readout text. CSS reads the
+  //       progress var to rotate the scanner sweep; the focus marker's
+  //       transition smooths the snap to each phase position.
   useEffect(() => {
     const root = rootRef.current;
     if (!root) return;
@@ -90,12 +99,56 @@ export function LandingPage({ bodyHtml, bodyClass, celestialSlots }: LandingPage
 
     if (!phases.length || !approach) return;
 
+    // Compass positions in the orbit's SVG coord system (viewBox
+    // -180,-180,360,360). These match the existing pillar labels in
+    // the orbit SVG so the focus marker glides between them as phases
+    // change. Values are unit-less for SVG `transform: translate(x y)`.
+    const PHASE_FOCUS: Record<string, { x: number; y: number; n: string }> = {
+      navigate: { x: -100, y: -100, n: "01" },
+      encode: { x: -50, y: 100, n: "02" },
+      build: { x: 80, y: -18, n: "03" },
+    };
+
+    // Lazy queries — these elements live inside the dangerouslySetInnerHTML
+    // body and may be replaced on Fast Refresh / Strict Mode double-mount,
+    // so we resolve them per call instead of capturing once. CSS handles
+    // the transition smoothing, so per-call DOM lookups are cheap. We set
+    // `transform` directly because Chromium does not always recalc the
+    // computed `transform` when only a custom property in
+    // `transform: translate(var(--x), var(--y))` changes on an SVG
+    // element. Inline transform invalidates correctly.
+    const setFocusPosition = (phase: string | null) => {
+      if (!phase) return;
+      const focusEl = root.querySelector<SVGGElement>(".approach__orbit__focus");
+      if (!focusEl) return;
+      const pos = PHASE_FOCUS[phase];
+      if (!pos) return;
+      focusEl.style.transform = `translate(${pos.x}px, ${pos.y}px)`;
+    };
+
+    const setReadoutText = (selector: string, value: string) => {
+      const el = root.querySelector<HTMLElement>(selector);
+      if (el && el.textContent !== value) el.textContent = value;
+    };
+
     const setActivePhase = (target: HTMLElement | null) => {
       if (!target) return;
       const phase = target.getAttribute("data-phase");
-      if (phase && approach.getAttribute("data-active-phase") !== phase) {
+      if (!phase) return;
+      // The attribute / focus / readout writes are idempotent and cheap
+      // (each compares the current value before writing), so we run them
+      // unconditionally. Gating on a phase change would skip the writes
+      // on Strict Mode's second mount where `data-active-phase` is
+      // already set from the first mount but the focus marker / readout
+      // text were never written.
+      if (approach.getAttribute("data-active-phase") !== phase) {
         approach.setAttribute("data-active-phase", phase);
       }
+      setFocusPosition(phase);
+      setReadoutText(
+        '.approach__stage__telemetry [data-readout="target"]',
+        PHASE_FOCUS[phase]?.n ?? "01"
+      );
       phases.forEach((p) => {
         const next = p === target ? "true" : "false";
         if (p.getAttribute("data-active") !== next) {
@@ -142,18 +195,51 @@ export function LandingPage({ bodyHtml, bodyClass, celestialSlots }: LandingPage
       setActivePhase(nearest);
     };
 
+    const updateOrbitTelemetry = () => {
+      if (!practice) return;
+      const r = practice.getBoundingClientRect();
+      const vh = window.innerHeight;
+      const total = r.height + vh;
+      // Progress = 0 when the section's top edge meets the viewport
+      // bottom (just entering); 1 when the section's bottom edge meets
+      // the viewport top (just leaving). Clamped to [0, 1].
+      const progress = Math.max(0, Math.min(1, (vh - r.top) / total));
+      approach.style.setProperty("--practice-progress", progress.toFixed(4));
+
+      // Scanner rotation — set directly via inline transform (same
+      // Chromium quirk as the focus marker). One-and-a-half sweeps
+      // (0..540deg) over the section.
+      const scanner = root.querySelector<SVGGElement>(".approach__orbit__scanner");
+      if (scanner) {
+        scanner.style.transform = `rotate(${(progress * 540).toFixed(2)}deg)`;
+      }
+
+      setReadoutText(
+        '.approach__stage__telemetry [data-readout="bearing"]',
+        Math.round((progress * 540) % 360)
+          .toString()
+          .padStart(3, "0")
+      );
+      setReadoutText(
+        '.approach__stage__telemetry [data-readout="depth"]',
+        (progress * 10).toFixed(2)
+      );
+    };
+
     let raf = 0;
     const schedule = () => {
       if (raf) return;
       raf = requestAnimationFrame(() => {
         raf = 0;
         pickActivePhase();
+        updateOrbitTelemetry();
       });
     };
 
     window.addEventListener("scroll", schedule, { passive: true });
     window.addEventListener("resize", schedule);
     pickActivePhase();
+    updateOrbitTelemetry();
 
     let practiceIO: IntersectionObserver | null = null;
     if (practice) {

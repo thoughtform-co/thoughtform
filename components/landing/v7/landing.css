@@ -4146,16 +4146,24 @@ html {
   gap: clamp(28px, 4vw, 48px);
 }
 
-/* ─── Chamber: two-column composition (copy + sticky orbit stage) ─── */
+/* ─── Chamber: two-column composition (sticky orbit + copy) ───
+   Stage sits in column 1 (left, narrower) so it lines up vertically
+   above the bottom-left HUD brandmark slot; copy reads on the right.
+   This mirrors Section 02 (which is copy-left / orbit-right), giving
+   each section its own footprint. DOM order stays "copy first, stage
+   second" — the explicit `grid-column` placement handles the swap so
+   the stage's `order: -1` mobile rule keeps the orbit on top. */
 .approach__chamber {
   display: grid;
-  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+  grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
   column-gap: clamp(32px, 4vw, 80px);
   align-items: start;
 }
 
-/* ─── LEFT — copy column: scroll-staged phase moments ─── */
+/* ─── RIGHT — copy column: scroll-staged phase moments ─── */
 .approach__copy {
+  grid-column: 2;
+  grid-row: 1;
   display: flex;
   flex-direction: column;
   gap: clamp(40px, 6vh, 96px);
@@ -4197,8 +4205,10 @@ html {
   color: var(--gold);
 }
 
-/* ─── RIGHT — sticky orbit stage ─── */
+/* ─── LEFT — sticky orbit stage ─── */
 .approach__stage {
+  grid-column: 1;
+  grid-row: 1;
   position: sticky;
   top: clamp(60px, 12vh, 120px);
   align-self: start;
@@ -4305,6 +4315,48 @@ html {
   height: 3px;
 }
 
+/* Scanner sweep — thin gold radial line rotating around the orbit
+   center, driven by scroll progress. JS sets `transform` directly via
+   inline style on each scroll frame (Chromium does not always recalc
+   CSS `transform` when a custom property changes on SVG elements, so
+   we bypass the var). One-and-a-half slow sweeps over the section.
+   Sits behind the brandmark / focus marker so the center stays clean. */
+.approach__orbit__scanner {
+  transform-origin: 0 0;
+  transform: rotate(0deg);
+  transition: transform 240ms linear;
+  pointer-events: none;
+}
+.approach__orbit__scanner line {
+  stroke: var(--gold);
+  stroke-width: 0.5;
+  stroke-opacity: 0.55;
+  filter: drop-shadow(0 0 4px rgba(202, 165, 84, 0.4));
+}
+
+/* Tracked focus marker — diamond reticle that glides between phase
+   compass positions as the active phase changes. JS sets `transform`
+   directly via inline style (Chromium does not always recalc CSS
+   `transform` when a custom property changes on SVG elements, so we
+   bypass the var). The CSS transition still fires on the inline
+   transform changes, so the marker glides smoothly. */
+.approach__orbit__focus {
+  transform: translate(-100px, -100px);
+  transition: transform 720ms var(--m-ease-instr, cubic-bezier(0.16, 1, 0.3, 1));
+  pointer-events: none;
+}
+.approach__orbit__focus__hull {
+  fill: none;
+  stroke: var(--gold);
+  stroke-width: 0.6;
+  stroke-opacity: 0.9;
+  filter: drop-shadow(0 0 6px rgba(202, 165, 84, 0.55));
+}
+.approach__orbit__focus__core {
+  fill: var(--gold);
+  fill-opacity: 0.9;
+}
+
 /* Brandmark center — distinct from the bottom-left HUD slot which
    renders as outline during this section. Sits ABOVE the phase glyphs. */
 .approach__orbit__mark {
@@ -4332,9 +4384,14 @@ html {
   pointer-events: none;
 }
 
-/* Phase-glyph crossfade slots — three layered DiagramSvg mounts, each
-   driven into one slot by PhaseGlyph (React). Only opacity transitions
-   so we never affect the structural void shield. */
+/* Phase-glyph layers — three DiagramSvg mounts, accumulating cumulatively
+   as the user scrolls through Navigate → Encode → Build. Compass rose
+   holds at the largest scale; crystal inscribes inside it at mid scale;
+   armature inscribes at the innermost scale. Each new layer is brighter
+   than the previous, but the previous layers persist at decaying opacity
+   so by Build the orbit reads as a fully layered celestial diagram.
+   Pure opacity + scale transitions — no transforms on the wrapper, no
+   path-length math. */
 .approach__orbit__glyphs {
   position: absolute;
   inset: 0;
@@ -4351,21 +4408,60 @@ html {
   display: grid;
   place-items: center;
   opacity: 0;
-  transition: opacity 320ms var(--m-ease-instr, cubic-bezier(0.16, 1, 0.3, 1));
+  transition:
+    opacity 480ms var(--m-ease-instr, cubic-bezier(0.16, 1, 0.3, 1)),
+    transform 480ms var(--m-ease-instr, cubic-bezier(0.16, 1, 0.3, 1));
+  transform: scale(0.92);
 }
 .approach__orbit__glyph svg {
-  width: clamp(220px, 52%, 360px);
   height: auto;
   color: var(--gold);
   opacity: 0.78;
 }
-[data-active-phase="navigate"] .approach__orbit__glyph--navigate,
-[data-active-phase="encode"] .approach__orbit__glyph--encode,
-[data-active-phase="build"] .approach__orbit__glyph--build {
-  opacity: 1;
+
+/* Per-layer scaling: broad → mid → close-inspection. */
+.approach__orbit__glyph--navigate svg {
+  width: clamp(240px, 56%, 380px);
+}
+.approach__orbit__glyph--encode svg {
+  width: clamp(180px, 42%, 280px);
+}
+.approach__orbit__glyph--build svg {
+  width: clamp(120px, 30%, 200px);
 }
 
-/* Readout strip beneath the orbit — caption + active-phase tag */
+/* Cumulative ladder — each row keeps the previous layers visible at
+   decaying opacity, so by Build all three signatures are layered. */
+[data-active-phase="navigate"] .approach__orbit__glyph--navigate {
+  opacity: 1;
+  transform: scale(1);
+}
+
+[data-active-phase="encode"] .approach__orbit__glyph--navigate {
+  opacity: 0.35;
+  transform: scale(1);
+}
+[data-active-phase="encode"] .approach__orbit__glyph--encode {
+  opacity: 1;
+  transform: scale(1);
+}
+
+[data-active-phase="build"] .approach__orbit__glyph--navigate {
+  opacity: 0.22;
+  transform: scale(1);
+}
+[data-active-phase="build"] .approach__orbit__glyph--encode {
+  opacity: 0.5;
+  transform: scale(1);
+}
+[data-active-phase="build"] .approach__orbit__glyph--build {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Readout strip beneath the orbit — field caption on the left, live
+   BRG / DPT / TGT telemetry on the right. Text values are written by
+   the practice useEffect on each scroll frame. */
 .approach__stage__readout {
   display: flex;
   align-items: center;
@@ -4391,25 +4487,44 @@ html {
   color: var(--dawn-50);
   text-transform: lowercase;
 }
-.approach__stage__phase {
+
+.approach__stage__telemetry {
   display: inline-flex;
-  gap: 0;
-  align-items: center;
+  align-items: baseline;
+  gap: clamp(10px, 1vw, 16px);
+  font-variant-numeric: tabular-nums;
 }
-.approach__stage__phase__item {
-  opacity: 0.35;
-  padding: 0 10px;
-  transition:
-    opacity 360ms var(--m-ease-instr, cubic-bezier(0.16, 1, 0.3, 1)),
-    color 360ms var(--m-ease-instr, cubic-bezier(0.16, 1, 0.3, 1));
+.approach__stage__telemetry .t {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 5px;
+  padding: 0 6px;
+  position: relative;
 }
-.approach__stage__phase__item:not(:first-child) {
-  border-left: 1px solid var(--dawn-08);
+.approach__stage__telemetry .t:not(:first-child)::before {
+  content: "";
+  position: absolute;
+  left: -1px;
+  top: 10%;
+  bottom: 10%;
+  width: 1px;
+  background: var(--dawn-08);
 }
-[data-active-phase="navigate"] .approach__stage__phase__item[data-phase-readout="navigate"],
-[data-active-phase="encode"] .approach__stage__phase__item[data-phase-readout="encode"],
-[data-active-phase="build"] .approach__stage__phase__item[data-phase-readout="build"] {
-  opacity: 1;
+.approach__stage__telemetry .k {
+  color: var(--gold);
+  font-weight: 700;
+}
+.approach__stage__telemetry .v {
+  color: var(--dawn-70);
+  min-width: 2.6ch;
+  text-align: right;
+  transition: color 360ms var(--m-ease-instr, cubic-bezier(0.16, 1, 0.3, 1));
+}
+.approach__stage__telemetry .u {
+  color: var(--dawn-30);
+  font-size: 0.78em;
+}
+[data-active-phase="build"] .approach__stage__telemetry .v[data-readout="target"] {
   color: var(--gold);
 }
 
@@ -4422,8 +4537,17 @@ html {
   .approach__orbit__label,
   .approach__orbit__label text,
   .approach__orbit__glyph,
-  .approach__stage__phase__item {
+  .approach__stage__telemetry .v {
     transition-duration: 200ms;
+  }
+  /* Freeze the scanner sweep at its current rotation; freeze the focus
+     marker glide so it snaps between phase positions. */
+  .approach__orbit__scanner {
+    transition: none;
+    transform: rotate(0deg);
+  }
+  .approach__orbit__focus {
+    transition-duration: 0ms;
   }
 }
 
@@ -4608,10 +4732,14 @@ html {
 .approach__phase__tag {
   position: absolute;
   top: clamp(12px, 1.6vw, 22px);
-  right: clamp(12px, 1.6vw, 22px);
+  /* Sits on the inner edge of the copy column so the tag faces the
+     orbit (stage is in column 1; copy is column 2). Reverse the gradient
+     direction on ::before so the rule still fades INTO the tag word. */
+  left: clamp(12px, 1.6vw, 22px);
   z-index: 2;
   display: inline-flex;
   align-items: center;
+  flex-direction: row-reverse;
   gap: 8px;
   font-family: var(--font-pt-mono);
   font-size: 9px;
@@ -4626,7 +4754,7 @@ html {
   content: "";
   width: 12px;
   height: 1px;
-  background: linear-gradient(to right, var(--gold-30, rgba(202, 165, 84, 0.35)), transparent);
+  background: linear-gradient(to left, var(--gold-30, rgba(202, 165, 84, 0.35)), transparent);
 }
 
 /* Latent horizon codetta (opaque shield; reveal on inner only) */
@@ -4938,7 +5066,7 @@ html {
   }
   .approach__phase__tag {
     top: 10px;
-    right: 10px;
+    left: 10px;
     font-size: 8px;
   }
 }

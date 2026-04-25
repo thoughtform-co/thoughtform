@@ -4638,6 +4638,24 @@ html { scroll-behavior: smooth; }
                   <text x="98" y="-18" font-size="6" fill="var(--dawn-30)" text-anchor="start">Ship</text>
                 </g>
               </g>
+              <!-- Scanner sweep — radial line rotating with scroll progress.
+                   Rotation is driven from CSS via var(--practice-progress).
+                   transform-origin sits at the orbit's SVG origin (0,0) so
+                   the sweep pivots around the brandmark center. -->
+              <g class="approach__orbit__scanner" aria-hidden="true">
+                <line x1="0" y1="0" x2="0" y2="-170"/>
+              </g>
+              <!-- Tracked focus marker — diamond reticle that glides
+                   between phase compass positions as the active phase
+                   changes. Position is set on the inner <g> via
+                   --focus-x / --focus-y CSS vars written by the practice
+                   useEffect when setActivePhase runs. -->
+              <g class="approach__orbit__focus" aria-hidden="true">
+                <g class="approach__orbit__focus__inner">
+                  <path d="M0 -7 L7 0 L0 7 L-7 0 Z" class="approach__orbit__focus__hull"/>
+                  <path d="M0 -3.5 L3.5 0 L0 3.5 L-3.5 0 Z" class="approach__orbit__focus__core"/>
+                </g>
+              </g>
             </svg>
 
             <!-- Particle halo — gold dots scattered around the orbit -->
@@ -4674,16 +4692,18 @@ html { scroll-behavior: smooth; }
 
           </div>
 
-          <!-- Readout strip beneath the orbit: caption + active-phase tag -->
+          <!-- Readout strip beneath the orbit: field caption + live
+               telemetry (BRG / DPT / TGT). Text values are written by
+               the practice useEffect on each scroll frame. -->
           <div class="approach__stage__readout" aria-hidden="true">
             <span class="approach__stage__cap">
               <span class="k">Field</span>
               <span class="v">navigate · encode · build</span>
             </span>
-            <span class="approach__stage__phase">
-              <span class="approach__stage__phase__item" data-phase-readout="navigate">01 · Navigate</span>
-              <span class="approach__stage__phase__item" data-phase-readout="encode">02 · Encode</span>
-              <span class="approach__stage__phase__item" data-phase-readout="build">03 · Build</span>
+            <span class="approach__stage__telemetry">
+              <span class="t"><span class="k">brg</span><span class="v" data-readout="bearing">000</span><span class="u">deg</span></span>
+              <span class="t"><span class="k">dpt</span><span class="v" data-readout="depth">0.00</span></span>
+              <span class="t"><span class="k">tgt</span><span class="v" data-readout="target">01</span></span>
             </span>
           </div>
 
