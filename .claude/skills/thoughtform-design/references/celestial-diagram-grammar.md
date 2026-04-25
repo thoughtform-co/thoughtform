@@ -98,7 +98,7 @@ These are principles that apply to every diagram, whether preset or custom.
 
 ## Named Recipes — Phase Glyphs (MEDIUM freedom)
 
-Three canonical compositions for the Navigate / Encode / Build approach phases. Configs live in `components/landing/v7/phaseGlyphConfigs.ts`, rendered via `PhaseGlyphPortals`.
+Three canonical compositions for the Navigate / Encode / Build approach phases. Bespoke SVGs live in `components/landing/v7/PhaseGlyphSvg.tsx`, rendered via `PhaseGlyphPortals`.
 
 ### 01 · Navigate — `compassRose`
 

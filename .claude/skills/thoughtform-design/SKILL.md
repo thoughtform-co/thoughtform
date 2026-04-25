@@ -16,7 +16,8 @@ The canonical Thoughtform design skill is installed globally at `~/.cursor/skill
 ## CSS source of truth
 
 - `components/landing/v7/landing.css` — HUD geometry, breakpoints, connector and CTA patterns
-- `components/landing/v7/hooks/useSigilChoreography.ts` — brandmark handoff choreography
+- `components/landing/v7/hooks/useSigilChoreography.ts` — brandmark scroll choreography (drives `BrandmarkActor`)
+- `components/landing/v7/BrandmarkActor.tsx` — single persistent HUD / sigil / practice brandmark overlay
 - `public/prototypes/v7/landing-v7-motion.html` — HTML prototype parsed at build time
 
 ## Thoughtform.co-specific rules

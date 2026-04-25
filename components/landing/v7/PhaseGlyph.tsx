@@ -2,18 +2,18 @@
 
 import { useEffect, useRef } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { DiagramSvg } from "./CelestialConnector";
-import { PHASE_GLYPH_CONFIGS } from "./phaseGlyphConfigs";
+import { PhaseGlyphSvg, type PracticePhaseGlyph } from "./PhaseGlyphSvg";
 
-type Phase = keyof typeof PHASE_GLYPH_CONFIGS;
-const PHASES = Object.keys(PHASE_GLYPH_CONFIGS) as Phase[];
+export type { PracticePhaseGlyph };
+
+export const PRACTICE_PHASE_GLYPHS: readonly PracticePhaseGlyph[] = ["navigate", "encode", "build"];
 
 interface PhaseGlyphPortalsProps {
   containerRef: React.RefObject<HTMLElement | null>;
 }
 
 /**
- * Mounts a <DiagramSvg/> into each [data-phase-glyph] placeholder found
+ * Mounts a <PhaseGlyphSvg/> into each [data-phase-glyph] placeholder found
  * inside the dangerouslySetInnerHTML container. Same portal pattern as
  * CelestialPortals — clean up on unmount.
  */
@@ -24,7 +24,7 @@ export function PhaseGlyphPortals({ containerRef }: PhaseGlyphPortalsProps) {
     const container = containerRef.current;
     if (!container) return;
 
-    for (const phase of PHASES) {
+    for (const phase of PRACTICE_PHASE_GLYPHS) {
       const el = container.querySelector<HTMLElement>(`[data-phase-glyph="${phase}"]`);
       if (!el) continue;
 
@@ -33,7 +33,7 @@ export function PhaseGlyphPortals({ containerRef }: PhaseGlyphPortalsProps) {
         root = createRoot(el);
         rootsRef.current.set(phase, root);
       }
-      root.render(<DiagramSvg config={PHASE_GLYPH_CONFIGS[phase]} />);
+      root.render(<PhaseGlyphSvg phase={phase} />);
     }
 
     return () => {

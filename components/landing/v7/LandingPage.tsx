@@ -4,6 +4,7 @@ import { useEffect, useLayoutEffect, useRef, useState, useCallback, useMemo } fr
 import { useLandingScroll } from "./hooks/useLandingScroll";
 import { useRevealMotion } from "./hooks/useRevealMotion";
 import { useSigilChoreography } from "./hooks/useSigilChoreography";
+import { BrandmarkActor, type BrandmarkActorHandle } from "./BrandmarkActor";
 import { CelestialPortals } from "./CelestialConnector/CelestialPortals";
 import { PhaseGlyphPortals } from "./PhaseGlyph";
 import { CelestialEditorOverlay } from "@/components/admin/CelestialEditor";
@@ -18,11 +19,12 @@ interface LandingPageProps {
 
 export function LandingPage({ bodyHtml, bodyClass, celestialSlots }: LandingPageProps) {
   const rootRef = useRef<HTMLDivElement>(null);
+  const brandmarkActorRef = useRef<BrandmarkActorHandle>(null);
   const [navOpen, setNavOpen] = useState(false);
 
   useLandingScroll(rootRef);
   useRevealMotion(rootRef);
-  useSigilChoreography(rootRef);
+  useSigilChoreography(rootRef, brandmarkActorRef);
 
   // Hamburger toggle — wire imperatively since the nav markup comes from HTML
   useEffect(() => {
@@ -384,6 +386,7 @@ export function LandingPage({ bodyHtml, bodyClass, celestialSlots }: LandingPage
       />
       {mergedSlots && <CelestialPortals slots={mergedSlots} containerRef={rootRef} />}
       <PhaseGlyphPortals containerRef={rootRef} />
+      <BrandmarkActor ref={brandmarkActorRef} />
       <CelestialEditorOverlay />
     </>
   );
