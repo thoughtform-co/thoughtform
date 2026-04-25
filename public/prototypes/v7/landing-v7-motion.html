@@ -4241,9 +4241,16 @@ html { scroll-behavior: smooth; }
     <div id="rightTicks"></div>
   </aside>
 
-  <!-- Bottom-left brandmark anchor (dormant until sigil handoff) -->
+  <!-- Bottom-left brandmark anchor (dormant until sigil handoff).
+       The filled mark dominates from Section 02 onward; while #practice
+       is the active station the filled copy fades out and the dawn-toned
+       outline asset fades in (opacity is the only transition so the
+       structural background layers stay shielded). The outline asset
+       ships dawn-coloured with opacity 0.33 baked in, matching the
+       "subtle trace" reading. -->
   <div class="hud__brandmark" id="hudBrandmark">
-    <img src="assets/logos/Thoughtform_Brandmark.svg" alt="Thoughtform" />
+    <img class="hud__brandmark__layer hud__brandmark__layer--filled" src="assets/logos/Thoughtform_Brandmark.svg" alt="Thoughtform" />
+    <img class="hud__brandmark__layer hud__brandmark__layer--outline" src="assets/logos/Thoughtform_Brandmark_Outline.svg" alt="" aria-hidden="true" />
   </div>
 </div>
 
@@ -4488,108 +4495,200 @@ html { scroll-behavior: smooth; }
   <!-- ═══════════ CONNECTOR · 03 → 04 (slot: React portal mount) ═══════════ -->
   <div data-celestial-slot="continuum-to-practice"></div>
 
-  <!-- ═══════════ 04 PRACTICE — celestial map (meridian + alternating cards) ═══════════ -->
+  <!-- ═══════════ 04 PRACTICE — orbit stage + three scroll moments ═══════════
+       Recall of the Section 02 sigil composition. The HUD brandmark in
+       the bottom-left fades to outline (driven by data-practice-active
+       on the root); the filled brandmark re-emerges on the right of this
+       section as the anchor of an orbit that lights up the active phase
+       lane. Each scroll step is one phase moment. -->
   <section class="station station--fullbleed station--from-connector station--to-connector" id="practice" data-station="practice" data-screen-label="04 Practice">
     <div class="station__idx">Thoughtform in Practice<span class="landmark">Landmark · navigate → encode → build</span></div>
-    <div class="approach" id="approach">
+    <div class="approach" id="approach" data-active-phase="navigate">
 
-      <!-- Centered thesis + CTA -->
-      <div class="approach__intro">
-        <h3 class="approach__intro__title">Three moves.<br>One skill.</h3>
-        <p class="approach__intro__lede">
-          Navigate latent space: <em>see</em>, then <em>encode</em>, then <em>ship</em> — one loop, instrument-grade.
-        </p>
-        <a class="approach__cta" href="#execTitle">
-          See how we run it
-          <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M3 7h8M8 4l3 3-3 3" stroke="currentColor" stroke-width="1.2" fill="none"/></svg>
-        </a>
-      </div>
+      <!-- Two-column chamber: copy left, sticky orbit right.
+           On tablet/mobile this collapses to a single column with the
+           orbit on top and the phases below. -->
+      <div class="approach__chamber">
 
-      <!-- Map: central meridian + left / right / left phase cards -->
-      <div class="approach__map">
-      <!-- SPINE — celestial navigation strip -->
-      <div class="approach__spine" aria-hidden="true">
-        <span class="reg reg--tl reg--gold"></span>
-        <span class="reg reg--br"></span>
-        <div class="approach__spine__sigils" aria-hidden="true">
-          <span class="sig sig--diamond-outline" style="--y: 4%; --x: -14px; --o: 0.45;"></span>
-          <span class="sig sig--bracket-tl"      style="--y: 8%;  --x: 16px; --o: 0.5;"></span>
-          <span class="sig sig--dot"             style="--y: 12%; --x: -9px; --o: 0.6;"></span>
-          <span class="sig sig--ring"            style="--y: 23%; --x: 14px; --o: 0.4;"></span>
-          <span class="sig sig--half-frame"      style="--y: 28%; --x: -16px; --o: 0.4;"></span>
-          <span class="sig sig--diamond-solid"   style="--y: 33%; --x: 12px; --o: 0.7;"></span>
-          <span class="sig sig--bracket-br"      style="--y: 39%; --x: -14px; --o: 0.5;"></span>
-          <span class="sig sig--plus"            style="--y: 44%; --x: 12px; --o: 0.45;"></span>
-          <span class="sig sig--bracket-tr"      style="--y: 56%; --x: -18px; --o: 0.5;"></span>
-          <span class="sig sig--diamond-outline" style="--y: 61%; --x: 13px; --o: 0.45;"></span>
-          <span class="sig sig--dot"             style="--y: 66%; --x: -10px; --o: 0.55;"></span>
-          <span class="sig sig--half-frame sig--half-frame-alt" style="--y: 72%; --x: 14px; --o: 0.4;"></span>
-          <span class="sig sig--ring"            style="--y: 77%; --x: -12px; --o: 0.4;"></span>
-          <span class="sig sig--bracket-bl"      style="--y: 89%; --x: 16px; --o: 0.5;"></span>
-          <span class="sig sig--diamond-solid"   style="--y: 94%; --x: -12px; --o: 0.7;"></span>
-          <span class="sig sig--frame"           style="--y: 98%; --x: 14px; --o: 0.35;"></span>
+        <!-- LEFT — copy column. Three scroll-staged phase moments;
+             the intro thesis is folded into the first one so the user
+             reaches Navigate without an extra scroll. -->
+        <div class="approach__copy">
+
+          <!-- ═══ 01 · NAVIGATE (carries the intro thesis) ═══ -->
+          <article class="approach__phase approach__phase--first" data-phase="navigate" data-active="true">
+            <span class="reg reg--tl reg--gold"></span>
+            <span class="reg reg--tr"></span>
+            <span class="reg reg--bl"></span>
+            <span class="reg reg--br"></span>
+            <span class="approach__phase__tag">Fluency</span>
+            <header class="approach__phase__intro">
+              <h3 class="approach__phase__intro__title">Three moves.<br><em>One skill.</em></h3>
+              <p class="approach__phase__intro__lede">
+                Navigate latent space: <em>see</em>, then <em>encode</em>, then <em>ship</em> — one loop, instrument-grade.
+              </p>
+            </header>
+            <div class="approach__phase__core">
+              <span class="approach__phase__num" aria-hidden="true"><span>01</span></span>
+              <h4 class="approach__phase__title">Navigate</h4>
+              <div class="approach__phase__verb">See · fluency through doing</div>
+              <p class="approach__phase__line">See intelligence in motion — fluency before tools.</p>
+            </div>
+          </article>
+
+          <!-- ═══ 02 · ENCODE ═══ -->
+          <article class="approach__phase" data-phase="encode" data-active="false">
+            <span class="reg reg--tl reg--gold"></span>
+            <span class="reg reg--tr"></span>
+            <span class="reg reg--bl"></span>
+            <span class="reg reg--br"></span>
+            <span class="approach__phase__tag">Leverage</span>
+            <div class="approach__phase__core">
+              <span class="approach__phase__num" aria-hidden="true"><span>02</span></span>
+              <h4 class="approach__phase__title">Encode</h4>
+              <div class="approach__phase__verb">Crystallize · intuition into skills</div>
+              <p class="approach__phase__line">Crystallize the work into reusable skills.</p>
+            </div>
+          </article>
+
+          <!-- ═══ 03 · BUILD ═══ -->
+          <article class="approach__phase" data-phase="build" data-active="false">
+            <span class="reg reg--tl reg--gold"></span>
+            <span class="reg reg--tr"></span>
+            <span class="reg reg--bl"></span>
+            <span class="reg reg--br"></span>
+            <span class="approach__phase__tag">Software</span>
+            <div class="approach__phase__core">
+              <span class="approach__phase__num" aria-hidden="true"><span>03</span></span>
+              <h4 class="approach__phase__title">Build</h4>
+              <div class="approach__phase__verb">Ship · domain experts as builders</div>
+              <p class="approach__phase__line">Ship small instruments from encoded knowledge.</p>
+            </div>
+          </article>
+
+          <!-- Bridge to services — the original thesis CTA, moved to the
+               end of the phase column so it lands after all three pillars. -->
+          <a class="approach__cta" href="#execTitle">
+            See how we run it
+            <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M3 7h8M8 4l3 3-3 3" stroke="currentColor" stroke-width="1.2" fill="none"/></svg>
+          </a>
+
         </div>
-        <div class="approach__spine__ticks" id="chamberTicks"></div>
-        <div class="approach__spine__scrubber" id="chamberScrubber" style="--scrubber-y: 8%;">
-          <span class="approach__spine__reticle"></span>
-        </div>
-        <span class="approach__spine__anchor approach__spine__anchor--1"></span>
-        <span class="approach__spine__anchor approach__spine__anchor--2"></span>
-        <span class="approach__spine__anchor approach__spine__anchor--3"></span>
-        <span class="approach__spine__transit approach__spine__transit--t1">δ 0.34</span>
-        <span class="approach__spine__transit approach__spine__transit--t2">ρ 0.58</span>
-      </div>
 
-      <div class="approach__list">
+        <!-- RIGHT — sticky orbit instrument: brandmark center, three
+             pillar lanes, phase-glyph crossfade slot. The active phase is
+             reflected on .approach via the IO observer; CSS reads
+             [data-active-phase] to highlight the matching lane and
+             crossfade in the matching diagram. Aria-hidden because all
+             content is also expressed in the copy column. -->
+        <aside class="approach__stage" aria-hidden="true">
+          <div class="approach__stage__inner">
 
-        <!-- ═══ 01 · NAVIGATE ═══ -->
-        <article class="approach__phase" data-phase="navigate" data-active="true">
-          <div class="approach__phase__halo" data-phase-glyph="navigate" aria-hidden="true"></div>
-          <span class="reg reg--tl reg--gold"></span>
-          <span class="reg reg--tr"></span>
-          <span class="reg reg--bl"></span>
-          <span class="reg reg--br"></span>
-          <span class="approach__phase__tag">Fluency</span>
-          <div class="approach__phase__core">
-            <span class="approach__phase__num" aria-hidden="true"><span>01</span></span>
-            <h4 class="approach__phase__title">Navigate</h4>
-            <div class="approach__phase__verb">See · fluency through doing</div>
-            <p class="approach__phase__line">See intelligence in motion — fluency before tools.</p>
+            <!-- Concentric orbit rings — reuses the sigil grammar from
+                 #definition at a larger scale, with each pillar lane
+                 named so it can be highlighted independently. -->
+            <svg class="approach__orbit" viewBox="-180 -180 360 360" overflow="visible" aria-hidden="true">
+              <g fill="none" stroke-width="0.6">
+                <!-- Outer guide ring -->
+                <circle r="170" stroke="var(--dawn-15)" stroke-dasharray="1 5"/>
+                <!-- Pillar lanes -->
+                <circle class="approach__orbit__lane approach__orbit__lane--navigate" r="142" stroke-dasharray="2 7"/>
+                <circle class="approach__orbit__lane approach__orbit__lane--encode" r="112" stroke-dasharray="2 5"/>
+                <circle class="approach__orbit__lane approach__orbit__lane--build" r="82" stroke-dasharray="1 3"/>
+                <!-- Slow-rotating orbital nodes -->
+                <g style="transform-origin:0 0; animation: rotate 200s linear infinite;">
+                  <circle cx="142" cy="0" r="2.4" fill="var(--gold)" opacity="0.85"/>
+                </g>
+                <g style="transform-origin:0 0; animation: rotateRev 140s linear infinite;">
+                  <circle cx="-82" cy="0" r="1.6" fill="var(--dawn)" opacity="0.55"/>
+                </g>
+                <!-- Bearing crosshair -->
+                <path d="M0 -170 L0 -148 M0 148 L0 170 M-170 0 L-148 0 M148 0 L170 0"
+                      stroke="var(--dawn-30)" stroke-width="0.4"/>
+              </g>
+              <!-- Bearing ticks at 30deg increments (skipping cardinals) -->
+              <g stroke="var(--dawn-30)" stroke-width="0.5">
+                <path d="M0 -170 L0 -162" transform="rotate(30)"/>
+                <path d="M0 -170 L0 -162" transform="rotate(60)"/>
+                <path d="M0 -170 L0 -162" transform="rotate(120)"/>
+                <path d="M0 -170 L0 -162" transform="rotate(150)"/>
+                <path d="M0 -170 L0 -162" transform="rotate(210)"/>
+                <path d="M0 -170 L0 -162" transform="rotate(240)"/>
+                <path d="M0 -170 L0 -162" transform="rotate(300)"/>
+                <path d="M0 -170 L0 -162" transform="rotate(330)"/>
+              </g>
+              <!-- Pillar labels at compass positions -->
+              <g class="approach__orbit__labels" font-family="var(--font-pt-mono)" letter-spacing="0.8">
+                <g class="approach__orbit__label approach__orbit__label--navigate">
+                  <circle cx="-100" cy="-100" r="3" fill="var(--gold)"/>
+                  <line x1="-100" y1="-100" x2="-114" y2="-114" stroke="var(--dawn-30)" stroke-width="0.4"/>
+                  <text x="-118" y="-118" font-size="9" fill="var(--dawn)" text-anchor="end" font-weight="700">NAVIGATE</text>
+                  <text x="-118" y="-108" font-size="6" fill="var(--dawn-30)" text-anchor="end">See</text>
+                </g>
+                <g class="approach__orbit__label approach__orbit__label--encode">
+                  <circle cx="-50" cy="100" r="2.5" fill="var(--gold)"/>
+                  <line x1="-50" y1="100" x2="-58" y2="116" stroke="var(--dawn-30)" stroke-width="0.4"/>
+                  <text x="-62" y="120" font-size="9" fill="var(--dawn)" text-anchor="end" font-weight="700">ENCODE</text>
+                  <text x="-62" y="130" font-size="6" fill="var(--dawn-30)" text-anchor="end">Crystallize</text>
+                </g>
+                <g class="approach__orbit__label approach__orbit__label--build">
+                  <circle cx="80" cy="-18" r="2.5" fill="var(--gold)"/>
+                  <line x1="80" y1="-18" x2="94" y2="-24" stroke="var(--dawn-30)" stroke-width="0.4"/>
+                  <text x="98" y="-28" font-size="9" fill="var(--dawn)" text-anchor="start" font-weight="700">BUILD</text>
+                  <text x="98" y="-18" font-size="6" fill="var(--dawn-30)" text-anchor="start">Ship</text>
+                </g>
+              </g>
+            </svg>
+
+            <!-- Particle halo — gold dots scattered around the orbit -->
+            <div class="approach__orbit__halo" aria-hidden="true">
+              <span class="p" style="--a: 8deg;  --r: 130px;"></span>
+              <span class="p" style="--a: 42deg; --r: 148px;"></span>
+              <span class="p" style="--a: 76deg; --r: 122px;"></span>
+              <span class="p" style="--a: 118deg;--r: 138px;"></span>
+              <span class="p" style="--a: 154deg;--r: 156px;"></span>
+              <span class="p" style="--a: 196deg;--r: 128px;"></span>
+              <span class="p" style="--a: 232deg;--r: 152px;"></span>
+              <span class="p" style="--a: 268deg;--r: 134px;"></span>
+              <span class="p" style="--a: 304deg;--r: 144px;"></span>
+              <span class="p" style="--a: 340deg;--r: 124px;"></span>
+            </div>
+
+            <!-- Brandmark center (filled — distinct instance from the
+                 bottom-left HUD slot which renders as outline during this
+                 section). -->
+            <div class="approach__orbit__mark" aria-hidden="true">
+              <img src="assets/logos/Thoughtform_Brandmark.svg" alt=""/>
+            </div>
+
+            <!-- Phase-glyph crossfade slots. PhaseGlyph (React) mounts
+                 each diagram into its placeholder; CSS reads
+                 [data-active-phase] on .approach to fade between them.
+                 All three are mounted at once so transitions are pure
+                 opacity and never re-mount the SVGs. -->
+            <div class="approach__orbit__glyphs" aria-hidden="true">
+              <div class="approach__orbit__glyph approach__orbit__glyph--navigate" data-phase-glyph="navigate"></div>
+              <div class="approach__orbit__glyph approach__orbit__glyph--encode" data-phase-glyph="encode"></div>
+              <div class="approach__orbit__glyph approach__orbit__glyph--build" data-phase-glyph="build"></div>
+            </div>
+
           </div>
-        </article>
 
-        <!-- ═══ 02 · ENCODE ═══ -->
-        <article class="approach__phase" data-phase="encode" data-active="false">
-          <div class="approach__phase__halo" data-phase-glyph="encode" aria-hidden="true"></div>
-          <span class="reg reg--tl reg--gold"></span>
-          <span class="reg reg--tr"></span>
-          <span class="reg reg--bl"></span>
-          <span class="reg reg--br"></span>
-          <span class="approach__phase__tag">Leverage</span>
-          <div class="approach__phase__core">
-            <span class="approach__phase__num" aria-hidden="true"><span>02</span></span>
-            <h4 class="approach__phase__title">Encode</h4>
-            <div class="approach__phase__verb">Crystallize · intuition into skills</div>
-            <p class="approach__phase__line">Crystallize the work into reusable skills.</p>
+          <!-- Readout strip beneath the orbit: caption + active-phase tag -->
+          <div class="approach__stage__readout" aria-hidden="true">
+            <span class="approach__stage__cap">
+              <span class="k">Field</span>
+              <span class="v">navigate · encode · build</span>
+            </span>
+            <span class="approach__stage__phase">
+              <span class="approach__stage__phase__item" data-phase-readout="navigate">01 · Navigate</span>
+              <span class="approach__stage__phase__item" data-phase-readout="encode">02 · Encode</span>
+              <span class="approach__stage__phase__item" data-phase-readout="build">03 · Build</span>
+            </span>
           </div>
-        </article>
 
-        <!-- ═══ 03 · BUILD ═══ -->
-        <article class="approach__phase" data-phase="build" data-active="false">
-          <div class="approach__phase__halo" data-phase-glyph="build" aria-hidden="true"></div>
-          <span class="reg reg--tl reg--gold"></span>
-          <span class="reg reg--tr"></span>
-          <span class="reg reg--bl"></span>
-          <span class="reg reg--br"></span>
-          <span class="approach__phase__tag">Software</span>
-          <div class="approach__phase__core">
-            <span class="approach__phase__num" aria-hidden="true"><span>03</span></span>
-            <h4 class="approach__phase__title">Build</h4>
-            <div class="approach__phase__verb">Ship · domain experts as builders</div>
-            <p class="approach__phase__line">Ship small instruments from encoded knowledge.</p>
-          </div>
-        </article>
-      </div>
+        </aside>
+
       </div>
 
       <!-- Latent horizon — diagram codetta toward cases (void shield; reveal on inner) -->

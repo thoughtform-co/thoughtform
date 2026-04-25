@@ -63,92 +63,119 @@ export function LandingPage({ bodyHtml, bodyClass, celestialSlots }: LandingPage
     };
   }, []);
 
-  // Approach scroll-driven phase controller — IntersectionObserver watches
-  // .approach__phase elements and updates the scrubber position on the spine.
+  // Practice section choreography. Two layers:
+  //
+  //   (1) section observer — toggles `data-practice-active` on the root
+  //       element while `#practice` is engaged with the viewport. CSS
+  //       reads this to crossfade the bottom-left HUD brandmark from its
+  //       filled rendering to the outline rendering (the SVG filter
+  //       defs live next to this component in the React tree).
+  //
+  //   (2) scroll-driven phase selector — on each scroll frame (rAF
+  //       throttled) picks the `.approach__phase` whose center is
+  //       closest to ~40% of the viewport (the natural reading focus)
+  //       and writes `data-active-phase` on `.approach` plus
+  //       `data-active` on each phase. CSS uses these to highlight the
+  //       matching orbit lane / label and crossfade the matching phase
+  //       glyph. This pattern avoids IntersectionObserver dead zones
+  //       that can leave the active phase stale on mobile, where each
+  //       phase is 100vh tall and may never cross a fixed ratio band.
   useEffect(() => {
     const root = rootRef.current;
     if (!root) return;
 
     const phases = Array.from(root.querySelectorAll<HTMLElement>(".approach__phase"));
-    const scrubber = root.querySelector<HTMLElement>("#chamberScrubber");
-    const total = phases.length;
+    const approach = root.querySelector<HTMLElement>(".approach");
+    const practice = root.querySelector<HTMLElement>("#practice");
 
-    if (!phases.length) return;
+    if (!phases.length || !approach) return;
 
-    const io = new IntersectionObserver(
-      (entries) => {
-        const top = entries
-          .filter((e) => e.isIntersecting)
-          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
-        if (!top) return;
-        const i = phases.indexOf(top.target as HTMLElement);
-        if (i < 0) return;
-        phases.forEach((p, j) => p.setAttribute("data-active", j === i ? "true" : "false"));
-        if (scrubber) {
-          const pct = total > 1 ? (i / (total - 1)) * 84 + 8 : 50;
-          scrubber.style.setProperty("--scrubber-y", `${pct}%`);
-        }
-      },
-      { threshold: [0.3, 0.5], rootMargin: "-20% 0px -40% 0px" }
-    );
-    phases.forEach((p) => io.observe(p));
-
-    const spine = root.querySelector<HTMLElement>(".approach__spine");
-    const canMeasureSpine = () => Boolean(spine && getComputedStyle(spine).display !== "none");
-
-    const measureSpineAnchors = () => {
-      if (!canMeasureSpine() || !phases.length) return;
-      const spineEl = spine!;
-      const spineRect = spineEl.getBoundingClientRect();
-      const spineH = spineRect.height || 1;
-      phases.forEach((phase, idx) => {
-        const r = phase.getBoundingClientRect();
-        const mid = r.top + r.height / 2 - spineRect.top;
-        spineEl.style.setProperty(`--anchor-${idx + 1}-y`, `${(mid / spineH) * 100}%`);
-      });
-      for (let t = 0; t < phases.length - 1; t++) {
-        const phaseRect = phases[t].getBoundingClientRect();
-        const boundary = phaseRect.bottom - spineRect.top;
-        const pct = (boundary / spineH) * 100;
-        spineEl.style.setProperty(`--transit-${t + 1}-y`, `${pct}%`);
+    const setActivePhase = (target: HTMLElement | null) => {
+      if (!target) return;
+      const phase = target.getAttribute("data-phase");
+      if (phase && approach.getAttribute("data-active-phase") !== phase) {
+        approach.setAttribute("data-active-phase", phase);
       }
+      phases.forEach((p) => {
+        const next = p === target ? "true" : "false";
+        if (p.getAttribute("data-active") !== next) {
+          p.setAttribute("data-active", next);
+        }
+      });
+    };
+
+    const pickActivePhase = () => {
+      const vh = window.innerHeight;
+      // 40% from viewport top is the natural reading focus on this layout.
+      const focusY = vh * 0.4;
+      let bestPhase: HTMLElement | null = null;
+      let bestDist = Infinity;
+      for (const p of phases) {
+        const r = p.getBoundingClientRect();
+        if (r.bottom <= 0 || r.top >= vh) continue;
+        const center = r.top + r.height / 2;
+        const dist = Math.abs(center - focusY);
+        if (dist < bestDist) {
+          bestDist = dist;
+          bestPhase = p;
+        }
+      }
+      if (bestPhase) {
+        setActivePhase(bestPhase);
+        return;
+      }
+      // Nothing in viewport — fall back to the phase nearest the
+      // viewport above/below so entering #practice from continuum
+      // immediately reads as Navigate, and entering from About on
+      // upward scroll lands on Build.
+      let nearest: HTMLElement | null = null;
+      let nearestDist = Infinity;
+      for (const p of phases) {
+        const r = p.getBoundingClientRect();
+        const center = r.top + r.height / 2;
+        const dist = Math.abs(center - focusY);
+        if (dist < nearestDist) {
+          nearestDist = dist;
+          nearest = p;
+        }
+      }
+      setActivePhase(nearest);
     };
 
     let raf = 0;
-    const scheduleMeasure = () => {
-      cancelAnimationFrame(raf);
+    const schedule = () => {
+      if (raf) return;
       raf = requestAnimationFrame(() => {
-        measureSpineAnchors();
+        raf = 0;
+        pickActivePhase();
       });
     };
 
-    let ro: ResizeObserver | null = null;
-    const setupSpineResizeObservers = () => {
-      ro?.disconnect();
-      ro = null;
-      if (typeof ResizeObserver === "undefined" || !spine) return;
-      if (!canMeasureSpine()) return;
-      ro = new ResizeObserver(() => {
-        scheduleMeasure();
-      });
-      ro.observe(spine);
-      phases.forEach((p) => ro!.observe(p));
-    };
+    window.addEventListener("scroll", schedule, { passive: true });
+    window.addEventListener("resize", schedule);
+    pickActivePhase();
 
-    measureSpineAnchors();
-    setupSpineResizeObservers();
-
-    const onWinResize = () => {
-      setupSpineResizeObservers();
-      scheduleMeasure();
-    };
-    window.addEventListener("resize", onWinResize);
+    let practiceIO: IntersectionObserver | null = null;
+    if (practice) {
+      // Activation band: shrink the viewport root by 15% top and bottom
+      // so the brandmark only flips when #practice is solidly engaged,
+      // not at the section boundaries where the user is still reading
+      // the connector or the outgoing through-line.
+      practiceIO = new IntersectionObserver(
+        ([entry]) => {
+          root.setAttribute("data-practice-active", entry?.isIntersecting ? "true" : "false");
+        },
+        { rootMargin: "-15% 0px -15% 0px", threshold: 0 }
+      );
+      practiceIO.observe(practice);
+    }
 
     return () => {
-      io.disconnect();
-      window.removeEventListener("resize", onWinResize);
-      cancelAnimationFrame(raf);
-      ro?.disconnect();
+      window.removeEventListener("scroll", schedule);
+      window.removeEventListener("resize", schedule);
+      if (raf) cancelAnimationFrame(raf);
+      practiceIO?.disconnect();
+      root.removeAttribute("data-practice-active");
     };
   }, []);
 
