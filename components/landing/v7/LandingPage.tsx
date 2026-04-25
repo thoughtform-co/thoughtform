@@ -94,21 +94,23 @@ export function LandingPage({ bodyHtml, bodyClass, celestialSlots }: LandingPage
     phases.forEach((p) => io.observe(p));
 
     const spine = root.querySelector<HTMLElement>(".approach__spine");
+    const canMeasureSpine = () => Boolean(spine && getComputedStyle(spine).display !== "none");
 
     const measureSpineAnchors = () => {
-      if (!spine || !phases.length) return;
-      const spineRect = spine.getBoundingClientRect();
+      if (!canMeasureSpine() || !phases.length) return;
+      const spineEl = spine!;
+      const spineRect = spineEl.getBoundingClientRect();
       const spineH = spineRect.height || 1;
       phases.forEach((phase, idx) => {
         const r = phase.getBoundingClientRect();
         const mid = r.top + r.height / 2 - spineRect.top;
-        spine.style.setProperty(`--anchor-${idx + 1}-y`, `${(mid / spineH) * 100}%`);
+        spineEl.style.setProperty(`--anchor-${idx + 1}-y`, `${(mid / spineH) * 100}%`);
       });
       for (let t = 0; t < phases.length - 1; t++) {
         const phaseRect = phases[t].getBoundingClientRect();
         const boundary = phaseRect.bottom - spineRect.top;
         const pct = (boundary / spineH) * 100;
-        spine.style.setProperty(`--transit-${t + 1}-y`, `${pct}%`);
+        spineEl.style.setProperty(`--transit-${t + 1}-y`, `${pct}%`);
       }
     };
 
@@ -120,23 +122,31 @@ export function LandingPage({ bodyHtml, bodyClass, celestialSlots }: LandingPage
       });
     };
 
-    measureSpineAnchors();
-
-    const ro =
-      typeof ResizeObserver !== "undefined"
-        ? new ResizeObserver(() => {
-            scheduleMeasure();
-          })
-        : null;
-    if (ro && spine) {
+    let ro: ResizeObserver | null = null;
+    const setupSpineResizeObservers = () => {
+      ro?.disconnect();
+      ro = null;
+      if (typeof ResizeObserver === "undefined" || !spine) return;
+      if (!canMeasureSpine()) return;
+      ro = new ResizeObserver(() => {
+        scheduleMeasure();
+      });
       ro.observe(spine);
-      phases.forEach((p) => ro.observe(p));
-    }
-    window.addEventListener("resize", scheduleMeasure);
+      phases.forEach((p) => ro!.observe(p));
+    };
+
+    measureSpineAnchors();
+    setupSpineResizeObservers();
+
+    const onWinResize = () => {
+      setupSpineResizeObservers();
+      scheduleMeasure();
+    };
+    window.addEventListener("resize", onWinResize);
 
     return () => {
       io.disconnect();
-      window.removeEventListener("resize", scheduleMeasure);
+      window.removeEventListener("resize", onWinResize);
       cancelAnimationFrame(raf);
       ro?.disconnect();
     };

@@ -1168,7 +1168,9 @@ body { color: var(--dawn-70); }
     row-gap: 56px;
     justify-content: stretch;
   }
-  .tri__center { order: -1; }
+  /* Source order is .tri__left (copy) then .tri__center (sigil), so on
+     stacked layouts the heading reads first and the brandmark anchors below. */
+  .tri__center { order: 0; }
 }
 
 .tri__eyebrow {
@@ -1315,6 +1317,58 @@ body { color: var(--dawn-70); }
 .sigil__legend-num { font-size: 9px; font-weight: 700; color: var(--gold); letter-spacing: var(--track-wider); }
 .sigil__legend-name { font-size: 10px; font-weight: 700; letter-spacing: var(--track-wide); text-transform: uppercase; color: var(--dawn); }
 .sigil__legend-desc { font-size: 9px; letter-spacing: var(--track-wide); color: var(--dawn-30); }
+
+/* v19+ — Section 02 (Thoughtform / sigil) mobile composition.
+   Single centered column: sigil first, then text. Constellation labels can
+   bleed behind the heading, but the brandmark itself keeps a clear margin.
+   #definition.station must keep min-height: 100vh so it shields the sticky
+   hero behind it — only adjust padding here, not height. */
+@media (max-width: 760px) {
+  #definition.station {
+    padding-top: clamp(96px, 18vw, 140px);
+    padding-bottom: clamp(64px, 12vw, 100px);
+  }
+  .tri {
+    margin-top: clamp(20px, 5vw, 40px);
+    min-height: 0;
+    row-gap: clamp(28px, 6vw, 48px);
+    text-align: center;
+    justify-items: center;
+  }
+  .tri__center {
+    width: min(100%, 360px);
+    min-height: 0;
+    aspect-ratio: 1;
+  }
+  .sigil__mark {
+    width: clamp(132px, 38vw, 168px);
+    height: clamp(132px, 38vw, 168px);
+  }
+  .tri__left {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    max-width: 44ch;
+  }
+  .tri__ipa,
+  .tri__title,
+  .tri__body,
+  .tri__body--muted {
+    text-align: center;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .tri__title {
+    font-size: clamp(22px, 5.4vw, 28px);
+    max-width: 22ch;
+  }
+  .tri__body {
+    max-width: 36ch;
+  }
+  .tri__ctas {
+    justify-content: center;
+  }
+}
 
 /* ═══════════ 03 CONTINUUM — spectrum + collapsed distances ═══════════ */
 .continuum {
@@ -1577,6 +1631,76 @@ body { color: var(--dawn-70); }
 .crail--large .crail__stop--r .crail__tick {
   left: 50% !important; right: auto !important;
   transform: translateX(-50%);
+}
+
+/* v19+ — Section 03 (Continuum) mobile composition.
+   Three side-by-side stops can't fit at phone widths (each would be ~10ch
+   wide). Rotate the rail to a vertical readout — same navigational metaphor,
+   one stop per row, dashed rail on the left with diamond markers. */
+@media (max-width: 720px) {
+  .crail--large {
+    padding-top: 8px;
+    margin-top: clamp(28px, 6vw, 48px);
+  }
+  .crail--large .crail__bearings,
+  .crail--large .crail__line,
+  .crail--large .crail__reticle,
+  .crail--large .crail__trail,
+  .crail--large .crail__readout,
+  .crail--large .crail__frame {
+    display: none;
+  }
+  .crail--large .crail__stops-grid {
+    grid-template-columns: 1fr;
+    gap: 32px;
+    padding-left: 26px;
+    position: relative;
+  }
+  .crail--large .crail__stops-grid::before {
+    content: "";
+    position: absolute;
+    top: 8px;
+    bottom: 8px;
+    left: 4px;
+    width: 1px;
+    border-left: 1px dashed var(--dawn-30);
+  }
+  .crail--large .crail__stop {
+    padding-top: 0;
+    text-align: left;
+    position: relative;
+  }
+  .crail--large .crail__stop::before {
+    content: "";
+    position: absolute;
+    top: 4px;
+    left: -26px;
+    width: 8px;
+    height: 8px;
+    border: 1px solid var(--dawn-30);
+    background: var(--void);
+    transform: rotate(45deg);
+  }
+  .crail--large .crail__stop--m::before {
+    border-color: var(--gold);
+    background: var(--gold);
+  }
+  .crail--large .crail__stop .crail__tick {
+    display: none;
+  }
+  .crail--large .crail__k {
+    margin-bottom: 8px;
+  }
+  .crail--large .crail__t {
+    font-size: 20px;
+    margin-bottom: 10px;
+    line-height: 1.15;
+  }
+  .crail--large .crail__b {
+    margin: 0;
+    max-width: none;
+    font-size: 14px;
+  }
 }
 
 .continuum__close {
@@ -3318,6 +3442,89 @@ html { scroll-behavior: smooth; }
   }
 }
 
+/* v19+ — Practice / About: phone & small-tablet composition (tighter rhythm,
+   touch-safe CTAs, voidwalker meta + orbit scale). */
+@media (max-width: 760px) {
+  #practice.station {
+    min-height: 0;
+    padding-top: clamp(80px, 16vw, 120px);
+    padding-bottom: clamp(64px, 12vw, 100px);
+  }
+  .approach {
+    margin-left: 0;
+    margin-right: 0;
+  }
+  /* Each phase (Navigate / Encode / Build) is its own full-viewport
+     moment on mobile. min-height: 100vh + flex centering means the
+     halo+text composition sits at the dead middle of the screen when the
+     user lands on that phase. The reduced gap avoids extra space between
+     phases since the 100vh blocks already give all the breathing room. */
+  .approach__list {
+    gap: 0;
+  }
+  .approach__phase[data-phase="navigate"],
+  .approach__phase[data-phase="encode"],
+  .approach__phase[data-phase="build"] {
+    min-height: 100vh;
+    padding: clamp(48px, 12vw, 80px) clamp(8px, 2vw, 16px);
+  }
+  .approach__phase__core {
+    place-self: center;
+  }
+  .approach__phase__halo svg {
+    width: min(120%, 380px);
+  }
+  .exec {
+    margin-top: clamp(40px, 8vw, 72px);
+  }
+  .exec__header {
+    padding-bottom: 20px;
+    margin-bottom: 20px;
+  }
+  .exec__grid {
+    margin-top: 22px;
+  }
+  .exec__card {
+    min-height: 0;
+    padding: 24px 20px 20px;
+    gap: 14px;
+  }
+  .exec__card h3 {
+    font-size: clamp(22px, 5vw, 30px);
+  }
+  .exec__card p {
+    max-width: none;
+  }
+  #about.station {
+    padding-top: clamp(72px, 12vw, 100px);
+    padding-bottom: clamp(72px, 12vw, 100px);
+  }
+}
+
+@media (max-width: 640px) {
+  .approach__throughline {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px 0;
+    margin-top: clamp(24px, 5vw, 40px);
+  }
+  .approach__throughline > span {
+    max-width: 100%;
+  }
+  /* Keep the 80vh "one phase per scroll" behavior from the 760px rule —
+     just tighten the halo/tag at very narrow widths so they don't feel
+     overcropped. min-height intentionally NOT overridden here. */
+  .approach__phase__halo {
+    inset: clamp(-18px, -2.5vw, -28px);
+  }
+  .approach__phase__halo svg {
+    width: min(118%, 320px);
+  }
+  .approach__phase__tag {
+    top: 4%;
+  }
+}
+
 /* ═══════════════════════════════════════════════════════════════════
    v14 — PRACTICE · EXECUTION STRIP (services absorbed into practice)
    A thin bridge between the phases above and the CTA below.
@@ -3535,6 +3742,41 @@ html { scroll-behavior: smooth; }
   width: 5px; height: 5px; background: var(--gold); transform: rotate(45deg);
 }
 
+@media (max-width: 640px) {
+  .practice-cta--funnel {
+    margin-left: 0;
+    margin-right: 0;
+    padding-left: 0;
+    padding-right: 0;
+    padding-bottom: clamp(32px, 8vw, 56px);
+  }
+  .practice-cta__copy--center {
+    max-width: none;
+    width: 100%;
+  }
+  .practice-cta__lede {
+    font-size: 15px;
+    margin-bottom: 22px;
+  }
+  .practice-cta__ctas {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+  }
+  .practice-cta__ctas .btn {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+  }
+  .practice-cta__trail {
+    flex-wrap: wrap;
+    text-align: center;
+    line-height: 1.4;
+  }
+}
+
 /* ═══════════════════════════════════════════════════════════════════
    v14 — PRODUCTS · flat cards with depth (Active Theory feel)
    Override the earlier curved/translucent look with straight edges,
@@ -3748,6 +3990,48 @@ html { scroll-behavior: smooth; }
 
 @media (max-width: 960px) {
   .voidwalker__orbit { max-width: 440px; }
+}
+
+@media (max-width: 640px) {
+  .voidwalker__meta {
+    grid-template-columns: 1fr;
+  }
+  .voidwalker__copy {
+    max-width: none;
+  }
+  .voidwalker__name {
+    font-size: clamp(28px, 7vw, 40px);
+  }
+  .voidwalker__bio {
+    font-size: 16px;
+  }
+  .voidwalker__links a {
+    min-width: 44px;
+    min-height: 44px;
+  }
+  .voidwalker__orbit {
+    max-width: min(100%, 320px);
+  }
+  .voidwalker__orbit__label {
+    font-size: 7px;
+    letter-spacing: 0.12em;
+  }
+  .voidwalker__orbit__label--tl {
+    top: 3%;
+    left: 3%;
+  }
+  .voidwalker__orbit__label--tr {
+    top: 3%;
+    right: 3%;
+  }
+  .voidwalker__orbit__label--bl {
+    bottom: 3%;
+    left: 3%;
+  }
+  .voidwalker__orbit__label--br {
+    bottom: 3%;
+    right: 3%;
+  }
 }
 
 /* animated particles inside the orbit */
