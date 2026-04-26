@@ -1,0 +1,16 @@
+---
+description: Fixed brandmark actor + ScrollTrigger choreography
+globs:
+  - "**/useSigilChoreography*"
+  - "**/BrandmarkActor*"
+  - components/landing/v7/landing.css
+alwaysApply: false
+---
+
+# Rule: Brandmark / sigil choreography
+
+The mark is **`position: fixed`** and must track **sigil → HUD → orbit** without hero flashes or practice snaps.
+
+**Read first:** `sentinel/decisions/010-brandmark-choreography.md`, `.claude/skills/brandmark-choreography/SKILL.md`, `sentinel/decisions/008-landing-v7-background-layers.md`.
+
+**Process:** `sentinel/MAINTENANCE.md` — live rects, `onLeave` settlement; avoid CSS sticky hacks without an ADR.

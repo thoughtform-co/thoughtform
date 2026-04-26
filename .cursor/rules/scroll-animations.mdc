@@ -1,0 +1,15 @@
+---
+description: Scroll metrics and NavigationCockpitV2 hooks
+globs:
+  - lib/hooks/useScroll*
+  - components/hud/NavigationCockpitV2/hooks/**
+alwaysApply: false
+---
+
+# Rule: Scroll animations & cockpit hooks
+
+Shared scroll progress and cockpit integration; changes affect Lenis, GSAP, and HUD behavior.
+
+**Read first:** `sentinel/decisions/002-scroll-animation-architecture.md`, `sentinel/decisions/005-scroll-captured-content-reveal.md`.
+
+**Process:** `sentinel/MAINTENANCE.md` — document contract changes (ADR or decision addendum).

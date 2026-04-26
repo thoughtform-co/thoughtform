@@ -1,0 +1,16 @@
+---
+description: Auth allowlist, gates, and API authorization
+globs:
+  - lib/auth/**
+  - components/auth/**
+  - app/api/**
+alwaysApply: false
+---
+
+# Rule: Auth & API routes
+
+Gates on the client are **UX only**; **server** must verify tokens and allowlist for mutations.
+
+**Read first:** `sentinel/decisions/003-auth-centralization.md`, `lib/auth/allowed-user.ts` (`isAllowedUserEmail()`). See also `.cursor/rules/admin-access.mdc`.
+
+**Process:** `sentinel/MAINTENANCE.md`

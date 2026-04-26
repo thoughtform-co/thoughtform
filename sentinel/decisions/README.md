@@ -34,6 +34,11 @@ Write an ADR when you:
 | 003 | [Auth Centralization](003-auth-centralization.md)                       | Accepted | 2024-12 |
 | 004 | [Legacy Code Archival](004-legacy-code-archival.md)                     | Accepted | 2024-12 |
 | 005 | [Scroll-Captured Content Reveal](005-scroll-captured-content-reveal.md) | Accepted | 2024-12 |
+| 006 | [Focus Overlay System](006-focus-overlay-system.md)                     | Accepted | 2025+   |
+| 007 | [Chamfered Card Polygon Design](007-chamfered-card-polygon-design.md)   | Accepted | 2025+   |
+| 008 | [Landing v7 Background Layers](008-landing-v7-background-layers.md)     | Accepted | 2026-04 |
+| 009 | [Repo Structure Conventions](009-repo-structure-conventions.md)         | Accepted | 2025+   |
+| 010 | [Brandmark Choreography](010-brandmark-choreography.md)                 | Accepted | 2026-04 |
 
 ---
 

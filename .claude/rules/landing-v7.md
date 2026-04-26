@@ -1,0 +1,22 @@
+---
+paths:
+  - "components/landing/v7/**"
+  - "app/(marketing)/**"
+description: Landing v7 compositing, layers, and brandmark journey
+---
+
+# Rule: Landing v7
+
+When editing files under `components/landing/v7/**` or `app/(marketing)/**`, you are in a **layered composite** (fixed gateway, sticky hero, opaque stations) — not a flat page.
+
+**Read first**
+
+- [ADR-008: Landing v7 background layers](../sentinel/decisions/008-landing-v7-background-layers.md)
+- [ADR-010: Brandmark choreography](../sentinel/decisions/010-brandmark-choreography.md)
+- Skill: `.claude/skills/landing-v7-compositing/SKILL.md`
+- Skill: `.claude/skills/brandmark-choreography/SKILL.md`
+
+**Process**
+
+- Before non-trivial changes: [sentinel/MAINTENANCE.md](../sentinel/MAINTENANCE.md) (Cycle B if adding a section; Cycle A after fixes).
+- After any non-trivial fix: same file, Cycle A checklist.

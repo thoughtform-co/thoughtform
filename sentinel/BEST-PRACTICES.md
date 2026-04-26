@@ -1,20 +1,26 @@
 # Thoughtform.co Best Practices
 
-> Patterns learned from real bugs in this codebase. These prevent classes of issues, not prescribe specific solutions.
+> Patterns learned from real bugs in this codebase. These prevent classes of issues, not prescribe specific solutions.  
+> **2026-04-25 audit:** cross-links to ADRs added where decisions exist; scroll/canvas/auth sections remain current. For **fixed elements + ScrollTrigger**, see [DOM Pinning & ScrollTrigger](#-dom-pinning--scrolltrigger-brandmark--fixed-actors) and [ADR-010](decisions/010-brandmark-choreography.md).
 
 ---
 
 ## Table of Contents
 
 - [Scroll Animation Patterns](#-scroll-animation-patterns)
+- [DOM Pinning & ScrollTrigger (brandmark / fixed actors)](#-dom-pinning--scrolltrigger-brandmark--fixed-actors)
 - [Canvas & Three.js](#-canvas--threejs)
 - [Authentication](#-authentication)
 - [CSS & Styling](#-css--styling)
+- [State Management](#-state-management)
+- [After a non-trivial fix](#-after-a-non-trivial-fix)
 - [Quick Checklist](#-quick-checklist)
 
 ---
 
 ## 🎬 Scroll Animation Patterns
+
+> **Related:** [ADR-002](decisions/002-scroll-animation-architecture.md), [ADR-005](decisions/005-scroll-captured-content-reveal.md). If the element is `position: fixed` and **tracks** the page, also read [DOM Pinning & ScrollTrigger](#-dom-pinning--scrolltrigger-brandmark--fixed-actors).
 
 ### Sync Animation Timing to Shared Constants
 
@@ -106,6 +112,37 @@ if (tDefToManifesto > 0.9 && !manifestoComplete) {
 ```
 
 **Why it matters:** Users expect scrolling back to "undo" the transition.
+
+---
+
+## 🧷 DOM Pinning & ScrollTrigger (brandmark / fixed actors)
+
+> See also: [ADR-010](decisions/010-brandmark-choreography.md), `.claude/skills/brandmark-choreography/SKILL.md`.  
+> These patterns came from `useSigilChoreography` and apply whenever a `position: fixed` element tracks a scrolling target.
+
+### Sticky elements + JS pinning don't compose naively
+
+A **precomputed sticky viewport coordinate** (or “where sticky _should_ be”) is not the same as where the **live** target paints this frame. Pin the fixed overlay to a **live rect** (per-frame / per-`onUpdate` read) so engagement of `position: sticky` is reflected. Otherwise the actor can hover over “empty” space between sections.
+
+**Why it matters:** Sticky is stateful; a coord derived from layout math without the same state machine as the browser will drift.
+
+### Scale-around-centre wobbles bounding-box edges
+
+If a source node **animates `transform: scale()`** (e.g. entrance reveal), `getBoundingClientRect()` on that node moves the **edges** in non-obvious ways. For positioning a **separate** fixed element, read position from a stable horizontal reference (e.g. untransformed **container** width) and/or derive vertical from the **unscaled** box (centre-based math). If the fixed actor must not “breathe,” **force render scale = 1** on the actor while the source scrubs.
+
+**Why it matters:** Coupling a fixed actor’s position to a scaled rect creates slow drift or jitter across long scroll ranges.
+
+### Capture-at-`onEnter` rects are stale for sticky targets
+
+`ScrollTrigger` `onEnter` can fire **before** sticky has engaged. If you capture `getBoundingClientRect()` once and reuse it for a **later** `onUpdate` / dock step, the stored rect can be wrong by hundreds of pixels. For `sticky` / `fixed` targets inside scroll portlets, **recompute live rects** in the same phase that applies the transform (e.g. forward travel into orbit uses live HUD + orbit reads).
+
+**Why it matters:** “Snap” glitches on practice/orbit transitions are often stale measurements, not easing.
+
+### Fast scrolls outrun `scrub: 0.4`
+
+Short scrub values feel responsive but **may not complete** a timeline before the user leaves the trigger. If `onUpdate` is the only place that finalises **dock state** or boolean flags, **add `onLeave` / `onRefresh` handling** to settle the same state so fast scrolls don’t leave the machine half-docked.
+
+**Why it matters:** Sticky flags (`practiceEntryArmed`, etc.) and the visible actor position can desync from ScrollTrigger’s progress.
 
 ---
 
@@ -434,4 +471,12 @@ Terminal/manifesto text uses Tensor Gold with CRT glow:
 
 ---
 
-_Last updated: 2026-01-28_
+## 🔁 After a non-trivial fix
+
+When a bugfix changes runtime behavior, **do not** rely on chat history — run the **post-incident capture** steps in [MAINTENANCE.md](MAINTENANCE.md) (Cycle A). If a checkbox triggers, update `sentinel/BEST-PRACTICES.md`, an ADR, a path rule, or a `SKILL.md` **before** the work is considered done.
+
+Trivial changes (typos, copy, formatting-only) skip this; see [MAINTENANCE — When to NOT capture](MAINTENANCE.md#when-to-not-capture).
+
+---
+
+_Last updated: 2026-04-25_

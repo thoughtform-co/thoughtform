@@ -1,0 +1,15 @@
+---
+description: Landing v7 compositing, layers, brandmark journey
+globs:
+  - "components/landing/v7/**"
+  - "app/(marketing)/**"
+alwaysApply: false
+---
+
+# Rule: Landing v7
+
+When editing these paths, you are in a **layered composite** (fixed `.gateway`, sticky hero, opaque stations) — not a flat page.
+
+**Read first:** `sentinel/decisions/008-landing-v7-background-layers.md`, `sentinel/decisions/010-brandmark-choreography.md`, `.claude/skills/landing-v7-compositing/SKILL.md`, `.claude/skills/brandmark-choreography/SKILL.md`.
+
+**Process:** `sentinel/MAINTENANCE.md` — Cycle B before large section work; Cycle A after non-trivial fixes.

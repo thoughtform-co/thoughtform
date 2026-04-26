@@ -1,5 +1,27 @@
 # Thoughtform.co - Project Context
 
+## Sentinel — patterns and decisions
+
+Read [sentinel/BEST-PRACTICES.md](sentinel/BEST-PRACTICES.md) and the **ADR** relevant to your task before non-trivial changes:
+
+- **Landing v7 compositing:** [ADR-008](sentinel/decisions/008-landing-v7-background-layers.md)
+- **Brandmark choreography:** [ADR-010](sentinel/decisions/010-brandmark-choreography.md)
+- **Scroll architecture:** [ADR-002](sentinel/decisions/002-scroll-animation-architecture.md)
+- **Auth centralization:** [ADR-003](sentinel/decisions/003-auth-centralization.md)
+- **Focus overlay system:** [ADR-006](sentinel/decisions/006-focus-overlay-system.md)
+
+When path-scoped rules in [`.claude/rules/`](.claude/rules/) match your files, follow them. Don’t import the whole `sentinel/` tree into prompts — use ADRs, rules, and skills on demand to save context.
+
+## Working on this codebase
+
+- **Before non-trivial work:** open [sentinel/MAINTENANCE.md](sentinel/MAINTENANCE.md) — use **Cycle A** for bugfix follow-up, **Cycle B** for new feature surface.
+- **At the end of a session that changed code:** run the **post-incident checklist** in [sentinel/MAINTENANCE.md](sentinel/MAINTENANCE.md); if a row triggers, update ADR / BEST-PRACTICES / rule / skill before pushing.
+- **Vocabulary:** [LANGUAGE.md](LANGUAGE.md) — use terms like _Module, Seam, Station, Actor_ consistently.
+
+**Hooks:** [lint-staged](package.json) runs ESLint + Prettier on staged `*.{ts,tsx}`; CI/build uses `npm run lint`. Optional: [`.cursor/hooks.json`](.cursor/hooks.json) + [`scripts/sentinel-pre-edit-hint.mjs`](scripts/sentinel-pre-edit-hint.mjs) inject a one-line Sentinel hint on matched writes.
+
+---
+
 This is the Thoughtform.co website, a Next.js application with a sophisticated particle system and HUD-based navigation.
 
 ## Tech Stack
@@ -149,12 +171,7 @@ box-shadow:
 3. Content frame with dashed border (`--focus-overlay-border`)
 4. Label badge on top (if content has a title)
 
-**Size Variants**:
-| Variant | Max Width | Max Height | Use Case |
-|---------|-----------|------------|----------|
-| small | 400px/50vw | 300px/50vh | Icons, small assets |
-| medium | 600px/60vw | 400px/50vh | Standard components |
-| large | 900px/75vw | 700px/75vh | Images, detailed views |
+**Size variants** (small / medium / large): see `sentinel/decisions/006-focus-overlay-system.md`.
 
 ### Panel Layout
 
@@ -176,6 +193,4 @@ See `sentinel/decisions/006-focus-overlay-system.md` for full documentation.
 
 ### Landing v7 Compositing (ADR-008)
 
-When editing anything under `components/landing/v7/**` or `landing.css`, the page is a layered composite with a `position: fixed` gateway glow (z:0), a `position: sticky` hero video (z:1), and opaque shield sections/connectors (z:2) stacked inside `.stations` (z:10). Full-bleed elements at z≥2 must declare `background: var(--void)`, and `opacity` reveals must never be applied to a wrapper that shields the gateway/hero — move the reveal to the inner content instead.
-
-Rules, pre-merge checklist, and a runtime debugging recipe: `.claude/skills/landing-v7-compositing/SKILL.md`. Architectural record and regression history: `sentinel/decisions/008-landing-v7-background-layers.md`.
+Stacking / gateway / hero / shield rules, checklists, and full regression history: [ADR-008](sentinel/decisions/008-landing-v7-background-layers.md) and `.claude/skills/landing-v7-compositing/SKILL.md` (and brandmark ADR-010 for the fixed mark).

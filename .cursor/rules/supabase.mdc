@@ -1,0 +1,15 @@
+---
+description: Migrations, RLS, and celestial data access
+globs:
+  - supabase/**
+  - lib/celestial/**
+alwaysApply: false
+---
+
+# Rule: Supabase & celestial
+
+Migrations: timestamp-prefixed, append-only history. RLS must match how the app queries.
+
+**Read first:** `CLAUDE.md` (naming, route groups), `supabase/schema.sql`, `supabase/auth-rls.sql`.
+
+**Process:** `sentinel/MAINTENANCE.md` — almost every policy change needs a pattern or ADR note.

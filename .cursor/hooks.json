@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "hooks": {
+    "preToolUse": [
+      {
+        "command": "node scripts/sentinel-pre-edit-hint.mjs",
+        "matcher": "Write|StrReplace|write|search_replace|apply_patch|Edit"
+      }
+    ]
+  }
+}
