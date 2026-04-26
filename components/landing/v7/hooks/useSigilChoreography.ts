@@ -236,12 +236,10 @@ export function useSigilChoreography(
     const syncActorToSigilEntrance = () => {
       const a = actor();
       if (!a) return;
-      const vh = window.innerHeight;
-      const defRect = defEl.getBoundingClientRect();
-      // Threshold matches the handoffTl trigger start ("bottom 90%" of
-      // defEl) — once section 02's bottom has reached 90% of the viewport
-      // height, handoffTl owns the actor.
-      const handoffStartReached = defRect.bottom <= vh * 0.9;
+      // Threshold matches the handoffTl trigger start ("top 35%" of
+      // contEl) — once continuum's top is in the upper third of the
+      // viewport, handoffTl owns the actor.
+      const handoffStartReached = contEl.getBoundingClientRect().top <= window.innerHeight * 0.35;
       const downstreamOwnsActor =
         handoffArmed ||
         practiceEntryArmed ||
@@ -750,10 +748,10 @@ export function useSigilChoreography(
       const entrancePastEnd = defEl.getBoundingClientRect().top <= vh * 0.35;
       if (!entrancePastEnd) return;
 
-      // Threshold matches `handoffTl.scrollTrigger.start` ("bottom 90%"
-      // of defEl) — once handoff arms, leave the actor alone so the
+      // Threshold matches `handoffTl.scrollTrigger.start` ("top 35%"
+      // of contEl) — once handoff arms, leave the actor alone so the
       // morph can drive it.
-      const handoffStartReached = defEl.getBoundingClientRect().bottom <= vh * 0.9;
+      const handoffStartReached = contEl.getBoundingClientRect().top <= vh * 0.35;
       if (handoffStartReached) return;
 
       const o = Number(gsap.getProperty(sigilMark, "opacity")) || 0;
@@ -943,21 +941,15 @@ export function useSigilChoreography(
 
       const handoffTl = gsap.timeline({
         scrollTrigger: {
-          // Anchor the handoff to section 02's *bottom* rather than
-          // continuum's top. Two reasons:
-          //   1. The diagram column (`.tri__center`) is `position: sticky`,
-          //      so its viewport position is locked while reading the
-          //      section copy — the natural moment for the brandmark to
-          //      detach is when section 02 is itself leaving the screen,
-          //      not when the next section happens to enter.
-          //   2. Anchoring to defEl makes the handoff start coincide
-          //      with the sticky un-engage point regardless of the
-          //      connector's height between sections.
-          // Range is tight + a short scrub so the travel feels
-          // deliberate ("gently moves") instead of dragged out.
-          trigger: defEl,
-          start: "bottom 90%",
-          end: "bottom 30%",
+          // Anchor on continuum's top so the brandmark only begins
+          // travelling toward the HUD once the user has actually
+          // scrolled past section 02 and the next section is taking
+          // over the viewport. Range matches the historical timing —
+          // we just tightened the scrub from 1.8 to 0.4 so the morph
+          // tracks the user's scroll instead of lagging behind.
+          trigger: contEl,
+          start: "top 35%",
+          end: "top 5%",
           scrub: 0.4,
           onEnter: () => {
             captureHandoffRects();
