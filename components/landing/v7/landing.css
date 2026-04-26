@@ -6183,3 +6183,1059 @@ html {
   right: 20px;
   left: auto;
 }
+
+/* ═══════════════════════════════════════════════════════════════════
+   v18 — BUILD AXIOM (sticky quote interstitial)
+   ───────────────────────────────────────────────────────────────────
+   Sticky full-viewport panel between #practice and #build. Pinned at
+   z:1 like .hero so the next station (#build, z:2) covers it as the
+   user scrolls — same parallax handoff as hero → definition.
+   Compositing rules:
+   - Wrapper paints opaque var(--void) (Rule 1 of landing-v7-compositing).
+   - Reveal motion lives on .build-quote__figure (data-m="instrument"),
+     not on the wrapper, so the sticky shield never fades and exposes
+     the fixed .gateway gold gradient (Rule 2).
+   - --build-cover (set by useLandingScroll) drives a tiny zoom/fade so
+     the quote feels like it recedes into the build cases that cover it.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Promote the quote station to a sticky shield. The default
+   `.station:not(.hero)` rule paints var(--void) at z:2 with specificity
+   (0,2,0); the doubled selector below also lands at (0,2,0) but appears
+   later in source order, so it wins. We drop to z:1 and pin to the top
+   so the cases station (still z:2) can scroll over it. */
+.station.station--sticky {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  min-height: 0;
+  z-index: 1;
+  /* No content-visibility: auto here — the station is sticky, so it must
+     stay laid out continuously while scrolling. Otherwise the browser
+     reports a placeholder size while offscreen and the sticky math is
+     off when the user scrolls back up. */
+  content-visibility: visible;
+  contain-intrinsic-size: auto;
+}
+
+.build-quote {
+  display: grid;
+  place-items: center;
+  padding: clamp(48px, 8vh, 96px) clamp(32px, 5vw, 96px);
+  overflow: hidden;
+}
+
+/* Cover-driven recede — the quote eases backward as #build covers it,
+   matching the hero's `transform: scale + opacity` recipe for the
+   hero → definition transition. */
+.build-quote {
+  --build-cover-eased: var(--build-cover, 0);
+}
+.build-quote__inner {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: min(100%, 1180px);
+  aspect-ratio: 1.6 / 1;
+  max-height: calc(100vh - clamp(64px, 12vh, 160px));
+  transform: scale(calc(1 - var(--build-cover, 0) * 0.06));
+  opacity: calc(1 - var(--build-cover, 0) * 0.6);
+  transition: opacity 120ms linear;
+  will-change: transform, opacity;
+}
+
+/* Asymmetric corner brackets — gold pair top-left + bottom-right, dawn
+   pair top-right + bottom-left. Reads as a navigational frame with the
+   active diagonal on gold (the way Thoughtform marks waypoints). */
+.build-quote__bracket {
+  position: absolute;
+  width: clamp(24px, 3.5vw, 44px);
+  height: clamp(24px, 3.5vw, 44px);
+  pointer-events: none;
+  border: 1px solid;
+  z-index: 2;
+}
+.build-quote__bracket--tl {
+  top: clamp(40px, 7vh, 88px);
+  left: clamp(40px, 6vw, 96px);
+  border-color: var(--gold);
+  opacity: 0.7;
+  border-right: none;
+  border-bottom: none;
+}
+.build-quote__bracket--br {
+  bottom: clamp(40px, 7vh, 88px);
+  right: clamp(40px, 6vw, 96px);
+  border-color: var(--gold);
+  opacity: 0.7;
+  border-left: none;
+  border-top: none;
+}
+.build-quote__bracket--tr {
+  top: clamp(40px, 7vh, 88px);
+  right: clamp(40px, 6vw, 96px);
+  border-color: var(--dawn-30);
+  border-left: none;
+  border-bottom: none;
+}
+.build-quote__bracket--bl {
+  bottom: clamp(40px, 7vh, 88px);
+  left: clamp(40px, 6vw, 96px);
+  border-color: var(--dawn-30);
+  border-right: none;
+  border-top: none;
+}
+
+.build-quote__label {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-pt-mono);
+  font-size: 9px;
+  letter-spacing: var(--track-widest, 0.18em);
+  text-transform: uppercase;
+  color: var(--dawn-50, rgba(232, 228, 216, 0.5));
+  white-space: nowrap;
+  z-index: 2;
+  pointer-events: none;
+}
+.build-quote__label .k {
+  color: var(--gold);
+}
+.build-quote__label--tl {
+  top: clamp(60px, 8vh, 108px);
+  left: clamp(72px, 8vw, 132px);
+}
+.build-quote__label--tr {
+  top: clamp(60px, 8vh, 108px);
+  right: clamp(72px, 8vw, 132px);
+}
+.build-quote__label--bl {
+  bottom: clamp(60px, 8vh, 108px);
+  left: clamp(72px, 8vw, 132px);
+}
+.build-quote__label--br {
+  bottom: clamp(60px, 8vh, 108px);
+  right: clamp(72px, 8vw, 132px);
+}
+
+.build-quote__diagram {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  margin: auto;
+  pointer-events: none;
+  opacity: 0.85;
+  /* Drift / breathe — same family as the celestial connector diagram. */
+  animation: bqDiagramBreath 12s ease-in-out infinite;
+}
+@keyframes bqDiagramBreath {
+  0%,
+  100% {
+    opacity: 0.78;
+  }
+  50% {
+    opacity: 0.95;
+  }
+}
+
+.build-quote__figure {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(16px, 2vh, 28px);
+  max-width: 60ch;
+  padding: clamp(24px, 4vh, 48px);
+}
+
+.build-quote__eyebrow {
+  font-family: var(--font-pt-mono);
+  font-size: 10px;
+  letter-spacing: var(--track-widest, 0.18em);
+  text-transform: uppercase;
+  color: var(--dawn-50, rgba(232, 228, 216, 0.5));
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.build-quote__eyebrow .k {
+  color: var(--gold);
+}
+
+/* The quote body. Renders the strikethrough/correction inline with the
+   rest of the sentence so the editorial gesture (cannot → do not) reads
+   as a hand-applied correction inside a typeset axiom. */
+.build-quote__quote {
+  margin: 0;
+  font-family: var(--font-pp-neue-montreal);
+  font-weight: 300;
+  font-style: italic;
+  font-size: clamp(28px, 3.6vw, 56px);
+  line-height: 1.18;
+  letter-spacing: -0.02em;
+  color: var(--dawn);
+  text-wrap: balance;
+}
+.build-quote__line {
+  display: inline;
+}
+.build-quote__quote::before {
+  content: "“";
+  display: inline-block;
+  margin-right: 0.18em;
+  color: var(--gold);
+  font-style: normal;
+  opacity: 0.85;
+}
+.build-quote__quote::after {
+  content: "”";
+  display: inline-block;
+  margin-left: 0.12em;
+  color: var(--gold);
+  font-style: normal;
+  opacity: 0.85;
+}
+
+/* Inline correction:
+   - .build-quote__strike  — the original "cannot", crossed out with a
+     stroked diagonal that lives inside the word's box (no overflow), so
+     it reads as a deliberate edit and the next word can sit cleanly
+     beside it.
+   - .build-quote__sub     — the replacement "do not", set in the same
+     italic display weight but tinted gold and prefixed by an arrow caret
+     pinned above the baseline so it reads as a margin annotation.
+   The pair lays out as one inline span; on phones it stacks. */
+.build-quote__correction {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.7ch;
+  margin: 0 0.22em;
+  vertical-align: baseline;
+}
+.build-quote__strike {
+  position: relative;
+  display: inline-block;
+  color: var(--dawn-50, rgba(232, 228, 216, 0.45));
+  text-decoration: none;
+  font-weight: 300;
+}
+.build-quote__strike::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 52%;
+  height: 1.5px;
+  background: var(--gold);
+  transform: rotate(-3deg);
+  transform-origin: center;
+  opacity: 0.9;
+}
+.build-quote__sub {
+  position: relative;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.18ch;
+  color: var(--gold);
+  text-decoration: none;
+  font-weight: 400;
+}
+.build-quote__sub em {
+  font-style: italic;
+  font-weight: 400;
+}
+.build-quote__caret {
+  font-family: var(--font-pt-mono);
+  font-style: normal;
+  font-size: 0.42em;
+  color: var(--gold);
+  opacity: 0.9;
+  transform: translateY(-0.32em);
+  letter-spacing: 0;
+}
+
+.build-quote__attribution {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--font-pt-mono);
+  font-size: 11px;
+  letter-spacing: var(--track-wide, 0.12em);
+  text-transform: uppercase;
+  color: var(--dawn-70, rgba(232, 228, 216, 0.7));
+}
+.build-quote__attribution__rule {
+  width: clamp(28px, 5vw, 56px);
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--gold) 40%, transparent);
+}
+.build-quote__attribution__name {
+  color: var(--dawn);
+  font-weight: 700;
+  letter-spacing: var(--track-wider, 0.16em);
+}
+.build-quote__attribution__meta {
+  color: var(--dawn-50, rgba(232, 228, 216, 0.5));
+}
+
+/* Reveal pinned to the figure (inner) only, per Rule 2. The wrapper
+   stays fully opaque so the gateway never bleeds through during the
+   880ms reveal, while the quote + attribution lift in. */
+.build-quote .build-quote__figure[data-m="instrument"],
+.build-quote .build-quote__figure[data-m="instrument"].is-in {
+  /* Reveal motion uses the v7 [data-m="instrument"] role; nothing to
+     override here — the rule exists to make the dependency explicit. */
+}
+
+/* Phone polish — quote scales down and the correction stacks below the
+   strike so the line break doesn't break the meaning. */
+@media (max-width: 720px) {
+  .build-quote {
+    padding: clamp(40px, 8vh, 80px) 24px;
+  }
+  .build-quote__inner {
+    aspect-ratio: auto;
+    height: 100%;
+    max-height: none;
+    width: 100%;
+  }
+  .build-quote__diagram {
+    opacity: 0.6;
+  }
+  .build-quote__bracket {
+    width: 18px;
+    height: 18px;
+  }
+  .build-quote__bracket--tl,
+  .build-quote__bracket--tr {
+    top: 16px;
+  }
+  .build-quote__bracket--bl,
+  .build-quote__bracket--br {
+    bottom: 16px;
+  }
+  .build-quote__bracket--tl,
+  .build-quote__bracket--bl {
+    left: 16px;
+  }
+  .build-quote__bracket--tr,
+  .build-quote__bracket--br {
+    right: 16px;
+  }
+  .build-quote__label--tl,
+  .build-quote__label--bl {
+    left: 40px;
+  }
+  .build-quote__label--tr,
+  .build-quote__label--br {
+    right: 40px;
+  }
+  .build-quote__label {
+    font-size: 8px;
+  }
+  .build-quote__correction {
+    flex-direction: column;
+    align-items: center;
+    gap: 0.1em;
+  }
+  .build-quote__attribution {
+    flex-direction: column;
+    gap: 6px;
+  }
+  .build-quote__attribution__meta {
+    font-size: 10px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .build-quote__diagram {
+    animation: none;
+  }
+  .build-quote__inner {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   v19 — BUILD CASES (creative-tech editorial slides)
+   ───────────────────────────────────────────────────────────────────
+   Section #build hosts four asymmetric editorial slides for the Loop
+   creative-tech tools. Layout A places copy left + frame right; layout
+   B mirrors it (frame left + copy right). The frame is a HUD-grade
+   image plate with offset corner brackets, a depth ladder, bearing
+   readouts, and an optional inset detail screenshot.
+   ═══════════════════════════════════════════════════════════════════ */
+
+.station--build {
+  position: relative;
+  z-index: 2;
+  background: var(--void);
+  padding-top: clamp(96px, 14vh, 180px);
+  padding-bottom: clamp(80px, 14vh, 160px);
+}
+
+.build-cases {
+  position: relative;
+  margin: 0;
+  padding: 0;
+}
+.build-cases__list {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(120px, 18vh, 240px);
+  margin-top: clamp(48px, 10vh, 120px);
+}
+
+/* ─── Single slide ─── */
+.build-case {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.32fr);
+  grid-template-rows: auto auto auto auto auto;
+  column-gap: clamp(32px, 5vw, 96px);
+  row-gap: clamp(20px, 3vh, 36px);
+  align-items: start;
+  scroll-margin-top: 96px;
+}
+
+/* Layout A — copy left, frame right */
+.build-case--a {
+  grid-template-areas:
+    "head     frame"
+    "subline  frame"
+    "body     frame"
+    "caps     caps"
+    "foot     foot";
+}
+/* Layout B — frame left, copy right */
+.build-case--b {
+  grid-template-columns: minmax(0, 1.32fr) minmax(0, 0.95fr);
+  grid-template-areas:
+    "frame  head"
+    "frame  subline"
+    "frame  body"
+    "caps   caps"
+    "foot   foot";
+}
+
+.build-case__head {
+  grid-area: head;
+}
+.build-case__subline {
+  grid-area: subline;
+}
+.build-case__body {
+  grid-area: body;
+}
+.build-case__frame {
+  grid-area: frame;
+}
+.build-case__caps {
+  grid-area: caps;
+}
+.build-case__foot {
+  grid-area: foot;
+}
+
+.build-case__head__row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-family: var(--font-pt-mono);
+  font-size: 10px;
+  letter-spacing: var(--track-widest, 0.18em);
+  text-transform: uppercase;
+  color: var(--dawn-50, rgba(232, 228, 216, 0.5));
+  flex-wrap: wrap;
+}
+.build-case__head__counter {
+  color: var(--gold);
+  font-weight: 700;
+}
+.build-case__head__rule {
+  flex: 0 0 clamp(20px, 3vw, 40px);
+  height: 1px;
+  background: linear-gradient(to right, var(--gold), transparent);
+}
+.build-case__head__domain {
+  color: var(--dawn-70, rgba(232, 228, 216, 0.7));
+  letter-spacing: var(--track-wider, 0.16em);
+}
+.build-case__head__status {
+  margin-left: auto;
+  padding: 4px 10px;
+  border: 1px solid var(--dawn-15);
+  font-size: 9px;
+  letter-spacing: var(--track-wide, 0.12em);
+}
+.build-case__head__status--production {
+  color: var(--gold);
+  border-color: var(--gold-30, rgba(202, 165, 84, 0.45));
+  background: rgba(202, 165, 84, 0.06);
+}
+
+.build-case__head__title {
+  margin-top: clamp(24px, 4vh, 44px);
+  display: flex;
+  flex-direction: column;
+  gap: clamp(10px, 1.4vh, 18px);
+}
+
+.build-case__name {
+  font-family: var(--font-pp-neue-montreal);
+  font-weight: 700;
+  font-size: clamp(48px, 7vw, 116px);
+  letter-spacing: -0.045em;
+  line-height: 0.92;
+  color: var(--dawn);
+  margin: 0;
+  text-wrap: balance;
+}
+.build-case__name span[aria-hidden] {
+  color: var(--gold);
+  margin-left: 0.04em;
+}
+
+.build-case__tagline {
+  margin: 0;
+  font-family: var(--font-pt-mono);
+  font-size: clamp(11px, 1vw, 13px);
+  letter-spacing: var(--track-widest, 0.18em);
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+.build-case__subline {
+  margin: 0;
+  font-family: var(--font-pp-neue-montreal);
+  font-weight: 300;
+  font-size: clamp(18px, 1.6vw, 24px);
+  line-height: 1.4;
+  color: var(--dawn-70, rgba(232, 228, 216, 0.7));
+}
+.build-case__subline em {
+  font-style: italic;
+  color: var(--dawn);
+}
+
+.build-case__body {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(16px, 2vh, 28px);
+  border-top: 1px dashed var(--dawn-08);
+  padding-top: clamp(20px, 2.6vh, 32px);
+  max-width: 46ch;
+}
+
+.build-case__mode {
+  align-self: flex-start;
+  font-family: var(--font-pt-mono);
+  font-size: 10px;
+  letter-spacing: var(--track-widest, 0.18em);
+  text-transform: uppercase;
+  padding: 6px 12px;
+  border: 1px solid var(--dawn-30);
+  color: var(--dawn);
+  background: rgba(15, 14, 12, 0.45);
+}
+.build-case__mode--repair {
+  border-color: var(--dawn-30);
+  color: var(--dawn);
+}
+.build-case__mode--compress {
+  border-color: var(--gold-30, rgba(202, 165, 84, 0.45));
+  color: var(--gold);
+  background: rgba(202, 165, 84, 0.06);
+}
+.build-case__mode--invent {
+  border-color: rgba(180, 150, 220, 0.45);
+  color: rgba(220, 200, 240, 0.95);
+  background: rgba(140, 110, 180, 0.06);
+}
+
+.build-case__body__text {
+  margin: 0;
+  font-family: var(--font-pp-neue-montreal);
+  font-size: clamp(15px, 1.1vw, 17px);
+  line-height: 1.55;
+  color: var(--dawn-80, rgba(232, 228, 216, 0.8));
+}
+
+.build-case__metrics {
+  list-style: none;
+  margin: clamp(8px, 1.2vh, 16px) 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(12px, 2vw, 24px);
+  border-top: 1px solid var(--dawn-08);
+  padding-top: clamp(16px, 2vh, 24px);
+}
+.build-case__metric {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.build-case__metric__v {
+  font-family: var(--font-pp-neue-montreal);
+  font-weight: 700;
+  font-size: clamp(20px, 1.8vw, 28px);
+  line-height: 1;
+  color: var(--dawn);
+  letter-spacing: -0.02em;
+}
+.build-case__metric__k {
+  font-family: var(--font-pt-mono);
+  font-size: 9px;
+  letter-spacing: var(--track-widest, 0.18em);
+  text-transform: uppercase;
+  color: var(--dawn-50, rgba(232, 228, 216, 0.5));
+}
+
+/* ─── Frame: navigationally-inspired image panel ─── */
+.build-case__frame {
+  position: relative;
+  margin: 0;
+  align-self: stretch;
+  /* No padding on the figure — bracket positions are absolute-relative to
+     this box, ladder and bars sit on the inside. */
+}
+.build-case__frame__shell {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  background: linear-gradient(180deg, rgba(15, 14, 12, 0.6) 0%, rgba(10, 9, 8, 0.92) 100%);
+  border: 1px solid var(--dawn-08);
+  overflow: hidden;
+  isolation: isolate;
+}
+
+/* Asymmetric brackets — only TL+BR for variant a; TR+BL for variant b.
+   Reads as a measured image plate, not a uniform card. */
+.build-case__frame__bracket {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border: 1px solid var(--gold);
+  z-index: 4;
+  opacity: 0.85;
+  pointer-events: none;
+}
+.build-case__frame__bracket--tl {
+  top: -1px;
+  left: -1px;
+  border-right: none;
+  border-bottom: none;
+}
+.build-case__frame__bracket--br {
+  bottom: -1px;
+  right: -1px;
+  border-left: none;
+  border-top: none;
+}
+/* Variant b mirrors the brackets to TR + BL */
+.build-case--b .build-case__frame__bracket--tl {
+  top: -1px;
+  left: auto;
+  right: -1px;
+  border: 1px solid var(--gold);
+  border-left: none;
+  border-bottom: none;
+}
+.build-case--b .build-case__frame__bracket--br {
+  bottom: -1px;
+  right: auto;
+  left: -1px;
+  border: 1px solid var(--gold);
+  border-right: none;
+  border-top: none;
+}
+
+.build-case__frame__topbar,
+.build-case__frame__bottombar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 16px;
+  font-family: var(--font-pt-mono);
+  font-size: 9px;
+  letter-spacing: var(--track-widest, 0.18em);
+  text-transform: uppercase;
+  color: var(--dawn-50, rgba(232, 228, 216, 0.5));
+  z-index: 4;
+  pointer-events: none;
+}
+.build-case__frame__topbar {
+  top: 0;
+  border-bottom: 1px solid var(--dawn-08);
+  background: linear-gradient(180deg, rgba(10, 9, 8, 0.7), rgba(10, 9, 8, 0.4));
+}
+.build-case__frame__bottombar {
+  bottom: 0;
+  border-top: 1px solid var(--dawn-08);
+  background: linear-gradient(0deg, rgba(10, 9, 8, 0.7), rgba(10, 9, 8, 0.4));
+}
+.build-case__frame__topbar .k,
+.build-case__frame__bottombar .k {
+  color: var(--gold);
+  margin-right: 6px;
+}
+.build-case__frame__topbar__rule,
+.build-case__frame__bottombar__rule {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(to right, var(--gold-30, rgba(202, 165, 84, 0.45)), transparent);
+}
+.build-case--b .build-case__frame__topbar__rule,
+.build-case--b .build-case__frame__bottombar__rule {
+  background: linear-gradient(to left, var(--gold-30, rgba(202, 165, 84, 0.45)), transparent);
+}
+.build-case__frame__topbar__id,
+.build-case__frame__bottombar__brg {
+  color: var(--dawn);
+}
+.build-case__frame__topbar__fig,
+.build-case__frame__bottombar__tag {
+  color: var(--dawn-70, rgba(232, 228, 216, 0.7));
+}
+
+/* Depth ladder — vertical ticks pinned to the right (variant a) or left
+   (variant b). Two majors at 33% and 66% break the rhythm. */
+.build-case__frame__ladder {
+  position: absolute;
+  top: 32px;
+  bottom: 32px;
+  width: 22px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 4;
+  pointer-events: none;
+}
+.build-case--a .build-case__frame__ladder {
+  right: 0;
+  border-left: 1px solid var(--dawn-08);
+}
+.build-case--b .build-case__frame__ladder {
+  left: 0;
+  border-right: 1px solid var(--dawn-08);
+}
+
+.build-case__frame__ladder__tick {
+  width: 8px;
+  height: 1px;
+  background: var(--dawn-30);
+  opacity: 0.7;
+}
+.build-case__frame__ladder__tick.is-major {
+  width: 14px;
+  background: var(--gold);
+  opacity: 0.9;
+}
+
+/* Reticle pip — small diamond + label in the corner opposite the inset.
+   Variant a → bottom-left, variant b → bottom-right. Reads as a
+   waypoint marker on the image plate. */
+.build-case__frame__reticle {
+  position: absolute;
+  bottom: 40px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  z-index: 4;
+  pointer-events: none;
+  font-family: var(--font-pt-mono);
+  font-size: 9px;
+  letter-spacing: var(--track-widest, 0.18em);
+  text-transform: uppercase;
+  color: var(--dawn-70, rgba(232, 228, 216, 0.7));
+}
+.build-case--a .build-case__frame__reticle {
+  left: 32px;
+}
+.build-case--b .build-case__frame__reticle {
+  right: 32px;
+  flex-direction: row-reverse;
+}
+
+.build-case__frame__reticle__diamond {
+  width: 8px;
+  height: 8px;
+  background: var(--gold);
+  transform: rotate(45deg);
+  box-shadow: 0 0 12px rgba(202, 165, 84, 0.5);
+}
+.build-case__frame__reticle__label {
+  letter-spacing: var(--track-wider, 0.16em);
+}
+
+/* Hero image — fills the inner area between top/bottom bars and the
+   ladder. Padded slightly so the bars don't crop the screenshot. */
+.build-case__frame__hero {
+  position: absolute;
+  top: 28px;
+  bottom: 28px;
+  left: 0;
+  right: 0;
+  z-index: 1;
+}
+.build-case--a .build-case__frame__hero {
+  right: 22px;
+}
+.build-case--b .build-case__frame__hero {
+  left: 22px;
+}
+.build-case__frame__hero__img {
+  object-fit: cover;
+  object-position: center top;
+  filter: brightness(0.96) saturate(0.94);
+}
+
+/* Inset detail — small secondary screenshot in the corner opposite the
+   reticle. Variant a → top-right, variant b → top-left. Asymmetric on
+   purpose: it's a deliberate annotation, not a sticker. */
+.build-case__frame__inset {
+  position: absolute;
+  width: clamp(120px, 18vw, 240px);
+  aspect-ratio: 16 / 10;
+  top: 56px;
+  z-index: 3;
+  border: 1px solid var(--gold-30, rgba(202, 165, 84, 0.45));
+  background: var(--surface-1, rgba(15, 14, 12, 0.85));
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.55);
+  overflow: hidden;
+}
+.build-case--a .build-case__frame__inset {
+  right: 56px;
+}
+.build-case--b .build-case__frame__inset {
+  left: 56px;
+}
+
+.build-case__frame__inset__label {
+  position: absolute;
+  top: 6px;
+  left: 8px;
+  z-index: 2;
+  font-family: var(--font-pt-mono);
+  font-size: 8px;
+  letter-spacing: var(--track-widest, 0.18em);
+  text-transform: uppercase;
+  color: var(--dawn);
+  background: rgba(10, 9, 8, 0.85);
+  padding: 3px 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.build-case__frame__inset__label .k {
+  color: var(--gold);
+  margin-right: 2px;
+}
+.build-case__frame__inset__img {
+  object-fit: cover;
+  object-position: center top;
+}
+
+/* ─── Capabilities grid (full-width below the head/frame) ─── */
+.build-case__caps {
+  list-style: none;
+  margin: clamp(28px, 5vh, 60px) 0 0;
+  padding-top: clamp(20px, 3vh, 32px);
+  border-top: 1px dashed var(--dawn-08);
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: clamp(20px, 2.4vw, 36px);
+}
+.build-case__cap {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-left: 14px;
+  border-left: 1px solid var(--dawn-15);
+}
+.build-case__cap__num {
+  font-family: var(--font-pt-mono);
+  font-size: 9px;
+  letter-spacing: var(--track-widest, 0.18em);
+  color: var(--gold);
+}
+.build-case__cap__title {
+  margin: 0;
+  font-family: var(--font-pp-neue-montreal);
+  font-weight: 600;
+  font-size: clamp(15px, 1.1vw, 17px);
+  color: var(--dawn);
+  letter-spacing: -0.005em;
+}
+.build-case__cap__body {
+  margin: 0;
+  font-family: var(--font-pp-neue-montreal);
+  font-weight: 300;
+  font-size: clamp(13px, 0.95vw, 14px);
+  line-height: 1.5;
+  color: var(--dawn-70, rgba(232, 228, 216, 0.7));
+}
+
+/* ─── Foot: stack pills + repo CTA ─── */
+.build-case__foot {
+  margin-top: clamp(24px, 3vh, 36px);
+  padding-top: clamp(20px, 2.6vh, 32px);
+  border-top: 1px solid var(--dawn-08);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+.build-case__stack {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 10px;
+}
+.build-case__stack li {
+  font-family: var(--font-pt-mono);
+  font-size: 10px;
+  letter-spacing: var(--track-wide, 0.12em);
+  color: var(--dawn-70, rgba(232, 228, 216, 0.7));
+  padding: 6px 12px;
+  border: 1px solid var(--dawn-08);
+  background: rgba(15, 14, 12, 0.55);
+}
+.build-case__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 20px;
+  font-family: var(--font-pt-mono);
+  font-size: 11px;
+  letter-spacing: var(--track-wider, 0.16em);
+  text-transform: uppercase;
+  color: var(--dawn);
+  background: var(--dawn);
+  color: var(--void);
+  text-decoration: none;
+  transition:
+    background var(--duration-normal, 240ms) var(--ease-out, cubic-bezier(0.22, 0.61, 0.36, 1)),
+    color var(--duration-normal, 240ms) var(--ease-out, cubic-bezier(0.22, 0.61, 0.36, 1)),
+    transform var(--duration-fast, 160ms) var(--ease-out, cubic-bezier(0.22, 0.61, 0.36, 1));
+}
+.build-case__cta:hover,
+.build-case__cta:focus-visible {
+  background: var(--gold);
+  color: var(--void);
+  transform: translateY(-2px);
+}
+
+/* ─── Tablet & phone ─── */
+@media (max-width: 1024px) {
+  .build-case,
+  .build-case--b {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "head"
+      "subline"
+      "frame"
+      "body"
+      "caps"
+      "foot";
+  }
+  .build-case__caps {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .build-case--a .build-case__frame__hero,
+  .build-case--b .build-case__frame__hero {
+    left: 0;
+    right: 0;
+  }
+  .build-case--a .build-case__frame__ladder,
+  .build-case--b .build-case__frame__ladder {
+    display: none;
+  }
+}
+
+@media (max-width: 720px) {
+  .build-cases__list {
+    gap: clamp(80px, 14vh, 140px);
+  }
+  .build-case__head__row {
+    gap: 10px;
+    font-size: 9px;
+  }
+  .build-case__head__status {
+    margin-left: 0;
+  }
+  .build-case__name {
+    font-size: clamp(44px, 13vw, 72px);
+  }
+  .build-case__metrics {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+  }
+  .build-case__metric__v {
+    font-size: clamp(18px, 5vw, 24px);
+  }
+  .build-case__caps {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .build-case__frame__shell {
+    aspect-ratio: 4 / 3;
+  }
+  .build-case__frame__inset {
+    width: 110px;
+  }
+  .build-case--a .build-case__frame__inset {
+    right: 28px;
+  }
+  .build-case--b .build-case__frame__inset {
+    left: 28px;
+  }
+  .build-case__foot {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .build-case__cta {
+    align-self: stretch;
+    justify-content: center;
+  }
+}
+
+/* ─── Reduced motion ─── */
+@media (prefers-reduced-motion: reduce) {
+  .build-case__cta {
+    transition: none;
+  }
+  .build-case__cta:hover,
+  .build-case__cta:focus-visible {
+    transform: none;
+  }
+}
+
+/* ─── Visually hidden helper used by the quote markup ─── */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

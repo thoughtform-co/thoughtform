@@ -7,6 +7,7 @@ import { useSigilChoreography } from "./hooks/useSigilChoreography";
 import { BrandmarkActor, type BrandmarkActorHandle } from "./BrandmarkActor";
 import { CelestialPortals } from "./CelestialConnector/CelestialPortals";
 import { PhaseGlyphPortals } from "./PhaseGlyph";
+import { BuildCasesPortal } from "./build-cases";
 import { CelestialEditorOverlay } from "@/components/admin/CelestialEditor";
 import { useCelestialDrafts } from "@/components/admin/CelestialEditor/useCelestialDrafts";
 import type { SlotsMap } from "@/lib/celestial/schema";
@@ -386,6 +387,7 @@ export function LandingPage({ bodyHtml, bodyClass, celestialSlots }: LandingPage
       />
       {mergedSlots && <CelestialPortals slots={mergedSlots} containerRef={rootRef} />}
       <PhaseGlyphPortals containerRef={rootRef} />
+      <BuildCasesPortal containerRef={rootRef} />
       <BrandmarkActor ref={brandmarkActorRef} />
       <CelestialEditorOverlay />
     </>

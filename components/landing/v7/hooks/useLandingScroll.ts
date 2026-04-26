@@ -5,6 +5,7 @@ interface ScrollTelemetry {
   progress: number;
   activeStation: string;
   heroCover: number;
+  buildCover: number;
 }
 
 const SECTORS: Record<string, string> = {
@@ -12,6 +13,8 @@ const SECTORS: Record<string, string> = {
   definition: "North star",
   continuum: "Continuum",
   practice: "Field",
+  buildQuote: "Axiom",
+  build: "Build",
   about: "Story",
   products: "Fleet",
   contact: "Horizon",
@@ -22,6 +25,7 @@ export function useLandingScroll(rootRef: React.RefObject<HTMLDivElement | null>
     progress: 0,
     activeStation: "hero",
     heroCover: 0,
+    buildCover: 0,
   });
   const rafId = useRef<number | null>(null);
   const lastScrollY = useRef(-1);
@@ -66,6 +70,25 @@ export function useLandingScroll(rootRef: React.RefObject<HTMLDivElement | null>
       heroEl.style.visibility = heroCover >= 1 ? "hidden" : "";
     }
 
+    // Build cover — same parallax handoff as hero → definition, but for
+    // the sticky build-axiom quote (#buildQuote) being covered by the
+    // build-cases station (#build). 0 when #build's top sits at viewport
+    // bottom; 1 when it has fully reached the viewport top. Only the
+    // sticky quote element reads --build-cover; nav telemetry tracks the
+    // station via data-station.
+    const buildQuoteEl = root.querySelector<HTMLElement>("#buildQuote");
+    const buildEl = root.querySelector<HTMLElement>("#build");
+    let buildCover = 0;
+    if (buildQuoteEl && buildEl) {
+      const buildTop = buildEl.getBoundingClientRect().top;
+      buildCover = Math.max(0, Math.min(1, 1 - buildTop / vh));
+      buildQuoteEl.style.setProperty("--build-cover", buildCover.toFixed(4));
+      // Hide the sticky quote once the cases section fully covers it so
+      // the pinned panel never repaints behind opaque content (mirrors
+      // the hero's `visibility: hidden` once heroCover >= 1).
+      buildQuoteEl.style.visibility = buildCover >= 1 ? "hidden" : "";
+    }
+
     // Active station
     const stations = Array.from(root.querySelectorAll<HTMLElement>(".station"));
     const viewportMid = scrollY + vh / 2;
@@ -97,7 +120,7 @@ export function useLandingScroll(rootRef: React.RefObject<HTMLDivElement | null>
       });
     }
 
-    telemetryRef.current = { progress, activeStation: activeKey, heroCover };
+    telemetryRef.current = { progress, activeStation: activeKey, heroCover, buildCover };
   }, [rootRef]);
 
   const onScroll = useCallback(() => {
