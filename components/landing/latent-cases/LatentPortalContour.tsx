@@ -3,23 +3,30 @@
 /**
  * v1 hero portal particle stack for the latent showcase only.
  * Ported from `components/gateway/ThreeGateway.tsx` (constants + SolidShapeRing … GoldDepthMarkers).
+ *
+ * Texture pass: each layer renders with a sprite that matches its semantic role
+ * (mouth body = soft dot, tunnel station = hollow ring, accent = filled
+ * diamond) so the gateway harmonizes with the celestial weave's brand grammar
+ * without copying it. Random `Math.random()` jitter has been pared back across
+ * ring layers and the random `InteriorFill` has been dropped — its job is now
+ * served by the structured `LatentInstrument` celestial weave + tunnel rings.
  */
 import { useRef, useMemo, useEffect } from "react";
 import { useFrame } from "@react-three/fiber";
-import { Points, PointMaterial } from "@react-three/drei";
+import { Points } from "@react-three/drei";
 import * as THREE from "three";
 import type { GatewayShape } from "@/lib/particle-config";
 import { getShapeGenerator } from "./latentShapePointFn";
+import { getDotSprite, getRingSprite, getDiamondSprite } from "./latentSprites";
 
-const TORUS_PARTICLES = 10000;
-const EDGE_PARTICLES = 3000;
-const TUNNEL_RING_COUNT = 40;
-const TUNNEL_PARTICLES_PER_RING = 150;
-const INNER_RING_PARTICLES = 4000;
+const TORUS_PARTICLES = 6000;
+const EDGE_PARTICLES = 2000;
+const TUNNEL_RING_COUNT = 30;
+const TUNNEL_PARTICLES_PER_RING = 100;
+const INNER_RING_PARTICLES = 1500;
 const SPIRAL_ARMS = 8;
 const SPIRAL_POINTS_PER_ARM = 300;
 const CORE_PARTICLES = 500;
-const INTERIOR_PARTICLES = 5000;
 const DEPTH_MARKER_COUNT = 6;
 const DEPTH_MARKER_RING_PARTICLES = 80;
 const DEPTH_MARKER_SPIRAL_ARMS = 4;
@@ -38,18 +45,19 @@ function SolidShapeRing({
 }) {
   const pointsRef = useRef<THREE.Points>(null);
   const getPoint = getShapeGenerator(shape);
+  const sprite = useMemo(() => getDotSprite(), []);
 
   const positions = useMemo(() => {
     const points: number[] = [];
     const R = 1.0;
-    const thickness = 0.12;
+    const thickness = 0.07;
 
     for (let i = 0; i < TORUS_PARTICLES; i++) {
       const t = i / TORUS_PARTICLES;
       const { x, y } = getPoint(t, R);
 
       const thicknessAngle = Math.random() * Math.PI * 2;
-      const thicknessR = thickness * (0.8 + Math.random() * 0.4);
+      const thicknessR = thickness * (0.85 + Math.random() * 0.3);
 
       const nextT = (t + 0.001) % 1;
       const next = getPoint(nextT, R);
@@ -81,13 +89,16 @@ function SolidShapeRing({
 
   return (
     <Points ref={pointsRef} positions={positions} stride={3} frustumCulled={false}>
-      <PointMaterial
+      <pointsMaterial
+        attach="material"
         transparent
         color={color}
         size={0.014}
         sizeAttenuation
         depthWrite={false}
         opacity={0.85}
+        map={sprite ?? undefined}
+        alphaTest={0.05}
       />
     </Points>
   );
@@ -106,6 +117,7 @@ function EdgeGlowRing({
 }) {
   const pointsRef = useRef<THREE.Points>(null);
   const getPoint = getShapeGenerator(shape);
+  const sprite = useMemo(() => getDotSprite(), []);
 
   const positions = useMemo(() => {
     const points: number[] = [];
@@ -120,9 +132,9 @@ function EdgeGlowRing({
       for (let i = 0; i < pointsPerLayer; i++) {
         const t = i / pointsPerLayer;
         const { x, y } = getPoint(t, baseRadius * layerScale);
-        const jitter = (Math.random() - 0.5) * 0.03;
+        const jitter = (Math.random() - 0.5) * 0.015;
 
-        points.push(x + jitter, y + jitter, layerZ + (Math.random() - 0.5) * 0.02);
+        points.push(x + jitter, y + jitter, layerZ + (Math.random() - 0.5) * 0.012);
       }
     }
 
@@ -141,13 +153,17 @@ function EdgeGlowRing({
 
   return (
     <Points ref={pointsRef} positions={positions} stride={3} frustumCulled={false}>
-      <PointMaterial
+      <pointsMaterial
+        attach="material"
         transparent
         color={color}
         size={0.018}
         sizeAttenuation
         depthWrite={false}
         opacity={0.95}
+        map={sprite ?? undefined}
+        alphaTest={0.05}
+        blending={THREE.AdditiveBlending}
       />
     </Points>
   );
@@ -173,6 +189,7 @@ function TunnelDepthRings({
   const pointsRef = useRef<THREE.Points>(null);
   const baseDataRef = useRef<{ baseX: number[]; baseY: number[]; depths: number[] } | null>(null);
   const getPoint = getShapeGenerator(shape);
+  const sprite = useMemo(() => getRingSprite(), []);
 
   const positions = useMemo(() => {
     const points: number[] = [];
@@ -188,7 +205,7 @@ function TunnelDepthRings({
       for (let i = 0; i < TUNNEL_PARTICLES_PER_RING; i++) {
         const pointT = i / TUNNEL_PARTICLES_PER_RING;
         const { x: shapeX, y: shapeY } = getPoint(pointT, 1);
-        const jitter = (Math.random() - 0.5) * 0.03;
+        const jitter = (Math.random() - 0.5) * 0.01;
         const x = shapeX * radius + jitter;
         const y = shapeY * radius + jitter;
 
@@ -233,13 +250,16 @@ function TunnelDepthRings({
 
   return (
     <Points ref={pointsRef} positions={positions} stride={3} frustumCulled={false}>
-      <PointMaterial
+      <pointsMaterial
+        attach="material"
         transparent
         color={color}
-        size={0.01}
+        size={0.014}
         sizeAttenuation
         depthWrite={false}
         opacity={0.65}
+        map={sprite ?? undefined}
+        alphaTest={0.05}
       />
     </Points>
   );
@@ -258,11 +278,12 @@ function InnerAccentRing({
 }) {
   const pointsRef = useRef<THREE.Points>(null);
   const getPoint = getShapeGenerator(shape);
+  const sprite = useMemo(() => getDiamondSprite(), []);
 
   const positions = useMemo(() => {
     const points: number[] = [];
     const radius = 0.88;
-    const thickness = 0.06;
+    const thickness = 0.04;
     const layers = 6;
     const pointsPerLayer = INNER_RING_PARTICLES / layers;
 
@@ -274,7 +295,7 @@ function InnerAccentRing({
         const r = radius + (Math.random() - 0.5) * thickness;
         const { x, y } = getPoint(t, r);
 
-        points.push(x, y, layerZ + (Math.random() - 0.5) * 0.02);
+        points.push(x, y, layerZ + (Math.random() - 0.5) * 0.012);
       }
     }
 
@@ -293,13 +314,17 @@ function InnerAccentRing({
 
   return (
     <Points ref={pointsRef} positions={positions} stride={3} frustumCulled={false}>
-      <PointMaterial
+      <pointsMaterial
+        attach="material"
         transparent
         color={color}
-        size={0.016}
+        size={0.018}
         sizeAttenuation
         depthWrite={false}
         opacity={0.9}
+        map={sprite ?? undefined}
+        alphaTest={0.05}
+        blending={THREE.AdditiveBlending}
       />
     </Points>
   );
@@ -325,6 +350,7 @@ function DepthSpiral({
   const pointsRef = useRef<THREE.Points>(null);
   const baseDataRef = useRef<{ baseX: number[]; baseY: number[]; depths: number[] } | null>(null);
   const getPoint = getShapeGenerator(shape);
+  const sprite = useMemo(() => getDotSprite(), []);
 
   const positions = useMemo(() => {
     const points: number[] = [];
@@ -340,9 +366,8 @@ function DepthSpiral({
         const radius = 0.75 * (1 - depthT * 0.5);
         const shapeT = (baseT + depthT * 0.25) % 1;
         const { x: shapeX, y: shapeY } = getPoint(shapeT, 1);
-        const jitter = (Math.random() - 0.5) * 0.05;
-        const x = shapeX * radius + jitter;
-        const y = shapeY * radius + jitter;
+        const x = shapeX * radius;
+        const y = shapeY * radius;
 
         baseX.push(x);
         baseY.push(y);
@@ -399,99 +424,16 @@ function DepthSpiral({
 
   return (
     <Points ref={pointsRef} positions={positions} stride={3} frustumCulled={false}>
-      <PointMaterial
+      <pointsMaterial
+        attach="material"
         transparent
         color={color}
         size={0.008}
         sizeAttenuation
         depthWrite={false}
         opacity={0.55}
-      />
-    </Points>
-  );
-}
-
-function InteriorFill({
-  opacity,
-  color,
-  density,
-  tunnelDepth,
-  tunnelCurve,
-  tunnelWidth,
-  shape,
-}: {
-  opacity: number;
-  color: string;
-  density: number;
-  tunnelDepth: number;
-  tunnelCurve: number;
-  tunnelWidth: number;
-  shape: GatewayShape;
-}) {
-  const pointsRef = useRef<THREE.Points>(null);
-  const baseDataRef = useRef<{ baseX: number[]; baseY: number[]; depths: number[] } | null>(null);
-  const getPoint = getShapeGenerator(shape);
-
-  const positions = useMemo(() => {
-    const points: number[] = [];
-    const baseX: number[] = [];
-    const baseY: number[] = [];
-    const depths: number[] = [];
-
-    for (let i = 0; i < INTERIOR_PARTICLES; i++) {
-      const depthT = Math.random();
-      const maxRadius = 0.85 * (1 - depthT * 0.35);
-      const shapeT = Math.random();
-      const radiusScale = Math.random() * maxRadius;
-      const { x: shapeX, y: shapeY } = getPoint(shapeT, radiusScale);
-
-      baseX.push(shapeX);
-      baseY.push(shapeY);
-      depths.push(depthT);
-
-      points.push(shapeX, shapeY, depthT);
-    }
-
-    baseDataRef.current = { baseX, baseY, depths };
-    return new Float32Array(points);
-  }, [getPoint]);
-
-  useEffect(() => {
-    if (!pointsRef.current || !baseDataRef.current) return;
-
-    const posArray = pointsRef.current.geometry.attributes.position.array as Float32Array;
-    const { baseX, baseY, depths } = baseDataRef.current;
-
-    for (let i = 0; i < baseX.length; i++) {
-      const t = depths[i]!;
-      const widthScale = 1 + (tunnelWidth - 1) * t * 2;
-      const curveOffset = tunnelCurve * t * t * 2;
-
-      posArray[i * 3] = baseX[i]! * widthScale + curveOffset;
-      posArray[i * 3 + 1] = baseY[i]! * widthScale;
-    }
-
-    pointsRef.current.geometry.attributes.position.needsUpdate = true;
-  }, [tunnelCurve, tunnelWidth]);
-
-  useFrame(() => {
-    if (pointsRef.current) {
-      pointsRef.current.scale.z = 7 * tunnelDepth;
-
-      const material = pointsRef.current.material as THREE.PointsMaterial;
-      material.opacity = 0.4 * opacity * density;
-    }
-  });
-
-  return (
-    <Points ref={pointsRef} positions={positions} stride={3} frustumCulled={false}>
-      <PointMaterial
-        transparent
-        color={color}
-        size={0.007}
-        sizeAttenuation
-        depthWrite={false}
-        opacity={0.4}
+        map={sprite ?? undefined}
+        alphaTest={0.05}
       />
     </Points>
   );
@@ -517,6 +459,7 @@ function GoldDepthMarkers({
   const pointsRef = useRef<THREE.Points>(null);
   const baseDataRef = useRef<{ baseX: number[]; baseY: number[]; depths: number[] } | null>(null);
   const getPoint = getShapeGenerator(shape);
+  const sprite = useMemo(() => getDiamondSprite(), []);
 
   const positions = useMemo(() => {
     const points: number[] = [];
@@ -592,13 +535,17 @@ function GoldDepthMarkers({
 
   return (
     <Points ref={pointsRef} positions={positions} stride={3} frustumCulled={false}>
-      <PointMaterial
+      <pointsMaterial
+        attach="material"
         transparent
         color={color}
         size={0.018}
         sizeAttenuation
         depthWrite={false}
         opacity={0.8}
+        map={sprite ?? undefined}
+        alphaTest={0.05}
+        blending={THREE.AdditiveBlending}
       />
     </Points>
   );
@@ -641,15 +588,6 @@ export function LatentPortalContour({
       />
       <InnerAccentRing opacity={opacity} color={accentColor} density={density} shape={shape} />
       <DepthSpiral
-        opacity={opacity}
-        color={primaryColor}
-        density={density}
-        tunnelDepth={tunnelDepth}
-        tunnelCurve={tunnelCurve}
-        tunnelWidth={tunnelWidth}
-        shape={shape}
-      />
-      <InteriorFill
         opacity={opacity}
         color={primaryColor}
         density={density}
