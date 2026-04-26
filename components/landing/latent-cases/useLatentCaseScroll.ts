@@ -87,30 +87,34 @@ export function useLatentCaseScroll(trackRef: RefObject<HTMLElement | null>): La
       typeof window !== "undefined" &&
       window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-    // Phase boundaries (trackProgress):
+    // Phase boundaries (trackProgress) — earlier case reveal so users meet
+    // the cases around the middle of the gateway traversal, not after a
+    // long full traversal:
     //   0.18..0.28  surface peel
-    //   0.21..0.73  tunnelScroll 0→1 (eased; WebGL camera + frontal wormhole)
-    //   0.32..0.58  latent topology + exit plane build
-    //   0.54..0.72  case dock from exit plane
-    //   0.66..0.86  orbit fan-out then drift
+    //   0.21..0.65  tunnelScroll 0→1 (eased; WebGL camera + frontal wormhole)
+    //   0.28..0.50  latent topology emerge
+    //   0.36..0.56  exit plane build
+    //   0.46..0.62  caseEntry — cases dock from the deep tunnel
+    //   0.58..0.78  orbit fan-out then drift
     //   0.78..0.95  case orbit cycle index
     const surfaceReveal = smooth((trackProgress - 0.18) / 0.1);
 
     const tunnelStart = 0.21;
-    const tunnelSpan = 0.52;
+    const tunnelSpan = 0.44;
     const rawTunnel = clamp01((trackProgress - tunnelStart) / tunnelSpan);
     const tunnelScroll = reduceMotion ? rawTunnel : easeInOutCubic(rawTunnel);
 
-    const gatewayScale = lerp(1, 1.12, smooth(clamp01((trackProgress - 0.2) / 0.28)));
-    // Longer, later fade so topology / exit plane can overlap the gateway without a hard cut
-    const gatewayOpacity = lerp(1, 0, smooth((trackProgress - 0.56) / 0.24));
+    const gatewayScale = lerp(1, 1.12, smooth(clamp01((trackProgress - 0.2) / 0.24)));
+    // Faster fade after the first case reveal begins, so the gateway stays
+    // present through the case approach but clears before the orbit phase.
+    const gatewayOpacity = lerp(1, 0, smooth((trackProgress - 0.5) / 0.18));
     const gatewayBlur = 0;
 
-    const latentEmerge = smooth((trackProgress - 0.32) / 0.26);
-    const exitPlane = smooth((trackProgress - 0.42) / 0.22);
+    const latentEmerge = smooth((trackProgress - 0.28) / 0.22);
+    const exitPlane = smooth((trackProgress - 0.36) / 0.2);
 
-    const caseEntry = smooth((trackProgress - 0.54) / 0.18);
-    const orbitFanOut = smooth((trackProgress - 0.66) / 0.2);
+    const caseEntry = smooth((trackProgress - 0.46) / 0.16);
+    const orbitFanOut = smooth((trackProgress - 0.58) / 0.2);
 
     const orbitRange = 0.95 - 0.78;
     const rawOrbit = clamp01((trackProgress - 0.78) / orbitRange);

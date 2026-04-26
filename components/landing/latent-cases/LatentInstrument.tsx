@@ -5,16 +5,21 @@ import { useMemo, useRef } from "react";
 import * as THREE from "three";
 import type { GatewayShape } from "@/lib/particle-config";
 import { useIsMobile } from "@/lib/hooks/useMediaQuery";
-import { buildCelestialWeave, type CelestialWeaveGeometry } from "./celestialGatewayGeometry";
+import {
+  buildCelestialWeave,
+  type CelestialWeaveGeometry,
+  type CelestialZoneGeometry,
+} from "./celestialGatewayGeometry";
 import { LatentPortalContour } from "./LatentPortalContour";
 
 const DEFAULT_PRIMARY = "#d4ccc0";
 const DEFAULT_ACCENT = "#caa554";
 
-/** Match `InteriorFill`'s `scale.z = 7 * tunnelDepth` so the weave threads
- * through the same tunnel depth as the portal interior, just inside the
- * deepest receding ring (which uses `scale.z = 8 * tunnelDepth`). */
-const WEAVE_Z_SCALE = 7;
+/** Threads the celestial weave through the deeper corridor: sits inside the
+ *  `TunnelDepthRings` (`scale.z = 14 * tunnelDepth`) so the bearing ticks /
+ *  data bands / register frames pass the camera as it dollies through,
+ *  exposing the tunnel walls as architecture not foreground. */
+const WEAVE_Z_SCALE = 12;
 
 function computeSceneOpacity(scrollProgress: number, fadeStart: number, fadeEnd: number): number {
   if (scrollProgress <= fadeStart) return 1;
@@ -38,6 +43,28 @@ function InstrumentCamera({
     camera.lookAt(0, 0, z + lookAhead);
   });
   return null;
+}
+
+interface ZoneGeometries {
+  /** Null when the zone's dawn buffer is empty (zero vertices) — three.js
+   *  WebGLAttributes throws if we render a `<points>` with a 0-length
+   *  BufferAttribute, especially across hot-reloads. */
+  dawnGeo: THREE.BufferGeometry | null;
+  goldGeo: THREE.BufferGeometry | null;
+}
+
+function makeZoneGeometries(zone: CelestialZoneGeometry): ZoneGeometries {
+  let dawnGeo: THREE.BufferGeometry | null = null;
+  let goldGeo: THREE.BufferGeometry | null = null;
+  if (zone.dawnPoints.length > 0) {
+    dawnGeo = new THREE.BufferGeometry();
+    dawnGeo.setAttribute("position", new THREE.BufferAttribute(zone.dawnPoints, 3));
+  }
+  if (zone.goldPoints.length > 0) {
+    goldGeo = new THREE.BufferGeometry();
+    goldGeo.setAttribute("position", new THREE.BufferAttribute(zone.goldPoints, 3));
+  }
+  return { dawnGeo, goldGeo };
 }
 
 function InstrumentScene({
@@ -71,51 +98,59 @@ function InstrumentScene({
   primaryColor: string;
   accentColor: string;
 }) {
-  const innerDawnMat = useRef<THREE.PointsMaterial>(null);
-  const innerGoldMat = useRef<THREE.PointsMaterial>(null);
   const outerDawnMat = useRef<THREE.PointsMaterial>(null);
   const outerGoldMat = useRef<THREE.PointsMaterial>(null);
+  const dataDawnMat = useRef<THREE.PointsMaterial>(null);
+  const codeDawnMat = useRef<THREE.PointsMaterial>(null);
+  const codeGoldMat = useRef<THREE.PointsMaterial>(null);
+  const celestialDawnMat = useRef<THREE.PointsMaterial>(null);
+  const celestialGoldMat = useRef<THREE.PointsMaterial>(null);
+  const topologyDawnMat = useRef<THREE.PointsMaterial>(null);
+
+  const dataGroupRef = useRef<THREE.Group>(null);
+  const codeGroupRef = useRef<THREE.Group>(null);
+  const celestialGroupRef = useRef<THREE.Group>(null);
 
   const gateFade = computeSceneOpacity(scrollProgress, fadeStart, fadeEnd);
 
-  const innerDawnGeo = useMemo(() => {
-    const g = new THREE.BufferGeometry();
-    g.setAttribute("position", new THREE.BufferAttribute(geometry.inner.dawnPoints, 3));
-    return g;
-  }, [geometry.inner.dawnPoints]);
-
-  const innerGoldGeo = useMemo(() => {
-    const g = new THREE.BufferGeometry();
-    g.setAttribute("position", new THREE.BufferAttribute(geometry.inner.goldPoints, 3));
-    return g;
-  }, [geometry.inner.goldPoints]);
-
-  const outerDawnGeo = useMemo(() => {
-    const g = new THREE.BufferGeometry();
-    g.setAttribute("position", new THREE.BufferAttribute(geometry.outer.dawnPoints, 3));
-    return g;
-  }, [geometry.outer.dawnPoints]);
-
-  const outerGoldGeo = useMemo(() => {
-    const g = new THREE.BufferGeometry();
-    g.setAttribute("position", new THREE.BufferAttribute(geometry.outer.goldPoints, 3));
-    return g;
-  }, [geometry.outer.goldPoints]);
+  const outer = useMemo(() => makeZoneGeometries(geometry.outer), [geometry.outer]);
+  const data = useMemo(() => makeZoneGeometries(geometry.data), [geometry.data]);
+  const code = useMemo(() => makeZoneGeometries(geometry.code), [geometry.code]);
+  const celestial = useMemo(() => makeZoneGeometries(geometry.celestial), [geometry.celestial]);
+  const topology = useMemo(() => makeZoneGeometries(geometry.topology), [geometry.topology]);
 
   useFrame((state) => {
     const t = state.clock.elapsedTime;
     const breath = reduceMotion ? 1 : 0.94 + Math.sin(t * 0.35) * 0.06;
     const scrollBoost = reduceMotion ? 1 : 0.9 + scrollProgress * 0.1;
+    const baseFade = gateFade * breath * scrollBoost * density;
 
-    const id = innerDawnMat.current;
-    if (id) id.opacity = 0.6 * gateFade * breath * scrollBoost * density;
-    const ig = innerGoldMat.current;
-    if (ig) ig.opacity = 0.78 * gateFade * breath * scrollBoost * density;
+    // Outer field — locked silhouette context.
+    if (outerDawnMat.current) outerDawnMat.current.opacity = 0.92 * baseFade;
+    if (outerGoldMat.current) outerGoldMat.current.opacity = 1.0 * baseFade;
 
-    const od = outerDawnMat.current;
-    if (od) od.opacity = 0.92 * gateFade * breath * scrollBoost * density;
-    const og = outerGoldMat.current;
-    if (og) og.opacity = 1.0 * gateFade * breath * scrollBoost * density;
+    // Data ring — slow CW (binary scroll feel), low opacity, smallest dots.
+    if (dataDawnMat.current) dataDawnMat.current.opacity = 0.5 * baseFade;
+    if (dataGroupRef.current) {
+      dataGroupRef.current.rotation.z = reduceMotion ? 0 : t * -0.012;
+    }
+
+    // Code ring — medium CCW, brighter for instrument anchors.
+    if (codeDawnMat.current) codeDawnMat.current.opacity = 0.7 * baseFade;
+    if (codeGoldMat.current) codeGoldMat.current.opacity = 0.85 * baseFade;
+    if (codeGroupRef.current) {
+      codeGroupRef.current.rotation.z = reduceMotion ? 0 : t * 0.025;
+    }
+
+    // Celestial ring — slowest, drifts CCW.
+    if (celestialDawnMat.current) celestialDawnMat.current.opacity = 0.62 * baseFade;
+    if (celestialGoldMat.current) celestialGoldMat.current.opacity = 0.78 * baseFade;
+    if (celestialGroupRef.current) {
+      celestialGroupRef.current.rotation.z = reduceMotion ? 0 : t * 0.008;
+    }
+
+    // Topology — wall rails + floor + gate frames stay locked (architecture).
+    if (topologyDawnMat.current) topologyDawnMat.current.opacity = 0.55 * baseFade;
   });
 
   return (
@@ -135,64 +170,139 @@ function InstrumentScene({
           tunnelWidth={tunnelWidth}
           primaryColor={primaryColor}
           accentColor={accentColor}
+          reduceMotion={reduceMotion}
         />
 
-        {/* Outer celestial field — co-planar with the mouth (no z-stretch).
-            Larger/brighter material so it reads as the gateway's surrounding
-            instrument, visible through any parallax reveal. */}
-        <points geometry={outerDawnGeo} frustumCulled={false}>
-          <pointsMaterial
-            ref={outerDawnMat}
-            attach="material"
-            color={primaryColor}
-            size={0.009}
-            sizeAttenuation
-            transparent
-            depthWrite={false}
-            opacity={0.92}
-          />
-        </points>
-
-        <points geometry={outerGoldGeo} frustumCulled={false}>
-          <pointsMaterial
-            ref={outerGoldMat}
-            attach="material"
-            color={accentColor}
-            size={0.0115}
-            sizeAttenuation
-            transparent
-            depthWrite={false}
-            opacity={1}
-          />
-        </points>
-
-        {/* Inner woven instrument — stretched along the tunnel via scale.z. */}
-        <group scale={[1, 1, WEAVE_Z_SCALE * tunnelDepth]}>
-          <points geometry={innerDawnGeo} frustumCulled={false}>
+        {/* Outer celestial field — co-planar with mouth, locked. */}
+        {outer.dawnGeo && (
+          <points geometry={outer.dawnGeo} frustumCulled={false}>
             <pointsMaterial
-              ref={innerDawnMat}
+              ref={outerDawnMat}
               attach="material"
               color={primaryColor}
-              size={0.0055}
+              size={0.009}
               sizeAttenuation
               transparent
               depthWrite={false}
-              opacity={0.6}
+              opacity={0.92}
             />
           </points>
-
-          <points geometry={innerGoldGeo} frustumCulled={false}>
+        )}
+        {outer.goldGeo && (
+          <points geometry={outer.goldGeo} frustumCulled={false}>
             <pointsMaterial
-              ref={innerGoldMat}
+              ref={outerGoldMat}
               attach="material"
               color={accentColor}
-              size={0.0072}
+              size={0.0115}
               sizeAttenuation
               transparent
               depthWrite={false}
-              opacity={0.78}
+              opacity={1}
             />
           </points>
+        )}
+
+        {/* Inner zones — stretched along the tunnel via scale.z. */}
+        <group scale={[1, 1, WEAVE_Z_SCALE * tunnelDepth]}>
+          {/* Topology: wall rails, topographic floor, rectangular depth gates.
+              Architecture stays locked so the corridor feels structural. */}
+          {topology.dawnGeo && (
+            <points geometry={topology.dawnGeo} frustumCulled={false}>
+              <pointsMaterial
+                ref={topologyDawnMat}
+                attach="material"
+                color={primaryColor}
+                size={0.0042}
+                sizeAttenuation
+                transparent
+                depthWrite={false}
+                opacity={0.55}
+              />
+            </points>
+          )}
+
+          {/* Data ring — slow CW. */}
+          <group ref={dataGroupRef}>
+            {data.dawnGeo && (
+              <points geometry={data.dawnGeo} frustumCulled={false}>
+                <pointsMaterial
+                  ref={dataDawnMat}
+                  attach="material"
+                  color={primaryColor}
+                  size={0.004}
+                  sizeAttenuation
+                  transparent
+                  depthWrite={false}
+                  opacity={0.5}
+                />
+              </points>
+            )}
+          </group>
+
+          {/* Code ring — medium CCW. */}
+          <group ref={codeGroupRef}>
+            {code.dawnGeo && (
+              <points geometry={code.dawnGeo} frustumCulled={false}>
+                <pointsMaterial
+                  ref={codeDawnMat}
+                  attach="material"
+                  color={primaryColor}
+                  size={0.0058}
+                  sizeAttenuation
+                  transparent
+                  depthWrite={false}
+                  opacity={0.7}
+                />
+              </points>
+            )}
+            {code.goldGeo && (
+              <points geometry={code.goldGeo} frustumCulled={false}>
+                <pointsMaterial
+                  ref={codeGoldMat}
+                  attach="material"
+                  color={accentColor}
+                  size={0.0072}
+                  sizeAttenuation
+                  transparent
+                  depthWrite={false}
+                  opacity={0.85}
+                />
+              </points>
+            )}
+          </group>
+
+          {/* Celestial ring — slowest CCW drift. */}
+          <group ref={celestialGroupRef}>
+            {celestial.dawnGeo && (
+              <points geometry={celestial.dawnGeo} frustumCulled={false}>
+                <pointsMaterial
+                  ref={celestialDawnMat}
+                  attach="material"
+                  color={primaryColor}
+                  size={0.005}
+                  sizeAttenuation
+                  transparent
+                  depthWrite={false}
+                  opacity={0.62}
+                />
+              </points>
+            )}
+            {celestial.goldGeo && (
+              <points geometry={celestial.goldGeo} frustumCulled={false}>
+                <pointsMaterial
+                  ref={celestialGoldMat}
+                  attach="material"
+                  color={accentColor}
+                  size={0.0072}
+                  sizeAttenuation
+                  transparent
+                  depthWrite={false}
+                  opacity={0.78}
+                />
+              </points>
+            )}
+          </group>
         </group>
       </group>
     </>
@@ -220,10 +330,11 @@ export interface LatentInstrumentProps {
 
 /**
  * Latent showcase WebGL instrument: v1 portal particle stack
- * (`LatentPortalContour`) interwoven with a celestial weave
- * (`celestialGatewayGeometry`) that anchors bearing ticks, register frames,
- * cardinal crosses, ecliptic orbits, radial spokes, constellation, and
- * waypoint diamonds across the same tunnel depth.
+ * (`LatentPortalContour`) interwoven with five differentiated celestial
+ * zones (outer field, data ring, code ring, celestial ring, topology) each
+ * rendered with its own material and rotation rate so the gate reads as a
+ * retrofuturistic navigation instrument with visible architecture, not as
+ * a mandala.
  */
 export function LatentInstrument({
   scrollProgress,

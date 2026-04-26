@@ -83,7 +83,9 @@ function SolidShapeRing({
       pointsRef.current.scale.setScalar(1 + Math.sin(time * 0.3) * 0.008);
 
       const material = pointsRef.current.material as THREE.PointsMaterial;
-      material.opacity = 0.85 * opacity * density;
+      // Slightly toned down (was 0.85) so the mouth supports the new
+      // celestial architecture without dominating as a thick band.
+      material.opacity = 0.7 * opacity * density;
     }
   });
 
@@ -96,7 +98,7 @@ function SolidShapeRing({
         size={0.014}
         sizeAttenuation
         depthWrite={false}
-        opacity={0.85}
+        opacity={0.7}
         map={sprite ?? undefined}
         alphaTest={0.05}
       />
@@ -147,7 +149,9 @@ function EdgeGlowRing({
       const pulse = 0.85 + Math.sin(time * 1.5) * 0.15;
 
       const material = pointsRef.current.material as THREE.PointsMaterial;
-      material.opacity = 0.95 * opacity * density * pulse;
+      // Toned down (was 0.95) so the mouth halo doesn't overpower the
+      // outer field bearing ticks at parallax reveal.
+      material.opacity = 0.7 * opacity * density * pulse;
     }
   });
 
@@ -160,7 +164,7 @@ function EdgeGlowRing({
         size={0.018}
         sizeAttenuation
         depthWrite={false}
-        opacity={0.95}
+        opacity={0.7}
         map={sprite ?? undefined}
         alphaTest={0.05}
         blending={THREE.AdditiveBlending}
@@ -177,6 +181,7 @@ function TunnelDepthRings({
   tunnelCurve,
   tunnelWidth,
   shape,
+  reduceMotion,
 }: {
   opacity: number;
   color: string;
@@ -185,6 +190,7 @@ function TunnelDepthRings({
   tunnelCurve: number;
   tunnelWidth: number;
   shape: GatewayShape;
+  reduceMotion: boolean;
 }) {
   const pointsRef = useRef<THREE.Points>(null);
   const baseDataRef = useRef<{ baseX: number[]; baseY: number[]; depths: number[] } | null>(null);
@@ -200,10 +206,17 @@ function TunnelDepthRings({
 
     for (let ring = 0; ring < TUNNEL_RING_COUNT; ring++) {
       const t = ring / (TUNNEL_RING_COUNT - 1);
-      const radius = startRadius * (1 - t * 0.4);
+      // Reduced radius shrink (was 0.4) for a corridor read instead of a funnel.
+      const radius = startRadius * (1 - t * 0.2);
+      // Per-ring phase + density variation so successive rings don't stack
+      // into a uniform concentric mandala — every other ring is sparser and
+      // offset, reading as discrete tunnel stations rather than a sun ring.
+      const phaseOffset = (ring * 0.137) % 1;
+      const ringDensity = ring % 2 === 0 ? 1 : 0.6;
+      const ringParticles = Math.round(TUNNEL_PARTICLES_PER_RING * ringDensity);
 
-      for (let i = 0; i < TUNNEL_PARTICLES_PER_RING; i++) {
-        const pointT = i / TUNNEL_PARTICLES_PER_RING;
+      for (let i = 0; i < ringParticles; i++) {
+        const pointT = (i / ringParticles + phaseOffset) % 1;
         const { x: shapeX, y: shapeY } = getPoint(pointT, 1);
         const jitter = (Math.random() - 0.5) * 0.01;
         const x = shapeX * radius + jitter;
@@ -239,9 +252,14 @@ function TunnelDepthRings({
     pointsRef.current.geometry.attributes.position.needsUpdate = true;
   }, [tunnelCurve, tunnelWidth]);
 
-  useFrame(() => {
+  useFrame((state) => {
     if (pointsRef.current) {
-      pointsRef.current.scale.z = 8 * tunnelDepth;
+      // Slow CCW drift so the tunnel reads as a turning instrument; mouth +
+      // edge glow stay locked above to keep the silhouette anchored.
+      pointsRef.current.rotation.z = reduceMotion ? 0 : state.clock.elapsedTime * 0.02;
+      // Deeper Z stretch (was 8) so the camera dolly passes through the rings
+      // sequentially, exposing the tunnel walls as it travels.
+      pointsRef.current.scale.z = 14 * tunnelDepth;
 
       const material = pointsRef.current.material as THREE.PointsMaterial;
       material.opacity = 0.65 * opacity * density;
@@ -270,11 +288,13 @@ function InnerAccentRing({
   color,
   density,
   shape,
+  reduceMotion,
 }: {
   opacity: number;
   color: string;
   density: number;
   shape: GatewayShape;
+  reduceMotion: boolean;
 }) {
   const pointsRef = useRef<THREE.Points>(null);
   const getPoint = getShapeGenerator(shape);
@@ -306,6 +326,8 @@ function InnerAccentRing({
     if (pointsRef.current) {
       const time = state.clock.elapsedTime;
       const pulse = 0.7 + Math.sin(time * 1.2) * 0.3;
+      // Medium CCW; counter to GoldDepthMarkers below for layered instrument feel.
+      pointsRef.current.rotation.z = reduceMotion ? 0 : time * 0.06;
 
       const material = pointsRef.current.material as THREE.PointsMaterial;
       material.opacity = 0.9 * opacity * density * pulse;
@@ -338,6 +360,7 @@ function DepthSpiral({
   tunnelCurve,
   tunnelWidth,
   shape,
+  reduceMotion,
 }: {
   opacity: number;
   color: string;
@@ -346,6 +369,7 @@ function DepthSpiral({
   tunnelCurve: number;
   tunnelWidth: number;
   shape: GatewayShape;
+  reduceMotion: boolean;
 }) {
   const pointsRef = useRef<THREE.Points>(null);
   const baseDataRef = useRef<{ baseX: number[]; baseY: number[]; depths: number[] } | null>(null);
@@ -363,7 +387,9 @@ function DepthSpiral({
 
       for (let i = 0; i < SPIRAL_POINTS_PER_ARM; i++) {
         const depthT = i / (SPIRAL_POINTS_PER_ARM - 1);
-        const radius = 0.75 * (1 - depthT * 0.5);
+        // Reduced radius shrink (was 0.5) so spiral arms read as a long
+        // helical corridor, not a converging funnel.
+        const radius = 0.75 * (1 - depthT * 0.3);
         const shapeT = (baseT + depthT * 0.25) % 1;
         const { x: shapeX, y: shapeY } = getPoint(shapeT, 1);
         const x = shapeX * radius;
@@ -413,9 +439,13 @@ function DepthSpiral({
     pointsRef.current.geometry.attributes.position.needsUpdate = true;
   }, [tunnelCurve, tunnelWidth]);
 
-  useFrame(() => {
+  useFrame((state) => {
     if (pointsRef.current) {
-      pointsRef.current.scale.z = 6 * tunnelDepth;
+      // Counter-rotation (CW) so the spiral helical motion balances the
+      // CCW tunnel rings above; reads as two engaged tracks.
+      pointsRef.current.rotation.z = reduceMotion ? 0 : state.clock.elapsedTime * -0.04;
+      // Deeper Z (was 6) to match the corridor stretch.
+      pointsRef.current.scale.z = 11 * tunnelDepth;
 
       const material = pointsRef.current.material as THREE.PointsMaterial;
       material.opacity = 0.55 * opacity * density;
@@ -447,6 +477,7 @@ function GoldDepthMarkers({
   tunnelCurve,
   tunnelWidth,
   shape,
+  reduceMotion,
 }: {
   opacity: number;
   color: string;
@@ -455,6 +486,7 @@ function GoldDepthMarkers({
   tunnelCurve: number;
   tunnelWidth: number;
   shape: GatewayShape;
+  reduceMotion: boolean;
 }) {
   const pointsRef = useRef<THREE.Points>(null);
   const baseDataRef = useRef<{ baseX: number[]; baseY: number[]; depths: number[] } | null>(null);
@@ -469,7 +501,9 @@ function GoldDepthMarkers({
 
     for (let marker = 0; marker < DEPTH_MARKER_COUNT; marker++) {
       const depthT = marker / (DEPTH_MARKER_COUNT - 1);
-      const radius = 0.82 * (1 - depthT * 0.3);
+      // Reduced radius shrink (was 0.3) so the gold waypoint rings read as
+      // calibrated stations along a corridor, not as a converging cone.
+      const radius = 0.82 * (1 - depthT * 0.15);
 
       for (let i = 0; i < DEPTH_MARKER_RING_PARTICLES; i++) {
         const shapeT = (i / DEPTH_MARKER_RING_PARTICLES + marker * 0.05) % 1;
@@ -526,7 +560,11 @@ function GoldDepthMarkers({
     if (pointsRef.current) {
       const time = state.clock.elapsedTime;
       const pulse = 0.75 + Math.sin(time * 1.8) * 0.25;
-      pointsRef.current.scale.z = 5 * tunnelDepth;
+      // Fastest CW sweep — reads as a clock-hand bearing indicator across
+      // the gold waypoint stations, the most "instrument" of the layers.
+      pointsRef.current.rotation.z = reduceMotion ? 0 : time * -0.085;
+      // Deeper Z (was 5) to match the corridor stretch.
+      pointsRef.current.scale.z = 9 * tunnelDepth;
 
       const material = pointsRef.current.material as THREE.PointsMaterial;
       material.opacity = 0.8 * opacity * density * pulse;
@@ -561,6 +599,9 @@ export interface LatentPortalContourProps {
   tunnelWidth: number;
   primaryColor: string;
   accentColor: string;
+  /** When true, all internal differential rotation is paused (mouth and
+   *  edge glow are static regardless). */
+  reduceMotion: boolean;
 }
 
 export function LatentPortalContour({
@@ -572,6 +613,7 @@ export function LatentPortalContour({
   tunnelWidth,
   primaryColor,
   accentColor,
+  reduceMotion,
 }: LatentPortalContourProps) {
   return (
     <>
@@ -585,8 +627,15 @@ export function LatentPortalContour({
         tunnelCurve={tunnelCurve}
         tunnelWidth={tunnelWidth}
         shape={shape}
+        reduceMotion={reduceMotion}
       />
-      <InnerAccentRing opacity={opacity} color={accentColor} density={density} shape={shape} />
+      <InnerAccentRing
+        opacity={opacity}
+        color={accentColor}
+        density={density}
+        shape={shape}
+        reduceMotion={reduceMotion}
+      />
       <DepthSpiral
         opacity={opacity}
         color={primaryColor}
@@ -595,6 +644,7 @@ export function LatentPortalContour({
         tunnelCurve={tunnelCurve}
         tunnelWidth={tunnelWidth}
         shape={shape}
+        reduceMotion={reduceMotion}
       />
       <GoldDepthMarkers
         opacity={opacity}
@@ -604,6 +654,7 @@ export function LatentPortalContour({
         tunnelCurve={tunnelCurve}
         tunnelWidth={tunnelWidth}
         shape={shape}
+        reduceMotion={reduceMotion}
       />
     </>
   );
