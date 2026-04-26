@@ -126,6 +126,14 @@ A **precomputed sticky viewport coordinate** (or “where sticky _should_ be”)
 
 **Why it matters:** Sticky is stateful; a coord derived from layout math without the same state machine as the browser will drift.
 
+### Let source elements own rest states
+
+A **`position: fixed`** overlay is the wrong owner for a brandmark that is supposed to be part of a scrolling diagram. Use the native source element for the rest/read state, and only switch to the fixed actor for actual travel between stations.
+
+For section 02, `.sigil__mark img` is visible and owns the diagram mark. `.tf-brandmark-actor` stays hidden through hero, entrance, and the parked/read state. At handoff, capture the live source rect, hide the native source, and let the actor travel to the HUD.
+
+**Why it matters:** A fixed overlay can drift independently from a relative diagram and feel like a sticky element, even if its viewport coordinate is mathematically stable. If the user expects “locked in the diagram,” the DOM source inside the diagram should own that visual state.
+
 ### Scale-around-centre wobbles bounding-box edges
 
 If a source node **animates `transform: scale()`** (e.g. entrance reveal), `getBoundingClientRect()` on that node moves the **edges** in non-obvious ways. For positioning a **separate** fixed element, read position from a stable horizontal reference (e.g. untransformed **container** width) and/or derive vertical from the **unscaled** box (centre-based math). If the fixed actor must not “breathe,” **force render scale = 1** on the actor while the source scrubs.
@@ -479,4 +487,4 @@ Trivial changes (typos, copy, formatting-only) skip this; see [MAINTENANCE — W
 
 ---
 
-_Last updated: 2026-04-25_
+_Last updated: 2026-04-26_

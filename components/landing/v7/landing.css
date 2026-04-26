@@ -587,7 +587,6 @@
 /* Single brandmark actor — Section 02 entrance, continuum handoff, practice
    orbit travel. Slot <img> nodes in the prototype stay in the DOM for
    layout but are visibility-hidden; only this overlay draws the mark. */
-.sigil__mark img,
 #hudBrandmark img,
 .approach__orbit__mark img {
   visibility: hidden !important;

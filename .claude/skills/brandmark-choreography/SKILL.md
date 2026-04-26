@@ -9,7 +9,7 @@ description: >
 
 # Brandmark choreography (Sigil → HUD → Orbit)
 
-The brandmark is a **`position: fixed`** actor that must stay visually locked to **sigil, HUD, and orbit** targets while the page uses **ScrollTrigger**, **stickies**, and **scale reveals**. A change to one trigger often regresses another (hero flash, between-section float, practice snap).
+The section-02 brandmark is **source-owned** while it is part of the diagram (`.sigil__mark img`). The **`position: fixed`** actor exists for travel only: sigil source → HUD → orbit → HUD. A change to one trigger often regresses another (hero flash, between-section float, practice snap, actor detaching from the diagram).
 
 **Canonical record:** [ADR-010](../../../sentinel/decisions/010-brandmark-choreography.md)  
 **Related compositing (layers):** [ADR-008](../../../sentinel/decisions/008-landing-v7-background-layers.md), `landing-v7-compositing` skill.
@@ -18,7 +18,7 @@ The brandmark is a **`position: fixed`** actor that must stay visually locked to
 
 ## State machine (one paragraph)
 
-The page moves the actor through: **Hidden → Entrance (reveal) → Park at sigil (section 2) → Handoff (toward HUD / bottom-left) → Park at HUD → Practice entry → Park at orbit → Practice exit → Park at HUD.** Each leg is a GSAP `ScrollTrigger` timeline; `onUpdate` keeps rects live; **`onLeave` / `onRefresh`** must settle boolean dock flags when the user scrolls faster than the scrub can finish.
+The visible mark moves through: **Native sigil source (section 2) → actor handoff (toward HUD / bottom-left) → actor parked at HUD → practice entry → actor parked at orbit → practice exit → actor parked at HUD.** Each travel leg is a GSAP `ScrollTrigger` timeline; `onUpdate` keeps rects live for moving targets; **`onLeave` / `onRefresh`** must settle boolean dock flags when the user scrolls faster than the scrub can finish.
 
 ---
 
@@ -26,13 +26,13 @@ The page moves the actor through: **Hidden → Entrance (reveal) → Park at sig
 
 Match each item to [ADR-010 § Seven regression rules](../../../sentinel/decisions/010-brandmark-choreography.md#seven-regression-rules-load-bearing-invariants):
 
-- [ ] **Live unscaled sigil rect** — no “sticky precomputed” viewport lock that leaves the mark floating between sections; use `readSigilRect()`-style centre/parent math.
-- [ ] **Entrance** — actor render **scale stays 1** while the source sigil may scale; no inherited scale wobble on `pinToRect`.
-- [ ] **Handoff** — timing matches **`contEl` `top 35% → 5%`**, `scrub: 0.4` (tune only with ADR update).
+- [ ] **Section 02 source-owned** — `.sigil__mark img` is visible and owns the diagram mark; `.tf-brandmark-actor` is hidden through hero, entrance, and the section-02 parked/read state.
+- [ ] **No actor imitation while parked** — do not pin/re-pin the fixed actor to section-02 during the reading state. That recreates the “sticky element detached from the diagram” bug.
+- [ ] **Handoff** — timing matches **`contEl` `top 35% → 5%`**, `scrub: 0.4` (tune only with ADR update). `captureHandoffRects` reads `readSigilRect()` from the live native source and the fixed actor takes over only as handoff progress begins.
 - [ ] **Hero / refresh** — `practiceUndockFromEntry` or HUD pin **not** called from `onRefresh` at **`scrollY === 0`**.
 - [ ] **Practice forward travel** — **live** HUD + orbit `getBoundingClientRect()`; no stale `onEnter` captures for sticky targets.
 - [ ] **Fast scroll** — `onLeave` (or equivalent) on practice entry/exit timelines finalises dock state.
-- [ ] **Run** the Playwright “sample + jump” recipe below on changed triggers.
+- [ ] **Run** the Playwright “sample + jump” recipe below in **both directions** and verify: section-02 native sigil is visible/centered, actor opacity is `0` before handoff, actor appears only during/after handoff.
 
 End of session: if this fix was non-trivial, run [Cycle A in MAINTENANCE.md](../../../sentinel/MAINTENANCE.md#cycle-a-post-incident-capture-checklist).
 
@@ -86,4 +86,5 @@ Adjust Y stops to your viewport; **add stops** at the handoff, practice top, and
 
 ## When you touch CSS too
 
-- Section 2 **must not** “fix” drift by making unrelated wrappers `position: sticky` without an ADR — that has broken horizontal alignment and diagram drift in the past. Prefer **live sigil rect** in JS over layout hacks.
+- Section 2 **must not** “fix” drift by making unrelated wrappers `position: sticky` without an ADR — that has broken horizontal alignment and diagram drift in the past.
+- Section 2 **must not** be represented by a fixed overlay actor during the reading state. The native `.sigil__mark img` belongs to the diagram; the fixed actor is for travel between stations only.

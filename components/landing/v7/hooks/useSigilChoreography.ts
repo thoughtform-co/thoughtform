@@ -196,16 +196,10 @@ export function useSigilChoreography(
      * `.sigil__mark` itself is not laid out by transform; horizontal
      * is stable because `.sigil` (its parent) has no scale animation.
      *
-     * The actor follows this rect on every frame, so it inherits the
-     * full natural lifecycle of the section:
-     *   - section below viewport  → rect is below viewport → actor
-     *     hidden visually (offscreen)
-     *   - section entering        → rect rises with section → actor
-     *     scrolls in attached to the diagram
-     *   - section in view (CSS sticky engaged) → rect is fixed at the
-     *     sticky position → actor stays put as the user reads
-     *   - section leaving (sticky un-engaged) → rect rises with
-     *     section again until handoffTl fires
+     * Used only at the handoff boundary. In section 02 itself, the
+     * native `.sigil__mark img` owns the visible brandmark so it is
+     * genuinely part of the diagram rather than a fixed overlay trying
+     * to imitate the diagram.
      */
     const readSigilRect = (): DOMRect => {
       const liveRect = sigilMark.getBoundingClientRect();
@@ -288,7 +282,7 @@ export function useSigilChoreography(
       debugBrandmark(
         "H1,H2",
         "useSigilChoreography.ts:syncActorToSigilEntrance",
-        "sigil sync pin",
+        "sigil source owns actor hidden",
         {
           scrollY: Math.round(window.scrollY),
           sigilOpacity: o,
@@ -298,18 +292,13 @@ export function useSigilChoreography(
         }
       );
       // #endregion
-      // Pin to the unscaled live sigil rect. The actor inherits the
-      // section's natural lifecycle: invisible while the section is
-      // below the viewport (live rect is offscreen below), scrolls in
-      // attached to the diagram as the section enters, fixes at the
-      // sticky position once `.tri__center`'s `position: sticky`
-      // engages, and travels with the section briefly until the
-      // handoff fires. Scale is forced to 1 so only opacity animates
-      // during the reveal — without that, scaling around centre would
-      // wobble the bounding-box edges 0.7 → 1.0 even though the centre
-      // is stable, which read as "still moves a bit".
+      // Section 02 is owned by the native `.sigil__mark img`, not the
+      // fixed actor. The actor exists only for travel between stations
+      // (sigil -> HUD, HUD -> orbit). If the actor is visible during
+      // hero -> section 02, it can drift independently from the diagram
+      // and feel like a sticky element. Keep it hidden until handoffTl.
       void s;
-      a.pinToRect(readSigilRect(), o, 1);
+      a.hide();
       a.setHudOutline(false);
     };
 
@@ -322,10 +311,11 @@ export function useSigilChoreography(
         "--frame-opacity": 1,
         clearProps: "rotation",
       });
-      // Read the actor's actual current position (unscaled live sigil
-      // rect) so the handoff morph picks up exactly where the actor
-      // has been parked during section 02 — no one-frame jump at the
-      // start of the travel.
+      // Start the handoff morph from the real diagram mark the user is
+      // looking at. Before this point the native `.sigil__mark img`
+      // owns section 02; the fixed actor is hidden. At handoff, the
+      // actor takes over from this live source rect and the native mark
+      // fades out.
       const sigilRect = readSigilRect();
       const hudRect = hudBrandmark!.getBoundingClientRect();
       const vh = window.innerHeight;
@@ -708,32 +698,10 @@ export function useSigilChoreography(
     };
 
     /**
-     * Hold the actor at a fixed viewport position while the brandmark is
-     * "parked at sigil" — after the section-02 entrance reveal completes,
-     * before the continuum handoff starts. We capture the sigil rect ONCE
-     * (when entrance is essentially done) and re-pin the actor to that
-     * cached rect on every scroll frame. Because the rect is in viewport
-     * coordinates and the actor is `position: fixed`, the brandmark stays
-     * visually anchored to one screen position throughout section 02 —
-     * the user reads the section copy while the brandmark hovers as a
-     * stable north-star reference, instead of drifting up the viewport
-     * with the section's natural scroll.
-     *
-     * The cache is cleared whenever an upstream owner takes over (entrance
-     * reverses, handoff arms, practice triggers arm, viewport resizes).
-     * `captureHandoffRects` reads parkedSigilRect when arming the handoff
-     * morph so the sigil → HUD travel begins from the actor's actual on-
-     * screen position rather than from a stale or unrelated rect.
-     */
-    /**
-     * Continuous re-pin to the live `.sigil__mark` rect while the
-     * brandmark is "parked at sigil" — i.e. between entrance reveal end
-     * and the continuum handoff arming. The diagram column
-     * (`.tri__center`) is `position: sticky`, so the live rect itself is
-     * stable while the user scrolls section 02; the actor gets that
-     * stability for free by tracking it. Without this loop, refreshes
-     * (resize, font-load, ResizeObserver) could leave the actor pinned
-     * to a stale rect while the sticky element settles.
+     * While section 02 is parked, the native sigil image must remain the
+     * only visible brandmark. The fixed actor is intentionally hidden
+     * until the handoff trigger arms; otherwise it can visually detach
+     * from the diagram and read as an independent sticky element.
      */
     const repinActorToSigilIfParked = () => {
       if (handoffArmed || practiceEntryArmed || practiceExitArmed) return;
@@ -757,11 +725,8 @@ export function useSigilChoreography(
       const o = Number(gsap.getProperty(sigilMark, "opacity")) || 0;
       if (o < 0.95) return;
 
-      const sigilRect = readSigilRect();
-      if (sigilRect.width <= 0 || sigilRect.height <= 0) return;
-
       brandPinnedToHudSlot = false;
-      actor()?.pinToRect(sigilRect, 1, 1);
+      actor()?.hide();
       actor()?.setHudOutline(false);
     };
 
@@ -856,14 +821,10 @@ export function useSigilChoreography(
     if (defEl) ro.observe(defEl);
     if (contEl) ro.observe(contEl);
 
-    // Continuous re-pin: the dock-tracker ScrollTrigger only re-pins
-    // inside its computed range, which is fragile to position drift.
-    // A passive, rAF-throttled scroll listener re-pins the actor on
-    // every frame while the brandmark is parked at one of its rest
-    // states (orbit center while docked in #practice, or sigil center
-    // between entranceTl ending and handoffTl beginning in #definition).
-    // Runs after the scroll event so ScrollTrigger has already updated
-    // `data-orbit-docked` and any state flags for the current frame.
+    // Continuous rest-state reconciliation. The orbit rest state is actor-owned
+    // and needs re-pinning while its sticky target moves. The section-02 rest
+    // state is source-owned, so this same pass hides the actor before handoff
+    // instead of trying to pin it to the sigil.
     let dockedRaf = 0;
     const onDockedScroll = () => {
       if (dockedRaf) return;
