@@ -13,6 +13,7 @@
  * receding rings.
  */
 import type { GatewayShape } from "@/lib/particle-config";
+import { seededRandom } from "@/components/landing/v7/CelestialConnector/shapes/seededRandom";
 import { getShapeGenerator } from "./latentShapePointFn";
 
 interface ContourAnchor {
@@ -162,6 +163,84 @@ function pushDiamondMarker(
   }
 }
 
+/**
+ * Outer celestial environment surrounding the gateway. Co-planar with the
+ * mouth (z=0 in weave space) so a parallax reveal can show the gateway
+ * embedded in a celestial instrument rather than floating in void.
+ *
+ * Uses a circular cosmological frame regardless of mouth shape — the
+ * gateway provides the silhouette, the frame provides the universal
+ * compass / star-field context that matches the landing-page connectors.
+ */
+function pushOuterCelestialField(R: number, seed: number, dawn: number[], gold: number[]): void {
+  const ringR = R * 1.55;
+
+  const ringSamples = 240;
+  for (let i = 0; i < ringSamples; i++) {
+    const a = (i / ringSamples) * Math.PI * 2;
+    dawn.push(Math.cos(a) * ringR, Math.sin(a) * ringR, 0);
+  }
+
+  const tickCount = 24;
+  const tickLen = 0.06;
+  for (let i = 0; i < tickCount; i++) {
+    const a = (i / tickCount) * Math.PI * 2;
+    pushDottedSegment(
+      dawn,
+      Math.cos(a) * ringR,
+      Math.sin(a) * ringR,
+      0,
+      Math.cos(a) * (ringR + tickLen),
+      Math.sin(a) * (ringR + tickLen),
+      0,
+      4
+    );
+  }
+
+  const cardinalAngles = [0, Math.PI / 2, Math.PI, -Math.PI / 2];
+  const axisStartR = R * 1.04;
+  const axisEndR = R * 2.0;
+  for (const a of cardinalAngles) {
+    pushDottedSegment(
+      dawn,
+      Math.cos(a) * axisStartR,
+      Math.sin(a) * axisStartR,
+      0,
+      Math.cos(a) * axisEndR,
+      Math.sin(a) * axisEndR,
+      0,
+      26
+    );
+    pushDiamondMarker(Math.cos(a) * axisEndR, Math.sin(a) * axisEndR, 0, 0.034, 5, gold);
+  }
+
+  const cornerR = R * 2.25;
+  const cornerAngles = [Math.PI / 4, (3 * Math.PI) / 4, -(3 * Math.PI) / 4, -Math.PI / 4];
+  const armLen = 0.16;
+  for (const a of cornerAngles) {
+    const cx = Math.cos(a) * cornerR;
+    const cy = Math.sin(a) * cornerR;
+    const inwardX = -Math.cos(a);
+    const inwardY = -Math.sin(a);
+    const tangX = -inwardY;
+    const tangY = inwardX;
+    pushDottedSegment(gold, cx, cy, 0, cx + inwardX * armLen, cy + inwardY * armLen, 0, 6);
+    pushDottedSegment(gold, cx, cy, 0, cx + tangX * armLen, cy + tangY * armLen, 0, 6);
+  }
+
+  const rnd = seededRandom(seed);
+  const starCount = 14;
+  for (let i = 0; i < starCount; i++) {
+    const a = rnd() * Math.PI * 2;
+    const r = R * (1.7 + rnd() * 0.7);
+    const x = Math.cos(a) * r;
+    const y = Math.sin(a) * r;
+    const ts = 0.012;
+    pushDottedSegment(dawn, x - ts, y, 0, x + ts, y, 0, 3);
+    pushDottedSegment(dawn, x, y - ts, 0, x, y + ts, 0, 3);
+  }
+}
+
 export interface CelestialWeaveGeometry {
   dawnPoints: Float32Array;
   goldPoints: Float32Array;
@@ -175,12 +254,21 @@ export interface CelestialWeaveOptions {
 }
 
 /**
- * Build a shape-aware celestial weave that:
- * - rims the mouth contour with bearing ticks
- * - stacks shrinking register frames into the tunnel
- * - radiates 8 long dotted spokes from the mouth to deep constellation nodes
- * - drops cardinal crosses + waypoint diamonds at each register depth
- * - threads tilted ecliptic orbits between depths
+ * Build a shape-aware celestial weave with two zones:
+ *
+ * Outer celestial field (around the gateway, co-planar with the mouth):
+ * - cosmological ring + bearing ticks
+ * - four cardinal axis lines extending from the mouth contour outward
+ * - gold waypoint diamonds capping each cardinal axis
+ * - gold corner brackets framing the composition (HUD register marks)
+ * - sparse field stars
+ *
+ * Inner woven instrument (inside the gateway, threaded through the tunnel):
+ * - bearing ticks at three depths
+ * - four shrinking register frames matching the mouth shape
+ * - eight long dotted spokes from mouth into deep constellation nodes
+ * - stacked gold cardinal crosses + waypoint diamonds at each register depth
+ * - three tilted ecliptic orbits between depths
  *
  * Returned z values are in [0..~1.0] so the host group can stretch them
  * along the tunnel via `scale.z = N * tunnelDepth` to sit in front of the
@@ -191,8 +279,11 @@ export function buildCelestialWeave(
   opts?: CelestialWeaveOptions
 ): CelestialWeaveGeometry {
   const R = opts?.contourRadius ?? 1.0;
+  const seed = opts?.seed ?? 7777;
   const dawn: number[] = [];
   const gold: number[] = [];
+
+  pushOuterCelestialField(R, seed, dawn, gold);
 
   pushBearingTicks(shape, R * 1.04, 48, 0.06, 3, 0.0, dawn);
   pushBearingTicks(shape, R * 0.78, 36, 0.045, 3, 0.42, dawn);
