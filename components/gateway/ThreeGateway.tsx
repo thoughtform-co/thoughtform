@@ -1593,12 +1593,10 @@ function LatentSpaceField({
     timeRef.current = state.clock.elapsedTime;
 
     if (linesRef.current) {
-      // Subtle rotation of the field
       linesRef.current.rotateY(0.01);
     }
 
     if (pointsRef.current) {
-      // Breathing/pulsing effect
       const breathe = 1 + Math.sin(timeRef.current * 0.8) * 0.05;
       pointsRef.current.scale.setScalar(breathe);
 

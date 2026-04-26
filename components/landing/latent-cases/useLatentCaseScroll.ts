@@ -44,6 +44,12 @@ function lerp(a: number, b: number, t: number): number {
   return a + (b - a) * clamp01(t);
 }
 
+/** Ease-in-out cubic for smoother wormhole travel than linear raw progress */
+function easeInOutCubic(t: number): number {
+  const x = clamp01(t);
+  return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+}
+
 function computeTrackProgress(el: HTMLElement): number {
   const rect = el.getBoundingClientRect();
   const vh = typeof window !== "undefined" ? window.innerHeight : 800;
@@ -83,17 +89,21 @@ export function useLatentCaseScroll(trackRef: RefObject<HTMLElement | null>): La
 
     // Phase boundaries (trackProgress):
     //   0.18..0.28  surface peel
-    //   0.22..0.70  tunnelScroll 0→1 (WebGL camera + frontal wormhole)
+    //   0.21..0.73  tunnelScroll 0→1 (eased; WebGL camera + frontal wormhole)
     //   0.32..0.58  latent topology + exit plane build
     //   0.54..0.72  case dock from exit plane
     //   0.66..0.86  orbit fan-out then drift
     //   0.78..0.95  case orbit cycle index
     const surfaceReveal = smooth((trackProgress - 0.18) / 0.1);
 
-    const tunnelScroll = clamp01((trackProgress - 0.22) / 0.48);
+    const tunnelStart = 0.21;
+    const tunnelSpan = 0.52;
+    const rawTunnel = clamp01((trackProgress - tunnelStart) / tunnelSpan);
+    const tunnelScroll = reduceMotion ? rawTunnel : easeInOutCubic(rawTunnel);
 
     const gatewayScale = lerp(1, 1.12, smooth(clamp01((trackProgress - 0.2) / 0.28)));
-    const gatewayOpacity = lerp(1, 0, smooth((trackProgress - 0.64) / 0.12));
+    // Longer, later fade so topology / exit plane can overlap the gateway without a hard cut
+    const gatewayOpacity = lerp(1, 0, smooth((trackProgress - 0.56) / 0.24));
     const gatewayBlur = 0;
 
     const latentEmerge = smooth((trackProgress - 0.32) / 0.26);

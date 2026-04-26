@@ -134,8 +134,8 @@
   inset: 0;
   z-index: 0;
   background:
-    radial-gradient(ellipse 70% 55% at 50% 42%, rgba(202, 165, 84, 0.07) 0%, transparent 58%),
-    radial-gradient(ellipse 55% 70% at 42% 55%, rgba(91, 122, 78, 0.06) 0%, transparent 52%),
+    radial-gradient(ellipse 70% 55% at 50% 42%, rgba(202, 165, 84, 0.085) 0%, transparent 60%),
+    radial-gradient(ellipse 55% 70% at 42% 55%, rgba(91, 122, 78, 0.065) 0%, transparent 54%),
     var(--void);
   pointer-events: none;
 }
@@ -238,8 +238,8 @@
      orbit-wrap padding (symmetric) so the centres coincide. */
   transform-origin: 50% 50%;
   transition:
-    transform 60ms linear,
-    opacity 80ms linear;
+    transform 140ms cubic-bezier(0.19, 1, 0.22, 1),
+    opacity 160ms cubic-bezier(0.19, 1, 0.22, 1);
   will-change: transform, opacity;
 }
 
@@ -253,7 +253,7 @@
   z-index: 4;
   pointer-events: none;
   background:
-    radial-gradient(ellipse 95% 75% at 50% 50%, transparent 55%, rgba(10, 9, 8, 0.5) 100%),
+    radial-gradient(ellipse 95% 75% at 50% 50%, transparent 58%, rgba(10, 9, 8, 0.48) 100%),
     linear-gradient(
       180deg,
       rgba(10, 9, 8, 0.25) 0%,

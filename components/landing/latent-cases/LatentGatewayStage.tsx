@@ -2,53 +2,51 @@
 
 import dynamic from "next/dynamic";
 import { useMemo } from "react";
-import type { GatewayTravelOptions } from "@/components/gateway/ThreeGateway";
-import { DEFAULT_GATEWAY, type GatewayConfig } from "@/lib/particle-config";
+import type { GatewayShape } from "@/lib/particle-config";
 
-const ThreeGateway = dynamic(
-  () => import("@/components/gateway/ThreeGateway").then((m) => m.ThreeGateway),
+const LatentInstrument = dynamic(
+  () => import("./LatentInstrument").then((m) => m.LatentInstrument),
   { ssr: false }
 );
 
-// Frontal latent wormhole: straight tunnel, no hero tilt, short camera travel.
-const LATENT_GATEWAY_CONFIG: GatewayConfig = {
-  ...DEFAULT_GATEWAY,
-  positionX: 0,
-  positionY: 0,
-  rotationY: 0,
-  tunnelCurve: 0,
-  tunnelDepth: 0.72,
-  scale: 1.52,
-  density: 1.78,
-  shape: "circle",
-};
-
-const LATENT_TRAVEL: GatewayTravelOptions = {
-  cameraZMax: 52,
-  fadeStart: 0.76,
-  fadeEnd: 0.995,
-  rotationX: 0,
-  rotationY: 0,
-  verticalInset: 0,
-  lookAhead: 11,
-};
+/** Matches ThreeGateway latent travel: frontal dolly + late fade */
+const FADE_START = 0.76;
+const FADE_END = 0.995;
+const CAMERA_Z_MAX = 52;
+const LOOK_AHEAD = 11;
 
 interface LatentGatewayStageProps {
-  /** 0..1 — full scroll range through the wormhole (maps to ThreeGateway scrollProgress) */
+  /** 0..1 — wormhole travel (eased upstream in useLatentCaseScroll) */
   tunnelScroll: number;
-  /** Subtle CSS scale only; primary motion is WebGL camera */
+  /** Subtle CSS scale */
   scale: number;
   /** 0..1 — wrapper opacity for handoff to cards / topology */
   opacity: number;
+  /** Freezes / softens time-based WebGL motion */
+  reduceMotion: boolean;
+  /** Portal silhouette for `LatentPortalContour` (default `diamond`) */
+  shape?: GatewayShape;
 }
 
 /**
- * Wraps ThreeGateway in a transformed container. CSS `scale` is kept subtle;
- * `tunnelScroll` drives the flying camera through a frontal, centered portal.
+ * WebGL instrument layer: v1 portal stack + celestial overlay (see LatentInstrument).
  */
-export function LatentGatewayStage({ tunnelScroll, scale, opacity }: LatentGatewayStageProps) {
-  const config = useMemo(() => LATENT_GATEWAY_CONFIG, []);
-  const travel = useMemo(() => LATENT_TRAVEL, []);
+export function LatentGatewayStage({
+  tunnelScroll,
+  scale,
+  opacity,
+  reduceMotion,
+  shape = "diamond",
+}: LatentGatewayStageProps) {
+  const fade = useMemo(
+    () => ({
+      fadeStart: FADE_START,
+      fadeEnd: FADE_END,
+      cameraZMax: CAMERA_Z_MAX,
+      lookAhead: LOOK_AHEAD,
+    }),
+    []
+  );
   const scroll = Math.max(0, Math.min(1, tunnelScroll));
 
   return (
@@ -60,12 +58,15 @@ export function LatentGatewayStage({ tunnelScroll, scale, opacity }: LatentGatew
       }}
       aria-hidden="true"
     >
-      <ThreeGateway
+      <LatentInstrument
         scrollProgress={scroll}
-        config={config}
-        travel={travel}
-        hideAfter={10}
+        reduceMotion={reduceMotion}
+        fadeStart={fade.fadeStart}
+        fadeEnd={fade.fadeEnd}
+        cameraZMax={fade.cameraZMax}
+        lookAhead={fade.lookAhead}
         layerZIndex={1}
+        shape={shape}
       />
     </div>
   );

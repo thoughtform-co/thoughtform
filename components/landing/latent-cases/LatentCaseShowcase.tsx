@@ -120,6 +120,8 @@ export function LatentCaseShowcase() {
             tunnelScroll={scroll.tunnelScroll}
             scale={scroll.gatewayScale}
             opacity={scroll.gatewayOpacity}
+            reduceMotion={scroll.reduceMotion}
+            shape="thoughtformGateway1"
           />
 
           <LatentExitPlane intensity={scroll.exitPlane} reduceMotion={scroll.reduceMotion} />
