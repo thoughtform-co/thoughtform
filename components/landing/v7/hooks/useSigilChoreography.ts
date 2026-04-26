@@ -188,13 +188,85 @@ export function useSigilChoreography(
     let practiceExitArmed = false;
     let practiceExitScrollTrigger: ScrollTrigger | null = null;
 
+    /**
+     * Returns the viewport rect where the sigil *would* sit when the
+     * `.tri__center` sticky parent is fully engaged AND the entrance
+     * scrub has finished (scale = 1) — independent of whether CSS
+     * sticky has actually taken effect yet at the current scroll
+     * position. Used everywhere the actor is pinned during section 02
+     * so the brandmark holds a single fixed viewport coordinate from
+     * the moment it becomes visible until the handoff fires, instead
+     * of rising up the screen with the section during pre-sticky and
+     * post-sticky un-engage windows.
+     *
+     * Both axes are read from elements that are not themselves
+     * transformed during the reveal:
+     *   - vertical: `.tri__center.offsetHeight` and the computed
+     *     `top` of the sticky parent
+     *   - horizontal: `.sigil` (sigilMark's parent) has no transform,
+     *     so its `getBoundingClientRect().left` is the unscaled left
+     *     of the sigil container; the sigil sits centred inside it
+     *
+     * Reading the live `sigilMark.getBoundingClientRect().left`
+     * directly would shift by `(offsetWidth * (1 - scale)) / 2` while
+     * the entranceTl scrubs `scale: 0.7 → 1`, producing visible
+     * left-edge drift even though the actor's centre is stable.
+     *
+     * Falls back to the live rect when the sticky parent is missing
+     * or sticky is disabled (mobile breakpoint).
+     */
+    const computeStickySigilPosition = (): DOMRect => {
+      const liveRect = sigilMark.getBoundingClientRect();
+      const triCenter = sigilMark.closest<HTMLElement>(".tri__center");
+      if (!triCenter) return liveRect;
+      const cs = getComputedStyle(triCenter);
+      if (cs.position !== "sticky") return liveRect;
+      const stickyTop = parseFloat(cs.top);
+      if (!Number.isFinite(stickyTop)) return liveRect;
+      const triCenterH = triCenter.offsetHeight;
+      const sigilH = sigilMark.offsetHeight;
+      const sigilW = sigilMark.offsetWidth;
+      if (triCenterH <= 0 || sigilH <= 0 || sigilW <= 0) return liveRect;
+
+      const sigilOffsetWithinSticky = (triCenterH - sigilH) / 2;
+      const stickyTopY = stickyTop + sigilOffsetWithinSticky;
+
+      // Untransformed left: `.sigil` is sigilMark's parent and has no
+      // scale animation, so its rect's left is stable across entrance
+      // scrub. sigilMark is centred inside it (flex centred).
+      const sigilContainer = sigilMark.parentElement;
+      let stickyLeft = liveRect.left;
+      if (sigilContainer) {
+        const containerRect = sigilContainer.getBoundingClientRect();
+        if (containerRect.width > 0) {
+          stickyLeft = containerRect.left + (containerRect.width - sigilW) / 2;
+        }
+      }
+
+      return new DOMRect(stickyLeft, stickyTopY, sigilW, sigilH);
+    };
+
     const syncActorToSigilEntrance = () => {
       const a = actor();
       if (!a) return;
+      const vh = window.innerHeight;
+      const defRect = defEl.getBoundingClientRect();
+      // Hide the actor while section 02 is still well below the
+      // viewport (hero). Threshold matches `entranceTl.scrollTrigger.start`
+      // — only paint the brandmark once the entrance reveal trigger
+      // has begun. Without this, `resetHandoff` (called at scrollY=0
+      // by handoffTl.onRefresh) would set sigilMark.opacity to 1 and
+      // cause `pinToRect` to render the actor at the sticky-computed
+      // position in the middle of the hero viewport.
+      const entranceReached = defRect.top <= vh * 0.85;
+      if (!entranceReached) {
+        a.hide();
+        return;
+      }
       // Threshold matches the handoffTl trigger start ("bottom 90%" of
       // defEl) — once section 02's bottom has reached 90% of the viewport
       // height, handoffTl owns the actor.
-      const handoffStartReached = defEl.getBoundingClientRect().bottom <= window.innerHeight * 0.9;
+      const handoffStartReached = defRect.bottom <= vh * 0.9;
       const downstreamOwnsActor =
         handoffArmed ||
         practiceEntryArmed ||
@@ -253,11 +325,25 @@ export function useSigilChoreography(
         }
       );
       // #endregion
-      // The diagram column (.tri__center) is `position: sticky` so the
-      // sigil's live rect is itself stable while the user reads section
-      // 02 — the actor inherits that stability for free by tracking the
-      // live rect.
-      a.pinToRect(sigilMark.getBoundingClientRect(), o, s || 1);
+      // Pin to the *sticky-engaged* sigil position rather than the
+      // live rect. CSS sticky only engages once the section has
+      // scrolled past its activation point, so during the entrance
+      // reveal (and again briefly after sticky un-engages) the live
+      // rect is moving up the viewport with the section. Using the
+      // computed sticky coordinate keeps the brandmark at one fixed
+      // viewport position from the first moment it's visible until the
+      // handoff begins.
+      //
+      // Scale is forced to 1 even when the sigilMark is mid-animation
+      // (entranceTl scrubs scale 0.7 → 1 alongside opacity). With a
+      // scaled transform applied around the centre, the actor's
+      // bounding-box top/left edges drift as the scale grows even
+      // though the centre stays put — the user reads that edge drift
+      // as "the brandmark is still moving a bit". Locking scale at 1
+      // means only opacity animates during the reveal, so the
+      // brandmark is dimensionally fixed from the first frame.
+      void s;
+      a.pinToRect(computeStickySigilPosition(), o, 1);
       a.setHudOutline(false);
     };
 
@@ -270,10 +356,13 @@ export function useSigilChoreography(
         "--frame-opacity": 1,
         clearProps: "rotation",
       });
-      // The diagram column is sticky, so the live sigil rect already
-      // represents the actor's current on-screen position by the time
-      // this fires.
-      const sigilRect = sigilMark.getBoundingClientRect();
+      // Use the sticky-engaged position so the morph starts from the
+      // exact viewport coordinate the actor has been parked at during
+      // section 02. The live `getBoundingClientRect()` would point at
+      // the post-sticky-un-engage flow position, which is a few hundred
+      // pixels above the actor — a one-frame jump at the start of the
+      // morph if used as the source rect.
+      const sigilRect = computeStickySigilPosition();
       const hudRect = hudBrandmark!.getBoundingClientRect();
       const vh = window.innerHeight;
       const isSigilVisible = sigilRect.bottom > 0 && sigilRect.top < vh;
@@ -704,7 +793,7 @@ export function useSigilChoreography(
       const o = Number(gsap.getProperty(sigilMark, "opacity")) || 0;
       if (o < 0.95) return;
 
-      const sigilRect = sigilMark.getBoundingClientRect();
+      const sigilRect = computeStickySigilPosition();
       if (sigilRect.width <= 0 || sigilRect.height <= 0) return;
 
       brandPinnedToHudSlot = false;
