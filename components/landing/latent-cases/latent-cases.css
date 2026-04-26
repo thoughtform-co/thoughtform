@@ -1,0 +1,756 @@
+/* ═══════════════════════════════════════════════════════════════
+   LATENT CASE SHOWCASE — prototype
+   Surface peel → gateway approach → fly-through → latent topology
+   → cases arrive from depth and orbit a centerpiece.
+   Scoped under .latent-case-showcase.
+   ═══════════════════════════════════════════════════════════════ */
+
+.latent-case-showcase {
+  --lc-pad: clamp(20px, 4vw, 48px);
+  --lc-track-vh: 480vh;
+  background: var(--void);
+  color: var(--dawn-70);
+  min-height: 100vh;
+  font-family: var(--font-mono);
+}
+
+.latent-case-showcase *,
+.latent-case-showcase *::before,
+.latent-case-showcase *::after {
+  box-sizing: border-box;
+}
+
+/* ── Top bar ───────────────────────────────────────────────────── */
+.latent-case-showcase__top {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px var(--lc-pad);
+  border-bottom: 1px solid var(--dawn-08);
+  background: color-mix(in oklab, var(--void) 90%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.latent-case-showcase__title {
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--dawn-50);
+}
+
+.latent-case-showcase__readout {
+  font-size: 10px;
+  color: var(--gold-60);
+  letter-spacing: 0.12em;
+}
+
+.latent-case-showcase__top a {
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--dawn-50);
+  text-decoration: none;
+  border: 1px solid var(--dawn-15);
+  padding: 8px 14px;
+  transition:
+    border-color 120ms cubic-bezier(0.16, 1, 0.3, 1),
+    color 120ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.latent-case-showcase__top a:hover {
+  color: var(--gold);
+  border-color: var(--gold-30);
+}
+
+/* ── Intro / outro ────────────────────────────────────────────── */
+.latent-case-showcase__intro {
+  /* Full viewport so the sticky stage is fully off-screen at scrollY=0 —
+     the user has to scroll to enter the gateway, instead of landing
+     halfway into the approach phase. */
+  min-height: calc(100vh - 56px);
+  padding: clamp(56px, 14vh, 160px) var(--lc-pad) clamp(40px, 8vh, 80px);
+  max-width: 62ch;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.latent-case-showcase__intro h1 {
+  font-weight: 700;
+  font-size: clamp(22px, 2.4vw, 28px);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--dawn);
+  margin: 0 0 var(--space-md);
+}
+
+.latent-case-showcase__intro p {
+  font-size: var(--type-md);
+  line-height: 1.6;
+  margin: 0 0 var(--space-md);
+}
+
+.latent-case-showcase__outro {
+  padding: clamp(56px, 10vh, 100px) var(--lc-pad);
+  border-top: 1px solid var(--dawn-08);
+  max-width: 52ch;
+}
+
+.latent-case-showcase__outro h2 {
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin: 0 0 var(--space-sm);
+}
+
+/* ── Sticky stage ─────────────────────────────────────────────── */
+.latent-case-showcase__track {
+  position: relative;
+  min-height: var(--lc-track-vh);
+  background: var(--void);
+}
+
+.latent-case-showcase__sticky {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  width: 100%;
+  overflow: hidden;
+  isolation: isolate;
+  /* Establish a stacking context so all layers sort against each other.
+     Anything fixed inside (e.g. ThreeGateway) becomes contained because
+     latent-gateway-stage applies a `transform`. */
+}
+
+/* z:0 — atmospheric backdrop (radials) */
+.latent-case-showcase__backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background:
+    radial-gradient(ellipse 70% 55% at 50% 42%, rgba(202, 165, 84, 0.07) 0%, transparent 58%),
+    radial-gradient(ellipse 55% 70% at 42% 55%, rgba(91, 122, 78, 0.06) 0%, transparent 52%),
+    var(--void);
+  pointer-events: none;
+}
+
+/* z:1 — latent space topology layer (rich SVG content) */
+.latent-topology {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  transition: opacity 280ms linear;
+}
+
+.latent-topology__layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  will-change: transform;
+}
+
+.latent-topology__layer--far {
+  opacity: 0.85;
+}
+
+.latent-topology__layer--mid {
+  animation: latent-topology-rotate 240s linear infinite;
+}
+
+.latent-topology__layer--near {
+  opacity: 0.7;
+}
+
+@keyframes latent-topology-rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .latent-topology__layer--mid {
+    animation: none;
+  }
+}
+
+/* z:3 — latent exit / docking plane (between gateway and vignette) */
+.latent-exit-plane {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 120ms linear;
+  will-change: opacity;
+}
+
+.latent-exit-plane__svg {
+  width: min(100%, 1400px);
+  height: min(100%, 900px);
+  display: block;
+}
+
+.latent-exit-plane:not(.latent-exit-plane--static) .latent-exit-plane__svg {
+  animation: latent-exit-plane-breathe 7s ease-in-out infinite;
+}
+
+@keyframes latent-exit-plane-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+    filter: saturate(1);
+  }
+  50% {
+    transform: scale(1.012);
+    filter: saturate(1.08);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .latent-exit-plane:not(.latent-exit-plane--static) .latent-exit-plane__svg {
+    animation: none;
+  }
+}
+
+/* z:2 — gateway WebGL fly-through wrapper */
+.latent-gateway-stage {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  /* Origin = viewport centre. The gateway’s visual focus has to land on
+     the same point as the case orbit, otherwise cards appear to emerge
+     above the gateway instead of from it. Keep this in sync with the
+     orbit-wrap padding (symmetric) so the centres coincide. */
+  transform-origin: 50% 50%;
+  transition:
+    transform 60ms linear,
+    opacity 80ms linear;
+  will-change: transform, opacity;
+}
+
+/* z:4 — atmospheric vignette under content for legibility.
+   Kept light: the gateway’s WebGL particles are subtle and any heavy
+   ellipse darkening washes them out. Edges only, transparent through
+   the centre 70%. */
+.latent-case-showcase__vignette {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 95% 75% at 50% 50%, transparent 55%, rgba(10, 9, 8, 0.5) 100%),
+    linear-gradient(
+      180deg,
+      rgba(10, 9, 8, 0.25) 0%,
+      transparent 22%,
+      transparent 78%,
+      rgba(10, 9, 8, 0.35) 100%
+    );
+}
+
+/* z:5 — editorial “surface” lid that peels away */
+.latent-case-showcase__surface {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  background: linear-gradient(
+    180deg,
+    rgba(10, 9, 8, 1) 0%,
+    rgba(10, 9, 8, 0.92) 35%,
+    rgba(10, 9, 8, 0.45) 100%
+  );
+  pointer-events: none;
+  transform-origin: 50% 100%;
+  will-change: transform, opacity;
+  transition: opacity 80ms linear;
+}
+
+/* z:6 — instrument readouts */
+.latent-case-showcase__hud {
+  position: absolute;
+  bottom: clamp(20px, 3vh, 40px);
+  left: var(--lc-pad);
+  z-index: 8;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--dawn-50);
+  pointer-events: none;
+}
+
+.latent-case-showcase__hud--right {
+  left: auto;
+  right: var(--lc-pad);
+  text-align: right;
+  align-items: flex-end;
+}
+
+.latent-case-showcase__hud-row {
+  display: flex;
+  gap: 10px;
+}
+
+.latent-case-showcase__hud-k {
+  color: var(--dawn-30);
+}
+
+.latent-case-showcase__hud-v {
+  color: var(--gold);
+  letter-spacing: 0.08em;
+  min-width: 8ch;
+}
+
+/* z:6 — case orbit wrapper. Symmetric padding so orbit centre lands
+   exactly on viewport centre, matching the gateway-stage transform-origin. */
+.latent-case-showcase__orbit-wrap {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(64px, 10vh, 92px) var(--lc-pad);
+  perspective: 1600px;
+  perspective-origin: 50% 50%;
+  transform-style: preserve-3d;
+  will-change: transform, opacity;
+  transition:
+    transform 320ms cubic-bezier(0.19, 1, 0.22, 1),
+    opacity 240ms linear;
+}
+
+.latent-case-showcase__orbit {
+  position: relative;
+  width: min(1200px, 100%);
+  height: min(540px, 60vh);
+  transform-style: preserve-3d;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   CASE CARD — visual-first compact layout
+   ═══════════════════════════════════════════════════════════════ */
+.latent-case-card {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: clamp(380px, 32vw, 480px);
+  height: clamp(360px, 56vh, 420px);
+  display: flex;
+  flex-direction: column;
+  background: rgba(10, 9, 8, 0.78);
+  border: 1px solid var(--dawn-15);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  transform-style: preserve-3d;
+  overflow: hidden;
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.35),
+    0 24px 80px rgba(0, 0, 0, 0.55);
+  transition:
+    transform 480ms cubic-bezier(0.19, 1, 0.22, 1),
+    opacity 360ms cubic-bezier(0.19, 1, 0.22, 1),
+    filter 360ms ease,
+    box-shadow 280ms ease,
+    border-color 200ms ease;
+  will-change: transform, opacity, filter;
+  margin: 0;
+}
+
+.latent-case-card[data-active="true"] {
+  border-color: var(--lc-accent, var(--gold-30));
+  box-shadow:
+    0 0 0 1px rgba(202, 165, 84, 0.06),
+    0 0 60px rgba(202, 165, 84, 0.1),
+    0 28px 90px rgba(0, 0, 0, 0.65);
+}
+
+.latent-case-card:focus-within {
+  outline: 1px solid var(--gold-30);
+  outline-offset: 2px;
+}
+
+/* Corner brackets */
+.latent-case-card::before,
+.latent-case-card::after {
+  content: "";
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  pointer-events: none;
+  z-index: 4;
+  opacity: 0.85;
+}
+
+.latent-case-card::before {
+  top: -1px;
+  left: -1px;
+  border-top: 1px solid var(--dawn-30);
+  border-left: 1px solid var(--dawn-30);
+}
+
+.latent-case-card::after {
+  bottom: -1px;
+  right: -1px;
+  border-bottom: 1px solid var(--dawn-30);
+  border-right: 1px solid var(--dawn-30);
+}
+
+/* Top strip ── idx · domain · status ──────────────────────────── */
+.latent-case-card__strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--dawn-50);
+  border-bottom: 1px solid var(--dawn-08);
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.latent-case-card__idx {
+  color: var(--dawn);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.latent-case-card__eyebrow {
+  flex: 1;
+  min-width: 0;
+  color: var(--dawn-40);
+  font-size: 9px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.latent-case-card__status {
+  flex-shrink: 0;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  padding: 3px 8px;
+  border: 1px solid var(--dawn-15);
+  color: var(--dawn-50);
+}
+
+.latent-case-card__status--prod {
+  color: var(--gold);
+  border-color: var(--gold-20);
+  background: rgba(202, 165, 84, 0.06);
+}
+
+/* Hero ── accent gradient with grid pattern + glyph ───────────── */
+.latent-case-card__hero {
+  position: relative;
+  height: clamp(110px, 16vh, 130px);
+  background-color: rgba(0, 0, 0, 0.4);
+  background-image:
+    radial-gradient(ellipse 70% 90% at 18% 28%, var(--lc-accent, var(--gold)) 0%, transparent 60%),
+    linear-gradient(135deg, var(--lc-accent, var(--gold)) 0%, transparent 75%);
+  background-blend-mode: screen, normal;
+  overflow: hidden;
+  border-bottom: 1px solid var(--dawn-08);
+  isolation: isolate;
+}
+
+.latent-case-card__hero-grid {
+  position: absolute;
+  inset: 0;
+  background-image: repeating-linear-gradient(
+    45deg,
+    transparent 0 14px,
+    rgba(0, 0, 0, 0.18) 14px 15px
+  );
+  opacity: 0.55;
+  z-index: 1;
+}
+
+.latent-case-card__hero::after {
+  content: "";
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 28px;
+  background: linear-gradient(180deg, transparent, rgba(10, 9, 8, 0.95));
+  z-index: 2;
+}
+
+/* Three small bars suggesting an instrument readout */
+.latent-case-card__hero-glyph {
+  position: absolute;
+  bottom: 18px;
+  left: 18px;
+  display: flex;
+  gap: 4px;
+  z-index: 3;
+}
+
+.latent-case-card__hero-glyph span {
+  width: 18px;
+  height: 6px;
+  background: rgba(10, 9, 8, 0.6);
+  border: 1px solid var(--dawn-30);
+}
+
+.latent-case-card__hero-glyph span:nth-child(1) {
+  background: var(--lc-accent, var(--gold));
+  border-color: transparent;
+}
+
+.latent-case-card__hero-glyph span:nth-child(2) {
+  width: 12px;
+  background: rgba(10, 9, 8, 0.4);
+}
+
+.latent-case-card__hero-tag {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 3;
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  padding: 5px 10px;
+  background: rgba(10, 9, 8, 0.78);
+  border: 1px solid var(--dawn-30);
+  color: var(--dawn);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.latent-case-card__hero-tag--repair {
+  border-color: var(--dawn-30);
+}
+
+.latent-case-card__hero-tag--compress {
+  border-color: var(--gold-30);
+  color: var(--gold);
+}
+
+.latent-case-card__hero-tag--invent {
+  border-color: rgba(180, 150, 220, 0.45);
+  color: rgba(220, 200, 240, 0.95);
+}
+
+/* Body ── name + tagline + sub ─────────────────────────────────── */
+.latent-case-card__body {
+  padding: 16px 18px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+  min-height: 0;
+}
+
+.latent-case-card__name {
+  font-weight: 700;
+  font-size: clamp(28px, 3.4vw, 38px);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--dawn);
+  margin: 0;
+  line-height: 1;
+}
+
+.latent-case-card__name span {
+  color: var(--lc-accent, var(--gold));
+  font-style: normal;
+}
+
+.latent-case-card__tagline {
+  margin-top: 8px;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--dawn-60);
+}
+
+.latent-case-card__divider {
+  width: 32px;
+  height: 1px;
+  background: var(--lc-accent, var(--gold));
+  margin: 8px 0 4px;
+  opacity: 0.7;
+}
+
+.latent-case-card__sub {
+  font-style: italic;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--dawn-50);
+  margin: 0;
+}
+
+/* Metrics row ─────────────────────────────────────────────────── */
+.latent-case-card__metrics {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  margin: 0 18px;
+  border-top: 1px solid var(--dawn-08);
+  border-bottom: 1px solid var(--dawn-08);
+}
+
+.latent-case-card__metric {
+  padding: 10px 8px;
+  border-right: 1px solid var(--dawn-08);
+}
+
+.latent-case-card__metric:last-child {
+  border-right: none;
+}
+
+.latent-case-card__metric-v {
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--dawn);
+  line-height: 1.1;
+  letter-spacing: 0.02em;
+}
+
+.latent-case-card__metric-k {
+  margin-top: 4px;
+  font-size: 8px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--dawn-40);
+  line-height: 1.3;
+}
+
+/* Foot ── stack + CTA ─────────────────────────────────────────── */
+.latent-case-card__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 18px 12px;
+  background: rgba(0, 0, 0, 0.25);
+  border-top: 1px solid var(--dawn-08);
+}
+
+.latent-case-card__stack {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0;
+  flex: 1;
+  min-width: 0;
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--dawn-50);
+  align-items: center;
+}
+
+.latent-case-card__stack > span {
+  display: inline-block;
+  white-space: nowrap;
+}
+
+.latent-case-card__stack > span:not(:last-child)::after {
+  content: "·";
+  margin: 0 6px;
+  color: var(--dawn-30);
+}
+
+.latent-case-card__stack-more {
+  color: var(--dawn-30);
+}
+
+.latent-case-card__cta {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--dawn);
+  border: 1px solid var(--dawn-30);
+  text-decoration: none;
+  transition:
+    background 120ms ease,
+    border-color 120ms ease,
+    color 120ms ease;
+}
+
+.latent-case-card__cta:hover {
+  border-color: var(--lc-accent, var(--gold));
+  color: var(--lc-accent, var(--gold));
+  background: rgba(202, 165, 84, 0.06);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   MOBILE — single card, vertical scroll (orbit collapsed)
+   ═══════════════════════════════════════════════════════════════ */
+@media (max-width: 720px) {
+  .latent-case-showcase__orbit-wrap {
+    perspective: none;
+    transform: none !important;
+    padding: 16px;
+  }
+
+  .latent-case-showcase__orbit {
+    height: auto;
+    min-height: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    transform: none !important;
+  }
+
+  .latent-case-card {
+    position: relative !important;
+    left: auto !important;
+    top: auto !important;
+    width: 100% !important;
+    height: auto !important;
+    transform: none !important;
+    opacity: 1 !important;
+    filter: none !important;
+    pointer-events: auto !important;
+  }
+
+  .latent-case-card--inactive {
+    display: none;
+  }
+
+  .latent-case-showcase__hud--right {
+    display: none;
+  }
+
+  .latent-case-showcase__hud {
+    bottom: 12px;
+    font-size: 8px;
+  }
+}
+
+/* Reduced motion polish: trim distance + transitions */
+@media (prefers-reduced-motion: reduce) {
+  .latent-gateway-stage,
+  .latent-case-card,
+  .latent-case-showcase__orbit-wrap {
+    transition-duration: 0ms;
+  }
+}

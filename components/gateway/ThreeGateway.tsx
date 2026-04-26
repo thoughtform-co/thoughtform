@@ -1283,6 +1283,24 @@ function FramedBorderGateway({
   );
 }
 
+/** Optional scroll-driven travel tuning (defaults preserve hero / cockpit behavior). */
+export interface GatewayTravelOptions {
+  /** Max camera Z at scrollProgress = 1 (default 90 = legacy 18 * 5). */
+  cameraZMax?: number;
+  /** Opacity stays 1 until this scrollProgress, then fades to 0 by fadeEnd. */
+  fadeStart?: number;
+  /** Opacity reaches 0 at this scrollProgress (default 0.16 with fadeStart 0.06). */
+  fadeEnd?: number;
+  /** Scene group rotation X in radians (default 0.1). Use 0 for a frontal portal. */
+  rotationX?: number;
+  /** Scene group rotation Y in radians (default: gateway config.rotationY). */
+  rotationY?: number;
+  /** Added to config.positionY for camera + portal group (default 0.05). */
+  verticalInset?: number;
+  /** Distance ahead of the camera used for lookAt (default 10). */
+  lookAhead?: number;
+}
+
 // ─── FLYING CAMERA ───
 // Camera is locked to the portal's (x, y) so scrolling flies straight through
 // the wormhole center instead of grazing its left edge.
@@ -1290,17 +1308,21 @@ function FlyingCamera({
   scrollProgress,
   gatewayX,
   gatewayY,
+  cameraZMax,
+  lookAhead,
 }: {
   scrollProgress: number;
   gatewayX: number;
   gatewayY: number;
+  cameraZMax: number;
+  lookAhead: number;
 }) {
   const { camera } = useThree();
 
   useFrame(() => {
-    const z = scrollProgress * 18 * 5;
+    const z = scrollProgress * cameraZMax;
     camera.position.set(gatewayX, gatewayY, z);
-    camera.lookAt(gatewayX, gatewayY, z + 10);
+    camera.lookAt(gatewayX, gatewayY, z + lookAhead);
   });
 
   return null;
@@ -1627,10 +1649,17 @@ function LatentSpaceField({
 interface GatewaySceneProps {
   scrollProgress: number;
   config: GatewayConfig;
+  travel: Required<GatewayTravelOptions>;
 }
 
-function GatewayScene({ scrollProgress, config }: GatewaySceneProps) {
-  const opacity = scrollProgress > 0.06 ? Math.max(0, 1 - (scrollProgress - 0.06) * 10) : 1;
+function computeGatewayOpacity(scrollProgress: number, fadeStart: number, fadeEnd: number): number {
+  if (scrollProgress <= fadeStart) return 1;
+  if (scrollProgress >= fadeEnd) return 0;
+  return 1 - (scrollProgress - fadeStart) / (fadeEnd - fadeStart);
+}
+
+function GatewayScene({ scrollProgress, config, travel }: GatewaySceneProps) {
+  const opacity = computeGatewayOpacity(scrollProgress, travel.fadeStart, travel.fadeEnd);
 
   // Don't return null - keep the scene mounted but invisible to avoid re-initialization costs
   // The parent container handles visibility
@@ -1659,12 +1688,14 @@ function GatewayScene({ scrollProgress, config }: GatewaySceneProps) {
       <FlyingCamera
         scrollProgress={scrollProgress}
         gatewayX={config.positionX}
-        gatewayY={config.positionY + 0.05}
+        gatewayY={config.positionY + travel.verticalInset}
+        cameraZMax={travel.cameraZMax}
+        lookAhead={travel.lookAhead}
       />
 
       <group
-        position={[config.positionX, config.positionY + 0.05, 4]}
-        rotation={[0.1, config.rotationY, 0]}
+        position={[config.positionX, config.positionY + travel.verticalInset, 4]}
+        rotation={[travel.rotationX, travel.rotationY, 0]}
         scale={config.scale}
       >
         {isKeyVisual ? (
@@ -1811,14 +1842,50 @@ interface ThreeGatewayProps {
   scrollProgress: number;
   config?: GatewayConfig;
   children?: React.ReactNode;
+  /** Hide overlay when scrollProgress exceeds this (default matches cockpit hero). */
+  hideAfter?: number;
+  /** Root wrapper z-index (default 1). Prototypes may raise above scroll chrome. */
+  layerZIndex?: number;
+  /** Scroll-driven camera / fade / rotation (defaults match legacy hero wormhole). */
+  travel?: GatewayTravelOptions;
 }
 
-export function ThreeGateway({ scrollProgress, config, children }: ThreeGatewayProps) {
+const LEGACY_TRAVEL_DEFAULTS = {
+  cameraZMax: 90,
+  fadeStart: 0.06,
+  fadeEnd: 0.16,
+  rotationX: 0.1,
+  verticalInset: 0.05,
+  lookAhead: 10,
+} as const;
+
+export function ThreeGateway({
+  scrollProgress,
+  config,
+  children,
+  hideAfter = 0.2,
+  layerZIndex = 1,
+  travel,
+}: ThreeGatewayProps) {
   const isMobile = useIsMobile();
 
   // Use config as passed - mobile overrides should be applied via ParticleConfigContext
   // The caller (NavigationCockpitV2) is responsible for passing the effective config
   const gatewayConfig = { ...DEFAULT_GATEWAY, ...config };
+
+  const travelResolved: Required<GatewayTravelOptions> = useMemo(() => {
+    const t = travel ?? {};
+    const rotationY = t.rotationY ?? gatewayConfig.rotationY;
+    return {
+      cameraZMax: t.cameraZMax ?? LEGACY_TRAVEL_DEFAULTS.cameraZMax,
+      fadeStart: t.fadeStart ?? LEGACY_TRAVEL_DEFAULTS.fadeStart,
+      fadeEnd: t.fadeEnd ?? LEGACY_TRAVEL_DEFAULTS.fadeEnd,
+      rotationX: t.rotationX ?? LEGACY_TRAVEL_DEFAULTS.rotationX,
+      rotationY,
+      verticalInset: t.verticalInset ?? LEGACY_TRAVEL_DEFAULTS.verticalInset,
+      lookAhead: t.lookAhead ?? LEGACY_TRAVEL_DEFAULTS.lookAhead,
+    };
+  }, [travel, gatewayConfig.rotationY]);
 
   // If disabled, don't render at all
   if (!gatewayConfig.enabled) return null;
@@ -1826,7 +1893,7 @@ export function ThreeGateway({ scrollProgress, config, children }: ThreeGatewayP
   // IMPORTANT: Keep the component mounted but hidden when scrolled past.
   // Returning null would unmount Three.js, causing expensive re-initialization
   // when scrolling back. Instead, use visibility/opacity to hide.
-  const shouldHide = scrollProgress > 0.2;
+  const shouldHide = scrollProgress > hideAfter;
 
   // Calculate screen position offset based on 3D gateway position
   // Camera FOV = 60, gateway is at z = 4
@@ -1849,7 +1916,7 @@ export function ThreeGateway({ scrollProgress, config, children }: ThreeGatewayP
         left: 0,
         width: "100%",
         height: "100%",
-        zIndex: 1,
+        zIndex: layerZIndex,
         pointerEvents: "none",
         display: "flex",
         alignItems: "center",
@@ -1869,7 +1936,11 @@ export function ThreeGateway({ scrollProgress, config, children }: ThreeGatewayP
         style={{ background: "transparent" }}
         dpr={isMobile ? 1 : undefined} // Lower DPR on mobile for performance
       >
-        <GatewayScene scrollProgress={scrollProgress} config={gatewayConfig} />
+        <GatewayScene
+          scrollProgress={scrollProgress}
+          config={gatewayConfig}
+          travel={travelResolved}
+        />
       </Canvas>
       {children && (
         <div
