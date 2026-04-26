@@ -71,33 +71,51 @@ function InstrumentScene({
   primaryColor: string;
   accentColor: string;
 }) {
-  const dawnWeaveMat = useRef<THREE.PointsMaterial>(null);
-  const goldWeaveMat = useRef<THREE.PointsMaterial>(null);
+  const innerDawnMat = useRef<THREE.PointsMaterial>(null);
+  const innerGoldMat = useRef<THREE.PointsMaterial>(null);
+  const outerDawnMat = useRef<THREE.PointsMaterial>(null);
+  const outerGoldMat = useRef<THREE.PointsMaterial>(null);
 
   const gateFade = computeSceneOpacity(scrollProgress, fadeStart, fadeEnd);
 
-  const dawnGeo = useMemo(() => {
+  const innerDawnGeo = useMemo(() => {
     const g = new THREE.BufferGeometry();
-    g.setAttribute("position", new THREE.BufferAttribute(geometry.dawnPoints, 3));
+    g.setAttribute("position", new THREE.BufferAttribute(geometry.inner.dawnPoints, 3));
     return g;
-  }, [geometry.dawnPoints]);
+  }, [geometry.inner.dawnPoints]);
 
-  const goldGeo = useMemo(() => {
+  const innerGoldGeo = useMemo(() => {
     const g = new THREE.BufferGeometry();
-    g.setAttribute("position", new THREE.BufferAttribute(geometry.goldPoints, 3));
+    g.setAttribute("position", new THREE.BufferAttribute(geometry.inner.goldPoints, 3));
     return g;
-  }, [geometry.goldPoints]);
+  }, [geometry.inner.goldPoints]);
+
+  const outerDawnGeo = useMemo(() => {
+    const g = new THREE.BufferGeometry();
+    g.setAttribute("position", new THREE.BufferAttribute(geometry.outer.dawnPoints, 3));
+    return g;
+  }, [geometry.outer.dawnPoints]);
+
+  const outerGoldGeo = useMemo(() => {
+    const g = new THREE.BufferGeometry();
+    g.setAttribute("position", new THREE.BufferAttribute(geometry.outer.goldPoints, 3));
+    return g;
+  }, [geometry.outer.goldPoints]);
 
   useFrame((state) => {
     const t = state.clock.elapsedTime;
     const breath = reduceMotion ? 1 : 0.94 + Math.sin(t * 0.35) * 0.06;
     const scrollBoost = reduceMotion ? 1 : 0.9 + scrollProgress * 0.1;
 
-    const d = dawnWeaveMat.current;
-    if (d) d.opacity = 0.6 * gateFade * breath * scrollBoost * density;
+    const id = innerDawnMat.current;
+    if (id) id.opacity = 0.6 * gateFade * breath * scrollBoost * density;
+    const ig = innerGoldMat.current;
+    if (ig) ig.opacity = 0.78 * gateFade * breath * scrollBoost * density;
 
-    const g = goldWeaveMat.current;
-    if (g) g.opacity = 0.78 * gateFade * breath * scrollBoost * density;
+    const od = outerDawnMat.current;
+    if (od) od.opacity = 0.92 * gateFade * breath * scrollBoost * density;
+    const og = outerGoldMat.current;
+    if (og) og.opacity = 1.0 * gateFade * breath * scrollBoost * density;
   });
 
   return (
@@ -119,10 +137,40 @@ function InstrumentScene({
           accentColor={accentColor}
         />
 
+        {/* Outer celestial field — co-planar with the mouth (no z-stretch).
+            Larger/brighter material so it reads as the gateway's surrounding
+            instrument, visible through any parallax reveal. */}
+        <points geometry={outerDawnGeo} frustumCulled={false}>
+          <pointsMaterial
+            ref={outerDawnMat}
+            attach="material"
+            color={primaryColor}
+            size={0.009}
+            sizeAttenuation
+            transparent
+            depthWrite={false}
+            opacity={0.92}
+          />
+        </points>
+
+        <points geometry={outerGoldGeo} frustumCulled={false}>
+          <pointsMaterial
+            ref={outerGoldMat}
+            attach="material"
+            color={accentColor}
+            size={0.0115}
+            sizeAttenuation
+            transparent
+            depthWrite={false}
+            opacity={1}
+          />
+        </points>
+
+        {/* Inner woven instrument — stretched along the tunnel via scale.z. */}
         <group scale={[1, 1, WEAVE_Z_SCALE * tunnelDepth]}>
-          <points geometry={dawnGeo} frustumCulled={false}>
+          <points geometry={innerDawnGeo} frustumCulled={false}>
             <pointsMaterial
-              ref={dawnWeaveMat}
+              ref={innerDawnMat}
               attach="material"
               color={primaryColor}
               size={0.0055}
@@ -133,9 +181,9 @@ function InstrumentScene({
             />
           </points>
 
-          <points geometry={goldGeo} frustumCulled={false}>
+          <points geometry={innerGoldGeo} frustumCulled={false}>
             <pointsMaterial
-              ref={goldWeaveMat}
+              ref={innerGoldMat}
               attach="material"
               color={accentColor}
               size={0.0072}

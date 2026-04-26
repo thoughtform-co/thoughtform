@@ -174,15 +174,21 @@ function pushDiamondMarker(
  */
 function pushOuterCelestialField(R: number, seed: number, dawn: number[], gold: number[]): void {
   const ringR = R * 1.55;
-
-  const ringSamples = 240;
+  const ringSamples = 360;
   for (let i = 0; i < ringSamples; i++) {
     const a = (i / ringSamples) * Math.PI * 2;
     dawn.push(Math.cos(a) * ringR, Math.sin(a) * ringR, 0);
   }
 
+  const innerRingR = R * 1.36;
+  const innerRingSamples = 280;
+  for (let i = 0; i < innerRingSamples; i++) {
+    const a = (i / innerRingSamples) * Math.PI * 2;
+    dawn.push(Math.cos(a) * innerRingR, Math.sin(a) * innerRingR, 0);
+  }
+
   const tickCount = 24;
-  const tickLen = 0.06;
+  const tickLen = 0.08;
   for (let i = 0; i < tickCount; i++) {
     const a = (i / tickCount) * Math.PI * 2;
     pushDottedSegment(
@@ -193,13 +199,15 @@ function pushOuterCelestialField(R: number, seed: number, dawn: number[], gold: 
       Math.cos(a) * (ringR + tickLen),
       Math.sin(a) * (ringR + tickLen),
       0,
-      4
+      6
     );
   }
 
   const cardinalAngles = [0, Math.PI / 2, Math.PI, -Math.PI / 2];
-  const axisStartR = R * 1.04;
-  const axisEndR = R * 2.0;
+  // Start the radial axes past the EdgeGlowRing halo (~1.12..1.2 R) so they
+  // read as separate from the gateway silhouette.
+  const axisStartR = R * 1.22;
+  const axisEndR = R * 2.05;
   for (const a of cardinalAngles) {
     pushDottedSegment(
       dawn,
@@ -209,14 +217,14 @@ function pushOuterCelestialField(R: number, seed: number, dawn: number[], gold: 
       Math.cos(a) * axisEndR,
       Math.sin(a) * axisEndR,
       0,
-      26
+      36
     );
-    pushDiamondMarker(Math.cos(a) * axisEndR, Math.sin(a) * axisEndR, 0, 0.034, 5, gold);
+    pushDiamondMarker(Math.cos(a) * axisEndR, Math.sin(a) * axisEndR, 0, 0.046, 8, gold);
   }
 
-  const cornerR = R * 2.25;
+  const cornerR = R * 2.3;
   const cornerAngles = [Math.PI / 4, (3 * Math.PI) / 4, -(3 * Math.PI) / 4, -Math.PI / 4];
-  const armLen = 0.16;
+  const armLen = 0.22;
   for (const a of cornerAngles) {
     const cx = Math.cos(a) * cornerR;
     const cy = Math.sin(a) * cornerR;
@@ -224,26 +232,33 @@ function pushOuterCelestialField(R: number, seed: number, dawn: number[], gold: 
     const inwardY = -Math.sin(a);
     const tangX = -inwardY;
     const tangY = inwardX;
-    pushDottedSegment(gold, cx, cy, 0, cx + inwardX * armLen, cy + inwardY * armLen, 0, 6);
-    pushDottedSegment(gold, cx, cy, 0, cx + tangX * armLen, cy + tangY * armLen, 0, 6);
+    pushDottedSegment(gold, cx, cy, 0, cx + inwardX * armLen, cy + inwardY * armLen, 0, 9);
+    pushDottedSegment(gold, cx, cy, 0, cx + tangX * armLen, cy + tangY * armLen, 0, 9);
   }
 
   const rnd = seededRandom(seed);
-  const starCount = 14;
+  const starCount = 18;
   for (let i = 0; i < starCount; i++) {
     const a = rnd() * Math.PI * 2;
     const r = R * (1.7 + rnd() * 0.7);
     const x = Math.cos(a) * r;
     const y = Math.sin(a) * r;
-    const ts = 0.012;
-    pushDottedSegment(dawn, x - ts, y, 0, x + ts, y, 0, 3);
-    pushDottedSegment(dawn, x, y - ts, 0, x, y + ts, 0, 3);
+    const ts = 0.018;
+    pushDottedSegment(dawn, x - ts, y, 0, x + ts, y, 0, 4);
+    pushDottedSegment(dawn, x, y - ts, 0, x, y + ts, 0, 4);
   }
 }
 
-export interface CelestialWeaveGeometry {
+export interface CelestialZoneGeometry {
   dawnPoints: Float32Array;
   goldPoints: Float32Array;
+}
+
+export interface CelestialWeaveGeometry {
+  /** Outer celestial field — co-planar with the mouth, surrounds the gateway */
+  outer: CelestialZoneGeometry;
+  /** Inner woven instrument — threaded through the tunnel via host scale.z */
+  inner: CelestialZoneGeometry;
 }
 
 export interface CelestialWeaveOptions {
@@ -280,14 +295,17 @@ export function buildCelestialWeave(
 ): CelestialWeaveGeometry {
   const R = opts?.contourRadius ?? 1.0;
   const seed = opts?.seed ?? 7777;
-  const dawn: number[] = [];
-  const gold: number[] = [];
 
-  pushOuterCelestialField(R, seed, dawn, gold);
+  const outerDawn: number[] = [];
+  const outerGold: number[] = [];
+  const innerDawn: number[] = [];
+  const innerGold: number[] = [];
 
-  pushBearingTicks(shape, R * 1.04, 48, 0.06, 3, 0.0, dawn);
-  pushBearingTicks(shape, R * 0.78, 36, 0.045, 3, 0.42, dawn);
-  pushBearingTicks(shape, R * 0.6, 28, 0.035, 3, 0.74, dawn);
+  pushOuterCelestialField(R, seed, outerDawn, outerGold);
+
+  pushBearingTicks(shape, R * 1.04, 48, 0.06, 3, 0.0, innerDawn);
+  pushBearingTicks(shape, R * 0.78, 36, 0.045, 3, 0.42, innerDawn);
+  pushBearingTicks(shape, R * 0.6, 28, 0.035, 3, 0.74, innerDawn);
 
   const frames: { radius: number; z: number; samples: number }[] = [
     { radius: R * 0.92, z: 0.15, samples: 320 },
@@ -295,11 +313,11 @@ export function buildCelestialWeave(
     { radius: R * 0.55, z: 0.7, samples: 200 },
     { radius: R * 0.38, z: 0.92, samples: 140 },
   ];
-  for (const f of frames) pushFrameAtZ(shape, f.radius, f.z, f.samples, dawn);
+  for (const f of frames) pushFrameAtZ(shape, f.radius, f.z, f.samples, innerDawn);
 
-  pushTiltedOrbit(R * 0.46, R * 0.46 * 0.42, 0.18, 56, -0.18, 0.06, dawn);
-  pushTiltedOrbit(R * 0.36, R * 0.36 * 0.42, 0.46, 48, 0.1, -0.04, dawn);
-  pushTiltedOrbit(R * 0.28, R * 0.28 * 0.42, 0.74, 40, -0.08, 0.02, dawn);
+  pushTiltedOrbit(R * 0.46, R * 0.46 * 0.42, 0.18, 56, -0.18, 0.06, innerDawn);
+  pushTiltedOrbit(R * 0.36, R * 0.36 * 0.42, 0.46, 48, 0.1, -0.04, innerDawn);
+  pushTiltedOrbit(R * 0.28, R * 0.28 * 0.42, 0.74, 40, -0.08, 0.02, innerDawn);
 
   const SPOKE_COUNT = 8;
   const mouthAnchors = sampleContourAnchors(shape, SPOKE_COUNT, R * 0.96);
@@ -309,7 +327,7 @@ export function buildCelestialWeave(
     const a = mouthAnchors[i]!;
     const b = innerAnchors[i]!;
     const zEnd = 0.92;
-    pushDottedSegment(dawn, a.x, a.y, 0, b.x, b.y, zEnd, 22);
+    pushDottedSegment(innerDawn, a.x, a.y, 0, b.x, b.y, zEnd, 22);
     constellationNodes.push({ x: b.x, y: b.y, z: zEnd });
   }
 
@@ -329,40 +347,46 @@ export function buildCelestialWeave(
     const a = constellationNodes[i];
     const b = constellationNodes[j];
     if (!a || !b) continue;
-    pushDottedSegment(dawn, a.x, a.y, a.z, b.x, b.y, b.z, 14);
+    pushDottedSegment(innerDawn, a.x, a.y, a.z, b.x, b.y, b.z, 14);
   }
   const tick = 0.018;
   for (const n of constellationNodes) {
-    pushDottedSegment(dawn, n.x - tick, n.y, n.z, n.x + tick, n.y, n.z, 3);
-    pushDottedSegment(dawn, n.x, n.y - tick, n.z, n.x, n.y + tick, n.z, 3);
+    pushDottedSegment(innerDawn, n.x - tick, n.y, n.z, n.x + tick, n.y, n.z, 3);
+    pushDottedSegment(innerDawn, n.x, n.y - tick, n.z, n.x, n.y + tick, n.z, 3);
   }
 
-  pushCardinalCross(R * 0.85, R * 0.85, 0.15, 22, gold);
-  pushCardinalCross(R * 0.68, R * 0.68, 0.42, 16, gold);
-  pushCardinalCross(R * 0.5, R * 0.5, 0.7, 12, gold);
-  pushCardinalCross(R * 0.34, R * 0.34, 0.92, 8, gold);
+  pushCardinalCross(R * 0.85, R * 0.85, 0.15, 22, innerGold);
+  pushCardinalCross(R * 0.68, R * 0.68, 0.42, 16, innerGold);
+  pushCardinalCross(R * 0.5, R * 0.5, 0.7, 12, innerGold);
+  pushCardinalCross(R * 0.34, R * 0.34, 0.92, 8, innerGold);
 
   for (let m = 0; m < 4; m++) {
     const ang = m * (Math.PI / 2) + Math.PI / 4;
     const wx = R * 0.46 * Math.cos(ang);
     const wy = R * 0.46 * 0.42 * Math.sin(ang);
-    pushDiamondMarker(wx, wy, 0.18, 0.026, 5, gold);
+    pushDiamondMarker(wx, wy, 0.18, 0.026, 5, innerGold);
   }
   for (let m = 0; m < 4; m++) {
     const ang = m * (Math.PI / 2);
     const wx = R * 0.36 * Math.cos(ang);
     const wy = R * 0.36 * 0.42 * Math.sin(ang);
-    pushDiamondMarker(wx, wy, 0.46, 0.022, 5, gold);
+    pushDiamondMarker(wx, wy, 0.46, 0.022, 5, innerGold);
   }
   for (let m = 0; m < 4; m++) {
     const ang = m * (Math.PI / 2) + Math.PI / 4;
     const wx = R * 0.28 * Math.cos(ang);
     const wy = R * 0.28 * 0.42 * Math.sin(ang);
-    pushDiamondMarker(wx, wy, 0.74, 0.018, 5, gold);
+    pushDiamondMarker(wx, wy, 0.74, 0.018, 5, innerGold);
   }
 
   return {
-    dawnPoints: new Float32Array(dawn),
-    goldPoints: new Float32Array(gold),
+    outer: {
+      dawnPoints: new Float32Array(outerDawn),
+      goldPoints: new Float32Array(outerGold),
+    },
+    inner: {
+      dawnPoints: new Float32Array(innerDawn),
+      goldPoints: new Float32Array(innerGold),
+    },
   };
 }
