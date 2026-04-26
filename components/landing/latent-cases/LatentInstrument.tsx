@@ -5,11 +5,16 @@ import { useMemo, useRef } from "react";
 import * as THREE from "three";
 import type { GatewayShape } from "@/lib/particle-config";
 import { useIsMobile } from "@/lib/hooks/useMediaQuery";
-import { buildLatentInstrumentGeometry, type InstrumentGeometry } from "./instrumentGeometry";
+import { buildCelestialWeave, type CelestialWeaveGeometry } from "./celestialGatewayGeometry";
 import { LatentPortalContour } from "./LatentPortalContour";
 
 const DEFAULT_PRIMARY = "#d4ccc0";
 const DEFAULT_ACCENT = "#caa554";
+
+/** Match `InteriorFill`'s `scale.z = 7 * tunnelDepth` so the weave threads
+ * through the same tunnel depth as the portal interior, just inside the
+ * deepest receding ring (which uses `scale.z = 8 * tunnelDepth`). */
+const WEAVE_Z_SCALE = 7;
 
 function computeSceneOpacity(scrollProgress: number, fadeStart: number, fadeEnd: number): number {
   if (scrollProgress <= fadeStart) return 1;
@@ -57,7 +62,7 @@ function InstrumentScene({
   cameraZMax: number;
   lookAhead: number;
   reduceMotion: boolean;
-  geometry: InstrumentGeometry;
+  geometry: CelestialWeaveGeometry;
   shape: GatewayShape;
   density: number;
   tunnelDepth: number;
@@ -66,8 +71,8 @@ function InstrumentScene({
   primaryColor: string;
   accentColor: string;
 }) {
-  const dawnOverlayMat = useRef<THREE.PointsMaterial>(null);
-  const goldOverlayMat = useRef<THREE.PointsMaterial>(null);
+  const dawnWeaveMat = useRef<THREE.PointsMaterial>(null);
+  const goldWeaveMat = useRef<THREE.PointsMaterial>(null);
 
   const gateFade = computeSceneOpacity(scrollProgress, fadeStart, fadeEnd);
 
@@ -86,13 +91,13 @@ function InstrumentScene({
   useFrame((state) => {
     const t = state.clock.elapsedTime;
     const breath = reduceMotion ? 1 : 0.94 + Math.sin(t * 0.35) * 0.06;
-    const scrollBoost = reduceMotion ? 1 : 0.88 + scrollProgress * 0.12;
+    const scrollBoost = reduceMotion ? 1 : 0.9 + scrollProgress * 0.1;
 
-    const d = dawnOverlayMat.current;
-    if (d) d.opacity = 0.35 * gateFade * breath * scrollBoost;
+    const d = dawnWeaveMat.current;
+    if (d) d.opacity = 0.6 * gateFade * breath * scrollBoost * density;
 
-    const g = goldOverlayMat.current;
-    if (g) g.opacity = 0.45 * gateFade * breath * scrollBoost;
+    const g = goldWeaveMat.current;
+    if (g) g.opacity = 0.78 * gateFade * breath * scrollBoost * density;
   });
 
   return (
@@ -114,31 +119,33 @@ function InstrumentScene({
           accentColor={accentColor}
         />
 
-        <points geometry={dawnGeo} frustumCulled={false}>
-          <pointsMaterial
-            ref={dawnOverlayMat}
-            attach="material"
-            color={primaryColor}
-            size={0.0048}
-            sizeAttenuation
-            transparent
-            depthWrite={false}
-            opacity={0.35}
-          />
-        </points>
+        <group scale={[1, 1, WEAVE_Z_SCALE * tunnelDepth]}>
+          <points geometry={dawnGeo} frustumCulled={false}>
+            <pointsMaterial
+              ref={dawnWeaveMat}
+              attach="material"
+              color={primaryColor}
+              size={0.0055}
+              sizeAttenuation
+              transparent
+              depthWrite={false}
+              opacity={0.6}
+            />
+          </points>
 
-        <points geometry={goldGeo} frustumCulled={false}>
-          <pointsMaterial
-            ref={goldOverlayMat}
-            attach="material"
-            color={accentColor}
-            size={0.006}
-            sizeAttenuation
-            transparent
-            depthWrite={false}
-            opacity={0.45}
-          />
-        </points>
+          <points geometry={goldGeo} frustumCulled={false}>
+            <pointsMaterial
+              ref={goldWeaveMat}
+              attach="material"
+              color={accentColor}
+              size={0.0072}
+              sizeAttenuation
+              transparent
+              depthWrite={false}
+              opacity={0.78}
+            />
+          </points>
+        </group>
       </group>
     </>
   );
@@ -164,8 +171,11 @@ export interface LatentInstrumentProps {
 }
 
 /**
- * Latent showcase WebGL: v1 portal particle stack (`LatentPortalContour`) plus a subordinate
- * celestial diagram overlay (orbits, spokes, constellation, gold cross + waypoints).
+ * Latent showcase WebGL instrument: v1 portal particle stack
+ * (`LatentPortalContour`) interwoven with a celestial weave
+ * (`celestialGatewayGeometry`) that anchors bearing ticks, register frames,
+ * cardinal crosses, ecliptic orbits, radial spokes, constellation, and
+ * waypoint diamonds across the same tunnel depth.
  */
 export function LatentInstrument({
   scrollProgress,
@@ -185,7 +195,7 @@ export function LatentInstrument({
 }: LatentInstrumentProps) {
   const isMobile = useIsMobile();
   const scroll = Math.max(0, Math.min(1, scrollProgress));
-  const geometry = useMemo(() => buildLatentInstrumentGeometry(), []);
+  const geometry = useMemo(() => buildCelestialWeave(shape), [shape]);
 
   return (
     <div
