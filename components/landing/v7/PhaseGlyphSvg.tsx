@@ -14,30 +14,62 @@ function mulberry32(seed: number) {
 
 const VB = "-120 -120 240 240";
 
-/** Constellation field + guide burst — Navigate. */
+// All practice glyphs are composed inside an annulus around the
+// brandmark. INNER_R covers the .approach__orbit__mark footprint at
+// every clamp size; OUTER_R keeps geometry inside the orbit's outer
+// guide ring without crowding the bearing ticks. Every primitive in
+// the three glyphs respects this exclusion so the brandmark always
+// reads cleanly at the center.
+const INNER_R = 64;
+const OUTER_R = 112;
+
+/** Constellation field + guide reticle — Navigate. */
 export function NavigateGlyph() {
   const rand = mulberry32(90210);
   const stars: Array<{ cx: number; cy: number; r: number; o: number }> = [];
-  for (let i = 0; i < 26; i++) {
-    const u = rand() * 0.55 - 0.28;
-    const v = rand() * 0.55 - 0.35;
-    const cx = u * 200 - 18;
-    const cy = v * 200 - 28;
-    const r = 0.6 + rand() * 1.85;
-    const o = 0.22 + rand() * 0.62;
-    stars.push({ cx, cy, r, o });
+  // Distribute stars uniformly by area in the annulus. We use a
+  // square-root remap on the radial term so stars don't clump near
+  // INNER_R; this gives an even halo around the brandmark.
+  const targetStars = 28;
+  while (stars.length < targetStars) {
+    const angle = rand() * Math.PI * 2;
+    const t = rand();
+    const inner2 = INNER_R * INNER_R;
+    const outer2 = OUTER_R * OUTER_R;
+    const dist = Math.sqrt(inner2 + t * (outer2 - inner2));
+    const cx = Math.cos(angle) * dist;
+    const cy = Math.sin(angle) * dist;
+    const radius = 0.6 + rand() * 1.85;
+    const opacity = 0.22 + rand() * 0.62;
+    stars.push({ cx, cy, r: radius, o: opacity });
   }
-  const edges = [
-    [0, 4],
-    [4, 9],
-    [9, 14],
-    [14, 7],
-    [7, 2],
-    [2, 11],
-    [11, 19],
-  ];
-  const guideX = -52;
-  const guideY = -58;
+  // Local proximity edges only — connect each star to its nearest
+  // neighbour, but skip pairs whose midpoint falls inside the
+  // brandmark exclusion so no chord cuts across the center.
+  const edges: Array<[number, number]> = [];
+  for (let i = 0; i < stars.length; i++) {
+    let bestJ = -1;
+    let bestD = Infinity;
+    for (let j = 0; j < stars.length; j++) {
+      if (j === i) continue;
+      const a = stars[i]!;
+      const b = stars[j]!;
+      const d = Math.hypot(a.cx - b.cx, a.cy - b.cy);
+      const mx = (a.cx + b.cx) / 2;
+      const my = (a.cy + b.cy) / 2;
+      if (Math.hypot(mx, my) < INNER_R + 4) continue;
+      if (d < bestD && d < 46) {
+        bestD = d;
+        bestJ = j;
+      }
+    }
+    if (bestJ > i) edges.push([i, bestJ]);
+  }
+  // Guide reticle on the Navigate compass position. Practice orbit
+  // labels Navigate at (-100, -100) in orbit space; mapped to glyph
+  // space (240/360 = 2/3) that's ~(-67, -67).
+  const guideX = -68;
+  const guideY = -68;
   return (
     <svg viewBox={VB} className="phase-glyph-svg" aria-hidden="true">
       <g fill="var(--gold, #caa554)" stroke="none">
@@ -45,7 +77,7 @@ export function NavigateGlyph() {
           <circle key={i} cx={s.cx} cy={s.cy} r={s.r} opacity={s.o} />
         ))}
       </g>
-      <g stroke="var(--gold, #caa554)" strokeWidth={0.35} opacity={0.38} fill="none">
+      <g stroke="var(--gold, #caa554)" strokeWidth={0.35} opacity={0.4} fill="none">
         {edges.map(([a, b], i) => (
           <line key={i} x1={stars[a]!.cx} y1={stars[a]!.cy} x2={stars[b]!.cx} y2={stars[b]!.cy} />
         ))}
@@ -59,45 +91,59 @@ export function NavigateGlyph() {
   );
 }
 
-/** Data field + scanlines + ticks — Encode. */
+/** Data field + scan arcs + crystal facets — Encode. */
 export function EncodeGlyph() {
   const dots: Array<{ cx: number; cy: number }> = [];
-  for (let row = 0; row < 9; row++) {
-    for (let col = 0; col < 9; col++) {
-      const cx = -80 + col * 20;
-      const cy = -80 + row * 20;
+  // 11x11 dot lattice spanning the annulus. The radial filter drops
+  // every dot inside the brandmark exclusion, leaving a halo of
+  // gridded telemetry around the mark.
+  for (let row = 0; row < 11; row++) {
+    for (let col = 0; col < 11; col++) {
+      const cx = -100 + col * 20;
+      const cy = -100 + row * 20;
+      const r = Math.hypot(cx, cy);
+      if (r < INNER_R + 4 || r > OUTER_R + 4) continue;
       dots.push({ cx, cy });
     }
   }
+  // Tick readouts at eight compass headings around the annulus rim;
+  // labels sit just outside the dot lattice so they read as outer
+  // measurements rather than competing with the center.
   const ticks = [
-    { x: 0, y: -92, label: "12.4" },
-    { x: 62, y: -40, label: "0xAF" },
-    { x: 78, y: 28, label: "δ.07" },
-    { x: 44, y: 72, label: "−01" },
-    { x: -48, y: 70, label: "7E3" },
-    { x: -86, y: 22, label: "φ2" },
-    { x: -70, y: -52, label: "004" },
-    { x: 22, y: -68, label: "9.81" },
-    { x: -22, y: 8, label: "0.02" },
-    { x: 52, y: 8, label: "11μ" },
-    { x: -8, y: -36, label: "τ" },
-    { x: -92, y: -8, label: "3F0" },
+    { x: 0, y: -104, label: "12.4" },
+    { x: 76, y: -76, label: "0xAF" },
+    { x: 104, y: 0, label: "δ.07" },
+    { x: 76, y: 76, label: "−01" },
+    { x: 0, y: 104, label: "7E3" },
+    { x: -76, y: 76, label: "φ2" },
+    { x: -104, y: 0, label: "004" },
+    { x: -76, y: -76, label: "9.81" },
+  ];
+  // Crystal facet diamonds at the four cardinal ordinals — small
+  // gold pips that sit on the inner annulus boundary, signalling
+  // crystallisation pulled around the mark.
+  const facets: Array<[number, number]> = [
+    [0, -78],
+    [78, 0],
+    [0, 78],
+    [-78, 0],
   ];
   return (
     <svg viewBox={VB} className="phase-glyph-svg" aria-hidden="true">
-      <g fill="var(--gold, #caa554)" opacity={0.2}>
+      <g fill="var(--gold, #caa554)" opacity={0.22}>
         {dots.map((d, i) => (
           <circle key={i} cx={d.cx} cy={d.cy} r={1} />
         ))}
       </g>
-      <g stroke="var(--gold, #caa554)" strokeWidth={0.35} opacity={0.22} fill="none">
-        <line x1={-100} y1={-36} x2={100} y2={-36} />
-        <line x1={-100} y1={4} x2={100} y2={4} />
-        <line x1={-100} y1={44} x2={100} y2={44} />
+      {/* Concentric scan arcs replace the centre-crossing scanlines
+          so the data field is sampled around the brandmark. */}
+      <g stroke="var(--gold, #caa554)" strokeWidth={0.35} fill="none">
+        <circle cx={0} cy={0} r={INNER_R + 12} strokeDasharray="14 8" opacity={0.32} />
+        <circle cx={0} cy={0} r={INNER_R + 30} strokeDasharray="3 6" opacity={0.28} />
       </g>
       <g
         fontFamily="var(--font-pt-mono, ui-monospace, monospace)"
-        fontSize={7}
+        fontSize={6}
         fill="var(--dawn-70, rgba(232,228,216,0.55))"
       >
         {ticks.map((t, i) => (
@@ -107,17 +153,34 @@ export function EncodeGlyph() {
         ))}
       </g>
       <g stroke="var(--gold, #caa554)" strokeWidth={0.4} opacity={0.55} fill="none">
-        {ticks.map((t, i) => (
-          <line key={`k${i}`} x1={t.x} y1={t.y + 4} x2={t.x} y2={t.y + 10} />
-        ))}
+        {/* Tick marks pointing inward from each label toward the
+            annulus, anchoring the labels to the data field. */}
+        {ticks.map((t, i) => {
+          const len = 6;
+          const r = Math.hypot(t.x, t.y) || 1;
+          const ux = t.x / r;
+          const uy = t.y / r;
+          return (
+            <line
+              key={`k${i}`}
+              x1={t.x - ux * 4}
+              y1={t.y - uy * 4}
+              x2={t.x - ux * (4 + len)}
+              y2={t.y - uy * (4 + len)}
+            />
+          );
+        })}
       </g>
-      <path
-        d="M0 -9 L9 0 L0 9 L-9 0 Z"
+      <g
         fill="var(--gold, #caa554)"
         fillOpacity={0.85}
         stroke="var(--gold, #caa554)"
         strokeWidth={0.35}
-      />
+      >
+        {facets.map(([x, y], i) => (
+          <path key={`f${i}`} d={`M${x} ${y - 5} L${x + 5} ${y} L${x} ${y + 5} L${x - 5} ${y} Z`} />
+        ))}
+      </g>
       <g
         stroke="var(--dawn-30, rgba(232,228,216,0.25))"
         strokeWidth={0.45}
@@ -133,60 +196,76 @@ export function EncodeGlyph() {
   );
 }
 
-/** Right-angle circuit lattice — Build. */
+/** Annular circuit lattice — Build. */
 export function BuildGlyph() {
   const gridDots: Array<{ cx: number; cy: number }> = [];
   for (let y = -110; y <= 110; y += 10) {
     for (let x = -110; x <= 110; x += 10) {
+      const r = Math.hypot(x, y);
+      if (r < INNER_R + 4 || r > OUTER_R + 6) continue;
       gridDots.push({ cx: x, cy: y });
     }
   }
+  // Traces emerge from the inner perimeter (r ~ 66) and route
+  // outward through orthogonal segments to circuit pads on the
+  // annulus rim. Every vertex is outside the brandmark exclusion.
   const traces = [
-    "M0,0 L0,-52 L48,-52 L48,-28 L88,-28",
-    "M0,0 L38,0 L38,44 L-12,44 L-12,72",
-    "M0,0 L-44,0 L-44,-36 L-78,-36",
-    "M0,0 L0,58 L64,58 L64,24 L96,24",
-    "M0,0 L-28,28 L-60,28 L-60,68",
-    "M0,0 L52,0 L52,32 L20,32 L20,-40",
+    "M0 -66 L0 -88 L40 -88 L40 -104",
+    "M48 -48 L72 -72 L102 -72",
+    "M66 0 L88 0 L88 32 L108 32",
+    "M48 48 L72 72 L72 104",
+    "M0 66 L0 90 L-40 90 L-40 108",
+    "M-48 48 L-72 72 L-104 72",
+    "M-66 0 L-88 0 L-88 -28 L-108 -28",
+    "M-48 -48 L-72 -72 L-72 -104",
   ];
+  // Bend joints — small rotated squares at every interior corner
+  // along the traces.
   const bends: Array<[number, number]> = [
-    [0, -52],
-    [48, -52],
-    [48, -28],
-    [88, -28],
-    [38, 0],
-    [38, 44],
-    [-12, 44],
-    [-12, 72],
-    [-44, 0],
-    [-44, -36],
-    [-78, -36],
-    [0, 58],
-    [64, 58],
-    [64, 24],
-    [96, 24],
-    [-28, 28],
-    [-60, 28],
-    [-60, 68],
-    [52, 0],
-    [52, 32],
-    [20, 32],
-    [20, -40],
+    [0, -88],
+    [40, -88],
+    [72, -72],
+    [88, 0],
+    [88, 32],
+    [72, 72],
+    [0, 90],
+    [-40, 90],
+    [-72, 72],
+    [-88, 0],
+    [-88, -28],
+    [-72, -72],
   ];
-  const pads = [
-    [-2, -56],
-    [90, -30],
-    [-14, 74],
-    [98, 24],
+  // Terminal pads at each trace end, on the outer annulus rim.
+  const pads: Array<[number, number]> = [
+    [40, -104],
+    [102, -72],
+    [108, 32],
+    [72, 104],
+    [-40, 108],
+    [-104, 72],
+    [-108, -28],
+    [-72, -104],
   ];
   return (
     <svg viewBox={VB} className="phase-glyph-svg" aria-hidden="true">
-      <g fill="var(--gold, #caa554)" opacity={0.15}>
+      <g fill="var(--gold, #caa554)" opacity={0.18}>
         {gridDots.map((d, i) => (
           <circle key={i} cx={d.cx} cy={d.cy} r={0.5} />
         ))}
       </g>
-      <g fill="none" stroke="var(--gold, #caa554)" strokeWidth={0.55} strokeOpacity={0.55}>
+      {/* Inner perimeter ring — replaces the central rotated square
+          with a subtle circuit boundary just outside the brandmark. */}
+      <circle
+        cx={0}
+        cy={0}
+        r={INNER_R + 2}
+        fill="none"
+        stroke="var(--gold, #caa554)"
+        strokeWidth={0.5}
+        strokeOpacity={0.55}
+        strokeDasharray="2 4"
+      />
+      <g fill="none" stroke="var(--gold, #caa554)" strokeWidth={0.55} strokeOpacity={0.6}>
         {traces.map((d, i) => (
           <path key={i} d={d} />
         ))}
@@ -214,21 +293,9 @@ export function BuildGlyph() {
           fill="none"
           stroke="var(--gold, #caa554)"
           strokeWidth={0.45}
-          opacity={0.65}
+          opacity={0.7}
         />
       ))}
-      <g transform="rotate(45)">
-        <rect
-          x={-12}
-          y={-12}
-          width={24}
-          height={24}
-          fill="none"
-          stroke="var(--gold, #caa554)"
-          strokeWidth={0.85}
-          opacity={0.92}
-        />
-      </g>
     </svg>
   );
 }

@@ -4325,7 +4325,10 @@ html { scroll-behavior: smooth; }
           <!-- orbital rings behind -->
           <svg class="sigil__orbits" viewBox="-160 -160 320 320" overflow="visible">
             <g fill="none" stroke-width="0.6">
-              <circle r="150" stroke="var(--dawn-15)" stroke-dasharray="1 5"/>
+              <!-- Outer guide ring — thinned so the brandmark stays
+                   the dominant centre and the phase rings read as the
+                   instrument structure. -->
+              <circle r="150" stroke="var(--dawn-15)" stroke-dasharray="1 5" stroke-width="0.3"/>
               <circle r="126" stroke="var(--dawn-08)"/>
               <circle r="104" stroke="var(--gold)" stroke-opacity="0.18" stroke-dasharray="2 7"/>
               <circle r="78"  stroke="var(--gold)" stroke-opacity="0.28" stroke-dasharray="1 3"/>
@@ -4589,8 +4592,10 @@ html { scroll-behavior: smooth; }
                  named so it can be highlighted independently. -->
             <svg class="approach__orbit" viewBox="-180 -180 360 360" overflow="visible" aria-hidden="true">
               <g fill="none" stroke-width="0.6">
-                <!-- Outer guide ring -->
-                <circle r="170" stroke="var(--dawn-15)" stroke-dasharray="1 5"/>
+                <!-- Outer guide ring — thinner than the lanes so the
+                     mark and the phase glyphs read against a hairline
+                     boundary, not a competing ring. -->
+                <circle r="170" stroke="var(--dawn-15)" stroke-dasharray="1 5" stroke-width="0.3"/>
                 <!-- Pillar lanes -->
                 <circle class="approach__orbit__lane approach__orbit__lane--navigate" r="142" stroke-dasharray="2 7"/>
                 <circle class="approach__orbit__lane approach__orbit__lane--encode" r="112" stroke-dasharray="2 5"/>

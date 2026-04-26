@@ -4492,14 +4492,17 @@ html {
   pointer-events: none;
 }
 
-/* Phase-glyph layers — three DiagramSvg mounts, accumulating cumulatively
-   as the user scrolls through Navigate → Encode → Build. Compass rose
-   holds at the largest scale; crystal inscribes inside it at mid scale;
-   armature inscribes at the innermost scale. Each new layer is brighter
-   than the previous, but the previous layers persist at decaying opacity
-   so by Build the orbit reads as a fully layered celestial diagram.
-   Pure opacity + scale transitions — no transforms on the wrapper, no
-   path-length math. */
+/* Phase-glyph layers — three SVG mounts that accumulate cumulatively
+   as the user scrolls through Navigate → Encode → Build. Each glyph
+   is composed inside an annulus around the brandmark (see INNER_R /
+   OUTER_R in PhaseGlyphSvg.tsx) so the centre stays clean and the
+   phase signature reads on the ring around the mark — the same
+   instrument grammar as the section-02 sigil.
+   All three layers share the same outer extent; differentiation
+   comes from motif and density (constellation → data field →
+   circuit lattice), not scale.
+   Pure opacity + scale transitions — no transforms on the wrapper,
+   no path-length math. */
 .approach__orbit__glyphs {
   position: absolute;
   inset: 0;
@@ -4519,7 +4522,7 @@ html {
   transition:
     opacity 360ms var(--m-ease-instr, cubic-bezier(0.16, 1, 0.3, 1)),
     transform 360ms var(--m-ease-instr, cubic-bezier(0.16, 1, 0.3, 1));
-  transform: scale(0.92);
+  transform: scale(0.94);
 }
 .phase-glyph-svg {
   display: block;
@@ -4530,18 +4533,18 @@ html {
 .approach__orbit__glyph svg {
   height: auto;
   color: var(--gold);
-  opacity: 0.78;
+  opacity: 0.82;
 }
 
-/* Per-layer scaling: broad → mid → close-inspection. */
-.approach__orbit__glyph--navigate svg {
-  width: clamp(240px, 56%, 380px);
-}
-.approach__orbit__glyph--encode svg {
-  width: clamp(180px, 42%, 280px);
-}
+/* Shared annular size — every phase glyph fills the orbit area
+   around the brandmark. The clamp leaves a comfortable buffer
+   between the glyph's inner exclusion and the brandmark's outer
+   edge at every viewport, and keeps geometry inside the orbit's
+   navigate lane (r=142 in orbit space). */
+.approach__orbit__glyph--navigate svg,
+.approach__orbit__glyph--encode svg,
 .approach__orbit__glyph--build svg {
-  width: clamp(120px, 30%, 200px);
+  width: clamp(240px, 62%, 420px);
 }
 
 /* Cumulative ladder — each row keeps the previous layers visible at
