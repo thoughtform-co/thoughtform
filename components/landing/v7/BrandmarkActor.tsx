@@ -3,6 +3,48 @@
 import { forwardRef, useImperativeHandle, useRef, useEffect, useState, useCallback } from "react";
 import gsap from "gsap";
 
+const DEBUG_ENDPOINT = "http://127.0.0.1:7282/ingest/c41d9533-0bb9-4c99-abdb-1d9fed02e7e0";
+const DEBUG_SESSION_ID = "31ead7";
+const debugLastSentAt = new Map<string, number>();
+
+function rectPayload(rect: DOMRect | null | undefined) {
+  if (!rect) return null;
+  return {
+    x: Math.round(rect.x),
+    y: Math.round(rect.y),
+    width: Math.round(rect.width),
+    height: Math.round(rect.height),
+    top: Math.round(rect.top),
+    left: Math.round(rect.left),
+  };
+}
+
+function debugBrandmarkActor(
+  hypothesisId: string,
+  location: string,
+  message: string,
+  data: Record<string, unknown>
+) {
+  if (process.env.NODE_ENV === "production") return;
+  const key = `${location}:${message}`;
+  const now = Date.now();
+  if (now - (debugLastSentAt.get(key) ?? 0) < 120) return;
+  debugLastSentAt.set(key, now);
+  fetch(DEBUG_ENDPOINT, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-Debug-Session-Id": DEBUG_SESSION_ID },
+    body: JSON.stringify({
+      sessionId: DEBUG_SESSION_ID,
+      runId: "pre-fix",
+      hypothesisId,
+      location,
+      message,
+      data,
+      timestamp: now,
+    }),
+  }).catch(() => {});
+}
+
 /** Paths from `public/logos/Thoughtform_Brandmark.svg` (viewBox 0 0 430.99 436). */
 const FILLED_PATHS: readonly string[] = [
   "M336.78,99.43c18.82,18.93,33.41,41.16,43.78,66.63,5.03,12.35,8.81,24.86,11.42,37.57h19.62c-1.91-18.99-6.54-37.52-13.79-55.54-10.01-24.71-24.56-46.73-43.78-66.02-19.17-19.29-41.16-33.97-65.92-43.99-7.9-3.24-15.9-5.92-23.95-8.1l-1.36,7.49-.9,4.91-1.41,7.49c2.87,1.11,5.79,2.28,8.65,3.54,25.51,10.99,48.06,26.33,67.63,46.02h.01Z",
@@ -77,11 +119,24 @@ export const BrandmarkActor = forwardRef<BrandmarkActorHandle>(
         morphRects: (src, dst, t, easeFn) => {
           const shell = shellRef.current;
           if (!shell || reduceMotion) return;
+          const before = shell.getBoundingClientRect();
           morphShell(shell, src, dst, t, easeFn);
+          const after = shell.getBoundingClientRect();
+          // #region agent log
+          debugBrandmarkActor("H5", "BrandmarkActor.tsx:morphRects", "actor morph write", {
+            t: Number(t.toFixed(4)),
+            src: rectPayload(src),
+            dst: rectPayload(dst),
+            before: rectPayload(before),
+            after: rectPayload(after),
+            style: shell.getAttribute("style"),
+          });
+          // #endregion
         },
         pinToRect: (rect, opacity, scale = 1) => {
           const shell = shellRef.current;
           if (!shell || reduceMotion) return;
+          const before = shell.getBoundingClientRect();
           gsap.set(shell, {
             left: rect.left,
             top: rect.top,
@@ -94,6 +149,17 @@ export const BrandmarkActor = forwardRef<BrandmarkActorHandle>(
             transformOrigin: "50% 50%",
             opacity,
           });
+          const after = shell.getBoundingClientRect();
+          // #region agent log
+          debugBrandmarkActor("H1,H5", "BrandmarkActor.tsx:pinToRect", "actor pin write", {
+            target: rectPayload(rect),
+            opacity,
+            scale,
+            before: rectPayload(before),
+            after: rectPayload(after),
+            style: shell.getAttribute("style"),
+          });
+          // #endregion
         },
         setArmed: (armed) => {
           shellRef.current?.classList.toggle("tf-brandmark-actor--armed", armed);

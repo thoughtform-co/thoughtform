@@ -1995,26 +1995,36 @@
 /* ═══════════ 02 TRI — What we do / orbit sigil (paired instrument) ═══════════
    Tight-coupled composition: copy + sigil bind as a single centered unit,
    flanked by negative space. Distinct from hero's viewport-spanning split and
-   from continuum's horizontal spectrum axis. */
+   from continuum's horizontal spectrum axis.
+
+   The grid is given full-section height so `.tri__center` has room to
+   `position: sticky` while the user reads the copy column on the left.
+   `align-items: start` lets the sticky element decide its own vertical
+   anchor instead of being collapsed by `align-items: center`. */
 .tri {
   display: grid;
   grid-template-columns: minmax(0, 400px) minmax(440px, 680px);
   column-gap: clamp(8px, 1.2vw, 20px);
-  align-items: center;
+  align-items: start;
   justify-content: center;
   margin-top: var(--space-xl);
-  min-height: 660px;
+  min-height: calc(100vh - var(--space-xl) * 2);
 }
 @media (max-width: 1100px) {
   .tri {
     grid-template-columns: 1fr;
     row-gap: 56px;
     justify-content: stretch;
+    /* Stacked layout: revert to natural height; sticky behaviour is desktop-
+       only because the diagram appears above the copy on narrow viewports. */
+    min-height: 0;
+    align-items: stretch;
   }
   /* Source order is .tri__left (copy) then .tri__center (sigil), so on
      stacked layouts the heading reads first and the brandmark anchors below. */
   .tri__center {
     order: 0;
+    position: relative;
   }
 }
 
@@ -2103,15 +2113,23 @@
   margin-top: var(--space-lg);
 }
 
-/* CENTER — the sigil (primary composition surface) */
+/* CENTER — the sigil (primary composition surface).
+   Sticky so the navigational sigil holds its viewport position while the
+   copy column scrolls past — the brandmark reads as a north star anchor
+   for the entire section, not as content that drifts up with the page.
+   `top` is computed so the diagram lands roughly viewport-centre on the
+   primary view (matches `.approach__stage`'s sticky pattern in section 04
+   so the two "instrument" sections share the same physical posture). */
 .tri__center {
-  position: relative;
+  position: sticky;
+  top: clamp(80px, calc((100vh - 680px) / 2), 280px);
   aspect-ratio: 1;
   min-height: 440px;
   max-height: 680px;
   width: 100%;
   max-width: 680px;
   justify-self: center;
+  align-self: start;
   display: flex;
   align-items: center;
   justify-content: center;

@@ -6,8 +6,51 @@ import type { BrandmarkActorHandle } from "../BrandmarkActor";
 
 gsap.registerPlugin(ScrollTrigger);
 
+const DEBUG_ENDPOINT = "http://127.0.0.1:7282/ingest/c41d9533-0bb9-4c99-abdb-1d9fed02e7e0";
+const DEBUG_SESSION_ID = "31ead7";
+const debugLastSentAt = new Map<string, number>();
+
 function query<T extends Element>(selector: string, scope: ParentNode): T | null {
   return scope.querySelector<T>(selector);
+}
+
+function rectPayload(rect: DOMRect | null | undefined) {
+  if (!rect) return null;
+  return {
+    x: Math.round(rect.x),
+    y: Math.round(rect.y),
+    width: Math.round(rect.width),
+    height: Math.round(rect.height),
+    top: Math.round(rect.top),
+    left: Math.round(rect.left),
+    bottom: Math.round(rect.bottom),
+  };
+}
+
+function debugBrandmark(
+  hypothesisId: string,
+  location: string,
+  message: string,
+  data: Record<string, unknown>
+) {
+  if (process.env.NODE_ENV === "production") return;
+  const key = `${location}:${message}`;
+  const now = Date.now();
+  if (now - (debugLastSentAt.get(key) ?? 0) < 120) return;
+  debugLastSentAt.set(key, now);
+  fetch(DEBUG_ENDPOINT, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-Debug-Session-Id": DEBUG_SESSION_ID },
+    body: JSON.stringify({
+      sessionId: DEBUG_SESSION_ID,
+      runId: "pre-fix",
+      hypothesisId,
+      location,
+      message,
+      data,
+      timestamp: now,
+    }),
+  }).catch(() => {});
 }
 
 export function useSigilChoreography(
@@ -148,13 +191,72 @@ export function useSigilChoreography(
     const syncActorToSigilEntrance = () => {
       const a = actor();
       if (!a) return;
+      // Threshold matches the handoffTl trigger start ("bottom 90%" of
+      // defEl) — once section 02's bottom has reached 90% of the viewport
+      // height, handoffTl owns the actor.
+      const handoffStartReached = defEl.getBoundingClientRect().bottom <= window.innerHeight * 0.9;
+      const downstreamOwnsActor =
+        handoffArmed ||
+        practiceEntryArmed ||
+        practiceExitArmed ||
+        handoffStartReached ||
+        approachEl?.getAttribute("data-orbit-docked") === "true";
+      if (downstreamOwnsActor) {
+        // #region agent log
+        debugBrandmark(
+          "H2",
+          "useSigilChoreography.ts:syncActorToSigilEntrance",
+          "sigil sync bail downstream owner",
+          {
+            scrollY: Math.round(window.scrollY),
+            sigilRect: rectPayload(sigilMark.getBoundingClientRect()),
+            approachDocked: approachEl?.getAttribute("data-orbit-docked"),
+            handoffStartReached,
+            flags: { handoffArmed, practiceEntryArmed, practiceExitArmed, brandPinnedToHudSlot },
+          }
+        );
+        // #endregion
+        return;
+      }
       brandPinnedToHudSlot = false;
       const o = Number(gsap.getProperty(sigilMark, "opacity")) || 0;
       const s = Number(gsap.getProperty(sigilMark, "scale")) || 0;
       if (o < 0.02) {
+        // #region agent log
+        debugBrandmark(
+          "H1,H2",
+          "useSigilChoreography.ts:syncActorToSigilEntrance",
+          "sigil sync hide",
+          {
+            scrollY: Math.round(window.scrollY),
+            sigilOpacity: o,
+            sigilScale: s,
+            sigilRect: rectPayload(sigilMark.getBoundingClientRect()),
+            flags: { handoffArmed, practiceEntryArmed, practiceExitArmed, brandPinnedToHudSlot },
+          }
+        );
+        // #endregion
         a.hide();
         return;
       }
+      // #region agent log
+      debugBrandmark(
+        "H1,H2",
+        "useSigilChoreography.ts:syncActorToSigilEntrance",
+        "sigil sync pin",
+        {
+          scrollY: Math.round(window.scrollY),
+          sigilOpacity: o,
+          sigilScale: s,
+          sigilRect: rectPayload(sigilMark.getBoundingClientRect()),
+          flags: { handoffArmed, practiceEntryArmed, practiceExitArmed, brandPinnedToHudSlot },
+        }
+      );
+      // #endregion
+      // The diagram column (.tri__center) is `position: sticky` so the
+      // sigil's live rect is itself stable while the user reads section
+      // 02 — the actor inherits that stability for free by tracking the
+      // live rect.
       a.pinToRect(sigilMark.getBoundingClientRect(), o, s || 1);
       a.setHudOutline(false);
     };
@@ -168,6 +270,9 @@ export function useSigilChoreography(
         "--frame-opacity": 1,
         clearProps: "rotation",
       });
+      // The diagram column is sticky, so the live sigil rect already
+      // represents the actor's current on-screen position by the time
+      // this fires.
       const sigilRect = sigilMark.getBoundingClientRect();
       const hudRect = hudBrandmark!.getBoundingClientRect();
       const vh = window.innerHeight;
@@ -198,6 +303,22 @@ export function useSigilChoreography(
       // onEnter / onEnterBack / onRefresh; the subsequent onUpdate
       // is responsible for visibility. Pinning with opacity 0 caused
       // a one-frame flicker on entry into the trigger range.
+      // #region agent log
+      debugBrandmark(
+        "H1,H2,H3",
+        "useSigilChoreography.ts:captureHandoffRects",
+        "capture handoff rects",
+        {
+          scrollY: Math.round(window.scrollY),
+          isSigilVisible,
+          sigilRect: rectPayload(sigilRect),
+          hudRect: rectPayload(hudRect),
+          handoffStartRect: rectPayload(handoffStartRect),
+          handoffTargetRect: rectPayload(handoffTargetRect),
+          flags: { handoffArmed, practiceEntryArmed, practiceExitArmed, brandPinnedToHudSlot },
+        }
+      );
+      // #endregion
     };
 
     const dock = () => {
@@ -279,6 +400,24 @@ export function useSigilChoreography(
       }
       // Same rationale as captureHandoffRects: don't override
       // visibility here, let applyPracticeTravel render the frame.
+      // #region agent log
+      debugBrandmark(
+        "H1,H2,H3",
+        "useSigilChoreography.ts:capturePracticeRects",
+        "capture practice rects",
+        {
+          dir,
+          scrollY: Math.round(window.scrollY),
+          hudRect: rectPayload(hudRect),
+          orbitRect: rectPayload(orbRect),
+          practiceRect: rectPayload(practiceEl?.getBoundingClientRect()),
+          approachDocked: approachEl?.getAttribute("data-orbit-docked"),
+          practiceStartRect: rectPayload(practiceStartRect),
+          practiceEndRect: rectPayload(practiceEndRect),
+          flags: { handoffArmed, practiceEntryArmed, practiceExitArmed, brandPinnedToHudSlot },
+        }
+      );
+      // #endregion
     };
 
     const practiceDockAtOrbit = () => {
@@ -341,9 +480,60 @@ export function useSigilChoreography(
     };
 
     const applyPracticeTravel = (p: number, dir: "forward" | "reverse") => {
-      if (!practiceStartRect || !practiceEndRect || !approachEl) return;
-      const src = practiceStartRect;
-      const dst = practiceEndRect;
+      if (!approachEl) return;
+      ensureFreshHudRefs();
+      let src: DOMRect;
+      let dst: DOMRect;
+      if (dir === "forward") {
+        // Use *live* rects for the HUD → orbit travel. The orbit lives
+        // inside `.approach__stage` (position: sticky), so its viewport
+        // rect at the moment the entry trigger fires (practiceTop ≈ 40%
+        // of viewport) is its not-yet-stuck flow position. At p=1
+        // (`practiceDockAtOrbit`), the dock pins to the live rect (now
+        // sticky-engaged), which produced a hundreds-of-pixels jump
+        // from the captured mid-morph end to the live dock target.
+        // Recomputing live every frame keeps the trajectory aimed at
+        // the orbit's actual current screen position so the brandmark
+        // "elegantly slides inside the diagram" instead of jumping
+        // there at the end.
+        const orbitMark = orbitMarkEl();
+        if (!orbitMark || !hudBrandmark) return;
+        src = hudBrandmark.getBoundingClientRect();
+        dst = orbitMark.getBoundingClientRect();
+      } else {
+        // Reverse (orbit → HUD): use the rects captured by
+        // `capturePracticeRects("reverse")` at trigger.onEnter. By the
+        // time the exit trigger fires the user has scrolled past the
+        // orbit's sticky un-engage point, so the live orbit rect is far
+        // offscreen and a live morph would sweep the brandmark from
+        // hundreds-of-pixels above the viewport down to the HUD. The
+        // capture-at-onEnter rect anchors the morph at the orbit's
+        // last on-screen position, which keeps the travel inside the
+        // viewport.
+        if (!practiceStartRect || !practiceEndRect) return;
+        src = practiceStartRect;
+        dst = practiceEndRect;
+      }
+      const shouldLogProgress = p <= 0.02 || p >= 0.98 || Math.abs(p - 0.5) < 0.03;
+      if (shouldLogProgress) {
+        // #region agent log
+        debugBrandmark(
+          "H2,H4",
+          "useSigilChoreography.ts:applyPracticeTravel",
+          "apply practice travel progress",
+          {
+            dir,
+            progress: Number(p.toFixed(4)),
+            scrollY: Math.round(window.scrollY),
+            src: rectPayload(src),
+            dst: rectPayload(dst),
+            suppressPracticeEntry: dir === "forward" ? suppressPracticeEntry() : false,
+            approachDocked: approachEl.getAttribute("data-orbit-docked"),
+            flags: { handoffArmed, practiceEntryArmed, practiceExitArmed, brandPinnedToHudSlot },
+          }
+        );
+        // #endregion
+      }
 
       if (dir === "forward") {
         if (suppressPracticeEntry()) return;
@@ -388,13 +578,137 @@ export function useSigilChoreography(
     };
 
     const repinActorToOrbitIfDocked = () => {
-      if (!approachEl || approachEl.getAttribute("data-orbit-docked") !== "true") return;
-      if (handoffArmed || practiceEntryArmed || practiceExitArmed) return;
+      if (!approachEl || approachEl.getAttribute("data-orbit-docked") !== "true") {
+        // #region agent log
+        debugBrandmark(
+          "H4",
+          "useSigilChoreography.ts:repinActorToOrbitIfDocked",
+          "repin bail no dock",
+          {
+            scrollY: Math.round(window.scrollY),
+            approachDocked: approachEl?.getAttribute("data-orbit-docked"),
+            flags: { handoffArmed, practiceEntryArmed, practiceExitArmed, brandPinnedToHudSlot },
+          }
+        );
+        // #endregion
+        return;
+      }
+      if (handoffArmed || practiceEntryArmed || practiceExitArmed) {
+        // #region agent log
+        debugBrandmark(
+          "H4",
+          "useSigilChoreography.ts:repinActorToOrbitIfDocked",
+          "repin bail armed",
+          {
+            scrollY: Math.round(window.scrollY),
+            approachDocked: approachEl.getAttribute("data-orbit-docked"),
+            flags: { handoffArmed, practiceEntryArmed, practiceExitArmed, brandPinnedToHudSlot },
+          }
+        );
+        // #endregion
+        return;
+      }
       const mark = orbitMarkEl();
-      if (!mark) return;
+      if (!mark) {
+        // #region agent log
+        debugBrandmark(
+          "H1,H4",
+          "useSigilChoreography.ts:repinActorToOrbitIfDocked",
+          "repin bail no mark",
+          {
+            scrollY: Math.round(window.scrollY),
+          }
+        );
+        // #endregion
+        return;
+      }
       const rect = mark.getBoundingClientRect();
-      if (rect.width <= 0 || rect.height <= 0) return;
+      if (rect.width <= 0 || rect.height <= 0) {
+        // #region agent log
+        debugBrandmark(
+          "H1,H4",
+          "useSigilChoreography.ts:repinActorToOrbitIfDocked",
+          "repin bail zero rect",
+          {
+            scrollY: Math.round(window.scrollY),
+            orbitRect: rectPayload(rect),
+          }
+        );
+        // #endregion
+        return;
+      }
+      // #region agent log
+      debugBrandmark(
+        "H1,H4",
+        "useSigilChoreography.ts:repinActorToOrbitIfDocked",
+        "repin actor to orbit",
+        {
+          scrollY: Math.round(window.scrollY),
+          orbitRect: rectPayload(rect),
+          practiceRect: rectPayload(practiceEl?.getBoundingClientRect()),
+          flags: { handoffArmed, practiceEntryArmed, practiceExitArmed, brandPinnedToHudSlot },
+        }
+      );
+      // #endregion
       actor()?.pinToRect(rect, 1, 1);
+      actor()?.setHudOutline(false);
+    };
+
+    /**
+     * Hold the actor at a fixed viewport position while the brandmark is
+     * "parked at sigil" — after the section-02 entrance reveal completes,
+     * before the continuum handoff starts. We capture the sigil rect ONCE
+     * (when entrance is essentially done) and re-pin the actor to that
+     * cached rect on every scroll frame. Because the rect is in viewport
+     * coordinates and the actor is `position: fixed`, the brandmark stays
+     * visually anchored to one screen position throughout section 02 —
+     * the user reads the section copy while the brandmark hovers as a
+     * stable north-star reference, instead of drifting up the viewport
+     * with the section's natural scroll.
+     *
+     * The cache is cleared whenever an upstream owner takes over (entrance
+     * reverses, handoff arms, practice triggers arm, viewport resizes).
+     * `captureHandoffRects` reads parkedSigilRect when arming the handoff
+     * morph so the sigil → HUD travel begins from the actor's actual on-
+     * screen position rather than from a stale or unrelated rect.
+     */
+    /**
+     * Continuous re-pin to the live `.sigil__mark` rect while the
+     * brandmark is "parked at sigil" — i.e. between entrance reveal end
+     * and the continuum handoff arming. The diagram column
+     * (`.tri__center`) is `position: sticky`, so the live rect itself is
+     * stable while the user scrolls section 02; the actor gets that
+     * stability for free by tracking it. Without this loop, refreshes
+     * (resize, font-load, ResizeObserver) could leave the actor pinned
+     * to a stale rect while the sticky element settles.
+     */
+    const repinActorToSigilIfParked = () => {
+      if (handoffArmed || practiceEntryArmed || practiceExitArmed) return;
+      if (brandPinnedToHudSlot) return;
+      if (approachEl?.getAttribute("data-orbit-docked") === "true") return;
+
+      const vh = window.innerHeight;
+
+      // Threshold matches `entranceTl.scrollTrigger.end` — only park
+      // once entrance is past, so entranceTl's scrub keeps full ownership
+      // during the reveal.
+      const entrancePastEnd = defEl.getBoundingClientRect().top <= vh * 0.35;
+      if (!entrancePastEnd) return;
+
+      // Threshold matches `handoffTl.scrollTrigger.start` ("bottom 90%"
+      // of defEl) — once handoff arms, leave the actor alone so the
+      // morph can drive it.
+      const handoffStartReached = defEl.getBoundingClientRect().bottom <= vh * 0.9;
+      if (handoffStartReached) return;
+
+      const o = Number(gsap.getProperty(sigilMark, "opacity")) || 0;
+      if (o < 0.95) return;
+
+      const sigilRect = sigilMark.getBoundingClientRect();
+      if (sigilRect.width <= 0 || sigilRect.height <= 0) return;
+
+      brandPinnedToHudSlot = false;
+      actor()?.pinToRect(sigilRect, 1, 1);
       actor()?.setHudOutline(false);
     };
 
@@ -412,6 +726,7 @@ export function useSigilChoreography(
       syncActorToSigilEntrance();
       syncHudOutlineFromRoot();
       repinActorToOrbitIfDocked();
+      repinActorToSigilIfParked();
     };
     window.addEventListener("resize", onResize);
 
@@ -438,6 +753,35 @@ export function useSigilChoreography(
     // (b) a delayed safety refresh, and (c) ResizeObservers on the key
     // landmarks so any post-load reflow re-syncs positions.
     const refresh = () => ScrollTrigger.refresh();
+    ScrollTrigger.addEventListener("refresh", () => {
+      // #region agent log
+      debugBrandmark(
+        "H3",
+        "useSigilChoreography.ts:ScrollTrigger.refresh",
+        "scrolltrigger refresh geometry",
+        {
+          scrollY: Math.round(window.scrollY),
+          viewport: { width: window.innerWidth, height: window.innerHeight },
+          practiceRect: rectPayload(practiceEl?.getBoundingClientRect()),
+          approachRect: rectPayload(approachEl?.getBoundingClientRect()),
+          orbitRect: rectPayload(orbitMarkEl()?.getBoundingClientRect()),
+          triggers: ScrollTrigger.getAll()
+            .filter((t) =>
+              ["practice", "continuum", "definition"].includes(
+                (t.trigger as HTMLElement | null)?.id ?? ""
+              )
+            )
+            .map((t) => ({
+              id: (t.trigger as HTMLElement | null)?.id,
+              start: Math.round(t.start),
+              end: Math.round(t.end),
+              progress: Number(t.progress.toFixed(4)),
+              isActive: t.isActive,
+            })),
+        }
+      );
+      // #endregion
+    });
     window.addEventListener("load", refresh);
     // The practice section can roughly triple in height after the
     // celestial portals + phase glyphs mount, which shifts every
@@ -462,16 +806,18 @@ export function useSigilChoreography(
     // Continuous re-pin: the dock-tracker ScrollTrigger only re-pins
     // inside its computed range, which is fragile to position drift.
     // A passive, rAF-throttled scroll listener re-pins the actor on
-    // every frame while the brandmark is docked at the orbit,
-    // regardless of trigger ranges. Runs after the scroll event so
-    // ScrollTrigger has already updated `data-orbit-docked` for the
-    // current frame.
+    // every frame while the brandmark is parked at one of its rest
+    // states (orbit center while docked in #practice, or sigil center
+    // between entranceTl ending and handoffTl beginning in #definition).
+    // Runs after the scroll event so ScrollTrigger has already updated
+    // `data-orbit-docked` and any state flags for the current frame.
     let dockedRaf = 0;
     const onDockedScroll = () => {
       if (dockedRaf) return;
       dockedRaf = requestAnimationFrame(() => {
         dockedRaf = 0;
         repinActorToOrbitIfDocked();
+        repinActorToSigilIfParked();
       });
     };
     window.addEventListener("scroll", onDockedScroll, { passive: true });
@@ -542,10 +888,22 @@ export function useSigilChoreography(
 
       const handoffTl = gsap.timeline({
         scrollTrigger: {
-          trigger: contEl,
-          start: "top 80%",
-          end: "top 5%",
-          scrub: 1.8,
+          // Anchor the handoff to section 02's *bottom* rather than
+          // continuum's top. Two reasons:
+          //   1. The diagram column (`.tri__center`) is `position: sticky`,
+          //      so its viewport position is locked while reading the
+          //      section copy — the natural moment for the brandmark to
+          //      detach is when section 02 is itself leaving the screen,
+          //      not when the next section happens to enter.
+          //   2. Anchoring to defEl makes the handoff start coincide
+          //      with the sticky un-engage point regardless of the
+          //      connector's height between sections.
+          // Range is tight + a short scrub so the travel feels
+          // deliberate ("gently moves") instead of dragged out.
+          trigger: defEl,
+          start: "bottom 90%",
+          end: "bottom 30%",
+          scrub: 0.4,
           onEnter: () => {
             captureHandoffRects();
             handoffArmed = true;
@@ -614,6 +972,22 @@ export function useSigilChoreography(
                 capturePracticeRects("forward");
                 practiceEntryArmed = true;
               },
+              // Fast-scroll defence: when the user blows past `top 0%`
+              // before scrub easing has reached p >= 0.995, the
+              // applyPracticeTravel onUpdate path never calls
+              // practiceDockAtOrbit, leaving practiceEntryArmed stuck
+              // at true and the actor frozen mid-morph. While that
+              // flag is set, repinActorToOrbitIfDocked bails, so the
+              // actor visibly drifts from where the morph stopped as
+              // the user scrolls between Navigate and Encode.
+              // onLeave fires the moment scroll passes the trigger end
+              // (regardless of scrub progress), so we can settle the
+              // dock state here.
+              onLeave: () => {
+                if (practiceEntryArmed) {
+                  practiceDockAtOrbit();
+                }
+              },
               onLeaveBack: () => {
                 practiceUndockFromEntry();
               },
@@ -628,7 +1002,18 @@ export function useSigilChoreography(
                   practiceEntryArmed = true;
                   applyPracticeTravel(self.progress, "forward");
                 } else {
-                  practiceUndockFromEntry();
+                  // We're before the practice-entry zone (hero, section 02,
+                  // or continuum). Reset practice-entry state but DO NOT
+                  // pin the actor to HUD here — that's only correct after
+                  // the continuum handoff has completed. On initial page
+                  // load at scrollY=0 (Hero), unconditionally pinning to
+                  // HUD made the brandmark visible at the bottom-left
+                  // corner during the Hero section, overriding the
+                  // entrance/sigil-park/hidden states owned by upstream
+                  // triggers.
+                  practiceEntryArmed = false;
+                  approachEl.setAttribute("data-orbit-docked", "false");
+                  setTravelArmed(handoffArmed || practiceExitArmed);
                 }
               },
               onUpdate: (self) => {
@@ -651,6 +1036,18 @@ export function useSigilChoreography(
             onEnterBack: () => {
               capturePracticeRects("reverse");
               practiceExitArmed = true;
+            },
+            // Symmetric fast-scroll defence: settle at the HUD slot
+            // when scroll blows past `bottom -10%` before scrub eases
+            // to p >= 0.995. Without this, practiceExitArmed would
+            // stay true after the user has left #practice entirely
+            // and the actor would remain frozen on its final exit
+            // frame, drifting off-target as the rest of the page
+            // continues scrolling.
+            onLeave: () => {
+              if (practiceExitArmed) {
+                practiceRedockAtHud();
+              }
             },
             onLeaveBack: () => {
               practiceDockAtOrbitFromExitLeaveBack();
