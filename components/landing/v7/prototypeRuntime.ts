@@ -137,8 +137,8 @@ function initializePrototypeRuntime(root: ShadowRoot, docEl: HTMLElement) {
     { station: "definition", label: "02" },
     { station: "continuum", label: "03" },
     { station: "practice", label: "04" },
-    { station: "services", label: "05" },
-    { station: "products", label: "06" },
+    { station: "build", label: "05" },
+    { station: "services", label: "06" },
     { station: "about", label: "07" },
     { station: "contact", label: "08" },
   ];

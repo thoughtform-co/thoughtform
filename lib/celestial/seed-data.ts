@@ -70,10 +70,10 @@ export const SEED_CONFIGS: Record<string, CelestialConfig> = {
       bottomPattern: "v-diverge",
     },
     labels: {
-      tl: { emphasis: "Transit", text: "· 05 → 06" },
-      tr: { emphasis: "λ", text: "0.78 · About" },
-      bl: { emphasis: "Ch", text: "· 06 / Voidwalker" },
-      br: { emphasis: "Fig", text: "· 05e / Author" },
+      tl: { emphasis: "Transit", text: "· 06 → 07" },
+      tr: { emphasis: "λ", text: "0.84 · About" },
+      bl: { emphasis: "Ch", text: "· 07 / Voidwalker" },
+      br: { emphasis: "Fig", text: "· 06e / Author" },
     },
     cornerBrackets: true,
   },
@@ -81,8 +81,9 @@ export const SEED_CONFIGS: Record<string, CelestialConfig> = {
 
 // Slot ID kept as "practice-to-about" for stability with any persisted
 // celestial_slots rows in Supabase. Conceptually the slot now bridges
-// `#build` → `#about` (the build cases sit between Practice and this
-// connector); see public/prototypes/v7/landing-v7-motion.html.
+// `#services` → `#about` (the build cases and the services pitch both
+// sit between Practice and this connector); see
+// public/prototypes/v7/landing-v7-motion.html.
 export const SEED_SLOT_ASSIGNMENTS: Record<string, string> = {
   "definition-to-continuum": "Meridian",
   "continuum-to-practice": "Square Cascade",
