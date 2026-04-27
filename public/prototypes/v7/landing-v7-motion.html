@@ -4787,10 +4787,11 @@ html { scroll-behavior: smooth; }
        reveal motion runs on inner elements only (Rule 2 of the
        landing-v7-compositing skill). =============================== -->
   <section class="station station--sticky build-quote" id="buildQuote" data-station="buildQuote" data-screen-label="04.5 Axiom">
-    <span class="build-quote__bracket build-quote__bracket--tl" aria-hidden="true"></span>
-    <span class="build-quote__bracket build-quote__bracket--tr" aria-hidden="true"></span>
-    <span class="build-quote__bracket build-quote__bracket--bl" aria-hidden="true"></span>
-    <span class="build-quote__bracket build-quote__bracket--br" aria-hidden="true"></span>
+    <!-- No corner L-brackets here on purpose: the page-level HUD grid
+         already carries L-brackets at the four outer corners and a
+         second set inside this panel competes with that frame. The
+         four small text labels below (Transit / Build axiom / Field /
+         Fig) provide the corner context on their own. -->
 
     <span class="build-quote__label build-quote__label--tl" aria-hidden="true"><span class="k">Transit</span> · 04 → 05</span>
     <span class="build-quote__label build-quote__label--tr" aria-hidden="true"><span class="k">δ</span> 0.62 · Build axiom</span>

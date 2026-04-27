@@ -6256,47 +6256,11 @@ html {
   will-change: transform, opacity;
 }
 
-/* Asymmetric corner brackets — gold pair top-left + bottom-right, dawn
-   pair top-right + bottom-left. Reads as a navigational frame with the
-   active diagonal on gold (the way Thoughtform marks waypoints). */
-.build-quote__bracket {
-  position: absolute;
-  width: clamp(24px, 3.5vw, 44px);
-  height: clamp(24px, 3.5vw, 44px);
-  pointer-events: none;
-  border: 1px solid;
-  z-index: 2;
-}
-.build-quote__bracket--tl {
-  top: clamp(40px, 7vh, 88px);
-  left: clamp(40px, 6vw, 96px);
-  border-color: var(--gold);
-  opacity: 0.7;
-  border-right: none;
-  border-bottom: none;
-}
-.build-quote__bracket--br {
-  bottom: clamp(40px, 7vh, 88px);
-  right: clamp(40px, 6vw, 96px);
-  border-color: var(--gold);
-  opacity: 0.7;
-  border-left: none;
-  border-top: none;
-}
-.build-quote__bracket--tr {
-  top: clamp(40px, 7vh, 88px);
-  right: clamp(40px, 6vw, 96px);
-  border-color: var(--dawn-30);
-  border-left: none;
-  border-bottom: none;
-}
-.build-quote__bracket--bl {
-  bottom: clamp(40px, 7vh, 88px);
-  left: clamp(40px, 6vw, 96px);
-  border-color: var(--dawn-30);
-  border-right: none;
-  border-top: none;
-}
+/* Corner L-brackets removed — the page-level HUD grid already paints
+   L-brackets at the four outer corners and the build-quote brackets
+   were stacking on top of them. The four small `.build-quote__label`
+   text labels below provide the corner context without competing
+   geometry. */
 
 .build-quote__label {
   position: absolute;
@@ -6530,26 +6494,6 @@ html {
   }
   .build-quote__diagram {
     opacity: 0.6;
-  }
-  .build-quote__bracket {
-    width: 18px;
-    height: 18px;
-  }
-  .build-quote__bracket--tl,
-  .build-quote__bracket--tr {
-    top: 16px;
-  }
-  .build-quote__bracket--bl,
-  .build-quote__bracket--br {
-    bottom: 16px;
-  }
-  .build-quote__bracket--tl,
-  .build-quote__bracket--bl {
-    left: 16px;
-  }
-  .build-quote__bracket--tr,
-  .build-quote__bracket--br {
-    right: 16px;
   }
   .build-quote__label--tl,
   .build-quote__label--bl {
