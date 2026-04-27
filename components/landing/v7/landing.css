@@ -6203,11 +6203,14 @@ html {
    `.station:not(.hero)` rule paints var(--void) at z:2 with specificity
    (0,2,0); the doubled selector below also lands at (0,2,0) but appears
    later in source order, so it wins. We drop to z:1 and pin to the top
-   so the cases station (still z:2) can scroll over it. */
+   so the cases station (still z:2) can scroll over it.
+   Height is intentionally < 100vh so the axiom panel reads as a tighter
+   editorial moment between Practice and the Build cases — and the cases
+   station begins to cover it sooner during the parallax handoff. */
 .station.station--sticky {
   position: sticky;
   top: 0;
-  height: 100vh;
+  height: min(78vh, 720px);
   min-height: 0;
   z-index: 1;
   /* No content-visibility: auto here — the station is sticky, so it must
@@ -6219,9 +6222,14 @@ html {
 }
 
 .build-quote {
-  display: grid;
-  place-items: center;
-  padding: clamp(48px, 8vh, 96px) clamp(32px, 5vw, 96px);
+  /* flex (not grid place-items) so the explicit `width: min(100%,1180px)`
+     on .build-quote__inner is honoured — the grid auto track was
+     collapsing inner to its content width and clipping the nowrap
+     line text. */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(40px, 6vh, 72px) clamp(32px, 5vw, 96px);
   overflow: hidden;
 }
 
@@ -6236,8 +6244,12 @@ html {
   display: grid;
   place-items: center;
   width: min(100%, 1180px);
-  aspect-ratio: 1.6 / 1;
-  max-height: calc(100vh - clamp(64px, 12vh, 160px));
+  /* Fill the (now shorter) sticky station height so the diagram and
+     figure have room to breathe without the inner box being narrowed
+     by an aspect-ratio constraint that previously clipped the
+     .build-quote__line nowrap text. The SVG diagram preserves its
+     own circular aspect via the default `xMidYMid meet`. */
+  height: 100%;
   transform: scale(calc(1 - var(--build-cover, 0) * 0.06));
   opacity: calc(1 - var(--build-cover, 0) * 0.6);
   transition: opacity 120ms linear;
@@ -6351,7 +6363,11 @@ html {
   flex-direction: column;
   align-items: center;
   gap: clamp(16px, 2vh, 28px);
-  max-width: 60ch;
+  /* Stretch to the inner width so the nowrap line text never overflows
+     the figure box. The earlier `max-width: 60ch` resolved against the
+     figure's own 16px font-size (not the 56px quote font), capping the
+     figure at ~576px and clipping the line. */
+  width: 100%;
   padding: clamp(24px, 4vh, 48px);
 }
 
@@ -6381,10 +6397,16 @@ html {
   line-height: 1.18;
   letter-spacing: -0.02em;
   color: var(--dawn);
-  text-wrap: balance;
 }
+/* Each `.build-quote__line` is one line of the axiom. Forcing block so
+   the visual break between "What I cannot do not build," and
+   "I do not understand." is structural, not a side-effect of auto-wrap
+   (which drifted at different viewport widths). `nowrap` keeps the line
+   from breaking internally on desktop — the inline-flex correction
+   otherwise nudged the engine into wrapping line 1. */
 .build-quote__line {
-  display: inline;
+  display: block;
+  white-space: nowrap;
 }
 .build-quote__quote::before {
   content: "“";
@@ -6544,6 +6566,12 @@ html {
     flex-direction: column;
     align-items: center;
     gap: 0.1em;
+  }
+  /* Phone: the correction stacks vertically, so the line itself
+     becomes a multi-line block. Re-enable wrap so the inline content
+     can flow naturally instead of overflowing the viewport. */
+  .build-quote__line {
+    white-space: normal;
   }
   .build-quote__attribution {
     flex-direction: column;
