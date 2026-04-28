@@ -77,55 +77,55 @@ export function useLandingScroll(rootRef: React.RefObject<HTMLDivElement | null>
       heroEl.style.visibility = heroCover >= 1 ? "hidden" : "";
     }
 
-    // Practice cover — exact mirror of hero cover. The chamber
-    // (`.approach__chamber`) carries `padding-bottom: 100vh`, which
-    // extends the sticky orbit's pin range by one viewport past the
-    // phase column's end. #buildQuote follows in normal flow as a
-    // `.station--cover` (z:2, opaque, full-bleed) and rises during
-    // that runway, covering the still-pinned orbit. The scalar tracks
-    // the axiom's top edge against viewport height (identical math to
-    // heroCover) and writes `--practice-cover` on `.approach__stage`
-    // so the orbit subtly recedes (scale + fade) in lock-step.
-    //
-    // CSS sticky's pin range always ends `element.height + sticky.top`
-    // before the containing block's bottom, so the orbit unpins ~828px
-    // before practice ends — leaving the cover playing over an empty
-    // viewport above. To match the hero's ALWAYS-VISIBLE under-layer,
-    // we compensate with a JS-driven `--practice-cover-translate` that
-    // shifts the stage back to its sticky position during the cover.
-    // The CSS rule on `.approach__stage` consumes this translate to
-    // keep the orbit visually pinned at top:12vh until the cover
-    // completes and the axiom fully fills the viewport.
+    // Practice cover — exact mirror of hero cover, but applied to the
+    // original final state inside #practice. The Build phase + orbit pin
+    // through the last viewport of #practice; #buildQuote follows as a
+    // higher-z opaque cover. As #buildQuote.top moves from `vh` to `0`,
+    // it covers the original pinned Practice state from bottom to top.
+    const practiceEl = root.querySelector<HTMLElement>("#practice");
     const stageEl = root.querySelector<HTMLElement>(".approach__stage");
     const chamberEl = root.querySelector<HTMLElement>(".approach__chamber");
+    const buildPhaseEl = root.querySelector<HTMLElement>('.approach__phase[data-phase="build"]');
     const quoteEl = root.querySelector<HTMLElement>("#buildQuote");
     let practiceCover = 0;
-    if (stageEl && chamberEl && quoteEl) {
-      const quoteTop = quoteEl.getBoundingClientRect().top;
+    if (practiceEl && stageEl && chamberEl && buildPhaseEl && quoteEl) {
+      const quoteRect = quoteEl.getBoundingClientRect();
+      const quoteTop = quoteRect.top;
+      const quoteActive = quoteRect.top < vh && quoteRect.bottom > 0;
+      root.setAttribute("data-quote-active", quoteActive ? "true" : "false");
+      document.documentElement.setAttribute("data-quote-active", quoteActive ? "true" : "false");
       practiceCover = Math.max(0, Math.min(1, 1 - quoteTop / vh));
-      stageEl.style.setProperty("--practice-cover", practiceCover.toFixed(4));
+      practiceEl.style.setProperty("--practice-cover", practiceCover.toFixed(4));
 
-      // Compute the post-pin scroll position purely from layout (offsetHeight,
-      // computed sticky.top, chamber bottom) so the math is independent of the
-      // stage's current transform. After CSS sticky unpins (scrollY beyond
-      // pinEndScrollY), the stage scrolls naturally and goes offscreen above.
-      // The translate brings it back to viewport top:sticky.top during the
-      // active cover window, mirroring the always-visible hero under-layer.
       const stickyTopPx = parseFloat(getComputedStyle(stageEl).top) || 0;
-      const stageLayoutHeight = stageEl.offsetHeight;
-      const chamberRect = chamberEl.getBoundingClientRect();
-      const chamberBottomDoc = scrollY + chamberRect.bottom;
-      const pinEndScrollY = chamberBottomDoc - stageLayoutHeight - stickyTopPx;
-      // Engage the translate the moment CSS sticky stops pinning (so there's
-      // no gap where the orbit briefly slides up while quote isn't covering
-      // yet) and disengage once the cover has fully completed (so the orbit
-      // doesn't keep "ghosting" at viewport top once quote is past).
-      if (scrollY > pinEndScrollY && practiceCover < 1) {
-        const delta = scrollY - pinEndScrollY;
+      const shouldPinPracticeStage = quoteTop <= vh * 1.15 && practiceCover < 1;
+      if (shouldPinPracticeStage) {
+        stageEl.style.removeProperty("--practice-cover-translate");
+        const stageRect = stageEl.getBoundingClientRect();
+        const delta = Math.max(0, stickyTopPx - stageRect.top);
         stageEl.style.setProperty("--practice-cover-translate", `${delta.toFixed(1)}px`);
       } else {
         stageEl.style.removeProperty("--practice-cover-translate");
       }
+
+      // Keep the *original* Build phase visible during the cover. CSS sticky
+      // still has container-end limits, so once the axiom is close enough to
+      // enter we directly compensate the Build phase's Y position back to its
+      // intended sticky top. This is not a duplicate frame; it preserves the
+      // original DOM node while the quote covers it.
+      const buildStickyTopPx = parseFloat(getComputedStyle(buildPhaseEl).top) || 0;
+      const shouldPinBuild = quoteTop <= vh * 1.15 && practiceCover < 1;
+      if (shouldPinBuild) {
+        buildPhaseEl.style.removeProperty("--practice-build-translate");
+        const buildRect = buildPhaseEl.getBoundingClientRect();
+        const delta = Math.max(0, buildStickyTopPx - buildRect.top);
+        buildPhaseEl.style.setProperty("--practice-build-translate", `${delta.toFixed(1)}px`);
+      } else {
+        buildPhaseEl.style.removeProperty("--practice-build-translate");
+      }
+    } else {
+      root.setAttribute("data-quote-active", "false");
+      document.documentElement.setAttribute("data-quote-active", "false");
     }
 
     // Active station
@@ -178,6 +178,7 @@ export function useLandingScroll(rootRef: React.RefObject<HTMLDivElement | null>
     return () => {
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onScroll);
+      document.documentElement.removeAttribute("data-quote-active");
       if (rafId.current) window.cancelAnimationFrame(rafId.current);
     };
   }, [onScroll]);

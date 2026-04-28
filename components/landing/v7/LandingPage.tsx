@@ -160,6 +160,13 @@ export function LandingPage({ bodyHtml, bodyClass, celestialSlots }: LandingPage
       });
     };
 
+    const quoteIsActive = () => {
+      const quote = root.querySelector<HTMLElement>("#buildQuote");
+      if (!quote) return false;
+      const r = quote.getBoundingClientRect();
+      return r.top < window.innerHeight && r.bottom > 0;
+    };
+
     const pickActivePhase = () => {
       const vh = window.innerHeight;
       // 40% from viewport top is the natural reading focus on this layout.
@@ -234,6 +241,10 @@ export function LandingPage({ bodyHtml, bodyClass, celestialSlots }: LandingPage
       if (raf) return;
       raf = requestAnimationFrame(() => {
         raf = 0;
+        if (quoteIsActive()) {
+          setActivePhase(root.querySelector<HTMLElement>('.approach__phase[data-phase="build"]'));
+          return;
+        }
         pickActivePhase();
         updateOrbitTelemetry();
       });

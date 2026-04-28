@@ -594,6 +594,19 @@
   pointer-events: none;
 }
 
+/* During the Quote cover, the original Practice diagram is the frozen
+   under-layer. The fixed travel actor is intentionally hidden so it
+   cannot keep animating above the quote (z:24); the native in-diagram
+   mark is revealed underneath the cover instead. */
+html[data-quote-active="true"] .tf-brandmark-actor {
+  opacity: 0 !important;
+}
+
+[data-quote-active="true"] .approach__orbit__mark img {
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
 .tf-brandmark-actor {
   position: fixed;
   left: 0;
@@ -4204,18 +4217,12 @@ html {
 }
 
 /* ═══════════════════════════════════════════════════════════════════
-   PRACTICE COVER HANDOFF — chamber padding extends the orbit pin
+   PRACTICE COVER HANDOFF — original final state as under-layer
    ───────────────────────────────────────────────────────────────────
-   Mirrors the `.hero` pattern. The orbit (`.approach__stage`) is
-   `position: sticky` with its containing block being the chamber's
-   padding-box. By adding `padding-bottom: 100vh` on the chamber, we
-   extend the orbit's sticky pin range by one viewport BEYOND where
-   the phase column ends. During that extra viewport of scroll the
-   orbit stays pinned (under-layer) while #buildQuote rises in normal
-   flow at z:2 (cover layer) — same mechanic as #definition rising
-   over .hero. There's NO separate `.practice-tail` element and NO
-   negative-margin overlap; the cover handoff lives entirely inside
-   #practice's geometry.
+   #practice remains the only Practice surface. The original Build phase
+   and original orbit pin through a short runway at the end of Practice,
+   while #buildQuote rises over them as the higher-z opaque cover layer.
+   No duplicate mini-section.
    ═══════════════════════════════════════════════════════════════════ */
 
 /* ─── Section stack ─── */
@@ -4256,17 +4263,6 @@ html {
   display: flex;
   flex-direction: column;
   gap: clamp(40px, 6vh, 96px);
-  /* Visual padding under the last phase content (CTA), then a 100vh
-     cover handoff runway. The runway extends grid row 1's height by
-     one viewport, which extends the sticky orbit's containing block
-     (= grid cell row 1 column 1) by the same amount. The orbit stays
-     pinned through this runway while #buildQuote (the next station)
-     rises into view, mirroring how .hero stays pinned while
-     #definition rises. CSS sticky's pin range still ends ~828px
-     (orbit.height + sticky.top) before the cell bottom, so a JS
-     translate (`--practice-cover-translate` written by
-     useLandingScroll) compensates for that gap and keeps the orbit
-     visually pinned for the entire cover. */
   padding-bottom: calc(clamp(20px, 4vw, 40px) + 100vh);
   padding-bottom: calc(clamp(20px, 4vw, 40px) + 100svh);
 }
@@ -4324,21 +4320,11 @@ html {
      background required. Crossfades happen on the inner glyph layer
      (opacity only) to honor v7 compositing rules.
 
-     `--practice-cover` (0 → 1) and `--practice-cover-translate` (px)
-     are written by useLandingScroll. As #buildQuote rises into view
-     across the chamber's `padding-bottom: 100vh` runway, the scalar
-     transitions and the translate compensates for CSS sticky's
-     pin-range limit so the orbit visually stays at viewport top:12vh
-     for the entire cover duration — same end result as the .hero
-     under-layer staying visible while #definition rises. The orbit
-     subtly recedes (scale + fade) during the cover, matching the
-     hero's video/content recede cadence. */
-  transform-origin: center center;
-  transform: translate3d(0, var(--practice-cover-translate, 0px), 0)
-    scale(calc(1 - var(--practice-cover, 0) * 0.05));
-  opacity: calc(1 - var(--practice-cover, 0) * 0.55);
-  transition: opacity 40ms linear;
-  will-change: transform, opacity;
+     During the final Practice → Quote handoff, useLandingScroll writes
+     `--practice-cover-translate` so this original orbit remains visually
+     pinned while the quote covers it. */
+  transform: translate3d(0, var(--practice-cover-translate, 0px), 0);
+  will-change: transform;
 }
 .approach__stage__inner {
   position: relative;
@@ -4826,6 +4812,19 @@ html {
 .approach__phase[data-active="true"] .approach__phase__num {
   border-color: var(--gold);
   background: rgba(202, 165, 84, 0.08);
+}
+
+.approach__phase[data-phase="build"] {
+  position: sticky;
+  top: clamp(116px, 18vh, 168px);
+  z-index: 2;
+  transform: translate3d(0, var(--practice-build-translate, 0px), 0);
+  will-change: transform;
+}
+
+.approach__phase[data-phase="build"] .approach__cta {
+  margin-top: clamp(28px, 4vh, 48px);
+  align-self: flex-start;
 }
 
 .approach__phase > .reg {
@@ -6078,10 +6077,10 @@ html {
    v18 — BUILD AXIOM (key-visual quote interstitial)
    ───────────────────────────────────────────────────────────────────
    The quote panel is a single 100vh full-bleed cover that slides OVER
-   the sticky `.practice-tail` above it, mirroring how #definition
-   slides over .hero. No negative margins, no pinned dead-scroll range
-   — the sticky tail provides the pin, this section provides the cover.
-   Build cases follow in normal flow once the axiom has settled.
+   the original final Practice state. The real Build phase and real orbit
+   pin during the final Practice runway; this section follows as the
+   opaque cover. Build cases follow in normal flow once the axiom has
+   settled.
    Compositing rules:
    - Wrapper paints opaque var(--void) (Rule 1 of landing-v7-compositing).
    - Reveal motion lives on .build-quote__figure (data-m="instrument"),
@@ -6089,22 +6088,15 @@ html {
      the fixed .gateway gold gradient (Rule 2).
    ═══════════════════════════════════════════════════════════════════ */
 
-/* Cover station: the axiom rises into view in normal flow. The sticky
-   orbit (`.approach__stage`) inside the previous #practice section
-   pins through the chamber's `padding-bottom: 100vh` runway. As the
-   user scrolls that runway, the axiom (this section) progressively
-   rises from below to cover the pinned orbit — identical mechanic to
-   #definition rising over .hero. Height is locked to one viewport so
-   the cover handoff is exactly 1vh of scroll. z-index:2 (default for
-   `.station:not(.hero)`) is sufficient because Practice and Quote are
-   both at z:2 but Quote is later in source order, so it paints over
-   Practice's content in any viewport pixel they share. */
+/* Cover station: the axiom rises into view in normal flow. z-index:3
+   places it above #practice (z:2), so the key visual physically covers
+   the pinned original Build/orbit state for one viewport of scroll. */
 .station.station--cover {
   position: relative;
   height: 100vh;
   height: 100svh;
   min-height: 0;
-  z-index: 2;
+  z-index: 3;
   /* No content-visibility: auto — the section needs real 100vh geometry
      so the `useLandingScroll` --practice-cover scalar (driven by this
      element's top edge) reads correctly through the cover handoff. */

@@ -4568,15 +4568,12 @@ html { scroll-behavior: smooth; }
               <h4 class="approach__phase__title">Build</h4>
               <div class="approach__phase__verb">Ship · domain experts as builders</div>
               <p class="approach__phase__line">Ship small instruments from encoded knowledge.</p>
+              <a class="approach__cta" href="#execTitle">
+                See how we run it
+                <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M3 7h8M8 4l3 3-3 3" stroke="currentColor" stroke-width="1.2" fill="none"/></svg>
+              </a>
             </div>
           </article>
-
-          <!-- Bridge to services — the original thesis CTA, moved to the
-               end of the phase column so it lands after all three pillars. -->
-          <a class="approach__cta" href="#execTitle">
-            See how we run it
-            <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M3 7h8M8 4l3 3-3 3" stroke="currentColor" stroke-width="1.2" fill="none"/></svg>
-          </a>
 
         </div>
 
@@ -4722,13 +4719,10 @@ html { scroll-behavior: smooth; }
   </section>
 
   <!-- ═══════════ 04.5 BUILD AXIOM · key-visual quote interstitial ═══════════
-       The quote panel covers the END of #practice via hero-style
-       grammar: #practice extends with an internal cover-runway (see
-       `.approach__chamber` padding-bottom in landing.css). The orbit
-       (sticky inside the chamber) pins through the runway. Quote
-       follows in normal flow and rises during the runway, with the
-       orbit visible underneath — same mechanic as #definition rising
-       over .hero. No negative margins, no separate practice-tail.
+       The quote panel covers the original final Build state inside
+       #practice. #practice gets a cover runway at the end; the original
+       orbit + original Build phase pin during that runway, and this
+       opaque full-bleed quote section rises over them.
        Compositing: the wrapper carries an opaque var(--void) shield;
        reveal motion runs on inner elements only (Rule 2 of the
        landing-v7-compositing skill). The bottom of the panel carries
