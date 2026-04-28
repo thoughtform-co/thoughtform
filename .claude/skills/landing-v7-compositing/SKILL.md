@@ -127,8 +127,9 @@ This means: when a Practice → Quote-style "frozen under-layer + opaque cover" 
 
 1. Verify with a Playwright sample at scroll positions where natural sticky should be engaged (`buildPhase.getBoundingClientRect().top` should equal the resolved sticky-`top` for many scroll positions in a row), and
 2. Gate any JS pin compensation on `naturalTop < stickyTop && coverProgress < 1` (a self-relative condition that works whether sticky engages or not), instead of gating it on the cover window alone (`quoteTop <= vh * 1.15`). The latter leaves a ~1-viewport gap where the element scrolls offscreen and then teleports back into view as the cover gate flips.
+3. Apply the compensation synchronously in the `scroll` event before heavier requestAnimationFrame work. If the pinned writes wait for rAF, the element can spend one paint tick in its natural scrolled position (~one wheel delta behind) and visibly stutter even though static samples taken after rAF look correct.
 
-The current implementation in [`useLandingScroll.ts`](../../../components/landing/v7/hooks/useLandingScroll.ts) follows this pattern for the build phase. The orbit stage's sticky does engage naturally inside `.approach__chamber` (a CSS grid), so its compensation still gates on `inCoverWindow`.
+The current implementation in [`useLandingScroll.ts`](../../../components/landing/v7/hooks/useLandingScroll.ts) follows this pattern for both the build phase and the orbit stage. The orbit stage's sticky does engage naturally inside `.approach__chamber` (a CSS grid), but it can still release a few scroll ticks before the Quote cover is visibly on top, so it uses the same natural-top gate to avoid a visible one-frame slip.
 
 **Regression history — do not repeat:**
 

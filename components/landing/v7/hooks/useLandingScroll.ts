@@ -67,52 +67,7 @@ export function useLandingScroll(rootRef: React.RefObject<HTMLDivElement | null>
     }
   }, [rootRef]);
 
-  const onScrollFrame = useCallback(() => {
-    rafId.current = null;
-    const root = rootRef.current;
-    if (!root) return;
-
-    const scrollY = window.scrollY;
-    const vh = window.innerHeight;
-    const scrollMax = Math.max(1, document.documentElement.scrollHeight - vh);
-    const progress = Math.max(0, Math.min(1, scrollY / scrollMax));
-
-    // Depth indicator
-    const depthEl = root.querySelector<HTMLElement>("#depthIndicator");
-    if (depthEl) depthEl.style.top = `${progress * 100}%`;
-
-    // Progress text
-    const progressEl = root.querySelector<HTMLElement>("#hudProgress");
-    if (progressEl)
-      progressEl.textContent = `${String(Math.round(progress * 100)).padStart(2, "0")}%`;
-
-    // Depth CSS var
-    root.style.setProperty("--depth", Math.min(1, progress * 1.2).toFixed(4));
-
-    // Coord readouts (inside nav status)
-    const coordD = root.querySelector<HTMLElement>("#coordD");
-    const coordT = root.querySelector<HTMLElement>("#coordT");
-    if (coordD) coordD.textContent = (0.2 + progress * 0.55).toFixed(2);
-    if (coordT)
-      coordT.textContent = `${String(Math.round(progress * 359)).padStart(3, "0")}.${String(Math.round((progress * 10) % 10))}\u00b0`;
-
-    // Hero cover — drives `--hero-cover` on #hero so the video/content
-    // recede (scale + fade) as #definition rises into view. The
-    // mechanic is: hero is `position: sticky; top:0; height:100vh;
-    // z-index:1`, and #definition follows in normal flow at z-index:2
-    // with an opaque var(--void) shield. As #definition.top crosses
-    // from `vh` to `0` (one viewport of scroll), it visually covers
-    // the pinned hero from bottom to top.
-    const heroEl = root.querySelector<HTMLElement>("#hero");
-    const defEl = root.querySelector<HTMLElement>("#definition");
-    let heroCover = 0;
-    if (heroEl && defEl) {
-      const defTop = defEl.getBoundingClientRect().top;
-      heroCover = Math.max(0, Math.min(1, 1 - defTop / vh));
-      heroEl.style.setProperty("--hero-cover", heroCover.toFixed(4));
-      heroEl.style.visibility = heroCover >= 1 ? "hidden" : "";
-    }
-
+  const applyPracticePinCompensation = useCallback((root: HTMLDivElement, vh: number) => {
     // Practice cover — exact mirror of hero cover, but applied to the
     // original final state inside #practice. The Build phase + orbit pin
     // through the last viewport of #practice; #buildQuote follows as a
@@ -126,14 +81,11 @@ export function useLandingScroll(rootRef: React.RefObject<HTMLDivElement | null>
     // `--practice-cover-translate` and `--practice-build-translate` so
     // those elements stay visually pinned until the cover completes.
     //
-    // Hardened algorithm: instead of removing+resetting the variable each
-    // frame (which forces two layout passes and visible micro-drift), we
-    // track the last applied translate in a ref. The element's "natural"
-    // top is then `rect.top - lastTranslate` — what its top WOULD be if
-    // we applied no translate. We compute the new translate from that
-    // and only write it back if the change exceeds PIN_EPSILON. This
-    // breaks the translation feedback loop that was causing the pinned
-    // elements to appear to move during the Quote cover transition.
+    // This helper is intentionally called synchronously from the scroll
+    // event before the heavier rAF scroll work. If these writes wait for
+    // requestAnimationFrame, the elements spend one paint tick in their
+    // natural scrolled position (~one wheel delta behind), which reads as
+    // stutter even though static samples taken after rAF look correct.
     const practiceEl = root.querySelector<HTMLElement>("#practice");
     const stageEl = root.querySelector<HTMLElement>(".approach__stage");
     const chamberEl = root.querySelector<HTMLElement>(".approach__chamber");
@@ -149,15 +101,16 @@ export function useLandingScroll(rootRef: React.RefObject<HTMLDivElement | null>
       practiceCover = Math.max(0, Math.min(1, 1 - quoteTop / vh));
       practiceEl.style.setProperty("--practice-cover", practiceCover.toFixed(4));
 
-      const inCoverWindow = quoteTop <= vh * 1.15 && practiceCover < 1;
-
       // Stage (orbit) compensation. The stage's CSS `position: sticky`
-      // engages naturally inside `.approach__chamber` (a CSS grid), so
-      // this JS only needs to compensate during the Quote cover window
-      // when the parent's bottom edge would otherwise release sticky.
+      // engages naturally inside `.approach__chamber` (a CSS grid), but
+      // it can still release a few scroll ticks before the Quote cover is
+      // visibly on top. Gate on the same natural-top condition used for
+      // Build so the native orbit mark never spends a paint tick above
+      // its pinned position before the cover arrives.
       const stageRect = stageEl.getBoundingClientRect();
       const stageNaturalTop = stageRect.top - lastStageTranslate.current;
-      const nextStageTranslate = inCoverWindow
+      const stageShouldPin = stageNaturalTop < stageStickyTopPx.current && practiceCover < 1;
+      const nextStageTranslate = stageShouldPin
         ? Math.max(0, stageStickyTopPx.current - stageNaturalTop)
         : 0;
       if (Math.abs(nextStageTranslate - lastStageTranslate.current) > PIN_EPSILON) {
@@ -213,6 +166,57 @@ export function useLandingScroll(rootRef: React.RefObject<HTMLDivElement | null>
       document.documentElement.setAttribute("data-quote-active", "false");
     }
 
+    return practiceCover;
+  }, []);
+
+  const onScrollFrame = useCallback(() => {
+    rafId.current = null;
+    const root = rootRef.current;
+    if (!root) return;
+
+    const scrollY = window.scrollY;
+    const vh = window.innerHeight;
+    const scrollMax = Math.max(1, document.documentElement.scrollHeight - vh);
+    const progress = Math.max(0, Math.min(1, scrollY / scrollMax));
+
+    // Depth indicator
+    const depthEl = root.querySelector<HTMLElement>("#depthIndicator");
+    if (depthEl) depthEl.style.top = `${progress * 100}%`;
+
+    // Progress text
+    const progressEl = root.querySelector<HTMLElement>("#hudProgress");
+    if (progressEl)
+      progressEl.textContent = `${String(Math.round(progress * 100)).padStart(2, "0")}%`;
+
+    // Depth CSS var
+    root.style.setProperty("--depth", Math.min(1, progress * 1.2).toFixed(4));
+
+    // Coord readouts (inside nav status)
+    const coordD = root.querySelector<HTMLElement>("#coordD");
+    const coordT = root.querySelector<HTMLElement>("#coordT");
+    if (coordD) coordD.textContent = (0.2 + progress * 0.55).toFixed(2);
+    if (coordT)
+      coordT.textContent = `${String(Math.round(progress * 359)).padStart(3, "0")}.${String(Math.round((progress * 10) % 10))}\u00b0`;
+
+    // Hero cover — drives `--hero-cover` on #hero so the video/content
+    // recede (scale + fade) as #definition rises into view. The
+    // mechanic is: hero is `position: sticky; top:0; height:100vh;
+    // z-index:1`, and #definition follows in normal flow at z-index:2
+    // with an opaque var(--void) shield. As #definition.top crosses
+    // from `vh` to `0` (one viewport of scroll), it visually covers
+    // the pinned hero from bottom to top.
+    const heroEl = root.querySelector<HTMLElement>("#hero");
+    const defEl = root.querySelector<HTMLElement>("#definition");
+    let heroCover = 0;
+    if (heroEl && defEl) {
+      const defTop = defEl.getBoundingClientRect().top;
+      heroCover = Math.max(0, Math.min(1, 1 - defTop / vh));
+      heroEl.style.setProperty("--hero-cover", heroCover.toFixed(4));
+      heroEl.style.visibility = heroCover >= 1 ? "hidden" : "";
+    }
+
+    const practiceCover = applyPracticePinCompensation(root, vh);
+
     // Active station
     const stations = Array.from(root.querySelectorAll<HTMLElement>(".station"));
     const viewportMid = scrollY + vh / 2;
@@ -245,12 +249,14 @@ export function useLandingScroll(rootRef: React.RefObject<HTMLDivElement | null>
     }
 
     telemetryRef.current = { progress, activeStation: activeKey, heroCover, practiceCover };
-  }, [rootRef]);
+  }, [applyPracticePinCompensation, rootRef]);
 
   const onScroll = useCallback(() => {
+    const root = rootRef.current;
+    if (root) applyPracticePinCompensation(root, window.innerHeight);
     if (rafId.current) return;
     rafId.current = window.requestAnimationFrame(onScrollFrame);
-  }, [onScrollFrame]);
+  }, [applyPracticePinCompensation, onScrollFrame, rootRef]);
 
   const onResize = useCallback(() => {
     refreshStickyCache();
