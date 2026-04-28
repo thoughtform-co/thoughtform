@@ -6733,22 +6733,22 @@ html {
 }
 .build-case__head__status {
   margin-left: auto;
-  padding: 4px 10px;
-  border: 1px solid var(--dawn-15);
   font-size: 9px;
   letter-spacing: var(--track-wide, 0.12em);
+  color: var(--dawn-70, rgba(232, 228, 216, 0.7));
 }
 .build-case__head__status--production {
   color: var(--gold);
-  border-color: var(--gold-30, rgba(202, 165, 84, 0.45));
-  background: rgba(202, 165, 84, 0.06);
+}
+.build-case__head__status--wip {
+  color: var(--dawn-70, rgba(232, 228, 216, 0.7));
 }
 
 .build-case__head__title {
   margin-top: clamp(24px, 4vh, 44px);
   display: flex;
   flex-direction: column;
-  gap: clamp(10px, 1.4vh, 18px);
+  gap: 8px;
 }
 
 .build-case__name {
@@ -6792,8 +6792,6 @@ html {
   display: flex;
   flex-direction: column;
   gap: clamp(16px, 2vh, 28px);
-  border-top: 1px dashed var(--dawn-08);
-  padding-top: clamp(20px, 2.6vh, 32px);
   max-width: 46ch;
 }
 
@@ -6803,24 +6801,16 @@ html {
   font-size: 10px;
   letter-spacing: var(--track-widest, 0.18em);
   text-transform: uppercase;
-  padding: 6px 12px;
-  border: 1px solid var(--dawn-30);
   color: var(--dawn);
-  background: rgba(15, 14, 12, 0.45);
 }
 .build-case__mode--repair {
-  border-color: var(--dawn-30);
   color: var(--dawn);
 }
 .build-case__mode--compress {
-  border-color: var(--gold-30, rgba(202, 165, 84, 0.45));
   color: var(--gold);
-  background: rgba(202, 165, 84, 0.06);
 }
 .build-case__mode--invent {
-  border-color: rgba(180, 150, 220, 0.45);
   color: rgba(220, 200, 240, 0.95);
-  background: rgba(140, 110, 180, 0.06);
 }
 
 .build-case__body__text {
@@ -6838,8 +6828,6 @@ html {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: clamp(12px, 2vw, 24px);
-  border-top: 1px solid var(--dawn-08);
-  padding-top: clamp(16px, 2vh, 24px);
 }
 .build-case__metric {
   display: flex;
@@ -6862,30 +6850,28 @@ html {
   color: var(--dawn-50, rgba(232, 228, 216, 0.5));
 }
 
-/* ─── Frame: navigationally-inspired image panel ─── */
+/* ─── Frame: clean image plate with one bracket gesture ─── */
 .build-case__frame {
   position: relative;
   margin: 0;
   align-self: stretch;
-  /* No padding on the figure — bracket positions are absolute-relative to
-     this box, ladder and bars sit on the inside. */
 }
 .build-case__frame__shell {
   position: relative;
   width: 100%;
   aspect-ratio: 16 / 10;
-  background: linear-gradient(180deg, rgba(15, 14, 12, 0.6) 0%, rgba(10, 9, 8, 0.92) 100%);
+  background: var(--void, rgba(10, 9, 8, 0.92));
   border: 1px solid var(--dawn-08);
   overflow: hidden;
   isolation: isolate;
 }
 
-/* Asymmetric brackets — only TL+BR for variant a; TR+BL for variant b.
-   Reads as a measured image plate, not a uniform card. */
+/* Asymmetric brackets — TL+BR for variant a; TR+BL for variant b. The
+   only HUD chrome that survives on the image; reads as a brand stamp. */
 .build-case__frame__bracket {
   position: absolute;
-  width: 18px;
-  height: 18px;
+  width: 14px;
+  height: 14px;
   border: 1px solid var(--gold);
   z-index: 4;
   opacity: 0.85;
@@ -6921,144 +6907,12 @@ html {
   border-top: none;
 }
 
-.build-case__frame__topbar,
-.build-case__frame__bottombar {
-  position: absolute;
-  left: 0;
-  right: 0;
-  height: 28px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 0 16px;
-  font-family: var(--font-pt-mono);
-  font-size: 9px;
-  letter-spacing: var(--track-widest, 0.18em);
-  text-transform: uppercase;
-  color: var(--dawn-50, rgba(232, 228, 216, 0.5));
-  z-index: 4;
-  pointer-events: none;
-}
-.build-case__frame__topbar {
-  top: 0;
-  border-bottom: 1px solid var(--dawn-08);
-  background: linear-gradient(180deg, rgba(10, 9, 8, 0.7), rgba(10, 9, 8, 0.4));
-}
-.build-case__frame__bottombar {
-  bottom: 0;
-  border-top: 1px solid var(--dawn-08);
-  background: linear-gradient(0deg, rgba(10, 9, 8, 0.7), rgba(10, 9, 8, 0.4));
-}
-.build-case__frame__topbar .k,
-.build-case__frame__bottombar .k {
-  color: var(--gold);
-  margin-right: 6px;
-}
-.build-case__frame__topbar__rule,
-.build-case__frame__bottombar__rule {
-  flex: 1;
-  height: 1px;
-  background: linear-gradient(to right, var(--gold-30, rgba(202, 165, 84, 0.45)), transparent);
-}
-.build-case--b .build-case__frame__topbar__rule,
-.build-case--b .build-case__frame__bottombar__rule {
-  background: linear-gradient(to left, var(--gold-30, rgba(202, 165, 84, 0.45)), transparent);
-}
-.build-case__frame__topbar__id,
-.build-case__frame__bottombar__brg {
-  color: var(--dawn);
-}
-.build-case__frame__topbar__fig,
-.build-case__frame__bottombar__tag {
-  color: var(--dawn-70, rgba(232, 228, 216, 0.7));
-}
-
-/* Depth ladder — vertical ticks pinned to the right (variant a) or left
-   (variant b). Two majors at 33% and 66% break the rhythm. */
-.build-case__frame__ladder {
-  position: absolute;
-  top: 32px;
-  bottom: 32px;
-  width: 22px;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  align-items: center;
-  z-index: 4;
-  pointer-events: none;
-}
-.build-case--a .build-case__frame__ladder {
-  right: 0;
-  border-left: 1px solid var(--dawn-08);
-}
-.build-case--b .build-case__frame__ladder {
-  left: 0;
-  border-right: 1px solid var(--dawn-08);
-}
-
-.build-case__frame__ladder__tick {
-  width: 8px;
-  height: 1px;
-  background: var(--dawn-30);
-  opacity: 0.7;
-}
-.build-case__frame__ladder__tick.is-major {
-  width: 14px;
-  background: var(--gold);
-  opacity: 0.9;
-}
-
-/* Reticle pip — small diamond + label in the corner opposite the inset.
-   Variant a → bottom-left, variant b → bottom-right. Reads as a
-   waypoint marker on the image plate. */
-.build-case__frame__reticle {
-  position: absolute;
-  bottom: 40px;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  z-index: 4;
-  pointer-events: none;
-  font-family: var(--font-pt-mono);
-  font-size: 9px;
-  letter-spacing: var(--track-widest, 0.18em);
-  text-transform: uppercase;
-  color: var(--dawn-70, rgba(232, 228, 216, 0.7));
-}
-.build-case--a .build-case__frame__reticle {
-  left: 32px;
-}
-.build-case--b .build-case__frame__reticle {
-  right: 32px;
-  flex-direction: row-reverse;
-}
-
-.build-case__frame__reticle__diamond {
-  width: 8px;
-  height: 8px;
-  background: var(--gold);
-  transform: rotate(45deg);
-  box-shadow: 0 0 12px rgba(202, 165, 84, 0.5);
-}
-.build-case__frame__reticle__label {
-  letter-spacing: var(--track-wider, 0.16em);
-}
-
-/* Hero image — fills the inner area between top/bottom bars and the
-   ladder. Padded slightly so the bars don't crop the screenshot. */
+/* Hero image — fills the plate edge-to-edge. With all the surrounding
+   chrome (top/bottom bars, ladder) removed, the image sits flush. */
 .build-case__frame__hero {
   position: absolute;
-  top: 28px;
-  bottom: 28px;
-  left: 0;
-  right: 0;
+  inset: 0;
   z-index: 1;
-}
-.build-case--a .build-case__frame__hero {
-  right: 22px;
-}
-.build-case--b .build-case__frame__hero {
-  left: 22px;
 }
 .build-case__frame__hero__img {
   object-fit: cover;
@@ -7066,58 +6920,11 @@ html {
   filter: brightness(0.96) saturate(0.94);
 }
 
-/* Inset detail — small secondary screenshot in the corner opposite the
-   reticle. Variant a → top-right, variant b → top-left. Asymmetric on
-   purpose: it's a deliberate annotation, not a sticker. */
-.build-case__frame__inset {
-  position: absolute;
-  width: clamp(120px, 18vw, 240px);
-  aspect-ratio: 16 / 10;
-  top: 56px;
-  z-index: 3;
-  border: 1px solid var(--gold-30, rgba(202, 165, 84, 0.45));
-  background: var(--surface-1, rgba(15, 14, 12, 0.85));
-  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.55);
-  overflow: hidden;
-}
-.build-case--a .build-case__frame__inset {
-  right: 56px;
-}
-.build-case--b .build-case__frame__inset {
-  left: 56px;
-}
-
-.build-case__frame__inset__label {
-  position: absolute;
-  top: 6px;
-  left: 8px;
-  z-index: 2;
-  font-family: var(--font-pt-mono);
-  font-size: 8px;
-  letter-spacing: var(--track-widest, 0.18em);
-  text-transform: uppercase;
-  color: var(--dawn);
-  background: rgba(10, 9, 8, 0.85);
-  padding: 3px 6px;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-}
-.build-case__frame__inset__label .k {
-  color: var(--gold);
-  margin-right: 2px;
-}
-.build-case__frame__inset__img {
-  object-fit: cover;
-  object-position: center top;
-}
-
-/* ─── Capabilities grid (full-width below the head/frame) ─── */
+/* ─── Capabilities (plain text grid, no card chrome) ─── */
 .build-case__caps {
   list-style: none;
-  margin: clamp(28px, 5vh, 60px) 0 0;
-  padding-top: clamp(20px, 3vh, 32px);
-  border-top: 1px dashed var(--dawn-08);
+  margin: clamp(48px, 7vh, 96px) 0 0;
+  padding: 0;
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: clamp(20px, 2.4vw, 36px);
@@ -7126,14 +6933,6 @@ html {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  padding-left: 14px;
-  border-left: 1px solid var(--dawn-15);
-}
-.build-case__cap__num {
-  font-family: var(--font-pt-mono);
-  font-size: 9px;
-  letter-spacing: var(--track-widest, 0.18em);
-  color: var(--gold);
 }
 .build-case__cap__title {
   margin: 0;
@@ -7152,57 +6951,73 @@ html {
   color: var(--dawn-70, rgba(232, 228, 216, 0.7));
 }
 
-/* ─── Foot: stack pills + repo CTA ─── */
+/* ─── Foot: inline mono stack line + quiet text-link CTA ─── */
 .build-case__foot {
   margin-top: clamp(24px, 3vh, 36px);
   padding-top: clamp(20px, 2.6vh, 32px);
   border-top: 1px solid var(--dawn-08);
   display: flex;
-  align-items: center;
+  align-items: baseline;
   justify-content: space-between;
-  gap: 24px;
+  gap: clamp(16px, 3vw, 32px);
   flex-wrap: wrap;
 }
 .build-case__stack {
-  list-style: none;
   margin: 0;
   padding: 0;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px 10px;
-}
-.build-case__stack li {
   font-family: var(--font-pt-mono);
-  font-size: 10px;
+  font-size: 11px;
   letter-spacing: var(--track-wide, 0.12em);
   color: var(--dawn-70, rgba(232, 228, 216, 0.7));
-  padding: 6px 12px;
-  border: 1px solid var(--dawn-08);
-  background: rgba(15, 14, 12, 0.55);
+  flex: 1 1 280px;
+}
+.build-case__stack__label {
+  text-transform: uppercase;
+  letter-spacing: var(--track-widest, 0.18em);
+  color: var(--dawn-50, rgba(232, 228, 216, 0.5));
+  margin-right: 10px;
 }
 .build-case__cta {
+  position: relative;
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  padding: 12px 20px;
+  padding: 12px 0;
   font-family: var(--font-pt-mono);
   font-size: 11px;
   letter-spacing: var(--track-wider, 0.16em);
   text-transform: uppercase;
   color: var(--dawn);
-  background: var(--dawn);
-  color: var(--void);
   text-decoration: none;
-  transition:
-    background var(--duration-normal, 240ms) var(--ease-out, cubic-bezier(0.22, 0.61, 0.36, 1)),
-    color var(--duration-normal, 240ms) var(--ease-out, cubic-bezier(0.22, 0.61, 0.36, 1)),
-    transform var(--duration-fast, 160ms) var(--ease-out, cubic-bezier(0.22, 0.61, 0.36, 1));
+  background: transparent;
+  border: 0;
+  transition: color var(--duration-fast, 160ms) var(--ease-out, cubic-bezier(0.22, 0.61, 0.36, 1));
 }
-.build-case__cta:hover,
-.build-case__cta:focus-visible {
-  background: var(--gold);
-  color: var(--void);
-  transform: translateY(-2px);
+.build-case__cta::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 6px;
+  height: 1px;
+  width: 100%;
+  background: var(--dawn-30);
+  transform-origin: left;
+  transform: scaleX(0);
+  transition: transform var(--duration-normal, 240ms)
+    var(--ease-out, cubic-bezier(0.22, 0.61, 0.36, 1));
+}
+.build-case__cta:hover::after,
+.build-case__cta:focus-visible::after {
+  transform: scaleX(1);
+}
+.build-case__cta__arrow {
+  color: var(--gold);
+  transition: transform var(--duration-fast, 160ms)
+    var(--ease-out, cubic-bezier(0.22, 0.61, 0.36, 1));
+}
+.build-case__cta:hover .build-case__cta__arrow,
+.build-case__cta:focus-visible .build-case__cta__arrow {
+  transform: translateX(3px);
 }
 
 /* ─── Tablet & phone ─── */
@@ -7220,15 +7035,6 @@ html {
   }
   .build-case__caps {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  .build-case--a .build-case__frame__hero,
-  .build-case--b .build-case__frame__hero {
-    left: 0;
-    right: 0;
-  }
-  .build-case--a .build-case__frame__ladder,
-  .build-case--b .build-case__frame__ladder {
-    display: none;
   }
 }
 
@@ -7255,18 +7061,14 @@ html {
   }
   .build-case__caps {
     grid-template-columns: minmax(0, 1fr);
+    gap: clamp(28px, 5vh, 40px);
   }
   .build-case__frame__shell {
     aspect-ratio: 4 / 3;
   }
-  .build-case__frame__inset {
-    width: 110px;
-  }
-  .build-case--a .build-case__frame__inset {
-    right: 28px;
-  }
-  .build-case--b .build-case__frame__inset {
-    left: 28px;
+  .build-case__frame__bracket {
+    width: 12px;
+    height: 12px;
   }
   .build-case__foot {
     flex-direction: column;
@@ -7274,17 +7076,20 @@ html {
   }
   .build-case__cta {
     align-self: stretch;
-    justify-content: center;
+    justify-content: flex-start;
+    padding: 14px 0;
   }
 }
 
 /* ─── Reduced motion ─── */
 @media (prefers-reduced-motion: reduce) {
-  .build-case__cta {
+  .build-case__cta,
+  .build-case__cta::after,
+  .build-case__cta__arrow {
     transition: none;
   }
-  .build-case__cta:hover,
-  .build-case__cta:focus-visible {
+  .build-case__cta:hover .build-case__cta__arrow,
+  .build-case__cta:focus-visible .build-case__cta__arrow {
     transform: none;
   }
 }

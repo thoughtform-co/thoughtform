@@ -15,14 +15,15 @@ interface BuildCaseSlideProps {
  *   - even index → copy left, frame right (variant a)
  *   - odd index  → frame left, copy right (variant b)
  *
- * The slide is intentionally low-chrome compared to the practice orbit —
- * it reads as a measured technical readout rather than a stage. All shape
- * grammar (corner brackets, hairlines, depth ladder) is inherited from the
- * v7 HUD vocabulary.
+ * Sparse readout — the screenshot is a clean plate with corner brackets,
+ * head collapses to three lines (no boxed status pill), the workflow tag
+ * is plain inline mono, capabilities are unbordered text, and the stack
+ * is a single mono line ending with a quiet text-link CTA.
  */
 export function BuildCaseSlide({ study, index, total }: BuildCaseSlideProps) {
   const variant: "a" | "b" = index % 2 === 0 ? "a" : "b";
   const counter = `${String(index + 1).padStart(2, "0")} / ${String(total).padStart(2, "0")}`;
+  const statusLabel = study.status === "production" ? "● Production" : "◐ Work in progress";
 
   return (
     <article
@@ -35,7 +36,7 @@ export function BuildCaseSlide({ study, index, total }: BuildCaseSlideProps) {
           <span className="build-case__head__rule" aria-hidden="true" />
           <span className="build-case__head__domain">{study.domain}</span>
           <span className={`build-case__head__status build-case__head__status--${study.status}`}>
-            {study.status === "production" ? "● Production" : "◐ Work in progress"}
+            {statusLabel}
           </span>
         </div>
 
@@ -71,11 +72,8 @@ export function BuildCaseSlide({ study, index, total }: BuildCaseSlideProps) {
       </div>
 
       <ul className="build-case__caps" aria-label="Capabilities">
-        {study.capabilities.map((cap, i) => (
+        {study.capabilities.map((cap) => (
           <li className="build-case__cap" key={cap.title}>
-            <span className="build-case__cap__num" aria-hidden="true">
-              {String(i + 1).padStart(2, "0")}
-            </span>
             <h4 className="build-case__cap__title">{cap.title}</h4>
             <p className="build-case__cap__body">{cap.body}</p>
           </li>
@@ -83,11 +81,10 @@ export function BuildCaseSlide({ study, index, total }: BuildCaseSlideProps) {
       </ul>
 
       <footer className="build-case__foot">
-        <ul className="build-case__stack" aria-label="Stack">
-          {study.stack.slice(0, 6).map((s) => (
-            <li key={s}>{s}</li>
-          ))}
-        </ul>
+        <p className="build-case__stack">
+          <span className="build-case__stack__label">Built with</span>
+          {study.stack.slice(0, 6).join(" · ")}
+        </p>
 
         <a
           href={study.repoUrl}
@@ -96,7 +93,9 @@ export function BuildCaseSlide({ study, index, total }: BuildCaseSlideProps) {
           rel="noopener noreferrer"
         >
           View project detail
-          <span aria-hidden="true">→</span>
+          <span className="build-case__cta__arrow" aria-hidden="true">
+            →
+          </span>
         </a>
       </footer>
     </article>

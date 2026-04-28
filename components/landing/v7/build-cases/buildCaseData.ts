@@ -58,7 +58,11 @@ export interface BuildCase {
   /** 3-4 capability cards rendered under the body or visual. */
   capabilities: BuildCaseCapability[];
   hero: BuildCaseScreenshot;
-  /** Optional 1-2 supporting shots used as decorative inserts in the frame. */
+  /**
+   * Optional 1-2 supporting shots. Reserved for the future per-project
+   * detail page; the sparse landing frame intentionally renders only the
+   * hero and does not consume `inserts`.
+   */
   inserts?: BuildCaseScreenshot[];
   repoUrl: string;
 }

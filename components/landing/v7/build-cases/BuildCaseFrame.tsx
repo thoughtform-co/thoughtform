@@ -5,30 +5,23 @@ import type { BuildCase } from "./buildCaseData";
 
 interface BuildCaseFrameProps {
   study: BuildCase;
-  /** Slide index — drives bearing/depth readouts in the frame chrome. */
+  /** Slide index — drives image priority for the first card only. */
   slideIndex: number;
   /** "a" mirrors brackets to TL/BR; "b" mirrors to TR/BL. */
   variant: "a" | "b";
 }
 
 /**
- * The navigationally-inspired image panel for a build case. Holds the hero
- * screenshot inside a HUD-grade frame with asymmetric corner brackets, a
- * depth ladder, bearing readouts, and a small inset detail screenshot. Per
- * variant, the inset and ladder swap sides so consecutive cases feel
- * mirrored.
+ * Image plate for a build case. The screenshot lives inside a minimal
+ * frame: two corner brackets (alternating side per case) on a thin border.
+ *
+ * All other HUD chrome — top/bottom bars, depth ladder, reticle pip,
+ * inset thumbnail — was stripped when the cases were sparsified. The
+ * screenshot is the artifact, not a HUD readout. The bracket survives
+ * as the brand stamp.
  */
 export function BuildCaseFrame({ study, slideIndex, variant }: BuildCaseFrameProps) {
-  const { hero, inserts } = study;
-  const inset = inserts?.[0];
-
-  // 8-position depth gauge — drives the right/left ladder. Cases land at
-  // bearings 042, 116, 248, 304 to keep the readouts asymmetric without
-  // looking random; pads to 3 chars for a stable monospace width.
-  const bearings = ["042", "116", "248", "304"];
-  const bearing = bearings[slideIndex % bearings.length];
-  const depth = (0.31 + slideIndex * 0.13).toFixed(2);
-  const figLabel = `FIG · ${study.index.replace(/\s/g, "")} / ${study.id.toUpperCase()}`;
+  const { hero } = study;
 
   return (
     <figure
@@ -45,40 +38,6 @@ export function BuildCaseFrame({ study, slideIndex, variant }: BuildCaseFramePro
           aria-hidden="true"
         />
 
-        <span className="build-case__frame__topbar" aria-hidden="true">
-          <span className="build-case__frame__topbar__id">
-            <span className="k">δ</span>
-            {depth}
-          </span>
-          <span className="build-case__frame__topbar__rule" />
-          <span className="build-case__frame__topbar__fig">{figLabel}</span>
-        </span>
-
-        <span className="build-case__frame__bottombar" aria-hidden="true">
-          <span className="build-case__frame__bottombar__brg">
-            <span className="k">brg</span>
-            {bearing}°
-          </span>
-          <span className="build-case__frame__bottombar__rule" />
-          <span className="build-case__frame__bottombar__tag">
-            {study.status === "production" ? "● Live · production" : "◐ WIP · in build"}
-          </span>
-        </span>
-
-        <span className="build-case__frame__ladder" aria-hidden="true">
-          {Array.from({ length: 9 }).map((_, i) => (
-            <span
-              key={i}
-              className={`build-case__frame__ladder__tick${i === 2 || i === 6 ? " is-major" : ""}`}
-            />
-          ))}
-        </span>
-
-        <span className="build-case__frame__reticle" aria-hidden="true">
-          <span className="build-case__frame__reticle__diamond" />
-          <span className="build-case__frame__reticle__label">04q · {study.id}</span>
-        </span>
-
         <div className="build-case__frame__hero">
           <Image
             src={hero.src}
@@ -89,21 +48,6 @@ export function BuildCaseFrame({ study, slideIndex, variant }: BuildCaseFramePro
             priority={slideIndex === 0}
           />
         </div>
-
-        {inset && (
-          <div className="build-case__frame__inset" aria-hidden="true">
-            <span className="build-case__frame__inset__label">
-              <span className="k">det</span>· {study.id}/02
-            </span>
-            <Image
-              src={inset.src}
-              alt={inset.alt}
-              fill
-              sizes="(max-width: 760px) 60vw, 320px"
-              className="build-case__frame__inset__img"
-            />
-          </div>
-        )}
       </div>
 
       <figcaption id={`build-case-${study.id}-caption`} className="visually-hidden">
