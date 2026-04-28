@@ -151,7 +151,10 @@ export function useLandingScroll(rootRef: React.RefObject<HTMLDivElement | null>
 
       const inCoverWindow = quoteTop <= vh * 1.15 && practiceCover < 1;
 
-      // Stage (orbit) compensation
+      // Stage (orbit) compensation. The stage's CSS `position: sticky`
+      // engages naturally inside `.approach__chamber` (a CSS grid), so
+      // this JS only needs to compensate during the Quote cover window
+      // when the parent's bottom edge would otherwise release sticky.
       const stageRect = stageEl.getBoundingClientRect();
       const stageNaturalTop = stageRect.top - lastStageTranslate.current;
       const nextStageTranslate = inCoverWindow
@@ -169,10 +172,29 @@ export function useLandingScroll(rootRef: React.RefObject<HTMLDivElement | null>
         lastStageTranslate.current = nextStageTranslate;
       }
 
-      // Build phase compensation — same shape as stage
+      // Build phase compensation. The Build phase is declared
+      // `position: sticky` but Chrome does not engage sticky on it in
+      // this layout: the parent `.approach__copy` is an intrinsically-
+      // sized flex column whose height is built from children + a
+      // 100vh `padding-bottom` rather than an explicit size. Verified
+      // at runtime — temporarily setting `.approach__copy { height: ... }`
+      // makes sticky grip; without it, the build phase scrolls past
+      // its sticky-top with no engagement at all.
+      //
+      // As a result, this JS path is the only thing that pins the
+      // Build phase. The pin must engage as soon as Build's natural
+      // top crosses above its sticky-top — not only when the Quote
+      // cover window arrives — otherwise the BUILD title scrolls
+      // offscreen for ~1 viewport, then teleports back into view the
+      // moment the cover gate (`quoteTop <= vh * 1.15`) flips. The
+      // gating below replaces the cover-window gate with the same
+      // condition that natural sticky would have used, plus the
+      // existing `practiceCover < 1` cap so the pin releases the
+      // moment the cover finishes covering.
       const buildRect = buildPhaseEl.getBoundingClientRect();
       const buildNaturalTop = buildRect.top - lastBuildTranslate.current;
-      const nextBuildTranslate = inCoverWindow
+      const buildShouldPin = buildNaturalTop < buildStickyTopPx.current && practiceCover < 1;
+      const nextBuildTranslate = buildShouldPin
         ? Math.max(0, buildStickyTopPx.current - buildNaturalTop)
         : 0;
       if (Math.abs(nextBuildTranslate - lastBuildTranslate.current) > PIN_EPSILON) {

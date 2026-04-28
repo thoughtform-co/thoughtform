@@ -119,6 +119,23 @@ If you introduce a new `position: fixed` or `position: sticky` layer on the land
 
 ---
 
+## Rule 5 — `position: sticky` can silently fail to engage; do not rely on it without a runtime check
+
+CSS `position: sticky` sometimes never engages even when the parent box looks tall enough. The known case on this landing page is `.approach__phase[data-phase="build"]` inside `.approach__copy` (a flex column whose height is built from intrinsic content + `padding-bottom: 100vh` rather than an explicit `height`). Verified in Chrome by setting `.approach__copy { height: <px> !important }` at runtime — sticky engages immediately. Without that, the build phase scrolls past its `top: clamp(116px, 18vh, 168px)` value with no engagement at all; only the JS pin in `useLandingScroll` keeps it visible.
+
+This means: when a Practice → Quote-style "frozen under-layer + opaque cover" pattern depends on sticky pinning, **do not assume sticky works**. Either:
+
+1. Verify with a Playwright sample at scroll positions where natural sticky should be engaged (`buildPhase.getBoundingClientRect().top` should equal the resolved sticky-`top` for many scroll positions in a row), and
+2. Gate any JS pin compensation on `naturalTop < stickyTop && coverProgress < 1` (a self-relative condition that works whether sticky engages or not), instead of gating it on the cover window alone (`quoteTop <= vh * 1.15`). The latter leaves a ~1-viewport gap where the element scrolls offscreen and then teleports back into view as the cover gate flips.
+
+The current implementation in [`useLandingScroll.ts`](../../../components/landing/v7/hooks/useLandingScroll.ts) follows this pattern for the build phase. The orbit stage's sticky does engage naturally inside `.approach__chamber` (a CSS grid), so its compensation still gates on `inCoverWindow`.
+
+**Regression history — do not repeat:**
+
+- After the Quote cover handoff was rebuilt with hero parity (`c03eab0`), `f1496bd`, `7b49336`), the BUILD title still teleported into view ~1 viewport before the cover started rising, because sticky never engaged on the build phase and the JS pin was gated on `quoteTop <= vh * 1.15`. Fix: changed the build pin gate to `buildNaturalTop < buildStickyTop && practiceCover < 1` so the pin engages exactly where natural sticky would have. See `useLandingScroll.ts` — search for "Build phase compensation".
+
+---
+
 ## Pre-merge checklist for any `components/landing/v7/**` or `landing.css` change
 
 Run through every item before opening the PR:
@@ -132,6 +149,7 @@ Run through every item before opening the PR:
 - [ ] Did I add a `position: fixed` or `position: sticky` layer?
   - [ ] Did I update the paint-stack diagram in this skill?
   - [ ] Did I confirm its z-index relative to `.hero` (z:1), `.station:not(.hero)` / `.celestial-connector` (z:2), and `.stations` (z:10)?
+  - [ ] If sticky inside a flex/grid container, did I verify at runtime that it actually engages (Rule 5)? `getBoundingClientRect().top` should equal the resolved sticky-`top` value across a sustained range of scroll positions — not just briefly cross past it.
 - [ ] Manual scroll test from hero through every section and connector, at `prefers-reduced-motion: no-preference`:
   - [ ] No warm tint appears in any section during or after scroll.
   - [ ] No hero video silhouette appears through any later section.
