@@ -21,6 +21,12 @@ const SECTORS: Record<string, string> = {
   contact: "Horizon",
 };
 
+// Threshold (px) below which we skip rewriting the pin compensation
+// variable. Sub-pixel jitter from getBoundingClientRect on a sticky
+// element can otherwise cause the pinned Practice elements to wobble
+// during the Quote cover handoff.
+const PIN_EPSILON = 0.25;
+
 export function useLandingScroll(rootRef: React.RefObject<HTMLDivElement | null>) {
   const telemetryRef = useRef<ScrollTelemetry>({
     progress: 0,
@@ -30,6 +36,36 @@ export function useLandingScroll(rootRef: React.RefObject<HTMLDivElement | null>
   });
   const rafId = useRef<number | null>(null);
   const lastScrollY = useRef(-1);
+
+  // Cached sticky-top values (resolved px from CSS clamp()). These only
+  // change when the viewport resizes, so reading them once per resize
+  // instead of once per scroll frame avoids a hot-path getComputedStyle
+  // call that was forcing extra style recalcs during scroll.
+  const stageStickyTopPx = useRef(0);
+  const buildStickyTopPx = useRef(0);
+
+  // Last applied translate values per element. We track these so we can
+  // compute "natural top" as `rect.top - lastTranslate` without having to
+  // remove the CSS variable every frame to reset the transform — which
+  // was causing a double layout reflow per frame and visible micro-drift
+  // in the pinned orbit/build elements during the Quote cover transition.
+  const lastStageTranslate = useRef(0);
+  const lastBuildTranslate = useRef(0);
+
+  const refreshStickyCache = useCallback(() => {
+    const root = rootRef.current;
+    if (!root) return;
+    const stageEl = root.querySelector<HTMLElement>(".approach__stage");
+    const buildEl = root.querySelector<HTMLElement>('.approach__phase[data-phase="build"]');
+    if (stageEl) {
+      const v = parseFloat(getComputedStyle(stageEl).top);
+      if (Number.isFinite(v)) stageStickyTopPx.current = v;
+    }
+    if (buildEl) {
+      const v = parseFloat(getComputedStyle(buildEl).top);
+      if (Number.isFinite(v)) buildStickyTopPx.current = v;
+    }
+  }, [rootRef]);
 
   const onScrollFrame = useCallback(() => {
     rafId.current = null;
@@ -82,6 +118,22 @@ export function useLandingScroll(rootRef: React.RefObject<HTMLDivElement | null>
     // through the last viewport of #practice; #buildQuote follows as a
     // higher-z opaque cover. As #buildQuote.top moves from `vh` to `0`,
     // it covers the original pinned Practice state from bottom to top.
+    //
+    // Pinning compensation: CSS `position: sticky` releases its lock when
+    // the parent's bottom edge passes the sticky's top + height window,
+    // so without help the orbit and Build phase would scroll out of view
+    // before #buildQuote has fully covered them. We compensate by writing
+    // `--practice-cover-translate` and `--practice-build-translate` so
+    // those elements stay visually pinned until the cover completes.
+    //
+    // Hardened algorithm: instead of removing+resetting the variable each
+    // frame (which forces two layout passes and visible micro-drift), we
+    // track the last applied translate in a ref. The element's "natural"
+    // top is then `rect.top - lastTranslate` — what its top WOULD be if
+    // we applied no translate. We compute the new translate from that
+    // and only write it back if the change exceeds PIN_EPSILON. This
+    // breaks the translation feedback loop that was causing the pinned
+    // elements to appear to move during the Quote cover transition.
     const practiceEl = root.querySelector<HTMLElement>("#practice");
     const stageEl = root.querySelector<HTMLElement>(".approach__stage");
     const chamberEl = root.querySelector<HTMLElement>(".approach__chamber");
@@ -97,31 +149,42 @@ export function useLandingScroll(rootRef: React.RefObject<HTMLDivElement | null>
       practiceCover = Math.max(0, Math.min(1, 1 - quoteTop / vh));
       practiceEl.style.setProperty("--practice-cover", practiceCover.toFixed(4));
 
-      const stickyTopPx = parseFloat(getComputedStyle(stageEl).top) || 0;
-      const shouldPinPracticeStage = quoteTop <= vh * 1.15 && practiceCover < 1;
-      if (shouldPinPracticeStage) {
-        stageEl.style.removeProperty("--practice-cover-translate");
-        const stageRect = stageEl.getBoundingClientRect();
-        const delta = Math.max(0, stickyTopPx - stageRect.top);
-        stageEl.style.setProperty("--practice-cover-translate", `${delta.toFixed(1)}px`);
-      } else {
-        stageEl.style.removeProperty("--practice-cover-translate");
+      const inCoverWindow = quoteTop <= vh * 1.15 && practiceCover < 1;
+
+      // Stage (orbit) compensation
+      const stageRect = stageEl.getBoundingClientRect();
+      const stageNaturalTop = stageRect.top - lastStageTranslate.current;
+      const nextStageTranslate = inCoverWindow
+        ? Math.max(0, stageStickyTopPx.current - stageNaturalTop)
+        : 0;
+      if (Math.abs(nextStageTranslate - lastStageTranslate.current) > PIN_EPSILON) {
+        if (nextStageTranslate === 0) {
+          stageEl.style.removeProperty("--practice-cover-translate");
+        } else {
+          stageEl.style.setProperty(
+            "--practice-cover-translate",
+            `${nextStageTranslate.toFixed(1)}px`
+          );
+        }
+        lastStageTranslate.current = nextStageTranslate;
       }
 
-      // Keep the *original* Build phase visible during the cover. CSS sticky
-      // still has container-end limits, so once the axiom is close enough to
-      // enter we directly compensate the Build phase's Y position back to its
-      // intended sticky top. This is not a duplicate frame; it preserves the
-      // original DOM node while the quote covers it.
-      const buildStickyTopPx = parseFloat(getComputedStyle(buildPhaseEl).top) || 0;
-      const shouldPinBuild = quoteTop <= vh * 1.15 && practiceCover < 1;
-      if (shouldPinBuild) {
-        buildPhaseEl.style.removeProperty("--practice-build-translate");
-        const buildRect = buildPhaseEl.getBoundingClientRect();
-        const delta = Math.max(0, buildStickyTopPx - buildRect.top);
-        buildPhaseEl.style.setProperty("--practice-build-translate", `${delta.toFixed(1)}px`);
-      } else {
-        buildPhaseEl.style.removeProperty("--practice-build-translate");
+      // Build phase compensation — same shape as stage
+      const buildRect = buildPhaseEl.getBoundingClientRect();
+      const buildNaturalTop = buildRect.top - lastBuildTranslate.current;
+      const nextBuildTranslate = inCoverWindow
+        ? Math.max(0, buildStickyTopPx.current - buildNaturalTop)
+        : 0;
+      if (Math.abs(nextBuildTranslate - lastBuildTranslate.current) > PIN_EPSILON) {
+        if (nextBuildTranslate === 0) {
+          buildPhaseEl.style.removeProperty("--practice-build-translate");
+        } else {
+          buildPhaseEl.style.setProperty(
+            "--practice-build-translate",
+            `${nextBuildTranslate.toFixed(1)}px`
+          );
+        }
+        lastBuildTranslate.current = nextBuildTranslate;
       }
     } else {
       root.setAttribute("data-quote-active", "false");
@@ -167,21 +230,27 @@ export function useLandingScroll(rootRef: React.RefObject<HTMLDivElement | null>
     rafId.current = window.requestAnimationFrame(onScrollFrame);
   }, [onScrollFrame]);
 
+  const onResize = useCallback(() => {
+    refreshStickyCache();
+    onScroll();
+  }, [refreshStickyCache, onScroll]);
+
   // Run FIRST frame synchronously before paint to prevent hero flash
   useLayoutEffect(() => {
+    refreshStickyCache();
     onScrollFrame();
-  }, [onScrollFrame]);
+  }, [refreshStickyCache, onScrollFrame]);
 
   useEffect(() => {
     window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll);
+    window.addEventListener("resize", onResize);
     return () => {
       window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onScroll);
+      window.removeEventListener("resize", onResize);
       document.documentElement.removeAttribute("data-quote-active");
       if (rafId.current) window.cancelAnimationFrame(rafId.current);
     };
-  }, [onScroll]);
+  }, [onScroll, onResize]);
 
   return telemetryRef;
 }

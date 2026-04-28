@@ -4325,6 +4325,11 @@ html {
      pinned while the quote covers it. */
   transform: translate3d(0, var(--practice-cover-translate, 0px), 0);
   will-change: transform;
+  /* Layout containment isolates the sticky stage from the parent flow so
+     micro-jitter in the sticky compensation never feeds back into the
+     surrounding chamber's layout pass. Keeps the orbit visually locked
+     during the Quote cover handoff. */
+  contain: layout;
 }
 .approach__stage__inner {
   position: relative;
@@ -4820,6 +4825,9 @@ html {
   z-index: 2;
   transform: translate3d(0, var(--practice-build-translate, 0px), 0);
   will-change: transform;
+  /* Same containment as .approach__stage — see comment above. The Build
+     phase pins through the Quote cover runway and must not jitter. */
+  contain: layout;
 }
 
 .approach__phase[data-phase="build"] .approach__cta {
@@ -6090,18 +6098,28 @@ html {
 
 /* Cover station: the axiom rises into view in normal flow. z-index:3
    places it above #practice (z:2), so the key visual physically covers
-   the pinned original Build/orbit state for one viewport of scroll. */
+   the pinned original Build/orbit state for one viewport of scroll.
+   Explicit opaque background (Rule 1 of ADR-008) — the higher specificity
+   of `.station.station--cover` ensures this beats `.station:not(.hero)`
+   so the cover never lets the gateway radial or the pinned Practice
+   elements bleed through during the handoff. */
 .station.station--cover {
   position: relative;
   height: 100vh;
   height: 100svh;
   min-height: 0;
   z-index: 3;
+  background: var(--void);
   /* No content-visibility: auto — the section needs real 100vh geometry
      so the `useLandingScroll` --practice-cover scalar (driven by this
      element's top edge) reads correctly through the cover handoff. */
   content-visibility: visible;
   contain-intrinsic-size: auto;
+  /* Promote to its own composite layer so the underlying Practice
+     elements never bleed through during scroll-driven repaints. The
+     cover slides up as a single GPU-backed surface. */
+  isolation: isolate;
+  will-change: transform;
 }
 
 .build-quote {
