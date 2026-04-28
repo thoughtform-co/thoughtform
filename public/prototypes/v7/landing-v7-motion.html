@@ -4718,75 +4718,22 @@ html { scroll-behavior: smooth; }
 
       </div>
 
-      <!-- Latent horizon — diagram codetta toward cases (void shield; reveal on inner) -->
-      <div class="approach__horizon">
-        <div class="approach__horizon__reveal" data-m="instrument">
-          <span class="approach__horizon__label approach__horizon__label--l">δ · LATENT HORIZON</span>
-          <span class="approach__horizon__label approach__horizon__label--r">→ CASES</span>
-          <svg class="approach__horizon__svg" viewBox="-700 -24 1400 200" preserveAspectRatio="xMidYMax meet" aria-hidden="true">
-            <g fill="none" stroke="var(--gold)" stroke-linecap="round">
-              <circle cx="0" cy="430" r="268" stroke-width="0.45" stroke-opacity="0.12" />
-              <circle cx="0" cy="430" r="328" stroke-width="0.45" stroke-opacity="0.14" />
-              <circle cx="0" cy="430" r="398" stroke-width="0.5" stroke-opacity="0.16" />
-              <circle cx="0" cy="430" r="478" stroke-width="0.55" stroke-opacity="0.18" />
-              <circle cx="0" cy="430" r="568" stroke-width="0.6" stroke-opacity="0.16" />
-              <circle cx="0" cy="430" r="672" stroke-width="0.65" stroke-opacity="0.13" />
-              <circle cx="0" cy="430" r="790" stroke-width="0.7" stroke-opacity="0.1" />
-              <circle cx="0" cy="430" r="920" stroke-width="0.75" stroke-opacity="0.08" />
-              <circle cx="0" cy="430" r="1060" stroke-width="0.8" stroke-opacity="0.06" />
-            </g>
-
-            <g>
-              <path d="M-253 20 L-249 24 L-253 28 L-257 24 Z" fill="var(--gold)" fill-opacity="0.48" stroke="var(--gold)" stroke-width="0.35" stroke-opacity="0.55" />
-              <path d="M253 20 L257 24 L253 28 L249 24 Z" fill="var(--gold)" fill-opacity="0.48" stroke="var(--gold)" stroke-width="0.35" stroke-opacity="0.55" />
-              <path d="M-422 46 L-419 50 L-422 54 L-425 50 Z" fill="none" stroke="var(--dawn-30)" stroke-width="0.35" stroke-opacity="0.8" />
-              <path d="M422 46 L425 50 L422 54 L419 50 Z" fill="none" stroke="var(--dawn-30)" stroke-width="0.35" stroke-opacity="0.8" />
-            </g>
-
-            <g stroke="var(--dawn-30)" stroke-width="0.35" stroke-linecap="round">
-              <line x1="-338" y1="83" x2="-342" y2="87" stroke-opacity="0.55" />
-              <line x1="338" y1="83" x2="342" y2="87" stroke-opacity="0.55" />
-              <line x1="-198" y1="34" x2="-196" y2="36" stroke-opacity="0.5" />
-              <line x1="198" y1="34" x2="196" y2="36" stroke-opacity="0.5" />
-            </g>
-
-            <g>
-              <circle cx="-103" cy="46" r="1.3" fill="var(--gold)" fill-opacity="0.55" />
-              <circle cx="103" cy="46" r="1.3" fill="var(--gold)" fill-opacity="0.55" />
-              <circle cx="-256" cy="125" r="1" fill="var(--gold)" fill-opacity="0.42" />
-              <circle cx="256" cy="125" r="1" fill="var(--gold)" fill-opacity="0.42" />
-              <circle cx="-139" cy="133" r="1.1" fill="var(--dawn)" fill-opacity="0.38" />
-              <circle cx="139" cy="133" r="1.1" fill="var(--dawn)" fill-opacity="0.38" />
-              <circle cx="-582" cy="94" r="0.9" fill="var(--gold)" fill-opacity="0.3" />
-              <circle cx="582" cy="94" r="0.9" fill="var(--gold)" fill-opacity="0.3" />
-            </g>
-
-            <line x1="0" y1="36" x2="0" y2="156" stroke="var(--dawn-15)" stroke-width="0.55" stroke-opacity="0.9" />
-            <path d="M0 148 L7 162 L0 176 L-7 162 Z" fill="var(--gold)" fill-opacity="0.22" stroke="var(--gold)" stroke-width="0.45" stroke-opacity="0.55" />
-          </svg>
-        </div>
-      </div>
-
-    </div>
-
-    <!-- Through-line -->
-    <div class="approach__throughline">
-      <strong>The through-line</strong>
-      <span>→ Navigate gives <em>fluency.</em></span>
-      <span>Encode turns fluency into <em>leverage.</em></span>
-      <span>Build turns leverage into <em>software.</em></span>
     </div>
   </section>
 
-  <!-- ═══════════ 04.5 BUILD AXIOM · sticky quote interstitial ═══════════
-       Pinned full-viewport panel that transits from Practice into the
-       Build cases. Sits at z:1 like .hero so the next station
-       (#build, z:2 via .station:not(.hero)) physically covers it as the
-       user scrolls — same parallax handoff as hero → definition.
+  <!-- ═══════════ 04.5 BUILD AXIOM · key-visual quote interstitial ═══════════
+       The quote panel covers the END of #practice via hero-style
+       grammar: #practice extends with an internal cover-runway (see
+       `.approach__chamber` padding-bottom in landing.css). The orbit
+       (sticky inside the chamber) pins through the runway. Quote
+       follows in normal flow and rises during the runway, with the
+       orbit visible underneath — same mechanic as #definition rising
+       over .hero. No negative margins, no separate practice-tail.
        Compositing: the wrapper carries an opaque var(--void) shield;
        reveal motion runs on inner elements only (Rule 2 of the
-       landing-v7-compositing skill). =============================== -->
-  <section class="station station--sticky build-quote" id="buildQuote" data-station="buildQuote" data-screen-label="04.5 Axiom">
+       landing-v7-compositing skill). The bottom of the panel carries
+       a gradient + backdrop-blur dissolve into Build cases. ========= -->
+  <section class="station station--cover build-quote" id="buildQuote" data-station="buildQuote" data-screen-label="04.5 Axiom">
     <!-- No corner L-brackets here on purpose: the page-level HUD grid
          already carries L-brackets at the four outer corners and a
          second set inside this panel competes with that frame. The
@@ -4797,6 +4744,24 @@ html { scroll-behavior: smooth; }
     <span class="build-quote__label build-quote__label--tr" aria-hidden="true"><span class="k">δ</span> 0.62 · Build axiom</span>
     <span class="build-quote__label build-quote__label--bl" aria-hidden="true">Field · build</span>
     <span class="build-quote__label build-quote__label--br" aria-hidden="true"><span class="k">Fig</span> · 04q / Feynman</span>
+
+    <!-- Gateway visual — atmospheric bridge from the practice tail into
+         the Build cases. The white-top / dark-bottom key visual sits
+         behind the diagram and quote (Rule 1: wrapper still paints void
+         underneath). aria-hidden + no data-m so the IO reveal stays on
+         .build-quote__figure only (Rule 2).
+         data-parallax=".04" routes through useLandingScroll's [data-parallax]
+         handler — it writes --py and the global CSS rule applies it via
+         the `translate` property (separate from `transform`), so this
+         image gets one motion channel only, identical to .hero__video. -->
+    <div class="build-quote__gateway" aria-hidden="true">
+      <img class="build-quote__gateway__img"
+           src="/images/Thoughtform_Key%20Visual_14d.jpg"
+           alt=""
+           data-parallax=".04"
+           loading="lazy"
+           decoding="async" />
+    </div>
 
     <div class="build-quote__inner">
 
@@ -4888,6 +4853,14 @@ html { scroll-behavior: smooth; }
         </figcaption>
       </figure>
     </div>
+
+    <!-- Bottom dissolve — gradient + backdrop-blur layer that softens
+         the panel's lower edge as the user scrolls out, so the key
+         visual visibly fades into the Build cases section instead of
+         ending at a hard horizontal seam. Sits above the gateway
+         image but below the corner labels (which stay crisp on the
+         dust-dark floor). aria-hidden because purely decorative. -->
+    <div class="build-quote__dissolve" aria-hidden="true"></div>
   </section>
 
   <!-- ═══════════ 05 BUILD · creative-tech cases (React portal) ═══════════

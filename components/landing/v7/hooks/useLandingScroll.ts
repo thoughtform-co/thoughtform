@@ -5,7 +5,7 @@ interface ScrollTelemetry {
   progress: number;
   activeStation: string;
   heroCover: number;
-  buildCover: number;
+  practiceCover: number;
 }
 
 const SECTORS: Record<string, string> = {
@@ -26,7 +26,7 @@ export function useLandingScroll(rootRef: React.RefObject<HTMLDivElement | null>
     progress: 0,
     activeStation: "hero",
     heroCover: 0,
-    buildCover: 0,
+    practiceCover: 0,
   });
   const rafId = useRef<number | null>(null);
   const lastScrollY = useRef(-1);
@@ -60,7 +60,13 @@ export function useLandingScroll(rootRef: React.RefObject<HTMLDivElement | null>
     if (coordT)
       coordT.textContent = `${String(Math.round(progress * 359)).padStart(3, "0")}.${String(Math.round((progress * 10) % 10))}\u00b0`;
 
-    // Hero cover
+    // Hero cover — drives `--hero-cover` on #hero so the video/content
+    // recede (scale + fade) as #definition rises into view. The
+    // mechanic is: hero is `position: sticky; top:0; height:100vh;
+    // z-index:1`, and #definition follows in normal flow at z-index:2
+    // with an opaque var(--void) shield. As #definition.top crosses
+    // from `vh` to `0` (one viewport of scroll), it visually covers
+    // the pinned hero from bottom to top.
     const heroEl = root.querySelector<HTMLElement>("#hero");
     const defEl = root.querySelector<HTMLElement>("#definition");
     let heroCover = 0;
@@ -71,23 +77,55 @@ export function useLandingScroll(rootRef: React.RefObject<HTMLDivElement | null>
       heroEl.style.visibility = heroCover >= 1 ? "hidden" : "";
     }
 
-    // Build cover — same parallax handoff as hero → definition, but for
-    // the sticky build-axiom quote (#buildQuote) being covered by the
-    // build-cases station (#build). 0 when #build's top sits at viewport
-    // bottom; 1 when it has fully reached the viewport top. Only the
-    // sticky quote element reads --build-cover; nav telemetry tracks the
-    // station via data-station.
-    const buildQuoteEl = root.querySelector<HTMLElement>("#buildQuote");
-    const buildEl = root.querySelector<HTMLElement>("#build");
-    let buildCover = 0;
-    if (buildQuoteEl && buildEl) {
-      const buildTop = buildEl.getBoundingClientRect().top;
-      buildCover = Math.max(0, Math.min(1, 1 - buildTop / vh));
-      buildQuoteEl.style.setProperty("--build-cover", buildCover.toFixed(4));
-      // Hide the sticky quote once the cases section fully covers it so
-      // the pinned panel never repaints behind opaque content (mirrors
-      // the hero's `visibility: hidden` once heroCover >= 1).
-      buildQuoteEl.style.visibility = buildCover >= 1 ? "hidden" : "";
+    // Practice cover — exact mirror of hero cover. The chamber
+    // (`.approach__chamber`) carries `padding-bottom: 100vh`, which
+    // extends the sticky orbit's pin range by one viewport past the
+    // phase column's end. #buildQuote follows in normal flow as a
+    // `.station--cover` (z:2, opaque, full-bleed) and rises during
+    // that runway, covering the still-pinned orbit. The scalar tracks
+    // the axiom's top edge against viewport height (identical math to
+    // heroCover) and writes `--practice-cover` on `.approach__stage`
+    // so the orbit subtly recedes (scale + fade) in lock-step.
+    //
+    // CSS sticky's pin range always ends `element.height + sticky.top`
+    // before the containing block's bottom, so the orbit unpins ~828px
+    // before practice ends — leaving the cover playing over an empty
+    // viewport above. To match the hero's ALWAYS-VISIBLE under-layer,
+    // we compensate with a JS-driven `--practice-cover-translate` that
+    // shifts the stage back to its sticky position during the cover.
+    // The CSS rule on `.approach__stage` consumes this translate to
+    // keep the orbit visually pinned at top:12vh until the cover
+    // completes and the axiom fully fills the viewport.
+    const stageEl = root.querySelector<HTMLElement>(".approach__stage");
+    const chamberEl = root.querySelector<HTMLElement>(".approach__chamber");
+    const quoteEl = root.querySelector<HTMLElement>("#buildQuote");
+    let practiceCover = 0;
+    if (stageEl && chamberEl && quoteEl) {
+      const quoteTop = quoteEl.getBoundingClientRect().top;
+      practiceCover = Math.max(0, Math.min(1, 1 - quoteTop / vh));
+      stageEl.style.setProperty("--practice-cover", practiceCover.toFixed(4));
+
+      // Compute the post-pin scroll position purely from layout (offsetHeight,
+      // computed sticky.top, chamber bottom) so the math is independent of the
+      // stage's current transform. After CSS sticky unpins (scrollY beyond
+      // pinEndScrollY), the stage scrolls naturally and goes offscreen above.
+      // The translate brings it back to viewport top:sticky.top during the
+      // active cover window, mirroring the always-visible hero under-layer.
+      const stickyTopPx = parseFloat(getComputedStyle(stageEl).top) || 0;
+      const stageLayoutHeight = stageEl.offsetHeight;
+      const chamberRect = chamberEl.getBoundingClientRect();
+      const chamberBottomDoc = scrollY + chamberRect.bottom;
+      const pinEndScrollY = chamberBottomDoc - stageLayoutHeight - stickyTopPx;
+      // Engage the translate the moment CSS sticky stops pinning (so there's
+      // no gap where the orbit briefly slides up while quote isn't covering
+      // yet) and disengage once the cover has fully completed (so the orbit
+      // doesn't keep "ghosting" at viewport top once quote is past).
+      if (scrollY > pinEndScrollY && practiceCover < 1) {
+        const delta = scrollY - pinEndScrollY;
+        stageEl.style.setProperty("--practice-cover-translate", `${delta.toFixed(1)}px`);
+      } else {
+        stageEl.style.removeProperty("--practice-cover-translate");
+      }
     }
 
     // Active station
@@ -121,7 +159,7 @@ export function useLandingScroll(rootRef: React.RefObject<HTMLDivElement | null>
       });
     }
 
-    telemetryRef.current = { progress, activeStation: activeKey, heroCover, buildCover };
+    telemetryRef.current = { progress, activeStation: activeKey, heroCover, practiceCover };
   }, [rootRef]);
 
   const onScroll = useCallback(() => {

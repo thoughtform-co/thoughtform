@@ -331,11 +331,17 @@ export function LandingPage({ bodyHtml, bodyClass, celestialSlots }: LandingPage
       tagIfEmpty(contact.querySelector(".contact__email"), "body");
     }
 
-    // Set parallax speeds on decorative elements
+    // Set parallax speeds on decorative elements. The single motion
+    // channel for these elements is the global `[data-parallax]` CSS
+    // rule, which applies `translate: 0 var(--py, 0px)`. The
+    // useLandingScroll hook writes --py per scroll frame. Do NOT also
+    // apply `transform: translate3d(...)` on these elements — that
+    // doubles the motion and breaks the parallax/cover composition.
     const parallaxMap: Array<[string, number]> = [
       [".hero__video", 0.03],
       [".tri__center", 0.04],
       [".voidwalker__orbit", 0.06],
+      [".build-quote__gateway__img", 0.04],
     ];
     parallaxMap.forEach(([selector, speed]) => {
       root.querySelectorAll<HTMLElement>(selector).forEach((el) => {

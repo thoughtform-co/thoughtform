@@ -4203,6 +4203,21 @@ html {
   contain-intrinsic-size: auto;
 }
 
+/* ═══════════════════════════════════════════════════════════════════
+   PRACTICE COVER HANDOFF — chamber padding extends the orbit pin
+   ───────────────────────────────────────────────────────────────────
+   Mirrors the `.hero` pattern. The orbit (`.approach__stage`) is
+   `position: sticky` with its containing block being the chamber's
+   padding-box. By adding `padding-bottom: 100vh` on the chamber, we
+   extend the orbit's sticky pin range by one viewport BEYOND where
+   the phase column ends. During that extra viewport of scroll the
+   orbit stays pinned (under-layer) while #buildQuote rises in normal
+   flow at z:2 (cover layer) — same mechanic as #definition rising
+   over .hero. There's NO separate `.practice-tail` element and NO
+   negative-margin overlap; the cover handoff lives entirely inside
+   #practice's geometry.
+   ═══════════════════════════════════════════════════════════════════ */
+
 /* ─── Section stack ─── */
 .approach {
   display: flex;
@@ -4241,7 +4256,19 @@ html {
   display: flex;
   flex-direction: column;
   gap: clamp(40px, 6vh, 96px);
-  padding-bottom: clamp(20px, 4vw, 40px);
+  /* Visual padding under the last phase content (CTA), then a 100vh
+     cover handoff runway. The runway extends grid row 1's height by
+     one viewport, which extends the sticky orbit's containing block
+     (= grid cell row 1 column 1) by the same amount. The orbit stays
+     pinned through this runway while #buildQuote (the next station)
+     rises into view, mirroring how .hero stays pinned while
+     #definition rises. CSS sticky's pin range still ends ~828px
+     (orbit.height + sticky.top) before the cell bottom, so a JS
+     translate (`--practice-cover-translate` written by
+     useLandingScroll) compensates for that gap and keeps the orbit
+     visually pinned for the entire cover. */
+  padding-bottom: calc(clamp(20px, 4vw, 40px) + 100vh);
+  padding-bottom: calc(clamp(20px, 4vw, 40px) + 100svh);
 }
 
 /* ─── Folded thesis (top of the first phase) ─── */
@@ -4295,7 +4322,23 @@ html {
   width: 100%;
   /* Stage paints inside the .station--fullbleed void shield; no extra
      background required. Crossfades happen on the inner glyph layer
-     (opacity only) to honor v7 compositing rules. */
+     (opacity only) to honor v7 compositing rules.
+
+     `--practice-cover` (0 → 1) and `--practice-cover-translate` (px)
+     are written by useLandingScroll. As #buildQuote rises into view
+     across the chamber's `padding-bottom: 100vh` runway, the scalar
+     transitions and the translate compensates for CSS sticky's
+     pin-range limit so the orbit visually stays at viewport top:12vh
+     for the entire cover duration — same end result as the .hero
+     under-layer staying visible while #definition rises. The orbit
+     subtly recedes (scale + fade) during the cover, matching the
+     hero's video/content recede cadence. */
+  transform-origin: center center;
+  transform: translate3d(0, var(--practice-cover-translate, 0px), 0)
+    scale(calc(1 - var(--practice-cover, 0) * 0.05));
+  opacity: calc(1 - var(--practice-cover, 0) * 0.55);
+  transition: opacity 40ms linear;
+  will-change: transform, opacity;
 }
 .approach__stage__inner {
   position: relative;
@@ -4884,112 +4927,10 @@ html {
   background: linear-gradient(to left, var(--gold-30, rgba(202, 165, 84, 0.35)), transparent);
 }
 
-/* Latent horizon codetta (opaque shield; reveal on inner only) */
-.approach__horizon {
-  position: relative;
-  margin-top: clamp(40px, 5vw, 72px);
-  margin-left: calc(-1 * var(--hud-content-inset));
-  margin-right: calc(-1 * var(--hud-content-inset));
-  width: 100vw;
-  padding: clamp(16px, 2vw, 26px) var(--hud-content-inset) clamp(22px, 3vw, 36px);
-  background: var(--void);
-  overflow: hidden;
-  z-index: 2;
-}
-
-.approach__horizon__reveal {
-  position: relative;
-  min-height: clamp(100px, 14vw, 160px);
-}
-
-.approach__horizon__svg {
-  display: block;
-  width: 100%;
-  height: auto;
-  color: var(--gold);
-  -webkit-mask-image: radial-gradient(
-    ellipse 68% 120% at 50% 100%,
-    #000 38%,
-    rgba(0, 0, 0, 0.75) 62%,
-    rgba(0, 0, 0, 0.25) 86%,
-    transparent 100%
-  );
-  mask-image: radial-gradient(
-    ellipse 68% 120% at 50% 100%,
-    #000 38%,
-    rgba(0, 0, 0, 0.75) 62%,
-    rgba(0, 0, 0, 0.25) 86%,
-    transparent 100%
-  );
-}
-
-.approach__horizon__label {
-  position: absolute;
-  z-index: 1;
-  bottom: clamp(8px, 1.2vw, 14px);
-  font-family: var(--font-pt-mono);
-  font-size: 9px;
-  letter-spacing: var(--track-widest);
-  text-transform: uppercase;
-  color: var(--dawn-50);
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  pointer-events: none;
-}
-
-.approach__horizon__label::before {
-  content: "";
-  width: 12px;
-  height: 1px;
-  background: linear-gradient(to right, var(--dawn-30), transparent);
-}
-
-.approach__horizon__label--l {
-  left: var(--hud-content-inset);
-}
-
-.approach__horizon__label--r {
-  right: var(--hud-content-inset);
-  flex-direction: row-reverse;
-}
-
-.approach__horizon__label--r::before {
-  background: linear-gradient(to left, var(--dawn-30), transparent);
-}
-
-.approach__horizon__reveal[data-m="instrument"],
-.approach__horizon__reveal[data-m="instrument"].is-in {
-  opacity: 1;
-  transform: none;
-  filter: none;
-  clip-path: none;
-}
-
-.approach__horizon__reveal .approach__horizon__svg,
-.approach__horizon__reveal .approach__horizon__label {
-  opacity: 0;
-  transform: translateY(8px);
-  filter: blur(2px);
-  transition-property: opacity, transform, filter;
-  transition-duration: var(--m-dur-slow);
-  transition-timing-function: var(--m-ease-long);
-}
-
-.approach__horizon__reveal.is-in .approach__horizon__svg,
-.approach__horizon__reveal.is-in .approach__horizon__label {
-  opacity: 1;
-  transform: translateY(0);
-  filter: none;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .approach__horizon__reveal .approach__horizon__svg,
-  .approach__horizon__reveal .approach__horizon__label {
-    transition-duration: 200ms;
-    filter: none !important;
-  }
-}
+/* Latent horizon codetta and through-line block were removed when the
+   Practice → Quote handoff was refactored to mirror the hero pattern.
+   The covering quote now provides the visual bridge into Build cases.
+   See the `.practice-tail` rule earlier in this file. */
 
 .approach__see-cases {
   align-self: center;
@@ -5028,31 +4969,6 @@ html {
 
 .approach__see-cases:hover .approach__see-cases__soon {
   color: var(--gold-30, rgba(202, 165, 84, 0.55));
-}
-
-/* ─── Through-line ─── */
-.approach__throughline {
-  margin: clamp(32px, 4vw, 52px) clamp(32px, 4vw, 64px) 0;
-  padding-top: 18px;
-  border-top: 1px dashed var(--dawn-08);
-  display: flex;
-  gap: 18px 28px;
-  align-items: baseline;
-  flex-wrap: wrap;
-  font-family: var(--font-pt-mono);
-  font-size: 11px;
-  letter-spacing: var(--track-wide);
-  color: var(--dawn-50);
-  text-transform: uppercase;
-}
-.approach__throughline strong {
-  color: var(--dawn);
-  font-weight: 700;
-  letter-spacing: var(--track-wider);
-}
-.approach__throughline em {
-  font-style: normal;
-  color: var(--gold);
 }
 
 /* ─── Tablet / mobile: orbit on top, copy below ───
@@ -5105,23 +5021,6 @@ html {
     align-self: flex-start;
     margin-top: clamp(20px, 4vh, 36px);
   }
-  .approach__throughline {
-    margin-left: 0;
-    margin-right: 0;
-  }
-  .approach__horizon {
-    margin-left: calc(-1 * clamp(16px, 3vw, 32px));
-    margin-right: calc(-1 * clamp(16px, 3vw, 32px));
-    width: calc(100% + 2 * clamp(16px, 3vw, 32px));
-    padding-left: clamp(16px, 3vw, 32px);
-    padding-right: clamp(16px, 3vw, 32px);
-  }
-  .approach__horizon__label--l {
-    left: clamp(16px, 3vw, 32px);
-  }
-  .approach__horizon__label--r {
-    right: clamp(16px, 3vw, 32px);
-  }
 }
 
 /* Phone & small-tablet — tighten rhythm, touch-safe CTAs, narrower
@@ -5173,15 +5072,6 @@ html {
 }
 
 @media (max-width: 640px) {
-  .approach__throughline {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 10px 0;
-    margin-top: clamp(24px, 5vw, 40px);
-  }
-  .approach__throughline > span {
-    max-width: 100%;
-  }
   .approach__stage {
     height: clamp(240px, 44vh, 320px);
   }
@@ -6185,38 +6075,39 @@ html {
 }
 
 /* ═══════════════════════════════════════════════════════════════════
-   v18 — BUILD AXIOM (sticky quote interstitial)
+   v18 — BUILD AXIOM (key-visual quote interstitial)
    ───────────────────────────────────────────────────────────────────
-   Sticky full-viewport panel between #practice and #build. Pinned at
-   z:1 like .hero so the next station (#build, z:2) covers it as the
-   user scrolls — same parallax handoff as hero → definition.
+   The quote panel is a single 100vh full-bleed cover that slides OVER
+   the sticky `.practice-tail` above it, mirroring how #definition
+   slides over .hero. No negative margins, no pinned dead-scroll range
+   — the sticky tail provides the pin, this section provides the cover.
+   Build cases follow in normal flow once the axiom has settled.
    Compositing rules:
    - Wrapper paints opaque var(--void) (Rule 1 of landing-v7-compositing).
    - Reveal motion lives on .build-quote__figure (data-m="instrument"),
-     not on the wrapper, so the sticky shield never fades and exposes
+     not on the wrapper, so the cover shield never fades and exposes
      the fixed .gateway gold gradient (Rule 2).
-   - --build-cover (set by useLandingScroll) drives a tiny zoom/fade so
-     the quote feels like it recedes into the build cases that cover it.
    ═══════════════════════════════════════════════════════════════════ */
 
-/* Promote the quote station to a sticky shield. The default
-   `.station:not(.hero)` rule paints var(--void) at z:2 with specificity
-   (0,2,0); the doubled selector below also lands at (0,2,0) but appears
-   later in source order, so it wins. We drop to z:1 and pin to the top
-   so the cases station (still z:2) can scroll over it.
-   Height is intentionally < 100vh so the axiom panel reads as a tighter
-   editorial moment between Practice and the Build cases — and the cases
-   station begins to cover it sooner during the parallax handoff. */
-.station.station--sticky {
-  position: sticky;
-  top: 0;
-  height: min(78vh, 720px);
+/* Cover station: the axiom rises into view in normal flow. The sticky
+   orbit (`.approach__stage`) inside the previous #practice section
+   pins through the chamber's `padding-bottom: 100vh` runway. As the
+   user scrolls that runway, the axiom (this section) progressively
+   rises from below to cover the pinned orbit — identical mechanic to
+   #definition rising over .hero. Height is locked to one viewport so
+   the cover handoff is exactly 1vh of scroll. z-index:2 (default for
+   `.station:not(.hero)`) is sufficient because Practice and Quote are
+   both at z:2 but Quote is later in source order, so it paints over
+   Practice's content in any viewport pixel they share. */
+.station.station--cover {
+  position: relative;
+  height: 100vh;
+  height: 100svh;
   min-height: 0;
-  z-index: 1;
-  /* No content-visibility: auto here — the station is sticky, so it must
-     stay laid out continuously while scrolling. Otherwise the browser
-     reports a placeholder size while offscreen and the sticky math is
-     off when the user scrolls back up. */
+  z-index: 2;
+  /* No content-visibility: auto — the section needs real 100vh geometry
+     so the `useLandingScroll` --practice-cover scalar (driven by this
+     element's top edge) reads correctly through the cover handoff. */
   content-visibility: visible;
   contain-intrinsic-size: auto;
 }
@@ -6233,27 +6124,24 @@ html {
   overflow: hidden;
 }
 
-/* Cover-driven recede — the quote eases backward as #build covers it,
-   matching the hero's `transform: scale + opacity` recipe for the
-   hero → definition transition. */
-.build-quote {
-  --build-cover-eased: var(--build-cover, 0);
-}
 .build-quote__inner {
   position: relative;
   display: grid;
-  place-items: center;
+  /* Anchor children to the TOP of the panel (horizontally still
+     centered) so the figure lands on the image's white half. The
+     diagram remains absolute inset:0 inside this grid cell, so it
+     keeps painting from the visual center of the panel — the
+     instrument lattice stays in the dark half while the axiom rises
+     into the light. The padding-top is intentionally small so the
+     full figure (eyebrow + quote + attribution) fits inside the
+     image's white region above the horizon. */
+  place-items: start center;
+  padding-top: clamp(12px, 2.5vh, 36px);
   width: min(100%, 1180px);
-  /* Fill the (now shorter) sticky station height so the diagram and
-     figure have room to breathe without the inner box being narrowed
-     by an aspect-ratio constraint that previously clipped the
-     .build-quote__line nowrap text. The SVG diagram preserves its
-     own circular aspect via the default `xMidYMid meet`. */
+  /* Fill the sticky station height so the diagram and figure have
+     room to breathe. The SVG diagram preserves its own circular
+     aspect via the default `xMidYMid meet`. */
   height: 100%;
-  transform: scale(calc(1 - var(--build-cover, 0) * 0.06));
-  opacity: calc(1 - var(--build-cover, 0) * 0.6);
-  transition: opacity 120ms linear;
-  will-change: transform, opacity;
 }
 
 /* Corner L-brackets removed — the page-level HUD grid already paints
@@ -6296,6 +6184,151 @@ html {
   right: clamp(72px, 8vw, 132px);
 }
 
+/* Top labels sit on the image's white half — flip their tone to
+   dark so they read against the cream/white area. Bottom labels
+   keep the default dawn-50 because they live on the dark half. */
+.build-quote__label--tl,
+.build-quote__label--tr {
+  color: rgba(10, 9, 8, 0.55);
+}
+
+/* Gateway visual — atmospheric bridge from #practice into the Build
+   cases. The white-top / dark-bottom key visual (`Thoughtform_Key
+   Visual_14d`) sits behind the diagram and quote inside the sticky
+   panel. The wrapper itself still paints var(--void) underneath, so
+   the fixed .gateway gold radial cannot bleed through (Rule 1 of
+   landing-v7-compositing). The image carries no [data-m]; reveal
+   motion stays on .build-quote__figure (Rule 2). */
+.build-quote__gateway {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.build-quote__gateway__img {
+  position: absolute;
+  /* Tiny fixed top buffer so the very small parallax translateY
+     can't expose a void strip at the top of the panel during pin.
+     The bottom edge stays at the panel bottom and is handled by
+     the mask's fade-to-transparent so the void below blends in. */
+  top: -12px;
+  left: 0;
+  right: 0;
+  width: 100%;
+  height: calc(100% + 12px);
+  object-fit: cover;
+  /* Image-top flush — biases the visible crop hard toward the
+     image's white half so the horizon falls below the panel
+     midpoint and the entire quote figure lands on the white area
+     with comfortable breathing room. */
+  object-position: 50% 0%;
+  /* No top fade — matches the rest of the Thoughtform site, which
+     never feathers the top edge of section visuals. The bottom is
+     left almost entirely opaque (the image's own dark lower half —
+     mountain → circle → space-dust floor — is the natural gradient
+     that bridges into #build). A tiny 8% fade at the very edge
+     softens the mathematical hard cut where the painted texture
+     ends and the build cases station's solid var(--void) begins. */
+  -webkit-mask-image: linear-gradient(
+    180deg,
+    #000 0%,
+    #000 92%,
+    rgba(0, 0, 0, 0.55) 97%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(180deg, #000 0%, #000 92%, rgba(0, 0, 0, 0.55) 97%, transparent 100%);
+  /* Parallax is applied by the global `[data-parallax]` rule via the
+     `translate` CSS property (separate from `transform`), exactly like
+     `.hero__video`. Do not also apply `transform: translate3d(...)`
+     here — that would double the motion. The element keeps its
+     `data-parallax="0.04"` attribute in the prototype HTML; the
+     `useLandingScroll` handler writes --py and the global rule
+     consumes it. */
+  will-change: translate;
+}
+
+/* No CSS scrim or void ramp — with the panel now at 100vh, the key
+   visual's own dark lower half (mountain silhouette → ouroboros →
+   space-dust floor) is the natural gradient that connects the
+   axiom's white half to the Build cases. Adding a CSS gradient on
+   top of that would dim the painted detail. The very bottom edge is
+   handled by the image's tiny mask fade and #build's leading-edge
+   pseudo. The pseudo-element below is kept (no background, no
+   declarations) only as documentation that this layer was
+   considered and intentionally left empty. */
+.build-quote__gateway::after {
+  content: none;
+}
+
+/* Make the inner content's z-index explicit — the gateway is z:0,
+   the corner labels are z:2; without this declaration the inner
+   relies on its transform stacking context, which is harder to
+   reason about when reading the cascade. */
+.build-quote__inner {
+  z-index: 1;
+}
+
+/* Bottom dissolve — a sibling of the gateway image, layered above it
+   inside the panel. Two effects compose in one element:
+     1. `backdrop-filter: blur` blurs whatever paints behind it (the
+        image's space-dust floor + the bottom of the ouroboros). The
+        blur strength is constant, but the dissolve below makes it
+        progressively more visible toward the bottom edge.
+     2. A `linear-gradient` background fades from transparent at the
+        top to var(--void) at the very bottom — taking the blurred
+        image content into pure void by the panel's last pixel.
+   The mask `linear-gradient` is what makes the blur read as a
+   gradient: blur is hidden at the top of this layer and fully
+   exposed at the bottom, so the user perceives the bottom of the
+   key visual softening as it merges with #build. */
+.build-quote__dissolve {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: clamp(220px, 38vh, 440px);
+  z-index: 2;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgba(10, 9, 8, 0.22) 32%,
+    rgba(10, 9, 8, 0.6) 58%,
+    rgba(10, 9, 8, 0.88) 82%,
+    var(--void) 100%
+  );
+  backdrop-filter: blur(18px) saturate(0.9);
+  -webkit-backdrop-filter: blur(18px) saturate(0.9);
+  -webkit-mask-image: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgba(0, 0, 0, 0.4) 28%,
+    rgba(0, 0, 0, 0.85) 58%,
+    #000 82%,
+    #000 100%
+  );
+  mask-image: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgba(0, 0, 0, 0.4) 28%,
+    rgba(0, 0, 0, 0.85) 58%,
+    #000 82%,
+    #000 100%
+  );
+}
+
+/* Bottom corner labels need to clear the dissolve so the field /
+   fig readouts stay sharp. Bump them to z:3 (above the dissolve's
+   z:2) and nudge their `bottom` offset up so they sit just above
+   the heaviest dissolve region. The dissolve's mask is fully
+   opaque from ~82% downward — labels above that read crisp. */
+.build-quote__label--bl,
+.build-quote__label--br {
+  z-index: 3;
+}
+
 .build-quote__diagram {
   position: absolute;
   inset: 0;
@@ -6304,17 +6337,20 @@ html {
   display: block;
   margin: auto;
   pointer-events: none;
-  opacity: 0.85;
+  /* Lowered from 0.85 — the gateway visual now carries the primary
+     atmosphere, so the diagram reads as a faint instrument lattice
+     on top of the image rather than a competing graphic. */
+  opacity: 0.42;
   /* Drift / breathe — same family as the celestial connector diagram. */
   animation: bqDiagramBreath 12s ease-in-out infinite;
 }
 @keyframes bqDiagramBreath {
   0%,
   100% {
-    opacity: 0.78;
+    opacity: 0.34;
   }
   50% {
-    opacity: 0.95;
+    opacity: 0.5;
   }
 }
 
@@ -6326,13 +6362,13 @@ html {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: clamp(16px, 2vh, 28px);
-  /* Stretch to the inner width so the nowrap line text never overflows
-     the figure box. The earlier `max-width: 60ch` resolved against the
-     figure's own 16px font-size (not the 56px quote font), capping the
-     figure at ~576px and clipping the line. */
+  /* Tight gap because the figure is shrink-wrapped against the
+     image's white area. Padding-y is zero (horizontal padding only)
+     so eyebrow and attribution sit as close to the quote as the
+     gap allows. */
+  gap: clamp(8px, 1.2vh, 16px);
   width: 100%;
-  padding: clamp(24px, 4vh, 48px);
+  padding: 0 clamp(24px, 4vh, 48px);
 }
 
 .build-quote__eyebrow {
@@ -6340,7 +6376,9 @@ html {
   font-size: 10px;
   letter-spacing: var(--track-widest, 0.18em);
   text-transform: uppercase;
-  color: var(--dawn-50, rgba(232, 228, 216, 0.5));
+  /* Dim void instead of dawn-50 — the eyebrow sits on the image's
+     white half above the quote, so it needs dark tone for legibility. */
+  color: rgba(10, 9, 8, 0.6);
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -6351,16 +6389,21 @@ html {
 
 /* The quote body. Renders the strikethrough/correction inline with the
    rest of the sentence so the editorial gesture (cannot → do not) reads
-   as a hand-applied correction inside a typeset axiom. */
+   as a hand-applied correction inside a typeset axiom. Set in
+   var(--void) (deep dark) since the figure now lands on the image's
+   white half — light cream on cream wouldn't have AA contrast. The
+   max font size is tuned so two lines + eyebrow + attribution all
+   fit inside the image's white region without spilling onto the
+   dark half. */
 .build-quote__quote {
   margin: 0;
   font-family: var(--font-pp-neue-montreal);
   font-weight: 300;
   font-style: italic;
-  font-size: clamp(28px, 3.6vw, 56px);
+  font-size: clamp(26px, 3vw, 46px);
   line-height: 1.18;
   letter-spacing: -0.02em;
-  color: var(--dawn);
+  color: var(--void);
 }
 /* Each `.build-quote__line` is one line of the axiom. Forcing block so
    the visual break between "What I cannot do not build," and
@@ -6408,7 +6451,9 @@ html {
 .build-quote__strike {
   position: relative;
   display: inline-block;
-  color: var(--dawn-50, rgba(232, 228, 216, 0.45));
+  /* Dim void on white half — was dawn-50 (light) which would
+     vanish against the cream paper. */
+  color: rgba(10, 9, 8, 0.45);
   text-decoration: none;
   font-weight: 300;
 }
@@ -6455,7 +6500,9 @@ html {
   font-size: 11px;
   letter-spacing: var(--track-wide, 0.12em);
   text-transform: uppercase;
-  color: var(--dawn-70, rgba(232, 228, 216, 0.7));
+  /* Attribution lives just below the quote on the white half; tint
+     to match the dark text family (was dawn-70). */
+  color: rgba(10, 9, 8, 0.68);
 }
 .build-quote__attribution__rule {
   width: clamp(28px, 5vw, 56px);
@@ -6463,12 +6510,12 @@ html {
   background: linear-gradient(to right, transparent, var(--gold) 40%, transparent);
 }
 .build-quote__attribution__name {
-  color: var(--dawn);
+  color: var(--void);
   font-weight: 700;
   letter-spacing: var(--track-wider, 0.16em);
 }
 .build-quote__attribution__meta {
-  color: var(--dawn-50, rgba(232, 228, 216, 0.5));
+  color: rgba(10, 9, 8, 0.5);
 }
 
 /* Reveal pinned to the figure (inner) only, per Rule 2. The wrapper
@@ -6491,9 +6538,23 @@ html {
     height: 100%;
     max-height: none;
     width: 100%;
+    /* Smaller padding-top on phones — the panel is shorter and the
+       quote needs to land in the upper white area without crowding
+       the bottom. */
+    padding-top: clamp(24px, 5vh, 64px);
   }
   .build-quote__diagram {
-    opacity: 0.6;
+    /* Narrow viewports crop the gateway image tighter, so the
+       diagram needs to read fainter still to avoid competing with
+       the centered peak silhouette. */
+    opacity: 0.3;
+    animation: none;
+  }
+  .build-quote__gateway__img {
+    /* On phones the image is height-fit cropped horizontally, so
+       the vertical bias used on desktop has no effect. Center the
+       horizon so the central peak / circle remain framed. */
+    object-position: 50% 50%;
   }
   .build-quote__label--tl,
   .build-quote__label--bl {
@@ -6534,6 +6595,20 @@ html {
     transform: none;
     opacity: 1;
   }
+  .build-quote__gateway {
+    opacity: 1;
+    transition: none;
+  }
+  .build-quote__gateway__img {
+    /* Parallax is decorative — pin the image at neutral when the
+       user prefers reduced motion. The useLandingScroll handler
+       already early-exits its parallax block under the same media
+       query, but re-asserting `translate: none` here makes the rule
+       resilient to ordering or stale --py values. The motion
+       channel is `translate` (not `transform`), matching the global
+       [data-parallax] rule. */
+    translate: none;
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -6553,6 +6628,11 @@ html {
   padding-top: clamp(96px, 14vh, 180px);
   padding-bottom: clamp(80px, 14vh, 160px);
 }
+
+/* No cover-edge pseudo on .station--build — Build cases flow as a
+   normal station after the cover-grammar buildQuote section. The
+   dissolve into Build is handled by .build-quote__dissolve at the
+   bottom of the quote panel itself (gradient + backdrop-filter blur). */
 
 .build-cases {
   position: relative;
