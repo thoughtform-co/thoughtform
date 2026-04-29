@@ -7,27 +7,21 @@ interface BuildCaseFrameProps {
   study: BuildCase;
   /** Slide index — drives image priority for the first card only. */
   slideIndex: number;
-  /** "a" mirrors brackets to TL/BR; "b" mirrors to TR/BL. */
-  variant: "a" | "b";
 }
 
 /**
- * Image plate for a build case. The screenshot lives inside a minimal
- * frame: two corner brackets (alternating side per case) on a thin border.
- *
- * All other HUD chrome — top/bottom bars, depth ladder, reticle pip,
- * inset thumbnail — was stripped when the cases were sparsified. The
- * screenshot is the artifact, not a HUD readout. The bracket survives
- * as the brand stamp.
+ * Hero plate at the top of a Build case card. A clean image inside a
+ * thin border with two gold corner brackets (top-left and bottom-right)
+ * — the only HUD chrome that survives on the image. With the
+ * surrounding chrome (top/bottom bars, depth ladder, reticle pip,
+ * inset thumbnail) stripped when the slide was sparsified, the
+ * screenshot is the artifact, not a HUD readout.
  */
-export function BuildCaseFrame({ study, slideIndex, variant }: BuildCaseFrameProps) {
+export function BuildCaseFrame({ study, slideIndex }: BuildCaseFrameProps) {
   const { hero } = study;
 
   return (
-    <figure
-      className={`build-case__frame build-case__frame--${variant}`}
-      aria-labelledby={`build-case-${study.id}-caption`}
-    >
+    <figure className="build-case__frame" aria-labelledby={`build-case-${study.id}-caption`}>
       <div className="build-case__frame__shell">
         <span
           className="build-case__frame__bracket build-case__frame__bracket--tl"
@@ -43,7 +37,7 @@ export function BuildCaseFrame({ study, slideIndex, variant }: BuildCaseFramePro
             src={hero.src}
             alt={hero.alt}
             fill
-            sizes="(max-width: 760px) 100vw, (max-width: 1200px) 60vw, 760px"
+            sizes="(max-width: 720px) 100vw, (max-width: 1024px) 55vw, 520px"
             className="build-case__frame__hero__img"
             priority={slideIndex === 0}
           />

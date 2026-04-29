@@ -6652,62 +6652,41 @@ html {
 .build-cases__list {
   display: flex;
   flex-direction: column;
-  gap: clamp(120px, 18vh, 240px);
+  gap: clamp(96px, 14vh, 200px);
   margin-top: clamp(48px, 10vh, 120px);
 }
 
-/* ─── Single slide ─── */
+/* ─── Single case: title LEFT, bridge MIDDLE, info card RIGHT ───────
+   Fixed orientation (no a/b alternation). This intentionally mirrors
+   the Practice section above, whose `.approach__chamber` is sticky-
+   orbit-LEFT / phase-copy-RIGHT. By inverting that layout here, Build
+   and Practice rhyme by mirror rather than by repeat.
+
+   The middle column is a small diagrammatic bridge: a gold hairline
+   plus a centered diamond marker that visually couples the title to
+   the card. The horizontal Y of the line aligns with the title row's
+   gold rule and the card image's TL corner bracket so the whole row
+   reads as one continuous telemetry strip. */
 .build-case {
   position: relative;
   display: grid;
-  grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.32fr);
-  grid-template-rows: auto auto auto auto auto;
-  column-gap: clamp(32px, 5vw, 96px);
-  row-gap: clamp(20px, 3vh, 36px);
+  grid-template-columns:
+    minmax(0, 0.9fr)
+    clamp(40px, 5vw, 96px)
+    minmax(0, 1.1fr);
+  column-gap: 0;
   align-items: start;
   scroll-margin-top: 96px;
 }
 
-/* Layout A — copy left, frame right */
-.build-case--a {
-  grid-template-areas:
-    "head     frame"
-    "subline  frame"
-    "body     frame"
-    "caps     caps"
-    "foot     foot";
-}
-/* Layout B — frame left, copy right */
-.build-case--b {
-  grid-template-columns: minmax(0, 1.32fr) minmax(0, 0.95fr);
-  grid-template-areas:
-    "frame  head"
-    "frame  subline"
-    "frame  body"
-    "caps   caps"
-    "foot   foot";
+/* ─── LEFT: title block ─── */
+.build-case__title {
+  grid-column: 1;
+  display: flex;
+  flex-direction: column;
 }
 
-.build-case__head {
-  grid-area: head;
-}
-.build-case__subline {
-  grid-area: subline;
-}
-.build-case__body {
-  grid-area: body;
-}
-.build-case__frame {
-  grid-area: frame;
-}
-.build-case__caps {
-  grid-area: caps;
-}
-.build-case__foot {
-  grid-area: foot;
-}
-
-.build-case__head__row {
+.build-case__title__row {
   display: flex;
   align-items: center;
   gap: 14px;
@@ -6716,49 +6695,46 @@ html {
   letter-spacing: var(--track-widest, 0.18em);
   text-transform: uppercase;
   color: var(--dawn-50, rgba(232, 228, 216, 0.5));
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  min-height: 14px;
 }
-.build-case__head__counter {
+.build-case__title__counter {
   color: var(--gold);
   font-weight: 700;
+  flex: 0 0 auto;
 }
-.build-case__head__rule {
+.build-case__title__rule {
   flex: 0 0 clamp(20px, 3vw, 40px);
   height: 1px;
   background: linear-gradient(to right, var(--gold), transparent);
 }
-.build-case__head__domain {
+.build-case__title__domain {
   color: var(--dawn-70, rgba(232, 228, 216, 0.7));
   letter-spacing: var(--track-wider, 0.16em);
+  flex: 0 0 auto;
+  white-space: nowrap;
 }
-.build-case__head__status {
-  margin-left: auto;
-  font-size: 9px;
-  letter-spacing: var(--track-wide, 0.12em);
-  color: var(--dawn-70, rgba(232, 228, 216, 0.7));
-}
-.build-case__head__status--production {
-  color: var(--gold);
-}
-.build-case__head__status--wip {
-  color: var(--dawn-70, rgba(232, 228, 216, 0.7));
-}
-
-.build-case__head__title {
-  margin-top: clamp(24px, 4vh, 44px);
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+/* Tail hairline: extends from the end of the domain crumb across the
+   remaining title-column width to meet the bridge. Combined with the
+   bridge line it forms one continuous gold strip from the counter all
+   the way to the card image's TL bracket. */
+.build-case__title__tail {
+  flex: 1 1 24px;
+  min-width: 12px;
+  height: 1px;
+  background: var(--gold-30, rgba(202, 165, 84, 0.3));
+  align-self: center;
+  margin-left: 4px;
 }
 
 .build-case__name {
   font-family: var(--font-pp-neue-montreal);
   font-weight: 700;
-  font-size: clamp(48px, 7vw, 116px);
-  letter-spacing: -0.045em;
-  line-height: 0.92;
+  font-size: clamp(40px, 5.5vw, 88px);
+  letter-spacing: -0.04em;
+  line-height: 0.94;
   color: var(--dawn);
-  margin: 0;
+  margin: clamp(14px, 1.6vh, 22px) 0 0;
   text-wrap: balance;
 }
 .build-case__name span[aria-hidden] {
@@ -6767,7 +6743,7 @@ html {
 }
 
 .build-case__tagline {
-  margin: 0;
+  margin: clamp(10px, 1.2vh, 16px) 0 0;
   font-family: var(--font-pt-mono);
   font-size: clamp(11px, 1vw, 13px);
   letter-spacing: var(--track-widest, 0.18em);
@@ -6776,98 +6752,107 @@ html {
 }
 
 .build-case__subline {
-  margin: 0;
+  margin: clamp(10px, 1.2vh, 16px) 0 0;
   font-family: var(--font-pp-neue-montreal);
   font-weight: 300;
-  font-size: clamp(18px, 1.6vw, 24px);
+  font-size: clamp(17px, 1.4vw, 22px);
   line-height: 1.4;
-  color: var(--dawn-70, rgba(232, 228, 216, 0.7));
+  color: var(--dawn-80, rgba(232, 228, 216, 0.8));
+  max-width: 22ch;
 }
 .build-case__subline em {
   font-style: italic;
   color: var(--dawn);
 }
 
-.build-case__body {
-  display: flex;
-  flex-direction: column;
-  gap: clamp(16px, 2vh, 28px);
-  max-width: 46ch;
-}
-
-.build-case__mode {
-  align-self: flex-start;
+.build-case__status {
+  margin: clamp(18px, 2.2vh, 28px) 0 0;
   font-family: var(--font-pt-mono);
   font-size: 10px;
   letter-spacing: var(--track-widest, 0.18em);
   text-transform: uppercase;
-  color: var(--dawn);
-}
-.build-case__mode--repair {
-  color: var(--dawn);
-}
-.build-case__mode--compress {
-  color: var(--gold);
-}
-.build-case__mode--invent {
-  color: rgba(220, 200, 240, 0.95);
-}
-
-.build-case__body__text {
-  margin: 0;
-  font-family: var(--font-pp-neue-montreal);
-  font-size: clamp(15px, 1.1vw, 17px);
-  line-height: 1.55;
-  color: var(--dawn-80, rgba(232, 228, 216, 0.8));
-}
-
-.build-case__metrics {
-  list-style: none;
-  margin: clamp(8px, 1.2vh, 16px) 0 0;
-  padding: 0;
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: clamp(12px, 2vw, 24px);
-}
-.build-case__metric {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-.build-case__metric__v {
-  font-family: var(--font-pp-neue-montreal);
-  font-weight: 700;
-  font-size: clamp(20px, 1.8vw, 28px);
-  line-height: 1;
-  color: var(--dawn);
-  letter-spacing: -0.02em;
-}
-.build-case__metric__k {
-  font-family: var(--font-pt-mono);
-  font-size: 9px;
-  letter-spacing: var(--track-widest, 0.18em);
-  text-transform: uppercase;
   color: var(--dawn-50, rgba(232, 228, 216, 0.5));
 }
+.build-case__status--production {
+  color: var(--gold);
+}
+.build-case__status--wip {
+  color: var(--dawn-70, rgba(232, 228, 216, 0.7));
+}
 
-/* ─── Frame: clean image plate with one bracket gesture ─── */
+/* ─── MIDDLE: bridge diagram ──────────────────────────────────────
+   Decorative gold hairline + central diamond connecting title and
+   card. The line sits at y≈7px from the article top, which aligns
+   with the title-row gold rule's vertical center AND the card image's
+   TL bracket vertical center, so all three read as one continuous
+   element. Pointer-events disabled so the diagram never intercepts
+   clicks on the surrounding content. */
+.build-case__bridge {
+  grid-column: 2;
+  position: relative;
+  align-self: stretch;
+  pointer-events: none;
+}
+.build-case__bridge::before {
+  content: "";
+  position: absolute;
+  top: 6px;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    var(--gold-30, rgba(202, 165, 84, 0.3)) 0%,
+    var(--gold) 30%,
+    var(--gold) 70%,
+    var(--gold-30, rgba(202, 165, 84, 0.3)) 100%
+  );
+}
+.build-case__bridge__diamond {
+  position: absolute;
+  top: 6px;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  margin-left: -4px;
+  margin-top: -4px;
+  background: var(--void);
+  border: 1px solid var(--gold);
+  transform: rotate(45deg);
+}
+
+/* ─── RIGHT: info card ─── */
+.build-case__card {
+  grid-column: 3;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface-1, rgba(15, 14, 12, 0.94));
+  border: 1px solid var(--dawn-08);
+  width: 100%;
+  max-width: 540px;
+  justify-self: start;
+}
+
+/* Hero plate at the top of the card. Two gold corner brackets (TL +
+   BR) survive as the brand stamp; everything else is stripped so the
+   screenshot reads as the artifact. */
 .build-case__frame {
   position: relative;
   margin: 0;
-  align-self: stretch;
+  width: 100%;
 }
 .build-case__frame__shell {
   position: relative;
   width: 100%;
   aspect-ratio: 16 / 10;
   background: var(--void, rgba(10, 9, 8, 0.92));
-  border: 1px solid var(--dawn-08);
+  border: 0;
+  border-bottom: 1px solid var(--dawn-08);
   overflow: hidden;
   isolation: isolate;
 }
 
-/* Asymmetric brackets — TL+BR for variant a; TR+BL for variant b. The
-   only HUD chrome that survives on the image; reads as a brand stamp. */
 .build-case__frame__bracket {
   position: absolute;
   width: 14px;
@@ -6889,26 +6874,7 @@ html {
   border-left: none;
   border-top: none;
 }
-/* Variant b mirrors the brackets to TR + BL */
-.build-case--b .build-case__frame__bracket--tl {
-  top: -1px;
-  left: auto;
-  right: -1px;
-  border: 1px solid var(--gold);
-  border-left: none;
-  border-bottom: none;
-}
-.build-case--b .build-case__frame__bracket--br {
-  bottom: -1px;
-  right: auto;
-  left: -1px;
-  border: 1px solid var(--gold);
-  border-right: none;
-  border-top: none;
-}
 
-/* Hero image — fills the plate edge-to-edge. With all the surrounding
-   chrome (top/bottom bars, ladder) removed, the image sits flush. */
 .build-case__frame__hero {
   position: absolute;
   inset: 0;
@@ -6920,69 +6886,70 @@ html {
   filter: brightness(0.96) saturate(0.94);
 }
 
-/* ─── Capabilities (plain text grid, no card chrome) ─── */
-.build-case__caps {
-  list-style: none;
-  margin: clamp(48px, 7vh, 96px) 0 0;
+/* Metadata rows: [mono label] / [content] split by hairline dividers */
+.build-case__card__rows {
+  margin: 0;
   padding: 0;
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: clamp(20px, 2.4vw, 36px);
-}
-.build-case__cap {
   display: flex;
   flex-direction: column;
-  gap: 8px;
 }
-.build-case__cap__title {
-  margin: 0;
-  font-family: var(--font-pp-neue-montreal);
-  font-weight: 600;
-  font-size: clamp(15px, 1.1vw, 17px);
-  color: var(--dawn);
-  letter-spacing: -0.005em;
-}
-.build-case__cap__body {
-  margin: 0;
-  font-family: var(--font-pp-neue-montreal);
-  font-weight: 300;
-  font-size: clamp(13px, 0.95vw, 14px);
-  line-height: 1.5;
-  color: var(--dawn-70, rgba(232, 228, 216, 0.7));
-}
-
-/* ─── Foot: inline mono stack line + quiet text-link CTA ─── */
-.build-case__foot {
-  margin-top: clamp(24px, 3vh, 36px);
-  padding-top: clamp(20px, 2.6vh, 32px);
-  border-top: 1px solid var(--dawn-08);
-  display: flex;
+.build-case__card__row {
+  display: grid;
+  grid-template-columns: clamp(72px, 8vw, 96px) minmax(0, 1fr);
+  gap: clamp(14px, 1.6vw, 22px);
   align-items: baseline;
-  justify-content: space-between;
-  gap: clamp(16px, 3vw, 32px);
-  flex-wrap: wrap;
+  padding: clamp(14px, 1.8vh, 20px) clamp(20px, 2vw, 28px);
+  border-bottom: 1px solid var(--dawn-08);
 }
-.build-case__stack {
+.build-case__card__row:last-of-type {
+  border-bottom: 0;
+}
+.build-case__card__label {
   margin: 0;
-  padding: 0;
+  font-family: var(--font-pt-mono);
+  font-size: 10px;
+  letter-spacing: var(--track-widest, 0.18em);
+  text-transform: uppercase;
+  color: var(--gold);
+}
+.build-case__card__value {
+  margin: 0;
+  font-family: var(--font-pp-neue-montreal);
+  font-size: clamp(13px, 0.95vw, 14px);
+  line-height: 1.55;
+  color: var(--dawn-80, rgba(232, 228, 216, 0.8));
+}
+.build-case__card__value--mode {
+  font-family: var(--font-pt-mono);
+  font-size: 11px;
+  letter-spacing: var(--track-wider, 0.16em);
+  text-transform: uppercase;
+  color: var(--dawn);
+}
+.build-case__card__value--mode-repair {
+  color: var(--dawn);
+}
+.build-case__card__value--mode-compress {
+  color: var(--gold);
+}
+.build-case__card__value--mode-invent {
+  color: rgba(220, 200, 240, 0.95);
+}
+.build-case__card__value--stack {
   font-family: var(--font-pt-mono);
   font-size: 11px;
   letter-spacing: var(--track-wide, 0.12em);
   color: var(--dawn-70, rgba(232, 228, 216, 0.7));
-  flex: 1 1 280px;
 }
-.build-case__stack__label {
-  text-transform: uppercase;
-  letter-spacing: var(--track-widest, 0.18em);
-  color: var(--dawn-50, rgba(232, 228, 216, 0.5));
-  margin-right: 10px;
-}
-.build-case__cta {
-  position: relative;
-  display: inline-flex;
+
+/* CTA — full-width text-link strip at the bottom of the card */
+.build-case__card__cta {
+  display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 10px;
-  padding: 12px 0;
+  padding: clamp(14px, 1.8vh, 20px) clamp(20px, 2vw, 28px);
+  border-top: 1px solid var(--dawn-08);
   font-family: var(--font-pt-mono);
   font-size: 11px;
   letter-spacing: var(--track-wider, 0.16em);
@@ -6990,78 +6957,89 @@ html {
   color: var(--dawn);
   text-decoration: none;
   background: transparent;
-  border: 0;
-  transition: color var(--duration-fast, 160ms) var(--ease-out, cubic-bezier(0.22, 0.61, 0.36, 1));
+  transition:
+    background var(--duration-fast, 160ms) var(--ease-out, cubic-bezier(0.22, 0.61, 0.36, 1)),
+    color var(--duration-fast, 160ms) var(--ease-out, cubic-bezier(0.22, 0.61, 0.36, 1));
 }
-.build-case__cta::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  bottom: 6px;
-  height: 1px;
-  width: 100%;
-  background: var(--dawn-30);
-  transform-origin: left;
-  transform: scaleX(0);
-  transition: transform var(--duration-normal, 240ms)
-    var(--ease-out, cubic-bezier(0.22, 0.61, 0.36, 1));
+.build-case__card__cta:hover,
+.build-case__card__cta:focus-visible {
+  background: rgba(202, 165, 84, 0.06);
+  color: var(--gold);
 }
-.build-case__cta:hover::after,
-.build-case__cta:focus-visible::after {
-  transform: scaleX(1);
-}
-.build-case__cta__arrow {
+.build-case__card__cta__arrow {
   color: var(--gold);
   transition: transform var(--duration-fast, 160ms)
     var(--ease-out, cubic-bezier(0.22, 0.61, 0.36, 1));
 }
-.build-case__cta:hover .build-case__cta__arrow,
-.build-case__cta:focus-visible .build-case__cta__arrow {
+.build-case__card__cta:hover .build-case__card__cta__arrow,
+.build-case__card__cta:focus-visible .build-case__card__cta__arrow {
   transform: translateX(3px);
 }
 
-/* ─── Tablet & phone ─── */
+/* ─── Tablet ─── */
 @media (max-width: 1024px) {
-  .build-case,
-  .build-case--b {
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-areas:
-      "head"
-      "subline"
-      "frame"
-      "body"
-      "caps"
-      "foot";
+  .build-case {
+    grid-template-columns:
+      minmax(0, 0.95fr)
+      clamp(24px, 3.5vw, 56px)
+      minmax(0, 1.05fr);
+    column-gap: 0;
   }
-  .build-case__caps {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .build-case__card {
+    max-width: none;
+    justify-self: stretch;
+  }
+  .build-case__name {
+    font-size: clamp(38px, 5.5vw, 64px);
+  }
+  .build-case__frame__shell {
+    aspect-ratio: 4 / 3;
   }
 }
 
+/* ─── Mobile ─── */
 @media (max-width: 720px) {
   .build-cases__list {
-    gap: clamp(80px, 14vh, 140px);
+    gap: clamp(72px, 12vh, 120px);
   }
-  .build-case__head__row {
+  .build-case {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: clamp(28px, 4vh, 44px);
+  }
+  .build-case__title {
+    grid-column: 1;
+  }
+  .build-case__bridge {
+    /* No horizontal connector when columns stack — the title sits
+       directly above its card and a bridge would just dangle. */
+    display: none;
+  }
+  .build-case__card {
+    grid-column: 1;
+    justify-self: stretch;
+  }
+  .build-case__title__row {
     gap: 10px;
     font-size: 9px;
   }
-  .build-case__head__status {
-    margin-left: 0;
+  .build-case__title__tail {
+    /* Hide the tail on stacked layout so the title row doesn't end
+       with a long fade into nothing. */
+    display: none;
   }
   .build-case__name {
     font-size: clamp(44px, 13vw, 72px);
   }
-  .build-case__metrics {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 12px;
+  .build-case__subline {
+    max-width: none;
   }
-  .build-case__metric__v {
-    font-size: clamp(18px, 5vw, 24px);
-  }
-  .build-case__caps {
+  .build-case__card__row {
     grid-template-columns: minmax(0, 1fr);
-    gap: clamp(28px, 5vh, 40px);
+    gap: 6px;
+    padding: clamp(14px, 2.4vh, 18px) clamp(16px, 4vw, 22px);
+  }
+  .build-case__card__cta {
+    padding: clamp(14px, 2.4vh, 18px) clamp(16px, 4vw, 22px);
   }
   .build-case__frame__shell {
     aspect-ratio: 4 / 3;
@@ -7070,26 +7048,16 @@ html {
     width: 12px;
     height: 12px;
   }
-  .build-case__foot {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-  .build-case__cta {
-    align-self: stretch;
-    justify-content: flex-start;
-    padding: 14px 0;
-  }
 }
 
 /* ─── Reduced motion ─── */
 @media (prefers-reduced-motion: reduce) {
-  .build-case__cta,
-  .build-case__cta::after,
-  .build-case__cta__arrow {
+  .build-case__card__cta,
+  .build-case__card__cta__arrow {
     transition: none;
   }
-  .build-case__cta:hover .build-case__cta__arrow,
-  .build-case__cta:focus-visible .build-case__cta__arrow {
+  .build-case__card__cta:hover .build-case__card__cta__arrow,
+  .build-case__card__cta:focus-visible .build-case__card__cta__arrow {
     transform: none;
   }
 }
