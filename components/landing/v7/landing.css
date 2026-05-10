@@ -2176,6 +2176,25 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   color: var(--gold);
   font-weight: 500;
 }
+
+/* Secondary title — the action that follows the observation. Same
+   display family + em treatment as the main title so the two read as
+   one continuous statement. Slightly smaller so the observation
+   stays the lede and the action reads as its consequence. The em
+   carries the warmth ("and train them to own it") — emphasises the
+   not-replacing-people angle without spelling it out. */
+.tri__title--secondary {
+  font-size: clamp(20px, 1.7vw, 26px);
+  color: var(--dawn-80);
+  margin: 0 0 var(--space-lg);
+  font-weight: 400;
+  max-width: 32ch;
+}
+.tri__title--secondary em {
+  font-style: italic;
+  color: var(--gold);
+  font-weight: 500;
+}
 .tri__body {
   font-family: var(--font-pp-neue-montreal);
   font-size: clamp(16px, 1.15vw, 19px);
