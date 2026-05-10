@@ -4211,16 +4211,17 @@ html { scroll-behavior: smooth; }
       </button>
       <div class="hud__nav__list">
         <div class="hud__nav__list__head">
-          <span class="k">Navigate</span><span>Stations · 08</span>
+          <span class="k">Navigate</span><span>Stations · 09</span>
         </div>
         <a href="#hero" data-station="hero" class="is-active"><span class="num">01</span>Interface</a>
         <a href="#definition" data-station="definition"><span class="num">02</span>Thoughtform</a>
-        <a href="#continuum" data-station="continuum"><span class="num">03</span>Continuum</a>
-        <a href="#practice" data-station="practice"><span class="num">04</span>Practice</a>
-        <a href="#build" data-station="build"><span class="num">05</span>Build</a>
-        <a href="#services" data-station="services"><span class="num">06</span>Services</a>
-        <a href="#about" data-station="about"><span class="num">07</span>About</a>
-        <a href="#contact" data-station="contact"><span class="num">08</span>Contact</a>
+        <a href="#asking-gap" data-station="askingGap"><span class="num">03</span>Asking gap</a>
+        <a href="#continuum" data-station="continuum"><span class="num">04</span>Continuum</a>
+        <a href="#practice" data-station="practice"><span class="num">05</span>Practice</a>
+        <a href="#build" data-station="build"><span class="num">06</span>Build</a>
+        <a href="#services" data-station="services"><span class="num">07</span>Services</a>
+        <a href="#about" data-station="about"><span class="num">08</span>About</a>
+        <a href="#contact" data-station="contact"><span class="num">09</span>Contact</a>
         <div class="hud__nav__status">
           <span><span class="k">δ</span><span id="coordD">0.27</span> <span class="k">θ</span><span id="coordT">058.1°</span></span>
           <span><span class="k">Sector</span> <span id="hudSector">Origin</span></span>
@@ -4281,15 +4282,19 @@ html { scroll-behavior: smooth; }
         <img src="assets/logos/Thoughtform_Wordmark_Lockup-Vertical%20%28Dual%29.svg" alt="Thoughtform" />
       </div>
       <p class="hero__tagline">
-        The interface for navigating <em>human–AI collaboration.</em>
+        AI capability, built <em>inside the work.</em>
       </p>
       <p class="hero__desc">
-        AI isn't software to command. It's a strange intelligence to navigate —
-        a geometry of meaning compressed from everything we've written, said,
-        and made. Thoughtform is the instrument deck.
+        The relationship between human intelligence and AI is the work of our
+        generation. Thoughtform embeds inside teams to navigate AI inside the
+        work, encode what makes it good, and build the capability on top of it.
+      </p>
+      <p class="hero__strong">
+        For brands automating their craft. For AI labs landing real
+        deployment inside the enterprise.
       </p>
       <div class="hero__cta">
-        <a href="#definition" class="btn btn--solid">Begin navigation<span class="arrow"></span></a>
+        <a href="#definition" class="btn btn--solid">See the approach<span class="arrow"></span></a>
         <a href="#services" class="btn">See services</a>
       </div>
     </div>
@@ -4305,18 +4310,16 @@ html { scroll-behavior: smooth; }
         <div class="tri__ipa"><span class="tri__ipa-name">Thoughtform</span> / θɔːtfɔːrm · THAWT-form /</div>
         <h2 class="tri__title">
           AI collapsed the distance between <em>thought and form.</em>
-          We help teams navigate what that actually means.
         </h2>
         <p class="tri__body">
-          The teams who thrive aren't the ones with the best prompts —
-          they're the ones who learn to <em>navigate</em> this new terrain.
+          The hard part isn't the model. It's the <em>layer between
+          how your team works and what AI can do.</em>
         </p>
         <p class="tri__body tri__body--muted">
-          Thoughtform is the studio, the method, and the instrument deck
-          for that work.
+          Navigate · Encode · Build is the method that closes that gap.
         </p>
         <div class="tri__ctas">
-          <a href="#continuum" class="btn btn--solid">See the thesis <span class="arrow"></span></a>
+          <a href="#asking-gap" class="btn btn--solid">See the thesis <span class="arrow"></span></a>
           <a href="#services" class="btn">Services</a>
         </div>
       </aside>
@@ -4427,8 +4430,60 @@ html { scroll-behavior: smooth; }
   <!-- ═══════════ CONNECTOR · 02 → 03 (slot: React portal mount) ═══════════ -->
   <div data-celestial-slot="definition-to-continuum"></div>
 
+  <!-- ═══════════ 03 ASKING-GAP — Benedict Evans interstitial ═══════════
+       Single full-viewport beat between the Thoughtform definition and
+       the tool↔collaborator continuum. Brings the AI operator case's
+       "asking gap" into the executive summary. The fixed BrandmarkActor
+       docks here as a faint backdrop (no markup needed beyond the
+       anchor; the actor reads `.ask__brandmark-anchor` to size itself).
+       Compositing: outer wrapper paints opaque var(--void) (Rule 1);
+       reveal motion runs on .ask__inner only (Rule 2). =================== -->
+  <section class="station station--centered station--cover station--from-connector station--to-connector ask" id="asking-gap" data-station="askingGap" data-screen-label="03 Asking gap">
+    <div class="station__idx">Asking gap<span class="landmark">Landmark · briefing intelligence</span></div>
+
+    <!-- Lane-tinted atmosphere: violet (Navigate), amber (Encode), sage
+         (Build) loosely placed so the lane palette is on the page before
+         the chips name it. aria-hidden, no data-m, no opacity reveal —
+         keeps the wrapper as an opaque void shield (Rule 1, Rule 2). -->
+    <div class="ask__bleed" aria-hidden="true">
+      <span class="ask__wash ask__wash--violet"></span>
+      <span class="ask__wash ask__wash--amber"></span>
+      <span class="ask__wash ask__wash--sage"></span>
+    </div>
+
+    <!-- Brandmark backdrop anchor: zero-paint placeholder. The fixed
+         BrandmarkActor reads this rect on entry, scales to ~640px, and
+         renders behind the quote at ~0.08 opacity. -->
+    <div class="ask__brandmark-anchor" aria-hidden="true"></div>
+
+    <div class="ask__inner" data-m="instrument">
+      <blockquote class="ask__quote">
+        <span class="ask__quote-mark" aria-hidden="true">&ldquo;</span>A lot of the challenge is
+        <span class="ask__chip ask__chip--navigate"><span class="ask__chip-dot" aria-hidden="true"></span>working out</span>
+        <span class="ask__chip ask__chip--encode"><span class="ask__chip-dot" aria-hidden="true"></span>how to ask</span>
+        for
+        <span class="ask__chip ask__chip--build"><span class="ask__chip-dot" aria-hidden="true"></span>what you want</span>.
+      </blockquote>
+
+      <p class="ask__attrib">
+        <span class="ask__attrib-rule" aria-hidden="true"></span>
+        <span class="ask__attrib-name">Benedict Evans</span>
+        <span class="ask__attrib-meta">on the hidden work behind useful AI</span>
+      </p>
+
+      <p class="ask__note">(because AI isn&rsquo;t software, it&rsquo;s an intelligence)</p>
+
+      <div class="ask__chevron" aria-hidden="true"></div>
+
+      <p class="ask__punchline">
+        The fix isn&rsquo;t more AI. <em>It&rsquo;s learning how to brief one.</em>
+      </p>
+      <p class="ask__sub">(which is more difficult than it sounds.)</p>
+    </div>
+  </section>
+
   <!-- ═══════════ 03 CONTINUUM — the tool ↔ collaborator spectrum ═══════════ -->
-  <section class="station station--centered station--from-connector station--to-connector" id="continuum" data-station="continuum" data-screen-label="03 Continuum">
+  <section class="station station--centered station--from-connector station--to-connector" id="continuum" data-station="continuum" data-screen-label="04 Continuum">
     <div class="station__idx">Continuum<span class="landmark">Landmark · tool ↔ collaborator / the navigation thesis</span></div>
     <h2 class="station__title station__title--compact station__title--centered">
       AI isn't software to command.<br><em>It's intelligence to navigate.</em>
@@ -4506,7 +4561,7 @@ html { scroll-behavior: smooth; }
        on the root); the filled brandmark re-emerges on the right of this
        section as the anchor of an orbit that lights up the active phase
        lane. Each scroll step is one phase moment. -->
-  <section class="station station--fullbleed station--from-connector station--to-connector" id="practice" data-station="practice" data-screen-label="04 Practice">
+  <section class="station station--fullbleed station--from-connector station--to-connector" id="practice" data-station="practice" data-screen-label="05 Practice">
     <div class="station__idx">Thoughtform in Practice<span class="landmark">Landmark · navigate → encode → build</span></div>
     <div class="approach" id="approach" data-active-phase="navigate" data-orbit-docked="false">
 
@@ -4528,16 +4583,18 @@ html { scroll-behavior: smooth; }
             <span class="reg reg--br"></span>
             <span class="approach__phase__tag">Fluency</span>
             <header class="approach__phase__intro">
-              <h3 class="approach__phase__intro__title">Three moves.<br><em>One skill.</em></h3>
+              <h3 class="approach__phase__intro__title">The AI flywheel<br><em>at Loop.</em></h3>
               <p class="approach__phase__intro__lede">
-                Navigate latent space: <em>see</em>, then <em>encode</em>, then <em>ship</em> — one loop, instrument-grade.
+                I&rsquo;ve led the AI adoption at Loop Earplugs since 2024 &mdash; first across the
+                company, then embedded inside marketing, helping teams turn the way they
+                actually work into reusable skills they can build their own automations on.
               </p>
             </header>
             <div class="approach__phase__core">
               <span class="approach__phase__num" aria-hidden="true"><span>01</span></span>
               <h4 class="approach__phase__title">Navigate</h4>
-              <div class="approach__phase__verb">See · fluency through doing</div>
-              <p class="approach__phase__line">See intelligence in motion — fluency before tools.</p>
+              <div class="approach__phase__verb">Teach the teams what they&rsquo;re working with</div>
+              <p class="approach__phase__line">AI sits between a tool and a collaborator. Foundation of the flywheel is knowing how to navigate it.</p>
             </div>
           </article>
 
@@ -4551,8 +4608,8 @@ html { scroll-behavior: smooth; }
             <div class="approach__phase__core">
               <span class="approach__phase__num" aria-hidden="true"><span>02</span></span>
               <h4 class="approach__phase__title">Encode</h4>
-              <div class="approach__phase__verb">Crystallize · intuition into skills</div>
-              <p class="approach__phase__line">Crystallize the work into reusable skills.</p>
+              <div class="approach__phase__verb">Turn how the team works into a portable layer any agent can use</div>
+              <p class="approach__phase__line">A Skill the team owns. Versioned. Headless. Encoding compounds the intelligence.</p>
             </div>
           </article>
 
@@ -4566,8 +4623,8 @@ html { scroll-behavior: smooth; }
             <div class="approach__phase__core">
               <span class="approach__phase__num" aria-hidden="true"><span>03</span></span>
               <h4 class="approach__phase__title">Build</h4>
-              <div class="approach__phase__verb">Ship · domain experts as builders</div>
-              <p class="approach__phase__line">Ship small instruments from encoded knowledge.</p>
+              <div class="approach__phase__verb">Hand the team a running system they actually own</div>
+              <p class="approach__phase__line">A thin running surface the team uses daily. Built on the substrate underneath.</p>
               <a class="approach__cta" href="#execTitle">
                 See how we run it
                 <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M3 7h8M8 4l3 3-3 3" stroke="currentColor" stroke-width="1.2" fill="none"/></svg>
@@ -4727,7 +4784,7 @@ html { scroll-behavior: smooth; }
        reveal motion runs on inner elements only (Rule 2 of the
        landing-v7-compositing skill). The bottom of the panel carries
        a gradient + backdrop-blur dissolve into Build cases. ========= -->
-  <section class="station station--cover build-quote" id="buildQuote" data-station="buildQuote" data-screen-label="04.5 Axiom">
+  <section class="station station--cover build-quote" id="buildQuote" data-station="buildQuote" data-screen-label="05.5 Axiom">
     <!-- No corner L-brackets here on purpose: the page-level HUD grid
          already carries L-brackets at the four outer corners and a
          second set inside this panel competes with that frame. The
@@ -4862,7 +4919,7 @@ html { scroll-behavior: smooth; }
        [data-build-cases-root]. Visit the BuildCases module under
        components/landing/v7/build-cases/ to edit copy, screenshots,
        or layout. =================================================== -->
-  <section class="station station--build" id="build" data-station="build" data-screen-label="05 Build">
+  <section class="station station--build" id="build" data-station="build" data-screen-label="06 Build">
     <div class="station__idx">Build<span class="landmark">Landmark · the work · software for few</span></div>
 
     <h2 class="station__title">
@@ -4883,7 +4940,7 @@ html { scroll-behavior: smooth; }
        Workshops · Strategy) and the closing funnel CTA that lands
        the user on /contact. The CTA in the Practice copy column
        (`See how we run it`) deep-links here via #execTitle. ===== -->
-  <section class="station" id="services" data-station="services" data-screen-label="06 Services">
+  <section class="station" id="services" data-station="services" data-screen-label="07 Services">
     <div class="station__idx">Services<span class="landmark">Landmark · how we run it</span></div>
 
     <!-- ── Execution strip — Keynotes · Workshops · Strategy ── -->
@@ -5005,7 +5062,7 @@ html { scroll-behavior: smooth; }
   <div data-celestial-slot="practice-to-about"></div>
 
   <!-- ═══════════ 05 ABOUT · VINCE BUYSSENS // VOIDWALKER ═══════════ -->
-  <section class="station" id="about" data-station="about" data-screen-label="07 About">
+  <section class="station" id="about" data-station="about" data-screen-label="08 About">
     <div class="station__idx">About<span class="landmark">Landmark · the navigator · who runs the practice</span></div>
 
     <div class="voidwalker">
@@ -5185,7 +5242,7 @@ html { scroll-behavior: smooth; }
   </section>
 
   <!-- ═══════════ 06 CONTACT ═══════════ -->
-  <section class="station" id="contact" data-station="contact" data-screen-label="08 Contact">
+  <section class="station" id="contact" data-station="contact" data-screen-label="09 Contact">
     <div class="contact">
       <div class="station__idx" style="justify-content:center">Contact<span class="landmark" style="margin-left:0">Event horizon · destination lock</span></div>
       <h2 class="contact__title">Plot your<br><em>course.</em></h2>

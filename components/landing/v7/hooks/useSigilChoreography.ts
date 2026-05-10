@@ -6,53 +6,61 @@ import type { BrandmarkActorHandle } from "../BrandmarkActor";
 
 gsap.registerPlugin(ScrollTrigger);
 
-const DEBUG_ENDPOINT = "http://127.0.0.1:7282/ingest/c41d9533-0bb9-4c99-abdb-1d9fed02e7e0";
-const DEBUG_SESSION_ID = "31ead7";
-const debugLastSentAt = new Map<string, number>();
-
-function query<T extends Element>(selector: string, scope: ParentNode): T | null {
-  return scope.querySelector<T>(selector);
-}
-
-function rectPayload(rect: DOMRect | null | undefined) {
-  if (!rect) return null;
-  return {
-    x: Math.round(rect.x),
-    y: Math.round(rect.y),
-    width: Math.round(rect.width),
-    height: Math.round(rect.height),
-    top: Math.round(rect.top),
-    left: Math.round(rect.left),
-    bottom: Math.round(rect.bottom),
-  };
-}
-
-function debugBrandmark(
-  hypothesisId: string,
-  location: string,
-  message: string,
-  data: Record<string, unknown>
-) {
-  if (process.env.NODE_ENV === "production") return;
-  const key = `${location}:${message}`;
-  const now = Date.now();
-  if (now - (debugLastSentAt.get(key) ?? 0) < 120) return;
-  debugLastSentAt.set(key, now);
-  fetch(DEBUG_ENDPOINT, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", "X-Debug-Session-Id": DEBUG_SESSION_ID },
-    body: JSON.stringify({
-      sessionId: DEBUG_SESSION_ID,
-      runId: "pre-fix",
-      hypothesisId,
-      location,
-      message,
-      data,
-      timestamp: now,
-    }),
-  }).catch(() => {});
-}
-
+/**
+ * useSigilChoreography
+ *
+ * Brandmark scroll character — a fixed travel actor that anchors the
+ * v7 landing page narrative through six stations:
+ *
+ *   HERO           : actor hidden; native sigil img not yet revealed.
+ *   SIGIL          : native `.sigil__mark img` owns the visible mark
+ *                    inside the section-02 diagram. Actor stays hidden.
+ *   ASK / BACKDROP : actor parked behind the asking-gap quote at large
+ *                    scale and ~0.08 opacity. Reads as a faint backdrop.
+ *   RAIL           : actor scrubs left-to-right along the continuum
+ *                    rail (`.crail__line`) driven by scroll progress.
+ *                    Replaces the static `.crail__reticle__diamond`,
+ *                    which is hidden via [data-brand-on-rail="true"].
+ *   ORBIT          : actor pins to `.approach__orbit__mark` inside
+ *                    practice. Re-pins every scroll frame because the
+ *                    orbit is `position: sticky`.
+ *   HIDDEN         : actor fades to 0 as the user exits practice.
+ *
+ * State machine (canonical):
+ *
+ *   Hidden -> Sigil (entrance @ defEl top 85% → top 35%)
+ *   Sigil -> Backdrop (backdropTl @ askEl top 50% → top 0%)
+ *   Backdrop -> Rail (railEntryTl @ contEl top 60% → top 30%)
+ *   Rail -> Rail (railScrubTl @ contEl top 30% → bottom 60%, scrub X)
+ *   Rail -> Orbit (practiceEntryTl @ practiceEl top 40% → top 0%)
+ *   Orbit -> Orbit (orbit re-pin @ practiceEl top 0% → bottom 25%)
+ *   Orbit -> Hidden (practiceExitTl @ practiceEl bottom 25% → -10%)
+ *
+ * Regression invariants (carry over from ADR-010, updated for the
+ * new destinations):
+ *   1. Section 02 is source-owned. The native `.sigil__mark img` owns
+ *      the visible mark while parked there; the fixed actor stays
+ *      hidden through hero, entrance, and the section-02 reading
+ *      state. Do not pin/imitate the actor to the diagram.
+ *   2. Handoff out of the sigil reads the *live unscaled* sigil rect
+ *      via `readSigilRect()`. The native source fades out only when
+ *      the actor takes over.
+ *   3. Backdrop/rail/orbit destinations all use *live* rects each
+ *      frame, not rects captured once at trigger entry — these
+ *      targets all sit inside scrolling, sticky, or scaled parents.
+ *   4. Never pin the actor to any docked target from `onRefresh` at
+ *      `scrollY === 0` (the "brandmark in hero on refresh" bug).
+ *   5. Fast-scroll: every travel timeline has an `onLeave` /
+ *      `onLeaveBack` that finalises the dock state, so flags can't
+ *      be left armed when the user blows past `scrub` easing.
+ *   6. The HUD bottom-left brandmark slot is *not* used as a
+ *      destination on the v7 page anymore; it remains in the DOM
+ *      and is hidden by CSS while [data-brand-on-rail="true"] or
+ *      [data-orbit-docked="true"] is set on the root.
+ *   7. Diamond reticle in the continuum rail is hidden while the
+ *      actor owns the rail (`[data-brand-on-rail="true"]` on root).
+ *      The rail's frame, line, trail, and stops remain visible.
+ */
 export function useSigilChoreography(
   rootRef: React.RefObject<HTMLElement | null>,
   actorRef: React.RefObject<BrandmarkActorHandle | null>
@@ -63,55 +71,61 @@ export function useSigilChoreography(
 
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-    const defEl = query<HTMLElement>("#definition", docEl);
-    const contEl = query<HTMLElement>("#continuum", docEl);
-    const practiceEl = query<HTMLElement>("#practice", docEl);
+    // Stations
+    const defEl = docEl.querySelector<HTMLElement>("#definition");
+    const askEl = docEl.querySelector<HTMLElement>("#asking-gap");
+    const contEl = docEl.querySelector<HTMLElement>("#continuum");
+    const practiceEl = docEl.querySelector<HTMLElement>("#practice");
     const approachEl =
-      query<HTMLElement>("#approach", docEl) ?? query<HTMLElement>(".approach", docEl);
-    const sigilOrbits = query<HTMLElement>(".sigil__orbits", docEl);
-    const sigilHalo = query<HTMLElement>(".sigil__halo", docEl);
-    const sigilMark = query<HTMLElement>(".sigil__mark", docEl);
-    const sigilCap = query<HTMLElement>(".sigil__cap", docEl);
-    const triLeft = query<HTMLElement>(".tri__left", docEl);
-    const sigilLegend = query<HTMLElement>(".sigil__legend", docEl);
-    let hudEl = query<HTMLElement>(".hud", docEl);
-    let hudBrandmark = query<HTMLElement>("#hudBrandmark", docEl);
+      docEl.querySelector<HTMLElement>("#approach") ??
+      docEl.querySelector<HTMLElement>(".approach");
 
-    if (!defEl || !contEl || !sigilOrbits || !sigilMark || !hudBrandmark) {
-      return;
-    }
+    // Sigil internals (section 02)
+    const sigilOrbits = docEl.querySelector<HTMLElement>(".sigil__orbits");
+    const sigilHalo = docEl.querySelector<HTMLElement>(".sigil__halo");
+    const sigilMark = docEl.querySelector<HTMLElement>(".sigil__mark");
+    const sigilCap = docEl.querySelector<HTMLElement>(".sigil__cap");
+    const sigilLegend = docEl.querySelector<HTMLElement>(".sigil__legend");
+    const triLeft = docEl.querySelector<HTMLElement>(".tri__left");
+
+    // Asking-gap backdrop anchor
+    const askAnchor = askEl?.querySelector<HTMLElement>(".ask__brandmark-anchor") ?? null;
+
+    // Continuum rail
+    const crailLine = contEl?.querySelector<HTMLElement>(".crail--large .crail__line") ?? null;
+    const crailStops = contEl
+      ? Array.from(contEl.querySelectorAll<HTMLElement>(".crail__stop"))
+      : [];
+
+    // Bail if essential stations are missing.
+    if (!defEl || !contEl || !sigilMark || !sigilOrbits) return;
 
     const actor = () => actorRef.current;
 
-    /** True only while the actor is parked in the bottom-left HUD slot (not sigil / orbit / in-flight). */
-    let brandPinnedToHudSlot = false;
+    // ── State flags ─────────────────────────────────────────────────
+    /** True while morphing sigil → backdrop. */
+    let backdropArmed = false;
+    /** True while parked at the asking-gap backdrop anchor. */
+    let parkedAtBackdrop = false;
+    /** True while morphing backdrop → rail leftmost stop. */
+    let railEntryArmed = false;
+    /** True while scrubbing along the rail. */
+    let railScrubArmed = false;
+    /** True while morphing rail → orbit. */
+    let practiceEntryArmed = false;
+    /** True while parked at orbit. */
+    let parkedAtOrbit = false;
+    /** True while fading orbit → hidden on practice exit. */
+    let practiceExitArmed = false;
 
-    const syncHudOutlineFromRoot = () => {
-      const a = actor();
-      if (!a) return;
-      if (!brandPinnedToHudSlot) {
-        a.setHudOutline(false);
-        return;
-      }
-      a.setHudOutline(docEl.getAttribute("data-practice-active") === "true");
+    /** Toggle the data attr that hides the diamond reticle while the
+     * actor owns the rail or its travel legs into and out of it. */
+    const setBrandOnRail = (on: boolean) => {
+      docEl.setAttribute("data-brand-on-rail", on ? "true" : "false");
     };
 
-    const ensureFreshHudRefs = () => {
-      if (!hudBrandmark || !docEl.contains(hudBrandmark)) {
-        const fresh = query<HTMLElement>("#hudBrandmark", docEl);
-        if (fresh) hudBrandmark = fresh;
-      }
-      if (!hudEl || !docEl.contains(hudEl)) {
-        const fresh = query<HTMLElement>(".hud", docEl);
-        if (fresh) hudEl = fresh;
-      }
-    };
-
-    const orbitMarkEl = () =>
-      approachEl && docEl.contains(approachEl)
-        ? approachEl.querySelector<HTMLElement>(".approach__orbit__mark")
-        : query<HTMLElement>(".approach__orbit__mark", docEl);
-
+    // Section-02 reveal targets — disable any baked-in IO motion so the
+    // entrance scrub is the only thing animating these.
     const section2Els = [sigilOrbits, sigilHalo, sigilMark, sigilCap, sigilLegend, triLeft].filter(
       Boolean
     ) as HTMLElement[];
@@ -124,97 +138,18 @@ export function useSigilChoreography(
       actor()?.setArmed(armed);
     };
 
-    /** Reduced motion: instant dock / undock; native slot images stay visible. */
-    if (reduceMotion) {
-      gsap.set(
-        [sigilOrbits, sigilHalo, sigilMark, sigilCap, sigilLegend, triLeft].filter(Boolean),
-        {
-          opacity: 1,
-          scale: 1,
-          y: 0,
-          clearProps: "transform",
-        }
-      );
-      hudBrandmark.classList.add("is-visible");
-      hudEl?.classList.add("hud--brandmark-active");
-
-      const rmCtx = gsap.context(() => {
-        if (!practiceEl || !approachEl) return;
-        ScrollTrigger.create({
-          trigger: practiceEl,
-          start: "top 40%",
-          end: "top 0%",
-          onEnter: () => {
-            approachEl.setAttribute("data-orbit-docked", "true");
-          },
-          onLeaveBack: () => {
-            approachEl.setAttribute("data-orbit-docked", "false");
-          },
-        });
-        ScrollTrigger.create({
-          trigger: practiceEl,
-          start: "bottom 25%",
-          end: "bottom -10%",
-          onEnter: () => {
-            approachEl.setAttribute("data-orbit-docked", "false");
-          },
-          onLeaveBack: () => {
-            approachEl.setAttribute("data-orbit-docked", "true");
-          },
-        });
-      }, docEl);
-
-      return () => {
-        rmCtx.revert();
-        hudBrandmark?.classList.remove("is-visible");
-        hudEl?.classList.remove("hud--brandmark-active");
-        approachEl?.removeAttribute("data-orbit-docked");
-      };
-    }
-
-    const practiceMo = new MutationObserver(() => {
-      syncHudOutlineFromRoot();
-    });
-    practiceMo.observe(docEl, { attributes: true, attributeFilter: ["data-practice-active"] });
-
-    const handoffEase = gsap.parseEase("power3.inOut");
-    let handoffStartRect: DOMRect | null = null;
-    let handoffTargetRect: DOMRect | null = null;
-    let handoffArmed = false;
-
-    let practiceStartRect: DOMRect | null = null;
-    let practiceEndRect: DOMRect | null = null;
-    let practiceEntryArmed = false;
-    let practiceExitArmed = false;
-    let practiceExitScrollTrigger: ScrollTrigger | null = null;
-
-    /**
-     * Read the sigil's untransformed bounding rect — equivalent to
-     * `getBoundingClientRect()` minus the entranceTl `scale: 0.7 → 1`
-     * shift that would otherwise wobble the bounding box's edges
-     * during the reveal scrub. Vertical position is stable because
-     * `.sigil__mark` itself is not laid out by transform; horizontal
-     * is stable because `.sigil` (its parent) has no scale animation.
-     *
-     * Used only at the handoff boundary. In section 02 itself, the
-     * native `.sigil__mark img` owns the visible brandmark so it is
-     * genuinely part of the diagram rather than a fixed overlay trying
-     * to imitate the diagram.
-     */
+    /** Read the sigil's untransformed rect. Vertical from the live rect's
+     * centre + offsetHeight; horizontal from the parent's rect (which has
+     * no scale animation). Same logic as the previous hook so the
+     * regression rule "horizontal from untransformed parent" still
+     * applies. */
     const readSigilRect = (): DOMRect => {
       const liveRect = sigilMark.getBoundingClientRect();
       const sigilH = sigilMark.offsetHeight;
       const sigilW = sigilMark.offsetWidth;
       if (sigilH <= 0 || sigilW <= 0) return liveRect;
-
-      // Vertical: live top is anchored at the centre, so add back
-      // half the (offsetHeight − rect.height) lost to scale.
       const verticalCentre = liveRect.top + liveRect.height / 2;
       const unscaledTop = verticalCentre - sigilH / 2;
-
-      // Horizontal: read from the parent (`.sigil`), which has no
-      // transform, so its rect is unscaled. The sigil mark sits
-      // flex-centred inside it.
       const sigilContainer = sigilMark.parentElement;
       let unscaledLeft = liveRect.left;
       if (sigilContainer) {
@@ -223,590 +158,409 @@ export function useSigilChoreography(
           unscaledLeft = containerRect.left + (containerRect.width - sigilW) / 2;
         }
       }
-
       return new DOMRect(unscaledLeft, unscaledTop, sigilW, sigilH);
     };
 
-    const syncActorToSigilEntrance = () => {
+    /** Backdrop anchor's live rect. */
+    const readBackdropRect = (): DOMRect | null => {
+      if (!askAnchor) return null;
+      return askAnchor.getBoundingClientRect();
+    };
+
+    /** Compute a square brandmark rect along the rail at a normalised
+     * scroll progress p in [0, 1]. The actor sits centred on the rail
+     * line, sized to fit visually below the line readout (~48px). */
+    const readRailRectAt = (p: number): DOMRect | null => {
+      if (!crailLine) return null;
+      const lineRect = crailLine.getBoundingClientRect();
+      if (lineRect.width <= 0) return null;
+      const size = 48;
+      const cx = lineRect.left + lineRect.width * Math.min(1, Math.max(0, p));
+      const cy = lineRect.top + lineRect.height / 2;
+      // Actor sits *above* the rail line so its centre and the rail
+      // ride together visually (the line is a 1px hairline; the
+      // brandmark is a square sigil).
+      return new DOMRect(cx - size / 2, cy - size / 2, size, size);
+    };
+
+    /** Rail X positions for the three stops, mapped from each stop's
+     * centre relative to the rail line's left edge. Used to give the
+     * scroll scrub three "snap" anchors instead of a perfectly linear
+     * sweep. Returns null if any rect is unavailable. */
+    const readRailStopFractions = (): number[] | null => {
+      if (!crailLine || crailStops.length !== 3) return null;
+      const lineRect = crailLine.getBoundingClientRect();
+      if (lineRect.width <= 0) return null;
+      const fractions: number[] = [];
+      for (const stop of crailStops) {
+        const r = stop.getBoundingClientRect();
+        const cx = r.left + r.width / 2;
+        const f = (cx - lineRect.left) / lineRect.width;
+        fractions.push(Math.min(1, Math.max(0, f)));
+      }
+      return fractions;
+    };
+
+    /** Eased rail position for a continuum scroll progress p. p∈[0..1]
+     * walks through three sub-segments anchored at the three stops:
+     *   [0..0.33]  Tool stop → constant
+     *   [0.33..0.66] Tool → AI lives here (eased)
+     *   [0.66..1.0] AI lives here → Collaborator (eased)
+     * Falls back to a linear sweep if stop fractions are unreadable. */
+    const railFractionForProgress = (p: number): number => {
+      const stops = readRailStopFractions();
+      if (!stops) return p;
+      const [a, b, c] = stops;
+      if (p <= 0.33) return a;
+      if (p >= 0.66) return c;
+      // Mid band: eased crossing from b ± to c
+      const t = (p - 0.33) / 0.33; // 0..1 inside mid band
+      const eased = t * t * (3 - 2 * t); // smoothstep
+      // For the first half of the mid band travel from a → b,
+      // for the second half from b → c. Keeps a beat at "AI lives here".
+      if (eased < 0.5) {
+        return a + (b - a) * (eased * 2);
+      }
+      return b + (c - b) * ((eased - 0.5) * 2);
+    };
+
+    const orbitMarkEl = () =>
+      approachEl && docEl.contains(approachEl)
+        ? approachEl.querySelector<HTMLElement>(".approach__orbit__mark")
+        : docEl.querySelector<HTMLElement>(".approach__orbit__mark");
+
+    /** Pin actor to the asking-gap backdrop anchor at large scale and
+     * faint opacity. */
+    const pinToBackdrop = () => {
       const a = actor();
       if (!a) return;
-      // Threshold matches the handoffTl trigger start ("top 35%" of
-      // contEl) — once continuum's top is in the upper third of the
-      // viewport, handoffTl owns the actor.
-      const handoffStartReached = contEl.getBoundingClientRect().top <= window.innerHeight * 0.35;
-      const downstreamOwnsActor =
-        handoffArmed ||
-        practiceEntryArmed ||
-        practiceExitArmed ||
-        handoffStartReached ||
-        approachEl?.getAttribute("data-orbit-docked") === "true";
-      if (downstreamOwnsActor) {
-        // #region agent log
-        debugBrandmark(
-          "H2",
-          "useSigilChoreography.ts:syncActorToSigilEntrance",
-          "sigil sync bail downstream owner",
-          {
-            scrollY: Math.round(window.scrollY),
-            sigilRect: rectPayload(sigilMark.getBoundingClientRect()),
-            approachDocked: approachEl?.getAttribute("data-orbit-docked"),
-            handoffStartReached,
-            flags: { handoffArmed, practiceEntryArmed, practiceExitArmed, brandPinnedToHudSlot },
-          }
-        );
-        // #endregion
-        return;
-      }
-      brandPinnedToHudSlot = false;
-      const o = Number(gsap.getProperty(sigilMark, "opacity")) || 0;
-      const s = Number(gsap.getProperty(sigilMark, "scale")) || 0;
-      if (o < 0.02) {
-        // #region agent log
-        debugBrandmark(
-          "H1,H2",
-          "useSigilChoreography.ts:syncActorToSigilEntrance",
-          "sigil sync hide",
-          {
-            scrollY: Math.round(window.scrollY),
-            sigilOpacity: o,
-            sigilScale: s,
-            sigilRect: rectPayload(sigilMark.getBoundingClientRect()),
-            flags: { handoffArmed, practiceEntryArmed, practiceExitArmed, brandPinnedToHudSlot },
-          }
-        );
-        // #endregion
-        a.hide();
-        return;
-      }
-      // #region agent log
-      debugBrandmark(
-        "H1,H2",
-        "useSigilChoreography.ts:syncActorToSigilEntrance",
-        "sigil source owns actor hidden",
-        {
-          scrollY: Math.round(window.scrollY),
-          sigilOpacity: o,
-          sigilScale: s,
-          sigilRect: rectPayload(sigilMark.getBoundingClientRect()),
-          flags: { handoffArmed, practiceEntryArmed, practiceExitArmed, brandPinnedToHudSlot },
-        }
-      );
-      // #endregion
-      // Section 02 is owned by the native `.sigil__mark img`, not the
-      // fixed actor. The actor exists only for travel between stations
-      // (sigil -> HUD, HUD -> orbit). If the actor is visible during
-      // hero -> section 02, it can drift independently from the diagram
-      // and feel like a sticky element. Keep it hidden until handoffTl.
-      void s;
-      a.hide();
+      const rect = readBackdropRect();
+      if (!rect) return;
+      a.pinToRect(rect, 0.08, 1);
       a.setHudOutline(false);
+      parkedAtBackdrop = true;
+      backdropArmed = false;
+      setBrandOnRail(false);
+      setTravelArmed(railEntryArmed || railScrubArmed);
     };
 
-    const captureHandoffRects = () => {
-      ensureFreshHudRefs();
-      brandPinnedToHudSlot = false;
-      gsap.set(sigilMark, {
-        opacity: 1,
-        scale: 1,
-        "--frame-opacity": 1,
-        clearProps: "rotation",
-      });
-      // Start the handoff morph from the real diagram mark the user is
-      // looking at. Before this point the native `.sigil__mark img`
-      // owns section 02; the fixed actor is hidden. At handoff, the
-      // actor takes over from this live source rect and the native mark
-      // fades out.
-      const sigilRect = readSigilRect();
-      const hudRect = hudBrandmark!.getBoundingClientRect();
-      const vh = window.innerHeight;
-      const isSigilVisible = sigilRect.bottom > 0 && sigilRect.top < vh;
-      if (isSigilVisible) {
-        handoffStartRect = sigilRect;
-      } else if (!handoffStartRect) {
-        const liveCont =
-          contEl && docEl.contains(contEl)
-            ? contEl
-            : docEl.querySelector<HTMLElement>("#continuum");
-        if (liveCont) {
-          const sigilDocY = sigilRect.top + window.scrollY;
-          const contDocY = liveCont.getBoundingClientRect().top + window.scrollY;
-          const fallbackTop = sigilDocY - (contDocY - vh * 0.8);
-          handoffStartRect = new DOMRect(
-            sigilRect.left,
-            fallbackTop,
-            sigilRect.width,
-            sigilRect.height
-          );
-        } else {
-          handoffStartRect = sigilRect;
-        }
-      }
-      handoffTargetRect = hudRect;
-      // Do NOT touch the actor opacity here. capture* runs on
-      // onEnter / onEnterBack / onRefresh; the subsequent onUpdate
-      // is responsible for visibility. Pinning with opacity 0 caused
-      // a one-frame flicker on entry into the trigger range.
-      // #region agent log
-      debugBrandmark(
-        "H1,H2,H3",
-        "useSigilChoreography.ts:captureHandoffRects",
-        "capture handoff rects",
-        {
-          scrollY: Math.round(window.scrollY),
-          isSigilVisible,
-          sigilRect: rectPayload(sigilRect),
-          hudRect: rectPayload(hudRect),
-          handoffStartRect: rectPayload(handoffStartRect),
-          handoffTargetRect: rectPayload(handoffTargetRect),
-          flags: { handoffArmed, practiceEntryArmed, practiceExitArmed, brandPinnedToHudSlot },
-        }
-      );
-      // #endregion
+    /** Pin actor to the rail at a normalised X fraction. */
+    const pinToRailAt = (frac: number) => {
+      const a = actor();
+      if (!a) return;
+      const rect = readRailRectAt(frac);
+      if (!rect) return;
+      a.pinToRect(rect, 1, 1);
+      a.setHudOutline(false);
+      setBrandOnRail(true);
+      parkedAtBackdrop = false;
+      railEntryArmed = false;
+      setTravelArmed(practiceEntryArmed);
     };
 
-    const dock = () => {
-      ensureFreshHudRefs();
-      if (!hudBrandmark) return;
-      brandPinnedToHudSlot = true;
-      // The handoff has completed — clear the gate so downstream
-      // listeners (orbit re-pin, practice docked tracker) are no
-      // longer suppressed by a stale "handoff in progress" flag.
-      handoffArmed = false;
-      const hudRect = hudBrandmark.getBoundingClientRect();
-      actor()?.pinToRect(hudRect, 1, 1);
-      syncHudOutlineFromRoot();
-      gsap.set(sigilMark, { opacity: 0, "--frame-opacity": 0 });
-      hudBrandmark.classList.add("is-visible");
-      hudEl?.classList.add("hud--brandmark-active");
-      setTravelArmed(practiceEntryArmed || practiceExitArmed);
+    /** Pin actor to the orbit centre (approach__orbit__mark). */
+    const pinToOrbit = () => {
+      const a = actor();
+      if (!a) return;
+      const mark = orbitMarkEl();
+      if (!mark) return;
+      const rect = mark.getBoundingClientRect();
+      if (rect.width <= 0 || rect.height <= 0) return;
+      a.pinToRect(rect, 1, 1);
+      a.setHudOutline(false);
+      parkedAtOrbit = true;
+      practiceEntryArmed = false;
+      setBrandOnRail(false);
+      approachEl?.setAttribute("data-orbit-docked", "true");
+      setTravelArmed(practiceExitArmed);
     };
 
-    const resetHandoff = () => {
-      ensureFreshHudRefs();
-      handoffArmed = false;
-      handoffStartRect = null;
-      handoffTargetRect = null;
-      brandPinnedToHudSlot = false;
+    /** Hide actor entirely (post-practice exit). */
+    const hideActor = () => {
+      actor()?.hide();
+      parkedAtBackdrop = false;
+      parkedAtOrbit = false;
+      backdropArmed = false;
+      railEntryArmed = false;
+      railScrubArmed = false;
+      practiceEntryArmed = false;
+      practiceExitArmed = false;
+      setBrandOnRail(false);
+      approachEl?.setAttribute("data-orbit-docked", "false");
+      setTravelArmed(false);
+    };
+
+    /** Show the native sigil source (used when reversing back into
+     * section 02 from the asking-gap). */
+    const showSigilSource = () => {
       gsap.set(sigilMark, { opacity: 1, "--frame-opacity": 1 });
-      hudBrandmark?.classList.remove("is-visible");
-      hudEl?.classList.remove("hud--brandmark-active");
-      setTravelArmed(handoffArmed || practiceEntryArmed || practiceExitArmed);
-      syncActorToSigilEntrance();
+      actor()?.hide();
+      parkedAtBackdrop = false;
+      backdropArmed = false;
+      setBrandOnRail(false);
     };
 
-    const applyHandoff = (p: number) => {
-      if (!handoffArmed || !handoffStartRect || !handoffTargetRect) {
-        return;
-      }
-      ensureFreshHudRefs();
-      if (p <= 0) {
-        brandPinnedToHudSlot = false;
-        gsap.set(sigilMark, { opacity: 1, "--frame-opacity": 1 });
-        hudBrandmark?.classList.remove("is-visible");
-        hudEl?.classList.remove("hud--brandmark-active");
-        setTravelArmed(practiceEntryArmed || practiceExitArmed);
-        syncActorToSigilEntrance();
-        return;
-      }
-
-      if (p >= 0.995) {
-        dock();
-        return;
-      }
-
-      setTravelArmed(true);
-      brandPinnedToHudSlot = false;
-      const src = handoffStartRect;
-      const dst = handoffTargetRect;
-      const cornerRetired = p >= 0.82;
-
-      hudEl?.classList.toggle("hud--brandmark-active", cornerRetired);
-      hudBrandmark?.classList.remove("is-visible");
-
-      actor()?.setHudOutline(false);
-      actor()?.morphRects(src, dst, p, handoffEase);
-      gsap.set(sigilMark, { opacity: 0, "--frame-opacity": 0 });
-    };
-
-    const capturePracticeRects = (dir: "forward" | "reverse") => {
-      ensureFreshHudRefs();
-      const mark = orbitMarkEl();
-      if (!hudBrandmark || !mark) return;
-      const hudRect = hudBrandmark.getBoundingClientRect();
-      const orbRect = mark.getBoundingClientRect();
-      if (dir === "forward") {
-        practiceStartRect = hudRect;
-        practiceEndRect = orbRect;
-      } else {
-        practiceStartRect = orbRect;
-        practiceEndRect = hudRect;
-      }
-      // Same rationale as captureHandoffRects: don't override
-      // visibility here, let applyPracticeTravel render the frame.
-      // #region agent log
-      debugBrandmark(
-        "H1,H2,H3",
-        "useSigilChoreography.ts:capturePracticeRects",
-        "capture practice rects",
-        {
-          dir,
-          scrollY: Math.round(window.scrollY),
-          hudRect: rectPayload(hudRect),
-          orbitRect: rectPayload(orbRect),
-          practiceRect: rectPayload(practiceEl?.getBoundingClientRect()),
-          approachDocked: approachEl?.getAttribute("data-orbit-docked"),
-          practiceStartRect: rectPayload(practiceStartRect),
-          practiceEndRect: rectPayload(practiceEndRect),
-          flags: { handoffArmed, practiceEntryArmed, practiceExitArmed, brandPinnedToHudSlot },
-        }
+    // ── Reduced-motion fast path ────────────────────────────────────
+    // Pin instantly: backdrop → rail → orbit; hide on practice exit.
+    if (reduceMotion) {
+      gsap.set(
+        [sigilOrbits, sigilHalo, sigilMark, sigilCap, sigilLegend, triLeft].filter(Boolean),
+        { opacity: 1, scale: 1, y: 0, clearProps: "transform" }
       );
-      // #endregion
-    };
-
-    const practiceDockAtOrbit = () => {
-      if (!approachEl) return;
-      practiceEntryArmed = false;
-      brandPinnedToHudSlot = false;
-      const mark = orbitMarkEl();
-      if (mark) {
-        actor()?.pinToRect(mark.getBoundingClientRect(), 1, 1);
-      }
-      actor()?.setHudOutline(false);
-      approachEl.setAttribute("data-orbit-docked", "true");
-      setTravelArmed(practiceExitArmed || handoffArmed);
-    };
-
-    const practiceRedockAtHud = () => {
-      if (!approachEl) return;
-      approachEl.setAttribute("data-orbit-docked", "false");
-      ensureFreshHudRefs();
-      brandPinnedToHudSlot = true;
-      if (hudBrandmark) {
-        actor()?.pinToRect(hudBrandmark.getBoundingClientRect(), 1, 1);
-      }
-      syncHudOutlineFromRoot();
-      hudBrandmark?.classList.add("is-visible");
-      hudEl?.classList.add("hud--brandmark-active");
-      practiceExitArmed = false;
-      setTravelArmed(handoffArmed || practiceEntryArmed);
-    };
-
-    const practiceUndockFromEntry = () => {
-      if (!approachEl) return;
-      approachEl.setAttribute("data-orbit-docked", "false");
-      practiceEntryArmed = false;
-      setTravelArmed(handoffArmed || practiceExitArmed);
-      ensureFreshHudRefs();
-      brandPinnedToHudSlot = true;
-      if (hudBrandmark) {
-        actor()?.pinToRect(hudBrandmark.getBoundingClientRect(), 1, 1);
-        syncHudOutlineFromRoot();
-      }
-    };
-
-    const practiceDockAtOrbitFromExitLeaveBack = () => {
-      if (!approachEl) return;
-      practiceExitArmed = false;
-      brandPinnedToHudSlot = false;
-      const mark = orbitMarkEl();
-      if (mark) {
-        actor()?.pinToRect(mark.getBoundingClientRect(), 1, 1);
-      }
-      actor()?.setHudOutline(false);
-      approachEl.setAttribute("data-orbit-docked", "true");
-      setTravelArmed(handoffArmed || practiceEntryArmed);
-    };
-
-    const suppressPracticeEntry = () => {
-      const st = practiceExitScrollTrigger;
-      return Boolean(st?.isActive || (st && st.progress > 0.0005));
-    };
-
-    const applyPracticeTravel = (p: number, dir: "forward" | "reverse") => {
-      if (!approachEl) return;
-      ensureFreshHudRefs();
-      let src: DOMRect;
-      let dst: DOMRect;
-      if (dir === "forward") {
-        // Use *live* rects for the HUD → orbit travel. The orbit lives
-        // inside `.approach__stage` (position: sticky), so its viewport
-        // rect at the moment the entry trigger fires (practiceTop ≈ 40%
-        // of viewport) is its not-yet-stuck flow position. At p=1
-        // (`practiceDockAtOrbit`), the dock pins to the live rect (now
-        // sticky-engaged), which produced a hundreds-of-pixels jump
-        // from the captured mid-morph end to the live dock target.
-        // Recomputing live every frame keeps the trajectory aimed at
-        // the orbit's actual current screen position so the brandmark
-        // "elegantly slides inside the diagram" instead of jumping
-        // there at the end.
-        const orbitMark = orbitMarkEl();
-        if (!orbitMark || !hudBrandmark) return;
-        src = hudBrandmark.getBoundingClientRect();
-        dst = orbitMark.getBoundingClientRect();
-      } else {
-        // Reverse (orbit → HUD): use the rects captured by
-        // `capturePracticeRects("reverse")` at trigger.onEnter. By the
-        // time the exit trigger fires the user has scrolled past the
-        // orbit's sticky un-engage point, so the live orbit rect is far
-        // offscreen and a live morph would sweep the brandmark from
-        // hundreds-of-pixels above the viewport down to the HUD. The
-        // capture-at-onEnter rect anchors the morph at the orbit's
-        // last on-screen position, which keeps the travel inside the
-        // viewport.
-        if (!practiceStartRect || !practiceEndRect) return;
-        src = practiceStartRect;
-        dst = practiceEndRect;
-      }
-      const shouldLogProgress = p <= 0.02 || p >= 0.98 || Math.abs(p - 0.5) < 0.03;
-      if (shouldLogProgress) {
-        // #region agent log
-        debugBrandmark(
-          "H2,H4",
-          "useSigilChoreography.ts:applyPracticeTravel",
-          "apply practice travel progress",
-          {
-            dir,
-            progress: Number(p.toFixed(4)),
-            scrollY: Math.round(window.scrollY),
-            src: rectPayload(src),
-            dst: rectPayload(dst),
-            suppressPracticeEntry: dir === "forward" ? suppressPracticeEntry() : false,
-            approachDocked: approachEl.getAttribute("data-orbit-docked"),
-            flags: { handoffArmed, practiceEntryArmed, practiceExitArmed, brandPinnedToHudSlot },
-          }
-        );
-        // #endregion
-      }
-
-      if (dir === "forward") {
-        if (suppressPracticeEntry()) return;
-        if (p <= 0.004) {
-          approachEl.setAttribute("data-orbit-docked", "false");
-          ensureFreshHudRefs();
-          brandPinnedToHudSlot = true;
-          if (hudBrandmark) {
-            actor()?.pinToRect(hudBrandmark.getBoundingClientRect(), 1, 1);
-            syncHudOutlineFromRoot();
-          }
-          setTravelArmed(practiceExitArmed || handoffArmed);
-          return;
+      const rmCtx = gsap.context(() => {
+        if (askEl) {
+          ScrollTrigger.create({
+            trigger: askEl,
+            start: "top 60%",
+            end: "bottom 40%",
+            onEnter: () => pinToBackdrop(),
+            onEnterBack: () => pinToBackdrop(),
+          });
         }
-        if (p >= 0.995) {
-          if (suppressPracticeEntry()) return;
-          practiceDockAtOrbit();
-          return;
+        ScrollTrigger.create({
+          trigger: contEl,
+          start: "top 60%",
+          end: "bottom 40%",
+          onEnter: () => pinToRailAt(0),
+          onUpdate: (self) => {
+            if (parkedAtBackdrop || parkedAtOrbit) return;
+            pinToRailAt(railFractionForProgress(self.progress));
+          },
+          onEnterBack: () => pinToRailAt(1),
+        });
+        if (practiceEl && approachEl) {
+          ScrollTrigger.create({
+            trigger: practiceEl,
+            start: "top 40%",
+            end: "top 0%",
+            onEnter: () => pinToOrbit(),
+            onLeaveBack: () => pinToRailAt(1),
+          });
+          ScrollTrigger.create({
+            trigger: practiceEl,
+            start: "bottom 25%",
+            end: "bottom -10%",
+            onEnter: () => hideActor(),
+            onLeaveBack: () => pinToOrbit(),
+          });
         }
-        setTravelArmed(true);
-        brandPinnedToHudSlot = false;
-        approachEl.setAttribute("data-orbit-docked", "false");
-        actor()?.setHudOutline(false);
-        actor()?.morphRects(src, dst, p, handoffEase);
+      }, docEl);
+      return () => {
+        rmCtx.revert();
+        approachEl?.removeAttribute("data-orbit-docked");
+        setBrandOnRail(false);
+        actor()?.hide();
+      };
+    }
+
+    const handoffEase = gsap.parseEase("power3.inOut");
+
+    // Cached morph rects — kept fresh by `onResize` and re-captured
+    // at trigger boundaries so live targets aren't re-read every frame
+    // outside the hot path of the scrub.
+    let backdropMorphSrc: DOMRect | null = null;
+    let backdropMorphDst: DOMRect | null = null;
+    let railEntryMorphSrc: DOMRect | null = null;
+    let railEntryMorphDst: DOMRect | null = null;
+    let practiceEntryMorphSrc: DOMRect | null = null;
+    let practiceEntryMorphDst: DOMRect | null = null;
+
+    const captureBackdropRects = () => {
+      backdropMorphSrc = readSigilRect();
+      backdropMorphDst = readBackdropRect();
+    };
+
+    const captureRailEntryRects = () => {
+      railEntryMorphSrc = readBackdropRect();
+      railEntryMorphDst = readRailRectAt(0);
+    };
+
+    const capturePracticeEntryRects = () => {
+      practiceEntryMorphSrc = readRailRectAt(1);
+      const mark = orbitMarkEl();
+      practiceEntryMorphDst = mark?.getBoundingClientRect() ?? null;
+    };
+
+    const applyBackdropMorph = (p: number) => {
+      const a = actor();
+      if (!a || !backdropMorphSrc || !backdropMorphDst) return;
+      if (p <= 0) {
+        showSigilSource();
         return;
       }
-
-      /* reverse — orbit → HUD */
       if (p >= 0.995) {
-        practiceRedockAtHud();
+        pinToBackdrop();
         return;
+      }
+      backdropArmed = true;
+      parkedAtBackdrop = false;
+      // Hide the native sigil mark while the actor flies over it.
+      gsap.set(sigilMark, { opacity: 0, "--frame-opacity": 0 });
+      a.morphRects(backdropMorphSrc, backdropMorphDst, p, handoffEase);
+      // morphShell sets opacity:1; tween it down toward backdrop's
+      // 0.08 as the morph completes so the landing reads as a faint
+      // backdrop rather than a sudden snap.
+      const targetOpacity = 1 - (1 - 0.08) * p;
+      gsap.set(".tf-brandmark-actor", { opacity: targetOpacity });
+      setTravelArmed(true);
+    };
+
+    const applyRailEntryMorph = (p: number) => {
+      const a = actor();
+      if (!a) return;
+      if (!railEntryMorphSrc || !railEntryMorphDst) {
+        captureRailEntryRects();
+      }
+      if (!railEntryMorphSrc || !railEntryMorphDst) return;
+      if (p <= 0) {
+        pinToBackdrop();
+        return;
+      }
+      if (p >= 0.995) {
+        pinToRailAt(0);
+        return;
+      }
+      railEntryArmed = true;
+      parkedAtBackdrop = false;
+      a.morphRects(railEntryMorphSrc, railEntryMorphDst, p, handoffEase);
+      // Fade up from 0.08 → 1 across the entry morph.
+      const opacity = 0.08 + (1 - 0.08) * p;
+      gsap.set(".tf-brandmark-actor", { opacity });
+      setBrandOnRail(true);
+      setTravelArmed(true);
+    };
+
+    const applyRailScrub = (p: number) => {
+      if (!railScrubArmed) return;
+      const a = actor();
+      if (!a) return;
+      const frac = railFractionForProgress(p);
+      const rect = readRailRectAt(frac);
+      if (!rect) return;
+      a.pinToRect(rect, 1, 1);
+      setBrandOnRail(true);
+    };
+
+    const applyPracticeEntryMorph = (p: number) => {
+      const a = actor();
+      if (!a) return;
+      // Always read live rects for the orbit destination — it's inside
+      // a `position: sticky` parent and the captured rect snaps when
+      // sticky engages.
+      practiceEntryMorphSrc = readRailRectAt(1);
+      const mark = orbitMarkEl();
+      practiceEntryMorphDst = mark?.getBoundingClientRect() ?? null;
+      if (!practiceEntryMorphSrc || !practiceEntryMorphDst) return;
+      if (p <= 0) {
+        pinToRailAt(1);
+        return;
+      }
+      if (p >= 0.995) {
+        pinToOrbit();
+        return;
+      }
+      practiceEntryArmed = true;
+      parkedAtOrbit = false;
+      setBrandOnRail(false);
+      approachEl?.setAttribute("data-orbit-docked", "false");
+      a.morphRects(practiceEntryMorphSrc, practiceEntryMorphDst, p, handoffEase);
+      gsap.set(".tf-brandmark-actor", { opacity: 1 });
+      setTravelArmed(true);
+    };
+
+    const applyPracticeExitFade = (p: number) => {
+      const a = actor();
+      if (!a) return;
+      if (p <= 0) {
+        pinToOrbit();
+        return;
+      }
+      if (p >= 0.995) {
+        hideActor();
+        return;
+      }
+      practiceExitArmed = true;
+      parkedAtOrbit = false;
+      // Keep the actor at the orbit position while fading out, so it
+      // looks like the brandmark is dissolving in place rather than
+      // sliding off-screen.
+      const mark = orbitMarkEl();
+      if (mark) {
+        a.pinToRect(mark.getBoundingClientRect(), 1 - p, 1);
       }
       setTravelArmed(true);
-      brandPinnedToHudSlot = false;
-      approachEl.setAttribute("data-orbit-docked", "false");
-      actor()?.setHudOutline(false);
-      if (p <= 0.004) {
-        actor()?.morphRects(src, dst, 0, handoffEase);
-        return;
-      }
-      actor()?.morphRects(src, dst, p, handoffEase);
     };
 
     const repinActorToOrbitIfDocked = () => {
-      if (!approachEl || approachEl.getAttribute("data-orbit-docked") !== "true") {
-        // #region agent log
-        debugBrandmark(
-          "H4",
-          "useSigilChoreography.ts:repinActorToOrbitIfDocked",
-          "repin bail no dock",
-          {
-            scrollY: Math.round(window.scrollY),
-            approachDocked: approachEl?.getAttribute("data-orbit-docked"),
-            flags: { handoffArmed, practiceEntryArmed, practiceExitArmed, brandPinnedToHudSlot },
-          }
-        );
-        // #endregion
-        return;
-      }
-      if (handoffArmed || practiceEntryArmed || practiceExitArmed) {
-        // #region agent log
-        debugBrandmark(
-          "H4",
-          "useSigilChoreography.ts:repinActorToOrbitIfDocked",
-          "repin bail armed",
-          {
-            scrollY: Math.round(window.scrollY),
-            approachDocked: approachEl.getAttribute("data-orbit-docked"),
-            flags: { handoffArmed, practiceEntryArmed, practiceExitArmed, brandPinnedToHudSlot },
-          }
-        );
-        // #endregion
-        return;
-      }
+      if (!approachEl) return;
+      if (approachEl.getAttribute("data-orbit-docked") !== "true") return;
+      if (backdropArmed || railEntryArmed || practiceEntryArmed || practiceExitArmed) return;
       const mark = orbitMarkEl();
-      if (!mark) {
-        // #region agent log
-        debugBrandmark(
-          "H1,H4",
-          "useSigilChoreography.ts:repinActorToOrbitIfDocked",
-          "repin bail no mark",
-          {
-            scrollY: Math.round(window.scrollY),
-          }
-        );
-        // #endregion
-        return;
-      }
+      if (!mark) return;
       const rect = mark.getBoundingClientRect();
-      if (rect.width <= 0 || rect.height <= 0) {
-        // #region agent log
-        debugBrandmark(
-          "H1,H4",
-          "useSigilChoreography.ts:repinActorToOrbitIfDocked",
-          "repin bail zero rect",
-          {
-            scrollY: Math.round(window.scrollY),
-            orbitRect: rectPayload(rect),
-          }
-        );
-        // #endregion
-        return;
-      }
-      // #region agent log
-      debugBrandmark(
-        "H1,H4",
-        "useSigilChoreography.ts:repinActorToOrbitIfDocked",
-        "repin actor to orbit",
-        {
-          scrollY: Math.round(window.scrollY),
-          orbitRect: rectPayload(rect),
-          practiceRect: rectPayload(practiceEl?.getBoundingClientRect()),
-          flags: { handoffArmed, practiceEntryArmed, practiceExitArmed, brandPinnedToHudSlot },
-        }
-      );
-      // #endregion
+      if (rect.width <= 0 || rect.height <= 0) return;
       actor()?.pinToRect(rect, 1, 1);
       actor()?.setHudOutline(false);
     };
 
-    /**
-     * While section 02 is parked, the native sigil image must remain the
-     * only visible brandmark. The fixed actor is intentionally hidden
-     * until the handoff trigger arms; otherwise it can visually detach
-     * from the diagram and read as an independent sticky element.
-     */
+    const repinActorAtRailIfScrubbing = () => {
+      if (!railScrubArmed) return;
+      // Best-effort: re-read rail rect on scroll without touching
+      // global progress. The railScrubTl onUpdate is the source of
+      // truth for X; this just keeps Y aligned with rail movement
+      // (the rail moves with the document scroll).
+      // No-op here — railScrubTl.onUpdate will fire on the same
+      // frame and overwrite. Reserved for future use.
+    };
+
+    /** Section 02 source-owned park: keep the actor hidden whenever the
+     * user is parked at the sigil reading state. Mirrors the original
+     * hook's invariant 1. */
     const repinActorToSigilIfParked = () => {
-      if (handoffArmed || practiceEntryArmed || practiceExitArmed) return;
-      if (brandPinnedToHudSlot) return;
-      if (approachEl?.getAttribute("data-orbit-docked") === "true") return;
-
+      if (
+        backdropArmed ||
+        railEntryArmed ||
+        practiceEntryArmed ||
+        practiceExitArmed ||
+        parkedAtBackdrop ||
+        parkedAtOrbit
+      )
+        return;
       const vh = window.innerHeight;
-
-      // Threshold matches `entranceTl.scrollTrigger.end` — only park
-      // once entrance is past, so entranceTl's scrub keeps full ownership
-      // during the reveal.
       const entrancePastEnd = defEl.getBoundingClientRect().top <= vh * 0.35;
       if (!entrancePastEnd) return;
-
-      // Threshold matches `handoffTl.scrollTrigger.start` ("top 35%"
-      // of contEl) — once handoff arms, leave the actor alone so the
-      // morph can drive it.
-      const handoffStartReached = contEl.getBoundingClientRect().top <= vh * 0.35;
-      if (handoffStartReached) return;
-
+      const askTopReached = askEl
+        ? askEl.getBoundingClientRect().top <= vh * 0.6
+        : contEl.getBoundingClientRect().top <= vh * 0.5;
+      if (askTopReached) return;
       const o = Number(gsap.getProperty(sigilMark, "opacity")) || 0;
       if (o < 0.95) return;
-
-      brandPinnedToHudSlot = false;
       actor()?.hide();
       actor()?.setHudOutline(false);
     };
 
     const onResize = () => {
-      ensureFreshHudRefs();
-      if (handoffArmed && hudBrandmark) {
-        handoffTargetRect = hudBrandmark.getBoundingClientRect();
-      }
-      if (practiceEntryArmed && hudBrandmark) {
-        capturePracticeRects("forward");
-      }
-      if (practiceExitArmed && hudBrandmark) {
-        capturePracticeRects("reverse");
-      }
-      syncActorToSigilEntrance();
-      syncHudOutlineFromRoot();
+      if (backdropArmed) captureBackdropRects();
+      if (railEntryArmed) captureRailEntryRects();
+      if (practiceEntryArmed) capturePracticeEntryRects();
+      if (parkedAtBackdrop) pinToBackdrop();
+      if (parkedAtOrbit) pinToOrbit();
       repinActorToOrbitIfDocked();
       repinActorToSigilIfParked();
     };
     window.addEventListener("resize", onResize);
 
     const onVisibilityChange = () => {
-      if (document.visibilityState === "visible") {
-        ScrollTrigger.refresh();
-      }
+      if (document.visibilityState === "visible") ScrollTrigger.refresh();
     };
     document.addEventListener("visibilitychange", onVisibilityChange);
     const onPageShow = (event: PageTransitionEvent) => {
-      if (event.persisted) {
-        ScrollTrigger.refresh();
-      }
+      if (event.persisted) ScrollTrigger.refresh();
     };
     window.addEventListener("pageshow", onPageShow);
 
-    // Layout shifts after initial mount (font swaps, image / video decode,
-    // dangerouslySetInnerHTML hydration) push the practice section's
-    // offsetTop down by 100s of pixels. ScrollTrigger caches start/end
-    // positions on first refresh, so without follow-up refreshes the
-    // entry trigger fires too early and the actor docks at the orbit
-    // before the user has reached the section. We chase those layout
-    // shifts with: (a) window 'load' (after all critical resources),
-    // (b) a delayed safety refresh, and (c) ResizeObservers on the key
-    // landmarks so any post-load reflow re-syncs positions.
     const refresh = () => ScrollTrigger.refresh();
-    ScrollTrigger.addEventListener("refresh", () => {
-      // #region agent log
-      debugBrandmark(
-        "H3",
-        "useSigilChoreography.ts:ScrollTrigger.refresh",
-        "scrolltrigger refresh geometry",
-        {
-          scrollY: Math.round(window.scrollY),
-          viewport: { width: window.innerWidth, height: window.innerHeight },
-          practiceRect: rectPayload(practiceEl?.getBoundingClientRect()),
-          approachRect: rectPayload(approachEl?.getBoundingClientRect()),
-          orbitRect: rectPayload(orbitMarkEl()?.getBoundingClientRect()),
-          triggers: ScrollTrigger.getAll()
-            .filter((t) =>
-              ["practice", "continuum", "definition"].includes(
-                (t.trigger as HTMLElement | null)?.id ?? ""
-              )
-            )
-            .map((t) => ({
-              id: (t.trigger as HTMLElement | null)?.id,
-              start: Math.round(t.start),
-              end: Math.round(t.end),
-              progress: Number(t.progress.toFixed(4)),
-              isActive: t.isActive,
-            })),
-        }
-      );
-      // #endregion
-    });
     window.addEventListener("load", refresh);
-    // The practice section can roughly triple in height after the
-    // celestial portals + phase glyphs mount, which shifts every
-    // downstream trigger position. Multiple deferred refreshes catch
-    // each settling step. A debounced ResizeObserver collapses the
-    // burst of resize callbacks during layout into a single late
-    // refresh.
     const refreshTimers = [
       window.setTimeout(refresh, 250),
       window.setTimeout(refresh, 1200),
@@ -820,42 +574,63 @@ export function useSigilChoreography(
     if (practiceEl) ro.observe(practiceEl);
     if (defEl) ro.observe(defEl);
     if (contEl) ro.observe(contEl);
+    if (askEl) ro.observe(askEl);
 
-    // Continuous rest-state reconciliation. The orbit rest state is actor-owned
-    // and needs re-pinning while its sticky target moves. The section-02 rest
-    // state is source-owned, so this same pass hides the actor before handoff
-    // instead of trying to pin it to the sigil.
+    // Continuous reconciliation. Re-pin the actor to the orbit while
+    // parked there (sticky parent moves), and keep the sigil-park rule
+    // honoured.
     let dockedRaf = 0;
-    const onDockedScroll = () => {
+    const onScroll = () => {
       if (dockedRaf) return;
       dockedRaf = requestAnimationFrame(() => {
         dockedRaf = 0;
         repinActorToOrbitIfDocked();
+        repinActorAtRailIfScrubbing();
         repinActorToSigilIfParked();
       });
     };
-    window.addEventListener("scroll", onDockedScroll, { passive: true });
+    window.addEventListener("scroll", onScroll, { passive: true });
 
     const ctx = gsap.context(() => {
-      gsap.set([sigilOrbits, sigilHalo], { opacity: 0, scale: 0.6, rotation: -8 });
+      // Initial state: hide everything at section 02.
+      gsap.set([sigilOrbits, sigilHalo].filter(Boolean), { opacity: 0, scale: 0.6, rotation: -8 });
       gsap.set(sigilMark, { opacity: 0, scale: 0.7 });
       gsap.set([sigilCap, sigilLegend, triLeft].filter(Boolean), { opacity: 0, y: 16 });
-
       if (approachEl && !approachEl.getAttribute("data-orbit-docked")) {
         approachEl.setAttribute("data-orbit-docked", "false");
       }
 
+      // ── Trigger 1: Entrance — sigil reveal ─────────────────────
       const entranceTl = gsap.timeline({
         scrollTrigger: {
           trigger: defEl,
           start: "top 85%",
           end: "top 35%",
           scrub: 0.6,
-          onUpdate: syncActorToSigilEntrance,
-          onRefresh: syncActorToSigilEntrance,
+          onUpdate: () => {
+            // While entrance is scrubbing, ensure the actor stays hidden
+            // and the native sigil owns the diagram (Rule 1).
+            const downstreamOwns =
+              backdropArmed ||
+              railEntryArmed ||
+              practiceEntryArmed ||
+              practiceExitArmed ||
+              parkedAtBackdrop ||
+              parkedAtOrbit;
+            if (!downstreamOwns) actor()?.hide();
+          },
+          onRefresh: () => {
+            const downstreamOwns =
+              backdropArmed ||
+              railEntryArmed ||
+              practiceEntryArmed ||
+              practiceExitArmed ||
+              parkedAtBackdrop ||
+              parkedAtOrbit;
+            if (!downstreamOwns) actor()?.hide();
+          },
         },
       });
-
       entranceTl
         .to(
           [sigilOrbits, sigilHalo].filter(Boolean),
@@ -868,238 +643,224 @@ export function useSigilChoreography(
           },
           0
         )
-        .to(
-          sigilMark,
-          {
-            opacity: 1,
-            scale: 1,
-            duration: 0.4,
-            ease: "power3.out",
-          },
-          0.15
-        )
+        .to(sigilMark, { opacity: 1, scale: 1, duration: 0.4, ease: "power3.out" }, 0.15)
         .to(
           [sigilCap, sigilLegend].filter(Boolean),
-          {
-            opacity: 1,
-            y: 0,
-            duration: 0.35,
-            ease: "power3.out",
-            stagger: 0.06,
-          },
+          { opacity: 1, y: 0, duration: 0.35, ease: "power3.out", stagger: 0.06 },
           0.3
         )
         .to(
           [triLeft].filter(Boolean),
-          {
-            opacity: 1,
-            y: 0,
-            duration: 0.4,
-            ease: "power3.out",
-          },
+          { opacity: 1, y: 0, duration: 0.4, ease: "power3.out" },
           0.25
         );
 
-      const handoffTl = gsap.timeline({
+      // ── Trigger 2: Backdrop — sigil → asking-gap backdrop ──────
+      if (askEl) {
+        gsap.timeline({
+          scrollTrigger: {
+            trigger: askEl,
+            start: "top 50%",
+            end: "top 0%",
+            scrub: 0.4,
+            onEnter: () => {
+              captureBackdropRects();
+              backdropArmed = true;
+              setTravelArmed(true);
+            },
+            onEnterBack: () => {
+              captureBackdropRects();
+              backdropArmed = true;
+              setTravelArmed(true);
+            },
+            onLeave: () => pinToBackdrop(),
+            onLeaveBack: () => {
+              backdropArmed = false;
+              showSigilSource();
+            },
+            onRefresh: (self) => {
+              // Never pin from refresh at scrollY === 0 (Rule 4).
+              if (window.scrollY < 4) return;
+              if (self.progress >= 0.995) {
+                captureBackdropRects();
+                backdropArmed = true;
+                pinToBackdrop();
+              } else if (self.progress > 0) {
+                captureBackdropRects();
+                backdropArmed = true;
+                applyBackdropMorph(self.progress);
+              } else {
+                if (parkedAtBackdrop || parkedAtOrbit) return;
+                showSigilSource();
+              }
+            },
+            onUpdate: (self) => applyBackdropMorph(self.progress),
+          },
+        });
+      }
+
+      // ── Trigger 3: Rail entry — backdrop → rail leftmost ───────
+      gsap.timeline({
         scrollTrigger: {
-          // Anchor on continuum's top so the brandmark only begins
-          // travelling toward the HUD once the user has actually
-          // scrolled past section 02 and the next section is taking
-          // over the viewport. Range matches the historical timing —
-          // we just tightened the scrub from 1.8 to 0.4 so the morph
-          // tracks the user's scroll instead of lagging behind.
           trigger: contEl,
-          start: "top 35%",
-          end: "top 5%",
+          start: "top 60%",
+          end: "top 30%",
           scrub: 0.4,
           onEnter: () => {
-            captureHandoffRects();
-            handoffArmed = true;
+            captureRailEntryRects();
+            railEntryArmed = true;
             setTravelArmed(true);
           },
           onEnterBack: () => {
-            captureHandoffRects();
-            handoffArmed = true;
+            captureRailEntryRects();
+            railEntryArmed = true;
             setTravelArmed(true);
           },
-          onLeave: () => dock(),
-          onLeaveBack: () => resetHandoff(),
+          onLeave: () => pinToRailAt(0),
+          onLeaveBack: () => pinToBackdrop(),
           onRefresh: (self) => {
-            // Defer to whichever stage currently owns the actor. If
-            // the practice triggers have already taken ownership
-            // (orbit-docked or in-flight to/from orbit), keep our
-            // hands off — otherwise refresh would yank the actor
-            // back to the HUD slot mid-practice.
-            const orbitOwns =
-              approachEl?.getAttribute("data-orbit-docked") === "true" ||
-              practiceEntryArmed ||
-              practiceExitArmed;
+            if (window.scrollY < 4) return;
             if (self.progress >= 0.995) {
-              if (orbitOwns) return;
-              captureHandoffRects();
-              handoffArmed = true;
-              dock();
+              captureRailEntryRects();
+              railEntryArmed = true;
+              pinToRailAt(0);
             } else if (self.progress > 0) {
-              if (orbitOwns) return;
-              captureHandoffRects();
-              handoffArmed = true;
-              applyHandoff(self.progress);
-            } else {
-              if (orbitOwns) return;
-              resetHandoff();
+              captureRailEntryRects();
+              railEntryArmed = true;
+              applyRailEntryMorph(self.progress);
             }
           },
-          onUpdate: (self) => applyHandoff(self.progress),
+          onUpdate: (self) => applyRailEntryMorph(self.progress),
         },
       });
 
-      handoffTl.to(
-        [sigilOrbits, sigilHalo, sigilCap, sigilLegend].filter(Boolean),
-        {
-          opacity: 0,
-          scale: 0.7,
-          duration: 0.6,
-          ease: "power2.inOut",
+      // ── Trigger 4: Rail scrub — left → middle → right ──────────
+      gsap.timeline({
+        scrollTrigger: {
+          trigger: contEl,
+          start: "top 30%",
+          end: "bottom 60%",
+          scrub: 0.3,
+          onEnter: () => {
+            railScrubArmed = true;
+            setBrandOnRail(true);
+          },
+          onEnterBack: () => {
+            railScrubArmed = true;
+            setBrandOnRail(true);
+          },
+          onLeave: () => {
+            railScrubArmed = false;
+          },
+          onLeaveBack: () => {
+            railScrubArmed = false;
+          },
+          onRefresh: (self) => {
+            if (window.scrollY < 4) return;
+            if (self.isActive) {
+              railScrubArmed = true;
+              applyRailScrub(self.progress);
+            }
+          },
+          onUpdate: (self) => applyRailScrub(self.progress),
         },
-        0
-      );
+      });
 
       if (practiceEl && approachEl) {
-        gsap
-          .timeline({
-            scrollTrigger: {
-              trigger: practiceEl,
-              start: "top 40%",
-              end: "top 0%",
-              scrub: 0.4,
-              onEnter: () => {
-                capturePracticeRects("forward");
-                practiceEntryArmed = true;
-              },
-              onEnterBack: () => {
-                capturePracticeRects("forward");
-                practiceEntryArmed = true;
-              },
-              // Fast-scroll defence: when the user blows past `top 0%`
-              // before scrub easing has reached p >= 0.995, the
-              // applyPracticeTravel onUpdate path never calls
-              // practiceDockAtOrbit, leaving practiceEntryArmed stuck
-              // at true and the actor frozen mid-morph. While that
-              // flag is set, repinActorToOrbitIfDocked bails, so the
-              // actor visibly drifts from where the morph stopped as
-              // the user scrolls between Navigate and Encode.
-              // onLeave fires the moment scroll passes the trigger end
-              // (regardless of scrub progress), so we can settle the
-              // dock state here.
-              onLeave: () => {
-                if (practiceEntryArmed) {
-                  practiceDockAtOrbit();
-                }
-              },
-              onLeaveBack: () => {
-                practiceUndockFromEntry();
-              },
-              onRefresh: (self) => {
-                if (self.progress >= 0.995) {
-                  if (suppressPracticeEntry()) return;
-                  capturePracticeRects("forward");
-                  practiceEntryArmed = true;
-                  practiceDockAtOrbit();
-                } else if (self.progress > 0) {
-                  capturePracticeRects("forward");
-                  practiceEntryArmed = true;
-                  applyPracticeTravel(self.progress, "forward");
-                } else {
-                  // We're before the practice-entry zone (hero, section 02,
-                  // or continuum). Reset practice-entry state but DO NOT
-                  // pin the actor to HUD here — that's only correct after
-                  // the continuum handoff has completed. On initial page
-                  // load at scrollY=0 (Hero), unconditionally pinning to
-                  // HUD made the brandmark visible at the bottom-left
-                  // corner during the Hero section, overriding the
-                  // entrance/sigil-park/hidden states owned by upstream
-                  // triggers.
-                  practiceEntryArmed = false;
-                  approachEl.setAttribute("data-orbit-docked", "false");
-                  setTravelArmed(handoffArmed || practiceExitArmed);
-                }
-              },
-              onUpdate: (self) => {
-                applyPracticeTravel(self.progress, "forward");
-              },
+        // ── Trigger 5: Practice entry — rail right → orbit ───────
+        // Anchored to start where the rail scrub ends (continuum
+        // bottom 60% ≈ practice top 60%) so there's no scroll gap
+        // between the two states. The actor flows from the rail's
+        // rightmost stop directly into the orbit centre over a
+        // ~540px scroll band on a 900px viewport.
+        gsap.timeline({
+          scrollTrigger: {
+            trigger: practiceEl,
+            start: "top 60%",
+            end: "top 0%",
+            scrub: 0.4,
+            onEnter: () => {
+              capturePracticeEntryRects();
+              practiceEntryArmed = true;
+              setTravelArmed(true);
             },
-          })
-          .to({}, { duration: 0.01 }, 0);
+            onEnterBack: () => {
+              capturePracticeEntryRects();
+              practiceEntryArmed = true;
+              setTravelArmed(true);
+            },
+            onLeave: () => {
+              if (practiceEntryArmed) pinToOrbit();
+            },
+            onLeaveBack: () => {
+              practiceEntryArmed = false;
+              pinToRailAt(1);
+            },
+            onRefresh: (self) => {
+              if (window.scrollY < 4) {
+                practiceEntryArmed = false;
+                approachEl.setAttribute("data-orbit-docked", "false");
+                return;
+              }
+              if (self.progress >= 0.995) {
+                capturePracticeEntryRects();
+                practiceEntryArmed = true;
+                pinToOrbit();
+              } else if (self.progress > 0) {
+                capturePracticeEntryRects();
+                practiceEntryArmed = true;
+                applyPracticeEntryMorph(self.progress);
+              } else {
+                practiceEntryArmed = false;
+                approachEl.setAttribute("data-orbit-docked", "false");
+              }
+            },
+            onUpdate: (self) => applyPracticeEntryMorph(self.progress),
+          },
+        });
 
-        const practiceExitTl = gsap.timeline({
+        // ── Trigger 6: Practice exit — orbit → hidden (fade) ─────
+        gsap.timeline({
           scrollTrigger: {
             trigger: practiceEl,
             start: "bottom 25%",
             end: "bottom -10%",
             scrub: 0.4,
             onEnter: () => {
-              capturePracticeRects("reverse");
               practiceExitArmed = true;
+              setTravelArmed(true);
             },
             onEnterBack: () => {
-              capturePracticeRects("reverse");
               practiceExitArmed = true;
+              setTravelArmed(true);
             },
-            // Symmetric fast-scroll defence: settle at the HUD slot
-            // when scroll blows past `bottom -10%` before scrub eases
-            // to p >= 0.995. Without this, practiceExitArmed would
-            // stay true after the user has left #practice entirely
-            // and the actor would remain frozen on its final exit
-            // frame, drifting off-target as the rest of the page
-            // continues scrolling.
             onLeave: () => {
-              if (practiceExitArmed) {
-                practiceRedockAtHud();
-              }
+              if (practiceExitArmed) hideActor();
             },
             onLeaveBack: () => {
-              practiceDockAtOrbitFromExitLeaveBack();
+              practiceExitArmed = false;
+              pinToOrbit();
             },
             onRefresh: (self) => {
-              practiceExitScrollTrigger = self;
+              if (window.scrollY < 4) return;
               if (self.progress >= 0.995) {
-                capturePracticeRects("reverse");
                 practiceExitArmed = true;
-                practiceRedockAtHud();
+                hideActor();
               } else if (self.progress > 0) {
-                capturePracticeRects("reverse");
                 practiceExitArmed = true;
-                applyPracticeTravel(self.progress, "reverse");
-              } else if (self.isActive) {
-                capturePracticeRects("reverse");
-                practiceExitArmed = true;
-                applyPracticeTravel(0, "reverse");
-              } else {
-                practiceExitArmed = false;
+                applyPracticeExitFade(self.progress);
               }
             },
-            onUpdate: (self) => {
-              practiceExitScrollTrigger = self;
-              applyPracticeTravel(self.progress, "reverse");
-            },
+            onUpdate: (self) => applyPracticeExitFade(self.progress),
           },
         });
 
-        practiceExitScrollTrigger = practiceExitTl.scrollTrigger ?? null;
-        practiceExitTl.to({}, { duration: 0.01 }, 0);
-
-        // While the user is reading inside #practice (orbit docked, no
-        // active handoff), the orbit element is `position: sticky`. The
-        // actor lives on `position: fixed`, so it does not naturally
-        // follow the sticky transitions. Re-pin every scroll frame to
-        // keep the visible mark glued to the orbit centre.
+        // ── Trigger 7: Orbit re-pin while parked (sticky tracker) ─
         ScrollTrigger.create({
           trigger: practiceEl,
           start: "top 0%",
           end: "bottom 25%",
-          onUpdate: () => {
-            repinActorToOrbitIfDocked();
-          },
+          onUpdate: () => repinActorToOrbitIfDocked(),
           onEnter: () => repinActorToOrbitIfDocked(),
           onEnterBack: () => repinActorToOrbitIfDocked(),
           onRefresh: () => repinActorToOrbitIfDocked(),
@@ -1107,22 +868,21 @@ export function useSigilChoreography(
       }
     }, docEl);
 
-    syncActorToSigilEntrance();
+    // Initial sync.
+    repinActorToSigilIfParked();
 
     return () => {
-      practiceMo.disconnect();
       window.removeEventListener("resize", onResize);
       document.removeEventListener("visibilitychange", onVisibilityChange);
       window.removeEventListener("pageshow", onPageShow);
       window.removeEventListener("load", refresh);
-      window.removeEventListener("scroll", onDockedScroll);
+      window.removeEventListener("scroll", onScroll);
       refreshTimers.forEach((id) => clearTimeout(id));
       if (roDebounce) clearTimeout(roDebounce);
       ro.disconnect();
       if (dockedRaf) cancelAnimationFrame(dockedRaf);
-      hudBrandmark?.classList.remove("is-visible");
-      hudEl?.classList.remove("hud--brandmark-active");
       approachEl?.removeAttribute("data-orbit-docked");
+      docEl.removeAttribute("data-brand-on-rail");
       ctx.revert();
       actor()?.hide();
     };

@@ -11,6 +11,7 @@ interface ScrollTelemetry {
 const SECTORS: Record<string, string> = {
   hero: "Origin",
   definition: "North star",
+  askingGap: "Asking gap",
   continuum: "Continuum",
   practice: "Field",
   buildQuote: "Axiom",

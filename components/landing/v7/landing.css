@@ -644,6 +644,51 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   opacity: 1;
 }
 
+/* ── Brandmark choreography (post-ADR-010 v2) ──────────────────────
+   The bottom-left HUD brandmark slot is no longer a docking target;
+   the actor flows hero → sigil → asking-gap backdrop → continuum
+   rail → orbit → hidden. Keep #hudBrandmark in the DOM (legacy CSS
+   reserves it as a frame anchor) but ensure it never paints on the
+   v7 landing.
+
+   The diamond reticle on the continuum rail is hidden whenever the
+   actor owns the rail (`[data-brand-on-rail="true"]`). The rail's
+   line, frame, trail, stops, and tick marks remain visible so the
+   instrument readout still reads as an instrument. */
+[data-brand-on-rail] .hud__brandmark,
+[data-brand-on-rail] .hud__brandmark.is-visible {
+  opacity: 0 !important;
+  visibility: hidden;
+}
+
+[data-brand-on-rail="true"] .crail--large .crail__reticle {
+  opacity: 0;
+  pointer-events: none;
+  /* Stop the infinite slide animation while the brandmark scrubs the
+     rail driven by scroll progress. Without this, the diamond keeps
+     looping behind the brandmark even though it's invisible, which
+     wastes a paint pass and can flash if data-brand-on-rail flips. */
+  animation: none;
+}
+
+/* Brandmark actor sits above the asking-gap content (z:4) when in
+   backdrop mode but below it when on the rail. The actor itself is
+   z:24 so we lower its z-index in backdrop mode via opacity ramp
+   only — the actor stays z:24 so it can carry shadow + bloom. The
+   .ask__brandmark-anchor is z:2 on purpose (above the lane wash,
+   below the inner content) so the brandmark reads as a backdrop. */
+.ask__brandmark-anchor {
+  /* Marker class to keep the actor's z-index under the quote when
+     parked here. The actor pulls its size from this anchor's rect. */
+  z-index: 2;
+}
+
+/* When the actor sits on the rail it should stay above the rail's
+   line, frame, and stops but below any HUD overlay. */
+[data-brand-on-rail="true"] .tf-brandmark-actor {
+  filter: drop-shadow(0 0 12px rgba(202, 165, 84, 0.55));
+}
+
 /* ═══════════════════════════════════════════════════════════════════
    CONTENT — stations along the scroll
    ═══════════════════════════════════════════════════════════════════ */
@@ -799,7 +844,24 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   line-height: 1.6;
   color: var(--dawn-80);
   max-width: 48ch;
+  margin: 0 0 var(--space-md);
+}
+
+/* Dual-valuation line: brands + AI labs. Sits between desc and CTA;
+   reads as the load-bearing executive statement (slightly tighter
+   than the desc, in dawn rather than dawn-80, with a hairline gold
+   bar to the left so it scans as a flagged punchline rather than
+   another paragraph). */
+.hero__strong {
+  font-family: var(--font-pp-neue-montreal);
+  font-size: var(--type-body);
+  line-height: 1.55;
+  color: var(--dawn);
+  max-width: 48ch;
   margin: 0 0 var(--space-lg);
+  padding-left: 12px;
+  border-left: 1px solid var(--gold);
+  font-weight: 500;
 }
 
 .hero__cta {
@@ -2339,6 +2401,290 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   }
 }
 
+/* ═══════════ 03 ASKING-GAP — Benedict Evans interstitial ═══════════
+   Single full-viewport beat between #definition and #continuum. Brings
+   the AI operator case's "asking gap" into the executive summary
+   without the four-card diagnosis grid. The fixed BrandmarkActor docks
+   here as a faint backdrop (see useSigilChoreography); markup carries
+   only an anchor div for the actor to read.
+
+   Compositing rules followed:
+   1. Outer .ask wrapper inherits .station's opaque var(--void) shield.
+   2. Reveal motion on .ask__inner only; .ask__bleed and .ask__brandmark-anchor
+      have no [data-m] so no opacity flicker exposes the fixed gateway.
+   3. Lane wash z-index sits above void shield but below content.
+   ──────────────────────────────────────────────────────────────────── */
+
+.ask {
+  /* Lane palette scoped to this section so the rest of the page is
+     untouched. Violet/amber/sage echo the AI operator lane chips. */
+  --ask-violet: #8b6df0;
+  --ask-amber: var(--gold);
+  --ask-sage: #6e9c6a;
+  --ask-violet-soft: rgba(139, 109, 240, 0.18);
+  --ask-amber-soft: rgba(202, 165, 84, 0.18);
+  --ask-sage-soft: rgba(110, 156, 106, 0.18);
+  --ask-violet-glow: rgba(139, 109, 240, 0.06);
+  --ask-amber-glow: rgba(202, 165, 84, 0.05);
+  --ask-sage-glow: rgba(110, 156, 106, 0.05);
+
+  /* Lock the section to one viewport so it reads as a single beat. */
+  height: 100vh;
+  height: 100svh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.ask .station__idx {
+  position: absolute;
+  top: clamp(24px, 4vh, 48px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 3;
+}
+
+/* Atmosphere — three soft radial washes, loosely placed in a triangle.
+   No opacity tweens (keeps the wrapper as an opaque shield). */
+.ask__bleed {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  overflow: hidden;
+}
+.ask__wash {
+  position: absolute;
+  width: 60vmin;
+  height: 60vmin;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.55;
+  pointer-events: none;
+}
+.ask__wash--violet {
+  top: -8vmin;
+  left: -8vmin;
+  background: radial-gradient(circle at 50% 50%, var(--ask-violet-soft), transparent 70%);
+}
+.ask__wash--amber {
+  top: 50%;
+  right: -10vmin;
+  background: radial-gradient(circle at 50% 50%, var(--ask-amber-soft), transparent 70%);
+}
+.ask__wash--sage {
+  bottom: -10vmin;
+  left: 30%;
+  background: radial-gradient(circle at 50% 50%, var(--ask-sage-soft), transparent 70%);
+}
+
+/* Brandmark backdrop anchor — invisible. The fixed BrandmarkActor reads
+   this rect on entry to size and centre the faint backdrop pass. */
+.ask__brandmark-anchor {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: clamp(360px, 50vmin, 640px);
+  height: clamp(360px, 50vmin, 640px);
+  transform: translate(-50%, -50%);
+  z-index: 2;
+  pointer-events: none;
+}
+
+/* Inner content column. data-m="instrument" so the existing IO reveal
+   motion fires here — wrapper stays opaque so the gateway doesn't bleed
+   through during the 880ms reveal. */
+.ask__inner {
+  position: relative;
+  z-index: 4;
+  max-width: min(880px, 88vw);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(20px, 3vh, 40px);
+  padding: 0 clamp(16px, 4vw, 48px);
+}
+
+/* The Evans quote. Italic display face for the long sentence; the three
+   lane chips are inline so the legend lives inside the prose. */
+.ask__quote {
+  font-family: var(--font-pp-neue-montreal), serif;
+  font-style: italic;
+  font-weight: 300;
+  font-size: clamp(28px, 3.4vw, 52px);
+  line-height: 1.25;
+  color: var(--dawn);
+  margin: 0;
+  text-wrap: balance;
+}
+.ask__quote-mark {
+  display: inline-block;
+  margin-right: 0.1em;
+  color: var(--ask-violet);
+  font-style: normal;
+  font-weight: 600;
+}
+
+/* Lane chips — bordered editorial chips inside the sentence, lifted
+   from the AI operator's QuoteBridge. Each lane uses its own colour
+   for the dot + border, stays neutral for the text so the sentence
+   still reads as one piece of prose. */
+.ask__chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.45em;
+  padding: 0.05em 0.55em 0.1em;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  font-style: normal;
+  font-weight: 400;
+  color: var(--dawn);
+  background: rgba(10, 9, 8, 0.35);
+  white-space: nowrap;
+  transform: translateY(-0.05em);
+  transition:
+    background 240ms ease,
+    border-color 240ms ease;
+}
+.ask__chip-dot {
+  display: inline-block;
+  width: 0.5em;
+  height: 0.5em;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+  align-self: center;
+}
+.ask__chip--navigate {
+  border-color: var(--ask-violet);
+  color: var(--ask-violet);
+  background: rgba(139, 109, 240, 0.08);
+}
+.ask__chip--encode {
+  border-color: var(--ask-amber);
+  color: var(--ask-amber);
+  background: rgba(202, 165, 84, 0.08);
+}
+.ask__chip--build {
+  border-color: var(--ask-sage);
+  color: var(--ask-sage);
+  background: rgba(110, 156, 106, 0.08);
+}
+.ask__chip > span:not(.ask__chip-dot) {
+  color: var(--dawn);
+}
+/* Render the chip text in dawn after the dot — split via the ::after
+   selector so existing markup `<span>chip><dot/>label</span>` works. */
+
+/* Attribution row: small mono caps name + meta, separated by a thin
+   gold rule. */
+.ask__attrib {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.9em;
+  font-family: var(--font-pt-mono), ui-monospace, monospace;
+  font-size: clamp(10px, 1vw, 12px);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--dawn-70);
+  margin: 0;
+}
+.ask__attrib-rule {
+  display: inline-block;
+  width: 32px;
+  height: 1px;
+  background: var(--gold);
+}
+.ask__attrib-name {
+  color: var(--dawn);
+  font-weight: 600;
+}
+.ask__attrib-meta {
+  color: var(--dawn-50);
+}
+
+/* Quiet parenthetical that sits below the attribution. */
+.ask__note {
+  font-family: var(--font-pp-neue-montreal), serif;
+  font-style: italic;
+  font-size: clamp(13px, 1.3vw, 16px);
+  color: var(--dawn-50);
+  margin: 0;
+}
+
+/* Chevron divider between the Evans block and the punchline. Same
+   typographic gesture as the AI operator's Diagnosis bridge. */
+.ask__chevron {
+  width: 12px;
+  height: 12px;
+  border-right: 1px solid var(--dawn-30);
+  border-bottom: 1px solid var(--dawn-30);
+  transform: rotate(45deg);
+  margin: clamp(8px, 1vh, 16px) auto 0;
+}
+
+/* Punchline: the page voice naming the gap. Display weight, larger
+   than the note, smaller than the quote. */
+.ask__punchline {
+  font-family: var(--font-pp-neue-montreal), serif;
+  font-weight: 400;
+  font-size: clamp(20px, 2.2vw, 32px);
+  line-height: 1.35;
+  color: var(--dawn);
+  margin: 0;
+  text-wrap: balance;
+}
+.ask__punchline em {
+  font-style: italic;
+  color: var(--gold);
+}
+
+/* Subline: parenthetical aside in muted dawn. */
+.ask__sub {
+  font-family: var(--font-pp-neue-montreal), serif;
+  font-style: italic;
+  font-size: clamp(13px, 1.2vw, 15px);
+  color: var(--dawn-50);
+  margin: 0;
+}
+
+/* Reveal — apply motion to inner content only. The wrapper carries an
+   opaque void background and must not transition opacity (Rule 2 of
+   landing-v7-compositing). */
+.ask__inner[data-m="instrument"] {
+  opacity: 0;
+  transform: translateY(12px);
+  filter: blur(2px);
+  transition-property: opacity, transform, filter;
+  transition-duration: var(--m-dur-slow, 880ms);
+  transition-timing-function: var(--m-ease-long, cubic-bezier(0.16, 1, 0.3, 1));
+}
+.ask__inner[data-m="instrument"].is-in {
+  opacity: 1;
+  transform: translateY(0);
+  filter: none;
+}
+
+/* Mobile: stack vertically; smaller lane chips. */
+@media (max-width: 720px) {
+  .ask {
+    padding: 80px 24px 64px;
+  }
+  .ask__quote {
+    font-size: clamp(22px, 5.5vw, 32px);
+  }
+  .ask__chip {
+    padding: 0.02em 0.45em 0.06em;
+  }
+  .ask__brandmark-anchor {
+    width: clamp(280px, 70vmin, 480px);
+    height: clamp(280px, 70vmin, 480px);
+  }
+}
+
 /* ═══════════ 03 CONTINUUM — spectrum + collapsed distances ═══════════ */
 .continuum {
   display: grid;
@@ -2360,6 +2706,34 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   max-width: 1500px;
   margin-left: auto;
   margin-right: auto;
+}
+
+/* Viewport lock — the continuum is one idea (the spectrum) and reads
+   as a single executive beat. Force it to one viewport so the rail
+   scrub maps cleanly to a finite scroll length and the brandmark
+   travels through three stops in one screen height. The .station
+   default carries `min-height: 100vh`; this strengthens that to a
+   hard `height` so internal content alignment uses the viewport
+   centre rather than growing to fit. */
+#continuum {
+  height: 100vh;
+  height: 100svh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+#continuum .continuum {
+  margin-top: 0;
+}
+@media (max-width: 720px) {
+  /* Mobile: relax the viewport lock — the rail stops stack
+     vertically and the section grows beyond one viewport. */
+  #continuum {
+    height: auto;
+    min-height: 100vh;
+    padding-top: 80px;
+    padding-bottom: 80px;
+  }
 }
 
 /* v5: centered station variant (used by Section 03) */
@@ -3261,6 +3635,10 @@ body.density-dense .station {
 }
 .hero__desc {
   max-width: 54ch;
+}
+.hero__strong {
+  max-width: 54ch;
+  text-wrap: balance;
 }
 .hero__video {
   transform: scale(calc(1 + var(--hero-cover, 0) * 0.18));

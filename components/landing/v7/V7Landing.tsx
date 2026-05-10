@@ -298,6 +298,7 @@ function initV7Runtime(docEl: HTMLElement): () => void {
   const sectors: Record<string, string> = {
     hero: "Origin",
     definition: "North star",
+    askingGap: "Asking gap",
     continuum: "Continuum",
     practice: "Field",
     about: "Story",
