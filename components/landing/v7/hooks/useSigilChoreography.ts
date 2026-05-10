@@ -93,9 +93,12 @@ export function useSigilChoreography(
 
     // Continuum rail
     const crailLine = contEl?.querySelector<HTMLElement>(".crail--large .crail__line") ?? null;
-    const crailStops = contEl
-      ? Array.from(contEl.querySelectorAll<HTMLElement>(".crail__stop"))
-      : [];
+    /** Native rail brandmark — source-owned during the parked phase.
+     * Lives inside the rail DOM (position: absolute) so it scrolls
+     * naturally with the rail and never jiggles like a fixed-position
+     * actor would. The fixed actor only takes over for transitions
+     * in (backdrop → rail) and out (rail → orbit). */
+    const crailBrand = contEl?.querySelector<HTMLElement>(".crail__brand") ?? null;
 
     // Bail if essential stations are missing.
     if (!defEl || !contEl || !sigilMark || !sigilOrbits) return;
@@ -109,8 +112,9 @@ export function useSigilChoreography(
     let parkedAtBackdrop = false;
     /** True while morphing backdrop → rail leftmost stop. */
     let railEntryArmed = false;
-    /** True while scrubbing along the rail. */
-    let railScrubArmed = false;
+    /** True while parked at the rail (native crail__brand owns the
+     * visible mark; fixed actor is hidden behind opacity 0). */
+    let parkedAtRail = false;
     /** True while morphing rail → orbit. */
     let practiceEntryArmed = false;
     /** True while parked at orbit. */
@@ -118,10 +122,20 @@ export function useSigilChoreography(
     /** True while fading orbit → hidden on practice exit. */
     let practiceExitArmed = false;
 
-    /** Toggle the data attr that hides the diamond reticle while the
-     * actor owns the rail or its travel legs into and out of it. */
-    const setBrandOnRail = (on: boolean) => {
-      docEl.setAttribute("data-brand-on-rail", on ? "true" : "false");
+    /** Tri-state data attr: "false" | "true" (transit) | "parked".
+     * - "true"   → fixed actor is travelling through the rail band; diamond
+     *              reticle is hidden but no native rail brand shown.
+     * - "parked" → native `.crail__brand` owns the visible mark; fixed
+     *              actor is hidden via CSS opacity.
+     * - "false"  → not on the rail at all (default state).
+     *
+     * Set on BOTH the LandingPage rootRef (for descendants like the
+     * native rail brand and diamond reticle) AND documentElement (for
+     * the fixed `.tf-brandmark-actor` which is rendered as a sibling
+     * of the rootRef and therefore NOT a descendant of it). */
+    const setBrandOnRail = (state: "false" | "true" | "parked") => {
+      docEl.setAttribute("data-brand-on-rail", state);
+      document.documentElement.setAttribute("data-brand-on-rail", state);
     };
 
     // Section-02 reveal targets — disable any baked-in IO motion so the
@@ -183,51 +197,24 @@ export function useSigilChoreography(
       return new DOMRect(cx - size / 2, cy - size / 2, size, size);
     };
 
-    /** Rail X positions for the three stops, mapped from each stop's
-     * centre relative to the rail line's left edge. Used to give the
-     * scroll scrub three "snap" anchors instead of a perfectly linear
-     * sweep. Returns null if any rect is unavailable. */
-    const readRailStopFractions = (): number[] | null => {
-      if (!crailLine || crailStops.length !== 3) return null;
-      const lineRect = crailLine.getBoundingClientRect();
-      if (lineRect.width <= 0) return null;
-      const fractions: number[] = [];
-      for (const stop of crailStops) {
-        const r = stop.getBoundingClientRect();
-        const cx = r.left + r.width / 2;
-        const f = (cx - lineRect.left) / lineRect.width;
-        fractions.push(Math.min(1, Math.max(0, f)));
-      }
-      return fractions;
-    };
-
-    /** Eased rail position for a continuum scroll progress p. p∈[0..1]
-     * walks through three sub-segments anchored at the three stops:
-     *   [0..0.33]  Tool stop → constant
-     *   [0.33..0.66] Tool → AI lives here (eased)
-     *   [0.66..1.0] AI lives here → Collaborator (eased)
-     * Falls back to a linear sweep if stop fractions are unreadable. */
-    const railFractionForProgress = (p: number): number => {
-      const stops = readRailStopFractions();
-      if (!stops) return p;
-      const [a, b, c] = stops;
-      if (p <= 0.33) return a;
-      if (p >= 0.66) return c;
-      // Mid band: eased crossing from b ± to c
-      const t = (p - 0.33) / 0.33; // 0..1 inside mid band
-      const eased = t * t * (3 - 2 * t); // smoothstep
-      // For the first half of the mid band travel from a → b,
-      // for the second half from b → c. Keeps a beat at "AI lives here".
-      if (eased < 0.5) {
-        return a + (b - a) * (eased * 2);
-      }
-      return b + (c - b) * ((eased - 0.5) * 2);
-    };
+    // Stop fractions / scrub helpers were removed when the brandmark
+    // moved to the native `.crail__brand` (parked at the middle stop
+    // for the duration of continuum). The fixed actor only handles
+    // transitions in (backdrop → rail brand) and out (rail brand →
+    // orbit), so per-stop fraction maths is no longer needed.
 
     const orbitMarkEl = () =>
       approachEl && docEl.contains(approachEl)
         ? approachEl.querySelector<HTMLElement>(".approach__orbit__mark")
         : docEl.querySelector<HTMLElement>(".approach__orbit__mark");
+
+    /** Live rect of the native rail brand element. Read each call so
+     * the morph from rail → orbit can hand off from the brand's
+     * current viewport position even as the page scrolls. */
+    const readRailBrandRect = (): DOMRect | null => {
+      if (!crailBrand) return null;
+      return crailBrand.getBoundingClientRect();
+    };
 
     /** Pin actor to the asking-gap backdrop anchor at large scale and
      * faint opacity. */
@@ -239,12 +226,16 @@ export function useSigilChoreography(
       a.pinToRect(rect, 0.08, 1);
       a.setHudOutline(false);
       parkedAtBackdrop = true;
+      parkedAtRail = false;
       backdropArmed = false;
-      setBrandOnRail(false);
-      setTravelArmed(railEntryArmed || railScrubArmed);
+      setBrandOnRail("false");
+      setTravelArmed(railEntryArmed);
     };
 
-    /** Pin actor to the rail at a normalised X fraction. */
+    /** Pin actor to the rail at a normalised X fraction. Used during
+     * the railEntry morph (when frac=0..1 hasn't reached the parked
+     * dock yet) and during the practice entry morph's first frame
+     * to position the actor where the native brand was. */
     const pinToRailAt = (frac: number) => {
       const a = actor();
       if (!a) return;
@@ -252,9 +243,32 @@ export function useSigilChoreography(
       if (!rect) return;
       a.pinToRect(rect, 1, 1);
       a.setHudOutline(false);
-      setBrandOnRail(true);
+      setBrandOnRail("true");
+      parkedAtBackdrop = false;
+      parkedAtRail = false;
+      railEntryArmed = false;
+      setTravelArmed(practiceEntryArmed);
+    };
+
+    /** Park at the native rail brand. Hands ownership of the visible
+     * mark to `.crail__brand` (CSS-driven via [data-brand-on-rail]
+     * = "parked"). The fixed actor stays positioned at the brand's
+     * rect (so it can re-emerge instantly for the practice entry
+     * morph) but is hidden via CSS opacity. No JS scroll listener
+     * needed while parked — the native brand scrolls naturally with
+     * the rail DOM, eliminating the fixed-position jiggle. */
+    const pinAtRailParked = () => {
+      const a = actor();
+      if (!a) return;
+      const rect = readRailBrandRect();
+      if (rect && rect.width > 0) {
+        a.pinToRect(rect, 1, 1); // CSS forces opacity:0 via data-attr
+      }
+      a.setHudOutline(false);
+      parkedAtRail = true;
       parkedAtBackdrop = false;
       railEntryArmed = false;
+      setBrandOnRail("parked");
       setTravelArmed(practiceEntryArmed);
     };
 
@@ -269,8 +283,9 @@ export function useSigilChoreography(
       a.pinToRect(rect, 1, 1);
       a.setHudOutline(false);
       parkedAtOrbit = true;
+      parkedAtRail = false;
       practiceEntryArmed = false;
-      setBrandOnRail(false);
+      setBrandOnRail("false");
       approachEl?.setAttribute("data-orbit-docked", "true");
       setTravelArmed(practiceExitArmed);
     };
@@ -279,13 +294,13 @@ export function useSigilChoreography(
     const hideActor = () => {
       actor()?.hide();
       parkedAtBackdrop = false;
+      parkedAtRail = false;
       parkedAtOrbit = false;
       backdropArmed = false;
       railEntryArmed = false;
-      railScrubArmed = false;
       practiceEntryArmed = false;
       practiceExitArmed = false;
-      setBrandOnRail(false);
+      setBrandOnRail("false");
       approachEl?.setAttribute("data-orbit-docked", "false");
       setTravelArmed(false);
     };
@@ -297,7 +312,7 @@ export function useSigilChoreography(
       actor()?.hide();
       parkedAtBackdrop = false;
       backdropArmed = false;
-      setBrandOnRail(false);
+      setBrandOnRail("false");
     };
 
     // ── Reduced-motion fast path ────────────────────────────────────
@@ -321,12 +336,8 @@ export function useSigilChoreography(
           trigger: contEl,
           start: "top 60%",
           end: "bottom 40%",
-          onEnter: () => pinToRailAt(0),
-          onUpdate: (self) => {
-            if (parkedAtBackdrop || parkedAtOrbit) return;
-            pinToRailAt(railFractionForProgress(self.progress));
-          },
-          onEnterBack: () => pinToRailAt(1),
+          onEnter: () => pinAtRailParked(),
+          onEnterBack: () => pinAtRailParked(),
         });
         if (practiceEl && approachEl) {
           ScrollTrigger.create({
@@ -334,7 +345,7 @@ export function useSigilChoreography(
             start: "top 40%",
             end: "top 0%",
             onEnter: () => pinToOrbit(),
-            onLeaveBack: () => pinToRailAt(1),
+            onLeaveBack: () => pinAtRailParked(),
           });
           ScrollTrigger.create({
             trigger: practiceEl,
@@ -348,7 +359,7 @@ export function useSigilChoreography(
       return () => {
         rmCtx.revert();
         approachEl?.removeAttribute("data-orbit-docked");
-        setBrandOnRail(false);
+        setBrandOnRail("false");
         actor()?.hide();
       };
     }
@@ -372,11 +383,17 @@ export function useSigilChoreography(
 
     const captureRailEntryRects = () => {
       railEntryMorphSrc = readBackdropRect();
-      railEntryMorphDst = readRailRectAt(0);
+      // Land at the native rail brand position (the parked dock) so
+      // the morph completes exactly where the native brand will take
+      // over. If the brand isn't measurable yet, fall back to the
+      // middle stop on the rail line.
+      railEntryMorphDst = readRailBrandRect() ?? readRailRectAt(0.5);
     };
 
     const capturePracticeEntryRects = () => {
-      practiceEntryMorphSrc = readRailRectAt(1);
+      // Source = current viewport position of the native rail brand.
+      // Read live each capture because the brand scrolls with the rail.
+      practiceEntryMorphSrc = readRailBrandRect() ?? readRailRectAt(0.5);
       const mark = orbitMarkEl();
       practiceEntryMorphDst = mark?.getBoundingClientRect() ?? null;
     };
@@ -417,7 +434,7 @@ export function useSigilChoreography(
         return;
       }
       if (p >= 0.995) {
-        pinToRailAt(0);
+        pinAtRailParked();
         return;
       }
       railEntryArmed = true;
@@ -426,33 +443,22 @@ export function useSigilChoreography(
       // Fade up from 0.08 → 1 across the entry morph.
       const opacity = 0.08 + (1 - 0.08) * p;
       gsap.set(".tf-brandmark-actor", { opacity });
-      setBrandOnRail(true);
+      setBrandOnRail("true");
       setTravelArmed(true);
-    };
-
-    const applyRailScrub = (p: number) => {
-      if (!railScrubArmed) return;
-      const a = actor();
-      if (!a) return;
-      const frac = railFractionForProgress(p);
-      const rect = readRailRectAt(frac);
-      if (!rect) return;
-      a.pinToRect(rect, 1, 1);
-      setBrandOnRail(true);
     };
 
     const applyPracticeEntryMorph = (p: number) => {
       const a = actor();
       if (!a) return;
-      // Always read live rects for the orbit destination — it's inside
-      // a `position: sticky` parent and the captured rect snaps when
-      // sticky engages.
-      practiceEntryMorphSrc = readRailRectAt(1);
+      // Always read live rects each frame — both the rail brand
+      // (scrolls with the rail DOM) and the orbit (sticky parent)
+      // change position relative to the viewport per scroll frame.
+      practiceEntryMorphSrc = readRailBrandRect() ?? readRailRectAt(0.5);
       const mark = orbitMarkEl();
       practiceEntryMorphDst = mark?.getBoundingClientRect() ?? null;
       if (!practiceEntryMorphSrc || !practiceEntryMorphDst) return;
       if (p <= 0) {
-        pinToRailAt(1);
+        pinAtRailParked();
         return;
       }
       if (p >= 0.995) {
@@ -461,7 +467,8 @@ export function useSigilChoreography(
       }
       practiceEntryArmed = true;
       parkedAtOrbit = false;
-      setBrandOnRail(false);
+      parkedAtRail = false;
+      setBrandOnRail("true"); // transit state — diamond hidden, native rail brand hidden, fixed actor visible
       approachEl?.setAttribute("data-orbit-docked", "false");
       a.morphRects(practiceEntryMorphSrc, practiceEntryMorphDst, p, handoffEase);
       gsap.set(".tf-brandmark-actor", { opacity: 1 });
@@ -504,7 +511,10 @@ export function useSigilChoreography(
     };
 
     const repinActorAtRailIfScrubbing = () => {
-      if (!railScrubArmed) return;
+      // Parked-at-rail uses the native `.crail__brand` element; no
+      // JS re-pin needed because the brand scrolls naturally with
+      // the rail DOM. Reserved as a no-op for future use.
+      return;
       // Best-effort: re-read rail rect on scroll without touching
       // global progress. The railScrubTl onUpdate is the source of
       // truth for X; this just keeps Y aligned with rail movement
@@ -523,6 +533,7 @@ export function useSigilChoreography(
         practiceEntryArmed ||
         practiceExitArmed ||
         parkedAtBackdrop ||
+        parkedAtRail ||
         parkedAtOrbit
       )
         return;
@@ -544,6 +555,7 @@ export function useSigilChoreography(
       if (railEntryArmed) captureRailEntryRects();
       if (practiceEntryArmed) capturePracticeEntryRects();
       if (parkedAtBackdrop) pinToBackdrop();
+      if (parkedAtRail) pinAtRailParked();
       if (parkedAtOrbit) pinToOrbit();
       repinActorToOrbitIfDocked();
       repinActorToSigilIfParked();
@@ -699,7 +711,14 @@ export function useSigilChoreography(
         });
       }
 
-      // ── Trigger 3: Rail entry — backdrop → rail leftmost ───────
+      // ── Trigger 3: Rail entry — backdrop → native rail brand ───
+      // Morphs the fixed actor from backdrop → the native
+      // `.crail__brand` element's position. At p=1, hands ownership
+      // to the native element via `pinAtRailParked()` (CSS sets
+      // `[data-brand-on-rail="parked"]`, which fades the native
+      // brand in and the fixed actor out). The native brand then
+      // owns the visible mark for the duration of continuum body —
+      // it scrolls naturally with the rail DOM, no jiggle.
       gsap.timeline({
         scrollTrigger: {
           trigger: contEl,
@@ -716,14 +735,14 @@ export function useSigilChoreography(
             railEntryArmed = true;
             setTravelArmed(true);
           },
-          onLeave: () => pinToRailAt(0),
+          onLeave: () => pinAtRailParked(),
           onLeaveBack: () => pinToBackdrop(),
           onRefresh: (self) => {
             if (window.scrollY < 4) return;
             if (self.progress >= 0.995) {
               captureRailEntryRects();
               railEntryArmed = true;
-              pinToRailAt(0);
+              pinAtRailParked();
             } else if (self.progress > 0) {
               captureRailEntryRects();
               railEntryArmed = true;
@@ -734,45 +753,41 @@ export function useSigilChoreography(
         },
       });
 
-      // ── Trigger 4: Rail scrub — left → middle → right ──────────
+      // ── Trigger 4 (legacy): Rail scrub trigger removed ─────────
+      // The brandmark now stays parked at the native `.crail__brand`
+      // (CSS-pinned to `left: 50%` of the rail line) for the entire
+      // continuum body. No JS scrub needed because the native brand
+      // moves with the rail DOM. Reverse hand-off (orbit → rail)
+      // re-armed by `practiceEntryTl.onLeaveBack`.
+      // Keep the data-attr re-set on continuum re-entry from above
+      // so a hard scroll back doesn't strand the actor in transit.
       gsap.timeline({
         scrollTrigger: {
           trigger: contEl,
           start: "top 30%",
           end: "bottom 60%",
-          scrub: 0.3,
           onEnter: () => {
-            railScrubArmed = true;
-            setBrandOnRail(true);
+            if (!parkedAtRail) pinAtRailParked();
           },
           onEnterBack: () => {
-            railScrubArmed = true;
-            setBrandOnRail(true);
-          },
-          onLeave: () => {
-            railScrubArmed = false;
-          },
-          onLeaveBack: () => {
-            railScrubArmed = false;
+            if (!parkedAtRail) pinAtRailParked();
           },
           onRefresh: (self) => {
             if (window.scrollY < 4) return;
             if (self.isActive) {
-              railScrubArmed = true;
-              applyRailScrub(self.progress);
+              if (!parkedAtRail) pinAtRailParked();
             }
           },
-          onUpdate: (self) => applyRailScrub(self.progress),
         },
       });
 
       if (practiceEl && approachEl) {
-        // ── Trigger 5: Practice entry — rail right → orbit ───────
-        // Anchored to start where the rail scrub ends (continuum
-        // bottom 60% ≈ practice top 60%) so there's no scroll gap
-        // between the two states. The actor flows from the rail's
-        // rightmost stop directly into the orbit centre over a
-        // ~540px scroll band on a 900px viewport.
+        // ── Trigger 5: Practice entry — rail brand → orbit ───────
+        // Source rect is the live `.crail__brand` (read each frame
+        // via `readRailBrandRect()`). Destination is the live orbit
+        // mark (also read each frame, since its sticky parent
+        // changes engagement). Starts at practice top 60% so there
+        // is a clean ~540px scroll runway for the morph.
         gsap.timeline({
           scrollTrigger: {
             trigger: practiceEl,
@@ -782,11 +797,13 @@ export function useSigilChoreography(
             onEnter: () => {
               capturePracticeEntryRects();
               practiceEntryArmed = true;
+              parkedAtRail = false;
               setTravelArmed(true);
             },
             onEnterBack: () => {
               capturePracticeEntryRects();
               practiceEntryArmed = true;
+              parkedAtRail = false;
               setTravelArmed(true);
             },
             onLeave: () => {
@@ -794,7 +811,7 @@ export function useSigilChoreography(
             },
             onLeaveBack: () => {
               practiceEntryArmed = false;
-              pinToRailAt(1);
+              pinAtRailParked();
             },
             onRefresh: (self) => {
               if (window.scrollY < 4) {
@@ -883,6 +900,7 @@ export function useSigilChoreography(
       if (dockedRaf) cancelAnimationFrame(dockedRaf);
       approachEl?.removeAttribute("data-orbit-docked");
       docEl.removeAttribute("data-brand-on-rail");
+      document.documentElement.removeAttribute("data-brand-on-rail");
       ctx.revert();
       actor()?.hide();
     };

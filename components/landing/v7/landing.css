@@ -661,14 +661,53 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   visibility: hidden;
 }
 
-[data-brand-on-rail="true"] .crail--large .crail__reticle {
+[data-brand-on-rail="true"] .crail--large .crail__reticle,
+[data-brand-on-rail="parked"] .crail--large .crail__reticle {
   opacity: 0;
   pointer-events: none;
-  /* Stop the infinite slide animation while the brandmark scrubs the
-     rail driven by scroll progress. Without this, the diamond keeps
-     looping behind the brandmark even though it's invisible, which
-     wastes a paint pass and can flash if data-brand-on-rail flips. */
+  /* Stop the infinite slide animation while the brandmark owns the
+     rail. Without this, the diamond keeps looping behind the
+     brandmark even though it's invisible, which wastes a paint pass
+     and can flash if data-brand-on-rail flips. */
   animation: none;
+}
+
+/* Native rail brandmark — source-owned during the parked phase.
+   Sits absolute inside the rail container, anchored at the
+   "AI lives here" middle stop (left: 50%) and centred on the rail
+   line (`top: 80px` matches `.crail__reticle`). Hidden by default;
+   the JS choreography sets `data-brand-on-rail="parked"` on the
+   root once the rail entry morph completes, which fades this in
+   and fades the fixed actor out. Because it lives inside the rail
+   DOM, it scrolls naturally with the page — no fixed-position lag,
+   no jiggle. */
+.crail--large .crail__brand {
+  position: absolute;
+  top: 80px;
+  left: 50%;
+  width: 56px;
+  height: 56px;
+  transform: translate(-50%, -50%);
+  z-index: 4;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 240ms var(--m-ease-instr, cubic-bezier(0.16, 1, 0.3, 1));
+  filter: drop-shadow(0 0 16px rgba(202, 165, 84, 0.45));
+}
+.crail--large .crail__brand img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: contain;
+}
+[data-brand-on-rail="parked"] .crail--large .crail__brand {
+  opacity: 1;
+}
+[data-brand-on-rail="parked"] .tf-brandmark-actor {
+  /* Hand off to the native rail brandmark — the fixed actor stays
+     positioned but invisible so it can take over instantly when the
+     practice entry morph arms. */
+  opacity: 0 !important;
 }
 
 /* Brandmark actor sits above the asking-gap content (z:4) when in
@@ -844,24 +883,7 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   line-height: 1.6;
   color: var(--dawn-80);
   max-width: 48ch;
-  margin: 0 0 var(--space-md);
-}
-
-/* Dual-valuation line: brands + AI labs. Sits between desc and CTA;
-   reads as the load-bearing executive statement (slightly tighter
-   than the desc, in dawn rather than dawn-80, with a hairline gold
-   bar to the left so it scans as a flagged punchline rather than
-   another paragraph). */
-.hero__strong {
-  font-family: var(--font-pp-neue-montreal);
-  font-size: var(--type-body);
-  line-height: 1.55;
-  color: var(--dawn);
-  max-width: 48ch;
   margin: 0 0 var(--space-lg);
-  padding-left: 12px;
-  border-left: 1px solid var(--gold);
-  font-weight: 500;
 }
 
 .hero__cta {
@@ -2156,10 +2178,10 @@ html[data-quote-active="true"] .tf-brandmark-actor {
 }
 .tri__body {
   font-family: var(--font-pp-neue-montreal);
-  font-size: 15px;
-  line-height: 1.6;
-  color: var(--dawn-70);
-  margin: 0 0 14px;
+  font-size: clamp(16px, 1.15vw, 19px);
+  line-height: 1.55;
+  color: var(--dawn-80);
+  margin: 0 0 18px;
   max-width: 44ch;
 }
 .tri__body em {
@@ -2167,8 +2189,8 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   color: var(--gold);
 }
 .tri__body--muted {
-  color: var(--dawn-50);
-  font-size: 14px;
+  color: var(--dawn-70);
+  font-size: clamp(15px, 1.05vw, 17px);
 }
 .tri__ctas {
   display: flex;
@@ -2495,11 +2517,13 @@ html[data-quote-active="true"] .tf-brandmark-actor {
 
 /* Inner content column. data-m="instrument" so the existing IO reveal
    motion fires here — wrapper stays opaque so the gateway doesn't bleed
-   through during the 880ms reveal. */
+   through during the 880ms reveal. Wide enough to keep the Evans
+   sentence on one line at the desktop breakpoint (matches the AI
+   operator's `.aiop-bridge__quote`). */
 .ask__inner {
   position: relative;
   z-index: 4;
-  max-width: min(880px, 88vw);
+  max-width: min(1180px, 92vw);
   text-align: center;
   display: flex;
   flex-direction: column;
@@ -2508,17 +2532,26 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   padding: 0 clamp(16px, 4vw, 48px);
 }
 
-/* The Evans quote. Italic display face for the long sentence; the three
-   lane chips are inline so the legend lives inside the prose. */
+/* The Evans quote. Italic display face, sized as the editorial
+   centerpiece. Single line on desktop (≥960px), wraps naturally below.
+   Mirrors the AI operator's `.aiop-bridge__pull`. */
 .ask__quote {
   font-family: var(--font-pp-neue-montreal), serif;
   font-style: italic;
-  font-weight: 300;
-  font-size: clamp(28px, 3.4vw, 52px);
-  line-height: 1.25;
+  font-weight: 400;
+  font-size: clamp(20px, 2.1vw, 30px);
+  line-height: 1.35;
+  letter-spacing: -0.018em;
   color: var(--dawn);
   margin: 0;
   text-wrap: balance;
+  white-space: normal;
+}
+@media (min-width: 1180px) {
+  .ask__quote {
+    /* On wide desktops the sentence fits on one line. */
+    text-wrap: nowrap;
+  }
 }
 .ask__quote-mark {
   display: inline-block;
@@ -2668,13 +2701,14 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   filter: none;
 }
 
-/* Mobile: stack vertically; smaller lane chips. */
+/* Mobile: stack vertically; chips wrap naturally with smaller text. */
 @media (max-width: 720px) {
   .ask {
     padding: 80px 24px 64px;
   }
   .ask__quote {
-    font-size: clamp(22px, 5.5vw, 32px);
+    font-size: clamp(18px, 4.6vw, 24px);
+    line-height: 1.45;
   }
   .ask__chip {
     padding: 0.02em 0.45em 0.06em;
@@ -3635,10 +3669,6 @@ body.density-dense .station {
 }
 .hero__desc {
   max-width: 54ch;
-}
-.hero__strong {
-  max-width: 54ch;
-  text-wrap: balance;
 }
 .hero__video {
   transform: scale(calc(1 + var(--hero-cover, 0) * 0.18));
