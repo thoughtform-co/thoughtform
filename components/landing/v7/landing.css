@@ -2457,28 +2457,26 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   }
 }
 
-/* ═══════════ 03 MISSING LAYER — diagnostic 4-card grid ═══════════
-   Adapts the AI operator's `.aiop-diagnosis` section to the dark
-   Thoughtform palette. Two-column header (title left / lede right),
-   2x2 card grid with the brandmark in the centre as a new dock on
-   the choreography. Native source-owned via `.miss__brand-slot img`
-   while parked, mirroring the rail brand pattern.
+/* ═══════════ 03 MISSING LAYER — diagnostic constellation ═══════════
+   Four use cases as constellation points around the brandmark at the
+   centre. Hairline-bordered instrument cards with corner registration
+   marks (Thoughtform grammar — same `.reg` system as the practice
+   phase shells); SVG connector rays fan from the centre out to each
+   card's inner corner so the four diagnoses read as one diagnostic
+   instrument with the missing layer at its core.
 
-   Compositing rules followed (landing-v7-compositing skill):
+   Brand alignment: gold + dawn only (no lane palette). Native
+   source-owned brandmark via `.miss__brand-slot img` while parked,
+   mirroring the rail brand pattern. Compositing rules (landing-v7-
+   compositing skill):
    1. Outer .miss inherits .station's opaque var(--void) shield.
    2. Reveal motion on .miss__inner only; brand slot has no [data-m].
-   3. 2x2 grid uses border + 1px gap so hairlines never expose the
-      gateway radial behind the cards.
+   3. SVG rays sit BEHIND the cards; cards have transparent
+      backgrounds so the rays read through to the centre, but the
+      void shield is the wrapper, so the gateway radial never bleeds.
    ──────────────────────────────────────────────────────────────────── */
 
 .miss {
-  /* Lane palette scoped to this section. Mirrors .ask
-     so the homepage palette stays consistent across diagnostic + Evans. */
-  --miss-violet: #8b6df0;
-  --miss-amber: var(--gold);
-  --miss-sage: #6e9c6a;
-  --miss-slate: #6b7c8b;
-
   /* One viewport — single executive beat. */
   height: 100vh;
   height: 100svh;
@@ -2487,14 +2485,6 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   justify-content: center;
   position: relative;
   overflow: hidden;
-}
-
-.miss .station__idx {
-  position: absolute;
-  top: clamp(24px, 4vh, 48px);
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 3;
 }
 
 /* Inner content column. data-m="instrument" so the existing IO reveal
@@ -2506,22 +2496,23 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   width: min(1280px, 92vw);
   display: flex;
   flex-direction: column;
-  gap: clamp(32px, 5vh, 64px);
+  gap: clamp(28px, 4.5vh, 56px);
   text-align: left;
 }
 
-/* Two-column header — title-left + lede-right (mirrors the AI
-   operator's diagnosis head pattern). */
+/* Header: eyebrow row above; then a two-column row (title left, lede
+   right) so the title and lede top-align on the same Y, no eyebrow
+   between them to throw off vertical balance. */
 .miss__head {
-  display: grid;
-  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
-  column-gap: clamp(40px, 5vw, 96px);
-  align-items: start;
-}
-.miss__head-title {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: clamp(14px, 2vh, 22px);
+}
+.miss__head-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+  column-gap: clamp(40px, 5vw, 96px);
+  align-items: start;
 }
 .miss__eyebrow {
   display: inline-flex;
@@ -2549,7 +2540,7 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   color: var(--dawn);
   margin: 0;
   text-wrap: balance;
-  max-width: 18ch;
+  max-width: 20ch;
 }
 .miss__title em {
   font-style: italic;
@@ -2570,71 +2561,71 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   font-weight: 500;
 }
 
-/* 3x2 grid: 4 corner cards + centre column reserved for the brandmark
-   dock. The 1px border + 0 gap draws hairlines between cards without
-   ever exposing the gateway radial. */
+/* 3x2 grid: 4 corner cards + centre column for the brandmark. Cards
+   sit on a transparent background so the SVG rays underneath read
+   through to the centre; the .miss section wrapper carries the
+   opaque void shield. */
 .miss__grid {
+  position: relative;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) clamp(140px, 15vw, 220px) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) clamp(140px, 15vw, 200px) minmax(0, 1fr);
   grid-template-rows: 1fr 1fr;
-  column-gap: 0;
-  row-gap: 0;
-  border: 1px solid var(--dawn-08);
-  background: var(--dawn-04);
+  column-gap: clamp(8px, 1vw, 16px);
+  row-gap: clamp(8px, 1vh, 16px);
 }
+
+/* Connector rays — 4 diagonals from the centre to the inner corner
+   of each card. preserveAspectRatio="none" + viewBox 0 0 100 100
+   stretches the lines with the grid. The strokes match the Thoughtform
+   instrument hairline grammar (gold @ low opacity, dashed). */
+.miss__rays {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+  overflow: visible;
+}
+.miss__ray {
+  stroke: var(--gold);
+  stroke-opacity: 0.3;
+  stroke-width: 0.4;
+  stroke-dasharray: 1.5 2.5;
+  vector-effect: non-scaling-stroke;
+  fill: none;
+}
+
 .miss__card {
   position: relative;
-  background: var(--void);
-  padding: clamp(20px, 2vh, 28px) clamp(20px, 2vw, 32px);
+  z-index: 1;
+  /* Transparent — the void shield is on the .miss section wrapper, so
+     the gateway radial cannot bleed through. Transparent cards let the
+     SVG constellation rays beneath weave visually under the card body
+     for the instrument-diagram look. */
+  background: transparent;
+  padding: clamp(20px, 2.4vh, 28px) clamp(20px, 2vw, 28px);
   display: flex;
   flex-direction: column;
   gap: 10px;
   min-width: 0;
+  border: 1px solid var(--dawn-08);
 }
 .miss__card--01 {
   grid-column: 1;
   grid-row: 1;
-  border-right: 1px solid var(--dawn-08);
-  border-bottom: 1px solid var(--dawn-08);
 }
 .miss__card--02 {
   grid-column: 3;
   grid-row: 1;
-  border-left: 1px solid var(--dawn-08);
-  border-bottom: 1px solid var(--dawn-08);
 }
 .miss__card--03 {
   grid-column: 1;
   grid-row: 2;
-  border-right: 1px solid var(--dawn-08);
 }
 .miss__card--04 {
   grid-column: 3;
   grid-row: 2;
-  border-left: 1px solid var(--dawn-08);
-}
-
-/* Lane rail — 3px left border in the lane colour. */
-.miss__card::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 3px;
-  background: var(--dawn-15);
-}
-.miss__card--violet::before {
-  background: var(--miss-violet);
-}
-.miss__card--gold::before {
-  background: var(--miss-amber);
-}
-.miss__card--sage::before {
-  background: var(--miss-sage);
-}
-.miss__card--slate::before {
-  background: var(--miss-slate);
 }
 
 .miss__card-head {
@@ -2650,24 +2641,13 @@ html[data-quote-active="true"] .tf-brandmark-actor {
 }
 .miss__card-n {
   font-weight: 600;
-  color: var(--dawn);
-}
-.miss__card--violet .miss__card-n {
-  color: var(--miss-violet);
-}
-.miss__card--gold .miss__card-n {
-  color: var(--miss-amber);
-}
-.miss__card--sage .miss__card-n {
-  color: var(--miss-sage);
-}
-.miss__card--slate .miss__card-n {
-  color: var(--miss-slate);
+  color: var(--gold);
 }
 .miss__card-rule {
   width: 18px;
   height: 1px;
-  background: var(--dawn-15);
+  background: var(--gold);
+  opacity: 0.5;
   display: inline-block;
   flex-shrink: 0;
 }
@@ -2693,11 +2673,9 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   max-width: 50ch;
 }
 
-/* Brandmark dock — centre cell of the grid. Source-owned: the native
-   image owns the visible mark while the choreography flag
-   [data-brand-on-missing="parked"] is on documentElement; the fixed
-   actor takes over for the morphs in (sigil → miss) and out
-   (miss → backdrop). */
+/* Brandmark dock — centre cell. Transparent background; the void
+   shows through and the SVG rays converge here. The gold drop-shadow
+   on the brand image creates a soft glow at the convergence point. */
 .miss__brand-slot {
   grid-column: 2;
   grid-row: 1 / span 2;
@@ -2706,6 +2684,7 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   height: clamp(96px, 11vw, 144px);
   position: relative;
   z-index: 2;
+  background: transparent;
 }
 .miss__brand-slot img {
   width: 100%;
@@ -2714,7 +2693,39 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   object-fit: contain;
   opacity: 0;
   transition: opacity 240ms var(--m-ease-instr, cubic-bezier(0.16, 1, 0.3, 1));
-  filter: drop-shadow(0 0 16px rgba(202, 165, 84, 0.45));
+  filter: drop-shadow(0 0 24px rgba(202, 165, 84, 0.5));
+}
+
+/* Diagnostic closer — moved here from asking-gap. The 4 cards
+   diagnose the symptom, this names the cure. Centred under the grid
+   so it reads as the resolution of the diagnostic. */
+.miss__closer {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: center;
+}
+.miss__punchline {
+  font-family: var(--font-pp-neue-montreal);
+  font-weight: 400;
+  font-size: clamp(20px, 2.2vw, 30px);
+  line-height: 1.3;
+  color: var(--dawn);
+  margin: 0;
+  text-wrap: balance;
+  max-width: 36ch;
+}
+.miss__punchline em {
+  font-style: italic;
+  color: var(--gold);
+}
+.miss__sub {
+  font-family: var(--font-pp-neue-montreal);
+  font-style: italic;
+  font-size: clamp(13px, 1.1vw, 15px);
+  color: var(--dawn-50);
+  margin: 0;
 }
 
 /* Reveal — apply motion to inner content only (Rule 2 of compositing). */
@@ -2733,7 +2744,8 @@ html[data-quote-active="true"] .tf-brandmark-actor {
 }
 
 /* Mobile: stack the cards in a single column, brandmark sits between
-   row 2 and row 3 as a horizontal divider. */
+   row 2 and row 3 as a horizontal divider. SVG rays hide on mobile —
+   diagonals from a single column don't read as a constellation. */
 @media (max-width: 960px) {
   .miss {
     height: auto;
@@ -2741,9 +2753,12 @@ html[data-quote-active="true"] .tf-brandmark-actor {
     padding-top: 100px;
     padding-bottom: 64px;
   }
-  .miss__head {
+  .miss__head-row {
     grid-template-columns: 1fr;
     row-gap: 16px;
+  }
+  .miss__rays {
+    display: none;
   }
   .miss__grid {
     grid-template-columns: 1fr;
@@ -2752,14 +2767,10 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   .miss__card--01 {
     grid-column: 1;
     grid-row: 1;
-    border-right: none;
-    border-bottom: 1px solid var(--dawn-08);
   }
   .miss__card--02 {
     grid-column: 1;
     grid-row: 2;
-    border-left: none;
-    border-bottom: 1px solid var(--dawn-08);
   }
   .miss__brand-slot {
     grid-column: 1;
@@ -2771,13 +2782,10 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   .miss__card--03 {
     grid-column: 1;
     grid-row: 4;
-    border-right: none;
-    border-bottom: 1px solid var(--dawn-08);
   }
   .miss__card--04 {
     grid-column: 1;
     grid-row: 5;
-    border-left: none;
   }
 }
 
@@ -2796,17 +2804,12 @@ html[data-quote-active="true"] .tf-brandmark-actor {
    ──────────────────────────────────────────────────────────────────── */
 
 .ask {
-  /* Lane palette scoped to this section so the rest of the page is
-     untouched. Violet/amber/sage echo the AI operator lane chips. */
-  --ask-violet: #8b6df0;
-  --ask-amber: var(--gold);
-  --ask-sage: #6e9c6a;
-  --ask-violet-soft: rgba(139, 109, 240, 0.18);
-  --ask-amber-soft: rgba(202, 165, 84, 0.18);
-  --ask-sage-soft: rgba(110, 156, 106, 0.18);
-  --ask-violet-glow: rgba(139, 109, 240, 0.06);
-  --ask-amber-glow: rgba(202, 165, 84, 0.05);
-  --ask-sage-glow: rgba(110, 156, 106, 0.05);
+  /* Brand-aligned palette — gold + dawn only, no lane colours. The
+     atmosphere washes use the same gold at varying opacities so the
+     section breathes without competing with the Thoughtform palette. */
+  --ask-glow-strong: rgba(202, 165, 84, 0.16);
+  --ask-glow-mid: rgba(202, 165, 84, 0.1);
+  --ask-glow-soft: rgba(202, 165, 84, 0.06);
 
   /* Lock the section to one viewport so it reads as a single beat. */
   height: 100vh;
@@ -2847,17 +2850,17 @@ html[data-quote-active="true"] .tf-brandmark-actor {
 .ask__wash--violet {
   top: -8vmin;
   left: -8vmin;
-  background: radial-gradient(circle at 50% 50%, var(--ask-violet-soft), transparent 70%);
+  background: radial-gradient(circle at 50% 50%, var(--ask-glow-strong), transparent 70%);
 }
 .ask__wash--amber {
   top: 50%;
   right: -10vmin;
-  background: radial-gradient(circle at 50% 50%, var(--ask-amber-soft), transparent 70%);
+  background: radial-gradient(circle at 50% 50%, var(--ask-glow-mid), transparent 70%);
 }
 .ask__wash--sage {
   bottom: -10vmin;
   left: 30%;
-  background: radial-gradient(circle at 50% 50%, var(--ask-sage-soft), transparent 70%);
+  background: radial-gradient(circle at 50% 50%, var(--ask-glow-soft), transparent 70%);
 }
 
 /* Brandmark backdrop anchor — invisible. The fixed BrandmarkActor reads
@@ -2914,26 +2917,27 @@ html[data-quote-active="true"] .tf-brandmark-actor {
 .ask__quote-mark {
   display: inline-block;
   margin-right: 0.1em;
-  color: var(--ask-violet);
+  color: var(--gold);
   font-style: normal;
   font-weight: 600;
 }
 
-/* Lane chips — bordered editorial chips inside the sentence, lifted
-   from the AI operator's QuoteBridge. Each lane uses its own colour
-   for the dot + border, stays neutral for the text so the sentence
-   still reads as one piece of prose. */
+/* Inline editorial chips — three operative phrases inside the Evans
+   sentence ("working out", "how to ask", "what you want") rendered in
+   the Thoughtform palette: gold border + gold dot, dawn text, void-
+   tinted background. All three identical so the sentence reads as
+   prose, not as a lane legend. */
 .ask__chip {
   display: inline-flex;
   align-items: baseline;
   gap: 0.45em;
   padding: 0.05em 0.55em 0.1em;
-  border: 1px solid currentColor;
+  border: 1px solid var(--gold);
   border-radius: 999px;
   font-style: normal;
   font-weight: 400;
   color: var(--dawn);
-  background: rgba(10, 9, 8, 0.35);
+  background: rgba(202, 165, 84, 0.06);
   white-space: nowrap;
   transform: translateY(-0.05em);
   transition:
@@ -2945,24 +2949,9 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   width: 0.5em;
   height: 0.5em;
   border-radius: 50%;
-  background: currentColor;
+  background: var(--gold);
   flex-shrink: 0;
   align-self: center;
-}
-.ask__chip--navigate {
-  border-color: var(--ask-violet);
-  color: var(--ask-violet);
-  background: rgba(139, 109, 240, 0.08);
-}
-.ask__chip--encode {
-  border-color: var(--ask-amber);
-  color: var(--ask-amber);
-  background: rgba(202, 165, 84, 0.08);
-}
-.ask__chip--build {
-  border-color: var(--ask-sage);
-  color: var(--ask-sage);
-  background: rgba(110, 156, 106, 0.08);
 }
 .ask__chip > span:not(.ask__chip-dot) {
   color: var(--dawn);
@@ -3006,40 +2995,13 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   margin: 0;
 }
 
-/* Chevron divider between the Evans block and the punchline. Same
-   typographic gesture as the AI operator's Diagnosis bridge. */
-.ask__chevron {
-  width: 12px;
-  height: 12px;
-  border-right: 1px solid var(--dawn-30);
-  border-bottom: 1px solid var(--dawn-30);
-  transform: rotate(45deg);
-  margin: clamp(8px, 1vh, 16px) auto 0;
-}
-
-/* Punchline: the page voice naming the gap. Display weight, larger
-   than the note, smaller than the quote. */
-.ask__punchline {
-  font-family: var(--font-pp-neue-montreal), serif;
-  font-weight: 400;
-  font-size: clamp(20px, 2.2vw, 32px);
-  line-height: 1.35;
-  color: var(--dawn);
-  margin: 0;
-  text-wrap: balance;
-}
-.ask__punchline em {
-  font-style: italic;
-  color: var(--gold);
-}
-
-/* Subline: parenthetical aside in muted dawn. */
-.ask__sub {
-  font-family: var(--font-pp-neue-montreal), serif;
-  font-style: italic;
-  font-size: clamp(13px, 1.2vw, 15px);
-  color: var(--dawn-50);
-  margin: 0;
+/* Chevron / punchline / subline removed — those beats now live in
+   `.miss__closer` (the diagnostic concludes with the "fix isn't more
+   AI" line under the constellation grid). The asking-gap section is
+   purely the Evans interstitial: quote + attribution + parenthetical
+   note, then the user scrolls into the Continuum. */
+.ask__sub-removed-marker {
+  display: none;
 }
 
 /* Reveal — apply motion to inner content only. The wrapper carries an

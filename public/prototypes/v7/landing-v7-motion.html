@@ -4432,30 +4432,53 @@ html { scroll-behavior: smooth; }
        orbit → hidden). Native source-owned via `.miss__brand-slot img`
        while parked, mirroring the rail brand pattern. =================== -->
   <section class="station station--centered miss" id="missing-layer" data-station="missingLayer" data-screen-label="03 Missing layer">
-    <div class="station__idx">Missing layer<span class="landmark">Landmark · diagnostic</span></div>
 
     <div class="miss__inner" data-m="instrument">
       <header class="miss__head">
-        <div class="miss__head-title">
-          <p class="miss__eyebrow">
-            <span class="miss__eyebrow-rule" aria-hidden="true"></span>
-            Diagnostic
-          </p>
+        <p class="miss__eyebrow">
+          <span class="miss__eyebrow-rule" aria-hidden="true"></span>
+          Diagnostic
+        </p>
+        <div class="miss__head-row">
           <h2 class="miss__title">
             The missing layer is rarely <em>the model.</em>
           </h2>
+          <p class="miss__lede">
+            Most companies already have AI tools, data, and founders who want
+            to move fast. What they lack is the
+            <strong>layer between what their teams know and what AI does.</strong>
+          </p>
         </div>
-        <p class="miss__lede">
-          Most companies already have AI tools, data, and founders who want
-          to move fast. What they lack is the
-          <strong>layer between what their teams know and what AI does.</strong>
-        </p>
       </header>
 
+      <!-- Diagnostic instrument: 4 cards as constellation points around
+           the brandmark centre. Cards are hairline-bordered with corner
+           registration marks (Thoughtform instrument grammar); SVG
+           connector lines fan out from the centre brandmark to each
+           card's inner corner so the four diagnoses read as one
+           constellation around the missing layer at the centre. No
+           lane colours — gold + dawn only, brand-aligned. -->
       <div class="miss__grid" role="list" aria-label="Four use cases sharing one missing layer">
-        <article class="miss__card miss__card--violet miss__card--01" role="listitem">
+
+        <!-- Connector lines — SVG that spans the entire grid, drawing
+             4 diagonals from the centre brandmark out to each card's
+             inner corner. preserveAspectRatio="none" lets the viewBox
+             stretch with the grid; gold strokes at low opacity match
+             the rest of the page's instrument hairlines. -->
+        <svg class="miss__rays" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+          <line x1="50" y1="50" x2="0"   y2="0"   class="miss__ray" />
+          <line x1="50" y1="50" x2="100" y2="0"   class="miss__ray" />
+          <line x1="50" y1="50" x2="0"   y2="100" class="miss__ray" />
+          <line x1="50" y1="50" x2="100" y2="100" class="miss__ray" />
+        </svg>
+
+        <article class="miss__card miss__card--01" role="listitem">
+          <span class="reg reg--tl reg--gold" aria-hidden="true"></span>
+          <span class="reg reg--tr" aria-hidden="true"></span>
+          <span class="reg reg--bl" aria-hidden="true"></span>
+          <span class="reg reg--br" aria-hidden="true"></span>
           <header class="miss__card-head">
-            <span class="miss__card-n">Use case 01</span>
+            <span class="miss__card-n">01</span>
             <span class="miss__card-rule" aria-hidden="true"></span>
             <span class="miss__card-tag">Brand voice at scale</span>
           </header>
@@ -4463,9 +4486,13 @@ html { scroll-behavior: smooth; }
           <p class="miss__card-body">AI doubled the output. The voice rules still live in three senior heads, and drift only surfaces at retro meetings.</p>
         </article>
 
-        <article class="miss__card miss__card--gold miss__card--02" role="listitem">
+        <article class="miss__card miss__card--02" role="listitem">
+          <span class="reg reg--tl reg--gold" aria-hidden="true"></span>
+          <span class="reg reg--tr" aria-hidden="true"></span>
+          <span class="reg reg--bl" aria-hidden="true"></span>
+          <span class="reg reg--br" aria-hidden="true"></span>
           <header class="miss__card-head">
-            <span class="miss__card-n">Use case 02</span>
+            <span class="miss__card-n">02</span>
             <span class="miss__card-rule" aria-hidden="true"></span>
             <span class="miss__card-tag">Localization at scale</span>
           </header>
@@ -4477,14 +4504,20 @@ html { scroll-behavior: smooth; }
              BrandmarkActor parks here while [data-brand-on-missing="parked"]
              on documentElement. Travel legs (sigil → miss, miss → backdrop)
              use the fixed actor; this slot owns the visible mark in
-             between, so the page can scroll naturally without jiggle. -->
+             between, so the page can scroll naturally without jiggle.
+             No background — the constellation rays converge on the
+             brandmark and the void around it reads through. -->
         <div class="miss__brand-slot" aria-hidden="true">
           <img src="assets/logos/Thoughtform_Brandmark.svg" alt="" />
         </div>
 
-        <article class="miss__card miss__card--sage miss__card--03" role="listitem">
+        <article class="miss__card miss__card--03" role="listitem">
+          <span class="reg reg--tl reg--gold" aria-hidden="true"></span>
+          <span class="reg reg--tr" aria-hidden="true"></span>
+          <span class="reg reg--bl" aria-hidden="true"></span>
+          <span class="reg reg--br" aria-hidden="true"></span>
           <header class="miss__card-head">
-            <span class="miss__card-n">Use case 03</span>
+            <span class="miss__card-n">03</span>
             <span class="miss__card-rule" aria-hidden="true"></span>
             <span class="miss__card-tag">Brief handoff</span>
           </header>
@@ -4492,9 +4525,13 @@ html { scroll-behavior: smooth; }
           <p class="miss__card-body">Product marketing has an ultra-clear view on how a new product should sell, but by the time the brief reaches the studio team downstream, the angle that mattered is gone.</p>
         </article>
 
-        <article class="miss__card miss__card--slate miss__card--04" role="listitem">
+        <article class="miss__card miss__card--04" role="listitem">
+          <span class="reg reg--tl reg--gold" aria-hidden="true"></span>
+          <span class="reg reg--tr" aria-hidden="true"></span>
+          <span class="reg reg--bl" aria-hidden="true"></span>
+          <span class="reg reg--br" aria-hidden="true"></span>
           <header class="miss__card-head">
-            <span class="miss__card-n">Use case 04</span>
+            <span class="miss__card-n">04</span>
             <span class="miss__card-rule" aria-hidden="true"></span>
             <span class="miss__card-tag">Briefing synthesis</span>
           </header>
@@ -4502,11 +4539,23 @@ html { scroll-behavior: smooth; }
           <p class="miss__card-body">Customer reviews, social listening, competitor ads, paid performance, brand framework. All present, all in different tools, with no layer that turns them into a creative angle.</p>
         </article>
       </div>
+
+      <!-- Diagnostic punchline — moved here from the asking-gap section.
+           The 4 cards diagnose the symptom, this names the cure: it's not
+           more AI, it's learning how to brief one. The Evans interstitial
+           below then elaborates the asking gap in a credible outside voice. -->
+      <div class="miss__closer">
+        <p class="miss__punchline">
+          The fix isn&rsquo;t more AI. <em>It&rsquo;s learning how to brief one.</em>
+        </p>
+        <p class="miss__sub">(which is more difficult than it sounds.)</p>
+      </div>
     </div>
   </section>
 
-  <!-- ═══════════ CONNECTOR · 03 → 04 (slot: React portal mount) ═══════════ -->
-  <div data-celestial-slot="definition-to-continuum"></div>
+  <!-- Connector slot removed: each section now fills its own viewport;
+       the celestial instrument between Missing Layer and Asking gap
+       added vertical noise that the section breaks already provide. -->
 
   <!-- ═══════════ 04 ASKING-GAP — Benedict Evans interstitial ═══════════
        Single full-viewport beat between the Thoughtform definition and
@@ -4537,10 +4586,10 @@ html { scroll-behavior: smooth; }
     <div class="ask__inner" data-m="instrument">
       <blockquote class="ask__quote">
         <span class="ask__quote-mark" aria-hidden="true">&ldquo;</span>A lot of the challenge is
-        <span class="ask__chip ask__chip--navigate"><span class="ask__chip-dot" aria-hidden="true"></span>working out</span>
-        <span class="ask__chip ask__chip--encode"><span class="ask__chip-dot" aria-hidden="true"></span>how to ask</span>
+        <span class="ask__chip"><span class="ask__chip-dot" aria-hidden="true"></span>working out</span>
+        <span class="ask__chip"><span class="ask__chip-dot" aria-hidden="true"></span>how to ask</span>
         for
-        <span class="ask__chip ask__chip--build"><span class="ask__chip-dot" aria-hidden="true"></span>what you want</span>.
+        <span class="ask__chip"><span class="ask__chip-dot" aria-hidden="true"></span>what you want</span>.
       </blockquote>
 
       <p class="ask__attrib">
@@ -4550,13 +4599,6 @@ html { scroll-behavior: smooth; }
       </p>
 
       <p class="ask__note">(because AI isn&rsquo;t software, it&rsquo;s an intelligence)</p>
-
-      <div class="ask__chevron" aria-hidden="true"></div>
-
-      <p class="ask__punchline">
-        The fix isn&rsquo;t more AI. <em>It&rsquo;s learning how to brief one.</em>
-      </p>
-      <p class="ask__sub">(which is more difficult than it sounds.)</p>
     </div>
   </section>
 
@@ -4640,8 +4682,9 @@ html { scroll-behavior: smooth; }
     </div>
   </section>
 
-  <!-- ═══════════ CONNECTOR · 03 → 04 (slot: React portal mount) ═══════════ -->
-  <div data-celestial-slot="continuum-to-practice"></div>
+  <!-- Connector slot removed: viewport-filling sections give the
+       narrative its breathing room without a celestial bridge here. -->
+
 
   <!-- ═══════════ 04 PRACTICE — orbit stage + three scroll moments ═══════════
        Recall of the Section 02 sigil composition. The HUD brandmark in
