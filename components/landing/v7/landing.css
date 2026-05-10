@@ -710,6 +710,21 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   opacity: 0 !important;
 }
 
+/* ── Missing-layer dock ─────────────────────────────────────────────
+   Mirror of the rail-brand pattern. The native `.miss__brand-slot img`
+   owns the visible mark while `[data-brand-on-missing="parked"]` is
+   set; the fixed actor stays positioned at the brand's rect (so it
+   can re-emerge instantly when the backdrop morph arms) but is
+   hidden via CSS opacity. The selector is mirrored to BOTH the
+   LandingPage rootRef and `documentElement` because the fixed actor
+   renders as a sibling of rootRef. */
+[data-brand-on-missing="parked"] .miss__brand-slot img {
+  opacity: 1;
+}
+[data-brand-on-missing="parked"] .tf-brandmark-actor {
+  opacity: 0 !important;
+}
+
 /* Brandmark actor sits above the asking-gap content (z:4) when in
    backdrop mode but below it when on the rail. The actor itself is
    z:24 so we lower its z-index in backdrop mode via opacity ramp
@@ -2442,9 +2457,333 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   }
 }
 
-/* ═══════════ 03 ASKING-GAP — Benedict Evans interstitial ═══════════
-   Single full-viewport beat between #definition and #continuum. Brings
-   the AI operator case's "asking gap" into the executive summary
+/* ═══════════ 03 MISSING LAYER — diagnostic 4-card grid ═══════════
+   Adapts the AI operator's `.aiop-diagnosis` section to the dark
+   Thoughtform palette. Two-column header (title left / lede right),
+   2x2 card grid with the brandmark in the centre as a new dock on
+   the choreography. Native source-owned via `.miss__brand-slot img`
+   while parked, mirroring the rail brand pattern.
+
+   Compositing rules followed (landing-v7-compositing skill):
+   1. Outer .miss inherits .station's opaque var(--void) shield.
+   2. Reveal motion on .miss__inner only; brand slot has no [data-m].
+   3. 2x2 grid uses border + 1px gap so hairlines never expose the
+      gateway radial behind the cards.
+   ──────────────────────────────────────────────────────────────────── */
+
+.miss {
+  /* Lane palette scoped to this section. Mirrors .ask
+     so the homepage palette stays consistent across diagnostic + Evans. */
+  --miss-violet: #8b6df0;
+  --miss-amber: var(--gold);
+  --miss-sage: #6e9c6a;
+  --miss-slate: #6b7c8b;
+
+  /* One viewport — single executive beat. */
+  height: 100vh;
+  height: 100svh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.miss .station__idx {
+  position: absolute;
+  top: clamp(24px, 4vh, 48px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 3;
+}
+
+/* Inner content column. data-m="instrument" so the existing IO reveal
+   motion fires; wrapper stays opaque so the gateway radial doesn't
+   bleed through during the 880ms reveal. */
+.miss__inner {
+  position: relative;
+  z-index: 2;
+  width: min(1280px, 92vw);
+  display: flex;
+  flex-direction: column;
+  gap: clamp(32px, 5vh, 64px);
+  text-align: left;
+}
+
+/* Two-column header — title-left + lede-right (mirrors the AI
+   operator's diagnosis head pattern). */
+.miss__head {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  column-gap: clamp(40px, 5vw, 96px);
+  align-items: start;
+}
+.miss__head-title {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.miss__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+  font-family: var(--font-pt-mono);
+  font-size: 10px;
+  letter-spacing: var(--track-widest);
+  text-transform: uppercase;
+  color: var(--gold);
+}
+.miss__eyebrow-rule {
+  width: 24px;
+  height: 1px;
+  background: var(--gold);
+  display: inline-block;
+}
+.miss__title {
+  font-family: var(--font-pp-neue-montreal);
+  font-weight: 400;
+  font-size: clamp(28px, 3.2vw, 44px);
+  line-height: 1.1;
+  letter-spacing: -0.022em;
+  color: var(--dawn);
+  margin: 0;
+  text-wrap: balance;
+  max-width: 18ch;
+}
+.miss__title em {
+  font-style: italic;
+  color: var(--gold);
+  font-weight: 400;
+}
+.miss__lede {
+  font-family: var(--font-pp-neue-montreal);
+  font-size: clamp(14px, 1.05vw, 17px);
+  line-height: 1.55;
+  color: var(--dawn-70);
+  margin: 0;
+  max-width: 42ch;
+  letter-spacing: -0.005em;
+}
+.miss__lede strong {
+  color: var(--dawn);
+  font-weight: 500;
+}
+
+/* 3x2 grid: 4 corner cards + centre column reserved for the brandmark
+   dock. The 1px border + 0 gap draws hairlines between cards without
+   ever exposing the gateway radial. */
+.miss__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) clamp(140px, 15vw, 220px) minmax(0, 1fr);
+  grid-template-rows: 1fr 1fr;
+  column-gap: 0;
+  row-gap: 0;
+  border: 1px solid var(--dawn-08);
+  background: var(--dawn-04);
+}
+.miss__card {
+  position: relative;
+  background: var(--void);
+  padding: clamp(20px, 2vh, 28px) clamp(20px, 2vw, 32px);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+.miss__card--01 {
+  grid-column: 1;
+  grid-row: 1;
+  border-right: 1px solid var(--dawn-08);
+  border-bottom: 1px solid var(--dawn-08);
+}
+.miss__card--02 {
+  grid-column: 3;
+  grid-row: 1;
+  border-left: 1px solid var(--dawn-08);
+  border-bottom: 1px solid var(--dawn-08);
+}
+.miss__card--03 {
+  grid-column: 1;
+  grid-row: 2;
+  border-right: 1px solid var(--dawn-08);
+}
+.miss__card--04 {
+  grid-column: 3;
+  grid-row: 2;
+  border-left: 1px solid var(--dawn-08);
+}
+
+/* Lane rail — 3px left border in the lane colour. */
+.miss__card::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--dawn-15);
+}
+.miss__card--violet::before {
+  background: var(--miss-violet);
+}
+.miss__card--gold::before {
+  background: var(--miss-amber);
+}
+.miss__card--sage::before {
+  background: var(--miss-sage);
+}
+.miss__card--slate::before {
+  background: var(--miss-slate);
+}
+
+.miss__card-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-pt-mono);
+  font-size: 10px;
+  letter-spacing: var(--track-widest);
+  text-transform: uppercase;
+  color: var(--dawn-50);
+  flex-wrap: wrap;
+}
+.miss__card-n {
+  font-weight: 600;
+  color: var(--dawn);
+}
+.miss__card--violet .miss__card-n {
+  color: var(--miss-violet);
+}
+.miss__card--gold .miss__card-n {
+  color: var(--miss-amber);
+}
+.miss__card--sage .miss__card-n {
+  color: var(--miss-sage);
+}
+.miss__card--slate .miss__card-n {
+  color: var(--miss-slate);
+}
+.miss__card-rule {
+  width: 18px;
+  height: 1px;
+  background: var(--dawn-15);
+  display: inline-block;
+  flex-shrink: 0;
+}
+.miss__card-tag {
+  color: var(--dawn-70);
+  font-weight: 500;
+}
+.miss__card-title {
+  font-family: var(--font-pp-neue-montreal);
+  font-size: clamp(16px, 1.4vw, 20px);
+  font-weight: 500;
+  line-height: 1.25;
+  letter-spacing: -0.012em;
+  color: var(--dawn);
+  margin: 4px 0 0;
+}
+.miss__card-body {
+  font-family: var(--font-pp-neue-montreal);
+  font-size: clamp(13px, 0.95vw, 14px);
+  line-height: 1.55;
+  color: var(--dawn-70);
+  margin: 0;
+  max-width: 50ch;
+}
+
+/* Brandmark dock — centre cell of the grid. Source-owned: the native
+   image owns the visible mark while the choreography flag
+   [data-brand-on-missing="parked"] is on documentElement; the fixed
+   actor takes over for the morphs in (sigil → miss) and out
+   (miss → backdrop). */
+.miss__brand-slot {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  place-self: center;
+  width: clamp(96px, 11vw, 144px);
+  height: clamp(96px, 11vw, 144px);
+  position: relative;
+  z-index: 2;
+}
+.miss__brand-slot img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: contain;
+  opacity: 0;
+  transition: opacity 240ms var(--m-ease-instr, cubic-bezier(0.16, 1, 0.3, 1));
+  filter: drop-shadow(0 0 16px rgba(202, 165, 84, 0.45));
+}
+
+/* Reveal — apply motion to inner content only (Rule 2 of compositing). */
+.miss__inner[data-m="instrument"] {
+  opacity: 0;
+  transform: translateY(12px);
+  filter: blur(2px);
+  transition-property: opacity, transform, filter;
+  transition-duration: var(--m-dur-slow, 880ms);
+  transition-timing-function: var(--m-ease-long, cubic-bezier(0.16, 1, 0.3, 1));
+}
+.miss__inner[data-m="instrument"].is-in {
+  opacity: 1;
+  transform: translateY(0);
+  filter: none;
+}
+
+/* Mobile: stack the cards in a single column, brandmark sits between
+   row 2 and row 3 as a horizontal divider. */
+@media (max-width: 960px) {
+  .miss {
+    height: auto;
+    min-height: 100vh;
+    padding-top: 100px;
+    padding-bottom: 64px;
+  }
+  .miss__head {
+    grid-template-columns: 1fr;
+    row-gap: 16px;
+  }
+  .miss__grid {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto auto auto;
+  }
+  .miss__card--01 {
+    grid-column: 1;
+    grid-row: 1;
+    border-right: none;
+    border-bottom: 1px solid var(--dawn-08);
+  }
+  .miss__card--02 {
+    grid-column: 1;
+    grid-row: 2;
+    border-left: none;
+    border-bottom: 1px solid var(--dawn-08);
+  }
+  .miss__brand-slot {
+    grid-column: 1;
+    grid-row: 3;
+    width: clamp(72px, 16vw, 96px);
+    height: clamp(72px, 16vw, 96px);
+    margin: 18px auto;
+  }
+  .miss__card--03 {
+    grid-column: 1;
+    grid-row: 4;
+    border-right: none;
+    border-bottom: 1px solid var(--dawn-08);
+  }
+  .miss__card--04 {
+    grid-column: 1;
+    grid-row: 5;
+    border-left: none;
+  }
+}
+
+/* ═══════════ 04 ASKING-GAP — Benedict Evans interstitial ═══════════
+   Single full-viewport beat between #missing-layer and #continuum.
+   Brings the AI operator case's "asking gap" into the executive summary
    without the four-card diagnosis grid. The fixed BrandmarkActor docks
    here as a faint backdrop (see useSigilChoreography); markup carries
    only an anchor div for the actor to read.
@@ -2738,7 +3077,57 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   }
 }
 
-/* ═══════════ 03 CONTINUUM — spectrum + collapsed distances ═══════════ */
+/* ═══════════ 05 CONTINUUM — spectrum + collapsed distances ═══════════
+   Header now sits in a Linear-style two-column grid (title left, lede
+   right) above the rail. Sizing draws on the Linear DESIGN.md
+   reference: title ≈ heading-lg (48px / 1.0 / -0.22px) clamped down
+   for our viewport bands; lede sits at body register (14-17px) in
+   --dawn-70 so it reads as Linear's "Storm Cloud" muted role.        */
+
+.continuum__head {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+  column-gap: clamp(40px, 5vw, 96px);
+  align-items: start;
+  margin-bottom: clamp(48px, 6vh, 96px);
+  text-align: left;
+}
+.continuum__title {
+  font-family: var(--font-pp-neue-montreal);
+  font-weight: 400;
+  font-size: clamp(28px, 3vw, 44px);
+  line-height: 1.1;
+  letter-spacing: -0.022em;
+  color: var(--dawn);
+  margin: 0;
+  text-wrap: balance;
+}
+.continuum__title em {
+  font-style: italic;
+  font-weight: 400;
+  color: var(--gold);
+}
+.continuum__lede {
+  font-family: var(--font-pp-neue-montreal);
+  font-size: clamp(14px, 1.05vw, 17px);
+  line-height: 1.55;
+  color: var(--dawn-70);
+  margin: 0;
+  max-width: 38ch;
+  letter-spacing: -0.005em;
+}
+.continuum__lede em {
+  font-style: normal;
+  color: var(--gold);
+}
+@media (max-width: 960px) {
+  .continuum__head {
+    grid-template-columns: 1fr;
+    row-gap: clamp(20px, 3vh, 32px);
+    margin-bottom: clamp(32px, 4vh, 56px);
+  }
+}
+
 .continuum {
   display: grid;
   grid-template-columns: 1.45fr 1fr;

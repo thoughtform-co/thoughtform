@@ -10,18 +10,18 @@ description: >
   practice orbit pin.
 ---
 
-# Brandmark choreography (Sigil → Backdrop → Rail → Orbit → Hidden)
+# Brandmark choreography (Sigil → Miss → Backdrop → Rail → Orbit → Hidden)
 
-The section-02 brandmark is **source-owned** while it is part of the diagram (`.sigil__mark img`). The **`position: fixed`** actor (`tf-brandmark-actor`) exists for travel only: it owns the visible mark from the asking-gap backdrop onward. A change to one trigger often regresses another (hero flash, between-section float, rail position drift, practice snap, actor visible after exit).
+Three native source-owned park stations carry the visible brandmark when the user is reading: `.sigil__mark img` (section 02 diagram), `.miss__brand-slot img` (centre of the missing-layer 4-card grid), and `.crail__brand img` (continuum rail middle). The **`position: fixed`** actor (`tf-brandmark-actor`) exists for travel only — five morphs total: sigil → miss, miss → backdrop, backdrop → rail-entry, rail → orbit, orbit → hidden. A change to one trigger often regresses another (hero flash, between-section float, rail position drift, practice snap, actor visible after exit).
 
-**Canonical record:** [ADR-010 v2](../../../sentinel/decisions/010-brandmark-choreography.md)
+**Canonical record:** [ADR-010 v3](../../../sentinel/decisions/010-brandmark-choreography.md)
 **Related compositing (layers):** [ADR-008](../../../sentinel/decisions/008-landing-v7-background-layers.md), `landing-v7-compositing` skill.
 
 ---
 
 ## State machine (one paragraph)
 
-The visible mark moves through: **Native sigil source (section 2) → actor morph to asking-gap backdrop (faint, 640px, 0.08 opacity) → actor morph to continuum rail leftmost stop (48px, opacity 1) → actor scrubs along the rail (`L → M → R`) driven by continuum scroll progress → actor morph to practice orbit (parked at `.approach__orbit__mark`, sticky tracker re-pins each frame) → actor fades to hidden as practice exits.** Each travel leg is a GSAP `ScrollTrigger` timeline; `onUpdate` keeps rects live for moving / sticky targets; `onLeave` / `onLeaveBack` settle dock flags when the user scrolls faster than the scrub can finish; `onRefresh` short-circuits when `scrollY < 4` (hero) so the actor never pins to a downstream target on initial load.
+The visible mark moves through: **Native sigil source (section 2) → actor morph to native missing-layer brand (centre of 4-card grid; source-owned, no jiggle) → actor morph to asking-gap backdrop (faint, 640px, 0.08 opacity) → actor morph to native rail brand (continuum middle stop; source-owned) → actor morph to practice orbit (parked at `.approach__orbit__mark`, sticky tracker re-pins each frame) → actor fades to hidden as practice exits.** Each travel leg is a GSAP `ScrollTrigger` timeline; `onUpdate` keeps rects live for moving / sticky targets; `onLeave` / `onLeaveBack` settle dock flags when the user scrolls faster than the scrub can finish; `onRefresh` short-circuits when `scrollY < 4` (hero) so the actor never pins to a downstream target on initial load.
 
 The HUD bottom-left brandmark slot (`#hudBrandmark`) is no longer used as a destination. CSS hides it while `[data-brand-on-rail]` is set on the root.
 
@@ -29,20 +29,21 @@ The HUD bottom-left brandmark slot (`#hudBrandmark`) is no longer used as a dest
 
 ## Pre-merge checklist (regression invariants)
 
-Match each item to [ADR-010 § Seven regression rules (v2)](../../../sentinel/decisions/010-brandmark-choreography.md#seven-regression-rules-load-bearing-invariants--v2):
+Match each item to [ADR-010 § Eight regression rules (v3)](../../../sentinel/decisions/010-brandmark-choreography.md#eight-regression-rules-load-bearing-invariants--v3):
 
 - [ ] **Section 02 source-owned** — `.sigil__mark img` is visible and owns the diagram mark; `.tf-brandmark-actor` opacity is `0` through hero, entrance, and the section-02 parked/read state.
-- [ ] **No actor imitation while parked** — do not pin/re-pin the fixed actor to section-02 during the reading state. That recreates the "sticky element detached from the diagram" bug.
-- [ ] **Backdrop trigger** — anchored to **`#asking-gap` `top 50% → top 0%`**, `scrub: 0.4`. `captureBackdropRects()` reads `readSigilRect()` (live unscaled sigil rect) and `readBackdropRect()` (live `.ask__brandmark-anchor` rect). The native sigil opacity goes to `0` only as backdrop progress begins.
-- [ ] **Rail entry trigger** — anchored to **`#continuum` `top 60% → top 30%`**, `scrub: 0.4`. Source rect is the live backdrop anchor; destination is `readRailRectAt(0)` (leftmost stop on `.crail__line`). Opacity ramps `0.08 → 1` across the morph.
-- [ ] **Rail scrub** — anchored to **`#continuum` `top 30% → bottom 60%`**, `scrub: 0.3`. Actor pinned each frame to `readRailRectAt(railFractionForProgress(p))`; rail rect is read live via `.crail__line.getBoundingClientRect()`. Diamond reticle (`.crail__reticle`) opacity goes to `0` whenever `[data-brand-on-rail="true"]` is on the root.
-- [ ] **Practice entry trigger** — anchored to **`#practice` `top 40% → top 0%`**, `scrub: 0.4`. Source rect is `readRailRectAt(1)` (live, every frame); destination is `.approach__orbit__mark.getBoundingClientRect()` (live, every frame — sticky parent).
+- [ ] **Three source-owned park stations** — `.sigil__mark img`, `.miss__brand-slot img`, `.crail__brand img` each own the visible mark while the choreography is parked there. The fixed actor stays positioned at the brand's rect (so it can re-emerge instantly for the next morph) but is hidden via CSS opacity.
+- [ ] **Miss trigger** — anchored to **`#missing-layer` `top 50% → top 0%`**, `scrub: 0.4`. `captureMissRects()` reads `readSigilRect()` (live unscaled sigil rect) and `readMissBrandRect()` (live `.miss__brand-slot img` rect). At p=1, hands to `pinAtMissLayerParked()` → `[data-brand-on-missing="parked"]`.
+- [ ] **Backdrop trigger** — anchored to **`#asking-gap` `top 50% → top 0%`**, `scrub: 0.4`. `captureBackdropRects()` reads `readMissBrandRect()` as source (the previous park station) and `readBackdropRect()` as destination. Source rect re-read live each frame inside `applyBackdropMorph` so the brand's scroll position stays accurate.
+- [ ] **Rail entry trigger** — anchored to **`#continuum` `top 60% → top 30%`**, `scrub: 0.4`. Source rect is the live backdrop anchor; destination is `readRailBrandRect()` (centre `.crail__brand` slot). Opacity ramps `0.08 → 1` across the morph.
+- [ ] **Practice entry trigger** — anchored to **`#practice` `top 60% → top 0%`**, `scrub: 0.4`. Source rect is `readRailBrandRect()` (live, every frame — scrolls with rail DOM); destination is `.approach__orbit__mark.getBoundingClientRect()` (live, every frame — sticky parent).
 - [ ] **Practice exit trigger** — anchored to **`#practice` `bottom 25% → bottom -10%`**, `scrub: 0.4`. Actor stays pinned at orbit position while opacity tweens `1 → 0`; `onLeave` calls `hideActor()` to settle.
 - [ ] **Hero / refresh** — every `onRefresh` else-branch short-circuits when `scrollY < 4`. No travel timeline pins to a downstream target on initial load.
-- [ ] **Live rects** — backdrop, rail, and orbit destinations all use live `getBoundingClientRect()` per relevant frame; no stale `onEnter` captures for moving / sticky targets.
-- [ ] **Fast scroll** — every travel timeline has `onLeave` / `onLeaveBack` that finalises the dock or returns to the previous parked state.
+- [ ] **Live rects** — backdrop, miss-brand, rail-brand, and orbit destinations all use live `getBoundingClientRect()` per relevant frame; no stale `onEnter` captures for moving / sticky targets.
+- [ ] **Fast scroll** — every travel timeline (`missTl`, `backdropTl`, `railEntryTl`, `practiceEntryTl`, `practiceExitTl`) has `onLeave` / `onLeaveBack` that finalises the dock or returns to the previous parked state.
+- [ ] **Tri-state attrs on documentElement** — `data-brand-on-missing` and `data-brand-on-rail` are written to BOTH the LandingPage rootRef AND `document.documentElement`. The fixed `.tf-brandmark-actor` renders as a sibling of rootRef, so descendant selectors only reach it via `documentElement`.
 - [ ] **HUD slot** — `#hudBrandmark` is hidden by CSS (`[data-brand-on-rail]` rule); the actor never `pinToRect`s the HUD rect.
-- [ ] **Run** the Playwright "sample + jump" recipe below in **both directions** and verify the visible path matches: hidden in hero → native sigil in section 02 → backdrop fade-in at asking-gap → small mark on rail at continuum → mark scrubs L→M→R → mark at orbit during practice → faded out after practice exit.
+- [ ] **Run** the Playwright "sample + jump" recipe below in **both directions** and verify the visible path matches: hidden in hero → native sigil in section 02 → native miss brand at missing-layer → backdrop fade-in at asking-gap → native rail brand at continuum → mark at orbit during practice → faded out after practice exit.
 
 End of session: if this fix was non-trivial, run [Cycle A in MAINTENANCE.md](../../../sentinel/MAINTENANCE.md#cycle-a-post-incident-capture-checklist).
 
@@ -62,10 +63,11 @@ Use the **Visual** test browser or a throwaway `test.describe` on `http://localh
 //   • At scrollY = 0 (hero):       actor opacity should be 0.
 //   • At #definition top - 100:    opacity 0 (still source-owned).
 //   • At #definition bottom:       opacity 0 (parked at sigil source).
+//   • At #missing-layer centre:    opacity 0 + data-brand-on-missing="parked"
+//                                  (native .miss__brand-slot img owns the mark).
 //   • At #asking-gap centre:       opacity ≈ 0.08 (backdrop park).
-//   • At #continuum top + 100:     opacity 1, X near rail leftmost stop.
-//   • At #continuum centre:        opacity 1, X near rail middle stop.
-//   • At #continuum bottom:        opacity 1, X near rail rightmost stop.
+//   • At #continuum centre:        opacity 0 + data-brand-on-rail="parked"
+//                                  (native .crail__brand img owns the mark).
 //   • At #practice top + 200:      opacity 1, position == orbit centre.
 //   • At #practice bottom + 100:   opacity 0 (faded after exit).
 
@@ -102,6 +104,7 @@ const stops = [
   { label: "hero", y: 0 },
   { label: "def-top", y: (await sectionTop("definition")) - 100 },
   { label: "def-mid", y: (await sectionTop("definition")) + 200 },
+  { label: "miss-mid", y: (await sectionTop("missing-layer")) + 300 },
   { label: "ask-mid", y: (await sectionTop("asking-gap")) + 200 },
   { label: "cont-top", y: (await sectionTop("continuum")) + 100 },
   { label: "cont-mid", y: (await sectionTop("continuum")) + 400 },
@@ -133,7 +136,8 @@ A **sudden** centre jump (especially while scroll delta is small) almost always 
 
 - Section 2 **must not** "fix" drift by making unrelated wrappers `position: sticky` without an ADR — that has broken horizontal alignment and diagram drift in the past.
 - Section 2 **must not** be represented by a fixed overlay actor during the reading state. The native `.sigil__mark img` belongs to the diagram; the fixed actor is for travel between stations only.
+- **Missing-layer (`#missing-layer`)** — the `.miss__brand-slot img` is the source-owned brandmark for the centre dock. It lives inside the 4-card grid as the centre cell of a 3-column / 2-row CSS grid (`grid-column: 2; grid-row: 1 / span 2`), so it scrolls naturally with the cards and never jiggles. Do not move it outside the grid. The fixed actor only takes over for the travel legs in (sigil → miss) and out (miss → backdrop).
 - **Asking-gap (`#asking-gap`)** — the `.ask__brandmark-anchor` is invisible and zero-paint; it exists purely as a measurement target for the actor. Do not give it a background, a border, or any visible content. The lane radial washes (`.ask__wash--violet/--amber/--sage`) belong on `.ask__bleed` (a separate layer) so the anchor's rect stays clean.
-- **Continuum rail** — the `.crail__reticle` (ring + cross + diamond) becomes opacity 0 whenever `[data-brand-on-rail="true"]`. Do not delete or restructure it: the rail's keyframe loop is also disabled by the same selector. If you need to change the rail visual, tweak the line / frame / stops, not the reticle.
+- **Continuum rail** — the `.crail__reticle` (ring + cross + diamond) becomes opacity 0 whenever `[data-brand-on-rail="true"]` or `"parked"`. Do not delete or restructure it: the rail's keyframe loop is also disabled by the same selector. If you need to change the rail visual, tweak the line / frame / stops, not the reticle.
 - **HUD bottom-left slot (`#hudBrandmark`)** — retired as a destination on v7. Do not pin the actor there. The CSS rule `[data-brand-on-rail] .hud__brandmark` keeps it hidden in both `true` and `false` states. Do not reintroduce a `.hud__brandmark.is-visible` class write on the v7 page.
 - **Practice orbit (`.approach__orbit__mark`)** — sticky inside `.approach__chamber` (CSS grid, column 1). The orbit's natural rect changes during sticky engagement; always read live before pinning. Re-pin every scroll frame while `data-orbit-docked="true"`.

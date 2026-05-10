@@ -4211,17 +4211,18 @@ html { scroll-behavior: smooth; }
       </button>
       <div class="hud__nav__list">
         <div class="hud__nav__list__head">
-          <span class="k">Navigate</span><span>Stations · 09</span>
+          <span class="k">Navigate</span><span>Stations · 10</span>
         </div>
         <a href="#hero" data-station="hero" class="is-active"><span class="num">01</span>Interface</a>
         <a href="#definition" data-station="definition"><span class="num">02</span>Thoughtform</a>
-        <a href="#asking-gap" data-station="askingGap"><span class="num">03</span>Asking gap</a>
-        <a href="#continuum" data-station="continuum"><span class="num">04</span>Continuum</a>
-        <a href="#practice" data-station="practice"><span class="num">05</span>Practice</a>
-        <a href="#build" data-station="build"><span class="num">06</span>Build</a>
-        <a href="#services" data-station="services"><span class="num">07</span>Services</a>
-        <a href="#about" data-station="about"><span class="num">08</span>About</a>
-        <a href="#contact" data-station="contact"><span class="num">09</span>Contact</a>
+        <a href="#missing-layer" data-station="missingLayer"><span class="num">03</span>Missing layer</a>
+        <a href="#asking-gap" data-station="askingGap"><span class="num">04</span>Asking gap</a>
+        <a href="#continuum" data-station="continuum"><span class="num">05</span>Continuum</a>
+        <a href="#practice" data-station="practice"><span class="num">06</span>Practice</a>
+        <a href="#build" data-station="build"><span class="num">07</span>Build</a>
+        <a href="#services" data-station="services"><span class="num">08</span>Services</a>
+        <a href="#about" data-station="about"><span class="num">09</span>About</a>
+        <a href="#contact" data-station="contact"><span class="num">10</span>Contact</a>
         <div class="hud__nav__status">
           <span><span class="k">δ</span><span id="coordD">0.27</span> <span class="k">θ</span><span id="coordT">058.1°</span></span>
           <span><span class="k">Sector</span> <span id="hudSector">Origin</span></span>
@@ -4308,8 +4309,11 @@ html { scroll-behavior: smooth; }
           AI collapsed the distance between <em>thought and form.</em>
         </h2>
         <p class="tri__title tri__title--secondary">
-          We build the layer between how your team works and what AI can do,
-          <em>and train them to own it.</em>
+          But the layer between how your team works and what AI can do is
+          missing.
+        </p>
+        <p class="tri__title tri__title--secondary">
+          We build it with them and <em>train them to own it.</em>
         </p>
         <div class="tri__ctas">
           <a href="#asking-gap" class="btn btn--solid">See the thesis <span class="arrow"></span></a>
@@ -4419,10 +4423,92 @@ html { scroll-behavior: smooth; }
     </div>
   </section>
 
-  <!-- ═══════════ CONNECTOR · 02 → 03 (slot: React portal mount) ═══════════ -->
+  <!-- ═══════════ 03 MISSING LAYER — diagnostic 4-card grid ═══════════
+       Inspired by the AI operator case page's `.aiop-diagnosis` section.
+       Names the executive-level problem the rest of the page solves: the
+       embedded layer between how teams work and what AI does is missing.
+       Brandmark sits in the centre dead-zone of the 2x2 card grid as a
+       new dock on the choreography (sigil → miss → backdrop → rail →
+       orbit → hidden). Native source-owned via `.miss__brand-slot img`
+       while parked, mirroring the rail brand pattern. =================== -->
+  <section class="station station--centered miss" id="missing-layer" data-station="missingLayer" data-screen-label="03 Missing layer">
+    <div class="station__idx">Missing layer<span class="landmark">Landmark · diagnostic</span></div>
+
+    <div class="miss__inner" data-m="instrument">
+      <header class="miss__head">
+        <div class="miss__head-title">
+          <p class="miss__eyebrow">
+            <span class="miss__eyebrow-rule" aria-hidden="true"></span>
+            Diagnostic
+          </p>
+          <h2 class="miss__title">
+            The missing layer is rarely <em>the model.</em>
+          </h2>
+        </div>
+        <p class="miss__lede">
+          Most companies already have AI tools, data, and founders who want
+          to move fast. What they lack is the
+          <strong>layer between what their teams know and what AI does.</strong>
+        </p>
+      </header>
+
+      <div class="miss__grid" role="list" aria-label="Four use cases sharing one missing layer">
+        <article class="miss__card miss__card--violet miss__card--01" role="listitem">
+          <header class="miss__card-head">
+            <span class="miss__card-n">Use case 01</span>
+            <span class="miss__card-rule" aria-hidden="true"></span>
+            <span class="miss__card-tag">Brand voice at scale</span>
+          </header>
+          <h3 class="miss__card-title">Brand voice slips faster than reviewers catch it.</h3>
+          <p class="miss__card-body">AI doubled the output. The voice rules still live in three senior heads, and drift only surfaces at retro meetings.</p>
+        </article>
+
+        <article class="miss__card miss__card--gold miss__card--02" role="listitem">
+          <header class="miss__card-head">
+            <span class="miss__card-n">Use case 02</span>
+            <span class="miss__card-rule" aria-hidden="true"></span>
+            <span class="miss__card-tag">Localization at scale</span>
+          </header>
+          <h3 class="miss__card-title">AI translates at scale, but cultural nuances never reach the system.</h3>
+          <p class="miss__card-body">AI handles the translation. The nuance stays in reviewer comments, claim checks, and local market calls, so the next launch starts from zero again.</p>
+        </article>
+
+        <!-- Centre brandmark dock — native source-owned. The fixed
+             BrandmarkActor parks here while [data-brand-on-missing="parked"]
+             on documentElement. Travel legs (sigil → miss, miss → backdrop)
+             use the fixed actor; this slot owns the visible mark in
+             between, so the page can scroll naturally without jiggle. -->
+        <div class="miss__brand-slot" aria-hidden="true">
+          <img src="assets/logos/Thoughtform_Brandmark.svg" alt="" />
+        </div>
+
+        <article class="miss__card miss__card--sage miss__card--03" role="listitem">
+          <header class="miss__card-head">
+            <span class="miss__card-n">Use case 03</span>
+            <span class="miss__card-rule" aria-hidden="true"></span>
+            <span class="miss__card-tag">Brief handoff</span>
+          </header>
+          <h3 class="miss__card-title">The studio team making the ads has no clear briefing to fall back on.</h3>
+          <p class="miss__card-body">Product marketing has an ultra-clear view on how a new product should sell, but by the time the brief reaches the studio team downstream, the angle that mattered is gone.</p>
+        </article>
+
+        <article class="miss__card miss__card--slate miss__card--04" role="listitem">
+          <header class="miss__card-head">
+            <span class="miss__card-n">Use case 04</span>
+            <span class="miss__card-rule" aria-hidden="true"></span>
+            <span class="miss__card-tag">Briefing synthesis</span>
+          </header>
+          <h3 class="miss__card-title">All the data for a great briefing is there, but AI doesn&rsquo;t know how to interpret it.</h3>
+          <p class="miss__card-body">Customer reviews, social listening, competitor ads, paid performance, brand framework. All present, all in different tools, with no layer that turns them into a creative angle.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════ CONNECTOR · 03 → 04 (slot: React portal mount) ═══════════ -->
   <div data-celestial-slot="definition-to-continuum"></div>
 
-  <!-- ═══════════ 03 ASKING-GAP — Benedict Evans interstitial ═══════════
+  <!-- ═══════════ 04 ASKING-GAP — Benedict Evans interstitial ═══════════
        Single full-viewport beat between the Thoughtform definition and
        the tool↔collaborator continuum. Brings the AI operator case's
        "asking gap" into the executive summary. The fixed BrandmarkActor
@@ -4430,7 +4516,7 @@ html { scroll-behavior: smooth; }
        anchor; the actor reads `.ask__brandmark-anchor` to size itself).
        Compositing: outer wrapper paints opaque var(--void) (Rule 1);
        reveal motion runs on .ask__inner only (Rule 2). =================== -->
-  <section class="station station--centered station--cover station--from-connector station--to-connector ask" id="asking-gap" data-station="askingGap" data-screen-label="03 Asking gap">
+  <section class="station station--centered station--cover station--from-connector station--to-connector ask" id="asking-gap" data-station="askingGap" data-screen-label="04 Asking gap">
     <div class="station__idx">Asking gap<span class="landmark">Landmark · briefing intelligence</span></div>
 
     <!-- Lane-tinted atmosphere: violet (Navigate), amber (Encode), sage
@@ -4475,17 +4561,18 @@ html { scroll-behavior: smooth; }
   </section>
 
   <!-- ═══════════ 03 CONTINUUM — the tool ↔ collaborator spectrum ═══════════ -->
-  <section class="station station--centered station--from-connector station--to-connector" id="continuum" data-station="continuum" data-screen-label="04 Continuum">
+  <section class="station station--centered station--from-connector station--to-connector" id="continuum" data-station="continuum" data-screen-label="05 Continuum">
     <div class="station__idx">Continuum<span class="landmark">Landmark · tool ↔ collaborator / the navigation thesis</span></div>
-    <h2 class="station__title station__title--compact station__title--centered">
-      AI isn't software to command.<br><em>It's intelligence to navigate.</em>
-    </h2>
-    <p class="station__lede station__lede--centered">
-      Software is commanded. Intelligence is navigated. AI sits on a continuum
-      between <em style="color:var(--gold);font-style:normal">tool</em> and
-      <em style="color:var(--gold);font-style:normal">collaborator</em> —
-      and the ratio shifts with every prompt.
-    </p>
+    <header class="continuum__head">
+      <h2 class="continuum__title">
+        AI isn't software to command.<br><em>It's intelligence to navigate.</em>
+      </h2>
+      <p class="continuum__lede">
+        Software is commanded. Intelligence is navigated. AI sits on a
+        continuum between <em>tool</em> and <em>collaborator</em>, and the
+        ratio shifts with every prompt.
+      </p>
+    </header>
 
     <!-- The continuum: one big spectrum, centered. Single idea, no competing content. -->
     <div class="continuum continuum--focused">
@@ -4562,7 +4649,7 @@ html { scroll-behavior: smooth; }
        on the root); the filled brandmark re-emerges on the right of this
        section as the anchor of an orbit that lights up the active phase
        lane. Each scroll step is one phase moment. -->
-  <section class="station station--fullbleed station--from-connector station--to-connector" id="practice" data-station="practice" data-screen-label="05 Practice">
+  <section class="station station--fullbleed station--from-connector station--to-connector" id="practice" data-station="practice" data-screen-label="06 Practice">
     <div class="station__idx">Thoughtform in Practice<span class="landmark">Landmark · navigate → encode → build</span></div>
     <div class="approach" id="approach" data-active-phase="navigate" data-orbit-docked="false">
 
@@ -4785,7 +4872,7 @@ html { scroll-behavior: smooth; }
        reveal motion runs on inner elements only (Rule 2 of the
        landing-v7-compositing skill). The bottom of the panel carries
        a gradient + backdrop-blur dissolve into Build cases. ========= -->
-  <section class="station station--cover build-quote" id="buildQuote" data-station="buildQuote" data-screen-label="05.5 Axiom">
+  <section class="station station--cover build-quote" id="buildQuote" data-station="buildQuote" data-screen-label="06.5 Axiom">
     <!-- No corner L-brackets here on purpose: the page-level HUD grid
          already carries L-brackets at the four outer corners and a
          second set inside this panel competes with that frame. The
@@ -4920,7 +5007,7 @@ html { scroll-behavior: smooth; }
        [data-build-cases-root]. Visit the BuildCases module under
        components/landing/v7/build-cases/ to edit copy, screenshots,
        or layout. =================================================== -->
-  <section class="station station--build" id="build" data-station="build" data-screen-label="06 Build">
+  <section class="station station--build" id="build" data-station="build" data-screen-label="07 Build">
     <div class="station__idx">Build<span class="landmark">Landmark · the work · software for few</span></div>
 
     <h2 class="station__title">
@@ -4941,7 +5028,7 @@ html { scroll-behavior: smooth; }
        Workshops · Strategy) and the closing funnel CTA that lands
        the user on /contact. The CTA in the Practice copy column
        (`See how we run it`) deep-links here via #execTitle. ===== -->
-  <section class="station" id="services" data-station="services" data-screen-label="07 Services">
+  <section class="station" id="services" data-station="services" data-screen-label="08 Services">
     <div class="station__idx">Services<span class="landmark">Landmark · how we run it</span></div>
 
     <!-- ── Execution strip — Keynotes · Workshops · Strategy ── -->
@@ -5063,7 +5150,7 @@ html { scroll-behavior: smooth; }
   <div data-celestial-slot="practice-to-about"></div>
 
   <!-- ═══════════ 05 ABOUT · VINCE BUYSSENS // VOIDWALKER ═══════════ -->
-  <section class="station" id="about" data-station="about" data-screen-label="08 About">
+  <section class="station" id="about" data-station="about" data-screen-label="09 About">
     <div class="station__idx">About<span class="landmark">Landmark · the navigator · who runs the practice</span></div>
 
     <div class="voidwalker">
@@ -5243,7 +5330,7 @@ html { scroll-behavior: smooth; }
   </section>
 
   <!-- ═══════════ 06 CONTACT ═══════════ -->
-  <section class="station" id="contact" data-station="contact" data-screen-label="09 Contact">
+  <section class="station" id="contact" data-station="contact" data-screen-label="10 Contact">
     <div class="contact">
       <div class="station__idx" style="justify-content:center">Contact<span class="landmark" style="margin-left:0">Event horizon · destination lock</span></div>
       <h2 class="contact__title">Plot your<br><em>course.</em></h2>

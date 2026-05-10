@@ -73,6 +73,7 @@ export function useSigilChoreography(
 
     // Stations
     const defEl = docEl.querySelector<HTMLElement>("#definition");
+    const missEl = docEl.querySelector<HTMLElement>("#missing-layer");
     const askEl = docEl.querySelector<HTMLElement>("#asking-gap");
     const contEl = docEl.querySelector<HTMLElement>("#continuum");
     const practiceEl = docEl.querySelector<HTMLElement>("#practice");
@@ -87,6 +88,14 @@ export function useSigilChoreography(
     const sigilCap = docEl.querySelector<HTMLElement>(".sigil__cap");
     const sigilLegend = docEl.querySelector<HTMLElement>(".sigil__legend");
     const triLeft = docEl.querySelector<HTMLElement>(".tri__left");
+
+    // Missing-layer brandmark slot (centre of the 4-card grid).
+    /** Native missing-layer brandmark — source-owned during the parked
+     * phase. Lives inside the grid DOM so it stays in flow with the
+     * cards. Mirrors the rail-brand pattern: fixed actor handles
+     * transitions in (sigil → miss) and out (miss → backdrop), the
+     * native image owns the visible mark in between. */
+    const missBrand = missEl?.querySelector<HTMLElement>(".miss__brand-slot img") ?? null;
 
     // Asking-gap backdrop anchor
     const askAnchor = askEl?.querySelector<HTMLElement>(".ask__brandmark-anchor") ?? null;
@@ -106,7 +115,12 @@ export function useSigilChoreography(
     const actor = () => actorRef.current;
 
     // ── State flags ─────────────────────────────────────────────────
-    /** True while morphing sigil → backdrop. */
+    /** True while morphing sigil → missing-layer brand slot. */
+    let missArmed = false;
+    /** True while parked at the missing-layer brand slot (native
+     * `.miss__brand-slot img` owns the visible mark). */
+    let parkedAtMiss = false;
+    /** True while morphing missing-layer → backdrop. */
     let backdropArmed = false;
     /** True while parked at the asking-gap backdrop anchor. */
     let parkedAtBackdrop = false;
@@ -136,6 +150,16 @@ export function useSigilChoreography(
     const setBrandOnRail = (state: "false" | "true" | "parked") => {
       docEl.setAttribute("data-brand-on-rail", state);
       document.documentElement.setAttribute("data-brand-on-rail", state);
+    };
+
+    /** Tri-state data attr for the missing-layer dock. Same pattern
+     * as setBrandOnRail: "parked" means the native
+     * `.miss__brand-slot img` owns the visible mark; "true" means
+     * the fixed actor is mid-transit toward / away from this dock;
+     * "false" means we're elsewhere on the page. */
+    const setBrandOnMissing = (state: "false" | "true" | "parked") => {
+      docEl.setAttribute("data-brand-on-missing", state);
+      document.documentElement.setAttribute("data-brand-on-missing", state);
     };
 
     // Section-02 reveal targets — disable any baked-in IO motion so the
@@ -216,6 +240,36 @@ export function useSigilChoreography(
       return crailBrand.getBoundingClientRect();
     };
 
+    /** Live rect of the missing-layer brand image. Same pattern as
+     * readRailBrandRect — read each call so the morph from
+     * miss → backdrop hands off from the brand's current viewport
+     * position even as the page scrolls. */
+    const readMissBrandRect = (): DOMRect | null => {
+      if (!missBrand) return null;
+      return missBrand.getBoundingClientRect();
+    };
+
+    /** Park at the native missing-layer brand. Hands ownership of the
+     * visible mark to `.miss__brand-slot img` (CSS-driven via
+     * `[data-brand-on-missing="parked"]`). The fixed actor stays
+     * pinned at the brand's rect so it can re-emerge instantly for
+     * the backdrop morph, but is hidden via CSS opacity. The native
+     * brand scrolls naturally with the grid DOM, no jiggle. */
+    const pinAtMissLayerParked = () => {
+      const a = actor();
+      if (!a) return;
+      const rect = readMissBrandRect();
+      if (rect && rect.width > 0) {
+        a.pinToRect(rect, 1, 1); // CSS forces opacity:0 via data-attr
+      }
+      a.setHudOutline(false);
+      parkedAtMiss = true;
+      missArmed = false;
+      setBrandOnMissing("parked");
+      setBrandOnRail("false");
+      setTravelArmed(backdropArmed);
+    };
+
     /** Pin actor to the asking-gap backdrop anchor at large scale and
      * faint opacity. */
     const pinToBackdrop = () => {
@@ -226,8 +280,10 @@ export function useSigilChoreography(
       a.pinToRect(rect, 0.08, 1);
       a.setHudOutline(false);
       parkedAtBackdrop = true;
+      parkedAtMiss = false;
       parkedAtRail = false;
       backdropArmed = false;
+      setBrandOnMissing("false");
       setBrandOnRail("false");
       setTravelArmed(railEntryArmed);
     };
@@ -290,39 +346,57 @@ export function useSigilChoreography(
       setTravelArmed(practiceExitArmed);
     };
 
+    /** Pin actor to the orbit centre (approach__orbit__mark). */
+
     /** Hide actor entirely (post-practice exit). */
     const hideActor = () => {
       actor()?.hide();
+      parkedAtMiss = false;
       parkedAtBackdrop = false;
       parkedAtRail = false;
       parkedAtOrbit = false;
+      missArmed = false;
       backdropArmed = false;
       railEntryArmed = false;
       practiceEntryArmed = false;
       practiceExitArmed = false;
+      setBrandOnMissing("false");
       setBrandOnRail("false");
       approachEl?.setAttribute("data-orbit-docked", "false");
       setTravelArmed(false);
     };
 
     /** Show the native sigil source (used when reversing back into
-     * section 02 from the asking-gap). */
+     * section 02 from the missing-layer / asking-gap). */
     const showSigilSource = () => {
       gsap.set(sigilMark, { opacity: 1, "--frame-opacity": 1 });
       actor()?.hide();
+      parkedAtMiss = false;
       parkedAtBackdrop = false;
+      missArmed = false;
       backdropArmed = false;
+      setBrandOnMissing("false");
       setBrandOnRail("false");
     };
 
     // ── Reduced-motion fast path ────────────────────────────────────
-    // Pin instantly: backdrop → rail → orbit; hide on practice exit.
+    // Pin instantly: missing-layer → backdrop → rail → orbit; hide on
+    // practice exit.
     if (reduceMotion) {
       gsap.set(
         [sigilOrbits, sigilHalo, sigilMark, sigilCap, sigilLegend, triLeft].filter(Boolean),
         { opacity: 1, scale: 1, y: 0, clearProps: "transform" }
       );
       const rmCtx = gsap.context(() => {
+        if (missEl) {
+          ScrollTrigger.create({
+            trigger: missEl,
+            start: "top 60%",
+            end: "bottom 40%",
+            onEnter: () => pinAtMissLayerParked(),
+            onEnterBack: () => pinAtMissLayerParked(),
+          });
+        }
         if (askEl) {
           ScrollTrigger.create({
             trigger: askEl,
@@ -360,6 +434,7 @@ export function useSigilChoreography(
         rmCtx.revert();
         approachEl?.removeAttribute("data-orbit-docked");
         setBrandOnRail("false");
+        setBrandOnMissing("false");
         actor()?.hide();
       };
     }
@@ -369,6 +444,8 @@ export function useSigilChoreography(
     // Cached morph rects — kept fresh by `onResize` and re-captured
     // at trigger boundaries so live targets aren't re-read every frame
     // outside the hot path of the scrub.
+    let missMorphSrc: DOMRect | null = null;
+    let missMorphDst: DOMRect | null = null;
     let backdropMorphSrc: DOMRect | null = null;
     let backdropMorphDst: DOMRect | null = null;
     let railEntryMorphSrc: DOMRect | null = null;
@@ -376,8 +453,20 @@ export function useSigilChoreography(
     let practiceEntryMorphSrc: DOMRect | null = null;
     let practiceEntryMorphDst: DOMRect | null = null;
 
+    const captureMissRects = () => {
+      missMorphSrc = readSigilRect();
+      // Land at the native missing-layer brand position (the parked
+      // dock) so the morph completes exactly where the native brand
+      // takes over.
+      missMorphDst = readMissBrandRect();
+    };
+
     const captureBackdropRects = () => {
-      backdropMorphSrc = readSigilRect();
+      // Source = current viewport position of the native missing-layer
+      // brand. If the missing-layer section isn't in the page (no
+      // brand to read), fall back to the live sigil rect so the morph
+      // still has a sensible source on first paint.
+      backdropMorphSrc = readMissBrandRect() ?? readSigilRect();
       backdropMorphDst = readBackdropRect();
     };
 
@@ -398,11 +487,39 @@ export function useSigilChoreography(
       practiceEntryMorphDst = mark?.getBoundingClientRect() ?? null;
     };
 
-    const applyBackdropMorph = (p: number) => {
+    const applyMissMorph = (p: number) => {
       const a = actor();
-      if (!a || !backdropMorphSrc || !backdropMorphDst) return;
+      if (!a || !missMorphSrc || !missMorphDst) return;
       if (p <= 0) {
         showSigilSource();
+        return;
+      }
+      if (p >= 0.995) {
+        pinAtMissLayerParked();
+        return;
+      }
+      missArmed = true;
+      parkedAtMiss = false;
+      // Hide the native sigil mark while the actor flies over it.
+      gsap.set(sigilMark, { opacity: 0, "--frame-opacity": 0 });
+      a.morphRects(missMorphSrc, missMorphDst, p, handoffEase);
+      gsap.set(".tf-brandmark-actor", { opacity: 1 });
+      setBrandOnMissing("true");
+      setTravelArmed(true);
+    };
+
+    const applyBackdropMorph = (p: number) => {
+      const a = actor();
+      if (!a) return;
+      // Read live each frame because the missing-layer source rect
+      // changes as the user scrolls past it.
+      backdropMorphSrc = readMissBrandRect() ?? readSigilRect();
+      backdropMorphDst = readBackdropRect();
+      if (!backdropMorphSrc || !backdropMorphDst) return;
+      if (p <= 0) {
+        // Reverse direction: hand back to the missing-layer parked dock.
+        if (missEl) pinAtMissLayerParked();
+        else showSigilSource();
         return;
       }
       if (p >= 0.995) {
@@ -411,7 +528,9 @@ export function useSigilChoreography(
       }
       backdropArmed = true;
       parkedAtBackdrop = false;
-      // Hide the native sigil mark while the actor flies over it.
+      parkedAtMiss = false;
+      // Sigil source already hidden by missMorph; ensure it stays so
+      // when the user reverses without going all the way back.
       gsap.set(sigilMark, { opacity: 0, "--frame-opacity": 0 });
       a.morphRects(backdropMorphSrc, backdropMorphDst, p, handoffEase);
       // morphShell sets opacity:1; tween it down toward backdrop's
@@ -419,6 +538,10 @@ export function useSigilChoreography(
       // backdrop rather than a sudden snap.
       const targetOpacity = 1 - (1 - 0.08) * p;
       gsap.set(".tf-brandmark-actor", { opacity: targetOpacity });
+      // Diamond / native rail brand are hidden during transit; native
+      // missing-layer brand also hidden so the fixed actor owns the
+      // visible mark for the duration of the morph.
+      setBrandOnMissing("true");
       setTravelArmed(true);
     };
 
@@ -501,11 +624,26 @@ export function useSigilChoreography(
     const repinActorToOrbitIfDocked = () => {
       if (!approachEl) return;
       if (approachEl.getAttribute("data-orbit-docked") !== "true") return;
-      if (backdropArmed || railEntryArmed || practiceEntryArmed || practiceExitArmed) return;
+      if (missArmed || backdropArmed || railEntryArmed || practiceEntryArmed || practiceExitArmed)
+        return;
       const mark = orbitMarkEl();
       if (!mark) return;
       const rect = mark.getBoundingClientRect();
       if (rect.width <= 0 || rect.height <= 0) return;
+      actor()?.pinToRect(rect, 1, 1);
+      actor()?.setHudOutline(false);
+    };
+
+    const repinActorAtMissIfParked = () => {
+      // Native miss brand owns the visible mark; the fixed actor is
+      // hidden via CSS opacity. Re-pin the (invisible) actor to the
+      // brand's current rect each scroll tick so it can re-emerge
+      // exactly where the brand is when the backdrop morph arms.
+      if (!parkedAtMiss) return;
+      if (missArmed || backdropArmed || railEntryArmed || practiceEntryArmed || practiceExitArmed)
+        return;
+      const rect = readMissBrandRect();
+      if (!rect || rect.width <= 0) return;
       actor()?.pinToRect(rect, 1, 1);
       actor()?.setHudOutline(false);
     };
@@ -528,10 +666,12 @@ export function useSigilChoreography(
      * hook's invariant 1. */
     const repinActorToSigilIfParked = () => {
       if (
+        missArmed ||
         backdropArmed ||
         railEntryArmed ||
         practiceEntryArmed ||
         practiceExitArmed ||
+        parkedAtMiss ||
         parkedAtBackdrop ||
         parkedAtRail ||
         parkedAtOrbit
@@ -540,10 +680,15 @@ export function useSigilChoreography(
       const vh = window.innerHeight;
       const entrancePastEnd = defEl.getBoundingClientRect().top <= vh * 0.35;
       if (!entrancePastEnd) return;
-      const askTopReached = askEl
-        ? askEl.getBoundingClientRect().top <= vh * 0.6
-        : contEl.getBoundingClientRect().top <= vh * 0.5;
-      if (askTopReached) return;
+      // Once the missing-layer (or asking-gap as fallback) crosses
+      // the upper third of the viewport, downstream owns the actor;
+      // stop pinning to sigil.
+      const downstreamReached = missEl
+        ? missEl.getBoundingClientRect().top <= vh * 0.6
+        : askEl
+          ? askEl.getBoundingClientRect().top <= vh * 0.6
+          : contEl.getBoundingClientRect().top <= vh * 0.5;
+      if (downstreamReached) return;
       const o = Number(gsap.getProperty(sigilMark, "opacity")) || 0;
       if (o < 0.95) return;
       actor()?.hide();
@@ -551,13 +696,16 @@ export function useSigilChoreography(
     };
 
     const onResize = () => {
+      if (missArmed) captureMissRects();
       if (backdropArmed) captureBackdropRects();
       if (railEntryArmed) captureRailEntryRects();
       if (practiceEntryArmed) capturePracticeEntryRects();
+      if (parkedAtMiss) pinAtMissLayerParked();
       if (parkedAtBackdrop) pinToBackdrop();
       if (parkedAtRail) pinAtRailParked();
       if (parkedAtOrbit) pinToOrbit();
       repinActorToOrbitIfDocked();
+      repinActorAtMissIfParked();
       repinActorToSigilIfParked();
     };
     window.addEventListener("resize", onResize);
@@ -587,10 +735,13 @@ export function useSigilChoreography(
     if (defEl) ro.observe(defEl);
     if (contEl) ro.observe(contEl);
     if (askEl) ro.observe(askEl);
+    if (missEl) ro.observe(missEl);
 
     // Continuous reconciliation. Re-pin the actor to the orbit while
     // parked there (sticky parent moves), and keep the sigil-park rule
-    // honoured.
+    // honoured. Also keep the (invisible) actor pinned to the
+    // missing-layer brand's current position while parked, so the
+    // backdrop morph hands off cleanly from the right rect.
     let dockedRaf = 0;
     const onScroll = () => {
       if (dockedRaf) return;
@@ -598,6 +749,7 @@ export function useSigilChoreography(
         dockedRaf = 0;
         repinActorToOrbitIfDocked();
         repinActorAtRailIfScrubbing();
+        repinActorAtMissIfParked();
         repinActorToSigilIfParked();
       });
     };
@@ -667,7 +819,59 @@ export function useSigilChoreography(
           0.25
         );
 
-      // ── Trigger 2: Backdrop — sigil → asking-gap backdrop ──────
+      // ── Trigger 2: Missing-layer — sigil → native miss brand ───
+      // Morphs the fixed actor from the live sigil rect to the
+      // missing-layer brand image's position. At p=1, hands ownership
+      // to the native `.miss__brand-slot img` via `pinAtMissLayerParked()`
+      // (CSS sets `[data-brand-on-missing="parked"]`, fading the native
+      // brand in and the fixed actor out). The native brand owns the
+      // visible mark while the user reads the 4 cards.
+      if (missEl) {
+        gsap.timeline({
+          scrollTrigger: {
+            trigger: missEl,
+            start: "top 50%",
+            end: "top 0%",
+            scrub: 0.4,
+            onEnter: () => {
+              captureMissRects();
+              missArmed = true;
+              setTravelArmed(true);
+            },
+            onEnterBack: () => {
+              captureMissRects();
+              missArmed = true;
+              setTravelArmed(true);
+            },
+            onLeave: () => pinAtMissLayerParked(),
+            onLeaveBack: () => {
+              missArmed = false;
+              showSigilSource();
+            },
+            onRefresh: (self) => {
+              if (window.scrollY < 4) return;
+              if (self.progress >= 0.995) {
+                captureMissRects();
+                missArmed = true;
+                pinAtMissLayerParked();
+              } else if (self.progress > 0) {
+                captureMissRects();
+                missArmed = true;
+                applyMissMorph(self.progress);
+              } else {
+                if (parkedAtMiss || parkedAtBackdrop || parkedAtOrbit) return;
+                showSigilSource();
+              }
+            },
+            onUpdate: (self) => applyMissMorph(self.progress),
+          },
+        });
+      }
+
+      // ── Trigger 3: Backdrop — missing-layer → asking-gap backdrop ──
+      // Source rect changes from the sigil to the native missing-layer
+      // brand (since the brandmark now travels through the miss dock
+      // first). At p=1, hands to the asking-gap backdrop anchor.
       if (askEl) {
         gsap.timeline({
           scrollTrigger: {
@@ -688,7 +892,8 @@ export function useSigilChoreography(
             onLeave: () => pinToBackdrop(),
             onLeaveBack: () => {
               backdropArmed = false;
-              showSigilSource();
+              if (missEl) pinAtMissLayerParked();
+              else showSigilSource();
             },
             onRefresh: (self) => {
               // Never pin from refresh at scrollY === 0 (Rule 4).
@@ -702,8 +907,9 @@ export function useSigilChoreography(
                 backdropArmed = true;
                 applyBackdropMorph(self.progress);
               } else {
-                if (parkedAtBackdrop || parkedAtOrbit) return;
-                showSigilSource();
+                if (parkedAtMiss || parkedAtBackdrop || parkedAtOrbit) return;
+                if (missEl) pinAtMissLayerParked();
+                else showSigilSource();
               }
             },
             onUpdate: (self) => applyBackdropMorph(self.progress),
@@ -901,6 +1107,8 @@ export function useSigilChoreography(
       approachEl?.removeAttribute("data-orbit-docked");
       docEl.removeAttribute("data-brand-on-rail");
       document.documentElement.removeAttribute("data-brand-on-rail");
+      docEl.removeAttribute("data-brand-on-missing");
+      document.documentElement.removeAttribute("data-brand-on-missing");
       ctx.revert();
       actor()?.hide();
     };
