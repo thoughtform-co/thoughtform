@@ -2500,19 +2500,17 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   text-align: left;
 }
 
-/* Header: eyebrow row above; then a two-column row (title left, lede
-   right) so the title and lede top-align on the same Y, no eyebrow
-   between them to throw off vertical balance. */
+/* Header: eyebrow → title → one-line bridge. Previously a two-column
+   title+lede grid; the lede repeated the title's claim and added a
+   second paragraph the reader had to track before the cards. The
+   four card titles do that job better, so the lede was replaced by
+   a single instrument-typography bridge line that primes the grid as
+   variants of one diagnosis ("Same pattern, four ways."). */
 .miss__head {
   display: flex;
   flex-direction: column;
-  gap: clamp(14px, 2vh, 22px);
-}
-.miss__head-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
-  column-gap: clamp(40px, 5vw, 96px);
-  align-items: start;
+  gap: clamp(12px, 1.6vh, 18px);
+  max-width: 56ch;
 }
 .miss__eyebrow {
   display: inline-flex;
@@ -2540,25 +2538,20 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   color: var(--dawn);
   margin: 0;
   text-wrap: balance;
-  max-width: 20ch;
+  max-width: 22ch;
 }
 .miss__title em {
   font-style: italic;
   color: var(--gold);
   font-weight: 400;
 }
-.miss__lede {
-  font-family: var(--font-pp-neue-montreal);
-  font-size: clamp(14px, 1.05vw, 17px);
-  line-height: 1.55;
-  color: var(--dawn-70);
+.miss__bridge {
+  font-family: var(--font-pt-mono);
+  font-size: clamp(11px, 0.9vw, 13px);
+  letter-spacing: var(--track-wide, 0.08em);
+  text-transform: uppercase;
+  color: var(--dawn-50);
   margin: 0;
-  max-width: 42ch;
-  letter-spacing: -0.005em;
-}
-.miss__lede strong {
-  color: var(--dawn);
-  font-weight: 500;
 }
 
 /* 3x2 grid: 4 corner cards + centre column for the brandmark. Cards
@@ -2574,10 +2567,17 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   row-gap: clamp(8px, 1vh, 16px);
 }
 
-/* Connector rays — 4 diagonals from the centre to the inner corner
-   of each card. preserveAspectRatio="none" + viewBox 0 0 100 100
-   stretches the lines with the grid. The strokes match the Thoughtform
-   instrument hairline grammar (gold @ low opacity, dashed). */
+/* Connector rays — 4 diagonals from centre to each card's inner
+   corner. preserveAspectRatio="none" + viewBox 0 0 100 100 stretches
+   with the grid; vector-effect: non-scaling-stroke keeps the
+   hairline weight constant. Each ray is its own <line> with
+   pathLength="1" so stroke-dashoffset arithmetic is normalised and
+   independent of pixel length.
+
+   Initial reveal uses a one-shot keyframe (`miss-ray-draw`) rather
+   than a transition so we don't pollute the ray's hover/focus
+   transitions with the stagger delays — the per-card hover state
+   needs to brighten the ray instantly, not at +120/240/360/480ms. */
 .miss__rays {
   position: absolute;
   inset: 0;
@@ -2590,19 +2590,89 @@ html[data-quote-active="true"] .tf-brandmark-actor {
 .miss__ray {
   stroke: var(--gold);
   stroke-opacity: 0.3;
-  stroke-width: 0.4;
-  stroke-dasharray: 1.5 2.5;
+  stroke-width: 0.5;
+  /* pathLength=1 → 0.014 dash and 0.024 gap repeats roughly match the
+     1.5/2.5 px hairline pattern of the original ray after the grid
+     stretches it across the page. */
+  stroke-dasharray: 0.014 0.024;
+  stroke-dashoffset: 0;
   vector-effect: non-scaling-stroke;
   fill: none;
+  transition:
+    stroke-opacity 220ms ease-out,
+    stroke-width 220ms ease-out;
+}
+
+/* Hidden initial state — applies only before the IntersectionObserver
+   adds `.is-in` to the wrapper. */
+.miss__inner:not(.is-in) .miss__ray {
+  stroke-opacity: 0;
+  stroke-dashoffset: 1;
+}
+
+@keyframes miss-ray-draw {
+  from {
+    stroke-dashoffset: 1;
+    stroke-opacity: 0;
+  }
+  to {
+    stroke-dashoffset: 0;
+    stroke-opacity: 0.3;
+  }
+}
+
+.miss__inner.is-in .miss__ray--01 {
+  animation: miss-ray-draw 880ms cubic-bezier(0.16, 1, 0.3, 1) 120ms both;
+}
+.miss__inner.is-in .miss__ray--02 {
+  animation: miss-ray-draw 880ms cubic-bezier(0.16, 1, 0.3, 1) 240ms both;
+}
+.miss__inner.is-in .miss__ray--03 {
+  animation: miss-ray-draw 880ms cubic-bezier(0.16, 1, 0.3, 1) 360ms both;
+}
+.miss__inner.is-in .miss__ray--04 {
+  animation: miss-ray-draw 880ms cubic-bezier(0.16, 1, 0.3, 1) 480ms both;
+}
+
+/* Brighten the ray belonging to a hovered/focused card so the
+   constellation responds to attention. Targets the corresponding ray
+   via :has() — `:has` is now broadly supported (Chrome 105+, Safari
+   15.4+, Firefox 121+); pre-:has browsers see the static 0.3 opacity
+   ray which is still legible. The transitions here ride on
+   stroke-opacity/stroke-width on the base `.miss__ray` rule (delay 0)
+   so brightening is instant. */
+.miss__grid:has(.miss__card--01:hover) .miss__ray--01,
+.miss__grid:has(.miss__card--01:focus-within) .miss__ray--01,
+.miss__grid:has(.miss__card--02:hover) .miss__ray--02,
+.miss__grid:has(.miss__card--02:focus-within) .miss__ray--02,
+.miss__grid:has(.miss__card--03:hover) .miss__ray--03,
+.miss__grid:has(.miss__card--03:focus-within) .miss__ray--03,
+.miss__grid:has(.miss__card--04:hover) .miss__ray--04,
+.miss__grid:has(.miss__card--04:focus-within) .miss__ray--04 {
+  stroke-opacity: 0.85;
+  stroke-width: 0.7;
+}
+
+@keyframes miss-card-acquire {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+    filter: blur(2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
 }
 
 .miss__card {
   position: relative;
   z-index: 1;
   /* Transparent — the void shield is on the .miss section wrapper, so
-     the gateway radial cannot bleed through. Transparent cards let the
-     SVG constellation rays beneath weave visually under the card body
-     for the instrument-diagram look. */
+     the gateway radial cannot bleed through. Transparent cards let
+     the SVG rays beneath weave visually under the card body for the
+     instrument-diagram look. */
   background: transparent;
   padding: clamp(20px, 2.4vh, 28px) clamp(20px, 2vw, 28px);
   display: flex;
@@ -2610,6 +2680,17 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   gap: 10px;
   min-width: 0;
   border: 1px solid var(--dawn-08);
+  /* Hover/focus transitions live here at delay 0 so they stay snappy.
+     The initial reveal motion is handled by `miss-card-acquire`
+     keyframes (below) so the per-card stagger delays don't leak into
+     hover transitions. */
+  transition: border-color 220ms ease;
+  outline: none;
+}
+.miss__inner:not(.is-in) .miss__card {
+  opacity: 0;
+  transform: translateY(8px);
+  filter: blur(2px);
 }
 .miss__card--01 {
   grid-column: 1;
@@ -2626,6 +2707,27 @@ html[data-quote-active="true"] .tf-brandmark-actor {
 .miss__card--04 {
   grid-column: 3;
   grid-row: 2;
+}
+
+.miss__inner.is-in .miss__card--01 {
+  animation: miss-card-acquire 720ms cubic-bezier(0.16, 1, 0.3, 1) 80ms both;
+}
+.miss__inner.is-in .miss__card--02 {
+  animation: miss-card-acquire 720ms cubic-bezier(0.16, 1, 0.3, 1) 200ms both;
+}
+.miss__inner.is-in .miss__card--03 {
+  animation: miss-card-acquire 720ms cubic-bezier(0.16, 1, 0.3, 1) 320ms both;
+}
+.miss__inner.is-in .miss__card--04 {
+  animation: miss-card-acquire 720ms cubic-bezier(0.16, 1, 0.3, 1) 440ms both;
+}
+
+/* Hovered/focused card warms its border to gold-tinted dawn so the
+   active diagnostic in the constellation is visible at a glance. */
+.miss__card:hover,
+.miss__card:focus-within {
+  border-color: rgba(202, 165, 84, 0.35);
+  cursor: default;
 }
 
 .miss__card-head {
@@ -2659,23 +2761,53 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   font-family: var(--font-pp-neue-montreal);
   font-size: clamp(16px, 1.4vw, 20px);
   font-weight: 500;
-  line-height: 1.25;
+  line-height: 1.3;
   letter-spacing: -0.012em;
   color: var(--dawn);
   margin: 4px 0 0;
+  text-wrap: balance;
+}
+
+/* Card body is hidden by default — the title + numbered tag carry the
+   diagnosis. On hover/focus the body expands so the visitor who wants
+   detail gets it without dumping all 4 paragraphs at first paint.
+   Animation uses grid-template-rows 0fr → 1fr (per frontend-design
+   skill: never animate height directly; grid rows transition cleanly
+   on chromium/firefox/webkit current). */
+.miss__card-detail {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition:
+    grid-template-rows 320ms cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 220ms ease-out;
+  opacity: 0;
+}
+.miss__card-detail > .miss__card-body {
+  min-height: 0;
+  overflow: hidden;
+}
+.miss__card:hover .miss__card-detail,
+.miss__card:focus-within .miss__card-detail {
+  grid-template-rows: 1fr;
+  opacity: 1;
 }
 .miss__card-body {
   font-family: var(--font-pp-neue-montreal);
   font-size: clamp(13px, 0.95vw, 14px);
   line-height: 1.55;
   color: var(--dawn-70);
-  margin: 0;
+  margin: 8px 0 0;
   max-width: 50ch;
 }
 
 /* Brandmark dock — centre cell. Transparent background; the void
    shows through and the SVG rays converge here. The gold drop-shadow
-   on the brand image creates a soft glow at the convergence point. */
+   creates a soft glow at the convergence point.
+
+   Motion: fades in at t=0 (before the cards) so the centre of the
+   constellation is established first. The drop-shadow intensity also
+   ramps up so the brandmark feels like it's "lighting up" rather
+   than appearing. */
 .miss__brand-slot {
   grid-column: 2;
   grid-row: 1 / span 2;
@@ -2691,20 +2823,59 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   height: 100%;
   display: block;
   object-fit: contain;
+  filter: drop-shadow(0 0 28px rgba(202, 165, 84, 0.5));
+}
+.miss__inner:not(.is-in) .miss__brand-slot img {
   opacity: 0;
-  transition: opacity 240ms var(--m-ease-instr, cubic-bezier(0.16, 1, 0.3, 1));
-  filter: drop-shadow(0 0 24px rgba(202, 165, 84, 0.5));
+  filter: drop-shadow(0 0 8px rgba(202, 165, 84, 0.15));
+  transform: scale(0.92);
+}
+
+@keyframes miss-brand-acquire {
+  from {
+    opacity: 0;
+    filter: drop-shadow(0 0 8px rgba(202, 165, 84, 0.15));
+    transform: scale(0.92);
+  }
+  to {
+    opacity: 1;
+    filter: drop-shadow(0 0 28px rgba(202, 165, 84, 0.5));
+    transform: scale(1);
+  }
+}
+.miss__inner.is-in .miss__brand-slot img {
+  animation: miss-brand-acquire 640ms cubic-bezier(0.16, 1, 0.3, 1) 0ms both;
 }
 
 /* Diagnostic closer — moved here from asking-gap. The 4 cards
-   diagnose the symptom, this names the cure. Centred under the grid
-   so it reads as the resolution of the diagnostic. */
+   diagnose the symptom, this names the cure. Centred under the
+   grid so it reads as the resolution of the diagnostic. Fades in
+   after the last card lands (delay ≈ card-04 stagger + most of its
+   720ms acquire). */
 .miss__closer {
   text-align: center;
   display: flex;
   flex-direction: column;
   gap: 6px;
   align-items: center;
+}
+.miss__inner:not(.is-in) .miss__closer {
+  opacity: 0;
+  transform: translateY(8px);
+}
+
+@keyframes miss-closer-settle {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.miss__inner.is-in .miss__closer {
+  animation: miss-closer-settle 540ms cubic-bezier(0.16, 1, 0.3, 1) 880ms both;
 }
 .miss__punchline {
   font-family: var(--font-pp-neue-montreal);
@@ -2728,34 +2899,75 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   margin: 0;
 }
 
-/* Reveal — apply motion to inner content only (Rule 2 of compositing). */
+/* Reveal — wrapper itself only fades opacity 0→1 (so its void shield
+   is opaque on first paint, Rule 1 of compositing); cards, rays,
+   brandmark, and closer carry their own staggered transitions tied
+   to the same .is-in. transform/filter are kept off the wrapper to
+   avoid the 100vw lateral-strip exposure (Rule 3). */
 .miss__inner[data-m="instrument"] {
   opacity: 0;
-  transform: translateY(12px);
-  filter: blur(2px);
-  transition-property: opacity, transform, filter;
-  transition-duration: var(--m-dur-slow, 880ms);
-  transition-timing-function: var(--m-ease-long, cubic-bezier(0.16, 1, 0.3, 1));
+  transition: opacity 240ms ease-out;
 }
 .miss__inner[data-m="instrument"].is-in {
   opacity: 1;
-  transform: translateY(0);
-  filter: none;
+}
+
+/* Reduced-motion path: skip every reveal motion (stagger, ray
+   draw-in, brandmark scale, closer settle). Animations are disabled
+   and the initial-hidden states (opacity 0, transform, blur, ray
+   dashoffset) are overridden to their final visible values, so
+   visitors who opted out of motion see the full constellation
+   immediately on first paint. Hover transitions on the ray and
+   card border are short and stay enabled. */
+@media (prefers-reduced-motion: reduce) {
+  .miss__inner[data-m="instrument"],
+  .miss__inner[data-m="instrument"].is-in {
+    opacity: 1;
+    transition: none;
+  }
+  .miss__inner .miss__card--01,
+  .miss__inner .miss__card--02,
+  .miss__inner .miss__card--03,
+  .miss__inner .miss__card--04,
+  .miss__inner .miss__ray--01,
+  .miss__inner .miss__ray--02,
+  .miss__inner .miss__ray--03,
+  .miss__inner .miss__ray--04,
+  .miss__inner .miss__brand-slot img,
+  .miss__inner .miss__closer {
+    animation: none;
+  }
+  .miss__inner:not(.is-in) .miss__card {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+  .miss__inner:not(.is-in) .miss__ray {
+    stroke-opacity: 0.3;
+    stroke-dashoffset: 0;
+  }
+  .miss__inner:not(.is-in) .miss__brand-slot img {
+    opacity: 1;
+    transform: none;
+    filter: drop-shadow(0 0 28px rgba(202, 165, 84, 0.5));
+  }
+  .miss__inner:not(.is-in) .miss__closer {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 /* Mobile: stack the cards in a single column, brandmark sits between
    row 2 and row 3 as a horizontal divider. SVG rays hide on mobile —
-   diagonals from a single column don't read as a constellation. */
+   diagonals from a single column don't read as a constellation. Card
+   bodies are visible by default on touch devices (no hover state),
+   so the hover-expand pattern is overridden inside this breakpoint. */
 @media (max-width: 960px) {
   .miss {
     height: auto;
     min-height: 100vh;
     padding-top: 100px;
     padding-bottom: 64px;
-  }
-  .miss__head-row {
-    grid-template-columns: 1fr;
-    row-gap: 16px;
   }
   .miss__rays {
     display: none;
@@ -2787,7 +2999,18 @@ html[data-quote-active="true"] .tf-brandmark-actor {
     grid-column: 1;
     grid-row: 5;
   }
+  /* On touch the user can't hover, so the bodies are shown by default
+     (still inside their grid-rows wrapper so the structure is the
+     same; just expanded at first paint). */
+  .miss__card-detail {
+    grid-template-rows: 1fr;
+    opacity: 1;
+  }
 }
+
+/* Tablet → small-desktop: keep the two-column grid but defer the body
+   reveal to hover (same as desktop). Touch tablets fall into the
+   compact range above (≤960px) where bodies show by default. */
 
 /* ═══════════ 04 ASKING-GAP — Benedict Evans interstitial ═══════════
    Single full-viewport beat between #missing-layer and #continuum.

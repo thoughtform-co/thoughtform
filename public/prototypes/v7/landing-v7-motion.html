@@ -4439,40 +4439,44 @@ html { scroll-behavior: smooth; }
           <span class="miss__eyebrow-rule" aria-hidden="true"></span>
           Diagnostic
         </p>
-        <div class="miss__head-row">
-          <h2 class="miss__title">
-            The missing layer is rarely <em>the model.</em>
-          </h2>
-          <p class="miss__lede">
-            Most companies already have AI tools, data, and founders who want
-            to move fast. What they lack is the
-            <strong>layer between what their teams know and what AI does.</strong>
-          </p>
-        </div>
+        <h2 class="miss__title">
+          The missing layer is rarely <em>the model.</em>
+        </h2>
+        <p class="miss__bridge">Same pattern, four ways.</p>
       </header>
 
       <!-- Diagnostic instrument: 4 cards as constellation points around
            the brandmark centre. Cards are hairline-bordered with corner
            registration marks (Thoughtform instrument grammar); SVG
-           connector lines fan out from the centre brandmark to each
-           card's inner corner so the four diagnoses read as one
-           constellation around the missing layer at the centre. No
-           lane colours — gold + dawn only, brand-aligned. -->
+           connector lines draw from the centre brandmark out to each
+           card so the four diagnoses read as one constellation around
+           the missing layer at the centre. No lane colours — gold +
+           dawn only, brand-aligned.
+
+           Motion model: the constellation builds itself rather than
+           landing flat. On intersection-enter, the brandmark fades in
+           first, then each card + its ray reveal with a 160ms stagger
+           via `--card-i`. Each ray draws from centre outward using
+           pathLength=1 + animated stroke-dashoffset so we can match the
+           card's reveal delay exactly. Card bodies are hidden by
+           default (titles + tags carry the diagnosis); hovering or
+           focusing a card expands the body and brightens its ray. -->
       <div class="miss__grid" role="list" aria-label="Four use cases sharing one missing layer">
 
-        <!-- Connector lines — SVG that spans the entire grid, drawing
-             4 diagonals from the centre brandmark out to each card's
-             inner corner. preserveAspectRatio="none" lets the viewBox
-             stretch with the grid; gold strokes at low opacity match
-             the rest of the page's instrument hairlines. -->
+        <!-- Connector rays — one path per quadrant so each can be
+             staggered independently. pathLength="1" normalises dash
+             math so the same dashoffset works regardless of pixel
+             length. preserveAspectRatio="none" stretches with the
+             grid; vector-effect="non-scaling-stroke" keeps the
+             hairline at 1px regardless of stretch. -->
         <svg class="miss__rays" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-          <line x1="50" y1="50" x2="0"   y2="0"   class="miss__ray" />
-          <line x1="50" y1="50" x2="100" y2="0"   class="miss__ray" />
-          <line x1="50" y1="50" x2="0"   y2="100" class="miss__ray" />
-          <line x1="50" y1="50" x2="100" y2="100" class="miss__ray" />
+          <line x1="50" y1="50" x2="0"   y2="0"   pathLength="1" class="miss__ray miss__ray--01" />
+          <line x1="50" y1="50" x2="100" y2="0"   pathLength="1" class="miss__ray miss__ray--02" />
+          <line x1="50" y1="50" x2="0"   y2="100" pathLength="1" class="miss__ray miss__ray--03" />
+          <line x1="50" y1="50" x2="100" y2="100" pathLength="1" class="miss__ray miss__ray--04" />
         </svg>
 
-        <article class="miss__card miss__card--01" role="listitem">
+        <article class="miss__card miss__card--01" role="listitem" tabindex="0">
           <span class="reg reg--tl reg--gold" aria-hidden="true"></span>
           <span class="reg reg--tr" aria-hidden="true"></span>
           <span class="reg reg--bl" aria-hidden="true"></span>
@@ -4483,10 +4487,12 @@ html { scroll-behavior: smooth; }
             <span class="miss__card-tag">Brand voice at scale</span>
           </header>
           <h3 class="miss__card-title">Brand voice slips faster than reviewers catch it.</h3>
-          <p class="miss__card-body">AI doubled the output. The voice rules still live in three senior heads, and drift only surfaces at retro meetings.</p>
+          <div class="miss__card-detail" aria-hidden="false">
+            <p class="miss__card-body">AI doubled the output. The voice rules still live in three senior heads, and drift only surfaces at retro meetings.</p>
+          </div>
         </article>
 
-        <article class="miss__card miss__card--02" role="listitem">
+        <article class="miss__card miss__card--02" role="listitem" tabindex="0">
           <span class="reg reg--tl reg--gold" aria-hidden="true"></span>
           <span class="reg reg--tr" aria-hidden="true"></span>
           <span class="reg reg--bl" aria-hidden="true"></span>
@@ -4496,8 +4502,10 @@ html { scroll-behavior: smooth; }
             <span class="miss__card-rule" aria-hidden="true"></span>
             <span class="miss__card-tag">Localization at scale</span>
           </header>
-          <h3 class="miss__card-title">AI translates at scale, but cultural nuances never reach the system.</h3>
-          <p class="miss__card-body">AI handles the translation. The nuance stays in reviewer comments, claim checks, and local market calls, so the next launch starts from zero again.</p>
+          <h3 class="miss__card-title">Cultural nuance never reaches the system.</h3>
+          <div class="miss__card-detail" aria-hidden="false">
+            <p class="miss__card-body">AI handles the translation. The nuance stays in reviewer comments, claim checks, and local market calls, so the next launch starts from zero again.</p>
+          </div>
         </article>
 
         <!-- Centre brandmark dock — native source-owned. The fixed
@@ -4511,7 +4519,7 @@ html { scroll-behavior: smooth; }
           <img src="assets/logos/Thoughtform_Brandmark.svg" alt="" />
         </div>
 
-        <article class="miss__card miss__card--03" role="listitem">
+        <article class="miss__card miss__card--03" role="listitem" tabindex="0">
           <span class="reg reg--tl reg--gold" aria-hidden="true"></span>
           <span class="reg reg--tr" aria-hidden="true"></span>
           <span class="reg reg--bl" aria-hidden="true"></span>
@@ -4521,11 +4529,13 @@ html { scroll-behavior: smooth; }
             <span class="miss__card-rule" aria-hidden="true"></span>
             <span class="miss__card-tag">Brief handoff</span>
           </header>
-          <h3 class="miss__card-title">The studio team making the ads has no clear briefing to fall back on.</h3>
-          <p class="miss__card-body">Product marketing has an ultra-clear view on how a new product should sell, but by the time the brief reaches the studio team downstream, the angle that mattered is gone.</p>
+          <h3 class="miss__card-title">The studio has no clear briefing to fall back on.</h3>
+          <div class="miss__card-detail" aria-hidden="false">
+            <p class="miss__card-body">Product marketing has an ultra-clear view on how a new product should sell, but by the time the brief reaches the studio team downstream, the angle that mattered is gone.</p>
+          </div>
         </article>
 
-        <article class="miss__card miss__card--04" role="listitem">
+        <article class="miss__card miss__card--04" role="listitem" tabindex="0">
           <span class="reg reg--tl reg--gold" aria-hidden="true"></span>
           <span class="reg reg--tr" aria-hidden="true"></span>
           <span class="reg reg--bl" aria-hidden="true"></span>
@@ -4535,8 +4545,10 @@ html { scroll-behavior: smooth; }
             <span class="miss__card-rule" aria-hidden="true"></span>
             <span class="miss__card-tag">Briefing synthesis</span>
           </header>
-          <h3 class="miss__card-title">All the data for a great briefing is there, but AI doesn&rsquo;t know how to interpret it.</h3>
-          <p class="miss__card-body">Customer reviews, social listening, competitor ads, paid performance, brand framework. All present, all in different tools, with no layer that turns them into a creative angle.</p>
+          <h3 class="miss__card-title">The data is there. AI doesn&rsquo;t know how to read it.</h3>
+          <div class="miss__card-detail" aria-hidden="false">
+            <p class="miss__card-body">Customer reviews, social listening, competitor ads, paid performance, brand framework. All present, all in different tools, with no layer that turns them into a creative angle.</p>
+          </div>
         </article>
       </div>
 
