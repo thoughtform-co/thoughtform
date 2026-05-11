@@ -4389,8 +4389,15 @@ html { scroll-behavior: smooth; }
             <span class="p" style="--a: 340deg;--r: 112px;"></span>
           </div>
 
-          <!-- the brandmark -->
-          <div class="sigil__mark">
+          <!-- the brandmark — anchor slot for the v7 brandmark
+               choreography. The `<img>` here is a layout placeholder
+               only: at runtime the v7 parser strips it and the
+               BrandmarkSystem React component renders the canonical
+               BrandmarkGlyph SVG into this slot via createPortal, so
+               every dock site on the page paints from the same code
+               source. See `data-brand-anchor` lookup in
+               `components/landing/v7/BrandmarkSystem.tsx`. -->
+          <div class="sigil__mark" data-brand-anchor="sigil">
             <img src="assets/logos/Thoughtform_Brandmark.svg" alt=""/>
           </div>
 
@@ -4514,8 +4521,14 @@ html { scroll-behavior: smooth; }
              use the fixed actor; this slot owns the visible mark in
              between, so the page can scroll naturally without jiggle.
              No background — the constellation rays converge on the
-             brandmark and the void around it reads through. -->
-        <div class="miss__brand-slot" aria-hidden="true">
+             brandmark and the void around it reads through.
+
+             Anchor slot for the v7 brandmark choreography (see the
+             `data-brand-anchor` lookup in BrandmarkSystem). At runtime
+             the `<img>` here is stripped and replaced by a portal'd
+             BrandmarkGlyph so this dock paints the same code-rendered
+             SVG as every other dock on the page. -->
+        <div class="miss__brand-slot" data-brand-anchor="missing" aria-hidden="true">
           <img src="assets/logos/Thoughtform_Brandmark.svg" alt="" />
         </div>
 
@@ -4655,8 +4668,11 @@ html { scroll-behavior: smooth; }
                parked on the rail. Sits at the AI lives here (middle)
                stop, scrolls naturally with the rail (no fixed-position
                jiggle). The fixed BrandmarkActor only takes over for
-               the morphs in (backdrop → rail) and out (rail → orbit). -->
-          <div class="crail__brand" id="crailBrand" aria-hidden="true">
+               the morphs in (backdrop → rail) and out (rail → orbit).
+               Anchor slot for v7 brandmark choreography — the `<img>`
+               is stripped at runtime and replaced by a portal'd
+               BrandmarkGlyph. -->
+          <div class="crail__brand" id="crailBrand" data-brand-anchor="rail" aria-hidden="true">
             <img src="assets/logos/Thoughtform_Brandmark.svg" alt=""/>
           </div>
 
@@ -4878,8 +4894,13 @@ html { scroll-behavior: smooth; }
 
             <!-- Brandmark center (filled — distinct instance from the
                  bottom-left HUD slot which renders as outline during this
-                 section). -->
-            <div class="approach__orbit__mark" aria-hidden="true">
+                 section). Anchor slot for v7 brandmark choreography:
+                 the fixed BrandmarkActor pins to this rect during the
+                 practice orbit state, and the `<img>` here is stripped
+                 at runtime and replaced by a portal'd BrandmarkGlyph
+                 (revealed under the quote cover via the
+                 `[data-quote-active="true"]` rule). -->
+            <div class="approach__orbit__mark" data-brand-anchor="orbit" aria-hidden="true">
               <img src="assets/logos/Thoughtform_Brandmark.svg" alt=""/>
             </div>
 

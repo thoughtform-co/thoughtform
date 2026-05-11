@@ -79,6 +79,28 @@ export function getV7Content(): V7Content {
   );
   bodyHtml = bodyHtml.replace(/href="#manifesto"/g, 'href="#definition"');
 
+  // Strip the placeholder <img> from each brandmark anchor slot.
+  //
+  // The prototype HTML keeps an <img src="...Thoughtform_Brandmark.svg">
+  // inside each dock site so designers can view the static prototype
+  // standalone. At runtime on the React-rendered landing page we
+  // replace that raster placeholder with a single canonical
+  // `BrandmarkGlyph` portal'd into the slot by `BrandmarkSystem`, so
+  // every dock paints from the same pure-code SVG source instead of
+  // a parallel raster fetched per slot. The empty slot keeps its
+  // layout box (size + position) intact for the choreography to read
+  // anchor rects.
+  //
+  // Matches any element carrying `data-brand-anchor="..."` with a
+  // single `<img>` direct child surrounded by whitespace, and drops
+  // the `<img>`. The closing-tag pattern is restricted to common
+  // wrappers (div / span / section / article) to avoid the regex
+  // overshooting on accidental nested structures.
+  bodyHtml = bodyHtml.replace(
+    /(<(?:div|span|section|article)\b[^>]*\bdata-brand-anchor="[^"]+"[^>]*>)\s*<img[^>]*\/?>\s*(<\/(?:div|span|section|article)>)/g,
+    "$1$2"
+  );
+
   bodyHtml = injectStaticHudChildren(bodyHtml);
 
   const scopedCss = scopeV7Css(tokensCss, inlineStyles);

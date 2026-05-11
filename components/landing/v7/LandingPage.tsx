@@ -4,7 +4,9 @@ import { useEffect, useLayoutEffect, useRef, useState, useCallback, useMemo } fr
 import { useLandingScroll } from "./hooks/useLandingScroll";
 import { useRevealMotion } from "./hooks/useRevealMotion";
 import { useSigilChoreography } from "./hooks/useSigilChoreography";
-import { BrandmarkActor, type BrandmarkActorHandle } from "./BrandmarkActor";
+import { type BrandmarkActorHandle } from "./BrandmarkActor";
+import { BrandmarkSystem } from "./BrandmarkSystem";
+import { useBrandmarkSingletonCheck } from "./lib/brandmarkSingletonCheck";
 import { CelestialPortals } from "./CelestialConnector/CelestialPortals";
 import { PhaseGlyphPortals } from "./PhaseGlyph";
 import { BuildCasesPortal } from "./build-cases";
@@ -26,6 +28,12 @@ export function LandingPage({ bodyHtml, bodyClass, celestialSlots }: LandingPage
   useLandingScroll(rootRef);
   useRevealMotion(rootRef);
   useSigilChoreography(rootRef, brandmarkActorRef);
+  // Dev-only invariant guard: warns in the console whenever more
+  // than one brandmark instance is painting at the same scroll
+  // position. Tree-shaken out of the production bundle by the
+  // `process.env.NODE_ENV === "production"` early return inside
+  // the hook.
+  useBrandmarkSingletonCheck(rootRef);
 
   // Hamburger toggle — wire imperatively since the nav markup comes from HTML
   useEffect(() => {
@@ -405,7 +413,13 @@ export function LandingPage({ bodyHtml, bodyClass, celestialSlots }: LandingPage
       {mergedSlots && <CelestialPortals slots={mergedSlots} containerRef={rootRef} />}
       <PhaseGlyphPortals containerRef={rootRef} />
       <BuildCasesPortal containerRef={rootRef} />
-      <BrandmarkActor ref={brandmarkActorRef} />
+      {/* Single brandmark entry point. Renders one canonical
+          `BrandmarkGlyph` into each `data-brand-anchor` slot via
+          portal, plus one fixed `BrandmarkActor` for transit/backdrop/
+          orbit passes. The actor handle is forwarded so the
+          choreography hook can drive its imperative API
+          (morphRects / pinToRect / hide) unchanged. */}
+      <BrandmarkSystem ref={brandmarkActorRef} rootRef={rootRef} />
       <CelestialEditorOverlay />
     </>
   );

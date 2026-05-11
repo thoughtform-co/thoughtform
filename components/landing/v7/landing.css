@@ -576,19 +576,30 @@
   .hud__brandmark__layer {
     transition-duration: 200ms;
   }
+  /* Reduced-motion: source-owned dock copies always paint at full
+     opacity. Each selector lists `img, svg` because the dock slot
+     may carry either a legacy `<img>` (HUD slot) or a portal'd
+     `BrandmarkGlyph` SVG (the four v7 `data-brand-anchor` slots:
+     sigil, missing, rail, orbit). */
   .sigil__mark img,
+  .sigil__mark svg,
   #hudBrandmark img,
-  .approach__orbit__mark img {
+  .approach__orbit__mark img,
+  .approach__orbit__mark svg {
     visibility: visible !important;
     opacity: 1 !important;
   }
 }
 
-/* Single brandmark actor — Section 02 entrance, continuum handoff, practice
-   orbit travel. Slot <img> nodes in the prototype stay in the DOM for
-   layout but are visibility-hidden; only this overlay draws the mark. */
+/* Single brandmark actor — Section 02 entrance, continuum handoff,
+   practice orbit travel. The native orbit and legacy HUD dock copies
+   (img on legacy HUD, portal'd BrandmarkGlyph svg on the v7 orbit
+   anchor) are visibility-hidden by default so the fixed actor paints
+   on top. CSS rules in the choreography section above re-show them
+   for specific states (parked, quote cover). */
 #hudBrandmark img,
-.approach__orbit__mark img {
+.approach__orbit__mark img,
+.approach__orbit__mark svg {
   visibility: hidden !important;
   opacity: 0 !important;
   pointer-events: none;
@@ -602,7 +613,8 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   opacity: 0 !important;
 }
 
-[data-quote-active="true"] .approach__orbit__mark img {
+[data-quote-active="true"] .approach__orbit__mark img,
+[data-quote-active="true"] .approach__orbit__mark svg {
   visibility: visible !important;
   opacity: 1 !important;
 }
@@ -694,7 +706,8 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   transition: opacity 240ms var(--m-ease-instr, cubic-bezier(0.16, 1, 0.3, 1));
   filter: drop-shadow(0 0 16px rgba(202, 165, 84, 0.45));
 }
-.crail--large .crail__brand img {
+.crail--large .crail__brand img,
+.crail--large .crail__brand svg {
   width: 100%;
   height: 100%;
   display: block;
@@ -726,7 +739,8 @@ html[data-quote-active="true"] .tf-brandmark-actor {
    handoff from the fixed actor to the native dock feel like the
    brandmark "settling" into the diagnostic centre, rather than two
    separate artifacts swapping. */
-[data-brand-on-missing="parked"] .miss__brand-slot img {
+[data-brand-on-missing="parked"] .miss__brand-slot img,
+[data-brand-on-missing="parked"] .miss__brand-slot svg {
   opacity: 1;
   filter: drop-shadow(0 0 28px rgba(202, 165, 84, 0.5));
   transform: scale(1);
@@ -2333,7 +2347,8 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   justify-content: center;
   filter: drop-shadow(0 0 24px rgba(202, 165, 84, 0.25));
 }
-.sigil__mark img {
+.sigil__mark img,
+.sigil__mark svg {
   width: 100%;
   height: 100%;
   display: block;
@@ -2828,7 +2843,8 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   z-index: 2;
   background: transparent;
 }
-.miss__brand-slot img {
+.miss__brand-slot img,
+.miss__brand-slot svg {
   width: 100%;
   height: 100%;
   display: block;
@@ -2965,7 +2981,8 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   }
   /* Native dock: instant swap on park, no fade. Stays hidden until the
      choreography sets `data-brand-on-missing="parked"`. */
-  .miss__brand-slot img {
+  .miss__brand-slot img,
+  .miss__brand-slot svg {
     transition: none;
   }
 }
@@ -5533,7 +5550,8 @@ html {
   z-index: 3;
   transform: translateZ(0);
 }
-.approach__orbit__mark img {
+.approach__orbit__mark img,
+.approach__orbit__mark svg {
   width: 100%;
   height: 100%;
   display: block;
