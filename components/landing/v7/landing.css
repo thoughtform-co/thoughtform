@@ -630,6 +630,16 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   z-index: 24;
   transform-origin: 0 0;
   filter: drop-shadow(0 0 24px rgba(202, 165, 84, 0.25));
+  /* Smooth dock-to-transit and transit-to-dock crossfades.
+     The continuous brandmark journey (useSigilChoreography) writes
+     inline opacity each rAF; when a parked CSS gate
+     (`[data-brand-on-missing="parked"]` / `[data-brand-on-rail=
+     "parked"]`) flips, the computed opacity changes from the gate's
+     `0 !important` to the inline value (or vice versa) in one frame.
+     A 120ms linear transition turns that step into a perceptible
+     crossfade so the actor and the native dock visually swap hands
+     instead of one popping out while the other pops in. */
+  transition: opacity 120ms linear;
 }
 .tf-brandmark-actor.tf-brandmark-actor--armed {
   will-change: transform, opacity;
@@ -703,7 +713,12 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   z-index: 4;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 240ms var(--m-ease-instr, cubic-bezier(0.16, 1, 0.3, 1));
+  /* 120ms matches `.tf-brandmark-actor`'s transition so when the
+     continuous journey flips `[data-brand-on-rail="parked"]` on the
+     PARK_FRAC threshold, the actor and native rail brand cross-fade
+     symmetrically (one out, one in) instead of dipping in combined
+     opacity. */
+  transition: opacity 120ms linear;
   filter: drop-shadow(0 0 16px rgba(202, 165, 84, 0.45));
 }
 .crail--large .crail__brand img,
@@ -2849,22 +2864,24 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   height: 100%;
   display: block;
   object-fit: contain;
-  /* Default: invisible until the choreography parks here. Previously
-     this dock used a `miss-brand-acquire` keyframe gated on
-     `.miss__inner.is-in`, which made the native brandmark fade in as
-     soon as the section intersected the viewport — independent of
-     whether the fixed actor had actually completed its sigil → miss
-     travel leg. That broke the "one artifact travelling" invariant:
-     visitors would see the Diagnostic brandmark appear before it had
-     "arrived". The acquire feel (opacity + scale + glow ramp) is now
-     applied via the [data-brand-on-missing="parked"] rule in the
-     brandmark choreography block, so the native dock only ever paints
-     once the actor hands ownership to it. See ADR-010. */
+  /* Default: invisible until the choreography parks here. The acquire
+     feel (scale + glow ramp) is applied via the
+     `[data-brand-on-missing="parked"]` rule in the brandmark
+     choreography block, so the native dock only ever paints once the
+     continuous journey hands ownership to it. See ADR-010.
+
+     Opacity transitions in 120ms (matching `.tf-brandmark-actor`) so
+     the actor → native crossfade at the PARK_FRAC threshold of the
+     sigil-to-miss segment stays symmetric — no opacity dip in the
+     middle of the handoff. The filter / transform ramps stay longer
+     (480-640ms) because they are aesthetic flourishes that "settle"
+     the brandmark into the dock; opacity is the load-bearing channel
+     for the crossfade timing. */
   opacity: 0;
   filter: drop-shadow(0 0 8px rgba(202, 165, 84, 0.15));
   transform: scale(0.92);
   transition:
-    opacity 480ms cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 120ms linear,
     filter 640ms cubic-bezier(0.16, 1, 0.3, 1),
     transform 480ms cubic-bezier(0.16, 1, 0.3, 1);
 }

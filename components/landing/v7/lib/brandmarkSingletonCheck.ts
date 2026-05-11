@@ -166,10 +166,28 @@ export function useBrandmarkSingletonCheck(rootRef?: RefObject<HTMLElement | nul
       rafId = 0;
       const visible = enumerateVisibleBrandmarks();
       if (visible.length <= 1) return;
-      // Only the asking-gap backdrop legitimately renders at very
-      // low opacity, but the threshold above already filters that;
-      // by here we have a real overlap. Throttle the warning so
-      // a sustained leak doesn't spam.
+
+      // Tolerate the continuous-journey crossfade.
+      //
+      // When the journey (`useSigilChoreography`) crosses the
+      // PARK_FRAC threshold of a segment, the parked CSS gate flips:
+      // the actor's inline `opacity: 1` becomes effective again (or
+      // vice versa) and the native dock's `opacity: 0` lifts (or
+      // vice versa). Both element groups have a 120ms opacity
+      // transition (see `landing.css`), so for ~120ms two painters
+      // are partially visible. Their COMBINED effective opacity stays
+      // ~1 throughout the crossfade — that is the intended visual:
+      // one brandmark handing off, not two.
+      //
+      // Warn only when the sum of effective opacities meaningfully
+      // exceeds 1 (i.e. the user would actually perceive two
+      // brandmarks), which indicates a real leak rather than a clean
+      // crossfade.
+      const combinedOpacity = visible.reduce((s, v) => s + v.opacity, 0);
+      const CROSSFADE_TOLERANCE = 1.25;
+      if (combinedOpacity <= CROSSFADE_TOLERANCE) return;
+
+      // Throttle warnings so a sustained leak doesn't spam.
       const now = performance.now();
       if (now - lastWarnAt < WARN_COOLDOWN_MS) return;
       lastWarnAt = now;
@@ -178,7 +196,7 @@ export function useBrandmarkSingletonCheck(rootRef?: RefObject<HTMLElement | nul
         .join(" | ");
       // eslint-disable-next-line no-console
       console.warn(
-        `[brandmark-singleton] ${visible.length} brandmark instances visible simultaneously: ${summary}`
+        `[brandmark-singleton] ${visible.length} brandmark instances visible (sum=${combinedOpacity.toFixed(3)}): ${summary}`
       );
     };
 
