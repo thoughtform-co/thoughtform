@@ -2926,20 +2926,30 @@ html[data-quote-active="true"] .tf-brandmark-actor {
    sentence ("working out", "how to ask", "what you want") rendered in
    the Thoughtform palette: gold border + gold dot, dawn text, void-
    tinted background. All three identical so the sentence reads as
-   prose, not as a lane legend. */
+   prose, not as a lane legend.
+
+   Geometry mirrors the AI-operator `.aiop-bridge__mark` reference: a
+   slightly squared corner (4px), generous breathing room around the
+   italic glyph box so descenders ("g", "y") never clip against the
+   border, and a centered cross-axis so the gold dot reads in line
+   with the optical mid-line of the italic text rather than its
+   typographic baseline. The chip's own line-height is locked so the
+   box height is determined by font-size + padding, not by whatever
+   line-height the surrounding quote inherits. */
 .ask__chip {
   display: inline-flex;
-  align-items: baseline;
+  align-items: center;
   gap: 0.45em;
-  padding: 0.05em 0.55em 0.1em;
-  border: 1px solid var(--gold);
-  border-radius: 999px;
-  font-style: normal;
+  padding: 0.22em 0.7em;
+  border: 1px solid color-mix(in oklab, var(--gold) 62%, transparent);
+  border-radius: 4px;
+  font-style: italic;
   font-weight: 400;
+  line-height: 1.15;
   color: var(--dawn);
   background: rgba(202, 165, 84, 0.06);
   white-space: nowrap;
-  transform: translateY(-0.05em);
+  vertical-align: baseline;
   transition:
     background 240ms ease,
     border-color 240ms ease;
@@ -2951,13 +2961,10 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   border-radius: 50%;
   background: var(--gold);
   flex-shrink: 0;
-  align-self: center;
 }
 .ask__chip > span:not(.ask__chip-dot) {
   color: var(--dawn);
 }
-/* Render the chip text in dawn after the dot — split via the ::after
-   selector so existing markup `<span>chip><dot/>label</span>` works. */
 
 /* Attribution row: small mono caps name + meta, separated by a thin
    gold rule. */
@@ -3031,7 +3038,8 @@ html[data-quote-active="true"] .tf-brandmark-actor {
     line-height: 1.45;
   }
   .ask__chip {
-    padding: 0.02em 0.45em 0.06em;
+    padding: 0.18em 0.55em;
+    gap: 0.35em;
   }
   .ask__brandmark-anchor {
     width: clamp(280px, 70vmin, 480px);
