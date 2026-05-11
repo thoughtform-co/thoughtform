@@ -717,9 +717,19 @@ html[data-quote-active="true"] .tf-brandmark-actor {
    can re-emerge instantly when the backdrop morph arms) but is
    hidden via CSS opacity. The selector is mirrored to BOTH the
    LandingPage rootRef and `documentElement` because the fixed actor
-   renders as a sibling of rootRef. */
+   renders as a sibling of rootRef.
+
+   The native dock starts at opacity 0 + scale(0.92) + faint drop-shadow
+   (declared in the `.miss__brand-slot img` rule). When the choreography
+   sets `data-brand-on-missing="parked"`, the rule below transitions
+   the native into full intensity — that crossfade is what makes the
+   handoff from the fixed actor to the native dock feel like the
+   brandmark "settling" into the diagnostic centre, rather than two
+   separate artifacts swapping. */
 [data-brand-on-missing="parked"] .miss__brand-slot img {
   opacity: 1;
+  filter: drop-shadow(0 0 28px rgba(202, 165, 84, 0.5));
+  transform: scale(1);
 }
 [data-brand-on-missing="parked"] .tf-brandmark-actor {
   opacity: 0 !important;
@@ -2823,28 +2833,24 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   height: 100%;
   display: block;
   object-fit: contain;
-  filter: drop-shadow(0 0 28px rgba(202, 165, 84, 0.5));
-}
-.miss__inner:not(.is-in) .miss__brand-slot img {
+  /* Default: invisible until the choreography parks here. Previously
+     this dock used a `miss-brand-acquire` keyframe gated on
+     `.miss__inner.is-in`, which made the native brandmark fade in as
+     soon as the section intersected the viewport — independent of
+     whether the fixed actor had actually completed its sigil → miss
+     travel leg. That broke the "one artifact travelling" invariant:
+     visitors would see the Diagnostic brandmark appear before it had
+     "arrived". The acquire feel (opacity + scale + glow ramp) is now
+     applied via the [data-brand-on-missing="parked"] rule in the
+     brandmark choreography block, so the native dock only ever paints
+     once the actor hands ownership to it. See ADR-010. */
   opacity: 0;
   filter: drop-shadow(0 0 8px rgba(202, 165, 84, 0.15));
   transform: scale(0.92);
-}
-
-@keyframes miss-brand-acquire {
-  from {
-    opacity: 0;
-    filter: drop-shadow(0 0 8px rgba(202, 165, 84, 0.15));
-    transform: scale(0.92);
-  }
-  to {
-    opacity: 1;
-    filter: drop-shadow(0 0 28px rgba(202, 165, 84, 0.5));
-    transform: scale(1);
-  }
-}
-.miss__inner.is-in .miss__brand-slot img {
-  animation: miss-brand-acquire 640ms cubic-bezier(0.16, 1, 0.3, 1) 0ms both;
+  transition:
+    opacity 480ms cubic-bezier(0.16, 1, 0.3, 1),
+    filter 640ms cubic-bezier(0.16, 1, 0.3, 1),
+    transform 480ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* Diagnostic closer — moved here from asking-gap. The 4 cards
@@ -2912,13 +2918,21 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   opacity: 1;
 }
 
-/* Reduced-motion path: skip every reveal motion (stagger, ray
-   draw-in, brandmark scale, closer settle). Animations are disabled
-   and the initial-hidden states (opacity 0, transform, blur, ray
-   dashoffset) are overridden to their final visible values, so
-   visitors who opted out of motion see the full constellation
-   immediately on first paint. Hover transitions on the ray and
-   card border are short and stay enabled. */
+/* Reduced-motion path: skip every reveal motion for the constellation
+   chrome (stagger, ray draw-in, closer settle). Animations are
+   disabled and the initial-hidden states (opacity 0, transform,
+   blur, ray dashoffset) are overridden to their final visible
+   values, so visitors who opted out of motion see the full
+   constellation immediately on first paint. Hover transitions on
+   the ray and card border are short and stay enabled.
+
+   IMPORTANT: the native brandmark dock (`.miss__brand-slot img`) is
+   NOT forced visible here. It stays gated on
+   `[data-brand-on-missing="parked"]` so the "one artifact travelling"
+   invariant holds for reduced-motion users too — the dock only
+   paints once the brandmark choreography has handed ownership to it.
+   We only neutralise its acquire transition so the appearance is
+   instant rather than a 480ms fade. */
 @media (prefers-reduced-motion: reduce) {
   .miss__inner[data-m="instrument"],
   .miss__inner[data-m="instrument"].is-in {
@@ -2933,7 +2947,6 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   .miss__inner .miss__ray--02,
   .miss__inner .miss__ray--03,
   .miss__inner .miss__ray--04,
-  .miss__inner .miss__brand-slot img,
   .miss__inner .miss__closer {
     animation: none;
   }
@@ -2946,14 +2959,14 @@ html[data-quote-active="true"] .tf-brandmark-actor {
     stroke-opacity: 0.3;
     stroke-dashoffset: 0;
   }
-  .miss__inner:not(.is-in) .miss__brand-slot img {
-    opacity: 1;
-    transform: none;
-    filter: drop-shadow(0 0 28px rgba(202, 165, 84, 0.5));
-  }
   .miss__inner:not(.is-in) .miss__closer {
     opacity: 1;
     transform: none;
+  }
+  /* Native dock: instant swap on park, no fade. Stays hidden until the
+     choreography sets `data-brand-on-missing="parked"`. */
+  .miss__brand-slot img {
+    transition: none;
   }
 }
 

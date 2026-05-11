@@ -9,57 +9,72 @@ gsap.registerPlugin(ScrollTrigger);
 /**
  * useSigilChoreography
  *
- * Brandmark scroll character — a fixed travel actor that anchors the
- * v7 landing page narrative through six stations:
+ * Brandmark scroll character — one travel actor + native source-owned
+ * docks. The fixed `.tf-brandmark-actor` exists *only* for transitions
+ * between stations; while parked, ownership of the visible mark hands
+ * to a native DOM element inside the relevant section so it scrolls
+ * naturally with the page (no fixed-position jiggle).
  *
- *   HERO           : actor hidden; native sigil img not yet revealed.
- *   SIGIL          : native `.sigil__mark img` owns the visible mark
- *                    inside the section-02 diagram. Actor stays hidden.
- *   ASK / BACKDROP : actor parked behind the asking-gap quote at large
- *                    scale and ~0.08 opacity. Reads as a faint backdrop.
- *   RAIL           : actor scrubs left-to-right along the continuum
- *                    rail (`.crail__line`) driven by scroll progress.
- *                    Replaces the static `.crail__reticle__diamond`,
- *                    which is hidden via [data-brand-on-rail="true"].
- *   ORBIT          : actor pins to `.approach__orbit__mark` inside
- *                    practice. Re-pins every scroll frame because the
- *                    orbit is `position: sticky`.
- *   HIDDEN         : actor fades to 0 as the user exits practice.
+ * Canonical v3 state machine (matches ADR-010 v3):
  *
- * State machine (canonical):
+ *   Hidden        : pre-hero state or post-practice exit; actor opacity 0.
+ *   Sigil         : native `.sigil__mark img` (section 02 diagram) owns
+ *                   the mark while the visitor reads section 02. The
+ *                   fixed actor stays hidden.
+ *   Miss          : actor morphs sigil → `.miss__brand-slot img` (centre
+ *                   of the 4-card grid in #missing-layer). On p=1, hands
+ *                   ownership to the native miss brand via
+ *                   `data-brand-on-missing="parked"`.
+ *   Backdrop      : actor morphs miss → `.ask__brandmark-anchor` (faint
+ *                   ~640px backdrop @ 0.08 opacity behind the Evans quote).
+ *   Rail entry    : actor morphs backdrop → `.crail__brand img` (middle
+ *                   of the continuum rail). On p=1, hands ownership to
+ *                   the native rail brand via `data-brand-on-rail="parked"`.
+ *   Practice entry: actor morphs rail brand → `.approach__orbit__mark`
+ *                   (orbit centre inside #practice). Live rect each frame
+ *                   because the orbit's parent is `position: sticky`.
+ *   Practice exit : actor stays pinned at orbit while opacity fades 1 → 0.
  *
- *   Hidden -> Sigil (entrance @ defEl top 85% → top 35%)
- *   Sigil -> Backdrop (backdropTl @ askEl top 50% → top 0%)
- *   Backdrop -> Rail (railEntryTl @ contEl top 60% → top 30%)
- *   Rail -> Rail (railScrubTl @ contEl top 30% → bottom 60%, scrub X)
- *   Rail -> Orbit (practiceEntryTl @ practiceEl top 40% → top 0%)
- *   Orbit -> Orbit (orbit re-pin @ practiceEl top 0% → bottom 25%)
- *   Orbit -> Hidden (practiceExitTl @ practiceEl bottom 25% → -10%)
+ * Trigger anchors (don't retune without an ADR update):
+ *   missTl          @ #missing-layer top 50% → top 0%, scrub: 0.4
+ *   backdropTl      @ #asking-gap    top 50% → top 0%, scrub: 0.4
+ *   railEntryTl     @ #continuum     top 60% → top 30%, scrub: 0.4
+ *   practiceEntryTl @ #practice      top 60% → top 0%, scrub: 0.4
+ *   practiceExitTl  @ #practice      bottom 25% → bottom -10%, scrub: 0.4
  *
- * Regression invariants (carry over from ADR-010, updated for the
- * new destinations):
- *   1. Section 02 is source-owned. The native `.sigil__mark img` owns
- *      the visible mark while parked there; the fixed actor stays
- *      hidden through hero, entrance, and the section-02 reading
- *      state. Do not pin/imitate the actor to the diagram.
- *   2. Handoff out of the sigil reads the *live unscaled* sigil rect
- *      via `readSigilRect()`. The native source fades out only when
- *      the actor takes over.
- *   3. Backdrop/rail/orbit destinations all use *live* rects each
- *      frame, not rects captured once at trigger entry — these
- *      targets all sit inside scrolling, sticky, or scaled parents.
- *   4. Never pin the actor to any docked target from `onRefresh` at
- *      `scrollY === 0` (the "brandmark in hero on refresh" bug).
- *   5. Fast-scroll: every travel timeline has an `onLeave` /
- *      `onLeaveBack` that finalises the dock state, so flags can't
- *      be left armed when the user blows past `scrub` easing.
- *   6. The HUD bottom-left brandmark slot is *not* used as a
- *      destination on the v7 page anymore; it remains in the DOM
- *      and is hidden by CSS while [data-brand-on-rail="true"] or
- *      [data-orbit-docked="true"] is set on the root.
- *   7. Diamond reticle in the continuum rail is hidden while the
- *      actor owns the rail (`[data-brand-on-rail="true"]` on root).
- *      The rail's frame, line, trail, and stops remain visible.
+ * Regression invariants (ADR-010 v3 § Eight regression rules):
+ *   1. Section 02 source-owned. The native `.sigil__mark img` owns the
+ *      visible mark during reading; the fixed actor stays hidden through
+ *      hero, entrance, and the parked sigil state. Never imitate the
+ *      diagram with the fixed actor.
+ *   2. Three source-owned park stations (`.sigil__mark img`,
+ *      `.miss__brand-slot img`, `.crail__brand img`). The fixed actor
+ *      stays positioned at the brand's rect so it can re-emerge instantly
+ *      for the next morph, but is hidden via CSS opacity while parked.
+ *      Native dock visibility is strictly gated on `[data-brand-on-*=
+ *      "parked"]` — never on IntersectionObserver `.is-in` alone, or the
+ *      native will paint before the actor has arrived.
+ *   3. Travel legs read live source rects each frame (`readSigilRect`,
+ *      `readMissBrandRect`, `readBackdropRect`, `readRailBrandRect`,
+ *      orbit `getBoundingClientRect`). No stale captures across triggers.
+ *   4. Entrance reads horizontal from the *untransformed* container
+ *      and vertical from the live rect centre, so the entrance `scale`
+ *      tween doesn't wobble the handoff rect.
+ *   5. `onRefresh` short-circuits at `scrollY < 4` for every downstream
+ *      trigger, so a refresh on the hero never pins the actor to miss/
+ *      backdrop/rail/orbit.
+ *   6. Every travel timeline has `onLeave` / `onLeaveBack` settlers so
+ *      fast-scroll past `scrub` easing can't leave a dock half-armed.
+ *   7. `data-brand-on-missing` and `data-brand-on-rail` (tri-state:
+ *      `"false" | "true" | "parked"`) are written to BOTH the landing
+ *      rootRef AND `document.documentElement`. The fixed
+ *      `.tf-brandmark-actor` renders as a sibling of rootRef, so
+ *      descendant selectors only reach it via `documentElement`.
+ *   8. `#hudBrandmark` is no longer a destination on v7. It remains
+ *      in the DOM as a legacy frame anchor but is hidden by CSS while
+ *      `[data-brand-on-rail]` is set. The diamond reticle on the
+ *      continuum rail is also hidden whenever the actor owns the rail
+ *      (`[data-brand-on-rail="true"]` transit or `"parked"`).
  */
 export function useSigilChoreography(
   rootRef: React.RefObject<HTMLElement | null>,
