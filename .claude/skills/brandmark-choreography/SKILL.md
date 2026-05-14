@@ -12,18 +12,64 @@ description: >
 
 # Brandmark choreography (Sigil → Miss → Backdrop → Rail → Orbit → Hidden)
 
-Three native source-owned park stations carry the visible brandmark when the user is reading: `.sigil__mark img` (section 02 diagram), `.miss__brand-slot img` (centre of the missing-layer 4-card grid), and `.crail__brand img` (continuum rail middle). The **`position: fixed`** actor (`tf-brandmark-actor`) exists for travel only — five morphs total: sigil → miss, miss → backdrop, backdrop → rail-entry, rail → orbit, orbit → hidden. A change to one trigger often regresses another (hero flash, between-section float, rail position drift, practice snap, actor visible after exit).
+The v7 brandmark journey is a five-station scroll state machine.
 
-**Canonical record:** [ADR-010 v3](../../../sentinel/decisions/010-brandmark-choreography.md)
+**What paints the mark depends on the runtime mode:**
+
+- **Particle mode** (ADR-011, default when WebGL is available and
+  `prefers-reduced-motion: reduce` is not set): one shared R3F canvas
+  paints the mark from a deterministic point cloud sampled from
+  `BRANDMARK_FILLED_PATHS`. Every parked station, every transit, the
+  asking-gap backdrop, and the post-orbit fade-out are painted by
+  particles. The native SVG dock glyphs and the fixed
+  `.tf-brandmark-actor` are hidden via the `[data-brandmark-mode="particle"]`
+  and `[data-brand-particle-backdrop="true"]` CSS gates. For everything
+  _particle-engine_ related see the [`brandmark-particle`](../brandmark-particle/SKILL.md) skill.
+- **SVG mode** (fallback for reduced motion or no WebGL): the architecture
+  documented in ADR-010 v3 paints the mark — three native source-owned
+  park stations (`.sigil__mark img`, `.miss__brand-slot img`,
+  `.crail__brand img`) plus the fixed actor for transit / backdrop /
+  orbit. **This file documents the state machine and the SVG mode
+  invariants.** They must keep holding even though particles are the
+  default painter, because the hook still runs the state machine in
+  both modes.
+
+The fixed actor (`tf-brandmark-actor`) exists for travel only — five
+morphs total: sigil → miss, miss → backdrop, backdrop → rail-entry, rail
+→ orbit, orbit → hidden. A change to one trigger often regresses another
+(hero flash, between-section float, rail position drift, practice snap,
+actor visible after exit).
+
+**Canonical records:** [ADR-010 v3](../../../sentinel/decisions/010-brandmark-choreography.md) (state machine + SVG painters), [ADR-011](../../../sentinel/decisions/011-brandmark-particle-artifact.md) (particle painters).
+**Related particle-engine skill:** [`brandmark-particle`](../brandmark-particle/SKILL.md).
 **Related compositing (layers):** [ADR-008](../../../sentinel/decisions/008-landing-v7-background-layers.md), `landing-v7-compositing` skill.
 
 ---
 
 ## State machine (one paragraph)
 
-The visible mark moves through: **Native sigil source (section 2) → actor morph to native missing-layer brand (centre of 4-card grid; source-owned, no jiggle) → actor morph to asking-gap backdrop (faint, 640px, 0.08 opacity) → actor morph to native rail brand (continuum middle stop; source-owned) → actor morph to practice orbit (parked at `.approach__orbit__mark`, sticky tracker re-pins each frame) → actor fades to hidden as practice exits.** Each travel leg is a GSAP `ScrollTrigger` timeline; `onUpdate` keeps rects live for moving / sticky targets; `onLeave` / `onLeaveBack` settle dock flags when the user scrolls faster than the scrub can finish; `onRefresh` short-circuits when `scrollY < 4` (hero) so the actor never pins to a downstream target on initial load.
+The journey traverses five stations along scrollY: **sigil → miss →
+backdrop → rail → orbit → hidden.** `useSigilChoreography` runs a single
+rAF-throttled scroll handler that computes the brandmark's state purely
+from `scrollY` and live anchor rects each frame — no per-leg GSAP
+timelines, no scroll-trigger settlers. Each segment between two adjacent
+stations has a park zone (`PARK_FRAC = 0.32` on each end) and a transit
+zone in the middle. **In particle mode** the hook writes a per-frame
+`StationSnapshot` into `useBrandmarkParticleStore` (for the parked station
+at parked moments, for the destination station with interpolated rect +
+density + dispersion during transit, and for the orbit station during
+post-orbit fade-out); the shared R3F canvas projects the snapshot's
+particles into the right rect with the right density / dispersion / tint.
+**In SVG mode** the hook calls `actor.pinToRect` with the same rects and
+opacity (sigil and rail use the native sigil / rail glyphs as the painter
+during parked moments via the `data-brand-on-*` CSS gates from ADR-010
+v3).
 
-The HUD bottom-left brandmark slot (`#hudBrandmark`) is no longer used as a destination. CSS hides it while `[data-brand-on-rail]` is set on the root.
+The hero guard short-circuits the journey when `scrollY < 4` so the
+brandmark is never pinned to a downstream target on initial load (or
+refresh-with-restored-scroll). The HUD bottom-left brandmark slot
+(`#hudBrandmark`) is no longer used as a destination. CSS hides it while
+`[data-brand-on-rail]` is set on the root.
 
 ---
 

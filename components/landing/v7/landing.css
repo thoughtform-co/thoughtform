@@ -776,6 +776,163 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   z-index: 2;
 }
 
+/* ── Brandmark particle artifact (ADR-011) ─────────────────────────
+   Shared R3F canvas that paints brandmarks from particles sampled
+   from the canonical SVG paths. Phase A wires only the asking-gap
+   backdrop station: when the brandmark journey parks at the
+   backdrop, `useSigilChoreography` writes a snapshot into the
+   particle store AND sets `data-brand-particle-backdrop="true"` on
+   the document element. The CSS below:
+
+     1. Hides the SVG `.tf-brandmark-actor` at the backdrop so the
+        particle field reads alone (the actor stays inline-positioned
+        at the backdrop rect, just invisible — when the journey
+        leaves backdrop the actor's `pinToRect` already has the next
+        station's rect pinned and the gate flips off);
+     2. Fades the `.tf-brandmark-particle-canvas` wrapper in over
+        240ms so the particle field doesn't pop when the gate flips.
+
+   The 120ms vs 240ms timing offset is deliberate: the SVG actor's
+   `transition: opacity 120ms` (declared above) fades it OUT in 120ms
+   when the gate goes true; the particle wrapper fades IN in 240ms
+   so the crossfade overlaps slightly without dipping to zero in the
+   middle.
+
+   Phases B and C add more stations to the canvas and replace the
+   wrapper-level fade with per-station shader opacity envelopes
+   (each station can have its own fade independent of the others). */
+[data-brand-particle-backdrop="true"] .tf-brandmark-actor {
+  opacity: 0 !important;
+}
+
+.tf-brandmark-particle-canvas,
+.tf-brandmark-particle-canvas--default {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  /* z:23 sits just under `.tf-brandmark-actor` (z:24). When the
+     actor is hidden by the backdrop gate, the canvas reads as the
+     top layer of the brandmark stack — above content, below HUD. */
+  z-index: 23;
+  opacity: 0;
+  transition: opacity 240ms ease-out;
+}
+
+[data-brand-particle-backdrop="true"] .tf-brandmark-particle-canvas,
+[data-brand-particle-backdrop="true"] .tf-brandmark-particle-canvas--default {
+  opacity: 1;
+}
+
+/* Reduced-motion fallback: hide the particle canvas entirely (the
+   choreography hook already keeps the store in `"svg"` mode and the
+   canvas component returns null, but this is belt-and-braces in case
+   a future phase changes that gating). */
+@media (prefers-reduced-motion: reduce) {
+  .tf-brandmark-particle-canvas,
+  .tf-brandmark-particle-canvas--default {
+    display: none !important;
+  }
+}
+
+/* ── Phase B universal particle gate ──────────────────────────────
+   When the choreography hook resolves the store mode to `particle`
+   (WebGL OK, motion preference allows), it writes
+   `data-brandmark-mode="particle"` on the document element. The
+   particle canvas paints every parked station from sampled points
+   on the canonical brandmark paths; we hide the native dock SVG
+   glyphs and the fixed SVG actor at the parked states so the
+   particle field is the only painter at the dock.
+
+   Transit between stations still uses the SVG actor in Phase B —
+   Phase C replaces transit with a particle dispersion. So the
+   rules below only fire when the relevant parked attribute is set;
+   transit states keep the actor visible as before.
+
+   The brandmark journey's own gates (`data-brand-on-missing`,
+   `data-brand-on-rail`, `data-orbit-docked`) compose with the new
+   particle mode attribute. We use `:where()` so the specificity
+   stays low and the existing parked rules above can win when
+   needed (e.g. SVG fallback path still paints natively). */
+[data-brandmark-mode="particle"][data-brand-on-missing="parked"]
+  .miss__brand-slot
+  :where(img, svg) {
+  opacity: 0 !important;
+}
+[data-brandmark-mode="particle"][data-brand-on-rail="parked"] .crail__brand :where(img, svg) {
+  opacity: 0 !important;
+}
+[data-brandmark-mode="particle"] [data-orbit-docked="true"] .tf-brandmark-actor {
+  opacity: 0 !important;
+}
+/* Sigil dock — the entrance scrub animates `.sigil__mark`'s
+   opacity to 1 once the section enters the viewport (see the hook
+   `setSigilVisible`). In particle mode we override that so the
+   sigil's native SVG glyph stays hidden and the particle field
+   paints the brandmark at the diagram centre instead. Note we
+   only target the glyph (`> svg`) — the wrapper element itself
+   stays opacity 1 because other diagram elements (halo, orbits)
+   are siblings of the glyph and need to paint. */
+[data-brandmark-mode="particle"] .sigil__mark > :where(img, svg) {
+  opacity: 0 !important;
+  /* 200ms crossfade for the particle → SVG handoff at the PARK_FRAC
+     threshold of the sigil-to-miss segment. The particle field's
+     opacity drop and the SVG glyph's opacity rise overlap so the
+     transition is smooth (no flicker between rendering modes). */
+  transition: opacity 200ms ease-out;
+}
+
+/* ── Phase D: pixel-perfect dock handoff (ADR-011 Phase D) ────────
+   At full-density dock parks, hand the paint OFF to the portal'd
+   SVG glyph so the brandmark is literally the SVG file at rest
+   (zero stipple, true vector crispness). The choreography hook
+   sets `data-brand-svg-dock="<kind>"` on documentElement whenever
+   the journey is parked at a station whose default density meets
+   `SVG_DOCK_THRESHOLD` (currently 0.95) — that's every dock
+   station except the asking-gap backdrop, which stays as the
+   particle cloud because its low density IS the visual story.
+
+   Specificity note: each rule extends the particle-mode hide
+   selector with an extra attribute selector, so it wins on
+   specificity over the hide rules immediately above (both are
+   `!important`, so the cascade decides). */
+[data-brandmark-mode="particle"][data-brand-svg-dock="sigil"] .sigil__mark > :where(img, svg) {
+  opacity: 1 !important;
+}
+[data-brandmark-mode="particle"][data-brand-svg-dock="missing"]
+  .miss__brand-slot
+  > :where(img, svg) {
+  opacity: 1 !important;
+}
+[data-brandmark-mode="particle"][data-brand-svg-dock="rail"]
+  .crail--large
+  .crail__brand
+  > :where(img, svg) {
+  opacity: 1 !important;
+}
+/* Orbit dock has its own default visibility: hidden + opacity: 0
+   (so the fixed actor used to paint there). The particle-mode
+   override needs to lift BOTH visibility and opacity, plus add the
+   same 200ms transition so the particle → SVG handoff feels like
+   the cloud "crystallising" into the SVG at park entry. */
+.approach__orbit__mark > :where(img, svg) {
+  transition:
+    opacity 200ms ease-out,
+    visibility 200ms ease-out;
+}
+[data-brandmark-mode="particle"][data-brand-svg-dock="orbit"]
+  .approach__orbit__mark
+  > :where(img, svg) {
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+/* Mirror the 200ms crossfade on the other dock anchors too, so
+   the transition above applies on the way OUT (when SVG dock
+   clears as the user scrolls into transit). */
+.miss__brand-slot > :where(img, svg),
+.crail--large .crail__brand > :where(img, svg) {
+  transition: opacity 200ms ease-out;
+}
+
 /* When the actor sits on the rail it should stay above the rail's
    line, frame, and stops but below any HUD overlay. */
 [data-brand-on-rail="true"] .tf-brandmark-actor {

@@ -4,6 +4,7 @@ import { forwardRef, useEffect, useLayoutEffect, useState, type RefObject } from
 import { createPortal } from "react-dom";
 import { BrandmarkActor, type BrandmarkActorHandle } from "./BrandmarkActor";
 import { BrandmarkGlyph } from "./BrandmarkGlyph";
+import { BrandmarkParticleCanvas } from "@/components/brand/BrandmarkParticleField";
 
 /**
  * BrandmarkSystem
@@ -129,6 +130,22 @@ export const BrandmarkSystem = forwardRef<BrandmarkActorHandle, BrandmarkSystemP
           return <BrandmarkAnchorPortal key={key} container={el} anchorKey={key} />;
         })}
         <BrandmarkActor ref={ref} />
+        {/* Shared GL canvas that paints brandmark particles. Mounts
+            only when the store is in `"particle"` mode (set by
+            `useSigilChoreography` after a WebGL + reduced-motion
+            probe). In `"svg"` mode it renders nothing and the
+            existing actor + portal'd glyphs above paint unchanged.
+
+            Phase B wires every station: sigil + miss + backdrop +
+            rail + orbit. The dock stations run at full density and
+            zero dispersion (visually indistinguishable from the
+            SVG); the backdrop runs at the sparse "diagnostic" tier.
+            CSS (`[data-brandmark-mode="particle"]`) hides the SVG
+            actor + native dock glyphs at the parked states so the
+            particle field is the sole painter. Transit between
+            stations still uses the SVG actor — Phase C replaces
+            that with a particle dispersion choreography. */}
+        <BrandmarkParticleCanvas stations={["sigil", "miss", "backdrop", "rail", "orbit"]} />
       </>
     );
   }

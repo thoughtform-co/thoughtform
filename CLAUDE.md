@@ -5,7 +5,8 @@
 Read [sentinel/BEST-PRACTICES.md](sentinel/BEST-PRACTICES.md) and the **ADR** relevant to your task before non-trivial changes:
 
 - **Landing v7 compositing:** [ADR-008](sentinel/decisions/008-landing-v7-background-layers.md)
-- **Brandmark choreography:** [ADR-010](sentinel/decisions/010-brandmark-choreography.md)
+- **Brandmark choreography:** [ADR-010](sentinel/decisions/010-brandmark-choreography.md) (state machine, SVG fallback)
+- **Brandmark particle artifact:** [ADR-011](sentinel/decisions/011-brandmark-particle-artifact.md) (R3F point-cloud painter, density tiers, fallback policy)
 - **Scroll architecture:** [ADR-002](sentinel/decisions/002-scroll-animation-architecture.md)
 - **Auth centralization:** [ADR-003](sentinel/decisions/003-auth-centralization.md)
 - **Focus overlay system:** [ADR-006](sentinel/decisions/006-focus-overlay-system.md)

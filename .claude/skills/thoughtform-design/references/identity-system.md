@@ -12,6 +12,55 @@ The Thoughtform brandmark is literally a **navigation instrument**: a gateway co
 - **Do not:** Stretch, rotate (except 90° increments for layout), add drop shadows, gradients, or outlines not in the Brand Codex.
 - **Colors:** Single-color (dawn, gold, or void) or approved two-color lockups. See [color-system.md](color-system.md).
 
+### Brandmark as a morphable particle artifact
+
+When mediums collapse — the strategic story behind Thoughtform — the brandmark
+collapses with them. The mark stops being a finished asset and becomes a
+**runtime substrate**: a deterministic point cloud sampled from the
+canonical SVG paths and projected by whatever the moment needs.
+
+This is the canonical brandmark behavior on `thoughtform.co` (v7 landing,
+ADR-011) and the recommended pattern for any new Thoughtform product
+where the brandmark needs to choreograph in space, dissolve into
+atmosphere, or recompose mid-journey.
+
+**Density tiers (load-bearing — keep in sync with `PARTICLE_STATION_DEFAULTS` in
+[`useSigilChoreography.ts`](../../../components/landing/v7/hooks/useSigilChoreography.ts)):**
+
+| Tier           | Density | Dispersion | Reads as                                                                                                                                                                                              |
+| -------------- | ------- | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Full**       | 1.00    | 0.00       | Solid filled mark. Pixel-comparable to the canonical SVG at any dock size.                                                                                                                            |
+| **Diagnostic** | 0.22    | 0.42       | Sparse atmospheric cloud. The brandmark dissolves into space — used for interstitials, quote backdrops, the "hidden work" moment.                                                                     |
+| **Transit**    | lerped  | bump       | Mid-flight scatter. Density / dispersion interpolate between adjacent tiers and a `sin(πt) * 0.45` bell curve adds dispersion at the midpoint so the mark scatters and re-coheres at the destination. |
+
+**Implementation:**
+
+- One canonical shape source: `BRANDMARK_FILLED_PATHS` + `BRANDMARK_VIEWBOX`
+  in [`components/landing/v7/BrandmarkGlyph.tsx`](../../../components/landing/v7/BrandmarkGlyph.tsx).
+- One sampling utility: [`lib/brandmark/sampleShape.ts`](../../../lib/brandmark/sampleShape.ts).
+  Rejection-samples via `Path2D + ctx.isPointInPath()`; seeded PRNG keeps
+  the cloud stable across mounts.
+- One shared GL canvas: [`components/brand/BrandmarkParticleField`](../../../components/brand/BrandmarkParticleField/).
+  R3F `<Canvas>` with a custom shader that rank-clips invisible
+  particles (the density dial), applies sinusoidal wander scaled by
+  `uDispersion`, and projects pixel coordinates to NDC directly.
+
+**Falls back to the SVG actor + portal'd glyphs** when WebGL is
+unavailable or `prefers-reduced-motion: reduce` is set. Both paths
+preserve the [ADR-010 v3](../../../sentinel/decisions/010-brandmark-choreography.md)
+state machine.
+
+**Strategic framing:** in the Navigate → Encode → Build flywheel, the
+brandmark substrate is the artifact the design system _encodes_. Every
+new shape you might want — compass, lotus, key visual, future identities
+— is a new entry in a shape registry that the engine treats identically.
+Mediums collapse: vector, particle, and (future) 3D become one substrate
+dialled differently.
+
+See [ADR-011](../../../sentinel/decisions/011-brandmark-particle-artifact.md)
+for the full record and the [`brandmark-particle` skill](../../brandmark-particle/SKILL.md)
+for the operational how-to.
+
 ---
 
 ## Wordmark

@@ -3,8 +3,58 @@ import { useEffect } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import type { BrandmarkActorHandle } from "../BrandmarkActor";
+import {
+  DEFAULT_TINT,
+  useBrandmarkParticleStore,
+  type StationKind as ParticleStationKind,
+  type StationSnapshot,
+} from "@/lib/stores/brandmarkParticleStore";
 
 gsap.registerPlugin(ScrollTrigger);
+
+/** Per-station particle defaults (ADR-011 density tiers).
+ *
+ *  - Dock stations (sigil / miss / rail / orbit) run at full
+ *    density and zero dispersion: every particle paints, every
+ *    particle sits exactly on its sampled home position. At the
+ *    small dock-rect sizes (rail ≈ 56px, miss / orbit ≈ 140px,
+ *    sigil ≈ live diagram) the rendered point size (3px) overlaps
+ *    enough that the cloud reads as a filled mark — visually
+ *    indistinguishable from the SVG within a few pixels.
+ *
+ *  - Backdrop (asking-gap) runs at the sparse "diagnostic" tier:
+ *    fewer visible particles, organic dispersion. The brandmark
+ *    dissolves into atmosphere so the Benedict Evans quote reads
+ *    as the foreground.
+ *
+ *  Tune these in `/test/brandmark-particle` and update both this
+ *  table and ADR-011 together when you change them. */
+const PARTICLE_STATION_DEFAULTS: Record<ParticleStationKind, Omit<StationSnapshot, "rect">> = {
+  sigil: { opacity: 1, density: 1, dispersion: 0, tint: DEFAULT_TINT as [number, number, number] },
+  miss: { opacity: 1, density: 1, dispersion: 0, tint: DEFAULT_TINT as [number, number, number] },
+  backdrop: {
+    opacity: 1,
+    density: 0.22,
+    dispersion: 0.42,
+    tint: DEFAULT_TINT as [number, number, number],
+  },
+  rail: { opacity: 1, density: 1, dispersion: 0, tint: DEFAULT_TINT as [number, number, number] },
+  orbit: { opacity: 1, density: 1, dispersion: 0, tint: DEFAULT_TINT as [number, number, number] },
+};
+
+/** Probe WebGL feasibility. Used to gate the store into `"particle"`
+ *  mode; if WebGL is unavailable the SVG fallback paints unchanged. */
+function probeWebGL(): boolean {
+  if (typeof document === "undefined") return false;
+  try {
+    const c = document.createElement("canvas");
+    const ctx =
+      c.getContext("webgl2") ?? c.getContext("webgl") ?? c.getContext("experimental-webgl");
+    return ctx != null;
+  } catch {
+    return false;
+  }
+}
 
 /**
  * useSigilChoreography — Continuous scroll-driven brandmark journey
@@ -123,6 +173,20 @@ export function useSigilChoreography(
 
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
+    // === Brandmark particle mode probe ===
+    // Set the store's render mode at hook init. The mode flag drives
+    // two things:
+    //   - whether `BrandmarkParticleCanvas` mounts inside
+    //     `BrandmarkSystem` (it only mounts when mode === "particle");
+    //   - whether this hook writes per-station snapshots to the store
+    //     (skipped entirely in "svg" mode so the existing SVG actor
+    //     paints exactly as it did pre-ADR-011).
+    // Probe is one-shot — WebGL availability and reduced-motion
+    // preference don't typically change during a session.
+    const particleModeOK = !reduceMotion && probeWebGL();
+    const particleStore = useBrandmarkParticleStore.getState();
+    particleStore.setMode(particleModeOK ? "particle" : "svg");
+
     // === DOM resolution ===
     const defEl = docEl.querySelector<HTMLElement>("#definition");
     const missEl = docEl.querySelector<HTMLElement>("#missing-layer");
@@ -190,6 +254,143 @@ export function useSigilChoreography(
       if (lastOrbitDocked === v) return;
       lastOrbitDocked = v;
       approachEl?.setAttribute("data-orbit-docked", v);
+    };
+
+    // === Particle gate attributes ===
+    // Three CSS gates set on documentElement coordinate the SVG, the
+    // particle field, and the SVG actor:
+    //
+    //   - `data-brandmark-mode="particle"` — global flag set when
+    //     the store mode resolves to particle. CSS reads this to
+    //     hide the native dock glyphs (sigil / miss / rail / orbit)
+    //     at their parked states by default.
+    //   - `data-brand-particle-backdrop="true"` — set when the
+    //     particle canvas wrapper should be visible (fade 0 → 1).
+    //     True for every painted moment (every station + every
+    //     transit + every fade-in/out window).
+    //   - `data-brand-svg-dock="<kind>"` — set when the choreography
+    //     is parked at a full-density dock (density ≥
+    //     `SVG_DOCK_THRESHOLD`). CSS reads this to OVERRIDE the
+    //     particle-mode hide and re-show the portal'd SVG glyph at
+    //     that anchor. The particle station's `opacity` is
+    //     simultaneously written to 0 so the cloud doesn't
+    //     double-paint with the SVG. Below the threshold the SVG
+    //     stays hidden and the particle field paints.
+    //
+    // This SVG-overlay-at-full-density approach makes dock states
+    // truly pixel-perfect (it's literally the SVG file). The
+    // particle field handles every other moment — entrance, transit,
+    // backdrop, and post-orbit fade-out — where its texture is the
+    // point of the visual.
+    //
+    // All three attribute writes are memoised so we don't
+    // setAttribute every scroll frame for unchanged values.
+    let lastBrandmarkMode: string | null = null;
+    const setBrandmarkMode = (mode: "particle" | "svg") => {
+      if (lastBrandmarkMode === mode) return;
+      lastBrandmarkMode = mode;
+      document.documentElement.setAttribute("data-brandmark-mode", mode);
+    };
+    setBrandmarkMode(particleModeOK ? "particle" : "svg");
+
+    let lastBackdropGate: string | null = null;
+    const setParticleBackdropGate = (active: boolean) => {
+      const v = active ? "true" : "false";
+      if (lastBackdropGate === v) return;
+      lastBackdropGate = v;
+      document.documentElement.setAttribute("data-brand-particle-backdrop", v);
+    };
+
+    /** SVG glyph crossover threshold. When a parked station's density
+     *  meets or exceeds this, the choreography hands the paint off to
+     *  the portal'd SVG glyph at that anchor (pixel-perfect at rest)
+     *  and silences the particle station. Set just below 1.0 so the
+     *  swap is robust to floating-point noise in lerped density. */
+    const SVG_DOCK_THRESHOLD = 0.95;
+
+    let lastSvgDock: string | null = null;
+    /** Anchor key for the portal'd glyph (BrandmarkSystem.tsx
+     *  `[data-brand-anchor]`). The "missing" station uses anchor
+     *  key "missing"; everything else matches its station kind. */
+    const svgDockAnchorKey = (kind: ParticleStationKind | null): string => {
+      if (kind === "miss") return "missing";
+      return kind ?? "none";
+    };
+    const setSvgDock = (kind: ParticleStationKind | null) => {
+      const v = kind == null ? "none" : svgDockAnchorKey(kind);
+      if (lastSvgDock === v) return;
+      lastSvgDock = v;
+      if (v === "none") {
+        document.documentElement.removeAttribute("data-brand-svg-dock");
+      } else {
+        document.documentElement.setAttribute("data-brand-svg-dock", v);
+      }
+    };
+
+    /** Last station the particle field painted, so we can clear it
+     *  when the journey moves on. Phase B replaces the simpler
+     *  "backdrop only" flag from Phase A. */
+    let lastParticleStation: ParticleStationKind | null = null;
+
+    /** Write or clear a station snapshot in the particle store. The
+     *  shared `BrandmarkParticleCanvas` reads each station's
+     *  snapshot every rAF (via `getState()`) and projects the
+     *  particles into the given rect. Skipped when the mode probe
+     *  rejected particles — in that case the SVG actor + native
+     *  dock glyphs remain the only painters.
+     *
+     *  `particleOpacityOverride` lets the dock-park caller silence
+     *  the particle render (opacity 0) while still pinning the rect,
+     *  so the SVG glyph at the same anchor can paint cleanly without
+     *  a particle cloud overlapping it. The mesh's
+     *  `VISIBILITY_EPSILON` check makes opacity 0 a true no-draw on
+     *  the GPU side. */
+    const writeStationSnapshot = (
+      kind: ParticleStationKind,
+      rect: DOMRect | null,
+      particleOpacityOverride?: number
+    ) => {
+      if (!particleModeOK) return;
+      const store = useBrandmarkParticleStore.getState();
+      // Clear the previous station's snapshot if we're switching.
+      if (lastParticleStation && lastParticleStation !== kind) {
+        store.setStation(lastParticleStation, null);
+      }
+      if (!rect) {
+        store.setStation(kind, null);
+        lastParticleStation = null;
+        setParticleBackdropGate(false);
+        return;
+      }
+      const defaults = PARTICLE_STATION_DEFAULTS[kind];
+      const snap: StationSnapshot = {
+        rect: {
+          left: rect.left,
+          top: rect.top,
+          width: rect.width,
+          height: rect.height,
+        },
+        ...defaults,
+        opacity: particleOpacityOverride !== undefined ? particleOpacityOverride : defaults.opacity,
+      };
+      store.setStation(kind, snap);
+      lastParticleStation = kind;
+      // The canvas wrapper's CSS fade is keyed off the backdrop gate
+      // attribute. Set it true whenever ANY station is painting via
+      // particles so the canvas is visible across all parked docks
+      // (sigil / miss / backdrop / rail / orbit) — not just backdrop.
+      setParticleBackdropGate(true);
+    };
+
+    /** Convenience: clear all station snapshots (transit, hero,
+     *  post-orbit fade). */
+    const clearAllStationSnapshots = () => {
+      if (!particleModeOK) return;
+      const store = useBrandmarkParticleStore.getState();
+      store.clearStations();
+      lastParticleStation = null;
+      setParticleBackdropGate(false);
+      setSvgDock(null);
     };
 
     /** Set the dock attribute cluster to match a parked station (or
@@ -312,6 +513,31 @@ export function useSigilChoreography(
       // Backdrop and orbit don't have native docks, so no attr to set
       // (the actor's inline opacity paints).
       setDockAttrs(s.nativeOwns ? s.kind : s.kind === "orbit" ? "orbit" : null);
+
+      // Particle snapshot + SVG dock handoff.
+      //
+      // Two cases:
+      //
+      //   - Full-density dock (sigil / miss / rail / orbit, density
+      //     1.0): hand off to the portal'd SVG glyph at this anchor
+      //     so the dock state is pixel-perfect. The particle station
+      //     is silenced (opacity 0) so it doesn't double-paint.
+      //
+      //   - Low-density park (backdrop, density 0.22): particles are
+      //     the visual — write the snapshot as usual, clear the SVG
+      //     dock attribute so no SVG glyph paints behind the cloud.
+      //
+      // The crossover is governed by `SVG_DOCK_THRESHOLD`. A 200ms
+      // CSS opacity transition on the portal'd glyphs smooths the
+      // particle → SVG crossfade at park entry.
+      const defaults = PARTICLE_STATION_DEFAULTS[s.kind];
+      if (defaults.density >= SVG_DOCK_THRESHOLD) {
+        setSvgDock(s.kind);
+        writeStationSnapshot(s.kind, rect, /* particleOpacityOverride */ 0);
+      } else {
+        setSvgDock(null);
+        writeStationSnapshot(s.kind, rect);
+      }
     };
 
     /** Mid-transit lerp between two stations at journey-local t in
@@ -347,6 +573,48 @@ export function useSigilChoreography(
         setBrandOnRail("false");
       }
       setOrbitDocked(false);
+      // Transit always uses the particle field — never the SVG glyph
+      // — because dispersion makes the cloud scatter mid-flight,
+      // which the static SVG can't represent.
+      setSvgDock(null);
+      // Phase C: write a TRANSIT snapshot to the `to` station's
+      // slot so particles keep painting through the whole segment.
+      // The rect lerps linearly between from / to (already eased
+      // via `lerpRect(fromRect, toRect, eased)` above), and the
+      // density / dispersion interpolate between the two stations'
+      // ADR-011 tier defaults. We also add a bell-curve dispersion
+      // bump peaking at t=0.5 so the cloud "scatters" mid-flight
+      // and re-coheres at the destination — the visual dispersion
+      // choreography promised in ADR-011 § Phase C.
+      if (particleModeOK) {
+        const fromDefaults = PARTICLE_STATION_DEFAULTS[from.kind];
+        const toDefaults = PARTICLE_STATION_DEFAULTS[to.kind];
+        // Bell curve peaks at t=0.5, returns to 0 at t=0 and t=1.
+        // Combined with the lerped per-station baseline so the
+        // transit-into-backdrop already starts loosening before
+        // the cloud arrives at the parked-at-backdrop density tier.
+        const bump = Math.sin(Math.PI * t) * 0.45;
+        const baseDispersion = lerp(fromDefaults.dispersion, toDefaults.dispersion, eased);
+        const transitSnap: StationSnapshot = {
+          rect: {
+            left: rect.left,
+            top: rect.top,
+            width: rect.width,
+            height: rect.height,
+          },
+          opacity: 1,
+          density: lerp(fromDefaults.density, toDefaults.density, eased),
+          dispersion: Math.min(1.5, baseDispersion + bump),
+          tint: fromDefaults.tint,
+        };
+        const store = useBrandmarkParticleStore.getState();
+        if (lastParticleStation && lastParticleStation !== to.kind) {
+          store.setStation(lastParticleStation, null);
+        }
+        store.setStation(to.kind, transitSnap);
+        lastParticleStation = to.kind;
+        setParticleBackdropGate(true);
+      }
     };
 
     /** Hide the brandmark entirely (hero, pre-sigil fade-in zone,
@@ -359,6 +627,10 @@ export function useSigilChoreography(
       // pre-sigil zone, and after entrance completes the sigil is at
       // opacity 1 naturally.
       setDockAttrs(null);
+      // Hero / pre-sigil / post-orbit zones don't paint particles
+      // either; `clearAllStationSnapshots` also clears the SVG dock
+      // attribute so the portal'd glyph fades out in lockstep.
+      clearAllStationSnapshots();
     };
 
     /** The continuous journey function. Called from a rAF-throttled
@@ -414,10 +686,69 @@ export function useSigilChoreography(
           hideBrandmark();
           return;
         }
-        // Fade-in window: the native sigil reveal handles its own
-        // opacity via the entrance scrub. Keep the actor hidden — the
-        // brandmark "appears" through the native sigil rendering, not
-        // through the fixed actor.
+        // Fade-in window into the sigil dock.
+        //
+        // In SVG mode the native sigil source paints, animated 0 → 1 by
+        // the entrance scrub (a separate GSAP timeline tied to
+        // `#definition top 85% → top 35%`), so we just keep the actor
+        // hidden and let the diagram's own opacity drive the visual.
+        //
+        // In particle mode the entrance scrub still runs (it owns the
+        // halo / orbits / cap / legend reveal), but the
+        // `[data-brandmark-mode="particle"]` CSS gate forces the
+        // `.sigil__mark > svg` portal'd glyph to opacity 0 so it can't
+        // double-paint with the particle field. That leaves the entry
+        // band empty unless we ramp the particle field here. Write a
+        // sigil snapshot whose opacity matches the fade-in progress so
+        // the brandmark visibly assembles from particles as the user
+        // scrolls into section 02.
+        if (particleModeOK) {
+          const fadeProgress = clamp01((scrollY - fadeStart) / Math.max(1, c[0] - fadeStart));
+          if (fadeProgress <= 0.005) {
+            hideBrandmark();
+            return;
+          }
+          const rect = readStationRect(stations[0]);
+          if (rect) {
+            const defaults = PARTICLE_STATION_DEFAULTS.sigil;
+            const snap: StationSnapshot = {
+              rect: {
+                left: rect.left,
+                top: rect.top,
+                width: rect.width,
+                height: rect.height,
+              },
+              opacity: easeInOut(fadeProgress),
+              density: defaults.density,
+              dispersion: defaults.dispersion,
+              tint: defaults.tint,
+            };
+            const store = useBrandmarkParticleStore.getState();
+            if (lastParticleStation && lastParticleStation !== "sigil") {
+              store.setStation(lastParticleStation, null);
+            }
+            store.setStation("sigil", snap);
+            lastParticleStation = "sigil";
+            setParticleBackdropGate(true);
+            // Entrance fade-in always uses particles — the
+            // brandmark should "assemble" from atoms, not pop into
+            // the SVG. Keep the SVG dock cleared so the portal'd
+            // glyph stays at opacity 0 until the journey enters the
+            // sigil park (PARK_FRAC threshold) where parkAt sets
+            // the dock back to "sigil".
+            setSvgDock(null);
+            // Keep the SVG actor hidden + dock attrs clean; particles
+            // are the sole painter through the entrance.
+            actor()?.hide();
+            setSigilVisible(false);
+            setDockAttrs(null);
+          } else {
+            hideBrandmark();
+          }
+          return;
+        }
+        // SVG-mode fallback: hide the actor; the entrance scrub paints
+        // the native sigil source.
         hideBrandmark();
         return;
       }
@@ -432,7 +763,8 @@ export function useSigilChoreography(
         }
         // Fade-out window: stay pinned at the orbit anchor with
         // declining opacity. The orbit has no native dock so the
-        // actor paints this.
+        // actor paints this. In particle mode the particle field
+        // mirrors the fade via the orbit station's snapshot.
         const ft = clamp01((scrollY - c[lastIdx]) / (fadeEnd - c[lastIdx]));
         const opacity = (1 - ft) * stations[lastIdx].opacity;
         const rect = readStationRect(stations[lastIdx]);
@@ -442,6 +774,37 @@ export function useSigilChoreography(
         }
         setSigilVisible(false);
         setDockAttrs(null);
+        if (particleModeOK) {
+          // Fade-out always uses particles (the SVG dock would
+          // snap-disappear at the threshold). Clear the SVG dock
+          // attribute so the portal'd glyph fades back out to 0
+          // while the particles handle the visible fade ramp.
+          setSvgDock(null);
+          if (opacity <= 0.005) {
+            clearAllStationSnapshots();
+          } else {
+            const defaults = PARTICLE_STATION_DEFAULTS.orbit;
+            const snap: StationSnapshot = {
+              rect: {
+                left: rect!.left,
+                top: rect!.top,
+                width: rect!.width,
+                height: rect!.height,
+              },
+              opacity,
+              density: defaults.density,
+              dispersion: defaults.dispersion,
+              tint: defaults.tint,
+            };
+            const store = useBrandmarkParticleStore.getState();
+            if (lastParticleStation && lastParticleStation !== "orbit") {
+              store.setStation(lastParticleStation, null);
+            }
+            store.setStation("orbit", snap);
+            lastParticleStation = "orbit";
+            setParticleBackdropGate(true);
+          }
+        }
         return;
       }
 
@@ -590,6 +953,13 @@ export function useSigilChoreography(
       docEl.removeAttribute("data-brand-on-missing");
       document.documentElement.removeAttribute("data-brand-on-rail");
       document.documentElement.removeAttribute("data-brand-on-missing");
+      document.documentElement.removeAttribute("data-brand-particle-backdrop");
+      document.documentElement.removeAttribute("data-brandmark-mode");
+      document.documentElement.removeAttribute("data-brand-svg-dock");
+      // Clear particle store snapshots so a remount with the same
+      // store instance (Fast Refresh, navigation) starts from a clean
+      // state.
+      useBrandmarkParticleStore.getState().clearStations();
       actor()?.hide();
     };
   }, [rootRef, actorRef]);

@@ -36,13 +36,23 @@ import { useEffect, type RefObject } from "react";
  *  fixed travel actor uses its own selector; each native dock site is
  *  paired with both `img` and `svg` because some legacy slots may
  *  still carry a raster placeholder (the parser strips only the v7
- *  anchors carrying `data-brand-anchor`). */
+ *  anchors carrying `data-brand-anchor`). The particle canvas is the
+ *  Phase B+ painter for every parked station; the choreography hook
+ *  flips `[data-brand-particle-backdrop="true"]` on documentElement
+ *  whenever the canvas should paint (the same attribute that fades
+ *  the wrapper opacity from 0 → 1 via CSS). */
 const BRANDMARK_RENDER_SELECTORS: readonly string[] = [
   '[data-brand-anchor="sigil"] :where(img, svg)',
   '[data-brand-anchor="missing"] :where(img, svg)',
   '[data-brand-anchor="rail"] :where(img, svg)',
   '[data-brand-anchor="orbit"] :where(img, svg)',
   ".tf-brandmark-actor",
+  // Particle canvas — counted as the single painter when the
+  // wrapper is faded in (driven by `[data-brand-particle-backdrop]`
+  // on documentElement, set by `useSigilChoreography`). The check
+  // uses the wrapper element's computed opacity, which mirrors the
+  // gate transition.
+  ".tf-brandmark-particle-canvas",
 ];
 
 /** Opacity below which a brandmark element is considered "not
