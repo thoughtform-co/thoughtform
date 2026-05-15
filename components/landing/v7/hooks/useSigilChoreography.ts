@@ -757,47 +757,6 @@ export function useSigilChoreography(
 
     // === ADR-012 v5d — sticky-cover handoff helpers ===
 
-    /** The substrate anchor's PINNED-position viewport rect.
-     *
-     * `useIlayerProgress.sizeAnchor` writes inline `top` / `left` /
-     * `width` / `height` (in CSS pixels) on `.ilayer__brandmark-anchor`.
-     * The anchor is `position: absolute` inside `.ilayer__inner`
-     * (`position: absolute; inset: 0`), which is inside `.ilayer`.
-     * When `.ilayer` is sticky-pinned at `top: 0` (Phase 2 of the
-     * handoff stage), those inline coordinates are equivalent to
-     * viewport coordinates — i.e. they describe the substrate
-     * anchor's eventual on-screen position when the cover slide
-     * settles.
-     *
-     * We use this rect during Phase 1 (cover slide) so the global
-     * particle field morphs the brandmark toward the substrate's
-     * EVENTUAL position rather than tracking the substrate anchor's
-     * currently-moving live bbox. Without this, the lerp would
-     * arc the brandmark down off-screen toward the still-emerging
-     * substrate anchor, then back up — a dip the eye reads as
-     * disorientation.
-     *
-     * Returns `null` if the inline styles haven't been written yet
-     * (first frame after mount, before `sizeAnchor` runs); callers
-     * fall back to a `parkAt(miss)` no-op in that case. */
-    const getSubstratePinnedRect = (): DOMRect | null => {
-      const anchor = getSubstrateAnchor();
-      if (!anchor) return null;
-      const top = parseFloat(anchor.style.top);
-      const left = parseFloat(anchor.style.left);
-      const width = parseFloat(anchor.style.width);
-      const height = parseFloat(anchor.style.height);
-      if (
-        !Number.isFinite(top) ||
-        !Number.isFinite(left) ||
-        !Number.isFinite(width) ||
-        !Number.isFinite(height)
-      ) {
-        return null;
-      }
-      return new DOMRect(left, top, width, height);
-    };
-
     /** Same paint logic as `transit` but uses caller-supplied rects.
      *
      * Used by the stage handoff branches:
@@ -834,7 +793,26 @@ export function useSigilChoreography(
       if (particleModeOK) {
         const fromDefaults = PARTICLE_STATION_DEFAULTS[from.kind];
         const toDefaults = PARTICLE_STATION_DEFAULTS[to.kind];
-        const bump = Math.sin(Math.PI * t) * 0.45;
+        // ADR-012 v5d follow-up: NO dispersion bell-curve bump in the
+        // stage handoff. The standard `transit` adds
+        // `sin(π * t) * 0.45` mid-transit so the cloud scatters and
+        // re-coheres — that reads as the right "particles passing
+        // through atmosphere" beat for short within-page transits
+        // (sigil → miss, rail → orbit) where the brandmark stays
+        // roughly the same size and the dispersion IS the visual
+        // story. The cover-slide path is different: the brandmark
+        // also GROWS (miss dock ~144 px → substrate ~280 px+) and is
+        // physically traveling between two paint stations as the
+        // intelligence layer slides up to cover. Adding a dispersion
+        // bump on top of that growth makes the cloud look like it's
+        // exploding outward instead of coherently moving down into
+        // the substrate — visually it reads as "the brandmark is
+        // moving toward the camera" rather than "the brandmark is
+        // settling into the next dock". Lerp dispersion linearly
+        // between the two stations' tier defaults (both 0 for the
+        // miss → substrate and substrate → rail legs, so dispersion
+        // stays at 0 throughout) and let the rect lerp do the
+        // visible work.
         const baseDispersion = lerp(fromDefaults.dispersion, toDefaults.dispersion, eased);
         const transitSnap: StationSnapshot = {
           rect: {
@@ -845,7 +823,7 @@ export function useSigilChoreography(
           },
           opacity: 1,
           density: lerp(fromDefaults.density, toDefaults.density, eased),
-          dispersion: Math.min(1.5, baseDispersion + bump),
+          dispersion: baseDispersion,
           tint: fromDefaults.tint,
         };
         const store = useBrandmarkParticleStore.getState();
@@ -906,17 +884,39 @@ export function useSigilChoreography(
       const railStation = stations[3];
 
       if (localScroll < phase1End) {
-        // Phase 1: cover slide + brandmark morph in.
+        // Phase 1: cover slide + brandmark "rides" the slide downward
+        // into the substrate position.
+        //
+        // We use the LIVE substrate rect (not the pinned rect) as the
+        // destination so the brandmark visibly translates downward
+        // along with #intelligence-layer's slide. As ilayer rises
+        // from the bottom of the viewport, the substrate anchor's
+        // bbox.top moves from ~150svh (off-bottom) up through ~50svh
+        // (centred when ilayer pins). The eased lerp over Phase 1
+        // glides the brandmark from the pinned miss anchor (~50svh)
+        // toward the moving substrate position — which arcs the
+        // brandmark down and back up to centre by t = 1.
+        //
+        // The earlier v5d implementation used `getSubstratePinnedRect`
+        // here so the cloud "grew in place at the eventual centre,"
+        // but with both anchors at viewport centre that read as
+        // pure growth with no translation — and combined with the
+        // (now-removed) dispersion bump, looked like the brandmark
+        // was exploding outward. Switching to the live rect gives the
+        // user the "moves downwards into the intelligence layer"
+        // motion they expect; the dispersion bump is suppressed in
+        // `paintTransitWithRects` so the cloud stays coherent
+        // throughout the arc (no scattering).
         const t = localScroll / phase1End;
         const missRect = readStationRect(missStation);
-        const substratePinned = getSubstratePinnedRect();
-        if (!missRect || !substratePinned) {
+        const substrateLive = readStationRect(substrateStation);
+        if (!missRect || !substrateLive) {
           // Anchors not measurable yet — fall back to parking miss
           // so the brandmark is at least at the visible source.
           parkAt(missStation);
           return;
         }
-        paintTransitWithRects(missStation, substrateStation, missRect, substratePinned, t);
+        paintTransitWithRects(missStation, substrateStation, missRect, substrateLive, t);
         return;
       }
 

@@ -261,14 +261,16 @@ three-phase special case (`handleStageHandoff`):
 
 - **Phase 1 (cover slide)** — global particle field carries the
   brandmark from the miss anchor's live rect toward the substrate
-  anchor's PINNED rect (read from inline styles via
-  `getSubstratePinnedRect()`, NOT from `getBoundingClientRect()`).
-  Without the pinned-rect destination, the lerp would chase the
-  substrate anchor's still-emerging position downward and back up
-  — a dip the eye reads as disorientation. The pinned rect uses
-  the inline `top` / `left` / `width` / `height` that
-  `useIlayerProgress.sizeAnchor` writes; those coordinates are
-  equivalent to viewport pixels when ilayer is sticky-pinned.
+  anchor's LIVE rect. As ilayer slides up from off-bottom, the
+  substrate anchor's bbox glides up through the viewport; the
+  eased lerp arcs the brandmark down with the slide and back up
+  to centre as ilayer pins. Visually the brandmark "rides" the
+  cover slide downward into the intelligence-layer position.
+  (An earlier v5d iteration used the substrate anchor's PINNED
+  rect — read from the inline styles `useIlayerProgress.sizeAnchor`
+  writes — to avoid any vertical motion, but that read as pure
+  scale-up with no translation; the live rect gives the user the
+  "moves downwards into the intelligence layer" beat they expect.)
 
 - **Phase 2 (substrate parked)** — same as v5c.
   `handoffActive = true`, R3F brandmark cloud is the painter,
@@ -281,9 +283,19 @@ three-phase special case (`handleStageHandoff`):
   is visible at the substrate position during the transit out.
 
 The new helper `paintTransitWithRects` is the body of `transit`
-factored to accept caller-supplied rects, so the dispersion
-bell-curve and per-station tier defaults still apply across the
-stage's Phase 1 and Phase 3 windows.
+factored to accept caller-supplied rects, with one deliberate
+difference: it **does NOT add the `sin(π * t) * 0.45` dispersion
+bump** that the standard `transit` applies. The bump is the right
+visual for short, same-size, within-page transits (sigil → miss,
+rail → orbit) where the dispersion IS the story. The cover-slide
+path is different — the brandmark also GROWS (miss dock ~144 px →
+substrate ~280 px+) AND is physically traveling between paint
+stations as the intelligence layer slides up to cover. Adding the
+bump on top of the growth makes the cloud read as "the brandmark
+is exploding outward" / "moving toward the camera" instead of
+"settling into the next dock". The cover slide should read as a
+clean translate + scale; dispersion stays at the per-station tier
+default (0 on both ends for miss / substrate / rail).
 
 When you change the stage's height (currently `300svh`), update
 both the CSS (`.brand-handoff-stage { height }`) and
