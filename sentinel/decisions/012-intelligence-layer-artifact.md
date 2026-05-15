@@ -406,3 +406,60 @@ v2 mapped the Aether substrate-map payload onto the artifact (three R3F discs fl
 - [`components/landing/v7/landing.css`](../../components/landing/v7/landing.css) — retired `.ilayer__stack__anno*`, `__chips*`, `__bands*`, `__band*`, `__props*`, `__prop` styles. Simplified `.ilayer__stack` grid to one `"canvas"` cell. Added `perspective: 900px` on `.ilayer__artifact` and `transform: rotateX(var(--ilayer-tilt-deg, 0deg))` on the brandmark anchor's children. Sized the anchor up to `clamp(220px, 26vw, 320px)`.
 - [`components/landing/v7/intelligence-layer/IntelligenceLayerStack.tsx`](../../components/landing/v7/intelligence-layer/IntelligenceLayerStack.tsx) — rebuilt as TWO rings (navigate + build) emerging from the brandmark's centre. Removed the encode ring and the central thread. Added the `tiltEnvelope(progress)` 0 → 1 → 0 shape and the `MAX_TILT_RAD` / `MAX_TILT_DEG` constants the hook keeps in lockstep.
 - [`components/landing/v7/intelligence-layer/useIlayerProgress.ts`](../../components/landing/v7/intelligence-layer/useIlayerProgress.ts) — writes `--ilayer-tilt-deg` on the brandmark anchor each scroll frame using a duplicate `tiltEnvelope` (same shape as the R3F module's). Removed the `data-ilayer-state="open"` attribute (no annotations to gate any more).
+
+---
+
+## Amendment v4 — Bottom-pinned podium with brandmark morph (2026-05-15)
+
+### Why amend (yet again)
+
+v3 read better than v2 — one centerpiece, brandmark as the encode layer — but the artifact was still a centred medium-sized object floating in the middle of the viewport with the title above and the closer below. Walking the page with the [sleep-well-creatives.com](https://sleep-well-creatives.com/) section-05 reference open made one thing obvious: the podium needs to **own the bottom of the viewport** at full width so the discs read as the floor of the page, not as a decorative widget. Sleep-well's discs span ~92vw and pin to the bottom; the upper viewport is given over to floating annotation labels with hairline connectors that drop into each disc. The brandmark is a small fixed mark at the top, not a dominant centre.
+
+This amendment reshapes ADR-012 along those lines while keeping every choreography contract from v2/v3 intact.
+
+### What changes from v3
+
+- **Layout flips from centred to bottom-pinned.** `.ilayer__artifact` is now `position: absolute; inset: auto 0 0 0; width: 100vw; height: clamp(360px, 52svh, 560px)`. The discs span the full viewport width with the largest (`build`) hugging the floor.
+
+- **Discs are real 3D cylinders, not flat ellipses.** `IntelligenceLayerStack.tsx` now renders three `THREE.CylinderGeometry` discs with visible rim thickness (build outer radius 1.00 / encode 0.62 / navigate 0.36, all height ~0.06–0.07 in scene units). Sleep-well's footer credits "DESIGN, DEVELOPMENT, **3D ASSETS**" — the rim depth on each disc is what makes the artifact read as physical. Materials switch from `MeshBasicMaterial` to `MeshStandardMaterial` so the rim/face contrast catches the lighting; new `ambientLight` + warm key + cool fill are added to support the standard material.
+
+- **Camera switches from orthographic to perspective at slight elevation.** `PerspectiveCamera` at `position [0, 1.6, 4.2]`, `fov: 28`, `lookAt [0, 0.4, 0]` — gives the 3/4 read where you can see the disc tops. The "tilt" envelope now drives the **podium group's** X-rotation (visually equivalent to pitching the camera, but simpler to wire because the camera is set on `<Canvas>`, not a scene node).
+
+- **Sequential disc reveal.** The discs deploy in order — build first (`reveal: [0.18..0.42]`), then encode (`[0.30..0.55]`, synced with the brandmark fade-out), then navigate (`[0.42..0.65]`). Reads as the podium "stacking itself" instead of all three popping at once.
+
+- **Brandmark morphs INTO the encode disc.** The visual heart of v4: the SVG mark starts at upper-center (where v3 had it), then descends + scales toward the encode disc's projected screen rect across `BRAND_MORPH.descend = [0.20..0.55]`, while crossfading to opacity 0 across `BRAND_MORPH.crossfade = [0.45..0.60]`. The encode disc fades in over `[0.30..0.55]`, so the mark dissolves AS the disc appears at the same screen rect — visual substitution. Past the morph, the brandmark is invisible; the encode disc carries the identity.
+
+- **Floating annotation labels return.** Four `.ilayer__label` blocks (`--navigate / --encode / --build / --closer`) absolute-positioned around the upper viewport with SVG hairline connectors that draw in via `stroke-dashoffset` keyed on `--ilayer-progress`. Each label fades in shortly before its matching disc fades in (gates declared per-modifier in `landing.css`). The lede + closer copy from v3 splits across the four labels — the title above and the labels do the editorial work the v3 lede + closer used to do.
+
+- **The substrate anchor's RECT is non-stationary across the section.** The anchor element is `position: absolute` with `transform: translateX(-50%) translate(--ilayer-anchor-x, --ilayer-anchor-y) scale(--ilayer-anchor-scale)`. `useIlayerProgress` writes those three variables every scroll frame, sourcing the encode disc's live screen rect from `useIlayerGeomStore` (the R3F scene projects the encode disc into client coords each frame). Because `useSigilChoreography` resolves the anchor lazily and reads `getBoundingClientRect()` live, the actor follows the anchor's descent automatically — no choreography-hook change needed.
+
+### New shared geometry module
+
+`components/landing/v7/intelligence-layer/intelligenceLayerGeom.ts` — single source of truth for:
+
+- `DISC_GEOM` (per-disc outerR / height / y / colour / metalness / roughness / reveal window / hole ratio)
+- `CAMERA_PARAMS` (fov / position / lookAt)
+- `BRAND_MORPH` (descend window / crossfade window / max tilt deg)
+- `tiltEnvelope(progress)`, `smoothstep(...)` — duplicated from v3, now exported once
+- `useIlayerGeomStore` — Zustand store the R3F scene writes the live encode rect into; the progress hook reads from it
+
+### Brandmark contract — still unchanged at the JS level
+
+`<div class="ilayer__brandmark-anchor" data-brand-anchor="substrate">` is still resolved by `useSigilChoreography.ts` via `intelligenceEl.querySelector(".ilayer__brandmark-anchor")`. The substrate station's density / opacity / dispersion stay at full SVG dock. The new contract subtlety is that the anchor's RECT moves during the section — but the choreography hook already reads it live every frame, so this is transparent. A comment was added at `getSubstrateAnchor()` documenting the new contract so future maintainers don't "fix" the anchor to a static center.
+
+The dock-state opacity gate is now multiplied by `--ilayer-brand-opacity` so the morph crossfade wins over the dock state's `opacity: 1 !important` (a higher-specificity overriding rule replaces the literal `1` with `var(--ilayer-brand-opacity, 1)`).
+
+### Compositing — ADR-008 still holds
+
+The R3F canvas mounts inside `.ilayer__inner` as before; the bleed wrapper stays opaque. Labels and brandmark sit above the canvas on z-index but neither carries `[data-m]` so the wrapper's reveal isn't exposed. The podium and labels are inside `.ilayer__inner` so the v7-parser's `<img>` strip rule still matches the brandmark anchor.
+
+### Files touched in v4
+
+- [`public/prototypes/v7/landing-v7-motion.html`](../../public/prototypes/v7/landing-v7-motion.html) — restructured `.ilayer__inner`: removed `.ilayer__stack__dock` wrapper around the brandmark anchor (the anchor is now a direct sibling of `.ilayer__artifact`); added `.ilayer__labels` with four `.ilayer__label` blocks (each containing eyebrow, body, and an inline SVG connector path); rewrote `.ilayer__stack__fallback` ellipses for the new vertically-stacked podium geometry.
+- [`components/landing/v7/landing.css`](../../components/landing/v7/landing.css) — replaced the entire `.ilayer*` block: `.ilayer__inner` → absolute stage, `.ilayer__head` → top-center positioned, new `.ilayer__labels` + `.ilayer__label*` rules with per-label position + reveal gates, `.ilayer__artifact` → bottom-pinned full-viewport-width, `.ilayer__brandmark-anchor` → absolute upper-center with new transform-driving CSS variables, dock-state opacity gate multiplied by `--ilayer-brand-opacity`, mobile collapse to stacked column without connectors.
+- [`components/landing/v7/intelligence-layer/intelligenceLayerGeom.ts`](../../components/landing/v7/intelligence-layer/intelligenceLayerGeom.ts) — NEW. `DISC_GEOM` / `CAMERA_PARAMS` / `BRAND_MORPH` constants, `tiltEnvelope` + `smoothstep` helpers, `useIlayerGeomStore` Zustand store.
+- [`components/landing/v7/intelligence-layer/IntelligenceLayerStack.tsx`](../../components/landing/v7/intelligence-layer/IntelligenceLayerStack.tsx) — rewritten end-to-end: three `CylinderGeometry` discs with `MeshStandardMaterial`, ambient + directional lighting, `PerspectiveCamera` at slight elevation, `Disc` component, podium group with X-rotation envelope, `EncodeRectReporter` that projects the encode disc's screen rect into `useIlayerGeomStore` each frame.
+- [`components/landing/v7/intelligence-layer/useIlayerProgress.ts`](../../components/landing/v7/intelligence-layer/useIlayerProgress.ts) — extended to write `--ilayer-progress` on the section root and `--ilayer-anchor-x` / `--ilayer-anchor-y` / `--ilayer-anchor-scale` / `--ilayer-brand-opacity` on the anchor each frame; reads encode rect from `useIlayerGeomStore` (with synthetic rect fallback for static mode).
+- [`components/landing/v7/intelligence-layer/index.ts`](../../components/landing/v7/intelligence-layer/index.ts) — re-exports the geom module.
+- [`components/landing/v7/hooks/useSigilChoreography.ts`](../../components/landing/v7/hooks/useSigilChoreography.ts) — added a comment block on `getSubstrateAnchor()` documenting the new "anchor moves during section" contract. No behavior change.
+- [`.claude/skills/brandmark-choreography/SKILL.md`](../../.claude/skills/brandmark-choreography/SKILL.md) — note about the substrate anchor's non-stationary rect across the section.

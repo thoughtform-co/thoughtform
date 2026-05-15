@@ -4602,6 +4602,35 @@ html { scroll-behavior: smooth; }
   <section class="station station--centered ilayer" id="intelligence-layer" data-station="intelligenceLayer" data-screen-label="04 Intelligence layer">
     <div class="station__idx">Intelligence layer<span class="landmark">Landmark · the encoded substrate</span></div>
 
+    <!-- Podium artifact (ADR-012 v4) — sleep-well-creatives.com pattern:
+         three real 3D discs (short cylinders with rim thickness) pinned
+         to the bottom of the viewport, full viewport width. The
+         brandmark MORPHS INTO the middle (encode) disc rather than
+         sitting above it: as the section progresses, the SVG mark
+         translates + scales toward the encode disc's projected screen
+         rect and crossfades to 0, while the encode disc fades in at
+         the same rect.
+
+         Layout regions inside .ilayer__inner are absolute-positioned
+         siblings (no centred flex column anymore):
+           - .ilayer__head           — top-center, eyebrow + title only
+           - .ilayer__labels         — 4 floating annotation blocks
+                                       around the upper viewport, each
+                                       with an SVG hairline connector
+                                       dropping toward its disc
+           - .ilayer__brandmark-anchor — starts at upper-center, descends
+                                         + scales toward the encode
+                                         disc per useIlayerProgress
+           - .ilayer__artifact .ilayer__stack — bottom-pinned podium
+
+         Compositing rules followed:
+         1. Outer .ilayer wrapper inherits .station's opaque var(--void)
+            shield. No transparency on the bleed-width element.
+         2. Reveal motion lives on .ilayer__inner; the wrapper carries
+            no data-m / opacity transitions (Rule 2 of
+            landing-v7-compositing).
+         3. The R3F canvas paints under the labels but above the void
+            shield; labels and brandmark sit on top via z-index. -->
     <div class="ilayer__inner" data-m="instrument">
 
       <header class="ilayer__head">
@@ -4612,62 +4641,100 @@ html { scroll-behavior: smooth; }
         <h2 class="ilayer__title">
           The fix is an <em>intelligence layer.</em>
         </h2>
-        <p class="ilayer__lede">
-          An operating layer between how your team works and what AI does.
-          <em>Encoded once.</em> Inherited by every surface the team
-          already uses.
-        </p>
       </header>
 
-      <!-- Layered 3D centerpiece (ADR-012 v3) — the brandmark IS the
-           middle layer of a three-strata stack. As the section enters
-           view, the whole artifact tilts back on X and two rings emerge
-           from the brandmark's centre (Navigate above, Build below).
-           No annotation clusters around it — the title above and the
-           closer below carry the editorial frame; the artifact carries
-           the visual story alone, like sleep-well-creatives.com.
+      <!-- Floating annotation labels — sleep-well-creatives.com
+           pattern: 4 callouts in the upper viewport, each with a
+           thin hairline path dropping to the disc it describes.
+           Connectors animate via stroke-dashoffset keyed on
+           --ilayer-progress (written by useIlayerProgress); per-
+           label fade-in is sequenced so navigate/encode/build/closer
+           reveal in order as the podium stacks itself. -->
+      <div class="ilayer__labels" aria-hidden="true">
 
-           The substrate dock anchor inside .ilayer__stack__dock is the
-           ADR-012 contract surface: BrandmarkSystem portals the
-           canonical glyph in, useSigilChoreography parks the actor
-           here. The brandmark anchor's children carry the X-tilt via
-           the --ilayer-tilt-deg CSS variable so the choreography's
-           bbox reads stay un-rotated. -->
+        <aside class="ilayer__label ilayer__label--navigate" data-ilayer-label="navigate">
+          <p class="ilayer__label__eyebrow">Navigate</p>
+          <p class="ilayer__label__body">
+            Trusted sources, decisions, and prior work — the input
+            plane the team already navigates.
+          </p>
+          <svg class="ilayer__label__connector" viewBox="0 0 100 200" preserveAspectRatio="none" aria-hidden="true">
+            <path class="ilayer__label__path" d="M 90 0 Q 90 100, 50 200" fill="none" />
+          </svg>
+        </aside>
+
+        <aside class="ilayer__label ilayer__label--encode" data-ilayer-label="encode">
+          <p class="ilayer__label__eyebrow">Encode</p>
+          <p class="ilayer__label__body">
+            <em>The substrate.</em> Your team's judgment, encoded
+            once. The brandmark IS this layer.
+          </p>
+          <svg class="ilayer__label__connector" viewBox="0 0 100 200" preserveAspectRatio="none" aria-hidden="true">
+            <path class="ilayer__label__path" d="M 10 0 Q 10 100, 50 200" fill="none" />
+          </svg>
+        </aside>
+
+        <aside class="ilayer__label ilayer__label--build" data-ilayer-label="build">
+          <p class="ilayer__label__eyebrow">Build</p>
+          <p class="ilayer__label__body">
+            Headless surfaces — every tool the team already uses
+            inherits the substrate's judgment.
+          </p>
+          <svg class="ilayer__label__connector" viewBox="0 0 100 200" preserveAspectRatio="none" aria-hidden="true">
+            <path class="ilayer__label__path" d="M 90 0 Q 90 120, 50 200" fill="none" />
+          </svg>
+        </aside>
+
+        <aside class="ilayer__label ilayer__label--closer" data-ilayer-label="closer">
+          <p class="ilayer__label__eyebrow">In practice</p>
+          <p class="ilayer__label__body">
+            Work stays in place. <em>Substrate carries the judgment.</em>
+            Surfaces inherit it.
+          </p>
+          <svg class="ilayer__label__connector" viewBox="0 0 100 200" preserveAspectRatio="none" aria-hidden="true">
+            <path class="ilayer__label__path" d="M 10 0 Q 10 120, 50 200" fill="none" />
+          </svg>
+        </aside>
+
+      </div>
+
+      <!-- Podium artifact — three-disc R3F scene, bottom-pinned, full
+           viewport width. The static SVG fallback (reduced-motion /
+           no-WebGL) shows the discs at rest. -->
       <div class="ilayer__artifact ilayer__stack" role="group" aria-label="Three-layer intelligence-layer instrument: navigate, encode substrate, build">
 
         <!-- R3F canvas mount slot. IntelligenceLayerPortal createRoots
-             into this placeholder; the static fallback (mobile or
-             reduced motion) hides the canvas and shows the SVG
-             ellipse stack directly underneath. -->
+             into this placeholder; the static fallback hides the
+             canvas and shows the SVG ellipse stack directly
+             underneath. -->
         <div class="ilayer__stack__canvas" data-ilayer-stack-root aria-hidden="true"></div>
 
-        <!-- Static fallback — three flat ellipses for reduced-motion /
-             no-WebGL visitors. Hidden whenever the R3F canvas is
-             active (data-ilayer-mode="r3f" on .ilayer__stack). -->
-        <svg class="ilayer__stack__fallback" viewBox="-200 -120 400 240" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
-          <ellipse class="ilayer__stack__fallback-ring ilayer__stack__fallback-ring--navigate" cx="0" cy="-44" rx="118" ry="22" />
-          <ellipse class="ilayer__stack__fallback-ring ilayer__stack__fallback-ring--encode" cx="0" cy="0" rx="138" ry="26" />
-          <ellipse class="ilayer__stack__fallback-ring ilayer__stack__fallback-ring--build" cx="0" cy="44" rx="118" ry="22" />
+        <!-- Static fallback — three vertically-offset ellipses
+             matching the podium geometry (build largest at bottom,
+             navigate smallest at top). Hidden whenever the R3F
+             canvas is active (data-ilayer-mode="r3f" on
+             .ilayer__stack). -->
+        <svg class="ilayer__stack__fallback" viewBox="-400 -160 800 320" preserveAspectRatio="xMidYMax meet" aria-hidden="true">
+          <ellipse class="ilayer__stack__fallback-ring ilayer__stack__fallback-ring--build" cx="0" cy="100" rx="380" ry="56" />
+          <ellipse class="ilayer__stack__fallback-ring ilayer__stack__fallback-ring--encode" cx="0" cy="0" rx="200" ry="32" />
+          <ellipse class="ilayer__stack__fallback-ring ilayer__stack__fallback-ring--navigate" cx="0" cy="-90" rx="120" ry="20" />
         </svg>
 
-        <!-- Substrate dock layer — sits over the canvas grid cell,
-             centres the brandmark anchor. Separate from the canvas
-             mount so React's createRoot does not own this subtree.
-             The brandmark anchor below is the ADR-012 contract
-             surface; the placeholder <img> is stripped by the v7
-             parser, and BrandmarkSystem portals the canonical glyph
-             into it. -->
-        <div class="ilayer__stack__dock" aria-hidden="true">
-          <div class="ilayer__brandmark-anchor" data-brand-anchor="substrate">
-            <img src="assets/logos/Thoughtform_Brandmark.svg" alt="" />
-          </div>
-        </div>
       </div>
 
-      <p class="ilayer__closer">
-        Work stays in place. <em>Substrate carries the judgment.</em>
-        Surfaces inherit it.
-      </p>
+      <!-- Brandmark substrate dock anchor — starts at upper-center
+           and descends + scales toward the encode disc's projected
+           screen rect via useIlayerProgress's CSS variables. The
+           anchor element is the ADR-012 contract surface: the
+           placeholder <img> is stripped by the v7 parser, and
+           BrandmarkSystem portals the canonical glyph into it.
+           Sibling of .ilayer__artifact (not a child of the canvas
+           grid cell) so its absolute positioning sits free of the
+           podium's bottom-pin layout. -->
+      <div class="ilayer__brandmark-anchor" data-brand-anchor="substrate" aria-hidden="true">
+        <img src="assets/logos/Thoughtform_Brandmark.svg" alt="" />
+      </div>
+
     </div>
   </section>
 

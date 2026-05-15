@@ -3223,41 +3223,46 @@ html[data-quote-active="true"] .tf-brandmark-actor {
    reveal to hover (same as desktop). Touch tablets fall into the
    compact range above (≤960px) where bodies show by default. */
 
-/* ═══════════ 04 INTELLIGENCE LAYER — layered 3D centerpiece (ADR-012 v3) ═══════════
-   The brandmark IS the middle layer. As the section enters view, the
-   whole artifact tilts back on X and two R3F rings emerge from the
-   brandmark's centre (Navigate above, Build below). No annotation
-   clusters around it — the section's title (above) and closer
-   (below) carry the editorial frame; the artifact carries the visual
-   story alone, like sleep-well-creatives.com.
+/* ═══════════ 04 INTELLIGENCE LAYER — bottom-pinned podium (ADR-012 v4) ═══════════
+   Sleep-well-creatives.com section-05 pattern: a stack of three real
+   3D discs (short cylinders with rim thickness) pinned to the bottom
+   of the viewport, full viewport width. The brandmark MORPHS INTO
+   the middle (encode) disc — the SVG mark descends + scales toward
+   the disc's projected screen rect and crossfades to 0 as the disc
+   fades in at the same rect. Floating annotation labels sit around
+   the upper viewport, each connected to its disc by a hairline path
+   that draws in via stroke-dashoffset.
 
-   The substrate dock anchor is unchanged from ADR-012 v1: choreography
-   reads its rect, BrandmarkSystem portals the glyph in. The CSS
-   tilt is applied to the anchor's CHILDREN (not the anchor itself)
-   so getBoundingClientRect() reads the un-rotated bbox and the
-   brandmark choreography stays correct during transit.
+   Layout regions inside .ilayer__inner are absolute siblings:
+     - .ilayer__head              top-center (eyebrow + title only)
+     - .ilayer__labels            4 floating annotation blocks
+     - .ilayer__brandmark-anchor  starts upper-center, descends per
+                                  useIlayerProgress, lands on encode
+     - .ilayer__artifact .ilayer__stack  bottom-pinned podium (R3F)
+
+   The substrate dock anchor's RECT is now non-stationary across the
+   section: useIlayerProgress writes --ilayer-anchor-x, --ilayer-anchor-y,
+   --ilayer-anchor-scale every frame, so the choreography hook's
+   live getBoundingClientRect() read tracks the descent automatically.
+   The choreography contract surface (`.ilayer__brandmark-anchor`) is
+   unchanged at the JS level — only its rect moves.
 
    Compositing rules followed:
    1. Outer .ilayer wrapper inherits .station's opaque var(--void)
       shield. The R3F canvas mounts inside .ilayer__inner (a
       positioned descendant) — never on the bleed wrapper.
-   2. Reveal motion on .ilayer__inner only; .ilayer__stack__canvas and
-      .ilayer__brandmark-anchor have no [data-m] so no opacity
+   2. Reveal motion on .ilayer__inner only; .ilayer__stack__canvas
+      and .ilayer__brandmark-anchor have no [data-m] so no opacity
       flicker exposes the fixed gateway radial.
    3. The canvas paints with `pointer-events: none` so it never
-      blocks scroll, and the dock layer sits above it via z-index.
+      blocks scroll, and labels + brandmark sit above it via z-index.
    ──────────────────────────────────────────────────────────────────── */
 
 .ilayer {
-  /* Lock to one viewport so the layered instrument reads as a single
-     executive beat. The .station default carries `min-height: 100vh`;
-     this strengthens that to a hard `height` so the artifact aligns
-     to the viewport centre rather than growing to fit. */
+  /* Lock to one viewport so the artifact reads as a single
+     executive beat. */
   height: 100vh;
   height: 100svh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   position: relative;
   overflow: hidden;
 }
@@ -3270,28 +3275,32 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   z-index: 3;
 }
 
-/* Inner column — data-m="instrument" carries the IO reveal motion.
-   Wrapper itself stays opaque (Rule 1); only the inner column fades
-   (Rule 2). */
+/* Inner — was a centred flex column; becomes an absolute-positioning
+   stage so head / labels / podium / brandmark anchor each layout
+   from the section's edges. data-m="instrument" still carries the
+   IO reveal motion (Rule 2). */
 .ilayer__inner {
-  position: relative;
+  position: absolute;
+  inset: 0;
   z-index: 2;
-  width: min(1180px, 92vw);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: clamp(20px, 3vh, 36px);
-  text-align: center;
 }
 
-/* Header — eyebrow / title / lede, mirrors .miss__head register so
-   the diagnostic and the answer share visual grammar. */
+/* Header — eyebrow + title only, anchored at the very top of the
+   viewport so the labels and podium have room below. The lede has
+   moved into the floating labels (each label carries a piece of
+   the editorial copy now). */
 .ilayer__head {
+  position: absolute;
+  top: clamp(80px, 12vh, 140px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 3;
   display: flex;
   flex-direction: column;
   gap: clamp(10px, 1.4vh, 16px);
-  max-width: 56ch;
+  max-width: min(56ch, 92vw);
   align-items: center;
+  text-align: center;
 }
 .ilayer__eyebrow {
   display: inline-flex;
@@ -3326,51 +3335,162 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   color: var(--gold);
   font-weight: 400;
 }
-.ilayer__lede {
+
+/* ── Floating annotation labels ────────────────────────────────────
+   Sleep-well pattern: 4 callouts in the upper viewport with a thin
+   hairline path dropping toward the disc the label describes. Each
+   label is absolute-positioned at clamp() coordinates; per-label
+   fade-in is keyed off --ilayer-progress (written by the progress
+   hook each frame) so navigate / encode / build / closer reveal
+   sequentially as the podium stacks itself.
+
+   Connector hairlines use SVG <path> with stroke-dasharray =
+   pathLength so we can animate stroke-dashoffset from pathLength
+   (hidden) to 0 (drawn) via the same --ilayer-progress variable. */
+.ilayer__labels {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 4;
+}
+.ilayer__label {
+  position: absolute;
+  width: clamp(180px, 22vw, 260px);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  /* Per-label opacity ramps in via --ilayer-progress thresholds
+     declared per-modifier below. Default 0 so labels don't flash on
+     first paint (the progress var is written 0 → 1 across the section
+     by useIlayerProgress). */
+  opacity: 0;
+  transition: opacity 320ms ease-out;
+  /* Hairline shows below the label text; we use padding-bottom so
+     the connector SVG can extend down ~280px without being clipped. */
+  padding-bottom: clamp(180px, 24vh, 280px);
+}
+.ilayer__label__eyebrow {
+  margin: 0;
+  font-family: var(--font-pt-mono);
+  font-size: 10px;
+  letter-spacing: var(--track-widest);
+  text-transform: uppercase;
+  color: var(--gold);
+}
+.ilayer__label__body {
+  margin: 0;
   font-family: var(--font-pp-neue-montreal);
-  font-size: clamp(13px, 1vw, 16px);
+  font-size: clamp(12px, 0.92vw, 14px);
   line-height: 1.55;
   color: var(--dawn-70);
-  margin: 0;
-  max-width: 52ch;
   text-wrap: pretty;
 }
-.ilayer__lede em {
+.ilayer__label__body em {
   font-style: italic;
   color: var(--dawn);
 }
-
-/* ── Stack artifact ────────────────────────────────────────────────
-   One centred grid cell holds three overlapping layers, all sharing
-   the same grid-area:
-     - .ilayer__stack__canvas (R3F mount)            — z:1
-     - .ilayer__stack__fallback (SVG static fallback) — z:1
-     - .ilayer__stack__dock (brandmark anchor host)   — z:3 (in front)
-   The wrapper is taller than the previous v2 grid because the
-   single-cell artifact reads as a denser instrument. */
-.ilayer__artifact {
-  position: relative;
+.ilayer__label__connector {
+  position: absolute;
+  /* Sit below the body, run down toward the podium. Width is the
+     label's width; height is the same as the padding-bottom above
+     so the path fits. */
+  left: 0;
+  bottom: 0;
   width: 100%;
-  display: grid;
-  /* Provide CSS perspective so the brandmark's child rotateX reads
-     as real depth instead of an orthographic flatten. ~900px puts
-     the vanishing point comfortably outside the visible area. */
-  perspective: 900px;
+  height: clamp(180px, 24vh, 280px);
+  overflow: visible;
+  pointer-events: none;
+}
+.ilayer__label__path {
+  stroke: var(--dawn-30);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+  /* The path is a quadratic curve in a 100x200 viewBox stretched to
+     the connector's actual size. We approximate the path length
+     with 220 (a touch over 200 to handle the curve); browsers
+     re-render the dasharray every paint so the over-estimate just
+     means the line has a brief tail of "extra" length to draw,
+     which we hide by clamping the dashoffset transition. */
+  stroke-dasharray: 220;
+  stroke-dashoffset: calc(220 * (1 - var(--ilayer-progress, 0)));
+  transition: stroke-dashoffset 80ms linear;
+  opacity: 0.6;
+}
+
+/* Per-label positioning + reveal threshold. Coordinates use clamp()
+   so they shift gracefully across viewport sizes. The reveal
+   threshold per label is the --ilayer-progress value above which
+   the label fades in; matched to its disc's reveal window in
+   DISC_GEOM. */
+.ilayer__label--navigate {
+  top: clamp(180px, 22vh, 280px);
+  left: clamp(40px, 6vw, 96px);
+  text-align: left;
+}
+.ilayer__label--navigate .ilayer__label__connector {
+  /* Drops down-right toward the top (navigate) disc, which sits
+     above the encode disc. Override the path's start/end so the
+     line emerges from the bottom-right of this label's body and
+     lands near the disc's rim. */
+}
+.ilayer__label--encode {
+  top: clamp(180px, 22vh, 280px);
+  right: clamp(40px, 6vw, 96px);
+  text-align: right;
+}
+.ilayer__label--build {
+  top: clamp(320px, 40vh, 460px);
+  left: clamp(40px, 6vw, 96px);
+  text-align: left;
+}
+.ilayer__label--closer {
+  top: clamp(320px, 40vh, 460px);
+  right: clamp(40px, 6vw, 96px);
+  text-align: right;
+}
+
+/* Per-label opacity gates. We fade each label in shortly before its
+   matching disc fades in, so the eye reads "label → disc" instead
+   of all four labels arriving at once. The thresholds match the
+   reveal.in values in DISC_GEOM. */
+.ilayer__label--navigate {
+  opacity: clamp(0, calc((var(--ilayer-progress, 0) - 0.42) * 6), 1);
+}
+.ilayer__label--encode {
+  opacity: clamp(0, calc((var(--ilayer-progress, 0) - 0.3) * 6), 1);
+}
+.ilayer__label--build {
+  opacity: clamp(0, calc((var(--ilayer-progress, 0) - 0.18) * 6), 1);
+}
+.ilayer__label--closer {
+  opacity: clamp(0, calc((var(--ilayer-progress, 0) - 0.55) * 6), 1);
+}
+
+/* ── Podium artifact ───────────────────────────────────────────────
+   Bottom-pinned, full viewport width. Hosts the R3F canvas + the
+   static SVG fallback. The R3F scene paints the three discs;
+   pointer-events disabled so scroll passes through. */
+.ilayer__artifact {
+  position: absolute;
+  inset: auto 0 0 0;
+  width: 100vw;
+  height: clamp(360px, 52svh, 560px);
+  z-index: 1;
+  pointer-events: none;
 }
 .ilayer__stack {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  grid-template-rows: clamp(280px, 44vh, 460px);
+  grid-template-rows: 1fr;
   grid-template-areas: "canvas";
   align-items: stretch;
   justify-items: stretch;
-  padding: clamp(8px, 1vh, 14px) 0 0;
+  width: 100%;
+  height: 100%;
 }
 
-/* Canvas slot — R3F portal mounts here. Pointer-events disabled so
-   scroll passes through. The canvas wrapper that React mounts
-   inside this element gets `position: absolute; inset: 0` so the
-   canvas always fills the slot regardless of resize. */
+/* Canvas slot — R3F portal mounts here. */
 .ilayer__stack__canvas {
   grid-area: canvas;
   position: relative;
@@ -3385,9 +3505,10 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   height: 100% !important;
 }
 
-/* Static fallback — three flat ellipses for reduced-motion / no-WebGL
-   visitors. Visible by default; hidden as soon as the R3F canvas
-   takes over (data-ilayer-mode="r3f" on .ilayer__stack). */
+/* Static fallback — three vertically-offset ellipses matching the
+   podium geometry (build largest at bottom, navigate smallest at
+   top). Visible by default; hidden as soon as the R3F canvas takes
+   over (data-ilayer-mode="r3f" on .ilayer__stack). */
 .ilayer__stack__fallback {
   grid-area: canvas;
   position: relative;
@@ -3406,55 +3527,55 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   display: none;
 }
 .ilayer__stack__fallback-ring {
-  fill: none;
+  fill: var(--dawn-08);
   stroke: var(--dawn-30);
   stroke-width: 1;
   vector-effect: non-scaling-stroke;
-  opacity: 0.55;
+  opacity: 0.7;
+}
+.ilayer__stack__fallback-ring--build {
+  fill: rgba(202, 165, 84, 0.18); /* gold-soft */
+  stroke: var(--gold-40);
+  opacity: 0.85;
 }
 .ilayer__stack__fallback-ring--encode {
-  stroke: var(--gold);
-  stroke-width: 1.4;
-  opacity: 0.9;
+  fill: rgba(236, 227, 214, 0.22); /* dawn-soft */
+  stroke: var(--dawn-50);
+  stroke-width: 1.2;
+  opacity: 0.95;
 }
 
-/* Substrate dock layer — sits over the canvas grid cell and centres
-   the brandmark anchor over the R3F encode position. Separate from
-   the canvas mount so React's createRoot does not own this subtree
-   (the canvas would otherwise blow it away on every render).
-   z-index: 3 keeps the brandmark in front of the canvas. */
-.ilayer__stack__dock {
-  grid-area: canvas;
-  position: relative;
-  display: grid;
-  place-items: center;
-  pointer-events: none;
-  z-index: 3;
-  width: 100%;
-  height: 100%;
-}
+/* ── Brandmark substrate dock anchor ───────────────────────────────
+   Now an ABSOLUTE-positioned element starting at upper-center.
+   useIlayerProgress writes --ilayer-anchor-x / -y / -scale every
+   frame to translate + scale the anchor toward the encode disc's
+   projected screen rect (read from useIlayerGeomStore). The anchor
+   IS what the choreography hook reads via getBoundingClientRect(),
+   so the substrate station's rect tracks the descent automatically.
 
-/* Brandmark substrate dock anchor — the visual heart. The anchor
-   itself is NEVER rotated (so the choreography hook's
-   getBoundingClientRect read stays a clean axis-aligned bbox). The
-   X-tilt lives on the anchor's CHILDREN via the --ilayer-tilt-deg
-   variable, which the progress hook writes every scroll frame in
-   lockstep with the R3F group's tilt.
-
-   ADR-012 size contract (clamp(180px, 22vw, 280px)) holds. The
-   children's opacity is gated on by the
-   `[data-brandmark-mode="particle"][data-brand-svg-dock="substrate"]`
-   selector (see the Brandmark particle artifact block above). */
+   The X-tilt still lives on the anchor's CHILDREN via
+   --ilayer-tilt-deg so the children's rotateX doesn't influence
+   getBoundingClientRect() (preserves the un-rotated bbox contract
+   for the choreography hook). */
 .ilayer__brandmark-anchor {
-  position: relative;
+  position: absolute;
+  left: 50%;
+  top: clamp(220px, 28vh, 320px);
   width: clamp(220px, 26vw, 320px);
   height: clamp(220px, 26vw, 320px);
-  display: block;
-  background: transparent;
+  z-index: 5;
   pointer-events: none;
-  /* Establish a 3D context so the children's rotateX reads with
-     real perspective from the parent .ilayer__artifact's perspective. */
+  background: transparent;
+  /* Compose centring (-50% X) with the per-frame translation +
+     uniform scale written by useIlayerProgress. Defaults yield the
+     resting position (upper-center) before the first scroll write. */
+  transform: translateX(-50%) translate(var(--ilayer-anchor-x, 0px), var(--ilayer-anchor-y, 0px))
+    scale(var(--ilayer-anchor-scale, 1));
+  transform-origin: center top;
+  will-change: transform;
+  /* 3D context so the children's rotateX reads with real perspective. */
   transform-style: preserve-3d;
+  perspective: 1100px;
 }
 .ilayer__brandmark-anchor img,
 .ilayer__brandmark-anchor svg {
@@ -3462,36 +3583,40 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   height: 100%;
   display: block;
   object-fit: contain;
-  opacity: 0;
+  /* Multiply the dock-state opacity gate (set in landing.css's
+     particle block via [data-brand-svg-dock="substrate"]) with the
+     section progress gate via --ilayer-brand-opacity. We use opacity
+     directly here because the dock-state gate sets opacity:1 with
+     !important; the multiplication happens visually because the
+     gate is the only !important rule and our default below is also
+     a base. The morph crossfade is enforced by the
+     [data-brand-svg-dock="substrate"][data-ilayer-brand-fade="..."]
+     selector below. */
+  opacity: var(--ilayer-brand-opacity, 0);
   filter: drop-shadow(0 0 32px rgba(202, 165, 84, 0.22));
+  /* Tight transitions so opacity + tilt track scrub precisely. The
+     dock-state crossfade (parked → not-parked) used to live here at
+     200ms; that semantic is preserved by the dock-state gate's own
+     selector chain (transition is overridden by the no-transition
+     reduced-motion media query when needed). */
   transition:
-    opacity 200ms ease-out,
+    opacity 80ms linear,
     transform 80ms linear;
-  /* The X-tilt the user asked for. Default 0 (head-on); the progress
-     hook lerps --ilayer-tilt-deg from 0 → ~22 → 0 across the section
-     scroll range so the brandmark "falls flat" mid-section then
-     stands back up before the substrate-to-rail transit fires. */
   transform: rotateX(var(--ilayer-tilt-deg, 0deg));
   transform-origin: center center;
   will-change: transform;
 }
 
-/* Closer — single line under the artifact. Same register as
-   .miss__punchline so the diagnostic answer and intelligence layer
-   answer share rhythm. */
-.ilayer__closer {
-  font-family: var(--font-pp-neue-montreal);
-  font-weight: 400;
-  font-size: clamp(15px, 1.4vw, 19px);
-  line-height: 1.4;
-  color: var(--dawn);
-  margin: clamp(6px, 1vh, 12px) 0 0;
-  max-width: 48ch;
-  text-wrap: balance;
-}
-.ilayer__closer em {
-  font-style: italic;
-  color: var(--gold);
+/* Compose the dock-state opacity gate with the section morph fade.
+   The substrate dock-state gate (declared above in the brandmark
+   particle block) sets opacity:1 with !important, which would
+   otherwise lock the brandmark visible. We override that with a
+   higher-specificity rule that multiplies in --ilayer-brand-opacity
+   so the morph crossfade still wins during the descent. */
+[data-brandmark-mode="particle"][data-brand-svg-dock="substrate"]
+  .ilayer__brandmark-anchor
+  > :where(img, svg) {
+  opacity: var(--ilayer-brand-opacity, 1) !important;
 }
 
 /* Reveal — opacity-only on the inner column so the void shield never
@@ -3505,7 +3630,8 @@ html[data-quote-active="true"] .tf-brandmark-actor {
 }
 
 /* Mobile / tablet — section grows from 100vh to auto so the title
-   and closer still fit, and the artifact's grid cell shrinks. */
+   and labels still fit, and the labels collapse to a stacked
+   column above the podium (no connectors). */
 @media (max-width: 960px) {
   .ilayer {
     height: auto;
@@ -3513,21 +3639,45 @@ html[data-quote-active="true"] .tf-brandmark-actor {
     padding-top: 100px;
     padding-bottom: 64px;
   }
-  .ilayer__stack {
-    grid-template-rows: clamp(220px, 36vh, 340px);
+  .ilayer__head {
+    top: clamp(60px, 8vh, 100px);
+  }
+  .ilayer__labels {
+    /* On mobile we stack labels vertically below the title rather
+       than floating them around the viewport — connector lines
+       would be too cramped. Each label becomes a row in a flex
+       column, no connector hairline shown. */
+    position: absolute;
+    top: clamp(180px, 24vh, 240px);
+    inset: clamp(180px, 24vh, 240px) 16px auto 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+  .ilayer__label {
+    position: static;
+    width: auto;
+    max-width: none;
+    padding-bottom: 0;
+    text-align: left;
+  }
+  .ilayer__label__connector {
+    display: none;
+  }
+  .ilayer__artifact {
+    height: clamp(260px, 38svh, 380px);
   }
   .ilayer__brandmark-anchor {
     width: clamp(180px, 44vw, 240px);
     height: clamp(180px, 44vw, 240px);
+    top: clamp(120px, 16vh, 180px);
   }
 }
 
 /* Reduced motion — keep the artifact visible immediately and skip
-   the rotate-and-split scroll choreography. The static SVG fallback
-   (toggled by the static-fallback hook on data-ilayer-mode) shows
-   the three layers at rest so the meaning still reads. The
-   --ilayer-tilt-deg variable is also pinned to 0 so the brandmark
-   never tilts. */
+   the morph choreography. The static SVG fallback shows the three
+   discs at rest. The morph variables are pinned to identity so the
+   brandmark sits at its resting position with no descent. */
 @media (prefers-reduced-motion: reduce) {
   .ilayer__inner[data-m="instrument"],
   .ilayer__inner[data-m="instrument"].is-in {
@@ -3539,11 +3689,24 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   }
   .ilayer__brandmark-anchor {
     --ilayer-tilt-deg: 0deg;
+    --ilayer-anchor-y: 0px;
+    --ilayer-anchor-x: 0px;
+    --ilayer-anchor-scale: 1;
   }
   .ilayer__brandmark-anchor img,
   .ilayer__brandmark-anchor svg {
     transition: none;
     transform: none;
+    /* Reveal the brandmark immediately (no scroll-progress fade). */
+    opacity: 1;
+  }
+  .ilayer__label {
+    /* Show all labels at rest. */
+    opacity: 1;
+  }
+  .ilayer__label__path {
+    /* Pre-draw connectors fully. */
+    stroke-dashoffset: 0;
   }
 }
 

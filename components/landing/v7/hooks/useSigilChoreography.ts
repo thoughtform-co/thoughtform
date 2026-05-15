@@ -219,6 +219,27 @@ export function useSigilChoreography(
     // Brandmark anchors — lazily resolved so the journey works after
     // late layout (admin overlays, portal re-mounts, etc.)
     const getMissBrand = () => missEl?.querySelector<HTMLElement>(".miss__brand-slot") ?? null;
+    /**
+     * Substrate anchor (ADR-012 v4).
+     *
+     * IMPORTANT: As of ADR-012 v4 (podium morph), this anchor's RECT
+     * is non-stationary across the #intelligence-layer section.
+     * `useIlayerProgress` writes `--ilayer-anchor-x`, `--ilayer-anchor-y`
+     * and `--ilayer-anchor-scale` on the anchor every scroll frame,
+     * descending + scaling it from upper-center toward the encode
+     * disc's projected screen rect. Live `getBoundingClientRect()`
+     * reads (which this lazy resolver enables) handle this
+     * transparently — the actor follows the anchor's descent
+     * automatically. Do NOT cache the rect or assume the anchor is
+     * fixed mid-section, and do not "fix" the anchor to a static
+     * center.
+     *
+     * The substrate → rail handoff fires at the section's exit edge,
+     * by which point the anchor sits at the encode disc's bottom-
+     * center position — the actor "lifts off" from inside the
+     * encode disc toward the rail dock. The handoff window may
+     * need widening if the lift-off reads abrupt; verify visually.
+     */
     const getSubstrateAnchor = () =>
       intelligenceEl?.querySelector<HTMLElement>(".ilayer__brandmark-anchor") ??
       // Legacy fallback for snapshots that still carry the old
