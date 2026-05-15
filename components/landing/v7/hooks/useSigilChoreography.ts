@@ -481,10 +481,15 @@ export function useSigilChoreography(
 
     /** Compute the scrollY at which a station's anchor centre sits at
      *  viewport centre. For non-sticky anchors this is a stable scroll
-     *  position; for sticky anchors (the orbit's sticky parent) the
-     *  return value advances with `scrollY` during sticky engagement,
-     *  which keeps the journey "parked at orbit" across the entire
-     *  practice section — correct behaviour. */
+     *  position. For the orbit (whose parent `.approach__stage` is
+     *  `position: sticky`) the return value advances with `scrollY`
+     *  during sticky engagement; that breaks the generic rawT-based
+     *  transit math for the rail → orbit segment, so `applyJourney`
+     *  special-cases that segment with a non-sticky reference (the
+     *  practice section's top edge). Post-orbit fade-out still uses
+     *  this function because once the practice section's sticky
+     *  window releases, the orbit anchor's rect.top goes negative
+     *  and `c[orbit]` correctly slides below `scrollY`. */
     const stationCenterY = (s: Station): number | null => {
       const el = s.anchor();
       if (!el) return null;
@@ -748,8 +753,33 @@ export function useSigilChoreography(
         return;
       }
 
-      // === Post-last-station zone ===
       const lastIdx = stations.length - 1;
+
+      // === Inside practice section: orbit is parked ===
+      // The orbit anchor is sticky inside `.approach__stage` (CSS
+      // `position: sticky; top: clamp(60px, 12vh, 120px)`). During
+      // sticky engagement its `getBoundingClientRect().top` clamps
+      // to the sticky offset (≈ 60–260 px) regardless of scrollY,
+      // which makes `c[lastIdx] = scrollY + rect.top + height/2 -
+      // vh/2` slide below `scrollY` and stay there for the whole
+      // practice section. Without this guard, the post-orbit
+      // fade-out branch below would fire across Navigate / Encode /
+      // Build phases — clearing the SVG dock and painting a
+      // decaying-opacity particle cloud over the canonical SVG.
+      // Short-circuit to `parkAt(orbit)` whenever the practice
+      // section straddles viewport top (sticky engaged); the
+      // fade-out branch then correctly only fires AFTER practice
+      // has scrolled past, when the sticky window has released and
+      // the orbit's `rect.top` has gone negative.
+      if (practiceEl) {
+        const practiceRect = practiceEl.getBoundingClientRect();
+        if (practiceRect.top <= 0 && practiceRect.bottom > 0) {
+          parkAt(stations[lastIdx]);
+          return;
+        }
+      }
+
+      // === Post-last-station zone ===
       if (scrollY > c[lastIdx]) {
         const fadeEnd = c[lastIdx] + vh * FADE_OUT_FRAC;
         if (scrollY > fadeEnd) {
@@ -813,6 +843,48 @@ export function useSigilChoreography(
 
       const from = stations[i];
       const to = stations[i + 1];
+
+      // === Special case: rail → orbit segment ===
+      // The orbit anchor (`.approach__orbit__mark`) is sticky inside
+      // `.approach__stage`, so its `getBoundingClientRect().top` stays
+      // constant during sticky engagement. That makes
+      // `stationCenterY(orbit)` advance with `scrollY` in lockstep,
+      // and the generic `rawT = (scrollY - c[i]) / (c[i+1] - c[i])`
+      // calculation only approaches 1 asymptotically — `parkAt(orbit)`
+      // (which fires `setSvgDock("orbit")` for the SVG handoff) would
+      // never trigger within the practice section's natural engagement
+      // window, leaving the first sub-section (Navigate) reading as
+      // stippled particles instead of the canonical SVG. Re-base the
+      // transit window on the practice section's top edge — a
+      // non-sticky reference — so the handoff fires as soon as
+      // sticky engages naturally.
+      if (to.kind === "orbit" && practiceEl) {
+        const practiceTop = practiceEl.getBoundingClientRect().top;
+        if (practiceTop <= 0) {
+          // Practice section's top has reached / passed viewport
+          // top: orbit sticky engaged, treat as parked.
+          parkAt(to);
+          return;
+        }
+        // Transit window: c[i] (rail centre) → scrollY at which
+        // practiceTop hits 0. That's a finite, sensible span instead
+        // of the asymptotic sticky math.
+        const transitEndY = scrollY + practiceTop;
+        const orbitSpan = Math.max(1, transitEndY - c[i]);
+        const orbitT = clamp01((scrollY - c[i]) / orbitSpan);
+        if (orbitT <= PARK_FRAC) {
+          parkAt(from);
+          return;
+        }
+        if (orbitT >= 1 - PARK_FRAC) {
+          parkAt(to);
+          return;
+        }
+        const ott = (orbitT - PARK_FRAC) / (1 - 2 * PARK_FRAC);
+        transit(from, to, ott);
+        return;
+      }
+
       const span = Math.max(1, c[i + 1] - c[i]);
       const rawT = (scrollY - c[i]) / span;
 

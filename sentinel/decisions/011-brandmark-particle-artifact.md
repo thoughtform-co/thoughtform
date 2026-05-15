@@ -187,6 +187,40 @@ and the diagram's existing entrance scrub
 `.sigil__mark` opacity 0 → 1. The result: a clean vector fade-in
 on direct entry / refresh, no stippled particle-assembly artefact.
 
+**Rail → orbit segment + practice sticky-window amendment (v2,
+2026-05-15):** the orbit anchor (`.approach__orbit__mark`) is sticky
+inside `.approach__stage` (CSS rule `position: sticky; top:
+clamp(60px, 12vh, 120px)`). During sticky engagement its
+`getBoundingClientRect().top` clamps to that offset regardless of
+`scrollY`, so `stationCenterY(orbit) = scrollY + rect.top + height/2 -
+vh/2` slides below `scrollY` by a constant and `scrollY > c[orbit]`
+is true for the entire practice section. Two compounding effects
+result, both fixed below:
+
+1. **Rail → orbit segment never reaches `parkAt(orbit)`.** The
+   generic `rawT = (scrollY - c[rail]) / (c[orbit] - c[rail])` only
+   approaches 1 asymptotically when both numerator and denominator
+   grow in lockstep. `applyJourney` special-cases this segment by
+   re-basing the transit window on the practice section's top edge:
+   once `practiceEl.getBoundingClientRect().top <= 0`, the orbit is
+   treated as parked. The pre-engagement transit window
+   (`scrollY` from `c[rail]` to the scrollY at which `practiceTop`
+   hits 0) still uses the standard transit dispersion bump.
+
+2. **Post-orbit fade-out branch fires too early.** The
+   `scrollY > c[lastIdx]` branch (which paints a decaying-opacity
+   particle cloud) becomes perpetually true once sticky engages,
+   so without a guard the entire practice section — Navigate /
+   Encode / Build — would render the orbit as a degrading
+   particle stipple over the canonical SVG. `applyJourney` therefore
+   short-circuits to `parkAt(orbit)` whenever the practice section
+   straddles viewport top (`practiceTop <= 0 && practiceBottom > 0`).
+   The original fade-out branch still fires after practice has
+   scrolled past — at that point sticky has released, the orbit's
+   `rect.top` has gone negative, and `c[orbit] < scrollY` again
+   reflects "user has scrolled past the orbit's natural centre",
+   which is the correct trigger for fade-out.
+
 Why this matters: the brandmark is a **logo**. At rest it must read
 as the logo, not as a creative interpretation of the logo. The
 particle texture is the visual story during _motion_ — entrance,
