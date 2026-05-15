@@ -217,9 +217,21 @@ Remove the `useEffect` before committing.
 
 ---
 
+## Section-scoped R3F mounts (intelligence layer, ADR-012 v2)
+
+`#intelligence-layer` mounts a section-scoped R3F canvas via `IntelligenceLayerPortal` into `[data-ilayer-stack-root]`. This is **not** the global `BrandmarkParticleCanvas` (which is `position: fixed; z-index: 23` and lives at the page root); it is a per-section canvas inside `.ilayer__inner`.
+
+Rules that hold for any future section-scoped canvas:
+
+- The mount slot must sit inside the section's opaque `.station` (or equivalent) wrapper, **not** as a full-bleed `position: fixed` overlay.
+- The canvas itself is `position: absolute; inset: 0; pointer-events: none` so it never blocks scroll and never carries a structural background.
+- Reveal motion stays on the section's inner column (`.ilayer__inner[data-m="instrument"]`); the canvas inherits that fade via DOM ancestry, no `[data-m]` on the canvas slot itself.
+- A static SVG fallback in the same grid cell handles `prefers-reduced-motion: reduce`, viewport ≤ 767px, and WebGL-fail. The portal writes `data-ilayer-mode="r3f" | "static"` on the stack wrapper to swap them.
+
 ## Related ADRs and references
 
 - `sentinel/decisions/008-landing-v7-background-layers.md` — architectural record of the paint stack and the two fixes that landed from this rule set.
+- `sentinel/decisions/012-intelligence-layer-artifact.md` (v2) — section-scoped R3F mount pattern and the unchanged substrate dock contract.
 - `components/landing/v7/hooks/useLandingScroll.ts` — owns the sticky-hero visibility transition (`heroCover >= 1 → visibility: hidden`).
 - `components/landing/v7/hooks/useRevealMotion.ts` — IntersectionObserver that adds `.is-in` to `[data-m]` elements.
 - `components/landing/v7/landing.css` — the `v17 — CELESTIAL CONNECTORS` block and the `Reveal decoupling` override are the canonical examples of applying these rules.

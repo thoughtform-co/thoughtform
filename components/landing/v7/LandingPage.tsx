@@ -10,6 +10,7 @@ import { useBrandmarkSingletonCheck } from "./lib/brandmarkSingletonCheck";
 import { CelestialPortals } from "./CelestialConnector/CelestialPortals";
 import { PhaseGlyphPortals } from "./PhaseGlyph";
 import { BuildCasesPortal } from "./build-cases";
+import { IntelligenceLayerPortal } from "./intelligence-layer";
 import { CelestialEditorOverlay } from "@/components/admin/CelestialEditor";
 import { useCelestialDrafts } from "@/components/admin/CelestialEditor/useCelestialDrafts";
 import type { SlotsMap } from "@/lib/celestial/schema";
@@ -413,6 +414,13 @@ export function LandingPage({ bodyHtml, bodyClass, celestialSlots }: LandingPage
       {mergedSlots && <CelestialPortals slots={mergedSlots} containerRef={rootRef} />}
       <PhaseGlyphPortals containerRef={rootRef} />
       <BuildCasesPortal containerRef={rootRef} />
+      {/* Intelligence-layer 3D stack (ADR-012 v2). Mounts the R3F
+          canvas into `[data-ilayer-stack-root]` and owns the
+          scroll-progress trigger that drives the rotate-and-split
+          choreography. Mounted before `BrandmarkSystem` so the
+          substrate dock anchor's grid placement settles before the
+          choreography hook reads its rect on first measure. */}
+      <IntelligenceLayerPortal containerRef={rootRef} />
       {/* Single brandmark entry point. Renders one canonical
           `BrandmarkGlyph` into each `data-brand-anchor` slot via
           portal, plus one fixed `BrandmarkActor` for transit/backdrop/

@@ -244,3 +244,130 @@ updated in a follow-up to reflect the rename.
 - ADR-010 (choreography): [`010-brandmark-choreography.md`](010-brandmark-choreography.md)
 - ADR-011 (particle artifact): [`011-brandmark-particle-artifact.md`](011-brandmark-particle-artifact.md)
 - Skills: `.claude/skills/brandmark-choreography/SKILL.md`, `.claude/skills/brandmark-particle/SKILL.md`, `.claude/skills/landing-v7-compositing/SKILL.md`
+
+---
+
+## Amendment v2 — Layered 3D stack (2026-05-15)
+
+### Why amend
+
+The v1 treatment (three flat HTML "planes" stacked vertically with
+dotted SVG guides between them) read as three confusing card rows
+rather than one layered instrument. Visitors landed on Section 04
+without a clear "this is the substrate" visual hit; the brandmark
+dock was buried inside a 3-column substrate panel. The user
+feedback ("it looks confusing and ugly") matched the diagnosis.
+
+The reference for the new visual is
+[sleep-well-creatives.com](https://sleep-well-creatives.com): a
+single tilted 3D stack of nested discs, with text annotations
+placed around it instead of stacked above it. The same Aether
+Sources / Substrate / Surfaces payload now reads as one artifact
+with depth, not three cards.
+
+### What changes
+
+- **Section body** in `public/prototypes/v7/landing-v7-motion.html`:
+  the three `.ilayer__plane*` blocks, the SVG `.ilayer__guides`,
+  and the `.ilayer__substrate` 3-column frame are retired. The new
+  body is one `.ilayer__stack` grid with five children:
+  - `.ilayer__stack__canvas` (R3F mount slot,
+    `data-ilayer-stack-root`)
+  - `.ilayer__stack__fallback` (SVG fallback — three flat ellipses
+    - thread, visible only when `data-ilayer-mode="static"`)
+  - `.ilayer__stack__dock` (positioned dock layer that contains
+    the unchanged `.ilayer__brandmark-anchor`)
+  - `.ilayer__stack__anno--navigate` (top-left annotation cluster,
+    Navigate / Trusted sources)
+  - `.ilayer__stack__anno--encode` (centred bottom annotation,
+    Encode / Substrate bands + properties)
+  - `.ilayer__stack__anno--build` (bottom-right annotation cluster,
+    Build / Headless surfaces)
+
+- **R3F module** at
+  `components/landing/v7/intelligence-layer/`:
+  - `IntelligenceLayerStack.tsx` — orthographic R3F canvas with
+    three nested ring meshes (Navigate top, Encode middle, Build
+    bottom) plus a thin vertical thread. Each ring is a halo fill +
+    hairline edge. Per-frame `useFrame` reads the scroll-progress
+    store and drives X-axis tilt (head-on at 0 → ~26° at 1) + Y-axis
+    split (collapsed at 0 → ±1.05 disc-radii at 1) + opacity fade-in.
+  - `IntelligenceLayerPortal.tsx` — `createRoot` into the
+    `[data-ilayer-stack-root]` placeholder, mirroring
+    `BuildCasesPortal`. Owns the static-fallback gate and the
+    scroll-progress trigger.
+  - `useIlayerProgress.ts` — Zustand store +
+    `gsap/ScrollTrigger` pinned to `#intelligence-layer`
+    (`top 80%` → `bottom 20%`, `scrub: true`). Sets
+    `data-ilayer-state="open"` on `.ilayer__stack` when progress
+    crosses 0.4 (with hysteresis at 0.3 on back-scroll).
+  - `index.ts` — barrel.
+
+- **`LandingPage.tsx`** — adds `<IntelligenceLayerPortal />` next
+  to `<BuildCasesPortal />`, mounted before `<BrandmarkSystem />`
+  so the substrate dock anchor's grid placement settles before the
+  choreography hook reads its rect on first measure.
+
+- **CSS** in `components/landing/v7/landing.css`:
+  retired `.ilayer__plane*` / `.ilayer__chips*` / `.ilayer__bands*`
+  / `.ilayer__guides` / `.ilayer__substrate` / `.ilayer__props`.
+  Added `.ilayer__stack*` (grid layout, annotation positioning,
+  static fallback, dock layer, mobile collapse).
+
+### Brandmark contract — unchanged
+
+The substrate dock anchor is still
+`<div class="ilayer__brandmark-anchor" data-brand-anchor="substrate">`,
+still inside `#intelligence-layer`, still
+`clamp(180px, 22vw, 280px)`. It now lives inside
+`.ilayer__stack__dock` (a positioned grid cell on top of the
+canvas) so the anchor centres exactly over the encode disc, but
+[`useSigilChoreography.ts`](../../components/landing/v7/hooks/useSigilChoreography.ts)
+still resolves it via
+`intelligenceEl.querySelector(".ilayer__brandmark-anchor")` and
+parks the actor at its rect at full density. No hook change. No
+particle store change. The encode ring's inner radius (0.62) is
+sized so the brandmark sits cleanly inside the ring's hole — the
+disc reads as a luminous halo around the canonical SVG glyph.
+
+### Mode toggle
+
+The portal writes `data-ilayer-mode="r3f" | "static"` on
+`.ilayer__stack` based on three checks evaluated on mount and on
+each preference / resize change:
+
+1. `prefers-reduced-motion: reduce` → static
+2. viewport width ≤ 767px → static
+3. WebGL context fails to acquire → static
+
+In static mode the portal does not `createRoot`; the SVG fallback
+inside `.ilayer__stack__fallback` is revealed by CSS via the
+`data-ilayer-mode="static"` attribute. The annotation clusters
+still fade in via the `[data-ilayer-state="open"]` attribute set by
+the scroll-progress hook (the hook runs in both modes), so the
+content payload remains legible.
+
+### Compositing — ADR-008 holds
+
+- The R3F canvas mounts inside `.ilayer__inner` (a positioned
+  descendant of the opaque `.ilayer` shield). It never paints on
+  the bleed wrapper, so no transparency reveal exposes the gateway
+  radial.
+- Canvas style is `position: absolute; inset: 0; pointer-events:
+none` so it never blocks scroll and never participates in opacity
+  reveals on the wrapper.
+- The `.ilayer__inner[data-m="instrument"]` reveal still drives the
+  inner column's fade; the canvas (z:1) and dock (z:3) are children
+  of the inner column and inherit its opacity transition without
+  exposing the shield.
+
+### Files touched in v2
+
+- [`public/prototypes/v7/landing-v7-motion.html`](../../public/prototypes/v7/landing-v7-motion.html) — replaced `.ilayer__artifact` inner body.
+- [`components/landing/v7/landing.css`](../../components/landing/v7/landing.css) — retired `.ilayer__plane*` block, added `.ilayer__stack*` block.
+- [`components/landing/v7/LandingPage.tsx`](../../components/landing/v7/LandingPage.tsx) — added `<IntelligenceLayerPortal />` mount.
+- `components/landing/v7/intelligence-layer/IntelligenceLayerStack.tsx` — NEW.
+- `components/landing/v7/intelligence-layer/IntelligenceLayerPortal.tsx` — NEW.
+- `components/landing/v7/intelligence-layer/useIlayerProgress.ts` — NEW.
+- `components/landing/v7/intelligence-layer/index.ts` — NEW.
+- `.claude/skills/landing-v7-compositing/SKILL.md`, `.claude/skills/brandmark-choreography/SKILL.md` — short notes about the new R3F mount and the unchanged dock contract.
