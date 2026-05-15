@@ -9,6 +9,7 @@ import {
   type StationKind as ParticleStationKind,
   type StationSnapshot,
 } from "@/lib/stores/brandmarkParticleStore";
+import { useIlayerProgressStore } from "@/components/landing/v7/intelligence-layer/useIlayerProgress";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -449,6 +450,50 @@ export function useSigilChoreography(
       setSvgDock(null);
     };
 
+    // === Intelligence-layer (ADR-012) handoff publisher ===
+    //
+    // The local R3F ringfield owns the brandmark only while we're parked
+    // at the substrate station. Outside that window the global particle
+    // field is the painter (transit in from miss, transit out to rail).
+    // We publish two things to `useIlayerProgressStore` every applyJourney
+    // call so the local hook can:
+    //
+    //   - drive its `progress` from the substrate-parked range so the
+    //     R3F brandmark cloud is axis-aligned at both the engage and
+    //     exit instants (clean swap with global particles), and
+    //   - gate the local R3F brandmark cloud's visibility on
+    //     `handoffActive` so it never paints during the global
+    //     particle's morph-in / morph-out windows (no double-paint).
+    //
+    // Memoised so we don't churn the store from rAF when scrollY moves
+    // but the substrate park range hasn't shifted (the range only moves
+    // when section heights change — resize, font swap, late image load).
+    let lastHandoffActive: boolean | null = null;
+    let lastSubstrateEngageY = -Infinity;
+    let lastSubstrateExitY = -Infinity;
+    const publishIlayerHandoff = (engageY: number, exitY: number, scrollY: number) => {
+      const ilayerStore = useIlayerProgressStore.getState();
+      if (
+        Math.abs(engageY - lastSubstrateEngageY) > 0.5 ||
+        Math.abs(exitY - lastSubstrateExitY) > 0.5
+      ) {
+        lastSubstrateEngageY = engageY;
+        lastSubstrateExitY = exitY;
+        ilayerStore.setSubstrateRange({ engageY, exitY });
+      }
+      const active = particleModeOK && scrollY >= engageY && scrollY <= exitY;
+      if (lastHandoffActive !== active) {
+        lastHandoffActive = active;
+        ilayerStore.setHandoffActive(active);
+      }
+    };
+    const clearIlayerHandoff = () => {
+      if (lastHandoffActive !== false) {
+        lastHandoffActive = false;
+        useIlayerProgressStore.getState().setHandoffActive(false);
+      }
+    };
+
     /** Set the dock attribute cluster to match a parked station (or
      *  none, for transit / sigil / substrate / hidden).
      *  `data-brand-on-missing` and `data-brand-on-rail` are written
@@ -709,6 +754,7 @@ export function useSigilChoreography(
       // and first-paint race where ScrollTrigger.refresh() fires
       // before the user has scrolled).
       if (scrollY < HERO_GUARD_PX) {
+        clearIlayerHandoff();
         hideBrandmark();
         return;
       }
@@ -720,6 +766,17 @@ export function useSigilChoreography(
       if (centers.some((c) => c == null)) return;
       const c = centers as number[];
       const vh = window.innerHeight;
+
+      // Publish the substrate-parked scroll range to the ilayer store
+      // before any branch returns. The range is derived from the live
+      // miss / substrate / rail station centres + PARK_FRAC, so it
+      // tracks layout changes (resize, font swap, late image load)
+      // automatically. The local intelligence-layer hook reads this
+      // to align R3F progress with the brandmark hand-off instants.
+      // Station indices: sigil=0, miss=1, substrate=2, rail=3, orbit=4.
+      const substrateEngageY = c[1] + (1 - PARK_FRAC) * (c[2] - c[1]);
+      const substrateExitY = c[2] + PARK_FRAC * (c[3] - c[2]);
+      publishIlayerHandoff(substrateEngageY, substrateExitY, scrollY);
 
       // === Reduced motion: hard-pin to the nearest station ===
       if (reduceMotion) {
@@ -1089,6 +1146,14 @@ export function useSigilChoreography(
       // store instance (Fast Refresh, navigation) starts from a clean
       // state.
       useBrandmarkParticleStore.getState().clearStations();
+      // Clear the intelligence-layer handoff publication too — the
+      // local R3F brandmark must not stay visible after the
+      // choreography hook tears down (HMR + Fast Refresh would
+      // otherwise leave the local cloud painting forever, while the
+      // global field is gone).
+      const ilayerStore = useIlayerProgressStore.getState();
+      ilayerStore.setHandoffActive(false);
+      ilayerStore.setSubstrateRange(null);
       actor()?.hide();
     };
   }, [rootRef, actorRef]);

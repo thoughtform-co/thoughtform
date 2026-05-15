@@ -567,3 +567,70 @@ Still inherent (and intentional):
 - [`components/landing/v7/intelligence-layer/IntelligenceLayerPortal.tsx`](../../components/landing/v7/intelligence-layer/IntelligenceLayerPortal.tsx) — added `applyR3FDockMask()` helper and a `MutationObserver` on the substrate anchor that re-applies the mask whenever its children change (BrandmarkSystem re-portals after Fast Refresh / route nav). Re-queries the section element on every `evaluate()` call and on cleanup. Cleanup also calls `applyR3FDockMask(false)` to restore the SVG's CSS-controlled visibility.
 - [`components/landing/v7/intelligence-layer/BrandmarkRingfield.tsx`](../../components/landing/v7/intelligence-layer/BrandmarkRingfield.tsx) — removed the per-frame `parent.visible` gate. The R3F scene paints unconditionally while the canvas is mounted; the section's DOM box clips it to the section's bounds.
 - [`components/landing/v7/landing.css`](../../components/landing/v7/landing.css) — replaced the v5 hard-swap rule with a comment block pointing at `applyR3FDockMask()`. The cascade-fragile attribute-selector approach is gone.
+
+---
+
+## Amendment v5c — Handoff-aligned R3F window (2026-05-15)
+
+### Why amend (fourth time, same day)
+
+After v5b the SVG / R3F double-paint at the substrate anchor was solved, but the user reported that scrolling from `#missing-layer` into `#intelligence-layer` still didn't read as a smooth transition: "it then disappears and then, all of a sudden, the fix is intelligence layer appears". The brandmark **morphed** into substrate (via the global particle field's miss → substrate transit) but the local R3F brandmark was already mid-rotation by the time the morph arrived, so the swap from "flat morphing cloud" to "rotating R3F cloud" read as a discontinuity.
+
+The two timing systems were running independently:
+
+- The brandmark choreography reaches `parkAt(substrate)` roughly at `scrollY ≈ miss.offsetTop + 68vh` — when the intelligence section is still 32vh below viewport top.
+- The R3F ringfield's ScrollTrigger window was `top 80% → bottom 20%` (≈ 160vh span). At that same scrollY the R3F `progress` was already ≈ 0.30 — heading into the EXTRUDE beat with rotation around -22°.
+
+The local R3F brandmark cloud was visible **and rotated** at the exact moment the global particle field handed it ownership.
+
+A second compounding issue: `BrandmarkRingfield`'s parent group was set to `visible: true` unconditionally (per v5b's "natural DOM clipping" assumption). So even before the global particle field arrived at substrate, the user could already see the local R3F brandmark cloud rotating in the lower viewport — two brandmarks at once during the entry seam.
+
+### What changes from v5b
+
+- **Substrate-aligned R3F progress.** [`useIlayerProgress`](../../components/landing/v7/intelligence-layer/useIlayerProgress.ts) now derives `progress` from the live substrate-parked scroll range published by [`useSigilChoreography`](../../components/landing/v7/hooks/useSigilChoreography.ts), via two new fields on [`useIlayerProgressStore`](../../components/landing/v7/intelligence-layer/useIlayerProgress.ts):
+
+  ```ts
+  interface IlayerProgressState {
+    // …
+    handoffActive: boolean;
+    substrateRange: { engageY: number; exitY: number } | null;
+  }
+  ```
+
+  - `progress = 0` at the moment the global particle field hands ownership to the local R3F (substrate park engage = `c[miss] + (1 - PARK_FRAC) * (c[substrate] - c[miss])`).
+  - `progress = 1` at the moment the local R3F hands ownership back to the global particle field for the substrate → rail transit (substrate park exit = `c[substrate] + PARK_FRAC * (c[rail] - c[substrate])`).
+
+  At both instants `splitRotation` returns `0` (per its rotate-only `[0..0.30]` and handoff `[0.92..1.00]` beats), so the R3F brandmark cloud is axis-aligned at both swap moments and reads as visual continuity with the global field.
+
+  A `top 80% → bottom 20%` ScrollTrigger window is kept as a fallback for the first few frames after mount when `useSigilChoreography` hasn't published the range yet.
+
+- **Handoff-gated R3F visibility.** [`BrandmarkRingfield`](../../components/landing/v7/intelligence-layer/BrandmarkRingfield.tsx)'s `useFrame` reads `handoffActive` from the store and sets `parent.visible = handoffActive`. Outside the substrate-parked window the entire R3F scene is invisible; the global particle field is the sole painter. Inside it, the R3F scene paints (with the brandmark cloud axis-aligned at the engage/exit instants and rotating in between).
+
+  This restores the v5-era visibility gate but ties it to the **brandmark journey state** instead of the section's own ScrollTrigger progress. The `parent.visible` gate is the only paint-control; we still don't ramp `material.opacity` for any major scene element.
+
+- **No DOM/CSS changes.** The same `applyR3FDockMask` keeps the substrate SVG hidden in particle mode; no rule-set change in `landing.css`. The R3F brandmark cloud's coordinates still match the encode ring's projected rect, which still matches the substrate anchor's CSS rect.
+
+### Painter table (v5c — current)
+
+| Scroll window                                 | Painter                                           | Notes                                                                                                                                                            |
+| --------------------------------------------- | ------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `scrollY < missEngageY`                       | global particle field at `sigil` / `miss` slot    | source-owned dock SVG via `data-brand-svg-dock`                                                                                                                  |
+| `missEngageY ≤ scrollY < substrateEngageY`    | global particle field, transit `miss → substrate` | dispersion bump; R3F invisible (`handoffActive = false`)                                                                                                         |
+| `substrateEngageY ≤ scrollY ≤ substrateExitY` | local R3F ringfield + brandmark cloud             | global particle silenced (snapshot `opacity 0`); SVG dock masked by `applyR3FDockMask`; R3F visible (`handoffActive = true`); progress 0 → 1 drives rotation arc |
+| `substrateExitY < scrollY ≤ railEngageY`      | global particle field, transit `substrate → rail` | R3F invisible again                                                                                                                                              |
+| `scrollY > railEngageY`                       | global particle field at `rail`, then `orbit`     | unchanged                                                                                                                                                        |
+
+### Files touched in v5c
+
+- [`components/landing/v7/intelligence-layer/useIlayerProgress.ts`](../../components/landing/v7/intelligence-layer/useIlayerProgress.ts) — extended store with `handoffActive` + `substrateRange`. Replaced the `onUpdate` ScrollTrigger driver with a rAF-throttled writer that reads `substrateRange` (when available) and computes `progress` from `(scrollY - engageY) / (exitY - engageY)`. ScrollTrigger window kept as fallback only.
+- [`components/landing/v7/hooks/useSigilChoreography.ts`](../../components/landing/v7/hooks/useSigilChoreography.ts) — publishes `substrateRange` and `handoffActive` to `useIlayerProgressStore` every `applyJourney` call. Memoised so we don't churn the store on every scroll frame for unchanged layout. Cleared on hook teardown so HMR / Fast Refresh starts from a clean state.
+- [`components/landing/v7/intelligence-layer/BrandmarkRingfield.tsx`](../../components/landing/v7/intelligence-layer/BrandmarkRingfield.tsx) — restored `parent.visible` gate, now driven by `handoffActive` instead of the section's ScrollTrigger window. Skips per-ring updates when invisible (sub-orbit autonomous spin still ticks).
+- [`components/landing/v7/intelligence-layer/index.ts`](../../components/landing/v7/intelligence-layer/index.ts) — re-exports `SubstrateRange`.
+
+### Pre-merge checklist (v5c)
+
+- [ ] At `scrollY ≈ substrateEngageY`: global particle station `substrate.opacity === 0`, `handoffActive === true`, R3F `parent.visible === true`, `progress` very close to 0, parent rotation ≈ 0 rad.
+- [ ] At `scrollY ≈ substrateExitY`: same as above except `progress` very close to 1, parent rotation ≈ 0 rad again.
+- [ ] At any scrollY in `(substrateEngageY, substrateExitY)`: exactly one painter is visible at the substrate position — the local R3F brandmark cloud. The global `BrandmarkParticleStation` for substrate has `mesh.visible === false`, the substrate SVG has inline `opacity: 0 !important`.
+- [ ] At any scrollY outside the substrate range: the local R3F scene is invisible (`parent.visible === false`); the global particle field is the sole painter (or hidden in hero / post-orbit).
+- [ ] HMR / Fast Refresh on `useSigilChoreography`: `handoffActive` is reset to `false` and `substrateRange` to `null` in cleanup so the next mount publishes from scratch.

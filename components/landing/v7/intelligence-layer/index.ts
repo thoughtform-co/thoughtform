@@ -1,7 +1,12 @@
 export { IntelligenceLayerPortal } from "./IntelligenceLayerPortal";
 export { IntelligenceLayerStack } from "./IntelligenceLayerStack";
 export { BrandmarkRingfield } from "./BrandmarkRingfield";
-export { useIlayerProgress, useIlayerProgressStore, type IlayerMode } from "./useIlayerProgress";
+export {
+  useIlayerProgress,
+  useIlayerProgressStore,
+  type IlayerMode,
+  type SubstrateRange,
+} from "./useIlayerProgress";
 export {
   RING_GEOM,
   RING_KINDS,

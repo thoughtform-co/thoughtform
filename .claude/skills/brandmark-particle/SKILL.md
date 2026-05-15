@@ -217,6 +217,40 @@ The handoff threshold is `SVG_DOCK_THRESHOLD = 0.95` in
 Any station whose default density meets the threshold triggers the
 SVG handoff in `parkAt`.
 
+### Substrate is special — coordinated handoff with the local R3F (ADR-012 v5c)
+
+The `substrate` station does NOT hand off to the portal'd SVG glyph
+at park (that glyph is masked by `IntelligenceLayerPortal`'s
+`applyR3FDockMask` whenever the section's R3F canvas is mounted). It
+instead hands off to a SECOND painter — the local R3F ringfield's
+brandmark cloud, which samples the same `BRANDMARK_FILLED_PATHS` and
+projects them at the encode ring's at-rest screen rect (= the
+substrate anchor's CSS rect).
+
+Two systems coordinate the swap via
+[`useIlayerProgressStore`](../../components/landing/v7/intelligence-layer/useIlayerProgress.ts):
+
+- `useSigilChoreography` publishes `substrateRange = { engageY, exitY }`
+  every `applyJourney` call (derived from the live miss / substrate /
+  rail station centres + `PARK_FRAC`), and writes `handoffActive` to
+  `true` only while `scrollY` is inside the range.
+- `useIlayerProgress` derives R3F `progress` from
+  `(scrollY - engageY) / (exitY - engageY)`. progress = 0 at engage,
+  progress = 1 at exit. At both instants `splitRotation` returns 0,
+  so the R3F brandmark cloud is axis-aligned at both swap moments.
+- `BrandmarkRingfield` reads `handoffActive` in `useFrame` and sets
+  `parent.visible = handoffActive`. Outside the range the entire
+  R3F scene is invisible — the global particle field at z:23 is the
+  sole painter for the miss → substrate and substrate → rail
+  transits.
+
+When you change `PARK_FRAC`, the substrate station list, or the
+intelligence-layer section position / height, re-verify both the
+engage and exit moments still align with `splitRotation(0)`. If the
+brandmark visually pops into a tilted state at the moment global
+particles silence, the publish is wrong (or the rotation envelope
+no longer returns 0 at the boundaries).
+
 The particle field still exists as the design substrate even at the
 dock — the same sampled buffer is loaded into the GPU; the shader
 just renders zero opacity at full-density parks. This keeps the

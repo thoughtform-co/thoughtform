@@ -399,7 +399,9 @@ export function BrandmarkRingfield() {
   const outflowRef = useRef<THREE.LineSegments>(flowArcs.outflow);
 
   useFrame((_, dt) => {
-    const progress = useIlayerProgressStore.getState().progress;
+    const ilayerState = useIlayerProgressStore.getState();
+    const progress = ilayerState.progress;
+    const handoffActive = ilayerState.handoffActive;
 
     // Parent group rotation — the SINGLE thing that makes the user
     // read "ONE artifact turning" rather than "compositing layers".
@@ -407,26 +409,40 @@ export function BrandmarkRingfield() {
     if (parent) {
       parent.rotation.y = splitRotation(progress);
 
-      // ADR-012 v5 visibility gate — visible whenever the section
-      // is being scrolled through. The progress envelope from the
-      // section's ScrollTrigger (`top 80% -> bottom 20%`) starts
-      // ramping the moment the section's TOP crosses the viewport's
-      // 80% line, so any progress > 0 means the user has scrolled
-      // far enough that the section is meaningfully in view.
+      // ADR-012 v5b — handoff-aligned visibility.
       //
-      // Setting `parent.visible = true` always while the canvas is
-      // mounted lets the R3F particle cloud + rings paint inside
-      // the section's bounds — and because the canvas's DOM
-      // container (`.ilayer__artifact { inset:0 }` inside the
-      // section element) naturally clips to the section's box, the
-      // brandmark cannot be seen from sections above or below.
+      // The R3F brandmark + rings paint ONLY while the brandmark
+      // choreography is parked at the substrate station (i.e.
+      // `handoffActive` is true). Outside that window the global
+      // particle field at z:23 owns the brandmark — first as it
+      // morphs in from the missing-layer dock (miss → substrate
+      // transit), then as it morphs back out toward the continuum
+      // rail (substrate → rail transit). Painting the R3F scene
+      // during those windows would create two brandmarks (a flat
+      // morphing one + a rotating local one) at the same screen
+      // position; gating on `handoffActive` keeps exactly one
+      // painter on screen at any time.
       //
-      // The SVG dock at the substrate anchor is hidden by
-      // IntelligenceLayerPortal's `applyR3FDockMask()` so there is
-      // never a frame where two brandmarks paint at the substrate
-      // position; the R3F particle cloud is the SOLE painter for
-      // the section's read beat.
-      parent.visible = true;
+      // At progress 0 (handoff IN) and progress 1 (handoff OUT) the
+      // splitRotation envelope returns `0`, so the brandmark cloud
+      // is axis-aligned at both swap instants and reads as visual
+      // continuity with the global particle field.
+      parent.visible = handoffActive;
+    }
+
+    // When the scene is hidden we can skip the rest of the per-frame
+    // updates. The geometry is in its current state and will resume
+    // on the next frame `handoffActive` flips to true (which always
+    // happens at progress 0 thanks to the substrate-aligned window
+    // computed by `useIlayerProgress`).
+    if (!handoffActive) {
+      // Sub-orbits' autonomous spin still ticks so the breath looks
+      // continuous when the scene comes back into view, even though
+      // it's invisible right now.
+      if (subOrbitsSpinRef.current) {
+        subOrbitsSpinRef.current.rotation.z += SUB_ORBIT_SPIN_RATE * dt;
+      }
+      return;
     }
 
     // Per-ring Z extrusion. Encode is anchored at z=0 (it's the
