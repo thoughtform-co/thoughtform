@@ -280,7 +280,7 @@ export function SigilCanvas({
         // Rotate around Y axis
         const cosY = Math.cos(rotationY);
         const sinY = Math.sin(rotationY);
-        let x = baseX * cosY + baseZ * sinY;
+        const x = baseX * cosY + baseZ * sinY;
         let z = -baseX * sinY + baseZ * cosY;
         let y = baseY;
 

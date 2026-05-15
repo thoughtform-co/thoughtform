@@ -280,16 +280,21 @@ export async function POST(request: NextRequest) {
         throw e instanceof Error ? e : new Error("Failed to parse segment labels");
       }
 
-      const results = (parsed as any)?.results;
+      const results = (parsed as { results?: unknown })?.results;
       if (!Array.isArray(results)) {
         console.error("Unexpected label response shape:", parsed);
         throw new Error("Unexpected Claude response shape");
       }
 
-      const updates = results
-        .filter((r: any) => r && typeof r.id === "string")
-        .map((r: any) => ({
-          id: r.id as string,
+      type LabelResult = {
+        id?: unknown;
+        ai_label?: unknown;
+        ai_description?: unknown;
+      };
+      const updates = (results as LabelResult[])
+        .filter((r): r is LabelResult & { id: string } => !!r && typeof r.id === "string")
+        .map((r) => ({
+          id: r.id,
           ai_label: sanitizeLabel(r.ai_label),
           ai_description: sanitizeDescription(r.ai_description),
           ai_labeled_at: nowIso,

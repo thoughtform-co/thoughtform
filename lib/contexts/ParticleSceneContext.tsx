@@ -5,7 +5,7 @@ import React, {
   useContext,
   useMemo,
   useRef,
-  type MutableRefObject,
+  type RefObject,
   type ReactNode,
 } from "react";
 import type { Camera } from "three";
@@ -76,13 +76,13 @@ export const DEFAULT_SCENE_ANCHORS: Record<ParticleSceneAnchorId, SceneAnchorSta
 };
 
 export interface ParticleSceneState {
-  cameraRef: MutableRefObject<Camera | null>;
-  particlesPositionsRef: MutableRefObject<Float32Array | null>;
-  scrollRef: MutableRefObject<SceneScrollState>;
-  dimensionsRef: MutableRefObject<SceneDimensions>;
-  phaseRef: MutableRefObject<ScenePhaseState>;
-  anchorsRef: MutableRefObject<Record<ParticleSceneAnchorId, SceneAnchorState>>;
-  transitionRef: MutableRefObject<SceneTransitionState>;
+  cameraRef: RefObject<Camera | null>;
+  particlesPositionsRef: RefObject<Float32Array | null>;
+  scrollRef: RefObject<SceneScrollState>;
+  dimensionsRef: RefObject<SceneDimensions>;
+  phaseRef: RefObject<ScenePhaseState>;
+  anchorsRef: RefObject<Record<ParticleSceneAnchorId, SceneAnchorState>>;
+  transitionRef: RefObject<SceneTransitionState>;
 }
 
 const ParticleSceneContext = createContext<ParticleSceneState | null>(null);

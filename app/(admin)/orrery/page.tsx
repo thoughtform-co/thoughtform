@@ -232,9 +232,9 @@ function InfiniteCanvas({
       const projected: Array<{ x: number; y: number; z: number; energy: number }> = [];
 
       for (const p of particles) {
-        let x = p.baseX;
-        let y = p.baseY;
-        let z = p.baseZ;
+        const x = p.baseX;
+        const y = p.baseY;
+        const z = p.baseZ;
 
         // Y rotation
         const x1 = x * cosY - z * sinY;

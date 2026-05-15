@@ -38,7 +38,7 @@ export async function GET() {
 
       if (!error && data?.config) {
         // Ensure mobileGateway and mobileManifold are preserved from saved config
-        const loadedConfig = data.config as any;
+        const loadedConfig = data.config as Partial<ParticleSystemConfig>;
         const config = mergeWithDefaults({
           ...loadedConfig,
           // Explicitly preserve mobile overrides (even if empty objects)

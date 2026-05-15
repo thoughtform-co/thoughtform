@@ -27,7 +27,7 @@ interface AnnotationWithCrop {
 }
 
 // GET - Fetch full item data by ID
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const authorized = await isAuthorized(request);
     if (!authorized) {
@@ -45,7 +45,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       return NextResponse.json({ error: "User not authenticated" }, { status: 401 });
     }
 
-    const itemId = params.id;
+    const { id: itemId } = await params;
 
     // Fetch full item data including large text fields
     const { data: item, error } = await supabase

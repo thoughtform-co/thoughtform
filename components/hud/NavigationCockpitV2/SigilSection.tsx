@@ -242,7 +242,7 @@ interface SigilConfig {
 interface SigilSectionProps {
   scrollProgress: number;
   config?: SigilConfig;
-  onParticlePositions: React.MutableRefObject<ParticlePosition[]>;
+  onParticlePositions: React.RefObject<ParticlePosition[]>;
   /** Origin position for brandmark-to-sigil animation (screen coordinates) */
   originPos?: { x: number; y: number } | null;
   /** Destination position for sigil-to-navbar animation when leaving definition section */

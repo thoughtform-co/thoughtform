@@ -36,7 +36,7 @@ export async function getParticleConfig(): Promise<ParticleSystemConfig> {
     }
 
     // Merge with defaults to ensure all fields exist
-    const loadedConfig = data.config as any;
+    const loadedConfig = data.config as Partial<ParticleSystemConfig>;
     return mergeWithDefaults({
       ...loadedConfig,
       mobileGateway: loadedConfig.mobileGateway,

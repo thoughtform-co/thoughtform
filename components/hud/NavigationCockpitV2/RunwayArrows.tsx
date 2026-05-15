@@ -8,7 +8,7 @@ interface RunwayArrowsProps {
   /** Definition→Manifesto transition progress (0-1) - button fades out during this */
   tDefToManifesto: number;
   /** Ref to the real CTA button in `index.tsx` so arrows can target its arrow spans */
-  frameButtonRef?: React.RefObject<HTMLButtonElement>;
+  frameButtonRef?: React.RefObject<HTMLButtonElement | null>;
 }
 
 /**

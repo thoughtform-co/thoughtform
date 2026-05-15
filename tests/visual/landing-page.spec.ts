@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, type Page } from "@playwright/test";
 
 /**
  * Visual Regression Tests for Thoughtform Landing Page
@@ -12,7 +12,7 @@ import { test, expect } from "@playwright/test";
  *   npm run test:visual:update
  */
 
-async function scrollToPercentage(page: any, percentage: number) {
+async function scrollToPercentage(page: Page, percentage: number) {
   await page.evaluate((pct: number) => {
     const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
     const targetScroll = (pct / 100) * scrollHeight;

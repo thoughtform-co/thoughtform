@@ -20,8 +20,8 @@ interface MorphingCTAButtonsProps {
   /** Navigation handler */
   onNavigate: (sectionId: string) => void;
   /** Source elements in the Interface section (for true morphing) */
-  journeyButtonRef: RefObject<HTMLElement>;
-  contactButtonRef: RefObject<HTMLElement>;
+  journeyButtonRef: RefObject<HTMLElement | null>;
+  contactButtonRef: RefObject<HTMLElement | null>;
 }
 
 const clamp01 = (n: number) => Math.max(0, Math.min(1, n));
@@ -116,7 +116,6 @@ export function MorphingCTAButtons({
   useLayoutEffect(() => {
     if (!enabled) return;
     measureTargets();
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- refs are stable
   }, [enabled]);
 
   useEffect(() => {
