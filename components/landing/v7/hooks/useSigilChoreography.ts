@@ -201,6 +201,16 @@ export function useSigilChoreography(
     const intelligenceEl =
       docEl.querySelector<HTMLElement>("#intelligence-layer") ??
       docEl.querySelector<HTMLElement>("#asking-gap");
+    // ADR-012 v5d: the brandmark handoff stage wraps `#missing-layer` +
+    // `#intelligence-layer` so the two sections each pin to viewport
+    // and the intelligence layer slides up to cover the missing layer
+    // (mirrors the existing `.hero` sticky pattern). Resolve it here
+    // so `applyJourney` can special-case the miss → substrate window
+    // when the user is inside the stage. `null` on legacy snapshots
+    // that ship the prototype HTML without the wrapper — in that
+    // case `applyJourney` falls back to the standard five-station
+    // math and behaviour matches v5c.
+    const handoffStageEl = docEl.querySelector<HTMLElement>('[data-handoff="miss-to-ilayer"]');
     const contEl = docEl.querySelector<HTMLElement>("#continuum");
     const practiceEl = docEl.querySelector<HTMLElement>("#practice");
     const approachEl =
@@ -745,6 +755,194 @@ export function useSigilChoreography(
       clearAllStationSnapshots();
     };
 
+    // === ADR-012 v5d — sticky-cover handoff helpers ===
+
+    /** The substrate anchor's PINNED-position viewport rect.
+     *
+     * `useIlayerProgress.sizeAnchor` writes inline `top` / `left` /
+     * `width` / `height` (in CSS pixels) on `.ilayer__brandmark-anchor`.
+     * The anchor is `position: absolute` inside `.ilayer__inner`
+     * (`position: absolute; inset: 0`), which is inside `.ilayer`.
+     * When `.ilayer` is sticky-pinned at `top: 0` (Phase 2 of the
+     * handoff stage), those inline coordinates are equivalent to
+     * viewport coordinates — i.e. they describe the substrate
+     * anchor's eventual on-screen position when the cover slide
+     * settles.
+     *
+     * We use this rect during Phase 1 (cover slide) so the global
+     * particle field morphs the brandmark toward the substrate's
+     * EVENTUAL position rather than tracking the substrate anchor's
+     * currently-moving live bbox. Without this, the lerp would
+     * arc the brandmark down off-screen toward the still-emerging
+     * substrate anchor, then back up — a dip the eye reads as
+     * disorientation.
+     *
+     * Returns `null` if the inline styles haven't been written yet
+     * (first frame after mount, before `sizeAnchor` runs); callers
+     * fall back to a `parkAt(miss)` no-op in that case. */
+    const getSubstratePinnedRect = (): DOMRect | null => {
+      const anchor = getSubstrateAnchor();
+      if (!anchor) return null;
+      const top = parseFloat(anchor.style.top);
+      const left = parseFloat(anchor.style.left);
+      const width = parseFloat(anchor.style.width);
+      const height = parseFloat(anchor.style.height);
+      if (
+        !Number.isFinite(top) ||
+        !Number.isFinite(left) ||
+        !Number.isFinite(width) ||
+        !Number.isFinite(height)
+      ) {
+        return null;
+      }
+      return new DOMRect(left, top, width, height);
+    };
+
+    /** Same paint logic as `transit` but uses caller-supplied rects.
+     *
+     * Used by the stage handoff branches:
+     *   - Phase 1 (cover slide): from = miss live rect, to = substrate
+     *     pinned rect (so the morph arc grows in place at viewport
+     *     centre instead of chasing a moving bbox).
+     *   - Phase 3 (transit out): from = substrate live rect (now
+     *     scrolling up with ilayer), to = rail live rect.
+     *
+     * Keeps every side-effect of the standard `transit` (actor pin,
+     * dock attrs, particle snapshot with dispersion bump) so the
+     * brandmark singleton invariant continues to hold. */
+    const paintTransitWithRects = (
+      from: Station,
+      to: Station,
+      fromRect: DOMRect,
+      toRect: DOMRect,
+      t: number
+    ) => {
+      const a = actor();
+      if (!a) return;
+      const eased = easeInOut(t);
+      const rect = lerpRect(fromRect, toRect, eased);
+      const opacity = lerp(from.opacity, to.opacity, eased);
+
+      a.pinToRect(rect, opacity, 1);
+      a.setHudOutline(false);
+      setSigilVisible(false);
+      setBrandOnMissing(from.kind === "miss" || to.kind === "miss" ? "true" : "false");
+      setBrandOnRail(from.kind === "rail" || to.kind === "rail" ? "true" : "false");
+      setOrbitDocked(false);
+      setSvgDock(null);
+
+      if (particleModeOK) {
+        const fromDefaults = PARTICLE_STATION_DEFAULTS[from.kind];
+        const toDefaults = PARTICLE_STATION_DEFAULTS[to.kind];
+        const bump = Math.sin(Math.PI * t) * 0.45;
+        const baseDispersion = lerp(fromDefaults.dispersion, toDefaults.dispersion, eased);
+        const transitSnap: StationSnapshot = {
+          rect: {
+            left: rect.left,
+            top: rect.top,
+            width: rect.width,
+            height: rect.height,
+          },
+          opacity: 1,
+          density: lerp(fromDefaults.density, toDefaults.density, eased),
+          dispersion: Math.min(1.5, baseDispersion + bump),
+          tint: fromDefaults.tint,
+        };
+        const store = useBrandmarkParticleStore.getState();
+        if (lastParticleStation && lastParticleStation !== to.kind) {
+          store.setStation(lastParticleStation, null);
+        }
+        store.setStation(to.kind, transitSnap);
+        lastParticleStation = to.kind;
+        setParticleBackdropGate(true);
+      }
+    };
+
+    /** Stage handoff — three-phase brandmark journey across the sticky
+     *  cover stage that wraps `#missing-layer` + `#intelligence-layer`.
+     *
+     *  Phase 1 (`localScroll ∈ [0, vh)`): miss is sticky-pinned at
+     *    top:0 and `#intelligence-layer` slides up from below with
+     *    `z:3` so it covers miss as it rises. The global particle
+     *    field morphs the brandmark from the live miss anchor rect
+     *    to the substrate anchor's PINNED rect (so the arc grows in
+     *    place at the eventual viewport centre, not toward the
+     *    moving substrate bbox). `handoffActive` stays false so the
+     *    R3F brandmark cloud is invisible.
+     *
+     *  Phase 2 (`localScroll ∈ [vh, 2*vh)`): both sections are
+     *    pinned at top:0; ilayer fully covers miss. `parkAt(substrate)`
+     *    silences the global station, and `handoffActive` flips on
+     *    so the local R3F brandmark cloud paints. Progress 0 → 1
+     *    across the phase drives `splitRotation`'s 0 → peak → 0
+     *    arc, axis-aligned at both ends for clean swaps.
+     *
+     *  Phase 3 (`localScroll ∈ [2*vh, 3*vh)`): both sections start
+     *    scrolling up out of the viewport (sticky un-pinned because
+     *    the stage's bottom has reached their bottom). The global
+     *    particle field morphs the brandmark from the now-moving
+     *    substrate live rect toward the rail live rect (way below
+     *    in the page). `handoffActive` flips off so the R3F cloud
+     *    yields cleanly.
+     *
+     *  After the stage (`localScroll ≥ 3*vh`): the standard
+     *  five-station journey resumes; substrate's natural centre
+     *  (computed from the post-stage absolute position of the
+     *  anchor) sits inside the stage's footprint, so the journey
+     *  immediately reads as "substrate → rail past PARK_FRAC =
+     *  parkAt(rail)" or as the natural transit window into rail —
+     *  no extra coordination required. */
+    const handleStageHandoff = (scrollY: number, stageTop: number, vh: number): void => {
+      const localScroll = scrollY - stageTop;
+      const phase1End = vh;
+      const phase2End = 2 * vh;
+
+      const substrateEngageY = stageTop + phase1End;
+      const substrateExitY = stageTop + phase2End;
+      publishIlayerHandoff(substrateEngageY, substrateExitY, scrollY);
+
+      const missStation = stations[1];
+      const substrateStation = stations[2];
+      const railStation = stations[3];
+
+      if (localScroll < phase1End) {
+        // Phase 1: cover slide + brandmark morph in.
+        const t = localScroll / phase1End;
+        const missRect = readStationRect(missStation);
+        const substratePinned = getSubstratePinnedRect();
+        if (!missRect || !substratePinned) {
+          // Anchors not measurable yet — fall back to parking miss
+          // so the brandmark is at least at the visible source.
+          parkAt(missStation);
+          return;
+        }
+        paintTransitWithRects(missStation, substrateStation, missRect, substratePinned, t);
+        return;
+      }
+
+      if (localScroll < phase2End) {
+        // Phase 2: substrate parked. R3F brandmark cloud paints +
+        // rotates across [substrateEngageY, substrateExitY].
+        parkAt(substrateStation);
+        return;
+      }
+
+      // Phase 3: substrate → rail transit. The substrate anchor is
+      // scrolling up with ilayer; the rail anchor is way below in
+      // the page (inside #continuum). The lerp tracks them naturally;
+      // the brandmark may be partially off-screen in the middle of
+      // Phase 3, which is acceptable because both endpoints are
+      // also off-screen at that moment (no visible discontinuity).
+      const t = (localScroll - phase2End) / vh;
+      const substrateRect = readStationRect(substrateStation);
+      const railRect = readStationRect(railStation);
+      if (!substrateRect || !railRect) {
+        hideBrandmark();
+        return;
+      }
+      paintTransitWithRects(substrateStation, railStation, substrateRect, railRect, t);
+    };
+
     /** The continuous journey function. Called from a rAF-throttled
      *  scroll handler. Computes brandmark state from `scrollY` alone;
      *  no state-flag soup, no race conditions between triggers. */
@@ -767,6 +965,35 @@ export function useSigilChoreography(
       const c = centers as number[];
       const vh = window.innerHeight;
 
+      // === ADR-012 v5d — sticky-cover handoff stage ===
+      //
+      // When the user is inside the brandmark handoff stage that wraps
+      // #missing-layer + #intelligence-layer, the standard five-station
+      // math doesn't apply: miss is sticky-pinned (so its bbox is at
+      // viewport top throughout) and ilayer slides up to cover
+      // (so its bbox moves through the viewport even though scrollY
+      // changes monotonically). `stationCenterY` for both sticky
+      // members returns moving values that confuse `rawT`. Special-
+      // case the journey for the stage's 3 * vh scroll window using
+      // the stage's own offsetTop as the stable reference (mirrors
+      // the rail → orbit special case which uses `practice.top` for
+      // the same reason).
+      //
+      // Inactive on mobile / tablet (≤ 960 px): the stage's CSS
+      // `@media` block collapses it to `height: auto`, so
+      // `offsetHeight` shrinks to roughly `2 * vh` of stacked
+      // sections; we detect that and fall through to the standard
+      // journey. The five-station math works fine when the
+      // sections aren't sticky.
+      if (handoffStageEl && handoffStageEl.offsetHeight > 2.5 * vh) {
+        const stageTop = handoffStageEl.offsetTop;
+        const stageBottom = stageTop + handoffStageEl.offsetHeight;
+        if (scrollY >= stageTop && scrollY < stageBottom) {
+          handleStageHandoff(scrollY, stageTop, vh);
+          return;
+        }
+      }
+
       // Publish the substrate-parked scroll range to the ilayer store
       // before any branch returns. The range is derived from the live
       // miss / substrate / rail station centres + PARK_FRAC, so it
@@ -774,6 +1001,10 @@ export function useSigilChoreography(
       // automatically. The local intelligence-layer hook reads this
       // to align R3F progress with the brandmark hand-off instants.
       // Station indices: sigil=0, miss=1, substrate=2, rail=3, orbit=4.
+      //
+      // (Stage-handoff path above publishes its own range derived from
+      // the stage offsets — this fallback path runs when the user is
+      // outside the stage or on mobile / tablet.)
       const substrateEngageY = c[1] + (1 - PARK_FRAC) * (c[2] - c[1]);
       const substrateExitY = c[2] + PARK_FRAC * (c[3] - c[2]);
       publishIlayerHandoff(substrateEngageY, substrateExitY, scrollY);
@@ -1116,6 +1347,12 @@ export function useSigilChoreography(
     if (contEl) ro.observe(contEl);
     if (intelligenceEl) ro.observe(intelligenceEl);
     if (missEl) ro.observe(missEl);
+    // Watch the handoff stage so the special-case math re-runs when
+    // the stage's measured height flips between the desktop sticky
+    // mode (300svh) and the mobile collapsed mode (auto). This is
+    // what catches viewport-width changes that cross the 960px
+    // breakpoint mid-session (devtools resize, foldable rotation).
+    if (handoffStageEl) ro.observe(handoffStageEl);
 
     // Initial computation (covers the case where the page loads with
     // restored scrollY).

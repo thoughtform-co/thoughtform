@@ -3736,6 +3736,102 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   }
 }
 
+/* ═══════════ 03 + 04 BRANDMARK HANDOFF STAGE (ADR-012 v5d) ═══════════
+   Wraps `#missing-layer` + `#intelligence-layer` in one tall stage so the
+   two sections each get a full viewport beat instead of co-occupying
+   the viewport during scroll. The pattern mirrors `.hero` (sticky
+   top: 0 + opaque higher-z next sibling slides up to cover):
+
+     ┌──────────────────────────────────────────────────┐
+     │ .brand-handoff-stage  position: relative; 300svh │
+     │  ┌────────────────────────────────────────────┐  │
+     │  │ #missing-layer  sticky top:0 z:2 100svh    │◄ │ phase 1 (read miss)
+     │  └────────────────────────────────────────────┘  │
+     │  ┌────────────────────────────────────────────┐  │
+     │  │ #intelligence-layer  sticky top:0 z:3 cover│◄ │ phase 2 (cover)
+     │  └────────────────────────────────────────────┘  │ phase 3 (read ilayer)
+     └──────────────────────────────────────────────────┘
+
+   Both sections keep their own `height: 100svh` + `var(--void)` shield
+   declared in the `.miss` / `.ilayer` blocks above; we only add the
+   sticky positioning, the cover z-order, and a border suppression
+   inside the stage. The choreography hook (`useSigilChoreography`)
+   special-cases the `miss → substrate` segment to use this stage's
+   `offsetTop + N * 100vh` boundaries instead of the now-moving
+   sticky station centres — see ADR-012 v5d.
+
+   Compositing rules (ADR-008) preserved:
+     - Both sections retain their opaque `var(--void)` background, so
+       the gateway radial never bleeds during the cover slide
+       (Rule 1).
+     - The stage wrapper carries no `[data-m]`, no opacity transition,
+       no transform. It is a layout-only positioning container.
+     - The bordered `.station { border-bottom: 1px dashed ... }`
+       hairline at the bottom of miss looks weird while pinned
+       because it would track the viewport edge instead of the
+       section break, so we suppress it inside the stage. The next
+       section (`#build-axiom-bridge`) outside the stage paints its
+       own top edge naturally. */
+.brand-handoff-stage {
+  position: relative;
+  /* 100svh of pinned-miss read + 100svh of cover/morph + 100svh of
+     pinned-ilayer read. Tune the middle band by adjusting this height
+     and the cover engage / substrate engage scrollY math in
+     `useSigilChoreography.ts` together. */
+  height: 300svh;
+}
+
+.brand-handoff-stage > #missing-layer {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  /* Existing `.miss { height: 100svh }` already pins the visible box
+     to one viewport. We restate it here for clarity at the cascade
+     review point — the value is the same. */
+  height: 100svh;
+  /* Suppress the inherited dashed bottom border while pinned;
+     otherwise it would paint at the bottom of the viewport during
+     the entire pinned read instead of at the natural section break. */
+  border-bottom: none;
+}
+
+.brand-handoff-stage > #intelligence-layer {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  height: 100svh;
+  border-bottom: none;
+  /* Opaque shield is critical here: as the in-flow position of
+     `#intelligence-layer` (at `stage.offsetTop + 100svh`) reaches
+     viewport top, this section slides up and covers `#missing-layer`
+     beneath it. The cover only reads as a hard, complete swap
+     because `var(--void)` paints over every pixel. */
+  background: var(--void);
+}
+
+/* Mobile / tablet — fall back to today's stacked layout. With
+   `height: auto` on the sections (already declared in their own
+   `@media (max-width: 960px)` blocks) sticky inside a `300svh` stage
+   is wrong; we collapse the stage to a transparent passthrough and
+   let the sections flow normally. The brandmark choreography's
+   special-case math still works because it falls back to the
+   five-station `stationCenterY` when the stage is not present /
+   not effective (the `data-handoff` element still exists, but the
+   sticky members are now `position: relative` so the centres are
+   stable). */
+@media (max-width: 960px) {
+  .brand-handoff-stage {
+    height: auto;
+  }
+  .brand-handoff-stage > #missing-layer,
+  .brand-handoff-stage > #intelligence-layer {
+    position: relative;
+    height: auto;
+    min-height: 100vh;
+    z-index: auto;
+  }
+}
+
 /* ═══════════ 04.5 BUILD AXIOM BRIDGE — lightweight key-visual divider ═══════════
    Pause-and-breathe divider between the dense intelligence-layer
    artifact and the continuum rail. Carries the Thoughtform key visual

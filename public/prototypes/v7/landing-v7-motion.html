@@ -4438,6 +4438,20 @@ html { scroll-behavior: smooth; }
        new dock on the choreography (sigil → miss → backdrop → rail →
        orbit → hidden). Native source-owned via `.miss__brand-slot img`
        while parked, mirroring the rail brand pattern. =================== -->
+
+  <!-- ═══════════ 03 + 04 BRANDMARK HANDOFF STAGE (ADR-012 v5d) ═══════════
+       Wraps #missing-layer + #intelligence-layer in one tall stage so the
+       two sections can both be `position: sticky; top: 0` and the
+       intelligence layer slides up to cover the missing layer (mirrors
+       the existing .hero pattern). The stage's height (`300svh` on
+       desktop) gives the brandmark choreography 100svh of pinned-miss
+       reading time, 100svh of cover/morph (global particle field carries
+       the brandmark from the miss dock to the substrate position), and
+       100svh of pinned-ilayer reading time (R3F ringfield rotates 0 → 0
+       across the substrate parked window). See `landing.css`
+       `.brand-handoff-stage` block + ADR-012 v5d. ──────────────────── -->
+  <div class="brand-handoff-stage" data-handoff="miss-to-ilayer">
+
   <section class="station station--centered miss" id="missing-layer" data-station="missingLayer" data-screen-label="03 Missing layer">
 
     <div class="miss__inner" data-m="instrument">
@@ -4767,6 +4781,9 @@ html { scroll-behavior: smooth; }
 
     </div>
   </section>
+
+  </div>
+  <!-- /.brand-handoff-stage -->
 
   <!-- ═══════════ 04.5 BUILD AXIOM BRIDGE — lightweight key-visual divider ═══════════
        Pause-and-breathe divider between the dense intelligence-layer

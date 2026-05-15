@@ -251,6 +251,47 @@ brandmark visually pops into a tilted state at the moment global
 particles silence, the publish is wrong (or the rotation envelope
 no longer returns 0 at the boundaries).
 
+### Sticky-cover handoff stage (ADR-012 v5d)
+
+`#missing-layer` and `#intelligence-layer` are wrapped in a
+`.brand-handoff-stage` (300svh tall on desktop, both members
+`position: sticky; top: 0` with z:2 / z:3, mobile collapses).
+Inside the stage, `useSigilChoreography.applyJourney` runs a
+three-phase special case (`handleStageHandoff`):
+
+- **Phase 1 (cover slide)** — global particle field carries the
+  brandmark from the miss anchor's live rect toward the substrate
+  anchor's PINNED rect (read from inline styles via
+  `getSubstratePinnedRect()`, NOT from `getBoundingClientRect()`).
+  Without the pinned-rect destination, the lerp would chase the
+  substrate anchor's still-emerging position downward and back up
+  — a dip the eye reads as disorientation. The pinned rect uses
+  the inline `top` / `left` / `width` / `height` that
+  `useIlayerProgress.sizeAnchor` writes; those coordinates are
+  equivalent to viewport pixels when ilayer is sticky-pinned.
+
+- **Phase 2 (substrate parked)** — same as v5c.
+  `handoffActive = true`, R3F brandmark cloud is the painter,
+  rotation arc 0 → peak → 0.
+
+- **Phase 3 (transit out)** — global particle field carries the
+  brandmark from substrate's now-moving live rect toward rail's
+  live rect (still way below). Both endpoints may be off-screen
+  in the middle of Phase 3; that's acceptable because no painter
+  is visible at the substrate position during the transit out.
+
+The new helper `paintTransitWithRects` is the body of `transit`
+factored to accept caller-supplied rects, so the dispersion
+bell-curve and per-station tier defaults still apply across the
+stage's Phase 1 and Phase 3 windows.
+
+When you change the stage's height (currently `300svh`), update
+both the CSS (`.brand-handoff-stage { height }`) and
+`handleStageHandoff`'s phase boundaries (`vh`, `2 * vh`) — they
+must stay in lockstep. The stage uses the rule `offsetHeight >
+2.5 * vh` as the desktop-mode probe, which assumes a stage of at
+least ~3 viewports.
+
 The particle field still exists as the design substrate even at the
 dock — the same sampled buffer is loaded into the GPU; the shader
 just renders zero opacity at full-density parks. This keeps the

@@ -634,3 +634,65 @@ A second compounding issue: `BrandmarkRingfield`'s parent group was set to `visi
 - [ ] At any scrollY in `(substrateEngageY, substrateExitY)`: exactly one painter is visible at the substrate position — the local R3F brandmark cloud. The global `BrandmarkParticleStation` for substrate has `mesh.visible === false`, the substrate SVG has inline `opacity: 0 !important`.
 - [ ] At any scrollY outside the substrate range: the local R3F scene is invisible (`parent.visible === false`); the global particle field is the sole painter (or hidden in hero / post-orbit).
 - [ ] HMR / Fast Refresh on `useSigilChoreography`: `handoffActive` is reset to `false` and `substrateRange` to `null` in cleanup so the next mount publishes from scratch.
+
+---
+
+## Amendment v5d — Sticky-cover handoff stage (2026-05-15)
+
+### Why amend (fifth time, same day)
+
+After v5c the brandmark hand-off was timed correctly (R3F axis-aligned at the engage / exit instants, no double-paint), but the user was still unhappy with the visual: the intelligence-layer section read as "kind of cut off" because at the relevant scroll position the user could see the bottom half of `#missing-layer` AND the top half of `#intelligence-layer` at the same time. Two 100svh sections back-to-back share the viewport during scroll, so the local R3F brandmark cloud appeared in the lower half of the viewport while the diagnostic cards were still above — which read as "the brandmark just shows up suddenly in a section that hasn't even arrived yet" rather than "the brandmark grew out of the diagnostic dock into the intelligence-layer artifact".
+
+The user wanted each section to fill the viewport at its own beat, with the brandmark physically traveling between docks via the global particle field — and only then handed off to the local R3F (per ADR-011 + v5c).
+
+### What changes from v5c
+
+- **`#missing-layer` and `#intelligence-layer` are wrapped in a sticky-cover stage.** A new `<div class="brand-handoff-stage" data-handoff="miss-to-ilayer">` containing both sections becomes 300svh tall on desktop. Inside the stage:
+  - `#missing-layer` is `position: sticky; top: 0; z-index: 2; height: 100svh; background: var(--void)`.
+  - `#intelligence-layer` is `position: sticky; top: 0; z-index: 3; height: 100svh; background: var(--void)`.
+
+  Same pattern as the existing `.hero` (sticky `top: 0` + opaque higher-z next sibling slides up to cover). On viewports ≤ 960 px the stage's `@media` block collapses to `height: auto` and removes the sticky positioning, so behaviour matches today's stacked layout on mobile / tablet.
+
+- **Three-phase scroll inside the stage (300svh / 3 = 100svh per phase).**
+
+  | Phase | Local scroll   | Visible state                                                   | Brandmark                                                                                                                                                                         |
+  | ----- | -------------- | --------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+  | 1     | `[0, vh)`      | miss pinned at top:0; ilayer slides up from below covering miss | global particle morphs from miss live rect to substrate **pinned** rect (so the arc grows in place at the eventual viewport centre, not toward the still-emerging substrate bbox) |
+  | 2     | `[vh, 2*vh)`   | both pinned at top:0; ilayer fully covers miss                  | `parkAt(substrate)` silences the global station; `handoffActive = true`; R3F brandmark cloud paints + rotates 0 → peak → 0                                                        |
+  | 3     | `[2*vh, 3*vh)` | both released; both scroll up out of the viewport               | global particle morphs from substrate live rect (now scrolling up) toward rail live rect (still way below in the page)                                                            |
+
+  After the stage (`localScroll ≥ 3 * vh`): the standard five-station journey resumes; `c[substrate]` computed from the post-stage absolute position of the anchor sits inside the stage's footprint, so the journey reads as "substrate → rail past PARK_FRAC = parkAt(rail)" or as the natural transit window into rail — no extra coordination required.
+
+- **`useSigilChoreography.applyJourney` special-cases the stage range.** A new `handleStageHandoff(scrollY, stageTop, vh)` branch runs whenever `scrollY ∈ [stageTop, stageTop + stageEl.offsetHeight)` and the stage is in desktop sticky mode (detected via `stageEl.offsetHeight > 2.5 * vh`). The branch dispatches to one of the three phases and `return`s before the standard journey logic. The pattern mirrors the `practice.top` special case for the orbit's sticky parent.
+
+- **Two new helpers in the hook.**
+  - `getSubstratePinnedRect()` reads the inline `top` / `left` / `width` / `height` styles that `useIlayerProgress.sizeAnchor` writes on `.ilayer__brandmark-anchor`. Those coordinates describe the substrate anchor's position relative to `.ilayer__inner` (which is `position: absolute; inset: 0` inside `.ilayer`), so when `.ilayer` is pinned at `top: 0` they are equivalent to viewport coordinates. This is the destination rect during Phase 1 — the morph grows in place at the eventual centre instead of chasing a moving bbox.
+  - `paintTransitWithRects(from, to, fromRect, toRect, t)` is the body of the existing `transit` factored to accept caller-supplied rects, so the same dispersion-bell-curve transit math runs across the stage's Phase 1 and Phase 3 windows without forcing the anchor callbacks to lie about positions.
+
+- **R3F gate unchanged.** [`BrandmarkRingfield`](../../components/landing/v7/intelligence-layer/BrandmarkRingfield.tsx) and [`useIlayerProgress`](../../components/landing/v7/intelligence-layer/useIlayerProgress.ts) keep gating on `handoffActive` and deriving `progress` from `(scrollY - engageY) / (exitY - engageY)`. The new range published from the stage path (`engageY = stageTop + vh`, `exitY = stageTop + 2*vh`) goes through the same store, so `splitRotation` is back at 0 rad at both swap instants exactly as in v5c.
+
+- **ResizeObserver subscribes to the stage element** so the special-case math re-runs when the stage's measured height flips between desktop sticky mode (300svh) and mobile collapsed mode (auto) — devtools resize, foldable rotation, etc.
+
+### Compositing audit (ADR-008)
+
+- The stage wrapper carries no `[data-m]`, no transform, no opacity transition. Layout-only.
+- Both sticky members keep their `var(--void)` background — the cover slide is fully opaque (Rule 1).
+- `z:3 > z:2` is what causes the cover slide; sequential, no fragile selector specificity. Other stations (still at `z:2` per `.station:not(.hero)`) outside the stage are unaffected.
+- `.station { border-bottom: 1px dashed ... }` is suppressed inside the stage; while pinned the border would track the viewport edge instead of the natural section break.
+
+### Files touched in v5d
+
+- [`public/prototypes/v7/landing-v7-motion.html`](../../public/prototypes/v7/landing-v7-motion.html) — wrapped `#missing-layer` + `#intelligence-layer` in `<div class="brand-handoff-stage" data-handoff="miss-to-ilayer">`.
+- [`components/landing/v7/landing.css`](../../components/landing/v7/landing.css) — `.brand-handoff-stage` block + `@media (max-width: 960px)` collapse.
+- [`components/landing/v7/hooks/useSigilChoreography.ts`](../../components/landing/v7/hooks/useSigilChoreography.ts) — resolved `handoffStageEl`; added `getSubstratePinnedRect`, `paintTransitWithRects`, `handleStageHandoff` helpers; dispatched from `applyJourney` before the standard journey when inside the stage; observed `handoffStageEl` on the existing `ResizeObserver`.
+- [`.claude/skills/landing-v7-compositing/SKILL.md`](../../.claude/skills/landing-v7-compositing/SKILL.md) — paint-stack table + new "Section-scoped sticky pairs" section.
+- [`.claude/skills/brandmark-particle/SKILL.md`](../../.claude/skills/brandmark-particle/SKILL.md) — added moving-rect transit case (sticky source AND sticky destination both pinned at top:0).
+
+### Pre-merge checklist (v5d)
+
+- [ ] At `scrollY = stageTop + 50svh` (Phase 1 mid): miss pinned at top:0; ilayer half-covering from below; global particle painting the brandmark at a rect lerped between miss live rect and substrate **pinned** rect; R3F invisible (`parent.visible === false`).
+- [ ] At `scrollY = stageTop + 150svh` (Phase 2 mid): both pinned at top:0; ilayer fully covering; R3F brandmark cloud visible (`handoffActive === true`); global station silenced; parent rotation around `splitRotation(0.5)`.
+- [ ] At `scrollY = stageTop + 250svh` (Phase 3 mid): both scrolling up out of viewport; global particle painting the brandmark at a rect lerped between substrate live rect and rail live rect; R3F invisible again.
+- [ ] At `scrollY = stageTop + 320svh` (post-stage): standard journey resumes; brandmark continues toward rail via the standard substrate → rail transit / parkAt(rail) logic.
+- [ ] Mobile / tablet (≤ 960 px): stage collapses to `height: auto`; sections relative-positioned and stacked; standard five-station journey runs end-to-end (handoffStageEl.offsetHeight ≤ 2.5 \* vh, so the special case bypasses).
+- [ ] HMR / Fast Refresh on `useSigilChoreography`: stage element re-resolved after re-mount; no stale handoffActive carried over.
