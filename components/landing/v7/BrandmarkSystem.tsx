@@ -14,8 +14,8 @@ import { BrandmarkParticleCanvas } from "@/components/brand/BrandmarkParticleFie
  * The v7 landing has one travelling artifact (the Thoughtform
  * brandmark) that flows through:
  *
- *     hero → sigil → diagnostic → asking-gap → continuum rail
- *          → practice orbit → hidden
+ *     hero → sigil → diagnostic → intelligence-layer substrate
+ *          → continuum rail → practice orbit → hidden
  *
  * Two render modes carry it:
  *
@@ -26,9 +26,8 @@ import { BrandmarkParticleCanvas } from "@/components/brand/BrandmarkParticleFie
  *     reads.
  *   - LIFT (travel): the fixed `BrandmarkActor` (also a
  *     `BrandmarkGlyph` under the hood) takes over for the transit
- *     legs between docks (and for the asking-gap backdrop / practice
- *     orbit pin, which have no native dock — the actor renders the
- *     glyph there directly).
+ *     legs between docks (and for the practice orbit pin, which has
+ *     no native dock — the actor renders the glyph there directly).
  *
  * The `BrandmarkSystem` here is the single source of truth that:
  *   1. Discovers anchor slots in the parsed prototype HTML via
@@ -56,9 +55,9 @@ import { BrandmarkParticleCanvas } from "@/components/brand/BrandmarkParticleFie
  * @see ADR-010 (`sentinel/decisions/010-brandmark-choreography.md`).
  */
 
-type AnchorKey = "sigil" | "missing" | "rail" | "orbit";
+type AnchorKey = "sigil" | "missing" | "substrate" | "rail" | "orbit";
 
-const ANCHOR_KEYS: readonly AnchorKey[] = ["sigil", "missing", "rail", "orbit"];
+const ANCHOR_KEYS: readonly AnchorKey[] = ["sigil", "missing", "substrate", "rail", "orbit"];
 
 export interface BrandmarkSystemProps {
   /** Reference to the landing page root that wraps the parsed
@@ -92,7 +91,6 @@ export const BrandmarkSystem = forwardRef<BrandmarkActorHandle, BrandmarkSystemP
         const el = root.querySelector<HTMLElement>(`[data-brand-anchor="${key}"]`);
         if (el) {
           if (process.env.NODE_ENV !== "production" && el.children.length > 0) {
-            // eslint-disable-next-line no-console
             console.warn(
               `[BrandmarkSystem] Anchor slot "${key}" still has child nodes; ` +
                 `the v7 parser should have stripped them. Children:`,
@@ -136,16 +134,15 @@ export const BrandmarkSystem = forwardRef<BrandmarkActorHandle, BrandmarkSystemP
             probe). In `"svg"` mode it renders nothing and the
             existing actor + portal'd glyphs above paint unchanged.
 
-            Phase B wires every station: sigil + miss + backdrop +
-            rail + orbit. The dock stations run at full density and
-            zero dispersion (visually indistinguishable from the
-            SVG); the backdrop runs at the sparse "diagnostic" tier.
-            CSS (`[data-brandmark-mode="particle"]`) hides the SVG
-            actor + native dock glyphs at the parked states so the
-            particle field is the sole painter. Transit between
-            stations still uses the SVG actor — Phase C replaces
-            that with a particle dispersion choreography. */}
-        <BrandmarkParticleCanvas stations={["sigil", "miss", "backdrop", "rail", "orbit"]} />
+            All five stations are wired: sigil + miss + substrate +
+            rail + orbit. (The third station was renamed from
+            `backdrop` to `substrate` in ADR-012 — same choreography
+            slot, but it now anchors inside the intelligence-layer
+            artifact and runs at full density.) Every station hands
+            off to the canonical SVG portal'd glyph at rest via the
+            `data-brand-svg-dock` gate; particles paint during
+            transit between stations. */}
+        <BrandmarkParticleCanvas stations={["sigil", "miss", "substrate", "rail", "orbit"]} />
       </>
     );
   }

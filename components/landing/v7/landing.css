@@ -666,12 +666,11 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   opacity: 1;
 }
 
-/* ── Brandmark choreography (post-ADR-010 v2) ──────────────────────
+/* ── Brandmark choreography (post-ADR-010 v2 / ADR-012) ────────────
    The bottom-left HUD brandmark slot is no longer a docking target;
-   the actor flows hero → sigil → asking-gap backdrop → continuum
-   rail → orbit → hidden. Keep #hudBrandmark in the DOM (legacy CSS
-   reserves it as a frame anchor) but ensure it never paints on the
-   v7 landing.
+   the actor flows hero → sigil → miss → substrate → rail → orbit →
+   hidden. Keep #hudBrandmark in the DOM (legacy CSS reserves it as
+   a frame anchor) but ensure it never paints on the v7 landing.
 
    The diamond reticle on the continuum rail is hidden whenever the
    actor owns the rail (`[data-brand-on-rail="true"]`). The rail's
@@ -764,31 +763,35 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   opacity: 0 !important;
 }
 
-/* Brandmark actor sits above the asking-gap content (z:4) when in
-   backdrop mode but below it when on the rail. The actor itself is
-   z:24 so we lower its z-index in backdrop mode via opacity ramp
-   only — the actor stays z:24 so it can carry shadow + bloom. The
-   .ask__brandmark-anchor is z:2 on purpose (above the lane wash,
-   below the inner content) so the brandmark reads as a backdrop. */
-.ask__brandmark-anchor {
-  /* Marker class to keep the actor's z-index under the quote when
-     parked here. The actor pulls its size from this anchor's rect. */
+/* Substrate dock anchor — the intelligence-layer's central plane (was:
+   .ask__brandmark-anchor for the asking-gap backdrop pin). The
+   .ilayer__brandmark-anchor element carries `data-brand-anchor=
+   "substrate"` so BrandmarkSystem portals the canonical glyph here;
+   the choreography hook reads its rect for the substrate station and
+   parks at full density. Z-index sits with content layer. */
+.ilayer__brandmark-anchor {
   z-index: 2;
 }
 
-/* ── Brandmark particle artifact (ADR-011) ─────────────────────────
+/* ── Brandmark particle artifact (ADR-011 / ADR-012) ──────────────
    Shared R3F canvas that paints brandmarks from particles sampled
-   from the canonical SVG paths. Phase A wires only the asking-gap
-   backdrop station: when the brandmark journey parks at the
-   backdrop, `useSigilChoreography` writes a snapshot into the
-   particle store AND sets `data-brand-particle-backdrop="true"` on
-   the document element. The CSS below:
+   from the canonical SVG paths. Five stations are wired:
+   sigil / miss / substrate / rail / orbit. (The third station was
+   renamed from `backdrop` to `substrate` in ADR-012 — same
+   choreography slot, but the visual role moved from "faint blur
+   behind the Evans quote" to "the dense central plane of the
+   intelligence-layer artifact".)
 
-     1. Hides the SVG `.tf-brandmark-actor` at the backdrop so the
-        particle field reads alone (the actor stays inline-positioned
-        at the backdrop rect, just invisible — when the journey
-        leaves backdrop the actor's `pinToRect` already has the next
-        station's rect pinned and the gate flips off);
+   `useSigilChoreography` writes a snapshot into the particle store
+   AND sets `data-brand-particle-backdrop="true"` on the document
+   element whenever the canvas should be visible (any station +
+   transit + fade-in/out). The attribute name retains the
+   `-backdrop` suffix for backwards compatibility; semantically it
+   now means "the particle canvas is the painter right now". The
+   CSS below:
+
+     1. Hides the SVG `.tf-brandmark-actor` whenever the gate is on
+        so the particle field reads alone;
      2. Fades the `.tf-brandmark-particle-canvas` wrapper in over
         240ms so the particle field doesn't pop when the gate flips.
 
@@ -796,11 +799,7 @@ html[data-quote-active="true"] .tf-brandmark-actor {
    `transition: opacity 120ms` (declared above) fades it OUT in 120ms
    when the gate goes true; the particle wrapper fades IN in 240ms
    so the crossfade overlaps slightly without dipping to zero in the
-   middle.
-
-   Phases B and C add more stations to the canvas and replace the
-   wrapper-level fade with per-station shader opacity envelopes
-   (each station can have its own fade independent of the others). */
+   middle. */
 [data-brand-particle-backdrop="true"] .tf-brandmark-actor {
   opacity: 0 !important;
 }
@@ -909,6 +908,16 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   > :where(img, svg) {
   opacity: 1 !important;
 }
+/* Substrate dock (ADR-012) — the intelligence-layer central plane.
+   At rest the brandmark hands off to the canonical SVG portal so the
+   substrate reads as a vector mark, not as stipple. The .ilayer__brandmark-anchor
+   element's children start at opacity 0 (declared in the .ilayer*
+   block); this gate lifts them to 1 when the choreography parks. */
+[data-brandmark-mode="particle"][data-brand-svg-dock="substrate"]
+  .ilayer__brandmark-anchor
+  > :where(img, svg) {
+  opacity: 1 !important;
+}
 /* Orbit dock has its own default visibility: hidden + opacity: 0
    (so the fixed actor used to paint there). The particle-mode
    override needs to lift BOTH visibility and opacity, plus add the
@@ -927,7 +936,8 @@ html[data-quote-active="true"] .tf-brandmark-actor {
 }
 /* Mirror the 200ms crossfade on the other dock anchors too, so
    the transition above applies on the way OUT (when SVG dock
-   clears as the user scrolls into transit). */
+   clears as the user scrolls into transit). The substrate anchor
+   already declares its 200ms transition in the .ilayer block. */
 .miss__brand-slot > :where(img, svg),
 .crail--large .crail__brand > :where(img, svg) {
   transition: opacity 200ms ease-out;
@@ -3216,29 +3226,30 @@ html[data-quote-active="true"] .tf-brandmark-actor {
    reveal to hover (same as desktop). Touch tablets fall into the
    compact range above (≤960px) where bodies show by default. */
 
-/* ═══════════ 04 ASKING-GAP — Benedict Evans interstitial ═══════════
-   Single full-viewport beat between #missing-layer and #continuum.
-   Brings the AI operator case's "asking gap" into the executive summary
-   without the four-card diagnosis grid. The fixed BrandmarkActor docks
-   here as a faint backdrop (see useSigilChoreography); markup carries
-   only an anchor div for the actor to read.
+/* ═══════════ 04 INTELLIGENCE LAYER — vertical stacked artifact ═══════════
+   Replaces the previous Benedict Evans asking-gap interstitial. The
+   section translates the Aether Sources / Substrate / Surfaces payload
+   into a three-plane stacked instrument: trusted SOURCES (Navigate)
+   above, the brandmark SUBSTRATE (Encode) at the centre, headless
+   SURFACES (Build) below. The brandmark is the visual heart — it docks
+   at full density via the substrate station (renamed from backdrop).
+   See ADR-012 / ADR-011.
 
    Compositing rules followed:
-   1. Outer .ask wrapper inherits .station's opaque var(--void) shield.
-   2. Reveal motion on .ask__inner only; .ask__bleed and .ask__brandmark-anchor
-      have no [data-m] so no opacity flicker exposes the fixed gateway.
-   3. Lane wash z-index sits above void shield but below content.
+   1. Outer .ilayer wrapper inherits .station's opaque var(--void) shield.
+      The artifact, guides, and reveal motion live on inner elements.
+   2. Reveal motion on .ilayer__inner only; .ilayer__guides and
+      .ilayer__brandmark-anchor have no [data-m] so no opacity flicker
+      exposes the fixed gateway radial.
+   3. Connector lines and substrate frame paint above the void shield;
+      they never reveal the gateway radial.
    ──────────────────────────────────────────────────────────────────── */
 
-.ask {
-  /* Brand-aligned palette — gold + dawn only, no lane colours. The
-     atmosphere washes use the same gold at varying opacities so the
-     section breathes without competing with the Thoughtform palette. */
-  --ask-glow-strong: rgba(202, 165, 84, 0.16);
-  --ask-glow-mid: rgba(202, 165, 84, 0.1);
-  --ask-glow-soft: rgba(202, 165, 84, 0.06);
-
-  /* Lock the section to one viewport so it reads as a single beat. */
+.ilayer {
+  /* Lock to one viewport so the stacked artifact reads as a single
+     executive beat. The .station default carries `min-height: 100vh`;
+     this strengthens that to a hard `height` so the three planes
+     align to the viewport centre rather than growing to fit. */
   height: 100vh;
   height: 100svh;
   display: flex;
@@ -3248,7 +3259,7 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   overflow: hidden;
 }
 
-.ask .station__idx {
+.ilayer .station__idx {
   position: absolute;
   top: clamp(24px, 4vh, 48px);
   left: 50%;
@@ -3256,192 +3267,563 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   z-index: 3;
 }
 
-/* Atmosphere — three soft radial washes, loosely placed in a triangle.
-   No opacity tweens (keeps the wrapper as an opaque shield). */
-.ask__bleed {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  pointer-events: none;
-  overflow: hidden;
-}
-.ask__wash {
-  position: absolute;
-  width: 60vmin;
-  height: 60vmin;
-  border-radius: 50%;
-  filter: blur(80px);
-  opacity: 0.55;
-  pointer-events: none;
-}
-.ask__wash--violet {
-  top: -8vmin;
-  left: -8vmin;
-  background: radial-gradient(circle at 50% 50%, var(--ask-glow-strong), transparent 70%);
-}
-.ask__wash--amber {
-  top: 50%;
-  right: -10vmin;
-  background: radial-gradient(circle at 50% 50%, var(--ask-glow-mid), transparent 70%);
-}
-.ask__wash--sage {
-  bottom: -10vmin;
-  left: 30%;
-  background: radial-gradient(circle at 50% 50%, var(--ask-glow-soft), transparent 70%);
-}
-
-/* Brandmark backdrop anchor — invisible. The fixed BrandmarkActor reads
-   this rect on entry to size and centre the faint backdrop pass. */
-.ask__brandmark-anchor {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: clamp(360px, 50vmin, 640px);
-  height: clamp(360px, 50vmin, 640px);
-  transform: translate(-50%, -50%);
-  z-index: 2;
-  pointer-events: none;
-}
-
-/* Inner content column. data-m="instrument" so the existing IO reveal
-   motion fires here — wrapper stays opaque so the gateway doesn't bleed
-   through during the 880ms reveal. Wide enough to keep the Evans
-   sentence on one line at the desktop breakpoint (matches the AI
-   operator's `.aiop-bridge__quote`). */
-.ask__inner {
+/* Inner column — data-m="instrument" carries the IO reveal motion.
+   Wrapper itself stays opaque (Rule 1); only the inner column fades /
+   translates / blurs (Rule 2). */
+.ilayer__inner {
   position: relative;
-  z-index: 4;
-  max-width: min(1180px, 92vw);
-  text-align: center;
+  z-index: 2;
+  width: min(1180px, 92vw);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: clamp(20px, 3vh, 40px);
-  padding: 0 clamp(16px, 4vw, 48px);
+  gap: clamp(20px, 3vh, 36px);
+  text-align: center;
 }
 
-/* The Evans quote. Italic display face, sized as the editorial
-   centerpiece. Single line on desktop (≥960px), wraps naturally below.
-   Mirrors the AI operator's `.aiop-bridge__pull`. */
-.ask__quote {
-  font-family: var(--font-pp-neue-montreal), serif;
-  font-style: italic;
+/* Header — eyebrow / title / lede, mirrors .miss__head register so the
+   diagnostic and the answer share visual grammar. */
+.ilayer__head {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(10px, 1.4vh, 16px);
+  max-width: 56ch;
+  align-items: center;
+}
+.ilayer__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+  font-family: var(--font-pt-mono);
+  font-size: 10px;
+  letter-spacing: var(--track-widest);
+  text-transform: uppercase;
+  color: var(--gold);
+}
+.ilayer__eyebrow-rule {
+  width: 24px;
+  height: 1px;
+  background: var(--gold);
+  display: inline-block;
+}
+.ilayer__title {
+  font-family: var(--font-pp-neue-montreal);
   font-weight: 400;
-  font-size: clamp(20px, 2.1vw, 30px);
-  line-height: 1.35;
-  letter-spacing: -0.018em;
+  font-size: clamp(28px, 3.2vw, 44px);
+  line-height: 1.1;
+  letter-spacing: -0.022em;
   color: var(--dawn);
   margin: 0;
   text-wrap: balance;
-  white-space: normal;
+  max-width: 22ch;
 }
-@media (min-width: 1180px) {
-  .ask__quote {
-    /* On wide desktops the sentence fits on one line. */
-    text-wrap: nowrap;
-  }
-}
-.ask__quote-mark {
-  display: inline-block;
-  margin-right: 0.1em;
+.ilayer__title em {
+  font-style: italic;
   color: var(--gold);
-  font-style: normal;
+  font-weight: 400;
+}
+.ilayer__lede {
+  font-family: var(--font-pp-neue-montreal);
+  font-size: clamp(13px, 1vw, 16px);
+  line-height: 1.55;
+  color: var(--dawn-70);
+  margin: 0;
+  max-width: 52ch;
+  text-wrap: pretty;
+}
+.ilayer__lede em {
+  font-style: italic;
+  color: var(--dawn);
+}
+
+/* The artifact: three vertically stacked planes. CSS grid keeps the
+   middle plane visually dominant by giving it more row weight; the
+   upper / lower planes get smaller fixed allocations. The whole
+   artifact respects breathing room with generous gaps. */
+.ilayer__artifact {
+  position: relative;
+  width: 100%;
+  display: grid;
+  grid-template-rows: auto auto auto;
+  row-gap: clamp(14px, 2vh, 22px);
+  align-items: center;
+  padding: clamp(8px, 1vh, 14px) 0;
+}
+
+/* Vertical guides — three dotted lines running through all three
+   planes, drawn with SVG so the dash pattern stays hairline at any
+   width. preserveAspectRatio="none" stretches with the artifact;
+   vector-effect locks stroke weight regardless of stretch. */
+.ilayer__guides {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+  overflow: visible;
+}
+.ilayer__guide {
+  stroke: var(--dawn-30);
+  stroke-opacity: 0.35;
+  stroke-width: 0.4;
+  stroke-dasharray: 0.008 0.012;
+  vector-effect: non-scaling-stroke;
+  fill: none;
+  transition: stroke-opacity 220ms ease-out;
+}
+.ilayer__guide--c {
+  stroke: var(--gold);
+  stroke-opacity: 0.4;
+}
+.ilayer__inner:not(.is-in) .ilayer__guide {
+  stroke-opacity: 0;
+}
+.ilayer__inner.is-in .ilayer__guide {
+  transition: stroke-opacity 880ms cubic-bezier(0.16, 1, 0.3, 1) 200ms;
+}
+.ilayer__inner.is-in .ilayer__guide--c {
+  stroke-opacity: 0.4;
+}
+
+/* Plane shell — each of the three layers is a horizontal band carrying
+   a numbered head, a caption, and a chip / band cluster. Backgrounds
+   stay transparent so the dotted guides read through; the .ilayer
+   wrapper carries the opaque void shield. */
+.ilayer__plane {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(8px, 1vh, 12px);
+  padding: clamp(8px, 1.2vh, 14px) 0;
+}
+.ilayer__plane__rule {
+  /* Hairline horizontal rule across the plane width. Helps separate
+     the three planes without a heavy border. */
+  width: 80%;
+  max-width: 720px;
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    transparent 0%,
+    var(--dawn-30) 24%,
+    var(--dawn-30) 76%,
+    transparent 100%
+  );
+  opacity: 0.4;
+}
+.ilayer__plane__head {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-pt-mono);
+  font-size: 10px;
+  letter-spacing: var(--track-widest);
+  text-transform: uppercase;
+  color: var(--dawn-70);
+}
+.ilayer__plane__num {
+  color: var(--gold);
   font-weight: 600;
 }
+.ilayer__plane__name {
+  color: var(--dawn);
+  font-weight: 600;
+}
+.ilayer__plane__rule-mid {
+  width: 14px;
+  height: 1px;
+  background: var(--gold);
+  opacity: 0.5;
+  display: inline-block;
+}
+.ilayer__plane__role {
+  color: var(--dawn-50);
+}
+.ilayer__plane__caption {
+  font-family: var(--font-pp-neue-montreal);
+  font-size: clamp(13px, 1.05vw, 16px);
+  line-height: 1.4;
+  color: var(--dawn);
+  margin: 0;
+  text-wrap: balance;
+  max-width: 36ch;
+}
 
-/* Inline editorial chips — three operative phrases inside the Evans
-   sentence ("working out", "how to ask", "what you want") rendered in
-   the Thoughtform palette: gold border + gold dot, dawn text, void-
-   tinted background. All three identical so the sentence reads as
-   prose, not as a lane legend.
-
-   Geometry mirrors the AI-operator `.aiop-bridge__mark` reference: a
-   slightly squared corner (4px), generous breathing room around the
-   italic glyph box so descenders ("g", "y") never clip against the
-   border, and a centered cross-axis so the gold dot reads in line
-   with the optical mid-line of the italic text rather than its
-   typographic baseline. The chip's own line-height is locked so the
-   box height is determined by font-size + padding, not by whatever
-   line-height the surrounding quote inherits. */
-.ask__chip {
+/* Chip clusters — Sources (top) and Surfaces (bottom). Loose flex row
+   that wraps; mono labels with gold dot or mark for surfaces. */
+.ilayer__chips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: clamp(8px, 1vw, 12px);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ilayer__chip {
   display: inline-flex;
   align-items: center;
-  gap: 0.45em;
-  padding: 0.22em 0.7em;
-  border: 1px solid color-mix(in oklab, var(--gold) 62%, transparent);
-  border-radius: 4px;
-  font-style: italic;
-  font-weight: 400;
-  line-height: 1.15;
-  color: var(--dawn);
-  background: rgba(202, 165, 84, 0.06);
-  white-space: nowrap;
-  vertical-align: baseline;
+  gap: 8px;
+  padding: 6px 12px;
+  border: 1px solid var(--dawn-08);
+  font-family: var(--font-pt-mono);
+  font-size: clamp(10px, 0.85vw, 12px);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--dawn-70);
+  background: transparent;
   transition:
-    background 240ms ease,
-    border-color 240ms ease;
+    border-color 220ms ease,
+    color 220ms ease;
 }
-.ask__chip-dot {
-  display: inline-block;
-  width: 0.5em;
-  height: 0.5em;
-  border-radius: 50%;
+.ilayer__chip:hover {
+  border-color: rgba(202, 165, 84, 0.35);
+  color: var(--dawn);
+}
+.ilayer__chip-dot {
+  width: 6px;
+  height: 6px;
   background: var(--gold);
+  display: inline-block;
   flex-shrink: 0;
 }
-.ask__chip > span:not(.ask__chip-dot) {
+.ilayer__chip-mark {
+  font-family: var(--font-pt-mono);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--gold);
+  min-width: 18px;
+  text-align: center;
+  letter-spacing: 0;
+}
+.ilayer__chip--surface {
   color: var(--dawn);
 }
 
-/* Attribution row: small mono caps name + meta, separated by a thin
-   gold rule. */
-.ask__attrib {
+/* Substrate (middle plane) — the dominant heart of the artifact. A
+   thin instrument frame with corner registration marks (using the
+   shared .reg system); the brandmark sits dead-centre, with two
+   columns of encoded bands flanking it. */
+.ilayer__substrate {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  column-gap: clamp(20px, 3vw, 44px);
+  padding: clamp(20px, 3vh, 32px) clamp(20px, 3vw, 36px);
+  border: 1px solid var(--dawn-08);
+  background: transparent;
+  width: min(880px, 88vw);
+  margin-top: clamp(8px, 1vh, 14px);
+}
+
+.ilayer__bands {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(10px, 1.3vh, 16px);
+}
+.ilayer__bands--left {
+  text-align: right;
+  align-items: flex-end;
+}
+.ilayer__bands--right {
+  text-align: left;
+  align-items: flex-start;
+}
+.ilayer__band {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.ilayer__band__tag {
+  font-family: var(--font-pt-mono);
+  font-size: 10px;
+  letter-spacing: var(--track-widest);
+  text-transform: uppercase;
+  color: var(--gold);
+}
+.ilayer__band__name {
+  font-family: var(--font-pp-neue-montreal);
+  font-size: clamp(13px, 1vw, 15px);
+  color: var(--dawn);
+  line-height: 1.3;
+}
+
+/* Brandmark substrate dock — the visual heart. Sized larger than the
+   other docks because this IS the intelligence layer, not just a
+   travel station. The portal'd glyph fills this slot at the SVG
+   density tier; the particle store mirror writes the same rect.
+
+   Default opacity 0; the choreography hook flips it on via the
+   `[data-brandmark-mode="particle"][data-brand-svg-dock="substrate"]`
+   gate (see brandmark particle artifact block above). 200ms
+   transition matches the other dock anchors. */
+.ilayer__brandmark-anchor {
+  width: clamp(180px, 22vw, 280px);
+  height: clamp(180px, 22vw, 280px);
+  position: relative;
+  z-index: 2;
+  display: block;
+  background: transparent;
+  pointer-events: none;
+}
+.ilayer__brandmark-anchor img,
+.ilayer__brandmark-anchor svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: contain;
+  opacity: 0;
+  filter: drop-shadow(0 0 24px rgba(202, 165, 84, 0.18));
+  transition: opacity 200ms ease-out;
+}
+
+/* Substrate properties — three small mono chips below the substrate
+   frame, naming the load-bearing properties of the encoded layer. */
+.ilayer__props {
+  list-style: none;
+  margin: clamp(6px, 1vh, 10px) 0 0;
+  padding: 0;
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: clamp(8px, 1vw, 14px);
+}
+.ilayer__prop {
+  font-family: var(--font-pt-mono);
+  font-size: 10px;
+  letter-spacing: var(--track-widest);
+  text-transform: uppercase;
+  color: var(--dawn-50);
+}
+.ilayer__prop::before {
+  content: "·";
+  color: var(--gold);
+  margin-right: 6px;
+}
+
+/* Closer — single line under the artifact. Same register as
+   .miss__punchline so the diagnostic answer and intelligence layer
+   answer share rhythm. */
+.ilayer__closer {
+  font-family: var(--font-pp-neue-montreal);
+  font-weight: 400;
+  font-size: clamp(15px, 1.4vw, 19px);
+  line-height: 1.4;
+  color: var(--dawn);
+  margin: clamp(6px, 1vh, 12px) 0 0;
+  max-width: 48ch;
+  text-wrap: balance;
+}
+.ilayer__closer em {
+  font-style: italic;
+  color: var(--gold);
+}
+
+/* Reveal — opacity-only on the inner column so the void shield never
+   exposes the gateway radial during the 880ms reveal (Rule 2). */
+.ilayer__inner[data-m="instrument"] {
+  opacity: 0;
+  transition: opacity 240ms ease-out;
+}
+.ilayer__inner[data-m="instrument"].is-in {
+  opacity: 1;
+}
+
+/* Mobile / tablet — collapse to single column; substrate bands stack
+   above and below the brandmark; chips wrap to fewer per row. */
+@media (max-width: 960px) {
+  .ilayer {
+    height: auto;
+    min-height: 100vh;
+    padding-top: 100px;
+    padding-bottom: 64px;
+  }
+  .ilayer__substrate {
+    grid-template-columns: 1fr;
+    row-gap: clamp(12px, 2vh, 18px);
+    padding: clamp(18px, 2.6vh, 24px) clamp(18px, 4vw, 28px);
+  }
+  .ilayer__bands--left,
+  .ilayer__bands--right {
+    text-align: center;
+    align-items: center;
+  }
+  .ilayer__brandmark-anchor {
+    width: clamp(140px, 38vw, 200px);
+    height: clamp(140px, 38vw, 200px);
+    margin: 6px auto;
+  }
+  .ilayer__guides {
+    /* Vertical guides don't read on a narrow column — hide them. */
+    display: none;
+  }
+}
+@media (max-width: 720px) {
+  .ilayer__chip {
+    padding: 5px 10px;
+    font-size: 10px;
+  }
+  .ilayer__band__name {
+    font-size: 13px;
+  }
+}
+
+/* Reduced motion — keep the artifact visible immediately, no transitions
+   on the inner reveal. The brandmark dock anchor still respects the
+   choreography gate (it stays opacity 0 until parked). */
+@media (prefers-reduced-motion: reduce) {
+  .ilayer__inner[data-m="instrument"],
+  .ilayer__inner[data-m="instrument"].is-in {
+    opacity: 1;
+    transition: none;
+  }
+  .ilayer__inner.is-in .ilayer__guide,
+  .ilayer__inner:not(.is-in) .ilayer__guide {
+    transition: none;
+    stroke-opacity: 0.35;
+  }
+  .ilayer__inner.is-in .ilayer__guide--c,
+  .ilayer__inner:not(.is-in) .ilayer__guide--c {
+    stroke-opacity: 0.4;
+  }
+  .ilayer__brandmark-anchor img,
+  .ilayer__brandmark-anchor svg {
+    transition: none;
+  }
+}
+
+/* ═══════════ 04.5 BUILD AXIOM BRIDGE — lightweight key-visual divider ═══════════
+   Pause-and-breathe divider between the dense intelligence-layer
+   artifact and the continuum rail. Carries the Thoughtform key visual
+   under "What I cannot build, I do not understand." in a modest
+   editorial register. Distinct from the heavier #buildQuote section
+   after #practice (which is the practice → build cover; do not
+   confuse the two). See ADR-012.
+
+   Compositing: opaque void shield on the wrapper; reveal motion lives
+   only on .ilayer-bridge__figure (Rule 2). The gateway image fades in
+   via the wrapper's natural opacity (no transform on the wrapper)
+   so no lateral gold strips are exposed (Rule 3). */
+
+.ilayer-bridge {
+  position: relative;
+  height: auto;
+  min-height: 80vh;
+  min-height: 80svh;
+  padding: clamp(80px, 12vh, 140px) 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.ilayer-bridge__gateway {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.ilayer-bridge__gateway__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  opacity: 0.55;
+  /* Soft mask edges — fade to void on top and bottom so the bridge
+     dissolves into the surrounding sections instead of a hard seam. */
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(0, 0, 0, 0.85) 18%,
+    rgba(0, 0, 0, 0.85) 82%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(0, 0, 0, 0.85) 18%,
+    rgba(0, 0, 0, 0.85) 82%,
+    transparent 100%
+  );
+}
+
+.ilayer-bridge__figure {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(14px, 2vh, 22px);
+  margin: 0;
+  padding: 0 clamp(20px, 6vw, 48px);
+  text-align: center;
+  max-width: min(880px, 92vw);
+}
+.ilayer-bridge__eyebrow {
+  font-family: var(--font-pt-mono);
+  font-size: 10px;
+  letter-spacing: var(--track-widest);
+  text-transform: uppercase;
+  color: var(--dawn-50);
+  margin: 0;
+}
+.ilayer-bridge__eyebrow .k {
+  color: var(--gold);
+  font-weight: 600;
+}
+.ilayer-bridge__quote {
+  font-family: var(--font-pp-neue-montreal), serif;
+  font-weight: 400;
+  font-size: clamp(22px, 2.6vw, 38px);
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  color: var(--dawn);
+  margin: 0;
+  text-wrap: balance;
+}
+.ilayer-bridge__line {
+  display: block;
+}
+.ilayer-bridge__line em {
+  font-style: italic;
+  color: var(--gold);
+  font-weight: 400;
+}
+.ilayer-bridge__attrib {
   display: inline-flex;
   align-items: center;
-  gap: 0.9em;
-  font-family: var(--font-pt-mono), ui-monospace, monospace;
-  font-size: clamp(10px, 1vw, 12px);
+  gap: 0.7em;
+  font-family: var(--font-pt-mono);
+  font-size: clamp(10px, 0.95vw, 12px);
   letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--dawn-70);
   margin: 0;
 }
-.ask__attrib-rule {
+.ilayer-bridge__attrib__rule {
   display: inline-block;
-  width: 32px;
+  width: 24px;
   height: 1px;
   background: var(--gold);
 }
-.ask__attrib-name {
+.ilayer-bridge__attrib__name {
   color: var(--dawn);
   font-weight: 600;
 }
-.ask__attrib-meta {
-  color: var(--dawn-50);
-}
 
-/* Quiet parenthetical that sits below the attribution. */
-.ask__note {
-  font-family: var(--font-pp-neue-montreal), serif;
-  font-style: italic;
-  font-size: clamp(13px, 1.3vw, 16px);
-  color: var(--dawn-50);
-  margin: 0;
-}
-
-/* Chevron / punchline / subline removed — those beats now live in
-   `.miss__closer` (the diagnostic concludes with the "fix isn't more
-   AI" line under the constellation grid). The asking-gap section is
-   purely the Evans interstitial: quote + attribution + parenthetical
-   note, then the user scrolls into the Continuum. */
-.ask__sub-removed-marker {
-  display: none;
-}
-
-/* Reveal — apply motion to inner content only. The wrapper carries an
-   opaque void background and must not transition opacity (Rule 2 of
-   landing-v7-compositing). */
-.ask__inner[data-m="instrument"] {
+/* Reveal — opacity / translate / blur on the figure only. Wrapper stays
+   opaque (Rule 2). */
+.ilayer-bridge__figure[data-m="instrument"] {
   opacity: 0;
   transform: translateY(12px);
   filter: blur(2px);
@@ -3449,28 +3831,32 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   transition-duration: var(--m-dur-slow, 880ms);
   transition-timing-function: var(--m-ease-long, cubic-bezier(0.16, 1, 0.3, 1));
 }
-.ask__inner[data-m="instrument"].is-in {
+.ilayer-bridge__figure[data-m="instrument"].is-in {
   opacity: 1;
   transform: translateY(0);
   filter: none;
 }
 
-/* Mobile: stack vertically; chips wrap naturally with smaller text. */
 @media (max-width: 720px) {
-  .ask {
-    padding: 80px 24px 64px;
+  .ilayer-bridge {
+    min-height: 60vh;
+    padding: clamp(56px, 10vh, 88px) 0;
   }
-  .ask__quote {
-    font-size: clamp(18px, 4.6vw, 24px);
-    line-height: 1.45;
+  .ilayer-bridge__quote {
+    font-size: clamp(20px, 5.4vw, 28px);
   }
-  .ask__chip {
-    padding: 0.18em 0.55em;
-    gap: 0.35em;
+  .ilayer-bridge__gateway__img {
+    opacity: 0.4;
   }
-  .ask__brandmark-anchor {
-    width: clamp(280px, 70vmin, 480px);
-    height: clamp(280px, 70vmin, 480px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ilayer-bridge__figure[data-m="instrument"],
+  .ilayer-bridge__figure[data-m="instrument"].is-in {
+    opacity: 1;
+    transform: none;
+    filter: none;
+    transition: none;
   }
 }
 

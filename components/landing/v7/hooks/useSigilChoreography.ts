@@ -12,30 +12,32 @@ import {
 
 gsap.registerPlugin(ScrollTrigger);
 
-/** Per-station particle defaults (ADR-011 density tiers).
+/** Per-station particle defaults (ADR-011 / ADR-012 density tiers).
  *
- *  - Dock stations (sigil / miss / rail / orbit) run at full
- *    density and zero dispersion: every particle paints, every
- *    particle sits exactly on its sampled home position. At the
- *    small dock-rect sizes (rail ≈ 56px, miss / orbit ≈ 140px,
- *    sigil ≈ live diagram) the rendered point size (3px) overlaps
- *    enough that the cloud reads as a filled mark — visually
- *    indistinguishable from the SVG within a few pixels.
+ *  All five stations now run at full density and zero dispersion —
+ *  every particle paints, every particle sits exactly on its sampled
+ *  home position. At parked density 1.0 the SVG_DOCK_THRESHOLD kicks
+ *  in and the canonical SVG glyph paints at rest (pixel-perfect);
+ *  particles take over for transit between stations, where the
+ *  dispersion bump in `transit()` makes the cloud scatter and
+ *  re-cohere.
  *
- *  - Backdrop (asking-gap) runs at the sparse "diagnostic" tier:
- *    fewer visible particles, organic dispersion. The brandmark
- *    dissolves into atmosphere so the Benedict Evans quote reads
- *    as the foreground.
+ *  Substrate (renamed from `backdrop` in ADR-012) used to run at
+ *  the sparse "diagnostic" tier (density 0.22, dispersion 0.42)
+ *  because the brandmark sat behind the Benedict Evans quote at
+ *  ~0.08 opacity. With the intelligence-layer artifact it is the
+ *  visual heart of the section — same SVG-dock treatment as the
+ *  other docks, just at a larger anchor rect.
  *
- *  Tune these in `/test/brandmark-particle` and update both this
- *  table and ADR-011 together when you change them. */
+ *  Tune these in `/test/brandmark-particle` and update this table
+ *  alongside ADR-011 / ADR-012 when you change them. */
 const PARTICLE_STATION_DEFAULTS: Record<ParticleStationKind, Omit<StationSnapshot, "rect">> = {
   sigil: { opacity: 1, density: 1, dispersion: 0, tint: DEFAULT_TINT as [number, number, number] },
   miss: { opacity: 1, density: 1, dispersion: 0, tint: DEFAULT_TINT as [number, number, number] },
-  backdrop: {
+  substrate: {
     opacity: 1,
-    density: 0.22,
-    dispersion: 0.42,
+    density: 1,
+    dispersion: 0,
     tint: DEFAULT_TINT as [number, number, number],
   },
   rail: { opacity: 1, density: 1, dispersion: 0, tint: DEFAULT_TINT as [number, number, number] },
@@ -61,7 +63,7 @@ function probeWebGL(): boolean {
  *
  * One physical brandmark traverses five stations as the user scrolls:
  *
- *   Hero (hidden) → SIGIL → MISS → BACKDROP → RAIL → ORBIT → (fade) → Hidden
+ *   Hero (hidden) → SIGIL → MISS → SUBSTRATE → RAIL → ORBIT → (fade) → Hidden
  *
  * Two render modes:
  *   - DOCK (parked): at sigil / miss / rail (native source-owned), the
@@ -122,7 +124,7 @@ function probeWebGL(): boolean {
  * different concern from the brandmark's position on the journey.
  */
 
-type StationKind = "sigil" | "miss" | "backdrop" | "rail" | "orbit";
+type StationKind = "sigil" | "miss" | "substrate" | "rail" | "orbit";
 
 interface Station {
   kind: StationKind;
@@ -190,7 +192,14 @@ export function useSigilChoreography(
     // === DOM resolution ===
     const defEl = docEl.querySelector<HTMLElement>("#definition");
     const missEl = docEl.querySelector<HTMLElement>("#missing-layer");
-    const askEl = docEl.querySelector<HTMLElement>("#asking-gap");
+    // ADR-012: the third station now anchors inside the
+    // intelligence-layer section. The previous asking-gap section is
+    // gone; if a snapshot of the prototype still ships the legacy
+    // `#asking-gap` we fall back to it so the page does not break,
+    // but production markup carries `#intelligence-layer`.
+    const intelligenceEl =
+      docEl.querySelector<HTMLElement>("#intelligence-layer") ??
+      docEl.querySelector<HTMLElement>("#asking-gap");
     const contEl = docEl.querySelector<HTMLElement>("#continuum");
     const practiceEl = docEl.querySelector<HTMLElement>("#practice");
     const approachEl =
@@ -210,7 +219,12 @@ export function useSigilChoreography(
     // Brandmark anchors — lazily resolved so the journey works after
     // late layout (admin overlays, portal re-mounts, etc.)
     const getMissBrand = () => missEl?.querySelector<HTMLElement>(".miss__brand-slot") ?? null;
-    const getAskAnchor = () => askEl?.querySelector<HTMLElement>(".ask__brandmark-anchor") ?? null;
+    const getSubstrateAnchor = () =>
+      intelligenceEl?.querySelector<HTMLElement>(".ilayer__brandmark-anchor") ??
+      // Legacy fallback for snapshots that still carry the old
+      // asking-gap markup (`.ask__brandmark-anchor`).
+      intelligenceEl?.querySelector<HTMLElement>(".ask__brandmark-anchor") ??
+      null;
     const getCrailBrand = () => contEl.querySelector<HTMLElement>(".crail__brand") ?? null;
     const getOrbitMark = (): HTMLElement | null =>
       approachEl?.querySelector<HTMLElement>(".approach__orbit__mark") ??
@@ -219,10 +233,15 @@ export function useSigilChoreography(
     const actor = () => actorRef.current;
 
     // === Station list (ordered along the journey) ===
+    // ADR-012: substrate replaces the old `backdrop` station. It now
+    // owns a native dock (the portal'd SVG glyph at
+    // `.ilayer__brandmark-anchor`) just like sigil / miss / rail, so
+    // `nativeOwns: true` and parked opacity 1.0 — no more faint
+    // backdrop pin.
     const stations: Station[] = [
       { kind: "sigil", anchor: () => sigilMark, opacity: 1, nativeOwns: true },
       { kind: "miss", anchor: getMissBrand, opacity: 1, nativeOwns: true },
-      { kind: "backdrop", anchor: getAskAnchor, opacity: 0.08, nativeOwns: false },
+      { kind: "substrate", anchor: getSubstrateAnchor, opacity: 1, nativeOwns: true },
       { kind: "rail", anchor: getCrailBrand, opacity: 1, nativeOwns: true },
       { kind: "orbit", anchor: getOrbitMark, opacity: 1, nativeOwns: false },
     ];
@@ -376,9 +395,11 @@ export function useSigilChoreography(
       store.setStation(kind, snap);
       lastParticleStation = kind;
       // The canvas wrapper's CSS fade is keyed off the backdrop gate
-      // attribute. Set it true whenever ANY station is painting via
-      // particles so the canvas is visible across all parked docks
-      // (sigil / miss / backdrop / rail / orbit) — not just backdrop.
+      // attribute (name retained for backwards compatibility — it now
+      // means "particle canvas is the painter right now"). Set true
+      // whenever ANY station is painting via particles so the canvas
+      // is visible across all parked docks (sigil / miss / substrate /
+      // rail / orbit) and during transit.
       setParticleBackdropGate(true);
     };
 
@@ -394,9 +415,14 @@ export function useSigilChoreography(
     };
 
     /** Set the dock attribute cluster to match a parked station (or
-     *  none, for transit / sigil / backdrop). `data-brand-on-missing`
-     *  and `data-brand-on-rail` are written together so only the
-     *  correct dock's CSS gate is active. */
+     *  none, for transit / sigil / substrate / hidden).
+     *  `data-brand-on-missing` and `data-brand-on-rail` are written
+     *  together so only the correct dock's CSS gate is active. The
+     *  substrate dock has no dedicated `data-brand-on-substrate`
+     *  attribute — its visibility is driven entirely by
+     *  `data-brand-svg-dock="substrate"` (set in `parkAt` when the
+     *  density crosses the SVG_DOCK_THRESHOLD), the same handoff
+     *  mechanism used by the sigil dock. */
     const setDockAttrs = (parkedKind: StationKind | null) => {
       if (parkedKind === "miss") {
         setBrandOnMissing("parked");
@@ -411,7 +437,8 @@ export function useSigilChoreography(
         setBrandOnRail("false");
         setBrandOnMissing("false");
       } else {
-        // Sigil / backdrop / transit / hidden: no dock CSS gate
+        // Sigil / substrate / transit / hidden: no dedicated dock CSS
+        // gate (substrate uses the SVG-dock handoff mechanism instead).
         setBrandOnRail("false");
         setBrandOnMissing("false");
         setOrbitDocked(false);
@@ -995,7 +1022,7 @@ export function useSigilChoreography(
     if (practiceEl) ro.observe(practiceEl);
     if (defEl) ro.observe(defEl);
     if (contEl) ro.observe(contEl);
-    if (askEl) ro.observe(askEl);
+    if (intelligenceEl) ro.observe(intelligenceEl);
     if (missEl) ro.observe(missEl);
 
     // Initial computation (covers the case where the page loads with

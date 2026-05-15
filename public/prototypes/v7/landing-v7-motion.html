@@ -4216,7 +4216,7 @@ html { scroll-behavior: smooth; }
         <a href="#hero" data-station="hero" class="is-active"><span class="num">01</span>Interface</a>
         <a href="#definition" data-station="definition"><span class="num">02</span>Thoughtform</a>
         <a href="#missing-layer" data-station="missingLayer"><span class="num">03</span>Missing layer</a>
-        <a href="#asking-gap" data-station="askingGap"><span class="num">04</span>Asking gap</a>
+        <a href="#intelligence-layer" data-station="intelligenceLayer"><span class="num">04</span>Intelligence layer</a>
         <a href="#continuum" data-station="continuum"><span class="num">05</span>Continuum</a>
         <a href="#practice" data-station="practice"><span class="num">06</span>Practice</a>
         <a href="#build" data-station="build"><span class="num">07</span>Build</a>
@@ -4316,7 +4316,7 @@ html { scroll-behavior: smooth; }
           We build it with them and <em>train them to own it.</em>
         </p>
         <div class="tri__ctas">
-          <a href="#asking-gap" class="btn btn--solid">See the thesis <span class="arrow"></span></a>
+          <a href="#intelligence-layer" class="btn btn--solid">See the thesis <span class="arrow"></span></a>
         </div>
       </aside>
 
@@ -4582,49 +4582,184 @@ html { scroll-behavior: smooth; }
        the celestial instrument between Missing Layer and Asking gap
        added vertical noise that the section breaks already provide. -->
 
-  <!-- ═══════════ 04 ASKING-GAP — Benedict Evans interstitial ═══════════
-       Single full-viewport beat between the Thoughtform definition and
-       the tool↔collaborator continuum. Brings the AI operator case's
-       "asking gap" into the executive summary. The fixed BrandmarkActor
-       docks here as a faint backdrop (no markup needed beyond the
-       anchor; the actor reads `.ask__brandmark-anchor` to size itself).
-       Compositing: outer wrapper paints opaque var(--void) (Rule 1);
-       reveal motion runs on .ask__inner only (Rule 2). =================== -->
-  <section class="station station--centered station--cover station--from-connector station--to-connector ask" id="asking-gap" data-station="askingGap" data-screen-label="04 Asking gap">
-    <div class="station__idx">Asking gap<span class="landmark">Landmark · briefing intelligence</span></div>
+  <!-- ═══════════ 04 INTELLIGENCE LAYER — vertical layered artifact ═══════════
+       Replaces the previous Benedict Evans asking-gap interstitial. This
+       station translates the Aether intelligence-layer payload into a
+       three-plane stacked artifact: trusted SOURCES (Navigate) at the
+       top, the brandmark SUBSTRATE (Encode) at the centre, headless
+       SURFACES (Build) at the bottom. The brandmark is the visual heart
+       — it docks here as a full-density SVG mark via the substrate
+       station (was: backdrop). See ADR-012.
 
-    <!-- Lane-tinted atmosphere: violet (Navigate), amber (Encode), sage
-         (Build) loosely placed so the lane palette is on the page before
-         the chips name it. aria-hidden, no data-m, no opacity reveal —
-         keeps the wrapper as an opaque void shield (Rule 1, Rule 2). -->
-    <div class="ask__bleed" aria-hidden="true">
-      <span class="ask__wash ask__wash--violet"></span>
-      <span class="ask__wash ask__wash--amber"></span>
-      <span class="ask__wash ask__wash--sage"></span>
-    </div>
+       Compositing rules followed:
+       1. Outer .ilayer wrapper inherits .station's opaque var(--void)
+          shield. No transparency on the bleed-width element.
+       2. Reveal motion lives on .ilayer__inner; the wrapper carries no
+          data-m / opacity transitions (Rule 2 of landing-v7-compositing).
+       3. The connector lines and contour rings paint on top of the
+          opaque shield; they never reveal the gateway radial.
+       ──────────────────────────────────────────────────────────────────── -->
+  <section class="station station--centered ilayer" id="intelligence-layer" data-station="intelligenceLayer" data-screen-label="04 Intelligence layer">
+    <div class="station__idx">Intelligence layer<span class="landmark">Landmark · the encoded substrate</span></div>
 
-    <!-- Brandmark backdrop anchor: zero-paint placeholder. The fixed
-         BrandmarkActor reads this rect on entry, scales to ~640px, and
-         renders behind the quote at ~0.08 opacity. -->
-    <div class="ask__brandmark-anchor" aria-hidden="true"></div>
+    <div class="ilayer__inner" data-m="instrument">
 
-    <div class="ask__inner" data-m="instrument">
-      <blockquote class="ask__quote">
-        <span class="ask__quote-mark" aria-hidden="true">&ldquo;</span>A lot of the challenge is
-        <span class="ask__chip"><span class="ask__chip-dot" aria-hidden="true"></span>working out</span>
-        <span class="ask__chip"><span class="ask__chip-dot" aria-hidden="true"></span>how to ask</span>
-        for
-        <span class="ask__chip"><span class="ask__chip-dot" aria-hidden="true"></span>what you want</span>.
-      </blockquote>
+      <header class="ilayer__head">
+        <p class="ilayer__eyebrow">
+          <span class="ilayer__eyebrow-rule" aria-hidden="true"></span>
+          The answer
+        </p>
+        <h2 class="ilayer__title">
+          The fix is an <em>intelligence layer.</em>
+        </h2>
+        <p class="ilayer__lede">
+          An operating layer between how your team works and what AI does.
+          <em>Encoded once.</em> Inherited by every surface the team
+          already uses.
+        </p>
+      </header>
 
-      <p class="ask__attrib">
-        <span class="ask__attrib-rule" aria-hidden="true"></span>
-        <span class="ask__attrib-name">Benedict Evans</span>
-        <span class="ask__attrib-meta">on the hidden work behind useful AI</span>
+      <!-- Stacked artifact — three vertical planes connected by fine
+           dotted guides. Top plane = trusted sources (Navigate);
+           middle plane = brandmark substrate (Encode); bottom plane =
+           headless surfaces (Build). The middle plane is visually
+           dominant; the upper / lower planes are supporting
+           annotations rather than co-equal cards. -->
+      <div class="ilayer__artifact" role="group" aria-label="Three layers: trusted sources, encoded substrate, headless surfaces">
+
+        <!-- Vertical guide lines — two dotted columns running through
+             all three planes, drawn with SVG so the strokes stay
+             hairline at any width. preserveAspectRatio="none" stretches
+             with the artifact; vector-effect locks stroke weight. -->
+        <svg class="ilayer__guides" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+          <line x1="32"  y1="6" x2="32"  y2="94" pathLength="1" class="ilayer__guide ilayer__guide--l" />
+          <line x1="68"  y1="6" x2="68"  y2="94" pathLength="1" class="ilayer__guide ilayer__guide--r" />
+          <line x1="50"  y1="6" x2="50"  y2="94" pathLength="1" class="ilayer__guide ilayer__guide--c" />
+        </svg>
+
+        <!-- ── Plane 01 — NAVIGATE / Trusted sources ─────────────── -->
+        <div class="ilayer__plane ilayer__plane--sources" data-plane="navigate">
+          <div class="ilayer__plane__rule" aria-hidden="true"></div>
+          <header class="ilayer__plane__head">
+            <span class="ilayer__plane__num">01</span>
+            <span class="ilayer__plane__name">Navigate</span>
+            <span class="ilayer__plane__rule-mid" aria-hidden="true"></span>
+            <span class="ilayer__plane__role">Trusted sources</span>
+          </header>
+          <p class="ilayer__plane__caption">Where the work already lives.</p>
+          <ul class="ilayer__chips ilayer__chips--sources" role="list">
+            <li class="ilayer__chip"><span class="ilayer__chip-dot" aria-hidden="true"></span>Brand framework</li>
+            <li class="ilayer__chip"><span class="ilayer__chip-dot" aria-hidden="true"></span>Past campaigns</li>
+            <li class="ilayer__chip"><span class="ilayer__chip-dot" aria-hidden="true"></span>Customer research</li>
+            <li class="ilayer__chip"><span class="ilayer__chip-dot" aria-hidden="true"></span>Performance data</li>
+            <li class="ilayer__chip"><span class="ilayer__chip-dot" aria-hidden="true"></span>Style guidelines</li>
+            <li class="ilayer__chip"><span class="ilayer__chip-dot" aria-hidden="true"></span>Reviewer notes</li>
+          </ul>
+        </div>
+
+        <!-- ── Plane 02 — ENCODE / Substrate (brandmark dock) ────── -->
+        <div class="ilayer__plane ilayer__plane--substrate" data-plane="encode">
+          <div class="ilayer__plane__rule" aria-hidden="true"></div>
+          <header class="ilayer__plane__head">
+            <span class="ilayer__plane__num">02</span>
+            <span class="ilayer__plane__name">Encode</span>
+            <span class="ilayer__plane__rule-mid" aria-hidden="true"></span>
+            <span class="ilayer__plane__role">Encoded substrate</span>
+          </header>
+          <p class="ilayer__plane__caption">What matters, how to decide, what to check.</p>
+
+          <div class="ilayer__substrate">
+            <span class="reg reg--tl reg--gold" aria-hidden="true"></span>
+            <span class="reg reg--tr" aria-hidden="true"></span>
+            <span class="reg reg--bl" aria-hidden="true"></span>
+            <span class="reg reg--br" aria-hidden="true"></span>
+
+            <ul class="ilayer__bands ilayer__bands--left" role="list">
+              <li class="ilayer__band"><span class="ilayer__band__tag">Rules</span><span class="ilayer__band__name">How the team decides</span></li>
+              <li class="ilayer__band"><span class="ilayer__band__tag">Examples</span><span class="ilayer__band__name">What good looks like</span></li>
+            </ul>
+
+            <!-- Brandmark substrate dock. data-brand-anchor="substrate"
+                 is stripped of its placeholder <img> by the v7 parser;
+                 BrandmarkSystem portals one canonical BrandmarkGlyph
+                 here. The choreography hook parks the actor at this
+                 rect via the substrate station (renamed from backdrop). -->
+            <div class="ilayer__brandmark-anchor" data-brand-anchor="substrate" aria-hidden="true">
+              <img src="assets/logos/Thoughtform_Brandmark.svg" alt="" />
+            </div>
+
+            <ul class="ilayer__bands ilayer__bands--right" role="list">
+              <li class="ilayer__band"><span class="ilayer__band__tag">Sources</span><span class="ilayer__band__name">Data it can read</span></li>
+              <li class="ilayer__band"><span class="ilayer__band__tag">Loops</span><span class="ilayer__band__name">Who confirms what</span></li>
+            </ul>
+
+            <ul class="ilayer__props" role="list" aria-label="Substrate properties">
+              <li class="ilayer__prop">Owned internally</li>
+              <li class="ilayer__prop">Versioned</li>
+              <li class="ilayer__prop">Model-portable</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- ── Plane 03 — BUILD / Headless surfaces ──────────────── -->
+        <div class="ilayer__plane ilayer__plane--surfaces" data-plane="build">
+          <div class="ilayer__plane__rule" aria-hidden="true"></div>
+          <header class="ilayer__plane__head">
+            <span class="ilayer__plane__num">03</span>
+            <span class="ilayer__plane__name">Build</span>
+            <span class="ilayer__plane__rule-mid" aria-hidden="true"></span>
+            <span class="ilayer__plane__role">Headless surfaces</span>
+          </header>
+          <p class="ilayer__plane__caption">Where the team calls the engine.</p>
+          <ul class="ilayer__chips ilayer__chips--surfaces" role="list">
+            <li class="ilayer__chip ilayer__chip--surface"><span class="ilayer__chip-mark">C</span>Cursor</li>
+            <li class="ilayer__chip ilayer__chip--surface"><span class="ilayer__chip-mark">Cl</span>Claude</li>
+            <li class="ilayer__chip ilayer__chip--surface"><span class="ilayer__chip-mark">&#9680;</span>Web app</li>
+            <li class="ilayer__chip ilayer__chip--surface"><span class="ilayer__chip-mark">{ }</span>REST</li>
+            <li class="ilayer__chip ilayer__chip--surface"><span class="ilayer__chip-mark">#</span>Slack</li>
+            <li class="ilayer__chip ilayer__chip--surface"><span class="ilayer__chip-mark">A</span>Agents</li>
+          </ul>
+        </div>
+      </div>
+
+      <p class="ilayer__closer">
+        Work stays in place. <em>Substrate carries the judgment.</em>
+        Surfaces inherit it.
       </p>
-
-      <p class="ask__note">(because AI isn&rsquo;t software, it&rsquo;s an intelligence)</p>
     </div>
+  </section>
+
+  <!-- ═══════════ 04.5 BUILD AXIOM BRIDGE — lightweight key-visual divider ═══════════
+       Pause-and-breathe divider between the dense intelligence-layer
+       artifact and the continuum rail. Carries the Thoughtform key
+       visual under the line "What I cannot build, I do not understand."
+       Distinct from the heavier #buildQuote section after #practice (which
+       is the practice → build cover; do not move it). See ADR-012.
+
+       Compositing: opaque void shield on the wrapper; reveal motion only
+       on .ilayer-bridge__figure (Rule 2). The key visual carries the
+       same data-parallax channel as the existing build-quote gateway. -->
+  <section class="station ilayer-bridge" id="build-axiom-bridge" data-station="buildAxiomBridge" data-screen-label="04.5 Axiom bridge">
+    <div class="ilayer-bridge__gateway" aria-hidden="true">
+      <img class="ilayer-bridge__gateway__img"
+           src="/images/Thoughtform_Key%20Visual_14d.webp"
+           alt=""
+           data-parallax=".04"
+           loading="lazy"
+           decoding="async" />
+    </div>
+
+    <figure class="ilayer-bridge__figure" data-m="instrument">
+      <p class="ilayer-bridge__eyebrow"><span class="k">Axiom</span> · into the work</p>
+      <blockquote class="ilayer-bridge__quote">
+        <span class="ilayer-bridge__line">What I cannot build,</span>
+        <span class="ilayer-bridge__line"><em>I do not understand.</em></span>
+      </blockquote>
+      <figcaption class="ilayer-bridge__attrib">
+        <span class="ilayer-bridge__attrib__rule" aria-hidden="true"></span>
+        <span class="ilayer-bridge__attrib__name">Richard Feynman</span>
+      </figcaption>
+    </figure>
   </section>
 
   <!-- ═══════════ 03 CONTINUUM — the tool ↔ collaborator spectrum ═══════════ -->

@@ -27,21 +27,27 @@
  *     unchanged. Used when `prefers-reduced-motion: reduce` is set or
  *     when WebGL context creation fails.
  *
- * Phase A (the current implementation) only ever writes to the
- * `backdrop` station. The store is built for all five stations so
- * Phases B and C can add them without a schema change.
+ * Stations:
+ *   sigil → miss → substrate → rail → orbit
  *
- * See ADR-011 for the full architecture.
+ * The third station was renamed from `backdrop` to `substrate` in
+ * ADR-012 when the asking-gap interstitial was replaced by the
+ * intelligence-layer artifact. Same choreography slot; new role
+ * (the dense central plane of the intelligence-layer instead of a
+ * sparse blur behind the Evans quote).
+ *
+ * See ADR-011 (particle architecture) and ADR-012 (intelligence
+ * layer artifact) for the full picture.
  */
 
 import { create } from "zustand";
 
-export type StationKind = "sigil" | "miss" | "backdrop" | "rail" | "orbit";
+export type StationKind = "sigil" | "miss" | "substrate" | "rail" | "orbit";
 
 export const ALL_STATION_KINDS: readonly StationKind[] = [
   "sigil",
   "miss",
-  "backdrop",
+  "substrate",
   "rail",
   "orbit",
 ];

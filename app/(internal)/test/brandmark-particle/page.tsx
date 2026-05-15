@@ -10,21 +10,24 @@ import {
 
 /**
  * /test/brandmark-particle — dev preview for the brandmark particle
- * artifact engine (ADR-011, Phase A).
+ * artifact engine (ADR-011 / ADR-012).
  *
- * Mounts the shared particle canvas with a single `backdrop` station
- * and lets us scrub density, dispersion, opacity, tint, and the
- * target rect's size + position via sliders. This is the lab — tune
- * here, copy the numbers into `PARTICLE_BACKDROP_DEFAULTS` in
- * `useSigilChoreography.ts` (or future per-station defaults).
+ * Mounts the shared particle canvas with a single `substrate` station
+ * (renamed from `backdrop` in ADR-012) and lets us scrub density,
+ * dispersion, opacity, tint, and the target rect's size + position
+ * via sliders. This is the lab — tune here, copy the numbers into
+ * `PARTICLE_STATION_DEFAULTS` in `useSigilChoreography.ts`.
  *
  * Internal route — blocked from production by `middleware.ts`.
  */
 
 export default function BrandmarkParticlePreviewPage() {
-  // Engine controls (UI state — fed into the store on change)
-  const [density, setDensity] = useState(0.22);
-  const [dispersion, setDispersion] = useState(0.42);
+  // Engine controls (UI state — fed into the store on change). Defaults
+  // sit at full density (the substrate dock target); flip density down
+  // to ≈ 0.22 + dispersion ≈ 0.42 to recreate the ADR-011 sparse
+  // diagnostic backdrop tier for tuning checks.
+  const [density, setDensity] = useState(1);
+  const [dispersion, setDispersion] = useState(0);
   const [opacity, setOpacity] = useState(1);
   const [pointSize, setPointSize] = useState(3);
   const [tintMode, setTintMode] = useState<"gold" | "dawn">("gold");
@@ -45,7 +48,7 @@ export default function BrandmarkParticlePreviewPage() {
     };
   }, []);
 
-  // Continuously write the backdrop station snapshot. The rect math
+  // Continuously write the substrate station snapshot. The rect math
   // converts the percent-based controls into viewport pixel coords.
   useEffect(() => {
     const write = () => {
@@ -54,7 +57,7 @@ export default function BrandmarkParticlePreviewPage() {
       const cx = (rectX / 100) * vw;
       const cy = (rectY / 100) * vh;
       const halfSize = rectSize / 2;
-      useBrandmarkParticleStore.getState().setStation("backdrop", {
+      useBrandmarkParticleStore.getState().setStation("substrate", {
         rect: {
           left: cx - halfSize,
           top: cy - halfSize,
@@ -87,7 +90,7 @@ export default function BrandmarkParticlePreviewPage() {
           chrome by default. We give the controls panel a higher
           z-index so it stays interactive. */}
       <BrandmarkParticleCanvas
-        stations={["backdrop"]}
+        stations={["substrate"]}
         forceMount
         className="tf-brandmark-particle-canvas tf-brandmark-particle-canvas--preview"
       />
@@ -237,8 +240,9 @@ export default function BrandmarkParticlePreviewPage() {
             lineHeight: 1.6,
           }}
         >
-          Phase A target: density ≈ 0.22, dispersion ≈ 0.42 for the asking-gap backdrop. Crank
-          density to 1.0 to verify the full-density mode reads as a solid mark.
+          Defaults sit at density 1.0 + dispersion 0 — the substrate dock target. Drop density to ≈
+          0.22 + dispersion ≈ 0.42 to recreate the legacy asking-gap backdrop tier for regression
+          checks.
         </p>
       </div>
     </main>

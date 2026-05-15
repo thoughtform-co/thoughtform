@@ -14,9 +14,11 @@ import { BrandmarkParticleStation } from "./BrandmarkParticleStation";
  * every brandmark on the page from particles.
  *
  * Mounts once at the v7 landing root. Inside, it renders one
- * `BrandmarkParticleStation` per station listed in `stations` — by
- * default Phase A wires only `backdrop`, with Phases B and C adding
- * the remaining four as they come online.
+ * `BrandmarkParticleStation` per station listed in `stations`. The
+ * v7 landing wires all five (sigil + miss + substrate + rail +
+ * orbit); other consumers (e.g. the dev preview at
+ * `/test/brandmark-particle`) may opt into a subset via the
+ * `stations` prop.
  *
  * Sit at z-index `23` so it sits just under the fixed
  * `.tf-brandmark-actor` (z=24). That keeps the SVG actor as the top
@@ -32,8 +34,9 @@ import { BrandmarkParticleStation } from "./BrandmarkParticleStation";
  */
 
 export interface BrandmarkParticleCanvasProps {
-  /** Stations to render. Defaults to `backdrop` (Phase A scope). Pass
-   *  `ALL_STATION_KINDS` to enable every station (Phase B+). */
+  /** Stations to render. Defaults to `substrate` only — the dev
+   *  preview's typical scope. Pass `ALL_STATION_KINDS` (or an
+   *  explicit list) to enable every station, as the v7 landing does. */
   stations?: readonly StationKind[];
   /** Optional className for the wrapper div. */
   className?: string;
@@ -44,7 +47,7 @@ export interface BrandmarkParticleCanvasProps {
 }
 
 export function BrandmarkParticleCanvas({
-  stations = ["backdrop"],
+  stations = ["substrate"],
   className,
   forceMount = false,
 }: BrandmarkParticleCanvasProps) {

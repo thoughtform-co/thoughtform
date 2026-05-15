@@ -14,7 +14,7 @@ import { brandmarkVertexShader, brandmarkFragmentShader } from "./shaders";
 
 /**
  * BrandmarkParticleStation — one `<points>` mesh that paints the
- * brandmark for a single station (sigil / miss / backdrop / rail /
+ * brandmark for a single station (sigil / miss / substrate / rail /
  * orbit).
  *
  * The mesh is mounted once per station that this canvas owns. Each
@@ -30,8 +30,9 @@ import { brandmarkVertexShader, brandmarkFragmentShader } from "./shaders";
  * `sampleShape` helper memoises by `(shapeKey, count)` so multiple
  * stations of the same shape share the same sampled buffer.
  *
- * Phase A only mounts the `backdrop` station. Phases B and C will
- * mount the rest.
+ * The v7 landing wires all five stations via `BrandmarkSystem`. The
+ * dev preview at `/test/brandmark-particle` typically wires the
+ * substrate station alone (the largest dock rect, used for tuning).
  */
 
 /** Brandmark viewBox: `0 0 430.99 436`. Parsed from
@@ -82,15 +83,18 @@ const COVERAGE_AT_FULL_DENSITY = 2.0;
 /** Coverage shaping exponent. Coverage scales as
  *  `density ^ COVERAGE_FALLOFF_EXP`, so reducing density shrinks
  *  individual points faster than the visible count drops. Effect:
- *  the asking-gap backdrop (density ≈ 0.22) reads as atmospheric
- *  grain rather than chunky confetti even though the rect is large.
- *  Higher exponent → sparser-looking lower densities. */
+ *  the transit dispersion bump (density lerps + sin-bump) reads as
+ *  atmospheric scatter rather than chunky confetti. Higher exponent
+ *  → sparser-looking lower densities. (Pre-ADR-012 the substrate
+ *  station ran at density 0.22 and used this falloff to read as the
+ *  asking-gap backdrop — same math, different visual destination.) */
 const COVERAGE_FALLOFF_EXP = 1.6;
 
 /** Floor and ceiling on the auto-computed point size. The floor keeps
  *  very small rects (rail ~56px) from going sub-pixel; the ceiling
- *  keeps very large rects (asking-gap backdrop ~640px) from drawing
- *  blocky chunks. */
+ *  keeps very large rects (substrate dock at ~280px, mid-transit
+ *  scatter rects up to a few hundred pixels) from drawing blocky
+ *  chunks. */
 const POINT_SIZE_MIN_PX = 1.6;
 const POINT_SIZE_MAX_PX = 6;
 
@@ -216,10 +220,11 @@ export function BrandmarkParticleStation({ stationKind }: BrandmarkParticleStati
     //
     //   coverage = COVERAGE_AT_FULL_DENSITY × density ^ COVERAGE_FALLOFF_EXP
     //
-    //   ≈ 2.0   at density 1.0  → solid filled silhouette (sigil/miss/
-    //                              rail/orbit dock — reads as the SVG)
-    //   ≈ 0.16  at density 0.22 → atmospheric grain (asking-gap
-    //                              diagnostic backdrop — reads as
+    //   ≈ 2.0   at density 1.0  → solid filled silhouette (every
+    //                              parked dock — sigil/miss/substrate/
+    //                              rail/orbit — reads as the SVG)
+    //   ≈ 0.16  at density 0.22 → atmospheric grain (transit
+    //                              dispersion bump — reads as
     //                              dispersed atoms, NOT confetti)
     //
     // Derive point size from coverage:
@@ -228,8 +233,8 @@ export function BrandmarkParticleStation({ stationKind }: BrandmarkParticleStati
     //   pointSize  = sqrt(coverage × filledArea / visibleCount)
     //
     // Clamped to [POINT_SIZE_MIN_PX, POINT_SIZE_MAX_PX] so rails
-    // don't go sub-pixel and the backdrop doesn't draw blocky chunks
-    // on very large rects.
+    // don't go sub-pixel and large transit rects don't draw blocky
+    // chunks.
     const filledArea = station.rect.width * station.rect.height * sample.fillRatio;
     const coverage =
       COVERAGE_AT_FULL_DENSITY * Math.pow(Math.max(0.001, station.density), COVERAGE_FALLOFF_EXP);

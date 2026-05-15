@@ -44,6 +44,9 @@ import { useEffect, type RefObject } from "react";
 const BRANDMARK_RENDER_SELECTORS: readonly string[] = [
   '[data-brand-anchor="sigil"] :where(img, svg)',
   '[data-brand-anchor="missing"] :where(img, svg)',
+  // Substrate anchor — added in ADR-012 when the asking-gap backdrop
+  // pin became the intelligence-layer central plane.
+  '[data-brand-anchor="substrate"] :where(img, svg)',
   '[data-brand-anchor="rail"] :where(img, svg)',
   '[data-brand-anchor="orbit"] :where(img, svg)',
   ".tf-brandmark-actor",
@@ -56,10 +59,10 @@ const BRANDMARK_RENDER_SELECTORS: readonly string[] = [
 ];
 
 /** Opacity below which a brandmark element is considered "not
- *  visible" for the singleton check. The asking-gap backdrop pin sits
- *  at ~0.08 opacity, so we tolerate anything strictly below 0.04 as
- *  invisible — that way the faint backdrop pass doesn't double-count
- *  against the fixed actor at its destination. */
+ *  visible" for the singleton check. The 0.04 floor was originally
+ *  set to tolerate the asking-gap backdrop pin (~0.08 opacity) without
+ *  double-counting; ADR-012 retired that faint dock but the floor is
+ *  kept for headroom against opacity rounding noise. */
 const VISIBILITY_OPACITY_THRESHOLD = 0.04;
 
 interface VisibleBrandmark {
@@ -204,7 +207,7 @@ export function useBrandmarkSingletonCheck(rootRef?: RefObject<HTMLElement | nul
       const summary = visible
         .map((v) => `${v.selector} @ y=${Math.round(v.rect.y)} op=${v.opacity.toFixed(3)}`)
         .join(" | ");
-      // eslint-disable-next-line no-console
+
       console.warn(
         `[brandmark-singleton] ${visible.length} brandmark instances visible (sum=${combinedOpacity.toFixed(3)}): ${summary}`
       );
