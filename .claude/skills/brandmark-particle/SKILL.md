@@ -185,6 +185,33 @@ fade-in band; the diagram's own entrance scrub
 Within-section entries always use the SVG; particles are reserved
 for cross-section motion.
 
+The **rail → orbit segment + practice sticky window** also need
+explicit handling. The orbit anchor (`.approach__orbit__mark`) is
+sticky inside `.approach__stage` (`position: sticky; top: clamp(60px,
+12vh, 120px)`) so its rect.top clamps to a constant during sticky
+engagement. Two compounding consequences:
+
+1. `stationCenterY(orbit)` advances with `scrollY` in lockstep, so
+   the generic rawT-based transit math in the rail → orbit segment
+   only approaches 1 asymptotically — `parkAt(orbit)` would never
+   fire inside the practice section. `applyJourney` re-bases the
+   rail → orbit transit window on the practice section's top edge:
+   once `practiceEl.getBoundingClientRect().top <= 0`, the orbit
+   is parked.
+2. `scrollY > c[lastIdx]` becomes perpetually true once sticky
+   engages, so the post-orbit fade-out branch would fire across
+   Navigate / Encode / Build — painting a decaying-opacity particle
+   cloud over the canonical SVG. `applyJourney` short-circuits to
+   `parkAt(orbit)` whenever the practice section straddles viewport
+   top (`practiceTop <= 0 && practiceBottom > 0`). The fade-out
+   branch then correctly only fires after practice has scrolled
+   past (sticky window released, `rect.top` negative,
+   `c[orbit] < scrollY` again reflects "past orbit").
+
+The visible effect: orbit reads as canonical SVG across all three
+practice sub-sections; fade-out engages cleanly once the user
+scrolls past the practice section.
+
 The handoff threshold is `SVG_DOCK_THRESHOLD = 0.95` in
 [`useSigilChoreography.ts`](../../components/landing/v7/hooks/useSigilChoreography.ts).
 Any station whose default density meets the threshold triggers the
