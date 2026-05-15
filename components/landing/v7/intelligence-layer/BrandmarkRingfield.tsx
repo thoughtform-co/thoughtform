@@ -406,6 +406,27 @@ export function BrandmarkRingfield() {
     const parent = parentGroupRef.current;
     if (parent) {
       parent.rotation.y = splitRotation(progress);
+
+      // ADR-012 v5 visibility gate — visible whenever the section
+      // is being scrolled through. The progress envelope from the
+      // section's ScrollTrigger (`top 80% -> bottom 20%`) starts
+      // ramping the moment the section's TOP crosses the viewport's
+      // 80% line, so any progress > 0 means the user has scrolled
+      // far enough that the section is meaningfully in view.
+      //
+      // Setting `parent.visible = true` always while the canvas is
+      // mounted lets the R3F particle cloud + rings paint inside
+      // the section's bounds — and because the canvas's DOM
+      // container (`.ilayer__artifact { inset:0 }` inside the
+      // section element) naturally clips to the section's box, the
+      // brandmark cannot be seen from sections above or below.
+      //
+      // The SVG dock at the substrate anchor is hidden by
+      // IntelligenceLayerPortal's `applyR3FDockMask()` so there is
+      // never a frame where two brandmarks paint at the substrate
+      // position; the R3F particle cloud is the SOLE painter for
+      // the section's read beat.
+      parent.visible = true;
     }
 
     // Per-ring Z extrusion. Encode is anchored at z=0 (it's the

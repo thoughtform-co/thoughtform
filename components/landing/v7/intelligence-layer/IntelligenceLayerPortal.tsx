@@ -49,25 +49,60 @@ export function IntelligenceLayerPortal({ containerRef }: IntelligenceLayerPorta
     if (!container) return;
     const stack = container.querySelector<HTMLElement>(".ilayer__stack");
     if (!stack) return;
-    // ADR-012 v5: also write the attribute on the section element so
-    // the v5 hard-swap CSS rule
-    // (`#intelligence-layer[data-ilayer-mode="r3f"] .ilayer__brandmark-anchor > svg`)
-    // can hide the SVG dock the moment the canvas mounts. The
-    // `.ilayer__stack` and `.ilayer__brandmark-anchor` are siblings
-    // inside `.ilayer__inner`, so a sibling selector wouldn't reach
-    // cleanly across; mirroring the attribute onto the section
-    // (which is the brandmark anchor's nearest common ancestor) is
-    // the simplest way to gate it.
-    const section = container.querySelector<HTMLElement>("#intelligence-layer");
 
     const motionMQ = window.matchMedia("(prefers-reduced-motion: reduce)");
     const sizeMQ = window.matchMedia("(max-width: 767px)");
 
+    /**
+     * ADR-012 v5: imperatively hide the SVG dock at the substrate
+     * anchor whenever the R3F canvas is the painter. We do this in
+     * JS (inline `style.opacity = "0"` with the `!important`
+     * priority flag) rather than via a CSS attribute selector
+     * because the cascade has historically been brittle around the
+     * brandmark dock-state gates (`[data-brand-svg-dock="substrate"]`
+     * sets `opacity: 1 !important`); inline `!important` beats
+     * stylesheet `!important` of any specificity, so this is the
+     * most reliable way to guarantee the SVG dock yields to the R3F
+     * particle cloud during the section.
+     *
+     * Re-applied each evaluate() because Fast Refresh / portal
+     * remounts may regenerate the SVG inside the anchor (BrandmarkSystem
+     * portals it via createPortal), and the inline style may need
+     * to be re-attached.
+     */
+    const applyR3FDockMask = (mask: boolean): void => {
+      const section = container.querySelector<HTMLElement>("#intelligence-layer");
+      const anchor = section?.querySelector<HTMLElement>(".ilayer__brandmark-anchor");
+      if (!anchor) return;
+      // Match both `<img>` (placeholder, normally stripped by v7-parse)
+      // and `<svg>` (canonical glyph portal'd by BrandmarkSystem).
+      const children = anchor.querySelectorAll<HTMLElement>(":scope > img, :scope > svg");
+      for (const child of children) {
+        if (mask) {
+          child.style.setProperty("opacity", "0", "important");
+          child.style.setProperty("transition", "none", "important");
+        } else {
+          child.style.removeProperty("opacity");
+          child.style.removeProperty("transition");
+        }
+      }
+    };
+
     const evaluate = () => {
       const wantsStatic = motionMQ.matches || sizeMQ.matches || !probeWebGL();
       const next = wantsStatic ? "static" : "r3f";
+      // Re-query the section element on every evaluate() call rather
+      // than caching it -- HMR / Fast Refresh regenerates the DOM
+      // (the v7 prototype is rendered via dangerouslySetInnerHTML)
+      // and the cached reference would point at the previous
+      // (detached) section, so setAttribute would silently fail to
+      // affect the live DOM.
+      const section = container.querySelector<HTMLElement>("#intelligence-layer");
       const cur = stack.getAttribute("data-ilayer-mode");
-      if (cur !== next) {
+      const sectionCur = section?.getAttribute("data-ilayer-mode");
+      // Always write to BOTH if either is stale (a fresh remount may
+      // have a cur="r3f" stack but a missing section attr).
+      if (cur !== next || sectionCur !== next) {
         stack.setAttribute("data-ilayer-mode", next);
         section?.setAttribute("data-ilayer-mode", next);
         useIlayerProgressStore.getState().setMode(next);
@@ -75,17 +110,46 @@ export function IntelligenceLayerPortal({ containerRef }: IntelligenceLayerPorta
         // mounts or unmounts the canvas to match the new mode.
         setMountToken((t) => t + 1);
       }
+      // Apply the dock-mask every evaluate, even if mode hasn't
+      // changed -- BrandmarkSystem may have re-portal'd the SVG
+      // (e.g. on Fast Refresh of an unrelated component), and our
+      // inline style would have been lost.
+      applyR3FDockMask(next === "r3f");
     };
 
     evaluate();
     motionMQ.addEventListener("change", evaluate);
     sizeMQ.addEventListener("change", evaluate);
 
+    // Watch for the substrate-anchor's children changing. When
+    // BrandmarkSystem re-portals the canonical glyph (e.g. after
+    // Fast Refresh, route navigation, admin overlay teardown), we
+    // need to re-apply the inline opacity-0 style to the newly
+    // created SVG so the R3F particle cloud stays the sole painter.
+    const sectionForObs = container.querySelector<HTMLElement>("#intelligence-layer");
+    const anchorForObs = sectionForObs?.querySelector<HTMLElement>(".ilayer__brandmark-anchor");
+    let dockObserver: MutationObserver | null = null;
+    if (anchorForObs) {
+      dockObserver = new MutationObserver(() => {
+        // Re-apply with the current desired mask state by calling
+        // evaluate's mask helper indirectly via re-evaluating mode.
+        const wantsStatic = motionMQ.matches || sizeMQ.matches || !probeWebGL();
+        applyR3FDockMask(!wantsStatic);
+      });
+      dockObserver.observe(anchorForObs, { childList: true, subtree: false });
+    }
+
     return () => {
       motionMQ.removeEventListener("change", evaluate);
       sizeMQ.removeEventListener("change", evaluate);
+      dockObserver?.disconnect();
       stack.removeAttribute("data-ilayer-mode");
+      // Re-query for cleanup too, in case the section element has
+      // been replaced since mount.
+      const section = container.querySelector<HTMLElement>("#intelligence-layer");
       section?.removeAttribute("data-ilayer-mode");
+      // Restore the SVG dock to its CSS-controlled visibility.
+      applyR3FDockMask(false);
     };
   }, [containerRef]);
 

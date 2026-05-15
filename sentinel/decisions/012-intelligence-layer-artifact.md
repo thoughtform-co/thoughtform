@@ -527,3 +527,43 @@ This amendment rewrites the section under three principles:
 - [`public/prototypes/v7/landing-v7-motion.html`](../../public/prototypes/v7/landing-v7-motion.html) — rewrote `.ilayer__stack__fallback` SVG: three concentric circles + bearing ticks + diamond markers (was three vertically-offset filled ellipses).
 - [`components/landing/v7/hooks/useSigilChoreography.ts`](../../components/landing/v7/hooks/useSigilChoreography.ts) — updated comment block on `getSubstrateAnchor()` for v5 contract. No behavior change.
 - [`.claude/skills/brandmark-choreography/SKILL.md`](../../.claude/skills/brandmark-choreography/SKILL.md) — substrate-dock paragraph updated for v5 (SVG glyph hidden via attribute gate, anchor sized from JS).
+
+---
+
+## Amendment v5b — Imperative SVG dock mask, R3F always renders (2026-05-15)
+
+### Why amend (third time, same day)
+
+After v5 deployed the user reported that the brandmark "isn't really transitioning" — when scrolling from the diagnostic section into the intelligence-layer, the section's brandmark felt "still there" before they had scrolled into it. They expected `everything needs to transition into each other`.
+
+Two underlying issues:
+
+1. **The hard-swap CSS rule was unreliable.** The selector `#intelligence-layer[data-ilayer-mode="r3f"] .ilayer__brandmark-anchor > :where(img, svg) { opacity: 0 !important }` was brittle in practice because the `[data-brandmark-mode="particle"][data-brand-svg-dock="substrate"]` dock-state gate also sets `opacity: 1 !important` on the same SVG with comparable specificity, and the dock-state gate sometimes won the cascade depending on rule declaration order and which attribute was set first by HMR. The result: the SVG dock and the R3F particle cloud both painted the brandmark at the substrate anchor at the same instant, which is what the user saw.
+
+2. **The `data-ilayer-mode` attribute was sometimes missing on the section element.** The portal cached the section ref at mount time, but Fast Refresh / HMR re-renders the v7 prototype HTML (it is rendered via `dangerouslySetInnerHTML` from `lib/v7-parse.ts`), which replaces the section element. The cached ref then pointed at the detached node and `setAttribute()` was a no-op on the live DOM.
+
+### What changes from v5
+
+- **Hard-swap CSS rule replaced with imperative inline style.** `IntelligenceLayerPortal` now exposes `applyR3FDockMask(mask: boolean)` which calls `el.style.setProperty("opacity", "0", "important")` (and the matching transition disable) on the substrate anchor's direct `<img>` and `<svg>` children. Inline `!important` styles beat stylesheet `!important` styles of any specificity per the CSS cascade, so the dock-state gate cannot override us. The mask is applied on every `evaluate()` call (including mount, MQ change, and explicit re-evaluation) and on every BrandmarkSystem re-portal via a `MutationObserver` on the substrate anchor's children.
+
+- **`#intelligence-layer[data-ilayer-mode="r3f"] ...` CSS rule removed.** Replaced with a comment in `landing.css` pointing at `applyR3FDockMask()` so future maintainers understand why the rule moved out of CSS.
+
+- **Section element re-queried on every `evaluate()` call.** The portal no longer caches the section ref from mount time; it calls `container.querySelector("#intelligence-layer")` inside `evaluate()` so the live element is always targeted. Same for cleanup. This was the root cause of "`sectionAttr: (none)` even though portal logged `sectionAttrAfter: r3f`" — the cached ref was stale.
+
+- **R3F visibility gate simplified.** The `useFrame` no longer toggles `parentGroup.visible` based on `data-brand-svg-dock`. The R3F always paints whenever the canvas is mounted; the natural DOM clipping of the section element (`.ilayer__artifact { inset:0 }` inside `#intelligence-layer { height: 100svh }`) keeps the ringfield from being seen from sections above or below. The earlier attempt to gate on the choreography's substrate park state was too restrictive — the substrate park zone is a narrow scroll range and didn't align with the section's `top 80% / bottom 20%` ScrollTrigger window, so the R3F never appeared in normal scrolling.
+
+### What this fixes vs. what's still inherent
+
+Fixed:
+
+- The "two brandmarks at the substrate position" perception. The SVG dock is now reliably hidden whenever the canvas is mounted; the R3F particle cloud is the SOLE painter for the section's read beat.
+
+Still inherent (and intentional):
+
+- The R3F brandmark + rings can be seen at the bottom of the viewport when the section first enters from below, while the diagnostic section is still partially visible at the top. This is a property of the stacked-section layout: any in-section content (HUD frame, labels, diagram) reads the same way during the entry seam. The composition is consistent with how the rest of the page handles section seams.
+
+### Files touched in v5b
+
+- [`components/landing/v7/intelligence-layer/IntelligenceLayerPortal.tsx`](../../components/landing/v7/intelligence-layer/IntelligenceLayerPortal.tsx) — added `applyR3FDockMask()` helper and a `MutationObserver` on the substrate anchor that re-applies the mask whenever its children change (BrandmarkSystem re-portals after Fast Refresh / route nav). Re-queries the section element on every `evaluate()` call and on cleanup. Cleanup also calls `applyR3FDockMask(false)` to restore the SVG's CSS-controlled visibility.
+- [`components/landing/v7/intelligence-layer/BrandmarkRingfield.tsx`](../../components/landing/v7/intelligence-layer/BrandmarkRingfield.tsx) — removed the per-frame `parent.visible` gate. The R3F scene paints unconditionally while the canvas is mounted; the section's DOM box clips it to the section's bounds.
+- [`components/landing/v7/landing.css`](../../components/landing/v7/landing.css) — replaced the v5 hard-swap rule with a comment block pointing at `applyR3FDockMask()`. The cascade-fragile attribute-selector approach is gone.

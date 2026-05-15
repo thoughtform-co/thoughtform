@@ -3627,30 +3627,23 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   will-change: opacity;
 }
 
-/* HARD SWAP rule (the central CSS in ADR-012 v5).
+/* HARD SWAP — implemented imperatively in JS (ADR-012 v5).
 
-   Whenever the section's R3F canvas is mounted, IntelligenceLayerPortal
-   writes `data-ilayer-mode="r3f"` on BOTH `.ilayer__stack` AND
-   `#intelligence-layer` (the section element). This rule reads the
-   section-level attribute so it can reach the brandmark anchor (a
-   sibling of the stack).
+   The CSS hard-swap rule that lived here was unreliable in practice
+   because of cascade interactions with the brandmark dock-state
+   gates (`[data-brandmark-mode="particle"][data-brand-svg-dock="substrate"]`
+   sets `opacity: 1 !important` on the same SVG, with comparable
+   specificity to any rule we could write here). The reliable fix is
+   to write `style.opacity = "0"` with the `!important` priority flag
+   directly on the SVG element from JS — inline `!important` styles
+   beat stylesheet `!important` styles of any specificity per the
+   CSS cascade.
 
-   `opacity: 0 !important` + `transition: none !important` keeps the
-   swap atomic: there is no fade window where the SVG dock and the
-   R3F particle cloud could appear simultaneously. The R3F cloud
-   takes over as the painter at exactly the same pixels (the anchor
-   is sized from the encode ring's projected rect by
-   useIlayerProgress), so the swap reads as visual continuity.
-
-   This rule wins over the `[data-brand-svg-dock="substrate"]`
-   particle-mode gate (declared earlier with `opacity: 1 !important`)
-   because it is declared LATER in the cascade and both have
-   matching specificity. */
-#intelligence-layer[data-ilayer-mode="r3f"] .ilayer__brandmark-anchor > img,
-#intelligence-layer[data-ilayer-mode="r3f"] .ilayer__brandmark-anchor > svg {
-  opacity: 0 !important;
-  transition: none !important;
-}
+   See `IntelligenceLayerPortal.tsx`'s `applyR3FDockMask()` for the
+   implementation. The mask is applied whenever the canvas is
+   mounted (`mode === "r3f"`) and re-applied on every BrandmarkSystem
+   re-portal via a MutationObserver on the substrate anchor's
+   children. */
 
 /* Reveal — opacity-only on the inner column so the void shield never
    exposes the gateway radial during the 880ms reveal (Rule 2). */
