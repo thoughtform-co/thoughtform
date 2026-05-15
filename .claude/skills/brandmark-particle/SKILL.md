@@ -162,16 +162,28 @@ on `<html>` so the CSS re-shows the portal'd glyph at that anchor
 (with a 200 ms crossfade). At rest the brandmark is the canonical
 SVG file — true vector crispness, zero stipple.
 
-Particles handle every moment of _motion_:
+Particles handle every moment of _cross-section_ motion:
 
-- **Entrance fade-in** — particles assemble the mark as you scroll
-  into section 02 (the SVG glyph stays at opacity 0).
 - **Transit between stations** — particles disperse and re-cohere
-  with the `sin(πt) × 0.45` bell curve.
+  with the `sin(πt) × 0.45` bell curve. This is where the
+  "pure-math substrate that can transform" story is on screen.
 - **Backdrop (asking-gap)** — particles paint the sparse diagnostic
   atmosphere; the SVG glyph stays at opacity 0 because the backdrop's
   density (`0.22`) is below `SVG_DOCK_THRESHOLD`.
 - **Post-orbit fade-out** — particles ramp opacity to 0.
+
+The **entrance fade-in into section 02** is intentionally NOT a
+particle moment. The original ADR-011 v1 design wrote a sigil
+snapshot whose `opacity` ramped 0 → 1 across the band, but the
+shader alpha-blends each particle individually so overlapping points
+never combine to full opacity — the cloud read as stippled even at
+density 1.0. From 2026-05-15 forward, the choreography hook flips
+`data-brand-svg-dock="sigil"` as soon as the user crosses into the
+fade-in band; the diagram's own entrance scrub
+(`#definition top 85% → top 35%`) animates `.sigil__mark` opacity
+0 → 1 smoothly, so the canonical SVG glyph fades in as clean vector.
+Within-section entries always use the SVG; particles are reserved
+for cross-section motion.
 
 The handoff threshold is `SVG_DOCK_THRESHOLD = 0.95` in
 [`useSigilChoreography.ts`](../../components/landing/v7/hooks/useSigilChoreography.ts).

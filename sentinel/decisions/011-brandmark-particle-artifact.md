@@ -1,8 +1,18 @@
 # ADR-011: Brandmark as Morphable Particle Artifact
 
-**Date:** 2026-05-11
+**Date:** 2026-05-11 (v1) / 2026-05-15 (v2 amendment)
 **Status:** Accepted
 **Supersedes:** none (additive on top of [ADR-010](010-brandmark-choreography.md))
+
+**v2 amendment (2026-05-15):** entrance fade-in into section 02 now
+hands off to the canonical SVG glyph via `data-brand-svg-dock="sigil"`
+instead of writing a particle snapshot with a per-particle opacity
+ramp. The original "particles assemble the mark from atoms" design
+read as stipple because the shader alpha-blends each grain
+individually. Particles are now reserved for cross-section motion
+(transit + backdrop + fade-out); within-section entries paint as
+clean vector via the diagram's existing entrance scrub. See
+"Dock-park SVG handoff" below and `brandmark-particle` SKILL.md.
 
 ---
 
@@ -168,6 +178,15 @@ Stations whose default density meets the threshold trigger the
 handoff in `parkAt`; the backdrop (density `0.22`) stays as
 particles.
 
+**Entrance band amendment (v2, 2026-05-15):** the pre-sigil
+fade-in band (`scrollY` in `[c[0] - 0.6 * vh, c[0]]`) also hands
+off to the SVG glyph — `setSvgDock("sigil")` is called as soon as
+the user crosses into the band, the particle station is cleared,
+and the diagram's existing entrance scrub
+(`#definition top 85% → top 35%`) is left alone to animate
+`.sigil__mark` opacity 0 → 1. The result: a clean vector fade-in
+on direct entry / refresh, no stippled particle-assembly artefact.
+
 Why this matters: the brandmark is a **logo**. At rest it must read
 as the logo, not as a creative interpretation of the logo. The
 particle texture is the visual story during _motion_ — entrance,
@@ -221,9 +240,9 @@ stateDiagram-v2
 ```
 
 The journey function (`applyJourney`) is unchanged from ADR-010 v3 — same
-scroll-position-derived state machine, same PARK_FRAC math, same hero
+scroll-position-derived state machine, same PARK*FRAC math, same hero
 guard, same fade-in / fade-out windows. What changes is what each branch
-_paints_. ADR-010 v3 mutated the SVG actor's `pinToRect`; this ADR
+\_paints*. ADR-010 v3 mutated the SVG actor's `pinToRect`; this ADR
 augments that with a `writeStationSnapshot` (parked / fadeout) or a
 transit-snapshot (mid-segment), and the CSS gate flips hide the SVG
 painters so the canvas reads alone.
@@ -258,6 +277,12 @@ In svg mode the check behaves exactly as it did under ADR-010 v3.
 - The asking-gap (Benedict Evans) moment now has the strategic-story
   visual: the brand literally dissolves into atmosphere while the quote
   reads in the foreground, then re-coheres at the continuum rail.
+- v2 (2026-05-15): within-section entries paint as clean vector via the
+  diagram's entrance scrub; particles are reserved for cross-section
+  motion. The "made of pure math, pure code that can transform" story
+  is now staged at the moments of motion (transit between stations),
+  and the dock states read as the canonical SVG at rest in every
+  section, not just at full-density parks.
 - The reduced-motion + no-WebGL paths still work — the SVG actor + portal'd
   glyphs are kept verbatim as the fallback. Every ADR-010 v3 invariant
   continues to hold on that path.
