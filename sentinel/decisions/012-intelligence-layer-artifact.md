@@ -463,3 +463,67 @@ The R3F canvas mounts inside `.ilayer__inner` as before; the bleed wrapper stays
 - [`components/landing/v7/intelligence-layer/index.ts`](../../components/landing/v7/intelligence-layer/index.ts) — re-exports the geom module.
 - [`components/landing/v7/hooks/useSigilChoreography.ts`](../../components/landing/v7/hooks/useSigilChoreography.ts) — added a comment block on `getSubstrateAnchor()` documenting the new "anchor moves during section" contract. No behavior change.
 - [`.claude/skills/brandmark-choreography/SKILL.md`](../../.claude/skills/brandmark-choreography/SKILL.md) — note about the substrate anchor's non-stationary rect across the section.
+
+---
+
+## Amendment v5 — Brandmark ringfield, ONE artifact, no crossfades (2026-05-15)
+
+### Why amend (yet again)
+
+v4's bottom-pinned podium of cylinders read as off-brand. The brand reference docs (`celestial-diagram-grammar.md`, `identity-system.md`, `data-visualization.md`) explicitly call out solid disc fills, PBR materials, and smooth-shaded surfaces as anti-patterns; v4 violated all three. More fundamentally, v4's "morph the brandmark into the encode disc via opacity crossfade" pattern treated the brandmark as TWO different paint sources that needed swapping — a UI compositing pattern, not a transformation of a single artifact. The user's design philosophy is that the brandmark IS pure code (per ADR-011), and it should physically transform between shapes, not be re-painted.
+
+This amendment rewrites the section under three principles:
+
+1. **ONE artifact, pure code.** The brandmark in this section is the SAME brandmark that lives at every other station — particles sampled from `BRANDMARK_FILLED_PATHS` (per ADR-011). The R3F scene's particle cloud and the global brandmark canvas share the same data source.
+2. **Transform geometrically, never composite.** Major scene elements (rings, ticks, diamonds, flow arcs, the brandmark cloud) appear / disappear via translation / scale / rotation, NEVER via `material.opacity` ramps. Opacity is reserved only for ambient breathing on autonomous decoration.
+3. **Hard swaps at section boundaries, never crossfades.** The boundary handoffs between the global brandmark painter and the local R3F ringfield are atomic CSS attribute toggles. Visual identity matches at the swap instant (same data source, same colour, same screen pixels), so the swap reads as visual continuity, not as a fade.
+
+### What changes from v4
+
+- **Discs replaced with hairline rings.** Three coaxial `THREE.LineLoop` rings (Navigate / Encode / Build) rendered with `LineBasicMaterial` only. No `RingGeometry` solid fills, no `CylinderGeometry`, no `MeshStandardMaterial`, no PBR lighting. Pure hairline strokes per the brand grammar.
+
+- **Brandmark is a 3D particle cloud.** New `brandmarkParticles.ts` calls the same `sampleShape` utility against the same `BRANDMARK_FILLED_PATHS` as the global brandmark canvas. The cloud sits in a 2D plane at local z=0 within the parent group, rendered as a `THREE.Points` mesh with `PointsMaterial` (size in pixels, fixed, square fragments — the default GL_POINT shape matches the global station's solid-square fragment shader). NO CanvasTexture, NO flat plane with a baked image. Same data source, same colour (`--gold`), so the boundary swap is visually invisible.
+
+- **One scalar drives everything.** `splitProgress` (from the section's scroll trigger) feeds a single `splitRotation()` envelope (parent group `rotation.y`) and a single `splitExtrude()` envelope (per-ring `position.z` plus child `scale.setScalar()` for ticks / diamonds). No per-element opacity envelopes for major scene elements.
+
+- **Geometric extrusion, not opacity reveal.**
+  - Side rings translate from `z=0` (coincident at section entry) to `±0.32` (full split at peak rotation), then RETRACT back to `z=0` at section exit so the brandmark hands off to the rail morph from a unified state.
+  - Bearing ticks and diamond markers use `scale.setScalar(extrude)` so they grow with the ring's emergence and shrink with its retraction. Scale 0 = invisible because there is no size, not because of opacity.
+  - Flow arcs (Navigate→Encode and Encode→Build) have their geometry rebuilt every frame from the rings' live world positions; length 0 when rings are coincident, full length at peak split. Geometric absence, not opacity 0.
+
+- **Sub-orbits + halo dots around the brandmark** (Section 02 sigil grammar). Concentric `LineLoop` hairlines in `--dawn-30`, with halo diamond markers in `--gold` at cardinal positions. Wrapped in a spin group that rotates autonomously on Z (independent of scroll) for the celestial breath that matches `.sigil__orbits`.
+
+- **HARD SWAP at boundaries via attribute toggle.** `IntelligenceLayerPortal` writes `data-ilayer-mode="r3f"` on BOTH `.ilayer__stack` AND `#intelligence-layer` (the section element) when the canvas mounts. A new CSS rule:
+
+  ```css
+  #intelligence-layer[data-ilayer-mode="r3f"] .ilayer__brandmark-anchor > :where(img, svg) {
+    opacity: 0 !important;
+    transition: none !important;
+  }
+  ```
+
+  hides the SVG dock the moment the canvas mounts, with NO transition. The R3F particle cloud takes over at exactly the same pixels (the substrate anchor is sized from the encode ring's projected rect by `useIlayerProgress` on init / resize). On section exit, when the canvas unmounts, the attribute is removed and the SVG dock returns instantly. Both swaps happen with zero fade window.
+
+- **Anchor sizing matches the projected encode ring.** `useIlayerProgress` reads `useIlayerGeomStore.encodeRect` (populated by the R3F scene's `EncodeRectReporter`) and writes inline `top` / `left` / `width` / `height` on `.ilayer__brandmark-anchor`. The fallback CSS layout (centred upper-area, `clamp` size) shows for the first few frames before the first sizeAnchor() call. The anchor's `transform: translateX(-50%)` fallback is cleared by the JS write so positioning stays clean.
+
+- **All v4 CSS variables removed.** No more `--ilayer-tilt-deg`, `--ilayer-anchor-x`, `--ilayer-anchor-y`, `--ilayer-anchor-scale`, `--ilayer-brand-opacity`. The progress hook only writes `--ilayer-progress` (for the floating-label opacity gates, which are HTML labels not major scene elements). The dock-state opacity gate `[data-brand-svg-dock="substrate"] ... { opacity: var(--ilayer-brand-opacity, 1) !important }` from v4 is removed; the v5 hard-swap rule wins via specificity (`#intelligence-layer` ID > `[data-brandmark-mode]` attribute).
+
+- **Static SVG fallback rewritten.** Three concentric hairline circles (`fill="none"`) with bearing ticks (8 on build, 4 on navigate) and diamond markers — matches the R3F composition at rest. Visible only in static-fallback mode (mobile / reduced-motion / no-WebGL). The R3F-mounted state hides this fallback as before.
+
+### Brandmark choreography contract — still unchanged at the JS level
+
+`<div class="ilayer__brandmark-anchor" data-brand-anchor="substrate">` is still resolved by `useSigilChoreography.ts` via `intelligenceEl.querySelector(".ilayer__brandmark-anchor")`. The substrate station's density / opacity / dispersion stay at full SVG dock. The anchor's RECT is now STATIC (not descending as in v4); the rail handoff at section exit reads from this static rect. Comment block on `getSubstrateAnchor()` updated to describe the v5 contract.
+
+### Files touched in v5
+
+- [`components/landing/v7/intelligence-layer/intelligenceLayerGeom.ts`](../../components/landing/v7/intelligence-layer/intelligenceLayerGeom.ts) — replaced `DISC_GEOM` / `BRAND_MORPH` with `RING_GEOM` / `SPLIT_ENVELOPE` / `SUB_ORBIT_RADII` / `HALO_DOT_COUNT` / `PARTICLE_COUNT` / `BRAND_PARTICLE_COLOR` / `BRAND_PARTICLE_SIZE_PX` / `BRAND_SCALE` / `DIAMOND_SIZE` / `TICK_LENGTH` / `RING_SEGMENTS` / `SUB_ORBIT_SPIN_RATE`. Added `splitRotation()` and `splitExtrude()` envelope helpers. Camera params eased (fov 32, position [0, 0.6, 3.4]).
+- [`components/landing/v7/intelligence-layer/brandmarkParticles.ts`](../../components/landing/v7/intelligence-layer/brandmarkParticles.ts) — NEW. Builds the brandmark `BufferGeometry` + `PointsMaterial` from `BRANDMARK_FILLED_PATHS` via `sampleShape`. Same data source as the global brandmark canvas (per ADR-011).
+- [`components/landing/v7/intelligence-layer/BrandmarkRingfield.tsx`](../../components/landing/v7/intelligence-layer/BrandmarkRingfield.tsx) — NEW. The v5 R3F scene: parent group + brandmark cloud + sub-orbits + halo dots + three RingHairline `LineLoop`s with bearing ticks + diamond markers + flow arcs + EncodeRectReporter. Single `useFrame` writes only `parentGroup.rotation.y` + per-ring `position.z` + child `scale.setScalar()`.
+- [`components/landing/v7/intelligence-layer/IntelligenceLayerStack.tsx`](../../components/landing/v7/intelligence-layer/IntelligenceLayerStack.tsx) — rewritten as a thin Canvas wrapper around `BrandmarkRingfield`. Drops cylinder Disc components and lighting.
+- [`components/landing/v7/intelligence-layer/useIlayerProgress.ts`](../../components/landing/v7/intelligence-layer/useIlayerProgress.ts) — simplified. Drops all per-frame opacity writes. Now only writes `--ilayer-progress` on section root + sizes the substrate anchor from the encode rect on init / resize / store changes.
+- [`components/landing/v7/intelligence-layer/IntelligenceLayerPortal.tsx`](../../components/landing/v7/intelligence-layer/IntelligenceLayerPortal.tsx) — also writes `data-ilayer-mode` on the section element (in addition to `.ilayer__stack`) so the v5 hard-swap CSS rule can reach the brandmark anchor.
+- [`components/landing/v7/intelligence-layer/index.ts`](../../components/landing/v7/intelligence-layer/index.ts) — re-exports the new geom module surface + `BrandmarkRingfield` + `buildBrandmarkParticles`.
+- [`components/landing/v7/landing.css`](../../components/landing/v7/landing.css) — replaced the v4 `.ilayer*` block with v5: anchor sized from JS (no transform-driven CSS variables), hard-swap rule via `#intelligence-layer[data-ilayer-mode="r3f"]`, hairline static fallback styles. Removed v4 dock-state override rule.
+- [`public/prototypes/v7/landing-v7-motion.html`](../../public/prototypes/v7/landing-v7-motion.html) — rewrote `.ilayer__stack__fallback` SVG: three concentric circles + bearing ticks + diamond markers (was three vertically-offset filled ellipses).
+- [`components/landing/v7/hooks/useSigilChoreography.ts`](../../components/landing/v7/hooks/useSigilChoreography.ts) — updated comment block on `getSubstrateAnchor()` for v5 contract. No behavior change.
+- [`.claude/skills/brandmark-choreography/SKILL.md`](../../.claude/skills/brandmark-choreography/SKILL.md) — substrate-dock paragraph updated for v5 (SVG glyph hidden via attribute gate, anchor sized from JS).

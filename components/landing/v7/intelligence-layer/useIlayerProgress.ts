@@ -4,14 +4,7 @@ import { useEffect } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { create } from "zustand";
-import {
-  BRAND_MORPH,
-  DISC_GEOM,
-  smoothstep,
-  tiltEnvelope,
-  useIlayerGeomStore,
-  type ScreenRect,
-} from "./intelligenceLayerGeom";
+import { useIlayerGeomStore } from "./intelligenceLayerGeom";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -20,10 +13,11 @@ gsap.registerPlugin(ScrollTrigger);
  * intelligence-layer section.
  *
  * The R3F scene reads `progress` inside `useFrame` to drive its
- * podium deploy + camera-pitch animation. A Zustand store is used
- * (not React state) so per-frame writes do not cascade re-renders
- * through the rest of the page; the canvas pulls the value
- * imperatively.
+ * single-scalar splitProgress envelope (rotation + per-ring
+ * extrusion + tick / diamond / arc geometric reveals). A Zustand
+ * store is used (not React state) so per-frame writes do not
+ * cascade re-renders through the rest of the page; the canvas
+ * pulls the value imperatively.
  *
  *   progress = 0   the section's top is at viewport bottom (just
  *                  about to enter)
@@ -53,64 +47,59 @@ export const useIlayerProgressStore = create<IlayerProgressState>((set) => ({
 }));
 
 /**
- * Compute a synthetic encode rect from the canvas slot's bbox when
- * the R3F scene isn't mounted (static-fallback mode). Mirrors the
- * `DISC_GEOM.encode.outerR` proportion against the slot's width so
- * the brandmark anchor still lands on roughly the right spot.
- *
- * The slot is a square-ish region pinned to the bottom of the
- * section; the encode disc sits at ~30% of slot height up from the
- * bottom and is ~62% of slot width wide.
- */
-function syntheticEncodeRect(slot: HTMLElement): ScreenRect {
-  const r = slot.getBoundingClientRect();
-  // Encode disc: centre at (slotCx, slotBottom - 0.30 * slotHeight),
-  // diameter ~ 0.62 * slotWidth (matches DISC_GEOM.encode.outerR /
-  // DISC_GEOM.build.outerR ratio).
-  const cx = r.left + r.width / 2;
-  const cy = r.top + r.height * 0.7;
-  const diameter = r.width * (DISC_GEOM.encode.outerR / DISC_GEOM.build.outerR);
-  return {
-    x: cx - diameter / 2,
-    y: cy - diameter / 2,
-    width: diameter,
-    height: diameter,
-  };
-}
-
-/**
  * useIlayerProgress — owns the scroll trigger that drives the
- * intelligence-layer choreography.
+ * intelligence-layer choreography (ADR-012 v5).
  *
- * Wires one ScrollTrigger to `#intelligence-layer` with
- * `scrub: true` so the per-frame progress mirrors scroll position
- * exactly (no lag, no smoothing). The trigger window is generous
- * (top of section enters at 80% of viewport, bottom leaves at
- * 20%) so the podium-deploy + brandmark-morph animation has room
- * to breathe across the full section height (100svh).
+ * Responsibilities:
  *
- * Side effects, written each frame:
+ *   1. Wires one ScrollTrigger to `#intelligence-layer` with
+ *      `scrub: true` so the per-frame progress mirrors scroll
+ *      position exactly. The trigger window is generous
+ *      (top of section enters at 80% of viewport, bottom leaves at
+ *      20%) so the rotate / extrude / settle / hold / retract /
+ *      handoff arc has room to breathe across the full section
+ *      height (100svh).
  *
- *   1. `useIlayerProgressStore.progress` (0..1) — read by the R3F
- *      scene's `useFrame` to drive disc reveal + podium pitch.
- *   2. `--ilayer-progress` on `#intelligence-layer` — read by the
- *      floating-label connectors (stroke-dashoffset reveal) and
- *      per-label fade-in keyframes in CSS.
- *   3. `--ilayer-tilt-deg` on `.ilayer__brandmark-anchor`'s
- *      children — keeps the SVG mark's X-tilt in lockstep with the
- *      podium's pitch envelope.
- *   4. `--ilayer-anchor-y`, `--ilayer-anchor-scale` on the anchor
- *      itself — translates + scales the whole anchor down toward
- *      the encode disc's projected screen rect across
- *      [BRAND_MORPH.descend.in..out]. The R3F scene writes the
- *      live encode rect into `useIlayerGeomStore` each frame; we
- *      read it here.
- *   5. `--ilayer-brand-opacity` on the anchor — crossfades the
- *      brandmark from 1 → 0 across [BRAND_MORPH.crossfade.in..out]
- *      so the SVG mark dissolves as the encode disc fades in.
+ *   2. Writes `--ilayer-progress` on the section root element so
+ *      the floating annotation labels' per-label opacity gates
+ *      (declared in landing.css via clamp() expressions on this
+ *      variable) can fade in sequentially as the rings emerge.
+ *      This is the ONLY CSS variable the hook writes — every other
+ *      visible state is owned by the R3F scene's geometric
+ *      transforms.
  *
- * Mounted from {@link IntelligenceLayerPortal} so it only runs
- * when the section's DOM exists. No-op when there is no
+ *   3. Sizes the substrate dock anchor (`.ilayer__brandmark-anchor`)
+ *      to match the encode ring's projected screen rect on init
+ *      and on resize. This is the precondition for the boundary
+ *      HARD SWAP between the global brandmark painter (entering
+ *      the section) and the local R3F particle cloud (taking
+ *      ownership for the duration) to be VISUALLY INVISIBLE — both
+ *      paint the brandmark glyph at exactly the same pixels at the
+ *      swap instant.
+ *
+ *   4. Writes `progress` (0..1) into `useIlayerProgressStore`
+ *      every scroll frame so the R3F scene's `useFrame` can read
+ *      it imperatively.
+ *
+ * What this hook does NOT do (intentionally, per ADR-012 v5):
+ *
+ *   - No per-frame opacity writes. The boundary handoffs are HARD
+ *     SWAPS via the `[data-ilayer-mode="r3f"]` CSS attribute (set
+ *     by `IntelligenceLayerPortal`); within the section, the
+ *     visible reveal of major scene elements is geometric (scale
+ *     0 = invisible, scale 1 = visible).
+ *
+ *   - No `--ilayer-tilt-deg`, no `--ilayer-anchor-x/y/scale`. The
+ *     v4 anchor descent + tilt envelope is gone. The SVG dock
+ *     inside the anchor is hidden the moment the canvas mounts;
+ *     it doesn't tilt or descend, it's just not visible.
+ *
+ *   - No `--ilayer-svg-dock-opacity`. The crossfade is replaced by
+ *     a static CSS attribute gate. See `landing.css`'s
+ *     `[data-ilayer-mode="r3f"] .ilayer__brandmark-anchor` rule.
+ *
+ * Mounted from `IntelligenceLayerPortal` so it only runs when the
+ * section's DOM exists. No-op when there is no
  * `#intelligence-layer` element.
  */
 export function useIlayerProgress(): void {
@@ -118,111 +107,87 @@ export function useIlayerProgress(): void {
     if (typeof window === "undefined") return;
     const section = document.getElementById("intelligence-layer");
     if (!section) return;
-    const dockAnchor = section.querySelector<HTMLElement>(".ilayer__brandmark-anchor");
-    const canvasSlot = section.querySelector<HTMLElement>(".ilayer__stack__canvas");
 
     const setProgress = useIlayerProgressStore.getState().setProgress;
 
     /**
-     * Resolve where the encode disc will land in viewport
-     * coordinates. R3F-mode reads from the live geom store (the
-     * scene projects the disc each frame). Static-fallback mode
-     * derives a synthetic rect from the canvas slot's bbox so the
-     * brandmark still lands sensibly without WebGL.
+     * Size the substrate dock anchor to match the encode ring's
+     * projected screen rect. Reads from `useIlayerGeomStore.encodeRect`
+     * (populated each frame by the R3F scene's `EncodeRectReporter`)
+     * and writes static inline `top` / `left` / `width` / `height`
+     * on `.ilayer__brandmark-anchor`.
+     *
+     * Run on init and on resize. NOT every frame — the anchor's
+     * size only matters at the boundary swap instants (progress 0
+     * and progress 1, where the parent rotation is 0 and the ring
+     * is at z=0). At those moments the R3F brandmark cloud and the
+     * SVG dock at the anchor share the same pixels.
      */
-    const resolveEncodeRect = (): ScreenRect | null => {
-      const live = useIlayerGeomStore.getState().encodeRect;
-      if (live) return live;
-      if (canvasSlot) return syntheticEncodeRect(canvasSlot);
-      return null;
-    };
-
-    /** Anchor's *resting* viewport rect (where it sits at progress 0,
-     *  before any descent). Read live so window resizes are picked
-     *  up automatically. */
-    const readAnchorRect = (): DOMRect | null => {
-      if (!dockAnchor) return null;
-      // Strip the current transform so we read the *base* (untransformed)
-      // rect. We do this by temporarily clearing the transform-driving
-      // CSS variables, reading, then restoring. Cheap because the
-      // browser already had to compose the transform for layout.
-      // (For a one-off mount we just read what's there.)
-      return dockAnchor.getBoundingClientRect();
-    };
-
-    const writeFrame = (progress: number) => {
-      // Section root variables — read by .ilayer__label connector
-      // SVG paths (stroke-dashoffset) and per-label fade-in.
-      section.style.setProperty("--ilayer-progress", progress.toFixed(3));
-
-      if (!dockAnchor) return;
-
-      // 1. Tilt — same envelope shape as the R3F podium pitch.
-      const tiltDeg = BRAND_MORPH.maxTiltDeg * tiltEnvelope(progress);
-      dockAnchor.style.setProperty("--ilayer-tilt-deg", `${tiltDeg.toFixed(1)}deg`);
-
-      // 2. Brandmark crossfade — 1 until crossfade.in, eases to 0 by
-      //    crossfade.out. Multiplied with the existing dock-state
-      //    opacity gate in landing.css.
-      const fadeT = smoothstep(BRAND_MORPH.crossfade.in, BRAND_MORPH.crossfade.out, progress);
-      const brandOpacity = 1 - fadeT;
-      dockAnchor.style.setProperty("--ilayer-brand-opacity", brandOpacity.toFixed(3));
-
-      // 3. Descent + scale — translate the anchor from its resting
-      //    position toward the encode disc's projected centre, and
-      //    scale it up so its visual diameter matches the disc.
-      const descentT = smoothstep(BRAND_MORPH.descend.in, BRAND_MORPH.descend.out, progress);
-      const encodeRect = resolveEncodeRect();
-      const anchorRect = readAnchorRect();
-      if (encodeRect && anchorRect && anchorRect.width > 1) {
-        const anchorCx = anchorRect.left + anchorRect.width / 2;
-        const anchorCy = anchorRect.top + anchorRect.height / 2;
-        const encodeCx = encodeRect.x + encodeRect.width / 2;
-        const encodeCy = encodeRect.y + encodeRect.height / 2;
-        // The anchor's CSS transform is `translateX(-50%) translateY(--y)
-        // scale(--s)`, so --y is a delta in viewport pixels from the
-        // anchor's resting centre to the target centre. The current
-        // anchorRect already includes any transform we wrote on the
-        // previous frame — to avoid feedback we don't subtract our
-        // own previous --y here; instead we treat --y as "where do
-        // we want to be relative to the resting position", and the
-        // resting position is anchorRect.top - lastY. But since the
-        // resting position is what `top: clamp(...)` in CSS gave us,
-        // and the translate is on top of it, the cleanest stable
-        // formula is: target Y delta = encodeCy - (anchorCy - lastY).
-        // We approximate by reading the inline style we wrote last
-        // frame.
-        const lastYStr = dockAnchor.style.getPropertyValue("--ilayer-anchor-y");
-        const lastY = lastYStr ? parseFloat(lastYStr) : 0;
-        const lastSStr = dockAnchor.style.getPropertyValue("--ilayer-anchor-scale");
-        const lastS = lastSStr ? parseFloat(lastSStr) : 1;
-        // Resting (untransformed) centre is current centre minus the
-        // inline-applied Y translation. (X is centred via translateX(-50%)
-        // and we don't write X, so anchorCx is already the resting X.)
-        const restingCy = anchorCy - lastY;
-        const restingHeight = anchorRect.height / Math.max(0.01, lastS);
-
-        const targetY = (encodeCy - restingCy) * descentT;
-        const restingDiameter = restingHeight; // anchor is square
-        const encodeDiameter = encodeRect.height;
-        const targetScaleAtMorphEnd = encodeDiameter / Math.max(8, restingDiameter);
-        const targetScale = 1 + (targetScaleAtMorphEnd - 1) * descentT;
-
-        dockAnchor.style.setProperty("--ilayer-anchor-y", `${targetY.toFixed(1)}px`);
-        dockAnchor.style.setProperty("--ilayer-anchor-scale", targetScale.toFixed(3));
-
-        // X-translation — usually zero (anchor is centred horizontally
-        // and the encode disc is too), but we write it for safety so
-        // any future asymmetry (e.g. side-mounted variant) just works.
-        const targetX = (encodeCx - anchorCx) * descentT;
-        dockAnchor.style.setProperty("--ilayer-anchor-x", `${targetX.toFixed(1)}px`);
+    const sizeAnchor = (): void => {
+      const anchor = section.querySelector<HTMLElement>(".ilayer__brandmark-anchor");
+      if (!anchor) return;
+      const encodeRect = useIlayerGeomStore.getState().encodeRect;
+      const sectionRect = section.getBoundingClientRect();
+      let target: { top: number; left: number; width: number; height: number };
+      if (encodeRect && encodeRect.width > 8) {
+        // Convert from viewport coords (encodeRect) to the
+        // section's positioning context coords.
+        target = {
+          top: encodeRect.y - sectionRect.top,
+          left: encodeRect.x - sectionRect.left,
+          width: encodeRect.width,
+          height: encodeRect.height,
+        };
       } else {
-        // No rect yet (R3F still booting) — pin to identity so the
-        // anchor stays put rather than glitching toward (0,0).
-        dockAnchor.style.setProperty("--ilayer-anchor-y", "0px");
-        dockAnchor.style.setProperty("--ilayer-anchor-x", "0px");
-        dockAnchor.style.setProperty("--ilayer-anchor-scale", "1");
+        // Synthetic fallback when the R3F scene hasn't projected
+        // a rect yet (static-fallback mode, or before first frame):
+        // place the anchor centred horizontally near the section's
+        // vertical centre at a sensible default size.
+        const fallbackDiameter = Math.min(sectionRect.width, sectionRect.height) * 0.32;
+        target = {
+          top: sectionRect.height * 0.5 - fallbackDiameter / 2,
+          left: sectionRect.width * 0.5 - fallbackDiameter / 2,
+          width: fallbackDiameter,
+          height: fallbackDiameter,
+        };
       }
+      anchor.style.top = `${target.top.toFixed(1)}px`;
+      anchor.style.left = `${target.left.toFixed(1)}px`;
+      anchor.style.width = `${target.width.toFixed(1)}px`;
+      anchor.style.height = `${target.height.toFixed(1)}px`;
+      // Clear the fallback `transform: translateX(-50%)` from the CSS
+      // because we're now writing `left` as the rect's LEFT edge
+      // (not the centre); leaving the transform would offset the
+      // anchor by another -50% width and break the boundary swap.
+      anchor.style.transform = "none";
+    };
+
+    // Initial anchor sizing (best-effort, will likely use the
+    // synthetic fallback because the R3F scene hasn't projected
+    // its first frame yet). The next call after ~500ms will pick
+    // up the real projected rect.
+    sizeAnchor();
+
+    // Subscribe to the geom store so we re-size the anchor
+    // whenever the encode rect changes (resize, canvas remount).
+    const unsubscribeGeom = useIlayerGeomStore.subscribe(() => {
+      sizeAnchor();
+    });
+
+    // Re-size on window resize too — `EncodeRectReporter` will
+    // update the store, which triggers our subscription, but
+    // running it on `resize` is belt-and-braces.
+    const onResize = (): void => sizeAnchor();
+    window.addEventListener("resize", onResize);
+
+    /**
+     * Per-scroll-frame writer. Updates the section root's
+     * `--ilayer-progress` variable for the floating-label opacity
+     * gates and pushes progress into the Zustand store for the
+     * R3F scene.
+     */
+    const writeFrame = (progress: number): void => {
+      section.style.setProperty("--ilayer-progress", progress.toFixed(3));
     };
 
     const trigger = ScrollTrigger.create({
@@ -237,22 +202,21 @@ export function useIlayerProgress(): void {
       },
     });
 
-    // Initial write so the anchor variables exist before the first
-    // scroll event (otherwise the first frame paints with the
-    // browser's `var(...)` fallback values).
+    // Initial write so the variable exists before the first scroll
+    // event (otherwise CSS clamp expressions would fall back to 0
+    // and the labels would briefly stay hidden after section entry).
     writeFrame(0);
 
     return () => {
       trigger.kill();
       setProgress(0);
-      if (dockAnchor) {
-        dockAnchor.style.removeProperty("--ilayer-tilt-deg");
-        dockAnchor.style.removeProperty("--ilayer-anchor-y");
-        dockAnchor.style.removeProperty("--ilayer-anchor-x");
-        dockAnchor.style.removeProperty("--ilayer-anchor-scale");
-        dockAnchor.style.removeProperty("--ilayer-brand-opacity");
-      }
+      unsubscribeGeom();
+      window.removeEventListener("resize", onResize);
       section.style.removeProperty("--ilayer-progress");
+      // We deliberately do NOT clear the anchor's inline width /
+      // height / top / left here — leaving them in place keeps the
+      // anchor at the right size across HMR cycles. They're
+      // overwritten on the next mount.
     };
   }, []);
 }

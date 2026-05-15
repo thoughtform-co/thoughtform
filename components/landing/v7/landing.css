@@ -3223,29 +3223,33 @@ html[data-quote-active="true"] .tf-brandmark-actor {
    reveal to hover (same as desktop). Touch tablets fall into the
    compact range above (≤960px) where bodies show by default. */
 
-/* ═══════════ 04 INTELLIGENCE LAYER — bottom-pinned podium (ADR-012 v4) ═══════════
-   Sleep-well-creatives.com section-05 pattern: a stack of three real
-   3D discs (short cylinders with rim thickness) pinned to the bottom
-   of the viewport, full viewport width. The brandmark MORPHS INTO
-   the middle (encode) disc — the SVG mark descends + scales toward
-   the disc's projected screen rect and crossfades to 0 as the disc
-   fades in at the same rect. Floating annotation labels sit around
-   the upper viewport, each connected to its disc by a hairline path
-   that draws in via stroke-dashoffset.
+/* ═══════════ 04 INTELLIGENCE LAYER — brandmark ringfield (ADR-012 v5) ═══════════
+   ONE pure-code brandmark that physically transforms in 3D space.
+   The R3F scene renders a particle cloud sampled from
+   BRANDMARK_FILLED_PATHS (same data source as the rest of the site,
+   per ADR-011) inside three coaxial hairline rings that emerge from
+   the brandmark's centre by extruding to +/-Z as scroll progresses.
+   Bearing ticks, diamond markers, and flow arcs grow GEOMETRICALLY
+   from the rings (scale 0 -> 1, NOT opacity ramps). Sub-orbits +
+   halo dots breathe autonomously around the brandmark, matching
+   Section 02's `.sigil__orbits` celestial grammar.
+
+   The boundary handoff is a HARD SWAP (not a crossfade): the moment
+   the R3F canvas mounts, the `[data-ilayer-mode="r3f"]` attribute
+   is set on `.ilayer__stack` and the SVG dock at the substrate
+   anchor goes to `opacity: 0` with NO transition. The R3F particle
+   cloud paints at exactly the same pixels (the substrate anchor is
+   sized from the encode ring's projected rect by useIlayerProgress
+   on init / resize). Same data source, same colour, same shape -->
+   the swap reads as visual continuity, not as a fade.
 
    Layout regions inside .ilayer__inner are absolute siblings:
      - .ilayer__head              top-center (eyebrow + title only)
      - .ilayer__labels            4 floating annotation blocks
-     - .ilayer__brandmark-anchor  starts upper-center, descends per
-                                  useIlayerProgress, lands on encode
-     - .ilayer__artifact .ilayer__stack  bottom-pinned podium (R3F)
-
-   The substrate dock anchor's RECT is now non-stationary across the
-   section: useIlayerProgress writes --ilayer-anchor-x, --ilayer-anchor-y,
-   --ilayer-anchor-scale every frame, so the choreography hook's
-   live getBoundingClientRect() read tracks the descent automatically.
-   The choreography contract surface (`.ilayer__brandmark-anchor`) is
-   unchanged at the JS level — only its rect moves.
+     - .ilayer__brandmark-anchor  static, sized from the projected
+                                  encode ring rect; SVG glyph hidden
+                                  whenever the R3F canvas is mounted
+     - .ilayer__artifact .ilayer__stack  bottom-pinned ringfield (R3F)
 
    Compositing rules followed:
    1. Outer .ilayer wrapper inherits .station's opaque var(--void)
@@ -3467,15 +3471,16 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   opacity: clamp(0, calc((var(--ilayer-progress, 0) - 0.55) * 6), 1);
 }
 
-/* ── Podium artifact ───────────────────────────────────────────────
-   Bottom-pinned, full viewport width. Hosts the R3F canvas + the
-   static SVG fallback. The R3F scene paints the three discs;
-   pointer-events disabled so scroll passes through. */
+/* ── Ringfield artifact (ADR-012 v5) ───────────────────────────────
+   Covers the FULL section (not bottom-pinned like v4) so the R3F
+   encode ring projects to roughly the section centre — same
+   position as the substrate dock anchor. The R3F scene paints
+   the brandmark cloud + three coaxial hairline rings + sub-orbits
+   + halo dots + bearing ticks + diamond markers + flow arcs.
+   Pointer-events disabled so scroll passes through. */
 .ilayer__artifact {
   position: absolute;
-  inset: auto 0 0 0;
-  width: 100vw;
-  height: clamp(360px, 52svh, 560px);
+  inset: 0;
   z-index: 1;
   pointer-events: none;
 }
@@ -3526,56 +3531,79 @@ html[data-quote-active="true"] .tf-brandmark-actor {
 .ilayer__stack[data-ilayer-mode="r3f"] .ilayer__stack__fallback {
   display: none;
 }
+/* Hairline rings — fill="none", `--dawn-30` guides + `--gold` for the
+   encode (signal). Matches the R3F scene's LineLoop hairlines so the
+   static fallback reads as the ringfield at rest, not as a different
+   widget. Bearing ticks per ring are added inline in the SVG via
+   <line> elements so the fallback stays HTML-only. */
 .ilayer__stack__fallback-ring {
-  fill: var(--dawn-08);
+  fill: none;
   stroke: var(--dawn-30);
   stroke-width: 1;
   vector-effect: non-scaling-stroke;
   opacity: 0.7;
 }
 .ilayer__stack__fallback-ring--build {
-  fill: rgba(202, 165, 84, 0.18); /* gold-soft */
-  stroke: var(--gold-40);
-  opacity: 0.85;
+  stroke: var(--dawn-30);
+  opacity: 0.6;
 }
 .ilayer__stack__fallback-ring--encode {
-  fill: rgba(236, 227, 214, 0.22); /* dawn-soft */
-  stroke: var(--dawn-50);
-  stroke-width: 1.2;
+  stroke: var(--gold);
+  stroke-width: 1.3;
   opacity: 0.95;
 }
+.ilayer__stack__fallback-ring--navigate {
+  stroke: var(--gold-40);
+  opacity: 0.75;
+}
+.ilayer__stack__fallback-tick {
+  stroke: var(--dawn-30);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+  opacity: 0.8;
+}
+.ilayer__stack__fallback-diamond {
+  fill: none;
+  stroke: var(--gold);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+  opacity: 0.9;
+}
 
-/* ── Brandmark substrate dock anchor ───────────────────────────────
-   Now an ABSOLUTE-positioned element starting at upper-center.
-   useIlayerProgress writes --ilayer-anchor-x / -y / -scale every
-   frame to translate + scale the anchor toward the encode disc's
-   projected screen rect (read from useIlayerGeomStore). The anchor
-   IS what the choreography hook reads via getBoundingClientRect(),
-   so the substrate station's rect tracks the descent automatically.
+/* ── Brandmark substrate dock anchor (ADR-012 v5) ──────────────────
+   The anchor sits at a STATIC position + size, sized from the
+   encode ring's projected screen rect by useIlayerProgress on init
+   and on resize. Inline `top` / `left` / `width` / `height` are
+   written by JS so the anchor matches the R3F particle cloud
+   pixel-for-pixel at the boundary instant.
 
-   The X-tilt still lives on the anchor's CHILDREN via
-   --ilayer-tilt-deg so the children's rotateX doesn't influence
-   getBoundingClientRect() (preserves the un-rotated bbox contract
-   for the choreography hook). */
+   The anchor element IS what the choreography hook reads via
+   `getBoundingClientRect()` (substrate station of the brandmark
+   journey, ADR-010). Its RECT is the rail-handoff source rect.
+   Its SVG glyph inside is hidden whenever the R3F canvas is
+   mounted -- the R3F particle cloud paints the brandmark for the
+   duration of the section. See the hard-swap rule below.
+
+   Defaults (the inline-style fallback before the first sizeAnchor()
+   call) place the anchor at a reasonable upper-center position so
+   the brandmark journey can park here even before the R3F scene
+   has projected its first frame. */
 .ilayer__brandmark-anchor {
   position: absolute;
+  /* Fallback layout before JS sizing -- centred upper area, fixed
+     size. useIlayerProgress overrides top / left / width / height /
+     transform via inline styles on init + resize from the encode
+     ring's projected rect, so the fallback only shows for the first
+     few frames after mount (or in static-fallback mode when the R3F
+     scene isn't projecting). */
   left: 50%;
-  top: clamp(220px, 28vh, 320px);
+  top: clamp(220px, 32vh, 360px);
   width: clamp(220px, 26vw, 320px);
   height: clamp(220px, 26vw, 320px);
+  transform: translateX(-50%);
   z-index: 5;
   pointer-events: none;
   background: transparent;
-  /* Compose centring (-50% X) with the per-frame translation +
-     uniform scale written by useIlayerProgress. Defaults yield the
-     resting position (upper-center) before the first scroll write. */
-  transform: translateX(-50%) translate(var(--ilayer-anchor-x, 0px), var(--ilayer-anchor-y, 0px))
-    scale(var(--ilayer-anchor-scale, 1));
-  transform-origin: center top;
-  will-change: transform;
-  /* 3D context so the children's rotateX reads with real perspective. */
-  transform-style: preserve-3d;
-  perspective: 1100px;
 }
 .ilayer__brandmark-anchor img,
 .ilayer__brandmark-anchor svg {
@@ -3583,40 +3611,45 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   height: 100%;
   display: block;
   object-fit: contain;
-  /* Multiply the dock-state opacity gate (set in landing.css's
-     particle block via [data-brand-svg-dock="substrate"]) with the
-     section progress gate via --ilayer-brand-opacity. We use opacity
-     directly here because the dock-state gate sets opacity:1 with
-     !important; the multiplication happens visually because the
-     gate is the only !important rule and our default below is also
-     a base. The morph crossfade is enforced by the
-     [data-brand-svg-dock="substrate"][data-ilayer-brand-fade="..."]
-     selector below. */
-  opacity: var(--ilayer-brand-opacity, 0);
+  /* Default visibility for the SVG glyph at the substrate dock.
+     The substrate dock-state gate declared in the brandmark
+     particle block (above) sets `opacity: 1 !important` whenever
+     the choreography parks here. The hard-swap rule below
+     overrides that with `opacity: 0 !important` whenever the
+     section's R3F canvas is mounted. */
+  opacity: 0;
   filter: drop-shadow(0 0 32px rgba(202, 165, 84, 0.22));
-  /* Tight transitions so opacity + tilt track scrub precisely. The
-     dock-state crossfade (parked → not-parked) used to live here at
-     200ms; that semantic is preserved by the dock-state gate's own
-     selector chain (transition is overridden by the no-transition
-     reduced-motion media query when needed). */
-  transition:
-    opacity 80ms linear,
-    transform 80ms linear;
-  transform: rotateX(var(--ilayer-tilt-deg, 0deg));
-  transform-origin: center center;
-  will-change: transform;
+  /* No transition -- the boundary handoff is a HARD SWAP, not a
+     fade. Opacity changes via attribute toggle should happen in
+     one frame for visual continuity to read as "same artifact,
+     different renderer". */
+  transition: none;
+  will-change: opacity;
 }
 
-/* Compose the dock-state opacity gate with the section morph fade.
-   The substrate dock-state gate (declared above in the brandmark
-   particle block) sets opacity:1 with !important, which would
-   otherwise lock the brandmark visible. We override that with a
-   higher-specificity rule that multiplies in --ilayer-brand-opacity
-   so the morph crossfade still wins during the descent. */
-[data-brandmark-mode="particle"][data-brand-svg-dock="substrate"]
-  .ilayer__brandmark-anchor
-  > :where(img, svg) {
-  opacity: var(--ilayer-brand-opacity, 1) !important;
+/* HARD SWAP rule (the central CSS in ADR-012 v5).
+
+   Whenever the section's R3F canvas is mounted, IntelligenceLayerPortal
+   writes `data-ilayer-mode="r3f"` on BOTH `.ilayer__stack` AND
+   `#intelligence-layer` (the section element). This rule reads the
+   section-level attribute so it can reach the brandmark anchor (a
+   sibling of the stack).
+
+   `opacity: 0 !important` + `transition: none !important` keeps the
+   swap atomic: there is no fade window where the SVG dock and the
+   R3F particle cloud could appear simultaneously. The R3F cloud
+   takes over as the painter at exactly the same pixels (the anchor
+   is sized from the encode ring's projected rect by
+   useIlayerProgress), so the swap reads as visual continuity.
+
+   This rule wins over the `[data-brand-svg-dock="substrate"]`
+   particle-mode gate (declared earlier with `opacity: 1 !important`)
+   because it is declared LATER in the cascade and both have
+   matching specificity. */
+#intelligence-layer[data-ilayer-mode="r3f"] .ilayer__brandmark-anchor > img,
+#intelligence-layer[data-ilayer-mode="r3f"] .ilayer__brandmark-anchor > svg {
+  opacity: 0 !important;
+  transition: none !important;
 }
 
 /* Reveal — opacity-only on the inner column so the void shield never
@@ -3668,16 +3701,20 @@ html[data-quote-active="true"] .tf-brandmark-actor {
     height: clamp(260px, 38svh, 380px);
   }
   .ilayer__brandmark-anchor {
+    /* Mobile fallback before JS sizing — slightly smaller default. */
     width: clamp(180px, 44vw, 240px);
     height: clamp(180px, 44vw, 240px);
-    top: clamp(120px, 16vh, 180px);
+    top: clamp(140px, 18vh, 200px);
   }
 }
 
 /* Reduced motion — keep the artifact visible immediately and skip
-   the morph choreography. The static SVG fallback shows the three
-   discs at rest. The morph variables are pinned to identity so the
-   brandmark sits at its resting position with no descent. */
+   the scroll-driven ringfield rotation. The static SVG fallback
+   (three concentric hairline rings + ticks + diamond) shows the
+   ringfield at rest so the meaning still reads. The brandmark dock
+   stays visible (R3F is not mounted in static-fallback mode, so
+   the hard-swap rule doesn't fire and the SVG glyph paints
+   normally). */
 @media (prefers-reduced-motion: reduce) {
   .ilayer__inner[data-m="instrument"],
   .ilayer__inner[data-m="instrument"].is-in {
@@ -3687,17 +3724,13 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   .ilayer__stack__fallback {
     transition: none;
   }
-  .ilayer__brandmark-anchor {
-    --ilayer-tilt-deg: 0deg;
-    --ilayer-anchor-y: 0px;
-    --ilayer-anchor-x: 0px;
-    --ilayer-anchor-scale: 1;
-  }
   .ilayer__brandmark-anchor img,
   .ilayer__brandmark-anchor svg {
     transition: none;
-    transform: none;
-    /* Reveal the brandmark immediately (no scroll-progress fade). */
+    /* Reveal the brandmark immediately. The substrate-dock-state
+       gate (`[data-brand-svg-dock="substrate"]`) brings opacity to
+       1 when parked; the v5 hard-swap rule does not fire because
+       no R3F canvas is mounted in static-fallback mode. */
     opacity: 1;
   }
   .ilayer__label {

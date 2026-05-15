@@ -4,122 +4,172 @@ import { create } from "zustand";
 
 /**
  * intelligenceLayerGeom — shared geometry contract between the R3F
- * podium scene ({@link IntelligenceLayerStack}) and the brandmark
- * morph hook ({@link useIlayerProgress}).
+ * ringfield scene ({@link IntelligenceLayerStack}) and the section
+ * progress hook ({@link useIlayerProgress}).
  *
- * The "podium" is three short vertical-axis cylinders stacked at
- * increasing Y offsets with decreasing radii from bottom to top, read
- * from a slightly elevated perspective camera. Sleep-well-creatives.com
- * style: discs are real 3D objects with rim thickness, not flat
- * ellipses.
+ * ADR-012 v5: the artifact is ONE pure-code brandmark that physically
+ * transforms in 3D space — particles sampled from
+ * `BRANDMARK_FILLED_PATHS` (same data source as the global brandmark
+ * canvas, per ADR-011), surrounded by three coaxial hairline rings
+ * that emerge from the brandmark's centre by extruding to +/- Z.
+ * Every visible element transforms via translation / scale / rotation
+ * only — opacity ramps are forbidden for paint-source swaps and for
+ * the appearance of major scene elements. Boundary handoffs are HARD
+ * SWAPS via the `[data-ilayer-mode="r3f"]` CSS attribute toggle, with
+ * matched visual states so the swap reads as visual continuity.
  *
- * Units are in scene-space (1.0 ~= half canvas height; tuned so the
- * `build` disc's outer radius reaches the full viewport width once
+ * Units are scene-space (1.0 ~= half canvas height; tuned so the
+ * `build` ring's outer radius reaches ~80% of the canvas width once
  * the camera is positioned).
  */
 
-export const DISC_KINDS = ["build", "encode", "navigate"] as const;
-export type DiscKind = (typeof DISC_KINDS)[number];
+export const RING_KINDS = ["build", "encode", "navigate"] as const;
+export type RingKind = (typeof RING_KINDS)[number];
 
-export interface DiscGeom {
-  /** Outer radius of the cylinder in scene units. */
-  outerR: number;
-  /** Vertical thickness of the cylinder in scene units. */
-  height: number;
-  /** Resting Y position of the cylinder's centre in scene units. */
-  y: number;
-  /** Hex colour for the standard material. Lit by the warm key + cool fill. */
+export interface RingGeom {
+  /** Outer radius of the hairline ring in scene units. */
+  radius: number;
+  /** Hex colour for the LineBasicMaterial / LineDashedMaterial.
+   *  Maps to `--gold` (signal), `--dawn-30` (guide), or `--gold-soft`. */
   color: string;
-  /** PBR metalness factor, 0..1. */
-  metalness: number;
-  /** PBR roughness factor, 0..1. */
-  roughness: number;
-  /** Final opacity once the reveal envelope is fully open. */
-  targetOpacity: number;
-  /** Reveal window in section progress (0..1). Outside this window the
-   *  disc is collapsed (`scale.y = 0`, `opacity = 0`). Inside it ramps
-   *  from `0 → 1` via smoothstep. */
-  reveal: { in: number; out: number };
-  /** Optional centre hole as a fraction of `outerR` (0 = no hole, 0.55
-   *  = a hole 55% of the radius, used by the encode disc to mirror the
-   *  reference's "target" hole). */
-  holeRatio: number;
+  /** Number of bearing tick marks evenly spaced around the ring.
+   *  Quantised to 0 / 4 / 8 / 12 / 16 per the celestial-diagram
+   *  grammar (`celestial-diagram-grammar.md` § BearingTicks). */
+  tickCount: number;
+  /** Angles (degrees, 0 = top of ring, clockwise) at which a small
+   *  diamond marker sits on the ring's outer edge. "Diamonds, not
+   *  dots" per the brand grammar. */
+  diamondAngles: readonly number[];
+  /** Resting Z position of the ring's centre in scene units, AT
+   *  FULL EXTRUSION. The actual `position.z` is interpolated by the
+   *  EXTRUDE / RETRACT envelope: `extrude * (1 - retract) * finalZ`.
+   *  Encode is anchored at z=0 (it's the centre); navigate extrudes
+   *  forward (+Z), build extrudes backward (-Z). */
+  finalZ: number;
 }
 
 /**
- * DISC_GEOM — the canonical podium layout. Tuned against the
- * sleep-well-creatives.com section-05 reference:
+ * RING_GEOM — the canonical ringfield layout. Three coaxial rings,
+ * all initially coincident at z=0 (so they read as ONE artifact at
+ * progress 0). Side rings emerge symmetrically from the centre.
  *
- *   navigate (top, smallest)      ─── outerR 0.36, y 0.16
- *   encode   (middle, brandmark) ── outerR 0.62, y 0.08
- *   build    (bottom, full width) ─ outerR 1.00, y 0.00
- *
- * Reveal is sequential so the podium "stacks itself" instead of all
- * three discs popping at once: build first, then encode (synced with
- * the brandmark fade-out for the morph), then navigate.
+ *   navigate (front, +Z, smaller, gold-soft accent)
+ *   encode   (centre, anchored at z=0, --gold, holds the brandmark cloud inside)
+ *   build    (back, -Z, larger, dawn-30 guide)
  */
-export const DISC_GEOM: Record<DiscKind, DiscGeom> = {
+export const RING_GEOM: Record<RingKind, RingGeom> = {
   build: {
-    outerR: 1.0,
-    height: 0.06,
-    y: 0.0,
-    color: "#caa554", // --gold
-    metalness: 0.15,
-    roughness: 0.55,
-    targetOpacity: 0.95,
-    reveal: { in: 0.18, out: 0.42 },
-    holeRatio: 0,
+    radius: 1.06,
+    color: "#ece3d6", // --dawn (drawn at low alpha via material opacity for the guide register)
+    tickCount: 8,
+    diamondAngles: [0, 90, 180, 270],
+    finalZ: -0.32,
   },
   encode: {
-    outerR: 0.62,
-    height: 0.07,
-    y: 0.08,
-    color: "#ece3d6", // --dawn
-    metalness: 0.05,
-    roughness: 0.4,
-    targetOpacity: 1.0,
-    reveal: { in: 0.3, out: 0.55 },
-    holeRatio: 0,
+    radius: 0.78,
+    color: "#caa554", // --gold (signal — the brandmark's own ring)
+    tickCount: 0,
+    diamondAngles: [],
+    finalZ: 0.0,
   },
   navigate: {
-    outerR: 0.36,
-    height: 0.06,
-    y: 0.16,
-    color: "#a99e8a", // --gold-soft (dawn-deep)
-    metalness: 0.1,
-    roughness: 0.5,
-    targetOpacity: 0.92,
-    reveal: { in: 0.42, out: 0.65 },
-    holeRatio: 0.55,
+    radius: 0.92,
+    color: "#a99e8a", // --gold-soft / dawn-deep (guide accent above the brandmark)
+    tickCount: 4,
+    diamondAngles: [0],
+    finalZ: 0.32,
   },
 };
 
-/** Camera framing — perspective camera, slight elevation looking down.
- *  These are the head-on values at progress 0; the camera pitches
- *  further as scroll advances (handled by the scene's per-frame
- *  envelope). */
+/** Camera framing — perspective camera at slight elevation looking
+ *  down at the ringfield. Gentler elevation than v4 so the 3/4 view
+ *  reads with depth without exaggerating the perspective. The camera
+ *  is STATIC; rotation lives on the parent group. */
 export const CAMERA_PARAMS = {
-  fov: 28,
-  position: [0, 1.6, 4.2] as [number, number, number],
-  lookAt: [0, 0.4, 0] as [number, number, number],
+  fov: 32,
+  position: [0, 0.6, 3.4] as [number, number, number],
+  lookAt: [0, 0, 0] as [number, number, number],
   near: 0.1,
   far: 50,
 };
 
-/** Brandmark morph timing windows. The brandmark begins translating /
- *  scaling at `descend.in`, lands on the encode disc rect at
- *  `descend.out`, and crossfades out across `crossfade`. Sequenced so
- *  the encode disc's fill ramp ([0.30..0.55]) overlaps the
- *  brandmark's fade ([0.45..0.60]) — the visual "morph". */
-export const BRAND_MORPH = {
-  /** Brandmark anchor descent + scale window. */
-  descend: { in: 0.2, out: 0.55 },
-  /** Brandmark opacity crossfade window (1 → 0). */
-  crossfade: { in: 0.45, out: 0.6 },
-  /** Maximum X-axis tilt at the envelope's peak (degrees). The R3F
-   *  camera carries an equivalent pitch via its own envelope. */
-  maxTiltDeg: 24,
+/**
+ * SPLIT_ENVELOPE — section-progress windows for the single-scalar
+ * splitProgress arc. All windows are smoothstep edges keyed off the
+ * scroll trigger's `progress` (0..1).
+ *
+ *   ROTATE   [0.00..0.30]: parent rotation 0 → -45deg
+ *   EXTRUDE  [0.30..0.55]: side rings translate to ±finalZ; rotation 45 → 70deg
+ *   SETTLE   [0.55..0.85]: rotation eases 70 → 25deg; rings hold at split
+ *   HOLD     [0.85..0.92]: rotation held at 25deg (the read beat)
+ *   RETRACT  [0.92..0.98]: side rings retract back to z=0; ticks/diamonds/arcs collapse
+ *   HANDOFF  [0.98..1.00]: rotation eases 25 → 0deg; brandmark cloud axis-aligned for rail morph
+ */
+export const SPLIT_ENVELOPE = {
+  /** Parent rotation peak (radians, negative so the right side of
+   *  the ring tips away from the camera). 70deg ~ 1.222 rad. */
+  rotationPeakRad: -1.222,
+  /** Held rotation during the SETTLE / HOLD beats (radians). 25deg ~ 0.436 rad. */
+  rotationHoldRad: -0.436,
+  /** EXTRUDE window — side rings translate to their finalZ. */
+  extrude: { in: 0.3, out: 0.55 },
+  /** RETRACT window — side rings unwind back to z=0. */
+  retract: { in: 0.92, out: 0.98 },
+  /** Rotation segments. Each piecewise lerp uses smoothstep within
+   *  its window. */
+  rotation: {
+    rotateOnly: { in: 0.0, out: 0.3 }, // 0 → rotationHoldRad/2 (~ -22deg)
+    extrude: { in: 0.3, out: 0.55 }, // -22deg → -70deg
+    settle: { in: 0.55, out: 0.85 }, // -70deg → -25deg
+    handoff: { in: 0.92, out: 1.0 }, // -25deg → 0deg
+  },
 };
+
+/** Sub-orbit hairlines around the brandmark cloud (Section 02 sigil
+ *  grammar). Concentric `LineLoop`s at fractional radii of the encode
+ *  ring. They breathe via autonomous slow rotation independent of
+ *  scroll. */
+export const SUB_ORBIT_RADII = [0.32, 0.42] as const;
+
+/** Number of halo dot diamonds on the outermost sub-orbit (cardinal
+ *  positions + optional half-cardinal). 4 = N/E/S/W. */
+export const HALO_DOT_COUNT = 4;
+
+/** Brandmark particle count per ringfield render. Matches the global
+ *  `BrandmarkParticleStation` desktop budget so the boundary HARD
+ *  SWAP from the global painter to the local ringfield renderer
+ *  preserves visual density. */
+export const PARTICLE_COUNT = 3200;
+export const PARTICLE_COUNT_MOBILE = 1800;
+
+/** Brandmark particle colour — `--gold`. Matches the global station's
+ *  default tint. */
+export const BRAND_PARTICLE_COLOR = "#caa554";
+
+/** Brandmark particle size in pixels (sizeAttenuation off). Tuned so
+ *  the cloud reads at the same density as the global station's
+ *  particles when the encode ring projects to ~400px diameter. */
+export const BRAND_PARTICLE_SIZE_PX = 2.6;
+
+/** BRAND_SCALE — half-width / half-height of the brandmark cloud in
+ *  scene units. Equal to the encode ring's radius so the cloud fits
+ *  cleanly inside the encode ring. */
+export const BRAND_SCALE = RING_GEOM.encode.radius;
+
+/** Diamond marker size in scene units (edge of the rotated square). */
+export const DIAMOND_SIZE = 0.04;
+
+/** Bearing tick length in scene units (radial). */
+export const TICK_LENGTH = 0.045;
+
+/** Ring segment count for the LineLoop circle approximation. 96 is
+ *  smooth enough at the camera framing without being wasteful. */
+export const RING_SEGMENTS = 96;
+
+/** Sub-orbit autonomous rotation rate (radians per second). Matches
+ *  the slow celestial breath of Section 02's `.sigil__orbits` —
+ *  reads as ambient motion, not as a deliberate animation. */
+export const SUB_ORBIT_SPIN_RATE = 0.06;
 
 /** A reported screen-space rect, in client (CSS) pixels. */
 export interface ScreenRect {
@@ -130,9 +180,11 @@ export interface ScreenRect {
 }
 
 interface IlayerGeomState {
-  /** Live screen-projected rect of the encode disc's *top face*,
+  /** Live screen-projected rect of the encode ring's centre + radius,
    *  written by the R3F scene each frame and read by the progress
-   *  hook to compute the brandmark's descent target.
+   *  hook on init / resize so the substrate dock anchor in DOM lands
+   *  on the same pixels as the R3F brandmark cloud (the precondition
+   *  for an invisible HARD SWAP at section boundaries).
    *
    *  `null` until the scene mounts and projects its first frame, and
    *  any time the canvas is unmounted (static-fallback mode). The
@@ -143,11 +195,12 @@ interface IlayerGeomState {
 }
 
 /**
- * useIlayerGeomStore — the live encode-disc rect channel.
+ * useIlayerGeomStore — the live encode-rect channel.
  *
  * Zustand store (not React state) so per-frame writes from R3F do
  * not cascade re-renders. The progress hook subscribes via
- * `getState()` inside its rAF tick.
+ * `getState()` only — never via the React selector — so per-frame
+ * writes don't trigger re-renders anywhere.
  *
  * Why a store and not a ref-passing chain? The R3F canvas is
  * createRoot'd into a placeholder by `IntelligenceLayerPortal`, so
@@ -160,10 +213,6 @@ export const useIlayerGeomStore = create<IlayerGeomState>((set) => ({
   encodeRect: null,
   setEncodeRect: (rect) =>
     set((state) => {
-      // Skip identity writes so per-frame setEncodeRect calls from
-      // R3F's `useFrame` don't churn React's external store
-      // subscribers (the progress hook reads via getState() and
-      // doesn't subscribe, but other future consumers might).
       const prev = state.encodeRect;
       if (
         prev &&
@@ -185,17 +234,65 @@ export function smoothstep(edge0: number, edge1: number, x: number): number {
   return t * t * (3 - 2 * t);
 }
 
+/** Linear interpolation. */
+export function lerp(a: number, b: number, t: number): number {
+  return a + (b - a) * t;
+}
+
 /**
- * tiltEnvelope — shared envelope shape for the camera pitch (in
- * R3F) and the SVG brandmark's `--ilayer-tilt-deg` (in CSS). Ramps
- * 0 → 1 across [0.10..0.55], holds at 1 across [0.55..0.85], eases
- * back to 0 across [0.85..1.00] so the substrate → rail handoff
- * reads against an axis-aligned brandmark bbox.
+ * splitRotation — single-piecewise envelope for the parent group's
+ * rotation.y. Returns rotation in radians (negative so the right
+ * side of the ring tips away from the camera, exposing depth).
+ *
+ *   [0.00..0.30] lerp  0 → rotationHoldRad/2  (rotate-only beat)
+ *   [0.30..0.55] lerp  rotationHoldRad/2 → rotationPeakRad  (extrude beat)
+ *   [0.55..0.85] lerp  rotationPeakRad → rotationHoldRad    (settle beat)
+ *   [0.85..0.92] hold  rotationHoldRad                       (read beat)
+ *   [0.92..1.00] lerp  rotationHoldRad → 0                   (handoff beat)
+ *
+ * At progress 0 and progress 1 the rotation is exactly 0, so the
+ * brandmark cloud is axis-aligned for both HARD SWAPs (entry +
+ * exit) — this is the precondition for the swap to be invisible.
  */
-export function tiltEnvelope(progress: number): number {
-  if (progress <= 0) return 0;
-  if (progress >= 1) return 0;
-  if (progress < 0.55) return smoothstep(0.1, 0.55, progress);
-  if (progress < 0.85) return 1;
-  return 1 - smoothstep(0.85, 1.0, progress);
+export function splitRotation(progress: number): number {
+  const { rotation, rotationPeakRad, rotationHoldRad } = SPLIT_ENVELOPE;
+  if (progress <= rotation.rotateOnly.in) return 0;
+  if (progress < rotation.rotateOnly.out) {
+    const t = smoothstep(rotation.rotateOnly.in, rotation.rotateOnly.out, progress);
+    return lerp(0, rotationHoldRad / 2, t);
+  }
+  if (progress < rotation.extrude.out) {
+    const t = smoothstep(rotation.extrude.in, rotation.extrude.out, progress);
+    return lerp(rotationHoldRad / 2, rotationPeakRad, t);
+  }
+  if (progress < rotation.settle.out) {
+    const t = smoothstep(rotation.settle.in, rotation.settle.out, progress);
+    return lerp(rotationPeakRad, rotationHoldRad, t);
+  }
+  if (progress < rotation.handoff.in) {
+    return rotationHoldRad;
+  }
+  if (progress < rotation.handoff.out) {
+    const t = smoothstep(rotation.handoff.in, rotation.handoff.out, progress);
+    return lerp(rotationHoldRad, 0, t);
+  }
+  return 0;
+}
+
+/**
+ * splitExtrude — extrude/retract scalar in [0..1]. Side rings'
+ * `position.z = finalZ * splitExtrude(progress)`. Bearing ticks,
+ * diamond markers, and flow arcs all use the same scalar for their
+ * `scale.setScalar(...)` so they grow/shrink with the rings.
+ *
+ *   [0.00..0.30] = 0       (rings coincident)
+ *   [0.30..0.55] ramps 0→1 (EXTRUDE)
+ *   [0.55..0.92] = 1       (held at full split)
+ *   [0.92..0.98] ramps 1→0 (RETRACT)
+ *   [0.98..1.00] = 0       (back to coincident for HANDOFF)
+ */
+export function splitExtrude(progress: number): number {
+  const extrudeIn = smoothstep(SPLIT_ENVELOPE.extrude.in, SPLIT_ENVELOPE.extrude.out, progress);
+  const retractOut = smoothstep(SPLIT_ENVELOPE.retract.in, SPLIT_ENVELOPE.retract.out, progress);
+  return extrudeIn * (1 - retractOut);
 }

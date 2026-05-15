@@ -220,25 +220,39 @@ export function useSigilChoreography(
     // late layout (admin overlays, portal re-mounts, etc.)
     const getMissBrand = () => missEl?.querySelector<HTMLElement>(".miss__brand-slot") ?? null;
     /**
-     * Substrate anchor (ADR-012 v4).
+     * Substrate anchor (ADR-012 v5 — brandmark ringfield).
      *
-     * IMPORTANT: As of ADR-012 v4 (podium morph), this anchor's RECT
-     * is non-stationary across the #intelligence-layer section.
-     * `useIlayerProgress` writes `--ilayer-anchor-x`, `--ilayer-anchor-y`
-     * and `--ilayer-anchor-scale` on the anchor every scroll frame,
-     * descending + scaling it from upper-center toward the encode
-     * disc's projected screen rect. Live `getBoundingClientRect()`
-     * reads (which this lazy resolver enables) handle this
-     * transparently — the actor follows the anchor's descent
-     * automatically. Do NOT cache the rect or assume the anchor is
-     * fixed mid-section, and do not "fix" the anchor to a static
-     * center.
+     * The anchor's RECT is set by `useIlayerProgress` to match the
+     * R3F scene's encode-ring projected screen rect on init + on
+     * resize (NOT every scroll frame — the rect is static through
+     * the section). Inline `top`/`left`/`width`/`height` styles are
+     * written directly so the SVG dock at this anchor and the R3F
+     * particle cloud share exactly the same screen pixels at the
+     * boundary HARD SWAP instants.
      *
-     * The substrate → rail handoff fires at the section's exit edge,
-     * by which point the anchor sits at the encode disc's bottom-
-     * center position — the actor "lifts off" from inside the
-     * encode disc toward the rail dock. The handoff window may
-     * need widening if the lift-off reads abrupt; verify visually.
+     * The SVG glyph inside this anchor is HIDDEN (opacity 0, no
+     * transition) whenever
+     * `#intelligence-layer[data-ilayer-mode="r3f"]` is set — i.e.
+     * the entire time the section's R3F canvas is mounted. The R3F
+     * particle cloud (sampled from the same `BRANDMARK_FILLED_PATHS`
+     * per ADR-011) is the painter for the duration. The anchor
+     * still exists in DOM as a measurement target so the rail
+     * handoff at section exit reads from the correct screen
+     * position.
+     *
+     * The substrate → rail handoff fires at the section's exit
+     * edge. By that point the R3F scene's parent rotation has
+     * eased back to 0deg and rings have retracted to z=0, so the
+     * R3F brandmark cloud is axis-aligned at the same pixels as
+     * the SVG dock — when `[data-ilayer-mode="r3f"]` is removed
+     * (canvas unmount), the SVG glyph reappears instantly at the
+     * same screen position, and the rail morph fires from a clean
+     * axis-aligned bbox.
+     *
+     * Do NOT cache the rect mid-section (resize might invalidate
+     * it). Do NOT assume the SVG glyph is visible during the
+     * section. Do NOT remove the inline `top`/`left`/`width`/`height`
+     * styles set by `useIlayerProgress`.
      */
     const getSubstrateAnchor = () =>
       intelligenceEl?.querySelector<HTMLElement>(".ilayer__brandmark-anchor") ??

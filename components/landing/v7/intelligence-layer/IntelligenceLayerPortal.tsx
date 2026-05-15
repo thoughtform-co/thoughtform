@@ -49,6 +49,16 @@ export function IntelligenceLayerPortal({ containerRef }: IntelligenceLayerPorta
     if (!container) return;
     const stack = container.querySelector<HTMLElement>(".ilayer__stack");
     if (!stack) return;
+    // ADR-012 v5: also write the attribute on the section element so
+    // the v5 hard-swap CSS rule
+    // (`#intelligence-layer[data-ilayer-mode="r3f"] .ilayer__brandmark-anchor > svg`)
+    // can hide the SVG dock the moment the canvas mounts. The
+    // `.ilayer__stack` and `.ilayer__brandmark-anchor` are siblings
+    // inside `.ilayer__inner`, so a sibling selector wouldn't reach
+    // cleanly across; mirroring the attribute onto the section
+    // (which is the brandmark anchor's nearest common ancestor) is
+    // the simplest way to gate it.
+    const section = container.querySelector<HTMLElement>("#intelligence-layer");
 
     const motionMQ = window.matchMedia("(prefers-reduced-motion: reduce)");
     const sizeMQ = window.matchMedia("(max-width: 767px)");
@@ -59,6 +69,7 @@ export function IntelligenceLayerPortal({ containerRef }: IntelligenceLayerPorta
       const cur = stack.getAttribute("data-ilayer-mode");
       if (cur !== next) {
         stack.setAttribute("data-ilayer-mode", next);
+        section?.setAttribute("data-ilayer-mode", next);
         useIlayerProgressStore.getState().setMode(next);
         // Bump mount token so the second effect re-runs and either
         // mounts or unmounts the canvas to match the new mode.
@@ -74,6 +85,7 @@ export function IntelligenceLayerPortal({ containerRef }: IntelligenceLayerPorta
       motionMQ.removeEventListener("change", evaluate);
       sizeMQ.removeEventListener("change", evaluate);
       stack.removeAttribute("data-ilayer-mode");
+      section?.removeAttribute("data-ilayer-mode");
     };
   }, [containerRef]);
 

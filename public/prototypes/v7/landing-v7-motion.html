@@ -4714,10 +4714,40 @@ html { scroll-behavior: smooth; }
              navigate smallest at top). Hidden whenever the R3F
              canvas is active (data-ilayer-mode="r3f" on
              .ilayer__stack). -->
-        <svg class="ilayer__stack__fallback" viewBox="-400 -160 800 320" preserveAspectRatio="xMidYMax meet" aria-hidden="true">
-          <ellipse class="ilayer__stack__fallback-ring ilayer__stack__fallback-ring--build" cx="0" cy="100" rx="380" ry="56" />
-          <ellipse class="ilayer__stack__fallback-ring ilayer__stack__fallback-ring--encode" cx="0" cy="0" rx="200" ry="32" />
-          <ellipse class="ilayer__stack__fallback-ring ilayer__stack__fallback-ring--navigate" cx="0" cy="-90" rx="120" ry="20" />
+        <svg class="ilayer__stack__fallback" viewBox="-400 -300 800 600" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+          <!-- ADR-012 v5 — three concentric HAIRLINE rings + bearing
+               ticks + diamond markers. fill="none" per the celestial-
+               diagram grammar. Build (largest, dawn-30 guide), encode
+               (centre, --gold signal — where the brandmark sits),
+               navigate (smaller, gold-soft accent). -->
+          <circle class="ilayer__stack__fallback-ring ilayer__stack__fallback-ring--build" cx="0" cy="0" r="265" />
+          <circle class="ilayer__stack__fallback-ring ilayer__stack__fallback-ring--encode" cx="0" cy="0" r="195" />
+          <circle class="ilayer__stack__fallback-ring ilayer__stack__fallback-ring--navigate" cx="0" cy="0" r="230" />
+          <!-- Bearing ticks on the build ring (8 cardinal + half-cardinal) -->
+          <g>
+            <line class="ilayer__stack__fallback-tick" x1="0" y1="-265" x2="0" y2="-253" />
+            <line class="ilayer__stack__fallback-tick" x1="187.4" y1="-187.4" x2="178.9" y2="-178.9" />
+            <line class="ilayer__stack__fallback-tick" x1="265" y1="0" x2="253" y2="0" />
+            <line class="ilayer__stack__fallback-tick" x1="187.4" y1="187.4" x2="178.9" y2="178.9" />
+            <line class="ilayer__stack__fallback-tick" x1="0" y1="265" x2="0" y2="253" />
+            <line class="ilayer__stack__fallback-tick" x1="-187.4" y1="187.4" x2="-178.9" y2="178.9" />
+            <line class="ilayer__stack__fallback-tick" x1="-265" y1="0" x2="-253" y2="0" />
+            <line class="ilayer__stack__fallback-tick" x1="-187.4" y1="-187.4" x2="-178.9" y2="-178.9" />
+          </g>
+          <!-- Bearing ticks on the navigate ring (4 cardinal) -->
+          <g>
+            <line class="ilayer__stack__fallback-tick" x1="0" y1="-230" x2="0" y2="-220" />
+            <line class="ilayer__stack__fallback-tick" x1="230" y1="0" x2="220" y2="0" />
+            <line class="ilayer__stack__fallback-tick" x1="0" y1="230" x2="0" y2="220" />
+            <line class="ilayer__stack__fallback-tick" x1="-230" y1="0" x2="-220" y2="0" />
+          </g>
+          <!-- Diamond markers on the build ring (4 cardinal positions). -->
+          <polygon class="ilayer__stack__fallback-diamond" points="0,-275 10,-265 0,-255 -10,-265" />
+          <polygon class="ilayer__stack__fallback-diamond" points="275,0 265,10 255,0 265,-10" />
+          <polygon class="ilayer__stack__fallback-diamond" points="0,275 10,265 0,255 -10,265" />
+          <polygon class="ilayer__stack__fallback-diamond" points="-275,0 -265,10 -255,0 -265,-10" />
+          <!-- Diamond marker on the navigate ring (top only). -->
+          <polygon class="ilayer__stack__fallback-diamond" points="0,-240 8,-230 0,-220 -8,-230" />
         </svg>
 
       </div>
