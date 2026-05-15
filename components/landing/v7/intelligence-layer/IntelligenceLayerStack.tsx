@@ -7,79 +7,94 @@ import { useIlayerProgressStore } from "./useIlayerProgress";
 
 /**
  * IntelligenceLayerStack — the R3F scene that paints the layered
- * intelligence-layer artifact (ADR-012 v2).
+ * intelligence-layer artifact (ADR-012 v3).
  *
- * Three nested ring meshes (Navigate top / Encode middle / Build
- * bottom) plus a thin vertical thread connecting their centres. As
- * the section's scroll progress climbs from 0 to 1:
+ * The brandmark is the middle layer (painted by the DOM substrate
+ * dock, which sits over the canvas in z-index:3 and shares the
+ * same X-tilt via the --ilayer-tilt-deg CSS variable). This canvas
+ * paints only the TWO surrounding rings — Navigate above, Build
+ * below — that emerge from the brandmark's centre as the section
+ * enters view.
  *
- *   - the whole group rotates from a near-head-on coin (looks like
- *     one ring) to a tilted perspective view (~26 degrees on X)
- *   - the navigate disc lifts above and the build disc drops below
- *     the encode disc, exposing the three-layer stack
- *   - opacities fade in over the first quarter of progress
+ * Animation arc, driven by the section's scroll progress (0..1):
  *
- * Each disc is rendered as two concentric ring meshes: a wide,
- * low-opacity fill (the "halo") and a narrow, high-opacity edge
- * (the hairline). This gives the HUD-grammar "luminous ring"
- * read without needing a separate `<line>` primitive (whose JSX
- * intrinsic clashes with the SVG `<line>` element under TS).
+ *   progress 0.00            head-on, rings collapsed at centre
+ *                            (radius 0, opacity 0). Brandmark
+ *                            untilted.
+ *   progress 0.10 → 0.50     rings scale from 0 → 1 and slide from
+ *                            Y=0 to Y=±splitY. Group tilts from
+ *                            0 to ~22 degrees on X. Opacities
+ *                            ramp in.
+ *   progress 0.50 → 0.85     hold at full tilt + full split.
+ *   progress 0.85 → 1.00     tilt eases back to 0 and rings fade
+ *                            (but stay at split-Y) so the substrate
+ *                            station's choreography handoff to
+ *                            rail fires against an un-rotated bbox.
  *
- * The brandmark substrate dock anchor (DOM, sibling of this
- * canvas) sits dead-centre over the encode disc. The encode ring's
- * inner radius is wide enough that the brandmark sits inside its
- * hole, not on top of it — the disc reads as a luminous halo
- * around the canonical SVG glyph.
- *
- * Compositing: this canvas mounts inside `.ilayer__inner` (a
- * positioned descendant of the opaque `.ilayer` shield), with
- * `pointer-events: none` so it never blocks scroll. ADR-008 holds.
+ * The same envelope shape that drives the R3F tilt also drives the
+ * --ilayer-tilt-deg CSS variable in `useIlayerProgress`, so the
+ * SVG brandmark in the DOM dock and these rings always share one
+ * tilt and one motion.
  */
 
+// Two emerging rings. Sizes are intentionally larger than the
+// brandmark anchor (clamp(220px, 26vw, 320px) at the dock layer)
+// so the brandmark sits inside the navigate/build rings as the
+// stack opens, like a coin landing between two plates.
 const RING_GEOM = {
-  navigate: { outerR: 0.92, innerR: 0.5, splitY: 1.05 },
-  encode: { outerR: 1.1, innerR: 0.62, splitY: 0 },
-  build: { outerR: 0.92, innerR: 0.5, splitY: -1.05 },
+  navigate: { outerR: 1.4, innerR: 1.18, splitY: 0.42 },
+  build: { outerR: 1.4, innerR: 1.18, splitY: -0.42 },
 } as const;
 
-// Hairline edge ring widths (outer - inner). Small enough to read as
-// a stroke rather than a band.
-const EDGE_RING_WIDTH = 0.018;
-
-// Per-disc base opacities. The fill alpha is multiplied by the
-// scroll-progress fade-in envelope; the edge alpha gives the
-// hairline halo its punch.
-const DISC_TARGET_ALPHA = {
-  navigate: { fill: 0.16, edge: 0.85 },
-  encode: { fill: 0.28, edge: 1.0 },
-  build: { fill: 0.16, edge: 0.7 },
+// Disc fill alphas (low — these read as halos, not slabs) and edge
+// alphas (high — these read as the hairline strokes).
+const RING_TARGET_ALPHA = {
+  navigate: { fill: 0.18, edge: 0.95 },
+  build: { fill: 0.18, edge: 0.7 },
 } as const;
-const THREAD_TARGET_ALPHA = 0.32;
 
-// Thoughtform palette (matches `--gold`, `--dawn`, `--gold-warm` in
-// landing tokens). Three.js wants linear-RGB; the default colour
-// management converts sRGB hex to linear under the hood, so passing
-// hex strings is fine.
+// Hairline edge ring widths (outer - inner). Small enough to read
+// as a stroke rather than a band.
+const EDGE_RING_WIDTH = 0.022;
+
+// Thoughtform palette (matches `--gold`, `--dawn` in landing tokens).
 const COLOURS = {
-  gold: "#caa554",
-  dawn: "#ece3d6",
-  dawnDeep: "#a99e8a",
-  thread: "#caa554",
+  navigate: "#ece3d6", // dawn — input lane
+  build: "#a99e8a", // dawn-deep — output lane
 } as const;
 
-/** Smooth easing for opacity ramps. */
+/** Smooth easing for opacity / scale ramps. */
 function smoothstep(edge0: number, edge1: number, x: number): number {
   const t = Math.max(0, Math.min(1, (x - edge0) / (edge1 - edge0)));
   return t * t * (3 - 2 * t);
 }
 
 /**
- * One layered disc — a wide low-opacity fill ring + a hairline
- * edge ring sitting on top. Materials are exposed via refs so the
- * top-level `useFrame` can animate their opacity without the
- * React-19 "modifying memoized value" warning.
+ * Tent envelope used by both the R3F group's tilt and the CSS
+ * --ilayer-tilt-deg variable: ramps 0 → 1 across [0.00..0.50],
+ * holds at 1 across [0.50..0.85], eases back to 0 across
+ * [0.85..1.00]. Keeps the brandmark choreography handoff to rail
+ * happening against an un-rotated dock bbox.
  */
-function Disc({
+export function tiltEnvelope(progress: number): number {
+  if (progress <= 0) return 0;
+  if (progress >= 1) return 0;
+  if (progress < 0.5) return smoothstep(0.0, 0.5, progress);
+  if (progress < 0.85) return 1;
+  return 1 - smoothstep(0.85, 1.0, progress);
+}
+
+/** Maximum X-axis tilt at the envelope's peak (radians for R3F,
+ *  degrees for CSS). Keep them in lockstep. */
+export const MAX_TILT_RAD = -0.38; // ~ -22 degrees
+export const MAX_TILT_DEG = 22;
+
+/**
+ * One emerging ring — a wide low-opacity halo + a hairline edge
+ * ring. The whole ring lives inside a group whose Y position and
+ * scale are animated per frame.
+ */
+function Ring({
   outerR,
   innerR,
   color,
@@ -127,136 +142,95 @@ function StackScene() {
   const groupRef = useRef<THREE.Group>(null);
   const navigateRef = useRef<THREE.Group>(null);
   const buildRef = useRef<THREE.Group>(null);
-  const threadRef = useRef<THREE.Mesh>(null);
 
   const navigateFillRef = useRef<THREE.MeshBasicMaterial>(null);
   const navigateEdgeRef = useRef<THREE.MeshBasicMaterial>(null);
-  const encodeFillRef = useRef<THREE.MeshBasicMaterial>(null);
-  const encodeEdgeRef = useRef<THREE.MeshBasicMaterial>(null);
   const buildFillRef = useRef<THREE.MeshBasicMaterial>(null);
   const buildEdgeRef = useRef<THREE.MeshBasicMaterial>(null);
-  const threadMatRef = useRef<THREE.MeshBasicMaterial>(null);
 
-  // Per-frame: read scroll progress from the store (no React
-  // re-render cost; this is a direct ref into the Zustand state) and
-  // drive tilt + Y-split + opacity envelopes.
   useFrame((_, dt) => {
     const progress = useIlayerProgressStore.getState().progress;
+    const env = tiltEnvelope(progress);
 
-    // Tilt the whole group on X. At rest (0): near head-on, the
-    // discs collapse to thin lines. At full progress (1): ~26
-    // degrees tilt so the three layers read as a stack with depth.
-    // A small baseline tilt keeps the rings legible even before the
-    // section enters view, hinting at the 3D shape.
-    const tiltX = THREE.MathUtils.lerp(-0.08, -0.46, progress);
+    // Whole-group X-tilt. Eased lerp toward target so wheel jitter
+    // doesn't snap. Subtle Y-axis ambient drift keeps the highlights
+    // breathing even at rest.
+    const targetTiltX = MAX_TILT_RAD * env;
     const group = groupRef.current;
     if (group) {
-      const cur = group.rotation.x;
-      // Time-based eased lerp so wheel jitter doesn't snap.
       const k = 1 - Math.pow(0.001, dt);
-      group.rotation.x = THREE.MathUtils.lerp(cur, tiltX, k);
-
-      // Subtle Y-axis ambient drift so the highlights breathe even
-      // at rest. ±0.05 rad over an 18-second cycle.
+      group.rotation.x = THREE.MathUtils.lerp(group.rotation.x, targetTiltX, k);
       const t = performance.now() / 1000;
-      group.rotation.y = Math.sin((t * Math.PI * 2) / 18) * 0.05;
+      group.rotation.y = Math.sin((t * Math.PI * 2) / 18) * 0.04;
     }
 
-    // Y-split: discs separate as progress climbs from 0.15 to 1.
-    const splitT = smoothstep(0.15, 1.0, progress);
+    // Rings emerge from the centre: scale 0 → 1 across [0.05..0.55],
+    // slide Y from 0 to ±splitY across [0.10..0.55].
+    const scaleT = smoothstep(0.05, 0.55, progress);
+    const slideT = smoothstep(0.1, 0.55, progress);
     if (navigateRef.current) {
-      navigateRef.current.position.y = RING_GEOM.navigate.splitY * splitT;
+      navigateRef.current.scale.setScalar(scaleT);
+      navigateRef.current.position.y = RING_GEOM.navigate.splitY * slideT;
     }
     if (buildRef.current) {
-      buildRef.current.position.y = RING_GEOM.build.splitY * splitT;
+      buildRef.current.scale.setScalar(scaleT);
+      buildRef.current.position.y = RING_GEOM.build.splitY * slideT;
     }
 
-    // Thread: scale Y to match the current span of the stack so it
-    // never pokes past the outermost discs.
-    if (threadRef.current) {
-      const span = Math.max(0.4, RING_GEOM.navigate.splitY * splitT * 2 + 0.4);
-      threadRef.current.scale.y = span;
-    }
-
-    // Opacity envelopes — ramp in over the first 25% of progress so
-    // the rings don't pop into view.
+    // Opacity envelopes — ramp in over the first quarter; fade
+    // slightly toward the end so the choreography handoff to rail
+    // happens against a quiet artifact.
     const fadeIn = smoothstep(0, 0.25, progress);
+    const fadeOut = 1 - smoothstep(0.85, 1.0, progress);
+    const alphaMul = fadeIn * fadeOut;
     if (navigateFillRef.current)
-      navigateFillRef.current.opacity = DISC_TARGET_ALPHA.navigate.fill * fadeIn;
+      navigateFillRef.current.opacity = RING_TARGET_ALPHA.navigate.fill * alphaMul;
     if (navigateEdgeRef.current)
-      navigateEdgeRef.current.opacity = DISC_TARGET_ALPHA.navigate.edge * fadeIn;
-    if (encodeFillRef.current)
-      encodeFillRef.current.opacity = DISC_TARGET_ALPHA.encode.fill * fadeIn;
-    if (encodeEdgeRef.current)
-      encodeEdgeRef.current.opacity = DISC_TARGET_ALPHA.encode.edge * fadeIn;
-    if (buildFillRef.current) buildFillRef.current.opacity = DISC_TARGET_ALPHA.build.fill * fadeIn;
-    if (buildEdgeRef.current) buildEdgeRef.current.opacity = DISC_TARGET_ALPHA.build.edge * fadeIn;
-    if (threadMatRef.current) threadMatRef.current.opacity = THREAD_TARGET_ALPHA * fadeIn;
+      navigateEdgeRef.current.opacity = RING_TARGET_ALPHA.navigate.edge * alphaMul;
+    if (buildFillRef.current)
+      buildFillRef.current.opacity = RING_TARGET_ALPHA.build.fill * alphaMul;
+    if (buildEdgeRef.current)
+      buildEdgeRef.current.opacity = RING_TARGET_ALPHA.build.edge * alphaMul;
   });
 
   return (
     <group ref={groupRef}>
-      {/* Navigate disc (top) */}
+      {/* Navigate ring (top) — emerges upward from the brandmark's
+          centre. */}
       <group ref={navigateRef}>
-        <Disc
+        <Ring
           outerR={RING_GEOM.navigate.outerR}
           innerR={RING_GEOM.navigate.innerR}
-          color={COLOURS.dawn}
+          color={COLOURS.navigate}
           fillRef={navigateFillRef}
           edgeRef={navigateEdgeRef}
         />
       </group>
 
-      {/* Encode disc (middle) — the substrate. Wider inner radius so
-          the brandmark glyph (DOM, in front via z-index:3 on
-          .ilayer__stack__dock) sits cleanly inside the hole. */}
-      <group>
-        <Disc
-          outerR={RING_GEOM.encode.outerR}
-          innerR={RING_GEOM.encode.innerR}
-          color={COLOURS.gold}
-          fillRef={encodeFillRef}
-          edgeRef={encodeEdgeRef}
-        />
-      </group>
-
-      {/* Build disc (bottom) */}
+      {/* Build ring (bottom) — emerges downward from the brandmark's
+          centre. */}
       <group ref={buildRef}>
-        <Disc
+        <Ring
           outerR={RING_GEOM.build.outerR}
           innerR={RING_GEOM.build.innerR}
-          color={COLOURS.dawnDeep}
+          color={COLOURS.build}
           fillRef={buildFillRef}
           edgeRef={buildEdgeRef}
         />
       </group>
-
-      {/* Vertical thread connecting all three discs. Cylinder
-          oriented along Y; scale.y is animated per frame to span
-          the current stack height. */}
-      <mesh ref={threadRef}>
-        <cylinderGeometry args={[0.012, 0.012, 1, 8, 1, true]} />
-        <meshBasicMaterial
-          ref={threadMatRef}
-          color={COLOURS.thread}
-          transparent
-          opacity={0}
-          depthWrite={false}
-        />
-      </mesh>
     </group>
   );
 }
 
 /**
  * IntelligenceLayerStack — the public component. Renders an R3F
- * `<Canvas>` with one orthographic camera and the StackScene group.
+ * `<Canvas>` with one orthographic camera and the two-ring scene.
  * Mounted by {@link IntelligenceLayerPortal} into the
  * `[data-ilayer-stack-root]` placeholder in the v7 prototype HTML.
  *
- * The camera sits at zoom 130 — that places a 1.0-radius disc at
- * roughly 130px on a 380px canvas, leaving generous margin for the
- * Y-split travel without clipping.
+ * Camera zoom 130 places a 1.0-radius ring at ~130px on the
+ * canvas's height, leaving headroom for the split travel and the
+ * subtle perspective of the X-tilt without clipping at the edges.
  */
 export function IntelligenceLayerStack() {
   return (

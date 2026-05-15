@@ -4619,107 +4619,48 @@ html { scroll-behavior: smooth; }
         </p>
       </header>
 
-      <!-- Layered 3D stack (ADR-012 v2) — one R3F canvas paints three
-           nested discs (Navigate top / Encode middle / Build bottom)
-           that rotate from a head-on coin to a tilted perspective view
-           and split apart along Y as the section enters the viewport.
-           The brandmark stays the visual heart: the substrate dock
-           anchor sits dead-centre over the encode disc and the canonical
-           SVG glyph portals into it via BrandmarkSystem.
+      <!-- Layered 3D centerpiece (ADR-012 v3) — the brandmark IS the
+           middle layer of a three-strata stack. As the section enters
+           view, the whole artifact tilts back on X and two rings emerge
+           from the brandmark's centre (Navigate above, Build below).
+           No annotation clusters around it — the title above and the
+           closer below carry the editorial frame; the artifact carries
+           the visual story alone, like sleep-well-creatives.com.
 
-           The four annotation clusters around the canvas are SSR-rendered
-           DOM so SEO / no-JS visitors still get the full payload; the
-           canvas only adds the visual depth on top. -->
-      <div class="ilayer__artifact ilayer__stack" role="group" aria-label="Three layers: trusted sources, encoded substrate, headless surfaces">
+           The substrate dock anchor inside .ilayer__stack__dock is the
+           ADR-012 contract surface: BrandmarkSystem portals the
+           canonical glyph in, useSigilChoreography parks the actor
+           here. The brandmark anchor's children carry the X-tilt via
+           the --ilayer-tilt-deg CSS variable so the choreography's
+           bbox reads stay un-rotated. -->
+      <div class="ilayer__artifact ilayer__stack" role="group" aria-label="Three-layer intelligence-layer instrument: navigate, encode substrate, build">
 
         <!-- R3F canvas mount slot. IntelligenceLayerPortal createRoots
              into this placeholder; the static fallback (mobile or
-             reduced motion) hides the canvas and shows the CSS-3D
+             reduced motion) hides the canvas and shows the SVG
              ellipse stack directly underneath. -->
         <div class="ilayer__stack__canvas" data-ilayer-stack-root aria-hidden="true"></div>
 
-        <!-- Static fallback — three flat ellipses, painted via SVG so
-             reduced-motion / no-WebGL visitors still see a layered
-             artifact. Hidden whenever the R3F canvas is active
-             (data-ilayer-mode="r3f" on .ilayer__stack). -->
+        <!-- Static fallback — three flat ellipses for reduced-motion /
+             no-WebGL visitors. Hidden whenever the R3F canvas is
+             active (data-ilayer-mode="r3f" on .ilayer__stack). -->
         <svg class="ilayer__stack__fallback" viewBox="-200 -120 400 240" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
-          <ellipse class="ilayer__stack__fallback-ring ilayer__stack__fallback-ring--navigate" cx="0" cy="-58" rx="118" ry="22" />
+          <ellipse class="ilayer__stack__fallback-ring ilayer__stack__fallback-ring--navigate" cx="0" cy="-44" rx="118" ry="22" />
           <ellipse class="ilayer__stack__fallback-ring ilayer__stack__fallback-ring--encode" cx="0" cy="0" rx="138" ry="26" />
-          <ellipse class="ilayer__stack__fallback-ring ilayer__stack__fallback-ring--build" cx="0" cy="58" rx="118" ry="22" />
-          <line class="ilayer__stack__fallback-thread" x1="0" y1="-78" x2="0" y2="78" />
+          <ellipse class="ilayer__stack__fallback-ring ilayer__stack__fallback-ring--build" cx="0" cy="44" rx="118" ry="22" />
         </svg>
 
-        <!-- Substrate dock layer — sits in the canvas grid area,
-             centred over the encode disc. The dock is a separate
-             sibling of the canvas mount so React's createRoot does
-             not own its subtree. The substrate dock anchor (ADR-012
-             contract) lives inside; BrandmarkSystem portals the
-             canonical glyph here, the choreography hook parks the
-             actor at this rect. The placeholder <img> is stripped by
-             the v7 parser. -->
+        <!-- Substrate dock layer — sits over the canvas grid cell,
+             centres the brandmark anchor. Separate from the canvas
+             mount so React's createRoot does not own this subtree.
+             The brandmark anchor below is the ADR-012 contract
+             surface; the placeholder <img> is stripped by the v7
+             parser, and BrandmarkSystem portals the canonical glyph
+             into it. -->
         <div class="ilayer__stack__dock" aria-hidden="true">
           <div class="ilayer__brandmark-anchor" data-brand-anchor="substrate">
             <img src="assets/logos/Thoughtform_Brandmark.svg" alt="" />
           </div>
-        </div>
-
-        <!-- ── Annotation 01 — NAVIGATE / Trusted sources (top-left) ─ -->
-        <div class="ilayer__stack__anno ilayer__stack__anno--navigate" data-anno="navigate">
-          <header class="ilayer__stack__anno-head">
-            <span class="ilayer__stack__anno-num">01</span>
-            <span class="ilayer__stack__anno-name">Navigate</span>
-            <span class="ilayer__stack__anno-role">Trusted sources</span>
-          </header>
-          <p class="ilayer__stack__anno-caption">Where the work already lives.</p>
-          <ul class="ilayer__stack__chips" role="list">
-            <li class="ilayer__stack__chip"><span class="ilayer__stack__chip-dot" aria-hidden="true"></span>Brand framework</li>
-            <li class="ilayer__stack__chip"><span class="ilayer__stack__chip-dot" aria-hidden="true"></span>Past campaigns</li>
-            <li class="ilayer__stack__chip"><span class="ilayer__stack__chip-dot" aria-hidden="true"></span>Customer research</li>
-            <li class="ilayer__stack__chip"><span class="ilayer__stack__chip-dot" aria-hidden="true"></span>Performance data</li>
-            <li class="ilayer__stack__chip"><span class="ilayer__stack__chip-dot" aria-hidden="true"></span>Style guidelines</li>
-            <li class="ilayer__stack__chip"><span class="ilayer__stack__chip-dot" aria-hidden="true"></span>Reviewer notes</li>
-          </ul>
-        </div>
-
-        <!-- ── Annotation 02 — ENCODE / Substrate (centre, hosts dock) ─ -->
-        <div class="ilayer__stack__anno ilayer__stack__anno--encode" data-anno="encode">
-          <header class="ilayer__stack__anno-head">
-            <span class="ilayer__stack__anno-num">02</span>
-            <span class="ilayer__stack__anno-name">Encode</span>
-            <span class="ilayer__stack__anno-role">Encoded substrate</span>
-          </header>
-          <p class="ilayer__stack__anno-caption">What matters, how to decide, what to check.</p>
-
-          <ul class="ilayer__stack__bands" role="list">
-            <li class="ilayer__stack__band"><span class="ilayer__stack__band-tag">Rules</span><span class="ilayer__stack__band-name">How the team decides</span></li>
-            <li class="ilayer__stack__band"><span class="ilayer__stack__band-tag">Examples</span><span class="ilayer__stack__band-name">What good looks like</span></li>
-            <li class="ilayer__stack__band"><span class="ilayer__stack__band-tag">Sources</span><span class="ilayer__stack__band-name">Data it can read</span></li>
-            <li class="ilayer__stack__band"><span class="ilayer__stack__band-tag">Loops</span><span class="ilayer__stack__band-name">Who confirms what</span></li>
-          </ul>
-
-          <ul class="ilayer__stack__props" role="list" aria-label="Substrate properties">
-            <li class="ilayer__stack__prop">Owned internally</li>
-            <li class="ilayer__stack__prop">Versioned</li>
-            <li class="ilayer__stack__prop">Model-portable</li>
-          </ul>
-        </div>
-
-        <!-- ── Annotation 03 — BUILD / Headless surfaces (bottom-right) ─ -->
-        <div class="ilayer__stack__anno ilayer__stack__anno--build" data-anno="build">
-          <header class="ilayer__stack__anno-head">
-            <span class="ilayer__stack__anno-num">03</span>
-            <span class="ilayer__stack__anno-name">Build</span>
-            <span class="ilayer__stack__anno-role">Headless surfaces</span>
-          </header>
-          <p class="ilayer__stack__anno-caption">Where the team calls the engine.</p>
-          <ul class="ilayer__stack__chips ilayer__stack__chips--surfaces" role="list">
-            <li class="ilayer__stack__chip ilayer__stack__chip--surface"><span class="ilayer__stack__chip-mark">C</span>Cursor</li>
-            <li class="ilayer__stack__chip ilayer__stack__chip--surface"><span class="ilayer__stack__chip-mark">Cl</span>Claude</li>
-            <li class="ilayer__stack__chip ilayer__stack__chip--surface"><span class="ilayer__stack__chip-mark">&#9680;</span>Web app</li>
-            <li class="ilayer__stack__chip ilayer__stack__chip--surface"><span class="ilayer__stack__chip-mark">{ }</span>REST</li>
-            <li class="ilayer__stack__chip ilayer__stack__chip--surface"><span class="ilayer__stack__chip-mark">#</span>Slack</li>
-            <li class="ilayer__stack__chip ilayer__stack__chip--surface"><span class="ilayer__stack__chip-mark">A</span>Agents</li>
-          </ul>
         </div>
       </div>
 

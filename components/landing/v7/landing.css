@@ -3223,30 +3223,29 @@ html[data-quote-active="true"] .tf-brandmark-actor {
    reveal to hover (same as desktop). Touch tablets fall into the
    compact range above (≤960px) where bodies show by default. */
 
-/* ═══════════ 04 INTELLIGENCE LAYER — layered 3D stack (ADR-012 v2) ═══════════
-   Replaces the previous Benedict Evans asking-gap interstitial AND
-   the v1 vertical-plane artifact. The section now translates the
-   Aether Sources / Substrate / Surfaces payload into a single layered
-   instrument: one R3F canvas paints three nested discs (Navigate top
-   / Encode middle / Build bottom) that rotate from a head-on coin to
-   a tilted perspective view and split apart along Y as the section
-   enters the viewport. The brandmark is the visual heart — it docks
-   dead-centre over the encode disc via the substrate station (see
-   ADR-012 § brandmark contract).
+/* ═══════════ 04 INTELLIGENCE LAYER — layered 3D centerpiece (ADR-012 v3) ═══════════
+   The brandmark IS the middle layer. As the section enters view, the
+   whole artifact tilts back on X and two R3F rings emerge from the
+   brandmark's centre (Navigate above, Build below). No annotation
+   clusters around it — the section's title (above) and closer
+   (below) carry the editorial frame; the artifact carries the visual
+   story alone, like sleep-well-creatives.com.
 
-   Annotation clusters live around the canvas in DOM so SEO / no-JS
-   visitors still get the full payload; the canvas only adds visual
-   depth on top.
+   The substrate dock anchor is unchanged from ADR-012 v1: choreography
+   reads its rect, BrandmarkSystem portals the glyph in. The CSS
+   tilt is applied to the anchor's CHILDREN (not the anchor itself)
+   so getBoundingClientRect() reads the un-rotated bbox and the
+   brandmark choreography stays correct during transit.
 
    Compositing rules followed:
    1. Outer .ilayer wrapper inherits .station's opaque var(--void)
       shield. The R3F canvas mounts inside .ilayer__inner (a
       positioned descendant) — never on the bleed wrapper.
    2. Reveal motion on .ilayer__inner only; .ilayer__stack__canvas and
-      .ilayer__brandmark-anchor have no [data-m] so no opacity flicker
-      exposes the fixed gateway radial.
-   3. The canvas paints with `pointer-events: none` so it never blocks
-      scroll, and is z-index-anchored below the annotation clusters.
+      .ilayer__brandmark-anchor have no [data-m] so no opacity
+      flicker exposes the fixed gateway radial.
+   3. The canvas paints with `pointer-events: none` so it never
+      blocks scroll, and the dock layer sits above it via z-index.
    ──────────────────────────────────────────────────────────────────── */
 
 .ilayer {
@@ -3342,41 +3341,41 @@ html[data-quote-active="true"] .tf-brandmark-actor {
 }
 
 /* ── Stack artifact ────────────────────────────────────────────────
-   The artifact is a positioned grid: one full-bleed canvas slot
-   below + a 3x3 grid of annotation cells above. Annotations sit at
-   the four diagonal corners (Sleep-Well pattern); the encode cluster
-   sits below the canvas centre and hosts the substrate dock anchor
-   over the centre of the visible disc stack. */
+   One centred grid cell holds three overlapping layers, all sharing
+   the same grid-area:
+     - .ilayer__stack__canvas (R3F mount)            — z:1
+     - .ilayer__stack__fallback (SVG static fallback) — z:1
+     - .ilayer__stack__dock (brandmark anchor host)   — z:3 (in front)
+   The wrapper is taller than the previous v2 grid because the
+   single-cell artifact reads as a denser instrument. */
 .ilayer__artifact {
   position: relative;
   width: 100%;
+  display: grid;
+  /* Provide CSS perspective so the brandmark's child rotateX reads
+     as real depth instead of an orthographic flatten. ~900px puts
+     the vanishing point comfortably outside the visible area. */
+  perspective: 900px;
 }
 .ilayer__stack {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr) minmax(0, 1fr);
-  grid-template-rows: minmax(0, auto) clamp(220px, 36vh, 380px) minmax(0, auto);
-  grid-template-areas:
-    "navigate canvas .       "
-    ".        canvas build   "
-    "encode   encode  encode ";
-  column-gap: clamp(8px, 2vw, 36px);
-  row-gap: clamp(10px, 1.6vh, 22px);
-  align-items: start;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: clamp(280px, 44vh, 460px);
+  grid-template-areas: "canvas";
+  align-items: stretch;
   justify-items: stretch;
   padding: clamp(8px, 1vh, 14px) 0 0;
 }
 
 /* Canvas slot — R3F portal mounts here. Pointer-events disabled so
-   scroll passes through; z-index keeps it below the annotation
-   clusters. The canvas wrapper that React mounts inside this element
-   gets `position: absolute; inset: 0` so the canvas always fills
-   the slot regardless of resize. */
+   scroll passes through. The canvas wrapper that React mounts
+   inside this element gets `position: absolute; inset: 0` so the
+   canvas always fills the slot regardless of resize. */
 .ilayer__stack__canvas {
   grid-area: canvas;
   position: relative;
   width: 100%;
   height: 100%;
-  min-height: clamp(220px, 36vh, 380px);
   pointer-events: none;
   z-index: 1;
 }
@@ -3386,15 +3385,14 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   height: 100% !important;
 }
 
-/* Static fallback — three flat ellipses + a vertical thread, painted
-   by SVG. Visible by default; hidden as soon as the R3F canvas takes
-   over (data-ilayer-mode="r3f" on .ilayer__stack). */
+/* Static fallback — three flat ellipses for reduced-motion / no-WebGL
+   visitors. Visible by default; hidden as soon as the R3F canvas
+   takes over (data-ilayer-mode="r3f" on .ilayer__stack). */
 .ilayer__stack__fallback {
   grid-area: canvas;
   position: relative;
   width: 100%;
   height: 100%;
-  min-height: clamp(220px, 36vh, 380px);
   pointer-events: none;
   z-index: 1;
   overflow: visible;
@@ -3412,218 +3410,19 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   stroke: var(--dawn-30);
   stroke-width: 1;
   vector-effect: non-scaling-stroke;
-  opacity: 0.5;
+  opacity: 0.55;
 }
 .ilayer__stack__fallback-ring--encode {
   stroke: var(--gold);
   stroke-width: 1.4;
-  opacity: 0.85;
-}
-.ilayer__stack__fallback-thread {
-  stroke: var(--dawn-30);
-  stroke-width: 0.8;
-  vector-effect: non-scaling-stroke;
-  opacity: 0.4;
+  opacity: 0.9;
 }
 
-/* ── Annotation clusters ───────────────────────────────────────────
-   Four clusters arranged around the canvas in the Sleep-Well style:
-   navigate top-left, build bottom-right, encode (with the substrate
-   dock + bands + properties) sits centred below the canvas. Each
-   cluster fades in once the section's progress passes 0.4 (set by
-   the choreography hook via [data-ilayer-state="open"] on the
-   artifact). */
-.ilayer__stack__anno {
-  display: flex;
-  flex-direction: column;
-  gap: clamp(8px, 1.2vh, 14px);
-  z-index: 2;
-  opacity: 0;
-  transform: translateY(8px);
-  transition:
-    opacity 540ms cubic-bezier(0.16, 1, 0.3, 1),
-    transform 540ms cubic-bezier(0.16, 1, 0.3, 1);
-}
-.ilayer__stack[data-ilayer-state="open"] .ilayer__stack__anno {
-  opacity: 1;
-  transform: translateY(0);
-}
-.ilayer__stack[data-ilayer-state="open"] .ilayer__stack__anno--encode {
-  transition-delay: 220ms;
-}
-.ilayer__stack[data-ilayer-state="open"] .ilayer__stack__anno--build {
-  transition-delay: 140ms;
-}
-
-.ilayer__stack__anno--navigate {
-  grid-area: navigate;
-  align-items: flex-start;
-  text-align: left;
-  padding-right: clamp(0px, 1vw, 12px);
-}
-.ilayer__stack__anno--build {
-  grid-area: build;
-  align-items: flex-end;
-  text-align: right;
-  padding-left: clamp(0px, 1vw, 12px);
-}
-.ilayer__stack__anno--encode {
-  grid-area: encode;
-  align-items: center;
-  text-align: center;
-  padding-top: clamp(8px, 1.4vh, 16px);
-}
-
-.ilayer__stack__anno-head {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  font-family: var(--font-pt-mono);
-  font-size: 10px;
-  letter-spacing: var(--track-widest);
-  text-transform: uppercase;
-  color: var(--dawn-70);
-}
-.ilayer__stack__anno-num {
-  color: var(--gold);
-  font-weight: 600;
-}
-.ilayer__stack__anno-name {
-  color: var(--dawn);
-  font-weight: 600;
-}
-.ilayer__stack__anno-role {
-  color: var(--dawn-50);
-}
-.ilayer__stack__anno-caption {
-  font-family: var(--font-pp-neue-montreal);
-  font-size: clamp(13px, 1.05vw, 16px);
-  line-height: 1.4;
-  color: var(--dawn);
-  margin: 0;
-  text-wrap: balance;
-  max-width: 36ch;
-}
-
-/* Chip clusters — Sources (navigate) and Surfaces (build). */
-.ilayer__stack__chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: clamp(6px, 0.7vw, 10px);
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-.ilayer__stack__anno--navigate .ilayer__stack__chips {
-  justify-content: flex-start;
-}
-.ilayer__stack__anno--build .ilayer__stack__chips {
-  justify-content: flex-end;
-}
-.ilayer__stack__chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 5px 11px;
-  border: 1px solid var(--dawn-08);
-  font-family: var(--font-pt-mono);
-  font-size: clamp(10px, 0.85vw, 12px);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--dawn-70);
-  background: transparent;
-  transition:
-    border-color 220ms ease,
-    color 220ms ease;
-}
-.ilayer__stack__chip:hover {
-  border-color: rgba(202, 165, 84, 0.35);
-  color: var(--dawn);
-}
-.ilayer__stack__chip-dot {
-  width: 6px;
-  height: 6px;
-  background: var(--gold);
-  display: inline-block;
-  flex-shrink: 0;
-}
-.ilayer__stack__chip-mark {
-  font-family: var(--font-pt-mono);
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--gold);
-  min-width: 18px;
-  text-align: center;
-  letter-spacing: 0;
-}
-.ilayer__stack__chip--surface {
-  color: var(--dawn);
-}
-
-/* Encode cluster — bands + properties below the centre disc. The
-   four bands sit in a 2x2 mono grid so the read order is left-right
-   top-bottom; properties sit as a single mono row beneath. */
-.ilayer__stack__bands {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: clamp(8px, 1vh, 14px) clamp(20px, 3vw, 36px);
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  max-width: 540px;
-  width: 100%;
-}
-.ilayer__stack__band {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-}
-.ilayer__stack__band-tag {
-  font-family: var(--font-pt-mono);
-  font-size: 10px;
-  letter-spacing: var(--track-widest);
-  text-transform: uppercase;
-  color: var(--gold);
-}
-.ilayer__stack__band-name {
-  font-family: var(--font-pp-neue-montreal);
-  font-size: clamp(13px, 1vw, 15px);
-  color: var(--dawn);
-  line-height: 1.3;
-}
-.ilayer__stack__props {
-  list-style: none;
-  margin: clamp(4px, 0.8vh, 8px) 0 0;
-  padding: 0;
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: clamp(8px, 1vw, 14px);
-}
-.ilayer__stack__prop {
-  font-family: var(--font-pt-mono);
-  font-size: 10px;
-  letter-spacing: var(--track-widest);
-  text-transform: uppercase;
-  color: var(--dawn-50);
-}
-.ilayer__stack__prop::before {
-  content: "·";
-  color: var(--gold);
-  margin-right: 6px;
-}
-
-/* Substrate dock layer — sits in the canvas grid area, centres the
-   brandmark anchor over the encode disc. Separate from the canvas
-   mount so React's createRoot does not own this subtree (the canvas
-   would otherwise blow it away on every render).
-
-   z-index: 3 keeps the dock above the canvas (z:1) and the static
-   fallback (z:1) but below the annotation clusters (z:2 — wait,
-   we want it above so the brandmark reads in front). Re-checked:
-   keep dock at z:3 so brandmark sits in front of canvas; annotation
-   clusters at z:2 stay clear of it. */
+/* Substrate dock layer — sits over the canvas grid cell and centres
+   the brandmark anchor over the R3F encode position. Separate from
+   the canvas mount so React's createRoot does not own this subtree
+   (the canvas would otherwise blow it away on every render).
+   z-index: 3 keeps the brandmark in front of the canvas. */
 .ilayer__stack__dock {
   grid-area: canvas;
   position: relative;
@@ -3635,23 +3434,27 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   height: 100%;
 }
 
-/* Brandmark substrate dock anchor — the visual heart. Centred over
-   the canvas via the dock layer above. The ADR-012 size contract
-   (clamp(180px, 22vw, 280px)) holds; the substrate choreography
-   reads its rect unchanged.
+/* Brandmark substrate dock anchor — the visual heart. The anchor
+   itself is NEVER rotated (so the choreography hook's
+   getBoundingClientRect read stays a clean axis-aligned bbox). The
+   X-tilt lives on the anchor's CHILDREN via the --ilayer-tilt-deg
+   variable, which the progress hook writes every scroll frame in
+   lockstep with the R3F group's tilt.
 
-   Default opacity 0 on children; the choreography hook flips it on
-   via the
+   ADR-012 size contract (clamp(180px, 22vw, 280px)) holds. The
+   children's opacity is gated on by the
    `[data-brandmark-mode="particle"][data-brand-svg-dock="substrate"]`
-   gate (see brandmark particle artifact block above). 200ms
-   transition matches the other dock anchors. */
+   selector (see the Brandmark particle artifact block above). */
 .ilayer__brandmark-anchor {
   position: relative;
-  width: clamp(180px, 22vw, 280px);
-  height: clamp(180px, 22vw, 280px);
+  width: clamp(220px, 26vw, 320px);
+  height: clamp(220px, 26vw, 320px);
   display: block;
   background: transparent;
   pointer-events: none;
+  /* Establish a 3D context so the children's rotateX reads with
+     real perspective from the parent .ilayer__artifact's perspective. */
+  transform-style: preserve-3d;
 }
 .ilayer__brandmark-anchor img,
 .ilayer__brandmark-anchor svg {
@@ -3660,8 +3463,17 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   display: block;
   object-fit: contain;
   opacity: 0;
-  filter: drop-shadow(0 0 24px rgba(202, 165, 84, 0.18));
-  transition: opacity 200ms ease-out;
+  filter: drop-shadow(0 0 32px rgba(202, 165, 84, 0.22));
+  transition:
+    opacity 200ms ease-out,
+    transform 80ms linear;
+  /* The X-tilt the user asked for. Default 0 (head-on); the progress
+     hook lerps --ilayer-tilt-deg from 0 → ~22 → 0 across the section
+     scroll range so the brandmark "falls flat" mid-section then
+     stands back up before the substrate-to-rail transit fires. */
+  transform: rotateX(var(--ilayer-tilt-deg, 0deg));
+  transform-origin: center center;
+  will-change: transform;
 }
 
 /* Closer — single line under the artifact. Same register as
@@ -3692,10 +3504,8 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   opacity: 1;
 }
 
-/* Mobile / tablet — collapse the diagonal-corner grid into a single
-   column (annotations stack above and below a smaller canvas). The
-   static fallback's height drops slightly so the artifact still fits
-   one viewport on the smallest screens. */
+/* Mobile / tablet — section grows from 100vh to auto so the title
+   and closer still fit, and the artifact's grid cell shrinks. */
 @media (max-width: 960px) {
   .ilayer {
     height: auto;
@@ -3704,72 +3514,36 @@ html[data-quote-active="true"] .tf-brandmark-actor {
     padding-bottom: 64px;
   }
   .ilayer__stack {
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: auto clamp(180px, 30vh, 280px) auto auto;
-    grid-template-areas:
-      "navigate"
-      "canvas"
-      "encode"
-      "build";
-    column-gap: 0;
-    row-gap: clamp(14px, 2vh, 22px);
-  }
-  .ilayer__stack__anno--navigate {
-    align-items: center;
-    text-align: center;
-    padding-right: 0;
-  }
-  .ilayer__stack__anno--build {
-    align-items: center;
-    text-align: center;
-    padding-left: 0;
-  }
-  .ilayer__stack__anno--navigate .ilayer__stack__chips,
-  .ilayer__stack__anno--build .ilayer__stack__chips {
-    justify-content: center;
-  }
-  .ilayer__stack__bands {
-    grid-template-columns: minmax(0, 1fr);
-    gap: clamp(8px, 1.2vh, 14px);
-    max-width: 320px;
+    grid-template-rows: clamp(220px, 36vh, 340px);
   }
   .ilayer__brandmark-anchor {
-    width: clamp(140px, 38vw, 200px);
-    height: clamp(140px, 38vw, 200px);
-    top: calc(50% - clamp(90px, 14vh, 140px));
-  }
-}
-@media (max-width: 720px) {
-  .ilayer__stack__chip {
-    padding: 4px 9px;
-    font-size: 10px;
-  }
-  .ilayer__stack__band-name {
-    font-size: 13px;
+    width: clamp(180px, 44vw, 240px);
+    height: clamp(180px, 44vw, 240px);
   }
 }
 
 /* Reduced motion — keep the artifact visible immediately and skip
    the rotate-and-split scroll choreography. The static SVG fallback
    (toggled by the static-fallback hook on data-ilayer-mode) shows
-   the three layers at rest so the meaning still reads. */
+   the three layers at rest so the meaning still reads. The
+   --ilayer-tilt-deg variable is also pinned to 0 so the brandmark
+   never tilts. */
 @media (prefers-reduced-motion: reduce) {
   .ilayer__inner[data-m="instrument"],
   .ilayer__inner[data-m="instrument"].is-in {
     opacity: 1;
     transition: none;
   }
-  .ilayer__stack__anno {
-    opacity: 1;
-    transform: none;
-    transition: none;
-  }
   .ilayer__stack__fallback {
     transition: none;
+  }
+  .ilayer__brandmark-anchor {
+    --ilayer-tilt-deg: 0deg;
   }
   .ilayer__brandmark-anchor img,
   .ilayer__brandmark-anchor svg {
     transition: none;
+    transform: none;
   }
 }
 
