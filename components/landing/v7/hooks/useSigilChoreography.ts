@@ -696,51 +696,46 @@ export function useSigilChoreography(
         // In particle mode the entrance scrub still runs (it owns the
         // halo / orbits / cap / legend reveal), but the
         // `[data-brandmark-mode="particle"]` CSS gate forces the
-        // `.sigil__mark > svg` portal'd glyph to opacity 0 so it can't
-        // double-paint with the particle field. That leaves the entry
-        // band empty unless we ramp the particle field here. Write a
-        // sigil snapshot whose opacity matches the fade-in progress so
-        // the brandmark visibly assembles from particles as the user
-        // scrolls into section 02.
+        // `.sigil__mark > svg` portal'd glyph to opacity 0 by default
+        // so the particle field can paint instead.
+        //
+        // ADR-011 amendment (2026-05-15): hand off to the canonical
+        // SVG glyph during the entrance fade-in band as well, rather
+        // than writing a sigil snapshot with a per-particle opacity
+        // ramp. The original design had particles "assemble" the
+        // mark here, but alpha-blending overlapping particles at
+        // intermediate opacities produces visible stipple — at
+        // density 1.0 + dispersion 0 the cloud should read as the
+        // filled silhouette, but `gl_FragColor.a < 1` makes each
+        // grain individually visible. The diagram's own entrance
+        // scrub (`#definition top 85% → top 35%`) already animates
+        // `.sigil__mark` opacity 0 → 1 smoothly, so flipping the
+        // SVG dock attribute on is enough to render a clean vector
+        // fade-in. Particle motion is now reserved for transit
+        // between stations (where dispersion is the visible story);
+        // within-section entries always use the SVG.
         if (particleModeOK) {
-          const fadeProgress = clamp01((scrollY - fadeStart) / Math.max(1, c[0] - fadeStart));
-          if (fadeProgress <= 0.005) {
-            hideBrandmark();
-            return;
-          }
           const rect = readStationRect(stations[0]);
           if (rect) {
-            const defaults = PARTICLE_STATION_DEFAULTS.sigil;
-            const snap: StationSnapshot = {
-              rect: {
-                left: rect.left,
-                top: rect.top,
-                width: rect.width,
-                height: rect.height,
-              },
-              opacity: easeInOut(fadeProgress),
-              density: defaults.density,
-              dispersion: defaults.dispersion,
-              tint: defaults.tint,
-            };
-            const store = useBrandmarkParticleStore.getState();
-            if (lastParticleStation && lastParticleStation !== "sigil") {
+            setSvgDock("sigil");
+            // Clear any leftover particle station so the field
+            // doesn't double-paint behind the SVG.
+            if (lastParticleStation) {
+              const store = useBrandmarkParticleStore.getState();
               store.setStation(lastParticleStation, null);
+              lastParticleStation = null;
             }
-            store.setStation("sigil", snap);
-            lastParticleStation = "sigil";
-            setParticleBackdropGate(true);
-            // Entrance fade-in always uses particles — the
-            // brandmark should "assemble" from atoms, not pop into
-            // the SVG. Keep the SVG dock cleared so the portal'd
-            // glyph stays at opacity 0 until the journey enters the
-            // sigil park (PARK_FRAC threshold) where parkAt sets
-            // the dock back to "sigil".
-            setSvgDock(null);
-            // Keep the SVG actor hidden + dock attrs clean; particles
-            // are the sole painter through the entrance.
+            setParticleBackdropGate(false);
+            // Actor stays hidden; the entrance scrub owns the
+            // `.sigil__mark` wrapper's opacity through this band.
             actor()?.hide();
-            setSigilVisible(false);
+            // Don't force `setSigilVisible` either way — the GSAP
+            // entrance scrub is scrubbing `.sigil__mark` opacity
+            // 0 → 1 across `#definition top 85% → top 35%`. Setting
+            // it to 1 here would override the scrub and pop the
+            // mark in instantly; setting it to 0 would override the
+            // scrub the other way and hide the mark we want to
+            // show. Leaving it alone lets the scrub own the band.
             setDockAttrs(null);
           } else {
             hideBrandmark();
