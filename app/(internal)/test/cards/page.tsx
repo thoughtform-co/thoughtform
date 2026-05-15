@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { CardFrame } from "@/components/ui/CardFrame";
 import { ParticleCanvasV2 } from "@/components/particles/ParticleCanvasV2";
 import { HUDFrame } from "@/components/hud/HUDFrame";
@@ -259,12 +260,12 @@ function CardLabInner() {
 
       {/* Navigation hint */}
       <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50">
-        <a
+        <Link
           href="/"
           className="font-mono text-2xs uppercase tracking-wide text-dawn-30 hover:text-gold transition-colors"
         >
           ← Back to Home
-        </a>
+        </Link>
       </div>
     </>
   );

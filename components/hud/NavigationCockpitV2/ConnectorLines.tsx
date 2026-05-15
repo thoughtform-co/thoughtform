@@ -7,8 +7,8 @@ interface ConnectorLinesProps {
   scrollProgress: number;
   /** Hero→Definition transition progress (0-1) for timing */
   transitionProgress?: number;
-  cardRefs: React.RefObject<HTMLDivElement>[];
-  sigilParticlesRef: React.MutableRefObject<ParticlePosition[]>;
+  cardRefs: React.RefObject<HTMLDivElement | null>[];
+  sigilParticlesRef: React.RefObject<ParticlePosition[]>;
 }
 
 // Generate angular segmented path from start to end with growth animation
@@ -91,7 +91,7 @@ export function ConnectorLines({
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    let cachedCardPositions: Array<{ x: number; y: number } | null> = [null, null, null];
+    const cachedCardPositions: Array<{ x: number; y: number } | null> = [null, null, null];
     let lastPositionUpdate = 0;
 
     // Track current and next targets for each line (for smooth transitions)

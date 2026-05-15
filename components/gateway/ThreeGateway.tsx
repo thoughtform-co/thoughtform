@@ -1611,12 +1611,7 @@ function LatentSpaceField({
       {linePositions.length > 0 && (
         <lineSegments ref={linesRef}>
           <bufferGeometry attach="geometry">
-            <bufferAttribute
-              attach="attributes-position"
-              count={linePositions.length / 3}
-              array={linePositions}
-              itemSize={3}
-            />
+            <bufferAttribute attach="attributes-position" args={[linePositions, 3]} />
           </bufferGeometry>
           <lineBasicMaterial
             attach="material"

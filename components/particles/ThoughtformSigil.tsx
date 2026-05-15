@@ -25,7 +25,7 @@ interface ThoughtformSigilProps {
   pulseSpeed?: number; // Multiplier for breathing animation (default 1.0)
   returnStrength?: number; // Multiplier for snap-back force (default 1.0)
   // Callback to expose particle positions for external use (e.g., connector lines)
-  onParticlePositions?: React.MutableRefObject<ParticlePosition[]>;
+  onParticlePositions?: React.RefObject<ParticlePosition[]>;
 }
 
 const GRID = 3; // Base unit from Signal System

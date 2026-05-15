@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useRef, useMemo, useEffect, useState } from "react";
-import { useFrame, useThree } from "@react-three/fiber";
+import { useFrame, useThree, type ThreeElement } from "@react-three/fiber";
 import { shaderMaterial } from "@react-three/drei";
 import * as THREE from "three";
 import { extend } from "@react-three/fiber";
@@ -386,33 +386,10 @@ const LayeredParticleMaterial = shaderMaterial(
 // Extend Three.js with our custom material
 extend({ LayeredParticleMaterial });
 
-// Type declaration for custom R3F material
-declare global {
-  namespace JSX {
-    interface IntrinsicElements {
-      layeredParticleMaterial: {
-        ref?: React.Ref<THREE.ShaderMaterial>;
-        uTime?: number;
-        uPrimaryColor?: THREE.Color;
-        uAccentColor?: THREE.Color;
-        uOpacity?: number;
-        uPointSize?: number;
-        uPointer?: THREE.Vector3;
-        uInteractionStrength?: number;
-        uTurbulenceStrength?: number;
-        uLayerOpacity?: THREE.Vector3;
-        uLayerSize?: THREE.Vector3;
-        uLayerColorMode?: THREE.Vector3;
-        uContrastGamma?: THREE.Vector2;
-        uLumaThreshold?: number;
-        uSigilMode?: number;
-        uSigilGridSize?: number;
-        attach?: string;
-        transparent?: boolean;
-        depthWrite?: boolean;
-        blending?: THREE.Blending;
-      };
-    }
+// R3F v9 type declaration for custom material (was JSX.IntrinsicElements in v8)
+declare module "@react-three/fiber" {
+  interface ThreeElements {
+    layeredParticleMaterial: ThreeElement<typeof LayeredParticleMaterial>;
   }
 }
 

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useRef, useMemo, useEffect, useState, useCallback } from "react";
-import { useFrame, useThree } from "@react-three/fiber";
+import { useFrame, useThree, type ThreeElement } from "@react-three/fiber";
 import { Points, shaderMaterial } from "@react-three/drei";
 import * as THREE from "three";
 import { extend } from "@react-three/fiber";
@@ -251,28 +251,10 @@ const KeyVisualParticleMaterial = shaderMaterial(
 // Extend Three.js with our custom material
 extend({ KeyVisualParticleMaterial });
 
-// Type declaration for the custom material
-// Type declaration for custom R3F material
-declare global {
-  namespace JSX {
-    interface IntrinsicElements {
-      keyVisualParticleMaterial: {
-        ref?: React.Ref<THREE.ShaderMaterial>;
-        uTime?: number;
-        uColor?: THREE.Color;
-        uAccentColor?: THREE.Color;
-        uOpacity?: number;
-        uPointSize?: number;
-        uPointer?: THREE.Vector3;
-        uInteractionStrength?: number;
-        uTurbulenceStrength?: number;
-        uUseImageColors?: number;
-        attach?: string;
-        transparent?: boolean;
-        depthWrite?: boolean;
-        blending?: THREE.Blending;
-      };
-    }
+// R3F v9 type declaration for custom material (was JSX.IntrinsicElements in v8)
+declare module "@react-three/fiber" {
+  interface ThreeElements {
+    keyVisualParticleMaterial: ThreeElement<typeof KeyVisualParticleMaterial>;
   }
 }
 

@@ -174,7 +174,7 @@ export async function POST(request: NextRequest) {
               stability_score_thresh: stabilityScoreThresh,
             },
           }
-        )) as any;
+        )) as { individual_masks?: unknown } & Record<string, unknown>;
 
         console.log("Replicate output keys:", Object.keys(output || {}));
 

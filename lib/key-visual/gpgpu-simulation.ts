@@ -199,10 +199,16 @@ export interface GPGPUSimulationUniforms {
   turbulence: number;
 }
 
+// Variable handle returned by `GPUComputationRenderer.addVariable()`.
+// The three.js example file ships its own implicit `Variable` type but
+// does not export it; derive it from the renderer instance to stay in
+// sync with whatever three.js version is installed.
+type GPUComputeVariable = ReturnType<GPUComputationRenderer["addVariable"]>;
+
 export class GPGPUParticleSimulation {
   private gpuCompute: GPUComputationRenderer;
-  private positionVariable: any;
-  private velocityVariable: any;
+  private positionVariable: GPUComputeVariable;
+  private velocityVariable: GPUComputeVariable;
   private textureSize: number;
   private particleCount: number;
 

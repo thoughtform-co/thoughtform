@@ -1,3 +1,4 @@
+import type React from "react";
 import type { TickDensity } from "@/lib/celestial/schema";
 
 interface BearingTicksProps {
@@ -8,7 +9,7 @@ interface BearingTicksProps {
 
 export function BearingTicks({ density, radius = 110, tickLen = 8 }: BearingTicksProps) {
   if (density === 0) return null;
-  const ticks: JSX.Element[] = [];
+  const ticks: React.JSX.Element[] = [];
   const step = 360 / density;
   for (let i = 0; i < density; i++) {
     const angle = i * step;

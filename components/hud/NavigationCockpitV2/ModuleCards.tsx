@@ -12,7 +12,7 @@ interface ModuleCardsProps {
   scrollProgress: number;
   /** Hero→Definition transition progress (0-1) for timing */
   transitionProgress?: number;
-  cardRefs: React.RefObject<HTMLDivElement>[];
+  cardRefs: React.RefObject<HTMLDivElement | null>[];
 }
 
 const MODULE_CARDS_DATA: ModuleCardProps[] = [

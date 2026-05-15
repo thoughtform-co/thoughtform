@@ -326,7 +326,7 @@ export async function initializeHomePage(): Promise<{ page: Page; sections: Sect
   }
 
   // Get existing sections
-  let sections = await getSectionsByPageId(page.id);
+  const sections = await getSectionsByPageId(page.id);
 
   // If no sections, create defaults
   if (sections.length === 0) {
