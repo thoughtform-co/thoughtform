@@ -3325,110 +3325,230 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   color: var(--dawn);
 }
 
-/* ── Triad pills (numbered eyebrows above each orbit) ──────────────
-   Three small mono pills, one per orbit. Positioned absolutely at
-   the top of each orbit's column. Reveal cascades via the per-pill
-   modifier thresholds keyed on --ilayer-progress. Aether's
-   `aiop-phase-pill` row translated to Thoughtform's HUD register —
-   PT Mono, gold accent on the numeral, dawn on the label. */
-.ilayer__triad__pills-dom {
-  position: absolute;
-  top: clamp(220px, 28vh, 320px);
-  left: 0;
-  right: 0;
-  z-index: 5;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  pointer-events: none;
-}
-.ilayer__triad__pill {
-  position: absolute;
-  top: 0;
-  display: inline-flex;
-  align-items: baseline;
-  gap: 10px;
-  padding: 6px 14px;
-  border: 1px solid var(--gold-30, rgba(202, 165, 84, 0.3));
-  border-radius: 999px;
-  background: rgba(10, 9, 8, 0.55);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  font-family: var(--font-pt-mono);
-  font-size: 10px;
-  letter-spacing: var(--track-widest);
-  text-transform: uppercase;
-  color: var(--dawn);
-  white-space: nowrap;
-  transform: translateX(-50%);
-  opacity: 0;
-  transition: opacity 320ms ease-out;
-}
-.ilayer__triad__pill-n {
-  color: var(--gold);
-  font-variant-numeric: tabular-nums;
-}
-.ilayer__triad__pill-label {
-  color: var(--dawn);
-}
-.ilayer__triad__pill--left {
-  left: 22%;
-  opacity: clamp(0, calc((var(--ilayer-progress, 0) - 0.2) * 6), 1);
-}
-.ilayer__triad__pill--mid {
-  left: 50%;
-  border-color: var(--gold, #caa554);
-  background: rgba(10, 9, 8, 0.7);
-  box-shadow: 0 0 24px rgba(202, 165, 84, 0.12);
-  opacity: clamp(0, calc((var(--ilayer-progress, 0) - 0.14) * 6), 1);
-}
-.ilayer__triad__pill--right {
-  left: 78%;
-  opacity: clamp(0, calc((var(--ilayer-progress, 0) - 0.2) * 6), 1);
+/* ── Chambers — content blocks rendered INSIDE each orbit ──────────
+   ADR-014 follow-up. All three pillars carry equal visual weight by
+   placing every pillar's content INSIDE its circle. The chambers
+   anchor on the same horizontal centres as the R3F orbits — the
+   substrate orbit centre sits at scene x=0 and the side orbits at
+   ±0.92 scene units, which projects to ±49.8% of the canvas height
+   in CSS pixels at the front-on camera framing. The shared
+   `--orbit-offset` var is consumed by left/right chambers and is
+   bounded by `clamp` so the chambers stay inside the section at
+   tall and short viewports.
+
+   Layout per chamber:
+     - .ilayer__chamber__head : numeric eyebrow + pillar title
+     - .ilayer__chamber__sub  : single-sentence framing line
+     - items                  : either a pip-led list (sources / surfaces)
+                                or a top/bottom split (substrate)
+
+   Reveal cascades via per-item `--reveal` thresholds keyed off the
+   section's `--ilayer-progress` CSS variable (mirrored from the
+   journey transform's `ringProgress` channel). */
+.ilayer__inner {
+  /* Horizontal projection of the side orbits' centres in CSS px.
+     Matches `LEFT_ORBIT.homeCentre.x` / `RIGHT_ORBIT.homeCentre.x` of
+     ±0.781 scene units at the R3F front-on framing
+     (0.781 / 1.846 ≈ 0.423 → 42.3vh). Bounded so the content stays
+     comfortably inside the section on tall, narrow and ultrawide
+     viewports. The same offset is consumed by the static-fallback
+     mode where the SVG side circles project to the same vh-relative
+     coordinate (cx = ±220 in viewBox 1000 × 520, meet-fit). */
+  --orbit-offset: clamp(220px, 42.3vh, 460px);
 }
 
-/* ── Substrate inner content ───────────────────────────────────────
-   Prose line + 3 chip row, centered horizontally inside the
-   substrate ring. Sits BELOW the brandmark cloud (which occupies
-   the top of the substrate ring); the chip row reads as the
-   substrate's tags / signatures. Revealed once the substrate cloud
-   has morphed to its ring topology (--ilayer-progress > 0.30). */
-.ilayer__substrate-inner {
+.ilayer__chamber {
   position: absolute;
   top: 50%;
   left: 50%;
-  transform: translate(-50%, calc(-50% + clamp(120px, 14vh, 180px)));
   z-index: 5;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 14px;
-  width: min(420px, 32vw);
+  justify-content: center;
+  gap: clamp(8px, 1.2vh, 14px);
+  width: clamp(190px, 22vw, 270px);
   pointer-events: none;
   text-align: center;
-  opacity: clamp(0, calc((var(--ilayer-progress, 0) - 0.3) * 5), 1);
+  transform: translate(-50%, -50%);
+}
+
+.ilayer__chamber--left {
+  left: calc(50% - var(--orbit-offset));
+}
+
+.ilayer__chamber--right {
+  left: calc(50% + var(--orbit-offset));
+}
+
+/* Mid chamber spans head-to-feet of the substrate orbit so the
+   eyebrow sits at the top of the ring, the brandmark cloud paints
+   visually centred (via .ilayer__brandmark-anchor at the same x/y),
+   and the rule rows + chips occupy the bottom of the ring. */
+.ilayer__chamber--mid {
+  width: clamp(240px, 30vw, 360px);
+  height: clamp(360px, 64vh, 540px);
+  justify-content: space-between;
+  gap: 0;
+}
+
+.ilayer__chamber__top,
+.ilayer__chamber__bottom {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(6px, 0.9vh, 12px);
+  width: 100%;
+}
+
+/* Eyebrow stack — number above title, centered. The number is mono
+   gold; the title is a slim sans-serif dawn label. */
+.ilayer__chamber__head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  opacity: clamp(0, calc((var(--ilayer-progress, 0) - 0.18) * 6), 1);
   transition: opacity 320ms ease-out;
 }
-.ilayer__substrate-prose {
-  margin: 0;
-  font-family: var(--font-pp-neue-montreal);
-  font-size: clamp(12px, 0.92vw, 14px);
-  line-height: 1.55;
-  color: var(--dawn-70);
-  text-wrap: pretty;
+.ilayer__chamber__num {
+  font-family: var(--font-pt-mono);
+  font-size: 10px;
+  letter-spacing: var(--track-widest);
+  text-transform: uppercase;
+  color: var(--gold);
+  font-variant-numeric: tabular-nums;
 }
-.ilayer__substrate-prose em {
-  font-style: italic;
+.ilayer__chamber__title {
+  margin: 0;
+  font-family: var(--font-pt-mono);
+  font-size: clamp(11px, 0.9vw, 13px);
+  font-weight: 400;
+  letter-spacing: var(--track-widest);
+  text-transform: uppercase;
   color: var(--dawn);
 }
+.ilayer__chamber__head--mid .ilayer__chamber__num {
+  color: var(--gold);
+}
+.ilayer__chamber__head--mid .ilayer__chamber__title {
+  color: var(--gold);
+}
+
+.ilayer__chamber__sub {
+  margin: 0;
+  font-family: var(--font-pp-neue-montreal);
+  font-size: clamp(11px, 0.85vw, 13px);
+  line-height: 1.45;
+  color: var(--dawn-70);
+  max-width: 28ch;
+  text-wrap: pretty;
+  opacity: clamp(0, calc((var(--ilayer-progress, 0) - 0.22) * 6), 1);
+  transition: opacity 320ms ease-out;
+}
+
+/* Pip-led item lists for the side chambers. */
+.ilayer__chamber__items {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(5px, 0.7vh, 9px);
+  width: 100%;
+  align-items: stretch;
+}
+.ilayer__chamber__items--grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(5px, 0.7vh, 9px) clamp(8px, 1vw, 14px);
+}
+.ilayer__chamber__item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-pt-mono);
+  font-size: clamp(10px, 0.78vw, 11px);
+  letter-spacing: var(--track-wide, 0.06em);
+  text-transform: uppercase;
+  color: var(--dawn);
+  text-align: left;
+  white-space: nowrap;
+  opacity: clamp(0, calc((var(--ilayer-progress, 0) - var(--reveal, 0.3)) * 5), 1);
+  transition: opacity 360ms ease-out;
+}
+/* Right-chamber items align from the left edge of each grid cell so
+   the pip → label rhythm reads consistently across columns. */
+.ilayer__chamber--right .ilayer__chamber__item {
+  justify-content: flex-start;
+}
+.ilayer__chamber__pip {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  flex-shrink: 0;
+  background: var(--gold);
+  transform: rotate(45deg);
+  box-shadow: 0 0 8px rgba(202, 165, 84, 0.4);
+}
+.ilayer__chamber__label {
+  display: inline-block;
+}
+
+/* ── Substrate-specific elements (rule rows + chips, mid chamber) ─
+   Two-column rule rows: a small mono key on the left, a sans-serif
+   value on the right. Dashed top borders give them an instrument-
+   readout feel that complements the brandmark ring above. */
+.ilayer__substrate__rules {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+.ilayer__substrate__rules li {
+  display: grid;
+  grid-template-columns: clamp(60px, 7vw, 84px) 1fr;
+  align-items: baseline;
+  gap: clamp(8px, 1vw, 14px);
+  padding: 6px 4px;
+  border-top: 1px dashed rgba(235, 227, 214, 0.16);
+  text-align: left;
+  opacity: clamp(0, calc((var(--ilayer-progress, 0) - var(--reveal, 0.36)) * 5), 1);
+  transition: opacity 360ms ease-out;
+}
+.ilayer__substrate__rules li:last-child {
+  border-bottom: 1px dashed rgba(235, 227, 214, 0.16);
+}
+.ilayer__substrate__key {
+  font-family: var(--font-pt-mono);
+  font-size: 10px;
+  letter-spacing: var(--track-widest);
+  text-transform: uppercase;
+  color: var(--gold);
+  font-variant-numeric: tabular-nums;
+}
+.ilayer__substrate__val {
+  font-family: var(--font-pp-neue-montreal);
+  font-size: clamp(11px, 0.86vw, 13px);
+  line-height: 1.35;
+  color: var(--dawn);
+  text-transform: none;
+  letter-spacing: -0.005em;
+}
+
 .ilayer__substrate-chips {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
   gap: 8px;
-  margin: 0;
+  margin: 10px 0 0;
   padding: 0;
   list-style: none;
+  opacity: clamp(0, calc((var(--ilayer-progress, 0) - 0.5) * 5), 1);
+  transition: opacity 320ms ease-out;
 }
 .ilayer__substrate-chips li {
   padding: 4px 10px;
@@ -3440,91 +3560,6 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   text-transform: uppercase;
   color: var(--dawn-70);
   background: rgba(10, 9, 8, 0.35);
-}
-
-/* ── Orbit labels (diamond-pipped items along each side orbit) ─────
-   Each label sits on the OUTER arc of its orbit at an --angle
-   (degrees, 0 = top, clockwise — same convention as the R3F pip
-   table). The pip is a small diamond on the orbit line; the label
-   trails outward into negative space via a flex row.
-
-   Layout math: orbit center is positioned at ~22% / 78% of viewport
-   width; orbit radius is ~clamp(140px, 18vw, 200px). The label is
-   placed via trig on --angle:
-     left = orbitCx + sin(angle) * radius
-     top  = orbitCy - cos(angle) * radius
-   Using CSS calc + a separate --orbit-cx / --orbit-cy / --orbit-r
-   per side. */
-.ilayer__orbit-labels {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  pointer-events: none;
-  z-index: 4;
-  /* Side orbit radius and center offset in CSS units. The orbit
-     centre sits horizontally offset from viewport center; vertical
-     centre is the section's mid-y. */
-  --orbit-r: clamp(150px, 18vw, 220px);
-  --orbit-cx: 0px;
-  --orbit-cy: 0px;
-  width: 0;
-  height: 0;
-}
-.ilayer__orbit-labels--left {
-  --orbit-cx: clamp(-360px, -28vw, -240px);
-}
-.ilayer__orbit-labels--right {
-  --orbit-cx: clamp(240px, 28vw, 360px);
-}
-.ilayer__orbit-label {
-  position: absolute;
-  /* --angle is set inline on each li (degrees, 0 = top, clockwise).
-     We compute the polar offset from the orbit's centre. */
-  top: calc(var(--orbit-cy) - cos(var(--angle)) * var(--orbit-r));
-  left: calc(var(--orbit-cx) + sin(var(--angle)) * var(--orbit-r));
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  transform: translateY(-50%);
-  white-space: nowrap;
-  opacity: 0;
-  transition: opacity 360ms ease-out;
-  /* Per-label reveal threshold via inline --reveal. Cascade fires
-     when --ilayer-progress crosses --reveal. */
-  opacity: clamp(0, calc((var(--ilayer-progress, 0) - var(--reveal, 0.3)) * 5), 1);
-}
-/* Left orbit labels trail RIGHT-to-LEFT — pip first then text on
-   the left so the label reads outward into the left margin. */
-.ilayer__orbit-labels--left .ilayer__orbit-label {
-  flex-direction: row-reverse;
-  transform: translate(-100%, -50%);
-}
-/* Right orbit labels trail LEFT-to-RIGHT — pip first then text on
-   the right so the label reads outward into the right margin. */
-.ilayer__orbit-labels--right .ilayer__orbit-label {
-  transform: translate(0, -50%);
-}
-.ilayer__orbit-label__pip {
-  display: inline-block;
-  width: 6px;
-  height: 6px;
-  flex-shrink: 0;
-  background: var(--gold);
-  /* Diamond — rotated square. No fill change, no fade. */
-  transform: rotate(45deg);
-  box-shadow: 0 0 8px rgba(202, 165, 84, 0.4);
-}
-.ilayer__orbit-label__text {
-  font-family: var(--font-pt-mono);
-  font-size: 11px;
-  letter-spacing: var(--track-wide, 0.06em);
-  text-transform: uppercase;
-  color: var(--dawn);
-  padding: 4px 0;
 }
 
 /* ── Ringfield artifact (ADR-012 v5) ───────────────────────────────
@@ -3590,8 +3625,11 @@ html[data-quote-active="true"] .tf-brandmark-actor {
 .ilayer__stack[data-ilayer-mode="r3f"] .ilayer__triad__fallback {
   display: none;
 }
-/* Triad fallback circles — hairline, fill="none". Substrate is the
-   gold signal; side orbits are dawn-deep guides. */
+/* Triad fallback circles — hairline, fill="none". All three rings
+   carry comparable contrast so the pillars read as equal stations:
+   side orbits get gold hairlines + concentric inner halos, the
+   substrate gets a slightly thicker gold guide framing the brandmark
+   cloud's perimeter. */
 .ilayer__triad__orbit {
   fill: none;
   stroke-width: 1;
@@ -3599,17 +3637,35 @@ html[data-quote-active="true"] .tf-brandmark-actor {
 }
 .ilayer__triad__orbit--left,
 .ilayer__triad__orbit--right {
-  stroke: var(--gold-40, rgba(202, 165, 84, 0.4));
-  opacity: 0.7;
+  stroke: var(--gold);
+  opacity: 0.6;
 }
 .ilayer__triad__orbit--mid {
   stroke: var(--gold);
   stroke-width: 1.3;
   opacity: 0.85;
 }
+/* Inner halo rings — second concentric per orbit. Lower contrast so
+   they read as instrument detail rather than primary geometry. */
+.ilayer__triad__halo {
+  fill: none;
+  stroke: var(--dawn-40, rgba(235, 227, 214, 0.3));
+  stroke-width: 1;
+  stroke-dasharray: 2 4;
+  vector-effect: non-scaling-stroke;
+  opacity: 0.45;
+}
+.ilayer__triad__halo--mid {
+  stroke: var(--gold-30, rgba(202, 165, 84, 0.3));
+  opacity: 0.55;
+}
 .ilayer__triad__pips polygon {
   fill: var(--gold);
   opacity: 0.85;
+}
+.ilayer__triad__pips--mid polygon {
+  fill: var(--gold);
+  opacity: 0.95;
 }
 
 /* ── Brandmark substrate dock anchor (ADR-012 v5) ──────────────────
@@ -3687,82 +3743,95 @@ html[data-quote-active="true"] .tf-brandmark-actor {
 }
 
 /* Mobile / tablet — section grows from 100vh to auto so title +
-   pills + orbit labels still fit. Side orbit labels collapse to a
-   stacked column below the substrate so they remain legible at
-   narrow widths. */
+   chambers stack in a single column. The orbital triad collapses
+   into individual chamber cards beneath the artifact area; each
+   chamber keeps the same eyebrow + sub + items rhythm but reads as
+   a vertical card stack rather than three overlapping circles. */
 @media (max-width: 960px) {
   .ilayer {
     height: auto;
     min-height: 100vh;
     padding-top: 100px;
-    padding-bottom: 64px;
+    padding-bottom: 72px;
   }
-  .ilayer__head {
-    top: clamp(60px, 8vh, 100px);
-  }
-  .ilayer__triad__pills-dom {
-    /* On mobile, pills sit just below the title and read as a
-       horizontal row centred above the artifact. */
-    top: clamp(180px, 22vh, 240px);
-    display: flex;
-    justify-content: center;
-    gap: 8px;
-  }
-  .ilayer__triad__pill {
-    position: static;
-    transform: none;
-  }
-  .ilayer__triad__pill--left,
-  .ilayer__triad__pill--mid,
-  .ilayer__triad__pill--right {
-    left: auto;
-  }
-  .ilayer__orbit-labels {
-    /* Stack as a flex column directly below the substrate ring
-       rather than wrapping around invisible orbits. */
-    position: absolute;
-    top: auto;
-    bottom: clamp(80px, 12vh, 140px);
-    left: 50%;
-    transform: translateX(-50%);
+  .ilayer__inner {
+    /* Switch off the absolute stage so chambers can stack in
+       natural document flow below the artifact. */
+    position: relative;
+    inset: auto;
     display: flex;
     flex-direction: column;
-    gap: 10px;
-    width: min(280px, 70vw);
-    --orbit-r: 0px;
-    --orbit-cx: 0px;
-    --orbit-cy: 0px;
+    align-items: center;
+    gap: clamp(16px, 3vh, 28px);
+    padding: clamp(140px, 18vh, 200px) clamp(16px, 4vw, 32px) 0;
   }
-  .ilayer__orbit-labels--left {
-    bottom: clamp(180px, 26vh, 260px);
-  }
-  .ilayer__orbit-label {
-    position: static;
-    transform: none !important;
-    flex-direction: row !important;
-    justify-content: flex-start;
-  }
-  .ilayer__substrate-inner {
-    transform: translate(-50%, calc(-50% + clamp(80px, 10vh, 120px)));
-    width: min(320px, 76vw);
+  .ilayer__head {
+    position: relative;
+    top: auto;
+    left: auto;
+    transform: none;
+    margin: 0 auto;
+    width: 100%;
   }
   .ilayer__artifact {
-    height: clamp(260px, 38svh, 380px);
+    /* Mobile drops the full orbital scene — the stacked chamber
+       cards below carry the three-pillar message clearly without
+       a decorative triad on top. The artifact stays in the DOM so
+       the R3F canvas mount slot still exists (the IntelligenceLayer
+       portal expects [data-ilayer-stack-root]); we just hide its
+       visual output to avoid overlap with the chamber cards. */
+    position: relative;
+    inset: auto;
+    width: 0;
+    height: 0;
+    margin: 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
+  .ilayer__chamber {
+    position: relative;
+    top: auto;
+    left: auto;
+    transform: none;
+    width: min(420px, 90vw);
+    height: auto;
+    padding: clamp(14px, 2.4vh, 22px) clamp(16px, 4vw, 24px);
+    margin: 0 auto;
+    border: 1px solid rgba(235, 227, 214, 0.16);
+    border-radius: 10px;
+    background: rgba(10, 9, 8, 0.42);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+  .ilayer__chamber--mid {
+    /* No fixed tall height on mobile — let content size the card. */
+    width: min(420px, 90vw);
+    height: auto;
+    justify-content: flex-start;
+    gap: clamp(10px, 1.6vh, 16px);
   }
   .ilayer__brandmark-anchor {
-    /* Mobile fallback before JS sizing — slightly smaller default. */
-    width: clamp(180px, 44vw, 240px);
-    height: clamp(180px, 44vw, 240px);
-    top: clamp(140px, 18vh, 200px);
+    /* Mobile collapses the dock to a 1×1 anchor near the head of
+       the section. The brandmark journey hook still finds it via
+       getElementById and getBoundingClientRect (so the cloud has
+       a valid rect for the painter), but the visual is suppressed
+       to keep the chamber cards uncluttered. */
+    position: absolute;
+    top: clamp(120px, 14vh, 160px);
+    left: 50%;
+    transform: translateX(-50%);
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    opacity: 0;
   }
 }
 
 /* Reduced motion — keep the artifact visible immediately and skip
    the scroll-driven orbit emerge. The static SVG fallback (three
-   overlapping circles + pips) shows the triad at rest so the
-   meaning still reads. The brandmark dock stays visible (R3F is
-   not mounted in static-fallback mode, so the painter's shape
-   blend stays at 0 and the SVG glyph paints in full-mark form). */
+   overlapping circles + pips + inner halos) shows the triad at rest
+   so the meaning still reads. All chamber content shows at full
+   opacity so each pillar's items are immediately legible. */
 @media (prefers-reduced-motion: reduce) {
   .ilayer__inner[data-m="instrument"],
   .ilayer__inner[data-m="instrument"].is-in {
@@ -3780,10 +3849,13 @@ html[data-quote-active="true"] .tf-brandmark-actor {
        fallback path) — the global particle painter is not running. */
     opacity: 1;
   }
-  .ilayer__triad__pill,
-  .ilayer__orbit-label,
-  .ilayer__substrate-inner {
-    /* Show all labels at rest. */
+  .ilayer__chamber,
+  .ilayer__chamber__head,
+  .ilayer__chamber__sub,
+  .ilayer__chamber__item,
+  .ilayer__substrate__rules li,
+  .ilayer__substrate-chips {
+    /* Show all chamber content at rest. */
     opacity: 1;
     transition: none;
   }

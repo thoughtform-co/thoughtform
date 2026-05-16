@@ -53,6 +53,7 @@ import { useBrandmarkJourneyStore } from "@/lib/stores/brandmarkJourneyStore";
 interface SideOrbitHandles {
   group: THREE.Group;
   ring: THREE.LineLoop;
+  halo: THREE.LineLoop;
   pipGroup: THREE.Group;
 }
 
@@ -79,10 +80,13 @@ function buildDiamondGeometry(size: number): THREE.BufferGeometry {
   return geom;
 }
 
-/** Construct one side orbit (left or right) — its hairline ring + a
- *  group of decorative diamond pips at `pipAngles`. Both children sit
- *  inside the orbit's parent group so a single transform on the
- *  parent drives the emerge slide + scale. */
+/** Construct one side orbit (left or right) — its primary hairline
+ *  ring, a concentric inner halo (60% radius, dashed/lower-contrast),
+ *  and a group of cardinal diamond pips at `pipAngles`. All children
+ *  sit inside the orbit's parent group so a single transform on the
+ *  parent drives the emerge slide + scale. The inner halo gives each
+ *  side orbit comparable visual density to the substrate's brandmark
+ *  cloud so the three pillars read as equal stations. */
 function buildSideOrbit(orbit: SideOrbit): SideOrbitHandles {
   const group = new THREE.Group();
   group.name = `orbit-${orbit.id}`;
@@ -91,6 +95,7 @@ function buildSideOrbit(orbit: SideOrbit): SideOrbitHandles {
   group.position.set(0, 0, 0);
   group.scale.setScalar(0);
 
+  // Primary outer ring — gold hairline at full signal weight.
   const ringMaterial = new THREE.LineBasicMaterial({
     color: orbit.color,
     transparent: true,
@@ -100,15 +105,28 @@ function buildSideOrbit(orbit: SideOrbit): SideOrbitHandles {
   const ring = new THREE.LineLoop(buildRingGeometry(orbit.radius), ringMaterial);
   group.add(ring);
 
-  // Decorative pips. `pipAngles` are degrees, 0 = top of orbit,
+  // Inner halo — concentric dashed-feel hairline at 60% radius.
+  // Lower-contrast (dawn) so it reads as instrument detail, not a
+  // second primary station. Adds celestial density without competing
+  // with the outer ring or the substrate cloud.
+  const haloMaterial = new THREE.LineBasicMaterial({
+    color: "#a99e8a", // --gold-soft / dawn-deep
+    transparent: true,
+    opacity: 0.4,
+    depthWrite: false,
+  });
+  const halo = new THREE.LineLoop(buildRingGeometry(orbit.radius * 0.6), haloMaterial);
+  group.add(halo);
+
+  // Cardinal pips. `pipAngles` are degrees, 0 = top of orbit,
   // clockwise. Convert to standard polar (0 = right, ccw) by
   // `θ_radians = π/2 - degrees * π/180`.
   const pipGroup = new THREE.Group();
   const pipGeometry = buildDiamondGeometry(DIAMOND_SIZE);
   const pipMaterial = new THREE.LineBasicMaterial({
-    color: "#caa554", // --gold — pips signal label anchor points
+    color: "#caa554", // --gold — pips signal cardinal bearings
     transparent: true,
-    opacity: 0.85,
+    opacity: 0.9,
     depthWrite: false,
   });
   for (const angleDeg of orbit.pipAngles) {
@@ -119,18 +137,26 @@ function buildSideOrbit(orbit: SideOrbit): SideOrbitHandles {
   }
   group.add(pipGroup);
 
-  return { group, ring, pipGroup };
+  return { group, ring, halo, pipGroup };
 }
 
-/** Build the substrate guide ring + inner halo. The substrate ring
- *  itself is a faint hairline that frames the brandmark cloud (drawn
- *  by the global painter at the same screen pixels). The halo is a
- *  smaller hairline circle that breathes via autonomous Z spin. */
-function buildSubstrateGuide(): { ring: THREE.LineLoop; halo: THREE.Group } {
+/** Build the substrate guide ring + inner halo + cardinal pips.
+ *  The substrate ring frames the brandmark cloud (which paints at
+ *  smaller screen pixels via the global painter). The halo is a
+ *  concentric hairline that breathes via slow autonomous Z spin.
+ *  Cardinal pips at top/bottom anchor the substrate's read direction
+ *  so it reads as a navigated station, not just an open ring. */
+function buildSubstrateGuide(): {
+  ring: THREE.LineLoop;
+  halo: THREE.Group;
+  pipGroup: THREE.Group;
+} {
+  // Primary substrate ring — gold hairline at signal weight equal to
+  // the side orbits so the three pillars read as balanced stations.
   const ringMaterial = new THREE.LineBasicMaterial({
-    color: "#caa554", // --gold — substrate is signal
+    color: "#caa554", // --gold
     transparent: true,
-    opacity: 0.18,
+    opacity: 0.55,
     depthWrite: false,
   });
   const ring = new THREE.LineLoop(buildRingGeometry(SUBSTRATE_RING.radius), ringMaterial);
@@ -143,15 +169,41 @@ function buildSubstrateGuide(): { ring: THREE.LineLoop; halo: THREE.Group } {
   const halo = new THREE.Group();
   halo.scale.setScalar(0);
   const haloMaterial = new THREE.LineBasicMaterial({
-    color: "#a99e8a",
+    color: "#caa554",
     transparent: true,
-    opacity: 0.35,
+    opacity: 0.32,
     depthWrite: false,
   });
   const haloRing = new THREE.LineLoop(buildRingGeometry(SUBSTRATE_RING.radius * 0.6), haloMaterial);
   halo.add(haloRing);
 
-  return { ring, halo };
+  // Cardinal pips at the substrate's top + bottom — the meridian
+  // anchors of the central station. Match the cardinal pip rhythm
+  // on the side orbits so all three pillars share the same bearing
+  // grammar. The horizontal cardinals are intentionally omitted so
+  // the substrate's left/right intersections with the side orbits
+  // stay clean.
+  const pipGroup = new THREE.Group();
+  pipGroup.scale.setScalar(0);
+  const pipGeometry = buildDiamondGeometry(DIAMOND_SIZE * 1.15);
+  const pipMaterial = new THREE.LineBasicMaterial({
+    color: "#caa554",
+    transparent: true,
+    opacity: 0.95,
+    depthWrite: false,
+  });
+  for (const angleDeg of [0, 180]) {
+    const t = Math.PI / 2 - (angleDeg * Math.PI) / 180;
+    const pip = new THREE.LineLoop(pipGeometry, pipMaterial);
+    pip.position.set(
+      Math.cos(t) * SUBSTRATE_RING.radius,
+      Math.sin(t) * SUBSTRATE_RING.radius,
+      0
+    );
+    pipGroup.add(pip);
+  }
+
+  return { ring, halo, pipGroup };
 }
 
 /**
@@ -159,10 +211,15 @@ function buildSubstrateGuide(): { ring: THREE.LineLoop; halo: THREE.Group } {
  * two side orbits + the per-frame envelope writer.
  */
 export function OrbitField() {
-  const { sideOrbits, substrateRing, substrateHalo } = useMemo(() => {
+  const { sideOrbits, substrateRing, substrateHalo, substratePips } = useMemo(() => {
     const sideOrbits = SIDE_ORBITS.map(buildSideOrbit);
-    const { ring, halo } = buildSubstrateGuide();
-    return { sideOrbits, substrateRing: ring, substrateHalo: halo };
+    const { ring, halo, pipGroup } = buildSubstrateGuide();
+    return {
+      sideOrbits,
+      substrateRing: ring,
+      substrateHalo: halo,
+      substratePips: pipGroup,
+    };
   }, []);
 
   // Spin target for the substrate halo's autonomous breath.
@@ -183,6 +240,7 @@ export function OrbitField() {
       }
       if (substrateRing.visible) substrateRing.visible = false;
       if (substrateHalo.visible) substrateHalo.visible = false;
+      if (substratePips.visible) substratePips.visible = false;
       return;
     }
     for (const handles of sideOrbits) {
@@ -190,6 +248,7 @@ export function OrbitField() {
     }
     if (!substrateRing.visible) substrateRing.visible = true;
     if (!substrateHalo.visible) substrateHalo.visible = true;
+    if (!substratePips.visible) substratePips.visible = true;
 
     const emerge = orbitEmerge(progress);
 
@@ -208,12 +267,13 @@ export function OrbitField() {
       handles.group.scale.setScalar(emerge);
     }
 
-    // === Substrate ring + halo — geometric emerge (no slide) ===
+    // === Substrate ring + halo + pips — geometric emerge (no slide) ===
     // The substrate stays at origin; it just scales 0 → 1 so the
-    // hairline guide and inner halo appear in sync with the side
-    // orbits.
+    // hairline guide, inner halo, and meridian pips appear in sync
+    // with the side orbits.
     substrateRing.scale.setScalar(emerge);
     substrateHalo.scale.setScalar(emerge);
+    substratePips.scale.setScalar(emerge);
 
     // Halo autonomous spin — slow Z rotation independent of scroll.
     if (haloRef.current) {
@@ -227,6 +287,8 @@ export function OrbitField() {
       for (const handles of sideOrbits) {
         handles.ring.geometry.dispose();
         (handles.ring.material as THREE.Material).dispose();
+        handles.halo.geometry.dispose();
+        (handles.halo.material as THREE.Material).dispose();
         handles.pipGroup.children.forEach((child) => {
           const m = child as THREE.LineLoop;
           m.geometry.dispose();
@@ -243,24 +305,33 @@ export function OrbitField() {
         m.geometry.dispose();
         (m.material as THREE.Material).dispose();
       });
+      substratePips.children.forEach((child) => {
+        const m = child as THREE.LineLoop;
+        m.geometry.dispose();
+      });
+      const firstSubstratePip = substratePips.children[0] as THREE.LineLoop | undefined;
+      if (firstSubstratePip) (firstSubstratePip.material as THREE.Material).dispose();
     };
-  }, [sideOrbits, substrateRing, substrateHalo]);
+  }, [sideOrbits, substrateRing, substrateHalo, substratePips]);
 
   return (
     <>
-      {/* Substrate guide ring — faint hairline framing the brandmark
-          cloud's perimeter. The cloud itself paints in the same
-          screen pixels (via the global painter, in ring topology),
-          so the guide reads as a precise rim around the morphed
-          mark. */}
+      {/* Substrate guide ring — gold hairline framing the brandmark
+          cloud's perimeter. Equal in signal to the side orbits so
+          the three pillars read as balanced stations. */}
       <primitive object={substrateRing} />
 
       {/* Substrate halo — single inner hairline that breathes via
           slow Z spin (Section 02 sigil grammar). */}
       <primitive object={substrateHalo} ref={haloRef} />
 
+      {/* Substrate meridian pips — top + bottom cardinal diamonds. */}
+      <primitive object={substratePips} />
+
       {/* Side orbits — emerge from substrate centre by sliding to
-          their home centres and scaling up in parallel. */}
+          their home centres and scaling up in parallel. Each side
+          orbit carries its own primary ring + inner halo + cardinal
+          pips (built inside `buildSideOrbit`). */}
       {sideOrbits.map((handles) => (
         <primitive key={handles.group.name} object={handles.group} />
       ))}

@@ -4609,29 +4609,31 @@ html { scroll-behavior: smooth; }
   <section class="station station--centered ilayer ilayer--triad" id="intelligence-layer" data-station="intelligenceLayer" data-screen-label="04 Intelligence layer">
     <div class="station__idx">Intelligence layer<span class="landmark">Landmark · the encoded substrate</span></div>
 
-    <!-- Orbital triad (ADR-014) — Destiny / Astral Frontier style
-         space-map composition. Three coplanar, front-on circles:
-           [ 01 left orbit · sources ]
-           [ 02 substrate · brandmark morphed to ring ]
-           [ 03 right orbit · surfaces ]
+    <!-- Orbital triad (ADR-014, refreshed) — Destiny / Astral Frontier
+         space-map composition. Three coplanar, front-on circles, each
+         carrying its own pillar with content rendered INSIDE the orbit:
+
+           [ 01 trusted sources ]   [ 02 encoded substrate ]   [ 03 headless surfaces ]
 
          The brandmark cloud literally BECOMES the middle ring during
          the substrate-engagement window (uShapeBlend ramp in the
          painter shader). Side orbits emerge from substrate centre by
-         sliding outward + scaling up in parallel. Labels integrate
-         along each orbit's outer arc via diamond pips at canonical
-         angles.
+         sliding outward + scaling up in parallel.
+
+         All three pillars are now equally outspoken: each side circle
+         carries its own eyebrow + sub + pip-led item list inside the
+         orbit, mirroring the substrate's chamber. The middle chamber
+         carries eyebrow at top, brandmark cloud at center, rule rows
+         + chips at bottom — keeping the cloud as the focal artwork
+         while the encoded substrate's structure reads as content.
 
          Layout regions inside .ilayer__inner are absolute-positioned
          siblings:
            - .ilayer__head            — top-center, title + lede
            - .ilayer__triad           — R3F canvas + static fallback
-           - .ilayer__triad__pills    — three numbered eyebrow pills
-                                        at the top of each orbit
-           - .ilayer__substrate-inner — prose + 3 chips, centered
-                                        inside the substrate ring
-           - .ilayer__orbit-labels    — diamond-pipped labels along
-                                        each side orbit's outer arc
+           - .ilayer__chamber--left   — trusted-sources content, inside left orbit
+           - .ilayer__chamber--mid    — encoded-substrate content, inside mid orbit
+           - .ilayer__chamber--right  — headless-surfaces content, inside right orbit
            - .ilayer__brandmark-anchor — substrate dock; the global
                                          painter docks the brandmark
                                          cloud here and the shape-
@@ -4643,8 +4645,8 @@ html { scroll-behavior: smooth; }
          2. Reveal motion lives on .ilayer__inner; the wrapper carries
             no data-m / opacity transitions (Rule 2 of
             landing-v7-compositing).
-         3. The R3F canvas paints under the labels but above the void
-            shield; labels and brandmark sit on top via z-index. -->
+         3. The R3F canvas paints under the chambers but above the void
+            shield; chambers and brandmark sit on top via z-index. -->
     <div class="ilayer__inner" data-m="instrument">
 
       <header class="ilayer__head">
@@ -4670,104 +4672,160 @@ html { scroll-behavior: smooth; }
         <div class="ilayer__triad__canvas ilayer__stack__canvas" data-ilayer-stack-root aria-hidden="true"></div>
 
         <!-- Static fallback — three OVERLAPPING circles (sources / substrate /
-             surfaces). Used when WebGL is unavailable or
-             prefers-reduced-motion is set. Hidden whenever the R3F
-             canvas is active (data-ilayer-mode="r3f" on .ilayer__stack). -->
+             surfaces) with inner halo guides matching the R3F scene.
+             Used when WebGL is unavailable or prefers-reduced-motion is
+             set. Hidden whenever the R3F canvas is active
+             (data-ilayer-mode="r3f" on .ilayer__stack). -->
         <svg class="ilayer__triad__fallback ilayer__stack__fallback" viewBox="-500 -260 1000 520" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+          <!-- Outer rings — primary orbit hairlines -->
           <circle class="ilayer__triad__orbit ilayer__triad__orbit--left" cx="-220" cy="0" r="195" />
           <circle class="ilayer__triad__orbit ilayer__triad__orbit--mid" cx="0" cy="0" r="240" />
           <circle class="ilayer__triad__orbit ilayer__triad__orbit--right" cx="220" cy="0" r="195" />
-          <!-- Diamond pips along the outer arc of each side orbit -->
+          <!-- Inner halo rings — second concentric per orbit (celestial
+               instrument detail; balances side orbits' visual weight
+               against the dense substrate brandmark cloud). -->
+          <circle class="ilayer__triad__halo ilayer__triad__halo--left" cx="-220" cy="0" r="117" />
+          <circle class="ilayer__triad__halo ilayer__triad__halo--mid" cx="0" cy="0" r="144" />
+          <circle class="ilayer__triad__halo ilayer__triad__halo--right" cx="220" cy="0" r="117" />
+          <!-- Bearing diamonds at the four cardinal points of each
+               side orbit — pure decoration matching the R3F pip table. -->
           <g class="ilayer__triad__pips ilayer__triad__pips--left">
-            <polygon points="-360,-138 -348,-128 -360,-118 -372,-128" />
-            <polygon points="-415,0 -403,10 -415,20 -427,10" />
-            <polygon points="-360,138 -348,148 -360,158 -372,148" />
             <polygon points="-220,-205 -210,-195 -220,-185 -230,-195" />
+            <polygon points="-415,0 -403,10 -415,20 -427,10" />
             <polygon points="-220,205 -210,215 -220,225 -230,215" />
+            <polygon points="-25,0 -13,10 -25,20 -37,10" />
           </g>
           <g class="ilayer__triad__pips ilayer__triad__pips--right">
-            <polygon points="360,-138 372,-128 360,-118 348,-128" />
-            <polygon points="415,0 427,10 415,20 403,10" />
-            <polygon points="360,138 372,148 360,158 348,148" />
             <polygon points="220,-205 230,-195 220,-185 210,-195" />
+            <polygon points="415,0 427,10 415,20 403,10" />
             <polygon points="220,205 230,215 220,225 210,215" />
+            <polygon points="25,0 37,10 25,20 13,10" />
+          </g>
+          <!-- Substrate cardinal markers — gold diamonds anchoring the
+               middle orbit's read direction. -->
+          <g class="ilayer__triad__pips ilayer__triad__pips--mid">
+            <polygon points="0,-250 10,-240 0,-230 -10,-240" />
+            <polygon points="0,230 10,240 0,250 -10,240" />
           </g>
         </svg>
 
       </div>
 
-      <!-- Numbered eyebrow pills at the top of each orbit. Translated
-           from Aether's `aiop-phase-pill` row into Thoughtform's mono
-           HUD register (PT Mono, gold). -->
-      <ol class="ilayer__triad__pills-dom" role="list" aria-label="Three intelligence-layer stations">
-        <li class="ilayer__triad__pill ilayer__triad__pill--left">
-          <span class="ilayer__triad__pill-n">01</span>
-          <span class="ilayer__triad__pill-label">Trusted sources</span>
-        </li>
-        <li class="ilayer__triad__pill ilayer__triad__pill--mid">
-          <span class="ilayer__triad__pill-n">02</span>
-          <span class="ilayer__triad__pill-label">Encoded substrate</span>
-        </li>
-        <li class="ilayer__triad__pill ilayer__triad__pill--right">
-          <span class="ilayer__triad__pill-n">03</span>
-          <span class="ilayer__triad__pill-label">Headless surfaces</span>
-        </li>
-      </ol>
-
-      <!-- Substrate inner content — prose + 3 chips, centered inside
-           the middle ring. Behind the brandmark cloud in z order;
-           reveal threshold ramps in via --ilayer-progress. -->
-      <div class="ilayer__substrate-inner">
-        <p class="ilayer__substrate-prose">
-          Your team's judgment, encoded once. <em>Surfaces inherit it.</em>
-        </p>
-        <ul class="ilayer__substrate-chips" role="list">
-          <li>Owned internally</li>
-          <li>Versioned</li>
-          <li>Model-portable</li>
+      <!-- ── 01 · TRUSTED SOURCES — left chamber ───────────────────
+           Content lives INSIDE the left orbit. Eyebrow + sub + pip-
+           led item list. Reveal cascades with --ilayer-progress so
+           items step in over the substrate-engagement window. -->
+      <section class="ilayer__chamber ilayer__chamber--left" aria-labelledby="ilayer-chamber-sources">
+        <header class="ilayer__chamber__head">
+          <span class="ilayer__chamber__num">01</span>
+          <h3 class="ilayer__chamber__title" id="ilayer-chamber-sources">Trusted sources</h3>
+        </header>
+        <p class="ilayer__chamber__sub">Where the work already lives.</p>
+        <ul class="ilayer__chamber__items" role="list">
+          <li class="ilayer__chamber__item" style="--reveal: 0.28;">
+            <span class="ilayer__chamber__pip" aria-hidden="true"></span>
+            <span class="ilayer__chamber__label">Brand framework</span>
+          </li>
+          <li class="ilayer__chamber__item" style="--reveal: 0.32;">
+            <span class="ilayer__chamber__pip" aria-hidden="true"></span>
+            <span class="ilayer__chamber__label">Past campaigns</span>
+          </li>
+          <li class="ilayer__chamber__item" style="--reveal: 0.36;">
+            <span class="ilayer__chamber__pip" aria-hidden="true"></span>
+            <span class="ilayer__chamber__label">Customer research</span>
+          </li>
+          <li class="ilayer__chamber__item" style="--reveal: 0.40;">
+            <span class="ilayer__chamber__pip" aria-hidden="true"></span>
+            <span class="ilayer__chamber__label">Performance data</span>
+          </li>
+          <li class="ilayer__chamber__item" style="--reveal: 0.44;">
+            <span class="ilayer__chamber__pip" aria-hidden="true"></span>
+            <span class="ilayer__chamber__label">Style guidelines</span>
+          </li>
+          <li class="ilayer__chamber__item" style="--reveal: 0.48;">
+            <span class="ilayer__chamber__pip" aria-hidden="true"></span>
+            <span class="ilayer__chamber__label">Reviewer notes</span>
+          </li>
         </ul>
-      </div>
+      </section>
 
-      <!-- LEFT ORBIT labels (Trusted sources). Each li sits on the
-           outer arc of the left orbit via CSS custom property --angle
-           (degrees, 0 = top, clockwise). The pip is a small diamond
-           on the orbit line; the label trails outward into negative
-           space. Per-label --reveal threshold cascades the fade-in. -->
-      <ul class="ilayer__orbit-labels ilayer__orbit-labels--left" role="list" aria-label="Trusted sources">
-        <li class="ilayer__orbit-label" style="--angle: 295deg; --reveal: 0.28;">
-          <span class="ilayer__orbit-label__pip" aria-hidden="true"></span>
-          <span class="ilayer__orbit-label__text">Brand framework</span>
-        </li>
-        <li class="ilayer__orbit-label" style="--angle: 270deg; --reveal: 0.32;">
-          <span class="ilayer__orbit-label__pip" aria-hidden="true"></span>
-          <span class="ilayer__orbit-label__text">Past work + decisions</span>
-        </li>
-        <li class="ilayer__orbit-label" style="--angle: 245deg; --reveal: 0.36;">
-          <span class="ilayer__orbit-label__pip" aria-hidden="true"></span>
-          <span class="ilayer__orbit-label__text">Customer research</span>
-        </li>
-      </ul>
+      <!-- ── 02 · ENCODED SUBSTRATE — middle chamber ───────────────
+           Content distributes top-and-bottom inside the middle orbit
+           so the brandmark particle cloud (painted at the substrate
+           dock anchor, morphed to ring topology) sits visually
+           centered between the eyebrow and the rule rows. -->
+      <section class="ilayer__chamber ilayer__chamber--mid" aria-labelledby="ilayer-chamber-substrate">
+        <div class="ilayer__chamber__top">
+          <header class="ilayer__chamber__head ilayer__chamber__head--mid">
+            <span class="ilayer__chamber__num">02</span>
+            <h3 class="ilayer__chamber__title" id="ilayer-chamber-substrate">Encoded substrate</h3>
+          </header>
+          <p class="ilayer__chamber__sub">What matters, how to decide, what to check.</p>
+        </div>
+        <div class="ilayer__chamber__bottom">
+          <ul class="ilayer__substrate__rules" role="list">
+            <li style="--reveal: 0.36;">
+              <span class="ilayer__substrate__key">Rules</span>
+              <span class="ilayer__substrate__val">How the team decides</span>
+            </li>
+            <li style="--reveal: 0.40;">
+              <span class="ilayer__substrate__key">Examples</span>
+              <span class="ilayer__substrate__val">What good looks like</span>
+            </li>
+            <li style="--reveal: 0.44;">
+              <span class="ilayer__substrate__key">Sources</span>
+              <span class="ilayer__substrate__val">Data it can read</span>
+            </li>
+            <li style="--reveal: 0.48;">
+              <span class="ilayer__substrate__key">Loops</span>
+              <span class="ilayer__substrate__val">Who confirms what</span>
+            </li>
+          </ul>
+          <ul class="ilayer__substrate-chips" role="list">
+            <li>Owned internally</li>
+            <li>Versioned</li>
+            <li>Model-portable</li>
+          </ul>
+        </div>
+      </section>
 
-      <!-- RIGHT ORBIT labels (Headless surfaces). Mirror of left:
-           angles 45° / 90° / 115° / 135° trail outward to the right. -->
-      <ul class="ilayer__orbit-labels ilayer__orbit-labels--right" role="list" aria-label="Headless surfaces">
-        <li class="ilayer__orbit-label" style="--angle: 65deg; --reveal: 0.40;">
-          <span class="ilayer__orbit-label__pip" aria-hidden="true"></span>
-          <span class="ilayer__orbit-label__text">Cursor</span>
-        </li>
-        <li class="ilayer__orbit-label" style="--angle: 90deg; --reveal: 0.44;">
-          <span class="ilayer__orbit-label__pip" aria-hidden="true"></span>
-          <span class="ilayer__orbit-label__text">Claude</span>
-        </li>
-        <li class="ilayer__orbit-label" style="--angle: 115deg; --reveal: 0.48;">
-          <span class="ilayer__orbit-label__pip" aria-hidden="true"></span>
-          <span class="ilayer__orbit-label__text">Web + REST</span>
-        </li>
-        <li class="ilayer__orbit-label" style="--angle: 135deg; --reveal: 0.52;">
-          <span class="ilayer__orbit-label__pip" aria-hidden="true"></span>
-          <span class="ilayer__orbit-label__text">Agents</span>
-        </li>
-      </ul>
+      <!-- ── 03 · HEADLESS SURFACES — right chamber ────────────────
+           Mirror of the left chamber. Items in two columns so the
+           list reads as a small grid of named surfaces inside the
+           right orbit. -->
+      <section class="ilayer__chamber ilayer__chamber--right" aria-labelledby="ilayer-chamber-surfaces">
+        <header class="ilayer__chamber__head">
+          <span class="ilayer__chamber__num">03</span>
+          <h3 class="ilayer__chamber__title" id="ilayer-chamber-surfaces">Headless surfaces</h3>
+        </header>
+        <p class="ilayer__chamber__sub">Where the cohort calls the engine.</p>
+        <ul class="ilayer__chamber__items ilayer__chamber__items--grid" role="list">
+          <li class="ilayer__chamber__item" style="--reveal: 0.40;">
+            <span class="ilayer__chamber__pip" aria-hidden="true"></span>
+            <span class="ilayer__chamber__label">Cursor</span>
+          </li>
+          <li class="ilayer__chamber__item" style="--reveal: 0.44;">
+            <span class="ilayer__chamber__pip" aria-hidden="true"></span>
+            <span class="ilayer__chamber__label">Claude</span>
+          </li>
+          <li class="ilayer__chamber__item" style="--reveal: 0.48;">
+            <span class="ilayer__chamber__pip" aria-hidden="true"></span>
+            <span class="ilayer__chamber__label">Web app</span>
+          </li>
+          <li class="ilayer__chamber__item" style="--reveal: 0.52;">
+            <span class="ilayer__chamber__pip" aria-hidden="true"></span>
+            <span class="ilayer__chamber__label">REST</span>
+          </li>
+          <li class="ilayer__chamber__item" style="--reveal: 0.56;">
+            <span class="ilayer__chamber__pip" aria-hidden="true"></span>
+            <span class="ilayer__chamber__label">Slack</span>
+          </li>
+          <li class="ilayer__chamber__item" style="--reveal: 0.60;">
+            <span class="ilayer__chamber__pip" aria-hidden="true"></span>
+            <span class="ilayer__chamber__label">Agents</span>
+          </li>
+        </ul>
+      </section>
 
       <!-- Brandmark substrate dock anchor — the global painter docks
            the cloud here. During the substrate window the uShapeBlend

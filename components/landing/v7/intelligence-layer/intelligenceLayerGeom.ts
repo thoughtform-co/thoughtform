@@ -61,13 +61,20 @@ export const CAMERA_PARAMS = {
 /** Substrate ring — anchored at the origin. The brandmark particle
  *  cloud is what paints here (via the global painter, morphed to the
  *  ring-only shape via `uShapeBlend`); this geometry record exists
- *  so the side orbits know where they emerge from. */
+ *  so the side orbits know where they emerge from.
+ *
+ *  Sized to match the static SVG fallback (`r=240` in a `viewBox` of
+ *  `1000 × 520`, where 520 maps to the camera's vertical world span
+ *  of 1.846 scene units → `radius = 240 / 520 * 1.846 ≈ 0.852`).
+ *  Aligning R3F with the static fallback means the chambers, which
+ *  anchor on the orbit centres in vh-relative CSS, sit cleanly
+ *  inside both rendering paths. */
 export const SUBSTRATE_RING = {
   centre: [0, 0, 0] as [number, number, number],
   /** Slightly larger than the side orbits so it reads as the
    *  primary station — Aether's 1.4× middle-column emphasis,
    *  translated into the orbital idiom. */
-  radius: 1.0,
+  radius: 0.852,
 };
 
 /**
@@ -101,31 +108,34 @@ export interface SideOrbit {
   pipAngles: readonly number[];
 }
 
-/** Left orbit — Navigate / Trusted sources. Hangs to the left of the
- *  substrate; pips populate the outer arc (away from the substrate
- *  intersection) so labels can trail outward into negative space. */
+/** Left orbit — Trusted sources. Sits to the left of the substrate.
+ *  Sized + positioned to align with the static SVG fallback
+ *  (`cx=-220, r=195` in a `viewBox` of `1000 × 520`):
+ *    homeCentre.x = -220 / 520 * 1.846 ≈ -0.781
+ *    radius       =  195 / 520 * 1.846 ≈  0.692
+ *  The cardinal pips at 0°/90°/180°/270° anchor the celestial
+ *  bearing register; the inner halo (drawn separately in
+ *  `OrbitField`) reinforces the orbit as a station rather than a
+ *  faint guide. */
 export const LEFT_ORBIT: SideOrbit = {
   id: "left",
-  homeCentre: [-0.92, 0, 0],
-  radius: 0.78,
-  color: "#a99e8a", // --gold-soft / dawn-deep — guide register
-  opacity: 0.6,
-  // 180° = leftmost point on the orbit. We cluster pips around the
-  // left arc (135° / 180° / 225°) — that's the half of the orbit
-  // furthest from the substrate, so labels trail off to the left.
-  pipAngles: [135, 180, 225, 270, 90],
+  homeCentre: [-0.781, 0, 0],
+  radius: 0.692,
+  color: "#caa554", // --gold — equal signal weight with the substrate
+  opacity: 0.65,
+  // Cardinal pips at top / right / bottom / left of the orbit, plus
+  // the inner-cardinal point closest to the substrate intersection.
+  pipAngles: [0, 90, 180, 270],
 };
 
-/** Right orbit — Build / Headless surfaces. Mirror of the left
- *  orbit; pips cluster around the right arc (away from the substrate
- *  intersection) so labels trail off to the right. */
+/** Right orbit — Headless surfaces. Mirror of the left orbit. */
 export const RIGHT_ORBIT: SideOrbit = {
   id: "right",
-  homeCentre: [0.92, 0, 0],
-  radius: 0.78,
-  color: "#a99e8a",
-  opacity: 0.6,
-  pipAngles: [45, 0, 315, 270, 90],
+  homeCentre: [0.781, 0, 0],
+  radius: 0.692,
+  color: "#caa554",
+  opacity: 0.65,
+  pipAngles: [0, 90, 180, 270],
 };
 
 /** Both side orbits in a single iterable. */
