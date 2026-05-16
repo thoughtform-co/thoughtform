@@ -3190,10 +3190,14 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   z-index: 2;
 }
 
-/* Header — eyebrow + title only, anchored at the very top of the
-   viewport so the labels and podium have room below. The lede has
-   moved into the floating labels (each label carries a piece of
-   the editorial copy now). */
+/* Header — title only (the section's `.station__idx` carries the
+   eyebrow text above). Anchored at the top of the viewport so the
+   labels and podium have room below. Block is centred horizontally
+   with the same `min(1280px, 92vw)` width as `.miss__inner`, and
+   contents are LEFT-aligned within the block — matches the
+   `.miss__head` layout so the eyebrow / title baseline is at the
+   same X coordinate across both sections (visual continuity through
+   the page). */
 .ilayer__head {
   position: absolute;
   top: clamp(80px, 12vh, 140px);
@@ -3203,26 +3207,9 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   display: flex;
   flex-direction: column;
   gap: clamp(10px, 1.4vh, 16px);
-  max-width: min(56ch, 92vw);
-  align-items: center;
-  text-align: center;
-}
-.ilayer__eyebrow {
-  display: inline-flex;
-  align-items: center;
-  gap: 12px;
-  margin: 0;
-  font-family: var(--font-pt-mono);
-  font-size: 10px;
-  letter-spacing: var(--track-widest);
-  text-transform: uppercase;
-  color: var(--gold);
-}
-.ilayer__eyebrow-rule {
-  width: 24px;
-  height: 1px;
-  background: var(--gold);
-  display: inline-block;
+  width: min(1280px, 92vw);
+  align-items: flex-start;
+  text-align: left;
 }
 .ilayer__title {
   font-family: var(--font-pp-neue-montreal);
