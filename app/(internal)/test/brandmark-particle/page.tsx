@@ -2,35 +2,28 @@
 
 import { useEffect, useState } from "react";
 import { BrandmarkParticleCanvas } from "@/components/brand/BrandmarkParticleField";
-import {
-  DEFAULT_TINT,
-  DAWN_TINT,
-  useBrandmarkParticleStore,
-} from "@/lib/stores/brandmarkParticleStore";
+import { useBrandmarkJourneyStore } from "@/lib/stores/brandmarkJourneyStore";
 
 /**
  * /test/brandmark-particle — dev preview for the brandmark particle
- * artifact engine (ADR-011 / ADR-012).
+ * artifact engine (ADR-011 / ADR-012 / ADR-013).
  *
- * Mounts the shared particle canvas with a single `substrate` station
- * (renamed from `backdrop` in ADR-012) and lets us scrub density,
- * dispersion, opacity, tint, and the target rect's size + position
- * via sliders. This is the lab — tune here, copy the numbers into
- * `PARTICLE_STATION_DEFAULTS` in `useSigilChoreography.ts`.
+ * Mounts the shared particle canvas and writes a single
+ * `BrandmarkTransform` into `brandmarkJourneyStore` driven by the
+ * controls panel. This is the lab — tune here, copy the numbers into
+ * the keyframe `parked` attrs in `lib/brandmark/journey.ts`.
  *
  * Internal route — blocked from production by `middleware.ts`.
  */
 
 export default function BrandmarkParticlePreviewPage() {
-  // Engine controls (UI state — fed into the store on change). Defaults
-  // sit at full density (the substrate dock target); flip density down
-  // to ≈ 0.22 + dispersion ≈ 0.42 to recreate the ADR-011 sparse
-  // diagnostic backdrop tier for tuning checks.
+  // Engine controls (UI state — fed into the journey store on change).
   const [density, setDensity] = useState(1);
   const [dispersion, setDispersion] = useState(0);
   const [opacity, setOpacity] = useState(1);
-  const [pointSize, setPointSize] = useState(3);
-  const [tintMode, setTintMode] = useState<"gold" | "dawn">("gold");
+  // Rotation in degrees (for human-friendly control); converted to
+  // radians when written into the transform.
+  const [rotationDeg, setRotationDeg] = useState(0);
   // Target rect (centered, with a configurable size)
   const [rectSize, setRectSize] = useState(520);
   const [rectX, setRectX] = useState(50);
@@ -39,17 +32,14 @@ export default function BrandmarkParticlePreviewPage() {
   // Push the store into particle mode for this page so the canvas
   // mounts regardless of the production gating.
   useEffect(() => {
-    useBrandmarkParticleStore.getState().setMode("particle");
+    useBrandmarkJourneyStore.getState().setMode("particle");
     return () => {
-      useBrandmarkParticleStore.getState().clearStations();
-      // Don't force the mode back to svg — the choreography hook
-      // owns that, and this route never coexists with the marketing
-      // page in the same tab session.
+      useBrandmarkJourneyStore.getState().reset();
     };
   }, []);
 
-  // Continuously write the substrate station snapshot. The rect math
-  // converts the percent-based controls into viewport pixel coords.
+  // Continuously write the transform. The rect math converts the
+  // percent-based controls into viewport pixel coords.
   useEffect(() => {
     const write = () => {
       const vw = window.innerWidth;
@@ -57,7 +47,7 @@ export default function BrandmarkParticlePreviewPage() {
       const cx = (rectX / 100) * vw;
       const cy = (rectY / 100) * vh;
       const halfSize = rectSize / 2;
-      useBrandmarkParticleStore.getState().setStation("substrate", {
+      useBrandmarkJourneyStore.getState().setTransform({
         rect: {
           left: cx - halfSize,
           top: cy - halfSize,
@@ -67,13 +57,17 @@ export default function BrandmarkParticlePreviewPage() {
         opacity,
         density,
         dispersion,
-        tint: (tintMode === "gold" ? DEFAULT_TINT : DAWN_TINT) as [number, number, number],
+        rotationY: (rotationDeg * Math.PI) / 180,
+        ringsActive: false,
+        ringProgress: 0,
+        visible: opacity > 0.001,
+        parkedAt: null,
       });
     };
     write();
     window.addEventListener("resize", write);
     return () => window.removeEventListener("resize", write);
-  }, [density, dispersion, opacity, tintMode, rectSize, rectX, rectY, pointSize]);
+  }, [density, dispersion, opacity, rotationDeg, rectSize, rectX, rectY]);
 
   return (
     <main
@@ -90,7 +84,6 @@ export default function BrandmarkParticlePreviewPage() {
           chrome by default. We give the controls panel a higher
           z-index so it stays interactive. */}
       <BrandmarkParticleCanvas
-        stations={["substrate"]}
         forceMount
         className="tf-brandmark-particle-canvas tf-brandmark-particle-canvas--preview"
       />
@@ -173,12 +166,12 @@ export default function BrandmarkParticlePreviewPage() {
           onChange={setOpacity}
         />
         <ControlSlider
-          label="Point size"
-          value={pointSize}
-          min={1}
-          max={8}
-          step={0.5}
-          onChange={setPointSize}
+          label="Rotation Y (deg)"
+          value={rotationDeg}
+          min={-90}
+          max={90}
+          step={1}
+          onChange={setRotationDeg}
         />
         <ControlSlider
           label="Rect size (px)"
@@ -205,33 +198,6 @@ export default function BrandmarkParticlePreviewPage() {
           onChange={setRectY}
         />
 
-        <div style={{ marginTop: 14 }}>
-          <label
-            style={{
-              display: "block",
-              color: "var(--dawn-70, rgba(236,227,214,0.7))",
-              marginBottom: 6,
-              textTransform: "uppercase",
-              letterSpacing: "0.16em",
-              fontSize: 10,
-            }}
-          >
-            Tint
-          </label>
-          <div style={{ display: "flex", gap: 8 }}>
-            <TintButton
-              active={tintMode === "gold"}
-              onClick={() => setTintMode("gold")}
-              label="Gold"
-            />
-            <TintButton
-              active={tintMode === "dawn"}
-              onClick={() => setTintMode("dawn")}
-              label="Dawn"
-            />
-          </div>
-        </div>
-
         <p
           style={{
             marginTop: 18,
@@ -240,9 +206,9 @@ export default function BrandmarkParticlePreviewPage() {
             lineHeight: 1.6,
           }}
         >
-          Defaults sit at density 1.0 + dispersion 0 — the substrate dock target. Drop density to ≈
-          0.22 + dispersion ≈ 0.42 to recreate the legacy asking-gap backdrop tier for regression
-          checks.
+          Drives the single `BrandmarkTransform` in `brandmarkJourneyStore` directly. Rotation Y
+          uses the 2D squash shader (ADR-013) — at +/-90deg the brandmark collapses to a vertical
+          strip.
         </p>
       </div>
     </main>
@@ -290,36 +256,5 @@ function ControlSlider({ label, value, min, max, step, onChange }: ControlSlider
         style={{ width: "100%", accentColor: "var(--gold, #caa554)" }}
       />
     </label>
-  );
-}
-
-function TintButton({
-  active,
-  onClick,
-  label,
-}: {
-  active: boolean;
-  onClick: () => void;
-  label: string;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      style={{
-        flex: 1,
-        padding: "8px 12px",
-        background: active ? "var(--gold-15, rgba(202,165,84,0.15))" : "transparent",
-        border: `1px solid ${active ? "var(--gold, #caa554)" : "var(--dawn-08, rgba(236,227,214,0.08))"}`,
-        color: active ? "var(--gold, #caa554)" : "var(--dawn-70, rgba(236,227,214,0.7))",
-        fontFamily: "inherit",
-        fontSize: 10,
-        textTransform: "uppercase",
-        letterSpacing: "0.16em",
-        cursor: "pointer",
-      }}
-    >
-      {label}
-    </button>
   );
 }

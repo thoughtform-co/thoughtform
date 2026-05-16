@@ -1,12 +1,15 @@
 # ADR-012: Intelligence Layer Artifact (replaces asking-gap interstitial)
 
 **Date:** 2026-05-15
-**Status:** Accepted
+**Status:** Section structure ACCEPTED; the R3F-brandmark + HARD SWAP architecture documented below is SUPERSEDED by [ADR-013 — Brandmark Journey Refactor](013-brandmark-journey-refactor.md) (2026-05-16).
+
+> **Partially superseded.** The intelligence-layer section's editorial purpose and structure (5-keyframe brandmark journey arriving at the substrate dock, ring/decoration choreography during the parked window, build-axiom bridge after) remain canonical. The IMPLEMENTATION has changed: the R3F scene no longer paints the brandmark cloud (rings + sub-orbits + halo dots + flow arcs only); the global particle canvas is the brandmark painter throughout the section; the rotation envelope is applied as a 2D squash in the shader; decoration emerge is a geometric scale envelope, not opacity. The `data-ilayer-mode` / static-fallback split, the section layout, and the editorial intent are unchanged. The substrate-window math (`engageY` / `exitY`) lives in `lib/brandmark/journey.ts` (`computeSubstrateRange`) and `useIlayerProgress` mirrors `ringProgress` from the journey store. See ADR-013 for the current contract.
 
 **Related:**
 [ADR-008](008-landing-v7-background-layers.md),
 [ADR-010](010-brandmark-choreography.md),
-[ADR-011](011-brandmark-particle-artifact.md).
+[ADR-011](011-brandmark-particle-artifact.md),
+[ADR-013](013-brandmark-journey-refactor.md).
 
 ---
 
@@ -696,3 +699,46 @@ The user wanted each section to fill the viewport at its own beat, with the bran
 - [ ] At `scrollY = stageTop + 320svh` (post-stage): standard journey resumes; brandmark continues toward rail via the standard substrate → rail transit / parkAt(rail) logic.
 - [ ] Mobile / tablet (≤ 960 px): stage collapses to `height: auto`; sections relative-positioned and stacked; standard five-station journey runs end-to-end (handoffStageEl.offsetHeight ≤ 2.5 \* vh, so the special case bypasses).
 - [ ] HMR / Fast Refresh on `useSigilChoreography`: stage element re-resolved after re-mount; no stale handoffActive carried over.
+
+---
+
+## Amendment v6 — Sticky-cover stage retired (2026-05-16)
+
+### Why amend
+
+In review the v5d sticky-cover stage read as a **parallax / layered cover** rather than as the brandmark choreography it was meant to support. Editorially the intent is simpler: as the user scrolls, the brandmark **moves into** `#intelligence-layer` over the natural scroll distance between the missing layer and the intelligence layer, and once docked at the substrate anchor, the R3F ringfield rotates / transforms per `splitProgress` exactly as defined.
+
+The cover-slide (intelligence-layer pinning at `top: 0` and rising `z:3` over the missing-layer pinned beneath it) created two visible regressions even when the math was right:
+
+1. The intelligence-layer section read as if it were a **separate stage on top of the page** rather than as the next station in the scroll narrative — the cover slide is a discrete UI gesture, not a continuation.
+2. The brandmark transit had to be split across three custom phases (cover-slide carry, R3F-parked rotation, scrolled-out yield), and the cover-slide phase always fought the standard "particles ride the scroll" expectation — the brandmark either appeared to ride a _moving_ destination or to grow in place at a stationary one, neither of which read as "moving INTO the intelligence layer".
+
+### What changes from v5d
+
+- **Wrapper retired.** The `<div class="brand-handoff-stage" data-handoff="miss-to-ilayer">` wrapper is removed from `public/prototypes/v7/landing-v7-motion.html`. `#missing-layer` and `#intelligence-layer` are once again ordinary sibling stations under `main.stations`, each owning its own `height: 100svh` + `var(--void)` shield.
+- **CSS block removed.** The `.brand-handoff-stage` CSS block (and its `@media (max-width: 960px)` collapse) is removed from `landing.css`. A short comment stub records the v6 retirement so future readers don't reintroduce the pattern by accident.
+- **Choreography reverts to standard five-station math.** `useSigilChoreography.ts` no longer resolves `handoffStageEl`, no longer carries the `paintTransitWithRects` / `handleStageHandoff` helpers, and no longer special-cases the journey for a stage range. The miss → substrate transit runs through the standard `transit()` helper over the natural scroll distance between `c[miss]` and `c[substrate]` (with `PARK_FRAC = 0.32` on each end). The substrate-parked window — and therefore the R3F handoff window published to `useIlayerProgressStore` — is computed as it was in v5c: `engageY = c[miss] + (1 - PARK_FRAC) * (c[substrate] - c[miss])`, `exitY = c[substrate] + PARK_FRAC * (c[rail] - c[substrate])`.
+- **R3F gate unchanged.** [`BrandmarkRingfield`](../../components/landing/v7/intelligence-layer/BrandmarkRingfield.tsx) and [`useIlayerProgress`](../../components/landing/v7/intelligence-layer/useIlayerProgress.ts) keep gating on `handoffActive` and deriving `progress` from `(scrollY - engageY) / (exitY - engageY)`. The substrate dock anchor is still sized inline by `useIlayerProgress.sizeAnchor()` from the encode ring's projected screen rect, so the boundary HARD SWAP between global particles and the local R3F brandmark cloud reads as visual continuity exactly as in v5.
+
+### Compositing audit (ADR-008)
+
+- `#missing-layer` and `#intelligence-layer` revert to `position: relative` (no sticky inside a stage), so the existing `.station:not(.hero)` rule places them at `z: 2` with `var(--void)` background — Rule 1 satisfied.
+- No `[data-m]` is added to the now-removed wrapper; reveal motion stays on the inner columns of each section as before — Rule 2 satisfied.
+- The previously suppressed `.station { border-bottom: 1px dashed ... }` hairline at the bottom of `#missing-layer` is now natural again (no sticky parent), so the section break paints at the natural offset.
+
+### Files touched in v6
+
+- [`public/prototypes/v7/landing-v7-motion.html`](../../public/prototypes/v7/landing-v7-motion.html) — removed the `<div class="brand-handoff-stage" data-handoff="miss-to-ilayer">` wrapper around `#missing-layer` + `#intelligence-layer`.
+- [`components/landing/v7/landing.css`](../../components/landing/v7/landing.css) — removed the `.brand-handoff-stage` block (and its `@media (max-width: 960px)` collapse); replaced with a short v6 stub comment so readers don't reintroduce the pattern.
+- [`components/landing/v7/hooks/useSigilChoreography.ts`](../../components/landing/v7/hooks/useSigilChoreography.ts) — dropped `handoffStageEl` resolution, the `paintTransitWithRects` / `handleStageHandoff` helpers, the special-case dispatch in `applyJourney`, and the `ResizeObserver.observe(handoffStageEl)` subscription. Standard five-station math now owns the miss → substrate transit end-to-end.
+- [`.claude/skills/landing-v7-compositing/SKILL.md`](../../.claude/skills/landing-v7-compositing/SKILL.md) — removed the paint-stack tree entry for `div.brand-handoff-stage` and the "Section-scoped sticky pairs" block (kept the general guidance about sticky pairs only as a "if you ever need this pattern again, here are the rules" reference).
+- [`.claude/skills/brandmark-particle/SKILL.md`](../../.claude/skills/brandmark-particle/SKILL.md) — removed the "Sticky-cover handoff stage (ADR-012 v5d)" subsection.
+
+### Pre-merge checklist (v6)
+
+- [ ] At `scrollY` halfway between `c[miss]` and `c[substrate]`: brandmark visible at a rect lerped between the live miss anchor and the live substrate anchor (standard `transit()` path); `handoffActive === false`; R3F scene invisible (`parent.visible === false`).
+- [ ] At `scrollY ∈ [substrateEngageY, substrateExitY]`: `parkAt(substrate)` silences the global station; `handoffActive === true`; R3F brandmark cloud paints + rotates per `splitProgress`.
+- [ ] At `scrollY` halfway between `c[substrate]` and `c[rail]`: standard `transit()` carries the brandmark from substrate to rail; R3F invisible again.
+- [ ] HMR / Fast Refresh on `useSigilChoreography`: cleanup resets `handoffActive` to `false` and `substrateRange` to `null`; next mount publishes from scratch via the five-station math.
+- [ ] No element with `data-handoff="miss-to-ilayer"` exists in the rendered DOM (`document.querySelector('[data-handoff="miss-to-ilayer"]') === null`).
+- [ ] Section flow reads as: missing-layer scrolls past, intelligence-layer enters from below as a normal section, brandmark visibly travels into the substrate dock, R3F rotation begins once docked.

@@ -1,8 +1,9 @@
 # ADR-011: Brandmark as Morphable Particle Artifact
 
 **Date:** 2026-05-11 (v1) / 2026-05-15 (v2 amendment)
-**Status:** Accepted
-**Supersedes:** none (additive on top of [ADR-010](010-brandmark-choreography.md))
+**Status:** SUPERSEDED by [ADR-013 — Brandmark Journey Refactor](013-brandmark-journey-refactor.md) (2026-05-16).
+
+> **Historical record.** The per-station snapshot model with one `BrandmarkParticleStation` mesh per kind, the `data-brand-svg-dock` pixel-perfect handoff fabric, and the dispersion bump applied uniformly to every transit are all retired. The current model is one painter (one `BrandmarkParticleStation` instance) reading one `BrandmarkTransform` from `brandmarkJourneyStore`. The dispersion bump is now per-keyframe-arrival (suppressed for substrate, rail, orbit; kept for miss). The point cloud sampling (`buildBrandmarkParticles` in `brandmarkParticles.ts`) is gone; the global shader is the only painter — even inside the intelligence-layer section. See ADR-013.
 
 **v2 amendment (2026-05-15):** entrance fade-in into section 02 now
 hands off to the canonical SVG glyph via `data-brand-svg-dock="sigil"`

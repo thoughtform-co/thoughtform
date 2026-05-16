@@ -11,48 +11,39 @@ import { BrandmarkParticleCanvas } from "@/components/brand/BrandmarkParticleFie
  *
  * Single React entry point for the v7 landing-page brandmark.
  *
- * The v7 landing has one travelling artifact (the Thoughtform
- * brandmark) that flows through:
+ * ADR-013: the brandmark journey is a single continuous transform
+ * owned by `useBrandmarkJourney`. This component mounts the rendering
+ * surface for both render modes:
  *
- *     hero → sigil → diagnostic → intelligence-layer substrate
- *          → continuum rail → practice orbit → hidden
+ *   - PARTICLE mode (default): the global `BrandmarkParticleCanvas`
+ *     is the SOLE painter for the brandmark cloud throughout the
+ *     entire journey. It reads the `BrandmarkTransform` from
+ *     `brandmarkJourneyStore` every frame. The portal'd `BrandmarkGlyph`
+ *     dock SVGs are present in DOM but hidden by CSS via the
+ *     `[data-brandmark-mode="particle"]` gate. The fixed
+ *     `BrandmarkActor` is also hidden via CSS (it has no role in
+ *     particle mode).
  *
- * Two render modes carry it:
+ *   - SVG mode (reduced motion / no WebGL): the particle canvas
+ *     does not mount. The native dock SVGs paint at their parked
+ *     positions via `data-brand-on-*="parked"` CSS gates (set by
+ *     `useBrandmarkJourney` in SVG mode). The fixed `BrandmarkActor`
+ *     paints during transit beats (pinned to the journey transform's
+ *     rect by `useBrandmarkJourney`).
  *
- *   - DOCK (parked): the canonical `BrandmarkGlyph` is portal'd into
- *     a section-owned anchor slot (`data-brand-anchor="..."`). The
- *     glyph rides inside that section's DOM, so it scrolls naturally
- *     with the page — no fixed-position jiggle while the visitor
- *     reads.
- *   - LIFT (travel): the fixed `BrandmarkActor` (also a
- *     `BrandmarkGlyph` under the hood) takes over for the transit
- *     legs between docks (and for the practice orbit pin, which has
- *     no native dock — the actor renders the glyph there directly).
- *
- * The `BrandmarkSystem` here is the single source of truth that:
- *   1. Discovers anchor slots in the parsed prototype HTML via
- *      `data-brand-anchor` (added in `landing-v7-motion.html` and
- *      stripped of their `<img>` placeholders by `lib/v7-parse.ts`).
- *   2. Portals one `BrandmarkGlyph` into each anchor — so every dock
- *      site on the page paints from the same code source, not from
- *      separate raster `<img>` copies that could drift in geometry
- *      or tint.
- *   3. Renders one `BrandmarkActor` for the fixed travel/backdrop
- *      passes.
- *
- * The choreography hook (`useSigilChoreography`) consumes the actor
- * via the `actorRef` forwarded through this component — same API as
- * before, so the GSAP timelines / ScrollTrigger / data-attr writes
- * are unchanged. What changes is what *paints*: instead of five
- * parallel `<img>` raster copies + one inline-SVG actor, we now have
- * four portal'd glyphs (one per anchor) + one actor, all rendered
- * from `BrandmarkGlyph`. Visibility gating remains driven by the
- * existing `[data-brand-on-missing="parked"]` and
- * `[data-brand-on-rail="parked"]` CSS rules.
+ * Responsibilities:
+ *   1. Discover anchor slots in the parsed prototype HTML via
+ *      `data-brand-anchor`.
+ *   2. Portal one `BrandmarkGlyph` into each anchor — every dock
+ *      paints from the same code source, not from separate raster
+ *      `<img>` copies.
+ *   3. Render one `BrandmarkActor` for the SVG-mode travel pass.
+ *   4. Render the `BrandmarkParticleCanvas` (which mounts its own
+ *      R3F context only in particle mode).
  *
  * @see `BrandmarkGlyph.tsx` — canonical SVG geometry source.
- * @see `useSigilChoreography.ts` — scroll-driven state machine.
- * @see ADR-010 (`sentinel/decisions/010-brandmark-choreography.md`).
+ * @see `useBrandmarkJourney.ts` — scroll-driven journey hook.
+ * @see ADR-013 (`sentinel/decisions/013-brandmark-journey-refactor.md`).
  */
 
 type AnchorKey = "sigil" | "missing" | "substrate" | "rail" | "orbit";
@@ -68,9 +59,11 @@ export interface BrandmarkSystemProps {
 
 /** Render the canonical brandmark system for a v7 landing page.
  *
- *  Forwards a ref to the underlying `BrandmarkActor` so the
- *  choreography hook can drive transit and backdrop morphs via the
- *  imperative `morphRects` / `pinToRect` / `hide` API. */
+ *  Forwards a ref to the underlying `BrandmarkActor` so
+ *  `useBrandmarkJourney` can drive transit pins via the imperative
+ *  `pinToRect` / `hide` API in SVG-fallback mode. In particle mode
+ *  the global `BrandmarkParticleCanvas` is the painter and the
+ *  actorRef is unused. */
 export const BrandmarkSystem = forwardRef<BrandmarkActorHandle, BrandmarkSystemProps>(
   function BrandmarkSystem({ rootRef }, ref) {
     /** Map of anchor key → DOM element, resolved after the prototype
@@ -128,21 +121,17 @@ export const BrandmarkSystem = forwardRef<BrandmarkActorHandle, BrandmarkSystemP
           return <BrandmarkAnchorPortal key={key} container={el} anchorKey={key} />;
         })}
         <BrandmarkActor ref={ref} />
-        {/* Shared GL canvas that paints brandmark particles. Mounts
-            only when the store is in `"particle"` mode (set by
-            `useSigilChoreography` after a WebGL + reduced-motion
-            probe). In `"svg"` mode it renders nothing and the
-            existing actor + portal'd glyphs above paint unchanged.
-
-            All five stations are wired: sigil + miss + substrate +
-            rail + orbit. (The third station was renamed from
-            `backdrop` to `substrate` in ADR-012 — same choreography
-            slot, but it now anchors inside the intelligence-layer
-            artifact and runs at full density.) Every station hands
-            off to the canonical SVG portal'd glyph at rest via the
-            `data-brand-svg-dock` gate; particles paint during
-            transit between stations. */}
-        <BrandmarkParticleCanvas stations={["sigil", "miss", "substrate", "rail", "orbit"]} />
+        {/* ADR-013: single shared GL canvas that paints the brandmark
+            particle cloud continuously throughout the journey. The
+            canvas owns ONE `BrandmarkParticleStation` instance that
+            reads the `BrandmarkTransform` from `brandmarkJourneyStore`
+            every frame — no per-station snapshots, no HARD SWAPs.
+            Mounts only when the journey store is in `"particle"` mode
+            (set by `useBrandmarkJourney` after a WebGL +
+            reduced-motion probe). In `"svg"` mode it renders nothing
+            and the actor + portal'd glyphs paint via the SVG
+            fallback path. */}
+        <BrandmarkParticleCanvas />
       </>
     );
   }

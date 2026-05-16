@@ -58,3 +58,5 @@ services/sam-segmenter/checkpoints/
 # Storybook
 *storybook.log
 storybook-static
+
+.vercel

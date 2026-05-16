@@ -3,66 +3,53 @@
  *
  * Enumerates every place on the v7 landing page where a brandmark
  * glyph can paint and verifies that at most one of them is visible at
- * the sampled scroll position. The v7 architecture deliberately
- * distributes the canonical `BrandmarkGlyph` across a handful of
- * dock slots (`.sigil__mark`, `.miss__brand-slot`, `.crail__brand`,
- * `.approach__orbit__mark`) and one fixed travel actor
- * (`.tf-brandmark-actor`) — at any given scroll position, exactly
- * zero or one of these should be painting. More than one indicates a
- * regression: a leak in the choreography, a wrong CSS gate, or a
- * native dock paint that survived a transit handoff.
+ * the sampled scroll position. The v7 architecture distributes the
+ * canonical `BrandmarkGlyph` across five dock slots (`.sigil__mark`,
+ * `.miss__brand-slot`, `.ilayer__brandmark-anchor`, `.crail__brand`,
+ * `.approach__orbit__mark`) plus one fixed travel actor
+ * (`.tf-brandmark-actor`) plus the global particle canvas — at any
+ * given scroll position, exactly zero or one of these should be
+ * painting. More than one indicates a regression: a leak in the
+ * journey, a wrong CSS gate, or a native dock paint that survived
+ * a transit handoff.
+ *
+ * Per ADR-013 the brandmark journey is a single continuous transform
+ * with ONE painter (the global particle canvas in particle mode, or
+ * the SVG actor + native dock SVGs in SVG mode). The R3F intelligence-
+ * layer scene paints rings only — it does not count as a brandmark
+ * painter and is excluded from this check.
  *
  * The check runs as a `requestAnimationFrame` loop in dev (and only
  * in dev — production never imports this module) and logs a
- * `console.warn` whenever it observes a multi-instance frame. It is
- * deliberately a warning, not a thrown error, so visitors who hit a
- * transient flicker during fast-scroll handoffs don't lose their
- * session.
- *
- * Wire-up: `useBrandmarkSingletonCheck` is called from
- * `LandingPage` under a `process.env.NODE_ENV !== "production"`
- * gate. Tree-shaking + dead-code elimination should drop the entire
- * module from the production bundle because the import site is
- * conditionally rendered with a literal `false` in prod.
+ * `console.warn` whenever it observes a multi-instance frame.
  *
  * @see `BrandmarkSystem.tsx`
- * @see `useSigilChoreography.ts`
- * @see ADR-010.
+ * @see `useBrandmarkJourney.ts`
+ * @see ADR-013.
  */
 
 import { useEffect, type RefObject } from "react";
 
-/** All selectors that can render a paint of the brandmark on v7. The
- *  fixed travel actor uses its own selector; each native dock site is
- *  paired with both `img` and `svg` because some legacy slots may
- *  still carry a raster placeholder (the parser strips only the v7
- *  anchors carrying `data-brand-anchor`). The particle canvas is the
- *  Phase B+ painter for every parked station; the choreography hook
- *  flips `[data-brand-particle-backdrop="true"]` on documentElement
- *  whenever the canvas should paint (the same attribute that fades
- *  the wrapper opacity from 0 → 1 via CSS). */
+/** All selectors that can render a paint of the brandmark on v7.
+ *  The fixed travel actor uses its own selector; each native dock
+ *  site is paired with both `img` and `svg` because the portal'd
+ *  glyph may be either depending on the BrandmarkGlyph render path.
+ *  The global particle canvas is the single painter in particle mode
+ *  (ADR-013) — it paints continuously, so it always counts as ONE
+ *  visible painter while the brandmark is on screen. */
 const BRANDMARK_RENDER_SELECTORS: readonly string[] = [
   '[data-brand-anchor="sigil"] :where(img, svg)',
   '[data-brand-anchor="missing"] :where(img, svg)',
-  // Substrate anchor — added in ADR-012 when the asking-gap backdrop
-  // pin became the intelligence-layer central plane.
   '[data-brand-anchor="substrate"] :where(img, svg)',
   '[data-brand-anchor="rail"] :where(img, svg)',
   '[data-brand-anchor="orbit"] :where(img, svg)',
   ".tf-brandmark-actor",
-  // Particle canvas — counted as the single painter when the
-  // wrapper is faded in (driven by `[data-brand-particle-backdrop]`
-  // on documentElement, set by `useSigilChoreography`). The check
-  // uses the wrapper element's computed opacity, which mirrors the
-  // gate transition.
   ".tf-brandmark-particle-canvas",
 ];
 
 /** Opacity below which a brandmark element is considered "not
- *  visible" for the singleton check. The 0.04 floor was originally
- *  set to tolerate the asking-gap backdrop pin (~0.08 opacity) without
- *  double-counting; ADR-012 retired that faint dock but the floor is
- *  kept for headroom against opacity rounding noise. */
+ *  visible" for the singleton check. The 0.04 floor leaves headroom
+ *  against opacity rounding noise. */
 const VISIBILITY_OPACITY_THRESHOLD = 0.04;
 
 interface VisibleBrandmark {
@@ -180,24 +167,18 @@ export function useBrandmarkSingletonCheck(rootRef?: RefObject<HTMLElement | nul
       const visible = enumerateVisibleBrandmarks();
       if (visible.length <= 1) return;
 
-      // Tolerate the continuous-journey crossfade.
+      // Per ADR-013 there are no painter crossfades. The journey's
+      // mode is set ONCE at init; in particle mode the global canvas
+      // is the only painter and all native dock SVGs + the actor are
+      // hidden by a single CSS gate. In SVG mode there is no
+      // particle canvas, the native dock SVGs paint at parked
+      // positions only, and the actor paints transit + orbit.
       //
-      // When the journey (`useSigilChoreography`) crosses the
-      // PARK_FRAC threshold of a segment, the parked CSS gate flips:
-      // the actor's inline `opacity: 1` becomes effective again (or
-      // vice versa) and the native dock's `opacity: 0` lifts (or
-      // vice versa). Both element groups have a 120ms opacity
-      // transition (see `landing.css`), so for ~120ms two painters
-      // are partially visible. Their COMBINED effective opacity stays
-      // ~1 throughout the crossfade — that is the intended visual:
-      // one brandmark handing off, not two.
-      //
-      // Warn only when the sum of effective opacities meaningfully
-      // exceeds 1 (i.e. the user would actually perceive two
-      // brandmarks), which indicates a real leak rather than a clean
-      // crossfade.
+      // The combined-opacity tolerance is kept low because there is
+      // no design-intended overlap window — anything above 1.1 is a
+      // real leak worth warning about.
       const combinedOpacity = visible.reduce((s, v) => s + v.opacity, 0);
-      const CROSSFADE_TOLERANCE = 1.25;
+      const CROSSFADE_TOLERANCE = 1.1;
       if (combinedOpacity <= CROSSFADE_TOLERANCE) return;
 
       // Throttle warnings so a sustained leak doesn't spam.

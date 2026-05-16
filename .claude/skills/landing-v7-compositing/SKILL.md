@@ -28,11 +28,8 @@ html
             │   └── div.hero__video       absolute; inset: 0; holds the video element
             ├── section.station           position: relative; z-index: 2; background: var(--void)
             ├── div.celestial-connector   position: relative; z-index: 2; background: var(--void)
-            ├── div.brand-handoff-stage   position: relative; height: 300svh    (ADR-012 v5d)
-            │   ├── section#missing-layer position: sticky; top: 0; z-index: 2; bg: var(--void)
-            │   └── section#intelligence-layer
-            │                             position: sticky; top: 0; z-index: 3; bg: var(--void)
-            │                             (z:3 covers miss as it slides up)
+            ├── section#missing-layer     position: relative; z-index: 2; bg: var(--void); 100svh
+            ├── section#intelligence-layer position: relative; z-index: 2; bg: var(--void); 100svh
             ├── section.station           …
             └── …
 ```
@@ -232,23 +229,25 @@ Rules that hold for any future section-scoped canvas:
 - The canvas itself is `position: absolute; inset: 0; pointer-events: none` so it never blocks scroll and never carries a structural background.
 - Reveal motion stays on the section's inner column (`.ilayer__inner[data-m="instrument"]`); the canvas inherits that fade via DOM ancestry, no `[data-m]` on the canvas slot itself.
 - A static SVG fallback in the same grid cell handles `prefers-reduced-motion: reduce`, viewport ≤ 767px, and WebGL-fail. The portal writes `data-ilayer-mode="r3f" | "static"` on the stack wrapper to swap them.
+- **ADR-013:** the R3F scene paints rings + sub-orbits + halo dots + flow arcs only. The brandmark cloud itself is painted by the GLOBAL `BrandmarkParticleCanvas` (z:23) throughout the section. The R3F parent group reads `rotationY` and `ringsActive` + `ringProgress` from the journey store; ring/decoration scale uses `splitEmerge` (geometric, never opacity).
 
-## Section-scoped sticky pairs (`.brand-handoff-stage`, ADR-012 v5d)
+## Section-scoped sticky pairs (general guidance)
 
-`#missing-layer` and `#intelligence-layer` are wrapped in a `.brand-handoff-stage` (`position: relative; height: 300svh`) so each can be `position: sticky; top: 0` and the intelligence layer slides up to cover the missing layer (mirrors the `.hero` pattern). On viewports ≤ 960 px the stage's `@media` block collapses it to `height: auto` and removes sticky on both members, falling back to the natural stacked flow.
+The v7 page uses **only one** sticky pair today: the hero (`.hero`) sits at `z:1` and is covered by the next `section.station` (at `z:2`) as it slides up. The previous `.brand-handoff-stage` (ADR-012 v5d) that pinned `#missing-layer` + `#intelligence-layer` was retired in v6 — both sections now flow as ordinary stacked stations and the brandmark choreography handles the miss → substrate transit over the natural scroll distance. **Do not reintroduce a sticky-cover wrapper around those two sections** without an ADR; the cover slide reads as parallax / discrete UI gesture rather than as continuous scroll narrative, which fights the editorial intent.
 
-Rules that hold for any future sticky pair inside `.stations`:
+If a future feature genuinely needs another sticky pair inside `.stations`, the rules below still apply (they're the same rules that govern the hero → first-station cover):
 
 - Both members keep their existing `var(--void)` background. The cover slide only reads as a clean swap because both layers are opaque (Rule 1). Never strip the shield from a sticky member to "show" the layer underneath — use crossfade transit on contained content instead.
 - The wrapper carries no `[data-m]`, no transform, no opacity transition (Rule 2). It is a layout-only positioning container.
-- The cover uses z-order to win the stack: lower member at `z:2`, upper member at `z:3`. The standard `.station:not(.hero)` rule pins everything else at `z:2`, so any new sticky pair must use `z:3` (or higher, sequentially) for the upper member.
-- Suppress the inherited `.station { border-bottom: 1px dashed ... }` hairline on the sticky members; while pinned the border would track the viewport edge instead of the natural section break, which reads as a stuck UI element.
-- Choreography hooks reading section centres for sticky members must special-case them: use the WRAPPER's `offsetTop + N * vh` boundaries instead of `getBoundingClientRect()` of the sticky element (which moves with scroll). The pattern is in `useSigilChoreography.ts` (`handleStageHandoff`) and matches the `practice.top` special case for the orbit's sticky parent.
+- The cover uses z-order to win the stack: lower member at `z:2`, upper member at `z:3` (or higher). The standard `.station:not(.hero)` rule pins everything else at `z:2`.
+- Suppress the inherited `.station { border-bottom: 1px dashed ... }` hairline on the sticky members; while pinned the border would track the viewport edge instead of the natural section break.
+- Choreography hooks reading section centres for sticky members must special-case them: use the WRAPPER's `offsetTop + N * vh` boundaries instead of `getBoundingClientRect()` of the sticky element (which moves with scroll). The retired `handleStageHandoff` in `useSigilChoreography.ts` is the historical reference; the `practice.top` special case for the orbit's sticky parent is the live one.
 
 ## Related ADRs and references
 
 - `sentinel/decisions/008-landing-v7-background-layers.md` — architectural record of the paint stack and the two fixes that landed from this rule set.
-- `sentinel/decisions/012-intelligence-layer-artifact.md` (v2) — section-scoped R3F mount pattern and the unchanged substrate dock contract.
+- `sentinel/decisions/012-intelligence-layer-artifact.md` — section structure (partially superseded by ADR-013 for the R3F painter model).
+- `sentinel/decisions/013-brandmark-journey-refactor.md` — single continuous transform + one painter model; replaces the multi-painter HARD SWAP fabric. The brandmark CSS gate fabric (~280 LOC of `data-brand-svg-dock` / `data-brand-particle-backdrop` blocks) was retired here; only the SVG-fallback `data-brand-on-*="parked"` rules and a single `[data-brandmark-mode="particle"]` hide gate remain.
 - `components/landing/v7/hooks/useLandingScroll.ts` — owns the sticky-hero visibility transition (`heroCover >= 1 → visibility: hidden`).
 - `components/landing/v7/hooks/useRevealMotion.ts` — IntersectionObserver that adds `.is-in` to `[data-m]` elements.
 - `components/landing/v7/landing.css` — the `v17 — CELESTIAL CONNECTORS` block and the `Reveal decoupling` override are the canonical examples of applying these rules.

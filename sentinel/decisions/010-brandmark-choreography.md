@@ -1,7 +1,9 @@
 # ADR-010: Brandmark (Sigil) Scroll Choreography
 
 **Date:** 2026-04-25 (v1) · **Updated:** 2026-05-10 (v2 — asking-gap + rail scrub) · **Updated:** 2026-05-10 (v3 — missing-layer dock between sigil and asking-gap)
-**Status:** Accepted
+**Status:** SUPERSEDED by [ADR-013 — Brandmark Journey Refactor](013-brandmark-journey-refactor.md) (2026-05-16).
+
+> **Historical record.** The per-station snapshot + multi-painter HARD SWAP architecture documented below is retired. The brandmark journey is now a single continuous transform pipeline; the `useSigilChoreography` hook, the `BrandmarkActor.morphRects` API, and the `data-brand-svg-dock` / `data-brand-particle-backdrop` CSS gates are all gone. New work on the brandmark journey should reference ADR-013.
 
 ---
 

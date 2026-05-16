@@ -296,3 +296,28 @@ export function splitExtrude(progress: number): number {
   const retractOut = smoothstep(SPLIT_ENVELOPE.retract.in, SPLIT_ENVELOPE.retract.out, progress);
   return extrudeIn * (1 - retractOut);
 }
+
+/**
+ * splitEmerge — geometric SCALE envelope for the encode ring + sub-
+ * orbits + halo dots (ADR-013).
+ *
+ * Decorations grow from a point (scale 0) at the brandmark cloud's
+ * centre to their full size over the first 8% of the substrate-
+ * parked window; they retract back to 0 over the last 8% so the
+ * scene is geometrically empty at progress 0 / 1 (matching the
+ * brandmark cloud's axis-aligned state at those swap instants).
+ *
+ *   [0.00..0.08] ramps 0→1 (EMERGE — decorations grow out of centre)
+ *   [0.08..0.92] = 1       (held at full scale)
+ *   [0.92..1.00] ramps 1→0 (RETRACT — decorations collapse back to centre)
+ *
+ * Applied via `group.scale.setScalar(splitEmerge(progress))` on the
+ * encode ring group, the sub-orbits spin group, and the halo dot
+ * groups. NEVER applied as `material.opacity` — Principle 4 of
+ * ADR-013 forbids opacity-based reveals for decoration appearance.
+ */
+export function splitEmerge(progress: number): number {
+  const emergeIn = smoothstep(0.0, 0.08, progress);
+  const emergeOut = smoothstep(0.92, 1.0, progress);
+  return emergeIn * (1 - emergeOut);
+}

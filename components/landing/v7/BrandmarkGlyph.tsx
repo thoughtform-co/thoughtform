@@ -6,12 +6,12 @@
  *
  * Renders the brandmark as inline SVG (filled gold paths + optional
  * outline overlay), with no `<img>` and no raster asset reference. All
- * landing-page dock sites (`.sigil__mark`, `.miss__brand-slot`,
- * `.crail__brand`, `.approach__orbit__mark`, the fixed
- * `.tf-brandmark-actor`) consume this same primitive so the brandmark
- * everywhere on the page is the same vector geometry from the same
- * code source — no parallel raster copies, no asset drift between
- * sections.
+ * landing-page dock sites — five portal docks (`.sigil__mark`,
+ * `.miss__brand-slot`, `.ilayer__brandmark-anchor`, `.crail__brand`,
+ * `.approach__orbit__mark`) plus the fixed `.tf-brandmark-actor` —
+ * consume this same primitive so the brandmark everywhere on the
+ * page is the same vector geometry from the same code source — no
+ * parallel raster copies, no asset drift between sections.
  *
  * Geometry is exported from `public/logos/Thoughtform_Brandmark.svg`
  * (viewBox 0 0 430.99 436); the outline overlay is loaded from

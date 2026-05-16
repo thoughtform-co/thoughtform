@@ -3,7 +3,8 @@
 import { useEffect, useLayoutEffect, useRef, useState, useCallback, useMemo } from "react";
 import { useLandingScroll } from "./hooks/useLandingScroll";
 import { useRevealMotion } from "./hooks/useRevealMotion";
-import { useSigilChoreography } from "./hooks/useSigilChoreography";
+import { useBrandmarkJourney } from "./hooks/useBrandmarkJourney";
+import { useSigilEntranceScrub } from "./hooks/useSigilEntranceScrub";
 import { type BrandmarkActorHandle } from "./BrandmarkActor";
 import { BrandmarkSystem } from "./BrandmarkSystem";
 import { useBrandmarkSingletonCheck } from "./lib/brandmarkSingletonCheck";
@@ -28,7 +29,17 @@ export function LandingPage({ bodyHtml, bodyClass, celestialSlots }: LandingPage
 
   useLandingScroll(rootRef);
   useRevealMotion(rootRef);
-  useSigilChoreography(rootRef, brandmarkActorRef);
+  // ADR-013: the brandmark journey is a single continuous transform.
+  // `useBrandmarkJourney` writes the transform to `brandmarkJourneyStore`
+  // every scroll frame; the global painter + R3F ringfield both read it.
+  // In SVG-fallback mode (reduced motion / no WebGL) the same hook
+  // pins the actor + drives dock attributes so the native SVG glyphs
+  // paint via CSS gates.
+  // `useSigilEntranceScrub` owns the section-02 diagram entrance
+  // animation (orbits, halo, cap, legend, tri-left) — a separate
+  // concern from the brandmark journey.
+  useBrandmarkJourney(rootRef, brandmarkActorRef);
+  useSigilEntranceScrub(rootRef);
   // Dev-only invariant guard: warns in the console whenever more
   // than one brandmark instance is painting at the same scroll
   // position. Tree-shaken out of the production bundle by the

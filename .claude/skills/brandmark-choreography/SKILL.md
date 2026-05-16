@@ -1,196 +1,183 @@
 ---
 name: brandmark-choreography
 description: >
-  Scroll-driven positioning for the v7 brandmark (fixed `BrandmarkActor` + `useSigilChoreography`).
-  Prevents regressions where the mark drifts, snaps, appears in the hero on refresh, mis-docks
-  into the orbit, or fails to fade out after practice exit. Activates on edits to
-  `components/landing/v7/hooks/useSigilChoreography.ts`, `components/landing/v7/BrandmarkActor.tsx`,
-  `components/landing/v7/landing.css` (brandmark / layout / asking-gap / continuum / practice),
-  or any change touching the asking-gap section, the continuum rail, the diamond reticle, or the
-  practice orbit pin.
+  Scroll-driven journey for the v7 brandmark (continuous transform model,
+  ADR-013). The brandmark is a single evolving point cloud whose position,
+  scale, rotation, density, and dispersion are continuous functions of
+  scrollY. One painter end-to-end. Activates on edits to
+  `lib/brandmark/journey.ts`, `lib/stores/brandmarkJourneyStore.ts`,
+  `components/landing/v7/hooks/useBrandmarkJourney.ts`, the keyframe
+  table, the substrate-window math, the journey transform schema, or any
+  change that touches the brandmark's per-frame state.
 ---
 
-# Brandmark choreography (Sigil → Miss → Backdrop → Rail → Orbit → Hidden)
+# Brandmark journey (continuous transform model)
 
-The v7 brandmark journey is a five-station scroll state machine.
+The v7 brandmark journey is a **single continuous transform** computed every scroll frame:
 
-**What paints the mark depends on the runtime mode:**
+```
+scrollY  →  computeBrandmarkTransform(scrollY, keyframes, ctx)  →  BrandmarkTransform
+```
 
-- **Particle mode** (ADR-011, default when WebGL is available and
-  `prefers-reduced-motion: reduce` is not set): one shared R3F canvas
-  paints the mark from a deterministic point cloud sampled from
-  `BRANDMARK_FILLED_PATHS`. Every parked station, every transit, the
-  asking-gap backdrop, and the post-orbit fade-out are painted by
-  particles. The native SVG dock glyphs and the fixed
-  `.tf-brandmark-actor` are hidden via the `[data-brandmark-mode="particle"]`
-  and `[data-brand-particle-backdrop="true"]` CSS gates. For everything
-  _particle-engine_ related see the [`brandmark-particle`](../brandmark-particle/SKILL.md) skill.
-- **SVG mode** (fallback for reduced motion or no WebGL): the architecture
-  documented in ADR-010 v3 paints the mark — three native source-owned
-  park stations (`.sigil__mark img`, `.miss__brand-slot img`,
-  `.crail__brand img`) plus the fixed actor for transit / backdrop /
-  orbit. **This file documents the state machine and the SVG mode
-  invariants.** They must keep holding even though particles are the
-  default painter, because the hook still runs the state machine in
-  both modes.
+One painter (`BrandmarkParticleStation` inside the global `BrandmarkParticleCanvas`) reads the transform every frame and renders the brandmark cloud. The R3F intelligence-layer scene (`BrandmarkRingfield`) reads the same transform for its rings, decorations, and rotation envelope — no separate brandmark cloud inside the R3F context. In SVG-fallback mode (reduced motion or no WebGL), `useBrandmarkJourney` also pins the `BrandmarkActor` to the transform's rect and writes `data-brand-on-*="parked"` attributes so native dock SVGs paint via CSS gates.
 
-The fixed actor (`tf-brandmark-actor`) exists for travel only — five
-morphs total: sigil → miss, miss → backdrop, backdrop → rail-entry, rail
-→ orbit, orbit → hidden. A change to one trigger often regresses another
-(hero flash, between-section float, rail position drift, practice snap,
-actor visible after exit).
-
-**Canonical records:** [ADR-010 v3](../../../sentinel/decisions/010-brandmark-choreography.md) (state machine + SVG painters), [ADR-011](../../../sentinel/decisions/011-brandmark-particle-artifact.md) (particle painters).
-**Related particle-engine skill:** [`brandmark-particle`](../brandmark-particle/SKILL.md).
-**Related compositing (layers):** [ADR-008](../../../sentinel/decisions/008-landing-v7-background-layers.md), `landing-v7-compositing` skill.
+**Canonical record:** [ADR-013](../../../sentinel/decisions/013-brandmark-journey-refactor.md).
+**Related (rendering):** [`brandmark-particle`](../brandmark-particle/SKILL.md).
+**Related (compositing):** [ADR-008](../../../sentinel/decisions/008-landing-v7-background-layers.md), `landing-v7-compositing` skill.
 
 ---
 
-## State machine (one paragraph)
+## Five design principles (load-bearing — every change is reviewed against these)
 
-The journey traverses five stations along scrollY: **sigil → miss →
-backdrop → rail → orbit → hidden.** `useSigilChoreography` runs a single
-rAF-throttled scroll handler that computes the brandmark's state purely
-from `scrollY` and live anchor rects each frame — no per-leg GSAP
-timelines, no scroll-trigger settlers. Each segment between two adjacent
-stations has a park zone (`PARK_FRAC = 0.32` on each end) and a transit
-zone in the middle. **In particle mode** the hook writes a per-frame
-`StationSnapshot` into `useBrandmarkParticleStore` (for the parked station
-at parked moments, for the destination station with interpolated rect +
-density + dispersion during transit, and for the orbit station during
-post-orbit fade-out); the shared R3F canvas projects the snapshot's
-particles into the right rect with the right density / dispersion / tint.
-**In SVG mode** the hook calls `actor.pinToRect` with the same rects and
-opacity (sigil and rail use the native sigil / rail glyphs as the painter
-during parked moments via the `data-brand-on-*` CSS gates from ADR-010
-v3).
+1. **The brandmark is a single CONTINUOUS artifact that EVOLVES.** Position, scale, rotation, density, dispersion are continuous functions of scrollY.
+2. **No opacity fades for the brandmark cloud mid-journey.** Every transition is geometric. Hero entry + post-orbit exit are the only opacity bookends.
+3. **No crossfades between painters.** One painter end-to-end. Boundary swaps are forbidden by construction.
+4. **Decorations EMERGE geometrically, not via opacity.** Encode ring, sub-orbits, halo dots all use `group.scale.setScalar(splitEmerge(progress))` — material opacity stays constant.
+5. **Hero entrance and post-orbit exit are the only bookends.** They may use opacity ramps because there is nothing to evolve from / into.
 
-The hero guard short-circuits the journey when `scrollY < 4` so the
-brandmark is never pinned to a downstream target on initial load (or
-refresh-with-restored-scroll). The HUD bottom-left brandmark slot
-(`#hudBrandmark`) is no longer used as a destination. CSS hides it while
-`[data-brand-on-rail]` is set on the root.
+If a fix tempts you to add an opacity fade mid-journey, an attribute swap, or a separate painter for a special case — re-read the principles and find a geometric solution instead.
+
+---
+
+## Keyframe schema
+
+Five keyframes, declared in [`lib/brandmark/journey.ts`](../../../lib/brandmark/journey.ts):
+
+```
+sigil → miss → substrate → rail → orbit
+```
+
+Each keyframe:
+
+| Field         | Purpose                                                                                   |
+| ------------- | ----------------------------------------------------------------------------------------- | ------ | ----------- | ------ | --------- |
+| `id`          | Stable identifier (`"sigil"                                                               | "miss" | "substrate" | "rail" | "orbit"`) |
+| `resolveRect` | Closure that returns the live `DOMRect` for this keyframe's anchor (re-read every frame)  |
+| `parkFracIn`  | Fraction of the inbound segment that counts as "parked at this keyframe" (default `0.32`) |
+| `parkFracOut` | Fraction of the outbound segment that counts as "still parked here" (default `0.32`)      |
+| `parked`      | `{ density, dispersion, ringsActive? }` — what the painter reads while parked             |
+| `transitIn`   | Per-arrival override for `dispersionBump` (`null` = no bump) and `easing`                 |
+
+**Keyframe configuration today:**
+
+| Keyframe  | Parked density | Parked dispersion | Rings | `transitIn.dispersionBump`                       |
+| --------- | -------------- | ----------------- | ----- | ------------------------------------------------ |
+| sigil     | 1.0            | 0                 | off   | (no inbound segment — first keyframe)            |
+| miss      | 1.0            | 0                 | off   | default `sin(πt) * 0.45` (atmospheric same-size) |
+| substrate | 1.0            | 0                 | on    | **`null`** — no bump (miss → substrate grows)    |
+| rail      | 1.0            | 0                 | off   | **`null`** — no bump (substrate → rail shrinks)  |
+| orbit     | 1.0            | 0                 | off   | **`null`** — no bump (rail → orbit is sticky)    |
+
+Per-arrival dispersion bump `null` suppresses the bell-curve scatter for size-changing transits. The brandmark cloud stays coherent through the rect lerp — Principle 1 / Principle 2.
+
+---
+
+## The journey transform
+
+```ts
+interface BrandmarkTransform {
+  rect: { left: number; top: number; width: number; height: number };
+  opacity: number; // 0 only at hero / post-orbit bookends (Principle 2)
+  density: number; // continuous
+  dispersion: number; // continuous (+ per-arrival bump if defined)
+  rotationY: number; // radians — non-zero only inside substrate window
+  ringsActive: boolean; // true only while parked at substrate
+  ringProgress: number; // 0..1 inside substrate window; drives R3F envelopes
+  visible: boolean; // false only at hero / post-orbit-fade-end
+  parkedAt: KeyframeId | null; // current parked station; null in transit
+}
+```
+
+`opacity` is the contract that enforces Principle 2: in the painter it's the `uOpacity` uniform; in any code reviewing this skill, an `opacity` change at any value of `scrollY` between `c[sigil] + 0` and `c[orbit] - 0` is a regression. The painter MUST keep the brandmark cloud at full opacity throughout.
+
+---
+
+## Substrate window — single source of truth for R3F
+
+The substrate-parked scroll window is computed by `computeSubstrateRange(keyframes, centres)`:
+
+```
+engageY = c[miss] + (1 - parkFracIn-substrate) * (c[substrate] - c[miss])
+exitY   = c[substrate] + parkFracOut-substrate * (c[rail] - c[substrate])
+```
+
+Inside `[engageY, exitY]`:
+
+- `transform.ringsActive = true`
+- `transform.ringProgress = (scrollY - engageY) / (exitY - engageY)`
+- `transform.rotationY = splitRotation(ringProgress)` — drives BOTH the global painter's 2D squash AND the R3F parent group's true 3D `rotation.y`
+
+At `ringProgress = 0` and `ringProgress = 1` the rotation is 0 (axis-aligned). Decorations are at scale 0 (geometrically absent). Both endpoints are clean visual swaps from the surrounding transit beats.
 
 ---
 
 ## Pre-merge checklist (regression invariants)
 
-Match each item to [ADR-010 § Eight regression rules (v3)](../../../sentinel/decisions/010-brandmark-choreography.md#eight-regression-rules-load-bearing-invariants--v3):
+Match each item to the principle it enforces. Run the dev parity log (`[brandmarkJourney]` console.debug every 30 frames) and scroll through the page.
 
-- [ ] **Section 02 source-owned** — `.sigil__mark img` is visible and owns the diagram mark; `.tf-brandmark-actor` opacity is `0` through hero, entrance, and the section-02 parked/read state.
-- [ ] **Three source-owned park stations** — `.sigil__mark img`, `.miss__brand-slot img`, `.crail__brand img` each own the visible mark while the choreography is parked there. The fixed actor stays positioned at the brand's rect (so it can re-emerge instantly for the next morph) but is hidden via CSS opacity.
-- [ ] **Miss trigger** — anchored to **`#missing-layer` `top 50% → top 0%`**, `scrub: 0.4`. `captureMissRects()` reads `readSigilRect()` (live unscaled sigil rect) and `readMissBrandRect()` (live `.miss__brand-slot img` rect). At p=1, hands to `pinAtMissLayerParked()` → `[data-brand-on-missing="parked"]`.
-- [ ] **Backdrop trigger** — anchored to **`#asking-gap` `top 50% → top 0%`**, `scrub: 0.4`. `captureBackdropRects()` reads `readMissBrandRect()` as source (the previous park station) and `readBackdropRect()` as destination. Source rect re-read live each frame inside `applyBackdropMorph` so the brand's scroll position stays accurate.
-- [ ] **Rail entry trigger** — anchored to **`#continuum` `top 60% → top 30%`**, `scrub: 0.4`. Source rect is the live backdrop anchor; destination is `readRailBrandRect()` (centre `.crail__brand` slot). Opacity ramps `0.08 → 1` across the morph.
-- [ ] **Practice entry trigger** — anchored to **`#practice` `top 60% → top 0%`**, `scrub: 0.4`. Source rect is `readRailBrandRect()` (live, every frame — scrolls with rail DOM); destination is `.approach__orbit__mark.getBoundingClientRect()` (live, every frame — sticky parent).
-- [ ] **Practice exit trigger** — anchored to **`#practice` `bottom 25% → bottom -10%`**, `scrub: 0.4`. Actor stays pinned at orbit position while opacity tweens `1 → 0`; `onLeave` calls `hideActor()` to settle.
-- [ ] **Hero / refresh** — every `onRefresh` else-branch short-circuits when `scrollY < 4`. No travel timeline pins to a downstream target on initial load.
-- [ ] **Live rects** — backdrop, miss-brand, rail-brand, and orbit destinations all use live `getBoundingClientRect()` per relevant frame; no stale `onEnter` captures for moving / sticky targets.
-- [ ] **Fast scroll** — every travel timeline (`missTl`, `backdropTl`, `railEntryTl`, `practiceEntryTl`, `practiceExitTl`) has `onLeave` / `onLeaveBack` that finalises the dock or returns to the previous parked state.
-- [ ] **Tri-state attrs on documentElement** — `data-brand-on-missing` and `data-brand-on-rail` are written to BOTH the LandingPage rootRef AND `document.documentElement`. The fixed `.tf-brandmark-actor` renders as a sibling of rootRef, so descendant selectors only reach it via `documentElement`.
-- [ ] **HUD slot** — `#hudBrandmark` is hidden by CSS (`[data-brand-on-rail]` rule); the actor never `pinToRect`s the HUD rect.
-- [ ] **Run** the Playwright "sample + jump" recipe below in **both directions** and verify the visible path matches: hidden in hero → native sigil in section 02 → native miss brand at missing-layer → backdrop fade-in at asking-gap → native rail brand at continuum → mark at orbit during practice → faded out after practice exit.
-
-End of session: if this fix was non-trivial, run [Cycle A in MAINTENANCE.md](../../../sentinel/MAINTENANCE.md#cycle-a-post-incident-capture-checklist).
+- [ ] **Hero (scrollY < 4)** — `transform.visible === false`. No painter renders.
+- [ ] **Sigil entrance** — opacity ramps 0 → 1 across `FADE_IN_FRAC * vh`. Hero bookend; only opacity write outside the orbit fade-out (Principle 5).
+- [ ] **Sigil parked** — `parkedAt === "sigil"`; rect matches sigil dock; no rotation; no rings.
+- [ ] **Sigil → miss transit** — `parkedAt === null`; rect lerps; dispersion ramps up (default bump = atmosphere — sigil → miss is same-size and the bump IS the visual story).
+- [ ] **Miss parked** — `parkedAt === "miss"`; rect matches the centre of the 4-card grid.
+- [ ] **Miss → substrate transit (CRITICAL)** — rect lerps from ~144 px to ~280 px+; **dispersion stays at 0 throughout** (Principle 2: cloud must stay coherent through growth). NEVER allow a dispersion bump on this leg.
+- [ ] **Substrate parked** — `parkedAt === "substrate"`; `ringsActive === true`; `ringProgress` ramps 0 → 1 over the parked scroll window. Rotation envelope plays per `splitRotation`. Decorations (encode ring, sub-orbits, halo) emerge via geometric scale 0 → 1 across `ringProgress ∈ [0, 0.08]` (Principle 4 — NEVER opacity).
+- [ ] **Substrate → rail transit (CRITICAL)** — rect lerps from ~280 px+ down to ~56 px; dispersion stays at 0. Same coherence requirement as miss → substrate.
+- [ ] **Rail parked** — `parkedAt === "rail"`; rect matches the rail dock.
+- [ ] **Rail → orbit transit** — uses the `practice.top` non-sticky reference inside `computeBaseTransform` to handle sticky-orbit math.
+- [ ] **Orbit parked** — `parkedAt === "orbit"`; rect matches the orbit dock.
+- [ ] **Post-orbit fade-out** — opacity ramps 1 → 0 across `FADE_OUT_FRAC * vh`. Post-orbit bookend; only opacity write outside the sigil entrance (Principle 5).
+- [ ] **Singleton check** — `brandmarkSingletonCheck` reports at most one painter visible at any scroll position.
 
 ---
 
-## Runtime debugging — Playwright sample-and-jump detector
+## Common edits and where they live
 
-Use the **Visual** test browser or a throwaway `test.describe` on `http://localhost:3003/`. The goal is to catch **jumps** (position delta ≫ scroll delta), **hero contamination** (actor visible when it should be hidden), and **bad opacity** at each station.
-
-```ts
-// Sample the fixed actor at known scroll positions across the v2 stations.
-// Use the section element's offsetTop to compute scroll positions; viewport
-// height varies but the station entry/exit triggers are viewport-relative,
-// so the centre of each station is a reliable sample target.
-//
-// Heuristics:
-//   • At scrollY = 0 (hero):       actor opacity should be 0.
-//   • At #definition top - 100:    opacity 0 (still source-owned).
-//   • At #definition bottom:       opacity 0 (parked at sigil source).
-//   • At #missing-layer centre:    opacity 0 + data-brand-on-missing="parked"
-//                                  (native .miss__brand-slot img owns the mark).
-//   • At #asking-gap centre:       opacity ≈ 0.08 (backdrop park).
-//   • At #continuum centre:        opacity 0 + data-brand-on-rail="parked"
-//                                  (native .crail__brand img owns the mark).
-//   • At #practice top + 200:      opacity 1, position == orbit centre.
-//   • At #practice bottom + 100:   opacity 0 (faded after exit).
-
-await page.goto("http://localhost:3003/", { waitUntil: "networkidle" });
-
-const sample = () =>
-  page.evaluate(() => {
-    const el = document.querySelector(".tf-brandmark-actor");
-    const root = document.documentElement;
-    const approach = document.querySelector(".approach");
-    if (!el) return { found: false };
-    const r = el.getBoundingClientRect();
-    return {
-      found: true,
-      x: Math.round(r.left + r.width / 2),
-      y: Math.round(r.top + r.height / 2),
-      w: Math.round(r.width),
-      h: Math.round(r.height),
-      opacity: parseFloat(getComputedStyle(el).opacity),
-      brandOnRail: document
-        .querySelector("[data-brand-on-rail]")
-        ?.getAttribute("data-brand-on-rail"),
-      orbitDocked: approach?.getAttribute("data-orbit-docked"),
-    };
-  });
-
-const sectionTop = (id: string) =>
-  page.evaluate((sel) => {
-    const el = document.querySelector(sel) as HTMLElement | null;
-    return el ? el.offsetTop : 0;
-  }, `#${id}`);
-
-const stops = [
-  { label: "hero", y: 0 },
-  { label: "def-top", y: (await sectionTop("definition")) - 100 },
-  { label: "def-mid", y: (await sectionTop("definition")) + 200 },
-  { label: "miss-mid", y: (await sectionTop("missing-layer")) + 300 },
-  { label: "ask-mid", y: (await sectionTop("asking-gap")) + 200 },
-  { label: "cont-top", y: (await sectionTop("continuum")) + 100 },
-  { label: "cont-mid", y: (await sectionTop("continuum")) + 400 },
-  { label: "cont-bot", y: (await sectionTop("continuum")) + 700 },
-  { label: "prac-top", y: (await sectionTop("practice")) + 200 },
-  { label: "prac-mid", y: (await sectionTop("practice")) + 1200 },
-  { label: "prac-bot", y: (await sectionTop("practice")) + 3000 },
-  { label: "post-exit", y: (await sectionTop("build")) + 100 },
-];
-
-let prev = await sample();
-for (const stop of stops) {
-  await page.evaluate((yy) => window.scrollTo(0, yy), stop.y);
-  await page.waitForTimeout(180);
-  const cur = await sample();
-  // eslint-disable-next-line no-console
-  console.log(stop.label, { scrollY: stop.y, ...cur });
-  prev = cur;
-}
-```
-
-A **sudden** centre jump (especially while scroll delta is small) almost always means **stale rect** or **wrong onRefresh** branch. **Wrong opacity** at a stop usually means a missed `pinToRect(rect, opacity, scale)` with the right opacity argument (backdrop = 0.08, rail / orbit = 1).
-
-**Production build:** `npm run build` still runs scroll logic; but reproduce bugs in **`npm run dev`** first for faster iteration.
+| Want to change                              | File                                                                                            |
+| ------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| Add a new keyframe / station                | `lib/brandmark/journey.ts` (`buildKeyframes`) + the painter's CSS dock anchor (if SVG fallback) |
+| Tune park dwell on a keyframe               | `lib/brandmark/journey.ts` (`parkFracIn` / `parkFracOut` on that keyframe)                      |
+| Tune dispersion bump on an arrival          | `lib/brandmark/journey.ts` (`transitIn.dispersionBump` on the destination keyframe)             |
+| Tune substrate rotation envelope            | `components/landing/v7/intelligence-layer/intelligenceLayerGeom.ts` (`splitRotation`)           |
+| Tune ring extrude envelope                  | same file (`splitExtrude`)                                                                      |
+| Tune decoration emerge envelope             | same file (`splitEmerge`) — geometric scale 0 → 1, NOT opacity                                  |
+| Tune entrance / fade-out band widths        | `lib/brandmark/journey.ts` (`FADE_IN_FRAC` / `FADE_OUT_FRAC`)                                   |
+| Change the 2D squash math (shader rotation) | `components/brand/BrandmarkParticleField/shaders.ts` (`uRotationY` block, `SHEAR_SCALE`)        |
+| Add per-frame side effects (CSS gates etc.) | `components/landing/v7/hooks/useBrandmarkJourney.ts` — SVG-mode block (particle mode is silent) |
 
 ---
 
 ## When you touch CSS too
 
-- Section 2 **must not** "fix" drift by making unrelated wrappers `position: sticky` without an ADR — that has broken horizontal alignment and diagram drift in the past.
-- Section 2 **must not** be represented by a fixed overlay actor during the reading state. The native `.sigil__mark img` belongs to the diagram; the fixed actor is for travel between stations only.
-- **Missing-layer (`#missing-layer`)** — the `.miss__brand-slot img` is the source-owned brandmark for the centre dock. It lives inside the 4-card grid as the centre cell of a 3-column / 2-row CSS grid (`grid-column: 2; grid-row: 1 / span 2`), so it scrolls naturally with the cards and never jiggles. Do not move it outside the grid. The fixed actor only takes over for the travel legs in (sigil → miss) and out (miss → backdrop).
-- **Asking-gap (`#asking-gap`)** — the `.ask__brandmark-anchor` is invisible and zero-paint; it exists purely as a measurement target for the actor. Do not give it a background, a border, or any visible content. The lane radial washes (`.ask__wash--violet/--amber/--sage`) belong on `.ask__bleed` (a separate layer) so the anchor's rect stays clean.
-- **Continuum rail** — the `.crail__reticle` (ring + cross + diamond) becomes opacity 0 whenever `[data-brand-on-rail="true"]` or `"parked"`. Do not delete or restructure it: the rail's keyframe loop is also disabled by the same selector. If you need to change the rail visual, tweak the line / frame / stops, not the reticle.
-- **HUD bottom-left slot (`#hudBrandmark`)** — retired as a destination on v7. Do not pin the actor there. The CSS rule `[data-brand-on-rail] .hud__brandmark` keeps it hidden in both `true` and `false` states. Do not reintroduce a `.hud__brandmark.is-visible` class write on the v7 page.
-- **Practice orbit (`.approach__orbit__mark`)** — sticky inside `.approach__chamber` (CSS grid, column 1). The orbit's natural rect changes during sticky engagement; always read live before pinning. Re-pin every scroll frame while `data-orbit-docked="true"`.
-- **Substrate dock (`.ilayer__brandmark-anchor`, ADR-012 v5 — brandmark ringfield)** — the anchor is `position: absolute` inside `#intelligence-layer`. The choreography contract is unchanged at the JS level: `useSigilChoreography.ts` still resolves it via `intelligenceEl.querySelector(".ilayer__brandmark-anchor")` and parks the actor at its rect at full density via the substrate station. Do not move the anchor outside `#intelligence-layer`.
+- **Particle mode** — there is a SINGLE rule that hides every native dock SVG + the fixed actor: `[data-brandmark-mode="particle"] [data-brand-anchor=...] :where(img, svg) { opacity: 0; visibility: hidden; }` and `[data-brandmark-mode="particle"] .tf-brandmark-actor { display: none; }`. Do not reintroduce per-station `data-brand-svg-dock` or `data-brand-particle-backdrop` attribute gates.
+- **SVG fallback** — the `[data-brand-on-missing="parked"]` and `[data-brand-on-rail="parked"]` rules make the native dock SVGs visible at their parked positions. These survived the refactor. Keep them — they're the SVG-mode display story.
+- **The brandmark cloud's opacity is owned by the shader uniform**, not by CSS. Do not add `opacity: 0 → 1` transitions to `.tf-brandmark-particle-canvas` — the canvas wrapper stays at opacity 1; the painter inside controls visibility via `uOpacity`.
 
-  **CONTRACT IN v5 — the SVG glyph at this anchor is HIDDEN whenever the section's R3F canvas is mounted.** `IntelligenceLayerPortal` writes `data-ilayer-mode="r3f"` on `#intelligence-layer` (in addition to `.ilayer__stack`) on canvas creation. A CSS rule `#intelligence-layer[data-ilayer-mode="r3f"] .ilayer__brandmark-anchor > :where(img, svg) { opacity: 0 !important; transition: none !important; }` hides the SVG glyph the moment the canvas mounts, with NO transition. The R3F particle cloud (sampled from the same `BRANDMARK_FILLED_PATHS` per ADR-011) takes over as the painter for the duration of the section. This is a HARD SWAP (atomic CSS attribute toggle), not a crossfade — both renderers paint the brandmark at exactly the same screen pixels (the anchor is sized from the encode ring's projected rect by `useIlayerProgress` on init / resize), so the swap reads as visual continuity.
+---
 
-  **The anchor's RECT is sized from JS, not CSS clamp().** `useIlayerProgress` writes inline `top` / `left` / `width` / `height` / `transform: none` on `.ilayer__brandmark-anchor` from the encode ring's projected screen rect. Reviewers must NOT remove these inline styles, NOT add CSS that overrides them with `!important`, and NOT re-introduce the v4 transform-driving CSS variables (`--ilayer-anchor-x` / `-y` / `-scale` / `--ilayer-tilt-deg` / `--ilayer-brand-opacity` are all retired). The anchor's RECT is what the rail handoff at section exit reads, so it MUST stay at the encode ring's projected position.
+## Don't reintroduce
 
-  At section exit the R3F scene's parent rotation eases back to 0deg and rings retract to z=0, so the brandmark cloud is axis-aligned at the same pixels as the SVG dock. When `[data-ilayer-mode="r3f"]` is removed (canvas unmount), the SVG glyph reappears instantly at the same position and the rail morph fires from a clean axis-aligned bbox. If the lift-off reads abrupt, the fix is in the R3F scene's RETRACT envelope (`splitExtrude` / `splitRotation` in `intelligenceLayerGeom.ts`), NOT in the choreography hook.
+- **`useSigilChoreography`** — replaced by `useBrandmarkJourney`. The old per-station snapshot model is gone; do not bring it back as a parallel hook.
+- **`brandmarkParticleStore`** — replaced by `brandmarkJourneyStore`. The single transform is the only state.
+- **`data-brand-svg-dock` / `data-brand-particle-backdrop`** — retired. The single `data-brandmark-mode` attribute (set once at init) is the entire CSS gate.
+- **`applyR3FDockMask` / `MutationObserver` in IntelligenceLayerPortal** — retired. The CSS `[data-brandmark-mode="particle"]` rule hides the substrate SVG dock declaratively.
+- **`BrandmarkActor.morphRects`** — dead API, deleted. The actor uses `pinToRect` only.
+- **`buildBrandmarkParticles` / R3F `<points>` inside `BrandmarkRingfield`** — retired. The R3F scene is rings-only; the brandmark cloud is the global painter's job, even inside the intelligence-layer section.
+
+---
+
+## Debugging tip — the dev parity log
+
+In development, `useBrandmarkJourney` writes a `console.debug` line every 30 frames:
+
+```
+[brandmarkJourney] scrollY=4321 parked=miss rect=842,521 144x144 density=1.00 disp=0.00 rotY=0.0deg rings=off ringP=0.00
+```
+
+Scan it as you scroll:
+
+- `density` should stay at 1.00 throughout (Principle 1 — continuous);
+- `disp` should be 0 at parks and during miss → substrate / substrate → rail / rail → orbit transits (Principle 2); only sigil → miss should show a bell-curve bump up to ~0.45.
+- `rotY` should be 0 outside the substrate window and ramp via `splitRotation` inside it.
+- `rings=on` should ONLY appear during the substrate window.
+- `parked` should match the current dock or report `transit` between them.

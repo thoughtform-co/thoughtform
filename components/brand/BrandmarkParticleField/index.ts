@@ -12,5 +12,4 @@
 export { BrandmarkParticleCanvas } from "./BrandmarkParticleCanvas";
 export type { BrandmarkParticleCanvasProps } from "./BrandmarkParticleCanvas";
 export { BrandmarkParticleStation } from "./BrandmarkParticleStation";
-export type { BrandmarkParticleStationProps } from "./BrandmarkParticleStation";
 export { brandmarkVertexShader, brandmarkFragmentShader } from "./shaders";

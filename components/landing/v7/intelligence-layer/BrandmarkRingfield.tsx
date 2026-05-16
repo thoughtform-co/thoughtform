@@ -1,9 +1,8 @@
 "use client";
 
-import { useFrame, useThree } from "@react-three/fiber";
+import { useFrame } from "@react-three/fiber";
 import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
-import { buildBrandmarkParticles } from "./brandmarkParticles";
 import {
   DIAMOND_SIZE,
   HALO_DOT_COUNT,
@@ -13,46 +12,44 @@ import {
   SUB_ORBIT_RADII,
   SUB_ORBIT_SPIN_RATE,
   TICK_LENGTH,
+  splitEmerge,
   splitExtrude,
-  splitRotation,
-  useIlayerGeomStore,
   type RingKind,
 } from "./intelligenceLayerGeom";
-import { useIlayerProgressStore } from "./useIlayerProgress";
+import { useBrandmarkJourneyStore } from "@/lib/stores/brandmarkJourneyStore";
 
 /**
- * BrandmarkRingfield — the ONE-artifact 3D scene for the
- * intelligence-layer section (ADR-012 v5).
+ * BrandmarkRingfield — the rings + decorations R3F scene for the
+ * intelligence-layer section (ADR-013).
+ *
+ * Rings-only. The brandmark cloud is owned by the global painter
+ * (`BrandmarkParticleStation` inside `BrandmarkParticleCanvas`),
+ * which reads the same `BrandmarkTransform` we do here. Both render
+ * at the same screen pixels at the substrate keyframe (the painter
+ * draws the cloud at `transform.rect`; the scene's encode ring
+ * projects to approximately the same area).
  *
  * Single parent group containing:
- *   - the brandmark particle cloud (sampled from BRANDMARK_FILLED_PATHS,
- *     same data as the global brandmark canvas per ADR-011)
  *   - three coaxial hairline `LineLoop` rings (Navigate / Encode / Build)
  *   - bearing ticks + diamond markers as children of each ring
- *   - sub-orbits + halo dots around the brandmark (Section 02 sigil grammar)
+ *   - sub-orbits + halo dots around the brandmark centre (Section 02
+ *     sigil grammar)
  *   - flow arcs between adjacent rings, geometry rebuilt each frame
  *
- * Single-scalar `splitProgress` (read from `useIlayerProgressStore`)
- * drives:
- *   - parent group `rotation.y` via the piecewise envelope in
- *     `splitRotation(progress)`
- *   - per-ring `position.z` via `splitExtrude(progress) * finalZ`
- *   - tick / diamond `scale.setScalar(extrude)` so they grow / shrink
- *     WITH the ring's emergence (NOT via opacity)
- *   - flow arc geometry rebuilt from live ring positions (length 0
- *     when rings coincident, full length at peak split)
+ * Each frame the scene reads:
+ *   - `transform.rotationY` → parent group `rotation.y` (TRUE 3D
+ *     rotation of the rings; the painter applies a 2D squash to the
+ *     brandmark cloud reading the same value so they stay coupled)
+ *   - `transform.ringsActive` → parent group `visible` (rings ONLY
+ *     paint while parked at substrate; outside that window the
+ *     brandmark cloud continues but the rings are absent)
+ *   - `transform.ringProgress` → `splitExtrude` (ring depth) +
+ *     `splitEmerge` (decoration geometric scale) + tick / diamond /
+ *     arc geometric reveals
  *
- * NO `material.opacity` writes for major scene elements. Every
- * appearance / disappearance is geometric (translation / scale).
- * Boundary handoffs are HARD SWAPS via the
- * `[data-ilayer-mode="r3f"]` CSS attribute toggle (set by
- * `IntelligenceLayerPortal` on canvas mount); at progress 0 and
- * progress 1 the parent rotation is exactly 0 and the rings are
- * coincident at z=0, so the brandmark cloud is axis-aligned and
- * matches the SVG dock at the boundary instant.
+ * NO `material.opacity` writes for decoration appearance — Principle
+ * 4 of ADR-013. Every emerge is GEOMETRIC (group.scale.setScalar).
  */
-
-const _projVec = new THREE.Vector3();
 
 interface RingHandles {
   group: THREE.Group;
@@ -80,9 +77,7 @@ function buildRingGeometry(radius: number): THREE.BufferGeometry {
 
 /**
  * Build a `LineSegments` geometry of N short radial tick marks
- * evenly spaced around a circle of `radius` in the XY plane. Each
- * tick is a 2-vertex segment from `(radius - tickLength)` to
- * `radius` along its bearing.
+ * evenly spaced around a circle of `radius` in the XY plane.
  */
 function buildTicksGeometry(
   radius: number,
@@ -112,112 +107,33 @@ function buildTicksGeometry(
 }
 
 /**
- * Build a 4-vertex `LineLoop` diamond (rotated square) — "diamonds
- * not dots" per the brand grammar. Centred at origin in the XY
- * plane.
+ * Build a 4-vertex `LineLoop` diamond (rotated square).
  */
 function buildDiamondGeometry(size: number): THREE.BufferGeometry {
-  const positions = new Float32Array([
-    0,
-    size,
-    0, // top
-    size,
-    0,
-    0, // right
-    0,
-    -size,
-    0, // bottom
-    -size,
-    0,
-    0, // left
-  ]);
+  const positions = new Float32Array([0, size, 0, size, 0, 0, 0, -size, 0, -size, 0, 0]);
   const geom = new THREE.BufferGeometry();
   geom.setAttribute("position", new THREE.BufferAttribute(positions, 3));
   return geom;
 }
 
 /**
- * EncodeRectReporter — projects the encode ring's centre + radius
- * to client (CSS) pixels and writes them into `useIlayerGeomStore`
- * so the substrate dock anchor in DOM can match its size for the
- * boundary HARD SWAP.
- *
- * Reads the encode group's WORLD position (so even if the parent
- * group is rotated, the projection accounts for it). Throttled to
- * once per second on resize-stable frames; updates more often if
- * the canvas size changes.
- */
-function EncodeRectReporter({
-  encodeGroupRef,
-}: {
-  encodeGroupRef: React.RefObject<THREE.Group | null>;
-}) {
-  const { camera, size } = useThree();
-  const setEncodeRect = useIlayerGeomStore((s) => s.setEncodeRect);
-  const lastWriteRef = useRef(0);
-  const lastSizeRef = useRef({ w: 0, h: 0 });
-
-  useFrame(() => {
-    const group = encodeGroupRef.current;
-    if (!group) return;
-
-    // Update on resize OR every ~500ms (the substrate dock anchor's
-    // CSS rect doesn't need higher precision; the rotation envelope
-    // moves the projected rect across the section but the anchor's
-    // job is just to hold the boundary swap visual position, which
-    // is at progress 0 = head-on = static).
-    const now = performance.now();
-    const sizeChanged =
-      lastSizeRef.current.w !== size.width || lastSizeRef.current.h !== size.height;
-    if (!sizeChanged && now - lastWriteRef.current < 500) return;
-    lastSizeRef.current = { w: size.width, h: size.height };
-    lastWriteRef.current = now;
-
-    // Project the encode ring's centre (group origin) to NDC, then
-    // to CSS pixel coords. Use the AT-REST ring centre (no parent
-    // rotation) by sampling the local origin and applying only the
-    // group's own world matrix excluding ancestor rotation. Easiest:
-    // since the boundary swap fires at progress 0 (parent rotation
-    // = 0), we just project the local origin through the camera.
-    _projVec.set(0, 0, 0);
-    group.localToWorld(_projVec);
-    _projVec.project(camera);
-    const cx = (_projVec.x * 0.5 + 0.5) * size.width;
-    const cy = (1 - (_projVec.y * 0.5 + 0.5)) * size.height;
-
-    // Project a point at radius along scene-X to derive the disc's
-    // projected horizontal radius in pixels.
-    _projVec.set(RING_GEOM.encode.radius, 0, 0);
-    group.localToWorld(_projVec);
-    _projVec.project(camera);
-    const edgeX = (_projVec.x * 0.5 + 0.5) * size.width;
-    const radiusPx = Math.max(8, Math.abs(edgeX - cx));
-    const diameter = radiusPx * 2;
-
-    setEncodeRect({
-      x: cx - radiusPx,
-      y: cy - radiusPx,
-      width: diameter,
-      height: diameter,
-    });
-  });
-
-  return null;
-}
-
-/**
  * Build a single ring (Encode / Navigate / Build) as a child group
  * containing: the hairline LineLoop, optional bearing ticks, optional
  * diamond markers. Returns the group + handles for per-frame updates.
+ *
+ * The whole ring group's `scale` is driven by `splitEmerge` so the
+ * ring grows from a point at the brandmark centre to its full
+ * radius — a geometric reveal, not an opacity fade.
  */
 function buildRing(kind: RingKind): RingHandles {
   const geom = RING_GEOM[kind];
   const group = new THREE.Group();
   group.name = `ring-${kind}`;
+  // Start at scale 0 — the splitEmerge envelope grows the ring from
+  // the brandmark's centre to its full radius. Per Principle 4 the
+  // reveal is geometric: no opacity fades.
+  group.scale.setScalar(0);
 
-  // Hairline ring. LineBasicMaterial.linewidth is clamped to 1px on
-  // most WebGL drivers — that IS the hairline aesthetic per the
-  // brand grammar.
   const ringGeometry = buildRingGeometry(geom.radius);
   const ringMaterial = new THREE.LineBasicMaterial({
     color: geom.color,
@@ -230,7 +146,7 @@ function buildRing(kind: RingKind): RingHandles {
 
   // Bearing ticks (only on Navigate / Build per RING_GEOM.tickCount).
   // Wrapped in their own group so we can scale them independently
-  // (scale grows with the ring's emergence).
+  // (scale grows with the ring's extrude beat after emerge completes).
   let ticks: THREE.LineSegments | null = null;
   if (geom.tickCount > 0) {
     const ticksGeometry = buildTicksGeometry(geom.radius, geom.tickCount, TICK_LENGTH);
@@ -241,13 +157,12 @@ function buildRing(kind: RingKind): RingHandles {
       depthWrite: false,
     });
     ticks = new THREE.LineSegments(ticksGeometry, ticksMaterial);
-    ticks.scale.setScalar(0); // start retracted (rings coincident, ticks invisible)
+    ticks.scale.setScalar(0); // start retracted (extrude beat scales them up)
     group.add(ticks);
   }
 
   // Diamond markers at specified angles. Each is a small LineLoop
-  // diamond placed on the ring's outer edge. Wrapped in a parent
-  // group so we can scale them as a unit with the ring's emergence.
+  // diamond placed on the ring's outer edge.
   let diamondGroup: THREE.Group | null = null;
   if (geom.diamondAngles.length > 0) {
     diamondGroup = new THREE.Group();
@@ -275,14 +190,16 @@ function buildRing(kind: RingKind): RingHandles {
 }
 
 /**
- * Sub-orbits group — concentric hairline `LineLoop`s around the
- * brandmark cloud, in `--dawn-30` (guide register). Plus halo dot
- * diamonds on the outermost orbit. Spins autonomously on Z (the
- * ambient celestial breath that matches Section 02's `.sigil__orbits`).
+ * Sub-orbits + halo dots — concentric hairlines around the brandmark
+ * cloud, spinning autonomously. Wrapped in a parent group that scales
+ * via `splitEmerge` so the sub-orbits + halo grow geometrically from
+ * the brandmark's centre when the substrate beat begins.
  */
 function buildSubOrbits(): { group: THREE.Group; spin: THREE.Group } {
   const root = new THREE.Group();
   root.name = "sub-orbits";
+  // Scale envelope drives the geometric emerge. Per Principle 4.
+  root.scale.setScalar(0);
 
   // Spin group — what we rotate per frame. Parent stays still so its
   // transform composes cleanly with the ringfield's parent group.
@@ -302,8 +219,8 @@ function buildSubOrbits(): { group: THREE.Group; spin: THREE.Group } {
   }
 
   // Halo dots — small diamonds at cardinal points on the OUTERMOST
-  // sub-orbit. Match the encode ring's `--gold` colour so they read
-  // as the brandmark's own attendants.
+  // sub-orbit. Match the encode ring's --gold colour so they read as
+  // the brandmark's own attendants.
   const haloRadius = SUB_ORBIT_RADII[SUB_ORBIT_RADII.length - 1];
   const haloMaterial = new THREE.LineBasicMaterial({
     color: "#caa554", // --gold
@@ -323,17 +240,12 @@ function buildSubOrbits(): { group: THREE.Group; spin: THREE.Group } {
 }
 
 /**
- * FlowArcs — two `LineSegments` connecting Navigate -> Encode and
- * Encode -> Build. Geometry is rebuilt every frame from the rings'
+ * FlowArcs — two `LineSegments` connecting Navigate ⇌ Encode and
+ * Encode ⇌ Build. Geometry is rebuilt every frame from the rings'
  * live world positions so the arcs naturally extrude from length 0
  * (when rings are coincident) to full length (when rings are at
- * +/- finalZ). NO opacity envelope; the arcs are geometrically
- * absent when rings are coincident.
- *
- * Drawn as straight line segments for simplicity (the rings are at
- * the same XY position, just different Z, so the arc is a straight
- * line in Z). If we want curved arcs in the future, we can add
- * intermediate vertices.
+ * ±finalZ). NO opacity envelope; the arcs are geometrically absent
+ * when rings are coincident.
  */
 function buildFlowArcs(): {
   group: THREE.Group;
@@ -343,8 +255,6 @@ function buildFlowArcs(): {
   const group = new THREE.Group();
   group.name = "flow-arcs";
 
-  // Each arc has 2 vertices (start + end). Positions are set per
-  // frame from live ring positions.
   const inflowGeom = new THREE.BufferGeometry();
   inflowGeom.setAttribute("position", new THREE.BufferAttribute(new Float32Array(6), 3));
   const outflowGeom = new THREE.BufferGeometry();
@@ -372,11 +282,8 @@ function buildFlowArcs(): {
 export function BrandmarkRingfield() {
   const parentGroupRef = useRef<THREE.Group>(null);
 
-  // Build everything once; geometry is shared across renders. The
-  // brandmark particles are sampled inside useMemo so we don't pay
-  // the sampling cost on every render.
-  const { brandmark, rings, subOrbits, flowArcs } = useMemo(() => {
-    const brandmark = buildBrandmarkParticles();
+  // Build everything once; geometry is shared across renders.
+  const { rings, subOrbits, flowArcs } = useMemo(() => {
     const rings: Record<RingKind, RingHandles> = {
       build: buildRing("build"),
       encode: buildRing("encode"),
@@ -384,13 +291,13 @@ export function BrandmarkRingfield() {
     };
     const subOrbits = buildSubOrbits();
     const flowArcs = buildFlowArcs();
-    return { brandmark, rings, subOrbits, flowArcs };
+    return { rings, subOrbits, flowArcs };
   }, []);
 
-  // Wire the built groups into refs we can use in useFrame. We use
-  // refs rather than R3F children because the imperative
-  // construction above gives us the cleanest control over the
-  // material / geometry lifecycle.
+  // Wire built groups into refs we can use in useFrame. We use refs
+  // rather than R3F children because the imperative construction
+  // above gives us the cleanest control over the material / geometry
+  // lifecycle.
   const buildGroupRef = useRef<THREE.Group>(rings.build.group);
   const encodeGroupRef = useRef<THREE.Group>(rings.encode.group);
   const navigateGroupRef = useRef<THREE.Group>(rings.navigate.group);
@@ -399,63 +306,64 @@ export function BrandmarkRingfield() {
   const outflowRef = useRef<THREE.LineSegments>(flowArcs.outflow);
 
   useFrame((_, dt) => {
-    const ilayerState = useIlayerProgressStore.getState();
-    const progress = ilayerState.progress;
-    const handoffActive = ilayerState.handoffActive;
+    const transform = useBrandmarkJourneyStore.getState().transform;
+    const ringProgress = transform.ringProgress;
+    const ringsActive = transform.ringsActive;
 
-    // Parent group rotation — the SINGLE thing that makes the user
-    // read "ONE artifact turning" rather than "compositing layers".
+    // === Parent group: rotation + visibility ===
+    // Rotation Y comes from the SAME source the global painter
+    // reads — the journey transform — so rings and brandmark cloud
+    // stay perfectly coupled. Rings rotate in TRUE 3D; the painter
+    // applies a 2D squash that approximates the same Y-axis rotation
+    // (ADR-013 Q1).
     const parent = parentGroupRef.current;
     if (parent) {
-      parent.rotation.y = splitRotation(progress);
-
-      // ADR-012 v5b — handoff-aligned visibility.
-      //
-      // The R3F brandmark + rings paint ONLY while the brandmark
-      // choreography is parked at the substrate station (i.e.
-      // `handoffActive` is true). Outside that window the global
-      // particle field at z:23 owns the brandmark — first as it
-      // morphs in from the missing-layer dock (miss → substrate
-      // transit), then as it morphs back out toward the continuum
-      // rail (substrate → rail transit). Painting the R3F scene
-      // during those windows would create two brandmarks (a flat
-      // morphing one + a rotating local one) at the same screen
-      // position; gating on `handoffActive` keeps exactly one
-      // painter on screen at any time.
-      //
-      // At progress 0 (handoff IN) and progress 1 (handoff OUT) the
-      // splitRotation envelope returns `0`, so the brandmark cloud
-      // is axis-aligned at both swap instants and reads as visual
-      // continuity with the global particle field.
-      parent.visible = handoffActive;
+      parent.rotation.y = transform.rotationY;
+      // Rings paint ONLY while parked at the substrate keyframe.
+      // Outside that window the global painter continues drawing the
+      // brandmark cloud alone (no rings); inside, rings + decorations
+      // emerge geometrically around the cloud.
+      parent.visible = ringsActive;
     }
 
-    // When the scene is hidden we can skip the rest of the per-frame
-    // updates. The geometry is in its current state and will resume
-    // on the next frame `handoffActive` flips to true (which always
-    // happens at progress 0 thanks to the substrate-aligned window
-    // computed by `useIlayerProgress`).
-    if (!handoffActive) {
-      // Sub-orbits' autonomous spin still ticks so the breath looks
-      // continuous when the scene comes back into view, even though
-      // it's invisible right now.
+    // When rings are inactive, skip the per-frame envelope writes.
+    // The sub-orbits' autonomous spin still ticks so the breath
+    // looks continuous when the scene comes back into view.
+    if (!ringsActive) {
       if (subOrbitsSpinRef.current) {
         subOrbitsSpinRef.current.rotation.z += SUB_ORBIT_SPIN_RATE * dt;
       }
       return;
     }
 
-    // Per-ring Z extrusion. Encode is anchored at z=0 (it's the
-    // centre); navigate and build extrude symmetrically.
-    const extrude = splitExtrude(progress);
+    // === splitEmerge — geometric decoration reveal (Principle 4) ===
+    // Sub-orbits + halo dots + encode ring grow from a point at the
+    // brandmark's centre to their full size over the first 8% of
+    // progress, then retract to 0 over the last 8%. NEVER an opacity
+    // fade — group.scale only.
+    const emerge = splitEmerge(ringProgress);
+    if (encodeGroupRef.current) encodeGroupRef.current.scale.setScalar(emerge);
+    if (subOrbits.group) subOrbits.group.scale.setScalar(emerge);
+
+    // === splitExtrude — side ring depth + tick / diamond scale ===
+    // Encode stays at z=0 (anchored centre); navigate and build
+    // extrude symmetrically along Z. Side ring groups also use the
+    // emerge envelope so they grow from the centre before extruding.
+    const extrude = splitExtrude(ringProgress);
     const navZ = RING_GEOM.navigate.finalZ * extrude;
     const bldZ = RING_GEOM.build.finalZ * extrude;
-    if (navigateGroupRef.current) navigateGroupRef.current.position.z = navZ;
-    if (buildGroupRef.current) buildGroupRef.current.position.z = bldZ;
+    if (navigateGroupRef.current) {
+      navigateGroupRef.current.position.z = navZ;
+      navigateGroupRef.current.scale.setScalar(emerge);
+    }
+    if (buildGroupRef.current) {
+      buildGroupRef.current.position.z = bldZ;
+      buildGroupRef.current.scale.setScalar(emerge);
+    }
 
-    // Bearing ticks + diamond markers scale with the ring's
-    // emergence. NOT opacity — they grow geometrically from a point
-    // at the ring's centre to their full position on the rim.
+    // Bearing ticks + diamond markers scale with the ring's emergence
+    // AND the extrude beat — they're only "on the rim" once the ring
+    // has emerged AND extruded out. Geometric grow from a point.
     const navHandles = rings.navigate;
     const bldHandles = rings.build;
     if (navHandles.ticks) navHandles.ticks.scale.setScalar(extrude);
@@ -467,29 +375,25 @@ export function BrandmarkRingfield() {
     // rings are coincident (extrude = 0), the arcs are 0-length
     // segments at z=0 (geometrically absent). When extruded, they
     // span from one ring's edge to the next ring's edge in Z.
-    //
-    // Sample each arc at the "0deg" position (top of ring) since
-    // that's where the diamond markers sit; the arc visually
-    // connects diamond to diamond.
     const inflow = inflowRef.current;
     const outflow = outflowRef.current;
     if (inflow) {
       const pos = inflow.geometry.attributes.position as THREE.BufferAttribute;
-      // Navigate -> Encode (front to centre): from Navigate's top at +Z to Encode's top at z=0
+      // Navigate -> Encode (front to centre): Navigate's top at +Z to Encode's top at z=0
       pos.setXYZ(0, 0, RING_GEOM.navigate.radius, navZ);
       pos.setXYZ(1, 0, RING_GEOM.encode.radius, 0);
       pos.needsUpdate = true;
     }
     if (outflow) {
       const pos = outflow.geometry.attributes.position as THREE.BufferAttribute;
-      // Encode -> Build (centre to back): from Encode's top at z=0 to Build's top at -Z
+      // Encode -> Build (centre to back): Encode's top at z=0 to Build's top at -Z
       pos.setXYZ(0, 0, RING_GEOM.encode.radius, 0);
       pos.setXYZ(1, 0, RING_GEOM.build.radius, bldZ);
       pos.needsUpdate = true;
     }
 
-    // Sub-orbits autonomous breath — slow Z-axis rotation
-    // independent of scroll, matches Section 02's `.sigil__orbits`.
+    // Sub-orbits autonomous breath — slow Z-axis rotation independent
+    // of scroll, matches Section 02's `.sigil__orbits`.
     if (subOrbitsSpinRef.current) {
       subOrbitsSpinRef.current.rotation.z += SUB_ORBIT_SPIN_RATE * dt;
     }
@@ -498,8 +402,6 @@ export function BrandmarkRingfield() {
   // Cleanup geometries / materials on unmount.
   useEffect(() => {
     return () => {
-      brandmark.geometry.dispose();
-      brandmark.material.dispose();
       for (const kind of RING_KINDS) {
         const handles = rings[kind];
         handles.ring.geometry.dispose();
@@ -518,25 +420,17 @@ export function BrandmarkRingfield() {
       flowArcs.outflow.geometry.dispose();
       (flowArcs.inflow.material as THREE.Material).dispose();
     };
-  }, [brandmark, rings, flowArcs]);
+  }, [rings, flowArcs]);
 
   return (
     <>
-      {/* Lighting NOT needed — we use only LineBasicMaterial /
-          PointsMaterial which are unlit by design. The brand
-          grammar wants flat hairline strokes, no PBR. */}
-
       {/* Parent group — one transform applied to everything inside.
-          rotation.y written each frame; rings' position.z written
-          per child; child scales written per child. */}
+          rotation.y written each frame from the journey transform;
+          rings' position.z + scale + decorations' scale written per
+          child. */}
       <group ref={parentGroupRef}>
-        {/* Brandmark particle cloud — the artifact's identity, in 3D
-            space at z=0. Rotates with the parent (at edge-on
-            becomes a thin vertical line of particles). */}
-        <points geometry={brandmark.geometry} material={brandmark.material} frustumCulled={false} />
-
         {/* Sub-orbits + halo dots — celestial decoration around the
-            brandmark, breathing on its own Z spin. */}
+            brandmark cloud's centre, breathing on its own Z spin. */}
         <primitive object={subOrbits.group} />
 
         {/* Three coaxial rings. Encode is at z=0 (anchor); navigate
@@ -549,12 +443,6 @@ export function BrandmarkRingfield() {
             positions; length 0 when rings coincident, full length
             at peak split. */}
         <primitive object={flowArcs.group} />
-
-        {/* Encode rect projector — writes the encode ring's screen
-            rect into useIlayerGeomStore so the substrate dock
-            anchor in DOM matches its size for the boundary HARD
-            SWAP. */}
-        <EncodeRectReporter encodeGroupRef={encodeGroupRef} />
       </group>
     </>
   );
