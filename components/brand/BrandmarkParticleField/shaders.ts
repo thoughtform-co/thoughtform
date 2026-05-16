@@ -57,8 +57,10 @@ uniform float uTime;        // seconds
 uniform float uPointSize;   // base px (multiplied by uPixelRatio)
 uniform float uPixelRatio;
 uniform float uRotationY;   // radians; 2D squash approximation of Y-axis 3D rotation
+uniform float uShapeBlend;  // [0..1] lerp between aHome (full mark) and aHomeRing (ring-only)
 
-attribute vec2 aHome;       // [-0.5, 0.5] normalised inside viewBox
+attribute vec2 aHome;       // [-0.5, 0.5] normalised inside viewBox (full mark)
+attribute vec2 aHomeRing;   // [-0.5, 0.5] normalised inside viewBox (ring-only)
 attribute vec2 aSeed;       // stable per-particle seed
 attribute float aRank;      // [0, count)
 
@@ -91,18 +93,23 @@ void main() {
       cos(aSeed.y * 0.37 + uTime * 0.91) * 0.22
   );
 
+  // === ADR-014: per-particle shape blend ===
+  //
+  // The brandmark can sample to multiple topologies (currently full
+  // mark vs ring-only). Each particle has a paired home in both
+  // shapes, indexed by its rank. mix() at uShapeBlend gives a
+  // continuous lerp so the cloud morphs cleanly between the two
+  // (no teleports, no opacity fades — Principle 4 of ADR-013).
+  vec2 blendedHome = mix(aHome, aHomeRing, uShapeBlend);
+
   // === ADR-013: 2D squash-rotation around the brandmark centre ===
   //
-  // Apply the squash to aHome (the normalised home position) BEFORE
-  // adding wander, so the wander stays in the post-squash coordinate
-  // frame (particles breathe inside the squashed silhouette, not
-  // outside it).
+  // Apply the squash to blendedHome BEFORE adding wander, so the
+  // wander stays in the post-squash coordinate frame (particles
+  // breathe inside the squashed silhouette, not outside it).
   //
   //   cosR = cos(rotationY)      → horizontal scale factor
   //   sinR = sin(rotationY)      → drives the perspective shear
-  //
-  // squashedX = aHome.x * cosR + aHome.y * sinR * SHEAR_SCALE
-  // squashedY = aHome.y         (vertical untouched — Y-axis rotation)
   //
   // At rotationY = 0:   cosR = 1, sinR = 0  → identity (axis-aligned).
   // At rotationY = pi/2: cosR = 0           → all particles collapse
@@ -111,8 +118,8 @@ void main() {
   float cosR = cos(uRotationY);
   float sinR = sin(uRotationY);
   vec2 squashedHome = vec2(
-    aHome.x * cosR + aHome.y * sinR * SHEAR_SCALE,
-    aHome.y
+    blendedHome.x * cosR + blendedHome.y * sinR * SHEAR_SCALE,
+    blendedHome.y
   );
 
   // Pixel-space final position. squashedHome is half-unit normalised

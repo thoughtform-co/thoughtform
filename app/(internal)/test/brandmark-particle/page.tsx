@@ -60,6 +60,7 @@ export default function BrandmarkParticlePreviewPage() {
         rotationY: (rotationDeg * Math.PI) / 180,
         ringsActive: false,
         ringProgress: 0,
+        shapeBlend: 0,
         visible: opacity > 0.001,
         parkedAt: null,
       });

@@ -1,23 +1,20 @@
 export { IntelligenceLayerPortal } from "./IntelligenceLayerPortal";
 export { IntelligenceLayerStack } from "./IntelligenceLayerStack";
-export { BrandmarkRingfield } from "./BrandmarkRingfield";
+export { OrbitField } from "./OrbitField";
 export { useIlayerProgress, useIlayerProgressStore, type IlayerMode } from "./useIlayerProgress";
 export {
-  RING_GEOM,
-  RING_KINDS,
   CAMERA_PARAMS,
-  SPLIT_ENVELOPE,
-  SUB_ORBIT_RADII,
-  HALO_DOT_COUNT,
+  SUBSTRATE_RING,
+  LEFT_ORBIT,
+  RIGHT_ORBIT,
+  SIDE_ORBITS,
+  ORBIT_ENVELOPE,
   DIAMOND_SIZE,
-  TICK_LENGTH,
   RING_SEGMENTS,
   SUB_ORBIT_SPIN_RATE,
   smoothstep,
   lerp,
+  orbitEmerge,
   splitRotation,
-  splitExtrude,
-  splitEmerge,
-  type RingKind,
-  type RingGeom,
+  type SideOrbit,
 } from "./intelligenceLayerGeom";

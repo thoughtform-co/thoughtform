@@ -4606,33 +4606,40 @@ html { scroll-behavior: smooth; }
        3. The connector lines and contour rings paint on top of the
           opaque shield; they never reveal the gateway radial.
        ──────────────────────────────────────────────────────────────────── -->
-  <section class="station station--centered ilayer" id="intelligence-layer" data-station="intelligenceLayer" data-screen-label="04 Intelligence layer">
+  <section class="station station--centered ilayer ilayer--triad" id="intelligence-layer" data-station="intelligenceLayer" data-screen-label="04 Intelligence layer">
     <div class="station__idx">Intelligence layer<span class="landmark">Landmark · the encoded substrate</span></div>
 
-    <!-- Podium artifact (ADR-012 v4) — sleep-well-creatives.com pattern:
-         three real 3D discs (short cylinders with rim thickness) pinned
-         to the bottom of the viewport, full viewport width. The
-         brandmark MORPHS INTO the middle (encode) disc rather than
-         sitting above it: as the section progresses, the SVG mark
-         translates + scales toward the encode disc's projected screen
-         rect and crossfades to 0, while the encode disc fades in at
-         the same rect.
+    <!-- Orbital triad (ADR-014) — Destiny / Astral Frontier style
+         space-map composition. Three coplanar, front-on circles:
+           [ 01 left orbit · sources ]
+           [ 02 substrate · brandmark morphed to ring ]
+           [ 03 right orbit · surfaces ]
+
+         The brandmark cloud literally BECOMES the middle ring during
+         the substrate-engagement window (uShapeBlend ramp in the
+         painter shader). Side orbits emerge from substrate centre by
+         sliding outward + scaling up in parallel. Labels integrate
+         along each orbit's outer arc via diamond pips at canonical
+         angles.
 
          Layout regions inside .ilayer__inner are absolute-positioned
-         siblings (no centred flex column anymore):
-           - .ilayer__head           — top-center, eyebrow + title only
-           - .ilayer__labels         — 4 floating annotation blocks
-                                       around the upper viewport, each
-                                       with an SVG hairline connector
-                                       dropping toward its disc
-           - .ilayer__brandmark-anchor — starts at upper-center, descends
-                                         + scales toward the encode
-                                         disc per useIlayerProgress
-           - .ilayer__artifact .ilayer__stack — bottom-pinned podium
+         siblings:
+           - .ilayer__head            — top-center, title + lede
+           - .ilayer__triad           — R3F canvas + static fallback
+           - .ilayer__triad__pills    — three numbered eyebrow pills
+                                        at the top of each orbit
+           - .ilayer__substrate-inner — prose + 3 chips, centered
+                                        inside the substrate ring
+           - .ilayer__orbit-labels    — diamond-pipped labels along
+                                        each side orbit's outer arc
+           - .ilayer__brandmark-anchor — substrate dock; the global
+                                         painter docks the brandmark
+                                         cloud here and the shape-
+                                         blend morphs it to a ring
 
          Compositing rules followed:
          1. Outer .ilayer wrapper inherits .station's opaque var(--void)
-            shield. No transparency on the bleed-width element.
+            shield + faint radial haze (.ilayer::before).
          2. Reveal motion lives on .ilayer__inner; the wrapper carries
             no data-m / opacity transitions (Rule 2 of
             landing-v7-compositing).
@@ -4641,133 +4648,132 @@ html { scroll-behavior: smooth; }
     <div class="ilayer__inner" data-m="instrument">
 
       <header class="ilayer__head">
-        <!-- Eyebrow removed: the section's own `.station__idx` already
-             carries "INTELLIGENCE LAYER LANDMARK · THE ENCODED SUBSTRATE"
-             above the title, so a second "THE ANSWER" eyebrow read as
-             redundant. Title only. -->
         <h2 class="ilayer__title">
           The fix is an <em>intelligence layer.</em>
         </h2>
+        <p class="ilayer__lede">
+          An operating layer between how your team works and what AI
+          does. <em>Encoded once.</em> Inherited by every surface.
+        </p>
       </header>
 
-      <!-- Floating annotation labels — sleep-well-creatives.com
-           pattern: 4 callouts in the upper viewport, each with a
-           thin hairline path dropping to the disc it describes.
-           Connectors animate via stroke-dashoffset keyed on
-           --ilayer-progress (written by useIlayerProgress); per-
-           label fade-in is sequenced so navigate/encode/build/closer
-           reveal in order as the podium stacks itself. -->
-      <div class="ilayer__labels" aria-hidden="true">
-
-        <aside class="ilayer__label ilayer__label--navigate" data-ilayer-label="navigate">
-          <p class="ilayer__label__eyebrow">Navigate</p>
-          <p class="ilayer__label__body">
-            Trusted sources, decisions, and prior work — the input
-            plane the team already navigates.
-          </p>
-          <svg class="ilayer__label__connector" viewBox="0 0 100 200" preserveAspectRatio="none" aria-hidden="true">
-            <path class="ilayer__label__path" d="M 90 0 Q 90 100, 50 200" fill="none" />
-          </svg>
-        </aside>
-
-        <aside class="ilayer__label ilayer__label--encode" data-ilayer-label="encode">
-          <p class="ilayer__label__eyebrow">Encode</p>
-          <p class="ilayer__label__body">
-            <em>The substrate.</em> Your team's judgment, encoded
-            once. The brandmark IS this layer.
-          </p>
-          <svg class="ilayer__label__connector" viewBox="0 0 100 200" preserveAspectRatio="none" aria-hidden="true">
-            <path class="ilayer__label__path" d="M 10 0 Q 10 100, 50 200" fill="none" />
-          </svg>
-        </aside>
-
-        <aside class="ilayer__label ilayer__label--build" data-ilayer-label="build">
-          <p class="ilayer__label__eyebrow">Build</p>
-          <p class="ilayer__label__body">
-            Headless surfaces — every tool the team already uses
-            inherits the substrate's judgment.
-          </p>
-          <svg class="ilayer__label__connector" viewBox="0 0 100 200" preserveAspectRatio="none" aria-hidden="true">
-            <path class="ilayer__label__path" d="M 90 0 Q 90 120, 50 200" fill="none" />
-          </svg>
-        </aside>
-
-        <aside class="ilayer__label ilayer__label--closer" data-ilayer-label="closer">
-          <p class="ilayer__label__eyebrow">In practice</p>
-          <p class="ilayer__label__body">
-            Work stays in place. <em>Substrate carries the judgment.</em>
-            Surfaces inherit it.
-          </p>
-          <svg class="ilayer__label__connector" viewBox="0 0 100 200" preserveAspectRatio="none" aria-hidden="true">
-            <path class="ilayer__label__path" d="M 10 0 Q 10 120, 50 200" fill="none" />
-          </svg>
-        </aside>
-
-      </div>
-
-      <!-- Podium artifact — three-disc R3F scene, bottom-pinned, full
-           viewport width. The static SVG fallback (reduced-motion /
-           no-WebGL) shows the discs at rest. -->
-      <div class="ilayer__artifact ilayer__stack" role="group" aria-label="Three-layer intelligence-layer instrument: navigate, encode substrate, build">
+      <!-- Triad artifact — R3F orbital scene + static fallback. The
+           wrapper keeps the .ilayer__stack class so the existing
+           portal queries ([data-ilayer-stack-root] inside .ilayer__stack)
+           still resolve without portal changes. -->
+      <div class="ilayer__artifact ilayer__triad ilayer__stack" role="group" aria-label="Intelligence-layer orbital triad: trusted sources, encoded substrate, headless surfaces">
 
         <!-- R3F canvas mount slot. IntelligenceLayerPortal createRoots
              into this placeholder; the static fallback hides the
-             canvas and shows the SVG ellipse stack directly
-             underneath. -->
-        <div class="ilayer__stack__canvas" data-ilayer-stack-root aria-hidden="true"></div>
+             canvas and shows the three overlapping circles
+             directly underneath. -->
+        <div class="ilayer__triad__canvas ilayer__stack__canvas" data-ilayer-stack-root aria-hidden="true"></div>
 
-        <!-- Static fallback — three vertically-offset ellipses
-             matching the podium geometry (build largest at bottom,
-             navigate smallest at top). Hidden whenever the R3F
-             canvas is active (data-ilayer-mode="r3f" on
-             .ilayer__stack). -->
-        <svg class="ilayer__stack__fallback" viewBox="-400 -300 800 600" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
-          <!-- ADR-012 v5 — three concentric HAIRLINE rings + bearing
-               ticks + diamond markers. fill="none" per the celestial-
-               diagram grammar. Build (largest, dawn-30 guide), encode
-               (centre, --gold signal — where the brandmark sits),
-               navigate (smaller, gold-soft accent). -->
-          <circle class="ilayer__stack__fallback-ring ilayer__stack__fallback-ring--build" cx="0" cy="0" r="265" />
-          <circle class="ilayer__stack__fallback-ring ilayer__stack__fallback-ring--encode" cx="0" cy="0" r="195" />
-          <circle class="ilayer__stack__fallback-ring ilayer__stack__fallback-ring--navigate" cx="0" cy="0" r="230" />
-          <!-- Bearing ticks on the build ring (8 cardinal + half-cardinal) -->
-          <g>
-            <line class="ilayer__stack__fallback-tick" x1="0" y1="-265" x2="0" y2="-253" />
-            <line class="ilayer__stack__fallback-tick" x1="187.4" y1="-187.4" x2="178.9" y2="-178.9" />
-            <line class="ilayer__stack__fallback-tick" x1="265" y1="0" x2="253" y2="0" />
-            <line class="ilayer__stack__fallback-tick" x1="187.4" y1="187.4" x2="178.9" y2="178.9" />
-            <line class="ilayer__stack__fallback-tick" x1="0" y1="265" x2="0" y2="253" />
-            <line class="ilayer__stack__fallback-tick" x1="-187.4" y1="187.4" x2="-178.9" y2="178.9" />
-            <line class="ilayer__stack__fallback-tick" x1="-265" y1="0" x2="-253" y2="0" />
-            <line class="ilayer__stack__fallback-tick" x1="-187.4" y1="-187.4" x2="-178.9" y2="-178.9" />
+        <!-- Static fallback — three OVERLAPPING circles (sources / substrate /
+             surfaces). Used when WebGL is unavailable or
+             prefers-reduced-motion is set. Hidden whenever the R3F
+             canvas is active (data-ilayer-mode="r3f" on .ilayer__stack). -->
+        <svg class="ilayer__triad__fallback ilayer__stack__fallback" viewBox="-500 -260 1000 520" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+          <circle class="ilayer__triad__orbit ilayer__triad__orbit--left" cx="-220" cy="0" r="195" />
+          <circle class="ilayer__triad__orbit ilayer__triad__orbit--mid" cx="0" cy="0" r="240" />
+          <circle class="ilayer__triad__orbit ilayer__triad__orbit--right" cx="220" cy="0" r="195" />
+          <!-- Diamond pips along the outer arc of each side orbit -->
+          <g class="ilayer__triad__pips ilayer__triad__pips--left">
+            <polygon points="-360,-138 -348,-128 -360,-118 -372,-128" />
+            <polygon points="-415,0 -403,10 -415,20 -427,10" />
+            <polygon points="-360,138 -348,148 -360,158 -372,148" />
+            <polygon points="-220,-205 -210,-195 -220,-185 -230,-195" />
+            <polygon points="-220,205 -210,215 -220,225 -230,215" />
           </g>
-          <!-- Bearing ticks on the navigate ring (4 cardinal) -->
-          <g>
-            <line class="ilayer__stack__fallback-tick" x1="0" y1="-230" x2="0" y2="-220" />
-            <line class="ilayer__stack__fallback-tick" x1="230" y1="0" x2="220" y2="0" />
-            <line class="ilayer__stack__fallback-tick" x1="0" y1="230" x2="0" y2="220" />
-            <line class="ilayer__stack__fallback-tick" x1="-230" y1="0" x2="-220" y2="0" />
+          <g class="ilayer__triad__pips ilayer__triad__pips--right">
+            <polygon points="360,-138 372,-128 360,-118 348,-128" />
+            <polygon points="415,0 427,10 415,20 403,10" />
+            <polygon points="360,138 372,148 360,158 348,148" />
+            <polygon points="220,-205 230,-195 220,-185 210,-195" />
+            <polygon points="220,205 230,215 220,225 210,215" />
           </g>
-          <!-- Diamond markers on the build ring (4 cardinal positions). -->
-          <polygon class="ilayer__stack__fallback-diamond" points="0,-275 10,-265 0,-255 -10,-265" />
-          <polygon class="ilayer__stack__fallback-diamond" points="275,0 265,10 255,0 265,-10" />
-          <polygon class="ilayer__stack__fallback-diamond" points="0,275 10,265 0,255 -10,265" />
-          <polygon class="ilayer__stack__fallback-diamond" points="-275,0 -265,10 -255,0 -265,-10" />
-          <!-- Diamond marker on the navigate ring (top only). -->
-          <polygon class="ilayer__stack__fallback-diamond" points="0,-240 8,-230 0,-220 -8,-230" />
         </svg>
 
       </div>
 
-      <!-- Brandmark substrate dock anchor — starts at upper-center
-           and descends + scales toward the encode disc's projected
-           screen rect via useIlayerProgress's CSS variables. The
-           anchor element is the ADR-012 contract surface: the
-           placeholder <img> is stripped by the v7 parser, and
-           BrandmarkSystem portals the canonical glyph into it.
-           Sibling of .ilayer__artifact (not a child of the canvas
-           grid cell) so its absolute positioning sits free of the
-           podium's bottom-pin layout. -->
+      <!-- Numbered eyebrow pills at the top of each orbit. Translated
+           from Aether's `aiop-phase-pill` row into Thoughtform's mono
+           HUD register (PT Mono, gold). -->
+      <ol class="ilayer__triad__pills-dom" role="list" aria-label="Three intelligence-layer stations">
+        <li class="ilayer__triad__pill ilayer__triad__pill--left">
+          <span class="ilayer__triad__pill-n">01</span>
+          <span class="ilayer__triad__pill-label">Trusted sources</span>
+        </li>
+        <li class="ilayer__triad__pill ilayer__triad__pill--mid">
+          <span class="ilayer__triad__pill-n">02</span>
+          <span class="ilayer__triad__pill-label">Encoded substrate</span>
+        </li>
+        <li class="ilayer__triad__pill ilayer__triad__pill--right">
+          <span class="ilayer__triad__pill-n">03</span>
+          <span class="ilayer__triad__pill-label">Headless surfaces</span>
+        </li>
+      </ol>
+
+      <!-- Substrate inner content — prose + 3 chips, centered inside
+           the middle ring. Behind the brandmark cloud in z order;
+           reveal threshold ramps in via --ilayer-progress. -->
+      <div class="ilayer__substrate-inner">
+        <p class="ilayer__substrate-prose">
+          Your team's judgment, encoded once. <em>Surfaces inherit it.</em>
+        </p>
+        <ul class="ilayer__substrate-chips" role="list">
+          <li>Owned internally</li>
+          <li>Versioned</li>
+          <li>Model-portable</li>
+        </ul>
+      </div>
+
+      <!-- LEFT ORBIT labels (Trusted sources). Each li sits on the
+           outer arc of the left orbit via CSS custom property --angle
+           (degrees, 0 = top, clockwise). The pip is a small diamond
+           on the orbit line; the label trails outward into negative
+           space. Per-label --reveal threshold cascades the fade-in. -->
+      <ul class="ilayer__orbit-labels ilayer__orbit-labels--left" role="list" aria-label="Trusted sources">
+        <li class="ilayer__orbit-label" style="--angle: 295deg; --reveal: 0.28;">
+          <span class="ilayer__orbit-label__pip" aria-hidden="true"></span>
+          <span class="ilayer__orbit-label__text">Brand framework</span>
+        </li>
+        <li class="ilayer__orbit-label" style="--angle: 270deg; --reveal: 0.32;">
+          <span class="ilayer__orbit-label__pip" aria-hidden="true"></span>
+          <span class="ilayer__orbit-label__text">Past work + decisions</span>
+        </li>
+        <li class="ilayer__orbit-label" style="--angle: 245deg; --reveal: 0.36;">
+          <span class="ilayer__orbit-label__pip" aria-hidden="true"></span>
+          <span class="ilayer__orbit-label__text">Customer research</span>
+        </li>
+      </ul>
+
+      <!-- RIGHT ORBIT labels (Headless surfaces). Mirror of left:
+           angles 45° / 90° / 115° / 135° trail outward to the right. -->
+      <ul class="ilayer__orbit-labels ilayer__orbit-labels--right" role="list" aria-label="Headless surfaces">
+        <li class="ilayer__orbit-label" style="--angle: 65deg; --reveal: 0.40;">
+          <span class="ilayer__orbit-label__pip" aria-hidden="true"></span>
+          <span class="ilayer__orbit-label__text">Cursor</span>
+        </li>
+        <li class="ilayer__orbit-label" style="--angle: 90deg; --reveal: 0.44;">
+          <span class="ilayer__orbit-label__pip" aria-hidden="true"></span>
+          <span class="ilayer__orbit-label__text">Claude</span>
+        </li>
+        <li class="ilayer__orbit-label" style="--angle: 115deg; --reveal: 0.48;">
+          <span class="ilayer__orbit-label__pip" aria-hidden="true"></span>
+          <span class="ilayer__orbit-label__text">Web + REST</span>
+        </li>
+        <li class="ilayer__orbit-label" style="--angle: 135deg; --reveal: 0.52;">
+          <span class="ilayer__orbit-label__pip" aria-hidden="true"></span>
+          <span class="ilayer__orbit-label__text">Agents</span>
+        </li>
+      </ul>
+
+      <!-- Brandmark substrate dock anchor — the global painter docks
+           the cloud here. During the substrate window the uShapeBlend
+           uniform morphs the cloud from full mark to ring (ADR-014),
+           so the brandmark literally becomes the middle circle of
+           the triad. -->
       <div class="ilayer__brandmark-anchor" data-brand-anchor="substrate" aria-hidden="true">
         <img src="assets/logos/Thoughtform_Brandmark.svg" alt="" />
       </div>

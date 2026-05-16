@@ -172,6 +172,38 @@
   }
 }
 
+/* ── Page-wide grit overlay (ADR-014) ──────────────────────────────
+   A second, very subtle noise layer above the stations content. The
+   existing `.gateway__grain` lives inside the fixed `.gateway` —
+   scoped to the gateway and capped by anything stacked over it
+   (stations, fixed HUD, brandmark canvas). The page can then read
+   as flat black between the gateway radial pools and the next
+   station background.
+
+   This overlay sits ABOVE the stations (z-index 11 — stations are
+   z-index 10) but BELOW the fixed HUD chrome (the HUD owns z-index
+   ≥ 50 throughout). Alpha is roughly half the gateway grain so the
+   atmosphere never competes with the section content. Uses
+   `mix-blend-mode: screen` so the noise reads as light glints, not
+   as muddy speckle. Pointer-events disabled so scroll passes
+   through.
+*/
+.v7-doc::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 11;
+  pointer-events: none;
+  background-image: radial-gradient(
+    circle at 1px 1px,
+    rgba(235, 227, 214, 0.022) 1px,
+    transparent 0
+  );
+  background-size: 2.5px 2.5px;
+  mix-blend-mode: screen;
+  animation: grain 12s steps(10) infinite;
+}
+
 /* ═══════════════════════════════════════════════════════════════════
    HUD CHROME — fixed rails, corners, nav
    ═══════════════════════════════════════════════════════════════════ */
@@ -3172,6 +3204,23 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   overflow: hidden;
 }
 
+/* Section-scoped radial haze (ADR-014) — soft gold glow at the
+   substrate's centre + a wider dawn-tinted wash so the orbital
+   triad sits in atmosphere rather than pure void. Mirrors the
+   precedent established by `#about.station::before`; alphas tuned
+   low so the haze is felt, not seen. Pointer-events disabled so
+   the artifact above takes all interaction. */
+.ilayer::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 40% 30% at 50% 50%, rgba(202, 165, 84, 0.05), transparent 60%),
+    radial-gradient(ellipse 70% 60% at 50% 50%, rgba(235, 227, 214, 0.02), transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
 .ilayer .station__idx {
   /* Sized + positioned to sit IMMEDIATELY ABOVE the title inside
      `.ilayer__head` — same `min(1280px, 92vw)` content column,
@@ -3258,49 +3307,109 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   font-weight: 400;
 }
 
-/* ── Floating annotation labels ────────────────────────────────────
-   Sleep-well pattern: 4 callouts in the upper viewport with a thin
-   hairline path dropping toward the disc the label describes. Each
-   label is absolute-positioned at clamp() coordinates; per-label
-   fade-in is keyed off --ilayer-progress (written by the progress
-   hook each frame) so navigate / encode / build / closer reveal
-   sequentially as the podium stacks itself.
+/* ── Lede (subtitle under the section title) ──────────────────────
+   Single short prose line that frames what the orbital triad is.
+   Sits beneath the title, same content column, dawn-toned. */
+.ilayer__lede {
+  margin: 0;
+  font-family: var(--font-pp-neue-montreal);
+  font-size: clamp(13px, 1vw, 15px);
+  line-height: 1.55;
+  letter-spacing: -0.005em;
+  color: var(--dawn-70);
+  max-width: 56ch;
+  text-wrap: pretty;
+}
+.ilayer__lede em {
+  font-style: italic;
+  color: var(--dawn);
+}
 
-   Connector hairlines use SVG <path> with stroke-dasharray =
-   pathLength so we can animate stroke-dashoffset from pathLength
-   (hidden) to 0 (drawn) via the same --ilayer-progress variable. */
-.ilayer__labels {
+/* ── Triad pills (numbered eyebrows above each orbit) ──────────────
+   Three small mono pills, one per orbit. Positioned absolutely at
+   the top of each orbit's column. Reveal cascades via the per-pill
+   modifier thresholds keyed on --ilayer-progress. Aether's
+   `aiop-phase-pill` row translated to Thoughtform's HUD register —
+   PT Mono, gold accent on the numeral, dawn on the label. */
+.ilayer__triad__pills-dom {
   position: absolute;
-  inset: 0;
+  top: clamp(220px, 28vh, 320px);
+  left: 0;
+  right: 0;
+  z-index: 5;
+  margin: 0;
+  padding: 0;
+  list-style: none;
   pointer-events: none;
-  z-index: 4;
 }
-.ilayer__label {
+.ilayer__triad__pill {
   position: absolute;
-  width: clamp(180px, 22vw, 260px);
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin: 0;
-  /* Per-label opacity ramps in via --ilayer-progress thresholds
-     declared per-modifier below. Default 0 so labels don't flash on
-     first paint (the progress var is written 0 → 1 across the section
-     by useIlayerProgress). */
-  opacity: 0;
-  transition: opacity 320ms ease-out;
-  /* Hairline shows below the label text; we use padding-bottom so
-     the connector SVG can extend down ~280px without being clipped. */
-  padding-bottom: clamp(180px, 24vh, 280px);
-}
-.ilayer__label__eyebrow {
-  margin: 0;
+  top: 0;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 6px 14px;
+  border: 1px solid var(--gold-30, rgba(202, 165, 84, 0.3));
+  border-radius: 999px;
+  background: rgba(10, 9, 8, 0.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
   font-family: var(--font-pt-mono);
   font-size: 10px;
   letter-spacing: var(--track-widest);
   text-transform: uppercase;
-  color: var(--gold);
+  color: var(--dawn);
+  white-space: nowrap;
+  transform: translateX(-50%);
+  opacity: 0;
+  transition: opacity 320ms ease-out;
 }
-.ilayer__label__body {
+.ilayer__triad__pill-n {
+  color: var(--gold);
+  font-variant-numeric: tabular-nums;
+}
+.ilayer__triad__pill-label {
+  color: var(--dawn);
+}
+.ilayer__triad__pill--left {
+  left: 22%;
+  opacity: clamp(0, calc((var(--ilayer-progress, 0) - 0.2) * 6), 1);
+}
+.ilayer__triad__pill--mid {
+  left: 50%;
+  border-color: var(--gold, #caa554);
+  background: rgba(10, 9, 8, 0.7);
+  box-shadow: 0 0 24px rgba(202, 165, 84, 0.12);
+  opacity: clamp(0, calc((var(--ilayer-progress, 0) - 0.14) * 6), 1);
+}
+.ilayer__triad__pill--right {
+  left: 78%;
+  opacity: clamp(0, calc((var(--ilayer-progress, 0) - 0.2) * 6), 1);
+}
+
+/* ── Substrate inner content ───────────────────────────────────────
+   Prose line + 3 chip row, centered horizontally inside the
+   substrate ring. Sits BELOW the brandmark cloud (which occupies
+   the top of the substrate ring); the chip row reads as the
+   substrate's tags / signatures. Revealed once the substrate cloud
+   has morphed to its ring topology (--ilayer-progress > 0.30). */
+.ilayer__substrate-inner {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, calc(-50% + clamp(120px, 14vh, 180px)));
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  width: min(420px, 32vw);
+  pointer-events: none;
+  text-align: center;
+  opacity: clamp(0, calc((var(--ilayer-progress, 0) - 0.3) * 5), 1);
+  transition: opacity 320ms ease-out;
+}
+.ilayer__substrate-prose {
   margin: 0;
   font-family: var(--font-pp-neue-montreal);
   font-size: clamp(12px, 0.92vw, 14px);
@@ -3308,85 +3417,114 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   color: var(--dawn-70);
   text-wrap: pretty;
 }
-.ilayer__label__body em {
+.ilayer__substrate-prose em {
   font-style: italic;
   color: var(--dawn);
 }
-.ilayer__label__connector {
+.ilayer__substrate-chips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ilayer__substrate-chips li {
+  padding: 4px 10px;
+  border: 1px solid var(--dawn-30, rgba(235, 227, 214, 0.25));
+  border-radius: 2px;
+  font-family: var(--font-pt-mono);
+  font-size: 9px;
+  letter-spacing: var(--track-widest);
+  text-transform: uppercase;
+  color: var(--dawn-70);
+  background: rgba(10, 9, 8, 0.35);
+}
+
+/* ── Orbit labels (diamond-pipped items along each side orbit) ─────
+   Each label sits on the OUTER arc of its orbit at an --angle
+   (degrees, 0 = top, clockwise — same convention as the R3F pip
+   table). The pip is a small diamond on the orbit line; the label
+   trails outward into negative space via a flex row.
+
+   Layout math: orbit center is positioned at ~22% / 78% of viewport
+   width; orbit radius is ~clamp(140px, 18vw, 200px). The label is
+   placed via trig on --angle:
+     left = orbitCx + sin(angle) * radius
+     top  = orbitCy - cos(angle) * radius
+   Using CSS calc + a separate --orbit-cx / --orbit-cy / --orbit-r
+   per side. */
+.ilayer__orbit-labels {
   position: absolute;
-  /* Sit below the body, run down toward the podium. Width is the
-     label's width; height is the same as the padding-bottom above
-     so the path fits. */
-  left: 0;
-  bottom: 0;
-  width: 100%;
-  height: clamp(180px, 24vh, 280px);
-  overflow: visible;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  margin: 0;
+  padding: 0;
+  list-style: none;
   pointer-events: none;
+  z-index: 4;
+  /* Side orbit radius and center offset in CSS units. The orbit
+     centre sits horizontally offset from viewport center; vertical
+     centre is the section's mid-y. */
+  --orbit-r: clamp(150px, 18vw, 220px);
+  --orbit-cx: 0px;
+  --orbit-cy: 0px;
+  width: 0;
+  height: 0;
 }
-.ilayer__label__path {
-  stroke: var(--dawn-30);
-  stroke-width: 1;
-  vector-effect: non-scaling-stroke;
-  /* The path is a quadratic curve in a 100x200 viewBox stretched to
-     the connector's actual size. We approximate the path length
-     with 220 (a touch over 200 to handle the curve); browsers
-     re-render the dasharray every paint so the over-estimate just
-     means the line has a brief tail of "extra" length to draw,
-     which we hide by clamping the dashoffset transition. */
-  stroke-dasharray: 220;
-  stroke-dashoffset: calc(220 * (1 - var(--ilayer-progress, 0)));
-  transition: stroke-dashoffset 80ms linear;
-  opacity: 0.6;
+.ilayer__orbit-labels--left {
+  --orbit-cx: clamp(-360px, -28vw, -240px);
 }
-
-/* Per-label positioning + reveal threshold. Coordinates use clamp()
-   so they shift gracefully across viewport sizes. The reveal
-   threshold per label is the --ilayer-progress value above which
-   the label fades in; matched to its disc's reveal window in
-   DISC_GEOM. */
-.ilayer__label--navigate {
-  top: clamp(180px, 22vh, 280px);
-  left: clamp(40px, 6vw, 96px);
-  text-align: left;
+.ilayer__orbit-labels--right {
+  --orbit-cx: clamp(240px, 28vw, 360px);
 }
-.ilayer__label--navigate .ilayer__label__connector {
-  /* Drops down-right toward the top (navigate) disc, which sits
-     above the encode disc. Override the path's start/end so the
-     line emerges from the bottom-right of this label's body and
-     lands near the disc's rim. */
+.ilayer__orbit-label {
+  position: absolute;
+  /* --angle is set inline on each li (degrees, 0 = top, clockwise).
+     We compute the polar offset from the orbit's centre. */
+  top: calc(var(--orbit-cy) - cos(var(--angle)) * var(--orbit-r));
+  left: calc(var(--orbit-cx) + sin(var(--angle)) * var(--orbit-r));
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transform: translateY(-50%);
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 360ms ease-out;
+  /* Per-label reveal threshold via inline --reveal. Cascade fires
+     when --ilayer-progress crosses --reveal. */
+  opacity: clamp(0, calc((var(--ilayer-progress, 0) - var(--reveal, 0.3)) * 5), 1);
 }
-.ilayer__label--encode {
-  top: clamp(180px, 22vh, 280px);
-  right: clamp(40px, 6vw, 96px);
-  text-align: right;
+/* Left orbit labels trail RIGHT-to-LEFT — pip first then text on
+   the left so the label reads outward into the left margin. */
+.ilayer__orbit-labels--left .ilayer__orbit-label {
+  flex-direction: row-reverse;
+  transform: translate(-100%, -50%);
 }
-.ilayer__label--build {
-  top: clamp(320px, 40vh, 460px);
-  left: clamp(40px, 6vw, 96px);
-  text-align: left;
+/* Right orbit labels trail LEFT-to-RIGHT — pip first then text on
+   the right so the label reads outward into the right margin. */
+.ilayer__orbit-labels--right .ilayer__orbit-label {
+  transform: translate(0, -50%);
 }
-.ilayer__label--closer {
-  top: clamp(320px, 40vh, 460px);
-  right: clamp(40px, 6vw, 96px);
-  text-align: right;
+.ilayer__orbit-label__pip {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  flex-shrink: 0;
+  background: var(--gold);
+  /* Diamond — rotated square. No fill change, no fade. */
+  transform: rotate(45deg);
+  box-shadow: 0 0 8px rgba(202, 165, 84, 0.4);
 }
-
-/* Per-label opacity gates. We fade each label in shortly before its
-   matching disc fades in, so the eye reads "label → disc" instead
-   of all four labels arriving at once. The thresholds match the
-   reveal.in values in DISC_GEOM. */
-.ilayer__label--navigate {
-  opacity: clamp(0, calc((var(--ilayer-progress, 0) - 0.42) * 6), 1);
-}
-.ilayer__label--encode {
-  opacity: clamp(0, calc((var(--ilayer-progress, 0) - 0.3) * 6), 1);
-}
-.ilayer__label--build {
-  opacity: clamp(0, calc((var(--ilayer-progress, 0) - 0.18) * 6), 1);
-}
-.ilayer__label--closer {
-  opacity: clamp(0, calc((var(--ilayer-progress, 0) - 0.55) * 6), 1);
+.ilayer__orbit-label__text {
+  font-family: var(--font-pt-mono);
+  font-size: 11px;
+  letter-spacing: var(--track-wide, 0.06em);
+  text-transform: uppercase;
+  color: var(--dawn);
+  padding: 4px 0;
 }
 
 /* ── Ringfield artifact (ADR-012 v5) ───────────────────────────────
@@ -3428,11 +3566,12 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   height: 100% !important;
 }
 
-/* Static fallback — three vertically-offset ellipses matching the
-   podium geometry (build largest at bottom, navigate smallest at
-   top). Visible by default; hidden as soon as the R3F canvas takes
-   over (data-ilayer-mode="r3f" on .ilayer__stack). */
-.ilayer__stack__fallback {
+/* Static fallback — three OVERLAPPING circles (left orbit / substrate /
+   right orbit) matching the R3F triad at rest. Used when WebGL is
+   unavailable or prefers-reduced-motion is set. Hidden whenever the
+   R3F canvas is active (data-ilayer-mode="r3f" on .ilayer__stack). */
+.ilayer__stack__fallback,
+.ilayer__triad__fallback {
   grid-area: canvas;
   position: relative;
   width: 100%;
@@ -3443,49 +3582,34 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   opacity: 0;
   transition: opacity 320ms ease-out 120ms;
 }
-.ilayer__stack[data-ilayer-mode="static"] .ilayer__stack__fallback {
+.ilayer__stack[data-ilayer-mode="static"] .ilayer__stack__fallback,
+.ilayer__stack[data-ilayer-mode="static"] .ilayer__triad__fallback {
   opacity: 1;
 }
-.ilayer__stack[data-ilayer-mode="r3f"] .ilayer__stack__fallback {
+.ilayer__stack[data-ilayer-mode="r3f"] .ilayer__stack__fallback,
+.ilayer__stack[data-ilayer-mode="r3f"] .ilayer__triad__fallback {
   display: none;
 }
-/* Hairline rings — fill="none", `--dawn-30` guides + `--gold` for the
-   encode (signal). Matches the R3F scene's LineLoop hairlines so the
-   static fallback reads as the ringfield at rest, not as a different
-   widget. Bearing ticks per ring are added inline in the SVG via
-   <line> elements so the fallback stays HTML-only. */
-.ilayer__stack__fallback-ring {
+/* Triad fallback circles — hairline, fill="none". Substrate is the
+   gold signal; side orbits are dawn-deep guides. */
+.ilayer__triad__orbit {
   fill: none;
-  stroke: var(--dawn-30);
   stroke-width: 1;
   vector-effect: non-scaling-stroke;
+}
+.ilayer__triad__orbit--left,
+.ilayer__triad__orbit--right {
+  stroke: var(--gold-40, rgba(202, 165, 84, 0.4));
   opacity: 0.7;
 }
-.ilayer__stack__fallback-ring--build {
-  stroke: var(--dawn-30);
-  opacity: 0.6;
-}
-.ilayer__stack__fallback-ring--encode {
+.ilayer__triad__orbit--mid {
   stroke: var(--gold);
   stroke-width: 1.3;
-  opacity: 0.95;
+  opacity: 0.85;
 }
-.ilayer__stack__fallback-ring--navigate {
-  stroke: var(--gold-40);
-  opacity: 0.75;
-}
-.ilayer__stack__fallback-tick {
-  stroke: var(--dawn-30);
-  stroke-width: 1;
-  vector-effect: non-scaling-stroke;
-  opacity: 0.8;
-}
-.ilayer__stack__fallback-diamond {
-  fill: none;
-  stroke: var(--gold);
-  stroke-width: 1;
-  vector-effect: non-scaling-stroke;
-  opacity: 0.9;
+.ilayer__triad__pips polygon {
+  fill: var(--gold);
+  opacity: 0.85;
 }
 
 /* ── Brandmark substrate dock anchor (ADR-012 v5) ──────────────────
@@ -3562,9 +3686,10 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   opacity: 1;
 }
 
-/* Mobile / tablet — section grows from 100vh to auto so the title
-   and labels still fit, and the labels collapse to a stacked
-   column above the podium (no connectors). */
+/* Mobile / tablet — section grows from 100vh to auto so title +
+   pills + orbit labels still fit. Side orbit labels collapse to a
+   stacked column below the substrate so they remain legible at
+   narrow widths. */
 @media (max-width: 960px) {
   .ilayer {
     height: auto;
@@ -3575,27 +3700,51 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   .ilayer__head {
     top: clamp(60px, 8vh, 100px);
   }
-  .ilayer__labels {
-    /* On mobile we stack labels vertically below the title rather
-       than floating them around the viewport — connector lines
-       would be too cramped. Each label becomes a row in a flex
-       column, no connector hairline shown. */
+  .ilayer__triad__pills-dom {
+    /* On mobile, pills sit just below the title and read as a
+       horizontal row centred above the artifact. */
+    top: clamp(180px, 22vh, 240px);
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+  }
+  .ilayer__triad__pill {
+    position: static;
+    transform: none;
+  }
+  .ilayer__triad__pill--left,
+  .ilayer__triad__pill--mid,
+  .ilayer__triad__pill--right {
+    left: auto;
+  }
+  .ilayer__orbit-labels {
+    /* Stack as a flex column directly below the substrate ring
+       rather than wrapping around invisible orbits. */
     position: absolute;
-    top: clamp(180px, 24vh, 240px);
-    inset: clamp(180px, 24vh, 240px) 16px auto 16px;
+    top: auto;
+    bottom: clamp(80px, 12vh, 140px);
+    left: 50%;
+    transform: translateX(-50%);
     display: flex;
     flex-direction: column;
-    gap: 18px;
+    gap: 10px;
+    width: min(280px, 70vw);
+    --orbit-r: 0px;
+    --orbit-cx: 0px;
+    --orbit-cy: 0px;
   }
-  .ilayer__label {
+  .ilayer__orbit-labels--left {
+    bottom: clamp(180px, 26vh, 260px);
+  }
+  .ilayer__orbit-label {
     position: static;
-    width: auto;
-    max-width: none;
-    padding-bottom: 0;
-    text-align: left;
+    transform: none !important;
+    flex-direction: row !important;
+    justify-content: flex-start;
   }
-  .ilayer__label__connector {
-    display: none;
+  .ilayer__substrate-inner {
+    transform: translate(-50%, calc(-50% + clamp(80px, 10vh, 120px)));
+    width: min(320px, 76vw);
   }
   .ilayer__artifact {
     height: clamp(260px, 38svh, 380px);
@@ -3609,19 +3758,19 @@ html[data-quote-active="true"] .tf-brandmark-actor {
 }
 
 /* Reduced motion — keep the artifact visible immediately and skip
-   the scroll-driven ringfield rotation. The static SVG fallback
-   (three concentric hairline rings + ticks + diamond) shows the
-   ringfield at rest so the meaning still reads. The brandmark dock
-   stays visible (R3F is not mounted in static-fallback mode, so
-   the hard-swap rule doesn't fire and the SVG glyph paints
-   normally). */
+   the scroll-driven orbit emerge. The static SVG fallback (three
+   overlapping circles + pips) shows the triad at rest so the
+   meaning still reads. The brandmark dock stays visible (R3F is
+   not mounted in static-fallback mode, so the painter's shape
+   blend stays at 0 and the SVG glyph paints in full-mark form). */
 @media (prefers-reduced-motion: reduce) {
   .ilayer__inner[data-m="instrument"],
   .ilayer__inner[data-m="instrument"].is-in {
     opacity: 1;
     transition: none;
   }
-  .ilayer__stack__fallback {
+  .ilayer__stack__fallback,
+  .ilayer__triad__fallback {
     transition: none;
   }
   .ilayer__brandmark-anchor img,
@@ -3631,13 +3780,12 @@ html[data-quote-active="true"] .tf-brandmark-actor {
        fallback path) — the global particle painter is not running. */
     opacity: 1;
   }
-  .ilayer__label {
+  .ilayer__triad__pill,
+  .ilayer__orbit-label,
+  .ilayer__substrate-inner {
     /* Show all labels at rest. */
     opacity: 1;
-  }
-  .ilayer__label__path {
-    /* Pre-draw connectors fully. */
-    stroke-dashoffset: 0;
+    transition: none;
   }
 }
 
@@ -5127,6 +5275,12 @@ body.density-dense .station {
   .hero__viz__scanline,
   .hud__status .cursor,
   .gateway__grain {
+    animation: none !important;
+  }
+  /* Page-wide grit (ADR-014) — disable the jitter animation in
+     reduced-motion mode. The static dot pattern still paints
+     (it's purely decorative atmosphere), it just doesn't shimmer. */
+  .v7-doc::after {
     animation: none !important;
   }
   [data-parallax] {

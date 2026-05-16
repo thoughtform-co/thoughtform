@@ -24,7 +24,7 @@ import type { BrandmarkActorHandle } from "../BrandmarkActor";
  *   2. Call `computeBrandmarkTransform(scrollY, keyframes, ctx)` —
  *      a pure function that returns the brandmark's full state.
  *   3. Write the transform into `useBrandmarkJourneyStore`. Painters
- *      (`BrandmarkParticleStation`, `BrandmarkRingfield`) read it
+ *      (`BrandmarkParticleStation`, `OrbitField`) read it
  *      imperatively via `getState()` inside `useFrame`.
  *   4. In SVG fallback mode (reduced motion or no WebGL), also pin
  *      the SVG `BrandmarkActor` to the transform's rect and write

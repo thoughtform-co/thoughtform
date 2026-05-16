@@ -13,9 +13,10 @@
  *   - `BrandmarkParticleStation` (the global pixel-space shader) which
  *     paints the brandmark cloud at the transform's rect/rotation/
  *     density/dispersion every frame.
- *   - `BrandmarkRingfield` (the R3F intelligence-layer scene) which
- *     reads `ringsActive` + `ringProgress` + `rotationY` to drive its
- *     ring extrude / decoration emerge / parent rotation envelopes.
+ *   - `OrbitField` (the R3F intelligence-layer scene) which reads
+ *     `ringsActive` + `ringProgress` to drive its side-orbit emerge
+ *     envelopes (ADR-014; replaces the deprecated ring extrude /
+ *     parent rotation channels).
  *
  * No HARD SWAPs, no painter handoffs, no per-frame CSS attribute
  * fabric. One painter for the cloud, one R3F scene for rings; both
@@ -39,6 +40,7 @@
  */
 
 import { splitRotation } from "@/components/landing/v7/intelligence-layer/intelligenceLayerGeom";
+import type { BrandmarkShapeKey } from "@/lib/brandmark/shapes";
 
 // ────────────────────────────────────────────────────────────────────
 // Types
@@ -56,6 +58,11 @@ export interface KeyframeParkedAttrs {
   /** When this keyframe is the active dock, are the R3F rings
    *  + decorations the visual story? Only true for `substrate`. */
   ringsActive?: boolean;
+  /** Which brandmark shape topology this keyframe parks at. Defaults
+   *  to `"full"` (the canonical mark). Substrate parks at `"ring"`,
+   *  so the painter blends the cloud from the full mark to a thick
+   *  ring during the substrate-engagement window (ADR-014). */
+  shapeKey?: BrandmarkShapeKey;
 }
 
 /** A per-arrival dispersion bump applied during the transit INTO this
@@ -138,6 +145,11 @@ export interface BrandmarkTransform {
    *  (decoration scale) inside the R3F scene. `0` outside the
    *  window. */
   ringProgress: number;
+  /** `[0, 1]` brandmark shape blend. `0` = full mark; `1` = ring
+   *  only. Ramps 0→1 during the substrate-engagement window so the
+   *  cloud morphs into a thick orbital ring at the intelligence
+   *  layer (ADR-014). Always `0` outside that window. */
+  shapeBlend: number;
   /** `false` only during hero / post-orbit-fade-end. Painter hides
    *  when this is false. */
   visible: boolean;
@@ -203,9 +215,18 @@ export const HIDDEN_TRANSFORM: BrandmarkTransform = {
   rotationY: 0,
   ringsActive: false,
   ringProgress: 0,
+  shapeBlend: 0,
   visible: false,
   parkedAt: null,
 };
+
+/** Fraction of the substrate scroll window devoted to the brandmark
+ *  shape blend on each side (engage + exit). With `0.18` each side,
+ *  the morph completes within the first 18% of the parked window,
+ *  holds through the read beat, and retracts in the last 18% — so
+ *  side orbits and labels have time to settle around the ring before
+ *  the cloud begins to un-morph back to its full mark for departure. */
+const SHAPE_BLEND_FRAC = 0.18;
 
 // ────────────────────────────────────────────────────────────────────
 // Math helpers
@@ -286,7 +307,15 @@ export function buildKeyframes(ctx: JourneyContext): BrandmarkKeyframe[] {
     {
       id: "substrate",
       resolveRect: () => querySubstrate()?.getBoundingClientRect() ?? null,
-      parked: { density: 1, dispersion: 0, ringsActive: true },
+      // shapeKey: "ring" — the brandmark cloud morphs into a thick
+      // ring during the substrate-engagement window so the mark
+      // literally BECOMES the middle circle of the orbital triad
+      // (ADR-014). The blend ramp is driven by the substrate scroll
+      // window in `computeBrandmarkTransform`, not by the parked
+      // attrs directly — `shapeKey` declares the destination shape
+      // and the ramp uses it to set uShapeBlend = 0 (full) at engage
+      // and 1 (ring) at hold.
+      parked: { density: 1, dispersion: 0, ringsActive: true, shapeKey: "ring" },
       transitIn: {
         // miss → substrate is a major growth (≈ 144px → 280px+). The
         // cloud must stay coherent through the morph so the user
@@ -405,6 +434,10 @@ function parkedRectTransform(
     rotationY: 0,
     ringsActive: false,
     ringProgress: 0,
+    // Shape blend is driven by the substrate scroll window, not by
+    // the parked attrs — outside that window every keyframe paints
+    // the full mark.
+    shapeBlend: 0,
     visible: opacity > 0,
     parkedAt: kf.id,
   };
@@ -444,6 +477,10 @@ function transitTransform(
     rotationY: 0, // rings off during transit; rotation owned by substrate window
     ringsActive: false,
     ringProgress: 0,
+    // Shape blend stays 0 during transits — the cloud arrives at the
+    // substrate dock in full-mark form and the substrate-window ramp
+    // begins the morph only after parking. Same on the way out.
+    shapeBlend: 0,
     visible: true,
     parkedAt: null, // in transit = not parked anywhere
   };
@@ -509,20 +546,35 @@ export function computeBrandmarkTransform(
 
   if (!base) return null;
 
-  // === Substrate channels — override rotation + ring channels when
-  //     parked at substrate. The base transform already has the
-  //     substrate rect (we resolved it as parked-at-substrate); we
-  //     just add the rotation arc + ring progress.
+  // === Substrate channels — override rotation + ring channels +
+  //     shape blend when parked at substrate. The base transform
+  //     already has the substrate rect (we resolved it as parked-at-
+  //     substrate); we just add the rotation arc, ring progress, and
+  //     the shape-morph ramp on top.
   if (inSubWindow) {
     base = {
       ...base,
       rotationY: splitRotation(substrateLocalProgress),
       ringsActive: true,
       ringProgress: substrateLocalProgress,
+      shapeBlend: substrateShapeBlend(substrateLocalProgress),
     };
   }
 
   return base;
+}
+
+/** Trapezoid envelope for the brandmark shape blend within the
+ *  substrate window. Ramps full → ring over `[0, SHAPE_BLEND_FRAC]`,
+ *  holds at ring through the read beat, and ramps ring → full over
+ *  `[1 - SHAPE_BLEND_FRAC, 1]` so the cloud departs the section in
+ *  its canonical mark form (ADR-014). */
+export function substrateShapeBlend(progress: number): number {
+  if (progress <= 0) return 0;
+  if (progress >= 1) return 0;
+  const blendIn = progress < SHAPE_BLEND_FRAC ? clamp01(progress / SHAPE_BLEND_FRAC) : 1;
+  const blendOut = progress > 1 - SHAPE_BLEND_FRAC ? clamp01((1 - progress) / SHAPE_BLEND_FRAC) : 1;
+  return blendIn * blendOut;
 }
 
 /** The bracketed-segment math, factored out from the public entry

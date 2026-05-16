@@ -3,8 +3,13 @@
 import { useEffect, useMemo, useRef } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
-import { BRANDMARK_FILLED_PATHS, BRANDMARK_VIEWBOX } from "@/components/landing/v7/BrandmarkGlyph";
+import { BRANDMARK_VIEWBOX } from "@/components/landing/v7/BrandmarkGlyph";
 import { sampleShape } from "@/lib/brandmark/sampleShape";
+import {
+  BRANDMARK_FULL_PATHS,
+  BRANDMARK_RING_PATHS,
+  BRANDMARK_SHAPE_KEYS,
+} from "@/lib/brandmark/shapes";
 import { useBrandmarkJourneyStore, DEFAULT_TINT } from "@/lib/stores/brandmarkJourneyStore";
 import { brandmarkVertexShader, brandmarkFragmentShader } from "./shaders";
 
@@ -96,6 +101,22 @@ const POINT_SIZE_MAX_PX = 6;
  *  (hero / post-orbit bookend) but hasn't been reset to hidden yet. */
 const VISIBILITY_EPSILON = 0.005;
 
+/** Pad a sampled ring home buffer up to the full particle count so
+ *  every index in the full sample has a paired ring position. Any
+ *  trailing entries (when the stratified sampler hit grid exhaustion
+ *  before reaching `count`) get the origin (0, 0); at full ring
+ *  blend those particles collapse to the brandmark centre, which is
+ *  visually invisible behind the dense ring of paired particles. */
+function padRingBuffer(buffer: Float32Array, count: number): Float32Array {
+  const expectedLength = count * 2;
+  if (buffer.length >= expectedLength) {
+    return buffer.length === expectedLength ? buffer : buffer.slice(0, expectedLength);
+  }
+  const padded = new Float32Array(expectedLength);
+  padded.set(buffer);
+  return padded;
+}
+
 export function BrandmarkParticleStation() {
   const meshRef = useRef<THREE.Points>(null);
   const { size, viewport } = useThree();
@@ -108,15 +129,37 @@ export function BrandmarkParticleStation() {
     return window.innerWidth <= 960 ? PARTICLE_COUNT_MOBILE : PARTICLE_COUNT;
   }, []);
 
+  // Sample the FULL brandmark first (this is the canonical sample
+  // every other consumer reads). `sample.count` is the authoritative
+  // particle count — the ring sample is requested at the same count
+  // so the per-particle rank lines up index-by-index for the shader's
+  // mix(aHome, aHomeRing, uShapeBlend) lerp (ADR-014).
   const sample = useMemo(
     () =>
       sampleShape({
-        shapeKey: "brandmark",
-        paths: BRANDMARK_FILLED_PATHS,
+        shapeKey: BRANDMARK_SHAPE_KEYS.full,
+        paths: BRANDMARK_FULL_PATHS,
         viewBox: VIEWBOX,
         count: particleCount,
       }),
     [particleCount]
+  );
+
+  // Sample the ring-only topology at the SAME particle count. The
+  // ring sample uses a different shape key so `sampleShape` returns
+  // a separate cached buffer. Per-particle pairing (full[i] ↔ ring[i])
+  // is index-based — particles that already sit on the outer arc
+  // barely move during the morph; particles in the cross + bar flow
+  // outward to find a ring position.
+  const ringSample = useMemo(
+    () =>
+      sampleShape({
+        shapeKey: BRANDMARK_SHAPE_KEYS.ring,
+        paths: BRANDMARK_RING_PATHS,
+        viewBox: VIEWBOX,
+        count: sample.count,
+      }),
+    [sample.count]
   );
 
   const { geometry, material } = useMemo(() => {
@@ -126,6 +169,15 @@ export function BrandmarkParticleStation() {
     // attribute to register the buffer for drawing.
     geom.setAttribute("position", new THREE.BufferAttribute(new Float32Array(sample.count * 3), 3));
     geom.setAttribute("aHome", new THREE.BufferAttribute(sample.home, 2));
+    // Ring-only home buffer. May be shorter than `sample.count` if
+    // the stratified sampler hit grid exhaustion early — pad with
+    // zeros (origin) for any missing entries so the buffer length
+    // matches. Those particles read as "collapsed to centre" at
+    // full ring blend, which is visually indistinguishable from
+    // density 0 once the rank clip kicks in (ringSample.count
+    // ≤ sample.count is fine; rank clip respects sample.count).
+    const ringHomePadded = padRingBuffer(ringSample.home, sample.count);
+    geom.setAttribute("aHomeRing", new THREE.BufferAttribute(ringHomePadded, 2));
     geom.setAttribute("aSeed", new THREE.BufferAttribute(sample.seed, 2));
     geom.setAttribute("aRank", new THREE.BufferAttribute(sample.rank, 1));
 
@@ -152,13 +204,14 @@ export function BrandmarkParticleStation() {
         uDispersion: { value: 0 },
         uTime: { value: 0 },
         uRotationY: { value: 0 },
+        uShapeBlend: { value: 0 },
         uPointSize: { value: 3 },
         uPixelRatio: { value: initialPixelRatio },
         uTint: { value: new THREE.Color(...DEFAULT_TINT) },
       },
     });
     return { geometry: geom, material: mat };
-  }, [sample]);
+  }, [sample, ringSample]);
 
   // Sync viewport size when the R3F canvas resizes. R3F's `size`
   // reflects the canvas's current dimensions, which match
@@ -193,6 +246,7 @@ export function BrandmarkParticleStation() {
     u.uVisibleCount.value = visibleCount;
     u.uDispersion.value = transform.dispersion;
     u.uRotationY.value = transform.rotationY;
+    u.uShapeBlend.value = transform.shapeBlend;
     u.uTime.value = state.clock.elapsedTime;
 
     // === Auto-scale point size for density-aware coverage ===

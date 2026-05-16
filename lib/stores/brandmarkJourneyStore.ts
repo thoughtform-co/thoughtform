@@ -5,7 +5,7 @@
  * One `BrandmarkTransform` lives in the store at any moment. The
  * journey hook (`useBrandmarkJourney`) writes it every rAF scroll
  * frame; the global painter (`BrandmarkParticleStation`) and the
- * R3F ringfield (`BrandmarkRingfield`) both read it imperatively
+ * R3F orbit field (`OrbitField`) both read it imperatively
  * via `getState()` inside their own `useFrame` loops.
  *
  * Why a store and not direct props: the painter mounts once at the

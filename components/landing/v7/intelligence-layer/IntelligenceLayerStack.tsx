@@ -1,27 +1,28 @@
 "use client";
 
 import { Canvas } from "@react-three/fiber";
-import { BrandmarkRingfield } from "./BrandmarkRingfield";
+import { OrbitField } from "./OrbitField";
 import { CAMERA_PARAMS } from "./intelligenceLayerGeom";
 
 /**
- * IntelligenceLayerStack — thin R3F Canvas host for the
- * `BrandmarkRingfield` scene (ADR-012 v5).
+ * IntelligenceLayerStack — thin R3F Canvas host for the `OrbitField`
+ * scene (ADR-014).
  *
- * The interesting stuff lives in `BrandmarkRingfield` (the brandmark
- * particle cloud + three coaxial hairline rings + bearing ticks +
- * diamond markers + sub-orbits + halo dots + flow arcs); this
- * wrapper just constructs the Canvas with the perspective camera
- * framing and the no-shadows, low-power gl config.
+ * The interesting stuff lives in `OrbitField` (the two side-orbit
+ * hairlines, decorative diamond pips, the faint substrate guide
+ * ring + halo); this wrapper just constructs the Canvas with the
+ * front-on perspective camera and the no-shadows, low-power gl
+ * config.
+ *
+ * Camera framing (ADR-014):
+ *   - PerspectiveCamera at [0, 0, 4.0], fov 26, lookAt [0, 0, 0].
+ *   - FRONT-ON. No Y elevation, no Y rotation anywhere in the scene
+ *     — the orbital triad reads as three coplanar circles, not
+ *     three foreshortened ellipses.
+ *   - Static — there is no rotation in the new model.
  *
  * Mounted by `IntelligenceLayerPortal` into the
  * `[data-ilayer-stack-root]` placeholder in the v7 prototype HTML.
- *
- * Camera framing:
- *   - PerspectiveCamera at [0, 0.6, 3.4], fov 32, lookAt [0, 0, 0]
- *   - Slight elevation so the 3/4 view at the SETTLE / HOLD beat
- *     reads with depth without exaggerating the perspective.
- *   - Static — rotation lives on the parent group, not the camera.
  */
 export function IntelligenceLayerStack() {
   return (
@@ -52,7 +53,7 @@ export function IntelligenceLayerStack() {
         pointerEvents: "none",
       }}
     >
-      <BrandmarkRingfield />
+      <OrbitField />
     </Canvas>
   );
 }
