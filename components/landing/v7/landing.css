@@ -3173,10 +3173,18 @@ html[data-quote-active="true"] .tf-brandmark-actor {
 }
 
 .ilayer .station__idx {
+  /* Absolute-positioned at the top of the section, BUT sized + offset
+     so it aligns with the same `min(1280px, 92vw)` content column
+     `.ilayer__head` uses. The base `.station__idx` flex layout then
+     pins "INTELLIGENCE LAYER" + gold rule to the LEFT rail of the
+     column (same X as the title below) and pushes the
+     ".landmark · THE ENCODED SUBSTRATE" span to the RIGHT rail via
+     its `margin-left: auto`. */
   position: absolute;
   top: clamp(24px, 4vh, 48px);
   left: 50%;
   transform: translateX(-50%);
+  width: min(1280px, 92vw);
   z-index: 3;
 }
 
