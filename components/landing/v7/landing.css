@@ -2442,7 +2442,8 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   margin-bottom: 18px;
 }
 .tri__ipa--noun {
-  font-size: 13px;
+  font-size: clamp(16px, 1.4vw, 20px);
+  letter-spacing: var(--track-wide);
 }
 .tri__ipa-name {
   color: var(--gold);
@@ -6034,8 +6035,8 @@ html {
 }
 .approach__phase__intro__title {
   font-family: var(--font-pp-neue-montreal);
-  font-weight: 700;
-  font-size: clamp(36px, 4.4vw, 64px);
+  font-weight: 500;
+  font-size: clamp(28px, 3.2vw, 44px);
   line-height: 0.95;
   letter-spacing: -0.035em;
   color: var(--dawn);
@@ -6632,8 +6633,8 @@ html {
 
 .approach__phase__title {
   font-family: var(--font-pp-neue-montreal);
-  font-weight: 700;
-  font-size: clamp(40px, 6vw, 88px);
+  font-weight: 500;
+  font-size: clamp(28px, 3.2vw, 44px);
   line-height: 0.95;
   letter-spacing: -0.035em;
   text-transform: uppercase;
@@ -6808,7 +6809,7 @@ html {
     width: min(100%, 320px);
   }
   .approach__phase__title {
-    font-size: clamp(36px, 11vw, 64px);
+    font-size: clamp(24px, 7vw, 36px);
   }
   .exec {
     margin-top: clamp(40px, 8vw, 72px);
@@ -8488,8 +8489,8 @@ html {
 
 .build-case__name {
   font-family: var(--font-pp-neue-montreal);
-  font-weight: 700;
-  font-size: clamp(40px, 5.5vw, 88px);
+  font-weight: 500;
+  font-size: clamp(28px, 3.2vw, 44px);
   letter-spacing: -0.04em;
   line-height: 0.94;
   color: var(--dawn);
@@ -8749,7 +8750,7 @@ html {
     justify-self: stretch;
   }
   .build-case__name {
-    font-size: clamp(38px, 5.5vw, 64px);
+    font-size: clamp(26px, 3vw, 40px);
   }
   .build-case__frame__shell {
     aspect-ratio: 4 / 3;
@@ -8787,7 +8788,7 @@ html {
     display: none;
   }
   .build-case__name {
-    font-size: clamp(44px, 13vw, 72px);
+    font-size: clamp(24px, 7vw, 36px);
   }
   .build-case__subline {
     max-width: none;
