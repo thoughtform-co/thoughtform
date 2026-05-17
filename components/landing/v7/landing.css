@@ -2441,6 +2441,9 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   color: var(--dawn-50);
   margin-bottom: 18px;
 }
+.tri__ipa--noun {
+  font-size: 13px;
+}
 .tri__ipa-name {
   color: var(--gold);
   letter-spacing: var(--track-widest);
