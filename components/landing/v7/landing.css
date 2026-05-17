@@ -898,14 +898,14 @@ html[data-quote-active="true"] .tf-brandmark-actor {
    when the journey morphs into ring topology during the substrate
    hold beat. */
 [data-brandmark-mode="particle"][data-brand-parked-at="substrate"] .tf-brandmark--substrate-full {
-  opacity: calc(1 - var(--brandmark-shape-blend, 0));
+  opacity: calc((1 - var(--brandmark-shape-blend, 0)) * var(--brandmark-vector-opacity, 1));
   visibility: visible;
   transition:
     opacity 120ms linear,
     visibility 0s linear 0s;
 }
 [data-brandmark-mode="particle"][data-brand-parked-at="substrate"] .tf-brandmark--substrate-ring {
-  opacity: var(--brandmark-shape-blend, 0);
+  opacity: calc(var(--brandmark-shape-blend, 0) * var(--brandmark-vector-opacity, 1));
   visibility: visible;
   transition:
     opacity 120ms linear,
@@ -3313,43 +3313,49 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   z-index: 0;
 }
 
-.ilayer .station__idx {
-  /* Sized + positioned to sit IMMEDIATELY ABOVE the title inside
-     `.ilayer__head` — same `min(1280px, 92vw)` content column,
-     centered horizontally, with `top` derived from
-     `.ilayer__head.top` minus the eyebrow's own height (26px) +
-     a 12px gap. This keeps the eyebrow + title visually grouped
-     across every viewport height (matches the `.miss__head` gap
-     pattern of 12–18px between eyebrow and title). Without this
-     coupling, the clamp() expansion at tall viewports would balloon
-     the gap to ~90px and the eyebrow would read as orphaned at the
-     top of the section.
+/* Section eyebrows — pinned to a fixed offset from the section's
+   TOP edge so they all appear at the same viewport position when
+   their respective section enters the viewport. The user judged the
+   THOUGHTFORM eyebrow in #definition as the correct visual position
+   (at the top rail of the section); without absolute positioning at
+   a small top value, the natural flex-centering pushes each section's
+   eyebrow to a different vertical position based on its content
+   height + section height.
 
-     IMPORTANT: centering uses `left: 50%; margin-left: -half-width`
-     INSTEAD of `left: 50%; transform: translateX(-50%)`. The
-     `[data-m="eyebrow"]` reveal motion writes its own `transform`
-     property (`translateY(...)` + `is-in` flips it to `translateY(0)
-     scale(1)`), which would OVERRIDE any `translateX(-50%)` we set
-     here. Using `margin-left` for the horizontal centering keeps
-     the `transform` channel free for the reveal motion, so the
-     element stays correctly centered AND the reveal animation
-     plays.
-
-     `text-align: left` and `justify-content: flex-start` defeat
-     the `text-align: center` inheritance from `.station--centered`
-     so the inner flex layout pins "— INTELLIGENCE LAYER" to the
-     LEFT rail (same X as the title below) and pushes ".landmark ·
-     THE ENCODED SUBSTRATE" to the RIGHT rail via its
-     `margin-left: auto`. */
+   `top: 80px` keeps the eyebrow clear of the navigation chrome
+   above while sitting at the section's top rail. Horizontal layout
+   centres the eyebrow band at `min(1280px, 92vw)` to match the
+   content column width. `margin-left/right: auto` instead of
+   `transform: translateX(-50%)` so the `[data-m="eyebrow"]` reveal
+   animation can use the transform channel without being overridden. */
+/* ID-prefixed to outrank the pre-existing
+   `#definition.station > *, #continuum.station > *, #build.station > *,
+    #contact.station > *` rule (position: relative; z-index: 1) that
+   would otherwise force every direct child back into the flex flow. */
+#definition.station > .station__idx,
+#missing-layer.station > .station__idx,
+#intelligence-layer.station > .station__idx,
+#continuum.station > .station__idx,
+#build.station > .station__idx,
+#contact.station > .station__idx,
+.station > .station__idx {
   position: absolute;
-  top: calc(clamp(80px, 12vh, 140px) - 38px);
-  left: 50%;
-  margin-left: calc(min(1280px, 92vw) / -2);
+  top: 80px;
+  left: 0;
+  right: 0;
+  margin-left: auto;
+  margin-right: auto;
+  margin-bottom: 0;
   width: min(1280px, 92vw);
   text-align: left;
   justify-content: flex-start;
-  z-index: 3;
+  z-index: 4;
 }
+
+/* INTELLIGENCE LAYER eyebrow — inherits the global
+   `.station > .station__idx { position: absolute; top: 80px; ... }`
+   rule above. No further overrides needed; the eyebrow sits at the
+   same top rail as THOUGHTFORM + DIAGNOSTIC. */
 
 /* Inner — was a centred flex column; becomes an absolute-positioning
    stage so head / labels / podium / brandmark anchor each layout
@@ -3757,31 +3763,40 @@ html[data-quote-active="true"] .tf-brandmark-actor {
 .ilayer__stack[data-ilayer-mode="r3f"] .ilayer__triad__fallback {
   display: none;
 }
-/* Triad fallback circles — hairline, fill="none". ADR-014 v2: all
-   three circles share the same stroke weight and opacity so the
-   three pillars read as equal stations. */
-.ilayer__triad__orbit {
+/* Triad fallback clusters — hairline rings + cardinal diamonds +
+   sparse dust per cluster. ADR-014 v5: clean futuristic celestial-
+   diagram vocabulary, no fill, no glow, no atmospheric halo. All
+   three clusters share the same ring + diamond + dust opacities so
+   the triad reads as three equal stations on the Navigate / Encode /
+   Build spine. */
+.ilayer__triad__ring {
   fill: none;
   stroke: var(--gold);
   stroke-width: 1;
   vector-effect: non-scaling-stroke;
-  opacity: 0.6;
 }
-.ilayer__triad__orbit--mid {
-  /* Slightly higher contrast on the middle ring since it carries the
-     encoded-substrate weight in the static fallback (where the
-     brandmark particle cloud is absent). In R3F mode the brandmark
-     cloud paints inside this circle and the SVG fallback is hidden,
-     so this rule has no effect on the live composition. */
-  opacity: 0.75;
-}
-.ilayer__triad__pips polygon {
-  fill: var(--gold);
+.ilayer__triad__ring--outer {
   opacity: 0.85;
 }
-.ilayer__triad__pips--mid polygon {
+.ilayer__triad__ring--r1 {
+  opacity: 0.55;
+}
+.ilayer__triad__ring--r2 {
+  opacity: 0.35;
+}
+.ilayer__triad__ring--r3 {
+  opacity: 0.25;
+}
+.ilayer__triad__ring--r4 {
+  opacity: 0.2;
+}
+.ilayer__triad__diamonds polygon {
   fill: var(--gold);
-  opacity: 0.95;
+  opacity: 0.9;
+}
+.ilayer__triad__dust circle {
+  fill: var(--dawn);
+  opacity: 0.55;
 }
 
 /* ── Brandmark substrate dock anchor (ADR-012 v5) ──────────────────

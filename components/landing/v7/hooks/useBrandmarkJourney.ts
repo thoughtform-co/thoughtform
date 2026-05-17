@@ -118,6 +118,7 @@ export function useBrandmarkJourney(
     // via CSS without any JS per-frame writes on each glyph.
     let lastBrandParkedAt: string | null = null;
     let lastBrandShapeBlend = -1;
+    let lastBrandVectorOpacity = -1;
 
     const PARKED_OPACITY_THRESHOLD = 0.99;
 
@@ -138,6 +139,20 @@ export function useBrandmarkJourney(
       document.documentElement.style.setProperty("--brandmark-shape-blend", rounded.toFixed(3));
     };
 
+    // ADR-014 v5: mirror `transform.vectorOpacity` to a CSS variable
+    // so the substrate-anchor portal'd dock glyphs (which use a
+    // pure-CSS crossfade between full + ring topologies via
+    // `--brandmark-shape-blend`) can also be dimmed by the HANDOFF
+    // ramp. Without this, the substrate-ring dock glyph stays visible
+    // at opacity 1 throughout the substrate window, fighting the new
+    // R3F OrbitalCluster mid pillar.
+    const setBrandVectorOpacity = (value: number) => {
+      const rounded = Math.round(value * 1000) / 1000;
+      if (Math.abs(rounded - lastBrandVectorOpacity) < 0.001) return;
+      lastBrandVectorOpacity = rounded;
+      document.documentElement.style.setProperty("--brandmark-vector-opacity", rounded.toFixed(3));
+    };
+
     const applyParticleMode = (transform: BrandmarkTransform) => {
       if (!particleModeOK) return;
       const parkedAt = transform.parkedAt;
@@ -146,6 +161,7 @@ export function useBrandmarkJourney(
         parkedAt != null && (isSectionOwnedDock || transform.opacity > PARKED_OPACITY_THRESHOLD);
       setBrandParkedAt(fullyParked ? transform.parkedAt : null);
       setBrandShapeBlend(transform.shapeBlend);
+      setBrandVectorOpacity(transform.vectorOpacity);
     };
 
     /** Apply SVG-mode side effects: pin the actor + write dock attrs.
@@ -299,6 +315,7 @@ export function useBrandmarkJourney(
       document.documentElement.removeAttribute("data-brand-on-rail");
       document.documentElement.removeAttribute("data-brand-parked-at");
       document.documentElement.style.removeProperty("--brandmark-shape-blend");
+      document.documentElement.style.removeProperty("--brandmark-vector-opacity");
       const approach =
         rootEl.querySelector<HTMLElement>("#approach") ??
         rootEl.querySelector<HTMLElement>(".approach");

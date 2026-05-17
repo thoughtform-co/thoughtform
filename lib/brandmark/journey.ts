@@ -39,7 +39,10 @@
  *      from / into.
  */
 
-import { splitRotation } from "@/components/landing/v7/intelligence-layer/intelligenceLayerGeom";
+import {
+  splitRotation,
+  vectorRingOpacity,
+} from "@/components/landing/v7/intelligence-layer/intelligenceLayerGeom";
 import type { BrandmarkShapeKey } from "@/lib/brandmark/shapes";
 
 // ────────────────────────────────────────────────────────────────────
@@ -86,6 +89,17 @@ export interface BrandmarkKeyframe {
    *  "still parked here" (before transit to the next keyframe
    *  begins). Default `0.32`. */
   parkFracOut?: number;
+  /** Fraction of viewport height at which this keyframe's rect
+   *  centre sits when it is considered parked. Default `0.5`
+   *  (centre of viewport). Larger values (e.g. `0.62`) shift the
+   *  parking point LOWER in the viewport — i.e. the brandmark
+   *  arrives at the dock with less scrolling required, so the
+   *  keyframe "appears" earlier in the user's scroll progression
+   *  without changing where the dock element actually sits in the
+   *  DOM. Used for hero → sigil arrival where the brandmark should
+   *  be present at the sigil dock by the time the section title is
+   *  in the upper viewport, not by the time the dock is dead-centre. */
+  parkViewportFrac?: number;
   /** Render attrs while parked here. */
   parked: KeyframeParkedAttrs;
   /** Per-arrival transit overrides. SUBSUMES Tier 1 Change 1 —
@@ -150,6 +164,13 @@ export interface BrandmarkTransform {
    *  cloud morphs into a thick orbital ring at the intelligence
    *  layer (ADR-014). Always `0` outside that window. */
   shapeBlend: number;
+  /** `[0, 1]` brandmark vector-actor opacity multiplier. `1` by
+   *  default; ramps `1 → 0` across the HANDOFF phase of the substrate
+   *  window so the brandmark vector ring fades out as the R3F
+   *  SplitRing fades in (ADR-014 v5). The vector actor multiplies
+   *  this against its own effectiveOpacity, so a journey-wide value
+   *  of 1 is a no-op for non-substrate beats. */
+  vectorOpacity: number;
   /** `false` only during hero / post-orbit-fade-end. Painter hides
    *  when this is false. */
   visible: boolean;
@@ -208,16 +229,18 @@ const DEFAULT_DISPERSION_BUMP: DispersionBumpFn = (t) => Math.sin(Math.PI * t) *
  *  blur, not as the brandmark exploding. */
 const EXHAUST_DISPERSION_BUMP: DispersionBumpFn = (t) => Math.sin(Math.PI * t) * 0.35;
 
-/** Atmosphere density at the substrate hold beat. Low enough that
- *  the cloud reads as ambient dust around the vector mark and the
- *  orbital triad; high enough that the substrate window still has
- *  a luminous "field" quality vs the bare vector states elsewhere. */
-const SUBSTRATE_ATMOSPHERE_DENSITY = 0.15;
+/** Atmosphere density at the substrate hold beat. ADR-014 v5: zero —
+ *  the brandmark fully dissolves into three clean orbital clusters
+ *  during the substrate window, so the atmosphere field has nothing
+ *  to accompany. The "clean and futuristic" register the user picked
+ *  drops particle dust + atmospheric glow in favour of pure linework
+ *  + diamond markers + sparse dot patterns rendered by the R3F
+ *  OrbitalCluster primitives. */
+const SUBSTRATE_ATMOSPHERE_DENSITY = 0;
 
-/** Atmosphere dispersion at the substrate hold beat. Slight scatter
- *  so the dust drifts in/around the orbital triad rather than
- *  snapping to the brandmark's outline. */
-const SUBSTRATE_ATMOSPHERE_DISPERSION = 0.35;
+/** Atmosphere dispersion at the substrate hold beat. Zero (same
+ *  reason as `SUBSTRATE_ATMOSPHERE_DENSITY`). */
+const SUBSTRATE_ATMOSPHERE_DISPERSION = 0;
 
 // === Easing semantics ===
 //
@@ -260,6 +283,7 @@ export const HIDDEN_TRANSFORM: BrandmarkTransform = {
   ringsActive: false,
   ringProgress: 0,
   shapeBlend: 0,
+  vectorOpacity: 1,
   visible: false,
   parkedAt: null,
 };
@@ -466,6 +490,15 @@ export function buildKeyframes(ctx: JourneyContext): BrandmarkKeyframe[] {
     {
       id: "sigil",
       resolveRect: () => readUnscaledSigilRect(querySigilMark()),
+      // Sigil's dock sits roughly mid-section of #definition (well
+      // below the eyebrow + title). Default centre-pin would only
+      // park the brandmark when the user has scrolled the dock to
+      // viewport centre — by then the eyebrow + title are already
+      // scrolled past. parkViewportFrac = 0.62 shifts the parking
+      // point so the brandmark is at the dock by the time the
+      // section title is in the upper viewport, matching the
+      // perceived "one beat sooner" arrival the user asked for.
+      parkViewportFrac: 0.62,
       parked: { density: 0, dispersion: 0 },
     },
     {
@@ -605,15 +638,23 @@ export function computeSubstrateRange(
 // Centre resolver
 // ────────────────────────────────────────────────────────────────────
 
-/** scrollY at which a keyframe's anchor centre sits at viewport
- *  centre. Stable for non-sticky anchors; for the sticky orbit, the
- *  return advances with scrollY during sticky engagement — the
- *  rail → orbit transit branch handles that by using practice.top
- *  as a non-sticky reference. */
+/** scrollY at which a keyframe's anchor centre sits at the keyframe's
+ *  declared viewport fraction (default 0.5 = viewport centre). Stable
+ *  for non-sticky anchors; for the sticky orbit, the return advances
+ *  with scrollY during sticky engagement — the rail → orbit transit
+ *  branch handles that by using practice.top as a non-sticky reference.
+ *
+ *  `parkViewportFrac` lets a keyframe arrive earlier in the scroll
+ *  by pinning its anchor LOWER in the viewport. For sigil with
+ *  `parkViewportFrac = 0.62`, the keyframe is considered parked when
+ *  the sigil rect's centre is at viewport 62% — so the user has
+ *  scrolled ~12% of viewport height less to reach the parked state
+ *  vs. the centre-pinned default. */
 function keyframeCentreY(kf: BrandmarkKeyframe, ctx: JourneyContext): number | null {
   const rect = kf.resolveRect(ctx);
   if (!rect || rect.width <= 0 || rect.height <= 0) return null;
-  return window.scrollY + rect.top + rect.height / 2 - window.innerHeight / 2;
+  const parkFrac = kf.parkViewportFrac ?? 0.5;
+  return window.scrollY + rect.top + rect.height / 2 - window.innerHeight * parkFrac;
 }
 
 // ────────────────────────────────────────────────────────────────────
@@ -639,6 +680,10 @@ function parkedRectTransform(
     // the parked attrs — outside that window every keyframe paints
     // the full mark.
     shapeBlend: 0,
+    // Vector actor at full opacity by default. The substrate-window
+    // override below ramps this 1 → 0 during the HANDOFF phase so
+    // the R3F SplitRing can take over the visible artefact.
+    vectorOpacity: 1,
     visible: opacity > 0,
     parkedAt: kf.id,
   };
@@ -682,6 +727,10 @@ function transitTransform(
     // substrate dock in full-mark form and the substrate-window ramp
     // begins the morph only after parking. Same on the way out.
     shapeBlend: 0,
+    // Vector actor always at full opacity during transits — the
+    // substrate-window HANDOFF ramp only fires inside the substrate
+    // scroll window.
+    vectorOpacity: 1,
     visible: true,
     parkedAt: null, // in transit = not parked anywhere
   };
@@ -748,10 +797,17 @@ export function computeBrandmarkTransform(
   if (!base) return null;
 
   // === Substrate channels — override rotation + ring channels +
-  //     shape blend when parked at substrate. The base transform
-  //     already has the substrate rect (we resolved it as parked-at-
-  //     substrate); we just add the rotation arc, ring progress, and
-  //     the shape-morph ramp on top.
+  //     shape blend + vector opacity when parked at substrate. The
+  //     base transform already has the substrate rect (we resolved
+  //     it as parked-at-substrate); we just add the rotation arc,
+  //     ring progress, the shape-morph ramp, and the vector-opacity
+  //     handoff ramp on top.
+  //
+  //     ADR-014 v5: `vectorOpacity` ramps 1 → 0 across the HANDOFF
+  //     phase (0.2-0.4 of the substrate window) so the brandmark
+  //     vector ring fades out as the R3F SplitRing fades in. After
+  //     0.4 the brandmark is fully dissolved and the three orbital
+  //     clusters (post-SPLIT/RESOLVE) are the only visible artefact.
   if (inSubWindow) {
     base = {
       ...base,
@@ -759,6 +815,7 @@ export function computeBrandmarkTransform(
       ringsActive: true,
       ringProgress: substrateLocalProgress,
       shapeBlend: substrateShapeBlend(substrateLocalProgress),
+      vectorOpacity: vectorRingOpacity(substrateLocalProgress),
     };
   }
 

@@ -182,6 +182,74 @@ export const RING_SEGMENTS = 96;
 export const SUB_ORBIT_SPIN_RATE = 0.06;
 
 // ────────────────────────────────────────────────────────────────────
+// Orbital cluster geometry (ADR-014 v5)
+// ────────────────────────────────────────────────────────────────────
+
+/** Per-cluster concentric ring radii as a fraction of the cluster's
+ *  outer radius. Five tapered rings give the cluster the "celestial
+ *  diagram" topology referenced from the Definition section. The
+ *  outermost ring (index 0) is the brandmark-ring sized to match the
+ *  R3F substrate radius; inner rings step down by ~16% each. */
+export const CLUSTER_RING_RADII: readonly number[] = [1.0, 0.84, 0.68, 0.52, 0.36];
+
+/** Per-ring base opacity. The outermost reads as the primary edge;
+ *  inner rings taper so the cluster has depth without competing for
+ *  attention. Multiplied per-frame by the cluster's resolve scalar +
+ *  presence. */
+export const CLUSTER_RING_OPACITIES: readonly number[] = [0.85, 0.55, 0.35, 0.25, 0.2];
+
+/** Per-cluster luminous dust-dot count. Deterministically placed
+ *  around the ring stack at fixed polar coordinates so each cluster
+ *  reads the same — no per-cluster randomness, the celestial diagram
+ *  vocabulary is calm and ordered, not chaotic. */
+export const CLUSTER_DUST_COUNT = 10;
+
+/** Pixel size for each dust dot inside the R3F scene. Small enough
+ *  that the dot reads as a pinpoint star, large enough to register
+ *  at any viewport size without disappearing on hi-DPI displays. */
+export const CLUSTER_DUST_SIZE_PX = 3.2;
+
+/** Dust accent color — dawn at low alpha, multiplied by resolve +
+ *  presence per frame. Kept slightly warmer than gold so the dust
+ *  reads as starlight against the cluster's gold ring stack. */
+export const CLUSTER_DUST_COLOR = "#e9d8a6";
+
+/** Diamond opacity at full resolve. */
+export const CLUSTER_DIAMOND_OPACITY = 0.9;
+
+/** Dust dot opacity at full resolve. */
+export const CLUSTER_DUST_OPACITY = 0.55;
+
+// ────────────────────────────────────────────────────────────────────
+// Cluster triad — the three pillars, equal radius
+// ────────────────────────────────────────────────────────────────────
+
+/** One pillar of the orbital triad. The three clusters share the
+ *  same radius and structure (5 rings + 4 diamonds + dust); only
+ *  centre and resolve-stagger phase differ. */
+export interface ClusterSpec {
+  id: "sources" | "substrate" | "surfaces";
+  /** Scene-space centre. */
+  centre: readonly [number, number, number];
+  /** Outer-ring radius in scene units. */
+  radius: number;
+  /** Resolve stagger phase (offset added to resolveProgress). The mid
+   *  cluster resolves first (phase 0); sides follow with a small
+   *  delay so the eye reads "centre first, then sides flowering". */
+  stagger: number;
+}
+
+/** Three pillars — equal radius, equal richness. Mid cluster shares
+ *  the substrate centre so it sits exactly where the brandmark used
+ *  to dock; side clusters anchor at ±1.0 scene units, identical to
+ *  the previous LEFT_ORBIT / RIGHT_ORBIT homeCentre. */
+export const CLUSTER_TRIAD: readonly ClusterSpec[] = [
+  { id: "sources", centre: [-1.0, -0.111, 0], radius: 0.48, stagger: 0.04 },
+  { id: "substrate", centre: [0, -0.111, 0], radius: 0.48, stagger: 0.0 },
+  { id: "surfaces", centre: [1.0, -0.111, 0], radius: 0.48, stagger: 0.04 },
+];
+
+// ────────────────────────────────────────────────────────────────────
 // Envelopes — orbit emerge / retract
 // ────────────────────────────────────────────────────────────────────
 
@@ -215,6 +283,11 @@ export function lerp(a: number, b: number, t: number): number {
   return a + (b - a) * t;
 }
 
+/** Clamp to [0, 1]. */
+export function clamp01(v: number): number {
+  return v < 0 ? 0 : v > 1 ? 1 : v;
+}
+
 /**
  * orbitEmerge — trapezoid envelope for the side-orbit reveal.
  *
@@ -230,6 +303,102 @@ export function orbitEmerge(progress: number): number {
   const emergeIn = smoothstep(ORBIT_ENVELOPE.emerge.in, ORBIT_ENVELOPE.emerge.out, progress);
   const retractOut = smoothstep(ORBIT_ENVELOPE.retract.in, ORBIT_ENVELOPE.retract.out, progress);
   return emergeIn * (1 - retractOut);
+}
+
+// ────────────────────────────────────────────────────────────────────
+// Split + resolve envelopes (ADR-014 v5)
+// ────────────────────────────────────────────────────────────────────
+
+/** Phase windows inside the substrate-window progress (0-1):
+ *
+ *   ARRIVE   [0.00 .. 0.04]: brandmark vector ring is the visible
+ *                            artefact. R3F SplitRing is invisible.
+ *                            Brief — just enough for the user to
+ *                            register the brandmark as the "before"
+ *                            state before it morphs.
+ *   HANDOFF  [0.04 .. 0.12]: brandmark vector ring fades out; R3F
+ *                            SplitRing fades in at the same scale +
+ *                            position. Visually identical-looking
+ *                            ring throughout the crossfade.
+ *   SPLIT    [0.12 .. 0.28]: SplitRing decomposes into three arcs
+ *                            that translate from substrate centre to
+ *                            the three chamber centres, tweening
+ *                            their angular span 120° → 360° as they
+ *                            arrive.
+ *   RESOLVE  [0.22 .. 0.42]: cluster's inner rings + cardinal
+ *                            diamonds + dust dots fade in, staggered
+ *                            ring-by-ring with mid-cluster leading.
+ *                            Overlaps slightly with SPLIT so the
+ *                            handoff to the cluster's outer ring
+ *                            doesn't leave a visual gap. After 0.42
+ *                            the three clusters are at full resolve
+ *                            and hold through the remainder of the
+ *                            substrate window — ~58% of the window
+ *                            is the held "answer" state the user
+ *                            reads at while scrolling through the
+ *                            chamber content. */
+export const SUBSTRATE_PHASE = {
+  arriveOut: 0.04,
+  handoffOut: 0.12,
+  splitOut: 0.28,
+  resolveIn: 0.22,
+  resolveOut: 0.42,
+} as const;
+
+export interface SubstratePhases {
+  /** [0, 1] across HANDOFF window — drives the SplitRing's fade-in. */
+  handoff: number;
+  /** [0, 1] across SPLIT window — drives the SplitRing's arc geometry
+   *  decomposition + translation. */
+  split: number;
+  /** [0, 1] across RESOLVE window — drives the cluster's inner-ring
+   *  + diamond + dust opacity ramps. */
+  resolve: number;
+}
+
+/** Decompose the substrate-window progress into the three local
+ *  scalars driving the handoff, split, and resolve phases. Each
+ *  returned scalar is clamped to [0, 1] and smoothed via smoothstep
+ *  so phase transitions read as gentle easing rather than linear
+ *  ramps. SPLIT and RESOLVE overlap slightly so the cluster's outer
+ *  ring fades in before the SplitRing fully fades out — avoids a
+ *  brief discontinuity at the SPLIT → RESOLVE boundary. After the
+ *  resolveOut moment the three scalars stay at their settled values
+ *  (handoff = 1, split = 1, resolve = 1) for the remainder of the
+ *  substrate window — that's the held "answer" state. */
+export function splitEnvelope(progress: number): SubstratePhases {
+  return {
+    handoff: smoothstep(SUBSTRATE_PHASE.arriveOut, SUBSTRATE_PHASE.handoffOut, progress),
+    split: smoothstep(SUBSTRATE_PHASE.handoffOut, SUBSTRATE_PHASE.splitOut, progress),
+    resolve: smoothstep(SUBSTRATE_PHASE.resolveIn, SUBSTRATE_PHASE.resolveOut, progress),
+  };
+}
+
+/** Brandmark vector-ring opacity scalar inside the substrate window.
+ *  Stays at 1 through the ARRIVE phase, ramps 1 → 0 across HANDOFF,
+ *  then holds at 0 through SPLIT + RESOLVE. The vector actor reads
+ *  this and multiplies it against its own effectiveOpacity so the
+ *  crossfade with the R3F SplitRing reads as a single artefact
+ *  morphing rather than two artefacts swapping. */
+export function vectorRingOpacity(progress: number): number {
+  if (progress <= SUBSTRATE_PHASE.arriveOut) return 1;
+  if (progress >= SUBSTRATE_PHASE.handoffOut) return 0;
+  return 1 - smoothstep(SUBSTRATE_PHASE.arriveOut, SUBSTRATE_PHASE.handoffOut, progress);
+}
+
+/** Per-ring resolve scalar (0-1) inside one cluster. Each ring fades
+ *  in with a small stagger so the cluster reads as "blooming inward"
+ *  — outermost ring first (matches the SplitRing it inherits from),
+ *  then inner rings cascade. The cluster-level stagger phase shifts
+ *  this curve forward/backward so the mid cluster leads the sides. */
+export function clusterRingResolve(
+  resolveProgress: number,
+  ringIndex: number,
+  clusterStagger: number
+): number {
+  const ringStagger = ringIndex * 0.08;
+  const phase = clamp01(resolveProgress - clusterStagger - ringStagger);
+  return smoothstep(0, 0.55, phase);
 }
 
 // ────────────────────────────────────────────────────────────────────

@@ -96,7 +96,7 @@ export function BrandmarkVectorActor() {
       }
       if (!shouldBeVisible) return;
 
-      const { rect, opacity, rotationY, shapeBlend, parkedAt } = transform;
+      const { rect, opacity, rotationY, shapeBlend, parkedAt, vectorOpacity } = transform;
 
       if (rect.left !== lastLeft) {
         shell.style.left = `${rect.left}px`;
@@ -131,10 +131,21 @@ export function BrandmarkVectorActor() {
       //     flips on.
       //   - Post-orbit fade (parkedAt="orbit", opacity ramps 1→0):
       //     symmetric mirror.
+      //
+      // ADR-014 v5: the SUBSTRATE keyframe is intentionally excluded
+      // from the fully-parked gate. During the substrate window the
+      // actor stays visible as the brandmark vector ring (shapeBlend
+      // = 1) for the first 20% of the window (ARRIVE phase), then
+      // fades out over the next 20% (HANDOFF phase) via the new
+      // `vectorOpacity` channel as the R3F SplitRing takes over.
+      // The previous gate hid the actor immediately on parking,
+      // breaking the visual handoff needed for the substrate window's
+      // SPLIT choreography.
       const fullyParked =
         parkedAt != null &&
+        parkedAt !== "substrate" &&
         (parkedAt === "sigil" || parkedAt === "miss" || opacity > PARKED_OPACITY_THRESHOLD);
-      const effectiveOpacity = fullyParked ? 0 : opacity;
+      const effectiveOpacity = fullyParked ? 0 : opacity * vectorOpacity;
       if (effectiveOpacity !== lastEffectiveOpacity) {
         shell.style.opacity = `${effectiveOpacity}`;
         lastEffectiveOpacity = effectiveOpacity;
