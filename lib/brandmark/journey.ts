@@ -315,6 +315,19 @@ export function buildKeyframes(ctx: JourneyContext): BrandmarkKeyframe[] {
       // attrs directly — `shapeKey` declares the destination shape
       // and the ramp uses it to set uShapeBlend = 0 (full) at engage
       // and 1 (ring) at hold.
+      //
+      // parkFracIn / parkFracOut OVERRIDE the default 0.32 so the
+      // substrate "parked" window covers most of the intelligence
+      // section's scroll range. Default 0.32 made --ilayer-progress
+      // drop back to 0 about halfway through the section, so the
+      // chamber items faded out before the user could finish
+      // reading them. 0.4 in + 0.6 out keeps progress > 0 from
+      // before the section reaches viewport top until near the
+      // section bottom, leaving 11–12vh of scroll for the
+      // substrate → rail transit (the remaining 1 - 0.4 - 0.32 of
+      // the substrate→rail journey).
+      parkFracIn: 0.4,
+      parkFracOut: 0.6,
       parked: { density: 1, dispersion: 0, ringsActive: true, shapeKey: "ring" },
       transitIn: {
         // miss → substrate is a major growth (≈ 144px → 280px+). The
