@@ -89,6 +89,17 @@ export interface BrandmarkKeyframe {
    *  "still parked here" (before transit to the next keyframe
    *  begins). Default `0.32`. */
   parkFracOut?: number;
+  /** Fraction of viewport height at which this keyframe's rect
+   *  centre sits when it is considered parked. Default `0.5`
+   *  (centre of viewport). Larger values (e.g. `0.62`) shift the
+   *  parking point LOWER in the viewport — i.e. the brandmark
+   *  arrives at the dock with less scrolling required, so the
+   *  keyframe "appears" earlier in the user's scroll progression
+   *  without changing where the dock element actually sits in the
+   *  DOM. Used for hero → sigil arrival where the brandmark should
+   *  be present at the sigil dock by the time the section title is
+   *  in the upper viewport, not by the time the dock is dead-centre. */
+  parkViewportFrac?: number;
   /** Render attrs while parked here. */
   parked: KeyframeParkedAttrs;
   /** Per-arrival transit overrides. SUBSUMES Tier 1 Change 1 —
@@ -479,6 +490,15 @@ export function buildKeyframes(ctx: JourneyContext): BrandmarkKeyframe[] {
     {
       id: "sigil",
       resolveRect: () => readUnscaledSigilRect(querySigilMark()),
+      // Sigil's dock sits roughly mid-section of #definition (well
+      // below the eyebrow + title). Default centre-pin would only
+      // park the brandmark when the user has scrolled the dock to
+      // viewport centre — by then the eyebrow + title are already
+      // scrolled past. parkViewportFrac = 0.62 shifts the parking
+      // point so the brandmark is at the dock by the time the
+      // section title is in the upper viewport, matching the
+      // perceived "one beat sooner" arrival the user asked for.
+      parkViewportFrac: 0.62,
       parked: { density: 0, dispersion: 0 },
     },
     {
@@ -618,15 +638,23 @@ export function computeSubstrateRange(
 // Centre resolver
 // ────────────────────────────────────────────────────────────────────
 
-/** scrollY at which a keyframe's anchor centre sits at viewport
- *  centre. Stable for non-sticky anchors; for the sticky orbit, the
- *  return advances with scrollY during sticky engagement — the
- *  rail → orbit transit branch handles that by using practice.top
- *  as a non-sticky reference. */
+/** scrollY at which a keyframe's anchor centre sits at the keyframe's
+ *  declared viewport fraction (default 0.5 = viewport centre). Stable
+ *  for non-sticky anchors; for the sticky orbit, the return advances
+ *  with scrollY during sticky engagement — the rail → orbit transit
+ *  branch handles that by using practice.top as a non-sticky reference.
+ *
+ *  `parkViewportFrac` lets a keyframe arrive earlier in the scroll
+ *  by pinning its anchor LOWER in the viewport. For sigil with
+ *  `parkViewportFrac = 0.62`, the keyframe is considered parked when
+ *  the sigil rect's centre is at viewport 62% — so the user has
+ *  scrolled ~12% of viewport height less to reach the parked state
+ *  vs. the centre-pinned default. */
 function keyframeCentreY(kf: BrandmarkKeyframe, ctx: JourneyContext): number | null {
   const rect = kf.resolveRect(ctx);
   if (!rect || rect.width <= 0 || rect.height <= 0) return null;
-  return window.scrollY + rect.top + rect.height / 2 - window.innerHeight / 2;
+  const parkFrac = kf.parkViewportFrac ?? 0.5;
+  return window.scrollY + rect.top + rect.height / 2 - window.innerHeight * parkFrac;
 }
 
 // ────────────────────────────────────────────────────────────────────
