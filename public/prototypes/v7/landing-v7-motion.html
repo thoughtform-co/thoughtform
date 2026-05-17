@@ -391,27 +391,16 @@ body { color: var(--dawn-70); }
 
 .hero__tagline {
   font-family: var(--font-pp-neue-montreal);
-  font-weight: 300;
-  font-size: var(--type-lede-lg);
-  line-height: 1.3;
+  font-weight: 350;
+  font-size: clamp(2rem, 1.2rem + 2.4vw, 3.2rem);
+  line-height: 1.14;
+  letter-spacing: -0.012em;
   color: var(--dawn);
-  margin: 0 0 var(--space-md);
+  margin: 0;
+  max-width: 18ch;
   text-wrap: balance;
 }
 .hero__tagline em { font-style: normal; color: var(--gold); }
-
-.hero__desc {
-  font-family: var(--font-pp-neue-montreal);
-  font-size: var(--type-body-lg); line-height: 1.6;
-  color: var(--dawn-80);
-  max-width: 48ch;
-  margin: 0 0 var(--space-lg);
-}
-
-.hero__cta {
-  display: flex; gap: 16px; flex-wrap: wrap;
-  margin: 0;
-}
 
 /* Inward scroll transition: hero recedes as definition enters */
 .hero {
@@ -2015,7 +2004,6 @@ body.density-dense .station { min-height: 85vh; padding: 120px 0; }
 
 /* ── Hero polish ──────────────────────────────────────────────────── */
 .hero__tagline { text-wrap: balance; }
-.hero__desc { max-width: 54ch; }
 .hero__video {
   transform: scale(calc(1 + var(--hero-cover, 0) * 0.18));
   opacity: calc(1 - var(--hero-cover, 0) * 0.45);
@@ -4285,15 +4273,6 @@ html { scroll-behavior: smooth; }
       <p class="hero__tagline">
         AI capability, built <em>inside the work.</em>
       </p>
-      <p class="hero__desc">
-        The relationship between human intelligence and AI is the work of our
-        generation. Thoughtform embeds inside teams to navigate AI inside the
-        work, encode what makes it good, and build the capability on top of it.
-      </p>
-      <div class="hero__cta">
-        <a href="#definition" class="btn btn--solid">See the approach<span class="arrow"></span></a>
-        <a href="#services" class="btn">See services</a>
-      </div>
     </div>
   </section>
 
@@ -5945,8 +5924,6 @@ html { scroll-behavior: smooth; }
     heroContent.setAttribute('data-m-group','');
     tagIfEmpty(heroContent.querySelector('.hero__wordmark'), 'title');
     tagIfEmpty(heroContent.querySelector('.hero__tagline'),  'body');
-    tagIfEmpty(heroContent.querySelector('.hero__desc'),     'body');
-    tagIfEmpty(heroContent.querySelector('.hero__cta'),      'body');
     tagIfEmpty(heroContent.querySelector('.hero__meta'),     'frame');
   }
   const heroViz = document.querySelector('.hero__viz');
