@@ -1,14 +1,13 @@
 "use client";
 
 import { useFrame } from "@react-three/fiber";
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo } from "react";
 import * as THREE from "three";
 import {
   DIAMOND_SIZE,
   RING_SEGMENTS,
   SIDE_ORBITS,
   SUBSTRATE_RING,
-  SUB_ORBIT_SPIN_RATE,
   orbitEmerge,
   type SideOrbit,
 } from "./intelligenceLayerGeom";
@@ -16,44 +15,45 @@ import { useBrandmarkJourneyStore } from "@/lib/stores/brandmarkJourneyStore";
 
 /**
  * OrbitField — the R3F scene for the intelligence-layer triad
- * (ADR-014).
+ * (ADR-014, simplified to three equal circles).
  *
- * Three coplanar, front-on orbits:
+ * Three coplanar, front-on circles — ONE ring per pillar, all equal
+ * in size:
  *
- *   - SUBSTRATE (middle):  the brandmark particle cloud, painted
- *                          by the global `BrandmarkParticleStation`
- *                          NOT by this scene. We draw a faint
- *                          hairline guide circle around its rim so
- *                          the substrate reads as a deliberate ring
- *                          alongside the two side orbits.
- *   - LEFT (sources):      hairline LineLoop + decorative diamond
- *                          pips. Emerges by sliding from origin to
+ *   - LEFT (sources):      one hairline LineLoop + cardinal pips.
+ *                          Emerges by sliding from origin to
  *                          `LEFT_ORBIT.homeCentre` and scaling 0→1
  *                          in parallel.
+ *   - SUBSTRATE (middle):  NOT rendered here. The brandmark particle
+ *                          cloud (painted by the global
+ *                          `BrandmarkParticleStation`) IS the middle
+ *                          circle — once the painter's `uShapeBlend`
+ *                          uniform morphs the cloud to ring topology,
+ *                          the cloud's outer rim is the substrate
+ *                          ring. Drawing a separate guide circle here
+ *                          would make the centre read as "smaller
+ *                          brandmark inside a bigger ring" — the bug
+ *                          we just fixed. Only the meridian pips
+ *                          (top + bottom diamonds) sit on the
+ *                          substrate's rim as decoration.
  *   - RIGHT (surfaces):    mirror of left.
  *
- * Per-frame the scene reads `transform.ringProgress` from the
- * journey store (the canonical substrate-window progress channel),
- * computes `orbitEmerge(progress)`, and writes:
+ * Per-frame the scene reads `transform.ringProgress` from the journey
+ * store (the canonical substrate-window progress channel), computes
+ * `orbitEmerge(progress)`, and writes:
  *
  *     sideOrbit.group.position.x = homeCentre.x * emerge
  *     sideOrbit.group.scale.setScalar(emerge)
  *
  * NO opacity envelopes for orbit appearance — Principle 4 of
- * ADR-013. NO Y-axis rotation — ADR-014 supersedes the previous
- * three-coaxial-ring rotation model.
- *
- * Sub-orbit halo: a single hairline circle inside the substrate
- * ring breathes via slow autonomous Z spin (matches Section 02's
- * `.sigil__orbits` celestial grammar). It is *inside* the substrate
- * ring, not nested around it, so it reads as the substrate's own
- * inner atmosphere rather than another concentric orbit.
+ * ADR-013. NO Y-axis rotation — ADR-014. NO concentric halos or
+ * substrate guide ring — three circles, equal weight, one ring per
+ * pillar.
  */
 
 interface SideOrbitHandles {
   group: THREE.Group;
   ring: THREE.LineLoop;
-  halo: THREE.LineLoop;
   pipGroup: THREE.Group;
 }
 
@@ -81,12 +81,11 @@ function buildDiamondGeometry(size: number): THREE.BufferGeometry {
 }
 
 /** Construct one side orbit (left or right) — its primary hairline
- *  ring, a concentric inner halo (60% radius, dashed/lower-contrast),
- *  and a group of cardinal diamond pips at `pipAngles`. All children
- *  sit inside the orbit's parent group so a single transform on the
- *  parent drives the emerge slide + scale. The inner halo gives each
- *  side orbit comparable visual density to the substrate's brandmark
- *  cloud so the three pillars read as equal stations. */
+ *  ring and a group of cardinal diamond pips at `pipAngles`. All
+ *  children sit inside the orbit's parent group so a single transform
+ *  on the parent drives the emerge slide + scale. ONE ring per side
+ *  orbit (no concentric halo) so the triad reads as three circles
+ *  total, all equal in size. */
 function buildSideOrbit(orbit: SideOrbit): SideOrbitHandles {
   const group = new THREE.Group();
   group.name = `orbit-${orbit.id}`;
@@ -104,19 +103,6 @@ function buildSideOrbit(orbit: SideOrbit): SideOrbitHandles {
   });
   const ring = new THREE.LineLoop(buildRingGeometry(orbit.radius), ringMaterial);
   group.add(ring);
-
-  // Inner halo — concentric dashed-feel hairline at 60% radius.
-  // Lower-contrast (dawn) so it reads as instrument detail, not a
-  // second primary station. Adds celestial density without competing
-  // with the outer ring or the substrate cloud.
-  const haloMaterial = new THREE.LineBasicMaterial({
-    color: "#a99e8a", // --gold-soft / dawn-deep
-    transparent: true,
-    opacity: 0.4,
-    depthWrite: false,
-  });
-  const halo = new THREE.LineLoop(buildRingGeometry(orbit.radius * 0.6), haloMaterial);
-  group.add(halo);
 
   // Cardinal pips. `pipAngles` are degrees, 0 = top of orbit,
   // clockwise. Convert to standard polar (0 = right, ccw) by
@@ -137,52 +123,17 @@ function buildSideOrbit(orbit: SideOrbit): SideOrbitHandles {
   }
   group.add(pipGroup);
 
-  return { group, ring, halo, pipGroup };
+  return { group, ring, pipGroup };
 }
 
-/** Build the substrate guide ring + inner halo + cardinal pips.
- *  The substrate ring frames the brandmark cloud (which paints at
- *  smaller screen pixels via the global painter). The halo is a
- *  concentric hairline that breathes via slow autonomous Z spin.
- *  Cardinal pips at top/bottom anchor the substrate's read direction
- *  so it reads as a navigated station, not just an open ring. */
-function buildSubstrateGuide(): {
-  ring: THREE.LineLoop;
-  halo: THREE.Group;
-  pipGroup: THREE.Group;
-} {
-  // Primary substrate ring — gold hairline at signal weight equal to
-  // the side orbits so the three pillars read as balanced stations.
-  const ringMaterial = new THREE.LineBasicMaterial({
-    color: "#caa554", // --gold
-    transparent: true,
-    opacity: 0.55,
-    depthWrite: false,
-  });
-  const ring = new THREE.LineLoop(buildRingGeometry(SUBSTRATE_RING.radius), ringMaterial);
-  ring.scale.setScalar(0);
-
-  // Inner halo — single hairline at 60% of substrate radius, slow
-  // autonomous rotation so the substrate feels alive even at the
-  // hold beat. Parent group is what we scale; the halo itself spins
-  // independently.
-  const halo = new THREE.Group();
-  halo.scale.setScalar(0);
-  const haloMaterial = new THREE.LineBasicMaterial({
-    color: "#caa554",
-    transparent: true,
-    opacity: 0.32,
-    depthWrite: false,
-  });
-  const haloRing = new THREE.LineLoop(buildRingGeometry(SUBSTRATE_RING.radius * 0.6), haloMaterial);
-  halo.add(haloRing);
-
-  // Cardinal pips at the substrate's top + bottom — the meridian
-  // anchors of the central station. Match the cardinal pip rhythm
-  // on the side orbits so all three pillars share the same bearing
-  // grammar. The horizontal cardinals are intentionally omitted so
-  // the substrate's left/right intersections with the side orbits
-  // stay clean.
+/** Build the substrate meridian pips only — top + bottom diamonds
+ *  sitting on the brandmark ring's rim. The substrate ring itself is
+ *  the brandmark particle cloud (drawn by the global painter, morphed
+ *  to ring topology via `uShapeBlend`), so we never draw a hairline
+ *  guide here. The meridian pips share the same scene-unit radius as
+ *  the brandmark cloud's projected screen rect (sized in CSS to match
+ *  the side orbits — see `--ilayer-ring-diameter` in landing.css). */
+function buildSubstrateMeridianPips(): THREE.Group {
   const pipGroup = new THREE.Group();
   pipGroup.scale.setScalar(0);
   const pipGeometry = buildDiamondGeometry(DIAMOND_SIZE * 1.15);
@@ -195,37 +146,24 @@ function buildSubstrateGuide(): {
   for (const angleDeg of [0, 180]) {
     const t = Math.PI / 2 - (angleDeg * Math.PI) / 180;
     const pip = new THREE.LineLoop(pipGeometry, pipMaterial);
-    pip.position.set(
-      Math.cos(t) * SUBSTRATE_RING.radius,
-      Math.sin(t) * SUBSTRATE_RING.radius,
-      0
-    );
+    pip.position.set(Math.cos(t) * SUBSTRATE_RING.radius, Math.sin(t) * SUBSTRATE_RING.radius, 0);
     pipGroup.add(pip);
   }
-
-  return { ring, halo, pipGroup };
+  return pipGroup;
 }
 
 /**
- * OrbitField — the public component. Mounts the substrate guide +
- * two side orbits + the per-frame envelope writer.
+ * OrbitField — the public component. Mounts the two side orbits +
+ * the substrate meridian pips + the per-frame envelope writer.
  */
 export function OrbitField() {
-  const { sideOrbits, substrateRing, substrateHalo, substratePips } = useMemo(() => {
+  const { sideOrbits, substratePips } = useMemo(() => {
     const sideOrbits = SIDE_ORBITS.map(buildSideOrbit);
-    const { ring, halo, pipGroup } = buildSubstrateGuide();
-    return {
-      sideOrbits,
-      substrateRing: ring,
-      substrateHalo: halo,
-      substratePips: pipGroup,
-    };
+    const substratePips = buildSubstrateMeridianPips();
+    return { sideOrbits, substratePips };
   }, []);
 
-  // Spin target for the substrate halo's autonomous breath.
-  const haloRef = useRef<THREE.Group>(substrateHalo);
-
-  useFrame((_, dt) => {
+  useFrame(() => {
     const transform = useBrandmarkJourneyStore.getState().transform;
     const ringsActive = transform.ringsActive;
     const progress = transform.ringProgress;
@@ -238,16 +176,12 @@ export function OrbitField() {
       for (const handles of sideOrbits) {
         if (handles.group.visible) handles.group.visible = false;
       }
-      if (substrateRing.visible) substrateRing.visible = false;
-      if (substrateHalo.visible) substrateHalo.visible = false;
       if (substratePips.visible) substratePips.visible = false;
       return;
     }
     for (const handles of sideOrbits) {
       if (!handles.group.visible) handles.group.visible = true;
     }
-    if (!substrateRing.visible) substrateRing.visible = true;
-    if (!substrateHalo.visible) substrateHalo.visible = true;
     if (!substratePips.visible) substratePips.visible = true;
 
     const emerge = orbitEmerge(progress);
@@ -267,18 +201,10 @@ export function OrbitField() {
       handles.group.scale.setScalar(emerge);
     }
 
-    // === Substrate ring + halo + pips — geometric emerge (no slide) ===
-    // The substrate stays at origin; it just scales 0 → 1 so the
-    // hairline guide, inner halo, and meridian pips appear in sync
-    // with the side orbits.
-    substrateRing.scale.setScalar(emerge);
-    substrateHalo.scale.setScalar(emerge);
+    // === Substrate meridian pips — geometric emerge (no slide) ===
+    // The pips stay at origin; they just scale 0 → 1 so the
+    // top/bottom diamonds appear in sync with the side orbits.
     substratePips.scale.setScalar(emerge);
-
-    // Halo autonomous spin — slow Z rotation independent of scroll.
-    if (haloRef.current) {
-      haloRef.current.rotation.z += SUB_ORBIT_SPIN_RATE * dt;
-    }
   });
 
   // Cleanup geometries / materials on unmount.
@@ -287,8 +213,6 @@ export function OrbitField() {
       for (const handles of sideOrbits) {
         handles.ring.geometry.dispose();
         (handles.ring.material as THREE.Material).dispose();
-        handles.halo.geometry.dispose();
-        (handles.halo.material as THREE.Material).dispose();
         handles.pipGroup.children.forEach((child) => {
           const m = child as THREE.LineLoop;
           m.geometry.dispose();
@@ -298,13 +222,6 @@ export function OrbitField() {
         const firstPip = handles.pipGroup.children[0] as THREE.LineLoop | undefined;
         if (firstPip) (firstPip.material as THREE.Material).dispose();
       }
-      substrateRing.geometry.dispose();
-      (substrateRing.material as THREE.Material).dispose();
-      substrateHalo.children.forEach((child) => {
-        const m = child as THREE.LineLoop;
-        m.geometry.dispose();
-        (m.material as THREE.Material).dispose();
-      });
       substratePips.children.forEach((child) => {
         const m = child as THREE.LineLoop;
         m.geometry.dispose();
@@ -312,26 +229,19 @@ export function OrbitField() {
       const firstSubstratePip = substratePips.children[0] as THREE.LineLoop | undefined;
       if (firstSubstratePip) (firstSubstratePip.material as THREE.Material).dispose();
     };
-  }, [sideOrbits, substrateRing, substrateHalo, substratePips]);
+  }, [sideOrbits, substratePips]);
 
   return (
     <>
-      {/* Substrate guide ring — gold hairline framing the brandmark
-          cloud's perimeter. Equal in signal to the side orbits so
-          the three pillars read as balanced stations. */}
-      <primitive object={substrateRing} />
-
-      {/* Substrate halo — single inner hairline that breathes via
-          slow Z spin (Section 02 sigil grammar). */}
-      <primitive object={substrateHalo} ref={haloRef} />
-
-      {/* Substrate meridian pips — top + bottom cardinal diamonds. */}
+      {/* Substrate meridian pips — top + bottom cardinal diamonds
+          on the brandmark ring's rim. NO hairline guide ring here —
+          the brandmark particle cloud IS the centre ring. */}
       <primitive object={substratePips} />
 
       {/* Side orbits — emerge from substrate centre by sliding to
           their home centres and scaling up in parallel. Each side
-          orbit carries its own primary ring + inner halo + cardinal
-          pips (built inside `buildSideOrbit`). */}
+          orbit carries its own primary ring + cardinal pips (built
+          inside `buildSideOrbit`). */}
       {sideOrbits.map((handles) => (
         <primitive key={handles.group.name} object={handles.group} />
       ))}

@@ -61,20 +61,35 @@ export const CAMERA_PARAMS = {
 /** Substrate ring — anchored at the origin. The brandmark particle
  *  cloud is what paints here (via the global painter, morphed to the
  *  ring-only shape via `uShapeBlend`); this geometry record exists
- *  so the side orbits know where they emerge from.
+ *  so the side orbits + meridian pips know where the centre is and
+ *  what size to match.
  *
- *  Sized to match the static SVG fallback (`r=240` in a `viewBox` of
- *  `1000 × 520`, where 520 maps to the camera's vertical world span
- *  of 1.846 scene units → `radius = 240 / 520 * 1.846 ≈ 0.852`).
- *  Aligning R3F with the static fallback means the chambers, which
- *  anchor on the orbit centres in vh-relative CSS, sit cleanly
- *  inside both rendering paths. */
+ *  ADR-014 v2 (three-equal-circles): all three rings now share the
+ *  same scene-unit radius (0.35). The previous "middle slightly
+ *  larger" rule was confusing because the brandmark cloud (centre
+ *  CSS-sized) and the rendered guide ring (centre scene-sized) did
+ *  not project to the same screen pixels, so the centre read as
+ *  "small cloud inside bigger ring". The fix is two-fold:
+ *
+ *    1. The substrate guide ring is no longer rendered (see
+ *       `OrbitField`). The brandmark cloud IS the centre ring.
+ *    2. All three rings — left orbit, brandmark, right orbit — are
+ *       sized to project to the same on-screen diameter (~38vh on
+ *       desktop). Side orbits use this scene-unit radius directly;
+ *       the brandmark anchor is sized in CSS to match via the
+ *       `--ilayer-ring-diameter` variable in landing.css.
+ *
+ *  `radius` is consumed by `buildSubstrateMeridianPips` so the
+ *  top/bottom diamonds sit exactly on the brandmark ring's rim. */
 export const SUBSTRATE_RING = {
   centre: [0, 0, 0] as [number, number, number],
-  /** Slightly larger than the side orbits so it reads as the
-   *  primary station — Aether's 1.4× middle-column emphasis,
-   *  translated into the orbital idiom. */
-  radius: 0.852,
+  /** Shared radius used by all three triad rings (substrate, left
+   *  orbit, right orbit). At camera fov 26 / z=4, vertical world
+   *  span is ~1.846 scene units, so 0.35 → ~19vh radius → ~38vh
+   *  diameter on a 100vh canvas. The CSS `--ilayer-ring-diameter`
+   *  is set to clamp(280px, 38vh, 440px) so the brandmark anchor
+   *  matches at typical desktop viewports. */
+  radius: 0.35,
 };
 
 /**
@@ -109,30 +124,29 @@ export interface SideOrbit {
 }
 
 /** Left orbit — Trusted sources. Sits to the left of the substrate.
- *  Sized + positioned to align with the static SVG fallback
- *  (`cx=-220, r=195` in a `viewBox` of `1000 × 520`):
- *    homeCentre.x = -220 / 520 * 1.846 ≈ -0.781
- *    radius       =  195 / 520 * 1.846 ≈  0.692
- *  The cardinal pips at 0°/90°/180°/270° anchor the celestial
- *  bearing register; the inner halo (drawn separately in
- *  `OrbitField`) reinforces the orbit as a station rather than a
- *  faint guide. */
+ *  ADR-014 v2: same scene-unit radius as the substrate / right orbit
+ *  so the three pillars read as three equal circles. `homeCentre.x`
+ *  is set for ~22% overlap with the substrate (centre distance ≈
+ *  1.57 × radius < 2 × radius = sum-of-radii), which matches the
+ *  reference space-map composition. The CSS `--orbit-offset`
+ *  variable is derived from `--ilayer-ring-radius` so the side
+ *  chambers anchor at the same screen-x as the orbit centres in
+ *  both R3F and static-fallback modes. */
 export const LEFT_ORBIT: SideOrbit = {
   id: "left",
-  homeCentre: [-0.781, 0, 0],
-  radius: 0.692,
+  homeCentre: [-0.55, 0, 0],
+  radius: 0.35,
   color: "#caa554", // --gold — equal signal weight with the substrate
   opacity: 0.65,
-  // Cardinal pips at top / right / bottom / left of the orbit, plus
-  // the inner-cardinal point closest to the substrate intersection.
+  // Cardinal pips at top / right / bottom / left of the orbit.
   pipAngles: [0, 90, 180, 270],
 };
 
 /** Right orbit — Headless surfaces. Mirror of the left orbit. */
 export const RIGHT_ORBIT: SideOrbit = {
   id: "right",
-  homeCentre: [0.781, 0, 0],
-  radius: 0.692,
+  homeCentre: [0.55, 0, 0],
+  radius: 0.35,
   color: "#caa554",
   opacity: 0.65,
   pipAngles: [0, 90, 180, 270],
