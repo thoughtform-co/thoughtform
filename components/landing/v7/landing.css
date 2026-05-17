@@ -864,6 +864,23 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   display: none !important;
 }
 
+/* Vector-first painter: visible only in particle mode. The vector
+   actor owns the brandmark shape end-to-end (sigil, miss, substrate,
+   rail, orbit + every transit between them), reading the journey
+   transform's rect / opacity / rotationY / shapeBlend on every rAF
+   tick. In SVG fallback mode the legacy `.tf-brandmark-actor` paints
+   transit and the native dock SVGs handle parked states, so the
+   vector actor is suppressed. */
+[data-brandmark-mode="svg"] .tf-brandmark-vector-actor {
+  display: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tf-brandmark-vector-actor {
+    display: none !important;
+  }
+}
+
 /* ── SVG fallback path ────────────────────────────────────────────
    In SVG mode (reduced motion or no WebGL), `useBrandmarkJourney`
    writes `data-brand-on-missing/rail="parked"` + `data-orbit-docked
@@ -3918,165 +3935,6 @@ html[data-quote-active="true"] .tf-brandmark-actor {
    for the miss → substrate transit; no special-case stage handoff,
    no helper `paintTransitWithRects`, no `handleStageHandoff`. See
    `useSigilChoreography.ts` and ADR-012 v6. */
-
-/* ═══════════ 04.5 BUILD AXIOM BRIDGE — lightweight key-visual divider ═══════════
-   Pause-and-breathe divider between the dense intelligence-layer
-   artifact and the continuum rail. Carries the Thoughtform key visual
-   under "What I cannot build, I do not understand." in a modest
-   editorial register. Distinct from the heavier #buildQuote section
-   after #practice (which is the practice → build cover; do not
-   confuse the two). See ADR-012.
-
-   Compositing: opaque void shield on the wrapper; reveal motion lives
-   only on .ilayer-bridge__figure (Rule 2). The gateway image fades in
-   via the wrapper's natural opacity (no transform on the wrapper)
-   so no lateral gold strips are exposed (Rule 3). */
-
-.ilayer-bridge {
-  position: relative;
-  height: auto;
-  min-height: 80vh;
-  min-height: 80svh;
-  padding: clamp(80px, 12vh, 140px) 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-}
-
-.ilayer-bridge__gateway {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  overflow: hidden;
-}
-.ilayer-bridge__gateway__img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center;
-  opacity: 0.55;
-  /* Soft mask edges — fade to void on top and bottom so the bridge
-     dissolves into the surrounding sections instead of a hard seam. */
-  -webkit-mask-image: linear-gradient(
-    to bottom,
-    transparent 0%,
-    rgba(0, 0, 0, 0.85) 18%,
-    rgba(0, 0, 0, 0.85) 82%,
-    transparent 100%
-  );
-  mask-image: linear-gradient(
-    to bottom,
-    transparent 0%,
-    rgba(0, 0, 0, 0.85) 18%,
-    rgba(0, 0, 0, 0.85) 82%,
-    transparent 100%
-  );
-}
-
-.ilayer-bridge__figure {
-  position: relative;
-  z-index: 2;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: clamp(14px, 2vh, 22px);
-  margin: 0;
-  padding: 0 clamp(20px, 6vw, 48px);
-  text-align: center;
-  max-width: min(880px, 92vw);
-}
-.ilayer-bridge__eyebrow {
-  font-family: var(--font-pt-mono);
-  font-size: 10px;
-  letter-spacing: var(--track-widest);
-  text-transform: uppercase;
-  color: var(--dawn-50);
-  margin: 0;
-}
-.ilayer-bridge__eyebrow .k {
-  color: var(--gold);
-  font-weight: 600;
-}
-.ilayer-bridge__quote {
-  font-family: var(--font-pp-neue-montreal), serif;
-  font-weight: 400;
-  font-size: clamp(22px, 2.6vw, 38px);
-  line-height: 1.2;
-  letter-spacing: -0.02em;
-  color: var(--dawn);
-  margin: 0;
-  text-wrap: balance;
-}
-.ilayer-bridge__line {
-  display: block;
-}
-.ilayer-bridge__line em {
-  font-style: italic;
-  color: var(--gold);
-  font-weight: 400;
-}
-.ilayer-bridge__attrib {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.7em;
-  font-family: var(--font-pt-mono);
-  font-size: clamp(10px, 0.95vw, 12px);
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--dawn-70);
-  margin: 0;
-}
-.ilayer-bridge__attrib__rule {
-  display: inline-block;
-  width: 24px;
-  height: 1px;
-  background: var(--gold);
-}
-.ilayer-bridge__attrib__name {
-  color: var(--dawn);
-  font-weight: 600;
-}
-
-/* Reveal — opacity / translate / blur on the figure only. Wrapper stays
-   opaque (Rule 2). */
-.ilayer-bridge__figure[data-m="instrument"] {
-  opacity: 0;
-  transform: translateY(12px);
-  filter: blur(2px);
-  transition-property: opacity, transform, filter;
-  transition-duration: var(--m-dur-slow, 880ms);
-  transition-timing-function: var(--m-ease-long, cubic-bezier(0.16, 1, 0.3, 1));
-}
-.ilayer-bridge__figure[data-m="instrument"].is-in {
-  opacity: 1;
-  transform: translateY(0);
-  filter: none;
-}
-
-@media (max-width: 720px) {
-  .ilayer-bridge {
-    min-height: 60vh;
-    padding: clamp(56px, 10vh, 88px) 0;
-  }
-  .ilayer-bridge__quote {
-    font-size: clamp(20px, 5.4vw, 28px);
-  }
-  .ilayer-bridge__gateway__img {
-    opacity: 0.4;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .ilayer-bridge__figure[data-m="instrument"],
-  .ilayer-bridge__figure[data-m="instrument"].is-in {
-    opacity: 1;
-    transform: none;
-    filter: none;
-    transition: none;
-  }
-}
 
 /* ═══════════ 05 CONTINUUM — spectrum + collapsed distances ═══════════
    Header now sits in a Linear-style two-column grid (title left, lede

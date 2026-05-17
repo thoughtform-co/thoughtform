@@ -2,6 +2,7 @@
 
 **Date:** 2026-05-16
 **Status:** Accepted — supersedes the per-station snapshot + multi-painter architecture of ADR-010 / ADR-011 / ADR-012.
+**Partially superseded by:** [ADR-015 — Vector-first brandmark + celestial-editor linework](015-brandmark-vector-first.md) (2026-05-17). The continuous-transform model, journey hook, store, keyframe schema, and substrate-window math are RETAINED VERBATIM. What changed is the rendering surface: the brandmark shape is now painted by `BrandmarkVectorActor` (inline SVG) instead of by the particle shader, and the particle field is repurposed as an atmosphere painter. The "one painter end-to-end" invariant becomes "one vector painter + one atmosphere painter, both reading the same transform".
 
 **Related (superseded):**
 [ADR-010 — Brandmark choreography](010-brandmark-choreography.md),

@@ -1,9 +1,16 @@
 /**
- * Shaders for the brandmark particle artifact.
+ * Shaders for the brandmark atmosphere.
  *
  * Kept as TypeScript template literals so we don't have to configure
  * a webpack `.glsl` loader in `next.config.mjs`. This is the same
  * pattern used by every R3F-in-Next.js example in the ecosystem.
+ *
+ * Vector-first refactor: the cloud no longer paints the brandmark
+ * shape. The crisp brandmark is rendered as vector SVG by
+ * `BrandmarkVectorActor`; this shader paints luminous atmospheric
+ * grain that lives around and inside the vector mark. The fragment
+ * shader now draws soft RADIAL dots with additive blending — every
+ * particle reads as a point of light rather than a paper tile.
  *
  * The vertex shader does four things:
  *
@@ -19,17 +26,12 @@
  *      against `uHalfSize` so the wander looks proportional to the
  *      station's rect at any size.
  *
- *   3. Squash-rotation (ADR-013): a single scalar `uRotationY`
- *      uniform applies a 2D affine transform that approximates a
- *      Y-axis 3D rotation. Horizontal positions are scaled by
- *      `cos(uRotationY)`; a small perspective shear ties the
- *      top/bottom of the brandmark in/out of the page depending on
- *      tilt direction. At `uRotationY = 0` the transform is
- *      identity, so the brandmark reads as axis-aligned at the
- *      hero / miss / rail / orbit keyframes. At peak tilt (~70deg
- *      inside the substrate window) the brandmark squashes to a
- *      vertical strip, matching the perceived edge-on read of the
- *      R3F ringfield's 3D-rotated rings around it.
+ *   3. Squash-rotation (legacy): a single scalar `uRotationY` uniform
+ *      applies a 2D affine transform that approximates a Y-axis 3D
+ *      rotation. Now redundant with the vector actor's honest CSS 3D
+ *      rotation, but retained so the atmosphere tilts in sympathy
+ *      with the brandmark during the substrate window. Set to 0 to
+ *      disable.
  *
  *   4. Pixel-to-NDC projection: rather than rely on an external
  *      camera matrix, the shader converts pixel-space coordinates
@@ -39,11 +41,12 @@
  *      and means we don't need to recompute camera uniforms on
  *      resize.
  *
- * The fragment shader paints a solid square — no antialiasing, no
- * radial falloff — which keeps the Canvas-2D `fillRect(GRID, GRID)`
- * aesthetic from `ParticleWordmarkMorph.tsx` and lets the dense
- * cloud read as a filled mark at full density without anti-aliased
- * dot edges softening the silhouette.
+ * The fragment shader now paints a soft RADIAL falloff — each point
+ * is a luminous gold speck rather than a paper tile. Combined with
+ * additive blending on the material this reads as constellation dust
+ * around the brandmark; sparse densities read as scattered sparks,
+ * higher densities glow as a halo. The papercraft tile aesthetic is
+ * intentionally gone.
  */
 
 export const brandmarkVertexShader = /* glsl */ `
@@ -149,11 +152,18 @@ uniform vec3 uTint;
 varying float vAlpha;
 
 void main() {
-  // Solid square coverage — no antialiasing, no radial falloff. This
-  // matches the Canvas-2D \`fillRect(GRID, GRID)\` aesthetic used by
-  // ThoughtformSigil and ParticleWordmarkMorph, so a high-density
-  // cloud reads as a hard-edged filled mark and a low-density cloud
-  // reads as discrete pixels rather than soft dust.
-  gl_FragColor = vec4(uTint, vAlpha);
+  // Soft radial falloff — each point is a luminous speck with a
+  // bright core and a smooth outer fade to alpha 0. Combined with
+  // additive blending on the material, dense regions glow as a
+  // halo while sparse regions read as discrete sparks.
+  //
+  // gl_PointCoord is [0,1]^2 across the rendered point square.
+  // length(gl_PointCoord - 0.5) is the distance from centre in [0,
+  // sqrt(0.5)]. Inside 0.35 we hold full intensity, then ramp to 0
+  // by 0.5 — a tight bright core surrounded by a quick soft halo.
+  float d = length(gl_PointCoord - vec2(0.5));
+  float alpha = 1.0 - smoothstep(0.35, 0.5, d);
+  if (alpha <= 0.001) discard;
+  gl_FragColor = vec4(uTint, vAlpha * alpha);
 }
 `;

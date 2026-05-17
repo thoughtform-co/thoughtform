@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { createRoot, type Root } from "react-dom/client";
 import { probeWebGL } from "@/lib/webgl/probe";
 import { IntelligenceLayerStack } from "./IntelligenceLayerStack";
 import { useIlayerProgress, useIlayerProgressStore } from "./useIlayerProgress";
+import { CelestialLinework } from "./CelestialLinework";
 
 interface IntelligenceLayerPortalProps {
   containerRef: React.RefObject<HTMLElement | null>;
@@ -46,6 +48,7 @@ interface IntelligenceLayerPortalProps {
 export function IntelligenceLayerPortal({ containerRef }: IntelligenceLayerPortalProps) {
   const rootRef = useRef<Root | null>(null);
   const [mountToken, setMountToken] = useState(0);
+  const [brandmarkAnchor, setBrandmarkAnchor] = useState<HTMLElement | null>(null);
 
   // Drive `--ilayer-progress` for the floating-label opacity gates.
   // The hook reads `transform.ringProgress` from `brandmarkJourneyStore`
@@ -135,5 +138,26 @@ export function IntelligenceLayerPortal({ containerRef }: IntelligenceLayerPorta
     };
   }, [containerRef, mountToken]);
 
-  return null;
+  // Discover the substrate brandmark anchor so we can portal the
+  // celestial-linework SVG overlay into it. The overlay is a
+  // decorative sibling of the canonical brandmark glyph (also
+  // portal'd into this anchor by `BrandmarkSystem`); it sits on
+  // top of the vector brandmark and adds hairline rings, ticks,
+  // and cardinal diamonds — celestial-editor language — driven
+  // entirely by the `--ilayer-progress` CSS variable.
+  //
+  // We share `mountToken` from the mode-probe effect — it bumps
+  // whenever the prototype HTML re-mounts, so the anchor lookup
+  // runs again post-HMR / Fast-Refresh without needing a separate
+  // MutationObserver (which previously fired on every R3F canvas
+  // mutation and starved the R3F mount of execution time).
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+    const anchor = container.querySelector<HTMLElement>(".ilayer__brandmark-anchor");
+    setBrandmarkAnchor(anchor);
+  }, [containerRef, mountToken]);
+
+  if (!brandmarkAnchor) return null;
+  return createPortal(<CelestialLinework />, brandmarkAnchor);
 }

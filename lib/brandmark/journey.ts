@@ -199,6 +199,26 @@ export const HERO_GUARD_PX = 4;
  *  (sigil → miss). Bell curve peaking at mid-transit. */
 const DEFAULT_DISPERSION_BUMP: DispersionBumpFn = (t) => Math.sin(Math.PI * t) * 0.45;
 
+/** Transit exhaust bump for size-changing legs (miss → substrate,
+ *  substrate → rail, rail → orbit). Vector-first model: the
+ *  brandmark itself is a crisp vector that lerps cleanly between
+ *  rects, so the atmosphere field is free to scatter as motion
+ *  exhaust around the moving mark. Wider, lower-amplitude bell than
+ *  the default — peaks at ~0.35 so the dust trails read as motion
+ *  blur, not as the brandmark exploding. */
+const EXHAUST_DISPERSION_BUMP: DispersionBumpFn = (t) => Math.sin(Math.PI * t) * 0.35;
+
+/** Atmosphere density at the substrate hold beat. Low enough that
+ *  the cloud reads as ambient dust around the vector mark and the
+ *  orbital triad; high enough that the substrate window still has
+ *  a luminous "field" quality vs the bare vector states elsewhere. */
+const SUBSTRATE_ATMOSPHERE_DENSITY = 0.15;
+
+/** Atmosphere dispersion at the substrate hold beat. Slight scatter
+ *  so the dust drifts in/around the orbital triad rather than
+ *  snapping to the brandmark's outline. */
+const SUBSTRATE_ATMOSPHERE_DISPERSION = 0.35;
+
 /** Default easing (power3.inOut). */
 const DEFAULT_EASING: EasingFn = (t) => {
   if (t < 0.5) return 4 * t * t * t;
@@ -292,29 +312,49 @@ export function buildKeyframes(ctx: JourneyContext): BrandmarkKeyframe[] {
     practiceEl?.querySelector<HTMLElement>(".approach__orbit__mark") ??
     rootEl.querySelector<HTMLElement>(".approach__orbit__mark");
 
+  // Vector-first model (ADR successor to ADR-013): the BRANDMARK
+  // SHAPE is owned by `BrandmarkVectorActor` (crisp inline SVG that
+  // reads the journey transform on every rAF tick). The atmosphere
+  // field (`BrandmarkParticleStation` with the new soft-radial
+  // shader) reads the SAME transform but consumes it as ambient
+  // grain and motion exhaust — not as the mark itself.
+  //
+  // The per-keyframe `parked.density` no longer means "how much of
+  // the brandmark do we paint with particles"; it means "how much
+  // atmospheric dust accompanies the vector mark at this station".
+  // Full-mark stations (sigil, miss, rail, orbit) get density 0 —
+  // the vector mark sits alone, crisp, no halo. The substrate hold
+  // beat gets a modest density (~0.15) + dispersion (~0.35) so the
+  // intelligence-layer scene reads as a luminous field around the
+  // vector ring.
+  //
+  // Transit `dispersionBump` is restored on every leg as exhaust:
+  // as the vector mark lerps between rects, the atmosphere bursts
+  // around it (peaking at mid-transit) to read as motion blur.
   return [
     {
       id: "sigil",
       resolveRect: () => readUnscaledSigilRect(querySigilMark()),
-      parked: { density: 1, dispersion: 0 },
+      parked: { density: 0, dispersion: 0 },
     },
     {
       id: "miss",
       resolveRect: () => queryMissBrand()?.getBoundingClientRect() ?? null,
-      parked: { density: 1, dispersion: 0 },
-      // sigil → miss: same-size journey; bump is the visual story.
+      parked: { density: 0, dispersion: 0 },
+      // sigil → miss: same-size journey; the default bump (0.45 peak)
+      // gives a denser exhaust because the vector barely moves and
+      // the atmosphere IS the visual story of the journey here.
     },
     {
       id: "substrate",
       resolveRect: () => querySubstrate()?.getBoundingClientRect() ?? null,
-      // shapeKey: "ring" — the brandmark cloud morphs into a thick
-      // ring during the substrate-engagement window so the mark
-      // literally BECOMES the middle circle of the orbital triad
-      // (ADR-014). The blend ramp is driven by the substrate scroll
-      // window in `computeBrandmarkTransform`, not by the parked
-      // attrs directly — `shapeKey` declares the destination shape
-      // and the ramp uses it to set uShapeBlend = 0 (full) at engage
-      // and 1 (ring) at hold.
+      // shapeKey: "ring" — the vector actor crossfades its full
+      // glyph for the ring-only glyph during the substrate window,
+      // and the atmosphere drifts inside the resulting orbital ring.
+      // The blend ramp is driven by the substrate scroll window in
+      // `computeBrandmarkTransform`, not by the parked attrs
+      // directly — `shapeKey` is retained as a declarative hint
+      // for downstream consumers (preview pages, debug telemetry).
       //
       // parkFracIn / parkFracOut OVERRIDE the default 0.32 so the
       // substrate "parked" window covers most of the intelligence
@@ -323,38 +363,42 @@ export function buildKeyframes(ctx: JourneyContext): BrandmarkKeyframe[] {
       // chamber items faded out before the user could finish
       // reading them. 0.4 in + 0.6 out keeps progress > 0 from
       // before the section reaches viewport top until near the
-      // section bottom, leaving 11–12vh of scroll for the
-      // substrate → rail transit (the remaining 1 - 0.4 - 0.32 of
-      // the substrate→rail journey).
+      // section bottom.
       parkFracIn: 0.4,
       parkFracOut: 0.6,
-      parked: { density: 1, dispersion: 0, ringsActive: true, shapeKey: "ring" },
+      parked: {
+        density: SUBSTRATE_ATMOSPHERE_DENSITY,
+        dispersion: SUBSTRATE_ATMOSPHERE_DISPERSION,
+        ringsActive: true,
+        shapeKey: "ring",
+      },
       transitIn: {
-        // miss → substrate is a major growth (≈ 144px → 280px+). The
-        // cloud must stay coherent through the morph so the user
-        // sees the brandmark GROW INTO the section, not explode.
-        dispersionBump: null,
+        // miss → substrate: vector lerps from ~144px to ~280px+;
+        // exhaust bump trails the growth so the substrate emerge
+        // reads as a "gathering" rather than a silent re-park.
+        dispersionBump: EXHAUST_DISPERSION_BUMP,
       },
     },
     {
       id: "rail",
       resolveRect: () => queryRail()?.getBoundingClientRect() ?? null,
-      parked: { density: 1, dispersion: 0 },
+      parked: { density: 0, dispersion: 0 },
       transitIn: {
-        // substrate → rail is a major shrink (≈ 280px → 56px). Same
-        // coherence requirement as miss → substrate.
-        dispersionBump: null,
+        // substrate → rail: vector shrinks from ~280px to ~56px;
+        // exhaust bump trails the shrink so the cloud reads as
+        // "concentrating" toward the rail station.
+        dispersionBump: EXHAUST_DISPERSION_BUMP,
       },
     },
     {
       id: "orbit",
       resolveRect: () => queryOrbit()?.getBoundingClientRect() ?? null,
-      parked: { density: 1, dispersion: 0 },
+      parked: { density: 0, dispersion: 0 },
       transitIn: {
-        // rail → orbit: similar small size, but the rail-to-orbit
-        // segment uses the sticky-practice special case below; the
-        // bump fights the sticky math. Suppress for consistency.
-        dispersionBump: null,
+        // rail → orbit: small lateral move under the sticky-practice
+        // special case. Subtle exhaust bump keeps the motion alive
+        // without overwhelming the small rect.
+        dispersionBump: (t) => Math.sin(Math.PI * t) * 0.2,
       },
     },
   ];

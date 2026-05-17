@@ -51,50 +51,45 @@ function parseViewBox(s: string): {
   return { x, y, width: w, height: h };
 }
 
-/** Number of particles in the cloud. At full density (`density === 1`)
- *  the brandmark reads as a filled mark; at lower densities the rank
- *  clip in the shader masks particles above the threshold so the
- *  field gets airier without rebuilding any buffer.
+/** Number of particles in the atmosphere field. Vector-first refactor:
+ *  the cloud no longer paints the brandmark SHAPE — that's the
+ *  vector actor's job. The cloud paints atmospheric grain around
+ *  and inside the vector mark. A lower count + larger luminous
+ *  points reads as constellation dust rather than as a stippled
+ *  filled mark.
  *
- *  Bumped from 2000 → 3200 alongside the stratified sampler. The
- *  combination of higher count + stratified placement closes the
- *  visible inter-particle gaps at the largest rect (substrate
- *  ~280px+ on desktop) so the cloud reads as a truly filled mark and
- *  not a stipple. Smaller rects (rail ~56px) are already over-
- *  saturated. */
-const PARTICLE_COUNT = 3200;
+ *  Dropped from 3200 → 800. With soft radial falloff + additive
+ *  blending each point now contributes a glowing speck; lower count
+ *  keeps the atmosphere airy and luminous rather than dense and
+ *  papery. */
+const PARTICLE_COUNT = 800;
 
-/** Mobile particle budget — fewer points to stay fillrate-cheap on
- *  iPhone-12-class hardware. Same stratified sampler runs at the lower
- *  count; the auto-scaling point-size formula in the shader compensates
- *  by drawing slightly larger points so coverage stays solid. */
-const PARTICLE_COUNT_MOBILE = 1800;
+/** Mobile atmosphere budget. Dropped from 1800 → 500 for the same
+ *  reason — fewer luminous points read as airier dust. */
+const PARTICLE_COUNT_MOBILE = 500;
 
-/** Target ink-coverage multiplier at density 1.0.
+/** Target coverage multiplier at density 1.0.
  *
- *  Coverage = (visibleCount × pointSize²) / filledScreenArea.
- *
- *  A value of 1.0 means the points exactly tile the filled area with
- *  no overlap; values above 1.0 oversize the points so neighbours
- *  overlap and gaps between sampled positions close up. 2.0 gives a
- *  solid filled silhouette at the largest rect that reads as the
- *  SVG glyph from any reasonable viewing distance. */
-const COVERAGE_AT_FULL_DENSITY = 2.0;
+ *  Vector-first model: the brandmark shape is now drawn by the
+ *  vector actor, so coverage no longer needs to "fill" the
+ *  brandmark silhouette. A low coverage value (~0.35) keeps the
+ *  atmosphere sparse — the particles read as scattered sparks
+ *  along the mark and inside the rect, not as a filled silhouette. */
+const COVERAGE_AT_FULL_DENSITY = 0.35;
 
-/** Coverage shaping exponent. Coverage scales as
- *  `density ^ COVERAGE_FALLOFF_EXP`, so reducing density shrinks
- *  individual points faster than the visible count drops. Effect:
- *  lower-density passes read as atmospheric scatter rather than
- *  chunky confetti. Higher exponent → sparser-looking lower
- *  densities. */
+/** Coverage shaping exponent. Lower densities shrink the per-point
+ *  glow faster than visibleCount drops, so the substrate-window
+ *  atmosphere (density ~0.15) reads as pinpoint sparks rather than
+ *  a confetti shower. */
 const COVERAGE_FALLOFF_EXP = 1.6;
 
-/** Floor and ceiling on the auto-computed point size. The floor keeps
- *  very small rects (rail ~56px) from going sub-pixel; the ceiling
- *  keeps very large rects (substrate ~280px+, mid-transit scatter
- *  rects up to a few hundred pixels) from drawing blocky chunks. */
-const POINT_SIZE_MIN_PX = 1.6;
-const POINT_SIZE_MAX_PX = 6;
+/** Floor and ceiling on the auto-computed point size. Larger floor
+ *  + larger ceiling than the previous papercraft model — each grain
+ *  is now a luminous speck with a soft outer falloff, and the
+ *  radial alpha math needs more pixels to read as a glow rather
+ *  than a single bright dot. */
+const POINT_SIZE_MIN_PX = 6;
+const POINT_SIZE_MAX_PX = 18;
 
 /** Threshold below which the mesh is hidden via `visible = false`.
  *  Saves the GPU a draw call when the transform has faded out
@@ -194,7 +189,12 @@ export function BrandmarkParticleStation() {
       transparent: true,
       depthTest: false,
       depthWrite: false,
-      blending: THREE.NormalBlending,
+      // Additive blending makes each soft radial point read as a
+      // luminous speck — overlapping particles brighten rather than
+      // averaging, so dense regions glow as a halo and sparse
+      // regions read as discrete sparks. Combined with the soft
+      // fragment falloff this is what removes the papery aesthetic.
+      blending: THREE.AdditiveBlending,
       uniforms: {
         uViewport: { value: initialViewport },
         uCenter: { value: new THREE.Vector2() },

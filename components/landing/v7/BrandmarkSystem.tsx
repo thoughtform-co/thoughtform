@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { BrandmarkActor, type BrandmarkActorHandle } from "./BrandmarkActor";
 import { BrandmarkGlyph } from "./BrandmarkGlyph";
 import { BrandmarkParticleCanvas } from "@/components/brand/BrandmarkParticleField";
+import { BrandmarkVectorActor } from "@/components/brand/BrandmarkVectorActor";
 
 /**
  * BrandmarkSystem
@@ -121,16 +122,23 @@ export const BrandmarkSystem = forwardRef<BrandmarkActorHandle, BrandmarkSystemP
           return <BrandmarkAnchorPortal key={key} container={el} anchorKey={key} />;
         })}
         <BrandmarkActor ref={ref} />
-        {/* ADR-013: single shared GL canvas that paints the brandmark
-            particle cloud continuously throughout the journey. The
-            canvas owns ONE `BrandmarkParticleStation` instance that
-            reads the `BrandmarkTransform` from `brandmarkJourneyStore`
-            every frame — no per-station snapshots, no HARD SWAPs.
-            Mounts only when the journey store is in `"particle"` mode
-            (set by `useBrandmarkJourney` after a WebGL +
-            reduced-motion probe). In `"svg"` mode it renders nothing
-            and the actor + portal'd glyphs paint via the SVG
-            fallback path. */}
+        {/* Vector-first brandmark painter. Mounts once and reads the
+            journey transform from `brandmarkJourneyStore` on every
+            rAF tick, writing rect / opacity / rotation / shapeBlend
+            directly to inline styles. Hidden in SVG-fallback mode by
+            the `[data-brandmark-mode="svg"]` CSS gate; in particle
+            mode this is the primary brandmark painter and the
+            particle canvas paints only atmospheric grain + transit
+            exhaust around it. */}
+        <BrandmarkVectorActor />
+        {/* Shared R3F canvas. In the vector-first model the canvas
+            no longer paints the brandmark shape — it paints
+            atmospheric grain (sparse luminous dust during the
+            substrate window) and transit exhaust (motion trails
+            during inter-keyframe lerps). The single
+            `BrandmarkParticleStation` (renamed `BrandmarkAtmosphere`
+            in subsequent phases) reads the same journey transform
+            but consumes it as atmosphere, not as the mark itself. */}
         <BrandmarkParticleCanvas />
       </>
     );

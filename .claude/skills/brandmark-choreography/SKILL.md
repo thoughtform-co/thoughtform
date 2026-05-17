@@ -19,9 +19,15 @@ The v7 brandmark journey is a **single continuous transform** computed every scr
 scrollY  →  computeBrandmarkTransform(scrollY, keyframes, ctx)  →  BrandmarkTransform
 ```
 
-One painter (`BrandmarkParticleStation` inside the global `BrandmarkParticleCanvas`) reads the transform every frame and renders the brandmark cloud. The R3F intelligence-layer scene (`BrandmarkRingfield`) reads the same transform for its rings, decorations, and rotation envelope — no separate brandmark cloud inside the R3F context. In SVG-fallback mode (reduced motion or no WebGL), `useBrandmarkJourney` also pins the `BrandmarkActor` to the transform's rect and writes `data-brand-on-*="parked"` attributes so native dock SVGs paint via CSS gates.
+**Two painters** read the transform every frame, both subscribing imperatively to the same store:
 
-**Canonical record:** [ADR-013](../../../sentinel/decisions/013-brandmark-journey-refactor.md).
+- **`BrandmarkVectorActor`** (ADR-015) paints the BRANDMARK SHAPE as crisp inline SVG. Two stacked glyphs (full + ring) crossfade via `transform.shapeBlend`. Rotation is honest CSS `perspective() rotateY()`.
+- **`BrandmarkParticleStation`** (atmosphere field) paints luminous gold dust around the vector mark — sparse at transit, modestly dense during the substrate window, off at full-mark parked states.
+
+The R3F intelligence-layer scene (`OrbitField`) reads the same transform for its side-orbit emerge envelopes; the new [`CelestialLinework`](../../../components/landing/v7/intelligence-layer/CelestialLinework.tsx) overlay adds hairline guide ring + bearing ticks + cardinal diamonds driven by `--ilayer-progress`. In SVG-fallback mode (reduced motion or no WebGL), `useBrandmarkJourney` pins the legacy `BrandmarkActor` to the transform's rect and writes `data-brand-on-*="parked"` attributes so native dock SVGs paint via CSS gates.
+
+**Canonical record:** [ADR-015](../../../sentinel/decisions/015-brandmark-vector-first.md) (current — vector-first split).
+**Predecessor (journey contract retained):** [ADR-013](../../../sentinel/decisions/013-brandmark-journey-refactor.md).
 **Related (rendering):** [`brandmark-particle`](../brandmark-particle/SKILL.md).
 **Related (compositing):** [ADR-008](../../../sentinel/decisions/008-landing-v7-background-layers.md), `landing-v7-compositing` skill.
 
@@ -58,17 +64,17 @@ Each keyframe:
 | `parked`      | `{ density, dispersion, ringsActive? }` — what the painter reads while parked             |
 | `transitIn`   | Per-arrival override for `dispersionBump` (`null` = no bump) and `easing`                 |
 
-**Keyframe configuration today:**
+**Keyframe configuration today (ADR-015 — atmosphere-field tuning):**
 
 | Keyframe  | Parked density | Parked dispersion | Rings | `transitIn.dispersionBump`                       |
 | --------- | -------------- | ----------------- | ----- | ------------------------------------------------ |
-| sigil     | 1.0            | 0                 | off   | (no inbound segment — first keyframe)            |
-| miss      | 1.0            | 0                 | off   | default `sin(πt) * 0.45` (atmospheric same-size) |
-| substrate | 1.0            | 0                 | on    | **`null`** — no bump (miss → substrate grows)    |
-| rail      | 1.0            | 0                 | off   | **`null`** — no bump (substrate → rail shrinks)  |
-| orbit     | 1.0            | 0                 | off   | **`null`** — no bump (rail → orbit is sticky)    |
+| sigil     | 0              | 0                 | off   | (no inbound segment — first keyframe)            |
+| miss      | 0              | 0                 | off   | default `sin(πt) * 0.45` (atmospheric same-size) |
+| substrate | 0.15           | 0.35              | on    | `sin(πt) * 0.35` exhaust                         |
+| rail      | 0              | 0                 | off   | `sin(πt) * 0.35` exhaust                         |
+| orbit     | 0              | 0                 | off   | `sin(πt) * 0.20` exhaust                         |
 
-Per-arrival dispersion bump `null` suppresses the bell-curve scatter for size-changing transits. The brandmark cloud stays coherent through the rect lerp — Principle 1 / Principle 2.
+The vector actor owns the brandmark shape at every keyframe — these densities tune the ATMOSPHERE FIELD around it. Full-mark stations (sigil / miss / rail / orbit) get density 0 so the vector mark sits alone, crisp, no halo. The substrate hold beat gets ambient dust + cardinal diamonds + hairline guide ring (via `CelestialLinework`) for the celestial-editor read. Transit dispersion bumps are RESTORED on every leg as exhaust around the moving vector — this is the visual story now, no longer a coherence threat as it was under ADR-013.
 
 ---
 
