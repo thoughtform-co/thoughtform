@@ -39,7 +39,10 @@
  *      from / into.
  */
 
-import { splitRotation } from "@/components/landing/v7/intelligence-layer/intelligenceLayerGeom";
+import {
+  splitRotation,
+  vectorRingOpacity,
+} from "@/components/landing/v7/intelligence-layer/intelligenceLayerGeom";
 import type { BrandmarkShapeKey } from "@/lib/brandmark/shapes";
 
 // ────────────────────────────────────────────────────────────────────
@@ -150,6 +153,13 @@ export interface BrandmarkTransform {
    *  cloud morphs into a thick orbital ring at the intelligence
    *  layer (ADR-014). Always `0` outside that window. */
   shapeBlend: number;
+  /** `[0, 1]` brandmark vector-actor opacity multiplier. `1` by
+   *  default; ramps `1 → 0` across the HANDOFF phase of the substrate
+   *  window so the brandmark vector ring fades out as the R3F
+   *  SplitRing fades in (ADR-014 v5). The vector actor multiplies
+   *  this against its own effectiveOpacity, so a journey-wide value
+   *  of 1 is a no-op for non-substrate beats. */
+  vectorOpacity: number;
   /** `false` only during hero / post-orbit-fade-end. Painter hides
    *  when this is false. */
   visible: boolean;
@@ -208,16 +218,18 @@ const DEFAULT_DISPERSION_BUMP: DispersionBumpFn = (t) => Math.sin(Math.PI * t) *
  *  blur, not as the brandmark exploding. */
 const EXHAUST_DISPERSION_BUMP: DispersionBumpFn = (t) => Math.sin(Math.PI * t) * 0.35;
 
-/** Atmosphere density at the substrate hold beat. Low enough that
- *  the cloud reads as ambient dust around the vector mark and the
- *  orbital triad; high enough that the substrate window still has
- *  a luminous "field" quality vs the bare vector states elsewhere. */
-const SUBSTRATE_ATMOSPHERE_DENSITY = 0.15;
+/** Atmosphere density at the substrate hold beat. ADR-014 v5: zero —
+ *  the brandmark fully dissolves into three clean orbital clusters
+ *  during the substrate window, so the atmosphere field has nothing
+ *  to accompany. The "clean and futuristic" register the user picked
+ *  drops particle dust + atmospheric glow in favour of pure linework
+ *  + diamond markers + sparse dot patterns rendered by the R3F
+ *  OrbitalCluster primitives. */
+const SUBSTRATE_ATMOSPHERE_DENSITY = 0;
 
-/** Atmosphere dispersion at the substrate hold beat. Slight scatter
- *  so the dust drifts in/around the orbital triad rather than
- *  snapping to the brandmark's outline. */
-const SUBSTRATE_ATMOSPHERE_DISPERSION = 0.35;
+/** Atmosphere dispersion at the substrate hold beat. Zero (same
+ *  reason as `SUBSTRATE_ATMOSPHERE_DENSITY`). */
+const SUBSTRATE_ATMOSPHERE_DISPERSION = 0;
 
 // === Easing semantics ===
 //
@@ -260,6 +272,7 @@ export const HIDDEN_TRANSFORM: BrandmarkTransform = {
   ringsActive: false,
   ringProgress: 0,
   shapeBlend: 0,
+  vectorOpacity: 1,
   visible: false,
   parkedAt: null,
 };
@@ -639,6 +652,10 @@ function parkedRectTransform(
     // the parked attrs — outside that window every keyframe paints
     // the full mark.
     shapeBlend: 0,
+    // Vector actor at full opacity by default. The substrate-window
+    // override below ramps this 1 → 0 during the HANDOFF phase so
+    // the R3F SplitRing can take over the visible artefact.
+    vectorOpacity: 1,
     visible: opacity > 0,
     parkedAt: kf.id,
   };
@@ -682,6 +699,10 @@ function transitTransform(
     // substrate dock in full-mark form and the substrate-window ramp
     // begins the morph only after parking. Same on the way out.
     shapeBlend: 0,
+    // Vector actor always at full opacity during transits — the
+    // substrate-window HANDOFF ramp only fires inside the substrate
+    // scroll window.
+    vectorOpacity: 1,
     visible: true,
     parkedAt: null, // in transit = not parked anywhere
   };
@@ -748,10 +769,17 @@ export function computeBrandmarkTransform(
   if (!base) return null;
 
   // === Substrate channels — override rotation + ring channels +
-  //     shape blend when parked at substrate. The base transform
-  //     already has the substrate rect (we resolved it as parked-at-
-  //     substrate); we just add the rotation arc, ring progress, and
-  //     the shape-morph ramp on top.
+  //     shape blend + vector opacity when parked at substrate. The
+  //     base transform already has the substrate rect (we resolved
+  //     it as parked-at-substrate); we just add the rotation arc,
+  //     ring progress, the shape-morph ramp, and the vector-opacity
+  //     handoff ramp on top.
+  //
+  //     ADR-014 v5: `vectorOpacity` ramps 1 → 0 across the HANDOFF
+  //     phase (0.2-0.4 of the substrate window) so the brandmark
+  //     vector ring fades out as the R3F SplitRing fades in. After
+  //     0.4 the brandmark is fully dissolved and the three orbital
+  //     clusters (post-SPLIT/RESOLVE) are the only visible artefact.
   if (inSubWindow) {
     base = {
       ...base,
@@ -759,6 +787,7 @@ export function computeBrandmarkTransform(
       ringsActive: true,
       ringProgress: substrateLocalProgress,
       shapeBlend: substrateShapeBlend(substrateLocalProgress),
+      vectorOpacity: vectorRingOpacity(substrateLocalProgress),
     };
   }
 

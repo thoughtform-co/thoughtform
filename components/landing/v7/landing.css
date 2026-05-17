@@ -898,14 +898,14 @@ html[data-quote-active="true"] .tf-brandmark-actor {
    when the journey morphs into ring topology during the substrate
    hold beat. */
 [data-brandmark-mode="particle"][data-brand-parked-at="substrate"] .tf-brandmark--substrate-full {
-  opacity: calc(1 - var(--brandmark-shape-blend, 0));
+  opacity: calc((1 - var(--brandmark-shape-blend, 0)) * var(--brandmark-vector-opacity, 1));
   visibility: visible;
   transition:
     opacity 120ms linear,
     visibility 0s linear 0s;
 }
 [data-brandmark-mode="particle"][data-brand-parked-at="substrate"] .tf-brandmark--substrate-ring {
-  opacity: var(--brandmark-shape-blend, 0);
+  opacity: calc(var(--brandmark-shape-blend, 0) * var(--brandmark-vector-opacity, 1));
   visibility: visible;
   transition:
     opacity 120ms linear,
@@ -3757,31 +3757,40 @@ html[data-quote-active="true"] .tf-brandmark-actor {
 .ilayer__stack[data-ilayer-mode="r3f"] .ilayer__triad__fallback {
   display: none;
 }
-/* Triad fallback circles — hairline, fill="none". ADR-014 v2: all
-   three circles share the same stroke weight and opacity so the
-   three pillars read as equal stations. */
-.ilayer__triad__orbit {
+/* Triad fallback clusters — hairline rings + cardinal diamonds +
+   sparse dust per cluster. ADR-014 v5: clean futuristic celestial-
+   diagram vocabulary, no fill, no glow, no atmospheric halo. All
+   three clusters share the same ring + diamond + dust opacities so
+   the triad reads as three equal stations on the Navigate / Encode /
+   Build spine. */
+.ilayer__triad__ring {
   fill: none;
   stroke: var(--gold);
   stroke-width: 1;
   vector-effect: non-scaling-stroke;
-  opacity: 0.6;
 }
-.ilayer__triad__orbit--mid {
-  /* Slightly higher contrast on the middle ring since it carries the
-     encoded-substrate weight in the static fallback (where the
-     brandmark particle cloud is absent). In R3F mode the brandmark
-     cloud paints inside this circle and the SVG fallback is hidden,
-     so this rule has no effect on the live composition. */
-  opacity: 0.75;
-}
-.ilayer__triad__pips polygon {
-  fill: var(--gold);
+.ilayer__triad__ring--outer {
   opacity: 0.85;
 }
-.ilayer__triad__pips--mid polygon {
+.ilayer__triad__ring--r1 {
+  opacity: 0.55;
+}
+.ilayer__triad__ring--r2 {
+  opacity: 0.35;
+}
+.ilayer__triad__ring--r3 {
+  opacity: 0.25;
+}
+.ilayer__triad__ring--r4 {
+  opacity: 0.2;
+}
+.ilayer__triad__diamonds polygon {
   fill: var(--gold);
-  opacity: 0.95;
+  opacity: 0.9;
+}
+.ilayer__triad__dust circle {
+  fill: var(--dawn);
+  opacity: 0.55;
 }
 
 /* ── Brandmark substrate dock anchor (ADR-012 v5) ──────────────────

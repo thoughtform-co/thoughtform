@@ -1,7 +1,9 @@
 # ADR-014: Intelligence Layer Orbital Triad
 
-**Date:** 2026-05-16
+**Date:** 2026-05-16 (revised 2026-05-17 — v5)
 **Status:** Accepted — supersedes the three-coaxial-ring composition of [ADR-012](012-intelligence-layer-artifact.md) v5. Extends [ADR-013](013-brandmark-journey-refactor.md) (single-continuous-transform brandmark) with a per-keyframe shape channel.
+
+**v5 revision (2026-05-17)** — clean futuristic three-cluster composition. The brandmark no longer paints inside the mid circle as the "encoded substrate" anchor; it fully dissolves at the start of the substrate window via a new SPLIT choreography. The three pillars are now equal-richness orbital clusters (5 concentric rings + 4 cardinal diamonds + sparse dust each), painted in the celestial-diagram vocabulary referenced from the Definition section. Atmosphere field + glow filters dropped — "clean and futuristic" register, pure linework + diamonds + dust. See "v5 deltas" below.
 
 **Related (composes with):**
 [ADR-013 — Brandmark journey refactor](013-brandmark-journey-refactor.md),
@@ -160,3 +162,80 @@ Moved from `position: [0, 0.6, 3.4]`, `fov: 32` to `position: [0, 0, 4.0]`, `fov
 - The orbit positions feel cramped at 16:9 desktop (the side orbits clip past the canvas edge). Tune `homeCentre.x` and `radius` in `intelligenceLayerGeom.ts`.
 - The morph reads as too chaotic (particles cross-path noticeably during the blend). Switch to angle-sorted pairing in `sampleShape`'s output — sort both samples by polar angle around the viewBox centre and re-rank.
 - The page-wide grit competes with content at certain breakpoints. Reduce alpha further or scope it to specific sections (`.miss`, `.ilayer`, `.continuum` only).
+
+---
+
+## v5 deltas (2026-05-17)
+
+The "brandmark literally becomes the middle circle" model of v2-v4 was too quiet in practice: the brandmark cloud's outer rim was the only visible ring at the substrate centre, and the side circles were thin single-stroke LineLoops. The triad read as "one bright thing in the middle + two faint rings" rather than as three pillars on a common spine. The remedy:
+
+**Brandmark fully dissolves into three equal-richness orbital clusters.** Each pillar gets the full celestial-diagram treatment — five concentric hairline rings + four cardinal diamonds + sparse dust dots — at equal opacity, equal radius, equal structure. The mid cluster is no longer "the brandmark" or "different"; it's the same instrument as the sides, sitting at the substrate centre.
+
+**Choreography — four phases inside the substrate window:**
+
+| Phase   | progress    | what is visible                                                                                                                                                                                                                       |
+| ------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ARRIVE  | 0.00 – 0.20 | brandmark vector ring (shapeBlend = 1). Clusters + SplitRing invisible.                                                                                                                                                               |
+| HANDOFF | 0.20 – 0.40 | brandmark vector ring fades out via new `vectorOpacity` channel; R3F SplitRing fades in at the same scene position + radius — visually identical-looking ring throughout the crossfade.                                               |
+| SPLIT   | 0.40 – 0.70 | SplitRing decomposes into three 120° arcs at home angles [210°, 330°, 90°]. Each arc translates from substrate centre to its chamber centre AND tweens angular span 120° → 360°, arriving as a complete ring at the chamber position. |
+| RESOLVE | 0.70 – 1.00 | each cluster's 4 inner rings + cardinal diamonds + dust fade in via `clusterRingResolve()` cascade. Mid cluster leads (stagger 0); sides follow (stagger 0.04).                                                                       |
+
+**Transform schema delta:**
+
+```ts
+interface BrandmarkTransform {
+  // ...existing fields...
+  vectorOpacity: number; // NEW — drives the HANDOFF fade
+}
+```
+
+`vectorOpacity` defaults to 1 (no-op for non-substrate beats). Inside the substrate window it ramps 1 → 0 across [0.2, 0.4] via `vectorRingOpacity(substrateLocalProgress)`. The vector actor multiplies it against its own `effectiveOpacity` so the actor's existing rect/rotation/shape channels stay independent.
+
+**Parked-gate exclusion:** the vector actor's "fully parked → opacity 0" gate is bypassed for `parkedAt === "substrate"`. Without this, the actor would have hidden immediately at `ringProgress = 0` and the HANDOFF crossfade would have nothing to fade out from.
+
+**Atmosphere field zeroed in the substrate window.** `SUBSTRATE_ATMOSPHERE_DENSITY` and `SUBSTRATE_ATMOSPHERE_DISPERSION` go to 0; the brandmark cloud + particle dust + soft glow drop out of the section entirely. The clusters carry the whole visual.
+
+**No glow filters, no soft halos anywhere in the new artefact.** The mid cluster's outermost ring is rendered at the same opacity as the sides; no atmospheric extras. The "clean and futuristic" register the user picked is enforced at the geometry level — every visible element is hairline gold linework, a diamond marker, or a dust dot.
+
+**CelestialLinework portal retired.** The hairline outer ring + bearing ticks + cardinal diamonds it added around the brandmark anchor are subsumed by the mid OrbitalCluster's own rings + diamonds + dust. The portal effect in `IntelligenceLayerPortal` returns `null`; the file remains in the tree for future reuse if needed.
+
+**Static fallback parity.** The `.ilayer__triad__fallback` SVG now renders the same three-cluster end-state (5 rings + 4 diamonds + 6 dust dots per cluster) with `.ilayer__triad__cluster`, `.ilayer__triad__ring`, `.ilayer__triad__diamonds`, and `.ilayer__triad__dust` CSS classes. No split animation in static mode (the post-RESOLVE end-state is the only frame).
+
+### v5 architecture
+
+```mermaid
+flowchart TB
+  subgraph journey ["lib/brandmark/journey.ts"]
+    subKf["substrate keyframe<br/>density=0, dispersion=0<br/>shapeKey: ring"]
+    subKf --> shapeRamp["substrateShapeBlend(0..1)"]
+    subKf --> vecRamp["vectorRingOpacity(0..1)"]
+    shapeRamp --> tr["BrandmarkTransform"]
+    vecRamp --> tr
+  end
+  subgraph painters
+    vec["BrandmarkVectorActor<br/>(visible during ARRIVE + HANDOFF)"]
+    splitRing["SplitRing<br/>(visible during HANDOFF + SPLIT)"]
+    cluster1["OrbitalCluster (sources)"]
+    cluster2["OrbitalCluster (substrate)"]
+    cluster3["OrbitalCluster (surfaces)"]
+  end
+  tr --> vec
+  tr --> splitRing
+  tr --> cluster1
+  tr --> cluster2
+  tr --> cluster3
+```
+
+### Files touched (v5)
+
+| File                                                                   | Change                                                                                                                                                                           |
+| ---------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `components/landing/v7/intelligence-layer/intelligenceLayerGeom.ts`    | Add `CLUSTER_RING_RADII`, `CLUSTER_RING_OPACITIES`, `CLUSTER_DUST_COUNT`, `CLUSTER_TRIAD`, `splitEnvelope`, `vectorRingOpacity`, `clusterRingResolve`, `clamp01`                 |
+| `components/landing/v7/intelligence-layer/OrbitalCluster.tsx` (NEW)    | R3F primitive — 5 concentric rings + 4 diamonds + dust, subscribes to journey transform                                                                                          |
+| `components/landing/v7/intelligence-layer/SplitRing.tsx` (NEW)         | R3F primitive — 3 arcs morphing from unified ring at substrate centre to 3 full rings at chamber centres                                                                         |
+| `components/landing/v7/intelligence-layer/OrbitField.tsx`              | Re-authored as pure composition of `SplitRing` + 3 `OrbitalCluster` instances                                                                                                    |
+| `lib/brandmark/journey.ts`                                             | Add `vectorOpacity` field to `BrandmarkTransform`; substrate keyframe parked density + dispersion → 0; substrate-window override emits `vectorOpacity` via `vectorRingOpacity()` |
+| `components/brand/BrandmarkVectorActor/BrandmarkVectorActor.tsx`       | Consume `vectorOpacity`; exclude `parkedAt === "substrate"` from the fully-parked gate so HANDOFF crossfade has a visible source                                                 |
+| `components/landing/v7/intelligence-layer/IntelligenceLayerPortal.tsx` | Stop portaling `CelestialLinework` into the brandmark anchor (subsumed by mid OrbitalCluster)                                                                                    |
+| `public/prototypes/v7/landing-v7-motion.html`                          | Replace the three single-circle fallback with three `.ilayer__triad__cluster` groups, each containing 5 rings + 4 diamonds + 6 dust dots                                         |
+| `components/landing/v7/landing.css`                                    | Replace `.ilayer__triad__orbit*` + `.ilayer__triad__pips*` rules with `.ilayer__triad__ring*` + `.ilayer__triad__diamonds polygon` + `.ilayer__triad__dust circle`               |

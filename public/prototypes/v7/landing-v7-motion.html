@@ -4661,48 +4661,94 @@ html { scroll-behavior: smooth; }
              directly underneath. -->
         <div class="ilayer__triad__canvas ilayer__stack__canvas" data-ilayer-stack-root aria-hidden="true"></div>
 
-        <!-- Static fallback — THREE EQUAL CIRCLES (sources / substrate /
-             surfaces). Matches the R3F scene at rest. Used when WebGL
-             is unavailable or prefers-reduced-motion is set. Hidden
-             whenever the R3F canvas is active (data-ilayer-mode="r3f"
-             on .ilayer__stack).
+        <!-- Static fallback — THREE EQUAL ORBITAL CLUSTERS (sources /
+             substrate / surfaces). Matches the R3F scene's resolved
+             end-state. Used when WebGL is unavailable or
+             prefers-reduced-motion is set. Hidden whenever the R3F
+             canvas is active (data-ilayer-mode="r3f" on .ilayer__stack).
 
-             ADR-014 v2: all three circles share the same `r` so the
-             three pillars read as equal stations. Centres are ±145
-             apart (slight ~22% overlap matching the R3F side-orbit
-             homeCentre.x ratio of ±1.57 × radius). -->
+             ADR-014 v5: each cluster is the celestial-diagram
+             vocabulary — 5 concentric hairline rings (outer to inner
+             at radii [135, 113, 92, 70, 49]), 4 cardinal diamond
+             markers on the outermost ring, 6 luminous dust dots
+             scattered across the inner rings. No fill, no glow, no
+             atmospheric halo. The brandmark itself does NOT paint
+             in this fallback — the three clusters carry the whole
+             intelligence-layer artefact between them, mirroring the
+             R3F end-state after the SPLIT + RESOLVE phases. Cluster
+             centres ±280 / 0 (cx) at cy=30 match the R3F
+             SUBSTRATE_RING.centre + CLUSTER_TRIAD centres. -->
         <svg class="ilayer__triad__fallback ilayer__stack__fallback" viewBox="-500 -260 1000 520" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
-          <!-- Three primary circles — equal radius, one ring per pillar.
-               ADR-014 v4: side orbits separated from the substrate
-               (cx=±280, no intersection) so each chamber's content
-               stays cleanly inside its own circle. Matches the R3F
-               LEFT_ORBIT / RIGHT_ORBIT `homeCentre.x` of ±1.0 scene
-               units (1.0 × 281.7 viewBox-units-per-scene-unit ≈ 280).
-               cy=30 keeps the triad in the lower half of the section
-               (matches `--ilayer-triad-y: 56%`). -->
-          <circle class="ilayer__triad__orbit ilayer__triad__orbit--left" cx="-280" cy="30" r="135" />
-          <circle class="ilayer__triad__orbit ilayer__triad__orbit--mid" cx="0" cy="30" r="135" />
-          <circle class="ilayer__triad__orbit ilayer__triad__orbit--right" cx="280" cy="30" r="135" />
-          <!-- Cardinal bearing diamonds on each side orbit (top, bottom,
-               outer). The inward-facing cardinal is intentionally
-               omitted so the gap between the side orbit and the
-               substrate reads as clean negative space. -->
-          <g class="ilayer__triad__pips ilayer__triad__pips--left">
-            <polygon points="-280,-115 -270,-105 -280,-95 -290,-105" />
-            <polygon points="-280,155 -270,165 -280,175 -290,165" />
-            <polygon points="-415,20 -405,30 -415,40 -425,30" />
+
+          <!-- ── 01 TRUSTED SOURCES — left cluster (cx=-280) ──────── -->
+          <g class="ilayer__triad__cluster ilayer__triad__cluster--left">
+            <circle class="ilayer__triad__ring ilayer__triad__ring--outer" cx="-280" cy="30" r="135" />
+            <circle class="ilayer__triad__ring ilayer__triad__ring--r1" cx="-280" cy="30" r="113" />
+            <circle class="ilayer__triad__ring ilayer__triad__ring--r2" cx="-280" cy="30" r="92" />
+            <circle class="ilayer__triad__ring ilayer__triad__ring--r3" cx="-280" cy="30" r="70" />
+            <circle class="ilayer__triad__ring ilayer__triad__ring--r4" cx="-280" cy="30" r="49" />
+            <g class="ilayer__triad__diamonds">
+              <polygon points="-280,-113 -272,-105 -280,-97 -288,-105" />
+              <polygon points="-145,22 -137,30 -145,38 -153,30" />
+              <polygon points="-280,157 -272,165 -280,173 -288,165" />
+              <polygon points="-415,22 -407,30 -415,38 -423,30" />
+            </g>
+            <g class="ilayer__triad__dust">
+              <circle cx="-200" cy="-50" r="1.6" />
+              <circle cx="-360" cy="110" r="1.6" />
+              <circle cx="-215" cy="95" r="1.6" />
+              <circle cx="-345" cy="-35" r="1.6" />
+              <circle cx="-210" cy="30" r="1.6" />
+              <circle cx="-350" cy="30" r="1.6" />
+            </g>
           </g>
-          <g class="ilayer__triad__pips ilayer__triad__pips--right">
-            <polygon points="280,-115 290,-105 280,-95 270,-105" />
-            <polygon points="280,155 290,165 280,175 270,165" />
-            <polygon points="415,20 425,30 415,40 405,30" />
+
+          <!-- ── 02 ENCODED SUBSTRATE — mid cluster (cx=0) ─────────── -->
+          <g class="ilayer__triad__cluster ilayer__triad__cluster--mid">
+            <circle class="ilayer__triad__ring ilayer__triad__ring--outer" cx="0" cy="30" r="135" />
+            <circle class="ilayer__triad__ring ilayer__triad__ring--r1" cx="0" cy="30" r="113" />
+            <circle class="ilayer__triad__ring ilayer__triad__ring--r2" cx="0" cy="30" r="92" />
+            <circle class="ilayer__triad__ring ilayer__triad__ring--r3" cx="0" cy="30" r="70" />
+            <circle class="ilayer__triad__ring ilayer__triad__ring--r4" cx="0" cy="30" r="49" />
+            <g class="ilayer__triad__diamonds">
+              <polygon points="0,-113 8,-105 0,-97 -8,-105" />
+              <polygon points="135,22 143,30 135,38 127,30" />
+              <polygon points="0,157 8,165 0,173 -8,165" />
+              <polygon points="-135,22 -127,30 -135,38 -143,30" />
+            </g>
+            <g class="ilayer__triad__dust">
+              <circle cx="80" cy="-50" r="1.6" />
+              <circle cx="-80" cy="110" r="1.6" />
+              <circle cx="65" cy="95" r="1.6" />
+              <circle cx="-65" cy="-35" r="1.6" />
+              <circle cx="70" cy="30" r="1.6" />
+              <circle cx="-70" cy="30" r="1.6" />
+            </g>
           </g>
-          <!-- Substrate meridian diamonds — top and bottom of the
-               brandmark ring. Match the R3F substrate meridian pips. -->
-          <g class="ilayer__triad__pips ilayer__triad__pips--mid">
-            <polygon points="0,-115 10,-105 0,-95 -10,-105" />
-            <polygon points="0,155 10,165 0,175 -10,165" />
+
+          <!-- ── 03 HEADLESS SURFACES — right cluster (cx=280) ─────── -->
+          <g class="ilayer__triad__cluster ilayer__triad__cluster--right">
+            <circle class="ilayer__triad__ring ilayer__triad__ring--outer" cx="280" cy="30" r="135" />
+            <circle class="ilayer__triad__ring ilayer__triad__ring--r1" cx="280" cy="30" r="113" />
+            <circle class="ilayer__triad__ring ilayer__triad__ring--r2" cx="280" cy="30" r="92" />
+            <circle class="ilayer__triad__ring ilayer__triad__ring--r3" cx="280" cy="30" r="70" />
+            <circle class="ilayer__triad__ring ilayer__triad__ring--r4" cx="280" cy="30" r="49" />
+            <g class="ilayer__triad__diamonds">
+              <polygon points="280,-113 288,-105 280,-97 272,-105" />
+              <polygon points="415,22 423,30 415,38 407,30" />
+              <polygon points="280,157 288,165 280,173 272,165" />
+              <polygon points="145,22 153,30 145,38 137,30" />
+            </g>
+            <g class="ilayer__triad__dust">
+              <circle cx="360" cy="-50" r="1.6" />
+              <circle cx="200" cy="110" r="1.6" />
+              <circle cx="345" cy="95" r="1.6" />
+              <circle cx="215" cy="-35" r="1.6" />
+              <circle cx="350" cy="30" r="1.6" />
+              <circle cx="210" cy="30" r="1.6" />
+            </g>
           </g>
+
         </svg>
 
       </div>
