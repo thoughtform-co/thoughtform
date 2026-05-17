@@ -103,6 +103,49 @@ export function useBrandmarkJourney(
       approach?.setAttribute("data-orbit-docked", v);
     };
 
+    // === Particle-mode parked handoff writers ===
+    // `data-brand-parked-at="<keyframeId>"` on documentElement drives
+    // the CSS gate that reveals the portal'd dock glyph at the
+    // matching anchor (sigil / miss / substrate / rail / orbit) and
+    // simultaneously fades out the fixed BrandmarkVectorActor. The
+    // attribute is only set while the journey is fully parked at a
+    // keyframe (`parkedAt !== null && opacity > 0.99`) — bookend
+    // fades (sigil entrance, post-orbit exit) keep the actor as the
+    // painter so the opacity ramp reads as one continuous animation.
+    //
+    // `--brandmark-shape-blend` mirrors `transform.shapeBlend` so the
+    // substrate's stacked full + ring portal'd glyphs can crossfade
+    // via CSS without any JS per-frame writes on each glyph.
+    let lastBrandParkedAt: string | null = null;
+    let lastBrandShapeBlend = -1;
+
+    const PARKED_OPACITY_THRESHOLD = 0.99;
+
+    const setBrandParkedAt = (parkedAt: string | null) => {
+      if (lastBrandParkedAt === parkedAt) return;
+      lastBrandParkedAt = parkedAt;
+      if (parkedAt == null) {
+        document.documentElement.removeAttribute("data-brand-parked-at");
+      } else {
+        document.documentElement.setAttribute("data-brand-parked-at", parkedAt);
+      }
+    };
+
+    const setBrandShapeBlend = (value: number) => {
+      const rounded = Math.round(value * 1000) / 1000;
+      if (Math.abs(rounded - lastBrandShapeBlend) < 0.001) return;
+      lastBrandShapeBlend = rounded;
+      document.documentElement.style.setProperty("--brandmark-shape-blend", rounded.toFixed(3));
+    };
+
+    const applyParticleMode = (transform: BrandmarkTransform) => {
+      if (!particleModeOK) return;
+      const fullyParked =
+        transform.parkedAt != null && transform.opacity > PARKED_OPACITY_THRESHOLD;
+      setBrandParkedAt(fullyParked ? transform.parkedAt : null);
+      setBrandShapeBlend(transform.shapeBlend);
+    };
+
     /** Apply SVG-mode side effects: pin the actor + write dock attrs.
      *  In particle mode this is a no-op (the global painter owns the
      *  visual; CSS hides docks via `data-brandmark-mode="particle"`). */
@@ -157,6 +200,7 @@ export function useBrandmarkJourney(
       const transform = computeBrandmarkTransform(window.scrollY, keyframes, ctx);
       if (transform == null) return;
       useBrandmarkJourneyStore.getState().setTransform(transform);
+      applyParticleMode(transform);
       applySvgMode(transform);
     };
 
@@ -251,6 +295,8 @@ export function useBrandmarkJourney(
       document.documentElement.removeAttribute("data-brandmark-mode");
       document.documentElement.removeAttribute("data-brand-on-missing");
       document.documentElement.removeAttribute("data-brand-on-rail");
+      document.documentElement.removeAttribute("data-brand-parked-at");
+      document.documentElement.style.removeProperty("--brandmark-shape-blend");
       const approach =
         rootEl.querySelector<HTMLElement>("#approach") ??
         rootEl.querySelector<HTMLElement>(".approach");

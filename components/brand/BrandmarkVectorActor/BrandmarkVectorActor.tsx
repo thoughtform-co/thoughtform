@@ -50,6 +50,14 @@ const PERSPECTIVE_PX = 900;
  *  when the journey transform's opacity is below this. */
 const VISIBILITY_EPSILON = 0.005;
 
+/** Park-handoff opacity threshold. Mirrors the same constant in
+ *  `useBrandmarkJourney` — the actor gates itself OFF when
+ *  `parkedAt != null && opacity > THRESHOLD`, which is exactly when
+ *  the journey hook writes `data-brand-parked-at` so the portal'd
+ *  dock glyph CSS-fades in. Both painters share this threshold so
+ *  their 120ms opacity transitions crossfade symmetrically. */
+const PARKED_OPACITY_THRESHOLD = 0.99;
+
 export function BrandmarkVectorActor() {
   const shellRef = useRef<HTMLDivElement>(null);
   const innerRef = useRef<HTMLDivElement>(null);
@@ -72,7 +80,7 @@ export function BrandmarkVectorActor() {
     let lastTop = -1;
     let lastWidth = -1;
     let lastHeight = -1;
-    let lastOpacity = -1;
+    let lastEffectiveOpacity = -1;
     let lastRotation = -999;
     let lastShapeBlend = -1;
     let lastVisible: boolean | null = null;
@@ -88,7 +96,7 @@ export function BrandmarkVectorActor() {
       }
       if (!shouldBeVisible) return;
 
-      const { rect, opacity, rotationY, shapeBlend } = transform;
+      const { rect, opacity, rotationY, shapeBlend, parkedAt } = transform;
 
       if (rect.left !== lastLeft) {
         shell.style.left = `${rect.left}px`;
@@ -106,9 +114,28 @@ export function BrandmarkVectorActor() {
         shell.style.height = `${rect.height}px`;
         lastHeight = rect.height;
       }
-      if (opacity !== lastOpacity) {
-        shell.style.opacity = `${opacity}`;
-        lastOpacity = opacity;
+      // Park-handoff gate. While the journey is FULLY parked at a
+      // keyframe (parkedAt non-null AND opacity at full), the portal'd
+      // dock glyph inside the section's DOM is the visible painter
+      // — so the actor stays at opacity 0. The threshold mirrors the
+      // journey hook's `data-brand-parked-at` write gate so the
+      // 120ms CSS opacity transitions on both painters crossfade
+      // symmetrically at the handoff edge.
+      //
+      // Outside the fully-parked window the actor paints normally
+      // at `transform.opacity`:
+      //   - Transit beats: parkedAt === null → actor at opacity.
+      //   - Entrance fade (parkedAt="sigil", opacity ramps 0→1):
+      //     actor handles the ramp; portal'd glyph stays hidden
+      //     until opacity crosses the threshold and the CSS gate
+      //     flips on.
+      //   - Post-orbit fade (parkedAt="orbit", opacity ramps 1→0):
+      //     symmetric mirror.
+      const fullyParked = parkedAt != null && opacity > PARKED_OPACITY_THRESHOLD;
+      const effectiveOpacity = fullyParked ? 0 : opacity;
+      if (effectiveOpacity !== lastEffectiveOpacity) {
+        shell.style.opacity = `${effectiveOpacity}`;
+        lastEffectiveOpacity = effectiveOpacity;
       }
       if (rotationY !== lastRotation) {
         // Honest 3D Y-axis rotation. At rotationY = 0 this is identity.
@@ -152,6 +179,11 @@ export function BrandmarkVectorActor() {
         perspective: `${PERSPECTIVE_PX}px`,
         filter: "drop-shadow(0 0 18px rgba(202, 165, 84, 0.32))",
         willChange: "left, top, width, height, opacity",
+        // 120ms opacity transition smooths the park-handoff crossfade
+        // when the journey hook flips data-brand-parked-at on/off.
+        // Position changes are not transitioned — they need to track
+        // the rect instantly during transit.
+        transition: "opacity 120ms linear",
       }}
     >
       <div

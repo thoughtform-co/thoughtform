@@ -9,27 +9,27 @@ gsap.registerPlugin(ScrollTrigger);
 /**
  * useSigilEntranceScrub — section-02 diagram entrance animation.
  *
- * Animates the sigil diagram's INTERNAL elements (orbits, halo, mark,
- * cap, legend, tri-left) as the user enters section 02. The diagram
- * is a separate visual concern from the brandmark JOURNEY (which is
- * owned by `useBrandmarkJourney` per ADR-013):
+ * Animates the sigil diagram's INTERNAL CHROME elements (orbits,
+ * halo, cap, legend, tri-left) as the user enters section 02. The
+ * diagram is a separate visual concern from the brandmark JOURNEY
+ * (which is owned by `useBrandmarkJourney` per ADR-013):
  *
  *   - The diagram is the static visual context for section 02 — it
- *     paints WHEN the user is reading section 02. Its elements (the
- *     orbital rings, the halo dots, the centre mark, the legend
- *     text) need to reveal cohesively as the section enters the
- *     viewport.
+ *     paints WHEN the user is reading section 02. Its chrome
+ *     elements (the orbital rings, the halo dots, the legend text)
+ *     reveal cohesively as the section enters the viewport.
  *   - The brandmark journey is the artifact's TRAVEL through the
- *     page — it lives outside the diagram, painted by the global
- *     particle field, evolving through the five keyframes.
+ *     page — it lives outside the diagram, painted by the vector
+ *     actor + atmosphere, evolving through the five keyframes.
  *
- * The `.sigil__mark` element here is the SVG-mode brandmark dock. In
- * particle mode (the default when WebGL is available), the brandmark
- * journey's painter is the visual story at section 02; this scrub
- * still animates `.sigil__mark` because the entrance scrub is what
- * brings the diagram in for SVG-fallback users (and because in
- * particle mode the `.sigil__mark` is hidden by the CSS gate so
- * touching its opacity is harmless).
+ * `.sigil__mark` is NOT part of this scrub anymore (no-jiggle parked
+ * rendering, post-ADR-015). The brandmark journey already owns the
+ * mark's entrance fade via `transform.opacity` ramping on the
+ * vector actor; at full park the portal'd dock glyph takes over and
+ * sits statically inside the diagram. Including `.sigil__mark` in
+ * the scrub would scale/fade the dock glyph on every scroll movement
+ * within section 02 — the exact "jiggle" the parked-handoff fix
+ * eliminates everywhere else.
  *
  * Extracted from the original `useSigilChoreography` (ADR-013 Phase
  * 5c) to enforce separation of concerns: the brandmark journey is
@@ -41,41 +41,55 @@ export function useSigilEntranceScrub(rootRef: React.RefObject<HTMLElement | nul
     const rootEl = rootRef.current;
     if (!rootEl) return;
 
-    // Resolve the diagram's internal elements + the section trigger.
+    // Resolve the diagram's internal CHROME elements + the section
+    // trigger. `.sigil__mark` is intentionally NOT resolved here —
+    // the brandmark dock is owned by the journey hook, which paints
+    // its entrance fade via the vector actor and hands off to the
+    // portal'd glyph at full park. Including the mark in this scrub
+    // would re-introduce the very jiggle the parked handoff fixes.
     const defEl = rootEl.querySelector<HTMLElement>("#definition");
     const sigilOrbits = rootEl.querySelector<HTMLElement>(".sigil__orbits");
     const sigilHalo = rootEl.querySelector<HTMLElement>(".sigil__halo");
-    const sigilMark = rootEl.querySelector<HTMLElement>(".sigil__mark");
     const sigilCap = rootEl.querySelector<HTMLElement>(".sigil__cap");
     const sigilLegend = rootEl.querySelector<HTMLElement>(".sigil__legend");
     const triLeft = rootEl.querySelector<HTMLElement>(".tri__left");
 
     if (!defEl) return;
 
-    // Disable any baked-in IO reveal motion on the sigil internals so
-    // the entrance scrub is the only thing animating them. Without
+    // Disable any baked-in IO reveal motion on the sigil chrome so
+    // the entrance scrub is the only thing animating it. Without
     // this, the global `useRevealMotion` hook would also fire reveal
     // transforms on these elements (data-m attribute) and the two
     // animations would compete.
-    const section2Els = [sigilOrbits, sigilHalo, sigilMark, sigilCap, sigilLegend, triLeft].filter(
+    const chromeEls = [sigilOrbits, sigilHalo, sigilCap, sigilLegend, triLeft].filter(
       (el): el is HTMLElement => el !== null
     );
-    section2Els.forEach((el) => {
+    chromeEls.forEach((el) => {
       el.removeAttribute("data-m");
       el.classList.add("is-in");
     });
 
+    // Defensive: also clear any prior scrub state on `.sigil__mark`
+    // so it cannot inherit a stale GSAP transform from a previous
+    // HMR cycle. The mark is now owned by the journey hook.
+    const sigilMark = rootEl.querySelector<HTMLElement>(".sigil__mark");
+    if (sigilMark) {
+      sigilMark.removeAttribute("data-m");
+      sigilMark.classList.add("is-in");
+      gsap.set(sigilMark, { clearProps: "opacity,scale,transform" });
+    }
+
     // === Entrance scrub timeline ===
     // Pinned to `#definition top 85% → top 35%` with a small lag
-    // (`scrub: 0.6`) for organic feel. The diagram reveals as the
-    // user enters section 02.
+    // (`scrub: 0.6`) for organic feel. The diagram chrome reveals as
+    // the user enters section 02. `.sigil__mark` is excluded — see
+    // hook docs above.
     const ctx = gsap.context(() => {
       gsap.set([sigilOrbits, sigilHalo].filter(Boolean), {
         opacity: 0,
         scale: 0.6,
         rotation: -8,
       });
-      if (sigilMark) gsap.set(sigilMark, { opacity: 0, scale: 0.7 });
       gsap.set([sigilCap, sigilLegend, triLeft].filter(Boolean), { opacity: 0, y: 16 });
 
       const tl = gsap.timeline({
@@ -91,9 +105,6 @@ export function useSigilEntranceScrub(rootRef: React.RefObject<HTMLElement | nul
         { opacity: 1, scale: 1, rotation: 0, duration: 0.5, ease: "power3.out" },
         0
       );
-      if (sigilMark) {
-        tl.to(sigilMark, { opacity: 1, scale: 1, duration: 0.4, ease: "power3.out" }, 0.15);
-      }
       tl.to(
         [sigilCap, sigilLegend].filter(Boolean),
         { opacity: 1, y: 0, duration: 0.35, ease: "power3.out", stagger: 0.06 },

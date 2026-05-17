@@ -834,34 +834,93 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   }
 }
 
-/* ── Particle-mode hide gate (ADR-013) ────────────────────────────
-   When `useBrandmarkJourney` resolves the journey store mode to
-   `particle` (WebGL OK, motion preference allows), it writes
-   `data-brandmark-mode="particle"` on the document element ONCE
-   at init. The global particle canvas paints the brandmark
-   continuously throughout the journey; we hide every other
-   brandmark painter so there's exactly one painter on screen.
+/* ── Particle-mode park handoff (ADR-015 addendum) ────────────────
+   In particle mode, the BrandmarkVectorActor (`.tf-brandmark-vector-actor`)
+   paints the brandmark during inter-section TRANSIT only. While
+   parked at a keyframe the actor fades out and the portal'd dock
+   glyph at the matching anchor takes over — the dock glyph is a
+   child of the section DOM, so it scrolls with the page natively
+   with zero JS tracking lag.
 
-   Hidden in particle mode:
-     - All native dock SVGs (sigil / miss / substrate / rail / orbit)
-       — the painter's cloud passes over their parked positions and
-       hands off pixel-perfectly via the journey transform's rect.
-     - The fixed `.tf-brandmark-actor` — the painter IS the actor
-       in particle mode. The actor stays in the DOM (so SVG mode
-       can swap to it instantly via the journey hook's `actorRef`)
-       but its display is gated to none. */
+   The `useBrandmarkJourney` hook writes `data-brand-parked-at=
+   "<keyframeId>"` on `documentElement` when fully parked (gated on
+   `transform.opacity > 0.99` to keep entrance / exit bookend fades
+   on the actor). Selectors below reveal the relevant dock glyph
+   and dim the actor, with a 120ms opacity crossfade in both
+   directions.
+
+   The legacy `.tf-brandmark-actor` (SVG-fallback travel actor) is
+   always display:none in particle mode — that's a different
+   painter and ADR-013 retired its particle-mode role. */
+[data-brandmark-mode="particle"] .tf-brandmark-actor {
+  display: none !important;
+}
+
+/* All portal'd dock glyphs start hidden in particle mode (the
+   transit actor paints during inter-section travel). The 120ms
+   transition smooths the crossfade against the actor when the
+   parked-at attribute flips. */
 [data-brandmark-mode="particle"] .sigil__mark > :where(img, svg),
 [data-brandmark-mode="particle"] .miss__brand-slot > :where(img, svg),
-[data-brandmark-mode="particle"] [data-brand-anchor="substrate"] > :where(img, svg),
 [data-brandmark-mode="particle"] .ilayer__brandmark-anchor > :where(img, svg),
 [data-brandmark-mode="particle"] .crail--large .crail__brand > :where(img, svg),
 [data-brandmark-mode="particle"] .approach__orbit__mark > :where(img, svg) {
-  opacity: 0 !important;
-  visibility: hidden !important;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 120ms linear,
+    visibility 0s linear 120ms;
 }
 
-[data-brandmark-mode="particle"] .tf-brandmark-actor {
-  display: none !important;
+/* Each parked state reveals only its own dock glyph. The
+   `visibility: visible` is set with a 0s transition so the glyph
+   becomes hit-testable immediately at park onset while the opacity
+   ramp animates the visual fade-in. */
+[data-brandmark-mode="particle"][data-brand-parked-at="sigil"] .sigil__mark > :where(img, svg),
+[data-brandmark-mode="particle"][data-brand-parked-at="miss"] .miss__brand-slot > :where(img, svg),
+[data-brandmark-mode="particle"][data-brand-parked-at="rail"]
+  .crail--large
+  .crail__brand
+  > :where(img, svg),
+[data-brandmark-mode="particle"][data-brand-parked-at="orbit"]
+  .approach__orbit__mark
+  > :where(img, svg) {
+  opacity: 1;
+  visibility: visible;
+  transition:
+    opacity 120ms linear,
+    visibility 0s linear 0s;
+}
+
+/* Substrate is special: two stacked glyphs (full + ring) crossfade
+   via `--brandmark-shape-blend`. Both share the anchor's full
+   `inset: 0` rect; the full glyph fades out as the ring fades in
+   when the journey morphs into ring topology during the substrate
+   hold beat. */
+[data-brandmark-mode="particle"][data-brand-parked-at="substrate"] .tf-brandmark--substrate-full {
+  opacity: calc(1 - var(--brandmark-shape-blend, 0));
+  visibility: visible;
+  transition:
+    opacity 120ms linear,
+    visibility 0s linear 0s;
+}
+[data-brandmark-mode="particle"][data-brand-parked-at="substrate"] .tf-brandmark--substrate-ring {
+  opacity: var(--brandmark-shape-blend, 0);
+  visibility: visible;
+  transition:
+    opacity 120ms linear,
+    visibility 0s linear 0s;
+}
+
+/* Substrate stacked glyphs need absolute positioning so they tile
+   the anchor's full bounding box. The anchor itself is
+   `.ilayer__brandmark-anchor` and is already sized via CSS. */
+.ilayer__brandmark-anchor .tf-brandmark--substrate {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
 }
 
 /* Vector-first painter: visible only in particle mode. The vector

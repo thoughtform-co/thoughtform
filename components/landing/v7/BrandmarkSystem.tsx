@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import { BrandmarkActor, type BrandmarkActorHandle } from "./BrandmarkActor";
 import { BrandmarkGlyph } from "./BrandmarkGlyph";
 import { BrandmarkParticleCanvas } from "@/components/brand/BrandmarkParticleField";
-import { BrandmarkVectorActor } from "@/components/brand/BrandmarkVectorActor";
+import { BrandmarkVectorActor, BrandmarkRingGlyph } from "@/components/brand/BrandmarkVectorActor";
 
 /**
  * BrandmarkSystem
@@ -147,16 +147,26 @@ export const BrandmarkSystem = forwardRef<BrandmarkActorHandle, BrandmarkSystemP
 
 BrandmarkSystem.displayName = "BrandmarkSystem";
 
-/** Portal one `BrandmarkGlyph` into a specific anchor's DOM slot.
+/** Portal one (or two) `BrandmarkGlyph` instances into a specific
+ *  anchor's DOM slot.
  *
  *  The glyph inherits its size from the anchor's CSS (each anchor
  *  rule in `landing.css` defines `width`/`height`). Visibility is
  *  driven by parent CSS rules tied to the choreography state
  *  attributes (`[data-brand-on-missing="parked"]`,
- *  `[data-brand-on-rail="parked"]`, etc.) so this component does
- *  not manage opacity — it only ensures *one* canonical glyph is
- *  always present per anchor slot, ready to paint when the parent
- *  rule allows it. */
+ *  `[data-brand-on-rail="parked"]`, and the new
+ *  `[data-brand-parked-at]` particle-mode handoff gate), so this
+ *  component does not manage opacity — it only ensures the canonical
+ *  glyph(s) are always present per anchor slot, ready to paint when
+ *  the parent rule allows it.
+ *
+ *  The substrate anchor is special: while parked at substrate the
+ *  brandmark morphs between the full mark and the ring-only
+ *  topology (ADR-015). To support a CSS-driven crossfade (no JS per
+ *  frame), we portal BOTH the full `BrandmarkGlyph` and a stacked
+ *  `BrandmarkRingGlyph` into the anchor. The journey hook publishes
+ *  `--brandmark-shape-blend` on documentElement; CSS opacity on each
+ *  glyph reads that variable to fade between the two topologies. */
 function BrandmarkAnchorPortal({
   container,
   anchorKey,
@@ -169,6 +179,23 @@ function BrandmarkAnchorPortal({
   // though it stays at opacity 0 most of the time. All other docks
   // paint filled-only.
   const wantsOutline = anchorKey === "orbit";
+
+  if (anchorKey === "substrate") {
+    return createPortal(
+      <>
+        <BrandmarkGlyph
+          className="tf-brandmark tf-brandmark--substrate tf-brandmark--substrate-full"
+          outline={false}
+          decorative
+        />
+        <BrandmarkRingGlyph
+          className="tf-brandmark tf-brandmark--substrate tf-brandmark--substrate-ring"
+          decorative
+        />
+      </>,
+      container
+    );
+  }
 
   return createPortal(
     <BrandmarkGlyph
