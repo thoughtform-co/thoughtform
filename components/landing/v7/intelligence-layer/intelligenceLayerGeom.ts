@@ -58,38 +58,42 @@ export const CAMERA_PARAMS = {
 // Triad geometry — substrate + two side orbits
 // ────────────────────────────────────────────────────────────────────
 
-/** Substrate ring — anchored at the origin. The brandmark particle
- *  cloud is what paints here (via the global painter, morphed to the
- *  ring-only shape via `uShapeBlend`); this geometry record exists
- *  so the side orbits + meridian pips know where the centre is and
- *  what size to match.
+/** Substrate ring — anchored slightly below the canvas centre.
+ *  The brandmark particle cloud paints here (via the global painter,
+ *  morphed to the ring-only shape via `uShapeBlend`); this geometry
+ *  record exists so the side orbits + meridian pips know where the
+ *  centre is and what size to match.
  *
- *  ADR-014 v2 (three-equal-circles): all three rings now share the
- *  same scene-unit radius (0.35). The previous "middle slightly
- *  larger" rule was confusing because the brandmark cloud (centre
- *  CSS-sized) and the rendered guide ring (centre scene-sized) did
- *  not project to the same screen pixels, so the centre read as
- *  "small cloud inside bigger ring". The fix is two-fold:
+ *  ADR-014 v3 (three-equal-circles, sized for content visibility):
  *
- *    1. The substrate guide ring is no longer rendered (see
- *       `OrbitField`). The brandmark cloud IS the centre ring.
- *    2. All three rings — left orbit, brandmark, right orbit — are
- *       sized to project to the same on-screen diameter (~38vh on
- *       desktop). Side orbits use this scene-unit radius directly;
- *       the brandmark anchor is sized in CSS to match via the
- *       `--ilayer-ring-diameter` variable in landing.css.
+ *    1. The substrate guide ring is NOT rendered (see `OrbitField`).
+ *       The brandmark cloud IS the centre ring.
+ *    2. All three rings share radius 0.48 scene units. At camera
+ *       fov 26 / z=4, vertical world span is ~1.846 scene units,
+ *       so 0.48 → ~26vh radius → ~52vh diameter on a 100vh canvas.
+ *       The CSS `--ilayer-ring-diameter` is set to
+ *       clamp(320px, 52vh, 540px) so the brandmark anchor matches.
+ *    3. The triad's vertical centre is shifted DOWN by ~6vh so the
+ *       bigger rings extend into the lower half of the section
+ *       instead of crashing into the title head. CSS positions the
+ *       brandmark anchor + chambers at `top: var(--ilayer-triad-y)`
+ *       = 56% of the section; R3F mirrors this via
+ *       `SUBSTRATE_RING.centre.y = -0.111` (and matching
+ *       `homeCentre.y` on the side orbits).
  *
- *  `radius` is consumed by `buildSubstrateMeridianPips` so the
- *  top/bottom diamonds sit exactly on the brandmark ring's rim. */
+ *  `centre` + `radius` are consumed by `buildSubstrateMeridianPips`
+ *  so the top/bottom diamonds sit exactly on the brandmark ring's
+ *  rim at the shifted-down centre. */
 export const SUBSTRATE_RING = {
-  centre: [0, 0, 0] as [number, number, number],
+  /** Shifted down by 0.111 scene units so the substrate sits at
+   *  viewport 56% (matching `--ilayer-triad-y` in landing.css).
+   *  6vh / 100vh × 1.846 ≈ 0.111. R3F Y axis points UP while the
+   *  viewport Y axis points DOWN, so "down in the viewport" maps
+   *  to negative R3F Y. */
+  centre: [0, -0.111, 0] as [number, number, number],
   /** Shared radius used by all three triad rings (substrate, left
-   *  orbit, right orbit). At camera fov 26 / z=4, vertical world
-   *  span is ~1.846 scene units, so 0.35 → ~19vh radius → ~38vh
-   *  diameter on a 100vh canvas. The CSS `--ilayer-ring-diameter`
-   *  is set to clamp(280px, 38vh, 440px) so the brandmark anchor
-   *  matches at typical desktop viewports. */
-  radius: 0.35,
+   *  orbit, right orbit). */
+  radius: 0.48,
 };
 
 /**
@@ -124,18 +128,20 @@ export interface SideOrbit {
 }
 
 /** Left orbit — Trusted sources. Sits to the left of the substrate.
- *  ADR-014 v2: same scene-unit radius as the substrate / right orbit
+ *  ADR-014 v3: same scene-unit radius as the substrate / right orbit
  *  so the three pillars read as three equal circles. `homeCentre.x`
  *  is set for ~22% overlap with the substrate (centre distance ≈
  *  1.57 × radius < 2 × radius = sum-of-radii), which matches the
- *  reference space-map composition. The CSS `--orbit-offset`
- *  variable is derived from `--ilayer-ring-radius` so the side
- *  chambers anchor at the same screen-x as the orbit centres in
- *  both R3F and static-fallback modes. */
+ *  reference space-map composition. `homeCentre.y` matches the
+ *  substrate's shifted centre so all three rings sit on a common
+ *  horizontal axis 6vh below the canvas centre. The CSS
+ *  `--orbit-offset` variable is derived from `--ilayer-ring-radius`
+ *  so the side chambers anchor at the same screen-x as the orbit
+ *  centres in both R3F and static-fallback modes. */
 export const LEFT_ORBIT: SideOrbit = {
   id: "left",
-  homeCentre: [-0.55, 0, 0],
-  radius: 0.35,
+  homeCentre: [-0.75, -0.111, 0],
+  radius: 0.48,
   color: "#caa554", // --gold — equal signal weight with the substrate
   opacity: 0.65,
   // Cardinal pips at top / right / bottom / left of the orbit.
@@ -145,8 +151,8 @@ export const LEFT_ORBIT: SideOrbit = {
 /** Right orbit — Headless surfaces. Mirror of the left orbit. */
 export const RIGHT_ORBIT: SideOrbit = {
   id: "right",
-  homeCentre: [0.55, 0, 0],
-  radius: 0.35,
+  homeCentre: [0.75, -0.111, 0],
+  radius: 0.48,
   color: "#caa554",
   opacity: 0.65,
   pipAngles: [0, 90, 180, 270],

@@ -3269,14 +3269,13 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   z-index: 2;
 }
 
-/* Header — title only (the section's `.station__idx` carries the
-   eyebrow text above). Anchored at the top of the viewport so the
-   labels and podium have room below. Block is centred horizontally
-   with the same `min(1280px, 92vw)` width as `.miss__inner`, and
-   contents are LEFT-aligned within the block — matches the
-   `.miss__head` layout so the eyebrow / title baseline is at the
-   same X coordinate across both sections (visual continuity through
-   the page). */
+/* Header — two columns (Aether-style): title on the LEFT, lede on
+   the RIGHT, with a generous gap so the eye reads them as a single
+   composed band. Anchored at the top of the viewport so the rings
+   have room below. Block is centred horizontally with the same
+   `min(1280px, 92vw)` width as `.miss__inner`, and contents are
+   LEFT-aligned within each column. Mobile media query collapses
+   back to a single column. */
 .ilayer__head {
   position: absolute;
   top: clamp(80px, 12vh, 140px);
@@ -3284,10 +3283,11 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   transform: translateX(-50%);
   z-index: 3;
   display: flex;
-  flex-direction: column;
-  gap: clamp(10px, 1.4vh, 16px);
-  width: min(1280px, 92vw);
+  flex-direction: row;
   align-items: flex-start;
+  justify-content: space-between;
+  gap: clamp(32px, 6vw, 96px);
+  width: min(1280px, 92vw);
   text-align: left;
 }
 .ilayer__title {
@@ -3300,6 +3300,7 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   margin: 0;
   text-wrap: balance;
   max-width: 22ch;
+  flex: 0 1 auto;
 }
 .ilayer__title em {
   font-style: italic;
@@ -3307,18 +3308,23 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   font-weight: 400;
 }
 
-/* ── Lede (subtitle under the section title) ──────────────────────
-   Single short prose line that frames what the orbital triad is.
-   Sits beneath the title, same content column, dawn-toned. */
+/* ── Lede (right column of the two-column head, Aether-style) ─────
+   Short prose framing line. Sits on the right of the title, sized
+   smaller (dawn-toned) so it reads as supporting copy. A small
+   top margin shifts the first line down so its baseline sits closer
+   to the title's second line — visually anchored without being
+   forced into baseline alignment. */
 .ilayer__lede {
   margin: 0;
+  margin-top: clamp(8px, 1vh, 14px);
   font-family: var(--font-pp-neue-montreal);
   font-size: clamp(13px, 1vw, 15px);
   line-height: 1.55;
   letter-spacing: -0.005em;
   color: var(--dawn-70);
-  max-width: 56ch;
+  max-width: 42ch;
   text-wrap: pretty;
+  flex: 0 1 auto;
 }
 .ilayer__lede em {
   font-style: italic;
@@ -3346,24 +3352,39 @@ html[data-quote-active="true"] .tf-brandmark-actor {
    section's `--ilayer-progress` CSS variable (mirrored from the
    journey transform's `ringProgress` channel). */
 .ilayer__inner {
-  /* Shared triad sizing (ADR-014 v2 — three equal circles).
+  /* Shared triad sizing (ADR-014 v3 — three equal circles, sized
+     for full chamber content visibility).
      All three rings — left orbit, brandmark centre, right orbit —
      share the same on-screen diameter. The brandmark anchor reads
      this value directly for its width/height; the side orbits use
      the matching scene-unit radius in `intelligenceLayerGeom.ts`
-     (0.35), which projects to the same diameter on a 100vh canvas
+     (0.48), which projects to the same diameter on a 100vh canvas
      at the camera's fov 26 / z=4 framing.
+
+     Diameter bumped to 52vh (was 38vh) so each chamber's inscribed
+     square fits the full content load: 6 source items, 4 rule rows
+     + chips, or the 6-cell surfaces grid. The triad centre is
+     shifted to viewport 56% (see `.ilayer__brandmark-anchor` and
+     `.ilayer__chamber` below) so the bigger rings extend DOWN into
+     the lower half of the section rather than colliding with the
+     title head. The matching R3F substrate centre and side orbit
+     `homeCentre.y` are set to -0.111 scene units to track this
+     6vh shift.
 
      `--orbit-offset` is derived from the radius so the side
      chambers anchor at the same screen-x as the side orbit centres
      in both R3F and static-fallback modes. The 1.57 multiplier
      gives ~22% overlap with the centre ring (matching the
-     LEFT_ORBIT / RIGHT_ORBIT homeCentre.x of ±0.55 scene units).
+     LEFT_ORBIT / RIGHT_ORBIT homeCentre.x of ±0.75 scene units).
      Clamped so chambers stay comfortably inside the section on
      narrow and ultrawide viewports. */
-  --ilayer-ring-diameter: clamp(280px, 38vh, 440px);
+  --ilayer-ring-diameter: clamp(320px, 52vh, 540px);
   --ilayer-ring-radius: calc(var(--ilayer-ring-diameter) / 2);
-  --orbit-offset: clamp(200px, calc(var(--ilayer-ring-radius) * 1.57), 360px);
+  --orbit-offset: clamp(240px, calc(var(--ilayer-ring-radius) * 1.57), 420px);
+  /* Vertical centre of the triad as a fraction of the section. All
+     orbit-aligned elements (brandmark anchor, chambers) read this
+     so they shift together. */
+  --ilayer-triad-y: 56%;
 }
 
 /* All three chambers share the same width — derived from the ring
@@ -3378,7 +3399,7 @@ html[data-quote-active="true"] .tf-brandmark-actor {
    edge and the chamber sits cleanly in its hollow interior. */
 .ilayer__chamber {
   position: absolute;
-  top: 50%;
+  top: var(--ilayer-triad-y);
   left: 50%;
   z-index: 5;
   display: flex;
@@ -3386,7 +3407,7 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   align-items: center;
   justify-content: center;
   gap: clamp(8px, 1.2vh, 14px);
-  width: min(calc(var(--ilayer-ring-diameter) * 0.78), 340px);
+  width: min(calc(var(--ilayer-ring-diameter) * 0.78), 360px);
   pointer-events: none;
   text-align: center;
   transform: translate(-50%, -50%);
@@ -3407,7 +3428,7 @@ html[data-quote-active="true"] .tf-brandmark-actor {
    the old composition where the centre orbit was much taller than
    it was wide. */
 .ilayer__chamber--mid {
-  width: min(calc(var(--ilayer-ring-diameter) * 0.78), 340px);
+  width: min(calc(var(--ilayer-ring-diameter) * 0.78), 360px);
   justify-content: center;
   gap: clamp(6px, 0.9vh, 10px);
 }
@@ -3692,16 +3713,20 @@ html[data-quote-active="true"] .tf-brandmark-actor {
    has projected its first frame. */
 .ilayer__brandmark-anchor {
   position: absolute;
-  /* ADR-014 v2 — the anchor IS the centre ring. Sized from the
+  /* ADR-014 v3 — the anchor IS the centre ring. Sized from the
      shared `--ilayer-ring-diameter` so the brandmark cloud's
      projected diameter equals the side orbits' diameter, giving
-     three equal circles. Centred vertically + horizontally on the
-     section so the three pillars sit on a common horizontal axis.
+     three equal circles. Anchored on the shared `--ilayer-triad-y`
+     (56% of the section) so the triad sits below the title block
+     and the rings grow DOWN into the lower half of the viewport
+     instead of crashing into the head. The matching R3F substrate
+     centre + side orbit `homeCentre.y` are set to -0.111 scene
+     units so R3F geometry tracks this 6vh shift.
      useIlayerProgress no longer rewrites these inline styles
      (the encode-rect channel is retired); the brandmark journey
      reads this anchor's bounding rect directly. */
   left: 50%;
-  top: 50%;
+  top: var(--ilayer-triad-y);
   width: var(--ilayer-ring-diameter);
   height: var(--ilayer-ring-diameter);
   transform: translate(-50%, -50%);
@@ -3778,6 +3803,17 @@ html[data-quote-active="true"] .tf-brandmark-actor {
     transform: none;
     margin: 0 auto;
     width: 100%;
+    /* Collapse the desktop two-column head back to a stacked column
+       on narrow viewports so the title + lede each get full width. */
+    flex-direction: column;
+    align-items: flex-start;
+    gap: clamp(8px, 1.6vh, 14px);
+  }
+  .ilayer__lede {
+    /* Reset the desktop baseline-shift margin so the lede sits
+       directly under the title in the stacked column. */
+    margin-top: 0;
+    max-width: none;
   }
   .ilayer__artifact {
     /* Mobile drops the full orbital scene — the stacked chamber

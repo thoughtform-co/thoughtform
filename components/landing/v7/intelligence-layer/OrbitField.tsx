@@ -132,7 +132,11 @@ function buildSideOrbit(orbit: SideOrbit): SideOrbitHandles {
  *  to ring topology via `uShapeBlend`), so we never draw a hairline
  *  guide here. The meridian pips share the same scene-unit radius as
  *  the brandmark cloud's projected screen rect (sized in CSS to match
- *  the side orbits — see `--ilayer-ring-diameter` in landing.css). */
+ *  the side orbits — see `--ilayer-ring-diameter` in landing.css).
+ *
+ *  ADR-014 v3: pips are positioned relative to `SUBSTRATE_RING.centre`
+ *  so they track the shifted-down triad centre (y = -0.111 scene
+ *  units, matching CSS `--ilayer-triad-y: 56%`). */
 function buildSubstrateMeridianPips(): THREE.Group {
   const pipGroup = new THREE.Group();
   pipGroup.scale.setScalar(0);
@@ -143,10 +147,15 @@ function buildSubstrateMeridianPips(): THREE.Group {
     opacity: 0.95,
     depthWrite: false,
   });
+  const [cx, cy, cz] = SUBSTRATE_RING.centre;
   for (const angleDeg of [0, 180]) {
     const t = Math.PI / 2 - (angleDeg * Math.PI) / 180;
     const pip = new THREE.LineLoop(pipGeometry, pipMaterial);
-    pip.position.set(Math.cos(t) * SUBSTRATE_RING.radius, Math.sin(t) * SUBSTRATE_RING.radius, 0);
+    pip.position.set(
+      cx + Math.cos(t) * SUBSTRATE_RING.radius,
+      cy + Math.sin(t) * SUBSTRATE_RING.radius,
+      cz
+    );
     pipGroup.add(pip);
   }
   return pipGroup;
@@ -186,17 +195,22 @@ export function OrbitField() {
 
     const emerge = orbitEmerge(progress);
 
-    // === Side orbits — slide outward AND scale up together ===
-    // Position lerps from origin to homeCentre with the same emerge
-    // scalar; scale lerps 0 → 1. Reads as the orbit being born from
-    // the substrate's centre.
+    // === Side orbits — slide outward FROM the substrate centre ===
+    // X position lerps from substrate centre to homeCentre with the
+    // emerge scalar; Y stays anchored at the substrate's centre Y
+    // throughout so the side orbit is "born from the substrate's
+    // centre" and only travels horizontally. Scale lerps 0 → 1.
+    // (Earlier iterations lerped Y from 0 → homeCentre.y, which made
+    // the orbits slide diagonally when the triad centre shifted off
+    // the canvas origin.)
+    const [substrateCx, substrateCy, substrateCz] = SUBSTRATE_RING.centre;
     for (let i = 0; i < sideOrbits.length; i++) {
       const handles = sideOrbits[i];
       const orbit = SIDE_ORBITS[i];
       handles.group.position.set(
-        orbit.homeCentre[0] * emerge,
-        orbit.homeCentre[1] * emerge,
-        orbit.homeCentre[2] * emerge
+        substrateCx + (orbit.homeCentre[0] - substrateCx) * emerge,
+        substrateCy,
+        substrateCz
       );
       handles.group.scale.setScalar(emerge);
     }

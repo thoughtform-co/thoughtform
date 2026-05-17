@@ -4682,30 +4682,33 @@ html { scroll-behavior: smooth; }
              apart (slight ~22% overlap matching the R3F side-orbit
              homeCentre.x ratio of ±1.57 × radius). -->
         <svg class="ilayer__triad__fallback ilayer__stack__fallback" viewBox="-500 -260 1000 520" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
-          <!-- Three primary circles — equal radius, one ring per pillar. -->
-          <circle class="ilayer__triad__orbit ilayer__triad__orbit--left" cx="-145" cy="0" r="180" />
-          <circle class="ilayer__triad__orbit ilayer__triad__orbit--mid" cx="0" cy="0" r="180" />
-          <circle class="ilayer__triad__orbit ilayer__triad__orbit--right" cx="145" cy="0" r="180" />
-          <!-- Cardinal bearing diamonds on each side orbit (top, right,
-               bottom, left). The 'right' pip on left orbit and 'left'
-               pip on right orbit fall inside the substrate's overlap
-               region and are intentionally omitted to keep the centre
-               read clean. -->
+          <!-- Three primary circles — equal radius, one ring per pillar.
+               ADR-014 v3: radii bumped (r=135) and centres shifted DOWN
+               by cy=30 so the triad sits in the lower half of the
+               section (matching the R3F substrate centre at y=-0.111
+               scene units and the CSS `--ilayer-triad-y: 56%`). -->
+          <circle class="ilayer__triad__orbit ilayer__triad__orbit--left" cx="-210" cy="30" r="135" />
+          <circle class="ilayer__triad__orbit ilayer__triad__orbit--mid" cx="0" cy="30" r="135" />
+          <circle class="ilayer__triad__orbit ilayer__triad__orbit--right" cx="210" cy="30" r="135" />
+          <!-- Cardinal bearing diamonds on each side orbit (top, bottom,
+               outer). The inward-facing cardinal on each side orbit is
+               intentionally omitted — it would sit inside the substrate
+               overlap region and read as clutter at the centre. -->
           <g class="ilayer__triad__pips ilayer__triad__pips--left">
-            <polygon points="-145,-190 -135,-180 -145,-170 -155,-180" />
-            <polygon points="-145,170 -135,180 -145,190 -155,180" />
-            <polygon points="-335,-10 -325,0 -335,10 -345,0" />
+            <polygon points="-210,-115 -200,-105 -210,-95 -220,-105" />
+            <polygon points="-210,155 -200,165 -210,175 -220,165" />
+            <polygon points="-345,20 -335,30 -345,40 -355,30" />
           </g>
           <g class="ilayer__triad__pips ilayer__triad__pips--right">
-            <polygon points="145,-190 155,-180 145,-170 135,-180" />
-            <polygon points="145,170 155,180 145,190 135,180" />
-            <polygon points="335,-10 345,0 335,10 325,0" />
+            <polygon points="210,-115 220,-105 210,-95 200,-105" />
+            <polygon points="210,155 220,165 210,175 200,165" />
+            <polygon points="345,20 355,30 345,40 335,30" />
           </g>
           <!-- Substrate meridian diamonds — top and bottom of the
                brandmark ring. Match the R3F substrate meridian pips. -->
           <g class="ilayer__triad__pips ilayer__triad__pips--mid">
-            <polygon points="0,-190 10,-180 0,-170 -10,-180" />
-            <polygon points="0,170 10,180 0,190 -10,180" />
+            <polygon points="0,-115 10,-105 0,-95 -10,-105" />
+            <polygon points="0,155 10,165 0,175 -10,165" />
           </g>
         </svg>
 
