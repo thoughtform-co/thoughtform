@@ -4683,26 +4683,29 @@ html { scroll-behavior: smooth; }
              homeCentre.x ratio of ±1.57 × radius). -->
         <svg class="ilayer__triad__fallback ilayer__stack__fallback" viewBox="-500 -260 1000 520" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
           <!-- Three primary circles — equal radius, one ring per pillar.
-               ADR-014 v3: radii bumped (r=135) and centres shifted DOWN
-               by cy=30 so the triad sits in the lower half of the
-               section (matching the R3F substrate centre at y=-0.111
-               scene units and the CSS `--ilayer-triad-y: 56%`). -->
-          <circle class="ilayer__triad__orbit ilayer__triad__orbit--left" cx="-210" cy="30" r="135" />
+               ADR-014 v4: side orbits separated from the substrate
+               (cx=±280, no intersection) so each chamber's content
+               stays cleanly inside its own circle. Matches the R3F
+               LEFT_ORBIT / RIGHT_ORBIT `homeCentre.x` of ±1.0 scene
+               units (1.0 × 281.7 viewBox-units-per-scene-unit ≈ 280).
+               cy=30 keeps the triad in the lower half of the section
+               (matches `--ilayer-triad-y: 56%`). -->
+          <circle class="ilayer__triad__orbit ilayer__triad__orbit--left" cx="-280" cy="30" r="135" />
           <circle class="ilayer__triad__orbit ilayer__triad__orbit--mid" cx="0" cy="30" r="135" />
-          <circle class="ilayer__triad__orbit ilayer__triad__orbit--right" cx="210" cy="30" r="135" />
+          <circle class="ilayer__triad__orbit ilayer__triad__orbit--right" cx="280" cy="30" r="135" />
           <!-- Cardinal bearing diamonds on each side orbit (top, bottom,
-               outer). The inward-facing cardinal on each side orbit is
-               intentionally omitted — it would sit inside the substrate
-               overlap region and read as clutter at the centre. -->
+               outer). The inward-facing cardinal is intentionally
+               omitted so the gap between the side orbit and the
+               substrate reads as clean negative space. -->
           <g class="ilayer__triad__pips ilayer__triad__pips--left">
-            <polygon points="-210,-115 -200,-105 -210,-95 -220,-105" />
-            <polygon points="-210,155 -200,165 -210,175 -220,165" />
-            <polygon points="-345,20 -335,30 -345,40 -355,30" />
+            <polygon points="-280,-115 -270,-105 -280,-95 -290,-105" />
+            <polygon points="-280,155 -270,165 -280,175 -290,165" />
+            <polygon points="-415,20 -405,30 -415,40 -425,30" />
           </g>
           <g class="ilayer__triad__pips ilayer__triad__pips--right">
-            <polygon points="210,-115 220,-105 210,-95 200,-105" />
-            <polygon points="210,155 220,165 210,175 200,165" />
-            <polygon points="345,20 355,30 345,40 335,30" />
+            <polygon points="280,-115 290,-105 280,-95 270,-105" />
+            <polygon points="280,155 290,165 280,175 270,165" />
+            <polygon points="415,20 425,30 415,40 405,30" />
           </g>
           <!-- Substrate meridian diamonds — top and bottom of the
                brandmark ring. Match the R3F substrate meridian pips. -->
@@ -4725,27 +4728,27 @@ html { scroll-behavior: smooth; }
         </header>
         <p class="ilayer__chamber__sub">Where the work already lives.</p>
         <ul class="ilayer__chamber__items" role="list">
-          <li class="ilayer__chamber__item" style="--reveal: 0.28;">
+          <li class="ilayer__chamber__item" style="--reveal: 0.10;">
             <span class="ilayer__chamber__pip" aria-hidden="true"></span>
             <span class="ilayer__chamber__label">Brand framework</span>
           </li>
-          <li class="ilayer__chamber__item" style="--reveal: 0.32;">
+          <li class="ilayer__chamber__item" style="--reveal: 0.13;">
             <span class="ilayer__chamber__pip" aria-hidden="true"></span>
             <span class="ilayer__chamber__label">Past campaigns</span>
           </li>
-          <li class="ilayer__chamber__item" style="--reveal: 0.36;">
+          <li class="ilayer__chamber__item" style="--reveal: 0.16;">
             <span class="ilayer__chamber__pip" aria-hidden="true"></span>
             <span class="ilayer__chamber__label">Customer research</span>
           </li>
-          <li class="ilayer__chamber__item" style="--reveal: 0.40;">
+          <li class="ilayer__chamber__item" style="--reveal: 0.19;">
             <span class="ilayer__chamber__pip" aria-hidden="true"></span>
             <span class="ilayer__chamber__label">Performance data</span>
           </li>
-          <li class="ilayer__chamber__item" style="--reveal: 0.44;">
+          <li class="ilayer__chamber__item" style="--reveal: 0.22;">
             <span class="ilayer__chamber__pip" aria-hidden="true"></span>
             <span class="ilayer__chamber__label">Style guidelines</span>
           </li>
-          <li class="ilayer__chamber__item" style="--reveal: 0.48;">
+          <li class="ilayer__chamber__item" style="--reveal: 0.25;">
             <span class="ilayer__chamber__pip" aria-hidden="true"></span>
             <span class="ilayer__chamber__label">Reviewer notes</span>
           </li>
@@ -4767,19 +4770,19 @@ html { scroll-behavior: smooth; }
         </div>
         <div class="ilayer__chamber__bottom">
           <ul class="ilayer__substrate__rules" role="list">
-            <li style="--reveal: 0.36;">
+            <li style="--reveal: 0.15;">
               <span class="ilayer__substrate__key">Rules</span>
               <span class="ilayer__substrate__val">How the team decides</span>
             </li>
-            <li style="--reveal: 0.40;">
+            <li style="--reveal: 0.18;">
               <span class="ilayer__substrate__key">Examples</span>
               <span class="ilayer__substrate__val">What good looks like</span>
             </li>
-            <li style="--reveal: 0.44;">
+            <li style="--reveal: 0.21;">
               <span class="ilayer__substrate__key">Sources</span>
               <span class="ilayer__substrate__val">Data it can read</span>
             </li>
-            <li style="--reveal: 0.48;">
+            <li style="--reveal: 0.24;">
               <span class="ilayer__substrate__key">Loops</span>
               <span class="ilayer__substrate__val">Who confirms what</span>
             </li>
@@ -4803,27 +4806,27 @@ html { scroll-behavior: smooth; }
         </header>
         <p class="ilayer__chamber__sub">Where the cohort calls the engine.</p>
         <ul class="ilayer__chamber__items ilayer__chamber__items--grid" role="list">
-          <li class="ilayer__chamber__item" style="--reveal: 0.40;">
+          <li class="ilayer__chamber__item" style="--reveal: 0.12;">
             <span class="ilayer__chamber__pip" aria-hidden="true"></span>
             <span class="ilayer__chamber__label">Cursor</span>
           </li>
-          <li class="ilayer__chamber__item" style="--reveal: 0.44;">
+          <li class="ilayer__chamber__item" style="--reveal: 0.15;">
             <span class="ilayer__chamber__pip" aria-hidden="true"></span>
             <span class="ilayer__chamber__label">Claude</span>
           </li>
-          <li class="ilayer__chamber__item" style="--reveal: 0.48;">
+          <li class="ilayer__chamber__item" style="--reveal: 0.18;">
             <span class="ilayer__chamber__pip" aria-hidden="true"></span>
             <span class="ilayer__chamber__label">Web app</span>
           </li>
-          <li class="ilayer__chamber__item" style="--reveal: 0.52;">
+          <li class="ilayer__chamber__item" style="--reveal: 0.21;">
             <span class="ilayer__chamber__pip" aria-hidden="true"></span>
             <span class="ilayer__chamber__label">REST</span>
           </li>
-          <li class="ilayer__chamber__item" style="--reveal: 0.56;">
+          <li class="ilayer__chamber__item" style="--reveal: 0.24;">
             <span class="ilayer__chamber__pip" aria-hidden="true"></span>
             <span class="ilayer__chamber__label">Slack</span>
           </li>
-          <li class="ilayer__chamber__item" style="--reveal: 0.60;">
+          <li class="ilayer__chamber__item" style="--reveal: 0.27;">
             <span class="ilayer__chamber__pip" aria-hidden="true"></span>
             <span class="ilayer__chamber__label">Agents</span>
           </li>

@@ -128,19 +128,24 @@ export interface SideOrbit {
 }
 
 /** Left orbit — Trusted sources. Sits to the left of the substrate.
- *  ADR-014 v3: same scene-unit radius as the substrate / right orbit
+ *  ADR-014 v4: same scene-unit radius as the substrate / right orbit
  *  so the three pillars read as three equal circles. `homeCentre.x`
- *  is set for ~22% overlap with the substrate (centre distance ≈
- *  1.57 × radius < 2 × radius = sum-of-radii), which matches the
- *  reference space-map composition. `homeCentre.y` matches the
- *  substrate's shifted centre so all three rings sit on a common
- *  horizontal axis 6vh below the canvas centre. The CSS
- *  `--orbit-offset` variable is derived from `--ilayer-ring-radius`
- *  so the side chambers anchor at the same screen-x as the orbit
- *  centres in both R3F and static-fallback modes. */
+ *  is set so the side orbits DO NOT intersect the substrate ring —
+ *  centre distance (1.0) > sum-of-radii (0.96), giving a small clean
+ *  gap of 0.04 scene units between rims. Earlier iterations used
+ *  overlapping orbits (a space-map convention) but the overlap made
+ *  the chamber content overflow into the substrate's read area;
+ *  separating the rings keeps each chamber's content cleanly scoped
+ *  to its own circle. `homeCentre.y` matches the substrate's
+ *  shifted centre so all three rings sit on a common horizontal
+ *  axis 6vh below the canvas centre. The CSS `--orbit-offset`
+ *  variable is derived from `--ilayer-ring-radius` (with a 2.08
+ *  multiplier matching this homeCentre.x / radius ratio) so the
+ *  side chambers anchor at the same screen-x as the orbit centres
+ *  in both R3F and static-fallback modes. */
 export const LEFT_ORBIT: SideOrbit = {
   id: "left",
-  homeCentre: [-0.75, -0.111, 0],
+  homeCentre: [-1.0, -0.111, 0],
   radius: 0.48,
   color: "#caa554", // --gold — equal signal weight with the substrate
   opacity: 0.65,
@@ -151,7 +156,7 @@ export const LEFT_ORBIT: SideOrbit = {
 /** Right orbit — Headless surfaces. Mirror of the left orbit. */
 export const RIGHT_ORBIT: SideOrbit = {
   id: "right",
-  homeCentre: [0.75, -0.111, 0],
+  homeCentre: [1.0, -0.111, 0],
   radius: 0.48,
   color: "#caa554",
   opacity: 0.65,
