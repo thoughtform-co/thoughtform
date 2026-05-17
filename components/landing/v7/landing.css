@@ -3059,63 +3059,11 @@ html[data-quote-active="true"] .tf-brandmark-actor {
     transform 480ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Diagnostic closer — moved here from asking-gap. The 4 cards
-   diagnose the symptom, this names the cure. Centred under the
-   grid so it reads as the resolution of the diagnostic. Fades in
-   after the last card lands (delay ≈ card-04 stagger + most of its
-   720ms acquire). */
-.miss__closer {
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  align-items: center;
-}
-.miss__inner:not(.is-in) .miss__closer {
-  opacity: 0;
-  transform: translateY(8px);
-}
-
-@keyframes miss-closer-settle {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-.miss__inner.is-in .miss__closer {
-  animation: miss-closer-settle 540ms cubic-bezier(0.16, 1, 0.3, 1) 880ms both;
-}
-.miss__punchline {
-  font-family: var(--font-pp-neue-montreal);
-  font-weight: 400;
-  font-size: clamp(20px, 2.2vw, 30px);
-  line-height: 1.3;
-  color: var(--dawn);
-  margin: 0;
-  text-wrap: balance;
-  max-width: 36ch;
-}
-.miss__punchline em {
-  font-style: italic;
-  color: var(--gold);
-}
-.miss__sub {
-  font-family: var(--font-pp-neue-montreal);
-  font-style: italic;
-  font-size: clamp(13px, 1.1vw, 15px);
-  color: var(--dawn-50);
-  margin: 0;
-}
-
 /* Reveal — wrapper itself only fades opacity 0→1 (so its void shield
    is opaque on first paint, Rule 1 of compositing); cards, rays,
-   brandmark, and closer carry their own staggered transitions tied
-   to the same .is-in. transform/filter are kept off the wrapper to
-   avoid the 100vw lateral-strip exposure (Rule 3). */
+   and brandmark carry their own staggered transitions tied to the
+   same .is-in. transform/filter are kept off the wrapper to avoid the
+   100vw lateral-strip exposure (Rule 3). */
 .miss__inner[data-m="instrument"] {
   opacity: 0;
   transition: opacity 240ms ease-out;
@@ -3125,7 +3073,7 @@ html[data-quote-active="true"] .tf-brandmark-actor {
 }
 
 /* Reduced-motion path: skip every reveal motion for the constellation
-   chrome (stagger, ray draw-in, closer settle). Animations are
+   chrome (stagger, ray draw-in). Animations are
    disabled and the initial-hidden states (opacity 0, transform,
    blur, ray dashoffset) are overridden to their final visible
    values, so visitors who opted out of motion see the full
@@ -3152,8 +3100,7 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   .miss__inner .miss__ray--01,
   .miss__inner .miss__ray--02,
   .miss__inner .miss__ray--03,
-  .miss__inner .miss__ray--04,
-  .miss__inner .miss__closer {
+  .miss__inner .miss__ray--04 {
     animation: none;
   }
   .miss__inner:not(.is-in) .miss__card {
@@ -3164,10 +3111,6 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   .miss__inner:not(.is-in) .miss__ray {
     stroke-opacity: 0.3;
     stroke-dashoffset: 0;
-  }
-  .miss__inner:not(.is-in) .miss__closer {
-    opacity: 1;
-    transform: none;
   }
   /* Native dock: instant swap on park, no fade. Stays hidden until the
      choreography sets `data-brand-on-missing="parked"`. */
