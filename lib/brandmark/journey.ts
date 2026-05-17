@@ -219,7 +219,31 @@ const SUBSTRATE_ATMOSPHERE_DENSITY = 0.15;
  *  snapping to the brandmark's outline. */
 const SUBSTRATE_ATMOSPHERE_DISPERSION = 0.35;
 
-/** Default easing (power3.inOut). */
+// === Easing semantics ===
+//
+// Scrollytelling pacing is a function of two things: how much SCROLL
+// BUDGET a leg gets (the [startY, endY] window), and HOW THAT BUDGET
+// IS REDISTRIBUTED across the rect lerp (the easing curve). We split
+// these intentionally so each leg can be tuned for "feel" without
+// changing the geometry.
+
+/** Smoothstep — gentle S-curve (3t² − 2t³). Mid-range velocity is
+ *  noticeably faster than `power3.inOut`, so the brandmark spends
+ *  less time hanging near each dock and more time visibly travelling.
+ *  Use for SAME-SIZE translations (sigil → miss, rail → orbit) where
+ *  "purposeful motion" is the desired read. */
+const TRAVEL_EASE: EasingFn = (t) => t * t * (3 - 2 * t);
+
+/** Smootherstep — gentler S-curve (6t⁵ − 15t⁴ + 10t³). Earlier than
+ *  `power3.inOut` at the start of the window, then settles slowly
+ *  into the destination dock. Use for SIZE-CHANGING arrivals
+ *  (miss → substrate, substrate → rail) where the brandmark needs
+ *  visible breathing room around the rect grow / shrink. */
+const MORPH_EASE: EasingFn = (t) => t * t * t * (t * (t * 6 - 15) + 10);
+
+/** Power3 inOut — the historical default. Strong S-curve with a
+ *  pronounced flat tail at each end. Kept as a fallback for any
+ *  keyframe that doesn't declare an explicit `transitIn.easing`. */
 const DEFAULT_EASING: EasingFn = (t) => {
   if (t < 0.5) return 4 * t * t * t;
   const f = 2 * t - 2;
@@ -241,13 +265,20 @@ export const HIDDEN_TRANSFORM: BrandmarkTransform = {
 };
 
 /** Fraction of the substrate scroll window devoted to the brandmark
- *  shape blend on each side (engage + exit). With `0.18` each side,
- *  the morph completes within the first 18% of the parked window,
- *  holds through the read beat, and retracts in the last 18% — so
- *  side orbits and labels have time to settle around the ring before
- *  the cloud begins to un-morph back to its full mark for departure. */
-const SHAPE_BLEND_FRAC = 0.18;
-const SIGIL_MISS_TRANSIT_VIEWPORT_GATE = 0.82;
+ *  shape blend on each side (engage + exit). With `0.30` each side,
+ *  the morph spreads over the first 30% of the parked window, holds
+ *  through the read beat, and retracts in the last 30%. The wider
+ *  ramp gives the full → ring transition visible breathing room
+ *  instead of snapping into ring topology the moment the substrate
+ *  window engages. Combined with `MORPH_EASE` on the rect lerp
+ *  (`miss → substrate.transitIn.easing`), the Diagnostic → Intelligence
+ *  hand-off reads as a single elegant settle rather than a fast pop. */
+const SHAPE_BLEND_FRAC = 0.3;
+
+/** While a section's bottom edge is below this viewport fraction, the
+ *  visitor is still "reading" that section — the brandmark should stay
+ *  parked at its dock instead of entering inter-section transit. */
+const SECTION_READING_ZONE_FRAC = 0.35;
 
 // ────────────────────────────────────────────────────────────────────
 // Math helpers
@@ -255,6 +286,99 @@ const SIGIL_MISS_TRANSIT_VIEWPORT_GATE = 0.82;
 
 const clamp01 = (v: number) => (v < 0 ? 0 : v > 1 ? 1 : v);
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
+
+function sectionReadingZoneExitY(
+  section: HTMLElement | null,
+  thresholdFrac = SECTION_READING_ZONE_FRAC
+): number | null {
+  if (!section) return null;
+  const rect = section.getBoundingClientRect();
+  return window.scrollY + rect.bottom - window.innerHeight * thresholdFrac;
+}
+
+/** Each keyframe is hosted by exactly one section in the page DOM.
+ *  This map lets per-leg helpers resolve the from-section so the
+ *  brandmark stays section-locked while the visitor is still reading
+ *  it, then unlocks once the section's reading zone has cleared. */
+const SECTION_ID_BY_KEYFRAME: Record<KeyframeId, string> = {
+  sigil: "definition",
+  miss: "missing-layer",
+  substrate: "intelligence-layer",
+  rail: "continuum",
+  orbit: "practice",
+};
+
+/** Fraction of the sigil → miss travel window reserved as a parked
+ *  tail at the miss end. The brandmark visibly arrives at miss
+ *  slightly before its centre coincides with the viewport, so the
+ *  4-card grid has a beat to register the new mark before the next
+ *  scroll input arrives. Without this tail, the brandmark would only
+ *  reach miss exactly when miss is mid-viewport, which reads as a
+ *  drag rather than a deliberate landing. */
+const SIGIL_TO_MISS_PARK_TAIL = 0.15;
+
+/** A per-leg travel window expressed in absolute scroll-Y. Encodes
+ *  both the section-locked unlock point (for legs whose from-section
+ *  hosts the brandmark — currently sigil → miss) and the parkFrac
+ *  carving used by the centre-based default. Other legs fall back to
+ *  centre-to-centre with each keyframe's own `parkFracIn` /
+ *  `parkFracOut`. */
+interface LegTravelWindow {
+  /** Absolute scroll-Y at which the leg's progress is `0` (parked at `from`). */
+  startY: number;
+  /** Absolute scroll-Y at which the leg's progress is `1` (parked at `to`). */
+  endY: number;
+  /** Fraction of `[startY, endY]` during which we report parked-at-from. */
+  parkOut: number;
+  /** Fraction of `[startY, endY]` during which we report parked-at-to. */
+  parkIn: number;
+}
+
+/** Resolve the travel window for a leg.
+ *
+ *  The `sigil → miss` leg is special: section-02 (`#definition`) is the
+ *  brandmark's own host, so transit only arms once the visitor has
+ *  scrolled past that section's reading zone. Without this gate the
+ *  centre-based math arms transit while the user is still reading the
+ *  Thoughtform definition, which historically read as in-section
+ *  jiggle. The gate is reversible — once the visitor scrolls back up,
+ *  the brandmark re-locks to the sigil dock immediately.
+ *
+ *  All other legs use centre-to-centre + parkFrac. The `rail → orbit`
+ *  leg further re-bases its span on `practice.top` inside
+ *  `computeBaseTransform`'s sticky special case; that branch uses
+ *  parkFrac from the keyframe table directly and does not call this
+ *  helper. */
+function resolveLegTravelWindow(
+  from: BrandmarkKeyframe,
+  to: BrandmarkKeyframe,
+  ctx: JourneyContext,
+  centres: readonly number[],
+  fromIdx: number
+): LegTravelWindow {
+  if (from.id === "sigil" && to.id === "miss") {
+    const fromSection = ctx.rootEl.querySelector<HTMLElement>(
+      `#${SECTION_ID_BY_KEYFRAME[from.id]}`
+    );
+    const exitY = sectionReadingZoneExitY(fromSection);
+    const endY = centres[fromIdx + 1];
+    if (exitY != null && endY > exitY) {
+      return {
+        startY: exitY,
+        endY,
+        parkOut: 0,
+        parkIn: SIGIL_TO_MISS_PARK_TAIL,
+      };
+    }
+  }
+
+  return {
+    startY: centres[fromIdx],
+    endY: centres[fromIdx + 1],
+    parkOut: from.parkFracOut ?? PARK_FRAC,
+    parkIn: to.parkFracIn ?? PARK_FRAC,
+  };
+}
 
 interface RectLike {
   left: number;
@@ -286,17 +410,23 @@ function rectFromDOM(rect: DOMRect | null): RectLike | null {
  *  live (sticky parents, late layout, admin overlays — all handled
  *  by the closure).
  *
- *  `transitIn.dispersionBump` overrides per arrival:
+ *  Per-arrival overrides (ADR-015 — vector-first model):
  *
- *    - `miss`: default bump (sigil→miss is same-size; atmosphere
- *      bump reads as the brandmark passing through diagnostic
- *      atoms). The visual story here IS the dispersion.
- *    - `substrate`, `rail`, `orbit`: explicit `null`. These arrivals
- *      involve significant rect-size change (miss ~144px →
- *      substrate ~280px+; substrate → rail ~56px; rail → orbit
- *      small). Adding a bump on top of the scale change makes the
- *      cloud read as "exploding outward" rather than "settling into
- *      the next dock". Tier 1 Change 1 is subsumed here.
+ *  | Leg               | dispersionBump            | easing       |
+ *  | ----------------- | ------------------------- | ------------ |
+ *  | sigil → miss      | default `sin(πt) * 0.45`  | TRAVEL_EASE  |
+ *  | miss → substrate  | EXHAUST `sin(πt) * 0.35`  | MORPH_EASE   |
+ *  | substrate → rail  | EXHAUST `sin(πt) * 0.35`  | MORPH_EASE   |
+ *  | rail → orbit      | `sin(πt) * 0.20`          | TRAVEL_EASE  |
+ *
+ *  Same-size translations (sigil → miss, rail → orbit) read as
+ *  "purposeful motion" under TRAVEL_EASE. Size-changing arrivals
+ *  (miss → substrate, substrate → rail) get MORPH_EASE so the rect
+ *  grow / shrink reads as a settle that synchronises with the wider
+ *  shape-blend ramp inside the substrate window. The dispersion
+ *  bump is computed against the RAW segment t (before easing) so
+ *  the atmosphere exhaust peaks at the geometric mid-point of each
+ *  leg regardless of the rect lerp's curve.
  */
 export function buildKeyframes(ctx: JourneyContext): BrandmarkKeyframe[] {
   const { rootEl, intelligenceEl, practiceEl } = ctx;
@@ -342,9 +472,13 @@ export function buildKeyframes(ctx: JourneyContext): BrandmarkKeyframe[] {
       id: "miss",
       resolveRect: () => queryMissBrand()?.getBoundingClientRect() ?? null,
       parked: { density: 0, dispersion: 0 },
-      // sigil → miss: same-size journey; the default bump (0.45 peak)
-      // gives a denser exhaust because the vector barely moves and
-      // the atmosphere IS the visual story of the journey here.
+      // sigil → miss: same-size translation; pair the default
+      // atmosphere bump (0.45 peak) with `TRAVEL_EASE` so the
+      // brandmark visibly leaves section-02 instead of hanging at
+      // the sigil dock under power3.inOut's flat-tail S-curve.
+      transitIn: {
+        easing: TRAVEL_EASE,
+      },
     },
     {
       id: "substrate",
@@ -374,10 +508,15 @@ export function buildKeyframes(ctx: JourneyContext): BrandmarkKeyframe[] {
         shapeKey: "ring",
       },
       transitIn: {
-        // miss → substrate: vector lerps from ~144px to ~280px+;
-        // exhaust bump trails the growth so the substrate emerge
-        // reads as a "gathering" rather than a silent re-park.
+        // miss → substrate: vector lerps from ~144px to ~280px+ AND
+        // morphs from full → ring once parked. Use `MORPH_EASE` so
+        // the rect grow has a slow-settle character that stays
+        // synchronised with the wider shape-blend ramp inside the
+        // substrate window — the two channels read as one elegant
+        // arrival rather than a fast translate followed by a sudden
+        // morph.
         dispersionBump: EXHAUST_DISPERSION_BUMP,
+        easing: MORPH_EASE,
       },
     },
     {
@@ -386,9 +525,11 @@ export function buildKeyframes(ctx: JourneyContext): BrandmarkKeyframe[] {
       parked: { density: 0, dispersion: 0 },
       transitIn: {
         // substrate → rail: vector shrinks from ~280px to ~56px;
-        // exhaust bump trails the shrink so the cloud reads as
-        // "concentrating" toward the rail station.
+        // mirror the inbound-substrate easing so the symmetric
+        // morph-out from ring-topology back to the canonical mark
+        // reads with the same gentle settle as the morph-in.
         dispersionBump: EXHAUST_DISPERSION_BUMP,
+        easing: MORPH_EASE,
       },
     },
     {
@@ -397,9 +538,11 @@ export function buildKeyframes(ctx: JourneyContext): BrandmarkKeyframe[] {
       parked: { density: 0, dispersion: 0 },
       transitIn: {
         // rail → orbit: small lateral move under the sticky-practice
-        // special case. Subtle exhaust bump keeps the motion alive
-        // without overwhelming the small rect.
+        // special case. Use `TRAVEL_EASE` to keep the motion crisp
+        // — there is no shape morph here, so the slower MORPH_EASE
+        // would only add lingering hangtime.
         dispersionBump: (t) => Math.sin(Math.PI * t) * 0.2,
+        easing: TRAVEL_EASE,
       },
     },
   ];
@@ -623,15 +766,20 @@ export function computeBrandmarkTransform(
 }
 
 /** Trapezoid envelope for the brandmark shape blend within the
- *  substrate window. Ramps full → ring over `[0, SHAPE_BLEND_FRAC]`,
- *  holds at ring through the read beat, and ramps ring → full over
+ *  substrate window. Ramps full → ring over `[0, SHAPE_BLEND_FRAC]`
+ *  (smootherstep — gentle start, gentle settle), holds at ring
+ *  through the read beat, and ramps ring → full over
  *  `[1 - SHAPE_BLEND_FRAC, 1]` so the cloud departs the section in
- *  its canonical mark form (ADR-014). */
+ *  its canonical mark form (ADR-014). The smootherstep curve makes
+ *  the morph read as a continuous evolve rather than a linear
+ *  attribute flip. */
 export function substrateShapeBlend(progress: number): number {
   if (progress <= 0) return 0;
   if (progress >= 1) return 0;
-  const blendIn = progress < SHAPE_BLEND_FRAC ? clamp01(progress / SHAPE_BLEND_FRAC) : 1;
-  const blendOut = progress > 1 - SHAPE_BLEND_FRAC ? clamp01((1 - progress) / SHAPE_BLEND_FRAC) : 1;
+  const blendIn =
+    progress < SHAPE_BLEND_FRAC ? MORPH_EASE(clamp01(progress / SHAPE_BLEND_FRAC)) : 1;
+  const blendOut =
+    progress > 1 - SHAPE_BLEND_FRAC ? MORPH_EASE(clamp01((1 - progress) / SHAPE_BLEND_FRAC)) : 1;
   return blendIn * blendOut;
 }
 
@@ -679,23 +827,6 @@ function computeBaseTransform(
 
   const from = keyframes[i];
   const to = keyframes[i + 1];
-  const toRect = to.resolveRect(ctx);
-
-  // Keep section-02 reading locked: sigil -> miss transit should not
-  // arm while the missing-layer dock is still well below the viewport.
-  // Without this gate, the centre-based segment math can enter transit
-  // early (rawT > parkOut) even though the visitor is still scrolling
-  // inside section 02, which reads as in-section jiggle. The gate is
-  // geometric and reversible: once miss approaches the viewport, transit
-  // can proceed in both directions naturally.
-  if (
-    from.id === "sigil" &&
-    to.id === "miss" &&
-    toRect &&
-    toRect.top > window.innerHeight * SIGIL_MISS_TRANSIT_VIEWPORT_GATE
-  ) {
-    return parkedRectTransform(from, ctx);
-  }
 
   // Special case: rail → orbit. Orbit anchor (`.approach__orbit__mark`)
   // is sticky inside `.approach__stage`; its
@@ -703,7 +834,9 @@ function computeBaseTransform(
   // making `c[orbit]` advance with scrollY and `rawT` only
   // approach 1 asymptotically. Re-base the transit on practice.top —
   // a non-sticky reference — so park-at-orbit fires at section entry.
-  let rawT: number;
+  // This branch bypasses `resolveLegTravelWindow` because the span is
+  // dynamic (varies with scrollY) and parkFrac is read directly from
+  // the keyframe table.
   if (to.id === "orbit" && ctx.practiceEl) {
     const practiceTop = ctx.practiceEl.getBoundingClientRect().top;
     if (practiceTop <= 0) {
@@ -711,20 +844,25 @@ function computeBaseTransform(
     }
     const transitEndY = scrollY + practiceTop;
     const orbitSpan = Math.max(1, transitEndY - c[i]);
-    rawT = clamp01((scrollY - c[i]) / orbitSpan);
-  } else {
-    const span = Math.max(1, c[i + 1] - c[i]);
-    rawT = (scrollY - c[i]) / span;
+    const rawT = clamp01((scrollY - c[i]) / orbitSpan);
+    const parkOut = from.parkFracOut ?? PARK_FRAC;
+    const parkIn = to.parkFracIn ?? PARK_FRAC;
+    if (rawT <= parkOut) return parkedRectTransform(from, ctx);
+    if (rawT >= 1 - parkIn) return parkedRectTransform(to, ctx);
+    const tt = (rawT - parkOut) / (1 - parkOut - parkIn);
+    return transitTransform(from, to, ctx, tt);
   }
 
-  // Per-end park-frac (default 0.32 each side).
-  const parkOut = from.parkFracOut ?? PARK_FRAC;
-  const parkIn = to.parkFracIn ?? PARK_FRAC;
-
-  if (rawT <= parkOut) return parkedRectTransform(from, ctx);
-  if (rawT >= 1 - parkIn) return parkedRectTransform(to, ctx);
-
-  // Remap inner [parkOut, 1 - parkIn] to [0, 1] for the easing.
-  const tt = (rawT - parkOut) / (1 - parkOut - parkIn);
+  // All other legs use the unified per-leg travel window. The window
+  // resolver returns either a section-locked unlock range (sigil →
+  // miss) or the centre-to-centre default (miss → substrate, etc.),
+  // along with the parkFrac carving used to split the window into
+  // parked-at-from / transit / parked-at-to phases.
+  const leg = resolveLegTravelWindow(from, to, ctx, c, i);
+  const span = Math.max(1, leg.endY - leg.startY);
+  const rawT = (scrollY - leg.startY) / span;
+  if (rawT <= leg.parkOut) return parkedRectTransform(from, ctx);
+  if (rawT >= 1 - leg.parkIn) return parkedRectTransform(to, ctx);
+  const tt = (rawT - leg.parkOut) / (1 - leg.parkOut - leg.parkIn);
   return transitTransform(from, to, ctx, tt);
 }

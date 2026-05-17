@@ -66,15 +66,21 @@ Each keyframe:
 
 **Keyframe configuration today (ADR-015 — atmosphere-field tuning):**
 
-| Keyframe  | Parked density | Parked dispersion | Rings | `transitIn.dispersionBump`                       |
-| --------- | -------------- | ----------------- | ----- | ------------------------------------------------ |
-| sigil     | 0              | 0                 | off   | (no inbound segment — first keyframe)            |
-| miss      | 0              | 0                 | off   | default `sin(πt) * 0.45` (atmospheric same-size) |
-| substrate | 0.15           | 0.35              | on    | `sin(πt) * 0.35` exhaust                         |
-| rail      | 0              | 0                 | off   | `sin(πt) * 0.35` exhaust                         |
-| orbit     | 0              | 0                 | off   | `sin(πt) * 0.20` exhaust                         |
+| Keyframe  | Parked density | Parked dispersion | Rings | `transitIn.dispersionBump`                       | `transitIn.easing` |
+| --------- | -------------- | ----------------- | ----- | ------------------------------------------------ | ------------------ |
+| sigil     | 0              | 0                 | off   | (no inbound segment — first keyframe)            | —                  |
+| miss      | 0              | 0                 | off   | default `sin(πt) * 0.45` (atmospheric same-size) | `TRAVEL_EASE`      |
+| substrate | 0.15           | 0.35              | on    | `sin(πt) * 0.35` exhaust                         | `MORPH_EASE`       |
+| rail      | 0              | 0                 | off   | `sin(πt) * 0.35` exhaust                         | `MORPH_EASE`       |
+| orbit     | 0              | 0                 | off   | `sin(πt) * 0.20` exhaust                         | `TRAVEL_EASE`      |
 
 The vector actor owns the brandmark shape at every keyframe — these densities tune the ATMOSPHERE FIELD around it. Full-mark stations (sigil / miss / rail / orbit) get density 0 so the vector mark sits alone, crisp, no halo. The substrate hold beat gets ambient dust + cardinal diamonds + hairline guide ring (via `CelestialLinework`) for the celestial-editor read. Transit dispersion bumps are RESTORED on every leg as exhaust around the moving vector — this is the visual story now, no longer a coherence threat as it was under ADR-013.
+
+**Easing semantics:** `TRAVEL_EASE` is `smoothstep(t)` — a gentle S-curve with brisk mid-range velocity, so the brandmark visibly leaves each dock instead of hanging on the flat tail of `power3.inOut`. `MORPH_EASE` is `smootherstep(t)` — even gentler ends, used on size-changing arrivals so the rect grow / shrink reads as an elegant settle. Same-size translations (sigil → miss, rail → orbit) get `TRAVEL_EASE`; size-changing arrivals (miss → substrate, substrate → rail) get `MORPH_EASE`.
+
+**Per-leg travel windows:** `sigil → miss` is gated on `#definition`'s reading-zone exit (the brandmark stays section-locked while the visitor is reading the Thoughtform definition). All other legs use centre-to-centre + parkFrac. The `rail → orbit` leg further re-bases its span on `practice.top` for the sticky special case. Helper: `resolveLegTravelWindow` in [`lib/brandmark/journey.ts`](../../../lib/brandmark/journey.ts).
+
+**Substrate shape-blend:** `SHAPE_BLEND_FRAC = 0.30` (was `0.18` before the speed-ramp pass) so the full → ring morph spans the first 30% of the substrate window, holds through the read beat, and retracts in the last 30%. The blend curve uses `MORPH_EASE` so the morph reads as a continuous evolve rather than a linear flip.
 
 ---
 
