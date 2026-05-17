@@ -1132,7 +1132,20 @@ html[data-quote-active="true"] .tf-brandmark-actor {
    negative margins, then restore the inset padding on themselves so
    content still aligns with the rails/gutter. */
 .station:not(.hero) {
-  background: var(--void);
+  background-color: var(--void);
+  /* Ambient hairline lattice — felt-not-seen lattice that breaks the
+     flat void on every non-hero station. Alpha tuned so the rail and
+     content above always dominate; 80px cell matches the rhythm of
+     content gutters without creating moiré at common viewports. */
+  background-image:
+    linear-gradient(to right, rgba(235, 227, 214, 0.022) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(235, 227, 214, 0.022) 1px, transparent 1px);
+  background-size:
+    80px 80px,
+    80px 80px;
+  background-position:
+    0 0,
+    0 0;
   z-index: 2;
   width: 100vw;
   margin-left: calc(50% - 50vw);
@@ -1152,6 +1165,66 @@ html[data-quote-active="true"] .tf-brandmark-actor {
 #definition {
   position: relative;
   z-index: 2;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   STATION RADIAL ATMOSPHERES — alternating Monopo-style corner washes
+   ═══════════════════════════════════════════════════════════════════
+
+   Mirrors the precedent set by `#about.station::before` (~7210) and
+   `.ilayer::before` (~3232): two low-alpha off-center radials per
+   station, anchored to opposite corners so the eye reads scenery
+   shift rather than centered glow. Alphas held in the 0.025–0.05
+   envelope. Pointer-events disabled; sit beneath content (z-index 0).
+
+   Cadence (alternating): #definition, #continuum, #build, #contact.
+   #ilayer and #about keep their own existing washes. The other
+   stations stay clean to let the page breathe between glows.
+   ═══════════════════════════════════════════════════════════════════ */
+#definition.station::before,
+#continuum.station::before,
+#build.station::before,
+#contact.station::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+#definition.station > *,
+#continuum.station > *,
+#build.station > *,
+#contact.station > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* gold top-left + dawn bottom-right */
+#definition.station::before {
+  background:
+    radial-gradient(ellipse 50% 40% at 15% 25%, rgba(202, 165, 84, 0.05), transparent 65%),
+    radial-gradient(ellipse 60% 50% at 85% 75%, rgba(235, 227, 214, 0.025), transparent 70%);
+}
+
+/* green bottom-left + gold top-right */
+#continuum.station::before {
+  background:
+    radial-gradient(ellipse 55% 45% at 10% 80%, rgba(91, 122, 78, 0.04), transparent 65%),
+    radial-gradient(ellipse 50% 40% at 90% 20%, rgba(202, 165, 84, 0.045), transparent 65%);
+}
+
+/* gold center-left + dawn top-right */
+#build.station::before {
+  background:
+    radial-gradient(ellipse 45% 60% at 5% 50%, rgba(202, 165, 84, 0.05), transparent 70%),
+    radial-gradient(ellipse 55% 45% at 80% 15%, rgba(235, 227, 214, 0.03), transparent 65%);
+}
+
+/* gold top-left + dawn bottom-center */
+#contact.station::before {
+  background:
+    radial-gradient(ellipse 50% 45% at 20% 10%, rgba(202, 165, 84, 0.045), transparent 65%),
+    radial-gradient(ellipse 70% 40% at 50% 90%, rgba(235, 227, 214, 0.03), transparent 70%);
 }
 
 @media (max-width: 640px) {
@@ -2520,7 +2593,7 @@ html[data-quote-active="true"] .tf-brandmark-actor {
 @keyframes haloFlicker {
   0%,
   100% {
-    opacity: 0.3;
+    opacity: 0.5;
   }
   50% {
     opacity: 0.9;
