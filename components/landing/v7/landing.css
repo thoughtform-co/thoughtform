@@ -3348,9 +3348,11 @@ html[data-quote-active="true"] .tf-brandmark-actor {
      - items                  : either a pip-led list (sources / surfaces)
                                 or a top/bottom split (substrate)
 
-   Reveal cascades via per-item `--reveal` thresholds keyed off the
-   section's `--ilayer-progress` CSS variable (mirrored from the
-   journey transform's `ringProgress` channel). */
+   Information is visible as soon as the section reveal lands. The
+   orbit geometry can still animate via `--ilayer-progress`, but the
+   content itself is never gated by substrate-window progress: users
+   should not have to scroll into the next section to read the latest
+   source, substrate, or surface item. */
 .ilayer__inner {
   /* Shared triad sizing (ADR-014 v3 — three equal circles, sized
      for full chamber content visibility).
@@ -3452,14 +3454,7 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   align-items: center;
   gap: 6px;
   margin: 0;
-  /* ADR-014 v4 — front-loaded reveal cascade.
-     Threshold lowered (0.18 -> 0.04) and multiplier bumped (6 -> 8)
-     so the chamber head reaches full opacity by progress ≈ 0.17.
-     Previous schedule did not finish revealing content until past
-     the substrate-window exit, which read as "items appear after
-     I've already scrolled past". */
-  opacity: clamp(0, calc((var(--ilayer-progress, 0) - 0.04) * 8), 1);
-  transition: opacity 320ms ease-out;
+  opacity: 1;
 }
 .ilayer__chamber__num {
   font-family: var(--font-pt-mono);
@@ -3493,9 +3488,7 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   color: var(--dawn-70);
   max-width: 28ch;
   text-wrap: pretty;
-  /* Front-loaded (ADR-014 v4) — full opacity by progress ≈ 0.20. */
-  opacity: clamp(0, calc((var(--ilayer-progress, 0) - 0.07) * 8), 1);
-  transition: opacity 320ms ease-out;
+  opacity: 1;
 }
 
 /* Pip-led item lists for the side chambers. */
@@ -3525,12 +3518,7 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   color: var(--dawn);
   text-align: left;
   white-space: nowrap;
-  /* Front-loaded (ADR-014 v4) — multiplier bumped 5 -> 8 so each
-     item ramps over ~12% of progress; per-item `--reveal` thresholds
-     in the HTML are lowered so the whole list cascades inside the
-     substrate window's first half. */
-  opacity: clamp(0, calc((var(--ilayer-progress, 0) - var(--reveal, 0.1)) * 8), 1);
-  transition: opacity 280ms ease-out;
+  opacity: 1;
 }
 /* Right-chamber items align from the left edge of each grid cell so
    the pip → label rhythm reads consistently across columns. */
@@ -3570,9 +3558,7 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   padding: 6px 4px;
   border-top: 1px dashed rgba(235, 227, 214, 0.16);
   text-align: left;
-  /* Front-loaded (ADR-014 v4) — see `.ilayer__chamber__item` above. */
-  opacity: clamp(0, calc((var(--ilayer-progress, 0) - var(--reveal, 0.15)) * 8), 1);
-  transition: opacity 280ms ease-out;
+  opacity: 1;
 }
 .ilayer__substrate__rules li:last-child {
   border-bottom: 1px dashed rgba(235, 227, 214, 0.16);
@@ -3602,11 +3588,7 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   margin: 10px 0 0;
   padding: 0;
   list-style: none;
-  /* Front-loaded (ADR-014 v4) — chips finish revealing by ≈ 0.40
-     so they appear with the last rule rows, not after the user has
-     scrolled past the section. */
-  opacity: clamp(0, calc((var(--ilayer-progress, 0) - 0.27) * 8), 1);
-  transition: opacity 280ms ease-out;
+  opacity: 1;
 }
 .ilayer__substrate-chips li {
   padding: 4px 10px;
