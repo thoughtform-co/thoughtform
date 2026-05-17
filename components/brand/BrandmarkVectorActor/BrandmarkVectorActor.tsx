@@ -131,7 +131,8 @@ export function BrandmarkVectorActor() {
       //     flips on.
       //   - Post-orbit fade (parkedAt="orbit", opacity ramps 1→0):
       //     symmetric mirror.
-      const fullyParked = parkedAt != null && opacity > PARKED_OPACITY_THRESHOLD;
+      const fullyParked =
+        parkedAt != null && (parkedAt === "sigil" || opacity > PARKED_OPACITY_THRESHOLD);
       const effectiveOpacity = fullyParked ? 0 : opacity;
       if (effectiveOpacity !== lastEffectiveOpacity) {
         shell.style.opacity = `${effectiveOpacity}`;

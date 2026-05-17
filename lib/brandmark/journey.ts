@@ -247,6 +247,7 @@ export const HIDDEN_TRANSFORM: BrandmarkTransform = {
  *  side orbits and labels have time to settle around the ring before
  *  the cloud begins to un-morph back to its full mark for departure. */
 const SHAPE_BLEND_FRAC = 0.18;
+const SIGIL_MISS_TRANSIT_VIEWPORT_GATE = 0.82;
 
 // ────────────────────────────────────────────────────────────────────
 // Math helpers
@@ -678,6 +679,23 @@ function computeBaseTransform(
 
   const from = keyframes[i];
   const to = keyframes[i + 1];
+  const toRect = to.resolveRect(ctx);
+
+  // Keep section-02 reading locked: sigil -> miss transit should not
+  // arm while the missing-layer dock is still well below the viewport.
+  // Without this gate, the centre-based segment math can enter transit
+  // early (rawT > parkOut) even though the visitor is still scrolling
+  // inside section 02, which reads as in-section jiggle. The gate is
+  // geometric and reversible: once miss approaches the viewport, transit
+  // can proceed in both directions naturally.
+  if (
+    from.id === "sigil" &&
+    to.id === "miss" &&
+    toRect &&
+    toRect.top > window.innerHeight * SIGIL_MISS_TRANSIT_VIEWPORT_GATE
+  ) {
+    return parkedRectTransform(from, ctx);
+  }
 
   // Special case: rail → orbit. Orbit anchor (`.approach__orbit__mark`)
   // is sticky inside `.approach__stage`; its

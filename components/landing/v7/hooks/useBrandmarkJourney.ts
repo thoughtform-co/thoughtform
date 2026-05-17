@@ -140,8 +140,10 @@ export function useBrandmarkJourney(
 
     const applyParticleMode = (transform: BrandmarkTransform) => {
       if (!particleModeOK) return;
+      const isSigilParked = transform.parkedAt === "sigil";
       const fullyParked =
-        transform.parkedAt != null && transform.opacity > PARKED_OPACITY_THRESHOLD;
+        transform.parkedAt != null &&
+        (isSigilParked || transform.opacity > PARKED_OPACITY_THRESHOLD);
       setBrandParkedAt(fullyParked ? transform.parkedAt : null);
       setBrandShapeBlend(transform.shapeBlend);
     };
