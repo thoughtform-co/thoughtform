@@ -213,11 +213,52 @@ export function useBrandmarkJourney(
       rootEl.style.setProperty("--orbit-style-morph", rounded.toFixed(3));
     };
 
-    const easeOrbitStyleMorph = (geometry: number): number => {
-      if (geometry <= 0.15) return 0;
-      if (geometry >= 0.95) return 1;
-      const t = (geometry - 0.15) / 0.8;
-      return t * t * (3 - 2 * t);
+    const smoothstep = (t: number, start: number, end: number): number => {
+      if (end <= start) return t >= end ? 1 : 0;
+      if (t <= start) return 0;
+      if (t >= end) return 1;
+      const u = (t - start) / (end - start);
+      return u * u * (3 - 2 * u);
+    };
+
+    const easeOrbitStyleMorph = (geometry: number): number => smoothstep(geometry, 0.15, 0.95);
+
+    // === Halo -> orbit handoff scalars ===
+    // Phased curves derived from the same geometry progress that drives
+    // `--orbit-morph`. They split the conversion window into a halo
+    // collapse phase and an orbit emergence phase so only one system
+    // is visually dominant at a time:
+    //
+    //   geometry 0.00 .. 0.55  -> halo visible, particles drifting onto
+    //                             4 elliptical lanes
+    //   geometry 0.45 .. 0.95  -> orbit strokes emerge (pre-handoff)
+    //   geometry 0.55 .. 1.00  -> anchor pips acquire
+    //   geometry 0.65 .. 1.00  -> label pills resolve in
+    //
+    // The halo geometry morph itself runs the full 0..1 leg so by the
+    // time it fades out its dots are already aligned with the ellipses
+    // the orbit strokes are drawing on. Visitors below `geometry < 0.45`
+    // see only the halo; above `geometry > 0.6` only the orbit system.
+    const writeNumberVar = (() => {
+      const last = new Map<string, number>();
+      return (name: string, value: number) => {
+        const clamped = value < 0 ? 0 : value > 1 ? 1 : value;
+        const rounded = Math.round(clamped * 1000) / 1000;
+        if (Math.abs(rounded - (last.get(name) ?? -1)) < 0.001) return;
+        last.set(name, rounded);
+        rootEl.style.setProperty(name, rounded.toFixed(3));
+      };
+    })();
+
+    const applyHandoffMorph = (geometry: number) => {
+      const haloFade = 1 - smoothstep(geometry, 0.0, 0.55);
+      const missOrbitEmerge = smoothstep(geometry, 0.45, 0.95);
+      const missAnchorEmerge = smoothstep(geometry, 0.55, 1.0);
+      const missLabelEmerge = smoothstep(geometry, 0.65, 1.0);
+      writeNumberVar("--halo-fade", haloFade);
+      writeNumberVar("--miss-orbit-emerge", missOrbitEmerge);
+      writeNumberVar("--miss-anchor-emerge", missAnchorEmerge);
+      writeNumberVar("--miss-label-emerge", missLabelEmerge);
     };
 
     const applyOrbitMorph = (transform: BrandmarkTransform) => {
@@ -226,11 +267,13 @@ export function useBrandmarkJourney(
       if (parked === "sigil") {
         setOrbitMorph(0);
         setOrbitStyleMorph(0);
+        applyHandoffMorph(0);
         return;
       }
       if (parked === "miss" || parked === "substrate" || parked === "rail" || parked === "orbit") {
         setOrbitMorph(1);
         setOrbitStyleMorph(1);
+        applyHandoffMorph(1);
         return;
       }
       // In transit. Read sigil + miss centres and interpolate against
@@ -246,16 +289,19 @@ export function useBrandmarkJourney(
       if (scrollY <= sigilC) {
         setOrbitMorph(0);
         setOrbitStyleMorph(0);
+        applyHandoffMorph(0);
         return;
       }
       if (scrollY >= missC) {
         setOrbitMorph(1);
         setOrbitStyleMorph(1);
+        applyHandoffMorph(1);
         return;
       }
       const geometry = (scrollY - sigilC) / (missC - sigilC);
       setOrbitMorph(geometry);
       setOrbitStyleMorph(easeOrbitStyleMorph(geometry));
+      applyHandoffMorph(geometry);
     };
 
     const applyParticleMode = (transform: BrandmarkTransform) => {
@@ -424,6 +470,10 @@ export function useBrandmarkJourney(
       document.documentElement.style.removeProperty("--brandmark-vector-opacity");
       rootEl.style.removeProperty("--orbit-morph");
       rootEl.style.removeProperty("--orbit-style-morph");
+      rootEl.style.removeProperty("--halo-fade");
+      rootEl.style.removeProperty("--miss-orbit-emerge");
+      rootEl.style.removeProperty("--miss-anchor-emerge");
+      rootEl.style.removeProperty("--miss-label-emerge");
       const approach =
         rootEl.querySelector<HTMLElement>("#approach") ??
         rootEl.querySelector<HTMLElement>(".approach");

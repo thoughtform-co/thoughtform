@@ -2659,6 +2659,14 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   .sigil__ring {
     transition: none;
   }
+  /* Pin the halo to its initial cloud state for visitors who opted
+     out of motion. The scroll-driven cartesian morph would otherwise
+     scrub the dots toward the orbit lanes as they scroll past
+     #definition; reduced-motion users see only the static cloud. */
+  .sigil__halo {
+    --halo-morph: 0;
+    --halo-fade: 1;
+  }
 }
 .sigil__halo {
   position: absolute;
@@ -2666,6 +2674,18 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   width: 100%;
   height: 100%;
 }
+
+/* Halo dots collapse onto the four diagnostic orbits as the visitor
+   scrolls toward #missing-layer. Each particle starts at its inline
+   `--a` / `--r` (rotation + radius) and lerps in CARTESIAN space
+   toward a per-particle `--halo-target-x` / `--halo-target-y` that
+   lands on one of the four MISS_ORBITS, scaled to fit inside the
+   680x680 halo box. Opacity fades to zero across the same morph
+   window so the halo and the missing-layer orbit system are never
+   both visible at full strength (Plan: continuous bridge,
+   one-to-one). The cartesian start is derived analytically from the
+   inline angle/radius via CSS `sin()` / `cos()` so the morph reduces
+   to a single `transform: translate()` regardless of orientation. */
 .sigil__halo .p {
   position: absolute;
   left: 50%;
@@ -2673,17 +2693,26 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   width: 2px;
   height: 2px;
   background: var(--gold);
-  transform: translate(-50%, -50%) rotate(var(--a)) translateY(calc(var(--r) * -1))
-    rotate(calc(var(--a) * -1));
+  --halo-start-x: calc(sin(var(--a, 0deg)) * var(--r, 0px));
+  --halo-start-y: calc(cos(var(--a, 0deg)) * var(--r, 0px) * -1);
+  --halo-target-x: var(--halo-start-x);
+  --halo-target-y: var(--halo-start-y);
+  --halo-morph: var(--orbit-morph, 0);
+  --halo-x: calc(
+    var(--halo-start-x) + (var(--halo-target-x) - var(--halo-start-x)) * var(--halo-morph)
+  );
+  --halo-y: calc(
+    var(--halo-start-y) + (var(--halo-target-y) - var(--halo-start-y)) * var(--halo-morph)
+  );
+  transform: translate(calc(-50% + var(--halo-x)), calc(-50% + var(--halo-y)));
   box-shadow: 0 0 6px rgba(202, 165, 84, 0.4);
-  opacity: 0.75;
+  opacity: calc(0.75 * var(--halo-fade, 1));
   animation: haloFlicker 4s ease-in-out infinite;
 }
 .sigil__halo .p:nth-child(2n) {
   animation-delay: 0.6s;
   background: var(--dawn-70);
   box-shadow: none;
-  opacity: 0.5;
 }
 .sigil__halo .p:nth-child(3n) {
   animation-delay: 1.4s;
@@ -2693,13 +2722,67 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   width: 3px;
   height: 3px;
 }
+
+/* Per-particle morph targets — each halo dot collapses onto one of
+   the four diagnostic orbits as `--halo-morph` ramps 0 -> 1, scaled
+   to fit inside the halo box (50% of MISS_ORBITS canonical units).
+   Source geometry: `lib/celestial/orbits.ts MISS_ORBITS`; the
+   numbers below are `pointOnEllipse(rx*0.5, ry*0.5, rotateDeg, psi)`
+   per particle so the cloud forms a faithful miniature of the
+   missing-layer constellation just before the orbits emerge. */
+.sigil__halo .p:nth-child(1) {
+  --halo-target-x: 178px;
+  --halo-target-y: 51px;
+}
+.sigil__halo .p:nth-child(2) {
+  --halo-target-x: 124px;
+  --halo-target-y: 44px;
+}
+.sigil__halo .p:nth-child(3) {
+  --halo-target-x: -52px;
+  --halo-target-y: 113px;
+}
+.sigil__halo .p:nth-child(4) {
+  --halo-target-x: -129px;
+  --halo-target-y: -81px;
+}
+.sigil__halo .p:nth-child(5) {
+  --halo-target-x: -178px;
+  --halo-target-y: -51px;
+}
+.sigil__halo .p:nth-child(6) {
+  --halo-target-x: -124px;
+  --halo-target-y: -44px;
+}
+.sigil__halo .p:nth-child(7) {
+  --halo-target-x: 52px;
+  --halo-target-y: -113px;
+}
+.sigil__halo .p:nth-child(8) {
+  --halo-target-x: 129px;
+  --halo-target-y: 81px;
+}
+.sigil__halo .p:nth-child(9) {
+  --halo-target-x: 31px;
+  --halo-target-y: -108px;
+}
+.sigil__halo .p:nth-child(10) {
+  --halo-target-x: 195px;
+  --halo-target-y: -63px;
+}
+
+/* Flicker keyframe values are multiplied by `--halo-fade` so the
+   per-frame fade scalar from useBrandmarkJourney drives the cloud
+   opacity envelope without fighting the existing flicker pattern.
+   At `--halo-fade: 1` the keyframe oscillates 0.5 .. 0.9 (original
+   intent); at 0 the entire cloud disappears regardless of phase. */
 @keyframes haloFlicker {
   0%,
   100% {
-    opacity: 0.5;
+    opacity: calc(0.5 * var(--halo-fade, 1));
   }
   50% {
-    opacity: 0.9;
+    opacity: calc(0.9 * var(--halo-fade, 1));
   }
 }
 .sigil__mark {
@@ -3227,7 +3310,7 @@ html[data-quote-active="true"] .tf-brandmark-actor {
    Two particles read in dawn, two in gold; speeds and directions
    vary to break uniformity (CW via sweep-flag=1, CCW via 0). */
 .miss__particle {
-  opacity: 0;
+  opacity: calc(0.9 * var(--miss-orbit-emerge, 0));
   offset-rotate: 0deg;
 }
 .miss__particle--01 {
@@ -3316,19 +3399,21 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   transform-box: fill-box;
 }
 
-/* Reveal: each orbit draws in from one endpoint outward via
-   `pathLength=1` + `stroke-dashoffset 1 → 0`. The frame ring + the
-   compass + the tethers + the anchors all fade in via the wrapper's
-   opacity ramp (no per-element stagger needed — there are not four
-   orbits anymore, so the staggered draw-in that used to differentiate
-   them is no longer necessary). */
-.miss__inner:not(.is-in) .miss__orbit {
-  stroke-dashoffset: 1;
-  stroke-opacity: 0;
+/* Reveal — scroll-driven from the same morph scalar that drives the
+   #definition halo collapse. As `--miss-orbit-emerge` ramps 0 -> 1
+   the stroke draws in (dashoffset 1 -> 0, stroke-opacity 0 -> 1)
+   locked to scroll position; `--miss-anchor-emerge` and
+   `--miss-label-emerge` then bring the pips and pills in on slightly
+   delayed curves so the system reads as a phased emergence
+   (structure first, attachments next, copy last) without ever
+   overlapping the dimming halo cloud above #missing-layer. */
+.miss__orbit {
+  stroke-dashoffset: calc(1 - var(--miss-orbit-emerge, 0));
+  stroke-opacity: var(--miss-orbit-emerge, 0);
 }
-.miss__inner:not(.is-in) .miss__anchor {
-  opacity: 0;
-  transform: scale(0.4);
+.miss__anchor {
+  opacity: calc(0.95 * var(--miss-anchor-emerge, 0));
+  transform: scale(calc(0.4 + 0.6 * var(--miss-anchor-emerge, 0)));
 }
 .miss__inner:not(.is-in) .miss__brand-halo {
   opacity: 0;
@@ -3352,84 +3437,23 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   }
 }
 
-@keyframes miss-orbit-draw {
-  from {
-    stroke-dashoffset: 1;
-    stroke-opacity: 0;
-  }
-  to {
-    stroke-dashoffset: 0;
-    stroke-opacity: 1;
-  }
+/* Particles: continuous orbital traverse runs from page load with
+   speeds varied per orbit so the system never reads as four
+   particles in lockstep. Visibility is gated by the same scroll
+   scalar as the orbit strokes (`--miss-orbit-emerge`) so the dot
+   appears with its host arc and never paints over the still-visible
+   halo cloud above #missing-layer. */
+.miss__particle--01 {
+  animation: miss-particle-orbit 70s linear infinite;
 }
-@keyframes miss-anchor-acquire {
-  from {
-    opacity: 0;
-    transform: scale(0.4);
-  }
-  to {
-    opacity: 0.85;
-    transform: scale(1);
-  }
+.miss__particle--02 {
+  animation: miss-particle-orbit 90s linear infinite;
 }
-
-.miss__inner.is-in .miss__orbit--01 {
-  animation: miss-orbit-draw 1200ms cubic-bezier(0.16, 1, 0.3, 1) 120ms both;
+.miss__particle--03 {
+  animation: miss-particle-orbit 80s linear infinite;
 }
-.miss__inner.is-in .miss__orbit--02 {
-  animation: miss-orbit-draw 1200ms cubic-bezier(0.16, 1, 0.3, 1) 240ms both;
-}
-.miss__inner.is-in .miss__orbit--03 {
-  animation: miss-orbit-draw 1200ms cubic-bezier(0.16, 1, 0.3, 1) 360ms both;
-}
-.miss__inner.is-in .miss__orbit--04 {
-  animation: miss-orbit-draw 1200ms cubic-bezier(0.16, 1, 0.3, 1) 480ms both;
-}
-.miss__inner.is-in .miss__anchor--01 {
-  animation: miss-anchor-acquire 420ms cubic-bezier(0.16, 1, 0.3, 1) 1120ms both;
-}
-.miss__inner.is-in .miss__anchor--02 {
-  animation: miss-anchor-acquire 420ms cubic-bezier(0.16, 1, 0.3, 1) 1240ms both;
-}
-.miss__inner.is-in .miss__anchor--03 {
-  animation: miss-anchor-acquire 420ms cubic-bezier(0.16, 1, 0.3, 1) 1360ms both;
-}
-.miss__inner.is-in .miss__anchor--04 {
-  animation: miss-anchor-acquire 420ms cubic-bezier(0.16, 1, 0.3, 1) 1480ms both;
-}
-
-/* Particles: fade in after their host orbit has substantially drawn,
-   then run the continuous orbital traverse forever (linear). Two
-   animations composed via comma — the fade-in completes, the orbit
-   keeps running. Speeds vary per orbit so the system doesn't read as
-   four particles in lockstep. */
-.miss__inner.is-in .miss__particle--01 {
-  animation:
-    miss-particle-fade 600ms ease-out 1400ms both,
-    miss-particle-orbit 70s linear 1400ms infinite;
-}
-.miss__inner.is-in .miss__particle--02 {
-  animation:
-    miss-particle-fade 600ms ease-out 1520ms both,
-    miss-particle-orbit 90s linear 1520ms infinite;
-}
-.miss__inner.is-in .miss__particle--03 {
-  animation:
-    miss-particle-fade 600ms ease-out 1640ms both,
-    miss-particle-orbit 80s linear 1640ms infinite;
-}
-.miss__inner.is-in .miss__particle--04 {
-  animation:
-    miss-particle-fade 600ms ease-out 1760ms both,
-    miss-particle-orbit 60s linear 1760ms infinite;
-}
-@keyframes miss-particle-fade {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 0.9;
-  }
+.miss__particle--04 {
+  animation: miss-particle-orbit 60s linear infinite;
 }
 
 /* Hover: brightens the orbit + anchor for the focused label,
@@ -3601,22 +3625,15 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   }
 }
 
-.miss__inner:not(.is-in) .miss__label {
-  opacity: 0;
-  filter: blur(2px);
-}
-
-.miss__inner.is-in .miss__label--01 {
-  animation: miss-label-acquire 720ms cubic-bezier(0.16, 1, 0.3, 1) 520ms both;
-}
-.miss__inner.is-in .miss__label--02 {
-  animation: miss-label-acquire 720ms cubic-bezier(0.16, 1, 0.3, 1) 640ms both;
-}
-.miss__inner.is-in .miss__label--03 {
-  animation: miss-label-acquire 720ms cubic-bezier(0.16, 1, 0.3, 1) 760ms both;
-}
-.miss__inner.is-in .miss__label--04 {
-  animation: miss-label-acquire 720ms cubic-bezier(0.16, 1, 0.3, 1) 880ms both;
+/* Labels resolve in last via the morph scalar so the constellation
+   reads structure-first (orbits) -> attachments (anchors) -> copy
+   (pills). Filter-blur falls from 2px to 0 along the same scalar so
+   the labels feel like they cohere into focus rather than appearing
+   abruptly. The transform stays at the static `translate(-50%, -50%)`
+   of the base rule; no per-label keyframe or stagger. */
+.miss__label {
+  opacity: var(--miss-label-emerge, 0);
+  filter: blur(calc(2px * (1 - var(--miss-label-emerge, 0))));
 }
 
 /* Reveal — wrapper itself only fades opacity 0→1 (so its void shield
@@ -3648,47 +3665,32 @@ html[data-quote-active="true"] .tf-brandmark-actor {
     opacity: 1;
     transition: none;
   }
-  .miss__inner .miss__orbit--01,
-  .miss__inner .miss__orbit--02,
-  .miss__inner .miss__orbit--03,
-  .miss__inner .miss__orbit--04,
-  .miss__inner .miss__anchor--01,
-  .miss__inner .miss__anchor--02,
-  .miss__inner .miss__anchor--03,
-  .miss__inner .miss__anchor--04,
+  /* Pin the morph-driven emerge scalars to 1 so visitors who opted
+     out of motion see the diagnostic constellation in its final
+     state without depending on the scroll-driven JS scalar. The
+     emerge vars cascade from `.miss__inner` to every descendant
+     (orbits, anchors, labels, particles), overriding the
+     `var(--orbit-morph, 0)` defaults in the base rules. */
+  .miss__inner {
+    --miss-orbit-emerge: 1;
+    --miss-anchor-emerge: 1;
+    --miss-label-emerge: 1;
+  }
   .miss__inner .miss__particle--01,
   .miss__inner .miss__particle--02,
   .miss__inner .miss__particle--03,
   .miss__inner .miss__particle--04,
   .miss__inner .miss__brand-halo,
-  .miss__inner .miss__brand-halo--inner,
-  .miss__inner .miss__label--01,
-  .miss__inner .miss__label--02,
-  .miss__inner .miss__label--03,
-  .miss__inner .miss__label--04 {
+  .miss__inner .miss__brand-halo--inner {
     animation: none;
-  }
-  .miss__inner:not(.is-in) .miss__orbit {
-    stroke-dashoffset: 0;
-    stroke-opacity: 1;
-  }
-  .miss__inner:not(.is-in) .miss__anchor {
-    opacity: 0.85;
-    transform: none;
   }
   .miss__inner:not(.is-in) .miss__brand-halo {
     opacity: 1;
   }
   /* Particles: park at their starting position on the orbit; no
      continuous traversal for visitors who opted out of motion. */
-  .miss__inner:not(.is-in) .miss__particle,
   .miss__particle {
-    opacity: 0.9;
     offset-distance: 0%;
-  }
-  .miss__inner:not(.is-in) .miss__label {
-    opacity: 1;
-    filter: none;
   }
   /* Native dock: instant swap on park, no fade. Stays hidden until the
      choreography sets `data-brand-on-missing="parked"`. */

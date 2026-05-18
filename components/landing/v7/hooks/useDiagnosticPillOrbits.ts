@@ -28,6 +28,15 @@ import { useEffect } from "react";
  * clockwise (01 + 03), two counter-clockwise (02 + 04) — direction is
  * a property of the orbit, not a global animation parameter.
  *
+ * Drift is gated by the sigil -> miss morph scalar. Until the orbit
+ * system is essentially fully formed (`--orbit-morph >= 0.99`) the
+ * labels + anchors are pinned to their SSR-rendered positions so the
+ * morph can resolve them in (opacity / blur / anchor scale) without
+ * the drift simultaneously sliding them off-anchor. Once the gate is
+ * crossed the drift accumulates phase only while it remains crossed,
+ * so scrolling back up to #definition pauses the celestial motion
+ * cleanly and a return visit picks it up again.
+ *
  * Respects `prefers-reduced-motion`: the hook simply does not start
  * the rAF loop, so labels + anchors stay at their SSR-rendered
  * starting positions for visitors who opted out of motion.
@@ -52,6 +61,12 @@ const ORBITS: readonly PillOrbit[] = [
 
 const VIEWBOX_W = 1100;
 const VIEWBOX_H = 650;
+// Threshold on `--orbit-morph` (set inline by useBrandmarkJourney)
+// past which the drift loop is allowed to advance phase. Below this
+// the morph is still resolving in the orbits / anchors / labels via
+// CSS scalars; running drift in that window would slide pills off
+// their emerging anchors and read as two competing motions.
+const DRIFT_GATE = 0.99;
 
 export function useDiagnosticPillOrbits(): void {
   useEffect(() => {
@@ -68,14 +83,85 @@ export function useDiagnosticPillOrbits(): void {
     );
     if (labels.every((l) => l == null) || anchors.every((a) => a == null)) return;
 
+    // Capture the SSR-rendered positions BEFORE any rAF tick can
+    // overwrite them so the gate-down restore path can reliably pin
+    // labels / anchors back to their starting frame.
+    const ssrLabelStyle = labels.map((l) =>
+      l
+        ? {
+            x: l.style.getPropertyValue("--x-pct").trim(),
+            y: l.style.getPropertyValue("--y-pct").trim(),
+          }
+        : null
+    );
+    const ssrAnchorAttr = anchors.map((a) =>
+      a
+        ? {
+            cx: a.getAttribute("cx") ?? "0",
+            cy: a.getAttribute("cy") ?? "0",
+          }
+        : null
+    );
+
+    // Locate the LandingPage root (where useBrandmarkJourney writes
+    // `--orbit-morph` inline). Reading from `.style.getPropertyValue`
+    // is materially cheaper than `getComputedStyle` per frame.
+    const rootEl: HTMLElement =
+      labels.find((l): l is HTMLElement => l != null)?.closest<HTMLElement>("[data-theme]") ??
+      document.documentElement;
+    const readOrbitMorph = (): number => {
+      const v = rootEl.style.getPropertyValue("--orbit-morph").trim();
+      if (!v) return 0;
+      const n = Number.parseFloat(v);
+      return Number.isFinite(n) ? n : 0;
+    };
+
+    const restoreSsr = () => {
+      for (let i = 0; i < ORBITS.length; i += 1) {
+        const label = labels[i];
+        const ssr = ssrLabelStyle[i];
+        if (label && ssr) {
+          if (ssr.x) label.style.setProperty("--x-pct", ssr.x);
+          if (ssr.y) label.style.setProperty("--y-pct", ssr.y);
+        }
+        const anchor = anchors[i];
+        const ssrA = ssrAnchorAttr[i];
+        if (anchor && ssrA) {
+          anchor.setAttribute("cx", ssrA.cx);
+          anchor.setAttribute("cy", ssrA.cy);
+        }
+      }
+    };
+
     let raf = 0;
-    const start = performance.now();
+    let driftActive = false;
+    let driftPhaseSec = 0;
+    let lastTickMs = 0;
 
     const tick = (now: number) => {
-      const elapsed = (now - start) / 1000;
+      const morph = readOrbitMorph();
+      if (morph < DRIFT_GATE) {
+        if (driftActive) {
+          restoreSsr();
+          driftActive = false;
+        }
+        lastTickMs = now;
+        raf = requestAnimationFrame(tick);
+        return;
+      }
+      // Drift active. Accumulate phase only when the gate stays
+      // crossed so visitors who scroll back up don't lose their
+      // celestial-time progress on next entry.
+      if (!driftActive) {
+        driftActive = true;
+        lastTickMs = now;
+      }
+      driftPhaseSec += (now - lastTickMs) / 1000;
+      lastTickMs = now;
+
       for (let i = 0; i < ORBITS.length; i += 1) {
         const O = ORBITS[i];
-        const cycleDeg = (elapsed / O.periodSec) * 360 * (O.reverse ? -1 : 1);
+        const cycleDeg = (driftPhaseSec / O.periodSec) * 360 * (O.reverse ? -1 : 1);
         const psi = ((O.startPsiDeg + cycleDeg) * Math.PI) / 180;
         const rot = (O.rotateDeg * Math.PI) / 180;
         const lx = O.rx * Math.cos(psi);
