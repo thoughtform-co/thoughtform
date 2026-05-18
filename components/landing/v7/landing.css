@@ -2893,7 +2893,13 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   grid-template-columns: 1fr;
   grid-template-rows: 1fr;
   text-align: left;
-  min-height: min(640px, calc(100svh - 320px));
+  /* Min-height matches the section's available content area
+     (`100svh - 360px` reserves the 220/140 padding) capped at
+     560px on tall viewports so the cell doesn't push past what
+     the height-bound `.miss__system` can fill. Keeps the head +
+     system relationship stable across viewport heights without
+     forcing overrun. */
+  min-height: min(560px, calc(100svh - 360px));
 }
 
 /* Header: eyebrow → title → one-line bridge. Previously a two-column
@@ -2990,12 +2996,23 @@ html[data-quote-active="true"] .tf-brandmark-actor {
    arcs at every viewport width. Lives in the same grid cell as
    `.miss__head` and centres vertically inside it — that puts the
    brandmark slot (50% / 50% of the system) at the section's
-   vertical centre while the heading floats at the cell's top. The
-   wider max-width (1180px vs the old 900) gives the long horizon
-   orbit room to extend out past the labelled pills. */
+   vertical centre while the heading floats at the cell's top.
+
+   Width is bounded by THREE limits so the orbital field never
+   overflows the section vertically (which would clip orbits at
+   top/bottom edges under `.miss { overflow: hidden }`):
+     - max 1180px on wide displays (gives the long horizon orbit
+       room to extend out past the labelled pills),
+     - 100% so the system never escapes the .miss__inner box,
+     - `(100svh - 360px) * 11 / 6.5` which converts the section's
+       available content height (svh minus the 220/140 padding)
+       into the matching width via the 1100/650 aspect-ratio. On a
+       1440x900 desktop the height-bound caps width at ~913px so
+       the system height exactly fills the 540px content area;
+       on a 1920x1080 ultrawide the full 1180px max kicks in. */
 .miss__system {
   position: relative;
-  width: min(1180px, 100%);
+  width: min(1180px, 100%, calc((100svh - 360px) * 11 / 6.5));
   aspect-ratio: 1100 / 650;
   margin: 0 auto;
   grid-column: 1;
