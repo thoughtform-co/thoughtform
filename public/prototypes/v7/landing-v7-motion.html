@@ -1243,6 +1243,21 @@ body { color: var(--dawn-70); }
   0%, 100% { opacity: 0.9; transform: scale(1); }
   50% { opacity: 1; transform: scale(1.015); }
 }
+
+/* Sigil → miss orbital morph. See landing.css for the canonical
+   commentary; this mirror keeps the prototype HTML self-contained. */
+.sigil__ring {
+  transform-origin: 0 0;
+  transform:
+    rotate(calc(var(--target-r, 0deg) * var(--orbit-morph, 0)))
+    scaleX(calc(1 + (var(--target-sx, 1) - 1) * var(--orbit-morph, 0)))
+    scaleY(calc(1 + (var(--target-sy, 1) - 1) * var(--orbit-morph, 0)));
+  transition: transform 120ms linear;
+}
+@media (prefers-reduced-motion: reduce) {
+  .sigil__orbits { --orbit-morph: 1; }
+  .sigil__ring { transition: none; }
+}
 .sigil__halo {
   position: absolute; inset: 0;
   width: 100%; height: 100%;
@@ -4311,11 +4326,21 @@ html { scroll-behavior: smooth; }
             <g fill="none" stroke-width="0.6">
               <!-- Outer guide ring — thinned so the brandmark stays
                    the dominant centre and the phase rings read as the
-                   instrument structure. -->
-              <circle r="150" stroke="var(--dawn-15)" stroke-dasharray="1 5" stroke-width="0.5"/>
-              <circle r="126" stroke="var(--dawn-15)"/>
-              <circle r="104" stroke="var(--gold)" stroke-opacity="0.32" stroke-dasharray="2 7"/>
-              <circle r="78"  stroke="var(--gold)" stroke-opacity="0.45" stroke-dasharray="1 3"/>
+                   instrument structure.
+
+                   Each ring carries a `--target-sx`, `--target-sy`, and
+                   `--target-r` matching one of the four diagnostic
+                   orbits (see lib/celestial/orbits.ts SIGIL_RING_MORPHS).
+                   As the visitor scrolls toward #missing-layer, the
+                   `--orbit-morph` CSS variable on the landing root ramps
+                   0 → 1 and the .sigil__ring transform rule interpolates
+                   each circle from concentric identity to the orbit's
+                   eccentric + rotated target. The compass becomes the
+                   lived celestial system in motion. -->
+              <circle r="150" class="sigil__ring sigil__ring--01" style="--target-sx:1.259;--target-sy:0.741;--target-r:18deg;"  stroke="var(--dawn-15)" stroke-dasharray="1 5" stroke-width="0.5"/>
+              <circle r="126" class="sigil__ring sigil__ring--02" style="--target-sx:1.277;--target-sy:0.723;--target-r:-12deg;" stroke="var(--dawn-15)"/>
+              <circle r="104" class="sigil__ring sigil__ring--03" style="--target-sx:1.273;--target-sy:0.727;--target-r:-22deg;" stroke="var(--gold)" stroke-opacity="0.32" stroke-dasharray="2 7"/>
+              <circle r="78"  class="sigil__ring sigil__ring--04" style="--target-sx:1.256;--target-sy:0.744;--target-r:22deg;"  stroke="var(--gold)" stroke-opacity="0.45" stroke-dasharray="1 3"/>
               <g style="transform-origin:0 0; animation: rotate 180s linear infinite;">
                 <circle r="104" fill="none" stroke="transparent"/>
                 <circle cx="104" cy="0" r="2.5" fill="var(--gold)" opacity="0.9"/>
@@ -4413,20 +4438,23 @@ html { scroll-behavior: smooth; }
     </div>
   </section>
 
-  <!-- ═══════════ 03 MISSING LAYER — diagnostic 4-card grid ═══════════
-       Inspired by the AI operator case page's `.aiop-diagnosis` section.
-       Names the executive-level problem the rest of the page solves: the
-       embedded layer between how teams work and what AI does is missing.
-       Brandmark sits in the centre dead-zone of the 2x2 card grid as a
-       new dock on the choreography (sigil → miss → backdrop → rail →
-       orbit → hidden). Native source-owned via `.miss__brand-slot img`
-       while parked, mirroring the rail brand pattern. =================== -->
+  <!-- ═══════════ 03 MISSING LAYER — orbital constellation ═══════════
+       The brandmark is the missing intelligence layer at the centre.
+       Four diagnostic concerns orbit around it on asymmetric, inclined
+       ellipses (canonical geometry: lib/celestial/orbits.ts). Real
+       orbits aren't perfect circles — the asymmetry signals that the
+       four diagnoses aren't symmetric facets of one thing; they're
+       distinct manifestations of one underlying gap.
 
-  <!-- ═══════════ 03 MISSING LAYER ═══════════
-       Diagnostic instrument; flows naturally as a normal station. The
-       brandmark choreography handles the miss → substrate handoff over
-       the natural scroll distance between this section and
-       #intelligence-layer (ADR-012 v6 retired the sticky-cover stage). -->
+       Replaces the legacy 2x2 card grid + 4 straight rays. The section
+       2 sigil's concentric compass rings deform into these same orbits
+       via `--orbit-morph` (0 at #definition entry, 1 at #missing-layer
+       park), wired by useBrandmarkJourney; the compass becomes the
+       lived celestial system in motion as the visitor scrolls.
+
+       Native source-owned brandmark via `.miss__brand-slot img` while
+       parked, mirroring the rail brand pattern. =========================
+  -->
 
   <section class="station station--centered miss" id="missing-layer" data-station="missingLayer" data-screen-label="03 Missing layer">
     <div class="station__idx">Diagnostic</div>
@@ -4439,117 +4467,65 @@ html { scroll-behavior: smooth; }
         <p class="miss__bridge">Same pattern, four ways.</p>
       </header>
 
-      <!-- Diagnostic instrument: 4 cards as constellation points around
-           the brandmark centre. Cards are hairline-bordered with corner
-           registration marks (Thoughtform instrument grammar); SVG
-           connector lines draw from the centre brandmark out to each
-           card so the four diagnoses read as one constellation around
-           the missing layer at the centre. No lane colours — gold +
-           dawn only, brand-aligned.
+      <!-- Orbital constellation: 4 elliptical orbits + 4 pill labels +
+           centre brandmark dock. Labels and orbits are positioned in
+           SVG units (viewBox -550 -325 1100 650); labels reference
+           viewBox-percentage CSS variables (`--x-pct`, `--y-pct`)
+           computed from `lib/celestial/orbits.ts` so the same numeric
+           source feeds both the static markup and any programmatic
+           consumer. -->
+      <div class="miss__system" role="list" aria-label="Four diagnoses orbiting the missing layer">
 
-           Motion model: the constellation builds itself rather than
-           landing flat. On intersection-enter, the brandmark fades in
-           first, then each card + its ray reveal with a 160ms stagger
-           via `--card-i`. Each ray draws from centre outward using
-           pathLength=1 + animated stroke-dashoffset so we can match the
-           card's reveal delay exactly. Card bodies are hidden by
-           default (titles + tags carry the diagnosis); hovering or
-           focusing a card expands the body and brightens its ray. -->
-      <div class="miss__grid" role="list" aria-label="Four use cases sharing one missing layer">
-
-        <!-- Connector rays — one path per quadrant so each can be
-             staggered independently. pathLength="1" normalises dash
-             math so the same dashoffset works regardless of pixel
-             length. preserveAspectRatio="none" stretches with the
-             grid; vector-effect="non-scaling-stroke" keeps the
-             hairline at 1px regardless of stretch. -->
-        <svg class="miss__rays" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-          <line x1="50" y1="50" x2="0"   y2="0"   pathLength="1" class="miss__ray miss__ray--01" />
-          <line x1="50" y1="50" x2="100" y2="0"   pathLength="1" class="miss__ray miss__ray--02" />
-          <line x1="50" y1="50" x2="0"   y2="100" pathLength="1" class="miss__ray miss__ray--03" />
-          <line x1="50" y1="50" x2="100" y2="100" pathLength="1" class="miss__ray miss__ray--04" />
+        <!-- The four orbits. Each `<ellipse>` is rotated independently
+             so the constellation reads as a lived celestial system,
+             not a symmetric atom. `vector-effect="non-scaling-stroke"`
+             keeps the hairline at 0.6 SVG-units regardless of how the
+             SVG scales with viewport. -->
+        <svg class="miss__orbits" viewBox="-550 -325 1100 650" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+          <ellipse class="miss__orbit miss__orbit--01" cx="0" cy="0" rx="340" ry="200" transform="rotate(18)"  pathLength="1" />
+          <ellipse class="miss__orbit miss__orbit--02" cx="0" cy="0" rx="300" ry="170" transform="rotate(-12)" pathLength="1" />
+          <ellipse class="miss__orbit miss__orbit--03" cx="0" cy="0" rx="350" ry="200" transform="rotate(-22)" pathLength="1" />
+          <ellipse class="miss__orbit miss__orbit--04" cx="0" cy="0" rx="270" ry="160" transform="rotate(22)"  pathLength="1" />
         </svg>
 
-        <article class="miss__card miss__card--01" role="listitem" tabindex="0">
-          <span class="reg reg--tl reg--gold" aria-hidden="true"></span>
-          <span class="reg reg--tr" aria-hidden="true"></span>
-          <span class="reg reg--bl" aria-hidden="true"></span>
-          <span class="reg reg--br" aria-hidden="true"></span>
-          <header class="miss__card-head">
-            <span class="miss__card-n">01</span>
-            <span class="miss__card-rule" aria-hidden="true"></span>
-            <span class="miss__card-tag">Brand voice at scale</span>
-          </header>
-          <h3 class="miss__card-title">Brand voice slips faster than reviewers catch it.</h3>
-          <div class="miss__card-detail" aria-hidden="false">
-            <p class="miss__card-body">AI doubled the output. The voice rules still live in three senior heads, and drift only surfaces at retro meetings.</p>
-          </div>
-        </article>
-
-        <article class="miss__card miss__card--02" role="listitem" tabindex="0">
-          <span class="reg reg--tl reg--gold" aria-hidden="true"></span>
-          <span class="reg reg--tr" aria-hidden="true"></span>
-          <span class="reg reg--bl" aria-hidden="true"></span>
-          <span class="reg reg--br" aria-hidden="true"></span>
-          <header class="miss__card-head">
-            <span class="miss__card-n">02</span>
-            <span class="miss__card-rule" aria-hidden="true"></span>
-            <span class="miss__card-tag">Localization at scale</span>
-          </header>
-          <h3 class="miss__card-title">Cultural nuance never reaches the system.</h3>
-          <div class="miss__card-detail" aria-hidden="false">
-            <p class="miss__card-body">AI handles the translation. The nuance stays in reviewer comments, claim checks, and local market calls, so the next launch starts from zero again.</p>
-          </div>
-        </article>
-
-        <!-- Centre brandmark dock — native source-owned. The fixed
-             BrandmarkActor parks here while [data-brand-on-missing="parked"]
-             on documentElement. Travel legs (sigil → miss, miss → backdrop)
-             use the fixed actor; this slot owns the visible mark in
-             between, so the page can scroll naturally without jiggle.
-             No background — the constellation rays converge on the
-             brandmark and the void around it reads through.
-
-             Anchor slot for the v7 brandmark choreography (see the
-             `data-brand-anchor` lookup in BrandmarkSystem). At runtime
-             the `<img>` here is stripped and replaced by a portal'd
-             BrandmarkGlyph so this dock paints the same code-rendered
-             SVG as every other dock on the page. -->
+        <!-- Centre brandmark dock — same selector + anchor as before
+             (the v7 brandmark journey reads `#missing-layer .miss__brand-slot`).
+             Absolute-positioned at viewport centre of the .miss__system
+             container; size in clamp() so it scales gracefully with
+             viewport width. -->
         <div class="miss__brand-slot" data-brand-anchor="missing" aria-hidden="true">
           <img src="assets/logos/Thoughtform_Brandmark.svg" alt="" />
         </div>
 
-        <article class="miss__card miss__card--03" role="listitem" tabindex="0">
-          <span class="reg reg--tl reg--gold" aria-hidden="true"></span>
-          <span class="reg reg--tr" aria-hidden="true"></span>
-          <span class="reg reg--bl" aria-hidden="true"></span>
-          <span class="reg reg--br" aria-hidden="true"></span>
-          <header class="miss__card-head">
-            <span class="miss__card-n">03</span>
-            <span class="miss__card-rule" aria-hidden="true"></span>
-            <span class="miss__card-tag">Brief handoff</span>
-          </header>
-          <h3 class="miss__card-title">The studio has no clear briefing to fall back on.</h3>
-          <div class="miss__card-detail" aria-hidden="false">
-            <p class="miss__card-body">Product marketing has an ultra-clear view on how a new product should sell, but by the time the brief reaches the studio team downstream, the angle that mattered is gone.</p>
-          </div>
-        </article>
-
-        <article class="miss__card miss__card--04" role="listitem" tabindex="0">
-          <span class="reg reg--tl reg--gold" aria-hidden="true"></span>
-          <span class="reg reg--tr" aria-hidden="true"></span>
-          <span class="reg reg--bl" aria-hidden="true"></span>
-          <span class="reg reg--br" aria-hidden="true"></span>
-          <header class="miss__card-head">
-            <span class="miss__card-n">04</span>
-            <span class="miss__card-rule" aria-hidden="true"></span>
-            <span class="miss__card-tag">Briefing synthesis</span>
-          </header>
-          <h3 class="miss__card-title">The data is there. AI doesn&rsquo;t know how to read it.</h3>
-          <div class="miss__card-detail" aria-hidden="false">
-            <p class="miss__card-body">Customer reviews, social listening, competitor ads, paid performance, brand framework. All present, all in different tools, with no layer that turns them into a creative angle.</p>
-          </div>
-        </article>
+        <!-- Four pill labels — each sits ON its host orbit. The label
+             is an anchor pointing to #intelligence-layer (the answer
+             section), so it's a meaningful navigation target, not a
+             dead pill. The icon is a small gold pip + numeral; the
+             tag matches the legacy `.miss__card-tag` copy verbatim. -->
+        <a class="miss__label miss__label--01" role="listitem" href="#intelligence-layer"
+           style="--x-pct: -23.45; --y-pct: -27.85;">
+          <span class="miss__label-pip" aria-hidden="true"></span>
+          <span class="miss__label-n">01</span>
+          <span class="miss__label-tag">Brand voice at scale</span>
+        </a>
+        <a class="miss__label miss__label--02" role="listitem" href="#intelligence-layer"
+           style="--x-pct: 21.45; --y-pct: -21.08;">
+          <span class="miss__label-pip" aria-hidden="true"></span>
+          <span class="miss__label-n">02</span>
+          <span class="miss__label-tag">Localization at scale</span>
+        </a>
+        <a class="miss__label miss__label--03" role="listitem" href="#intelligence-layer"
+           style="--x-pct: -21.82; --y-pct: 32.31;">
+          <span class="miss__label-pip" aria-hidden="true"></span>
+          <span class="miss__label-n">03</span>
+          <span class="miss__label-tag">Brief handoff</span>
+        </a>
+        <a class="miss__label miss__label--04" role="listitem" href="#intelligence-layer"
+           style="--x-pct: 20.0; --y-pct: 23.08;">
+          <span class="miss__label-pip" aria-hidden="true"></span>
+          <span class="miss__label-n">04</span>
+          <span class="miss__label-tag">Briefing synthesis</span>
+        </a>
       </div>
 
     </div>

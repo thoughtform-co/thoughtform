@@ -5,6 +5,7 @@ import gsap from "gsap";
 import {
   buildKeyframes,
   computeBrandmarkTransform,
+  type BrandmarkKeyframe,
   type BrandmarkTransform,
   type JourneyContext,
   type KeyframeId,
@@ -153,6 +154,70 @@ export function useBrandmarkJourney(
       document.documentElement.style.setProperty("--brandmark-vector-opacity", rounded.toFixed(3));
     };
 
+    // === Sigil → miss orbital morph driver ===
+    // The section 2 sigil's perfect concentric rings deform into the
+    // section 3 elliptical orbits as the visitor scrolls from
+    // #definition into #missing-layer. We write a single CSS variable
+    // (`--orbit-morph`) on the landing root each frame; the
+    // `.sigil__ring` rule interpolates each circle from identity to
+    // its paired orbit's target (scaleX, scaleY, rotate) against this
+    // value. See lib/celestial/orbits.ts for the canonical geometry
+    // and the SIGIL_RING_MORPHS / MISS_ORBITS pairing.
+    //
+    // The morph is bidirectional: scrolling back up to #definition
+    // ramps the rings back to concentric, so the compass re-forms.
+    const sigilKf: BrandmarkKeyframe | undefined = keyframes.find((kf) => kf.id === "sigil");
+    const missKf: BrandmarkKeyframe | undefined = keyframes.find((kf) => kf.id === "miss");
+
+    const keyframeCentreY = (kf: BrandmarkKeyframe | undefined): number | null => {
+      if (!kf) return null;
+      const rect = kf.resolveRect(ctx);
+      if (!rect || rect.width <= 0 || rect.height <= 0) return null;
+      const frac = kf.parkViewportFrac ?? 0.5;
+      return window.scrollY + rect.top + rect.height / 2 - window.innerHeight * frac;
+    };
+
+    let lastOrbitMorph = -1;
+    const setOrbitMorph = (value: number) => {
+      const clamped = value < 0 ? 0 : value > 1 ? 1 : value;
+      const rounded = Math.round(clamped * 1000) / 1000;
+      if (Math.abs(rounded - lastOrbitMorph) < 0.001) return;
+      lastOrbitMorph = rounded;
+      rootEl.style.setProperty("--orbit-morph", rounded.toFixed(3));
+    };
+
+    const applyOrbitMorph = (transform: BrandmarkTransform) => {
+      // Hard-pin shortcuts at the bookends.
+      const parked = transform.parkedAt;
+      if (parked === "sigil") {
+        setOrbitMorph(0);
+        return;
+      }
+      if (parked === "miss" || parked === "substrate" || parked === "rail" || parked === "orbit") {
+        setOrbitMorph(1);
+        return;
+      }
+      // In transit. Read sigil + miss centres and interpolate against
+      // the live scroll position.
+      const sigilC = keyframeCentreY(sigilKf);
+      const missC = keyframeCentreY(missKf);
+      if (sigilC == null || missC == null || missC <= sigilC) {
+        // First paint or anchors not yet measurable. Leave the var at
+        // its last known value rather than thrashing.
+        return;
+      }
+      const scrollY = window.scrollY;
+      if (scrollY <= sigilC) {
+        setOrbitMorph(0);
+        return;
+      }
+      if (scrollY >= missC) {
+        setOrbitMorph(1);
+        return;
+      }
+      setOrbitMorph((scrollY - sigilC) / (missC - sigilC));
+    };
+
     const applyParticleMode = (transform: BrandmarkTransform) => {
       if (!particleModeOK) return;
       const parkedAt = transform.parkedAt;
@@ -220,6 +285,7 @@ export function useBrandmarkJourney(
       useBrandmarkJourneyStore.getState().setTransform(transform);
       applyParticleMode(transform);
       applySvgMode(transform);
+      applyOrbitMorph(transform);
     };
 
     const schedule = () => {
@@ -316,6 +382,7 @@ export function useBrandmarkJourney(
       document.documentElement.removeAttribute("data-brand-parked-at");
       document.documentElement.style.removeProperty("--brandmark-shape-blend");
       document.documentElement.style.removeProperty("--brandmark-vector-opacity");
+      rootEl.style.removeProperty("--orbit-morph");
       const approach =
         rootEl.querySelector<HTMLElement>("#approach") ??
         rootEl.querySelector<HTMLElement>(".approach");
