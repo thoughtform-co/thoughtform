@@ -2929,11 +2929,18 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   z-index: 0;
 }
 
+/* Orbit hairlines. Base contrast bumped from the original
+   `dawn-15 / 0.6px / 2-6 dash` (which rendered below the visibility
+   threshold on most displays) to `dawn-30 / 1.0px / 3-6 dash`. The
+   four orbits stay uniform in colour — the hover-brighten on
+   `:has(.miss__label--N:hover)` (below) is the per-orbit accent
+   channel, picking out the active diagnosis in gold while the rest
+   stay quiet. */
 .miss__orbit {
   fill: none;
-  stroke: var(--dawn-15);
-  stroke-width: 0.6;
-  stroke-dasharray: 2 6;
+  stroke: var(--dawn-30, rgba(235, 227, 214, 0.3));
+  stroke-width: 1;
+  stroke-dasharray: 3 6;
   vector-effect: non-scaling-stroke;
   transition:
     stroke 220ms ease-out,
