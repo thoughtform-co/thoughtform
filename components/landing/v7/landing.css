@@ -2807,9 +2807,15 @@ html[data-quote-active="true"] .tf-brandmark-actor {
    ──────────────────────────────────────────────────────────────────── */
 
 .miss {
-  /* One viewport — single executive beat. */
+  /* One viewport — single executive beat. Asymmetric padding (more
+     top, less bottom) shifts the flex-centered content downward so
+     it clears the absolute-positioned `.station__idx` eyebrow
+     (which sits at `top: 80px` from the section). With symmetric
+     180/180 padding the inner content was tall enough to overflow
+     the centered box, pulling the title up into the eyebrow zone. */
   height: 100vh;
   height: 100svh;
+  padding: 220px 0 140px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2907,10 +2913,13 @@ html[data-quote-active="true"] .tf-brandmark-actor {
 /* Outer constellation container. Fixed aspect-ratio matches the
    orbits SVG viewBox (1100 / 650) so absolute-positioned labels
    computed in viewBox-percentage units stay locked to the orbital
-   arcs at every viewport width. */
+   arcs at every viewport width. Max width 900px keeps the
+   constellation's total height inside the section's available
+   content area (~540px) so the title + bridge above + system here
+   don't overflow into the eyebrow zone. */
 .miss__system {
   position: relative;
-  width: min(1100px, 92vw);
+  width: min(900px, 88vw);
   aspect-ratio: 1100 / 650;
   margin: 0 auto;
 }
