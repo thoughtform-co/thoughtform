@@ -186,15 +186,51 @@ export function useBrandmarkJourney(
       rootEl.style.setProperty("--orbit-morph", rounded.toFixed(3));
     };
 
+    // === Sigil ring → diagnostic orbit STYLE morph ===
+    // Companion to `--orbit-morph`. Whereas `--orbit-morph` deforms
+    // the sigil rings INTO the orbit shapes (transform: scale/rotate),
+    // `--orbit-style-morph` interpolates each ring's STROKE IDENTITY
+    // — dash pattern, color, weight — from the sigil-side starting
+    // style to the miss-side target style declared per ring in
+    // landing.css (canonical tokens in lib/celestial/orbitStyles.ts).
+    //
+    // The style morph runs on a slightly delayed easing relative to
+    // the geometry morph so the rings first reshape (geometry) and
+    // then settle into the diagnostic dash identity (style). Without
+    // the delay, the dash array and stroke colour change while the
+    // ring is still mid-transform and the eye reads two simultaneous
+    // animations instead of one continuous evolution.
+    //
+    // smoothstep(0.15, 0.95, t) — the eased curve: identity-pinned
+    // for the first ~15% of the leg, ease in toward target across the
+    // middle ~80%, full target at >= 95%.
+    let lastOrbitStyleMorph = -1;
+    const setOrbitStyleMorph = (value: number) => {
+      const clamped = value < 0 ? 0 : value > 1 ? 1 : value;
+      const rounded = Math.round(clamped * 1000) / 1000;
+      if (Math.abs(rounded - lastOrbitStyleMorph) < 0.001) return;
+      lastOrbitStyleMorph = rounded;
+      rootEl.style.setProperty("--orbit-style-morph", rounded.toFixed(3));
+    };
+
+    const easeOrbitStyleMorph = (geometry: number): number => {
+      if (geometry <= 0.15) return 0;
+      if (geometry >= 0.95) return 1;
+      const t = (geometry - 0.15) / 0.8;
+      return t * t * (3 - 2 * t);
+    };
+
     const applyOrbitMorph = (transform: BrandmarkTransform) => {
       // Hard-pin shortcuts at the bookends.
       const parked = transform.parkedAt;
       if (parked === "sigil") {
         setOrbitMorph(0);
+        setOrbitStyleMorph(0);
         return;
       }
       if (parked === "miss" || parked === "substrate" || parked === "rail" || parked === "orbit") {
         setOrbitMorph(1);
+        setOrbitStyleMorph(1);
         return;
       }
       // In transit. Read sigil + miss centres and interpolate against
@@ -209,13 +245,17 @@ export function useBrandmarkJourney(
       const scrollY = window.scrollY;
       if (scrollY <= sigilC) {
         setOrbitMorph(0);
+        setOrbitStyleMorph(0);
         return;
       }
       if (scrollY >= missC) {
         setOrbitMorph(1);
+        setOrbitStyleMorph(1);
         return;
       }
-      setOrbitMorph((scrollY - sigilC) / (missC - sigilC));
+      const geometry = (scrollY - sigilC) / (missC - sigilC);
+      setOrbitMorph(geometry);
+      setOrbitStyleMorph(easeOrbitStyleMorph(geometry));
     };
 
     const applyParticleMode = (transform: BrandmarkTransform) => {
@@ -383,6 +423,7 @@ export function useBrandmarkJourney(
       document.documentElement.style.removeProperty("--brandmark-shape-blend");
       document.documentElement.style.removeProperty("--brandmark-vector-opacity");
       rootEl.style.removeProperty("--orbit-morph");
+      rootEl.style.removeProperty("--orbit-style-morph");
       const approach =
         rootEl.querySelector<HTMLElement>("#approach") ??
         rootEl.querySelector<HTMLElement>(".approach");

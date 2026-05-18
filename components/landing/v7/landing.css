@@ -2565,13 +2565,83 @@ html[data-quote-active="true"] .tf-brandmark-actor {
    The 120ms linear transition smooths sub-frame gaps when the scroll
    listener doesn't fire every animation frame (fast flicks, low end
    devices). It's short enough that the rings still feel scroll-bound,
-   long enough to hide jank between updates. */
+   long enough to hide jank between updates.
+
+   STYLE MORPH (companion to the geometry morph): each ring also
+   crossfades its STROKE COLOUR and WEIGHT from the section-2 starting
+   identity to the section-3 diagnostic identity as
+   `--orbit-style-morph` ramps 0 → 1 (also written by
+   useBrandmarkJourney, eased so the geometry deforms first and the
+   style settles afterward — see easeOrbitStyleMorph in the hook). The
+   dash PATTERN itself stays constant per ring because the sigil-side
+   and miss-side line identities are PAIRED (canonical tokens in
+   lib/celestial/orbitStyles.ts): the dotted ring stays dotted while
+   the line gradually deepens to match the orbit's stronger character.
+   Per-ring `--ring-stroke-*` and `--ring-w-*` overrides live on the
+   `.sigil__ring--NN` selectors below. The interpolation falls back to
+   identity (no change) if a ring doesn't declare its end values. */
 .sigil__ring {
   transform-origin: 0 0;
   transform: rotate(calc(var(--target-r, 0deg) * var(--orbit-morph, 0)))
     scaleX(calc(1 + (var(--target-sx, 1) - 1) * var(--orbit-morph, 0)))
     scaleY(calc(1 + (var(--target-sy, 1) - 1) * var(--orbit-morph, 0)));
-  transition: transform 120ms linear;
+  stroke: color-mix(
+    in srgb,
+    var(--ring-stroke-start, currentColor) calc(100% - var(--orbit-style-morph, 0) * 100%),
+    var(--ring-stroke-end, var(--ring-stroke-start, currentColor))
+  );
+  stroke-width: calc(
+    var(--ring-w-start, 0.6) +
+      (var(--ring-w-end, var(--ring-w-start, 0.6)) - var(--ring-w-start, 0.6)) *
+      var(--orbit-style-morph, 0)
+  );
+  transition:
+    transform 120ms linear,
+    stroke 220ms linear,
+    stroke-width 220ms linear;
+}
+
+/* Per-ring start (section-2 sigil identity) and end (section-3
+   diagnostic identity) anchors for the style morph. Start values
+   match the inline HTML stroke/stroke-width attributes (so the morph
+   begins from the existing sigil look); end values land each ring on
+   its paired miss orbit's stroke character. Dash patterns stay per
+   the inline `stroke-dasharray` HTML attribute on each ring because
+   the paired sigil-side and miss-side identities share a dash family
+   (lib/celestial/orbitStyles.ts ORBIT_STYLES). */
+.sigil__ring--01 {
+  /* Spaced dotted dawn. Start matches the inline dawn-15 stroke; end
+     deepens to a low-alpha dawn so the ring picks up a touch of
+     weight as it settles into orbit 01 (also spaced dotted). */
+  --ring-stroke-start: rgba(236, 227, 214, 0.15);
+  --ring-stroke-end: rgba(236, 227, 214, 0.5);
+  --ring-w-start: 0.5;
+  --ring-w-end: 0.7;
+}
+.sigil__ring--02 {
+  /* Solid dawn baseline — the morph target is the bold solid miss
+     orbit 02, so this ring takes the largest weight bump of the
+     four. Start matches the inline dawn-15 stroke. */
+  --ring-stroke-start: rgba(236, 227, 214, 0.15);
+  --ring-stroke-end: rgba(236, 227, 214, 0.6);
+  --ring-w-start: 0.6;
+  --ring-w-end: 0.9;
+}
+.sigil__ring--03 {
+  /* Dotted gold — start matches inline gold 0.32; end saturates to
+     gold 0.5 to match the warmer miss orbit 03. */
+  --ring-stroke-start: rgba(202, 165, 84, 0.32);
+  --ring-stroke-end: rgba(202, 165, 84, 0.5);
+  --ring-w-start: 0.6;
+  --ring-w-end: 0.75;
+}
+.sigil__ring--04 {
+  /* Tight dotted gold — start matches inline gold 0.45; end settles
+     into the warm inner cadence of miss orbit 04. */
+  --ring-stroke-start: rgba(202, 165, 84, 0.45);
+  --ring-stroke-end: rgba(202, 165, 84, 0.55);
+  --ring-w-start: 0.6;
+  --ring-w-end: 0.7;
 }
 
 /* Reduced motion: skip the scroll-driven morph. Pin `--orbit-morph`
@@ -2584,6 +2654,7 @@ html[data-quote-active="true"] .tf-brandmark-actor {
 @media (prefers-reduced-motion: reduce) {
   .sigil__orbits {
     --orbit-morph: 1;
+    --orbit-style-morph: 1;
   }
   .sigil__ring {
     transition: none;
@@ -2810,9 +2881,14 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   /* One viewport — single executive beat. Asymmetric padding (more
      top, less bottom) shifts the flex-centered content downward so
      it clears the absolute-positioned `.station__idx` eyebrow
-     (which sits at `top: 80px` from the section). With symmetric
-     180/180 padding the inner content was tall enough to overflow
-     the centered box, pulling the title up into the eyebrow zone.
+     (which sits at `top: 80px` from the section). The 220/80 split
+     reserves room above for the eyebrow + heading and leaves the
+     bottom of the section open so the constellation can sit lower
+     in the available area (see `.miss__system` align-self: end and
+     `.miss__inner` min-height below — together they push the
+     orbital field into the lower ~60% of the section so the
+     brandmark dock parks below the vertical centre, giving the
+     heading proper breathing room above the orbits).
 
      `isolation: isolate` creates a section-local stacking context so
      the decorative nebula (`.miss::before`) and starfield
@@ -2821,7 +2897,7 @@ html[data-quote-active="true"] .tf-brandmark-actor {
      gateway/hero stacking context above. */
   height: 100vh;
   height: 100svh;
-  padding: 220px 0 140px;
+  padding: 220px 0 80px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2894,12 +2970,13 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   grid-template-rows: 1fr;
   text-align: left;
   /* Min-height matches the section's available content area
-     (`100svh - 360px` reserves the 220/140 padding) capped at
-     560px on tall viewports so the cell doesn't push past what
-     the height-bound `.miss__system` can fill. Keeps the head +
-     system relationship stable across viewport heights without
-     forcing overrun. */
-  min-height: min(560px, calc(100svh - 360px));
+     (`100svh - 300px` reserves the 220/80 padding) capped at
+     640px on tall viewports. The cap is taller than the height-
+     bound `.miss__system` so the grid cell has spare vertical room
+     above the bottom-aligned system — that gap is where the
+     heading floats and is what gives the orbital field its
+     downward bias relative to the section centre. */
+  min-height: min(640px, calc(100svh - 300px));
 }
 
 /* Header: eyebrow → title → one-line bridge. Previously a two-column
@@ -2994,9 +3071,13 @@ html[data-quote-active="true"] .tf-brandmark-actor {
    orbits SVG viewBox (1100 / 650) so absolute-positioned labels
    computed in viewBox-percentage units stay locked to the orbital
    arcs at every viewport width. Lives in the same grid cell as
-   `.miss__head` and centres vertically inside it — that puts the
-   brandmark slot (50% / 50% of the system) at the section's
-   vertical centre while the heading floats at the cell's top.
+   `.miss__head` and bottom-aligns inside it — that drops the
+   brandmark slot (50% / 50% of the system) BELOW the section's
+   vertical centre, leaving more breathing room between the heading
+   at the cell's top and the orbital field. The brandmark journey
+   reads `.miss__brand-slot.getBoundingClientRect()` every frame, so
+   the section-2 → section-3 brandmark travel destination auto-tracks
+   this lower park position without any JS change.
 
    Width is bounded by THREE limits so the orbital field never
    overflows the section vertically (which would clip orbits at
@@ -3004,21 +3085,27 @@ html[data-quote-active="true"] .tf-brandmark-actor {
      - max 1180px on wide displays (gives the long horizon orbit
        room to extend out past the labelled pills),
      - 100% so the system never escapes the .miss__inner box,
-     - `(100svh - 360px) * 11 / 6.5` which converts the section's
-       available content height (svh minus the 220/140 padding)
-       into the matching width via the 1100/650 aspect-ratio. On a
-       1440x900 desktop the height-bound caps width at ~913px so
-       the system height exactly fills the 540px content area;
-       on a 1920x1080 ultrawide the full 1180px max kicks in. */
+     - `(100svh - 440px) * 11 / 6.5` which converts the section's
+       padded content envelope into the matching width via the
+       1100/650 aspect-ratio. The 440px subtracted accounts for the
+       220/80 section padding (300px) plus ~140px of bottom-bias
+       headroom that sits between the heading at the cell's top
+       and the system at the cell's bottom. On a 1440x900 desktop
+       the height-bound caps width at ~778px so the system sits in
+       the lower ~460px of the 600px content cell, leaving ~140px
+       above for the heading and the bias gap. On a 1920x1080
+       ultrawide the full 1180px max kicks in and the system fills
+       its 697px height inside the 640px cap — the heading then
+       overlays the system top (text-shadow keeps it legible). */
 .miss__system {
   position: relative;
-  width: min(1180px, 100%, calc((100svh - 360px) * 11 / 6.5));
+  width: min(1180px, 100%, calc((100svh - 440px) * 11 / 6.5));
   aspect-ratio: 1100 / 650;
   margin: 0 auto;
   grid-column: 1;
   grid-row: 1;
   justify-self: center;
-  align-self: center;
+  align-self: end;
   z-index: 1;
 }
 
@@ -3036,15 +3123,18 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   z-index: 0;
 }
 
-/* Four asymmetric orbits — one per label, each with a clearly
-   different LINE CHARACTER (solid / true dotted / dash-dot /
-   long-dash). Per-orbit alpha is BAKED INTO the stroke colour
-   (rgba) so the orbit-draw reveal keyframe's `to { stroke-opacity:
-   1 }` step doesn't flatten the per-orbit hierarchy. Two orbits
-   read in cooler dawn (the navigation-chart vocabulary) and two
-   pick up a warm gold tint — same instrument family, just enough
-   chromatic variety to feel like a real star chart rather than an
-   atom diagram. */
+/* Four asymmetric orbits — one per label, expressing the same three
+   LINE IDENTITIES the section-2 sigil already uses (solid + dotted +
+   spaced dotted, plus a tight-dotted variant). Each orbit is PAIRED
+   by index with its sigil ring so the section-2 → section-3 morph
+   reads as a continuous evolution per pair: the spaced-dotted ring
+   becomes the spaced-dotted orbit, the solid ring becomes the solid
+   orbit, etc. Canonical tokens in lib/celestial/orbitStyles.ts.
+   Per-orbit alpha is BAKED INTO the stroke colour (rgba) so the
+   orbit-draw reveal keyframe's `to { stroke-opacity: 1 }` step
+   doesn't flatten the per-orbit hierarchy. Two orbits read in cooler
+   dawn and two pick up a warm gold tint so the four paths still feel
+   like four distinct bodies after the morph completes. */
 .miss__orbit {
   fill: none;
   stroke: rgba(235, 227, 214, 0.42);
@@ -3056,39 +3146,47 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   stroke-opacity: 1;
 }
 .miss__orbit--01 {
-  /* Solid continuous — the bold baseline trajectory. Slightly
-     heavier weight so it reads as the dominant arc when the four
-     orbits overlap. */
-  stroke: rgba(235, 227, 214, 0.5);
+  /* Spaced dotted — round caps, wide gap. Pairs with sigil ring 01
+     (also spaced dotted) so the morph from compass to constellation
+     keeps a continuous line identity. Round caps on a small dash
+     produce visible circular dots; gap is wide so the rhythm reads
+     as airy / atmospheric even at the wide outer radius. NOTE: the
+     ellipse carries `pathLength="1"` so dash values here are
+     normalized to fractions of the orbit's total path length —
+     `0.003 0.028` gives ~30 dots distributed evenly around the
+     ellipse with a clear airy cadence. */
+  stroke: rgba(235, 227, 214, 0.6);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-dasharray: 0.003 0.028;
+}
+.miss__orbit--02 {
+  /* Solid baseline — the dominant continuous arc. Takes the visual
+     weight role the legacy orbit 01 used to hold. Pairs with sigil
+     ring 02 (also solid). */
+  stroke: rgba(235, 227, 214, 0.6);
   stroke-width: 1.7;
   stroke-dasharray: none;
 }
-.miss__orbit--02 {
-  /* TRUE dotted — round caps + `0 X` dash makes each "dash" render
-     as a perfect circle (stroke-width in diameter). The dot rhythm
-     matches the reference space-map vocabulary directly. Warm gold
-     tint at low alpha so the four orbits don't read monochrome. */
-  stroke: rgba(202, 165, 84, 0.38);
+.miss__orbit--03 {
+  /* Dotted — round caps, moderate gap. Pairs with sigil ring 03
+     (also dotted). Warm gold register picks the diagnosis out from
+     the cooler dawn-toned orbits 01 + 02. `0.003 0.020` gives ~43
+     dots — confident measured cadence vs orbit 01's airier 30. */
+  stroke: rgba(202, 165, 84, 0.55);
   stroke-width: 1.6;
   stroke-linecap: round;
-  stroke-dasharray: 0.001 9;
-}
-.miss__orbit--03 {
-  /* Dash-dot articulated rhythm — long mark, gap, dot, gap. The
-     four-segment dasharray gives this orbit a measured chart-line
-     feel distinct from both pure solid and pure dotted. */
-  stroke: rgba(235, 227, 214, 0.48);
-  stroke-width: 1.4;
-  stroke-linecap: round;
-  stroke-dasharray: 14 6 0.001 6;
+  stroke-dasharray: 0.003 0.02;
 }
 .miss__orbit--04 {
-  /* Long sparse dash — measured trajectory in a warmer gold,
-     thinner stroke. Reads as the most distant / orbital path,
-     receding behind the others. */
-  stroke: rgba(202, 165, 84, 0.32);
-  stroke-width: 1.2;
-  stroke-dasharray: 22 11;
+  /* Tight dotted — round caps, compact cadence. Pairs with sigil
+     ring 04 (also tight dotted). `0.003 0.012` gives ~67 dots — the
+     same dotted identity at a finer granular pitch, so the compact
+     inner orbit reads as more textured than orbit 03. */
+  stroke: rgba(202, 165, 84, 0.5);
+  stroke-width: 1.3;
+  stroke-linecap: round;
+  stroke-dasharray: 0.003 0.012;
 }
 
 /* Ghost orbits — extra unlabeled arcs that thicken the navigation
