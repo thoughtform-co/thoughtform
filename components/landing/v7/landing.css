@@ -1106,7 +1106,6 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   color: var(--gold);
 }
 
-
 /* Inward scroll transition: hero recedes as definition enters */
 .hero {
   transform-origin: center center;
@@ -2442,8 +2441,9 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   margin-bottom: 18px;
 }
 .tri__ipa--noun {
-  font-size: clamp(16px, 1.4vw, 20px);
+  font-size: clamp(11px, 0.9vw, 13px);
   letter-spacing: var(--track-wide);
+  color: var(--gold);
 }
 .tri__ipa-name {
   color: var(--gold);
