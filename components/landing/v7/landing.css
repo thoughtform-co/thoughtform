@@ -3146,19 +3146,19 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   stroke-opacity: 1;
 }
 .miss__orbit--01 {
-  /* Spaced dotted — round caps, wide gap. Pairs with sigil ring 01
-     (also spaced dotted) so the morph from compass to constellation
-     keeps a continuous line identity. Round caps on a small dash
-     produce visible circular dots; gap is wide so the rhythm reads
-     as airy / atmospheric even at the wide outer radius. NOTE: the
-     ellipse carries `pathLength="1"` so dash values here are
-     normalized to fractions of the orbit's total path length —
-     `0.003 0.028` gives ~30 dots distributed evenly around the
-     ellipse with a clear airy cadence. */
+  /* Spaced dotted — round caps with a tight gap so the orbit reads
+     as a continuous beaded hairline rather than a scatter of dots.
+     Pairs with sigil ring 01 (also spaced dotted) so the morph from
+     compass to constellation keeps a continuous line identity. The
+     ellipse carries `pathLength="1"`, so dash values are normalized
+     fractions of the orbit's total path length — `0.003 0.014`
+     gives ~60 dots distributed evenly around the ellipse, the
+     airiest of the three dotted variants but still close enough to
+     read as a line rather than a scatter. */
   stroke: rgba(235, 227, 214, 0.6);
   stroke-width: 1.6;
   stroke-linecap: round;
-  stroke-dasharray: 0.003 0.028;
+  stroke-dasharray: 0.003 0.014;
 }
 .miss__orbit--02 {
   /* Solid baseline — the dominant continuous arc. Takes the visual
@@ -3171,22 +3171,25 @@ html[data-quote-active="true"] .tf-brandmark-actor {
 .miss__orbit--03 {
   /* Dotted — round caps, moderate gap. Pairs with sigil ring 03
      (also dotted). Warm gold register picks the diagnosis out from
-     the cooler dawn-toned orbits 01 + 02. `0.003 0.020` gives ~43
-     dots — confident measured cadence vs orbit 01's airier 30. */
+     the cooler dawn-toned orbits 01 + 02. `0.003 0.009` gives ~85
+     dots — a measured cadence that reads as a confident dotted
+     line, denser than orbit 01's airier pitch but still clearly
+     beaded against the solid orbit 02. */
   stroke: rgba(202, 165, 84, 0.55);
   stroke-width: 1.6;
   stroke-linecap: round;
-  stroke-dasharray: 0.003 0.02;
+  stroke-dasharray: 0.003 0.009;
 }
 .miss__orbit--04 {
   /* Tight dotted — round caps, compact cadence. Pairs with sigil
-     ring 04 (also tight dotted). `0.003 0.012` gives ~67 dots — the
-     same dotted identity at a finer granular pitch, so the compact
-     inner orbit reads as more textured than orbit 03. */
+     ring 04 (also tight dotted). `0.003 0.006` gives ~110 dots —
+     the same dotted identity at the finest granular pitch, so the
+     compact inner orbit reads as an almost-continuous textured line
+     against the cooler dawn arcs above. */
   stroke: rgba(202, 165, 84, 0.5);
   stroke-width: 1.3;
   stroke-linecap: round;
-  stroke-dasharray: 0.003 0.012;
+  stroke-dasharray: 0.003 0.006;
 }
 
 /* Ghost orbits — extra unlabeled arcs that thicken the navigation
