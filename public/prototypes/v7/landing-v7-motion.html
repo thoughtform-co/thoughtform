@@ -4337,10 +4337,10 @@ html { scroll-behavior: smooth; }
                    each circle from concentric identity to the orbit's
                    eccentric + rotated target. The compass becomes the
                    lived celestial system in motion. -->
-              <circle r="150" class="sigil__ring sigil__ring--01" style="--target-sx:1.259;--target-sy:0.741;--target-r:18deg;"  stroke="var(--dawn-15)" stroke-dasharray="1 5" stroke-width="0.5"/>
-              <circle r="126" class="sigil__ring sigil__ring--02" style="--target-sx:1.277;--target-sy:0.723;--target-r:-12deg;" stroke="var(--dawn-15)"/>
-              <circle r="104" class="sigil__ring sigil__ring--03" style="--target-sx:1.273;--target-sy:0.727;--target-r:-22deg;" stroke="var(--gold)" stroke-opacity="0.32" stroke-dasharray="2 7"/>
-              <circle r="78"  class="sigil__ring sigil__ring--04" style="--target-sx:1.256;--target-sy:0.744;--target-r:22deg;"  stroke="var(--gold)" stroke-opacity="0.45" stroke-dasharray="1 3"/>
+              <circle r="150" class="sigil__ring sigil__ring--01" style="--target-sx:1.244;--target-sy:0.756;--target-r:16deg;"  stroke="var(--dawn-15)" stroke-dasharray="1 5" stroke-width="0.5"/>
+              <circle r="126" class="sigil__ring sigil__ring--02" style="--target-sx:1.537;--target-sy:0.463;--target-r:-8deg;" stroke="var(--dawn-15)"/>
+              <circle r="104" class="sigil__ring sigil__ring--03" style="--target-sx:1.386;--target-sy:0.614;--target-r:-28deg;" stroke="var(--gold)" stroke-opacity="0.32" stroke-dasharray="2 7"/>
+              <circle r="78"  class="sigil__ring sigil__ring--04" style="--target-sx:1.245;--target-sy:0.755;--target-r:32deg;"  stroke="var(--gold)" stroke-opacity="0.45" stroke-dasharray="1 3"/>
               <g style="transform-origin:0 0; animation: rotate 180s linear infinite;">
                 <circle r="104" fill="none" stroke="transparent"/>
                 <circle cx="104" cy="0" r="2.5" fill="var(--gold)" opacity="0.9"/>
@@ -4459,6 +4459,69 @@ html { scroll-behavior: smooth; }
   <section class="station station--centered miss" id="missing-layer" data-station="missingLayer" data-screen-label="03 Missing layer">
     <div class="station__idx">Diagnostic</div>
 
+    <!-- Starfield depth layer. Sparse dot field that paints between
+         the nebula wash (.miss::before, z: -1) and the section
+         content (.miss__inner, z: 2). Uses a 1600x900 viewBox with
+         `preserveAspectRatio="xMidYMid slice"` so the field always
+         covers the section regardless of aspect ratio. Stars are
+         scattered loosely with low fill-opacity for depth; a handful
+         carry .miss__star--gold to break monochrome and align with
+         the dawn/gold palette. Always-on (no reveal stagger) — the
+         field is environment, not narrative. -->
+    <svg class="miss__stars" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+      <circle cx="40"   cy="80"  r="1.2" fill-opacity="0.7"/>
+      <circle cx="220"  cy="60"  r="0.8" fill-opacity="0.5"/>
+      <circle cx="380"  cy="110" r="1.0" fill-opacity="0.6"/>
+      <circle cx="560"  cy="50"  r="1.3" fill-opacity="0.8"/>
+      <circle cx="720"  cy="130" r="0.7" fill-opacity="0.4"/>
+      <circle cx="880"  cy="70"  r="1.1" fill-opacity="0.7"/>
+      <circle cx="1040" cy="110" r="0.9" fill-opacity="0.5"/>
+      <circle cx="1180" cy="110" r="1.4" fill-opacity="0.7" class="miss__star--gold"/>
+      <circle cx="1360" cy="100" r="1.2" fill-opacity="0.75"/>
+      <circle cx="1520" cy="140" r="0.8" fill-opacity="0.5"/>
+      <circle cx="80"   cy="200" r="0.9" fill-opacity="0.5"/>
+      <circle cx="300"  cy="280" r="1.0" fill-opacity="0.6"/>
+      <circle cx="460"  cy="220" r="0.7" fill-opacity="0.4"/>
+      <circle cx="620"  cy="290" r="0.8" fill-opacity="0.5"/>
+      <circle cx="780"  cy="240" r="1.1" fill-opacity="0.7"/>
+      <circle cx="940"  cy="300" r="0.6" fill-opacity="0.4"/>
+      <circle cx="1100" cy="220" r="1.2" fill-opacity="0.75"/>
+      <circle cx="1260" cy="280" r="0.8" fill-opacity="0.5"/>
+      <circle cx="1420" cy="230" r="1.0" fill-opacity="0.6"/>
+      <circle cx="1560" cy="300" r="0.7" fill-opacity="0.4"/>
+      <circle cx="60"   cy="510" r="1.0" fill-opacity="0.6"/>
+      <circle cx="130"  cy="320" r="1.4" fill-opacity="0.7" class="miss__star--gold"/>
+      <circle cx="160"  cy="420" r="0.8" fill-opacity="0.5"/>
+      <circle cx="260"  cy="600" r="1.2" fill-opacity="0.6" class="miss__star--gold"/>
+      <circle cx="340"  cy="540" r="0.6" fill-opacity="0.3"/>
+      <circle cx="800"  cy="520" r="1.0" fill-opacity="0.55" class="miss__star--gold"/>
+      <circle cx="1240" cy="480" r="0.7" fill-opacity="0.4"/>
+      <circle cx="1320" cy="590" r="1.1" fill-opacity="0.55" class="miss__star--gold"/>
+      <circle cx="1440" cy="420" r="0.8" fill-opacity="0.5"/>
+      <circle cx="1480" cy="360" r="1.3" fill-opacity="0.65" class="miss__star--gold"/>
+      <circle cx="1560" cy="540" r="0.6" fill-opacity="0.3"/>
+      <circle cx="120"  cy="670" r="1.1" fill-opacity="0.7"/>
+      <circle cx="300"  cy="740" r="0.8" fill-opacity="0.5"/>
+      <circle cx="480"  cy="660" r="0.9" fill-opacity="0.5"/>
+      <circle cx="640"  cy="720" r="0.7" fill-opacity="0.4"/>
+      <circle cx="800"  cy="670" r="1.0" fill-opacity="0.6"/>
+      <circle cx="960"  cy="740" r="0.8" fill-opacity="0.5"/>
+      <circle cx="1120" cy="670" r="1.2" fill-opacity="0.75"/>
+      <circle cx="1280" cy="720" r="0.9" fill-opacity="0.5"/>
+      <circle cx="1440" cy="670" r="0.8" fill-opacity="0.5"/>
+      <circle cx="1540" cy="740" r="1.0" fill-opacity="0.65"/>
+      <circle cx="60"   cy="830" r="1.0" fill-opacity="0.6"/>
+      <circle cx="240"  cy="870" r="0.8" fill-opacity="0.5"/>
+      <circle cx="400"  cy="820" r="1.1" fill-opacity="0.7"/>
+      <circle cx="560"  cy="870" r="0.7" fill-opacity="0.4"/>
+      <circle cx="720"  cy="830" r="0.9" fill-opacity="0.6"/>
+      <circle cx="880"  cy="870" r="1.0" fill-opacity="0.6"/>
+      <circle cx="1040" cy="830" r="0.8" fill-opacity="0.5"/>
+      <circle cx="1200" cy="870" r="1.2" fill-opacity="0.75"/>
+      <circle cx="1360" cy="820" r="0.9" fill-opacity="0.5"/>
+      <circle cx="1520" cy="870" r="1.1" fill-opacity="0.7"/>
+    </svg>
+
     <div class="miss__inner" data-m="instrument">
       <header class="miss__head">
         <h2 class="miss__title">
@@ -4476,16 +4539,90 @@ html { scroll-behavior: smooth; }
            consumer. -->
       <div class="miss__system" role="list" aria-label="Four diagnoses orbiting the missing layer">
 
-        <!-- The four orbits. Each `<ellipse>` is rotated independently
-             so the constellation reads as a lived celestial system,
-             not a symmetric atom. `vector-effect="non-scaling-stroke"`
-             keeps the hairline at 0.6 SVG-units regardless of how the
-             SVG scales with viewport. -->
+        <!-- Diagnostic celestial system. Composition (back to front):
+             1. Four orbits — each label sits on its OWN ellipse, with
+                deliberately distinct eccentricity + tilt + STROKE
+                PATTERN so the four paths read as four different
+                bodies (orbit 01 rounder tilt +18° medium dash, 02
+                very flat tilt -10° dotted, 03 medium tilt -26°
+                dash-dot, 04 medium-round tilt +30° long dash).
+             2. Orbiting particles — one small dot per orbit, slowly
+                traversing the elliptical path (CSS `offset-path` so
+                each particle follows its actual orbit rather than
+                tracing a circle). Mirrors the section 2 sigil's
+                rotating compass markers, gives the system motion.
+             3. Tethers — gold dashed lines from centre to each label
+                anchor; each diagnosis is visibly bound to the
+                missing layer at the centre.
+             4. Anchor pips — gold dots where each label meets its
+                orbit; labels read as celestial bodies on the orbital
+                paths, not floating pills.
+             Each orbit is wrapped in a `<g transform="rotate(α)">`
+             so the particle (positioned in the unrotated local frame
+             via offset-path) inherits the rotation along with the
+             ellipse. Canonical geometry: lib/celestial/orbits.ts. -->
         <svg class="miss__orbits" viewBox="-550 -325 1100 650" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
-          <ellipse class="miss__orbit miss__orbit--01" cx="0" cy="0" rx="340" ry="200" transform="rotate(18)"  pathLength="1" />
-          <ellipse class="miss__orbit miss__orbit--02" cx="0" cy="0" rx="300" ry="170" transform="rotate(-12)" pathLength="1" />
-          <ellipse class="miss__orbit miss__orbit--03" cx="0" cy="0" rx="350" ry="200" transform="rotate(-22)" pathLength="1" />
-          <ellipse class="miss__orbit miss__orbit--04" cx="0" cy="0" rx="270" ry="160" transform="rotate(22)"  pathLength="1" />
+          <!-- Ghost orbits — three unlabeled arcs in different line
+               styles. They thicken the navigation chart density (the
+               way real space maps layer faint reference orbits behind
+               named ones) without competing with the four diagnostic
+               paths. Rendered FIRST so they sit at the bottom of the
+               SVG paint order, behind the labelled orbits + brand
+               halo + anchors. -->
+          <g class="miss__ghost-orbits" aria-hidden="true">
+            <ellipse class="miss__orbit miss__orbit--ghost" cx="0" cy="0" rx="510" ry="105" transform="rotate(6)" />
+            <ellipse class="miss__orbit miss__orbit--ghost-long" cx="0" cy="0" rx="245" ry="240" transform="rotate(-44)" />
+            <ellipse class="miss__orbit miss__orbit--ghost-solid" cx="0" cy="0" rx="445" ry="265" transform="rotate(22)" />
+          </g>
+
+          <!-- Orbit 01 — rounder, tilt +16°, SOLID baseline. -->
+          <g class="miss__orbit-group miss__orbit-group--01" transform="rotate(16)">
+            <ellipse class="miss__orbit miss__orbit--01" cx="0" cy="0" rx="370" ry="225" pathLength="1" />
+            <circle class="miss__particle miss__particle--01" cx="0" cy="0" r="3.5" />
+          </g>
+          <!-- Orbit 02 — very flat + long horizon, tilt -8°, TRUE dotted. -->
+          <g class="miss__orbit-group miss__orbit-group--02" transform="rotate(-8)">
+            <ellipse class="miss__orbit miss__orbit--02" cx="0" cy="0" rx="465" ry="140" pathLength="1" />
+            <circle class="miss__particle miss__particle--02" cx="0" cy="0" r="2.5" />
+          </g>
+          <!-- Orbit 03 — medium, tilt -28°, dash-dot. -->
+          <g class="miss__orbit-group miss__orbit-group--03" transform="rotate(-28)">
+            <ellipse class="miss__orbit miss__orbit--03" cx="0" cy="0" rx="395" ry="175" pathLength="1" />
+            <circle class="miss__particle miss__particle--03" cx="0" cy="0" r="3" />
+          </g>
+          <!-- Orbit 04 — compact, tilt +32°, long dash. -->
+          <g class="miss__orbit-group miss__orbit-group--04" transform="rotate(32)">
+            <ellipse class="miss__orbit miss__orbit--04" cx="0" cy="0" rx="305" ry="185" pathLength="1" />
+            <circle class="miss__particle miss__particle--04" cx="0" cy="0" r="2.5" />
+          </g>
+
+          <!-- Brand halo: small decorative concentric rings + pips that
+               gently rotate around the brandmark. Two layers in opposite
+               directions for subtle parallax. Sits just outside the
+               brandmark slot (~88 SVG-unit radius) without crowding it. -->
+          <g class="miss__brand-halo miss__brand-halo--outer" aria-hidden="true">
+            <circle r="118" class="miss__brand-halo-ring miss__brand-halo-ring--outer" />
+            <circle class="miss__brand-halo-pip" cx="118"  cy="0"   r="2" />
+            <circle class="miss__brand-halo-pip" cx="-118" cy="0"   r="1.6" />
+            <circle class="miss__brand-halo-pip" cx="0"    cy="-118" r="1.4" />
+          </g>
+          <g class="miss__brand-halo miss__brand-halo--inner" aria-hidden="true">
+            <circle r="104" class="miss__brand-halo-ring" />
+            <circle class="miss__brand-halo-pip miss__brand-halo-pip--dawn" cx="104" cy="0"  r="1.5" />
+            <circle class="miss__brand-halo-pip miss__brand-halo-pip--dawn" cx="-90" cy="52" r="1.2" />
+          </g>
+
+          <!-- Anchor pips where each label meets its orbit. JS hook
+               `useDiagnosticPillOrbits` updates the cx/cy of these
+               circles every frame to keep them in sync with the
+               orbiting pill labels. Initial coords match the
+               canonical positions in lib/celestial/orbits.ts. -->
+          <g class="miss__anchors">
+            <circle class="miss__anchor miss__anchor--01" cx="-296" cy="-184" r="6" />
+            <circle class="miss__anchor miss__anchor--02" cx="366"  cy="-133" r="6" />
+            <circle class="miss__anchor miss__anchor--03" cx="-281" cy="233"  r="6" />
+            <circle class="miss__anchor miss__anchor--04" cx="238"  cy="186"  r="6" />
+          </g>
         </svg>
 
         <!-- Centre brandmark dock — same selector + anchor as before
@@ -4503,25 +4640,25 @@ html { scroll-behavior: smooth; }
              dead pill. The icon is a small gold pip + numeral; the
              tag matches the legacy `.miss__card-tag` copy verbatim. -->
         <a class="miss__label miss__label--01" role="listitem" href="#intelligence-layer"
-           style="--x-pct: -23.45; --y-pct: -27.85;">
+           style="--x-pct: -26.92; --y-pct: -28.28;">
           <span class="miss__label-pip" aria-hidden="true"></span>
           <span class="miss__label-n">01</span>
           <span class="miss__label-tag">Brand voice at scale</span>
         </a>
         <a class="miss__label miss__label--02" role="listitem" href="#intelligence-layer"
-           style="--x-pct: 21.45; --y-pct: -21.08;">
+           style="--x-pct: 33.28; --y-pct: -20.39;">
           <span class="miss__label-pip" aria-hidden="true"></span>
           <span class="miss__label-n">02</span>
           <span class="miss__label-tag">Localization at scale</span>
         </a>
         <a class="miss__label miss__label--03" role="listitem" href="#intelligence-layer"
-           style="--x-pct: -21.82; --y-pct: 32.31;">
+           style="--x-pct: -25.58; --y-pct: 35.90;">
           <span class="miss__label-pip" aria-hidden="true"></span>
           <span class="miss__label-n">03</span>
           <span class="miss__label-tag">Brief handoff</span>
         </a>
         <a class="miss__label miss__label--04" role="listitem" href="#intelligence-layer"
-           style="--x-pct: 20.0; --y-pct: 23.08;">
+           style="--x-pct: 21.61; --y-pct: 28.68;">
           <span class="miss__label-pip" aria-hidden="true"></span>
           <span class="miss__label-n">04</span>
           <span class="miss__label-tag">Briefing synthesis</span>

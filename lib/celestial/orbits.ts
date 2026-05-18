@@ -2,19 +2,23 @@
  * orbits — canonical orbital geometry for the v7 landing page.
  *
  * The Diagnostic section (#missing-layer) reads as a celestial
- * constellation: the brandmark sits at the gravitational centre and
- * four diagnostic concerns orbit it on asymmetric, inclined ellipses.
- * Real orbits aren't perfect circles; the asymmetry signals that the
- * four diagnoses aren't symmetric facets of one thing — they're
- * distinct manifestations of one underlying gap, each with its own
- * gravitational signature.
+ * instrument: the brandmark sits at the gravitational centre with a
+ * dense compass scale around it; four diagnostic concerns each sit
+ * on their OWN elliptical orbit, varied in eccentricity and tilt
+ * (rounder vs flatter, +18° vs -26° etc.) so the four paths read as
+ * four distinct bodies — not four near-copies. Each diagnosis is
+ * visibly tethered back to the centre with a gold beam, and a gold
+ * anchor pip marks where it sits on its orbit.
  *
  * The Definition section (#definition) sigil opens as the canonical
  * compass (concentric circles + NAVIGATE / ENCODE / BUILD labels).
  * As the visitor scrolls toward the diagnostic, those circles morph
- * into these same ellipses via a CSS-variable-driven scale + rotate
- * tween. The compass becomes the lived celestial system in motion;
- * that morph IS the section transition.
+ * into the same four asymmetric ellipses (via `--orbit-morph` and
+ * per-ring scale targets in `SIGIL_RING_MORPHS` below) so the
+ * compass-at-rest becomes the lived celestial system in motion. The
+ * `MISS_ORBITS` table drives BOTH the diagnostic rendering and the
+ * sigil-ring morph targets — one canonical orbital family across
+ * both sections.
  *
  * This module is the SINGLE SOURCE OF TRUTH for the orbit + label
  * geometry. The actual landing markup hardcodes the numbers (the
@@ -67,75 +71,75 @@ export const MISS_VIEWBOX = {
 } as const;
 
 /**
- * Four asymmetric orbits around the centre brandmark.
+ * Four asymmetric orbits around the brandmark, ONE PER LABEL. Each
+ * orbit has deliberately distinct (rx, ry, rotateDeg) so the four
+ * orbital paths read as four different bodies — not four near-copies.
+ * Eccentricity ranges from ~1.65 (orbit 01, rounder) to ~3.32 (orbit
+ * 02, very flat and long), and tilts span -28° to +32°.
  *
- * Each orbit's `(rx, ry, rotateDeg)` was chosen so that:
- *   - Orbit 01 carries the upper-left label.
- *   - Orbit 02 carries the upper-right label.
- *   - Orbit 03 carries the lower-left label (biggest + lowest).
- *   - Orbit 04 carries the lower-right label (smallest + tightest).
- *
- * Eccentricity (rx / ry) clusters around 1.7, so all four read as
- * the same "family" of orbits rather than wildly different paths.
- * The varied rotations give the constellation its asymmetric feel.
+ * Geometry tuned (from the earlier 320/380/350/280 set) for a wider,
+ * more chart-like sweep: orbit 02 stretches well past the labelled
+ * pills to read as a long horizon path, orbit 03 leans further left
+ * for a clearer asymmetry from 04, and orbit 04 picks up extra
+ * vertical extent so the four paths feel like distinct trajectories
+ * rather than four near-equal rings. The total horizontal extent
+ * still sits inside the canonical -550..+550 viewBox.
  */
 export const MISS_ORBITS: readonly OrbitEllipse[] = [
-  { id: "01", rx: 340, ry: 200, rotateDeg: +18 },
-  { id: "02", rx: 300, ry: 170, rotateDeg: -12 },
-  { id: "03", rx: 350, ry: 200, rotateDeg: -22 },
-  { id: "04", rx: 270, ry: 160, rotateDeg: +22 },
+  { id: "01", rx: 370, ry: 225, rotateDeg: +16 }, // rounder, gentle right tilt
+  { id: "02", rx: 465, ry: 140, rotateDeg: -8 }, // very flat + long horizon path
+  { id: "03", rx: 395, ry: 175, rotateDeg: -28 }, // medium, stronger left tilt
+  { id: "04", rx: 305, ry: 185, rotateDeg: +32 }, // compact, sharp right tilt
 ] as const;
 
 /**
- * The four diagnostic labels, each positioned on its host orbit.
- *
- * Positions are pre-baked (rather than parametric angles) so the
- * markup can hardcode `--x-pct` / `--y-pct` CSS variables. To
- * re-derive them analytically, call `pointOnEllipse(rx, ry,
- * rotateDeg, parametricDeg)` with the parametric angles documented
- * inline below.
+ * The four diagnostic labels, each positioned on its OWN orbit at a
+ * parametric angle that puts the label in its assigned quadrant.
+ * Positions are pre-baked so the markup can hardcode `--x-pct` /
+ * `--y-pct` CSS variables. Re-derive analytically by calling
+ * `pointOnEllipse(orbit.rx, orbit.ry, orbit.rotateDeg, parametricDeg)`
+ * with the angles documented inline below.
  */
 export const MISS_LABELS: readonly OrbitLabel[] = [
   {
     id: "01",
     tag: "Brand voice at scale",
-    // orbit 01 (340, 200, +18°), parametric ψ ≈ 207.5°
-    x: -258,
-    y: -181,
-    xPct: -23.45,
-    yPct: -27.85,
+    // orbit 01 (370, 225, +16°), parametric ψ = 205° → UL
+    x: -296,
+    y: -184,
+    xPct: -26.92,
+    yPct: -28.28,
   },
   {
     id: "02",
     tag: "Localization at scale",
-    // orbit 02 (300, 170, -12°), parametric ψ ≈ -29°
-    x: +236,
-    y: -137,
-    xPct: +21.45,
-    yPct: -21.08,
+    // orbit 02 (465, 140, -8°), parametric ψ = -35° → UR
+    x: +366,
+    y: -133,
+    xPct: +33.28,
+    yPct: -20.39,
   },
   {
     id: "03",
     tag: "Brief handoff",
-    // orbit 03 (350, 200, -22°), parametric ψ ≈ 161°
-    x: -240,
-    y: +210,
-    xPct: -21.82,
-    yPct: +32.31,
+    // orbit 03 (395, 175, -28°), parametric ψ = 155° → LL
+    x: -281,
+    y: +233,
+    xPct: -25.58,
+    yPct: +35.9,
   },
   {
     id: "04",
     tag: "Briefing synthesis",
-    // orbit 04 (270, 160, +22°), parametric ψ ≈ 19°
-    x: +220,
-    y: +150,
-    xPct: +20.0,
-    yPct: +23.08,
+    // orbit 04 (305, 185, +32°), parametric ψ = 10° → LR
+    x: +238,
+    y: +186,
+    xPct: +21.61,
+    yPct: +28.68,
   },
 ] as const;
 
-/** Pair each orbit id to its label by id. Convenience map for
- *  consumers that need to walk the pair list. */
+/** Pair each orbit to its label by id. */
 export const MISS_PAIRS: readonly { orbit: OrbitEllipse; label: OrbitLabel }[] = MISS_ORBITS.map(
   (orbit) => {
     const label = MISS_LABELS.find((l) => l.id === orbit.id);

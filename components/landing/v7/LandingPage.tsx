@@ -4,6 +4,7 @@ import { useEffect, useLayoutEffect, useRef, useState, useCallback, useMemo } fr
 import { useLandingScroll } from "./hooks/useLandingScroll";
 import { useRevealMotion } from "./hooks/useRevealMotion";
 import { useBrandmarkJourney } from "./hooks/useBrandmarkJourney";
+import { useDiagnosticPillOrbits } from "./hooks/useDiagnosticPillOrbits";
 import { useSigilEntranceScrub } from "./hooks/useSigilEntranceScrub";
 import { type BrandmarkActorHandle } from "./BrandmarkActor";
 import { BrandmarkSystem } from "./BrandmarkSystem";
@@ -39,6 +40,7 @@ export function LandingPage({ bodyHtml, bodyClass, celestialSlots }: LandingPage
   // animation (orbits, halo, cap, legend, tri-left) — a separate
   // concern from the brandmark journey.
   useBrandmarkJourney(rootRef, brandmarkActorRef);
+  useDiagnosticPillOrbits();
   useSigilEntranceScrub(rootRef);
   // Dev-only invariant guard: warns in the console whenever more
   // than one brandmark instance is painting at the same scroll

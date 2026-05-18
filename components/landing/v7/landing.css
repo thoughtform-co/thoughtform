@@ -2812,7 +2812,13 @@ html[data-quote-active="true"] .tf-brandmark-actor {
      it clears the absolute-positioned `.station__idx` eyebrow
      (which sits at `top: 80px` from the section). With symmetric
      180/180 padding the inner content was tall enough to overflow
-     the centered box, pulling the title up into the eyebrow zone. */
+     the centered box, pulling the title up into the eyebrow zone.
+
+     `isolation: isolate` creates a section-local stacking context so
+     the decorative nebula (`.miss::before`) and starfield
+     (`.miss__stars`) can use `z-index: -1` to paint above the void
+     shield but below all real content — without bleeding into the
+     gateway/hero stacking context above. */
   height: 100vh;
   height: 100svh;
   padding: 220px 0 140px;
@@ -2821,19 +2827,73 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   justify-content: center;
   position: relative;
   overflow: hidden;
+  isolation: isolate;
+}
+
+/* Nebula — soft, very low-alpha radial wash layered behind the
+   orbital chart. Three radials in gold / green / dawn tones cluster
+   off-axis so the section reads as a region of space, not a flat
+   void panel. `z-index: -1` keeps the wash beneath the .station__idx
+   eyebrow and .miss__inner content; the section's `isolation: isolate`
+   confines that negative z to the section so it can't drop below the
+   void shield. */
+.miss::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+  background:
+    radial-gradient(ellipse 62% 48% at 28% 30%, rgba(202, 165, 84, 0.085), transparent 65%),
+    radial-gradient(ellipse 55% 42% at 78% 70%, rgba(91, 122, 78, 0.06), transparent 65%),
+    radial-gradient(ellipse 75% 42% at 50% 50%, rgba(202, 165, 84, 0.035), transparent 72%),
+    radial-gradient(ellipse 42% 55% at 88% 22%, rgba(235, 227, 214, 0.03), transparent 70%),
+    radial-gradient(ellipse 38% 45% at 12% 80%, rgba(235, 227, 214, 0.022), transparent 70%);
+}
+
+/* Starfield — sparse SVG dot field that paints between the nebula
+   wash and the section content. Same `z-index: -1` band as the
+   nebula so the eyebrow + heading + orbital instrument always read
+   on top. Uses `preserveAspectRatio="xMidYMid slice"` (declared on
+   the SVG element) so the field covers the whole section regardless
+   of aspect ratio. */
+.miss__stars {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: -1;
+  overflow: hidden;
+}
+.miss__stars circle {
+  fill: rgb(235, 227, 214);
+}
+.miss__stars circle.miss__star--gold {
+  fill: rgb(202, 165, 84);
 }
 
 /* Inner content column. data-m="instrument" so the existing IO reveal
    motion fires; wrapper stays opaque so the gateway radial doesn't
-   bleed through during the 880ms reveal. */
+   bleed through during the 880ms reveal.
+
+   Layout: single-cell CSS grid that stacks the heading and the
+   orbital system in the same cell so the orbits naturally extend
+   up behind the title (more space-map, less diagram). The head
+   pins to the cell's top (`align-self: start`) and carries the
+   higher z-index; the system centres in the cell so the brandmark
+   slot resolves to the section's vertical centre. `min-height`
+   keeps the cell at least ~620px so the orbit field has room to
+   breathe even on shorter viewports. */
 .miss__inner {
   position: relative;
   z-index: 2;
   width: min(1280px, 92vw);
-  display: flex;
-  flex-direction: column;
-  gap: clamp(28px, 4.5vh, 56px);
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr;
   text-align: left;
+  min-height: min(640px, calc(100svh - 320px));
 }
 
 /* Header: eyebrow → title → one-line bridge. Previously a two-column
@@ -2841,12 +2901,26 @@ html[data-quote-active="true"] .tf-brandmark-actor {
    second paragraph the reader had to track before the cards. The
    four card titles do that job better, so the lede was replaced by
    a single instrument-typography bridge line that primes the grid as
-   variants of one diagnosis ("Same pattern, four ways."). */
+   variants of one diagnosis ("Same pattern, four ways.").
+
+   Sits in the top of the shared `.miss__inner` grid cell with a
+   higher z-index than the orbital system; void-toned text shadows
+   keep title + bridge legible when an orbit arc grazes the glyphs
+   from behind. */
 .miss__head {
   display: flex;
   flex-direction: column;
   gap: clamp(12px, 1.6vh, 18px);
   max-width: 56ch;
+  grid-column: 1;
+  grid-row: 1;
+  align-self: start;
+  position: relative;
+  z-index: 3;
+  text-shadow:
+    0 0 4px var(--void),
+    0 0 14px var(--void),
+    0 0 28px var(--void);
 }
 .miss__eyebrow {
   display: inline-flex;
@@ -2913,15 +2987,22 @@ html[data-quote-active="true"] .tf-brandmark-actor {
 /* Outer constellation container. Fixed aspect-ratio matches the
    orbits SVG viewBox (1100 / 650) so absolute-positioned labels
    computed in viewBox-percentage units stay locked to the orbital
-   arcs at every viewport width. Max width 900px keeps the
-   constellation's total height inside the section's available
-   content area (~540px) so the title + bridge above + system here
-   don't overflow into the eyebrow zone. */
+   arcs at every viewport width. Lives in the same grid cell as
+   `.miss__head` and centres vertically inside it — that puts the
+   brandmark slot (50% / 50% of the system) at the section's
+   vertical centre while the heading floats at the cell's top. The
+   wider max-width (1180px vs the old 900) gives the long horizon
+   orbit room to extend out past the labelled pills. */
 .miss__system {
   position: relative;
-  width: min(900px, 88vw);
+  width: min(1180px, 100%);
   aspect-ratio: 1100 / 650;
   margin: 0 auto;
+  grid-column: 1;
+  grid-row: 1;
+  justify-self: center;
+  align-self: center;
+  z-index: 1;
 }
 
 /* The four orbital ellipses. `preserveAspectRatio="xMidYMid meet"`
@@ -2938,33 +3019,219 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   z-index: 0;
 }
 
-/* Orbit hairlines. Base contrast bumped from the original
-   `dawn-15 / 0.6px / 2-6 dash` (which rendered below the visibility
-   threshold on most displays) to `dawn-30 / 1.0px / 3-6 dash`. The
-   four orbits stay uniform in colour — the hover-brighten on
-   `:has(.miss__label--N:hover)` (below) is the per-orbit accent
-   channel, picking out the active diagnosis in gold while the rest
-   stay quiet. */
+/* Four asymmetric orbits — one per label, each with a clearly
+   different LINE CHARACTER (solid / true dotted / dash-dot /
+   long-dash). Per-orbit alpha is BAKED INTO the stroke colour
+   (rgba) so the orbit-draw reveal keyframe's `to { stroke-opacity:
+   1 }` step doesn't flatten the per-orbit hierarchy. Two orbits
+   read in cooler dawn (the navigation-chart vocabulary) and two
+   pick up a warm gold tint — same instrument family, just enough
+   chromatic variety to feel like a real star chart rather than an
+   atom diagram. */
 .miss__orbit {
   fill: none;
-  stroke: var(--dawn-30, rgba(235, 227, 214, 0.3));
-  stroke-width: 1;
-  stroke-dasharray: 3 6;
+  stroke: rgba(235, 227, 214, 0.42);
+  stroke-width: 1.4;
   vector-effect: non-scaling-stroke;
   transition:
     stroke 220ms ease-out,
     stroke-opacity 220ms ease-out;
   stroke-opacity: 1;
 }
+.miss__orbit--01 {
+  /* Solid continuous — the bold baseline trajectory. Slightly
+     heavier weight so it reads as the dominant arc when the four
+     orbits overlap. */
+  stroke: rgba(235, 227, 214, 0.5);
+  stroke-width: 1.7;
+  stroke-dasharray: none;
+}
+.miss__orbit--02 {
+  /* TRUE dotted — round caps + `0 X` dash makes each "dash" render
+     as a perfect circle (stroke-width in diameter). The dot rhythm
+     matches the reference space-map vocabulary directly. Warm gold
+     tint at low alpha so the four orbits don't read monochrome. */
+  stroke: rgba(202, 165, 84, 0.38);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-dasharray: 0.001 9;
+}
+.miss__orbit--03 {
+  /* Dash-dot articulated rhythm — long mark, gap, dot, gap. The
+     four-segment dasharray gives this orbit a measured chart-line
+     feel distinct from both pure solid and pure dotted. */
+  stroke: rgba(235, 227, 214, 0.48);
+  stroke-width: 1.4;
+  stroke-linecap: round;
+  stroke-dasharray: 14 6 0.001 6;
+}
+.miss__orbit--04 {
+  /* Long sparse dash — measured trajectory in a warmer gold,
+     thinner stroke. Reads as the most distant / orbital path,
+     receding behind the others. */
+  stroke: rgba(202, 165, 84, 0.32);
+  stroke-width: 1.2;
+  stroke-dasharray: 22 11;
+}
 
-/* Orbit draw-in reveal — each ellipse draws from its starting point
-   outward via `pathLength=1` + `stroke-dashoffset 1 → 0`. The
-   stagger matches the legacy ray-draw timing so the diagnostic
-   reveals at the same cadence the visitor has seen elsewhere on
-   the page. */
+/* Ghost orbits — extra unlabeled arcs that thicken the navigation
+   chart without competing with the four diagnostic paths. Very low
+   alpha so they read as the secondary map grid (the way real space
+   maps layer faint reference orbits behind their named ones). The
+   `miss__orbit` base styles still apply for stroke-width + dash
+   transitions; the override here keeps them quiet. */
+.miss__orbit--ghost {
+  stroke: rgba(235, 227, 214, 0.13);
+  stroke-width: 1;
+  stroke-dasharray: 1 6;
+  stroke-linecap: round;
+}
+.miss__orbit--ghost-long {
+  stroke: rgba(202, 165, 84, 0.14);
+  stroke-width: 0.9;
+  stroke-dasharray: 18 9;
+  stroke-linecap: butt;
+}
+.miss__orbit--ghost-solid {
+  stroke: rgba(235, 227, 214, 0.1);
+  stroke-width: 0.8;
+  stroke-dasharray: none;
+}
+
+/* Orbiting particles — small dawn/gold dots that slowly traverse
+   their host orbit. Uses `offset-path` so each particle follows its
+   ACTUAL elliptical orbit (rather than tracing a circular path via
+   CSS `rotate`, which would not match the orbit's eccentricity).
+   Each `<g class="miss__orbit-group">` rotates its child ellipse +
+   particle by the orbit's tilt, so the particle's offset-path is
+   expressed in the unrotated local frame and inherits the rotation
+   from the parent group.
+   Two particles read in dawn, two in gold; speeds and directions
+   vary to break uniformity (CW via sweep-flag=1, CCW via 0). */
+.miss__particle {
+  opacity: 0;
+  offset-rotate: 0deg;
+}
+.miss__particle--01 {
+  fill: var(--gold);
+  filter: drop-shadow(0 0 4px rgba(202, 165, 84, 0.55));
+  offset-path: path("M 370,0 A 370,225 0 0,1 -370,0 A 370,225 0 0,1 370,0 Z");
+}
+.miss__particle--02 {
+  fill: rgba(236, 227, 214, 0.7);
+  /* Reverse direction (sweep-flag 0) so this orbit's particle
+     travels CCW relative to the others. */
+  offset-path: path("M 465,0 A 465,140 0 0,0 -465,0 A 465,140 0 0,0 465,0 Z");
+}
+.miss__particle--03 {
+  fill: var(--gold);
+  filter: drop-shadow(0 0 3px rgba(202, 165, 84, 0.45));
+  offset-path: path("M 395,0 A 395,175 0 0,1 -395,0 A 395,175 0 0,1 395,0 Z");
+}
+.miss__particle--04 {
+  fill: rgba(236, 227, 214, 0.7);
+  offset-path: path("M 305,0 A 305,185 0 0,0 -305,0 A 305,185 0 0,0 305,0 Z");
+}
+
+@keyframes miss-particle-orbit {
+  from {
+    offset-distance: 0%;
+  }
+  to {
+    offset-distance: 100%;
+  }
+}
+
+/* Brand halo: two concentric decorative rings + a few pips that
+   gently rotate around the brandmark in opposite directions. Sits
+   just outside the brandmark slot (~88 SVG-unit radius). Subtle
+   motion close to the centre gives the brandmark visible life
+   without the previous compass's static density. */
+.miss__brand-halo {
+  transform-origin: 0 0;
+}
+.miss__brand-halo--outer {
+  animation: brand-halo-spin 360s linear infinite;
+}
+.miss__brand-halo--inner {
+  animation: brand-halo-spin 240s linear infinite reverse;
+}
+.miss__brand-halo-ring {
+  fill: none;
+  stroke: var(--dawn-15);
+  stroke-width: 0.5;
+  stroke-dasharray: 1 5;
+  vector-effect: non-scaling-stroke;
+}
+.miss__brand-halo-ring--outer {
+  stroke-dasharray: 0.5 7;
+}
+.miss__brand-halo-pip {
+  fill: var(--gold);
+  opacity: 0.7;
+}
+.miss__brand-halo-pip--dawn {
+  fill: rgba(236, 227, 214, 0.6);
+}
+@keyframes brand-halo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Anchor pips where labels meet the orbit. Gold dots that read as
+   celestial bodies on the orbital path, picking out the four
+   diagnoses without needing per-orbit colour variety. Larger than
+   default so they hold their own next to the label pills. */
+.miss__anchor {
+  fill: var(--gold);
+  opacity: 0.95;
+  filter: drop-shadow(0 0 4px rgba(202, 165, 84, 0.55));
+  transition:
+    opacity 220ms ease-out,
+    transform 220ms ease-out,
+    filter 220ms ease-out;
+  transform-origin: center;
+  transform-box: fill-box;
+}
+
+/* Reveal: each orbit draws in from one endpoint outward via
+   `pathLength=1` + `stroke-dashoffset 1 → 0`. The frame ring + the
+   compass + the tethers + the anchors all fade in via the wrapper's
+   opacity ramp (no per-element stagger needed — there are not four
+   orbits anymore, so the staggered draw-in that used to differentiate
+   them is no longer necessary). */
 .miss__inner:not(.is-in) .miss__orbit {
   stroke-dashoffset: 1;
   stroke-opacity: 0;
+}
+.miss__inner:not(.is-in) .miss__anchor {
+  opacity: 0;
+  transform: scale(0.4);
+}
+.miss__inner:not(.is-in) .miss__brand-halo {
+  opacity: 0;
+}
+.miss__inner.is-in .miss__brand-halo {
+  animation:
+    miss-brand-halo-fade 800ms ease-out 600ms both,
+    brand-halo-spin 360s linear 600ms infinite;
+}
+.miss__inner.is-in .miss__brand-halo--inner {
+  animation:
+    miss-brand-halo-fade 800ms ease-out 720ms both,
+    brand-halo-spin 240s linear 720ms infinite reverse;
+}
+@keyframes miss-brand-halo-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes miss-orbit-draw {
@@ -2975,6 +3242,16 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   to {
     stroke-dashoffset: 0;
     stroke-opacity: 1;
+  }
+}
+@keyframes miss-anchor-acquire {
+  from {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+  to {
+    opacity: 0.85;
+    transform: scale(1);
   }
 }
 
@@ -2990,12 +3267,55 @@ html[data-quote-active="true"] .tf-brandmark-actor {
 .miss__inner.is-in .miss__orbit--04 {
   animation: miss-orbit-draw 1200ms cubic-bezier(0.16, 1, 0.3, 1) 480ms both;
 }
+.miss__inner.is-in .miss__anchor--01 {
+  animation: miss-anchor-acquire 420ms cubic-bezier(0.16, 1, 0.3, 1) 1120ms both;
+}
+.miss__inner.is-in .miss__anchor--02 {
+  animation: miss-anchor-acquire 420ms cubic-bezier(0.16, 1, 0.3, 1) 1240ms both;
+}
+.miss__inner.is-in .miss__anchor--03 {
+  animation: miss-anchor-acquire 420ms cubic-bezier(0.16, 1, 0.3, 1) 1360ms both;
+}
+.miss__inner.is-in .miss__anchor--04 {
+  animation: miss-anchor-acquire 420ms cubic-bezier(0.16, 1, 0.3, 1) 1480ms both;
+}
 
-/* Hovering / focusing a label brightens the orbit it sits on, so the
-   visitor's attention reads as a beam picking out one diagnosis in
-   the constellation. Uses :has() (Chrome 105+, Safari 15.4+, Firefox
-   121+); pre-:has browsers see static dawn-15 orbits which are still
-   legible. */
+/* Particles: fade in after their host orbit has substantially drawn,
+   then run the continuous orbital traverse forever (linear). Two
+   animations composed via comma — the fade-in completes, the orbit
+   keeps running. Speeds vary per orbit so the system doesn't read as
+   four particles in lockstep. */
+.miss__inner.is-in .miss__particle--01 {
+  animation:
+    miss-particle-fade 600ms ease-out 1400ms both,
+    miss-particle-orbit 70s linear 1400ms infinite;
+}
+.miss__inner.is-in .miss__particle--02 {
+  animation:
+    miss-particle-fade 600ms ease-out 1520ms both,
+    miss-particle-orbit 90s linear 1520ms infinite;
+}
+.miss__inner.is-in .miss__particle--03 {
+  animation:
+    miss-particle-fade 600ms ease-out 1640ms both,
+    miss-particle-orbit 80s linear 1640ms infinite;
+}
+.miss__inner.is-in .miss__particle--04 {
+  animation:
+    miss-particle-fade 600ms ease-out 1760ms both,
+    miss-particle-orbit 60s linear 1760ms infinite;
+}
+@keyframes miss-particle-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 0.9;
+  }
+}
+
+/* Hover: brightens the orbit + anchor for the focused label,
+   picking that diagnosis out of the constellation in gold. */
 .miss__system:has(.miss__label--01:hover) .miss__orbit--01,
 .miss__system:has(.miss__label--01:focus-visible) .miss__orbit--01,
 .miss__system:has(.miss__label--02:hover) .miss__orbit--02,
@@ -3006,6 +3326,17 @@ html[data-quote-active="true"] .tf-brandmark-actor {
 .miss__system:has(.miss__label--04:focus-visible) .miss__orbit--04 {
   stroke: var(--gold);
   stroke-opacity: 0.7;
+}
+.miss__system:has(.miss__label--01:hover) .miss__anchor--01,
+.miss__system:has(.miss__label--01:focus-visible) .miss__anchor--01,
+.miss__system:has(.miss__label--02:hover) .miss__anchor--02,
+.miss__system:has(.miss__label--02:focus-visible) .miss__anchor--02,
+.miss__system:has(.miss__label--03:hover) .miss__anchor--03,
+.miss__system:has(.miss__label--03:focus-visible) .miss__anchor--03,
+.miss__system:has(.miss__label--04:hover) .miss__anchor--04,
+.miss__system:has(.miss__label--04:focus-visible) .miss__anchor--04 {
+  opacity: 1;
+  transform: scale(1.5);
 }
 
 /* Centre brandmark dock. Absolute-positioned at the constellation
@@ -3203,6 +3534,16 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   .miss__inner .miss__orbit--02,
   .miss__inner .miss__orbit--03,
   .miss__inner .miss__orbit--04,
+  .miss__inner .miss__anchor--01,
+  .miss__inner .miss__anchor--02,
+  .miss__inner .miss__anchor--03,
+  .miss__inner .miss__anchor--04,
+  .miss__inner .miss__particle--01,
+  .miss__inner .miss__particle--02,
+  .miss__inner .miss__particle--03,
+  .miss__inner .miss__particle--04,
+  .miss__inner .miss__brand-halo,
+  .miss__inner .miss__brand-halo--inner,
   .miss__inner .miss__label--01,
   .miss__inner .miss__label--02,
   .miss__inner .miss__label--03,
@@ -3212,6 +3553,20 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   .miss__inner:not(.is-in) .miss__orbit {
     stroke-dashoffset: 0;
     stroke-opacity: 1;
+  }
+  .miss__inner:not(.is-in) .miss__anchor {
+    opacity: 0.85;
+    transform: none;
+  }
+  .miss__inner:not(.is-in) .miss__brand-halo {
+    opacity: 1;
+  }
+  /* Particles: park at their starting position on the orbit; no
+     continuous traversal for visitors who opted out of motion. */
+  .miss__inner:not(.is-in) .miss__particle,
+  .miss__particle {
+    opacity: 0.9;
+    offset-distance: 0%;
   }
   .miss__inner:not(.is-in) .miss__label {
     opacity: 1;
@@ -3242,6 +3597,30 @@ html[data-quote-active="true"] .tf-brandmark-actor {
     padding-top: 100px;
     padding-bottom: 64px;
   }
+  /* Revert the desktop grid stacking so head + system flow normally
+     on mobile. The mobile single-halo collapse below takes over for
+     `.miss__system`, and `.miss__head` reads as a normal stacked
+     block above it. */
+  .miss__inner {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(28px, 4.5vh, 56px);
+    min-height: 0;
+  }
+  .miss__head {
+    grid-area: auto;
+    align-self: auto;
+    z-index: auto;
+    /* Drop the desktop legibility halo — orbit lines don't pass
+       behind the head on mobile (single-halo collapse), so the
+       text-shadow would only soften the heading needlessly. */
+    text-shadow: none;
+  }
+  /* Hide the ghost orbits on mobile — they only have meaning at
+     desktop densities where the labelled orbits give them context. */
+  .miss__ghost-orbits {
+    display: none;
+  }
   .miss__system {
     width: 100%;
     aspect-ratio: auto;
@@ -3252,11 +3631,16 @@ html[data-quote-active="true"] .tf-brandmark-actor {
     margin: 0;
     justify-items: center;
     align-items: center;
+    justify-self: stretch;
+    align-self: stretch;
+    grid-area: auto;
   }
   /* Orbits + brandmark share row 1 so they overlap; place-items
-     centres both within the cell. Three of four orbits hide on mobile
-     (a single elliptical halo signals the celestial language without
-     overcrowding). */
+     centres both within the cell. On mobile we strip the diagnostic
+     instrument down to a single elliptical halo — orbit-groups
+     02-04, the tethers, anchor pips, and the orbiting particles
+     all hide; only orbit 01 remains, reshaped to a thin horizontal
+     halo. */
   .miss__orbits {
     grid-row: 1;
     grid-column: 1;
@@ -3266,19 +3650,24 @@ html[data-quote-active="true"] .tf-brandmark-actor {
     max-width: 360px;
     height: 100%;
   }
-  .miss__orbit--02,
-  .miss__orbit--03,
-  .miss__orbit--04 {
+  .miss__orbit-group--02,
+  .miss__orbit-group--03,
+  .miss__orbit-group--04,
+  .miss__anchors,
+  .miss__particle,
+  .miss__brand-halo {
     display: none;
   }
+  /* Reshape orbit 01 + un-rotate its group so the surviving halo
+     reads as a clean horizontal ellipse. CSS `rx` / `ry` are
+     supported on SVG ellipse elements in all evergreen browsers
+     (Chrome 51+, Firefox 69+, Safari 12.1+). */
+  .miss__orbit-group--01 {
+    transform: none;
+  }
   .miss__orbit--01 {
-    /* Override the desktop orbit shape to a thin horizontal halo that
-       reads as the singular elliptical signal. CSS `rx` / `ry` are
-       supported on SVG ellipse elements in all evergreen browsers
-       (Chrome 51+, Firefox 69+, Safari 12.1+). */
     rx: 340;
     ry: 90;
-    transform: rotate(0deg);
   }
   .miss__brand-slot {
     grid-row: 1;
