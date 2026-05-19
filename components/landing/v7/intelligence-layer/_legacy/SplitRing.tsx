@@ -9,7 +9,7 @@ import {
   lerp,
   orbitEmerge,
   splitEnvelope,
-} from "./intelligenceLayerGeom";
+} from "../intelligenceLayerGeom";
 import { useBrandmarkJourneyStore } from "@/lib/stores/brandmarkJourneyStore";
 
 /**

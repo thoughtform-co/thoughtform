@@ -1,6 +1,6 @@
 "use client";
 
-import { CLUSTER_RING_RADII, CLUSTER_TRIAD, SUBSTRATE_RING } from "./intelligenceLayerGeom";
+import { CLUSTER_RING_RADII, CLUSTER_TRIAD, SUBSTRATE_RING } from "../intelligenceLayerGeom";
 import { OrbitalCluster } from "./OrbitalCluster";
 import { SplitRing } from "./SplitRing";
 

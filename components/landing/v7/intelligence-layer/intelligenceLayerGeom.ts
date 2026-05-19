@@ -1,9 +1,13 @@
 /**
- * intelligenceLayerGeom — geometry contract for the orbital triad
- * R3F scene (`OrbitField`) and the substrate-window choreography
+ * intelligenceLayerGeom — geometry contract for the intelligence-layer
+ * R3F scene (`TriadScene`) and the substrate-window choreography
  * (`lib/brandmark/journey.ts`).
  *
- * ADR-014: the intelligence layer is no longer a three-coaxial-ring
+ * ADR-016: three discrete celestial bodies (Sources / Substrate /
+ * Surfaces) on a mild isometric tilt with a comet stream connector.
+ * ADR-014 (front-on coplanar rings) is archived under `_legacy/`.
+ *
+ * ADR-014 (legacy): the intelligence layer is no longer a three-coaxial-ring
  * instrument that rotates around a Y axis. It is a front-on TRIAD of
  * three overlapping circular orbits — a space-map composition modelled
  * after Destiny / Astral Frontier celestial diagrams:
@@ -30,29 +34,84 @@
  */
 
 import { create } from "zustand";
+import * as THREE from "three";
 
 // ────────────────────────────────────────────────────────────────────
-// Camera — front-on (no Y tilt), wide enough to frame the triad
+// ADR-016 — celestial triad layout + orthographic camera
 // ────────────────────────────────────────────────────────────────────
 
-/**
- * Camera framing for `IntelligenceLayerStack`. Front-on: the camera
- * sits on the Z axis looking straight at the origin so the side
- * orbits read as circles, not foreshortened ellipses. (The previous
- * three-ring model used a slight Y elevation so 3D-rotated rings
- * read with depth; the orbital triad has no 3D rotation at all.)
- *
- * `position.z = 4.0` and `fov = 26` give the triad ~80% of the
- * canvas width at 16:9 with comfortable padding for the orbits' top
- * tick marks and diamond pips.
- */
+export type BodyId = "sources" | "substrate" | "surfaces";
+
+const DEG = Math.PI / 180;
+
+/** Mild isometric tilt applied to the R3F camera (radians). */
+export const CAMERA_TILT = {
+  x: -14 * DEG,
+  y: 6 * DEG,
+} as const;
+
+/** Orthographic framing for `IntelligenceLayerStack` (ADR-016). */
 export const CAMERA_PARAMS = {
-  fov: 26,
-  position: [0, 0, 4.0] as [number, number, number],
-  lookAt: [0, 0, 0] as [number, number, number],
+  orthographic: true as const,
+  zoom: 38,
+  position: [0, 0.35, 12] as [number, number, number],
+  lookAt: [0, -0.111, 0] as [number, number, number],
   near: 0.1,
-  far: 50,
+  far: 80,
+  rotation: [CAMERA_TILT.x, CAMERA_TILT.y, 0] as [number, number, number],
 };
+
+/** Scene-space centres — substrate at the brandmark dock height. */
+export const BODY_POSITIONS: Record<BodyId, [number, number, number]> = {
+  sources: [-2.4, -0.111, -0.4],
+  substrate: [0, -0.111, 0],
+  surfaces: [2.4, -0.111, -0.4],
+};
+
+export const BODY_SCALES: Record<BodyId, number> = {
+  sources: 0.7,
+  substrate: 1.0,
+  surfaces: 0.7,
+};
+
+/** Per-body ring Euler tilts (radians) — rings tip toward the viewer. */
+export const BODY_RING_TILTS: Record<BodyId, readonly [number, number, number][]> = {
+  sources: [[16 * DEG, 0, 8 * DEG]],
+  substrate: [
+    [14 * DEG, 0, 6 * DEG],
+    [18 * DEG, 0, -10 * DEG],
+  ],
+  surfaces: [[16 * DEG, 0, -8 * DEG]],
+};
+
+/** Catmull-Rom control points for the comet stream (left → right). */
+export const COMET_CURVE_POINTS: readonly [number, number, number][] = [
+  [-4.2, -0.15, -0.5],
+  [-2.35, -0.05, -0.35],
+  [0, 0.42, 0.05],
+  [2.35, -0.05, -0.35],
+  [4.2, -0.15, -0.5],
+];
+
+const _projVec = new THREE.Vector3();
+
+/** Project a body's world centre to CSS % coords on the ilayer canvas. */
+export function screenSpaceForBody(
+  camera: THREE.Camera,
+  canvas: HTMLCanvasElement,
+  worldPos: THREE.Vector3,
+  bodyScale: number
+): { x: number; y: number; scale: number } {
+  _projVec.copy(worldPos).project(camera);
+  const rect = canvas.getBoundingClientRect();
+  if (rect.width < 1 || rect.height < 1) {
+    return { x: 50, y: 56, scale: bodyScale };
+  }
+  const x = (_projVec.x * 0.5 + 0.5) * 100;
+  const y = (-_projVec.y * 0.5 + 0.5) * 100;
+  const scale = bodyScale * (0.92 + _projVec.z * 0.08);
+  return { x, y, scale };
+}
 
 // ────────────────────────────────────────────────────────────────────
 // Triad geometry — substrate + two side orbits

@@ -1,7 +1,7 @@
 # ADR-014: Intelligence Layer Orbital Triad
 
 **Date:** 2026-05-16 (revised 2026-05-17 — v5)
-**Status:** Accepted — supersedes the three-coaxial-ring composition of [ADR-012](012-intelligence-layer-artifact.md) v5. Extends [ADR-013](013-brandmark-journey-refactor.md) (single-continuous-transform brandmark) with a per-keyframe shape channel.
+**Status:** Superseded by [ADR-016](016-intelligence-layer-celestial-triad.md) (2026-05-19). Was accepted — superseded the three-coaxial-ring composition of [ADR-012](012-intelligence-layer-artifact.md) v5. Legacy R3F components: `intelligence-layer/_legacy/`.
 
 **v5 revision (2026-05-17)** — clean futuristic three-cluster composition. The brandmark no longer paints inside the mid circle as the "encoded substrate" anchor; it fully dissolves at the start of the substrate window via a new SPLIT choreography. The three pillars are now equal-richness orbital clusters (5 concentric rings + 4 cardinal diamonds + sparse dust each), painted in the celestial-diagram vocabulary referenced from the Definition section. Atmosphere field + glow filters dropped — "clean and futuristic" register, pure linework + diamonds + dust. See "v5 deltas" below.
 

@@ -1,34 +1,23 @@
 "use client";
 
 import { Canvas } from "@react-three/fiber";
-import { OrbitField } from "./OrbitField";
+import { OrthographicCamera } from "@react-three/drei";
 import { CAMERA_PARAMS } from "./intelligenceLayerGeom";
+import { TriadScene } from "./TriadScene";
 
 /**
- * IntelligenceLayerStack — thin R3F Canvas host for the `OrbitField`
- * scene (ADR-014).
+ * IntelligenceLayerStack — R3F host for the celestial triad (ADR-016).
  *
- * The interesting stuff lives in `OrbitField` (the two side-orbit
- * hairlines, decorative diamond pips, the faint substrate guide
- * ring + halo); this wrapper just constructs the Canvas with the
- * front-on perspective camera and the no-shadows, low-power gl
- * config.
- *
- * Camera framing (ADR-014):
- *   - PerspectiveCamera at [0, 0, 4.0], fov 26, lookAt [0, 0, 0].
- *   - FRONT-ON. No Y elevation, no Y rotation anywhere in the scene
- *     — the orbital triad reads as three coplanar circles, not
- *     three foreshortened ellipses.
- *   - Static — there is no rotation in the new model.
- *
- * Mounted by `IntelligenceLayerPortal` into the
- * `[data-ilayer-stack-root]` placeholder in the v7 prototype HTML.
+ * Orthographic camera with a mild X/Y tilt so orbital rings read as
+ * orbits rather than flat overlapping ellipses. The scene composes
+ * three `CelestialBody` groups plus a `CometStream` connector.
  */
 export function IntelligenceLayerStack() {
   return (
     <Canvas
+      orthographic
       camera={{
-        fov: CAMERA_PARAMS.fov,
+        zoom: CAMERA_PARAMS.zoom,
         position: CAMERA_PARAMS.position,
         near: CAMERA_PARAMS.near,
         far: CAMERA_PARAMS.far,
@@ -36,6 +25,8 @@ export function IntelligenceLayerStack() {
       onCreated={({ camera }) => {
         const [lx, ly, lz] = CAMERA_PARAMS.lookAt;
         camera.lookAt(lx, ly, lz);
+        const [rx, ry, rz] = CAMERA_PARAMS.rotation;
+        camera.rotation.set(rx, ry, rz);
       }}
       dpr={[1, 1.75]}
       gl={{
@@ -53,7 +44,14 @@ export function IntelligenceLayerStack() {
         pointerEvents: "none",
       }}
     >
-      <OrbitField />
+      <OrthographicCamera
+        makeDefault
+        zoom={CAMERA_PARAMS.zoom}
+        position={CAMERA_PARAMS.position}
+        near={CAMERA_PARAMS.near}
+        far={CAMERA_PARAMS.far}
+      />
+      <TriadScene />
     </Canvas>
   );
 }
