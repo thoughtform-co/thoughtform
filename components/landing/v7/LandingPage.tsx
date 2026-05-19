@@ -13,6 +13,7 @@ import { CelestialPortals } from "./CelestialConnector/CelestialPortals";
 import { PhaseGlyphPortals } from "./PhaseGlyph";
 import { BuildCasesPortal } from "./build-cases";
 import { IntelligenceLayerPortal } from "./intelligence-layer";
+import { TravelingOrbits } from "./orbits/TravelingOrbits";
 import { CelestialEditorOverlay } from "@/components/admin/CelestialEditor";
 import { useCelestialDrafts } from "@/components/admin/CelestialEditor/useCelestialDrafts";
 import type { SlotsMap } from "@/lib/celestial/schema";
@@ -434,6 +435,18 @@ export function LandingPage({ bodyHtml, bodyClass, celestialSlots }: LandingPage
           substrate dock anchor's grid placement settles before the
           choreography hook reads its rect on first measure. */}
       <IntelligenceLayerPortal containerRef={rootRef} />
+      {/* Persistent four-ring painter (ADR-017). Renders one set of
+          rings whose centre + per-ring scale/rotation lerp from the
+          sigil dock (concentric circles) to the miss dock
+          (eccentric tilted ellipses) over the sigil → miss leg.
+          Replaces the legacy `.sigil__orbits` / `.miss__orbits`
+          two-tree handoff in particle mode; the prototype SVG
+          orbit/ring elements are hidden by a CSS gate. Returns
+          null in SVG fallback mode so the legacy markup paints
+          unchanged. Mounted before `BrandmarkSystem` so the
+          painter sits BEHIND the crisp vector mark in the layer
+          stack. */}
+      <TravelingOrbits rootRef={rootRef} />
       {/* Single brandmark entry point. Renders one canonical
           `BrandmarkGlyph` into each `data-brand-anchor` slot via
           portal, plus one fixed `BrandmarkActor` for transit/backdrop/

@@ -62,6 +62,7 @@ export default function BrandmarkParticlePreviewPage() {
         ringProgress: 0,
         shapeBlend: 0,
         vectorOpacity: 1,
+        substrateMorph: 0,
         visible: opacity > 0.001,
         parkedAt: null,
       });

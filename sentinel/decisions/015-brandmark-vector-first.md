@@ -12,7 +12,8 @@
 
 **Related (composes with):**
 [ADR-008 — Landing v7 background layers](008-landing-v7-background-layers.md),
-[ADR-010 — Brandmark choreography](010-brandmark-choreography.md) (state machine).
+[ADR-010 — Brandmark choreography](010-brandmark-choreography.md) (state machine),
+[ADR-017 — Orbit journey + substrate-sphere morph](017-orbit-journey-and-substrate-morph.md). The "atmosphere painter is atmosphere-only" invariant survives ADR-017: the new substrate-sphere morph mesh paints the brandmark shape ONLY inside the substrate scroll window, ONLY inside the intelligence-layer R3F canvas, and is bound to the substrate body — not the global brandmark canvas. `BrandmarkParticleStation` continues to paint atmospheric grain + transit exhaust everywhere else in the journey.
 
 ---
 

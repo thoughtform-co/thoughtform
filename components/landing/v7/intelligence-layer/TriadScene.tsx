@@ -6,6 +6,7 @@ import * as THREE from "three";
 import { CelestialBody } from "./CelestialBody";
 import { CometStream } from "./CometStream";
 import { InterSphereTrajectories } from "./InterSphereTrajectories";
+import { SubstrateMorphPoints } from "./SubstrateMorphPoints";
 import { TrajectoryFlows } from "./TrajectoryFlows";
 import { pipLocalPosition } from "./celestialRingUtils";
 import {
@@ -113,7 +114,21 @@ export function TriadScene() {
         position={BODY_POSITIONS.substrate}
         scale={BODY_SCALES.substrate}
         atmosphereCount={520}
+        // Substrate's sphere cloud is owned by the morph-capable
+        // `<SubstrateMorphPoints>` mesh below (ADR-017). Rings,
+        // diamonds, atmosphere, and ambient lighting still render
+        // here so the substrate body keeps its full visual register
+        // when the morph completes.
+        renderCloud={false}
       />
+      {/* Substrate-sphere morph cloud (ADR-017). Mounts the same
+          1900-point set in BOTH brandmark-shape (uSubstrateMorph = 0)
+          and Fibonacci-sphere (uSubstrateMorph = 1) homes; the
+          shader lerps positions between them every frame. The
+          brandmark target uniforms are computed by un-projecting
+          the substrate brandmark anchor's screen rect onto the
+          substrate body's z plane every tick. */}
+      <SubstrateMorphPoints />
       <CelestialBody
         id="surfaces"
         position={BODY_POSITIONS.surfaces}

@@ -29,6 +29,15 @@ export interface CelestialBodyProps {
   scale: number;
   atmosphereCount: number;
   ringRadius?: number;
+  /** Render the legacy Fibonacci-sphere `<points>` cloud as part of
+   *  this body. Defaults to `true`. The substrate body sets this to
+   *  `false` because its cloud is now painted by the morph-capable
+   *  `<SubstrateMorphPoints>` mesh (ADR-017) — that mesh is the
+   *  brandmark cloud at `substrateMorph = 0` and the sphere cloud
+   *  at `substrateMorph = 1`, so a parallel sphere here would
+   *  double-paint the same particles. Rings, diamonds, satellites,
+   *  inflow/outflow, and the atmosphere shell are unaffected. */
+  renderCloud?: boolean;
 }
 
 const DAWN_LINE = new THREE.Color("#ebe3d6");
@@ -63,6 +72,7 @@ export function CelestialBody({
   scale,
   atmosphereCount,
   ringRadius = BODY_RING_RADIUS,
+  renderCloud = true,
 }: CelestialBodyProps) {
   const groupRef = useRef<THREE.Group>(null);
   const primaryTilt =
@@ -242,7 +252,7 @@ export function CelestialBody({
 
   return (
     <group ref={groupRef} position={position} scale={scale}>
-      <points geometry={cloudGeom} material={cloudMat} />
+      {renderCloud && <points geometry={cloudGeom} material={cloudMat} />}
       {ringGeoms.map((geom, i) => (
         <lineLoop key={`ring-${i}`} geometry={geom} material={ringMats[i]} />
       ))}

@@ -99,6 +99,7 @@ export default function BrandmarkVectorPreviewPage() {
           ringProgress: 0,
           shapeBlend: blend,
           vectorOpacity: 1,
+          substrateMorph: 0,
           visible: true,
           parkedAt: null,
         });
@@ -123,6 +124,7 @@ export default function BrandmarkVectorPreviewPage() {
         ringProgress: 0,
         shapeBlend,
         vectorOpacity: 1,
+        substrateMorph: 0,
         visible: opacity > 0.001,
         parkedAt: null,
       });

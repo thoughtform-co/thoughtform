@@ -10,7 +10,8 @@
 [ADR-012 — Intelligence layer artifact](012-intelligence-layer-artifact.md).
 
 **Related (composes with):**
-[ADR-008 — Landing v7 background layers](008-landing-v7-background-layers.md).
+[ADR-008 — Landing v7 background layers](008-landing-v7-background-layers.md),
+[ADR-017 — Orbit journey + substrate-sphere morph](017-orbit-journey-and-substrate-morph.md) (adds the `substrateMorph` channel to `BrandmarkTransform` and uses an instant visibility cut on the vector actor in place of the legacy `vectorOpacity` HANDOFF ramp during the substrate window — the renderer swap is invisible because the substrate-sphere morph mesh covers the same silhouette at the same screen position).
 
 ---
 

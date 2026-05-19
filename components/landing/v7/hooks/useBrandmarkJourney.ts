@@ -120,6 +120,7 @@ export function useBrandmarkJourney(
     let lastBrandParkedAt: string | null = null;
     let lastBrandShapeBlend = -1;
     let lastBrandVectorOpacity = -1;
+    let lastBrandSubstrateCut = -1;
 
     const PARKED_OPACITY_THRESHOLD = 0.99;
 
@@ -152,6 +153,20 @@ export function useBrandmarkJourney(
       if (Math.abs(rounded - lastBrandVectorOpacity) < 0.001) return;
       lastBrandVectorOpacity = rounded;
       document.documentElement.style.setProperty("--brandmark-vector-opacity", rounded.toFixed(3));
+    };
+
+    /** ADR-017 — substrate-morph instant-cut gate. When > 0 the
+     *  substrate sphere's particle mesh (`SubstrateMorphPoints`) is
+     *  painting the brandmark shape in the same screen position as
+     *  the vector dock glyphs. This var multiplies the dock-glyph
+     *  opacities by 0 to hide them instantly (no fade — the
+     *  particles cover the same silhouette). The flag is binary
+     *  (0 or 1) so the CSS swap is a clean cut. */
+    const setBrandSubstrateCut = (value: number) => {
+      const cut = value > 0.001 ? 1 : 0;
+      if (cut === lastBrandSubstrateCut) return;
+      lastBrandSubstrateCut = cut;
+      document.documentElement.style.setProperty("--brandmark-substrate-cut", cut.toFixed(0));
     };
 
     // === Sigil → miss orbital morph driver ===
@@ -313,6 +328,7 @@ export function useBrandmarkJourney(
       setBrandParkedAt(fullyParked ? transform.parkedAt : null);
       setBrandShapeBlend(transform.shapeBlend);
       setBrandVectorOpacity(transform.vectorOpacity);
+      setBrandSubstrateCut(transform.substrateMorph);
     };
 
     /** Apply SVG-mode side effects: pin the actor + write dock attrs.
@@ -440,7 +456,8 @@ export function useBrandmarkJourney(
               `disp=${t.dispersion.toFixed(2)}`,
               `rotY=${(t.rotationY * 57.2958).toFixed(1)}deg`,
               `rings=${t.ringsActive ? "on" : "off"}`,
-              `ringP=${t.ringProgress.toFixed(2)}`
+              `ringP=${t.ringProgress.toFixed(2)}`,
+              `morph=${t.substrateMorph.toFixed(2)}`
             );
           })
         : null;
@@ -468,6 +485,7 @@ export function useBrandmarkJourney(
       document.documentElement.removeAttribute("data-brand-parked-at");
       document.documentElement.style.removeProperty("--brandmark-shape-blend");
       document.documentElement.style.removeProperty("--brandmark-vector-opacity");
+      document.documentElement.style.removeProperty("--brandmark-substrate-cut");
       rootEl.style.removeProperty("--orbit-morph");
       rootEl.style.removeProperty("--orbit-style-morph");
       rootEl.style.removeProperty("--halo-fade");

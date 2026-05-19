@@ -171,6 +171,23 @@ export interface BrandmarkTransform {
    *  this against its own effectiveOpacity, so a journey-wide value
    *  of 1 is a no-op for non-substrate beats. */
   vectorOpacity: number;
+  /** `[0, 1]` substrate-sphere morph progress (ADR-017). `0` = the
+   *  substrate-sphere R3F point cloud paints the brandmark shape at
+   *  the miss anchor's projected screen position. `1` = the points
+   *  occupy the canonical Fibonacci sphere shell at the substrate
+   *  body. Symmetric trapezoid envelope inside the substrate scroll
+   *  window — ramps 0 → 1 across the first `SUBSTRATE_MORPH_FRAC`
+   *  of the window, holds at 1 through the read beat, and ramps
+   *  1 → 0 across the last `SUBSTRATE_MORPH_FRAC` so the cloud
+   *  collapses back into the brandmark shape exactly as the
+   *  substrate window exits and the brandmark vector resumes
+   *  travel toward the rail dock. The vector actor reads the
+   *  same channel and does an instant visibility cut while
+   *  `substrateMorph > 0` so the swap between vector mark and
+   *  particle mark is invisible (the particles cover the same
+   *  shape — no opacity fade). Always `0` outside the substrate
+   *  window. */
+  substrateMorph: number;
   /** `false` only during hero / post-orbit-fade-end. Painter hides
    *  when this is false. */
   visible: boolean;
@@ -284,6 +301,7 @@ export const HIDDEN_TRANSFORM: BrandmarkTransform = {
   ringProgress: 0,
   shapeBlend: 0,
   vectorOpacity: 1,
+  substrateMorph: 0,
   visible: false,
   parkedAt: null,
 };
@@ -298,6 +316,17 @@ export const HIDDEN_TRANSFORM: BrandmarkTransform = {
  *  (`miss → substrate.transitIn.easing`), the Diagnostic → Intelligence
  *  hand-off reads as a single elegant settle rather than a fast pop. */
 const SHAPE_BLEND_FRAC = 0.3;
+
+/** Fraction of the substrate scroll window devoted to the
+ *  brandmark → sphere point-cloud morph on each side (ADR-017).
+ *  With `0.35` each side, the cloud morphs from the brandmark
+ *  shape (sampled at the miss anchor's projected screen position)
+ *  into the Fibonacci sphere across the first 35% of the parked
+ *  window, holds at the sphere through the read beat, and
+ *  collapses back over the last 35% so the cloud is in brandmark
+ *  form exactly when the brandmark vector resumes travel toward
+ *  the rail dock. */
+const SUBSTRATE_MORPH_FRAC = 0.35;
 
 /** While a section's bottom edge is below this viewport fraction, the
  *  visitor is still "reading" that section — the brandmark should stay
@@ -692,6 +721,10 @@ function parkedRectTransform(
     // override below ramps this 1 → 0 during the HANDOFF phase so
     // the R3F SplitRing can take over the visible artefact.
     vectorOpacity: 1,
+    // Substrate-sphere morph: 0 outside the substrate window. The
+    // override below ramps this through the symmetric trapezoid
+    // when parked at substrate.
+    substrateMorph: 0,
     visible: opacity > 0,
     parkedAt: kf.id,
   };
@@ -739,6 +772,9 @@ function transitTransform(
     // substrate-window HANDOFF ramp only fires inside the substrate
     // scroll window.
     vectorOpacity: 1,
+    // Substrate morph: 0 during all transits. Only the substrate
+    // window ramp drives this channel.
+    substrateMorph: 0,
     visible: true,
     parkedAt: null, // in transit = not parked anywhere
   };
@@ -824,6 +860,7 @@ export function computeBrandmarkTransform(
       ringProgress: substrateLocalProgress,
       shapeBlend: substrateShapeBlend(substrateLocalProgress),
       vectorOpacity: vectorRingOpacity(substrateLocalProgress),
+      substrateMorph: substrateMorphProgress(substrateLocalProgress),
     };
   }
 
@@ -846,6 +883,32 @@ export function substrateShapeBlend(progress: number): number {
   const blendOut =
     progress > 1 - SHAPE_BLEND_FRAC ? MORPH_EASE(clamp01((1 - progress) / SHAPE_BLEND_FRAC)) : 1;
   return blendIn * blendOut;
+}
+
+/** Symmetric trapezoid envelope for the substrate-sphere point-cloud
+ *  morph (ADR-017). Ramps `0 → 1` across the first
+ *  `SUBSTRATE_MORPH_FRAC` of the substrate window so the brandmark-
+ *  shaped point cloud transforms into the Fibonacci sphere as the
+ *  user enters the intelligence-layer read beat. Holds at `1` through
+ *  the centre of the window so the sphere is the stable artefact
+ *  while the substrate caption is read. Ramps `1 → 0` across the
+ *  last `SUBSTRATE_MORPH_FRAC` so the points collapse back into the
+ *  brandmark shape exactly as the substrate window exits — at which
+ *  point the brandmark vector resumes ownership of the mark and
+ *  begins its transit toward the rail dock. The vector actor reads
+ *  this same channel and does an instant visibility cut while
+ *  `substrateMorph > 0`, so the renderer swap is invisible (the
+ *  particles cover the same shape — no opacity fade). */
+export function substrateMorphProgress(progress: number): number {
+  if (progress <= 0) return 0;
+  if (progress >= 1) return 0;
+  if (progress < SUBSTRATE_MORPH_FRAC) {
+    return MORPH_EASE(clamp01(progress / SUBSTRATE_MORPH_FRAC));
+  }
+  if (progress > 1 - SUBSTRATE_MORPH_FRAC) {
+    return MORPH_EASE(clamp01((1 - progress) / SUBSTRATE_MORPH_FRAC));
+  }
+  return 1;
 }
 
 /** The bracketed-segment math, factored out from the public entry

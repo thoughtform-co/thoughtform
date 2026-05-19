@@ -896,16 +896,28 @@ html[data-quote-active="true"] .tf-brandmark-actor {
    via `--brandmark-shape-blend`. Both share the anchor's full
    `inset: 0` rect; the full glyph fades out as the ring fades in
    when the journey morphs into ring topology during the substrate
-   hold beat. */
+   hold beat.
+
+   ADR-017 cut: when `--brandmark-substrate-cut` is `1` (i.e. the
+   substrate-sphere morph mesh is painting the brandmark shape in
+   particles at the same screen position), both dock glyphs are
+   forced to opacity 0 — instant cut, no transition. The particles
+   cover the same silhouette so the swap is invisible. */
 [data-brandmark-mode="particle"][data-brand-parked-at="substrate"] .tf-brandmark--substrate-full {
-  opacity: calc((1 - var(--brandmark-shape-blend, 0)) * var(--brandmark-vector-opacity, 1));
+  opacity: calc(
+    (1 - var(--brandmark-shape-blend, 0)) * var(--brandmark-vector-opacity, 1) *
+      (1 - var(--brandmark-substrate-cut, 0))
+  );
   visibility: visible;
   transition:
     opacity 120ms linear,
     visibility 0s linear 0s;
 }
 [data-brandmark-mode="particle"][data-brand-parked-at="substrate"] .tf-brandmark--substrate-ring {
-  opacity: calc(var(--brandmark-shape-blend, 0) * var(--brandmark-vector-opacity, 1));
+  opacity: calc(
+    var(--brandmark-shape-blend, 0) * var(--brandmark-vector-opacity, 1) *
+      (1 - var(--brandmark-substrate-cut, 0))
+  );
   visibility: visible;
   transition:
     opacity 120ms linear,
@@ -921,6 +933,96 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   width: 100%;
   height: 100%;
   pointer-events: none;
+}
+
+/* TRAVELING ORBITS (ADR-017)
+   ----------------------------------------------------------------
+   In particle mode the new `<TravelingOrbits>` painter is the sole
+   source of orbit visuals across the sigil → miss leg. The legacy
+   sigil rings (`.sigil__ring`) and miss orbit ellipses
+   (`.miss__orbit`) are hidden so the painter doesn't fight a
+   duplicate set of elements during the morph. Other elements in the
+   sigil and miss SVGs (bearing ticks, halo dots, brand-halo rings,
+   orbit particles, anchor pips) stay visible — they remain owned
+   by the prototype DOM and emerge via the existing
+   `--miss-anchor-emerge` / `--miss-label-emerge` scalars.
+
+   In SVG fallback mode the painter returns null and the legacy
+   markup re-shows via the gate selectors below; today's crossfade
+   morph survives unchanged. */
+[data-brandmark-mode="particle"] .sigil__ring,
+[data-brandmark-mode="particle"] .miss__orbits .miss__orbit {
+  display: none;
+}
+
+/* Per-ring stroke + dash identity for the traveling-orbits painter.
+   Mirrors the existing `.sigil__ring--NN` start values + the
+   `.miss__orbit--NN` end values, interpolated by the
+   `--orbit-style-morph` CSS variable that the painter writes
+   directly onto its SVG element. The dash pattern is per-ring and
+   stable across the morph (same dash family on both ends — see
+   ORBIT_STYLES in lib/celestial/orbitStyles.ts). */
+.tf-traveling-orbits {
+  /* The painter writes `--orbit-style-morph` per frame onto the SVG
+     element itself (scoped, not on the root) — defaulting to 0
+     covers the SSR / first-paint frame before the painter's first
+     compute fires. */
+  --orbit-style-morph: 0;
+}
+
+.tf-traveling-orbit circle {
+  fill: none;
+  vector-effect: non-scaling-stroke;
+  stroke: color-mix(
+    in srgb,
+    var(--ring-stroke-start, currentColor) calc(100% - var(--orbit-style-morph, 0) * 100%),
+    var(--ring-stroke-end, var(--ring-stroke-start, currentColor))
+  );
+  stroke-width: calc(
+    var(--ring-w-start, 0.6) +
+      (var(--ring-w-end, var(--ring-w-start, 0.6)) - var(--ring-w-start, 0.6)) *
+      var(--orbit-style-morph, 0)
+  );
+  transition:
+    stroke 220ms linear,
+    stroke-width 220ms linear;
+}
+/* Per-ring stroke endpoints — same values as `.sigil__ring--NN` for
+   the start and `.miss__orbit--NN` for the end. Dash patterns are
+   declared as inline `stroke-dasharray` on each ring's circle in
+   the painter (see TravelingOrbits.tsx). */
+.tf-traveling-orbit--01 {
+  --ring-stroke-start: rgba(236, 227, 214, 0.15);
+  --ring-stroke-end: rgba(235, 227, 214, 0.6);
+  --ring-w-start: 0.5;
+  --ring-w-end: 1.5;
+}
+.tf-traveling-orbit--01 circle {
+  stroke-dasharray: 1 5;
+}
+.tf-traveling-orbit--02 {
+  --ring-stroke-start: rgba(236, 227, 214, 0.15);
+  --ring-stroke-end: rgba(235, 227, 214, 0.6);
+  --ring-w-start: 0.6;
+  --ring-w-end: 1.7;
+}
+.tf-traveling-orbit--03 {
+  --ring-stroke-start: rgba(202, 165, 84, 0.32);
+  --ring-stroke-end: rgba(202, 165, 84, 0.55);
+  --ring-w-start: 0.6;
+  --ring-w-end: 1.5;
+}
+.tf-traveling-orbit--03 circle {
+  stroke-dasharray: 2 7;
+}
+.tf-traveling-orbit--04 {
+  --ring-stroke-start: rgba(202, 165, 84, 0.45);
+  --ring-stroke-end: rgba(202, 165, 84, 0.5);
+  --ring-w-start: 0.6;
+  --ring-w-end: 1.4;
+}
+.tf-traveling-orbit--04 circle {
+  stroke-dasharray: 1 3;
 }
 
 /* Vector-first painter: visible only in particle mode. The vector

@@ -50,6 +50,14 @@ const PERSPECTIVE_PX = 900;
  *  when the journey transform's opacity is below this. */
 const VISIBILITY_EPSILON = 0.005;
 
+/** Substrate-morph cut threshold (ADR-017). The vector actor is
+ *  visibility-cut OFF the moment the substrate sphere's particle
+ *  cloud begins painting the same brandmark shape at the same
+ *  screen position. The cut is via `display: none` (instant), not
+ *  the 120ms opacity transition — the particles cover the same
+ *  silhouette so the swap is invisible. */
+const SUBSTRATE_MORPH_CUT_EPSILON = 0.001;
+
 /** Park-handoff opacity threshold. Mirrors the same constant in
  *  `useBrandmarkJourney` — the actor gates itself OFF when
  *  `parkedAt != null && opacity > THRESHOLD`, which is exactly when
@@ -89,7 +97,16 @@ export function BrandmarkVectorActor() {
       rafRef.current = requestAnimationFrame(tick);
       const transform = useBrandmarkJourneyStore.getState().transform;
 
-      const shouldBeVisible = transform.visible && transform.opacity > VISIBILITY_EPSILON;
+      // ADR-017: while `substrateMorph > 0` the SubstrateMorphPoints
+      // mesh inside the intelligence-layer canvas is painting the
+      // brandmark in particles AT THE SAME SCREEN POSITION as this
+      // actor. Display-none kills the actor instantly so we don't
+      // double-paint the silhouette, and bypasses the shell's 120ms
+      // opacity transition for an invisible cut (the particles
+      // cover the same shape — no opacity fade needed).
+      const morphCut = transform.substrateMorph > SUBSTRATE_MORPH_CUT_EPSILON;
+      const shouldBeVisible =
+        transform.visible && transform.opacity > VISIBILITY_EPSILON && !morphCut;
       if (shouldBeVisible !== lastVisible) {
         lastVisible = shouldBeVisible;
         shell.style.display = shouldBeVisible ? "block" : "none";

@@ -28,6 +28,7 @@ The R3F intelligence-layer scene (`OrbitField`) reads the same transform for its
 
 **Canonical record:** [ADR-015](../../../sentinel/decisions/015-brandmark-vector-first.md) (current — vector-first split).
 **Predecessor (journey contract retained):** [ADR-013](../../../sentinel/decisions/013-brandmark-journey-refactor.md).
+**Composes with:** [ADR-017](../../../sentinel/decisions/017-orbit-journey-and-substrate-morph.md) — adds the `substrateMorph` channel + the persistent traveling orbits painter and the substrate-sphere morph mesh.
 **Related (rendering):** [`brandmark-particle`](../brandmark-particle/SKILL.md).
 **Related (compositing):** [ADR-008](../../../sentinel/decisions/008-landing-v7-background-layers.md), `landing-v7-compositing` skill.
 
@@ -37,7 +38,7 @@ The R3F intelligence-layer scene (`OrbitField`) reads the same transform for its
 
 1. **The brandmark is a single CONTINUOUS artifact that EVOLVES.** Position, scale, rotation, density, dispersion are continuous functions of scrollY.
 2. **No opacity fades for the brandmark cloud mid-journey.** Every transition is geometric. Hero entry + post-orbit exit are the only opacity bookends.
-3. **No crossfades between painters.** One painter end-to-end. Boundary swaps are forbidden by construction.
+3. **No crossfades between painters.** One painter end-to-end. Boundary swaps are forbidden by construction. **(ADR-017 corollary:** when a renderer swap is unavoidable — vector → particle morph at substrate engage — it is an INSTANT visibility cut under matching particle cover, never an opacity ramp. The particles must already paint the same silhouette at the same screen position the moment the cut fires.**)**
 4. **Decorations EMERGE geometrically, not via opacity.** Encode ring, sub-orbits, halo dots all use `group.scale.setScalar(splitEmerge(progress))` — material opacity stays constant.
 5. **Hero entrance and post-orbit exit are the only bookends.** They may use opacity ramps because there is nothing to evolve from / into.
 
@@ -64,15 +65,17 @@ Each keyframe:
 | `parked`      | `{ density, dispersion, ringsActive? }` — what the painter reads while parked             |
 | `transitIn`   | Per-arrival override for `dispersionBump` (`null` = no bump) and `easing`                 |
 
-**Keyframe configuration today (ADR-015 — atmosphere-field tuning):**
+**Keyframe configuration today (ADR-015 — atmosphere-field tuning + ADR-017 — substrate morph):**
 
-| Keyframe  | Parked density | Parked dispersion | Rings | `transitIn.dispersionBump`                       | `transitIn.easing` |
-| --------- | -------------- | ----------------- | ----- | ------------------------------------------------ | ------------------ |
-| sigil     | 0              | 0                 | off   | (no inbound segment — first keyframe)            | —                  |
-| miss      | 0              | 0                 | off   | default `sin(πt) * 0.45` (atmospheric same-size) | `TRAVEL_EASE`      |
-| substrate | 0.15           | 0.35              | on    | `sin(πt) * 0.35` exhaust                         | `MORPH_EASE`       |
-| rail      | 0              | 0                 | off   | `sin(πt) * 0.35` exhaust                         | `MORPH_EASE`       |
-| orbit     | 0              | 0                 | off   | `sin(πt) * 0.20` exhaust                         | `TRAVEL_EASE`      |
+| Keyframe  | Parked density | Parked dispersion | Rings | `substrateMorph` | `transitIn.dispersionBump`                       | `transitIn.easing` |
+| --------- | -------------- | ----------------- | ----- | ---------------- | ------------------------------------------------ | ------------------ |
+| sigil     | 0              | 0                 | off   | 0                | (no inbound segment — first keyframe)            | —                  |
+| miss      | 0              | 0                 | off   | 0                | default `sin(πt) * 0.45` (atmospheric same-size) | `TRAVEL_EASE`      |
+| substrate | 0.15           | 0.35              | on    | 0 → 1 → 0 (sym.) | `sin(πt) * 0.35` exhaust                         | `MORPH_EASE`       |
+| rail      | 0              | 0                 | off   | 0                | `sin(πt) * 0.35` exhaust                         | `MORPH_EASE`       |
+| orbit     | 0              | 0                 | off   | 0                | `sin(πt) * 0.20` exhaust                         | `TRAVEL_EASE`      |
+
+`substrateMorph` (ADR-017) is the symmetric trapezoid envelope (`MORPH_EASE`, `SUBSTRATE_MORPH_FRAC = 0.35`) that drives the substrate-sphere R3F point cloud's morph from brandmark shape → Fibonacci sphere → brandmark shape across the substrate scroll window. The vector actor + portal'd substrate dock glyphs are visibility-cut OFF whenever `substrateMorph > 0.001` (instant — particles cover the same silhouette).
 
 The vector actor owns the brandmark shape at every keyframe — these densities tune the ATMOSPHERE FIELD around it. Full-mark stations (sigil / miss / rail / orbit) get density 0 so the vector mark sits alone, crisp, no halo. The substrate hold beat gets ambient dust + cardinal diamonds + hairline guide ring (via `CelestialLinework`) for the celestial-editor read. Transit dispersion bumps are RESTORED on every leg as exhaust around the moving vector — this is the visual story now, no longer a coherence threat as it was under ADR-013.
 
@@ -95,6 +98,9 @@ interface BrandmarkTransform {
   rotationY: number; // radians — non-zero only inside substrate window
   ringsActive: boolean; // true only while parked at substrate
   ringProgress: number; // 0..1 inside substrate window; drives R3F envelopes
+  shapeBlend: number; // 0..1 — full → ring topology blend (substrate window)
+  vectorOpacity: number; // 0..1 — legacy HANDOFF ramp (under particle cover post-ADR-017)
+  substrateMorph: number; // 0..1 (ADR-017) — substrate-sphere point cloud morph
   visible: boolean; // false only at hero / post-orbit-fade-end
   parkedAt: KeyframeId | null; // current parked station; null in transit
 }
