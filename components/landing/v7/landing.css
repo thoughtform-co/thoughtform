@@ -8011,10 +8011,10 @@ html {
 }
 .voidwalker__name {
   font-family: var(--font-pp-neue-montreal);
-  font-weight: 700;
-  font-size: clamp(32px, 4.2vw, 56px);
-  letter-spacing: -0.025em;
-  line-height: 1.02;
+  font-weight: 400;
+  font-size: clamp(28px, 3.2vw, 44px);
+  letter-spacing: -0.022em;
+  line-height: 1.1;
   color: var(--dawn);
   margin: 0 0 10px;
 }

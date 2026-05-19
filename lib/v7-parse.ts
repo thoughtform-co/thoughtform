@@ -56,10 +56,14 @@ function injectStaticHudChildren(html: string): string {
     .replace(/<div id="rightTicks"><\/div>/, `<div id="rightTicks">${ticksHtml}</div>`);
 }
 
-export function getV7Content(): V7Content {
-  const htmlPath = join(process.cwd(), "public/prototypes/v7/landing-v7-motion.html");
-  const tokensPath = join(process.cwd(), "public/prototypes/v7/tokens.css");
-
+// Shared parse pipeline. Reads a V7-prototype-shaped HTML file plus the canonical
+// tokens.css, extracts/cleans the body markup, scopes the styles for runtime use,
+// and returns a V7Content the LandingPage component can render directly.
+//
+// Forked routes (e.g. the Claude-workshop page) reuse this by pointing at a
+// different HTML file with the same structural contract (sections, brandmark
+// anchors, data-celestial-slot markers, etc.).
+function parseV7Html(htmlPath: string, tokensPath: string): V7Content {
   const html = readFileSync(htmlPath, "utf-8");
   const tokensCss = readFileSync(tokensPath, "utf-8");
 
@@ -106,4 +110,16 @@ export function getV7Content(): V7Content {
   const scopedCss = scopeV7Css(tokensCss, inlineStyles);
 
   return { bodyHtml, bodyClass, scopedCss };
+}
+
+export function getV7Content(): V7Content {
+  const htmlPath = join(process.cwd(), "public/prototypes/v7/landing-v7-motion.html");
+  const tokensPath = join(process.cwd(), "public/prototypes/v7/tokens.css");
+  return parseV7Html(htmlPath, tokensPath);
+}
+
+export function getClaudeWorkshopContent(): V7Content {
+  const htmlPath = join(process.cwd(), "public/prototypes/v7/landing-claude-workshop.html");
+  const tokensPath = join(process.cwd(), "public/prototypes/v7/tokens.css");
+  return parseV7Html(htmlPath, tokensPath);
 }
