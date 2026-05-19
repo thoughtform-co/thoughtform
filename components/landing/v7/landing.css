@@ -2998,7 +2998,16 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   height: 100svh;
   padding: 100px 0 80px;
   display: flex;
-  align-items: center;
+  /* `stretch` (was `center`) so `.miss__inner` fills the section's
+     available height. With centered alignment, the inner cell was
+     capped at 640px which pushed the heading well below the
+     section's top on tall viewports (a 1080+ viewport left ~190px
+     of empty space above the title). Stretching the cell pins the
+     heading to the top while keeping `.miss__system align-self: end`
+     bottom-aligned in the cell — the orbital field stays anchored
+     near the section bottom and the breathing room between the
+     heading and the orbits grows with the viewport. */
+  align-items: stretch;
   justify-content: center;
   position: relative;
   overflow: hidden;
@@ -3068,14 +3077,14 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   grid-template-columns: 1fr;
   grid-template-rows: 1fr;
   text-align: left;
-  /* Min-height matches the section's available content area
-     (`100svh - 300px` reserves the 220/80 padding) capped at
-     640px on tall viewports. The cap is taller than the height-
-     bound `.miss__system` so the grid cell has spare vertical room
-     above the bottom-aligned system — that gap is where the
-     heading floats and is what gives the orbital field its
-     downward bias relative to the section centre. */
-  min-height: min(640px, calc(100svh - 300px));
+  /* Fill the section's available height so the heading (align-self:
+     start) pins to the top of the section and the orbital system
+     (align-self: end) anchors to the bottom. Previously the inner
+     used `min-height: min(640px, calc(100svh - 300px))` which
+     capped the cell at 640px on tall viewports — with `align-items:
+     center` on the parent the cell then floated mid-section,
+     dropping the heading well below the section's top edge. */
+  height: 100%;
 }
 
 /* Header: eyebrow → title → one-line bridge. Previously a two-column
