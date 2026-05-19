@@ -970,7 +970,11 @@ html[data-quote-active="true"] .tf-brandmark-actor {
      chrome dynamically; `100vh` is the fallback for older engines. */
   min-height: 100vh;
   min-height: 100dvh;
-  padding: 180px 0 180px;
+  /* Asymmetric padding biases the flex-centered content slightly above
+     the section's true vertical centre. Each station's headline sits
+     higher in the viewport so the title reads first and the bottom of
+     the section keeps its breathing room. */
+  padding: 140px 0 220px;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -981,7 +985,12 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   border-bottom: none;
 }
 
-/* Station eyebrow */
+/* Station eyebrow — hidden globally. The original eyebrow band
+   (DIAGNOSTIC / THOUGHTFORM / INTELLIGENCE LAYER / …) is removed
+   so each section's headline reads first and gets more breathing
+   room. The rule still carries its original typography for any
+   future reintroduction; the `display: none` override below wins
+   via cascade order. */
 .station__idx {
   font-family: var(--font-pt-mono);
   font-size: 10px;
@@ -992,6 +1001,9 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   align-items: center;
   gap: 12px;
   margin-bottom: var(--space-lg);
+}
+.station__idx {
+  display: none !important;
 }
 .station__idx::before {
   content: "";
@@ -2967,16 +2979,15 @@ html[data-quote-active="true"] .tf-brandmark-actor {
 
 .miss {
   /* One viewport — single executive beat. Asymmetric padding (more
-     top, less bottom) shifts the flex-centered content downward so
-     it clears the absolute-positioned `.station__idx` eyebrow
-     (which sits at `top: 80px` from the section). The 220/80 split
-     reserves room above for the eyebrow + heading and leaves the
-     bottom of the section open so the constellation can sit lower
-     in the available area (see `.miss__system` align-self: end and
-     `.miss__inner` min-height below — together they push the
-     orbital field into the lower ~60% of the section so the
-     brandmark dock parks below the vertical centre, giving the
-     heading proper breathing room above the orbits).
+     top than bottom is no longer required now that the
+     `.station__idx` eyebrow is hidden globally; the 100/80 split
+     keeps a small top inset for breathing room above the heading
+     and leaves the bottom of the section open so the constellation
+     can sit lower in the available area (see `.miss__system`
+     align-self: end and `.miss__inner` min-height below — together
+     they push the orbital field into the lower ~60% of the section
+     so the brandmark dock parks below the vertical centre, giving
+     the heading proper breathing room above the orbits).
 
      `isolation: isolate` creates a section-local stacking context so
      the decorative nebula (`.miss::before`) and starfield
@@ -2985,7 +2996,7 @@ html[data-quote-active="true"] .tf-brandmark-actor {
      gateway/hero stacking context above. */
   height: 100vh;
   height: 100svh;
-  padding: 220px 0 80px;
+  padding: 100px 0 80px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -3995,7 +4006,11 @@ html[data-quote-active="true"] .tf-brandmark-actor {
    back to a single column. */
 .ilayer__head {
   position: absolute;
-  top: clamp(80px, 12vh, 140px);
+  /* Lifted from the original `clamp(80px, 12vh, 140px)` now that the
+     `.station__idx` eyebrow is hidden globally — the title can sit
+     closer to the section's top rail without competing with the
+     gold eyebrow band. */
+  top: clamp(56px, 8vh, 96px);
   left: 50%;
   transform: translateX(-50%);
   z-index: 3;
