@@ -103,6 +103,17 @@ export function CelestialBody({
     );
   }, [id, ringRadius, primaryTilt]);
 
+  /** Satellite-pip 3D markers for Sources and Surfaces — small diamonds
+   *  pinned at the END of each inflow arc / outflow rail so the DOM
+   *  pip labels read as tags attached to a visible satellite rather
+   *  than as floating text annotations. */
+  const satellitePositions = useMemo(() => {
+    if (id === "substrate") return [] as THREE.Vector3[];
+    return BODY_PIPS[id].map((pip) =>
+      pipLocalPosition(pip.angleDeg, pip.radiusMul, ringRadius, primaryTilt)
+    );
+  }, [id, ringRadius, primaryTilt]);
+
   const ringMats = useMemo(() => {
     const ringBase = id === "substrate" ? 0.5 : 0.4;
     return ringGeoms.map((_, i) => {
@@ -135,6 +146,20 @@ export function CelestialBody({
           })
       ),
     [diamondPositions.length]
+  );
+
+  const satelliteMats = useMemo(
+    () =>
+      satellitePositions.map(
+        () =>
+          new THREE.MeshBasicMaterial({
+            color: id === "surfaces" ? GOLD_LINE : DAWN_LINE,
+            transparent: true,
+            opacity: 0.85,
+            depthWrite: false,
+          })
+      ),
+    [id, satellitePositions.length]
   );
 
   const cloudGeom = useMemo(() => buildSphereCloudGeometry(0.46, BODY_CLOUD_COUNT[id]), [id]);
@@ -210,6 +235,9 @@ export function CelestialBody({
     diamondMats.forEach((mat) => {
       mat.opacity = presence * 0.85;
     });
+    satelliteMats.forEach((mat) => {
+      mat.opacity = presence * 0.82;
+    });
   });
 
   return (
@@ -227,6 +255,11 @@ export function CelestialBody({
       {diamondPositions.map((pos, i) => (
         <mesh key={`diamond-${i}`} position={pos} material={diamondMats[i]}>
           <octahedronGeometry args={[0.022, 0]} />
+        </mesh>
+      ))}
+      {satellitePositions.map((pos, i) => (
+        <mesh key={`satellite-${i}`} position={pos} material={satelliteMats[i]}>
+          <octahedronGeometry args={[0.018, 0]} />
         </mesh>
       ))}
       <points geometry={atmosphereGeom} material={atmosphereMat} />
