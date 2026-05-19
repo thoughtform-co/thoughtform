@@ -3073,6 +3073,14 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   position: relative;
   z-index: 2;
   width: min(1280px, 92vw);
+  /* Centre the inner column horizontally inside `.miss`. The parent
+     is `display: flex; justify-content: center`, but the flex
+     container is full-bleed via negative margins, and on this
+     codebase `justify-content` was not centering this single item
+     reliably across viewports — `margin-inline: auto` is the
+     unconditional fix and matches the centring used everywhere
+     else (continuum, ilayer, build, etc.). */
+  margin-inline: auto;
   display: grid;
   grid-template-columns: 1fr;
   grid-template-rows: 1fr;
@@ -3106,6 +3114,13 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   grid-column: 1;
   grid-row: 1;
   align-self: start;
+  /* Centre the heading column inside the grid cell so the title +
+     bridge line sit balanced above the orbital constellation,
+     matching the centred composition of ilayer / continuum /
+     build elsewhere on the page. */
+  justify-self: center;
+  text-align: center;
+  align-items: center;
   position: relative;
   z-index: 3;
   text-shadow:
@@ -4747,14 +4762,16 @@ html[data-quote-active="true"] .tf-brandmark-actor {
    scrub maps cleanly to a finite scroll length and the brandmark
    travels through three stops in one screen height. The .station
    default carries `min-height: 100vh`; this strengthens that to a
-   hard `height` so internal content alignment uses the viewport
-   centre rather than growing to fit. */
+   hard `height` so internal content alignment anchors from the top
+   rail (`justify-content: flex-start`) — the heading sits at the
+   same vertical position as ilayer / missing-layer headings, and
+   the spectrum diagram falls into the remaining viewport below. */
 #continuum {
   height: 100vh;
   height: 100svh;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
 }
 #continuum .continuum {
   margin-top: 0;
