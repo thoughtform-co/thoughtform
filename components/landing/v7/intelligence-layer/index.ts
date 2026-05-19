@@ -2,6 +2,7 @@ export { IntelligenceLayerPortal } from "./IntelligenceLayerPortal";
 export { IntelligenceLayerStack } from "./IntelligenceLayerStack";
 export { TriadScene } from "./TriadScene";
 export { CelestialBody } from "./CelestialBody";
+export { InterSphereTrajectories } from "./InterSphereTrajectories";
 export { useIlayerProgress, useIlayerProgressStore, type IlayerMode } from "./useIlayerProgress";
 export {
   CAMERA_PARAMS,
@@ -9,7 +10,12 @@ export {
   BODY_SCALES,
   BODY_RING_TILTS,
   COMET_CURVE_POINTS,
+  BODY_PIPS,
+  BODY_RING_RADIUS,
+  TRAJECTORY_CURVES,
+  getCometTrajectoryPoints,
   screenSpaceForBody,
+  screenSpaceForPoint,
   type BodyId,
   SUBSTRATE_RING,
   LEFT_ORBIT,

@@ -4,7 +4,7 @@ import { useFrame } from "@react-three/fiber";
 import { useMemo, useRef } from "react";
 import * as THREE from "three";
 import { createCometMaterial } from "./celestialMaterials";
-import { COMET_CURVE_POINTS, orbitEmerge } from "./intelligenceLayerGeom";
+import { getCometTrajectoryPoints, orbitEmerge } from "./intelligenceLayerGeom";
 import { useBrandmarkJourneyStore } from "@/lib/stores/brandmarkJourneyStore";
 
 const PARTICLE_COUNT = 120;
@@ -37,17 +37,19 @@ function buildCometGeometry(curve: THREE.CatmullRomCurve3): THREE.BufferGeometry
 export function CometStream() {
   const pointsRef = useRef<THREE.Points>(null);
   const mat = useMemo(() => createCometMaterial(), []);
-  const curve = useMemo(
-    () => new THREE.CatmullRomCurve3(COMET_CURVE_POINTS.map((p) => new THREE.Vector3(...p))),
-    []
-  );
+  const curve = useMemo(() => {
+    const pts = getCometTrajectoryPoints();
+    return new THREE.CatmullRomCurve3(pts.map((p) => new THREE.Vector3(...p)));
+  }, []);
   const baseGeom = useMemo(() => buildCometGeometry(curve), [curve]);
   const scratch = useMemo(() => new THREE.Vector3(), []);
 
   useFrame((state) => {
     const progress = useBrandmarkJourneyStore.getState().transform.ringProgress;
     const emerge = orbitEmerge(progress);
-    const phase = progress * 0.92;
+    // Comet always visible (lower baseline alpha), brightens with emerge.
+    const visibility = 0.4 + emerge * 0.6;
+    const phase = (state.clock.elapsedTime * 0.08 + progress * 0.6) % 1;
     const positions = pointsRef.current?.geometry.getAttribute("position") as THREE.BufferAttribute;
     if (!positions) return;
 
@@ -61,11 +63,11 @@ export function CometStream() {
       positions.setXYZ(i, scratch.x, scratch.y, scratch.z);
       const bAttr = baseGeom.getAttribute("aBrightness") as THREE.BufferAttribute;
       const sAttr = baseGeom.getAttribute("aSize") as THREE.BufferAttribute;
-      const b = (bAttr.getX(i) as number) * fadeIn * fadeOut * emerge;
+      const b = (bAttr.getX(i) as number) * fadeIn * fadeOut * visibility;
       (pointsRef.current!.geometry.getAttribute("aBrightness") as THREE.BufferAttribute).setX(i, b);
       (pointsRef.current!.geometry.getAttribute("aSize") as THREE.BufferAttribute).setX(
         i,
-        (sAttr.getX(i) as number) * (0.8 + emerge * 0.4)
+        (sAttr.getX(i) as number) * (0.85 + emerge * 0.35)
       );
     }
     positions.needsUpdate = true;
@@ -73,9 +75,9 @@ export function CometStream() {
       true;
     (pointsRef.current!.geometry.getAttribute("aSize") as THREE.BufferAttribute).needsUpdate = true;
 
-    mat.uniforms.uOpacity.value = emerge * 0.7;
+    mat.uniforms.uOpacity.value = visibility;
     mat.uniforms.uPixelRatio.value = state.viewport.dpr;
-    if (pointsRef.current) pointsRef.current.visible = emerge > 0.02;
+    if (pointsRef.current) pointsRef.current.visible = true;
   });
 
   const liveGeom = useMemo(() => {

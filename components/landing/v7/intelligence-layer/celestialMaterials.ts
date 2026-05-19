@@ -31,7 +31,7 @@ export const BODY_TINTS: Record<"sources" | "substrate" | "surfaces", BodyTint> 
   },
 };
 
-export function createSphereMaterial(tint: THREE.Color, opacity = 0.72): THREE.ShaderMaterial {
+export function createSphereMaterial(tint: THREE.Color, opacity = 0.82): THREE.ShaderMaterial {
   return new THREE.ShaderMaterial({
     vertexShader: sphereSurfaceVertex,
     fragmentShader: sphereSurfaceFragment,
@@ -39,8 +39,8 @@ export function createSphereMaterial(tint: THREE.Color, opacity = 0.72): THREE.S
       uTint: { value: tint },
       uOpacity: { value: opacity },
       uTime: { value: 0 },
-      uFresnelPower: { value: 2.4 },
-      uNoiseScale: { value: 1.8 },
+      uFresnelPower: { value: 2.1 },
+      uNoiseScale: { value: 1.65 },
     },
     transparent: true,
     depthWrite: false,
@@ -56,7 +56,7 @@ export function createRingDashMaterial(color: THREE.Color, opacity = 0.7): THREE
       uColor: { value: color },
       uOpacity: { value: opacity },
       uProgress: { value: 0 },
-      uGlow: { value: 0.35 },
+      uGlow: { value: 0.52 },
     },
     transparent: true,
     depthWrite: false,
@@ -101,5 +101,10 @@ export function createCometMaterial(opacity = 0.65): THREE.ShaderMaterial {
   });
 }
 
-/** Shared low-poly sphere for all three bodies. */
-export const SHARED_ICO_SPHERE = new THREE.IcosahedronGeometry(1, 4);
+/** Shared low-poly sphere for all three bodies.
+ *
+ * Radius 0.42 (smaller than the per-body ring radius of ~0.56) so the
+ * orbital rings sit clearly OUTSIDE each sphere. Earlier value of 1.0
+ * placed the sphere geometry larger than its rings, which forced rings
+ * to read as faint internal arcs instead of the screenshot's orbits. */
+export const SHARED_ICO_SPHERE = new THREE.IcosahedronGeometry(0.42, 4);

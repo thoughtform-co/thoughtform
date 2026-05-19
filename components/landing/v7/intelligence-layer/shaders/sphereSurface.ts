@@ -80,11 +80,11 @@ void main() {
   float fresnel = pow(1.0 - max(dot(normalize(vNormal), normalize(vViewDir)), 0.0), uFresnelPower);
   vec3 npos = vWorldPos * uNoiseScale + vec3(uTime * 0.04, uTime * 0.03, 0.0);
   float grain = snoise(npos) * 0.5 + 0.5;
-  float band = smoothstep(-0.15, 0.15, vNormal.y) * 0.12;
-  vec3 core = uTint * (0.12 + grain * 0.08);
-  vec3 rim = uTint * (0.55 + fresnel * 0.45);
-  vec3 col = mix(core, rim, fresnel + band);
-  float alpha = uOpacity * (0.35 + fresnel * 0.55 + grain * 0.08);
+  float band = smoothstep(-0.15, 0.15, vNormal.y) * 0.14;
+  vec3 core = uTint * (0.22 + grain * 0.12);
+  vec3 rim = uTint * (0.72 + fresnel * 0.55);
+  vec3 col = mix(core, rim, clamp(fresnel + band, 0.0, 1.0));
+  float alpha = uOpacity * (0.48 + fresnel * 0.42 + grain * 0.1);
   gl_FragColor = vec4(col, alpha);
 }
 `;

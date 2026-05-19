@@ -3926,8 +3926,8 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(ellipse 40% 30% at 50% 50%, rgba(202, 165, 84, 0.05), transparent 60%),
-    radial-gradient(ellipse 70% 60% at 50% 50%, rgba(235, 227, 214, 0.02), transparent 70%);
+    radial-gradient(ellipse 48% 38% at 50% 56%, rgba(202, 165, 84, 0.08), transparent 62%),
+    radial-gradient(ellipse 80% 65% at 50% 56%, rgba(235, 227, 214, 0.03), transparent 72%);
   pointer-events: none;
   z-index: 0;
 }
@@ -4052,126 +4052,94 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   color: var(--dawn);
 }
 
-/* ── Chambers — content blocks rendered INSIDE each orbit ──────────
-   ADR-014 follow-up. All three pillars carry equal visual weight by
-   placing every pillar's content INSIDE its circle. The chambers
-   anchor on the same horizontal centres as the R3F orbits — the
-   substrate orbit centre sits at scene x=0 and the side orbits at
-   ±0.92 scene units, which projects to ±49.8% of the canvas height
-   in CSS pixels at the front-on camera framing. The shared
-   `--orbit-offset` var is consumed by left/right chambers and is
-   bounded by `clamp` so the chambers stay inside the section at
-   tall and short viewports.
-
-   Layout per chamber:
-     - .ilayer__chamber__head : numeric eyebrow + pillar title
-     - .ilayer__chamber__sub  : single-sentence framing line
-     - items                  : either a pip-led list (sources / surfaces)
-                                or a top/bottom split (substrate)
-
-   Information is visible as soon as the section reveal lands. The
-   orbit geometry can still animate via `--ilayer-progress`, but the
-   content itself is never gated by substrate-window progress: users
-   should not have to scroll into the next section to read the latest
-   source, substrate, or surface item. */
+/* ── Chambers — HUD captions + constellation pips (ADR-016)
+   TriadScene writes body + pip CSS vars on `#intelligence-layer`.
+   Captions sit beside projected spheres on hairline rails; pip labels
+   track `--ilayer-pip-{body}-{i}-x/y`. */
 .ilayer__inner {
-  /* Shared triad sizing (ADR-014 v3 — three equal circles, sized
-     for full chamber content visibility).
-     All three rings — left orbit, brandmark centre, right orbit —
-     share the same on-screen diameter. The brandmark anchor reads
-     this value directly for its width/height; the side orbits use
-     the matching scene-unit radius in `intelligenceLayerGeom.ts`
-     (0.48), which projects to the same diameter on a 100vh canvas
-     at the camera's fov 26 / z=4 framing.
-
-     Diameter bumped to 52vh (was 38vh) so each chamber's inscribed
-     square fits the full content load: 6 source items, 4 rule rows
-     + chips, or the 6-cell surfaces grid. The triad centre is
-     shifted to viewport 56% (see `.ilayer__brandmark-anchor` and
-     `.ilayer__chamber` below) so the bigger rings extend DOWN into
-     the lower half of the section rather than colliding with the
-     title head. The matching R3F substrate centre and side orbit
-     `homeCentre.y` are set to -0.111 scene units to track this
-     6vh shift.
-
-     `--orbit-offset` is derived from the radius so the side
-     chambers anchor at the same screen-x as the side orbit centres
-     in both R3F and static-fallback modes. ADR-014 v4: multiplier
-     is now 2.08 (was 1.57), matching LEFT_ORBIT / RIGHT_ORBIT
-     `homeCentre.x` of ±1.0 scene units. At this ratio the side
-     rings sit just outside the substrate ring (small clean gap, no
-     intersection) so each chamber's content stays scoped to its
-     own circle. Clamped so chambers stay comfortably inside the
-     section on narrow and ultrawide viewports. */
-  --ilayer-ring-diameter: clamp(320px, 52vh, 540px);
+  --ilayer-ring-diameter: clamp(300px, min(44vh, 40vw), 520px);
   --ilayer-ring-radius: calc(var(--ilayer-ring-diameter) / 2);
-  --orbit-offset: clamp(280px, calc(var(--ilayer-ring-radius) * 2.08), 480px);
-  /* Vertical centre of the triad as a fraction of the section. All
-     orbit-aligned elements (brandmark anchor, chambers) read this
-     so they shift together. */
-  --ilayer-triad-y: 50%;
+  --ilayer-side-diameter: calc(var(--ilayer-ring-diameter) * 0.68);
+  --orbit-offset: clamp(200px, 26vw, 360px);
+  --ilayer-triad-y: 58%;
+  --ilayer-caption-gap: clamp(10px, 1.4vh, 18px);
+  --ilayer-pip-label-size: 9px;
 }
 
-/* R3F mode: chambers track per-body projection from TriadScene */
-.ilayer__stack[data-ilayer-mode="r3f"] .ilayer__chamber--left {
+@media (min-width: 1920px) {
+  .ilayer__inner {
+    --ilayer-ring-diameter: clamp(320px, 42vh, 520px);
+    --orbit-offset: clamp(240px, 24vw, 400px);
+  }
+}
+@media (max-width: 1440px) and (min-width: 1025px) {
+  .ilayer__inner {
+    --ilayer-ring-diameter: clamp(280px, 40vh, 460px);
+    --orbit-offset: clamp(200px, 25vw, 340px);
+  }
+}
+@media (max-width: 1280px) and (min-width: 1025px) {
+  .ilayer__inner {
+    --ilayer-ring-diameter: clamp(250px, 38vh, 400px);
+    --orbit-offset: clamp(180px, 24vw, 300px);
+    --ilayer-pip-label-size: 8px;
+  }
+}
+@media (max-width: 1024px) and (min-width: 769px) {
+  .ilayer__inner {
+    --ilayer-ring-diameter: clamp(220px, 36vh, 340px);
+    --orbit-offset: clamp(150px, 22vw, 260px);
+    --ilayer-pip-label-size: 8px;
+  }
+  .ilayer__pip-label__text {
+    letter-spacing: 0.08em;
+  }
+}
+
+/* R3F mode: chambers track per-body projection from TriadScene.
+ *
+ * TriadScene only writes `--ilayer-body-*-x/y` when the canvas is
+ * sized and the projection is valid — until then, the calc() fallback
+ * keeps chambers spread on the static offset. */
+#intelligence-layer[data-ilayer-mode="r3f"] .ilayer__chamber--left {
   left: var(--ilayer-body-sources-x, calc(50% - var(--orbit-offset)));
   top: var(--ilayer-body-sources-y, var(--ilayer-triad-y));
-  transform: translate(-50%, -50%) scale(var(--ilayer-body-sources-scale, 1));
+  width: auto;
+  max-width: clamp(140px, 14vw, 220px);
+  transform: translate(-50%, -50%);
 }
-.ilayer__stack[data-ilayer-mode="r3f"] .ilayer__chamber--mid {
+#intelligence-layer[data-ilayer-mode="r3f"] .ilayer__chamber--mid {
   left: var(--ilayer-body-substrate-x, 50%);
   top: var(--ilayer-body-substrate-y, var(--ilayer-triad-y));
-  transform: translate(-50%, -50%) scale(var(--ilayer-body-substrate-scale, 1));
+  width: auto;
+  max-width: clamp(160px, 16vw, 240px);
+  transform: translate(-50%, -50%);
 }
-.ilayer__stack[data-ilayer-mode="r3f"] .ilayer__chamber--right {
+#intelligence-layer[data-ilayer-mode="r3f"] .ilayer__chamber--right {
   left: var(--ilayer-body-surfaces-x, calc(50% + var(--orbit-offset)));
   top: var(--ilayer-body-surfaces-y, var(--ilayer-triad-y));
-  transform: translate(-50%, -50%) scale(var(--ilayer-body-surfaces-scale, 1));
-}
-
-/* Orbit-pinned cardinal labels on the substrate body (R3F + static) */
-.ilayer__orbit-labels {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  z-index: 2;
-}
-.ilayer__orbit-label {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  font-family: var(--font-pt-mono);
-  font-size: 9px;
-  letter-spacing: var(--track-widest);
-  text-transform: uppercase;
-  color: var(--gold-70, rgba(202, 165, 84, 0.7));
-  opacity: clamp(0, calc((var(--ilayer-progress, 0) - 0.35) * 4), 1);
+  width: auto;
+  max-width: clamp(140px, 14vw, 220px);
   transform: translate(-50%, -50%);
-  white-space: nowrap;
-}
-.ilayer__orbit-label--rules {
-  transform: translate(-50%, -50%) translate(0, calc(var(--ilayer-ring-radius, 160px) * -0.92));
-}
-.ilayer__orbit-label--loops {
-  transform: translate(-50%, -50%) translate(calc(var(--ilayer-ring-radius, 160px) * -0.92), 0);
-}
-.ilayer__orbit-label--examples {
-  transform: translate(-50%, -50%) translate(calc(var(--ilayer-ring-radius, 160px) * 0.92), 0);
-}
-.ilayer__orbit-label--sources {
-  transform: translate(-50%, -50%) translate(0, calc(var(--ilayer-ring-radius, 160px) * 0.92));
 }
 
-/* All three chambers share the same width — derived from the ring
-   diameter so text sits inside the inscribed square of each circle.
-   0.78 × diameter is wider than the strict inscribed square (which
-   would be ~0.707 × diameter) so longer labels fit without wrapping;
-   the small corner overflow is invisible since chambers sit inside
-   the dark void of the ring's interior, not on top of the rim.
-   Height is content-driven for all chambers — the centre chamber
-   no longer pushes content top/bottom away from the brandmark
-   cloud, because the brandmark ring perimeter is the ring's outer
-   edge and the chamber sits cleanly in its hollow interior. */
+/* Static SVG fallback — chambers align to schematic sphere centres */
+#intelligence-layer[data-ilayer-mode="static"] .ilayer__chamber--left {
+  left: calc(50% - var(--orbit-offset));
+  top: var(--ilayer-triad-y);
+  transform: translate(-50%, -50%);
+}
+#intelligence-layer[data-ilayer-mode="static"] .ilayer__chamber--mid {
+  left: 50%;
+  top: var(--ilayer-triad-y);
+  transform: translate(-50%, -50%);
+}
+#intelligence-layer[data-ilayer-mode="static"] .ilayer__chamber--right {
+  left: calc(50% + var(--orbit-offset));
+  top: var(--ilayer-triad-y);
+  transform: translate(-50%, -50%);
+}
+
 .ilayer__chamber {
   position: absolute;
   top: var(--ilayer-triad-y);
@@ -4180,9 +4148,8 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: clamp(8px, 1.2vh, 14px);
-  width: min(calc(var(--ilayer-ring-diameter) * 0.78), 360px);
+  justify-content: flex-start;
+  width: auto;
   pointer-events: none;
   text-align: center;
   transform: translate(-50%, -50%);
@@ -4196,38 +4163,61 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   left: calc(50% + var(--orbit-offset));
 }
 
-/* Mid chamber sits inside the brandmark ring. The ring is hollow
-   (the morphed brandmark cloud paints only the outer rim), so the
-   eyebrow + sub + rules + chips can stack normally in the centre.
-   No more `space-between` push to top/bottom — that pattern was for
-   the old composition where the centre orbit was much taller than
-   it was wide. */
 .ilayer__chamber--mid {
-  width: min(calc(var(--ilayer-ring-diameter) * 0.78), 360px);
-  justify-content: center;
-  gap: clamp(6px, 0.9vh, 10px);
+  width: auto;
 }
 
-.ilayer__chamber__top,
-.ilayer__chamber__bottom {
+/* HUD caption beside each sphere (Astral Frontier register) */
+.ilayer__caption {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: clamp(6px, 0.9vh, 12px);
+  gap: 5px;
   width: 100%;
+  opacity: clamp(0, calc((var(--ilayer-progress, 0) - 0.2) * 3.5), 1);
 }
-
-/* Eyebrow stack — number above title, centered. The number is mono
-   gold; the title is a slim sans-serif dawn label. */
-.ilayer__chamber__head {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  margin: 0;
-  opacity: 1;
+.ilayer__caption__rail {
+  display: block;
+  width: 1px;
+  height: clamp(14px, 2vh, 22px);
+  background: var(--dawn-30, rgba(235, 227, 214, 0.3));
+  flex-shrink: 0;
 }
-.ilayer__chamber__num {
+.ilayer__caption--below .ilayer__caption__rail {
+  order: -1;
+}
+.ilayer__caption--above .ilayer__caption__rail {
+  order: 1;
+}
+.ilayer__chamber--left .ilayer__caption--below {
+  transform: translateY(
+    calc(
+      var(--ilayer-body-sources-diameter, var(--ilayer-side-diameter)) * 0.54 +
+        var(--ilayer-caption-gap)
+    )
+  );
+}
+.ilayer__chamber--mid .ilayer__caption--above {
+  transform: translateY(
+    calc(
+      -1 *
+        (
+          var(--ilayer-body-substrate-diameter, var(--ilayer-ring-diameter)) * 0.54 +
+            var(--ilayer-caption-gap)
+        )
+    )
+  );
+}
+.ilayer__chamber--right .ilayer__caption--below {
+  transform: translateY(
+    calc(
+      var(--ilayer-body-surfaces-diameter, var(--ilayer-side-diameter)) * 0.54 +
+        var(--ilayer-caption-gap)
+    )
+  );
+}
+.ilayer__caption__num {
   font-family: var(--font-pt-mono);
   font-size: 10px;
   letter-spacing: var(--track-widest);
@@ -4235,120 +4225,146 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   color: var(--gold);
   font-variant-numeric: tabular-nums;
 }
-.ilayer__chamber__title {
+.ilayer__caption__title {
   margin: 0;
   font-family: var(--font-pt-mono);
-  font-size: clamp(11px, 0.9vw, 13px);
+  font-size: clamp(10px, 0.85vw, 12px);
   font-weight: 400;
   letter-spacing: var(--track-widest);
   text-transform: uppercase;
   color: var(--dawn);
+  text-wrap: balance;
 }
-.ilayer__chamber__head--mid .ilayer__chamber__num {
+.ilayer__chamber--mid .ilayer__caption__title {
   color: var(--gold);
 }
-.ilayer__chamber__head--mid .ilayer__chamber__title {
-  color: var(--gold);
-}
-
-.ilayer__chamber__sub {
+.ilayer__caption__sub {
   margin: 0;
   font-family: var(--font-pp-neue-montreal);
-  font-size: clamp(11px, 0.85vw, 13px);
+  font-size: clamp(10px, 0.8vw, 11px);
   line-height: 1.45;
   color: var(--dawn-70);
-  max-width: 28ch;
+  max-width: 22ch;
   text-wrap: pretty;
-  opacity: 1;
 }
 
-/* Pip-led item lists for the side chambers. */
-.ilayer__chamber__items {
-  list-style: none;
-  margin: 0;
-  padding: 0;
+.ilayer__substrate-chips--readout {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(
+    -50%,
+    calc(
+      var(--ilayer-body-substrate-diameter, var(--ilayer-ring-diameter)) * 0.58 +
+        clamp(56px, 8vh, 88px)
+    )
+  );
+  opacity: clamp(0, calc((var(--ilayer-progress, 0) - 0.28) * 3), 1);
+}
+
+/* Constellation pip labels — track TriadScene pip projection */
+.ilayer__pip-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+}
+.ilayer__pip-label {
+  position: absolute;
+  left: -9999px;
+  top: -9999px;
   display: flex;
   flex-direction: column;
-  gap: clamp(5px, 0.7vh, 9px);
-  width: 100%;
-  align-items: stretch;
-}
-.ilayer__chamber__items--grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: clamp(5px, 0.7vh, 9px) clamp(8px, 1vw, 14px);
-}
-.ilayer__chamber__item {
-  display: flex;
   align-items: center;
-  gap: 8px;
-  font-family: var(--font-pt-mono);
-  font-size: clamp(10px, 0.78vw, 11px);
-  letter-spacing: var(--track-wide, 0.06em);
-  text-transform: uppercase;
-  color: var(--dawn);
-  text-align: left;
+  gap: 2px;
+  transform: translate(-50%, -100%);
+  opacity: clamp(0, calc((var(--ilayer-progress, 0) - 0.25) * 3.2), 1);
   white-space: nowrap;
-  opacity: 1;
 }
-/* Right-chamber items align from the left edge of each grid cell so
-   the pip → label rhythm reads consistently across columns. */
-.ilayer__chamber--right .ilayer__chamber__item {
-  justify-content: flex-start;
+.ilayer__pip-label__rail {
+  display: block;
+  width: 1px;
+  height: 10px;
+  background: var(--dawn-30, rgba(235, 227, 214, 0.3));
+  order: 1;
 }
-.ilayer__chamber__pip {
-  display: inline-block;
-  width: 6px;
-  height: 6px;
-  flex-shrink: 0;
-  background: var(--gold);
-  transform: rotate(45deg);
-  box-shadow: 0 0 8px rgba(202, 165, 84, 0.4);
-}
-.ilayer__chamber__label {
-  display: inline-block;
-}
-
-/* ── Substrate-specific elements (rule rows + chips, mid chamber) ─
-   Two-column rule rows: a small mono key on the left, a sans-serif
-   value on the right. Dashed top borders give them an instrument-
-   readout feel that complements the brandmark ring above. */
-.ilayer__substrate__rules {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-}
-.ilayer__substrate__rules li {
-  display: grid;
-  grid-template-columns: clamp(60px, 7vw, 84px) 1fr;
-  align-items: baseline;
-  gap: clamp(8px, 1vw, 14px);
-  padding: 6px 4px;
-  border-top: 1px dashed rgba(235, 227, 214, 0.16);
-  text-align: left;
-  opacity: 1;
-}
-.ilayer__substrate__rules li:last-child {
-  border-bottom: 1px dashed rgba(235, 227, 214, 0.16);
-}
-.ilayer__substrate__key {
+.ilayer__pip-label__text {
   font-family: var(--font-pt-mono);
-  font-size: 10px;
+  font-size: var(--ilayer-pip-label-size, 9px);
   letter-spacing: var(--track-widest);
   text-transform: uppercase;
-  color: var(--gold);
-  font-variant-numeric: tabular-nums;
-}
-.ilayer__substrate__val {
-  font-family: var(--font-pp-neue-montreal);
-  font-size: clamp(11px, 0.86vw, 13px);
-  line-height: 1.35;
   color: var(--dawn);
+}
+.ilayer__pip-label__val {
+  font-family: var(--font-pp-neue-montreal);
+  font-size: 8px;
+  letter-spacing: 0.02em;
   text-transform: none;
-  letter-spacing: -0.005em;
+  color: var(--dawn-70);
+}
+.ilayer__pip-label[data-body="sources"][data-pip="0"] {
+  left: var(--ilayer-pip-sources-0-x, -9999px);
+  top: var(--ilayer-pip-sources-0-y, -9999px);
+}
+.ilayer__pip-label[data-body="sources"][data-pip="1"] {
+  left: var(--ilayer-pip-sources-1-x, -9999px);
+  top: var(--ilayer-pip-sources-1-y, -9999px);
+}
+.ilayer__pip-label[data-body="sources"][data-pip="2"] {
+  left: var(--ilayer-pip-sources-2-x, -9999px);
+  top: var(--ilayer-pip-sources-2-y, -9999px);
+}
+.ilayer__pip-label[data-body="sources"][data-pip="3"] {
+  left: var(--ilayer-pip-sources-3-x, -9999px);
+  top: var(--ilayer-pip-sources-3-y, -9999px);
+}
+.ilayer__pip-label[data-body="sources"][data-pip="4"] {
+  left: var(--ilayer-pip-sources-4-x, -9999px);
+  top: var(--ilayer-pip-sources-4-y, -9999px);
+}
+.ilayer__pip-label[data-body="sources"][data-pip="5"] {
+  left: var(--ilayer-pip-sources-5-x, -9999px);
+  top: var(--ilayer-pip-sources-5-y, -9999px);
+}
+.ilayer__pip-label[data-body="substrate"][data-pip="0"] {
+  left: var(--ilayer-pip-substrate-0-x, -9999px);
+  top: var(--ilayer-pip-substrate-0-y, -9999px);
+}
+.ilayer__pip-label[data-body="substrate"][data-pip="1"] {
+  left: var(--ilayer-pip-substrate-1-x, -9999px);
+  top: var(--ilayer-pip-substrate-1-y, -9999px);
+}
+.ilayer__pip-label[data-body="substrate"][data-pip="2"] {
+  left: var(--ilayer-pip-substrate-2-x, -9999px);
+  top: var(--ilayer-pip-substrate-2-y, -9999px);
+}
+.ilayer__pip-label[data-body="substrate"][data-pip="3"] {
+  left: var(--ilayer-pip-substrate-3-x, -9999px);
+  top: var(--ilayer-pip-substrate-3-y, -9999px);
+}
+.ilayer__pip-label[data-body="surfaces"][data-pip="0"] {
+  left: var(--ilayer-pip-surfaces-0-x, -9999px);
+  top: var(--ilayer-pip-surfaces-0-y, -9999px);
+}
+.ilayer__pip-label[data-body="surfaces"][data-pip="1"] {
+  left: var(--ilayer-pip-surfaces-1-x, -9999px);
+  top: var(--ilayer-pip-surfaces-1-y, -9999px);
+}
+.ilayer__pip-label[data-body="surfaces"][data-pip="2"] {
+  left: var(--ilayer-pip-surfaces-2-x, -9999px);
+  top: var(--ilayer-pip-surfaces-2-y, -9999px);
+}
+.ilayer__pip-label[data-body="surfaces"][data-pip="3"] {
+  left: var(--ilayer-pip-surfaces-3-x, -9999px);
+  top: var(--ilayer-pip-surfaces-3-y, -9999px);
+}
+.ilayer__pip-label[data-body="surfaces"][data-pip="4"] {
+  left: var(--ilayer-pip-surfaces-4-x, -9999px);
+  top: var(--ilayer-pip-surfaces-4-y, -9999px);
+}
+.ilayer__pip-label[data-body="surfaces"][data-pip="5"] {
+  left: var(--ilayer-pip-surfaces-5-x, -9999px);
+  top: var(--ilayer-pip-surfaces-5-y, -9999px);
 }
 
 .ilayer__substrate-chips {
@@ -4362,15 +4378,15 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   opacity: 1;
 }
 .ilayer__substrate-chips li {
-  padding: 4px 10px;
-  border: 1px solid var(--dawn-30, rgba(235, 227, 214, 0.25));
-  border-radius: 2px;
+  padding: 3px 8px;
+  border: 1px solid var(--dawn-30, rgba(235, 227, 214, 0.22));
+  border-radius: 0;
   font-family: var(--font-pt-mono);
-  font-size: 9px;
+  font-size: 8px;
   letter-spacing: var(--track-widest);
   text-transform: uppercase;
   color: var(--dawn-70);
-  background: rgba(10, 9, 8, 0.35);
+  background: rgba(10, 9, 8, 0.45);
 }
 
 /* ── Ringfield artifact (ADR-012 v5) ───────────────────────────────
@@ -4436,28 +4452,31 @@ html[data-quote-active="true"] .tf-brandmark-actor {
 .ilayer__stack[data-ilayer-mode="r3f"] .ilayer__triad__fallback {
   display: none;
 }
-/* ADR-016 static fallback — three spheres on a horizontal axis */
+/* ADR-016 static fallback — three luminous spheres on a horizontal axis */
 .ilayer__triad__sphere {
-  fill: rgba(202, 165, 84, 0.08);
-  stroke: var(--gold);
+  fill: rgba(202, 165, 84, 0.14);
+  stroke: rgba(202, 165, 84, 0.55);
   stroke-width: 1;
   vector-effect: non-scaling-stroke;
+  filter: drop-shadow(0 0 24px rgba(202, 165, 84, 0.18));
 }
 .ilayer__triad__sphere--mid {
-  fill: rgba(202, 165, 84, 0.12);
+  fill: rgba(202, 165, 84, 0.2);
+  stroke: rgba(202, 165, 84, 0.7);
 }
 .ilayer__triad__ring {
   fill: none;
   stroke: var(--gold);
   stroke-width: 1.2;
   vector-effect: non-scaling-stroke;
-  opacity: 0.55;
+  opacity: 0.65;
 }
 .ilayer__triad__ring--r1 {
-  opacity: 0.35;
+  opacity: 0.42;
 }
 .ilayer__triad__comet {
-  opacity: 0.85;
+  opacity: 0.9;
+  stroke: rgba(202, 165, 84, 0.35);
 }
 
 /* ── Brandmark substrate dock anchor (ADR-012 v5) ──────────────────
@@ -4607,10 +4626,20 @@ html[data-quote-active="true"] .tf-brandmark-actor {
     padding: clamp(14px, 2.4vh, 22px) clamp(16px, 4vw, 24px);
     margin: 0 auto;
     border: 1px solid rgba(235, 227, 214, 0.16);
-    border-radius: 10px;
-    background: rgba(10, 9, 8, 0.42);
+    border-radius: 0;
+    background: rgba(10, 9, 8, 0.55);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
+  }
+  .ilayer__pip-layer {
+    display: none;
+  }
+  .ilayer__caption,
+  .ilayer__substrate-chips--readout {
+    transform: none;
+    position: relative;
+    top: auto;
+    left: auto;
   }
   .ilayer__chamber--mid {
     /* No fixed tall height on mobile — let content size the card. */
@@ -4659,10 +4688,8 @@ html[data-quote-active="true"] .tf-brandmark-actor {
     opacity: 1;
   }
   .ilayer__chamber,
-  .ilayer__chamber__head,
-  .ilayer__chamber__sub,
-  .ilayer__chamber__item,
-  .ilayer__substrate__rules li,
+  .ilayer__caption,
+  .ilayer__pip-label,
   .ilayer__substrate-chips {
     /* Show all chamber content at rest. */
     opacity: 1;
