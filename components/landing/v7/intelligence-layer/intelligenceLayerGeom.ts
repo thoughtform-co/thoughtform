@@ -44,11 +44,13 @@ export const CAMERA_PARAMS = {
   far: 50,
 };
 
-/** Scene-space centres — triad sits below the section head (~56% viewport). */
+/** Scene-space centres — triad sits below the section head (~56% viewport).
+ *  Sources and Surfaces are pushed wider so the bodies breathe closer to
+ *  the HUD rails on the viewport edges; substrate stays centred. */
 export const BODY_POSITIONS: Record<BodyId, [number, number, number]> = {
-  sources: [-1.95, -0.05, -0.25],
+  sources: [-2.55, -0.05, -0.25],
   substrate: [0, -0.05, 0],
-  surfaces: [1.95, -0.05, -0.25],
+  surfaces: [2.55, -0.05, -0.25],
 };
 
 export const BODY_SCALES: Record<BodyId, number> = {
@@ -72,11 +74,11 @@ export const BODY_RING_TILTS: Record<BodyId, readonly [number, number, number][]
 
 /** Main comet path — rides the primary inter-sphere trajectory. */
 export const COMET_CURVE_POINTS: readonly [number, number, number][] = [
-  [-3.2, -0.08, -0.35],
-  [-1.75, 0.05, -0.2],
+  [-3.9, -0.08, -0.35],
+  [-2.3, 0.05, -0.2],
   [0, 0.38, 0.04],
-  [1.75, 0.05, -0.2],
-  [3.2, -0.08, -0.35],
+  [2.3, 0.05, -0.2],
+  [3.9, -0.08, -0.35],
 ];
 
 /** Inter-sphere trajectory curves (Destiny / space-map register). */
@@ -95,33 +97,33 @@ export const TRAJECTORY_CURVES: readonly TrajectorySpec[] = [
     cometHost: true,
     color: "gold",
     points: [
-      [-3.4, -0.22, -0.45],
-      [-1.85, 0.12, -0.15],
+      [-4.1, -0.22, -0.45],
+      [-2.4, 0.12, -0.15],
       [0, 0.48, 0.08],
-      [1.85, 0.12, -0.15],
-      [3.4, -0.22, -0.45],
+      [2.4, 0.12, -0.15],
+      [4.1, -0.22, -0.45],
     ],
   },
   {
     id: "upper",
     color: "dawn",
     points: [
-      [-3.1, 0.35, -0.55],
-      [-1.6, 0.55, -0.25],
+      [-3.8, 0.35, -0.55],
+      [-2.1, 0.55, -0.25],
       [0, 0.72, 0.02],
-      [1.6, 0.55, -0.25],
-      [3.1, 0.35, -0.55],
+      [2.1, 0.55, -0.25],
+      [3.8, 0.35, -0.55],
     ],
   },
   {
     id: "lower",
     color: "gold",
     points: [
-      [-3.2, -0.42, -0.5],
-      [-1.7, -0.28, -0.35],
+      [-3.9, -0.42, -0.5],
+      [-2.2, -0.28, -0.35],
       [0, -0.12, -0.2],
-      [1.7, -0.28, -0.35],
-      [3.2, -0.42, -0.5],
+      [2.2, -0.28, -0.35],
+      [3.9, -0.42, -0.5],
     ],
   },
   {
@@ -129,9 +131,9 @@ export const TRAJECTORY_CURVES: readonly TrajectorySpec[] = [
     ghost: true,
     color: "dawn",
     points: [
-      [-3.5, 0.05, -0.65],
+      [-4.2, 0.05, -0.65],
       [0, 0.28, -0.55],
-      [3.5, 0.05, -0.65],
+      [4.2, 0.05, -0.65],
     ],
   },
   {
@@ -139,9 +141,9 @@ export const TRAJECTORY_CURVES: readonly TrajectorySpec[] = [
     ghost: true,
     color: "dawn",
     points: [
-      [-2.8, -0.55, -0.4],
+      [-3.5, -0.55, -0.4],
       [0, -0.38, -0.32],
-      [2.8, -0.55, -0.4],
+      [3.5, -0.55, -0.4],
     ],
   },
 ];
