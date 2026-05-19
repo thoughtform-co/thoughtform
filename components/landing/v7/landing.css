@@ -964,7 +964,12 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   padding: 0 var(--hud-content-inset);
 }
 .station {
+  /* Viewport-isolated sections: each station fills at least the full
+     visible viewport so the next section's title never peeks at the
+     bottom edge during normal reading. `100dvh` tracks mobile browser
+     chrome dynamically; `100vh` is the fallback for older engines. */
   min-height: 100vh;
+  min-height: 100dvh;
   padding: 180px 0 180px;
   display: flex;
   flex-direction: column;
@@ -5547,13 +5552,18 @@ body.theme-latent .panel__label {
   color: var(--atreides-light);
 }
 
-/* Density variants */
+/* Density variants — control internal rhythm (padding) only.
+   Section min-height stays at the full viewport floor so dense mode
+   never drops a station below the visible viewport, which would let
+   the next section's title peek at the bottom edge. */
 body.density-spacious .station {
   min-height: 115vh;
+  min-height: 115dvh;
   padding: 220px 0;
 }
 body.density-dense .station {
-  min-height: 85vh;
+  min-height: 100vh;
+  min-height: 100dvh;
   padding: 120px 0;
 }
 

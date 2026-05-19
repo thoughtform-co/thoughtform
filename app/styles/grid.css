@@ -206,7 +206,10 @@
 @media (max-width: 768px) {
   .section {
     padding: 80px 24px !important;
-    min-height: auto;
+    /* Viewport-isolated sections: keep the full-viewport floor on mobile
+       so the next section's title never peeks at the bottom edge. */
+    min-height: 100vh;
+    min-height: 100dvh;
   }
 
   .section-layout {

@@ -1189,7 +1189,10 @@
 
   .section-definition {
     padding: 60px var(--frame-pad-x) calc(100px + var(--safe-bottom)) !important;
-    min-height: auto !important;
+    /* Viewport-isolated sections: keep the full-viewport floor on mobile
+       so the next section's title never peeks at the bottom edge. */
+    min-height: 100vh !important;
+    min-height: 100dvh !important;
   }
 
   .sigil-placeholder {
