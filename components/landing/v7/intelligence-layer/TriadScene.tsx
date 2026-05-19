@@ -6,6 +6,7 @@ import * as THREE from "three";
 import { CelestialBody } from "./CelestialBody";
 import { CometStream } from "./CometStream";
 import { InterSphereTrajectories } from "./InterSphereTrajectories";
+import { TrajectoryFlows } from "./TrajectoryFlows";
 import { pipLocalPosition } from "./celestialRingUtils";
 import {
   BODY_PIPS,
@@ -100,6 +101,7 @@ export function TriadScene() {
   return (
     <group ref={groupRef}>
       <InterSphereTrajectories />
+      <TrajectoryFlows />
       <CelestialBody
         id="sources"
         position={BODY_POSITIONS.sources}

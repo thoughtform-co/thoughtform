@@ -155,6 +155,10 @@ export function getCometTrajectoryPoints(): readonly [number, number, number][] 
 // Constellation pip layout (DOM labels track via TriadScene CSS vars)
 // ────────────────────────────────────────────────────────────────────
 
+/** Re-export of `TrajectorySpec` shape for consumers (kept stable for the
+ *  `TrajectoryFlows` ambient particle streams). */
+export type { TrajectorySpec as Trajectory };
+
 export interface PipSpec {
   /** degrees, 0 = top, clockwise */
   angleDeg: number;

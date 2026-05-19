@@ -4175,7 +4175,9 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   align-items: center;
   gap: 5px;
   width: 100%;
-  opacity: clamp(0, calc((var(--ilayer-progress, 0) - 0.2) * 3.5), 1);
+  /* Filled one beat before substrate engagement so the IA reads before
+     the body lights up. */
+  opacity: clamp(0, calc((var(--ilayer-progress, 0) - 0.02) * 5), 1);
 }
 .ilayer__caption__rail {
   display: block;
@@ -4259,7 +4261,71 @@ html[data-quote-active="true"] .tf-brandmark-actor {
         clamp(56px, 8vh, 88px)
     )
   );
-  opacity: clamp(0, calc((var(--ilayer-progress, 0) - 0.28) * 3), 1);
+  opacity: clamp(0, calc((var(--ilayer-progress, 0) - 0.08) * 4), 1);
+}
+
+/* Substrate inner readout — 2x2 instrument cards sitting inside the
+   substrate sphere silhouette. The particle cloud paints behind them.
+   Each cell carries a mono gold KEY + sans dawn VAL, framed by faint
+   hairline brackets in true HUD register (Destiny / Mass Effect ops
+   panel). The substrate's 4 cardinal pip labels are removed from the
+   pip layer because their function is absorbed here. */
+.ilayer__substrate-readout {
+  position: absolute;
+  left: var(--ilayer-body-substrate-x, 50%);
+  top: var(--ilayer-body-substrate-y, var(--ilayer-triad-y));
+  transform: translate(-50%, -50%);
+  width: calc(var(--ilayer-body-substrate-diameter, var(--ilayer-ring-diameter)) * 0.78);
+  max-width: 320px;
+  z-index: 6;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(6px, 0.9vh, 12px) clamp(8px, 1vw, 14px);
+  pointer-events: none;
+  opacity: clamp(0, calc((var(--ilayer-progress, 0) - 0.05) * 4.5), 1);
+}
+.ilayer__substrate-readout__cell {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: clamp(6px, 0.9vh, 10px) clamp(8px, 1vw, 12px);
+}
+.ilayer__substrate-readout__cell::before,
+.ilayer__substrate-readout__cell::after {
+  content: "";
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border: 1px solid rgba(202, 165, 84, 0.42);
+}
+.ilayer__substrate-readout__cell::before {
+  top: 0;
+  left: 0;
+  border-right: none;
+  border-bottom: none;
+}
+.ilayer__substrate-readout__cell::after {
+  bottom: 0;
+  right: 0;
+  border-left: none;
+  border-top: none;
+}
+.ilayer__substrate-readout__key {
+  font-family: var(--font-pt-mono);
+  font-size: 8.5px;
+  letter-spacing: var(--track-widest);
+  text-transform: uppercase;
+  color: var(--gold);
+  font-variant-numeric: tabular-nums;
+}
+.ilayer__substrate-readout__val {
+  font-family: var(--font-pp-neue-montreal);
+  font-size: clamp(9px, 0.72vw, 11px);
+  line-height: 1.25;
+  color: var(--dawn);
+  letter-spacing: -0.005em;
 }
 
 /* Constellation pip labels — track TriadScene pip projection */
@@ -4278,7 +4344,9 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   align-items: center;
   gap: 2px;
   transform: translate(-50%, -100%);
-  opacity: clamp(0, calc((var(--ilayer-progress, 0) - 0.25) * 3.2), 1);
+  /* One beat earlier than substrate engagement so the constellation
+     IA reads as the body lights up, not after. */
+  opacity: clamp(0, calc((var(--ilayer-progress, 0) - 0.05) * 4.5), 1);
   white-space: nowrap;
 }
 .ilayer__pip-label__rail {
