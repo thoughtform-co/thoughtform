@@ -2,6 +2,7 @@ import * as THREE from "three";
 import { atmosphereParticleFragment, atmosphereParticleVertex } from "./shaders/atmosphereParticle";
 import { cometParticleFragment, cometParticleVertex } from "./shaders/cometParticle";
 import { ringDashFragment, ringDashVertex } from "./shaders/ringDash";
+import { sphereCloudFragment, sphereCloudVertex } from "./shaders/sphereCloud";
 import { sphereSurfaceFragment, sphereSurfaceVertex } from "./shaders/sphereSurface";
 
 const GOLD = new THREE.Color("#caa554");
@@ -78,6 +79,34 @@ export function createAtmosphereMaterial(
       uPointSize: { value: pointSize },
       uPixelRatio: { value: typeof window !== "undefined" ? window.devicePixelRatio : 1 },
       uTime: { value: 0 },
+    },
+    transparent: true,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending,
+  });
+}
+
+/** Fibonacci-sphere particle cloud — replaces the icosphere mesh + wireframe.
+ *  Renders a luminous dust shell with rim-biased brightness, breathing along
+ *  surface normals so each body reads as a particle-rendered planet rather
+ *  than a geometric lattice. */
+export function createSphereCloudMaterial(
+  body: THREE.Color,
+  rim: THREE.Color,
+  opacity = 0.85,
+  pointSize = 3.4
+): THREE.ShaderMaterial {
+  return new THREE.ShaderMaterial({
+    vertexShader: sphereCloudVertex,
+    fragmentShader: sphereCloudFragment,
+    uniforms: {
+      uColor: { value: body },
+      uRimColor: { value: rim },
+      uOpacity: { value: opacity },
+      uPointSize: { value: pointSize },
+      uPixelRatio: { value: typeof window !== "undefined" ? window.devicePixelRatio : 1 },
+      uTime: { value: 0 },
+      uPresence: { value: 1 },
     },
     transparent: true,
     depthWrite: false,

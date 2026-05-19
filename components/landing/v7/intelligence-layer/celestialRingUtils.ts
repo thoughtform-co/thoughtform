@@ -67,6 +67,42 @@ export function buildOutflowRailGeometry(
   return new THREE.BufferGeometry().setFromPoints([inner, outer]);
 }
 
+/** Fibonacci-sphere point cloud — even, organic distribution across the
+ *  unit sphere, used as the particle skin for each celestial body. Returns
+ *  a `BufferGeometry` carrying `position`, `aNormal` (surface normal) and
+ *  `aSeed` (per-point golden-ratio seed for shader variation). */
+export function buildSphereCloudGeometry(radius: number, count: number): THREE.BufferGeometry {
+  const positions = new Float32Array(count * 3);
+  const normals = new Float32Array(count * 3);
+  const seeds = new Float32Array(count);
+  const golden = Math.PI * (3 - Math.sqrt(5));
+  for (let i = 0; i < count; i++) {
+    const yUnit = 1 - (i / Math.max(1, count - 1)) * 2;
+    const r = Math.sqrt(Math.max(0, 1 - yUnit * yUnit));
+    const theta = golden * i;
+    const xUnit = Math.cos(theta) * r;
+    const zUnit = Math.sin(theta) * r;
+
+    const seed = (((i * 0.6180339887) % 1) + 1) % 1;
+    // Shell jitter — particles live in a thin shell around radius so the
+    // cloud has depth without becoming a fuzzy ball.
+    const shell = 0.965 + seed * 0.07;
+
+    positions[i * 3] = xUnit * radius * shell;
+    positions[i * 3 + 1] = yUnit * radius * shell;
+    positions[i * 3 + 2] = zUnit * radius * shell;
+    normals[i * 3] = xUnit;
+    normals[i * 3 + 1] = yUnit;
+    normals[i * 3 + 2] = zUnit;
+    seeds[i] = seed;
+  }
+  const geom = new THREE.BufferGeometry();
+  geom.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+  geom.setAttribute("aNormal", new THREE.BufferAttribute(normals, 3));
+  geom.setAttribute("aSeed", new THREE.BufferAttribute(seeds, 1));
+  return geom;
+}
+
 /** Local pip position on the tilted orbital plane (0° = top, clockwise). */
 export function pipLocalPosition(
   angleDeg: number,

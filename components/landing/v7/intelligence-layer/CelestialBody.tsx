@@ -3,14 +3,11 @@
 import { useFrame } from "@react-three/fiber";
 import { useMemo, useRef } from "react";
 import * as THREE from "three";
-import {
-  createAtmosphereMaterial,
-  createSphereMaterial,
-  SHARED_ICO_SPHERE,
-} from "./celestialMaterials";
+import { createAtmosphereMaterial, createSphereCloudMaterial } from "./celestialMaterials";
 import {
   buildInflowArcGeometry,
   buildOutflowRailGeometry,
+  buildSphereCloudGeometry,
   buildTiltedRingLineLoop,
   pipLocalPosition,
 } from "./celestialRingUtils";
@@ -36,6 +33,20 @@ export interface CelestialBodyProps {
 
 const DAWN_LINE = new THREE.Color("#ebe3d6");
 const GOLD_LINE = new THREE.Color("#caa554");
+const DAWN_RIM = new THREE.Color("#f3ecdb");
+const GOLD_RIM = new THREE.Color("#e9c97a");
+
+const BODY_CLOUD_COUNT: Record<BodyId, number> = {
+  sources: 1100,
+  substrate: 1900,
+  surfaces: 1100,
+};
+
+const BODY_CLOUD_POINT_SIZE: Record<BodyId, number> = {
+  sources: 3.6,
+  substrate: 4.2,
+  surfaces: 3.6,
+};
 
 function hairlineMaterial(color: THREE.Color, opacity: number) {
   return new THREE.LineBasicMaterial({
@@ -126,15 +137,21 @@ export function CelestialBody({
     [diamondPositions.length]
   );
 
-  const sphereMat = useMemo(
-    () => createSphereMaterial(id === "substrate" ? GOLD_LINE : DAWN_LINE),
-    [id]
-  );
+  const cloudGeom = useMemo(() => buildSphereCloudGeometry(0.46, BODY_CLOUD_COUNT[id]), [id]);
+  const cloudMat = useMemo(() => {
+    const isSubstrate = id === "substrate";
+    return createSphereCloudMaterial(
+      isSubstrate ? GOLD_LINE : DAWN_LINE,
+      isSubstrate ? GOLD_RIM : DAWN_RIM,
+      isSubstrate ? 0.95 : 0.78,
+      BODY_CLOUD_POINT_SIZE[id]
+    );
+  }, [id]);
   const atmosphereMat = useMemo(
     () =>
       createAtmosphereMaterial(
         id === "substrate" ? GOLD_LINE : DAWN_LINE,
-        id === "substrate" ? 0.62 : 0.42
+        id === "substrate" ? 0.5 : 0.34
       ),
     [id]
   );
@@ -147,7 +164,7 @@ export function CelestialBody({
       const seed = (i * 0.6180339887) % 1;
       const phi = Math.acos(1 - (2 * (i + 0.5)) / atmosphereCount);
       const theta = Math.PI * 2 * seed;
-      const r = ringRadius * 1.08 * (0.92 + seed * 0.14);
+      const r = ringRadius * 1.14 * (0.94 + seed * 0.16);
       positions[i * 3] = Math.sin(phi) * Math.cos(theta) * r;
       positions[i * 3 + 1] = Math.sin(phi) * Math.sin(theta) * r;
       positions[i * 3 + 2] = Math.cos(phi) * r;
@@ -161,8 +178,6 @@ export function CelestialBody({
     return geom;
   }, [atmosphereCount, ringRadius]);
 
-  const wireGeom = useMemo(() => new THREE.WireframeGeometry(SHARED_ICO_SPHERE), []);
-
   useFrame((state) => {
     const t = state.clock.elapsedTime;
     const progress = useBrandmarkJourneyStore.getState().transform.ringProgress;
@@ -173,10 +188,11 @@ export function CelestialBody({
       groupRef.current.rotation.y = t * 0.03 * (id === "substrate" ? 1 : 0.65);
     }
 
-    sphereMat.uniforms.uTime.value = t;
-    sphereMat.uniforms.uOpacity.value = presence * (id === "substrate" ? 0.95 : 0.78);
+    cloudMat.uniforms.uTime.value = t;
+    cloudMat.uniforms.uPresence.value = presence;
+    cloudMat.uniforms.uPixelRatio.value = state.viewport.dpr;
     atmosphereMat.uniforms.uTime.value = t;
-    atmosphereMat.uniforms.uOpacity.value = presence * (id === "substrate" ? 0.82 : 0.58);
+    atmosphereMat.uniforms.uOpacity.value = presence * (id === "substrate" ? 0.7 : 0.5);
     atmosphereMat.uniforms.uPixelRatio.value = state.viewport.dpr;
 
     ringMats.forEach((mat, i) => {
@@ -198,10 +214,7 @@ export function CelestialBody({
 
   return (
     <group ref={groupRef} position={position} scale={scale}>
-      <mesh geometry={SHARED_ICO_SPHERE} material={sphereMat} />
-      <lineSegments geometry={wireGeom}>
-        <lineBasicMaterial color="#e9d8a6" transparent opacity={0.14} depthWrite={false} />
-      </lineSegments>
+      <points geometry={cloudGeom} material={cloudMat} />
       {ringGeoms.map((geom, i) => (
         <lineLoop key={`ring-${i}`} geometry={geom} material={ringMats[i]} />
       ))}
