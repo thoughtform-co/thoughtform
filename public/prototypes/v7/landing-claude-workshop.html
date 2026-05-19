@@ -4968,127 +4968,59 @@ html { scroll-behavior: smooth; }
 
       </div>
 
-      <!-- ── 01 · TRUSTED SOURCES — left chamber ───────────────────
-           Content lives INSIDE the left orbit. Eyebrow + sub + pip-
-           led item list. Reveal cascades with --ilayer-progress so
-           items step in over the substrate-engagement window. -->
+      <!-- HUD captions + constellation pip labels (ADR-016) -->
       <section class="ilayer__chamber ilayer__chamber--left" aria-labelledby="ilayer-chamber-sources">
-        <header class="ilayer__chamber__head">
-          <span class="ilayer__chamber__num">01</span>
-          <h3 class="ilayer__chamber__title" id="ilayer-chamber-sources">Trusted sources</h3>
-        </header>
-        <p class="ilayer__chamber__sub">Where the work already lives.</p>
-        <ul class="ilayer__chamber__items" role="list">
-          <li class="ilayer__chamber__item" style="--reveal: 0.10;">
-            <span class="ilayer__chamber__pip" aria-hidden="true"></span>
-            <span class="ilayer__chamber__label">Brand framework</span>
-          </li>
-          <li class="ilayer__chamber__item" style="--reveal: 0.13;">
-            <span class="ilayer__chamber__pip" aria-hidden="true"></span>
-            <span class="ilayer__chamber__label">Past campaigns</span>
-          </li>
-          <li class="ilayer__chamber__item" style="--reveal: 0.16;">
-            <span class="ilayer__chamber__pip" aria-hidden="true"></span>
-            <span class="ilayer__chamber__label">Customer research</span>
-          </li>
-          <li class="ilayer__chamber__item" style="--reveal: 0.19;">
-            <span class="ilayer__chamber__pip" aria-hidden="true"></span>
-            <span class="ilayer__chamber__label">Performance data</span>
-          </li>
-          <li class="ilayer__chamber__item" style="--reveal: 0.22;">
-            <span class="ilayer__chamber__pip" aria-hidden="true"></span>
-            <span class="ilayer__chamber__label">Style guidelines</span>
-          </li>
-          <li class="ilayer__chamber__item" style="--reveal: 0.25;">
-            <span class="ilayer__chamber__pip" aria-hidden="true"></span>
-            <span class="ilayer__chamber__label">Reviewer notes</span>
-          </li>
-        </ul>
+        <div class="ilayer__caption ilayer__caption--below">
+          <span class="ilayer__caption__rail" aria-hidden="true"></span>
+          <span class="ilayer__caption__num">01</span>
+          <h3 class="ilayer__caption__title" id="ilayer-chamber-sources">Trusted sources</h3>
+          <p class="ilayer__caption__sub">Where the work already lives.</p>
+        </div>
       </section>
 
-      <!-- ── 02 · ENCODED SUBSTRATE — middle chamber ───────────────
-           Content distributes top-and-bottom inside the middle orbit
-           so the brandmark particle cloud (painted at the substrate
-           dock anchor, morphed to ring topology) sits visually
-           centered between the eyebrow and the rule rows. -->
       <section class="ilayer__chamber ilayer__chamber--mid" aria-labelledby="ilayer-chamber-substrate">
-        <div class="ilayer__orbit-labels" aria-hidden="true">
-          <span class="ilayer__orbit-label ilayer__orbit-label--rules">Rules</span>
-          <span class="ilayer__orbit-label ilayer__orbit-label--loops">Loops</span>
-          <span class="ilayer__orbit-label ilayer__orbit-label--examples">Examples</span>
-          <span class="ilayer__orbit-label ilayer__orbit-label--sources">Sources</span>
+        <div class="ilayer__caption ilayer__caption--above">
+          <span class="ilayer__caption__rail" aria-hidden="true"></span>
+          <span class="ilayer__caption__num">02</span>
+          <h3 class="ilayer__caption__title" id="ilayer-chamber-substrate">Encoded substrate</h3>
+          <p class="ilayer__caption__sub">What matters, how to decide, what to check.</p>
         </div>
-        <div class="ilayer__chamber__top">
-          <header class="ilayer__chamber__head ilayer__chamber__head--mid">
-            <span class="ilayer__chamber__num">02</span>
-            <h3 class="ilayer__chamber__title" id="ilayer-chamber-substrate">Encoded substrate</h3>
-          </header>
-          <p class="ilayer__chamber__sub">What matters, how to decide, what to check.</p>
-        </div>
-        <div class="ilayer__chamber__bottom">
-          <ul class="ilayer__substrate__rules" role="list">
-            <li style="--reveal: 0.15;">
-              <span class="ilayer__substrate__key">Rules</span>
-              <span class="ilayer__substrate__val">How the team decides</span>
-            </li>
-            <li style="--reveal: 0.18;">
-              <span class="ilayer__substrate__key">Examples</span>
-              <span class="ilayer__substrate__val">What good looks like</span>
-            </li>
-            <li style="--reveal: 0.21;">
-              <span class="ilayer__substrate__key">Sources</span>
-              <span class="ilayer__substrate__val">Data it can read</span>
-            </li>
-            <li style="--reveal: 0.24;">
-              <span class="ilayer__substrate__key">Loops</span>
-              <span class="ilayer__substrate__val">Who confirms what</span>
-            </li>
-          </ul>
-          <ul class="ilayer__substrate-chips" role="list">
-            <li>Owned internally</li>
-            <li>Versioned</li>
-            <li>Model-portable</li>
-          </ul>
+        <ul class="ilayer__substrate-chips ilayer__substrate-chips--readout" role="list" aria-label="Substrate properties">
+          <li>Owned internally</li>
+          <li>Versioned</li>
+          <li>Model-portable</li>
+        </ul>
+      </section>
+
+      <section class="ilayer__chamber ilayer__chamber--right" aria-labelledby="ilayer-chamber-surfaces">
+        <div class="ilayer__caption ilayer__caption--below">
+          <span class="ilayer__caption__rail" aria-hidden="true"></span>
+          <span class="ilayer__caption__num">03</span>
+          <h3 class="ilayer__caption__title" id="ilayer-chamber-surfaces">Headless surfaces</h3>
+          <p class="ilayer__caption__sub">Where the cohort calls the engine.</p>
         </div>
       </section>
 
-      <!-- ── 03 · HEADLESS SURFACES — right chamber ────────────────
-           Mirror of the left chamber. Items in two columns so the
-           list reads as a small grid of named surfaces inside the
-           right orbit. -->
-      <section class="ilayer__chamber ilayer__chamber--right" aria-labelledby="ilayer-chamber-surfaces">
-        <header class="ilayer__chamber__head">
-          <span class="ilayer__chamber__num">03</span>
-          <h3 class="ilayer__chamber__title" id="ilayer-chamber-surfaces">Headless surfaces</h3>
-        </header>
-        <p class="ilayer__chamber__sub">Where the cohort calls the engine.</p>
-        <ul class="ilayer__chamber__items ilayer__chamber__items--grid" role="list">
-          <li class="ilayer__chamber__item" style="--reveal: 0.12;">
-            <span class="ilayer__chamber__pip" aria-hidden="true"></span>
-            <span class="ilayer__chamber__label">Cursor</span>
-          </li>
-          <li class="ilayer__chamber__item" style="--reveal: 0.15;">
-            <span class="ilayer__chamber__pip" aria-hidden="true"></span>
-            <span class="ilayer__chamber__label">Claude</span>
-          </li>
-          <li class="ilayer__chamber__item" style="--reveal: 0.18;">
-            <span class="ilayer__chamber__pip" aria-hidden="true"></span>
-            <span class="ilayer__chamber__label">Web app</span>
-          </li>
-          <li class="ilayer__chamber__item" style="--reveal: 0.21;">
-            <span class="ilayer__chamber__pip" aria-hidden="true"></span>
-            <span class="ilayer__chamber__label">REST</span>
-          </li>
-          <li class="ilayer__chamber__item" style="--reveal: 0.24;">
-            <span class="ilayer__chamber__pip" aria-hidden="true"></span>
-            <span class="ilayer__chamber__label">Slack</span>
-          </li>
-          <li class="ilayer__chamber__item" style="--reveal: 0.27;">
-            <span class="ilayer__chamber__pip" aria-hidden="true"></span>
-            <span class="ilayer__chamber__label">Agents</span>
-          </li>
-        </ul>
-      </section>
+      <div class="ilayer__pip-layer" aria-hidden="true">
+        <span class="ilayer__pip-label" data-body="sources" data-pip="0"><span class="ilayer__pip-label__rail"></span><span class="ilayer__pip-label__text">Brand</span></span>
+        <span class="ilayer__pip-label" data-body="sources" data-pip="1"><span class="ilayer__pip-label__rail"></span><span class="ilayer__pip-label__text">Campaigns</span></span>
+        <span class="ilayer__pip-label" data-body="sources" data-pip="2"><span class="ilayer__pip-label__rail"></span><span class="ilayer__pip-label__text">Customer</span></span>
+        <span class="ilayer__pip-label" data-body="sources" data-pip="3"><span class="ilayer__pip-label__rail"></span><span class="ilayer__pip-label__text">Perf</span></span>
+        <span class="ilayer__pip-label" data-body="sources" data-pip="4"><span class="ilayer__pip-label__rail"></span><span class="ilayer__pip-label__text">Style</span></span>
+        <span class="ilayer__pip-label" data-body="sources" data-pip="5"><span class="ilayer__pip-label__rail"></span><span class="ilayer__pip-label__text">Reviewer</span></span>
+
+        <span class="ilayer__pip-label ilayer__pip-label--cardinal" data-body="substrate" data-pip="0"><span class="ilayer__pip-label__rail"></span><span class="ilayer__pip-label__text">Rules</span><span class="ilayer__pip-label__val">Decide</span></span>
+        <span class="ilayer__pip-label ilayer__pip-label--cardinal" data-body="substrate" data-pip="1"><span class="ilayer__pip-label__rail"></span><span class="ilayer__pip-label__text">Examples</span><span class="ilayer__pip-label__val">Good</span></span>
+        <span class="ilayer__pip-label ilayer__pip-label--cardinal" data-body="substrate" data-pip="2"><span class="ilayer__pip-label__rail"></span><span class="ilayer__pip-label__text">Sources</span><span class="ilayer__pip-label__val">Data</span></span>
+        <span class="ilayer__pip-label ilayer__pip-label--cardinal" data-body="substrate" data-pip="3"><span class="ilayer__pip-label__rail"></span><span class="ilayer__pip-label__text">Loops</span><span class="ilayer__pip-label__val">Confirm</span></span>
+
+        <span class="ilayer__pip-label" data-body="surfaces" data-pip="0"><span class="ilayer__pip-label__rail"></span><span class="ilayer__pip-label__text">Cursor</span></span>
+        <span class="ilayer__pip-label" data-body="surfaces" data-pip="1"><span class="ilayer__pip-label__rail"></span><span class="ilayer__pip-label__text">Claude</span></span>
+        <span class="ilayer__pip-label" data-body="surfaces" data-pip="2"><span class="ilayer__pip-label__rail"></span><span class="ilayer__pip-label__text">Web</span></span>
+        <span class="ilayer__pip-label" data-body="surfaces" data-pip="3"><span class="ilayer__pip-label__rail"></span><span class="ilayer__pip-label__text">REST</span></span>
+        <span class="ilayer__pip-label" data-body="surfaces" data-pip="4"><span class="ilayer__pip-label__rail"></span><span class="ilayer__pip-label__text">Slack</span></span>
+        <span class="ilayer__pip-label" data-body="surfaces" data-pip="5"><span class="ilayer__pip-label__rail"></span><span class="ilayer__pip-label__text">Agents</span></span>
+      </div>
 
       <!-- Brandmark substrate dock anchor — the global painter docks
            the cloud here. During the substrate window the uShapeBlend
