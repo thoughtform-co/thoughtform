@@ -35,7 +35,14 @@ interface TravelingOrbitsProps {
   rootRef: React.RefObject<HTMLElement | null>;
 }
 
-const MISS_PARK_VIEWPORT_FRAC = 0.5;
+// Mirrors `BRANDMARK_KEYFRAMES.miss.parkViewportFrac` in
+// `lib/brandmark/journey.ts`. The orbits painter shares the journey
+// timing exactly so the four rings land at the diagnostic
+// constellation centre on the same scroll frame the brandmark vector
+// docks at `.miss__brand-slot`. See the journey file's `miss` block
+// for the rationale on the 0.62 value (one-beat-sooner park that
+// compensates for the bottom-anchored `.miss__system`).
+const MISS_PARK_VIEWPORT_FRAC = 0.62;
 
 const BASE_VIEWBOX_WIDTH = 1100;
 const BASE_VIEWBOX_HEIGHT = 650;

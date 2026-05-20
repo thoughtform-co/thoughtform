@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { probeWebGL } from "@/lib/webgl/probe";
 import { IntelligenceLayerStack } from "./IntelligenceLayerStack";
@@ -45,7 +45,6 @@ interface IntelligenceLayerPortalProps {
  */
 export function IntelligenceLayerPortal({ containerRef }: IntelligenceLayerPortalProps) {
   const rootRef = useRef<Root | null>(null);
-  const [mountToken, setMountToken] = useState(0);
 
   // Drive `--ilayer-progress` for the floating-label opacity gates.
   // The hook reads `transform.ringProgress` from `brandmarkJourneyStore`
@@ -53,28 +52,51 @@ export function IntelligenceLayerPortal({ containerRef }: IntelligenceLayerPorta
   // `#intelligence-layer` is absent.
   useIlayerProgress();
 
-  // Static-fallback gate. Reads `prefers-reduced-motion` and viewport
-  // width on mount and on each change. The portal then either
-  // createRoots an R3F canvas (mode="r3f") or skips the mount
-  // entirely (mode="static") and the SVG fallback paints.
+  // Single combined effect — owns: static-fallback gate (MQ listeners
+  // + writes `data-ilayer-mode` attribute), a SINGLE persistent
+  // `createRoot` against `[data-ilayer-stack-root]`, and a mode
+  // subscription that re-renders that root with either the R3F
+  // stack or `null` (static fallback) as the mode changes.
+  //
+  // Previous shape used two effects + a `mountToken` to re-trigger
+  // mount/unmount on mode flips. That created two failure modes:
+  //   1. Calling `root.unmount()` synchronously inside an effect
+  //      cleanup that fired during a parent render triggered
+  //      "Attempted to synchronously unmount a root while React was
+  //      already rendering".
+  //   2. Deferring the unmount via `queueMicrotask` let the next
+  //      effect run `createRoot(slot)` on the same container before
+  //      the queued unmount executed — "You are calling
+  //      ReactDOMClient.createRoot() on a container that has already
+  //      been passed to createRoot() before".
+  //
+  // The single-root model sidesteps both: we createRoot exactly once
+  // per component mount, switch its children via `root.render()`
+  // (which `null` correctly handles by unmounting children but
+  // keeping the root alive), and unmount only on real component
+  // unmount.
   useEffect(() => {
     if (typeof window === "undefined") return;
     const container = containerRef.current;
     if (!container) return;
     const stack = container.querySelector<HTMLElement>(".ilayer__stack");
     if (!stack) return;
+    const slot = container.querySelector<HTMLElement>("[data-ilayer-stack-root]");
+    if (!slot) return;
+
+    const root = createRoot(slot);
+    rootRef.current = root;
+
+    const renderForMode = (mode: "r3f" | "static") => {
+      root.render(mode === "static" ? null : <IntelligenceLayerStack />);
+    };
 
     const motionMQ = window.matchMedia("(prefers-reduced-motion: reduce)");
     const sizeMQ = window.matchMedia("(max-width: 767px)");
 
     const evaluate = () => {
       const wantsStatic = motionMQ.matches || sizeMQ.matches || !probeWebGL();
-      const next = wantsStatic ? "static" : "r3f";
-      // Re-query the section element on every evaluate() call rather
-      // than caching it -- HMR / Fast Refresh regenerates the DOM
-      // (the v7 prototype is rendered via dangerouslySetInnerHTML)
-      // and the cached reference would point at the previous
-      // (detached) section, so setAttribute would silently fail.
+      const next: "r3f" | "static" = wantsStatic ? "static" : "r3f";
       const section = container.querySelector<HTMLElement>("#intelligence-layer");
       const cur = stack.getAttribute("data-ilayer-mode");
       const sectionCur = section?.getAttribute("data-ilayer-mode");
@@ -82,9 +104,7 @@ export function IntelligenceLayerPortal({ containerRef }: IntelligenceLayerPorta
         stack.setAttribute("data-ilayer-mode", next);
         section?.setAttribute("data-ilayer-mode", next);
         useIlayerProgressStore.getState().setMode(next);
-        // Bump mount token so the second effect re-runs and either
-        // mounts or unmounts the canvas to match the new mode.
-        setMountToken((t) => t + 1);
+        renderForMode(next);
       }
     };
 
@@ -98,42 +118,15 @@ export function IntelligenceLayerPortal({ containerRef }: IntelligenceLayerPorta
       stack.removeAttribute("data-ilayer-mode");
       const section = container.querySelector<HTMLElement>("#intelligence-layer");
       section?.removeAttribute("data-ilayer-mode");
+      // Defer the unmount: this cleanup can run during a parent
+      // re-render (e.g. StrictMode's double-invoke, HMR), and a
+      // synchronous `root.unmount()` then races React's render
+      // commit. Microtask scheduling lets the current commit flush
+      // before the root is torn down.
+      rootRef.current = null;
+      queueMicrotask(() => root.unmount());
     };
   }, [containerRef]);
-
-  // Canvas mount / unmount based on the resolved mode. We createRoot
-  // into `[data-ilayer-stack-root]` only when mode="r3f"; in static
-  // mode we tear down any existing root so the canvas DOM is gone
-  // and the SVG fallback reads cleanly.
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-
-    const slot = container.querySelector<HTMLElement>("[data-ilayer-stack-root]");
-    if (!slot) return;
-
-    const mode = useIlayerProgressStore.getState().mode;
-
-    if (mode === "static") {
-      const r = rootRef.current;
-      rootRef.current = null;
-      if (r) r.unmount();
-      return;
-    }
-
-    let root = rootRef.current;
-    if (!root) {
-      root = createRoot(slot);
-      rootRef.current = root;
-    }
-    root.render(<IntelligenceLayerStack />);
-
-    return () => {
-      const r = rootRef.current;
-      rootRef.current = null;
-      if (r) r.unmount();
-    };
-  }, [containerRef, mountToken]);
 
   // ADR-014 v5: CelestialLinework no longer portals into the
   // substrate anchor. Its role (dashed outer ring + bearing ticks +

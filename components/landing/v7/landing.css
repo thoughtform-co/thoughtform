@@ -4201,7 +4201,15 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   --ilayer-ring-radius: calc(var(--ilayer-ring-diameter) / 2);
   --ilayer-side-diameter: calc(var(--ilayer-ring-diameter) * 0.68);
   --orbit-offset: clamp(200px, 26vw, 360px);
-  --ilayer-triad-y: 58%;
+  /* Triad-y was 58% which left ~230px of empty space below the sphere
+     captions on a 900px viewport. Linear's section composition fills
+     the viewport with the demo / illustration — there's no convention
+     of capping the visual at mid-section and leaving the bottom third
+     blank. 68% drops the triad's vertical centre into the lower half
+     so spheres + captions occupy the section's natural lower band,
+     with the title rail (clamp 96-140px) above. Title-to-sphere gap
+     stays comfortable (~280px on 1440x900). */
+  --ilayer-triad-y: 68%;
   --ilayer-caption-gap: clamp(10px, 1.4vh, 18px);
   --ilayer-pip-label-size: 9px;
 }

@@ -533,14 +533,24 @@ export function buildKeyframes(ctx: JourneyContext): BrandmarkKeyframe[] {
     {
       id: "miss",
       resolveRect: () => queryMissBrand()?.getBoundingClientRect() ?? null,
-      // Diagnostic 4-card grid sits mid-#missing-layer. Same
-      // one-beat-sooner pattern as sigil (commit f6553ea):
-      // parkViewportFrac = 0.62 shifts the parking point so the
-      // brandmark lands at the constellation centre by the time the
-      // diagnostic eyebrow + title are in the upper viewport, instead
-      // of waiting for the slot to reach dead centre (at which point
-      // the section header is already scrolling past).
-      parkViewportFrac: 0.5,
+      // Diagnostic 4-card grid sits in the lower half of #missing-layer
+      // (the .miss__system bottom-anchors via `align-self: end`, so the
+      // brand slot resolves to ~y=520-530 in a 900px section). Without
+      // a one-beat-sooner park, the brandmark + orbits keep morphing
+      // toward miss until the slot reaches mid-viewport — by then the
+      // visitor has already scrolled into the next section and only
+      // sees the orbital constellation "land" from inside continuum.
+      // parkViewportFrac = 0.62 parks the brandmark when the slot is
+      // at viewport 62% (~558 on 900vh), which is ~28px BEFORE the
+      // section snaps to viewport top. The brandmark + four orbits
+      // are therefore fully landed by the time the diagnostic title
+      // is in the upper viewport — matching the one-beat-sooner
+      // pattern used by `sigil` (0.55) and originally documented
+      // here. Prior `0.5` was a regression introduced when the
+      // miss__system aligned at center; with `align-self: end`
+      // (current) the slot sits ~70px lower, so 0.5 left a too-long
+      // post-snap tail. (See landing.css `.miss__system` block.)
+      parkViewportFrac: 0.62,
       parked: { density: 0, dispersion: 0 },
       // sigil → miss: same-size translation; pair the default
       // atmosphere bump (0.45 peak) with `TRAVEL_EASE` so the

@@ -34,12 +34,23 @@ export const CAMERA_TILT = {
  * projected world `x = ±2.35` to ~45%/55% NDC and the spheres rendered
  * at ~70px. Switching to perspective gives consistent screen layout
  * across viewports without dynamic zoom math.
+ *
+ * Camera + lookAt are both shifted up by 0.9 world units vs. the
+ * original `(0, 0.45)` / `(0, -0.05)` framing. The forward vector
+ * (lookAt - camera) is unchanged so the perspective tilt is the
+ * same; the entire frame is panned UP so the bodies (which stay at
+ * world `y = -0.05`) project to ~68% of the canvas instead of the
+ * dead-centre 50%. That fills the section's lower band with the
+ * triad + captions instead of leaving ~230px of empty space below
+ * the captions (the previous composition centered the triad in the
+ * canvas while title + bottom padding ate the upper third — Linear
+ * sections fill the available height with the demo / illustration).
  */
 export const CAMERA_PARAMS = {
   orthographic: false as const,
   fov: 42,
-  position: [0, 0.45, 6.4] as [number, number, number],
-  lookAt: [0, -0.05, 0] as [number, number, number],
+  position: [0, 1.35, 6.4] as [number, number, number],
+  lookAt: [0, 0.85, 0] as [number, number, number],
   near: 0.1,
   far: 50,
 };
