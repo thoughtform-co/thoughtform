@@ -1241,11 +1241,17 @@ html[data-quote-active="true"] .tf-brandmark-actor {
    - Bottom: opaque `var(--void)` backplate. Required by ADR-008 Rule 1
      so the sticky hero video doesn't bleed through subsequent
      sections.
-   - Top: `/v7-stars.svg` painted as a viewport-fixed background image
-     (`background-attachment: fixed`). Each station paints its own copy
-     anchored to viewport, so the starfield reads as a continuous
-     deep-space backdrop across the full scroll instead of a per-section
-     dot pattern.
+   - Top: `/v7-stars.svg` tiled at a fixed pixel size and scroll-attached
+     (no `background-attachment: fixed` — that re-rasterised the SVG to
+     viewport size on every scroll frame and froze the diagnostic
+     section under the additional weight of `.miss::before`, the
+     spinning brand-halo, and the orbit particle stream). The pattern
+     is `1600 × 900px` — the SVG's native viewBox — and repeats so
+     tall sections (build-quote cover, sticky practice) get an even
+     density of stars rather than a stretched single copy. Stars now
+     scroll with each section's rect; the field reads as deep space
+     bleeding through every section without the per-frame compositor
+     cost.
    - The previous 80px lattice grid was retired — the starfield + the
      per-section `.station::before` radial gradients (`#definition`,
      `#continuum`, `#build`, `#contact`, `#about`, `.miss::before`,
@@ -1253,10 +1259,9 @@ html[data-quote-active="true"] .tf-brandmark-actor {
 .station:not(.hero) {
   background-color: var(--void);
   background-image: url("/v7-stars.svg");
-  background-size: cover;
-  background-position: center center;
-  background-repeat: no-repeat;
-  background-attachment: fixed;
+  background-size: 1600px 900px;
+  background-position: center top;
+  background-repeat: repeat;
   z-index: 2;
   width: 100vw;
   margin-left: calc(50% - 50vw);
