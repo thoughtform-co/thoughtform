@@ -8912,21 +8912,49 @@ html {
    of `.station.station--cover` ensures this beats `.station:not(.hero)`
    so the cover never lets the gateway radial or the pinned Practice
    elements bleed through during the handoff. */
-.station.station--cover {
+/* Runway wrapper around #buildQuote — gives the sticky section a
+   scrub window so it pins to the viewport for one full viewport of
+   scroll before releasing into #continuum below. Total height =
+   2 × viewport (one for the pinned beat, one for the runway). Use
+   `dvh` so the runway tracks dynamic browser chrome (mobile address
+   bar) instead of locking to the largest viewport. */
+.build-quote-runway {
   position: relative;
+  height: 200vh;
+  height: 200dvh;
+  /* No isolation here — the sticky child owns its own stacking
+     context (z-index: 3 + isolation: isolate below), which is what
+     the surrounding sections expect to composite against. */
+}
+
+.station.station--cover {
+  /* Sticky pin instead of position: relative — gives the user a
+     guaranteed full-viewport interstitial beat between
+     #intelligence-layer and #continuum. The runway wrapper above
+     provides the scrub window; the section pins at top: 0 while
+     the runway is in view, then releases as the runway's bottom
+     crosses the bottom-of-section line. */
+  position: sticky;
+  top: 0;
+  /* Belt-and-braces: prefer dvh (always equals the visible viewport,
+     even when the mobile browser bars are showing) and bump with
+     min-height: 100lvh so the section never collapses below the
+     full viewport — earlier `100svh` could measure smaller than
+     `100vh` on browsers with dynamic toolbars, leaving a strip of
+     the next section visible during the pinned beat. */
   height: 100vh;
-  height: 100svh;
-  min-height: 0;
+  height: 100dvh;
+  min-height: 100vh;
+  min-height: 100lvh;
   z-index: 3;
   background: var(--void);
-  /* No content-visibility: auto — the section needs real 100vh
-     geometry so the .gateway radial / brandmark stack composites
-     correctly under the build-quote panel. */
+  /* No content-visibility: auto — the section needs real geometry
+     so the .gateway radial / brandmark stack composites correctly
+     under the build-quote panel. */
   content-visibility: visible;
   contain-intrinsic-size: auto;
-  /* Promote to its own composite layer so the underlying Practice
-     elements never bleed through during scroll-driven repaints. The
-     cover slides up as a single GPU-backed surface. */
+  /* Promote to its own composite layer so the underlying section
+     elements never bleed through during scroll-driven repaints. */
   isolation: isolate;
   will-change: transform;
 }
@@ -9233,6 +9261,17 @@ html {
 .build-quote__line {
   display: block;
   white-space: nowrap;
+}
+/* Accent word inside a quote line — gold, italic (the parent quote
+   is already italic so explicit `font-style: italic` keeps the
+   accent from reverting upright per CSS's `em-in-italic` rule).
+   Used by the Evans axiom's accented "ask" word; matches the gold-
+   italic treatment used on the `.ilayer__title em` ("intelligence
+   layer.") and `.ilayer__lede em` ("Encoded once.") accents. */
+.build-quote__line em {
+  font-style: italic;
+  color: var(--gold);
+  font-weight: 400;
 }
 .build-quote__quote::before {
   content: "“";

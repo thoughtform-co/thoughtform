@@ -4806,12 +4806,24 @@ html { scroll-behavior: smooth; }
        previously between #practice and #build, where it acted as an
        opaque cover sliding over the pinned Practice end-state). The
        Practice cover handoff has been retired in useLandingScroll +
-       landing.css; this section now stands alone as a Feynman axiom
-       interstitial right after the intelligence-layer payload.
-       Compositing: the wrapper carries an opaque var(--void) shield;
+       landing.css; this section now stands alone as a Benedict
+       Evans axiom interstitial right after the intelligence-layer
+       payload.
+
+       Runway wrapper: the section is `position: sticky; top: 0;
+       height: 100dvh;` so it pins to the viewport for one full
+       viewport of scroll, giving the user a real interstitial beat
+       between #intelligence-layer and #continuum. The runway div is
+       200dvh tall (100dvh for the pinned beat + 100dvh of natural
+       flow runway) — without this wrapper the sticky section would
+       have no scrub window and the next section would just push it
+       up the page like any other block.
+
+       Compositing: the section carries an opaque var(--void) shield;
        reveal motion runs on inner elements only (Rule 2 of the
        landing-v7-compositing skill). The bottom of the panel carries
        a gradient + backdrop-blur dissolve into the next section. -->
+  <div class="build-quote-runway">
   <section class="station station--cover build-quote" id="buildQuote" data-station="buildQuote" data-screen-label="04.5 Axiom">
     <!-- No corner L-brackets here on purpose: the page-level HUD grid
          already carries L-brackets at the four outer corners and a
@@ -4820,9 +4832,9 @@ html { scroll-behavior: smooth; }
          Fig) provide the corner context on their own. -->
 
     <span class="build-quote__label build-quote__label--tl" aria-hidden="true"><span class="k">Transit</span> · 04 → 05</span>
-    <span class="build-quote__label build-quote__label--tr" aria-hidden="true"><span class="k">δ</span> 0.62 · Build axiom</span>
-    <span class="build-quote__label build-quote__label--bl" aria-hidden="true">Field · build</span>
-    <span class="build-quote__label build-quote__label--br" aria-hidden="true"><span class="k">Fig</span> · 04.5q / Feynman</span>
+    <span class="build-quote__label build-quote__label--tr" aria-hidden="true"><span class="k">δ</span> 0.62 · Asking axiom</span>
+    <span class="build-quote__label build-quote__label--bl" aria-hidden="true">Field · ask</span>
+    <span class="build-quote__label build-quote__label--br" aria-hidden="true"><span class="k">Fig</span> · 04.5q / Evans</span>
 
     <!-- Gateway visual — atmospheric bridge from the intelligence
          layer into the continuum. The white-top / dark-bottom key
@@ -4908,27 +4920,17 @@ html { scroll-behavior: smooth; }
       </svg>
 
       <figure class="build-quote__figure" data-m="instrument">
-        <div class="build-quote__eyebrow"><span class="k">Axiom</span> · 04.5q · Build</div>
+        <div class="build-quote__eyebrow"><span class="k">Axiom</span> · 04.5q · Ask</div>
 
         <blockquote class="build-quote__quote">
-          <span class="build-quote__line">
-            What I
-            <span class="build-quote__correction">
-              <del class="build-quote__strike">cannot</del>
-              <ins class="build-quote__sub" cite="https://thoughtform.co/build">
-                <span class="build-quote__caret" aria-hidden="true">↳</span>
-                <em>do not</em>
-              </ins>
-            </span>
-            build,
-          </span>
-          <span class="build-quote__line">I do not understand.</span>
+          <span class="build-quote__line">A lot of the challenge is working out</span>
+          <span class="build-quote__line">how to <em>ask</em> for what you want.</span>
         </blockquote>
 
         <figcaption class="build-quote__attribution">
           <span class="build-quote__attribution__rule" aria-hidden="true"></span>
-          <span class="build-quote__attribution__name">Richard Feynman</span>
-          <span class="build-quote__attribution__meta">— blackboard, Caltech 1988</span>
+          <span class="build-quote__attribution__name">Benedict Evans</span>
+          <span class="build-quote__attribution__meta">— on the hidden work behind useful AI</span>
         </figcaption>
       </figure>
     </div>
@@ -4941,6 +4943,7 @@ html { scroll-behavior: smooth; }
          dust-dark floor). aria-hidden because purely decorative. -->
     <div class="build-quote__dissolve" aria-hidden="true"></div>
   </section>
+  </div>
 
   <!-- ═══════════ 03 CONTINUUM — the tool ↔ collaborator spectrum ═══════════ -->
   <section class="station station--centered station--from-connector station--to-connector" id="continuum" data-station="continuum" data-screen-label="05 Continuum">

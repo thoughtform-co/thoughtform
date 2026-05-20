@@ -670,10 +670,21 @@ function readUnscaledSigilRect(el: HTMLElement | null): DOMRect | null {
  *
  *  Returns `null` when the substrate keyframe isn't bracketed by
  *  neighbouring keyframes (it always should be in our 5-keyframe
- *  layout — defensive). */
+ *  layout — defensive).
+ *
+ *  `ctx` is optional but, when provided, lets the function clamp
+ *  `exitY` to the bottom of `#intelligence-layer` in scroll-Y. That
+ *  matters because the next centre (`rail` in `#continuum`) now sits
+ *  past the `#buildQuote` interstitial; without the clamp, the
+ *  substrate window's `parkFracOut` lerps into / past the build-
+ *  quote, leaving the spheres + brandmark mid-morph as the cover
+ *  rises. The clamp guarantees the substrate window closes inside
+ *  intelligence-layer so the spheres finish their full emerge → hold
+ *  → retract cycle BEFORE the user reaches the interstitial. */
 export function computeSubstrateRange(
   keyframes: readonly BrandmarkKeyframe[],
-  centres: readonly number[]
+  centres: readonly number[],
+  ctx?: JourneyContext
 ): SubstrateRange | null {
   const subIdx = keyframes.findIndex((kf) => kf.id === "substrate");
   if (subIdx <= 0 || subIdx >= keyframes.length - 1) return null;
@@ -684,7 +695,19 @@ export function computeSubstrateRange(
   const subC = centres[subIdx];
   const nextC = centres[subIdx + 1];
   const engageY = prevC + (1 - parkIn) * (subC - prevC);
-  const exitY = subC + parkOut * (nextC - subC);
+  let exitY = subC + parkOut * (nextC - subC);
+
+  if (ctx?.intelligenceEl && typeof window !== "undefined") {
+    const rect = ctx.intelligenceEl.getBoundingClientRect();
+    if (rect.height > 0) {
+      const sectionBottomY = window.scrollY + rect.bottom;
+      // Keep at least a minimum span so progress math stays well-
+      // defined; clamp to the section bottom otherwise.
+      const minSpan = Math.max(1, subC - engageY);
+      exitY = Math.max(subC + minSpan * 0.05, Math.min(exitY, sectionBottomY));
+    }
+  }
+
   return { engageY, exitY };
 }
 
@@ -826,7 +849,12 @@ export function computeBrandmarkTransform(
   const vh = window.innerHeight;
 
   // === Substrate window (drives R3F ring channels uniformly) ===
-  const subRange = computeSubstrateRange(keyframes, c);
+  // `ctx` is passed so the range can clamp `exitY` to the bottom of
+  // `#intelligence-layer`. With the Feynman / Evans build-quote now
+  // sitting between intelligence-layer and continuum, an unclamped
+  // window would extend through the cover and leave the spheres
+  // mid-morph as the user reads the axiom.
+  const subRange = computeSubstrateRange(keyframes, c, ctx);
   const inSubWindow = subRange != null && scrollY >= subRange.engageY && scrollY <= subRange.exitY;
   let substrateLocalProgress = 0;
   if (inSubWindow && subRange) {

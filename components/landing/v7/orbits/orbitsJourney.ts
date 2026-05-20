@@ -123,12 +123,15 @@ const SECTION_READING_ZONE_FRAC = 0.35;
  *  the diagnostic constellation reveals. */
 const SIGIL_TO_MISS_PARK_TAIL = 0.15;
 
-/** Subtle position lag — orbits trail the brandmark by this fraction
- *  of the (parking-carved) transit window so the rings read as a
- *  comet tail rather than a co-moving rigid frame. The brandmark
- *  reaches each scroll milestone first; the orbits catch up an
- *  instant later. Set to 0 to lock orbits and brandmark in lockstep. */
-const ORBIT_TRAIL_LAG = 0.08;
+/** Orbit / brandmark position relationship across the sigil → miss
+ *  leg. Set to `0` so the orbits lerp in EXACT lockstep with the
+ *  brandmark vector glyph — the rings and the mark land at the
+ *  diagnostic dock on the same scroll frame. Earlier versions used
+ *  `0.08` to read as a comet tail, but the resulting late-arrival
+ *  beat read as the orbits landing "after" the brandmark rather
+ *  than alongside it. With `0` and the shared `TRAVEL_EASE` curve
+ *  the two layers move as one. */
+const ORBIT_TRAIL_LAG = 0;
 
 export interface OrbitsJourneyInput {
   /** Sigil anchor element (`.sigil__mark`). */
