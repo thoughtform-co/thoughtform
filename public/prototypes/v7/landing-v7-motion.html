@@ -4290,18 +4290,18 @@ html { scroll-behavior: smooth; }
 
     <div class="tri">
       <!-- LEFT: What Thoughtform is / does -->
-      <aside class="tri__left">
-        <div class="tri__ipa tri__ipa--noun">THOUGHTFORM /θɔːtfɔːrm · THAWT-form/</div>
-        <h2 class="tri__title">
+      <aside class="tri__left" data-m-group>
+        <div class="tri__ipa tri__ipa--noun" data-m="eyebrow">THOUGHTFORM /θɔːtfɔːrm · THAWT-form/</div>
+        <h2 class="tri__title" data-m="title">
           AI collapsed the distance between <em>thought</em> and <em>form</em>.
         </h2>
-        <p class="tri__title tri__title--secondary">
+        <p class="tri__title tri__title--secondary" data-m="body">
           But the layer between how your team works and what AI can do is missing.
         </p>
-        <p class="tri__title tri__title--secondary">
+        <p class="tri__title tri__title--secondary" data-m="body">
           We build it with your team and <em>train them to own it</em>.
         </p>
-        <div class="tri__ctas">
+        <div class="tri__ctas" data-m="fade">
           <a href="#intelligence-layer" class="btn btn--solid">See the thesis <span class="arrow"></span></a>
         </div>
       </aside>
@@ -4455,10 +4455,10 @@ html { scroll-behavior: smooth; }
 
     <div class="miss__inner" data-m="instrument">
       <header class="miss__head">
-        <h2 class="miss__title">
+        <h2 class="miss__title" data-m="title">
           The missing layer is rarely <em>the model.</em>
         </h2>
-        <p class="miss__bridge">Same pattern, four ways.</p>
+        <p class="miss__bridge" data-m="body">Same pattern, four ways.</p>
       </header>
 
       <!-- Orbital constellation: 4 elliptical orbits + 4 pill labels +
@@ -4468,7 +4468,7 @@ html { scroll-behavior: smooth; }
            computed from `lib/celestial/orbits.ts` so the same numeric
            source feeds both the static markup and any programmatic
            consumer. -->
-      <div class="miss__system" role="list" aria-label="Four diagnoses orbiting the missing layer">
+      <div class="miss__system" role="list" aria-label="Four diagnoses orbiting the missing layer" data-m-group>
 
         <!-- Diagnostic celestial system. Composition (back to front):
              1. Four orbits — each label sits on its OWN ellipse, with
@@ -4569,24 +4569,28 @@ html { scroll-behavior: smooth; }
              dead pill. The icon is a small gold pip + numeral; the
              tag matches the legacy `.miss__card-tag` copy verbatim. -->
         <a class="miss__label miss__label--01" role="listitem" href="#intelligence-layer"
+           data-m="body"
            style="--x-pct: -26.92; --y-pct: -28.28;">
           <span class="miss__label-pip" aria-hidden="true"></span>
           <span class="miss__label-n">01</span>
           <span class="miss__label-tag">Brand voice drifts across every channel.</span>
         </a>
         <a class="miss__label miss__label--02" role="listitem" href="#intelligence-layer"
+           data-m="body"
            style="--x-pct: 33.28; --y-pct: -20.39;">
           <span class="miss__label-pip" aria-hidden="true"></span>
           <span class="miss__label-n">02</span>
           <span class="miss__label-tag">Creative briefs arrive without the thinking.</span>
         </a>
         <a class="miss__label miss__label--03" role="listitem" href="#intelligence-layer"
+           data-m="body"
            style="--x-pct: -25.58; --y-pct: 35.90;">
           <span class="miss__label-pip" aria-hidden="true"></span>
           <span class="miss__label-n">03</span>
           <span class="miss__label-tag">Every product concept looks feasible.</span>
         </a>
         <a class="miss__label miss__label--04" role="listitem" href="#intelligence-layer"
+           data-m="body"
            style="--x-pct: 21.61; --y-pct: 28.68;">
           <span class="miss__label-pip" aria-hidden="true"></span>
           <span class="miss__label-n">04</span>
@@ -4659,13 +4663,13 @@ html { scroll-behavior: smooth; }
             landing-v7-compositing).
          3. The R3F canvas paints under the chambers but above the void
             shield; chambers and brandmark sit on top via z-index. -->
-    <div class="ilayer__inner" data-m="instrument">
+    <div class="ilayer__inner" data-m="instrument" data-m-group>
 
       <header class="ilayer__head">
-        <h2 class="ilayer__title">
+        <h2 class="ilayer__title" data-m="title">
           The fix is an <em>intelligence layer.</em>
         </h2>
-        <p class="ilayer__lede">
+        <p class="ilayer__lede" data-m="body">
           An operating layer between how your team works and what AI
           does. <em>Encoded once.</em> Inherited by every surface.
         </p>
@@ -4786,11 +4790,11 @@ html { scroll-behavior: smooth; }
   <!-- ═══════════ 03 CONTINUUM — the tool ↔ collaborator spectrum ═══════════ -->
   <section class="station station--centered station--from-connector station--to-connector" id="continuum" data-station="continuum" data-screen-label="05 Continuum">
     <div class="station__idx">Continuum<span class="landmark">Landmark · tool ↔ collaborator / the navigation thesis</span></div>
-    <header class="continuum__head">
-      <h2 class="continuum__title">
+    <header class="continuum__head" data-m-group>
+      <h2 class="continuum__title" data-m="title">
         AI isn't software to command.<br><em>It's intelligence to navigate.</em>
       </h2>
-      <p class="continuum__lede">
+      <p class="continuum__lede" data-m="body">
         Software is commanded. Intelligence is navigated. AI sits on a
         continuum between <em>tool</em> and <em>collaborator</em>, and the
         ratio shifts with every prompt.
@@ -5242,10 +5246,10 @@ html { scroll-behavior: smooth; }
   <section class="station station--build" id="build" data-station="build" data-screen-label="07 Build">
     <div class="station__idx">Build<span class="landmark">Landmark · the work · software for few</span></div>
 
-    <h2 class="station__title">
+    <h2 class="station__title" data-m="title">
       Tools the team <em>builds itself.</em>
     </h2>
-    <p class="station__lede">
+    <p class="station__lede" data-m="body">
       Off-the-shelf SaaS is too generic. A dev agency is too expensive for
       a team of ten. In that gap, AI lets the people who understand the
       problem ship the instrument they need — in days, not months.
@@ -5387,24 +5391,24 @@ html { scroll-behavior: smooth; }
 
     <div class="voidwalker">
       <!-- LEFT · bio -->
-      <div class="voidwalker__copy">
-        <h2 class="voidwalker__name">
+      <div class="voidwalker__copy" data-m-group>
+        <h2 class="voidwalker__name" data-m="title">
           Vince Buyssens<br>
           <em>// Voidwalker.</em>
         </h2>
-        <div class="voidwalker__role">Founder · Navigator · Loop Earplugs AI Strategy</div>
+        <div class="voidwalker__role" data-m="eyebrow">Founder · Navigator · Loop Earplugs AI Strategy</div>
 
-        <p class="voidwalker__bio">
+        <p class="voidwalker__bio" data-m="body">
           <strong>Vince</strong> has spent a decade moving teams through the
           tides of digital change — the web, mobile, creator economies, and
           now <em>intelligence itself.</em>
         </p>
-        <p class="voidwalker__bio">
+        <p class="voidwalker__bio" data-m="body">
           Through Thoughtform he teaches organisations how to think and
           build with AI — keynotes, intensives, and embedded residencies
           with teams ready to ship.
         </p>
-        <p class="voidwalker__bio">
+        <p class="voidwalker__bio" data-m="body">
           Inside Loop Earplugs he runs the same practice from the inside:
           shaping AI strategy and using AI to prototype the tools that power
           the marketing engine.
@@ -5563,17 +5567,17 @@ html { scroll-behavior: smooth; }
 
   <!-- ═══════════ 06 CONTACT ═══════════ -->
   <section class="station" id="contact" data-station="contact" data-screen-label="10 Contact">
-    <div class="contact">
+    <div class="contact" data-m-group>
       <div class="station__idx" style="justify-content:center">Contact<span class="landmark" style="margin-left:0">Event horizon · destination lock</span></div>
-      <h2 class="contact__title">Plot your<br><em>course.</em></h2>
-      <p class="contact__desc">
+      <h2 class="contact__title" data-m="title">Plot your<br><em>course.</em></h2>
+      <p class="contact__desc" data-m="body">
         Ready to navigate intelligence with your team? Send a signal. We'll
         reply with a route.
       </p>
-      <div class="contact__cta">
+      <div class="contact__cta" data-m="fade">
         <a href="mailto:hello@thoughtform.co" class="btn btn--solid">Initiate contact<span class="arrow"></span></a>
       </div>
-      <div class="contact__email">
+      <div class="contact__email" data-m="body">
         <a href="mailto:hello@thoughtform.co">hello@thoughtform.co</a>
       </div>
     </div>

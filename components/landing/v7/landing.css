@@ -3698,12 +3698,18 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   background: rgba(10, 9, 8, 0.62);
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
-  /* Width budget for the diagnostic sentences ("Brand voice drifts
-     across every channel.", etc.). Without a cap, the longer
-     sentences would extend off-canvas on narrower viewports; with
-     the cap + natural wrapping at word boundaries each label reads
-     as a two-line statement that still sits on its host orbit. */
-  max-width: 26ch;
+  /* Width budget for the diagnostic sentences. We declare both:
+     - `width: max-content` so the label SIZES TO its longest natural
+       line; without it, inline-flex was letting the browser pick a
+       shorter wrap (164px / 3 lines for "Creative briefs arrive
+       without the thinking.") while the other labels sat at 238px /
+       2 lines — inconsistent label rhythm.
+     - `max-width: 32ch` caps the natural-line width so the labels
+       never crowd the orbit interior; with the cap, every label
+       lands on exactly two lines and the four sentences read as a
+       uniform diagnostic chorus. */
+  width: max-content;
+  max-width: 38ch;
 
   font-family: var(--font-pt-mono);
   font-size: 11px;
@@ -3713,7 +3719,11 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   text-decoration: none;
   white-space: normal;
   text-align: left;
-  text-wrap: balance;
+  /* `pretty` over `balance` — balance was producing three short lines
+     for "Creative briefs arrive without the thinking." while the
+     other sentences sat on two. pretty keeps the wrap natural (fill
+     each line to the cap) while still avoiding single-word widows. */
+  text-wrap: pretty;
   outline: none;
 
   transition:
