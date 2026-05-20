@@ -1,0 +1,325 @@
+/*
+ * home-v2.css — styles for the /test/home-v2 depth-gateway experiment.
+ *
+ * Reuses v7 tokens (--gold, --dawn, --void) via landing.css import.
+ * Layer order (loose ADR-008 alignment for this experimental route):
+ *
+ *   z 0 — page void background
+ *   z 1 — hero (sticky), tail sections
+ *   z 2 — home-v2 sticky stage (transparent so atmosphere bleeds through)
+ *   z 3 — R3F canvas (inside the stage)
+ *   z 4 — HTML chamber label overlay
+ *   z 5 — debug HUD
+ */
+
+.home-v2-root {
+  position: relative;
+  min-height: 100vh;
+  background: var(--void, #050403);
+  color: var(--dawn, #ebe3d6);
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+}
+
+/* ── Hero (copy of v7 .hero markup; styles live in landing.css) ── */
+.home-v2-root .hero {
+  position: sticky;
+  top: 0;
+}
+
+/* ── Sticky depth stage ──────────────────────────────────────── */
+.home-v2-stage {
+  position: relative;
+  width: 100%;
+  /* 300svh = three chambers; each ~one viewport of scroll length */
+  height: 300svh;
+  background: var(--void, #050403);
+  z-index: 2;
+  isolation: isolate;
+}
+
+.home-v2-stage__sticky {
+  position: sticky;
+  top: 0;
+  width: 100%;
+  height: 100svh;
+  overflow: hidden;
+}
+
+.home-v2-stage__canvas {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.home-v2-stage__canvas canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+/* ── Chamber HTML overlay (labels + 2D text plane) ──────────── */
+.home-v2-chamber-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  color: var(--dawn, #ebe3d6);
+}
+
+/* Definition chamber — left-side text plane. Rendered as a DOM
+   element on top of the canvas, then translated on the Z axis via
+   CSS perspective so it visibly rushes toward the viewer. The same
+   chamber progress drives both the canvas brandmark and this DOM
+   plane so they read as a single coordinated motion. */
+.home-v2-overlay__definition {
+  position: absolute;
+  left: clamp(48px, 8vw, 160px);
+  top: 50%;
+  transform-origin: left center;
+  perspective: 1200px;
+  width: min(48vw, 540px);
+  pointer-events: none;
+  opacity: var(--definition-opacity, 0);
+  transform: translateY(-50%);
+}
+
+.home-v2-overlay__definition-inner {
+  /* The Z-translate is driven by --definition-translate-z written by
+     the rAF scroll hook. Negative starts the plane behind the screen;
+     positive pushes it past the viewer. */
+  transform: translateZ(var(--definition-translate-z, -200px)) scale(var(--definition-scale, 0.95));
+  transform-origin: left center;
+  will-change: transform, opacity;
+}
+
+.home-v2-overlay__definition-eyebrow {
+  font-family: var(--font-pt-mono, ui-monospace, monospace);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--gold, #caa554);
+  opacity: 0.7;
+  margin: 0 0 18px;
+}
+
+.home-v2-overlay__definition-title {
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-weight: 400;
+  font-size: clamp(28px, 3.8vw, 56px);
+  line-height: 1.1;
+  letter-spacing: -0.012em;
+  color: var(--dawn, #ebe3d6);
+  margin: 0 0 18px;
+  text-wrap: balance;
+}
+
+.home-v2-overlay__definition-title em {
+  font-style: normal;
+  color: var(--gold, #caa554);
+}
+
+.home-v2-overlay__definition-body {
+  font-size: clamp(15px, 1.1vw, 18px);
+  line-height: 1.55;
+  color: rgba(235, 227, 214, 0.72);
+  max-width: 36ch;
+  margin: 0;
+}
+
+/* Intelligence chamber — left/right side labels for the L/R bodies.
+   Position is written by ChamberLabels via --left-x / --left-y /
+   --right-x / --right-y as CSS percentages. */
+.home-v2-overlay__chamber-label {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  opacity: var(--label-opacity, 0);
+  transition: opacity 200ms ease-out;
+  text-align: center;
+  min-width: 180px;
+}
+
+.home-v2-overlay__chamber-label--left {
+  left: var(--left-x, 16%);
+  top: var(--left-y, 50%);
+}
+
+.home-v2-overlay__chamber-label--right {
+  left: var(--right-x, 84%);
+  top: var(--right-y, 50%);
+}
+
+.home-v2-overlay__chamber-label-eyebrow {
+  font-family: var(--font-pt-mono, ui-monospace, monospace);
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--gold, #caa554);
+  opacity: 0.85;
+  margin: 0 0 6px;
+}
+
+.home-v2-overlay__chamber-label-title {
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-size: clamp(15px, 1.1vw, 19px);
+  font-weight: 400;
+  color: var(--dawn, #ebe3d6);
+  margin: 0 0 4px;
+  letter-spacing: 0.01em;
+}
+
+.home-v2-overlay__chamber-label-meta {
+  font-family: var(--font-pt-mono, ui-monospace, monospace);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  color: rgba(235, 227, 214, 0.5);
+  margin: 0;
+}
+
+/* Diagnostic chamber — minimal eyebrow that fades in across chamber B
+   to give context for the orbital rings appearing in 3D. */
+.home-v2-overlay__diagnostic {
+  position: absolute;
+  left: 50%;
+  bottom: clamp(60px, 12vh, 140px);
+  transform: translateX(-50%);
+  text-align: center;
+  opacity: var(--diagnostic-opacity, 0);
+  pointer-events: none;
+}
+
+.home-v2-overlay__diagnostic-eyebrow {
+  font-family: var(--font-pt-mono, ui-monospace, monospace);
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--gold, #caa554);
+  margin: 0 0 6px;
+}
+
+.home-v2-overlay__diagnostic-title {
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-size: clamp(18px, 1.6vw, 24px);
+  font-weight: 400;
+  color: var(--dawn, #ebe3d6);
+  margin: 0;
+  letter-spacing: 0.01em;
+}
+
+/* ── HUD progress chrome (debug) ─────────────────────────────── */
+.home-v2-stage__hud {
+  position: absolute;
+  top: clamp(16px, 2.6vh, 24px);
+  right: clamp(16px, 2.6vw, 32px);
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  font-family: var(--font-pt-mono, ui-monospace, monospace);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(235, 227, 214, 0.5);
+  pointer-events: none;
+}
+
+.home-v2-stage__hud-progress {
+  color: var(--gold, #caa554);
+  font-size: 14px;
+}
+
+/* ── Tail sections (normal scroll, placeholder) ──────────────── */
+.home-v2-tail {
+  position: relative;
+  background: var(--void, #050403);
+  z-index: 1;
+}
+
+.home-v2-tail__section {
+  min-height: 100vh;
+  padding: clamp(80px, 12vh, 160px) clamp(48px, 8vw, 140px);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  border-top: 1px solid rgba(235, 227, 214, 0.06);
+}
+
+.home-v2-tail__eyebrow {
+  font-family: var(--font-pt-mono, ui-monospace, monospace);
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--gold, #caa554);
+  margin: 0 0 18px;
+}
+
+.home-v2-tail__title {
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-size: clamp(32px, 4vw, 56px);
+  font-weight: 400;
+  line-height: 1.1;
+  letter-spacing: -0.012em;
+  color: var(--dawn, #ebe3d6);
+  margin: 0 0 24px;
+  max-width: 24ch;
+  text-wrap: balance;
+}
+
+.home-v2-tail__body {
+  font-size: clamp(16px, 1.2vw, 19px);
+  line-height: 1.6;
+  color: rgba(235, 227, 214, 0.72);
+  max-width: 60ch;
+}
+
+/* ── Static (no-WebGL / reduced motion) fallback ─────────────── */
+.home-v2-stage[data-fallback="true"] .home-v2-stage__canvas {
+  display: none;
+}
+
+.home-v2-stage[data-fallback="true"] .home-v2-stage__sticky {
+  position: relative;
+  height: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.home-v2-stage__fallback {
+  display: none;
+}
+
+.home-v2-stage[data-fallback="true"] .home-v2-stage__fallback {
+  display: block;
+  position: relative;
+  width: 100%;
+  padding: clamp(80px, 12vh, 160px) clamp(48px, 8vw, 140px);
+}
+
+.home-v2-fallback__chamber {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  border-top: 1px solid rgba(235, 227, 214, 0.06);
+  padding: clamp(40px, 6vh, 80px) 0;
+}
+
+.home-v2-fallback__chamber:first-child {
+  border-top: none;
+}
+
+.home-v2-fallback__brandmark {
+  width: clamp(160px, 28vw, 280px);
+  height: auto;
+  margin-bottom: 32px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-v2-overlay__definition-inner {
+    transition: none;
+  }
+}
