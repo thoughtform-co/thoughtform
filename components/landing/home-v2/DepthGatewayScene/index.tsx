@@ -4,32 +4,27 @@ import { Canvas } from "@react-three/fiber";
 import { useEffect, useState } from "react";
 import { probeWebGL } from "@/lib/webgl/probe";
 import { BrandmarkPointCloud } from "./BrandmarkPointCloud";
-import { ChamberLabels } from "./ChamberLabels";
-import { DiagnosticChamber } from "./chambers/DiagnosticChamber";
 import { IntelligenceChamber } from "./chambers/IntelligenceChamber";
 import { FlyingCameraRig } from "./FlyingCameraRig";
 import { CAMERA_FOV, CAMERA_LOOK_AT, CAMERA_START } from "./sceneGeom";
 
 /**
- * DepthGatewayScene — the shared R3F canvas for the home-v2 sticky
- * stage. Owns one camera rig + one brandmark point cloud + the
- * Diagnostic ring constellation + the Intelligence L/R bodies, all
- * mounted inside the same `<Canvas>` so they share a single GL
- * context, a single render loop, and a single camera.
+ * DepthGatewayScene — shared R3F canvas for the home-v2 sticky stage.
  *
- * The Definition chamber has no 3D content of its own — its visual
- * register is the brandmark (this canvas) + the DOM text plane
- * (rendered by `HomeV2Page` as an HTML overlay). The camera dolly
- * carries the user from Chamber A through C; the brandmark cloud
- * morphs across; the rings emerge in Chamber B; the L/R bodies fade
- * in during Chamber C.
+ * Lean composition: one camera rig + one brandmark point cloud +
+ * the chamber-C L/R bodies. The orbital constellation, sigil
+ * compass, and HUD chamber captions come from the v7 markup (the
+ * DOM siblings of this canvas), so they're NOT in the R3F tree.
  *
- * Probes WebGL on mount; renders nothing if WebGL is unavailable
- * (the page's static fallback paints instead, see `HomeV2Page`).
+ *   - FlyingCameraRig: subtle Z dolly across stage progress.
+ *   - BrandmarkPointCloud: persistent point cloud anchored to the
+ *     active chamber's brandmark dock element via DOM un-projection.
+ *     Shape morph from sigil → Fibonacci sphere during chamber C.
+ *   - IntelligenceChamber: L/R celestial bodies (Trusted Sources +
+ *     Headless Surfaces). Fade in during chamber C only.
  *
- * `prefers-reduced-motion` also opts out of the canvas — the static
- * fallback gives the same content in a stacked layout without the
- * z-axis dolly.
+ * Probes WebGL on mount; renders nothing if unavailable or
+ * prefers-reduced-motion is set (the page paints its own fallback).
  */
 export function DepthGatewayScene() {
   const [webglOK, setWebglOK] = useState<boolean | null>(null);
@@ -77,9 +72,7 @@ export function DepthGatewayScene() {
     >
       <FlyingCameraRig />
       <BrandmarkPointCloud />
-      <DiagnosticChamber />
       <IntelligenceChamber />
-      <ChamberLabels />
     </Canvas>
   );
 }

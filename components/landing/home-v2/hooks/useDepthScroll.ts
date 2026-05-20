@@ -5,7 +5,6 @@ import {
   INITIAL_TRANSFORM,
   deriveChambers,
   smoothstep,
-  lerp,
   useDepthGatewayStore,
 } from "@/lib/stores/depthGatewayStore";
 
@@ -13,34 +12,30 @@ import {
  * useDepthScroll — rAF-throttled scroll watcher for the home-v2
  * depth-gateway stage.
  *
- * Modeled on `useLandingScroll` (the v7 production hook): we listen
- * to `window.scroll`, schedule a single rAF tick per frame, and
- * compute a 0..1 progress across the sticky stage. Progress is
+ * Modeled on `useLandingScroll` (the v7 production hook): listens
+ * to `window.scroll`, schedules a single rAF tick per frame, and
+ * computes a 0..1 progress across the sticky stage. Progress is
  * written to:
  *
- *   1. CSS custom properties on the stage root
- *      (`--depth-progress`, `--chamber-a-progress`,
- *      `--chamber-b-progress`, `--chamber-c-progress`,
- *      `--definition-translate-z`, `--definition-scale`,
- *      `--definition-opacity`, `--diagnostic-opacity`).
- *      These drive the DOM overlay text plane and any CSS-driven
- *      decorations on the stage.
+ *   1. CSS custom properties on the stage root —
+ *      `--depth-progress`, `--chamber-{a,b,c}-progress`, plus the
+ *      three section opacity vars `--chamber-{A,B,C}-section-opacity`
+ *      that gate the chamber DOM sections' cross-fade.
  *
- *   2. `depthGatewayStore` — the single store the R3F painters read
+ *   2. `depthGatewayStore` — single store the R3F painters read
  *      imperatively inside `useFrame` so per-frame work stays at
  *      uniform writes only.
  *
- * The stage element is identified by its ref. We use the element's
- * `getBoundingClientRect()` against the viewport to derive progress:
+ * Cross-fade envelopes are smoothstep'd across ~12% of global
+ * progress at each chamber boundary so transitions feel like
+ * camera passing through, not abrupt swaps.
  *
- *   - `progress = 0` when the stage's top edge meets the viewport top
- *   - `progress = 1` when the stage's top edge has scrolled (height -
- *     vh) past the viewport top
- *
- * For a 300svh stage with a 100svh sticky interior that means the
- * sticky stays pinned for 200svh of progress, which is the canonical
- * "pin and scrub" pattern (no GSAP, no ScrollTrigger needed — just
- * rAF math).
+ *   global progress     0     0.27   0.39  0.61   0.73  1.0
+ *   chamber A opacity   1 ─────────╲                          0
+ *                                    ╲
+ *   chamber B opacity   0          ╱──────────────╲           0
+ *                                                  ╲
+ *   chamber C opacity   0                            ╲──────────1
  */
 export function useDepthScroll(stageRef: React.RefObject<HTMLDivElement | null>): void {
   const rafId = useRef<number | null>(null);
@@ -56,97 +51,38 @@ export function useDepthScroll(stageRef: React.RefObject<HTMLDivElement | null>)
     const stageHeight = rect.height;
     const scrubHeight = Math.max(1, stageHeight - vh);
 
-    // Raw progress in 0..1 across the sticky window.
-    const rawProgress = clamp01(-rect.top / scrubHeight);
-    const progress = rawProgress;
+    const progress = clamp01(-rect.top / scrubHeight);
 
     const { chamberA, chamberB, chamberC, chamberId } = deriveChambers(progress);
 
-    // Stage CSS vars — drive the DOM overlay text plane and the
-    // debug HUD readouts. CSS reads these synchronously so any
-    // overlay text follows scroll with no JS frame lag.
     stage.style.setProperty("--depth-progress", progress.toFixed(4));
     stage.style.setProperty("--chamber-a-progress", chamberA.toFixed(4));
     stage.style.setProperty("--chamber-b-progress", chamberB.toFixed(4));
     stage.style.setProperty("--chamber-c-progress", chamberC.toFixed(4));
 
-    // Definition chamber DOM plane choreography. The plane starts
-    // far behind the screen (Z = -240px in perspective space), is
-    // legible mid-Chamber A, then accelerates past the viewer at
-    // the end (Z = +600px) so it falls off the front of the camera.
-    // Opacity peaks mid-chamber and fades as it rushes past — this
-    // gives the "text approaches the viewer, then passes" feel
-    // the user described.
-    const pA = chamberA;
-    const definitionZ = lerp(-240, 600, smoothstep(0, 1, pA));
-    const definitionScale = lerp(0.78, 1.8, smoothstep(0, 1, pA));
-    // Opacity envelope: ramp in over first 20%, hold to ~70%, fade
-    // out as it rushes past.
-    let definitionOpacity = 0;
-    if (pA < 0.18) definitionOpacity = smoothstep(0, 1, pA / 0.18);
-    else if (pA > 0.78) definitionOpacity = 1 - smoothstep(0, 1, (pA - 0.78) / 0.22);
-    else definitionOpacity = 1;
-    // If we've left Chamber A entirely, force opacity to 0 so the
-    // DOM plane never bleeds into Chambers B / C.
-    if (progress > 1 / 3 + 0.02) definitionOpacity = 0;
-
-    stage.style.setProperty("--definition-translate-z", `${definitionZ.toFixed(1)}px`);
-    stage.style.setProperty("--definition-scale", definitionScale.toFixed(3));
-    stage.style.setProperty("--definition-opacity", definitionOpacity.toFixed(3));
-
-    // Diagnostic chamber overlay — fade in across Chamber B and out
-    // as we leave it. Two related but distinct envelopes:
+    // ── Chamber section cross-fade envelopes ───────────────────
+    // Each chamber owns a window. Outside it: opacity 0. At its
+    // boundary edge: smoothstep fade. In the center of its window:
+    // opacity 1.
     //
-    //   --diagnostic-opacity        applies to the header copy
-    //                               (miss__title + miss__bridge).
-    //   --diagnostic-pills-opacity  applies to the 4 .miss__label pills.
-    //                               Lags the header by ~12% of chamber
-    //                               progress so the user reads the
-    //                               framing line BEFORE the pills
-    //                               acquire — mirrors the v7 miss-label
-    //                               reveal stagger.
-    const pB = chamberB;
-    let diagnosticOpacity = 0;
-    if (pB > 0 && pB < 0.2) diagnosticOpacity = smoothstep(0, 1, pB / 0.2);
-    else if (pB >= 0.2 && pB <= 0.88) diagnosticOpacity = 1;
-    else if (pB > 0.88) diagnosticOpacity = 1 - smoothstep(0, 1, (pB - 0.88) / 0.12);
-    stage.style.setProperty("--diagnostic-opacity", diagnosticOpacity.toFixed(3));
+    // Boundaries (smoothstep transition zones):
+    //   A → B  : progress 0.27..0.39
+    //   B → C  : progress 0.61..0.73
+    //
+    // Held at 1 in the central windows:
+    //   A      : progress < 0.27
+    //   B      : 0.39 < progress < 0.61
+    //   C      : progress > 0.73
+    const aOpacity = 1 - smoothstep(0.27, 0.39, progress);
+    const bOpacity = smoothstep(0.27, 0.39, progress) * (1 - smoothstep(0.61, 0.73, progress));
+    const cOpacity = smoothstep(0.61, 0.73, progress);
 
-    let pillsOpacity = 0;
-    if (pB > 0.12 && pB < 0.42) pillsOpacity = smoothstep(0, 1, (pB - 0.12) / 0.3);
-    else if (pB >= 0.42 && pB <= 0.85) pillsOpacity = 1;
-    else if (pB > 0.85) pillsOpacity = 1 - smoothstep(0, 1, (pB - 0.85) / 0.15);
-    stage.style.setProperty("--diagnostic-pills-opacity", pillsOpacity.toFixed(3));
+    stage.style.setProperty("--chamber-A-section-opacity", aOpacity.toFixed(4));
+    stage.style.setProperty("--chamber-B-section-opacity", bOpacity.toFixed(4));
+    stage.style.setProperty("--chamber-C-section-opacity", cOpacity.toFixed(4));
 
-    // Intelligence-layer overlay — header (ilayer__title + lede)
-    // fades in across the FIRST half of Chamber C so it lands while
-    // the substrate morph is still mid-flight. The HUD captions on
-    // the L/R bodies are gated by `--label-opacity` written from
-    // ChamberLabels (driven by getSideBodyOpacity), so they fade in
-    // with their 3D bodies.
-    const pC = chamberC;
-    let ilayerHeaderOpacity = 0;
-    if (pC > 0 && pC < 0.35) ilayerHeaderOpacity = smoothstep(0, 1, pC / 0.35);
-    else if (pC >= 0.35) ilayerHeaderOpacity = 1;
-    stage.style.setProperty("--ilayer-header-opacity", ilayerHeaderOpacity.toFixed(3));
-
-    // Substrate readout (key/value pairs inside the morphed sphere).
-    // Lands a beat AFTER the morph completes so the user reads the
-    // brandmark transform first, then the structure of the substrate.
-    let readoutOpacity = 0;
-    if (pC > 0.55 && pC < 0.85) readoutOpacity = smoothstep(0, 1, (pC - 0.55) / 0.3);
-    else if (pC >= 0.85) readoutOpacity = 1;
-    stage.style.setProperty("--ilayer-readout-opacity", readoutOpacity.toFixed(3));
-
-    // Stage active state — the canvas + painters can short-circuit
-    // when the stage is fully off-screen.
     const active = rect.bottom > 0 && rect.top < vh;
 
-    // Skip the store write if nothing meaningful changed. The R3F
-    // painters poll the store via `getState()` inside `useFrame`,
-    // so an identical write triggers no work, but skipping
-    // construction of the next object reduces GC pressure during
-    // fast scroll.
     if (Math.abs(progress - lastProgress.current) > 0.00005 || active !== getActive()) {
       lastProgress.current = progress;
       useDepthGatewayStore.getState().setTransform({
@@ -165,8 +101,8 @@ export function useDepthScroll(stageRef: React.RefObject<HTMLDivElement | null>)
     rafId.current = window.requestAnimationFrame(writeFrame);
   }, [writeFrame]);
 
-  // First frame must happen synchronously before paint so the canvas
-  // doesn't flash with INITIAL_TRANSFORM during hydration.
+  // First frame synchronously before paint so the canvas + sections
+  // don't flash with INITIAL_TRANSFORM during hydration.
   useLayoutEffect(() => {
     writeFrame();
   }, [writeFrame]);

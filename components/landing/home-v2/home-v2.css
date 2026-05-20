@@ -1,27 +1,29 @@
 /*
  * home-v2.css — styles for the /test/home-v2 depth-gateway experiment.
  *
- * Reuses v7 tokens (--gold, --dawn, --void) + the v7 typography
- * classes (.tri__*, .miss__*, .ilayer__*) imported via landing.css.
- * This file is responsible for:
+ * This file is intentionally LEAN. The chamber visual register
+ * (sigil compass, missing-layer orbits, intelligence-layer chambers)
+ * comes from `landing.css` via the v7 markup sliced into the page.
+ * home-v2.css adds only:
  *
- *   - The sticky depth stage geometry (300svh container, 100svh
- *     sticky interior, R3F canvas + HTML overlay siblings).
- *   - Per-chamber overlay positioning (Definition text plane,
- *     Diagnostic header + orbit pills, Intelligence layer head +
- *     chamber HUD captions + substrate readout).
- *   - Per-chamber opacity gating driven by --*-opacity CSS vars
- *     written by useDepthScroll.
- *   - The static fallback layout for no-WebGL / reduced-motion.
+ *   1. Hero / stage / tail layout (sticky depth stage geometry).
+ *   2. Chamber stacking (3 v7 sections in the same viewport rect
+ *      via CSS grid `grid-area: stack`).
+ *   3. Per-chamber cross-fade gating driven by --chamber-{A,B,C}
+ *      -section-opacity vars written by useDepthScroll.
+ *   4. Section height overrides so v7's 128dvh-tall .ilayer fits
+ *      inside our 100svh sticky window.
+ *   5. Force-reveal safety net for [data-m] reveal motion (JS
+ *      adds .is-in too; this is the fallback so nothing flashes
+ *      hidden if a useEffect tick is missed).
+ *   6. Hide the v7 #intelligence-layer static SVG fallback + R3F
+ *      mount slot (our home-v2 canvas owns the 3D content here).
  *
- * Layer order (loose ADR-008 alignment for this experimental route):
- *
- *   z 0 — page void background
- *   z 1 — hero (sticky), tail sections
- *   z 2 — home-v2 sticky stage (transparent so atmosphere bleeds through)
- *   z 3 — R3F canvas (inside the stage)
- *   z 4 — HTML chamber label overlay
- *   z 5 — debug HUD
+ * Layer order in the sticky:
+ *   z 1 — chamber sections (.home-v2-section, opaque void shields)
+ *   z 5 — R3F canvas (transparent except where the brandmark cloud
+ *          + L/R bodies paint)
+ *   z 6 — debug HUD
  */
 
 .home-v2-root {
@@ -32,9 +34,21 @@
   font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
 }
 
+/* Hero sits on top of the v7 gateway, sticky-pinned 100vh. */
 .home-v2-root .hero {
   position: sticky;
   top: 0;
+}
+
+/* ── v7 HUD chrome container ─────────────────────────────────
+   The injected HTML contains `.gateway` and `.hud` which are
+   `position: fixed` in landing.css. The wrapper is just a mount
+   node — do NOT use `contain: layout` here: containment creates
+   a new containing block for fixed-positioned descendants, which
+   would scope the HUD rails to this wrapper instead of the
+   viewport. */
+.home-v2-hud-root {
+  display: contents;
 }
 
 /* ── Sticky depth stage ──────────────────────────────────────── */
@@ -48,20 +62,15 @@
   isolation: isolate;
   /* Defaults for the CSS vars useDepthScroll updates per frame.
      MUST live on this element (the one the hook writes to) — if
-     they were declared on the overlay child instead, CSS's custom
-     property cascade would block the inherited value from the
-     hook and these would stay frozen at their defaults. */
+     they were declared on a child, the cascade would block the
+     inherited value from the hook. */
   --depth-progress: 0;
   --chamber-a-progress: 0;
   --chamber-b-progress: 0;
   --chamber-c-progress: 0;
-  --definition-opacity: 0;
-  --definition-translate-z: -200px;
-  --definition-scale: 0.95;
-  --diagnostic-opacity: 0;
-  --diagnostic-pills-opacity: 0;
-  --ilayer-header-opacity: 0;
-  --ilayer-readout-opacity: 0;
+  --chamber-A-section-opacity: 1;
+  --chamber-B-section-opacity: 0;
+  --chamber-C-section-opacity: 0;
 }
 
 .home-v2-stage__sticky {
@@ -70,13 +79,115 @@
   width: 100%;
   height: 100svh;
   overflow: hidden;
+  /* CSS grid stacking so each .home-v2-section sits in the same
+     viewport rect without absolute positioning. This inherits the
+     v7 `.stations` horizontal padding via the section's own
+     `--hud-content-inset` reads. */
+  display: grid;
+  grid-template-areas: "stack";
+  grid-template-rows: 1fr;
+  grid-template-columns: 1fr;
 }
 
-.home-v2-stage__canvas {
-  position: absolute;
-  inset: 0;
+/* Each sliced section sits in the same grid cell. Opacity gated
+   by chamber progress (see useDepthScroll). */
+.home-v2-section {
+  grid-area: stack;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  /* v7 stations expect `<main class="stations">` padding (hud
+     content inset). Apply it here so .station inner content sits
+     inside the HUD rails. */
+  padding: 0 var(--hud-content-inset, clamp(80px, 8vw, 160px));
+  transition: opacity 240ms ease-out;
+}
+
+.home-v2-section[data-chamber="A"] {
+  opacity: var(--chamber-A-section-opacity, 1);
+  /* Stack ordering: chamber A on bottom of the stack so chambers
+     B and C composite over it during their windows. */
   z-index: 1;
+}
+.home-v2-section[data-chamber="B"] {
+  opacity: var(--chamber-B-section-opacity, 0);
+  z-index: 2;
+  /* v7's #missing-layer constellation orbits + anchor pips + pill
+     labels are gated by --miss-orbit-emerge / --miss-anchor-emerge
+     / --miss-label-emerge CSS vars that production drives from
+     `useBrandmarkJourney`. We don't run that hook on v2 — pin all
+     three to 1 so the constellation is fully revealed whenever
+     chamber B is up. */
+  --miss-orbit-emerge: 1;
+  --miss-anchor-emerge: 1;
+  --miss-label-emerge: 1;
+}
+.home-v2-section[data-chamber="C"] {
+  opacity: var(--chamber-C-section-opacity, 0);
+  z-index: 3;
+  /* v7's #intelligence-layer chamber captions + substrate readout
+     are gated by --ilayer-progress (production drives this from
+     ringProgress in the brandmark journey). Pin to 1 so chambers
+     + readout are visible whenever chamber C is up. */
+  --ilayer-progress: 1;
+}
+
+/* ── Section sizing overrides ────────────────────────────────
+   v7 stations are sized to viewport (100vh / 128dvh) which makes
+   them taller than our 100svh sticky window. Override to fill
+   the sticky cell instead. */
+.home-v2-stage .station {
+  min-height: 100%;
+  height: 100%;
+  /* Compress the section padding so head + body fit inside 100svh.
+     v7 normal is 140/220; halve it for the depth-gateway flow
+     where each chamber is one viewport of scroll. */
+  padding: clamp(80px, 10vh, 120px) 0 clamp(60px, 8vh, 100px);
+}
+
+.home-v2-stage .miss,
+.home-v2-stage .ilayer {
+  height: 100%;
+  min-height: 100%;
+}
+
+/* ── Force-reveal [data-m] elements ──────────────────────────
+   The v7 production path wires `useRevealMotion` (IO observer
+   adding .is-in). We skip that hook on v2 because chambers
+   stack/cross-fade rather than entering the viewport sequentially.
+   The HomeV2Page useEffect adds .is-in on mount; this CSS rule
+   is a safety net so nothing flashes at its hidden start state
+   if the JS tick is delayed (e.g. Fast Refresh). */
+.home-v2-stage [data-m]:not(.is-in),
+.home-v2-stage [data-m-group]:not(.is-in) {
+  opacity: 1 !important;
+  transform: none !important;
+  clip-path: none !important;
+  filter: none !important;
+}
+
+/* ── Hide v7 #intelligence-layer production-only elements ────
+   The R3F portal mount slot (`[data-ilayer-stack-root]`) is left
+   empty because we don't mount IntelligenceLayerPortal on v2.
+   The static fallback SVG would paint by default since we don't
+   set `data-ilayer-mode` — hide it explicitly. */
+.home-v2-stage .ilayer__stack__canvas,
+.home-v2-stage .ilayer__triad__canvas {
+  display: none !important;
+}
+.home-v2-stage .ilayer__stack__fallback,
+.home-v2-stage .ilayer__triad__fallback {
+  display: none !important;
+}
+
+/* ── R3F canvas — paints brandmark cloud + L/R bodies ─────── */
+.home-v2-stage__canvas {
+  grid-area: stack;
+  position: relative;
+  width: 100%;
+  height: 100%;
   pointer-events: none;
+  z-index: 5;
 }
 
 .home-v2-stage__canvas canvas {
@@ -86,290 +197,14 @@
   pointer-events: none;
 }
 
-/* ── Chamber HTML overlay (shared root) ──────────────────────── */
-.home-v2-chamber-overlay {
-  position: absolute;
-  inset: 0;
-  z-index: 4;
-  pointer-events: none;
-  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
-  color: var(--dawn, #ebe3d6);
-  /* Defaults for the projected vars written by ChamberLabels
-     (inside the canvas). These DO live here because they need
-     `inherit` lookups from the canvas's parent chain — the canvas
-     queries `[data-home-v2-overlay]` and writes onto IT. Keeping
-     defaults here gives the overlay a sensible starting state
-     before the first useFrame tick. */
-  --brand-x: 50%;
-  --brand-y: 50%;
-  --brand-r: 120px;
-  --left-x: 16%;
-  --left-y: 50%;
-  --right-x: 84%;
-  --right-y: 50%;
-  --label-opacity: 0;
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   CHAMBER A — Definition
-
-   v7 .tri__left content (IPA + tri__title + secondary lines)
-   pinned to the left side of the frame and translated on a CSS
-   perspective Z axis so the text reads as a physical plane
-   rushing past the viewer as the camera dollies forward.
-   ═══════════════════════════════════════════════════════════════ */
-
-.home-v2-overlay__definition {
-  position: absolute;
-  left: clamp(48px, 8vw, 160px);
-  top: 50%;
-  transform: translateY(-50%);
-  perspective: 1200px;
-  width: min(46vw, 540px);
-  pointer-events: none;
-  opacity: var(--definition-opacity, 0);
-  transform-origin: left center;
-}
-
-.home-v2-overlay__definition-inner {
-  transform: translateZ(var(--definition-translate-z, -200px)) scale(var(--definition-scale, 0.95));
-  transform-origin: left center;
-  will-change: transform, opacity;
-}
-
-/* Slight overrides on the inherited v7 .tri__title so the left
-   plane reads as a focused statement at the home-v2 framing
-   (the production page sits in a 3-column .tri grid, ours is
-   alone in the frame so we cap width tighter and bump tracking). */
-.home-v2-overlay__definition .tri__title {
-  max-width: 18ch;
-}
-.home-v2-overlay__definition .tri__title--secondary {
-  max-width: 26ch;
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   CHAMBER B — Diagnostic
-
-   Header copy pinned to the top of the stage; four .miss__label
-   pills positioned around the brandmark's projected screen
-   centre (--brand-x / --brand-y) at a screen radius based on
-   --brand-r (the projected brandmark on-screen half-width).
-   ═══════════════════════════════════════════════════════════════ */
-
-.home-v2-overlay__diagnostic {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-}
-
-.home-v2-overlay__diagnostic-head {
-  position: absolute;
-  top: clamp(48px, 8vh, 96px);
-  left: 50%;
-  transform: translateX(-50%);
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  opacity: var(--diagnostic-opacity, 0);
-  max-width: 760px;
-  padding: 0 24px;
-  width: 100%;
-}
-
-.home-v2-overlay__diagnostic-head .miss__title {
-  max-width: 20ch;
-  text-align: center;
-}
-
-.home-v2-overlay__diagnostic-pills {
-  position: absolute;
-  inset: 0;
-  opacity: var(--diagnostic-pills-opacity, 0);
-  pointer-events: none;
-}
-
-/* The 4 .miss__label pills.
-
-   Position is polar around (--brand-x, --brand-y) at a radius
-   computed from --brand-r (the projected brandmark half-width)
-   times --pill-radius-mult (per-pill multiplier, ~2.0 = "twice
-   the brandmark's apparent radius outward"). The angle (--pill-
-   angle) is measured clockwise from the +X axis. We compute the
-   X/Y offset with calc() trig... except CSS has no trig pre-spec
-   so we fall back to per-pill hardcoded sin/cos values via
-   --pill-cos / --pill-sin set inline if needed.
-
-   For four pills at -120°/-60°/120°/60° the offsets are
-   symmetric — we can express them directly as ±X / ±Y multipliers
-   on --brand-r without trig functions in the cascade. Each pill
-   carries its own home-v2-pill--N modifier with the explicit
-   axes set, so authors can pick angles freely without relying on
-   trig support. */
-.home-v2-overlay__diagnostic .miss__label {
-  /* Reset the v7 absolute positioning rules that target the
-     #missing-layer section's grid (--x-pct / --y-pct). We use a
-     home-v2-specific positioning system below. */
-  position: absolute;
-  left: var(--brand-x, 50%);
-  top: var(--brand-y, 50%);
-  transform: translate(-50%, -50%);
-  /* Override v7 reveal envelope; home-v2 controls opacity via
-     the parent --diagnostic-pills-opacity. */
-  opacity: 1;
-  filter: none;
-  /* Tighter pill width than the v7 layout so 4 pills can sit on
-     the diagonals around the brandmark without colliding at the
-     centre. The brandmark sits in the middle and the pills sit at
-     the four corners of an X with ~120px clearance from the
-     cloud's outer edge. */
-  max-width: 26ch;
-  pointer-events: none;
-}
-
-/* Pill positioning — polar around (brand-x, brand-y) at
-   --brand-r × --pill-radius-mult outward. Horizontal/vertical
-   ratios are 0.78 / 0.6 instead of trig sin/cos so the
-   pills push wider sideways than vertically — gives breathing
-   room from the diagnostic header above and from the
-   brandmark + rings below. */
-.home-v2-overlay__diagnostic .home-v2-pill--01 {
-  /* Upper-left: horizontal -0.78, vertical -0.60 */
-  margin-left: calc(var(--brand-r, 120px) * -0.78 * var(--pill-radius-mult, 3.4));
-  margin-top: calc(var(--brand-r, 120px) * -0.6 * var(--pill-radius-mult, 3.4));
-}
-.home-v2-overlay__diagnostic .home-v2-pill--02 {
-  /* Upper-right */
-  margin-left: calc(var(--brand-r, 120px) * 0.78 * var(--pill-radius-mult, 3.4));
-  margin-top: calc(var(--brand-r, 120px) * -0.6 * var(--pill-radius-mult, 3.4));
-}
-.home-v2-overlay__diagnostic .home-v2-pill--03 {
-  /* Lower-left */
-  margin-left: calc(var(--brand-r, 120px) * -0.78 * var(--pill-radius-mult, 3.4));
-  margin-top: calc(var(--brand-r, 120px) * 0.6 * var(--pill-radius-mult, 3.4));
-}
-.home-v2-overlay__diagnostic .home-v2-pill--04 {
-  /* Lower-right */
-  margin-left: calc(var(--brand-r, 120px) * 0.78 * var(--pill-radius-mult, 3.4));
-  margin-top: calc(var(--brand-r, 120px) * 0.6 * var(--pill-radius-mult, 3.4));
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   CHAMBER C — Intelligence Layer
-
-   .ilayer__head (title + lede) at the top; three .ilayer__caption
-   HUD captions positioned on the L / mid / R bodies (using the
-   projected positions written by ChamberLabels); substrate readout
-   grid below the centre body.
-   ═══════════════════════════════════════════════════════════════ */
-
-.home-v2-overlay__ilayer {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-}
-
-.home-v2-overlay__ilayer-head {
-  position: absolute;
-  top: clamp(48px, 8vh, 96px);
-  left: 50%;
-  transform: translateX(-50%);
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 16px;
-  opacity: var(--ilayer-header-opacity, 0);
-  max-width: 900px;
-  padding: 0 24px;
-  width: 100%;
-}
-
-.home-v2-overlay__ilayer-head .ilayer__title {
-  max-width: 24ch;
-  text-align: center;
-}
-.home-v2-overlay__ilayer-head .ilayer__lede {
-  max-width: 56ch;
-  text-align: center;
-}
-
-.home-v2-overlay__ilayer-chamber {
-  position: absolute;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: auto;
-  text-align: center;
-  transform: translate(-50%, -50%);
-  opacity: var(--label-opacity, 0);
-}
-
-.home-v2-overlay__ilayer-chamber--left {
-  left: var(--left-x, 18%);
-  top: var(--left-y, 50%);
-  /* HUD caption sits below the sphere. Offset by half the body
-     radius (~64px on typical viewports) + the caption gap. */
-  --chamber-caption-offset: 84px;
-}
-.home-v2-overlay__ilayer-chamber--mid {
-  left: var(--brand-x, 50%);
-  top: var(--brand-y, 50%);
-  /* Mid caption sits ABOVE the substrate sphere so it doesn't
-     overlap the readout grid below. */
-  --chamber-caption-offset: -110px;
-  /* Mid chamber only resolves once the substrate has morphed —
-     fades with the L/R bodies' opacity envelope. */
-  opacity: var(--label-opacity, 0);
-}
-.home-v2-overlay__ilayer-chamber--right {
-  left: var(--right-x, 82%);
-  top: var(--right-y, 50%);
-  --chamber-caption-offset: 84px;
-}
-
-.home-v2-overlay__ilayer-chamber .ilayer__caption {
-  /* v7's .ilayer__caption uses --ilayer-progress to gate opacity;
-     home-v2 controls it via the parent chamber's opacity. */
-  opacity: 1;
-  transform: translateY(var(--chamber-caption-offset, 0));
-}
-
-/* Substrate readout — 2x2 grid sitting below the mid (substrate)
-   chamber. Each cell uses the v7 .ilayer__substrate-readout__key
-   / __val typography. Position is anchored to the projected
-   brandmark/substrate centre so the grid follows the morphed
-   sphere through the dolly. */
-.home-v2-overlay__ilayer-readout {
-  position: absolute;
-  left: var(--brand-x, 50%);
-  top: var(--brand-y, 50%);
-  transform: translate(-50%, calc(var(--brand-r, 120px) + 32px));
-  display: grid;
-  grid-template-columns: repeat(2, minmax(120px, 1fr));
-  gap: clamp(10px, 1.4vh, 16px) clamp(28px, 4vw, 48px);
-  opacity: var(--ilayer-readout-opacity, 0);
-  pointer-events: none;
-  width: max-content;
-  max-width: 460px;
-}
-
-.home-v2-overlay__ilayer-readout-cell {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 3px;
-  text-align: center;
-}
-
 /* ── HUD progress chrome (debug) ─────────────────────────────── */
 .home-v2-stage__hud {
-  position: absolute;
-  top: clamp(16px, 2.6vh, 24px);
-  right: clamp(16px, 2.6vw, 32px);
-  z-index: 5;
+  grid-area: stack;
+  position: relative;
+  align-self: start;
+  justify-self: end;
+  margin: clamp(16px, 2.6vh, 24px) clamp(16px, 2.6vw, 32px);
+  z-index: 6;
   display: flex;
   flex-direction: column;
   align-items: flex-end;
@@ -436,70 +271,26 @@
   display: none;
 }
 
-.home-v2-stage[data-fallback="true"] .home-v2-stage__sticky {
-  position: relative;
-  height: auto;
-  display: flex;
-  flex-direction: column;
-}
-
-.home-v2-stage[data-fallback="true"] .home-v2-chamber-overlay {
-  display: none;
+.home-v2-stage[data-fallback="true"] .home-v2-section[data-chamber] {
+  /* In fallback mode we DON'T stack — let sections render at full
+     opacity, scrolling naturally. The sticky window still pins
+     them but the user can scroll through. */
+  opacity: 1 !important;
 }
 
 .home-v2-stage__fallback {
+  grid-area: stack;
   display: none;
+  align-self: center;
+  justify-self: center;
+  padding: 24px;
+  font-family: var(--font-pt-mono, ui-monospace, monospace);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  color: var(--dawn-50, rgba(235, 227, 214, 0.5));
+  text-align: center;
+  max-width: 480px;
 }
-
 .home-v2-stage[data-fallback="true"] .home-v2-stage__fallback {
   display: block;
-  position: relative;
-  width: 100%;
-  padding: clamp(80px, 12vh, 160px) clamp(48px, 8vw, 140px);
-}
-
-.home-v2-fallback__chamber {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  border-top: 1px solid rgba(235, 227, 214, 0.06);
-  padding: clamp(40px, 6vh, 80px) 0;
-  gap: 18px;
-}
-
-.home-v2-fallback__chamber:first-child {
-  border-top: none;
-}
-
-.home-v2-fallback__brandmark {
-  width: clamp(160px, 28vw, 280px);
-  height: auto;
-  margin-bottom: 32px;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .home-v2-overlay__definition-inner {
-    transition: none;
-  }
-}
-
-/* ── Responsive trims ────────────────────────────────────────── */
-@media (max-width: 768px) {
-  .home-v2-overlay__definition {
-    left: clamp(20px, 5vw, 48px);
-    width: min(80vw, 440px);
-  }
-  .home-v2-overlay__diagnostic .home-v2-pill--01,
-  .home-v2-overlay__diagnostic .home-v2-pill--02,
-  .home-v2-overlay__diagnostic .home-v2-pill--03,
-  .home-v2-overlay__diagnostic .home-v2-pill--04 {
-    /* Tighter radius on mobile so pills don't escape the frame. */
-    --pill-radius-mult: 1.6;
-  }
-  .home-v2-overlay__ilayer-readout {
-    grid-template-columns: repeat(2, minmax(100px, 1fr));
-    gap: 8px 20px;
-    max-width: 320px;
-  }
 }

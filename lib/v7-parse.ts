@@ -123,3 +123,103 @@ export function getClaudeWorkshopContent(): V7Content {
   const tokensPath = join(process.cwd(), "public/prototypes/v7/tokens.css");
   return parseV7Html(htmlPath, tokensPath);
 }
+
+export interface V7Slice {
+  /** Markup that lives BEFORE `<main class="stations">` — gateway,
+   *  hud chrome, hud nav. Renderable as-is via `dangerouslySetInnerHTML`. */
+  hudHtml: string;
+  /** Per-section breakdown of the requested station sections, in the
+   *  ORDER they appear in the source HTML (not the order requested).
+   *  Each entry carries the section's id + its full `<section ...>`
+   *  HTML block. Consumers can wrap each block in a sibling element
+   *  for opacity / transform gating without breaking nested sections.
+   */
+  sections: { id: string; html: string }[];
+  /** Concatenated convenience — `sections.map(s => s.html).join('\n')`.
+   *  Useful when no per-section wrapping is needed. */
+  sectionsHtml: string;
+  /** Body class lifted from the prototype (theme + density flags). */
+  bodyClass: string;
+}
+
+/**
+ * sliceV7Sections — extract the HUD chrome plus a subset of station
+ * sections from the v7 prototype HTML.
+ *
+ * Powers v2-style routes (e.g. `/test/home-v2`) that want to render
+ * the production HUD + a handful of stations without paying for the
+ * full v7 LandingPage scroll machinery. The slice runs through the
+ * same parse pipeline as `getV7Content` (script-strip, asset paths
+ * rewritten to public/, brandmark `<img>` placeholders removed, hud
+ * depth ticks injected) so the markup is drop-in renderable.
+ *
+ * Walks the body twice:
+ *   1. Splits at `<main class="stations">` to take everything before
+ *      as hudHtml.
+ *   2. For each requested station id, scans forward from the matching
+ *      `<section ... id="...">` opener, counting balanced
+ *      `<section>` / `</section>` pairs so nested sections (the
+ *      intelligence-layer chambers) are preserved intact.
+ *
+ * Sections are concatenated in source order so DOM order matches the
+ * prototype — important for any later mounting of v7 hooks that
+ * walk by querySelectorAll.
+ */
+export function sliceV7Sections(sectionIds: readonly string[]): V7Slice {
+  const htmlPath = join(process.cwd(), "public/prototypes/v7/landing-v7-motion.html");
+  const tokensPath = join(process.cwd(), "public/prototypes/v7/tokens.css");
+  const { bodyHtml, bodyClass } = parseV7Html(htmlPath, tokensPath);
+
+  const stationsMarker = '<main class="stations">';
+  const stationsStart = bodyHtml.indexOf(stationsMarker);
+  if (stationsStart < 0) {
+    return { hudHtml: bodyHtml, sections: [], sectionsHtml: "", bodyClass };
+  }
+
+  const hudHtml = bodyHtml.slice(0, stationsStart);
+  const stationsBody = bodyHtml.slice(stationsStart + stationsMarker.length);
+
+  // Walk the stations body, locating each requested section by id and
+  // capturing its full `<section ... id="X"> ... </section>` block with
+  // nested section balance. The capture order follows the source so
+  // sections render in the same order as the prototype.
+  const wantedIds = new Set(sectionIds);
+  const captured: { start: number; id: string; html: string }[] = [];
+
+  const sectionOpenRe = /<section\b[^>]*\bid="([^"]+)"[^>]*>/g;
+  let openMatch: RegExpExecArray | null;
+  while ((openMatch = sectionOpenRe.exec(stationsBody)) !== null) {
+    const id = openMatch[1];
+    if (!wantedIds.has(id)) continue;
+
+    const startIdx = openMatch.index;
+    // Walk forward counting balanced section tags so nested chambers
+    // (intelligence-layer has 3 inner `<section>` blocks) don't
+    // prematurely close the outer station.
+    const tagRe = /<section\b|<\/section>/g;
+    tagRe.lastIndex = startIdx;
+    let depth = 0;
+    let endIdx = -1;
+    let m: RegExpExecArray | null;
+    while ((m = tagRe.exec(stationsBody)) !== null) {
+      if (m[0] === "</section>") {
+        depth -= 1;
+        if (depth === 0) {
+          endIdx = m.index + m[0].length;
+          break;
+        }
+      } else {
+        depth += 1;
+      }
+    }
+    if (endIdx > startIdx) {
+      captured.push({ start: startIdx, id, html: stationsBody.slice(startIdx, endIdx) });
+    }
+  }
+
+  captured.sort((a, b) => a.start - b.start);
+  const sections = captured.map(({ id, html }) => ({ id, html }));
+  const sectionsHtml = sections.map((s) => s.html).join("\n");
+
+  return { hudHtml, sections, sectionsHtml, bodyClass };
+}

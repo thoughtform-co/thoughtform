@@ -6,35 +6,48 @@ import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import { DepthGatewayScene } from "./DepthGatewayScene";
 import { useDepthScroll } from "./hooks/useDepthScroll";
 
+interface HomeV2PageProps {
+  /** v7 HUD chrome HTML (gateway, hud rails, nav, status). Fed by
+   *  `sliceV7Sections` in the route's server component. */
+  hudHtml: string;
+  /** Per-section breakdown from `sliceV7Sections` — already in source
+   *  order. Each entry carries the v7 station markup, untouched. */
+  sections: { id: string; html: string }[];
+  /** Body class lifted from the prototype (theme + density). */
+  bodyClass: string;
+}
+
+/** Map section ids to chamber letters so CSS opacity vars + the
+ *  brandmark dock lookup share one indirection table. */
+const CHAMBER_BY_SECTION_ID: Record<string, "A" | "B" | "C"> = {
+  definition: "A",
+  "missing-layer": "B",
+  "intelligence-layer": "C",
+};
+
 /**
- * HomeV2Page — composition for the /test/home-v2 depth-gateway
- * experiment.
+ * HomeV2Page — depth-gateway composition with v7 visual fidelity.
  *
- * Three layers stacked top-to-bottom:
+ * Renders three v7 station sections (definition / missing-layer /
+ * intelligence-layer) stacked inside the sticky depth stage. Each
+ * section is the verbatim v7 markup (sigil compass, miss orbital
+ * SVG, ilayer chamber captions) so the on-screen composition reads
+ * identically to production at each chamber's resting state.
+ * Cross-fade per chamber driven by useDepthScroll's section
+ * opacity vars.
  *
- *   1. Hero — copied from the v7 prototype markup so the entrance
- *      reads identically to production. Sticky 100vh, video
- *      background, wordmark + tagline. Uses v7 `.hero` CSS from
- *      `landing.css` (imported by the route page).
+ * The R3F canvas paints the brandmark cloud at the ACTIVE chamber's
+ * brandmark dock element (`.sigil__mark` → `.miss__brand-slot` →
+ * `.ilayer__brandmark-anchor`) via DOM un-projection. Cloud size
+ * matches the dock's natural CSS dimensions pixel-for-pixel — same
+ * primitive `SubstrateMorphPoints` uses on production.
  *
- *   2. Depth stage — 300svh tall with a 100svh sticky interior. The
- *      sticky pane hosts the R3F canvas (one camera dolly through
- *      three "chambers" along -Z) plus an HTML overlay layer
- *      that reuses the v7 typography classes (`.tri__title`,
- *      `.miss__label`, `.ilayer__caption`, etc.) so the v2 page
- *      reads as a direct descendant of the production landing
- *      rather than a generic restyle.
- *
- *   3. Tail — placeholder normal-scroll sections so the page
- *      doesn't terminate abruptly. Future iteration will swap these
- *      for the v7 continuum / practice / build / services / about
- *      / contact content.
- *
- * The static fallback (no WebGL OR `prefers-reduced-motion`) flips
- * `data-fallback="true"` on the stage root; the canvas is hidden
- * and a stacked version of the three chambers paints instead.
+ * The v7 HUD chrome is mounted once at page root (position: fixed
+ * elements from the prototype) so rails + depth ticks + wordmark
+ * persist across hero, stage, and tail.
  */
-export function HomeV2Page() {
+export function HomeV2Page({ hudHtml, sections, bodyClass }: HomeV2PageProps) {
+  const rootRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const [webglOK, setWebglOK] = useState<boolean | null>(null);
   const [reducedMotion, setReducedMotion] = useState(false);
@@ -50,10 +63,10 @@ export function HomeV2Page() {
     return () => mql.removeEventListener("change", onChange);
   }, []);
 
-  // Set data-brandmark-mode="off" on the document root so the
-  // global v7 brandmark canvas (if mounted via some other route or
-  // import chain) doesn't paint over the home-v2 scene. The home-v2
-  // canvas owns its own brandmark cloud end-to-end.
+  // Set data-brandmark-mode="off" on the document root so the global
+  // v7 brandmark canvas (if mounted elsewhere in this render tree)
+  // doesn't paint over the home-v2 scene. The home-v2 R3F owns the
+  // brandmark cloud end-to-end on this route.
   useEffect(() => {
     const prev = document.documentElement.getAttribute("data-brandmark-mode");
     document.documentElement.setAttribute("data-brandmark-mode", "off");
@@ -63,10 +76,54 @@ export function HomeV2Page() {
     };
   }, []);
 
+  // HUD hamburger nav — wire the bare minimum from v7 LandingPage so
+  // the menu can open/close. Smooth-scroll on nav links is skipped
+  // (the v2 stage is a sticky scrub, not a section anchor target).
+  useEffect(() => {
+    const root = rootRef.current;
+    if (!root) return;
+    const navEl = root.querySelector<HTMLElement>(".hud__nav");
+    const navBtn = root.querySelector<HTMLButtonElement>(".hud__nav__btn");
+    if (!navEl || !navBtn) return;
+    const toggle = () => {
+      navEl.classList.toggle("is-open");
+    };
+    navBtn.addEventListener("click", toggle);
+    return () => {
+      navBtn.removeEventListener("click", toggle);
+    };
+  }, []);
+
+  // Force-reveal v7 [data-m] elements inside the stage. The
+  // production page wires `useRevealMotion` (IntersectionObserver
+  // adding `.is-in`) to drive these transitions; we skip that hook
+  // on v2 because the sections are stacked & cross-faded by chamber
+  // progress, not section-entry observers. Without this, every
+  // [data-m] element would stay at its hidden start state.
+  useEffect(() => {
+    const root = rootRef.current;
+    if (!root) return;
+    root.querySelectorAll<HTMLElement>(".home-v2-stage [data-m]").forEach((el) => {
+      el.classList.add("is-in");
+    });
+    root.querySelectorAll<HTMLElement>(".home-v2-stage [data-m-group]").forEach((el) => {
+      el.classList.add("is-in");
+    });
+  }, [sections]);
+
   const fallback = webglOK === false || reducedMotion;
 
   return (
-    <div className="home-v2-root" data-theme="dark">
+    <div ref={rootRef} className={`home-v2-root ${bodyClass}`} data-theme="dark">
+      {/* v7 HUD chrome — .gateway + .hud rails + .hud__nav. All of
+          this is `position: fixed` in landing.css so it lives at
+          viewport regardless of where we mount it. */}
+      <div
+        className="home-v2-hud-root"
+        suppressHydrationWarning
+        dangerouslySetInnerHTML={{ __html: hudHtml }}
+      />
+
       {/* ═══ HERO ═══ */}
       <section className="station hero" id="hero" data-station="hero" data-screen-label="01 Hero">
         <div className="hero__video" aria-hidden="true">
@@ -97,7 +154,11 @@ export function HomeV2Page() {
         </div>
       </section>
 
-      {/* ═══ DEPTH STAGE (Chambers A → B → C) ═══ */}
+      {/* ═══ DEPTH STAGE (Chambers A → B → C) ═══
+          Sticky 100svh interior; each chamber section is the v7
+          markup wrapped in an absolutely-positioned div so they
+          stack in the same viewport rect and cross-fade by chamber
+          progress. */}
       <div
         ref={stageRef}
         className="home-v2-stage"
@@ -105,156 +166,41 @@ export function HomeV2Page() {
         aria-label="Depth gateway: Definition, Diagnostic, Intelligence Layer"
       >
         <div className="home-v2-stage__sticky">
+          {sections.map((s) => {
+            const chamber = CHAMBER_BY_SECTION_ID[s.id] ?? "A";
+            return (
+              <div
+                key={s.id}
+                className="home-v2-section"
+                data-chamber={chamber}
+                data-section-id={s.id}
+                suppressHydrationWarning
+                dangerouslySetInnerHTML={{ __html: s.html }}
+              />
+            );
+          })}
+
+          {/* R3F canvas — sits ABOVE the chamber sections so the
+              brandmark cloud paints at the dock screen positions
+              regardless of the chamber's opaque void shield. */}
           <div className="home-v2-stage__canvas">
             <DepthGatewayScene />
           </div>
 
-          {/* HTML overlay layer. Uses the v7 typography classes via
-              `landing.css` (imported by the route). Per-chamber
-              opacity is gated by CSS vars written by useDepthScroll
-              so each chamber's content only paints during its
-              window. Brandmark + body screen positions are written
-              by ChamberLabels in the R3F canvas. */}
-          <div className="home-v2-chamber-overlay" data-home-v2-overlay aria-hidden="true">
-            {/* ───── Chamber A — Definition ─────
-                v7 `.tri__left` copy + IPA pronunciation, projected
-                on a CSS-perspective plane that translates Z+ toward
-                the viewer as Chamber A progresses. */}
-            <div className="home-v2-overlay__definition">
-              <div className="home-v2-overlay__definition-inner">
-                <div className="tri__ipa tri__ipa--noun">THOUGHTFORM /θɔːtfɔːrm · THAWT-form/</div>
-                <h2 className="tri__title">
-                  AI collapsed the distance between <em>thought</em> and <em>form</em>.
-                </h2>
-                <p className="tri__title tri__title--secondary">
-                  But the layer between how your team works and what AI can do is missing.
-                </p>
-                <p className="tri__title tri__title--secondary">
-                  We build it with your team and <em>train them to own it</em>.
-                </p>
-              </div>
-            </div>
-
-            {/* ───── Chamber B — Diagnostic ─────
-                Header text (v7 `.miss__title` + `.miss__bridge`) at
-                the top of the stage, plus four `.miss__label` pills
-                orbiting the brandmark. Pill positions are computed
-                from the projected brandmark screen position
-                (`--brand-x` / `--brand-y` / `--brand-r`) so they
-                stay locked to the cloud as the camera dollies. */}
-            <div className="home-v2-overlay__diagnostic">
-              <header className="home-v2-overlay__diagnostic-head">
-                <p className="miss__bridge">Diagnostic · Same pattern, four ways.</p>
-                <h2 className="miss__title">
-                  The missing layer is rarely <em>the model.</em>
-                </h2>
-              </header>
-
-              <div className="home-v2-overlay__diagnostic-pills">
-                <div className="miss__label home-v2-pill home-v2-pill--01">
-                  <span className="miss__label-pip" aria-hidden="true" />
-                  <span className="miss__label-n">01</span>
-                  <span className="miss__label-tag">Brand voice drifts across every channel.</span>
-                </div>
-                <div className="miss__label home-v2-pill home-v2-pill--02">
-                  <span className="miss__label-pip" aria-hidden="true" />
-                  <span className="miss__label-n">02</span>
-                  <span className="miss__label-tag">
-                    Creative briefs arrive without the thinking.
-                  </span>
-                </div>
-                <div className="miss__label home-v2-pill home-v2-pill--03">
-                  <span className="miss__label-pip" aria-hidden="true" />
-                  <span className="miss__label-n">03</span>
-                  <span className="miss__label-tag">Every product concept looks feasible.</span>
-                </div>
-                <div className="miss__label home-v2-pill home-v2-pill--04">
-                  <span className="miss__label-pip" aria-hidden="true" />
-                  <span className="miss__label-n">04</span>
-                  <span className="miss__label-tag">Customer service depends on who picks up.</span>
-                </div>
-              </div>
-            </div>
-
-            {/* ───── Chamber C — Intelligence Layer ─────
-                v7 `.ilayer__head` (title + lede) at the top of the
-                stage, three HUD captions on the L / mid / R bodies
-                (v7 `.ilayer__caption` rail+num+title), and the
-                substrate readout (Rules / Examples / Sources /
-                Loops) inside the morphed sphere. */}
-            <div className="home-v2-overlay__ilayer">
-              <header className="home-v2-overlay__ilayer-head">
-                <h2 className="ilayer__title">
-                  The fix is an <em>intelligence layer.</em>
-                </h2>
-                <p className="ilayer__lede">
-                  An operating layer between how your team works and what AI does.{" "}
-                  <em>Encoded once.</em> Inherited by every surface.
-                </p>
-              </header>
-
-              {/* Left chamber — Trusted sources */}
-              <section className="home-v2-overlay__ilayer-chamber home-v2-overlay__ilayer-chamber--left">
-                <div className="ilayer__caption ilayer__caption--below">
-                  <span className="ilayer__caption__rail" aria-hidden="true" />
-                  <span className="ilayer__caption__num">01</span>
-                  <h3 className="ilayer__caption__title">Trusted sources</h3>
-                </div>
-              </section>
-
-              {/* Mid chamber — Encoded substrate (caption above the
-                  morphed brandmark sphere). */}
-              <section className="home-v2-overlay__ilayer-chamber home-v2-overlay__ilayer-chamber--mid">
-                <div className="ilayer__caption ilayer__caption--above">
-                  <span className="ilayer__caption__rail" aria-hidden="true" />
-                  <span className="ilayer__caption__num">02</span>
-                  <h3 className="ilayer__caption__title">Encoded substrate</h3>
-                </div>
-              </section>
-
-              {/* Right chamber — Headless surfaces */}
-              <section className="home-v2-overlay__ilayer-chamber home-v2-overlay__ilayer-chamber--right">
-                <div className="ilayer__caption ilayer__caption--below">
-                  <span className="ilayer__caption__rail" aria-hidden="true" />
-                  <span className="ilayer__caption__num">03</span>
-                  <h3 className="ilayer__caption__title">Headless surfaces</h3>
-                </div>
-              </section>
-
-              {/* Substrate readout — 2x2 instrument card grid sitting
-                  below the substrate sphere. Lands after the morph
-                  completes so the user reads the brandmark→sphere
-                  transform first. */}
-              <div className="home-v2-overlay__ilayer-readout">
-                <div className="home-v2-overlay__ilayer-readout-cell">
-                  <span className="ilayer__substrate-readout__key">Rules</span>
-                  <span className="ilayer__substrate-readout__val">How the team decides</span>
-                </div>
-                <div className="home-v2-overlay__ilayer-readout-cell">
-                  <span className="ilayer__substrate-readout__key">Examples</span>
-                  <span className="ilayer__substrate-readout__val">What good looks like</span>
-                </div>
-                <div className="home-v2-overlay__ilayer-readout-cell">
-                  <span className="ilayer__substrate-readout__key">Sources</span>
-                  <span className="ilayer__substrate-readout__val">Data it reads</span>
-                </div>
-                <div className="home-v2-overlay__ilayer-readout-cell">
-                  <span className="ilayer__substrate-readout__key">Loops</span>
-                  <span className="ilayer__substrate-readout__val">Who confirms what</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Debug HUD — progress readout. Hidden in static fallback
-              because the chambers aren't being scrubbed. */}
+          {/* Debug HUD — progress + active chamber readout. */}
           {!fallback && <StageHud />}
 
-          {/* Static fallback — paints when WebGL is unavailable or
-              prefers-reduced-motion is on. Three stacked content
-              blocks that present the same Chamber A/B/C information
-              without any 3D / dolly choreography. */}
-          {fallback && <StageFallback />}
+          {/* Static fallback (no WebGL / reduced motion) — paint a
+              stacked plain-text version of the three chambers so
+              the route is still readable. */}
+          {fallback && (
+            <div className="home-v2-stage__fallback">
+              <p>
+                Depth gateway requires WebGL. The three chambers (Definition, Diagnostic,
+                Intelligence Layer) are also reachable from the production homepage.
+              </p>
+            </div>
+          )}
         </div>
       </div>
 
@@ -281,7 +227,7 @@ export function HomeV2Page() {
   );
 }
 
-/** Tiny readout — shows progress and active chamber as a debug aid. */
+/** Tiny readout — shows progress + active chamber as a debug aid. */
 function StageHud() {
   const transform = useDepthGatewayStore((s) => s.transform);
   const progressPct = Math.round(transform.progress * 100);
@@ -289,46 +235,6 @@ function StageHud() {
     <div className="home-v2-stage__hud" aria-hidden="true">
       <div className="home-v2-stage__hud-progress">{String(progressPct).padStart(2, "0")}%</div>
       <div>{transform.chamberId}</div>
-    </div>
-  );
-}
-
-/** Static stacked layout for no-WebGL / reduced-motion. Reuses the
- *  v7 typography classes so the fallback reads as the real page,
- *  just without the camera dolly. */
-function StageFallback() {
-  return (
-    <div className="home-v2-stage__fallback">
-      <div className="home-v2-fallback__chamber">
-        <img
-          src="/logos/Thoughtform_Brandmark.svg"
-          alt=""
-          className="home-v2-fallback__brandmark"
-          aria-hidden="true"
-        />
-        <div className="tri__ipa tri__ipa--noun">THOUGHTFORM /θɔːtfɔːrm · THAWT-form/</div>
-        <h2 className="tri__title">
-          AI collapsed the distance between <em>thought</em> and <em>form</em>.
-        </h2>
-        <p className="tri__title tri__title--secondary">
-          But the layer between how your team works and what AI can do is missing.
-        </p>
-      </div>
-      <div className="home-v2-fallback__chamber">
-        <p className="miss__bridge">Diagnostic · Same pattern, four ways.</p>
-        <h2 className="miss__title">
-          The missing layer is rarely <em>the model.</em>
-        </h2>
-      </div>
-      <div className="home-v2-fallback__chamber">
-        <h2 className="ilayer__title">
-          The fix is an <em>intelligence layer.</em>
-        </h2>
-        <p className="ilayer__lede">
-          An operating layer between how your team works and what AI does. <em>Encoded once.</em>{" "}
-          Inherited by every surface.
-        </p>
-      </div>
     </div>
   );
 }

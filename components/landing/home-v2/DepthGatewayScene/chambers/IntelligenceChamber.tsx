@@ -26,10 +26,10 @@ import {
  * a single tilted orbital ring. The visual register matches the
  * production triad so the v2 page reads as a related composition.
  *
- * Side body labels (Trusted Sources / Headless Surfaces) are
- * rendered as HTML overlay text in `ChamberLabels.tsx`, projected
- * from the side bodies' world positions onto the canvas via
- * `camera.project()`.
+ * Side body labels (Trusted Sources / Headless Surfaces) come
+ * from the v7 .ilayer__chamber DOM elements in the sliced markup —
+ * they position themselves via the static .ilayer__chamber--left /
+ * --right CSS rules (no R3F-driven projection needed).
  */
 const DEG = Math.PI / 180;
 const RING_TILT_LEFT: [number, number, number] = [16 * DEG, 0, 8 * DEG];
