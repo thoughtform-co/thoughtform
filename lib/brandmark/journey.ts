@@ -535,22 +535,29 @@ export function buildKeyframes(ctx: JourneyContext): BrandmarkKeyframe[] {
       resolveRect: () => queryMissBrand()?.getBoundingClientRect() ?? null,
       // Diagnostic 4-card grid sits in the lower half of #missing-layer
       // (the .miss__system bottom-anchors via `align-self: end`, so the
-      // brand slot resolves to ~y=520-530 in a 900px section). Without
-      // a one-beat-sooner park, the brandmark + orbits keep morphing
-      // toward miss until the slot reaches mid-viewport — by then the
-      // visitor has already scrolled into the next section and only
-      // sees the orbital constellation "land" from inside continuum.
-      // parkViewportFrac = 0.62 parks the brandmark when the slot is
-      // at viewport 62% (~558 on 900vh), which is ~28px BEFORE the
-      // section snaps to viewport top. The brandmark + four orbits
-      // are therefore fully landed by the time the diagnostic title
-      // is in the upper viewport — matching the one-beat-sooner
-      // pattern used by `sigil` (0.55) and originally documented
-      // here. Prior `0.5` was a regression introduced when the
-      // miss__system aligned at center; with `align-self: end`
-      // (current) the slot sits ~70px lower, so 0.5 left a too-long
-      // post-snap tail. (See landing.css `.miss__system` block.)
-      parkViewportFrac: 0.62,
+      // brand slot resolves to ~y=520-530 in a 900px section). The
+      // brandmark + orbits need to LAND in the diagnostic constellation
+      // a clear beat before the visitor reaches the section's reading
+      // position — otherwise the morph reads as a drawn-out transition
+      // that's still resolving when the eye lands on "The missing
+      // layer is rarely the model."
+      //
+      // parkViewportFrac = 0.72 parks the brandmark when the slot
+      // center is at viewport 72% (~648 on 900vh), which corresponds
+      // to the user having scrolled the section's top edge ~118px BELOW
+      // the viewport top. Translation: the diagnostic constellation is
+      // fully formed while the visitor still has the section's upper
+      // padding above the fold, so the title arrives onto a settled
+      // chart instead of into a mid-morph one.
+      //
+      // History: was 0.5 (regression when the system was centre-aligned),
+      // then 0.62 (after the system moved to align-self: end). Bumped
+      // to 0.72 in this pass to make the orbital landing read as a
+      // distinct beat rather than a coincident one. Sigil at 0.55,
+      // miss at 0.72 — the further-down park keyframes get the more
+      // aggressive park fraction so they don't out-race the section
+      // reveal but still arrive ahead of the visitor's reading eye.
+      parkViewportFrac: 0.72,
       parked: { density: 0, dispersion: 0 },
       // sigil → miss: same-size translation; pair the default
       // atmosphere bump (0.45 peak) with `TRAVEL_EASE` so the
