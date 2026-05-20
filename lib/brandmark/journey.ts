@@ -673,19 +673,18 @@ function readUnscaledSigilRect(el: HTMLElement | null): DOMRect | null {
  *  layout — defensive).
  *
  *  `ctx` is optional but, when provided, retargets the progress
- *  window to the visual boundary where the next section FIRST peeks
- *  into the viewport (`#intelligence-layer` bottom reaches viewport
- *  bottom). That is the user's perceived end of the intelligence
- *  section. At that boundary, the substrate sphere must already be
- *  in its stable formed state — not still morphing in.
+ *  window to the visual boundary where `#intelligence-layer` itself
+ *  lands full-screen (`section.top === 0`). That is the user's
+ *  perceived “this section is now in full view” moment. At that
+ *  boundary, the substrate sphere must already be in its stable
+ *  formed state — not still morphing in.
  *
  *  Important: `exitY` is NOT clamped to that boundary. The progress
  *  window is shortened just enough that the boundary lands at a
- *  stable mid-window progress value (`SUBSTRATE_STABLE_AT_NEXT_PEEK`).
- *  This keeps the sphere fully formed when #buildQuote starts peeking,
- *  then lets the retract phase happen later behind the opaque
- *  interstitial instead of visibly inside the intelligence-layer read
- *  beat. */
+ *  stable mid-window progress value. This keeps the sphere fully
+ *  formed while the section is fully framed, then the CSS-level 28dvh
+ *  hold on `.ilayer` gives that final state room to breathe before
+ *  #buildQuote can enter. */
 export function computeSubstrateRange(
   keyframes: readonly BrandmarkKeyframe[],
   centres: readonly number[],
@@ -705,13 +704,17 @@ export function computeSubstrateRange(
   if (ctx?.intelligenceEl && typeof window !== "undefined") {
     const rect = ctx.intelligenceEl.getBoundingClientRect();
     if (rect.height > 0) {
-      const nextPeekY = window.scrollY + rect.bottom - window.innerHeight;
-      if (nextPeekY > engageY) {
+      const sectionTopY = window.scrollY + rect.top;
+      if (sectionTopY > engageY) {
         // `substrateMorphProgress` is fully formed once progress is
         // >= SUBSTRATE_MORPH_FRAC (0.35). Aim higher (0.55) so the
-        // boundary has a real hold beat, not a just-finished frame.
-        const SUBSTRATE_STABLE_AT_NEXT_PEEK = 0.55;
-        exitY = Math.min(exitY, engageY + (nextPeekY - engageY) / SUBSTRATE_STABLE_AT_NEXT_PEEK);
+        // full-section boundary has a real hold beat, not a just-
+        // finished frame.
+        const SUBSTRATE_STABLE_AT_SECTION_TOP = 0.55;
+        exitY = Math.min(
+          exitY,
+          engageY + (sectionTopY - engageY) / SUBSTRATE_STABLE_AT_SECTION_TOP
+        );
       }
     }
   }
@@ -858,9 +861,10 @@ export function computeBrandmarkTransform(
 
   // === Substrate window (drives R3F ring channels uniformly) ===
   // `ctx` is passed so the range can align the stable substrate
-  // window with the moment #buildQuote first peeks into the viewport.
-  // At that boundary the sphere should already be fully formed; the
-  // retract phase can happen later behind the opaque interstitial.
+  // window with the moment #intelligence-layer itself lands full-
+  // screen. At that boundary the sphere should already be fully
+  // formed; the added CSS-level hold then gives that final state
+  // room to breathe before #buildQuote can enter.
   const subRange = computeSubstrateRange(keyframes, c, ctx);
   const inSubWindow = subRange != null && scrollY >= subRange.engageY && scrollY <= subRange.exitY;
   let substrateLocalProgress = 0;

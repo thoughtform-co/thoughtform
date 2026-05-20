@@ -4072,12 +4072,19 @@
    ──────────────────────────────────────────────────────────────────── */
 
 .ilayer {
-  /* Lock to one viewport so the artifact reads as a single
-     executive beat. */
-  height: 100vh;
-  height: 100svh;
+  /* Slightly longer than one viewport: the inner stage pins for the
+     first 100dvh, then the extra 28dvh acts as a quiet hold before
+     the buildQuote interstitial can enter. This gives the fully
+     formed substrate sphere a breathing beat without adding a wheel
+     trap or any JS scroll interception. */
+  height: 128vh;
+  height: 128dvh;
   position: relative;
-  overflow: hidden;
+  /* `clip` hides any oversized R3F / label artefacts without creating
+     a scroll container that would break the sticky `.ilayer__inner`
+     hold. (`overflow: hidden` would make sticky behave as if the
+     section itself were the scroller in some browsers.) */
+  overflow: clip;
 }
 
 /* Section-scoped radial haze (ADR-014) — soft gold glow at the
@@ -4146,8 +4153,14 @@
    from the section's edges. data-m="instrument" still carries the
    IO reveal motion (Rule 2). */
 .ilayer__inner {
-  position: absolute;
-  inset: 0;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  height: 100dvh;
+  /* Fill the section width while staying in normal flow. The rest of
+     the intelligence-layer layout remains absolute-positioned inside
+     this sticky viewport. */
+  inset: auto;
   z-index: 2;
 }
 

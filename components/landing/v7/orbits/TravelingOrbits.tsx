@@ -139,13 +139,20 @@ export function TravelingOrbits({ rootRef }: TravelingOrbitsProps) {
       }
 
       // SVG-element transform: position the painter origin at the
-      // brandmark's centre. The viewBox is `-W/2 -H/2 W H` so the
-      // (0, 0) of the inner coordinate system sits at the SVG
-      // element's geometric centre — translating the ELEMENT by the
-      // brandmark centre's screen position puts every ring's origin
-      // exactly where we need it.
-      const offsetX = orbits.cx - BASE_VIEWBOX_WIDTH / 2;
-      const offsetY = orbits.cy - BASE_VIEWBOX_HEIGHT / 2;
+      // brandmark's ACTUAL live centre. The orbit math still owns the
+      // morph/style progress, but the centre comes from the single
+      // canonical brandmark transform published by useBrandmarkJourney.
+      //
+      // This removes the last parallel rect reader: previously the
+      // rings centred on `#missing-layer .miss__brand-slot` while the
+      // visible mark centred on `t.rect`. A subpixel/scaling mismatch
+      // between those two DOM reads made the diagnostic orbits appear
+      // to float beside the mark after landing. The brandmark store is
+      // now the source of truth for both painters.
+      const brandCx = t.rect.left + t.rect.width / 2;
+      const brandCy = t.rect.top + t.rect.height / 2;
+      const offsetX = brandCx - BASE_VIEWBOX_WIDTH / 2;
+      const offsetY = brandCy - BASE_VIEWBOX_HEIGHT / 2;
       if (Math.abs(offsetX - lastCx) > 0.1 || Math.abs(offsetY - lastCy) > 0.1) {
         lastCx = offsetX;
         lastCy = offsetY;
