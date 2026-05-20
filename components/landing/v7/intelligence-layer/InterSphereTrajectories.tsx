@@ -52,6 +52,16 @@ export function InterSphereTrajectories() {
   const matsRef = useRef(materials);
   matsRef.current = materials;
 
+  // R3F v9 / React 19 / @types/react 19: lowercase `<line>` clashes
+  // with SVG's `<line>` element type. Pre-build the `THREE.Line`
+  // instances (only for non-ghost specs — ghost specs render as
+  // `<lineSegments>`, which has no SVG namespace conflict) and
+  // mount them via `<primitive>`.
+  const lineObjects = useMemo(
+    () => specs.map((spec, i) => (spec.ghost ? null : new THREE.Line(geoms[i], materials[i]))),
+    [specs, geoms, materials]
+  );
+
   useFrame(() => {
     const presence =
       0.45 + orbitEmerge(useBrandmarkJourneyStore.getState().transform.ringProgress) * 0.55;
@@ -68,7 +78,9 @@ export function InterSphereTrajectories() {
         if (spec.ghost) {
           return <lineSegments key={spec.id} geometry={geoms[i]} material={materials[i]} />;
         }
-        return <line key={spec.id} geometry={geoms[i]} material={materials[i]} />;
+        const lineObj = lineObjects[i];
+        if (!lineObj) return null;
+        return <primitive key={spec.id} object={lineObj} />;
       })}
     </group>
   );

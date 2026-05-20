@@ -172,6 +172,22 @@ export function CelestialBody({
     [id, satellitePositions.length]
   );
 
+  // R3F v9 / React 19 / @types/react 19: the lowercase `<line>` JSX
+  // intrinsic clashes with SVG's `<line>` element type, and TS picks
+  // the SVG variant — which doesn't accept `geometry` / `material`
+  // props. Pre-build `THREE.Line` instances and mount them via
+  // `<primitive object={...}>`, which has no namespace conflict.
+  // `<lineLoop>` is unaffected because there is no SVG element by
+  // that name.
+  const inflowLines = useMemo(
+    () => inflowGeoms.map((geom, i) => new THREE.Line(geom, inflowMats[i])),
+    [inflowGeoms, inflowMats]
+  );
+  const outflowLines = useMemo(
+    () => outflowGeoms.map((geom, i) => new THREE.Line(geom, outflowMats[i])),
+    [outflowGeoms, outflowMats]
+  );
+
   const cloudGeom = useMemo(() => buildSphereCloudGeometry(0.46, BODY_CLOUD_COUNT[id]), [id]);
   const cloudMat = useMemo(() => {
     const isSubstrate = id === "substrate";
@@ -256,11 +272,11 @@ export function CelestialBody({
       {ringGeoms.map((geom, i) => (
         <lineLoop key={`ring-${i}`} geometry={geom} material={ringMats[i]} />
       ))}
-      {inflowGeoms.map((geom, i) => (
-        <line key={`inflow-${i}`} geometry={geom} material={inflowMats[i]} />
+      {inflowLines.map((line, i) => (
+        <primitive key={`inflow-${i}`} object={line} />
       ))}
-      {outflowGeoms.map((geom, i) => (
-        <line key={`outflow-${i}`} geometry={geom} material={outflowMats[i]} />
+      {outflowLines.map((line, i) => (
+        <primitive key={`outflow-${i}`} object={line} />
       ))}
       {diamondPositions.map((pos, i) => (
         <mesh key={`diamond-${i}`} position={pos} material={diamondMats[i]}>
