@@ -3395,34 +3395,40 @@ html[data-quote-active="true"] .tf-brandmark-actor {
    like four distinct bodies after the morph completes. */
 .miss__orbit {
   fill: none;
-  stroke: rgba(235, 227, 214, 0.42);
-  stroke-width: 1.4;
+  stroke: rgba(202, 165, 84, 0.55);
+  stroke-width: 1.5;
   vector-effect: non-scaling-stroke;
   transition:
     stroke 220ms ease-out,
     stroke-opacity 220ms ease-out;
   stroke-opacity: 1;
 }
+/* Tensor Gold orbital family — the four diagnostic orbits now share a
+   single gold identity (was mixed dawn 01-02 + gold 03-04, which made
+   the constellation read as two separate systems). Each label sits ON
+   its own gold ellipse so the connection between symptom and orbit is
+   unambiguous. Per-orbit alpha + stroke-width still give a visual
+   hierarchy — 02 is the dominant arc, 01 sits one tier below, 03/04
+   read as supporting paths. Pairs with the sigil-to-miss morph: the
+   four sigil rings carry through into four gold orbits, no longer
+   shifting palette mid-leg. */
 .miss__orbit--01 {
-  stroke: rgba(235, 227, 214, 0.6);
+  stroke: rgba(202, 165, 84, 0.62);
   stroke-width: 1.5;
   stroke-dasharray: none;
 }
 .miss__orbit--02 {
-  /* Solid baseline — the dominant continuous arc. Takes the visual
-     weight role the legacy orbit 01 used to hold. Pairs with sigil
-     ring 02 (also solid). */
-  stroke: rgba(235, 227, 214, 0.6);
+  stroke: rgba(202, 165, 84, 0.72);
   stroke-width: 1.7;
   stroke-dasharray: none;
 }
 .miss__orbit--03 {
-  stroke: rgba(202, 165, 84, 0.55);
+  stroke: rgba(202, 165, 84, 0.58);
   stroke-width: 1.5;
   stroke-dasharray: none;
 }
 .miss__orbit--04 {
-  stroke: rgba(202, 165, 84, 0.5);
+  stroke: rgba(202, 165, 84, 0.55);
   stroke-width: 1.4;
   stroke-dasharray: none;
 }
@@ -3685,21 +3691,29 @@ html[data-quote-active="true"] .tf-brandmark-actor {
 
   display: inline-flex;
   align-items: baseline;
-  gap: 8px;
-  padding: 8px 14px;
-  border: 1px solid var(--dawn-15);
-  border-radius: 999px;
-  background: rgba(10, 9, 8, 0.55);
+  gap: 10px;
+  padding: 9px 16px;
+  border: 1px solid var(--gold-15, rgba(202, 165, 84, 0.18));
+  border-radius: 14px;
+  background: rgba(10, 9, 8, 0.62);
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
+  /* Width budget for the diagnostic sentences ("Brand voice drifts
+     across every channel.", etc.). Without a cap, the longer
+     sentences would extend off-canvas on narrower viewports; with
+     the cap + natural wrapping at word boundaries each label reads
+     as a two-line statement that still sits on its host orbit. */
+  max-width: 26ch;
 
   font-family: var(--font-pt-mono);
   font-size: 11px;
   letter-spacing: var(--track-wide);
-  text-transform: uppercase;
-  color: var(--dawn-70);
+  text-transform: none;
+  color: var(--dawn);
   text-decoration: none;
-  white-space: nowrap;
+  white-space: normal;
+  text-align: left;
+  text-wrap: balance;
   outline: none;
 
   transition:
@@ -3725,10 +3739,24 @@ html[data-quote-active="true"] .tf-brandmark-actor {
 .miss__label-n {
   font-weight: 600;
   color: var(--gold);
+  /* Number stays on its own short line aligned with the first line
+     of the sentence — keeps the "01 / sentence" stencil even when
+     the sentence wraps. */
+  flex-shrink: 0;
+  letter-spacing: var(--track-widest);
+  font-size: 10px;
+  text-transform: uppercase;
 }
 .miss__label-tag {
-  color: var(--dawn-70);
-  font-weight: 500;
+  color: var(--dawn);
+  font-weight: 400;
+  font-family: var(--font-pp-neue-montreal);
+  font-size: 13px;
+  letter-spacing: -0.005em;
+  line-height: 1.35;
+  /* Inherit `text-wrap: balance` from .miss__label so the sentence
+     splits at a natural cadence point instead of leaving one orphan
+     word on a second line. */
 }
 
 .miss__label:hover,
@@ -4507,7 +4535,7 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 3px 7px;
+  padding: 3px 8px;
   font-family: var(--font-pt-mono);
   font-size: calc(var(--ilayer-pip-label-size, 9px) + 1px);
   letter-spacing: var(--track-widest);
@@ -4515,6 +4543,11 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   color: var(--dawn);
   background: rgba(10, 9, 8, 0.62);
   border: 1px solid rgba(235, 227, 214, 0.18);
+  /* Lift the text box above the body's particle cloud and gold
+     trajectories so the corner brackets always paint on the dark
+     backplate, not against the gold haze. The bracket pseudos are
+     siblings of the text content and share this stacking context. */
+  isolation: isolate;
 }
 .ilayer__pip-label__icon {
   display: inline-flex;
@@ -4533,10 +4566,15 @@ html[data-quote-active="true"] .tf-brandmark-actor {
 .ilayer__pip-label__text::after {
   content: "";
   position: absolute;
-  width: 4px;
-  height: 4px;
+  width: 6px;
+  height: 6px;
   border: 1px solid var(--gold, #caa554);
-  opacity: 0.7;
+  opacity: 0.95;
+  /* Above the text wrapper's local stacking context (created via
+     `isolation: isolate` on the parent) so brackets always read
+     against the backplate, never washed out by an adjacent particle
+     cloud or gold trajectory passing behind a label. */
+  z-index: 1;
 }
 .ilayer__pip-label__text::before {
   top: -1px;
@@ -4558,15 +4596,20 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   color: var(--dawn-70);
 }
 /* Surfaces pips read as outflow — gold text + brighter accent corners
-   so the right-side cluster registers as the engine radiating outward. */
+   so the right-side cluster registers as the engine radiating outward.
+   Previously used `var(--gold-30)` for the text colour, which resolves
+   to `rgba(202, 165, 84, 0.30)` — the surface labels (Claude, Web,
+   REST, Slack, Agents, Cursor) were unreadable against the dark
+   backplate. Now uses full-alpha `--gold` so the surface names are
+   the most legible label cluster on the page. */
 .ilayer__pip-label[data-body="surfaces"] .ilayer__pip-label__text {
-  color: var(--gold-30, rgba(202, 165, 84, 0.95));
-  border-color: rgba(202, 165, 84, 0.28);
+  color: var(--gold, #caa554);
+  border-color: rgba(202, 165, 84, 0.32);
 }
 .ilayer__pip-label[data-body="surfaces"] .ilayer__pip-label__text::before,
 .ilayer__pip-label[data-body="surfaces"] .ilayer__pip-label__text::after {
   border-color: var(--gold, #caa554);
-  opacity: 0.85;
+  opacity: 1;
 }
 .ilayer__pip-label[data-body="sources"][data-pip="0"] {
   left: var(--ilayer-pip-sources-0-x, -9999px);
