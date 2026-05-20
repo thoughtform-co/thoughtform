@@ -105,11 +105,42 @@ const smoothstep = (t: number, start: number, end: number): number => {
 
 const easeOrbitStyleMorph = (geometry: number): number => smoothstep(geometry, 0.15, 0.95);
 
+/** Smoothstep S-curve — matches `TRAVEL_EASE` in the brandmark
+ *  journey so orbit position lerps share the brandmark's velocity
+ *  profile across the sigil → miss leg. */
+const TRAVEL_EASE = (t: number): number => t * t * (3 - 2 * t);
+
+/** Section-reading-zone fraction used by the brandmark journey to
+ *  decide when the brandmark unlocks from the sigil dock and begins
+ *  travelling toward miss. The orbits painter mirrors this exactly
+ *  so the leg start lines up with the brandmark's. */
+const SECTION_READING_ZONE_FRAC = 0.35;
+
+/** Fraction of the leg reserved as a parked tail at the miss end —
+ *  matches `SIGIL_TO_MISS_PARK_TAIL` in the brandmark journey. The
+ *  brandmark snaps to the miss anchor for the last 15% of the leg;
+ *  orbits do the same so they re-centre on the brandmark before
+ *  the diagnostic constellation reveals. */
+const SIGIL_TO_MISS_PARK_TAIL = 0.15;
+
+/** Subtle position lag — orbits trail the brandmark by this fraction
+ *  of the (parking-carved) transit window so the rings read as a
+ *  comet tail rather than a co-moving rigid frame. The brandmark
+ *  reaches each scroll milestone first; the orbits catch up an
+ *  instant later. Set to 0 to lock orbits and brandmark in lockstep. */
+const ORBIT_TRAIL_LAG = 0.08;
+
 export interface OrbitsJourneyInput {
   /** Sigil anchor element (`.sigil__mark`). */
   sigilEl: HTMLElement | null;
   /** Miss anchor element (`#missing-layer .miss__brand-slot`). */
   missEl: HTMLElement | null;
+  /** Definition section element (`#definition`). The brandmark
+   *  journey unlocks from sigil only after this section's reading
+   *  zone has cleared (`SECTION_READING_ZONE_FRAC`); the orbits use
+   *  the same anchor so they don't start moving before the
+   *  brandmark does. */
+  definitionEl: HTMLElement | null;
   /** Brandmark journey opacity (drives the hero / post-orbit
    *  bookends). Painter follows this so its fade-ins and fade-outs
    *  are perfectly in sync with the brandmark. */
@@ -118,9 +149,6 @@ export interface OrbitsJourneyInput {
    *  itself once parked at `rail` / `orbit` (well past miss), and
    *  during all states where the rings should be off the page. */
   parkedAt: "sigil" | "miss" | "substrate" | "rail" | "orbit" | null;
-  /** Optional viewport-fraction parking factor for the sigil anchor
-   *  (matches `BrandmarkKeyframe.parkViewportFrac`). Default 0.55. */
-  sigilParkViewportFrac?: number;
   /** Optional viewport-fraction parking factor for the miss anchor.
    *  Default 0.5. */
   missParkViewportFrac?: number;
@@ -135,13 +163,14 @@ export interface OrbitsJourneyInput {
  * transform and try again next frame.
  */
 export function computeOrbitsTransform(input: OrbitsJourneyInput): OrbitsTransform | null {
-  const { sigilEl, missEl, brandmarkOpacity, parkedAt } = input;
+  const { sigilEl, missEl, definitionEl, brandmarkOpacity, parkedAt } = input;
   if (typeof window === "undefined") return null;
-  if (!sigilEl || !missEl) return null;
+  if (!sigilEl || !missEl || !definitionEl) return null;
 
   const sigilRect = sigilEl.getBoundingClientRect();
   const missRect = missEl.getBoundingClientRect();
-  if (sigilRect.width <= 0 || missRect.width <= 0) return null;
+  const definitionRect = definitionEl.getBoundingClientRect();
+  if (sigilRect.width <= 0 || missRect.width <= 0 || definitionRect.height <= 0) return null;
 
   // Painter is hidden far past miss — by then the orbits have
   // long-since scrolled off-screen with the miss section, so this
@@ -153,32 +182,51 @@ export function computeOrbitsTransform(input: OrbitsJourneyInput): OrbitsTransfo
   // opacity, so the orbits sit at full opacity too.
   if (brandmarkOpacity <= 0) return HIDDEN_TRANSFORM;
 
-  const sigilFrac = input.sigilParkViewportFrac ?? 0.55;
   const missFrac = input.missParkViewportFrac ?? 0.5;
   const vh = window.innerHeight;
   const scrollY = window.scrollY;
 
-  // Anchor centres in screen-space. We use the SAME
-  // parkViewportFrac convention as the brandmark journey so the
-  // orbits travel along the exact same scrollY → screen-position
-  // function as the brandmark (no drift).
+  // Anchor centres in screen-space. The brandmark journey reads
+  // these via getBoundingClientRect each frame; the orbits follow.
   const sigilCenterX = sigilRect.left + sigilRect.width / 2;
   const sigilCenterY = sigilRect.top + sigilRect.height / 2;
   const missCenterX = missRect.left + missRect.width / 2;
   const missCenterY = missRect.top + missRect.height / 2;
 
-  // The leg's progress factor mirrors the brandmark journey's
-  // `c[sigil] → c[miss]` window with a `parkViewportFrac` adjustment
-  // (the brandmark's centre-Y resolver subtracts `vh * frac`).
-  const sigilCY = scrollY + sigilCenterY - vh * sigilFrac;
-  const missCY = scrollY + missCenterY - vh * missFrac;
-  const span = Math.max(1, missCY - sigilCY);
-  const tRaw = (scrollY - sigilCY) / span;
-  const t = clamp01(tRaw);
+  // ─── Section-locked leg window ────────────────────────────────
+  // Mirrors `resolveLegTravelWindow` in `lib/brandmark/journey.ts`
+  // for the sigil → miss leg. The brandmark stays parked at sigil
+  // until the visitor scrolls past `#definition`'s reading zone
+  // (bottom edge above 35% of viewport). Before this gate, the
+  // brandmark hasn't started moving — and neither should the orbits.
+  // Without this gate the orbits used `sigilCenterY` as the leg
+  // start, which is upstream of the brandmark's actual unlock
+  // point, so they began travelling before the brandmark did.
+  const startY = scrollY + definitionRect.bottom - vh * SECTION_READING_ZONE_FRAC;
+  const endY = scrollY + missCenterY - vh * missFrac;
+  const span = Math.max(1, endY - startY);
+  const rawT = clamp01((scrollY - startY) / span);
 
-  // Painter centre lerps with the same factor as the geometry morph
-  // — this is what makes the rings READ as travelling alongside the
-  // brandmark instead of fading from one location to another.
+  // Carve out the parked tail at miss — last 15% of the leg the
+  // brandmark is fully docked; the orbits should be too. Without
+  // this the orbits would still be "moving" in the final 15% of
+  // scroll while the brandmark is already pinned.
+  const segmentT =
+    rawT >= 1 - SIGIL_TO_MISS_PARK_TAIL ? 1 : rawT / Math.max(0.0001, 1 - SIGIL_TO_MISS_PARK_TAIL);
+
+  // ─── Trail lag ────────────────────────────────────────────────
+  // Orbits begin moving `ORBIT_TRAIL_LAG` of the segment LATER than
+  // the brandmark, then catch up by the end. Combined with the same
+  // smoothstep velocity profile (`TRAVEL_EASE`) the brandmark uses,
+  // this puts the orbit cluster a fraction behind the brandmark
+  // throughout the leg — the comet-tail read the user asked for.
+  const lagged = clamp01((segmentT - ORBIT_TRAIL_LAG) / (1 - ORBIT_TRAIL_LAG));
+  const t = TRAVEL_EASE(lagged);
+
+  // Painter centre lerps with the eased + lagged factor — the rings
+  // read as travelling alongside the brandmark, not as faded from
+  // one location to another. Stays at sigilCenter when t = 0,
+  // missCenter when t = 1.
   const cx = lerp(sigilCenterX, missCenterX, t);
   const cy = lerp(sigilCenterY, missCenterY, t);
 

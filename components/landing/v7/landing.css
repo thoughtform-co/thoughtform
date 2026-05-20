@@ -1235,22 +1235,28 @@ html[data-quote-active="true"] .tf-brandmark-actor {
    (100vw) so they physically cover it edge-to-edge as the user scrolls.
    They break out of the .stations horizontal padding with matched
    negative margins, then restore the inset padding on themselves so
-   content still aligns with the rails/gutter. */
+   content still aligns with the rails/gutter.
+
+   Background composition (revised 2026-05-20):
+   - Bottom: opaque `var(--void)` backplate. Required by ADR-008 Rule 1
+     so the sticky hero video doesn't bleed through subsequent
+     sections.
+   - Top: `/v7-stars.svg` painted as a viewport-fixed background image
+     (`background-attachment: fixed`). Each station paints its own copy
+     anchored to viewport, so the starfield reads as a continuous
+     deep-space backdrop across the full scroll instead of a per-section
+     dot pattern.
+   - The previous 80px lattice grid was retired — the starfield + the
+     per-section `.station::before` radial gradients (`#definition`,
+     `#continuum`, `#build`, `#contact`, `#about`, `.miss::before`,
+     `.ilayer::before`) are the only ambient visual now. */
 .station:not(.hero) {
   background-color: var(--void);
-  /* Ambient hairline lattice — felt-not-seen lattice that breaks the
-     flat void on every non-hero station. Alpha tuned so the rail and
-     content above always dominate; 80px cell matches the rhythm of
-     content gutters without creating moiré at common viewports. */
-  background-image:
-    linear-gradient(to right, rgba(235, 227, 214, 0.022) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(235, 227, 214, 0.022) 1px, transparent 1px);
-  background-size:
-    80px 80px,
-    80px 80px;
-  background-position:
-    0 0,
-    0 0;
+  background-image: url("/v7-stars.svg");
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
   z-index: 2;
   width: 100vw;
   margin-left: calc(50% - 50vw);
@@ -3158,6 +3164,16 @@ html[data-quote-active="true"] .tf-brandmark-actor {
 .miss__stars circle.miss__star--gold {
   fill: rgb(202, 165, 84);
 }
+
+/* `.gateway__stars` (DOM-injected SVG starfield in `.gateway`) was
+   tried 2026-05-20 but retired the same day: stars sat behind every
+   station's opaque void backplate (required by ADR-008 Rule 1 to
+   shield the sticky hero video) so they were never visible. The
+   per-station `background-image: url('/v7-stars.svg')` with
+   `background-attachment: fixed` is the canonical mechanism now —
+   stars are part of every station's own background, painted on top
+   of the void shield and anchored to the viewport so the field
+   reads as one continuous backdrop. */
 
 /* Inner content column. data-m="instrument" so the existing IO reveal
    motion fires; wrapper stays opaque so the gateway radial doesn't

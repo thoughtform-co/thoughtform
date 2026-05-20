@@ -35,7 +35,6 @@ interface TravelingOrbitsProps {
   rootRef: React.RefObject<HTMLElement | null>;
 }
 
-const SIGIL_PARK_VIEWPORT_FRAC = 0.55;
 const MISS_PARK_VIEWPORT_FRAC = 0.5;
 
 const BASE_VIEWBOX_WIDTH = 1100;
@@ -91,13 +90,14 @@ export function TravelingOrbits({ rootRef }: TravelingOrbitsProps) {
 
       const sigilEl = root.querySelector<HTMLElement>(".sigil__mark");
       const missEl = root.querySelector<HTMLElement>("#missing-layer .miss__brand-slot");
+      const definitionEl = root.querySelector<HTMLElement>("#definition");
 
       const orbits = computeOrbitsTransform({
         sigilEl,
         missEl,
+        definitionEl,
         brandmarkOpacity: t.opacity,
         parkedAt: t.parkedAt,
-        sigilParkViewportFrac: SIGIL_PARK_VIEWPORT_FRAC,
         missParkViewportFrac: MISS_PARK_VIEWPORT_FRAC,
       });
 
