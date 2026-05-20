@@ -1081,10 +1081,14 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   flex-direction: column;
   justify-content: center;
   position: relative;
-  border-bottom: 1px dashed var(--dawn-08);
-}
-.station:last-child {
-  border-bottom: none;
+  /* No section border. The previous `1px dashed var(--dawn-08)` painted
+     a visible seam between every station (visible most strongly at the
+     missing-layer ↔ intelligence-layer boundary, where both edges met
+     on opaque void backplates). Linear's pattern is to let the content
+     and bottom-padding compose the gap — no chrome between sections.
+     If the rhythm ever needs reinforcement, the per-section radial
+     atmospheres (`#definition.station::before`, etc.) provide it
+     without a hairline rule. */
 }
 
 /* Station eyebrow — hidden globally. The original eyebrow band
@@ -3091,16 +3095,13 @@ html[data-quote-active="true"] .tf-brandmark-actor {
    ──────────────────────────────────────────────────────────────────── */
 
 .miss {
-  /* One viewport — single executive beat. Asymmetric padding (more
-     top than bottom is no longer required now that the
-     `.station__idx` eyebrow is hidden globally; the 100/80 split
-     keeps a small top inset for breathing room above the heading
-     and leaves the bottom of the section open so the constellation
-     can sit lower in the available area (see `.miss__system`
-     align-self: end and `.miss__inner` min-height below — together
-     they push the orbital field into the lower ~60% of the section
-     so the brandmark dock parks below the vertical centre, giving
-     the heading proper breathing room above the orbits).
+  /* One viewport — single executive beat. The top padding holds the
+     same Linear-style title rail as #continuum / #intelligence-layer
+     (~120-140px) so every section title lands on the same vertical
+     line as the user scrolls through. Bottom padding stays modest
+     (~80px) — the orbital field is bottom-anchored via
+     `.miss__system align-self: end`, so the orbits sit just above
+     the bottom padding rather than floating mid-section.
 
      `isolation: isolate` creates a section-local stacking context so
      the decorative nebula (`.miss::before`) and starfield
@@ -3109,7 +3110,7 @@ html[data-quote-active="true"] .tf-brandmark-actor {
      gateway/hero stacking context above. */
   height: 100vh;
   height: 100svh;
-  padding: 100px 0 80px;
+  padding: clamp(96px, 13vh, 140px) 0 80px;
   display: flex;
   /* `stretch` (was `center`) so `.miss__inner` fills the section's
      available height. With centered alignment, the inner cell was
@@ -3345,13 +3346,24 @@ html[data-quote-active="true"] .tf-brandmark-actor {
        overlays the system top (text-shadow keeps it legible). */
 .miss__system {
   position: relative;
-  width: min(1180px, 100%, calc((100svh - 440px) * 11 / 6.5));
+  /* Width is bounded by:
+     - 1180px max (gives the long horizon orbit room),
+     - 100% (never escape the `.miss__inner` box),
+     - `(100svh - 320px) * 11 / 6.5` — converts the section's padded
+       envelope into a matching width via the 1100/650 aspect ratio.
+       320 = ~140 top rail + ~80 bottom padding + ~100 title+gap. On
+       a 1440x900 viewport this resolves to ~982px wide / ~580px tall
+       (was ~778×460 with the previous 440 subtraction, which left
+       ~211px of wasted space below the orbits). Bottom-anchored via
+       `align-self: end` so the orbital field sits just above the
+       section's bottom padding rather than floating mid-section. */
+  width: min(1180px, 100%, calc((100svh - 320px) * 11 / 6.5));
   aspect-ratio: 1100 / 650;
   margin: 0 auto;
   grid-column: 1;
   grid-row: 1;
   justify-self: center;
-  align-self: center;
+  align-self: end;
   z-index: 1;
 }
 
@@ -4118,11 +4130,16 @@ html[data-quote-active="true"] .tf-brandmark-actor {
    back to a single column. */
 .ilayer__head {
   position: absolute;
-  /* Lifted from the original `clamp(80px, 12vh, 140px)` now that the
-     `.station__idx` eyebrow is hidden globally — the title can sit
-     closer to the section's top rail without competing with the
-     gold eyebrow band. */
-  top: clamp(56px, 8vh, 96px);
+  /* Title rail — matches the Linear-pattern title position used across
+     missing-layer (`.miss` padding-top) and #continuum (140px via the
+     `.station` padding). The previous `clamp(56px, 8vh, 96px)` parked
+     the title at ~72px on a 900px viewport, which read as cramped: at
+     a hard 100vh section lock, the user had to scroll past the section
+     start to give the heading breathing room — which then revealed
+     `#continuum` bleeding through at the bottom edge. Holding the rail
+     at ~120px means the snapped-in viewport reads balanced without
+     needing the offset scroll. */
+  top: clamp(96px, 13vh, 140px);
   left: 50%;
   transform: translateX(-50%);
   z-index: 3;
