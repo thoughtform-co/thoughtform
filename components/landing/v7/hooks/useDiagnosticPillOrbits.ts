@@ -1,28 +1,68 @@
 "use client";
 
-/**
- * useDiagnosticPillOrbits — DEPRECATED (kept as a no-op for now).
- *
- * The diagnostic pill labels in #missing-layer used to slowly orbit
- * along their host ellipses (10–13 minutes per revolution) driven by
- * a per-frame rAF loop that wrote `--x-pct` / `--y-pct` onto each
- * label and `cx` / `cy` onto each anchor pip. Once the labels grew
- * from 3-word tags ("Brief handoff") into full diagnostic sentences
- * ("Creative briefs arrive without the thinking."), the orbital
- * drift made every sentence a moving target the reader couldn't
- * settle on — the section asked for steady reading, not motion.
- *
- * The orbital READ is now provided by the four CSS-`offset-path`
- * particles (`.miss__particle--01..04`), which travel their host
- * orbits on their own — the user still sees four small bodies in
- * motion against four static labels, which is the celestial register
- * the diagnostic section was always after.
- *
- * Hook kept as a no-op (instead of deleted) so any prototype HTML or
- * call site that still imports it doesn't break. Safe to remove
- * entirely once no caller references `useDiagnosticPillOrbits`.
- */
+import { useEffect } from "react";
 
-export function useDiagnosticPillOrbits(): void {
-  // No-op. See module-level comment above.
+/**
+ * useDiagnosticPillOrbits — re-purposed engagement observer for
+ * `#missing-layer` (the Diagnostic section).
+ *
+ * Was a per-frame orbital drift driver for the pill labels (10-13
+ * min revolutions). Removed once the labels grew into full sentences
+ * the reader needed to settle on. Now the hook owns one job: watch
+ * `#missing-layer` with an IntersectionObserver and set
+ * `data-miss-engaged="true"` on the landing root while the section
+ * is solidly in view.
+ *
+ * The flag is read by:
+ *
+ *   - [TravelingOrbits.tsx](../orbits/TravelingOrbits.tsx) — the
+ *     four-ring painter early-outs its per-frame compute while
+ *     engaged AND parked at miss, so the orbits hold a perfect
+ *     snapshot instead of jiggling on every scroll tick.
+ *   - [useBrandmarkJourney.ts](./useBrandmarkJourney.ts) — skips
+ *     the per-frame store write under the same conditions so the
+ *     brandmark vector glyph holds in lockstep with the orbits.
+ *
+ * Reverse-scrolling out of the section drops the attribute and the
+ * live computes resume immediately, so the journey reverses
+ * naturally as the user scrolls back up into `#definition`.
+ *
+ * The 10% / 10% rootMargin shrink means the freeze only engages
+ * once the section is clearly the dominant one in the viewport — it
+ * never traps mid-transit, when the brandmark is still in motion
+ * along the sigil → miss leg.
+ */
+export function useDiagnosticPillOrbits(rootRef?: React.RefObject<HTMLElement | null>): void {
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const root = rootRef?.current ?? null;
+
+    const target = (root ?? document).querySelector<HTMLElement>("#missing-layer");
+    if (!target) return;
+
+    // Resolve the attribute host — prefer the landing root so this
+    // is scoped to the v7 page, fall back to the documentElement so
+    // any prototype variant that hosts #missing-layer in a different
+    // tree still gets the flag.
+    const host: HTMLElement = root ?? document.documentElement;
+
+    const setEngaged = (engaged: boolean) => {
+      if (engaged) host.setAttribute("data-miss-engaged", "true");
+      else host.removeAttribute("data-miss-engaged");
+    };
+
+    const io = new IntersectionObserver(
+      ([entry]) => setEngaged(!!entry?.isIntersecting),
+      // Shrink by 10% top/bottom so the freeze only kicks in once
+      // the section is clearly dominant in the viewport (avoids
+      // catching the brandmark mid-transit at the section edges).
+      { rootMargin: "-10% 0px -10% 0px", threshold: 0 }
+    );
+    io.observe(target);
+
+    return () => {
+      io.disconnect();
+      host.removeAttribute("data-miss-engaged");
+    };
+  }, [rootRef]);
 }

@@ -1,7 +1,19 @@
 /*
  * home-v2.css — styles for the /test/home-v2 depth-gateway experiment.
  *
- * Reuses v7 tokens (--gold, --dawn, --void) via landing.css import.
+ * Reuses v7 tokens (--gold, --dawn, --void) + the v7 typography
+ * classes (.tri__*, .miss__*, .ilayer__*) imported via landing.css.
+ * This file is responsible for:
+ *
+ *   - The sticky depth stage geometry (300svh container, 100svh
+ *     sticky interior, R3F canvas + HTML overlay siblings).
+ *   - Per-chamber overlay positioning (Definition text plane,
+ *     Diagnostic header + orbit pills, Intelligence layer head +
+ *     chamber HUD captions + substrate readout).
+ *   - Per-chamber opacity gating driven by --*-opacity CSS vars
+ *     written by useDepthScroll.
+ *   - The static fallback layout for no-WebGL / reduced-motion.
+ *
  * Layer order (loose ADR-008 alignment for this experimental route):
  *
  *   z 0 — page void background
@@ -20,7 +32,6 @@
   font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
 }
 
-/* ── Hero (copy of v7 .hero markup; styles live in landing.css) ── */
 .home-v2-root .hero {
   position: sticky;
   top: 0;
@@ -35,6 +46,22 @@
   background: var(--void, #050403);
   z-index: 2;
   isolation: isolate;
+  /* Defaults for the CSS vars useDepthScroll updates per frame.
+     MUST live on this element (the one the hook writes to) — if
+     they were declared on the overlay child instead, CSS's custom
+     property cascade would block the inherited value from the
+     hook and these would stay frozen at their defaults. */
+  --depth-progress: 0;
+  --chamber-a-progress: 0;
+  --chamber-b-progress: 0;
+  --chamber-c-progress: 0;
+  --definition-opacity: 0;
+  --definition-translate-z: -200px;
+  --definition-scale: 0.95;
+  --diagnostic-opacity: 0;
+  --diagnostic-pills-opacity: 0;
+  --ilayer-header-opacity: 0;
+  --ilayer-readout-opacity: 0;
 }
 
 .home-v2-stage__sticky {
@@ -59,7 +86,7 @@
   pointer-events: none;
 }
 
-/* ── Chamber HTML overlay (labels + 2D text plane) ──────────── */
+/* ── Chamber HTML overlay (shared root) ──────────────────────── */
 .home-v2-chamber-overlay {
   position: absolute;
   inset: 0;
@@ -67,146 +94,274 @@
   pointer-events: none;
   font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
   color: var(--dawn, #ebe3d6);
+  /* Defaults for the projected vars written by ChamberLabels
+     (inside the canvas). These DO live here because they need
+     `inherit` lookups from the canvas's parent chain — the canvas
+     queries `[data-home-v2-overlay]` and writes onto IT. Keeping
+     defaults here gives the overlay a sensible starting state
+     before the first useFrame tick. */
+  --brand-x: 50%;
+  --brand-y: 50%;
+  --brand-r: 120px;
+  --left-x: 16%;
+  --left-y: 50%;
+  --right-x: 84%;
+  --right-y: 50%;
+  --label-opacity: 0;
 }
 
-/* Definition chamber — left-side text plane. Rendered as a DOM
-   element on top of the canvas, then translated on the Z axis via
-   CSS perspective so it visibly rushes toward the viewer. The same
-   chamber progress drives both the canvas brandmark and this DOM
-   plane so they read as a single coordinated motion. */
+/* ═══════════════════════════════════════════════════════════════
+   CHAMBER A — Definition
+
+   v7 .tri__left content (IPA + tri__title + secondary lines)
+   pinned to the left side of the frame and translated on a CSS
+   perspective Z axis so the text reads as a physical plane
+   rushing past the viewer as the camera dollies forward.
+   ═══════════════════════════════════════════════════════════════ */
+
 .home-v2-overlay__definition {
   position: absolute;
   left: clamp(48px, 8vw, 160px);
   top: 50%;
-  transform-origin: left center;
+  transform: translateY(-50%);
   perspective: 1200px;
-  width: min(48vw, 540px);
+  width: min(46vw, 540px);
   pointer-events: none;
   opacity: var(--definition-opacity, 0);
-  transform: translateY(-50%);
+  transform-origin: left center;
 }
 
 .home-v2-overlay__definition-inner {
-  /* The Z-translate is driven by --definition-translate-z written by
-     the rAF scroll hook. Negative starts the plane behind the screen;
-     positive pushes it past the viewer. */
   transform: translateZ(var(--definition-translate-z, -200px)) scale(var(--definition-scale, 0.95));
   transform-origin: left center;
   will-change: transform, opacity;
 }
 
-.home-v2-overlay__definition-eyebrow {
-  font-family: var(--font-pt-mono, ui-monospace, monospace);
-  font-size: 11px;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--gold, #caa554);
-  opacity: 0.7;
-  margin: 0 0 18px;
+/* Slight overrides on the inherited v7 .tri__title so the left
+   plane reads as a focused statement at the home-v2 framing
+   (the production page sits in a 3-column .tri grid, ours is
+   alone in the frame so we cap width tighter and bump tracking). */
+.home-v2-overlay__definition .tri__title {
+  max-width: 18ch;
+}
+.home-v2-overlay__definition .tri__title--secondary {
+  max-width: 26ch;
 }
 
-.home-v2-overlay__definition-title {
-  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
-  font-weight: 400;
-  font-size: clamp(28px, 3.8vw, 56px);
-  line-height: 1.1;
-  letter-spacing: -0.012em;
-  color: var(--dawn, #ebe3d6);
-  margin: 0 0 18px;
-  text-wrap: balance;
-}
+/* ═══════════════════════════════════════════════════════════════
+   CHAMBER B — Diagnostic
 
-.home-v2-overlay__definition-title em {
-  font-style: normal;
-  color: var(--gold, #caa554);
-}
+   Header copy pinned to the top of the stage; four .miss__label
+   pills positioned around the brandmark's projected screen
+   centre (--brand-x / --brand-y) at a screen radius based on
+   --brand-r (the projected brandmark on-screen half-width).
+   ═══════════════════════════════════════════════════════════════ */
 
-.home-v2-overlay__definition-body {
-  font-size: clamp(15px, 1.1vw, 18px);
-  line-height: 1.55;
-  color: rgba(235, 227, 214, 0.72);
-  max-width: 36ch;
-  margin: 0;
-}
-
-/* Intelligence chamber — left/right side labels for the L/R bodies.
-   Position is written by ChamberLabels via --left-x / --left-y /
-   --right-x / --right-y as CSS percentages. */
-.home-v2-overlay__chamber-label {
-  position: absolute;
-  transform: translate(-50%, -50%);
-  pointer-events: none;
-  opacity: var(--label-opacity, 0);
-  transition: opacity 200ms ease-out;
-  text-align: center;
-  min-width: 180px;
-}
-
-.home-v2-overlay__chamber-label--left {
-  left: var(--left-x, 16%);
-  top: var(--left-y, 50%);
-}
-
-.home-v2-overlay__chamber-label--right {
-  left: var(--right-x, 84%);
-  top: var(--right-y, 50%);
-}
-
-.home-v2-overlay__chamber-label-eyebrow {
-  font-family: var(--font-pt-mono, ui-monospace, monospace);
-  font-size: 10px;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: var(--gold, #caa554);
-  opacity: 0.85;
-  margin: 0 0 6px;
-}
-
-.home-v2-overlay__chamber-label-title {
-  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
-  font-size: clamp(15px, 1.1vw, 19px);
-  font-weight: 400;
-  color: var(--dawn, #ebe3d6);
-  margin: 0 0 4px;
-  letter-spacing: 0.01em;
-}
-
-.home-v2-overlay__chamber-label-meta {
-  font-family: var(--font-pt-mono, ui-monospace, monospace);
-  font-size: 10px;
-  letter-spacing: 0.12em;
-  color: rgba(235, 227, 214, 0.5);
-  margin: 0;
-}
-
-/* Diagnostic chamber — minimal eyebrow that fades in across chamber B
-   to give context for the orbital rings appearing in 3D. */
 .home-v2-overlay__diagnostic {
   position: absolute;
-  left: 50%;
-  bottom: clamp(60px, 12vh, 140px);
-  transform: translateX(-50%);
-  text-align: center;
-  opacity: var(--diagnostic-opacity, 0);
+  inset: 0;
   pointer-events: none;
 }
 
-.home-v2-overlay__diagnostic-eyebrow {
-  font-family: var(--font-pt-mono, ui-monospace, monospace);
-  font-size: 11px;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: var(--gold, #caa554);
-  margin: 0 0 6px;
+.home-v2-overlay__diagnostic-head {
+  position: absolute;
+  top: clamp(48px, 8vh, 96px);
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  opacity: var(--diagnostic-opacity, 0);
+  max-width: 760px;
+  padding: 0 24px;
+  width: 100%;
 }
 
-.home-v2-overlay__diagnostic-title {
-  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
-  font-size: clamp(18px, 1.6vw, 24px);
-  font-weight: 400;
-  color: var(--dawn, #ebe3d6);
-  margin: 0;
-  letter-spacing: 0.01em;
+.home-v2-overlay__diagnostic-head .miss__title {
+  max-width: 20ch;
+  text-align: center;
+}
+
+.home-v2-overlay__diagnostic-pills {
+  position: absolute;
+  inset: 0;
+  opacity: var(--diagnostic-pills-opacity, 0);
+  pointer-events: none;
+}
+
+/* The 4 .miss__label pills.
+
+   Position is polar around (--brand-x, --brand-y) at a radius
+   computed from --brand-r (the projected brandmark half-width)
+   times --pill-radius-mult (per-pill multiplier, ~2.0 = "twice
+   the brandmark's apparent radius outward"). The angle (--pill-
+   angle) is measured clockwise from the +X axis. We compute the
+   X/Y offset with calc() trig... except CSS has no trig pre-spec
+   so we fall back to per-pill hardcoded sin/cos values via
+   --pill-cos / --pill-sin set inline if needed.
+
+   For four pills at -120°/-60°/120°/60° the offsets are
+   symmetric — we can express them directly as ±X / ±Y multipliers
+   on --brand-r without trig functions in the cascade. Each pill
+   carries its own home-v2-pill--N modifier with the explicit
+   axes set, so authors can pick angles freely without relying on
+   trig support. */
+.home-v2-overlay__diagnostic .miss__label {
+  /* Reset the v7 absolute positioning rules that target the
+     #missing-layer section's grid (--x-pct / --y-pct). We use a
+     home-v2-specific positioning system below. */
+  position: absolute;
+  left: var(--brand-x, 50%);
+  top: var(--brand-y, 50%);
+  transform: translate(-50%, -50%);
+  /* Override v7 reveal envelope; home-v2 controls opacity via
+     the parent --diagnostic-pills-opacity. */
+  opacity: 1;
+  filter: none;
+  /* Tighter pill width than the v7 layout so 4 pills can sit on
+     the diagonals around the brandmark without colliding at the
+     centre. The brandmark sits in the middle and the pills sit at
+     the four corners of an X with ~120px clearance from the
+     cloud's outer edge. */
+  max-width: 26ch;
+  pointer-events: none;
+}
+
+/* Pill positioning — polar around (brand-x, brand-y) at
+   --brand-r × --pill-radius-mult outward. Horizontal/vertical
+   ratios are 0.78 / 0.6 instead of trig sin/cos so the
+   pills push wider sideways than vertically — gives breathing
+   room from the diagnostic header above and from the
+   brandmark + rings below. */
+.home-v2-overlay__diagnostic .home-v2-pill--01 {
+  /* Upper-left: horizontal -0.78, vertical -0.60 */
+  margin-left: calc(var(--brand-r, 120px) * -0.78 * var(--pill-radius-mult, 3.4));
+  margin-top: calc(var(--brand-r, 120px) * -0.6 * var(--pill-radius-mult, 3.4));
+}
+.home-v2-overlay__diagnostic .home-v2-pill--02 {
+  /* Upper-right */
+  margin-left: calc(var(--brand-r, 120px) * 0.78 * var(--pill-radius-mult, 3.4));
+  margin-top: calc(var(--brand-r, 120px) * -0.6 * var(--pill-radius-mult, 3.4));
+}
+.home-v2-overlay__diagnostic .home-v2-pill--03 {
+  /* Lower-left */
+  margin-left: calc(var(--brand-r, 120px) * -0.78 * var(--pill-radius-mult, 3.4));
+  margin-top: calc(var(--brand-r, 120px) * 0.6 * var(--pill-radius-mult, 3.4));
+}
+.home-v2-overlay__diagnostic .home-v2-pill--04 {
+  /* Lower-right */
+  margin-left: calc(var(--brand-r, 120px) * 0.78 * var(--pill-radius-mult, 3.4));
+  margin-top: calc(var(--brand-r, 120px) * 0.6 * var(--pill-radius-mult, 3.4));
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   CHAMBER C — Intelligence Layer
+
+   .ilayer__head (title + lede) at the top; three .ilayer__caption
+   HUD captions positioned on the L / mid / R bodies (using the
+   projected positions written by ChamberLabels); substrate readout
+   grid below the centre body.
+   ═══════════════════════════════════════════════════════════════ */
+
+.home-v2-overlay__ilayer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.home-v2-overlay__ilayer-head {
+  position: absolute;
+  top: clamp(48px, 8vh, 96px);
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  opacity: var(--ilayer-header-opacity, 0);
+  max-width: 900px;
+  padding: 0 24px;
+  width: 100%;
+}
+
+.home-v2-overlay__ilayer-head .ilayer__title {
+  max-width: 24ch;
+  text-align: center;
+}
+.home-v2-overlay__ilayer-head .ilayer__lede {
+  max-width: 56ch;
+  text-align: center;
+}
+
+.home-v2-overlay__ilayer-chamber {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: auto;
+  text-align: center;
+  transform: translate(-50%, -50%);
+  opacity: var(--label-opacity, 0);
+}
+
+.home-v2-overlay__ilayer-chamber--left {
+  left: var(--left-x, 18%);
+  top: var(--left-y, 50%);
+  /* HUD caption sits below the sphere. Offset by half the body
+     radius (~64px on typical viewports) + the caption gap. */
+  --chamber-caption-offset: 84px;
+}
+.home-v2-overlay__ilayer-chamber--mid {
+  left: var(--brand-x, 50%);
+  top: var(--brand-y, 50%);
+  /* Mid caption sits ABOVE the substrate sphere so it doesn't
+     overlap the readout grid below. */
+  --chamber-caption-offset: -110px;
+  /* Mid chamber only resolves once the substrate has morphed —
+     fades with the L/R bodies' opacity envelope. */
+  opacity: var(--label-opacity, 0);
+}
+.home-v2-overlay__ilayer-chamber--right {
+  left: var(--right-x, 82%);
+  top: var(--right-y, 50%);
+  --chamber-caption-offset: 84px;
+}
+
+.home-v2-overlay__ilayer-chamber .ilayer__caption {
+  /* v7's .ilayer__caption uses --ilayer-progress to gate opacity;
+     home-v2 controls it via the parent chamber's opacity. */
+  opacity: 1;
+  transform: translateY(var(--chamber-caption-offset, 0));
+}
+
+/* Substrate readout — 2x2 grid sitting below the mid (substrate)
+   chamber. Each cell uses the v7 .ilayer__substrate-readout__key
+   / __val typography. Position is anchored to the projected
+   brandmark/substrate centre so the grid follows the morphed
+   sphere through the dolly. */
+.home-v2-overlay__ilayer-readout {
+  position: absolute;
+  left: var(--brand-x, 50%);
+  top: var(--brand-y, 50%);
+  transform: translate(-50%, calc(var(--brand-r, 120px) + 32px));
+  display: grid;
+  grid-template-columns: repeat(2, minmax(120px, 1fr));
+  gap: clamp(10px, 1.4vh, 16px) clamp(28px, 4vw, 48px);
+  opacity: var(--ilayer-readout-opacity, 0);
+  pointer-events: none;
+  width: max-content;
+  max-width: 460px;
+}
+
+.home-v2-overlay__ilayer-readout-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  text-align: center;
 }
 
 /* ── HUD progress chrome (debug) ─────────────────────────────── */
@@ -288,6 +443,10 @@
   flex-direction: column;
 }
 
+.home-v2-stage[data-fallback="true"] .home-v2-chamber-overlay {
+  display: none;
+}
+
 .home-v2-stage__fallback {
   display: none;
 }
@@ -306,6 +465,7 @@
   justify-content: center;
   border-top: 1px solid rgba(235, 227, 214, 0.06);
   padding: clamp(40px, 6vh, 80px) 0;
+  gap: 18px;
 }
 
 .home-v2-fallback__chamber:first-child {
@@ -321,5 +481,25 @@
 @media (prefers-reduced-motion: reduce) {
   .home-v2-overlay__definition-inner {
     transition: none;
+  }
+}
+
+/* ── Responsive trims ────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .home-v2-overlay__definition {
+    left: clamp(20px, 5vw, 48px);
+    width: min(80vw, 440px);
+  }
+  .home-v2-overlay__diagnostic .home-v2-pill--01,
+  .home-v2-overlay__diagnostic .home-v2-pill--02,
+  .home-v2-overlay__diagnostic .home-v2-pill--03,
+  .home-v2-overlay__diagnostic .home-v2-pill--04 {
+    /* Tighter radius on mobile so pills don't escape the frame. */
+    --pill-radius-mult: 1.6;
+  }
+  .home-v2-overlay__ilayer-readout {
+    grid-template-columns: repeat(2, minmax(100px, 1fr));
+    gap: 8px 20px;
+    max-width: 320px;
   }
 }

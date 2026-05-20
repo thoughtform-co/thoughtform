@@ -384,7 +384,24 @@ export function useBrandmarkJourney(
       ctx = resolveContext();
       const transform = computeBrandmarkTransform(window.scrollY, keyframes, ctx);
       if (transform == null) return;
-      useBrandmarkJourneyStore.getState().setTransform(transform);
+
+      // Engagement freeze (companion to TravelingOrbits). While
+      // `#missing-layer` is the dominant section in the viewport
+      // and the brandmark is already parked at miss, skip the
+      // store write so the vector glyph holds in lockstep with
+      // the frozen orbit painter. Reverse-scrolling out of the
+      // section drops `data-miss-engaged` and the live computes
+      // resume immediately. CSS-var writes still fire so any
+      // late hover/route transitions stay in sync — they're
+      // no-ops at the parked-at-miss values anyway.
+      const lastTransform = useBrandmarkJourneyStore.getState().transform;
+      const frozenAtMiss =
+        rootEl.hasAttribute("data-miss-engaged") &&
+        transform.parkedAt === "miss" &&
+        lastTransform.parkedAt === "miss";
+      if (!frozenAtMiss) {
+        useBrandmarkJourneyStore.getState().setTransform(transform);
+      }
       applyParticleMode(transform);
       applySvgMode(transform);
       applyOrbitMorph(transform);

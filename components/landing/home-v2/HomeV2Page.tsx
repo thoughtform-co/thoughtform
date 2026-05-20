@@ -19,10 +19,11 @@ import { useDepthScroll } from "./hooks/useDepthScroll";
  *
  *   2. Depth stage — 300svh tall with a 100svh sticky interior. The
  *      sticky pane hosts the R3F canvas (one camera dolly through
- *      three "chambers" along -Z) plus an HTML overlay layer that
- *      paints the Definition text plane (translating Z+ on
- *      perspective) and the L/R chamber labels (projected from
- *      world positions onto screen by `ChamberLabels`).
+ *      three "chambers" along -Z) plus an HTML overlay layer
+ *      that reuses the v7 typography classes (`.tri__title`,
+ *      `.miss__label`, `.ilayer__caption`, etc.) so the v2 page
+ *      reads as a direct descendant of the production landing
+ *      rather than a generic restyle.
  *
  *   3. Tail — placeholder normal-scroll sections so the page
  *      doesn't terminate abruptly. Future iteration will swap these
@@ -31,8 +32,7 @@ import { useDepthScroll } from "./hooks/useDepthScroll";
  *
  * The static fallback (no WebGL OR `prefers-reduced-motion`) flips
  * `data-fallback="true"` on the stage root; the canvas is hidden
- * and a stacked SVG/text version of the three chambers paints
- * instead (see `home-v2.css`).
+ * and a stacked version of the three chambers paints instead.
  */
 export function HomeV2Page() {
   const stageRef = useRef<HTMLDivElement>(null);
@@ -109,47 +109,140 @@ export function HomeV2Page() {
             <DepthGatewayScene />
           </div>
 
-          {/* HTML overlay layer. The Definition text plane uses CSS
-              perspective + translateZ driven by --definition-* vars
-              from useDepthScroll. The chamber labels use CSS
-              positioning driven by --left-* / --right-* vars written
-              by ChamberLabels in the canvas. */}
+          {/* HTML overlay layer. Uses the v7 typography classes via
+              `landing.css` (imported by the route). Per-chamber
+              opacity is gated by CSS vars written by useDepthScroll
+              so each chamber's content only paints during its
+              window. Brandmark + body screen positions are written
+              by ChamberLabels in the R3F canvas. */}
           <div className="home-v2-chamber-overlay" data-home-v2-overlay aria-hidden="true">
-            {/* Definition text plane — left of frame, translates Z+
-                toward and past the camera as Chamber A progresses. */}
+            {/* ───── Chamber A — Definition ─────
+                v7 `.tri__left` copy + IPA pronunciation, projected
+                on a CSS-perspective plane that translates Z+ toward
+                the viewer as Chamber A progresses. */}
             <div className="home-v2-overlay__definition">
               <div className="home-v2-overlay__definition-inner">
-                <p className="home-v2-overlay__definition-eyebrow">02 — Thoughtform</p>
-                <h2 className="home-v2-overlay__definition-title">
-                  Most teams treat AI like <em>software.</em>
+                <div className="tri__ipa tri__ipa--noun">THOUGHTFORM /θɔːtfɔːrm · THAWT-form/</div>
+                <h2 className="tri__title">
+                  AI collapsed the distance between <em>thought</em> and <em>form</em>.
                 </h2>
-                <p className="home-v2-overlay__definition-body">
-                  But intelligence isn&apos;t a tool to command — it&apos;s a substrate to navigate.
-                  Thoughtform teaches teams how to read it, encode it, and build with it.
+                <p className="tri__title tri__title--secondary">
+                  But the layer between how your team works and what AI can do is missing.
+                </p>
+                <p className="tri__title tri__title--secondary">
+                  We build it with your team and <em>train them to own it</em>.
                 </p>
               </div>
             </div>
 
-            {/* Diagnostic eyebrow — anchored at bottom-centre,
-                fades in across Chamber B alongside the orbital rings. */}
+            {/* ───── Chamber B — Diagnostic ─────
+                Header text (v7 `.miss__title` + `.miss__bridge`) at
+                the top of the stage, plus four `.miss__label` pills
+                orbiting the brandmark. Pill positions are computed
+                from the projected brandmark screen position
+                (`--brand-x` / `--brand-y` / `--brand-r`) so they
+                stay locked to the cloud as the camera dollies. */}
             <div className="home-v2-overlay__diagnostic">
-              <p className="home-v2-overlay__diagnostic-eyebrow">03 — Diagnostic</p>
-              <p className="home-v2-overlay__diagnostic-title">
-                The missing layer between teams and AI.
-              </p>
+              <header className="home-v2-overlay__diagnostic-head">
+                <p className="miss__bridge">Diagnostic · Same pattern, four ways.</p>
+                <h2 className="miss__title">
+                  The missing layer is rarely <em>the model.</em>
+                </h2>
+              </header>
+
+              <div className="home-v2-overlay__diagnostic-pills">
+                <div className="miss__label home-v2-pill home-v2-pill--01">
+                  <span className="miss__label-pip" aria-hidden="true" />
+                  <span className="miss__label-n">01</span>
+                  <span className="miss__label-tag">Brand voice drifts across every channel.</span>
+                </div>
+                <div className="miss__label home-v2-pill home-v2-pill--02">
+                  <span className="miss__label-pip" aria-hidden="true" />
+                  <span className="miss__label-n">02</span>
+                  <span className="miss__label-tag">
+                    Creative briefs arrive without the thinking.
+                  </span>
+                </div>
+                <div className="miss__label home-v2-pill home-v2-pill--03">
+                  <span className="miss__label-pip" aria-hidden="true" />
+                  <span className="miss__label-n">03</span>
+                  <span className="miss__label-tag">Every product concept looks feasible.</span>
+                </div>
+                <div className="miss__label home-v2-pill home-v2-pill--04">
+                  <span className="miss__label-pip" aria-hidden="true" />
+                  <span className="miss__label-n">04</span>
+                  <span className="miss__label-tag">Customer service depends on who picks up.</span>
+                </div>
+              </div>
             </div>
 
-            {/* Intelligence chamber labels — projected onto the L/R
-                celestial-body positions by ChamberLabels. */}
-            <div className="home-v2-overlay__chamber-label home-v2-overlay__chamber-label--left">
-              <p className="home-v2-overlay__chamber-label-eyebrow">Sources</p>
-              <p className="home-v2-overlay__chamber-label-title">Trusted Sources</p>
-              <p className="home-v2-overlay__chamber-label-meta">Brand · Voice · Knowledge</p>
-            </div>
-            <div className="home-v2-overlay__chamber-label home-v2-overlay__chamber-label--right">
-              <p className="home-v2-overlay__chamber-label-eyebrow">Surfaces</p>
-              <p className="home-v2-overlay__chamber-label-title">Headless Surfaces</p>
-              <p className="home-v2-overlay__chamber-label-meta">Cursor · Claude · Agents</p>
+            {/* ───── Chamber C — Intelligence Layer ─────
+                v7 `.ilayer__head` (title + lede) at the top of the
+                stage, three HUD captions on the L / mid / R bodies
+                (v7 `.ilayer__caption` rail+num+title), and the
+                substrate readout (Rules / Examples / Sources /
+                Loops) inside the morphed sphere. */}
+            <div className="home-v2-overlay__ilayer">
+              <header className="home-v2-overlay__ilayer-head">
+                <h2 className="ilayer__title">
+                  The fix is an <em>intelligence layer.</em>
+                </h2>
+                <p className="ilayer__lede">
+                  An operating layer between how your team works and what AI does.{" "}
+                  <em>Encoded once.</em> Inherited by every surface.
+                </p>
+              </header>
+
+              {/* Left chamber — Trusted sources */}
+              <section className="home-v2-overlay__ilayer-chamber home-v2-overlay__ilayer-chamber--left">
+                <div className="ilayer__caption ilayer__caption--below">
+                  <span className="ilayer__caption__rail" aria-hidden="true" />
+                  <span className="ilayer__caption__num">01</span>
+                  <h3 className="ilayer__caption__title">Trusted sources</h3>
+                </div>
+              </section>
+
+              {/* Mid chamber — Encoded substrate (caption above the
+                  morphed brandmark sphere). */}
+              <section className="home-v2-overlay__ilayer-chamber home-v2-overlay__ilayer-chamber--mid">
+                <div className="ilayer__caption ilayer__caption--above">
+                  <span className="ilayer__caption__rail" aria-hidden="true" />
+                  <span className="ilayer__caption__num">02</span>
+                  <h3 className="ilayer__caption__title">Encoded substrate</h3>
+                </div>
+              </section>
+
+              {/* Right chamber — Headless surfaces */}
+              <section className="home-v2-overlay__ilayer-chamber home-v2-overlay__ilayer-chamber--right">
+                <div className="ilayer__caption ilayer__caption--below">
+                  <span className="ilayer__caption__rail" aria-hidden="true" />
+                  <span className="ilayer__caption__num">03</span>
+                  <h3 className="ilayer__caption__title">Headless surfaces</h3>
+                </div>
+              </section>
+
+              {/* Substrate readout — 2x2 instrument card grid sitting
+                  below the substrate sphere. Lands after the morph
+                  completes so the user reads the brandmark→sphere
+                  transform first. */}
+              <div className="home-v2-overlay__ilayer-readout">
+                <div className="home-v2-overlay__ilayer-readout-cell">
+                  <span className="ilayer__substrate-readout__key">Rules</span>
+                  <span className="ilayer__substrate-readout__val">How the team decides</span>
+                </div>
+                <div className="home-v2-overlay__ilayer-readout-cell">
+                  <span className="ilayer__substrate-readout__key">Examples</span>
+                  <span className="ilayer__substrate-readout__val">What good looks like</span>
+                </div>
+                <div className="home-v2-overlay__ilayer-readout-cell">
+                  <span className="ilayer__substrate-readout__key">Sources</span>
+                  <span className="ilayer__substrate-readout__val">Data it reads</span>
+                </div>
+                <div className="home-v2-overlay__ilayer-readout-cell">
+                  <span className="ilayer__substrate-readout__key">Loops</span>
+                  <span className="ilayer__substrate-readout__val">Who confirms what</span>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -200,7 +293,9 @@ function StageHud() {
   );
 }
 
-/** Static stacked layout for no-WebGL / reduced-motion. */
+/** Static stacked layout for no-WebGL / reduced-motion. Reuses the
+ *  v7 typography classes so the fallback reads as the real page,
+ *  just without the camera dolly. */
 function StageFallback() {
   return (
     <div className="home-v2-stage__fallback">
@@ -211,26 +306,27 @@ function StageFallback() {
           className="home-v2-fallback__brandmark"
           aria-hidden="true"
         />
-        <p className="home-v2-overlay__definition-eyebrow">02 — Thoughtform</p>
-        <h2 className="home-v2-overlay__definition-title">
-          Most teams treat AI like <em>software.</em>
+        <div className="tri__ipa tri__ipa--noun">THOUGHTFORM /θɔːtfɔːrm · THAWT-form/</div>
+        <h2 className="tri__title">
+          AI collapsed the distance between <em>thought</em> and <em>form</em>.
         </h2>
-        <p className="home-v2-overlay__definition-body">
-          But intelligence isn&apos;t a tool to command — it&apos;s a substrate to navigate.
+        <p className="tri__title tri__title--secondary">
+          But the layer between how your team works and what AI can do is missing.
         </p>
       </div>
       <div className="home-v2-fallback__chamber">
-        <p className="home-v2-overlay__diagnostic-eyebrow">03 — Diagnostic</p>
-        <h2 className="home-v2-overlay__definition-title">
-          The missing layer between teams and AI.
+        <p className="miss__bridge">Diagnostic · Same pattern, four ways.</p>
+        <h2 className="miss__title">
+          The missing layer is rarely <em>the model.</em>
         </h2>
       </div>
       <div className="home-v2-fallback__chamber">
-        <p className="home-v2-overlay__chamber-label-eyebrow">04 — Intelligence layer</p>
-        <h2 className="home-v2-overlay__definition-title">Sources, substrate, surfaces.</h2>
-        <p className="home-v2-overlay__definition-body">
-          Trusted sources of brand, voice, and knowledge feed an encoded substrate that surfaces
-          through the tools your team already uses.
+        <h2 className="ilayer__title">
+          The fix is an <em>intelligence layer.</em>
+        </h2>
+        <p className="ilayer__lede">
+          An operating layer between how your team works and what AI does. <em>Encoded once.</em>{" "}
+          Inherited by every surface.
         </p>
       </div>
     </div>

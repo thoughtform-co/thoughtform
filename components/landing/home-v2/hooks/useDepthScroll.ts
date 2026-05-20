@@ -94,15 +94,49 @@ export function useDepthScroll(stageRef: React.RefObject<HTMLDivElement | null>)
     stage.style.setProperty("--definition-scale", definitionScale.toFixed(3));
     stage.style.setProperty("--definition-opacity", definitionOpacity.toFixed(3));
 
-    // Diagnostic eyebrow visibility — fade in across Chamber B and
-    // out as we leave it. Lives at the bottom of the canvas and
-    // gives a textual context for the orbital rings.
+    // Diagnostic chamber overlay — fade in across Chamber B and out
+    // as we leave it. Two related but distinct envelopes:
+    //
+    //   --diagnostic-opacity        applies to the header copy
+    //                               (miss__title + miss__bridge).
+    //   --diagnostic-pills-opacity  applies to the 4 .miss__label pills.
+    //                               Lags the header by ~12% of chamber
+    //                               progress so the user reads the
+    //                               framing line BEFORE the pills
+    //                               acquire — mirrors the v7 miss-label
+    //                               reveal stagger.
     const pB = chamberB;
     let diagnosticOpacity = 0;
-    if (pB > 0 && pB < 0.25) diagnosticOpacity = smoothstep(0, 1, pB / 0.25);
-    else if (pB >= 0.25 && pB <= 0.85) diagnosticOpacity = 1;
-    else if (pB > 0.85) diagnosticOpacity = 1 - smoothstep(0, 1, (pB - 0.85) / 0.15);
+    if (pB > 0 && pB < 0.2) diagnosticOpacity = smoothstep(0, 1, pB / 0.2);
+    else if (pB >= 0.2 && pB <= 0.88) diagnosticOpacity = 1;
+    else if (pB > 0.88) diagnosticOpacity = 1 - smoothstep(0, 1, (pB - 0.88) / 0.12);
     stage.style.setProperty("--diagnostic-opacity", diagnosticOpacity.toFixed(3));
+
+    let pillsOpacity = 0;
+    if (pB > 0.12 && pB < 0.42) pillsOpacity = smoothstep(0, 1, (pB - 0.12) / 0.3);
+    else if (pB >= 0.42 && pB <= 0.85) pillsOpacity = 1;
+    else if (pB > 0.85) pillsOpacity = 1 - smoothstep(0, 1, (pB - 0.85) / 0.15);
+    stage.style.setProperty("--diagnostic-pills-opacity", pillsOpacity.toFixed(3));
+
+    // Intelligence-layer overlay — header (ilayer__title + lede)
+    // fades in across the FIRST half of Chamber C so it lands while
+    // the substrate morph is still mid-flight. The HUD captions on
+    // the L/R bodies are gated by `--label-opacity` written from
+    // ChamberLabels (driven by getSideBodyOpacity), so they fade in
+    // with their 3D bodies.
+    const pC = chamberC;
+    let ilayerHeaderOpacity = 0;
+    if (pC > 0 && pC < 0.35) ilayerHeaderOpacity = smoothstep(0, 1, pC / 0.35);
+    else if (pC >= 0.35) ilayerHeaderOpacity = 1;
+    stage.style.setProperty("--ilayer-header-opacity", ilayerHeaderOpacity.toFixed(3));
+
+    // Substrate readout (key/value pairs inside the morphed sphere).
+    // Lands a beat AFTER the morph completes so the user reads the
+    // brandmark transform first, then the structure of the substrate.
+    let readoutOpacity = 0;
+    if (pC > 0.55 && pC < 0.85) readoutOpacity = smoothstep(0, 1, (pC - 0.55) / 0.3);
+    else if (pC >= 0.85) readoutOpacity = 1;
+    stage.style.setProperty("--ilayer-readout-opacity", readoutOpacity.toFixed(3));
 
     // Stage active state — the canvas + painters can short-circuit
     // when the stage is fully off-screen.

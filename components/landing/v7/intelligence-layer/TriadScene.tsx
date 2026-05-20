@@ -7,6 +7,7 @@ import { CelestialBody } from "./CelestialBody";
 import { CometStream } from "./CometStream";
 import { InterSphereTrajectories } from "./InterSphereTrajectories";
 import { SubstrateMorphPoints } from "./SubstrateMorphPoints";
+import { SystemOrbits } from "./SystemOrbits";
 import { TrajectoryFlows } from "./TrajectoryFlows";
 import { pipLocalPosition } from "./celestialRingUtils";
 import {
@@ -101,6 +102,12 @@ export function TriadScene() {
 
   return (
     <group ref={groupRef}>
+      {/* System orbits — two tilted hairline ellipses centred on the
+          substrate brandmark that visibly bind Sources + Surfaces to
+          the substrate as planets on an orbital system. Painted FIRST
+          so the celestial bodies render on top, with their atmospheres
+          haloing the rim where each body sits on the primary orbit. */}
+      <SystemOrbits />
       <InterSphereTrajectories />
       <TrajectoryFlows />
       <CelestialBody

@@ -637,19 +637,11 @@
   pointer-events: none;
 }
 
-/* During the Quote cover, the original Practice diagram is the frozen
-   under-layer. The fixed travel actor is intentionally hidden so it
-   cannot keep animating above the quote (z:24); the native in-diagram
-   mark is revealed underneath the cover instead. */
-html[data-quote-active="true"] .tf-brandmark-actor {
-  opacity: 0 !important;
-}
-
-[data-quote-active="true"] .approach__orbit__mark img,
-[data-quote-active="true"] .approach__orbit__mark svg {
-  visibility: visible !important;
-  opacity: 1 !important;
-}
+/* The Practice → Quote cover handoff rules previously gated on
+   `data-quote-active` are retired now that #buildQuote moved up to
+   sit between #intelligence-layer and #continuum. #practice ends
+   naturally; there is no cover for the orbit / actor to coordinate
+   around. */
 
 .tf-brandmark-actor {
   position: fixed;
@@ -4205,6 +4197,12 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   font-style: italic;
   color: var(--gold);
   font-weight: 400;
+  /* inline-block + 100% width so the em always wraps to its own
+     line even if a future parse step strips the literal <br>
+     between "an" and the em. Belt-and-braces for the canonical
+     "The fix is an / intelligence layer." composition. */
+  display: inline-block;
+  width: 100%;
 }
 
 /* ── Lede (right column of the two-column head, Aether-style) ─────
@@ -4217,17 +4215,41 @@ html[data-quote-active="true"] .tf-brandmark-actor {
   margin: 0;
   margin-top: clamp(8px, 1vh, 14px);
   font-family: var(--font-pp-neue-montreal);
-  font-size: clamp(13px, 1vw, 15px);
-  line-height: 1.55;
+  /* Linear-scale body lede — was clamp(13px, 1vw, 15px), which read
+     as micro-print next to the bigger title rail and Linear's body
+     conventions (17px @ 1.6 line-height). Bumped to clamp(15px,
+     1.25vw, 18px) so the lede sits as a real reading-grade paragraph
+     and balances the heading visually. max-width nudged to 48ch so
+     the bigger type still breaks into two clean lines on desktop. */
+  font-size: clamp(15px, 1.25vw, 18px);
+  line-height: 1.5;
   letter-spacing: -0.005em;
   color: var(--dawn-70);
-  max-width: 42ch;
+  max-width: 48ch;
   text-wrap: pretty;
   flex: 0 1 auto;
 }
 .ilayer__lede em {
   font-style: italic;
   color: var(--dawn);
+}
+
+/* ── Bottom CTA — subtle ghost button anchored at the lower edge of
+   the section. Inherits .btn .btn--ghost tokens (border, color, hover
+   ramp, arrow micro-motion); this rule only handles positioning so
+   the button reads as a single quiet anchor below the triad without
+   competing with the chamber captions or the brandmark substrate. */
+.ilayer__cta {
+  position: absolute;
+  left: 50%;
+  bottom: clamp(48px, 7vh, 96px);
+  transform: translateX(-50%);
+  z-index: 4;
+  /* Slightly tighter scale than the default .btn so the CTA reads
+     as a quiet sign-post and never out-shouts the substrate or the
+     chamber captions. */
+  padding: 10px 18px;
+  font-size: 10px;
 }
 
 /* ── Chambers — HUD captions + constellation pips (ADR-016)
@@ -4919,6 +4941,17 @@ html[data-quote-active="true"] .tf-brandmark-actor {
        directly under the title in the stacked column. */
     margin-top: 0;
     max-width: none;
+  }
+  .ilayer__cta {
+    /* Mobile drops absolute positioning so the CTA flows naturally
+       at the bottom of the stacked column instead of clipping past
+       the section height. */
+    position: relative;
+    left: auto;
+    bottom: auto;
+    transform: none;
+    align-self: center;
+    margin-top: clamp(16px, 3vh, 32px);
   }
   .ilayer__artifact {
     /* Mobile drops the full orbital scene — the stacked chamber
@@ -7100,17 +7133,10 @@ html {
   width: 100%;
   /* Stage paints inside the .station--fullbleed void shield; no extra
      background required. Crossfades happen on the inner glyph layer
-     (opacity only) to honor v7 compositing rules.
-
-     During the final Practice → Quote handoff, useLandingScroll writes
-     `--practice-cover-translate` so this original orbit remains visually
-     pinned while the quote covers it. */
-  transform: translate3d(0, var(--practice-cover-translate, 0px), 0);
-  will-change: transform;
-  /* Layout containment isolates the sticky stage from the parent flow so
-     micro-jitter in the sticky compensation never feeds back into the
-     surrounding chamber's layout pass. Keeps the orbit visually locked
-     during the Quote cover handoff. */
+     (opacity only) to honor v7 compositing rules. The
+     `--practice-cover-translate` pin (used while #buildQuote covered
+     the pinned Practice end-state) was retired with the cover handoff;
+     the stage now relies on natural sticky positioning. */
   contain: layout;
 }
 .approach__stage__inner {
@@ -7606,10 +7632,10 @@ html {
   position: sticky;
   top: clamp(116px, 18vh, 168px);
   z-index: 2;
-  transform: translate3d(0, var(--practice-build-translate, 0px), 0);
-  will-change: transform;
-  /* Same containment as .approach__stage — see comment above. The Build
-     phase pins through the Quote cover runway and must not jitter. */
+  /* The `--practice-build-translate` pin (used while #buildQuote
+     covered the pinned Practice end-state) was retired with the
+     cover handoff; the Build phase now relies on natural sticky
+     positioning. */
   contain: layout;
 }
 
@@ -8893,9 +8919,9 @@ html {
   min-height: 0;
   z-index: 3;
   background: var(--void);
-  /* No content-visibility: auto — the section needs real 100vh geometry
-     so the `useLandingScroll` --practice-cover scalar (driven by this
-     element's top edge) reads correctly through the cover handoff. */
+  /* No content-visibility: auto — the section needs real 100vh
+     geometry so the .gateway radial / brandmark stack composites
+     correctly under the build-quote panel. */
   content-visibility: visible;
   contain-intrinsic-size: auto;
   /* Promote to its own composite layer so the underlying Practice

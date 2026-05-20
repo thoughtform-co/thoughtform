@@ -96,6 +96,19 @@ export function TravelingOrbits({ rootRef }: TravelingOrbitsProps) {
       const store = useBrandmarkJourneyStore.getState();
       const t = store.transform;
 
+      // Engagement freeze (ADR diag-stability). When `#missing-layer`
+      // is the dominant section in the viewport AND the brandmark is
+      // parked at miss, hold the last computed transform instead of
+      // chasing `getBoundingClientRect()` every scroll tick. Without
+      // this the painter's centre and the brandmark vector glyph
+      // walked by ~0.5px per tick between the two readers, which
+      // read as a perceptible wobble while the user was settled on
+      // the diagnostic copy. Flag is set/cleared by
+      // `useDiagnosticPillOrbits` via IntersectionObserver.
+      if (root.hasAttribute("data-miss-engaged") && t.parkedAt === "miss" && lastVisible === true) {
+        return;
+      }
+
       const sigilEl = root.querySelector<HTMLElement>(".sigil__mark");
       const missEl = root.querySelector<HTMLElement>("#missing-layer .miss__brand-slot");
       const definitionEl = root.querySelector<HTMLElement>("#definition");

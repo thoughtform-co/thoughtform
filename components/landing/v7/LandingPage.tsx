@@ -41,7 +41,7 @@ export function LandingPage({ bodyHtml, bodyClass, celestialSlots }: LandingPage
   // animation (orbits, halo, cap, legend, tri-left) — a separate
   // concern from the brandmark journey.
   useBrandmarkJourney(rootRef, brandmarkActorRef);
-  useDiagnosticPillOrbits();
+  useDiagnosticPillOrbits(rootRef);
   useSigilEntranceScrub(rootRef);
   // Dev-only invariant guard: warns in the console whenever more
   // than one brandmark instance is painting at the same scroll
