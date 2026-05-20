@@ -672,15 +672,20 @@ function readUnscaledSigilRect(el: HTMLElement | null): DOMRect | null {
  *  neighbouring keyframes (it always should be in our 5-keyframe
  *  layout — defensive).
  *
- *  `ctx` is optional but, when provided, lets the function clamp
- *  `exitY` to the bottom of `#intelligence-layer` in scroll-Y. That
- *  matters because the next centre (`rail` in `#continuum`) now sits
- *  past the `#buildQuote` interstitial; without the clamp, the
- *  substrate window's `parkFracOut` lerps into / past the build-
- *  quote, leaving the spheres + brandmark mid-morph as the cover
- *  rises. The clamp guarantees the substrate window closes inside
- *  intelligence-layer so the spheres finish their full emerge → hold
- *  → retract cycle BEFORE the user reaches the interstitial. */
+ *  `ctx` is optional but, when provided, retargets the progress
+ *  window to the visual boundary where the next section FIRST peeks
+ *  into the viewport (`#intelligence-layer` bottom reaches viewport
+ *  bottom). That is the user's perceived end of the intelligence
+ *  section. At that boundary, the substrate sphere must already be
+ *  in its stable formed state — not still morphing in.
+ *
+ *  Important: `exitY` is NOT clamped to that boundary. The progress
+ *  window is shortened just enough that the boundary lands at a
+ *  stable mid-window progress value (`SUBSTRATE_STABLE_AT_NEXT_PEEK`).
+ *  This keeps the sphere fully formed when #buildQuote starts peeking,
+ *  then lets the retract phase happen later behind the opaque
+ *  interstitial instead of visibly inside the intelligence-layer read
+ *  beat. */
 export function computeSubstrateRange(
   keyframes: readonly BrandmarkKeyframe[],
   centres: readonly number[],
@@ -700,11 +705,14 @@ export function computeSubstrateRange(
   if (ctx?.intelligenceEl && typeof window !== "undefined") {
     const rect = ctx.intelligenceEl.getBoundingClientRect();
     if (rect.height > 0) {
-      const sectionBottomY = window.scrollY + rect.bottom;
-      // Keep at least a minimum span so progress math stays well-
-      // defined; clamp to the section bottom otherwise.
-      const minSpan = Math.max(1, subC - engageY);
-      exitY = Math.max(subC + minSpan * 0.05, Math.min(exitY, sectionBottomY));
+      const nextPeekY = window.scrollY + rect.bottom - window.innerHeight;
+      if (nextPeekY > engageY) {
+        // `substrateMorphProgress` is fully formed once progress is
+        // >= SUBSTRATE_MORPH_FRAC (0.35). Aim higher (0.55) so the
+        // boundary has a real hold beat, not a just-finished frame.
+        const SUBSTRATE_STABLE_AT_NEXT_PEEK = 0.55;
+        exitY = Math.min(exitY, engageY + (nextPeekY - engageY) / SUBSTRATE_STABLE_AT_NEXT_PEEK);
+      }
     }
   }
 
@@ -849,11 +857,10 @@ export function computeBrandmarkTransform(
   const vh = window.innerHeight;
 
   // === Substrate window (drives R3F ring channels uniformly) ===
-  // `ctx` is passed so the range can clamp `exitY` to the bottom of
-  // `#intelligence-layer`. With the Feynman / Evans build-quote now
-  // sitting between intelligence-layer and continuum, an unclamped
-  // window would extend through the cover and leave the spheres
-  // mid-morph as the user reads the axiom.
+  // `ctx` is passed so the range can align the stable substrate
+  // window with the moment #buildQuote first peeks into the viewport.
+  // At that boundary the sphere should already be fully formed; the
+  // retract phase can happen later behind the opaque interstitial.
   const subRange = computeSubstrateRange(keyframes, c, ctx);
   const inSubWindow = subRange != null && scrollY >= subRange.engageY && scrollY <= subRange.exitY;
   let substrateLocalProgress = 0;
