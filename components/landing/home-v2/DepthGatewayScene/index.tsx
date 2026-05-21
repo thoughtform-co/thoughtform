@@ -6,28 +6,33 @@ import { probeWebGL } from "@/lib/webgl/probe";
 import { BrandmarkPointCloud } from "./BrandmarkPointCloud";
 import { IntelligenceChamber } from "./chambers/IntelligenceChamber";
 import { FlyingCameraRig } from "./FlyingCameraRig";
-import { StreamingDust } from "./StreamingDust";
-import { CAMERA_FOV, CAMERA_LOOK_AT, CAMERA_START } from "./sceneGeom";
+import { GatewayWorld } from "./gates/GatewayWorld";
+import { ScrollStreaks } from "./ScrollStreaks";
+import { StaticStarfield } from "./StaticStarfield";
+import { CAMERA_FOV, CAMERA_START, getCameraLookAt } from "./sceneGeom";
 
 /**
- * DepthGatewayScene — shared R3F canvas for the home-v2 sticky stage.
+ * DepthGatewayScene — shared R3F canvas for the home-v2 depth
+ * corridor (ADR-018).
  *
- * Lean composition. The orbital constellation, sigil compass, and
- * HUD chamber captions come from the v7 markup (DOM siblings of this
- * canvas), so they're NOT in the R3F tree.
+ * Scene composition (paint order, near → far):
  *
- *   - FlyingCameraRig: forward Z dolly across stage progress (z=8 → z=3).
- *   - StreamingDust: ambient particle field flowing far-Z → near-Z.
- *     Provides the "traveling through space" signal regardless of
- *     which chamber is active. Velocity-reactive — flow speeds up
- *     when the user is actively scrolling.
- *   - BrandmarkPointCloud: persistent traveling artifact. Lerps
- *     between two world stations (A → B) so the brandmark moves
- *     smoothly through scene space instead of teleporting between
- *     DOM dock positions. Shape morph from sigil → Fibonacci sphere
- *     during chamber C.
- *   - IntelligenceChamber: L/R celestial bodies (Trusted Sources +
- *     Headless Surfaces). Fade in during chamber C only.
+ *   - StaticStarfield  : non-animated background stars
+ *   - ScrollStreaks    : near-camera streaks driven by scroll velocity
+ *                         (invisible when idle)
+ *   - GatewayWorld     : world-space diagram gates (Thoughtform,
+ *                         Diagnostic, Interstitial). Each gate paints
+ *                         at its station Z and fades in/out via its
+ *                         own visibility envelope.
+ *   - BrandmarkPointCloud : substrate-morph cover during the
+ *                         intelligence beat only (covers the cut from
+ *                         the projected vector actor to the sphere).
+ *   - IntelligenceChamber : L/R side bodies, fade in during the
+ *                         intelligence beat.
+ *
+ * The PRIMARY brandmark painter is the DOM-side
+ * `ProjectedBrandmarkActor` (`components/landing/home-v2/
+ * ProjectedBrandmarkActor.tsx`), NOT a member of this canvas.
  *
  * Probes WebGL on mount; renders nothing if unavailable or
  * prefers-reduced-motion is set (the page paints its own fallback).
@@ -48,6 +53,8 @@ export function DepthGatewayScene() {
   if (webglOK === null) return null;
   if (!webglOK || reducedMotion) return null;
 
+  const [lx, ly, lz] = getCameraLookAt(0);
+
   return (
     <Canvas
       className="home-v2-stage__canvas-inner"
@@ -58,7 +65,7 @@ export function DepthGatewayScene() {
         position: CAMERA_START,
       }}
       onCreated={({ camera }) => {
-        camera.lookAt(CAMERA_LOOK_AT[0], CAMERA_LOOK_AT[1], CAMERA_LOOK_AT[2]);
+        camera.lookAt(lx, ly, lz);
       }}
       dpr={[1, 1.75]}
       gl={{
@@ -77,10 +84,9 @@ export function DepthGatewayScene() {
       }}
     >
       <FlyingCameraRig />
-      {/* StreamingDust paints behind the brandmark + L/R bodies —
-          provides the constant z-axis travel signal even when
-          chamber content is static. */}
-      <StreamingDust />
+      <StaticStarfield />
+      <ScrollStreaks />
+      <GatewayWorld />
       <BrandmarkPointCloud />
       <IntelligenceChamber />
     </Canvas>

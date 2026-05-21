@@ -39,6 +39,7 @@ Write an ADR when you:
 | 008 | [Landing v7 Background Layers](008-landing-v7-background-layers.md)     | Accepted | 2026-04 |
 | 009 | [Repo Structure Conventions](009-repo-structure-conventions.md)         | Accepted | 2025+   |
 | 010 | [Brandmark Choreography](010-brandmark-choreography.md)                 | Accepted | 2026-04 |
+| 018 | [Home V2 Depth Corridor](018-home-v2-depth-corridor.md)                 | Proposed | 2026-05 |
 
 ---
 

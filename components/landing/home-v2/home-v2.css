@@ -1,29 +1,25 @@
 /*
- * home-v2.css — styles for the /test/home-v2 depth-gateway experiment.
+ * home-v2.css — styles for /test/home-v2 (ADR-018 depth corridor).
  *
- * This file is intentionally LEAN. The chamber visual register
- * (sigil compass, missing-layer orbits, intelligence-layer chambers)
- * comes from `landing.css` via the v7 markup sliced into the page.
- * home-v2.css adds only:
+ * The page is composed of three layers:
  *
- *   1. Hero / stage / tail layout (sticky depth stage geometry).
- *   2. Chamber stacking (3 v7 sections in the same viewport rect
- *      via CSS grid `grid-area: stack`).
- *   3. Per-chamber cross-fade gating driven by --chamber-{A,B,C}
- *      -section-opacity vars written by useDepthScroll.
- *   4. Section height overrides so v7's 128dvh-tall .ilayer fits
- *      inside our 100svh sticky window.
- *   5. Force-reveal safety net for [data-m] reveal motion (JS
- *      adds .is-in too; this is the fallback so nothing flashes
- *      hidden if a useEffect tick is missed).
- *   6. Hide the v7 #intelligence-layer static SVG fallback + R3F
- *      mount slot (our home-v2 canvas owns the 3D content here).
- *
- * Layer order in the sticky:
- *   z 1 — chamber sections (.home-v2-section, opaque void shields)
- *   z 5 — R3F canvas (transparent except where the brandmark cloud
- *          + L/R bodies paint)
+ *   z 0 — fixed v7 gateway gradient + HUD rails (from sliced HUD)
+ *   z 1 — sticky hero (video)
+ *   z 2 — home-v2-section copy overlays (titles, ledes, label pills)
+ *         These shield the gateway gradient + hero video below.
+ *   z 5 — R3F canvas (transparent — paints world-space gates,
+ *         stars, streaks, substrate sphere cover)
  *   z 6 — debug HUD
+ *  z 24 — ProjectedBrandmarkActor (fixed; composited above canvas)
+ *
+ * In `[data-home-v2-mode="corridor"]` the v7 SVG diagram geometry
+ * inside the chamber sections is HIDDEN — the same shapes are
+ * rendered by R3F at world Z. We keep titles, ledes, pills, and
+ * chamber captions visible so the copy still reads.
+ *
+ * In `[data-home-v2-mode="fallback"]` (no WebGL / reduced motion),
+ * the SVG geometry paints normally so the route degrades to the
+ * legacy stacked-cross-fade view.
  */
 
 .home-v2-root {
@@ -43,10 +39,7 @@
 /* ── v7 HUD chrome container ─────────────────────────────────
    The injected HTML contains `.gateway` and `.hud` which are
    `position: fixed` in landing.css. The wrapper is just a mount
-   node — do NOT use `contain: layout` here: containment creates
-   a new containing block for fixed-positioned descendants, which
-   would scope the HUD rails to this wrapper instead of the
-   viewport. */
+   node — do NOT use `contain: layout` here. */
 .home-v2-hud-root {
   display: contents;
 }
@@ -55,16 +48,23 @@
 .home-v2-stage {
   position: relative;
   width: 100%;
-  /* 300svh = three chambers; each ~one viewport of scroll length */
+  /* 300svh = the corridor scroll length. Each beat covers a
+     fraction of this — see BEAT_WINDOWS in depthGatewayStore.ts. */
   height: 300svh;
   background: var(--void, #050403);
   z-index: 2;
   isolation: isolate;
   /* Defaults for the CSS vars useDepthScroll updates per frame.
-     MUST live on this element (the one the hook writes to) — if
-     they were declared on a child, the cascade would block the
-     inherited value from the hook. */
+     MUST live on this element. */
   --depth-progress: 0;
+  --camera-t: 0;
+  --beat-gate-progress: 0;
+  --beat-thoughtform-active: 1;
+  --beat-passthrough-01-active: 0;
+  --beat-diagnostic-active: 0;
+  --beat-passthrough-02-active: 0;
+  --beat-intelligence-active: 0;
+  --velocity-mag: 0;
   --chamber-a-progress: 0;
   --chamber-b-progress: 0;
   --chamber-c-progress: 0;
@@ -79,50 +79,31 @@
   width: 100%;
   height: 100svh;
   overflow: hidden;
-  /* CSS grid stacking so each .home-v2-section sits in the same
-     viewport rect without absolute positioning. This inherits the
-     v7 `.stations` horizontal padding via the section's own
-     `--hud-content-inset` reads. */
   display: grid;
   grid-template-areas: "stack";
   grid-template-rows: 1fr;
   grid-template-columns: 1fr;
 }
 
-/* Each sliced section sits in the same grid cell. Opacity gated
-   by chamber progress (see useDepthScroll). */
+/* Each sliced section sits in the same grid cell. Copy fades
+   driven by chamber section opacity (computed in useDepthScroll
+   from beat membership). */
 .home-v2-section {
   grid-area: stack;
   position: relative;
   width: 100%;
   height: 100%;
-  /* v7 stations expect `<main class="stations">` padding (hud
-     content inset). Apply it here so .station inner content sits
-     inside the HUD rails. */
   padding: 0 var(--hud-content-inset, clamp(80px, 8vw, 160px));
-  /* Short linear transition so the chamber dead-band between
-     sections (e.g. progress 0.35..0.36) reads as a crisp gap
-     where only brandmark + dust + HUD remain. useDepthScroll
-     already smoothstep's the opacity value across the boundary
-     ramps, so a long CSS transition would just lag the scroll. */
   transition: opacity 80ms linear;
 }
 
 .home-v2-section[data-chamber="A"] {
   opacity: var(--chamber-A-section-opacity, 1);
-  /* Stack ordering: chamber A on bottom of the stack so chambers
-     B and C composite over it during their windows. */
   z-index: 1;
 }
 .home-v2-section[data-chamber="B"] {
   opacity: var(--chamber-B-section-opacity, 0);
   z-index: 2;
-  /* v7's #missing-layer constellation orbits + anchor pips + pill
-     labels are gated by --miss-orbit-emerge / --miss-anchor-emerge
-     / --miss-label-emerge CSS vars that production drives from
-     `useBrandmarkJourney`. We don't run that hook on v2 — pin all
-     three to 1 so the constellation is fully revealed whenever
-     chamber B is up. */
   --miss-orbit-emerge: 1;
   --miss-anchor-emerge: 1;
   --miss-label-emerge: 1;
@@ -130,10 +111,6 @@
 .home-v2-section[data-chamber="C"] {
   opacity: var(--chamber-C-section-opacity, 0);
   z-index: 3;
-  /* v7's #intelligence-layer chamber captions + substrate readout
-     are gated by --ilayer-progress (production drives this from
-     ringProgress in the brandmark journey). Pin to 1 so chambers
-     + readout are visible whenever chamber C is up. */
   --ilayer-progress: 1;
 }
 
@@ -144,9 +121,6 @@
 .home-v2-stage .station {
   min-height: 100%;
   height: 100%;
-  /* Compress the section padding so head + body fit inside 100svh.
-     v7 normal is 140/220; halve it for the depth-gateway flow
-     where each chamber is one viewport of scroll. */
   padding: clamp(80px, 10vh, 120px) 0 clamp(60px, 8vh, 100px);
 }
 
@@ -159,10 +133,7 @@
 /* ── Force-reveal [data-m] elements ──────────────────────────
    The v7 production path wires `useRevealMotion` (IO observer
    adding .is-in). We skip that hook on v2 because chambers
-   stack/cross-fade rather than entering the viewport sequentially.
-   The HomeV2Page useEffect adds .is-in on mount; this CSS rule
-   is a safety net so nothing flashes at its hidden start state
-   if the JS tick is delayed (e.g. Fast Refresh). */
+   stack/cross-fade. Force the reveal so the copy is visible. */
 .home-v2-stage [data-m]:not(.is-in),
 .home-v2-stage [data-m-group]:not(.is-in) {
   opacity: 1 !important;
@@ -171,11 +142,7 @@
   filter: none !important;
 }
 
-/* ── Hide v7 #intelligence-layer production-only elements ────
-   The R3F portal mount slot (`[data-ilayer-stack-root]`) is left
-   empty because we don't mount IntelligenceLayerPortal on v2.
-   The static fallback SVG would paint by default since we don't
-   set `data-ilayer-mode` — hide it explicitly. */
+/* ── Hide v7 #intelligence-layer production-only elements ──── */
 .home-v2-stage .ilayer__stack__canvas,
 .home-v2-stage .ilayer__triad__canvas {
   display: none !important;
@@ -185,7 +152,59 @@
   display: none !important;
 }
 
-/* ── R3F canvas — paints brandmark cloud + L/R bodies ─────── */
+/* ════════════════════════════════════════════════════════════════
+   CORRIDOR MODE — hide DOM diagram geometry; R3F owns those
+   shapes in world space (ADR-018 Principle 1).
+   ════════════════════════════════════════════════════════════════ */
+
+/* Thoughtform / Definition section — hide the inline sigil compass
+   SVG. Keep the .tri__left copy block + heading. The brandmark
+   itself is painted by ProjectedBrandmarkActor on top. */
+[data-home-v2-mode="corridor"] .home-v2-stage .sigil__orbits,
+[data-home-v2-mode="corridor"] .home-v2-stage .sigil__cap,
+[data-home-v2-mode="corridor"] .home-v2-stage .sigil__legend,
+[data-home-v2-mode="corridor"] .home-v2-stage .sigil__mark > :where(img, svg) {
+  display: none !important;
+}
+/* Keep the .sigil__mark slot itself so the layout doesn't reflow,
+   but pin it to no size so the projected actor owns the brand
+   position. */
+[data-home-v2-mode="corridor"] .home-v2-stage .sigil__mark {
+  background: transparent !important;
+  filter: none !important;
+  pointer-events: none;
+}
+[data-home-v2-mode="corridor"] .home-v2-stage .sigil__mark::before {
+  display: none !important;
+}
+
+/* Diagnostic / Missing-layer section — hide the orbital SVG +
+   particles + halo + native brandmark slot. Keep heading + bridge
+   + label pills (positioned via inline --x-pct / --y-pct CSS
+   variables — those layout off the section, not the SVG). */
+[data-home-v2-mode="corridor"] .home-v2-stage .miss__orbits,
+[data-home-v2-mode="corridor"] .home-v2-stage .miss__brand-halo,
+[data-home-v2-mode="corridor"] .home-v2-stage .miss__brand-slot > :where(img, svg) {
+  display: none !important;
+}
+[data-home-v2-mode="corridor"] .home-v2-stage .miss__brand-slot {
+  background: transparent !important;
+  pointer-events: none;
+}
+
+/* Intelligence-layer section — hide the substrate SVG dock glyph
+   so the projected actor owns the centre. The R3F substrate sphere
+   covers it during the morph window. */
+[data-home-v2-mode="corridor"] .home-v2-stage .ilayer__brandmark-anchor > :where(img, svg) {
+  display: none !important;
+}
+[data-home-v2-mode="corridor"] .home-v2-stage .ilayer__brandmark-anchor {
+  background: transparent !important;
+  pointer-events: none;
+}
+
+/* ── R3F canvas — paints world-space gates BELOW the projected
+   actor, BELOW the DOM copy. Sits inside the sticky cell. */
 .home-v2-stage__canvas {
   grid-area: stack;
   position: relative;
@@ -225,6 +244,20 @@
 .home-v2-stage__hud-progress {
   color: var(--gold, #caa554);
   font-size: 14px;
+}
+
+/* ── Projected brandmark actor ───────────────────────────────
+   Fixed shell positioned by ProjectedBrandmarkActor.tsx. The
+   actor writes inline left/top/width/height each rAF; CSS here
+   just guarantees the layer order + that the glyph paints crisp. */
+.home-v2-projected-brandmark {
+  /* Above the canvas, below any future modal HUD. */
+  z-index: 24;
+}
+.home-v2-projected-brandmark svg {
+  width: 100%;
+  height: 100%;
+  display: block;
 }
 
 /* ── Tail sections (normal scroll, placeholder) ──────────────── */
@@ -278,8 +311,7 @@
 
 .home-v2-stage[data-fallback="true"] .home-v2-section[data-chamber] {
   /* In fallback mode we DON'T stack — let sections render at full
-     opacity, scrolling naturally. The sticky window still pins
-     them but the user can scroll through. */
+     opacity, scrolling naturally. */
   opacity: 1 !important;
 }
 

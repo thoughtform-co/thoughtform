@@ -5,6 +5,7 @@ import { probeWebGL } from "@/lib/webgl/probe";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import { DepthGatewayScene } from "./DepthGatewayScene";
 import { useDepthScroll } from "./hooks/useDepthScroll";
+import { ProjectedBrandmarkActor } from "./ProjectedBrandmarkActor";
 
 interface HomeV2PageProps {
   /** v7 HUD chrome HTML (gateway, hud rails, nav, status). Fed by
@@ -26,21 +27,25 @@ const CHAMBER_BY_SECTION_ID: Record<string, "A" | "B" | "C"> = {
 };
 
 /**
- * HomeV2Page — depth-gateway composition with v7 visual fidelity.
+ * HomeV2Page — depth-corridor composition (ADR-018).
  *
- * Renders three v7 station sections (definition / missing-layer /
- * intelligence-layer) stacked inside the sticky depth stage. Each
- * section is the verbatim v7 markup (sigil compass, miss orbital
- * SVG, ilayer chamber captions) so the on-screen composition reads
- * identically to production at each chamber's resting state.
- * Cross-fade per chamber driven by useDepthScroll's section
- * opacity vars.
+ * Mounts three v7 station sections (definition / missing-layer /
+ * intelligence-layer) stacked inside the sticky depth stage. The
+ * sections now contribute COPY ONLY — titles, ledes, label pills,
+ * chamber captions. The diagram visuals (sigil compass, miss
+ * orbital SVG, ilayer triad SVG) are hidden in corridor mode via
+ * a `[data-home-v2-mode="corridor"]` CSS gate; their geometry is
+ * rendered by the R3F `GatewayWorld` instead, in world space, so
+ * the camera can approach + pass each gate.
  *
- * The R3F canvas paints the brandmark cloud at the ACTIVE chamber's
- * brandmark dock element (`.sigil__mark` → `.miss__brand-slot` →
- * `.ilayer__brandmark-anchor`) via DOM un-projection. Cloud size
- * matches the dock's natural CSS dimensions pixel-for-pixel — same
- * primitive `SubstrateMorphPoints` uses on production.
+ * The PRIMARY brandmark painter is the
+ * `ProjectedBrandmarkActor` — a `position: fixed` inline SVG mark
+ * whose viewport rect is computed each frame from the brandmark's
+ * world position projected through the same camera path used by
+ * the R3F scene. During the intelligence beat's substrate morph
+ * the actor cuts off (`display: none`) and the `BrandmarkPointCloud`
+ * covers the same silhouette before morphing to the Fibonacci
+ * sphere (ADR-017 substrate-cut pattern).
  *
  * The v7 HUD chrome is mounted once at page root (position: fixed
  * elements from the prototype) so rails + depth ticks + wordmark
@@ -112,9 +117,15 @@ export function HomeV2Page({ hudHtml, sections, bodyClass }: HomeV2PageProps) {
   }, [sections]);
 
   const fallback = webglOK === false || reducedMotion;
+  const mode = fallback ? "fallback" : "corridor";
 
   return (
-    <div ref={rootRef} className={`home-v2-root ${bodyClass}`} data-theme="dark">
+    <div
+      ref={rootRef}
+      className={`home-v2-root ${bodyClass}`}
+      data-theme="dark"
+      data-home-v2-mode={mode}
+    >
       {/* v7 HUD chrome — .gateway + .hud rails + .hud__nav. All of
           this is `position: fixed` in landing.css so it lives at
           viewport regardless of where we mount it. */}
@@ -180,9 +191,12 @@ export function HomeV2Page({ hudHtml, sections, bodyClass }: HomeV2PageProps) {
             );
           })}
 
-          {/* R3F canvas — sits ABOVE the chamber sections so the
-              brandmark cloud paints at the dock screen positions
-              regardless of the chamber's opaque void shield. */}
+          {/* R3F canvas — paints the depth-corridor world (static
+              stars, scroll streaks, world-space diagram gates, and
+              the substrate-morph cover) BEHIND the chamber copy
+              layers. The brandmark itself is painted by the DOM-side
+              ProjectedBrandmarkActor mounted at page root, so it
+              composites above the canvas without z-index gymnastics. */}
           <div className="home-v2-stage__canvas">
             <DepthGatewayScene />
           </div>
@@ -203,6 +217,13 @@ export function HomeV2Page({ hudHtml, sections, bodyClass }: HomeV2PageProps) {
           )}
         </div>
       </div>
+
+      {/* Projected vector brandmark — primary brandmark painter for
+          the corridor (ADR-018). Mounted at page root so its
+          `position: fixed` shell sits above the R3F canvas and the
+          chamber DOM. Renders nothing during the substrate-morph
+          window — the R3F point cloud covers the silhouette then. */}
+      {!fallback && <ProjectedBrandmarkActor />}
 
       {/* ═══ TAIL (normal scroll, placeholder) ═══ */}
       <div className="home-v2-tail">

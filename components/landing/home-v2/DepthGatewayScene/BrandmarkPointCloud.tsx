@@ -7,58 +7,48 @@ import { sampleShape } from "@/lib/brandmark/sampleShape";
 import { BRANDMARK_FULL_PATHS, BRANDMARK_SHAPE_KEYS } from "@/lib/brandmark/shapes";
 import { buildSphereCloudGeometry } from "@/components/landing/v7/intelligence-layer/celestialRingUtils";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
-import {
-  getBrandmarkWorldHalfSize,
-  getBrandmarkWorldPosition,
-  getSubstrateMorph,
-} from "./sceneGeom";
+import { BRANDMARK_ANCHOR_INTELLIGENCE, getSubstrateMorph } from "./sceneGeom";
 import { brandmarkCloudVertex, brandmarkCloudFragment } from "./shaders/brandmarkCloud";
 
-/** Brandmark SVG viewBox — must match `public/logos/Thoughtform_Brandmark.svg`. */
+/**
+ * BrandmarkPointCloud — substrate morph cover for the home-v2
+ * depth corridor (ADR-018, mirrors ADR-017's substrate-cut pattern).
+ *
+ * Repurposed from the previous "primary brandmark painter" model.
+ * The projected vector actor (`ProjectedBrandmarkActor`) owns the
+ * crisp brandmark shape throughout the corridor — except during
+ * the intelligence beat's substrate morph window, when this point
+ * cloud paints the same brandmark silhouette at the same world
+ * position and then morphs into the Fibonacci substrate sphere.
+ *
+ * The cloud is INVISIBLE outside the intelligence beat. Inside it,
+ * the cloud:
+ *
+ *   1. Spawns at the brandmark anchor world position, in the
+ *      brandmark shape, at the same on-screen size as the
+ *      projected vector actor was at when it cut off.
+ *   2. Morphs continuously into a Fibonacci sphere as
+ *      `getSubstrateMorph(intelligenceGate)` ramps 0 → 1.
+ *   3. Holds the sphere through the read beat.
+ *   4. Collapses back into the brandmark shape on the way out.
+ *
+ * The vector actor reads the same morph channel and CSS-cuts to
+ * `display: none` whenever the morph is non-zero — the user sees
+ * a single continuous artifact.
+ */
+
 const BRANDMARK_VIEWBOX = { x: 0, y: 0, width: 430.99, height: 436 } as const;
-
-/** Total point count. Matches the production substrate cloud (1900)
- *  so the morph from brandmark → sphere reads at the same density
- *  as the production triad. */
 const POINT_COUNT = 1900;
-
-/** Sphere radius as a multiplier on the brandmark half-size at the
- *  current station. < 1 keeps the morphed sphere inside the
- *  brandmark plate's footprint while preserving enough girth to
- *  read as a 3D shell. */
 const SPHERE_TO_HALF_RATIO = 0.55;
 
 const GOLD_BODY = new THREE.Color("#caa554");
 const GOLD_RIM = new THREE.Color("#e9c97a");
 
-/**
- * BrandmarkPointCloud — one persistent point cloud that lives in
- * the scene for all three chambers of the home-v2 depth gateway.
- *
- * STABLE TRAVELING ARTIFACT MODEL (revised). The cloud no longer
- * un-projects DOM dock rects — it sits at a world-space station
- * and the camera dollies toward it across stage progress. Two
- * stations:
- *
- *   - Station A (chamber A — Definition): off-centre right, matches
- *     v7 `.sigil__mark` placement inside the .tri compass diagram.
- *   - Station B (chambers B + C — Diagnostic / Intelligence):
- *     viewport centre, matches v7 `.miss__brand-slot` and
- *     `.ilayer__brandmark-anchor` placement.
- *
- * Cloud world position lerps smoothly from A → B across the
- * sequenced chamber dead-band (progress 0.30..0.50) so the
- * brandmark visibly TRAVELS between stations during the
- * cross-fade, rather than teleporting via DOM dock changes.
- *
- * The cloud is visible CONTINUOUSLY from chamber A entry through
- * chamber C end — no fade between sections. As the camera dollies
- * forward (z=8 → z=3), the cloud naturally grows on screen,
- * conveying "we are approaching the artifact" travel motion.
- *
- * Shape morph (sigil → Fibonacci sphere) gated by chamber C
- * progress only.
- */
+/** Local-space half-size of the brandmark plate. Tuned so the
+ *  projected on-screen size at the intelligence anchor matches the
+ *  v7 `.ilayer__brandmark-anchor` ring. */
+const BRANDMARK_LOCAL_HALF = 1.0;
+
 export function BrandmarkPointCloud() {
   const groupRef = useRef<THREE.Group>(null);
 
@@ -106,7 +96,6 @@ export function BrandmarkPointCloud() {
     return geom;
   }, []);
 
-  // ── Material with the shape-morph shader ─────────────────────
   const material = useMemo(() => {
     return new THREE.ShaderMaterial({
       vertexShader: brandmarkCloudVertex,
@@ -115,10 +104,12 @@ export function BrandmarkPointCloud() {
         uTime: { value: 0 },
         uPointSize: { value: 6.0 },
         uPixelRatio: { value: typeof window !== "undefined" ? window.devicePixelRatio : 1 },
-        uPresence: { value: 1 },
+        uPresence: { value: 0 },
         uShapeMorph: { value: 0 },
-        uBrandmarkSize: { value: new THREE.Vector2(1.1, 1.1) },
-        uSphereRadius: { value: 0.6 },
+        uBrandmarkSize: {
+          value: new THREE.Vector2(BRANDMARK_LOCAL_HALF * 2, BRANDMARK_LOCAL_HALF * 2),
+        },
+        uSphereRadius: { value: BRANDMARK_LOCAL_HALF * SPHERE_TO_HALF_RATIO },
         uColor: { value: GOLD_BODY.clone() },
         uRimColor: { value: GOLD_RIM.clone() },
         uOpacity: { value: 0.95 },
@@ -136,13 +127,12 @@ export function BrandmarkPointCloud() {
     };
   }, [material, geometry]);
 
-  // ── Per-frame: position + size + morph ───────────────────────
   useFrame((state) => {
     const group = groupRef.current;
     if (!group) return;
 
     const transform = useDepthGatewayStore.getState().transform;
-    const { progress, chamberC, active } = transform;
+    const { active, beat, gateProgress } = transform;
 
     material.uniforms.uTime.value = state.clock.elapsedTime;
     material.uniforms.uPixelRatio.value = state.viewport.dpr;
@@ -151,33 +141,40 @@ export function BrandmarkPointCloud() {
       group.visible = false;
       return;
     }
+
+    // Only paint during the intelligence beat.
+    if (beat !== "intelligence") {
+      group.visible = false;
+      material.uniforms.uPresence.value = 0;
+      return;
+    }
+
     group.visible = true;
 
-    // Position group at the interpolated station — A → B across
-    // the cross-station glide window.
-    const [px, py, pz] = getBrandmarkWorldPosition(progress);
-    group.position.set(px, py, pz);
+    // Pin at the intelligence world anchor (same position the
+    // projected vector actor was painting at the moment it cut off).
+    group.position.set(
+      BRANDMARK_ANCHOR_INTELLIGENCE[0],
+      BRANDMARK_ANCHOR_INTELLIGENCE[1],
+      BRANDMARK_ANCHOR_INTELLIGENCE[2]
+    );
 
-    // Brandmark plate world half-size (XY extent). The shader's
-    // `aHomeBrandmark` lives in [-0.5, 0.5]; multiplying by 2×halfSize
-    // expands the local range to [-halfSize, +halfSize] in world units.
-    const halfSize = getBrandmarkWorldHalfSize(progress);
-    const sz = material.uniforms.uBrandmarkSize.value as THREE.Vector2;
-    sz.set(halfSize * 2, halfSize * 2);
+    // Shape morph: brandmark → Fibonacci sphere → brandmark.
+    const morph = getSubstrateMorph(gateProgress);
+    material.uniforms.uShapeMorph.value = morph;
 
-    // Sphere radius keyed off the current station's brandmark
-    // half-size so the morphed substrate sphere sits inside the
-    // plate's apparent footprint.
-    material.uniforms.uSphereRadius.value = halfSize * SPHERE_TO_HALF_RATIO;
-
-    // Shape morph: sigil → Fibonacci sphere across chamber C.
-    material.uniforms.uShapeMorph.value = getSubstrateMorph(chamberC);
+    // Presence ramps to 1 as soon as the substrate morph engages,
+    // matching the vector actor's cut threshold. Outside the morph
+    // window the cloud is invisible so the vector mark owns the
+    // visible artefact.
+    const presence = morph > 0.001 ? 1 : 0;
+    material.uniforms.uPresence.value = presence;
   });
 
   if (!geometry) return null;
 
   return (
-    <group ref={groupRef}>
+    <group ref={groupRef} visible={false}>
       <points geometry={geometry} material={material} frustumCulled={false} />
     </group>
   );
