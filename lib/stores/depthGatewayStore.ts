@@ -34,6 +34,13 @@ export interface DepthGatewayTransform {
   /** True while the sticky stage is engaged with the viewport. Used
    *  to pause work when the scene is offscreen. */
   active: boolean;
+  /** Per-frame scroll velocity in "progress units per second" — the
+   *  rate of change of `progress` measured at the last rAF tick.
+   *  Positive when scrolling forward through the stage, negative
+   *  on upward scroll, zero when idle. Used by StreamingDust to
+   *  amplify particle flow during active scroll so the travel
+   *  motion intensifies when the user is moving. */
+  velocity: number;
 }
 
 export const INITIAL_TRANSFORM: DepthGatewayTransform = {
@@ -43,6 +50,7 @@ export const INITIAL_TRANSFORM: DepthGatewayTransform = {
   chamberB: 0,
   chamberC: 0,
   active: false,
+  velocity: 0,
 };
 
 interface DepthGatewayState {
@@ -68,7 +76,8 @@ function transformEquals(a: DepthGatewayTransform, b: DepthGatewayTransform): bo
     a.chamberA === b.chamberA &&
     a.chamberB === b.chamberB &&
     a.chamberC === b.chamberC &&
-    a.active === b.active
+    a.active === b.active &&
+    a.velocity === b.velocity
   );
 }
 

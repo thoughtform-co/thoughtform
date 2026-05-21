@@ -6,20 +6,26 @@ import { probeWebGL } from "@/lib/webgl/probe";
 import { BrandmarkPointCloud } from "./BrandmarkPointCloud";
 import { IntelligenceChamber } from "./chambers/IntelligenceChamber";
 import { FlyingCameraRig } from "./FlyingCameraRig";
+import { StreamingDust } from "./StreamingDust";
 import { CAMERA_FOV, CAMERA_LOOK_AT, CAMERA_START } from "./sceneGeom";
 
 /**
  * DepthGatewayScene — shared R3F canvas for the home-v2 sticky stage.
  *
- * Lean composition: one camera rig + one brandmark point cloud +
- * the chamber-C L/R bodies. The orbital constellation, sigil
- * compass, and HUD chamber captions come from the v7 markup (the
- * DOM siblings of this canvas), so they're NOT in the R3F tree.
+ * Lean composition. The orbital constellation, sigil compass, and
+ * HUD chamber captions come from the v7 markup (DOM siblings of this
+ * canvas), so they're NOT in the R3F tree.
  *
- *   - FlyingCameraRig: subtle Z dolly across stage progress.
- *   - BrandmarkPointCloud: persistent point cloud anchored to the
- *     active chamber's brandmark dock element via DOM un-projection.
- *     Shape morph from sigil → Fibonacci sphere during chamber C.
+ *   - FlyingCameraRig: forward Z dolly across stage progress (z=8 → z=3).
+ *   - StreamingDust: ambient particle field flowing far-Z → near-Z.
+ *     Provides the "traveling through space" signal regardless of
+ *     which chamber is active. Velocity-reactive — flow speeds up
+ *     when the user is actively scrolling.
+ *   - BrandmarkPointCloud: persistent traveling artifact. Lerps
+ *     between two world stations (A → B) so the brandmark moves
+ *     smoothly through scene space instead of teleporting between
+ *     DOM dock positions. Shape morph from sigil → Fibonacci sphere
+ *     during chamber C.
  *   - IntelligenceChamber: L/R celestial bodies (Trusted Sources +
  *     Headless Surfaces). Fade in during chamber C only.
  *
@@ -71,6 +77,10 @@ export function DepthGatewayScene() {
       }}
     >
       <FlyingCameraRig />
+      {/* StreamingDust paints behind the brandmark + L/R bodies —
+          provides the constant z-axis travel signal even when
+          chamber content is static. */}
+      <StreamingDust />
       <BrandmarkPointCloud />
       <IntelligenceChamber />
     </Canvas>

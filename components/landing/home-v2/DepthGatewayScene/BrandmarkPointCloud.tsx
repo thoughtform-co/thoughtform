@@ -1,14 +1,17 @@
 "use client";
 
-import { useFrame, useThree } from "@react-three/fiber";
+import { useFrame } from "@react-three/fiber";
 import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { sampleShape } from "@/lib/brandmark/sampleShape";
 import { BRANDMARK_FULL_PATHS, BRANDMARK_SHAPE_KEYS } from "@/lib/brandmark/shapes";
 import { buildSphereCloudGeometry } from "@/components/landing/v7/intelligence-layer/celestialRingUtils";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
-import { smoothstep } from "@/lib/stores/depthGatewayStore";
-import { getSubstrateMorph } from "./sceneGeom";
+import {
+  getBrandmarkWorldHalfSize,
+  getBrandmarkWorldPosition,
+  getSubstrateMorph,
+} from "./sceneGeom";
 import { brandmarkCloudVertex, brandmarkCloudFragment } from "./shaders/brandmarkCloud";
 
 /** Brandmark SVG viewBox — must match `public/logos/Thoughtform_Brandmark.svg`. */
@@ -19,65 +22,44 @@ const BRANDMARK_VIEWBOX = { x: 0, y: 0, width: 430.99, height: 436 } as const;
  *  as the production triad. */
 const POINT_COUNT = 1900;
 
-/** Brandmark anchor target z in scene-space. The cloud's parent
- *  group sits on this z-plane, and dock screen rects are un-
- *  projected onto it. Negative (away from camera) so the cloud
- *  reads as a 3D object beyond the camera near plane. */
-const ANCHOR_Z = -2;
-
-/** Fraction of the dock's projected world half-width to use as the
- *  Fibonacci sphere radius. < 1 keeps the morphed sphere from
- *  exceeding the dock's visual footprint while preserving enough
- *  girth to read as a 3D shell. */
-const SPHERE_TO_DOCK_RATIO = 0.6;
+/** Sphere radius as a multiplier on the brandmark half-size at the
+ *  current station. < 1 keeps the morphed sphere inside the
+ *  brandmark plate's footprint while preserving enough girth to
+ *  read as a 3D shell. */
+const SPHERE_TO_HALF_RATIO = 0.55;
 
 const GOLD_BODY = new THREE.Color("#caa554");
 const GOLD_RIM = new THREE.Color("#e9c97a");
-
-const DOCK_SELECTORS = {
-  A: ".home-v2-stage .sigil__mark",
-  B: ".home-v2-stage .miss__brand-slot",
-  C: ".home-v2-stage .ilayer__brandmark-anchor",
-} as const;
-
-interface ChamberRect {
-  cx: number;
-  cy: number;
-  halfW: number;
-  halfH: number;
-}
-
-const ZERO_RECT: ChamberRect = { cx: 0, cy: 0, halfW: 0, halfH: 0 };
 
 /**
  * BrandmarkPointCloud — one persistent point cloud that lives in
  * the scene for all three chambers of the home-v2 depth gateway.
  *
- * Anchoring model (SubstrateMorphPoints, ADR-017 pattern):
+ * STABLE TRAVELING ARTIFACT MODEL (revised). The cloud no longer
+ * un-projects DOM dock rects — it sits at a world-space station
+ * and the camera dollies toward it across stage progress. Two
+ * stations:
  *
- *   1. Each frame, look up the three chamber dock elements
- *      (`.sigil__mark`, `.miss__brand-slot`,
- *      `.ilayer__brandmark-anchor`) by querySelector.
- *   2. Get each dock's `getBoundingClientRect()`.
- *   3. Take a WEIGHTED AVERAGE of the dock rects using the per-
- *      chamber opacity envelopes (matches what useDepthScroll
- *      writes to the section opacity vars). Cross-fades smoothly
- *      between dock positions during chamber transitions instead
- *      of jumping at the chamberId boundary.
- *   4. Un-project the averaged centre + right edge + bottom edge
- *      onto the z = ANCHOR_Z plane to get world coords.
- *   5. Drive the parent group's position + the shader's
- *      `uBrandmarkSize` / `uSphereRadius` uniforms so the cloud
- *      paints inside the dock rect at v7's exact sizing.
+ *   - Station A (chamber A — Definition): off-centre right, matches
+ *     v7 `.sigil__mark` placement inside the .tri compass diagram.
+ *   - Station B (chambers B + C — Diagnostic / Intelligence):
+ *     viewport centre, matches v7 `.miss__brand-slot` and
+ *     `.ilayer__brandmark-anchor` placement.
  *
- * Shape morph: `uShapeMorph` interpolates between the brandmark
- * sigil sample and a Fibonacci sphere. Morph is gated by Chamber C
- * progress (see `getSubstrateMorph`). Chambers A and B keep the
- * cloud as a flat brandmark mark; Chamber C ramps it into the
- * sphere.
+ * Cloud world position lerps smoothly from A → B across the
+ * sequenced chamber dead-band (progress 0.30..0.50) so the
+ * brandmark visibly TRAVELS between stations during the
+ * cross-fade, rather than teleporting via DOM dock changes.
+ *
+ * The cloud is visible CONTINUOUSLY from chamber A entry through
+ * chamber C end — no fade between sections. As the camera dollies
+ * forward (z=8 → z=3), the cloud naturally grows on screen,
+ * conveying "we are approaching the artifact" travel motion.
+ *
+ * Shape morph (sigil → Fibonacci sphere) gated by chamber C
+ * progress only.
  */
 export function BrandmarkPointCloud() {
-  const { camera, gl, scene } = useThree();
   const groupRef = useRef<THREE.Group>(null);
 
   // ── Geometry: brandmark sample + Fibonacci sphere ────────────
@@ -135,8 +117,8 @@ export function BrandmarkPointCloud() {
         uPixelRatio: { value: typeof window !== "undefined" ? window.devicePixelRatio : 1 },
         uPresence: { value: 1 },
         uShapeMorph: { value: 0 },
-        uBrandmarkSize: { value: new THREE.Vector2(0.5, 0.5) },
-        uSphereRadius: { value: 0.3 },
+        uBrandmarkSize: { value: new THREE.Vector2(1.1, 1.1) },
+        uSphereRadius: { value: 0.6 },
         uColor: { value: GOLD_BODY.clone() },
         uRimColor: { value: GOLD_RIM.clone() },
         uOpacity: { value: 0.95 },
@@ -154,68 +136,7 @@ export function BrandmarkPointCloud() {
     };
   }, [material, geometry]);
 
-  // ── Scratch vectors for per-frame projection ─────────────────
-  // Allocated outside useFrame so we don't churn the GC per tick.
-  const ndc = useMemo(() => new THREE.Vector2(), []);
-  const ray = useMemo(() => new THREE.Raycaster(), []);
-  const planeNormal = useMemo(() => new THREE.Vector3(0, 0, 1), []);
-  const plane = useMemo(() => new THREE.Plane(planeNormal, -ANCHOR_Z), [planeNormal]);
-  const hitCenter = useMemo(() => new THREE.Vector3(), []);
-  const hitRight = useMemo(() => new THREE.Vector3(), []);
-  const hitBottom = useMemo(() => new THREE.Vector3(), []);
-
-  // Cached dock element references — chambers don't unmount, so
-  // these resolve once and stay valid. Re-resolved each frame as
-  // a safety net (Fast Refresh, late hydration).
-  const docksRef = useRef<{
-    A: HTMLElement | null;
-    B: HTMLElement | null;
-    C: HTMLElement | null;
-  }>({ A: null, B: null, C: null });
-
-  const lookupDocks = () => {
-    if (typeof document === "undefined") return;
-    if (!docksRef.current.A) {
-      docksRef.current.A = document.querySelector<HTMLElement>(DOCK_SELECTORS.A);
-    }
-    if (!docksRef.current.B) {
-      docksRef.current.B = document.querySelector<HTMLElement>(DOCK_SELECTORS.B);
-    }
-    if (!docksRef.current.C) {
-      docksRef.current.C = document.querySelector<HTMLElement>(DOCK_SELECTORS.C);
-    }
-  };
-
-  const rectFor = (el: HTMLElement | null): ChamberRect => {
-    if (!el) return ZERO_RECT;
-    const r = el.getBoundingClientRect();
-    if (r.width <= 0 || r.height <= 0) return ZERO_RECT;
-    return {
-      cx: r.left + r.width / 2,
-      cy: r.top + r.height / 2,
-      halfW: r.width / 2,
-      halfH: r.height / 2,
-    };
-  };
-
-  /** Un-project an absolute viewport-px (x, y) coordinate onto the
-   *  ANCHOR_Z plane in world space, writing into `dest`. */
-  const screenToWorld = (
-    canvas: HTMLCanvasElement,
-    canvasRect: DOMRect,
-    screenX: number,
-    screenY: number,
-    dest: THREE.Vector3
-  ): boolean => {
-    const relX = screenX - canvasRect.left;
-    const relY = screenY - canvasRect.top;
-    if (canvasRect.width <= 0 || canvasRect.height <= 0) return false;
-    ndc.x = (relX / canvasRect.width) * 2 - 1;
-    ndc.y = -((relY / canvasRect.height) * 2 - 1);
-    ray.setFromCamera(ndc, camera);
-    return ray.ray.intersectPlane(plane, dest) !== null;
-  };
-
+  // ── Per-frame: position + size + morph ───────────────────────
   useFrame((state) => {
     const group = groupRef.current;
     if (!group) return;
@@ -232,76 +153,25 @@ export function BrandmarkPointCloud() {
     }
     group.visible = true;
 
-    lookupDocks();
-    const rectA = rectFor(docksRef.current.A);
-    const rectB = rectFor(docksRef.current.B);
-    const rectC = rectFor(docksRef.current.C);
+    // Position group at the interpolated station — A → B across
+    // the cross-station glide window.
+    const [px, py, pz] = getBrandmarkWorldPosition(progress);
+    group.position.set(px, py, pz);
 
-    // Per-chamber weights mirror the section opacity envelopes in
-    // useDepthScroll so the cloud's blended dock position lines up
-    // exactly with whichever chamber section is currently visible.
-    const wA = 1 - smoothstep(0.27, 0.39, progress);
-    const wB = smoothstep(0.27, 0.39, progress) * (1 - smoothstep(0.61, 0.73, progress));
-    const wC = smoothstep(0.61, 0.73, progress);
-    const wSum = wA + wB + wC;
-    if (wSum < 1e-4) {
-      group.visible = false;
-      return;
-    }
+    // Brandmark plate world half-size (XY extent). The shader's
+    // `aHomeBrandmark` lives in [-0.5, 0.5]; multiplying by 2×halfSize
+    // expands the local range to [-halfSize, +halfSize] in world units.
+    const halfSize = getBrandmarkWorldHalfSize(progress);
+    const sz = material.uniforms.uBrandmarkSize.value as THREE.Vector2;
+    sz.set(halfSize * 2, halfSize * 2);
 
-    // Weighted average dock rect. Skipping rects whose dock didn't
-    // resolve (rectFor returned ZERO_RECT) by zeroing their weight.
-    const safeA = rectA.halfW > 0 ? wA : 0;
-    const safeB = rectB.halfW > 0 ? wB : 0;
-    const safeC = rectC.halfW > 0 ? wC : 0;
-    const safeSum = safeA + safeB + safeC;
-    if (safeSum < 1e-4) return;
+    // Sphere radius keyed off the current station's brandmark
+    // half-size so the morphed substrate sphere sits inside the
+    // plate's apparent footprint.
+    material.uniforms.uSphereRadius.value = halfSize * SPHERE_TO_HALF_RATIO;
 
-    const cx = (safeA * rectA.cx + safeB * rectB.cx + safeC * rectC.cx) / safeSum;
-    const cy = (safeA * rectA.cy + safeB * rectB.cy + safeC * rectC.cy) / safeSum;
-    const halfW = (safeA * rectA.halfW + safeB * rectB.halfW + safeC * rectC.halfW) / safeSum;
-    const halfH = (safeA * rectA.halfH + safeB * rectB.halfH + safeC * rectC.halfH) / safeSum;
-
-    // ── Un-project dock centre + right edge + bottom edge to
-    //    world space on the ANCHOR_Z plane. ────────────────────
-    const canvas = gl.domElement;
-    const canvasRect = canvas.getBoundingClientRect();
-    if (canvasRect.width < 4 || canvasRect.height < 4) return;
-
-    // Re-establish the plane at the camera-facing depth. With our
-    // perspective camera at varying Z (the FlyingCameraRig dollies
-    // it), the plane sits at scene-space z = ANCHOR_Z and we
-    // un-project to that plane.
-    plane.set(planeNormal, -ANCHOR_Z);
-
-    if (!screenToWorld(canvas, canvasRect, cx, cy, hitCenter)) return;
-    if (!screenToWorld(canvas, canvasRect, cx + halfW, cy, hitRight)) return;
-    if (!screenToWorld(canvas, canvasRect, cx, cy + halfH, hitBottom)) return;
-
-    const worldHalfW = hitRight.distanceTo(hitCenter);
-    const worldHalfH = hitBottom.distanceTo(hitCenter);
-
-    // ── Drive the cloud transform ──────────────────────────────
-    group.position.set(hitCenter.x, hitCenter.y, hitCenter.z);
-    group.scale.setScalar(1);
-
-    // Brandmark plate spans the local [-0.5, 0.5] range × uBrandmarkSize,
-    // so to fill the dock's world rect we set uBrandmarkSize to
-    // 2 × worldHalf — the local range × this scalar lands at
-    // (-worldHalf, +worldHalf), filling the dock exactly.
-    const bm = material.uniforms.uBrandmarkSize.value as THREE.Vector2;
-    bm.set(worldHalfW * 2, worldHalfH * 2);
-
-    // Sphere radius is keyed off the dock's world half-width so the
-    // morphed substrate sphere sits at a stable visual size relative
-    // to the dock anchor (smaller than the dock to read as a 3D
-    // shell tucked inside the dock's rect rather than overflowing).
-    material.uniforms.uSphereRadius.value = worldHalfW * SPHERE_TO_DOCK_RATIO;
-
-    // Shape morph from brandmark to Fibonacci sphere across chamber C.
+    // Shape morph: sigil → Fibonacci sphere across chamber C.
     material.uniforms.uShapeMorph.value = getSubstrateMorph(chamberC);
-
-    void scene; // keep ref to satisfy lint; scene matrices auto-update
   });
 
   if (!geometry) return null;

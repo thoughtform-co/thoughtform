@@ -100,7 +100,12 @@
      content inset). Apply it here so .station inner content sits
      inside the HUD rails. */
   padding: 0 var(--hud-content-inset, clamp(80px, 8vw, 160px));
-  transition: opacity 240ms ease-out;
+  /* Short linear transition so the chamber dead-band between
+     sections (e.g. progress 0.35..0.36) reads as a crisp gap
+     where only brandmark + dust + HUD remain. useDepthScroll
+     already smoothstep's the opacity value across the boundary
+     ramps, so a long CSS transition would just lag the scroll. */
+  transition: opacity 80ms linear;
 }
 
 .home-v2-section[data-chamber="A"] {
