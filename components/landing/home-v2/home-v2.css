@@ -1,25 +1,25 @@
 /*
- * home-v2.css — styles for /test/home-v2 (ADR-018 depth corridor).
+ * home-v2.css — styles for /test/home-v2 (ADR-018, world-owned
+ * depth corridor rebuild).
  *
- * The page is composed of three layers:
+ * Layer stack:
  *
  *   z 0 — fixed v7 gateway gradient + HUD rails (from sliced HUD)
  *   z 1 — sticky hero (video)
- *   z 2 — home-v2-section copy overlays (titles, ledes, label pills)
- *         These shield the gateway gradient + hero video below.
+ *   z 2 — sticky stage scaffolding (background void)
  *   z 5 — R3F canvas (transparent — paints world-space gates,
- *         stars, streaks, substrate sphere cover)
- *   z 6 — debug HUD
- *  z 24 — ProjectedBrandmarkActor (fixed; composited above canvas)
+ *         stars, ring debris)
+ *   z 6 — debug HUD readout
+ *  z 14 — DOM copy + label overlay (CopyAnchors, transformed by
+ *         useWorldDomTracker)
+ *  z 24 — ProjectedBrandmarkActor (fixed; composited above canvas
+ *         + copy)
  *
- * In `[data-home-v2-mode="corridor"]` the v7 SVG diagram geometry
- * inside the chamber sections is HIDDEN — the same shapes are
- * rendered by R3F at world Z. We keep titles, ledes, pills, and
- * chamber captions visible so the copy still reads.
- *
- * In `[data-home-v2-mode="fallback"]` (no WebGL / reduced motion),
- * the SVG geometry paints normally so the route degrades to the
- * legacy stacked-cross-fade view.
+ * The previous chamber A/B/C section opacity machinery + corridor-
+ * mode SVG hiding rules are GONE — the world-owned model removes
+ * the v7 section grid stack from the corridor entirely. Copy is
+ * pure DOM text positioned by world-anchor projection; diagrams are
+ * R3F geometry at fixed Z stations.
  */
 
 .home-v2-root {
@@ -59,18 +59,7 @@
   --depth-progress: 0;
   --camera-t: 0;
   --beat-gate-progress: 0;
-  --beat-thoughtform-active: 1;
-  --beat-passthrough-01-active: 0;
-  --beat-diagnostic-active: 0;
-  --beat-passthrough-02-active: 0;
-  --beat-intelligence-active: 0;
   --velocity-mag: 0;
-  --chamber-a-progress: 0;
-  --chamber-b-progress: 0;
-  --chamber-c-progress: 0;
-  --chamber-A-section-opacity: 1;
-  --chamber-B-section-opacity: 0;
-  --chamber-C-section-opacity: 0;
 }
 
 .home-v2-stage__sticky {
@@ -79,130 +68,14 @@
   width: 100%;
   height: 100svh;
   overflow: hidden;
-  display: grid;
-  grid-template-areas: "stack";
-  grid-template-rows: 1fr;
-  grid-template-columns: 1fr;
 }
 
-/* Each sliced section sits in the same grid cell. Copy fades
-   driven by chamber section opacity (computed in useDepthScroll
-   from beat membership). */
-.home-v2-section {
-  grid-area: stack;
-  position: relative;
-  width: 100%;
-  height: 100%;
-  padding: 0 var(--hud-content-inset, clamp(80px, 8vw, 160px));
-  transition: opacity 80ms linear;
-}
-
-.home-v2-section[data-chamber="A"] {
-  opacity: var(--chamber-A-section-opacity, 1);
-  z-index: 1;
-}
-.home-v2-section[data-chamber="B"] {
-  opacity: var(--chamber-B-section-opacity, 0);
-  z-index: 2;
-  --miss-orbit-emerge: 1;
-  --miss-anchor-emerge: 1;
-  --miss-label-emerge: 1;
-}
-.home-v2-section[data-chamber="C"] {
-  opacity: var(--chamber-C-section-opacity, 0);
-  z-index: 3;
-  --ilayer-progress: 1;
-}
-
-/* ── Section sizing overrides ────────────────────────────────
-   v7 stations are sized to viewport (100vh / 128dvh) which makes
-   them taller than our 100svh sticky window. Override to fill
-   the sticky cell instead. */
-.home-v2-stage .station {
-  min-height: 100%;
-  height: 100%;
-  padding: clamp(80px, 10vh, 120px) 0 clamp(60px, 8vh, 100px);
-}
-
-.home-v2-stage .miss,
-.home-v2-stage .ilayer {
-  height: 100%;
-  min-height: 100%;
-}
-
-/* ── Force-reveal [data-m] elements ──────────────────────────
-   The v7 production path wires `useRevealMotion` (IO observer
-   adding .is-in). We skip that hook on v2 because chambers
-   stack/cross-fade. Force the reveal so the copy is visible. */
-.home-v2-stage [data-m]:not(.is-in),
-.home-v2-stage [data-m-group]:not(.is-in) {
-  opacity: 1 !important;
-  transform: none !important;
-  clip-path: none !important;
-  filter: none !important;
-}
-
-/* ── Hide v7 #intelligence-layer production-only elements ──── */
-.home-v2-stage .ilayer__stack__canvas,
-.home-v2-stage .ilayer__triad__canvas {
-  display: none !important;
-}
-.home-v2-stage .ilayer__stack__fallback,
-.home-v2-stage .ilayer__triad__fallback {
-  display: none !important;
-}
-
-/* ════════════════════════════════════════════════════════════════
-   CORRIDOR MODE — hide DOM diagram geometry; R3F owns those
-   shapes in world space (ADR-018 Principle 1).
-   ════════════════════════════════════════════════════════════════ */
-
-/* Thoughtform / Definition section — KEEP the v7 sigil compass SVG
-   visible in corridor mode so the parked Thoughtform beat reads
-   identically to the homepage (compass rings + NAVIGATE/ENCODE/BUILD
-   phase labels + diamond outline ring + NORTH STAR caption + phase
-   legend). The chamber's `--chamber-A-section-opacity` fades the
-   entire section out as the corridor scrolls past it.
-   We hide only the placeholder `<img>`/`<svg>` inside `.sigil__mark`
-   because `ProjectedBrandmarkActor` owns the brand at that dock
-   position (pinned via `getBoundingClientRect()`). */
-[data-home-v2-mode="corridor"] .home-v2-stage .sigil__mark > :where(img, svg) {
-  display: none !important;
-}
-[data-home-v2-mode="corridor"] .home-v2-stage .sigil__mark {
-  pointer-events: none;
-}
-
-/* Diagnostic / Missing-layer section — hide the orbital SVG +
-   particles + halo + native brandmark slot. Keep heading + bridge
-   + label pills (positioned via inline --x-pct / --y-pct CSS
-   variables — those layout off the section, not the SVG). */
-[data-home-v2-mode="corridor"] .home-v2-stage .miss__orbits,
-[data-home-v2-mode="corridor"] .home-v2-stage .miss__brand-halo,
-[data-home-v2-mode="corridor"] .home-v2-stage .miss__brand-slot > :where(img, svg) {
-  display: none !important;
-}
-[data-home-v2-mode="corridor"] .home-v2-stage .miss__brand-slot {
-  background: transparent !important;
-  pointer-events: none;
-}
-
-/* Intelligence-layer section — hide the substrate SVG dock glyph
-   so the projected actor owns the centre. The R3F substrate sphere
-   covers it during the morph window. */
-[data-home-v2-mode="corridor"] .home-v2-stage .ilayer__brandmark-anchor > :where(img, svg) {
-  display: none !important;
-}
-[data-home-v2-mode="corridor"] .home-v2-stage .ilayer__brandmark-anchor {
-  background: transparent !important;
-  pointer-events: none;
-}
-
-/* ── R3F canvas — paints world-space gates BELOW the projected
-   actor, BELOW the DOM copy. Sits inside the sticky cell. */
+/* ── R3F canvas — world-rigid gates + ring debris ─────────────
+   Sits inside the sticky cell, behind the DOM copy overlay and
+   the projected brandmark actor. */
 .home-v2-stage__canvas {
-  grid-area: stack;
-  position: relative;
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   pointer-events: none;
@@ -216,12 +89,217 @@
   pointer-events: none;
 }
 
+/* ── DOM copy + label overlay ─────────────────────────────────
+   Container for `<CopyAnchors>`. Each child element is positioned
+   by `useWorldDomTracker` writing inline `transform: translate3d(...)`
+   per frame — CSS here only sets typography + base box geometry. */
+.home-v2-copy-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 14;
+}
+
+/* All world-anchored elements share this base: positioned at the
+   layer's top-left and translated into place by the tracker. The
+   tracker writes inline `transform: translate3d(...) translate(...)`
+   per frame combining the projected screen px with a per-element
+   anchor origin (read from `data-anchor-origin`). Visibility is
+   opacity-based — invisible at start, fades in when the tracker
+   writes the first opacity value. */
+.home-v2-copy-layer [data-world-anchor] {
+  position: absolute;
+  left: 0;
+  top: 0;
+  opacity: 0;
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+
+/* ── Copy block typography ──────────────────────────────────── */
+
+.home-v2-copy-block {
+  width: clamp(280px, 32vw, 460px);
+}
+
+.home-v2-copy-block--diagnostic-head,
+.home-v2-copy-block--intelligence-head {
+  width: clamp(320px, 40vw, 580px);
+  text-align: center;
+}
+
+.home-v2-copy-bridge {
+  font-family: var(--font-pt-mono, ui-monospace, monospace);
+  font-size: clamp(11px, 0.85vw, 13px);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(235, 227, 214, 0.7);
+  margin: 0 0 clamp(12px, 1.2vh, 18px);
+}
+
+.home-v2-copy-title {
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-size: clamp(28px, 3vw, 44px);
+  font-weight: 400;
+  line-height: 1.12;
+  letter-spacing: -0.012em;
+  color: var(--dawn, #ebe3d6);
+  margin: 0 0 clamp(14px, 1.4vh, 20px);
+  text-wrap: balance;
+}
+
+.home-v2-copy-title em {
+  font-style: normal;
+  color: var(--gold, #caa554);
+}
+
+.home-v2-copy-body {
+  font-size: clamp(15px, 1.05vw, 17px);
+  line-height: 1.5;
+  color: rgba(235, 227, 214, 0.78);
+  margin: 0 0 clamp(10px, 1.1vh, 16px);
+}
+
+.home-v2-copy-body em {
+  font-style: italic;
+  color: var(--dawn, #ebe3d6);
+}
+
+.home-v2-copy-cta-row {
+  margin-top: clamp(16px, 1.6vh, 24px);
+}
+
+.home-v2-copy-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-pt-mono, ui-monospace, monospace);
+  font-size: 12px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--gold, #caa554);
+  text-decoration: none;
+  padding: 12px 20px;
+  border: 1px solid rgba(202, 165, 84, 0.4);
+  background: rgba(202, 165, 84, 0.06);
+  transition:
+    border-color 200ms ease,
+    background 200ms ease,
+    transform 200ms ease;
+}
+
+.home-v2-copy-cta:hover {
+  border-color: rgba(202, 165, 84, 0.7);
+  background: rgba(202, 165, 84, 0.12);
+  transform: translateY(-1px);
+}
+
+.home-v2-copy-cta__arrow {
+  font-size: 14px;
+  letter-spacing: 0;
+}
+
+/* ── Phase labels (NAVIGATE / ENCODE / BUILD) ─────────────── */
+
+.home-v2-copy-phase {
+  font-family: var(--font-pt-mono, ui-monospace, monospace);
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: var(--gold, #caa554);
+  white-space: nowrap;
+}
+
+/* ── North-star caption ───────────────────────────────────── */
+
+.home-v2-copy-northstar {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  font-family: var(--font-pt-mono, ui-monospace, monospace);
+  white-space: nowrap;
+}
+
+.home-v2-copy-northstar__k {
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(235, 227, 214, 0.5);
+}
+
+.home-v2-copy-northstar__v {
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: rgba(235, 227, 214, 0.32);
+  font-style: italic;
+}
+
+/* ── Diagnostic orbit labels ──────────────────────────────── */
+
+.home-v2-copy-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  font-family: var(--font-pt-mono, ui-monospace, monospace);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: rgba(235, 227, 214, 0.85);
+  background: rgba(10, 9, 8, 0.55);
+  border: 1px solid rgba(235, 227, 214, 0.18);
+  backdrop-filter: blur(6px);
+  white-space: nowrap;
+}
+
+.home-v2-copy-label__pip {
+  width: 6px;
+  height: 6px;
+  background: var(--gold, #caa554);
+  transform: rotate(45deg);
+}
+
+.home-v2-copy-label__n {
+  color: var(--gold, #caa554);
+  font-weight: 700;
+}
+
+.home-v2-copy-label__tag {
+  color: rgba(235, 227, 214, 0.78);
+}
+
+/* ── Intelligence side body labels ────────────────────────── */
+
+.home-v2-copy-body-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-pt-mono, ui-monospace, monospace);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.home-v2-copy-body-label__num {
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  color: var(--gold, #caa554);
+}
+
+.home-v2-copy-body-label__name {
+  font-size: 13px;
+  letter-spacing: 0.14em;
+  color: var(--dawn, #ebe3d6);
+  font-weight: 700;
+}
+
 /* ── HUD progress chrome (debug) ─────────────────────────────── */
+
 .home-v2-stage__hud {
-  grid-area: stack;
-  position: relative;
-  align-self: start;
-  justify-self: end;
+  position: absolute;
+  top: 0;
+  right: 0;
   margin: clamp(16px, 2.6vh, 24px) clamp(16px, 2.6vw, 32px);
   z-index: 6;
   display: flex;
@@ -243,12 +321,12 @@
 
 /* ── Projected brandmark actor ───────────────────────────────
    Fixed shell positioned by ProjectedBrandmarkActor.tsx. The
-   actor writes inline left/top/width/height each rAF; CSS here
+   actor writes inline transform/width/height each rAF; CSS here
    just guarantees the layer order + that the glyph paints crisp. */
 .home-v2-projected-brandmark {
-  /* Above the canvas, below any future modal HUD. */
   z-index: 24;
 }
+
 .home-v2-projected-brandmark svg {
   width: 100%;
   height: 100%;
@@ -256,6 +334,7 @@
 }
 
 /* ── Tail sections (normal scroll, placeholder) ──────────────── */
+
 .home-v2-tail {
   position: relative;
   background: var(--void, #050403);
@@ -300,29 +379,78 @@
 }
 
 /* ── Static (no-WebGL / reduced motion) fallback ─────────────── */
-.home-v2-stage[data-fallback="true"] .home-v2-stage__canvas {
-  display: none;
-}
 
-.home-v2-stage[data-fallback="true"] .home-v2-section[data-chamber] {
-  /* In fallback mode we DON'T stack — let sections render at full
-     opacity, scrolling naturally. */
-  opacity: 1 !important;
+.home-v2-stage[data-fallback="true"] .home-v2-stage__canvas,
+.home-v2-stage[data-fallback="true"] .home-v2-copy-layer {
+  display: none;
 }
 
 .home-v2-stage__fallback {
-  grid-area: stack;
-  display: none;
-  align-self: center;
-  justify-self: center;
-  padding: 24px;
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: clamp(48px, 6vw, 96px);
+  overflow-y: auto;
+}
+
+.home-v2-fallback-text {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(40px, 6vh, 80px);
+  max-width: 720px;
+  margin: 0 auto;
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  color: var(--dawn, #ebe3d6);
+}
+
+.home-v2-fallback-text section {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.home-v2-fallback-text h2 {
+  font-size: clamp(28px, 3vw, 42px);
+  font-weight: 400;
+  line-height: 1.12;
+  letter-spacing: -0.012em;
+  margin: 0;
+  text-wrap: balance;
+}
+
+.home-v2-fallback-text h2 em {
+  font-style: normal;
+  color: var(--gold, #caa554);
+}
+
+.home-v2-fallback-text p {
+  font-size: 16px;
+  line-height: 1.5;
+  color: rgba(235, 227, 214, 0.78);
+  margin: 0;
+}
+
+.home-v2-fallback-text__bridge {
   font-family: var(--font-pt-mono, ui-monospace, monospace);
   font-size: 11px;
-  letter-spacing: 0.18em;
-  color: var(--dawn-50, rgba(235, 227, 214, 0.5));
-  text-align: center;
-  max-width: 480px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--gold, #caa554);
 }
-.home-v2-stage[data-fallback="true"] .home-v2-stage__fallback {
-  display: block;
+
+.home-v2-fallback-text ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.home-v2-fallback-text li span:first-child {
+  color: var(--gold, #caa554);
+  margin-right: 10px;
+  font-family: var(--font-pt-mono, ui-monospace, monospace);
 }

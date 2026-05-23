@@ -3,36 +3,38 @@
 import { Canvas } from "@react-three/fiber";
 import { useEffect, useState } from "react";
 import { probeWebGL } from "@/lib/webgl/probe";
-import { BrandmarkPointCloud } from "./BrandmarkPointCloud";
-import { IntelligenceChamber } from "./chambers/IntelligenceChamber";
 import { FlyingCameraRig } from "./FlyingCameraRig";
 import { GatewayWorld } from "./gates/GatewayWorld";
+import { InterGateCorridor } from "./InterGateCorridor";
 import { ScrollStreaks } from "./ScrollStreaks";
 import { StaticStarfield } from "./StaticStarfield";
 import { CAMERA_FOV, CAMERA_START, getCameraLookAt } from "./sceneGeom";
 
 /**
- * DepthGatewayScene — shared R3F canvas for the home-v2 depth
- * corridor (ADR-018).
+ * DepthGatewayScene — single R3F canvas for the home-v2 depth
+ * corridor (ADR-018, world-owned rebuild).
  *
- * Scene composition (paint order, near → far):
+ * Scene composition (paint order, near -> far):
  *
- *   - StaticStarfield  : non-animated background stars
- *   - ScrollStreaks    : near-camera streaks driven by scroll velocity
- *                         (invisible when idle)
- *   - GatewayWorld     : world-space diagram gates (Thoughtform,
- *                         Diagnostic, Interstitial). Each gate paints
- *                         at its station Z and fades in/out via its
- *                         own visibility envelope.
- *   - BrandmarkPointCloud : substrate-morph cover during the
- *                         intelligence beat only (covers the cut from
- *                         the projected vector actor to the sphere).
- *   - IntelligenceChamber : L/R side bodies, fade in during the
- *                         intelligence beat.
+ *   - StaticStarfield    : non-animated background stars.
+ *   - InterGateCorridor  : depth-stacked debris bands at intermediate
+ *                          Z stations between the gate groups —
+ *                          the "spaceship-flying-through-space"
+ *                          atmosphere between gates.
+ *   - ScrollStreaks      : near-camera streaks driven by scroll
+ *                          velocity (invisible when idle).
+ *   - GatewayWorld       : the four world-rigid gate groups
+ *                          (Thoughtform, Diagnostic, Interstitial,
+ *                          Intelligence). Each gate paints at its
+ *                          station Z and self-manages its visibility
+ *                          envelope.
  *
  * The PRIMARY brandmark painter is the DOM-side
- * `ProjectedBrandmarkActor` (`components/landing/home-v2/
- * ProjectedBrandmarkActor.tsx`), NOT a member of this canvas.
+ * `ProjectedBrandmarkActor` — its world position is interpolated
+ * between gate centres and projected through a mirror camera
+ * tracing the same path. The substrate-cut at intelligence is
+ * handled inside the `IntelligenceGate` group itself (no separate
+ * top-level `BrandmarkPointCloud`).
  *
  * Probes WebGL on mount; renders nothing if unavailable or
  * prefers-reduced-motion is set (the page paints its own fallback).
@@ -85,10 +87,9 @@ export function DepthGatewayScene() {
     >
       <FlyingCameraRig />
       <StaticStarfield />
+      <InterGateCorridor />
       <ScrollStreaks />
       <GatewayWorld />
-      <BrandmarkPointCloud />
-      <IntelligenceChamber />
     </Canvas>
   );
 }

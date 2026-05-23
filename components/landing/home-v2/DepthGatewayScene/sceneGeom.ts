@@ -1,151 +1,173 @@
 /**
- * sceneGeom — world-space layout for the home-v2 depth corridor
- * (ADR-018).
+ * sceneGeom — single source of truth for the home-v2 depth-corridor
+ * world layout (ADR-018, REBUILT for the world-owned model).
+ *
+ * Operating principle: ONE 3D scene. Every diagram is a world-rigid
+ * group at a fixed Z station. The camera flies through them on one
+ * continuous path. Copy and labels are DOM text whose screen position
+ * is computed every frame by projecting named world anchors. The
+ * brandmark is a pure 3D-projected vector — no DOM-dock pinning.
+ *
+ * This file owns:
+ *   - The camera path (position, lookAt, roll, FOV).
+ *   - The four gate stations (Thoughtform, Diagnostic, Interstitial,
+ *     Intelligence) — world positions + half-extents + parked progress.
+ *   - The brandmark anchor at each gate centre + the smooth world-
+ *     space interpolation between them.
+ *   - The COPY_ANCHORS table — named world positions for every DOM
+ *     text element the world-DOM tracker projects per frame.
+ *   - Substrate-cut envelope (ADR-017) for the intelligence beat.
  *
  * Coordinate convention:
  *   - +Z toward the viewer, -Z into the distance (Three.js default).
- *   - Camera sits at +Z and dollies forward (toward more negative Z)
- *     across the scroll stage.
- *   - Gate stations sit at staggered negative Z so they pass the
- *     camera as the user scrolls forward.
+ *   - Camera sits at large +Z and dollies forward (toward more
+ *     negative Z) across the scroll stage.
+ *   - Gates sit at staggered Z stations the camera passes.
  *
- * The corridor model:
- *   - The CAMERA moves continuously (eased global progress).
- *   - GATE GEOMETRY parks at its world Z station; the camera
- *     approaches it (distant → big → past the edges).
- *   - The BRANDMARK has a world-space anchor at each parked beat
- *     and a smooth lerp path between them.
- *
- * This is intentionally a different model from the v7 production
- * journey: production lerps DOM dock rects on a tall page; we lerp
- * world positions on a sticky stage.
+ * The X-reframe (off-axis-right -> centred) is concentrated inside
+ * the passthrough-01 window [0.18, 0.32] so by the time the user
+ * reaches the parked Diagnostic beat, the camera + lookAt are both
+ * centred and world-origin objects project dead-centre.
  */
 
 import { lerp, smoothstep } from "@/lib/stores/depthGatewayStore";
+import { MISS_LABELS, MISS_ORBITS, MISS_VIEWBOX, pointOnEllipse } from "@/lib/celestial/orbits";
 
-// ── Camera path ─────────────────────────────────────────────────
+// ── Camera FOV + path constants ──────────────────────────────────
+
+/** Vertical FOV. ~38° gives the focal-compressed "looking into a
+ *  corridor" feel without going full fish-eye. */
+export const CAMERA_FOV = 38;
 
 /** Camera position at progress = 0 (start of corridor).
  *
- *  Offset slightly to the RIGHT so the camera is co-located with the
- *  Thoughtform composition. Combined with a lookAt that also sits
- *  toward the Thoughtform world position, this makes the camera
- *  "see" the brandmark + compass on the right side of the viewport
- *  at the parked beat — same composition the homepage uses at the
- *  `.tri` grid (copy on the left, compass on the right). */
+ *  Off-axis RIGHT so the camera frames the Thoughtform composition
+ *  (compass right / copy left) at the parked Thoughtform beat. */
 export const CAMERA_START: [number, number, number] = [0.55, 0, 10];
 
-/** Camera position at progress = 1 (end of corridor). */
+/** Camera position at progress = 1 (end of corridor). On-axis. */
 export const CAMERA_END: [number, number, number] = [0, 0, -8];
 
-/** Vertical FOV. Slightly narrower than the previous iteration so
- *  the focal compression at gate centres reads as a proper "looking
- *  into a corridor" perspective. */
-export const CAMERA_FOV = 38;
-
 /** How far ahead of the camera the lookAt point sits. The lookAt
- *  travels forward with the camera so the gaze is always into the
- *  next gate (perspective signal: we are FLYING forward, not
- *  staring at a fixed world point). */
+ *  travels with the camera so each frame the gaze is into the next
+ *  gate (perspective signal: we are FLYING forward). */
 const LOOK_AHEAD = 6;
 
-/** Subtle vertical drift on the lookAt point so the camera bobs
- *  with the corridor rhythm. Tiny — just enough to hint that this
- *  is a hand-flown camera rather than a rigid rail. */
-const LOOK_BOB_AMPLITUDE = 0.1;
-
-/** Where the camera's gaze settles at each end of the corridor.
- *  At progress = 0 the camera looks slightly off-axis (toward the
- *  Thoughtform compass on the right) so the homepage composition
- *  reads correctly. By the time the camera reaches the Diagnostic
- *  gate the gaze is straight ahead, centered on the world axis. */
+/** Look-at X at the start of the corridor (frames the off-axis-right
+ *  Thoughtform composition). */
 const LOOK_AT_X_START = 0.95;
+
+/** Look-at X at the end of the corridor (centred). */
 const LOOK_AT_X_END = 0;
 
-/** Camera position at the given camera travel parameter (0..1).
- *  The travel curve is already smoothstep'd inside the store; here
- *  we just lerp endpoints. The X drift (CAMERA_START.x → 0) plus
- *  the lookAt drift (off-axis right → on-axis ahead) gives the
- *  visible "camera turning" that re-frames the Thoughtform
- *  composition into the centered Diagnostic gate. */
-export function getCameraPosition(cameraT: number): [number, number, number] {
-  return [
-    lerp(CAMERA_START[0], CAMERA_END[0], cameraT),
-    lerp(CAMERA_START[1], CAMERA_END[1], cameraT),
-    lerp(CAMERA_START[2], CAMERA_END[2], cameraT),
-  ];
+/** Subtle vertical bob on the lookAt point — hand-flown camera
+ *  signal, very low amplitude so it doesn't read as wobble. */
+const LOOK_BOB_AMPLITUDE = 0.08;
+
+/** Maximum camera roll (radians) during the X-reframe. Tiny — adds
+ *  a "bank into the turn" hint without making the corridor wobble. */
+const ROLL_MAX = 0.018;
+
+// ── Beat-window references ───────────────────────────────────────
+// These mirror the BEAT_WINDOWS table in depthGatewayStore so the
+// reframe envelope stays in lock-step with the camera path.
+
+/** Reframe window: progress range over which the camera + lookAt
+ *  X-pan from off-axis-right to centred. Matches passthrough-01. */
+const REFRAME_START = 0.18;
+const REFRAME_END = 0.32;
+
+/** Camera Z dolly easing — smoothstep'd progress so the corridor
+ *  decelerates at both ends. */
+function cameraZDollyT(progress: number): number {
+  return smoothstep(0, 1, clamp01(progress));
 }
 
-/** Look-at point. Travels with the camera but stays LOOK_AHEAD
- *  units further down the corridor so the camera's forward gaze
- *  is into the next gate, not at a static world point.
+/** Camera position at the given GLOBAL progress.
  *
- *  The X component of the lookAt eases from `LOOK_AT_X_START`
- *  (off-axis right, framing the Thoughtform composition) to
- *  `LOOK_AT_X_END` (on-axis, framing the centered Diagnostic and
- *  Intelligence gates). The pan happens across the Thoughtform →
- *  Diagnostic transit so the user feels the camera swing from
- *  the right-of-axis homepage composition to the centered
- *  corridor view. */
-export function getCameraLookAt(cameraT: number): [number, number, number] {
-  const [, , camZ] = getCameraPosition(cameraT);
-  const bob = Math.sin(cameraT * Math.PI * 2) * LOOK_BOB_AMPLITUDE;
-  // The pan resolves earlier than the camera travel (we want the
-  // gaze to settle on the centered Diagnostic gate by the time the
-  // user reaches that parked beat at progress ≈ 0.41 → cameraT ≈ 0.34).
-  const panT = smoothstep(0, 0.34, cameraT);
-  const lookX = lerp(LOOK_AT_X_START, LOOK_AT_X_END, panT);
-  return [lookX, bob, camZ - LOOK_AHEAD];
+ *  Two motions superimposed:
+ *    - Z dolly: smoothstep'd over [0, 1].
+ *    - X reframe: held to passthrough-01 only [0.18, 0.32].
+ *
+ *  Result: at parked Thoughtform (progress ~0.09) the camera is
+ *  off-axis right, framing the right-column composition. By parked
+ *  Diagnostic (progress ~0.41) the X-reframe has fully resolved and
+ *  the camera is centred on the world axis, so the centred
+ *  Diagnostic gate projects dead-centre. */
+export function getCameraPosition(progress: number): [number, number, number] {
+  const dollyT = cameraZDollyT(progress);
+  const reframeT = smoothstep(REFRAME_START, REFRAME_END, progress);
+  return [lerp(CAMERA_START[0], 0, reframeT), 0, lerp(CAMERA_START[2], CAMERA_END[2], dollyT)];
 }
 
-// ── Gate stations ───────────────────────────────────────────────
+/** Look-at point. Travels with the camera (LOOK_AHEAD units further
+ *  down the corridor) and pans X 0.95 -> 0 across passthrough-01. */
+export function getCameraLookAt(progress: number): [number, number, number] {
+  const [, , camZ] = getCameraPosition(progress);
+  const reframeT = smoothstep(REFRAME_START, REFRAME_END, progress);
+  const lookX = lerp(LOOK_AT_X_START, LOOK_AT_X_END, reframeT);
+  // Bob phased to corridor progress — one and a half cycles across
+  // the full stage, very low amplitude.
+  const bobY = Math.sin(progress * Math.PI * 3) * LOOK_BOB_AMPLITUDE;
+  return [lookX, bobY, camZ - LOOK_AHEAD];
+}
 
-/** Each gate sits at a world Z position the camera will pass. The
- *  Z values are picked so that at each gate's parked progress
- *  centre, the camera sits ~`GATE_PARK_DISTANCE` units in front of
- *  the gate (close enough to fill the viewport with the diagram). */
+/** Camera roll (radians) — peaks in the middle of passthrough-01
+ *  so the user feels the camera "bank into" the reframe, then
+ *  level out by the parked Diagnostic beat. Roll is RIGHT-side-up
+ *  (negative Z roll) so the right side of the frame dips during
+ *  the reframe — that's the natural direction of a bank turn from
+ *  off-axis-right to centred. */
+export function getCameraRoll(progress: number): number {
+  // Bell curve over passthrough-01: 0 -> 1 -> 0 across [0.18, 0.32].
+  if (progress <= REFRAME_START || progress >= REFRAME_END) return 0;
+  const t = (progress - REFRAME_START) / (REFRAME_END - REFRAME_START);
+  const bell = Math.sin(t * Math.PI); // 0..1..0
+  return -bell * ROLL_MAX;
+}
+
+// ── Gate stations ────────────────────────────────────────────────
+
+/** Distance the camera sits in front of a gate when the user is
+ *  parked at that gate's beat. Picked so the gate's halfExtent
+ *  comfortably fills the viewport at FOV ~38°. */
 const GATE_PARK_DISTANCE = 4.5;
 
 export interface GateStation {
-  /** Identifier so painters can selectively render. */
   id: "thoughtform" | "diagnostic" | "interstitial" | "intelligence";
   /** World position of the gate's centre. */
   position: [number, number, number];
-  /** Approximate world half-extent (XY). Used by painters to size
-   *  their geometry — e.g. compass radius, orbit radii. */
+  /** Approximate world half-extent (XY) — used by painters to size
+   *  geometry against this gate's allocated frame. */
   halfExtent: number;
-  /** Camera progress at which the gate is "parked" (centre of the
-   *  beat window in stage progress, smoothstep'd to camera-T). */
+  /** Camera progress at which the gate is "parked" (i.e. centred in
+   *  the viewport; camera is GATE_PARK_DISTANCE units in front). */
   parkProgress: number;
 }
 
-/** Compute a gate's Z position so that at `parkProgress`, the
- *  camera-T-lerped position sits `GATE_PARK_DISTANCE` units in
- *  front of the gate. We solve:
- *      camZ(parkProgress) = gateZ + GATE_PARK_DISTANCE
- *  where camZ(t) lerps CAMERA_START.z → CAMERA_END.z by
- *  smoothstep(t). */
+/** Solve a gate's world Z so that at `parkProgress` the camera sits
+ *  GATE_PARK_DISTANCE units in front of the gate. Camera Z lerps
+ *  CAMERA_START.z -> CAMERA_END.z by smoothstep(progress). */
 function gateZAtParkProgress(parkProgress: number): number {
   const t = smoothstep(0, 1, parkProgress);
   const camZ = lerp(CAMERA_START[2], CAMERA_END[2], t);
   return camZ - GATE_PARK_DISTANCE;
 }
 
-// Stations: park progress values match the BEAT_PARK_CENTRES table
-// in depthGatewayStore.ts.
-//
-// The Thoughtform compass sits at the SAME world X as the brandmark
-// anchor (BRANDMARK_ANCHOR_THOUGHTFORM) so the compass rings and the
-// brandmark read as one composition, matching the v7 homepage's
-// `.tri__center .sigil` placement (compass + brandmark in the right
-// column of the `.tri` grid, copy in the left column).
+/** Thoughtform compass — sits OFF-AXIS RIGHT so the parked frame
+ *  shows compass-right + copy-left, matching the v7 `.tri` grid
+ *  spirit. The camera is also offset right so the gate appears
+ *  right-of-centre on screen at parked rest. */
 export const STATION_THOUGHTFORM: GateStation = {
   id: "thoughtform",
-  position: [1.4, 0.05, gateZAtParkProgress(0.09)],
+  position: [1.4, 0.0, gateZAtParkProgress(0.09)],
   halfExtent: 1.6,
   parkProgress: 0.09,
 };
 
+/** Diagnostic orbital field — centred. By the time the user parks
+ *  here, the camera reframe has resolved to X=0, so this gate sits
+ *  dead-centre on the optical axis. */
 export const STATION_DIAGNOSTIC: GateStation = {
   id: "diagnostic",
   position: [0, 0, gateZAtParkProgress(0.41)],
@@ -153,17 +175,17 @@ export const STATION_DIAGNOSTIC: GateStation = {
   parkProgress: 0.41,
 };
 
-/** Interstitial gate between Diagnostic and Intelligence. Sits in
- *  the passthrough-02 window. The camera passes through it on the
- *  way to Intelligence — that is its job. */
+/** Interstitial waypoint — sits in the middle of passthrough-02 so
+ *  the camera passes through it on the way to Intelligence. */
 export const STATION_INTERSTITIAL: GateStation = {
   id: "interstitial",
-  // Sit at the midpoint of passthrough-02 (progress ≈ 0.6).
   position: [0, 0, gateZAtParkProgress(0.6)],
   halfExtent: 1.8,
   parkProgress: 0.6,
 };
 
+/** Intelligence sphere station — centre of the substrate-cut beat.
+ *  The substrate sphere + L/R side bodies all live in this group. */
 export const STATION_INTELLIGENCE: GateStation = {
   id: "intelligence",
   position: [0, 0, gateZAtParkProgress(0.88)],
@@ -178,97 +200,55 @@ export const STATIONS: readonly GateStation[] = [
   STATION_INTELLIGENCE,
 ];
 
-// ── Brandmark anchors (world space) ─────────────────────────────
+// ── Brandmark anchors (world space, attached to gate centres) ────
 
-/** World position the brandmark sits at when parked at each beat.
- *  These are calibrated against the v7 homepage so the on-screen
- *  position roughly matches `.sigil__mark`, `.miss__brand-slot`,
- *  and `.ilayer__brandmark-anchor` (the projected actor will read
- *  the actual camera + position to compute the screen rect each
- *  frame). */
+/** Brandmark anchor at the parked Thoughtform beat — sits at the
+ *  GATE CENTRE (slightly in front so it composites above the rings).
+ *  Because the anchor is rigidly co-located with the gate, the mark
+ *  always lands inside the diamond regardless of viewport. */
 export const BRANDMARK_ANCHOR_THOUGHTFORM: [number, number, number] = [
-  // Off-centre right + below the camera's gaze axis. The X places
-  // the brandmark inside the v7 sigil compass (which sits in the
-  // right column of the `.tri` grid); the negative Y compensates
-  // for the v7 station's `padding: 140px 0 220px` bias — the
-  // brandmark dock sits roughly 40px below the viewport's vertical
-  // centre on the homepage, which in world coords (at this camera
-  // distance ≈ 4.9 units, fov 38°) translates to a noticeably
-  // negative Y so the perspective projection lands inside the
-  // diamond.
-  1.4,
-  -0.5,
+  STATION_THOUGHTFORM.position[0],
+  STATION_THOUGHTFORM.position[1],
   STATION_THOUGHTFORM.position[2] + 0.1,
 ];
 
+/** Brandmark anchor at the parked Diagnostic beat — centre of the
+ *  orbital field. */
 export const BRANDMARK_ANCHOR_DIAGNOSTIC: [number, number, number] = [
-  // Centred horizontally — matches the v7 `.miss__brand-slot` at
-  // the centre of the diagnostic constellation.
-  0,
-  -0.1,
+  STATION_DIAGNOSTIC.position[0],
+  STATION_DIAGNOSTIC.position[1],
   STATION_DIAGNOSTIC.position[2] + 0.1,
 ];
 
+/** Brandmark anchor at the parked Intelligence beat — centre of the
+ *  substrate sphere. */
 export const BRANDMARK_ANCHOR_INTELLIGENCE: [number, number, number] = [
-  // Centred — matches the v7 `.ilayer__brandmark-anchor`.
-  0,
-  -0.05,
+  STATION_INTELLIGENCE.position[0],
+  STATION_INTELLIGENCE.position[1],
   STATION_INTELLIGENCE.position[2] + 0.1,
 ];
 
-/** Brandmark on-screen target widths at each parked beat (kept for
- *  legacy callers; the projected actor now uses
- *  `getBrandmarkWorldHalfExtent` instead so the brandmark size obeys
- *  3D perspective as the camera approaches/recedes). */
-export const BRANDMARK_PARKED_SCREEN_WIDTH_FRAC = {
-  // Matches v7 .sigil__mark clamp(155px, 19vw, 232px) → ~19vw
-  thoughtform: 0.19,
-  // Matches v7 .miss__brand-slot clamp(96px, 11vw, 144px) → ~11vw
-  diagnostic: 0.11,
-  // Matches v7 .ilayer__brandmark-anchor (centred ring diameter)
-  // — wider because the substrate ring takes more real estate.
-  intelligence: 0.22,
-} as const;
-
-/** WORLD-SPACE half-extent (radius) of the brandmark plate at each
- *  parked beat. Calibrated so that at the parked camera distance the
- *  perspective projection lands at the homepage `.sigil__mark`,
- *  `.miss__brand-slot`, and `.ilayer__brandmark-anchor` screen
- *  widths on a typical desktop viewport (~1920px).
- *
- *  Using a world-space size (instead of a fixed pixel widthFrac)
- *  is what makes the brandmark feel like a true 3D object: as the
- *  camera dollies forward the brandmark perspective-scales naturally,
- *  and during the Thoughtform → Diagnostic transit the shrinking
- *  world half-extent + drifting world position combine into a
- *  "camera move through the world" read instead of a 2D screen
- *  slide. */
-export const BRANDMARK_WORLD_HALF_EXTENT = {
-  // ~9-10% of vw on a 1920 viewport — sits comfortably inside the
-  // v7 sigil diamond outline.
-  thoughtform: 0.18,
-  // ~6% of vw — smaller landing inside the diagnostic constellation
-  // centre (matches v7 .miss__brand-slot proportion).
-  diagnostic: 0.12,
-  // ~13% of vw — the centerpiece of the intelligence sphere station
-  // (largest dock on the homepage).
-  intelligence: 0.24,
-} as const;
-
-/** Resolve the brandmark world position for the current progress.
- *  Interpolates between the three parked anchor points across the
- *  beat windows so the mark TRAVELS through world space, not just
- *  fades between locations. */
+/** Resolve the brandmark world position for the current GLOBAL
+ *  progress. Smoothly interpolates between the three parked anchors
+ *  across the beat windows so the mark TRAVELS through world space. */
 export function getBrandmarkWorldPosition(progress: number): [number, number, number] {
-  // 0.0 → 0.18: parked at thoughtform
-  // 0.18 → 0.41: travel thoughtform → diagnostic
-  // 0.41 → 0.50: parked at diagnostic
-  // 0.50 → 0.88: travel diagnostic → intelligence (through interstitial)
-  // 0.88 → 1.00: parked at intelligence
+  // Beat windows (mirror BEAT_WINDOWS):
+  //   thoughtform     : [0.00, 0.18]
+  //   passthrough-01  : [0.18, 0.32]
+  //   diagnostic      : [0.32, 0.50]
+  //   passthrough-02  : [0.50, 0.70]
+  //   intelligence    : [0.70, 1.00]
+  //
+  // Brandmark stays parked at thoughtform across thoughtform +
+  // first half of passthrough-01 (so the camera reframe pulls AWAY
+  // from a stable mark), then travels across the second half of
+  // passthrough-01 + first half of diagnostic, parks at diagnostic,
+  // then travels across passthrough-02 + early intelligence to the
+  // intelligence anchor.
 
-  if (progress <= 0.18) return BRANDMARK_ANCHOR_THOUGHTFORM;
-  if (progress <= 0.41) {
-    const t = smoothstep(0.18, 0.41, progress);
+  if (progress <= 0.22) return BRANDMARK_ANCHOR_THOUGHTFORM;
+  if (progress <= 0.38) {
+    const t = smoothstep(0.22, 0.38, progress);
     return [
       lerp(BRANDMARK_ANCHOR_THOUGHTFORM[0], BRANDMARK_ANCHOR_DIAGNOSTIC[0], t),
       lerp(BRANDMARK_ANCHOR_THOUGHTFORM[1], BRANDMARK_ANCHOR_DIAGNOSTIC[1], t),
@@ -276,8 +256,8 @@ export function getBrandmarkWorldPosition(progress: number): [number, number, nu
     ];
   }
   if (progress <= 0.5) return BRANDMARK_ANCHOR_DIAGNOSTIC;
-  if (progress <= 0.88) {
-    const t = smoothstep(0.5, 0.88, progress);
+  if (progress <= 0.78) {
+    const t = smoothstep(0.5, 0.78, progress);
     return [
       lerp(BRANDMARK_ANCHOR_DIAGNOSTIC[0], BRANDMARK_ANCHOR_INTELLIGENCE[0], t),
       lerp(BRANDMARK_ANCHOR_DIAGNOSTIC[1], BRANDMARK_ANCHOR_INTELLIGENCE[1], t),
@@ -287,38 +267,207 @@ export function getBrandmarkWorldPosition(progress: number): [number, number, nu
   return BRANDMARK_ANCHOR_INTELLIGENCE;
 }
 
-/** Target on-screen width (as a fraction of viewport width) for the
- *  brandmark at the current scroll position. Legacy path — the
- *  projected actor now uses `getBrandmarkWorldHalfExtent` so the
- *  size obeys perspective; kept for any non-projected consumer. */
-export function getBrandmarkTargetScreenWidthFrac(progress: number): number {
-  const W = BRANDMARK_PARKED_SCREEN_WIDTH_FRAC;
-  if (progress <= 0.18) return W.thoughtform;
-  if (progress <= 0.41) return lerp(W.thoughtform, W.diagnostic, smoothstep(0.18, 0.41, progress));
-  if (progress <= 0.5) return W.diagnostic;
-  if (progress <= 0.88) return lerp(W.diagnostic, W.intelligence, smoothstep(0.5, 0.88, progress));
-  return W.intelligence;
-}
+/** WORLD-SPACE half-extent (radius) of the brandmark plate at each
+ *  parked beat. Sized so the perspective projection lands at a
+ *  visually sensible scale relative to its gate's geometry — large
+ *  enough to read inside the compass diamond, small inside the
+ *  Diagnostic constellation centre, and largest at Intelligence
+ *  where the substrate is the centrepiece. */
+export const BRANDMARK_WORLD_HALF_EXTENT = {
+  thoughtform: 0.32,
+  diagnostic: 0.18,
+  intelligence: 0.42,
+} as const;
 
-/** Brandmark WORLD-SPACE half-extent at the current scroll position.
- *  Lerps between the parked beats using the same windows as
- *  `getBrandmarkWorldPosition`. Combined with the camera path this
- *  produces a perspective-correct screen size for every frame, so
- *  the brandmark grows/shrinks as the camera approaches/recedes —
- *  the "true 3D object" feel.  */
+/** Brandmark world half-extent for the current scroll position.
+ *  Lerps using the same windows as `getBrandmarkWorldPosition` so
+ *  the mark perspective-scales naturally as it travels. */
 export function getBrandmarkWorldHalfExtent(progress: number): number {
   const H = BRANDMARK_WORLD_HALF_EXTENT;
-  if (progress <= 0.18) return H.thoughtform;
-  if (progress <= 0.41) return lerp(H.thoughtform, H.diagnostic, smoothstep(0.18, 0.41, progress));
+  if (progress <= 0.22) return H.thoughtform;
+  if (progress <= 0.38) return lerp(H.thoughtform, H.diagnostic, smoothstep(0.22, 0.38, progress));
   if (progress <= 0.5) return H.diagnostic;
-  if (progress <= 0.88) return lerp(H.diagnostic, H.intelligence, smoothstep(0.5, 0.88, progress));
+  if (progress <= 0.78) return lerp(H.diagnostic, H.intelligence, smoothstep(0.5, 0.78, progress));
   return H.intelligence;
 }
 
-// ── Intelligence chamber — L/R bodies ──────────────────────────
+// ── Copy + label world anchors ───────────────────────────────────
 
-/** Left celestial body — "Trusted Sources". Sits next to the
- *  intelligence sphere station. */
+import type { Beat } from "@/lib/stores/depthGatewayStore";
+
+export interface CopyAnchor {
+  /** Stable id used by the DOM tracker to find the matching element
+   *  via `[data-world-anchor="{id}"]`. */
+  id: string;
+  /** World-space position. */
+  position: [number, number, number];
+  /** Beats during which this anchor is visible (1.0). Outside, the
+   *  tracker fades the element out. */
+  visibilityBeats: Beat[];
+  /** Optional fade window (fraction of beat width) applied at the
+   *  outer edges of the visibility window. Default 0.15. */
+  fadeFrac?: number;
+}
+
+/** Convert SVG-coords-relative-to-orbital-centre into world-space
+ *  anchor offsets at the Diagnostic gate centre. The orbital SVG is
+ *  1100 wide and we render it at SVG_TO_WORLD = 1/240, so a label at
+ *  SVG (x_svg, y_svg) sits at world (x_svg/240, -y_svg/240, gateZ +
+ *  0.01). Y is flipped because SVG is y-down and world is y-up. */
+const ORBIT_SVG_TO_WORLD = 1 / 240;
+function diagnosticLabelWorldPosition(pipXSvg: number, pipYSvg: number): [number, number, number] {
+  return [
+    STATION_DIAGNOSTIC.position[0] + pipXSvg * ORBIT_SVG_TO_WORLD,
+    STATION_DIAGNOSTIC.position[1] - pipYSvg * ORBIT_SVG_TO_WORLD,
+    STATION_DIAGNOSTIC.position[2] + 0.05,
+  ];
+}
+
+/**
+ * COPY_ANCHORS — every DOM text element the world-DOM tracker
+ * projects per frame. The order does not matter; the tracker walks
+ * this list and matches against `[data-world-anchor="{id}"]` in the
+ * DOM.
+ *
+ * Coordinate guidelines:
+ *   - World units; positions are absolute (NOT local to a gate).
+ *   - Z is slightly in front of the gate's Z so the projected DOM
+ *     element composites above the canvas without depth-sort issues.
+ */
+export const COPY_ANCHORS: readonly CopyAnchor[] = [
+  // ── Thoughtform ─────────────────────────────────────────────────
+  // Left copy block: bridge + title + lede + CTA. Sits OFF-AXIS LEFT
+  // of the compass (which is at world X = +1.4) so at parked rest
+  // the .tri composition reads as copy-left + compass-right. As the
+  // camera dollies forward + reframes through passthrough-01, the
+  // Z dolly carries this anchor BEHIND the camera by parked
+  // Diagnostic — so it leaves the screen naturally without needing
+  // a per-progress X offset.
+  {
+    id: "thoughtform.leftCopy",
+    position: [-1.45, 0.0, STATION_THOUGHTFORM.position[2] + 0.1],
+    visibilityBeats: ["thoughtform", "passthrough-01"],
+    fadeFrac: 0.4,
+  },
+  // North star caption above the compass diamond.
+  {
+    id: "thoughtform.northStar",
+    position: [
+      STATION_THOUGHTFORM.position[0] + 0.9,
+      -0.05,
+      STATION_THOUGHTFORM.position[2] + 0.05,
+    ],
+    visibilityBeats: ["thoughtform"],
+    fadeFrac: 0.25,
+  },
+  // Three phase labels — NAVIGATE/ENCODE/BUILD — sit at the v7 sigil
+  // ring node positions (top, lower-left, lower-right) relative to
+  // the compass centre.
+  {
+    id: "thoughtform.phase.navigate",
+    position: [
+      STATION_THOUGHTFORM.position[0],
+      STATION_THOUGHTFORM.position[1] + 0.95,
+      STATION_THOUGHTFORM.position[2] + 0.05,
+    ],
+    visibilityBeats: ["thoughtform"],
+    fadeFrac: 0.3,
+  },
+  {
+    id: "thoughtform.phase.encode",
+    position: [
+      STATION_THOUGHTFORM.position[0] - 0.82,
+      STATION_THOUGHTFORM.position[1] - 0.48,
+      STATION_THOUGHTFORM.position[2] + 0.05,
+    ],
+    visibilityBeats: ["thoughtform"],
+    fadeFrac: 0.3,
+  },
+  {
+    id: "thoughtform.phase.build",
+    position: [
+      STATION_THOUGHTFORM.position[0] + 0.82,
+      STATION_THOUGHTFORM.position[1] - 0.48,
+      STATION_THOUGHTFORM.position[2] + 0.05,
+    ],
+    visibilityBeats: ["thoughtform"],
+    fadeFrac: 0.3,
+  },
+
+  // ── Diagnostic ──────────────────────────────────────────────────
+  // Heading block above the orbital field — bridge + title.
+  {
+    id: "diagnostic.headCopy",
+    position: [
+      STATION_DIAGNOSTIC.position[0],
+      STATION_DIAGNOSTIC.position[1] + 0.95,
+      STATION_DIAGNOSTIC.position[2] + 0.1,
+    ],
+    visibilityBeats: ["diagnostic"],
+    fadeFrac: 0.15,
+  },
+  // 4 orbit labels — pinned to the actual MISS_LABELS pip world
+  // positions so they ride the orbits in 3D as the camera approaches
+  // and passes the gate.
+  ...MISS_LABELS.map((label) => ({
+    id: `diagnostic.label.${label.id}`,
+    position: diagnosticLabelWorldPosition(label.x, label.y),
+    visibilityBeats: ["diagnostic", "passthrough-02"] as Beat[],
+    fadeFrac: 0.1,
+  })),
+
+  // ── Intelligence ────────────────────────────────────────────────
+  // Heading block above the substrate sphere.
+  {
+    id: "intelligence.headCopy",
+    position: [
+      STATION_INTELLIGENCE.position[0],
+      STATION_INTELLIGENCE.position[1] + 0.85,
+      STATION_INTELLIGENCE.position[2] + 0.1,
+    ],
+    visibilityBeats: ["intelligence", "passthrough-02"],
+    fadeFrac: 0.08,
+  },
+  // L/R body labels — Trusted Sources / Headless Surfaces — sit
+  // above each side body.
+  {
+    id: "intelligence.leftLabel",
+    position: [-2.2, 0.55, STATION_INTELLIGENCE.position[2] + 0.2],
+    visibilityBeats: ["intelligence"],
+    fadeFrac: 0.12,
+  },
+  {
+    id: "intelligence.rightLabel",
+    position: [2.2, 0.55, STATION_INTELLIGENCE.position[2] + 0.2],
+    visibilityBeats: ["intelligence"],
+    fadeFrac: 0.12,
+  },
+];
+
+// ── Substrate-cut envelope (ADR-017, unchanged) ──────────────────
+
+/** Substrate morph value (0 = brandmark shape, 1 = Fibonacci sphere).
+ *  Symmetric trapezoid envelope across the intelligence beat so the
+ *  cloud collapses back into the mark before the corridor ends. */
+export function getSubstrateMorph(intelligenceGate: number): number {
+  const FRAC = 0.3;
+  if (intelligenceGate <= 0) return 0;
+  if (intelligenceGate >= 1) return 0;
+  if (intelligenceGate < FRAC) {
+    const t = intelligenceGate / FRAC;
+    return t * t * t * (t * (t * 6 - 15) + 10);
+  }
+  if (intelligenceGate > 1 - FRAC) {
+    const t = (1 - intelligenceGate) / FRAC;
+    return t * t * t * (t * (t * 6 - 15) + 10);
+  }
+  return 1;
+}
+
+// ── Intelligence side bodies ─────────────────────────────────────
+
+/** Left celestial body — "Trusted Sources". Sits left of the
+ *  substrate sphere station. */
 export const LEFT_BODY_POSITION: [number, number, number] = [
   -3.0,
   -0.1,
@@ -334,58 +483,20 @@ export const RIGHT_BODY_POSITION: [number, number, number] = [
 
 export const SIDE_BODY_SCALE = 1.1;
 
-/** Side body opacity envelope across the intelligence beat (0.70..1.00).
- *  Bodies appear after the substrate sphere has begun to morph so the
- *  read is: brandmark → sphere → constellation forms around it. */
+/** Side body opacity envelope across the intelligence beat (gate-
+ *  local 0..1). Bodies appear after the substrate sphere has begun
+ *  to morph so the read is: brandmark -> sphere -> constellation. */
 export function getSideBodyOpacity(intelligenceGate: number): number {
-  // intelligenceGate is the intelligence beat's local 0..1.
   if (intelligenceGate <= 0.35) return 0;
   return smoothstep(0.35, 0.85, intelligenceGate);
 }
 
-/** Substrate morph value (0 = brandmark shape, 1 = Fibonacci sphere).
- *  Symmetric trapezoid envelope across the intelligence beat so the
- *  cloud collapses back into the mark before the corridor ends.
- *  Mirrors the v7 `substrateMorphProgress` shape from ADR-017. */
-export function getSubstrateMorph(intelligenceGate: number): number {
-  const FRAC = 0.3;
-  if (intelligenceGate <= 0) return 0;
-  if (intelligenceGate >= 1) return 0;
-  // Smootherstep ramp on each side, hold in the middle.
-  if (intelligenceGate < FRAC) {
-    const t = intelligenceGate / FRAC;
-    return t * t * t * (t * (t * 6 - 15) + 10);
-  }
-  if (intelligenceGate > 1 - FRAC) {
-    const t = (1 - intelligenceGate) / FRAC;
-    return t * t * t * (t * (t * 6 - 15) + 10);
-  }
-  return 1;
+// ── Helpers ──────────────────────────────────────────────────────
+
+function clamp01(v: number): number {
+  return v < 0 ? 0 : v > 1 ? 1 : v;
 }
 
-// ── Legacy compatibility ───────────────────────────────────────
+// ── Re-exports for downstream consumers ──────────────────────────
 
-/** Backwards-compatible alias for the old camera lookAt constant
- *  some older painters might import. The lookAt now travels — this
- *  returns the static centre as a fallback. */
-export const CAMERA_LOOK_AT: [number, number, number] = [0, 0, 0];
-
-/** Backwards-compatible world half-size helper for the existing
- *  `BrandmarkPointCloud` shader. Returns a smooth size that lerps
- *  between the brandmark anchor target sizes — the point cloud
- *  only paints during the intelligence substrate window now, so
- *  this resolves to roughly the intelligence anchor size. */
-export function getBrandmarkWorldHalfSize(progress: number): number {
-  // Reuse the screen-width target × camera-distance to compute a
-  // rough world half-extent. The exact value matters less now that
-  // the cloud is only the cover layer for the substrate morph.
-  const widthFrac = getBrandmarkTargetScreenWidthFrac(progress);
-  const [, , camZ] = getCameraPosition(smoothstep(0, 1, progress));
-  const [, , brandZ] = getBrandmarkWorldPosition(progress);
-  const camToBrand = Math.max(0.5, camZ - brandZ);
-  // World half-extent ≈ widthFrac * 2 * tan(fov/2) * distance / 2
-  const tanHalfFov = Math.tan((CAMERA_FOV * Math.PI) / 180 / 2);
-  const aspect = 16 / 9; // approximate; the projection helper uses live aspect
-  const viewW = 2 * tanHalfFov * camToBrand * aspect;
-  return widthFrac * viewW * 0.5;
-}
+export { MISS_ORBITS, MISS_LABELS, MISS_VIEWBOX, pointOnEllipse };

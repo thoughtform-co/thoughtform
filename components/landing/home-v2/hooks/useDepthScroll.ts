@@ -2,9 +2,7 @@
 
 import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
 import {
-  BEAT_WINDOWS,
   INITIAL_TRANSFORM,
-  type Beat,
   type ChamberId,
   cameraTravelT,
   deriveChambers,
@@ -13,21 +11,14 @@ import {
 
 /**
  * useDepthScroll — rAF-throttled scroll watcher for the home-v2
- * depth-corridor stage (ADR-018).
+ * depth-corridor stage (ADR-018, world-owned rebuild).
  *
  * Per frame, computes the global 0..1 progress across the sticky
  * stage and writes:
  *
  *   1. CSS custom properties on the stage root:
- *      - `--depth-progress`, `--camera-t`
- *      - `--beat-thoughtform-active` etc. (1 when this is the current
- *         beat, 0 otherwise, with a short fade window at the boundary
- *         so DOM copy can crossfade cleanly)
- *      - `--beat-gate-progress` (0..1 inside the current beat)
- *      - `--velocity-mag` (|velocity|, used to drive HUD intensity)
- *      - Legacy `--chamber-{a,b,c}-progress` +
- *         `--chamber-{A,B,C}-section-opacity` for the migration
- *         period.
+ *      - `--depth-progress`, `--camera-t`, `--beat-gate-progress`
+ *      - `--velocity-mag` (used to drive HUD intensity)
  *
  *   2. v7 HUD readout elements (the depth-rail diamond, %, coord
  *      readouts, sector text) so the v7 HUD chrome reads as a live
@@ -36,6 +27,12 @@ import {
  *   3. `depthGatewayStore` — single store the R3F painters read
  *      imperatively inside `useFrame` so per-frame work stays at
  *      uniform writes only.
+ *
+ * The chamber A/B/C section-opacity machinery is GONE — the world-
+ * owned model removes the v7 section grid stack from the corridor.
+ * Each gate group manages its own visibility envelope from `beat` +
+ * `gateProgress`; the DOM copy overlay manages its visibility from
+ * `useWorldDomTracker` based on per-anchor `visibilityBeats`.
  */
 export function useDepthScroll(stageRef: React.RefObject<HTMLDivElement | null>): void {
   const rafId = useRef<number | null>(null);
@@ -63,46 +60,6 @@ export function useDepthScroll(stageRef: React.RefObject<HTMLDivElement | null>)
     stage.style.setProperty("--camera-t", cameraT.toFixed(4));
     stage.style.setProperty("--beat-gate-progress", gateProgress.toFixed(4));
 
-    // ── Beat active flags (for DOM copy crossfade) ───────────────
-    // Each beat's "active" var is 1 inside its window and 0 elsewhere
-    // with a small (FADE px in scroll units) fade at the boundary so
-    // section copy crossfades cleanly without driving the diagram
-    // visuals (which now live in R3F).
-    const FADE = 0.02;
-    for (const { beat: b, start, end } of BEAT_WINDOWS) {
-      // Trapezoid envelope: 0 outside [start - FADE, end + FADE],
-      // ramps to 1 inside [start, end].
-      let active = 0;
-      if (progress >= start && progress <= end) {
-        active = 1;
-      } else if (progress > start - FADE && progress < start) {
-        active = (progress - (start - FADE)) / FADE;
-      } else if (progress > end && progress < end + FADE) {
-        active = 1 - (progress - end) / FADE;
-      }
-      stage.style.setProperty(`--beat-${b}-active`, active.toFixed(4));
-    }
-
-    // ── Legacy chamber progress + section-opacity vars ───────────
-    // Kept for the existing painters (BrandmarkPointCloud,
-    // IntelligenceChamber) and the DOM cross-fade layer during
-    // migration. The corridor mode CSS hides the diagram visuals
-    // and only uses these for COPY visibility.
-    stage.style.setProperty("--chamber-a-progress", chamberA.toFixed(4));
-    stage.style.setProperty("--chamber-b-progress", chamberB.toFixed(4));
-    stage.style.setProperty("--chamber-c-progress", chamberC.toFixed(4));
-
-    // Chamber section opacity — copy fades in/out around the parked
-    // beats. Thoughtform's copy is visible during thoughtform +
-    // passthrough-01; diagnostic during diagnostic; intelligence
-    // during passthrough-02 + intelligence.
-    const aOpacity = visibilityForBeats(progress, ["thoughtform", "passthrough-01"]);
-    const bOpacity = visibilityForBeats(progress, ["diagnostic"]);
-    const cOpacity = visibilityForBeats(progress, ["passthrough-02", "intelligence"]);
-    stage.style.setProperty("--chamber-A-section-opacity", aOpacity.toFixed(4));
-    stage.style.setProperty("--chamber-B-section-opacity", bOpacity.toFixed(4));
-    stage.style.setProperty("--chamber-C-section-opacity", cOpacity.toFixed(4));
-
     // ── v7 HUD readouts ─────────────────────────────────────────
     writeV7HudReadouts(progress, chamberId);
 
@@ -114,10 +71,6 @@ export function useDepthScroll(stageRef: React.RefObject<HTMLDivElement | null>)
     lastFrameTime.current = now;
     const lastP = lastProgress.current;
 
-    // velocity in progress-units-per-second. Default to 0 on the
-    // first frame (no lastT yet), and on idle (delta progress = 0).
-    // Negative when scrolling upward. We deliberately keep the sign
-    // so painters can distinguish forward vs backward travel.
     let velocity = 0;
     if (lastT > 0 && lastP >= 0) {
       const dtSec = Math.max(0.001, (now - lastT) / 1000);
@@ -140,8 +93,8 @@ export function useDepthScroll(stageRef: React.RefObject<HTMLDivElement | null>)
         velocity,
       });
     } else if (Math.abs(velocity) > 0.0001) {
-      // Even when progress didn't change meaningfully, surface
-      // velocity decay so the streaks settle back to 0 quickly.
+      // Surface velocity decay even when progress hasn't changed,
+      // so streak intensity settles back to 0 quickly when idle.
       useDepthGatewayStore.getState().setTransform({
         progress,
         cameraT,
@@ -168,11 +121,8 @@ export function useDepthScroll(stageRef: React.RefObject<HTMLDivElement | null>)
     writeFrame();
   }, [writeFrame]);
 
-  // Decay velocity to zero on idle. The scroll listener only fires
-  // when the user actually scrolls — but the streak system wants to
-  // see velocity tend back toward 0 between scroll events. Schedule
-  // a follow-up rAF ~200ms after the last scroll so the velocity
-  // calculation naturally produces ~0 (progress didn't change).
+  // Decay velocity to zero on idle: schedule a follow-up rAF ~200ms
+  // after the last scroll so the velocity calculation produces ~0.
   useEffect(() => {
     let decayHandle: number | null = null;
     const scheduleDecay = () => {
@@ -242,23 +192,4 @@ function writeV7HudReadouts(progress: number, chamberId: ChamberId): void {
   if (sectorEl) {
     sectorEl.textContent = SECTOR_BY_CHAMBER[chamberId] ?? "Origin";
   }
-}
-
-/**
- * Visibility envelope for a SET of consecutive beats. Returns 1 while
- * the user is inside any of the beats, with short fade-in / fade-out
- * windows at the outer boundaries so DOM copy crossfades cleanly.
- * Inside the set of beats, opacity is 1 throughout — no notch at
- * passthrough boundaries.
- */
-function visibilityForBeats(progress: number, beats: Beat[]): number {
-  const windows = BEAT_WINDOWS.filter((b) => beats.includes(b.beat));
-  if (windows.length === 0) return 0;
-  const start = Math.min(...windows.map((w) => w.start));
-  const end = Math.max(...windows.map((w) => w.end));
-  const FADE = 0.04;
-  if (progress >= start && progress <= end) return 1;
-  if (progress > start - FADE && progress < start) return (progress - (start - FADE)) / FADE;
-  if (progress > end && progress < end + FADE) return 1 - (progress - end) / FADE;
-  return 0;
 }
