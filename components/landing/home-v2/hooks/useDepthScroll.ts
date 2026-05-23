@@ -6,6 +6,7 @@ import {
   type ChamberId,
   cameraTravelT,
   deriveChambers,
+  getCorridorEngagement,
   useDepthGatewayStore,
 } from "@/lib/stores/depthGatewayStore";
 
@@ -63,18 +64,20 @@ export function useDepthScroll(stageRef: React.RefObject<HTMLDivElement | null>)
     // ── v7 HUD readouts ─────────────────────────────────────────
     writeV7HudReadouts(progress, chamberId);
 
-    // ── Active state + velocity ─────────────────────────────────
-    // `active` flips on only once the stage has fully reached the
-    // top of the viewport (rect.top <= 0). The previous looser
-    // criterion (`rect.top < vh`) flipped active true the moment
-    // the stage entered the viewport even slightly — but during the
-    // hero scroll the sticky stage is still below the viewport, so
-    // painting then meant the projected brandmark appeared over the
-    // hero with no compass around it. Gating on `rect.top <= 0`
-    // means the corridor only engages once the user has actually
-    // arrived at the Thoughtform section, so the compass + brand-
-    // mark are already in place the moment they become visible.
-    const active = rect.bottom > 0 && rect.top <= 0;
+    // ── Engagement state + velocity ─────────────────────────────
+    // Two-phase engagement (ADR-018 "furnished room on arrival"):
+    //   - `armed`: the sticky stage is rising into pin position
+    //     (0 < rect.top < vh). Painters pre-position at the parked
+    //     Thoughtform layout (paintProgress = 0) with opacity 0,
+    //     so the first `active` frame reveals a fully composed
+    //     parked beat instead of an empty void that fills in as
+    //     the user scrolls.
+    //   - `active`: stage is pinned (rect.top <= 0). Painters paint
+    //     at the live scroll progress.
+    // The hero is sticky-pinned beneath the stage layer; armed
+    // painters write opacity 0 so nothing composites over the hero
+    // even while transforms are being computed.
+    const { active, armed, paintProgress } = getCorridorEngagement(rect, vh, progress);
 
     const now = performance.now();
     const lastT = lastFrameTime.current;
@@ -88,7 +91,12 @@ export function useDepthScroll(stageRef: React.RefObject<HTMLDivElement | null>)
     }
     stage.style.setProperty("--velocity-mag", Math.abs(velocity).toFixed(4));
 
-    if (Math.abs(progress - lastProgress.current) > 0.00005 || active !== getActive()) {
+    const prev = useDepthGatewayStore.getState().transform;
+    const engagementChanged = active !== prev.active || armed !== prev.armed;
+    if (
+      Math.abs(progress - lastProgress.current) > 0.00005 ||
+      engagementChanged
+    ) {
       lastProgress.current = progress;
       useDepthGatewayStore.getState().setTransform({
         progress,
@@ -100,6 +108,8 @@ export function useDepthScroll(stageRef: React.RefObject<HTMLDivElement | null>)
         chamberB,
         chamberC,
         active,
+        armed,
+        paintProgress,
         velocity,
       });
     } else if (Math.abs(velocity) > 0.0001) {
@@ -115,6 +125,8 @@ export function useDepthScroll(stageRef: React.RefObject<HTMLDivElement | null>)
         chamberB,
         chamberC,
         active,
+        armed,
+        paintProgress,
         velocity,
       });
     }
@@ -160,10 +172,6 @@ export function useDepthScroll(stageRef: React.RefObject<HTMLDivElement | null>)
 
 function clamp01(v: number): number {
   return v < 0 ? 0 : v > 1 ? 1 : v;
-}
-
-function getActive(): boolean {
-  return useDepthGatewayStore.getState().transform.active;
 }
 
 const SECTOR_BY_CHAMBER: Record<ChamberId, string> = {

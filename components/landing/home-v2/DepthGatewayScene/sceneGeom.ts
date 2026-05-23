@@ -488,12 +488,17 @@ export const COPY_ANCHORS: readonly CopyAnchor[] = [
   {
     id: "thoughtform.leftCopy",
     position: (transform) => [
-      -1.8 + getThoughtformCenterOffsetX(transform.progress),
+      -1.8 + getThoughtformCenterOffsetX(transform.paintProgress),
       0.0,
       STATION_THOUGHTFORM.position[2] + 0.1,
     ],
     visibilityBeats: ["thoughtform", "passthrough-01"],
-    fadeFrac: 0.4,
+    // No entry fade — copy reads at full strength the moment the
+    // stage pins. Pre-arm projection writes the transform at parked
+    // Thoughtform with opacity 0, so revealing it is a single flip
+    // from invisible to full ("furnished room on arrival") rather
+    // than a 40%-window crossfade as the user scrolls in.
+    fadeFrac: 0,
   },
   // Three phase labels — NAVIGATE/ENCODE/BUILD — sit at the v7 sigil
   // ring node positions (top, lower-left, lower-right) relative to
@@ -506,32 +511,33 @@ export const COPY_ANCHORS: readonly CopyAnchor[] = [
   {
     id: "thoughtform.phase.navigate",
     position: (transform) => [
-      STATION_THOUGHTFORM.position[0] + getThoughtformCenterOffsetX(transform.progress),
+      STATION_THOUGHTFORM.position[0] + getThoughtformCenterOffsetX(transform.paintProgress),
       STATION_THOUGHTFORM.position[1] + 0.71,
       STATION_THOUGHTFORM.position[2] + 0.05,
     ],
     visibilityBeats: ["thoughtform"],
-    fadeFrac: 0.3,
+    // No entry fade — see thoughtform.leftCopy above.
+    fadeFrac: 0,
   },
   {
     id: "thoughtform.phase.encode",
     position: (transform) => [
-      STATION_THOUGHTFORM.position[0] - 0.62 + getThoughtformCenterOffsetX(transform.progress),
+      STATION_THOUGHTFORM.position[0] - 0.62 + getThoughtformCenterOffsetX(transform.paintProgress),
       STATION_THOUGHTFORM.position[1] - 0.36,
       STATION_THOUGHTFORM.position[2] + 0.05,
     ],
     visibilityBeats: ["thoughtform"],
-    fadeFrac: 0.3,
+    fadeFrac: 0,
   },
   {
     id: "thoughtform.phase.build",
     position: (transform) => [
-      STATION_THOUGHTFORM.position[0] + 0.62 + getThoughtformCenterOffsetX(transform.progress),
+      STATION_THOUGHTFORM.position[0] + 0.62 + getThoughtformCenterOffsetX(transform.paintProgress),
       STATION_THOUGHTFORM.position[1] - 0.36,
       STATION_THOUGHTFORM.position[2] + 0.05,
     ],
     visibilityBeats: ["thoughtform"],
-    fadeFrac: 0.3,
+    fadeFrac: 0,
   },
 
   // ── Diagnostic ──────────────────────────────────────────────────

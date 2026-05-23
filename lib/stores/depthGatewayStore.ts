@@ -64,6 +64,20 @@ export interface DepthGatewayTransform {
   chamberC: number;
   /** True while the sticky stage is engaged with the viewport. */
   active: boolean;
+  /** True only while the stage is approaching its pinned position
+   *  AFTER the hero has fully scrolled off-screen but BEFORE the
+   *  sticky cell has reached the top of the viewport. While armed,
+   *  painters should pre-position elements at the parked Thoughtform
+   *  layout (`paintProgress = 0`) with opacity 0, so the first
+   *  `active` frame reveals a fully composed room instead of an
+   *  empty void that fills in as the user scrolls. */
+  armed: boolean;
+  /** Progress value PAINTERS should drive world positions + camera
+   *  sync from. Equal to `progress` when `active`. Forced to 0 while
+   *  `armed` so the pre-arm pass projects the parked Thoughtform
+   *  layout. While neither active nor armed, equals `progress` but
+   *  painters bail out early so the value is moot. */
+  paintProgress: number;
   /** Signed per-frame scroll velocity in "progress units per second".
    *  Positive when scrolling forward through the stage, negative on
    *  upward scroll, zero when idle. Used by `ScrollStreaks` to
@@ -82,6 +96,8 @@ export const INITIAL_TRANSFORM: DepthGatewayTransform = {
   chamberB: 0,
   chamberC: 0,
   active: false,
+  armed: false,
+  paintProgress: 0,
   velocity: 0,
 };
 
@@ -112,8 +128,41 @@ function transformEquals(a: DepthGatewayTransform, b: DepthGatewayTransform): bo
     a.chamberB === b.chamberB &&
     a.chamberC === b.chamberC &&
     a.active === b.active &&
+    a.armed === b.armed &&
+    a.paintProgress === b.paintProgress &&
     a.velocity === b.velocity
   );
+}
+
+/** Resolve corridor engagement state from the stage rect and the
+ *  current global progress. Returns:
+ *
+ *   - `active`: stage is pinned (rect.top <= 0) and still in view.
+ *     Painters paint at the live progress with their normal
+ *     visibility envelopes.
+ *   - `armed`: stage is rising into the pinned position but hasn't
+ *     pinned yet (0 < rect.top < vh). Painters should pre-position
+ *     elements at the parked Thoughtform layout (`paintProgress = 0`)
+ *     with opacity forced to 0, so the first `active` frame reveals
+ *     a fully composed parked beat instead of an empty void.
+ *   - `paintProgress`: equal to `progress` while active; forced to 0
+ *     while armed (or otherwise).
+ *
+ *  Hero overlap is not a concern here: while `armed`, all painters
+ *  write opacity 0, so even though transforms are computed nothing
+ *  is shown. The hero is sticky-pinned beneath the stage layer; the
+ *  stage's own rect crossing into view is the correct signal. */
+export function getCorridorEngagement(
+  stageRect: DOMRect,
+  vh: number,
+  progress: number
+): { active: boolean; armed: boolean; paintProgress: number } {
+  const pinned = stageRect.top <= 0;
+  const stageInView = stageRect.bottom > 0 && stageRect.top < vh;
+  const active = pinned && stageRect.bottom > 0;
+  const armed = stageInView && !pinned;
+  const paintProgress = active ? progress : 0;
+  return { active, armed, paintProgress };
 }
 
 // ────────────────────────────────────────────────────────────────

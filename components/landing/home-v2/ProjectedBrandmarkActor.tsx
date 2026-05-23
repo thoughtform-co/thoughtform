@@ -68,7 +68,7 @@ export function ProjectedBrandmarkActor() {
     return [
       {
         id: "home-v2.brandmark",
-        position: (transform) => getBrandmarkWorldPosition(transform.progress),
+        position: (transform) => getBrandmarkWorldPosition(transform.paintProgress),
         // Brandmark is visible across all five beats; substrate-cut
         // is handled inside onPaint so the DOM hides during the
         // intelligence morph window.
@@ -85,7 +85,13 @@ export function ProjectedBrandmarkActor() {
           if (!inner) return;
 
           const { transform, camera, vw, screenX, screenY, worldPos } = ctx;
-          const { progress, beat, gateProgress } = transform;
+          const { paintProgress, beat, gateProgress, active } = transform;
+          // Drive geometry off `paintProgress` so during the armed
+          // pre-arm pass the mark is sized + placed at parked
+          // Thoughtform — the first `active` frame then unmutes its
+          // opacity with the layout already correct (furnished room
+          // on arrival).
+          const progress = paintProgress;
 
           // Substrate-cut: hide the DOM brandmark whenever the in-
           // canvas substrate morph cloud is painting (ADR-017). The
@@ -141,7 +147,11 @@ export function ProjectedBrandmarkActor() {
           const isParkedBeat =
             beat === "thoughtform" || beat === "diagnostic" || beat === "intelligence";
           const intensity = isParkedBeat ? 1 : 0.92;
-          element.style.opacity = `${(bookend * intensity).toFixed(3)}`;
+          // Suppress opacity during the armed pre-arm pass so the
+          // brandmark transforms are written but invisible until
+          // the stage pins.
+          const visibilityScale = active ? 1 : 0;
+          element.style.opacity = `${(bookend * intensity * visibilityScale).toFixed(3)}`;
 
           // Roll: the inner div takes the perspective rotation so
           // the outer shell stays a clean layout box.

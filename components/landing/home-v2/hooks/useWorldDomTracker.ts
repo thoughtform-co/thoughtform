@@ -187,13 +187,20 @@ export function useWorldDomTracker(
       if (!root || !cam || !proj || !fwd || !toA) return;
 
       const transform = useDepthGatewayStore.getState().transform;
-      syncMirrorCamera(cam, transform.progress);
+      // Use `paintProgress` so during the `armed` pre-arm pass the
+      // mirror camera sits at parked Thoughtform (progress 0) — the
+      // first `active` frame then already has every anchor's
+      // transform written, so the room reads as "furnished on
+      // arrival" rather than filling in as the user scrolls.
+      const painting = transform.active || transform.armed;
+      const paintProgress = transform.paintProgress;
+      syncMirrorCamera(cam, paintProgress);
 
       const vw = window.innerWidth;
       const vh = window.innerHeight;
 
       // Camera-forward (used for behind-camera culling).
-      const [lx, ly, lz] = getCameraLookAt(transform.progress);
+      const [lx, ly, lz] = getCameraLookAt(paintProgress);
       fwd.set(lx, ly, lz).sub(cam.position).normalize();
 
       for (const anchor of anchors) {
@@ -210,9 +217,14 @@ export function useWorldDomTracker(
         // Behind-camera cull.
         toA.set(worldPos[0], worldPos[1], worldPos[2]).sub(cam.position);
         const camToAnchor = toA.dot(fwd);
-        const visibilityOpacity = computeVisibilityOpacity(anchor, transform.progress);
+        const visibilityOpacity = computeVisibilityOpacity(anchor, paintProgress);
         const inFront = camToAnchor > 0.2;
-        const visible = inFront && visibilityOpacity > 0.001 && transform.active;
+        // Paint (write transform) while armed OR active. Opacity is
+        // forced to 0 while only armed so nothing is visually shown
+        // until the stage actually pins. The first `active` frame
+        // then flips opacity to its computed visibility value with
+        // every transform already in place.
+        const visible = inFront && visibilityOpacity > 0.001 && painting;
 
         const lastState = lastStateRef.current;
         const last = lastState.get(anchor.id);
@@ -265,11 +277,14 @@ export function useWorldDomTracker(
           element.style.transform = transformValue;
         }
 
-        if (!last || becameVisible || Math.abs(visibilityOpacity - last.o) > 0.005) {
-          element.style.opacity = `${visibilityOpacity.toFixed(3)}`;
+        // While armed, suppress opacity so the pre-armed transform
+        // doesn't flash visible before the stage pins.
+        const writeOpacity = transform.active ? visibilityOpacity : 0;
+        if (!last || becameVisible || Math.abs(writeOpacity - last.o) > 0.005) {
+          element.style.opacity = `${writeOpacity.toFixed(3)}`;
         }
 
-        lastState.set(anchor.id, { x: screenX, y: screenY, o: visibilityOpacity, visible: true });
+        lastState.set(anchor.id, { x: screenX, y: screenY, o: writeOpacity, visible: true });
 
         if (anchor.onPaint) {
           anchor.onPaint(

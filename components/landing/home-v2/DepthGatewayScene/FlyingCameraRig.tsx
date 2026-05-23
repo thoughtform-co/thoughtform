@@ -50,15 +50,19 @@ export function FlyingCameraRig() {
   }, [camera]);
 
   useFrame(() => {
-    const { progress } = useDepthGatewayStore.getState().transform;
-    const [x, y, z] = getCameraPosition(progress);
+    // Drive the rig from `paintProgress` so the camera sits at the
+    // parked Thoughtform layout (progress 0) during the `armed` pre-
+    // arm pass — mirrors the DOM tracker so DOM + R3F project from
+    // the same camera the moment the stage pins.
+    const { paintProgress } = useDepthGatewayStore.getState().transform;
+    const [x, y, z] = getCameraPosition(paintProgress);
     camera.position.set(x, y, z);
-    const [lx, ly, lz] = getCameraLookAt(progress);
+    const [lx, ly, lz] = getCameraLookAt(paintProgress);
     camera.lookAt(lx, ly, lz);
     // Apply roll AFTER lookAt so the up-vector tilt sticks. lookAt
     // resets the camera's up to (0,1,0); we then translate the
     // up-vector into a banked direction for the bell-curve roll.
-    const roll = getCameraRoll(progress);
+    const roll = getCameraRoll(paintProgress);
     if (roll !== 0) {
       camera.up.set(Math.sin(roll), Math.cos(roll), 0);
     } else {

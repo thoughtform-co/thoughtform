@@ -171,12 +171,18 @@ export function ThoughtformCompassGate() {
   useFrame((state) => {
     const group = groupRef.current;
     if (!group) return;
-    const { progress, active } = useDepthGatewayStore.getState().transform;
-    if (!active) {
+    const { paintProgress, active, armed } = useDepthGatewayStore.getState().transform;
+    // Paint while armed OR active so the parked Thoughtform geometry
+    // is in place at progress 0 before the stage pins. Opacity is
+    // forced to 0 while only armed (visibilityScale = 0) so the
+    // group transforms compile without flashing the user.
+    if (!active && !armed) {
       group.visible = false;
       return;
     }
     group.visible = true;
+    const progress = paintProgress;
+    const visibilityScale = active ? 1 : 0;
 
     // Staggered flythrough: each ring gets its own [start, end]
     // window in `FLYTHROUGH_WINDOWS`. Outer ring (index 0) flies
@@ -194,7 +200,7 @@ export function ThoughtformCompassGate() {
       const { dz, opacityT } = getThoughtformRingFlythrough(progress, i);
       if (ring) ring.position.z = dz;
       const base = (mat.userData as { baseAlpha: number }).baseAlpha;
-      mat.opacity = opacityT * base;
+      mat.opacity = opacityT * base * visibilityScale;
     }
 
     // Diamond rides ring 0 (it's the outer frame — visually paired
@@ -202,7 +208,7 @@ export function ThoughtformCompassGate() {
     const ring0 = getThoughtformRingFlythrough(progress, 0);
     const diamond = diamondRef.current;
     if (diamond) diamond.position.z = ring0.dz;
-    diamondMat.opacity = ring0.opacityT * 0.85;
+    diamondMat.opacity = ring0.opacityT * 0.85 * visibilityScale;
 
     // Phase node markers stay parked at gate Z — they don't ride
     // the flythrough (their DOM label siblings are parked-only).
@@ -212,7 +218,7 @@ export function ThoughtformCompassGate() {
     let phaseOpacity = 0;
     if (progress <= 0.18) phaseOpacity = 1;
     else if (progress <= 0.234) phaseOpacity = 1 - (progress - 0.18) / 0.054;
-    phaseNodeMat.opacity = phaseOpacity * 0.95;
+    phaseNodeMat.opacity = phaseOpacity * 0.95 * visibilityScale;
 
     // Cinematic centering pan: slide the whole group laterally
     // toward dead-centre during [0.05, 0.18]. Mirrors the same
