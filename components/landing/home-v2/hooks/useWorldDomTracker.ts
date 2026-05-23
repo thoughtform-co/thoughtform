@@ -85,6 +85,9 @@ export interface PaintContext {
  *    "left-center"   : left edge centred vertically on the anchor
  *    "right-center"  : right edge centred vertically on the anchor
  *    "top-left"      : element's top-left corner on the anchor (no shift)
+ *    "top-right"     : element's top-right corner on the anchor
+ *    "bottom-left"   : element's bottom-left corner on the anchor
+ *    "bottom-right"  : element's bottom-right corner on the anchor
  */
 const ANCHOR_ORIGINS: Record<string, string> = {
   center: "-50%, -50%",
@@ -93,6 +96,9 @@ const ANCHOR_ORIGINS: Record<string, string> = {
   "left-center": "0%, -50%",
   "right-center": "-100%, -50%",
   "top-left": "0%, 0%",
+  "top-right": "-100%, 0%",
+  "bottom-left": "0%, -100%",
+  "bottom-right": "-100%, -100%",
 };
 
 /** Make a mirror camera mounted to the same FOV as the R3F scene. */

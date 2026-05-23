@@ -201,14 +201,47 @@
 
 /* ── Phase labels (NAVIGATE / ENCODE / BUILD) ─────────────── */
 
+/* Two-line stacked label mirroring the v7 sigil `<text>` pairs
+   at landing-v7-motion.html lines 4359-4370. Primary line is the
+   NAVIGATE/ENCODE/BUILD verb (dawn, uppercase, ~11px); secondary
+   line is the See/Crystallize/Ship gloss (dawn-30, mixed case,
+   ~9px). Modifier classes set `text-align` to mirror v7's
+   `text-anchor="end"` (navigate, encode) and `"start"` (build). */
 .home-v2-copy-phase {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
   font-family: var(--font-pt-mono, ui-monospace, monospace);
-  font-size: 10px;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  font-weight: 700;
-  color: var(--gold, #caa554);
   white-space: nowrap;
+}
+
+.home-v2-copy-phase__label {
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--dawn, #ebe3d6);
+  line-height: 1;
+}
+
+.home-v2-copy-phase__sub {
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  font-weight: 400;
+  color: var(--dawn-30, rgba(235, 227, 214, 0.35));
+  line-height: 1;
+}
+
+/* text-align per modifier mirrors v7 SVG text-anchor on each label. */
+.home-v2-copy-phase--navigate,
+.home-v2-copy-phase--encode {
+  text-align: right;
+  align-items: flex-end;
+}
+
+.home-v2-copy-phase--build {
+  text-align: left;
+  align-items: flex-start;
 }
 
 /* ── North-star caption ───────────────────────────────────── */

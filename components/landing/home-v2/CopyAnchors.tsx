@@ -60,26 +60,37 @@ export function CopyAnchors({ text }: CopyAnchorsProps) {
         </div>
       </div>
 
+      {/* Phase labels — NAVIGATE / ENCODE / BUILD. Each label is a
+          two-line stack (primary uppercase + secondary mixed-case)
+          mirroring the v7 sigil `<text>` pairs at lines 4359-4370
+          of `landing-v7-motion.html`. The COPY_ANCHORS positions
+          place the label's appropriate corner at the v7 connector
+          tip; `data-anchor-origin` shifts each label so that corner
+          lands on the anchor (top-right for navigate/encode = v7
+          `text-anchor="end"`, top-left for build = `"start"`). */}
       <div
         className="home-v2-copy-phase home-v2-copy-phase--navigate"
         data-world-anchor="thoughtform.phase.navigate"
-        data-anchor-origin="center"
+        data-anchor-origin="top-right"
       >
-        {tf.phaseLabels.navigate}
+        <span className="home-v2-copy-phase__label">{tf.phaseLabels.navigate}</span>
+        <span className="home-v2-copy-phase__sub">See</span>
       </div>
       <div
         className="home-v2-copy-phase home-v2-copy-phase--encode"
         data-world-anchor="thoughtform.phase.encode"
-        data-anchor-origin="center"
+        data-anchor-origin="top-right"
       >
-        {tf.phaseLabels.encode}
+        <span className="home-v2-copy-phase__label">{tf.phaseLabels.encode}</span>
+        <span className="home-v2-copy-phase__sub">Crystallize</span>
       </div>
       <div
         className="home-v2-copy-phase home-v2-copy-phase--build"
         data-world-anchor="thoughtform.phase.build"
-        data-anchor-origin="center"
+        data-anchor-origin="top-left"
       >
-        {tf.phaseLabels.build}
+        <span className="home-v2-copy-phase__label">{tf.phaseLabels.build}</span>
+        <span className="home-v2-copy-phase__sub">Ship</span>
       </div>
 
       {/* ─────────── DIAGNOSTIC ─────────── */}

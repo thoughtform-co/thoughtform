@@ -500,19 +500,30 @@ export const COPY_ANCHORS: readonly CopyAnchor[] = [
     // than a 40%-window crossfade as the user scrolls in.
     fadeFrac: 0,
   },
-  // Three phase labels — NAVIGATE/ENCODE/BUILD — sit at the v7 sigil
-  // ring node positions (top, lower-left, lower-right) relative to
-  // the compass centre. Offsets must match `PHASE_NODES` in
-  // ThoughtformCompassGate so the DOM labels stay co-located with
-  // the 3D phase-node markers (0.75x of the legacy values to track
-  // the smaller compass geometry: 0.95 -> 0.71, 0.82 -> 0.62,
-  // 0.48 -> 0.36). The per-frame X resolver folds in the centering
-  // pan offset so the labels track the compass as it slides.
+  // Three phase labels — NAVIGATE/ENCODE/BUILD — pinned to the v7
+  // sigil compass-bearing positions (matching the production home
+  // page sigil at landing-v7-motion.html lines 4357-4370). The DOM
+  // label anchor sits at the TIP of the SVG connector line (where
+  // the v7 `<text>` element's text-anchor point lives), so the
+  // label reads at the same visual point in screen space as on the
+  // production sigil.
+  //
+  // Source SVG coordinates (scaled 1/200 → world units, Y flipped):
+  //   navigate label anchor: SVG (-100, -140) → world (-0.50, +0.70)
+  //   encode   label anchor: SVG ( -65, +131) → world (-0.325, -0.655)
+  //   build    label anchor: SVG (+118,  -27) → world (+0.59, +0.135)
+  //
+  // The per-frame X resolver folds in the centering pan offset so
+  // the labels track the compass as it slides during [0.05, 0.18].
+  // Visual origin is set per-element in CopyAnchors.tsx via
+  // `data-anchor-origin` so each label's appropriate corner (top-
+  // right for navigate/encode, top-left for build) lands on the
+  // anchor point — mirroring v7's `text-anchor="end"` / `"start"`.
   {
     id: "thoughtform.phase.navigate",
     position: (transform) => [
-      STATION_THOUGHTFORM.position[0] + getThoughtformCenterOffsetX(transform.paintProgress),
-      STATION_THOUGHTFORM.position[1] + 0.71,
+      STATION_THOUGHTFORM.position[0] - 0.5 + getThoughtformCenterOffsetX(transform.paintProgress),
+      STATION_THOUGHTFORM.position[1] + 0.7,
       STATION_THOUGHTFORM.position[2] + 0.05,
     ],
     visibilityBeats: ["thoughtform"],
@@ -522,8 +533,10 @@ export const COPY_ANCHORS: readonly CopyAnchor[] = [
   {
     id: "thoughtform.phase.encode",
     position: (transform) => [
-      STATION_THOUGHTFORM.position[0] - 0.62 + getThoughtformCenterOffsetX(transform.paintProgress),
-      STATION_THOUGHTFORM.position[1] - 0.36,
+      STATION_THOUGHTFORM.position[0] -
+        0.325 +
+        getThoughtformCenterOffsetX(transform.paintProgress),
+      STATION_THOUGHTFORM.position[1] - 0.655,
       STATION_THOUGHTFORM.position[2] + 0.05,
     ],
     visibilityBeats: ["thoughtform"],
@@ -532,8 +545,8 @@ export const COPY_ANCHORS: readonly CopyAnchor[] = [
   {
     id: "thoughtform.phase.build",
     position: (transform) => [
-      STATION_THOUGHTFORM.position[0] + 0.62 + getThoughtformCenterOffsetX(transform.paintProgress),
-      STATION_THOUGHTFORM.position[1] - 0.36,
+      STATION_THOUGHTFORM.position[0] + 0.59 + getThoughtformCenterOffsetX(transform.paintProgress),
+      STATION_THOUGHTFORM.position[1] + 0.135,
       STATION_THOUGHTFORM.position[2] + 0.05,
     ],
     visibilityBeats: ["thoughtform"],
