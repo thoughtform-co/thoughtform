@@ -82,10 +82,25 @@ const ROLL_MAX = 0;
 const REFRAME_START = 0.18;
 const REFRAME_END = 0.32;
 
-/** Camera Z dolly easing — smoothstep'd progress so the corridor
- *  decelerates at both ends. */
+/** Scroll progress at which the camera Z dolly is RELEASED. The
+ *  dolly holds at 0 (camera stationary at `CAMERA_START.z`) across
+ *  [0, Z_DOLLY_HOLD_END] so the Thoughtform lateral pan
+ *  (compass + brandmark + copy sliding to dead-centre, see
+ *  `getThoughtformCenterOffsetX`) reads as a pure camera-pan with
+ *  no forward drift. After this boundary the dolly smoothsteps to 1
+ *  across the remaining scroll, carrying the camera into and through
+ *  the corridor. Must stay aligned with `THOUGHTFORM_PAN_END`. */
+const Z_DOLLY_HOLD_END = 0.18;
+
+/** Camera Z dolly easing — held at 0 across the Thoughtform pan
+ *  window, then smoothstep'd from 0 -> 1 across the remaining
+ *  scroll. Shared by the runtime camera-position function and
+ *  `gateZAtParkProgress` so gate stations stay consistent with
+ *  the live camera at every parked beat. */
 function cameraZDollyT(progress: number): number {
-  return smoothstep(0, 1, clamp01(progress));
+  const p = clamp01(progress);
+  if (p <= Z_DOLLY_HOLD_END) return 0;
+  return smoothstep(0, 1, (p - Z_DOLLY_HOLD_END) / (1 - Z_DOLLY_HOLD_END));
 }
 
 /** Camera position at the given GLOBAL progress.
@@ -151,23 +166,30 @@ export interface GateStation {
 }
 
 /** Solve a gate's world Z so that at `parkProgress` the camera sits
- *  GATE_PARK_DISTANCE units in front of the gate. Camera Z lerps
- *  CAMERA_START.z -> CAMERA_END.z by smoothstep(progress). */
+ *  GATE_PARK_DISTANCE units in front of the gate. Uses the same
+ *  `cameraZDollyT` curve as the runtime camera-position function so
+ *  the parked-beat invariant (camera-to-gate = GATE_PARK_DISTANCE)
+ *  holds even with the dolly's pan-window hold. */
 function gateZAtParkProgress(parkProgress: number): number {
-  const t = smoothstep(0, 1, parkProgress);
-  const camZ = lerp(CAMERA_START[2], CAMERA_END[2], t);
+  const dollyT = cameraZDollyT(parkProgress);
+  const camZ = lerp(CAMERA_START[2], CAMERA_END[2], dollyT);
   return camZ - GATE_PARK_DISTANCE;
 }
 
-/** Thoughtform compass — dead-centred on the optical axis. The
- *  parked frame reads as a centred compass with the left copy
- *  panel anchored further out at world X = -2.3 (see leftCopy
- *  anchor). Previously this gate sat off-axis-right at X=+1.4 with
- *  a corresponding camera reframe; the axial composition replaces
- *  that and the camera path is now a straight Z dolly. */
+/** Thoughtform compass — off-axis-right at parked rest so the
+ *  parked frame reads as a balanced two-column composition: copy
+ *  on the left half, brandmark + compass on the right half, both
+ *  well clear of the HUD rails (matches the v7 home page).
+ *
+ *  The camera path stays axial (X=0 throughout). The brandmark's
+ *  world-space TRAVEL between Thoughtform and Diagnostic anchors
+ *  (see `getBrandmarkWorldPosition`) naturally migrates the
+ *  compass to dead-centre during passthrough-01, so the user reads
+ *  "compass slides toward centre, copy slides off-screen left" as
+ *  a single continuous camera move. No reframe envelope needed. */
 export const STATION_THOUGHTFORM: GateStation = {
   id: "thoughtform",
-  position: [0, 0.0, gateZAtParkProgress(0.09)],
+  position: [1.1, 0.0, gateZAtParkProgress(0.09)],
   halfExtent: 1.6,
   parkProgress: 0.09,
 };
@@ -206,6 +228,32 @@ export const STATIONS: readonly GateStation[] = [
   STATION_INTERSTITIAL,
   STATION_INTELLIGENCE,
 ];
+
+// ── Thoughtform centering pan ────────────────────────────────────
+
+/** Scroll range over which the Thoughtform composition (compass +
+ *  brandmark + phase labels + left copy) pans laterally from its
+ *  parked off-axis-right rest to dead-centre. Held flat outside
+ *  this range so the user gets a moment to read the parked frame
+ *  before the pan begins, and the centre position is locked in
+ *  before the camera Z dolly is released (see `Z_DOLLY_HOLD_END`).
+ *
+ *  The pan applies the SAME `dx` to every Thoughtform-anchored
+ *  element each frame, so the world reads as a single camera-pan
+ *  rather than independent object motions. */
+const THOUGHTFORM_PAN_START = 0.05;
+const THOUGHTFORM_PAN_END = 0.18;
+
+/** Lateral X offset (world units) for the Thoughtform composition
+ *  at the current global progress. Smoothsteps from 0 (parked off-
+ *  axis-right) to `-STATION_THOUGHTFORM.position[0]` (composition
+ *  dead-centred) across the pan window. */
+export function getThoughtformCenterOffsetX(progress: number): number {
+  if (progress <= THOUGHTFORM_PAN_START) return 0;
+  if (progress >= THOUGHTFORM_PAN_END) return -STATION_THOUGHTFORM.position[0];
+  const t = smoothstep(THOUGHTFORM_PAN_START, THOUGHTFORM_PAN_END, progress);
+  return -STATION_THOUGHTFORM.position[0] * t;
+}
 
 // ── Brandmark anchors (world space, attached to gate centres) ────
 
@@ -253,11 +301,24 @@ export function getBrandmarkWorldPosition(progress: number): [number, number, nu
   // then travels across passthrough-02 + early intelligence to the
   // intelligence anchor.
 
-  if (progress <= 0.22) return BRANDMARK_ANCHOR_THOUGHTFORM;
+  // Apply the Thoughtform centering pan to the THOUGHTFORM-side
+  // anchor X each frame so the brandmark slides laterally with the
+  // compass + copy during the [0.05, 0.18] window. By the time the
+  // travel envelope below kicks in (>= 0.22) the offset has fully
+  // resolved to -STATION_THOUGHTFORM.position[0], which puts the
+  // Thoughtform anchor on the world axis — matching the Diagnostic
+  // anchor's X — so the X-lerp is effectively a no-op and Y/Z do
+  // all the travel work, as designed.
+  const tfOffsetX = getThoughtformCenterOffsetX(progress);
+  const tfX = BRANDMARK_ANCHOR_THOUGHTFORM[0] + tfOffsetX;
+
+  if (progress <= 0.22) {
+    return [tfX, BRANDMARK_ANCHOR_THOUGHTFORM[1], BRANDMARK_ANCHOR_THOUGHTFORM[2]];
+  }
   if (progress <= 0.38) {
     const t = smoothstep(0.22, 0.38, progress);
     return [
-      lerp(BRANDMARK_ANCHOR_THOUGHTFORM[0], BRANDMARK_ANCHOR_DIAGNOSTIC[0], t),
+      lerp(tfX, BRANDMARK_ANCHOR_DIAGNOSTIC[0], t),
       lerp(BRANDMARK_ANCHOR_THOUGHTFORM[1], BRANDMARK_ANCHOR_DIAGNOSTIC[1], t),
       lerp(BRANDMARK_ANCHOR_THOUGHTFORM[2], BRANDMARK_ANCHOR_DIAGNOSTIC[2], t),
     ];
@@ -300,14 +361,25 @@ export function getBrandmarkWorldHalfExtent(progress: number): number {
 
 // ── Copy + label world anchors ───────────────────────────────────
 
-import type { Beat } from "@/lib/stores/depthGatewayStore";
+import type { Beat, DepthGatewayTransform } from "@/lib/stores/depthGatewayStore";
+
+/** Position resolver: either a static `[x, y, z]` tuple OR a function
+ *  evaluated per frame against the current depth-gateway transform.
+ *  Dynamic resolvers let an anchor slide with a scroll-driven
+ *  envelope (e.g. the Thoughtform centering pan) without needing a
+ *  bespoke painter — `useWorldDomTracker` already resolves the
+ *  position each tick. Mirrors `WorldAnchorPosition` in
+ *  `useWorldDomTracker`. */
+export type CopyAnchorPosition =
+  | readonly [number, number, number]
+  | ((transform: DepthGatewayTransform) => readonly [number, number, number]);
 
 export interface CopyAnchor {
   /** Stable id used by the DOM tracker to find the matching element
    *  via `[data-world-anchor="{id}"]`. */
   id: string;
-  /** World-space position. */
-  position: [number, number, number];
+  /** World-space position — static tuple or per-frame resolver. */
+  position: CopyAnchorPosition;
   /** Beats during which this anchor is visible (1.0). Outside, the
    *  tracker fades the element out. */
   visibilityBeats: Beat[];
@@ -343,26 +415,40 @@ function diagnosticLabelWorldPosition(pipXSvg: number, pipYSvg: number): [number
  */
 export const COPY_ANCHORS: readonly CopyAnchor[] = [
   // ── Thoughtform ─────────────────────────────────────────────────
-  // Left copy block: bridge + title + lede + CTA. With the compass
-  // dead-centred at world X=0, the copy sits well to the left (X =
-  // -2.3) so its right edge clears the compass + diamond cleanly.
-  // As the camera dollies forward, the Z dolly carries this anchor
-  // behind the camera by the parked Diagnostic beat — so it leaves
-  // the screen naturally without needing a per-progress X offset.
+  // Left copy block: bridge + title + lede + CTA. The Thoughtform
+  // gate is off-axis-right at world X=+1.1, so the copy mirrors it
+  // off-axis-left at world X=-1.8 to read as a balanced two-column
+  // composition (copy-left, compass-right) at parked rest. During
+  // the Thoughtform centering pan [0.05, 0.18] the SAME lateral
+  // offset is applied to the copy as to the compass + brandmark +
+  // phase labels, so the entire composition slides as a single
+  // camera-pan: the compass migrates to dead-centre while the copy
+  // is carried off-screen left. After the pan completes the camera
+  // dolly is released and the copy continues drifting via the
+  // forward travel.
   {
     id: "thoughtform.leftCopy",
-    position: [-2.3, 0.0, STATION_THOUGHTFORM.position[2] + 0.1],
+    position: (transform) => [
+      -1.8 + getThoughtformCenterOffsetX(transform.progress),
+      0.0,
+      STATION_THOUGHTFORM.position[2] + 0.1,
+    ],
     visibilityBeats: ["thoughtform", "passthrough-01"],
     fadeFrac: 0.4,
   },
   // Three phase labels — NAVIGATE/ENCODE/BUILD — sit at the v7 sigil
   // ring node positions (top, lower-left, lower-right) relative to
-  // the compass centre.
+  // the compass centre. Offsets must match `PHASE_NODES` in
+  // ThoughtformCompassGate so the DOM labels stay co-located with
+  // the 3D phase-node markers (0.75x of the legacy values to track
+  // the smaller compass geometry: 0.95 -> 0.71, 0.82 -> 0.62,
+  // 0.48 -> 0.36). The per-frame X resolver folds in the centering
+  // pan offset so the labels track the compass as it slides.
   {
     id: "thoughtform.phase.navigate",
-    position: [
-      STATION_THOUGHTFORM.position[0],
-      STATION_THOUGHTFORM.position[1] + 0.95,
+    position: (transform) => [
+      STATION_THOUGHTFORM.position[0] + getThoughtformCenterOffsetX(transform.progress),
+      STATION_THOUGHTFORM.position[1] + 0.71,
       STATION_THOUGHTFORM.position[2] + 0.05,
     ],
     visibilityBeats: ["thoughtform"],
@@ -370,9 +456,9 @@ export const COPY_ANCHORS: readonly CopyAnchor[] = [
   },
   {
     id: "thoughtform.phase.encode",
-    position: [
-      STATION_THOUGHTFORM.position[0] - 0.82,
-      STATION_THOUGHTFORM.position[1] - 0.48,
+    position: (transform) => [
+      STATION_THOUGHTFORM.position[0] - 0.62 + getThoughtformCenterOffsetX(transform.progress),
+      STATION_THOUGHTFORM.position[1] - 0.36,
       STATION_THOUGHTFORM.position[2] + 0.05,
     ],
     visibilityBeats: ["thoughtform"],
@@ -380,9 +466,9 @@ export const COPY_ANCHORS: readonly CopyAnchor[] = [
   },
   {
     id: "thoughtform.phase.build",
-    position: [
-      STATION_THOUGHTFORM.position[0] + 0.82,
-      STATION_THOUGHTFORM.position[1] - 0.48,
+    position: (transform) => [
+      STATION_THOUGHTFORM.position[0] + 0.62 + getThoughtformCenterOffsetX(transform.progress),
+      STATION_THOUGHTFORM.position[1] - 0.36,
       STATION_THOUGHTFORM.position[2] + 0.05,
     ],
     visibilityBeats: ["thoughtform"],

@@ -5,7 +5,7 @@ import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { SIGIL_RING_MORPHS } from "@/lib/celestial/orbits";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
-import { STATION_THOUGHTFORM } from "../sceneGeom";
+import { STATION_THOUGHTFORM, getThoughtformCenterOffsetX } from "../sceneGeom";
 
 /**
  * ThoughtformCompassGate — the v7 sigil compass rendered as a
@@ -39,24 +39,28 @@ import { STATION_THOUGHTFORM } from "../sceneGeom";
  *   - 0 after 0.34.
  */
 
-/** Ring radii in world units. Scaled from v7 SVG units by 1/150 so
- *  the largest ring at world r = 1.0 fits comfortably inside
- *  STATION_THOUGHTFORM.halfExtent (1.6) with margin for the diamond
- *  outline + phase node markers. */
-const RING_RADII = SIGIL_RING_MORPHS.map((r) => r.ringRadius / 150);
+/** Ring radii in world units. Scaled from v7 SVG units by 1/200 so
+ *  the compass reads as the smaller, balanced two-column proportion
+ *  from the v7 home page (largest ring at world r = 0.75). The
+ *  earlier 1/150 scale rendered the diamond + outer rings too large
+ *  to clear the left copy block; this 75% size leaves a clean gap. */
+const RING_RADII = SIGIL_RING_MORPHS.map((r) => r.ringRadius / 200);
 const RING_SEGMENTS = 96;
 
 /** Diamond outline ring radius — sits just outside the largest ring,
- *  matching the v7 `.sigil__diamond` overlay's read. */
-const DIAMOND_R = 1.05;
+ *  matching the v7 `.sigil__diamond` overlay's read. Scaled with the
+ *  rings (was 1.05, now 0.79 ≈ 1.05 * 0.75). */
+const DIAMOND_R = 0.79;
 
 /** Phase node positions relative to the compass centre, at 3 evenly
  *  spaced angles (top, lower-left, lower-right). Matches the
- *  `thoughtform.phase.{navigate,encode,build}` COPY_ANCHORS. */
+ *  `thoughtform.phase.{navigate,encode,build}` COPY_ANCHORS. Scaled
+ *  with the rings (0.75x of the previous radii: 0.95 -> 0.71,
+ *  0.82 -> 0.62, 0.48 -> 0.36). */
 const PHASE_NODES = [
-  { id: "navigate", offset: [0, 0.95, 0.05] as [number, number, number] },
-  { id: "encode", offset: [-0.82, -0.48, 0.05] as [number, number, number] },
-  { id: "build", offset: [0.82, -0.48, 0.05] as [number, number, number] },
+  { id: "navigate", offset: [0, 0.71, 0.05] as [number, number, number] },
+  { id: "encode", offset: [-0.62, -0.36, 0.05] as [number, number, number] },
+  { id: "build", offset: [0.62, -0.36, 0.05] as [number, number, number] },
 ];
 
 /** Phase node marker — a small 4-vertex diamond outline. */
@@ -180,6 +184,14 @@ export function ThoughtformCompassGate() {
     }
     diamondMat.opacity = opacity * 0.85;
     phaseNodeMat.opacity = opacity * 0.95;
+
+    // Cinematic centering pan: slide the whole compass + diamond +
+    // phase-node markers laterally toward dead-centre during the
+    // [0.05, 0.18] window. Mirrors the same offset applied to the
+    // brandmark, copy, and DOM phase labels in sceneGeom.ts, so the
+    // entire Thoughtform composition reads as a single camera-pan
+    // before the forward dolly is released at progress >= 0.18.
+    group.position.x = STATION_THOUGHTFORM.position[0] + getThoughtformCenterOffsetX(progress);
 
     // Slow self-rotation around Z — the v7 compass has a subtle
     // breath animation (`@keyframes sigilBreath`); a hairline Z-spin
