@@ -255,6 +255,57 @@ export function getThoughtformCenterOffsetX(progress: number): number {
   return -STATION_THOUGHTFORM.position[0] * t;
 }
 
+// ── Thoughtform compass flythrough ───────────────────────────────
+
+/** Staggered flythrough windows per compass ring. The outer ring
+ *  (index 0) flies first — its window opens the instant the lateral
+ *  pan completes and the camera dolly is released. Each inner ring
+ *  follows 0.025 of scroll later, so the user reads four discrete
+ *  arches sweeping past the camera in tight sequence rather than a
+ *  single mass dimming at distance. Total span [0.18, 0.335] starts
+ *  with the camera dolly release (`Z_DOLLY_HOLD_END`) and ends just
+ *  inside the diagnostic beat (which begins at 0.32). */
+const FLYTHROUGH_WINDOWS: readonly { start: number; end: number }[] = [
+  { start: 0.18, end: 0.26 }, // ring 0 (outer) + diamond
+  { start: 0.205, end: 0.285 }, // ring 1
+  { start: 0.23, end: 0.31 }, // ring 2
+  { start: 0.255, end: 0.335 }, // ring 3 (inner)
+];
+
+/** Forward translation (positive world Z) added to each ring at the
+ *  end of its flythrough window. Parked compass sits at world Z=5.5;
+ *  +6 brings the ring to Z=11.5, ~2-3 world units past the held
+ *  camera (Z=10 -> ~8.3 during the windows), so each ring physically
+ *  passes the camera plane before fading. */
+const FLYTHROUGH_Z_DISTANCE = 6;
+
+/** Local-T (0..1 inside the window) at which the ring begins fading.
+ *  Held at full for the first 70%, ramps 1 -> 0 in the final 30% so
+ *  the ring vanishes just before becoming a giant gold smear around
+ *  the viewer. */
+const FLYTHROUGH_FADE_FROM = 0.7;
+
+/** Per-ring flythrough state for the Thoughtform compass.
+ *
+ *  - `dz` is the Z translation to add to the ring's gate-relative
+ *    origin each frame (gate is at world Z=5.5, ring's local Z is 0,
+ *    so the ring's world Z = 5.5 + dz).
+ *  - `opacityT` is the local opacity multiplier (combined downstream
+ *    with each ring's `baseAlpha` weight). */
+export function getThoughtformRingFlythrough(
+  progress: number,
+  ringIndex: number
+): { dz: number; opacityT: number } {
+  const w = FLYTHROUGH_WINDOWS[ringIndex] ?? FLYTHROUGH_WINDOWS[0];
+  if (progress <= w.start) return { dz: 0, opacityT: 1 };
+  if (progress >= w.end) return { dz: FLYTHROUGH_Z_DISTANCE, opacityT: 0 };
+  const t = smoothstep(w.start, w.end, progress);
+  const dz = t * FLYTHROUGH_Z_DISTANCE;
+  const opacityT =
+    t <= FLYTHROUGH_FADE_FROM ? 1 : 1 - (t - FLYTHROUGH_FADE_FROM) / (1 - FLYTHROUGH_FADE_FROM);
+  return { dz, opacityT };
+}
+
 // ── Brandmark anchors (world space, attached to gate centres) ────
 
 /** Brandmark anchor at the parked Thoughtform beat — sits at the
