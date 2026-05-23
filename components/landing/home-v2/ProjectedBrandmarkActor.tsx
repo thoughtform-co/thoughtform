@@ -87,13 +87,28 @@ export function ProjectedBrandmarkActor() {
           const { transform, camera, vw, screenX, screenY, worldPos } = ctx;
           const { progress, beat, gateProgress } = transform;
 
+          // Hero-gate: during the hero scroll, `progress` stays
+          // clamped at 0 (stage rect.top is still positive) even
+          // though the tracker has flagged us active. We don't want
+          // the brandmark painting over the pinned hero — it should
+          // appear AT FULL OPACITY the moment the Thoughtform
+          // section reaches the viewport (progress > 0), since
+          // Thoughtform is the start of the journey.
+          //
           // Substrate-cut: hide the DOM brandmark whenever the in-
           // canvas substrate morph cloud is painting (ADR-017).
+          const heroGate = progress <= 0;
           const morph = beat === "intelligence" ? getSubstrateMorph(gateProgress) : 0;
-          if (morph > SUBSTRATE_CUT_EPSILON) {
+          const substrateCut = morph > SUBSTRATE_CUT_EPSILON;
+          if (heroGate || substrateCut) {
             element.style.display = "none";
             return;
           }
+          // Neither gate active — clear any prior display:none set
+          // by a previous frame (either hero-gate before the user
+          // reached Thoughtform, or substrate-cut inside the
+          // intelligence morph window).
+          if (element.style.display === "none") element.style.display = "";
 
           // Width from world half-extent — project an edge point and
           // measure the screen-space distance from the centre. This
@@ -121,7 +136,10 @@ export function ProjectedBrandmarkActor() {
           element.style.width = `${width.toFixed(2)}px`;
           element.style.height = `${height.toFixed(2)}px`;
 
-          // Tail fade-out.
+          // Tail fade-out. The head transition is a hard hero-gate
+          // (above) rather than a fade — the brandmark is already
+          // visible the moment we enter Thoughtform (Principle 5:
+          // only the post-orbit exit uses an opacity ramp).
           let bookend = 1;
           if (progress > TAIL_FADE_OUT_START) {
             bookend = Math.max(0, 1 - (progress - TAIL_FADE_OUT_START) / (1 - TAIL_FADE_OUT_START));
