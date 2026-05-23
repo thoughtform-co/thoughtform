@@ -234,14 +234,22 @@ export const STATIONS: readonly GateStation[] = [
 /** Scroll range over which the Thoughtform composition (compass +
  *  brandmark + phase labels + left copy) pans laterally from its
  *  parked off-axis-right rest to dead-centre. Held flat outside
- *  this range so the user gets a moment to read the parked frame
- *  before the pan begins, and the centre position is locked in
- *  before the camera Z dolly is released (see `Z_DOLLY_HOLD_END`).
+ *  this range so the user gets a real beat to read the parked
+ *  frame before the pan begins, and the centre position is locked
+ *  in before the camera Z dolly is released (see `Z_DOLLY_HOLD_END`).
+ *
+ *  PAN_START is pushed well past 0 (was 0.05) so the parked two-
+ *  column composition holds across the first ~11% of stage scroll
+ *  — fast scrollers get a stationary beat to take in the copy +
+ *  brandmark composition before any motion begins. PAN_END stays
+ *  locked to `Z_DOLLY_HOLD_END` so the camera dolly + ring
+ *  flythrough release the moment the pan completes; downstream
+ *  timing is unchanged.
  *
  *  The pan applies the SAME `dx` to every Thoughtform-anchored
  *  element each frame, so the world reads as a single camera-pan
  *  rather than independent object motions. */
-const THOUGHTFORM_PAN_START = 0.05;
+const THOUGHTFORM_PAN_START = 0.11;
 const THOUGHTFORM_PAN_END = 0.18;
 
 /** Lateral X offset (world units) for the Thoughtform composition
