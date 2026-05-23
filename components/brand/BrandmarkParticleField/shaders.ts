@@ -167,3 +167,117 @@ void main() {
   gl_FragColor = vec4(uTint, vAlpha * alpha);
 }
 `;
+
+/**
+ * Silhouette shader pair for the sigil → miss → … particle brandmark
+ * (ADR-019). The crisp vector at Thoughtform dissolves into this
+ * point cloud the moment the visitor enters the sigil → miss travel
+ * leg, and stays as the particle brandmark from the Diagnostic dock
+ * onward.
+ *
+ * The vertex shader is the pixel-space sibling of the substrate
+ * morph: each point reads its home from the brandmark's `[-0.5, 0.5]`
+ * normalised viewBox sample (`aHome`) and is placed into screen
+ * coordinates via the journey transform's `uCenter` + `uHalfSize`.
+ *
+ * Differences from `brandmarkVertexShader` (the atmosphere station):
+ *
+ *   1. No rank clip — the silhouette is always at full density. The
+ *      visible particle count is fixed at mesh-build time so the
+ *      brandmark reads as a solid filled mark of soft dots.
+ *   2. No shape blend — the silhouette only paints the canonical
+ *      `full` topology. The ring topology lives inside the substrate
+ *      window and is owned by the vector actor's stacked ring glyph.
+ *   3. Cover-in by morph — `uMorph` (0 → 1) drives a gentle radial
+ *      inflation from the rect centre so the silhouette emerges from
+ *      the vector mark's centre rather than popping into existence
+ *      pre-formed. Past `MORPH_FULL` the geometry is identity.
+ *   4. Opacity gated by `uOpacity * smoothstep(0, MORPH_FULL, uMorph)`
+ *      so when `silhouetteMorph = 0` the mesh renders nothing — saves
+ *      the fragment shader for sigil parked state where the vector
+ *      owns the mark alone.
+ */
+export const brandmarkSilhouetteVertexShader = /* glsl */ `
+uniform vec2 uViewport;     // pixels (window.innerWidth, window.innerHeight)
+uniform vec2 uCenter;       // pixels (rect center)
+uniform vec2 uHalfSize;     // pixels (rect.width / 2, rect.height / 2)
+uniform float uOpacity;     // [0..1] base opacity (transform.opacity)
+uniform float uMorph;       // [0..1] silhouetteMorph
+uniform float uTime;        // seconds
+uniform float uPointSize;   // base px (multiplied by uPixelRatio)
+uniform float uPixelRatio;
+uniform float uSuppress;    // [0..1] external opacity multiplier (e.g. substrate handoff)
+
+attribute vec2 aHome;       // [-0.5, 0.5] normalised inside viewBox (full mark)
+attribute vec2 aSeed;       // stable per-particle seed
+
+varying float vAlpha;
+
+/** Morph value at which the silhouette has fully covered the
+ *  vector mark. Past this the rect lerp owns the journey. The
+ *  vector actor's cover-cut threshold is tuned just below this. */
+const float MORPH_FULL = 0.6;
+
+void main() {
+  // Cover-in inflation. Particles start collapsed at the rect centre
+  // (radial = 0) and inflate to their home position as uMorph crosses
+  // [0, MORPH_FULL]. Past MORPH_FULL the home is identity. This makes
+  // the silhouette emerge OUT of the vector mark rather than appear
+  // pre-formed alongside it. Eased with a smoothstep so the start
+  // is gentle (Principle 1: continuous geometric evolution).
+  float coverIn = smoothstep(0.0, MORPH_FULL, uMorph);
+  vec2 coveredHome = aHome * coverIn;
+
+  // Subtle wander — same two-frequency sinusoidal pattern as the
+  // atmosphere station, but at lower amplitude so the silhouette
+  // breathes as a coherent mark rather than dispersing. Amplitude
+  // scales with the morph so the wander only manifests once the
+  // silhouette has formed.
+  vec2 wander = vec2(
+    sin(aSeed.x * 1.7 + uTime * 0.55) * 0.012 +
+      sin(aSeed.x * 0.41 + uTime * 1.13) * 0.006,
+    cos(aSeed.y * 1.9 + uTime * 0.47) * 0.012 +
+      cos(aSeed.y * 0.37 + uTime * 0.91) * 0.006
+  ) * coverIn;
+
+  vec2 pixelPos = uCenter + (coveredHome + wander) * 2.0 * uHalfSize;
+
+  // Convert pixel coords to clip-space NDC. Client Y is top-down,
+  // NDC Y is bottom-up — flip the y component.
+  vec2 ndc = (pixelPos / uViewport) * 2.0 - 1.0;
+  ndc.y = -ndc.y;
+
+  gl_Position = vec4(ndc, 0.0, 1.0);
+
+  // Point size also ramps with the cover-in so the silhouette
+  // condenses into focus rather than appearing as full-size dots
+  // from frame one. At full cover the size is uPointSize.
+  float sizeRamp = 0.4 + 0.6 * coverIn;
+  gl_PointSize = uPointSize * uPixelRatio * sizeRamp;
+
+  // Opacity gates: base journey opacity, the morph envelope (so the
+  // mesh is invisible at silhouetteMorph = 0), and the external
+  // suppression channel (substrate handoff).
+  vAlpha = uOpacity * coverIn * uSuppress;
+}
+`;
+
+export const brandmarkSilhouetteFragmentShader = /* glsl */ `
+precision mediump float;
+
+uniform vec3 uTint;
+
+varying float vAlpha;
+
+void main() {
+  // Soft radial falloff — same family as the atmosphere shader so
+  // the silhouette dots read with consistent visual language. A
+  // slightly tighter core (0.30 vs 0.35) keeps the silhouette
+  // crisp; the atmosphere field's wider halo is what we use for
+  // luminous dust around the mark.
+  float d = length(gl_PointCoord - vec2(0.5));
+  float alpha = 1.0 - smoothstep(0.30, 0.5, d);
+  if (alpha <= 0.001) discard;
+  gl_FragColor = vec4(uTint, vAlpha * alpha);
+}
+`;

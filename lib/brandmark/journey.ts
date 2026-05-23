@@ -188,6 +188,29 @@ export interface BrandmarkTransform {
    *  shape — no opacity fade). Always `0` outside the substrate
    *  window. */
   substrateMorph: number;
+  /** `[0, 1]` silhouette particle morph progress (ADR-019). The
+   *  brandmark dissolves from a crisp vector at Thoughtform into a
+   *  silhouette point cloud the moment the visitor enters the sigil
+   *  → miss travel leg, and stays as the particle brandmark from the
+   *  Diagnostic dock onward. `0` = vector-only (Thoughtform rest);
+   *  `1` = silhouette point cloud is the visible mark.
+   *
+   *  Envelope:
+   *    - sigil parked      : 0 (vector only)
+   *    - sigil → miss transit : ramps 0 → 1 over the first
+   *      `SILHOUETTE_RAMP_FRAC` of the transit `t`, eased with
+   *      `TRAVEL_EASE`. Phase-locks with `--orbit-morph` so the
+   *      brandmark is in particle form before the diagram morph
+   *      crosses its midpoint.
+   *    - miss / substrate / rail / orbit parked : 1
+   *    - all other transits  : 1 (the brandmark stays as particles
+   *      from Diagnostic onward; only the rect lerps)
+   *
+   *  The vector actor reads this channel and does an instant
+   *  visibility cut at the cover threshold, so the renderer swap
+   *  is invisible — the particles already paint the same silhouette
+   *  at the same rect. */
+  silhouetteMorph: number;
   /** `false` only during hero / post-orbit-fade-end. Painter hides
    *  when this is false. */
   visible: boolean;
@@ -302,6 +325,7 @@ export const HIDDEN_TRANSFORM: BrandmarkTransform = {
   shapeBlend: 0,
   vectorOpacity: 1,
   substrateMorph: 0,
+  silhouetteMorph: 0,
   visible: false,
   parkedAt: null,
 };
@@ -327,6 +351,16 @@ const SHAPE_BLEND_FRAC = 0.3;
  *  form exactly when the brandmark vector resumes travel toward
  *  the rail dock. */
 const SUBSTRATE_MORPH_FRAC = 0.35;
+
+/** Fraction of the sigil → miss transit `t` over which the
+ *  silhouette point cloud emerges (ADR-019). The brandmark dissolves
+ *  from a crisp vector into a particle silhouette across the first
+ *  30% of the travel leg, then holds at full particle cover for the
+ *  remainder of the transit — and stays as the particle brandmark
+ *  from the Diagnostic dock onward. A 30% ramp keeps the silhouette
+ *  cover ahead of the `--orbit-morph` midpoint so the vector never
+ *  ghosts over the morphing diagrams. */
+const SILHOUETTE_RAMP_FRAC = 0.3;
 
 /** While a section's bottom edge is below this viewport fraction, the
  *  visitor is still "reading" that section — the brandmark should stay
@@ -776,6 +810,8 @@ function parkedRectTransform(
     // override below ramps this through the symmetric trapezoid
     // when parked at substrate.
     substrateMorph: 0,
+    // ADR-019: vector at sigil rest; particles from miss onward.
+    silhouetteMorph: kf.id === "sigil" ? 0 : 1,
     visible: opacity > 0,
     parkedAt: kf.id,
   };
@@ -807,6 +843,21 @@ function transitTransform(
   const bump = bumpFn ? bumpFn(t) : 0;
   const dispersion = Math.min(1.5, Math.max(0, baseDispersion + bump));
 
+  // ADR-019: silhouette morph during transits.
+  //   sigil → miss : ramp 0 → 1 over the first SILHOUETTE_RAMP_FRAC
+  //                  of the leg's eased `t`. The ramp uses the same
+  //                  TRAVEL_EASE applied to the rect lerp so the
+  //                  silhouette cover crosses the COVER_THRESHOLD
+  //                  before the `--orbit-morph` midpoint, and the
+  //                  vector actor cuts cleanly under matching cover
+  //                  (Principle 3).
+  //   else         : 1 — from miss onward the brandmark IS particles;
+  //                  transits only lerp the rect.
+  const silhouetteMorph =
+    from.id === "sigil" && to.id === "miss"
+      ? TRAVEL_EASE(clamp01(t / SILHOUETTE_RAMP_FRAC))
+      : 1;
+
   return {
     rect,
     opacity: 1,
@@ -826,6 +877,7 @@ function transitTransform(
     // Substrate morph: 0 during all transits. Only the substrate
     // window ramp drives this channel.
     substrateMorph: 0,
+    silhouetteMorph,
     visible: true,
     parkedAt: null, // in transit = not parked anywhere
   };

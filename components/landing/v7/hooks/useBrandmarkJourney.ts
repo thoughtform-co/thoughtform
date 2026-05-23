@@ -121,6 +121,8 @@ export function useBrandmarkJourney(
     let lastBrandShapeBlend = -1;
     let lastBrandVectorOpacity = -1;
     let lastBrandSubstrateCut = -1;
+    let lastBrandSilhouetteMorph = -1;
+    let lastBrandSilhouetteCut = -1;
 
     const PARKED_OPACITY_THRESHOLD = 0.99;
 
@@ -167,6 +169,33 @@ export function useBrandmarkJourney(
       if (cut === lastBrandSubstrateCut) return;
       lastBrandSubstrateCut = cut;
       document.documentElement.style.setProperty("--brandmark-substrate-cut", cut.toFixed(0));
+    };
+
+    /** ADR-019 — silhouette morph + cover-cut gates. The continuous
+     *  channel exposes the silhouette progress to any downstream CSS
+     *  rule that wants to phase against the cover-in (e.g. dock-glyph
+     *  fade-outs, halo crossfades). The binary cut flag mirrors the
+     *  vector actor's instant-cut threshold so the dock-glyph CSS at
+     *  miss / rail / orbit parks can collapse to opacity 0 the moment
+     *  the silhouette particles cover the same shape. */
+    const SILHOUETTE_CUT_THRESHOLD = 0.55;
+    const setBrandSilhouetteMorph = (value: number) => {
+      const rounded = Math.round(value * 1000) / 1000;
+      if (Math.abs(rounded - lastBrandSilhouetteMorph) < 0.001) return;
+      lastBrandSilhouetteMorph = rounded;
+      document.documentElement.style.setProperty(
+        "--brand-silhouette-morph",
+        rounded.toFixed(3)
+      );
+    };
+    const setBrandSilhouetteCut = (value: number) => {
+      const cut = value >= SILHOUETTE_CUT_THRESHOLD ? 1 : 0;
+      if (cut === lastBrandSilhouetteCut) return;
+      lastBrandSilhouetteCut = cut;
+      document.documentElement.style.setProperty(
+        "--brandmark-silhouette-cut",
+        cut.toFixed(0)
+      );
     };
 
     // === Sigil → miss orbital morph driver ===
@@ -329,6 +358,8 @@ export function useBrandmarkJourney(
       setBrandShapeBlend(transform.shapeBlend);
       setBrandVectorOpacity(transform.vectorOpacity);
       setBrandSubstrateCut(transform.substrateMorph);
+      setBrandSilhouetteMorph(transform.silhouetteMorph);
+      setBrandSilhouetteCut(transform.silhouetteMorph);
     };
 
     /** Apply SVG-mode side effects: pin the actor + write dock attrs.
@@ -503,6 +534,8 @@ export function useBrandmarkJourney(
       document.documentElement.style.removeProperty("--brandmark-shape-blend");
       document.documentElement.style.removeProperty("--brandmark-vector-opacity");
       document.documentElement.style.removeProperty("--brandmark-substrate-cut");
+      document.documentElement.style.removeProperty("--brand-silhouette-morph");
+      document.documentElement.style.removeProperty("--brandmark-silhouette-cut");
       rootEl.style.removeProperty("--orbit-morph");
       rootEl.style.removeProperty("--orbit-style-morph");
       rootEl.style.removeProperty("--halo-fade");

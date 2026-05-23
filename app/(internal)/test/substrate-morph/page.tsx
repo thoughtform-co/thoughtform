@@ -55,6 +55,7 @@ export default function SubstrateMorphPreviewPage() {
         shapeBlend: 0,
         vectorOpacity: 1,
         substrateMorph: morph,
+        silhouetteMorph: 1,
         visible: true,
         parkedAt: "substrate",
       });

@@ -19,16 +19,21 @@ The v7 brandmark journey is a **single continuous transform** computed every scr
 scrollY  →  computeBrandmarkTransform(scrollY, keyframes, ctx)  →  BrandmarkTransform
 ```
 
-**Two painters** read the transform every frame, both subscribing imperatively to the same store:
+**Four painters** read the transform every frame, all subscribing imperatively to the same store:
 
-- **`BrandmarkVectorActor`** (ADR-015) paints the BRANDMARK SHAPE as crisp inline SVG. Two stacked glyphs (full + ring) crossfade via `transform.shapeBlend`. Rotation is honest CSS `perspective() rotateY()`.
-- **`BrandmarkParticleStation`** (atmosphere field) paints luminous gold dust around the vector mark — sparse at transit, modestly dense during the substrate window, off at full-mark parked states.
+- **`BrandmarkVectorActor`** (ADR-015) paints the BRANDMARK SHAPE as crisp inline SVG at **sigil (Thoughtform) rest only**. Two stacked glyphs (full + ring) crossfade via `transform.shapeBlend`. Rotation is honest CSS `perspective() rotateY()`. Fades out geometrically as `silhouetteMorph` ramps (ADR-019).
+- **`BrandmarkSilhouettePoints`** (ADR-019) paints the brandmark as a silhouette point cloud from the sigil → miss transit onward, and stays at every park from Diagnostic through Orbit. Gated by `transform.silhouetteMorph`; suppressed inside the substrate window.
+- **`SubstrateMorphPoints`** (ADR-017) paints the brandmark → sphere morph inside the substrate window. Lives in the intelligence-layer R3F canvas, not the global one.
+- **`BrandmarkParticleStation`** (atmosphere field) paints luminous gold dust around the active mark painter. Damped while `silhouetteMorph > 0` so the silhouette reads cleanly.
 
 The R3F intelligence-layer scene (`OrbitField`) reads the same transform for its side-orbit emerge envelopes; the new [`CelestialLinework`](../../../components/landing/v7/intelligence-layer/CelestialLinework.tsx) overlay adds hairline guide ring + bearing ticks + cardinal diamonds driven by `--ilayer-progress`. In SVG-fallback mode (reduced motion or no WebGL), `useBrandmarkJourney` pins the legacy `BrandmarkActor` to the transform's rect and writes `data-brand-on-*="parked"` attributes so native dock SVGs paint via CSS gates.
 
-**Canonical record:** [ADR-015](../../../sentinel/decisions/015-brandmark-vector-first.md) (current — vector-first split).
+**Canonical records:**
+- [ADR-015](../../../sentinel/decisions/015-brandmark-vector-first.md) — vector-first split (current default for sigil).
+- [ADR-017](../../../sentinel/decisions/017-orbit-journey-and-substrate-morph.md) — `substrateMorph` channel + substrate-sphere morph mesh.
+- [ADR-019](../../../sentinel/decisions/019-brandmark-silhouette-morph.md) — `silhouetteMorph` channel + global silhouette point cloud (Diagnostic onward).
+
 **Predecessor (journey contract retained):** [ADR-013](../../../sentinel/decisions/013-brandmark-journey-refactor.md).
-**Composes with:** [ADR-017](../../../sentinel/decisions/017-orbit-journey-and-substrate-morph.md) — adds the `substrateMorph` channel + the persistent traveling orbits painter and the substrate-sphere morph mesh.
 **Related (rendering):** [`brandmark-particle`](../brandmark-particle/SKILL.md).
 **Related (compositing):** [ADR-008](../../../sentinel/decisions/008-landing-v7-background-layers.md), `landing-v7-compositing` skill.
 

@@ -100,6 +100,7 @@ export default function BrandmarkVectorPreviewPage() {
           shapeBlend: blend,
           vectorOpacity: 1,
           substrateMorph: 0,
+          silhouetteMorph: 0,
           visible: true,
           parkedAt: null,
         });
@@ -125,6 +126,7 @@ export default function BrandmarkVectorPreviewPage() {
         shapeBlend,
         vectorOpacity: 1,
         substrateMorph: 0,
+        silhouetteMorph: 0,
         visible: opacity > 0.001,
         parkedAt: null,
       });

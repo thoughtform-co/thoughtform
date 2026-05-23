@@ -867,8 +867,21 @@
 /* Each parked state reveals only its own dock glyph. The
    `visibility: visible` is set with a 0s transition so the glyph
    becomes hit-testable immediately at park onset while the opacity
-   ramp animates the visual fade-in. */
-[data-brandmark-mode="particle"][data-brand-parked-at="sigil"] .sigil__mark > :where(img, svg),
+   ramp animates the visual fade-in.
+
+   ADR-019: at miss / rail / orbit parks the brandmark is owned by
+   the global SILHOUETTE point cloud (not the dock glyph). The
+   `--brandmark-silhouette-cut` variable is 1 from the sigil → miss
+   transit onward, so the dock-glyph opacity at those parks collapses
+   to 0 — the particles cover the same silhouette. Sigil is the only
+   park where the vector dock glyph remains the visible painter. */
+[data-brandmark-mode="particle"][data-brand-parked-at="sigil"] .sigil__mark > :where(img, svg) {
+  opacity: 1;
+  visibility: visible;
+  transition:
+    opacity 120ms linear,
+    visibility 0s linear 0s;
+}
 [data-brandmark-mode="particle"][data-brand-parked-at="miss"] .miss__brand-slot > :where(img, svg),
 [data-brandmark-mode="particle"][data-brand-parked-at="rail"]
   .crail--large
@@ -877,7 +890,7 @@
 [data-brandmark-mode="particle"][data-brand-parked-at="orbit"]
   .approach__orbit__mark
   > :where(img, svg) {
-  opacity: 1;
+  opacity: calc(1 - var(--brandmark-silhouette-cut, 0));
   visibility: visible;
   transition:
     opacity 120ms linear,

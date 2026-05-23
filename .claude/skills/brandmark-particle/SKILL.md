@@ -1,22 +1,27 @@
 ---
 name: brandmark-particle
 description: >
-  Atmosphere-field shader model for the v7 brandmark (ADR-015 supersedes
-  ADR-013's rendering surface). One `BrandmarkParticleStation` instance
-  (aliased as `BrandmarkAtmosphere`) inside the global canvas paints
-  luminous gold dust around the vector brandmark — NOT the brandmark
-  shape itself. The crisp mark is rendered by `BrandmarkVectorActor`
-  (inline SVG). Activates on edits to
+  Particle painters for the v7 brandmark — atmosphere field (ADR-015),
+  silhouette point cloud (ADR-019), and substrate-sphere morph
+  (ADR-017). Three painters live inside the global
+  `BrandmarkParticleCanvas`; the substrate-sphere mesh lives inside
+  the intelligence-layer R3F canvas. All read the SAME journey
+  transform. Activates on edits to
   `components/brand/BrandmarkParticleField/**`,
-  `lib/brandmark/sampleShape.ts`, the atmosphere shader (soft radial
-  dots + additive blending), or anything that changes how the
-  atmosphere field is rendered (vs. how the brandmark is choreographed,
-  which is the `brandmark-choreography` skill).
+  `lib/brandmark/sampleShape.ts`, any shader in this folder, or
+  anything that changes how a particle painter is rendered (vs. how
+  the brandmark is choreographed, which is the `brandmark-choreography`
+  skill).
 ---
 
-# Brandmark atmosphere painter (soft radial dots, additive blending)
+# Brandmark particle painters (atmosphere + silhouette + substrate-sphere)
 
-The brandmark **shape** is rendered by [`BrandmarkVectorActor`](../../components/brand/BrandmarkVectorActor/BrandmarkVectorActor.tsx) — crisp inline SVG, pinned to the journey transform's rect via rAF. See ADR-015.
+The brandmark shape painter changes along the journey:
+
+- **Sigil (Thoughtform rest)** — crisp inline SVG via [`BrandmarkVectorActor`](../../components/brand/BrandmarkVectorActor/BrandmarkVectorActor.tsx) (ADR-015).
+- **Sigil → miss transit, miss / rail / orbit parks** — silhouette point cloud via `BrandmarkSilhouettePoints` (ADR-019).
+- **Substrate window** — brandmark → sphere morph via `SubstrateMorphPoints` inside the intelligence-layer R3F canvas (ADR-017). The global silhouette mesh is suppressed during this window.
+- **Everywhere** — atmosphere dust via `BrandmarkParticleStation` (ADR-015). Damped at miss park onward so the silhouette reads cleanly.
 
 The **atmosphere field** is rendered by ONE `BrandmarkParticleStation` mesh inside the global `BrandmarkParticleCanvas` (fixed full-viewport, z:23). It paints luminous gold dust around the vector mark — sparse at transit, modestly dense during the substrate window, fully off at full-mark parked states (sigil / miss / rail / orbit). Every frame the painter reads the `BrandmarkTransform` from `brandmarkJourneyStore` and writes the per-frame uniforms onto its `ShaderMaterial`:
 
@@ -35,9 +40,31 @@ Mode flag in the store:
 - `mode === "particle"`: canvas mounts; painter renders.
 - `mode === "svg"`: canvas returns `null`; SVG actor + native dock SVGs paint via the journey hook's SVG-mode side effects.
 
-**Canonical record:** [ADR-015](../../../sentinel/decisions/015-brandmark-vector-first.md) (current — vector-first split).
-**Predecessor:** [ADR-013](../../../sentinel/decisions/013-brandmark-journey-refactor.md) (journey contract retained verbatim; only the rendering surface changed).
+**Canonical records:**
+- [ADR-015](../../../sentinel/decisions/015-brandmark-vector-first.md) — vector-first split (atmosphere does not paint the mark by default).
+- [ADR-017](../../../sentinel/decisions/017-orbit-journey-and-substrate-morph.md) — substrate-sphere morph mesh exemption (intelligence-layer canvas).
+- [ADR-019](../../../sentinel/decisions/019-brandmark-silhouette-morph.md) — silhouette particle mesh from Diagnostic onward (global canvas).
+
+**Predecessor:** [ADR-013](../../../sentinel/decisions/013-brandmark-journey-refactor.md) (journey contract retained verbatim; only the rendering surface evolves).
 **Related (state machine):** [`brandmark-choreography`](../brandmark-choreography/SKILL.md).
+
+---
+
+## The silhouette painter (ADR-019)
+
+[`components/brand/BrandmarkParticleField/BrandmarkSilhouettePoints.tsx`](../../../components/brand/BrandmarkParticleField/BrandmarkSilhouettePoints.tsx) — global silhouette point cloud, mounted alongside the atmosphere station inside `BrandmarkParticleCanvas`. Reads:
+
+| Transform field    | Uniform     | What it does                                                                       |
+| ------------------ | ----------- | ---------------------------------------------------------------------------------- |
+| `rect.center`      | `uCenter`   | Where the silhouette paints (same anchor the atmosphere uses)                      |
+| `rect.halfSize`    | `uHalfSize` | Silhouette size                                                                    |
+| `opacity`          | `uOpacity`  | Base alpha (hero/orbit bookend fades only)                                         |
+| `silhouetteMorph`  | `uMorph`    | Cover-in envelope. 0 = nothing painted, ≥0.6 = full silhouette at rect             |
+| `substrateMorph`   | (binary suppression) | While > 0.001 the global mesh is hidden — substrate-sphere mesh owns the shape |
+
+Density tier: **1900 desktop / 700 mobile** (substrate-tier so the silhouette reads as a solid mark). Soft radial dot fragment shader, additive blending — same family as the atmosphere but with a slightly tighter core (`smoothstep(0.30, 0.5, d)`) so the silhouette stays crisp.
+
+The vector actor crossfades out across `silhouetteMorph ∈ [0, 0.55]` so the visible silhouette equals `vector + particles` at every frame (Principle 3 honoured geometrically, not via opacity crossfade against empty space).
 
 ---
 
@@ -89,17 +116,17 @@ Tune in `/test/brandmark-vector` (the new dev preview page that mounts both the 
 ## Don't reintroduce
 
 - **Solid-square fragment shader.** `gl_FragColor = vec4(uTint, vAlpha)` was the papercraft tile aesthetic that ADR-015 retired. Soft radial dots + additive blending are the contract.
-- **The brandmark shape painted by particles.** The atmosphere field never paints the brandmark silhouette — that's `BrandmarkVectorActor`'s job. `parked.density` at full-mark stations (sigil / miss / rail / orbit) stays at 0.
-- **Per-station snapshots.** There is ONE transform, not five. Mounting more than one `BrandmarkParticleStation` instance is forbidden — the painter is a singleton.
-- **`brandmarkParticles.ts` / R3F-local brandmark `<points>`.** The intelligence-layer R3F scene is orbits + pips only. The global painter draws the atmosphere inside that section.
-- **`data-brand-svg-dock` / `data-brand-particle-backdrop` gates.** The painter's visibility is controlled by `uOpacity` (per-frame from the journey transform). The wrapper opacity stays at 1 in particle mode.
-- **Two particle implementations.** There is one shader. Any new atmospheric visual that needs particles MUST go through the journey transform + the existing painter.
+- **The atmosphere field painting the brandmark silhouette.** ADR-015's split is still load-bearing for the atmosphere — that mesh paints dust + exhaust, never the mark. The silhouette mesh (ADR-019) is the documented exception; do not move silhouette responsibilities onto `BrandmarkParticleStation`.
+- **Per-station snapshots.** There is ONE transform, not five. Mounting more than one `BrandmarkParticleStation` or `BrandmarkSilhouettePoints` instance is forbidden — both are singletons.
+- **A fourth global particle mesh.** Three painters at most (atmosphere + silhouette globally, substrate-sphere inside the intelligence-layer canvas). Any new particle visual MUST extend an existing painter or replace one — not add a fourth.
+- **`data-brand-svg-dock` / `data-brand-particle-backdrop` gates.** Painter visibility is controlled by per-frame uniforms from the journey transform. The wrapper opacity stays at 1 in particle mode.
+- **Opacity crossfades between renderers.** The vector → silhouette handoff is a geometric cover-in (silhouette inflates from rect centre; vector recedes in proportion). The silhouette → substrate-sphere handoff is a binary cut under matching screen-anchor particles. Both honour Principle 3.
 
 ---
 
 ## Pre-merge checklist (rendering invariants)
 
-- [ ] **One painter mesh** — `BrandmarkParticleCanvas` mounts exactly one `BrandmarkParticleStation` (it takes no `stations` prop).
+- [ ] **Two global meshes** — `BrandmarkParticleCanvas` mounts exactly one `BrandmarkParticleStation` (atmosphere) AND one `BrandmarkSilhouettePoints` (silhouette). Both are singletons; neither takes per-station props.
 - [ ] **Cloud opacity (`uOpacity`)** stays at 1 anywhere between hero exit and post-orbit fade. Only the bookends ramp opacity (Principle 2).
 - [ ] **Rect lerp is geometric** — `uCenter` + `uHalfSize` change continuously each scroll frame; no opacity crossfade replaces a geometric morph.
 - [ ] **Dispersion bump** appears only in the sigil → miss leg (the default `sin(πt)*0.45`). All other arrivals (`substrate`, `rail`, `orbit`) have `dispersionBump: null` — no scatter on growing / shrinking transits.

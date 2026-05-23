@@ -58,6 +58,19 @@ const VISIBILITY_EPSILON = 0.005;
  *  silhouette so the swap is invisible. */
 const SUBSTRATE_MORPH_CUT_EPSILON = 0.001;
 
+/** Silhouette-morph cover-cut threshold (ADR-019). Once the global
+ *  silhouette point cloud has inflated enough to read as the visible
+ *  brandmark, the vector actor crossfades out in proportion to the
+ *  remaining cover-in budget. The shader's cover-in ramp completes
+ *  at `silhouetteMorph = 0.6`, so we tie the vector handoff to the
+ *  same 0..0.55 window — by 0.55 the silhouette is at ~92% cover
+ *  and the vector is fully out. Below 0 (or absent) this branch is
+ *  a no-op. The handoff is a geometric fade keyed to the same
+ *  channel that grows the silhouette, so at every moment the visible
+ *  silhouette equals (vector + particles) — Principle 3 satisfied
+ *  via matched cover rather than a hard cut. */
+const SILHOUETTE_HANDOFF_END = 0.55;
+
 /** Park-handoff opacity threshold. Mirrors the same constant in
  *  `useBrandmarkJourney` — the actor gates itself OFF when
  *  `parkedAt != null && opacity > THRESHOLD`, which is exactly when
@@ -162,7 +175,17 @@ export function BrandmarkVectorActor() {
         parkedAt != null &&
         parkedAt !== "substrate" &&
         (parkedAt === "sigil" || parkedAt === "miss" || opacity > PARKED_OPACITY_THRESHOLD);
-      const effectiveOpacity = fullyParked ? 0 : opacity * vectorOpacity;
+      // ADR-019: silhouette cover crossfade. The global silhouette
+      // point cloud inflates from the rect centre as `silhouetteMorph`
+      // ramps 0 → 1. We fade the vector in proportion so the visible
+      // brandmark = vector + particles at every frame — no hole, no
+      // crossfade against an empty rect. Past `SILHOUETTE_HANDOFF_END`
+      // the silhouette owns the mark and the vector is fully out.
+      const silhouetteFade = Math.max(
+        0,
+        1 - transform.silhouetteMorph / SILHOUETTE_HANDOFF_END
+      );
+      const effectiveOpacity = fullyParked ? 0 : opacity * vectorOpacity * silhouetteFade;
       if (effectiveOpacity !== lastEffectiveOpacity) {
         shell.style.opacity = `${effectiveOpacity}`;
         lastEffectiveOpacity = effectiveOpacity;

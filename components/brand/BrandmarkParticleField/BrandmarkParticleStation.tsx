@@ -244,7 +244,18 @@ export function BrandmarkParticleStation() {
     u.uHalfSize.value.set(transform.rect.width / 2, transform.rect.height / 2);
     u.uOpacity.value = transform.opacity;
     u.uVisibleCount.value = visibleCount;
-    u.uDispersion.value = transform.dispersion;
+    // ADR-019: while the global silhouette mesh is painting the
+    // brandmark shape, damp the atmosphere's dispersion bump so the
+    // silhouette reads cleanly. The atmosphere's role across the
+    // sigil → miss transit was "motion exhaust around the moving
+    // vector"; now the silhouette IS the visible mark, so a strong
+    // exhaust scatter would visually compete with the cover-in.
+    // We scale dispersion by (1 - silhouetteMorph * DAMP) so it's
+    // intact at sigil rest (silhouetteMorph = 0) and reduced to a
+    // soft halo by the time the silhouette is fully formed.
+    const SILHOUETTE_DISPERSION_DAMP = 0.7;
+    const dispersionScale = 1 - transform.silhouetteMorph * SILHOUETTE_DISPERSION_DAMP;
+    u.uDispersion.value = transform.dispersion * dispersionScale;
     u.uRotationY.value = transform.rotationY;
     u.uShapeBlend.value = transform.shapeBlend;
     u.uTime.value = state.clock.elapsedTime;

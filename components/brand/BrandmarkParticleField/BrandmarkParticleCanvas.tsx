@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { useBrandmarkJourneyStore } from "@/lib/stores/brandmarkJourneyStore";
 import { probeWebGL } from "@/lib/webgl/probe";
 import { BrandmarkParticleStation } from "./BrandmarkParticleStation";
+import { BrandmarkSilhouettePoints } from "./BrandmarkSilhouettePoints";
 
 /**
  * BrandmarkParticleCanvas — the single shared R3F canvas that paints
@@ -119,6 +120,13 @@ export function BrandmarkParticleCanvas({
         style={{ background: "transparent", pointerEvents: "none" }}
       >
         <BrandmarkParticleStation />
+        {/* ADR-019: silhouette point cloud that paints the brandmark
+            from Diagnostic onward. Reads the SAME journey transform
+            as the atmosphere station; renders only when
+            `transform.silhouetteMorph > 0`. Fades out automatically
+            during the substrate window so the intelligence-layer
+            canvas's own silhouette → sphere mesh owns the morph. */}
+        <BrandmarkSilhouettePoints />
       </Canvas>
     </div>
   );
