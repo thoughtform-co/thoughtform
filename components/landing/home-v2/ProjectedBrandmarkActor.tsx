@@ -19,21 +19,26 @@ import {
  *
  * Mounts ONCE as a `position: fixed` shell containing the canonical
  * inline `BrandmarkGlyph` SVG (same vector geometry as the production
- * homepage). Each rAF tick it:
+ * homepage). Each rAF tick it computes a screen rect from one of two
+ * sources:
  *
- *   1. Reads `progress`, `cameraT`, `beat`, and `gateProgress` from
- *      `depthGatewayStore`.
- *   2. Computes the brandmark's WORLD position from
- *      `getBrandmarkWorldPosition(progress)`.
- *   3. Projects that world position through a mirror
+ *   1. **DOM dock rect** (Thoughtform parked beat).
+ *      The actor pins to `.home-v2-stage .sigil__mark`'s
+ *      `getBoundingClientRect()` so the brandmark sits inside the v7
+ *      sigil compass diagram exactly like the production homepage —
+ *      same size (`clamp(155px, 19vw, 232px)`), same screen position,
+ *      responsive across viewports.
+ *
+ *   2. **3D world projection** (passthrough-01 onward).
+ *      The actor projects a world position from
+ *      `getBrandmarkWorldPosition(progress)` through a mirror
  *      `THREE.PerspectiveCamera` set up with the same camera path
- *      as the R3F scene (so the actor's screen position is exactly
- *      where the camera would render a point at that world location).
- *   4. Resolves the target on-screen width via
- *      `getBrandmarkTargetScreenWidthFrac(progress)`, calibrated to
- *      match v7 dock CSS sizes (`.sigil__mark` ~19vw,
- *      `.miss__brand-slot` ~11vw, `.ilayer__brandmark-anchor` ~22vw).
- *   5. Writes the shell's `left/top/width/height` inline styles.
+ *      as the R3F scene, then sizes the shell via
+ *      `getBrandmarkTargetScreenWidthFrac(progress)`.
+ *
+ * Across the passthrough-01 beat (0.18 → 0.32) the two sources are
+ * lerped so the brandmark leaves the v7 dock and gradually settles
+ * onto the corridor's centered world path without a jump.
  *
  * Visibility:
  *   - Opacity 0 at hero (stage inactive) and during the substrate
@@ -134,7 +139,9 @@ export function ProjectedBrandmarkActor() {
       }
       if (!shouldBeVisible) return;
 
-      // Build the mirror camera.
+      // ── Compute the world-projected screen rect ────────────────
+      // (used for transit / Diagnostic / Intelligence; lerped FROM
+      // during passthrough-01).
       const [cx, cy, cz] = getCameraPosition(cameraT);
       const [lx, ly, lz] = getCameraLookAt(cameraT);
       s.pos.set(cx, cy, cz);
@@ -143,36 +150,91 @@ export function ProjectedBrandmarkActor() {
       s.camera.lookAt(s.lookAt);
       s.camera.updateMatrixWorld();
 
-      // Project the brandmark world position to NDC.
       const [wx, wy, wz] = getBrandmarkWorldPosition(progress);
       s.target.set(wx, wy, wz);
-      // If behind the camera, hide (cz > target z + small margin).
       const camToTargetZ = cz - wz;
-      if (camToTargetZ <= 0.2) {
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+
+      let worldLeft = 0;
+      let worldTop = 0;
+      let worldWidth = 0;
+      let worldHeight = 0;
+      let worldRectValid = false;
+      if (camToTargetZ > 0.2) {
+        s.projected.copy(s.target).project(s.camera);
+        const screenX = (s.projected.x * 0.5 + 0.5) * vw;
+        const screenY = (-s.projected.y * 0.5 + 0.5) * vh;
+        const widthFrac = getBrandmarkTargetScreenWidthFrac(progress);
+        worldWidth = vw * widthFrac;
+        worldHeight = worldWidth * (436 / 430.99);
+        worldLeft = screenX - worldWidth / 2;
+        worldTop = screenY - worldHeight / 2;
+        worldRectValid = true;
+      }
+
+      // ── Compute the DOM dock rect at Thoughtform parked ────────
+      // The v7 `.sigil__mark` element sits inside the sliced
+      // `#definition` chamber DOM. At the Thoughtform beat the
+      // sigil compass SVG is visible (homepage layout), so we pin
+      // the brandmark exactly to its dock slot — same as how the
+      // production v7 brandmark journey pins to the sigil dock.
+      let dockLeft = 0;
+      let dockTop = 0;
+      let dockWidth = 0;
+      let dockHeight = 0;
+      let dockRectValid = false;
+      const needsDock = beat === "thoughtform" || beat === "passthrough-01";
+      if (needsDock) {
+        const dock = document.querySelector(".home-v2-stage .sigil__mark");
+        if (dock) {
+          const r = dock.getBoundingClientRect();
+          if (r.width > 0 && r.height > 0) {
+            dockLeft = r.left;
+            dockTop = r.top;
+            dockWidth = r.width;
+            dockHeight = r.height;
+            dockRectValid = true;
+          }
+        }
+      }
+
+      // ── Choose / blend rect sources ────────────────────────────
+      // - Thoughtform parked: pure dock rect (homepage fidelity).
+      // - Passthrough-01: blend dock → world over the beat so the
+      //   brandmark glides off the sigil dock and onto the corridor's
+      //   world path without a jump.
+      // - All other beats: pure world projection.
+      let left: number;
+      let top: number;
+      let width: number;
+      let height: number;
+      if (beat === "thoughtform" && dockRectValid) {
+        left = dockLeft;
+        top = dockTop;
+        width = dockWidth;
+        height = dockHeight;
+      } else if (beat === "passthrough-01" && dockRectValid && worldRectValid) {
+        // Smoothstep blend so the handoff has decelerated ends.
+        const u = gateProgress < 0 ? 0 : gateProgress > 1 ? 1 : gateProgress;
+        const t = u * u * (3 - 2 * u);
+        left = dockLeft + (worldLeft - dockLeft) * t;
+        top = dockTop + (worldTop - dockTop) * t;
+        width = dockWidth + (worldWidth - dockWidth) * t;
+        height = dockHeight + (worldHeight - dockHeight) * t;
+      } else if (worldRectValid) {
+        left = worldLeft;
+        top = worldTop;
+        width = worldWidth;
+        height = worldHeight;
+      } else {
+        // Behind the camera and no dock available — hide.
         if (s.lastVisible !== false) {
           s.lastVisible = false;
           shell.style.display = "none";
         }
         return;
       }
-
-      s.projected.copy(s.target).project(s.camera);
-
-      // NDC → screen pixels.
-      const vw = window.innerWidth;
-      const vh = window.innerHeight;
-      const screenX = (s.projected.x * 0.5 + 0.5) * vw;
-      const screenY = (-s.projected.y * 0.5 + 0.5) * vh;
-
-      // Target on-screen width fraction → pixel width. Height
-      // follows the brandmark's intrinsic 430.99 × 436 ratio so the
-      // mark stays square-ish at every parked station.
-      const widthFrac = getBrandmarkTargetScreenWidthFrac(progress);
-      const width = vw * widthFrac;
-      const height = width * (436 / 430.99);
-
-      const left = screenX - width / 2;
-      const top = screenY - height / 2;
 
       // Write to inline styles only when meaningfully changed (avoid
       // touching the DOM on every rAF if the user is idle).
@@ -193,19 +255,22 @@ export function ProjectedBrandmarkActor() {
         shell.style.height = `${height}px`;
       }
 
-      // Opacity bookends. The brandmark fades IN across the first
-      // few percent of stage progress (so it doesn't pop in during
-      // the hero → stage handoff) and fades OUT at the very end
-      // (so it doesn't sit huge on top of the tail copy after the
-      // user scrolls past the corridor). Parked beats are slightly
-      // brighter than transit beats so the mark feels "lit" when
-      // it lands.
-      const HERO_FADE_IN = 0.05;
+      // Opacity bookends.
+      //
+      // No hero fade-in: at the start of the stage the actor is
+      // pinned to the v7 `.sigil__mark` dock rect (homepage layout),
+      // so it must be at full intensity the moment the chamber
+      // section appears — the same way the production homepage
+      // shows the brandmark crisply at #definition.
+      //
+      // Tail fade-out only: ramps 1 → 0 across the final 3% of
+      // stage progress so the actor doesn't sit huge on top of the
+      // tail copy after the user scrolls past the corridor.
+      // Parked beats are slightly brighter than transit beats so the
+      // mark feels "lit" when it lands.
       const TAIL_FADE_OUT_START = 0.97;
       let bookend = 1;
-      if (progress < HERO_FADE_IN) {
-        bookend = Math.max(0, progress / HERO_FADE_IN);
-      } else if (progress > TAIL_FADE_OUT_START) {
+      if (progress > TAIL_FADE_OUT_START) {
         bookend = Math.max(0, 1 - (progress - TAIL_FADE_OUT_START) / (1 - TAIL_FADE_OUT_START));
       }
       const isParkedBeat =

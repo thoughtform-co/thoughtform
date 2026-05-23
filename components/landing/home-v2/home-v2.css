@@ -157,25 +157,20 @@
    shapes in world space (ADR-018 Principle 1).
    ════════════════════════════════════════════════════════════════ */
 
-/* Thoughtform / Definition section — hide the inline sigil compass
-   SVG. Keep the .tri__left copy block + heading. The brandmark
-   itself is painted by ProjectedBrandmarkActor on top. */
-[data-home-v2-mode="corridor"] .home-v2-stage .sigil__orbits,
-[data-home-v2-mode="corridor"] .home-v2-stage .sigil__cap,
-[data-home-v2-mode="corridor"] .home-v2-stage .sigil__legend,
+/* Thoughtform / Definition section — KEEP the v7 sigil compass SVG
+   visible in corridor mode so the parked Thoughtform beat reads
+   identically to the homepage (compass rings + NAVIGATE/ENCODE/BUILD
+   phase labels + diamond outline ring + NORTH STAR caption + phase
+   legend). The chamber's `--chamber-A-section-opacity` fades the
+   entire section out as the corridor scrolls past it.
+   We hide only the placeholder `<img>`/`<svg>` inside `.sigil__mark`
+   because `ProjectedBrandmarkActor` owns the brand at that dock
+   position (pinned via `getBoundingClientRect()`). */
 [data-home-v2-mode="corridor"] .home-v2-stage .sigil__mark > :where(img, svg) {
   display: none !important;
 }
-/* Keep the .sigil__mark slot itself so the layout doesn't reflow,
-   but pin it to no size so the projected actor owns the brand
-   position. */
 [data-home-v2-mode="corridor"] .home-v2-stage .sigil__mark {
-  background: transparent !important;
-  filter: none !important;
   pointer-events: none;
-}
-[data-home-v2-mode="corridor"] .home-v2-stage .sigil__mark::before {
-  display: none !important;
 }
 
 /* Diagnostic / Missing-layer section — hide the orbital SVG +
