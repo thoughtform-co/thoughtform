@@ -41,9 +41,12 @@ export const CAMERA_FOV = 38;
 
 /** Camera position at progress = 0 (start of corridor).
  *
- *  Off-axis RIGHT so the camera frames the Thoughtform composition
- *  (compass right / copy left) at the parked Thoughtform beat. */
-export const CAMERA_START: [number, number, number] = [0.55, 0, 10];
+ *  Dead-centred on the optical axis — the Thoughtform composition is
+ *  axial (compass dead-centre / copy on the left), so the camera
+ *  never needs to off-axis-frame. The previous off-axis-right start
+ *  + passthrough-01 X-reframe was retired when STATION_THOUGHTFORM
+ *  moved to world X=0. */
+export const CAMERA_START: [number, number, number] = [0, 0, 10];
 
 /** Camera position at progress = 1 (end of corridor). On-axis. */
 export const CAMERA_END: [number, number, number] = [0, 0, -8];
@@ -53,9 +56,9 @@ export const CAMERA_END: [number, number, number] = [0, 0, -8];
  *  gate (perspective signal: we are FLYING forward). */
 const LOOK_AHEAD = 6;
 
-/** Look-at X at the start of the corridor (frames the off-axis-right
- *  Thoughtform composition). */
-const LOOK_AT_X_START = 0.95;
+/** Look-at X at the start of the corridor. Centred, matching the
+ *  axial Thoughtform composition. */
+const LOOK_AT_X_START = 0;
 
 /** Look-at X at the end of the corridor (centred). */
 const LOOK_AT_X_END = 0;
@@ -64,9 +67,11 @@ const LOOK_AT_X_END = 0;
  *  signal, very low amplitude so it doesn't read as wobble. */
 const LOOK_BOB_AMPLITUDE = 0.08;
 
-/** Maximum camera roll (radians) during the X-reframe. Tiny — adds
- *  a "bank into the turn" hint without making the corridor wobble. */
-const ROLL_MAX = 0.018;
+/** Maximum camera roll (radians) during the X-reframe. Zero now
+ *  that the corridor is axial end-to-end — there's no X-pan to
+ *  bank into. The constant + envelope stay defined so future
+ *  off-axis beats can re-enable banking without a refactor. */
+const ROLL_MAX = 0;
 
 // ── Beat-window references ───────────────────────────────────────
 // These mirror the BEAT_WINDOWS table in depthGatewayStore so the
@@ -154,13 +159,15 @@ function gateZAtParkProgress(parkProgress: number): number {
   return camZ - GATE_PARK_DISTANCE;
 }
 
-/** Thoughtform compass — sits OFF-AXIS RIGHT so the parked frame
- *  shows compass-right + copy-left, matching the v7 `.tri` grid
- *  spirit. The camera is also offset right so the gate appears
- *  right-of-centre on screen at parked rest. */
+/** Thoughtform compass — dead-centred on the optical axis. The
+ *  parked frame reads as a centred compass with the left copy
+ *  panel anchored further out at world X = -2.3 (see leftCopy
+ *  anchor). Previously this gate sat off-axis-right at X=+1.4 with
+ *  a corresponding camera reframe; the axial composition replaces
+ *  that and the camera path is now a straight Z dolly. */
 export const STATION_THOUGHTFORM: GateStation = {
   id: "thoughtform",
-  position: [1.4, 0.0, gateZAtParkProgress(0.09)],
+  position: [0, 0.0, gateZAtParkProgress(0.09)],
   halfExtent: 1.6,
   parkProgress: 0.09,
 };
@@ -336,29 +343,17 @@ function diagnosticLabelWorldPosition(pipXSvg: number, pipYSvg: number): [number
  */
 export const COPY_ANCHORS: readonly CopyAnchor[] = [
   // ── Thoughtform ─────────────────────────────────────────────────
-  // Left copy block: bridge + title + lede + CTA. Sits OFF-AXIS LEFT
-  // of the compass (which is at world X = +1.4) so at parked rest
-  // the .tri composition reads as copy-left + compass-right. As the
-  // camera dollies forward + reframes through passthrough-01, the
-  // Z dolly carries this anchor BEHIND the camera by parked
-  // Diagnostic — so it leaves the screen naturally without needing
-  // a per-progress X offset.
+  // Left copy block: bridge + title + lede + CTA. With the compass
+  // dead-centred at world X=0, the copy sits well to the left (X =
+  // -2.3) so its right edge clears the compass + diamond cleanly.
+  // As the camera dollies forward, the Z dolly carries this anchor
+  // behind the camera by the parked Diagnostic beat — so it leaves
+  // the screen naturally without needing a per-progress X offset.
   {
     id: "thoughtform.leftCopy",
-    position: [-1.45, 0.0, STATION_THOUGHTFORM.position[2] + 0.1],
+    position: [-2.3, 0.0, STATION_THOUGHTFORM.position[2] + 0.1],
     visibilityBeats: ["thoughtform", "passthrough-01"],
     fadeFrac: 0.4,
-  },
-  // North star caption above the compass diamond.
-  {
-    id: "thoughtform.northStar",
-    position: [
-      STATION_THOUGHTFORM.position[0] + 0.9,
-      -0.05,
-      STATION_THOUGHTFORM.position[2] + 0.05,
-    ],
-    visibilityBeats: ["thoughtform"],
-    fadeFrac: 0.25,
   },
   // Three phase labels — NAVIGATE/ENCODE/BUILD — sit at the v7 sigil
   // ring node positions (top, lower-left, lower-right) relative to

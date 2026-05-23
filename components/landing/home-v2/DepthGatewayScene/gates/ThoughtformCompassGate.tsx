@@ -160,13 +160,17 @@ export function ThoughtformCompassGate() {
     group.visible = true;
 
     // Visibility envelope:
-    //   0           -> 0.04 : paint-in 0 -> 1
-    //   0.04        -> 0.20 : full (1)
+    //   0           -> 0.20 : full (1)  — already present when the
+    //                                     user reaches Thoughtform
+    //                                     (the depth-stage `active`
+    //                                     flag gates everything off
+    //                                     during the hero scroll, so
+    //                                     we don't need a paint-in
+    //                                     here).
     //   0.20        -> 0.34 : fade 1 -> 0 (camera passing through)
     //   0.34        -> ...  : 0
     let opacity = 0;
-    if (progress <= 0.04) opacity = progress / 0.04;
-    else if (progress <= 0.2) opacity = 1;
+    if (progress <= 0.2) opacity = 1;
     else if (progress <= 0.34) opacity = 1 - (progress - 0.2) / 0.14;
 
     for (let i = 0; i < ringMats.length; i++) {

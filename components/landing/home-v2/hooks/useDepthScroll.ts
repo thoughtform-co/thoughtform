@@ -64,7 +64,17 @@ export function useDepthScroll(stageRef: React.RefObject<HTMLDivElement | null>)
     writeV7HudReadouts(progress, chamberId);
 
     // ── Active state + velocity ─────────────────────────────────
-    const active = rect.bottom > 0 && rect.top < vh;
+    // `active` flips on only once the stage has fully reached the
+    // top of the viewport (rect.top <= 0). The previous looser
+    // criterion (`rect.top < vh`) flipped active true the moment
+    // the stage entered the viewport even slightly — but during the
+    // hero scroll the sticky stage is still below the viewport, so
+    // painting then meant the projected brandmark appeared over the
+    // hero with no compass around it. Gating on `rect.top <= 0`
+    // means the corridor only engages once the user has actually
+    // arrived at the Thoughtform section, so the compass + brand-
+    // mark are already in place the moment they become visible.
+    const active = rect.bottom > 0 && rect.top <= 0;
 
     const now = performance.now();
     const lastT = lastFrameTime.current;

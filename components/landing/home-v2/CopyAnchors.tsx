@@ -61,15 +61,6 @@ export function CopyAnchors({ text }: CopyAnchorsProps) {
       </div>
 
       <div
-        className="home-v2-copy-northstar"
-        data-world-anchor="thoughtform.northStar"
-        data-anchor-origin="left-center"
-      >
-        <span className="home-v2-copy-northstar__k">{tf.northStarTitle}</span>
-        <span className="home-v2-copy-northstar__v">{tf.northStarDesc}</span>
-      </div>
-
-      <div
         className="home-v2-copy-phase home-v2-copy-phase--navigate"
         data-world-anchor="thoughtform.phase.navigate"
         data-anchor-origin="center"

@@ -87,27 +87,20 @@ export function ProjectedBrandmarkActor() {
           const { transform, camera, vw, screenX, screenY, worldPos } = ctx;
           const { progress, beat, gateProgress } = transform;
 
-          // Hero-gate: during the hero scroll, `progress` stays
-          // clamped at 0 (stage rect.top is still positive) even
-          // though the tracker has flagged us active. We don't want
-          // the brandmark painting over the pinned hero — it should
-          // appear AT FULL OPACITY the moment the Thoughtform
-          // section reaches the viewport (progress > 0), since
-          // Thoughtform is the start of the journey.
-          //
           // Substrate-cut: hide the DOM brandmark whenever the in-
-          // canvas substrate morph cloud is painting (ADR-017).
-          const heroGate = progress <= 0;
+          // canvas substrate morph cloud is painting (ADR-017). The
+          // hero is gated upstream by the depth-stage's `active`
+          // flag (rect.top <= 0 in useDepthScroll), so the tracker
+          // doesn't even call onPaint until the corridor has truly
+          // engaged — no hero-gate needed here.
           const morph = beat === "intelligence" ? getSubstrateMorph(gateProgress) : 0;
-          const substrateCut = morph > SUBSTRATE_CUT_EPSILON;
-          if (heroGate || substrateCut) {
+          if (morph > SUBSTRATE_CUT_EPSILON) {
             element.style.display = "none";
             return;
           }
-          // Neither gate active — clear any prior display:none set
-          // by a previous frame (either hero-gate before the user
-          // reached Thoughtform, or substrate-cut inside the
-          // intelligence morph window).
+          // Substrate-cut not active — clear any prior display:none
+          // set during the intelligence morph window so the mark is
+          // paintable again when scrolling back up out of intelligence.
           if (element.style.display === "none") element.style.display = "";
 
           // Width from world half-extent — project an edge point and
