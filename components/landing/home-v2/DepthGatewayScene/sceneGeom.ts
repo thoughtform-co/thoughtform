@@ -25,12 +25,17 @@ import { lerp, smoothstep } from "@/lib/stores/depthGatewayStore";
 
 // ── Camera path ─────────────────────────────────────────────────
 
-/** Camera Z at progress = 0 (start of corridor). */
-export const CAMERA_START: [number, number, number] = [0, 0, 10];
+/** Camera position at progress = 0 (start of corridor).
+ *
+ *  Offset slightly to the RIGHT so the camera is co-located with the
+ *  Thoughtform composition. Combined with a lookAt that also sits
+ *  toward the Thoughtform world position, this makes the camera
+ *  "see" the brandmark + compass on the right side of the viewport
+ *  at the parked beat — same composition the homepage uses at the
+ *  `.tri` grid (copy on the left, compass on the right). */
+export const CAMERA_START: [number, number, number] = [0.55, 0, 10];
 
-/** Camera Z at progress = 1 (end of corridor). The camera travels
- *  18 world units across the stage — enough for each gate to fully
- *  approach + pass before the next one engages. */
+/** Camera position at progress = 1 (end of corridor). */
 export const CAMERA_END: [number, number, number] = [0, 0, -8];
 
 /** Vertical FOV. Slightly narrower than the previous iteration so
@@ -38,11 +43,10 @@ export const CAMERA_END: [number, number, number] = [0, 0, -8];
  *  into a corridor" perspective. */
 export const CAMERA_FOV = 38;
 
-/** Where the camera looks. The lookAt point ALSO travels with
- *  progress — at the start we look slightly down-Z into the
- *  corridor; at the end we look further into the distance past the
- *  intelligence sphere station. The constant offset ahead of the
- *  camera is the "we're flying forward" perspective signal. */
+/** How far ahead of the camera the lookAt point sits. The lookAt
+ *  travels forward with the camera so the gaze is always into the
+ *  next gate (perspective signal: we are FLYING forward, not
+ *  staring at a fixed world point). */
 const LOOK_AHEAD = 6;
 
 /** Subtle vertical drift on the lookAt point so the camera bobs
@@ -50,9 +54,20 @@ const LOOK_AHEAD = 6;
  *  is a hand-flown camera rather than a rigid rail. */
 const LOOK_BOB_AMPLITUDE = 0.1;
 
+/** Where the camera's gaze settles at each end of the corridor.
+ *  At progress = 0 the camera looks slightly off-axis (toward the
+ *  Thoughtform compass on the right) so the homepage composition
+ *  reads correctly. By the time the camera reaches the Diagnostic
+ *  gate the gaze is straight ahead, centered on the world axis. */
+const LOOK_AT_X_START = 0.95;
+const LOOK_AT_X_END = 0;
+
 /** Camera position at the given camera travel parameter (0..1).
  *  The travel curve is already smoothstep'd inside the store; here
- *  we just lerp endpoints. */
+ *  we just lerp endpoints. The X drift (CAMERA_START.x → 0) plus
+ *  the lookAt drift (off-axis right → on-axis ahead) gives the
+ *  visible "camera turning" that re-frames the Thoughtform
+ *  composition into the centered Diagnostic gate. */
 export function getCameraPosition(cameraT: number): [number, number, number] {
   return [
     lerp(CAMERA_START[0], CAMERA_END[0], cameraT),
@@ -63,11 +78,24 @@ export function getCameraPosition(cameraT: number): [number, number, number] {
 
 /** Look-at point. Travels with the camera but stays LOOK_AHEAD
  *  units further down the corridor so the camera's forward gaze
- *  is into the next gate, not at a static world point. */
+ *  is into the next gate, not at a static world point.
+ *
+ *  The X component of the lookAt eases from `LOOK_AT_X_START`
+ *  (off-axis right, framing the Thoughtform composition) to
+ *  `LOOK_AT_X_END` (on-axis, framing the centered Diagnostic and
+ *  Intelligence gates). The pan happens across the Thoughtform →
+ *  Diagnostic transit so the user feels the camera swing from
+ *  the right-of-axis homepage composition to the centered
+ *  corridor view. */
 export function getCameraLookAt(cameraT: number): [number, number, number] {
   const [, , camZ] = getCameraPosition(cameraT);
   const bob = Math.sin(cameraT * Math.PI * 2) * LOOK_BOB_AMPLITUDE;
-  return [0, bob, camZ - LOOK_AHEAD];
+  // The pan resolves earlier than the camera travel (we want the
+  // gaze to settle on the centered Diagnostic gate by the time the
+  // user reaches that parked beat at progress ≈ 0.41 → cameraT ≈ 0.34).
+  const panT = smoothstep(0, 0.34, cameraT);
+  const lookX = lerp(LOOK_AT_X_START, LOOK_AT_X_END, panT);
+  return [lookX, bob, camZ - LOOK_AHEAD];
 }
 
 // ── Gate stations ───────────────────────────────────────────────
@@ -159,10 +187,17 @@ export const STATIONS: readonly GateStation[] = [
  *  the actual camera + position to compute the screen rect each
  *  frame). */
 export const BRANDMARK_ANCHOR_THOUGHTFORM: [number, number, number] = [
-  // Off-centre right (matches the v7 `.sigil__mark` position inside
-  // the tri grid — copy on the left, sigil on the right).
+  // Off-centre right + below the camera's gaze axis. The X places
+  // the brandmark inside the v7 sigil compass (which sits in the
+  // right column of the `.tri` grid); the negative Y compensates
+  // for the v7 station's `padding: 140px 0 220px` bias — the
+  // brandmark dock sits roughly 40px below the viewport's vertical
+  // centre on the homepage, which in world coords (at this camera
+  // distance ≈ 4.9 units, fov 38°) translates to a noticeably
+  // negative Y so the perspective projection lands inside the
+  // diamond.
   1.4,
-  0.05,
+  -0.5,
   STATION_THOUGHTFORM.position[2] + 0.1,
 ];
 
@@ -181,9 +216,10 @@ export const BRANDMARK_ANCHOR_INTELLIGENCE: [number, number, number] = [
   STATION_INTELLIGENCE.position[2] + 0.1,
 ];
 
-/** Brandmark on-screen target widths at each parked beat. Used by
- *  the projected actor to compute a per-frame world scale that
- *  resolves to the homepage-matching screen pixel widths. */
+/** Brandmark on-screen target widths at each parked beat (kept for
+ *  legacy callers; the projected actor now uses
+ *  `getBrandmarkWorldHalfExtent` instead so the brandmark size obeys
+ *  3D perspective as the camera approaches/recedes). */
 export const BRANDMARK_PARKED_SCREEN_WIDTH_FRAC = {
   // Matches v7 .sigil__mark clamp(155px, 19vw, 232px) → ~19vw
   thoughtform: 0.19,
@@ -192,6 +228,31 @@ export const BRANDMARK_PARKED_SCREEN_WIDTH_FRAC = {
   // Matches v7 .ilayer__brandmark-anchor (centred ring diameter)
   // — wider because the substrate ring takes more real estate.
   intelligence: 0.22,
+} as const;
+
+/** WORLD-SPACE half-extent (radius) of the brandmark plate at each
+ *  parked beat. Calibrated so that at the parked camera distance the
+ *  perspective projection lands at the homepage `.sigil__mark`,
+ *  `.miss__brand-slot`, and `.ilayer__brandmark-anchor` screen
+ *  widths on a typical desktop viewport (~1920px).
+ *
+ *  Using a world-space size (instead of a fixed pixel widthFrac)
+ *  is what makes the brandmark feel like a true 3D object: as the
+ *  camera dollies forward the brandmark perspective-scales naturally,
+ *  and during the Thoughtform → Diagnostic transit the shrinking
+ *  world half-extent + drifting world position combine into a
+ *  "camera move through the world" read instead of a 2D screen
+ *  slide. */
+export const BRANDMARK_WORLD_HALF_EXTENT = {
+  // ~9-10% of vw on a 1920 viewport — sits comfortably inside the
+  // v7 sigil diamond outline.
+  thoughtform: 0.18,
+  // ~6% of vw — smaller landing inside the diagnostic constellation
+  // centre (matches v7 .miss__brand-slot proportion).
+  diagnostic: 0.12,
+  // ~13% of vw — the centerpiece of the intelligence sphere station
+  // (largest dock on the homepage).
+  intelligence: 0.24,
 } as const;
 
 /** Resolve the brandmark world position for the current progress.
@@ -227,8 +288,9 @@ export function getBrandmarkWorldPosition(progress: number): [number, number, nu
 }
 
 /** Target on-screen width (as a fraction of viewport width) for the
- *  brandmark at the current scroll position. Used by the projected
- *  vector actor to compute a per-frame world scale. */
+ *  brandmark at the current scroll position. Legacy path — the
+ *  projected actor now uses `getBrandmarkWorldHalfExtent` so the
+ *  size obeys perspective; kept for any non-projected consumer. */
 export function getBrandmarkTargetScreenWidthFrac(progress: number): number {
   const W = BRANDMARK_PARKED_SCREEN_WIDTH_FRAC;
   if (progress <= 0.18) return W.thoughtform;
@@ -236,6 +298,21 @@ export function getBrandmarkTargetScreenWidthFrac(progress: number): number {
   if (progress <= 0.5) return W.diagnostic;
   if (progress <= 0.88) return lerp(W.diagnostic, W.intelligence, smoothstep(0.5, 0.88, progress));
   return W.intelligence;
+}
+
+/** Brandmark WORLD-SPACE half-extent at the current scroll position.
+ *  Lerps between the parked beats using the same windows as
+ *  `getBrandmarkWorldPosition`. Combined with the camera path this
+ *  produces a perspective-correct screen size for every frame, so
+ *  the brandmark grows/shrinks as the camera approaches/recedes —
+ *  the "true 3D object" feel.  */
+export function getBrandmarkWorldHalfExtent(progress: number): number {
+  const H = BRANDMARK_WORLD_HALF_EXTENT;
+  if (progress <= 0.18) return H.thoughtform;
+  if (progress <= 0.41) return lerp(H.thoughtform, H.diagnostic, smoothstep(0.18, 0.41, progress));
+  if (progress <= 0.5) return H.diagnostic;
+  if (progress <= 0.88) return lerp(H.diagnostic, H.intelligence, smoothstep(0.5, 0.88, progress));
+  return H.intelligence;
 }
 
 // ── Intelligence chamber — L/R bodies ──────────────────────────

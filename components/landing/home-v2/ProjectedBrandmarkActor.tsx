@@ -6,7 +6,7 @@ import { BrandmarkGlyph } from "@/components/landing/v7/BrandmarkGlyph";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import {
   CAMERA_FOV,
-  getBrandmarkTargetScreenWidthFrac,
+  getBrandmarkWorldHalfExtent,
   getBrandmarkWorldPosition,
   getCameraLookAt,
   getCameraPosition,
@@ -19,33 +19,31 @@ import {
  *
  * Mounts ONCE as a `position: fixed` shell containing the canonical
  * inline `BrandmarkGlyph` SVG (same vector geometry as the production
- * homepage). Each rAF tick it computes a screen rect from one of two
- * sources:
+ * homepage). The brandmark is a TRUE 3D WORLD OBJECT throughout the
+ * journey — its screen rect is the perspective projection of a
+ * world position through a mirror `THREE.PerspectiveCamera` that
+ * traces the SAME path (position dolly + lookAt X pan) as the R3F
+ * scene. There is no DOM dock rect mode anywhere; the Thoughtform
+ * parked composition is achieved by tuning the world anchor so its
+ * projection lands inside the v7 sigil diamond at the start of the
+ * corridor.
  *
- *   1. **DOM dock rect** (Thoughtform parked beat).
- *      The actor pins to `.home-v2-stage .sigil__mark`'s
- *      `getBoundingClientRect()` so the brandmark sits inside the v7
- *      sigil compass diagram exactly like the production homepage —
- *      same size (`clamp(155px, 19vw, 232px)`), same screen position,
- *      responsive across viewports.
- *
- *   2. **3D world projection** (passthrough-01 onward).
- *      The actor projects a world position from
- *      `getBrandmarkWorldPosition(progress)` through a mirror
- *      `THREE.PerspectiveCamera` set up with the same camera path
- *      as the R3F scene, then sizes the shell via
- *      `getBrandmarkTargetScreenWidthFrac(progress)`.
- *
- * Across the passthrough-01 beat (0.18 → 0.32) the two sources are
- * lerped so the brandmark leaves the v7 dock and gradually settles
- * onto the corridor's centered world path without a jump.
+ * This single-source-of-truth model is what makes the Thoughtform
+ * → Diagnostic transit feel like a real 3D camera move: as scroll
+ * advances, the camera dollies forward, the lookAt pans from
+ * off-axis-right (framing the Thoughtform composition) to on-axis
+ * (framing the Diagnostic gate ahead), AND the brandmark's world
+ * anchor + half-extent lerp through the same window. The brandmark
+ * perspective-scales as the camera approaches and re-frames — not a
+ * 2D screen lerp between two anchor points.
  *
  * Visibility:
- *   - Opacity 0 at hero (stage inactive) and during the substrate
- *     morph window (the R3F `BrandmarkPointCloud` covers the same
- *     silhouette in that beat — instant `display: none` cut so the
- *     swap is invisible, mirrors ADR-017's substrate cut pattern).
- *   - Opacity 1 everywhere else during the corridor.
+ *   - `display: none` while the depth stage is inactive (hero, post-
+ *     stage scroll) and during the substrate morph window (the R3F
+ *     `BrandmarkPointCloud` covers the same silhouette in that beat
+ *     — instant cut, mirrors ADR-017's substrate-cut pattern).
+ *   - Opacity ramps 1 → 0 across the final 3% of stage progress so
+ *     the actor doesn't sit on top of the tail copy.
  *
  * This actor never re-renders React state per frame — all updates go
  * to inline styles via refs.
@@ -79,6 +77,11 @@ export function ProjectedBrandmarkActor() {
     lookAt: THREE.Vector3;
     target: THREE.Vector3;
     projected: THREE.Vector3;
+    right: THREE.Vector3;
+    edge: THREE.Vector3;
+    edgeProjected: THREE.Vector3;
+    fwd: THREE.Vector3;
+    toBrand: THREE.Vector3;
     lastLeft: number;
     lastTop: number;
     lastWidth: number;
@@ -100,6 +103,11 @@ export function ProjectedBrandmarkActor() {
       lookAt: new THREE.Vector3(),
       target: new THREE.Vector3(),
       projected: new THREE.Vector3(),
+      right: new THREE.Vector3(),
+      edge: new THREE.Vector3(),
+      edgeProjected: new THREE.Vector3(),
+      fwd: new THREE.Vector3(),
+      toBrand: new THREE.Vector3(),
       // Sentinel values well outside any plausible value so the first
       // frame's `Math.abs(newValue - lastValue) > epsilon` always
       // fires and updates the DOM. NaN would defeat the diff check
@@ -139,9 +147,13 @@ export function ProjectedBrandmarkActor() {
       }
       if (!shouldBeVisible) return;
 
-      // ── Compute the world-projected screen rect ────────────────
-      // (used for transit / Diagnostic / Intelligence; lerped FROM
-      // during passthrough-01).
+      // ── 3D world projection (used everywhere — no DOM dock mode) ─
+      // The brandmark is a coherent 3D world object end-to-end. Its
+      // screen rect is derived from a perspective projection through
+      // a mirror camera that traces the SAME path as the R3F scene
+      // (position dolly + lookAt X pan), so the Thoughtform →
+      // Diagnostic transit reads as a real camera move — not a 2D
+      // screen lerp between two anchor points.
       const [cx, cy, cz] = getCameraPosition(cameraT);
       const [lx, ly, lz] = getCameraLookAt(cameraT);
       s.pos.set(cx, cy, cz);
@@ -152,89 +164,42 @@ export function ProjectedBrandmarkActor() {
 
       const [wx, wy, wz] = getBrandmarkWorldPosition(progress);
       s.target.set(wx, wy, wz);
-      const camToTargetZ = cz - wz;
-      const vw = window.innerWidth;
-      const vh = window.innerHeight;
 
-      let worldLeft = 0;
-      let worldTop = 0;
-      let worldWidth = 0;
-      let worldHeight = 0;
-      let worldRectValid = false;
-      if (camToTargetZ > 0.2) {
-        s.projected.copy(s.target).project(s.camera);
-        const screenX = (s.projected.x * 0.5 + 0.5) * vw;
-        const screenY = (-s.projected.y * 0.5 + 0.5) * vh;
-        const widthFrac = getBrandmarkTargetScreenWidthFrac(progress);
-        worldWidth = vw * widthFrac;
-        worldHeight = worldWidth * (436 / 430.99);
-        worldLeft = screenX - worldWidth / 2;
-        worldTop = screenY - worldHeight / 2;
-        worldRectValid = true;
-      }
-
-      // ── Compute the DOM dock rect at Thoughtform parked ────────
-      // The v7 `.sigil__mark` element sits inside the sliced
-      // `#definition` chamber DOM. At the Thoughtform beat the
-      // sigil compass SVG is visible (homepage layout), so we pin
-      // the brandmark exactly to its dock slot — same as how the
-      // production v7 brandmark journey pins to the sigil dock.
-      let dockLeft = 0;
-      let dockTop = 0;
-      let dockWidth = 0;
-      let dockHeight = 0;
-      let dockRectValid = false;
-      const needsDock = beat === "thoughtform" || beat === "passthrough-01";
-      if (needsDock) {
-        const dock = document.querySelector(".home-v2-stage .sigil__mark");
-        if (dock) {
-          const r = dock.getBoundingClientRect();
-          if (r.width > 0 && r.height > 0) {
-            dockLeft = r.left;
-            dockTop = r.top;
-            dockWidth = r.width;
-            dockHeight = r.height;
-            dockRectValid = true;
-          }
-        }
-      }
-
-      // ── Choose / blend rect sources ────────────────────────────
-      // - Thoughtform parked: pure dock rect (homepage fidelity).
-      // - Passthrough-01: blend dock → world over the beat so the
-      //   brandmark glides off the sigil dock and onto the corridor's
-      //   world path without a jump.
-      // - All other beats: pure world projection.
-      let left: number;
-      let top: number;
-      let width: number;
-      let height: number;
-      if (beat === "thoughtform" && dockRectValid) {
-        left = dockLeft;
-        top = dockTop;
-        width = dockWidth;
-        height = dockHeight;
-      } else if (beat === "passthrough-01" && dockRectValid && worldRectValid) {
-        // Smoothstep blend so the handoff has decelerated ends.
-        const u = gateProgress < 0 ? 0 : gateProgress > 1 ? 1 : gateProgress;
-        const t = u * u * (3 - 2 * u);
-        left = dockLeft + (worldLeft - dockLeft) * t;
-        top = dockTop + (worldTop - dockTop) * t;
-        width = dockWidth + (worldWidth - dockWidth) * t;
-        height = dockHeight + (worldHeight - dockHeight) * t;
-      } else if (worldRectValid) {
-        left = worldLeft;
-        top = worldTop;
-        width = worldWidth;
-        height = worldHeight;
-      } else {
-        // Behind the camera and no dock available — hide.
+      // Camera-forward distance to the brandmark — for perspective
+      // culling (skip the frame if the brandmark is behind the
+      // camera).
+      s.fwd.subVectors(s.lookAt, s.pos).normalize();
+      s.toBrand.subVectors(s.target, s.pos);
+      const camToBrand = s.toBrand.dot(s.fwd);
+      if (camToBrand <= 0.2) {
         if (s.lastVisible !== false) {
           s.lastVisible = false;
           shell.style.display = "none";
         }
         return;
       }
+
+      s.projected.copy(s.target).project(s.camera);
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      const screenX = (s.projected.x * 0.5 + 0.5) * vw;
+      const screenY = (-s.projected.y * 0.5 + 0.5) * vh;
+
+      // Perspective-correct screen size from world half-extent.
+      // Project a point at `target + cameraRight * halfExtent` and
+      // measure the screen-space distance between that point and
+      // the centre. This picks up camera dolly, camera roll, and
+      // the beat-to-beat world half-extent ramp automatically.
+      const halfExtent = getBrandmarkWorldHalfExtent(progress);
+      s.right.setFromMatrixColumn(s.camera.matrixWorld, 0);
+      s.edge.copy(s.target).addScaledVector(s.right, halfExtent);
+      s.edgeProjected.copy(s.edge).project(s.camera);
+      const edgeScreenX = (s.edgeProjected.x * 0.5 + 0.5) * vw;
+      const halfPixelWidth = Math.abs(edgeScreenX - screenX);
+      const width = halfPixelWidth * 2;
+      const height = width * (436 / 430.99);
+      const left = screenX - width / 2;
+      const top = screenY - height / 2;
 
       // Write to inline styles only when meaningfully changed (avoid
       // touching the DOM on every rAF if the user is idle).
