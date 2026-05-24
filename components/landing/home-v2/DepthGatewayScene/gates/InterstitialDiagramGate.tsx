@@ -4,7 +4,7 @@ import { useFrame } from "@react-three/fiber";
 import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
-import { STATION_INTERSTITIAL } from "../sceneGeom";
+import { STATION_INTERSTITIAL, depthOpacityForWorldPosition } from "../sceneGeom";
 
 /**
  * InterstitialDiagramGate — the world-space "traveling through a
@@ -31,6 +31,12 @@ const MID_RING_R = 0.9;
 const MID_RING_TILT_RAD = 0.28;
 const CENTRE_DIAMOND_R = 0.35;
 const TICK_COUNT = 16;
+const INTERSTITIAL_DEPTH_WINDOW = {
+  near: 0.95,
+  nearFade: 3,
+  far: 7,
+  farFade: 3.2,
+} as const;
 
 export function InterstitialDiagramGate() {
   const groupRef = useRef<THREE.Group>(null);
@@ -175,20 +181,13 @@ export function InterstitialDiagramGate() {
     }
     group.visible = true;
 
-    // Visible across late diagnostic + passthrough-02 + a sliver of
-    // intelligence. The gate is the "we are travelling through a
-    // gateway" beat — it should bloom in around progress 0.55, peak
-    // around the interstitial park (0.63), and fade once the camera
-    // has passed it. Windows align with BEAT_WINDOWS: diagnostic
-    // 0.40–0.55, passthrough-02 0.55–0.72, intelligence 0.72–1.00.
-    //   - 0 before 0.55
-    //   - Ramps 0 → 1 across [0.55, 0.62]
-    //   - Holds at 1 across [0.62, 0.68]
-    //   - Fades 1 → 0 across [0.68, 0.78]
-    let opacity = 0;
-    if (progress > 0.55 && progress < 0.62) opacity = (progress - 0.55) / 0.07;
-    else if (progress >= 0.62 && progress <= 0.68) opacity = 1;
-    else if (progress > 0.68 && progress < 0.78) opacity = 1 - (progress - 0.68) / 0.1;
+    // Persistent world object: optical presence comes from camera
+    // depth, not from a progress-only fade clip.
+    const opacity = depthOpacityForWorldPosition(
+      progress,
+      STATION_INTERSTITIAL.position,
+      INTERSTITIAL_DEPTH_WINDOW
+    );
 
     armatureMat.opacity = opacity * 0.5;
     midRingMat.opacity = opacity * 0.45;

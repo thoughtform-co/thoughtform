@@ -5,10 +5,12 @@ import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import {
+  type DepthFocusWindow,
   STATION_DIAGNOSTIC,
   STATION_INTELLIGENCE,
   STATION_INTERSTITIAL,
   STATION_THOUGHTFORM,
+  depthOpacityForWorldPosition,
 } from "./sceneGeom";
 
 /**
@@ -22,9 +24,9 @@ import {
  * geometry the camera passes physically.
  *
  * Each "band" is a layer of slow-rotating ring pips at varied radii
- * sitting at a Z station midway between two gates. Visibility is
- * gated to the relevant passthrough beat so the bands fade in as
- * the camera approaches and out as it has passed.
+ * sitting at a Z station between gates. Visibility is governed by
+ * camera-space depth/focus, not a progress-only fade clip, so bands
+ * feel like persistent layers of space the camera travels through.
  *
  * Total cost: ~4 bands × 60 pips = ~240 small line loops. All
  * static geometry; only opacity + group rotation per frame.
@@ -40,11 +42,10 @@ interface RingBandProps {
   /** Min/max ring radius (world units). */
   minRadius?: number;
   maxRadius?: number;
-  /** Visibility envelope: progress range over which this band fades
-   *  in (0->1) at the start and out (1->0) at the end. The full band
-   *  is visible across `[fadeIn[1], fadeOut[0]]`. */
-  fadeIn: [number, number];
-  fadeOut: [number, number];
+  /** Camera-space depth/focus window. Defaults to a broad corridor
+   *  band that is faint at distance, full near the station, and
+   *  fades as it crosses the near plane. */
+  focusWindow?: DepthFocusWindow;
   /** Rotation rate around Z (radians/sec). Sign alternates per band
    *  so adjacent bands counter-spin. */
   spinRate?: number;
@@ -62,11 +63,10 @@ function RingBand({
   ringCount = 14,
   minRadius = 0.25,
   maxRadius = 1.6,
-  fadeIn,
-  fadeOut,
+  focusWindow = { near: 2.2, nearFade: 1.6, far: 5.8, farFade: 2.4 },
   spinRate = 0.04,
   color = "#ebe3d6",
-  alphaCeiling = 0.35,
+  alphaCeiling = 0.22,
 }: RingBandProps) {
   const groupRef = useRef<THREE.Group>(null);
   const matRef = useRef<THREE.LineBasicMaterial | null>(null);
@@ -129,14 +129,7 @@ function RingBand({
       return;
     }
 
-    let opacity = 0;
-    if (progress > fadeIn[0] && progress < fadeIn[1]) {
-      opacity = (progress - fadeIn[0]) / (fadeIn[1] - fadeIn[0]);
-    } else if (progress >= fadeIn[1] && progress <= fadeOut[0]) {
-      opacity = 1;
-    } else if (progress > fadeOut[0] && progress < fadeOut[1]) {
-      opacity = 1 - (progress - fadeOut[0]) / (fadeOut[1] - fadeOut[0]);
-    }
+    const opacity = depthOpacityForWorldPosition(progress, [offsetX, 0, centreZ], focusWindow);
 
     if (opacity <= 0.001) {
       group.visible = false;
@@ -172,26 +165,19 @@ function RingBand({
  * InterGateCorridor — composes ring debris bands at intermediate Z
  * stations between the four gates.
  *
- * Bands (timed to BEAT_WINDOWS in depthGatewayStore):
+ * Bands:
  *   1. Approach band, Thoughtform -> Diagnostic — sits 1/3 of
- *      the way from Thoughtform to Diagnostic. Active across
- *      the FIRST half of the widened passthrough-01 so the
- *      user sees debris STREAM PAST as the Thoughtform compass
- *      sweeps by (it fills the void between gates so the
- *      stretch doesn't read as empty travel).
+ *      the way from Thoughtform to Diagnostic.
  *   2. Mid band, Thoughtform -> Diagnostic — sits 2/3 of the
- *      way to Diagnostic. Active across the SECOND half of
- *      passthrough-01 so the user feels continued depth as the
- *      Diagnostic gate emerges from the distance.
- *   3. Diagnostic -> Interstitial (active during early
- *      passthrough-02).
- *   4. Interstitial -> Intelligence (active during late
- *      passthrough-02).
+ *      way to Diagnostic.
+ *   3. Diagnostic -> Interstitial.
+ *   4. Interstitial -> Intelligence.
  *
  *  Two bands across passthrough-01 (was one) keep the longer
  *  fly-through populated with light debris parallax without
  *  reintroducing a topology/tunnel grid — each band is still
- *  just faint orbital ring fragments at varied radii.
+ *  just faint orbital ring fragments at varied radii. Their
+ *  opacity now follows depth, matching the gate painters.
  */
 export function InterGateCorridor() {
   const tfZ = STATION_THOUGHTFORM.position[2];
@@ -211,47 +197,41 @@ export function InterGateCorridor() {
       <RingBand
         centreZ={tfDgNearZ}
         offsetX={0.2}
-        ringCount={14}
+        ringCount={10}
         minRadius={0.18}
-        maxRadius={1.2}
-        fadeIn={[0.14, 0.2]}
-        fadeOut={[0.26, 0.32]}
+        maxRadius={0.9}
         spinRate={0.06}
-        alphaCeiling={0.3}
+        alphaCeiling={0.16}
       />
       <RingBand
         centreZ={tfDgFarZ}
         offsetX={-0.25}
-        ringCount={16}
+        ringCount={12}
         minRadius={0.22}
-        maxRadius={1.5}
-        fadeIn={[0.26, 0.32]}
-        fadeOut={[0.38, 0.44]}
+        maxRadius={1.05}
         spinRate={-0.05}
         color="#f0e6cf"
-        alphaCeiling={0.32}
+        alphaCeiling={0.18}
       />
       <RingBand
         centreZ={(dgZ + interZ) / 2}
         offsetX={-0.3}
         ringCount={14}
         minRadius={0.3}
-        maxRadius={1.5}
-        fadeIn={[0.5, 0.56]}
-        fadeOut={[0.6, 0.66]}
+        maxRadius={1.1}
         spinRate={-0.05}
         color="#f0e6cf"
+        alphaCeiling={0.2}
       />
       <RingBand
         centreZ={(interZ + ilZ) / 2}
         offsetX={0.25}
         ringCount={14}
         minRadius={0.25}
-        maxRadius={1.4}
-        fadeIn={[0.64, 0.7]}
-        fadeOut={[0.74, 0.8]}
+        maxRadius={1.05}
         spinRate={0.04}
         color="#ebe3d6"
+        alphaCeiling={0.2}
       />
     </>
   );

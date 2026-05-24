@@ -7,6 +7,7 @@ import { SIGIL_RING_MORPHS } from "@/lib/celestial/orbits";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import {
   STATION_THOUGHTFORM,
+  depthOpacityForWorldPosition,
   getThoughtformCenterOffsetX,
   getThoughtformRingFlythrough,
 } from "../sceneGeom";
@@ -82,6 +83,12 @@ const RING_ALPHA_WEIGHTS = [0.32, 0.36, 0.56, 0.76];
 const DAWN_HEX = "#ebe3d6";
 const GOLD_HEX = "#caa554";
 const RING_COLORS = [DAWN_HEX, DAWN_HEX, GOLD_HEX, GOLD_HEX];
+const COMPASS_DEPTH_WINDOW = {
+  near: 1.15,
+  nearFade: 3.2,
+  far: 9,
+  farFade: 3,
+} as const;
 
 /** Per-ring dash pattern (world units), matching v7 SVG dasharrays
  *  scaled 1/200. `null` means solid. */
@@ -425,20 +432,29 @@ export function ThoughtformCompassGate() {
     group.visible = true;
     const progress = paintProgress;
 
+    // Cinematic centering pan: slide the whole group laterally
+    // toward dead-centre during [0.10, 0.16]. Apply this before
+    // depth-opacity calculations so world-position samples use the
+    // same transform the user sees this frame.
+    group.position.x = STATION_THOUGHTFORM.position[0] + getThoughtformCenterOffsetX(progress);
+
     // Staggered ring flythrough — each ring rides its own [start, end]
-    // window in `FLYTHROUGH_WINDOWS`. Outer ring (index 0) flies
-    // first, inner ring (index 3) last, ~2.5% of scroll apart. Each
-    // ring translates +Z by FLYTHROUGH_Z_DISTANCE across its window
-    // and fades 1 -> 0 in the final 30%, so the four arches sweep
-    // past the camera in tight sequence rather than dimming at
-    // distance.
+    // window in `FLYTHROUGH_WINDOWS`. Opacity is now derived from
+    // camera-space depth, Star Atlas-style: the rings persist as
+    // world objects and fade when too near / behind the camera,
+    // not because their progress window ended.
     for (let i = 0; i < ringMats.length; i++) {
       const mat = ringMats[i];
       const ring = ringRefs.current[i];
-      const { dz, opacityT } = getThoughtformRingFlythrough(progress, i);
+      const { dz } = getThoughtformRingFlythrough(progress, i);
       if (ring) ring.position.z = dz;
       const base = (mat.userData as { baseAlpha: number }).baseAlpha;
-      mat.opacity = opacityT * base;
+      const depthOpacity = depthOpacityForWorldPosition(
+        progress,
+        [group.position.x, STATION_THOUGHTFORM.position[1], STATION_THOUGHTFORM.position[2] + dz],
+        COMPASS_DEPTH_WINDOW
+      );
+      mat.opacity = depthOpacity * base;
     }
 
     // Bearings + ticks + atmosphere dots + phase markers all ride
@@ -450,19 +466,28 @@ export function ThoughtformCompassGate() {
     // through static frame elements that dissolve in place.
     const ring0 = getThoughtformRingFlythrough(progress, 0);
     if (supportingRef.current) supportingRef.current.position.z = ring0.dz;
-    bearingsMat.opacity = ring0.opacityT * 0.58;
-    orbitDot1Mat.opacity = ring0.opacityT * ORBIT_DOT_1.opacity;
-    orbitDot2Mat.opacity = ring0.opacityT * ORBIT_DOT_2.opacity;
+    const supportingDepthOpacity = depthOpacityForWorldPosition(
+      progress,
+      [
+        group.position.x,
+        STATION_THOUGHTFORM.position[1],
+        STATION_THOUGHTFORM.position[2] + ring0.dz,
+      ],
+      COMPASS_DEPTH_WINDOW
+    );
+    bearingsMat.opacity = supportingDepthOpacity * 0.58;
+    orbitDot1Mat.opacity = supportingDepthOpacity * ORBIT_DOT_1.opacity;
+    orbitDot2Mat.opacity = supportingDepthOpacity * ORBIT_DOT_2.opacity;
 
     // Phase node dots + connector lines ride ring 0's envelope
     // too, so the labelled phase markers travel toward the
     // camera with the outer ring before fading.
     for (let i = 0; i < PHASE_NODES.length; i++) {
       const node = PHASE_NODES[i];
-      phaseDotMats[i].opacity = ring0.opacityT * node.dotOpacity;
+      phaseDotMats[i].opacity = supportingDepthOpacity * node.dotOpacity;
       // Connector lines are slightly stronger than v7's literal
       // dawn-30 so they survive the home-v2 dark stage + grain.
-      connectorMats[i].opacity = ring0.opacityT * 0.54;
+      connectorMats[i].opacity = supportingDepthOpacity * 0.54;
     }
 
     // Atmosphere orbit dots — independent continuous rotation
@@ -476,14 +501,6 @@ export function ThoughtformCompassGate() {
     if (orbitDot2GroupRef.current) {
       orbitDot2GroupRef.current.rotation.z = state.clock.elapsedTime * ORBIT_DOT_2.angularVelocity;
     }
-
-    // Cinematic centering pan: slide the whole group laterally
-    // toward dead-centre during [0.05, 0.18]. Mirrors the same
-    // offset applied to the brandmark, copy, and DOM phase labels
-    // in sceneGeom.ts. Note: ring Z translation is APPLIED LOCALLY
-    // on each mesh, so it composes with this group-level X without
-    // interference.
-    group.position.x = STATION_THOUGHTFORM.position[0] + getThoughtformCenterOffsetX(progress);
 
     // Hairline Z-spin (the v7 compass has a subtle "breath" cue).
     group.rotation.z = state.clock.elapsedTime * 0.012;

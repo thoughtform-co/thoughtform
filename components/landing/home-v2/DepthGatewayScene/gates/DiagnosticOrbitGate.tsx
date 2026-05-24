@@ -4,8 +4,8 @@ import { useFrame } from "@react-three/fiber";
 import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { MISS_ORBITS } from "@/lib/celestial/orbits";
-import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
-import { STATION_DIAGNOSTIC } from "../sceneGeom";
+import { smoothstep, useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
+import { STATION_DIAGNOSTIC, cameraSpaceDepth, depthFocusOpacity } from "../sceneGeom";
 
 /**
  * DiagnosticOrbitGate — the world-space diagnostic constellation
@@ -30,6 +30,12 @@ import { STATION_DIAGNOSTIC } from "../sceneGeom";
 // roughly matching the diagnostic gate's halfExtent (2.2).
 const SVG_TO_WORLD = 1 / 240;
 const RING_SEGMENTS = 128;
+const DIAGNOSTIC_DEPTH_WINDOW = {
+  near: 1.05,
+  nearFade: 2.8,
+  far: 7.3,
+  farFade: 3.1,
+} as const;
 
 const PIP_POSITIONS = [
   { id: "01", parametricDeg: 205 },
@@ -186,38 +192,12 @@ export function DiagnosticOrbitGate() {
     }
     group.visible = true;
 
-    // Two-stage emergence so the orbits read as DISTANT signal
-    // first, then a fully landed instrument:
-    //   - 0 before 0.22 — the user is still in the Thoughtform
-    //     fly-through; nothing of the Diagnostic gate is on
-    //     screen.
-    //   - Distant onset across [0.22, 0.36] — orbits appear at
-    //     ~25% of their full opacity (faint, far-away signal).
-    //     Combined with the gate's farther world Z (park at
-    //     0.47), the rings perspective-scale up as the camera
-    //     approaches, so the eye reads "an instrument coming
-    //     into view at distance" rather than a fade-in pop.
-    //   - Approach across [0.36, 0.50] — opacity ramps up to
-    //     full as the camera closes the remaining travel.
-    //   - Hold at 1 across [0.50, 0.58] (parked gate centred).
-    //   - Fade across [0.58, 0.70] as the gate passes behind.
-    //
-    // Window edges align with BEAT_WINDOWS:
-    //   passthrough-01 0.16–0.40, diagnostic 0.40–0.55,
-    //   passthrough-02 0.55–0.72.
-    const DISTANT_CEILING = 0.25;
-    let opacity = 0;
-    if (progress > 0.22 && progress < 0.36) {
-      // Linear ramp 0 → DISTANT_CEILING.
-      opacity = ((progress - 0.22) / 0.14) * DISTANT_CEILING;
-    } else if (progress >= 0.36 && progress < 0.5) {
-      // Linear ramp DISTANT_CEILING → 1.
-      opacity = DISTANT_CEILING + ((progress - 0.36) / 0.14) * (1 - DISTANT_CEILING);
-    } else if (progress >= 0.5 && progress <= 0.58) {
-      opacity = 1;
-    } else if (progress > 0.58 && progress < 0.7) {
-      opacity = 1 - (progress - 0.58) / 0.12;
-    }
+    // Star Atlas-style persistence: the Diagnostic gate lives at a
+    // fixed world Z, and its linework becomes present because the
+    // camera approaches its focus depth. No beat boundary hard-cuts
+    // the geometry; it fades only when too far, too near, or behind.
+    const depth = cameraSpaceDepth(progress, STATION_DIAGNOSTIC.position);
+    const opacity = depthFocusOpacity(depth, DIAGNOSTIC_DEPTH_WINDOW);
 
     for (let i = 0; i < orbitMats.length; i++) {
       const m = orbitMats[i];
@@ -226,11 +206,9 @@ export function DiagnosticOrbitGate() {
     }
     ghostMats[0].opacity = opacity * 0.18;
     ghostMats[1].opacity = opacity * 0.13;
-    // Pips need a slightly different envelope: at distance they
-    // should NOT show as bright points (they'd read as dust),
-    // so they only start appearing during the approach phase
-    // after the rings have begun to resolve.
-    const pipOpacity = progress > 0.36 ? Math.max(0, opacity - DISTANT_CEILING * 0.5) : 0;
+    // Pips resolve only as the gate comes into readable range.
+    const pipResolve = smoothstep(7.2, 4.8, depth);
+    const pipOpacity = opacity * pipResolve;
     pipMat.opacity = pipOpacity * 0.95;
   });
 

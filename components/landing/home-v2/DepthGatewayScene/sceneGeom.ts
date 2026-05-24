@@ -33,6 +33,8 @@
 import { lerp, smoothstep } from "@/lib/stores/depthGatewayStore";
 import { MISS_LABELS, MISS_ORBITS, MISS_VIEWBOX, pointOnEllipse } from "@/lib/celestial/orbits";
 
+export type Vec3 = readonly [number, number, number];
+
 // ── Camera FOV + path constants ──────────────────────────────────
 
 /** Vertical FOV. ~38° gives the focal-compressed "looking into a
@@ -123,9 +125,12 @@ export function getCameraPosition(progress: number): [number, number, number] {
   return [lerp(CAMERA_START[0], 0, reframeT), 0, lerp(CAMERA_START[2], CAMERA_END[2], dollyT)];
 }
 
-/** Look-at point. Travels with the camera (LOOK_AHEAD units further
- *  down the corridor) and pans X 0.95 -> 0 across passthrough-01. */
-export function getCameraLookAt(progress: number): [number, number, number] {
+/** Base look-at point. Travels with the camera (LOOK_AHEAD units
+ *  further down the corridor) and pans X 0.95 -> 0 across
+ *  passthrough-01. Kept separate from `getCameraLookAt` so the
+ *  brandmark chase math can use a stable forward vector without
+ *  recursively depending on the public lookAt's subtle target blend. */
+function getBaseCameraLookAt(progress: number): [number, number, number] {
   const [, , camZ] = getCameraPosition(progress);
   const reframeT = smoothstep(REFRAME_START, REFRAME_END, progress);
   const lookX = lerp(LOOK_AT_X_START, LOOK_AT_X_END, reframeT);
@@ -133,6 +138,85 @@ export function getCameraLookAt(progress: number): [number, number, number] {
   // the full stage, very low amplitude.
   const bobY = Math.sin(progress * Math.PI * 3) * LOOK_BOB_AMPLITUDE;
   return [lookX, bobY, camZ - LOOK_AHEAD];
+}
+
+/** Look-at point used by the live camera. During the Diagnostic ->
+ *  Intelligence transit it subtly biases toward the brandmark lead
+ *  position so the camera feels like it is following the artifact
+ *  down the corridor, while the base look-ahead still preserves the
+ *  axial "flying forward" read. */
+export function getCameraLookAt(progress: number): [number, number, number] {
+  const base = getBaseCameraLookAt(progress);
+  if (progress < 0.55 || progress > 0.84) return base;
+
+  const chaseIn = smoothstep(0, 1, (progress - 0.55) / 0.11);
+  const chaseOut = 1 - smoothstep(0, 1, (progress - 0.76) / 0.08);
+  const chaseT = Math.min(chaseIn, chaseOut) * 0.38;
+  if (chaseT <= 0.001) return base;
+
+  const lead = getBrandmarkLeadWorldPosition(progress);
+  return [
+    lerp(base[0], lead[0], chaseT),
+    lerp(base[1], lead[1], chaseT),
+    lerp(base[2], lead[2], chaseT),
+  ];
+}
+
+/** Unit vector pointing from the camera into the corridor. This is
+ *  intentionally based on the base look-ahead, not the public
+ *  brandmark-biased lookAt, so all depth/focus opacity helpers share
+ *  a stable camera-space axis. */
+export function getCameraForward(progress: number): [number, number, number] {
+  const cam = getCameraPosition(progress);
+  const look = getBaseCameraLookAt(progress);
+  const x = look[0] - cam[0];
+  const y = look[1] - cam[1];
+  const z = look[2] - cam[2];
+  const len = Math.max(1e-6, Math.hypot(x, y, z));
+  return [x / len, y / len, z / len];
+}
+
+/** Signed distance from camera to a world position along the camera
+ *  forward axis. Positive = in front of the camera. Negative = behind
+ *  the camera and should generally fade/cull. */
+export function cameraSpaceDepth(progress: number, worldPosition: Vec3): number {
+  const cam = getCameraPosition(progress);
+  const forward = getCameraForward(progress);
+  return (
+    (worldPosition[0] - cam[0]) * forward[0] +
+    (worldPosition[1] - cam[1]) * forward[1] +
+    (worldPosition[2] - cam[2]) * forward[2]
+  );
+}
+
+export interface DepthFocusWindow {
+  /** Distance at which near-plane fade reaches full opacity. */
+  near: number;
+  /** Fade length before `near`; depths <= near - nearFade are hidden. */
+  nearFade: number;
+  /** Distance at which far-plane fade begins. */
+  far: number;
+  /** Fade length after `far`; depths >= far + farFade are hidden. */
+  farFade: number;
+}
+
+/** Camera-space focus opacity, mirroring the Star Atlas pattern:
+ *  world objects persist, but they fade when too near, too far, or
+ *  behind the camera. Progress decides pacing; depth decides whether
+ *  geometry is optically present. */
+export function depthFocusOpacity(depth: number, window: DepthFocusWindow): number {
+  if (depth <= 0) return 0;
+  const nearOpacity = smoothstep(window.near - window.nearFade, window.near, depth);
+  const farOpacity = 1 - smoothstep(window.far, window.far + window.farFade, depth);
+  return clamp01(Math.min(nearOpacity, farOpacity));
+}
+
+export function depthOpacityForWorldPosition(
+  progress: number,
+  worldPosition: Vec3,
+  window: DepthFocusWindow
+): number {
+  return depthFocusOpacity(cameraSpaceDepth(progress, worldPosition), window);
 }
 
 /** Camera roll (radians) — peaks in the middle of passthrough-01
@@ -289,47 +373,37 @@ export function getThoughtformCenterOffsetX(progress: number): number {
  *  the passthrough so there's still a clean tail of empty travel
  *  before the Diagnostic gate emerges from the distance. */
 const FLYTHROUGH_WINDOWS: readonly { start: number; end: number }[] = [
-  { start: 0.16, end: 0.28 }, // ring 0 (outer) + diamond
-  { start: 0.19, end: 0.3 }, // ring 1
-  { start: 0.22, end: 0.32 }, // ring 2
-  { start: 0.25, end: 0.34 }, // ring 3 (inner)
+  { start: 0.16, end: 0.34 }, // ring 0 (outer) + supporting linework
+  { start: 0.19, end: 0.36 }, // ring 1
+  { start: 0.22, end: 0.38 }, // ring 2
+  { start: 0.25, end: 0.4 }, // ring 3 (inner)
 ];
 
 /** Forward translation (positive world Z) added to each ring at the
  *  end of its flythrough window. Parked compass sits at world Z=5.5;
- *  +9 brings the ring to Z=14.5, several world units past the held
- *  camera start (Z=10) so each ring physically sweeps PAST the
- *  camera plane rather than merely scaling up before fading. Read
- *  as: instrument geometry the spaceship is flying THROUGH. */
-const FLYTHROUGH_Z_DISTANCE = 9;
-
-/** Local-T (0..1 inside the window) at which the ring begins fading.
- *  Held at full for the first 85% of the window, ramps 1 -> 0 only
- *  in the final 15% so each ring is well past the camera plane
- *  before its alpha drops. Previously this was 0.7 (fade across the
- *  final 30%), which read as "diagrams gently dissolve" rather than
- *  "diagrams sweep past us". */
-const FLYTHROUGH_FADE_FROM = 0.85;
+ *  +7 brings the ring to Z=12.5, past the camera across the longer
+ *  [0.16, 0.40] passthrough window. Opacity is now depth-driven, so
+ *  this value controls physical sweep speed rather than fade timing. */
+const FLYTHROUGH_Z_DISTANCE = 7;
 
 /** Per-ring flythrough state for the Thoughtform compass.
  *
  *  - `dz` is the Z translation to add to the ring's gate-relative
  *    origin each frame (gate is at world Z=5.5, ring's local Z is 0,
  *    so the ring's world Z = 5.5 + dz).
- *  - `opacityT` is the local opacity multiplier (combined downstream
- *    with each ring's `baseAlpha` weight). */
+ *  - `travelT` is the local 0..1 travel factor. Opacity is NOT
+ *    returned here anymore; painters derive that from camera-space
+ *    depth so the rings fade because they cross the camera/focus
+ *    plane, not because a progress window ended. */
 export function getThoughtformRingFlythrough(
   progress: number,
   ringIndex: number
-): { dz: number; opacityT: number } {
+): { dz: number; travelT: number } {
   const w = FLYTHROUGH_WINDOWS[ringIndex] ?? FLYTHROUGH_WINDOWS[0];
-  if (progress <= w.start) return { dz: 0, opacityT: 1 };
-  if (progress >= w.end) return { dz: FLYTHROUGH_Z_DISTANCE, opacityT: 0 };
+  if (progress <= w.start) return { dz: 0, travelT: 0 };
+  if (progress >= w.end) return { dz: FLYTHROUGH_Z_DISTANCE, travelT: 1 };
   const t = smoothstep(w.start, w.end, progress);
-  const dz = t * FLYTHROUGH_Z_DISTANCE;
-  const opacityT =
-    t <= FLYTHROUGH_FADE_FROM ? 1 : 1 - (t - FLYTHROUGH_FADE_FROM) / (1 - FLYTHROUGH_FADE_FROM);
-  return { dz, opacityT };
+  return { dz: t * FLYTHROUGH_Z_DISTANCE, travelT: t };
 }
 
 // ── Brandmark anchors (world space, attached to gate centres) ────
@@ -359,6 +433,44 @@ export const BRANDMARK_ANCHOR_INTELLIGENCE: [number, number, number] = [
   STATION_INTELLIGENCE.position[1],
   STATION_INTELLIGENCE.position[2] + 0.1,
 ];
+
+/** Camera-relative lead point for the Diagnostic -> Intelligence
+ *  transit. The brandmark is no longer only an anchor-to-anchor lerp
+ *  during this stretch; it becomes a lead artifact several world
+ *  units ahead of the camera. The camera subtly looks toward this
+ *  point (see `getCameraLookAt`) while the substrate sphere owns the
+ *  later scale-up moment. */
+export function getBrandmarkLeadWorldPosition(progress: number): [number, number, number] {
+  const cam = getCameraPosition(progress);
+  const forward = getCameraForward(progress);
+  const pullT = smoothstep(0.52, 0.76, progress);
+  const leadDistance = lerp(5.6, 7.2, pullT);
+  const rawLead: [number, number, number] = [
+    cam[0] + forward[0] * leadDistance,
+    cam[1] + forward[1] * leadDistance,
+    cam[2] + forward[2] * leadDistance,
+  ];
+
+  if (progress < 0.62) {
+    const t = smoothstep(0.52, 0.62, progress);
+    return [
+      lerp(BRANDMARK_ANCHOR_DIAGNOSTIC[0], rawLead[0], t),
+      lerp(BRANDMARK_ANCHOR_DIAGNOSTIC[1], rawLead[1], t),
+      lerp(BRANDMARK_ANCHOR_DIAGNOSTIC[2], rawLead[2], t),
+    ];
+  }
+
+  if (progress > 0.78) {
+    const t = smoothstep(0.78, 0.86, progress);
+    return [
+      lerp(rawLead[0], BRANDMARK_ANCHOR_INTELLIGENCE[0], t),
+      lerp(rawLead[1], BRANDMARK_ANCHOR_INTELLIGENCE[1], t),
+      lerp(rawLead[2], BRANDMARK_ANCHOR_INTELLIGENCE[2], t),
+    ];
+  }
+
+  return rawLead;
+}
 
 /** Resolve the brandmark world position for the current GLOBAL
  *  progress. Smoothly interpolates between the three parked anchors
@@ -401,15 +513,8 @@ export function getBrandmarkWorldPosition(progress: number): [number, number, nu
       lerp(BRANDMARK_ANCHOR_THOUGHTFORM[2], BRANDMARK_ANCHOR_DIAGNOSTIC[2], t),
     ];
   }
-  if (progress <= 0.55) return BRANDMARK_ANCHOR_DIAGNOSTIC;
-  if (progress <= 0.8) {
-    const t = smoothstep(0.55, 0.8, progress);
-    return [
-      lerp(BRANDMARK_ANCHOR_DIAGNOSTIC[0], BRANDMARK_ANCHOR_INTELLIGENCE[0], t),
-      lerp(BRANDMARK_ANCHOR_DIAGNOSTIC[1], BRANDMARK_ANCHOR_INTELLIGENCE[1], t),
-      lerp(BRANDMARK_ANCHOR_DIAGNOSTIC[2], BRANDMARK_ANCHOR_INTELLIGENCE[2], t),
-    ];
-  }
+  if (progress <= 0.52) return BRANDMARK_ANCHOR_DIAGNOSTIC;
+  if (progress <= 0.86) return getBrandmarkLeadWorldPosition(progress);
   return BRANDMARK_ANCHOR_INTELLIGENCE;
 }
 
@@ -422,7 +527,8 @@ export function getBrandmarkWorldPosition(progress: number): [number, number, nu
 export const BRANDMARK_WORLD_HALF_EXTENT = {
   thoughtform: 0.32,
   diagnostic: 0.18,
-  intelligence: 0.42,
+  transitLead: 0.2,
+  intelligence: 0.22,
 } as const;
 
 /** Brandmark world half-extent for the current scroll position.
@@ -432,8 +538,10 @@ export function getBrandmarkWorldHalfExtent(progress: number): number {
   const H = BRANDMARK_WORLD_HALF_EXTENT;
   if (progress <= 0.2) return H.thoughtform;
   if (progress <= 0.44) return lerp(H.thoughtform, H.diagnostic, smoothstep(0.2, 0.44, progress));
-  if (progress <= 0.55) return H.diagnostic;
-  if (progress <= 0.8) return lerp(H.diagnostic, H.intelligence, smoothstep(0.55, 0.8, progress));
+  if (progress <= 0.52) return H.diagnostic;
+  if (progress <= 0.72) return lerp(H.diagnostic, H.transitLead, smoothstep(0.52, 0.72, progress));
+  if (progress <= 0.86)
+    return lerp(H.transitLead, H.intelligence, smoothstep(0.72, 0.86, progress));
   return H.intelligence;
 }
 
