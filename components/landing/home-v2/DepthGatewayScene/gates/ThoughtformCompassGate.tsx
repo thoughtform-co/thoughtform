@@ -55,17 +55,26 @@ import {
  *     STATION_THOUGHTFORM.position[0] (off-axis-right) to 0 via
  *     `getThoughtformCenterOffsetX`. Mirrors the offset applied to
  *     the brandmark and copy in sceneGeom.ts.
- *   - Ring flythrough [0.16, 0.34]: each ring (outer -> inner) gets
- *     its own staggered window via `getThoughtformRingFlythrough`,
- *     translating forward in world Z and fading only in the final
- *     ~15% of its window so each arch physically passes the
- *     camera plane before vanishing.
+ *   - Ring flythrough [0.16, 0.40]: each ring rides its own
+ *     staggered window via `getThoughtformRingFlythrough`,
+ *     translating forward in world Z. **Inner-first order** —
+ *     the innermost ring (index 3, smallest radius) flies FIRST,
+ *     the outermost ring (index 0) flies LAST. This guarantees
+ *     the small dotted circle around the brandmark has full Z
+ *     headroom to sweep visibly past the camera before the
+ *     camera catches up; the larger outer rings then follow as
+ *     a trailing wave.
+ *   - Opacity is governed by camera-space depth via
+ *     `depthOpacityForWorldPosition` (ADR-018, 2026-05-24
+ *     revision) — rings persist as world objects and fade only
+ *     when too far, too near, or behind the camera.
  *   - Phase node markers, connector lines, bearing crosshair,
- *     ticks, and atmosphere dots ALL ride ring 0's flythrough —
- *     they share its Z translation and opacity envelope so the
- *     entire compass instrument sweeps past the camera as one
- *     piece of geometry rather than the rings flying while the
- *     supporting linework dissolves in place.
+ *     ticks, and atmosphere dots ride ring 0's Z translation.
+ *     Ring 0 is the OUTER frame and now flies LAST, so the
+ *     supporting linework holds with the outer-frame chrome
+ *     until the final sweep — matching the bearings' visual
+ *     association with the outer ring rather than the inner
+ *     detail rings.
  */
 
 /** Ring radii in world units. Scaled from v7 SVG units by 1/200. */
@@ -458,12 +467,13 @@ export function ThoughtformCompassGate() {
     }
 
     // Bearings + ticks + atmosphere dots + phase markers all ride
-    // ring 0's flythrough: opacity follows ring 0's envelope AND
-    // their parent `supportingRef` group is translated forward in
-    // Z by ring 0's `dz`. Read: the entire compass instrument
-    // (rings + supporting linework + phase dots) sweeps past the
-    // camera as one piece of geometry rather than the rings flying
-    // through static frame elements that dissolve in place.
+    // ring 0's flythrough Z. Ring 0 is the OUTER ring and now flies
+    // LAST (inner-first stagger, see sceneGeom.ts). The supporting
+    // linework holds with the outer-frame chrome through the inner
+    // rings' early sweep, then translates forward with ring 0 as
+    // the final wave. Opacity is depth-driven, so a single shared
+    // sample at the supporting wrapper's world position drives all
+    // material alphas.
     const ring0 = getThoughtformRingFlythrough(progress, 0);
     if (supportingRef.current) supportingRef.current.position.z = ring0.dz;
     const supportingDepthOpacity = depthOpacityForWorldPosition(

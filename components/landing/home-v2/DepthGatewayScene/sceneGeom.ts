@@ -360,23 +360,23 @@ export function getThoughtformCenterOffsetX(progress: number): number {
 
 // ── Thoughtform compass flythrough ───────────────────────────────
 
-/** Staggered flythrough windows per compass ring. The outer ring
- *  (index 0) flies first — its window opens the instant the lateral
- *  pan completes and the camera dolly is released. Each inner ring
- *  follows ~0.03 of scroll later, so the user reads four discrete
- *  arches sweeping past the camera in tight sequence rather than a
- *  single mass dimming at distance.
- *
- *  Windows span the new wider passthrough-01 [0.16, 0.40]: the
- *  outer ring opens at 0.16 (camera dolly release) and the inner
- *  ring finishes around 0.34 — the rings consume roughly 75% of
- *  the passthrough so there's still a clean tail of empty travel
- *  before the Diagnostic gate emerges from the distance. */
+/** Staggered flythrough windows per compass ring — **inner-first
+ *  order**. The innermost ring (index 3, smallest radius) opens
+ *  its window the instant the camera dolly is released; each
+ *  larger ring follows ~0.02 of scroll later. The previous
+ *  outer-first order forced ring 3 to start at progress 0.25, by
+ *  which time the camera had already advanced significantly toward
+ *  the gate. Ring 3 had almost no Z headroom before being behind
+ *  the camera, so the small dotted circle around the brandmark
+ *  seemed to vanish in place instead of flying past. With
+ *  inner-first the smallest ring has its full Z run to sweep
+ *  through the camera while the camera is still distant, and the
+ *  larger outer rings follow as a trailing wave. */
 const FLYTHROUGH_WINDOWS: readonly { start: number; end: number }[] = [
-  { start: 0.16, end: 0.34 }, // ring 0 (outer) + supporting linework
-  { start: 0.19, end: 0.36 }, // ring 1
-  { start: 0.22, end: 0.38 }, // ring 2
-  { start: 0.25, end: 0.4 }, // ring 3 (inner)
+  { start: 0.22, end: 0.4 }, // ring 0 (outer) — flies LAST
+  { start: 0.2, end: 0.38 }, // ring 1
+  { start: 0.18, end: 0.36 }, // ring 2
+  { start: 0.16, end: 0.34 }, // ring 3 (inner) — flies FIRST
 ];
 
 /** Forward translation (positive world Z) added to each ring at the
