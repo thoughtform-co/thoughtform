@@ -409,17 +409,18 @@ export function ThoughtformCompassGate() {
     const group = groupRef.current;
     if (!group) return;
     const { paintProgress, active, armed } = useDepthGatewayStore.getState().transform;
-    // Paint while armed OR active so the parked Thoughtform geometry
-    // is in place at progress 0 before the stage pins. Opacity is
-    // forced to 0 while only armed (visibilityScale = 0) so the
-    // group transforms compile without flashing the user.
+    // Paint at full opacity while EITHER armed or active. `paint-
+    // Progress` is forced to 0 while armed so the parked Thoughtform
+    // layout is in place the moment the stage starts rising into
+    // view — the second section reads as composed on arrival, not
+    // as an empty void that fills in after the user scrolls past
+    // the hero.
     if (!active && !armed) {
       group.visible = false;
       return;
     }
     group.visible = true;
     const progress = paintProgress;
-    const visibilityScale = active ? 1 : 0;
 
     // Staggered ring flythrough — each ring rides its own [start, end]
     // window in `FLYTHROUGH_WINDOWS`. Outer ring (index 0) flies
@@ -427,16 +428,14 @@ export function ThoughtformCompassGate() {
     // ring translates +Z by FLYTHROUGH_Z_DISTANCE across its window
     // and fades 1 -> 0 in the final 30%, so the four arches sweep
     // past the camera in tight sequence rather than dimming at
-    // distance. Before the window opens the ring sits at the gate
-    // at full opacity (the depth-stage's `active` flag already gates
-    // the whole compass off during the hero scroll).
+    // distance.
     for (let i = 0; i < ringMats.length; i++) {
       const mat = ringMats[i];
       const ring = ringRefs.current[i];
       const { dz, opacityT } = getThoughtformRingFlythrough(progress, i);
       if (ring) ring.position.z = dz;
       const base = (mat.userData as { baseAlpha: number }).baseAlpha;
-      mat.opacity = opacityT * base * visibilityScale;
+      mat.opacity = opacityT * base;
     }
 
     // Bearing crosshair + ticks + atmosphere dots stay parked at
@@ -445,9 +444,9 @@ export function ThoughtformCompassGate() {
     // they appear/fade with the outermost ring (which is the visual
     // frame they belong to).
     const ring0 = getThoughtformRingFlythrough(progress, 0);
-    bearingsMat.opacity = ring0.opacityT * 0.3 * visibilityScale;
-    orbitDot1Mat.opacity = ring0.opacityT * ORBIT_DOT_1.opacity * visibilityScale;
-    orbitDot2Mat.opacity = ring0.opacityT * ORBIT_DOT_2.opacity * visibilityScale;
+    bearingsMat.opacity = ring0.opacityT * 0.3;
+    orbitDot1Mat.opacity = ring0.opacityT * ORBIT_DOT_1.opacity;
+    orbitDot2Mat.opacity = ring0.opacityT * ORBIT_DOT_2.opacity;
 
     // Phase node dots + connector lines: parked at gate Z. Fade
     // 1 -> 0 across [0.18, 0.234] so they vanish before the outer
@@ -457,9 +456,9 @@ export function ThoughtformCompassGate() {
     else if (progress <= 0.234) phaseOpacity = 1 - (progress - 0.18) / 0.054;
     for (let i = 0; i < PHASE_NODES.length; i++) {
       const node = PHASE_NODES[i];
-      phaseDotMats[i].opacity = phaseOpacity * node.dotOpacity * visibilityScale;
+      phaseDotMats[i].opacity = phaseOpacity * node.dotOpacity;
       // Connector lines use the same dawn-30 weight as the bearings.
-      connectorMats[i].opacity = phaseOpacity * 0.3 * visibilityScale;
+      connectorMats[i].opacity = phaseOpacity * 0.3;
     }
 
     // Atmosphere orbit dots — independent continuous rotation

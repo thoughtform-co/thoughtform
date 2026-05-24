@@ -283,14 +283,18 @@ export function useWorldDomTracker(
           element.style.transform = transformValue;
         }
 
-        // While armed, suppress opacity so the pre-armed transform
-        // doesn't flash visible before the stage pins.
-        const writeOpacity = transform.active ? visibilityOpacity : 0;
-        if (!last || becameVisible || Math.abs(writeOpacity - last.o) > 0.005) {
-          element.style.opacity = `${writeOpacity.toFixed(3)}`;
+        // Paint at the computed visibility opacity for BOTH `active`
+        // and `armed`. `paintProgress` is forced to 0 while armed
+        // (see depthGatewayStore.getCorridorEngagement) so the
+        // parked Thoughtform layout is what the user sees as the
+        // sticky stage rises into pin — copy + phase labels are
+        // already in place, the second section reads as composed
+        // on arrival rather than fading in only after pin.
+        if (!last || becameVisible || Math.abs(visibilityOpacity - last.o) > 0.005) {
+          element.style.opacity = `${visibilityOpacity.toFixed(3)}`;
         }
 
-        lastState.set(anchor.id, { x: screenX, y: screenY, o: writeOpacity, visible: true });
+        lastState.set(anchor.id, { x: screenX, y: screenY, o: visibilityOpacity, visible: true });
 
         if (anchor.onPaint) {
           anchor.onPaint(

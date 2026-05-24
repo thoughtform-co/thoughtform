@@ -67,16 +67,18 @@ export interface DepthGatewayTransform {
   /** True only while the stage is approaching its pinned position
    *  AFTER the hero has fully scrolled off-screen but BEFORE the
    *  sticky cell has reached the top of the viewport. While armed,
-   *  painters should pre-position elements at the parked Thoughtform
-   *  layout (`paintProgress = 0`) with opacity 0, so the first
-   *  `active` frame reveals a fully composed room instead of an
-   *  empty void that fills in as the user scrolls. */
+   *  painters pre-position elements at the parked Thoughtform
+   *  layout (`paintProgress = 0`) AND paint at full opacity, so the
+   *  second section reads as composed on arrival — copy + compass
+   *  + brandmark are already visible as the stage rises into view,
+   *  rather than appearing only after the stage finishes pinning. */
   armed: boolean;
   /** Progress value PAINTERS should drive world positions + camera
    *  sync from. Equal to `progress` when `active`. Forced to 0 while
-   *  `armed` so the pre-arm pass projects the parked Thoughtform
-   *  layout. While neither active nor armed, equals `progress` but
-   *  painters bail out early so the value is moot. */
+   *  `armed` so the parked Thoughtform layout is what's visible as
+   *  the stage rises into view. While neither active nor armed,
+   *  equals `progress` but painters bail out early so the value is
+   *  moot. */
   paintProgress: number;
   /** Signed per-frame scroll velocity in "progress units per second".
    *  Positive when scrolling forward through the stage, negative on
@@ -141,17 +143,18 @@ function transformEquals(a: DepthGatewayTransform, b: DepthGatewayTransform): bo
  *     Painters paint at the live progress with their normal
  *     visibility envelopes.
  *   - `armed`: stage is rising into the pinned position but hasn't
- *     pinned yet (0 < rect.top < vh). Painters should pre-position
- *     elements at the parked Thoughtform layout (`paintProgress = 0`)
- *     with opacity forced to 0, so the first `active` frame reveals
- *     a fully composed parked beat instead of an empty void.
+ *     pinned yet (0 < rect.top < vh). Painters paint at FULL opacity
+ *     against the parked Thoughtform layout (`paintProgress = 0`)
+ *     so the second section is composed and visible the moment its
+ *     sticky cell starts entering the viewport.
  *   - `paintProgress`: equal to `progress` while active; forced to 0
- *     while armed (or otherwise).
+ *     while armed (or otherwise) so painters draw the parked beat.
  *
- *  Hero overlap is not a concern here: while `armed`, all painters
- *  write opacity 0, so even though transforms are computed nothing
- *  is shown. The hero is sticky-pinned beneath the stage layer; the
- *  stage's own rect crossing into view is the correct signal. */
+ *  Stage / hero layering: the stage canvas lives inside
+ *  `.home-v2-stage__sticky` (z-index 2) which scrolls up over the
+ *  sticky hero (z-index 1) as the user scrolls past the hero. The
+ *  stage canvas only covers the stage area of the viewport, so
+ *  painting at full opacity while armed doesn't overlap the hero. */
 export function getCorridorEngagement(
   stageRect: DOMRect,
   vh: number,
