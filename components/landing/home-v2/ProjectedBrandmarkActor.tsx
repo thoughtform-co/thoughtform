@@ -165,19 +165,11 @@ export function ProjectedBrandmarkActor() {
     ];
   }, []);
 
-  const layerRef = useRef<HTMLElement | null>(null);
-  // Bind the layer ref to the document body so the tracker scopes
-  // its `[data-world-anchor]` query to the whole document. Using
-  // `document.body` keeps the brandmark mountable even when the
-  // page renders the actor outside the corridor stage.
-  if (typeof document !== "undefined" && layerRef.current === null) {
-    layerRef.current = document.body;
-  }
-  // The hook only reads from layerRef.current, so wrap into a stable
-  // RefObject-shaped value once.
-  const stableRef = useRef<HTMLElement | null>(null);
-  stableRef.current = layerRef.current;
-  useWorldDomTracker(anchors, stableRef);
+  // The actor is mounted inside `.home-v2-stage__sticky`. Because
+  // the shell is absolute inside the sticky stage (not fixed on
+  // document.body), armed-state prepaint is clipped to the incoming
+  // Thoughtform section instead of floating over the hero.
+  useWorldDomTracker(anchors, shellRef);
 
   return (
     <div
@@ -186,7 +178,7 @@ export function ProjectedBrandmarkActor() {
       className="home-v2-projected-brandmark"
       aria-hidden="true"
       style={{
-        position: "fixed",
+        position: "absolute",
         left: 0,
         top: 0,
         width: 0,

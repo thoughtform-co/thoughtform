@@ -213,7 +213,10 @@ export function useWorldDomTracker(
         const elementCache = elementCacheRef.current;
         let element = elementCache.get(anchor.id);
         if (!element) {
-          element = root.querySelector<HTMLElement>(`[data-world-anchor="${anchor.id}"]`);
+          const selector = `[data-world-anchor="${anchor.id}"]`;
+          element = root.matches(selector)
+            ? (root as HTMLElement)
+            : root.querySelector<HTMLElement>(selector);
           if (element) elementCache.set(anchor.id, element);
         }
         if (!element) continue;

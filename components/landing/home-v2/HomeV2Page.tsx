@@ -168,6 +168,11 @@ export function HomeV2Page({ hudHtml, bodyClass, text }: HomeV2PageProps) {
               `useWorldDomTracker` (mounted inside `CopyAnchors`). */}
           {!fallback && <CopyAnchors text={text} />}
 
+          {/* Projected brandmark — lives inside the sticky stage so
+              armed prepaint is clipped to the incoming Thoughtform
+              section instead of floating over the hero. */}
+          {!fallback && <ProjectedBrandmarkActor />}
+
           {/* Debug HUD — progress + active beat readout. */}
           {!fallback && <StageHud />}
 
@@ -179,11 +184,6 @@ export function HomeV2Page({ hudHtml, bodyClass, text }: HomeV2PageProps) {
           )}
         </div>
       </div>
-
-      {/* Projected brandmark — primary brandmark painter for the
-          corridor. Pure 3D world projection; rigidly co-located
-          with each gate's centre. */}
-      {!fallback && <ProjectedBrandmarkActor />}
 
       {/* ═══ TAIL (normal scroll, placeholder) ═══ */}
       <div className="home-v2-tail">
