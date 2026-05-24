@@ -8,6 +8,7 @@ import { GatewayWorld } from "./gates/GatewayWorld";
 import { InterGateCorridor } from "./InterGateCorridor";
 import { ScrollStreaks } from "./ScrollStreaks";
 import { StaticStarfield } from "./StaticStarfield";
+import { ThoughtformAtmosphere } from "./ThoughtformAtmosphere";
 import { CAMERA_FOV, CAMERA_START, getCameraLookAt } from "./sceneGeom";
 
 /**
@@ -16,18 +17,27 @@ import { CAMERA_FOV, CAMERA_START, getCameraLookAt } from "./sceneGeom";
  *
  * Scene composition (paint order, near -> far):
  *
- *   - StaticStarfield    : non-animated background stars.
- *   - InterGateCorridor  : depth-stacked debris bands at intermediate
- *                          Z stations between the gate groups —
- *                          the "spaceship-flying-through-space"
- *                          atmosphere between gates.
- *   - ScrollStreaks      : near-camera streaks driven by scroll
- *                          velocity (invisible when idle).
- *   - GatewayWorld       : the four world-rigid gate groups
- *                          (Thoughtform, Diagnostic, Interstitial,
- *                          Intelligence). Each gate paints at its
- *                          station Z and self-manages its visibility
- *                          envelope.
+ *   - StaticStarfield       : non-animated deep-space background.
+ *   - ThoughtformAtmosphere : dense local star cluster behind the
+ *                             Thoughtform gate plus a soft gold
+ *                             shockwave ring that pulses at the
+ *                             pan-completion boundary ("stargate
+ *                             locked into view"). Scoped to the
+ *                             Thoughtform beat + early
+ *                             passthrough-01 via camera-space
+ *                             depth focus.
+ *   - InterGateCorridor     : depth-stacked debris bands at
+ *                             intermediate Z stations between the
+ *                             gate groups — the
+ *                             "spaceship-flying-through-space"
+ *                             atmosphere between gates.
+ *   - ScrollStreaks         : near-camera streaks driven by scroll
+ *                             velocity (invisible when idle).
+ *   - GatewayWorld          : the four world-rigid gate groups
+ *                             (Thoughtform, Diagnostic,
+ *                             Interstitial, Intelligence). Each
+ *                             gate paints at its station Z and
+ *                             self-manages its visibility envelope.
  *
  * The PRIMARY brandmark painter is the DOM-side
  * `ProjectedBrandmarkActor` — its world position is interpolated
@@ -87,6 +97,7 @@ export function DepthGatewayScene() {
     >
       <FlyingCameraRig />
       <StaticStarfield />
+      <ThoughtformAtmosphere />
       <InterGateCorridor />
       <ScrollStreaks />
       <GatewayWorld />
