@@ -74,13 +74,12 @@ import {
 const RING_RADII = SIGIL_RING_MORPHS.map((r) => r.ringRadius / 200);
 const RING_SEGMENTS = 96;
 
-/** Per-ring opacity weight matching v7 SVG stroke-opacity attrs:
- *  - Ring 0 (r=150) stroke="var(--dawn-15)" → ~0.15
- *  - Ring 1 (r=126) stroke="var(--dawn-15)" → ~0.18 (solid, slightly
- *    brighter to compensate for no dashing)
- *  - Ring 2 (r=104) stroke="var(--gold)" stroke-opacity="0.32"
- *  - Ring 3 (r= 78) stroke="var(--gold)" stroke-opacity="0.45" */
-const RING_ALPHA_WEIGHTS = [0.15, 0.18, 0.32, 0.45];
+/** Per-ring opacity weight. These are deliberately a notch above the
+ *  v7 SVG's literal stroke-opacity values because the R3F lines sit
+ *  behind a brighter projected brandmark + grain field in home-v2.
+ *  The compass should read as present instrument structure, but the
+ *  brandmark remains the dominant gold object. */
+const RING_ALPHA_WEIGHTS = [0.32, 0.36, 0.56, 0.76];
 
 /** Per-ring colours — outer two are dawn, inner two are gold. */
 const DAWN_HEX = "#ebe3d6";
@@ -444,7 +443,7 @@ export function ThoughtformCompassGate() {
     // they appear/fade with the outermost ring (which is the visual
     // frame they belong to).
     const ring0 = getThoughtformRingFlythrough(progress, 0);
-    bearingsMat.opacity = ring0.opacityT * 0.3;
+    bearingsMat.opacity = ring0.opacityT * 0.58;
     orbitDot1Mat.opacity = ring0.opacityT * ORBIT_DOT_1.opacity;
     orbitDot2Mat.opacity = ring0.opacityT * ORBIT_DOT_2.opacity;
 
@@ -457,8 +456,9 @@ export function ThoughtformCompassGate() {
     for (let i = 0; i < PHASE_NODES.length; i++) {
       const node = PHASE_NODES[i];
       phaseDotMats[i].opacity = phaseOpacity * node.dotOpacity;
-      // Connector lines use the same dawn-30 weight as the bearings.
-      connectorMats[i].opacity = phaseOpacity * 0.3;
+      // Connector lines are slightly stronger than v7's literal
+      // dawn-30 so they survive the home-v2 dark stage + grain.
+      connectorMats[i].opacity = phaseOpacity * 0.54;
     }
 
     // Atmosphere orbit dots — independent continuous rotation
