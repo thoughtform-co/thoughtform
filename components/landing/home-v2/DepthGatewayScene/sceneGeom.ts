@@ -591,11 +591,27 @@ export interface CopyAnchor {
  *  SVG (x_svg, y_svg) sits at world (x_svg/240, -y_svg/240, gateZ +
  *  0.01). Y is flipped because SVG is y-down and world is y-up. */
 const ORBIT_SVG_TO_WORLD = 1 / 240;
-function diagnosticLabelWorldPosition(pipXSvg: number, pipYSvg: number): [number, number, number] {
-  return [
-    STATION_DIAGNOSTIC.position[0] + pipXSvg * ORBIT_SVG_TO_WORLD,
-    STATION_DIAGNOSTIC.position[1] - pipYSvg * ORBIT_SVG_TO_WORLD,
-    STATION_DIAGNOSTIC.position[2] + 0.05,
+
+/** Depth offset (world units, negative = deeper behind parked Z)
+ *  applied to the Diagnostic head copy and orbit label pills during
+ *  the passthrough-01 approach. The labels start ~6 units behind
+ *  their parked Z and converge to the parked orbital plane by the
+ *  time the Diagnostic beat begins. Combined with each anchor's
+ *  perspectiveScale, this makes the labels read as GENUINELY
+ *  DISTANT objects that fly toward the orbits — not already-landed
+ *  text that just shrinks slightly via perspective alone. */
+function diagnosticApproachDepthOffset(progress: number): number {
+  return lerp(-6, 0, smoothstep(0.18, 0.42, progress));
+}
+
+function diagnosticLabelWorldPosition(pipXSvg: number, pipYSvg: number): CopyAnchorPosition {
+  const baseX = STATION_DIAGNOSTIC.position[0] + pipXSvg * ORBIT_SVG_TO_WORLD;
+  const baseY = STATION_DIAGNOSTIC.position[1] - pipYSvg * ORBIT_SVG_TO_WORLD;
+  const baseZ = STATION_DIAGNOSTIC.position[2] + 0.05;
+  return (transform) => [
+    baseX,
+    baseY,
+    baseZ + diagnosticApproachDepthOffset(transform.paintProgress),
   ];
 }
 
@@ -702,33 +718,38 @@ export const COPY_ANCHORS: readonly CopyAnchor[] = [
   // Heading block above the orbital field — bridge + title.
   // Visibility extends back into `passthrough-01` so the title
   // can begin to register as a distant text-band as the camera
-  // approaches the parked gate, mirroring the orbits' two-stage
-  // distant-onset envelope in DiagnosticOrbitGate. Perspective
-  // scale grows it from ~0.4x at the far end of the approach
-  // to 1.0x at parked rest.
+  // approaches the parked gate. Position uses
+  // `diagnosticApproachDepthOffset` so the head copy sits ~6
+  // world units BEHIND the parked Z during the start of the
+  // approach and converges to the orbital plane by the
+  // Diagnostic beat — combined with perspectiveScale (min 0.22)
+  // this makes the title clearly read as "coming toward the
+  // orbits" rather than already landed at the gate.
   {
     id: "diagnostic.headCopy",
-    position: [
+    position: (transform) => [
       STATION_DIAGNOSTIC.position[0],
       STATION_DIAGNOSTIC.position[1] + 0.95,
-      STATION_DIAGNOSTIC.position[2] + 0.1,
+      STATION_DIAGNOSTIC.position[2] + 0.1 + diagnosticApproachDepthOffset(transform.paintProgress),
     ],
     visibilityBeats: ["passthrough-01", "diagnostic"],
     fadeFrac: 0.12,
     perspectiveScale: {
       referenceDistance: 4.5,
-      min: 0.4,
+      min: 0.22,
       max: 1.15,
     },
   },
   // 4 orbit labels — pinned to the actual MISS_LABELS pip world
   // positions so they ride the orbits in 3D as the camera
-  // approaches and passes the gate. Visibility extends across
-  // passthrough-01 so the pills can be FAINT and SMALL in the
-  // distance during the long fly-through and then land at full
-  // strength at the parked diagnostic beat, instead of popping
-  // in at full opacity + size the instant the diagnostic beat
-  // starts.
+  // approaches and passes the gate. Each label's position
+  // resolver applies `diagnosticApproachDepthOffset` to the
+  // base orbital pip Z so the pills sit far behind the parked
+  // gate at the start of passthrough-01 and converge to their
+  // pip's true world position by the Diagnostic beat — combined
+  // with perspectiveScale (min 0.2), the labels register as tiny
+  // distant text drifting toward the orbits before settling on
+  // their pips at parked rest.
   ...MISS_LABELS.map((label) => ({
     id: `diagnostic.label.${label.id}`,
     position: diagnosticLabelWorldPosition(label.x, label.y),
@@ -736,7 +757,7 @@ export const COPY_ANCHORS: readonly CopyAnchor[] = [
     fadeFrac: 0.08,
     perspectiveScale: {
       referenceDistance: 4.5,
-      min: 0.35,
+      min: 0.2,
       max: 1.2,
     },
   })),
