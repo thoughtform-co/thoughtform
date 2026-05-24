@@ -66,11 +66,17 @@ varying float vTwinkle;
 void main() {
   vec4 mv = modelViewMatrix * vec4(position, 1.0);
   gl_Position = projectionMatrix * mv;
-  // Distance falloff for a soft hierarchy across the cluster
-  float distFactor = clamp(2.8 / max(0.4, -mv.z), 0.55, 1.7);
-  gl_PointSize = uPointSize * uPixelRatio * distFactor;
-  // Very slow twinkle, phase-shifted per star via the seed
-  vTwinkle = 0.72 + 0.28 * sin(uTime * 0.55 + aSeed * 19.0);
+  // Per-star size variation via seed so the cluster has visual
+  // hierarchy. Distance falloff is deliberately gentle — the
+  // cluster sits 4-8 world units from the camera, and at these
+  // depths a strict perspective shrink would render every star
+  // sub-pixel and invisible. We want stars that READ as stars,
+  // not as a perspective study.
+  float sizeJitter = 0.7 + fract(aSeed * 7.0) * 1.1;
+  float distFactor = clamp(7.0 / max(0.4, -mv.z), 0.7, 1.6);
+  gl_PointSize = uPointSize * uPixelRatio * sizeJitter * distFactor;
+  // Slow twinkle, phase-shifted per star via the seed
+  vTwinkle = 0.78 + 0.22 * sin(uTime * 0.55 + aSeed * 19.0);
   vSeed = aSeed;
 }
 `;
@@ -171,7 +177,7 @@ export function ThoughtformAtmosphere() {
       vertexShader: starVertexShader,
       fragmentShader: starFragmentShader,
       uniforms: {
-        uPointSize: { value: 3.4 },
+        uPointSize: { value: 6 },
         uPixelRatio: { value: typeof window !== "undefined" ? window.devicePixelRatio : 1 },
         uColor: { value: STAR_COLOR.clone() },
         uOpacity: { value: 0 },
