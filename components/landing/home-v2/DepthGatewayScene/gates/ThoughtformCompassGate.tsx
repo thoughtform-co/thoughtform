@@ -54,20 +54,17 @@ import {
  *     STATION_THOUGHTFORM.position[0] (off-axis-right) to 0 via
  *     `getThoughtformCenterOffsetX`. Mirrors the offset applied to
  *     the brandmark and copy in sceneGeom.ts.
- *   - Ring flythrough [0.18, 0.335]: each ring (outer -> inner) gets
+ *   - Ring flythrough [0.16, 0.34]: each ring (outer -> inner) gets
  *     its own staggered window via `getThoughtformRingFlythrough`,
- *     translating forward in world Z and fading in the final 30%
- *     of its window. Bearing crosshair, ticks, atmosphere dots, and
- *     phase markers stay parked at gate Z — only the 4 main rings
- *     ride the flythrough (matches v7 behaviour where only the
- *     `.sigil__ring` elements morph; bearings are static reference).
- *   - Phase node markers + connector lines: fade 1 -> 0 across
- *     [0.18, 0.234] so they vanish before the outer ring sweeps
- *     past them.
- *   - Bearing crosshair, ticks, and atmosphere dots track ring 0's
- *     opacity envelope (they're visually paired with the outer ring
- *     frame and atmosphere; they fade away with the rings during
- *     passthrough).
+ *     translating forward in world Z and fading only in the final
+ *     ~15% of its window so each arch physically passes the
+ *     camera plane before vanishing.
+ *   - Phase node markers, connector lines, bearing crosshair,
+ *     ticks, and atmosphere dots ALL ride ring 0's flythrough —
+ *     they share its Z translation and opacity envelope so the
+ *     entire compass instrument sweeps past the camera as one
+ *     piece of geometry rather than the rings flying while the
+ *     supporting linework dissolves in place.
  */
 
 /** Ring radii in world units. Scaled from v7 SVG units by 1/200. */
@@ -242,6 +239,13 @@ export function ThoughtformCompassGate() {
   // Per-ring mesh refs so the flythrough can translate each ring's
   // Z independently (staggered windows + overshoot past the camera).
   const ringRefs = useRef<(THREE.LineLoop | null)[]>([]);
+  // Supporting-linework wrapper. All the non-ring instrument
+  // elements (bearings, ticks, phase dots + connectors, atmosphere
+  // orbit dots) sit inside this group. Per frame we set
+  // `group.position.z = ring0.dz` so the supporting structure
+  // sweeps PAST the camera together with the outer ring rather
+  // than fading in place while the rings fly past it.
+  const supportingRef = useRef<THREE.Group>(null);
   // Orbit dot groups — rotation animated per frame so the markers
   // sweep around the compass like the v7 CSS-animated dots.
   const orbitDot1GroupRef = useRef<THREE.Group>(null);
@@ -437,28 +441,28 @@ export function ThoughtformCompassGate() {
       mat.opacity = opacityT * base;
     }
 
-    // Bearing crosshair + ticks + atmosphere dots stay parked at
-    // gate Z (matching v7 — bearings are static reference, not part
-    // of the flythrough). Their opacity follows ring 0's window so
-    // they appear/fade with the outermost ring (which is the visual
-    // frame they belong to).
+    // Bearings + ticks + atmosphere dots + phase markers all ride
+    // ring 0's flythrough: opacity follows ring 0's envelope AND
+    // their parent `supportingRef` group is translated forward in
+    // Z by ring 0's `dz`. Read: the entire compass instrument
+    // (rings + supporting linework + phase dots) sweeps past the
+    // camera as one piece of geometry rather than the rings flying
+    // through static frame elements that dissolve in place.
     const ring0 = getThoughtformRingFlythrough(progress, 0);
+    if (supportingRef.current) supportingRef.current.position.z = ring0.dz;
     bearingsMat.opacity = ring0.opacityT * 0.58;
     orbitDot1Mat.opacity = ring0.opacityT * ORBIT_DOT_1.opacity;
     orbitDot2Mat.opacity = ring0.opacityT * ORBIT_DOT_2.opacity;
 
-    // Phase node dots + connector lines: parked at gate Z. Fade
-    // 1 -> 0 across [0.18, 0.234] so they vanish before the outer
-    // ring sweeps past them.
-    let phaseOpacity = 0;
-    if (progress <= 0.18) phaseOpacity = 1;
-    else if (progress <= 0.234) phaseOpacity = 1 - (progress - 0.18) / 0.054;
+    // Phase node dots + connector lines ride ring 0's envelope
+    // too, so the labelled phase markers travel toward the
+    // camera with the outer ring before fading.
     for (let i = 0; i < PHASE_NODES.length; i++) {
       const node = PHASE_NODES[i];
-      phaseDotMats[i].opacity = phaseOpacity * node.dotOpacity;
+      phaseDotMats[i].opacity = ring0.opacityT * node.dotOpacity;
       // Connector lines are slightly stronger than v7's literal
       // dawn-30 so they survive the home-v2 dark stage + grain.
-      connectorMats[i].opacity = phaseOpacity * 0.54;
+      connectorMats[i].opacity = ring0.opacityT * 0.54;
     }
 
     // Atmosphere orbit dots — independent continuous rotation
@@ -501,39 +505,47 @@ export function ThoughtformCompassGate() {
         />
       ))}
 
-      {/* Bearing crosshair (4 cardinal stubs) — static reference. */}
-      <lineSegments geometry={crosshairGeom} material={bearingsMat} />
+      {/* Supporting linework wrapper: ridden by ring 0's
+          flythrough so bearings + phase dots + atmosphere orbits
+          sweep PAST the camera with the outer ring, instead of
+          fading in place while the rings fly past them. */}
+      <group ref={supportingRef}>
+        {/* Bearing crosshair (4 cardinal stubs). */}
+        <lineSegments geometry={crosshairGeom} material={bearingsMat} />
 
-      {/* 8 bearing ticks at non-cardinal angles — static reference. */}
-      <lineSegments geometry={ticksGeom} material={bearingsMat} />
+        {/* 8 bearing ticks at non-cardinal angles. */}
+        <lineSegments geometry={ticksGeom} material={bearingsMat} />
 
-      {/* Phase node dots + connector lines. Dot is a small filled
-          gold circle (NOT a diamond outline); connector is a thin
-          dawn-30 stroke from the dot to the label anchor area. */}
-      {PHASE_NODES.map((node, i) => (
-        <group key={`phase-${node.id}`}>
-          <mesh geometry={phaseDotGeoms[i]} material={phaseDotMats[i]} position={node.dot} />
-          <lineSegments geometry={connectorGeoms[i]} material={connectorMats[i]} />
+        {/* Phase node dots + connector lines. Dot is a small filled
+            gold circle (NOT a diamond outline); connector is a thin
+            dawn-30 stroke from the dot to the label anchor area. */}
+        {PHASE_NODES.map((node, i) => (
+          <group key={`phase-${node.id}`}>
+            <mesh geometry={phaseDotGeoms[i]} material={phaseDotMats[i]} position={node.dot} />
+            <lineSegments geometry={connectorGeoms[i]} material={connectorMats[i]} />
+          </group>
+        ))}
+
+        {/* Atmosphere orbiting dots — independent rotation groups.
+            Dot 1 starts at +X (radius 0.52) and sweeps clockwise;
+            dot 2 starts at -X (radius 0.39) and sweeps counter-
+            clockwise. The rotation refs live on inner groups so
+            the supporting wrapper can translate without
+            disrupting the atmosphere spin. */}
+        <group ref={orbitDot1GroupRef}>
+          <mesh
+            geometry={orbitDot1Geom}
+            material={orbitDot1Mat}
+            position={[ORBIT_DOT_1.radius, 0, 0.01]}
+          />
         </group>
-      ))}
-
-      {/* Atmosphere orbiting dots — independent rotation groups.
-          Dot 1 starts at +X (radius 0.52) and sweeps clockwise;
-          dot 2 starts at -X (radius 0.39) and sweeps counter-
-          clockwise. */}
-      <group ref={orbitDot1GroupRef}>
-        <mesh
-          geometry={orbitDot1Geom}
-          material={orbitDot1Mat}
-          position={[ORBIT_DOT_1.radius, 0, 0.01]}
-        />
-      </group>
-      <group ref={orbitDot2GroupRef}>
-        <mesh
-          geometry={orbitDot2Geom}
-          material={orbitDot2Mat}
-          position={[-ORBIT_DOT_2.radius, 0, 0.01]}
-        />
+        <group ref={orbitDot2GroupRef}>
+          <mesh
+            geometry={orbitDot2Geom}
+            material={orbitDot2Mat}
+            position={[-ORBIT_DOT_2.radius, 0, 0.01]}
+          />
+        </group>
       </group>
     </group>
   );

@@ -36,6 +36,19 @@ export type WorldAnchorPosition =
   | readonly [number, number, number]
   | ((transform: DepthGatewayTransform) => readonly [number, number, number]);
 
+export interface PerspectiveScaleConfig {
+  /** World-space camera-to-anchor distance at which scale = 1.
+   *  Below this distance the element gets LARGER (up to `max`);
+   *  above this distance it gets SMALLER (down to `min`). Pick
+   *  this to match the camera-to-gate distance at the anchor's
+   *  parked beat (usually `GATE_PARK_DISTANCE` ≈ 4.5). */
+  referenceDistance: number;
+  /** Minimum scale clamp (when very far). Defaults to 0.35. */
+  min?: number;
+  /** Maximum scale clamp (when very close). Defaults to 1.25. */
+  max?: number;
+}
+
 export interface WorldAnchor {
   /** DOM lookup: `[data-world-anchor="{id}"]`. */
   id: string;
@@ -47,6 +60,15 @@ export interface WorldAnchor {
   /** Fade window (fraction of the FULL combined visibility window)
    *  applied at both outer boundaries. Default 0.15. */
   fadeFrac?: number;
+  /** Optional perspective scaling. When set, the element is
+   *  CSS-transformed with a scale factor derived from the
+   *  camera-to-anchor distance, so labels at depth read SMALLER
+   *  and grow into view as the camera approaches. Without this
+   *  the element is always at 1:1 size regardless of world Z,
+   *  which is what we want for HUD chrome but reads as "pop-in"
+   *  for in-world labels (e.g. Diagnostic orbit pills that the
+   *  user is supposed to feel flying toward). */
+  perspectiveScale?: PerspectiveScaleConfig;
   /** Optional per-frame hook fired after inline transform + opacity
    *  are written. Use for extra frame state (perspective-correct
    *  width/height, custom tilt, etc.). */
@@ -273,15 +295,39 @@ export function useWorldDomTracker(
         // origin lands on (screenX, screenY).
         const origin = element.getAttribute("data-anchor-origin") ?? "center";
         const originPercent = ANCHOR_ORIGINS[origin] ?? ANCHOR_ORIGINS.center;
+
+        // Optional perspective scaling — labels at depth read
+        // smaller and grow as the camera closes the distance.
+        // Without this the projected screen X/Y is correct but
+        // the element is always rendered at 1:1 size, which
+        // reads as "pop-in" for in-world labels.
+        let scaleSegment = "";
+        if (anchor.perspectiveScale) {
+          const { referenceDistance, min = 0.35, max = 1.25 } = anchor.perspectiveScale;
+          // `camToAnchor` is the signed forward distance computed
+          // above. Use the unsigned magnitude here so the scale is
+          // well-behaved right up to the cull edge.
+          const dist = Math.max(0.2, Math.abs(camToAnchor));
+          const raw = referenceDistance / dist;
+          const scale = Math.min(max, Math.max(min, raw));
+          scaleSegment = ` scale(${scale.toFixed(3)})`;
+        }
+
         const transformValue = `translate3d(${screenX.toFixed(2)}px, ${screenY.toFixed(
           2
-        )}px, 0) translate(${originPercent})`;
+        )}px, 0) translate(${originPercent})${scaleSegment}`;
 
         if (
           !last ||
           becameVisible ||
           Math.abs(screenX - last.x) > 0.25 ||
-          Math.abs(screenY - last.y) > 0.25
+          Math.abs(screenY - last.y) > 0.25 ||
+          // Always re-write while perspective scale is active so
+          // the element interpolates smoothly with distance —
+          // pixel-position change alone won't catch the case
+          // where the camera dollies forward but the anchor sits
+          // on the optical axis (screenX/screenY barely change).
+          !!anchor.perspectiveScale
         ) {
           element.style.transform = transformValue;
         }

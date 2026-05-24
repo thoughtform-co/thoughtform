@@ -169,15 +169,29 @@ function RingBand({
 }
 
 /**
- * InterGateCorridor — composes 4 ring bands at intermediate Z
+ * InterGateCorridor — composes ring debris bands at intermediate Z
  * stations between the four gates.
  *
- * Bands:
- *   1. Thoughtform <-> Diagnostic (active during passthrough-01)
- *   2. Diagnostic <-> Interstitial (active during early passthrough-02)
- *   3. Interstitial <-> Intelligence (active during late passthrough-02)
- *   4. Beyond intelligence (active during late intelligence — debris
- *      receding behind the camera as the corridor ends)
+ * Bands (timed to BEAT_WINDOWS in depthGatewayStore):
+ *   1. Approach band, Thoughtform -> Diagnostic — sits 1/3 of
+ *      the way from Thoughtform to Diagnostic. Active across
+ *      the FIRST half of the widened passthrough-01 so the
+ *      user sees debris STREAM PAST as the Thoughtform compass
+ *      sweeps by (it fills the void between gates so the
+ *      stretch doesn't read as empty travel).
+ *   2. Mid band, Thoughtform -> Diagnostic — sits 2/3 of the
+ *      way to Diagnostic. Active across the SECOND half of
+ *      passthrough-01 so the user feels continued depth as the
+ *      Diagnostic gate emerges from the distance.
+ *   3. Diagnostic -> Interstitial (active during early
+ *      passthrough-02).
+ *   4. Interstitial -> Intelligence (active during late
+ *      passthrough-02).
+ *
+ *  Two bands across passthrough-01 (was one) keep the longer
+ *  fly-through populated with light debris parallax without
+ *  reintroducing a topology/tunnel grid — each band is still
+ *  just faint orbital ring fragments at varied radii.
  */
 export function InterGateCorridor() {
   const tfZ = STATION_THOUGHTFORM.position[2];
@@ -185,16 +199,37 @@ export function InterGateCorridor() {
   const interZ = STATION_INTERSTITIAL.position[2];
   const ilZ = STATION_INTELLIGENCE.position[2];
 
+  // Two intermediate Z stations across the Thoughtform ->
+  // Diagnostic gap. Splitting the run means each band is a
+  // smaller, more focused beat — debris approaches, sweeps past,
+  // then the next layer takes over.
+  const tfDgNearZ = tfZ + (dgZ - tfZ) * 0.35;
+  const tfDgFarZ = tfZ + (dgZ - tfZ) * 0.7;
+
   return (
     <>
       <RingBand
-        centreZ={(tfZ + dgZ) / 2}
-        ringCount={16}
-        minRadius={0.2}
-        maxRadius={1.4}
-        fadeIn={[0.16, 0.22]}
-        fadeOut={[0.28, 0.34]}
+        centreZ={tfDgNearZ}
+        offsetX={0.2}
+        ringCount={14}
+        minRadius={0.18}
+        maxRadius={1.2}
+        fadeIn={[0.14, 0.2]}
+        fadeOut={[0.26, 0.32]}
         spinRate={0.06}
+        alphaCeiling={0.3}
+      />
+      <RingBand
+        centreZ={tfDgFarZ}
+        offsetX={-0.25}
+        ringCount={16}
+        minRadius={0.22}
+        maxRadius={1.5}
+        fadeIn={[0.26, 0.32]}
+        fadeOut={[0.38, 0.44]}
+        spinRate={-0.05}
+        color="#f0e6cf"
+        alphaCeiling={0.32}
       />
       <RingBand
         centreZ={(dgZ + interZ) / 2}
@@ -202,8 +237,8 @@ export function InterGateCorridor() {
         ringCount={14}
         minRadius={0.3}
         maxRadius={1.5}
-        fadeIn={[0.48, 0.54]}
-        fadeOut={[0.58, 0.64]}
+        fadeIn={[0.5, 0.56]}
+        fadeOut={[0.6, 0.66]}
         spinRate={-0.05}
         color="#f0e6cf"
       />
@@ -213,8 +248,8 @@ export function InterGateCorridor() {
         ringCount={14}
         minRadius={0.25}
         maxRadius={1.4}
-        fadeIn={[0.62, 0.68]}
-        fadeOut={[0.72, 0.78]}
+        fadeIn={[0.64, 0.7]}
+        fadeOut={[0.74, 0.8]}
         spinRate={0.04}
         color="#ebe3d6"
       />

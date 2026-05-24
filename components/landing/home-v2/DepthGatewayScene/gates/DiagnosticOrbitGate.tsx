@@ -186,17 +186,38 @@ export function DiagnosticOrbitGate() {
     }
     group.visible = true;
 
-    // Visible across passthrough-01 + diagnostic + start of
-    // passthrough-02. Maps stage progress to a 0..1 envelope:
-    //   - 0 before 0.18
-    //   - Ramps 0 → 1 across [0.18, 0.34] (orbits draw in as the
-    //     camera approaches from the previous gate)
-    //   - Holds at 1 across [0.34, 0.55]
-    //   - Fades out across [0.55, 0.68] (gate has passed)
+    // Two-stage emergence so the orbits read as DISTANT signal
+    // first, then a fully landed instrument:
+    //   - 0 before 0.22 — the user is still in the Thoughtform
+    //     fly-through; nothing of the Diagnostic gate is on
+    //     screen.
+    //   - Distant onset across [0.22, 0.36] — orbits appear at
+    //     ~25% of their full opacity (faint, far-away signal).
+    //     Combined with the gate's farther world Z (park at
+    //     0.47), the rings perspective-scale up as the camera
+    //     approaches, so the eye reads "an instrument coming
+    //     into view at distance" rather than a fade-in pop.
+    //   - Approach across [0.36, 0.50] — opacity ramps up to
+    //     full as the camera closes the remaining travel.
+    //   - Hold at 1 across [0.50, 0.58] (parked gate centred).
+    //   - Fade across [0.58, 0.70] as the gate passes behind.
+    //
+    // Window edges align with BEAT_WINDOWS:
+    //   passthrough-01 0.16–0.40, diagnostic 0.40–0.55,
+    //   passthrough-02 0.55–0.72.
+    const DISTANT_CEILING = 0.25;
     let opacity = 0;
-    if (progress > 0.18 && progress < 0.34) opacity = (progress - 0.18) / 0.16;
-    else if (progress >= 0.34 && progress <= 0.55) opacity = 1;
-    else if (progress > 0.55 && progress < 0.68) opacity = 1 - (progress - 0.55) / 0.13;
+    if (progress > 0.22 && progress < 0.36) {
+      // Linear ramp 0 → DISTANT_CEILING.
+      opacity = ((progress - 0.22) / 0.14) * DISTANT_CEILING;
+    } else if (progress >= 0.36 && progress < 0.5) {
+      // Linear ramp DISTANT_CEILING → 1.
+      opacity = DISTANT_CEILING + ((progress - 0.36) / 0.14) * (1 - DISTANT_CEILING);
+    } else if (progress >= 0.5 && progress <= 0.58) {
+      opacity = 1;
+    } else if (progress > 0.58 && progress < 0.7) {
+      opacity = 1 - (progress - 0.58) / 0.12;
+    }
 
     for (let i = 0; i < orbitMats.length; i++) {
       const m = orbitMats[i];
@@ -205,7 +226,12 @@ export function DiagnosticOrbitGate() {
     }
     ghostMats[0].opacity = opacity * 0.18;
     ghostMats[1].opacity = opacity * 0.13;
-    pipMat.opacity = opacity * 0.95;
+    // Pips need a slightly different envelope: at distance they
+    // should NOT show as bright points (they'd read as dust),
+    // so they only start appearing during the approach phase
+    // after the rings have begun to resolve.
+    const pipOpacity = progress > 0.36 ? Math.max(0, opacity - DISTANT_CEILING * 0.5) : 0;
+    pipMat.opacity = pipOpacity * 0.95;
   });
 
   return (

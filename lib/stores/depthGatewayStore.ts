@@ -177,22 +177,40 @@ export function getCorridorEngagement(
  *  These boundaries DEFINE the corridor pacing. Painters lerp
  *  geometry against them; the camera path uses `cameraT` (eased
  *  global progress) directly so the camera dollies CONTINUOUSLY
- *  through the beats and only the diagram geometry parks. */
+ *  through the beats and only the diagram geometry parks.
+ *
+ *  Pacing pass (Thoughtform -> Diagnostics immersion): the
+ *  passthrough-01 window was widened from 14% to 24% of stage
+ *  scroll and the stage itself was lengthened from 300svh to
+ *  360svh (see home-v2.css). Together that roughly doubles the
+ *  physical fly-through distance between the Thoughtform compass
+ *  and the Diagnostic orbital field — the Diagnostic gate parks
+ *  later in the corridor, so its world Z (derived from park
+ *  progress in sceneGeom.ts) sits genuinely farther down the
+ *  camera path. Downstream beats compress slightly but each
+ *  still owns more absolute scroll than before thanks to the
+ *  longer stage. */
 export const BEAT_WINDOWS: { beat: Beat; start: number; end: number }[] = [
-  { beat: "thoughtform", start: 0.0, end: 0.18 },
-  { beat: "passthrough-01", start: 0.18, end: 0.32 },
-  { beat: "diagnostic", start: 0.32, end: 0.5 },
-  { beat: "passthrough-02", start: 0.5, end: 0.7 },
-  { beat: "intelligence", start: 0.7, end: 1.0 },
+  { beat: "thoughtform", start: 0.0, end: 0.16 },
+  { beat: "passthrough-01", start: 0.16, end: 0.4 },
+  { beat: "diagnostic", start: 0.4, end: 0.55 },
+  { beat: "passthrough-02", start: 0.55, end: 0.72 },
+  { beat: "intelligence", start: 0.72, end: 1.0 },
 ];
 
 /** Park centres for each "parked" beat (used by the projected
  *  brandmark to know when it is at rest). The passthrough beats
- *  intentionally do not appear here. */
+ *  intentionally do not appear here.
+ *
+ *  Diagnostic park pushed from 0.41 -> 0.47 so the orbital field
+ *  sits well past the widened passthrough-01 — combined with the
+ *  later beat boundary, this means the Diagnostic gate's solved
+ *  world Z (see sceneGeom.ts gateZAtParkProgress) is several
+ *  world units farther from camera-start than before. */
 export const BEAT_PARK_CENTRES: Partial<Record<Beat, number>> = {
-  thoughtform: 0.09,
-  diagnostic: 0.41,
-  intelligence: 0.88,
+  thoughtform: 0.08,
+  diagnostic: 0.47,
+  intelligence: 0.86,
 };
 
 /** Resolve which beat a global progress value sits in, plus the

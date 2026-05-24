@@ -177,16 +177,18 @@ export function InterstitialDiagramGate() {
 
     // Visible across late diagnostic + passthrough-02 + a sliver of
     // intelligence. The gate is the "we are travelling through a
-    // gateway" beat — it should bloom in around progress 0.50, peak
-    // around 0.62, and fade once the camera has passed it.
-    //   - 0 before 0.50
-    //   - Ramps 0 → 1 across [0.50, 0.60]
-    //   - Holds at 1 across [0.60, 0.66]
-    //   - Fades 1 → 0 across [0.66, 0.76]
+    // gateway" beat — it should bloom in around progress 0.55, peak
+    // around the interstitial park (0.63), and fade once the camera
+    // has passed it. Windows align with BEAT_WINDOWS: diagnostic
+    // 0.40–0.55, passthrough-02 0.55–0.72, intelligence 0.72–1.00.
+    //   - 0 before 0.55
+    //   - Ramps 0 → 1 across [0.55, 0.62]
+    //   - Holds at 1 across [0.62, 0.68]
+    //   - Fades 1 → 0 across [0.68, 0.78]
     let opacity = 0;
-    if (progress > 0.5 && progress < 0.6) opacity = (progress - 0.5) / 0.1;
-    else if (progress >= 0.6 && progress <= 0.66) opacity = 1;
-    else if (progress > 0.66 && progress < 0.76) opacity = 1 - (progress - 0.66) / 0.1;
+    if (progress > 0.55 && progress < 0.62) opacity = (progress - 0.55) / 0.07;
+    else if (progress >= 0.62 && progress <= 0.68) opacity = 1;
+    else if (progress > 0.68 && progress < 0.78) opacity = 1 - (progress - 0.68) / 0.1;
 
     armatureMat.opacity = opacity * 0.5;
     midRingMat.opacity = opacity * 0.45;

@@ -48,9 +48,13 @@
 .home-v2-stage {
   position: relative;
   width: 100%;
-  /* 300svh = the corridor scroll length. Each beat covers a
-     fraction of this — see BEAT_WINDOWS in depthGatewayStore.ts. */
-  height: 300svh;
+  /* 360svh = the corridor scroll length. Each beat covers a
+     fraction of this — see BEAT_WINDOWS in depthGatewayStore.ts.
+     Bumped from 300svh as part of the Thoughtform -> Diagnostics
+     immersion pass so the widened `passthrough-01` window (now
+     ~24% of scroll, was ~14%) translates to roughly 2x the
+     physical fly-through distance between the first two gates. */
+  height: 360svh;
   background: var(--void, #050403);
   z-index: 2;
   isolation: isolate;
