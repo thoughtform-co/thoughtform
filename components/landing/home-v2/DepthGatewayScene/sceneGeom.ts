@@ -358,6 +358,38 @@ export function getThoughtformCenterOffsetX(progress: number): number {
   return -STATION_THOUGHTFORM.position[0] * t;
 }
 
+/** "Gateway boot-up" envelope (0..1) used by painters that want to
+ *  intensify subtly the moment the Thoughtform composition centres.
+ *  Read as: the gateway is powering on as the brandmark + diagrams
+ *  slide into the optical axis, briefly holds at full as the parked
+ *  composition reads, then gently relaxes as the camera starts to
+ *  push down the corridor.
+ *
+ *  Phases (mirrored to the Thoughtform pan window + ring flythrough
+ *  windows already in this file):
+ *
+ *  - Pre-boot (progress ≤ 0.04): 0 — the visitor hasn't reached the
+ *    section yet.
+ *  - Ramp-up (0.04 → 0.16): 0 → 1 — runs alongside the centering pan
+ *    (`THOUGHTFORM_PAN_START` ≈ 0.10, `THOUGHTFORM_PAN_END` = 0.16)
+ *    so the lighting visibly powers on as the composition centres.
+ *  - Hold (0.16 → 0.24): 1 — the gateway sits fully lit just after
+ *    the pan completes, before the camera Z dolly is well underway.
+ *  - Relax (0.24 → 0.42): 1 → 0 — fades as the ring flythrough
+ *    starts and the camera moves into passthrough-01.
+ *
+ *  Used by `StaticStarfield`, `ThoughtformAtmosphere` (boot-glow
+ *  disk + atmosphere), and `ThoughtformCompassGate` (small alpha
+ *  boost on the linework) — kept as ONE function so the lighting
+ *  beat is unified across painters. */
+export function getThoughtformBootEnvelope(progress: number): number {
+  if (progress <= 0.04) return 0;
+  if (progress <= 0.16) return smoothstep(0.04, 0.16, progress);
+  if (progress <= 0.24) return 1;
+  if (progress <= 0.42) return 1 - smoothstep(0.24, 0.42, progress);
+  return 0;
+}
+
 // ── Thoughtform compass flythrough ───────────────────────────────
 
 /** Staggered flythrough windows per compass ring — **inner-first

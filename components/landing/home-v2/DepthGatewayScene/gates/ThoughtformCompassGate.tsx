@@ -8,9 +8,17 @@ import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import {
   STATION_THOUGHTFORM,
   depthOpacityForWorldPosition,
+  getThoughtformBootEnvelope,
   getThoughtformCenterOffsetX,
   getThoughtformRingFlythrough,
 } from "../sceneGeom";
+
+/** Maximum additive boost to compass linework alphas while the
+ *  Thoughtform boot envelope is at full. Kept small (≤ 0.18) so the
+ *  rings + bearings read brighter at the parked beat without
+ *  thickening any linework — pairs with the `ThoughtformAtmosphere`
+ *  boot-glow disk and the `StaticStarfield` boot lift. */
+const COMPASS_BOOT_BOOST = 0.18;
 
 /**
  * ThoughtformCompassGate — the v7 sigil compass rendered as a
@@ -447,6 +455,17 @@ export function ThoughtformCompassGate() {
     // same transform the user sees this frame.
     group.position.x = STATION_THOUGHTFORM.position[0] + getThoughtformCenterOffsetX(progress);
 
+    // Boot envelope — runs alongside the centering pan and the
+    // first beat of the parked composition. Painters in this gate
+    // use it to add a small additive alpha boost to the rings +
+    // supporting linework so the compass reads CLEARER at arrival
+    // without any linework actually getting thicker. The atmosphere
+    // glow disk + starfield lift in the surrounding components are
+    // driven from the same envelope, so the whole gateway powers
+    // on as one beat.
+    const boot = getThoughtformBootEnvelope(progress);
+    const bootBoost = 1 + boot * COMPASS_BOOT_BOOST;
+
     // Staggered ring flythrough — each ring rides its own [start, end]
     // window in `FLYTHROUGH_WINDOWS`. Opacity is now derived from
     // camera-space depth, Star Atlas-style: the rings persist as
@@ -463,7 +482,7 @@ export function ThoughtformCompassGate() {
         [group.position.x, STATION_THOUGHTFORM.position[1], STATION_THOUGHTFORM.position[2] + dz],
         COMPASS_DEPTH_WINDOW
       );
-      mat.opacity = depthOpacity * base;
+      mat.opacity = Math.min(1, depthOpacity * base * bootBoost);
     }
 
     // Bearings + ticks + atmosphere dots + phase markers all ride
@@ -485,19 +504,19 @@ export function ThoughtformCompassGate() {
       ],
       COMPASS_DEPTH_WINDOW
     );
-    bearingsMat.opacity = supportingDepthOpacity * 0.58;
-    orbitDot1Mat.opacity = supportingDepthOpacity * ORBIT_DOT_1.opacity;
-    orbitDot2Mat.opacity = supportingDepthOpacity * ORBIT_DOT_2.opacity;
+    bearingsMat.opacity = Math.min(1, supportingDepthOpacity * 0.58 * bootBoost);
+    orbitDot1Mat.opacity = Math.min(1, supportingDepthOpacity * ORBIT_DOT_1.opacity * bootBoost);
+    orbitDot2Mat.opacity = Math.min(1, supportingDepthOpacity * ORBIT_DOT_2.opacity * bootBoost);
 
     // Phase node dots + connector lines ride ring 0's envelope
     // too, so the labelled phase markers travel toward the
     // camera with the outer ring before fading.
     for (let i = 0; i < PHASE_NODES.length; i++) {
       const node = PHASE_NODES[i];
-      phaseDotMats[i].opacity = supportingDepthOpacity * node.dotOpacity;
+      phaseDotMats[i].opacity = Math.min(1, supportingDepthOpacity * node.dotOpacity * bootBoost);
       // Connector lines are slightly stronger than v7's literal
       // dawn-30 so they survive the home-v2 dark stage + grain.
-      connectorMats[i].opacity = supportingDepthOpacity * 0.54;
+      connectorMats[i].opacity = Math.min(1, supportingDepthOpacity * 0.54 * bootBoost);
     }
 
     // Atmosphere orbit dots — independent continuous rotation

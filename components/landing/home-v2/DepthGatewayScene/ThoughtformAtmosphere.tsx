@@ -4,13 +4,19 @@ import { useFrame } from "@react-three/fiber";
 import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { lerp, smoothstep, useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
-import { STATION_THOUGHTFORM, cameraSpaceDepth, depthFocusOpacity } from "./sceneGeom";
+import {
+  STATION_THOUGHTFORM,
+  cameraSpaceDepth,
+  depthFocusOpacity,
+  getThoughtformBootEnvelope,
+  getThoughtformCenterOffsetX,
+} from "./sceneGeom";
 
 /**
  * ThoughtformAtmosphere — scoped atmosphere around the Thoughtform
  * gate, on top of the global `StaticStarfield`.
  *
- * Two layers:
+ * Three layers:
  *
  *   1. Local star cluster — a denser, slightly brighter field of
  *      stars in a thin volume BEHIND the brandmark plane (world Z
@@ -20,13 +26,23 @@ import { STATION_THOUGHTFORM, cameraSpaceDepth, depthFocusOpacity } from "./scen
  *      centering pan and decays via camera-space focus as the
  *      camera dollies past the gate during passthrough-01.
  *
- *   2. Stargate-lock shockwave — a thin gold ring at the gate Z
+ *   2. Boot-up glow disk — a soft warm radial gradient seated
+ *      slightly BEHIND the gate plane that fades up during the
+ *      centering pan and gently relaxes as the camera moves into
+ *      passthrough-01. Reads as "the gateway is powering on"
+ *      lighting — never solid, sits behind the rings + brandmark,
+ *      gives the parked composition a small ambient bath of warm
+ *      light without thickening any existing linework.
+ *
+ *   3. Stargate-lock shockwave — a thin gold ring at the gate Z
  *      that expands outward and dissipates at the pan-completion
  *      boundary (progress ~0.16). Reads as a subtle "the stargate
  *      has locked into view" beat, matching the moment the
- *      compass + brandmark + copy finish centring.
+ *      compass + brandmark + copy finish centring. Pairs with the
+ *      sustained boot glow: shockwave is the punctuation, glow is
+ *      the ambient.
  *
- * Both effects are localised to the Thoughtform beat + early
+ * All effects are localised to the Thoughtform beat + early
  * passthrough-01. They fade out naturally as the camera passes
  * the gate; no progress-only hard cuts.
  */
@@ -150,10 +166,63 @@ function shockwaveState(progress: number): { scale: number; opacity: number } {
   return { scale, opacity };
 }
 
+// ── Boot-up glow disk ───────────────────────────────────────────
+
+/** Half-extent of the glow plane (world units). Set wide enough
+ *  that the warm bath extends beyond the outer compass ring
+ *  (r ≈ 0.75) without feeling like a hard disk edge — the radial
+ *  falloff handles the visual softness. */
+const BOOT_GLOW_HALF = 3.6;
+
+/** Peak alpha of the glow at full boot. Deliberately low so the
+ *  disk reads as ambient lighting, never as a solid coloured
+ *  shape competing with the brandmark. */
+const BOOT_GLOW_PEAK_OPACITY = 0.18;
+
+/** Z offset behind the gate plane so the glow composites BEHIND
+ *  the compass rings + brandmark — the rings read against it, the
+ *  brandmark sits on top of it. */
+const BOOT_GLOW_Z_BEHIND_GATE = -0.45;
+
+const BOOT_GLOW_INNER_COLOR = new THREE.Color("#caa554");
+const BOOT_GLOW_OUTER_COLOR = new THREE.Color(0.42, 0.3, 0.16);
+
+const bootGlowVertexShader = /* glsl */ `
+varying vec2 vUv;
+void main() {
+  vUv = uv;
+  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+}
+`;
+
+const bootGlowFragmentShader = /* glsl */ `
+uniform vec3 uInnerColor;
+uniform vec3 uOuterColor;
+uniform float uOpacity;
+uniform float uBreath;
+varying vec2 vUv;
+void main() {
+  // Radial distance from disk centre (0 at centre, 1 at edge).
+  vec2 centred = vUv - 0.5;
+  float d = length(centred) * 2.0;
+  if (d >= 1.0) discard;
+  // Two-stage falloff: bright warm core, soft cool halo. Reads as
+  // a luminous source (the gateway itself) bathing the surrounding
+  // void in light, rather than a flat tinted disk.
+  float core = smoothstep(0.55, 0.0, d);
+  float halo = smoothstep(1.0, 0.18, d);
+  vec3 color = mix(uOuterColor, uInnerColor, core);
+  float alpha = mix(halo * 0.45, 1.0, core) * uOpacity * uBreath;
+  if (alpha < 0.005) discard;
+  gl_FragColor = vec4(color, alpha);
+}
+`;
+
 // ── Component ────────────────────────────────────────────────────
 
 export function ThoughtformAtmosphere() {
   const starsRef = useRef<THREE.Points>(null);
+  const bootGlowRef = useRef<THREE.Mesh>(null);
   const shockwaveRef = useRef<THREE.LineLoop>(null);
 
   // Star geometry — randomly distributed inside the cluster volume.
@@ -209,25 +278,61 @@ export function ThoughtformAtmosphere() {
     });
   }, []);
 
+  // Boot-up glow disk — a single quad with a radial-gradient shader.
+  // Sized larger than the compass so the warm bath extends beyond
+  // the outer ring; the radial falloff in the shader handles the
+  // soft edge so the disk never reads as a hard shape.
+  const bootGlowGeometry = useMemo(
+    () => new THREE.PlaneGeometry(BOOT_GLOW_HALF * 2, BOOT_GLOW_HALF * 2, 1, 1),
+    []
+  );
+
+  const bootGlowMaterial = useMemo(() => {
+    return new THREE.ShaderMaterial({
+      vertexShader: bootGlowVertexShader,
+      fragmentShader: bootGlowFragmentShader,
+      uniforms: {
+        uInnerColor: { value: BOOT_GLOW_INNER_COLOR.clone() },
+        uOuterColor: { value: BOOT_GLOW_OUTER_COLOR.clone() },
+        uOpacity: { value: 0 },
+        uBreath: { value: 1 },
+      },
+      transparent: true,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+    });
+  }, []);
+
   useEffect(() => {
     return () => {
       starGeometry.dispose();
       starMaterial.dispose();
       shockwaveGeometry.dispose();
       shockwaveMaterial.dispose();
+      bootGlowGeometry.dispose();
+      bootGlowMaterial.dispose();
     };
-  }, [starGeometry, starMaterial, shockwaveGeometry, shockwaveMaterial]);
+  }, [
+    starGeometry,
+    starMaterial,
+    shockwaveGeometry,
+    shockwaveMaterial,
+    bootGlowGeometry,
+    bootGlowMaterial,
+  ]);
 
   useFrame((state) => {
     const stars = starsRef.current;
     const shockwave = shockwaveRef.current;
-    if (!stars || !shockwave) return;
+    const bootGlow = bootGlowRef.current;
+    if (!stars || !shockwave || !bootGlow) return;
 
     const { paintProgress, active, armed } = useDepthGatewayStore.getState().transform;
     const painting = active || armed;
     if (!painting) {
       stars.visible = false;
       shockwave.visible = false;
+      bootGlow.visible = false;
       return;
     }
 
@@ -256,6 +361,8 @@ export function ThoughtformAtmosphere() {
     // camera-space depth gate so it can never show through after
     // the camera has passed the gate plane.
     const sw = shockwaveState(paintProgress);
+    const shockwaveX = STATION_THOUGHTFORM.position[0] + getThoughtformCenterOffsetX(paintProgress);
+    shockwave.position.x = shockwaveX;
     if (sw.opacity < 0.005 || depth < 0.4) {
       shockwave.visible = false;
     } else {
@@ -264,10 +371,44 @@ export function ThoughtformAtmosphere() {
       shockwave.scale.set(scale, scale, 1);
       shockwaveMaterial.opacity = sw.opacity;
     }
+
+    // Boot-up glow disk — ambient warm lighting that ramps up as
+    // the Thoughtform composition centres, holds briefly, then
+    // relaxes as the camera moves into passthrough-01. The disk
+    // tracks the centering pan (same X offset as the compass +
+    // brandmark + copy) so the light source stays under the
+    // gateway, not anchored off-axis. A gentle breath modulates
+    // alpha by ±4 % over ~7 s so the lighting feels alive without
+    // distracting. Camera-space depth gates the whole thing off
+    // once the camera passes the gate plane.
+    const boot = getThoughtformBootEnvelope(paintProgress);
+    const bootDepthAlpha = depthFocusOpacity(depth, STAR_DEPTH_WINDOW);
+    const glowAlpha = boot * bootDepthAlpha * BOOT_GLOW_PEAK_OPACITY;
+    if (glowAlpha < 0.003) {
+      bootGlow.visible = false;
+    } else {
+      bootGlow.visible = true;
+      bootGlow.position.x = shockwaveX;
+      bootGlow.position.z = STATION_THOUGHTFORM.position[2] + BOOT_GLOW_Z_BEHIND_GATE;
+      const breath = 1 + Math.sin(state.clock.elapsedTime * 0.9) * 0.04;
+      bootGlowMaterial.uniforms.uBreath.value = breath;
+      bootGlowMaterial.uniforms.uOpacity.value = glowAlpha;
+    }
   });
 
   return (
     <group>
+      {/* Boot-up glow disk — paints BEFORE the local star cluster
+          so the warm bath sits behind the stars too. The mesh's
+          additive blending means the stars in front of it pick up
+          a slight warm tint at peak boot, reinforcing the lit-up
+          atmosphere read. */}
+      <mesh
+        ref={bootGlowRef}
+        geometry={bootGlowGeometry}
+        material={bootGlowMaterial}
+        visible={false}
+      />
       <points
         ref={starsRef}
         geometry={starGeometry}
@@ -278,7 +419,7 @@ export function ThoughtformAtmosphere() {
         ref={shockwaveRef}
         geometry={shockwaveGeometry}
         material={shockwaveMaterial}
-        position={[0, 0, STATION_THOUGHTFORM.position[2] + 0.05]}
+        position={[STATION_THOUGHTFORM.position[0], 0, STATION_THOUGHTFORM.position[2] + 0.05]}
         visible={false}
       />
     </group>
