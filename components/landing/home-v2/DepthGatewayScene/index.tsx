@@ -9,6 +9,7 @@ import { InterGateCorridor } from "./InterGateCorridor";
 import { ScrollStreaks } from "./ScrollStreaks";
 import { StaticStarfield } from "./StaticStarfield";
 import { ThoughtformAtmosphere } from "./ThoughtformAtmosphere";
+import { WormholeTunnel } from "./WormholeTunnel";
 import { CAMERA_FOV, CAMERA_START, getCameraLookAt } from "./sceneGeom";
 
 /**
@@ -31,6 +32,14 @@ import { CAMERA_FOV, CAMERA_START, getCameraLookAt } from "./sceneGeom";
  *                             gate groups — the
  *                             "spaceship-flying-through-space"
  *                             atmosphere between gates.
+ *   - WormholeTunnel        : wide, cool near-camera star field
+ *                             that frames the brandmark as a
+ *                             luminous tunnel. Faintly visible at
+ *                             rest (ambient tunnel structure),
+ *                             intensifies with scroll velocity
+ *                             (parallax momentum cue). Pairs with
+ *                             ScrollStreaks: tunnel = ambient
+ *                             frame, streaks = active flash.
  *   - ScrollStreaks         : near-camera streaks driven by scroll
  *                             velocity (invisible when idle).
  *   - GatewayWorld          : the four world-rigid gate groups
@@ -99,6 +108,7 @@ export function DepthGatewayScene() {
       <StaticStarfield />
       <ThoughtformAtmosphere />
       <InterGateCorridor />
+      <WormholeTunnel />
       <ScrollStreaks />
       <GatewayWorld />
     </Canvas>
