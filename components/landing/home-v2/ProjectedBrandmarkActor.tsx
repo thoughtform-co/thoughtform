@@ -7,7 +7,7 @@ import {
   getBrandmarkWorldHalfExtent,
   getBrandmarkWorldPosition,
   getCameraRoll,
-  getSubstrateMorph,
+  getIntelligenceSubstratePresence,
 } from "./DepthGatewayScene/sceneGeom";
 import { type WorldAnchor, useWorldDomTracker } from "./hooks/useWorldDomTracker";
 
@@ -94,7 +94,7 @@ export function ProjectedBrandmarkActor() {
           if (!inner) return;
 
           const { transform, camera, vw, screenX, screenY, worldPos } = ctx;
-          const { paintProgress, beat, gateProgress } = transform;
+          const { paintProgress, beat } = transform;
           // Drive geometry off `paintProgress` so during the armed
           // pre-arm pass the mark is sized + placed at parked
           // Thoughtform. We now paint at FULL opacity during armed
@@ -104,14 +104,20 @@ export function ProjectedBrandmarkActor() {
           // stage finishes pinning.
           const progress = paintProgress;
 
-          // Substrate cross-fade: rather than instantly hiding the
-          // DOM brandmark when the substrate cloud appears, we
-          // smoothly fade it out across an early-morph window
-          // [0, SUBSTRATE_CROSSFADE_END]. Combined with the cloud's
-          // matched brandmark-form size, the handoff reads as a
-          // continuous bloom from the DOM mark into the particle
-          // substrate rather than a hard cut.
-          const morph = beat === "intelligence" ? getSubstrateMorph(gateProgress) : 0;
+          // Substrate cross-fade: drive the DOM brandmark's exit
+          // from the SAME `morph` channel used by the substrate
+          // cloud (`getIntelligenceSubstratePresence`). The cloud
+          // emerges faintly in brandmark form during late
+          // `passthrough-02` (depth-driven approach glow, see
+          // ADR-018 2026-05-24 revision), but the DOM mark only
+          // begins to fade once the morph itself engages — i.e.,
+          // once the cloud is actively losing brandmark silhouette
+          // for the Fibonacci sphere. This keeps the DOM lead
+          // brandmark visible across the approach (so the user
+          // still has an artifact to chase into the corridor) and
+          // hands off to the particles only when the substrate
+          // cloud is structurally taking over the silhouette.
+          const { morph } = getIntelligenceSubstratePresence(transform);
           const substrateFadeOut =
             morph <= 0
               ? 1

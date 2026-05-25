@@ -434,41 +434,61 @@ export const BRANDMARK_ANCHOR_INTELLIGENCE: [number, number, number] = [
   STATION_INTELLIGENCE.position[2] + 0.1,
 ];
 
-/** Camera-relative lead point for the Diagnostic -> Intelligence
- *  transit. The brandmark becomes a lead artifact several world
- *  units ahead of the camera; the camera subtly looks toward this
- *  point (see `getCameraLookAt`) while the substrate sphere owns
- *  the later scale-up moment.
+/** Camera-relative lead point for the brandmark across the
+ *  Diagnostic-park → Intelligence-arrival arc. The brandmark is a
+ *  lead artifact ahead of the camera; the camera subtly looks
+ *  toward this point (see `getCameraLookAt`) while the substrate
+ *  sphere owns the later scale-up moment.
  *
- *  Lead distance starts at the parked-Diagnostic camera-to-anchor
- *  distance (so the brandmark exits the Diagnostic beat seamlessly
- *  at the same world Z it was parked at) and grows continuously to
- *  a full lead. This guarantees the camera-to-brandmark distance
- *  is MONOTONICALLY NON-DECREASING during the transit — the
- *  previous version lerped from the fixed Diagnostic anchor toward
- *  a far rawLead point, but the camera dollied forward faster than
- *  that lerp, briefly catching up to the brandmark and creating a
- *  subtle "bob toward camera" feel.
+ *  Lead distance is a two-phase envelope:
  *
- *  Landing: once the rawLead Z reaches the Intelligence anchor's
- *  world Z, the brandmark FREEZES at that anchor while the camera
- *  continues approaching. No late lerp that would pull the
- *  brandmark BACK toward the camera in the last 8% of the transit.
- *  The substrate-cut takes over the visible role from the Intel
- *  beat onward, so this final approach reads as "camera dollies
- *  into the substrate" rather than "brandmark comes back at us". */
+ *  - **Park hold (p < 0.52)** — held at `PARK_LEAD` so the brandmark
+ *    sits at the same apparent size as the camera dollies through
+ *    the Diagnostic gate. Because `PARK_LEAD` matches the camera-
+ *    to-Diagnostic-anchor distance at the park CENTRE (p ≈ 0.47),
+ *    the brandmark coincides with the orbital field plane at the
+ *    centre of the park: it leads the camera into the gate, sits
+ *    on the gate plane at park centre, and drifts slightly behind
+ *    the gate as the camera exits the park. The PARKED brandmark
+ *    therefore recedes in lock-step with the camera (constant
+ *    apparent size) instead of growing as a world-rigid anchor that
+ *    the camera approached. This removes the "comes closer to the
+ *    camera before receding" jank where the brandmark used to
+ *    appear to grow through the Diagnostic park then snap to a
+ *    smaller lead-mode size at p=0.52.
+ *
+ *  - **Transit pull (p = 0.52 → 0.76)** — lead grows from
+ *    `PARK_LEAD` to `FULL_LEAD` so the brandmark visibly drifts
+ *    deeper into the corridor while the camera follows. Apparent
+ *    size shrinks continuously (distance growth + a small world
+ *    half-extent ramp in `getBrandmarkWorldHalfExtent`) — the
+ *    brandmark is heading for the Intelligence anchor.
+ *
+ *  - **Landing (p > ~0.74)** — once `rawLead.z` would carry past
+ *    the Intelligence anchor's world Z, the brandmark FREEZES at
+ *    that anchor while the camera continues to approach. The
+ *    substrate-cut takes over the visible role from the
+ *    intelligence beat onward, so the final approach reads as
+ *    "camera dollies into the substrate" rather than "brandmark
+ *    comes back at us". */
 export function getBrandmarkLeadWorldPosition(progress: number): [number, number, number] {
   const cam = getCameraPosition(progress);
   const forward = getCameraForward(progress);
 
-  /** Camera-to-brandmark distance at the moment transit begins
-   *  (progress ≈ 0.52, end of the Diagnostic park hold). This is
-   *  derived from the camera path + the Diagnostic anchor Z so the
-   *  lead distance is continuous across the transition. */
-  const INITIAL_LEAD = 3.46;
+  /** Held lead distance across the Diagnostic-park beat. Equals the
+   *  camera-to-Diagnostic-anchor distance at the park CENTRE
+   *  (p ≈ 0.47), where camera-to-gate = `GATE_PARK_DISTANCE` (4.5)
+   *  and the anchor sits +0.1 in front of the gate plane. Holding
+   *  the lead at this value through the entire park keeps the
+   *  brandmark's APPARENT SIZE stable as the camera dollies
+   *  through — and makes the brandmark coincide with the orbital
+   *  field plane exactly at the park centre, so the parked
+   *  composition still reads as "brandmark at the centre of the
+   *  Diagnostic gate". */
+  const PARK_LEAD = GATE_PARK_DISTANCE - 0.1;
   const FULL_LEAD = 7.2;
   const pullT = smoothstep(0.52, 0.76, progress);
-  const leadDistance = lerp(INITIAL_LEAD, FULL_LEAD, pullT);
+  const leadDistance = lerp(PARK_LEAD, FULL_LEAD, pullT);
 
   const rawLead: [number, number, number] = [
     cam[0] + forward[0] * leadDistance,
@@ -489,7 +509,20 @@ export function getBrandmarkLeadWorldPosition(progress: number): [number, number
 
 /** Resolve the brandmark world position for the current GLOBAL
  *  progress. Smoothly interpolates between the three parked anchors
- *  across the beat windows so the mark TRAVELS through world space. */
+ *  across the beat windows so the mark TRAVELS through world space.
+ *
+ *  After the 2026-05-25 recede-continuity pass, the brandmark is in
+ *  LEAD MODE from the end of the Thoughtform → Diagnostic arrival
+ *  lerp (p ≈ 0.44) through the start of the Intelligence park
+ *  (p ≈ 0.86). The previous world-rigid "parked at Diagnostic anchor"
+ *  phase (p = 0.44 → 0.52) made the brandmark visibly grow as the
+ *  camera dollied into the gate and then snap to a smaller size when
+ *  lead mode took over at p=0.52. Replacing it with a held lead
+ *  distance keeps the brandmark's apparent size stable across the
+ *  whole Diagnostic beat — it recedes in lock-step with the camera
+ *  through the park, then visibly drifts deeper as the lead grows
+ *  toward `FULL_LEAD` through passthrough-02. See
+ *  `getBrandmarkLeadWorldPosition` for the two-phase envelope. */
 export function getBrandmarkWorldPosition(progress: number): [number, number, number] {
   // Beat windows (mirror BEAT_WINDOWS):
   //   thoughtform     : [0.00, 0.16]
@@ -497,14 +530,6 @@ export function getBrandmarkWorldPosition(progress: number): [number, number, nu
   //   diagnostic      : [0.40, 0.55]
   //   passthrough-02  : [0.55, 0.72]
   //   intelligence    : [0.72, 1.00]
-  //
-  // Brandmark stays parked at thoughtform across thoughtform + a
-  // short slice of passthrough-01 (the camera Z dolly begins to
-  // pull away from a stable mark), then travels across the bulk
-  // of passthrough-01 into the start of the diagnostic park,
-  // holds at the Diagnostic anchor during the diagnostic beat,
-  // then travels across passthrough-02 + early intelligence to
-  // the intelligence anchor.
 
   // Apply the Thoughtform centering pan to the THOUGHTFORM-side
   // anchor X each frame so the brandmark slides laterally with the
@@ -512,8 +537,8 @@ export function getBrandmarkWorldPosition(progress: number): [number, number, nu
   // envelope below kicks in (>= 0.20) the offset has fully
   // resolved to -STATION_THOUGHTFORM.position[0], which puts the
   // Thoughtform anchor on the world axis — matching the Diagnostic
-  // anchor's X — so the X-lerp is effectively a no-op and Y/Z do
-  // all the travel work, as designed.
+  // lead position's X — so the X-lerp is effectively a no-op and
+  // Y/Z do all the travel work, as designed.
   const tfOffsetX = getThoughtformCenterOffsetX(progress);
   const tfX = BRANDMARK_ANCHOR_THOUGHTFORM[0] + tfOffsetX;
 
@@ -521,14 +546,27 @@ export function getBrandmarkWorldPosition(progress: number): [number, number, nu
     return [tfX, BRANDMARK_ANCHOR_THOUGHTFORM[1], BRANDMARK_ANCHOR_THOUGHTFORM[2]];
   }
   if (progress <= 0.44) {
+    // Arrival lerp lands at the LEAD position at p=0.44, not the
+    // static Diagnostic anchor, so the lerp → lead handoff is
+    // C0-continuous and the brandmark transitions seamlessly into
+    // the held-lead park. The lead-at-0.44 position sits slightly
+    // in front of the Diagnostic gate plane; by the park centre
+    // (p ≈ 0.47) the held lead crosses the gate plane and the
+    // brandmark coincides exactly with the orbital field centre.
     const t = smoothstep(0.2, 0.44, progress);
+    const diagLeadStart = getBrandmarkLeadWorldPosition(0.44);
     return [
-      lerp(tfX, BRANDMARK_ANCHOR_DIAGNOSTIC[0], t),
-      lerp(BRANDMARK_ANCHOR_THOUGHTFORM[1], BRANDMARK_ANCHOR_DIAGNOSTIC[1], t),
-      lerp(BRANDMARK_ANCHOR_THOUGHTFORM[2], BRANDMARK_ANCHOR_DIAGNOSTIC[2], t),
+      lerp(tfX, diagLeadStart[0], t),
+      lerp(BRANDMARK_ANCHOR_THOUGHTFORM[1], diagLeadStart[1], t),
+      lerp(BRANDMARK_ANCHOR_THOUGHTFORM[2], diagLeadStart[2], t),
     ];
   }
-  if (progress <= 0.52) return BRANDMARK_ANCHOR_DIAGNOSTIC;
+  // Lead mode owns p=0.44 through p=0.86 (held during the
+  // Diagnostic park, growing across passthrough-02). The legacy
+  // `if (progress <= 0.52) return BRANDMARK_ANCHOR_DIAGNOSTIC`
+  // park hold is intentionally gone — it grew the brandmark as the
+  // camera dollied into the gate and snapped to a smaller size
+  // when lead mode kicked in at p=0.52.
   if (progress <= 0.86) return getBrandmarkLeadWorldPosition(progress);
   return BRANDMARK_ANCHOR_INTELLIGENCE;
 }
@@ -625,6 +663,18 @@ const ORBIT_SVG_TO_WORLD = 1 / 240;
  *  text that just shrinks slightly via perspective alone. */
 function diagnosticApproachDepthOffset(progress: number): number {
   return lerp(-6, 0, smoothstep(0.18, 0.42, progress));
+}
+
+/** Depth offset (world units, negative = deeper behind parked Z)
+ *  applied to the Intelligence head copy and side-body labels during
+ *  the passthrough-02 approach. Mirror of `diagnosticApproachDepthOffset`:
+ *  labels start ~5.5 units behind their parked Z while the camera is
+ *  still leaving Diagnostic, then converge to the parked Intelligence
+ *  plane by mid-intelligence so the text reads as a DISTANT readout
+ *  approaching the substrate rather than a panel that pops to full
+ *  size on the beat boundary. */
+function intelligenceApproachDepthOffset(progress: number): number {
+  return lerp(-5.5, 0, smoothstep(0.55, 0.78, progress));
 }
 
 function diagnosticLabelWorldPosition(pipXSvg: number, pipYSvg: number): CopyAnchorPosition {
@@ -786,30 +836,71 @@ export const COPY_ANCHORS: readonly CopyAnchor[] = [
   })),
 
   // ── Intelligence ────────────────────────────────────────────────
-  // Heading block above the substrate sphere.
+  // Heading block above the substrate sphere. Mirrors the Diagnostic
+  // approach pattern: an extra Z offset
+  // (`intelligenceApproachDepthOffset`) parks the headline ~5.5 world
+  // units BEHIND the substrate during late passthrough-02, then
+  // converges to the parked plane by mid-intelligence. Combined with
+  // `perspectiveScale` (min 0.22), the headline reads as a distant
+  // readout flying toward the substrate, not a panel that pops to
+  // full size on the beat boundary. The fade window is widened
+  // (0.18) so the opacity ramp itself is gentler — visible from
+  // early passthrough-02, full by parked Intelligence.
   {
     id: "intelligence.headCopy",
-    position: [
+    position: (transform) => [
       STATION_INTELLIGENCE.position[0],
       STATION_INTELLIGENCE.position[1] + 0.85,
-      STATION_INTELLIGENCE.position[2] + 0.1,
+      STATION_INTELLIGENCE.position[2] +
+        0.1 +
+        intelligenceApproachDepthOffset(transform.paintProgress),
     ],
-    visibilityBeats: ["intelligence", "passthrough-02"],
-    fadeFrac: 0.08,
+    visibilityBeats: ["passthrough-02", "intelligence"],
+    fadeFrac: 0.18,
+    perspectiveScale: {
+      referenceDistance: 4.5,
+      min: 0.22,
+      max: 1.15,
+    },
   },
   // L/R body labels — Trusted Sources / Headless Surfaces — sit
-  // above each side body.
+  // above each side body. Visibility now extends back into
+  // passthrough-02 with the same depth approach + perspective scale
+  // as the headline, so the labels track their bodies as the camera
+  // closes the distance instead of popping on the beat boundary.
   {
     id: "intelligence.leftLabel",
-    position: [-2.2, 0.55, STATION_INTELLIGENCE.position[2] + 0.2],
-    visibilityBeats: ["intelligence"],
-    fadeFrac: 0.12,
+    position: (transform) => [
+      -2.2,
+      0.55,
+      STATION_INTELLIGENCE.position[2] +
+        0.2 +
+        intelligenceApproachDepthOffset(transform.paintProgress),
+    ],
+    visibilityBeats: ["passthrough-02", "intelligence"],
+    fadeFrac: 0.15,
+    perspectiveScale: {
+      referenceDistance: 4.5,
+      min: 0.25,
+      max: 1.2,
+    },
   },
   {
     id: "intelligence.rightLabel",
-    position: [2.2, 0.55, STATION_INTELLIGENCE.position[2] + 0.2],
-    visibilityBeats: ["intelligence"],
-    fadeFrac: 0.12,
+    position: (transform) => [
+      2.2,
+      0.55,
+      STATION_INTELLIGENCE.position[2] +
+        0.2 +
+        intelligenceApproachDepthOffset(transform.paintProgress),
+    ],
+    visibilityBeats: ["passthrough-02", "intelligence"],
+    fadeFrac: 0.15,
+    perspectiveScale: {
+      referenceDistance: 4.5,
+      min: 0.25,
+      max: 1.2,
+    },
   },
 ];
 
@@ -833,6 +924,69 @@ export function getSubstrateMorph(intelligenceGate: number): number {
   return 1;
 }
 
+// ── Intelligence depth approach (mirrors Diagnostic / Interstitial) ──
+
+/** Depth-focus window for the Intelligence substrate cloud's APPROACH
+ *  envelope. Used to let the substrate cloud emerge gently from depth
+ *  during late passthrough-02 in brandmark form, so the intelligence
+ *  layer doesn't pop on the beat boundary at progress 0.72. */
+export const INTELLIGENCE_APPROACH_DEPTH_WINDOW: DepthFocusWindow = {
+  near: 0.6,
+  nearFade: 1.8,
+  far: 6.2,
+  farFade: 3.4,
+};
+
+/** Depth-focus window for the Intelligence side bodies (Trusted Sources
+ *  / Headless Surfaces). Slightly tighter than the substrate window so
+ *  the bodies settle in after the substrate has begun to register —
+ *  read order stays: substrate centre → constellation flanks. */
+export const INTELLIGENCE_SIDEBODY_DEPTH_WINDOW: DepthFocusWindow = {
+  near: 0.7,
+  nearFade: 1.8,
+  far: 5.2,
+  farFade: 2.6,
+};
+
+/** Combined substrate-cloud presence + morph for the intelligence gate.
+ *
+ *  During late `passthrough-02` the cloud emerges as a faint, brandmark-
+ *  shaped particle bloom in the distance behind the DOM lead brandmark
+ *  (presence ramps up from camera-space depth; morph stays at 0). When
+ *  the intelligence beat begins the morph envelope takes over and the
+ *  cloud blooms into the Fibonacci sphere, then collapses back into the
+ *  brandmark before the corridor exit. Presence is capped during the
+ *  depth-only approach so the cloud reads as a distant readout, not a
+ *  second resolved object competing with the DOM brandmark. */
+export function getIntelligenceSubstratePresence(transform: DepthGatewayTransform): {
+  presence: number;
+  morph: number;
+} {
+  const { paintProgress, beat, gateProgress } = transform;
+
+  if (beat === "intelligence") {
+    const morph = getSubstrateMorph(gateProgress);
+    // Cross-fade in across the early-morph window so the cloud meets
+    // the DOM brandmark fading out (see ProjectedBrandmarkActor).
+    const SUBSTRATE_CROSSFADE_END = 0.2;
+    const fadeIn = Math.min(1, morph / SUBSTRATE_CROSSFADE_END);
+    // Hand off smoothly from the passthrough-02 approach cap so there is
+    // no presence dip at the beat boundary — at gateProgress 0 morph is
+    // 0, fadeIn is 0, but the depth-based approach is at its peak.
+    const depth = cameraSpaceDepth(paintProgress, STATION_INTELLIGENCE.position);
+    const approach = depthFocusOpacity(depth, INTELLIGENCE_APPROACH_DEPTH_WINDOW) * 0.55;
+    return { presence: Math.max(approach, fadeIn), morph };
+  }
+
+  if (beat === "passthrough-02") {
+    const depth = cameraSpaceDepth(paintProgress, STATION_INTELLIGENCE.position);
+    const approach = depthFocusOpacity(depth, INTELLIGENCE_APPROACH_DEPTH_WINDOW);
+    return { presence: approach * 0.55, morph: 0 };
+  }
+
+  return { presence: 0, morph: 0 };
+}
+
 // ── Intelligence side bodies ─────────────────────────────────────
 
 /** Left celestial body — "Trusted Sources". Sits left of the
@@ -854,10 +1008,28 @@ export const SIDE_BODY_SCALE = 1.1;
 
 /** Side body opacity envelope across the intelligence beat (gate-
  *  local 0..1). Bodies appear after the substrate sphere has begun
- *  to morph so the read is: brandmark -> sphere -> constellation. */
+ *  to morph so the read is: brandmark -> sphere -> constellation.
+ *
+ *  Retained for any legacy painter still reading the chamber model;
+ *  new code should call `getIntelligenceSideBodyPresence` instead so
+ *  the bodies emerge from camera-space depth during late
+ *  passthrough-02 rather than popping inside the intelligence beat. */
 export function getSideBodyOpacity(intelligenceGate: number): number {
   if (intelligenceGate <= 0.35) return 0;
   return smoothstep(0.35, 0.85, intelligenceGate);
+}
+
+/** Depth-driven side-body presence (0..1) for the intelligence flanks.
+ *  Reads camera-space depth on the Intelligence station so the bodies
+ *  begin to register during late passthrough-02 (faint, distant) and
+ *  intensify through the intelligence beat. Mirrors the Star Atlas
+ *  "objects emerge from distance" contract that already governs
+ *  Diagnostic and Interstitial geometry on this route. */
+export function getIntelligenceSideBodyPresence(transform: DepthGatewayTransform): number {
+  const { paintProgress, active } = transform;
+  if (!active) return 0;
+  const depth = cameraSpaceDepth(paintProgress, STATION_INTELLIGENCE.position);
+  return depthFocusOpacity(depth, INTELLIGENCE_SIDEBODY_DEPTH_WINDOW);
 }
 
 // ── Helpers ──────────────────────────────────────────────────────

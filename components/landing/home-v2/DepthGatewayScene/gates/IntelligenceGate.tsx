@@ -14,8 +14,8 @@ import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import {
   SIDE_BODY_SCALE,
   STATION_INTELLIGENCE,
-  getSideBodyOpacity,
-  getSubstrateMorph,
+  getIntelligenceSideBodyPresence,
+  getIntelligenceSubstratePresence,
 } from "../sceneGeom";
 import { brandmarkCloudVertex, brandmarkCloudFragment } from "../shaders/brandmarkCloud";
 
@@ -171,19 +171,30 @@ function SubstrateMorphCloud() {
     const group = groupRef.current;
     if (!group) return;
 
-    const { active, beat, gateProgress } = useDepthGatewayStore.getState().transform;
+    const transform = useDepthGatewayStore.getState().transform;
+    const { active } = transform;
 
     material.uniforms.uTime.value = state.clock.elapsedTime;
     material.uniforms.uPixelRatio.value = state.viewport.dpr;
 
-    if (!active || beat !== "intelligence") {
+    if (!active) {
       group.visible = false;
       material.uniforms.uPresence.value = 0;
       return;
     }
 
-    const morph = getSubstrateMorph(gateProgress);
-    if (morph <= 0.001) {
+    // Depth-aware substrate emergence (Star Atlas-style depth focus,
+    // see ADR-018 2026-05-24 revision). `getIntelligenceSubstratePresence`
+    // combines:
+    //   - a capped depth-based approach during late `passthrough-02`
+    //     (cloud emerges from distance in brandmark form, painting
+    //      a faint particle bloom beyond the DOM lead brandmark), and
+    //   - the existing morph envelope during the intelligence beat
+    //     (cloud blooms into Fibonacci sphere, then collapses back).
+    // This removes the beat-boundary pop at progress 0.72 where the
+    // substrate previously appeared instead of emerging from depth.
+    const { presence, morph } = getIntelligenceSubstratePresence(transform);
+    if (presence <= 0.001) {
       group.visible = false;
       material.uniforms.uPresence.value = 0;
       return;
@@ -191,15 +202,7 @@ function SubstrateMorphCloud() {
 
     group.visible = true;
     material.uniforms.uShapeMorph.value = morph;
-    // Cross-fade IN across the early-morph window so the cloud
-    // gracefully meets the DOM brandmark fading OUT (see
-    // ProjectedBrandmarkActor.SUBSTRATE_CROSSFADE_END). With the
-    // cloud's brandmark form now sized to match the DOM mark, this
-    // makes the substrate-cut read as a continuous particle bloom
-    // rather than an instant size jump.
-    const SUBSTRATE_CROSSFADE_END = 0.2;
-    const fadeIn = Math.min(1, morph / SUBSTRATE_CROSSFADE_END);
-    material.uniforms.uPresence.value = fadeIn;
+    material.uniforms.uPresence.value = presence;
   });
 
   if (!geometry) return null;
@@ -255,7 +258,8 @@ function SideBody({ id, localPosition, ringTilt }: SideBodyProps) {
   useFrame((state) => {
     const group = groupRef.current;
     if (!group) return;
-    const { chamberC, active } = useDepthGatewayStore.getState().transform;
+    const transform = useDepthGatewayStore.getState().transform;
+    const { active } = transform;
 
     if (!active) {
       group.visible = false;
@@ -266,7 +270,13 @@ function SideBody({ id, localPosition, ringTilt }: SideBodyProps) {
     const t = state.clock.elapsedTime;
     group.rotation.y = t * 0.03 * (id === "left" ? -1 : 1);
 
-    const opacity = getSideBodyOpacity(chamberC);
+    // Depth-driven side-body presence: the constellation flanks
+    // start to register in late `passthrough-02` as the camera
+    // closes in on the Intelligence station, and resolve fully
+    // through the intelligence beat. Replaces the prior
+    // `chamberC > 0.35` ramp which popped just before the beat
+    // boundary and made the flanks read as a separate UI gesture.
+    const opacity = getIntelligenceSideBodyPresence(transform);
     cloudMat.uniforms.uPresence.value = opacity;
     cloudMat.uniforms.uTime.value = t;
     cloudMat.uniforms.uPixelRatio.value = state.viewport.dpr;
