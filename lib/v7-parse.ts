@@ -63,7 +63,7 @@ function injectStaticHudChildren(html: string): string {
 // Forked routes (e.g. the Claude-workshop page) reuse this by pointing at a
 // different HTML file with the same structural contract (sections, brandmark
 // anchors, data-celestial-slot markers, etc.).
-function parseV7Html(htmlPath: string, tokensPath: string): V7Content {
+function parseV7Html(htmlPath: string, tokensPath: string, options?: ParseOptions): V7Content {
   const html = readFileSync(htmlPath, "utf-8");
   const tokensCss = readFileSync(tokensPath, "utf-8");
 
@@ -107,15 +107,136 @@ function parseV7Html(htmlPath: string, tokensPath: string): V7Content {
 
   bodyHtml = injectStaticHudChildren(bodyHtml);
 
+  // Optional surgery: strip a set of `<section id="...">` station blocks
+  // from `<main class="stations">` and inject a single mount placeholder
+  // where the FIRST removed station used to be. Powers the production
+  // home page swap where #definition + #missing-layer + #intelligence-
+  // layer are replaced by the home-v2 depth corridor (ADR-018).
+  if (options?.removeStations && options.removeStations.length) {
+    const removeIds = options.removeStations;
+    const mountId = options.corridorMountId ?? "home-corridor-mount";
+    bodyHtml = removeStationsFromBody(bodyHtml, removeIds, mountId);
+
+    // Strip the matching nav entries so the HUD nav doesn't show
+    // dead links. Kept in lockstep with the section removal so the
+    // numbering stays as authored (gaps appear at the removed
+    // positions; the corridor itself gets no nav entry).
+    bodyHtml = removeHudNavEntries(bodyHtml, removeIds);
+
+    // Redirect any leftover cross-links pointing at removed sections
+    // to the corridor mount, so e.g. the Hero CTA still has somewhere
+    // sensible to scroll. Done here (per-route) rather than in the
+    // shared cleanup above so other routes (`getClaudeWorkshopContent`)
+    // keep their own anchor semantics intact.
+    for (const id of removeIds) {
+      const escaped = id.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      bodyHtml = bodyHtml.replace(new RegExp(`href="#${escaped}"`, "g"), `href="#${mountId}"`);
+    }
+  }
+
   const scopedCss = scopeV7Css(tokensCss, inlineStyles);
 
   return { bodyHtml, bodyClass, scopedCss };
 }
 
-export function getV7Content(): V7Content {
+/**
+ * Walk the body, locate each requested `<section ... id="X">` block
+ * inside `<main class="stations">`, and slice it out (preserving
+ * nested `<section>` balance for ilayer chambers). Inserts a single
+ * `<div id="${mountId}" data-home-corridor-mount></div>` placeholder
+ * at the first removal site so DOM order matches scroll order on the
+ * client.
+ */
+function removeStationsFromBody(bodyHtml: string, ids: readonly string[], mountId: string): string {
+  const wantedIds = new Set(ids);
+  const sectionOpenRe = /<section\b[^>]*\bid="([^"]+)"[^>]*>/g;
+  type Range = { start: number; end: number };
+  const ranges: Range[] = [];
+
+  let openMatch: RegExpExecArray | null;
+  while ((openMatch = sectionOpenRe.exec(bodyHtml)) !== null) {
+    const id = openMatch[1];
+    if (!wantedIds.has(id)) continue;
+
+    const startIdx = openMatch.index;
+    const tagRe = /<section\b|<\/section>/g;
+    tagRe.lastIndex = startIdx;
+    let depth = 0;
+    let endIdx = -1;
+    let m: RegExpExecArray | null;
+    while ((m = tagRe.exec(bodyHtml)) !== null) {
+      if (m[0] === "</section>") {
+        depth -= 1;
+        if (depth === 0) {
+          endIdx = m.index + m[0].length;
+          break;
+        }
+      } else {
+        depth += 1;
+      }
+    }
+    if (endIdx > startIdx) {
+      ranges.push({ start: startIdx, end: endIdx });
+    }
+  }
+
+  if (ranges.length === 0) return bodyHtml;
+
+  ranges.sort((a, b) => a.start - b.start);
+  const placeholder = `<div id="${mountId}" data-home-corridor-mount></div>`;
+
+  // Build the result by walking the source forward, skipping the
+  // ranges. Place the placeholder at the FIRST removed range so the
+  // mount slot sits in the same DOM position the corridor's entry
+  // anchor used to occupy.
+  let out = "";
+  let cursor = 0;
+  for (let i = 0; i < ranges.length; i += 1) {
+    const r = ranges[i];
+    out += bodyHtml.slice(cursor, r.start);
+    if (i === 0) out += placeholder;
+    cursor = r.end;
+  }
+  out += bodyHtml.slice(cursor);
+  return out;
+}
+
+/**
+ * Strip `<a href="#X" data-station="..." ...>...</a>` entries from
+ * `#hudNav` whose href hash matches one of the removed station ids.
+ * Surrounding whitespace between entries is collapsed. Kept tolerant
+ * of class attributes (e.g. `is-active`) and any extra attributes
+ * the prototype might add.
+ */
+function removeHudNavEntries(bodyHtml: string, ids: readonly string[]): string {
+  let out = bodyHtml;
+  for (const id of ids) {
+    const escaped = id.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    // Allow attributes in any order; the prototype's nav entries
+    // follow `<a href="#id" data-station="..."...>`. Whitespace before
+    // the `<a>` is consumed so the stripped line collapses cleanly.
+    const re = new RegExp(`\\s*<a\\b[^>]*\\bhref="#${escaped}"[^>]*>[\\s\\S]*?</a>`, "g");
+    out = out.replace(re, "");
+  }
+  return out;
+}
+
+export interface ParseOptions {
+  /** Station ids to strip from `<main class="stations">`. The first
+   *  removed section is replaced with a `<div id="${corridorMountId}"
+   *  data-home-corridor-mount>` placeholder. The matching `#hudNav`
+   *  anchors are also stripped, and any leftover `href="#${id}"` cross
+   *  links are redirected to the corridor mount. */
+  removeStations?: readonly string[];
+  /** Id used for the mount placeholder div + the redirected cross-
+   *  links. Defaults to `"home-corridor-mount"`. */
+  corridorMountId?: string;
+}
+
+export function getV7Content(options?: ParseOptions): V7Content {
   const htmlPath = join(process.cwd(), "public/prototypes/v7/landing-v7-motion.html");
   const tokensPath = join(process.cwd(), "public/prototypes/v7/tokens.css");
-  return parseV7Html(htmlPath, tokensPath);
+  return parseV7Html(htmlPath, tokensPath, options);
 }
 
 export function getClaudeWorkshopContent(): V7Content {

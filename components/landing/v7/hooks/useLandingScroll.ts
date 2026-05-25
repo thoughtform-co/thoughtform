@@ -42,24 +42,40 @@ export function useLandingScroll(rootRef: React.RefObject<HTMLDivElement | null>
     const scrollMax = Math.max(1, document.documentElement.scrollHeight - vh);
     const progress = Math.max(0, Math.min(1, scrollY / scrollMax));
 
-    // Depth indicator
-    const depthEl = root.querySelector<HTMLElement>("#depthIndicator");
-    if (depthEl) depthEl.style.top = `${progress * 100}%`;
+    // Defer HUD rail/coord readouts to the corridor while it's the
+    // engaged owner of the depth gauge. `useDepthScroll` (home-v2)
+    // sets `data-corridor-engaged="true"` on <html> whenever the
+    // depth stage is armed or active; without this gate both hooks
+    // would write to `#depthIndicator`, `#hudProgress`, `#coordD`,
+    // `#coordT` every frame and the readout would oscillate. The
+    // active-station + parallax + heroCover writes below stay live
+    // either way — they describe the page's overall scroll state,
+    // not the corridor's internal beat.
+    const corridorEngaged =
+      document.documentElement.getAttribute("data-corridor-engaged") === "true";
 
-    // Progress text
-    const progressEl = root.querySelector<HTMLElement>("#hudProgress");
-    if (progressEl)
-      progressEl.textContent = `${String(Math.round(progress * 100)).padStart(2, "0")}%`;
+    if (!corridorEngaged) {
+      // Depth indicator
+      const depthEl = root.querySelector<HTMLElement>("#depthIndicator");
+      if (depthEl) depthEl.style.top = `${progress * 100}%`;
 
-    // Depth CSS var
+      // Progress text
+      const progressEl = root.querySelector<HTMLElement>("#hudProgress");
+      if (progressEl)
+        progressEl.textContent = `${String(Math.round(progress * 100)).padStart(2, "0")}%`;
+
+      // Coord readouts (inside nav status)
+      const coordD = root.querySelector<HTMLElement>("#coordD");
+      const coordT = root.querySelector<HTMLElement>("#coordT");
+      if (coordD) coordD.textContent = (0.2 + progress * 0.55).toFixed(2);
+      if (coordT)
+        coordT.textContent = `${String(Math.round(progress * 359)).padStart(3, "0")}.${String(Math.round((progress * 10) % 10))}\u00b0`;
+    }
+
+    // Depth CSS var — always written. Drives reveal/parallax envelopes
+    // throughout the page, so it must stay live even while the
+    // corridor owns the HUD readouts.
     root.style.setProperty("--depth", Math.min(1, progress * 1.2).toFixed(4));
-
-    // Coord readouts (inside nav status)
-    const coordD = root.querySelector<HTMLElement>("#coordD");
-    const coordT = root.querySelector<HTMLElement>("#coordT");
-    if (coordD) coordD.textContent = (0.2 + progress * 0.55).toFixed(2);
-    if (coordT)
-      coordT.textContent = `${String(Math.round(progress * 359)).padStart(3, "0")}.${String(Math.round((progress * 10) % 10))}\u00b0`;
 
     // Hero cover — drives `--hero-cover` on #hero so the video/content
     // recede (scale + fade) as #definition rises into view. The
@@ -88,7 +104,8 @@ export function useLandingScroll(rootRef: React.RefObject<HTMLDivElement | null>
     const viewportMid = scrollY + vh / 2;
     let activeStation = stations[0];
     for (const station of stations) {
-      if (station.offsetTop <= viewportMid) activeStation = station;
+      const stationTop = scrollY + station.getBoundingClientRect().top;
+      if (stationTop <= viewportMid) activeStation = station;
     }
     const activeKey = activeStation?.getAttribute("data-station") || activeStation?.id || "hero";
 
@@ -98,8 +115,10 @@ export function useLandingScroll(rootRef: React.RefObject<HTMLDivElement | null>
       const isActive = link.getAttribute("data-station") === activeKey;
       link.classList.toggle("is-active", isActive);
     });
-    const sectorEl = root.querySelector<HTMLElement>("#hudSector");
-    if (sectorEl) sectorEl.textContent = SECTORS[activeKey] || "Field";
+    if (!corridorEngaged) {
+      const sectorEl = root.querySelector<HTMLElement>("#hudSector");
+      if (sectorEl) sectorEl.textContent = SECTORS[activeKey] || "Field";
+    }
 
     // Parallax
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;

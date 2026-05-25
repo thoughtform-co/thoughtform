@@ -44,6 +44,43 @@
   display: contents;
 }
 
+/* ── Production embed wrapper ────────────────────────────────
+   When the corridor is mounted inside the v7 LandingPage (production
+   homepage), the stage sits inside `.home-corridor-host` between
+   #hero and #buildQuote.
+
+   Two structural concerns the host has to solve that the test route
+   doesn't:
+
+   1. Stacking. The v7 hero (`section.station.hero`) is sticky at
+      `z-index: 1` inside `<main class="stations">`. If the host
+      stacks at `z-auto`, the sticky hero paints OVER the corridor
+      while the corridor's sticky cell is pinned, so the user just
+      sees the hero video where the 3D scene should be. We give the
+      host `z-index: 3` so it sits above the hero AND the
+      build-quote runway (`#buildQuote` sticky at `z-index: 3`),
+      while still scrolling away once the corridor exits.
+
+   2. Full-bleed width. `<main class="stations">` is inset by the
+      v7 HUD rails (~180px each side) on wide viewports, so any
+      direct child only spans the central column. The original
+      v7 stations (`#definition`, `#missing-layer`,
+      `#intelligence-layer`) escape that with `width: 100vw;
+      margin-left: calc(50% - 50vw);`. We do the same here so the
+      depth corridor reads edge-to-edge, matching `/test/home-v2`.
+
+   The opaque `var(--void)` background keeps the gateway gradient
+   from bleeding through, and `isolation: isolate` keeps the inner
+   canvas / copy / brandmark z-stack self-contained. */
+.home-corridor-host {
+  position: relative;
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  background: var(--void, #050403);
+  isolation: isolate;
+  z-index: 3;
+}
+
 /* ── Sticky depth stage ──────────────────────────────────────── */
 .home-v2-stage {
   position: relative;

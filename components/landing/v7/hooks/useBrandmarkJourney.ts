@@ -183,19 +183,13 @@ export function useBrandmarkJourney(
       const rounded = Math.round(value * 1000) / 1000;
       if (Math.abs(rounded - lastBrandSilhouetteMorph) < 0.001) return;
       lastBrandSilhouetteMorph = rounded;
-      document.documentElement.style.setProperty(
-        "--brand-silhouette-morph",
-        rounded.toFixed(3)
-      );
+      document.documentElement.style.setProperty("--brand-silhouette-morph", rounded.toFixed(3));
     };
     const setBrandSilhouetteCut = (value: number) => {
       const cut = value >= SILHOUETTE_CUT_THRESHOLD ? 1 : 0;
       if (cut === lastBrandSilhouetteCut) return;
       lastBrandSilhouetteCut = cut;
-      document.documentElement.style.setProperty(
-        "--brandmark-silhouette-cut",
-        cut.toFixed(0)
-      );
+      document.documentElement.style.setProperty("--brandmark-silhouette-cut", cut.toFixed(0));
     };
 
     // === Sigil → miss orbital morph driver ===
@@ -413,7 +407,33 @@ export function useBrandmarkJourney(
     const compute = () => {
       rafId = 0;
       ctx = resolveContext();
-      const transform = computeBrandmarkTransform(window.scrollY, keyframes, ctx);
+
+      // Production homepage: the #definition / #missing-layer /
+      // #intelligence-layer station anchors are removed (replaced by
+      // the home-v2 depth corridor, ADR-018). Filter the keyframe
+      // table down to the keyframes whose anchor measures this frame
+      // so `computeBrandmarkTransform` can bracket the live remaining
+      // journey (typically rail → orbit on production). Filtering
+      // per-frame rather than once at mount handles late portal
+      // mounts (continuum's `.crail__brand` arrives via React commit)
+      // and admin overlays that resize sections at runtime.
+      const liveKeyframes = keyframes.filter((kf) => {
+        const r = kf.resolveRect(ctx);
+        return r != null && r.width > 0 && r.height > 0;
+      });
+      if (liveKeyframes.length < 2) {
+        // Not enough live anchors to bracket the journey. Hide the
+        // brandmark until enough mount; the corridor's own actor
+        // owns the brandmark while the corridor is engaged.
+        useBrandmarkJourneyStore.getState().setTransform({
+          ...useBrandmarkJourneyStore.getState().transform,
+          visible: false,
+          opacity: 0,
+        });
+        return;
+      }
+
+      const transform = computeBrandmarkTransform(window.scrollY, liveKeyframes, ctx);
       if (transform == null) return;
 
       // Engagement freeze (companion to TravelingOrbits). While

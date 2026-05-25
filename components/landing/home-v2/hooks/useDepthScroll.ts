@@ -49,8 +49,6 @@ export function useDepthScroll(stageRef: React.RefObject<HTMLDivElement | null>)
     const progress = clamp01(-rect.top / scrubHeight);
     const { beat, gateProgress } = resolveBeat(progress);
 
-    writeV7HudReadouts(progress, beat);
-
     // ── Engagement state + velocity ─────────────────────────────
     // Two-phase engagement (ADR-018 "furnished room on arrival"):
     //   - `armed`: the sticky stage is rising into pin position
@@ -65,6 +63,29 @@ export function useDepthScroll(stageRef: React.RefObject<HTMLDivElement | null>)
     // painters write opacity 0 so nothing composites over the hero
     // even while transforms are being computed.
     const { active, armed, paintProgress } = getCorridorEngagement(rect, vh, progress);
+
+    // Mirror engagement to a global DOM flag so co-mounted scroll
+    // hooks (notably the v7 LandingPage's `useLandingScroll`) know
+    // to defer HUD readouts to the corridor while it owns the rail.
+    // The flag covers both armed and active phases — armed is when
+    // the corridor is rising into pin, active is when it's pinned.
+    // Cleared on unmount inside the cleanup effect below.
+    if (typeof document !== "undefined") {
+      const engaged = active || armed ? "true" : "false";
+      const html = document.documentElement;
+      if (html.getAttribute("data-corridor-engaged") !== engaged) {
+        html.setAttribute("data-corridor-engaged", engaged);
+      }
+    }
+
+    // Only the corridor writes HUD readouts while it's the engaged
+    // owner of the depth rail. When idle (the user has scrolled
+    // past the corridor into Continuum etc) we leave the readouts
+    // alone so `useLandingScroll` can drive them with the global
+    // page progress instead.
+    if (active || armed) {
+      writeV7HudReadouts(progress, beat);
+    }
 
     const now = performance.now();
     const lastT = lastFrameTime.current;
@@ -139,6 +160,9 @@ export function useDepthScroll(stageRef: React.RefObject<HTMLDivElement | null>)
       }
       if (decayHandle != null) clearTimeout(decayHandle);
       useDepthGatewayStore.getState().setTransform(INITIAL_TRANSFORM);
+      if (typeof document !== "undefined") {
+        document.documentElement.removeAttribute("data-corridor-engaged");
+      }
     };
   }, [onScroll, writeFrame]);
 }

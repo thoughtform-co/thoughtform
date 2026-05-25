@@ -1,13 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import type { V7CorridorText } from "@/lib/v7-parse";
-import { probeWebGL } from "@/lib/webgl/probe";
-import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
-import { CopyAnchors } from "./CopyAnchors";
-import { DepthGatewayScene } from "./DepthGatewayScene";
-import { useDepthScroll } from "./hooks/useDepthScroll";
-import { ProjectedBrandmarkActor } from "./ProjectedBrandmarkActor";
+import { HomeCorridor } from "./HomeCorridor";
 
 interface HomeV2PageProps {
   /** v7 HUD chrome HTML (gateway, hud rails, nav, status). Fed by
@@ -20,68 +15,20 @@ interface HomeV2PageProps {
 }
 
 /**
- * HomeV2Page — depth-corridor composition (ADR-018, world-owned
- * rebuild).
+ * HomeV2Page — depth-corridor composition for /test/home-v2 (ADR-018).
  *
- * Operating model: ONE 3D scene. `DepthGatewayScene` is the single
- * R3F canvas hosting all four world-rigid gate groups (Thoughtform
- * compass, Diagnostic orbits, Interstitial waypoint, Intelligence
- * sphere) plus the inter-gate ring debris. The camera flies through
- * them on one continuous path.
+ * Composes the v7 HUD chrome + a sticky video hero + the world-owned
+ * `HomeCorridor` 3D stage + placeholder tail sections. The hero and
+ * tail are route-specific scaffolding so the corridor reads as a
+ * standalone showcase; production wires the same `HomeCorridor`
+ * shell into the v7 LandingPage between #hero and #buildQuote.
  *
- * Copy is pure DOM TEXT: `CopyAnchors` renders titles, bodies, label
- * pills, and side body labels tagged with `data-world-anchor` IDs.
- * `useWorldDomTracker` (driven by the same camera path as the R3F
- * scene) projects each named world anchor to screen pixels every
- * frame and writes inline `transform` + `opacity` to the matching
- * DOM element. Result: copy and labels travel with their gates as
- * the camera approaches and passes.
- *
- * The brandmark is a pure 3D-projected vector via
- * `ProjectedBrandmarkActor`. No DOM-dock pinning. Its world
- * position is rigidly co-located with each gate's centre, so the
- * homepage-fidelity "brandmark inside the diamond" composition is
- * structural, not calibrated per breakpoint.
- *
- * The v7 HUD chrome is mounted once at page root (position: fixed
- * elements from the prototype) so rails + depth ticks + wordmark
- * persist across hero, stage, and tail.
+ * The corridor itself owns its 3D flow, brandmark, copy projection,
+ * and HUD readouts — see `HomeCorridor.tsx` and ADR-018 for the
+ * complete operating model.
  */
 export function HomeV2Page({ hudHtml, bodyClass, text }: HomeV2PageProps) {
   const rootRef = useRef<HTMLDivElement>(null);
-  const stageRef = useRef<HTMLDivElement>(null);
-  const [webglOK, setWebglOK] = useState<boolean | null>(null);
-  const [reducedMotion, setReducedMotion] = useState(false);
-  const [smallViewport, setSmallViewport] = useState(false);
-
-  useDepthScroll(stageRef);
-
-  useEffect(() => {
-    setWebglOK(probeWebGL());
-    const mql = window.matchMedia("(prefers-reduced-motion: reduce)");
-    setReducedMotion(mql.matches);
-    const onChange = (e: MediaQueryListEvent) => setReducedMotion(e.matches);
-    mql.addEventListener("change", onChange);
-    const syncViewport = () => setSmallViewport(window.innerWidth < 760);
-    syncViewport();
-    window.addEventListener("resize", syncViewport);
-    return () => {
-      mql.removeEventListener("change", onChange);
-      window.removeEventListener("resize", syncViewport);
-    };
-  }, []);
-
-  // Suppress the global v7 brandmark canvas (if mounted elsewhere
-  // in this render tree) so it doesn't paint over the home-v2 scene.
-  // The home-v2 actor owns the brandmark end-to-end on this route.
-  useEffect(() => {
-    const prev = document.documentElement.getAttribute("data-brandmark-mode");
-    document.documentElement.setAttribute("data-brandmark-mode", "off");
-    return () => {
-      if (prev === null) document.documentElement.removeAttribute("data-brandmark-mode");
-      else document.documentElement.setAttribute("data-brandmark-mode", prev);
-    };
-  }, []);
 
   // HUD hamburger nav — wire the bare minimum from v7 LandingPage so
   // the menu can open / close.
@@ -100,16 +47,8 @@ export function HomeV2Page({ hudHtml, bodyClass, text }: HomeV2PageProps) {
     };
   }, []);
 
-  const fallback = webglOK === false || reducedMotion || smallViewport;
-  const mode = fallback ? "fallback" : "corridor";
-
   return (
-    <div
-      ref={rootRef}
-      className={`home-v2-root ${bodyClass}`}
-      data-theme="dark"
-      data-home-v2-mode={mode}
-    >
+    <div ref={rootRef} className={`home-v2-root ${bodyClass}`} data-theme="dark">
       {/* v7 HUD chrome — `.gateway` + `.hud` rails + `.hud__nav`. */}
       <div
         className="home-v2-hud-root"
@@ -147,43 +86,10 @@ export function HomeV2Page({ hudHtml, bodyClass, text }: HomeV2PageProps) {
         </div>
       </section>
 
-      {/* ═══ DEPTH STAGE ═══
-          Sticky 100svh interior; the R3F canvas, copy overlay, and
-          fallback live inside the same sticky cell. There is NO v7
-          section grid stack any more — the world owns the layout. */}
-      <div
-        ref={stageRef}
-        className="home-v2-stage"
-        data-fallback={fallback ? "true" : "false"}
-        aria-label="Depth corridor: Thoughtform, Diagnostic, Intelligence layer"
-      >
-        <div className="home-v2-stage__sticky">
-          {!fallback && (
-            <div className="home-v2-stage__canvas">
-              <DepthGatewayScene />
-            </div>
-          )}
-
-          {/* Copy + label overlay — DOM text positioned by
-              `useWorldDomTracker` (mounted inside `CopyAnchors`). */}
-          {!fallback && <CopyAnchors text={text} />}
-
-          {/* Projected brandmark — lives inside the sticky stage so
-              armed prepaint is clipped to the incoming Thoughtform
-              section instead of floating over the hero. */}
-          {!fallback && <ProjectedBrandmarkActor />}
-
-          {/* Debug HUD — progress + active beat readout. */}
-          {!fallback && <StageHud />}
-
-          {/* Static fallback (no WebGL / reduced motion). */}
-          {fallback && (
-            <div className="home-v2-stage__fallback">
-              <FallbackCorridor text={text} />
-            </div>
-          )}
-        </div>
-      </div>
+      {/* ═══ DEPTH CORRIDOR ═══
+          The world-owned 3D stage. Shared with the production home
+          page (mounted inside `LandingPage` via portal there). */}
+      <HomeCorridor text={text} debug />
 
       {/* ═══ TAIL (normal scroll, placeholder) ═══ */}
       <div className="home-v2-tail">
@@ -204,51 +110,6 @@ export function HomeV2Page({ hudHtml, bodyClass, text }: HomeV2PageProps) {
           </p>
         </section>
       </div>
-    </div>
-  );
-}
-
-/** Tiny readout — shows progress + active beat as a debug aid. */
-function StageHud() {
-  const transform = useDepthGatewayStore((s) => s.transform);
-  const progressPct = Math.round(transform.progress * 100);
-  return (
-    <div className="home-v2-stage__hud" aria-hidden="true">
-      <div className="home-v2-stage__hud-progress">{String(progressPct).padStart(2, "0")}%</div>
-      <div>{transform.beat}</div>
-    </div>
-  );
-}
-
-/** Simple stacked-text fallback — paints the corridor copy in plain
- *  flow when WebGL or motion is unavailable. */
-function FallbackCorridor({ text }: { text: V7CorridorText }) {
-  return (
-    <div className="home-v2-fallback-text">
-      <section>
-        <p className="home-v2-fallback-text__bridge">{text.thoughtform.bridge}</p>
-        <h2 dangerouslySetInnerHTML={{ __html: text.thoughtform.titleHtml }} />
-        <p dangerouslySetInnerHTML={{ __html: text.thoughtform.body1Html }} />
-        <p dangerouslySetInnerHTML={{ __html: text.thoughtform.body2Html }} />
-      </section>
-      <section>
-        <h2 dangerouslySetInnerHTML={{ __html: text.diagnostic.titleHtml }} />
-        <p>{text.diagnostic.bridge}</p>
-        <ul>
-          {text.diagnostic.labels.map((label) => (
-            <li key={label.id}>
-              <span>{label.n}</span> {label.tag}
-            </li>
-          ))}
-        </ul>
-      </section>
-      <section>
-        <h2 dangerouslySetInnerHTML={{ __html: text.intelligence.titleHtml }} />
-        <p dangerouslySetInnerHTML={{ __html: text.intelligence.ledeHtml }} />
-        <p>
-          {text.intelligence.leftLabel} · {text.intelligence.rightLabel}
-        </p>
-      </section>
     </div>
   );
 }

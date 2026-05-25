@@ -1,33 +1,50 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useRef, useState, useCallback, useMemo } from "react";
+import { useEffect, useLayoutEffect, useRef, useMemo } from "react";
+import { createRoot, type Root } from "react-dom/client";
 import { useLandingScroll } from "./hooks/useLandingScroll";
 import { useRevealMotion } from "./hooks/useRevealMotion";
 import { useBrandmarkJourney } from "./hooks/useBrandmarkJourney";
-import { useDiagnosticPillOrbits } from "./hooks/useDiagnosticPillOrbits";
-import { useSigilEntranceScrub } from "./hooks/useSigilEntranceScrub";
 import { type BrandmarkActorHandle } from "./BrandmarkActor";
 import { BrandmarkSystem } from "./BrandmarkSystem";
 import { useBrandmarkSingletonCheck } from "./lib/brandmarkSingletonCheck";
 import { CelestialPortals } from "./CelestialConnector/CelestialPortals";
 import { PhaseGlyphPortals } from "./PhaseGlyph";
 import { BuildCasesPortal } from "./build-cases";
-import { IntelligenceLayerPortal } from "./intelligence-layer";
-import { TravelingOrbits } from "./orbits/TravelingOrbits";
+import { HomeCorridor } from "@/components/landing/home-v2/HomeCorridor";
 import { CelestialEditorOverlay } from "@/components/admin/CelestialEditor";
 import { useCelestialDrafts } from "@/components/admin/CelestialEditor/useCelestialDrafts";
 import type { SlotsMap } from "@/lib/celestial/schema";
+import type { V7CorridorText } from "@/lib/v7-parse";
 
 interface LandingPageProps {
   bodyHtml: string;
   bodyClass: string;
   celestialSlots?: SlotsMap;
+  /** Corridor copy extracted from the v7 prototype HTML. When
+   *  provided alongside `corridorMountId`, the home-v2 depth
+   *  corridor is mounted into the matching placeholder inside the
+   *  parsed body markup. Production passes this; legacy
+   *  routes that forked LandingPage may omit it. */
+  corridorText?: V7CorridorText;
+  /** Element id of the corridor mount placeholder injected by
+   *  `getV7Content({ removeStations })`. Defaults to
+   *  `"home-corridor-mount"`. The corridor is only mounted when
+   *  both `corridorText` and a matching DOM node are present. */
+  corridorMountId?: string;
 }
 
-export function LandingPage({ bodyHtml, bodyClass, celestialSlots }: LandingPageProps) {
+export function LandingPage({
+  bodyHtml,
+  bodyClass,
+  celestialSlots,
+  corridorText,
+  corridorMountId = "home-corridor-mount",
+}: LandingPageProps) {
   const rootRef = useRef<HTMLDivElement>(null);
   const brandmarkActorRef = useRef<BrandmarkActorHandle>(null);
-  const [navOpen, setNavOpen] = useState(false);
+  const corridorRootRef = useRef<Root | null>(null);
+  const corridorMountRef = useRef<HTMLElement | null>(null);
 
   useLandingScroll(rootRef);
   useRevealMotion(rootRef);
@@ -37,18 +54,61 @@ export function LandingPage({ bodyHtml, bodyClass, celestialSlots }: LandingPage
   // In SVG-fallback mode (reduced motion / no WebGL) the same hook
   // pins the actor + drives dock attributes so the native SVG glyphs
   // paint via CSS gates.
-  // `useSigilEntranceScrub` owns the section-02 diagram entrance
-  // animation (orbits, halo, cap, legend, tri-left) — a separate
-  // concern from the brandmark journey.
+  //
+  // The Thoughtform / Diagnostic / Intelligence-layer stations have
+  // been replaced by the home-v2 depth corridor (ADR-018) on the
+  // production homepage; the corridor's `ProjectedBrandmarkActor`
+  // owns the brandmark while the corridor is engaged, and the journey
+  // hook below filters its keyframe table down to the live anchors
+  // (rail @ #continuum, orbit @ #practice) so the global painter
+  // picks back up cleanly once the corridor exits. The companion
+  // hooks for those removed stations (sigil entrance scrub,
+  // traveling-orbits sigil→miss morph, diagnostic pill IO) and the
+  // intelligence-layer R3F portal were stripped along with the HTML
+  // they targeted.
   useBrandmarkJourney(rootRef, brandmarkActorRef);
-  useDiagnosticPillOrbits(rootRef);
-  useSigilEntranceScrub(rootRef);
   // Dev-only invariant guard: warns in the console whenever more
   // than one brandmark instance is painting at the same scroll
   // position. Tree-shaken out of the production bundle by the
   // `process.env.NODE_ENV === "production"` early return inside
   // the hook.
   useBrandmarkSingletonCheck(rootRef);
+
+  // Mount the reusable home-v2 corridor into the live placeholder
+  // inside the parsed v7 HTML. A React portal is fragile here because
+  // `dangerouslySetInnerHTML` can replace that placeholder during dev
+  // remounts / bfcache restores, leaving the portal attached to a
+  // detached node. A tiny nested root lets us tear down and re-create
+  // the corridor whenever the live placeholder changes.
+  useLayoutEffect(() => {
+    const root = rootRef.current;
+    if (!root || !corridorText) return;
+
+    const mountCorridor = () => {
+      const mount = root.querySelector<HTMLElement>(`#${corridorMountId}`);
+      if (!mount || mount === corridorMountRef.current) return;
+
+      corridorRootRef.current?.unmount();
+      corridorMountRef.current = mount;
+      corridorRootRef.current = createRoot(mount);
+      corridorRootRef.current.render(
+        <div className="home-corridor-host">
+          <HomeCorridor text={corridorText} debug={false} />
+        </div>
+      );
+    };
+
+    mountCorridor();
+    const observer = new MutationObserver(mountCorridor);
+    observer.observe(root, { childList: true, subtree: true });
+
+    return () => {
+      observer.disconnect();
+      corridorRootRef.current?.unmount();
+      corridorRootRef.current = null;
+      corridorMountRef.current = null;
+    };
+  }, [corridorMountId, corridorText]);
 
   // Hamburger toggle — wire imperatively since the nav markup comes from HTML
   useEffect(() => {
@@ -428,25 +488,15 @@ export function LandingPage({ bodyHtml, bodyClass, celestialSlots }: LandingPage
       {mergedSlots && <CelestialPortals slots={mergedSlots} containerRef={rootRef} />}
       <PhaseGlyphPortals containerRef={rootRef} />
       <BuildCasesPortal containerRef={rootRef} />
-      {/* Intelligence-layer 3D stack (ADR-012 v2). Mounts the R3F
-          canvas into `[data-ilayer-stack-root]` and owns the
-          scroll-progress trigger that drives the rotate-and-split
-          choreography. Mounted before `BrandmarkSystem` so the
-          substrate dock anchor's grid placement settles before the
-          choreography hook reads its rect on first measure. */}
-      <IntelligenceLayerPortal containerRef={rootRef} />
-      {/* Persistent four-ring painter (ADR-017). Renders one set of
-          rings whose centre + per-ring scale/rotation lerp from the
-          sigil dock (concentric circles) to the miss dock
-          (eccentric tilted ellipses) over the sigil → miss leg.
-          Replaces the legacy `.sigil__orbits` / `.miss__orbits`
-          two-tree handoff in particle mode; the prototype SVG
-          orbit/ring elements are hidden by a CSS gate. Returns
-          null in SVG fallback mode so the legacy markup paints
-          unchanged. Mounted before `BrandmarkSystem` so the
-          painter sits BEHIND the crisp vector mark in the layer
-          stack. */}
-      <TravelingOrbits rootRef={rootRef} />
+      {/* IntelligenceLayerPortal + TravelingOrbits were removed when
+          the Thoughtform / Diagnostic / Intelligence-layer station
+          stack was replaced by the home-v2 depth corridor (ADR-018)
+          on the production homepage. Their target anchors
+          (`[data-ilayer-stack-root]`, `.sigil__orbits`,
+          `.miss__orbits`) no longer exist in the parsed body HTML,
+          so both portals would have been no-ops. The corridor
+          renders its own ring/orbit/substrate choreography inside
+          `DepthGatewayScene`. */}
       {/* Single brandmark entry point. Renders one canonical
           `BrandmarkGlyph` into each `data-brand-anchor` slot via
           portal, plus one fixed `BrandmarkActor` for transit/backdrop/
