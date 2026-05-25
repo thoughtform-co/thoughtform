@@ -7,6 +7,7 @@ import { GatewayWorld } from "./gates/GatewayWorld";
 import { InterGateCorridor } from "./InterGateCorridor";
 import { LatentFieldTunnel } from "./LatentFieldTunnel";
 import { LatentTopographyContours } from "./LatentTopographyContours";
+import { LatentWormholeWalls } from "./LatentWormholeWalls";
 import { ScrollStreaks } from "./ScrollStreaks";
 import { StaticStarfield } from "./StaticStarfield";
 import { ThoughtformAtmosphere } from "./ThoughtformAtmosphere";
@@ -41,11 +42,30 @@ import { CAMERA_FOV, CAMERA_START, getCameraLookAt } from "./sceneGeom";
  *                             through a starfield. STILL at rest,
  *                             flows ONLY with scroll velocity, peaks
  *                             through the Thoughtform boot envelope.
+ *   - LatentWormholeWalls   : subtle particle-based wormhole shell
+ *                             that wraps BOTH passthrough legs.
+ *                             Longitudinal dotted rails around an
+ *                             oval cross-section + 3 aperture
+ *                             depth-gate frames per leg + a low
+ *                             topographic shelf. World-fixed
+ *                             geometry; the camera flies through
+ *                             the walls. Each leg has its own
+ *                             progress reveal so parked beats stay
+ *                             clean — the wormhole opens AFTER the
+ *                             user leaves Thoughtform, then again
+ *                             AFTER they leave Diagnostic. Inspired
+ *                             by the archived latent-cases topology
+ *                             (`celestialGatewayGeometry.ts`),
+ *                             scaled to subtle so it never reads
+ *                             as a literal grid tube.
  *   - LatentTopographyContours : world-fixed contour shards + ridge
  *                             arcs + gradient arrows distributed
  *                             along BOTH passthrough legs. Reads
  *                             as the level sets of a loss surface
- *                             the camera is flying past. Unlike
+ *                             the camera is flying past. Paints
+ *                             ABOVE the wormhole walls so contours
+ *                             register on top of the rail lattice
+ *                             rather than competing with it. Unlike
  *                             LatentFieldTunnel (camera-relative
  *                             ambient particles), every shard
  *                             lives at a fixed world Z — the
@@ -119,6 +139,7 @@ export function DepthGatewayScene() {
       <ThoughtformAtmosphere />
       <InterGateCorridor />
       <LatentFieldTunnel />
+      <LatentWormholeWalls />
       <LatentTopographyContours />
       <CelestialMotes />
       <ScrollStreaks />
