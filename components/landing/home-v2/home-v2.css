@@ -132,41 +132,59 @@
   text-align: center;
 }
 
+/* Thoughtform-left typography mirrors the production homepage's
+   `.tri__ipa--noun`, `.tri__title`, and `.tri__title--secondary`
+   rules in `components/landing/v7/landing.css` (~L2575-2627) so the
+   parked-Thoughtform composition reads at the same scale + palette
+   as the production landing's Definition section. Keep these in
+   sync if the v7 typography is retuned. */
 .home-v2-copy-bridge {
   font-family: var(--font-pt-mono, ui-monospace, monospace);
-  font-size: clamp(11px, 0.85vw, 13px);
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: rgba(235, 227, 214, 0.7);
-  margin: 0 0 clamp(12px, 1.2vh, 18px);
+  font-size: clamp(11px, 0.9vw, 13px);
+  letter-spacing: var(--track-wide, 0.08em);
+  color: var(--gold, #caa554);
+  margin: 0 0 18px;
 }
 
 .home-v2-copy-title {
   font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
-  font-size: clamp(28px, 3vw, 44px);
+  font-size: clamp(24px, 2.1vw, 32px);
   font-weight: 400;
-  line-height: 1.12;
-  letter-spacing: -0.012em;
+  line-height: 1.22;
+  letter-spacing: -0.015em;
   color: var(--dawn, #ebe3d6);
-  margin: 0 0 clamp(14px, 1.4vh, 20px);
-  text-wrap: balance;
+  margin: 0 0 var(--space-lg, 24px);
+  text-wrap: pretty;
+  max-width: 28ch;
 }
 
 .home-v2-copy-title em {
   font-style: normal;
   color: var(--gold, #caa554);
+  font-weight: 500;
 }
 
+/* Secondary title — the body lines in the Thoughtform left column
+   are styled as `.tri__title--secondary` on production, not as a
+   smaller body paragraph. Same display family + em treatment as the
+   main title so the observation + action read as one continuous
+   statement. The em carries the warmth ("and train them to own it")
+   in gold to emphasise the not-replacing-people angle. */
 .home-v2-copy-body {
-  font-size: clamp(15px, 1.05vw, 17px);
-  line-height: 1.5;
-  color: rgba(235, 227, 214, 0.78);
-  margin: 0 0 clamp(10px, 1.1vh, 16px);
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-size: clamp(20px, 1.7vw, 26px);
+  font-weight: 400;
+  line-height: 1.22;
+  letter-spacing: -0.015em;
+  color: var(--dawn-80, rgba(235, 227, 214, 0.8));
+  margin: 0 0 var(--space-lg, 24px);
+  max-width: 32ch;
 }
 
 .home-v2-copy-body em {
   font-style: italic;
-  color: var(--dawn, #ebe3d6);
+  color: var(--gold, #caa554);
+  font-weight: 500;
 }
 
 .home-v2-copy-cta-row {
