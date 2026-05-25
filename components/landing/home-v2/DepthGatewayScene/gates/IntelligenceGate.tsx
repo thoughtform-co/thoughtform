@@ -52,8 +52,22 @@ import { brandmarkCloudVertex, brandmarkCloudFragment } from "../shaders/brandma
 
 const BRANDMARK_VIEWBOX = { x: 0, y: 0, width: 430.99, height: 436 } as const;
 const SUBSTRATE_POINT_COUNT = 1900;
-const SUBSTRATE_HALF = 1.0;
-const SUBSTRATE_TO_SPHERE_RATIO = 0.55;
+/** World half-extent of the cloud in BRANDMARK FORM (morph = 0).
+ *  Matches the DOM brandmark's half-extent at the Intelligence beat
+ *  (`BRANDMARK_WORLD_HALF_EXTENT.intelligence = 0.22`) so the
+ *  substrate-cut handoff is seamless — the cloud appears at the
+ *  same apparent size as the DOM brandmark it replaces. The cloud
+ *  then GROWS into the sphere as the shape morph progresses, which
+ *  reads as "the brandmark dissolves into the substrate" rather
+ *  than "the brandmark suddenly leaps toward the camera". */
+const SUBSTRATE_HALF = 0.22;
+/** Sphere radius as a multiple of `SUBSTRATE_HALF`. The final
+ *  sphere is meant to be substantial at the parked Intelligence
+ *  beat, so this ratio (2.5) puts the sphere at 0.55 world radius
+ *  — the same final size the cloud used to start with in
+ *  brandmark form. The morph now visibly EXPANDS the cloud as the
+ *  brandmark silhouette dissolves into the Fibonacci sphere. */
+const SUBSTRATE_TO_SPHERE_RATIO = 2.5;
 
 const GOLD_BODY = new THREE.Color("#caa554");
 const GOLD_RIM = new THREE.Color("#e9c97a");
@@ -177,7 +191,15 @@ function SubstrateMorphCloud() {
 
     group.visible = true;
     material.uniforms.uShapeMorph.value = morph;
-    material.uniforms.uPresence.value = 1;
+    // Cross-fade IN across the early-morph window so the cloud
+    // gracefully meets the DOM brandmark fading OUT (see
+    // ProjectedBrandmarkActor.SUBSTRATE_CROSSFADE_END). With the
+    // cloud's brandmark form now sized to match the DOM mark, this
+    // makes the substrate-cut read as a continuous particle bloom
+    // rather than an instant size jump.
+    const SUBSTRATE_CROSSFADE_END = 0.2;
+    const fadeIn = Math.min(1, morph / SUBSTRATE_CROSSFADE_END);
+    material.uniforms.uPresence.value = fadeIn;
   });
 
   if (!geometry) return null;

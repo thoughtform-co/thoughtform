@@ -43,7 +43,16 @@ import { type WorldAnchor, useWorldDomTracker } from "./hooks/useWorldDomTracker
 
 const PERSPECTIVE_PX = 1200;
 const TAIL_FADE_OUT_START = 0.97;
-const SUBSTRATE_CUT_EPSILON = 0.001;
+
+/** Cross-fade window: morph value at which the DOM brandmark is
+ *  fully faded out (and the substrate cloud is fully faded in).
+ *  Below this value the DOM mark is partially visible; above it,
+ *  the substrate cloud carries the visual. With the substrate
+ *  cloud now sized to MATCH the DOM brandmark in its brandmark
+ *  form (see `IntelligenceGate` SUBSTRATE_HALF), this short
+ *  cross-fade reads as a seamless particle bloom rather than an
+ *  instant size jump. */
+const SUBSTRATE_CROSSFADE_END = 0.2;
 
 /** Aspect ratio of the BrandmarkGlyph SVG (height/width). */
 const BRANDMARK_ASPECT = 436 / 430.99;
@@ -95,20 +104,28 @@ export function ProjectedBrandmarkActor() {
           // stage finishes pinning.
           const progress = paintProgress;
 
-          // Substrate-cut: hide the DOM brandmark whenever the in-
-          // canvas substrate morph cloud is painting (ADR-017). The
-          // hero is gated upstream by the depth-stage's `active`
-          // flag (rect.top <= 0 in useDepthScroll), so the tracker
-          // doesn't even call onPaint until the corridor has truly
-          // engaged — no hero-gate needed here.
+          // Substrate cross-fade: rather than instantly hiding the
+          // DOM brandmark when the substrate cloud appears, we
+          // smoothly fade it out across an early-morph window
+          // [0, SUBSTRATE_CROSSFADE_END]. Combined with the cloud's
+          // matched brandmark-form size, the handoff reads as a
+          // continuous bloom from the DOM mark into the particle
+          // substrate rather than a hard cut.
           const morph = beat === "intelligence" ? getSubstrateMorph(gateProgress) : 0;
-          if (morph > SUBSTRATE_CUT_EPSILON) {
-            element.style.display = "none";
+          const substrateFadeOut =
+            morph <= 0
+              ? 1
+              : morph >= SUBSTRATE_CROSSFADE_END
+                ? 0
+                : 1 - morph / SUBSTRATE_CROSSFADE_END;
+          // Once the cloud has fully taken over, suppress all DOM
+          // updates so we don't spend layout work on an invisible
+          // element. The element is left visible (no display:none)
+          // so that scrolling back up resumes the fade-in naturally.
+          if (substrateFadeOut <= 0.001) {
+            element.style.opacity = "0";
             return;
           }
-          // Substrate-cut not active — clear any prior display:none
-          // set during the intelligence morph window so the mark is
-          // paintable again when scrolling back up out of intelligence.
           if (element.style.display === "none") element.style.display = "";
 
           // Width from world half-extent — project an edge point and
@@ -149,7 +166,7 @@ export function ProjectedBrandmarkActor() {
           const isParkedBeat =
             beat === "thoughtform" || beat === "diagnostic" || beat === "intelligence";
           const intensity = isParkedBeat ? 1 : 0.92;
-          element.style.opacity = `${(bookend * intensity).toFixed(3)}`;
+          element.style.opacity = `${(bookend * intensity * substrateFadeOut).toFixed(3)}`;
 
           // Roll: the inner div takes the perspective rotation so
           // the outer shell stays a clean layout box.

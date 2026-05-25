@@ -435,38 +435,53 @@ export const BRANDMARK_ANCHOR_INTELLIGENCE: [number, number, number] = [
 ];
 
 /** Camera-relative lead point for the Diagnostic -> Intelligence
- *  transit. The brandmark is no longer only an anchor-to-anchor lerp
- *  during this stretch; it becomes a lead artifact several world
- *  units ahead of the camera. The camera subtly looks toward this
- *  point (see `getCameraLookAt`) while the substrate sphere owns the
- *  later scale-up moment. */
+ *  transit. The brandmark becomes a lead artifact several world
+ *  units ahead of the camera; the camera subtly looks toward this
+ *  point (see `getCameraLookAt`) while the substrate sphere owns
+ *  the later scale-up moment.
+ *
+ *  Lead distance starts at the parked-Diagnostic camera-to-anchor
+ *  distance (so the brandmark exits the Diagnostic beat seamlessly
+ *  at the same world Z it was parked at) and grows continuously to
+ *  a full lead. This guarantees the camera-to-brandmark distance
+ *  is MONOTONICALLY NON-DECREASING during the transit — the
+ *  previous version lerped from the fixed Diagnostic anchor toward
+ *  a far rawLead point, but the camera dollied forward faster than
+ *  that lerp, briefly catching up to the brandmark and creating a
+ *  subtle "bob toward camera" feel.
+ *
+ *  Landing: once the rawLead Z reaches the Intelligence anchor's
+ *  world Z, the brandmark FREEZES at that anchor while the camera
+ *  continues approaching. No late lerp that would pull the
+ *  brandmark BACK toward the camera in the last 8% of the transit.
+ *  The substrate-cut takes over the visible role from the Intel
+ *  beat onward, so this final approach reads as "camera dollies
+ *  into the substrate" rather than "brandmark comes back at us". */
 export function getBrandmarkLeadWorldPosition(progress: number): [number, number, number] {
   const cam = getCameraPosition(progress);
   const forward = getCameraForward(progress);
+
+  /** Camera-to-brandmark distance at the moment transit begins
+   *  (progress ≈ 0.52, end of the Diagnostic park hold). This is
+   *  derived from the camera path + the Diagnostic anchor Z so the
+   *  lead distance is continuous across the transition. */
+  const INITIAL_LEAD = 3.46;
+  const FULL_LEAD = 7.2;
   const pullT = smoothstep(0.52, 0.76, progress);
-  const leadDistance = lerp(5.6, 7.2, pullT);
+  const leadDistance = lerp(INITIAL_LEAD, FULL_LEAD, pullT);
+
   const rawLead: [number, number, number] = [
     cam[0] + forward[0] * leadDistance,
     cam[1] + forward[1] * leadDistance,
     cam[2] + forward[2] * leadDistance,
   ];
 
-  if (progress < 0.62) {
-    const t = smoothstep(0.52, 0.62, progress);
-    return [
-      lerp(BRANDMARK_ANCHOR_DIAGNOSTIC[0], rawLead[0], t),
-      lerp(BRANDMARK_ANCHOR_DIAGNOSTIC[1], rawLead[1], t),
-      lerp(BRANDMARK_ANCHOR_DIAGNOSTIC[2], rawLead[2], t),
-    ];
-  }
-
-  if (progress > 0.78) {
-    const t = smoothstep(0.78, 0.86, progress);
-    return [
-      lerp(rawLead[0], BRANDMARK_ANCHOR_INTELLIGENCE[0], t),
-      lerp(rawLead[1], BRANDMARK_ANCHOR_INTELLIGENCE[1], t),
-      lerp(rawLead[2], BRANDMARK_ANCHOR_INTELLIGENCE[2], t),
-    ];
+  // Cap at Intelligence anchor: once the rawLead would carry the
+  // brandmark past the Intelligence anchor (in the camera-forward
+  // direction, which is -Z down the corridor), freeze it there.
+  const intel = BRANDMARK_ANCHOR_INTELLIGENCE;
+  if (forward[2] < 0 && rawLead[2] <= intel[2]) {
+    return [intel[0], intel[1], intel[2]];
   }
 
   return rawLead;
