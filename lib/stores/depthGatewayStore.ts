@@ -179,38 +179,52 @@ export function getCorridorEngagement(
  *  global progress) directly so the camera dollies CONTINUOUSLY
  *  through the beats and only the diagram geometry parks.
  *
- *  Pacing pass (Thoughtform -> Diagnostics immersion): the
- *  passthrough-01 window was widened from 14% to 24% of stage
- *  scroll and the stage itself was lengthened from 300svh to
- *  360svh (see home-v2.css). Together that roughly doubles the
- *  physical fly-through distance between the Thoughtform compass
- *  and the Diagnostic orbital field — the Diagnostic gate parks
- *  later in the corridor, so its world Z (derived from park
- *  progress in sceneGeom.ts) sits genuinely farther down the
- *  camera path. Downstream beats compress slightly but each
- *  still owns more absolute scroll than before thanks to the
- *  longer stage. */
+ *  Pacing history:
+ *    - Original: passthrough-01 = 0.18 → 0.32 (~14% of scroll).
+ *    - Immersion pass: passthrough-01 = 0.16 → 0.40 (~24%).
+ *    - Latent depth spacing pass (current): passthrough-01 =
+ *      0.14 → 0.46 (~32%). Combined with the stage growing to
+ *      460svh (see home-v2.css), the absolute fly-through scroll
+ *      length between the Thoughtform compass and the Diagnostic
+ *      orbital field is roughly 1.7x what it was after the
+ *      immersion pass and ~3.5x the original. The Diagnostic
+ *      beat shifts later and its park progress moves to 0.53, so
+ *      the gate's solved world Z (see sceneGeom.ts
+ *      gateZAtParkProgress) sits several world units deeper —
+ *      Diagnostic is genuinely distant when first registered
+ *      and approached over a real travel window.
+ *
+ *  Downstream beats keep similar narrative shape because the
+ *  longer stage absorbs the widened passthrough; in absolute
+ *  scroll they all gain headroom relative to the previous pass. */
 export const BEAT_WINDOWS: { beat: Beat; start: number; end: number }[] = [
-  { beat: "thoughtform", start: 0.0, end: 0.16 },
-  { beat: "passthrough-01", start: 0.16, end: 0.4 },
-  { beat: "diagnostic", start: 0.4, end: 0.55 },
-  { beat: "passthrough-02", start: 0.55, end: 0.72 },
-  { beat: "intelligence", start: 0.72, end: 1.0 },
+  { beat: "thoughtform", start: 0.0, end: 0.14 },
+  { beat: "passthrough-01", start: 0.14, end: 0.46 },
+  { beat: "diagnostic", start: 0.46, end: 0.6 },
+  { beat: "passthrough-02", start: 0.6, end: 0.76 },
+  { beat: "intelligence", start: 0.76, end: 1.0 },
 ];
 
 /** Park centres for each "parked" beat (used by the projected
  *  brandmark to know when it is at rest). The passthrough beats
  *  intentionally do not appear here.
  *
- *  Diagnostic park pushed from 0.41 -> 0.47 so the orbital field
- *  sits well past the widened passthrough-01 — combined with the
- *  later beat boundary, this means the Diagnostic gate's solved
- *  world Z (see sceneGeom.ts gateZAtParkProgress) is several
- *  world units farther from camera-start than before. */
+ *  Park progress history:
+ *    - Thoughtform: 0.08 → 0.07 (slightly earlier so the parked
+ *      composition holds during the trimmed Thoughtform beat
+ *      before the longer fly-through begins).
+ *    - Diagnostic: 0.47 → 0.53. Combined with the later
+ *      passthrough-01 end, the Diagnostic gate's solved world Z
+ *      sits ~1.5 units deeper than before, so the orbital field
+ *      visibly approaches from the distance for the entire
+ *      fly-through.
+ *    - Intelligence: 0.86 → 0.88. Shifted later to match the
+ *      new intelligence beat start (0.76); the substrate sphere
+ *      still owns the late-corridor scale-up. */
 export const BEAT_PARK_CENTRES: Partial<Record<Beat, number>> = {
-  thoughtform: 0.08,
-  diagnostic: 0.47,
-  intelligence: 0.86,
+  thoughtform: 0.07,
+  diagnostic: 0.53,
+  intelligence: 0.88,
 };
 
 /** Resolve which beat a global progress value sits in, plus the
@@ -277,9 +291,9 @@ export function deriveChambers(progress: number): {
   // Chamber A: spans [0, end of passthrough-01]
   // Chamber B: spans [start of diagnostic, end of diagnostic]
   // Chamber C: spans [start of passthrough-02, 1]
-  const chamberASpan = BEAT_WINDOWS[1].end - BEAT_WINDOWS[0].start; // 0.0 → 0.32
-  const chamberBSpan = BEAT_WINDOWS[2].end - BEAT_WINDOWS[2].start; // 0.32 → 0.50
-  const chamberCSpan = BEAT_WINDOWS[4].end - BEAT_WINDOWS[3].start; // 0.50 → 1.00
+  const chamberASpan = BEAT_WINDOWS[1].end - BEAT_WINDOWS[0].start; // 0.0 → 0.46
+  const chamberBSpan = BEAT_WINDOWS[2].end - BEAT_WINDOWS[2].start; // 0.46 → 0.60
+  const chamberCSpan = BEAT_WINDOWS[4].end - BEAT_WINDOWS[3].start; // 0.60 → 1.00
 
   const chamberA = clamp01((progress - BEAT_WINDOWS[0].start) / chamberASpan);
   const chamberB = clamp01((progress - BEAT_WINDOWS[2].start) / chamberBSpan);

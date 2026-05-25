@@ -48,13 +48,22 @@
 .home-v2-stage {
   position: relative;
   width: 100%;
-  /* 360svh = the corridor scroll length. Each beat covers a
+  /* 460svh = the corridor scroll length. Each beat covers a
      fraction of this — see BEAT_WINDOWS in depthGatewayStore.ts.
-     Bumped from 300svh as part of the Thoughtform -> Diagnostics
-     immersion pass so the widened `passthrough-01` window (now
-     ~24% of scroll, was ~14%) translates to roughly 2x the
-     physical fly-through distance between the first two gates. */
-  height: 360svh;
+     Stage growth history:
+       - 300svh: original world-owned corridor.
+       - 360svh: Thoughtform -> Diagnostics immersion pass
+         (passthrough-01 widened from 14% to 24% of scroll).
+       - 460svh: latent depth spacing pass — passthrough-01
+         widened again to 32% of scroll (~147svh absolute, ~1.7x
+         the previous physical fly-through). The Diagnostic gate
+         parks at progress 0.53, several world units deeper than
+         before, so its orbital field genuinely approaches from
+         the distance instead of fading in at gate scale. The
+         extra scroll length also gives the new latent artifact
+         bands (equations, vectors, tokens) the world-Z headroom
+         to read as objects flown past, not ambient drift. */
+  height: 460svh;
   background: var(--void, #050403);
   z-index: 2;
   isolation: isolate;

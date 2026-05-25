@@ -100,11 +100,25 @@ const RING_ALPHA_WEIGHTS = [0.32, 0.36, 0.56, 0.76];
 const DAWN_HEX = "#ebe3d6";
 const GOLD_HEX = "#caa554";
 const RING_COLORS = [DAWN_HEX, DAWN_HEX, GOLD_HEX, GOLD_HEX];
+/** Camera-space focus window for the compass rings + supporting
+ *  linework. After the latent depth spacing pass:
+ *    - `near` tightened from 1.15 → 0.55 with `nearFade` from 3.2
+ *      → 0.7. The previous values bled the near-fade across more
+ *      than 3 world units, so rings visibly thinned long before
+ *      they actually crossed the camera plane — the user read
+ *      that as "the diagrams just disappear". Now the rings stay
+ *      at full opacity right up until ~0.55 in front of the
+ *      camera, then fade quickly across 0.7 world units as they
+ *      actually pass.
+ *    - `far` extended from 9 → 13 with `farFade` from 3 → 5 so
+ *      the compass remains optically present further into the
+ *      distance during the longer parked Thoughtform beat
+ *      (longer scroll dwell on the parked composition). */
 const COMPASS_DEPTH_WINDOW = {
-  near: 1.15,
-  nearFade: 3.2,
-  far: 9,
-  farFade: 3,
+  near: 0.55,
+  nearFade: 0.7,
+  far: 13,
+  farFade: 5,
 } as const;
 
 /** Per-ring dash pattern (world units), matching v7 SVG dasharrays

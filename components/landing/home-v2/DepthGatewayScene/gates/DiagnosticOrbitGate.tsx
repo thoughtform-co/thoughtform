@@ -30,11 +30,24 @@ import { STATION_DIAGNOSTIC, cameraSpaceDepth, depthFocusOpacity } from "../scen
 // roughly matching the diagnostic gate's halfExtent (2.2).
 const SVG_TO_WORLD = 1 / 240;
 const RING_SEGMENTS = 128;
+/** Camera-space focus window for the Diagnostic orbital field.
+ *  After the latent depth spacing pass:
+ *    - `far` extended from 7.3 → 11 with `farFade` from 3.1 → 5
+ *      so the orbits register as VERY FAINT distant geometry the
+ *      moment the camera dolly begins (early passthrough-01),
+ *      then visibly intensify across the longer fly-through. The
+ *      Diagnostic gate is now several world units deeper (park
+ *      progress 0.53 vs 0.47), so this wider far envelope is
+ *      necessary to let the user see it approaching rather than
+ *      popping into existence at mid-passthrough.
+ *    - `near` slightly relaxed (1.05 → 0.9, nearFade 2.8 → 2.4)
+ *      so the orbits hold full opacity longer as the camera
+ *      enters the parked range. */
 const DIAGNOSTIC_DEPTH_WINDOW = {
-  near: 1.05,
-  nearFade: 2.8,
-  far: 7.3,
-  farFade: 3.1,
+  near: 0.9,
+  nearFade: 2.4,
+  far: 11,
+  farFade: 5,
 } as const;
 
 const PIP_POSITIONS = [

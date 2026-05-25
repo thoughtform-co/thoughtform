@@ -4,7 +4,13 @@ import { useEffect, useRef, type RefObject } from "react";
 import * as THREE from "three";
 import type { DepthGatewayTransform, Beat } from "@/lib/stores/depthGatewayStore";
 import { BEAT_WINDOWS, useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
-import { CAMERA_FOV, getCameraLookAt, getCameraPosition } from "../DepthGatewayScene/sceneGeom";
+import {
+  CAMERA_FOV,
+  type DepthFocusWindow,
+  depthFocusOpacity,
+  getCameraLookAt,
+  getCameraPosition,
+} from "../DepthGatewayScene/sceneGeom";
 
 /**
  * useWorldDomTracker — the central per-frame projector for the
@@ -69,6 +75,27 @@ export interface WorldAnchor {
    *  for in-world labels (e.g. Diagnostic orbit pills that the
    *  user is supposed to feel flying toward). */
   perspectiveScale?: PerspectiveScaleConfig;
+  /** Optional camera-space focus window. When set, the anchor's
+   *  visibility opacity is MULTIPLIED by
+   *  `depthFocusOpacity(camToAnchor, depthFade)` — so in-world DOM
+   *  labels emerge by DISTANCE, not just by beat membership.
+   *
+   *  Beat visibility decides WHEN the element is allowed to paint;
+   *  depthFade decides HOW MUCH of that paint actually reaches the
+   *  user as the camera approaches and passes the anchor.
+   *
+   *  Use this for any DOM anchor co-located with a 3D gate that
+   *  should appear faintly when far, intensify as the camera
+   *  closes the distance, and recede as it passes — matching the
+   *  Star Atlas-style depth contract that already governs the
+   *  R3F geometry on this route (see ADR-018 2026-05-24 revision).
+   *
+   *  Without this, anchors with multi-beat visibility windows pop
+   *  to full opacity the moment they enter the window — even if
+   *  the camera is still many world units away — which reads as
+   *  "the next section is already there" rather than as travel
+   *  through depth. */
+  depthFade?: DepthFocusWindow;
   /** Optional per-frame hook fired after inline transform + opacity
    *  are written. Use for extra frame state (perspective-correct
    *  width/height, custom tilt, etc.). */
@@ -248,7 +275,20 @@ export function useWorldDomTracker(
         // Behind-camera cull.
         toA.set(worldPos[0], worldPos[1], worldPos[2]).sub(cam.position);
         const camToAnchor = toA.dot(fwd);
-        const visibilityOpacity = computeVisibilityOpacity(anchor, paintProgress);
+        const beatOpacity = computeVisibilityOpacity(anchor, paintProgress);
+        // Depth-fade: when an anchor opts in via `depthFade`, the
+        // beat-driven opacity is multiplied by a depth-focus
+        // envelope so the element registers faintly when far,
+        // intensifies as the camera closes the distance, and
+        // recedes as it crosses the camera. Without this, in-world
+        // labels with multi-beat visibility windows pop to full
+        // opacity the moment they enter the window — which reads
+        // as "the next section is already there" instead of as a
+        // distant object approaching.
+        const depthMultiplier = anchor.depthFade
+          ? depthFocusOpacity(camToAnchor, anchor.depthFade)
+          : 1;
+        const visibilityOpacity = beatOpacity * depthMultiplier;
         const inFront = camToAnchor > 0.2;
         // Paint (write transform) while armed OR active. Opacity is
         // forced to 0 while only armed so nothing is visually shown
