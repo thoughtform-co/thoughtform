@@ -73,13 +73,16 @@ interface StaticStarfieldProps {
 }
 
 export function StaticStarfield({ count }: StaticStarfieldProps = {}) {
+  // Counts bumped 2026-05-25 (+33% across tiers) so the deep-space
+  // backdrop reads as a denser starfield as the camera dollies
+  // through the corridor — more parallax events per second.
   const starCount = useMemo(() => {
     if (count != null) return count;
-    if (typeof window === "undefined") return 1400;
+    if (typeof window === "undefined") return 1900;
     const w = window.innerWidth;
-    if (w < 760) return 900;
-    if (w < 1280) return 1300;
-    return 1800;
+    if (w < 760) return 1200;
+    if (w < 1280) return 1700;
+    return 2400;
   }, [count]);
 
   const geometry = useMemo(() => {

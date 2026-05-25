@@ -114,13 +114,16 @@ export function ScrollStreaks({ count }: ScrollStreaksProps = {}) {
   const lastTime = useRef<number>(-1);
   const visibleAlpha = useRef<number>(0);
 
+  // Counts bumped 2026-05-25 (+27% across tiers) so the punctuation
+  // streaks read denser during fast scrolls — paired with the
+  // raised alpha cap below.
   const particleCount = useMemo(() => {
     if (count != null) return count;
-    if (typeof window === "undefined") return 1400;
+    if (typeof window === "undefined") return 1800;
     const w = window.innerWidth;
-    if (w < 760) return 900;
-    if (w < 1280) return 1600;
-    return 2200;
+    if (w < 760) return 1100;
+    if (w < 1280) return 2000;
+    return 2800;
   }, [count]);
 
   const geometry = useMemo(() => {
@@ -197,10 +200,12 @@ export function ScrollStreaks({ count }: ScrollStreaksProps = {}) {
     const targetAlpha = Math.min(1, Math.abs(velocity) * 2.5);
     const k = 1 - Math.exp(-ALPHA_RESPONSE * dt);
     visibleAlpha.current = visibleAlpha.current + (targetAlpha - visibleAlpha.current) * k;
-    // Cap multiplier dropped (was 0.85) so streaks act as a warm
-    // punctuation glint on top of the LatentFieldTunnel rather
-    // than competing with it for attention. See the file header.
-    material.uniforms.uOpacity.value = visibleAlpha.current * 0.55;
+    // Cap raised 2026-05-25 (0.55 -> 0.65) alongside the count
+    // bump above so fast-scroll glints register more clearly as
+    // the corridor density grew. Streaks still cap below 1.0 so
+    // they remain a punctuation layer on top of the
+    // LatentFieldTunnel, not a competing foreground.
+    material.uniforms.uOpacity.value = visibleAlpha.current * 0.65;
 
     if (!active) {
       return;

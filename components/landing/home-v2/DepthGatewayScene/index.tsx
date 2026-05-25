@@ -5,8 +5,8 @@ import { CelestialMotes } from "./CelestialMotes";
 import { FlyingCameraRig } from "./FlyingCameraRig";
 import { GatewayWorld } from "./gates/GatewayWorld";
 import { InterGateCorridor } from "./InterGateCorridor";
-import { LatentArtifactBands } from "./LatentArtifactBands";
 import { LatentFieldTunnel } from "./LatentFieldTunnel";
+import { LatentTopographyContours } from "./LatentTopographyContours";
 import { ScrollStreaks } from "./ScrollStreaks";
 import { StaticStarfield } from "./StaticStarfield";
 import { ThoughtformAtmosphere } from "./ThoughtformAtmosphere";
@@ -41,16 +41,19 @@ import { CAMERA_FOV, CAMERA_START, getCameraLookAt } from "./sceneGeom";
  *                             through a starfield. STILL at rest,
  *                             flows ONLY with scroll velocity, peaks
  *                             through the Thoughtform boot envelope.
- *   - LatentArtifactBands   : world-fixed equation / token / vector
- *                             shards spaced between Thoughtform and
- *                             Diagnostic. Unlike LatentFieldTunnel
- *                             (camera-relative ambient particles),
- *                             every artifact here lives at a fixed
- *                             world Z — the camera literally flies
- *                             past each one, scaling it up via
- *                             perspective and culling it as it
- *                             crosses the camera plane. Reinforces
- *                             the "real depth corridor" read.
+ *   - LatentTopographyContours : world-fixed contour shards + ridge
+ *                             arcs + gradient arrows distributed
+ *                             along BOTH passthrough legs. Reads
+ *                             as the level sets of a loss surface
+ *                             the camera is flying past. Unlike
+ *                             LatentFieldTunnel (camera-relative
+ *                             ambient particles), every shard
+ *                             lives at a fixed world Z — the
+ *                             camera literally flies past each
+ *                             one. Reinforces the "real depth
+ *                             corridor" read with abstract latent-
+ *                             space content instead of literal
+ *                             equation glyphs.
  *   - CelestialMotes        : a small set of sphere-shaped particle
  *                             clusters that fly past the camera like
  *                             planetoids — the celestial-navigation
@@ -116,7 +119,7 @@ export function DepthGatewayScene() {
       <ThoughtformAtmosphere />
       <InterGateCorridor />
       <LatentFieldTunnel />
-      <LatentArtifactBands />
+      <LatentTopographyContours />
       <CelestialMotes />
       <ScrollStreaks />
       <GatewayWorld />

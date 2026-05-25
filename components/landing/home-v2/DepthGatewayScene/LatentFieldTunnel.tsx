@@ -54,9 +54,12 @@ import { getThoughtformBootEnvelope } from "./sceneGeom";
 
 // ─── Density tiers (art-directable, per-viewport) ────────────────
 
-const POINT_COUNT_DESKTOP = 2800;
-const POINT_COUNT_TABLET = 1800;
-const POINT_COUNT_MOBILE = 1100;
+// Density tiers bumped 2026-05-25 to intensify the wormhole tunnel
+// feel without changing the motion contract (still scroll-velocity-
+// only, still no idle drift). +29% desktop / +28% tablet / +27% mobile.
+const POINT_COUNT_DESKTOP = 3600;
+const POINT_COUNT_TABLET = 2300;
+const POINT_COUNT_MOBILE = 1400;
 
 /** Fraction of points marked as bright "anchor" stars (the rest are
  *  faint "field" points). Anchors are noticeably larger + brighter
@@ -65,9 +68,11 @@ const POINT_COUNT_MOBILE = 1100;
  *  several anchors in frame to give the field structure. */
 const ANCHOR_RATIO = 0.13;
 
-const VECTOR_PAIR_COUNT_DESKTOP = 320;
-const VECTOR_PAIR_COUNT_TABLET = 200;
-const VECTOR_PAIR_COUNT_MOBILE = 90;
+// Vector pair counts +20% alongside the point bump so the embedding
+// graph keeps its visible neighbourhood density at the new tier.
+const VECTOR_PAIR_COUNT_DESKTOP = 385;
+const VECTOR_PAIR_COUNT_TABLET = 240;
+const VECTOR_PAIR_COUNT_MOBILE = 110;
 
 const TOKEN_COUNT_DESKTOP = 72;
 const TOKEN_COUNT_TABLET = 42;
