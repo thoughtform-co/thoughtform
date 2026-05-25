@@ -3,7 +3,7 @@
 import { useFrame } from "@react-three/fiber";
 import { useEffect, useMemo } from "react";
 import * as THREE from "three";
-import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
+import { smoothstep, useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import { STATION_DIAGNOSTIC, STATION_THOUGHTFORM, depthOpacityForWorldPosition } from "./sceneGeom";
 
 /**
@@ -42,10 +42,9 @@ import { STATION_DIAGNOSTIC, STATION_THOUGHTFORM, depthOpacityForWorldPosition }
  *     brandmark column (|x| > 0.9 OR |y| > 0.55 minimum offset).
  *   - No artifact sits in the peripheral HUD-rail strip (|x| < ~2.6,
  *     |y| < ~1.5 maximum offset at the parked compass distance).
- *   - Z range: roughly between Thoughtform parked Z (~5.5) and the
- *     parked Diagnostic Z (~-2.2) — a few are placed slightly past
- *     Diagnostic so the camera continues to fly past artifacts as
- *     the orbital field becomes legible.
+ *   - Z range: starts after the Thoughtform station, not on top of
+ *     it. The semantic equations should be discovered during travel,
+ *     not already visible in the parked Thoughtform read.
  *   - Each artifact's depth-focus window is sized to its scale so
  *     larger plates fade in earlier (visible from further away) and
  *     smaller plates only register when close.
@@ -73,6 +72,24 @@ const PLANE_GEOM_SIZE = 1;
  *  viewing distances (camera-to-anchor 2 – 8 world units). */
 const ATLAS_TILE_PX = 256;
 const ATLAS_FONT_PX = 64;
+
+/** Semantic artifacts begin after the Thoughtform gate clears the
+ *  centre. This keeps the parked section from showing the entire next
+ *  corridor while preserving fixed-world-Z fly-past behavior once the
+ *  camera starts moving. */
+const ARTIFACT_NEAR_Z =
+  STATION_THOUGHTFORM.position[2] +
+  (STATION_DIAGNOSTIC.position[2] - STATION_THOUGHTFORM.position[2]) * 0.34;
+const ARTIFACT_Z_STEP = 0.68;
+const ARTIFACT_EXTRA_FAR_Z = STATION_DIAGNOSTIC.position[2] - 2.35;
+
+function artifactZ(index: number): number {
+  return ARTIFACT_NEAR_Z - ARTIFACT_Z_STEP * index;
+}
+
+function semanticCorridorReveal(progress: number): number {
+  return smoothstep(0.16, 0.28, progress);
+}
 
 // ─── Artifact catalogue (hand-placed) ──────────────────────────
 
@@ -130,60 +147,83 @@ const EQUATION_LEXICON = [
 const TOKEN_LEXICON = ["[CLS]", "<emb>", "ctx[i]", "k=32", "attn", "proj"] as const;
 
 /** Catalogue: every artifact's world position, scale, kind, and
- *  content. The Z range here intentionally spans Thoughtform's
- *  parked Z (~5.5) through just past the Diagnostic park Z (~-2.2) so
- *  the camera flies past a populated corridor across the entire
- *  passthrough-01 window AND the early Diagnostic beat. */
+ *  content. The Z range intentionally begins deeper than the
+ *  Thoughtform station, so the parked Thoughtform beat stays clean
+ *  and the equations are discovered only once the brandmark leads the
+ *  camera into the corridor. */
 const ARTIFACTS: Artifact[] = [
   // ── Equations — primary content layer ─────────────────────────
-  { kind: "equation", text: EQUATION_LEXICON[0], pos: [-1.6, 0.95, 4.8], scale: 0.42 },
-  { kind: "equation", text: EQUATION_LEXICON[1], pos: [1.85, -0.85, 4.2], scale: 0.5 },
+  { kind: "equation", text: EQUATION_LEXICON[0], pos: [-1.6, 0.95, artifactZ(0)], scale: 0.42 },
+  { kind: "equation", text: EQUATION_LEXICON[1], pos: [1.85, -0.85, artifactZ(1)], scale: 0.5 },
   {
     kind: "equation",
     text: EQUATION_LEXICON[2],
-    pos: [2.05, 0.7, 3.2],
+    pos: [2.05, 0.7, artifactZ(2)],
     scale: 0.6,
     color: GOLD_HEX,
   },
-  { kind: "equation", text: EQUATION_LEXICON[3], pos: [-1.95, -0.65, 2.55], scale: 0.48 },
-  { kind: "equation", text: EQUATION_LEXICON[4], pos: [1.55, 1.15, 1.6], scale: 0.42 },
-  { kind: "equation", text: EQUATION_LEXICON[5], pos: [-2.2, 0.55, 0.95], scale: 0.5 },
+  { kind: "equation", text: EQUATION_LEXICON[3], pos: [-1.95, -0.65, artifactZ(3)], scale: 0.48 },
+  { kind: "equation", text: EQUATION_LEXICON[4], pos: [1.55, 1.15, artifactZ(4)], scale: 0.42 },
+  { kind: "equation", text: EQUATION_LEXICON[5], pos: [-2.2, 0.55, artifactZ(5)], scale: 0.5 },
   {
     kind: "equation",
     text: EQUATION_LEXICON[6],
-    pos: [1.85, -1.05, 0.1],
+    pos: [1.85, -1.05, artifactZ(6)],
     scale: 0.52,
     color: GOLD_HEX,
   },
-  { kind: "equation", text: EQUATION_LEXICON[7], pos: [-1.45, 1.0, -0.55], scale: 0.46 },
-  { kind: "equation", text: EQUATION_LEXICON[8], pos: [2.1, 0.4, -1.25], scale: 0.46 },
-  { kind: "equation", text: EQUATION_LEXICON[9], pos: [-1.8, -0.95, -2.0], scale: 0.5 },
-  { kind: "equation", text: EQUATION_LEXICON[10], pos: [1.55, 0.95, -2.85], scale: 0.5 },
-  { kind: "equation", text: EQUATION_LEXICON[11], pos: [-2.0, -0.45, -3.6], scale: 0.46 },
+  { kind: "equation", text: EQUATION_LEXICON[7], pos: [-1.45, 1.0, artifactZ(7)], scale: 0.46 },
+  { kind: "equation", text: EQUATION_LEXICON[8], pos: [2.1, 0.4, artifactZ(8)], scale: 0.46 },
+  { kind: "equation", text: EQUATION_LEXICON[9], pos: [-1.8, -0.95, artifactZ(9)], scale: 0.5 },
+  { kind: "equation", text: EQUATION_LEXICON[10], pos: [1.55, 0.95, artifactZ(10)], scale: 0.5 },
+  {
+    kind: "equation",
+    text: EQUATION_LEXICON[11],
+    pos: [-2.0, -0.45, ARTIFACT_EXTRA_FAR_Z],
+    scale: 0.46,
+  },
 
   // ── Tokens — bracketed identifiers, slightly larger, gold ─────
-  { kind: "token", text: TOKEN_LEXICON[0], pos: [-1.2, -1.1, 4.1], scale: 0.45, color: GOLD_HEX },
-  { kind: "token", text: TOKEN_LEXICON[1], pos: [1.3, 1.05, 2.85], scale: 0.45 },
-  { kind: "token", text: TOKEN_LEXICON[2], pos: [-1.7, 0.35, 1.8], scale: 0.48 },
-  { kind: "token", text: TOKEN_LEXICON[3], pos: [1.7, -0.45, 0.45], scale: 0.42 },
-  { kind: "token", text: TOKEN_LEXICON[4], pos: [-1.35, 0.75, -1.0], scale: 0.42, color: GOLD_HEX },
-  { kind: "token", text: TOKEN_LEXICON[5], pos: [1.4, -1.0, -2.6], scale: 0.42 },
+  {
+    kind: "token",
+    text: TOKEN_LEXICON[0],
+    pos: [-1.2, -1.1, artifactZ(1)],
+    scale: 0.45,
+    color: GOLD_HEX,
+  },
+  { kind: "token", text: TOKEN_LEXICON[1], pos: [1.3, 1.05, artifactZ(3)], scale: 0.45 },
+  { kind: "token", text: TOKEN_LEXICON[2], pos: [-1.7, 0.35, artifactZ(4)], scale: 0.48 },
+  { kind: "token", text: TOKEN_LEXICON[3], pos: [1.7, -0.45, artifactZ(6)], scale: 0.42 },
+  {
+    kind: "token",
+    text: TOKEN_LEXICON[4],
+    pos: [-1.35, 0.75, artifactZ(8)],
+    scale: 0.42,
+    color: GOLD_HEX,
+  },
+  { kind: "token", text: TOKEN_LEXICON[5], pos: [1.4, -1.0, artifactZ(10)], scale: 0.42 },
 
   // ── Vector shards — directional line segments with end markers ─
   {
     kind: "vector",
-    pos: [-1.05, 0.6, 3.7],
+    pos: [-1.05, 0.6, artifactZ(2)],
     dir: [0.85, 0.4, -0.25],
     length: 0.95,
     color: GOLD_HEX,
   },
-  { kind: "vector", pos: [1.2, -0.55, 2.4], dir: [-0.7, -0.45, -0.3], length: 0.85 },
-  { kind: "vector", pos: [-1.4, -0.4, 1.2], dir: [0.6, 0.6, -0.35], length: 0.9, color: GOLD_HEX },
-  { kind: "vector", pos: [1.45, 0.45, -0.4], dir: [-0.55, 0.55, -0.4], length: 0.85 },
-  { kind: "vector", pos: [-1.1, 0.8, -1.65], dir: [0.7, -0.5, -0.35], length: 0.9 },
+  { kind: "vector", pos: [1.2, -0.55, artifactZ(4)], dir: [-0.7, -0.45, -0.3], length: 0.85 },
   {
     kind: "vector",
-    pos: [1.25, -0.85, -3.0],
+    pos: [-1.4, -0.4, artifactZ(5)],
+    dir: [0.6, 0.6, -0.35],
+    length: 0.9,
+    color: GOLD_HEX,
+  },
+  { kind: "vector", pos: [1.45, 0.45, artifactZ(7)], dir: [-0.55, 0.55, -0.4], length: 0.85 },
+  { kind: "vector", pos: [-1.1, 0.8, artifactZ(9)], dir: [0.7, -0.5, -0.35], length: 0.9 },
+  {
+    kind: "vector",
+    pos: [1.25, -0.85, artifactZ(10)],
     dir: [-0.6, 0.5, -0.4],
     length: 0.85,
     color: GOLD_HEX,
@@ -323,16 +363,16 @@ function GlyphBillboard({ atlas, tileIndex, pos, scale, color }: GlyphBillboardP
     };
   }, [material]);
 
-  // Depth-focus window scaled with the artifact size so larger
-  // glyphs are visible from further away (more legible at small
-  // angular size) and smaller glyphs only register up close.
+  // Depth-focus window scaled with the artifact size, but kept
+  // tighter than before so parked Thoughtform does not already show
+  // the whole semantic layer behind it.
   const depthWindow = useMemo(() => {
-    const reach = 5 + scale * 7;
+    const reach = 4.5 + scale * 3.5;
     return {
       near: 0.4,
       nearFade: 0.5,
       far: reach,
-      farFade: Math.max(1.5, scale * 4),
+      farFade: Math.max(0.9, scale * 2.2),
     };
   }, [scale]);
 
@@ -342,7 +382,9 @@ function GlyphBillboard({ atlas, tileIndex, pos, scale, color }: GlyphBillboardP
       material.uniforms.uOpacity.value = 0;
       return;
     }
-    const opacity = depthOpacityForWorldPosition(paintProgress, pos, depthWindow);
+    const opacity =
+      depthOpacityForWorldPosition(paintProgress, pos, depthWindow) *
+      semanticCorridorReveal(paintProgress);
     // Cap at a deliberate ceiling — artifacts read as ambient
     // signal, not as foreground UI competing with the brandmark
     // or the gate copy.
@@ -456,8 +498,8 @@ function VectorShard({ pos, dir, length, color }: VectorShardProps) {
     () => ({
       near: 0.4,
       nearFade: 0.5,
-      far: 6,
-      farFade: 2.5,
+      far: 5.4,
+      farFade: 1.4,
     }),
     []
   );
@@ -469,7 +511,9 @@ function VectorShard({ pos, dir, length, color }: VectorShardProps) {
       diamondMaterial.opacity = 0;
       return;
     }
-    const opacity = depthOpacityForWorldPosition(paintProgress, midpoint, depthWindow);
+    const opacity =
+      depthOpacityForWorldPosition(paintProgress, midpoint, depthWindow) *
+      semanticCorridorReveal(paintProgress);
     lineMaterial.opacity = opacity * 0.6;
     diamondMaterial.opacity = opacity * 0.85;
   });
@@ -507,25 +551,22 @@ export function LatentArtifactBands() {
   }, [atlas]);
 
   // Confirm the corridor span the catalogue targets is consistent
-  // with the actual station Z positions — surfaces in DEV logs only
-  // if the assumed range deviates by more than half a world unit,
-  // which would only happen if someone moves the stations without
-  // updating the catalogue. Cheap one-shot, no runtime cost.
+  // with the computed reveal band — surfaces in DEV logs only if the
+  // assumed range deviates enough to make the parked Thoughtform beat
+  // show too much of the next leg again. Cheap one-shot, no runtime cost.
   useEffect(() => {
     if (process.env.NODE_ENV !== "development") return;
-    const expectedNearZ = STATION_THOUGHTFORM.position[2];
-    const expectedFarZ = STATION_DIAGNOSTIC.position[2];
     const minArtifactZ = Math.min(...ARTIFACTS.map((a) => a.pos[2]));
     const maxArtifactZ = Math.max(...ARTIFACTS.map((a) => a.pos[2]));
     if (
-      Math.abs(maxArtifactZ - expectedNearZ) > 1.5 ||
-      Math.abs(minArtifactZ - expectedFarZ) > 1.5
+      Math.abs(maxArtifactZ - ARTIFACT_NEAR_Z) > 0.75 ||
+      Math.abs(minArtifactZ - ARTIFACT_EXTRA_FAR_Z) > 0.75
     ) {
       console.warn(
         "[LatentArtifactBands] artifact Z range",
         [minArtifactZ, maxArtifactZ],
-        "drifted from station range",
-        [expectedFarZ, expectedNearZ],
+        "drifted from semantic reveal range",
+        [ARTIFACT_EXTRA_FAR_Z, ARTIFACT_NEAR_Z],
         "— consider re-spacing the ARTIFACTS catalogue."
       );
     }

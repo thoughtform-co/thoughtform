@@ -883,15 +883,14 @@ export const COPY_ANCHORS: readonly CopyAnchor[] = [
       min: 0.18,
       max: 1.15,
     },
-    // Far envelope is generous (12 units, 5-unit farFade) so the
-    // headline registers faintly while the camera is still far up
-    // the corridor, then ramps to full only by the time the
-    // Diagnostic gate is at parked focus distance (~4.5 units).
+    // Tight far envelope keeps the headline hidden during the
+    // parked Thoughtform read; it only resolves once the camera has
+    // travelled most of passthrough-01.
     depthFade: {
       near: 0.9,
       nearFade: 2.4,
-      far: 12,
-      farFade: 5,
+      far: 6.8,
+      farFade: 2.2,
     },
   },
   // 4 orbit labels — pinned to the actual MISS_LABELS pip world
@@ -919,16 +918,14 @@ export const COPY_ANCHORS: readonly CopyAnchor[] = [
       min: 0.16,
       max: 1.2,
     },
-    // Same depth-fade envelope as the head copy so the orbit
-    // labels appear as tiny distant text drifting toward the
-    // orbital field across the longer passthrough-01, rather
-    // than popping to full opacity the instant the visibility
-    // window opens.
+    // Same tighter depth-fade envelope as the head copy. The labels
+    // no longer ghost into the Thoughtform park; they arrive as the
+    // Diagnostic gate enters readable distance.
     depthFade: {
       near: 0.9,
       nearFade: 2.4,
-      far: 12,
-      farFade: 5,
+      far: 6.8,
+      farFade: 2.2,
     } as DepthFocusWindow,
   })),
 

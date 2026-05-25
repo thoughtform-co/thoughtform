@@ -5,7 +5,7 @@ import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { MISS_ORBITS } from "@/lib/celestial/orbits";
 import { smoothstep, useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
-import { STATION_DIAGNOSTIC, cameraSpaceDepth, depthFocusOpacity } from "../sceneGeom";
+import { STATION_DIAGNOSTIC, cameraSpaceDepth } from "../sceneGeom";
 
 /**
  * DiagnosticOrbitGate — the world-space diagnostic constellation
@@ -30,25 +30,14 @@ import { STATION_DIAGNOSTIC, cameraSpaceDepth, depthFocusOpacity } from "../scen
 // roughly matching the diagnostic gate's halfExtent (2.2).
 const SVG_TO_WORLD = 1 / 240;
 const RING_SEGMENTS = 128;
-/** Camera-space focus window for the Diagnostic orbital field.
- *  After the latent depth spacing pass:
- *    - `far` extended from 7.3 → 11 with `farFade` from 3.1 → 5
- *      so the orbits register as VERY FAINT distant geometry the
- *      moment the camera dolly begins (early passthrough-01),
- *      then visibly intensify across the longer fly-through. The
- *      Diagnostic gate is now several world units deeper (park
- *      progress 0.53 vs 0.47), so this wider far envelope is
- *      necessary to let the user see it approaching rather than
- *      popping into existence at mid-passthrough.
- *    - `near` slightly relaxed (1.05 → 0.9, nearFade 2.8 → 2.4)
- *      so the orbits hold full opacity longer as the camera
- *      enters the parked range. */
-const DIAGNOSTIC_DEPTH_WINDOW = {
-  near: 0.9,
-  nearFade: 2.4,
-  far: 11,
-  farFade: 5,
-} as const;
+/** Distance band where the Diagnostic constellation constructs
+ *  itself. The gate stays absent while very far away, then the
+ *  ellipses trace on as the camera closes in. This avoids both
+ *  "pre-visible backdrop" and "opacity pop" reads. */
+const DIAGNOSTIC_FORM_START_DEPTH = 9.4;
+const DIAGNOSTIC_FORM_FULL_DEPTH = 5.2;
+const DIAGNOSTIC_NEAR_DEPTH = 0.9;
+const DIAGNOSTIC_NEAR_FADE = 2.4;
 
 const PIP_POSITIONS = [
   { id: "01", parametricDeg: 205 },
@@ -63,6 +52,46 @@ function pointOnEllipse(rx: number, ry: number, rotateDeg: number, parametricDeg
   const lx = rx * Math.cos(psi);
   const ly = ry * Math.sin(psi);
   return [lx * Math.cos(alpha) - ly * Math.sin(alpha), lx * Math.sin(alpha) + ly * Math.cos(alpha)];
+}
+
+function clamp01(v: number): number {
+  return v < 0 ? 0 : v > 1 ? 1 : v;
+}
+
+function buildDashedGeometry(points: THREE.Vector3[]): THREE.BufferGeometry {
+  const geometry = new THREE.BufferGeometry().setFromPoints(points);
+  const lineDistances = new Float32Array(points.length);
+  let totalLength = 0;
+  for (let i = 1; i < points.length; i++) {
+    totalLength += points[i - 1].distanceTo(points[i]);
+    lineDistances[i] = totalLength;
+  }
+  geometry.setAttribute("lineDistance", new THREE.BufferAttribute(lineDistances, 1));
+  geometry.userData.lineLength = totalLength;
+  return geometry;
+}
+
+function geometryLength(geometry: THREE.BufferGeometry): number {
+  const length = geometry.userData.lineLength;
+  return typeof length === "number" && length > 0 ? length : 1;
+}
+
+function formationFromDepth(depth: number): number {
+  return 1 - smoothstep(DIAGNOSTIC_FORM_FULL_DEPTH, DIAGNOSTIC_FORM_START_DEPTH, depth);
+}
+
+function nearPresenceFromDepth(depth: number): number {
+  if (depth <= 0) return 0;
+  return smoothstep(DIAGNOSTIC_NEAR_DEPTH - DIAGNOSTIC_NEAR_FADE, DIAGNOSTIC_NEAR_DEPTH, depth);
+}
+
+function setFormationDash(
+  material: THREE.LineDashedMaterial,
+  lineLength: number,
+  formation: number
+) {
+  material.dashSize = Math.max(0.0001, lineLength * (formation >= 0.995 ? 1.2 : formation));
+  material.gapSize = lineLength * 2;
 }
 
 export function DiagnosticOrbitGate() {
@@ -84,7 +113,7 @@ export function DiagnosticOrbitGate() {
         const y = -(lx * Math.sin(rotAlpha) + ly * Math.cos(rotAlpha));
         points.push(new THREE.Vector3(x * SVG_TO_WORLD, y * SVG_TO_WORLD, 0));
       }
-      return new THREE.BufferGeometry().setFromPoints(points);
+      return buildDashedGeometry(points);
     });
   }, []);
 
@@ -107,7 +136,7 @@ export function DiagnosticOrbitGate() {
         const y = -(lx * Math.sin(rotAlpha) + ly * Math.cos(rotAlpha));
         points.push(new THREE.Vector3(x * SVG_TO_WORLD, y * SVG_TO_WORLD, -0.05));
       }
-      return new THREE.BufferGeometry().setFromPoints(points);
+      return buildDashedGeometry(points);
     });
   }, []);
 
@@ -117,7 +146,7 @@ export function DiagnosticOrbitGate() {
       // Match the v7 per-orbit gold weights.
       const stroke = [0.62, 0.72, 0.58, 0.55][idx];
       const col = new THREE.Color("#caa554");
-      return new THREE.LineBasicMaterial({
+      return new THREE.LineDashedMaterial({
         color: col,
         transparent: true,
         opacity: 0,
@@ -135,17 +164,21 @@ export function DiagnosticOrbitGate() {
 
   const ghostMats = useMemo(
     () => [
-      new THREE.LineBasicMaterial({
+      new THREE.LineDashedMaterial({
         color: new THREE.Color(0.93, 0.89, 0.84),
         transparent: true,
         opacity: 0,
         depthWrite: false,
+        dashSize: 0.0001,
+        gapSize: 10,
       }),
-      new THREE.LineBasicMaterial({
+      new THREE.LineDashedMaterial({
         color: new THREE.Color(0.93, 0.89, 0.84),
         transparent: true,
         opacity: 0,
         depthWrite: false,
+        dashSize: 0.0001,
+        gapSize: 10,
       }),
     ],
     []
@@ -206,22 +239,37 @@ export function DiagnosticOrbitGate() {
     group.visible = true;
 
     // Star Atlas-style persistence: the Diagnostic gate lives at a
-    // fixed world Z, and its linework becomes present because the
-    // camera approaches its focus depth. No beat boundary hard-cuts
-    // the geometry; it fades only when too far, too near, or behind.
+    // fixed world Z. As the camera approaches, the linework constructs
+    // itself by draw distance rather than appearing as an opacity fade.
     const depth = cameraSpaceDepth(progress, STATION_DIAGNOSTIC.position);
-    const opacity = depthFocusOpacity(depth, DIAGNOSTIC_DEPTH_WINDOW);
+    const formation = formationFromDepth(depth);
+    const nearPresence = nearPresenceFromDepth(depth);
+    if (formation <= 0.001 || nearPresence <= 0.001) {
+      group.visible = false;
+      return;
+    }
+
+    group.visible = true;
+    const builtPresence = smoothstep(0.02, 0.12, formation) * nearPresence;
 
     for (let i = 0; i < orbitMats.length; i++) {
       const m = orbitMats[i];
-      const base = (m.userData as { baseAlpha: number }).baseAlpha;
-      m.opacity = opacity * base;
+      const { baseAlpha } = m.userData as { baseAlpha: number };
+      const staggeredFormation = clamp01((formation - i * 0.045) / 0.82);
+      setFormationDash(m, geometryLength(orbitGeoms[i]), staggeredFormation);
+      m.opacity = builtPresence * baseAlpha;
     }
-    ghostMats[0].opacity = opacity * 0.18;
-    ghostMats[1].opacity = opacity * 0.13;
-    // Pips resolve only as the gate comes into readable range.
-    const pipResolve = smoothstep(7.2, 4.8, depth);
-    const pipOpacity = opacity * pipResolve;
+
+    for (let i = 0; i < ghostMats.length; i++) {
+      const ghostFormation = clamp01((formation - 0.12 - i * 0.06) / 0.75);
+      setFormationDash(ghostMats[i], geometryLength(ghostGeoms[i]), ghostFormation);
+    }
+    ghostMats[0].opacity = builtPresence * 0.18;
+    ghostMats[1].opacity = builtPresence * 0.13;
+
+    // Pips resolve only after the orbit skeleton is mostly formed.
+    const pipResolve = smoothstep(0.62, 0.92, formation);
+    const pipOpacity = builtPresence * pipResolve;
     pipMat.opacity = pipOpacity * 0.95;
   });
 

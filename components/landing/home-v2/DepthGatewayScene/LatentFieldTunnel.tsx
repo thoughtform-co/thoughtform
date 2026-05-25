@@ -148,28 +148,25 @@ const ALPHA_RESPONSE = 5;
 
 // ─── Per-sub-mesh alpha envelopes ───────────────────────────────
 
-/** Points: clearly visible at rest, strong at scroll, brightest at
- *  boot. Tuned to read as "I am inside a latent field" the moment
- *  the user parks at Thoughtform — never snow. */
-const POINT_AMBIENT = 0.88;
+/** Points: visible at rest, stronger at scroll. The parked
+ *  Thoughtform read should feel like a deep field, not a flat wall
+ *  of already-legible data. */
+const POINT_AMBIENT = 0.52;
 const POINT_PEAK = 1.0;
 const POINT_BOOT_LIFT = 0.2;
 
-/** Vectors: present at rest (you should feel the embedding graph),
- *  pop into legibility during active scroll, peak through boot.
- *  Driven high because WebGL line widths are clamped to 1 pixel on
- *  most platforms — the visible "weight" of an embedding edge has
- *  to come from alpha + colour, not from stroke thickness. */
-const VECTOR_AMBIENT = 0.55;
+/** Vectors: almost hidden at rest; they become readable when the
+ *  visitor scrolls and the field actually flies past. */
+const VECTOR_AMBIENT = 0.08;
 const VECTOR_PEAK = 0.95;
-const VECTOR_BOOT_LIFT = 0.4;
+const VECTOR_BOOT_LIFT = 0.14;
 
-/** Tokens: persistent ambient presence so the data-artifact read
- *  survives at rest; soft lift on scroll. Velocity damping prevents
- *  high-speed scroll from turning the glyphs into illegible smear. */
-const TOKEN_AMBIENT = 0.65;
+/** Tokens: near-silent while parked. Legible notation is reserved
+ *  for travel, where it can pass the camera instead of sitting as
+ *  foreground UI behind the Thoughtform gate. */
+const TOKEN_AMBIENT = 0.025;
 const TOKEN_PEAK = 1.0;
-const TOKEN_BOOT_LIFT = 0.3;
+const TOKEN_BOOT_LIFT = 0.05;
 const TOKEN_VELOCITY_DAMP = 0.55;
 
 // ─── Token atlas ────────────────────────────────────────────────
