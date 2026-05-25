@@ -3,13 +3,14 @@
 import { Canvas } from "@react-three/fiber";
 import { useEffect, useState } from "react";
 import { probeWebGL } from "@/lib/webgl/probe";
+import { CelestialMotes } from "./CelestialMotes";
 import { FlyingCameraRig } from "./FlyingCameraRig";
 import { GatewayWorld } from "./gates/GatewayWorld";
 import { InterGateCorridor } from "./InterGateCorridor";
+import { LatentFieldTunnel } from "./LatentFieldTunnel";
 import { ScrollStreaks } from "./ScrollStreaks";
 import { StaticStarfield } from "./StaticStarfield";
 import { ThoughtformAtmosphere } from "./ThoughtformAtmosphere";
-import { WormholeTunnel } from "./WormholeTunnel";
 import { CAMERA_FOV, CAMERA_START, getCameraLookAt } from "./sceneGeom";
 
 /**
@@ -32,16 +33,27 @@ import { CAMERA_FOV, CAMERA_START, getCameraLookAt } from "./sceneGeom";
  *                             gate groups — the
  *                             "spaceship-flying-through-space"
  *                             atmosphere between gates.
- *   - WormholeTunnel        : wide, cool near-camera star field
- *                             that frames the brandmark as a
- *                             luminous tunnel. Faintly visible at
- *                             rest (ambient tunnel structure),
- *                             intensifies with scroll velocity
- *                             (parallax momentum cue). Pairs with
- *                             ScrollStreaks: tunnel = ambient
- *                             frame, streaks = active flash.
+ *   - LatentFieldTunnel     : layered latent-space visualisation —
+ *                             rank-tiered point cloud + faint
+ *                             embedding-vector linework + sparse
+ *                             PT Mono token motes. Frames the
+ *                             brandmark as flying through the
+ *                             substrate of intelligence rather than
+ *                             through a starfield. STILL at rest,
+ *                             flows ONLY with scroll velocity, peaks
+ *                             through the Thoughtform boot envelope.
+ *   - CelestialMotes        : a small set of sphere-shaped particle
+ *                             clusters that fly past the camera like
+ *                             planetoids — the celestial-navigation
+ *                             companion to the latent field's
+ *                             abstract substrate. Star Atlas-
+ *                             inspired. Motion gated on scroll
+ *                             velocity (no idle drift, no idle
+ *                             rotation).
  *   - ScrollStreaks         : near-camera streaks driven by scroll
- *                             velocity (invisible when idle).
+ *                             velocity (invisible when idle). The
+ *                             warm punctuation layer on top of the
+ *                             cool LatentFieldTunnel + CelestialMotes.
  *   - GatewayWorld          : the four world-rigid gate groups
  *                             (Thoughtform, Diagnostic,
  *                             Interstitial, Intelligence). Each
@@ -108,7 +120,8 @@ export function DepthGatewayScene() {
       <StaticStarfield />
       <ThoughtformAtmosphere />
       <InterGateCorridor />
-      <WormholeTunnel />
+      <LatentFieldTunnel />
+      <CelestialMotes />
       <ScrollStreaks />
       <GatewayWorld />
     </Canvas>

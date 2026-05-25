@@ -9,8 +9,7 @@ import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
  * ScrollStreaks — near-camera particle streaks whose flow is
  * strictly proportional to scroll velocity (ADR-018).
  *
- * Replaces the previous `StreamingDust` ambient drift. The new
- * model:
+ * Behaviour:
  *
  *   - When the user is NOT scrolling, particles do not advance.
  *     They sit at their spawned z. Their alpha decays to 0 so the
@@ -22,10 +21,13 @@ import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
  *     the camera at the same rate so the parallax cue mirrors the
  *     direction of travel.
  *
- * This is the "I am moving" signal: present only when the user is
- * moving, absent otherwise. Together with the static starfield it
- * solves the original feedback ("the stars shouldn't move when I'm
- * not scrolling, it breaks the immersion of flying through space").
+ * Composition role (latent-field finishing pass, 2026-05-25):
+ *   `LatentFieldTunnel` now carries the ambient + scroll + boot
+ *   intensity for the corridor — it is the cool latent substrate.
+ *   ScrollStreaks is its PUNCTUATION partner: a narrow, warm flash
+ *   that fires only on active scroll. The alpha cap has been
+ *   dropped from 0.85 to 0.55 so the streaks add a glint on top of
+ *   the latent field without competing with it for attention.
  */
 
 /** Far-Z spawn point. Particles wrap to this z when they pass the
@@ -195,7 +197,10 @@ export function ScrollStreaks({ count }: ScrollStreaksProps = {}) {
     const targetAlpha = Math.min(1, Math.abs(velocity) * 2.5);
     const k = 1 - Math.exp(-ALPHA_RESPONSE * dt);
     visibleAlpha.current = visibleAlpha.current + (targetAlpha - visibleAlpha.current) * k;
-    material.uniforms.uOpacity.value = visibleAlpha.current * 0.85;
+    // Cap multiplier dropped (was 0.85) so streaks act as a warm
+    // punctuation glint on top of the LatentFieldTunnel rather
+    // than competing with it for attention. See the file header.
+    material.uniforms.uOpacity.value = visibleAlpha.current * 0.55;
 
     if (!active) {
       return;
