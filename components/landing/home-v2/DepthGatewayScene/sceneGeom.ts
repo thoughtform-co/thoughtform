@@ -526,7 +526,15 @@ export function getBrandmarkWorldPosition(progress: number): [number, number, nu
  *  where the substrate is the centrepiece. */
 export const BRANDMARK_WORLD_HALF_EXTENT = {
   thoughtform: 0.32,
-  diagnostic: 0.18,
+  // Diagnostic parked size raised from 0.18 to 0.28 (~56% larger
+  // physical object in world space) so the brandmark has real
+  // optical presence at the centre of the orbital field instead
+  // of reading as a small reference dot. Because ProjectedBrand-
+  // markActor projects a world edge through the camera each
+  // frame, perspective handles the size naturally as the camera
+  // approaches, parks, and pulls away — no scroll momentum
+  // break, no parallax mismatch with the orbits.
+  diagnostic: 0.28,
   transitLead: 0.2,
   intelligence: 0.22,
 } as const;
