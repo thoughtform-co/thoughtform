@@ -67,12 +67,6 @@
   background: var(--void, #050403);
   z-index: 2;
   isolation: isolate;
-  /* Defaults for the CSS vars useDepthScroll updates per frame.
-     MUST live on this element. */
-  --depth-progress: 0;
-  --camera-t: 0;
-  --beat-gate-progress: 0;
-  --velocity-mag: 0;
 }
 
 .home-v2-stage__sticky {
@@ -273,31 +267,6 @@
 .home-v2-copy-phase--build {
   text-align: left;
   align-items: flex-start;
-}
-
-/* ── North-star caption ───────────────────────────────────── */
-
-.home-v2-copy-northstar {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 2px;
-  font-family: var(--font-pt-mono, ui-monospace, monospace);
-  white-space: nowrap;
-}
-
-.home-v2-copy-northstar__k {
-  font-size: 10px;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: rgba(235, 227, 214, 0.5);
-}
-
-.home-v2-copy-northstar__v {
-  font-size: 11px;
-  letter-spacing: 0.04em;
-  color: rgba(235, 227, 214, 0.32);
-  font-style: italic;
 }
 
 /* ── Diagnostic orbit labels ──────────────────────────────── */

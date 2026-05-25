@@ -23,11 +23,11 @@ import { getThoughtformBootEnvelope } from "./sceneGeom";
  *      a deterministic subset of nearby points. Reads as the
  *      neighbourhood structure of an embedding space — the brandmark
  *      sits inside a small web of relationships rather than a void.
- *   3. Token MOTES — tiny PT Mono glyph fragments (`01`, `ctx`,
- *      `vec`, `tok`, `Δθ`, `emb`, `1f3a`, `.5e0`) drawn from a
- *      single canvas atlas via point-sprite UV offsets. Used very
- *      sparsely so they read as peripheral data artifacts, not UI
- *      labels.
+ *   3. Token MOTES — tiny PT Mono glyph fragments (current set in
+ *      `TOKEN_STRINGS`: `01`, `ctx`, `vec`, `tok`, `emb`, `kv`,
+ *      `Δ`, `λ`) drawn from a single canvas atlas via point-sprite
+ *      UV offsets. Used very sparsely so they read as peripheral
+ *      data artifacts, not UI labels.
  *
  * Motion envelope (shared by all three):
  *   - PERFECTLY STILL at rest. No ambient drift. The corridor only

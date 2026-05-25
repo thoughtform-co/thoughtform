@@ -30,9 +30,9 @@ interface CopyAnchorsProps {
 
 export function CopyAnchors({ text }: CopyAnchorsProps) {
   const layerRef = useRef<HTMLDivElement>(null);
-  // Filter out the brandmark anchor — it's owned by ProjectedBrandmarkActor.
-  const copyOnlyAnchors = COPY_ANCHORS;
-  useWorldDomTracker(copyOnlyAnchors, layerRef);
+  // COPY_ANCHORS is text-only; the brandmark's own anchor is
+  // registered by ProjectedBrandmarkActor via its own tracker call.
+  useWorldDomTracker(COPY_ANCHORS, layerRef);
 
   const tf = text.thoughtform;
   const dg = text.diagnostic;

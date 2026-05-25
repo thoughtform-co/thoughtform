@@ -1,7 +1,7 @@
 "use client";
 
 import { useFrame } from "@react-three/fiber";
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo } from "react";
 import * as THREE from "three";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import { getThoughtformBootEnvelope } from "./sceneGeom";
@@ -126,8 +126,6 @@ export function StaticStarfield({ count }: StaticStarfieldProps = {}) {
     };
   }, [geometry, material]);
 
-  const pointsRef = useRef<THREE.Points>(null);
-
   // Boot-lift: lift the field's uOpacity by up to `STARFIELD_BOOT_LIFT`
   // while the Thoughtform boot envelope is engaged. Outside the
   // boot window the uniform sits at `STARFIELD_BASE_OPACITY`, so the
@@ -143,5 +141,5 @@ export function StaticStarfield({ count }: StaticStarfieldProps = {}) {
     material.uniforms.uOpacity.value = STARFIELD_BASE_OPACITY + boot * STARFIELD_BOOT_LIFT;
   });
 
-  return <points ref={pointsRef} geometry={geometry} material={material} frustumCulled={false} />;
+  return <points geometry={geometry} material={material} frustumCulled={false} />;
 }

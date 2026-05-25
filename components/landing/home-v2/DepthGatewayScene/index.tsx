@@ -1,8 +1,6 @@
 "use client";
 
 import { Canvas } from "@react-three/fiber";
-import { useEffect, useState } from "react";
-import { probeWebGL } from "@/lib/webgl/probe";
 import { CelestialMotes } from "./CelestialMotes";
 import { FlyingCameraRig } from "./FlyingCameraRig";
 import { GatewayWorld } from "./gates/GatewayWorld";
@@ -78,25 +76,11 @@ import { CAMERA_FOV, CAMERA_START, getCameraLookAt } from "./sceneGeom";
  * handled inside the `IntelligenceGate` group itself (no separate
  * top-level `BrandmarkPointCloud`).
  *
- * Probes WebGL on mount; renders nothing if unavailable or
- * prefers-reduced-motion is set (the page paints its own fallback).
+ * WebGL availability + reduced-motion gating live in `HomeV2Page`;
+ * this component is only mounted when the corridor mode is active,
+ * so no probe is needed here.
  */
 export function DepthGatewayScene() {
-  const [webglOK, setWebglOK] = useState<boolean | null>(null);
-  const [reducedMotion, setReducedMotion] = useState(false);
-
-  useEffect(() => {
-    setWebglOK(probeWebGL());
-    const mql = window.matchMedia("(prefers-reduced-motion: reduce)");
-    setReducedMotion(mql.matches);
-    const onChange = (e: MediaQueryListEvent) => setReducedMotion(e.matches);
-    mql.addEventListener("change", onChange);
-    return () => mql.removeEventListener("change", onChange);
-  }, []);
-
-  if (webglOK === null) return null;
-  if (!webglOK || reducedMotion) return null;
-
   const [lx, ly, lz] = getCameraLookAt(0);
 
   return (

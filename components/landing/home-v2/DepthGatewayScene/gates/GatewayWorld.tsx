@@ -14,9 +14,9 @@ import { ThoughtformCompassGate } from "./ThoughtformCompassGate";
  * here. All four gates are world-rigid groups at their own Z
  * stations; the camera flies through them on one continuous path.
  *
- *   - ThoughtformCompassGate    — concentric rings + diamond +
- *                                 phase nodes (replaces v7 SVG
- *                                 compass end-to-end).
+ *   - ThoughtformCompassGate    — concentric rings + phase nodes
+ *                                 (replaces v7 SVG compass end-to-end;
+ *                                 no bounding diamond).
  *   - DiagnosticOrbitGate       — 4 asymmetric orbits + pips.
  *   - InterstitialDiagramGate   — armature + tilted ring + diamond.
  *   - IntelligenceGate          — substrate sphere + side bodies +

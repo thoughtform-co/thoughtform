@@ -4,6 +4,7 @@ import { useFrame, useThree } from "@react-three/fiber";
 import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
+import { getThoughtformBootEnvelope } from "./sceneGeom";
 
 /**
  * CelestialMotes — small sphere-shaped particle clusters that drift
@@ -369,20 +370,11 @@ export function CelestialMotes() {
 
     // Alpha envelope. Boot lift gives motes a small extra presence
     // when the gateway centres, matching the LatentFieldTunnel and
-    // ThoughtformAtmosphere beat.
+    // ThoughtformAtmosphere beat. Uses the SHARED boot envelope from
+    // sceneGeom so all gateway-lit painters ramp on the same beat.
     const absV = Math.abs(velocity);
     const velocityT = Math.min(1, absV * 1.8);
-    const boot = transform.paintProgress;
-    // Re-compute the boot envelope inline (same shape used in
-    // sceneGeom's `getThoughtformBootEnvelope`) so this file stays
-    // self-contained for its single use.
-    let bootEnv = 0;
-    if (boot > 0.04) {
-      if (boot <= 0.16) bootEnv = (boot - 0.04) / 0.12;
-      else if (boot <= 0.24) bootEnv = 1;
-      else if (boot <= 0.42) bootEnv = 1 - (boot - 0.24) / 0.18;
-      bootEnv = Math.max(0, Math.min(1, bootEnv));
-    }
+    const bootEnv = getThoughtformBootEnvelope(transform.paintProgress);
     const target =
       AMBIENT_OPACITY + velocityT * (PEAK_OPACITY - AMBIENT_OPACITY) + bootEnv * BOOT_LIFT;
     const k = 1 - Math.exp(-ALPHA_RESPONSE * dt);

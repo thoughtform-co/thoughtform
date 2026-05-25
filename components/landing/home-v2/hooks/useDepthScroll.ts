@@ -2,11 +2,11 @@
 
 import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
 import {
+  type Beat,
   INITIAL_TRANSFORM,
-  type ChamberId,
-  cameraTravelT,
-  deriveChambers,
+  clamp01,
   getCorridorEngagement,
+  resolveBeat,
   useDepthGatewayStore,
 } from "@/lib/stores/depthGatewayStore";
 
@@ -17,15 +17,11 @@ import {
  * Per frame, computes the global 0..1 progress across the sticky
  * stage and writes:
  *
- *   1. CSS custom properties on the stage root:
- *      - `--depth-progress`, `--camera-t`, `--beat-gate-progress`
- *      - `--velocity-mag` (used to drive HUD intensity)
- *
- *   2. v7 HUD readout elements (the depth-rail diamond, %, coord
+ *   1. v7 HUD readout elements (the depth-rail diamond, %, coord
  *      readouts, sector text) so the v7 HUD chrome reads as a live
  *      travel signal.
  *
- *   3. `depthGatewayStore` — single store the R3F painters read
+ *   2. `depthGatewayStore` — single store the R3F painters read
  *      imperatively inside `useFrame` so per-frame work stays at
  *      uniform writes only.
  *
@@ -51,18 +47,9 @@ export function useDepthScroll(stageRef: React.RefObject<HTMLDivElement | null>)
     const scrubHeight = Math.max(1, stageHeight - vh);
 
     const progress = clamp01(-rect.top / scrubHeight);
-    const cameraT = cameraTravelT(progress);
+    const { beat, gateProgress } = resolveBeat(progress);
 
-    const { chamberA, chamberB, chamberC, chamberId, beat, gateProgress } =
-      deriveChambers(progress);
-
-    // ── Global progress + camera channels ─────────────────────────
-    stage.style.setProperty("--depth-progress", progress.toFixed(4));
-    stage.style.setProperty("--camera-t", cameraT.toFixed(4));
-    stage.style.setProperty("--beat-gate-progress", gateProgress.toFixed(4));
-
-    // ── v7 HUD readouts ─────────────────────────────────────────
-    writeV7HudReadouts(progress, chamberId);
+    writeV7HudReadouts(progress, beat);
 
     // ── Engagement state + velocity ─────────────────────────────
     // Two-phase engagement (ADR-018 "furnished room on arrival"):
@@ -89,24 +76,15 @@ export function useDepthScroll(stageRef: React.RefObject<HTMLDivElement | null>)
       const dtSec = Math.max(0.001, (now - lastT) / 1000);
       velocity = (progress - lastP) / dtSec;
     }
-    stage.style.setProperty("--velocity-mag", Math.abs(velocity).toFixed(4));
 
     const prev = useDepthGatewayStore.getState().transform;
     const engagementChanged = active !== prev.active || armed !== prev.armed;
-    if (
-      Math.abs(progress - lastProgress.current) > 0.00005 ||
-      engagementChanged
-    ) {
+    if (Math.abs(progress - lastProgress.current) > 0.00005 || engagementChanged) {
       lastProgress.current = progress;
       useDepthGatewayStore.getState().setTransform({
         progress,
-        cameraT,
         beat,
         gateProgress,
-        chamberId,
-        chamberA,
-        chamberB,
-        chamberC,
         active,
         armed,
         paintProgress,
@@ -117,13 +95,8 @@ export function useDepthScroll(stageRef: React.RefObject<HTMLDivElement | null>)
       // so streak intensity settles back to 0 quickly when idle.
       useDepthGatewayStore.getState().setTransform({
         progress,
-        cameraT,
         beat,
         gateProgress,
-        chamberId,
-        chamberA,
-        chamberB,
-        chamberC,
         active,
         armed,
         paintProgress,
@@ -170,21 +143,27 @@ export function useDepthScroll(stageRef: React.RefObject<HTMLDivElement | null>)
   }, [onScroll, writeFrame]);
 }
 
-function clamp01(v: number): number {
-  return v < 0 ? 0 : v > 1 ? 1 : v;
+/** HUD sector text per beat. Passthrough beats inherit their
+ *  neighbour parked beat's sector so the readout doesn't blank
+ *  during travel. */
+function sectorForBeat(beat: Beat): string {
+  switch (beat) {
+    case "thoughtform":
+    case "passthrough-01":
+      return "North star";
+    case "diagnostic":
+      return "Missing layer";
+    case "passthrough-02":
+    case "intelligence":
+      return "Substrate";
+  }
 }
-
-const SECTOR_BY_CHAMBER: Record<ChamberId, string> = {
-  definition: "North star",
-  diagnostic: "Missing layer",
-  intelligence: "Substrate",
-};
 
 /**
  * Mirror the v7 HUD readouts so the depth diamond + status numbers
  * track stage progress.
  */
-function writeV7HudReadouts(progress: number, chamberId: ChamberId): void {
+function writeV7HudReadouts(progress: number, beat: Beat): void {
   if (typeof document === "undefined") return;
 
   const depthEl = document.getElementById("depthIndicator");
@@ -208,6 +187,6 @@ function writeV7HudReadouts(progress: number, chamberId: ChamberId): void {
 
   const sectorEl = document.getElementById("hudSector");
   if (sectorEl) {
-    sectorEl.textContent = SECTOR_BY_CHAMBER[chamberId] ?? "Origin";
+    sectorEl.textContent = sectorForBeat(beat);
   }
 }

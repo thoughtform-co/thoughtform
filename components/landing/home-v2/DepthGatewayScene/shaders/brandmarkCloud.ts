@@ -101,9 +101,8 @@ void main() {
   // view-space get smaller. -mv.z is the positive view-space
   // distance for a camera at the origin looking down -Z. A 0.45
   // exponent gives a gentle perspective falloff that keeps brandmark
-  // particles legible at the closer Chamber-A camera distance and
-  // still readable when the camera has dollied to the Chamber-C
-  // resting position.
+  // particles legible as the camera approaches the intelligence
+  // gate and still readable when the camera has dollied past it.
   float distFactor = 1.0 / max(0.4, pow(-mv.z, 0.45));
   gl_PointSize = uPointSize * uPixelRatio * distFactor * (0.85 + rim * 0.45 + frontness * 0.2);
 }

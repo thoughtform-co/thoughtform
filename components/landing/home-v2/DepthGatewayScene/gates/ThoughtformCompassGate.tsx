@@ -52,20 +52,19 @@ const COMPASS_BOOT_BOOST = 0.18;
  *   - 3 thin connector lines from each phase dot to the label
  *     anchor — dawn @ 30%, matching v7's `<line>` connector strokes.
  *
- * The v7 compass has NO bounding diamond outline. The earlier
- * version of this gate added one at r=0.79 + 0.85 gold opacity,
- * which dominated the brandmark and broke parity with the production
- * sigil. It has been removed entirely.
+ * The v7 compass has NO bounding diamond outline; the earlier
+ * version of this gate that added one has been removed entirely.
  *
  * Visibility + motion envelope (gate self-managed):
  *
- *   - Lateral pan [0.05, 0.18]: group.position.x slides from
+ *   - Lateral pan: group.position.x slides from
  *     STATION_THOUGHTFORM.position[0] (off-axis-right) to 0 via
  *     `getThoughtformCenterOffsetX`. Mirrors the offset applied to
- *     the brandmark and copy in sceneGeom.ts.
- *   - Ring flythrough [0.16, 0.40]: each ring rides its own
- *     staggered window via `getThoughtformRingFlythrough`,
- *     translating forward in world Z. **Inner-first order** —
+ *     the brandmark and copy in sceneGeom.ts. Window is owned by
+ *     `THOUGHTFORM_PAN_*` in sceneGeom.
+ *   - Ring flythrough: each ring rides its own staggered window via
+ *     `getThoughtformRingFlythrough`, translating forward in world
+ *     Z. **Inner-first order** —
  *     the innermost ring (index 3, smallest radius) flies FIRST,
  *     the outermost ring (index 0) flies LAST. This guarantees
  *     the small dotted circle around the brandmark has full Z

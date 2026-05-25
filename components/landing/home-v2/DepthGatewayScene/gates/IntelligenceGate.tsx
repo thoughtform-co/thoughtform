@@ -32,20 +32,21 @@ import { brandmarkCloudVertex, brandmarkCloudFragment } from "../shaders/brandma
  * Composition (paint order, near -> far):
  *
  *   - Substrate morph cloud (centre): brandmark shape <-> Fibonacci
- *     sphere morph driven by `getSubstrateMorph(intelligenceGate)`.
+ *     sphere morph driven by `getIntelligenceSubstratePresence`.
  *     This is the substrate-cut cover for the projected vector
  *     brandmark (ADR-017 pattern).
  *   - Left side body: Fibonacci point cloud + tilted ring at
- *     local [-3.0, -0.1, 0.2]. Fades in via `getSideBodyOpacity`.
+ *     local [-3.0, -0.1, 0.2]. Presence comes from
+ *     `getIntelligenceSideBodyPresence` — camera-space depth focus,
+ *     so the bodies emerge from distance during late passthrough-02.
  *   - Right side body: mirror of left at [+3.0, -0.1, 0.2].
  *
  * Behaviour:
  *   - Group is hidden when `!active` (corridor not engaged).
  *   - During passthrough-02 + intelligence beats, side bodies fade
- *     in based on the legacy `chamberC` ramp (kept for compatibility
- *     with `getSideBodyOpacity`).
+ *     in via `getIntelligenceSideBodyPresence` (camera-space depth).
  *   - The substrate morph paints only during the intelligence beat
- *     when `getSubstrateMorph(gateProgress) > 0`.
+ *     and its early cross-fade window.
  */
 
 // ── Constants ────────────────────────────────────────────────────
@@ -273,9 +274,7 @@ function SideBody({ id, localPosition, ringTilt }: SideBodyProps) {
     // Depth-driven side-body presence: the constellation flanks
     // start to register in late `passthrough-02` as the camera
     // closes in on the Intelligence station, and resolve fully
-    // through the intelligence beat. Replaces the prior
-    // `chamberC > 0.35` ramp which popped just before the beat
-    // boundary and made the flanks read as a separate UI gesture.
+    // through the intelligence beat.
     const opacity = getIntelligenceSideBodyPresence(transform);
     cloudMat.uniforms.uPresence.value = opacity;
     cloudMat.uniforms.uTime.value = t;

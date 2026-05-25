@@ -4,9 +4,9 @@ import { useMemo, useRef } from "react";
 import * as THREE from "three";
 import { BrandmarkGlyph } from "@/components/landing/v7/BrandmarkGlyph";
 import {
+  SUBSTRATE_CROSSFADE_END,
   getBrandmarkWorldHalfExtent,
   getBrandmarkWorldPosition,
-  getCameraRoll,
   getIntelligenceSubstratePresence,
 } from "./DepthGatewayScene/sceneGeom";
 import { type WorldAnchor, useWorldDomTracker } from "./hooks/useWorldDomTracker";
@@ -28,31 +28,22 @@ import { type WorldAnchor, useWorldDomTracker } from "./hooks/useWorldDomTracker
  *   - Size: perspective-projected from
  *     `getBrandmarkWorldHalfExtent(progress)` so it dollies + scales
  *     with the camera as a real 3D plate.
- *   - Roll: matches `getCameraRoll(progress)` so during the
- *     passthrough-01 bank the mark tilts with the camera.
+ *   - Forward tilt: a small Y rotation scaled by camera dolly so the
+ *     mark reads as a 3D plate in motion (the camera path itself is
+ *     axial, so no banking roll is applied).
  *
  * NO DOM-dock pinning. The previous hybrid (DOM-pin at parked beats
  * vs world-project during transits) is gone — co-location via the
  * gate group makes dock mode unnecessary.
  *
- * Substrate-cut: during the intelligence beat, when
- * `getSubstrateMorph(gateProgress) > 0`, the actor goes
- * `display: none` and the in-canvas substrate morph cloud paints the
- * silhouette (ADR-017 pattern).
+ * Substrate-cut: during the intelligence beat, when the substrate
+ * morph engages (see `getIntelligenceSubstratePresence`), the DOM
+ * mark cross-fades out and the in-canvas substrate morph cloud
+ * paints the silhouette (ADR-017 pattern).
  */
 
 const PERSPECTIVE_PX = 1200;
 const TAIL_FADE_OUT_START = 0.97;
-
-/** Cross-fade window: morph value at which the DOM brandmark is
- *  fully faded out (and the substrate cloud is fully faded in).
- *  Below this value the DOM mark is partially visible; above it,
- *  the substrate cloud carries the visual. With the substrate
- *  cloud now sized to MATCH the DOM brandmark in its brandmark
- *  form (see `IntelligenceGate` SUBSTRATE_HALF), this short
- *  cross-fade reads as a seamless particle bloom rather than an
- *  instant size jump. */
-const SUBSTRATE_CROSSFADE_END = 0.2;
 
 /** Aspect ratio of the BrandmarkGlyph SVG (height/width). */
 const BRANDMARK_ASPECT = 436 / 430.99;
@@ -174,15 +165,11 @@ export function ProjectedBrandmarkActor() {
           const intensity = isParkedBeat ? 1 : 0.92;
           element.style.opacity = `${(bookend * intensity * substrateFadeOut).toFixed(3)}`;
 
-          // Roll: the inner div takes the perspective rotation so
-          // the outer shell stays a clean layout box.
-          const roll = getCameraRoll(progress);
-          // Add a small forward tilt that scales with camera dolly
-          // so the mark reads as a 3D plate in motion.
+          // Forward tilt: the inner div takes a small Y rotation
+          // scaled by camera dolly so the mark reads as a 3D plate
+          // in motion. No Z roll — the camera path is axial.
           const dollyTilt = (progress - 0.5) * 6; // ±3° across the corridor
-          inner.style.transform = `rotateZ(${(roll * (180 / Math.PI)).toFixed(
-            2
-          )}deg) rotateY(${dollyTilt.toFixed(2)}deg)`;
+          inner.style.transform = `rotateY(${dollyTilt.toFixed(2)}deg)`;
         },
       },
     ];
