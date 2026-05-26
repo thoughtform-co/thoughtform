@@ -83,11 +83,6 @@ export function HomeV2Page({ hudHtml, bodyClass, text }: HomeV2PageProps) {
           <p className="hero__tagline">
             AI capability, built <em>inside the work.</em>
           </p>
-          <p className="hero__subline">
-            We help teams navigate AI, encode how they work,
-            <br />
-            and build tools they can own.
-          </p>
         </div>
       </section>
 
