@@ -1170,7 +1170,14 @@
   width: 100vw;
   margin-left: calc(50% - 50vw);
   margin-right: calc(50% - 50vw);
-  padding: clamp(96px, 14vh, 156px) clamp(96px, 8vw + 40px, 140px) clamp(56px, 8vh, 104px);
+  /* Mirror `.station`'s asymmetric padding (140 top / 220 bottom) so the
+     wordmark + tagline sit slightly above the true vertical centre —
+     the same upward bias the rest of the page uses for section
+     titles. The horizontal padding keeps the v7 HUD-rail gutter
+     clearance and anchors the content to the LEFT rail (the hero
+     video / gateway portal owns the right-hand half of the
+     composition). */
+  padding: 140px clamp(96px, 8vw + 40px, 140px) 220px;
   overflow: hidden;
   z-index: 1;
 }
@@ -1204,7 +1211,6 @@
   max-width: 560px;
   padding: 0;
   text-align: left;
-  transform: translateY(clamp(-18px, -3vh, -32px));
 }
 
 .hero__wordmark {
@@ -6103,7 +6109,7 @@ body.density-dense .station {
   will-change: transform, opacity;
 }
 .hero__content {
-  transform: translateY(clamp(-18px, -3vh, -32px)) scale(calc(1 + var(--hero-cover, 0) * 0.035));
+  transform: scale(calc(1 + var(--hero-cover, 0) * 0.035));
   transform-origin: left center;
   opacity: calc(1 - var(--hero-cover, 0) * 1.4);
   will-change: transform, opacity;
