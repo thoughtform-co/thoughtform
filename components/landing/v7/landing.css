@@ -1240,6 +1240,31 @@
   color: var(--gold);
 }
 
+/* Subline — body line beneath the tagline. Reads as a one-sentence
+   description of what Thoughtform does for the team (navigate /
+   encode / build), so the hero answers "what is this?" in two
+   beats: the gold-accented headline promise + this concrete how.
+   Sized slightly larger than ordinary body so it carries enough
+   weight to balance the wordmark above and the CTA below
+   (composition mirrors the General Intelligence Company hero —
+   brand at top, value-prop sentence + CTA grounding the column). */
+.hero__subline {
+  font-family: var(--font-pp-neue-montreal);
+  font-weight: 400;
+  font-size: clamp(16px, 1rem + 0.5vw, 20px);
+  line-height: 1.5;
+  letter-spacing: -0.005em;
+  color: var(--dawn-70);
+  margin: var(--space-lg) 0 0;
+  max-width: 42ch;
+  /* Balance line lengths for any wrapping that happens BEYOND the
+     explicit `<br>` (e.g. on narrower viewports where the first
+     half also has to wrap). The hand-placed break still anchors
+     the primary "work, / and build" cadence the way the headline
+     reads aloud. */
+  text-wrap: balance;
+}
+
 /* Inward scroll transition: hero recedes as definition enters */
 .hero {
   transform-origin: center center;
