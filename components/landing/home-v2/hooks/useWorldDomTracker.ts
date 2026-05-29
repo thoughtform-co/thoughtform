@@ -5,7 +5,7 @@ import * as THREE from "three";
 import type { DepthGatewayTransform, Beat } from "@/lib/stores/depthGatewayStore";
 import { BEAT_WINDOWS, useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import {
-  CAMERA_FOV,
+  getCameraFov,
   type DepthFocusWindow,
   depthFocusOpacity,
   getCameraLookAt,
@@ -150,10 +150,12 @@ const ANCHOR_ORIGINS: Record<string, string> = {
   "bottom-right": "-100%, -100%",
 };
 
-/** Make a mirror camera mounted to the same FOV as the R3F scene. */
+/** Make a mirror camera mounted to the same FOV as the R3F scene.
+ *  Uses the aspect-aware `getCameraFov` so the DOM projection matches
+ *  the canvas camera on portrait viewports (ADR-018 mobile revision). */
 function makeMirrorCamera(): THREE.PerspectiveCamera {
   const aspect = typeof window !== "undefined" ? window.innerWidth / window.innerHeight : 16 / 9;
-  return new THREE.PerspectiveCamera(CAMERA_FOV, aspect, 0.1, 100);
+  return new THREE.PerspectiveCamera(getCameraFov(aspect), aspect, 0.1, 100);
 }
 
 /** Sync the mirror camera to the corridor camera path for the
@@ -227,6 +229,9 @@ export function useWorldDomTracker(
       const cam = cameraRef.current;
       if (!cam) return;
       cam.aspect = window.innerWidth / window.innerHeight;
+      // Keep fov in lock-step with the canvas camera (both derive from
+      // the same aspect) so the projection never desyncs on rotate.
+      cam.fov = getCameraFov(cam.aspect);
       cam.updateProjectionMatrix();
     };
     window.addEventListener("resize", onResize);

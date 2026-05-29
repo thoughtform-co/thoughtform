@@ -31,14 +31,46 @@
 
 import { BEAT_PARK_CENTRES, clamp01, lerp, smoothstep } from "@/lib/stores/depthGatewayStore";
 import { MISS_LABELS } from "@/lib/celestial/orbits";
+import { isMobileComposition } from "@/lib/hooks/useDeviceTier";
 
 export type Vec3 = readonly [number, number, number];
 
 // ── Camera FOV + path constants ──────────────────────────────────
 
 /** Vertical FOV. ~38° gives the focal-compressed "looking into a
- *  corridor" feel without going full fish-eye. */
+ *  corridor" feel without going full fish-eye. This is the LANDSCAPE /
+ *  desktop value; `getCameraFov` widens it on portrait so the
+ *  horizontal coverage holds (the gates/copy are laid out for a
+ *  landscape horizontal FOV — see ADR-018 mobile revision). */
 export const CAMERA_FOV = 38;
+
+/** Desktop-equivalent HORIZONTAL FOV target the portrait fix tries to
+ *  preserve. At 16:9 a 38° vertical FOV already yields ~63° horizontal,
+ *  so this only ever widens the vertical FOV on aspect < 1. */
+const TARGET_HFOV_DEG = 60;
+/** Hard cap on the widened vertical FOV — beyond this the scene reads
+ *  as fish-eye. On very tall phones we accept some horizontal tightening
+ *  (the stacked section-2 layout compensates) rather than distort. */
+const MAX_FOV_DEG = 70;
+
+/**
+ * Aspect-aware vertical FOV. Three.js `PerspectiveCamera.fov` is the
+ * VERTICAL angle and is aspect-independent, so a portrait viewport
+ * keeps the tuned vertical framing but collapses horizontally. To
+ * restore horizontal coverage we widen the vertical FOV when
+ * `aspect < 1` to hit `TARGET_HFOV_DEG` (clamped to `MAX_FOV_DEG`).
+ *
+ * BOTH the R3F scene camera AND the DOM mirror camera in
+ * `useWorldDomTracker` must call this with the same aspect, or the
+ * projected copy/brandmark will desync from the canvas geometry.
+ */
+export function getCameraFov(aspect: number): number {
+  if (!Number.isFinite(aspect) || aspect >= 1) return CAMERA_FOV;
+  const targetH = (TARGET_HFOV_DEG * Math.PI) / 180;
+  const vfovRad = 2 * Math.atan(Math.tan(targetH / 2) / aspect);
+  const vfovDeg = (vfovRad * 180) / Math.PI;
+  return Math.min(MAX_FOV_DEG, Math.max(CAMERA_FOV, vfovDeg));
+}
 
 /** Camera position at progress = 0 (start of corridor). Dead-centred
  *  on the optical axis. */
@@ -383,6 +415,14 @@ export const STATION_INTELLIGENCE: GateStation = {
  *  each frame, so the world reads as a single camera-pan rather
  *  than independent object motions. */
 export function getThoughtformCenterOffsetX(progress: number): number {
+  // Mobile composition: there is no two-column → centred pan. The
+  // whole Thoughtform composition (compass + brandmark + phase
+  // labels) is pre-centred on the optical axis for the entire beat so
+  // the stacked layout (copy above the mark) reads cleanly on a narrow
+  // portrait frame. The same offset is folded into the copy anchor and
+  // brandmark travel, so every Thoughtform-anchored element stays
+  // co-centred. (ADR-018 mobile revision.)
+  if (isMobileComposition()) return -STATION_THOUGHTFORM.position[0];
   const { start, end } = CORRIDOR_TIMELINE.thoughtformPan;
   if (progress <= start) return 0;
   if (progress >= end) return -STATION_THOUGHTFORM.position[0];
@@ -633,6 +673,11 @@ export const BRANDMARK_WORLD_HALF_EXTENT = {
  *  naturally as it travels. */
 export function getBrandmarkWorldHalfExtent(progress: number): number {
   const H = BRANDMARK_WORLD_HALF_EXTENT;
+  // Portrait widens the vertical FOV (see `getCameraFov`), which shrinks
+  // the mark's apparent size at the Thoughtform park. Bump its world
+  // half-extent on mobile so it keeps real presence inside the diamond.
+  // (ADR-018 mobile revision.)
+  const thoughtformExtent = isMobileComposition() ? 0.4 : H.thoughtform;
   const {
     thoughtformHold,
     diagnosticArrival,
@@ -640,10 +685,10 @@ export function getBrandmarkWorldHalfExtent(progress: number): number {
     intelligenceArrival,
     intelligenceLanding,
   } = CORRIDOR_TIMELINE.brandmark;
-  if (progress <= thoughtformHold) return H.thoughtform;
+  if (progress <= thoughtformHold) return thoughtformExtent;
   if (progress <= diagnosticArrival)
     return lerp(
-      H.thoughtform,
+      thoughtformExtent,
       H.diagnostic,
       smoothstep(thoughtformHold, diagnosticArrival, progress)
     );
@@ -736,11 +781,19 @@ export const COPY_ANCHORS: readonly WorldAnchor[] = [
   // forward travel.
   {
     id: "thoughtform.leftCopy",
-    position: (transform) => [
-      -1.8 + getThoughtformCenterOffsetX(transform.paintProgress),
-      0.0,
-      STATION_THOUGHTFORM.position[2] + 0.1,
-    ],
+    // Desktop: off-axis-left at world X=-1.8 (two-column composition).
+    // Mobile: stacked ABOVE the centred mark — X tracks the gate centre
+    // (so it sits over the brandmark) and Y is lifted above the mark.
+    // The block's `data-anchor-origin` flips to `bottom-center` on
+    // mobile (CopyAnchors.tsx) so its bottom edge lands at this point.
+    // (ADR-018 mobile revision.)
+    position: (transform) => {
+      const off = getThoughtformCenterOffsetX(transform.paintProgress);
+      if (isMobileComposition()) {
+        return [STATION_THOUGHTFORM.position[0] + off, 0.95, STATION_THOUGHTFORM.position[2] + 0.1];
+      }
+      return [-1.8 + off, 0.0, STATION_THOUGHTFORM.position[2] + 0.1];
+    },
     visibilityBeats: ["thoughtform", "passthrough-01"],
     // No entry fade — copy reads at full strength the moment the
     // stage pins. Pre-arm projection writes the transform at parked

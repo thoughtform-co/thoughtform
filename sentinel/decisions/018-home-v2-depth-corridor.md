@@ -11,6 +11,59 @@
 
 ---
 
+## 2026-05-29 Revision — Mobile corridor
+
+The corridor was previously gated off for any viewport `< 760px`
+(`HomeCorridor.tsx`), so phones fell back to the static text
+`FallbackCorridor` — losing both the flythrough and the section-2
+brandmark composition. This revision runs the real 3D corridor on
+**capable phones** ("corridor-lite") and stacks the Thoughtform copy
+above the brandmark in portrait. Plan: `plans/mobile-3d-corridor.md`.
+
+Changes:
+
+- **Capability gate, not a phone block.** The `smallViewport < 760`
+  fallback condition is replaced by `corridorCapable()`
+  (`lib/hooks/useDeviceTier.ts`): the corridor runs unless WebGL is
+  unavailable, reduced-motion is set, or the device is genuinely
+  low-end (≤2 cores **and** ≤2 GiB RAM, or a touch device `< 360px`).
+  `useDeviceTier()` / `getDeviceTier(width)` centralise the
+  `mobile < 760 / tablet < 1280` thresholds the per-layer `pickCount`
+  helpers already use.
+- **Mobile performance tier** (`DepthGatewayScene/index.tsx`):
+  drawing-buffer pixel ratio capped to `[1, 1.4]` on mobile (the
+  dominant GPU lever — phones report DPR ~3) and MSAA dropped
+  (`antialias: !isMobile`). The two heaviest layers
+  (`LatentWormholeWalls`, `LatentTopographyContours`) and
+  `CelestialMotes` remain culled on mobile; the existing per-layer
+  mobile particle budget (dead until now) carries the rest.
+- **WebGL context-loss handling** (new): `webglcontextlost` is
+  `preventDefault`-ed and `webglcontextrestored` bumps a Canvas `key`
+  so all `useMemo` geometry rebuilds — phones drop contexts under
+  memory pressure / backgrounding.
+- **Aspect-aware FOV** (`sceneGeom.ts` `getCameraFov(aspect)`): the
+  vertical FOV widens on portrait (`aspect < 1`) toward a ~60°
+  horizontal target, capped at 70° to avoid fish-eye, so the
+  landscape-tuned gate/copy layout keeps horizontal coverage. BOTH
+  the live camera (`FlyingCameraRig`) and the DOM mirror camera
+  (`useWorldDomTracker`) read the same function + update on resize, so
+  canvas geometry and projected copy/brandmark stay in sync.
+- **Section-2 stacked layout.** On mobile the Thoughtform composition
+  is pre-centred (`getThoughtformCenterOffsetX` returns the centred
+  offset for the whole beat instead of panning), the `thoughtform.leftCopy`
+  world anchor sits ABOVE the mark with a `bottom-center` origin
+  (`CopyAnchors.tsx`), the brandmark world half-extent is bumped to
+  compensate for the wider FOV, and the decorative phase labels are
+  dropped (`home-v2.css` `@media (max-width: 760px)`).
+
+Known follow-up (R1): the portrait FOV widening can leave gates
+slightly under-filled vertically or expose seams tuned for 38°. A
+tier-scoped `GATE_PARK_DISTANCE` is the next lever if on-device
+testing shows gates overflowing the narrow frame; this revision keeps
+the FOV widening modest and leans on the stacked layout. Per-gate
+particle budgets for `ThoughtformAtmosphere` / `InterGateCorridor` /
+`GatewayWorld` on mobile are unaudited and may need a `pickCount` tier.
+
 ## 2026-05-23 Revision — World-Owned Corridor
 
 Status update: ADR-018 now prefers a stricter model than the first proposal below.
@@ -193,7 +246,7 @@ The store exposes:
 ### Out of scope
 
 - Production homepage (`/`). Unaffected.
-- Mobile fidelity beyond a graceful WebGL / reduced-motion fallback (existing fallback markup still paints).
+- ~~Mobile fidelity beyond a graceful WebGL / reduced-motion fallback (existing fallback markup still paints).~~ **Superseded by the 2026-05-29 Mobile corridor revision** — capable phones now run the corridor with a stacked section-2 layout; only no-WebGL / reduced-motion / genuinely low-end devices get the static fallback.
 - Performance budgets beyond "feels smooth at 60fps on a recent laptop". A dedicated perf pass can follow if needed.
 
 ## References

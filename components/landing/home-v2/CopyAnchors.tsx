@@ -2,6 +2,7 @@
 
 import { useRef } from "react";
 import type { V7CorridorText } from "@/lib/v7-parse";
+import { useDeviceTier } from "@/lib/hooks/useDeviceTier";
 import { COPY_ANCHORS } from "./DepthGatewayScene/sceneGeom";
 import { useWorldDomTracker } from "./hooks/useWorldDomTracker";
 
@@ -34,6 +35,13 @@ export function CopyAnchors({ text }: CopyAnchorsProps) {
   // registered by ProjectedBrandmarkActor via its own tracker call.
   useWorldDomTracker(COPY_ANCHORS, layerRef);
 
+  // Mobile stacks the Thoughtform copy ABOVE the centred mark, so its
+  // anchor origin flips from `left-center` (two-column) to
+  // `bottom-center` (the block's bottom edge lands on the world anchor
+  // lifted above the mark in `sceneGeom.ts`). (ADR-018 mobile revision.)
+  const isMobile = useDeviceTier() === "mobile";
+  const thoughtformCopyOrigin = isMobile ? "bottom-center" : "left-center";
+
   const tf = text.thoughtform;
   const dg = text.diagnostic;
   const il = text.intelligence;
@@ -44,7 +52,7 @@ export function CopyAnchors({ text }: CopyAnchorsProps) {
       <div
         className="home-v2-copy-block home-v2-copy-block--thoughtform-left"
         data-world-anchor="thoughtform.leftCopy"
-        data-anchor-origin="left-center"
+        data-anchor-origin={thoughtformCopyOrigin}
       >
         <div className="home-v2-copy-bridge">{tf.bridge}</div>
         <h2 className="home-v2-copy-title" dangerouslySetInnerHTML={{ __html: tf.titleHtml }} />
