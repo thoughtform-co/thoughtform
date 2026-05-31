@@ -47,6 +47,7 @@ export function CopyAnchors({ text }: CopyAnchorsProps) {
   const dg = text.diagnostic;
   const il = text.intelligence;
 
+  // Desktop CTA: the "See the thesis →" link to the intelligence layer.
   const cta = (
     <div className="home-v2-copy-cta-row">
       <a className="home-v2-copy-cta" href="#intelligence-layer">
@@ -55,6 +56,31 @@ export function CopyAnchors({ text }: CopyAnchorsProps) {
           →
         </span>
       </a>
+    </div>
+  );
+
+  // Mobile CTA: three down-pointing chevrons that glow in sequence
+  // (launch-pad runway) as a "scroll down to continue" cue into the
+  // Moment-2 brandmark + diagram reveal. Tapping scrolls ~one viewport
+  // forward; honours reduced-motion (instant scroll + static-lit CSS).
+  const scrollForward = () => {
+    const reduce =
+      typeof window !== "undefined" &&
+      window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    window.scrollBy({ top: window.innerHeight, behavior: reduce ? "auto" : "smooth" });
+  };
+  const mobileChevrons = (
+    <div className="home-v2-copy-cta-row">
+      <button
+        type="button"
+        className="home-v2-scroll-chevrons"
+        aria-label="Scroll down to continue"
+        onClick={scrollForward}
+      >
+        <span className="home-v2-scroll-chevrons__c" />
+        <span className="home-v2-scroll-chevrons__c" />
+        <span className="home-v2-scroll-chevrons__c" />
+      </button>
     </div>
   );
 
@@ -80,7 +106,7 @@ export function CopyAnchors({ text }: CopyAnchorsProps) {
           >
             <p className="home-v2-copy-body" dangerouslySetInnerHTML={{ __html: tf.body1Html }} />
             <p className="home-v2-copy-body" dangerouslySetInnerHTML={{ __html: tf.body2Html }} />
-            {cta}
+            {mobileChevrons}
           </div>
         </>
       ) : (

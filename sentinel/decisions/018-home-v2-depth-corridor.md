@@ -93,6 +93,50 @@ desktop (and tablet ≥ 769px) keep the original two-column layout and the
 pan-to-centre scroll motion. Verified at 390×844 (split layout + rings
 sweeping immediately past the park) and 1440×900 (unchanged).
 
+**Follow-up (same revision) — two scroll moments + chevron scroll cue.**
+The split-around-the-mark layout still crammed copy and brandmark into one
+frame. Mobile now sequences the Thoughtform beat into two scroll moments
+(the camera held across both), then the fly:
+
+- **Moment 1 — copy:** copy alone fills the viewport; brandmark, compass,
+  and phase labels are at opacity 0.
+- **Moment 2 — diagram:** the copy fades out and the brandmark slides up
+  into centre with the compass rings + NAVIGATE/ENCODE/BUILD labels —
+  the same detail desktop shows when its mark pans to centre.
+- **Moment 3 — fly:** the existing corridor flythrough.
+
+Mechanism (all mobile-only, desktop = identity):
+- **Scroll budget.** Mobile stage height 460→**620svh** (`home-v2.css`);
+  `getMobilePaintProgress` reshaped to map the whole `[0, MOBILE_THOUGHTFORM_END=0.38]`
+  raw dwell into the camera-hold span `[0, dollyHoldEnd]` (camera still
+  through both moments), then fly over `[0.38, 1]`. Continuous + monotonic
+  at the seam (`cameraZDollyT(hold)=0`, no pop).
+- **Sub-phase helper** `getThoughtformMobilePhase(rawProgress)` → `{copyFactor,
+  diagramFactor, slideY}` (desktop short-circuits to `{1,1,0}`). Consumers
+  multiply it in: copy anchors (`onPaint × copyFactor`), brandmark
+  (`ProjectedBrandmarkActor` onPaint `× diagramFactor`), compass
+  (`ThoughtformCompassGate` `bootBoost × diagramFactor`, `group.position.y
+  += slideY`), phase labels (`onPaint × diagramFactor`, world offsets +slideY).
+  Brandmark slide is world-space (`getBrandmarkWorldPosition(progress, rawProgress)`)
+  so the mark and rings stay co-located.
+- **Beat from paintProgress on mobile** (`useDepthScroll`): with the larger
+  remap, `beat`/`gateProgress` are resolved from the painted value so
+  cosmetics (brandmark `isParkedBeat`, HUD sector) stay aligned. Note:
+  phase-label/copy *visibility* is keyed off `paintProgress` against
+  `BEAT_WINDOWS` (`useWorldDomTracker:283`), and the remap pins paintProgress
+  into the thoughtform window across the dwell — so no `BEAT_WINDOWS` change
+  is needed.
+- **Phase labels restored on mobile** (un-hidden; gated by `diagramFactor`),
+  offsets pulled inward by `MOBILE_PHASE_SCALE` (0.7) to fit portrait FOV.
+- **Chevron CTA** (`CopyAnchors` + `home-v2.css`): mobile replaces "See the
+  thesis →" with three down-pointing chevrons glowing in sequence (launch-pad
+  runway) as a scroll-down cue; tapping scrolls ~1 viewport. `prefers-reduced-motion`
+  → static all-lit. Desktop keeps the text link.
+
+Verified 390×844 on `/test/home-v2` and prod `/` (Moment 1 copy-only →
+transition crossfade+slide → Moment 2 brandmark+rings+labels centred → fly)
+and 1440×900 desktop unchanged.
+
 ## 2026-05-23 Revision — World-Owned Corridor
 
 Status update: ADR-018 now prefers a stricter model than the first proposal below.

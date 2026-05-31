@@ -49,7 +49,6 @@ export function useDepthScroll(stageRef: React.RefObject<HTMLDivElement | null>)
     const scrubHeight = Math.max(1, stageHeight - vh);
 
     const progress = clamp01(-rect.top / scrubHeight);
-    const { beat, gateProgress } = resolveBeat(progress);
 
     // ── Engagement state + velocity ─────────────────────────────
     // Two-phase engagement (ADR-018 "furnished room on arrival"):
@@ -67,19 +66,25 @@ export function useDepthScroll(stageRef: React.RefObject<HTMLDivElement | null>)
     const engagement = getCorridorEngagement(rect, vh, progress);
     const { active, armed } = engagement;
 
-    // Mobile "brief read, then fly": on phones the centring pan is a
-    // no-op (the mark is already centred), so the Thoughtform pan/hold
-    // window is dead time. Remap the active paint progress so scrolling
-    // past the parked read flies straight into the corridor. Only the
-    // PAINT channel is remapped — `progress`/`beat`/`gateProgress`
-    // stay raw — and only while active (armed keeps paintProgress 0 for
+    // Mobile two-moment Thoughtform: the beat is sequenced into a copy
+    // moment then a brandmark+diagram moment, both with the camera held,
+    // before the corridor fly. `getMobilePaintProgress` maps the whole
+    // dwell into the camera-hold span so paintProgress stays ≤ dollyHoldEnd
+    // across both moments, then runs the fly. Only the PAINT channel is
+    // remapped — and only while active (armed keeps paintProgress 0 for
     // the "furnished on arrival" parked prepaint). Every visual reads
     // `paintProgress`, so the camera, mirror camera, rings, brandmark,
     // and copy all shift together. (ADR-018 mobile revision.)
+    const mobile = isMobileComposition();
     const paintProgress =
-      active && isMobileComposition()
-        ? getMobilePaintProgress(progress)
-        : engagement.paintProgress;
+      active && mobile ? getMobilePaintProgress(progress) : engagement.paintProgress;
+
+    // Beat / gateProgress drive cosmetics (brandmark `isParkedBeat`
+    // intensity, HUD sector text). On mobile the remap stretches raw
+    // progress far from paintProgress, so resolve the beat from the
+    // PAINTED value to keep cosmetics aligned with what's on screen.
+    // Desktop resolves from raw progress (unchanged).
+    const { beat, gateProgress } = resolveBeat(active && mobile ? paintProgress : progress);
 
     // Mirror engagement to a global DOM flag so co-mounted scroll
     // hooks (notably the v7 LandingPage's `useLandingScroll`) know

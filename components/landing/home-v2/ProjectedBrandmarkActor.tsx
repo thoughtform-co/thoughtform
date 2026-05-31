@@ -8,6 +8,7 @@ import {
   getBrandmarkWorldHalfExtent,
   getBrandmarkWorldPosition,
   getIntelligenceSubstratePresence,
+  getThoughtformMobilePhase,
 } from "./DepthGatewayScene/sceneGeom";
 import { type WorldAnchor, useWorldDomTracker } from "./hooks/useWorldDomTracker";
 
@@ -68,7 +69,8 @@ export function ProjectedBrandmarkActor() {
     return [
       {
         id: "home-v2.brandmark",
-        position: (transform) => getBrandmarkWorldPosition(transform.paintProgress),
+        position: (transform) =>
+          getBrandmarkWorldPosition(transform.paintProgress, transform.progress),
         // Brandmark is visible across all five beats; substrate-cut
         // is handled inside onPaint so the DOM hides during the
         // intelligence morph window.
@@ -163,7 +165,12 @@ export function ProjectedBrandmarkActor() {
           const isParkedBeat =
             beat === "thoughtform" || beat === "diagnostic" || beat === "intelligence";
           const intensity = isParkedBeat ? 1 : 0.92;
-          element.style.opacity = `${(bookend * intensity * substrateFadeOut).toFixed(3)}`;
+          // Mobile two-moment beat: the mark only fades in for Moment 2
+          // (the brandmark + diagram reveal). `diagramFactor` is 1 on
+          // desktop and 1 once raw progress passes the dwell, so it's a
+          // no-op everywhere except the mobile copy moment.
+          const { diagramFactor } = getThoughtformMobilePhase(transform.progress);
+          element.style.opacity = `${(bookend * intensity * substrateFadeOut * diagramFactor).toFixed(3)}`;
 
           // Forward tilt: the inner div takes a small Y rotation
           // scaled by camera dolly so the mark reads as a 3D plate

@@ -348,38 +348,76 @@ const THOUGHTFORM_PARK_PROGRESS = BEAT_PARK_CENTRES.thoughtform ?? 0.07;
 const DIAGNOSTIC_PARK_PROGRESS = BEAT_PARK_CENTRES.diagnostic ?? 0.53;
 const INTELLIGENCE_PARK_PROGRESS = BEAT_PARK_CENTRES.intelligence ?? 0.88;
 
+/** Raw-progress end of the mobile Thoughtform DWELL — the scroll span
+ *  that holds BOTH mobile moments (copy, then brandmark+diagram) before
+ *  the corridor fly begins. The mobile stage is taller (see
+ *  `home-v2.css` `@media (max-width:760px)`) so this 0..0.38 raw window
+ *  is ~two viewports of scroll. `getMobilePaintProgress` maps the whole
+ *  dwell into the camera-hold span `[0, dollyHoldEnd]` so the camera is
+ *  still through both moments; the fly owns `[0.38, 1]`. */
+export const MOBILE_THOUGHTFORM_END = 0.38;
+
 /**
- * Mobile-only paint-progress remap — "brief read, then fly".
+ * Mobile-only paint-progress remap — two mobile Thoughtform moments,
+ * then fly.
  *
  * On desktop the Thoughtform beat spends [park, dollyHoldEnd] panning
- * the brandmark laterally to dead-centre while the camera Z dolly is
- * held at 0 (see `thoughtformPan` / `dollyHoldEnd` / `cameraZDollyT`).
- * On mobile the mark is already centred — `getThoughtformCenterOffsetX`
- * returns 0 under `isMobileComposition()` — so that pan window is dead
- * time the user scrolls through before anything moves.
+ * the brandmark to centre while the camera Z dolly is held at 0. On
+ * mobile the mark is already centred (`getThoughtformCenterOffsetX`
+ * returns 0), and the beat is sequenced into two scroll moments — copy
+ * alone, then the brandmark + compass diagram — both of which want the
+ * camera HELD. So the entire dwell `[0, MOBILE_THOUGHTFORM_END]` is
+ * mapped into the camera-hold span `[0, dollyHoldEnd]` (where
+ * `cameraZDollyT` ≡ 0), and everything past the dwell is rescaled to
+ * run the dolly + ring flythrough to completion at progress = 1.
  *
- * This remap collapses it. The parked read [0, park] is stretched onto
- * the full camera-hold span [0, dollyHoldEnd] (nothing moves there, so
- * the stretch is invisible — it just lets the gateway boot ramp play
- * while the composition is read), and everything past the park is
- * rescaled to start the dolly + ring flythrough immediately and run it
- * to completion at progress = 1.
+ * The copy fade, brandmark fade + slide, compass + phase-label reveal
+ * are NOT driven by this remap — they come from `getThoughtformMobilePhase`
+ * (keyed off raw progress) so they can sequence WITHIN the held dwell.
  *
- * Continuous + monotonic: both branches evaluate to `dollyHoldEnd` at
- * p = park, and `cameraZDollyT` is 0 across [0, dollyHoldEnd], so the
- * camera Z is identical on both sides of the seam — no pop. Every
- * visual reads `paintProgress`, so feeding the remapped value shifts
- * the whole timeline coherently (scene camera, DOM mirror camera,
- * compass rings, brandmark, and copy stay in lockstep — no desync).
- * Caller gates this behind `isMobileComposition()`. (ADR-018 mobile
- * revision.)
+ * Continuous + monotonic at the seam `p = MOBILE_THOUGHTFORM_END` (both
+ * branches → `dollyHoldEnd`); `cameraZDollyT(dollyHoldEnd) = 0`, so the
+ * camera Z is identical on both sides — no pop. Every visual reads
+ * `paintProgress`, so the whole timeline shifts coherently. Caller gates
+ * this behind `isMobileComposition()`. (ADR-018 mobile revision.)
  */
 export function getMobilePaintProgress(progress: number): number {
   const p = clamp01(progress);
-  const park = THOUGHTFORM_PARK_PROGRESS;
+  const dwell = MOBILE_THOUGHTFORM_END;
   const hold = CORRIDOR_TIMELINE.dollyHoldEnd;
-  if (p <= park) return (p / park) * hold;
-  return hold + ((p - park) * (1 - hold)) / (1 - park);
+  if (p <= dwell) return (p / dwell) * hold;
+  return hold + ((p - dwell) * (1 - hold)) / (1 - dwell);
+}
+
+/** Per-element factors for the mobile two-moment Thoughtform beat,
+ *  keyed off RAW scroll progress (not `paintProgress`, which is pinned
+ *  into the held span across the dwell). Consumers multiply these in:
+ *
+ *   - `copyFactor`    1 → 0 : copy block opacity (Moment 1 → fades out).
+ *   - `diagramFactor` 0 → 1 : brandmark + compass + phase-label opacity
+ *                             (fades in for Moment 2; saturates to 1 by
+ *                             0.30 so it stays full through the fly).
+ *   - `slideY` world-Y added to brandmark + compass + phase labels:
+ *                eases from below-centre up to centre as the diagram
+ *                fades in ("scrolls into the middle").
+ *
+ *  Desktop short-circuits to the identity `{1, 1, 0}` so every consumer
+ *  can multiply unconditionally and desktop is provably unchanged. */
+export interface ThoughtformMobilePhase {
+  copyFactor: number;
+  diagramFactor: number;
+  slideY: number;
+}
+
+const MOBILE_BRANDMARK_SLIDE_FROM = -0.55;
+
+export function getThoughtformMobilePhase(rawProgress: number): ThoughtformMobilePhase {
+  if (!isMobileComposition()) return { copyFactor: 1, diagramFactor: 1, slideY: 0 };
+  const p = clamp01(rawProgress);
+  const copyFactor = 1 - smoothstep(0.12, 0.19, p);
+  const diagramFactor = smoothstep(0.16, 0.3, p);
+  const slideY = lerp(MOBILE_BRANDMARK_SLIDE_FROM, 0, smoothstep(0.16, 0.32, p));
+  return { copyFactor, diagramFactor, slideY };
 }
 
 /** Thoughtform compass — off-axis-right at parked rest so the
@@ -630,7 +668,10 @@ export function getBrandmarkLeadWorldPosition(progress: number): [number, number
  *  through the park, then visibly drifts deeper as the lead grows
  *  toward `FULL_LEAD` through passthrough-02. See
  *  `getBrandmarkLeadWorldPosition` for the two-phase envelope. */
-export function getBrandmarkWorldPosition(progress: number): [number, number, number] {
+export function getBrandmarkWorldPosition(
+  progress: number,
+  rawProgress: number = progress
+): [number, number, number] {
   // Phase breakpoints from `CORRIDOR_TIMELINE.brandmark` — the
   // travel arc deliberately overshoots the matching beat
   // boundaries (`thoughtformHold: 0.16` sits 0.02 past the
@@ -651,7 +692,10 @@ export function getBrandmarkWorldPosition(progress: number): [number, number, nu
   const tfX = BRANDMARK_ANCHOR_THOUGHTFORM[0] + tfOffsetX;
 
   if (progress <= thoughtformHold) {
-    return [tfX, BRANDMARK_ANCHOR_THOUGHTFORM[1], BRANDMARK_ANCHOR_THOUGHTFORM[2]];
+    // Mobile two-moment beat: the mark slides up from below-centre to
+    // centre as Moment 2 fades it in (no-op on desktop → slideY 0).
+    const { slideY } = getThoughtformMobilePhase(rawProgress);
+    return [tfX, BRANDMARK_ANCHOR_THOUGHTFORM[1] + slideY, BRANDMARK_ANCHOR_THOUGHTFORM[2]];
   }
   if (progress <= diagnosticArrival) {
     // Arrival lerp lands at the LEAD position at `diagnosticArrival`,
@@ -789,6 +833,46 @@ function diagnosticLabelWorldPosition(pipXSvg: number, pipYSvg: number): WorldAn
   ];
 }
 
+/** Mobile inward-pull for the Thoughtform phase labels. Portrait FOV
+ *  (widened by `getCameraFov`) spreads the gate-relative label offsets
+ *  toward the frame edges, so on mobile they're scaled toward the gate
+ *  centre to read clearly around the mark. */
+const MOBILE_PHASE_SCALE = 0.7;
+
+/** Position resolver for a Thoughtform phase label at gate-relative
+ *  offset `[offsetX, offsetY]`. Folds in the centering pan (desktop)
+ *  and, on mobile, pulls the offset inward (`MOBILE_PHASE_SCALE`) and
+ *  rides the Moment-2 slide so the labels travel up with the mark. */
+function thoughtformPhasePosition(offsetX: number, offsetY: number): WorldAnchorPosition {
+  return (transform: DepthGatewayTransform) => {
+    const mobile = isMobileComposition();
+    const s = mobile ? MOBILE_PHASE_SCALE : 1;
+    const slideY = mobile ? getThoughtformMobilePhase(transform.progress).slideY : 0;
+    return [
+      STATION_THOUGHTFORM.position[0] +
+        offsetX * s +
+        getThoughtformCenterOffsetX(transform.paintProgress),
+      STATION_THOUGHTFORM.position[1] + offsetY * s + slideY,
+      STATION_THOUGHTFORM.position[2] + 0.05,
+    ];
+  };
+}
+
+/** onPaint: gate a Thoughtform copy block by the mobile copy factor so
+ *  it fades out as Moment 2 begins. No-op on desktop (copyFactor 1). */
+const gateThoughtformCopy: WorldAnchor["onPaint"] = (ctx, el) => {
+  const { copyFactor } = getThoughtformMobilePhase(ctx.transform.progress);
+  el.style.opacity = (ctx.visibilityOpacity * copyFactor).toFixed(3);
+};
+
+/** onPaint: gate a Thoughtform diagram element (compass-bearing phase
+ *  label) by the mobile diagram factor so it appears only in Moment 2.
+ *  No-op on desktop (diagramFactor 1). */
+const gateThoughtformDiagram: WorldAnchor["onPaint"] = (ctx, el) => {
+  const { diagramFactor } = getThoughtformMobilePhase(ctx.transform.progress);
+  el.style.opacity = (ctx.visibilityOpacity * diagramFactor).toFixed(3);
+};
+
 /**
  * COPY_ANCHORS — every DOM text element the world-DOM tracker
  * projects per frame. The order does not matter; the tracker walks
@@ -838,6 +922,9 @@ export const COPY_ANCHORS: readonly WorldAnchor[] = [
     // from invisible to full ("furnished room on arrival") rather
     // than a 40%-window crossfade as the user scrolls in.
     fadeFrac: 0,
+    // Mobile: fade the title block out as Moment 2 (the brandmark +
+    // diagram reveal) begins. No-op on desktop.
+    onPaint: gateThoughtformCopy,
   },
   {
     // Mobile-only lower copy block: the two body lines + the CTA,
@@ -855,6 +942,7 @@ export const COPY_ANCHORS: readonly WorldAnchor[] = [
     },
     visibilityBeats: ["thoughtform", "passthrough-01"],
     fadeFrac: 0,
+    onPaint: gateThoughtformCopy,
   },
   // Three phase labels — NAVIGATE/ENCODE/BUILD — pinned to the v7
   // sigil compass-bearing positions (matching the production home
@@ -894,35 +982,24 @@ export const COPY_ANCHORS: readonly WorldAnchor[] = [
   // boundary.
   {
     id: "thoughtform.phase.navigate",
-    position: (transform) => [
-      STATION_THOUGHTFORM.position[0] - 0.5 + getThoughtformCenterOffsetX(transform.paintProgress),
-      STATION_THOUGHTFORM.position[1] + 0.7,
-      STATION_THOUGHTFORM.position[2] + 0.05,
-    ],
+    position: thoughtformPhasePosition(-0.5, 0.7),
     visibilityBeats: ["thoughtform"],
     fadeFrac: 2.0,
+    onPaint: gateThoughtformDiagram,
   },
   {
     id: "thoughtform.phase.encode",
-    position: (transform) => [
-      STATION_THOUGHTFORM.position[0] -
-        0.325 +
-        getThoughtformCenterOffsetX(transform.paintProgress),
-      STATION_THOUGHTFORM.position[1] - 0.655,
-      STATION_THOUGHTFORM.position[2] + 0.05,
-    ],
+    position: thoughtformPhasePosition(-0.325, -0.655),
     visibilityBeats: ["thoughtform"],
     fadeFrac: 2.0,
+    onPaint: gateThoughtformDiagram,
   },
   {
     id: "thoughtform.phase.build",
-    position: (transform) => [
-      STATION_THOUGHTFORM.position[0] + 0.59 + getThoughtformCenterOffsetX(transform.paintProgress),
-      STATION_THOUGHTFORM.position[1] + 0.135,
-      STATION_THOUGHTFORM.position[2] + 0.05,
-    ],
+    position: thoughtformPhasePosition(0.59, 0.135),
     visibilityBeats: ["thoughtform"],
     fadeFrac: 2.0,
+    onPaint: gateThoughtformDiagram,
   },
 
   // ── Diagnostic ──────────────────────────────────────────────────

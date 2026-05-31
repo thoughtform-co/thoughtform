@@ -10,6 +10,7 @@ import {
   depthOpacityForWorldPosition,
   getThoughtformBootEnvelope,
   getThoughtformCenterOffsetX,
+  getThoughtformMobilePhase,
   getThoughtformRingFlythrough,
 } from "../sceneGeom";
 
@@ -448,7 +449,12 @@ export function ThoughtformCompassGate() {
   useFrame((state) => {
     const group = groupRef.current;
     if (!group) return;
-    const { paintProgress, active, armed } = useDepthGatewayStore.getState().transform;
+    const {
+      paintProgress,
+      progress: rawProgress,
+      active,
+      armed,
+    } = useDepthGatewayStore.getState().transform;
     // Paint at full opacity while EITHER armed or active. `paint-
     // Progress` is forced to 0 while armed so the parked Thoughtform
     // layout is in place the moment the stage starts rising into
@@ -468,6 +474,14 @@ export function ThoughtformCompassGate() {
     // same transform the user sees this frame.
     group.position.x = STATION_THOUGHTFORM.position[0] + getThoughtformCenterOffsetX(progress);
 
+    // Mobile two-moment beat: the whole compass rides the Moment-2
+    // slide (up from below-centre) and is gated by `diagramFactor` so
+    // it only appears in Moment 2. Both are no-ops on desktop
+    // (slideY 0, diagramFactor 1) and once raw progress passes the
+    // dwell. Keyed off RAW progress, not paintProgress.
+    const { diagramFactor, slideY } = getThoughtformMobilePhase(rawProgress);
+    group.position.y = STATION_THOUGHTFORM.position[1] + slideY;
+
     // Boot envelope — runs alongside the centering pan and the
     // first beat of the parked composition. Painters in this gate
     // use it to add a small additive alpha boost to the rings +
@@ -477,7 +491,10 @@ export function ThoughtformCompassGate() {
     // driven from the same envelope, so the whole gateway powers
     // on as one beat.
     const boot = getThoughtformBootEnvelope(progress);
-    const bootBoost = 1 + boot * COMPASS_BOOT_BOOST;
+    // `diagramFactor` (mobile Moment-2 reveal) folds into the shared
+    // alpha multiplier so every ring + bearing + phase dot fades in
+    // together; ×1 on desktop and past the mobile dwell.
+    const bootBoost = (1 + boot * COMPASS_BOOT_BOOST) * diagramFactor;
 
     // Staggered ring flythrough — each ring rides its own [start, end]
     // window in `FLYTHROUGH_WINDOWS`. Opacity is now derived from
