@@ -488,10 +488,10 @@ export function extractV7Text(): V7CorridorText {
     "AI collapsed the distance between <em>thought</em> and <em>form</em>.";
   const tfBody1 =
     innerHtmlForClass(tfHtml, "p", "tri__title--secondary", 0) ??
-    "But the layer between how your team works and what AI can do is missing.";
+    "What it can’t see is the <em>judgment</em> that makes your work good.";
   const tfBody2 =
     innerHtmlForClass(tfHtml, "p", "tri__title--secondary", 1) ??
-    "We build it with your team and <em>train them to own it</em>.";
+    "We embed and navigate it with your team, encode how they work, and build what runs on top, <em>until they own it</em>.";
   const tfCtaMatch = /<a\b[^>]*\bclass="[^"]*\bbtn--solid\b[^"]*"[^>]*>([\s\S]*?)<\/a>/i.exec(
     tfHtml
   );

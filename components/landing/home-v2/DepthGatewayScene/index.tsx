@@ -1,6 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import { Canvas } from "@react-three/fiber";
+import { useDeviceTier } from "@/lib/hooks/useDeviceTier";
 import { CelestialMotes } from "./CelestialMotes";
 import { FlyingCameraRig } from "./FlyingCameraRig";
 import { GatewayWorld } from "./gates/GatewayWorld";
@@ -11,7 +13,15 @@ import { LatentWormholeWalls } from "./LatentWormholeWalls";
 import { ScrollStreaks } from "./ScrollStreaks";
 import { StaticStarfield } from "./StaticStarfield";
 import { ThoughtformAtmosphere } from "./ThoughtformAtmosphere";
-import { CAMERA_FOV, CAMERA_START, getCameraLookAt } from "./sceneGeom";
+import { CAMERA_START, getCameraFov, getCameraLookAt } from "./sceneGeom";
+
+/** Current viewport aspect (browser only; safe fallback on server).
+ *  Used only for the Canvas's initial camera fov; `FlyingCameraRig`
+ *  owns the live fov + resize sync thereafter. */
+function viewportAspect(): number {
+  if (typeof window === "undefined") return 16 / 9;
+  return window.innerWidth / window.innerHeight;
+}
 
 /**
  * DepthGatewayScene — single R3F canvas for the home-v2 depth
@@ -104,24 +114,46 @@ import { CAMERA_FOV, CAMERA_START, getCameraLookAt } from "./sceneGeom";
  * so no probe is needed here.
  */
 export function DepthGatewayScene() {
+  const tier = useDeviceTier();
   const [lx, ly, lz] = getCameraLookAt(0);
+  // `glEpoch` is bumped on `webglcontextrestored` to force a Canvas
+  // remount so all `useMemo` geometry rebuilds against the fresh
+  // context — phones drop GL contexts under memory pressure /
+  // backgrounding. (ADR-018 mobile revision.)
+  const [glEpoch, setGlEpoch] = useState(0);
+
+  // Mobile performance tier: cap the drawing-buffer pixel ratio (phones
+  // report DPR ~3, so [1, 1.4] is the dominant GPU lever) and drop MSAA
+  // (expensive on a high-DPR panel; the dpr cap carries edge quality).
+  const isMobile = tier === "mobile";
+  const dpr: [number, number] = isMobile ? [1, 1.4] : [1, 1.75];
 
   return (
     <Canvas
+      key={glEpoch}
       className="home-v2-stage__canvas-inner"
       camera={{
-        fov: CAMERA_FOV,
+        fov: getCameraFov(viewportAspect()),
         near: 0.1,
         far: 100,
         position: CAMERA_START,
       }}
-      onCreated={({ camera }) => {
+      onCreated={({ camera, gl }) => {
         camera.lookAt(lx, ly, lz);
+        const canvas = gl.domElement;
+        const onLost = (e: Event) => {
+          // Preventing default lets the browser restore the context
+          // (otherwise `webglcontextrestored` never fires).
+          e.preventDefault();
+        };
+        const onRestored = () => setGlEpoch((n) => n + 1);
+        canvas.addEventListener("webglcontextlost", onLost as EventListener, false);
+        canvas.addEventListener("webglcontextrestored", onRestored, false);
       }}
-      dpr={[1, 1.75]}
+      dpr={dpr}
       gl={{
         alpha: true,
-        antialias: true,
+        antialias: !isMobile,
         premultipliedAlpha: false,
         powerPreference: "low-power",
         preserveDrawingBuffer: false,

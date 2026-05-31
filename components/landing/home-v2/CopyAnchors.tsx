@@ -2,6 +2,7 @@
 
 import { useRef } from "react";
 import type { V7CorridorText } from "@/lib/v7-parse";
+import { useDeviceTier } from "@/lib/hooks/useDeviceTier";
 import { COPY_ANCHORS } from "./DepthGatewayScene/sceneGeom";
 import { useWorldDomTracker } from "./hooks/useWorldDomTracker";
 
@@ -34,31 +35,89 @@ export function CopyAnchors({ text }: CopyAnchorsProps) {
   // registered by ProjectedBrandmarkActor via its own tracker call.
   useWorldDomTracker(COPY_ANCHORS, layerRef);
 
+  // Mobile renders the Thoughtform copy as ONE vertically-centred column
+  // (bridge + title + body + chevron cue) over the gate centre, with the
+  // chevron scroll cue instead of the desktop "See the thesis" link. Copy
+  // and the brandmark never share the frame (copy fades out in Moment 1
+  // before the mark slides in for Moment 2), so the block is centred and
+  // reads as one cohesive paragraph. Desktop keeps the two-column block
+  // with the text CTA. (ADR-018 mobile two-moment revision.)
+  const isMobile = useDeviceTier() === "mobile";
+
   const tf = text.thoughtform;
   const dg = text.diagnostic;
   const il = text.intelligence;
 
+  // Desktop CTA: the "See the thesis →" link to the intelligence layer.
+  const cta = (
+    <div className="home-v2-copy-cta-row">
+      <a className="home-v2-copy-cta" href="#intelligence-layer">
+        {tf.cta}{" "}
+        <span className="home-v2-copy-cta__arrow" aria-hidden="true">
+          →
+        </span>
+      </a>
+    </div>
+  );
+
+  // Mobile CTA: three down-pointing chevrons that glow in sequence
+  // (launch-pad runway) as a "scroll down to continue" cue into the
+  // Moment-2 brandmark + diagram reveal. Tapping scrolls ~one viewport
+  // forward; honours reduced-motion (instant scroll + static-lit CSS).
+  const scrollForward = () => {
+    const reduce =
+      typeof window !== "undefined" &&
+      window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    window.scrollBy({ top: window.innerHeight, behavior: reduce ? "auto" : "smooth" });
+  };
+  const mobileChevrons = (
+    <div className="home-v2-copy-cta-row">
+      <button
+        type="button"
+        className="home-v2-scroll-chevrons"
+        aria-label="Scroll down to continue"
+        onClick={scrollForward}
+      >
+        <span className="home-v2-scroll-chevrons__c" />
+        <span className="home-v2-scroll-chevrons__c" />
+        <span className="home-v2-scroll-chevrons__c" />
+      </button>
+    </div>
+  );
+
   return (
     <div ref={layerRef} className="home-v2-copy-layer" aria-hidden="false">
       {/* ─────────── THOUGHTFORM ─────────── */}
-      <div
-        className="home-v2-copy-block home-v2-copy-block--thoughtform-left"
-        data-world-anchor="thoughtform.leftCopy"
-        data-anchor-origin="left-center"
-      >
-        <div className="home-v2-copy-bridge">{tf.bridge}</div>
-        <h2 className="home-v2-copy-title" dangerouslySetInnerHTML={{ __html: tf.titleHtml }} />
-        <p className="home-v2-copy-body" dangerouslySetInnerHTML={{ __html: tf.body1Html }} />
-        <p className="home-v2-copy-body" dangerouslySetInnerHTML={{ __html: tf.body2Html }} />
-        <div className="home-v2-copy-cta-row">
-          <a className="home-v2-copy-cta" href="#intelligence-layer">
-            {tf.cta}{" "}
-            <span className="home-v2-copy-cta__arrow" aria-hidden="true">
-              →
-            </span>
-          </a>
+      {isMobile ? (
+        // One vertically-centred copy column. Copy and the brandmark
+        // never share the frame (copy fades out before the mark slides
+        // in for Moment 2), so the whole block — bridge, title, body,
+        // and the chevron scroll cue — reads as a single cohesive
+        // paragraph centred in the viewport. (ADR-018 two-moment.)
+        <div
+          className="home-v2-copy-block home-v2-copy-block--thoughtform-left"
+          data-world-anchor="thoughtform.leftCopy"
+          data-anchor-origin="center"
+        >
+          <div className="home-v2-copy-bridge">{tf.bridge}</div>
+          <h2 className="home-v2-copy-title" dangerouslySetInnerHTML={{ __html: tf.titleHtml }} />
+          <p className="home-v2-copy-body" dangerouslySetInnerHTML={{ __html: tf.body1Html }} />
+          <p className="home-v2-copy-body" dangerouslySetInnerHTML={{ __html: tf.body2Html }} />
+          {mobileChevrons}
         </div>
-      </div>
+      ) : (
+        <div
+          className="home-v2-copy-block home-v2-copy-block--thoughtform-left"
+          data-world-anchor="thoughtform.leftCopy"
+          data-anchor-origin="left-center"
+        >
+          <div className="home-v2-copy-bridge">{tf.bridge}</div>
+          <h2 className="home-v2-copy-title" dangerouslySetInnerHTML={{ __html: tf.titleHtml }} />
+          <p className="home-v2-copy-body" dangerouslySetInnerHTML={{ __html: tf.body1Html }} />
+          <p className="home-v2-copy-body" dangerouslySetInnerHTML={{ __html: tf.body2Html }} />
+          {cta}
+        </div>
+      )}
 
       {/* Phase labels — NAVIGATE / ENCODE / BUILD. Each label is a
           two-line stack (primary uppercase + secondary mixed-case)

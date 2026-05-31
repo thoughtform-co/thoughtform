@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { V7CorridorText } from "@/lib/v7-parse";
 import { probeWebGL } from "@/lib/webgl/probe";
+import { corridorCapable } from "@/lib/hooks/useDeviceTier";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import { CopyAnchors } from "./CopyAnchors";
 import { DepthGatewayScene } from "./DepthGatewayScene";
@@ -33,8 +34,11 @@ interface HomeCorridorProps {
  *
  *   1. `useDepthScroll(stageRef)` — per-frame scroll watcher that
  *      writes the depth-store transform + v7 HUD readouts.
- *   2. WebGL / reduced-motion / `<760px` viewport probe that decides
- *      between the corridor (R3F) and the static text fallback.
+ *   2. WebGL / reduced-motion / device-capability probe that decides
+ *      between the corridor (R3F) and the static text fallback. Capable
+ *      phones run the corridor; only no-WebGL, reduced-motion, or
+ *      genuinely low-end devices get the static fallback
+ *      (`corridorCapable()`, ADR-018 mobile revision).
  *   3. `data-brandmark-mode="off"` lifecycle so the global v7
  *      brandmark canvas (if mounted on the same route) doesn't
  *      paint over the corridor.
@@ -47,22 +51,24 @@ export function HomeCorridor({ text, debug = true }: HomeCorridorProps) {
   const stageRef = useRef<HTMLDivElement>(null);
   const [webglOK, setWebglOK] = useState<boolean | null>(null);
   const [reducedMotion, setReducedMotion] = useState(false);
-  const [smallViewport, setSmallViewport] = useState(false);
+  // Corridor capability replaces the old blanket `innerWidth < 760`
+  // phone block (ADR-018 mobile revision): capable phones now run the
+  // real 3D corridor; only no-WebGL / genuinely low-end devices fall
+  // back. Capability is effectively static for the session, so unlike
+  // the old viewport check it is not re-evaluated on resize.
+  const [capable, setCapable] = useState<boolean | null>(null);
 
   useDepthScroll(stageRef);
 
   useEffect(() => {
     setWebglOK(probeWebGL());
+    setCapable(corridorCapable());
     const mql = window.matchMedia("(prefers-reduced-motion: reduce)");
     setReducedMotion(mql.matches);
     const onChange = (e: MediaQueryListEvent) => setReducedMotion(e.matches);
     mql.addEventListener("change", onChange);
-    const syncViewport = () => setSmallViewport(window.innerWidth < 760);
-    syncViewport();
-    window.addEventListener("resize", syncViewport);
     return () => {
       mql.removeEventListener("change", onChange);
-      window.removeEventListener("resize", syncViewport);
     };
   }, []);
 
@@ -118,7 +124,7 @@ export function HomeCorridor({ text, debug = true }: HomeCorridorProps) {
     };
   }, []);
 
-  const fallback = webglOK === false || reducedMotion || smallViewport;
+  const fallback = webglOK === false || reducedMotion || capable === false;
 
   return (
     <div

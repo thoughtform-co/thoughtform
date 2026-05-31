@@ -364,6 +364,126 @@
   font-weight: 700;
 }
 
+/* ── Section-2 (Thoughtform beat) mobile composition ──────────
+   The corridor now runs on capable phones (ADR-018 mobile revision).
+   In portrait the Thoughtform copy is stacked ABOVE the centred
+   brandmark instead of sitting in a left column — the world anchor +
+   `bottom-center` origin are set in sceneGeom.ts / CopyAnchors.tsx;
+   these rules only touch properties the world-DOM tracker does NOT
+   write (width, text-align, font-size, flow). Mirrors the intended
+   look of the non-corridor `#definition` mobile block in
+   landing-v7-motion.html (~L1335-1380) so the corridor and the static
+   fallback read identically across the capability boundary. */
+@media (max-width: 760px) {
+  /* Taller stage on mobile: the Thoughtform beat is sequenced into two
+     scroll moments (copy, then the brandmark + diagram reveal), each
+     ~one viewport, before the corridor fly. `getMobilePaintProgress`
+     maps the [0, 0.38] raw dwell into the camera-hold span. (ADR-018
+     mobile two-moment revision.) */
+  .home-v2-stage {
+    height: 620svh;
+  }
+  /* Mobile Thoughtform copy: one vertically-centred column (bridge,
+     title, body, chevron cue) that reads as a single cohesive paragraph.
+     The type scale is harmonised — title and body sit close in size with
+     a shared 1.22 line-height — so the block reads as one flowing
+     statement rather than a headline over small body text. */
+  .home-v2-copy-block--thoughtform-left {
+    width: min(88vw, 430px);
+    text-align: center;
+  }
+  .home-v2-copy-block--thoughtform-left .home-v2-copy-bridge {
+    margin-bottom: 16px;
+  }
+  .home-v2-copy-block--thoughtform-left .home-v2-copy-title,
+  .home-v2-copy-block--thoughtform-left .home-v2-copy-body {
+    max-width: none;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .home-v2-copy-block--thoughtform-left .home-v2-copy-title {
+    font-size: clamp(23px, 5.8vw, 29px);
+    margin-bottom: 20px;
+  }
+  .home-v2-copy-block--thoughtform-left .home-v2-copy-body {
+    font-size: clamp(19px, 5vw, 24px);
+    margin-bottom: 18px;
+  }
+  .home-v2-copy-block--thoughtform-left .home-v2-copy-body:last-of-type {
+    margin-bottom: 0;
+  }
+  .home-v2-copy-block--thoughtform-left .home-v2-copy-cta-row {
+    display: flex;
+    justify-content: center;
+    margin-top: 22px;
+  }
+  /* Phase labels (Navigate / Encode / Build) are kept on mobile now —
+     they belong to Moment 2 (the brandmark + diagram reveal) and are
+     gated to it by `diagramFactor` opacity in the world-DOM tracker,
+     not hidden, so they only appear once the copy has handed off. Their
+     world offsets are pulled inward (`MOBILE_PHASE_SCALE`) to fit the
+     portrait frame. Tighten the type so they read at phone scale. */
+  .home-v2-copy-phase__label {
+    font-size: 11px;
+  }
+  .home-v2-copy-phase__sub {
+    font-size: 9px;
+  }
+}
+
+/* ── Mobile scroll-cue chevrons (Thoughtform Moment 1 → Moment 2) ──
+   Three down-pointing chevrons that glow in sequence like a launch-pad
+   runway, cueing the scroll from the copy into the brandmark + diagram
+   reveal. Mobile-only (rendered by CopyAnchors on the mobile branch).
+   The button lives in the lower copy block, so it fades with the copy
+   via the `copyFactor` gate as Moment 2 begins. */
+.home-v2-scroll-chevrons {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 8px;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+.home-v2-scroll-chevrons__c {
+  width: 18px;
+  height: 18px;
+  border-right: 2px solid var(--gold, #caa554);
+  border-bottom: 2px solid var(--gold, #caa554);
+  transform: rotate(45deg);
+  opacity: 0.25;
+  animation: home-v2-chevron-glow 1.5s ease-in-out infinite;
+}
+.home-v2-scroll-chevrons__c:nth-child(1) {
+  animation-delay: 0s;
+}
+.home-v2-scroll-chevrons__c:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.home-v2-scroll-chevrons__c:nth-child(3) {
+  animation-delay: 0.4s;
+}
+@keyframes home-v2-chevron-glow {
+  0%,
+  60%,
+  100% {
+    opacity: 0.25;
+    filter: none;
+  }
+  20% {
+    opacity: 1;
+    filter: drop-shadow(0 0 6px rgba(202, 165, 84, 0.7));
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .home-v2-scroll-chevrons__c {
+    animation: none;
+    opacity: 1;
+  }
+}
+
 /* ── HUD progress chrome (debug) ─────────────────────────────── */
 
 .home-v2-stage__hud {

@@ -11,6 +11,136 @@
 
 ---
 
+## 2026-05-29 Revision — Mobile corridor
+
+The corridor was previously gated off for any viewport `< 760px`
+(`HomeCorridor.tsx`), so phones fell back to the static text
+`FallbackCorridor` — losing both the flythrough and the section-2
+brandmark composition. This revision runs the real 3D corridor on
+**capable phones** ("corridor-lite") and stacks the Thoughtform copy
+above the brandmark in portrait. Plan: `plans/mobile-3d-corridor.md`.
+
+Changes:
+
+- **Capability gate, not a phone block.** The `smallViewport < 760`
+  fallback condition is replaced by `corridorCapable()`
+  (`lib/hooks/useDeviceTier.ts`): the corridor runs unless WebGL is
+  unavailable, reduced-motion is set, or the device is genuinely
+  low-end (≤2 cores **and** ≤2 GiB RAM, or a touch device `< 360px`).
+  `useDeviceTier()` / `getDeviceTier(width)` centralise the
+  `mobile < 760 / tablet < 1280` thresholds the per-layer `pickCount`
+  helpers already use.
+- **Mobile performance tier** (`DepthGatewayScene/index.tsx`):
+  drawing-buffer pixel ratio capped to `[1, 1.4]` on mobile (the
+  dominant GPU lever — phones report DPR ~3) and MSAA dropped
+  (`antialias: !isMobile`). The two heaviest layers
+  (`LatentWormholeWalls`, `LatentTopographyContours`) and
+  `CelestialMotes` remain culled on mobile; the existing per-layer
+  mobile particle budget (dead until now) carries the rest.
+- **WebGL context-loss handling** (new): `webglcontextlost` is
+  `preventDefault`-ed and `webglcontextrestored` bumps a Canvas `key`
+  so all `useMemo` geometry rebuilds — phones drop contexts under
+  memory pressure / backgrounding.
+- **Aspect-aware FOV** (`sceneGeom.ts` `getCameraFov(aspect)`): the
+  vertical FOV widens on portrait (`aspect < 1`) toward a ~60°
+  horizontal target, capped at 70° to avoid fish-eye, so the
+  landscape-tuned gate/copy layout keeps horizontal coverage. BOTH
+  the live camera (`FlyingCameraRig`) and the DOM mirror camera
+  (`useWorldDomTracker`) read the same function + update on resize, so
+  canvas geometry and projected copy/brandmark stay in sync.
+- **Section-2 stacked layout.** On mobile the Thoughtform composition
+  is pre-centred (`getThoughtformCenterOffsetX` returns the centred
+  offset for the whole beat instead of panning), the `thoughtform.leftCopy`
+  world anchor sits ABOVE the mark with a `bottom-center` origin
+  (`CopyAnchors.tsx`), the brandmark world half-extent is bumped to
+  compensate for the wider FOV, and the decorative phase labels are
+  dropped (`home-v2.css` `@media (max-width: 760px)`).
+
+Known follow-up (R1): the portrait FOV widening can leave gates
+slightly under-filled vertically or expose seams tuned for 38°. A
+tier-scoped `GATE_PARK_DISTANCE` is the next lever if on-device
+testing shows gates overflowing the narrow frame; this revision keeps
+the FOV widening modest and leans on the stacked layout. Per-gate
+particle budgets for `ThoughtformAtmosphere` / `InterGateCorridor` /
+`GatewayWorld` on mobile are unaudited and may need a `pickCount` tier.
+
+**Follow-up (same revision) — split copy + immediate fly-in.** The
+first pass put the whole copy block above the mark and held the desktop
+pan/dolly window on mobile (dead time, since the mark is already
+centred). Two mobile-only refinements:
+
+- **Title above / body below.** The Thoughtform copy splits around the
+  mark: `thoughtform.leftCopy` carries only the bridge + title (above,
+  `bottom-center`), and a new `thoughtform.lowerCopy` anchor carries the
+  two body lines + CTA (below, `top-center`). `CopyAnchors.tsx` branches
+  on `useDeviceTier() === "mobile"`; desktop renders the single
+  two-column block and has no `lowerCopy` DOM element, so the tracker's
+  missing-anchor `continue` skips it.
+- **Immediate fly-in.** `getMobilePaintProgress(progress)` (`sceneGeom.ts`)
+  remaps the PAINT channel on mobile only: the parked read `[0, park]`
+  stretches onto the camera-hold span `[0, dollyHoldEnd]` (nothing moves
+  there) and everything past the park is rescaled to run the dolly + ring
+  flythrough to completion at `progress = 1`. Applied in `useDepthScroll`
+  behind `active && isMobileComposition()`; `progress`/`beat`/`gateProgress`
+  stay raw. The remap is continuous + monotonic at the park seam and
+  `cameraZDollyT` is 0 across `[0, dollyHoldEnd]`, so the camera Z is
+  identical on both sides — no pop. Because every visual reads
+  `paintProgress` (scene camera, mirror camera, rings, brandmark, copy),
+  the whole timeline shifts coherently with no DOM/canvas desync.
+
+Both are gated behind `isMobileComposition()` / `useDeviceTier`, so
+desktop (and tablet ≥ 769px) keep the original two-column layout and the
+pan-to-centre scroll motion. Verified at 390×844 (split layout + rings
+sweeping immediately past the park) and 1440×900 (unchanged).
+
+**Follow-up (same revision) — two scroll moments + chevron scroll cue.**
+The split-around-the-mark layout still crammed copy and brandmark into one
+frame. Mobile now sequences the Thoughtform beat into two scroll moments
+(the camera held across both), then the fly:
+
+- **Moment 1 — copy:** copy alone fills the viewport as ONE vertically-
+  centred column (bridge + title + body + chevron cue) with a harmonised
+  type scale, reading as a single cohesive paragraph; brandmark, compass,
+  and phase labels are at opacity 0. (Supersedes the earlier title-above /
+  body-below split — copy and mark never share the frame, so the split was
+  unnecessary; the `thoughtform.lowerCopy` anchor was removed.)
+- **Moment 2 — diagram:** the copy fades out and the brandmark slides up
+  into centre with the compass rings + NAVIGATE/ENCODE/BUILD labels —
+  the same detail desktop shows when its mark pans to centre.
+- **Moment 3 — fly:** the existing corridor flythrough.
+
+Mechanism (all mobile-only, desktop = identity):
+- **Scroll budget.** Mobile stage height 460→**620svh** (`home-v2.css`);
+  `getMobilePaintProgress` reshaped to map the whole `[0, MOBILE_THOUGHTFORM_END=0.38]`
+  raw dwell into the camera-hold span `[0, dollyHoldEnd]` (camera still
+  through both moments), then fly over `[0.38, 1]`. Continuous + monotonic
+  at the seam (`cameraZDollyT(hold)=0`, no pop).
+- **Sub-phase helper** `getThoughtformMobilePhase(rawProgress)` → `{copyFactor,
+  diagramFactor, slideY}` (desktop short-circuits to `{1,1,0}`). Consumers
+  multiply it in: copy anchors (`onPaint × copyFactor`), brandmark
+  (`ProjectedBrandmarkActor` onPaint `× diagramFactor`), compass
+  (`ThoughtformCompassGate` `bootBoost × diagramFactor`, `group.position.y
+  += slideY`), phase labels (`onPaint × diagramFactor`, world offsets +slideY).
+  Brandmark slide is world-space (`getBrandmarkWorldPosition(progress, rawProgress)`)
+  so the mark and rings stay co-located.
+- **Beat from paintProgress on mobile** (`useDepthScroll`): with the larger
+  remap, `beat`/`gateProgress` are resolved from the painted value so
+  cosmetics (brandmark `isParkedBeat`, HUD sector) stay aligned. Note:
+  phase-label/copy *visibility* is keyed off `paintProgress` against
+  `BEAT_WINDOWS` (`useWorldDomTracker:283`), and the remap pins paintProgress
+  into the thoughtform window across the dwell — so no `BEAT_WINDOWS` change
+  is needed.
+- **Phase labels restored on mobile** (un-hidden; gated by `diagramFactor`),
+  offsets pulled inward by `MOBILE_PHASE_SCALE` (0.7) to fit portrait FOV.
+- **Chevron CTA** (`CopyAnchors` + `home-v2.css`): mobile replaces "See the
+  thesis →" with three down-pointing chevrons glowing in sequence (launch-pad
+  runway) as a scroll-down cue; tapping scrolls ~1 viewport. `prefers-reduced-motion`
+  → static all-lit. Desktop keeps the text link.
+
+Verified 390×844 on `/test/home-v2` and prod `/` (Moment 1 copy-only →
+transition crossfade+slide → Moment 2 brandmark+rings+labels centred → fly)
+and 1440×900 desktop unchanged.
+
 ## 2026-05-23 Revision — World-Owned Corridor
 
 Status update: ADR-018 now prefers a stricter model than the first proposal below.
@@ -193,7 +323,7 @@ The store exposes:
 ### Out of scope
 
 - Production homepage (`/`). Unaffected.
-- Mobile fidelity beyond a graceful WebGL / reduced-motion fallback (existing fallback markup still paints).
+- ~~Mobile fidelity beyond a graceful WebGL / reduced-motion fallback (existing fallback markup still paints).~~ **Superseded by the 2026-05-29 Mobile corridor revision** — capable phones now run the corridor with a stacked section-2 layout; only no-WebGL / reduced-motion / genuinely low-end devices get the static fallback.
 - Performance budgets beyond "feels smooth at 60fps on a recent laptop". A dedicated perf pass can follow if needed.
 
 ## References

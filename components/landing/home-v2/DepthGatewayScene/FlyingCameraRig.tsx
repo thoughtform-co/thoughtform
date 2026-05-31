@@ -3,7 +3,7 @@
 import { useFrame, useThree } from "@react-three/fiber";
 import { useEffect } from "react";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
-import { CAMERA_FOV, CAMERA_START, getCameraLookAt, getCameraPosition } from "./sceneGeom";
+import { CAMERA_START, getCameraFov, getCameraLookAt, getCameraPosition } from "./sceneGeom";
 
 /**
  * FlyingCameraRig — scroll-driven camera dolly for the home-v2
@@ -22,20 +22,34 @@ import { CAMERA_FOV, CAMERA_START, getCameraLookAt, getCameraPosition } from "./
 export function FlyingCameraRig() {
   const { camera } = useThree();
 
-  // One-time bootstrap. R3F's <Canvas camera={...}> only sets the
-  // initial position; we set position + lookAt + fov here so the
-  // first frame frames CAMERA_START -> forward correctly.
+  // One-time bootstrap + resize sync. R3F's <Canvas camera={...}> only
+  // sets the initial position; we set position + lookAt + fov here so
+  // the first frame frames CAMERA_START -> forward correctly. The fov
+  // is aspect-aware (`getCameraFov`) so portrait viewports widen the
+  // vertical FOV to preserve horizontal coverage, and re-applies on
+  // resize/rotate. The DOM mirror camera in `useWorldDomTracker` reads
+  // the SAME function, so canvas geometry and projected copy/brandmark
+  // stay in sync. (ADR-018 mobile revision.)
   useEffect(() => {
     camera.position.set(...CAMERA_START);
     const [lx, ly, lz] = getCameraLookAt(0);
     camera.lookAt(lx, ly, lz);
     camera.up.set(0, 1, 0);
-    if ("fov" in camera && (camera as { fov: number }).fov !== undefined) {
-      (camera as { fov: number; updateProjectionMatrix: () => void }).fov = CAMERA_FOV;
+
+    const applyFov = () => {
+      if ("fov" in camera && (camera as { fov: number }).fov !== undefined) {
+        const aspect = window.innerWidth / window.innerHeight;
+        (camera as { fov: number; updateProjectionMatrix: () => void }).fov = getCameraFov(aspect);
+      }
       camera.updateProjectionMatrix();
-    } else {
-      camera.updateProjectionMatrix();
-    }
+    };
+    applyFov();
+    window.addEventListener("resize", applyFov);
+    window.addEventListener("orientationchange", applyFov);
+    return () => {
+      window.removeEventListener("resize", applyFov);
+      window.removeEventListener("orientationchange", applyFov);
+    };
   }, [camera]);
 
   useFrame(() => {
