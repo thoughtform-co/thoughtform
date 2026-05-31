@@ -901,17 +901,17 @@ export const COPY_ANCHORS: readonly WorldAnchor[] = [
     id: "thoughtform.leftCopy",
     // Desktop: the FULL copy block (bridge + title + lede + CTA),
     // off-axis-left at world X=-1.8 (two-column composition).
-    // Mobile: the TITLE block only (bridge + title) stacked ABOVE the
-    // centred mark — X tracks the gate centre (so it sits over the
-    // brandmark) and Y is lifted above the mark. The body lines + CTA
-    // render as a SEPARATE block below the mark (`thoughtform.lowerCopy`).
-    // The block's `data-anchor-origin` flips to `bottom-center` on
-    // mobile (CopyAnchors.tsx) so its bottom edge lands at this point.
-    // (ADR-018 mobile revision.)
+    // Mobile: the FULL copy block (bridge + title + body + chevron cue)
+    // as ONE vertically-centred column over the gate centre. Copy and
+    // the brandmark never share the frame (copy fades out in Moment 1
+    // before the mark slides in for Moment 2), so the block is centred
+    // (`data-anchor-origin="center"`, Y = 0) and reads as one cohesive
+    // paragraph rather than split above/below the mark. (ADR-018 mobile
+    // two-moment revision.)
     position: (transform) => {
       const off = getThoughtformCenterOffsetX(transform.paintProgress);
       if (isMobileComposition()) {
-        return [STATION_THOUGHTFORM.position[0] + off, 0.95, STATION_THOUGHTFORM.position[2] + 0.1];
+        return [STATION_THOUGHTFORM.position[0] + off, 0.0, STATION_THOUGHTFORM.position[2] + 0.1];
       }
       return [-1.8 + off, 0.0, STATION_THOUGHTFORM.position[2] + 0.1];
     },
@@ -922,26 +922,8 @@ export const COPY_ANCHORS: readonly WorldAnchor[] = [
     // from invisible to full ("furnished room on arrival") rather
     // than a 40%-window crossfade as the user scrolls in.
     fadeFrac: 0,
-    // Mobile: fade the title block out as Moment 2 (the brandmark +
+    // Mobile: fade the copy block out as Moment 2 (the brandmark +
     // diagram reveal) begins. No-op on desktop.
-    onPaint: gateThoughtformCopy,
-  },
-  {
-    // Mobile-only lower copy block: the two body lines + the CTA,
-    // stacked BELOW the centred mark so the title sits above and the
-    // body frames it. Mirrors `leftCopy`'s X (gate centre + pan offset)
-    // and Z, with Y dropped below the mark; `data-anchor-origin` is
-    // `top-center` (CopyAnchors.tsx) so the block hangs down from this
-    // anchor. On desktop CopyAnchors renders no element for this id, so
-    // the tracker simply skips it (missing-anchor `continue`). (ADR-018
-    // mobile revision.)
-    id: "thoughtform.lowerCopy",
-    position: (transform) => {
-      const off = getThoughtformCenterOffsetX(transform.paintProgress);
-      return [STATION_THOUGHTFORM.position[0] + off, -0.95, STATION_THOUGHTFORM.position[2] + 0.1];
-    },
-    visibilityBeats: ["thoughtform", "passthrough-01"],
-    fadeFrac: 0,
     onPaint: gateThoughtformCopy,
   },
   // Three phase labels — NAVIGATE/ENCODE/BUILD — pinned to the v7

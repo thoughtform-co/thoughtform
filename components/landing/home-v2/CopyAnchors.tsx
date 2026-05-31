@@ -35,12 +35,13 @@ export function CopyAnchors({ text }: CopyAnchorsProps) {
   // registered by ProjectedBrandmarkActor via its own tracker call.
   useWorldDomTracker(COPY_ANCHORS, layerRef);
 
-  // Mobile reframes the Thoughtform copy around the centred mark: the
-  // title block stacks ABOVE it (anchor origin flips from `left-center`
-  // two-column to `bottom-center`, so the block's bottom edge lands on
-  // the world anchor lifted above the mark), and the body + CTA render
-  // as a SEPARATE block BELOW it (`thoughtform.lowerCopy`, `top-center`).
-  // Desktop keeps the single two-column block. (ADR-018 mobile revision.)
+  // Mobile renders the Thoughtform copy as ONE vertically-centred column
+  // (bridge + title + body + chevron cue) over the gate centre, with the
+  // chevron scroll cue instead of the desktop "See the thesis" link. Copy
+  // and the brandmark never share the frame (copy fades out in Moment 1
+  // before the mark slides in for Moment 2), so the block is centred and
+  // reads as one cohesive paragraph. Desktop keeps the two-column block
+  // with the text CTA. (ADR-018 mobile two-moment revision.)
   const isMobile = useDeviceTier() === "mobile";
 
   const tf = text.thoughtform;
@@ -88,27 +89,22 @@ export function CopyAnchors({ text }: CopyAnchorsProps) {
     <div ref={layerRef} className="home-v2-copy-layer" aria-hidden="false">
       {/* ─────────── THOUGHTFORM ─────────── */}
       {isMobile ? (
-        <>
-          {/* Title block — above the centred mark. */}
-          <div
-            className="home-v2-copy-block home-v2-copy-block--thoughtform-left"
-            data-world-anchor="thoughtform.leftCopy"
-            data-anchor-origin="bottom-center"
-          >
-            <div className="home-v2-copy-bridge">{tf.bridge}</div>
-            <h2 className="home-v2-copy-title" dangerouslySetInnerHTML={{ __html: tf.titleHtml }} />
-          </div>
-          {/* Body + CTA block — below the centred mark. */}
-          <div
-            className="home-v2-copy-block home-v2-copy-block--thoughtform-lower"
-            data-world-anchor="thoughtform.lowerCopy"
-            data-anchor-origin="top-center"
-          >
-            <p className="home-v2-copy-body" dangerouslySetInnerHTML={{ __html: tf.body1Html }} />
-            <p className="home-v2-copy-body" dangerouslySetInnerHTML={{ __html: tf.body2Html }} />
-            {mobileChevrons}
-          </div>
-        </>
+        // One vertically-centred copy column. Copy and the brandmark
+        // never share the frame (copy fades out before the mark slides
+        // in for Moment 2), so the whole block — bridge, title, body,
+        // and the chevron scroll cue — reads as a single cohesive
+        // paragraph centred in the viewport. (ADR-018 two-moment.)
+        <div
+          className="home-v2-copy-block home-v2-copy-block--thoughtform-left"
+          data-world-anchor="thoughtform.leftCopy"
+          data-anchor-origin="center"
+        >
+          <div className="home-v2-copy-bridge">{tf.bridge}</div>
+          <h2 className="home-v2-copy-title" dangerouslySetInnerHTML={{ __html: tf.titleHtml }} />
+          <p className="home-v2-copy-body" dangerouslySetInnerHTML={{ __html: tf.body1Html }} />
+          <p className="home-v2-copy-body" dangerouslySetInnerHTML={{ __html: tf.body2Html }} />
+          {mobileChevrons}
+        </div>
       ) : (
         <div
           className="home-v2-copy-block home-v2-copy-block--thoughtform-left"

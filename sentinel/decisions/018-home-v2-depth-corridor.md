@@ -98,8 +98,12 @@ The split-around-the-mark layout still crammed copy and brandmark into one
 frame. Mobile now sequences the Thoughtform beat into two scroll moments
 (the camera held across both), then the fly:
 
-- **Moment 1 — copy:** copy alone fills the viewport; brandmark, compass,
-  and phase labels are at opacity 0.
+- **Moment 1 — copy:** copy alone fills the viewport as ONE vertically-
+  centred column (bridge + title + body + chevron cue) with a harmonised
+  type scale, reading as a single cohesive paragraph; brandmark, compass,
+  and phase labels are at opacity 0. (Supersedes the earlier title-above /
+  body-below split — copy and mark never share the frame, so the split was
+  unnecessary; the `thoughtform.lowerCopy` anchor was removed.)
 - **Moment 2 — diagram:** the copy fades out and the brandmark slides up
   into centre with the compass rings + NAVIGATE/ENCODE/BUILD labels —
   the same detail desktop shows when its mark pans to centre.
