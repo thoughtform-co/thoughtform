@@ -64,6 +64,35 @@ the FOV widening modest and leans on the stacked layout. Per-gate
 particle budgets for `ThoughtformAtmosphere` / `InterGateCorridor` /
 `GatewayWorld` on mobile are unaudited and may need a `pickCount` tier.
 
+**Follow-up (same revision) — split copy + immediate fly-in.** The
+first pass put the whole copy block above the mark and held the desktop
+pan/dolly window on mobile (dead time, since the mark is already
+centred). Two mobile-only refinements:
+
+- **Title above / body below.** The Thoughtform copy splits around the
+  mark: `thoughtform.leftCopy` carries only the bridge + title (above,
+  `bottom-center`), and a new `thoughtform.lowerCopy` anchor carries the
+  two body lines + CTA (below, `top-center`). `CopyAnchors.tsx` branches
+  on `useDeviceTier() === "mobile"`; desktop renders the single
+  two-column block and has no `lowerCopy` DOM element, so the tracker's
+  missing-anchor `continue` skips it.
+- **Immediate fly-in.** `getMobilePaintProgress(progress)` (`sceneGeom.ts`)
+  remaps the PAINT channel on mobile only: the parked read `[0, park]`
+  stretches onto the camera-hold span `[0, dollyHoldEnd]` (nothing moves
+  there) and everything past the park is rescaled to run the dolly + ring
+  flythrough to completion at `progress = 1`. Applied in `useDepthScroll`
+  behind `active && isMobileComposition()`; `progress`/`beat`/`gateProgress`
+  stay raw. The remap is continuous + monotonic at the park seam and
+  `cameraZDollyT` is 0 across `[0, dollyHoldEnd]`, so the camera Z is
+  identical on both sides — no pop. Because every visual reads
+  `paintProgress` (scene camera, mirror camera, rings, brandmark, copy),
+  the whole timeline shifts coherently with no DOM/canvas desync.
+
+Both are gated behind `isMobileComposition()` / `useDeviceTier`, so
+desktop (and tablet ≥ 769px) keep the original two-column layout and the
+pan-to-centre scroll motion. Verified at 390×844 (split layout + rings
+sweeping immediately past the park) and 1440×900 (unchanged).
+
 ## 2026-05-23 Revision — World-Owned Corridor
 
 Status update: ADR-018 now prefers a stricter model than the first proposal below.

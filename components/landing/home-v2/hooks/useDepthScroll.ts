@@ -9,6 +9,8 @@ import {
   resolveBeat,
   useDepthGatewayStore,
 } from "@/lib/stores/depthGatewayStore";
+import { isMobileComposition } from "@/lib/hooks/useDeviceTier";
+import { getMobilePaintProgress } from "../DepthGatewayScene/sceneGeom";
 
 /**
  * useDepthScroll — rAF-throttled scroll watcher for the home-v2
@@ -62,7 +64,22 @@ export function useDepthScroll(stageRef: React.RefObject<HTMLDivElement | null>)
     // The hero is sticky-pinned beneath the stage layer; armed
     // painters write opacity 0 so nothing composites over the hero
     // even while transforms are being computed.
-    const { active, armed, paintProgress } = getCorridorEngagement(rect, vh, progress);
+    const engagement = getCorridorEngagement(rect, vh, progress);
+    const { active, armed } = engagement;
+
+    // Mobile "brief read, then fly": on phones the centring pan is a
+    // no-op (the mark is already centred), so the Thoughtform pan/hold
+    // window is dead time. Remap the active paint progress so scrolling
+    // past the parked read flies straight into the corridor. Only the
+    // PAINT channel is remapped — `progress`/`beat`/`gateProgress`
+    // stay raw — and only while active (armed keeps paintProgress 0 for
+    // the "furnished on arrival" parked prepaint). Every visual reads
+    // `paintProgress`, so the camera, mirror camera, rings, brandmark,
+    // and copy all shift together. (ADR-018 mobile revision.)
+    const paintProgress =
+      active && isMobileComposition()
+        ? getMobilePaintProgress(progress)
+        : engagement.paintProgress;
 
     // Mirror engagement to a global DOM flag so co-mounted scroll
     // hooks (notably the v7 LandingPage's `useLandingScroll`) know

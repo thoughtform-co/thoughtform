@@ -348,6 +348,40 @@ const THOUGHTFORM_PARK_PROGRESS = BEAT_PARK_CENTRES.thoughtform ?? 0.07;
 const DIAGNOSTIC_PARK_PROGRESS = BEAT_PARK_CENTRES.diagnostic ?? 0.53;
 const INTELLIGENCE_PARK_PROGRESS = BEAT_PARK_CENTRES.intelligence ?? 0.88;
 
+/**
+ * Mobile-only paint-progress remap — "brief read, then fly".
+ *
+ * On desktop the Thoughtform beat spends [park, dollyHoldEnd] panning
+ * the brandmark laterally to dead-centre while the camera Z dolly is
+ * held at 0 (see `thoughtformPan` / `dollyHoldEnd` / `cameraZDollyT`).
+ * On mobile the mark is already centred — `getThoughtformCenterOffsetX`
+ * returns 0 under `isMobileComposition()` — so that pan window is dead
+ * time the user scrolls through before anything moves.
+ *
+ * This remap collapses it. The parked read [0, park] is stretched onto
+ * the full camera-hold span [0, dollyHoldEnd] (nothing moves there, so
+ * the stretch is invisible — it just lets the gateway boot ramp play
+ * while the composition is read), and everything past the park is
+ * rescaled to start the dolly + ring flythrough immediately and run it
+ * to completion at progress = 1.
+ *
+ * Continuous + monotonic: both branches evaluate to `dollyHoldEnd` at
+ * p = park, and `cameraZDollyT` is 0 across [0, dollyHoldEnd], so the
+ * camera Z is identical on both sides of the seam — no pop. Every
+ * visual reads `paintProgress`, so feeding the remapped value shifts
+ * the whole timeline coherently (scene camera, DOM mirror camera,
+ * compass rings, brandmark, and copy stay in lockstep — no desync).
+ * Caller gates this behind `isMobileComposition()`. (ADR-018 mobile
+ * revision.)
+ */
+export function getMobilePaintProgress(progress: number): number {
+  const p = clamp01(progress);
+  const park = THOUGHTFORM_PARK_PROGRESS;
+  const hold = CORRIDOR_TIMELINE.dollyHoldEnd;
+  if (p <= park) return (p / park) * hold;
+  return hold + ((p - park) * (1 - hold)) / (1 - park);
+}
+
 /** Thoughtform compass — off-axis-right at parked rest so the
  *  parked frame reads as a balanced two-column composition: copy
  *  on the left half, brandmark + compass on the right half, both
@@ -781,9 +815,12 @@ export const COPY_ANCHORS: readonly WorldAnchor[] = [
   // forward travel.
   {
     id: "thoughtform.leftCopy",
-    // Desktop: off-axis-left at world X=-1.8 (two-column composition).
-    // Mobile: stacked ABOVE the centred mark — X tracks the gate centre
-    // (so it sits over the brandmark) and Y is lifted above the mark.
+    // Desktop: the FULL copy block (bridge + title + lede + CTA),
+    // off-axis-left at world X=-1.8 (two-column composition).
+    // Mobile: the TITLE block only (bridge + title) stacked ABOVE the
+    // centred mark — X tracks the gate centre (so it sits over the
+    // brandmark) and Y is lifted above the mark. The body lines + CTA
+    // render as a SEPARATE block below the mark (`thoughtform.lowerCopy`).
     // The block's `data-anchor-origin` flips to `bottom-center` on
     // mobile (CopyAnchors.tsx) so its bottom edge lands at this point.
     // (ADR-018 mobile revision.)
@@ -800,6 +837,23 @@ export const COPY_ANCHORS: readonly WorldAnchor[] = [
     // Thoughtform with opacity 0, so revealing it is a single flip
     // from invisible to full ("furnished room on arrival") rather
     // than a 40%-window crossfade as the user scrolls in.
+    fadeFrac: 0,
+  },
+  {
+    // Mobile-only lower copy block: the two body lines + the CTA,
+    // stacked BELOW the centred mark so the title sits above and the
+    // body frames it. Mirrors `leftCopy`'s X (gate centre + pan offset)
+    // and Z, with Y dropped below the mark; `data-anchor-origin` is
+    // `top-center` (CopyAnchors.tsx) so the block hangs down from this
+    // anchor. On desktop CopyAnchors renders no element for this id, so
+    // the tracker simply skips it (missing-anchor `continue`). (ADR-018
+    // mobile revision.)
+    id: "thoughtform.lowerCopy",
+    position: (transform) => {
+      const off = getThoughtformCenterOffsetX(transform.paintProgress);
+      return [STATION_THOUGHTFORM.position[0] + off, -0.95, STATION_THOUGHTFORM.position[2] + 0.1];
+    },
+    visibilityBeats: ["thoughtform", "passthrough-01"],
     fadeFrac: 0,
   },
   // Three phase labels — NAVIGATE/ENCODE/BUILD — pinned to the v7

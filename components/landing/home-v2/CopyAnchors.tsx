@@ -35,38 +35,67 @@ export function CopyAnchors({ text }: CopyAnchorsProps) {
   // registered by ProjectedBrandmarkActor via its own tracker call.
   useWorldDomTracker(COPY_ANCHORS, layerRef);
 
-  // Mobile stacks the Thoughtform copy ABOVE the centred mark, so its
-  // anchor origin flips from `left-center` (two-column) to
-  // `bottom-center` (the block's bottom edge lands on the world anchor
-  // lifted above the mark in `sceneGeom.ts`). (ADR-018 mobile revision.)
+  // Mobile reframes the Thoughtform copy around the centred mark: the
+  // title block stacks ABOVE it (anchor origin flips from `left-center`
+  // two-column to `bottom-center`, so the block's bottom edge lands on
+  // the world anchor lifted above the mark), and the body + CTA render
+  // as a SEPARATE block BELOW it (`thoughtform.lowerCopy`, `top-center`).
+  // Desktop keeps the single two-column block. (ADR-018 mobile revision.)
   const isMobile = useDeviceTier() === "mobile";
-  const thoughtformCopyOrigin = isMobile ? "bottom-center" : "left-center";
 
   const tf = text.thoughtform;
   const dg = text.diagnostic;
   const il = text.intelligence;
 
+  const cta = (
+    <div className="home-v2-copy-cta-row">
+      <a className="home-v2-copy-cta" href="#intelligence-layer">
+        {tf.cta}{" "}
+        <span className="home-v2-copy-cta__arrow" aria-hidden="true">
+          →
+        </span>
+      </a>
+    </div>
+  );
+
   return (
     <div ref={layerRef} className="home-v2-copy-layer" aria-hidden="false">
       {/* ─────────── THOUGHTFORM ─────────── */}
-      <div
-        className="home-v2-copy-block home-v2-copy-block--thoughtform-left"
-        data-world-anchor="thoughtform.leftCopy"
-        data-anchor-origin={thoughtformCopyOrigin}
-      >
-        <div className="home-v2-copy-bridge">{tf.bridge}</div>
-        <h2 className="home-v2-copy-title" dangerouslySetInnerHTML={{ __html: tf.titleHtml }} />
-        <p className="home-v2-copy-body" dangerouslySetInnerHTML={{ __html: tf.body1Html }} />
-        <p className="home-v2-copy-body" dangerouslySetInnerHTML={{ __html: tf.body2Html }} />
-        <div className="home-v2-copy-cta-row">
-          <a className="home-v2-copy-cta" href="#intelligence-layer">
-            {tf.cta}{" "}
-            <span className="home-v2-copy-cta__arrow" aria-hidden="true">
-              →
-            </span>
-          </a>
+      {isMobile ? (
+        <>
+          {/* Title block — above the centred mark. */}
+          <div
+            className="home-v2-copy-block home-v2-copy-block--thoughtform-left"
+            data-world-anchor="thoughtform.leftCopy"
+            data-anchor-origin="bottom-center"
+          >
+            <div className="home-v2-copy-bridge">{tf.bridge}</div>
+            <h2 className="home-v2-copy-title" dangerouslySetInnerHTML={{ __html: tf.titleHtml }} />
+          </div>
+          {/* Body + CTA block — below the centred mark. */}
+          <div
+            className="home-v2-copy-block home-v2-copy-block--thoughtform-lower"
+            data-world-anchor="thoughtform.lowerCopy"
+            data-anchor-origin="top-center"
+          >
+            <p className="home-v2-copy-body" dangerouslySetInnerHTML={{ __html: tf.body1Html }} />
+            <p className="home-v2-copy-body" dangerouslySetInnerHTML={{ __html: tf.body2Html }} />
+            {cta}
+          </div>
+        </>
+      ) : (
+        <div
+          className="home-v2-copy-block home-v2-copy-block--thoughtform-left"
+          data-world-anchor="thoughtform.leftCopy"
+          data-anchor-origin="left-center"
+        >
+          <div className="home-v2-copy-bridge">{tf.bridge}</div>
+          <h2 className="home-v2-copy-title" dangerouslySetInnerHTML={{ __html: tf.titleHtml }} />
+          <p className="home-v2-copy-body" dangerouslySetInnerHTML={{ __html: tf.body1Html }} />
+          <p className="home-v2-copy-body" dangerouslySetInnerHTML={{ __html: tf.body2Html }} />
+          {cta}
         </div>
-      </div>
+      )}
 
       {/* Phase labels — NAVIGATE / ENCODE / BUILD. Each label is a
           two-line stack (primary uppercase + secondary mixed-case)
