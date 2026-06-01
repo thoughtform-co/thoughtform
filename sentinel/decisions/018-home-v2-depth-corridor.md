@@ -11,6 +11,48 @@
 
 ---
 
+## 2026-06-01 Revision — Declarative corridor map + Navigate / Encode / Build remap
+
+Two changes: a structural refactor (the corridor topology becomes
+data-driven) and a content remap onto the strategy's Navigate → Encode
+→ Build spine. The opening "AI collapsed the distance between thought
+and form" setup beat — spine copy, brandmark-to-center pan, compass —
+is **unchanged**.
+
+**Declarative corridor map (`lib/home-v2/corridorMap.ts`).** The
+corridor is now a single ordered list of `station` / `transition`
+nodes. Everything structural DERIVES from it: the `Beat` union,
+`BEAT_WINDOWS`, `BEAT_PARK_CENTRES`, `SECTOR_LABELS`, the solved gate
+`STATIONS` (world-Z via `gateZAtParkProgress`), `DOLLY_HOLD_END`, and
+`resolveBeat`. The camera-path constants + math helpers moved into this
+kernel so the store (which re-exports the beat symbols for back-compat)
+and `sceneGeom` (whose `STATION_*` are now aliases of the solved
+stations) both consume it without a cycle. Adding / moving / reweighting
+a landmark is a data edit. The extraction reproduced the prior 5-beat
+topology byte-for-byte (weights `[14,32,14,16,24]` → windows
+`[0,.14,.46,.6,.76,1]`; parks `.07/.53/.88`; interstitial `.63`).
+
+**Navigate / Encode / Build.** Encode = the former Diagnostic gate,
+Build = the former Intelligence gate; section copy (kicker / title /
+support) now lives on the map nodes (`NodeContent`), drawn concise and
+executive from the `thoughtform-strategy` skill. The four "same pattern,
+four ways" orbit labels and the "Trusted sources / Headless surfaces"
+chamber labels are dropped (gate GEOMETRY kept as the visuals). Navigate
+gets a **place**: a fly-through landmark gate (`NavigateGate` — armature
++ tilted ring + compass cross, interstitial-gate family) parked at a Z
+inside `passthrough-01`, carrying the "01 · Navigate" copy. It is a map
+**waypoint**, not a re-tiling parked beat, so it adds zero weight and
+the brandmark / camera / opening choreography stay byte-identical. HUD
+sector labels map to the phases.
+
+**Deferred (needs preview tuning):** promoting the Navigate landmark to
+a true parked beat and lengthening the corridor — that re-tiles the
+normalized windows (shrinking the setup window below the hardcoded
+`0.14`-based opening constants) and requires re-expressing
+`CORRIDOR_TIMELINE` window-relatively + recalibrating the brandmark lead
+arc and camera chase. The landmark `parkBias` is the primary placement
+knob.
+
 ## 2026-06-01 Revision — Engagement-gated render loop + corridor-grammar reference
 
 A perf-hardening pass (no behaviour change) plus skill documentation.
