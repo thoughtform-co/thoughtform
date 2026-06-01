@@ -65,8 +65,8 @@ export const GATE_PARK_DISTANCE = 4.5;
 // ── Node model ───────────────────────────────────────────────────────
 
 /** Which gate component renders at a station / waypoint. Consumed by
- *  `GatewayWorld` (Phase 3 maps over the node list). */
-export type GateKind = "compass" | "orbits" | "interstitial" | "sphere";
+ *  `GatewayWorld`. */
+export type GateKind = "compass" | "navigate" | "orbits" | "interstitial" | "sphere";
 
 interface NodeBase {
   /** Stable beat id. Also the `Beat` union member. */
@@ -107,13 +107,20 @@ export interface StationNode extends NodeBase {
 }
 
 /** An optional fly-through landmark sitting INSIDE a transition leg
- *  (the camera passes through it, it is not a parked beat). */
+ *  (the camera passes through it, it is not a parked beat). Carries
+ *  optional section copy + lateral offset so a landmark like the
+ *  Navigate gate can present a titled "place" mid-corridor without
+ *  re-tiling the beat windows. */
 export interface TransitionWaypoint {
   id: string;
   /** Where in the transition window the waypoint sits (0..1). */
   parkBias: number;
   halfExtent: number;
   gate: GateKind;
+  /** World-X offset of the landmark centre (default 0 = on-axis). */
+  lateralX?: number;
+  /** Section copy rendered at this landmark (e.g. Navigate). */
+  content?: NodeContent;
 }
 
 export interface TransitionNode extends NodeBase {
@@ -136,7 +143,7 @@ export const CORRIDOR_MAP = [
   {
     kind: "station",
     id: "thoughtform",
-    label: "North star",
+    label: "Navigate",
     dwell: 14,
     parkBias: 0.5,
     lateralX: 1.1,
@@ -147,8 +154,27 @@ export const CORRIDOR_MAP = [
   {
     kind: "transition",
     id: "passthrough-01",
-    label: "North star",
+    label: "Navigate",
     travel: 32,
+    // Navigate's "place": a fly-through landmark gate the camera
+    // passes mid-corridor (same pattern as the interstitial gate),
+    // giving the Navigate phase a named destination between the
+    // setup and Encode without re-tiling the beat windows.
+    waypoint: {
+      id: "navigate",
+      // parkBias 0.6 of passthrough-01 -> world Z ~3.0, a distinct
+      // mid-corridor landmark clear of the setup compass and well
+      // ahead of the Encode orbits. This single number is the primary
+      // placement knob — tune on the Vercel preview.
+      parkBias: 0.6,
+      halfExtent: 1.5,
+      gate: "navigate",
+      content: {
+        kicker: "01 · Navigate",
+        titleHtml: "Navigate the <em>intelligence</em>.",
+        supportHtml: "Work with AI inside real work, not around it.",
+      },
+    },
   },
   {
     kind: "station",
@@ -168,7 +194,7 @@ export const CORRIDOR_MAP = [
   {
     kind: "transition",
     id: "passthrough-02",
-    label: "Substrate",
+    label: "Build",
     travel: 16,
     waypoint: { id: "interstitial", parkBias: 0.1875, halfExtent: 1.8, gate: "interstitial" },
   },
@@ -309,10 +335,11 @@ export const STATIONS: GateStation[] = (() => {
       const park = w.start + n.waypoint.parkBias * (w.end - w.start);
       out.push({
         id: n.waypoint.id,
-        position: [0, 0, gateZAtParkProgress(park)],
+        position: [n.waypoint.lateralX ?? 0, 0, gateZAtParkProgress(park)],
         halfExtent: n.waypoint.halfExtent,
         parkProgress: park,
         gate: n.waypoint.gate,
+        content: n.waypoint.content,
       });
     }
   });

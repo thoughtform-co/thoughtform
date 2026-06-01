@@ -166,6 +166,7 @@
   width: clamp(280px, 32vw, 460px);
 }
 
+.home-v2-copy-block--navigate-head,
 .home-v2-copy-block--diagnostic-head,
 .home-v2-copy-block--intelligence-head {
   width: clamp(320px, 40vw, 580px);

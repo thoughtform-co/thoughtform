@@ -3,6 +3,7 @@
 import { DiagnosticOrbitGate } from "./DiagnosticOrbitGate";
 import { IntelligenceGate } from "./IntelligenceGate";
 import { InterstitialDiagramGate } from "./InterstitialDiagramGate";
+import { NavigateGate } from "./NavigateGate";
 import { ThoughtformCompassGate } from "./ThoughtformCompassGate";
 
 /**
@@ -17,15 +18,19 @@ import { ThoughtformCompassGate } from "./ThoughtformCompassGate";
  *   - ThoughtformCompassGate    — concentric rings + phase nodes
  *                                 (replaces v7 SVG compass end-to-end;
  *                                 no bounding diamond).
- *   - DiagnosticOrbitGate       — 4 asymmetric orbits + pips.
+ *   - NavigateGate              — armature + tilted ring + compass
+ *                                 cross (Navigate's place in the
+ *                                 corridor; fly-through landmark).
+ *   - DiagnosticOrbitGate       — 4 asymmetric orbits + pips (Encode).
  *   - InterstitialDiagramGate   — armature + tilted ring + diamond.
  *   - IntelligenceGate          — substrate sphere + side bodies +
- *                                 brandmark substrate-cut shader.
+ *                                 brandmark substrate-cut shader (Build).
  */
 export function GatewayWorld() {
   return (
     <>
       <ThoughtformCompassGate />
+      <NavigateGate />
       <DiagnosticOrbitGate />
       <InterstitialDiagramGate />
       <IntelligenceGate />

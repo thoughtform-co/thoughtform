@@ -402,6 +402,11 @@ export function getThoughtformMobilePhase(rawProgress: number): ThoughtformMobil
  *  a single continuous camera move. No reframe envelope needed. */
 export const STATION_THOUGHTFORM: GateStation = stationById("thoughtform")!;
 
+/** Navigate landmark — a fly-through gate parked at a Z inside
+ *  passthrough-01 (the camera passes through it), giving the Navigate
+ *  phase a named "place" between the setup and Encode. */
+export const STATION_NAVIGATE: GateStation = stationById("navigate")!;
+
 /** Diagnostic orbital field — centred. By the time the user parks
  *  here, the camera reframe has resolved to X=0, so this gate sits
  *  dead-centre on the optical axis.
@@ -913,6 +918,34 @@ export const COPY_ANCHORS: readonly WorldAnchor[] = [
     visibilityBeats: ["thoughtform"],
     fadeFrac: 2.0,
     onPaint: gateThoughtformDiagram,
+  },
+
+  // ── Navigate ────────────────────────────────────────────────────
+  // Heading block above the Navigate landmark gate (a fly-through
+  // "place" inside passthrough-01). Camera-depth driven like the
+  // interstitial gate: emerges from the distance and recedes as the
+  // camera passes, so the Navigate phase reads as a named waypoint
+  // between the setup compass and the Encode orbits.
+  {
+    id: "navigate.headCopy",
+    position: [
+      STATION_NAVIGATE.position[0],
+      STATION_NAVIGATE.position[1] + 0.95,
+      STATION_NAVIGATE.position[2] + 0.1,
+    ],
+    visibilityBeats: ["thoughtform", "passthrough-01", "diagnostic"],
+    fadeFrac: 0.2,
+    perspectiveScale: {
+      referenceDistance: 4.5,
+      min: 0.2,
+      max: 1.15,
+    },
+    depthFade: {
+      near: 0.9,
+      nearFade: 2.4,
+      far: 7,
+      farFade: 3,
+    },
   },
 
   // ── Diagnostic ──────────────────────────────────────────────────

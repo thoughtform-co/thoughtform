@@ -46,9 +46,11 @@ export function CopyAnchors({ text }: CopyAnchorsProps) {
   const isMobile = useDeviceTier() === "mobile";
 
   const tf = text.thoughtform;
-  // Encode + Build section copy now lives on the corridor map nodes
-  // (Navigate/Encode/Build remap). The opening Thoughtform/setup copy
-  // still flows through `text` (untouched).
+  // Navigate / Encode / Build section copy now lives on the corridor
+  // map nodes (Navigate is the fly-through landmark inside
+  // passthrough-01). The opening Thoughtform/setup copy still flows
+  // through `text` (untouched).
+  const nav = stationById("navigate")?.content;
   const enc = stationById("diagnostic")?.content;
   const bld = stationById("intelligence")?.content;
 
@@ -154,6 +156,29 @@ export function CopyAnchors({ text }: CopyAnchorsProps) {
       >
         <span className="home-v2-copy-phase__label">{tf.phaseLabels.build}</span>
         <span className="home-v2-copy-phase__sub">Ship</span>
+      </div>
+
+      {/* ─────────── NAVIGATE (landmark in passthrough-01) ─────────── */}
+      <div
+        className="home-v2-copy-block home-v2-copy-block--navigate-head"
+        data-world-anchor="navigate.headCopy"
+        data-anchor-origin="bottom-center"
+      >
+        {nav && (
+          <>
+            <p className="home-v2-copy-bridge">{nav.kicker}</p>
+            <h2
+              className="home-v2-copy-title"
+              dangerouslySetInnerHTML={{ __html: nav.titleHtml }}
+            />
+            {nav.supportHtml && (
+              <p
+                className="home-v2-copy-body"
+                dangerouslySetInnerHTML={{ __html: nav.supportHtml }}
+              />
+            )}
+          </>
+        )}
       </div>
 
       {/* ─────────── ENCODE (was Diagnostic) ─────────── */}
