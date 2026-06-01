@@ -10,6 +10,7 @@ import {
   useDepthGatewayStore,
 } from "@/lib/stores/depthGatewayStore";
 import { isMobileComposition } from "@/lib/hooks/useDeviceTier";
+import { SECTOR_LABELS } from "@/lib/home-v2/corridorMap";
 import { getMobilePaintProgress } from "../DepthGatewayScene/sceneGeom";
 
 /**
@@ -189,20 +190,11 @@ export function useDepthScroll(stageRef: React.RefObject<HTMLDivElement | null>)
   }, [onScroll, writeFrame]);
 }
 
-/** HUD sector text per beat. Passthrough beats inherit their
- *  neighbour parked beat's sector so the readout doesn't blank
- *  during travel. */
+/** HUD sector text per beat — derived from the declarative corridor
+ *  map (`label` on each node). Passthrough beats carry their own label
+ *  so the readout doesn't blank during travel. */
 function sectorForBeat(beat: Beat): string {
-  switch (beat) {
-    case "thoughtform":
-    case "passthrough-01":
-      return "North star";
-    case "diagnostic":
-      return "Missing layer";
-    case "passthrough-02":
-    case "intelligence":
-      return "Substrate";
-  }
+  return SECTOR_LABELS[beat];
 }
 
 /**

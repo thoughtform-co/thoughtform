@@ -20,15 +20,22 @@
 
 import { create } from "zustand";
 
-/** Narrative beats along the corridor (ADR-018). Each beat owns a
- *  scroll window; the in-between beats (`passthrough-*`) are the
- *  travel windows where geometry physically passes the camera. */
-export type Beat =
-  | "thoughtform"
-  | "passthrough-01"
-  | "diagnostic"
-  | "passthrough-02"
-  | "intelligence";
+import type { Beat } from "@/lib/home-v2/corridorMap";
+
+// The corridor topology (beats, windows, park centres), `resolveBeat`,
+// and the shared math helpers are now DERIVED from the declarative
+// `corridorMap`. They are re-exported here so the many
+// `@/lib/stores/depthGatewayStore` importers keep working unchanged.
+// New code should prefer importing from `@/lib/home-v2/corridorMap`.
+export {
+  BEAT_PARK_CENTRES,
+  BEAT_WINDOWS,
+  clamp01,
+  lerp,
+  resolveBeat,
+  smoothstep,
+} from "@/lib/home-v2/corridorMap";
+export type { Beat } from "@/lib/home-v2/corridorMap";
 
 export interface DepthGatewayTransform {
   /** Global 0..1 progress across the sticky stage. */
@@ -132,96 +139,6 @@ export function getCorridorEngagement(
   return { active, armed, paintProgress };
 }
 
-// ────────────────────────────────────────────────────────────────
-// Beat layout (ADR-018)
-// ────────────────────────────────────────────────────────────────
-
-/** Beat scroll windows along the 0..1 stage progress.
- *
- *  These boundaries DEFINE the corridor pacing. Painters lerp
- *  geometry against them; the camera path drives continuously off
- *  `paintProgress` so the camera dollies through the beats and only
- *  the diagram geometry parks.
- *
- *  Pacing history:
- *    - Original: passthrough-01 = 0.18 → 0.32 (~14% of scroll).
- *    - Immersion pass: passthrough-01 = 0.16 → 0.40 (~24%).
- *    - Latent depth spacing pass (current): passthrough-01 =
- *      0.14 → 0.46 (~32%). Combined with the stage growing to
- *      460svh (see home-v2.css), the absolute fly-through scroll
- *      length between the Thoughtform compass and the Diagnostic
- *      orbital field is roughly 1.7x what it was after the
- *      immersion pass and ~3.5x the original. The Diagnostic
- *      beat shifts later and its park progress moves to 0.53, so
- *      the gate's solved world Z (see sceneGeom.ts
- *      gateZAtParkProgress) sits several world units deeper —
- *      Diagnostic is genuinely distant when first registered
- *      and approached over a real travel window.
- *
- *  Downstream beats keep similar narrative shape because the
- *  longer stage absorbs the widened passthrough; in absolute
- *  scroll they all gain headroom relative to the previous pass. */
-export const BEAT_WINDOWS: { beat: Beat; start: number; end: number }[] = [
-  { beat: "thoughtform", start: 0.0, end: 0.14 },
-  { beat: "passthrough-01", start: 0.14, end: 0.46 },
-  { beat: "diagnostic", start: 0.46, end: 0.6 },
-  { beat: "passthrough-02", start: 0.6, end: 0.76 },
-  { beat: "intelligence", start: 0.76, end: 1.0 },
-];
-
-/** Park centres for each "parked" beat (used by the projected
- *  brandmark to know when it is at rest). The passthrough beats
- *  intentionally do not appear here.
- *
- *  Park progress history:
- *    - Thoughtform: 0.08 → 0.07 (slightly earlier so the parked
- *      composition holds during the trimmed Thoughtform beat
- *      before the longer fly-through begins).
- *    - Diagnostic: 0.47 → 0.53. Combined with the later
- *      passthrough-01 end, the Diagnostic gate's solved world Z
- *      sits ~1.5 units deeper than before, so the orbital field
- *      visibly approaches from the distance for the entire
- *      fly-through.
- *    - Intelligence: 0.86 → 0.88. Shifted later to match the
- *      new intelligence beat start (0.76); the substrate sphere
- *      still owns the late-corridor scale-up. */
-export const BEAT_PARK_CENTRES: Partial<Record<Beat, number>> = {
-  thoughtform: 0.07,
-  diagnostic: 0.53,
-  intelligence: 0.88,
-};
-
-/** Resolve which beat a global progress value sits in, plus the
- *  beat-local 0..1 progress inside that beat's window. */
-export function resolveBeat(progress: number): { beat: Beat; gateProgress: number } {
-  const p = clamp01(progress);
-  for (let i = 0; i < BEAT_WINDOWS.length; i++) {
-    const { beat, start, end } = BEAT_WINDOWS[i];
-    if (p <= end) {
-      const span = Math.max(1e-6, end - start);
-      return { beat, gateProgress: clamp01((p - start) / span) };
-    }
-  }
-  // p >= 1 → end of last beat
-  const last = BEAT_WINDOWS[BEAT_WINDOWS.length - 1];
-  return { beat: last.beat, gateProgress: 1 };
-}
-
-// ────────────────────────────────────────────────────────────────
-// Math helpers — shared across the corridor (scroll hook, sceneGeom,
-// painters) so the same clamping / easing primitives are used
-// everywhere.
-// ────────────────────────────────────────────────────────────────
-
-export function clamp01(v: number): number {
-  return v < 0 ? 0 : v > 1 ? 1 : v;
-}
-
-export function smoothstep(edge0: number, edge1: number, x: number): number {
-  const t = clamp01((x - edge0) / (edge1 - edge0));
-  return t * t * (3 - 2 * t);
-}
-
-export function lerp(a: number, b: number, t: number): number {
-  return a + (b - a) * t;
-}
+// Beat layout (windows, park centres), `resolveBeat`, and the shared
+// math helpers now live in `@/lib/home-v2/corridorMap` and are
+// re-exported from the top of this file for back-compat.

@@ -29,11 +29,28 @@
  * via `getThoughtformCenterOffsetX` rather than via camera reframe.
  */
 
-import { BEAT_PARK_CENTRES, clamp01, lerp, smoothstep } from "@/lib/stores/depthGatewayStore";
+import {
+  CAMERA_END,
+  CAMERA_START,
+  DOLLY_HOLD_END,
+  GATE_PARK_DISTANCE,
+  type GateStation,
+  INTERSTITIAL_PARK,
+  type Vec3,
+  cameraZDollyT,
+  clamp01,
+  lerp,
+  smoothstep,
+  stationById,
+} from "@/lib/home-v2/corridorMap";
 import { MISS_LABELS } from "@/lib/celestial/orbits";
 import { isMobileComposition } from "@/lib/hooks/useDeviceTier";
 
-export type Vec3 = readonly [number, number, number];
+// Re-exported for back-compat: external modules (FlyingCameraRig,
+// index, gate components, contour/intergate painters) import these
+// from `sceneGeom`. Their definitions now live in the declarative
+// `corridorMap` kernel.
+export { CAMERA_END, CAMERA_START, type GateStation, type Vec3 };
 
 // ── Camera FOV + path constants ──────────────────────────────────
 
@@ -72,12 +89,6 @@ export function getCameraFov(aspect: number): number {
   return Math.min(MAX_FOV_DEG, Math.max(CAMERA_FOV, vfovDeg));
 }
 
-/** Camera position at progress = 0 (start of corridor). Dead-centred
- *  on the optical axis. */
-export const CAMERA_START: [number, number, number] = [0, 0, 10];
-
-/** Camera position at progress = 1 (end of corridor). On-axis. */
-export const CAMERA_END: [number, number, number] = [0, 0, -8];
 
 /** How far ahead of the camera the lookAt point sits. The lookAt
  *  travels with the camera so each frame the gaze is into the next
@@ -111,7 +122,7 @@ export const CORRIDOR_TIMELINE = {
    *  then smoothsteps to 1 across the remaining scroll. Tracks the
    *  end of the `thoughtform` beat (`BEAT_WINDOWS[0].end = 0.14`)
    *  and the end of the Thoughtform pan below. */
-  dollyHoldEnd: 0.14,
+  dollyHoldEnd: DOLLY_HOLD_END,
 
   /** Thoughtform composition lateral centering pan window. PAN_END
    *  must stay locked to `dollyHoldEnd` so the camera dolly + ring
@@ -146,7 +157,7 @@ export const CORRIDOR_TIMELINE = {
    *  (camera flies THROUGH it) so it does not appear in
    *  `BEAT_PARK_CENTRES`; the value lives here so the station's
    *  solved world Z still derives through `gateZAtParkProgress`. */
-  interstitialPark: 0.63,
+  interstitialPark: INTERSTITIAL_PARK,
 
   /** Brandmark world-travel phase breakpoints.
    *  - `thoughtformHold`: held at Thoughtform anchor through 0.16
@@ -196,21 +207,6 @@ export const CORRIDOR_TIMELINE = {
     peak: 0.38,
   },
 } as const;
-
-/** Camera Z dolly easing — held at 0 across the Thoughtform pan
- *  window, then smoothstep'd from 0 -> 1 across the remaining
- *  scroll. Shared by the runtime camera-position function and
- *  `gateZAtParkProgress` so gate stations stay consistent with
- *  the live camera at every parked beat. */
-function cameraZDollyT(progress: number): number {
-  const p = clamp01(progress);
-  if (p <= CORRIDOR_TIMELINE.dollyHoldEnd) return 0;
-  return smoothstep(
-    0,
-    1,
-    (p - CORRIDOR_TIMELINE.dollyHoldEnd) / (1 - CORRIDOR_TIMELINE.dollyHoldEnd)
-  );
-}
 
 /** Camera position at the given GLOBAL progress. Pure Z dolly: the
  *  camera holds at `CAMERA_START.z` across the Thoughtform pan
@@ -315,38 +311,12 @@ export function depthOpacityForWorldPosition(
 }
 
 // ── Gate stations ────────────────────────────────────────────────
-
-/** Distance the camera sits in front of a gate when the user is
- *  parked at that gate's beat. Picked so the gate's halfExtent
- *  comfortably fills the viewport at FOV ~38°. */
-const GATE_PARK_DISTANCE = 4.5;
-
-export interface GateStation {
-  id: "thoughtform" | "diagnostic" | "interstitial" | "intelligence";
-  /** World position of the gate's centre. */
-  position: [number, number, number];
-  /** Approximate world half-extent (XY) — used by painters to size
-   *  geometry against this gate's allocated frame. */
-  halfExtent: number;
-  /** Camera progress at which the gate is "parked" (i.e. centred in
-   *  the viewport; camera is GATE_PARK_DISTANCE units in front). */
-  parkProgress: number;
-}
-
-/** Solve a gate's world Z so that at `parkProgress` the camera sits
- *  GATE_PARK_DISTANCE units in front of the gate. Uses the same
- *  `cameraZDollyT` curve as the runtime camera-position function so
- *  the parked-beat invariant (camera-to-gate = GATE_PARK_DISTANCE)
- *  holds even with the dolly's pan-window hold. */
-function gateZAtParkProgress(parkProgress: number): number {
-  const dollyT = cameraZDollyT(parkProgress);
-  const camZ = lerp(CAMERA_START[2], CAMERA_END[2], dollyT);
-  return camZ - GATE_PARK_DISTANCE;
-}
-
-const THOUGHTFORM_PARK_PROGRESS = BEAT_PARK_CENTRES.thoughtform ?? 0.07;
-const DIAGNOSTIC_PARK_PROGRESS = BEAT_PARK_CENTRES.diagnostic ?? 0.53;
-const INTELLIGENCE_PARK_PROGRESS = BEAT_PARK_CENTRES.intelligence ?? 0.88;
+//
+// `GateStation`, the `GATE_PARK_DISTANCE` invariant, and the
+// `gateZAtParkProgress` solver now live in the `corridorMap` kernel.
+// The `STATION_*` exports below are convenience aliases of the solved
+// stations so existing gate / painter imports keep working; the
+// world-Z, half-extent, and park progress all derive from the map.
 
 /** Raw-progress end of the mobile Thoughtform DWELL — the scroll span
  *  that holds BOTH mobile moments (copy, then brandmark+diagram) before
@@ -431,12 +401,7 @@ export function getThoughtformMobilePhase(rawProgress: number): ThoughtformMobil
  *  compass to dead-centre during passthrough-01, so the user reads
  *  "compass slides toward centre, copy slides off-screen left" as
  *  a single continuous camera move. No reframe envelope needed. */
-export const STATION_THOUGHTFORM: GateStation = {
-  id: "thoughtform",
-  position: [1.1, 0.0, gateZAtParkProgress(THOUGHTFORM_PARK_PROGRESS)],
-  halfExtent: 1.6,
-  parkProgress: THOUGHTFORM_PARK_PROGRESS,
-};
+export const STATION_THOUGHTFORM: GateStation = stationById("thoughtform")!;
 
 /** Diagnostic orbital field — centred. By the time the user parks
  *  here, the camera reframe has resolved to X=0, so this gate sits
@@ -449,33 +414,18 @@ export const STATION_THOUGHTFORM: GateStation = {
  *  significantly more world distance before this gate appears at
  *  parked rest, and the orbital geometry visibly approaches from
  *  the distance rather than fading in at screen-scale. */
-export const STATION_DIAGNOSTIC: GateStation = {
-  id: "diagnostic",
-  position: [0, 0, gateZAtParkProgress(DIAGNOSTIC_PARK_PROGRESS)],
-  halfExtent: 2.2,
-  parkProgress: DIAGNOSTIC_PARK_PROGRESS,
-};
+export const STATION_DIAGNOSTIC: GateStation = stationById("diagnostic")!;
 
 /** Interstitial waypoint — sits in the middle of passthrough-02 so
  *  the camera passes through it on the way to Intelligence. Park
  *  progress comes from `CORRIDOR_TIMELINE.interstitialPark`
  *  because the interstitial beat is a transit waypoint and does
  *  not have a `BEAT_PARK_CENTRES` entry. */
-export const STATION_INTERSTITIAL: GateStation = {
-  id: "interstitial",
-  position: [0, 0, gateZAtParkProgress(CORRIDOR_TIMELINE.interstitialPark)],
-  halfExtent: 1.8,
-  parkProgress: CORRIDOR_TIMELINE.interstitialPark,
-};
+export const STATION_INTERSTITIAL: GateStation = stationById("interstitial")!;
 
 /** Intelligence sphere station — centre of the substrate-cut beat.
  *  The substrate sphere + L/R side bodies all live in this group. */
-export const STATION_INTELLIGENCE: GateStation = {
-  id: "intelligence",
-  position: [0, 0, gateZAtParkProgress(INTELLIGENCE_PARK_PROGRESS)],
-  halfExtent: 2.0,
-  parkProgress: INTELLIGENCE_PARK_PROGRESS,
-};
+export const STATION_INTELLIGENCE: GateStation = stationById("intelligence")!;
 
 // ── Thoughtform centering pan ────────────────────────────────────
 
