@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Canvas } from "@react-three/fiber";
 import { useDeviceTier } from "@/lib/hooks/useDeviceTier";
+import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import { CelestialMotes } from "./CelestialMotes";
 import { FlyingCameraRig } from "./FlyingCameraRig";
 import { GatewayWorld } from "./gates/GatewayWorld";
@@ -122,6 +123,32 @@ export function DepthGatewayScene() {
   // backgrounding. (ADR-018 mobile revision.)
   const [glEpoch, setGlEpoch] = useState(0);
 
+  // Engagement-gated render loop. The Canvas is mounted for the whole
+  // page, but it only needs to draw while the corridor stage is on
+  // screen — `active` (pinned & in view) or `armed` (rising into the
+  // pin). While engaged we run `frameloop="always"` so the layers that
+  // animate on continuous clock time (ThoughtformAtmosphere twinkle +
+  // boot-glow breathing, LatentFieldTunnel embedding-vector twinkle,
+  // InterGateCorridor debris spin) keep moving even when the user is
+  // parked and reading. While disengaged the corridor is fully
+  // off-screen, so we drop to `"demand"` and the GPU idles — nothing
+  // the user can see freezes. (ADR-018 mobile/perf revision.)
+  //
+  // A boolean selector re-renders only on the engage/disengage edge,
+  // not per scroll frame. Initialise from the live store so the first
+  // paint already matches engagement (mirrors HomeCorridor's brandmark
+  // handoff effect, which reads the same signal).
+  const [engaged, setEngaged] = useState(() => {
+    const t = useDepthGatewayStore.getState().transform;
+    return t.active || t.armed;
+  });
+  useEffect(() => {
+    const unsubscribe = useDepthGatewayStore.subscribe((state) =>
+      setEngaged(state.transform.active || state.transform.armed),
+    );
+    return unsubscribe;
+  }, []);
+
   // Mobile performance tier: cap the drawing-buffer pixel ratio (phones
   // report DPR ~3, so [1, 1.4] is the dominant GPU lever) and drop MSAA
   // (expensive on a high-DPR panel; the dpr cap carries edge quality).
@@ -158,7 +185,7 @@ export function DepthGatewayScene() {
         powerPreference: "low-power",
         preserveDrawingBuffer: false,
       }}
-      frameloop="always"
+      frameloop={engaged ? "always" : "demand"}
       style={{
         position: "absolute",
         inset: 0,

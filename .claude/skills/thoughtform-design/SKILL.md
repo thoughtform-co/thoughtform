@@ -13,6 +13,10 @@ The canonical Thoughtform design skill is installed globally at `~/.cursor/skill
 - **Responsive HUD:** `references/web-hud-adaptation.md` — breakpoint ladder, fluid tokens, brandmark handoff, connector compositing
 - **Fixed-canvas shell:** `references/cross-format-shell.md` — for any slide/deck/proposal work in this repo
 
+## Depth corridor (home-v2)
+
+- **Corridor grammar:** `references/depth-corridor-grammar.md` — the home-v2 3D depth-corridor invariants: the `paintProgress` timeline law, mirror-camera world-space anchoring, aspect-aware FOV, device tiers, the two-moment mobile composition, and the engagement-gated render-loop contract. Read before editing anything under `components/landing/home-v2/`.
+
 ## CSS source of truth
 
 - `components/landing/v7/landing.css` — HUD geometry, breakpoints, connector and CTA patterns
