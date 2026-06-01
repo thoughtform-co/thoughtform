@@ -43,7 +43,6 @@ import {
   smoothstep,
   stationById,
 } from "@/lib/home-v2/corridorMap";
-import { MISS_LABELS } from "@/lib/celestial/orbits";
 import { isMobileComposition } from "@/lib/hooks/useDeviceTier";
 
 // Re-exported for back-compat: external modules (FlyingCameraRig,
@@ -741,13 +740,6 @@ export function getBrandmarkWorldHalfExtent(progress: number): number {
 import type { Beat, DepthGatewayTransform } from "@/lib/stores/depthGatewayStore";
 import type { WorldAnchor, WorldAnchorPosition } from "../hooks/useWorldDomTracker";
 
-/** Convert SVG-coords-relative-to-orbital-centre into world-space
- *  anchor offsets at the Diagnostic gate centre. The orbital SVG is
- *  1100 wide and we render it at SVG_TO_WORLD = 1/240, so a label at
- *  SVG (x_svg, y_svg) sits at world (x_svg/240, -y_svg/240, gateZ +
- *  0.01). Y is flipped because SVG is y-down and world is y-up. */
-const ORBIT_SVG_TO_WORLD = 1 / 240;
-
 /** Depth offset (world units, negative = deeper behind parked Z)
  *  applied to the Diagnostic head copy and orbit label pills during
  *  the passthrough-01 approach. Window + offset from
@@ -770,17 +762,6 @@ function diagnosticApproachDepthOffset(progress: number): number {
 function intelligenceApproachDepthOffset(progress: number): number {
   const { offset, start, end } = CORRIDOR_TIMELINE.intelligenceApproach;
   return lerp(offset, 0, smoothstep(start, end, progress));
-}
-
-function diagnosticLabelWorldPosition(pipXSvg: number, pipYSvg: number): WorldAnchorPosition {
-  const baseX = STATION_DIAGNOSTIC.position[0] + pipXSvg * ORBIT_SVG_TO_WORLD;
-  const baseY = STATION_DIAGNOSTIC.position[1] - pipYSvg * ORBIT_SVG_TO_WORLD;
-  const baseZ = STATION_DIAGNOSTIC.position[2] + 0.05;
-  return (transform: DepthGatewayTransform) => [
-    baseX,
-    baseY,
-    baseZ + diagnosticApproachDepthOffset(transform.paintProgress),
-  ];
 }
 
 /** Mobile inward-pull for the Thoughtform phase labels. Portrait FOV
@@ -974,41 +955,9 @@ export const COPY_ANCHORS: readonly WorldAnchor[] = [
       farFade: 2.2,
     },
   },
-  // 4 orbit labels — pinned to the actual MISS_LABELS pip world
-  // positions so they ride the orbits in 3D as the camera
-  // approaches and passes the gate. Each label's position
-  // resolver applies `diagnosticApproachDepthOffset` to the
-  // base orbital pip Z so the pills sit far behind the parked
-  // gate at the start of passthrough-01 and converge to their
-  // pip's true world position by the Diagnostic beat — combined
-  // with perspectiveScale (min 0.2), the labels register as tiny
-  // distant text drifting toward the orbits before settling on
-  // their pips at parked rest.
-  ...MISS_LABELS.map((label) => ({
-    id: `diagnostic.label.${label.id}`,
-    position: diagnosticLabelWorldPosition(label.x, label.y),
-    visibilityBeats: ["diagnostic", "passthrough-02"] as Beat[],
-    // Oversized fade-in keeps labels faint through most of
-    // passthrough-01, then full once the Diagnostic beat starts.
-    // Because the visible window includes passthrough-02, the
-    // labels can still ride their pips as the camera passes the
-    // orbital field.
-    fadeFrac: 0.66,
-    perspectiveScale: {
-      referenceDistance: 4.5,
-      min: 0.16,
-      max: 1.2,
-    },
-    // Same tighter depth-fade envelope as the head copy. The labels
-    // no longer ghost into the Thoughtform park; they arrive as the
-    // Diagnostic gate enters readable distance.
-    depthFade: {
-      near: 0.9,
-      nearFade: 2.4,
-      far: 6.8,
-      farFade: 2.2,
-    } as DepthFocusWindow,
-  })),
+  // (Encode orbit labels removed — the Navigate/Encode/Build remap
+  // drops the four "same pattern, four ways" pills; the orbital gate
+  // geometry stays as Encode's gate visual.)
 
   // ── Intelligence ────────────────────────────────────────────────
   // Heading block above the substrate sphere. Mirrors the Diagnostic
@@ -1046,57 +995,9 @@ export const COPY_ANCHORS: readonly WorldAnchor[] = [
       farFade: 4.5,
     },
   },
-  // L/R body labels — Trusted Sources / Headless Surfaces — sit
-  // above each side body. Visibility now extends back into
-  // passthrough-02 with the same depth approach + perspective scale
-  // as the headline, so the labels track their bodies as the camera
-  // closes the distance instead of popping on the beat boundary.
-  {
-    id: "intelligence.leftLabel",
-    position: (transform) => [
-      -2.2,
-      0.55,
-      STATION_INTELLIGENCE.position[2] +
-        0.2 +
-        intelligenceApproachDepthOffset(transform.paintProgress),
-    ],
-    visibilityBeats: ["passthrough-02", "intelligence"],
-    fadeFrac: 0.15,
-    perspectiveScale: {
-      referenceDistance: 4.5,
-      min: 0.22,
-      max: 1.2,
-    },
-    depthFade: {
-      near: 0.9,
-      nearFade: 2.4,
-      far: 11,
-      farFade: 4.5,
-    },
-  },
-  {
-    id: "intelligence.rightLabel",
-    position: (transform) => [
-      2.2,
-      0.55,
-      STATION_INTELLIGENCE.position[2] +
-        0.2 +
-        intelligenceApproachDepthOffset(transform.paintProgress),
-    ],
-    visibilityBeats: ["passthrough-02", "intelligence"],
-    fadeFrac: 0.15,
-    perspectiveScale: {
-      referenceDistance: 4.5,
-      min: 0.22,
-      max: 1.2,
-    },
-    depthFade: {
-      near: 0.9,
-      nearFade: 2.4,
-      far: 11,
-      farFade: 4.5,
-    },
-  },
+  // (Build chamber labels removed — the Navigate/Encode/Build remap
+  // drops the "Trusted sources / Headless surfaces" side labels; the
+  // substrate sphere + side bodies stay as Build's gate visual.)
 ];
 
 // ── Substrate-cut envelope (ADR-017, unchanged) ──────────────────

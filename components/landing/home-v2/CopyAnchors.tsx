@@ -3,6 +3,7 @@
 import { useRef } from "react";
 import type { V7CorridorText } from "@/lib/v7-parse";
 import { useDeviceTier } from "@/lib/hooks/useDeviceTier";
+import { stationById } from "@/lib/home-v2/corridorMap";
 import { COPY_ANCHORS } from "./DepthGatewayScene/sceneGeom";
 import { useWorldDomTracker } from "./hooks/useWorldDomTracker";
 
@@ -45,8 +46,11 @@ export function CopyAnchors({ text }: CopyAnchorsProps) {
   const isMobile = useDeviceTier() === "mobile";
 
   const tf = text.thoughtform;
-  const dg = text.diagnostic;
-  const il = text.intelligence;
+  // Encode + Build section copy now lives on the corridor map nodes
+  // (Navigate/Encode/Build remap). The opening Thoughtform/setup copy
+  // still flows through `text` (untouched).
+  const enc = stationById("diagnostic")?.content;
+  const bld = stationById("intelligence")?.content;
 
   // Desktop CTA: the "See the thesis →" link to the intelligence layer.
   const cta = (
@@ -152,54 +156,50 @@ export function CopyAnchors({ text }: CopyAnchorsProps) {
         <span className="home-v2-copy-phase__sub">Ship</span>
       </div>
 
-      {/* ─────────── DIAGNOSTIC ─────────── */}
+      {/* ─────────── ENCODE (was Diagnostic) ─────────── */}
       <div
         className="home-v2-copy-block home-v2-copy-block--diagnostic-head"
         data-world-anchor="diagnostic.headCopy"
         data-anchor-origin="bottom-center"
       >
-        <p className="home-v2-copy-bridge">{dg.bridge}</p>
-        <h2 className="home-v2-copy-title" dangerouslySetInnerHTML={{ __html: dg.titleHtml }} />
+        {enc && (
+          <>
+            <p className="home-v2-copy-bridge">{enc.kicker}</p>
+            <h2
+              className="home-v2-copy-title"
+              dangerouslySetInnerHTML={{ __html: enc.titleHtml }}
+            />
+            {enc.supportHtml && (
+              <p
+                className="home-v2-copy-body"
+                dangerouslySetInnerHTML={{ __html: enc.supportHtml }}
+              />
+            )}
+          </>
+        )}
       </div>
 
-      {dg.labels.map((label) => (
-        <div
-          key={label.id}
-          className={`home-v2-copy-label home-v2-copy-label--${label.id}`}
-          data-world-anchor={`diagnostic.label.${label.id}`}
-          data-anchor-origin="center"
-        >
-          <span className="home-v2-copy-label__pip" aria-hidden="true" />
-          <span className="home-v2-copy-label__n">{label.n}</span>
-          <span className="home-v2-copy-label__tag">{label.tag}</span>
-        </div>
-      ))}
-
-      {/* ─────────── INTELLIGENCE ─────────── */}
+      {/* ─────────── BUILD (was Intelligence) ─────────── */}
       <div
         className="home-v2-copy-block home-v2-copy-block--intelligence-head"
         data-world-anchor="intelligence.headCopy"
         data-anchor-origin="bottom-center"
       >
-        <h2 className="home-v2-copy-title" dangerouslySetInnerHTML={{ __html: il.titleHtml }} />
-        <p className="home-v2-copy-body" dangerouslySetInnerHTML={{ __html: il.ledeHtml }} />
-      </div>
-
-      <div
-        className="home-v2-copy-body-label home-v2-copy-body-label--left"
-        data-world-anchor="intelligence.leftLabel"
-        data-anchor-origin="center"
-      >
-        <span className="home-v2-copy-body-label__num">01</span>
-        <span className="home-v2-copy-body-label__name">{il.leftLabel}</span>
-      </div>
-      <div
-        className="home-v2-copy-body-label home-v2-copy-body-label--right"
-        data-world-anchor="intelligence.rightLabel"
-        data-anchor-origin="center"
-      >
-        <span className="home-v2-copy-body-label__num">03</span>
-        <span className="home-v2-copy-body-label__name">{il.rightLabel}</span>
+        {bld && (
+          <>
+            <p className="home-v2-copy-bridge">{bld.kicker}</p>
+            <h2
+              className="home-v2-copy-title"
+              dangerouslySetInnerHTML={{ __html: bld.titleHtml }}
+            />
+            {bld.supportHtml && (
+              <p
+                className="home-v2-copy-body"
+                dangerouslySetInnerHTML={{ __html: bld.supportHtml }}
+              />
+            )}
+          </>
+        )}
       </div>
     </div>
   );

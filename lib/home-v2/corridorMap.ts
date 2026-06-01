@@ -75,6 +75,19 @@ interface NodeBase {
   label: string;
 }
 
+/** Concise, executive section copy rendered (and projected) at a
+ *  station. The opening Thoughtform/setup beat is the exception — its
+ *  spine copy still flows through `V7CorridorText` and is left
+ *  untouched. */
+export interface NodeContent {
+  /** Eyebrow / kicker, e.g. "02 · Encode". */
+  kicker: string;
+  /** Heading (may contain inline `<em>`). */
+  titleHtml: string;
+  /** Optional one-line supporting clause (may contain `<em>`). */
+  supportHtml?: string;
+}
+
 export interface StationNode extends NodeBase {
   kind: "station";
   /** Relative weight of this station's parked scroll window. */
@@ -87,6 +100,10 @@ export interface StationNode extends NodeBase {
   gate: GateKind;
   /** True if the brandmark rests at this station's centre. */
   brandmarkAnchor?: boolean;
+  /** Section copy rendered at this station (Encode/Build/Navigate).
+   *  Omitted for the opening setup beat, which keeps its v7 spine
+   *  copy. */
+  content?: NodeContent;
 }
 
 /** An optional fly-through landmark sitting INSIDE a transition leg
@@ -136,12 +153,17 @@ export const CORRIDOR_MAP = [
   {
     kind: "station",
     id: "diagnostic",
-    label: "Missing layer",
+    label: "Encode",
     dwell: 14,
     parkBias: 0.5,
     lateralX: 0,
     halfExtent: 2.2,
     gate: "orbits",
+    content: {
+      kicker: "02 · Encode",
+      titleHtml: "Encode the <em>judgment</em>.",
+      supportHtml: "Turn what makes the work good into substrate the intelligence inherits.",
+    },
   },
   {
     kind: "transition",
@@ -160,6 +182,11 @@ export const CORRIDOR_MAP = [
     halfExtent: 2.0,
     gate: "sphere",
     brandmarkAnchor: true,
+    content: {
+      kicker: "03 · Build",
+      titleHtml: "Build on the <em>substrate</em>.",
+      supportHtml: "Tools and workflows that run on their own.",
+    },
   },
 ] as const satisfies readonly CorridorNode[];
 
@@ -257,6 +284,9 @@ export interface GateStation {
   /** Camera progress at which the gate is parked / centred. */
   parkProgress: number;
   gate: GateKind;
+  /** Section copy for this station (undefined for the setup beat and
+   *  for waypoints). */
+  content?: NodeContent;
 }
 
 /** Every renderable gate position — parked stations AND transition
@@ -273,6 +303,7 @@ export const STATIONS: GateStation[] = (() => {
         halfExtent: n.halfExtent,
         parkProgress: park,
         gate: n.gate,
+        content: n.content,
       });
     } else if (n.waypoint) {
       const park = w.start + n.waypoint.parkBias * (w.end - w.start);
