@@ -11,6 +11,42 @@
 
 ---
 
+## 2026-06-01 Revision — Engagement-gated render loop + corridor-grammar reference
+
+A perf-hardening pass (no behaviour change) plus skill documentation.
+
+- **Engagement-gated `frameloop`** (`DepthGatewayScene/index.tsx`). The
+  Canvas is mounted for the whole page but previously ran
+  `frameloop="always"`, so it rendered ~60fps even while the corridor
+  was scrolled fully off-screen (a large share of the page, especially
+  on the 620svh mobile stage). It now runs
+  `frameloop={engaged ? "always" : "demand"}` where
+  `engaged = active || armed` (subscribed via a boolean selector on the
+  store, so it re-renders only on the engage/disengage edge, not per
+  scroll frame — the same signal `HomeCorridor` already uses for the
+  brandmark-mode handoff). Disengaged ⇔ off-screen, so the GPU idles
+  with nothing visible frozen.
+- **Why engagement-gated, not velocity-gated.** Four layers animate on
+  continuous `clock` time and must keep moving while the user is
+  parked-and-reading: `ThoughtformAtmosphere` star twinkle + boot-glow
+  breathing (`:339,:393`), `LatentFieldTunnel` embedding-vector twinkle
+  (`:722,:737`), `InterGateCorridor` debris-ring rotation (`:145`). A
+  velocity-gate would freeze these on-screen the moment scrolling stops.
+  Engagement-gating keeps `"always"` for the entire time the corridor is
+  visible (including parked dwell) and only stops when off-screen — zero
+  visible regression. This supersedes the base-plan "v1.1 deferred"
+  note about on-demand rendering; it does **not** relax the idle-motion
+  contract (no new idle drift — those four are pre-existing ambient
+  animations, now simply paused only when off-screen). `dpr`, MSAA, and
+  the context-loss `key` are unchanged and orthogonal.
+- **Corridor-grammar reference** (`.claude/skills/thoughtform-design/references/depth-corridor-grammar.md`,
+  linked from `SKILL.md`). Captures the invariants this and prior
+  revisions depend on: the `paintProgress` timeline law, mirror-camera
+  world-space anchoring, aspect-aware FOV, device tiers/capability gate,
+  the two-moment mobile composition, and the render-gating contract
+  (any `useFrame` animating on `clock` time is allowed only because the
+  loop runs while engaged, and must tolerate being paused off-screen).
+
 ## 2026-05-29 Revision — Mobile corridor
 
 The corridor was previously gated off for any viewport `< 760px`
@@ -324,7 +360,7 @@ The store exposes:
 
 - Production homepage (`/`). Unaffected.
 - ~~Mobile fidelity beyond a graceful WebGL / reduced-motion fallback (existing fallback markup still paints).~~ **Superseded by the 2026-05-29 Mobile corridor revision** — capable phones now run the corridor with a stacked section-2 layout; only no-WebGL / reduced-motion / genuinely low-end devices get the static fallback.
-- Performance budgets beyond "feels smooth at 60fps on a recent laptop". A dedicated perf pass can follow if needed.
+- Performance budgets beyond "feels smooth at 60fps on a recent laptop". A first perf pass landed in the **2026-06-01 revision** (engagement-gated render loop so the GPU idles when the corridor is off-screen); deeper budgeting can still follow if needed.
 
 ## References
 
