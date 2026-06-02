@@ -52,10 +52,15 @@ const DAWN = "#ebe3d6";
  *  camera is alongside, recede as they cross behind. */
 const FOCUS_WINDOW: DepthFocusWindow = { near: 1.5, nearFade: 1.5, far: 7, farFade: 3 };
 
-/** Seeded systems spread across the corridor Z (~+6 setup → ~−5 build),
+/** Seeded systems spread across the corridor Z (~+6 setup → ~−9 build),
  *  all off-axis (|X| ≥ 3) so they never collide with the gates (X≈0,
  *  halfExtent ≤ 2.2) or the centred copy. X / Z / alphaCeiling and the
- *  focus window are the preview-tuning knobs. */
+ *  focus window are the preview-tuning knobs.
+ *
+ *  NOTE (Refinement 3): these Z positions are ABSOLUTE-Z literals — the
+ *  one corridor consumer that does NOT follow `CAMERA_END`. When the
+ *  dolly was deepened (-8 → -11.5) the last two seeds were added in the
+ *  ~-7 → -9 band so the new deep Build run isn't an empty void. */
 const ASTROGATION_SEEDS: AstrogationSystem[] = [
   { position: [-3.6, 1.4, 6.2], radius: 0.9, tilt: [0.9, 0.2, 0.3], eccentricity: 0.82, planetAngle: 40, color: GOLD, alphaCeiling: 0.16, spinRate: 0.05, innerRing: true },
   { position: [4.0, -1.1, 3.8], radius: 0.7, tilt: [1.1, 0.0, -0.4], eccentricity: 0.9, planetAngle: 150, color: DAWN, alphaCeiling: 0.14, spinRate: -0.06 },
@@ -63,6 +68,8 @@ const ASTROGATION_SEEDS: AstrogationSystem[] = [
   { position: [3.4, 1.8, -1.6], radius: 0.8, tilt: [1.0, -0.2, 0.2], eccentricity: 0.86, planetAngle: 80, color: DAWN, alphaCeiling: 0.14, spinRate: -0.05 },
   { position: [-3.0, 0.9, -3.4], radius: 0.95, tilt: [0.8, 0.1, -0.3], eccentricity: 0.84, planetAngle: 320, color: GOLD, alphaCeiling: 0.15, spinRate: 0.06, innerRing: true },
   { position: [4.3, -1.4, -5.2], radius: 0.7, tilt: [1.2, 0.2, 0.4], eccentricity: 0.9, planetAngle: 200, color: DAWN, alphaCeiling: 0.13, spinRate: -0.04 },
+  { position: [-3.8, 1.2, -7.1], radius: 1.0, tilt: [0.9, -0.1, 0.35], eccentricity: 0.8, planetAngle: 120, color: GOLD, alphaCeiling: 0.14, spinRate: 0.045, innerRing: true },
+  { position: [3.9, -0.8, -9.0], radius: 0.75, tilt: [1.05, 0.15, -0.3], eccentricity: 0.88, planetAngle: 290, color: DAWN, alphaCeiling: 0.12, spinRate: -0.05 },
 ];
 
 const RING_SEGMENTS = 96;

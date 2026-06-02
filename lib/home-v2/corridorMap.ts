@@ -54,8 +54,15 @@ export function lerp(a: number, b: number, t: number): number {
 /** Camera position at progress = 0 (start of corridor), on the axis. */
 export const CAMERA_START: [number, number, number] = [0, 0, 10];
 
-/** Camera position at progress = 1 (end of corridor), on the axis. */
-export const CAMERA_END: [number, number, number] = [0, 0, -8];
+/** Camera position at progress = 1 (end of corridor), on the axis.
+ *  Deepened from -8 → -11.5 (Refinement 3) to give the corridor real
+ *  travel room. Because every gate Z re-solves from `gateZAtParkProgress`
+ *  and all choreography is progress-keyed (CORRIDOR_TIMELINE windows in
+ *  0..1), deepening the dolly only stretches the *world* spacing between
+ *  beats — timing stays valid. The one absolute-Z consumer that does NOT
+ *  follow is `AstrogationField`'s seed positions, which are re-spread to
+ *  populate the new deep section. */
+export const CAMERA_END: [number, number, number] = [0, 0, -11.5];
 
 /** Distance the camera sits in FRONT of a gate when that gate is
  *  parked (centred). Picked so the gate's halfExtent comfortably fills
@@ -134,12 +141,19 @@ export type CorridorNode = StationNode | TransitionNode;
 
 // ── THE MAP ──────────────────────────────────────────────────────────
 //
-// 7-node topology. Weights [14, (12+12+8), 14, 16, 24] still sum to 100
+// 7-node topology. Weights [14, (10+11+11), 14, 16, 24] still sum to 100
 // — the Navigate park is carved out of the old `passthrough-01` leg
-// (travel 32 → pass-01a 12 + navigate 12 + pass-01b 8) so `diagnostic`
+// (travel 32 → pass-01a 10 + navigate 11 + pass-01b 11) so `diagnostic`
 // onward stays at the historical windows [.46,.6,.76,1]. Park bias .5
 // reproduces the encode/build parks .53/.88; the interstitial waypoint
 // bias .1875 reproduces interstitialPark 0.63.
+//
+// Refinement 3 front-leg reshuffle: the three front weights were
+// re-split 12/12/8 → 10/11/11 (sum still 32) to give the Navigate→Encode
+// approach (`pass-01b`) more room without touching any `diagnostic`-
+// onward window — preserving the CORRIDOR_TIMELINE invariant exactly.
+// The deeper CAMERA_END independently lengthens passthrough-02 / the
+// Build run in world-Z at the same weight.
 
 export const CORRIDOR_MAP = [
   {
@@ -163,12 +177,12 @@ export const CORRIDOR_MAP = [
   // are labelled "Navigate" so the HUD sector readout reads "Navigate"
   // continuously across the leg. Primary preview knob: the 12/12/8
   // split (keep the sum at 32) and the navigate `parkBias`.
-  { kind: "transition", id: "pass-01a", label: "Navigate", travel: 12 },
+  { kind: "transition", id: "pass-01a", label: "Navigate", travel: 10 },
   {
     kind: "station",
     id: "navigate",
     label: "Navigate",
-    dwell: 12,
+    dwell: 11,
     parkBias: 0.5,
     lateralX: 0,
     halfExtent: 1.5,
@@ -176,10 +190,11 @@ export const CORRIDOR_MAP = [
     content: {
       kicker: "01 · Navigate",
       titleHtml: "Navigate the <em>intelligence</em>.",
-      supportHtml: "Work with AI inside real work, not around it.",
+      supportHtml:
+        "AI isn't software. It's intelligence that sits between <em>tool</em> and <em>collaborator</em>.",
     },
   },
-  { kind: "transition", id: "pass-01b", label: "Navigate", travel: 8 },
+  { kind: "transition", id: "pass-01b", label: "Navigate", travel: 11 },
   {
     kind: "station",
     id: "diagnostic",
