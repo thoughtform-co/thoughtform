@@ -81,6 +81,33 @@ wall-breathing exception noted in move 3. Mobile-narrow viewports skip
 the walls, orbit-capture, and Build artifact (matching the existing
 `LatentTopographyContours` gate).
 
+**Follow-up (same revision) — user-review cleanup.** On first preview the
+expansion read as cluttered and overboard. Per user direction:
+
+- **Move 3 (walls) REVERTED.** `LatentWormholeWalls` was restored to its
+  pre-revision state — the original uniform dawn/gold wormhole. The
+  tool/collaborator hemisphere divergence + the `aSide`/`uTime` breathing
+  are gone, so the 2026-05-25 "Wormhole wall topology" idle-motion clause
+  is **fully back in force** (no self-motion; camera-only). The Navigate
+  copy (move 2) stays, but `tool`/`collaborator` no longer have a wall to
+  tie into — purely a copy emphasis now.
+- **Move 4 (tacit words) REMOVED.** `TacitKnowledgeOrbits` deleted — the
+  big legible word sprites overwhelmed the Encode read and bled to other
+  stations.
+- **Side bodies REMOVED.** The pre-existing flanking Fibonacci-sphere
+  "side bodies" (`IntelligenceGate` `SideBody`, + `getIntelligenceSideBodyPresence`
+  usage) were deleted; they competed with the substrate sphere and were
+  unwanted.
+- **Move 5 (Build artifact) PARED BACK.** The floating wireframe panels
+  read as ugly empty rectangles and were removed; the grid pedestal +
+  descending streams + `EncodeToBuildStreams` remain. Proper holographic
+  panels (matching shared reference images) are a pending rebuild in
+  `BuildArtifact`.
+
+Net surviving from this revision: the deeper `CAMERA_END` + front-leg
+reweight (move 1), the Navigate copy (move 2), and a pared-back Build
+artifact (grid + streams, panels pending).
+
 ---
 
 ## 2026-06-01 Revision — Declarative corridor map + Navigate / Encode / Build remap

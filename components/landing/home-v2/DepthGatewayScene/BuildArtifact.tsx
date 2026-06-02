@@ -69,34 +69,13 @@ function buildGrid(half: number, divisions: number): THREE.BufferGeometry {
   return geom;
 }
 
-/** Centred rectangle in the local XY plane, rendered as a line loop. */
-function buildRectLoop(w: number, h: number): THREE.BufferGeometry {
-  const hw = w / 2;
-  const hh = h / 2;
-  const geom = new THREE.BufferGeometry();
-  geom.setAttribute(
-    "position",
-    new THREE.Float32BufferAttribute([-hw, -hh, 0, hw, -hh, 0, hw, hh, 0, -hw, hh, 0], 3)
-  );
-  return geom;
-}
+// NOTE: the floating wireframe panels were removed in the 2026-06-02
+// cleanup — the first pass read as ugly empty black rectangles. Proper
+// holographic panels (matching the shared references) will be rebuilt
+// here in a follow-up. For now the artifact is just the grid pedestal +
+// descending streams.
 
-// ── Floating panel catalogue (local to the gate centre) ──────────────
-
-interface PanelConfig {
-  w: number;
-  h: number;
-  position: [number, number, number];
-  rotation: [number, number, number];
-}
-
-const PANELS: PanelConfig[] = [
-  { w: 1.15, h: 0.72, position: [-1.45, 0.25, -0.5], rotation: [0, 0.6, 0.05] },
-  { w: 0.86, h: 1.2, position: [1.5, 0.1, -0.4], rotation: [0, -0.7, -0.04] },
-  { w: 0.78, h: 0.5, position: [0.15, 1.2, -0.55], rotation: [0.55, 0.1, 0] },
-];
-
-// ── Local artifact: grid + panels + descending streams ───────────────
+// ── Local artifact: grid + descending streams ────────────────────────
 
 const GRID_HALF = 1.95;
 const GRID_DIVISIONS = 11;
@@ -108,7 +87,6 @@ const DESCEND_PER_CURVE = 30;
 const DESCEND_SPEED = 0.16;
 
 const GRID_ALPHA = 0.3;
-const PANEL_ALPHA = 0.42;
 const DESCEND_ALPHA = 0.6;
 
 export function BuildArtifact() {
@@ -116,26 +94,11 @@ export function BuildArtifact() {
   const enabled = useMemo(() => isWideViewport(), []);
 
   const gridGeom = useMemo(() => (enabled ? buildGrid(GRID_HALF, GRID_DIVISIONS) : null), [enabled]);
-  const panelGeoms = useMemo(
-    () => (enabled ? PANELS.map((p) => buildRectLoop(p.w, p.h)) : []),
-    [enabled]
-  );
 
   const gridMat = useMemo(
     () =>
       new THREE.LineBasicMaterial({
         color: DAWN.clone(),
-        transparent: true,
-        opacity: 0,
-        depthWrite: false,
-        toneMapped: false,
-      }),
-    []
-  );
-  const panelMat = useMemo(
-    () =>
-      new THREE.LineBasicMaterial({
-        color: GOLD.clone(),
         transparent: true,
         opacity: 0,
         depthWrite: false,
@@ -186,13 +149,11 @@ export function BuildArtifact() {
   useEffect(() => {
     return () => {
       gridGeom?.dispose();
-      panelGeoms.forEach((g) => g.dispose());
       gridMat.dispose();
-      panelMat.dispose();
       descend?.geom.dispose();
       descend?.mat.dispose();
     };
-  }, [gridGeom, panelGeoms, gridMat, panelMat, descend]);
+  }, [gridGeom, gridMat, descend]);
 
   const scratch = useRef(new THREE.Vector3()).current;
 
@@ -211,10 +172,9 @@ export function BuildArtifact() {
     }
     grp.visible = true;
 
-    // Grid + panels boot up with presence; streams intensify with morph
-    // so they appear as the sphere powers on.
+    // Grid boots up with presence; streams intensify with morph so they
+    // appear as the sphere powers on.
     gridMat.opacity = presence * GRID_ALPHA;
-    panelMat.opacity = presence * PANEL_ALPHA;
 
     if (descend) {
       const t = clock.elapsedTime;
@@ -243,15 +203,6 @@ export function BuildArtifact() {
       <group position={[0, GRID_Y, 0]} rotation={[0.06, 0, 0]}>
         <lineSegments geometry={gridGeom} material={gridMat} />
       </group>
-      {PANELS.map((p, i) => (
-        <lineLoop
-          key={i}
-          geometry={panelGeoms[i]}
-          material={panelMat}
-          position={p.position}
-          rotation={p.rotation}
-        />
-      ))}
       {descend && <points geometry={descend.geom} material={descend.mat} />}
     </group>
   );

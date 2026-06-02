@@ -13,7 +13,6 @@ import { LatentFieldTunnel } from "./LatentFieldTunnel";
 import { LatentTopographyContours } from "./LatentTopographyContours";
 import { EncodeToBuildStreams } from "./BuildArtifact";
 import { LatentWormholeWalls } from "./LatentWormholeWalls";
-import { TacitKnowledgeOrbits } from "./TacitKnowledgeOrbits";
 import { ScrollStreaks } from "./ScrollStreaks";
 import { StaticStarfield } from "./StaticStarfield";
 import { ThoughtformAtmosphere } from "./ThoughtformAtmosphere";
@@ -207,7 +206,6 @@ export function DepthGatewayScene() {
       <ScrollStreaks />
       <AstrogationField isMobile={isMobile} />
       <GatewayWorld />
-      <TacitKnowledgeOrbits />
       <EncodeToBuildStreams />
     </Canvas>
   );

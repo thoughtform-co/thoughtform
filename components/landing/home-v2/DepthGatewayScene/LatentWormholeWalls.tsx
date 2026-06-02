@@ -23,12 +23,7 @@ import { STATION_DIAGNOSTIC, STATION_INTELLIGENCE, STATION_THOUGHTFORM } from ".
  *      around an oval shell. About a third are partial rails (end
  *      midway through the leg) so the shell never reads as a closed
  *      cage. Rails drift slightly inward with depth so the shell
- *      visibly converges toward the optical axis. The two HEMISPHERES
- *      diverge in character (Refinement 3): the LEFT (−X) is a rigid
- *      cool-steel "Tool" lattice (straight rails + horizontal
- *      cross-rungs), the RIGHT (+X) an organic warm "Collaborator"
- *      flow (curved, jittered rails that subtly breathe). The
- *      brandmark + copy travel the X≈0 seam between them.
+ *      visibly converges toward the optical axis.
  *
  *   2. **Aperture frames** — 3 sparse depth-gate frames per leg.
  *      Four gold corner anchors with short dawn arms in two
@@ -83,11 +78,6 @@ const DAWN_HEX = "#ebe3d6";
 const DAWN_SOFT_HEX = "#d6cdb5";
 const GOLD_HEX = "#caa554";
 
-/** Tool hemisphere (left, −X) — cool steel tints. The rigid lattice
- *  reads against the warm Collaborator flow on the right. */
-const TOOL_HEX = "#c9d2db";
-const TOOL_SOFT_HEX = "#9fb0bf";
-
 // ── Shell geometry ──────────────────────────────────────────────
 
 /** Oval cross-section of the wormhole shell. Wider than tall so the
@@ -105,18 +95,6 @@ const RAIL_INWARD_PULL = 0.28;
 
 /** Longitudinal rails per leg. */
 const RAIL_COUNT_PER_LEG = 14;
-
-/** Collaborator hemisphere (right, +X) flow: the rail centreline curves
- *  along Z (sine in X, gentler cosine in Y) so the right wall reads as
- *  an organic, breathing flow rather than a ruled cage. */
-const RIGHT_FLOW_FREQ = 0.9;
-const RIGHT_FLOW_AMP = 0.13;
-
-/** Tool hemisphere (left, −X) cross-rungs: horizontal connectors strung
- *  between angularly-adjacent left rails at fixed Z intervals. These are
- *  what make the left wall read as a rigid orthogonal lattice / ladder. */
-const CROSS_RUNG_Z_SPACING = 1.3;
-const CROSS_RUNG_DOTS = 4;
 
 /** Dot counts per rail. Partial rails end midway through the leg
  *  so the shell never closes off into a cage. */
@@ -175,33 +153,17 @@ uniform float uVisibleNear;
 uniform float uVisibleFar;
 uniform float uReveal1;
 uniform float uReveal2;
-uniform float uTime;
 
 attribute vec3 aColor;
 attribute float aReveal;
 attribute float aSize;
-attribute float aSide;
 
 varying vec3 vColor;
 varying float vAlpha;
 
 void main() {
-  // Collaborator hemisphere (aSide = 1) breathes: a small radial pulse
-  // animated by uTime. The Tool hemisphere (aSide = 0 — left rails,
-  // cross-rungs, apertures, shelves) stays perfectly rigid.
-  vec3 pos = position;
-  if (aSide > 0.5) {
-    vec2 radial = pos.xy;
-    float rl = length(radial);
-    if (rl > 0.001) {
-      radial /= rl;
-      float breathe = sin(uTime * 0.6 + pos.z * 0.9) * 0.045;
-      pos.xy += radial * breathe;
-    }
-  }
-
-  vec4 mv = modelViewMatrix * vec4(pos, 1.0);
-  float dist = distance(pos, uCameraPos);
+  vec4 mv = modelViewMatrix * vec4(position, 1.0);
+  float dist = distance(position, uCameraPos);
 
   // Camera-space depth focus. Walls behind the camera or beyond the
   // far plane vanish; rails ahead fade in as they approach.
@@ -242,17 +204,11 @@ void main() {
 
 // ── Geometry builders ───────────────────────────────────────────
 
-function clampUnit(v: number): number {
-  return v < 0 ? 0 : v > 1 ? 1 : v;
-}
-
 interface PointBuffers {
   positions: number[];
   colors: number[];
   reveals: number[];
   sizes: number[];
-  /** 0 = Tool hemisphere (rigid), 1 = Collaborator hemisphere (breathes). */
-  sides: number[];
 }
 
 function pushPoint(
@@ -262,33 +218,22 @@ function pushPoint(
   z: number,
   color: THREE.Color,
   reveal: number,
-  size: number,
-  side: number
+  size: number
 ): void {
   buf.positions.push(x, y, z);
   buf.colors.push(color.r, color.g, color.b);
   buf.reveals.push(reveal);
   buf.sizes.push(size);
-  buf.sides.push(side);
 }
 
 /** Build the longitudinal dotted rails around the oval shell for one
- *  leg. The two HEMISPHERES diverge in character (Refinement 3): the
- *  LEFT (−X) is a rigid orthogonal "Tool" lattice — straight rails, even
- *  spacing, cool steel tint, plus horizontal cross-rungs (built after)
- *  — while the RIGHT (+X) is an organic "Collaborator" flow — the rail
- *  centreline curves along Z, spacing is jittered, and the tint warms to
- *  gold/dawn. The brandmark + section copy travel down the X≈0 seam
- *  between the two walls, so the metaphor (intelligence sitting between
- *  tool and collaborator) is structural, not labelled. */
+ *  leg. Rails are deterministically distributed around the full 360°
+ *  so the user is enclosed by the lattice; alternating full/partial
+ *  rails plus a colour mix prevent the shell from reading as a
+ *  perfect cage. */
 function buildLegRails(fromZ: number, toZ: number, legIdx: 0 | 1, buf: PointBuffers): void {
-  const steel = new THREE.Color(TOOL_HEX);
-  const steelSoft = new THREE.Color(TOOL_SOFT_HEX);
-  const warmGold = new THREE.Color(GOLD_HEX);
-  const warmDawn = new THREE.Color(DAWN_HEX);
-
-  // Left-hemisphere rail base positions, collected for the cross-rungs.
-  const leftRails: { x: number; y: number }[] = [];
+  const dawn = new THREE.Color(DAWN_HEX);
+  const dawnSoft = new THREE.Color(DAWN_SOFT_HEX);
 
   for (let i = 0; i < RAIL_COUNT_PER_LEG; i++) {
     // Even angular distribution around the shell with a per-leg
@@ -298,88 +243,25 @@ function buildLegRails(fromZ: number, toZ: number, legIdx: 0 | 1, buf: PointBuff
     const angle = (i / RAIL_COUNT_PER_LEG) * Math.PI * 2 + legIdx * 0.18;
     const baseX = Math.cos(angle) * SHELL_RX;
     const baseY = Math.sin(angle) * SHELL_RY;
-    const isLeft = baseX < 0; // Tool hemisphere
-    const sideVal = isLeft ? 0 : 1;
 
     // Every third rail is "partial" — ends midway through the leg.
+    // Mix gold sparingly: only on the cardinal-ish rails.
     const isFull = i % 3 !== 2;
     const dotCount = isFull ? FULL_RAIL_DOTS : PARTIAL_RAIL_DOTS;
     const railEndZ = isFull ? toZ : lerp(fromZ, toZ, 0.55);
 
-    // Hemisphere tint: cool steel on the Tool side, warm gold/dawn on
-    // the Collaborator side. Each tier keeps a quiet two-tone mix.
-    const railColor = isLeft
-      ? i % 4 === 0
-        ? steel
-        : steelSoft
-      : i % 3 === 0
-        ? warmGold
-        : warmDawn;
+    // Color tiering: a quarter of the rails read in dawn (brighter),
+    // the rest in dawn-soft. Keeps the lattice palette quiet.
+    const railColor = i % 4 === 0 ? dawn : dawnSoft;
     const railSize = isFull ? 1.0 : 0.85;
 
-    if (isLeft) leftRails.push({ x: baseX, y: baseY });
-
     for (let d = 0; d < dotCount; d++) {
-      const baseT = dotCount > 1 ? d / (dotCount - 1) : 0;
-      // LEFT: even spacing (rigid). RIGHT: deterministic jitter so the
-      // flow reads irregular / hand-strung rather than ruled.
-      const t = isLeft
-        ? baseT
-        : clampUnit(baseT + (Math.sin(d * 1.7 + i * 2.3) * 0.5) / dotCount);
+      const t = dotCount > 1 ? d / (dotCount - 1) : 0;
       const z = lerp(fromZ, railEndZ, t);
       // Inward perspective pull at far end — small but cumulative
       // across many rails it makes the shell visibly converge.
       const inward = 1 - t * RAIL_INWARD_PULL;
-      let x = baseX * inward;
-      let y = baseY * inward;
-      if (!isLeft) {
-        // Organic centreline flow — curve the rail along Z.
-        x += Math.sin(z * RIGHT_FLOW_FREQ + angle * 1.3) * RIGHT_FLOW_AMP;
-        y += Math.cos(z * RIGHT_FLOW_FREQ * 0.8 + angle) * RIGHT_FLOW_AMP * 0.6;
-      }
-      pushPoint(buf, x, y, z, railColor, legIdx, railSize, sideVal);
-    }
-  }
-
-  buildLeftCrossRungs(fromZ, toZ, legIdx, leftRails, buf);
-}
-
-/** Build the Tool-hemisphere cross-rungs: short straight dot-runs strung
- *  between angularly-adjacent left rails at fixed Z intervals. The
- *  resulting ladder reads as a rigid orthogonal lattice — the structural
- *  opposite of the curved Collaborator flow on the right. */
-function buildLeftCrossRungs(
-  fromZ: number,
-  toZ: number,
-  legIdx: 0 | 1,
-  leftRails: { x: number; y: number }[],
-  buf: PointBuffers
-): void {
-  if (leftRails.length < 2) return;
-  const steel = new THREE.Color(TOOL_HEX);
-
-  // Order rails around the arc so adjacency is along the shell.
-  const sorted = [...leftRails].sort(
-    (a, b) => Math.atan2(a.y, a.x) - Math.atan2(b.y, b.x)
-  );
-  const span = Math.abs(toZ - fromZ);
-  const slices = Math.max(2, Math.round(span / CROSS_RUNG_Z_SPACING));
-
-  for (let s = 1; s < slices; s++) {
-    const frac = s / slices;
-    const z = lerp(fromZ, toZ, frac);
-    // Match the longitudinal rails' inward convergence so the rungs sit
-    // flush on the shell rather than floating off it.
-    const inward = 1 - frac * RAIL_INWARD_PULL;
-    for (let r = 0; r < sorted.length - 1; r++) {
-      const a = sorted[r];
-      const b = sorted[r + 1];
-      for (let k = 1; k < CROSS_RUNG_DOTS; k++) {
-        const t = k / CROSS_RUNG_DOTS;
-        const x = lerp(a.x, b.x, t) * inward;
-        const y = lerp(a.y, b.y, t) * inward;
-        pushPoint(buf, x, y, z, steel, legIdx, 0.8, 0);
-      }
+      pushPoint(buf, baseX * inward, baseY * inward, z, railColor, legIdx, railSize);
     }
   }
 }
@@ -408,17 +290,16 @@ function buildAperture(
   const armLength = 0.22;
 
   for (const [cx, cy] of corners) {
-    // Corner anchor — gold accent. Apertures stay symmetric + rigid
-    // (side 0) — the rails/rungs carry the Tool/Collaborator metaphor.
-    pushPoint(buf, cx, cy, centreZ, gold, legIdx, 1.3, 0);
+    // Corner anchor — gold accent.
+    pushPoint(buf, cx, cy, centreZ, gold, legIdx, 1.3);
 
     // Inward arms — short horizontal + short vertical dotted runs.
     const dirX = -Math.sign(cx);
     const dirY = -Math.sign(cy);
     for (let k = 1; k <= APERTURE_ARM_DOTS; k++) {
       const t = k / APERTURE_ARM_DOTS;
-      pushPoint(buf, cx + dirX * armLength * t, cy, centreZ, dawn, legIdx, 0.95, 0);
-      pushPoint(buf, cx, cy + dirY * armLength * t, centreZ, dawn, legIdx, 0.95, 0);
+      pushPoint(buf, cx + dirX * armLength * t, cy, centreZ, dawn, legIdx, 0.95);
+      pushPoint(buf, cx, cy + dirY * armLength * t, centreZ, dawn, legIdx, 0.95);
     }
   }
 
@@ -435,15 +316,15 @@ function buildAperture(
       const t = k / (APERTURE_EDGE_DOTS + 2);
       const x = ax + (bx - ax) * t;
       const y = ay + (by - ay) * t;
-      pushPoint(buf, x, y, centreZ, dawnSoft, legIdx, 0.85, 0);
+      pushPoint(buf, x, y, centreZ, dawnSoft, legIdx, 0.85);
     }
   }
 
   // Mid-edge accent ticks — top + bottom only. Sides are left clear
   // so the HUD rails (which sit at the viewport extremes) don't
   // fight the aperture for the eye.
-  pushPoint(buf, 0, halfY, centreZ, dawn, legIdx, 1.0, 0);
-  pushPoint(buf, 0, -halfY, centreZ, dawn, legIdx, 1.0, 0);
+  pushPoint(buf, 0, halfY, centreZ, dawn, legIdx, 1.0);
+  pushPoint(buf, 0, -halfY, centreZ, dawn, legIdx, 1.0);
 }
 
 /** Build the lower topographic shelves for one leg — a few rows of
@@ -467,7 +348,7 @@ function buildShelves(fromZ: number, toZ: number, legIdx: 0 | 1, buf: PointBuffe
         // Deterministic wave so the shelf reads as terrain, not a
         // perfectly ruled grid.
         const wave = Math.sin(x * 2.4 + baseZ * 1.7 + s * 1.3 + legIdx * 0.9) * 0.05;
-        pushPoint(buf, x, y + wave, baseZ, dawnSoft, legIdx, 0.7, 0);
+        pushPoint(buf, x, y + wave, baseZ, dawnSoft, legIdx, 0.7);
       }
     }
   }
@@ -479,14 +360,12 @@ function buildWormholeWalls(): {
   colors: Float32Array;
   reveals: Float32Array;
   sizes: Float32Array;
-  sides: Float32Array;
 } {
   const buf: PointBuffers = {
     positions: [],
     colors: [],
     reveals: [],
     sizes: [],
-    sides: [],
   };
 
   const tfZ = STATION_THOUGHTFORM.position[2];
@@ -527,7 +406,6 @@ function buildWormholeWalls(): {
     colors: new Float32Array(buf.colors),
     reveals: new Float32Array(buf.reveals),
     sizes: new Float32Array(buf.sizes),
-    sides: new Float32Array(buf.sides),
   };
 }
 
@@ -559,13 +437,12 @@ export function LatentWormholeWalls() {
 
   const geometry = useMemo(() => {
     if (!enabled) return null;
-    const { positions, colors, reveals, sizes, sides } = buildWormholeWalls();
+    const { positions, colors, reveals, sizes } = buildWormholeWalls();
     const geom = new THREE.BufferGeometry();
     geom.setAttribute("position", new THREE.BufferAttribute(positions, 3));
     geom.setAttribute("aColor", new THREE.BufferAttribute(colors, 3));
     geom.setAttribute("aReveal", new THREE.BufferAttribute(reveals, 1));
     geom.setAttribute("aSize", new THREE.BufferAttribute(sizes, 1));
-    geom.setAttribute("aSide", new THREE.BufferAttribute(sides, 1));
     return geom;
   }, [enabled]);
 
@@ -582,7 +459,6 @@ export function LatentWormholeWalls() {
         uReveal1: { value: 0 },
         uReveal2: { value: 0 },
         uOpacity: { value: 0 },
-        uTime: { value: 0 },
       },
       transparent: true,
       depthWrite: false,
@@ -610,7 +486,6 @@ export function LatentWormholeWalls() {
     const painting = active || armed;
 
     material.uniforms.uPixelRatio.value = viewport.dpr;
-    material.uniforms.uTime.value = now;
     (material.uniforms.uCameraPos.value as THREE.Vector3).copy(camera.position);
 
     if (!painting) {

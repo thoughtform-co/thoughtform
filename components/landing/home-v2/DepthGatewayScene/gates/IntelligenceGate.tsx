@@ -5,18 +5,9 @@ import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { sampleShape } from "@/lib/brandmark/sampleShape";
 import { BRANDMARK_FULL_PATHS, BRANDMARK_SHAPE_KEYS } from "@/lib/brandmark/shapes";
-import { createSphereCloudMaterial } from "@/components/landing/v7/intelligence-layer/celestialMaterials";
-import {
-  buildSphereCloudGeometry,
-  buildTiltedRingLineLoop,
-} from "@/components/landing/v7/intelligence-layer/celestialRingUtils";
+import { buildSphereCloudGeometry } from "@/components/landing/v7/intelligence-layer/celestialRingUtils";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
-import {
-  SIDE_BODY_SCALE,
-  STATION_INTELLIGENCE,
-  getIntelligenceSideBodyPresence,
-  getIntelligenceSubstratePresence,
-} from "../sceneGeom";
+import { STATION_INTELLIGENCE, getIntelligenceSubstratePresence } from "../sceneGeom";
 import { brandmarkCloudVertex, brandmarkCloudFragment } from "../shaders/brandmarkCloud";
 import { BuildArtifact } from "../BuildArtifact";
 
@@ -24,11 +15,9 @@ import { BuildArtifact } from "../BuildArtifact";
  * IntelligenceGate — the world-rigid 3D group at
  * `STATION_INTELLIGENCE` (ADR-018, world-owned rebuild).
  *
- * Consolidates the previous two-component composition (the side
- * `IntelligenceChamber` + the brandmark `BrandmarkPointCloud`) into
- * one cohesive gate group. All children sit in LOCAL coords relative
- * to the gate centre, so the entire intelligence beat can be moved
- * by changing `STATION_INTELLIGENCE.position`.
+ * All children sit in LOCAL coords relative to the gate centre, so the
+ * entire intelligence beat can be moved by changing
+ * `STATION_INTELLIGENCE.position`.
  *
  * Composition (paint order, near -> far):
  *
@@ -36,16 +25,14 @@ import { BuildArtifact } from "../BuildArtifact";
  *     sphere morph driven by `getIntelligenceSubstratePresence`.
  *     This is the substrate-cut cover for the projected vector
  *     brandmark (ADR-017 pattern).
- *   - Left side body: Fibonacci point cloud + tilted ring at
- *     local [-3.0, -0.1, 0.2]. Presence comes from
- *     `getIntelligenceSideBodyPresence` — camera-space depth focus,
- *     so the bodies emerge from distance during late passthrough-02.
- *   - Right side body: mirror of left at [+3.0, -0.1, 0.2].
+ *   - `BuildArtifact`: holographic grid + panels + streams that boot
+ *     up around the sphere as it forms.
+ *
+ * The flanking Fibonacci-sphere "side bodies" were removed in the
+ * 2026-06-02 revision (they competed with the substrate sphere).
  *
  * Behaviour:
  *   - Group is hidden when `!active` (corridor not engaged).
- *   - During passthrough-02 + intelligence beats, side bodies fade
- *     in via `getIntelligenceSideBodyPresence` (camera-space depth).
  *   - The substrate morph paints only during the intelligence beat
  *     and its early cross-fade window.
  */
@@ -73,17 +60,6 @@ const SUBSTRATE_TO_SPHERE_RATIO = 2.5;
 
 const GOLD_BODY = new THREE.Color("#caa554");
 const GOLD_RIM = new THREE.Color("#e9c97a");
-
-const DEG = Math.PI / 180;
-const SIDE_RING_TILT_LEFT: [number, number, number] = [16 * DEG, 0, 8 * DEG];
-const SIDE_RING_TILT_RIGHT: [number, number, number] = [16 * DEG, 0, -8 * DEG];
-const SIDE_RING_RADIUS = 0.62;
-const SIDE_SPHERE_RADIUS = 0.46;
-const SIDE_SPHERE_POINT_COUNT = 1100;
-
-/** Side body local positions relative to the gate centre. */
-const LEFT_BODY_LOCAL: [number, number, number] = [-3.0, -0.1, 0.2];
-const RIGHT_BODY_LOCAL: [number, number, number] = [3.0, -0.1, 0.2];
 
 /** Substrate morph cloud local position relative to the gate centre.
  *  Sits slightly in front of Z=0 so it composites above any background
@@ -216,81 +192,6 @@ function SubstrateMorphCloud() {
   );
 }
 
-// ── Side body (left + right Fibonacci-sphere clouds) ─────────────
-
-interface SideBodyProps {
-  id: "left" | "right";
-  localPosition: readonly [number, number, number];
-  ringTilt: readonly [number, number, number];
-}
-
-function SideBody({ id, localPosition, ringTilt }: SideBodyProps) {
-  const groupRef = useRef<THREE.Group>(null);
-
-  const cloudGeom = useMemo(
-    () => buildSphereCloudGeometry(SIDE_SPHERE_RADIUS, SIDE_SPHERE_POINT_COUNT),
-    []
-  );
-  const cloudMat = useMemo(
-    () =>
-      createSphereCloudMaterial(new THREE.Color("#ebe3d6"), new THREE.Color("#f3ecdb"), 0.78, 3.6),
-    []
-  );
-  const ringGeom = useMemo(() => buildTiltedRingLineLoop(SIDE_RING_RADIUS, ringTilt), [ringTilt]);
-  const ringMat = useMemo(
-    () =>
-      new THREE.LineBasicMaterial({
-        color: new THREE.Color("#caa554"),
-        transparent: true,
-        opacity: 0,
-        depthWrite: false,
-      }),
-    []
-  );
-
-  useEffect(() => {
-    return () => {
-      cloudGeom.dispose();
-      cloudMat.dispose();
-      ringGeom.dispose();
-      ringMat.dispose();
-    };
-  }, [cloudGeom, cloudMat, ringGeom, ringMat]);
-
-  useFrame((state) => {
-    const group = groupRef.current;
-    if (!group) return;
-    const transform = useDepthGatewayStore.getState().transform;
-    const { active } = transform;
-
-    if (!active) {
-      group.visible = false;
-      return;
-    }
-    group.visible = true;
-
-    const t = state.clock.elapsedTime;
-    group.rotation.y = t * 0.03 * (id === "left" ? -1 : 1);
-
-    // Depth-driven side-body presence: the constellation flanks
-    // start to register in late `passthrough-02` as the camera
-    // closes in on the Intelligence station, and resolve fully
-    // through the intelligence beat.
-    const opacity = getIntelligenceSideBodyPresence(transform);
-    cloudMat.uniforms.uPresence.value = opacity;
-    cloudMat.uniforms.uTime.value = t;
-    cloudMat.uniforms.uPixelRatio.value = state.viewport.dpr;
-    ringMat.opacity = opacity * 0.5;
-  });
-
-  return (
-    <group ref={groupRef} position={localPosition} scale={SIDE_BODY_SCALE}>
-      <points geometry={cloudGeom} material={cloudMat} />
-      <lineLoop geometry={ringGeom} material={ringMat} />
-    </group>
-  );
-}
-
 // ── IntelligenceGate — the consolidated gate group ───────────────
 
 export function IntelligenceGate() {
@@ -298,8 +199,6 @@ export function IntelligenceGate() {
     <group position={STATION_INTELLIGENCE.position}>
       <SubstrateMorphCloud />
       <BuildArtifact />
-      <SideBody id="left" localPosition={LEFT_BODY_LOCAL} ringTilt={SIDE_RING_TILT_LEFT} />
-      <SideBody id="right" localPosition={RIGHT_BODY_LOCAL} ringTilt={SIDE_RING_TILT_RIGHT} />
     </group>
   );
 }
