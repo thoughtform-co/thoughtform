@@ -34,11 +34,16 @@ const MID_RING_TILT_RAD = 0.3;
 const COMPASS_R = 0.62;
 const CENTRE_DIAMOND_R = 0.3;
 const TICK_COUNT = 16;
+// Tight depth window: the camera parks ~6.8 units back at the setup
+// beat (Z≈10), so this keeps the gate dark until the camera flies in
+// and closes within ~6 units, peaks at the ~4.5-unit park distance,
+// and fades as the camera passes through. (Looser than this and the
+// gate reads as already-present behind the parked setup composition.)
 const NAVIGATE_DEPTH_WINDOW = {
-  near: 0.95,
-  nearFade: 3,
-  far: 7,
-  farFade: 3.2,
+  near: 0.9,
+  nearFade: 2.4,
+  far: 4.5,
+  farFade: 1.8,
 } as const;
 
 export function NavigateGate() {
