@@ -134,10 +134,12 @@ export type CorridorNode = StationNode | TransitionNode;
 
 // ── THE MAP ──────────────────────────────────────────────────────────
 //
-// Reproduces the current 5-beat topology EXACTLY. Weights [14,32,14,
-// 16,24] (sum 100) tile to the historical windows
-// [0,.14,.46,.6,.76,1]; park bias .5 reproduces parks .07/.53/.88; the
-// interstitial waypoint bias .1875 reproduces interstitialPark 0.63.
+// 7-node topology. Weights [14, (12+12+8), 14, 16, 24] still sum to 100
+// — the Navigate park is carved out of the old `passthrough-01` leg
+// (travel 32 → pass-01a 12 + navigate 12 + pass-01b 8) so `diagnostic`
+// onward stays at the historical windows [.46,.6,.76,1]. Park bias .5
+// reproduces the encode/build parks .53/.88; the interstitial waypoint
+// bias .1875 reproduces interstitialPark 0.63.
 
 export const CORRIDOR_MAP = [
   {
@@ -151,31 +153,33 @@ export const CORRIDOR_MAP = [
     gate: "compass",
     brandmarkAnchor: true,
   },
+  // Navigate's "place" is now a PARKED station (the camera pauses in
+  // front of it like Encode/Build), carved out of the old single
+  // `passthrough-01` leg WITHOUT changing the total weight: the three
+  // weights below sum to 32 (the old leg's travel), so every beat from
+  // `diagnostic` onward — and the whole CORRIDOR_TIMELINE — stays
+  // byte-identical. `pass-01a` flies the camera in, `navigate` is the
+  // brief park, `pass-01b` is the shorter exit toward Encode. All three
+  // are labelled "Navigate" so the HUD sector readout reads "Navigate"
+  // continuously across the leg. Primary preview knob: the 12/12/8
+  // split (keep the sum at 32) and the navigate `parkBias`.
+  { kind: "transition", id: "pass-01a", label: "Navigate", travel: 12 },
   {
-    kind: "transition",
-    id: "passthrough-01",
+    kind: "station",
+    id: "navigate",
     label: "Navigate",
-    travel: 32,
-    // Navigate's "place": a fly-through landmark gate the camera
-    // passes mid-corridor (same pattern as the interstitial gate),
-    // giving the Navigate phase a named destination between the
-    // setup and Encode without re-tiling the beat windows.
-    waypoint: {
-      id: "navigate",
-      // parkBias 0.6 of passthrough-01 -> world Z ~3.0, a distinct
-      // mid-corridor landmark clear of the setup compass and well
-      // ahead of the Encode orbits. This single number is the primary
-      // placement knob — tune on the Vercel preview.
-      parkBias: 0.6,
-      halfExtent: 1.5,
-      gate: "navigate",
-      content: {
-        kicker: "01 · Navigate",
-        titleHtml: "Navigate the <em>intelligence</em>.",
-        supportHtml: "Work with AI inside real work, not around it.",
-      },
+    dwell: 12,
+    parkBias: 0.5,
+    lateralX: 0,
+    halfExtent: 1.5,
+    gate: "navigate",
+    content: {
+      kicker: "01 · Navigate",
+      titleHtml: "Navigate the <em>intelligence</em>.",
+      supportHtml: "Work with AI inside real work, not around it.",
     },
   },
+  { kind: "transition", id: "pass-01b", label: "Navigate", travel: 8 },
   {
     kind: "station",
     id: "diagnostic",

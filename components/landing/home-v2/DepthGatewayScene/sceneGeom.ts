@@ -851,7 +851,7 @@ export const COPY_ANCHORS: readonly WorldAnchor[] = [
       }
       return [-1.8 + off, 0.0, STATION_THOUGHTFORM.position[2] + 0.1];
     },
-    visibilityBeats: ["thoughtform", "passthrough-01"],
+    visibilityBeats: ["thoughtform", "pass-01a", "navigate", "pass-01b"],
     // No entry fade — copy reads at full strength the moment the
     // stage pins. Pre-arm projection writes the transform at parked
     // Thoughtform with opacity 0, so revealing it is a single flip
@@ -935,7 +935,7 @@ export const COPY_ANCHORS: readonly WorldAnchor[] = [
       STATION_NAVIGATE.position[1] + 0.85,
       STATION_NAVIGATE.position[2] + 0.1,
     ],
-    visibilityBeats: ["passthrough-01", "diagnostic"],
+    visibilityBeats: ["pass-01a", "navigate", "pass-01b", "diagnostic"],
     fadeFrac: 0.28,
     perspectiveScale: {
       referenceDistance: 4.5,
