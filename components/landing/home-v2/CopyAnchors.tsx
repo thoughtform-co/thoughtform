@@ -6,7 +6,7 @@ import { useDeviceTier } from "@/lib/hooks/useDeviceTier";
 import { stationById } from "@/lib/home-v2/corridorMap";
 import { COPY_ANCHORS } from "./DepthGatewayScene/sceneGeom";
 import { useWorldDomTracker } from "./hooks/useWorldDomTracker";
-import { CorridorTitleCard } from "./CorridorTitleCard";
+import { StationTitle } from "./StationTitle";
 
 /**
  * CopyAnchors — DOM text overlay for the home-v2 depth corridor
@@ -160,16 +160,14 @@ export function CopyAnchors({ text }: CopyAnchorsProps) {
       </div>
 
       {/* ─────────── NAVIGATE / ENCODE / BUILD ───────────
-          Each section title is a tethered readout card — a framed
-          plate (corner ticks + void scrim) holding kicker + title +
-          support, sitting above its gate with a hairline tether + pip
-          pointing down at the reticle, so the title reads as the gate's
-          instrument annotation rather than detached floating text.
-          One reusable card (CorridorTitleCard) for all three phases;
-          the opening Thoughtform/setup composition above is untouched. */}
-      {nav && <CorridorTitleCard content={nav} anchorId="navigate.headCopy" variant="navigate" />}
-      {enc && <CorridorTitleCard content={enc} anchorId="diagnostic.headCopy" variant="encode" />}
-      {bld && <CorridorTitleCard content={bld} anchorId="intelligence.headCopy" variant="build" />}
+          Each section title STRADDLES its gate's central reticle: a
+          frameless title just above + support line just below, near
+          screen-centre, lit by the gold glow. No kicker (it doubled the
+          title's verb), no card. The opening Thoughtform/setup
+          composition above is untouched. */}
+      {nav && <StationTitle content={nav} base="navigate" />}
+      {enc && <StationTitle content={enc} base="diagnostic" />}
+      {bld && <StationTitle content={bld} base="intelligence" />}
     </div>
   );
 }

@@ -921,33 +921,38 @@ export const COPY_ANCHORS: readonly WorldAnchor[] = [
   },
 
   // ── Navigate ────────────────────────────────────────────────────
-  // Tethered readout card: a single framed plate (kicker + title +
-  // support) anchored `bottom-center` just above the landmark gate, so
-  // the card sits over the gate and its hairline tether/pip points down
-  // at the reticle — one composed annotation rather than detached text.
-  // Camera-depth driven (wide + gentle window) so it lingers as the
-  // camera flies in and fades softly as it passes — but stays dark at
-  // the parked setup beat, where the camera is ~6.8 units back.
+  // Straddle composition: a frameless TITLE just ABOVE the central
+  // reticle/brandmark (near screen-centre) and the SUPPORT line just
+  // BELOW it, so the title reads as the gate's annotation without a
+  // boxed card. Navigate is now a parked station, so the camera holds
+  // these steady for a beat. Camera-depth driven (full opacity at the
+  // ~4.5 park distance, just inside `far` 4.8) so they fade in on the
+  // approach and out as the camera passes — dark at the parked setup
+  // beat where the camera is ~6.8 units back. The +Y / −Y offsets are
+  // the primary straddle knobs.
   {
-    id: "navigate.headCopy",
+    id: "navigate.title",
     position: [
       STATION_NAVIGATE.position[0],
-      STATION_NAVIGATE.position[1] + 0.85,
+      STATION_NAVIGATE.position[1] + 0.55,
       STATION_NAVIGATE.position[2] + 0.1,
     ],
-    visibilityBeats: ["pass-01a", "navigate", "pass-01b", "diagnostic"],
+    visibilityBeats: ["pass-01a", "navigate", "pass-01b"],
     fadeFrac: 0.28,
-    perspectiveScale: {
-      referenceDistance: 4.5,
-      min: 0.2,
-      max: 1.1,
-    },
-    depthFade: {
-      near: 0.4,
-      nearFade: 1.8,
-      far: 4.8,
-      farFade: 1.6,
-    },
+    perspectiveScale: { referenceDistance: 4.5, min: 0.2, max: 1.1 },
+    depthFade: { near: 0.4, nearFade: 1.8, far: 4.8, farFade: 1.6 },
+  },
+  {
+    id: "navigate.support",
+    position: [
+      STATION_NAVIGATE.position[0],
+      STATION_NAVIGATE.position[1] - 0.6,
+      STATION_NAVIGATE.position[2] + 0.1,
+    ],
+    visibilityBeats: ["pass-01a", "navigate", "pass-01b"],
+    fadeFrac: 0.28,
+    perspectiveScale: { referenceDistance: 4.5, min: 0.2, max: 1.1 },
+    depthFade: { near: 0.4, nearFade: 1.8, far: 4.8, farFade: 1.6 },
   },
 
   // ── Diagnostic ──────────────────────────────────────────────────
@@ -961,34 +966,34 @@ export const COPY_ANCHORS: readonly WorldAnchor[] = [
   // Diagnostic beat — combined with perspectiveScale (min 0.22)
   // this makes the title clearly read as "coming toward the
   // orbits" rather than already landed at the gate.
+  // Straddle: TITLE above the orbital field's core, SUPPORT below it.
+  // Both fold in `diagnosticApproachDepthOffset` so they read as flying
+  // toward the orbits on approach. The oversized entry fade (1.4x) +
+  // depthFade keep them hidden during the parked Thoughtform read and
+  // resolve only as the Diagnostic gate begins.
   {
-    id: "diagnostic.headCopy",
+    id: "diagnostic.title",
     position: (transform) => [
       STATION_DIAGNOSTIC.position[0],
-      STATION_DIAGNOSTIC.position[1] + 0.95,
+      STATION_DIAGNOSTIC.position[1] + 0.7,
       STATION_DIAGNOSTIC.position[2] + 0.1 + diagnosticApproachDepthOffset(transform.paintProgress),
     ],
-    // The head copy belongs narratively to the Diagnostic beat, but
-    // uses an oversized entry fade (1.4x the beat width) plus the
-    // depthFade envelope below. That allows it to register faintly
-    // during late passthrough-01 while delaying full opacity until
-    // the Diagnostic gate actually begins.
     visibilityBeats: ["diagnostic"],
     fadeFrac: 1.4,
-    perspectiveScale: {
-      referenceDistance: 4.5,
-      min: 0.18,
-      max: 1.15,
-    },
-    // Tight far envelope keeps the headline hidden during the
-    // parked Thoughtform read; it only resolves once the camera has
-    // travelled most of passthrough-01.
-    depthFade: {
-      near: 0.9,
-      nearFade: 2.4,
-      far: 6.8,
-      farFade: 2.2,
-    },
+    perspectiveScale: { referenceDistance: 4.5, min: 0.18, max: 1.15 },
+    depthFade: { near: 0.9, nearFade: 2.4, far: 6.8, farFade: 2.2 },
+  },
+  {
+    id: "diagnostic.support",
+    position: (transform) => [
+      STATION_DIAGNOSTIC.position[0],
+      STATION_DIAGNOSTIC.position[1] - 0.8,
+      STATION_DIAGNOSTIC.position[2] + 0.1 + diagnosticApproachDepthOffset(transform.paintProgress),
+    ],
+    visibilityBeats: ["diagnostic"],
+    fadeFrac: 1.4,
+    perspectiveScale: { referenceDistance: 4.5, min: 0.18, max: 1.15 },
+    depthFade: { near: 0.9, nearFade: 2.4, far: 6.8, farFade: 2.2 },
   },
   // (Encode orbit labels removed — the Navigate/Encode/Build remap
   // drops the four "same pattern, four ways" pills; the orbital gate
@@ -1005,30 +1010,38 @@ export const COPY_ANCHORS: readonly WorldAnchor[] = [
   // full size on the beat boundary. The fade window is widened
   // (0.18) so the opacity ramp itself is gentler — visible from
   // early passthrough-02, full by parked Intelligence.
+  // Straddle: TITLE above the substrate sphere's core, SUPPORT below.
+  // Both fold in `intelligenceApproachDepthOffset` so the readout flies
+  // toward the substrate rather than popping in at the beat boundary.
+  // Build is the highest overlap risk (the sphere is the centrepiece) —
+  // bump title +0.8 / support −0.9 on preview if it crowds.
   {
-    id: "intelligence.headCopy",
+    id: "intelligence.title",
     position: (transform) => [
       STATION_INTELLIGENCE.position[0],
-      STATION_INTELLIGENCE.position[1] + 0.85,
+      STATION_INTELLIGENCE.position[1] + 0.7,
       STATION_INTELLIGENCE.position[2] +
         0.1 +
         intelligenceApproachDepthOffset(transform.paintProgress),
     ],
     visibilityBeats: ["passthrough-02", "intelligence"],
     fadeFrac: 0.18,
-    perspectiveScale: {
-      referenceDistance: 4.5,
-      min: 0.2,
-      max: 1.15,
-    },
-    // Mirrors the Diagnostic head-copy depth contract — emerge
-    // from the distance, intensify on approach.
-    depthFade: {
-      near: 0.9,
-      nearFade: 2.4,
-      far: 11,
-      farFade: 4.5,
-    },
+    perspectiveScale: { referenceDistance: 4.5, min: 0.2, max: 1.15 },
+    depthFade: { near: 0.9, nearFade: 2.4, far: 11, farFade: 4.5 },
+  },
+  {
+    id: "intelligence.support",
+    position: (transform) => [
+      STATION_INTELLIGENCE.position[0],
+      STATION_INTELLIGENCE.position[1] - 0.85,
+      STATION_INTELLIGENCE.position[2] +
+        0.1 +
+        intelligenceApproachDepthOffset(transform.paintProgress),
+    ],
+    visibilityBeats: ["passthrough-02", "intelligence"],
+    fadeFrac: 0.18,
+    perspectiveScale: { referenceDistance: 4.5, min: 0.2, max: 1.15 },
+    depthFade: { near: 0.9, nearFade: 2.4, far: 11, farFade: 4.5 },
   },
   // (Build chamber labels removed — the Navigate/Encode/Build remap
   // drops the "Trusted sources / Headless surfaces" side labels; the

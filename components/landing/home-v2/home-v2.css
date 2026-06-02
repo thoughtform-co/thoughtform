@@ -166,88 +166,29 @@
   width: clamp(280px, 32vw, 460px);
 }
 
-/* ── Corridor section title cards (Navigate / Encode / Build) ───────
-   Tethered readout: a framed plate above each gate (corner ticks +
-   void scrim) with a hairline tether/pip pointing down at the reticle,
-   so each title reads as the gate's instrument annotation rather than
-   detached floating text. The wrapper is positioned + faded as a group
-   by useWorldDomTracker; brackets, scrim, card, and tether share its
-   opacity. (Reuses CornerBracket; see CorridorTitleCard.tsx.) */
-.home-v2-corridor-card-anchor {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: clamp(300px, 34vw, 480px);
-}
-
-.home-v2-corridor-card {
-  position: relative;
-  width: 100%;
-  /* Void scrim for legibility over the starfield/gate — a cheap radial
-     glow-plate (no backdrop-filter; the block perspective-scales every
-     frame). Darkest behind the text, fading out past the corner ticks. */
-  background: radial-gradient(
-    118% 132% at 50% 46%,
-    rgba(10, 9, 8, 0.66) 0%,
-    rgba(10, 9, 8, 0.42) 52%,
-    rgba(10, 9, 8, 0) 100%
-  );
-}
-
-.home-v2-corridor-card__content {
-  position: relative;
-  z-index: 1;
-  padding: clamp(18px, 2vw, 26px) clamp(22px, 2.6vw, 34px);
-  text-align: center;
-}
-
-/* Compact stacked rhythm inside the plate (vs. the looser Thoughtform
-   column) — kicker, title, and support read as one framed readout. */
-.home-v2-corridor-card__content .home-v2-copy-bridge {
-  margin: 0 0 12px;
-}
-.home-v2-corridor-card__content .home-v2-copy-title {
+/* ── Corridor section titles (Navigate / Encode / Build) ────────────
+   Frameless straddle: the TITLE sits just above the gate's central
+   reticle and the SUPPORT line just below it (positioned + faded per
+   frame by useWorldDomTracker against `{base}.title` / `{base}.support`).
+   No card/scrim/tether — a soft gold text-shadow reads the copy as "lit
+   by the gate" against the starfield. See StationTitle.tsx. */
+.home-v2-station-title {
+  width: clamp(280px, 32vw, 460px);
   margin: 0 auto;
   max-width: 24ch;
+  text-align: center;
+  text-shadow: 0 0 22px rgba(202, 165, 84, 0.18);
 }
-.home-v2-corridor-card__content .home-v2-copy-body {
-  margin: 14px auto 0;
-  max-width: 30ch;
+
+.home-v2-station-support {
+  width: clamp(260px, 30vw, 420px);
+  margin: 0 auto;
+  max-width: 32ch;
+  text-align: center;
   font-size: clamp(15px, 1.15vw, 18px);
   line-height: 1.4;
   color: rgba(235, 227, 214, 0.72);
-}
-
-/* Soft gold glow ties the card to the lit gate so it reads as one
-   composed emblem rather than detached text. */
-.home-v2-corridor-card__content .home-v2-copy-bridge,
-.home-v2-corridor-card__content .home-v2-copy-title {
-  text-shadow: 0 0 22px rgba(202, 165, 84, 0.16);
-}
-
-/* Tether — a hairline gold stem descending from the card toward the
-   gate, capped by a small diamond pip aimed at the reticle. */
-.home-v2-corridor-card__tether {
-  position: relative;
-  width: 1px;
-  height: clamp(34px, 4.5vh, 56px);
-  margin-top: 2px;
-  background: linear-gradient(
-    to bottom,
-    rgba(202, 165, 84, 0.7),
-    rgba(202, 165, 84, 0.12)
-  );
-}
-.home-v2-corridor-card__tether::after {
-  content: "";
-  position: absolute;
-  left: 50%;
-  bottom: -3px;
-  width: 6px;
-  height: 6px;
-  transform: translateX(-50%) rotate(45deg);
-  background: var(--gold, #caa554);
-  box-shadow: 0 0 8px rgba(202, 165, 84, 0.5);
+  text-shadow: 0 0 18px rgba(202, 165, 84, 0.14);
 }
 
 /* Thoughtform-left typography mirrors the production homepage's
