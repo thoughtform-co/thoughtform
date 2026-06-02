@@ -11,6 +11,78 @@
 
 ---
 
+## 2026-06-02 Revision — Corridor world expansion (walls / orbit-capture / Build artifact)
+
+A creative expansion that deepens the corridor's narrative architecture
+on top of the Navigate / Encode / Build remap. Five moves:
+
+1. **Spatial extension.** `CAMERA_END` deepened `-8 → -11.5`
+   (`corridorMap.ts`). Because every gate Z re-solves from
+   `gateZAtParkProgress` and all choreography is **progress-keyed**
+   (`CORRIDOR_TIMELINE` windows in 0..1), deepening the dolly only
+   stretches the *world* spacing between beats — timing stays valid.
+   The front Navigate legs were re-split `12/12/8 → 10/11/11` (sum still
+   32) to widen the Navigate→Encode approach **without touching any
+   `diagnostic`-onward window**, preserving the timeline invariant
+   exactly (the load-bearing constraint documented in the 2026-06-01
+   declarative-map revision). **Caveat:** `AstrogationField`'s seed
+   positions are the one corridor consumer keyed to **absolute Z** (not
+   the map) — two deep seeds (~-7, -9) were added by hand so the new
+   deep Build run isn't an empty void. Any future `CAMERA_END` change
+   must re-check those seeds.
+
+2. **Navigate copy** → "AI isn't software. It's intelligence that sits
+   between *tool* and *collaborator*." The em-tinted *tool* /
+   *collaborator* tie structurally into move 3.
+
+3. **Tool / Collaborator wormhole walls.** `LatentWormholeWalls` now
+   diverges by hemisphere end-to-end: the LEFT (−X) is a rigid cool-steel
+   "Tool" lattice (straight rails + horizontal cross-rungs), the RIGHT
+   (+X) an organic warm "Collaborator" flow (curved, jittered rails). A
+   new `aSide` attribute (0=tool, 1=collab) + `uTime` uniform drive a
+   small radial **breathing** displacement on the right side only. The
+   brandmark + copy travel the X≈0 seam between the two walls, so the
+   metaphor is structural, not labelled.
+
+   **Contract note — narrows the 2026-05-25 "Wormhole wall topology"
+   idle-motion clause.** That revision stated the walls "do not rotate,
+   pulse, or drift on their own; only the camera moves them." This
+   revision deliberately makes a **scoped exception**: the Collaborator
+   (right) hemisphere breathes (~0.045 world units, shader-only) to
+   express the organic metaphor. The Tool (left) hemisphere, apertures,
+   and shelves remain perfectly rigid / camera-only. Idle motion at
+   *gates* (orbiting pips, rotating side bodies) was already established
+   precedent; this extends a small, intentional pulse to one wall.
+
+4. **Tacit-knowledge orbit capture** (`TacitKnowledgeOrbits`, new, mounted
+   after `GatewayWorld`). Tacit words (judgment, taste, instinct, …) drift
+   in along the Navigate→Encode leg and are captured into three tilted
+   orbits around the Encode station via a per-fragment capture factor `c`
+   (from camera forward-depth to the station) with a decaying tangential
+   swirl so they spiral in rather than slide. Words render as per-word
+   billboard sprites (tightly-sized canvas textures — the square token
+   atlas would squish them). Fades out once the camera passes Encode.
+
+5. **Build artifact + Encode→Build streams** (`BuildArtifact`, new). A
+   wireframe grid pedestal + floating panels + sphere→grid descending
+   streams boot up around the substrate sphere as it forms (grid/panels
+   ∝ substrate `presence`, streams ∝ `morph` from
+   `getIntelligenceSubstratePresence`); mounted **local** to the
+   Intelligence gate group. Separately, `EncodeToBuildStreams` (world-
+   space, top-level mount) drifts gold/dawn motes from the Encode station
+   to the Build station across passthrough-02 so the encoded examples
+   visibly stream into the artifact, with a depth-focus window on the
+   stream midpoint for emerge/dissolve. All artifact alpha ceilings are
+   low so the substrate sphere stays the focal point.
+
+All new layers honour the world-fixed model (geometry generated once;
+visibility from progress + camera-space depth) except the single scoped
+wall-breathing exception noted in move 3. Mobile-narrow viewports skip
+the walls, orbit-capture, and Build artifact (matching the existing
+`LatentTopographyContours` gate).
+
+---
+
 ## 2026-06-01 Revision — Declarative corridor map + Navigate / Encode / Build remap
 
 Two changes: a structural refactor (the corridor topology becomes
