@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Canvas } from "@react-three/fiber";
 import { useDeviceTier } from "@/lib/hooks/useDeviceTier";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
+import { AstrogationField } from "./AstrogationField";
 import { CelestialMotes } from "./CelestialMotes";
 import { FlyingCameraRig } from "./FlyingCameraRig";
 import { GatewayWorld } from "./gates/GatewayWorld";
@@ -202,6 +203,7 @@ export function DepthGatewayScene() {
       <LatentTopographyContours />
       <CelestialMotes />
       <ScrollStreaks />
+      <AstrogationField isMobile={isMobile} />
       <GatewayWorld />
     </Canvas>
   );
