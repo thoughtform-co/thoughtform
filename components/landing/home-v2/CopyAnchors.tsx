@@ -158,7 +158,8 @@ export function CopyAnchors({ text }: CopyAnchorsProps) {
         <span className="home-v2-copy-phase__sub">Ship</span>
       </div>
 
-      {/* ─────────── NAVIGATE (landmark in passthrough-01) ─────────── */}
+      {/* ─────────── NAVIGATE (landmark in passthrough-01) ───────────
+          Framed-reticle: kicker + title above the gate, support below. */}
       <div
         className="home-v2-copy-block home-v2-copy-block--navigate-head"
         data-world-anchor="navigate.headCopy"
@@ -171,15 +172,21 @@ export function CopyAnchors({ text }: CopyAnchorsProps) {
               className="home-v2-copy-title"
               dangerouslySetInnerHTML={{ __html: nav.titleHtml }}
             />
-            {nav.supportHtml && (
-              <p
-                className="home-v2-copy-body"
-                dangerouslySetInnerHTML={{ __html: nav.supportHtml }}
-              />
-            )}
           </>
         )}
       </div>
+      {nav?.supportHtml && (
+        <div
+          className="home-v2-copy-block home-v2-copy-block--navigate-sub"
+          data-world-anchor="navigate.subCopy"
+          data-anchor-origin="top-center"
+        >
+          <p
+            className="home-v2-copy-body"
+            dangerouslySetInnerHTML={{ __html: nav.supportHtml }}
+          />
+        </div>
+      )}
 
       {/* ─────────── ENCODE (was Diagnostic) ─────────── */}
       <div

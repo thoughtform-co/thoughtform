@@ -28,22 +28,22 @@ import { STATION_NAVIGATE, depthOpacityForWorldPosition } from "../sceneGeom";
  *   - Bearing ticks on the armature (instrument-grade).
  */
 
-const ARMATURE_HALF = 1.3;
-const MID_RING_R = 0.85;
+const ARMATURE_HALF = 1.0;
+const MID_RING_R = 0.66;
 const MID_RING_TILT_RAD = 0.3;
-const COMPASS_R = 0.62;
-const CENTRE_DIAMOND_R = 0.3;
+const COMPASS_R = 0.48;
+const CENTRE_DIAMOND_R = 0.23;
 const TICK_COUNT = 16;
-// Tight depth window: the camera parks ~6.8 units back at the setup
-// beat (Z≈10), so this keeps the gate dark until the camera flies in
-// and closes within ~6 units, peaks at the ~4.5-unit park distance,
-// and fades as the camera passes through. (Looser than this and the
-// gate reads as already-present behind the parked setup composition.)
+// Wide, gentle depth window so the landmark lingers as the camera
+// flies in and fades softly as it passes — but still fully dark at
+// the parked setup beat, where the camera sits ~6.8 units back (Z≈10)
+// from this Z≈3.2 gate. Keep far+farFade < ~6.6 so it stays hidden
+// there; the near side stays full almost until the camera reaches it.
 const NAVIGATE_DEPTH_WINDOW = {
-  near: 0.9,
-  nearFade: 2.4,
-  far: 4.5,
-  farFade: 1.8,
+  near: 0.4,
+  nearFade: 1.8,
+  far: 4.8,
+  farFade: 1.6,
 } as const;
 
 export function NavigateGate() {

@@ -173,6 +173,21 @@
   text-align: center;
 }
 
+/* Navigate support line sits just below the landmark gate; the head
+   (kicker + title) sits just above it — a framed-reticle composition. */
+.home-v2-copy-block--navigate-sub {
+  width: clamp(280px, 36vw, 520px);
+  text-align: center;
+}
+
+/* Soft gold glow ties the Navigate caption to the lit gate so it reads
+   as one composed emblem rather than detached text. */
+.home-v2-copy-block--navigate-head .home-v2-copy-bridge,
+.home-v2-copy-block--navigate-head .home-v2-copy-title,
+.home-v2-copy-block--navigate-sub .home-v2-copy-body {
+  text-shadow: 0 0 22px rgba(202, 165, 84, 0.18);
+}
+
 /* Thoughtform-left typography mirrors the production homepage's
    `.tri__ipa--noun`, `.tri__title`, and `.tri__title--secondary`
    rules in `components/landing/v7/landing.css` (~L2575-2627) so the

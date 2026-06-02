@@ -921,36 +921,52 @@ export const COPY_ANCHORS: readonly WorldAnchor[] = [
   },
 
   // ── Navigate ────────────────────────────────────────────────────
-  // Heading block above the Navigate landmark gate (a fly-through
-  // "place" inside passthrough-01). Camera-depth driven like the
-  // interstitial gate: emerges from the distance and recedes as the
-  // camera passes, so the Navigate phase reads as a named waypoint
-  // between the setup compass and the Encode orbits.
+  // Framed-reticle composition: the kicker + title sit just ABOVE the
+  // Navigate landmark gate and the support line just BELOW it, so the
+  // emblem reads as one composed unit rather than text floating over
+  // it. Camera-depth driven (wide + gentle window) so it lingers as
+  // the camera flies in and fades softly as it passes — but stays
+  // dark at the parked setup beat, where the camera is ~6.8 units back.
   {
     id: "navigate.headCopy",
     position: [
       STATION_NAVIGATE.position[0],
-      STATION_NAVIGATE.position[1] + 0.95,
+      STATION_NAVIGATE.position[1] + 1.15,
       STATION_NAVIGATE.position[2] + 0.1,
     ],
-    // NOT visible at the parked setup beat — only once the camera
-    // flies INTO the corridor. The camera holds at Z≈10 across the
-    // setup window (~6.8 units back from this gate at Z≈3.2), so the
-    // tight `depthFade` keeps it dark until the camera closes within
-    // ~6 units mid-passthrough-01, peaks as it reaches the landmark,
-    // and recedes as it passes through.
     visibilityBeats: ["passthrough-01", "diagnostic"],
-    fadeFrac: 0.2,
+    fadeFrac: 0.28,
     perspectiveScale: {
       referenceDistance: 4.5,
       min: 0.2,
-      max: 1.15,
+      max: 1.1,
     },
     depthFade: {
-      near: 0.9,
-      nearFade: 2.4,
-      far: 4.5,
-      farFade: 1.8,
+      near: 0.4,
+      nearFade: 1.8,
+      far: 4.8,
+      farFade: 1.6,
+    },
+  },
+  {
+    id: "navigate.subCopy",
+    position: [
+      STATION_NAVIGATE.position[0],
+      STATION_NAVIGATE.position[1] - 1.15,
+      STATION_NAVIGATE.position[2] + 0.1,
+    ],
+    visibilityBeats: ["passthrough-01", "diagnostic"],
+    fadeFrac: 0.28,
+    perspectiveScale: {
+      referenceDistance: 4.5,
+      min: 0.2,
+      max: 1.1,
+    },
+    depthFade: {
+      near: 0.4,
+      nearFade: 1.8,
+      far: 4.8,
+      farFade: 1.6,
     },
   },
 
