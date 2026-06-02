@@ -11,6 +11,7 @@ import { GatewayWorld } from "./gates/GatewayWorld";
 import { InterGateCorridor } from "./InterGateCorridor";
 import { LatentFieldTunnel } from "./LatentFieldTunnel";
 import { LatentTopographyContours } from "./LatentTopographyContours";
+import { EncodeToBuildStreams } from "./BuildArtifact";
 import { LatentWormholeWalls } from "./LatentWormholeWalls";
 import { TacitKnowledgeOrbits } from "./TacitKnowledgeOrbits";
 import { ScrollStreaks } from "./ScrollStreaks";
@@ -207,6 +208,7 @@ export function DepthGatewayScene() {
       <AstrogationField isMobile={isMobile} />
       <GatewayWorld />
       <TacitKnowledgeOrbits />
+      <EncodeToBuildStreams />
     </Canvas>
   );
 }

@@ -18,6 +18,7 @@ import {
   getIntelligenceSubstratePresence,
 } from "../sceneGeom";
 import { brandmarkCloudVertex, brandmarkCloudFragment } from "../shaders/brandmarkCloud";
+import { BuildArtifact } from "../BuildArtifact";
 
 /**
  * IntelligenceGate — the world-rigid 3D group at
@@ -296,6 +297,7 @@ export function IntelligenceGate() {
   return (
     <group position={STATION_INTELLIGENCE.position}>
       <SubstrateMorphCloud />
+      <BuildArtifact />
       <SideBody id="left" localPosition={LEFT_BODY_LOCAL} ringTilt={SIDE_RING_TILT_LEFT} />
       <SideBody id="right" localPosition={RIGHT_BODY_LOCAL} ringTilt={SIDE_RING_TILT_RIGHT} />
     </group>
