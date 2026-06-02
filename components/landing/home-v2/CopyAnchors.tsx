@@ -6,6 +6,7 @@ import { useDeviceTier } from "@/lib/hooks/useDeviceTier";
 import { stationById } from "@/lib/home-v2/corridorMap";
 import { COPY_ANCHORS } from "./DepthGatewayScene/sceneGeom";
 import { useWorldDomTracker } from "./hooks/useWorldDomTracker";
+import { CorridorTitleCard } from "./CorridorTitleCard";
 
 /**
  * CopyAnchors — DOM text overlay for the home-v2 depth corridor
@@ -158,81 +159,17 @@ export function CopyAnchors({ text }: CopyAnchorsProps) {
         <span className="home-v2-copy-phase__sub">Ship</span>
       </div>
 
-      {/* ─────────── NAVIGATE (landmark in passthrough-01) ───────────
-          Framed-reticle: kicker + title above the gate, support below. */}
-      <div
-        className="home-v2-copy-block home-v2-copy-block--navigate-head"
-        data-world-anchor="navigate.headCopy"
-        data-anchor-origin="bottom-center"
-      >
-        {nav && (
-          <>
-            <p className="home-v2-copy-bridge">{nav.kicker}</p>
-            <h2
-              className="home-v2-copy-title"
-              dangerouslySetInnerHTML={{ __html: nav.titleHtml }}
-            />
-          </>
-        )}
-      </div>
-      {nav?.supportHtml && (
-        <div
-          className="home-v2-copy-block home-v2-copy-block--navigate-sub"
-          data-world-anchor="navigate.subCopy"
-          data-anchor-origin="top-center"
-        >
-          <p
-            className="home-v2-copy-body"
-            dangerouslySetInnerHTML={{ __html: nav.supportHtml }}
-          />
-        </div>
-      )}
-
-      {/* ─────────── ENCODE (was Diagnostic) ─────────── */}
-      <div
-        className="home-v2-copy-block home-v2-copy-block--diagnostic-head"
-        data-world-anchor="diagnostic.headCopy"
-        data-anchor-origin="bottom-center"
-      >
-        {enc && (
-          <>
-            <p className="home-v2-copy-bridge">{enc.kicker}</p>
-            <h2
-              className="home-v2-copy-title"
-              dangerouslySetInnerHTML={{ __html: enc.titleHtml }}
-            />
-            {enc.supportHtml && (
-              <p
-                className="home-v2-copy-body"
-                dangerouslySetInnerHTML={{ __html: enc.supportHtml }}
-              />
-            )}
-          </>
-        )}
-      </div>
-
-      {/* ─────────── BUILD (was Intelligence) ─────────── */}
-      <div
-        className="home-v2-copy-block home-v2-copy-block--intelligence-head"
-        data-world-anchor="intelligence.headCopy"
-        data-anchor-origin="bottom-center"
-      >
-        {bld && (
-          <>
-            <p className="home-v2-copy-bridge">{bld.kicker}</p>
-            <h2
-              className="home-v2-copy-title"
-              dangerouslySetInnerHTML={{ __html: bld.titleHtml }}
-            />
-            {bld.supportHtml && (
-              <p
-                className="home-v2-copy-body"
-                dangerouslySetInnerHTML={{ __html: bld.supportHtml }}
-              />
-            )}
-          </>
-        )}
-      </div>
+      {/* ─────────── NAVIGATE / ENCODE / BUILD ───────────
+          Each section title is a tethered readout card — a framed
+          plate (corner ticks + void scrim) holding kicker + title +
+          support, sitting above its gate with a hairline tether + pip
+          pointing down at the reticle, so the title reads as the gate's
+          instrument annotation rather than detached floating text.
+          One reusable card (CorridorTitleCard) for all three phases;
+          the opening Thoughtform/setup composition above is untouched. */}
+      {nav && <CorridorTitleCard content={nav} anchorId="navigate.headCopy" variant="navigate" />}
+      {enc && <CorridorTitleCard content={enc} anchorId="diagnostic.headCopy" variant="encode" />}
+      {bld && <CorridorTitleCard content={bld} anchorId="intelligence.headCopy" variant="build" />}
     </div>
   );
 }

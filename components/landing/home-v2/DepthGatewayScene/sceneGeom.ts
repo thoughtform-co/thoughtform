@@ -921,38 +921,18 @@ export const COPY_ANCHORS: readonly WorldAnchor[] = [
   },
 
   // ── Navigate ────────────────────────────────────────────────────
-  // Framed-reticle composition: the kicker + title sit just ABOVE the
-  // Navigate landmark gate and the support line just BELOW it, so the
-  // emblem reads as one composed unit rather than text floating over
-  // it. Camera-depth driven (wide + gentle window) so it lingers as
-  // the camera flies in and fades softly as it passes — but stays
-  // dark at the parked setup beat, where the camera is ~6.8 units back.
+  // Tethered readout card: a single framed plate (kicker + title +
+  // support) anchored `bottom-center` just above the landmark gate, so
+  // the card sits over the gate and its hairline tether/pip points down
+  // at the reticle — one composed annotation rather than detached text.
+  // Camera-depth driven (wide + gentle window) so it lingers as the
+  // camera flies in and fades softly as it passes — but stays dark at
+  // the parked setup beat, where the camera is ~6.8 units back.
   {
     id: "navigate.headCopy",
     position: [
       STATION_NAVIGATE.position[0],
-      STATION_NAVIGATE.position[1] + 1.15,
-      STATION_NAVIGATE.position[2] + 0.1,
-    ],
-    visibilityBeats: ["passthrough-01", "diagnostic"],
-    fadeFrac: 0.28,
-    perspectiveScale: {
-      referenceDistance: 4.5,
-      min: 0.2,
-      max: 1.1,
-    },
-    depthFade: {
-      near: 0.4,
-      nearFade: 1.8,
-      far: 4.8,
-      farFade: 1.6,
-    },
-  },
-  {
-    id: "navigate.subCopy",
-    position: [
-      STATION_NAVIGATE.position[0],
-      STATION_NAVIGATE.position[1] - 1.15,
+      STATION_NAVIGATE.position[1] + 0.85,
       STATION_NAVIGATE.position[2] + 0.1,
     ],
     visibilityBeats: ["passthrough-01", "diagnostic"],
