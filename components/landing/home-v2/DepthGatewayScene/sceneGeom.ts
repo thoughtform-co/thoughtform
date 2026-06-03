@@ -126,14 +126,14 @@ export const CORRIDOR_TIMELINE = {
   /** Thoughtform composition lateral centering pan window. PAN_END
    *  must stay locked to `dollyHoldEnd` so the camera dolly + ring
    *  flythrough release the moment the pan completes. */
-  thoughtformPan: { start: 0.085, end: 0.13 },
+  thoughtformPan: { start: 0.08, end: 0.12 },
 
   /** Gateway "boot-up" envelope phases. Ramp runs alongside the
    *  Thoughtform pan; hold spans the early ring flythrough; relax
    *  fades through the start of passthrough-01. Shared by
    *  `StaticStarfield`, `ThoughtformAtmosphere`, `CelestialMotes`,
    *  and `ThoughtformCompassGate`. */
-  thoughtformBoot: { preBoot: 0.03, rampEnd: 0.13, holdEnd: 0.22, relaxEnd: 0.5 },
+  thoughtformBoot: { preBoot: 0.03, rampEnd: 0.12, holdEnd: 0.21, relaxEnd: 0.5 },
 
   /** Compass ring forward translation at the end of each flythrough
    *  window. Parked compass sits at world Z≈5.6; +10 brings the
@@ -146,10 +146,10 @@ export const CORRIDOR_TIMELINE = {
    *  ends exactly at the passthrough-01 boundary so the supporting
    *  linework finishes sweeping just as Diagnostic takes focus. */
   flythrough: [
-    { start: 0.2, end: 0.53 }, // ring 0 (outer) — flies LAST
-    { start: 0.18, end: 0.51 }, // ring 1
-    { start: 0.155, end: 0.48 }, // ring 2
-    { start: 0.13, end: 0.455 }, // ring 3 (inner) — flies FIRST
+    { start: 0.18, end: 0.53 }, // ring 0 (outer) — flies LAST
+    { start: 0.16, end: 0.51 }, // ring 1
+    { start: 0.14, end: 0.48 }, // ring 2
+    { start: 0.12, end: 0.455 }, // ring 3 (inner) — flies FIRST
   ],
 
   /** Interstitial waypoint park progress. Sits inside passthrough-02
@@ -170,7 +170,7 @@ export const CORRIDOR_TIMELINE = {
    *  - `intelligenceLanding`: brandmark FREEZES at the Intelligence
    *    anchor and the substrate cloud takes over the silhouette. */
   brandmark: {
-    thoughtformHold: 0.15,
+    thoughtformHold: 0.14,
     diagnosticArrival: 0.57,
     diagnosticHold: 0.65,
     intelligenceArrival: 0.85,
@@ -937,7 +937,12 @@ export const COPY_ANCHORS: readonly WorldAnchor[] = [
       STATION_NAVIGATE.position[1] + 0.55,
       STATION_NAVIGATE.position[2] + 0.1,
     ],
-    visibilityBeats: ["pass-01a", "navigate", "pass-01b"],
+    // NOT eligible during `pass-01a`: that long entry leg is the pure
+    // wormhole flythrough and must stay text-free ("fly through the
+    // corridor" before arriving). The copy appears only as the camera
+    // reaches the Navigate park (and lingers briefly leaving via
+    // `pass-01b`), with the depth fade owning the actual reveal.
+    visibilityBeats: ["navigate", "pass-01b"],
     fadeFrac: 0.28,
     perspectiveScale: { referenceDistance: 4.5, min: 0.2, max: 1.1 },
     depthFade: { near: 0.4, nearFade: 1.8, far: 4.8, farFade: 1.6 },
@@ -949,7 +954,7 @@ export const COPY_ANCHORS: readonly WorldAnchor[] = [
       STATION_NAVIGATE.position[1] - 0.6,
       STATION_NAVIGATE.position[2] + 0.1,
     ],
-    visibilityBeats: ["pass-01a", "navigate", "pass-01b"],
+    visibilityBeats: ["navigate", "pass-01b"],
     fadeFrac: 0.28,
     perspectiveScale: { referenceDistance: 4.5, min: 0.2, max: 1.1 },
     depthFade: { near: 0.4, nearFade: 1.8, far: 4.8, farFade: 1.6 },

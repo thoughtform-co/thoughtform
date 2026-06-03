@@ -123,16 +123,16 @@ const SHELF_X_SAMPLES = 8;
 const VISIBLE_NEAR = 0.6;
 const VISIBLE_FAR = 22;
 
-/** Reveal envelopes per leg, in global progress units. Re-tuned for the
- *  entry/section-spacing pass (see corridorMap weight note).
+/** Reveal envelopes per leg, in global progress units.
  *
- *  Leg 1 lifts AFTER the Thoughtform park (centre ~0.065), resolving by
- *  progress 0.31 — inside the long entry leg (pass-01a [0.13,0.30]).
+ *  Leg 1 lifts AFTER the Thoughtform park (centre ~0.06), resolving
+ *  early in the long entry flythrough (pass-01a [0.12,0.35]) so the
+ *  wormhole is already wrapping you as you fly toward Navigate.
  *
  *  Leg 2 lifts AFTER the Diagnostic park (centre 0.60), resolving by
  *  progress 0.77 — comfortably inside passthrough-02 (0.67 → 0.83). */
-const LEG_1_REVEAL_START = 0.17;
-const LEG_1_REVEAL_END = 0.31;
+const LEG_1_REVEAL_START = 0.14;
+const LEG_1_REVEAL_END = 0.28;
 const LEG_2_REVEAL_START = 0.63;
 const LEG_2_REVEAL_END = 0.77;
 

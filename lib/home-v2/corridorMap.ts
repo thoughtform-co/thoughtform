@@ -145,34 +145,32 @@ export type CorridorNode = StationNode | TransitionNode;
 //
 // 7-node topology. Weights sum to 100.
 //
-// Entry / section-spacing pass: the ENTRY flythrough (`pass-01a`) was
-// grown 10 → 17 so you fly noticeably deeper into the corridor before
-// the Navigate text appears (previously it arrived almost immediately,
-// breaking the "entering a new realm" immersion). `pass-01b` 11 → 12
-// adds a little Navigate→Encode room. Funded by trimming the long
-// `intelligence` dwell 24 → 17 and `thoughtform` 14 → 13. Combined with
-// the deeper CAMERA_END (-14), every section now sits further apart in
-// depth.
+// Entry / section-spacing pass: the ENTRY flythrough (`pass-01a`) is the
+// long pure-wormhole stretch you fly through before arriving at the
+// first gate. It was grown to 23 (from 10) so you genuinely travel the
+// corridor before the Navigate gate + text appear. The Navigate copy is
+// ALSO gated out of `pass-01a` (see its `visibilityBeats` in sceneGeom)
+// so the flythrough stays text-free.
 //
-// NOTE: this DOES shift the `diagnostic`-onward windows later (≈+0.07),
-// which previously had to stay byte-identical to preserve
-// CORRIDOR_TIMELINE. That invariant was deliberately broken here — the
-// coupled choreography breakpoints in `sceneGeom.CORRIDOR_TIMELINE` (and
-// the wormhole/contour leg-reveal windows + ThoughtformAtmosphere boot
-// fade) were re-tuned in lockstep to the new windows. If you re-weight
-// again, re-tune those together.
+// IMPORTANT: pass-01a is funded ENTIRELY from the other FRONT legs
+// (thoughtform/navigate/pass-01b), keeping the front total at 53 so the
+// `diagnostic`-onward windows stay byte-identical — the back-half
+// CORRIDOR_TIMELINE choreography is therefore untouched. Only the FRONT
+// timeline values (pan, boot, ring flythrough, brandmark thoughtformHold)
+// + the front leg-reveal windows were re-tuned. Combined with the deeper
+// CAMERA_END (-14) every section also sits further apart in depth.
 //
-// Current windows: thoughtform [0,.13] · pass-01a [.13,.30] · navigate
-// [.30,.41] (park .355) · pass-01b [.41,.53] · diagnostic [.53,.67]
-// (park .60) · passthrough-02 [.67,.83] (interstitial waypoint .67+
-// .1875·.16 = .70) · intelligence [.83,1] (park .915).
+// Current windows: thoughtform [0,.12] · pass-01a [.12,.35] · navigate
+// [.35,.45] (park .40) · pass-01b [.45,.53] · diagnostic [.53,.67]
+// (park .60) · passthrough-02 [.67,.83] (interstitial waypoint ≈.70) ·
+// intelligence [.83,1] (park .915).
 
 export const CORRIDOR_MAP = [
   {
     kind: "station",
     id: "thoughtform",
     label: "Navigate",
-    dwell: 13,
+    dwell: 12,
     parkBias: 0.5,
     lateralX: 1.1,
     halfExtent: 1.6,
@@ -189,12 +187,12 @@ export const CORRIDOR_MAP = [
   // are labelled "Navigate" so the HUD sector readout reads "Navigate"
   // continuously across the leg. Primary preview knob: the 12/12/8
   // split (keep the sum at 32) and the navigate `parkBias`.
-  { kind: "transition", id: "pass-01a", label: "Navigate", travel: 17 },
+  { kind: "transition", id: "pass-01a", label: "Navigate", travel: 23 },
   {
     kind: "station",
     id: "navigate",
     label: "Navigate",
-    dwell: 11,
+    dwell: 10,
     parkBias: 0.5,
     lateralX: 0,
     halfExtent: 1.5,
@@ -206,7 +204,7 @@ export const CORRIDOR_MAP = [
         "AI isn't software. It's intelligence that sits between <em>tool</em> and <em>collaborator</em>.",
     },
   },
-  { kind: "transition", id: "pass-01b", label: "Navigate", travel: 12 },
+  { kind: "transition", id: "pass-01b", label: "Navigate", travel: 8 },
   {
     kind: "station",
     id: "diagnostic",
