@@ -167,28 +167,305 @@
 }
 
 /* ── Corridor section titles (Navigate / Encode / Build) ────────────
-   Frameless straddle: the TITLE sits just above the gate's central
-   reticle and the SUPPORT line just below it (positioned + faded per
-   frame by useWorldDomTracker against `{base}.title` / `{base}.support`).
-   No card/scrim/tether — a soft gold text-shadow reads the copy as "lit
-   by the gate" against the starfield. See StationTitle.tsx. */
-.home-v2-station-title {
-  width: clamp(280px, 32vw, 460px);
+   Bracketed celestial-navigation readouts that STRADDLE the gate
+   reticle. The TITLE cluster sits just above the reticle, the SUPPORT
+   cluster just below — positioned + faded per frame by
+   useWorldDomTracker against `{base}.title` / `{base}.support`. See
+   StationTitle.tsx for markup; the v7 instrument grammar is mirrored
+   from the `.panel` corner brackets + `.panel__label` mono header
+   chips in components/landing/v7/landing.css. */
+
+/* ── Cluster container ───────────────────────────────────────────────
+   Both title + support clusters share the same outer width, mono type
+   foundation, and origin grammar so the tracker's transform writes
+   land identically on top-center / bottom-center anchor origins. The
+   header chips, frame, and leader pseudo-elements live INSIDE this
+   box and inherit its scale transform (the tracker writes
+   `translate3d(...) translate(...) scale(...)` on the element). */
+.home-v2-readout {
+  width: clamp(300px, 34vw, 520px);
   margin: 0 auto;
-  max-width: 24ch;
+  font-family: var(--font-pt-mono, ui-monospace, monospace);
+  color: var(--dawn, #ebe3d6);
   text-align: center;
-  text-shadow: 0 0 22px rgba(202, 165, 84, 0.18);
+  /* Soft gold ambient glow on the whole cluster — reads as "lit by
+     the gate" without painting any tinted background plate. */
+  filter: drop-shadow(0 0 18px rgba(202, 165, 84, 0.12));
 }
 
-.home-v2-station-support {
-  width: clamp(260px, 30vw, 420px);
+/* ── Title readout (above the reticle) ──────────────────────────────
+   `bottom-center` anchor origin: the cluster's bottom edge sits at
+   the projected world point, so the title + frame stack UPWARD and
+   the leader drops from the bottom toward the reticle. Padding
+   reserves the leader span height so the inner frame doesn't crowd
+   the reticle. Position is `absolute` from `.home-v2-copy-layer
+   [data-world-anchor]`, so the cluster is already a positioning
+   context for its leader / corner pseudos. */
+.home-v2-readout--title {
+  padding-bottom: 24px;
+}
+
+/* ── Support readout (below the reticle) ────────────────────────────
+   `top-center` anchor origin: the cluster's top edge sits at the
+   projected world point, so the cluster stacks DOWNWARD and the
+   leader rises from the top toward the reticle. */
+.home-v2-readout--support {
+  padding-top: 24px;
+}
+
+/* ── Header chip row ────────────────────────────────────────────────
+   `STATION 02 // ENC-02   ID EN-02 · DPT 0.53   [ENCODING]` — pure
+   mono, gold separators, dawn-30 muted callsigns. White-space wrap
+   off so the row reads as a single instrument string. The
+   `chip-spacer` flex-gaps the left cluster (sector//callsign) from
+   the right cluster (code/metric/badge) without resorting to
+   space-between, which would push the badge to the far edge when
+   the row breaks at narrow widths. */
+.home-v2-readout__header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 0 8px;
+  margin: 0 0 8px;
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.home-v2-readout__chip {
+  color: rgba(235, 227, 214, 0.78);
+}
+.home-v2-readout__chip--sector {
+  color: var(--gold, #caa554);
+  font-weight: 700;
+}
+.home-v2-readout__chip--callsign {
+  color: var(--dawn, #ebe3d6);
+  font-weight: 700;
+}
+.home-v2-readout__chip--code {
+  color: rgba(235, 227, 214, 0.55);
+}
+.home-v2-readout__chip--metric {
+  color: rgba(235, 227, 214, 0.78);
+}
+.home-v2-readout__chip-sep,
+.home-v2-readout__chip-dot {
+  color: rgba(202, 165, 84, 0.6);
+}
+.home-v2-readout__chip-spacer {
+  /* Inline flex gap between the sector/callsign and the code/metric
+     groups. 16px reads as a deliberate caesura without breaking the
+     row. */
+  width: 14px;
+}
+
+/* Status badge — bracketed pseudo-button at the row's tail, with a
+   diamond pip prefixed to match the v7 `.panel__label::before`
+   pattern. Bracket the badge with square pseudo-frames so it reads
+   as a separate "validated" stamp from the chip stream. */
+.home-v2-readout__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px 3px 7px;
+  margin-left: 4px;
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  color: var(--gold, #caa554);
+  border: 1px solid rgba(202, 165, 84, 0.42);
+  background: rgba(202, 165, 84, 0.06);
+}
+.home-v2-readout__badge-tick {
+  width: 5px;
+  height: 5px;
+  background: var(--gold, #caa554);
+  transform: rotate(45deg);
+  display: inline-block;
+}
+
+/* ── Corner-bracket frame ───────────────────────────────────────────
+   Gold L-corners mirroring the v7 `.panel::before / ::after / .bl /
+   .br` grammar. The frame WRAPS the title element and is sized to
+   `width: max-content` (centred via `margin: 0 auto`) so the
+   brackets hug the title's actual rendered width regardless of word
+   length. The four `.home-v2-readout__corner` spans are absolutely
+   positioned at the frame's corners; 14x14, 1.5px gold strokes. */
+.home-v2-readout__frame {
+  position: relative;
+  display: block;
+  width: max-content;
+  max-width: 100%;
   margin: 0 auto;
-  max-width: 32ch;
+  padding: 0;
+  pointer-events: none;
+}
+
+.home-v2-readout__corner {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  pointer-events: none;
+  border: 0 solid var(--gold, #caa554);
+}
+.home-v2-readout__corner--tl {
+  top: -1px;
+  left: -1px;
+  border-top-width: 1.5px;
+  border-left-width: 1.5px;
+}
+.home-v2-readout__corner--tr {
+  top: -1px;
+  right: -1px;
+  border-top-width: 1.5px;
+  border-right-width: 1.5px;
+}
+.home-v2-readout__corner--bl {
+  bottom: -1px;
+  left: -1px;
+  border-bottom-width: 1.5px;
+  border-left-width: 1.5px;
+}
+.home-v2-readout__corner--br {
+  bottom: -1px;
+  right: -1px;
+  border-bottom-width: 1.5px;
+  border-right-width: 1.5px;
+}
+
+/* Title itself — full-mono uppercase tracked, sitting INSIDE the
+   bracket frame. The title is the frame's only flow child, so its
+   padded box is what the frame sizes to and the corners hug. */
+.home-v2-readout__title {
+  display: block;
+  margin: 0;
+  padding: 14px 24px 16px;
+  max-width: 36ch;
+  font-family: var(--font-pt-mono, ui-monospace, monospace);
+  font-size: clamp(15px, 1.55vw, 22px);
+  font-weight: 700;
+  line-height: 1.18;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
   text-align: center;
-  font-size: clamp(15px, 1.15vw, 18px);
-  line-height: 1.4;
+  color: var(--dawn, #ebe3d6);
+  text-wrap: pretty;
+  /* The soft gold halo on the title itself — keeps the "lit by the
+     gate" read intact while the corners give the cluster body. */
+  text-shadow: 0 0 22px rgba(202, 165, 84, 0.22);
+}
+
+.home-v2-readout__title em {
+  font-style: normal;
+  color: var(--gold, #caa554);
+  font-weight: 700;
+}
+
+/* ── Leader line + node ─────────────────────────────────────────────
+   1px gold gradient line dropping from the title cluster's bottom
+   (or rising from the support cluster's top) toward the gate
+   reticle, ending in a small rotated-square gold node. Reads as the
+   readout being TETHERED to the centre instrument. Sized as a HINT
+   (W1, plan 03adb0dd): shorter span (~18px), lower alpha and a
+   smaller node so the tie to the reticle is felt without becoming
+   a gimmick — the title corner-brackets and the copy do the work,
+   the leader just confirms the binding. */
+.home-v2-readout__leader {
+  position: absolute;
+  left: 50%;
+  width: 1px;
+  height: 18px;
+  background: linear-gradient(
+    to bottom,
+    rgba(202, 165, 84, 0) 0%,
+    rgba(202, 165, 84, 0.45) 45%,
+    rgba(202, 165, 84, 0.7) 100%
+  );
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+.home-v2-readout__leader--down {
+  /* Drops from cluster bottom toward the reticle. */
+  bottom: 0;
+}
+.home-v2-readout__leader--up {
+  /* Rises from cluster top toward the reticle. Flip the gradient so
+     the dense end sits at the top (against the reticle). */
+  top: 0;
+  background: linear-gradient(
+    to top,
+    rgba(202, 165, 84, 0) 0%,
+    rgba(202, 165, 84, 0.45) 45%,
+    rgba(202, 165, 84, 0.7) 100%
+  );
+}
+.home-v2-readout__leader-node {
+  position: absolute;
+  left: 50%;
+  width: 4px;
+  height: 4px;
+  background: var(--gold, #caa554);
+  transform: translateX(-50%) rotate(45deg);
+  box-shadow: 0 0 6px rgba(202, 165, 84, 0.4);
+}
+/* Node sits at the reticle-facing END of each leader (bottom for
+   down-leaders, top for up-leaders). */
+.home-v2-readout__leader--down .home-v2-readout__leader-node {
+  bottom: -2px;
+}
+.home-v2-readout__leader--up .home-v2-readout__leader-node {
+  top: -2px;
+}
+
+/* ── Support sentence ───────────────────────────────────────────────
+   Quiet sentence-case mono caption below the reticle. After W1
+   (plan 03adb0dd) the SCAN :: <STATUS> prefix was removed — the
+   support sentence carries the meaning, the leader hints at the
+   binding to the reticle, and the title above does the instrument
+   framing. So this rule strips the telemetry voice (uppercase +
+   tracked) and lets the copy breathe. Italic `<em>` stays gold for
+   the accent words (judgment, substrate, etc.). */
+.home-v2-readout__support {
+  margin: 0 auto;
+  max-width: 44ch;
+  font-family: var(--font-pt-mono, ui-monospace, monospace);
+  font-size: clamp(11px, 0.9vw, 13px);
+  line-height: 1.55;
+  letter-spacing: 0.01em;
   color: rgba(235, 227, 214, 0.72);
-  text-shadow: 0 0 18px rgba(202, 165, 84, 0.14);
+  text-shadow: 0 0 18px rgba(202, 165, 84, 0.1);
+  text-align: center;
+}
+
+.home-v2-readout__support em {
+  font-style: normal;
+  color: var(--gold, #caa554);
+}
+
+/* Legacy class hooks (kept so any external selector / test still
+   resolves). The old `.home-v2-station-title` and
+   `.home-v2-station-support` are now composed onto the readout
+   inner title / support elements above; their typography is fully
+   overridden by `.home-v2-readout__title` / `.home-v2-readout__support`.
+   We KEEP the class names on the elements but clear the old
+   margin/max-width so they don't fight the readout container. */
+.home-v2-station-title {
+  width: auto;
+  max-width: none;
+  margin: 0 auto;
+  text-shadow: none;
+}
+.home-v2-station-support {
+  width: auto;
+  max-width: none;
+  margin: 0 auto;
+  font-size: inherit;
+  line-height: inherit;
+  color: inherit;
+  text-shadow: none;
 }
 
 /* Thoughtform-left typography mirrors the production homepage's
@@ -448,6 +725,47 @@
   .home-v2-copy-phase__sub {
     font-size: 9px;
   }
+
+  /* Station readout — scale the cluster down for portrait so the
+     header chips, brackets, and leader still fit comfortably under
+     each gate without crowding the reticle. Header chips drop a
+     point, the title tightens, the leader span shortens, and the
+     cluster width narrows to the mobile copy-block budget. */
+  .home-v2-readout {
+    width: min(88vw, 380px);
+  }
+  .home-v2-readout--title {
+    padding-bottom: 18px;
+  }
+  .home-v2-readout--support {
+    padding-top: 18px;
+  }
+  .home-v2-readout__header {
+    font-size: 9px;
+    letter-spacing: 0.14em;
+    gap: 0 6px;
+  }
+  .home-v2-readout__chip-spacer {
+    width: 8px;
+  }
+  .home-v2-readout__badge {
+    font-size: 8px;
+    padding: 2px 6px;
+    letter-spacing: 0.16em;
+  }
+  .home-v2-readout__title {
+    padding: 11px 16px 12px;
+    font-size: clamp(14px, 4.2vw, 17px);
+    letter-spacing: 0.1em;
+  }
+  .home-v2-readout__leader {
+    height: 14px;
+  }
+  .home-v2-readout__support {
+    font-size: clamp(10px, 2.9vw, 12px);
+    letter-spacing: 0.01em;
+    max-width: 36ch;
+  }
 }
 
 /* ── Mobile scroll-cue chevrons (Thoughtform Moment 1 → Moment 2) ──
@@ -620,13 +938,22 @@
   gap: 14px;
 }
 
+/* Static fallback typography — lighter version of the corridor's
+   instrument grammar. Headings adopt the mono uppercase tracked
+   voice (matching the live readouts) but skip the bracket / leader
+   chrome, since there's no reticle to bind to. Reads as the same
+   navigation system at a lower fidelity tier (no-WebGL / reduced-
+   motion). */
 .home-v2-fallback-text h2 {
-  font-size: clamp(28px, 3vw, 42px);
-  font-weight: 400;
-  line-height: 1.12;
-  letter-spacing: -0.012em;
+  font-family: var(--font-pt-mono, ui-monospace, monospace);
+  font-size: clamp(20px, 2.2vw, 30px);
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
   margin: 0;
   text-wrap: balance;
+  text-shadow: 0 0 18px rgba(202, 165, 84, 0.16);
 }
 
 .home-v2-fallback-text h2 em {
@@ -635,10 +962,18 @@
 }
 
 .home-v2-fallback-text p {
-  font-size: 16px;
-  line-height: 1.5;
-  color: rgba(235, 227, 214, 0.78);
+  font-family: var(--font-pt-mono, ui-monospace, monospace);
+  font-size: 13px;
+  line-height: 1.55;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: rgba(235, 227, 214, 0.72);
   margin: 0;
+}
+
+.home-v2-fallback-text p em {
+  font-style: normal;
+  color: var(--gold, #caa554);
 }
 
 .home-v2-fallback-text__bridge {

@@ -174,6 +174,28 @@ const TOKEN_PEAK = 1.0;
 const TOKEN_BOOT_LIFT = 0.05;
 const TOKEN_VELOCITY_DAMP = 0.55;
 
+/** Parked Thoughtform gate window. The latent field is GATED OFF
+ *  across the parked Thoughtform beat (progress < 0.12) and ramps
+ *  in across the early pass-01a flythrough so the opening view of
+ *  the corridor is just the brandmark + compass + warm atmosphere —
+ *  no dense camera-axis particle cloud floating over the off-axis
+ *  brandmark (the W4 floating-particle bug, plan 03adb0dd). The
+ *  field reaches full ambient strength by progress 0.20, well
+ *  before the visitor reaches the Navigate gate.
+ *
+ *  Multiplied into the alpha targets for ALL THREE sub-meshes
+ *  (points, vectors, tokens) so the gating is uniform — gating the
+ *  point opacity alone would still leave faint embedding lines
+ *  visible at rest. */
+const THOUGHTFORM_GATE_END = 0.12;
+const LATENT_REVEAL_END = 0.2;
+function latentParkedReveal(paintProgress: number): number {
+  if (paintProgress <= THOUGHTFORM_GATE_END) return 0;
+  if (paintProgress >= LATENT_REVEAL_END) return 1;
+  const t = (paintProgress - THOUGHTFORM_GATE_END) / (LATENT_REVEAL_END - THOUGHTFORM_GATE_END);
+  return t * t * (3 - 2 * t);
+}
+
 // ─── Token atlas ────────────────────────────────────────────────
 
 /** Token strings. Mix of latent-ish notation: dimensions, ops,
@@ -753,21 +775,27 @@ export function LatentFieldTunnel() {
 
     // Per-sub-mesh alpha targets share the same envelope structure
     // (ambient floor + velocity lift + boot lift) so the three
-    // layers always agree on intensity.
+    // layers always agree on intensity. The parked-Thoughtform gate
+    // multiplies the WHOLE envelope so the opening beat reads clean
+    // (W4, plan 03adb0dd).
     const boot = getThoughtformBootEnvelope(paintProgress);
     const absV = Math.abs(velocity);
     const velocityT = Math.min(1, absV * 2.0);
+    const parkedReveal = latentParkedReveal(paintProgress);
 
     const pointsTarget =
-      POINT_AMBIENT + velocityT * (POINT_PEAK - POINT_AMBIENT) + boot * POINT_BOOT_LIFT;
+      (POINT_AMBIENT + velocityT * (POINT_PEAK - POINT_AMBIENT) + boot * POINT_BOOT_LIFT) *
+      parkedReveal;
     const vectorsTarget =
-      VECTOR_AMBIENT + velocityT * (VECTOR_PEAK - VECTOR_AMBIENT) + boot * VECTOR_BOOT_LIFT;
+      (VECTOR_AMBIENT + velocityT * (VECTOR_PEAK - VECTOR_AMBIENT) + boot * VECTOR_BOOT_LIFT) *
+      parkedReveal;
     // Tokens damp at high velocity so they don't smear into illegible
     // streaks during a fast scroll. The damping multiplier scales
     // down the velocity lift but leaves ambient + boot intact.
     const tokensVelocityLift =
       velocityT * (TOKEN_PEAK - TOKEN_AMBIENT) * (1 - velocityT * TOKEN_VELOCITY_DAMP);
-    const tokensTarget = TOKEN_AMBIENT + tokensVelocityLift + boot * TOKEN_BOOT_LIFT;
+    const tokensTarget =
+      (TOKEN_AMBIENT + tokensVelocityLift + boot * TOKEN_BOOT_LIFT) * parkedReveal;
 
     const k = 1 - Math.exp(-ALPHA_RESPONSE * dt);
     pointsAlpha.current += (pointsTarget - pointsAlpha.current) * k;

@@ -5,6 +5,7 @@ import { Canvas } from "@react-three/fiber";
 import { useDeviceTier } from "@/lib/hooks/useDeviceTier";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import { AstrogationField } from "./AstrogationField";
+import { BrandmarkAccretionShell } from "./BrandmarkAccretionShell";
 import { CelestialMotes } from "./CelestialMotes";
 import { FlyingCameraRig } from "./FlyingCameraRig";
 import { GatewayWorld } from "./gates/GatewayWorld";
@@ -104,6 +105,18 @@ function viewportAspect(): number {
  *                             Interstitial, Intelligence). Each
  *                             gate paints at its station Z and
  *                             self-manages its visibility envelope.
+ *   - BrandmarkAccretionShell : progressive layers around the
+ *                             brandmark that accumulate as it
+ *                             travels (Navigate halo, Encode rack
+ *                             frames + data nodes, Build surface
+ *                             planes). Tracks
+ *                             `getBrandmarkWorldPosition` per frame
+ *                             so the shell follows the mark through
+ *                             lead mode. Reveals owned by
+ *                             `CORRIDOR_TIMELINE.accretion`. The
+ *                             mark itself never changes — what
+ *                             surrounds it does. See ADR-013 +
+ *                             plan 03adb0dd · W3.
  *
  * The PRIMARY brandmark painter is the DOM-side
  * `ProjectedBrandmarkActor` — its world position is interpolated
@@ -146,7 +159,7 @@ export function DepthGatewayScene() {
   });
   useEffect(() => {
     const unsubscribe = useDepthGatewayStore.subscribe((state) =>
-      setEngaged(state.transform.active || state.transform.armed),
+      setEngaged(state.transform.active || state.transform.armed)
     );
     return unsubscribe;
   }, []);
@@ -207,6 +220,14 @@ export function DepthGatewayScene() {
       <AstrogationField isMobile={isMobile} />
       <GatewayWorld />
       <EncodeToBuildStreams />
+      {/* BrandmarkAccretionShell — progressive layers around the
+          brandmark (Navigate halo, Encode rack/nodes, Build surface
+          planes). Mounted AFTER the gate world so its additive
+          line/point geometry overlays gate geometry rather than
+          being occluded by it. Tracks `getBrandmarkWorldPosition`
+          per frame so the shell follows the mark through lead mode.
+          See ADR-013 + plan 03adb0dd · W3. */}
+      <BrandmarkAccretionShell />
     </Canvas>
   );
 }

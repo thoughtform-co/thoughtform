@@ -88,7 +88,6 @@ export function getCameraFov(aspect: number): number {
   return Math.min(MAX_FOV_DEG, Math.max(CAMERA_FOV, vfovDeg));
 }
 
-
 /** How far ahead of the camera the lookAt point sits. The lookAt
  *  travels with the camera so each frame the gaze is into the next
  *  gate (perspective signal: we are FLYING forward). */
@@ -204,6 +203,38 @@ export const CORRIDOR_TIMELINE = {
     peakAt: 0.835,
     fadeOut: 0.08,
     peak: 0.38,
+  },
+
+  /** Brandmark accretion shell reveal windows (ADR-013 brandmark
+   *  travels accretively through the corridor; the mark itself does
+   *  not change, but what surrounds it accumulates). Three layers,
+   *  each owned by its own reveal envelope so designers can tune
+   *  one without disturbing the others:
+   *
+   *  - `navigateHalo`: thin bearing-tick ring that establishes the
+   *    mark as an instrument in flight. Starts to register late in
+   *    pass-01a (just before the Navigate park) and lingers until
+   *    the camera leaves Navigate.
+   *  - `encodeNodes`: wireframe rack/card frames + additive data-node
+   *    points accreting in an annulus around the mark — reads as
+   *    judgment being encoded into nodes around the north star. Hits
+   *    full strength at the Diagnostic park, then persists into
+   *    passthrough-02 (additive — the field accumulates as the mark
+   *    travels). The annulus mirrors the diagnostic mote band
+   *    (r ∈ [0.55, 1.95]) so the centre stays clear of the brandmark.
+   *  - `buildSurfaces`: stacked translucent wireframe interface
+   *    planes fanning around the mark. Reveals across passthrough-02
+   *    → intelligence; coordinates with `getIntelligenceSubstratePresence`
+   *    via `buildSubstrateBlend` so the planes RECEDE into the
+   *    substrate cloud rather than fighting it. */
+  accretion: {
+    navigateHalo: { start: 0.3, peakAt: 0.4, fadeOutStart: 0.5, fadeOutEnd: 0.6 },
+    encodeNodes: { start: 0.42, peakAt: 0.6 },
+    buildSurfaces: { start: 0.72, peakAt: 0.9 },
+    /** Once the substrate cloud takes over the mark, the Build
+     *  accretion planes fade so the morph silhouette can read.
+     *  Multiplied with the Build reveal envelope. */
+    buildSubstrateBlend: { start: 0.91, end: 0.95 },
   },
 } as const;
 
@@ -769,6 +800,50 @@ function intelligenceApproachDepthOffset(progress: number): number {
   return lerp(offset, 0, smoothstep(start, end, progress));
 }
 
+/** Brandmark accretion reveal envelopes — one per layer. Each
+ *  returns [0..1] for the current paint progress, ramping up across
+ *  its reveal window. The `navigate` halo also fades back OUT after
+ *  the Navigate beat (transient cue); `encode` and `build` are
+ *  PERSISTENT — once they reveal, they hold so the field around the
+ *  mark visibly accumulates as the camera travels (the W3 "more
+ *  layered the further it travels" intent, plan 03adb0dd).
+ *
+ *  Build's envelope is multiplied by `buildSubstrateBlend` so the
+ *  interface planes recede AS the substrate morph takes over the
+ *  mark at Intelligence landing — they don't compete with the
+ *  silhouette cloud once the brandmark hands off. */
+export function getBrandmarkAccretionLayers(progress: number): {
+  navigate: number;
+  encode: number;
+  build: number;
+} {
+  const { navigateHalo, encodeNodes, buildSurfaces, buildSubstrateBlend } =
+    CORRIDOR_TIMELINE.accretion;
+
+  // Navigate halo: bell envelope (ramp in, hold past park, ramp out
+  // as the camera leaves Navigate).
+  let navigate = 0;
+  if (progress > navigateHalo.start) {
+    const inT = smoothstep(navigateHalo.start, navigateHalo.peakAt, progress);
+    const outT = 1 - smoothstep(navigateHalo.fadeOutStart, navigateHalo.fadeOutEnd, progress);
+    navigate = clamp01(Math.min(inT, outT));
+  }
+
+  // Encode nodes: ramp in, persist forever (the field genuinely
+  // accumulates as the mark travels).
+  const encode = smoothstep(encodeNodes.start, encodeNodes.peakAt, progress);
+
+  // Build surfaces: ramp in across passthrough-02 → intelligence,
+  // multiplied by a fade-OUT that respects the substrate handoff so
+  // the planes recede when the morph takes over.
+  const buildIn = smoothstep(buildSurfaces.start, buildSurfaces.peakAt, progress);
+  const substrateBlend =
+    1 - smoothstep(buildSubstrateBlend.start, buildSubstrateBlend.end, progress);
+  const build = clamp01(buildIn * substrateBlend);
+
+  return { navigate, encode, build };
+}
+
 /** Mobile inward-pull for the Thoughtform phase labels. Portrait FOV
  *  (widened by `getCameraFov`) spreads the gate-relative label offsets
  *  toward the frame edges, so on mobile they're scaled toward the gate
@@ -934,7 +1009,15 @@ export const COPY_ANCHORS: readonly WorldAnchor[] = [
     id: "navigate.title",
     position: [
       STATION_NAVIGATE.position[0],
-      STATION_NAVIGATE.position[1] + 0.55,
+      // Straddle journey: 0.55 (frameless) -> 0.72 (instrument readout
+      // restyle) -> 0.60 (W1 de-gimmick, plan 03adb0dd). With the
+      // shorter leader (~18px) and tighter cluster padding (24px),
+      // the title can sit visibly closer to the brandmark again
+      // without the corner frame crowding the reticle. Straddle Y
+      // is the only knob we touch — perspectiveScale, depthFade,
+      // visibilityBeats own the approach/recede choreography
+      // (ADR-018).
+      STATION_NAVIGATE.position[1] + 0.6,
       STATION_NAVIGATE.position[2] + 0.1,
     ],
     // NOT eligible during `pass-01a`: that long entry leg is the pure
@@ -951,7 +1034,11 @@ export const COPY_ANCHORS: readonly WorldAnchor[] = [
     id: "navigate.support",
     position: [
       STATION_NAVIGATE.position[0],
-      STATION_NAVIGATE.position[1] - 0.6,
+      // Straddle journey: -0.6 (frameless) -> -0.78 (instrument
+      // readout restyle) -> -0.65 (W1 de-gimmick, plan 03adb0dd).
+      // Mirrors the title nudge inward; the shorter up-leader keeps
+      // the support cluster reading as a caption close to the mark.
+      STATION_NAVIGATE.position[1] - 0.65,
       STATION_NAVIGATE.position[2] + 0.1,
     ],
     visibilityBeats: ["navigate", "pass-01b"],
@@ -980,7 +1067,12 @@ export const COPY_ANCHORS: readonly WorldAnchor[] = [
     id: "diagnostic.title",
     position: (transform) => [
       STATION_DIAGNOSTIC.position[0],
-      STATION_DIAGNOSTIC.position[1] + 0.7,
+      // Straddle: 0.7 -> 0.92 -> 0.78 (W1 de-gimmick). Encode's
+      // orbital field is still the tallest gate visual so the
+      // title sits slightly further out than Navigate, but the
+      // shorter cluster lets us reclaim some closeness to the
+      // mark.
+      STATION_DIAGNOSTIC.position[1] + 0.78,
       STATION_DIAGNOSTIC.position[2] + 0.1 + diagnosticApproachDepthOffset(transform.paintProgress),
     ],
     visibilityBeats: ["diagnostic"],
@@ -992,7 +1084,10 @@ export const COPY_ANCHORS: readonly WorldAnchor[] = [
     id: "diagnostic.support",
     position: (transform) => [
       STATION_DIAGNOSTIC.position[0],
-      STATION_DIAGNOSTIC.position[1] - 0.8,
+      // Straddle: -0.8 -> -1.02 -> -0.88 (W1 de-gimmick). Still
+      // clears the lower orbit ring; the shorter leader makes the
+      // caption sit visibly closer to the brandmark.
+      STATION_DIAGNOSTIC.position[1] - 0.88,
       STATION_DIAGNOSTIC.position[2] + 0.1 + diagnosticApproachDepthOffset(transform.paintProgress),
     ],
     visibilityBeats: ["diagnostic"],
@@ -1024,7 +1119,11 @@ export const COPY_ANCHORS: readonly WorldAnchor[] = [
     id: "intelligence.title",
     position: (transform) => [
       STATION_INTELLIGENCE.position[0],
-      STATION_INTELLIGENCE.position[1] + 0.7,
+      // Straddle: 0.7 -> 0.88 -> 0.74 (W1 de-gimmick). Build's
+      // substrate sphere is the centrepiece — the readout still
+      // needs to sit clear of the pole, but with the shorter
+      // cluster we can pull it closer.
+      STATION_INTELLIGENCE.position[1] + 0.74,
       STATION_INTELLIGENCE.position[2] +
         0.1 +
         intelligenceApproachDepthOffset(transform.paintProgress),
@@ -1038,7 +1137,10 @@ export const COPY_ANCHORS: readonly WorldAnchor[] = [
     id: "intelligence.support",
     position: (transform) => [
       STATION_INTELLIGENCE.position[0],
-      STATION_INTELLIGENCE.position[1] - 0.85,
+      // Straddle: -0.85 -> -1.05 -> -0.9 (W1 de-gimmick). Still
+      // clears the sphere's south pole; reclaims proximity to the
+      // mark via the shorter cluster + leader.
+      STATION_INTELLIGENCE.position[1] - 0.9,
       STATION_INTELLIGENCE.position[2] +
         0.1 +
         intelligenceApproachDepthOffset(transform.paintProgress),

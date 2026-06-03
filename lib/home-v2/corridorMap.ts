@@ -95,6 +95,32 @@ export interface NodeContent {
   titleHtml: string;
   /** Optional one-line supporting clause (may contain `<em>`). */
   supportHtml?: string;
+  /** Optional pseudo-telemetry block rendered around the station's
+   *  HUD readout cluster (header row + status prefix). All fields
+   *  are short uppercase strings; the StationTitle component
+   *  composes them as `sector // callsign  ·  code  ·  metric  [status]`.
+   *  Invented but plausible — keeps the in-world instrument grammar
+   *  consistent while staying data-driven (no hardcoded copy in the
+   *  component / CSS). */
+  telemetry?: StationTelemetry;
+}
+
+/** Short, mono-uppercase readout fragments for the station HUD
+ *  cluster. Each field is intentionally compact (<= ~10 chars) so
+ *  the header row stays on a single line at every viewport.
+ *
+ *  - `sector`   : station ordinal, e.g. "STATION 01"
+ *  - `callsign` : verb/role glyph, e.g. "NAV-01" / "ENC-02" / "BLD-03"
+ *  - `code`     : ID code, e.g. "ID NX-01"
+ *  - `metric`   : a single live-looking metric, e.g. "BRG 312°" / "DPT 0.53" / "RUN 24/7"
+ *  - `status`   : terminal state badge, e.g. "LOCKED" / "ENCODING" / "LIVE"
+ */
+export interface StationTelemetry {
+  sector: string;
+  callsign: string;
+  code: string;
+  status: string;
+  metric: string;
 }
 
 export interface StationNode extends NodeBase {
@@ -200,8 +226,24 @@ export const CORRIDOR_MAP = [
     content: {
       kicker: "01 · Navigate",
       titleHtml: "Navigate the <em>intelligence</em>.",
+      // W2 (plan 03adb0dd) — replaces "AI isn't software. It's
+      // intelligence that sits between tool and collaborator." which
+      // violated the strategy skill's voice rule against the
+      // "X is not Y, it is Z" construction. New line is plain
+      // declarative agency first-person, matches the strategy spine
+      // ("learn to work with the intelligence inside real work")
+      // and the Aether flywheel's Navigate body ("Team works with
+      // Claude inside real, named workflows"). Gold em on
+      // "judgment" pairs with the Encode title's em.
       supportHtml:
-        "AI isn't software. It's intelligence that sits between <em>tool</em> and <em>collaborator</em>.",
+        "We work inside your real workflows, learning where the model helps and where your <em>judgment</em> still leads.",
+      telemetry: {
+        sector: "STATION 01",
+        callsign: "NAV-01",
+        code: "ID NX-01",
+        status: "LOCKED",
+        metric: "BRG 312°",
+      },
     },
   },
   { kind: "transition", id: "pass-01b", label: "Navigate", travel: 8 },
@@ -217,7 +259,20 @@ export const CORRIDOR_MAP = [
     content: {
       kicker: "02 · Encode",
       titleHtml: "Encode the <em>judgment</em>.",
-      supportHtml: "Turn what makes the work good into substrate the intelligence inherits.",
+      // W2 (plan 03adb0dd) — agency-voice rewrite of the Encode
+      // support line. Plain declarative; promotes "substrate" to a
+      // gold em accent so the noun reads through (matches the spine
+      // "substrate is the material, the intelligence layer is the
+      // product") and prepares Build's "Build on the substrate."
+      supportHtml:
+        "The judgment that makes your work good becomes <em>substrate</em> the intelligence can inherit.",
+      telemetry: {
+        sector: "STATION 02",
+        callsign: "ENC-02",
+        code: "ID EN-02",
+        status: "ENCODING",
+        metric: "DPT 0.53",
+      },
     },
   },
   {
@@ -240,7 +295,20 @@ export const CORRIDOR_MAP = [
     content: {
       kicker: "03 · Build",
       titleHtml: "Build on the <em>substrate</em>.",
-      supportHtml: "Tools and workflows that run on their own.",
+      // W2 (plan 03adb0dd) — Build support line names the durable
+      // outputs (tools + headless surfaces) and lands on ownership,
+      // mirroring the Thoughtform spine "...until they own it." Gold
+      // em on "headless surfaces" picks up the strategy skill's
+      // build-headless-by-default rule.
+      supportHtml:
+        "Encoded judgment turns into tools and <em>headless surfaces</em> your team owns.",
+      telemetry: {
+        sector: "STATION 03",
+        callsign: "BLD-03",
+        code: "ID SB-03",
+        status: "LIVE",
+        metric: "RUN 24/7",
+      },
     },
   },
 ] as const satisfies readonly CorridorNode[];

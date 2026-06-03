@@ -345,8 +345,23 @@ export function ThoughtformAtmosphere() {
     // the brandmark, so its visibility is governed by the camera's
     // depth relative to that slab. Outside the focus window it
     // gracefully fades.
+    //
+    // W4 (plan 03adb0dd): the cluster X now follows the same
+    // centering pan as the shockwave + boot glow + compass + copy
+    // (`getThoughtformCenterOffsetX(paintProgress)`), so the local
+    // stars stay anchored under the off-axis brandmark (lateralX
+    // ~1.1) instead of sitting on the camera axis. Without this,
+    // the 420-star slab drifted to the optical centre while every
+    // other Thoughtform element sat to its right — reading as a
+    // floating cluster beside the mark during the opening beat.
     const clusterCentreZ = (STAR_Z_MIN + STAR_Z_MAX) * 0.5;
-    const depth = cameraSpaceDepth(paintProgress, [0, 0, clusterCentreZ]);
+    const panX = getThoughtformCenterOffsetX(paintProgress);
+    stars.position.x = STATION_THOUGHTFORM.position[0] + panX;
+    const depth = cameraSpaceDepth(paintProgress, [
+      STATION_THOUGHTFORM.position[0] + panX,
+      0,
+      clusterCentreZ,
+    ]);
     const depthAlpha = depthFocusOpacity(depth, STAR_DEPTH_WINDOW);
     const ramp = thoughtformStarsProgressRamp(paintProgress);
     const starsOpacity = depthAlpha * ramp;

@@ -42,12 +42,34 @@ export function BrandmarkParticleCanvas({
 }: BrandmarkParticleCanvasProps = {}) {
   const mode = useBrandmarkJourneyStore((s) => s.mode);
   const [webglOK, setWebglOK] = useState<boolean | null>(null);
+  // W4 (plan 03adb0dd) — corridor handoff hardening. The home-v2
+  // depth corridor sets `data-brandmark-mode="off"` on `<html>`
+  // whenever its engagement is armed/active (see HomeCorridor.tsx),
+  // signalling that the corridor's `ProjectedBrandmarkActor` owns
+  // the brandmark and the global particle canvas must NOT paint.
+  // Previously this attribute only suppressed via the journey
+  // store's `visible:false` math — but that depended on the
+  // rail-fade-in window, leaving a small risk that the global
+  // station could double-paint over the corridor. Reading the
+  // attribute directly (subscribed via MutationObserver) is the
+  // explicit guard: when "off", the canvas unmounts entirely.
+  const [corridorOff, setCorridorOff] = useState<boolean>(false);
 
   // Probe WebGL capability once on mount. Three.js will throw on
   // canvas-context acquire if WebGL is unavailable; we'd rather know
   // upfront so we can keep the SVG fallback as the painter.
   useEffect(() => {
     setWebglOK(probeWebGL());
+  }, []);
+
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    const html = document.documentElement;
+    const read = () => setCorridorOff(html.getAttribute("data-brandmark-mode") === "off");
+    read();
+    const observer = new MutationObserver(read);
+    observer.observe(html, { attributes: true, attributeFilter: ["data-brandmark-mode"] });
+    return () => observer.disconnect();
   }, []);
 
   // Wait for the probe to land before mounting Three. Returning
@@ -57,6 +79,10 @@ export function BrandmarkParticleCanvas({
   if (webglOK === null) return null;
   if (!webglOK) return null;
   if (!forceMount && mode !== "particle") return null;
+  // Corridor owns the mark; do not double-paint. `forceMount` (used
+  // on the dev preview page) intentionally bypasses this so previews
+  // still render regardless of whichever route mounted the corridor.
+  if (!forceMount && corridorOff) return null;
 
   // Inline positioning so the wrapper renders correctly even on
   // routes that don't import `landing.css`. In particle mode the
