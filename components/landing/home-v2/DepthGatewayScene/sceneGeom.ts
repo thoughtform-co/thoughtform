@@ -126,14 +126,14 @@ export const CORRIDOR_TIMELINE = {
   /** Thoughtform composition lateral centering pan window. PAN_END
    *  must stay locked to `dollyHoldEnd` so the camera dolly + ring
    *  flythrough release the moment the pan completes. */
-  thoughtformPan: { start: 0.09, end: 0.14 },
+  thoughtformPan: { start: 0.085, end: 0.13 },
 
   /** Gateway "boot-up" envelope phases. Ramp runs alongside the
    *  Thoughtform pan; hold spans the early ring flythrough; relax
    *  fades through the start of passthrough-01. Shared by
    *  `StaticStarfield`, `ThoughtformAtmosphere`, `CelestialMotes`,
    *  and `ThoughtformCompassGate`. */
-  thoughtformBoot: { preBoot: 0.03, rampEnd: 0.14, holdEnd: 0.22, relaxEnd: 0.42 },
+  thoughtformBoot: { preBoot: 0.03, rampEnd: 0.13, holdEnd: 0.22, relaxEnd: 0.5 },
 
   /** Compass ring forward translation at the end of each flythrough
    *  window. Parked compass sits at world Z≈5.6; +10 brings the
@@ -146,10 +146,10 @@ export const CORRIDOR_TIMELINE = {
    *  ends exactly at the passthrough-01 boundary so the supporting
    *  linework finishes sweeping just as Diagnostic takes focus. */
   flythrough: [
-    { start: 0.2, end: 0.46 }, // ring 0 (outer) — flies LAST
-    { start: 0.18, end: 0.44 }, // ring 1
-    { start: 0.16, end: 0.42 }, // ring 2
-    { start: 0.14, end: 0.4 }, // ring 3 (inner) — flies FIRST
+    { start: 0.2, end: 0.53 }, // ring 0 (outer) — flies LAST
+    { start: 0.18, end: 0.51 }, // ring 1
+    { start: 0.155, end: 0.48 }, // ring 2
+    { start: 0.13, end: 0.455 }, // ring 3 (inner) — flies FIRST
   ],
 
   /** Interstitial waypoint park progress. Sits inside passthrough-02
@@ -170,27 +170,27 @@ export const CORRIDOR_TIMELINE = {
    *  - `intelligenceLanding`: brandmark FREEZES at the Intelligence
    *    anchor and the substrate cloud takes over the silhouette. */
   brandmark: {
-    thoughtformHold: 0.16,
-    diagnosticArrival: 0.5,
-    diagnosticHold: 0.58,
-    intelligenceArrival: 0.78,
-    intelligenceLanding: 0.88,
+    thoughtformHold: 0.15,
+    diagnosticArrival: 0.57,
+    diagnosticHold: 0.65,
+    intelligenceArrival: 0.85,
+    intelligenceLanding: 0.915,
   },
 
   /** Brandmark lead-distance transit pull. Starts just after the
    *  Diagnostic park, reaches FULL_LEAD by the end of passthrough-02
    *  + a touch into intelligence (0.80). */
-  brandmarkLeadPull: { start: 0.58, end: 0.8 },
+  brandmarkLeadPull: { start: 0.65, end: 0.85 },
 
   /** Diagnostic head-copy + label depth-approach offset. The labels
    *  start `offset` world units behind their parked Z at `start` and
    *  converge to the parked plane by `end`. */
-  diagnosticApproach: { offset: -9, start: 0.16, end: 0.56 },
+  diagnosticApproach: { offset: -9, start: 0.18, end: 0.63 },
 
   /** Intelligence head-copy + side-body label depth-approach offset.
    *  Mirrors the Diagnostic pattern around the passthrough-02 →
    *  intelligence handoff. */
-  intelligenceApproach: { offset: -6, start: 0.6, end: 0.85 },
+  intelligenceApproach: { offset: -6, start: 0.67, end: 0.9 },
 
   /** Camera chase toward the brandmark lead — peaks across the
    *  passthrough-02 → intelligence transit, then releases as the
@@ -198,10 +198,10 @@ export const CORRIDOR_TIMELINE = {
    *  `start → start + fadeIn` ramps in; `peakAt → peakAt + fadeOut`
    *  ramps out; peak strength is `peak`. */
   cameraChase: {
-    start: 0.6,
-    end: 0.88,
+    start: 0.67,
+    end: 0.915,
     fadeIn: 0.11,
-    peakAt: 0.8,
+    peakAt: 0.835,
     fadeOut: 0.08,
     peak: 0.38,
   },

@@ -123,19 +123,18 @@ const SHELF_X_SAMPLES = 8;
 const VISIBLE_NEAR = 0.6;
 const VISIBLE_FAR = 22;
 
-/** Reveal envelopes per leg, in global progress units.
+/** Reveal envelopes per leg, in global progress units. Re-tuned for the
+ *  entry/section-spacing pass (see corridorMap weight note).
  *
- *  Leg 1 lifts AFTER the trimmed Thoughtform park (centre 0.07),
- *  resolving by progress 0.30 — well inside the long passthrough-01
- *  window (0.14 → 0.46).
+ *  Leg 1 lifts AFTER the Thoughtform park (centre ~0.065), resolving by
+ *  progress 0.31 — inside the long entry leg (pass-01a [0.13,0.30]).
  *
- *  Leg 2 lifts AFTER the Diagnostic park (centre 0.53), resolving
- *  by progress 0.66 — comfortably inside passthrough-02
- *  (0.60 → 0.76). */
-const LEG_1_REVEAL_START = 0.18;
-const LEG_1_REVEAL_END = 0.3;
-const LEG_2_REVEAL_START = 0.56;
-const LEG_2_REVEAL_END = 0.66;
+ *  Leg 2 lifts AFTER the Diagnostic park (centre 0.60), resolving by
+ *  progress 0.77 — comfortably inside passthrough-02 (0.67 → 0.83). */
+const LEG_1_REVEAL_START = 0.17;
+const LEG_1_REVEAL_END = 0.31;
+const LEG_2_REVEAL_START = 0.63;
+const LEG_2_REVEAL_END = 0.77;
 
 /** Leg span fractions: rails START slightly past the source gate and
  *  END slightly before the destination gate so they don't intersect

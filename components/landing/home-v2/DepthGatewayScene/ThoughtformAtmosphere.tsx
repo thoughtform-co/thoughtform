@@ -125,8 +125,8 @@ void main() {
  *  camera passes the gate. */
 function thoughtformStarsProgressRamp(progress: number): number {
   if (progress <= 0.04) return 0;
-  if (progress >= 0.16) return 1;
-  return smoothstep(0.04, 0.16, progress);
+  if (progress >= 0.15) return 1;
+  return smoothstep(0.04, 0.15, progress);
 }
 
 // ── Stargate-lock shockwave ─────────────────────────────────────
