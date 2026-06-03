@@ -88,16 +88,21 @@ export function StaticStarfield({ count }: StaticStarfieldProps = {}) {
   const geometry = useMemo(() => {
     const positions = new Float32Array(starCount * 3);
     const seeds = new Float32Array(starCount);
-    // Distribute across a wide volume: x/y in [-25, +25], z in
-    // [-30, -10] so all stars sit behind the deepest gate but in
-    // front of the camera's far plane. This volume is big enough
-    // that camera dolly doesn't visibly translate them (parallax
-    // shows the depth, but no star runs off the edge of the
-    // viewport at the corridor's end).
+    // Distribute across a wide volume: x/y in [-25, +25]/[-15,+15],
+    // z in [-42, -22] so all stars sit BEHIND the deepest gate
+    // (intelligence ≈ z -16) AND behind the camera's deepest dolly
+    // point (CAMERA_END z -14). Keeping the whole volume behind the
+    // camera is load-bearing: if the camera dollies INTO the star
+    // volume, near stars sweep past / float beside the camera (worst
+    // on reverse scroll). This range was pushed deeper when CAMERA_END
+    // went -8 → -14 (entry/section-spacing pass) — the original
+    // [-30,-10] range left the deep half of the corridor inside the
+    // starfield. The volume is still big enough that the dolly shows
+    // parallax without any star running off the viewport edge.
     for (let i = 0; i < starCount; i++) {
       positions[i * 3] = (Math.random() - 0.5) * 50;
       positions[i * 3 + 1] = (Math.random() - 0.5) * 30;
-      positions[i * 3 + 2] = -10 - Math.random() * 20;
+      positions[i * 3 + 2] = -22 - Math.random() * 20;
       seeds[i] = Math.random();
     }
     const geom = new THREE.BufferGeometry();

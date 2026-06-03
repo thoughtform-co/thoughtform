@@ -5,6 +5,7 @@ import type { V7CorridorText } from "@/lib/v7-parse";
 import { probeWebGL } from "@/lib/webgl/probe";
 import { corridorCapable } from "@/lib/hooks/useDeviceTier";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
+import { stationById } from "@/lib/home-v2/corridorMap";
 import { CopyAnchors } from "./CopyAnchors";
 import { DepthGatewayScene } from "./DepthGatewayScene";
 import { useDepthScroll } from "./hooks/useDepthScroll";
@@ -178,6 +179,10 @@ function StageHud() {
 /** Simple stacked-text fallback — paints the corridor copy in plain
  *  flow when WebGL or motion is unavailable. */
 function FallbackCorridor({ text }: { text: V7CorridorText }) {
+  // Encode + Build copy comes from the corridor map (single source);
+  // the opening setup section keeps its v7 spine copy.
+  const enc = stationById("diagnostic")?.content;
+  const bld = stationById("intelligence")?.content;
   return (
     <div className="home-v2-fallback-text">
       <section>
@@ -186,24 +191,20 @@ function FallbackCorridor({ text }: { text: V7CorridorText }) {
         <p dangerouslySetInnerHTML={{ __html: text.thoughtform.body1Html }} />
         <p dangerouslySetInnerHTML={{ __html: text.thoughtform.body2Html }} />
       </section>
-      <section>
-        <h2 dangerouslySetInnerHTML={{ __html: text.diagnostic.titleHtml }} />
-        <p>{text.diagnostic.bridge}</p>
-        <ul>
-          {text.diagnostic.labels.map((label) => (
-            <li key={label.id}>
-              <span>{label.n}</span> {label.tag}
-            </li>
-          ))}
-        </ul>
-      </section>
-      <section>
-        <h2 dangerouslySetInnerHTML={{ __html: text.intelligence.titleHtml }} />
-        <p dangerouslySetInnerHTML={{ __html: text.intelligence.ledeHtml }} />
-        <p>
-          {text.intelligence.leftLabel} · {text.intelligence.rightLabel}
-        </p>
-      </section>
+      {enc && (
+        <section>
+          <p className="home-v2-fallback-text__bridge">{enc.kicker}</p>
+          <h2 dangerouslySetInnerHTML={{ __html: enc.titleHtml }} />
+          {enc.supportHtml && <p dangerouslySetInnerHTML={{ __html: enc.supportHtml }} />}
+        </section>
+      )}
+      {bld && (
+        <section>
+          <p className="home-v2-fallback-text__bridge">{bld.kicker}</p>
+          <h2 dangerouslySetInnerHTML={{ __html: bld.titleHtml }} />
+          {bld.supportHtml && <p dangerouslySetInnerHTML={{ __html: bld.supportHtml }} />}
+        </section>
+      )}
     </div>
   );
 }

@@ -3,8 +3,10 @@
 import { useRef } from "react";
 import type { V7CorridorText } from "@/lib/v7-parse";
 import { useDeviceTier } from "@/lib/hooks/useDeviceTier";
+import { stationById } from "@/lib/home-v2/corridorMap";
 import { COPY_ANCHORS } from "./DepthGatewayScene/sceneGeom";
 import { useWorldDomTracker } from "./hooks/useWorldDomTracker";
+import { StationTitle } from "./StationTitle";
 
 /**
  * CopyAnchors — DOM text overlay for the home-v2 depth corridor
@@ -45,8 +47,13 @@ export function CopyAnchors({ text }: CopyAnchorsProps) {
   const isMobile = useDeviceTier() === "mobile";
 
   const tf = text.thoughtform;
-  const dg = text.diagnostic;
-  const il = text.intelligence;
+  // Navigate / Encode / Build section copy now lives on the corridor
+  // map nodes (Navigate is the fly-through landmark inside
+  // passthrough-01). The opening Thoughtform/setup copy still flows
+  // through `text` (untouched).
+  const nav = stationById("navigate")?.content;
+  const enc = stationById("diagnostic")?.content;
+  const bld = stationById("intelligence")?.content;
 
   // Desktop CTA: the "See the thesis →" link to the intelligence layer.
   const cta = (
@@ -152,55 +159,15 @@ export function CopyAnchors({ text }: CopyAnchorsProps) {
         <span className="home-v2-copy-phase__sub">Ship</span>
       </div>
 
-      {/* ─────────── DIAGNOSTIC ─────────── */}
-      <div
-        className="home-v2-copy-block home-v2-copy-block--diagnostic-head"
-        data-world-anchor="diagnostic.headCopy"
-        data-anchor-origin="bottom-center"
-      >
-        <p className="home-v2-copy-bridge">{dg.bridge}</p>
-        <h2 className="home-v2-copy-title" dangerouslySetInnerHTML={{ __html: dg.titleHtml }} />
-      </div>
-
-      {dg.labels.map((label) => (
-        <div
-          key={label.id}
-          className={`home-v2-copy-label home-v2-copy-label--${label.id}`}
-          data-world-anchor={`diagnostic.label.${label.id}`}
-          data-anchor-origin="center"
-        >
-          <span className="home-v2-copy-label__pip" aria-hidden="true" />
-          <span className="home-v2-copy-label__n">{label.n}</span>
-          <span className="home-v2-copy-label__tag">{label.tag}</span>
-        </div>
-      ))}
-
-      {/* ─────────── INTELLIGENCE ─────────── */}
-      <div
-        className="home-v2-copy-block home-v2-copy-block--intelligence-head"
-        data-world-anchor="intelligence.headCopy"
-        data-anchor-origin="bottom-center"
-      >
-        <h2 className="home-v2-copy-title" dangerouslySetInnerHTML={{ __html: il.titleHtml }} />
-        <p className="home-v2-copy-body" dangerouslySetInnerHTML={{ __html: il.ledeHtml }} />
-      </div>
-
-      <div
-        className="home-v2-copy-body-label home-v2-copy-body-label--left"
-        data-world-anchor="intelligence.leftLabel"
-        data-anchor-origin="center"
-      >
-        <span className="home-v2-copy-body-label__num">01</span>
-        <span className="home-v2-copy-body-label__name">{il.leftLabel}</span>
-      </div>
-      <div
-        className="home-v2-copy-body-label home-v2-copy-body-label--right"
-        data-world-anchor="intelligence.rightLabel"
-        data-anchor-origin="center"
-      >
-        <span className="home-v2-copy-body-label__num">03</span>
-        <span className="home-v2-copy-body-label__name">{il.rightLabel}</span>
-      </div>
+      {/* ─────────── NAVIGATE / ENCODE / BUILD ───────────
+          Each section title STRADDLES its gate's central reticle: a
+          frameless title just above + support line just below, near
+          screen-centre, lit by the gold glow. No kicker (it doubled the
+          title's verb), no card. The opening Thoughtform/setup
+          composition above is untouched. */}
+      {nav && <StationTitle content={nav} base="navigate" />}
+      {enc && <StationTitle content={enc} base="diagnostic" />}
+      {bld && <StationTitle content={bld} base="intelligence" />}
     </div>
   );
 }

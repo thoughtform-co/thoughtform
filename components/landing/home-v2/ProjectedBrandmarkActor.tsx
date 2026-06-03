@@ -11,6 +11,7 @@ import {
   getThoughtformMobilePhase,
 } from "./DepthGatewayScene/sceneGeom";
 import { type WorldAnchor, useWorldDomTracker } from "./hooks/useWorldDomTracker";
+import { BEAT_ORDER } from "@/lib/home-v2/corridorMap";
 
 /**
  * ProjectedBrandmarkActor — the primary brandmark painter for the
@@ -71,16 +72,12 @@ export function ProjectedBrandmarkActor() {
         id: "home-v2.brandmark",
         position: (transform) =>
           getBrandmarkWorldPosition(transform.paintProgress, transform.progress),
-        // Brandmark is visible across all five beats; substrate-cut
-        // is handled inside onPaint so the DOM hides during the
-        // intelligence morph window.
-        visibilityBeats: [
-          "thoughtform",
-          "passthrough-01",
-          "diagnostic",
-          "passthrough-02",
-          "intelligence",
-        ],
+        // Brandmark is visible across EVERY beat; substrate-cut is
+        // handled inside onPaint so the DOM hides during the
+        // intelligence morph window. Derived from BEAT_ORDER so it
+        // automatically spans new beats (e.g. the Navigate park's
+        // pass-01a / navigate / pass-01b sub-beats) without churn.
+        visibilityBeats: [...BEAT_ORDER],
         fadeFrac: 0,
         onPaint: (ctx, element) => {
           const inner = innerRef.current;
@@ -162,6 +159,10 @@ export function ProjectedBrandmarkActor() {
             bookend = Math.max(0, 1 - (progress - TAIL_FADE_OUT_START) / (1 - TAIL_FADE_OUT_START));
           }
           // Slightly brighter at parked beats than during transits.
+          // The Navigate park is intentionally NOT included: the mark
+          // is mid-flight LEADING the camera through Navigate (it is
+          // not anchored there), so it stays at transit intensity while
+          // the gate + title own the parked moment.
           const isParkedBeat =
             beat === "thoughtform" || beat === "diagnostic" || beat === "intelligence";
           const intensity = isParkedBeat ? 1 : 0.92;

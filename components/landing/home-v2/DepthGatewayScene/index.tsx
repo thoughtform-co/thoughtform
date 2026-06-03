@@ -4,12 +4,14 @@ import { useEffect, useState } from "react";
 import { Canvas } from "@react-three/fiber";
 import { useDeviceTier } from "@/lib/hooks/useDeviceTier";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
+import { AstrogationField } from "./AstrogationField";
 import { CelestialMotes } from "./CelestialMotes";
 import { FlyingCameraRig } from "./FlyingCameraRig";
 import { GatewayWorld } from "./gates/GatewayWorld";
 import { InterGateCorridor } from "./InterGateCorridor";
 import { LatentFieldTunnel } from "./LatentFieldTunnel";
 import { LatentTopographyContours } from "./LatentTopographyContours";
+import { EncodeToBuildStreams } from "./BuildArtifact";
 import { LatentWormholeWalls } from "./LatentWormholeWalls";
 import { ScrollStreaks } from "./ScrollStreaks";
 import { StaticStarfield } from "./StaticStarfield";
@@ -202,7 +204,9 @@ export function DepthGatewayScene() {
       <LatentTopographyContours />
       <CelestialMotes />
       <ScrollStreaks />
+      <AstrogationField isMobile={isMobile} />
       <GatewayWorld />
+      <EncodeToBuildStreams />
     </Canvas>
   );
 }

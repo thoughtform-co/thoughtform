@@ -97,8 +97,11 @@ const LEG_2_END_Z = INT_Z + 0.5;
  *  begins dollying out of the parked Diagnostic beat, so the
  *  parked Diagnostic composition stays clean too. */
 function legRevealForZ(z: number, progress: number): number {
-  if (z > DG_Z) return smoothstep(0.16, 0.28, progress);
-  return smoothstep(0.56, 0.65, progress);
+  // Re-tuned for the entry/section-spacing pass: front leg resolves
+  // across the longer entry; back leg lifts after the Diagnostic park
+  // (centre 0.60) and resolves inside passthrough-02 (0.67 → 0.83).
+  if (z > DG_Z) return smoothstep(0.14, 0.28, progress);
+  return smoothstep(0.63, 0.77, progress);
 }
 
 // ── Artifact catalogue ────────────────────────────────────────

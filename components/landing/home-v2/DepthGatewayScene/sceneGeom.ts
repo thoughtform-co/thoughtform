@@ -29,11 +29,27 @@
  * via `getThoughtformCenterOffsetX` rather than via camera reframe.
  */
 
-import { BEAT_PARK_CENTRES, clamp01, lerp, smoothstep } from "@/lib/stores/depthGatewayStore";
-import { MISS_LABELS } from "@/lib/celestial/orbits";
+import {
+  CAMERA_END,
+  CAMERA_START,
+  DOLLY_HOLD_END,
+  GATE_PARK_DISTANCE,
+  type GateStation,
+  INTERSTITIAL_PARK,
+  type Vec3,
+  cameraZDollyT,
+  clamp01,
+  lerp,
+  smoothstep,
+  stationById,
+} from "@/lib/home-v2/corridorMap";
 import { isMobileComposition } from "@/lib/hooks/useDeviceTier";
 
-export type Vec3 = readonly [number, number, number];
+// Re-exported for back-compat: external modules (FlyingCameraRig,
+// index, gate components, contour/intergate painters) import these
+// from `sceneGeom`. Their definitions now live in the declarative
+// `corridorMap` kernel.
+export { CAMERA_END, CAMERA_START, type GateStation, type Vec3 };
 
 // ── Camera FOV + path constants ──────────────────────────────────
 
@@ -72,12 +88,6 @@ export function getCameraFov(aspect: number): number {
   return Math.min(MAX_FOV_DEG, Math.max(CAMERA_FOV, vfovDeg));
 }
 
-/** Camera position at progress = 0 (start of corridor). Dead-centred
- *  on the optical axis. */
-export const CAMERA_START: [number, number, number] = [0, 0, 10];
-
-/** Camera position at progress = 1 (end of corridor). On-axis. */
-export const CAMERA_END: [number, number, number] = [0, 0, -8];
 
 /** How far ahead of the camera the lookAt point sits. The lookAt
  *  travels with the camera so each frame the gaze is into the next
@@ -111,19 +121,19 @@ export const CORRIDOR_TIMELINE = {
    *  then smoothsteps to 1 across the remaining scroll. Tracks the
    *  end of the `thoughtform` beat (`BEAT_WINDOWS[0].end = 0.14`)
    *  and the end of the Thoughtform pan below. */
-  dollyHoldEnd: 0.14,
+  dollyHoldEnd: DOLLY_HOLD_END,
 
   /** Thoughtform composition lateral centering pan window. PAN_END
    *  must stay locked to `dollyHoldEnd` so the camera dolly + ring
    *  flythrough release the moment the pan completes. */
-  thoughtformPan: { start: 0.09, end: 0.14 },
+  thoughtformPan: { start: 0.08, end: 0.12 },
 
   /** Gateway "boot-up" envelope phases. Ramp runs alongside the
    *  Thoughtform pan; hold spans the early ring flythrough; relax
    *  fades through the start of passthrough-01. Shared by
    *  `StaticStarfield`, `ThoughtformAtmosphere`, `CelestialMotes`,
    *  and `ThoughtformCompassGate`. */
-  thoughtformBoot: { preBoot: 0.03, rampEnd: 0.14, holdEnd: 0.22, relaxEnd: 0.42 },
+  thoughtformBoot: { preBoot: 0.03, rampEnd: 0.12, holdEnd: 0.21, relaxEnd: 0.5 },
 
   /** Compass ring forward translation at the end of each flythrough
    *  window. Parked compass sits at world Z≈5.6; +10 brings the
@@ -136,17 +146,17 @@ export const CORRIDOR_TIMELINE = {
    *  ends exactly at the passthrough-01 boundary so the supporting
    *  linework finishes sweeping just as Diagnostic takes focus. */
   flythrough: [
-    { start: 0.2, end: 0.46 }, // ring 0 (outer) — flies LAST
-    { start: 0.18, end: 0.44 }, // ring 1
-    { start: 0.16, end: 0.42 }, // ring 2
-    { start: 0.14, end: 0.4 }, // ring 3 (inner) — flies FIRST
+    { start: 0.18, end: 0.53 }, // ring 0 (outer) — flies LAST
+    { start: 0.16, end: 0.51 }, // ring 1
+    { start: 0.14, end: 0.48 }, // ring 2
+    { start: 0.12, end: 0.455 }, // ring 3 (inner) — flies FIRST
   ],
 
   /** Interstitial waypoint park progress. Sits inside passthrough-02
    *  (camera flies THROUGH it) so it does not appear in
    *  `BEAT_PARK_CENTRES`; the value lives here so the station's
    *  solved world Z still derives through `gateZAtParkProgress`. */
-  interstitialPark: 0.63,
+  interstitialPark: INTERSTITIAL_PARK,
 
   /** Brandmark world-travel phase breakpoints.
    *  - `thoughtformHold`: held at Thoughtform anchor through 0.16
@@ -160,27 +170,27 @@ export const CORRIDOR_TIMELINE = {
    *  - `intelligenceLanding`: brandmark FREEZES at the Intelligence
    *    anchor and the substrate cloud takes over the silhouette. */
   brandmark: {
-    thoughtformHold: 0.16,
-    diagnosticArrival: 0.5,
-    diagnosticHold: 0.58,
-    intelligenceArrival: 0.78,
-    intelligenceLanding: 0.88,
+    thoughtformHold: 0.14,
+    diagnosticArrival: 0.57,
+    diagnosticHold: 0.65,
+    intelligenceArrival: 0.85,
+    intelligenceLanding: 0.915,
   },
 
   /** Brandmark lead-distance transit pull. Starts just after the
    *  Diagnostic park, reaches FULL_LEAD by the end of passthrough-02
    *  + a touch into intelligence (0.80). */
-  brandmarkLeadPull: { start: 0.58, end: 0.8 },
+  brandmarkLeadPull: { start: 0.65, end: 0.85 },
 
   /** Diagnostic head-copy + label depth-approach offset. The labels
    *  start `offset` world units behind their parked Z at `start` and
    *  converge to the parked plane by `end`. */
-  diagnosticApproach: { offset: -9, start: 0.16, end: 0.56 },
+  diagnosticApproach: { offset: -9, start: 0.18, end: 0.63 },
 
   /** Intelligence head-copy + side-body label depth-approach offset.
    *  Mirrors the Diagnostic pattern around the passthrough-02 →
    *  intelligence handoff. */
-  intelligenceApproach: { offset: -6, start: 0.6, end: 0.85 },
+  intelligenceApproach: { offset: -6, start: 0.67, end: 0.9 },
 
   /** Camera chase toward the brandmark lead — peaks across the
    *  passthrough-02 → intelligence transit, then releases as the
@@ -188,29 +198,14 @@ export const CORRIDOR_TIMELINE = {
    *  `start → start + fadeIn` ramps in; `peakAt → peakAt + fadeOut`
    *  ramps out; peak strength is `peak`. */
   cameraChase: {
-    start: 0.6,
-    end: 0.88,
+    start: 0.67,
+    end: 0.915,
     fadeIn: 0.11,
-    peakAt: 0.8,
+    peakAt: 0.835,
     fadeOut: 0.08,
     peak: 0.38,
   },
 } as const;
-
-/** Camera Z dolly easing — held at 0 across the Thoughtform pan
- *  window, then smoothstep'd from 0 -> 1 across the remaining
- *  scroll. Shared by the runtime camera-position function and
- *  `gateZAtParkProgress` so gate stations stay consistent with
- *  the live camera at every parked beat. */
-function cameraZDollyT(progress: number): number {
-  const p = clamp01(progress);
-  if (p <= CORRIDOR_TIMELINE.dollyHoldEnd) return 0;
-  return smoothstep(
-    0,
-    1,
-    (p - CORRIDOR_TIMELINE.dollyHoldEnd) / (1 - CORRIDOR_TIMELINE.dollyHoldEnd)
-  );
-}
 
 /** Camera position at the given GLOBAL progress. Pure Z dolly: the
  *  camera holds at `CAMERA_START.z` across the Thoughtform pan
@@ -315,38 +310,12 @@ export function depthOpacityForWorldPosition(
 }
 
 // ── Gate stations ────────────────────────────────────────────────
-
-/** Distance the camera sits in front of a gate when the user is
- *  parked at that gate's beat. Picked so the gate's halfExtent
- *  comfortably fills the viewport at FOV ~38°. */
-const GATE_PARK_DISTANCE = 4.5;
-
-export interface GateStation {
-  id: "thoughtform" | "diagnostic" | "interstitial" | "intelligence";
-  /** World position of the gate's centre. */
-  position: [number, number, number];
-  /** Approximate world half-extent (XY) — used by painters to size
-   *  geometry against this gate's allocated frame. */
-  halfExtent: number;
-  /** Camera progress at which the gate is "parked" (i.e. centred in
-   *  the viewport; camera is GATE_PARK_DISTANCE units in front). */
-  parkProgress: number;
-}
-
-/** Solve a gate's world Z so that at `parkProgress` the camera sits
- *  GATE_PARK_DISTANCE units in front of the gate. Uses the same
- *  `cameraZDollyT` curve as the runtime camera-position function so
- *  the parked-beat invariant (camera-to-gate = GATE_PARK_DISTANCE)
- *  holds even with the dolly's pan-window hold. */
-function gateZAtParkProgress(parkProgress: number): number {
-  const dollyT = cameraZDollyT(parkProgress);
-  const camZ = lerp(CAMERA_START[2], CAMERA_END[2], dollyT);
-  return camZ - GATE_PARK_DISTANCE;
-}
-
-const THOUGHTFORM_PARK_PROGRESS = BEAT_PARK_CENTRES.thoughtform ?? 0.07;
-const DIAGNOSTIC_PARK_PROGRESS = BEAT_PARK_CENTRES.diagnostic ?? 0.53;
-const INTELLIGENCE_PARK_PROGRESS = BEAT_PARK_CENTRES.intelligence ?? 0.88;
+//
+// `GateStation`, the `GATE_PARK_DISTANCE` invariant, and the
+// `gateZAtParkProgress` solver now live in the `corridorMap` kernel.
+// The `STATION_*` exports below are convenience aliases of the solved
+// stations so existing gate / painter imports keep working; the
+// world-Z, half-extent, and park progress all derive from the map.
 
 /** Raw-progress end of the mobile Thoughtform DWELL — the scroll span
  *  that holds BOTH mobile moments (copy, then brandmark+diagram) before
@@ -431,12 +400,12 @@ export function getThoughtformMobilePhase(rawProgress: number): ThoughtformMobil
  *  compass to dead-centre during passthrough-01, so the user reads
  *  "compass slides toward centre, copy slides off-screen left" as
  *  a single continuous camera move. No reframe envelope needed. */
-export const STATION_THOUGHTFORM: GateStation = {
-  id: "thoughtform",
-  position: [1.1, 0.0, gateZAtParkProgress(THOUGHTFORM_PARK_PROGRESS)],
-  halfExtent: 1.6,
-  parkProgress: THOUGHTFORM_PARK_PROGRESS,
-};
+export const STATION_THOUGHTFORM: GateStation = stationById("thoughtform")!;
+
+/** Navigate landmark — a fly-through gate parked at a Z inside
+ *  passthrough-01 (the camera passes through it), giving the Navigate
+ *  phase a named "place" between the setup and Encode. */
+export const STATION_NAVIGATE: GateStation = stationById("navigate")!;
 
 /** Diagnostic orbital field — centred. By the time the user parks
  *  here, the camera reframe has resolved to X=0, so this gate sits
@@ -449,33 +418,18 @@ export const STATION_THOUGHTFORM: GateStation = {
  *  significantly more world distance before this gate appears at
  *  parked rest, and the orbital geometry visibly approaches from
  *  the distance rather than fading in at screen-scale. */
-export const STATION_DIAGNOSTIC: GateStation = {
-  id: "diagnostic",
-  position: [0, 0, gateZAtParkProgress(DIAGNOSTIC_PARK_PROGRESS)],
-  halfExtent: 2.2,
-  parkProgress: DIAGNOSTIC_PARK_PROGRESS,
-};
+export const STATION_DIAGNOSTIC: GateStation = stationById("diagnostic")!;
 
 /** Interstitial waypoint — sits in the middle of passthrough-02 so
  *  the camera passes through it on the way to Intelligence. Park
  *  progress comes from `CORRIDOR_TIMELINE.interstitialPark`
  *  because the interstitial beat is a transit waypoint and does
  *  not have a `BEAT_PARK_CENTRES` entry. */
-export const STATION_INTERSTITIAL: GateStation = {
-  id: "interstitial",
-  position: [0, 0, gateZAtParkProgress(CORRIDOR_TIMELINE.interstitialPark)],
-  halfExtent: 1.8,
-  parkProgress: CORRIDOR_TIMELINE.interstitialPark,
-};
+export const STATION_INTERSTITIAL: GateStation = stationById("interstitial")!;
 
 /** Intelligence sphere station — centre of the substrate-cut beat.
  *  The substrate sphere + L/R side bodies all live in this group. */
-export const STATION_INTELLIGENCE: GateStation = {
-  id: "intelligence",
-  position: [0, 0, gateZAtParkProgress(INTELLIGENCE_PARK_PROGRESS)],
-  halfExtent: 2.0,
-  parkProgress: INTELLIGENCE_PARK_PROGRESS,
-};
+export const STATION_INTELLIGENCE: GateStation = stationById("intelligence")!;
 
 // ── Thoughtform centering pan ────────────────────────────────────
 
@@ -791,13 +745,6 @@ export function getBrandmarkWorldHalfExtent(progress: number): number {
 import type { Beat, DepthGatewayTransform } from "@/lib/stores/depthGatewayStore";
 import type { WorldAnchor, WorldAnchorPosition } from "../hooks/useWorldDomTracker";
 
-/** Convert SVG-coords-relative-to-orbital-centre into world-space
- *  anchor offsets at the Diagnostic gate centre. The orbital SVG is
- *  1100 wide and we render it at SVG_TO_WORLD = 1/240, so a label at
- *  SVG (x_svg, y_svg) sits at world (x_svg/240, -y_svg/240, gateZ +
- *  0.01). Y is flipped because SVG is y-down and world is y-up. */
-const ORBIT_SVG_TO_WORLD = 1 / 240;
-
 /** Depth offset (world units, negative = deeper behind parked Z)
  *  applied to the Diagnostic head copy and orbit label pills during
  *  the passthrough-01 approach. Window + offset from
@@ -820,17 +767,6 @@ function diagnosticApproachDepthOffset(progress: number): number {
 function intelligenceApproachDepthOffset(progress: number): number {
   const { offset, start, end } = CORRIDOR_TIMELINE.intelligenceApproach;
   return lerp(offset, 0, smoothstep(start, end, progress));
-}
-
-function diagnosticLabelWorldPosition(pipXSvg: number, pipYSvg: number): WorldAnchorPosition {
-  const baseX = STATION_DIAGNOSTIC.position[0] + pipXSvg * ORBIT_SVG_TO_WORLD;
-  const baseY = STATION_DIAGNOSTIC.position[1] - pipYSvg * ORBIT_SVG_TO_WORLD;
-  const baseZ = STATION_DIAGNOSTIC.position[2] + 0.05;
-  return (transform: DepthGatewayTransform) => [
-    baseX,
-    baseY,
-    baseZ + diagnosticApproachDepthOffset(transform.paintProgress),
-  ];
 }
 
 /** Mobile inward-pull for the Thoughtform phase labels. Portrait FOV
@@ -915,7 +851,7 @@ export const COPY_ANCHORS: readonly WorldAnchor[] = [
       }
       return [-1.8 + off, 0.0, STATION_THOUGHTFORM.position[2] + 0.1];
     },
-    visibilityBeats: ["thoughtform", "passthrough-01"],
+    visibilityBeats: ["thoughtform", "pass-01a", "navigate", "pass-01b"],
     // No entry fade — copy reads at full strength the moment the
     // stage pins. Pre-arm projection writes the transform at parked
     // Thoughtform with opacity 0, so revealing it is a single flip
@@ -984,6 +920,46 @@ export const COPY_ANCHORS: readonly WorldAnchor[] = [
     onPaint: gateThoughtformDiagram,
   },
 
+  // ── Navigate ────────────────────────────────────────────────────
+  // Straddle composition: a frameless TITLE just ABOVE the central
+  // reticle/brandmark (near screen-centre) and the SUPPORT line just
+  // BELOW it, so the title reads as the gate's annotation without a
+  // boxed card. Navigate is now a parked station, so the camera holds
+  // these steady for a beat. Camera-depth driven (full opacity at the
+  // ~4.5 park distance, just inside `far` 4.8) so they fade in on the
+  // approach and out as the camera passes — dark at the parked setup
+  // beat where the camera is ~6.8 units back. The +Y / −Y offsets are
+  // the primary straddle knobs.
+  {
+    id: "navigate.title",
+    position: [
+      STATION_NAVIGATE.position[0],
+      STATION_NAVIGATE.position[1] + 0.55,
+      STATION_NAVIGATE.position[2] + 0.1,
+    ],
+    // NOT eligible during `pass-01a`: that long entry leg is the pure
+    // wormhole flythrough and must stay text-free ("fly through the
+    // corridor" before arriving). The copy appears only as the camera
+    // reaches the Navigate park (and lingers briefly leaving via
+    // `pass-01b`), with the depth fade owning the actual reveal.
+    visibilityBeats: ["navigate", "pass-01b"],
+    fadeFrac: 0.28,
+    perspectiveScale: { referenceDistance: 4.5, min: 0.2, max: 1.1 },
+    depthFade: { near: 0.4, nearFade: 1.8, far: 4.8, farFade: 1.6 },
+  },
+  {
+    id: "navigate.support",
+    position: [
+      STATION_NAVIGATE.position[0],
+      STATION_NAVIGATE.position[1] - 0.6,
+      STATION_NAVIGATE.position[2] + 0.1,
+    ],
+    visibilityBeats: ["navigate", "pass-01b"],
+    fadeFrac: 0.28,
+    perspectiveScale: { referenceDistance: 4.5, min: 0.2, max: 1.1 },
+    depthFade: { near: 0.4, nearFade: 1.8, far: 4.8, farFade: 1.6 },
+  },
+
   // ── Diagnostic ──────────────────────────────────────────────────
   // Heading block above the orbital field — bridge + title.
   // Visibility extends back into `passthrough-01` so the title
@@ -995,70 +971,38 @@ export const COPY_ANCHORS: readonly WorldAnchor[] = [
   // Diagnostic beat — combined with perspectiveScale (min 0.22)
   // this makes the title clearly read as "coming toward the
   // orbits" rather than already landed at the gate.
+  // Straddle: TITLE above the orbital field's core, SUPPORT below it.
+  // Both fold in `diagnosticApproachDepthOffset` so they read as flying
+  // toward the orbits on approach. The oversized entry fade (1.4x) +
+  // depthFade keep them hidden during the parked Thoughtform read and
+  // resolve only as the Diagnostic gate begins.
   {
-    id: "diagnostic.headCopy",
+    id: "diagnostic.title",
     position: (transform) => [
       STATION_DIAGNOSTIC.position[0],
-      STATION_DIAGNOSTIC.position[1] + 0.95,
+      STATION_DIAGNOSTIC.position[1] + 0.7,
       STATION_DIAGNOSTIC.position[2] + 0.1 + diagnosticApproachDepthOffset(transform.paintProgress),
     ],
-    // The head copy belongs narratively to the Diagnostic beat, but
-    // uses an oversized entry fade (1.4x the beat width) plus the
-    // depthFade envelope below. That allows it to register faintly
-    // during late passthrough-01 while delaying full opacity until
-    // the Diagnostic gate actually begins.
     visibilityBeats: ["diagnostic"],
     fadeFrac: 1.4,
-    perspectiveScale: {
-      referenceDistance: 4.5,
-      min: 0.18,
-      max: 1.15,
-    },
-    // Tight far envelope keeps the headline hidden during the
-    // parked Thoughtform read; it only resolves once the camera has
-    // travelled most of passthrough-01.
-    depthFade: {
-      near: 0.9,
-      nearFade: 2.4,
-      far: 6.8,
-      farFade: 2.2,
-    },
+    perspectiveScale: { referenceDistance: 4.5, min: 0.18, max: 1.15 },
+    depthFade: { near: 0.9, nearFade: 2.4, far: 6.8, farFade: 2.2 },
   },
-  // 4 orbit labels — pinned to the actual MISS_LABELS pip world
-  // positions so they ride the orbits in 3D as the camera
-  // approaches and passes the gate. Each label's position
-  // resolver applies `diagnosticApproachDepthOffset` to the
-  // base orbital pip Z so the pills sit far behind the parked
-  // gate at the start of passthrough-01 and converge to their
-  // pip's true world position by the Diagnostic beat — combined
-  // with perspectiveScale (min 0.2), the labels register as tiny
-  // distant text drifting toward the orbits before settling on
-  // their pips at parked rest.
-  ...MISS_LABELS.map((label) => ({
-    id: `diagnostic.label.${label.id}`,
-    position: diagnosticLabelWorldPosition(label.x, label.y),
-    visibilityBeats: ["diagnostic", "passthrough-02"] as Beat[],
-    // Oversized fade-in keeps labels faint through most of
-    // passthrough-01, then full once the Diagnostic beat starts.
-    // Because the visible window includes passthrough-02, the
-    // labels can still ride their pips as the camera passes the
-    // orbital field.
-    fadeFrac: 0.66,
-    perspectiveScale: {
-      referenceDistance: 4.5,
-      min: 0.16,
-      max: 1.2,
-    },
-    // Same tighter depth-fade envelope as the head copy. The labels
-    // no longer ghost into the Thoughtform park; they arrive as the
-    // Diagnostic gate enters readable distance.
-    depthFade: {
-      near: 0.9,
-      nearFade: 2.4,
-      far: 6.8,
-      farFade: 2.2,
-    } as DepthFocusWindow,
-  })),
+  {
+    id: "diagnostic.support",
+    position: (transform) => [
+      STATION_DIAGNOSTIC.position[0],
+      STATION_DIAGNOSTIC.position[1] - 0.8,
+      STATION_DIAGNOSTIC.position[2] + 0.1 + diagnosticApproachDepthOffset(transform.paintProgress),
+    ],
+    visibilityBeats: ["diagnostic"],
+    fadeFrac: 1.4,
+    perspectiveScale: { referenceDistance: 4.5, min: 0.18, max: 1.15 },
+    depthFade: { near: 0.9, nearFade: 2.4, far: 6.8, farFade: 2.2 },
+  },
+  // (Encode orbit labels removed — the Navigate/Encode/Build remap
+  // drops the four "same pattern, four ways" pills; the orbital gate
+  // geometry stays as Encode's gate visual.)
 
   // ── Intelligence ────────────────────────────────────────────────
   // Heading block above the substrate sphere. Mirrors the Diagnostic
@@ -1071,82 +1015,42 @@ export const COPY_ANCHORS: readonly WorldAnchor[] = [
   // full size on the beat boundary. The fade window is widened
   // (0.18) so the opacity ramp itself is gentler — visible from
   // early passthrough-02, full by parked Intelligence.
+  // Straddle: TITLE above the substrate sphere's core, SUPPORT below.
+  // Both fold in `intelligenceApproachDepthOffset` so the readout flies
+  // toward the substrate rather than popping in at the beat boundary.
+  // Build is the highest overlap risk (the sphere is the centrepiece) —
+  // bump title +0.8 / support −0.9 on preview if it crowds.
   {
-    id: "intelligence.headCopy",
+    id: "intelligence.title",
     position: (transform) => [
       STATION_INTELLIGENCE.position[0],
-      STATION_INTELLIGENCE.position[1] + 0.85,
+      STATION_INTELLIGENCE.position[1] + 0.7,
       STATION_INTELLIGENCE.position[2] +
         0.1 +
         intelligenceApproachDepthOffset(transform.paintProgress),
     ],
     visibilityBeats: ["passthrough-02", "intelligence"],
     fadeFrac: 0.18,
-    perspectiveScale: {
-      referenceDistance: 4.5,
-      min: 0.2,
-      max: 1.15,
-    },
-    // Mirrors the Diagnostic head-copy depth contract — emerge
-    // from the distance, intensify on approach.
-    depthFade: {
-      near: 0.9,
-      nearFade: 2.4,
-      far: 11,
-      farFade: 4.5,
-    },
+    perspectiveScale: { referenceDistance: 4.5, min: 0.2, max: 1.15 },
+    depthFade: { near: 0.9, nearFade: 2.4, far: 11, farFade: 4.5 },
   },
-  // L/R body labels — Trusted Sources / Headless Surfaces — sit
-  // above each side body. Visibility now extends back into
-  // passthrough-02 with the same depth approach + perspective scale
-  // as the headline, so the labels track their bodies as the camera
-  // closes the distance instead of popping on the beat boundary.
   {
-    id: "intelligence.leftLabel",
+    id: "intelligence.support",
     position: (transform) => [
-      -2.2,
-      0.55,
+      STATION_INTELLIGENCE.position[0],
+      STATION_INTELLIGENCE.position[1] - 0.85,
       STATION_INTELLIGENCE.position[2] +
-        0.2 +
+        0.1 +
         intelligenceApproachDepthOffset(transform.paintProgress),
     ],
     visibilityBeats: ["passthrough-02", "intelligence"],
-    fadeFrac: 0.15,
-    perspectiveScale: {
-      referenceDistance: 4.5,
-      min: 0.22,
-      max: 1.2,
-    },
-    depthFade: {
-      near: 0.9,
-      nearFade: 2.4,
-      far: 11,
-      farFade: 4.5,
-    },
+    fadeFrac: 0.18,
+    perspectiveScale: { referenceDistance: 4.5, min: 0.2, max: 1.15 },
+    depthFade: { near: 0.9, nearFade: 2.4, far: 11, farFade: 4.5 },
   },
-  {
-    id: "intelligence.rightLabel",
-    position: (transform) => [
-      2.2,
-      0.55,
-      STATION_INTELLIGENCE.position[2] +
-        0.2 +
-        intelligenceApproachDepthOffset(transform.paintProgress),
-    ],
-    visibilityBeats: ["passthrough-02", "intelligence"],
-    fadeFrac: 0.15,
-    perspectiveScale: {
-      referenceDistance: 4.5,
-      min: 0.22,
-      max: 1.2,
-    },
-    depthFade: {
-      near: 0.9,
-      nearFade: 2.4,
-      far: 11,
-      farFade: 4.5,
-    },
-  },
+  // (Build chamber labels removed — the Navigate/Encode/Build remap
+  // drops the "Trusted sources / Headless surfaces" side labels; the
+  // substrate sphere + side bodies stay as Build's gate visual.)
 ];
 
 // ── Substrate-cut envelope (ADR-017, unchanged) ──────────────────

@@ -166,10 +166,29 @@
   width: clamp(280px, 32vw, 460px);
 }
 
-.home-v2-copy-block--diagnostic-head,
-.home-v2-copy-block--intelligence-head {
-  width: clamp(320px, 40vw, 580px);
+/* ── Corridor section titles (Navigate / Encode / Build) ────────────
+   Frameless straddle: the TITLE sits just above the gate's central
+   reticle and the SUPPORT line just below it (positioned + faded per
+   frame by useWorldDomTracker against `{base}.title` / `{base}.support`).
+   No card/scrim/tether — a soft gold text-shadow reads the copy as "lit
+   by the gate" against the starfield. See StationTitle.tsx. */
+.home-v2-station-title {
+  width: clamp(280px, 32vw, 460px);
+  margin: 0 auto;
+  max-width: 24ch;
   text-align: center;
+  text-shadow: 0 0 22px rgba(202, 165, 84, 0.18);
+}
+
+.home-v2-station-support {
+  width: clamp(260px, 30vw, 420px);
+  margin: 0 auto;
+  max-width: 32ch;
+  text-align: center;
+  font-size: clamp(15px, 1.15vw, 18px);
+  line-height: 1.4;
+  color: rgba(235, 227, 214, 0.72);
+  text-shadow: 0 0 18px rgba(202, 165, 84, 0.14);
 }
 
 /* Thoughtform-left typography mirrors the production homepage's

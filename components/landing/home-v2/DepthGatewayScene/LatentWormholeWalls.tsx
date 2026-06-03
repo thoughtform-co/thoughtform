@@ -125,17 +125,16 @@ const VISIBLE_FAR = 22;
 
 /** Reveal envelopes per leg, in global progress units.
  *
- *  Leg 1 lifts AFTER the trimmed Thoughtform park (centre 0.07),
- *  resolving by progress 0.30 — well inside the long passthrough-01
- *  window (0.14 → 0.46).
+ *  Leg 1 lifts AFTER the Thoughtform park (centre ~0.06), resolving
+ *  early in the long entry flythrough (pass-01a [0.12,0.35]) so the
+ *  wormhole is already wrapping you as you fly toward Navigate.
  *
- *  Leg 2 lifts AFTER the Diagnostic park (centre 0.53), resolving
- *  by progress 0.66 — comfortably inside passthrough-02
- *  (0.60 → 0.76). */
-const LEG_1_REVEAL_START = 0.18;
-const LEG_1_REVEAL_END = 0.3;
-const LEG_2_REVEAL_START = 0.56;
-const LEG_2_REVEAL_END = 0.66;
+ *  Leg 2 lifts AFTER the Diagnostic park (centre 0.60), resolving by
+ *  progress 0.77 — comfortably inside passthrough-02 (0.67 → 0.83). */
+const LEG_1_REVEAL_START = 0.14;
+const LEG_1_REVEAL_END = 0.28;
+const LEG_2_REVEAL_START = 0.63;
+const LEG_2_REVEAL_END = 0.77;
 
 /** Leg span fractions: rails START slightly past the source gate and
  *  END slightly before the destination gate so they don't intersect
