@@ -216,7 +216,17 @@ export function IntelligenceArtifactScene() {
             onCreated={({ camera }) => {
               camera.lookAt(...CAMERA_LOOK_AT);
             }}
-            style={{ width: "100%", height: "100%", background: "transparent" }}
+            style={{
+              width: "100%",
+              height: "100%",
+              background: "transparent",
+              // `pointer-events: none` on the inline canvas element so
+              // clicks fall through to the chrome's variant switcher
+              // sitting beneath in DOM order. Without this, R3F's
+              // default `auto` on the <canvas> intercepts clicks even
+              // though the wrapper opts out.
+              pointerEvents: "none",
+            }}
           >
             <IntelligenceArtifact
               progress={progress}
@@ -593,6 +603,12 @@ const styles = `
   display: flex;
   align-items: center;
   justify-content: center;
+  /* The canvas + label overlay live here. They must not capture
+     clicks, or the chrome variant switcher (which sits beneath in
+     DOM order) becomes unclickable. Labels already opt-out via their
+     own pointer-events rule; setting it here lets the canvas pass
+     events through as well. */
+  pointer-events: none;
 }
 
 .ia-loading {
