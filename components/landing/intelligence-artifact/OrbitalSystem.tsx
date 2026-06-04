@@ -24,7 +24,9 @@
 import { useFrame } from "@react-three/fiber";
 import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
+import { AnchorProjector } from "./AnchorProjector";
 import {
+  type ArtifactAnchors,
   CAMERA_LOOK_AT,
   CAMERA_ORBIT_LIFT,
   CAMERA_ORBIT_PERIOD_SEC,
@@ -77,7 +79,21 @@ const SURFACES_PORT_COUNT = 6;
  *  hanging off the orbit" read. */
 const SURFACES_TAG_LENGTH = 0.22;
 
+/** Anchor points (parent-local) for the leader-line label system.
+ *  Sources / Surfaces anchor at a point on their respective tilted
+ *  orbits; Substrate at the sphere centre. Since the orbits live
+ *  inside `sourcesOrbitRef` / `surfacesOrbitRef` (not the root), the
+ *  anchors here are pre-rotated approximations of where the rings
+ *  cross the +x axis — close enough for the leader line to land on
+ *  the geometry. */
+const ORBITAL_ANCHORS: ArtifactAnchors = {
+  sources: [SOURCES_ORBIT_RADIUS * 0.95, SUBSTRATE_RADIUS * 0.45, 0],
+  substrate: [0, 0, 0],
+  surfaces: [SURFACES_ORBIT_RADIUS * 0.95, -SUBSTRATE_RADIUS * 0.5, 0],
+};
+
 export function OrbitalSystem({ progress, reducedMotion = false }: OrbitalSystemProps) {
+  const rootRef = useRef<THREE.Group>(null);
   const sourcesOrbitRef = useRef<THREE.Group>(null);
   const surfacesOrbitRef = useRef<THREE.Group>(null);
   const sourcesSpinRef = useRef<THREE.Group>(null);
@@ -218,7 +234,7 @@ export function OrbitalSystem({ progress, reducedMotion = false }: OrbitalSystem
   const gatewayZ = lerp(GATEWAY_Z_START, GATEWAY_Z_END, smoothstep(0, 0.16, progress));
 
   return (
-    <group>
+    <group ref={rootRef}>
       <ambientLight intensity={0.32} />
 
       {/* Gateway descent */}
@@ -287,6 +303,8 @@ export function OrbitalSystem({ progress, reducedMotion = false }: OrbitalSystem
           ))}
         </group>
       </group>
+
+      <AnchorProjector anchors={ORBITAL_ANCHORS} trackGroupRef={rootRef} />
     </group>
   );
 }

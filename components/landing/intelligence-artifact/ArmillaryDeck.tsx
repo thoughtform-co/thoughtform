@@ -21,7 +21,9 @@
 import { useFrame } from "@react-three/fiber";
 import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
+import { AnchorProjector } from "./AnchorProjector";
 import {
+  type ArtifactAnchors,
   CAMERA_LOOK_AT,
   CAMERA_ORBIT_LIFT,
   CAMERA_ORBIT_PERIOD_SEC,
@@ -81,6 +83,15 @@ interface ArmillaryDeckProps {
   progress: number;
   reducedMotion?: boolean;
 }
+
+/** Anchor points (parent-local) for the leader-line label system.
+ *  Sources sits on the outer deck rim, Substrate at the sphere
+ *  centre, Surfaces on a pylon cap. */
+const ARMILLARY_ANCHORS: ArtifactAnchors = {
+  sources: [DECK_OUTER_RADIUS * 0.75, DECK_LIFT * 0.5, DECK_OUTER_RADIUS * 0.4],
+  substrate: [0, SUBSTRATE_LIFT, 0],
+  surfaces: [-PYLON_ROOT_RADIUS * 0.6, DECK_LIFT + PYLON_HEIGHT, -PYLON_ROOT_RADIUS * 0.7],
+};
 
 export function ArmillaryDeck({ progress, reducedMotion = false }: ArmillaryDeckProps) {
   const rootRef = useRef<THREE.Group>(null);
@@ -360,6 +371,8 @@ export function ArmillaryDeck({ progress, reducedMotion = false }: ArmillaryDeck
           />
         </group>
       ))}
+
+      <AnchorProjector anchors={ARMILLARY_ANCHORS} trackGroupRef={rootRef} />
     </group>
   );
 }

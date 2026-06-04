@@ -245,19 +245,38 @@ export function phasePresence(progress: number, window: PhaseWindow, recedeOver?
  *  three layers onto a different spatial composition so the user can
  *  compare which form reads best.
  *
- *  - `armillary` : low-angle deck + central substrate sphere + raised
- *                  pylons. Reads as engineered infrastructure with the
- *                  three layers as distinct zones (perimeter / centre /
- *                  rim).
- *  - `shell`     : single object with three concentric shells. The
- *                  substrate is the inner core; sources are a tilted
- *                  provenance band around it; surfaces are the paneled
- *                  outer skin with port glyphs.
- *  - `orbital`   : three planes orbiting one core. Each plane is
- *                  visually distinct (Sources green, Surfaces dawn)
- *                  and carries its own anchored label tag.
+ *  - `armillary`     : low-angle deck + central substrate sphere +
+ *                       raised pylons. Reads as engineered
+ *                       infrastructure with the three layers as
+ *                       distinct zones (perimeter / centre / rim).
+ *  - `shell`         : single object with three concentric shells. The
+ *                       substrate is the inner core; sources are a
+ *                       tilted provenance band around it; surfaces are
+ *                       the paneled outer skin with port glyphs.
+ *  - `orbital`       : three planes orbiting one core. Each plane is
+ *                       visually distinct (Sources green, Surfaces
+ *                       dawn) and carries its own anchored label tag.
+ *  - `strata`        : cross-section / layer cake viewed from the side.
+ *                       Three vertically stacked slabs joined by
+ *                       hairline pillars (Surfaces top dawn, Substrate
+ *                       middle gold + brandmark, Sources bottom green).
+ *  - `funnel`        : horizontal directional flow. Sources cluster on
+ *                       the left feeding green motes inward, central
+ *                       Substrate brandmark, Surfaces fan of port
+ *                       channels on the right.
+ *  - `constellation` : celestial navigation chart. Substrate at centre
+ *                       + bearing rings + tick grid; Sources stars in
+ *                       the upper hemisphere with inbound trajectories,
+ *                       Surfaces stars in the lower hemisphere with
+ *                       outbound trajectories.
  */
-export type ArtifactVariant = "armillary" | "shell" | "orbital";
+export type ArtifactVariant =
+  | "armillary"
+  | "shell"
+  | "orbital"
+  | "strata"
+  | "funnel"
+  | "constellation";
 
 export interface VariantSpec {
   key: ArtifactVariant;
@@ -269,6 +288,33 @@ export const ARTIFACT_VARIANTS: readonly VariantSpec[] = [
   { key: "armillary", label: "Armillary", sub: "Deck instrument" },
   { key: "shell", label: "Shell", sub: "Nested concentric layers" },
   { key: "orbital", label: "Orbital", sub: "Distinct planes" },
+  { key: "strata", label: "Strata", sub: "Cross-section stack" },
+  { key: "funnel", label: "Funnel", sub: "Directional flow" },
+  { key: "constellation", label: "Constellation", sub: "Navigation chart" },
+];
+
+// ── Label anchors ───────────────────────────────────────────────────
+
+/** World-space anchor points exposed by each variant. The leader-line
+ *  label system projects these to canvas pixel coordinates each frame
+ *  so the labels can connect to a visible point on the geometry while
+ *  the label box itself stays at a fixed slot in the chrome.
+ *
+ *  Each anchor is a `[x, y, z]` tuple in the variant's local world
+ *  coordinate system. The `AnchorProjector` reads them from the
+ *  caller and projects them through the active camera. */
+export interface ArtifactAnchors {
+  sources: readonly [number, number, number];
+  substrate: readonly [number, number, number];
+  surfaces: readonly [number, number, number];
+}
+
+/** Slot keys used by the leader-line system. Match the role identifiers
+ *  so CSS variables stay readable (`--anchor-sources-x`, etc.). */
+export const ANCHOR_KEYS: readonly ["sources", "substrate", "surfaces"] = [
+  "sources",
+  "substrate",
+  "surfaces",
 ];
 
 // ── Labels ───────────────────────────────────────────────────────────

@@ -394,3 +394,283 @@ export function makePointsMaterial(
     blending: additive ? THREE.AdditiveBlending : THREE.NormalBlending,
   });
 }
+
+// ── Slab edge (Strata variant) ───────────────────────────────────────
+
+/** Rectangular hairline frame on the XZ plane (Y up), used as the
+ *  edge of a stratum slab. Optional internal subdivision lines give
+ *  the slab a "tile / floor" register. */
+export function buildSlabEdgeGeometry(
+  halfWidth: number,
+  halfDepth: number,
+  y: number,
+  subdivisions: number = 0
+): THREE.BufferGeometry {
+  const positions: number[] = [];
+  // Outer frame (closed LineLoop equivalent rendered as LineSegments).
+  const corners: Array<[number, number]> = [
+    [-halfWidth, -halfDepth],
+    [halfWidth, -halfDepth],
+    [halfWidth, halfDepth],
+    [-halfWidth, halfDepth],
+  ];
+  for (let i = 0; i < 4; i++) {
+    const [ax, az] = corners[i];
+    const [bx, bz] = corners[(i + 1) % 4];
+    positions.push(ax, y, az, bx, y, bz);
+  }
+  // Internal grid lines for the "floor tile" feel.
+  for (let i = 1; i < subdivisions; i++) {
+    const t = i / subdivisions;
+    const x = lerp(-halfWidth, halfWidth, t);
+    positions.push(x, y, -halfDepth, x, y, halfDepth);
+    const z = lerp(-halfDepth, halfDepth, t);
+    positions.push(-halfWidth, y, z, halfWidth, y, z);
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+  return g;
+}
+
+/** Four corner pillars connecting two slab Y planes. Used by the
+ *  Strata variant to bind the top / middle / bottom slabs into one
+ *  cross-section structure. */
+export function buildSlabPillarsGeometry(
+  halfWidth: number,
+  halfDepth: number,
+  yBottom: number,
+  yTop: number
+): THREE.BufferGeometry {
+  const corners: Array<[number, number]> = [
+    [-halfWidth, -halfDepth],
+    [halfWidth, -halfDepth],
+    [halfWidth, halfDepth],
+    [-halfWidth, halfDepth],
+  ];
+  const positions = new Float32Array(corners.length * 2 * 3);
+  for (let i = 0; i < corners.length; i++) {
+    const [x, z] = corners[i];
+    positions[i * 6] = x;
+    positions[i * 6 + 1] = yBottom;
+    positions[i * 6 + 2] = z;
+    positions[i * 6 + 3] = x;
+    positions[i * 6 + 4] = yTop;
+    positions[i * 6 + 5] = z;
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+  return g;
+}
+
+/** Evenly-distributed grid positions on the XZ plane (Y constant). */
+export function gridPositions(
+  cols: number,
+  rows: number,
+  halfWidth: number,
+  halfDepth: number,
+  y: number = 0
+): Array<[number, number, number]> {
+  const out: Array<[number, number, number]> = [];
+  for (let i = 0; i < cols; i++) {
+    for (let j = 0; j < rows; j++) {
+      const tx = cols === 1 ? 0.5 : i / (cols - 1);
+      const tz = rows === 1 ? 0.5 : j / (rows - 1);
+      out.push([lerp(-halfWidth, halfWidth, tx), y, lerp(-halfDepth, halfDepth, tz)]);
+    }
+  }
+  return out;
+}
+
+// ── Scattered stars (Constellation variant) ──────────────────────────
+
+/** Mulberry32-style deterministic PRNG. Seeded by a 32-bit integer so
+ *  the same seed always yields the same scatter — important for
+ *  testability and HMR stability. */
+function makePrng(seed: number): () => number {
+  let s = seed | 0;
+  return () => {
+    s = (s + 0x6d2b79f5) | 0;
+    let t = s;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+/** Generate a deterministic scatter of star positions inside a
+ *  hemisphere (Y > 0 if `upper`, Y < 0 otherwise). Used by the
+ *  Constellation variant to place Sources / Surfaces stars around the
+ *  central substrate. Returns local positions in scene units. */
+export function scatterHemisphereStars(
+  count: number,
+  radius: number,
+  upper: boolean,
+  seed: number,
+  minTilt: number = 0.18
+): Array<[number, number, number]> {
+  const prng = makePrng(seed);
+  const out: Array<[number, number, number]> = [];
+  for (let i = 0; i < count; i++) {
+    // Stratified azimuth so we don't get clumps.
+    const az = (i / count) * Math.PI * 2 + prng() * 0.6;
+    // Elevation biased toward the equator with a minimum tilt so no
+    // star sits exactly on the equator (which would look like a ring).
+    const elevation = minTilt + prng() * (Math.PI / 2 - minTilt) * 0.85;
+    const r = radius * (0.85 + prng() * 0.3);
+    const horiz = Math.cos(elevation) * r;
+    const vert = Math.sin(elevation) * r * (upper ? 1 : -1);
+    out.push([Math.cos(az) * horiz, vert, Math.sin(az) * horiz]);
+  }
+  return out;
+}
+
+/** A short bezier curve hairline from `start` to `end`, dipping toward
+ *  the origin by `dip` units at its midpoint. Used by the Constellation
+ *  variant to draw inbound / outbound trajectories that visibly curve
+ *  through the artifact's interior. */
+export function buildBezierCurveGeometry(
+  start: readonly [number, number, number],
+  end: readonly [number, number, number],
+  dip: number,
+  segments: number = 24
+): THREE.BufferGeometry {
+  const positions = new Float32Array((segments + 1) * 3);
+  const mx = (start[0] + end[0]) / 2;
+  const my = (start[1] + end[1]) / 2;
+  const mz = (start[2] + end[2]) / 2;
+  // Pull the midpoint toward origin by `dip` so the curve bows inward.
+  const midLen = Math.hypot(mx, my, mz);
+  const cx = midLen > 1e-4 ? mx * (1 - dip / midLen) : mx;
+  const cy = midLen > 1e-4 ? my * (1 - dip / midLen) : my;
+  const cz = midLen > 1e-4 ? mz * (1 - dip / midLen) : mz;
+  for (let i = 0; i <= segments; i++) {
+    const t = i / segments;
+    const inv = 1 - t;
+    // Quadratic bezier with single control point (cx, cy, cz).
+    const x = inv * inv * start[0] + 2 * inv * t * cx + t * t * end[0];
+    const y = inv * inv * start[1] + 2 * inv * t * cy + t * t * end[1];
+    const z = inv * inv * start[2] + 2 * inv * t * cz + t * t * end[2];
+    positions[i * 3] = x;
+    positions[i * 3 + 1] = y;
+    positions[i * 3 + 2] = z;
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+  return g;
+}
+
+// ── Lane geometry (Funnel variant) ───────────────────────────────────
+
+/** Lateral lane lines from `startX` to `endX` at evenly-spaced Y
+ *  positions. Reads as the channels of a horizontal flow pipeline. */
+export function buildLaneLinesGeometry(
+  laneCount: number,
+  startX: number,
+  endX: number,
+  yRange: number,
+  z: number = 0
+): THREE.BufferGeometry {
+  const positions = new Float32Array(laneCount * 2 * 3);
+  for (let i = 0; i < laneCount; i++) {
+    const t = laneCount === 1 ? 0.5 : i / (laneCount - 1);
+    const y = lerp(-yRange, yRange, t);
+    positions[i * 6] = startX;
+    positions[i * 6 + 1] = y;
+    positions[i * 6 + 2] = z;
+    positions[i * 6 + 3] = endX;
+    positions[i * 6 + 4] = y;
+    positions[i * 6 + 5] = z;
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+  return g;
+}
+
+/** Diverging fan: a set of lines all starting at `origin` and ending
+ *  at the supplied destination points. Used for the Funnel's Surfaces
+ *  output rays. */
+export function buildFanLinesGeometry(
+  origin: readonly [number, number, number],
+  destinations: ReadonlyArray<readonly [number, number, number]>
+): THREE.BufferGeometry {
+  const positions = new Float32Array(destinations.length * 2 * 3);
+  for (let i = 0; i < destinations.length; i++) {
+    positions[i * 6] = origin[0];
+    positions[i * 6 + 1] = origin[1];
+    positions[i * 6 + 2] = origin[2];
+    positions[i * 6 + 3] = destinations[i][0];
+    positions[i * 6 + 4] = destinations[i][1];
+    positions[i * 6 + 5] = destinations[i][2];
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+  return g;
+}
+
+/** Linear flow motes: deterministic dot positions along a straight
+ *  segment from `start` to `end`, each carrying a phase so the painter
+ *  can drift them along the segment. Used by the Funnel for the
+ *  Sources -> Substrate -> Surfaces flow. */
+export interface LinearMotesData {
+  geometry: THREE.BufferGeometry;
+  phases: Float32Array;
+  starts: Float32Array; // length count*3 — per-mote start
+  dirs: Float32Array; // length count*3 — per-mote (end - start)
+}
+
+export function buildLinearMotes(
+  laneStarts: ReadonlyArray<readonly [number, number, number]>,
+  laneEnds: ReadonlyArray<readonly [number, number, number]>,
+  motesPerLane: number
+): LinearMotesData {
+  if (laneStarts.length !== laneEnds.length) {
+    throw new Error("laneStarts and laneEnds must have the same length");
+  }
+  const laneCount = laneStarts.length;
+  const total = laneCount * motesPerLane;
+  const positions = new Float32Array(total * 3);
+  const phases = new Float32Array(total);
+  const starts = new Float32Array(total * 3);
+  const dirs = new Float32Array(total * 3);
+
+  for (let i = 0; i < laneCount; i++) {
+    const [sx, sy, sz] = laneStarts[i];
+    const [ex, ey, ez] = laneEnds[i];
+    for (let m = 0; m < motesPerLane; m++) {
+      const idx = i * motesPerLane + m;
+      const t = m / motesPerLane;
+      positions[idx * 3] = lerp(sx, ex, t);
+      positions[idx * 3 + 1] = lerp(sy, ey, t);
+      positions[idx * 3 + 2] = lerp(sz, ez, t);
+      phases[idx] = t;
+      starts[idx * 3] = sx;
+      starts[idx * 3 + 1] = sy;
+      starts[idx * 3 + 2] = sz;
+      dirs[idx * 3] = ex - sx;
+      dirs[idx * 3 + 1] = ey - sy;
+      dirs[idx * 3 + 2] = ez - sz;
+    }
+  }
+
+  const g = new THREE.BufferGeometry();
+  g.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+  return { geometry: g, phases, starts, dirs };
+}
+
+/** Step the linear motes one frame. Mutates the geometry. */
+export function advanceLinearMotes(motes: LinearMotesData, driftT: number): void {
+  const posAttr = motes.geometry.getAttribute("position") as THREE.BufferAttribute;
+  const { phases, starts, dirs } = motes;
+  const total = phases.length;
+  for (let i = 0; i < total; i++) {
+    const localT = (phases[i] + driftT) % 1;
+    const sx = starts[i * 3];
+    const sy = starts[i * 3 + 1];
+    const sz = starts[i * 3 + 2];
+    const dx = dirs[i * 3];
+    const dy = dirs[i * 3 + 1];
+    const dz = dirs[i * 3 + 2];
+    posAttr.setXYZ(i, sx + dx * localT, sy + dy * localT, sz + dz * localT);
+  }
+  posAttr.needsUpdate = true;
+}

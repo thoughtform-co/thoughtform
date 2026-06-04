@@ -8,21 +8,21 @@
  *     `prefers-reduced-motion`, and degrades gracefully when either
  *     fails (or when the viewport is too narrow for the 3D composition
  *     to read).
- *   - Variant switcher: toggle between Armillary / Shell / Orbital so
- *     the three structural metaphors can be compared side-by-side.
- *   - Scrub slider, phase tabs, and an autoplay toggle so the reveal
- *     can be inspected without wiring real scroll input.
- *   - HUD-style chrome: corner brackets, station readout, ALWAYS-ON
- *     colour-coded layer labels (Sources / Substrate / Surfaces) so
- *     it's immediately readable what each zone of the artifact is.
+ *   - Variant switcher: toggles between six structural metaphors
+ *     (Armillary / Shell / Orbital / Strata / Funnel / Constellation).
+ *     Wraps to a second row on narrow viewports.
+ *   - Scrub slider, phase tabs, autoplay.
+ *   - Leader-line labels: three role labels (Sources / Substrate /
+ *     Surfaces) anchored to fixed slots in the chrome with hairline
+ *     SVG leaders that connect each label to a point inside the
+ *     artifact geometry. `AnchorProjector` (mounted inside each
+ *     variant) updates the geometry-end of each leader every frame.
  *
- * This page is mounted at `/test/intelligence-artifact` and stays
- * inside the existing `(internal)` group so production traffic never
- * reaches it (middleware blocks `/test/*` in production).
+ * Internal-only: production blocks `/test/*` via `middleware.ts`.
  */
 
 import { Canvas } from "@react-three/fiber";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useDeviceTier } from "@/lib/hooks/useDeviceTier";
 import { probeWebGL } from "@/lib/webgl/probe";
 import { IntelligenceArtifact } from "./IntelligenceArtifact";
@@ -54,6 +54,19 @@ const PHASE_TABS: Array<{ key: keyof typeof PHASES; label: string; progress: num
 
 /** Cycle length when autoplay is on (seconds for a single 0 → 1 sweep). */
 const AUTOPLAY_DURATION_SEC = 14;
+
+/** Pixel offsets for the leader line's label-end relative to the
+ *  label box. Each entry picks the side of the box that faces the
+ *  centre of the canvas, so the line emerges from the label edge
+ *  pointing toward the artifact. */
+const LABEL_CONNECTION_SIDE: Record<
+  "sources" | "substrate" | "surfaces",
+  "left" | "right" | "top" | "bottom"
+> = {
+  sources: "right", // sources sits on the left, line goes right
+  substrate: "top", // substrate sits at bottom, line goes up
+  surfaces: "left", // surfaces sits on the right, line goes left
+};
 
 export function IntelligenceArtifactScene() {
   const tier = useDeviceTier();
@@ -91,7 +104,6 @@ export function IntelligenceArtifactScene() {
     return () => cancelAnimationFrame(rafId);
   }, [autoplay]);
 
-  // Wheel scrub disabled when autoplay is on.
   useEffect(() => {
     if (autoplay) return;
     const onWheel = (e: WheelEvent) => {
@@ -107,11 +119,7 @@ export function IntelligenceArtifactScene() {
     setProgress(p);
   }, []);
 
-  // ── Phase scalars ───────────────────────────────────────────────
-  // Always-on label opacities: each label fades in with its phase
-  // envelope (Sources / Substrate / Surfaces) and stays visible from
-  // then on — making the three layers legible end-to-end rather than
-  // only at the resolved view.
+  // ── Phase scalars / opacities ───────────────────────────────────
   const sourcesP = phasePresence(progress, PHASES.sources);
   const substrateP = phasePresence(progress, PHASES.substrate);
   const surfacesP = phasePresence(progress, PHASES.surfaces);
@@ -124,6 +132,54 @@ export function IntelligenceArtifactScene() {
   };
 
   const telemetry = telemetryAt(progress);
+
+  // ── Leader line / label slot bookkeeping ───────────────────────
+  // Each role label sits at a fixed slot in the chrome. We compute
+  // the label-end of its leader line once per layout (mount, resize,
+  // variant change) by reading the label's bounding rect and picking
+  // a connection side. AnchorProjector updates the geometry-end
+  // (`x1`/`y1`) of each line every frame.
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const labelRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const leaderLineRefs = useRef<Record<string, SVGLineElement | null>>({});
+
+  const recomputeLabelEnds = useCallback(() => {
+    const wrap = wrapRef.current;
+    if (!wrap) return;
+    const wrapRect = wrap.getBoundingClientRect();
+
+    for (const role of ["sources", "substrate", "surfaces"] as const) {
+      const labelEl = labelRefs.current[role];
+      const line = leaderLineRefs.current[role];
+      if (!labelEl || !line) continue;
+      const r = labelEl.getBoundingClientRect();
+      const side = LABEL_CONNECTION_SIDE[role];
+      let x2: number;
+      let y2: number;
+      if (side === "left") {
+        x2 = r.left - wrapRect.left;
+        y2 = r.top - wrapRect.top + r.height / 2;
+      } else if (side === "right") {
+        x2 = r.right - wrapRect.left;
+        y2 = r.top - wrapRect.top + r.height / 2;
+      } else if (side === "top") {
+        x2 = r.left - wrapRect.left + r.width / 2;
+        y2 = r.top - wrapRect.top;
+      } else {
+        x2 = r.left - wrapRect.left + r.width / 2;
+        y2 = r.bottom - wrapRect.top;
+      }
+      line.setAttribute("x2", x2.toFixed(1));
+      line.setAttribute("y2", y2.toFixed(1));
+    }
+  }, []);
+
+  useLayoutEffect(() => {
+    recomputeLabelEnds();
+    const onResize = () => recomputeLabelEnds();
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, [recomputeLabelEnds, variant]);
 
   // ── Render fallback when we can't run the 3D scene ──────────────
   const useStaticFallback = webglOk === false || (webglOk !== null && reducedMotion && isMobile);
@@ -160,7 +216,7 @@ export function IntelligenceArtifactScene() {
         <header className="ia-header">
           <span className="ia-header__code">INTERNAL · LAB</span>
           <span className="ia-header__title">INTELLIGENCE LAYER · ARTIFACT</span>
-          <span className="ia-header__build">v0.2 · /test/intelligence-artifact</span>
+          <span className="ia-header__build">v0.3 · /test/intelligence-artifact</span>
         </header>
 
         <div className="ia-telemetry">
@@ -175,8 +231,6 @@ export function IntelligenceArtifactScene() {
           <span className="ia-telemetry__variant">{variant.toUpperCase()}</span>
         </div>
 
-        {/* Variant switcher — sits beside the telemetry line so the
-            user can compare metaphors at the same scrub position. */}
         <div className="ia-variants" role="tablist" aria-label="Artifact variant">
           {ARTIFACT_VARIANTS.map((v) => (
             <button
@@ -195,7 +249,7 @@ export function IntelligenceArtifactScene() {
         </div>
       </div>
 
-      <div className="ia-canvas-wrap">
+      <div className="ia-canvas-wrap" ref={wrapRef}>
         {useStaticFallback ? (
           <StaticArtifactFallback progress={progress} variant={variant} />
         ) : webglOk === null ? (
@@ -220,11 +274,6 @@ export function IntelligenceArtifactScene() {
               width: "100%",
               height: "100%",
               background: "transparent",
-              // `pointer-events: none` on the inline canvas element so
-              // clicks fall through to the chrome's variant switcher
-              // sitting beneath in DOM order. Without this, R3F's
-              // default `auto` on the <canvas> intercepts clicks even
-              // though the wrapper opts out.
               pointerEvents: "none",
             }}
           >
@@ -236,11 +285,55 @@ export function IntelligenceArtifactScene() {
           </Canvas>
         )}
 
-        {/* Always-on labelled layer zones — colour-coded to the role
-            tier so the artifact reads as Sources / Substrate /
-            Surfaces from the moment each layer enters. */}
+        {/* Leader-line overlay. Three SVG lines, one per role. The
+            geometry-end (x1/y1) is updated each frame by
+            `AnchorProjector` inside the active variant. The label-end
+            (x2/y2) is updated on mount + resize from the label box's
+            position. The overlay is non-interactive. */}
+        <svg className="ia-leaders" aria-hidden>
+          <line
+            className="ia-leader ia-leader--sources"
+            ref={(el) => {
+              leaderLineRefs.current.sources = el;
+            }}
+            x1="0"
+            y1="0"
+            x2="0"
+            y2="0"
+            style={{ stroke: COLOR_SOURCES_CSS, opacity: labelOpacity.sources }}
+          />
+          <line
+            className="ia-leader ia-leader--substrate"
+            ref={(el) => {
+              leaderLineRefs.current.substrate = el;
+            }}
+            x1="0"
+            y1="0"
+            x2="0"
+            y2="0"
+            style={{ stroke: COLOR_SUBSTRATE_CSS, opacity: labelOpacity.substrate }}
+          />
+          <line
+            className="ia-leader ia-leader--surfaces"
+            ref={(el) => {
+              leaderLineRefs.current.surfaces = el;
+            }}
+            x1="0"
+            y1="0"
+            x2="0"
+            y2="0"
+            style={{ stroke: COLOR_SURFACES_CSS, opacity: labelOpacity.surfaces }}
+          />
+        </svg>
+
+        {/* Label boxes at fixed chrome slots. Diamond pips on each
+            label face the artifact centre — the leader line attaches
+            at this side. */}
         <div className="ia-labels">
           <div
+            ref={(el) => {
+              labelRefs.current.sources = el;
+            }}
             className="ia-label ia-label--sources"
             style={
               {
@@ -249,12 +342,15 @@ export function IntelligenceArtifactScene() {
               } as React.CSSProperties
             }
           >
-            <span className="ia-label__pip" aria-hidden />
             <span className="ia-label__ordinal">{ARTIFACT_LABELS[0].ordinal}</span>
             <span className="ia-label__title">{ARTIFACT_LABELS[0].title}</span>
             <span className="ia-label__sub">{ARTIFACT_LABELS[0].sub}</span>
+            <span className="ia-label__pip ia-label__pip--right" aria-hidden />
           </div>
           <div
+            ref={(el) => {
+              labelRefs.current.substrate = el;
+            }}
             className="ia-label ia-label--substrate"
             style={
               {
@@ -263,12 +359,15 @@ export function IntelligenceArtifactScene() {
               } as React.CSSProperties
             }
           >
-            <span className="ia-label__pip" aria-hidden />
+            <span className="ia-label__pip ia-label__pip--top" aria-hidden />
             <span className="ia-label__ordinal">{ARTIFACT_LABELS[1].ordinal}</span>
             <span className="ia-label__title">{ARTIFACT_LABELS[1].title}</span>
             <span className="ia-label__sub">{ARTIFACT_LABELS[1].sub}</span>
           </div>
           <div
+            ref={(el) => {
+              labelRefs.current.surfaces = el;
+            }}
             className="ia-label ia-label--surfaces"
             style={
               {
@@ -277,7 +376,7 @@ export function IntelligenceArtifactScene() {
               } as React.CSSProperties
             }
           >
-            <span className="ia-label__pip" aria-hidden />
+            <span className="ia-label__pip ia-label__pip--left" aria-hidden />
             <span className="ia-label__ordinal">{ARTIFACT_LABELS[2].ordinal}</span>
             <span className="ia-label__title">{ARTIFACT_LABELS[2].title}</span>
             <span className="ia-label__sub">{ARTIFACT_LABELS[2].sub}</span>
@@ -344,19 +443,11 @@ interface StaticFallbackProps {
   variant: ArtifactVariant;
 }
 
-/** SVG-only schematic shown when WebGL is unavailable or the device is
- *  flagged reduced-motion + mobile. Same semantic layers (sources →
- *  substrate → surfaces) at rest. */
 function StaticArtifactFallback({ progress, variant }: StaticFallbackProps) {
   const sourcesP = phasePresence(progress, PHASES.sources);
   const substrateP = phasePresence(progress, PHASES.substrate);
   const surfacesP = phasePresence(progress, PHASES.surfaces);
 
-  // All three variants reduce to the same essential schematic for the
-  // static fallback — an outer Surfaces dawn ring, a middle Sources
-  // green band, and a central Substrate gold core. The variant only
-  // affects the inner sphere style (geodesic polygon vs concentric
-  // rings vs cross-tilted ellipses).
   return (
     <svg
       className="ia-fallback"
@@ -364,7 +455,6 @@ function StaticArtifactFallback({ progress, variant }: StaticFallbackProps) {
       role="img"
       aria-label={`Intelligence layer artifact (static schematic: ${variant})`}
     >
-      {/* Outer Surfaces shell — dawn */}
       <polygon
         points={polygonPoints(0, 0, 160, variant === "armillary" ? 12 : 24)}
         fill="none"
@@ -372,8 +462,6 @@ function StaticArtifactFallback({ progress, variant }: StaticFallbackProps) {
         strokeOpacity={0.45 * surfacesP + 0.15}
         strokeWidth={0.8}
       />
-
-      {/* Middle Sources band — Atreides green */}
       <polygon
         points={polygonPoints(0, 0, 110, variant === "armillary" ? 12 : 32)}
         fill="none"
@@ -388,8 +476,6 @@ function StaticArtifactFallback({ progress, variant }: StaticFallbackProps) {
         strokeOpacity={0.3 * sourcesP + 0.06}
         strokeWidth={0.6}
       />
-
-      {/* Substrate core — gold */}
       <circle
         cx={0}
         cy={0}
@@ -413,8 +499,6 @@ function StaticArtifactFallback({ progress, variant }: StaticFallbackProps) {
         strokeOpacity={0.4 * substrateP}
         strokeWidth={0.6}
       />
-
-      {/* Sources pips on the middle band */}
       {sourcePips(8, 101).map(([x, y], i) => (
         <polygon
           key={`src-${i}`}
@@ -423,8 +507,6 @@ function StaticArtifactFallback({ progress, variant }: StaticFallbackProps) {
           fillOpacity={0.9 * sourcesP}
         />
       ))}
-
-      {/* Surfaces port diamonds on the outer shell */}
       {sourcePips(6, 160).map(([x, y], i) => (
         <g key={`srf-${i}`} opacity={surfacesP}>
           <polygon
@@ -485,7 +567,6 @@ const styles = `
   inset: 0;
   pointer-events: none;
 }
-
 .ia-chrome > * { pointer-events: auto; }
 .ia-corner, .ia-rail { pointer-events: none; }
 
@@ -557,11 +638,14 @@ const styles = `
 
 .ia-variants {
   position: absolute;
-  top: 102px;
+  top: 100px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
   gap: 6px;
+  flex-wrap: wrap;
+  justify-content: center;
+  max-width: min(820px, 80vw);
 }
 .ia-variant {
   background: transparent;
@@ -571,7 +655,7 @@ const styles = `
   font-size: 9px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  padding: 6px 14px 8px 14px;
+  padding: 6px 12px 8px 12px;
   cursor: pointer;
   transition: color 160ms, border-color 160ms, background 160ms;
   display: flex;
@@ -603,11 +687,7 @@ const styles = `
   display: flex;
   align-items: center;
   justify-content: center;
-  /* The canvas + label overlay live here. They must not capture
-     clicks, or the chrome variant switcher (which sits beneath in
-     DOM order) becomes unclickable. Labels already opt-out via their
-     own pointer-events rule; setting it here lets the canvas pass
-     events through as well. */
+  /* Pass clicks through to the chrome variant switcher beneath. */
   pointer-events: none;
 }
 
@@ -623,6 +703,24 @@ const styles = `
   max-height: 70vh;
 }
 
+/* Leader-line SVG overlay. Sits above the canvas, below the labels.
+   The line endpoints are updated imperatively (x1/y1 from
+   AnchorProjector, x2/y2 from useLayoutEffect). */
+.ia-leaders {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: visible;
+}
+.ia-leader {
+  stroke-width: 1;
+  stroke-dasharray: 4 3;
+  fill: none;
+  transition: opacity 220ms ease-out;
+}
+
 .ia-labels {
   position: absolute;
   inset: 0;
@@ -631,27 +729,32 @@ const styles = `
 .ia-label {
   position: absolute;
   display: grid;
-  grid-template-columns: auto auto 1fr;
+  grid-template-columns: auto 1fr;
   grid-template-areas:
-    "pip ordinal title"
-    ".   .       sub";
+    "ordinal title"
+    ".       sub";
   gap: 2px 8px;
   font-size: 11px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--dawn, #ebe3d6);
   transition: opacity 220ms ease-out;
-  max-width: 200px;
+  max-width: 180px;
+  padding: 6px 10px;
+  border: 1px solid color-mix(in srgb, var(--label-color) 35%, transparent);
+  background: rgba(10, 9, 8, 0.55);
+  backdrop-filter: blur(4px);
 }
 .ia-label__pip {
-  grid-area: pip;
-  align-self: center;
-  width: 8px;
-  height: 8px;
+  position: absolute;
+  width: 6px;
+  height: 6px;
   background: var(--label-color, var(--gold));
   transform: rotate(45deg);
-  margin-top: 2px;
 }
+.ia-label__pip--right { right: -3px; top: 50%; margin-top: -3px; }
+.ia-label__pip--left { left: -3px; top: 50%; margin-top: -3px; }
+.ia-label__pip--top { left: 50%; top: -3px; margin-left: -3px; }
 .ia-label__ordinal {
   grid-area: ordinal;
   align-self: center;
@@ -662,25 +765,31 @@ const styles = `
 .ia-label__title {
   grid-area: title;
   align-self: center;
-  font-size: 14px;
+  font-size: 13px;
   color: var(--label-color, var(--gold));
   letter-spacing: 0.08em;
 }
 .ia-label__sub {
   grid-area: sub;
-  font-size: 10px;
+  font-size: 9px;
   color: var(--dawn-50, rgba(235, 227, 214, 0.5));
   letter-spacing: 0.06em;
   text-transform: none;
 }
-/* Three zones around the artifact's natural composition area.
-   Mirroring the deck composition the same anchor points read across
-   variants. */
-.ia-label--sources { top: 38%; left: 6%; }
-.ia-label--substrate { bottom: 26%; left: 50%; transform: translateX(-50%); text-align: center; }
-.ia-label--substrate .ia-label__sub { text-align: center; }
-.ia-label--surfaces { top: 38%; right: 6%; text-align: right; }
-.ia-label--surfaces { grid-template-columns: 1fr auto auto; grid-template-areas: "title ordinal pip" "sub . ."; }
+/* Three fixed slots. Sources sits on the left, Surfaces on the right,
+   Substrate at the bottom. The leader line connects each label to a
+   visible point inside the artifact. */
+.ia-label--sources { top: 38%; left: 64px; }
+.ia-label--substrate {
+  /* Clear of the phase-tabs row + scrubber row at the bottom of the
+     viewport (controls sit at bottom: 36px and stack ~108px tall). */
+  bottom: 168px;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  grid-template-areas: "ordinal title" ". sub";
+}
+.ia-label--surfaces { top: 38%; right: 64px; text-align: right; grid-template-areas: "title ordinal" "sub ."; grid-template-columns: 1fr auto; }
 
 .ia-controls {
   position: absolute;
@@ -782,11 +891,13 @@ const styles = `
 
 @media (max-width: 760px) {
   .ia-rail { display: none; }
-  .ia-variants { top: 96px; }
+  .ia-variants { top: 96px; max-width: 92vw; }
   .ia-variant { min-width: 84px; padding: 4px 8px 6px 8px; }
   .ia-variant__sub { display: none; }
-  .ia-label--sources { top: auto; bottom: 36%; left: 6%; max-width: 140px; }
-  .ia-label--surfaces { top: auto; bottom: 36%; right: 6%; max-width: 140px; }
+  .ia-label { max-width: 130px; padding: 4px 8px; font-size: 10px; }
+  .ia-label__title { font-size: 11px; }
+  .ia-label--sources { top: auto; bottom: 36%; left: 16px; }
+  .ia-label--surfaces { top: auto; bottom: 36%; right: 16px; }
   .ia-label--substrate { bottom: 22%; }
   .ia-header__build { display: none; }
 }

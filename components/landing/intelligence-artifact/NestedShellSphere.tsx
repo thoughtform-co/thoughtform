@@ -30,7 +30,9 @@
 import { useFrame } from "@react-three/fiber";
 import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
+import { AnchorProjector } from "./AnchorProjector";
 import {
+  type ArtifactAnchors,
   CAMERA_LOOK_AT,
   CAMERA_ORBIT_LIFT,
   CAMERA_ORBIT_PERIOD_SEC,
@@ -64,6 +66,17 @@ interface NestedShellSphereProps {
   progress: number;
   reducedMotion?: boolean;
 }
+
+/** Anchor points (parent-local) for the leader-line label system.
+ *  Sources sits on the tilted ring band, Substrate at the sphere
+ *  centre, Surfaces on a port pip of the outer shell. */
+const SHELL_ANCHORS: ArtifactAnchors = {
+  // A point on the tilted source ring (~10 o'clock looking face-on).
+  sources: [-SUBSTRATE_RADIUS * 1.5, SUBSTRATE_RADIUS * 0.55, 0],
+  substrate: [0, 0, 0],
+  // A surface port at ~2 o'clock on the outer geodesic.
+  surfaces: [SUBSTRATE_RADIUS * 2.0, SUBSTRATE_RADIUS * 0.4, 0],
+};
 
 /** Substrate shell radius (inner). Matches the canonical substrate
  *  size so the brandmark + geodesic edge look identical to the other
@@ -335,6 +348,8 @@ export function NestedShellSphere({ progress, reducedMotion = false }: NestedShe
           </group>
         ))}
       </group>
+
+      <AnchorProjector anchors={SHELL_ANCHORS} trackGroupRef={rootRef} />
     </group>
   );
 }
