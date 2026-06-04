@@ -186,10 +186,19 @@ export type CorridorNode = StationNode | TransitionNode;
 // + the front leg-reveal windows were re-tuned. Combined with the deeper
 // CAMERA_END (-14) every section also sits further apart in depth.
 //
-// Current windows: thoughtform [0,.12] · pass-01a [.12,.35] · navigate
-// [.35,.45] (park .40) · pass-01b [.45,.53] · diagnostic [.53,.67]
+// Current windows: thoughtform [0,.12] · pass-01a [.12,.29] · navigate
+// [.29,.39] (park .34) · pass-01b [.39,.53] · diagnostic [.53,.67]
 // (park .60) · passthrough-02 [.67,.83] (interstitial waypoint ≈.70) ·
 // intelligence [.83,1] (park .915).
+//
+// Navigate→Encode travel pass (2026-06-04): pass-01b was widened
+// 8 → 14 and pass-01a trimmed 23 → 17 (net 0, front total still 53).
+// The Navigate park therefore reads, then you genuinely TRAVEL a
+// longer leg before Encode arrives, instead of Encode appearing
+// almost immediately after Navigate. Because the swap stays inside
+// the front legs, `diagnostic`-onward windows + the back-half
+// CORRIDOR_TIMELINE are byte-identical — only the Navigate park
+// (.40 → .34) and the pass-01b span moved.
 
 export const CORRIDOR_MAP = [
   {
@@ -211,9 +220,11 @@ export const CORRIDOR_MAP = [
   // byte-identical. `pass-01a` flies the camera in, `navigate` is the
   // brief park, `pass-01b` is the shorter exit toward Encode. All three
   // are labelled "Navigate" so the HUD sector readout reads "Navigate"
-  // continuously across the leg. Primary preview knob: the 12/12/8
-  // split (keep the sum at 32) and the navigate `parkBias`.
-  { kind: "transition", id: "pass-01a", label: "Navigate", travel: 23 },
+  // continuously across the leg. Primary preview knob: the
+  // pass-01a / navigate / pass-01b split (keep the sum at 32) and the
+  // navigate `parkBias`. pass-01a 17 + navigate 10 + pass-01b 14 = 41,
+  // plus thoughtform 12 = front total 53 (unchanged).
+  { kind: "transition", id: "pass-01a", label: "Navigate", travel: 17 },
   {
     kind: "station",
     id: "navigate",
@@ -246,7 +257,7 @@ export const CORRIDOR_MAP = [
       },
     },
   },
-  { kind: "transition", id: "pass-01b", label: "Navigate", travel: 8 },
+  { kind: "transition", id: "pass-01b", label: "Navigate", travel: 14 },
   {
     kind: "station",
     id: "diagnostic",

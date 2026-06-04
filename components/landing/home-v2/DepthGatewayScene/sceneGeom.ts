@@ -188,8 +188,12 @@ export const CORRIDOR_TIMELINE = {
 
   /** Intelligence head-copy + side-body label depth-approach offset.
    *  Mirrors the Diagnostic pattern around the passthrough-02 →
-   *  intelligence handoff. */
-  intelligenceApproach: { offset: -6, start: 0.67, end: 0.9 },
+   *  intelligence handoff. Offset softened -6 → -1.5 (2026-06-04) so
+   *  the Build title no longer flies in from far depth at a tiny
+   *  scale — it now appears at roughly the same apparent size as the
+   *  Navigate + Encode titles and grows gently to parked size (paired
+   *  with the tightened intelligence depthFade `far` below). */
+  intelligenceApproach: { offset: -1.5, start: 0.67, end: 0.9 },
 
   /** Camera chase toward the brandmark lead — peaks across the
    *  passthrough-02 → intelligence transit, then releases as the
@@ -1101,18 +1105,17 @@ export const COPY_ANCHORS: readonly WorldAnchor[] = [
 
   // ── Intelligence ────────────────────────────────────────────────
   // Heading block above the substrate sphere. Mirrors the Diagnostic
-  // approach pattern: an extra Z offset
-  // (`intelligenceApproachDepthOffset`) parks the headline ~5.5 world
-  // units BEHIND the substrate during late passthrough-02, then
-  // converges to the parked plane by mid-intelligence. Combined with
-  // `perspectiveScale` (min 0.22), the headline reads as a distant
-  // readout flying toward the substrate, not a panel that pops to
-  // full size on the beat boundary. The fade window is widened
-  // (0.18) so the opacity ramp itself is gentler — visible from
-  // early passthrough-02, full by parked Intelligence.
+  // approach pattern, and as of 2026-06-04 is tuned to match Encode's
+  // ENTRY SIZE so the three flywheel titles read consistently: the
+  // approach offset was softened (-6 → -1.5 in
+  // `CORRIDOR_TIMELINE.intelligenceApproach`) and the depthFade `far`
+  // tightened (11 → 6.8, farFade 4.5 → 2.2 to match
+  // `diagnostic.*`). Together these stop the Build title appearing
+  // while it is still far away and tiny — it now resolves at roughly
+  // the same apparent size as Navigate / Encode (~0.66–0.7 scale) and
+  // grows to parked size, instead of ballooning up from a distant
+  // speck.
   // Straddle: TITLE above the substrate sphere's core, SUPPORT below.
-  // Both fold in `intelligenceApproachDepthOffset` so the readout flies
-  // toward the substrate rather than popping in at the beat boundary.
   // Build is the highest overlap risk (the sphere is the centrepiece) —
   // bump title +0.8 / support −0.9 on preview if it crowds.
   {
@@ -1131,7 +1134,7 @@ export const COPY_ANCHORS: readonly WorldAnchor[] = [
     visibilityBeats: ["passthrough-02", "intelligence"],
     fadeFrac: 0.18,
     perspectiveScale: { referenceDistance: 4.5, min: 0.2, max: 1.15 },
-    depthFade: { near: 0.9, nearFade: 2.4, far: 11, farFade: 4.5 },
+    depthFade: { near: 0.9, nearFade: 2.4, far: 6.8, farFade: 2.2 },
   },
   {
     id: "intelligence.support",
@@ -1148,7 +1151,7 @@ export const COPY_ANCHORS: readonly WorldAnchor[] = [
     visibilityBeats: ["passthrough-02", "intelligence"],
     fadeFrac: 0.18,
     perspectiveScale: { referenceDistance: 4.5, min: 0.2, max: 1.15 },
-    depthFade: { near: 0.9, nearFade: 2.4, far: 11, farFade: 4.5 },
+    depthFade: { near: 0.9, nearFade: 2.4, far: 6.8, farFade: 2.2 },
   },
   // (Build chamber labels removed — the Navigate/Encode/Build remap
   // drops the "Trusted sources / Headless surfaces" side labels; the

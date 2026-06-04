@@ -20,10 +20,15 @@ import { getBrandmarkAccretionLayers, getBrandmarkWorldPosition } from "./sceneG
  *
  *   - Navigate halo : thin bearing-tick ring (transient cue). Reads
  *                     as the mark being on instrument flight.
- *   - Encode nodes  : 6 wireframe "rack" cards in an annulus around
- *                     the mark + additive data nodes scattered in
- *                     the same band. Reads as judgment being encoded
- *                     into nodes around the north star.
+ *   - Encode nodes  : additive data-node points scattered in an
+ *                     annulus around the brandmark. Reads as
+ *                     judgment being encoded around the north star.
+ *                     (An earlier iteration paired these with
+ *                     wireframe rack/card frames at the same band —
+ *                     the racks were dropped on visual review
+ *                     because they competed with the brandmark and
+ *                     the cleaner point cloud carried the
+ *                     "encoding" feel on its own.)
  *   - Build surfaces: 5 stacked translucent wireframe interface
  *                     planes fanning around the mark. Reads as
  *                     surfaces / MCP-style endpoints sitting on top
@@ -42,9 +47,9 @@ import { getBrandmarkAccretionLayers, getBrandmarkWorldPosition } from "./sceneG
  * remains the optical centre.
  *
  * Mobile / reduced-motion: counts drop and the Build surface stack
- * thins (Encode racks 6 → 3, nodes 60 → 24). The shell is still
- * rendered so the "more layered the further it travels" read holds,
- * just at a lighter density.
+ * thins (Encode nodes 60 → 24, Build planes 5 → 3). The shell is
+ * still rendered so the "more layered the further it travels" read
+ * holds, just at a lighter density.
  */
 
 const ANNULUS_INNER = 0.7;
@@ -55,13 +60,8 @@ const NAVIGATE_TICK_COUNT = 24;
 const NAVIGATE_TICK_INNER = 0.5;
 const NAVIGATE_TICK_OUTER = 0.6;
 
-const ENCODE_RACK_COUNT_DESKTOP = 6;
-const ENCODE_RACK_COUNT_MOBILE = 3;
 const ENCODE_NODE_COUNT_DESKTOP = 60;
 const ENCODE_NODE_COUNT_MOBILE = 24;
-const ENCODE_RACK_WIDTH = 0.28;
-const ENCODE_RACK_HEIGHT = 0.36;
-const ENCODE_RACK_RADIUS = 1.15;
 
 const BUILD_PLANE_COUNT_DESKTOP = 5;
 const BUILD_PLANE_COUNT_MOBILE = 3;
@@ -112,52 +112,13 @@ function buildHaloTicksGeometry(): THREE.BufferGeometry {
   return g;
 }
 
-/** Wireframe "rack" card outlines arranged in an annulus around
- *  the mark. Each rack is a thin rectangle facing the camera, with
- *  a couple of internal divider lines so it reads as a stack of
- *  shelves / records rather than a plain frame. The racks sit at
- *  fixed angular positions on a ring of `ENCODE_RACK_RADIUS`. */
-function buildEncodeRacksGeometry(count: number): THREE.BufferGeometry {
-  const g = new THREE.BufferGeometry();
-  const SEGMENTS_PER_RACK = 4 + 3; // 4 frame + 3 dividers
-  const positions = new Float32Array(count * SEGMENTS_PER_RACK * 2 * 3);
-  let p = 0;
-
-  const writeSeg = (ax: number, ay: number, bx: number, by: number, z: number) => {
-    positions[p++] = ax;
-    positions[p++] = ay;
-    positions[p++] = z;
-    positions[p++] = bx;
-    positions[p++] = by;
-    positions[p++] = z;
-  };
-
-  const w = ENCODE_RACK_WIDTH * 0.5;
-  const h = ENCODE_RACK_HEIGHT * 0.5;
-
-  for (let i = 0; i < count; i++) {
-    const t = (i / count) * Math.PI * 2;
-    const cx = Math.cos(t) * ENCODE_RACK_RADIUS;
-    const cy = Math.sin(t) * ENCODE_RACK_RADIUS;
-    const z = 0;
-
-    // Frame (4 segs).
-    writeSeg(cx - w, cy - h, cx + w, cy - h, z);
-    writeSeg(cx + w, cy - h, cx + w, cy + h, z);
-    writeSeg(cx + w, cy + h, cx - w, cy + h, z);
-    writeSeg(cx - w, cy + h, cx - w, cy - h, z);
-    // Internal dividers (3 segs across).
-    writeSeg(cx - w * 0.85, cy + h * 0.45, cx + w * 0.85, cy + h * 0.45, z);
-    writeSeg(cx - w * 0.85, cy, cx + w * 0.85, cy, z);
-    writeSeg(cx - w * 0.85, cy - h * 0.45, cx + w * 0.85, cy - h * 0.45, z);
-  }
-
-  g.setAttribute("position", new THREE.BufferAttribute(positions, 3));
-  return g;
-}
-
-/** Additive data-node point cloud scattered in the same annulus as
- *  the racks. Center is kept clear so the brandmark stays focal. */
+/** Additive data-node point cloud scattered in an annulus around
+ *  the brandmark. Center is kept clear so the brandmark stays focal.
+ *  Originally paired with wireframe rack/card frames at the same
+ *  band; the racks were dropped on visual review — the additive
+ *  point cloud alone reads as "judgment being encoded into nodes
+ *  around the north star" without the rack-frame overlay competing
+ *  with the brandmark. */
 function buildEncodeNodesGeometry(count: number): {
   geometry: THREE.BufferGeometry;
   positions: Float32Array;
@@ -294,7 +255,6 @@ export function BrandmarkAccretionShell() {
   const tier = useDeviceTier();
   const isMobile = tier === "mobile";
 
-  const rackCount = isMobile ? ENCODE_RACK_COUNT_MOBILE : ENCODE_RACK_COUNT_DESKTOP;
   const nodeCount = isMobile ? ENCODE_NODE_COUNT_MOBILE : ENCODE_NODE_COUNT_DESKTOP;
   const planeCount = isMobile ? BUILD_PLANE_COUNT_MOBILE : BUILD_PLANE_COUNT_DESKTOP;
 
@@ -310,7 +270,6 @@ export function BrandmarkAccretionShell() {
 
   const navigateHaloGeometry = useMemo(() => buildRingGeometry(NAVIGATE_HALO_RADIUS), []);
   const navigateTicksGeometry = useMemo(() => buildHaloTicksGeometry(), []);
-  const encodeRacksGeometry = useMemo(() => buildEncodeRacksGeometry(rackCount), [rackCount]);
   const encodeNodesGeometry = useMemo(
     () => buildEncodeNodesGeometry(nodeCount).geometry,
     [nodeCount]
@@ -321,7 +280,6 @@ export function BrandmarkAccretionShell() {
 
   const navigateHaloMaterial = useMemo(() => makeLineMaterial(COLOR_GOLD, 0), []);
   const navigateTicksMaterial = useMemo(() => makeLineMaterial(COLOR_GOLD, 0), []);
-  const encodeRacksMaterial = useMemo(() => makeLineMaterial(COLOR_DAWN, 0), []);
   const encodeNodesMaterial = useMemo(() => makePointsMaterial(0.06, 0), []);
   const buildSurfacesMaterial = useMemo(() => makeLineMaterial(COLOR_DAWN, 0), []);
 
@@ -329,24 +287,20 @@ export function BrandmarkAccretionShell() {
     return () => {
       navigateHaloGeometry.dispose();
       navigateTicksGeometry.dispose();
-      encodeRacksGeometry.dispose();
       encodeNodesGeometry.dispose();
       buildSurfacesGeometry.dispose();
       navigateHaloMaterial.dispose();
       navigateTicksMaterial.dispose();
-      encodeRacksMaterial.dispose();
       encodeNodesMaterial.dispose();
       buildSurfacesMaterial.dispose();
     };
   }, [
     navigateHaloGeometry,
     navigateTicksGeometry,
-    encodeRacksGeometry,
     encodeNodesGeometry,
     buildSurfacesGeometry,
     navigateHaloMaterial,
     navigateTicksMaterial,
-    encodeRacksMaterial,
     encodeNodesMaterial,
     buildSurfacesMaterial,
   ]);
@@ -375,7 +329,6 @@ export function BrandmarkAccretionShell() {
     const layers = getBrandmarkAccretionLayers(paintProgress);
     navigateHaloMaterial.opacity = layers.navigate * 0.55;
     navigateTicksMaterial.opacity = layers.navigate * 0.7;
-    encodeRacksMaterial.opacity = layers.encode * 0.55;
     encodeNodesMaterial.opacity = layers.encode * 0.85;
     buildSurfacesMaterial.opacity = layers.build * 0.5;
 
@@ -385,7 +338,7 @@ export function BrandmarkAccretionShell() {
     if (encodeGroupRef.current) encodeGroupRef.current.visible = layers.encode > 0.005;
     if (buildGroupRef.current) buildGroupRef.current.visible = layers.build > 0.005;
 
-    // Subtle live motion: the Encode rack ring rotates slowly so the
+    // Subtle live motion: the Encode node cloud rotates slowly so the
     // accretion reads as "alive", not static decoration. Tied to
     // clock time, not scroll, so it breathes during parked beats
     // too. Build plane fan oscillates ±5° around its base angle for
@@ -416,13 +369,11 @@ export function BrandmarkAccretionShell() {
         />
       </group>
 
-      {/* Encode racks + data nodes */}
+      {/* Encode data nodes (the wireframe rack frames that originally
+          paired with these nodes were removed on visual review — the
+          point cloud alone reads as "judgment being encoded" without
+          competing with the brandmark). */}
       <group ref={encodeGroupRef} visible={false}>
-        <lineSegments
-          geometry={encodeRacksGeometry}
-          material={encodeRacksMaterial}
-          frustumCulled={false}
-        />
         <points
           geometry={encodeNodesGeometry}
           material={encodeNodesMaterial}

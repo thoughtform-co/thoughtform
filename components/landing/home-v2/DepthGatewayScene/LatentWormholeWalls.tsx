@@ -45,9 +45,14 @@ import { STATION_DIAGNOSTIC, STATION_INTELLIGENCE, STATION_THOUGHTFORM } from ".
  *     scrolling, and the perceived flow comes from the camera
  *     dollying past the world-rigid points.
  *   - Each leg has its OWN progress reveal envelope. Leg 1 resolves
- *     after the camera leaves the parked Thoughtform read; leg 2
- *     resolves after the parked Diagnostic read. Parked beats
- *     therefore stay clean.
+ *     after the camera leaves the opening Thoughtform read; leg 2
+ *     resolves BEFORE the Diagnostic/Encode park (revised 2026-06-04)
+ *     and the two leg spans nearly meet at the Diagnostic gate, so
+ *     the rail shell stays continuously present from the entry
+ *     flythrough through to the substrate — the left/right walls no
+ *     longer drop out as the camera passes Encode. The opening
+ *     Thoughtform park stays clean because leg 1 only lifts once the
+ *     entry flythrough begins.
  *   - Per-point camera-space depth fade is computed in the vertex
  *     shader so dots ahead of the camera fade in as they approach
  *     and clip out as they cross the near plane — same depth-focus
@@ -125,22 +130,33 @@ const VISIBLE_FAR = 22;
 
 /** Reveal envelopes per leg, in global progress units.
  *
- *  Leg 1 lifts AFTER the Thoughtform park (centre ~0.06), resolving
- *  early in the long entry flythrough (pass-01a [0.12,0.35]) so the
- *  wormhole is already wrapping you as you fly toward Navigate.
+ *  Leg 1 lifts AFTER the opening Thoughtform park (centre ~0.06),
+ *  resolving early in the entry flythrough so the wormhole is already
+ *  wrapping you as you fly toward Navigate.
  *
- *  Leg 2 lifts AFTER the Diagnostic park (centre 0.60), resolving by
- *  progress 0.77 — comfortably inside passthrough-02 (0.67 → 0.83). */
-const LEG_1_REVEAL_START = 0.14;
-const LEG_1_REVEAL_END = 0.28;
-const LEG_2_REVEAL_START = 0.63;
-const LEG_2_REVEAL_END = 0.77;
+ *  Leg 2 reveal was pulled EARLIER (2026-06-04): it now resolves
+ *  BEFORE the Diagnostic/Encode park (0.60) instead of after it.
+ *  Previously leg 2 only lifted at 0.63–0.77, so as you scrolled past
+ *  Encode the leg-1 rails had already slid behind the camera while
+ *  leg 2 hadn't appeared yet — the corridor walls visibly vanished
+ *  for a beat. Revealing leg 2 by ~0.57 (combined with the
+ *  continuous leg spans below) keeps the left/right rails present the
+ *  whole way through, including across the Encode park. */
+const LEG_1_REVEAL_START = 0.12;
+const LEG_1_REVEAL_END = 0.24;
+const LEG_2_REVEAL_START = 0.46;
+const LEG_2_REVEAL_END = 0.57;
 
-/** Leg span fractions: rails START slightly past the source gate and
- *  END slightly before the destination gate so they don't intersect
- *  the gate group geometry directly. */
-const LEG_RAIL_START_FRAC = 0.12;
-const LEG_RAIL_END_FRAC = 0.94;
+/** Leg span fractions: rails START just past the source gate and END
+ *  just before the destination gate. Tightened toward the gates
+ *  (2026-06-04: start 0.12 → 0.06, end 0.94 → 0.99) so leg 1 and
+ *  leg 2 very nearly meet at the Diagnostic gate — the residual gap
+ *  (~0.7 world units) sits right at the orbit diagram and is masked
+ *  by it, so the rail shell reads as ONE continuous tube from the
+ *  entry flythrough all the way to the substrate instead of two
+ *  disconnected segments with a hole at Encode. */
+const LEG_RAIL_START_FRAC = 0.06;
+const LEG_RAIL_END_FRAC = 0.99;
 
 // ── Shaders ─────────────────────────────────────────────────────
 
