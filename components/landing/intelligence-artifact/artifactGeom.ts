@@ -189,7 +189,27 @@ export const COLOR_GOLD = 0xcaa554;
 export const COLOR_GOLD_RIM = 0xe9c97a;
 export const COLOR_DAWN = 0xebe3d6;
 export const COLOR_VOID = 0x0a0908;
-export const COLOR_ATREIDES = 0x7a9e6a;
+/** Atreides light — provenance / "the work that came before" tier. */
+export const COLOR_ATREIDES = 0x5b7a4e;
+
+// ── Role-tier mapping ────────────────────────────────────────────────
+//
+// Each of the three intelligence-layer roles owns ONE colour from the
+// canonical Thoughtform palette tiers. The variants below all paint
+// their Sources / Substrate / Surfaces zones with these same colours
+// so the role is readable across forms.
+
+/** Atreides-green family. Provenance, "where the work comes from". */
+export const COLOR_SOURCES = COLOR_ATREIDES;
+/** Canonical gold. The active centre — you-are-here / encoded judgment. */
+export const COLOR_SUBSTRATE = COLOR_GOLD;
+/** Dawn family. Structure / output skin / headless surfaces. */
+export const COLOR_SURFACES = COLOR_DAWN;
+
+/** CSS-string equivalents for DOM labels and SVG fallback. */
+export const COLOR_SOURCES_CSS = "#5b7a4e";
+export const COLOR_SUBSTRATE_CSS = "#caa554";
+export const COLOR_SURFACES_CSS = "#ebe3d6";
 
 // ── Phase math helpers ───────────────────────────────────────────────
 
@@ -219,6 +239,38 @@ export function phasePresence(progress: number, window: PhaseWindow, recedeOver?
   return rise * fall;
 }
 
+// ── Variants ─────────────────────────────────────────────────────────
+
+/** Structural metaphors selectable in the lab page. Each maps the
+ *  three layers onto a different spatial composition so the user can
+ *  compare which form reads best.
+ *
+ *  - `armillary` : low-angle deck + central substrate sphere + raised
+ *                  pylons. Reads as engineered infrastructure with the
+ *                  three layers as distinct zones (perimeter / centre /
+ *                  rim).
+ *  - `shell`     : single object with three concentric shells. The
+ *                  substrate is the inner core; sources are a tilted
+ *                  provenance band around it; surfaces are the paneled
+ *                  outer skin with port glyphs.
+ *  - `orbital`   : three planes orbiting one core. Each plane is
+ *                  visually distinct (Sources green, Surfaces dawn)
+ *                  and carries its own anchored label tag.
+ */
+export type ArtifactVariant = "armillary" | "shell" | "orbital";
+
+export interface VariantSpec {
+  key: ArtifactVariant;
+  label: string;
+  sub: string;
+}
+
+export const ARTIFACT_VARIANTS: readonly VariantSpec[] = [
+  { key: "armillary", label: "Armillary", sub: "Deck instrument" },
+  { key: "shell", label: "Shell", sub: "Nested concentric layers" },
+  { key: "orbital", label: "Orbital", sub: "Distinct planes" },
+];
+
 // ── Labels ───────────────────────────────────────────────────────────
 
 /** Phase labels surfaced beside the artifact at the resolved view.
@@ -228,12 +280,32 @@ export interface ArtifactLabel {
   ordinal: string;
   title: string;
   sub: string;
+  /** CSS colour, mapped to the role-tier palette above. */
+  color: string;
 }
 
 export const ARTIFACT_LABELS: readonly ArtifactLabel[] = [
-  { id: "sources", ordinal: "01", title: "Sources", sub: "where the work lives" },
-  { id: "substrate", ordinal: "02", title: "Substrate", sub: "how the team decides" },
-  { id: "surfaces", ordinal: "03", title: "Surfaces", sub: "where the layer is called" },
+  {
+    id: "sources",
+    ordinal: "01",
+    title: "Sources",
+    sub: "where the work lives",
+    color: COLOR_SOURCES_CSS,
+  },
+  {
+    id: "substrate",
+    ordinal: "02",
+    title: "Substrate",
+    sub: "how the team decides",
+    color: COLOR_SUBSTRATE_CSS,
+  },
+  {
+    id: "surfaces",
+    ordinal: "03",
+    title: "Surfaces",
+    sub: "where the layer is called",
+    color: COLOR_SURFACES_CSS,
+  },
 ];
 
 /** Phase telemetry shown above the artifact while scrubbing — gives
