@@ -276,7 +276,8 @@ export type ArtifactVariant =
   | "orbital"
   | "strata"
   | "funnel"
-  | "constellation";
+  | "constellation"
+  | "aperture";
 
 export interface VariantSpec {
   key: ArtifactVariant;
@@ -291,6 +292,36 @@ export const ARTIFACT_VARIANTS: readonly VariantSpec[] = [
   { key: "strata", label: "Strata", sub: "Cross-section stack" },
   { key: "funnel", label: "Funnel", sub: "Directional flow" },
   { key: "constellation", label: "Constellation", sub: "Navigation chart" },
+  { key: "aperture", label: "Aperture", sub: "Windows + orbiting sources" },
+];
+
+/** Aperture variant — interface-window labels for the highlighted
+ *  facets. Each entry pairs a short uppercase interface name with the
+ *  icosahedron face index it should render on. The list is kept short
+ *  (six windows) so the sphere doesn't get crowded; the remaining
+ *  facets stay unlit so the windows read as a deliberate subset.
+ *
+ *  Faces are picked by hand to spread roughly around the sphere when
+ *  rendered as a detail-0 icosahedron (20 faces). The exact indices
+ *  may need light tuning once the geodesic edge wireframe is in the
+ *  scene; treated as preset coordinates here for clarity. */
+export interface ApertureWindow {
+  /** Stable id (URL-safe, used as a CSS class fragment). */
+  id: string;
+  /** Short uppercase label shown next to the window. */
+  label: string;
+  /** Index of the icosahedron face this window paints. Indices into
+   *  `THREE.IcosahedronGeometry(_, 0)`'s face list. */
+  faceIndex: number;
+}
+
+export const APERTURE_WINDOWS: readonly ApertureWindow[] = [
+  { id: "api", label: "API", faceIndex: 1 },
+  { id: "mcp", label: "MCP", faceIndex: 4 },
+  { id: "web", label: "Web", faceIndex: 7 },
+  { id: "slack", label: "Slack", faceIndex: 10 },
+  { id: "cursor", label: "Cursor", faceIndex: 13 },
+  { id: "claude", label: "Claude", faceIndex: 16 },
 ];
 
 // ── Label anchors ───────────────────────────────────────────────────

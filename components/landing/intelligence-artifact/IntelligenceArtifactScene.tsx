@@ -27,6 +27,7 @@ import { useDeviceTier } from "@/lib/hooks/useDeviceTier";
 import { probeWebGL } from "@/lib/webgl/probe";
 import { IntelligenceArtifact } from "./IntelligenceArtifact";
 import {
+  APERTURE_WINDOWS,
   ARTIFACT_LABELS,
   ARTIFACT_VARIANTS,
   type ArtifactVariant,
@@ -382,6 +383,26 @@ export function IntelligenceArtifactScene() {
             <span className="ia-label__sub">{ARTIFACT_LABELS[2].sub}</span>
           </div>
         </div>
+
+        {/* Aperture variant: per-facet interface window badges.
+            Rendered for every variant but only positioned by the
+            Aperture variant's R3F useFrame (the badges sit invisibly
+            in the corner otherwise). The variant queries each via
+            `[data-aperture-window]` and writes left/top/opacity. */}
+        {variant === "aperture" && (
+          <div className="ia-windows" aria-hidden>
+            {APERTURE_WINDOWS.map((w) => (
+              <div
+                key={w.id}
+                data-aperture-window={w.id}
+                className="ia-window"
+                style={{ "--label-color": COLOR_SURFACES_CSS } as React.CSSProperties}
+              >
+                {w.label}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Phase scrubber + tabs + autoplay */}
@@ -779,6 +800,30 @@ const styles = `
 /* Three fixed slots. Sources sits on the left, Surfaces on the right,
    Substrate at the bottom. The leader line connects each label to a
    visible point inside the artifact. */
+/* Aperture interface window badges. Floating mono-uppercase chips
+   that the Aperture variant projects onto each highlighted facet. */
+.ia-windows {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.ia-window {
+  position: absolute;
+  left: -200px;
+  top: -200px;
+  transform: translate(-50%, -50%);
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--label-color, var(--dawn));
+  background: rgba(10, 9, 8, 0.7);
+  border: 1px solid color-mix(in srgb, var(--label-color) 40%, transparent);
+  padding: 3px 8px;
+  white-space: nowrap;
+  transition: opacity 220ms ease-out;
+  opacity: 0;
+}
+
 .ia-label--sources { top: 38%; left: 64px; }
 .ia-label--substrate {
   /* Clear of the phase-tabs row + scrubber row at the bottom of the

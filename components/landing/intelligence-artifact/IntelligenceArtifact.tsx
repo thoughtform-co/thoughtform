@@ -15,11 +15,15 @@
  *   - `strata`        -> `Strata`               : vertically stacked slabs.
  *   - `funnel`        -> `Funnel`               : horizontal flow pipeline.
  *   - `constellation` -> `Constellation`        : star-map navigation chart.
+ *   - `aperture`      -> `Aperture`             : geodesic sphere with
+ *                                                 highlighted interface
+ *                                                 windows + orbiting sources.
  *
  * All six share `SubstrateBrandmark` for the central nucleus so the
  * brandmark colour + depth are identical across forms.
  */
 
+import { Aperture } from "./Aperture";
 import { ArmillaryDeck } from "./ArmillaryDeck";
 import { Constellation } from "./Constellation";
 import { Funnel } from "./Funnel";
@@ -53,6 +57,8 @@ export function IntelligenceArtifact({
       return <Funnel progress={progress} reducedMotion={reducedMotion} />;
     case "constellation":
       return <Constellation progress={progress} reducedMotion={reducedMotion} />;
+    case "aperture":
+      return <Aperture progress={progress} reducedMotion={reducedMotion} />;
     case "armillary":
     default:
       return <ArmillaryDeck progress={progress} reducedMotion={reducedMotion} />;

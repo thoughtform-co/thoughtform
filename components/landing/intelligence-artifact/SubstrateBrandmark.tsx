@@ -173,6 +173,11 @@ interface SubstrateBrandmarkProps {
   radius?: number;
   /** When true, render the inner geodesic shell. Defaults to true. */
   showInnerShell?: boolean;
+  /** When true, render the outer geodesic shell. Defaults to true.
+   *  Variants like Aperture supply their own custom wireframe (with
+   *  highlighted interface facets) and set this to false to avoid
+   *  painting two overlapping geodesics at the same radius. */
+  showOuterShell?: boolean;
 }
 
 export function SubstrateBrandmark({
@@ -182,6 +187,7 @@ export function SubstrateBrandmark({
   reducedMotion = false,
   radius = SUBSTRATE_RADIUS,
   showInnerShell = true,
+  showOuterShell = true,
 }: SubstrateBrandmarkProps) {
   const groupRef = useRef<THREE.Group>(null);
 
@@ -216,7 +222,7 @@ export function SubstrateBrandmark({
 
   // ── Per-frame: opacities + spin ────────────────────────────────
   useFrame(() => {
-    mats.outerEdge.opacity = presence * 0.85;
+    mats.outerEdge.opacity = presence * 0.85 * (showOuterShell ? 1 : 0);
     mats.innerEdge.opacity = presence * 0.4 * (showInnerShell ? 1 : 0);
     // Front layer: solid gold, no blow-out.
     mats.brandFront.opacity = presence * 0.92;
@@ -231,7 +237,9 @@ export function SubstrateBrandmark({
 
   return (
     <group ref={groupRef}>
-      <lineSegments geometry={geoms.outerEdges} material={mats.outerEdge} frustumCulled={false} />
+      {showOuterShell && (
+        <lineSegments geometry={geoms.outerEdges} material={mats.outerEdge} frustumCulled={false} />
+      )}
       {showInnerShell && (
         <lineSegments geometry={geoms.innerEdges} material={mats.innerEdge} frustumCulled={false} />
       )}

@@ -6,6 +6,7 @@ export { OrbitalSystem } from "./OrbitalSystem";
 export { Strata } from "./Strata";
 export { Funnel } from "./Funnel";
 export { Constellation } from "./Constellation";
+export { Aperture } from "./Aperture";
 export { SubstrateBrandmark } from "./SubstrateBrandmark";
 export { AnchorProjector } from "./AnchorProjector";
 export * from "./artifactGeom";
