@@ -12,28 +12,27 @@ import { STATION_NAVIGATE, depthOpacityForWorldPosition } from "../sceneGeom";
  * (ADR-018, Navigate/Encode/Build remap).
  *
  * Gives the Navigate phase a named PLACE between the setup compass and
- * the Encode orbits. Same family + shape law as the interstitial gate
- * (diamonds + concentric armature, no rounded corners), with a compass
- * cross at the centre as the Navigate signature. The camera flies
- * through it; optical presence is camera-depth driven (no progress-only
- * fade clip), so it emerges from the distance and recedes as the camera
- * passes — exactly like the interstitial gate.
+ * the Encode orbits. The camera flies through it; optical presence is
+ * camera-depth driven (no progress-only fade clip), so it emerges from
+ * the distance and recedes as the camera passes — exactly like the
+ * interstitial gate.
  *
- * Composition:
- *   - OUTER armature: a large rotated square frame ("gateway").
+ * Composition (2026-06-05 petal-unfold revision — the outer rotated
+ * square armature + corner bearing ticks were dropped because they
+ * read as a competing frame around the brand mark + accreted shell
+ * dodecahedron, which together already give the eye plenty of
+ * structure to anchor on):
  *   - MID ring: a tilted ellipse so it reads as a passage angled into
  *     the corridor (depth cue).
- *   - COMPASS cross: four cardinal spokes from the centre (Navigate).
+ *   - COMPASS cross: four cardinal spokes from the centre (Navigate
+ *     signature).
  *   - CENTRE diamond: the Thoughtform through-line shape.
- *   - Bearing ticks on the armature (instrument-grade).
  */
 
-const ARMATURE_HALF = 1.0;
 const MID_RING_R = 0.66;
 const MID_RING_TILT_RAD = 0.3;
 const COMPASS_R = 0.48;
 const CENTRE_DIAMOND_R = 0.23;
-const TICK_COUNT = 16;
 // Wide, gentle depth window so the landmark lingers as the camera
 // flies in and fades softly as it passes — but still fully dark at
 // the parked setup beat, where the camera sits ~6.8 units back (Z≈10)
@@ -48,18 +47,6 @@ const NAVIGATE_DEPTH_WINDOW = {
 
 export function NavigateGate() {
   const groupRef = useRef<THREE.Group>(null);
-
-  // ── Outer armature: rotated square ──────────────────────────
-  const armatureGeom = useMemo(() => {
-    const h = ARMATURE_HALF;
-    return new THREE.BufferGeometry().setFromPoints([
-      new THREE.Vector3(-h, h, 0),
-      new THREE.Vector3(h, h, 0),
-      new THREE.Vector3(h, -h, 0),
-      new THREE.Vector3(-h, -h, 0),
-      new THREE.Vector3(-h, h, 0),
-    ]);
-  }, []);
 
   // ── Mid ring: tilted ellipse so it reads as a passage ──────
   const midRingGeom = useMemo(() => {
@@ -104,38 +91,7 @@ export function NavigateGate() {
     ]);
   }, []);
 
-  // ── Bearing ticks on armature ──────────────────────────────
-  const tickPositions = useMemo(() => {
-    const out: THREE.Vector3[] = [];
-    const h = ARMATURE_HALF;
-    const tickLen = 0.12;
-    for (let i = 0; i < TICK_COUNT; i++) {
-      const a = (i / TICK_COUNT) * Math.PI * 2;
-      const cos = Math.cos(a);
-      const sin = Math.sin(a);
-      const ax = Math.abs(cos);
-      const ay = Math.abs(sin);
-      const k = h / Math.max(ax, ay, 1e-6);
-      const px = cos * k;
-      const py = sin * k;
-      const inward = new THREE.Vector3(-cos, -sin, 0).normalize();
-      out.push(new THREE.Vector3(px, py, 0));
-      out.push(new THREE.Vector3(px + inward.x * tickLen, py + inward.y * tickLen, 0));
-    }
-    return new THREE.BufferGeometry().setFromPoints(out);
-  }, []);
-
   // ── Materials ───────────────────────────────────────────────
-  const armatureMat = useMemo(
-    () =>
-      new THREE.LineBasicMaterial({
-        color: new THREE.Color(0.79, 0.65, 0.33),
-        transparent: true,
-        opacity: 0,
-        depthWrite: false,
-      }),
-    []
-  );
   const midRingMat = useMemo(
     () =>
       new THREE.LineBasicMaterial({
@@ -166,42 +122,17 @@ export function NavigateGate() {
       }),
     []
   );
-  const tickMat = useMemo(
-    () =>
-      new THREE.LineBasicMaterial({
-        color: new THREE.Color(0.79, 0.65, 0.33),
-        transparent: true,
-        opacity: 0,
-        depthWrite: false,
-      }),
-    []
-  );
 
   useEffect(() => {
     return () => {
-      armatureGeom.dispose();
       midRingGeom.dispose();
       compassGeom.dispose();
       diamondGeom.dispose();
-      tickPositions.dispose();
-      armatureMat.dispose();
       midRingMat.dispose();
       compassMat.dispose();
       diamondMat.dispose();
-      tickMat.dispose();
     };
-  }, [
-    armatureGeom,
-    midRingGeom,
-    compassGeom,
-    diamondGeom,
-    tickPositions,
-    armatureMat,
-    midRingMat,
-    compassMat,
-    diamondMat,
-    tickMat,
-  ]);
+  }, [midRingGeom, compassGeom, diamondGeom, midRingMat, compassMat, diamondMat]);
 
   // ── Per-frame visibility envelope ───────────────────────────
   useFrame(() => {
@@ -220,11 +151,9 @@ export function NavigateGate() {
       NAVIGATE_DEPTH_WINDOW
     );
 
-    armatureMat.opacity = opacity * 0.5;
     midRingMat.opacity = opacity * 0.45;
     compassMat.opacity = opacity * 0.5;
     diamondMat.opacity = opacity * 0.7;
-    tickMat.opacity = opacity * 0.55;
 
     // Slow spin so the gate reads as instrument-alive at a fixed Z.
     group.rotation.z = progress * 0.6;
@@ -232,11 +161,9 @@ export function NavigateGate() {
 
   return (
     <group ref={groupRef} position={STATION_NAVIGATE.position} visible={false}>
-      <lineLoop geometry={armatureGeom} material={armatureMat} />
       <lineLoop geometry={midRingGeom} material={midRingMat} />
       <lineSegments geometry={compassGeom} material={compassMat} />
       <lineLoop geometry={diamondGeom} material={diamondMat} />
-      <lineSegments geometry={tickPositions} material={tickMat} />
     </group>
   );
 }

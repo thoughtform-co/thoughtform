@@ -32,6 +32,7 @@
  * ellipses, not coplanar rings.
  */
 
+import * as THREE from "three";
 import {
   COLOR_GOLD,
   COLOR_SOURCES,
@@ -220,22 +221,186 @@ export const SURFACES_PORT_SIZE = 0.085;
  *  sit on a primary axis — gives the outer skin a hand-flown feel. */
 export const SURFACES_PORT_TILT_Y = (12 * Math.PI) / 180;
 
-// ── Reveal helpers ───────────────────────────────────────────────────
+// ── Petal-unfold helpers (2026-06-05 revision) ──────────────────────
+//
+// The shell layers deploy with PETAL UNFOLD motion: each individual
+// element (a dodecahedron face, a source orbit, a surfaces port)
+// starts COLLAPSED AT THE BRAND MARK CENTER (position 0, scale 0)
+// and unfolds OUTWARD to its final position + size as its per-element
+// reveal ramps. Per-element reveals are STAGGERED inside the parent
+// layer's reveal window so the layer reads as origami petals opening
+// in a cascade around the mark, not a single uniform scale-up.
+//
+// Brandmark Principle 4 (`brandmark-choreography` skill): decorations
+// emerge GEOMETRICALLY via scale + position lerp, NEVER via opacity.
 
-/** Visibility-skip threshold. Layers with `reveal < EMERGE_EPSILON`
+/** Visibility-skip threshold. Layers/elements with reveal below this
  *  hide their group entirely so the GPU doesn't spend draw calls on
  *  zero-scale geometry. */
 export const EMERGE_EPSILON = 0.005;
 
-/** Map a phase reveal [0,1] (already smoothstepped upstream by
- *  `getBrandmarkAccretionLayers`) to a geometric SCALE factor that
- *  the layer's parent group applies via `setScalar`. Brandmark
- *  Principle 4 (`brandmark-choreography` skill): decorations emerge
- *  GEOMETRICALLY via scale, never via opacity.
+/** Stagger an individual element's reveal inside the parent layer's
+ *  reveal window. Element 0 starts unfolding at parent reveal 0;
+ *  element `total - 1` finishes at parent reveal 1; intermediate
+ *  elements unfold in between with `overlap` controlling how much
+ *  consecutive windows overlap (0 = no overlap / strict round-robin,
+ *  1 = all elements unfold together).
  *
- *  Applies a gentle cubic so the shell sub-layer reads as a settle
- *  rather than a linear stretch as the reveal ramps. */
+ *  With `overlap = 0.55` and `total = 12`, each element's window
+ *  spans ~17% of the parent reveal and neighbours overlap by ~55%
+ *  — reads as a cascade, not a slow parade. */
+export function petalStagger(reveal: number, idx: number, total: number, overlap = 0.55): number {
+  if (total <= 1) return reveal;
+  // Solve for window size `f` so the first element starts at 0, the
+  // last ends at 1, and consecutive windows overlap by `overlap * f`.
+  // Derivation: with step = (1 - f) / (total - 1) between starts and
+  // overlap fraction p of f, f - step = p * f  =>
+  // f = 1 / [(1 - p)(total - 1) + 1].
+  const f = 1 / ((1 - overlap) * (total - 1) + 1);
+  const step = (1 - f) / (total - 1);
+  const start = idx * step;
+  const t = (reveal - start) / f;
+  return t < 0 ? 0 : t > 1 ? 1 : t;
+}
+
+/** Per-element unfold output. `scale` is applied via `group.scale.setScalar`;
+ *  `positionT` is the lerp factor from origin (0,0,0) to the element's
+ *  final outward position. Both share the same smootherstep curve so
+ *  the face's position and size ramp together — no mismatch where a
+ *  face is at full size at the origin. */
+export interface PetalEmerge {
+  scale: number;
+  positionT: number;
+}
+
+/** Map a staggered per-element reveal to its `{scale, positionT}`
+ *  pair. Uses smootherstep (6t^5 - 15t^4 + 10t^3) for elegant
+ *  ease-in-and-out — gentler than smoothstep so the unfold reads as
+ *  a settle rather than a snap. */
+export function petalEmerge(stagger: number): PetalEmerge {
+  const t = stagger < 0 ? 0 : stagger > 1 ? 1 : stagger;
+  const s = t * t * t * (t * (t * 6 - 15) + 10);
+  return { scale: s, positionT: s };
+}
+
+/** Legacy single-scalar emerge helper. Kept as an alias of the new
+ *  `petalEmerge(reveal).scale` so any caller that hasn't migrated to
+ *  per-element unfold still gets the same smootherstep scale ramp. */
 export function splitEmerge(reveal: number): number {
-  const r = reveal < 0 ? 0 : reveal > 1 ? 1 : reveal;
-  return r * r * (3 - 2 * r);
+  return petalEmerge(reveal).scale;
+}
+
+// ── Dodecahedron face decomposition (ShellSubstrate) ─────────────────
+
+/** A single pentagonal face of a regular dodecahedron, expressed in
+ *  the world-space frame of the shell (parent group). The pentagon's
+ *  vertices are given as offsets FROM the face centroid, so a face
+ *  rendered at `group.position = centroid` paints in its correct
+ *  world orientation — no quaternion needed because the offsets
+ *  already encode the face plane.
+ *
+ *  Used by `ShellSubstrate` to render each face as its own
+ *  `<lineLoop>` sub-group that petal-unfolds from origin -> centroid. */
+export interface DodecahedronFace {
+  /** World-space final position of the face centroid. */
+  centroid: [number, number, number];
+  /** World-space outward unit normal of the face. */
+  normal: [number, number, number];
+  /** The five pentagon vertices in face-local coords (vertex - centroid),
+   *  ordered counter-clockwise around the face centroid in the face plane. */
+  localVertices: Array<[number, number, number]>;
+}
+
+/** Decompose a regular dodecahedron of the given circumradius (vertex
+ *  distance from center) into its 12 pentagonal faces. Uses
+ *  `THREE.DodecahedronGeometry` to source the canonical vertex set,
+ *  then clusters its 36 triangles by face normal and angle-sorts the
+ *  pentagon vertices around each face centroid.
+ *
+ *  Geometry is allocated + immediately disposed inside the helper;
+ *  the returned face descriptors are plain JS data that the consumer
+ *  can use to build its own per-face line-loop geometries. */
+export function buildDodecahedronFaces(radius: number): DodecahedronFace[] {
+  const geom = new THREE.DodecahedronGeometry(radius, 0);
+  const posAttr = geom.getAttribute("position") as THREE.BufferAttribute;
+  const normalAttr = geom.getAttribute("normal") as THREE.BufferAttribute;
+  const triCount = posAttr.count / 3;
+
+  interface RawFace {
+    normal: [number, number, number];
+    verts: Array<[number, number, number]>;
+  }
+  const rawFaces: RawFace[] = [];
+
+  for (let t = 0; t < triCount; t++) {
+    const i0 = t * 3;
+    const nx = normalAttr.getX(i0);
+    const ny = normalAttr.getY(i0);
+    const nz = normalAttr.getZ(i0);
+
+    let face = rawFaces.find(
+      (f) =>
+        Math.abs(f.normal[0] - nx) < 1e-3 &&
+        Math.abs(f.normal[1] - ny) < 1e-3 &&
+        Math.abs(f.normal[2] - nz) < 1e-3
+    );
+    if (!face) {
+      face = { normal: [nx, ny, nz], verts: [] };
+      rawFaces.push(face);
+    }
+    for (let v = 0; v < 3; v++) {
+      const vx = posAttr.getX(i0 + v);
+      const vy = posAttr.getY(i0 + v);
+      const vz = posAttr.getZ(i0 + v);
+      const dup = face.verts.some(
+        ([ex, ey, ez]) =>
+          Math.abs(ex - vx) < 1e-3 && Math.abs(ey - vy) < 1e-3 && Math.abs(ez - vz) < 1e-3
+      );
+      if (!dup) face.verts.push([vx, vy, vz]);
+    }
+  }
+
+  geom.dispose();
+
+  // Build the per-face descriptor: centroid, normal, and pentagon
+  // vertices sorted angularly around the centroid in the face plane.
+  return rawFaces.map((face) => {
+    const cx = face.verts.reduce((s, v) => s + v[0], 0) / face.verts.length;
+    const cy = face.verts.reduce((s, v) => s + v[1], 0) / face.verts.length;
+    const cz = face.verts.reduce((s, v) => s + v[2], 0) / face.verts.length;
+    const centroid: [number, number, number] = [cx, cy, cz];
+
+    // Build a 2D basis in the face plane for angle sorting. Pick a
+    // reference 'up' direction that's not parallel to the face normal.
+    const [nx, ny, nz] = face.normal;
+    const refUp: [number, number, number] = Math.abs(ny) > 0.9 ? [1, 0, 0] : [0, 1, 0];
+    const ux = refUp[1] * nz - refUp[2] * ny;
+    const uy = refUp[2] * nx - refUp[0] * nz;
+    const uz = refUp[0] * ny - refUp[1] * nx;
+    const uLen = Math.max(1e-6, Math.sqrt(ux * ux + uy * uy + uz * uz));
+    const u: [number, number, number] = [ux / uLen, uy / uLen, uz / uLen];
+    const v: [number, number, number] = [
+      ny * u[2] - nz * u[1],
+      nz * u[0] - nx * u[2],
+      nx * u[1] - ny * u[0],
+    ];
+
+    const withAngle = face.verts.map((vert) => {
+      const dx = vert[0] - cx;
+      const dy = vert[1] - cy;
+      const dz = vert[2] - cz;
+      const uc = dx * u[0] + dy * u[1] + dz * u[2];
+      const vc = dx * v[0] + dy * v[1] + dz * v[2];
+      return { vert, angle: Math.atan2(vc, uc) };
+    });
+    withAngle.sort((a, b) => a.angle - b.angle);
+
+    const localVertices: Array<[number, number, number]> = withAngle.map(({ vert }) => [
+      vert[0] - cx,
+      vert[1] - cy,
+      vert[2] - cz,
+    ]);
+
+    return { centroid, normal: face.normal, localVertices };
+  });
 }

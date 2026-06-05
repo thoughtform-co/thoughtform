@@ -9,18 +9,21 @@
  * Mix of round and very flat ellipses (eccentricity 0.4..0.95) and a
  * spread of XYZ tilts so the orbits visibly CROSS when seen face-on —
  * a real solar system of inclined planes, not a stack of coplanar
- * rings. Replaces the four flat coplanar ellipses of the retired
- * `DiagnosticOrbitGate` AND the single Saturn-style band of the
- * standalone `NestedShellSphere` sources.
+ * rings.
  *
- * Emerges geometrically (group `scale` 0 -> 1 via `splitEmerge`) during
- * the Encode phase and PERSISTS through Build so the constellation
- * accumulates around the traveling mark and lands fully formed at the
- * Build station.
+ * PETAL UNFOLD (2026-06-05 revision): each orbit is rendered inside
+ * its OWN sub-group (ring lineLoop + pip mesh co-located). The
+ * sub-group scales 0 -> 1 with staggered timing inside the parent
+ * sources reveal window, so the orbits unfold one after the other
+ * around the brandmark + already-deployed substrate dodecahedron.
+ * Because the orbit ring is centered on origin, scale 0 collapses it
+ * to a single point AT the brand mark center; scale 1 deploys the
+ * full tilted ellipse. The pip mesh sits inside the same sub-group,
+ * so it scales + travels with its orbit naturally — no extra math.
+ * Reads as planets flying out from the mark to their orbital paths.
  *
  * Pip revolution uses each orbit's own period + direction + phase so
- * the field reads as multi-body rather than one coordinated sweep
- * (mirrors the per-orbit-pip pattern from the retired DiagnosticOrbitGate).
+ * the field reads as multi-body rather than one coordinated sweep.
  */
 
 import { useFrame } from "@react-three/fiber";
@@ -34,7 +37,13 @@ import {
 import { buildTiltedRingLineLoop } from "@/components/landing/v7/intelligence-layer/celestialRingUtils";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import { getBrandmarkAccretionLayers } from "../sceneGeom";
-import { EMERGE_EPSILON, SHELL_ORBITS, type ShellOrbit, splitEmerge } from "./shellGeom";
+import {
+  EMERGE_EPSILON,
+  petalEmerge,
+  petalStagger,
+  SHELL_ORBITS,
+  type ShellOrbit,
+} from "./shellGeom";
 
 interface ShellSourcesProps {
   /** Which accretion layer this component represents. Hard-coded to
@@ -46,9 +55,16 @@ interface ShellSourcesProps {
   reducedMotion?: boolean;
 }
 
+/** Per-orbit stagger overlap inside the parent sources reveal window
+ *  (see `petalStagger` in shellGeom.ts). 0.6 reads as a tight cascade
+ *  through all 6 orbits — they unfold quickly enough to feel like one
+ *  burst, but with visible per-orbit character. */
+const SOURCES_ORBIT_OVERLAP = 0.6;
+
 /** Compute a 3D point on an XY ellipse at the given parametric angle
- *  after applying the orbit's tilt. Mirrors the math `buildTiltedRingLineLoop`
- *  uses for its segments so the pip rides exactly on its orbit. */
+ *  after applying the orbit's tilt. Mirrors the math
+ *  `buildTiltedRingLineLoop` uses for its segments so the pip rides
+ *  exactly on its orbit. */
 function pipPositionOnOrbit(orbit: ShellOrbit, parametricRad: number): THREE.Vector3 {
   const lx = orbit.rx * Math.cos(parametricRad);
   const ly = orbit.rx * orbit.eccentricity * Math.sin(parametricRad);
@@ -59,6 +75,7 @@ function pipPositionOnOrbit(orbit: ShellOrbit, parametricRad: number): THREE.Vec
 export function ShellSources({ layerKey, reducedMotion = false }: ShellSourcesProps) {
   void layerKey;
   const groupRef = useRef<THREE.Group>(null);
+  const orbitGroupRefs = useRef<(THREE.Group | null)[]>([]);
   const pipRefs = useRef<(THREE.Mesh | null)[]>([]);
 
   // ── Geometries ─────────────────────────────────────────────────
@@ -109,42 +126,60 @@ export function ShellSources({ layerKey, reducedMotion = false }: ShellSourcesPr
       return;
     }
     group.visible = true;
-    group.scale.setScalar(splitEmerge(reveal));
 
     // Revolve each pip along its orbit. While reduced-motion is on,
     // pips snap to their starting phase so the field stays static
     // but still legible as a multi-body constellation.
     const t = reducedMotion ? 0 : clock.elapsedTime;
+
+    // ── Per-orbit petal unfold ──────────────────────────────────
+    // Each orbit's sub-group scales 0 -> 1 with staggered timing.
+    // Pip position is updated INSIDE the sub-group's local space,
+    // so the pip naturally travels from origin (at scale 0) to its
+    // full orbital position (at scale 1) — no separate pip lerp.
     for (let i = 0; i < SHELL_ORBITS.length; i++) {
       const orbit = SHELL_ORBITS[i];
-      const ref = pipRefs.current[i];
-      if (!ref) continue;
-      const parametricRad = orbit.phaseRad + orbit.dir * (t / orbit.periodSec) * Math.PI * 2;
-      const pos = pipPositionOnOrbit(orbit, parametricRad);
-      ref.position.set(pos.x, pos.y, pos.z);
+      const orbitGroup = orbitGroupRefs.current[i];
+      const pip = pipRefs.current[i];
+      if (!orbitGroup) continue;
+
+      const stagger = petalStagger(reveal, i, SHELL_ORBITS.length, SOURCES_ORBIT_OVERLAP);
+      const { scale } = petalEmerge(stagger);
+      if (scale <= EMERGE_EPSILON) {
+        orbitGroup.visible = false;
+        continue;
+      }
+      orbitGroup.visible = true;
+      orbitGroup.scale.setScalar(scale);
+
+      if (pip) {
+        const parametricRad = orbit.phaseRad + orbit.dir * (t / orbit.periodSec) * Math.PI * 2;
+        const pos = pipPositionOnOrbit(orbit, parametricRad);
+        pip.position.set(pos.x, pos.y, pos.z);
+      }
     }
   });
 
   return (
     <group ref={groupRef} visible={false}>
       {SHELL_ORBITS.map((orbit, i) => (
-        <lineLoop
+        <group
           key={`orbit-${orbit.id}`}
-          geometry={ringGeoms[i]}
-          material={ringMats[i]}
-          frustumCulled={false}
-        />
-      ))}
-      {SHELL_ORBITS.map((orbit, i) => (
-        <mesh
-          key={`pip-${orbit.id}`}
           ref={(node) => {
-            pipRefs.current[i] = node;
+            orbitGroupRefs.current[i] = node;
           }}
-          geometry={pipGeoms[i]}
-          material={pipMats[i]}
-          frustumCulled={false}
-        />
+          visible={false}
+        >
+          <lineLoop geometry={ringGeoms[i]} material={ringMats[i]} frustumCulled={false} />
+          <mesh
+            ref={(node) => {
+              pipRefs.current[i] = node;
+            }}
+            geometry={pipGeoms[i]}
+            material={pipMats[i]}
+            frustumCulled={false}
+          />
+        </group>
       ))}
     </group>
   );

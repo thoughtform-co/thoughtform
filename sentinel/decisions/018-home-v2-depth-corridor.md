@@ -11,6 +11,71 @@
 
 ---
 
+## 2026-06-05 Revision — Petal-unfold accretion (per-element origami emerge)
+
+The first shell-into-corridor pass below uniformly scaled each layer
+from a single point during the preceding transit (substrate started
+emerging at progress 0.22 mid-pass-01a). Combined with the camera
+dolly, this read as "the cage is coming from a distance" — the layer
+appeared to fly in from afar instead of forming around the mark.
+Follow-up pass replaces the uniform scale with **per-element petal
+unfold** at each park arrival:
+
+- **Per-element decomposition.** `ShellSubstrate` decomposes the
+  dodecahedron into 12 pentagonal face sub-groups (new
+  `buildDodecahedronFaces(radius)` helper in `shellGeom.ts` — sources
+  the canonical vertex set from `THREE.DodecahedronGeometry`, clusters
+  triangles by face normal, angle-sorts the 5 pentagon vertices around
+  each centroid). `ShellSources` wraps each of its 6 orbits (ring +
+  pip) in its own sub-group. `ShellSurfaces` keeps the outer geodesic
+  - equator as a uniform-scale backdrop but wraps each of the 6 port
+    pips in its own sub-group.
+
+- **Origami unfold per element.** At reveal 0 every sub-group sits at
+  the brand mark center collapsed (position 0, scale 0). As its
+  per-element reveal ramps, the sub-group's position lerps from
+  `(0,0,0)` to its final outward centroid / ring position AND its
+  scale lerps 0 → 1, both on the same smootherstep curve. Reads as
+  origami petals opening around the mark.
+
+- **Staggered cascade.** Per-element reveals are STAGGERED inside the
+  parent layer reveal window via new `petalStagger(reveal, idx, total,
+overlap)` helper. With `overlap = 0.55` and 12 faces, each face's
+  window spans ~17% of the parent reveal and neighbours overlap by
+  ~55% — reads as a cascade through all 12 faces, not a slow
+  one-at-a-time parade or a uniform burst.
+
+- **Reveal windows late-bound to park arrival.** `CORRIDOR_TIMELINE.accretion`
+  windows tightened to deploy AT each phase park instead of during
+  the preceding transit: `substrate: 0.28→0.36` (Navigate park 0.34),
+  `sources: 0.55→0.62` (Encode park 0.60), `surfaces: 0.84→0.91`
+  (Build park 0.92). Each layer now snaps open as the mark arrives
+  at its phase, while the camera has stabilised around the parked
+  composition.
+
+- **Inner geodesic + outer geodesic** stay on the legacy uniform
+  smootherstep scale (`splitEmerge`, kept as an alias of
+  `petalEmerge(reveal).scale`) — they are faint structural backdrops
+  and decomposing 20 icosahedron faces would read as visually busy
+  at the corridor's read distance.
+
+**Companion NavigateGate cleanup** (same pass): the outer rotated
+square armature + corner bearing ticks were removed because they
+read as a competing frame around the brand mark + accreted shell
+dodecahedron, which together already give the eye plenty of
+structure to anchor on. The gate keeps its compass cross + tilted
+mid-ring + centre diamond as its Navigate signature.
+
+**New tuning knobs (`shell/shellGeom.ts`):**
+
+| Knob                                                                                     | Effect                                                                                                                                                     |
+| ---------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `petalStagger`'s `overlap` arg                                                           | 0 = strict round-robin (faces unfold one at a time), 1 = uniform (all faces unfold together). Current values: substrate 0.55, sources 0.60, surfaces 0.55. |
+| `CORRIDOR_TIMELINE.accretion.{layer}.start`/`peakAt`                                     | The parent window each layer's per-element stagger lives inside. Tighter = snappier deploy.                                                                |
+| Per-element `localVertices` / `centroid` (substrate) and `portFinalPositions` (surfaces) | Final outward positions the petals travel to. Element index also controls stagger order — earlier indices unfold first.                                    |
+
+---
+
 ## 2026-06-05 Revision — Shell-into-corridor (intelligence-layer artifact as the climax)
 
 The brandmark accretion shell that wrapped the travelling mark with

@@ -238,9 +238,18 @@ export const CORRIDOR_TIMELINE = {
    *    skin sits at radius 1.85, well outside the 0.55 sphere, so
    *    no blend is needed). */
   accretion: {
-    substrate: { start: 0.22, peakAt: 0.39 },
-    sources: { start: 0.5, peakAt: 0.63 },
-    surfaces: { start: 0.74, peakAt: 0.91 },
+    // 2026-06-05 petal-unfold pass: tight windows anchored to each
+    // phase park's arrival. The wide early-emerge windows of the
+    // previous pass (substrate 0.22→0.39, sources 0.50→0.63,
+    // surfaces 0.74→0.91) caused each layer to slowly grow during
+    // the preceding transit, which combined with the camera dolly
+    // read as "the cage is coming from a distance". Tight windows
+    // (~0.08 wide) sized to fire AT the park arrival make each
+    // layer DEPLOY at the moment the mark arrives, so the petals
+    // unfold around a stable mark, not approach from afar.
+    substrate: { start: 0.28, peakAt: 0.36 }, // Navigate park centre ~0.34
+    sources: { start: 0.55, peakAt: 0.62 }, // Encode park centre ~0.60
+    surfaces: { start: 0.84, peakAt: 0.91 }, // Build park centre ~0.92
   },
 } as const;
 
