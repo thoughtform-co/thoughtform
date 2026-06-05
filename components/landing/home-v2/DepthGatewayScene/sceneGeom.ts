@@ -211,34 +211,36 @@ export const CORRIDOR_TIMELINE = {
 
   /** Brandmark accretion shell reveal windows (ADR-013 brandmark
    *  travels accretively through the corridor; the mark itself does
-   *  not change, but what surrounds it accumulates). Three layers,
-   *  each owned by its own reveal envelope so designers can tune
-   *  one without disturbing the others:
+   *  not change, but what surrounds it accumulates).
    *
-   *  - `navigateHalo`: thin bearing-tick ring that establishes the
-   *    mark as an instrument in flight. Starts to register late in
-   *    pass-01a (just before the Navigate park) and lingers until
-   *    the camera leaves Navigate.
-   *  - `encodeNodes`: wireframe rack/card frames + additive data-node
-   *    points accreting in an annulus around the mark — reads as
-   *    judgment being encoded into nodes around the north star. Hits
-   *    full strength at the Diagnostic park, then persists into
-   *    passthrough-02 (additive — the field accumulates as the mark
-   *    travels). The annulus mirrors the diagnostic mote band
-   *    (r ∈ [0.55, 1.95]) so the centre stays clear of the brandmark.
-   *  - `buildSurfaces`: stacked translucent wireframe interface
-   *    planes fanning around the mark. Reveals across passthrough-02
-   *    → intelligence; coordinates with `getIntelligenceSubstratePresence`
-   *    via `buildSubstrateBlend` so the planes RECEDE into the
-   *    substrate cloud rather than fighting it. */
+   *  INSIDE-OUT MAPPING (shell-into-corridor pass): each phase of
+   *  the flywheel adds the next layer of the intelligence-layer
+   *  shell around the traveling guiding-star brandmark, and each
+   *  layer PERSISTS so the shell is fully assembled at the Build
+   *  landing.
+   *
+   *  - `substrate`: golden dodecahedron cage + faint inner geodesic
+   *    around the mark — Navigate adds the substrate core. Starts to
+   *    register in pass-01a, peaks at the Navigate park, persists
+   *    forever (it is the inner core of the assembled shell).
+   *  - `sources`: a solar-system of inclined elliptical orbits with
+   *    revolving source pips — Encode adds the constellation of
+   *    trusted sources around the substrate. Starts late pass-01b on
+   *    approach, peaks at the Encode (Diagnostic) park, persists.
+   *  - `surfaces`: outer geodesic skin + port-pip ring (dawn) —
+   *    Build adds the headless surfaces wrapping the layer. Starts
+   *    mid passthrough-02 on approach, peaks at the Intelligence
+   *    landing, persists so the assembled shell stays present as
+   *    the brandmark hands off to the substrate sphere morph at
+   *    the centre. No fade-out (the previous Build accretion's
+   *    `buildSubstrateBlend` was for stacked interface planes that
+   *    competed with the morph silhouette — the geodesic outer
+   *    skin sits at radius 1.85, well outside the 0.55 sphere, so
+   *    no blend is needed). */
   accretion: {
-    navigateHalo: { start: 0.3, peakAt: 0.4, fadeOutStart: 0.5, fadeOutEnd: 0.6 },
-    encodeNodes: { start: 0.42, peakAt: 0.6 },
-    buildSurfaces: { start: 0.72, peakAt: 0.9 },
-    /** Once the substrate cloud takes over the mark, the Build
-     *  accretion planes fade so the morph silhouette can read.
-     *  Multiplied with the Build reveal envelope. */
-    buildSubstrateBlend: { start: 0.91, end: 0.95 },
+    substrate: { start: 0.22, peakAt: 0.39 },
+    sources: { start: 0.5, peakAt: 0.63 },
+    surfaces: { start: 0.74, peakAt: 0.91 },
   },
 } as const;
 
@@ -804,48 +806,37 @@ function intelligenceApproachDepthOffset(progress: number): number {
   return lerp(offset, 0, smoothstep(start, end, progress));
 }
 
-/** Brandmark accretion reveal envelopes — one per layer. Each
- *  returns [0..1] for the current paint progress, ramping up across
- *  its reveal window. The `navigate` halo also fades back OUT after
- *  the Navigate beat (transient cue); `encode` and `build` are
- *  PERSISTENT — once they reveal, they hold so the field around the
- *  mark visibly accumulates as the camera travels (the W3 "more
- *  layered the further it travels" intent, plan 03adb0dd).
+/** Brandmark accretion reveal envelopes — one per layer of the
+ *  intelligence-layer shell that accretes inside-out around the
+ *  travelling brandmark:
  *
- *  Build's envelope is multiplied by `buildSubstrateBlend` so the
- *  interface planes recede AS the substrate morph takes over the
- *  mark at Intelligence landing — they don't compete with the
- *  silhouette cloud once the brandmark hands off. */
+ *   - `substrate` (Navigate adds): golden dodecahedron + faint inner
+ *     geodesic — the substrate core wrap around the mark.
+ *   - `sources` (Encode adds): solar-system of inclined orbits +
+ *     revolving source pips around the substrate.
+ *   - `surfaces` (Build adds): outer geodesic skin + port-pip ring,
+ *     wrapping the assembled shell.
+ *
+ *  All three are PERSISTENT — once they reveal, they hold so the
+ *  shell is fully assembled at the Build landing and stays present
+ *  as the brandmark hands off to the substrate sphere morph at the
+ *  centre. No fade-out: the previous Build accretion's
+ *  `buildSubstrateBlend` was needed because the old interface
+ *  planes sat inside the morph cloud's silhouette; the new outer
+ *  geodesic skin sits at radius ~1.85, well outside the 0.55
+ *  substrate sphere, so it can stay visible at landing without
+ *  competing. */
 export function getBrandmarkAccretionLayers(progress: number): {
-  navigate: number;
-  encode: number;
-  build: number;
+  substrate: number;
+  sources: number;
+  surfaces: number;
 } {
-  const { navigateHalo, encodeNodes, buildSurfaces, buildSubstrateBlend } =
-    CORRIDOR_TIMELINE.accretion;
-
-  // Navigate halo: bell envelope (ramp in, hold past park, ramp out
-  // as the camera leaves Navigate).
-  let navigate = 0;
-  if (progress > navigateHalo.start) {
-    const inT = smoothstep(navigateHalo.start, navigateHalo.peakAt, progress);
-    const outT = 1 - smoothstep(navigateHalo.fadeOutStart, navigateHalo.fadeOutEnd, progress);
-    navigate = clamp01(Math.min(inT, outT));
-  }
-
-  // Encode nodes: ramp in, persist forever (the field genuinely
-  // accumulates as the mark travels).
-  const encode = smoothstep(encodeNodes.start, encodeNodes.peakAt, progress);
-
-  // Build surfaces: ramp in across passthrough-02 → intelligence,
-  // multiplied by a fade-OUT that respects the substrate handoff so
-  // the planes recede when the morph takes over.
-  const buildIn = smoothstep(buildSurfaces.start, buildSurfaces.peakAt, progress);
-  const substrateBlend =
-    1 - smoothstep(buildSubstrateBlend.start, buildSubstrateBlend.end, progress);
-  const build = clamp01(buildIn * substrateBlend);
-
-  return { navigate, encode, build };
+  const { substrate, sources, surfaces } = CORRIDOR_TIMELINE.accretion;
+  return {
+    substrate: smoothstep(substrate.start, substrate.peakAt, progress),
+    sources: smoothstep(sources.start, sources.peakAt, progress),
+    surfaces: smoothstep(surfaces.start, surfaces.peakAt, progress),
+  };
 }
 
 /** Mobile inward-pull for the Thoughtform phase labels. Portrait FOV

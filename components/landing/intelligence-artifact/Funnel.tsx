@@ -64,10 +64,10 @@ const SOURCES_X = -2.4;
 const SUBSTRATE_X = 0;
 const SURFACES_X = 2.4;
 
-const SOURCES_LANE_COUNT = 5;
+const SOURCES_LANE_COUNT: number = 5;
 const SOURCES_LANE_Y_RANGE = 0.85;
 
-const SURFACES_FAN_COUNT = 6;
+const SURFACES_FAN_COUNT: number = 6;
 /** Vertical spread of the surfaces fan endpoints. */
 const SURFACES_FAN_HALF_HEIGHT = 1.05;
 

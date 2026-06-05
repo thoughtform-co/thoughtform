@@ -9,7 +9,6 @@ import { buildSphereCloudGeometry } from "@/components/landing/v7/intelligence-l
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import { STATION_INTELLIGENCE, getIntelligenceSubstratePresence } from "../sceneGeom";
 import { brandmarkCloudVertex, brandmarkCloudFragment } from "../shaders/brandmarkCloud";
-import { BuildArtifact } from "../BuildArtifact";
 
 /**
  * IntelligenceGate — the world-rigid 3D group at
@@ -19,21 +18,24 @@ import { BuildArtifact } from "../BuildArtifact";
  * entire intelligence beat can be moved by changing
  * `STATION_INTELLIGENCE.position`.
  *
- * Composition (paint order, near -> far):
+ * Composition:
  *
  *   - Substrate morph cloud (centre): brandmark shape <-> Fibonacci
  *     sphere morph driven by `getIntelligenceSubstratePresence`.
  *     This is the substrate-cut cover for the projected vector
- *     brandmark (ADR-017 pattern).
- *   - `BuildArtifact`: holographic grid + panels + streams that boot
- *     up around the sphere as it forms.
+ *     brandmark (ADR-017 pattern). At landing it IS the substrate
+ *     sphere at the heart of the shell.
  *
- * The flanking Fibonacci-sphere "side bodies" were removed in the
- * 2026-06-02 revision (they competed with the substrate sphere).
+ * The wrapping dodecahedron cage + solar-system source orbits +
+ * outer surfaces skin are NOT mounted here — they arrive via the
+ * accreted `BrandmarkAccretionShell`, which co-locates with the
+ * substrate sphere at landing (both centred on
+ * `STATION_INTELLIGENCE.position + [0,0,0.1]`). The previous
+ * holographic grid/panels/streams `BuildArtifact` was removed in
+ * the shell-into-corridor pass — the assembled shell IS the climax.
  *
  * Behaviour:
- *   - Group is hidden when `!active` (corridor not engaged).
- *   - The substrate morph paints only during the intelligence beat
+ *   - Substrate morph cloud paints only during the intelligence beat
  *     and its early cross-fade window.
  */
 
@@ -198,7 +200,6 @@ export function IntelligenceGate() {
   return (
     <group position={STATION_INTELLIGENCE.position}>
       <SubstrateMorphCloud />
-      <BuildArtifact />
     </group>
   );
 }

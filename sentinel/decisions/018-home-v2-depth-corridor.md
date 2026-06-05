@@ -11,6 +11,94 @@
 
 ---
 
+## 2026-06-05 Revision — Shell-into-corridor (intelligence-layer artifact as the climax)
+
+The brandmark accretion shell that wrapped the travelling mark with
+generic decorative layers (`navigateHalo` ring + `encodeNodes` point
+cloud + `buildSurfaces` interface planes) is replaced with an
+**inside-out reconstruction of the intelligence-layer `shell` artifact**
+prototyped at `/test/intelligence-artifact`. Each flywheel phase adds
+the next layer of the shell around the guiding-star brandmark, and at
+the Build landing the shell is fully assembled around the substrate
+sphere — the climax of the corridor is the same artifact the
+intelligence-layer lab presents in isolation.
+
+**Three layers, inside-out:**
+
+1. **Substrate core** (`ShellSubstrate`, Navigate adds) — a true 12-face
+   golden `DodecahedronGeometry` cage (radius 0.95) + a fainter dawn
+   icosahedron-edge geodesic (radius 0.74) sitting in the gap between
+   the substrate sphere and the cage. Wraps the brandmark from the
+   Navigate park onward.
+2. **Source orbits** (`ShellSources`, Encode adds) — a solar-system of
+   six 3D-inclined elliptical orbits (`SHELL_ORBITS` in
+   `shell/shellGeom.ts`; rx 0.95..1.50, eccentricity 0.4..0.95, XYZ
+   Euler tilts spread across every axis so the orbits visibly cross
+   when viewed face-on). Each carries a green/gold/dawn diamond pip
+   that revolves at its own period + direction + phase. Replaces the
+   four flat coplanar ellipses of the retired `DiagnosticOrbitGate`
+   _and_ the single Saturn-style band of the lab's `NestedShellSphere`
+   sources.
+3. **Surfaces skin** (`ShellSurfaces`, Build adds) — the dawn outer
+   geodesic (radius 1.85, fits the gate `halfExtent` 2.0) + a faint
+   equator hairline + 6 port-pip diamonds. Mirrors the standalone
+   `NestedShellSphere`'s surfaces composition.
+
+**Single carrier.** All three layers live inside the existing
+`BrandmarkAccretionShell` — its parent group still tracks
+`getBrandmarkWorldPosition(paintProgress)` per frame, so the whole
+shell follows the mark through Lead mode. Each layer reads the depth
+store + accretion helper inside its own `useFrame` (the established
+gate-component pattern), and applies geometric **scale-emerge** via
+`splitEmerge(reveal)` — brandmark Principle 4 (`brandmark-choreography`
+skill): decorations emerge geometrically via scale, NEVER via opacity.
+Once revealed, every layer **persists** so the assembled shell stays
+present at landing and the `SubstrateMorphCloud` (substrate sphere)
+takes over the silhouette at the centre without losing the
+surrounding cage / orbits / skin.
+
+**Wiring deltas:**
+
+- `CORRIDOR_TIMELINE.accretion` re-keyed `{ navigateHalo, encodeNodes,
+buildSurfaces, buildSubstrateBlend }` → `{ substrate, sources,
+surfaces }`. `getBrandmarkAccretionLayers` returns the new triple.
+  The previous `buildSubstrateBlend` fade-out is gone — the outer
+  surfaces skin sits at radius 1.85, well outside the 0.55 substrate
+  sphere, so no fade is needed at the morph handoff.
+- `DiagnosticOrbitGate` retired (deleted). The Encode station's
+  constellation is now the accreted `ShellSources` — the brandmark
+  coincides with the Diagnostic gate plane at park
+  (`getBrandmarkLeadWorldPosition`) so the orbits read as centred on
+  Encode.
+- `BuildArtifact` + `EncodeToBuildStreams` retired (deleted). The
+  holographic grid pedestal + descending streams were a placeholder
+  for the climax; the assembled shell wrapping the substrate sphere
+  IS the climax now. `IntelligenceGate` keeps `SubstrateMorphCloud`
+  alone as the centre.
+- `GatewayWorld` updated to omit `DiagnosticOrbitGate`; remaining
+  gates unchanged.
+
+**Geometry / colour reuse.** The new `shell/` components reuse the
+dependency-free geometry + material builders + colour tokens from the
+standalone lab (`components/landing/intelligence-artifact/artifactPrimitives.ts`
+
+- `artifactGeom.ts`) so the lab page stays the canonical reference
+  for the artifact's vocabulary. The standalone `NestedShellSphere`
+  intentionally still uses its single-Saturn-ring sources composition
+  — the corridor's solar-system table is corridor-tuned; both share the
+  same `buildTiltedRingLineLoop` helper from
+  `components/landing/v7/intelligence-layer/celestialRingUtils.ts`.
+
+**Untouched contracts.** Camera path, corridor topology
+(`corridorMap.ts`), wormhole walls + apertures + topographic shelves +
+intergate debris + latent field tunnel + celestial motes + scroll
+streaks + thoughtform atmosphere + static starfield are all
+**byte-identical** — the walls / environment the user explicitly
+called out as the part they love stay exactly as they were. Only the
+accreted shell + the two retired gate-side composites change.
+
+---
+
 ## 2026-06-02 Revision — Corridor world expansion (walls / orbit-capture / Build artifact)
 
 A creative expansion that deepens the corridor's narrative architecture
@@ -20,9 +108,8 @@ on top of the Navigate / Encode / Build remap. Five moves:
    (`corridorMap.ts`). Because every gate Z re-solves from
    `gateZAtParkProgress` and all choreography is **progress-keyed**
    (`CORRIDOR_TIMELINE` windows in 0..1), deepening the dolly only
-   stretches the *world* spacing between beats — timing stays valid.
-   The front Navigate legs were re-split `12/12/8 → 10/11/11` (sum still
-   32) to widen the Navigate→Encode approach **without touching any
+   stretches the _world_ spacing between beats — timing stays valid.
+   The front Navigate legs were re-split `12/12/8 → 10/11/11` (sum still 32) to widen the Navigate→Encode approach **without touching any
    `diagnostic`-onward window**, preserving the timeline invariant
    exactly (the load-bearing constraint documented in the 2026-06-01
    declarative-map revision). **Caveat:** `AstrogationField`'s seed
@@ -32,8 +119,8 @@ on top of the Navigate / Encode / Build remap. Five moves:
    must re-check those seeds.
 
 2. **Navigate copy** → "AI isn't software. It's intelligence that sits
-   between *tool* and *collaborator*." The em-tinted *tool* /
-   *collaborator* tie structurally into move 3.
+   between _tool_ and _collaborator_." The em-tinted _tool_ /
+   _collaborator_ tie structurally into move 3.
 
 3. **Tool / Collaborator wormhole walls.** `LatentWormholeWalls` now
    diverges by hemisphere end-to-end: the LEFT (−X) is a rigid cool-steel
@@ -51,7 +138,7 @@ on top of the Navigate / Encode / Build remap. Five moves:
    (right) hemisphere breathes (~0.045 world units, shader-only) to
    express the organic metaphor. The Tool (left) hemisphere, apertures,
    and shelves remain perfectly rigid / camera-only. Idle motion at
-   *gates* (orbiting pips, rotating side bodies) was already established
+   _gates_ (orbiting pips, rotating side bodies) was already established
    precedent; this extends a small, intentional pulse to one wall.
 
 4. **Tacit-knowledge orbit capture** (`TacitKnowledgeOrbits`, new, mounted
@@ -138,11 +225,12 @@ executive from the `thoughtform-strategy` skill. The four "same pattern,
 four ways" orbit labels and the "Trusted sources / Headless surfaces"
 chamber labels are dropped (gate GEOMETRY kept as the visuals). Navigate
 gets a **place**: a fly-through landmark gate (`NavigateGate` — armature
-+ tilted ring + compass cross, interstitial-gate family) parked at a Z
-inside `passthrough-01`, carrying the "01 · Navigate" copy. It is a map
-**waypoint**, not a re-tiling parked beat, so it adds zero weight and
-the brandmark / camera / opening choreography stay byte-identical. HUD
-sector labels map to the phases.
+
+- tilted ring + compass cross, interstitial-gate family) parked at a Z
+  inside `passthrough-01`, carrying the "01 · Navigate" copy. It is a map
+  **waypoint**, not a re-tiling parked beat, so it adds zero weight and
+  the brandmark / camera / opening choreography stay byte-identical. HUD
+  sector labels map to the phases.
 
 **Deferred (needs preview tuning):** promoting the Navigate landmark to
 a true parked beat and lengthening the corridor — that re-tiles the
@@ -287,23 +375,24 @@ frame. Mobile now sequences the Thoughtform beat into two scroll moments
 - **Moment 3 — fly:** the existing corridor flythrough.
 
 Mechanism (all mobile-only, desktop = identity):
+
 - **Scroll budget.** Mobile stage height 460→**620svh** (`home-v2.css`);
   `getMobilePaintProgress` reshaped to map the whole `[0, MOBILE_THOUGHTFORM_END=0.38]`
   raw dwell into the camera-hold span `[0, dollyHoldEnd]` (camera still
   through both moments), then fly over `[0.38, 1]`. Continuous + monotonic
   at the seam (`cameraZDollyT(hold)=0`, no pop).
 - **Sub-phase helper** `getThoughtformMobilePhase(rawProgress)` → `{copyFactor,
-  diagramFactor, slideY}` (desktop short-circuits to `{1,1,0}`). Consumers
+diagramFactor, slideY}` (desktop short-circuits to `{1,1,0}`). Consumers
   multiply it in: copy anchors (`onPaint × copyFactor`), brandmark
   (`ProjectedBrandmarkActor` onPaint `× diagramFactor`), compass
   (`ThoughtformCompassGate` `bootBoost × diagramFactor`, `group.position.y
-  += slideY`), phase labels (`onPaint × diagramFactor`, world offsets +slideY).
++= slideY`), phase labels (`onPaint × diagramFactor`, world offsets +slideY).
   Brandmark slide is world-space (`getBrandmarkWorldPosition(progress, rawProgress)`)
   so the mark and rings stay co-located.
 - **Beat from paintProgress on mobile** (`useDepthScroll`): with the larger
   remap, `beat`/`gateProgress` are resolved from the painted value so
   cosmetics (brandmark `isParkedBeat`, HUD sector) stay aligned. Note:
-  phase-label/copy *visibility* is keyed off `paintProgress` against
+  phase-label/copy _visibility_ is keyed off `paintProgress` against
   `BEAT_WINDOWS` (`useWorldDomTracker:283`), and the remap pins paintProgress
   into the thoughtform window across the dwell — so no `BEAT_WINDOWS` change
   is needed.

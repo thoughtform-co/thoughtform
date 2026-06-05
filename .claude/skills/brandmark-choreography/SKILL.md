@@ -29,8 +29,10 @@ scrollY  →  computeBrandmarkTransform(scrollY, keyframes, ctx)  →  Brandmark
 The R3F intelligence-layer scene (`OrbitField`) reads the same transform for its side-orbit emerge envelopes; the new [`CelestialLinework`](../../../components/landing/v7/intelligence-layer/CelestialLinework.tsx) overlay adds hairline guide ring + bearing ticks + cardinal diamonds driven by `--ilayer-progress`. In SVG-fallback mode (reduced motion or no WebGL), `useBrandmarkJourney` pins the legacy `BrandmarkActor` to the transform's rect and writes `data-brand-on-*="parked"` attributes so native dock SVGs paint via CSS gates.
 
 **Canonical records:**
+
 - [ADR-015](../../../sentinel/decisions/015-brandmark-vector-first.md) — vector-first split (current default for sigil).
 - [ADR-017](../../../sentinel/decisions/017-orbit-journey-and-substrate-morph.md) — `substrateMorph` channel + substrate-sphere morph mesh.
+- [ADR-018](../../../sentinel/decisions/018-home-v2-depth-corridor.md) — depth corridor + brandmark accretion shell (shell-into-corridor: inside-out reconstruction of the intelligence-layer `shell` artifact around the travelling mark).
 - [ADR-019](../../../sentinel/decisions/019-brandmark-silhouette-morph.md) — `silhouetteMorph` channel + global silhouette point cloud (Diagnostic onward).
 
 **Predecessor (journey contract retained):** [ADR-013](../../../sentinel/decisions/013-brandmark-journey-refactor.md).
@@ -167,6 +169,20 @@ Match each item to the principle it enforces. Run the dev parity log (`[brandmar
 | Tune entrance / fade-out band widths        | `lib/brandmark/journey.ts` (`FADE_IN_FRAC` / `FADE_OUT_FRAC`)                                   |
 | Change the 2D squash math (shader rotation) | `components/brand/BrandmarkParticleField/shaders.ts` (`uRotationY` block, `SHEAR_SCALE`)        |
 | Add per-frame side effects (CSS gates etc.) | `components/landing/v7/hooks/useBrandmarkJourney.ts` — SVG-mode block (particle mode is silent) |
+
+### Home-v2 corridor (ADR-018) — accretion shell
+
+The depth corridor's brandmark accretes the intelligence-layer `shell` artifact around it inside-out as it travels Navigate → Encode → Build. The shell lives in `components/landing/home-v2/DepthGatewayScene/shell/` and is composed by `BrandmarkAccretionShell` (which tracks `getBrandmarkWorldPosition(paintProgress)` per frame so the whole shell follows the mark).
+
+| Want to change in the corridor accretion shell                                        | File                                                                                                                                              |
+| ------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Tune which corridor progress each shell layer emerges at                              | `components/landing/home-v2/DepthGatewayScene/sceneGeom.ts` — `CORRIDOR_TIMELINE.accretion` (`substrate` / `sources` / `surfaces` start + peakAt) |
+| Tune shell layer radii (dodecahedron / inner geodesic / orbit table / outer surfaces) | `components/landing/home-v2/DepthGatewayScene/shell/shellGeom.ts`                                                                                 |
+| Add / re-tune a source orbit (3D-inclined ellipse + pip)                              | `SHELL_ORBITS` in `shell/shellGeom.ts`                                                                                                            |
+| Change layer composition (mount order, group rotation)                                | `components/landing/home-v2/DepthGatewayScene/BrandmarkAccretionShell.tsx`                                                                        |
+| Change a single layer's geometry / materials                                          | `shell/ShellSubstrate.tsx`, `shell/ShellSources.tsx`, `shell/ShellSurfaces.tsx`                                                                   |
+
+Layers emerge **geometrically via group scale** (Principle 4) on their reveal envelope and **persist** so the assembled shell stays present at the Build landing while `SubstrateMorphCloud` morphs the brandmark silhouette into the substrate sphere at the centre.
 
 ---
 

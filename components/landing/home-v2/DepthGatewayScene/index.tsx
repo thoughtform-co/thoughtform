@@ -12,7 +12,6 @@ import { GatewayWorld } from "./gates/GatewayWorld";
 import { InterGateCorridor } from "./InterGateCorridor";
 import { LatentFieldTunnel } from "./LatentFieldTunnel";
 import { LatentTopographyContours } from "./LatentTopographyContours";
-import { EncodeToBuildStreams } from "./BuildArtifact";
 import { LatentWormholeWalls } from "./LatentWormholeWalls";
 import { ScrollStreaks } from "./ScrollStreaks";
 import { StaticStarfield } from "./StaticStarfield";
@@ -100,23 +99,29 @@ function viewportAspect(): number {
  *                             velocity (invisible when idle). The
  *                             warm punctuation layer on top of the
  *                             cool LatentFieldTunnel + CelestialMotes.
- *   - GatewayWorld          : the four world-rigid gate groups
- *                             (Thoughtform, Diagnostic,
- *                             Interstitial, Intelligence). Each
- *                             gate paints at its station Z and
+ *   - GatewayWorld          : world-rigid gate groups (Thoughtform,
+ *                             Navigate, Interstitial, Intelligence).
+ *                             Each gate paints at its station Z and
  *                             self-manages its visibility envelope.
- *   - BrandmarkAccretionShell : progressive layers around the
- *                             brandmark that accumulate as it
- *                             travels (Navigate halo, Encode rack
- *                             frames + data nodes, Build surface
- *                             planes). Tracks
+ *                             The Encode (Diagnostic) station has no
+ *                             standalone gate — its constellation
+ *                             arrives via the accreted shell.
+ *   - BrandmarkAccretionShell : inside-out intelligence-layer shell
+ *                             that accretes around the brandmark
+ *                             as it travels (substrate dodecahedron
+ *                             + inner geodesic at Navigate; solar-
+ *                             system source orbits at Encode; outer
+ *                             surfaces skin at Build). Tracks
  *                             `getBrandmarkWorldPosition` per frame
  *                             so the shell follows the mark through
  *                             lead mode. Reveals owned by
  *                             `CORRIDOR_TIMELINE.accretion`. The
  *                             mark itself never changes — what
- *                             surrounds it does. See ADR-013 +
- *                             plan 03adb0dd · W3.
+ *                             surrounds it does. Lands co-located
+ *                             with `SubstrateMorphCloud` so the
+ *                             assembled shell wraps the substrate
+ *                             sphere at the climax. See ADR-013 +
+ *                             the shell-into-corridor pass.
  *
  * The PRIMARY brandmark painter is the DOM-side
  * `ProjectedBrandmarkActor` — its world position is interpolated
@@ -219,14 +224,16 @@ export function DepthGatewayScene() {
       <ScrollStreaks />
       <AstrogationField isMobile={isMobile} />
       <GatewayWorld />
-      <EncodeToBuildStreams />
-      {/* BrandmarkAccretionShell — progressive layers around the
-          brandmark (Navigate halo, Encode rack/nodes, Build surface
-          planes). Mounted AFTER the gate world so its additive
-          line/point geometry overlays gate geometry rather than
-          being occluded by it. Tracks `getBrandmarkWorldPosition`
-          per frame so the shell follows the mark through lead mode.
-          See ADR-013 + plan 03adb0dd · W3. */}
+      {/* BrandmarkAccretionShell — inside-out intelligence-layer
+          shell that accretes around the brandmark as it travels
+          (substrate dodecahedron + inner geodesic at Navigate;
+          solar-system source orbits at Encode; outer surfaces skin
+          at Build). Mounted AFTER the gate world so its additive
+          line geometry overlays gate geometry rather than being
+          occluded by it. Tracks `getBrandmarkWorldPosition` per
+          frame; lands co-located with `SubstrateMorphCloud` so the
+          assembled shell wraps the substrate sphere at the climax.
+          See ADR-013 + the shell-into-corridor pass. */}
       <BrandmarkAccretionShell />
     </Canvas>
   );
