@@ -98,13 +98,31 @@ const SHELL_RY = 1.35;
  *  tunnel and not past a flat picture. */
 const RAIL_INWARD_PULL = 0.28;
 
-/** Longitudinal rails per leg. */
-const RAIL_COUNT_PER_LEG = 14;
+/** Longitudinal rails per leg. Bumped 14 -> 20 (2026-06-05 wall
+ *  presence pass) so the shell reads as a denser tunnel — the
+ *  perceived "you're flying inside walls" cue scales with how many
+ *  rails the rays of perspective can catch on. */
+const RAIL_COUNT_PER_LEG = 20;
 
 /** Dot counts per rail. Partial rails end midway through the leg
- *  so the shell never closes off into a cage. */
-const FULL_RAIL_DOTS = 32;
-const PARTIAL_RAIL_DOTS = 16;
+ *  so the shell never closes off into a cage. Bumped 32/16 -> 42/22
+ *  (same pass) so each rail reads as a continuous receding line of
+ *  dots rather than a sparse scatter, which is the strongest cue
+ *  the visitor is inside a long tube. */
+const FULL_RAIL_DOTS = 42;
+const PARTIAL_RAIL_DOTS = 22;
+
+/** Cross-ring depth slices per leg. A full 360° dotted oval at each
+ *  slice gives the shell visible CROSS-SECTIONS the camera flies
+ *  through — the strongest "concentric rings receding into a
+ *  tunnel" cue (the visual the 1c5494c hemisphere-divergence walls
+ *  achieved via left-only cross-rungs, now uniform around the
+ *  whole shell so it reads as a unified wormhole, not a split
+ *  metaphor). */
+const CROSS_RING_COUNT_PER_LEG = 6;
+/** Dots around each cross-ring's oval perimeter. 32 reads as a
+ *  smooth circle from afar but stays clearly dotted up close. */
+const CROSS_RING_DOTS = 32;
 
 /** Aperture depth-gate frames per leg. */
 const APERTURE_FRAMES_PER_LEG = 3;
@@ -342,6 +360,51 @@ function buildAperture(
   pushPoint(buf, 0, -halfY, centreZ, dawn, legIdx, 1.0);
 }
 
+/** Build full 360° cross-section rings around the wormhole shell at
+ *  evenly-spaced Z slices through the leg. Each ring is a dotted
+ *  oval at the SHELL_RX/SHELL_RY cross-section (with the same inward
+ *  perspective pull as the longitudinal rails so the rings sit flush
+ *  on the shell as it converges).
+ *
+ *  This is the single strongest "you are inside a tunnel" cue — when
+ *  the camera flies along Z it passes THROUGH the rings, and from
+ *  off-centre the rings read as the prominent concentric arcs on the
+ *  left and right walls of the wormhole. Restored 2026-06-05 as a
+ *  uniform replacement for the retired hemisphere-divergence
+ *  cross-rungs (see ADR-018 wall-presence revision). */
+function buildCrossRings(fromZ: number, toZ: number, legIdx: 0 | 1, buf: PointBuffers): void {
+  // Alternating dawn / gold / dawn-soft so successive rings don't
+  // collapse into one uniform colour — keeps the ring stack reading
+  // as a layered chart rather than monotone shells.
+  const dawn = new THREE.Color(DAWN_HEX);
+  const dawnSoft = new THREE.Color(DAWN_SOFT_HEX);
+  const gold = new THREE.Color(GOLD_HEX);
+  const ringColors = [dawn, dawnSoft, gold];
+
+  for (let s = 0; s < CROSS_RING_COUNT_PER_LEG; s++) {
+    // Spread rings evenly through the interior of the leg span,
+    // skipping the very start/end so they don't crowd the gate
+    // geometry at the leg boundaries.
+    const zT = (s + 1) / (CROSS_RING_COUNT_PER_LEG + 1);
+    const z = lerp(fromZ, toZ, zT);
+    const inward = 1 - zT * RAIL_INWARD_PULL;
+    const rx = SHELL_RX * inward;
+    const ry = SHELL_RY * inward;
+    const color = ringColors[(s + legIdx) % ringColors.length];
+    // Slightly smaller dot size on the rings than on the rails so the
+    // rails still read as the primary structure and the rings as
+    // depth annotations layered on top.
+    const dotSize = 0.85;
+
+    for (let d = 0; d < CROSS_RING_DOTS; d++) {
+      const angle = (d / CROSS_RING_DOTS) * Math.PI * 2 + legIdx * 0.07;
+      const x = Math.cos(angle) * rx;
+      const y = Math.sin(angle) * ry;
+      pushPoint(buf, x, y, z, color, legIdx, dotSize);
+    }
+  }
+}
+
 /** Build the lower topographic shelves for one leg — a few rows of
  *  faintly waved dots below the optical axis. Reads as a latent
  *  floor receding into the corridor, mirroring the archived
@@ -391,6 +454,7 @@ function buildWormholeWalls(): {
   const leg1Start = lerp(tfZ, dgZ, LEG_RAIL_START_FRAC);
   const leg1End = lerp(tfZ, dgZ, LEG_RAIL_END_FRAC);
   buildLegRails(leg1Start, leg1End, 0, buf);
+  buildCrossRings(leg1Start, leg1End, 0, buf);
   buildShelves(leg1Start, leg1End, 0, buf);
   for (let i = 0; i < APERTURE_FRAMES_PER_LEG; i++) {
     const t = (i + 1) / (APERTURE_FRAMES_PER_LEG + 1);
@@ -407,6 +471,7 @@ function buildWormholeWalls(): {
   const leg2Start = lerp(dgZ, intZ, LEG_RAIL_START_FRAC);
   const leg2End = lerp(dgZ, intZ, LEG_RAIL_END_FRAC);
   buildLegRails(leg2Start, leg2End, 1, buf);
+  buildCrossRings(leg2Start, leg2End, 1, buf);
   buildShelves(leg2Start, leg2End, 1, buf);
   for (let i = 0; i < APERTURE_FRAMES_PER_LEG; i++) {
     const t = (i + 1) / (APERTURE_FRAMES_PER_LEG + 1);
@@ -466,7 +531,7 @@ export function LatentWormholeWalls() {
       vertexShader: wallsVertex,
       fragmentShader: wallsFragment,
       uniforms: {
-        uPointSize: { value: 5.0 },
+        uPointSize: { value: 6.5 },
         uPixelRatio: { value: typeof window !== "undefined" ? window.devicePixelRatio : 1 },
         uCameraPos: { value: new THREE.Vector3() },
         uVisibleNear: { value: VISIBLE_NEAR },
