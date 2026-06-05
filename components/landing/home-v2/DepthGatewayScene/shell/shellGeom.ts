@@ -32,7 +32,6 @@
  * ellipses, not coplanar rings.
  */
 
-import * as THREE from "three";
 import {
   COLOR_GOLD,
   COLOR_SOURCES,
@@ -41,25 +40,26 @@ import {
 
 // ── Substrate core (inside-out layer 1) ──────────────────────────────
 
-/** Outer dodecahedron wrap radius. Tight 1.27x wrap around the
+/** Outer geodesic icosphere wrap radius. Tight 1.27x wrap around the
  *  0.55-radius substrate sphere — mirrors the standalone shell's
  *  cage-to-cloud ratio (0.92 / 0.75 = 1.22x). Sized this way so the
  *  cage reads as a proportional wrapper around the brandmark / sphere
  *  it cages, not as an oversized halo. The source orbits below MUST
- *  stay outside this radius. */
-export const SUBSTRATE_DODEC_RADIUS = 0.7;
+ *  stay outside this radius.
+ *
+ *  Renamed from `SUBSTRATE_DODEC_RADIUS` in the 2026-06-05 lab-match
+ *  revision (the cage is now an 80-face geodesic icosphere, matching
+ *  the standalone `NestedShellSphere` exactly, not a 12-face
+ *  dodecahedron). */
+export const SUBSTRATE_CAGE_RADIUS = 0.7;
 
 /** Inner geodesic shell radius. Sits inside the substrate sphere as
- *  a faint dawn hairline at ~0.6x the dodecahedron (matching the lab
- *  shell's inner detail-2 geodesic at 0.62x the core radius). At the
- *  Build landing the substrate morph cloud eclipses it visually; it
- *  reads strongest during the Navigate / Encode beats before the
- *  sphere has formed, where it gives the cage internal depth. */
+ *  a faint dawn hairline at ~0.6x the cage (matching the lab shell's
+ *  inner detail-2 geodesic at 0.62x the core radius). At the Build
+ *  landing the substrate morph cloud eclipses it visually; it reads
+ *  strongest during the Navigate / Encode beats before the sphere
+ *  has formed, where it gives the cage internal depth. */
 export const SUBSTRATE_INNER_RADIUS = 0.42;
-
-/** Dodecahedron subdivision detail. `0` keeps the canonical 12-face
- *  pentagonal cage — distinctive and recognizable. */
-export const SUBSTRATE_DODEC_DETAIL = 0;
 
 // ── Sources (inside-out layer 2) ─────────────────────────────────────
 
@@ -290,117 +290,13 @@ export function splitEmerge(reveal: number): number {
   return petalEmerge(reveal).scale;
 }
 
-// ── Dodecahedron face decomposition (ShellSubstrate) ─────────────────
-
-/** A single pentagonal face of a regular dodecahedron, expressed in
- *  the world-space frame of the shell (parent group). The pentagon's
- *  vertices are given as offsets FROM the face centroid, so a face
- *  rendered at `group.position = centroid` paints in its correct
- *  world orientation — no quaternion needed because the offsets
- *  already encode the face plane.
- *
- *  Used by `ShellSubstrate` to render each face as its own
- *  `<lineLoop>` sub-group that petal-unfolds from origin -> centroid. */
-export interface DodecahedronFace {
-  /** World-space final position of the face centroid. */
-  centroid: [number, number, number];
-  /** World-space outward unit normal of the face. */
-  normal: [number, number, number];
-  /** The five pentagon vertices in face-local coords (vertex - centroid),
-   *  ordered counter-clockwise around the face centroid in the face plane. */
-  localVertices: Array<[number, number, number]>;
-}
-
-/** Decompose a regular dodecahedron of the given circumradius (vertex
- *  distance from center) into its 12 pentagonal faces. Uses
- *  `THREE.DodecahedronGeometry` to source the canonical vertex set,
- *  then clusters its 36 triangles by face normal and angle-sorts the
- *  pentagon vertices around each face centroid.
- *
- *  Geometry is allocated + immediately disposed inside the helper;
- *  the returned face descriptors are plain JS data that the consumer
- *  can use to build its own per-face line-loop geometries. */
-export function buildDodecahedronFaces(radius: number): DodecahedronFace[] {
-  const geom = new THREE.DodecahedronGeometry(radius, 0);
-  const posAttr = geom.getAttribute("position") as THREE.BufferAttribute;
-  const normalAttr = geom.getAttribute("normal") as THREE.BufferAttribute;
-  const triCount = posAttr.count / 3;
-
-  interface RawFace {
-    normal: [number, number, number];
-    verts: Array<[number, number, number]>;
-  }
-  const rawFaces: RawFace[] = [];
-
-  for (let t = 0; t < triCount; t++) {
-    const i0 = t * 3;
-    const nx = normalAttr.getX(i0);
-    const ny = normalAttr.getY(i0);
-    const nz = normalAttr.getZ(i0);
-
-    let face = rawFaces.find(
-      (f) =>
-        Math.abs(f.normal[0] - nx) < 1e-3 &&
-        Math.abs(f.normal[1] - ny) < 1e-3 &&
-        Math.abs(f.normal[2] - nz) < 1e-3
-    );
-    if (!face) {
-      face = { normal: [nx, ny, nz], verts: [] };
-      rawFaces.push(face);
-    }
-    for (let v = 0; v < 3; v++) {
-      const vx = posAttr.getX(i0 + v);
-      const vy = posAttr.getY(i0 + v);
-      const vz = posAttr.getZ(i0 + v);
-      const dup = face.verts.some(
-        ([ex, ey, ez]) =>
-          Math.abs(ex - vx) < 1e-3 && Math.abs(ey - vy) < 1e-3 && Math.abs(ez - vz) < 1e-3
-      );
-      if (!dup) face.verts.push([vx, vy, vz]);
-    }
-  }
-
-  geom.dispose();
-
-  // Build the per-face descriptor: centroid, normal, and pentagon
-  // vertices sorted angularly around the centroid in the face plane.
-  return rawFaces.map((face) => {
-    const cx = face.verts.reduce((s, v) => s + v[0], 0) / face.verts.length;
-    const cy = face.verts.reduce((s, v) => s + v[1], 0) / face.verts.length;
-    const cz = face.verts.reduce((s, v) => s + v[2], 0) / face.verts.length;
-    const centroid: [number, number, number] = [cx, cy, cz];
-
-    // Build a 2D basis in the face plane for angle sorting. Pick a
-    // reference 'up' direction that's not parallel to the face normal.
-    const [nx, ny, nz] = face.normal;
-    const refUp: [number, number, number] = Math.abs(ny) > 0.9 ? [1, 0, 0] : [0, 1, 0];
-    const ux = refUp[1] * nz - refUp[2] * ny;
-    const uy = refUp[2] * nx - refUp[0] * nz;
-    const uz = refUp[0] * ny - refUp[1] * nx;
-    const uLen = Math.max(1e-6, Math.sqrt(ux * ux + uy * uy + uz * uz));
-    const u: [number, number, number] = [ux / uLen, uy / uLen, uz / uLen];
-    const v: [number, number, number] = [
-      ny * u[2] - nz * u[1],
-      nz * u[0] - nx * u[2],
-      nx * u[1] - ny * u[0],
-    ];
-
-    const withAngle = face.verts.map((vert) => {
-      const dx = vert[0] - cx;
-      const dy = vert[1] - cy;
-      const dz = vert[2] - cz;
-      const uc = dx * u[0] + dy * u[1] + dz * u[2];
-      const vc = dx * v[0] + dy * v[1] + dz * v[2];
-      return { vert, angle: Math.atan2(vc, uc) };
-    });
-    withAngle.sort((a, b) => a.angle - b.angle);
-
-    const localVertices: Array<[number, number, number]> = withAngle.map(({ vert }) => [
-      vert[0] - cx,
-      vert[1] - cy,
-      vert[2] - cz,
-    ]);
-
-    return { centroid, normal: face.normal, localVertices };
-  });
-}
+// NOTE: the `buildDodecahedronFaces` helper + `DodecahedronFace` type
+// + `SUBSTRATE_DODEC_DETAIL` constant were removed in the 2026-06-05
+// lab-match revision. The substrate cage is now a single clean
+// `buildGeodesicEdges(SUBSTRATE_CAGE_RADIUS, 1)` icosphere that
+// emerges as one body, matching the standalone `NestedShellSphere`
+// substrate composition (which the corridor is meant to mirror, per
+// the user's "as close as possible to the lab" direction). The
+// `petalStagger` / `petalEmerge` helpers above stay — they still
+// drive the per-orbit and per-port unfolds in `ShellSources` and
+// `ShellSurfaces`.

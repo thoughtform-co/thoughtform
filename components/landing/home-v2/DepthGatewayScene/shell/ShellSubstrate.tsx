@@ -2,25 +2,33 @@
 
 /**
  * ShellSubstrate — the inside-out layer 1 of the accreted intelligence
- * shell. Wraps the guiding-star brandmark with a golden dodecahedron
- * cage + a fainter dawn geodesic inner shell.
+ * shell. Wraps the guiding-star brandmark with a gold geodesic
+ * icosphere cage + a fainter dawn inner geodesic.
  *
- * PETAL UNFOLD (2026-06-05 revision): the dodecahedron is decomposed
- * into 12 pentagonal face sub-groups. Each face starts COLLAPSED AT
- * THE BRAND MARK CENTER (position 0, scale 0) and unfolds OUTWARD to
- * its final centroid + size with staggered timing — reads as origami
- * petals opening around the mark, not a uniform scale-up of a single
- * cage that grew from a distant point. Faces persist at full deploy
- * through Encode + Build so the layer accumulates around the
+ * 2026-06-05 LAB-MATCH REVISION: the previous 12-face dodecahedron
+ * cage with per-face petal unfold was replaced with the standalone
+ * shell artifact's composition — a single clean GOLD GEODESIC
+ * ICOSPHERE (`buildGeodesicEdges(radius, 1)` = 80 fine triangular
+ * faces) + a tighter DAWN inner geodesic. Visually identical to the
+ * lab `NestedShellSphere`'s outer + inner shells (minus the brand
+ * cloud, which the projected DOM brandmark + substrate morph already
+ * supply at the centre).
+ *
+ * Emerges as ONE CLEAN BODY: `group.scale.setScalar(splitEmerge(reveal))`
+ * on the whole cage. The 80-face decomposition would have read busy
+ * at the corridor's parked viewing distance — single-body fold/scale-in
+ * matches the lab's clean read and lets the source-orbit + surfaces-port
+ * per-element petal unfolds (kept in `ShellSources` / `ShellSurfaces`)
+ * still carry the accretion narrative.
+ *
+ * Persists through Encode + Build so the cage accumulates around the
  * traveling mark and visually wraps the substrate sphere
- * `SubstrateMorphCloud` at the Build landing.
+ * `SubstrateMorphCloud` at the Build landing (both centred on the same
+ * anchor — `STATION_INTELLIGENCE.position + [0,0,0.1]`).
  *
- * The inner geodesic shell stays as a single uniform-scale group —
- * it's a faint backdrop and doesn't need per-face unfold.
- *
- * Brandmark Principle 4 (`brandmark-choreography` skill): decorations
- * EMERGE geometrically via scale + position lerp, NEVER via opacity.
- * The material's opacity stays constant once the layer is revealed.
+ * Brandmark Principle 4 (`brandmark-choreography` skill): decoration
+ * EMERGES geometrically via scale, NEVER via opacity. Material opacity
+ * stays constant once the layer is revealed.
  */
 
 import { useFrame } from "@react-three/fiber";
@@ -34,11 +42,8 @@ import {
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import { getBrandmarkAccretionLayers } from "../sceneGeom";
 import {
-  buildDodecahedronFaces,
   EMERGE_EPSILON,
-  petalEmerge,
-  petalStagger,
-  SUBSTRATE_DODEC_RADIUS,
+  SUBSTRATE_CAGE_RADIUS,
   SUBSTRATE_INNER_RADIUS,
   splitEmerge,
 } from "./shellGeom";
@@ -52,72 +57,57 @@ interface ShellSubstrateProps {
   reducedMotion?: boolean;
 }
 
-/** Slow spin rate for the dodecahedron cage (radians per second).
- *  Mirrors the standalone `SubstrateBrandmark`'s 0.18 spinRate so the
- *  cage reads as the same living instrument. The spin is applied to
- *  the parent `dodecGroupRef`, NOT to individual face sub-groups, so
- *  the whole assembled cage co-rotates as one body once unfolded. */
+/** Slow spin rate for the cage (radians per second). Mirrors the
+ *  standalone `SubstrateBrandmark`'s 0.18 spinRate so the cage reads
+ *  as the same living instrument. The spin is applied to the parent
+ *  `cageGroupRef` so the whole assembled cage co-rotates as one body. */
 const SUBSTRATE_SPIN_RATE = 0.18;
 
 /** Base material opacities at full reveal. Tuned slightly higher than
  *  the standalone artifact (which composites on a black void) because
- *  the corridor's wormhole walls add background noise we have to
- *  read through. */
-const DODEC_OPACITY = 0.82;
+ *  the corridor's wormhole walls add background noise we have to read
+ *  through. */
+const CAGE_OPACITY = 0.82;
 const INNER_OPACITY = 0.34;
 
-/** Per-face stagger overlap inside the parent substrate reveal window
- *  (see `petalStagger` in shellGeom.ts). 0.55 reads as a cascade
- *  through all 12 faces — neighbouring faces unfold simultaneously
- *  enough that the whole cage emerges as one coherent flower, but
- *  with visible per-face character. */
-const SUBSTRATE_FACE_OVERLAP = 0.55;
+/** Outer geodesic detail level. `1` matches the lab's
+ *  `SUBSTRATE_DETAIL` — classic 80-face geodesic that reads as
+ *  engineered without looking low-poly. */
+const SUBSTRATE_OUTER_DETAIL = 1;
+
+/** Inner geodesic detail level. `2` matches the lab's
+ *  `SUBSTRATE_INNER_DETAIL` — a tighter inner shell. */
+const SUBSTRATE_INNER_DETAIL = 2;
 
 export function ShellSubstrate({ layerKey, reducedMotion = false }: ShellSubstrateProps) {
   void layerKey;
   const groupRef = useRef<THREE.Group>(null);
-  const dodecGroupRef = useRef<THREE.Group>(null);
-  const innerShellRef = useRef<THREE.Group>(null);
-  const faceGroupRefs = useRef<(THREE.Group | null)[]>([]);
+  const cageGroupRef = useRef<THREE.Group>(null);
 
-  // ── Per-face descriptors + pentagon line-loop geometries ────────
+  // ── Geometries (lab composition exactly) ───────────────────────
 
-  const faces = useMemo(() => buildDodecahedronFaces(SUBSTRATE_DODEC_RADIUS), []);
+  const outerEdges = useMemo(
+    () => buildGeodesicEdges(SUBSTRATE_CAGE_RADIUS, SUBSTRATE_OUTER_DETAIL),
+    []
+  );
+  const innerEdges = useMemo(
+    () => buildGeodesicEdges(SUBSTRATE_INNER_RADIUS, SUBSTRATE_INNER_DETAIL),
+    []
+  );
 
-  const faceGeoms = useMemo(() => {
-    return faces.map((face) => {
-      // Pentagon outline in face-local space. The 5 vertices already
-      // sit in the face plane (their offsets from the centroid encode
-      // the face's orientation), so no rotation is needed — placing
-      // the parent sub-group at `position = centroid` paints the
-      // pentagon in its correct world position + orientation.
-      const positions = new Float32Array(face.localVertices.length * 3);
-      face.localVertices.forEach((v, i) => {
-        positions[i * 3] = v[0];
-        positions[i * 3 + 1] = v[1];
-        positions[i * 3 + 2] = v[2];
-      });
-      const geom = new THREE.BufferGeometry();
-      geom.setAttribute("position", new THREE.BufferAttribute(positions, 3));
-      return geom;
-    });
-  }, [faces]);
+  // ── Materials ──────────────────────────────────────────────────
 
-  const innerEdges = useMemo(() => buildGeodesicEdges(SUBSTRATE_INNER_RADIUS, 1), []);
-
-  // ── Materials (shared across all 12 faces; only one draw setup) ──
-
-  const dodecMat = useMemo(() => makeLineMaterial(COLOR_GOLD, DODEC_OPACITY, true), []);
+  const cageMat = useMemo(() => makeLineMaterial(COLOR_GOLD, CAGE_OPACITY, true), []);
   const innerMat = useMemo(() => makeLineMaterial(COLOR_DAWN, INNER_OPACITY, false), []);
 
   useEffect(() => {
     return () => {
-      faceGeoms.forEach((g) => g.dispose());
+      outerEdges.dispose();
       innerEdges.dispose();
-      dodecMat.dispose();
+      cageMat.dispose();
       innerMat.dispose();
     };
-  }, [faceGeoms, innerEdges, dodecMat, innerMat]);
+  }, [outerEdges, innerEdges, cageMat, innerMat]);
 
   useFrame((_, delta) => {
     const group = groupRef.current;
@@ -136,58 +126,22 @@ export function ShellSubstrate({ layerKey, reducedMotion = false }: ShellSubstra
     }
     group.visible = true;
 
-    // ── Per-face petal unfold ───────────────────────────────────
-    // Each face's sub-group starts at world origin (collapsed to the
-    // brand mark center) and travels to its final centroid as its
-    // staggered reveal ramps. Scale ramps in lock-step so the face
-    // never appears at full size at the wrong position.
-    for (let i = 0; i < faces.length; i++) {
-      const faceGroup = faceGroupRefs.current[i];
-      if (!faceGroup) continue;
-      const stagger = petalStagger(reveal, i, faces.length, SUBSTRATE_FACE_OVERLAP);
-      const { scale, positionT } = petalEmerge(stagger);
-      if (scale <= EMERGE_EPSILON) {
-        faceGroup.visible = false;
-        continue;
-      }
-      faceGroup.visible = true;
-      const c = faces[i].centroid;
-      faceGroup.position.set(c[0] * positionT, c[1] * positionT, c[2] * positionT);
-      faceGroup.scale.setScalar(scale);
-    }
+    // Single-body fold/scale-in. The whole cage (outer + inner geodesic)
+    // emerges as one clean unit — no per-face petals.
+    group.scale.setScalar(splitEmerge(reveal));
 
-    // Slow spin on the assembled dodec — once enough faces have
-    // unfolded the cage reads as a single rotating body. Applied to
-    // the parent `dodecGroupRef` so all faces rotate together.
-    if (dodecGroupRef.current && !reducedMotion) {
-      dodecGroupRef.current.rotation.y += SUBSTRATE_SPIN_RATE * delta;
-    }
-
-    // Inner geodesic uses the legacy uniform-scale emerge — it's a
-    // faint backdrop and doesn't benefit from per-face petal motion,
-    // but it still needs to grow with the parent reveal so it doesn't
-    // pop in at full size while the petals are still mid-unfold.
-    if (innerShellRef.current) {
-      innerShellRef.current.scale.setScalar(splitEmerge(reveal));
+    // Slow spin on the assembled cage so it reads as a living
+    // instrument once unfolded. Applied to the parent so outer + inner
+    // shells co-rotate as one body.
+    if (cageGroupRef.current && !reducedMotion) {
+      cageGroupRef.current.rotation.y += SUBSTRATE_SPIN_RATE * delta;
     }
   });
 
   return (
     <group ref={groupRef} visible={false}>
-      <group ref={dodecGroupRef}>
-        {faces.map((_, i) => (
-          <group
-            key={`face-${i}`}
-            ref={(node) => {
-              faceGroupRefs.current[i] = node;
-            }}
-            visible={false}
-          >
-            <lineLoop geometry={faceGeoms[i]} material={dodecMat} frustumCulled={false} />
-          </group>
-        ))}
-      </group>
-      <group ref={innerShellRef}>
+      <group ref={cageGroupRef}>
+        <lineSegments geometry={outerEdges} material={cageMat} frustumCulled={false} />
         <lineSegments geometry={innerEdges} material={innerMat} frustumCulled={false} />
       </group>
     </group>

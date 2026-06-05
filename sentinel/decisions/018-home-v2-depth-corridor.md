@@ -11,6 +11,65 @@
 
 ---
 
+## 2026-06-05 Revision — Lab-match shell (icosphere substrate + per-station parkDistance)
+
+User direction after reviewing both the corridor and the standalone lab
+`/test/intelligence-artifact` Shell variant: "I really want to be as
+close as possible to this. The corridor substrate cage suddenly reads
+busy / less elegant than the lab's, and the corridor artifact is too
+zoomed in." Two changes land it:
+
+- **Substrate cage swap: dodecahedron -> geodesic icosphere.**
+  `ShellSubstrate` previously decomposed a 12-face dodecahedron into
+  per-face pentagonal petals that unfolded one-at-a-time. Replaced with
+  the standalone shell artifact's exact composition: a single
+  `buildGeodesicEdges(SUBSTRATE_CAGE_RADIUS, 1)` icosphere (80 fine
+  triangular faces, gold) + a fainter `buildGeodesicEdges(SUBSTRATE_INNER_RADIUS,
+2)` dawn inner geodesic. Emerges as ONE CLEAN BODY via
+  `splitEmerge(reveal)` — no per-face petals (the source orbits + port
+  pips keep their per-element unfold so the accretion narrative still
+  reads). `shellGeom.ts` lost `buildDodecahedronFaces`,
+  `DodecahedronFace`, and `SUBSTRATE_DODEC_DETAIL`; `SUBSTRATE_DODEC_RADIUS`
+  was renamed to `SUBSTRATE_CAGE_RADIUS` (value unchanged at 0.7 so the
+  1.27x wrap around the 0.55 morph sphere holds).
+
+- **Per-station `parkDistance` for shell oversight.** New optional
+  `parkDistance?: number` field on `StationNode` + `TransitionWaypoint`
+  in `corridorMap.ts`, defaulting to `GATE_PARK_DISTANCE` (4.5). The
+  shell parks (`navigate`, `diagnostic`, `intelligence`) set it to 6.2,
+  which pushes their gates ~1.7 deeper in world Z. The camera path is
+  unchanged, so the camera ends up further from the parked gates — the
+  composition reads with breathing room instead of filling the
+  viewport. The setup beat (`thoughtform`) + waypoint (`interstitial`)
+  keep 4.5 so the opening compass composition stays tight.
+
+  `gateZAtParkProgress(parkProgress, parkDistance = GATE_PARK_DISTANCE)`
+  takes the distance; `STATIONS` passes each node's value through; the
+  resolved `GateStation` carries `parkDistance` as a first-class field
+  so downstream consumers (brand-mark lead math, copy anchor reference
+  distances) don't hardcode 4.5. Specific ripples in `sceneGeom.ts`:
+  - `PARK_LEAD` in `getBrandmarkLeadWorldPosition` re-based on
+    `STATION_DIAGNOSTIC.parkDistance - 0.1` so the brand mark still
+    coincides with the orbital field plane at the Encode park centre.
+  - `navigate.*`, `diagnostic.*`, `intelligence.*` copy anchors:
+    `perspectiveScale.referenceDistance` + `depthFade.far` now derive
+    from each station's `parkDistance` so titles keep their parked
+    apparent size and don't clip at the deeper gates.
+
+- **`AstrogationField` deep extension.** The Build station moves from
+  Z≈-17.85 to Z≈-19.55 after the pull-back, and the previous deepest
+  seed sat at Z=-12.5 — two additional seeds at Z=-16 and Z=-19 keep
+  the deep flight from reading as a void. (Same ADR-018 absolute-Z
+  caveat documented in earlier revisions: `AstrogationField` is the
+  only consumer keyed to absolute Z, all other layers derive station
+  positions from `STATIONS` and follow automatically.)
+
+Walls / wormhole rails / corridor environment / camera path / brand
+mark journey / lab `NestedShellSphere` are untouched. Only the
+corridor's substrate cage + per-shell-park camera framing change.
+
+---
+
 ## 2026-06-05 Revision — Petal-unfold accretion (per-element origami emerge)
 
 The first shell-into-corridor pass below uniformly scaled each layer

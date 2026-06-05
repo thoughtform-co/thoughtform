@@ -33,7 +33,6 @@ import {
   CAMERA_END,
   CAMERA_START,
   DOLLY_HOLD_END,
-  GATE_PARK_DISTANCE,
   type GateStation,
   INTERSTITIAL_PARK,
   type Vec3,
@@ -615,16 +614,17 @@ export function getBrandmarkLeadWorldPosition(progress: number): [number, number
   const forward = getCameraForward(progress);
 
   /** Held lead distance across the Diagnostic-park beat. Equals the
-   *  camera-to-Diagnostic-anchor distance at the park CENTRE
-   *  (p ≈ 0.53 after the latent depth spacing pass), where
-   *  camera-to-gate = `GATE_PARK_DISTANCE` (4.5) and the anchor
-   *  sits +0.1 in front of the gate plane. Holding the lead at
-   *  this value through the entire park keeps the brandmark's
-   *  APPARENT SIZE stable as the camera dollies through — and
-   *  makes the brandmark coincide with the orbital field plane
-   *  exactly at the park centre, so the parked composition still
-   *  reads as "brandmark at the centre of the Diagnostic gate". */
-  const PARK_LEAD = GATE_PARK_DISTANCE - 0.1;
+   *  camera-to-Diagnostic-anchor distance at the park CENTRE, where
+   *  camera-to-gate = `STATION_DIAGNOSTIC.parkDistance` (4.5 by
+   *  default; 6.2 after the lab-match shell-oversight revision) and
+   *  the anchor sits +0.1 in front of the gate plane. Holding the
+   *  lead at this value through the entire park keeps the brandmark's
+   *  APPARENT SIZE stable as the camera dollies through — and makes
+   *  the brandmark coincide with the orbital field plane exactly at
+   *  the park centre, so the parked composition still reads as
+   *  "brandmark at the centre of the Diagnostic gate" regardless of
+   *  how far back the camera is pulled for shell oversight. */
+  const PARK_LEAD = STATION_DIAGNOSTIC.parkDistance - 0.1;
   const FULL_LEAD = 7.2;
   // Transit pull from `CORRIDOR_TIMELINE.brandmarkLeadPull` — held
   // through the Diagnostic park, then grows to FULL_LEAD by the
@@ -1031,8 +1031,16 @@ export const COPY_ANCHORS: readonly WorldAnchor[] = [
     // `pass-01b`), with the depth fade owning the actual reveal.
     visibilityBeats: ["navigate", "pass-01b"],
     fadeFrac: 0.28,
-    perspectiveScale: { referenceDistance: 4.5, min: 0.2, max: 1.1 },
-    depthFade: { near: 0.4, nearFade: 1.8, far: 4.8, farFade: 1.6 },
+    // referenceDistance + depthFade tracks STATION_NAVIGATE.parkDistance
+    // (6.2 after the 2026-06-05 lab-match revision; was 4.5) so the
+    // title keeps its parked apparent size and doesn't clip when the
+    // camera is pulled back for shell oversight.
+    perspectiveScale: {
+      referenceDistance: STATION_NAVIGATE.parkDistance,
+      min: 0.2,
+      max: 1.1,
+    },
+    depthFade: { near: 0.4, nearFade: 1.8, far: STATION_NAVIGATE.parkDistance + 2.0, farFade: 1.6 },
   },
   {
     id: "navigate.support",
@@ -1047,8 +1055,12 @@ export const COPY_ANCHORS: readonly WorldAnchor[] = [
     ],
     visibilityBeats: ["navigate", "pass-01b"],
     fadeFrac: 0.28,
-    perspectiveScale: { referenceDistance: 4.5, min: 0.2, max: 1.1 },
-    depthFade: { near: 0.4, nearFade: 1.8, far: 4.8, farFade: 1.6 },
+    perspectiveScale: {
+      referenceDistance: STATION_NAVIGATE.parkDistance,
+      min: 0.2,
+      max: 1.1,
+    },
+    depthFade: { near: 0.4, nearFade: 1.8, far: STATION_NAVIGATE.parkDistance + 2.0, farFade: 1.6 },
   },
 
   // ── Diagnostic ──────────────────────────────────────────────────
@@ -1081,8 +1093,20 @@ export const COPY_ANCHORS: readonly WorldAnchor[] = [
     ],
     visibilityBeats: ["diagnostic"],
     fadeFrac: 1.4,
-    perspectiveScale: { referenceDistance: 4.5, min: 0.18, max: 1.15 },
-    depthFade: { near: 0.9, nearFade: 2.4, far: 6.8, farFade: 2.2 },
+    // referenceDistance + depthFade tracks STATION_DIAGNOSTIC.parkDistance
+    // (6.2 after the lab-match revision) so the title keeps its parked
+    // apparent size and doesn't clip when the camera is pulled back.
+    perspectiveScale: {
+      referenceDistance: STATION_DIAGNOSTIC.parkDistance,
+      min: 0.18,
+      max: 1.15,
+    },
+    depthFade: {
+      near: 0.9,
+      nearFade: 2.4,
+      far: STATION_DIAGNOSTIC.parkDistance + 2.3,
+      farFade: 2.2,
+    },
   },
   {
     id: "diagnostic.support",
@@ -1096,8 +1120,17 @@ export const COPY_ANCHORS: readonly WorldAnchor[] = [
     ],
     visibilityBeats: ["diagnostic"],
     fadeFrac: 1.4,
-    perspectiveScale: { referenceDistance: 4.5, min: 0.18, max: 1.15 },
-    depthFade: { near: 0.9, nearFade: 2.4, far: 6.8, farFade: 2.2 },
+    perspectiveScale: {
+      referenceDistance: STATION_DIAGNOSTIC.parkDistance,
+      min: 0.18,
+      max: 1.15,
+    },
+    depthFade: {
+      near: 0.9,
+      nearFade: 2.4,
+      far: STATION_DIAGNOSTIC.parkDistance + 2.3,
+      farFade: 2.2,
+    },
   },
   // (Encode orbit labels removed — the Navigate/Encode/Build remap
   // drops the four "same pattern, four ways" pills; the orbital gate
@@ -1133,8 +1166,21 @@ export const COPY_ANCHORS: readonly WorldAnchor[] = [
     ],
     visibilityBeats: ["passthrough-02", "intelligence"],
     fadeFrac: 0.18,
-    perspectiveScale: { referenceDistance: 4.5, min: 0.2, max: 1.15 },
-    depthFade: { near: 0.9, nearFade: 2.4, far: 6.8, farFade: 2.2 },
+    // referenceDistance + depthFade tracks STATION_INTELLIGENCE.parkDistance
+    // (6.2 after the lab-match revision) so the Build title keeps its
+    // parked apparent size and doesn't clip when the camera is pulled
+    // back for shell oversight.
+    perspectiveScale: {
+      referenceDistance: STATION_INTELLIGENCE.parkDistance,
+      min: 0.2,
+      max: 1.15,
+    },
+    depthFade: {
+      near: 0.9,
+      nearFade: 2.4,
+      far: STATION_INTELLIGENCE.parkDistance + 2.3,
+      farFade: 2.2,
+    },
   },
   {
     id: "intelligence.support",
@@ -1150,8 +1196,17 @@ export const COPY_ANCHORS: readonly WorldAnchor[] = [
     ],
     visibilityBeats: ["passthrough-02", "intelligence"],
     fadeFrac: 0.18,
-    perspectiveScale: { referenceDistance: 4.5, min: 0.2, max: 1.15 },
-    depthFade: { near: 0.9, nearFade: 2.4, far: 6.8, farFade: 2.2 },
+    perspectiveScale: {
+      referenceDistance: STATION_INTELLIGENCE.parkDistance,
+      min: 0.2,
+      max: 1.15,
+    },
+    depthFade: {
+      near: 0.9,
+      nearFade: 2.4,
+      far: STATION_INTELLIGENCE.parkDistance + 2.3,
+      farFade: 2.2,
+    },
   },
   // (Build chamber labels removed — the Navigate/Encode/Build remap
   // drops the "Trusted sources / Headless surfaces" side labels; the

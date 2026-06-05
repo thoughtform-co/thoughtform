@@ -133,6 +133,15 @@ export interface StationNode extends NodeBase {
   lateralX: number;
   halfExtent: number;
   gate: GateKind;
+  /** Distance the camera sits in front of this gate when parked
+   *  (world units along the corridor axis). Defaults to
+   *  `GATE_PARK_DISTANCE` (4.5). Larger values push the gate deeper
+   *  in world Z — since the camera path is fixed, the camera ends
+   *  up further away and the gate reads SMALLER in frame, opening
+   *  oversight margin around the parked composition. Used by the
+   *  shell parks (Navigate / Encode / Build) so the accreted shell
+   *  reads with breathing room instead of filling the viewport. */
+  parkDistance?: number;
   /** True if the brandmark rests at this station's centre. */
   brandmarkAnchor?: boolean;
   /** Section copy rendered at this station (Encode/Build/Navigate).
@@ -152,6 +161,9 @@ export interface TransitionWaypoint {
   parkBias: number;
   halfExtent: number;
   gate: GateKind;
+  /** Distance the camera sits in front of this waypoint when it is
+   *  the focal point (world units). Defaults to `GATE_PARK_DISTANCE`. */
+  parkDistance?: number;
   /** World-X offset of the landmark centre (default 0 = on-axis). */
   lateralX?: number;
   /** Section copy rendered at this landmark (e.g. Navigate). */
@@ -234,6 +246,12 @@ export const CORRIDOR_MAP = [
     lateralX: 0,
     halfExtent: 1.5,
     gate: "navigate",
+    // Pull the camera back at the Navigate park (4.5 -> 6.2 world
+    // units in front of the gate) so the accreted substrate cage +
+    // brand mark read with breathing room, matching the lab
+    // `NestedShellSphere` oversight framing. Lab-match revision
+    // (2026-06-05).
+    parkDistance: 6.2,
     content: {
       kicker: "01 · Navigate",
       titleHtml: "Navigate the <em>intelligence</em>.",
@@ -267,6 +285,10 @@ export const CORRIDOR_MAP = [
     lateralX: 0,
     halfExtent: 2.2,
     gate: "orbits",
+    // Pull the camera back at the Encode park (4.5 -> 6.2 world
+    // units) so the accreted source orbits + dodecahedron read with
+    // oversight margin (lab-match revision).
+    parkDistance: 6.2,
     content: {
       kicker: "02 · Encode",
       titleHtml: "Encode the <em>judgment</em>.",
@@ -303,6 +325,12 @@ export const CORRIDOR_MAP = [
     halfExtent: 2.0,
     gate: "sphere",
     brandmarkAnchor: true,
+    // Pull the camera back at the Build landing (4.5 -> 6.2 world
+    // units) so the fully-assembled shell (substrate cage + source
+    // orbits + outer surfaces + port pips + morph sphere) reads with
+    // oversight, matching the standalone lab Shell variant's clean
+    // framing instead of filling the viewport (lab-match revision).
+    parkDistance: 6.2,
     content: {
       kicker: "03 · Build",
       titleHtml: "Build on the <em>substrate</em>.",
@@ -400,11 +428,18 @@ export function cameraZDollyT(progress: number): number {
 }
 
 /** Solve a gate's world Z so that at `parkProgress` the camera sits
- *  GATE_PARK_DISTANCE units in front of it (the parked-beat
- *  invariant), using the same dolly curve as the live camera. */
-export function gateZAtParkProgress(parkProgress: number): number {
+ *  `parkDistance` units in front of it (the parked-beat invariant),
+ *  using the same dolly curve as the live camera. `parkDistance`
+ *  defaults to `GATE_PARK_DISTANCE`; the shell parks
+ *  (Navigate / Encode / Build) pass a larger value to push the gate
+ *  deeper in world Z, opening oversight margin around the parked
+ *  shell composition (lab-match revision). */
+export function gateZAtParkProgress(
+  parkProgress: number,
+  parkDistance: number = GATE_PARK_DISTANCE
+): number {
   const camZ = lerp(CAMERA_START[2], CAMERA_END[2], cameraZDollyT(parkProgress));
-  return camZ - GATE_PARK_DISTANCE;
+  return camZ - parkDistance;
 }
 
 // ── Derived: solved gate stations ────────────────────────────────────
@@ -417,6 +452,13 @@ export interface GateStation {
   halfExtent: number;
   /** Camera progress at which the gate is parked / centred. */
   parkProgress: number;
+  /** Distance the camera sits in front of this gate when parked.
+   *  Defaults to `GATE_PARK_DISTANCE`; the shell parks override it
+   *  to ~6.2 for oversight framing. Consumers that need to know how
+   *  far the camera is from a parked gate (brand-mark lead math,
+   *  copy-anchor reference distances) read this rather than
+   *  hardcoding 4.5. */
+  parkDistance: number;
   gate: GateKind;
   /** Section copy for this station (undefined for the setup beat and
    *  for waypoints). */
@@ -431,21 +473,25 @@ export const STATIONS: GateStation[] = (() => {
     const w = BEAT_WINDOWS[i];
     if (n.kind === "station") {
       const park = w.start + (n.parkBias ?? 0.5) * (w.end - w.start);
+      const parkDistance = n.parkDistance ?? GATE_PARK_DISTANCE;
       out.push({
         id: n.id,
-        position: [n.lateralX, 0, gateZAtParkProgress(park)],
+        position: [n.lateralX, 0, gateZAtParkProgress(park, parkDistance)],
         halfExtent: n.halfExtent,
         parkProgress: park,
+        parkDistance,
         gate: n.gate,
         content: n.content,
       });
     } else if (n.waypoint) {
       const park = w.start + n.waypoint.parkBias * (w.end - w.start);
+      const parkDistance = n.waypoint.parkDistance ?? GATE_PARK_DISTANCE;
       out.push({
         id: n.waypoint.id,
-        position: [n.waypoint.lateralX ?? 0, 0, gateZAtParkProgress(park)],
+        position: [n.waypoint.lateralX ?? 0, 0, gateZAtParkProgress(park, parkDistance)],
         halfExtent: n.waypoint.halfExtent,
         parkProgress: park,
+        parkDistance,
         gate: n.waypoint.gate,
         content: n.waypoint.content,
       });
