@@ -8,18 +8,23 @@
  * mark visibly accumulates the layers of the intelligence-layer shell
  * and lands on the fully-assembled artifact at the Build station.
  *
- * World-unit sizing is anchored to two known values:
+ * World-unit sizing is anchored to the Intelligence substrate sphere
+ * radius (`SUBSTRATE_HALF * SUBSTRATE_TO_SPHERE_RATIO` = 0.22 * 2.5 =
+ * 0.55 world units, see `IntelligenceGate.tsx`) using the SAME
+ * proportions as the standalone `NestedShellSphere` shell artifact
+ * (substrate core : sources : surfaces ≈ 1.00 : 1.55 : 2.25):
  *
- *   - The Intelligence substrate sphere lands at radius `SUBSTRATE_HALF
- *     * SUBSTRATE_TO_SPHERE_RATIO` = 0.22 * 2.5 = 0.55 world units (see
- *     `IntelligenceGate.tsx`).
- *   - The Intelligence gate `halfExtent` is 2.0 world units (see
- *     `corridorMap.ts`).
- *
- * So the substrate core wraps the 0.55-radius sphere with breathing
- * room (~0.85), the sources solar system sits between ~0.95 and ~1.55,
- * and the surfaces outer skin sits at ~1.85 so the fully-assembled
- * shell comfortably fits the gate's halfExtent.
+ *   - Substrate dodecahedron wraps the 0.55 sphere with a tight ~1.27x
+ *     ratio (0.70) — visually proportional to the brandmark / sphere
+ *     it cages, just like the lab artifact (where the cage is at 0.92
+ *     and the brandmark cloud half-extent is 0.75, ratio 1.22x).
+ *   - Source orbits sit OUTSIDE the cage in a band ~0.88..1.65 — every
+ *     orbit's `min(rx, rx*eccentricity)` clears the dodecahedron with
+ *     breathing room so the constellation visibly orbits AROUND the
+ *     substrate, not through it.
+ *   - Surfaces outer skin at 1.85 — ~2.6x the dodec, ~3.4x the
+ *     substrate sphere; still fits the Intelligence gate `halfExtent`
+ *     2.0 with breathing room and clears the outermost orbit.
  *
  * Tilts on the source orbits use Euler angles applied to an XY ellipse
  * via `buildTiltedRingLineLoop` (celestialRingUtils.ts) so each orbit
@@ -35,18 +40,21 @@ import {
 
 // ── Substrate core (inside-out layer 1) ──────────────────────────────
 
-/** Outer dodecahedron wrap radius. Wraps the 0.55-radius substrate
- *  sphere with breathing room so the cage edges read clearly around
- *  the morph cloud at landing. */
-export const SUBSTRATE_DODEC_RADIUS = 0.95;
+/** Outer dodecahedron wrap radius. Tight 1.27x wrap around the
+ *  0.55-radius substrate sphere — mirrors the standalone shell's
+ *  cage-to-cloud ratio (0.92 / 0.75 = 1.22x). Sized this way so the
+ *  cage reads as a proportional wrapper around the brandmark / sphere
+ *  it cages, not as an oversized halo. The source orbits below MUST
+ *  stay outside this radius. */
+export const SUBSTRATE_DODEC_RADIUS = 0.7;
 
-/** Inner geodesic shell radius. Sits in the gap between the 0.55-
- *  radius substrate sphere and the 0.95 outer dodecahedron so the
- *  faint dawn hairline reads as a middle layer at landing rather
- *  than being eclipsed by the morph cloud. During transit beats
- *  (before the sphere expands) it reads as a soft second cage
- *  around the dodecahedron's inside. */
-export const SUBSTRATE_INNER_RADIUS = 0.74;
+/** Inner geodesic shell radius. Sits inside the substrate sphere as
+ *  a faint dawn hairline at ~0.6x the dodecahedron (matching the lab
+ *  shell's inner detail-2 geodesic at 0.62x the core radius). At the
+ *  Build landing the substrate morph cloud eclipses it visually; it
+ *  reads strongest during the Navigate / Encode beats before the
+ *  sphere has formed, where it gives the cage internal depth. */
+export const SUBSTRATE_INNER_RADIUS = 0.42;
 
 /** Dodecahedron subdivision detail. `0` keeps the canonical 12-face
  *  pentagonal cage — distinctive and recognizable. */
@@ -87,13 +95,21 @@ export interface ShellOrbit {
  *  every axis so the orbits visibly cross when seen face-on (the
  *  astronomy-poster reference). Colors mix Sources green, gold, and
  *  dawn so the field reads as a layered chart, not a single-hue
- *  ring stack. */
+ *  ring stack.
+ *
+ *  **Invariant — orbits sit OUTSIDE the substrate dodecahedron.** For
+ *  every orbit, `min(rx, rx * eccentricity)` must be >= `SUBSTRATE_DODEC_RADIUS
+ *  + 0.15` (clearance) so the orbit's closest approach to origin is
+ *  clearly outside the cage in 3D space. The cage is a rigid solid;
+ *  orbits are 1D paths that flow AROUND it. Without this clearance the
+ *  flat ellipses cut through the cage and the inside-out story breaks. */
 export const SHELL_ORBITS: readonly ShellOrbit[] = [
   {
     id: "01",
-    rx: 1.05,
+    rx: 1.1,
     eccentricity: 0.92,
     // Front-tilted plane, modest left bank — the "primary" inner orbit.
+    // min radius = 1.01, clears the 0.70 dodec with 0.31 breathing.
     tilt: [0.42, 0.0, 0.22],
     periodSec: 18,
     dir: -1,
@@ -104,24 +120,26 @@ export const SHELL_ORBITS: readonly ShellOrbit[] = [
   },
   {
     id: "02",
-    rx: 1.35,
-    eccentricity: 0.42,
+    rx: 1.55,
+    eccentricity: 0.6,
     // Flat horizon orbit on a strong Y-axis tilt — reads as a long
-    // ellipse crossing the others.
+    // ellipse crossing the others. min radius = 0.93, clears the dodec
+    // with 0.23 breathing.
     tilt: [0.15, 0.62, -0.38],
     periodSec: 26,
     dir: 1,
     phaseRad: 1.4,
     pipRadius: 0.036,
     color: COLOR_SURFACES,
-    baseAlpha: 0.5,
+    baseAlpha: 0.55,
   },
   {
     id: "03",
-    rx: 1.2,
+    rx: 1.25,
     eccentricity: 0.95,
     // Steep polar tilt — the orbit sweeps near-vertical, crossing the
-    // equatorial orbits at the top/bottom of its arc.
+    // equatorial orbits at the top/bottom of its arc. min radius =
+    // 1.19, clears comfortably.
     tilt: [1.18, 0.28, 0.0],
     periodSec: 22,
     dir: -1,
@@ -132,10 +150,11 @@ export const SHELL_ORBITS: readonly ShellOrbit[] = [
   },
   {
     id: "04",
-    rx: 1.5,
-    eccentricity: 0.4,
+    rx: 1.6,
+    eccentricity: 0.55,
     // Very flat + long horizon, tipped on the Y axis so it reads as
-    // a wide outer track passing behind the inner orbits.
+    // a wide outer track passing behind the inner orbits. min radius
+    // = 0.88, clears with 0.18 breathing.
     tilt: [0.0, 1.25, 0.26],
     periodSec: 30,
     dir: 1,
@@ -146,31 +165,33 @@ export const SHELL_ORBITS: readonly ShellOrbit[] = [
   },
   {
     id: "05",
-    rx: 0.95,
-    eccentricity: 0.88,
+    rx: 1.0,
+    eccentricity: 0.92,
     // Tight inner orbit on a triple-axis tilt — gives the innermost
-    // body the most dynamic angle in the constellation.
+    // body the most dynamic angle in the constellation. min radius =
+    // 0.92, the closest orbit to the dodec.
     tilt: [0.72, -0.55, 0.62],
     periodSec: 14,
     dir: -1,
     phaseRad: 4.6,
     pipRadius: 0.032,
     color: COLOR_SURFACES,
-    baseAlpha: 0.45,
+    baseAlpha: 0.5,
   },
   {
     id: "06",
-    rx: 1.45,
-    eccentricity: 0.5,
+    rx: 1.5,
+    eccentricity: 0.62,
     // Counter-tilted outer orbit — its inclination opposes orbit 02's
-    // so the two long horizons read as a deliberate X-cross.
+    // so the two long horizons read as a deliberate X-cross. min
+    // radius = 0.93.
     tilt: [-0.42, 0.45, -0.82],
     periodSec: 24,
     dir: 1,
     phaseRad: 5.4,
     pipRadius: 0.036,
     color: COLOR_SOURCES,
-    baseAlpha: 0.58,
+    baseAlpha: 0.6,
   },
 ];
 
