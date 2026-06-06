@@ -147,6 +147,22 @@ are. It does not count against the brandmark painter cap.
   still inside the 0.88 nearest-orbit clearance). The `brainCloud`
   shader was deleted.
 
+- **Substrate particle morph removed at Build (2026-06-06).** The
+  Build beat previously cross-faded the DOM brandmark to an in-canvas
+  `SubstrateMorphCloud` (brandmark silhouette → Fibonacci particle
+  sphere → particle logo) inside `IntelligenceGate`. Removed on user
+  feedback: the brandmark should stay the SAME 2D SVG mark
+  (`ProjectedBrandmarkActor`) across all three phases — Navigate,
+  Encode, AND Build — and never turn into a particle sphere or a
+  particle version of the logo. `IntelligenceGate` is now an empty
+  null placeholder; `ProjectedBrandmarkActor` dropped its
+  `getIntelligenceSubstratePresence`-driven fade (the only opacity
+  ramp left is the post-corridor tail bookend). The Build climax is
+  now the assembled accretion shell (brain + orbits + surfaces)
+  wrapping the persistent DOM brandmark. `getIntelligenceSubstratePresence`
+  / `getSubstrateMorph` / `SUBSTRATE_CROSSFADE_END` remain exported in
+  `sceneGeom.ts` but have no live consumers.
+
 ---
 
 ## 2026-06-05 Revision — Lab-match shell (icosphere substrate + per-station parkDistance)

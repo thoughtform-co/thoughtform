@@ -33,8 +33,10 @@
  * silhouette (which is the DOM glyph and never fades here).
  *
  * PERSISTS through Encode + Build so the brain accumulates around the
- * traveling mark and visually wraps the substrate sphere at the
- * Build climax (`SubstrateMorphCloud`'s morph endpoint).
+ * traveling mark and, at the Build climax, wraps the persistent DOM
+ * brandmark (`ProjectedBrandmarkActor`) at the centre — the previous
+ * particle substrate sphere was removed (2026-06-06), the 2D SVG
+ * mark stays consistent across all three phases.
  */
 
 import { useFrame } from "@react-three/fiber";

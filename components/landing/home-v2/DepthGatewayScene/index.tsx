@@ -108,27 +108,28 @@ function viewportAspect(): number {
  *                             arrives via the accreted shell.
  *   - BrandmarkAccretionShell : inside-out intelligence-layer shell
  *                             that accretes around the brandmark
- *                             as it travels (substrate dodecahedron
- *                             + inner geodesic at Navigate; solar-
- *                             system source orbits at Encode; outer
- *                             surfaces skin at Build). Tracks
+ *                             as it travels (low-poly brain at
+ *                             Navigate; solar-system source orbits
+ *                             at Encode; outer surfaces skin at
+ *                             Build). Tracks
  *                             `getBrandmarkWorldPosition` per frame
  *                             so the shell follows the mark through
  *                             lead mode. Reveals owned by
  *                             `CORRIDOR_TIMELINE.accretion`. The
  *                             mark itself never changes — what
- *                             surrounds it does. Lands co-located
- *                             with `SubstrateMorphCloud` so the
- *                             assembled shell wraps the substrate
- *                             sphere at the climax. See ADR-013 +
- *                             the shell-into-corridor pass.
+ *                             surrounds it does. At the Build climax
+ *                             the assembled shell wraps the
+ *                             persistent DOM brandmark (no particle
+ *                             substrate sphere — removed 2026-06-06).
+ *                             See ADR-013 + the shell-into-corridor
+ *                             pass.
  *
- * The PRIMARY brandmark painter is the DOM-side
+ * The ONLY brandmark painter is the DOM-side
  * `ProjectedBrandmarkActor` — its world position is interpolated
  * between gate centres and projected through a mirror camera
- * tracing the same path. The substrate-cut at intelligence is
- * handled inside the `IntelligenceGate` group itself (no separate
- * top-level `BrandmarkPointCloud`).
+ * tracing the same path. The same 2D SVG mark reads across all
+ * three phases; there is no longer a particle substrate-cut at
+ * Build (`IntelligenceGate` is now an empty placeholder).
  *
  * WebGL availability + reduced-motion gating live in `HomeV2Page`;
  * this component is only mounted when the corridor mode is active,
@@ -230,10 +231,10 @@ export function DepthGatewayScene() {
           at Encode; outer surfaces skin at Build). Mounted AFTER
           the gate world so its additive line geometry overlays
           gate geometry rather than being occluded by it. Tracks
-          `getBrandmarkWorldPosition` per frame; lands co-located
-          with `SubstrateMorphCloud` (inside IntelligenceGate) so
-          the assembled shell wraps the substrate sphere at the
-          climax. See ADR-013 + the shell-into-corridor pass. */}
+          `getBrandmarkWorldPosition` per frame; the assembled shell
+          wraps the persistent DOM brandmark at the Build climax (no
+          particle substrate — removed 2026-06-06). See ADR-013 +
+          the shell-into-corridor pass. */}
       <BrandmarkAccretionShell />
     </Canvas>
   );

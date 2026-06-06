@@ -32,9 +32,11 @@ import { ShellSurfaces } from "./shell/ShellSurfaces";
  *     pip ring (dawn) — headless surfaces wrapping the layer.
  *
  * All three persist after they emerge so the shell is fully
- * assembled at the Build landing and stays present as the brandmark
- * hands off to the `SubstrateMorphCloud` (substrate sphere morph,
- * inside `IntelligenceGate`) at the centre.
+ * assembled at the Build landing and wraps the persistent DOM
+ * brandmark (`ProjectedBrandmarkActor`) at the centre. The previous
+ * substrate particle sphere / particle-logo morph at Build was
+ * removed (2026-06-06) — the 2D SVG mark stays consistent across
+ * all three phases.
  *
  * This component owns ONLY the world position: per frame the parent
  * group is moved to `getBrandmarkWorldPosition(paintProgress)` so the
