@@ -23,6 +23,7 @@
  *
  *   - `corridor-geodesic` : current home shell (baseline).
  *   - `corridor-rings`    : armillary gimbal of great-circle rings.
+ *   - `corridor-platform` : Armillary-style platform + interface landmarks.
  *   - `corridor-panels`   : tangent surface plates + faint equator.
  *   - `corridor-contour`  : latitude contour sphere.
  *   - `corridor-gem`      : crystalline bipyramid.
@@ -45,6 +46,7 @@ import {
   OuterGem,
   OuterGeodesic,
   OuterPanels,
+  OuterPlatform,
 } from "./corridor/outerShells";
 import type { ArtifactVariant } from "./artifactGeom";
 
@@ -89,6 +91,14 @@ export function IntelligenceArtifact({
           progress={progress}
           reducedMotion={reducedMotion}
           OuterShell={OuterArmillary}
+        />
+      );
+    case "corridor-platform":
+      return (
+        <CorridorArtifact
+          progress={progress}
+          reducedMotion={reducedMotion}
+          OuterShell={OuterPlatform}
         />
       );
     case "corridor-panels":

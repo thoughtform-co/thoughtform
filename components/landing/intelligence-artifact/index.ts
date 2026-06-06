@@ -14,6 +14,7 @@ export {
   OuterGem,
   OuterGeodesic,
   OuterPanels,
+  OuterPlatform,
 } from "./corridor/outerShells";
 export { SubstrateBrandmark } from "./SubstrateBrandmark";
 export { AnchorProjector } from "./AnchorProjector";

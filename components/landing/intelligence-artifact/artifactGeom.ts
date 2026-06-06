@@ -286,6 +286,7 @@ export type ArtifactVariant =
   // the production corridor.
   | "corridor-geodesic"
   | "corridor-rings"
+  | "corridor-platform"
   | "corridor-panels"
   | "corridor-contour"
   | "corridor-gem";
@@ -309,6 +310,7 @@ export const ARTIFACT_VARIANTS: readonly VariantSpec[] = [
   // chrome switcher reads as a sub-family.
   { key: "corridor-geodesic", label: "Home · Geodesic", sub: "Current home shell" },
   { key: "corridor-rings", label: "Home · Rings", sub: "Armillary gimbal" },
+  { key: "corridor-platform", label: "Home · Platform", sub: "Interface landmarks" },
   { key: "corridor-panels", label: "Home · Panels", sub: "Tangent surface plates" },
   { key: "corridor-contour", label: "Home · Contour", sub: "Latitude rings" },
   { key: "corridor-gem", label: "Home · Gem", sub: "Crystalline bipyramid" },

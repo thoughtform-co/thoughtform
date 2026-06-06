@@ -101,7 +101,10 @@ interface CorridorBrainProps {
   reducedMotion?: boolean;
 }
 
-const BRAIN_SPIN_RATE = 0.18;
+/** Keep the intelligence object calm. The source orbits animate, but
+ *  the brain itself should not rotate; otherwise the center feels
+ *  dizzying and competes with the moving knowledge layer. */
+const BRAIN_SPIN_RATE = 0;
 const EDGE_OPACITY = 0.72;
 const FACE_OPACITY = 0.07;
 const NODE_OPACITY = 0.85;
@@ -350,6 +353,7 @@ export function CorridorArtifact({
           presence={substrateP}
           resolved={resolvedP}
           reducedMotion={reducedMotion}
+          spinRate={0}
           showInnerShell={false}
           showOuterShell={false}
         />

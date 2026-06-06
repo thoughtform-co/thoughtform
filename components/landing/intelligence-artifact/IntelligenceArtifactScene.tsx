@@ -53,6 +53,17 @@ const PHASE_TABS: Array<{ key: keyof typeof PHASES; label: string; progress: num
   { key: "resolved", label: "Layer", progress: 0.96 },
 ];
 
+const VARIANT_GROUPS = [
+  {
+    label: "Core studies",
+    items: ARTIFACT_VARIANTS.filter((v) => !v.key.startsWith("corridor-")),
+  },
+  {
+    label: "Home shells",
+    items: ARTIFACT_VARIANTS.filter((v) => v.key.startsWith("corridor-")),
+  },
+] as const;
+
 /** Cycle length when autoplay is on (seconds for a single 0 → 1 sweep). */
 const AUTOPLAY_DURATION_SEC = 14;
 
@@ -232,22 +243,30 @@ export function IntelligenceArtifactScene() {
           <span className="ia-telemetry__variant">{variant.toUpperCase()}</span>
         </div>
 
-        <div className="ia-variants" role="tablist" aria-label="Artifact variant">
-          {ARTIFACT_VARIANTS.map((v) => (
-            <button
-              key={v.key}
-              type="button"
-              role="tab"
-              aria-selected={v.key === variant}
-              className={`ia-variant${v.key === variant ? " is-on" : ""}`}
-              onClick={() => setVariant(v.key)}
-              title={v.sub}
-            >
-              <span className="ia-variant__label">{v.label}</span>
-              <span className="ia-variant__sub">{v.sub}</span>
-            </button>
+        <aside className="ia-variants" aria-label="Artifact variant groups">
+          <span className="ia-variants__eyebrow">Variant map</span>
+          {VARIANT_GROUPS.map((group) => (
+            <div key={group.label} className="ia-variant-group">
+              <span className="ia-variant-group__label">{group.label}</span>
+              <div className="ia-variant-group__items" role="tablist" aria-label={group.label}>
+                {group.items.map((v) => (
+                  <button
+                    key={v.key}
+                    type="button"
+                    role="tab"
+                    aria-selected={v.key === variant}
+                    className={`ia-variant${v.key === variant ? " is-on" : ""}`}
+                    onClick={() => setVariant(v.key)}
+                    title={v.sub}
+                  >
+                    <span className="ia-variant__label">{v.label.replace("Home · ", "")}</span>
+                    <span className="ia-variant__sub">{v.sub}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
           ))}
-        </div>
+        </aside>
       </div>
 
       <div className="ia-canvas-wrap" ref={wrapRef}>
@@ -659,14 +678,44 @@ const styles = `
 
 .ia-variants {
   position: absolute;
-  top: 100px;
-  left: 50%;
-  transform: translateX(-50%);
+  top: 118px;
+  left: 84px;
+  width: 168px;
   display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-  justify-content: center;
-  max-width: min(820px, 80vw);
+  flex-direction: column;
+  gap: 12px;
+  max-height: calc(100vh - 264px);
+  overflow: auto;
+  padding: 10px;
+  border: 1px solid var(--dawn-10, rgba(235, 227, 214, 0.1));
+  background:
+    linear-gradient(180deg, rgba(10, 9, 8, 0.68), rgba(10, 9, 8, 0.42)),
+    rgba(10, 9, 8, 0.38);
+  backdrop-filter: blur(6px);
+  scrollbar-width: thin;
+  scrollbar-color: var(--gold-30, rgba(202, 165, 84, 0.3)) transparent;
+}
+.ia-variants__eyebrow {
+  color: var(--gold, #caa554);
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+.ia-variant-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.ia-variant-group__label {
+  color: var(--dawn-30, rgba(235, 227, 214, 0.3));
+  font-size: 8px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+.ia-variant-group__items {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 .ia-variant {
   background: transparent;
@@ -674,16 +723,17 @@ const styles = `
   color: var(--dawn-50, rgba(235, 227, 214, 0.5));
   font-family: inherit;
   font-size: 9px;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  padding: 6px 12px 8px 12px;
+  padding: 5px 7px 6px 7px;
   cursor: pointer;
   transition: color 160ms, border-color 160ms, background 160ms;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
   gap: 2px;
-  min-width: 110px;
+  width: 100%;
+  text-align: left;
 }
 .ia-variant:hover {
   color: var(--gold, #caa554);
@@ -694,12 +744,13 @@ const styles = `
   background: var(--gold, #caa554);
   border-color: var(--gold, #caa554);
 }
-.ia-variant__label { font-size: 10px; }
+.ia-variant__label { font-size: 9px; }
 .ia-variant__sub {
-  font-size: 8px;
-  letter-spacing: 0.1em;
+  font-size: 7px;
+  letter-spacing: 0.08em;
   text-transform: none;
   opacity: 0.7;
+  line-height: 1.15;
 }
 
 .ia-canvas-wrap {
@@ -936,8 +987,21 @@ const styles = `
 
 @media (max-width: 760px) {
   .ia-rail { display: none; }
-  .ia-variants { top: 96px; max-width: 92vw; }
-  .ia-variant { min-width: 84px; padding: 4px 8px 6px 8px; }
+  .ia-variants {
+    top: 92px;
+    left: 50%;
+    width: min(92vw, 520px);
+    max-height: 132px;
+    transform: translateX(-50%);
+    flex-direction: row;
+    align-items: flex-start;
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+  .ia-variant-group {
+    min-width: 180px;
+  }
+  .ia-variant { padding: 4px 8px 5px 8px; }
   .ia-variant__sub { display: none; }
   .ia-label { max-width: 130px; padding: 4px 8px; font-size: 10px; }
   .ia-label__title { font-size: 11px; }
