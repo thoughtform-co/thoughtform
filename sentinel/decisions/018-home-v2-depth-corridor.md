@@ -121,6 +121,32 @@ brandmark's painters; the brain is part of the accretion shell
 around the mark, the same way the source orbits and surfaces ports
 are. It does not count against the brandmark painter cap.
 
+### Phase 5 follow-ups (2026-06-06, same day)
+
+- **Larger + smoother first pass.** Ellipsoid radii bumped and sulci
+  amplitude + jitter reduced so the point-cloud brain read less
+  noisy.
+- **Shell-wrap emerge.** The brain originally used `foldEmerge`,
+  which starts at scale 0 (a point at the mark centre that balloons
+  outward) — it read as "appears from the back and grows through the
+  mark." Replaced with `shellWrapEmerge` (`shellGeom.ts`): the shell
+  starts LARGE (`SHELL_WRAP_START_SCALE` 1.85x, already surrounding
+  the mark) and only ever CONTRACTS inward to scale 1.0, faded in via
+  a `presence` (opacity) ramp so the large starting shell doesn't
+  pop. Reads as a shell closing around the mark from outside in 3D.
+  `foldEmerge` is retained for the source orbits + surfaces ports.
+- **Low-poly mesh (final).** The dense point cloud + synapse web
+  still read as busy; the request was for a minimalist "reduce the
+  polygon count in Cinema 4D" look. `sampleBrain.ts` was rewritten
+  from `sampleBrainPoints` / `buildSynapseLinks` to `buildLowPolyBrain`,
+  which deforms an icosahedron (detail 1 desktop / 0 mobile) into a
+  brain (ellipsoid + central fissure + lobing noise) and returns
+  `faces` / `edges` / `nodes` geometries. `ShellSubstrate` renders a
+  gold wireframe (primary) + faint facet fills + small vertex nodes,
+  sized a touch larger (radii 0.62 / 0.52 / 0.8, max extent ~0.85
+  still inside the 0.88 nearest-orbit clearance). The `brainCloud`
+  shader was deleted.
+
 ---
 
 ## 2026-06-05 Revision — Lab-match shell (icosphere substrate + per-station parkDistance)

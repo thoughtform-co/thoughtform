@@ -2,22 +2,25 @@
 
 /**
  * ShellSubstrate — the inside-out layer 1 of the accreted intelligence
- * shell. Wraps the guiding-star brandmark with an abstract BRAIN
- * artifact: a procedural two-hemisphere point cloud with sulci
- * displacement + faint synapse links.
+ * shell. Wraps the guiding-star brandmark with an abstract LOW-POLY
+ * BRAIN artifact: a deformed icosahedron rendered as a gold wireframe
+ * with faint facet fills and small vertex nodes.
  *
  * EVOLUTION:
  *   - 2026-06-05 lab-match revision: 12-face dodecahedron cage →
  *     80-face gold geodesic icosphere + dawn inner geodesic.
  *   - 2026-06-06 wrap-around revision (Phase 2): dropped the dawn
- *     inner geodesic so only the gold cage carried the substrate.
- *   - 2026-06-06 wrap-around revision (Phase 5, this file): swapped
- *     the geodesic cage for the BRAIN ARTIFACT. The substrate layer
- *     of the "Navigate the intelligence" choreography now reads as
- *     the THING the user is navigating (an intelligence) rather than
- *     a generic geodesic shell. Renders as `THREE.Points` plus a
- *     sparse `LineSegments` synapse network, both with additive gold
- *     dots / hairlines.
+ *     inner geodesic.
+ *   - 2026-06-06 wrap-around revision (Phase 5): swapped the geodesic
+ *     cage for a BRAIN ARTIFACT — first as a dense point cloud +
+ *     synapse web.
+ *   - 2026-06-06 low-poly revision (this file): the dense point
+ *     cloud read as busy. Replaced with a LOW-POLY MESH — an
+ *     icosahedron (detail 1, 80 faces) deformed into a brain
+ *     (ellipsoid + central fissure + lobing noise, see
+ *     `buildLowPolyBrain`) and rendered as a wireframe + faint
+ *     facets + vertex nodes. Minimalistic "reduce the polygon count
+ *     in Cinema 4D" read, sized a touch larger.
  *
  * EMERGE: `shellWrapEmerge(reveal)` on the whole brain group — the
  * shell ONLY EVER CONTRACTS INWARD. It starts LARGE (scale 1.85x,
@@ -31,16 +34,15 @@
  *
  * PERSISTS through Encode + Build so the brain accumulates around the
  * traveling mark and visually wraps the substrate sphere at the
- * Build climax (`TravelingBrandmarkCloud`'s morph endpoint).
+ * Build climax (`SubstrateMorphCloud`'s morph endpoint).
  */
 
 import { useFrame } from "@react-three/fiber";
 import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
-import { buildSynapseLinks, sampleBrainPoints } from "@/lib/brandmark/sampleBrain";
+import { buildLowPolyBrain } from "@/lib/brandmark/sampleBrain";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import { getBrandmarkAccretionLayers } from "../sceneGeom";
-import { brainCloudFragment, brainCloudVertex } from "../shaders/brainCloud";
 import { EMERGE_EPSILON, shellWrapEmerge } from "./shellGeom";
 
 interface ShellSubstrateProps {
@@ -57,92 +59,50 @@ interface ShellSubstrateProps {
  *  instrument at the same cadence as the rest of the corridor. */
 const BRAIN_SPIN_RATE = 0.18;
 
-/** Brain point budget. Picked so the cloud reads as a solid brain
- *  surface at parked viewing distance without saturating the GPU on
- *  mobile (where this layer paints alongside the source orbits +
- *  surfaces skin + wormhole walls). Bumped from 1800 to 2400 in the
- *  2026-06-06 "larger + less facets + more geometrical" pass so the
- *  larger ellipsoid still reads as a coherent surface rather than a
- *  sparser dusting. */
-const BRAIN_POINT_COUNT = 2400;
-const BRAIN_POINT_COUNT_MOBILE = 1100;
+/** Icosahedron subdivision for the low-poly brain. 1 = 80 faces —
+ *  the low-poly sweet spot (faceted + readable, not a dense sphere).
+ *  Mobile drops to 0 (20 faces) for an even cleaner / cheaper read. */
+const BRAIN_DETAIL = 1;
+const BRAIN_DETAIL_MOBILE = 0;
 
-/** Synapse link count. Bumped from 480 to 650 (mobile 220 → 300)
- *  alongside the point-count bump so the structural network reads
- *  visibly as a deliberate geometric scaffold rather than a few
- *  stray hairs across the cloud. */
-const SYNAPSE_LINK_COUNT = 650;
-const SYNAPSE_LINK_COUNT_MOBILE = 300;
+/** Brain bounding-box hint. Must contain the brain (max radius ~0.85)
+ *  at the SHELL_WRAP_START_SCALE (1.85x) so frustum culling never
+ *  clips the contract-in frames. Geometry is mounted with
+ *  `frustumCulled={false}` anyway, but the sphere keeps any future
+ *  culling honest. */
+const BRAIN_BOUND_RADIUS = 1.7;
 
-/** Brain bounding-box hints. Must comfortably contain the larger
- *  brain (radius ~0.7) at the SHELL_WRAP_START_SCALE (1.85x) so
- *  frustum culling never clips the contract-in frames. */
-const BRAIN_BOUND_RADIUS = 1.4;
-
-/** Material colors / opacities. Tuned so the brain reads brightly at
- *  the corridor's typical viewing distance (camera ~6.2 units back
- *  during the Navigate park) without blowing out the wormhole walls
- *  behind it. */
 const COLOR_BODY = new THREE.Color("#caa554");
 const COLOR_RIM = new THREE.Color("#e9c97a");
-const POINT_OPACITY = 0.95;
-/** Synapse opacity raised from 0.28 to 0.36 in the larger / more-
- *  geometrical pass so the network reads as a clear structural
- *  layer over the point surface rather than a faint suggestion. */
-const SYNAPSE_OPACITY = 0.36;
+
+/** Edge wireframe opacity at full presence — the primary read. */
+const EDGE_OPACITY = 0.72;
+/** Facet fill opacity — very faint, just enough to give the wireframe
+ *  a sense of solid body without filling in the minimalist look. */
+const FACE_OPACITY = 0.07;
+/** Vertex node opacity — small accent dots at the polygon corners. */
+const NODE_OPACITY = 0.85;
 
 export function ShellSubstrate({ layerKey, reducedMotion = false }: ShellSubstrateProps) {
   void layerKey;
   const groupRef = useRef<THREE.Group>(null);
   const spinGroupRef = useRef<THREE.Group>(null);
 
-  // ── Geometry: brain points + synapse links ─────────────────────
+  // ── Geometry: low-poly brain (faces + edges + vertex nodes) ─────
 
-  const { pointGeom, lineGeom } = useMemo(() => {
-    const pointCount = reducedMotion ? BRAIN_POINT_COUNT_MOBILE : BRAIN_POINT_COUNT;
-    const linkCount = reducedMotion ? SYNAPSE_LINK_COUNT_MOBILE : SYNAPSE_LINK_COUNT;
-
-    const brain = sampleBrainPoints({ count: pointCount, seed: 1 });
-
-    const pg = new THREE.BufferGeometry();
-    pg.setAttribute("position", new THREE.BufferAttribute(brain.positions, 3));
-    pg.setAttribute("aSeed", new THREE.BufferAttribute(brain.seeds, 1));
-    pg.boundingSphere = new THREE.Sphere(new THREE.Vector3(0, 0, 0), BRAIN_BOUND_RADIUS);
-
-    const synapses = buildSynapseLinks({
-      positions: brain.positions,
-      count: brain.count,
-      linkCount,
-    });
-    const lg = new THREE.BufferGeometry();
-    lg.setAttribute("position", new THREE.BufferAttribute(synapses, 3));
-    lg.boundingSphere = new THREE.Sphere(new THREE.Vector3(0, 0, 0), BRAIN_BOUND_RADIUS);
-
-    return { pointGeom: pg, lineGeom: lg };
+  const { faceGeom, edgeGeom, nodeGeom } = useMemo(() => {
+    const detail = reducedMotion ? BRAIN_DETAIL_MOBILE : BRAIN_DETAIL;
+    const brain = buildLowPolyBrain({ detail });
+    const bound = new THREE.Sphere(new THREE.Vector3(0, 0, 0), BRAIN_BOUND_RADIUS);
+    brain.faces.boundingSphere = bound.clone();
+    brain.edges.boundingSphere = bound.clone();
+    brain.nodes.boundingSphere = bound.clone();
+    return { faceGeom: brain.faces, edgeGeom: brain.edges, nodeGeom: brain.nodes };
   }, [reducedMotion]);
 
   // ── Materials ──────────────────────────────────────────────────
 
-  const pointMat = useMemo(() => {
-    return new THREE.ShaderMaterial({
-      vertexShader: brainCloudVertex,
-      fragmentShader: brainCloudFragment,
-      uniforms: {
-        uTime: { value: 0 },
-        uPointSize: { value: 5.0 },
-        uPixelRatio: { value: typeof window !== "undefined" ? window.devicePixelRatio : 1 },
-        uPresence: { value: 0 },
-        uColor: { value: COLOR_BODY.clone() },
-        uRimColor: { value: COLOR_RIM.clone() },
-        uOpacity: { value: POINT_OPACITY },
-      },
-      transparent: true,
-      depthWrite: false,
-      blending: THREE.AdditiveBlending,
-    });
-  }, []);
-
-  const lineMat = useMemo(
+  const edgeMat = useMemo(
     () =>
       new THREE.LineBasicMaterial({
         color: COLOR_BODY.clone(),
@@ -154,32 +114,62 @@ export function ShellSubstrate({ layerKey, reducedMotion = false }: ShellSubstra
     []
   );
 
+  const faceMat = useMemo(
+    () =>
+      new THREE.MeshBasicMaterial({
+        color: COLOR_BODY.clone(),
+        transparent: true,
+        opacity: 0,
+        depthWrite: false,
+        side: THREE.DoubleSide,
+      }),
+    []
+  );
+
+  const nodeMat = useMemo(
+    () =>
+      new THREE.PointsMaterial({
+        color: COLOR_RIM.clone(),
+        transparent: true,
+        opacity: 0,
+        depthWrite: false,
+        size: 0.03,
+        sizeAttenuation: true,
+        blending: THREE.AdditiveBlending,
+      }),
+    []
+  );
+
   useEffect(() => {
     return () => {
-      pointGeom.dispose();
-      lineGeom.dispose();
-      pointMat.dispose();
-      lineMat.dispose();
+      faceGeom.dispose();
+      edgeGeom.dispose();
+      nodeGeom.dispose();
+      edgeMat.dispose();
+      faceMat.dispose();
+      nodeMat.dispose();
     };
-  }, [pointGeom, lineGeom, pointMat, lineMat]);
+  }, [faceGeom, edgeGeom, nodeGeom, edgeMat, faceMat, nodeMat]);
 
-  useFrame((state, delta) => {
+  useFrame((_, delta) => {
     const group = groupRef.current;
     if (!group) return;
 
     const { paintProgress, active, armed } = useDepthGatewayStore.getState().transform;
     if (!active && !armed) {
       group.visible = false;
-      pointMat.uniforms.uPresence.value = 0;
-      lineMat.opacity = 0;
+      edgeMat.opacity = 0;
+      faceMat.opacity = 0;
+      nodeMat.opacity = 0;
       return;
     }
 
     const reveal = getBrandmarkAccretionLayers(paintProgress).substrate;
     if (reveal <= EMERGE_EPSILON) {
       group.visible = false;
-      pointMat.uniforms.uPresence.value = 0;
-      lineMat.opacity = 0;
+      edgeMat.opacity = 0;
+      faceMat.opacity = 0;
+      nodeMat.opacity = 0;
       return;
     }
     group.visible = true;
@@ -194,16 +184,9 @@ export function ShellSubstrate({ layerKey, reducedMotion = false }: ShellSubstra
     const { scale, presence } = shellWrapEmerge(reveal);
     group.scale.setScalar(scale);
 
-    // Per-frame uniforms. Twinkle is driven by clock time so the
-    // brain feels alive even when the user parks the corridor.
-    pointMat.uniforms.uTime.value = state.clock.elapsedTime;
-    pointMat.uniforms.uPixelRatio.value = state.viewport.dpr;
-    pointMat.uniforms.uPresence.value = presence;
-
-    // Synapse links ride the same presence ramp as the points, capped
-    // at SYNAPSE_OPACITY so they stay faint enough to read as texture
-    // rather than competing with the source orbits at Encode.
-    lineMat.opacity = SYNAPSE_OPACITY * presence;
+    edgeMat.opacity = EDGE_OPACITY * presence;
+    faceMat.opacity = FACE_OPACITY * presence;
+    nodeMat.opacity = NODE_OPACITY * presence;
 
     if (spinGroupRef.current && !reducedMotion) {
       spinGroupRef.current.rotation.y += BRAIN_SPIN_RATE * delta;
@@ -213,8 +196,9 @@ export function ShellSubstrate({ layerKey, reducedMotion = false }: ShellSubstra
   return (
     <group ref={groupRef} visible={false}>
       <group ref={spinGroupRef}>
-        <points geometry={pointGeom} material={pointMat} frustumCulled={false} />
-        <lineSegments geometry={lineGeom} material={lineMat} frustumCulled={false} />
+        <mesh geometry={faceGeom} material={faceMat} frustumCulled={false} />
+        <lineSegments geometry={edgeGeom} material={edgeMat} frustumCulled={false} />
+        <points geometry={nodeGeom} material={nodeMat} frustumCulled={false} />
       </group>
     </group>
   );
