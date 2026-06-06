@@ -1,9 +1,9 @@
 "use client";
 
 /**
- * IntelligenceArtifact — thin dispatcher around the six artifact
- * variants. Each variant is its own R3F scene graph; this component
- * picks one based on the `variant` prop so the lab page's
+ * IntelligenceArtifact — thin dispatcher around the artifact variants.
+ * Each variant is its own R3F scene graph; this component picks one
+ * based on the `variant` prop so the lab page's
  * `IntelligenceArtifactScene` can switch between them without
  * remounting the surrounding chrome.
  *
@@ -19,8 +19,16 @@
  *                                                 highlighted interface
  *                                                 windows + orbiting sources.
  *
- * All six share `SubstrateBrandmark` for the central nucleus so the
- * brandmark colour + depth are identical across forms.
+ * Corridor family (Home composition, pluggable outer shell):
+ *
+ *   - `corridor-geodesic` : current home shell (baseline).
+ *   - `corridor-rings`    : armillary gimbal of great-circle rings.
+ *   - `corridor-panels`   : tangent surface plates + faint equator.
+ *   - `corridor-contour`  : latitude contour sphere.
+ *   - `corridor-gem`      : crystalline bipyramid.
+ *
+ * All variants share `SubstrateBrandmark` for the central nucleus
+ * so the brandmark colour + depth are identical across forms.
  */
 
 import { Aperture } from "./Aperture";
@@ -30,6 +38,14 @@ import { Funnel } from "./Funnel";
 import { NestedShellSphere } from "./NestedShellSphere";
 import { OrbitalSystem } from "./OrbitalSystem";
 import { Strata } from "./Strata";
+import { CorridorArtifact } from "./corridor/CorridorArtifact";
+import {
+  OuterArmillary,
+  OuterContour,
+  OuterGem,
+  OuterGeodesic,
+  OuterPanels,
+} from "./corridor/outerShells";
 import type { ArtifactVariant } from "./artifactGeom";
 
 interface IntelligenceArtifactProps {
@@ -59,6 +75,42 @@ export function IntelligenceArtifact({
       return <Constellation progress={progress} reducedMotion={reducedMotion} />;
     case "aperture":
       return <Aperture progress={progress} reducedMotion={reducedMotion} />;
+    case "corridor-geodesic":
+      return (
+        <CorridorArtifact
+          progress={progress}
+          reducedMotion={reducedMotion}
+          OuterShell={OuterGeodesic}
+        />
+      );
+    case "corridor-rings":
+      return (
+        <CorridorArtifact
+          progress={progress}
+          reducedMotion={reducedMotion}
+          OuterShell={OuterArmillary}
+        />
+      );
+    case "corridor-panels":
+      return (
+        <CorridorArtifact
+          progress={progress}
+          reducedMotion={reducedMotion}
+          OuterShell={OuterPanels}
+        />
+      );
+    case "corridor-contour":
+      return (
+        <CorridorArtifact
+          progress={progress}
+          reducedMotion={reducedMotion}
+          OuterShell={OuterContour}
+        />
+      );
+    case "corridor-gem":
+      return (
+        <CorridorArtifact progress={progress} reducedMotion={reducedMotion} OuterShell={OuterGem} />
+      );
     case "armillary":
     default:
       return <ArmillaryDeck progress={progress} reducedMotion={reducedMotion} />;

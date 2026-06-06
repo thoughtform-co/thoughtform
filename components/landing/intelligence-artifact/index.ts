@@ -7,6 +7,14 @@ export { Strata } from "./Strata";
 export { Funnel } from "./Funnel";
 export { Constellation } from "./Constellation";
 export { Aperture } from "./Aperture";
+export { CorridorArtifact } from "./corridor/CorridorArtifact";
+export {
+  OuterArmillary,
+  OuterContour,
+  OuterGem,
+  OuterGeodesic,
+  OuterPanels,
+} from "./corridor/outerShells";
 export { SubstrateBrandmark } from "./SubstrateBrandmark";
 export { AnchorProjector } from "./AnchorProjector";
 export * from "./artifactGeom";

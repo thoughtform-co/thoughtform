@@ -277,7 +277,18 @@ export type ArtifactVariant =
   | "strata"
   | "funnel"
   | "constellation"
-  | "aperture";
+  | "aperture"
+  // Corridor family — the home page's accreted shell composition
+  // (low-poly brain + source orbits + outer shell) imported into the
+  // lab as switchable variants. Each entry pairs the shared inner
+  // composition with a different OUTER SHELL so we can compare shell
+  // shapes in-context against the brain before picking a winner for
+  // the production corridor.
+  | "corridor-geodesic"
+  | "corridor-rings"
+  | "corridor-panels"
+  | "corridor-contour"
+  | "corridor-gem";
 
 export interface VariantSpec {
   key: ArtifactVariant;
@@ -293,6 +304,14 @@ export const ARTIFACT_VARIANTS: readonly VariantSpec[] = [
   { key: "funnel", label: "Funnel", sub: "Directional flow" },
   { key: "constellation", label: "Constellation", sub: "Navigation chart" },
   { key: "aperture", label: "Aperture", sub: "Windows + orbiting sources" },
+  // Corridor variants — same inner composition (brain + orbits),
+  // different outer shell. Labels group them under `Home ·` so the
+  // chrome switcher reads as a sub-family.
+  { key: "corridor-geodesic", label: "Home · Geodesic", sub: "Current home shell" },
+  { key: "corridor-rings", label: "Home · Rings", sub: "Armillary gimbal" },
+  { key: "corridor-panels", label: "Home · Panels", sub: "Tangent surface plates" },
+  { key: "corridor-contour", label: "Home · Contour", sub: "Latitude rings" },
+  { key: "corridor-gem", label: "Home · Gem", sub: "Crystalline bipyramid" },
 ];
 
 /** Aperture variant — interface-window labels for the highlighted
