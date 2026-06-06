@@ -358,6 +358,56 @@ export function foldEmerge(reveal: number): FoldEmerge {
   return { scale: settled, positionFactor: settled };
 }
 
+// ── Shell-wrap emerge (2026-06-06 "wrap like a shell" revision) ─────
+//
+// `foldEmerge` still STARTS at scale 0 — a point at the brand-mark
+// centre that balloons outward. For a VOLUMETRIC layer (the brain
+// point cloud) that reads as "the shell appears from the back and
+// grows through the mark", which is exactly what the user does NOT
+// want. `shellWrapEmerge` is the fix: the shell ONLY EVER CONTRACTS
+// INWARD. It starts as a LARGE, faint shell already surrounding the
+// mark (`SHELL_WRAP_START_SCALE`) and closes down onto its final
+// radius (scale 1.0). The geometry never passes through the mark
+// centre — it wraps the mark from outside, in 3D, like a shell
+// closing around it.
+//
+// Because a large shell appearing at scale 1.85 on frame one would
+// pop, the entry is handled by a PRESENCE ramp (the only place the
+// brain is allowed a brief opacity fade — it is a substrate-layer
+// decoration, not the brandmark silhouette; the brandmark itself is
+// the DOM glyph and never fades here). So the read is: a big faint
+// shell materialises around the mark, then tightens + brightens as
+// it wraps in.
+
+/** Scale the shell starts at (relative to its final radius). 1.85x
+ *  means the shell first appears clearly OUTSIDE the mark and the
+ *  inner accreted geometry, then contracts onto its final radius. */
+export const SHELL_WRAP_START_SCALE = 1.85;
+
+/** Fraction of the reveal window over which the presence (opacity)
+ *  ramp runs. Short so the shell reads as present-and-contracting for
+ *  most of the window rather than fading the whole way in. */
+const SHELL_WRAP_PRESENCE_FRAC = 0.45;
+
+export interface ShellWrapEmerge {
+  /** Group scale — `SHELL_WRAP_START_SCALE` -> 1.0 (contracts inward). */
+  scale: number;
+  /** Opacity scalar — 0 -> 1 over the first `SHELL_WRAP_PRESENCE_FRAC`
+   *  of the reveal so the large starting shell doesn't pop in. */
+  presence: number;
+}
+
+export function shellWrapEmerge(reveal: number): ShellWrapEmerge {
+  const t = reveal < 0 ? 0 : reveal > 1 ? 1 : reveal;
+  // Contract inward across the FULL reveal via smootherstep.
+  const sCurve = t * t * t * (t * (t * 6 - 15) + 10);
+  const scale = SHELL_WRAP_START_SCALE + (1 - SHELL_WRAP_START_SCALE) * sCurve;
+  // Presence ramps over the first slice of the reveal, smootherstep.
+  const pT = t < SHELL_WRAP_PRESENCE_FRAC ? t / SHELL_WRAP_PRESENCE_FRAC : 1;
+  const presence = pT * pT * pT * (pT * (pT * 6 - 15) + 10);
+  return { scale, presence };
+}
+
 // NOTE: the `buildDodecahedronFaces` helper + `DodecahedronFace` type
 // + `SUBSTRATE_DODEC_DETAIL` constant were removed in the 2026-06-05
 // lab-match revision. The substrate cage is now a single clean

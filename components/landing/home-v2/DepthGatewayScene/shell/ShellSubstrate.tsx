@@ -19,10 +19,15 @@
  *     sparse `LineSegments` synapse network, both with additive gold
  *     dots / hairlines.
  *
- * EMERGE: `foldEmerge(reveal).scale` on the whole brain group — the
- * artifact appears OVERSIZED (FOLD_OVERSHOOT ~ 1.45x) and closes in
- * to scale 1.0, wrapping the mark from outside (brandmark
- * Principle 4 — geometric, not opacity).
+ * EMERGE: `shellWrapEmerge(reveal)` on the whole brain group — the
+ * shell ONLY EVER CONTRACTS INWARD. It starts LARGE (scale 1.85x,
+ * already surrounding the mark) and closes down onto its final
+ * radius (scale 1.0), so it wraps the mark from outside in 3D like
+ * a shell closing around it — it NEVER scales up from a point at
+ * the centre / grows through the mark. The large starting shell is
+ * brought in via a brief presence (opacity) ramp so it doesn't pop;
+ * the brain is a substrate-layer decoration, not the brandmark
+ * silhouette (which is the DOM glyph and never fades here).
  *
  * PERSISTS through Encode + Build so the brain accumulates around the
  * traveling mark and visually wraps the substrate sphere at the
@@ -36,7 +41,7 @@ import { buildSynapseLinks, sampleBrainPoints } from "@/lib/brandmark/sampleBrai
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import { getBrandmarkAccretionLayers } from "../sceneGeom";
 import { brainCloudFragment, brainCloudVertex } from "../shaders/brainCloud";
-import { EMERGE_EPSILON, foldEmerge } from "./shellGeom";
+import { EMERGE_EPSILON, shellWrapEmerge } from "./shellGeom";
 
 interface ShellSubstrateProps {
   /** Which accretion layer this component represents. Hard-coded to
@@ -70,9 +75,9 @@ const SYNAPSE_LINK_COUNT = 650;
 const SYNAPSE_LINK_COUNT_MOBILE = 300;
 
 /** Brain bounding-box hints. Must comfortably contain the larger
- *  brain (radius ~0.7) plus the FOLD_OVERSHOOT scale (1.45x) so
- *  frustum culling never clips the emerge frames. */
-const BRAIN_BOUND_RADIUS = 1.1;
+ *  brain (radius ~0.7) at the SHELL_WRAP_START_SCALE (1.85x) so
+ *  frustum culling never clips the contract-in frames. */
+const BRAIN_BOUND_RADIUS = 1.4;
 
 /** Material colors / opacities. Tuned so the brain reads brightly at
  *  the corridor's typical viewing distance (camera ~6.2 units back
@@ -179,27 +184,26 @@ export function ShellSubstrate({ layerKey, reducedMotion = false }: ShellSubstra
     }
     group.visible = true;
 
-    // Wrap-around emerge: the brain appears OVERSIZED (FOLD_OVERSHOOT
-    // ~ 1.45x its final radius, clearly outside the mark) and closes
-    // in to scale 1.0. Reads as the artifact folding around the mark
-    // from outside rather than expanding through it from the centre.
-    const { scale } = foldEmerge(reveal);
+    // Shell-wrap emerge: the brain ONLY EVER CONTRACTS INWARD. It
+    // starts LARGE (scale 1.85x, already surrounding the mark) and
+    // closes onto its final radius (scale 1.0), so it wraps the mark
+    // from outside like a shell closing around it — it never scales
+    // up from a point at the centre / grows through the mark. The
+    // large starting shell is faded in via `presence` so it doesn't
+    // pop.
+    const { scale, presence } = shellWrapEmerge(reveal);
     group.scale.setScalar(scale);
 
     // Per-frame uniforms. Twinkle is driven by clock time so the
     // brain feels alive even when the user parks the corridor.
     pointMat.uniforms.uTime.value = state.clock.elapsedTime;
     pointMat.uniforms.uPixelRatio.value = state.viewport.dpr;
-    pointMat.uniforms.uPresence.value = 1;
+    pointMat.uniforms.uPresence.value = presence;
 
-    // Synapse links opacity comes up with the reveal — the brain's
-    // BODY (the points) does NOT fade (Principle 4); the synapse
-    // hairlines are decoration outside the silhouette and ride a
-    // gentle ramp so they don't pop in at scale 1.45. Capped at
-    // SYNAPSE_OPACITY so they stay faint enough to read as texture
+    // Synapse links ride the same presence ramp as the points, capped
+    // at SYNAPSE_OPACITY so they stay faint enough to read as texture
     // rather than competing with the source orbits at Encode.
-    const linkReveal = reveal < 0.4 ? reveal / 0.4 : 1;
-    lineMat.opacity = SYNAPSE_OPACITY * linkReveal;
+    lineMat.opacity = SYNAPSE_OPACITY * presence;
 
     if (spinGroupRef.current && !reducedMotion) {
       spinGroupRef.current.rotation.y += BRAIN_SPIN_RATE * delta;
