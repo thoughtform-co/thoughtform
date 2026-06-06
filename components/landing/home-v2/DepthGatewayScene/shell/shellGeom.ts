@@ -40,27 +40,27 @@ import {
 
 // ── Substrate core (inside-out layer 1) ──────────────────────────────
 
-/** Substrate layer outer bounding radius. The source orbits MUST
- *  stay outside this radius (see `SHELL_ORBITS` invariant below) so
- *  the constellation visibly wraps the substrate rather than cutting
+/** Substrate layer outer geodesic radius. The source orbits MUST stay
+ *  outside this radius (see `SHELL_ORBITS` invariant below) so the
+ *  constellation visibly wraps the substrate rather than cutting
  *  through it.
  *
  *  EVOLUTION:
  *  - Originally the dodecahedron cage radius (`SUBSTRATE_DODEC_RADIUS`).
  *  - Renamed to `SUBSTRATE_CAGE_RADIUS` on 2026-06-05 when the cage
  *    became an 80-face geodesic icosphere.
- *  - On 2026-06-06 the cage was replaced with the BRAIN ARTIFACT (see
- *    `ShellSubstrate.tsx`), whose two-hemisphere ellipsoid sample
- *    has a max radius of ~0.55. The constant is kept at 0.7 so the
- *    source-orbit clearance invariant still produces a comfortable
- *    breathing gap between the brain and the inbound orbital paths —
- *    this is now the CLEARANCE radius, not a literal cage size. */
-export const SUBSTRATE_CAGE_RADIUS = 0.7;
+ *  - On 2026-06-06 the brain-artifact experiments moved to the lab
+ *    (`/test/intelligence-artifact`) and the homepage returned to
+ *    this Shell-variant outer gold geodesic only.
+ *  - Tuned 0.70 -> 0.42 after the particle substrate was removed so
+ *    the shell is sized against the persistent DOM brandmark (roughly
+ *    the lab Shell ratio: geodesic radius ≈ 1.2-1.35x brandmark
+ *    half-extent), not against the retired 0.55 particle sphere. */
+export const SUBSTRATE_CAGE_RADIUS = 0.42;
 
 // NOTE: `SUBSTRATE_INNER_RADIUS` (faint dawn inner geodesic) was
-// removed in the 2026-06-06 wrap-around revision (Phase 2). The
-// brain artifact at the centre supplies the inner read directly —
-// no separate inner shell is needed.
+// removed in the 2026-06-06 wrap-around revision (Phase 2). Keep the
+// homepage substrate as ONE gold geodesic — no inner white/dawn shell.
 
 // ── Sources (inside-out layer 2) ─────────────────────────────────────
 
@@ -99,12 +99,13 @@ export interface ShellOrbit {
  *  dawn so the field reads as a layered chart, not a single-hue
  *  ring stack.
  *
- *  **Invariant — orbits sit OUTSIDE the substrate dodecahedron.** For
- *  every orbit, `min(rx, rx * eccentricity)` must be >= `SUBSTRATE_DODEC_RADIUS
- *  + 0.15` (clearance) so the orbit's closest approach to origin is
- *  clearly outside the cage in 3D space. The cage is a rigid solid;
- *  orbits are 1D paths that flow AROUND it. Without this clearance the
- *  flat ellipses cut through the cage and the inside-out story breaks. */
+ *  **Invariant — orbits sit OUTSIDE the substrate geodesic.** For
+ *  every orbit, `min(rx, rx * eccentricity)` must be >=
+ *  `SUBSTRATE_CAGE_RADIUS + 0.15` (clearance) so the orbit's closest
+ *  approach to origin is clearly outside the cage in 3D space. The
+ *  cage is a rigid solid; orbits are 1D paths that flow AROUND it.
+ *  Without this clearance the flat ellipses cut through the cage and
+ *  the inside-out story breaks. */
 export const SHELL_ORBITS: readonly ShellOrbit[] = [
   {
     id: "01",

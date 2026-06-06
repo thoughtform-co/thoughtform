@@ -163,6 +163,29 @@ are. It does not count against the brandmark painter cap.
   / `getSubstrateMorph` / `SUBSTRATE_CROSSFADE_END` remain exported in
   `sceneGeom.ts` but have no live consumers.
 
+### Phase 5 production revert — Shell substrate restored (2026-06-06)
+
+After comparing the low-poly brain against the Shell variant in
+`/test/intelligence-artifact`, the homepage substrate returned to the
+Shell variant's cleaner read:
+
+- `ShellSubstrate` now renders only the outer gold geodesic
+  icosphere: `buildGeodesicEdges(SUBSTRATE_CAGE_RADIUS, 1)`.
+- The dawn / white inner geodesic stays removed.
+- The low-poly brain remains available in the lab variants for
+  exploration, but it is no longer the production home substrate.
+- `shellWrapEmerge` is retained for the production geodesic so it
+  still appears as a shell already surrounding the mark and contracts
+  inward to its final radius.
+- `SUBSTRATE_CAGE_RADIUS` was tightened from `0.70` to `0.42` after
+  the particle substrate was removed. The shell is now sized against
+  the persistent DOM/SVG brandmark, matching the lab Shell proportion
+  more closely instead of wrapping an absent 0.55 particle sphere.
+
+This gives the homepage three clearer roles without two competing
+"brain-like" reads: gold Shell substrate at Navigate, source orbits at
+Encode, and the Build/interface layer to be chosen from the lab.
+
 ---
 
 ## 2026-06-05 Revision — Lab-match shell (icosphere substrate + per-station parkDistance)
