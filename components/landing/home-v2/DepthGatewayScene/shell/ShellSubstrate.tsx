@@ -53,22 +53,26 @@ interface ShellSubstrateProps {
 const BRAIN_SPIN_RATE = 0.18;
 
 /** Brain point budget. Picked so the cloud reads as a solid brain
- *  shape at parked viewing distance without saturating the GPU on
+ *  surface at parked viewing distance without saturating the GPU on
  *  mobile (where this layer paints alongside the source orbits +
- *  surfaces skin + wormhole walls). */
-const BRAIN_POINT_COUNT = 1800;
-const BRAIN_POINT_COUNT_MOBILE = 900;
+ *  surfaces skin + wormhole walls). Bumped from 1800 to 2400 in the
+ *  2026-06-06 "larger + less facets + more geometrical" pass so the
+ *  larger ellipsoid still reads as a coherent surface rather than a
+ *  sparser dusting. */
+const BRAIN_POINT_COUNT = 2400;
+const BRAIN_POINT_COUNT_MOBILE = 1100;
 
-/** Synapse link count. Sparse — ~25-30% of point count gives the
- *  "neural network" texture without crowding the silhouette. */
-const SYNAPSE_LINK_COUNT = 480;
-const SYNAPSE_LINK_COUNT_MOBILE = 220;
+/** Synapse link count. Bumped from 480 to 650 (mobile 220 → 300)
+ *  alongside the point-count bump so the structural network reads
+ *  visibly as a deliberate geometric scaffold rather than a few
+ *  stray hairs across the cloud. */
+const SYNAPSE_LINK_COUNT = 650;
+const SYNAPSE_LINK_COUNT_MOBILE = 300;
 
-/** Brain bounding-box hints (must agree with `sampleBrainPoints`'s
- *  defaults). Used to set `boundingSphere` so frustum culling +
- *  picking work even though we disable culling for safety on the
- *  emerge frames. */
-const BRAIN_BOUND_RADIUS = 0.55;
+/** Brain bounding-box hints. Must comfortably contain the larger
+ *  brain (radius ~0.7) plus the FOLD_OVERSHOOT scale (1.45x) so
+ *  frustum culling never clips the emerge frames. */
+const BRAIN_BOUND_RADIUS = 1.1;
 
 /** Material colors / opacities. Tuned so the brain reads brightly at
  *  the corridor's typical viewing distance (camera ~6.2 units back
@@ -77,7 +81,10 @@ const BRAIN_BOUND_RADIUS = 0.55;
 const COLOR_BODY = new THREE.Color("#caa554");
 const COLOR_RIM = new THREE.Color("#e9c97a");
 const POINT_OPACITY = 0.95;
-const SYNAPSE_OPACITY = 0.28;
+/** Synapse opacity raised from 0.28 to 0.36 in the larger / more-
+ *  geometrical pass so the network reads as a clear structural
+ *  layer over the point surface rather than a faint suggestion. */
+const SYNAPSE_OPACITY = 0.36;
 
 export function ShellSubstrate({ layerKey, reducedMotion = false }: ShellSubstrateProps) {
   void layerKey;

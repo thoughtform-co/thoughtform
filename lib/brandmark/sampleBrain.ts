@@ -70,15 +70,22 @@ export interface SampleBrainOptions {
 
 /** Build a stratified surface sample over two ellipsoidal hemispheres
  *  with sulci-like noise displacement. Returns positions + per-point
- *  seeds. */
+ *  seeds.
+ *
+ *  Default radii sized to fill the substrate clearance envelope
+ *  (SUBSTRATE_CAGE_RADIUS = 0.7) with breathing room — the brain
+ *  wraps the brandmark instead of reading as a small halo around
+ *  it. Default sulci amplitude tuned LOW so the surface reads as a
+ *  coherent geometric form rather than a noisy facetted blob;
+ *  default jitter tightened for the same reason. */
 export function sampleBrainPoints({
   count,
   seed = 1,
-  radiusX = 0.38,
-  radiusY = 0.32,
-  radiusZ = 0.5,
-  fissure = 0.05,
-  sulciAmplitude = 0.055,
+  radiusX = 0.55,
+  radiusY = 0.45,
+  radiusZ = 0.68,
+  fissure = 0.06,
+  sulciAmplitude = 0.022,
 }: SampleBrainOptions): BrainPointSample {
   const prng = makePrng(seed);
   const positions = new Float32Array(count * 3);
@@ -103,8 +110,12 @@ export function sampleBrainPoints({
     let y = yUnit;
     let z = Math.sin(theta) * ringR;
 
-    // Small jitter so the lattice doesn't read as too regular.
-    const jitter = 0.03;
+    // Very small jitter — the Fibonacci lattice already gives an
+    // even point distribution, and big jitter starts to read as
+    // noise rather than structure. Tuned LOW so the lattice
+    // dominates the visual and the brain reads as a geometric
+    // form, not a powdery cloud.
+    const jitter = 0.012;
     x += (prng() - 0.5) * jitter;
     y += (prng() - 0.5) * jitter;
     z += (prng() - 0.5) * jitter;
