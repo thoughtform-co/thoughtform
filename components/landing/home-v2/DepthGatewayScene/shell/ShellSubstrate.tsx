@@ -2,51 +2,41 @@
 
 /**
  * ShellSubstrate — the inside-out layer 1 of the accreted intelligence
- * shell. Wraps the guiding-star brandmark with a gold geodesic
- * icosphere cage + a fainter dawn inner geodesic.
+ * shell. Wraps the guiding-star brandmark with an abstract BRAIN
+ * artifact: a procedural two-hemisphere point cloud with sulci
+ * displacement + faint synapse links.
  *
- * 2026-06-05 LAB-MATCH REVISION: the previous 12-face dodecahedron
- * cage with per-face petal unfold was replaced with the standalone
- * shell artifact's composition — a single clean GOLD GEODESIC
- * ICOSPHERE (`buildGeodesicEdges(radius, 1)` = 80 fine triangular
- * faces) + a tighter DAWN inner geodesic. Visually identical to the
- * lab `NestedShellSphere`'s outer + inner shells (minus the brand
- * cloud, which the projected DOM brandmark + substrate morph already
- * supply at the centre).
+ * EVOLUTION:
+ *   - 2026-06-05 lab-match revision: 12-face dodecahedron cage →
+ *     80-face gold geodesic icosphere + dawn inner geodesic.
+ *   - 2026-06-06 wrap-around revision (Phase 2): dropped the dawn
+ *     inner geodesic so only the gold cage carried the substrate.
+ *   - 2026-06-06 wrap-around revision (Phase 5, this file): swapped
+ *     the geodesic cage for the BRAIN ARTIFACT. The substrate layer
+ *     of the "Navigate the intelligence" choreography now reads as
+ *     the THING the user is navigating (an intelligence) rather than
+ *     a generic geodesic shell. Renders as `THREE.Points` plus a
+ *     sparse `LineSegments` synapse network, both with additive gold
+ *     dots / hairlines.
  *
- * Emerges as ONE CLEAN BODY: `group.scale.setScalar(splitEmerge(reveal))`
- * on the whole cage. The 80-face decomposition would have read busy
- * at the corridor's parked viewing distance — single-body fold/scale-in
- * matches the lab's clean read and lets the source-orbit + surfaces-port
- * per-element petal unfolds (kept in `ShellSources` / `ShellSurfaces`)
- * still carry the accretion narrative.
+ * EMERGE: `foldEmerge(reveal).scale` on the whole brain group — the
+ * artifact appears OVERSIZED (FOLD_OVERSHOOT ~ 1.45x) and closes in
+ * to scale 1.0, wrapping the mark from outside (brandmark
+ * Principle 4 — geometric, not opacity).
  *
- * Persists through Encode + Build so the cage accumulates around the
- * traveling mark and visually wraps the substrate sphere
- * `SubstrateMorphCloud` at the Build landing (both centred on the same
- * anchor — `STATION_INTELLIGENCE.position + [0,0,0.1]`).
- *
- * Brandmark Principle 4 (`brandmark-choreography` skill): decoration
- * EMERGES geometrically via scale, NEVER via opacity. Material opacity
- * stays constant once the layer is revealed.
+ * PERSISTS through Encode + Build so the brain accumulates around the
+ * traveling mark and visually wraps the substrate sphere at the
+ * Build climax (`TravelingBrandmarkCloud`'s morph endpoint).
  */
 
 import { useFrame } from "@react-three/fiber";
 import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
-import { COLOR_DAWN, COLOR_GOLD } from "@/components/landing/intelligence-artifact/artifactGeom";
-import {
-  buildGeodesicEdges,
-  makeLineMaterial,
-} from "@/components/landing/intelligence-artifact/artifactPrimitives";
+import { buildSynapseLinks, sampleBrainPoints } from "@/lib/brandmark/sampleBrain";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import { getBrandmarkAccretionLayers } from "../sceneGeom";
-import {
-  EMERGE_EPSILON,
-  SUBSTRATE_CAGE_RADIUS,
-  SUBSTRATE_INNER_RADIUS,
-  splitEmerge,
-} from "./shellGeom";
+import { brainCloudFragment, brainCloudVertex } from "../shaders/brainCloud";
+import { EMERGE_EPSILON, foldEmerge } from "./shellGeom";
 
 interface ShellSubstrateProps {
   /** Which accretion layer this component represents. Hard-coded to
@@ -57,92 +47,163 @@ interface ShellSubstrateProps {
   reducedMotion?: boolean;
 }
 
-/** Slow spin rate for the cage (radians per second). Mirrors the
- *  standalone `SubstrateBrandmark`'s 0.18 spinRate so the cage reads
- *  as the same living instrument. The spin is applied to the parent
- *  `cageGroupRef` so the whole assembled cage co-rotates as one body. */
-const SUBSTRATE_SPIN_RATE = 0.18;
+/** Slow spin rate for the brain (radians per second). Same value the
+ *  retired geodesic cage used so the artifact reads as a living
+ *  instrument at the same cadence as the rest of the corridor. */
+const BRAIN_SPIN_RATE = 0.18;
 
-/** Base material opacities at full reveal. Tuned slightly higher than
- *  the standalone artifact (which composites on a black void) because
- *  the corridor's wormhole walls add background noise we have to read
- *  through. */
-const CAGE_OPACITY = 0.82;
-const INNER_OPACITY = 0.34;
+/** Brain point budget. Picked so the cloud reads as a solid brain
+ *  shape at parked viewing distance without saturating the GPU on
+ *  mobile (where this layer paints alongside the source orbits +
+ *  surfaces skin + wormhole walls). */
+const BRAIN_POINT_COUNT = 1800;
+const BRAIN_POINT_COUNT_MOBILE = 900;
 
-/** Outer geodesic detail level. `1` matches the lab's
- *  `SUBSTRATE_DETAIL` — classic 80-face geodesic that reads as
- *  engineered without looking low-poly. */
-const SUBSTRATE_OUTER_DETAIL = 1;
+/** Synapse link count. Sparse — ~25-30% of point count gives the
+ *  "neural network" texture without crowding the silhouette. */
+const SYNAPSE_LINK_COUNT = 480;
+const SYNAPSE_LINK_COUNT_MOBILE = 220;
 
-/** Inner geodesic detail level. `2` matches the lab's
- *  `SUBSTRATE_INNER_DETAIL` — a tighter inner shell. */
-const SUBSTRATE_INNER_DETAIL = 2;
+/** Brain bounding-box hints (must agree with `sampleBrainPoints`'s
+ *  defaults). Used to set `boundingSphere` so frustum culling +
+ *  picking work even though we disable culling for safety on the
+ *  emerge frames. */
+const BRAIN_BOUND_RADIUS = 0.55;
+
+/** Material colors / opacities. Tuned so the brain reads brightly at
+ *  the corridor's typical viewing distance (camera ~6.2 units back
+ *  during the Navigate park) without blowing out the wormhole walls
+ *  behind it. */
+const COLOR_BODY = new THREE.Color("#caa554");
+const COLOR_RIM = new THREE.Color("#e9c97a");
+const POINT_OPACITY = 0.95;
+const SYNAPSE_OPACITY = 0.28;
 
 export function ShellSubstrate({ layerKey, reducedMotion = false }: ShellSubstrateProps) {
   void layerKey;
   const groupRef = useRef<THREE.Group>(null);
-  const cageGroupRef = useRef<THREE.Group>(null);
+  const spinGroupRef = useRef<THREE.Group>(null);
 
-  // ── Geometries (lab composition exactly) ───────────────────────
+  // ── Geometry: brain points + synapse links ─────────────────────
 
-  const outerEdges = useMemo(
-    () => buildGeodesicEdges(SUBSTRATE_CAGE_RADIUS, SUBSTRATE_OUTER_DETAIL),
-    []
-  );
-  const innerEdges = useMemo(
-    () => buildGeodesicEdges(SUBSTRATE_INNER_RADIUS, SUBSTRATE_INNER_DETAIL),
-    []
-  );
+  const { pointGeom, lineGeom } = useMemo(() => {
+    const pointCount = reducedMotion ? BRAIN_POINT_COUNT_MOBILE : BRAIN_POINT_COUNT;
+    const linkCount = reducedMotion ? SYNAPSE_LINK_COUNT_MOBILE : SYNAPSE_LINK_COUNT;
+
+    const brain = sampleBrainPoints({ count: pointCount, seed: 1 });
+
+    const pg = new THREE.BufferGeometry();
+    pg.setAttribute("position", new THREE.BufferAttribute(brain.positions, 3));
+    pg.setAttribute("aSeed", new THREE.BufferAttribute(brain.seeds, 1));
+    pg.boundingSphere = new THREE.Sphere(new THREE.Vector3(0, 0, 0), BRAIN_BOUND_RADIUS);
+
+    const synapses = buildSynapseLinks({
+      positions: brain.positions,
+      count: brain.count,
+      linkCount,
+    });
+    const lg = new THREE.BufferGeometry();
+    lg.setAttribute("position", new THREE.BufferAttribute(synapses, 3));
+    lg.boundingSphere = new THREE.Sphere(new THREE.Vector3(0, 0, 0), BRAIN_BOUND_RADIUS);
+
+    return { pointGeom: pg, lineGeom: lg };
+  }, [reducedMotion]);
 
   // ── Materials ──────────────────────────────────────────────────
 
-  const cageMat = useMemo(() => makeLineMaterial(COLOR_GOLD, CAGE_OPACITY, true), []);
-  const innerMat = useMemo(() => makeLineMaterial(COLOR_DAWN, INNER_OPACITY, false), []);
+  const pointMat = useMemo(() => {
+    return new THREE.ShaderMaterial({
+      vertexShader: brainCloudVertex,
+      fragmentShader: brainCloudFragment,
+      uniforms: {
+        uTime: { value: 0 },
+        uPointSize: { value: 5.0 },
+        uPixelRatio: { value: typeof window !== "undefined" ? window.devicePixelRatio : 1 },
+        uPresence: { value: 0 },
+        uColor: { value: COLOR_BODY.clone() },
+        uRimColor: { value: COLOR_RIM.clone() },
+        uOpacity: { value: POINT_OPACITY },
+      },
+      transparent: true,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+    });
+  }, []);
+
+  const lineMat = useMemo(
+    () =>
+      new THREE.LineBasicMaterial({
+        color: COLOR_BODY.clone(),
+        transparent: true,
+        opacity: 0,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending,
+      }),
+    []
+  );
 
   useEffect(() => {
     return () => {
-      outerEdges.dispose();
-      innerEdges.dispose();
-      cageMat.dispose();
-      innerMat.dispose();
+      pointGeom.dispose();
+      lineGeom.dispose();
+      pointMat.dispose();
+      lineMat.dispose();
     };
-  }, [outerEdges, innerEdges, cageMat, innerMat]);
+  }, [pointGeom, lineGeom, pointMat, lineMat]);
 
-  useFrame((_, delta) => {
+  useFrame((state, delta) => {
     const group = groupRef.current;
     if (!group) return;
 
     const { paintProgress, active, armed } = useDepthGatewayStore.getState().transform;
     if (!active && !armed) {
       group.visible = false;
+      pointMat.uniforms.uPresence.value = 0;
+      lineMat.opacity = 0;
       return;
     }
 
     const reveal = getBrandmarkAccretionLayers(paintProgress).substrate;
     if (reveal <= EMERGE_EPSILON) {
       group.visible = false;
+      pointMat.uniforms.uPresence.value = 0;
+      lineMat.opacity = 0;
       return;
     }
     group.visible = true;
 
-    // Single-body fold/scale-in. The whole cage (outer + inner geodesic)
-    // emerges as one clean unit — no per-face petals.
-    group.scale.setScalar(splitEmerge(reveal));
+    // Wrap-around emerge: the brain appears OVERSIZED (FOLD_OVERSHOOT
+    // ~ 1.45x its final radius, clearly outside the mark) and closes
+    // in to scale 1.0. Reads as the artifact folding around the mark
+    // from outside rather than expanding through it from the centre.
+    const { scale } = foldEmerge(reveal);
+    group.scale.setScalar(scale);
 
-    // Slow spin on the assembled cage so it reads as a living
-    // instrument once unfolded. Applied to the parent so outer + inner
-    // shells co-rotate as one body.
-    if (cageGroupRef.current && !reducedMotion) {
-      cageGroupRef.current.rotation.y += SUBSTRATE_SPIN_RATE * delta;
+    // Per-frame uniforms. Twinkle is driven by clock time so the
+    // brain feels alive even when the user parks the corridor.
+    pointMat.uniforms.uTime.value = state.clock.elapsedTime;
+    pointMat.uniforms.uPixelRatio.value = state.viewport.dpr;
+    pointMat.uniforms.uPresence.value = 1;
+
+    // Synapse links opacity comes up with the reveal — the brain's
+    // BODY (the points) does NOT fade (Principle 4); the synapse
+    // hairlines are decoration outside the silhouette and ride a
+    // gentle ramp so they don't pop in at scale 1.45. Capped at
+    // SYNAPSE_OPACITY so they stay faint enough to read as texture
+    // rather than competing with the source orbits at Encode.
+    const linkReveal = reveal < 0.4 ? reveal / 0.4 : 1;
+    lineMat.opacity = SYNAPSE_OPACITY * linkReveal;
+
+    if (spinGroupRef.current && !reducedMotion) {
+      spinGroupRef.current.rotation.y += BRAIN_SPIN_RATE * delta;
     }
   });
 
   return (
     <group ref={groupRef} visible={false}>
-      <group ref={cageGroupRef}>
-        <lineSegments geometry={outerEdges} material={cageMat} frustumCulled={false} />
-        <lineSegments geometry={innerEdges} material={innerMat} frustumCulled={false} />
+      <group ref={spinGroupRef}>
+        <points geometry={pointGeom} material={pointMat} frustumCulled={false} />
+        <lineSegments geometry={lineGeom} material={lineMat} frustumCulled={false} />
       </group>
     </group>
   );

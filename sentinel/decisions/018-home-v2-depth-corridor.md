@@ -11,6 +11,124 @@
 
 ---
 
+## 2026-06-06 Revision — Wrap-around shell + traveling brandmark + brain artifact
+
+User feedback after the lab-match shell landed: the cage + orbits feel
+like they "fight through the brand mark" instead of "wrapping around"
+it; the substrate dodecahedron should be one solid abstract artifact
+(a brain) rather than a generic geodesic; the constellation should
+appear a tad sooner; and the brandmark should be a particle cloud the
+moment 3D travel starts, not a DOM glyph that hands off only at the
+Build climax. Five-phase revision, all landing in one pass:
+
+### Phase 1 — Encode constellation: wrap + arrive sooner
+
+- `CORRIDOR_TIMELINE.accretion.sources` shifted earlier from
+  `{ start: 0.55, peakAt: 0.62 }` to `{ start: 0.47, peakAt: 0.57 }`
+  so the orbits begin folding inward BEFORE the Encode park arrival
+  rather than landing simultaneously with it. By the time the
+  "Encode the judgment." title settles, the constellation is already
+  wrapping the mark.
+- `ShellSources` swapped from `petalEmerge` to the new `foldEmerge`
+  (see Phase 3) so each orbit sub-group's scale starts at
+  `FOLD_OVERSHOOT` (1.45x) and closes in to 1.0 — orbits arrive from
+  beyond the mark and seat onto their final radii rather than
+  inflating through the mark from its centre.
+
+### Phase 2 — Drop the dawn inner geodesic
+
+The faint dawn inner geodesic inside the gold cage was competing for
+attention with the brand mark + substrate morph at the centre.
+Removed from `ShellSubstrate`; `SUBSTRATE_INNER_RADIUS` retired from
+`shellGeom.ts`. (Superseded by Phase 5's brain swap anyway, but the
+intermediate state is buildable on its own.)
+
+### Phase 3 — `foldEmerge` (wrap-around envelope)
+
+New `foldEmerge(reveal): { scale, positionFactor }` helper in
+`shellGeom.ts`. Each element appears at scale `FOLD_OVERSHOOT = 1.45`
+(clearly outside its final radius) and closes in to scale 1.0 via
+smootherstep, with a brief 12% entry ramp from 0 → 1.45 so the
+oversized state is visible but doesn't pop. Material opacity stays
+constant throughout — brandmark Principle 4 (`brandmark-choreography`
+skill) honoured by keeping every transition geometric.
+
+Applied to:
+
+- `ShellSubstrate` cage group (uniform scale).
+- `ShellSources` per-orbit sub-groups (uniform scale).
+- `ShellSurfaces` outer geodesic (uniform scale) and per-port
+  sub-groups (positionFactor multiplier on final ring position, so
+  ports overshoot beyond the ring radius and settle inward).
+
+### Phase 4 — Traveling brandmark cloud (DOM → particles at corridor entry)
+
+The DOM `ProjectedBrandmarkActor` previously owned the brandmark
+across the entire corridor and only handed off to the in-canvas
+`SubstrateMorphCloud` at the Build beat. Phase 4 promotes the cloud
+to a TRAVELING brandmark cloud that follows the mark end-to-end:
+
+- New `getBrandmarkParticlePresence(transform)` window in
+  `sceneGeom.ts` cuts presence from 0 → 1 across a tight 0.02-wide
+  progress window starting at `thoughtformHold` (0.14). The cloud is
+  invisible during the Thoughtform park (DOM glyph owns the mark)
+  and fully visible the moment 3D travel begins.
+- New `TravelingBrandmarkCloud` component (mounted at scene root in
+  `DepthGatewayScene`) follows `getBrandmarkWorldPosition` per
+  frame and updates `uBrandmarkSize` from
+  `getBrandmarkWorldHalfExtent` so the silhouette tracks the DOM
+  glyph exactly through the half-extent ramp. `uShapeMorph` is 0
+  across the journey and only ramps via `getSubstrateMorph` at the
+  Intelligence beat (sphere climax).
+- `ProjectedBrandmarkActor` swapped its substrate-morph-driven fade
+  for a `BRANDMARK_PARTICLE_CUT_END`-driven cut. Cut + traveling
+  cloud share the same world position + half-extent at every frame
+  inside the handoff window, so the swap is an INSTANT CUT UNDER
+  MATCHING COVER (ADR-017 Principle 3 corollary).
+- `IntelligenceGate` is now an empty placeholder — the cloud lives
+  at scene root, the accretion shell lands at the Intelligence
+  position by tracking the mark.
+
+The legacy `getIntelligenceSubstratePresence` + `SUBSTRATE_CROSSFADE_END`
+are kept in `sceneGeom.ts` for historical reference but no longer
+have live consumers.
+
+### Phase 5 — Brain artifact (replaces the geodesic substrate cage)
+
+The gold geodesic cage was the most generic piece of the shell — at
+parked viewing distance it reads as "a wireframe sphere", not as
+"the intelligence". Replaced with a procedural BRAIN ARTIFACT:
+
+- New `lib/brandmark/sampleBrain.ts` samples two ellipsoidal
+  hemispheres (separated by a longitudinal-fissure gap along X) on
+  a Fibonacci-spiral lattice and displaces each point along the
+  ellipsoid normal by multi-frequency 3D pseudo-noise to produce a
+  roughened sulci surface. Returns ~1800 desktop / 900 mobile
+  surface points + 480 / 220 nearest-neighbour synapse links.
+- New `shaders/brainCloud.ts` paints soft additive gold dots with
+  per-particle twinkle (same dot family as `brandmarkCloud`, minus
+  the brandmark/sphere morph machinery).
+- `ShellSubstrate` re-implemented to render `<points>` for the
+  brain cloud + `<lineSegments>` for the synapse links. Folds in
+  via `foldEmerge` on the same `accretion.substrate` reveal window,
+  with the synapse hairlines ramping their opacity over the first
+  40% of reveal so they don't pop in at scale 1.45 (the brain
+  silhouette POINTS stay at constant alpha — Principle 4; the
+  synapse decoration is outside the silhouette so a brief opacity
+  ramp on them is the readable surface).
+- `SUBSTRATE_CAGE_RADIUS` (0.7) is retained as the source-orbit
+  CLEARANCE radius — the brain's max extent is ~0.55 so the
+  constellation still has the documented breathing room.
+
+NOTE: the brain is a SUBSTRATE-LAYER ARTIFACT, not a brandmark
+painter. The "three painters max" rule from the `brandmark-particle`
+skill counts atmosphere + silhouette + substrate-morph as the
+brandmark's painters; the brain is part of the accretion shell
+around the mark, the same way the source orbits and surfaces ports
+are. It does not count against the brandmark painter cap.
+
+---
+
 ## 2026-06-05 Revision — Lab-match shell (icosphere substrate + per-station parkDistance)
 
 User direction after reviewing both the corridor and the standalone lab

@@ -20,19 +20,21 @@ import { ShellSurfaces } from "./shell/ShellSurfaces";
  * `CORRIDOR_TIMELINE.accretion`, rendered by its own component, and
  * driven directly off the depth store in its own `useFrame`:
  *
- *   - {@link ShellSubstrate} (Navigate adds): golden dodecahedron
- *     cage + faint inner geodesic — substrate core.
+ *   - {@link ShellSubstrate} (Navigate adds): abstract BRAIN
+ *     artifact — two-hemisphere gold point cloud with sulci
+ *     displacement + faint synapse links (2026-06-06 wrap-around
+ *     revision, Phase 5). Replaces the prior gold geodesic cage so
+ *     the substrate layer of "Navigate the intelligence" reads as
+ *     the THING being navigated.
  *   - {@link ShellSources} (Encode adds): solar-system of six
  *     inclined elliptical orbits with revolving source pips.
- *     Replaces the four flat coplanar ellipses of the retired
- *     `DiagnosticOrbitGate`.
  *   - {@link ShellSurfaces} (Build adds): outer geodesic skin + port
  *     pip ring (dawn) — headless surfaces wrapping the layer.
  *
  * All three persist after they emerge so the shell is fully
  * assembled at the Build landing and stays present as the brandmark
- * hands off to the `SubstrateMorphCloud` (substrate sphere) at the
- * centre.
+ * hands off to the `TravelingBrandmarkCloud` (substrate sphere
+ * morph) at the centre.
  *
  * This component owns ONLY the world position: per frame the parent
  * group is moved to `getBrandmarkWorldPosition(paintProgress)` so the

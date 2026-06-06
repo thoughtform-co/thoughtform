@@ -4,14 +4,23 @@ import { useMemo, useRef } from "react";
 import * as THREE from "three";
 import { BrandmarkGlyph } from "@/components/landing/v7/BrandmarkGlyph";
 import {
-  SUBSTRATE_CROSSFADE_END,
+  BRANDMARK_PARTICLE_CUT_END,
+  BRANDMARK_PARTICLE_CUT_START,
   getBrandmarkWorldHalfExtent,
   getBrandmarkWorldPosition,
-  getIntelligenceSubstratePresence,
   getThoughtformMobilePhase,
 } from "./DepthGatewayScene/sceneGeom";
 import { type WorldAnchor, useWorldDomTracker } from "./hooks/useWorldDomTracker";
 import { BEAT_ORDER } from "@/lib/home-v2/corridorMap";
+
+/** Helper — smoothstep (same shape as in sceneGeom.ts; duplicated
+ *  here so this module doesn't pull the heavier scene-geom barrel
+ *  just for the cut-out ramp). */
+function smoothstep(edge0: number, edge1: number, x: number): number {
+  if (edge1 === edge0) return x < edge0 ? 0 : 1;
+  const t = Math.max(0, Math.min(1, (x - edge0) / (edge1 - edge0)));
+  return t * t * (3 - 2 * t);
+}
 
 /**
  * ProjectedBrandmarkActor — the primary brandmark painter for the
@@ -38,10 +47,14 @@ import { BEAT_ORDER } from "@/lib/home-v2/corridorMap";
  * vs world-project during transits) is gone — co-location via the
  * gate group makes dock mode unnecessary.
  *
- * Substrate-cut: during the intelligence beat, when the substrate
- * morph engages (see `getIntelligenceSubstratePresence`), the DOM
- * mark cross-fades out and the in-canvas substrate morph cloud
- * paints the silhouette (ADR-017 pattern).
+ * Particle-cut (2026-06-06 wrap-around revision, Phase 4): the DOM
+ * glyph only owns the mark across the Thoughtform park. The moment
+ * 3D travel begins (just past `BRANDMARK_PARTICLE_CUT_START`) the
+ * DOM glyph fades out across a tight 0.02-progress window and the
+ * `TravelingBrandmarkCloud` takes over the silhouette, travelling
+ * with the mark through Navigate → Encode → Build. The two painters
+ * share the SAME world position + half-extent so the swap is a cut
+ * under matching cover (ADR-017 Principle 3 corollary).
  */
 
 const PERSPECTIVE_PX = 1200;
@@ -94,31 +107,28 @@ export function ProjectedBrandmarkActor() {
           // stage finishes pinning.
           const progress = paintProgress;
 
-          // Substrate cross-fade: drive the DOM brandmark's exit
-          // from the SAME `morph` channel used by the substrate
-          // cloud (`getIntelligenceSubstratePresence`). The cloud
-          // emerges faintly in brandmark form during late
-          // `passthrough-02` (depth-driven approach glow, see
-          // ADR-018 2026-05-24 revision), but the DOM mark only
-          // begins to fade once the morph itself engages — i.e.,
-          // once the cloud is actively losing brandmark silhouette
-          // for the Fibonacci sphere. This keeps the DOM lead
-          // brandmark visible across the approach (so the user
-          // still has an artifact to chase into the corridor) and
-          // hands off to the particles only when the substrate
-          // cloud is structurally taking over the silhouette.
-          const { morph } = getIntelligenceSubstratePresence(transform);
-          const substrateFadeOut =
-            morph <= 0
-              ? 1
-              : morph >= SUBSTRATE_CROSSFADE_END
-                ? 0
-                : 1 - morph / SUBSTRATE_CROSSFADE_END;
+          // Particle cut-out: the DOM glyph fades out across the
+          // tight handoff window `[BRANDMARK_PARTICLE_CUT_START,
+          // BRANDMARK_PARTICLE_CUT_END]`, after which the traveling
+          // particle cloud owns the silhouette for the rest of the
+          // corridor. The cloud paints at the same world position
+          // + half-extent through the entire window (see
+          // `TravelingBrandmarkCloud` + `getBrandmarkParticlePresence`),
+          // so the swap reads as an instant cut under matching cover
+          // (ADR-017). Drive off `progress` (not `paintProgress`)
+          // so the cut fires on the user's actual scroll position
+          // rather than the armed pre-arm pass.
+          const cutIn = smoothstep(
+            BRANDMARK_PARTICLE_CUT_START,
+            BRANDMARK_PARTICLE_CUT_END,
+            transform.progress
+          );
+          const particleFadeOut = 1 - cutIn;
           // Once the cloud has fully taken over, suppress all DOM
           // updates so we don't spend layout work on an invisible
           // element. The element is left visible (no display:none)
           // so that scrolling back up resumes the fade-in naturally.
-          if (substrateFadeOut <= 0.001) {
+          if (particleFadeOut <= 0.001) {
             element.style.opacity = "0";
             return;
           }
@@ -171,7 +181,7 @@ export function ProjectedBrandmarkActor() {
           // desktop and 1 once raw progress passes the dwell, so it's a
           // no-op everywhere except the mobile copy moment.
           const { diagramFactor } = getThoughtformMobilePhase(transform.progress);
-          element.style.opacity = `${(bookend * intensity * substrateFadeOut * diagramFactor).toFixed(3)}`;
+          element.style.opacity = `${(bookend * intensity * particleFadeOut * diagramFactor).toFixed(3)}`;
 
           // Forward tilt: the inner div takes a small Y rotation
           // scaled by camera dolly so the mark reads as a 3D plate

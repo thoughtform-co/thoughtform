@@ -41,6 +41,7 @@ Mode flag in the store:
 - `mode === "svg"`: canvas returns `null`; SVG actor + native dock SVGs paint via the journey hook's SVG-mode side effects.
 
 **Canonical records:**
+
 - [ADR-015](../../../sentinel/decisions/015-brandmark-vector-first.md) — vector-first split (atmosphere does not paint the mark by default).
 - [ADR-017](../../../sentinel/decisions/017-orbit-journey-and-substrate-morph.md) — substrate-sphere morph mesh exemption (intelligence-layer canvas).
 - [ADR-019](../../../sentinel/decisions/019-brandmark-silhouette-morph.md) — silhouette particle mesh from Diagnostic onward (global canvas).
@@ -54,13 +55,13 @@ Mode flag in the store:
 
 [`components/brand/BrandmarkParticleField/BrandmarkSilhouettePoints.tsx`](../../../components/brand/BrandmarkParticleField/BrandmarkSilhouettePoints.tsx) — global silhouette point cloud, mounted alongside the atmosphere station inside `BrandmarkParticleCanvas`. Reads:
 
-| Transform field    | Uniform     | What it does                                                                       |
-| ------------------ | ----------- | ---------------------------------------------------------------------------------- |
-| `rect.center`      | `uCenter`   | Where the silhouette paints (same anchor the atmosphere uses)                      |
-| `rect.halfSize`    | `uHalfSize` | Silhouette size                                                                    |
-| `opacity`          | `uOpacity`  | Base alpha (hero/orbit bookend fades only)                                         |
-| `silhouetteMorph`  | `uMorph`    | Cover-in envelope. 0 = nothing painted, ≥0.6 = full silhouette at rect             |
-| `substrateMorph`   | (binary suppression) | While > 0.001 the global mesh is hidden — substrate-sphere mesh owns the shape |
+| Transform field   | Uniform              | What it does                                                                   |
+| ----------------- | -------------------- | ------------------------------------------------------------------------------ |
+| `rect.center`     | `uCenter`            | Where the silhouette paints (same anchor the atmosphere uses)                  |
+| `rect.halfSize`   | `uHalfSize`          | Silhouette size                                                                |
+| `opacity`         | `uOpacity`           | Base alpha (hero/orbit bookend fades only)                                     |
+| `silhouetteMorph` | `uMorph`             | Cover-in envelope. 0 = nothing painted, ≥0.6 = full silhouette at rect         |
+| `substrateMorph`  | (binary suppression) | While > 0.001 the global mesh is hidden — substrate-sphere mesh owns the shape |
 
 Density tier: **1900 desktop / 700 mobile** (substrate-tier so the silhouette reads as a solid mark). Soft radial dot fragment shader, additive blending — same family as the atmosphere but with a slightly tighter core (`smoothstep(0.30, 0.5, d)`) so the silhouette stays crisp.
 
@@ -118,7 +119,7 @@ Tune in `/test/brandmark-vector` (the new dev preview page that mounts both the 
 - **Solid-square fragment shader.** `gl_FragColor = vec4(uTint, vAlpha)` was the papercraft tile aesthetic that ADR-015 retired. Soft radial dots + additive blending are the contract.
 - **The atmosphere field painting the brandmark silhouette.** ADR-015's split is still load-bearing for the atmosphere — that mesh paints dust + exhaust, never the mark. The silhouette mesh (ADR-019) is the documented exception; do not move silhouette responsibilities onto `BrandmarkParticleStation`.
 - **Per-station snapshots.** There is ONE transform, not five. Mounting more than one `BrandmarkParticleStation` or `BrandmarkSilhouettePoints` instance is forbidden — both are singletons.
-- **A fourth global particle mesh.** Three painters at most (atmosphere + silhouette globally, substrate-sphere inside the intelligence-layer canvas). Any new particle visual MUST extend an existing painter or replace one — not add a fourth.
+- **A fourth global particle mesh.** Three painters at most (atmosphere + silhouette globally, substrate-sphere inside the intelligence-layer canvas). Any new particle visual that PAINTS THE BRAND MARK SILHOUETTE must extend an existing painter or replace one — not add a fourth. (Substrate-layer artifacts of the accretion shell — e.g. the brain cloud in `ShellSubstrate.tsx`, ADR-018 Phase 5 — are NOT brandmark painters; they wrap the mark from outside and do not count against this cap.)
 - **`data-brand-svg-dock` / `data-brand-particle-backdrop` gates.** Painter visibility is controlled by per-frame uniforms from the journey transform. The wrapper opacity stays at 1 in particle mode.
 - **Opacity crossfades between renderers.** The vector → silhouette handoff is a geometric cover-in (silhouette inflates from rect centre; vector recedes in proportion). The silhouette → substrate-sphere handoff is a binary cut under matching screen-anchor particles. Both honour Principle 3.
 

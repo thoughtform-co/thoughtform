@@ -247,7 +247,13 @@ export const CORRIDOR_TIMELINE = {
     // layer DEPLOY at the moment the mark arrives, so the petals
     // unfold around a stable mark, not approach from afar.
     substrate: { start: 0.28, peakAt: 0.36 }, // Navigate park centre ~0.34
-    sources: { start: 0.55, peakAt: 0.62 }, // Encode park centre ~0.60
+    // Sources reveal moved earlier (0.55→0.47 / 0.62→0.57) per the
+    // 2026-06-06 wrap-around revision so the constellation begins
+    // folding in BEFORE the Encode park arrival rather than landing
+    // simultaneously with the parked composition. The user reads the
+    // orbits as already wrapping the mark by the time the title
+    // settles, which matches the requested "appear a tad sooner".
+    sources: { start: 0.47, peakAt: 0.57 }, // Encode park centre ~0.60
     surfaces: { start: 0.84, peakAt: 0.91 }, // Build park centre ~0.92
   },
 } as const;
@@ -1301,6 +1307,68 @@ export function getIntelligenceSubstratePresence(transform: DepthGatewayTransfor
   }
 
   return { presence: 0, morph: 0 };
+}
+
+// ── Traveling brandmark particle cloud (Phase 4 — wrap-around pass) ─
+
+/** Progress at which the brandmark hands off from the DOM glyph to
+ *  the traveling particle cloud. Set just past `thoughtformHold` so
+ *  the cut fires the MOMENT 3D travel begins (Thoughtform → Diagnostic
+ *  transit), per the requested choreography:
+ *
+ *    "after the brand mark has centered on the screen and the AI has
+ *     collapsed the distance between the thought and form section,
+ *     when you scroll, the brand mark moves into the middle. The
+ *     moment you scroll through 3D space, I want our brand mark to
+ *     transform into the particle effect version."
+ */
+export const BRANDMARK_PARTICLE_CUT_START = CORRIDOR_TIMELINE.brandmark.thoughtformHold;
+
+/** Cut-window end. Tight 0.02 progress wide so the swap reads as an
+ *  INSTANT CUT UNDER MATCHING COVER (ADR-017 Principle 3 corollary —
+ *  the particle cloud paints the same silhouette at the same world
+ *  position the moment the DOM glyph fades out, so the cut is
+ *  perceptually a single frame even with a small ramp for sub-pixel
+ *  smoothness). */
+export const BRANDMARK_PARTICLE_CUT_END = BRANDMARK_PARTICLE_CUT_START + 0.02;
+
+/** Tail fade-out window for the traveling cloud — mirrors the DOM
+ *  actor's `TAIL_FADE_OUT_START = 0.97` so both painters bookend
+ *  symmetrically. The post-orbit fade is the only opacity ramp the
+ *  cloud is allowed (Principle 5). */
+const BRANDMARK_PARTICLE_TAIL_START = 0.97;
+
+/** Combined presence + morph for the traveling brandmark cloud
+ *  (ADR-018 wrap-around revision, supersedes the Intelligence-only
+ *  `getIntelligenceSubstratePresence` for the cloud — the latter is
+ *  retained for the legacy depth-approach math; the traveling cloud
+ *  uses THIS function).
+ *
+ *  - presence is 0 across the Thoughtform park (DOM glyph owns the
+ *    mark), CUTS UP to 1 across the 0.02-wide handoff window, and
+ *    holds at 1 through Navigate → Encode → Build until the tail
+ *    fade-out at the corridor exit.
+ *  - morph is 0 across the journey (cloud paints the brandmark
+ *    silhouette at every park) and ramps via `getSubstrateMorph` only
+ *    when the intelligence beat is active — the substrate sphere is
+ *    the climax, not a state the mark passes through. */
+export function getBrandmarkParticlePresence(transform: DepthGatewayTransform): {
+  presence: number;
+  morph: number;
+} {
+  const { progress, beat, gateProgress, active, armed } = transform;
+  if (!active && !armed) return { presence: 0, morph: 0 };
+
+  const cutIn = smoothstep(BRANDMARK_PARTICLE_CUT_START, BRANDMARK_PARTICLE_CUT_END, progress);
+  const tailOut = 1 - smoothstep(BRANDMARK_PARTICLE_TAIL_START, 1, progress);
+  const presence = cutIn * tailOut;
+
+  let morph = 0;
+  if (beat === "intelligence") {
+    morph = getSubstrateMorph(gateProgress);
+  }
+
+  return { presence, morph };
 }
 
 // ── Intelligence side bodies ─────────────────────────────────────

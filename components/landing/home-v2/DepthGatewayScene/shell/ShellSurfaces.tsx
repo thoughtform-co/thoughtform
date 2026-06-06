@@ -10,15 +10,19 @@
  * ring) but sized to the corridor: `SURFACES_OUTER_RADIUS` 1.85 sits
  * comfortably inside the Intelligence gate `halfExtent` 2.0.
  *
- * PETAL UNFOLD (2026-06-05 revision):
- *   - The outer geodesic + equator hairline scale UNIFORMLY 0 -> 1
- *     with the parent layer reveal. They're a faint structural
- *     backdrop and decomposing the 20 icosahedron faces would read
- *     as visually busy at the corridor's read distance.
+ * FOLD-IN UNFOLD (2026-06-06 wrap-around revision):
+ *   - The outer geodesic + equator hairline scale via `foldEmerge`
+ *     so the skin appears OVERSIZED (FOLD_OVERSHOOT ~ 1.45x its final
+ *     radius, sitting clearly outside the assembled cage + orbits)
+ *     and closes in to scale 1.0. Reads as the outer skin folding
+ *     around the now-fully-assembled inner shell from outside.
  *   - The 6 port pips each render inside their OWN sub-group that
- *     petal-unfolds from origin -> final ring position with staggered
- *     timing. Reads as 6 port lights flying out of the brand mark to
- *     their orbital ring positions, completing the assembled shell.
+ *     fold-unfolds: per-port scale ramps 0 -> 1 (so the diamond
+ *     visibly grows) while the port's position OVERSHOOTS beyond the
+ *     ring radius (positionFactor FOLD_OVERSHOOT) and settles inward
+ *     to the ring (positionFactor 1.0). Reads as 6 port lights
+ *     arriving from beyond the surfaces ring and seating onto their
+ *     final ring positions.
  *
  * Persists at the Build landing so the assembled shell stays present
  * as the brandmark hands off to the substrate sphere morph at the
@@ -41,9 +45,8 @@ import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import { getBrandmarkAccretionLayers } from "../sceneGeom";
 import {
   EMERGE_EPSILON,
-  petalEmerge,
+  foldEmerge,
   petalStagger,
-  splitEmerge,
   SURFACES_GEODESIC_DETAIL,
   SURFACES_OUTER_RADIUS,
   SURFACES_PORT_COUNT,
@@ -145,27 +148,33 @@ export function ShellSurfaces({ layerKey, reducedMotion = false }: ShellSurfaces
     }
     group.visible = true;
 
-    // Outer geodesic + equator: uniform smootherstep emerge. Faint
-    // structural backdrop, doesn't benefit from per-face petal motion.
+    // Outer geodesic + equator: fold-in emerge. The skin appears
+    // OVERSIZED (FOLD_OVERSHOOT ~ 1.45x its final radius) and closes
+    // in to scale 1.0 — reads as the outer skin folding around the
+    // assembled inner shell from outside rather than expanding
+    // through it from the centre.
     if (geodesicShellRef.current) {
-      geodesicShellRef.current.scale.setScalar(splitEmerge(reveal));
+      geodesicShellRef.current.scale.setScalar(foldEmerge(reveal).scale);
     }
 
-    // Per-port petal unfold: each port group starts at origin and
-    // lerps to its final ring position with staggered timing, scale
-    // ramping 0 -> 1 in lock-step.
+    // Per-port fold-in unfold: each port group's POSITION overshoots
+    // beyond the ring radius (positionFactor ~ FOLD_OVERSHOOT) and
+    // settles inward to the ring (positionFactor 1.0), while its
+    // SCALE ramps 0 -> 1 in lock-step so the diamond grows in as
+    // it arrives. Staggered with petalStagger so the six ports don't
+    // all close simultaneously.
     for (let i = 0; i < SURFACES_PORT_COUNT; i++) {
       const portGroup = portGroupRefs.current[i];
       if (!portGroup) continue;
       const stagger = petalStagger(reveal, i, SURFACES_PORT_COUNT, SURFACES_PORT_OVERLAP);
-      const { scale, positionT } = petalEmerge(stagger);
+      const { scale, positionFactor } = foldEmerge(stagger);
       if (scale <= EMERGE_EPSILON) {
         portGroup.visible = false;
         continue;
       }
       portGroup.visible = true;
       const p = portFinalPositions[i];
-      portGroup.position.set(p[0] * positionT, p[1] * positionT, p[2] * positionT);
+      portGroup.position.set(p[0] * positionFactor, p[1] * positionFactor, p[2] * positionFactor);
       portGroup.scale.setScalar(scale);
     }
 

@@ -11,16 +11,17 @@
  * a real solar system of inclined planes, not a stack of coplanar
  * rings.
  *
- * PETAL UNFOLD (2026-06-05 revision): each orbit is rendered inside
- * its OWN sub-group (ring lineLoop + pip mesh co-located). The
- * sub-group scales 0 -> 1 with staggered timing inside the parent
- * sources reveal window, so the orbits unfold one after the other
- * around the brandmark + already-deployed substrate dodecahedron.
- * Because the orbit ring is centered on origin, scale 0 collapses it
- * to a single point AT the brand mark center; scale 1 deploys the
- * full tilted ellipse. The pip mesh sits inside the same sub-group,
- * so it scales + travels with its orbit naturally — no extra math.
- * Reads as planets flying out from the mark to their orbital paths.
+ * FOLD-IN UNFOLD (2026-06-06 wrap-around revision): each orbit is
+ * rendered inside its OWN sub-group (ring lineLoop + pip mesh
+ * co-located) and DEPLOYS via `foldEmerge`: the sub-group appears at
+ * an OVERSIZED scale (FOLD_OVERSHOOT ~ 1.45x the final radius, sitting
+ * clearly outside the mark + cage) and CLOSES IN to scale 1.0 to its
+ * final radius. Staggered with `petalStagger` so the six orbits don't
+ * all close in lock-step — reads as a cascade of orbital planes
+ * folding inward to wrap the mark, rather than orbits growing
+ * through the mark from its centre. The pip mesh sits inside the
+ * same sub-group so it travels with its orbit naturally — no extra
+ * math.
  *
  * Pip revolution uses each orbit's own period + direction + phase so
  * the field reads as multi-body rather than one coordinated sweep.
@@ -39,7 +40,7 @@ import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import { getBrandmarkAccretionLayers } from "../sceneGeom";
 import {
   EMERGE_EPSILON,
-  petalEmerge,
+  foldEmerge,
   petalStagger,
   SHELL_ORBITS,
   type ShellOrbit,
@@ -132,11 +133,14 @@ export function ShellSources({ layerKey, reducedMotion = false }: ShellSourcesPr
     // but still legible as a multi-body constellation.
     const t = reducedMotion ? 0 : clock.elapsedTime;
 
-    // ── Per-orbit petal unfold ──────────────────────────────────
-    // Each orbit's sub-group scales 0 -> 1 with staggered timing.
-    // Pip position is updated INSIDE the sub-group's local space,
-    // so the pip naturally travels from origin (at scale 0) to its
-    // full orbital position (at scale 1) — no separate pip lerp.
+    // ── Per-orbit fold-in unfold ─────────────────────────────────
+    // Each orbit's sub-group deploys via foldEmerge: appears at an
+    // oversized scale (FOLD_OVERSHOOT) and closes in to scale 1.0.
+    // Because the orbit ring + pip live inside the same sub-group,
+    // scaling the parent scales the orbit's radius too — so at
+    // scale 1.45 the orbit is at 1.45x its final radius (sitting
+    // outside the mark + cage) and closes in to its final orbital
+    // path. Reads as the planes folding inward to wrap the mark.
     for (let i = 0; i < SHELL_ORBITS.length; i++) {
       const orbit = SHELL_ORBITS[i];
       const orbitGroup = orbitGroupRefs.current[i];
@@ -144,7 +148,7 @@ export function ShellSources({ layerKey, reducedMotion = false }: ShellSourcesPr
       if (!orbitGroup) continue;
 
       const stagger = petalStagger(reveal, i, SHELL_ORBITS.length, SOURCES_ORBIT_OVERLAP);
-      const { scale } = petalEmerge(stagger);
+      const { scale } = foldEmerge(stagger);
       if (scale <= EMERGE_EPSILON) {
         orbitGroup.visible = false;
         continue;

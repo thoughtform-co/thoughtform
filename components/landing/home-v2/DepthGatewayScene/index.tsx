@@ -16,6 +16,7 @@ import { LatentWormholeWalls } from "./LatentWormholeWalls";
 import { ScrollStreaks } from "./ScrollStreaks";
 import { StaticStarfield } from "./StaticStarfield";
 import { ThoughtformAtmosphere } from "./ThoughtformAtmosphere";
+import { TravelingBrandmarkCloud } from "./TravelingBrandmarkCloud";
 import { CAMERA_START, getCameraFov, getCameraLookAt } from "./sceneGeom";
 
 /** Current viewport aspect (browser only; safe fallback on server).
@@ -226,15 +227,23 @@ export function DepthGatewayScene() {
       <GatewayWorld />
       {/* BrandmarkAccretionShell — inside-out intelligence-layer
           shell that accretes around the brandmark as it travels
-          (substrate dodecahedron + inner geodesic at Navigate;
-          solar-system source orbits at Encode; outer surfaces skin
-          at Build). Mounted AFTER the gate world so its additive
-          line geometry overlays gate geometry rather than being
-          occluded by it. Tracks `getBrandmarkWorldPosition` per
-          frame; lands co-located with `SubstrateMorphCloud` so the
-          assembled shell wraps the substrate sphere at the climax.
+          (substrate cage at Navigate; solar-system source orbits
+          at Encode; outer surfaces skin at Build). Mounted AFTER
+          the gate world so its additive line geometry overlays
+          gate geometry rather than being occluded by it. Tracks
+          `getBrandmarkWorldPosition` per frame; lands co-located
+          with the traveling brandmark cloud at the Build climax.
           See ADR-013 + the shell-into-corridor pass. */}
       <BrandmarkAccretionShell />
+      {/* TravelingBrandmarkCloud — particle form of the brandmark,
+          mounted at scene root and travelling with the mark from
+          the moment 3D travel starts (just past `thoughtformHold`)
+          through to the corridor exit. Morphs to the Fibonacci
+          substrate sphere at the Intelligence beat. Replaces the
+          legacy `SubstrateMorphCloud` that lived inside
+          `IntelligenceGate` and only painted at the Intelligence
+          beat. See ADR-018 Phase 4 (2026-06-06 wrap-around). */}
+      <TravelingBrandmarkCloud />
     </Canvas>
   );
 }

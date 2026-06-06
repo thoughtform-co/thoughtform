@@ -40,26 +40,27 @@ import {
 
 // ── Substrate core (inside-out layer 1) ──────────────────────────────
 
-/** Outer geodesic icosphere wrap radius. Tight 1.27x wrap around the
- *  0.55-radius substrate sphere — mirrors the standalone shell's
- *  cage-to-cloud ratio (0.92 / 0.75 = 1.22x). Sized this way so the
- *  cage reads as a proportional wrapper around the brandmark / sphere
- *  it cages, not as an oversized halo. The source orbits below MUST
- *  stay outside this radius.
+/** Substrate layer outer bounding radius. The source orbits MUST
+ *  stay outside this radius (see `SHELL_ORBITS` invariant below) so
+ *  the constellation visibly wraps the substrate rather than cutting
+ *  through it.
  *
- *  Renamed from `SUBSTRATE_DODEC_RADIUS` in the 2026-06-05 lab-match
- *  revision (the cage is now an 80-face geodesic icosphere, matching
- *  the standalone `NestedShellSphere` exactly, not a 12-face
- *  dodecahedron). */
+ *  EVOLUTION:
+ *  - Originally the dodecahedron cage radius (`SUBSTRATE_DODEC_RADIUS`).
+ *  - Renamed to `SUBSTRATE_CAGE_RADIUS` on 2026-06-05 when the cage
+ *    became an 80-face geodesic icosphere.
+ *  - On 2026-06-06 the cage was replaced with the BRAIN ARTIFACT (see
+ *    `ShellSubstrate.tsx`), whose two-hemisphere ellipsoid sample
+ *    has a max radius of ~0.55. The constant is kept at 0.7 so the
+ *    source-orbit clearance invariant still produces a comfortable
+ *    breathing gap between the brain and the inbound orbital paths —
+ *    this is now the CLEARANCE radius, not a literal cage size. */
 export const SUBSTRATE_CAGE_RADIUS = 0.7;
 
-/** Inner geodesic shell radius. Sits inside the substrate sphere as
- *  a faint dawn hairline at ~0.6x the cage (matching the lab shell's
- *  inner detail-2 geodesic at 0.62x the core radius). At the Build
- *  landing the substrate morph cloud eclipses it visually; it reads
- *  strongest during the Navigate / Encode beats before the sphere
- *  has formed, where it gives the cage internal depth. */
-export const SUBSTRATE_INNER_RADIUS = 0.42;
+// NOTE: `SUBSTRATE_INNER_RADIUS` (faint dawn inner geodesic) was
+// removed in the 2026-06-06 wrap-around revision (Phase 2). The
+// brain artifact at the centre supplies the inner read directly —
+// no separate inner shell is needed.
 
 // ── Sources (inside-out layer 2) ─────────────────────────────────────
 
@@ -288,6 +289,73 @@ export function petalEmerge(stagger: number): PetalEmerge {
  *  per-element unfold still gets the same smootherstep scale ramp. */
 export function splitEmerge(reveal: number): number {
   return petalEmerge(reveal).scale;
+}
+
+// ── Fold / wrap emerge (2026-06-06 wrap-around revision) ────────────
+//
+// `petalEmerge` reads as the geometry GROWING THROUGH the brand mark
+// from the centre (scale 0 -> 1 expanding outward). The user feedback
+// after the lab-match composition landed was that this looks like the
+// cage / orbits are "fighting through" the mark instead of "wrapping
+// around" it. `foldEmerge` is the wrap-around alternative: each
+// element appears at an OVERSIZED scale (sitting visibly OUTSIDE the
+// mark) and CLOSES IN to its final scale of 1.0. Reads as the layer
+// arriving from beyond the mark and folding inward to wrap it.
+//
+// Material opacity stays CONSTANT throughout — brandmark Principle 4
+// is honoured by keeping every transition geometric.
+//
+// For per-element petal staggers, foldEmerge runs on the same
+// `stagger` value `petalEmerge` consumes, so the SHELL_ORBITS /
+// SURFACES_PORT_COUNT cascades work unchanged — only the per-element
+// curve changes shape.
+
+/** Initial group scale at the START of the reveal window. Sized so the
+ *  cage / orbit appears clearly OUTSIDE the mark when it first deploys
+ *  (1.45x the final radius), then closes in to 1.0x. Picked by eye:
+ *  larger values read as "the layer is far away and rushes in" which
+ *  competes with the camera dolly; smaller values barely look like a
+ *  fold at all. */
+export const FOLD_OVERSHOOT = 1.45;
+
+/** Fraction of the reveal window spent in the entry ramp (scale 0 ->
+ *  FOLD_OVERSHOOT). The remainder closes in (FOLD_OVERSHOOT -> 1.0).
+ *  Short so the oversized read is brief and the wrap-in dominates. */
+const FOLD_ENTRY_FRAC = 0.12;
+
+/** Fold-emerge: scale starts at 0, rises briefly to FOLD_OVERSHOOT,
+ *  then closes in to 1.0 over the rest of the reveal. `positionFactor`
+ *  is a parallel multiplier for sub-elements positioned at a final
+ *  outward offset (e.g. the surfaces ports) — those want their
+ *  position to overshoot beyond the ring radius and settle inward,
+ *  not lerp from origin.
+ *
+ *  - reveal 0           → scale 0,             positionFactor 0
+ *  - reveal FOLD_ENTRY  → scale FOLD_OVERSHOOT,positionFactor FOLD_OVERSHOOT
+ *  - reveal 1           → scale 1.0,           positionFactor 1.0
+ */
+export interface FoldEmerge {
+  scale: number;
+  positionFactor: number;
+}
+
+export function foldEmerge(reveal: number): FoldEmerge {
+  const t = reveal < 0 ? 0 : reveal > 1 ? 1 : reveal;
+  if (t <= 0) return { scale: 0, positionFactor: 0 };
+  if (t < FOLD_ENTRY_FRAC) {
+    // Entry ramp: scale 0 -> FOLD_OVERSHOOT via smootherstep.
+    const u = t / FOLD_ENTRY_FRAC;
+    const s = u * u * u * (u * (u * 6 - 15) + 10);
+    return {
+      scale: s * FOLD_OVERSHOOT,
+      positionFactor: s * FOLD_OVERSHOOT,
+    };
+  }
+  // Close-in: FOLD_OVERSHOOT -> 1.0 via smootherstep.
+  const u = (t - FOLD_ENTRY_FRAC) / (1 - FOLD_ENTRY_FRAC);
+  const s = u * u * u * (u * (u * 6 - 15) + 10);
+  const settled = FOLD_OVERSHOOT + (1 - FOLD_OVERSHOOT) * s;
+  return { scale: settled, positionFactor: settled };
 }
 
 // NOTE: the `buildDodecahedronFaces` helper + `DodecahedronFace` type
