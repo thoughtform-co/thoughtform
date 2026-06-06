@@ -33,8 +33,8 @@ import { ShellSurfaces } from "./shell/ShellSurfaces";
  *
  * All three persist after they emerge so the shell is fully
  * assembled at the Build landing and stays present as the brandmark
- * hands off to the `TravelingBrandmarkCloud` (substrate sphere
- * morph) at the centre.
+ * hands off to the `SubstrateMorphCloud` (substrate sphere morph,
+ * inside `IntelligenceGate`) at the centre.
  *
  * This component owns ONLY the world position: per frame the parent
  * group is moved to `getBrandmarkWorldPosition(paintProgress)` so the

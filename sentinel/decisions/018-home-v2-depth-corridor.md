@@ -61,37 +61,31 @@ Applied to:
   sub-groups (positionFactor multiplier on final ring position, so
   ports overshoot beyond the ring radius and settle inward).
 
-### Phase 4 — Traveling brandmark cloud (DOM → particles at corridor entry)
+### Phase 4 — Traveling brandmark cloud (REVERTED on user feedback)
 
-The DOM `ProjectedBrandmarkActor` previously owned the brandmark
-across the entire corridor and only handed off to the in-canvas
-`SubstrateMorphCloud` at the Build beat. Phase 4 promotes the cloud
-to a TRAVELING brandmark cloud that follows the mark end-to-end:
+Phase 4 originally promoted the substrate `SubstrateMorphCloud` to a
+TRAVELING brandmark cloud mounted at scene root, with a tight cut
+from the DOM glyph at corridor entry so the mark travelled as
+particles end-to-end. Shipped, but reverted on user feedback the
+same day — the brandmark belongs on the DOM layer across travel and
+only hands off to particles at the Build substrate morph (the
+original ADR-017 pattern). State of the world after revert:
 
-- New `getBrandmarkParticlePresence(transform)` window in
-  `sceneGeom.ts` cuts presence from 0 → 1 across a tight 0.02-wide
-  progress window starting at `thoughtformHold` (0.14). The cloud is
-  invisible during the Thoughtform park (DOM glyph owns the mark)
-  and fully visible the moment 3D travel begins.
-- New `TravelingBrandmarkCloud` component (mounted at scene root in
-  `DepthGatewayScene`) follows `getBrandmarkWorldPosition` per
-  frame and updates `uBrandmarkSize` from
-  `getBrandmarkWorldHalfExtent` so the silhouette tracks the DOM
-  glyph exactly through the half-extent ramp. `uShapeMorph` is 0
-  across the journey and only ramps via `getSubstrateMorph` at the
-  Intelligence beat (sphere climax).
-- `ProjectedBrandmarkActor` swapped its substrate-morph-driven fade
-  for a `BRANDMARK_PARTICLE_CUT_END`-driven cut. Cut + traveling
-  cloud share the same world position + half-extent at every frame
-  inside the handoff window, so the swap is an INSTANT CUT UNDER
-  MATCHING COVER (ADR-017 Principle 3 corollary).
-- `IntelligenceGate` is now an empty placeholder — the cloud lives
-  at scene root, the accretion shell lands at the Intelligence
-  position by tracking the mark.
-
-The legacy `getIntelligenceSubstratePresence` + `SUBSTRATE_CROSSFADE_END`
-are kept in `sceneGeom.ts` for historical reference but no longer
-have live consumers.
+- `SubstrateMorphCloud` lives inside `IntelligenceGate` again,
+  anchored at `STATION_INTELLIGENCE.position + [0,0,0.1]`. Drives
+  `uPresence` + `uShapeMorph` from `getIntelligenceSubstratePresence`
+  (depth-approach during late passthrough-02, morph envelope during
+  the intelligence beat).
+- `ProjectedBrandmarkActor` consumes
+  `getIntelligenceSubstratePresence(transform).morph` for its DOM
+  fade-out — fade engages only when the substrate cloud is actively
+  losing the brandmark silhouette for the Fibonacci sphere.
+- `TravelingBrandmarkCloud.tsx` is deleted; the
+  `BRANDMARK_PARTICLE_CUT_START/END` constants and
+  `getBrandmarkParticlePresence` were removed from `sceneGeom.ts`.
+- Phases 1, 2, 3, 5 of this revision (constellation timing, dropped
+  dawn inner geodesic, `foldEmerge` envelope, brain artifact) are
+  retained.
 
 ### Phase 5 — Brain artifact (replaces the geodesic substrate cage)
 
