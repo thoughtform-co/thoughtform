@@ -4,6 +4,7 @@ import { useFrame } from "@react-three/fiber";
 import { useEffect, useMemo } from "react";
 import * as THREE from "three";
 import { smoothstep, useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
+import { BEAT_WINDOWS } from "@/lib/home-v2/corridorMap";
 import {
   STATION_DIAGNOSTIC,
   STATION_INTELLIGENCE,
@@ -102,6 +103,19 @@ function legRevealForZ(z: number, progress: number): number {
   // (centre 0.60) and resolves inside passthrough-02 (0.67 → 0.83).
   if (z > DG_Z) return smoothstep(0.14, 0.28, progress);
   return smoothstep(0.63, 0.77, progress);
+}
+
+/** Navigate-park suppression: hide the topography shards across the
+ *  Navigate beat (with soft fades into the flanking passthroughs) so
+ *  the migrated compass reads clean at that park. They return for the
+ *  rest of the corridor. Returns a 0..1 visibility multiplier. */
+const NAV_WINDOW = BEAT_WINDOWS.find((w) => w.beat === "navigate");
+function navParkVisibility(progress: number): number {
+  if (!NAV_WINDOW) return 1;
+  const fade = 0.035;
+  const entering = smoothstep(NAV_WINDOW.start - fade, NAV_WINDOW.start + fade, progress);
+  const leaving = 1 - smoothstep(NAV_WINDOW.end - fade, NAV_WINDOW.end + fade, progress);
+  return 1 - Math.min(entering, leaving);
 }
 
 // ── Artifact catalogue ────────────────────────────────────────
@@ -489,8 +503,9 @@ function ContourShard({
     const reveal = legRevealForZ(pos[2], paintProgress);
     const depthOpacity = depthOpacityForWorldPosition(paintProgress, pos, depthWindow);
     // Cap at 0.32 — contours are a backdrop layer, never compete
-    // with the orbits or the brandmark.
-    material.opacity = depthOpacity * reveal * 0.32;
+    // with the orbits or the brandmark. Suppressed across the Navigate
+    // park so the compass reads clean there.
+    material.opacity = depthOpacity * reveal * 0.32 * navParkVisibility(paintProgress);
   });
 
   return (
@@ -583,7 +598,7 @@ function RidgeShard({
     }
     const reveal = legRevealForZ(pos[2], paintProgress);
     const depthOpacity = depthOpacityForWorldPosition(paintProgress, pos, depthWindow);
-    const base = depthOpacity * reveal;
+    const base = depthOpacity * reveal * navParkVisibility(paintProgress);
     arcMat.opacity = base * 0.45;
     tickMat.opacity = base * 0.7;
   });
@@ -686,7 +701,7 @@ function VectorShard({ pos, dir, length, color = DAWN_HEX }: Omit<VectorShardArt
     }
     const reveal = legRevealForZ(midpoint[2], paintProgress);
     const depthOpacity = depthOpacityForWorldPosition(paintProgress, midpoint, depthWindow);
-    const base = depthOpacity * reveal;
+    const base = depthOpacity * reveal * navParkVisibility(paintProgress);
     lineMat.opacity = base * 0.6;
     diamondMat.opacity = base * 0.85;
   });

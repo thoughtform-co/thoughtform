@@ -95,21 +95,12 @@ export const SUBSTRATE_COMPASS_ORBIT_DOT_2 = {
   angularVelocity: (2 * Math.PI) / 120,
 } as const;
 
-/** Eight-ball horizon + attitude enrichment (world units). The horizon
- *  equator sits just inside the outer ring; kept FAINT so the flat
- *  compass rings remain the dominant read. */
-export const SUBSTRATE_COMPASS_HORIZON_R = 0.73;
-export const SUBSTRATE_COMPASS_HORIZON_BAND_Y = 0.018;
-export const SUBSTRATE_COMPASS_PITCH_LADDER_DEG = [12, 24] as const;
+/** Cardinal diamond size (world units) — small N/E/S/W bearing markers
+ *  just outside the outer ring. (The eight-ball horizon / pitch-ladder
+ *  attitude read was removed 2026-06-07 — the tilted ellipses competed
+ *  with the flat compass; only these flat markers remain.) */
 export const SUBSTRATE_COMPASS_CARDINAL_DIAMOND = 0.03;
 
-/** Gimbal attitude seek (radians / Hz) — applied ONLY to the eight-ball
- *  horizon/pitch sub-group so the flat compass rings stay camera-facing
- *  like the opening-beat compass. */
-export const SUBSTRATE_COMPASS_TILT_AMP_X = 0.16;
-export const SUBSTRATE_COMPASS_TILT_AMP_Z = 0.1;
-export const SUBSTRATE_COMPASS_TILT_FREQ_X = 0.5;
-export const SUBSTRATE_COMPASS_TILT_FREQ_Z = 0.42;
 /** Slow breath spin for the whole instrument (matches the opening
  *  compass `group.rotation.z = elapsed * 0.012`). */
 export const SUBSTRATE_COMPASS_BREATH_RATE = 0.012;

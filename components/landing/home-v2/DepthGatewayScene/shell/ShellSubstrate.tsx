@@ -3,24 +3,29 @@
 /**
  * ShellSubstrate — Navigate layer 1 of the accreted intelligence shell.
  * Wraps the guiding-star brandmark with the migrated Thoughtform compass
- * read: 4 concentric rings, bearing crosshair + ticks, atmosphere orbit
- * dots, and a FAINT eight-ball horizon / attitude cue behind them.
+ * read: 4 concentric rings, bearing crosshair + ticks, cardinal markers,
+ * and two atmosphere orbit dots.
  *
  * The rings + crosshair + ticks reproduce the opening-beat compass
  * (`ThoughtformCompassGate`) EXACTLY — same radii, dash, colours — so
- * the instrument frames the mark like the previous second section. They
- * stay camera-facing (flat) with only a slow breath spin. The eight-ball
- * horizon / pitch ladder live on a separate sub-group that gimbal-tilts
- * for the attitude-sphere cue, without tilting the flat compass rings.
+ * the instrument frames the mark like the previous second section. The
+ * whole compass is flat / camera-facing with only a slow breath spin.
+ *
+ * ORGANIC UNFOLD: rather than fading in, the compass deploys as a
+ * staggered geometric cascade — each ring (outer → inner) then the
+ * reticle (crosshair + ticks + cardinals + dots) wraps in via
+ * `foldEmerge` on its own slot of the substrate reveal window. Full
+ * opacity throughout (brandmark Principle 4: geometric emerge).
  *
  * EVOLUTION:
  *   - 2026-06-05: dodecahedron → gold geodesic icosphere.
  *   - 2026-06-06: dropped dawn inner geodesic; shellWrapEmerge.
  *   - 2026-06-07: geodesic replaced by compass instrument; rings sized
- *     to the opening-beat compass; gimbal tilt isolated to the
- *     eight-ball sub-group so the rings frame the mark like before.
+ *     to the opening-beat compass; organic staggered unfold.
+ *   - 2026-06-07 (later): removed the eight-ball horizon / pitch-ladder
+ *     attitude read (the gimbal-tilted ellipses) — the flat compass is
+ *     the whole read now.
  *
- * EMERGE: `shellWrapEmerge(reveal)` — contracts inward from outside.
  * PERSISTS through Encode + Build around `ProjectedBrandmarkActor`.
  */
 
@@ -32,15 +37,14 @@ import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import { getBrandmarkAccretionLayers } from "../sceneGeom";
 import {
   EMERGE_EPSILON,
+  foldEmerge,
+  petalStagger,
   SUBSTRATE_COMPASS_BREATH_RATE,
   SUBSTRATE_COMPASS_CARDINAL_DIAMOND,
   SUBSTRATE_COMPASS_CROSSHAIR_INNER,
   SUBSTRATE_COMPASS_CROSSHAIR_OUTER,
-  SUBSTRATE_COMPASS_HORIZON_BAND_Y,
-  SUBSTRATE_COMPASS_HORIZON_R,
   SUBSTRATE_COMPASS_ORBIT_DOT_1,
   SUBSTRATE_COMPASS_ORBIT_DOT_2,
-  SUBSTRATE_COMPASS_PITCH_LADDER_DEG,
   SUBSTRATE_COMPASS_RING_ALPHA,
   SUBSTRATE_COMPASS_RING_DASH,
   SUBSTRATE_COMPASS_RING_RADII,
@@ -48,11 +52,6 @@ import {
   SUBSTRATE_COMPASS_SHELL_OPACITY,
   SUBSTRATE_COMPASS_TICK_INNER,
   SUBSTRATE_COMPASS_TICK_OUTER,
-  SUBSTRATE_COMPASS_TILT_AMP_X,
-  SUBSTRATE_COMPASS_TILT_AMP_Z,
-  SUBSTRATE_COMPASS_TILT_FREQ_X,
-  SUBSTRATE_COMPASS_TILT_FREQ_Z,
-  shellWrapEmerge,
 } from "./shellGeom";
 
 interface ShellSubstrateProps {
@@ -60,10 +59,21 @@ interface ShellSubstrateProps {
   reducedMotion?: boolean;
 }
 
-const D2R = Math.PI / 180;
 const TICK_ANGLES_DEG = [30, 60, 120, 150, 210, 240, 300, 330];
 
 const RING_COLORS = [COLOR_DAWN, COLOR_DAWN, COLOR_GOLD, COLOR_GOLD] as const;
+
+/** Organic unfold: the compass deploys as a staggered cascade rather
+ *  than fading in. Each part rides its own slot in the substrate reveal
+ *  window and wraps in via `foldEmerge` (oversized → settle). Slot
+ *  order acquires/locks inward: the rings close from outer to inner,
+ *  then the reticle (crosshair + ticks + cardinals + atmosphere dots)
+ *  snaps in last. */
+const UNFOLD_SLOTS = 5;
+const UNFOLD_OVERLAP = 0.5;
+/** Slot index per ring (rings array is outer→inner: index 0 = outer). */
+const RING_SLOT_BASE = 0;
+const DETAILS_SLOT = 4;
 
 function buildCircleGeometry(radius: number, segments: number): THREE.BufferGeometry {
   const points: THREE.Vector3[] = [];
@@ -116,54 +126,9 @@ const CROSSHAIR_VERTS: [number, number, number][] = [
   [SUBSTRATE_COMPASS_CROSSHAIR_OUTER, 0, 0.02],
 ];
 
-/** Full-circle horizon + faint parallel band (eight-ball equator, in
- *  the XZ plane so it reads edge-on as a horizon line behind the rings). */
-function buildHorizonGeometries(): {
-  horizon: THREE.BufferGeometry;
-  band: THREE.BufferGeometry;
-} {
-  const segments = 120;
-  const r = SUBSTRATE_COMPASS_HORIZON_R;
-  const bandY = SUBSTRATE_COMPASS_HORIZON_BAND_Y;
-  const horizonPts: THREE.Vector3[] = [];
-  const bandPts: THREE.Vector3[] = [];
-  for (let i = 0; i <= segments; i++) {
-    const a = (i / segments) * Math.PI * 2;
-    const x = Math.cos(a) * r;
-    const z = Math.sin(a) * r;
-    horizonPts.push(new THREE.Vector3(x, 0, z));
-    bandPts.push(new THREE.Vector3(x * 1.007, bandY, z * 1.007));
-  }
-  return {
-    horizon: new THREE.BufferGeometry().setFromPoints(horizonPts),
-    band: new THREE.BufferGeometry().setFromPoints(bandPts),
-  };
-}
-
-/** Faint pitch-ladder parallels (±latitudes on the attitude sphere). */
-function buildPitchLadderGeometries(): THREE.BufferGeometry[] {
-  const r = SUBSTRATE_COMPASS_HORIZON_R;
-  const segments = 96;
-  return SUBSTRATE_COMPASS_PITCH_LADDER_DEG.flatMap((latDeg) => {
-    const geoms: THREE.BufferGeometry[] = [];
-    for (const sign of [1, -1] as const) {
-      const lat = latDeg * D2R * sign;
-      const y = Math.sin(lat) * r;
-      const rr = Math.cos(lat) * r;
-      const pts: THREE.Vector3[] = [];
-      for (let i = 0; i <= segments; i++) {
-        const a = (i / segments) * Math.PI * 2;
-        pts.push(new THREE.Vector3(Math.cos(a) * rr, y, Math.sin(a) * rr));
-      }
-      geoms.push(new THREE.BufferGeometry().setFromPoints(pts));
-    }
-    return geoms;
-  });
-}
-
-/** Cardinal diamonds on the horizon (N/E/S/W), in the camera-facing plane. */
+/** Cardinal diamonds on the outer ring (N/E/S/W), camera-facing. */
 function buildCardinalDiamondGeometries(): THREE.BufferGeometry[] {
-  const r = SUBSTRATE_COMPASS_HORIZON_R * 1.05;
+  const r = SUBSTRATE_COMPASS_RING_RADII[0] * 1.05;
   const s = SUBSTRATE_COMPASS_CARDINAL_DIAMOND;
   const dirs: [number, number][] = [
     [0, 1],
@@ -190,7 +155,8 @@ export function ShellSubstrate({ layerKey, reducedMotion = false }: ShellSubstra
   void layerKey;
   const groupRef = useRef<THREE.Group>(null);
   const instrumentRef = useRef<THREE.Group>(null);
-  const attitudeRef = useRef<THREE.Group>(null);
+  const detailsRef = useRef<THREE.Group>(null);
+  const ringScaleRefs = useRef<(THREE.Group | null)[]>([]);
   const orbitDot1Ref = useRef<THREE.Group>(null);
   const orbitDot2Ref = useRef<THREE.Group>(null);
 
@@ -206,8 +172,6 @@ export function ShellSubstrate({ layerKey, reducedMotion = false }: ShellSubstra
 
   const crosshairGeom = useMemo(() => buildSegmentsGeometry(CROSSHAIR_VERTS), []);
   const ticksGeom = useMemo(() => buildSegmentsGeometry(buildTickVerts()), []);
-  const { horizon: horizonGeom, band: bandGeom } = useMemo(() => buildHorizonGeometries(), []);
-  const pitchLadderGeoms = useMemo(() => buildPitchLadderGeometries(), []);
   const cardinalGeoms = useMemo(() => buildCardinalDiamondGeometries(), []);
   const orbitDot1Geom = useMemo(
     () => new THREE.CircleGeometry(SUBSTRATE_COMPASS_ORBIT_DOT_1.size, 20),
@@ -256,45 +220,6 @@ export function ShellSubstrate({ layerKey, reducedMotion = false }: ShellSubstra
     []
   );
 
-  const horizonMat = useMemo(
-    () =>
-      new THREE.LineBasicMaterial({
-        color: new THREE.Color(COLOR_GOLD),
-        transparent: true,
-        opacity: 0,
-        depthWrite: false,
-        toneMapped: false,
-      }),
-    []
-  );
-
-  const horizonBandMat = useMemo(
-    () =>
-      new THREE.LineBasicMaterial({
-        color: new THREE.Color(COLOR_GOLD),
-        transparent: true,
-        opacity: 0,
-        depthWrite: false,
-        toneMapped: false,
-      }),
-    []
-  );
-
-  const pitchLadderMats = useMemo(
-    () =>
-      pitchLadderGeoms.map(
-        () =>
-          new THREE.LineBasicMaterial({
-            color: new THREE.Color(COLOR_DAWN),
-            transparent: true,
-            opacity: 0,
-            depthWrite: false,
-            toneMapped: false,
-          })
-      ),
-    [pitchLadderGeoms]
-  );
-
   const cardinalMats = useMemo(
     () =>
       cardinalGeoms.map(
@@ -340,17 +265,11 @@ export function ShellSubstrate({ layerKey, reducedMotion = false }: ShellSubstra
       ringGeoms.forEach((g) => g.dispose());
       crosshairGeom.dispose();
       ticksGeom.dispose();
-      horizonGeom.dispose();
-      bandGeom.dispose();
-      pitchLadderGeoms.forEach((g) => g.dispose());
       cardinalGeoms.forEach((g) => g.dispose());
       orbitDot1Geom.dispose();
       orbitDot2Geom.dispose();
       ringMats.forEach((m) => m.dispose());
       bearingsMat.dispose();
-      horizonMat.dispose();
-      horizonBandMat.dispose();
-      pitchLadderMats.forEach((m) => m.dispose());
       cardinalMats.forEach((m) => m.dispose());
       orbitDot1Mat.dispose();
       orbitDot2Mat.dispose();
@@ -359,17 +278,11 @@ export function ShellSubstrate({ layerKey, reducedMotion = false }: ShellSubstra
     ringGeoms,
     crosshairGeom,
     ticksGeom,
-    horizonGeom,
-    bandGeom,
-    pitchLadderGeoms,
     cardinalGeoms,
     orbitDot1Geom,
     orbitDot2Geom,
     ringMats,
     bearingsMat,
-    horizonMat,
-    horizonBandMat,
-    pitchLadderMats,
     cardinalMats,
     orbitDot1Mat,
     orbitDot2Mat,
@@ -380,11 +293,6 @@ export function ShellSubstrate({ layerKey, reducedMotion = false }: ShellSubstra
       m.opacity = 0;
     });
     bearingsMat.opacity = 0;
-    horizonMat.opacity = 0;
-    horizonBandMat.opacity = 0;
-    pitchLadderMats.forEach((m) => {
-      m.opacity = 0;
-    });
     cardinalMats.forEach((m) => {
       m.opacity = 0;
     });
@@ -411,48 +319,45 @@ export function ShellSubstrate({ layerKey, reducedMotion = false }: ShellSubstra
     }
     group.visible = true;
 
-    const { scale, presence } = shellWrapEmerge(reveal);
-    group.scale.setScalar(scale);
+    // Materials hold FULL target opacity once revealed — the emerge is
+    // GEOMETRIC (staggered per-part scale unfold below), never an
+    // opacity fade (brandmark Principle 4).
+    const shellOpacity = SUBSTRATE_COMPASS_SHELL_OPACITY;
 
-    const shellOpacity = SUBSTRATE_COMPASS_SHELL_OPACITY * presence;
-
-    // Flat compass rings — the dominant read (full alpha weights).
     for (const mat of ringMats) {
       const base = (mat.userData as { baseAlpha: number }).baseAlpha;
       mat.opacity = shellOpacity * base;
     }
     bearingsMat.opacity = shellOpacity * 0.78;
-    // Eight-ball horizon / attitude — kept fainter than the rings but
-    // still legible behind them.
-    horizonMat.opacity = shellOpacity * 0.62;
-    horizonBandMat.opacity = shellOpacity * 0.28;
-    pitchLadderMats.forEach((m, i) => {
-      m.opacity = shellOpacity * (i % 2 === 0 ? 0.22 : 0.13);
-    });
     cardinalMats.forEach((m) => {
       m.opacity = shellOpacity * 0.5;
     });
     orbitDot1Mat.opacity = shellOpacity * SUBSTRATE_COMPASS_ORBIT_DOT_1.alpha;
     orbitDot2Mat.opacity = shellOpacity * SUBSTRATE_COMPASS_ORBIT_DOT_2.alpha;
 
+    // ── Organic unfold: staggered per-part wrap-in (geometric) ──────
+    for (let i = 0; i < ringScaleRefs.current.length; i++) {
+      const wrap = ringScaleRefs.current[i];
+      if (!wrap) continue;
+      const s = foldEmerge(
+        petalStagger(reveal, RING_SLOT_BASE + i, UNFOLD_SLOTS, UNFOLD_OVERLAP)
+      ).scale;
+      wrap.visible = s > EMERGE_EPSILON;
+      wrap.scale.setScalar(Math.max(s, 1e-4));
+    }
+    const detScale = foldEmerge(
+      petalStagger(reveal, DETAILS_SLOT, UNFOLD_SLOTS, UNFOLD_OVERLAP)
+    ).scale;
+    if (detailsRef.current) {
+      detailsRef.current.visible = detScale > EMERGE_EPSILON;
+      detailsRef.current.scale.setScalar(Math.max(detScale, 1e-4));
+    }
+
     const t = state.clock.elapsedTime;
 
     // Whole instrument: slow breath spin (matches the opening compass).
     if (instrumentRef.current) {
       instrumentRef.current.rotation.z = reducedMotion ? 0 : t * SUBSTRATE_COMPASS_BREATH_RATE;
-    }
-
-    // Eight-ball sub-group: gentle gimbal attitude seek. Isolated here
-    // so the flat compass rings stay camera-facing.
-    if (attitudeRef.current) {
-      if (reducedMotion) {
-        attitudeRef.current.rotation.set(0, 0, 0);
-      } else {
-        attitudeRef.current.rotation.x =
-          Math.sin(t * SUBSTRATE_COMPASS_TILT_FREQ_X) * SUBSTRATE_COMPASS_TILT_AMP_X;
-        attitudeRef.current.rotation.z =
-          Math.sin(t * SUBSTRATE_COMPASS_TILT_FREQ_Z + 1) * SUBSTRATE_COMPASS_TILT_AMP_Z;
-      }
     }
 
     // Atmosphere orbit dots — independent continuous rotation.
@@ -471,56 +376,50 @@ export function ShellSubstrate({ layerKey, reducedMotion = false }: ShellSubstra
   return (
     <group ref={groupRef} visible={false}>
       <group ref={instrumentRef}>
-        {/* Eight-ball horizon / pitch ladder — gimbal-tilted behind the
-            flat rings for the attitude-sphere cue. */}
-        <group ref={attitudeRef}>
-          <lineLoop geometry={horizonGeom} material={horizonMat} frustumCulled={false} />
-          <lineLoop geometry={bandGeom} material={horizonBandMat} frustumCulled={false} />
-          {pitchLadderGeoms.map((g, i) => (
+        {/* Flat camera-facing compass — the dominant read. Each ring
+            sits in its own scale group so it can wrap in on its own
+            slot of the unfold cascade. */}
+        {ringGeoms.map((g, i) => (
+          <group
+            key={`compass-ring-${i}`}
+            ref={(node) => {
+              ringScaleRefs.current[i] = node;
+            }}
+          >
+            <lineLoop geometry={g} material={ringMats[i]} frustumCulled={false} />
+          </group>
+        ))}
+
+        {/* Reticle details — crosshair, ticks, cardinals, atmosphere
+            dots — snap in last as one unfold slot. */}
+        <group ref={detailsRef}>
+          <lineSegments geometry={crosshairGeom} material={bearingsMat} frustumCulled={false} />
+          <lineSegments geometry={ticksGeom} material={bearingsMat} frustumCulled={false} />
+
+          {cardinalGeoms.map((g, i) => (
             <lineLoop
-              key={`pitch-${i}`}
+              key={`cardinal-${i}`}
               geometry={g}
-              material={pitchLadderMats[i]}
+              material={cardinalMats[i]}
               frustumCulled={false}
             />
           ))}
-        </group>
 
-        {/* Flat camera-facing compass — the dominant read. */}
-        {ringGeoms.map((g, i) => (
-          <lineLoop
-            key={`compass-ring-${i}`}
-            geometry={g}
-            material={ringMats[i]}
-            frustumCulled={false}
-          />
-        ))}
-        <lineSegments geometry={crosshairGeom} material={bearingsMat} frustumCulled={false} />
-        <lineSegments geometry={ticksGeom} material={bearingsMat} frustumCulled={false} />
-
-        {cardinalGeoms.map((g, i) => (
-          <lineLoop
-            key={`cardinal-${i}`}
-            geometry={g}
-            material={cardinalMats[i]}
-            frustumCulled={false}
-          />
-        ))}
-
-        {/* Atmosphere orbit dots. */}
-        <group ref={orbitDot1Ref}>
-          <mesh
-            geometry={orbitDot1Geom}
-            material={orbitDot1Mat}
-            position={[SUBSTRATE_COMPASS_ORBIT_DOT_1.radius, 0, 0.01]}
-          />
-        </group>
-        <group ref={orbitDot2Ref}>
-          <mesh
-            geometry={orbitDot2Geom}
-            material={orbitDot2Mat}
-            position={[-SUBSTRATE_COMPASS_ORBIT_DOT_2.radius, 0, 0.01]}
-          />
+          {/* Atmosphere orbit dots. */}
+          <group ref={orbitDot1Ref}>
+            <mesh
+              geometry={orbitDot1Geom}
+              material={orbitDot1Mat}
+              position={[SUBSTRATE_COMPASS_ORBIT_DOT_1.radius, 0, 0.01]}
+            />
+          </group>
+          <group ref={orbitDot2Ref}>
+            <mesh
+              geometry={orbitDot2Geom}
+              material={orbitDot2Mat}
+              position={[-SUBSTRATE_COMPASS_ORBIT_DOT_2.radius, 0, 0.01]}
+            />
+          </group>
         </group>
       </group>
     </group>
