@@ -239,13 +239,15 @@ export const CORRIDOR_TIMELINE = {
     // layer DEPLOY at the moment the mark arrives, so the petals
     // unfold around a stable mark, not approach from afar.
     substrate: { start: 0.28, peakAt: 0.36 }, // Navigate park centre ~0.34
-    // Sources reveal moved earlier (0.55→0.47 / 0.62→0.57) per the
-    // 2026-06-06 wrap-around revision so the constellation begins
-    // folding in BEFORE the Encode park arrival rather than landing
-    // simultaneously with the parked composition. The user reads the
-    // orbits as already wrapping the mark by the time the title
-    // settles, which matches the requested "appear a tad sooner".
-    orbits: { start: 0.47, peakAt: 0.57 }, // Encode park centre ~0.60
+    // Orbits window re-aligned to the Encode park ARRIVAL (2026-06-07)
+    // so the staggered fold-in is WITNESSED as the camera enters Encode,
+    // mirroring the compass at Navigate (window straddles the park:
+    // ~0.06 before → ~0.02 after the park centre). The earlier 0.47/0.57
+    // window completed the unfold during the fast pass-01b transit, so
+    // by arrival the orbits were already static ("just appear"). The
+    // brandmark arrives at Diagnostic at 0.57 and holds to 0.65, so this
+    // window deploys the orbits around the arriving + settling mark.
+    orbits: { start: 0.54, peakAt: 0.62 }, // Encode park centre ~0.60
     stack: { start: 0.84, peakAt: 0.91 }, // Build park centre ~0.92
   },
 } as const;
@@ -633,9 +635,19 @@ export function getBrandmarkLeadWorldPosition(progress: number): [number, number
   const pullT = smoothstep(pullStart, pullEnd, progress);
   const leadDistance = lerp(PARK_LEAD, FULL_LEAD, pullT);
 
+  // Y is pinned to the camera height (the corridor axis), NOT
+  // `forward[1] * leadDistance`. The camera look-at carries a subtle
+  // vertical bob (`LOOK_BOB_AMPLITUDE`) for a hand-flown gaze; letting
+  // the brandmark lead inherit that bob made the mark (and the shell
+  // compass + orbits tracking it) drift vertically through the
+  // Diagnostic → Intelligence approach and then SNAP down to the
+  // static Intelligence anchor (Y=0) at the Build landing — the
+  // "moves down a beat entering Build" the bob caused. Pinning Y to
+  // `cam[1]` (= 0) keeps the mark centred on the axis end-to-end and
+  // makes the landing handoff C0-continuous in Y.
   const rawLead: [number, number, number] = [
     cam[0] + forward[0] * leadDistance,
-    cam[1] + forward[1] * leadDistance,
+    cam[1],
     cam[2] + forward[2] * leadDistance,
   ];
 
