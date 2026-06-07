@@ -751,8 +751,15 @@ export const BRANDMARK_WORLD_HALF_EXTENT = {
   // approaches, parks, and pulls away — no scroll momentum
   // break, no parallax mismatch with the orbits.
   diagnostic: 0.28,
-  transitLead: 0.2,
-  intelligence: 0.22,
+  // Mid-transit (lead position during passthrough-02). Slightly
+  // smaller than the parked sizes so the mark reads as a distant
+  // lead as the camera dollies through the gap.
+  transitLead: 0.24,
+  // Intelligence (Build) parked size matches the Encode park (0.28)
+  // so the brandmark does NOT shrink on landing — the compass + four
+  // primitive labels read at the same scale through Encode + Build.
+  // Previously 0.22 which made the mark visibly contract on arrival.
+  intelligence: 0.28,
 } as const;
 
 /** Brandmark world half-extent for the current scroll position.
@@ -800,7 +807,12 @@ export function getBrandmarkWorldHalfExtent(progress: number): number {
 
 import type { Beat, DepthGatewayTransform } from "@/lib/stores/depthGatewayStore";
 import type { WorldAnchor, WorldAnchorPosition } from "../hooks/useWorldDomTracker";
-import { STACK_SOURCES_X, STACK_SURFACES_X } from "./shell/shellGeom";
+import {
+  STACK_SOURCES_X,
+  STACK_SURFACES_X,
+  getPrimitiveLabelOffset,
+  SHELL_PRIMITIVES,
+} from "./shell/shellGeom";
 
 /** Depth offset (world units, negative = deeper behind parked Z)
  *  applied to the Diagnostic head copy and orbit label pills during
@@ -895,6 +907,12 @@ const gateStackLabel: WorldAnchor["onPaint"] = (ctx, el) => {
   el.style.opacity = (ctx.visibilityOpacity * stack).toFixed(3);
 };
 
+/** Gate Encode primitive labels on the orbits accretion envelope. */
+const gateEncodePrimitive: WorldAnchor["onPaint"] = (ctx, el) => {
+  const orbits = getBrandmarkAccretionLayers(ctx.transform.paintProgress).orbits;
+  el.style.opacity = (ctx.visibilityOpacity * orbits).toFixed(3);
+};
+
 /**
  * COPY_ANCHORS — every DOM text element the world-DOM tracker
  * projects per frame. The order does not matter; the tracker walks
@@ -906,6 +924,33 @@ const gateStackLabel: WorldAnchor["onPaint"] = (ctx, el) => {
  *   - Z is slightly in front of the gate's Z so the projected DOM
  *     element composites above the canvas without depth-sort issues.
  */
+/** Encode primitive label anchors — one per compass cardinal. */
+const ENCODE_PRIMITIVE_ANCHORS: WorldAnchor[] = SHELL_PRIMITIVES.map((prim, idx) => ({
+  id: `encode.primitive.${prim.id}`,
+  position: (transform) => {
+    const [bx, by, bz] = getBrandmarkWorldPosition(transform.paintProgress);
+    const [ox, oy] = getPrimitiveLabelOffset(idx);
+    return [bx + ox, by + oy, bz + 0.12];
+  },
+  // Visible from the Encode park (`diagnostic`) onward — the four
+  // primitives ARE the encoded judgment, and the encoded layer persists
+  // through Build, so the labels stay legible on the dock as well.
+  visibilityBeats: ["diagnostic", "passthrough-02", "intelligence"],
+  fadeFrac: 0.45,
+  perspectiveScale: {
+    referenceDistance: STATION_DIAGNOSTIC.parkDistance,
+    min: 0.2,
+    max: 1.05,
+  },
+  depthFade: {
+    near: 0.9,
+    nearFade: 2.2,
+    far: STATION_DIAGNOSTIC.parkDistance + 2.4,
+    farFade: 2.2,
+  },
+  onPaint: gateEncodePrimitive,
+}));
+
 export const COPY_ANCHORS: readonly WorldAnchor[] = [
   // ── Thoughtform ─────────────────────────────────────────────────
   // Left copy block: bridge + title + lede + CTA. The Thoughtform
@@ -1143,6 +1188,9 @@ export const COPY_ANCHORS: readonly WorldAnchor[] = [
   // drops the four "same pattern, four ways" pills; the orbital gate
   // geometry stays as Encode's gate visual.)
 
+  // Encode primitive labels — framed tags on the four compass cardinals.
+  ...ENCODE_PRIMITIVE_ANCHORS,
+
   // ── Intelligence ────────────────────────────────────────────────
   // Heading block above the substrate sphere. Mirrors the Diagnostic
   // approach pattern, and as of 2026-06-04 is tuned to match Encode's
@@ -1217,11 +1265,16 @@ export const COPY_ANCHORS: readonly WorldAnchor[] = [
   },
   // Stack tier labels — Sources (left) and Surfaces (right) dock with
   // the Build funnel. Centre label is the existing Build title readout.
+  // Sources / Surfaces labels sit JUST OUTSIDE the source pip + surface
+  // fan tip rails respectively (rail X at ±STACK_*_X = ±2.4). Multiplier
+  // 1.10 pushes the label centre ~0.24 past the rail so the text reads
+  // as labelling the rail from outside, not crowding the funnel from
+  // inside.
   {
     id: "intelligence.sourcesLabel",
     position: (transform) => {
       const [bx, by, bz] = getBrandmarkWorldPosition(transform.paintProgress);
-      return [bx + STACK_SOURCES_X, by + 0.1, bz];
+      return [bx + STACK_SOURCES_X * 1.1, by + 0.1, bz];
     },
     visibilityBeats: ["passthrough-02", "intelligence"],
     fadeFrac: 0.14,
@@ -1236,7 +1289,7 @@ export const COPY_ANCHORS: readonly WorldAnchor[] = [
     id: "intelligence.surfacesLabel",
     position: (transform) => {
       const [bx, by, bz] = getBrandmarkWorldPosition(transform.paintProgress);
-      return [bx + STACK_SURFACES_X * 0.92, by, bz];
+      return [bx + STACK_SURFACES_X * 1.1, by, bz];
     },
     visibilityBeats: ["passthrough-02", "intelligence"],
     fadeFrac: 0.14,

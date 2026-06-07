@@ -9,7 +9,7 @@
  *   1. Low-poly brain (substrate)  — `buildLowPolyBrain` mesh +
  *      wireframe + vertex nodes, faded in via `shellWrapEmerge`.
  *   2. Source orbits (sources)     — six inclined elliptical orbits
- *      from `SHELL_ORBITS`, fold-in via `foldEmerge` + `petalStagger`.
+ *      from `LAB_ORBITS`, fold-in via `foldEmerge` + `petalStagger`.
  *   3. Outer shell (surfaces)      — pluggable: geodesic / rings /
  *      panels / contour / gem (`outerShells/`).
  *
@@ -34,12 +34,11 @@ import { buildTiltedRingLineLoop } from "@/components/landing/v7/intelligence-la
 import {
   EMERGE_EPSILON,
   FOLD_OVERSHOOT,
-  SHELL_ORBITS,
-  type ShellOrbit,
   foldEmerge,
   petalStagger,
   shellWrapEmerge,
 } from "@/components/landing/home-v2/DepthGatewayScene/shell/shellGeom";
+import { LAB_ORBITS, type LabOrbit } from "./labOrbits";
 import { AnchorProjector } from "../AnchorProjector";
 import { SubstrateBrandmark } from "../SubstrateBrandmark";
 import {
@@ -216,39 +215,38 @@ const SOURCES_ORBIT_OVERLAP = 0.6;
 
 /** Mirror of home `pipPositionOnOrbit` — keeps the pip ON the
  *  tilted ellipse path so the orbit reads as a real revolution. */
-function pipPositionOnOrbit(orbit: ShellOrbit, parametricRad: number): THREE.Vector3 {
+function pipPositionOnOrbit(orbit: LabOrbit, parametricRad: number): THREE.Vector3 {
   const lx = orbit.rx * Math.cos(parametricRad);
   const ly = orbit.rx * orbit.eccentricity * Math.sin(parametricRad);
   const euler = new THREE.Euler(orbit.tilt[0], orbit.tilt[1], orbit.tilt[2]);
   return new THREE.Vector3(lx, ly, 0).applyEuler(euler);
 }
 
-/** Lab source orbits: the SAME `SHELL_ORBITS` table the home page
- *  uses, with the same `foldEmerge` per-orbit unfold. Each orbit
- *  appears at FOLD_OVERSHOOT (1.45x its final radius) and closes
- *  inward to scale 1.0. */
+/** Lab source orbits: the legacy six-orbit table (home corridor now
+ *  uses the flat plug array). Each orbit appears at FOLD_OVERSHOOT
+ *  (1.45x its final radius) and closes inward to scale 1.0. */
 function CorridorOrbits({ reveal, reducedMotion = false }: CorridorOrbitsProps) {
   const groupRef = useRef<THREE.Group>(null);
   const orbitGroupRefs = useRef<(THREE.Group | null)[]>([]);
   const pipRefs = useRef<(THREE.Mesh | null)[]>([]);
 
   const ringGeoms = useMemo(
-    () => SHELL_ORBITS.map((o) => buildTiltedRingLineLoop(o.rx, o.tilt, 96, o.eccentricity)),
+    () => LAB_ORBITS.map((o) => buildTiltedRingLineLoop(o.rx, o.tilt, 96, o.eccentricity)),
     []
   );
 
   const pipGeoms = useMemo(
-    () => SHELL_ORBITS.map((o) => buildFilledDiamondGeometry(o.pipRadius)),
+    () => LAB_ORBITS.map((o) => buildFilledDiamondGeometry(o.pipRadius)),
     []
   );
 
   const ringMats = useMemo(
-    () => SHELL_ORBITS.map((o) => makeLineMaterial(o.color, o.baseAlpha, true)),
+    () => LAB_ORBITS.map((o) => makeLineMaterial(o.color, o.baseAlpha, true)),
     []
   );
 
   const pipMats = useMemo(
-    () => SHELL_ORBITS.map((o) => makeMeshMaterial(o.color, Math.min(1, o.baseAlpha + 0.18))),
+    () => LAB_ORBITS.map((o) => makeMeshMaterial(o.color, Math.min(1, o.baseAlpha + 0.18))),
     []
   );
 
@@ -271,13 +269,13 @@ function CorridorOrbits({ reveal, reducedMotion = false }: CorridorOrbitsProps) 
     group.visible = true;
     const t = reducedMotion ? 0 : clock.elapsedTime;
 
-    for (let i = 0; i < SHELL_ORBITS.length; i++) {
-      const orbit = SHELL_ORBITS[i];
+    for (let i = 0; i < LAB_ORBITS.length; i++) {
+      const orbit = LAB_ORBITS[i];
       const orbitGroup = orbitGroupRefs.current[i];
       const pip = pipRefs.current[i];
       if (!orbitGroup) continue;
 
-      const stagger = petalStagger(reveal, i, SHELL_ORBITS.length, SOURCES_ORBIT_OVERLAP);
+      const stagger = petalStagger(reveal, i, LAB_ORBITS.length, SOURCES_ORBIT_OVERLAP);
       const { scale } = foldEmerge(stagger);
       if (scale <= EMERGE_EPSILON) {
         orbitGroup.visible = false;
@@ -296,7 +294,7 @@ function CorridorOrbits({ reveal, reducedMotion = false }: CorridorOrbitsProps) 
 
   return (
     <group ref={groupRef} visible={false}>
-      {SHELL_ORBITS.map((orbit, i) => (
+      {LAB_ORBITS.map((orbit, i) => (
         <group
           key={`orbit-${orbit.id}`}
           ref={(node) => {

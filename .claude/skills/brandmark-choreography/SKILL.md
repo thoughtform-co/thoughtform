@@ -184,23 +184,23 @@ The depth corridor's brandmark accretes the intelligence-layer `shell` artifact 
 
 **Stack dock (2026-06-07):** at Build the layer (substrate + orbits) docks into the full **stack** via `ShellStack` — green trusted-source lanes from the left, dawn surface fan to the right (ported from the lab FUNNEL variant). The outer geodesic cage at Build is retired. Accretion keys: `{ substrate, orbits, stack }`. Encode orbits are **judgment**, not sources.
 
-**Judgment orbits (Encode):** six inclined elliptical orbits in `ShellOrbits` (was `ShellSources`) emerge via `foldEmerge` + `petalStagger` and persist through Build.
+**Judgment cardinal primitives (Encode):** four labeled compass axes in `ShellEncode` — Judgment (N), Taste (E), Way of working (S), Voice (W) — plus ~6 asymmetric captured notes that slide in and compare against a primitive. Staggered via `petalStagger`; framed DOM labels via `encode.primitive.*` anchors; persists through Build.
 
 **Per-station camera framing (`parkDistance`):** each station can override how far the camera sits in front of it when parked (`StationNode.parkDistance`, defaults to `GATE_PARK_DISTANCE` 4.5). The three shell parks (Navigate / Encode / Build) use 6.2 so the assembled layer + stack read with oversight.
 
-| Want to change in the corridor accretion shell            | File                                                                                                                                           |
-| --------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| Tune which corridor progress each shell layer DEPLOYS at  | `components/landing/home-v2/DepthGatewayScene/sceneGeom.ts` — `CORRIDOR_TIMELINE.accretion` (`substrate` / `orbits` / `stack` start + peakAt). |
-| Tune orbit fold cascade                                   | `shell/ShellOrbits.tsx` — `ORBITS_OVERLAP` in `petalStagger` (default 0.6).                                                                    |
-| Tune stack funnel extents / lane counts                   | `shell/shellGeom.ts` — `STACK_SOURCES_X`, `STACK_SURFACES_X`, `STACK_LANE_COUNT`, `STACK_FAN_COUNT`, etc.                                      |
-| Tune shell layer radii (substrate geodesic / orbit table) | `shell/shellGeom.ts` — `SUBSTRATE_CAGE_RADIUS` (0.42), `SHELL_ORBITS`.                                                                         |
-| Tune shell-park camera oversight                          | `lib/home-v2/corridorMap.ts` — `StationNode.parkDistance` (Navigate / Encode / Build use 6.2).                                                 |
-| Add / re-tune a judgment orbit                            | `SHELL_ORBITS` in `shell/shellGeom.ts`                                                                                                         |
-| Change layer composition (mount order, group rotation)    | `BrandmarkAccretionShell.tsx` — mount order: `ShellSubstrate` → `ShellOrbits` → `ShellStack`.                                                  |
-| Change a single layer's geometry / materials              | `shell/ShellSubstrate.tsx`, `shell/ShellOrbits.tsx`, `shell/ShellStack.tsx`                                                                    |
-| Stack tier DOM labels (Sources / Surfaces)                | `sceneGeom.ts` `COPY_ANCHORS` + `CopyAnchors.tsx` + `home-v2.css`                                                                              |
+| Want to change in the corridor accretion shell           | File                                                                                                                                           |
+| -------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| Tune which corridor progress each shell layer DEPLOYS at | `components/landing/home-v2/DepthGatewayScene/sceneGeom.ts` — `CORRIDOR_TIMELINE.accretion` (`substrate` / `orbits` / `stack` start + peakAt). |
+| Tune plug cascade overlap                                | `shell/ShellEncode.tsx` — `PRIMITIVE_OVERLAP` / `NOTE_OVERLAP` in `petalStagger`.                                                              |
+| Tune stack funnel extents / lane counts                  | `shell/shellGeom.ts` — `STACK_SOURCES_X`, `STACK_SURFACES_X`, `STACK_LANE_COUNT`, `STACK_FAN_COUNT`, etc.                                      |
+| Tune shell layer radii (substrate / primitive table)     | `shell/shellGeom.ts` — `SUBSTRATE_CAGE_RADIUS` (0.42), `PLUG_INNER_R`, `PRIMITIVE_NODE_R`, `SHELL_PRIMITIVES`, `SHELL_NOTES`.                  |
+| Tune shell-park camera oversight                         | `lib/home-v2/corridorMap.ts` — `StationNode.parkDistance` (Navigate / Encode / Build use 6.2).                                                 |
+| Add / re-tune a judgment primitive or note               | `SHELL_PRIMITIVES` / `SHELL_NOTES` in `shell/shellGeom.ts`                                                                                     |
+| Change layer composition (mount order, group rotation)   | `BrandmarkAccretionShell.tsx` — mount order: `ShellSubstrate` → `ShellEncode` → `ShellStack`.                                                  |
+| Change a single layer's geometry / materials             | `shell/ShellSubstrate.tsx`, `shell/ShellEncode.tsx`, `shell/ShellStack.tsx`                                                                    |
+| Stack tier DOM labels (Sources / Surfaces)               | `sceneGeom.ts` `COPY_ANCHORS` + `CopyAnchors.tsx` + `home-v2.css`                                                                              |
 
-The substrate geodesic emerges via `shellWrapEmerge(reveal)`. Judgment orbits and stack funnel emerge via `foldEmerge` + `petalStagger`. All three layers persist at the Build landing around the persistent DOM brandmark.
+The substrate geodesic emerges via `shellWrapEmerge(reveal)`. Judgment primitives + notes and stack funnel emerge geometrically (trim + slide / `foldEmerge` + `petalStagger`). All three layers persist at the Build landing around the persistent DOM brandmark.
 
 **`splitEmerge(reveal)` is the alias of `petalEmerge(reveal).scale`** — used by the substrate cage (uniform body) and the outer surfaces geodesic where per-element petals would have read busy.
 

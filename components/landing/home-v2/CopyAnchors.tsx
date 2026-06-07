@@ -6,6 +6,7 @@ import type { V7CorridorText } from "@/lib/v7-parse";
 import { useDeviceTier } from "@/lib/hooks/useDeviceTier";
 import { stationById } from "@/lib/home-v2/corridorMap";
 import { COPY_ANCHORS } from "./DepthGatewayScene/sceneGeom";
+import { SHELL_PRIMITIVES } from "./DepthGatewayScene/shell/shellGeom";
 import { useWorldDomTracker } from "./hooks/useWorldDomTracker";
 import { StationTitle } from "./StationTitle";
 
@@ -31,6 +32,20 @@ import { StationTitle } from "./StationTitle";
 interface CopyAnchorsProps {
   text: V7CorridorText;
 }
+
+/** DOM anchor origin + layout class per primitive cardinal. `center`
+ *  on all four — each label centers on its midpoint anchor, sitting
+ *  nicely in the gap between the compass outer ring (0.75) and the
+ *  slot dock ring (`SLOT_RING_R`). */
+const PRIMITIVE_ANCHOR_META: Record<
+  string,
+  { origin: string; layout: "north" | "east" | "south" | "west" }
+> = {
+  judgment: { origin: "center", layout: "north" },
+  taste: { origin: "center", layout: "east" },
+  craft: { origin: "center", layout: "south" },
+  voice: { origin: "center", layout: "west" },
+};
 
 export function CopyAnchors({ text }: CopyAnchorsProps) {
   const layerRef = useRef<HTMLDivElement>(null);
@@ -170,6 +185,26 @@ export function CopyAnchors({ text }: CopyAnchorsProps) {
           composition above is untouched. */}
       {nav && <StationTitle content={nav} base="navigate" />}
       {enc && <StationTitle content={enc} base="diagnostic" />}
+
+      {/* Encode primitive labels — framed tags on the four compass
+          cardinals (Judgment / Taste / Way of working / Voice). */}
+      {SHELL_PRIMITIVES.map((prim) => {
+        const meta = PRIMITIVE_ANCHOR_META[prim.id];
+        if (!meta) return null;
+        return (
+          <div
+            key={`encode-prim-${prim.id}`}
+            className={`home-v2-encode-primitive home-v2-encode-primitive--${meta.layout}`}
+            data-world-anchor={`encode.primitive.${prim.id}`}
+            data-anchor-origin={meta.origin}
+          >
+            <div className="home-v2-encode-primitive__frame">
+              <span className="home-v2-encode-primitive__label">{prim.label}</span>
+            </div>
+          </div>
+        );
+      })}
+
       {bld && <StationTitle content={bld} base="intelligence" />}
 
       {/* Stack tier labels — dock with the Build funnel (Sources left,

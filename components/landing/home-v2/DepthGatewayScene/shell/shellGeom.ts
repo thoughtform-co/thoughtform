@@ -1,6 +1,6 @@
 /**
  * shellGeom — corridor-tuned constants for the brandmark's accreted
- * shell (substrate core, Encode judgment orbits, Build stack dock).
+ * shell (substrate core, Encode cardinal primitives, Build stack dock).
  *
  * The accretion shell follows the guiding-star brandmark as it flies
  * Navigate -> Encode -> Build down the depth corridor (ADR-018). Each
@@ -9,21 +9,20 @@
  * fully-assembled stack at the Build station.
  *
  *   - Substrate compass wraps the brandmark (Navigate).
- *   - Judgment orbits sit outside the cage (Encode).
+ *   - Judgment primitives on four compass cardinals (Encode).
  *   - Stack funnel lanes + fan dock sources left / surfaces right (Build).
  */
 
 import {
   COLOR_GOLD,
-  COLOR_SOURCES,
   COLOR_SURFACES,
 } from "@/components/landing/intelligence-artifact/artifactGeom";
 
 // ── Substrate core (inside-out layer 1) ──────────────────────────────
 
-/** Substrate layer outer geodesic radius. The source orbits MUST stay
- *  outside this radius (see `SHELL_ORBITS` invariant below) so the
- *  constellation visibly wraps the substrate rather than cutting
+/** Substrate layer outer geodesic radius. The Encode primitive array MUST
+ *  sit outside this radius (see `PLUG_INNER_R` invariant below) so
+ *  the cardinal spokes visibly wrap the substrate rather than cutting
  *  through it.
  *
  *  EVOLUTION:
@@ -50,10 +49,9 @@ export const SUBSTRATE_CAGE_RADIUS = 0.42;
 // Thoughtform park (0.32), so the same radii read as the same framing.
 //
 // NOTE: the compass outer ring (0.75) now extends past
-// SUBSTRATE_CAGE_RADIUS (0.42, the old geodesic boundary the Encode
-// orbits sit outside of). The flat camera-facing rings and the
-// inclined Encode orbits live on different planes; any Encode overlap
-// is tuned via opacity, not by shrinking the Navigate framing.
+// SUBSTRATE_CAGE_RADIUS (0.42, the old geodesic boundary). The flat
+// Encode plug array shares the same XY plane as the compass; plug
+// inner radius (`PLUG_INNER_R`) sits just outside the outer ring.
 
 /** Four concentric compass ring radii (world units), matching the
  *  opening-beat compass [150, 126, 104, 78] / 200. */
@@ -112,129 +110,235 @@ export const SUBSTRATE_COMPASS_SHELL_OPACITY = 1.0;
 // removed in the 2026-06-06 wrap-around revision (Phase 2). Keep the
 // homepage substrate as ONE gold geodesic — no inner white/dawn shell.
 
-// ── Encode judgment orbits (inside-out layer 2) ────────────────────
+// ── Encode cardinal primitives (inside-out layer 2) ────────────────
 
-/** One inclined ellipse around the brandmark. `rx` is the semi-major
- *  radius (world units); `eccentricity = ry/rx` makes the orbit flat
- *  or round. `tilt` is XYZ Euler in radians, applied to the XY-plane
- *  ellipse, so each orbit lives on its own 3D-inclined plane. */
-export interface ShellOrbit {
-  /** Stable id (also used as a React key). */
+/** One encoded primitive on a compass cardinal — the direction you
+ *  navigate by (Judgment / Taste / Way of working / Voice). Flat in
+ *  the XY plane, aligned to the Navigate compass N/E/S/W diamonds. */
+export interface ShellPrimitive {
   id: string;
-  /** Semi-major axis (world units). */
-  rx: number;
-  /** Ellipse eccentricity = ry / rx (1 = round, 0.4 = very flat). */
-  eccentricity: number;
-  /** XYZ Euler tilt in radians applied to the XY ellipse. */
-  tilt: readonly [number, number, number];
-  /** Per-orbit revolve period (seconds for a full revolution). */
-  periodSec: number;
-  /** Revolve direction: +1 = positive parametric angle, -1 = inverted. */
-  dir: 1 | -1;
-  /** Starting parametric angle (radians) so the planets don't all
-   *  start at the same phase. */
-  phaseRad: number;
-  /** Source-pip diamond radius (world units). */
-  pipRadius: number;
-  /** Stroke + pip color (hex literal — matches role-tier palette). */
+  label: string;
+  sub: string;
+  angleRad: number;
+  nodeRadius: number;
   color: number;
-  /** Base orbit ring opacity at full reveal. */
   baseAlpha: number;
 }
 
-/** A solar-system of six inclined elliptical orbits around the
- *  brandmark (restored 2026-06-07 — the user preferred this over the
- *  tightened four-orbit table). Mix of round and flat ellipses, spread
- *  tilts across every axis so the orbits visibly cross when seen
- *  face-on. Colours mix Sources green, gold, and dawn so the field
- *  reads as a layered chart. The orbits' min radii (~0.88+) sit
- *  comfortably OUTSIDE the Navigate compass (outer ring 0.75) so the
- *  constellation wraps the layer rather than cutting through it. */
-export const SHELL_ORBITS: readonly ShellOrbit[] = [
+/** A captured "note" — raw material compared against a primitive. */
+export interface ShellNote {
+  id: string;
+  angleRad: number;
+  captureR: number;
+  targetIdx: number;
+  radius: number;
+  seatOffset: number;
+  color: number;
+  baseAlpha: number;
+}
+
+/** Inner rim radius where primitive spokes begin — just outside the
+ *  compass outer ring (0.75). */
+export const PLUG_INNER_R = 0.82;
+
+/** Radius of each primitive node on its cardinal axis. */
+export const PRIMITIVE_NODE_R = 1.15;
+
+/** Default outer capture radius for notes. */
+export const NOTE_CAPTURE_R = 1.5;
+
+/** Encode slot dock ring radius. A second outer ring (in addition to
+ *  the compass outer ring at 0.75) carries four cardinal SLOTS — the
+ *  four primitives sit INSIDE the gap between the compass and the
+ *  dock ring, angularly aligned with the slots. Pushed out to 1.05 so
+ *  the gap (~0.30) comfortably fits the labels' radial extent without
+ *  the labels overlapping the compass outer ring. */
+export const SLOT_RING_R = 1.05;
+
+/** Label anchor radius — centered in the gap between the compass outer
+ *  ring (0.75) and the slot dock ring (`SLOT_RING_R`). Each label uses
+ *  `center` anchor origin so its box sits in the middle of the gap. */
+export const PRIMITIVE_LABEL_R = (0.75 + SLOT_RING_R) / 2;
+
+/** Half-angle (radians) of each cardinal slot — the angular GAP in the
+ *  dock ring where a label seats. ±20° gives room for the widest
+ *  label (JUDGMENT, ~35° tangential at this radius) without making the
+ *  arc segments feel thin. */
+export const SLOT_HALF_ANGLE = (20 * Math.PI) / 180;
+
+/** Length of each slot bracket tick — short radial line at the slot
+ *  edge marking where the dock ring ends and the slot begins. The
+ *  bracket extends symmetrically inward + outward from the ring radius
+ *  so it reads as a notch. */
+export const SLOT_BRACKET_HALF_LEN = 0.022;
+
+/** Arc bounds between consecutive cardinal slots (radians). Each arc
+ *  spans 90° minus 2x slot half-angle ≈ 50°. */
+export const SLOT_ARC_BOUNDS: ReadonlyArray<{ startRad: number; endRad: number }> = [
+  // Right-top arc: between East slot and North slot
+  { startRad: SLOT_HALF_ANGLE, endRad: Math.PI / 2 - SLOT_HALF_ANGLE },
+  // Top-left arc: between North slot and West slot
+  { startRad: Math.PI / 2 + SLOT_HALF_ANGLE, endRad: Math.PI - SLOT_HALF_ANGLE },
+  // Left-bottom arc: between West slot and South slot
+  { startRad: Math.PI + SLOT_HALF_ANGLE, endRad: (3 * Math.PI) / 2 - SLOT_HALF_ANGLE },
+  // Bottom-right arc: between South slot and East slot
+  { startRad: (3 * Math.PI) / 2 + SLOT_HALF_ANGLE, endRad: 2 * Math.PI - SLOT_HALF_ANGLE },
+];
+
+/** Angles for the 8 slot brackets (2 per cardinal — at each slot edge). */
+export const SLOT_BRACKET_ANGLES: readonly number[] = [
+  -SLOT_HALF_ANGLE,
+  SLOT_HALF_ANGLE,
+  Math.PI / 2 - SLOT_HALF_ANGLE,
+  Math.PI / 2 + SLOT_HALF_ANGLE,
+  Math.PI - SLOT_HALF_ANGLE,
+  Math.PI + SLOT_HALF_ANGLE,
+  -Math.PI / 2 - SLOT_HALF_ANGLE,
+  -Math.PI / 2 + SLOT_HALF_ANGLE,
+];
+
+/** Parent reveal fraction spent deploying the four cardinal primitives. */
+export const ENCODE_PRIMITIVE_PHASE_END = 0.4;
+
+/** Seat light-up peak additive alpha (brief flash on lock). */
+export const PLUG_SEAT_BLIP_PEAK = 0.85;
+
+/** Fraction of the seat phase spent rising (rest fades out). */
+export const PLUG_SEAT_BLIP_RISE_FRAC = 0.2;
+
+/** Four compass cardinals — N=Judgment, E=Taste, S=Way of working, W=Voice. */
+export const SHELL_PRIMITIVES: readonly ShellPrimitive[] = [
   {
-    id: "01",
-    rx: 1.1,
-    eccentricity: 0.92,
-    // Front-tilted plane, modest left bank — the "primary" inner orbit.
-    tilt: [0.42, 0.0, 0.22],
-    periodSec: 18,
-    dir: -1,
-    phaseRad: 0.6,
-    pipRadius: 0.04,
-    color: COLOR_SOURCES,
+    id: "judgment",
+    label: "JUDGMENT",
+    sub: "what makes it good",
+    angleRad: Math.PI / 2,
+    nodeRadius: 0.036,
+    color: COLOR_GOLD,
+    baseAlpha: 0.75,
+  },
+  {
+    id: "taste",
+    label: "TASTE",
+    sub: "what you prefer",
+    angleRad: 0,
+    nodeRadius: 0.032,
+    color: COLOR_SURFACES,
+    baseAlpha: 0.62,
+  },
+  {
+    id: "craft",
+    label: "CRAFT",
+    sub: "how you make",
+    angleRad: -Math.PI / 2,
+    nodeRadius: 0.034,
+    color: COLOR_GOLD,
     baseAlpha: 0.7,
   },
   {
-    id: "02",
-    rx: 1.55,
-    eccentricity: 0.6,
-    // Flat horizon orbit on a strong Y-axis tilt — reads as a long
-    // ellipse crossing the others.
-    tilt: [0.15, 0.62, -0.38],
-    periodSec: 26,
-    dir: 1,
-    phaseRad: 1.4,
-    pipRadius: 0.036,
+    id: "voice",
+    label: "VOICE",
+    sub: "how you sound",
+    angleRad: Math.PI,
+    nodeRadius: 0.032,
     color: COLOR_SURFACES,
-    baseAlpha: 0.55,
+    baseAlpha: 0.62,
   },
+];
+
+/** Asymmetric notes — captured from outside, compared, seated with blip. */
+export const SHELL_NOTES: readonly ShellNote[] = [
   {
-    id: "03",
-    rx: 1.25,
-    eccentricity: 0.95,
-    // Steep polar tilt — the orbit sweeps near-vertical, crossing the
-    // equatorial orbits at the top/bottom of its arc.
-    tilt: [1.18, 0.28, 0.0],
-    periodSec: 22,
-    dir: -1,
-    phaseRad: 2.1,
-    pipRadius: 0.04,
-    color: COLOR_SOURCES,
-    baseAlpha: 0.65,
-  },
-  {
-    id: "04",
-    rx: 1.6,
-    eccentricity: 0.55,
-    // Very flat + long horizon, tipped on the Y axis so it reads as
-    // a wide outer track passing behind the inner orbits.
-    tilt: [0.0, 1.25, 0.26],
-    periodSec: 30,
-    dir: 1,
-    phaseRad: 3.6,
-    pipRadius: 0.038,
+    id: "n1",
+    angleRad: 0.55,
+    captureR: 1.48,
+    targetIdx: 0,
+    radius: 0.018,
+    seatOffset: 0.06,
     color: COLOR_GOLD,
     baseAlpha: 0.55,
   },
   {
-    id: "05",
-    rx: 1.0,
-    eccentricity: 0.92,
-    // Tight inner orbit on a triple-axis tilt — gives the innermost
-    // body the most dynamic angle in the constellation.
-    tilt: [0.72, -0.55, 0.62],
-    periodSec: 14,
-    dir: -1,
-    phaseRad: 4.6,
-    pipRadius: 0.032,
+    id: "n2",
+    angleRad: 2.15,
+    captureR: 1.52,
+    targetIdx: 3,
+    radius: 0.016,
+    seatOffset: -0.05,
     color: COLOR_SURFACES,
     baseAlpha: 0.5,
   },
   {
-    id: "06",
-    rx: 1.5,
-    eccentricity: 0.62,
-    // Counter-tilted outer orbit — its inclination opposes orbit 02's
-    // so the two long horizons read as a deliberate X-cross.
-    tilt: [-0.42, 0.45, -0.82],
-    periodSec: 24,
-    dir: 1,
-    phaseRad: 5.4,
-    pipRadius: 0.036,
-    color: COLOR_SOURCES,
-    baseAlpha: 0.6,
+    id: "n3",
+    angleRad: -0.35,
+    captureR: 1.45,
+    targetIdx: 1,
+    radius: 0.017,
+    seatOffset: 0.04,
+    color: COLOR_GOLD,
+    baseAlpha: 0.52,
+  },
+  {
+    id: "n4",
+    angleRad: 3.85,
+    captureR: 1.55,
+    targetIdx: 2,
+    radius: 0.018,
+    seatOffset: 0.05,
+    color: COLOR_SURFACES,
+    baseAlpha: 0.48,
+  },
+  {
+    id: "n5",
+    angleRad: 1.25,
+    captureR: 1.42,
+    targetIdx: 0,
+    radius: 0.015,
+    seatOffset: -0.04,
+    color: COLOR_SURFACES,
+    baseAlpha: 0.45,
+  },
+  {
+    id: "n6",
+    angleRad: 4.55,
+    captureR: 1.5,
+    targetIdx: 2,
+    radius: 0.016,
+    seatOffset: -0.03,
+    color: COLOR_GOLD,
+    baseAlpha: 0.5,
   },
 ];
+
+/** Shell-local XY offset of a primitive node (for DOM label anchors). */
+export function getPrimitiveNodeOffset(primitiveIdx: number): readonly [number, number] {
+  const p = SHELL_PRIMITIVES[primitiveIdx];
+  return [Math.cos(p.angleRad) * PRIMITIVE_NODE_R, Math.sin(p.angleRad) * PRIMITIVE_NODE_R];
+}
+
+// ── Encode plug array (asymmetric rectangular plugs) ──────────────
+//
+// The asymmetric rectangular plug array (`SHELL_PLUGS`) was removed
+// 2026-06-07 — the four cardinal labels carry the Encode read alone;
+// any rim ornament read as decoration rather than meaning. The
+// `ShellEncode` renderer is now label-only (no 3D geometry).
+
+/** Shell-local XY offset of a primitive's framed label tag. */
+export function getPrimitiveLabelOffset(primitiveIdx: number): readonly [number, number] {
+  const p = SHELL_PRIMITIVES[primitiveIdx];
+  return [Math.cos(p.angleRad) * PRIMITIVE_LABEL_R, Math.sin(p.angleRad) * PRIMITIVE_LABEL_R];
+}
+
+/** Seat position for a note near its target primitive (shell-local). */
+export function getNoteSeatOffset(note: ShellNote): readonly [number, number] {
+  const prim = SHELL_PRIMITIVES[note.targetIdx];
+  const px = Math.cos(prim.angleRad);
+  const py = Math.sin(prim.angleRad);
+  const tx = -py;
+  const ty = px;
+  const r = PRIMITIVE_NODE_R * 0.94;
+  return [px * r + tx * note.seatOffset, py * r + ty * note.seatOffset];
+}
 
 // ── Stack dock (inside-out layer 3 — Build) ──────────────────────────
 //
@@ -346,7 +450,7 @@ export function splitEmerge(reveal: number): number {
 // is honoured by keeping every transition geometric.
 //
 // For per-element petal staggers, foldEmerge runs on the same
-// `stagger` value `petalEmerge` consumes, so the SHELL_ORBITS /
+// `stagger` value `petalEmerge` consumes, so the SHELL_PRIMITIVES /
 // stack funnel cascades work unchanged — only the per-element
 // curve changes shape.
 
@@ -456,5 +560,5 @@ export function shellWrapEmerge(reveal: number): ShellWrapEmerge {
 // substrate composition (which the corridor is meant to mirror, per
 // the user's "as close as possible to the lab" direction). The
 // `petalStagger` / `petalEmerge` helpers above stay — they still
-// drive the per-orbit unfold in `ShellOrbits` and the stack funnel
+// drive the per-primitive unfold in `ShellEncode` and the stack funnel
 // unfold in `ShellStack`.

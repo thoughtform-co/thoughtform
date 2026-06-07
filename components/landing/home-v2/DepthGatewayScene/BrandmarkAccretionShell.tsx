@@ -6,7 +6,7 @@ import * as THREE from "three";
 import { useDeviceTier } from "@/lib/hooks/useDeviceTier";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import { getBrandmarkAccretionLayers, getBrandmarkWorldPosition } from "./sceneGeom";
-import { ShellOrbits } from "./shell/ShellOrbits";
+import { ShellEncode } from "./shell/ShellEncode";
 import { ShellStack } from "./shell/ShellStack";
 import { ShellSubstrate } from "./shell/ShellSubstrate";
 
@@ -19,7 +19,7 @@ import { ShellSubstrate } from "./shell/ShellSubstrate";
  * `CORRIDOR_TIMELINE.accretion`:
  *
  *   - {@link ShellSubstrate} (Navigate): migrated flat compass layer boundary.
- *   - {@link ShellOrbits} (Encode): judgment orbits circling the layer.
+ *   - {@link ShellEncode} (Encode): four cardinal primitives + compared notes.
  *   - {@link ShellStack} (Build): sources + surfaces dock the layer
  *     into the full stack (funnel composition from the lab FUNNEL
  *     variant — no outer geodesic cage).
@@ -54,7 +54,7 @@ export function BrandmarkAccretionShell() {
   return (
     <group ref={shellGroupRef} visible={false}>
       <ShellSubstrate layerKey="substrate" reducedMotion={isMobile} />
-      <ShellOrbits layerKey="orbits" reducedMotion={isMobile} />
+      <ShellEncode layerKey="orbits" reducedMotion={isMobile} />
       <ShellStack layerKey="stack" reducedMotion={isMobile} />
     </group>
   );

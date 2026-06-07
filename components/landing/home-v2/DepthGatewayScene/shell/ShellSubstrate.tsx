@@ -40,7 +40,6 @@ import {
   foldEmerge,
   petalStagger,
   SUBSTRATE_COMPASS_BREATH_RATE,
-  SUBSTRATE_COMPASS_CARDINAL_DIAMOND,
   SUBSTRATE_COMPASS_CROSSHAIR_INNER,
   SUBSTRATE_COMPASS_CROSSHAIR_OUTER,
   SUBSTRATE_COMPASS_ORBIT_DOT_1,
@@ -74,6 +73,50 @@ const UNFOLD_OVERLAP = 0.5;
 /** Slot index per ring (rings array is outer→inner: index 0 = outer). */
 const RING_SLOT_BASE = 0;
 const DETAILS_SLOT = 4;
+
+// ── Radar sweep (reference: thoughtform-flythrough Navigate shell) ──
+/** Arm reaches the outer ring. */
+const RADAR_ARM_R = SUBSTRATE_COMPASS_RING_RADII[0];
+/** Sweep rotation rate (rad/s). Subtle — well below the reference's 1.1. */
+const RADAR_SWEEP_RATE = 0.32;
+/** Trailing wedge angle behind the leading arm (radians). */
+const RADAR_TAIL_RAD = 0.62;
+const RADAR_ARM_ALPHA = 0.5;
+const RADAR_WEDGE_ALPHA = 0.1;
+
+// ── Radar contact blip (occasionally lights up + fades out) ─────────
+const BLIP_SIZE = 0.014;
+const BLIP_PEAK_ALPHA = 0.95;
+/** Seconds between blips (randomised in this range). */
+const BLIP_MIN_GAP = 2.6;
+const BLIP_MAX_GAP = 5.8;
+/** Blip light-up + fade duration (seconds). */
+const BLIP_DURATION = 0.95;
+/** Fraction of the duration spent rising (rest fades out). */
+const BLIP_RISE_FRAC = 0.16;
+/** Radial band the blip can appear in (world units). */
+const BLIP_R_MIN = 0.22;
+const BLIP_R_MAX = 0.7;
+
+/** Trailing sweep wedge: a thin triangle fan from centre spanning
+ *  `tailRad` behind the leading arm (which sits at local angle 0). */
+function buildSweepWedgeGeometry(
+  radius: number,
+  tailRad: number,
+  segments = 20
+): THREE.BufferGeometry {
+  const positions: number[] = [0, 0, 0];
+  for (let i = 0; i <= segments; i++) {
+    const a = -tailRad + (i / segments) * tailRad;
+    positions.push(Math.cos(a) * radius, Math.sin(a) * radius, 0);
+  }
+  const index: number[] = [];
+  for (let i = 1; i <= segments; i++) index.push(0, i, i + 1);
+  const g = new THREE.BufferGeometry();
+  g.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+  g.setIndex(index);
+  return g;
+}
 
 function buildCircleGeometry(radius: number, segments: number): THREE.BufferGeometry {
   const points: THREE.Vector3[] = [];
@@ -126,29 +169,6 @@ const CROSSHAIR_VERTS: [number, number, number][] = [
   [SUBSTRATE_COMPASS_CROSSHAIR_OUTER, 0, 0.02],
 ];
 
-/** Cardinal diamonds on the outer ring (N/E/S/W), camera-facing. */
-function buildCardinalDiamondGeometries(): THREE.BufferGeometry[] {
-  const r = SUBSTRATE_COMPASS_RING_RADII[0] * 1.05;
-  const s = SUBSTRATE_COMPASS_CARDINAL_DIAMOND;
-  const dirs: [number, number][] = [
-    [0, 1],
-    [1, 0],
-    [0, -1],
-    [-1, 0],
-  ];
-  return dirs.map(([dx, dy]) => {
-    const cx = dx * r;
-    const cy = dy * r;
-    return new THREE.BufferGeometry().setFromPoints([
-      new THREE.Vector3(cx, cy + s, 0.03),
-      new THREE.Vector3(cx + s, cy, 0.03),
-      new THREE.Vector3(cx, cy - s, 0.03),
-      new THREE.Vector3(cx - s, cy, 0.03),
-      new THREE.Vector3(cx, cy + s, 0.03),
-    ]);
-  });
-}
-
 type RingMaterial = THREE.LineBasicMaterial | THREE.LineDashedMaterial;
 
 export function ShellSubstrate({ layerKey, reducedMotion = false }: ShellSubstrateProps) {
@@ -159,6 +179,11 @@ export function ShellSubstrate({ layerKey, reducedMotion = false }: ShellSubstra
   const ringScaleRefs = useRef<(THREE.Group | null)[]>([]);
   const orbitDot1Ref = useRef<THREE.Group>(null);
   const orbitDot2Ref = useRef<THREE.Group>(null);
+  const radarSweepRef = useRef<THREE.Group>(null);
+  const blipRef = useRef<THREE.Mesh>(null);
+  // Blip scheduler — `next` is the elapsed time of the next blip;
+  // `start` is the elapsed time the current blip began (-1 = idle).
+  const blipState = useRef({ initialized: false, next: 0, start: -1 });
 
   const ringGeoms = useMemo(
     () =>
@@ -172,7 +197,6 @@ export function ShellSubstrate({ layerKey, reducedMotion = false }: ShellSubstra
 
   const crosshairGeom = useMemo(() => buildSegmentsGeometry(CROSSHAIR_VERTS), []);
   const ticksGeom = useMemo(() => buildSegmentsGeometry(buildTickVerts()), []);
-  const cardinalGeoms = useMemo(() => buildCardinalDiamondGeometries(), []);
   const orbitDot1Geom = useMemo(
     () => new THREE.CircleGeometry(SUBSTRATE_COMPASS_ORBIT_DOT_1.size, 20),
     []
@@ -181,6 +205,16 @@ export function ShellSubstrate({ layerKey, reducedMotion = false }: ShellSubstra
     () => new THREE.CircleGeometry(SUBSTRATE_COMPASS_ORBIT_DOT_2.size, 20),
     []
   );
+  const radarArmGeom = useMemo(
+    () =>
+      buildSegmentsGeometry([
+        [0, 0, 0.022],
+        [RADAR_ARM_R, 0, 0.022],
+      ]),
+    []
+  );
+  const sweepWedgeGeom = useMemo(() => buildSweepWedgeGeometry(RADAR_ARM_R, RADAR_TAIL_RAD), []);
+  const blipGeom = useMemo(() => new THREE.CircleGeometry(BLIP_SIZE, 18), []);
 
   const ringMats = useMemo<RingMaterial[]>(() => {
     return SUBSTRATE_COMPASS_RING_ALPHA.map((alpha, i) => {
@@ -220,21 +254,6 @@ export function ShellSubstrate({ layerKey, reducedMotion = false }: ShellSubstra
     []
   );
 
-  const cardinalMats = useMemo(
-    () =>
-      cardinalGeoms.map(
-        () =>
-          new THREE.LineBasicMaterial({
-            color: new THREE.Color(COLOR_GOLD),
-            transparent: true,
-            opacity: 0,
-            depthWrite: false,
-            toneMapped: false,
-          })
-      ),
-    [cardinalGeoms]
-  );
-
   const orbitDot1Mat = useMemo(
     () =>
       new THREE.MeshBasicMaterial({
@@ -259,33 +278,78 @@ export function ShellSubstrate({ layerKey, reducedMotion = false }: ShellSubstra
       }),
     []
   );
+  const radarArmMat = useMemo(
+    () =>
+      new THREE.LineBasicMaterial({
+        color: new THREE.Color(COLOR_GOLD),
+        transparent: true,
+        opacity: 0,
+        depthWrite: false,
+        toneMapped: false,
+      }),
+    []
+  );
+  const sweepWedgeMat = useMemo(
+    () =>
+      new THREE.MeshBasicMaterial({
+        color: new THREE.Color(COLOR_GOLD),
+        transparent: true,
+        opacity: 0,
+        depthWrite: false,
+        toneMapped: false,
+        side: THREE.DoubleSide,
+        blending: THREE.AdditiveBlending,
+      }),
+    []
+  );
+  const blipMat = useMemo(
+    () =>
+      new THREE.MeshBasicMaterial({
+        color: new THREE.Color(COLOR_GOLD),
+        transparent: true,
+        opacity: 0,
+        depthWrite: false,
+        toneMapped: false,
+        side: THREE.DoubleSide,
+        blending: THREE.AdditiveBlending,
+      }),
+    []
+  );
 
   useEffect(() => {
     return () => {
       ringGeoms.forEach((g) => g.dispose());
       crosshairGeom.dispose();
       ticksGeom.dispose();
-      cardinalGeoms.forEach((g) => g.dispose());
       orbitDot1Geom.dispose();
       orbitDot2Geom.dispose();
+      radarArmGeom.dispose();
+      sweepWedgeGeom.dispose();
+      blipGeom.dispose();
       ringMats.forEach((m) => m.dispose());
       bearingsMat.dispose();
-      cardinalMats.forEach((m) => m.dispose());
       orbitDot1Mat.dispose();
       orbitDot2Mat.dispose();
+      radarArmMat.dispose();
+      sweepWedgeMat.dispose();
+      blipMat.dispose();
     };
   }, [
     ringGeoms,
     crosshairGeom,
     ticksGeom,
-    cardinalGeoms,
     orbitDot1Geom,
     orbitDot2Geom,
+    radarArmGeom,
+    sweepWedgeGeom,
+    blipGeom,
     ringMats,
     bearingsMat,
-    cardinalMats,
     orbitDot1Mat,
     orbitDot2Mat,
+    radarArmMat,
+    sweepWedgeMat,
+    blipMat,
   ]);
 
   const hideAll = () => {
@@ -293,11 +357,11 @@ export function ShellSubstrate({ layerKey, reducedMotion = false }: ShellSubstra
       m.opacity = 0;
     });
     bearingsMat.opacity = 0;
-    cardinalMats.forEach((m) => {
-      m.opacity = 0;
-    });
     orbitDot1Mat.opacity = 0;
     orbitDot2Mat.opacity = 0;
+    radarArmMat.opacity = 0;
+    sweepWedgeMat.opacity = 0;
+    blipMat.opacity = 0;
   };
 
   useFrame((state) => {
@@ -329,11 +393,10 @@ export function ShellSubstrate({ layerKey, reducedMotion = false }: ShellSubstra
       mat.opacity = shellOpacity * base;
     }
     bearingsMat.opacity = shellOpacity * 0.78;
-    cardinalMats.forEach((m) => {
-      m.opacity = shellOpacity * 0.5;
-    });
     orbitDot1Mat.opacity = shellOpacity * SUBSTRATE_COMPASS_ORBIT_DOT_1.alpha;
     orbitDot2Mat.opacity = shellOpacity * SUBSTRATE_COMPASS_ORBIT_DOT_2.alpha;
+    radarArmMat.opacity = shellOpacity * RADAR_ARM_ALPHA;
+    sweepWedgeMat.opacity = shellOpacity * RADAR_WEDGE_ALPHA;
 
     // ── Organic unfold: staggered per-part wrap-in (geometric) ──────
     for (let i = 0; i < ringScaleRefs.current.length; i++) {
@@ -371,6 +434,49 @@ export function ShellSubstrate({ layerKey, reducedMotion = false }: ShellSubstra
         ? 0
         : t * SUBSTRATE_COMPASS_ORBIT_DOT_2.angularVelocity;
     }
+
+    // ── Radar sweep arm + occasional contact blip ───────────────────
+    if (radarSweepRef.current) {
+      // Leading arm sits at local +X; negative z-rotation sweeps it
+      // clockwise. Frozen under reduced motion.
+      radarSweepRef.current.rotation.z = reducedMotion ? 0 : -t * RADAR_SWEEP_RATE;
+    }
+
+    const blip = blipState.current;
+    if (reducedMotion) {
+      blipMat.opacity = 0;
+    } else {
+      if (!blip.initialized) {
+        blip.initialized = true;
+        blip.next = t + BLIP_MIN_GAP + Math.random() * (BLIP_MAX_GAP - BLIP_MIN_GAP);
+      }
+      // Start a new blip at a fresh contact point.
+      if (blip.start < 0 && t >= blip.next) {
+        blip.start = t;
+        const ang = Math.random() * Math.PI * 2;
+        const rr = BLIP_R_MIN + Math.random() * (BLIP_R_MAX - BLIP_R_MIN);
+        if (blipRef.current)
+          blipRef.current.position.set(Math.cos(ang) * rr, Math.sin(ang) * rr, 0.03);
+      }
+      if (blip.start >= 0) {
+        const e = (t - blip.start) / BLIP_DURATION;
+        if (e >= 1) {
+          // Done — schedule the next blip.
+          blip.start = -1;
+          blip.next = t + BLIP_MIN_GAP + Math.random() * (BLIP_MAX_GAP - BLIP_MIN_GAP);
+          blipMat.opacity = 0;
+        } else {
+          // Quick rise, slow fade.
+          const env =
+            e < BLIP_RISE_FRAC
+              ? e / BLIP_RISE_FRAC
+              : 1 - (e - BLIP_RISE_FRAC) / (1 - BLIP_RISE_FRAC);
+          blipMat.opacity = shellOpacity * BLIP_PEAK_ALPHA * Math.max(0, env);
+        }
+      } else {
+        blipMat.opacity = 0;
+      }
+    }
   });
 
   return (
@@ -390,20 +496,12 @@ export function ShellSubstrate({ layerKey, reducedMotion = false }: ShellSubstra
           </group>
         ))}
 
-        {/* Reticle details — crosshair, ticks, cardinals, atmosphere
-            dots — snap in last as one unfold slot. */}
+        {/* Reticle details — crosshair, ticks, atmosphere dots — snap in
+            last as one unfold slot. (Cardinal diamond markers removed —
+            Encode primitive labels own N/E/S/W.) */}
         <group ref={detailsRef}>
           <lineSegments geometry={crosshairGeom} material={bearingsMat} frustumCulled={false} />
           <lineSegments geometry={ticksGeom} material={bearingsMat} frustumCulled={false} />
-
-          {cardinalGeoms.map((g, i) => (
-            <lineLoop
-              key={`cardinal-${i}`}
-              geometry={g}
-              material={cardinalMats[i]}
-              frustumCulled={false}
-            />
-          ))}
 
           {/* Atmosphere orbit dots. */}
           <group ref={orbitDot1Ref}>
@@ -420,6 +518,16 @@ export function ShellSubstrate({ layerKey, reducedMotion = false }: ShellSubstra
               position={[-SUBSTRATE_COMPASS_ORBIT_DOT_2.radius, 0, 0.01]}
             />
           </group>
+
+          {/* Radar sweep — leading arm + faint trailing wedge,
+              rotating subtly around the mark. */}
+          <group ref={radarSweepRef}>
+            <mesh geometry={sweepWedgeGeom} material={sweepWedgeMat} frustumCulled={false} />
+            <lineSegments geometry={radarArmGeom} material={radarArmMat} frustumCulled={false} />
+          </group>
+
+          {/* Radar contact blip — lights up + fades out occasionally. */}
+          <mesh ref={blipRef} geometry={blipGeom} material={blipMat} frustumCulled={false} />
         </group>
       </group>
     </group>

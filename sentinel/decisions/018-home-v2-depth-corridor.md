@@ -902,7 +902,7 @@ The store exposes:
 **Components:**
 
 - `ShellSubstrate` (Navigate) — migrated compass instrument (4 rings + bearings + eight-ball horizon); replaces gold geodesic.
-- `ShellOrbits` (Encode, was `ShellSources`) — judgment orbits; not trusted sources.
+- `ShellEncode` (Encode, was `ShellOrbits` / `ShellSources`) — four cardinal judgment primitives + compared notes; not trusted sources.
 - `ShellStack` (Build, replaces `ShellSurfaces`) — FUNNEL lab composition: green source lanes converging from the left, dawn surface fan diverging right. No spin. Reuses `buildLaneLinesGeometry` / `buildFanLinesGeometry` from `artifactPrimitives.ts`.
 
 **Retired:** outer dawn geodesic + port ring at Build (`SURFACES_OUTER_RADIUS` etc.).
@@ -923,6 +923,8 @@ The store exposes:
 
 **Eight-ball attitude read removed (2026-06-07):** an earlier pass added a gimbal-tilted eight-ball horizon + pitch-ladder behind the rings (reference `thoughtform-navigate-eightball.html`). The tilting ellipses competed with the flat compass, so they were removed; only the flat compass + cardinal markers remain. `SUBSTRATE_COMPASS_HORIZON_*` / `_PITCH_LADDER_*` / `_TILT_*` constants were dropped from `shellGeom.ts`.
 
+**Radar sweep + contact blip (2026-06-07):** the compass gained a subtle rotating radar arm (leading line + faint additive trailing wedge, `RADAR_SWEEP_RATE = 0.32` rad/s) and an occasional "contact" blip — a small gold dot that lights up and fades out at a random point inside the rings every ~2.6–5.8s (`ShellSubstrate`, reference `thoughtform-flythrough.html` Navigate shell). Both ride the reticle unfold slot and are frozen under reduced motion.
+
 **Encode orbits restored (2026-06-07):** the tightened four-orbit table (from the stack-dock commit) was reverted to the previous **six-orbit** solar-system constellation (`SHELL_ORBITS`, mixed green/gold/dawn, rx 1.0–1.6) per user preference. `ShellOrbits` returned to the single additive-ring + pip render (no dual-pass / emphasis band). The wider orbits (min radius ~0.88) sit cleanly outside the Navigate compass (0.75).
 
 **Encode orbit unfold timing (2026-06-07):** the `accretion.orbits` window (`0.47 → 0.57`) completed the cascade during the fast pass-01b transit, so the orbits read as already-formed ("just appear") on arrival. Re-aligned to `0.54 → 0.62` so the staggered unfold is witnessed AS the camera enters Encode — mirroring the compass at Navigate (window straddles the park arrival). `ORBITS_OVERLAP` lowered `0.6 → 0.5` for a clearer sequential cascade. This supersedes the 2026-06-06 "appear a tad sooner" tuning.
@@ -930,6 +932,8 @@ The store exposes:
 **Encode orbit trim-path unfold (2026-06-07):** the orbits previously deployed via `foldEmerge` (each ring scaled from oversized → settle), which read as the orbit "flying toward the mark". Replaced with an After Effects **trim-paths** draw: each orbit holds its FINAL size + position and the ring line draws itself along its path via `geometry.setDrawRange(0, n)`, `n` growing `0 → vertexCount` on the orbit's staggered (`petalStagger`) + smootherstep reveal. Rings are now open `THREE.Line` primitives (a `lineLoop` chord-closes a partial trim); the ellipse's last vertex coincides with the first, so a full draw range closes the loop. Each pip grows in place (scale `0 → 1`) as its orbit draws, then revolves. `foldEmerge` is no longer used by `ShellOrbits` (still used by `ShellStack`).
 
 **AstrogationField removed (2026-06-07):** the ambient off-axis "astrogation" orbit systems were removed from the scene — they read as competing/jiggling circles next to the Navigate compass. (`AstrogationField.tsx` is no longer mounted in `DepthGatewayScene/index.tsx`.)
+
+**Encode cardinal primitives (2026-06-07):** the ~18-plug ornament ring (`SHELL_PLUGS`) is replaced by **four labeled compass cardinals** (`SHELL_PRIMITIVES`: Judgment/N, Taste/E, Way of working/S, Voice/W) plus **~6 asymmetric captured notes** (`SHELL_NOTES`) that slide from an outer capture radius toward their target primitive and seat with a brief additive light-up. Stems draw rim → `PRIMITIVE_NODE_R` (1.15) via trim-path; notes compare against the nearest axis. Framed gold DOM tags (`encode.primitive.*` in `COPY_ANCHORS` / `CopyAnchors.tsx`) tie labels to nodes without competing with the station title. Lab corridor keeps legacy orbits in `corridor/labOrbits.ts`.
 
 ## References
 
