@@ -108,10 +108,9 @@ function viewportAspect(): number {
  *                             arrives via the accreted shell.
  *   - BrandmarkAccretionShell : inside-out intelligence-layer shell
  *                             that accretes around the brandmark
- *                             as it travels (low-poly brain at
- *                             Navigate; solar-system source orbits
- *                             at Encode; outer surfaces skin at
- *                             Build). Tracks
+ *                             as it travels (gold geodesic at
+ *                             Navigate; judgment orbits at Encode;
+ *                             stack funnel dock at Build). Tracks
  *                             `getBrandmarkWorldPosition` per frame
  *                             so the shell follows the mark through
  *                             lead mode. Reveals owned by
@@ -225,16 +224,9 @@ export function DepthGatewayScene() {
       <ScrollStreaks />
       <AstrogationField isMobile={isMobile} />
       <GatewayWorld />
-      {/* BrandmarkAccretionShell — inside-out intelligence-layer
-          shell that accretes around the brandmark as it travels
-          (substrate brain at Navigate; solar-system source orbits
-          at Encode; outer surfaces skin at Build). Mounted AFTER
-          the gate world so its additive line geometry overlays
-          gate geometry rather than being occluded by it. Tracks
-          `getBrandmarkWorldPosition` per frame; the assembled shell
-          wraps the persistent DOM brandmark at the Build climax (no
-          particle substrate — removed 2026-06-06). See ADR-013 +
-          the shell-into-corridor pass. */}
+      {/* BrandmarkAccretionShell — inside-out intelligence layer that
+          accretes around the brandmark (substrate at Navigate;
+          judgment orbits at Encode; stack funnel at Build). */}
       <BrandmarkAccretionShell />
     </Canvas>
   );

@@ -286,7 +286,7 @@ export const CORRIDOR_MAP = [
     halfExtent: 2.2,
     gate: "orbits",
     // Pull the camera back at the Encode park (4.5 -> 6.2 world
-    // units) so the accreted source orbits + dodecahedron read with
+    // units) so the accreted judgment orbits + substrate cage read with
     // oversight margin (lab-match revision).
     parkDistance: 6.2,
     content: {
@@ -326,10 +326,9 @@ export const CORRIDOR_MAP = [
     gate: "sphere",
     brandmarkAnchor: true,
     // Pull the camera back at the Build landing (4.5 -> 6.2 world
-    // units) so the fully-assembled shell (substrate cage + source
-    // orbits + outer surfaces + port pips + morph sphere) reads with
-    // oversight, matching the standalone lab Shell variant's clean
-    // framing instead of filling the viewport (lab-match revision).
+    // units) so the fully-assembled layer + stack funnel read with
+    // oversight, matching the lab FUNNEL variant's clean framing
+    // instead of filling the viewport (lab-match revision).
     parkDistance: 6.2,
     content: {
       kicker: "03 · Build",
@@ -340,7 +339,7 @@ export const CORRIDOR_MAP = [
       // em on "headless surfaces" picks up the strategy skill's
       // build-headless-by-default rule.
       supportHtml:
-        "Encoded judgment turns into tools and <em>headless surfaces</em> your team owns.",
+        "Sources, the layer, and the surfaces that call it lock into one <em>stack</em> your team owns.",
       telemetry: {
         sector: "STATION 03",
         callsign: "BLD-03",

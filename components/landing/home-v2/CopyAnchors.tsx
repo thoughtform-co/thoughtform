@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef } from "react";
+import { ARTIFACT_LABELS } from "@/components/landing/intelligence-artifact/artifactGeom";
 import type { V7CorridorText } from "@/lib/v7-parse";
 import { useDeviceTier } from "@/lib/hooks/useDeviceTier";
 import { stationById } from "@/lib/home-v2/corridorMap";
@@ -54,6 +55,8 @@ export function CopyAnchors({ text }: CopyAnchorsProps) {
   const nav = stationById("navigate")?.content;
   const enc = stationById("diagnostic")?.content;
   const bld = stationById("intelligence")?.content;
+  const stackSourcesLabel = ARTIFACT_LABELS.find((l) => l.id === "sources");
+  const stackSurfacesLabel = ARTIFACT_LABELS.find((l) => l.id === "surfaces");
 
   // Desktop CTA: the "See the thesis →" link to the intelligence layer.
   const cta = (
@@ -168,6 +171,63 @@ export function CopyAnchors({ text }: CopyAnchorsProps) {
       {nav && <StationTitle content={nav} base="navigate" />}
       {enc && <StationTitle content={enc} base="diagnostic" />}
       {bld && <StationTitle content={bld} base="intelligence" />}
+
+      {/* Stack tier labels — dock with the Build funnel (Sources left,
+          Surfaces right). Centre = Build title readout above. */}
+      {stackSourcesLabel && (
+        <div
+          className="home-v2-stack-label home-v2-stack-label--sources"
+          data-world-anchor="intelligence.sourcesLabel"
+          data-anchor-origin="center"
+        >
+          <span
+            className="home-v2-stack-label__leader home-v2-stack-label__leader--right"
+            aria-hidden="true"
+          />
+          <div className="home-v2-copy-body-label">
+            <span
+              className="home-v2-copy-body-label__num"
+              style={{ color: stackSourcesLabel.color }}
+            >
+              {stackSourcesLabel.ordinal}
+            </span>
+            <span
+              className="home-v2-copy-body-label__name"
+              style={{ color: stackSourcesLabel.color }}
+            >
+              {stackSourcesLabel.title}
+            </span>
+            <span className="home-v2-stack-label__sub">{stackSourcesLabel.sub}</span>
+          </div>
+        </div>
+      )}
+      {stackSurfacesLabel && (
+        <div
+          className="home-v2-stack-label home-v2-stack-label--surfaces"
+          data-world-anchor="intelligence.surfacesLabel"
+          data-anchor-origin="center"
+        >
+          <span
+            className="home-v2-stack-label__leader home-v2-stack-label__leader--left"
+            aria-hidden="true"
+          />
+          <div className="home-v2-copy-body-label">
+            <span
+              className="home-v2-copy-body-label__num"
+              style={{ color: stackSurfacesLabel.color }}
+            >
+              {stackSurfacesLabel.ordinal}
+            </span>
+            <span
+              className="home-v2-copy-body-label__name"
+              style={{ color: stackSurfacesLabel.color }}
+            >
+              {stackSurfacesLabel.title}
+            </span>
+            <span className="home-v2-stack-label__sub">{stackSurfacesLabel.sub}</span>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

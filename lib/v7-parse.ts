@@ -533,7 +533,7 @@ export function extractV7Text(): V7CorridorText {
     "The fix is an<br><em>intelligence layer.</em>";
   const ilLede =
     innerHtmlForClass(ilHtml, "p", "ilayer__lede") ??
-    "An operating layer between how your team works and what AI does. <em>Encoded once.</em> Inherited by every surface.";
+    "The intelligence layer sits in the middle. When sources and surfaces dock around it, the full <em>stack</em> lives.";
   const ilLeft = stripTags(
     innerHtmlForId(ilHtml, "h3", "ilayer-chamber-sources") ?? "Trusted sources"
   );

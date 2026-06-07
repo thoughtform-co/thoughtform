@@ -1,35 +1,16 @@
 /**
  * shellGeom — corridor-tuned constants for the brandmark's accreted
- * shell (substrate core, source orbits, surfaces skin).
+ * shell (substrate core, Encode judgment orbits, Build stack dock).
  *
  * The accretion shell follows the guiding-star brandmark as it flies
  * Navigate -> Encode -> Build down the depth corridor (ADR-018). Each
  * layer emerges geometrically on its phase window and PERSISTS so the
- * mark visibly accumulates the layers of the intelligence-layer shell
- * and lands on the fully-assembled artifact at the Build station.
+ * mark visibly accumulates the intelligence layer and lands on the
+ * fully-assembled stack at the Build station.
  *
- * World-unit sizing is anchored to the Intelligence substrate sphere
- * radius (`SUBSTRATE_HALF * SUBSTRATE_TO_SPHERE_RATIO` = 0.22 * 2.5 =
- * 0.55 world units, see `IntelligenceGate.tsx`) using the SAME
- * proportions as the standalone `NestedShellSphere` shell artifact
- * (substrate core : sources : surfaces ≈ 1.00 : 1.55 : 2.25):
- *
- *   - Substrate dodecahedron wraps the 0.55 sphere with a tight ~1.27x
- *     ratio (0.70) — visually proportional to the brandmark / sphere
- *     it cages, just like the lab artifact (where the cage is at 0.92
- *     and the brandmark cloud half-extent is 0.75, ratio 1.22x).
- *   - Source orbits sit OUTSIDE the cage in a band ~0.88..1.65 — every
- *     orbit's `min(rx, rx*eccentricity)` clears the dodecahedron with
- *     breathing room so the constellation visibly orbits AROUND the
- *     substrate, not through it.
- *   - Surfaces outer skin at 1.85 — ~2.6x the dodec, ~3.4x the
- *     substrate sphere; still fits the Intelligence gate `halfExtent`
- *     2.0 with breathing room and clears the outermost orbit.
- *
- * Tilts on the source orbits use Euler angles applied to an XY ellipse
- * via `buildTiltedRingLineLoop` (celestialRingUtils.ts) so each orbit
- * lives on its own 3D-inclined plane — a real solar system of crossing
- * ellipses, not coplanar rings.
+ *   - Substrate geodesic wraps the brandmark (Navigate).
+ *   - Judgment orbits sit outside the cage (Encode).
+ *   - Stack funnel lanes + fan dock sources left / surfaces right (Build).
  */
 
 import {
@@ -62,7 +43,7 @@ export const SUBSTRATE_CAGE_RADIUS = 0.42;
 // removed in the 2026-06-06 wrap-around revision (Phase 2). Keep the
 // homepage substrate as ONE gold geodesic — no inner white/dawn shell.
 
-// ── Sources (inside-out layer 2) ─────────────────────────────────────
+// ── Encode judgment orbits (inside-out layer 2) ────────────────────
 
 /** One inclined ellipse around the brandmark. `rx` is the semi-major
  *  radius (world units); `eccentricity = ry/rx` makes the orbit flat
@@ -90,138 +71,93 @@ export interface ShellOrbit {
   color: number;
   /** Base orbit ring opacity at full reveal. */
   baseAlpha: number;
+  /** When true, the ring renders with a heavier stroke (hero band). */
+  emphasis?: boolean;
 }
 
-/** A solar-system of six inclined elliptical orbits around the
- *  brandmark. Mix of round and flat ellipses, spread tilts across
- *  every axis so the orbits visibly cross when seen face-on (the
- *  astronomy-poster reference). Colors mix Sources green, gold, and
- *  dawn so the field reads as a layered chart, not a single-hue
- *  ring stack.
- *
- *  **Invariant — orbits sit OUTSIDE the substrate geodesic.** For
- *  every orbit, `min(rx, rx * eccentricity)` must be >=
- *  `SUBSTRATE_CAGE_RADIUS + 0.15` (clearance) so the orbit's closest
- *  approach to origin is clearly outside the cage in 3D space. The
- *  cage is a rigid solid; orbits are 1D paths that flow AROUND it.
- *  Without this clearance the flat ellipses cut through the cage and
- *  the inside-out story breaks. */
+/** Four inclined judgment orbits — tighter and asymmetrical than the
+ *  previous six-orbit table. Each carries one pip; phases are spread
+ *  so blocks read on distinct quadrants at park. Mix of round and flat
+ *  ellipses with varied XYZ tilts (reference: nested armillary /
+ *  Einstein orbit diagram). */
 export const SHELL_ORBITS: readonly ShellOrbit[] = [
   {
     id: "01",
-    rx: 1.1,
-    eccentricity: 0.92,
-    // Front-tilted plane, modest left bank — the "primary" inner orbit.
-    // min radius = 1.01, clears the 0.70 dodec with 0.31 breathing.
-    tilt: [0.42, 0.0, 0.22],
-    periodSec: 18,
+    rx: 0.7,
+    eccentricity: 0.93,
+    tilt: [0.62, 0.22, 0.38],
+    periodSec: 19,
     dir: -1,
-    phaseRad: 0.6,
-    pipRadius: 0.04,
-    color: COLOR_SOURCES,
-    baseAlpha: 0.7,
+    phaseRad: 0.75,
+    pipRadius: 0.048,
+    color: COLOR_GOLD,
+    baseAlpha: 0.84,
   },
   {
     id: "02",
-    rx: 1.55,
-    eccentricity: 0.6,
-    // Flat horizon orbit on a strong Y-axis tilt — reads as a long
-    // ellipse crossing the others. min radius = 0.93, clears the dodec
-    // with 0.23 breathing.
-    tilt: [0.15, 0.62, -0.38],
-    periodSec: 26,
+    rx: 0.98,
+    eccentricity: 0.58,
+    // Near-horizontal hero band — the thick accent ring in the reference.
+    tilt: [0.1, 1.08, 0.06],
+    periodSec: 27,
     dir: 1,
-    phaseRad: 1.4,
-    pipRadius: 0.036,
+    phaseRad: 2.35,
+    pipRadius: 0.054,
     color: COLOR_SURFACES,
-    baseAlpha: 0.55,
+    baseAlpha: 0.9,
+    emphasis: true,
   },
   {
     id: "03",
-    rx: 1.25,
-    eccentricity: 0.95,
-    // Steep polar tilt — the orbit sweeps near-vertical, crossing the
-    // equatorial orbits at the top/bottom of its arc. min radius =
-    // 1.19, clears comfortably.
-    tilt: [1.18, 0.28, 0.0],
-    periodSec: 22,
+    rx: 0.78,
+    eccentricity: 0.96,
+    tilt: [1.42, -0.28, 0.52],
+    periodSec: 15,
     dir: -1,
-    phaseRad: 2.1,
-    pipRadius: 0.04,
-    color: COLOR_SOURCES,
-    baseAlpha: 0.65,
+    phaseRad: 4.05,
+    pipRadius: 0.046,
+    color: COLOR_GOLD,
+    baseAlpha: 0.8,
   },
   {
     id: "04",
-    rx: 1.6,
-    eccentricity: 0.55,
-    // Very flat + long horizon, tipped on the Y axis so it reads as
-    // a wide outer track passing behind the inner orbits. min radius
-    // = 0.88, clears with 0.18 breathing.
-    tilt: [0.0, 1.25, 0.26],
-    periodSec: 30,
+    rx: 0.88,
+    eccentricity: 0.82,
+    tilt: [-0.48, 0.58, -1.02],
+    periodSec: 23,
     dir: 1,
-    phaseRad: 3.6,
-    pipRadius: 0.038,
-    color: COLOR_GOLD,
-    baseAlpha: 0.55,
-  },
-  {
-    id: "05",
-    rx: 1.0,
-    eccentricity: 0.92,
-    // Tight inner orbit on a triple-axis tilt — gives the innermost
-    // body the most dynamic angle in the constellation. min radius =
-    // 0.92, the closest orbit to the dodec.
-    tilt: [0.72, -0.55, 0.62],
-    periodSec: 14,
-    dir: -1,
-    phaseRad: 4.6,
-    pipRadius: 0.032,
+    phaseRad: 5.65,
+    pipRadius: 0.05,
     color: COLOR_SURFACES,
-    baseAlpha: 0.5,
-  },
-  {
-    id: "06",
-    rx: 1.5,
-    eccentricity: 0.62,
-    // Counter-tilted outer orbit — its inclination opposes orbit 02's
-    // so the two long horizons read as a deliberate X-cross. min
-    // radius = 0.93.
-    tilt: [-0.42, 0.45, -0.82],
-    periodSec: 24,
-    dir: 1,
-    phaseRad: 5.4,
-    pipRadius: 0.036,
-    color: COLOR_SOURCES,
-    baseAlpha: 0.6,
+    baseAlpha: 0.78,
   },
 ];
 
-// ── Surfaces (inside-out layer 3) ────────────────────────────────────
+// ── Stack dock (inside-out layer 3 — Build) ──────────────────────────
+//
+// Horizontal funnel composition (mirrors the FUNNEL lab variant):
+// green trusted-source lanes converge from the left; dawn surface fan
+// diverges to the right. The intelligence layer (substrate + orbits)
+// sits at the centre — no outer geodesic cage at Build.
 
-/** Outer surfaces shell radius. Fits comfortably inside the
- *  Intelligence gate's `halfExtent` 2.0 with breathing room so the
- *  hairline wireframe doesn't run into the depth-corridor walls. */
-export const SURFACES_OUTER_RADIUS = 1.85;
+/** Left cluster X for trusted-source lanes (world units, shell-local). */
+export const STACK_SOURCES_X = -2.4;
 
-/** Detail level for the outer geodesic shell. `1` gives the classic
- *  80-face icosahedron — reads as engineered without looking
- *  low-poly. */
-export const SURFACES_GEODESIC_DETAIL = 1;
+/** Centre X — brandmark + layer core. */
+export const STACK_SUBSTRATE_X = 0;
 
-/** Number of port-pip diamonds around the surfaces shell rim.
- *  Six pips reads as the canonical surface endpoints (Web / API /
- *  MCP / Slack / Cursor / Claude — the same family the standalone
- *  Aperture variant uses) without crowding the wireframe. */
-export const SURFACES_PORT_COUNT = 6;
+/** Right fan-tip X for headless surfaces. */
+export const STACK_SURFACES_X = 2.4;
 
-/** Outline diamond half-extent for the port pips (world units). */
-export const SURFACES_PORT_SIZE = 0.085;
+export const STACK_LANE_COUNT = 5;
+export const STACK_LANE_Y_RANGE = 0.85;
+export const STACK_FAN_COUNT = 6;
+export const STACK_FAN_HALF_HEIGHT = 1.05;
+export const STACK_MOTES_PER_LANE = 12;
+export const STACK_MOTES_PER_RAY = 8;
 
-/** Y-axis tilt applied to the surfaces port ring so the pips don't
- *  sit on a primary axis — gives the outer skin a hand-flown feel. */
-export const SURFACES_PORT_TILT_Y = (12 * Math.PI) / 180;
+/** Diamond pip scale relative to `PYLON_CAP_SIZE`. */
+export const STACK_PIP_SCALE = 0.55;
 
 // ── Petal-unfold helpers (2026-06-05 revision) ──────────────────────
 //
@@ -308,7 +244,7 @@ export function splitEmerge(reveal: number): number {
 //
 // For per-element petal staggers, foldEmerge runs on the same
 // `stagger` value `petalEmerge` consumes, so the SHELL_ORBITS /
-// SURFACES_PORT_COUNT cascades work unchanged — only the per-element
+// stack funnel cascades work unchanged — only the per-element
 // curve changes shape.
 
 /** Initial group scale at the START of the reveal window. Sized so the
@@ -417,5 +353,5 @@ export function shellWrapEmerge(reveal: number): ShellWrapEmerge {
 // substrate composition (which the corridor is meant to mirror, per
 // the user's "as close as possible to the lab" direction). The
 // `petalStagger` / `petalEmerge` helpers above stay — they still
-// drive the per-orbit and per-port unfolds in `ShellSources` and
-// `ShellSurfaces`.
+// drive the per-orbit unfold in `ShellOrbits` and the stack funnel
+// unfold in `ShellStack`.

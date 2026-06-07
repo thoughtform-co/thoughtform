@@ -893,6 +893,24 @@ The store exposes:
 - ~~Mobile fidelity beyond a graceful WebGL / reduced-motion fallback (existing fallback markup still paints).~~ **Superseded by the 2026-05-29 Mobile corridor revision** — capable phones now run the corridor with a stacked section-2 layout; only no-WebGL / reduced-motion / genuinely low-end devices get the static fallback.
 - Performance budgets beyond "feels smooth at 60fps on a recent laptop". A first perf pass landed in the **2026-06-01 revision** (engagement-gated render loop so the GPU idles when the corridor is off-screen); deeper budgeting can still follow if needed.
 
+## 2026-06-07 revision — stack dock (layer vs stack naming)
+
+**Conceptual fix:** the **intelligence layer** is the middle only (substrate geodesic + Encode judgment orbits). The **stack** is the full three-tier assembly: trusted sources (left) → layer (centre) → headless surfaces (right). Build docks the layer into the stack; it no longer adds another outer geodesic cage.
+
+**Accretion keys renamed:** `{ substrate, sources, surfaces }` → `{ substrate, orbits, stack }`.
+
+**Components:**
+
+- `ShellSubstrate` (Navigate) — unchanged gold geodesic layer boundary.
+- `ShellOrbits` (Encode, was `ShellSources`) — judgment orbits; not trusted sources.
+- `ShellStack` (Build, replaces `ShellSurfaces`) — FUNNEL lab composition: green source lanes converging from the left, dawn surface fan diverging right. No spin. Reuses `buildLaneLinesGeometry` / `buildFanLinesGeometry` from `artifactPrimitives.ts`.
+
+**Retired:** outer dawn geodesic + port ring at Build (`SURFACES_OUTER_RADIUS` etc.).
+
+**Labels:** `COPY_ANCHORS` restores Sources / Surfaces tier labels at the stack funnel extents, gated on the `stack` accretion envelope. Build centre label remains the existing `StationTitle` readout.
+
+**Copy:** Build support line names the stack assembly; v7 prototype lede distinguishes layer (middle) from stack (full dock).
+
 ## References
 
 - Star Atlas reference: [experience.staratlas.com](https://experience.staratlas.com/) — depth corridor pattern (camera through persistent world).

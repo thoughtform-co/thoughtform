@@ -660,6 +660,56 @@
   font-weight: 700;
 }
 
+/* ── Stack tier labels (Build funnel dock) ─────────────────── */
+
+.home-v2-stack-label {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  pointer-events: none;
+}
+
+.home-v2-stack-label--sources {
+  flex-direction: row-reverse;
+}
+
+.home-v2-stack-label__sub {
+  font-family: var(--font-pt-mono, ui-monospace, monospace);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: lowercase;
+  color: rgba(235, 227, 214, 0.62);
+  margin-top: 2px;
+}
+
+.home-v2-stack-label__leader {
+  display: block;
+  width: 42px;
+  height: 0;
+  border-top: 1px dashed currentColor;
+  opacity: 0.55;
+  flex-shrink: 0;
+}
+
+.home-v2-stack-label--sources .home-v2-stack-label__leader {
+  color: #5b7a4e;
+}
+
+.home-v2-stack-label--surfaces .home-v2-stack-label__leader {
+  color: #ebe3d6;
+}
+
+.home-v2-stack-label .home-v2-copy-body-label {
+  align-items: flex-start;
+  text-align: left;
+}
+
+.home-v2-stack-label--sources .home-v2-copy-body-label {
+  align-items: flex-end;
+  text-align: right;
+}
+
 /* ── Section-2 (Thoughtform beat) mobile composition ──────────
    The corridor now runs on capable phones (ADR-018 mobile revision).
    In portrait the Thoughtform copy is stacked ABOVE the centred

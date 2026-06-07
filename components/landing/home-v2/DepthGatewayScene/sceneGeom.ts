@@ -218,24 +218,16 @@ export const CORRIDOR_TIMELINE = {
    *  layer PERSISTS so the shell is fully assembled at the Build
    *  landing.
    *
-   *  - `substrate`: golden dodecahedron cage + faint inner geodesic
-   *    around the mark — Navigate adds the substrate core. Starts to
-   *    register in pass-01a, peaks at the Navigate park, persists
-   *    forever (it is the inner core of the assembled shell).
-   *  - `sources`: a solar-system of inclined elliptical orbits with
-   *    revolving source pips — Encode adds the constellation of
-   *    trusted sources around the substrate. Starts late pass-01b on
-   *    approach, peaks at the Encode (Diagnostic) park, persists.
-   *  - `surfaces`: outer geodesic skin + port-pip ring (dawn) —
-   *    Build adds the headless surfaces wrapping the layer. Starts
-   *    mid passthrough-02 on approach, peaks at the Intelligence
-   *    landing, persists so the assembled shell stays present as
-   *    the brandmark hands off to the substrate sphere morph at
-   *    the centre. No fade-out (the previous Build accretion's
-   *    `buildSubstrateBlend` was for stacked interface planes that
-   *    competed with the morph silhouette — the geodesic outer
-   *    skin sits at radius 1.85, well outside the 0.55 sphere, so
-   *    no blend is needed). */
+   *  - `substrate`: gold geodesic cage around the mark — Navigate
+   *    adds the layer boundary. Starts in pass-01a, peaks at the
+   *    Navigate park, persists forever.
+   *  - `orbits`: inclined elliptical orbits with judgment pips —
+   *    Encode adds encoded judgment circling the layer. Starts late
+   *    pass-01b, peaks at Encode park, persists.
+   *  - `stack`: trusted sources (left) + headless surfaces (right)
+   *    funnel — Build docks the layer into the full stack. Starts
+   *    mid passthrough-02, peaks at Build landing, persists. No
+   *    outer geodesic cage (retired 2026-06-07 stack-dock pass). */
   accretion: {
     // 2026-06-05 petal-unfold pass: tight windows anchored to each
     // phase park's arrival. The wide early-emerge windows of the
@@ -253,8 +245,8 @@ export const CORRIDOR_TIMELINE = {
     // simultaneously with the parked composition. The user reads the
     // orbits as already wrapping the mark by the time the title
     // settles, which matches the requested "appear a tad sooner".
-    sources: { start: 0.47, peakAt: 0.57 }, // Encode park centre ~0.60
-    surfaces: { start: 0.84, peakAt: 0.91 }, // Build park centre ~0.92
+    orbits: { start: 0.47, peakAt: 0.57 }, // Encode park centre ~0.60
+    stack: { start: 0.84, peakAt: 0.91 }, // Build park centre ~0.92
   },
 } as const;
 
@@ -796,6 +788,7 @@ export function getBrandmarkWorldHalfExtent(progress: number): number {
 
 import type { Beat, DepthGatewayTransform } from "@/lib/stores/depthGatewayStore";
 import type { WorldAnchor, WorldAnchorPosition } from "../hooks/useWorldDomTracker";
+import { STACK_SOURCES_X, STACK_SURFACES_X } from "./shell/shellGeom";
 
 /** Depth offset (world units, negative = deeper behind parked Z)
  *  applied to the Diagnostic head copy and orbit label pills during
@@ -822,35 +815,24 @@ function intelligenceApproachDepthOffset(progress: number): number {
 }
 
 /** Brandmark accretion reveal envelopes — one per layer of the
- *  intelligence-layer shell that accretes inside-out around the
- *  travelling brandmark:
+ *  intelligence layer + stack that accretes around the travelling
+ *  brandmark:
  *
- *   - `substrate` (Navigate adds): golden dodecahedron + faint inner
- *     geodesic — the substrate core wrap around the mark.
- *   - `sources` (Encode adds): solar-system of inclined orbits +
- *     revolving source pips around the substrate.
- *   - `surfaces` (Build adds): outer geodesic skin + port-pip ring,
- *     wrapping the assembled shell.
+ *   - `substrate` (Navigate): gold geodesic — layer boundary.
+ *   - `orbits` (Encode): judgment orbits around the layer.
+ *   - `stack` (Build): sources lanes + surfaces fan dock the layer.
  *
- *  All three are PERSISTENT — once they reveal, they hold so the
- *  shell is fully assembled at the Build landing and stays present
- *  as the brandmark hands off to the substrate sphere morph at the
- *  centre. No fade-out: the previous Build accretion's
- *  `buildSubstrateBlend` was needed because the old interface
- *  planes sat inside the morph cloud's silhouette; the new outer
- *  geodesic skin sits at radius ~1.85, well outside the 0.55
- *  substrate sphere, so it can stay visible at landing without
- *  competing. */
+ *  All three are PERSISTENT — once revealed, they hold through Build. */
 export function getBrandmarkAccretionLayers(progress: number): {
   substrate: number;
-  sources: number;
-  surfaces: number;
+  orbits: number;
+  stack: number;
 } {
-  const { substrate, sources, surfaces } = CORRIDOR_TIMELINE.accretion;
+  const { substrate, orbits, stack } = CORRIDOR_TIMELINE.accretion;
   return {
     substrate: smoothstep(substrate.start, substrate.peakAt, progress),
-    sources: smoothstep(sources.start, sources.peakAt, progress),
-    surfaces: smoothstep(surfaces.start, surfaces.peakAt, progress),
+    orbits: smoothstep(orbits.start, orbits.peakAt, progress),
+    stack: smoothstep(stack.start, stack.peakAt, progress),
   };
 }
 
@@ -892,6 +874,13 @@ const gateThoughtformCopy: WorldAnchor["onPaint"] = (ctx, el) => {
 const gateThoughtformDiagram: WorldAnchor["onPaint"] = (ctx, el) => {
   const { diagramFactor } = getThoughtformMobilePhase(ctx.transform.progress);
   el.style.opacity = (ctx.visibilityOpacity * diagramFactor).toFixed(3);
+};
+
+/** Gate stack tier labels on the Build accretion envelope so Sources /
+ *  Surfaces only read once the funnel docks. */
+const gateStackLabel: WorldAnchor["onPaint"] = (ctx, el) => {
+  const stack = getBrandmarkAccretionLayers(ctx.transform.paintProgress).stack;
+  el.style.opacity = (ctx.visibilityOpacity * stack).toFixed(3);
 };
 
 /**
@@ -1214,9 +1203,38 @@ export const COPY_ANCHORS: readonly WorldAnchor[] = [
       farFade: 2.2,
     },
   },
-  // (Build chamber labels removed — the Navigate/Encode/Build remap
-  // drops the "Trusted sources / Headless surfaces" side labels; the
-  // substrate sphere + side bodies stay as Build's gate visual.)
+  // Stack tier labels — Sources (left) and Surfaces (right) dock with
+  // the Build funnel. Centre label is the existing Build title readout.
+  {
+    id: "intelligence.sourcesLabel",
+    position: (transform) => {
+      const [bx, by, bz] = getBrandmarkWorldPosition(transform.paintProgress);
+      return [bx + STACK_SOURCES_X, by + 0.1, bz];
+    },
+    visibilityBeats: ["passthrough-02", "intelligence"],
+    fadeFrac: 0.14,
+    perspectiveScale: {
+      referenceDistance: STATION_INTELLIGENCE.parkDistance,
+      min: 0.25,
+      max: 1.1,
+    },
+    onPaint: gateStackLabel,
+  },
+  {
+    id: "intelligence.surfacesLabel",
+    position: (transform) => {
+      const [bx, by, bz] = getBrandmarkWorldPosition(transform.paintProgress);
+      return [bx + STACK_SURFACES_X * 0.92, by, bz];
+    },
+    visibilityBeats: ["passthrough-02", "intelligence"],
+    fadeFrac: 0.14,
+    perspectiveScale: {
+      referenceDistance: STATION_INTELLIGENCE.parkDistance,
+      min: 0.25,
+      max: 1.1,
+    },
+    onPaint: gateStackLabel,
+  },
 ];
 
 // ── Substrate-cut envelope (ADR-017, unchanged) ──────────────────
