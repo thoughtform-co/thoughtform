@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { Canvas } from "@react-three/fiber";
 import { useDeviceTier } from "@/lib/hooks/useDeviceTier";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
-import { AstrogationField } from "./AstrogationField";
 import { BrandmarkAccretionShell } from "./BrandmarkAccretionShell";
 import { CelestialMotes } from "./CelestialMotes";
 import { FlyingCameraRig } from "./FlyingCameraRig";
@@ -222,7 +221,6 @@ export function DepthGatewayScene() {
       <LatentTopographyContours />
       <CelestialMotes />
       <ScrollStreaks />
-      <AstrogationField isMobile={isMobile} />
       <GatewayWorld />
       {/* BrandmarkAccretionShell — inside-out intelligence layer that
           accretes around the brandmark (substrate at Navigate;

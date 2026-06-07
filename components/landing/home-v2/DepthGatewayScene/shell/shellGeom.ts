@@ -8,7 +8,7 @@
  * mark visibly accumulates the intelligence layer and lands on the
  * fully-assembled stack at the Build station.
  *
- *   - Substrate geodesic wraps the brandmark (Navigate).
+ *   - Substrate compass wraps the brandmark (Navigate).
  *   - Judgment orbits sit outside the cage (Encode).
  *   - Stack funnel lanes + fan dock sources left / surfaces right (Build).
  */
@@ -38,6 +38,84 @@ import {
  *    the lab Shell ratio: geodesic radius ≈ 1.2-1.35x brandmark
  *    half-extent), not against the retired 0.55 particle sphere. */
 export const SUBSTRATE_CAGE_RADIUS = 0.42;
+
+// ── Navigate substrate compass (2026-06-07 revision) ───────────────
+//
+// The gold geodesic icosphere is replaced by the migrated Thoughtform
+// compass read (4 rings + bearings + eight-ball horizon/attitude cue).
+// Ring radii reproduce the opening-beat compass EXACTLY (v7 SVG units
+// / 200) so the instrument frames the brandmark with the same
+// proportions as the previous second section. The brandmark world
+// half-extent at the Navigate park (~0.30) is within 6% of the
+// Thoughtform park (0.32), so the same radii read as the same framing.
+//
+// NOTE: the compass outer ring (0.75) now extends past
+// SUBSTRATE_CAGE_RADIUS (0.42, the old geodesic boundary the Encode
+// orbits sit outside of). The flat camera-facing rings and the
+// inclined Encode orbits live on different planes; any Encode overlap
+// is tuned via opacity, not by shrinking the Navigate framing.
+
+/** Four concentric compass ring radii (world units), matching the
+ *  opening-beat compass [150, 126, 104, 78] / 200. */
+export const SUBSTRATE_COMPASS_RING_RADII = [0.75, 0.63, 0.52, 0.39] as const;
+
+export const SUBSTRATE_COMPASS_RING_SEGMENTS = 96;
+
+/** Per-ring opacity weight. Pushed well above the opening-beat compass
+ *  so the migrated rings read as a present instrument around the mark
+ *  at Navigate (no boot boost / brighter-brandmark backdrop here). */
+export const SUBSTRATE_COMPASS_RING_ALPHA = [0.62, 0.68, 0.92, 1.0] as const;
+
+/** Per-ring dash pattern (world units). `null` = solid. */
+export const SUBSTRATE_COMPASS_RING_DASH: ({ dashSize: number; gapSize: number } | null)[] = [
+  { dashSize: 0.005, gapSize: 0.025 },
+  null,
+  { dashSize: 0.01, gapSize: 0.035 },
+  { dashSize: 0.005, gapSize: 0.015 },
+];
+
+/** Bearing crosshair + tick radii (world units), matching the
+ *  opening-beat compass. */
+export const SUBSTRATE_COMPASS_CROSSHAIR_INNER = 0.65;
+export const SUBSTRATE_COMPASS_CROSSHAIR_OUTER = 0.75;
+export const SUBSTRATE_COMPASS_TICK_INNER = 0.72;
+export const SUBSTRATE_COMPASS_TICK_OUTER = 0.75;
+
+/** Atmosphere orbit dots — gold at r=0.52, dawn at r=0.39 (v7 read). */
+export const SUBSTRATE_COMPASS_ORBIT_DOT_1 = {
+  radius: 0.52,
+  size: 0.0125,
+  alpha: 0.9,
+  angularVelocity: -((2 * Math.PI) / 180),
+} as const;
+export const SUBSTRATE_COMPASS_ORBIT_DOT_2 = {
+  radius: 0.39,
+  size: 0.009,
+  alpha: 0.6,
+  angularVelocity: (2 * Math.PI) / 120,
+} as const;
+
+/** Eight-ball horizon + attitude enrichment (world units). The horizon
+ *  equator sits just inside the outer ring; kept FAINT so the flat
+ *  compass rings remain the dominant read. */
+export const SUBSTRATE_COMPASS_HORIZON_R = 0.73;
+export const SUBSTRATE_COMPASS_HORIZON_BAND_Y = 0.018;
+export const SUBSTRATE_COMPASS_PITCH_LADDER_DEG = [12, 24] as const;
+export const SUBSTRATE_COMPASS_CARDINAL_DIAMOND = 0.03;
+
+/** Gimbal attitude seek (radians / Hz) — applied ONLY to the eight-ball
+ *  horizon/pitch sub-group so the flat compass rings stay camera-facing
+ *  like the opening-beat compass. */
+export const SUBSTRATE_COMPASS_TILT_AMP_X = 0.16;
+export const SUBSTRATE_COMPASS_TILT_AMP_Z = 0.1;
+export const SUBSTRATE_COMPASS_TILT_FREQ_X = 0.5;
+export const SUBSTRATE_COMPASS_TILT_FREQ_Z = 0.42;
+/** Slow breath spin for the whole instrument (matches the opening
+ *  compass `group.rotation.z = elapsed * 0.012`). */
+export const SUBSTRATE_COMPASS_BREATH_RATE = 0.012;
+
+/** Shell material opacity at full presence. */
+export const SUBSTRATE_COMPASS_SHELL_OPACITY = 1.0;
 
 // NOTE: `SUBSTRATE_INNER_RADIUS` (faint dawn inner geodesic) was
 // removed in the 2026-06-06 wrap-around revision (Phase 2). Keep the
@@ -71,65 +149,99 @@ export interface ShellOrbit {
   color: number;
   /** Base orbit ring opacity at full reveal. */
   baseAlpha: number;
-  /** When true, the ring renders with a heavier stroke (hero band). */
-  emphasis?: boolean;
 }
 
-/** Four inclined judgment orbits — tighter and asymmetrical than the
- *  previous six-orbit table. Each carries one pip; phases are spread
- *  so blocks read on distinct quadrants at park. Mix of round and flat
- *  ellipses with varied XYZ tilts (reference: nested armillary /
- *  Einstein orbit diagram). */
+/** A solar-system of six inclined elliptical orbits around the
+ *  brandmark (restored 2026-06-07 — the user preferred this over the
+ *  tightened four-orbit table). Mix of round and flat ellipses, spread
+ *  tilts across every axis so the orbits visibly cross when seen
+ *  face-on. Colours mix Sources green, gold, and dawn so the field
+ *  reads as a layered chart. The orbits' min radii (~0.88+) sit
+ *  comfortably OUTSIDE the Navigate compass (outer ring 0.75) so the
+ *  constellation wraps the layer rather than cutting through it. */
 export const SHELL_ORBITS: readonly ShellOrbit[] = [
   {
     id: "01",
-    rx: 0.7,
-    eccentricity: 0.93,
-    tilt: [0.62, 0.22, 0.38],
-    periodSec: 19,
+    rx: 1.1,
+    eccentricity: 0.92,
+    // Front-tilted plane, modest left bank — the "primary" inner orbit.
+    tilt: [0.42, 0.0, 0.22],
+    periodSec: 18,
     dir: -1,
-    phaseRad: 0.75,
-    pipRadius: 0.048,
-    color: COLOR_GOLD,
-    baseAlpha: 0.84,
+    phaseRad: 0.6,
+    pipRadius: 0.04,
+    color: COLOR_SOURCES,
+    baseAlpha: 0.7,
   },
   {
     id: "02",
-    rx: 0.98,
-    eccentricity: 0.58,
-    // Near-horizontal hero band — the thick accent ring in the reference.
-    tilt: [0.1, 1.08, 0.06],
-    periodSec: 27,
+    rx: 1.55,
+    eccentricity: 0.6,
+    // Flat horizon orbit on a strong Y-axis tilt — reads as a long
+    // ellipse crossing the others.
+    tilt: [0.15, 0.62, -0.38],
+    periodSec: 26,
     dir: 1,
-    phaseRad: 2.35,
-    pipRadius: 0.054,
+    phaseRad: 1.4,
+    pipRadius: 0.036,
     color: COLOR_SURFACES,
-    baseAlpha: 0.9,
-    emphasis: true,
+    baseAlpha: 0.55,
   },
   {
     id: "03",
-    rx: 0.78,
-    eccentricity: 0.96,
-    tilt: [1.42, -0.28, 0.52],
-    periodSec: 15,
+    rx: 1.25,
+    eccentricity: 0.95,
+    // Steep polar tilt — the orbit sweeps near-vertical, crossing the
+    // equatorial orbits at the top/bottom of its arc.
+    tilt: [1.18, 0.28, 0.0],
+    periodSec: 22,
     dir: -1,
-    phaseRad: 4.05,
-    pipRadius: 0.046,
-    color: COLOR_GOLD,
-    baseAlpha: 0.8,
+    phaseRad: 2.1,
+    pipRadius: 0.04,
+    color: COLOR_SOURCES,
+    baseAlpha: 0.65,
   },
   {
     id: "04",
-    rx: 0.88,
-    eccentricity: 0.82,
-    tilt: [-0.48, 0.58, -1.02],
-    periodSec: 23,
+    rx: 1.6,
+    eccentricity: 0.55,
+    // Very flat + long horizon, tipped on the Y axis so it reads as
+    // a wide outer track passing behind the inner orbits.
+    tilt: [0.0, 1.25, 0.26],
+    periodSec: 30,
     dir: 1,
-    phaseRad: 5.65,
-    pipRadius: 0.05,
+    phaseRad: 3.6,
+    pipRadius: 0.038,
+    color: COLOR_GOLD,
+    baseAlpha: 0.55,
+  },
+  {
+    id: "05",
+    rx: 1.0,
+    eccentricity: 0.92,
+    // Tight inner orbit on a triple-axis tilt — gives the innermost
+    // body the most dynamic angle in the constellation.
+    tilt: [0.72, -0.55, 0.62],
+    periodSec: 14,
+    dir: -1,
+    phaseRad: 4.6,
+    pipRadius: 0.032,
     color: COLOR_SURFACES,
-    baseAlpha: 0.78,
+    baseAlpha: 0.5,
+  },
+  {
+    id: "06",
+    rx: 1.5,
+    eccentricity: 0.62,
+    // Counter-tilted outer orbit — its inclination opposes orbit 02's
+    // so the two long horizons read as a deliberate X-cross.
+    tilt: [-0.42, 0.45, -0.82],
+    periodSec: 24,
+    dir: 1,
+    phaseRad: 5.4,
+    pipRadius: 0.036,
+    color: COLOR_SOURCES,
+    baseAlpha: 0.6,
   },
 ];
 

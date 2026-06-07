@@ -18,7 +18,7 @@ import { ShellSubstrate } from "./shell/ShellSubstrate";
  * Three layers, each owned by its own reveal envelope from
  * `CORRIDOR_TIMELINE.accretion`:
  *
- *   - {@link ShellSubstrate} (Navigate): gold geodesic layer boundary.
+ *   - {@link ShellSubstrate} (Navigate): migrated compass + eight-ball horizon layer boundary.
  *   - {@link ShellOrbits} (Encode): judgment orbits circling the layer.
  *   - {@link ShellStack} (Build): sources + surfaces dock the layer
  *     into the full stack (funnel composition from the lab FUNNEL

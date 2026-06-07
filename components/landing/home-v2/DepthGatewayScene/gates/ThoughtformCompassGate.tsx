@@ -31,12 +31,13 @@ const COMPASS_BOOT_BOOST = 0.18;
  * 4313-4372). All SVG coordinates are scaled by 1/200 to world units
  * and Y is flipped (SVG +Y is down, Three.js +Y is up).
  *
- * Geometry (matches v7 `.sigil__orbits`):
+ * Geometry (2026-06-07 gateway revision — circles → rectangles):
  *
- *   - 4 concentric ring loops at world radii [0.75, 0.63, 0.52, 0.39]
- *     (= [150, 126, 104, 78] / 200). Per-ring opacity + dashing
- *     mirrors the v7 strokes — outer rings faint dawn-colour dashed,
- *     inner rings gold with progressively shorter dash patterns.
+ *   - 4 concentric square portal loops at half-sides [0.75, 0.63, 0.52,
+ *     0.39] (= v7 ring radii / 200). Same per-ring opacity + dashing
+ *     as the original circular compass — outer loops faint dawn-colour
+ *     dashed, inner loops gold with progressively shorter dash patterns.
+ *     The circular compass read migrates to `ShellSubstrate` at Navigate.
  *   - Bearing crosshair: 4 short cardinal stubs from r=0.65 to
  *     r=0.75 at top/right/bottom/left, dawn @ 30% (matching v7's
  *     `<path d="M0 -150 L0 -130 ...">`).
@@ -85,9 +86,9 @@ const COMPASS_BOOT_BOOST = 0.18;
  *     detail rings.
  */
 
-/** Ring radii in world units. Scaled from v7 SVG units by 1/200. */
+/** Portal loop half-sides in world units. Scaled from v7 SVG ring radii
+ *  by 1/200 — each square is inscribed in the former circle radius. */
 const RING_RADII = SIGIL_RING_MORPHS.map((r) => r.ringRadius / 200);
-const RING_SEGMENTS = 96;
 
 /** Per-ring opacity weight. These are deliberately a notch above the
  *  v7 SVG's literal stroke-opacity values because the R3F lines sit
@@ -225,13 +226,17 @@ const ORBIT_DOT_2 = {
   angularVelocity: (2 * Math.PI) / 120,
 };
 
-function buildCircleGeometry(radius: number, segments: number): THREE.BufferGeometry {
-  const points: THREE.Vector3[] = [];
-  for (let i = 0; i <= segments; i++) {
-    const a = (i / segments) * Math.PI * 2;
-    points.push(new THREE.Vector3(Math.cos(a) * radius, Math.sin(a) * radius, 0));
-  }
-  return new THREE.BufferGeometry().setFromPoints(points);
+/** Axis-aligned square portal loop. `halfSide` matches the former
+ *  circular ring radius so the gateway occupies the same footprint. */
+function buildRectGeometry(halfSide: number): THREE.BufferGeometry {
+  const h = halfSide;
+  return new THREE.BufferGeometry().setFromPoints([
+    new THREE.Vector3(-h, h, 0),
+    new THREE.Vector3(h, h, 0),
+    new THREE.Vector3(h, -h, 0),
+    new THREE.Vector3(-h, -h, 0),
+    new THREE.Vector3(-h, h, 0),
+  ]);
 }
 
 function buildSegmentsGeometry(verts: [number, number, number][]): THREE.BufferGeometry {
@@ -292,7 +297,7 @@ export function ThoughtformCompassGate() {
   // ── Geometries ────────────────────────────────────────────────
   const ringGeoms = useMemo(() => {
     return RING_RADII.map((r, i) => {
-      const g = buildCircleGeometry(r, RING_SEGMENTS);
+      const g = buildRectGeometry(r);
       // LineDashedMaterial requires per-vertex lineDistance. Solid
       // rings (LineBasicMaterial) ignore the attribute, so we only
       // compute it when needed.
@@ -567,9 +572,8 @@ export function ThoughtformCompassGate() {
 
   return (
     <group ref={groupRef} position={STATION_THOUGHTFORM.position} visible={false}>
-      {/* 4 concentric rings. Outer rings dawn + dashed (faint
-          atmospheric guide); inner rings gold + dashed (the visible
-          instrument). */}
+      {/* 4 concentric square portal loops. Outer loops dawn + dashed;
+          inner loops gold + dashed (gateway frame). */}
       {ringGeoms.map((g, i) => (
         <lineLoop
           key={`ring-${i}`}

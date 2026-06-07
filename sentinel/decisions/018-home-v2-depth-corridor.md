@@ -901,7 +901,7 @@ The store exposes:
 
 **Components:**
 
-- `ShellSubstrate` (Navigate) — unchanged gold geodesic layer boundary.
+- `ShellSubstrate` (Navigate) — migrated compass instrument (4 rings + bearings + eight-ball horizon); replaces gold geodesic.
 - `ShellOrbits` (Encode, was `ShellSources`) — judgment orbits; not trusted sources.
 - `ShellStack` (Build, replaces `ShellSurfaces`) — FUNNEL lab composition: green source lanes converging from the left, dawn surface fan diverging right. No spin. Reuses `buildLaneLinesGeometry` / `buildFanLinesGeometry` from `artifactPrimitives.ts`.
 
@@ -910,6 +910,18 @@ The store exposes:
 **Labels:** `COPY_ANCHORS` restores Sources / Surfaces tier labels at the stack funnel extents, gated on the `stack` accretion envelope. Build centre label remains the existing `StationTitle` readout.
 
 **Copy:** Build support line names the stack assembly; v7 prototype lede distinguishes layer (middle) from stack (full dock).
+
+## 2026-06-07 revision — compass migrate + gateway portal
+
+**Conceptual fix:** the elegant circular compass (4 rings + bearings + ticks) is the Navigate instrument — it belongs on the brandmark at the Navigate park, not duplicated at the opening Thoughtform beat. The opening beat becomes an angular **gateway** (nested square portal loops) so the visitor reads "portal" first and "compass" when they arrive at Navigate.
+
+**Opening beat (`ThoughtformCompassGate`):** the 4 concentric circular rings become axis-aligned square loops at the same half-sides (inscribed in the former ring radii). Flythrough timing, inner-first stagger, depth opacity, lateral pan, phase dots, and bearing chrome are unchanged.
+
+**Navigate substrate (`ShellSubstrate`):** the gold geodesic icosphere is retired. Replaced by the migrated compass read — 4 concentric rings sized to the opening-beat compass (`0.75 / 0.63 / 0.52 / 0.39`, gold/dawn + dash), bearing crosshair + ticks, atmosphere orbit dots, plus a FAINT eight-ball attitude enrichment (gold horizon + band, dawn pitch-ladder parallels, cardinal diamonds). Reference: `thoughtform-navigate-eightball.html`. The flat rings stay camera-facing with a slow breath spin; the gimbal attitude tilt is isolated to the eight-ball sub-group so the rings frame the mark exactly like the second section. Ring opacities are pushed above the opening beat (no boot boost here) so they read as present. Constants live in `SUBSTRATE_COMPASS_*` in `shellGeom.ts`.
+
+**Encode orbits restored (2026-06-07):** the tightened four-orbit table (from the stack-dock commit) was reverted to the previous **six-orbit** solar-system constellation (`SHELL_ORBITS`, mixed green/gold/dawn, rx 1.0–1.6) per user preference. `ShellOrbits` returned to the single additive-ring + pip render (no dual-pass / emphasis band). The wider orbits (min radius ~0.88) sit cleanly outside the Navigate compass (0.75).
+
+**AstrogationField removed (2026-06-07):** the ambient off-axis "astrogation" orbit systems were removed from the scene — they read as competing/jiggling circles next to the Navigate compass. (`AstrogationField.tsx` is no longer mounted in `DepthGatewayScene/index.tsx`.)
 
 ## References
 
