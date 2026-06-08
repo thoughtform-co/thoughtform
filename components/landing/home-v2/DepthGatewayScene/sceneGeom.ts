@@ -824,10 +824,12 @@ export function getBrandmarkWorldHalfExtent(progress: number): number {
 
 // ── Copy + label world anchors ───────────────────────────────────
 
+import { epilogueBand } from "@/lib/home-v2/epilogueTimeline";
 import type { Beat, DepthGatewayTransform } from "@/lib/stores/depthGatewayStore";
 import { gyroTilt, useGyroLabStore } from "@/lib/stores/gyroLabStore";
 import type { WorldAnchor, WorldAnchorPosition } from "../hooks/useWorldDomTracker";
 import {
+  EPILOGUE_GYRO_SHRINK,
   EPILOGUE_SHELL_X,
   GYRO_ASSEMBLY_SCALE,
   STACK_FAN_COUNT,
@@ -979,12 +981,10 @@ const gateStackLabel: WorldAnchor["onPaint"] = (ctx, el) => {
       lock = eased;
     }
   }
-  // Epilogue fade: source/surface DOM labels clear with the canvas
-  // stack pips/lanes so the sphere reads clean during the news-card
-  // beat. Smoothstepped against `epilogueProgress` from the store.
-  const ep = ctx.transform.epilogueProgress;
-  const epEased = ep <= 0 ? 0 : ep >= 1 ? 1 : ep * ep * (3 - 2 * ep);
-  const epFade = 1 - epEased;
+  // Epilogue v2 fade: source/surface DOM labels clear with the canvas
+  // stack pips/lanes on the shared BUILD_OUT band so the whole Build
+  // composition leaves together (corridor cadence rule).
+  const epFade = 1 - epilogueBand(ctx.transform.epilogueProgress, "BUILD_OUT");
   el.style.opacity = (ctx.visibilityOpacity * lock * epFade).toFixed(3);
   applyGyroDomBank(el);
 };
@@ -1073,7 +1073,7 @@ function rotateGyroLocalOffset(local: readonly [number, number, number]): Vec3 {
 }
 
 /** World-X offset of the accretion shell during the corridor's
- *  EPILOGUE beat. Matches the same smoothstepped slide applied in
+ *  EPILOGUE beat. Matches the same SPHERE-band slide applied in
  *  `BrandmarkAccretionShell.useFrame` (which moves the canvas shell).
  *  Exposed here so the DOM-anchored labels that hang off the shell
  *  (cardinals, source/surface item labels, group headers) follow
@@ -1081,9 +1081,16 @@ function rotateGyroLocalOffset(local: readonly [number, number, number]): Vec3 {
  *  at the corridor's parked X while the canvas geometry slides
  *  underneath them. */
 function epilogueShellOffsetX(transform: DepthGatewayTransform): number {
-  const ep = transform.epilogueProgress;
-  const eased = ep <= 0 ? 0 : ep >= 1 ? 1 : ep * ep * (3 - 2 * ep);
-  return eased * EPILOGUE_SHELL_X;
+  return epilogueBand(transform.epilogueProgress, "SPHERE") * EPILOGUE_SHELL_X;
+}
+
+/** Per-frame shrink factor applied to the gyro assembly during the
+ *  EPILOGUE beat. Mirrors the SPHERE-band shrink in
+ *  `BrandmarkAccretionShell` so DOM cardinal labels shrink TOWARDS
+ *  the sphere's centre instead of stranding at their original
+ *  parked offset. */
+function epilogueGyroShrinkFactor(transform: DepthGatewayTransform): number {
+  return 1 + (EPILOGUE_GYRO_SHRINK - 1) * epilogueBand(transform.epilogueProgress, "SPHERE");
 }
 
 function gyroAssemblyWorldPosition(
@@ -1094,7 +1101,10 @@ function gyroAssemblyWorldPosition(
   // applies to the gyro assembly group (BrandmarkAccretionShell), so
   // projected DOM labels stay welded to the enlarged geometry. Only
   // when the gyro is enabled — flat-compass mode has no assembly scale.
-  const s = useGyroLabStore.getState().enabled ? GYRO_ASSEMBLY_SCALE : 1;
+  // The epilogue SHRINK factor composes on top so cardinals migrate
+  // INWARD with the shrinking sphere.
+  const base = useGyroLabStore.getState().enabled ? GYRO_ASSEMBLY_SCALE : 1;
+  const s = base * epilogueGyroShrinkFactor(transform);
   const scaledLocal: [number, number, number] = [local[0] * s, local[1] * s, local[2] * s];
   const [bx, by, bz] = getBrandmarkWorldPosition(transform.paintProgress);
   const [x, y, z] = rotateGyroLocalOffset(scaledLocal);

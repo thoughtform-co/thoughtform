@@ -31,6 +31,7 @@ import {
   makeMeshMaterial,
   makePointsMaterial,
 } from "@/components/landing/intelligence-artifact/artifactPrimitives";
+import { epilogueBand } from "@/lib/home-v2/epilogueTimeline";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import { getBrandmarkAccretionLayers } from "../sceneGeom";
 import {
@@ -238,14 +239,12 @@ export function ShellStack({ layerKey, reducedMotion = false }: ShellStackProps)
       group.visible = false;
       return;
     }
-    // Epilogue fade-out: the sources/interfaces stack is the FIRST
-    // thing to clear as the user scrolls past Build, so the sphere
-    // is reading clean before the news cards arrive. Smoothstepped
-    // so the stream lines and pips ease out together instead of a
-    // hard cut. Hide entirely once invisible to spare the GPU.
-    const ep = epilogueProgress;
-    const epEased = ep <= 0 ? 0 : ep >= 1 ? 1 : ep * ep * (3 - 2 * ep);
-    const epFade = 1 - epEased;
+    // Epilogue v2 fade-out — the sources / interfaces stack clears
+    // alongside the Build header on the shared BUILD_OUT band so the
+    // whole "Build on the substrate" composition leaves the stage in
+    // one motion (corridor cadence rule). Hide entirely once
+    // invisible to spare the GPU.
+    const epFade = 1 - epilogueBand(epilogueProgress, "BUILD_OUT");
     if (epFade <= EMERGE_EPSILON) {
       group.visible = false;
       return;

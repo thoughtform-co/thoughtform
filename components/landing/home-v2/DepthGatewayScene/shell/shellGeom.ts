@@ -676,6 +676,15 @@ export const GYRO_ASSEMBLY_SCALE = 1.18;
  *  parked, paintProgress saturated at 1). */
 export const EPILOGUE_SHELL_X = 0.95;
 
+/** Uniform scale multiplier applied to the gimbal assembly at peak
+ *  epilogue. Picked so the substrate sphere shrinks from its parked
+ *  GYRO_ASSEMBLY_SCALE (1.18) down to ~0.94 of that — small enough
+ *  that the four orbiting news cards frame it nicely without
+ *  intersecting, big enough that the cardinal labels still read.
+ *  News cards are a SIBLING of the gyro assembly (not a child), so
+ *  the cards keep their own size as the gimbal shrinks. */
+export const EPILOGUE_GYRO_SHRINK = 0.7;
+
 /** Orbit ring radius (shell-local units) for the news cards during
  *  the epilogue. Sits just outside the gimbal+stack envelope so the
  *  cards don't intersect the cage; small enough to read all four at

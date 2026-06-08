@@ -4,6 +4,7 @@ import { useFrame } from "@react-three/fiber";
 import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { useDeviceTier } from "@/lib/hooks/useDeviceTier";
+import { epilogueBand } from "@/lib/home-v2/epilogueTimeline";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import { gyroTilt, useGyroLabStore } from "@/lib/stores/gyroLabStore";
 import { getBrandmarkAccretionLayers, getBrandmarkWorldPosition } from "./sceneGeom";
@@ -13,6 +14,7 @@ import { ShellStack } from "./shell/ShellStack";
 import { ShellSubstrate } from "./shell/ShellSubstrate";
 import { ShellSubstrateGyro } from "./shell/ShellSubstrateGyro";
 import {
+  EPILOGUE_GYRO_SHRINK,
   EPILOGUE_SHELL_X,
   GYRO_ASSEMBLY_SCALE,
   SUBSTRATE_GYRO_DRIFT_AMP,
@@ -24,11 +26,6 @@ import {
   SUBSTRATE_GYRO_STATIC_TILT_X,
   SUBSTRATE_GYRO_STATIC_TILT_Y,
 } from "./shell/shellGeom";
-
-function smoothstep(edge0: number, edge1: number, x: number): number {
-  const t = Math.max(0, Math.min(1, (x - edge0) / (edge1 - edge0)));
-  return t * t * (3 - 2 * t);
-}
 
 /**
  * BrandmarkAccretionShell — the inside-out intelligence layer that
@@ -92,13 +89,13 @@ export function BrandmarkAccretionShell() {
 
     shell.visible = true;
     const [bx, by, bz] = getBrandmarkWorldPosition(paintProgress);
-    // Epilogue glide-right: once the corridor has parked the shell at
-    // the Intelligence anchor (paintProgress === 1), `epilogueProgress`
-    // ramps 0..1 across the extra scroll and slides the whole accretion
-    // shell laterally by `EPILOGUE_SHELL_X`. The orbiting news cards
-    // mounted as a sibling of `gyroAssemblyRef` inherit this slide so
-    // they stay framed around the sphere as it migrates right.
-    const epiSlide = smoothstep(0, 1, epilogueProgress) * EPILOGUE_SHELL_X;
+    // Epilogue v2 glide-right: SPHERE band drives the lateral slide so
+    // the sphere doesn't begin moving until just after BUILD_OUT starts
+    // clearing the Build chrome (avoids the slide racing the fade).
+    // The orbiting news cards are a SIBLING of the gyro assembly so
+    // they inherit this slide and stay framed around the sphere.
+    const sphereReveal = epilogueBand(epilogueProgress, "SPHERE");
+    const epiSlide = sphereReveal * EPILOGUE_SHELL_X;
     shell.position.set(bx + epiSlide, by, bz);
 
     const gyroAssembly = gyroAssemblyRef.current;
@@ -108,6 +105,16 @@ export function BrandmarkAccretionShell() {
       gyroTilt.z = 0;
       return;
     }
+
+    // Epilogue v2 shrink: the gimbal assembly contracts from the
+    // parked GYRO_ASSEMBLY_SCALE toward EPILOGUE_GYRO_SHRINK*scale as
+    // the SPHERE band ramps. The card ring (sibling) keeps its own
+    // size, so the cards visually surround the (now smaller) sphere
+    // at a tighter, more legible radius. The matching shrink for DOM-
+    // anchored cardinal labels lives in `sceneGeom.gyroAssemblyWorld
+    // Position` so labels stay welded.
+    const epShrink = 1 + (EPILOGUE_GYRO_SHRINK - 1) * sphereReveal;
+    gyroAssembly.scale.setScalar(GYRO_ASSEMBLY_SCALE * epShrink);
 
     const layers = getBrandmarkAccretionLayers(paintProgress);
     const tiltCalm = 1 - (1 - SUBSTRATE_GYRO_ENCODE_TILT_FLOOR) * layers.orbits;
@@ -160,9 +167,10 @@ export function BrandmarkAccretionShell() {
         // Uniform assembly scale enlarges the whole instrument (gimbal +
         // cardinals + orbits + funnel) about the brandmark centre. The
         // matching DOM-label scale lives in
-        // `sceneGeom.gyroAssemblyWorldPosition`. Rotation is still set
-        // imperatively per-frame in useFrame (scale + rotation compose).
-        <group ref={gyroAssemblyRef} scale={GYRO_ASSEMBLY_SCALE}>
+        // `sceneGeom.gyroAssemblyWorldPosition`. Both scale AND rotation
+        // are written imperatively per-frame in useFrame so the SPHERE
+        // band's epilogue shrink can compose with the base scale.
+        <group ref={gyroAssemblyRef}>
           <ShellSubstrateGyro layerKey="substrate" reducedMotion={isMobile} />
           <ShellEncode layerKey="orbits" reducedMotion={isMobile} />
           <ShellStack layerKey="stack" reducedMotion={isMobile} />

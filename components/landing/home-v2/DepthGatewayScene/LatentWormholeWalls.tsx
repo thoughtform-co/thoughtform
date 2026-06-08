@@ -3,8 +3,38 @@
 import { useFrame } from "@react-three/fiber";
 import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
+import { epilogueBand } from "@/lib/home-v2/epilogueTimeline";
 import { lerp, smoothstep, useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
+import { CAMERA_END } from "@/lib/home-v2/corridorMap";
 import { STATION_DIAGNOSTIC, STATION_INTELLIGENCE, STATION_THOUGHTFORM } from "./sceneGeom";
+
+// ── Epilogue landscape morph ─────────────────────────────────────
+//
+// During the epilogue beat the camera holds at CAMERA_END but the
+// background WARPS: every wormhole-wall point lerps from its
+// corridor-tube position to a corresponding LANDSCAPE position.
+// Ground rises as a heightfield from former bottom-of-tube points,
+// rails splay outward into distant ridges, top-of-tube points settle
+// to the horizon, and a soft gold tint blooms toward the gateway
+// centre. The lerp is per-point with a front-to-back stagger so the
+// warp sweeps INTO the distance like reality is bending around the
+// parked camera — not a flat cross-fade.
+
+/** Ground-plane Y for landscape morph targets. Just below the
+ *  tube's bottom rail (SHELL_RY = 1.35) so the landscape reads as
+ *  "the tube floor opened up" rather than dropping straight down. */
+const LANDSCAPE_GROUND_Y = -1.55;
+
+/** How much the X coordinate spreads outward for landscape ground
+ *  points. The corridor tube is ~4.3 wide (2 * SHELL_RX); the
+ *  landscape ground extends ~3.5x that so it reads as an open
+ *  plain rather than a narrow strip. */
+const LANDSCAPE_X_SPREAD = 3.4;
+
+/** Horizon Z hint — the depth where the new gateway emerges. Used
+ *  by the vertex shader to compute proximity for the gold tint. */
+const LANDSCAPE_GATEWAY_Z = -30;
+const LANDSCAPE_GATEWAY_Y = -0.2;
 
 /**
  * LatentWormholeWalls — subtle particle-based wormhole topology
@@ -187,16 +217,45 @@ uniform float uVisibleFar;
 uniform float uReveal1;
 uniform float uReveal2;
 
+// Epilogue landscape morph. uMorph ramps 0..1 across the MORPH band;
+// uMorphCameraZ holds the parked camera Z so per-point stagger can
+// compute "distance ahead of the camera" without per-frame uniform
+// updates from the JS side.
+uniform float uMorph;
+uniform float uMorphCameraZ;
+uniform vec3 uGatewayCenter;
+uniform vec3 uGoldColor;
+
 attribute vec3 aColor;
 attribute float aReveal;
 attribute float aSize;
+attribute vec3 aMorphTarget;
 
 varying vec3 vColor;
 varying float vAlpha;
 
 void main() {
-  vec4 mv = modelViewMatrix * vec4(position, 1.0);
-  float dist = distance(position, uCameraPos);
+  // Per-point landscape morph with a FRONT-TO-BACK stagger. Points
+  // nearer the camera morph FIRST, so the warp sweeps into the
+  // distance like a wave of bending reality rather than a uniform
+  // cross-fade. zNorm 0 = right at the camera, 1 = at the gateway.
+  float ahead = max(0.0, uMorphCameraZ - position.z);
+  float zNorm = clamp(ahead / 20.0, 0.0, 1.0);
+
+  // Per-point morph reveal: smoothstepped window that travels with
+  // uMorph. Width 0.4 keeps the sweep wave visible at any progress.
+  float perPointMorph = smoothstep(
+    uMorph - 0.30,
+    uMorph + 0.10,
+    1.0 - zNorm
+  );
+  // Clamp to the global ramp so points never morph past the band.
+  perPointMorph = min(perPointMorph, uMorph);
+
+  vec3 warped = mix(position, aMorphTarget, perPointMorph);
+
+  vec4 mv = modelViewMatrix * vec4(warped, 1.0);
+  float dist = distance(warped, uCameraPos);
 
   // Camera-space depth focus. Walls behind the camera or beyond the
   // far plane vanish; rails ahead fade in as they approach.
@@ -208,7 +267,13 @@ void main() {
 
   gl_Position = projectionMatrix * mv;
 
-  vColor = aColor;
+  // Gold tint that blooms toward the horizon gateway centre as the
+  // morph completes — points landing near the gateway get a gentle
+  // gold lift so the gateway's emergence feels lit by something
+  // beyond the camera, not painted on top.
+  float distToGateway = distance(warped, uGatewayCenter);
+  float goldFactor = smoothstep(9.0, 2.0, distToGateway) * perPointMorph * 0.65;
+  vColor = mix(aColor, uGoldColor, goldFactor);
   vAlpha = reveal * farFade * nearFade;
 
   // Distance-based size with a generous floor so far rails still
@@ -242,6 +307,45 @@ interface PointBuffers {
   colors: number[];
   reveals: number[];
   sizes: number[];
+  /** Per-point landscape target — where this point "lands" once the
+   *  epilogue morph fully resolves. The shader lerps position ->
+   *  morphTarget on `uMorph`. */
+  morphTargets: number[];
+}
+
+/** Compute this point's landscape morph target. The mapping reads
+ *  the tube cross-section: bottom-half points become ground (with a
+ *  sine-wave heightfield), top-half points descend to the horizon,
+ *  side points fan outward into distant ridges. Z is preserved so
+ *  depth ordering reads naturally as the warp progresses. */
+function morphTargetFor(x: number, y: number, z: number): [number, number, number] {
+  // Normalize Y to the tube's vertical extent so any geometry built
+  // at any oval radius maps consistently.
+  const yNorm = y / SHELL_RY;
+  const skyness = Math.max(0, Math.min(1, yNorm)); // 1 = top of tube
+  const groundness = Math.max(0, Math.min(1, -yNorm)); // 1 = bottom of tube
+
+  // Heightfield from two overlaid sines so the ground reads as
+  // gently rolling terrain instead of a flat plane. Amplitude is
+  // small (0.18) so the horizon line stays calm and the gateway
+  // ring isn't broken by aggressive ridges.
+  const heightfield = Math.sin(x * 0.55 + z * 0.22) * 0.14 + Math.cos(x * 0.38 - z * 0.31) * 0.08;
+
+  // X spread: bottom points expand widely (open ground plane);
+  // top points compress toward the optical axis (distant horizon
+  // line). Side points (|skyness|, |groundness| both ~0) sit in
+  // between, suggesting ridges along the horizon.
+  const sideness = 1 - skyness - groundness;
+  const xSpread = 1 + LANDSCAPE_X_SPREAD * groundness + sideness * 0.9 + skyness * 0.2;
+
+  // Y target: ground points sink to the heightfield, top points
+  // settle just above the horizon line, side points slot into the
+  // mid-ground ridges between them.
+  const groundY = LANDSCAPE_GROUND_Y + heightfield;
+  const horizonY = LANDSCAPE_GATEWAY_Y + skyness * 0.18;
+  const targetY = groundY * groundness + horizonY * skyness + groundY * sideness * 0.55;
+
+  return [x * xSpread, targetY, z];
 }
 
 function pushPoint(
@@ -257,6 +361,8 @@ function pushPoint(
   buf.colors.push(color.r, color.g, color.b);
   buf.reveals.push(reveal);
   buf.sizes.push(size);
+  const [mx, my, mz] = morphTargetFor(x, y, z);
+  buf.morphTargets.push(mx, my, mz);
 }
 
 /** Build the longitudinal dotted rails around the oval shell for one
@@ -438,12 +544,14 @@ function buildWormholeWalls(): {
   colors: Float32Array;
   reveals: Float32Array;
   sizes: Float32Array;
+  morphTargets: Float32Array;
 } {
   const buf: PointBuffers = {
     positions: [],
     colors: [],
     reveals: [],
     sizes: [],
+    morphTargets: [],
   };
 
   const tfZ = STATION_THOUGHTFORM.position[2];
@@ -486,6 +594,7 @@ function buildWormholeWalls(): {
     colors: new Float32Array(buf.colors),
     reveals: new Float32Array(buf.reveals),
     sizes: new Float32Array(buf.sizes),
+    morphTargets: new Float32Array(buf.morphTargets),
   };
 }
 
@@ -517,12 +626,13 @@ export function LatentWormholeWalls() {
 
   const geometry = useMemo(() => {
     if (!enabled) return null;
-    const { positions, colors, reveals, sizes } = buildWormholeWalls();
+    const { positions, colors, reveals, sizes, morphTargets } = buildWormholeWalls();
     const geom = new THREE.BufferGeometry();
     geom.setAttribute("position", new THREE.BufferAttribute(positions, 3));
     geom.setAttribute("aColor", new THREE.BufferAttribute(colors, 3));
     geom.setAttribute("aReveal", new THREE.BufferAttribute(reveals, 1));
     geom.setAttribute("aSize", new THREE.BufferAttribute(sizes, 1));
+    geom.setAttribute("aMorphTarget", new THREE.BufferAttribute(morphTargets, 3));
     return geom;
   }, [enabled]);
 
@@ -539,6 +649,15 @@ export function LatentWormholeWalls() {
         uReveal1: { value: 0 },
         uReveal2: { value: 0 },
         uOpacity: { value: 0 },
+        // Epilogue landscape morph uniforms — driven from the
+        // MORPH band in useFrame so the warp progresses in lockstep
+        // with the gateway emergence and the title fade-in.
+        uMorph: { value: 0 },
+        uMorphCameraZ: { value: CAMERA_END[2] },
+        uGatewayCenter: {
+          value: new THREE.Vector3(0, LANDSCAPE_GATEWAY_Y, LANDSCAPE_GATEWAY_Z),
+        },
+        uGoldColor: { value: new THREE.Color(GOLD_HEX) },
       },
       transparent: true,
       depthWrite: false,
@@ -562,7 +681,7 @@ export function LatentWormholeWalls() {
     const dt = lastT < 0 ? 0 : Math.min(0.1, now - lastT);
 
     const transform = useDepthGatewayStore.getState().transform;
-    const { paintProgress, active, armed, velocity } = transform;
+    const { paintProgress, epilogueProgress, active, armed, velocity } = transform;
     const painting = active || armed;
 
     material.uniforms.uPixelRatio.value = viewport.dpr;
@@ -573,6 +692,7 @@ export function LatentWormholeWalls() {
       material.uniforms.uOpacity.value = 0;
       material.uniforms.uReveal1.value = 0;
       material.uniforms.uReveal2.value = 0;
+      material.uniforms.uMorph.value = 0;
       return;
     }
 
@@ -580,6 +700,11 @@ export function LatentWormholeWalls() {
     const reveal2 = smoothstep(LEG_2_REVEAL_START, LEG_2_REVEAL_END, paintProgress);
     material.uniforms.uReveal1.value = reveal1;
     material.uniforms.uReveal2.value = reveal2;
+
+    // Epilogue landscape morph — drives the per-vertex warp from
+    // corridor-tube to ground/horizon. Stays at 0 inside the
+    // calibrated corridor (epilogueProgress == 0).
+    material.uniforms.uMorph.value = epilogueBand(epilogueProgress, "MORPH");
 
     // Velocity lift sharpens the lattice during active travel.
     // |velocity| is in progress-units / sec; a 2x multiplier reaches

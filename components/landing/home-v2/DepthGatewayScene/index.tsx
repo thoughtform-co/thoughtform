@@ -6,6 +6,7 @@ import { useDeviceTier } from "@/lib/hooks/useDeviceTier";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import { BrandmarkAccretionShell } from "./BrandmarkAccretionShell";
 import { CelestialMotes } from "./CelestialMotes";
+import { EpilogueGateway } from "./EpilogueGateway";
 import { FlyingCameraRig } from "./FlyingCameraRig";
 import { GatewayWorld } from "./gates/GatewayWorld";
 import { InterGateCorridor } from "./InterGateCorridor";
@@ -214,6 +215,14 @@ export function DepthGatewayScene() {
     >
       <FlyingCameraRig />
       <StaticStarfield />
+      {/* EpilogueGateway — a small gold portal that EMERGES on the
+          horizon during the epilogue beat (ADR-018 epilogue v2).
+          Mounted right after the starfield so it composites as deep
+          background: in FRONT of the star volume (-26..-46) but
+          BEHIND every corridor gate. Invisible (and effectively a
+          no-op render) until `epilogueProgress` enters the GATEWAY
+          band. */}
+      <EpilogueGateway />
       <ThoughtformAtmosphere />
       <InterGateCorridor />
       <LatentFieldTunnel />

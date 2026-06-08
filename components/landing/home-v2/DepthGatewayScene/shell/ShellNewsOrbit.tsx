@@ -32,8 +32,9 @@
 import { ThreeEvent, useFrame, useThree } from "@react-three/fiber";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
-import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
+import { epilogueBand } from "@/lib/home-v2/epilogueTimeline";
 import { SIGNAL_CARDS, type SignalCardData } from "@/lib/home-v2/signalCards";
+import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import {
   EPILOGUE_NEWS_RING_RADIUS,
   EPILOGUE_NEWS_RING_TILT_X,
@@ -313,17 +314,22 @@ export function ShellNewsOrbit({ reducedMotion = false }: ShellNewsOrbitProps) {
       group.visible = false;
       return;
     }
+    // Epilogue v2 — cards live on the CARDS_IN sub-band so they arrive
+    // AFTER the morph + gateway have established the new landscape and
+    // the billions title has landed. Reveal is the same eased 0..1 as
+    // before, just keyed to the band start/end instead of raw ep.
+    const reveal = epilogueBand(epilogueProgress, "CARDS_IN");
+    if (reveal <= EPILOGUE_EPSILON) {
+      group.visible = false;
+      return;
+    }
     group.visible = true;
 
-    // Smoothstep for a soft ease at both ends of the epilogue.
-    const ep = epilogueProgress;
-    const epEased = ep <= 0 ? 0 : ep >= 1 ? 1 : ep * ep * (3 - 2 * ep);
-
     const t = clock.elapsedTime;
-    // Per-frame spin progresses linearly; on top, the EPILOGUE drives
-    // a one-shot DEPLOY rotation so cards rotate INTO place as the
-    // user scrolls into the beat (not just spinning idly).
-    const deploy = epEased * Math.PI; // ~half-turn deploy across the epilogue
+    // Per-frame spin progresses linearly; on top, CARDS_IN drives a
+    // one-shot DEPLOY rotation so cards rotate INTO place as they
+    // fade in (not just spinning idly).
+    const deploy = reveal * Math.PI; // ~half-turn deploy across the band
     const spin = reducedMotion ? 0 : t * EPILOGUE_NEWS_SPIN_SPEED;
     const total = SIGNAL_CARDS.length;
     const hovered = hoverRef.current;
@@ -365,12 +371,12 @@ export function ShellNewsOrbit({ reducedMotion = false }: ShellNewsOrbitProps) {
       const current = cardScales.current[i];
       const next = current + (target - current) * Math.min(1, HOVER_LERP * 0.016);
       cardScales.current[i] = next;
-      mesh.scale.setScalar(next * (0.85 + 0.15 * epEased));
+      mesh.scale.setScalar(next * (0.85 + 0.15 * reveal));
 
-      // Opacity ramps with the epilogue and lifts on hover so the
-      // active card reads brighter than its neighbours.
+      // Opacity ramps with the CARDS_IN band and lifts on hover so
+      // the active card reads brighter than its neighbours.
       const hoverBoost = hovered === i ? 0.12 : 0;
-      mat.opacity = Math.min(1, epEased + hoverBoost);
+      mat.opacity = Math.min(1, reveal + hoverBoost);
     }
   });
 

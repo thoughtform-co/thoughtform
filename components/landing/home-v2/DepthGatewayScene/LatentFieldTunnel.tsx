@@ -3,6 +3,7 @@
 import { useFrame, useThree } from "@react-three/fiber";
 import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
+import { epilogueBand } from "@/lib/home-v2/epilogueTimeline";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import { getThoughtformBootEnvelope } from "./sceneGeom";
 
@@ -748,7 +749,7 @@ export function LatentFieldTunnel() {
     const dt = Math.min(0.1, now - lastT);
 
     const transform = useDepthGatewayStore.getState().transform;
-    const { velocity, active, armed, paintProgress } = transform;
+    const { velocity, active, armed, paintProgress, epilogueProgress } = transform;
     const painting = active || armed;
 
     pointsMaterial.uniforms.uPixelRatio.value = state.viewport.dpr;
@@ -783,19 +784,29 @@ export function LatentFieldTunnel() {
     const velocityT = Math.min(1, absV * 2.0);
     const parkedReveal = latentParkedReveal(paintProgress);
 
+    // Epilogue dim: the latent-field tunnel is the corridor's
+    // ambient atmosphere, so it dissolves to background-quiet during
+    // the MORPH band — the warped wormhole walls + emerging gateway
+    // own the visual stage from here on. Stays at full intensity
+    // through BUILD_OUT so the transition out of Build keeps its
+    // ambient texture.
+    const epiDim = 1 - epilogueBand(epilogueProgress, "MORPH") * 0.85;
+
     const pointsTarget =
       (POINT_AMBIENT + velocityT * (POINT_PEAK - POINT_AMBIENT) + boot * POINT_BOOT_LIFT) *
-      parkedReveal;
+      parkedReveal *
+      epiDim;
     const vectorsTarget =
       (VECTOR_AMBIENT + velocityT * (VECTOR_PEAK - VECTOR_AMBIENT) + boot * VECTOR_BOOT_LIFT) *
-      parkedReveal;
+      parkedReveal *
+      epiDim;
     // Tokens damp at high velocity so they don't smear into illegible
     // streaks during a fast scroll. The damping multiplier scales
     // down the velocity lift but leaves ambient + boot intact.
     const tokensVelocityLift =
       velocityT * (TOKEN_PEAK - TOKEN_AMBIENT) * (1 - velocityT * TOKEN_VELOCITY_DAMP);
     const tokensTarget =
-      (TOKEN_AMBIENT + tokensVelocityLift + boot * TOKEN_BOOT_LIFT) * parkedReveal;
+      (TOKEN_AMBIENT + tokensVelocityLift + boot * TOKEN_BOOT_LIFT) * parkedReveal * epiDim;
 
     const k = 1 - Math.exp(-ALPHA_RESPONSE * dt);
     pointsAlpha.current += (pointsTarget - pointsAlpha.current) * k;

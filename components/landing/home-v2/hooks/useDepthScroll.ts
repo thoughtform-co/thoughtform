@@ -14,14 +14,19 @@ import { SECTOR_LABELS } from "@/lib/home-v2/corridorMap";
 import { getMobilePaintProgress } from "../DepthGatewayScene/sceneGeom";
 
 /** Fraction of the sticky stage that belongs to the calibrated
- *  corridor. The remainder (1 - EPILOGUE_START) is the new
+ *  corridor. The remainder (1 - EPILOGUE_START) is the
  *  "billions on the same layer" epilogue scroll channel. Tied
- *  to the stage height in home-v2.css (`460svh corridor + 180svh
- *  epilogue` -> 460 / 640 = 0.71875). The corridor's normalized
+ *  to the stage height in home-v2.css (`460svh corridor + 300svh
+ *  epilogue` -> 460 / 760 ≈ 0.6053). The corridor's normalized
  *  progress (and beat windows) is computed AGAINST EPILOGUE_START,
  *  so the corridor still tiles [0,1] across its physical span and
- *  every CORRIDOR_TIMELINE constant stays byte-identical. */
-const EPILOGUE_START = 0.71875;
+ *  every CORRIDOR_TIMELINE constant stays byte-identical.
+ *
+ *  Epilogue v2 (2026-06-08) expanded the epilogue from 180svh to
+ *  300svh so the Build header has room to fade out fully BEFORE the
+ *  billions title arrives — corridor cadence rule. Sub-bands inside
+ *  the epilogue live in `lib/home-v2/epilogueTimeline.ts`. */
+const EPILOGUE_START = 460 / 760;
 
 /**
  * useDepthScroll — rAF-throttled scroll watcher for the home-v2

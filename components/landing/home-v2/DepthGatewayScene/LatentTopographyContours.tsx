@@ -5,12 +5,22 @@ import { useEffect, useMemo } from "react";
 import * as THREE from "three";
 import { smoothstep, useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import { BEAT_WINDOWS } from "@/lib/home-v2/corridorMap";
+import { epilogueBand } from "@/lib/home-v2/epilogueTimeline";
 import {
   STATION_DIAGNOSTIC,
   STATION_INTELLIGENCE,
   STATION_THOUGHTFORM,
   depthOpacityForWorldPosition,
 } from "./sceneGeom";
+
+/** Epilogue dissolve multiplier — corridor topology contour shards
+ *  clear during the MORPH band so the warped wormhole walls + the
+ *  emerging gateway can carry the "topology has become a landscape"
+ *  story without competing decorative line art. Returns 1 outside
+ *  the epilogue and during BUILD_OUT, then ramps to 0 across MORPH. */
+function epilogueContourFade(epilogueProgress: number): number {
+  return 1 - epilogueBand(epilogueProgress, "MORPH");
+}
 
 /**
  * LatentTopographyContours — world-fixed topographic shards spaced
@@ -495,7 +505,7 @@ function ContourShard({
   }, [geoms, material]);
 
   useFrame(() => {
-    const { paintProgress, active } = useDepthGatewayStore.getState().transform;
+    const { paintProgress, epilogueProgress, active } = useDepthGatewayStore.getState().transform;
     if (!active) {
       material.opacity = 0;
       return;
@@ -504,8 +514,14 @@ function ContourShard({
     const depthOpacity = depthOpacityForWorldPosition(paintProgress, pos, depthWindow);
     // Cap at 0.32 — contours are a backdrop layer, never compete
     // with the orbits or the brandmark. Suppressed across the Navigate
-    // park so the compass reads clean there.
-    material.opacity = depthOpacity * reveal * 0.32 * navParkVisibility(paintProgress);
+    // park so the compass reads clean there. Dissolved during the
+    // epilogue MORPH band so the new landscape reads cleanly.
+    material.opacity =
+      depthOpacity *
+      reveal *
+      0.32 *
+      navParkVisibility(paintProgress) *
+      epilogueContourFade(epilogueProgress);
   });
 
   return (
@@ -590,7 +606,7 @@ function RidgeShard({
   }, [arcGeom, ticksGeom, arcMat, tickMat]);
 
   useFrame(() => {
-    const { paintProgress, active } = useDepthGatewayStore.getState().transform;
+    const { paintProgress, epilogueProgress, active } = useDepthGatewayStore.getState().transform;
     if (!active) {
       arcMat.opacity = 0;
       tickMat.opacity = 0;
@@ -598,7 +614,8 @@ function RidgeShard({
     }
     const reveal = legRevealForZ(pos[2], paintProgress);
     const depthOpacity = depthOpacityForWorldPosition(paintProgress, pos, depthWindow);
-    const base = depthOpacity * reveal * navParkVisibility(paintProgress);
+    const epFade = epilogueContourFade(epilogueProgress);
+    const base = depthOpacity * reveal * navParkVisibility(paintProgress) * epFade;
     arcMat.opacity = base * 0.45;
     tickMat.opacity = base * 0.7;
   });
@@ -693,7 +710,7 @@ function VectorShard({ pos, dir, length, color = DAWN_HEX }: Omit<VectorShardArt
   }, [lineGeom, diamondGeom, lineMat, diamondMat]);
 
   useFrame(() => {
-    const { paintProgress, active } = useDepthGatewayStore.getState().transform;
+    const { paintProgress, epilogueProgress, active } = useDepthGatewayStore.getState().transform;
     if (!active) {
       lineMat.opacity = 0;
       diamondMat.opacity = 0;
@@ -701,7 +718,8 @@ function VectorShard({ pos, dir, length, color = DAWN_HEX }: Omit<VectorShardArt
     }
     const reveal = legRevealForZ(midpoint[2], paintProgress);
     const depthOpacity = depthOpacityForWorldPosition(paintProgress, midpoint, depthWindow);
-    const base = depthOpacity * reveal * navParkVisibility(paintProgress);
+    const epFade = epilogueContourFade(epilogueProgress);
+    const base = depthOpacity * reveal * navParkVisibility(paintProgress) * epFade;
     lineMat.opacity = base * 0.6;
     diamondMat.opacity = base * 0.85;
   });

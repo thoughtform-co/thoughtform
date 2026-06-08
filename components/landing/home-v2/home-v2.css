@@ -106,8 +106,14 @@
          saturates at 1 right when the user starts scrolling into
          the epilogue, and the epilogue scrub takes over from
          there. Corridor windows + CORRIDOR_TIMELINE are byte-
-         identical — see `depthGatewayStore.epilogueProgress`. */
-  height: 640svh;
+         identical — see `depthGatewayStore.epilogueProgress`.
+       - 760svh: epilogue v2 — extended the epilogue to ~300svh so
+         the Build header and the billions title never co-exist
+         (corridor cadence rule). The new sub-bands
+         (BUILD_OUT / SPHERE / MORPH / GATEWAY / SIGNAL_IN /
+         CARDS_IN) live in `lib/home-v2/epilogueTimeline.ts`;
+         `EPILOGUE_START` recomputes to 460/760 ≈ 0.6053. */
+  height: 760svh;
   background: var(--void, #050403);
   z-index: 2;
   isolation: isolate;
@@ -334,14 +340,18 @@ html[data-corridor-epilogue="true"] .home-v2-stage__canvas canvas {
    right half of the viewport is now empty (sphere slid out of the
    way) and the copy can claim a wider column. */
 .home-v2-station-header--signal {
-  top: auto;
-  bottom: clamp(80px, 14vh, 160px);
+  /* Vertical-centre, left-anchored. Mirrors the screen position of
+     section 2's `.home-v2-copy-block--thoughtform-left` ("AI collapsed
+     the distance between thought and form") so the closing chapter
+     reads as the symmetric bookend to the opening copy. Camera is
+     parked during the epilogue, so this fixed anchor is pixel-stable. */
+  top: 50%;
   /* Anchor to the left edge of a centred 1400px container so on wide
      viewports the block sits at the same left inset as the corridor
      headers (consistent inset), and on narrower screens it tucks
      toward the gutter without jamming against the edge. */
   left: max(24px, calc(50% - 700px));
-  transform: none;
+  transform: translateY(-50%);
   width: min(86vw, 540px);
 }
 .home-v2-station-header--signal .home-v2-station-header__title {

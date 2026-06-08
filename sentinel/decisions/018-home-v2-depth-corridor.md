@@ -11,6 +11,171 @@
 
 ---
 
+## 2026-06-08 Revision (v2) — Epilogue choreography polish + landscape warp + emerging gateway
+
+The first epilogue pass (below) shipped sphere-slides-right + orbiting news
+cards + bottom-left title, but the user's feedback identified three issues:
+
+1. The title was anchored to the BOTTOM of the viewport; should sit at
+   the **vertical centre** to mirror section 2's "AI collapsed the
+   distance" copy position.
+2. The Build header and the billions title were **co-existing on
+   screen** during the cross-fade — violates the corridor's handoff
+   "rule" (Navigate/Encode/Build never share the viewport with the
+   next title; same length + style fade should apply here).
+3. Once the user passed the Build park the **camera + background sat
+   completely still** — the corridor's depth/motion vocabulary
+   evaporated. The user asked for the background to MORPH into a
+   **landscape with a gateway emerging in the distance** — visually,
+   the original homepage gateway grammar (gold portal rings + glow
+   over a topology floor).
+
+Fixes shipped together as "epilogue v2".
+
+### a. Sub-band timeline — single source of truth
+
+The epilogue is no longer a single 0..1 ramp driving everything in
+lockstep. New module
+[`lib/home-v2/epilogueTimeline.ts`](../../lib/home-v2/epilogueTimeline.ts)
+declares six **sub-bands** (start/end in epilogueProgress 0..1) and a
+shared `band(p, a, b)` smoothstep helper that every consumer reads:
+
+| Band        | Window      | Drives                                                          |
+| ----------- | ----------- | --------------------------------------------------------------- |
+| `BUILD_OUT` | 0.00 → 0.22 | Build header + ShellStack + source/surface DOM labels fade out  |
+| `SPHERE`    | 0.08 → 0.55 | Gimbal slides right AND shrinks                                 |
+| `MORPH`     | 0.06 → 0.70 | Wormhole topology warps into landscape; contour shards dissolve |
+| `GATEWAY`   | 0.20 → 0.85 | Gold portal scales 0.25 → 1.0 + opacity 0 → 0.85                |
+| `SIGNAL_IN` | 0.52 → 0.74 | "Billions" title fades / types in                               |
+| `CARDS_IN`  | 0.54 → 0.84 | News cards orbit in + deploy                                    |
+
+The empty window **`[0.22, 0.52]`** between `BUILD_OUT.end` and
+`SIGNAL_IN.start` is the corridor cadence rule made literal — no
+title is on screen there. It's pure background morph + gateway
+emergence (where the camera-static "warp reality" beat lives).
+
+The stage grew from `640svh` to `760svh` to give that gap room
+(epilogue length 180 → 300svh). `useDepthScroll` `EPILOGUE_START`
+recomputes to `460 / 760 ≈ 0.6053`.
+
+### b. Title at vertical centre
+
+[`home-v2.css`](../../components/landing/home-v2/home-v2.css)
+`.home-v2-station-header--signal` now uses
+`top: 50%; transform: translateY(-50%)` (was
+`bottom: clamp(80px, 14vh, 160px)`). Mirrors the on-screen Y of
+`.home-v2-copy-block--thoughtform-left` so the closing chapter is
+the symmetric bookend to the opening copy. Camera is parked through
+the entire epilogue, so a fixed-position anchor is pixel-stable.
+
+### c. Sphere shrinks (cards keep their size)
+
+New `EPILOGUE_GYRO_SHRINK = 0.7` in
+[`shellGeom.ts`](../../components/landing/home-v2/DepthGatewayScene/shell/shellGeom.ts).
+[`BrandmarkAccretionShell`](../../components/landing/home-v2/DepthGatewayScene/BrandmarkAccretionShell.tsx)
+writes `gyroAssembly.scale.setScalar(GYRO_ASSEMBLY_SCALE * epShrink)`
+per frame off the SPHERE band, so the gimbal contracts toward the
+news-card ring radius as the user scrolls in. The news cards are a
+**sibling** of `gyroAssemblyRef` (not a child), so they keep their
+own size as the gimbal shrinks. The DOM-anchored cardinal labels
+(JUDGMENT / CRAFT / VOICE / TASTE) shrink in lockstep via
+`epilogueGyroShrinkFactor` inside `sceneGeom.gyroAssemblyWorldPosition`.
+
+### d. Topology → landscape warp (the centerpiece)
+
+The camera holds at `CAMERA_END = [0, 0, -17]` throughout the
+epilogue, so the sensation of "moving through space again" comes
+from the **geometry warping around the parked camera**, not from
+camera dolly. The user described it as "warping reality" — that's
+exactly what the shader does.
+
+[`LatentWormholeWalls`](../../components/landing/home-v2/DepthGatewayScene/LatentWormholeWalls.tsx)
+is one `Points` mesh (~thousands of dots: longitudinal rails, cross
+rings, aperture frames, shelf rows). At build time we now compute a
+per-point **`aMorphTarget`** that says "where does this tube point
+LAND on the landscape." Mapping:
+
+- bottom-of-tube points (`yNorm < 0`) become **ground heightfield**
+  — X expands ~3.4×, Y descends to `-1.55` + a low-amplitude two-
+  sine heightfield, Z preserved → an open ground plane;
+- top-of-tube points (`yNorm > 0`) descend toward the **horizon
+  line** — X stays close to the optical axis (distant), Y settles
+  near `LANDSCAPE_GATEWAY_Y`;
+- side points form the **ridges** between ground and horizon.
+
+The vertex shader lerps `position` → `aMorphTarget` per point with
+a **front-to-back stagger** — points nearer the camera morph FIRST,
+so a wave of bending reality sweeps OUTWARD into the distance
+rather than the whole tube cross-fading at once:
+
+```glsl
+float ahead = max(0.0, uMorphCameraZ - position.z);
+float zNorm = clamp(ahead / 20.0, 0.0, 1.0);
+float perPointMorph = smoothstep(uMorph - 0.30, uMorph + 0.10, 1.0 - zNorm);
+perPointMorph = min(perPointMorph, uMorph);
+vec3 warped = mix(position, aMorphTarget, perPointMorph);
+```
+
+A **gold tint** blooms toward the horizon gateway centre as the
+morph completes — points landing near `LANDSCAPE_GATEWAY_Z = -30`
+get a soft lift so the gateway feels "lit by something beyond" the
+camera rather than painted on top.
+
+The corridor's other topology — `LatentTopographyContours` shards
+and the ambient `LatentFieldTunnel` field — dissolve during the
+MORPH band so the new landscape reads cleanly. (Multipliers on
+each material.opacity; the layers don't disappear, they recede
+underneath the warped wall lattice.)
+
+### e. Emerging gateway
+
+New
+[`EpilogueGateway.tsx`](../../components/landing/home-v2/DepthGatewayScene/EpilogueGateway.tsx).
+Three concentric gold `RingGeometry` discs + one outer dawn ring +
+an additive radial-glow shader plane behind them at world `[0,
+-0.2, -30]` (behind Intelligence station ~-22.6, in front of the
+starfield -26..-46, comfortably inside Canvas `far: 100`). Mounted
+right after `<StaticStarfield />` so it composites as deep
+background.
+
+GATEWAY band drives scale (`0.25 → 1.0`) and opacity (`0 → 0.85`)
+with a faint breathing pulse on `clock.elapsedTime`. The portal
+**emerges** rather than fades on — the geometry literally grows
+out of nothing on the horizon.
+
+### Files touched in v2
+
+| File                                                                        | Change                                                                                     |
+| --------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| New: `lib/home-v2/epilogueTimeline.ts`                                      | Sub-band table + helpers                                                                   |
+| New: `components/landing/home-v2/DepthGatewayScene/EpilogueGateway.tsx`     | Gold portal                                                                                |
+| `components/landing/home-v2/home-v2.css`                                    | Stage 640 → 760svh; signal block top:50%                                                   |
+| `components/landing/home-v2/hooks/useDepthScroll.ts`                        | `EPILOGUE_START = 460/760`                                                                 |
+| `components/landing/home-v2/CorridorStationHeaders.tsx`                     | Build header → BUILD_OUT; signal → SIGNAL_IN                                               |
+| `components/landing/home-v2/DepthGatewayScene/BrandmarkAccretionShell.tsx`  | Sphere slide+shrink on SPHERE band                                                         |
+| `components/landing/home-v2/DepthGatewayScene/shell/shellGeom.ts`           | `EPILOGUE_GYRO_SHRINK = 0.7`                                                               |
+| `components/landing/home-v2/DepthGatewayScene/shell/ShellStack.tsx`         | Fade on BUILD_OUT                                                                          |
+| `components/landing/home-v2/DepthGatewayScene/shell/ShellNewsOrbit.tsx`     | Reveal on CARDS_IN                                                                         |
+| `components/landing/home-v2/DepthGatewayScene/LatentWormholeWalls.tsx`      | `aMorphTarget` attribute + `uMorph` uniform; per-vertex warp + gold horizon tint           |
+| `components/landing/home-v2/DepthGatewayScene/LatentTopographyContours.tsx` | Fade on MORPH                                                                              |
+| `components/landing/home-v2/DepthGatewayScene/LatentFieldTunnel.tsx`        | Dim on MORPH                                                                               |
+| `components/landing/home-v2/DepthGatewayScene/sceneGeom.ts`                 | `epilogueShellOffsetX` and `epilogueGyroShrinkFactor` band-keyed; gateStackLabel BUILD_OUT |
+| `components/landing/home-v2/DepthGatewayScene/index.tsx`                    | Mount `<EpilogueGateway />` after `<StaticStarfield />`                                    |
+
+### Verified (v2)
+
+- `npm run build` clean (57 routes, no new errors).
+- Five-checkpoint browser scrub at 1440×900 — Build park, gap,
+  mid-SIGNAL_IN, late SIGNAL_IN, near-end — all PASS:
+  - title at vertical centre 450px throughout the SIGNAL_IN band;
+  - GAP at ep=0.35 shows no title (both Build and billions at 0);
+  - SIGNAL_IN opacity ramps 0.634 → 1.0 → 1.0 across 0.65→0.78→0.92;
+  - gateway rings visible from ~0.65, fully emerged by 0.92;
+  - wormhole walls warping visibly throughout the epilogue;
+- No console errors.
+
+---
+
 ## 2026-06-08 Revision — "Billions on the same layer" epilogue (orbiting news cards)
 
 User asked for a NEW final beat AFTER "Build on the substrate": when the

@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef } from "react";
 import { stationById } from "@/lib/home-v2/corridorMap";
+import { epilogueBand } from "@/lib/home-v2/epilogueTimeline";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 
 /**
@@ -395,21 +396,25 @@ export function CorridorStationHeaders() {
       const p = painting ? t.paintProgress : 0;
       const nowSec = performance.now() / 1000;
 
-      // Epilogue fade-out applies to the Build header only — Navigate /
-      // Encode have already faded out by the time the corridor's
-      // paintProgress saturates at 1. Smoothstepped against the
-      // epilogue scroll channel from `useDepthScroll`.
+      // Epilogue v2 — Build header and signal block read SEPARATE
+      // sub-bands off the epilogue timeline so they never co-exist
+      // on screen. BUILD_OUT clears the Build header by epilogue
+      // 0.22; SIGNAL_IN brings the billions title in starting at
+      // 0.52 — the 0.22 -> 0.52 gap is pure morph + gateway, no
+      // copy visible. Mirrors the corridor's existing Navigate ->
+      // Encode and Encode -> Build handoff cadence.
       const ep = t.epilogueProgress;
-      const epEased = ep <= 0 ? 0 : ep >= 1 ? 1 : ep * ep * (3 - 2 * ep);
-      const epFadeOut = 1 - epEased;
+      const buildOut = 1 - epilogueBand(ep, "BUILD_OUT");
+      const signalIn = epilogueBand(ep, "SIGNAL_IN");
       const containerOps = {
         nav: bandOpacity(p, NAVIGATE_FADE_IN, NAVIGATE_FADE_OUT),
         enc: bandOpacity(p, ENCODE_FADE_IN, ENCODE_FADE_OUT),
-        bld: bandOpacity(p, BUILD_FADE_IN) * epFadeOut,
+        bld: bandOpacity(p, BUILD_FADE_IN) * buildOut,
         // Signal block is the new bottom-left "billions" title +
-        // paragraph. Its only driver is the epilogue scrub — the
-        // corridor stays at paintProgress 1 throughout the epilogue.
-        sig: epEased,
+        // paragraph. Its only driver is the epilogue SIGNAL_IN band
+        // (gap from BUILD_OUT.end == 0.22 to SIGNAL_IN.start == 0.52
+        // guarantees the two titles never share the viewport).
+        sig: signalIn,
       };
 
       // Container opacity writes (suppress when no meaningful change).
