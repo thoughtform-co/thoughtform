@@ -380,7 +380,9 @@ function buildBearingGlyphs(radius: number): THREE.BufferGeometry {
 }
 
 /** Graduated ticks in the XZ plane — these sit inside a ring's spin
- *  group so they rotate with the gimbal ring like a calibrated scale. */
+ *  group so they rotate with the gimbal ring like a calibrated scale.
+ *  Ticks extend outward from the ring (compass-bezel style) with three
+ *  tiers — major / half / minor — and cardinal chevrons at N/E/S/W. */
 function buildRingGraduations(
   radius: number,
   count: number,
@@ -390,9 +392,11 @@ function buildRingGraduations(
   for (let i = 0; i < count; i++) {
     const a = (i / count) * Math.PI * 2;
     const major = i % majorEvery === 0;
-    const half = i % (majorEvery / 2) === 0 && !major;
-    const innerOff = major ? 0.048 : half ? 0.032 : 0.018;
-    const outerOff = major ? 0.018 : 0.006;
+    const half = i % Math.max(1, Math.floor(majorEvery / 2)) === 0 && !major;
+    // Mostly outward extension so the ticks read as a compass bezel
+    // outside the ring line, with a tiny inward serif for crispness.
+    const innerOff = major ? 0.018 : half ? 0.012 : 0.006;
+    const outerOff = major ? 0.05 : half ? 0.03 : 0.016;
     const inner = radius - innerOff;
     const outer = radius + outerOff;
     positions.push(Math.cos(a) * inner, 0, Math.sin(a) * inner);
@@ -401,9 +405,9 @@ function buildRingGraduations(
 
   [0, Math.PI / 2, Math.PI, Math.PI * 1.5].forEach((a) => {
     const tangent = a + Math.PI / 2;
-    const tipR = radius + 0.06;
-    const baseR = radius + 0.025;
-    const spread = 0.022;
+    const tipR = radius + 0.04;
+    const baseR = radius + 0.018;
+    const spread = 0.013;
     positions.push(Math.cos(a) * tipR, 0, Math.sin(a) * tipR);
     positions.push(
       Math.cos(a) * baseR + Math.cos(tangent) * spread,
@@ -628,8 +632,10 @@ export function ShellSubstrateGyro({ layerKey, reducedMotion = false }: ShellSub
     const ringGraduations: THREE.BufferGeometry[] = [];
     for (let i = 0; i < SUBSTRATE_GYRO_GIMBAL_RINGS.length; i++) {
       const r = SUBSTRATE_GYRO_GIMBAL_RINGS[i].radius;
-      const density = i === 0 ? 72 : i === 1 ? 56 : 40;
-      const majorEvery = i === 0 ? 6 : 4;
+      // Each ring carries 36 majors (every 10° equivalent) so the
+      // calibrated read is consistent across the three gimbals.
+      const density = i === 0 ? 108 : i === 1 ? 90 : 72;
+      const majorEvery = i === 0 ? 9 : i === 1 ? 9 : 6;
       ringGraduations.push(buildRingGraduations(r, density, majorEvery));
     }
 
@@ -662,7 +668,7 @@ export function ShellSubstrateGyro({ layerKey, reducedMotion = false }: ShellSub
       equator: makeDepthFadeLineMaterial(gold, SUBSTRATE_GYRO_GLOBE_EQUATOR_OPACITY),
       ring: makeDepthFadeLineMaterial(gold, SUBSTRATE_GYRO_RING_LINE_OPACITY),
       tick: makeDepthFadeLineMaterial(gold, SUBSTRATE_GYRO_TICK_OPACITY),
-      graduation: makeDepthFadeLineMaterial(dawn, SUBSTRATE_GYRO_TICK_OPACITY * 0.7),
+      graduation: makeDepthFadeLineMaterial(gold, SUBSTRATE_GYRO_RING_LINE_OPACITY * 0.95),
       symbol: makeDepthFadeLineMaterial(gold, SUBSTRATE_GYRO_SYMBOL_OPACITY),
       pivot: makeMeshMaterial(COLOR_GOLD, SUBSTRATE_GYRO_PIVOT_OPACITY),
       particle: makeParticleMaterial(),
@@ -726,7 +732,7 @@ export function ShellSubstrateGyro({ layerKey, reducedMotion = false }: ShellSub
     mats.equator.uniforms.uOpacity.value = lineOpacity(SUBSTRATE_GYRO_GLOBE_EQUATOR_OPACITY);
     mats.ring.uniforms.uOpacity.value = lineOpacity(SUBSTRATE_GYRO_RING_LINE_OPACITY);
     mats.tick.uniforms.uOpacity.value = lineOpacity(SUBSTRATE_GYRO_TICK_OPACITY);
-    mats.graduation.uniforms.uOpacity.value = lineOpacity(SUBSTRATE_GYRO_TICK_OPACITY * 0.7);
+    mats.graduation.uniforms.uOpacity.value = lineOpacity(SUBSTRATE_GYRO_RING_LINE_OPACITY * 0.95);
     mats.symbol.uniforms.uOpacity.value = lineOpacity(SUBSTRATE_GYRO_SYMBOL_OPACITY);
     mats.pivot.opacity = SUBSTRATE_GYRO_PIVOT_OPACITY * presence;
     mats.particle.uniforms.uPixelRatio.value = state.viewport.dpr;
