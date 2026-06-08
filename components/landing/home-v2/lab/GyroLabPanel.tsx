@@ -80,7 +80,7 @@ export function GyroLabPanel() {
             label="Pt density"
             value={particleDensity}
             min={0.2}
-            max={1.5}
+            max={3.0}
             step={0.05}
             onChange={(v) => set({ particleDensity: v })}
           />

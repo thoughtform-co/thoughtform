@@ -631,6 +631,19 @@ export const SUBSTRATE_GYRO_PARTICLE_COUNT_MOBILE = 90;
 export const SUBSTRATE_GYRO_POINT_SIZE = 6.0;
 export const SUBSTRATE_GYRO_PARTICLE_OPACITY = 0.45;
 
+/** Dotted-sphere shell — dots in latitude bands on a single sphere
+ *  surface, with per-dot facing fade in the shader so the back
+ *  hemisphere drops out and the cloud reads as a real 3D shell.
+ *  Dense by design so the shell saturates with dots like the
+ *  reference dotted globe; the facing-fade shader handles the
+ *  hemisphere drop-off, additive blending handles the brightness. */
+export const SUBSTRATE_GYRO_DOTTED_SHELL_RADIUS_MUL = 1.32;
+export const SUBSTRATE_GYRO_DOTTED_SHELL_COUNT_DESKTOP = 3600;
+export const SUBSTRATE_GYRO_DOTTED_SHELL_COUNT_MOBILE = 1200;
+export const SUBSTRATE_GYRO_DOTTED_SHELL_BANDS = 28;
+export const SUBSTRATE_GYRO_DOTTED_SHELL_POINT_SIZE = 6.5;
+export const SUBSTRATE_GYRO_DOTTED_SHELL_OPACITY = 1.0;
+
 /** Small navigational glyphs on the outer instrument ring. */
 export const SUBSTRATE_GYRO_TICK_COUNT = 48;
 export const SUBSTRATE_GYRO_MAJOR_TICK_EVERY = 4;

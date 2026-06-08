@@ -42,6 +42,12 @@ import {
   SUBSTRATE_GYRO_GIMBAL_RINGS,
   SUBSTRATE_GYRO_GLOBE_DOTS_OPACITY,
   SUBSTRATE_GYRO_GLOBE_DOTS_POINT_SIZE,
+  SUBSTRATE_GYRO_DOTTED_SHELL_BANDS,
+  SUBSTRATE_GYRO_DOTTED_SHELL_COUNT_DESKTOP,
+  SUBSTRATE_GYRO_DOTTED_SHELL_COUNT_MOBILE,
+  SUBSTRATE_GYRO_DOTTED_SHELL_OPACITY,
+  SUBSTRATE_GYRO_DOTTED_SHELL_POINT_SIZE,
+  SUBSTRATE_GYRO_DOTTED_SHELL_RADIUS_MUL,
   SUBSTRATE_GYRO_GLOBE_EQUATOR_OPACITY,
   SUBSTRATE_GYRO_GLOBE_LINE_OPACITY,
   SUBSTRATE_GYRO_GLOBE_SEGMENTS,
@@ -158,6 +164,93 @@ function makeParticleMaterial(): THREE.ShaderMaterial {
     fragmentShader: gyroParticleFragment,
     uniforms: {
       uPointSize: { value: SUBSTRATE_GYRO_POINT_SIZE },
+      uPixelRatio: { value: typeof window !== "undefined" ? window.devicePixelRatio : 1 },
+      uColorWarm: { value: new THREE.Color(COLOR_GOLD) },
+      uColorCool: { value: new THREE.Color(COLOR_DAWN) },
+      uOpacity: { value: 0 },
+    },
+    transparent: true,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending,
+  });
+}
+
+// ── Dotted-shell surface shader (per-dot facing fade) ───────────────
+// The dots sit on a sphere shell. Each dot's outward normal is dotted
+// with the view direction so the front hemisphere is bright and a touch
+// larger; the far hemisphere fades to near zero. That gradient is what
+// makes a flat scatter of dots read as a 3D shell.
+
+const surfaceShellVertex = /* glsl */ `
+uniform float uPointSize;
+uniform float uPixelRatio;
+attribute vec3 aNormal;
+attribute float aSeed;
+attribute float aRank;
+attribute float aTint;
+varying float vFacing;
+varying float vSeed;
+varying float vRank;
+varying float vTint;
+void main() {
+  vec4 mv = modelViewMatrix * vec4(position, 1.0);
+  gl_Position = projectionMatrix * mv;
+  float dist = max(0.4, -mv.z);
+
+  // Outward normal transformed into view space. In view space the
+  // camera looks down -Z, so the dot faces the camera when vNormal.z
+  // is positive.
+  vec3 vNormal = normalize(normalMatrix * aNormal);
+  float facing = vNormal.z;
+  vFacing = facing;
+
+  float sizeFactor = clamp(6.0 / dist, 0.5, 2.4);
+  float sizeFade = smoothstep(-0.3, 0.5, facing);
+  gl_PointSize = uPointSize * uPixelRatio * sizeFactor *
+                 mix(0.55, 1.4, sizeFade) * mix(0.8, 1.3, aRank);
+
+  vSeed = aSeed;
+  vRank = aRank;
+  vTint = aTint;
+}
+`;
+
+const surfaceShellFragment = /* glsl */ `
+uniform vec3 uColorWarm;
+uniform vec3 uColorCool;
+uniform float uOpacity;
+varying float vFacing;
+varying float vSeed;
+varying float vRank;
+varying float vTint;
+void main() {
+  vec2 uv = gl_PointCoord - 0.5;
+  float d = length(uv);
+  float coreR = mix(0.10, 0.18, vRank);
+  float core = smoothstep(coreR, 0.0, d);
+  float halo = smoothstep(0.5, 0.14, d);
+  float soft = max(core, halo * 0.5);
+
+  // Per-dot facing fade: side-facing dots (the sphere silhouette) at
+  // full brightness, back hemisphere fades to near zero. The curve is
+  // softened so the limb stays dense; only the truly back-facing dots
+  // drop out, otherwise the sphere reads as a thin ring.
+  float facingAlpha = smoothstep(-0.45, 0.05, vFacing);
+
+  float jitter = 0.65 + fract(vSeed * 41.0) * 0.35;
+  vec3 col = mix(uColorCool, uColorWarm, vTint);
+  float alpha = soft * uOpacity * jitter * facingAlpha;
+  if (alpha < 0.008) discard;
+  gl_FragColor = vec4(col, alpha);
+}
+`;
+
+function makeSurfaceShellMaterial(pointSize: number): THREE.ShaderMaterial {
+  return new THREE.ShaderMaterial({
+    vertexShader: surfaceShellVertex,
+    fragmentShader: surfaceShellFragment,
+    uniforms: {
+      uPointSize: { value: pointSize },
       uPixelRatio: { value: typeof window !== "undefined" ? window.devicePixelRatio : 1 },
       uColorWarm: { value: new THREE.Color(COLOR_GOLD) },
       uColorCool: { value: new THREE.Color(COLOR_DAWN) },
@@ -368,6 +461,60 @@ function buildParallelPoints(radius: number, latRad: number, count: number): THR
   return g;
 }
 
+/** Latitude-band dotted sphere shell — dots arranged in parallel rows
+ *  with cos(lat) density (denser at the equator, thinning to the poles).
+ *  Each dot carries its outward normal so the shader can fade the far
+ *  hemisphere by facing — the single technique that makes a flat
+ *  scatter of dots read as a real 3D shell. */
+function buildDottedShell(
+  radius: number,
+  approxCount: number,
+  latBands: number
+): THREE.BufferGeometry {
+  const positions: number[] = [];
+  const normals: number[] = [];
+  const seeds: number[] = [];
+
+  // Sum of cos(lat) across bands sets the normalization constant.
+  let cosSum = 0;
+  for (let b = 0; b < latBands; b++) {
+    const lat = -Math.PI / 2 + ((b + 0.5) * Math.PI) / latBands;
+    cosSum += Math.cos(lat);
+  }
+  const dotsPerCos = approxCount / cosSum;
+
+  for (let b = 0; b < latBands; b++) {
+    const lat = -Math.PI / 2 + ((b + 0.5) * Math.PI) / latBands;
+    const cosLat = Math.cos(lat);
+    const sinLat = Math.sin(lat);
+    const dotsInBand = Math.max(1, Math.round(dotsPerCos * cosLat));
+
+    // Random longitude offset per band so rows don't align into a grid.
+    const offset = Math.random() * Math.PI * 2;
+    const y = sinLat * radius;
+    const r = cosLat * radius;
+
+    for (let i = 0; i < dotsInBand; i++) {
+      const lon = offset + (i / dotsInBand) * Math.PI * 2 + (Math.random() - 0.5) * 0.08;
+      const rJitter = 0.992 + Math.random() * 0.016;
+      const px = Math.cos(lon) * r * rJitter;
+      const py = y * rJitter;
+      const pz = Math.sin(lon) * r * rJitter;
+      positions.push(px, py, pz);
+
+      const len = Math.sqrt(px * px + py * py + pz * pz) || 1;
+      normals.push(px / len, py / len, pz / len);
+      seeds.push(Math.random());
+    }
+  }
+
+  const g = new THREE.BufferGeometry();
+  g.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+  g.setAttribute("aNormal", new THREE.Float32BufferAttribute(normals, 3));
+  g.setAttribute("aSeed", new THREE.Float32BufferAttribute(seeds, 1));
+  return g;
+}
+
 function addRankTint(geom: THREE.BufferGeometry, count: number, warmBias: number): void {
   const ranks = new Float32Array(count);
   const tints = new Float32Array(count);
@@ -449,6 +596,22 @@ export function ShellSubstrateGyro({ layerKey, reducedMotion = false }: ShellSub
     const particles = buildSphereCloudGeometry(globeRadius, particleCount);
     addRankTint(particles, particleCount, 0.3);
 
+    const dottedShellCount = Math.max(
+      120,
+      Math.round(
+        (reducedMotion
+          ? SUBSTRATE_GYRO_DOTTED_SHELL_COUNT_MOBILE
+          : SUBSTRATE_GYRO_DOTTED_SHELL_COUNT_DESKTOP) * particleDensity
+      )
+    );
+    const dottedShellRadius = globeRadius * SUBSTRATE_GYRO_DOTTED_SHELL_RADIUS_MUL;
+    const dottedShell = buildDottedShell(
+      dottedShellRadius,
+      dottedShellCount,
+      SUBSTRATE_GYRO_DOTTED_SHELL_BANDS
+    );
+    addRankTint(dottedShell, dottedShell.attributes.position.count, 0.6);
+
     const pivot = buildDiamondGeometry(PIVOT_SIZE);
     const ticks = buildNavigationTicks(
       SUBSTRATE_GYRO_GIMBAL_RINGS[0].radius,
@@ -476,6 +639,7 @@ export function ShellSubstrateGyro({ layerKey, reducedMotion = false }: ShellSub
       equator,
       gimbalRings,
       particles,
+      dottedShell,
       pivot,
       ticks,
       ticksMiddle,
@@ -502,6 +666,7 @@ export function ShellSubstrateGyro({ layerKey, reducedMotion = false }: ShellSub
       symbol: makeDepthFadeLineMaterial(gold, SUBSTRATE_GYRO_SYMBOL_OPACITY),
       pivot: makeMeshMaterial(COLOR_GOLD, SUBSTRATE_GYRO_PIVOT_OPACITY),
       particle: makeParticleMaterial(),
+      dottedShell: makeSurfaceShellMaterial(SUBSTRATE_GYRO_DOTTED_SHELL_POINT_SIZE),
     };
   }, []);
 
@@ -512,6 +677,7 @@ export function ShellSubstrateGyro({ layerKey, reducedMotion = false }: ShellSub
       geom.equator.dispose();
       geom.gimbalRings.forEach((g) => g.dispose());
       geom.particles.dispose();
+      geom.dottedShell.dispose();
       geom.pivot.dispose();
       geom.ticks.dispose();
       geom.ticksMiddle.dispose();
@@ -565,6 +731,8 @@ export function ShellSubstrateGyro({ layerKey, reducedMotion = false }: ShellSub
     mats.pivot.opacity = SUBSTRATE_GYRO_PIVOT_OPACITY * presence;
     mats.particle.uniforms.uPixelRatio.value = state.viewport.dpr;
     mats.particle.uniforms.uOpacity.value = SUBSTRATE_GYRO_PARTICLE_OPACITY * presence;
+    mats.dottedShell.uniforms.uPixelRatio.value = state.viewport.dpr;
+    mats.dottedShell.uniforms.uOpacity.value = SUBSTRATE_GYRO_DOTTED_SHELL_OPACITY * presence;
 
     if (motionFrozen) {
       globeSpin.rotation.y = 0.4;
@@ -606,6 +774,11 @@ export function ShellSubstrateGyro({ layerKey, reducedMotion = false }: ShellSub
           <points geometry={geom.particles} material={mats.particle} frustumCulled={false} />
         )}
       </group>
+
+      {/* Dotted shell — surface dots with per-dot facing fade so the
+          gimbal cage reads as a real 3D sphere shell (front bright,
+          back hemisphere fades to near zero). */}
+      <points geometry={geom.dottedShell} material={mats.dottedShell} frustumCulled={false} />
 
       <lineSegments geometry={geom.ticks} material={mats.tick} frustumCulled={false} />
       <lineSegments geometry={geom.ticksMiddle} material={mats.tick} frustumCulled={false} />
