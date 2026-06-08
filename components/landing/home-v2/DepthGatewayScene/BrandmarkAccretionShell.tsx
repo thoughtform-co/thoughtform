@@ -125,8 +125,11 @@ export function BrandmarkAccretionShell() {
         SUBSTRATE_GYRO_DRIFT_AMP *
         tiltCalm;
 
-      pitch = (pointerSmoothed.current.pitch + driftPitch) * tiltCalm;
-      yaw = pointerSmoothed.current.yaw * tiltCalm;
+      // Mouse amplitude is already calmed via `mouseCalm`; don't apply
+      // `tiltCalm` a second time or the Build phase becomes visually
+      // unresponsive while the gimbal shell still rotates.
+      pitch = pointerSmoothed.current.pitch + driftPitch;
+      yaw = pointerSmoothed.current.yaw;
       roll = driftRoll;
     }
 

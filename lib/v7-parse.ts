@@ -140,43 +140,46 @@ function parseV7Html(htmlPath: string, tokensPath: string, options?: ParseOption
 }
 
 /**
- * Walk the body, locate each requested `<section ... id="X">` block
- * inside `<main class="stations">`, and slice it out (preserving
- * nested `<section>` balance for ilayer chambers). Inserts a single
- * `<div id="${mountId}" data-home-corridor-mount></div>` placeholder
- * at the first removal site so DOM order matches scroll order on the
- * client.
+ * Walk the body, locate each requested station block by id, and slice
+ * it out. Most v7 stations are `<section id="...">`; the legacy
+ * approach/flywheel block is a `<div id="approach">`, so the removal
+ * supports both tags while preserving same-tag nesting balance.
+ * Inserts a single `<div id="${mountId}" data-home-corridor-mount></div>`
+ * placeholder at the first removal site so DOM order matches scroll
+ * order on the client.
  */
 function removeStationsFromBody(bodyHtml: string, ids: readonly string[], mountId: string): string {
   const wantedIds = new Set(ids);
-  const sectionOpenRe = /<section\b[^>]*\bid="([^"]+)"[^>]*>/g;
   type Range = { start: number; end: number };
   const ranges: Range[] = [];
 
-  let openMatch: RegExpExecArray | null;
-  while ((openMatch = sectionOpenRe.exec(bodyHtml)) !== null) {
-    const id = openMatch[1];
-    if (!wantedIds.has(id)) continue;
+  for (const tag of ["section", "div"] as const) {
+    const openRe = new RegExp(`<${tag}\\b[^>]*\\bid="([^"]+)"[^>]*>`, "g");
+    let openMatch: RegExpExecArray | null;
+    while ((openMatch = openRe.exec(bodyHtml)) !== null) {
+      const id = openMatch[1];
+      if (!wantedIds.has(id)) continue;
 
-    const startIdx = openMatch.index;
-    const tagRe = /<section\b|<\/section>/g;
-    tagRe.lastIndex = startIdx;
-    let depth = 0;
-    let endIdx = -1;
-    let m: RegExpExecArray | null;
-    while ((m = tagRe.exec(bodyHtml)) !== null) {
-      if (m[0] === "</section>") {
-        depth -= 1;
-        if (depth === 0) {
-          endIdx = m.index + m[0].length;
-          break;
+      const startIdx = openMatch.index;
+      const tagRe = new RegExp(`<${tag}\\b|<\\/${tag}>`, "g");
+      tagRe.lastIndex = startIdx;
+      let depth = 0;
+      let endIdx = -1;
+      let m: RegExpExecArray | null;
+      while ((m = tagRe.exec(bodyHtml)) !== null) {
+        if (m[0] === `</${tag}>`) {
+          depth -= 1;
+          if (depth === 0) {
+            endIdx = m.index + m[0].length;
+            break;
+          }
+        } else {
+          depth += 1;
         }
-      } else {
-        depth += 1;
       }
-    }
-    if (endIdx > startIdx) {
-      ranges.push({ start: startIdx, end: endIdx });
+      if (endIdx > startIdx) {
+        ranges.push({ start: startIdx, end: endIdx });
+      }
     }
   }
 

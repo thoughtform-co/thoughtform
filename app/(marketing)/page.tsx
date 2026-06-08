@@ -19,7 +19,14 @@ export const metadata: Metadata = {
 // the `HomeCorridor` shell into that node. The corridor's copy is
 // extracted directly from the prototype HTML so the source of truth
 // for that text remains the v7 prototype file.
-const CORRIDOR_REPLACED_STATIONS = ["definition", "missing-layer", "intelligence-layer"] as const;
+const CORRIDOR_REPLACED_STATIONS = [
+  "definition",
+  "missing-layer",
+  "intelligence-layer",
+  // Legacy normal-flow Navigate / Encode / Build flywheel block.
+  // The home-v2 corridor now owns this sequence.
+  "approach",
+] as const;
 const CORRIDOR_MOUNT_ID = "home-corridor-mount";
 
 export default async function Home() {
