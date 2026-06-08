@@ -65,19 +65,20 @@ const TYPER_ARRIVE_OPACITY = 0.5;
  *  next arrival types out fresh. Lower than ARRIVE so transient
  *  jitters in the middle of a beat don't retype. */
 const TYPER_REARM_OPACITY = 0.04;
-/** Typing speed for the title (characters per second). Title types
- *  first and clears its line in ~0.4-0.5s for a ~25-char heading.
- *  Faster than the original 38 cps so the title doesn't crawl. */
-const TYPER_TITLE_CPS = 55;
-/** Typing speed for the support paragraph. Faster than the title so
- *  a 130-150 char paragraph lands within ~1s of the title — keeps
- *  both lines in sync with the gimbal's arrival rather than the
- *  paragraph dribbling on long after the title settles. Was 70. */
-const TYPER_SUPPORT_CPS = 140;
-/** Gap (seconds) between title finishing and support starting. Short
- *  so the eye flows straight from headline to body without a beat of
- *  empty space. Was 0.18. */
-const TYPER_GAP_S = 0.06;
+/** Typing speed for the title (characters per second). Snappy enough
+ *  that a ~25-char heading clears in ~0.15s — the type-on reads as a
+ *  fast terminal flush, not a crawl. Bumped 55 -> 165 (2026-06-08
+ *  speed pass) after the previous values took a couple of seconds and
+ *  broke the corridor flow. */
+const TYPER_TITLE_CPS = 165;
+/** Typing speed for the support paragraph. Much faster than the title
+ *  so a 130-150 char paragraph lands within ~0.35s — the whole header
+ *  (title + body) resolves in roughly half a second, in step with the
+ *  gimbal's arrival. Bumped 140 -> 420. */
+const TYPER_SUPPORT_CPS = 420;
+/** Gap (seconds) between title finishing and support starting. Tiny
+ *  so the body flushes almost immediately after the headline. */
+const TYPER_GAP_S = 0.03;
 /** Time (seconds) a fully-typed char takes to fade up to opacity 1.
  *  Tiny — keeps each char snappy without a hard pop. */
 const TYPER_CHAR_FADE_S = 0.04;
