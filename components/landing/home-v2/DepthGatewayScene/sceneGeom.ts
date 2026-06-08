@@ -806,6 +806,7 @@ export function getBrandmarkWorldHalfExtent(progress: number): number {
 // ── Copy + label world anchors ───────────────────────────────────
 
 import type { Beat, DepthGatewayTransform } from "@/lib/stores/depthGatewayStore";
+import { gyroTilt, useGyroLabStore } from "@/lib/stores/gyroLabStore";
 import type { WorldAnchor, WorldAnchorPosition } from "../hooks/useWorldDomTracker";
 import {
   STACK_SOURCES_X,
@@ -913,6 +914,41 @@ const gateEncodePrimitive: WorldAnchor["onPaint"] = (ctx, el) => {
   el.style.opacity = (ctx.visibilityOpacity * orbits).toFixed(3);
 };
 
+/** Rotate a shell-local offset by the lab gyroscope's assembly bank.
+ *  This mirrors `BrandmarkAccretionShell`'s wrapper group so projected
+ *  DOM labels belong to the same 3D object as the canvas geometry. */
+function rotateGyroLocalOffset(local: readonly [number, number, number]): Vec3 {
+  if (!useGyroLabStore.getState().enabled) return [local[0], local[1], local[2]];
+
+  const cx = Math.cos(gyroTilt.x);
+  const sx = Math.sin(gyroTilt.x);
+  const cy = Math.cos(gyroTilt.y);
+  const sy = Math.sin(gyroTilt.y);
+  const cz = Math.cos(gyroTilt.z);
+  const sz = Math.sin(gyroTilt.z);
+
+  // Euler XYZ, matching `THREE.Group.rotation.set(x, y, z)` closely
+  // enough for DOM anchor projection.
+  const x1 = local[0];
+  const y1 = local[1] * cx - local[2] * sx;
+  const z1 = local[1] * sx + local[2] * cx;
+
+  const x2 = x1 * cy + z1 * sy;
+  const y2 = y1;
+  const z2 = -x1 * sy + z1 * cy;
+
+  return [x2 * cz - y2 * sz, x2 * sz + y2 * cz, z2];
+}
+
+function gyroAssemblyWorldPosition(
+  transform: DepthGatewayTransform,
+  local: readonly [number, number, number]
+): Vec3 {
+  const [bx, by, bz] = getBrandmarkWorldPosition(transform.paintProgress);
+  const [x, y, z] = rotateGyroLocalOffset(local);
+  return [bx + x, by + y, bz + z];
+}
+
 /**
  * COPY_ANCHORS — every DOM text element the world-DOM tracker
  * projects per frame. The order does not matter; the tracker walks
@@ -928,9 +964,8 @@ const gateEncodePrimitive: WorldAnchor["onPaint"] = (ctx, el) => {
 const ENCODE_PRIMITIVE_ANCHORS: WorldAnchor[] = SHELL_PRIMITIVES.map((prim, idx) => ({
   id: `encode.primitive.${prim.id}`,
   position: (transform) => {
-    const [bx, by, bz] = getBrandmarkWorldPosition(transform.paintProgress);
     const [ox, oy] = getPrimitiveLabelOffset(idx);
-    return [bx + ox, by + oy, bz + 0.12];
+    return gyroAssemblyWorldPosition(transform, [ox, oy, 0.12]);
   },
   // Visible from the Encode park (`diagnostic`) onward — the four
   // primitives ARE the encoded judgment, and the encoded layer persists
@@ -1273,8 +1308,7 @@ export const COPY_ANCHORS: readonly WorldAnchor[] = [
   {
     id: "intelligence.sourcesLabel",
     position: (transform) => {
-      const [bx, by, bz] = getBrandmarkWorldPosition(transform.paintProgress);
-      return [bx + STACK_SOURCES_X * 1.1, by + 0.1, bz];
+      return gyroAssemblyWorldPosition(transform, [STACK_SOURCES_X * 1.1, 0.1, 0]);
     },
     visibilityBeats: ["passthrough-02", "intelligence"],
     fadeFrac: 0.14,
@@ -1288,8 +1322,7 @@ export const COPY_ANCHORS: readonly WorldAnchor[] = [
   {
     id: "intelligence.surfacesLabel",
     position: (transform) => {
-      const [bx, by, bz] = getBrandmarkWorldPosition(transform.paintProgress);
-      return [bx + STACK_SURFACES_X * 1.1, by, bz];
+      return gyroAssemblyWorldPosition(transform, [STACK_SURFACES_X * 1.1, 0, 0]);
     },
     visibilityBeats: ["passthrough-02", "intelligence"],
     fadeFrac: 0.14,

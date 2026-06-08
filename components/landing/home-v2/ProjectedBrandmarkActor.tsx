@@ -10,6 +10,7 @@ import {
 } from "./DepthGatewayScene/sceneGeom";
 import { type WorldAnchor, useWorldDomTracker } from "./hooks/useWorldDomTracker";
 import { BEAT_ORDER } from "@/lib/home-v2/corridorMap";
+import { gyroTilt, useGyroLabStore } from "@/lib/stores/gyroLabStore";
 
 /**
  * ProjectedBrandmarkActor — the primary brandmark painter for the
@@ -160,9 +161,16 @@ export function ProjectedBrandmarkActor() {
 
           // Forward tilt: the inner div takes a small Y rotation
           // scaled by camera dolly so the mark reads as a 3D plate
-          // in motion. No Z roll — the camera path is axial.
+          // in motion. When the gyro lab is enabled, bank the mark
+          // with the gimbal (ref read — no store subscription).
           const dollyTilt = (progress - 0.5) * 6; // ±3° across the corridor
-          inner.style.transform = `rotateY(${dollyTilt.toFixed(2)}deg)`;
+          let gyroBankX = 0;
+          let gyroBankY = 0;
+          if (useGyroLabStore.getState().enabled) {
+            gyroBankX = gyroTilt.x * (180 / Math.PI);
+            gyroBankY = gyroTilt.y * (180 / Math.PI);
+          }
+          inner.style.transform = `rotateX(${gyroBankX.toFixed(2)}deg) rotateY(${(dollyTilt + gyroBankY).toFixed(2)}deg)`;
         },
       },
     ];

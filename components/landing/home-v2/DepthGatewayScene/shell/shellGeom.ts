@@ -562,3 +562,73 @@ export function shellWrapEmerge(reveal: number): ShellWrapEmerge {
 // `petalStagger` / `petalEmerge` helpers above stay — they still
 // drive the per-primitive unfold in `ShellEncode` and the stack funnel
 // unfold in `ShellStack`.
+
+// ── Navigate gyroscope exploration (lab-only) ───────────────────────
+//
+// True 3D gimbaled gyroscope: wireframe attitude globe + counter-rotating
+// great-circle gimbal rings at `/test/navigate-gyroscope`. Depth-fade line
+// shader makes front arcs bright and back arcs dim so the volume reads.
+//
+// PRODUCTION SAFETY: consumed exclusively by `ShellSubstrateGyro`, which
+// only mounts when `gyroLabStore.enabled` is true (default false). The
+// flat-compass `SUBSTRATE_COMPASS_*` constants above are untouched.
+
+/** Default wireframe globe radius — inside the Encode slot ring (1.05). */
+export const SUBSTRATE_GYRO_GLOBE_RADIUS = 0.6;
+
+/** Meridian / parallel counts at `globeDensity` = 1.0. */
+export const SUBSTRATE_GYRO_MERIDIAN_COUNT = 7;
+export const SUBSTRATE_GYRO_PARALLEL_COUNT = 5;
+
+/** Segments per great-circle / latitude arc. */
+export const SUBSTRATE_GYRO_GLOBE_SEGMENTS = 96;
+
+/** Three orthogonal gimbal rings — radii sit just outside the globe,
+ *  inside the Encode slot ring. Mixed-sign spin rates counter-rotate. */
+export const SUBSTRATE_GYRO_GIMBAL_RINGS: ReadonlyArray<{
+  radius: number;
+  tilt: readonly [number, number, number];
+  spin: number;
+}> = [
+  { radius: 0.8, tilt: [0, 0, 0], spin: 0.22 },
+  { radius: 0.92, tilt: [Math.PI / 2, 0, 0], spin: -0.14 },
+  { radius: 1.04, tilt: [0, 0, Math.PI / 2], spin: 0.1 },
+];
+
+/** Slow polar spin of the attitude globe (rad/s). */
+export const SUBSTRATE_GYRO_GLOBE_SPIN = 0.08;
+
+/** Idle whole-assembly drift (rad/s frequencies + amplitude). */
+export const SUBSTRATE_GYRO_DRIFT_PITCH_FREQ = 0.35;
+export const SUBSTRATE_GYRO_DRIFT_ROLL_FREQ = 0.28;
+export const SUBSTRATE_GYRO_DRIFT_AMP = 0.08;
+
+/** Pointer bank smoothing rate (1/s). Amplitude comes from store `mouseAmpDeg`. */
+export const SUBSTRATE_GYRO_MOUSE_LERP = 4.0;
+
+/** Depth-fade line shader bounds relative to the object's view-space
+ *  centre. Positive = closer to camera, negative = farther hemisphere. */
+export const SUBSTRATE_GYRO_DEPTH_NEAR = 0.62;
+export const SUBSTRATE_GYRO_DEPTH_FAR = -0.62;
+
+/** Line opacities at full presence. */
+export const SUBSTRATE_GYRO_GLOBE_LINE_OPACITY = 0.75;
+export const SUBSTRATE_GYRO_GLOBE_EQUATOR_OPACITY = 0.95;
+export const SUBSTRATE_GYRO_RING_LINE_OPACITY = 0.7;
+export const SUBSTRATE_GYRO_PIVOT_OPACITY = 0.85;
+
+/** Surface particle accent counts at `particleDensity` = 1.0. */
+export const SUBSTRATE_GYRO_PARTICLE_COUNT_DESKTOP = 180;
+export const SUBSTRATE_GYRO_PARTICLE_COUNT_MOBILE = 80;
+export const SUBSTRATE_GYRO_POINT_SIZE = 7.0;
+export const SUBSTRATE_GYRO_PARTICLE_OPACITY = 0.55;
+
+/** Static tilt when `prefers-reduced-motion` (radians). */
+export const SUBSTRATE_GYRO_STATIC_TILT_X = 0.12;
+export const SUBSTRATE_GYRO_STATIC_TILT_Y = 0.08;
+
+/** Fraction of tilt / opacity / mouse amp that REMAINS once Encode is
+ *  fully emerged — gimbal persists but calms for the labels / stack. */
+export const SUBSTRATE_GYRO_ENCODE_TILT_FLOOR = 0.55;
+export const SUBSTRATE_GYRO_ENCODE_OPACITY_FLOOR = 0.72;
+export const SUBSTRATE_GYRO_ENCODE_MOUSE_FLOOR = 0.45;
