@@ -268,10 +268,12 @@ export const CORRIDOR_MAP = [
       // declarative agency first-person, matches the strategy spine
       // ("learn to work with the intelligence inside real work")
       // and the Aether flywheel's Navigate body ("Team works with
-      // Claude inside real, named workflows"). Gold em on
-      // "judgment" pairs with the Encode title's em.
+      // Claude inside real, named workflows"). 2026-06-08 copy pass:
+      // names the trained-on-us-but-alien framing and the
+      // command→navigate shift. Gold em on "navigating" reinforces
+      // the station verb.
       supportHtml:
-        "We work inside your real workflows, learning where the model helps and where your <em>judgment</em> still leads.",
+        "Trained on us, but it doesn't think like us. So you stop commanding and start <em>navigating</em>, finding where it leads and where you do.",
       telemetry: {
         sector: "STATION 01",
         callsign: "NAV-01",
@@ -298,13 +300,11 @@ export const CORRIDOR_MAP = [
     content: {
       kicker: "02 · Encode",
       titleHtml: "Encode the <em>judgment</em>.",
-      // W2 (plan 03adb0dd) — agency-voice rewrite of the Encode
-      // support line. Plain declarative; promotes "substrate" to a
-      // gold em accent so the noun reads through (matches the spine
-      // "substrate is the material, the intelligence layer is the
-      // product") and prepares Build's "Build on the substrate."
+      // 2026-06-08 copy pass — frames encoding as moving tacit
+      // judgment out of people's heads into something the model can
+      // inherit. Gold em on "brief" names the encoded artefact.
       supportHtml:
-        "The judgment that makes your work good becomes <em>substrate</em> the intelligence can inherit.",
+        "The judgment that makes your work good was stuck in people's heads. Now it's a <em>brief</em> the model can inherit instead of guessing.",
       telemetry: {
         sector: "STATION 02",
         callsign: "ENC-02",
@@ -339,13 +339,12 @@ export const CORRIDOR_MAP = [
     content: {
       kicker: "03 · Build",
       titleHtml: "Build on the <em>substrate</em>.",
-      // W2 (plan 03adb0dd) — Build support line names the durable
-      // outputs (tools + headless surfaces) and lands on ownership,
-      // mirroring the Thoughtform spine "...until they own it." Gold
-      // em on "headless surfaces" picks up the strategy skill's
-      // build-headless-by-default rule.
+      // 2026-06-08 copy pass — lands on durable ownership: encoded
+      // judgment becomes capability that runs across every surface
+      // and outlives any single model. Gold em on "owned capability"
+      // mirrors the Thoughtform spine "...until they own it."
       supportHtml:
-        "Sources, the layer, and the surfaces that call it lock into one <em>stack</em> your team owns.",
+        "Encoded once, it becomes <em>owned capability</em>, running across chat, agents, and your own apps, and surviving the next model.",
       telemetry: {
         sector: "STATION 03",
         callsign: "BLD-03",

@@ -59,6 +59,59 @@ const SOURCE_PIP_OPACITY = 0.95;
 const SURFACE_FAN_OPACITY = 0.6;
 const SURFACE_PIP_OPACITY = 0.9;
 
+// ── Slot-in tuning (2026-06-08 reveal-polish) ─────────────────────
+//
+// Each cluster slides in from off-screen toward the substrate:
+// sources from far LEFT, surfaces from far RIGHT. The cluster X
+// offset is driven by the cluster's outer stagger window; the
+// existing `foldEmerge` scale stays so the cluster "lands" with a
+// soft overshoot on arrival. On top, each per-item pip / fan tip
+// gets its own staggered scale snap so the parts read as slotting
+// into the machine in sequence.
+
+/** Outer cluster stagger overlap. 0.30 gives a clear sources →
+ *  surfaces handoff while still feeling like one motion. */
+const STACK_CLUSTER_OVERLAP = 0.3;
+
+/** Off-screen X offset at cluster stagger = 0. Picked so the cluster
+ *  is clearly outside the gate frame at parked distance 6.2 (FOV 38°,
+ *  16:9). Negative for sources, positive for surfaces. */
+export const STACK_SLOT_X_OFFSET = 8;
+
+/** Per-item lock stagger inside its cluster's window. Each lane/fan
+ *  tip's scale snaps from a starting floor up to 1.0 in sequence,
+ *  so the parts read as plugging in one-by-one instead of arriving
+ *  as one block. */
+const STACK_ITEM_OVERLAP = 0.55;
+/** Per-item scale floor — pips start at this scale and snap to 1.0
+ *  on lock. Small enough to read as a snap, large enough that the
+ *  pip is still visible during slide so the eye tracks it. */
+const STACK_ITEM_SCALE_FLOOR = 0.6;
+/** Soft landing overshoot peak on each item (additive to 1.0 at the
+ *  mid of the per-item curve, decays to 0 at full lock). */
+const STACK_ITEM_OVERSHOOT = 0.12;
+
+function smootherStack(t: number): number {
+  const x = t < 0 ? 0 : t > 1 ? 1 : t;
+  return x * x * x * (x * (x * 6 - 15) + 10);
+}
+
+/** Per-item lock progress + scale. Used for source pips and surface
+ *  tips (both rendered as individually-positioned meshes/groups, so
+ *  each can scale independently of the cluster geometry). */
+export function stackItemLock(
+  clusterStagger: number,
+  idx: number,
+  total: number
+): { scale: number; locked: number } {
+  if (total <= 0) return { scale: 1, locked: 1 };
+  const s = petalStagger(clusterStagger, idx, total, STACK_ITEM_OVERLAP);
+  const eased = smootherStack(s);
+  const base = STACK_ITEM_SCALE_FLOOR + (1 - STACK_ITEM_SCALE_FLOOR) * eased;
+  const overshoot = Math.sin(Math.PI * s) * STACK_ITEM_OVERSHOOT * (1 - s);
+  return { scale: base + overshoot, locked: s };
+}
+
 export function ShellStack({ layerKey, reducedMotion = false }: ShellStackProps) {
   void layerKey;
   const groupRef = useRef<THREE.Group>(null);
@@ -66,6 +119,15 @@ export function ShellStack({ layerKey, reducedMotion = false }: ShellStackProps)
   const surfacesGroupRef = useRef<THREE.Group>(null);
   const sourceMotesRef = useRef<THREE.Points>(null);
   const surfaceMotesRef = useRef<THREE.Points>(null);
+  // Per-pip / per-tip group refs so we can apply per-item scale + lock
+  // snap independently while the parent cluster slides in.
+  const sourcePipRefs = useRef<(THREE.Group | null)[]>([]);
+  const surfaceTipRefs = useRef<(THREE.Group | null)[]>([]);
+  // Capture pre-stagger lane materials' base opacities so we can fade
+  // the lane and fan lines on with the cluster (the line geometry is
+  // a single buffer, not per-lane).
+  const sourceLanePeakOp = useRef(SOURCE_LANE_OPACITY);
+  const surfaceFanPeakOp = useRef(SURFACE_FAN_OPACITY);
 
   const sourceLaneEnds = useMemo(() => {
     const starts: Array<[number, number, number]> = [];
@@ -177,18 +239,68 @@ export function ShellStack({ layerKey, reducedMotion = false }: ShellStackProps)
     }
     group.visible = true;
 
-    const sourcesStagger = petalStagger(reveal, 0, 2, 0.35);
-    const surfacesStagger = petalStagger(reveal, 1, 2, 0.35);
-    const sourcesScale = foldEmerge(sourcesStagger).scale;
-    const surfacesScale = foldEmerge(surfacesStagger).scale;
+    // Cluster-level staggers: sources arrive first, surfaces follow
+    // with a soft overlap so the read flows left → right into the
+    // central layer.
+    const sourcesStagger = petalStagger(reveal, 0, 2, STACK_CLUSTER_OVERLAP);
+    const surfacesStagger = petalStagger(reveal, 1, 2, STACK_CLUSTER_OVERLAP);
+
+    // Fold-emerge gives a soft landing overshoot on the cluster scale
+    // — `foldEmerge` already overshoots 1.0 around the mid of the
+    // stagger and settles to 1.0 at the end (existing behavior). We
+    // keep it as a polish landing on top of the new X-slide.
+    const sourcesFold = foldEmerge(sourcesStagger);
+    const surfacesFold = foldEmerge(surfacesStagger);
+    const sourcesScale = sourcesFold.scale;
+    const surfacesScale = surfacesFold.scale;
+
+    // Cluster X-slide: at stagger 0 the group sits OFF-SCREEN on its
+    // own side; at stagger 1 it's at the parked X = 0 (relative to
+    // the brandmark world position). The slide uses a smootherstep
+    // so the cluster doesn't pop in halfway.
+    const sourcesSlideT = reducedMotion ? 1 : smootherStack(sourcesStagger);
+    const surfacesSlideT = reducedMotion ? 1 : smootherStack(surfacesStagger);
+    const sourcesX = -STACK_SLOT_X_OFFSET * (1 - sourcesSlideT);
+    const surfacesX = STACK_SLOT_X_OFFSET * (1 - surfacesSlideT);
 
     if (sourcesGroupRef.current) {
       sourcesGroupRef.current.visible = sourcesScale > EMERGE_EPSILON;
       sourcesGroupRef.current.scale.setScalar(sourcesScale);
+      sourcesGroupRef.current.position.set(sourcesX, 0, 0);
     }
     if (surfacesGroupRef.current) {
       surfacesGroupRef.current.visible = surfacesScale > EMERGE_EPSILON;
       surfacesGroupRef.current.scale.setScalar(surfacesScale);
+      surfacesGroupRef.current.position.set(surfacesX, 0, 0);
+    }
+
+    // Fade lane / fan line opacities with the cluster slide so the
+    // streams don't fully appear until the parts have arrived. Pips
+    // are individually scaled below.
+    mats.sourceLanes.opacity = sourcesSlideT * sourceLanePeakOp.current;
+    mats.surfaceFan.opacity = surfacesSlideT * surfaceFanPeakOp.current;
+    mats.sourceMotes.opacity = sourcesSlideT * SOURCE_PIP_OPACITY;
+    mats.surfaceMotes.opacity = surfacesSlideT * SOURCE_PIP_OPACITY;
+
+    // Per-pip lock snap: each pip eases from STACK_ITEM_SCALE_FLOOR
+    // up to ~1.0 with a small overshoot on its own stagger window
+    // inside the cluster — reads as "each pip plugs into its slot
+    // in sequence" rather than the cluster appearing as one block.
+    for (let i = 0; i < sourcePipRefs.current.length; i++) {
+      const node = sourcePipRefs.current[i];
+      if (!node) continue;
+      const { scale } = reducedMotion
+        ? { scale: 1 }
+        : stackItemLock(sourcesStagger, i, sourcePipRefs.current.length);
+      node.scale.setScalar(scale);
+    }
+    for (let i = 0; i < surfaceTipRefs.current.length; i++) {
+      const node = surfaceTipRefs.current[i];
+      if (!node) continue;
+      const { scale } = reducedMotion
+        ? { scale: 1 }
+        : stackItemLock(surfacesStagger, i, surfaceTipRefs.current.length);
+      node.scale.setScalar(scale);
     }
 
     if (!reducedMotion) {
@@ -217,13 +329,19 @@ export function ShellStack({ layerKey, reducedMotion = false }: ShellStackProps)
           frustumCulled={false}
         />
         {sourcePipPositions.map((pos, i) => (
-          <mesh
+          <group
             key={`stack-src-${i}`}
-            geometry={geoms.sourcePipFilled}
-            material={mats.sourcePip}
             position={pos}
-            frustumCulled={false}
-          />
+            ref={(node) => {
+              sourcePipRefs.current[i] = node;
+            }}
+          >
+            <mesh
+              geometry={geoms.sourcePipFilled}
+              material={mats.sourcePip}
+              frustumCulled={false}
+            />
+          </group>
         ))}
       </group>
 
@@ -240,7 +358,13 @@ export function ShellStack({ layerKey, reducedMotion = false }: ShellStackProps)
           frustumCulled={false}
         />
         {surfaceFanEnds.map((pos, i) => (
-          <group key={`stack-srf-${i}`} position={pos}>
+          <group
+            key={`stack-srf-${i}`}
+            position={pos}
+            ref={(node) => {
+              surfaceTipRefs.current[i] = node;
+            }}
+          >
             <lineLoop
               geometry={geoms.surfacePipOutline}
               material={mats.surfacePipOutline}

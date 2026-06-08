@@ -241,7 +241,12 @@ export const CORRIDOR_TIMELINE = {
     // Entry-buildup pass (2026-06-08): delay substrate/gyro deployment
     // until the camera has spent a little time in the corridor after
     // leaving Thoughtform. Encode/Build windows below are untouched.
-    substrate: { start: 0.345, peakAt: 0.415 }, // Navigate park centre ~0.40 — `gateNavigateReadout` reuses this window so the Navigate text fades in with the sphere
+    // Widened (2026-06-08 reveal-polish) so the per-ring + globe-bloom
+    // unfold has room to read as a cascade rather than a single ramp.
+    // Park centre ~0.40 unchanged; window now spans ~12% of paint
+    // progress instead of 7%. `gateNavigateReadout` reuses this window
+    // so the Navigate text fades in with the sphere.
+    substrate: { start: 0.33, peakAt: 0.45 },
     // Orbits window re-aligned to the Encode park ARRIVAL (2026-06-07)
     // so the staggered fold-in is WITNESSED as the camera enters Encode,
     // mirroring the compass at Navigate (window straddles the park:
@@ -682,26 +687,14 @@ export function getBrandmarkLeadWorldPosition(progress: number): [number, number
  *  whole Diagnostic beat — it recedes in lock-step with the camera
  *  through the park, then visibly drifts deeper as the lead grows
  *  toward `FULL_LEAD` through passthrough-02. See
- *  `getBrandmarkLeadWorldPosition` for the two-phase envelope. */
-/** Post-Thoughtform downward Y drop applied to the brandmark world
- *  position so the gimbal sphere (and the centre brandmark) sit lower
- *  in frame — frees the upper band for the Linear-style station
- *  headers without panning the camera (which would drag the headers
- *  down too). Held at 0 through Thoughtform; ramps to
- *  `BRANDMARK_POST_THOUGHTFORM_DROP_Y` across `pass-01a` and persists
- *  thereafter. (2026-06-08 instrument-drop pass.) */
-const BRANDMARK_POST_THOUGHTFORM_DROP_Y = -0.3;
-const BRANDMARK_POST_THOUGHTFORM_DROP_END = 0.355; // end of pass-01a window
-
-function postThoughtformDropY(progress: number): number {
-  const { thoughtformHold } = CORRIDOR_TIMELINE.brandmark;
-  return lerp(
-    0,
-    BRANDMARK_POST_THOUGHTFORM_DROP_Y,
-    smoothstep(thoughtformHold, BRANDMARK_POST_THOUGHTFORM_DROP_END, progress)
-  );
-}
-
+ *  `getBrandmarkLeadWorldPosition` for the two-phase envelope.
+ *
+ *  NOTE (2026-06-08): an earlier pass dropped the brandmark world-Y by
+ *  -0.3 after Thoughtform to free the upper band for the station
+ *  headers. Now that the headers are a flat 2D top-band overlay
+ *  (`CorridorStationHeaders`, not world-projected), the drop is no
+ *  longer needed and was removed so the gimbal + brandmark sit
+ *  centred in the frame. */
 export function getBrandmarkWorldPosition(
   progress: number,
   rawProgress: number = progress
@@ -728,17 +721,9 @@ export function getBrandmarkWorldPosition(
   if (progress <= thoughtformHold) {
     // Mobile two-moment beat: the mark slides up from below-centre to
     // centre as Moment 2 fades it in (no-op on desktop → slideY 0).
-    // The post-Thoughtform drop is intentionally NOT applied here —
-    // Thoughtform composition stays byte-identical.
     const { slideY } = getThoughtformMobilePhase(rawProgress);
     return [tfX, BRANDMARK_ANCHOR_THOUGHTFORM[1] + slideY, BRANDMARK_ANCHOR_THOUGHTFORM[2]];
   }
-  // After Thoughtform, the gimbal sphere drops in world-Y so it sits
-  // lower in frame (header room). `dropY` is 0 right at thoughtformHold
-  // so the branch boundary is C0-continuous, ramps to
-  // `BRANDMARK_POST_THOUGHTFORM_DROP_Y` by the end of pass-01a, and
-  // holds thereafter through Build.
-  const dropY = postThoughtformDropY(progress);
   if (progress <= diagnosticArrival) {
     // Arrival lerp lands at the LEAD position at `diagnosticArrival`,
     // not the static Diagnostic anchor, so the lerp → lead handoff
@@ -752,7 +737,7 @@ export function getBrandmarkWorldPosition(
     const diagLeadStart = getBrandmarkLeadWorldPosition(diagnosticArrival);
     return [
       lerp(tfX, diagLeadStart[0], t),
-      lerp(BRANDMARK_ANCHOR_THOUGHTFORM[1], diagLeadStart[1], t) + dropY,
+      lerp(BRANDMARK_ANCHOR_THOUGHTFORM[1], diagLeadStart[1], t),
       lerp(BRANDMARK_ANCHOR_THOUGHTFORM[2], diagLeadStart[2], t),
     ];
   }
@@ -762,15 +747,8 @@ export function getBrandmarkWorldPosition(
   // intentionally gone — it grew the brandmark as the camera
   // dollied into the gate and snapped to a smaller size when lead
   // mode kicked in.
-  if (progress <= intelligenceLanding) {
-    const p = getBrandmarkLeadWorldPosition(progress);
-    return [p[0], p[1] + dropY, p[2]];
-  }
-  return [
-    BRANDMARK_ANCHOR_INTELLIGENCE[0],
-    BRANDMARK_ANCHOR_INTELLIGENCE[1] + dropY,
-    BRANDMARK_ANCHOR_INTELLIGENCE[2],
-  ];
+  if (progress <= intelligenceLanding) return getBrandmarkLeadWorldPosition(progress);
+  return BRANDMARK_ANCHOR_INTELLIGENCE;
 }
 
 /** WORLD-SPACE half-extent (radius) of the brandmark plate at each
@@ -780,25 +758,26 @@ export function getBrandmarkWorldPosition(
  *  Diagnostic constellation centre, and largest at Intelligence
  *  where the substrate is the centrepiece. */
 export const BRANDMARK_WORLD_HALF_EXTENT = {
+  // Thoughtform (opening composition) is intentionally unchanged so
+  // the parked compass + copy stays byte-identical.
   thoughtform: 0.32,
-  // Diagnostic parked size raised from 0.18 to 0.28 (~56% larger
-  // physical object in world space) so the brandmark has real
-  // optical presence at the centre of the orbital field instead
-  // of reading as a small reference dot. Because ProjectedBrand-
-  // markActor projects a world edge through the camera each
-  // frame, perspective handles the size naturally as the camera
-  // approaches, parks, and pulls away — no scroll momentum
-  // break, no parallax mismatch with the orbits.
-  diagnostic: 0.28,
+  // Diagnostic / Intelligence parked sizes bumped 0.28 → 0.34 and
+  // transitLead 0.24 → 0.29 (2026-06-08 instrument-enlarge pass, ~1.2x)
+  // so the central brandmark grows with the gimbal now that the
+  // instrument is re-centred (drop removed) and has the space. Because
+  // ProjectedBrandmarkActor projects a world edge through the camera
+  // each frame, perspective handles the size naturally across approach,
+  // park, and pull-away — no scroll momentum break, no parallax
+  // mismatch with the orbits.
+  diagnostic: 0.34,
   // Mid-transit (lead position during passthrough-02). Slightly
   // smaller than the parked sizes so the mark reads as a distant
   // lead as the camera dollies through the gap.
-  transitLead: 0.24,
-  // Intelligence (Build) parked size matches the Encode park (0.28)
-  // so the brandmark does NOT shrink on landing — the compass + four
+  transitLead: 0.29,
+  // Intelligence (Build) parked size matches the Encode park so the
+  // brandmark does NOT shrink on landing — the compass + four
   // primitive labels read at the same scale through Encode + Build.
-  // Previously 0.22 which made the mark visibly contract on arrival.
-  intelligence: 0.28,
+  intelligence: 0.34,
 } as const;
 
 /** Brandmark world half-extent for the current scroll position.
@@ -848,6 +827,7 @@ import type { Beat, DepthGatewayTransform } from "@/lib/stores/depthGatewayStore
 import { gyroTilt, useGyroLabStore } from "@/lib/stores/gyroLabStore";
 import type { WorldAnchor, WorldAnchorPosition } from "../hooks/useWorldDomTracker";
 import {
+  GYRO_ASSEMBLY_SCALE,
   STACK_FAN_COUNT,
   STACK_FAN_HALF_HEIGHT,
   STACK_LANE_COUNT,
@@ -855,6 +835,7 @@ import {
   STACK_SOURCES_X,
   STACK_SURFACES_X,
   getPrimitiveLabelOffset,
+  petalStagger,
   SHELL_PRIMITIVES,
 } from "./shell/shellGeom";
 
@@ -968,17 +949,91 @@ const gateEncodeReadout: WorldAnchor["onPaint"] = (ctx, el) => {
 };
 
 /** Gate stack tier labels on the Build accretion envelope so Sources /
- *  Surfaces only read once the funnel docks. */
+ *  Surfaces only read once the funnel docks.
+ *
+ *  2026-06-08 slot-in pass: when the element carries a
+ *  `data-stack-side` (`sources` | `surfaces`) and a numeric
+ *  `data-stack-idx`, opacity tracks that item's per-pip LOCK progress
+ *  inside its cluster's stagger — so each DOM label fades in exactly
+ *  as the canvas pip it labels snaps into place. Group labels (no
+ *  attribute) keep the previous whole-envelope fade. */
+const STACK_CLUSTER_OVERLAP_DOM = 0.3;
+const STACK_ITEM_OVERLAP_DOM = 0.55;
 const gateStackLabel: WorldAnchor["onPaint"] = (ctx, el) => {
   const stack = getBrandmarkAccretionLayers(ctx.transform.paintProgress).stack;
-  el.style.opacity = (ctx.visibilityOpacity * stack).toFixed(3);
+  const side = el.getAttribute("data-stack-side");
+  const idxAttr = el.getAttribute("data-stack-idx");
+  let lock = stack;
+  if (side && idxAttr !== null) {
+    const idx = Number(idxAttr);
+    if (Number.isFinite(idx) && idx >= 0) {
+      // Mirror `ShellStack`'s two-level stagger so labels and pips
+      // share a single source of truth.
+      const clusterIdx = side === "sources" ? 0 : 1;
+      const clusterStagger = petalStagger(stack, clusterIdx, 2, STACK_CLUSTER_OVERLAP_DOM);
+      const total = side === "sources" ? STACK_LANE_COUNT : STACK_FAN_COUNT;
+      const item = petalStagger(clusterStagger, idx, total, STACK_ITEM_OVERLAP_DOM);
+      const eased = item * item * item * (item * (item * 6 - 15) + 10);
+      lock = eased;
+    }
+  }
+  el.style.opacity = (ctx.visibilityOpacity * lock).toFixed(3);
   applyGyroDomBank(el);
 };
 
-/** Gate Encode primitive labels on the orbits accretion envelope. */
+/** Per-cardinal cartridge stagger overlap for Encode. 4 cardinals
+ *  emerge in cascade across the `orbits` reveal — small overlap so
+ *  each cartridge gets a distinct "punch" rather than blurring into
+ *  one collective fade. */
+const ENCODE_CARTRIDGE_OVERLAP = 0.45;
+
+/** Order in which the cardinals fly in. Picked so the read circles
+ *  the dial (north → east → south → west) — feels intentional, not
+ *  arbitrary. SHELL_PRIMITIVES order is judgment(N)/taste(E)/craft(S)/voice(W),
+ *  so the natural index order already matches. */
+const ENCODE_CARTRIDGE_ORDER = [0, 1, 2, 3] as const;
+
+function encodeCartridgeStagger(orbits: number, idx: number): number {
+  const total = ENCODE_CARTRIDGE_ORDER.length;
+  // Inverse map: find where this primitive sits in the fly-in order.
+  const orderPos = ENCODE_CARTRIDGE_ORDER.indexOf(idx as 0 | 1 | 2 | 3);
+  const slot = orderPos < 0 ? idx : orderPos;
+  return petalStagger(orbits, slot, total, ENCODE_CARTRIDGE_OVERLAP);
+}
+
+/** Smoothstep helper local to the gate paints. */
+function smoother(t: number): number {
+  const x = t < 0 ? 0 : t > 1 ? 1 : t;
+  return x * x * x * (x * (x * 6 - 15) + 10);
+}
+
+/** Map staggered cartridge progress to a 0→1 curve with a soft
+ *  overshoot near the end (punch). At t=1 we return exactly 1 so the
+ *  parked position is byte-identical to the prior layout. */
+function encodeCartridgeCurve(t: number): number {
+  const base = smoother(t);
+  if (t >= 1) return 1;
+  // Small overshoot ~+0.08 at t≈0.78, decays to 0 at t=1.
+  const punch = Math.sin(Math.PI * t) * 0.08 * (1 - t);
+  return base + punch;
+}
+
+/** Gate Encode primitive labels on the orbits accretion envelope.
+ *  2026-06-08 cartridge pass: opacity follows the per-cardinal
+ *  stagger so each label fades on as its cartridge arrives (instead
+ *  of all four fading in together). The position resolver (below)
+ *  uses the SAME stagger to fly each cardinal inward from its outer
+ *  start, with a curved tangential arc and overshoot punch. */
 const gateEncodePrimitive: WorldAnchor["onPaint"] = (ctx, el) => {
+  const idxAttr = el.getAttribute("data-encode-cardinal-idx");
+  const idx = idxAttr == null ? -1 : Number(idxAttr);
   const orbits = getBrandmarkAccretionLayers(ctx.transform.paintProgress).orbits;
-  el.style.opacity = (ctx.visibilityOpacity * orbits).toFixed(3);
+  const stagger = idx >= 0 ? encodeCartridgeStagger(orbits, idx) : orbits;
+  // Each cartridge's opacity ramps over the back-half of its stagger
+  // so it "lights up" as it locks in, rather than ghosting during the
+  // fly-in. Multiplied by the parent visibility envelope.
+  const op = smoother(stagger);
+  el.style.opacity = (ctx.visibilityOpacity * op).toFixed(3);
   applyGyroDomBank(el, 0.8);
 };
 
@@ -1012,8 +1067,14 @@ function gyroAssemblyWorldPosition(
   transform: DepthGatewayTransform,
   local: readonly [number, number, number]
 ): Vec3 {
+  // Scale the local offset by the same uniform factor the canvas
+  // applies to the gyro assembly group (BrandmarkAccretionShell), so
+  // projected DOM labels stay welded to the enlarged geometry. Only
+  // when the gyro is enabled — flat-compass mode has no assembly scale.
+  const s = useGyroLabStore.getState().enabled ? GYRO_ASSEMBLY_SCALE : 1;
+  const scaledLocal: [number, number, number] = [local[0] * s, local[1] * s, local[2] * s];
   const [bx, by, bz] = getBrandmarkWorldPosition(transform.paintProgress);
-  const [x, y, z] = rotateGyroLocalOffset(local);
+  const [x, y, z] = rotateGyroLocalOffset(scaledLocal);
   return [bx + x, by + y, bz + z];
 }
 
@@ -1053,7 +1114,20 @@ function stationHeaderPosition(
   return [station.position[0] + dx, station.position[1] + HEADER_TOP_Y, baseZ];
 }
 
-function getGyroPrimitiveLabelLocal(idx: number): Vec3 {
+/** Final parked radius for an Encode cardinal label (hugging the
+ *  bezel ring at SUBSTRATE_GYRO_CARDINAL_RING_RADIUS ~1.08). */
+const ENCODE_CARDINAL_FINAL_R = 1.0;
+/** Outer start radius from which a cardinal cartridge flies in. Picked
+ *  so each cartridge is clearly outside the parked instrument when its
+ *  fly-in begins (a "tray-loading" feel) without leaving the gate's
+ *  visible frame. */
+const ENCODE_CARDINAL_START_R = 2.45;
+/** Tangential arc offset (radians) at mid-fly. Slight curve so the
+ *  cartridge doesn't fly in along a perfectly straight cardinal ray
+ *  — reads as a load-arc with punch rather than a click-in. */
+const ENCODE_CARDINAL_ARC_RAD = 0.22;
+
+function getGyroPrimitiveLabelLocal(idx: number, progress: number): Vec3 {
   const prim = SHELL_PRIMITIVES[idx];
   const [ox, oy] = getPrimitiveLabelOffset(idx);
   if (!useGyroLabStore.getState().enabled || !prim) return [ox, oy, 0.12];
@@ -1062,8 +1136,22 @@ function getGyroPrimitiveLabelLocal(idx: number): Vec3 {
   // `shellGeom.SUBSTRATE_GYRO_CARDINAL_RING_RADIUS`). Was 1.34 — the
   // labels used to float outside the outermost gimbal ring (1.16) and
   // read as detached. (2026-06-08 cardinal-ring polish.)
-  const labelR = 1.0;
-  return [Math.cos(prim.angleRad) * labelR, Math.sin(prim.angleRad) * labelR, 0.18];
+  //
+  // 2026-06-08 cartridge pass: at orbits = 0 the label sits at
+  // ENCODE_CARDINAL_START_R along its cardinal direction; as the
+  // per-cardinal staggered curve climbs to 1 it spirals inward to
+  // ENCODE_CARDINAL_FINAL_R with a soft tangential arc + landing
+  // overshoot. At progress = 1 the position is exactly the parked
+  // value so the end state is byte-identical.
+  const orbits = getBrandmarkAccretionLayers(progress).orbits;
+  const stagger = encodeCartridgeStagger(orbits, idx);
+  const tCurve = encodeCartridgeCurve(stagger);
+  const r = ENCODE_CARDINAL_START_R + (ENCODE_CARDINAL_FINAL_R - ENCODE_CARDINAL_START_R) * tCurve;
+  // Tangential arc: peaks at stagger ≈ 0.5, returns to 0 at stagger 1
+  // so the parked angle is exact.
+  const arc = Math.sin(Math.PI * stagger) * ENCODE_CARDINAL_ARC_RAD * (1 - stagger);
+  const angle = prim.angleRad + arc;
+  return [Math.cos(angle) * r, Math.sin(angle) * r, 0.18];
 }
 
 function applyGyroDomBank(el: HTMLElement, scale = 0.65): void {
@@ -1122,7 +1210,10 @@ export const STACK_SURFACE_ITEMS: StackItem[] = Array.from({ length: STACK_FAN_C
 const ENCODE_PRIMITIVE_ANCHORS: WorldAnchor[] = SHELL_PRIMITIVES.map((prim, idx) => ({
   id: `encode.primitive.${prim.id}`,
   position: (transform) => {
-    return gyroAssemblyWorldPosition(transform, getGyroPrimitiveLabelLocal(idx));
+    return gyroAssemblyWorldPosition(
+      transform,
+      getGyroPrimitiveLabelLocal(idx, transform.paintProgress)
+    );
   },
   // Visible from the Encode park (`diagnostic`) onward — the four
   // primitives ARE the encoded judgment, and the encoded layer persists

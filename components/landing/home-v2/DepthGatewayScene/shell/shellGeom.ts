@@ -658,6 +658,15 @@ export const SUBSTRATE_GYRO_SYMBOL_OPACITY = 0.72;
 export const SUBSTRATE_GYRO_CARDINAL_RING_RADIUS = 1.08;
 export const SUBSTRATE_GYRO_CARDINAL_RING_OPACITY = 0.55;
 
+/** Uniform scale applied to the WHOLE gyro assembly (gimbal sphere +
+ *  cardinals + encode orbits + build funnel) about the brandmark
+ *  centre. `BrandmarkAccretionShell` applies it to the canvas group,
+ *  and `sceneGeom.gyroAssemblyWorldPosition` multiplies every projected
+ *  DOM label offset by the same factor so the labels stay welded to the
+ *  geometry. Bumped to 1.18 (2026-06-08 instrument-enlarge pass) now
+ *  that the instrument is re-centred and has the surrounding space. */
+export const GYRO_ASSEMBLY_SCALE = 1.18;
+
 /** Static tilt when `prefers-reduced-motion` (radians). */
 export const SUBSTRATE_GYRO_STATIC_TILT_X = 0.12;
 export const SUBSTRATE_GYRO_STATIC_TILT_Y = 0.08;
@@ -667,3 +676,128 @@ export const SUBSTRATE_GYRO_STATIC_TILT_Y = 0.08;
 export const SUBSTRATE_GYRO_ENCODE_TILT_FLOOR = 0.6;
 export const SUBSTRATE_GYRO_ENCODE_OPACITY_FLOOR = 1.0;
 export const SUBSTRATE_GYRO_ENCODE_MOUSE_FLOOR = 0.5;
+
+// ── Gimbal "fold around the mark" unfold (2026-06-08 reveal-polish) ──
+//
+// `shellWrapEmerge` (above) made the whole gyro contract from 1.85x to
+// 1.0x as `substrate` ramped — the user read that as "the sphere flies
+// toward the mark" rather than "the shell folds around it." The new
+// model treats the instrument as a CAGE THAT OPENS AROUND THE BRAND
+// MARK: each gimbal ring rotates open from a near-coplanar start to
+// its final tilt, the globe Y-flattens into a disc and blooms back to
+// a full sphere, and the dotted shell settles inward from a slightly
+// larger surrounding radius. End state at `reveal = 1` is byte-
+// identical to the parked composition.
+//
+// All curves are pure functions of the parent `substrate` reveal so
+// the unfold remains scroll-scrubbed and reverses cleanly on scroll-
+// back. The per-ring stagger uses `petalStagger` so the three rings
+// open in cascade rather than together.
+
+/** Subtle outer-shell scale at `reveal = 0`. Replaces the dramatic
+ *  `SHELL_WRAP_START_SCALE = 1.85` contract; here the root barely
+ *  scales so the instrument doesn't read as approaching — only its
+ *  *parts* unfold. */
+export const SUBSTRATE_GYRO_UNFOLD_ROOT_START_SCALE = 1.06;
+
+/** Initial Y-flatten of the globe-spin group (meridians + parallels).
+ *  At `reveal = 0` the dotted globe collapses toward a near-disc in
+ *  the XZ plane, then blooms back to scale 1 as the rings unfold.
+ *  Picked so the disc reads as a faint horizon line before the globe
+ *  opens, not as a thin sliver that disappears. */
+export const SUBSTRATE_GYRO_UNFOLD_GLOBE_Y_FLOOR = 0.08;
+
+/** Extra "wrap spin" applied to the globe during reveal — a damped
+ *  Y-rotation on top of the idle spin so the meridian/parallel dots
+ *  appear to swirl around the mark as the globe blooms open, then
+ *  fade out as `reveal → 1`. Radians. */
+export const SUBSTRATE_GYRO_UNFOLD_WRAP_SPIN_AMP = Math.PI * 0.55;
+
+/** Petal-stagger overlap for the three rings. 0.45 gives a clear
+ *  cascade (ring 0 opens first, ring 2 last) but with enough overlap
+ *  to feel like one motion. */
+export const SUBSTRATE_GYRO_UNFOLD_RING_OVERLAP = 0.45;
+
+/** Each gimbal ring starts NEARLY coplanar with the camera-facing XY
+ *  plane and rotates open to its final tilt. We can't start at exactly
+ *  the same tilt as ring 0 (`[0,0,0]`) for all three or the cage would
+ *  read as a flat circle that splits apart — instead each ring starts
+ *  tilted by this fraction of its final tilt so the cage reads as a
+ *  pressed shell that opens up into a full gimbal. Smaller = more
+ *  dramatic open. */
+export const SUBSTRATE_GYRO_UNFOLD_RING_TILT_FLOOR = 0.08;
+
+/** Initial outer shell radius multiplier — the dotted shell starts
+ *  this much further out (relative to its parked
+ *  `SUBSTRATE_GYRO_DOTTED_SHELL_RADIUS_MUL = 1.32`) and settles inward
+ *  as the cage closes. End state untouched. */
+export const SUBSTRATE_GYRO_UNFOLD_SHELL_RADIUS_BOOST = 1.32;
+
+/** Per-element unfold output for one gimbal ring inside the
+ *  `substrate` reveal. */
+export interface GyroRingUnfold {
+  /** Final-tilt lerp factor (0 = coplanar start, 1 = parked tilt). */
+  tiltT: number;
+  /** Group scale for the ring (small at start, settles to 1 with a
+   *  soft overshoot so the ring "lands" into the cage). */
+  scale: number;
+}
+
+/** Smootherstep helper, used everywhere in this module. */
+function smootherStep(t: number): number {
+  const x = t < 0 ? 0 : t > 1 ? 1 : t;
+  return x * x * x * (x * (x * 6 - 15) + 10);
+}
+
+/** Compute the per-ring unfold (tilt lerp + ring scale) for ring
+ *  `idx` inside a substrate reveal of `reveal`. Uses `petalStagger`
+ *  so the three rings open in cascade. */
+export function gyroRingUnfold(reveal: number, idx: number, ringCount: number): GyroRingUnfold {
+  const stagger = petalStagger(reveal, idx, ringCount, SUBSTRATE_GYRO_UNFOLD_RING_OVERLAP);
+  const t = smootherStep(stagger);
+  // Small overshoot on the ring scale so each ring snaps into place
+  // as it opens. Peak overshoot ~1.06 at stagger ≈ 0.6, settles to 1.
+  const overshoot = 0.06;
+  const scale = 0.92 + (1 - 0.92) * t + overshoot * Math.sin(Math.PI * t);
+  return { tiltT: t, scale };
+}
+
+/** Compute the whole-assembly unfold: root scale, globe Y-bloom,
+ *  decaying wrap-spin, dotted-shell radius multiplier, presence
+ *  opacity scalar. All driven by the parent `substrate` reveal so
+ *  the unfold stays scroll-scrubbed. */
+export interface GyroAssemblyUnfold {
+  /** Root group uniform scale (subtle, ~1.06 → 1.0). */
+  rootScale: number;
+  /** Globe-spin group Y scale (disc → sphere). */
+  globeY: number;
+  /** Extra Y-rotation in radians to add this frame — fades out as
+   *  `reveal → 1`. */
+  wrapSpinExtra: number;
+  /** Dotted-shell radius multiplier (relative to parked muls). */
+  shellRadiusMul: number;
+  /** Presence (opacity) scalar — fades up over the first slice of
+   *  the reveal so the oversized starting shell doesn't pop in. */
+  presence: number;
+}
+
+export function gyroAssemblyUnfold(reveal: number): GyroAssemblyUnfold {
+  const t = reveal < 0 ? 0 : reveal > 1 ? 1 : reveal;
+  const s = smootherStep(t);
+  const rootScale =
+    SUBSTRATE_GYRO_UNFOLD_ROOT_START_SCALE + (1 - SUBSTRATE_GYRO_UNFOLD_ROOT_START_SCALE) * s;
+  const globeY =
+    SUBSTRATE_GYRO_UNFOLD_GLOBE_Y_FLOOR + (1 - SUBSTRATE_GYRO_UNFOLD_GLOBE_Y_FLOOR) * s;
+  // Wrap-spin amplitude tapers from full (at reveal 0) to 0 (at reveal 1).
+  const wrapSpinExtra = (1 - s) * SUBSTRATE_GYRO_UNFOLD_WRAP_SPIN_AMP;
+  // Shell radius multiplier: at reveal 0 sits BOOST x past parked; at
+  // reveal 1 sits at 1.0 x parked.
+  const shellRadiusMul =
+    SUBSTRATE_GYRO_UNFOLD_SHELL_RADIUS_BOOST + (1 - SUBSTRATE_GYRO_UNFOLD_SHELL_RADIUS_BOOST) * s;
+  // Presence over the first 40% of reveal so the open shell doesn't
+  // pop at frame one.
+  const pFrac = 0.4;
+  const pT = t < pFrac ? t / pFrac : 1;
+  const presence = smootherStep(pT);
+  return { rootScale, globeY, wrapSpinExtra, shellRadiusMul, presence };
+}

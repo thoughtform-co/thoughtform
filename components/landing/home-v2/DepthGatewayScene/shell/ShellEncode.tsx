@@ -41,10 +41,19 @@ interface ShellEncodeProps {
 /** Per-arc tessellation. ~50° arc / 32 = 1.6° per segment — smooth. */
 const ARC_SEGMENTS = 32;
 
-/** Arc draw + bracket fade-in windows inside the orbits envelope. */
-const ARC_DRAW_END = 0.6;
-const BRACKET_FADE_START = 0.45;
-const BRACKET_FADE_END = 0.85;
+/** Per-cardinal stagger overlap for the slot dock. Mirrors the
+ *  Encode cartridge stagger in `sceneGeom.ts` so each slot draws on
+ *  as its cartridge label lands, instead of all four arcs drawing
+ *  together. (2026-06-08 cartridge pass.) */
+const ENCODE_DOCK_OVERLAP = 0.45;
+
+/** Per-slot draw window inside the cardinal's staggered local
+ *  progress: arc traces 0 → ARC_LOCAL_DRAW_END, then bracket fades
+ *  over the back half. The whole window completes by stagger = 1
+ *  so the end state is byte-identical to the pre-stagger version. */
+const ARC_LOCAL_DRAW_END = 0.7;
+const BRACKET_LOCAL_START = 0.55;
+const BRACKET_LOCAL_END = 1.0;
 
 const SLOT_ARC_ALPHA = 0.42;
 const SLOT_BRACKET_ALPHA = 0.78;
@@ -52,6 +61,17 @@ const SLOT_BRACKET_ALPHA = 0.78;
 function smoother(t: number): number {
   const x = t < 0 ? 0 : t > 1 ? 1 : t;
   return x * x * x * (x * (x * 6 - 15) + 10);
+}
+
+/** Petal stagger duplicated locally to avoid cross-module coupling.
+ *  Matches `shellGeom.petalStagger`. */
+function petalStaggerLocal(reveal: number, idx: number, total: number, overlap: number): number {
+  if (total <= 1) return reveal;
+  const f = 1 / ((1 - overlap) * (total - 1) + 1);
+  const step = (1 - f) / (total - 1);
+  const start = idx * step;
+  const t = (reveal - start) / f;
+  return t < 0 ? 0 : t > 1 ? 1 : t;
 }
 
 function buildArcGeometry(
@@ -91,6 +111,32 @@ function buildBracketGeometry(
   return g;
 }
 
+// Per-arc → cardinal mapping: each arc draws on as its LATER
+// cardinal (in `ENCODE_CARTRIDGE_ORDER`) arrives, so the slot wall
+// reads as completing once the cartridge has docked. Order in
+// `SLOT_ARC_BOUNDS` (right-top → top-left → left-bottom → bottom-right)
+// crosses cardinals as:
+//   arc 0: East(1) → North(0) ⇒ later in order = taste (idx 1)
+//   arc 1: North(0) → West(3) ⇒ later = voice  (idx 3)
+//   arc 2: West(3)  → South(2) ⇒ later = voice  (idx 3)
+//   arc 3: South(2) → East(1) ⇒ later = craft (idx 2)
+// (SHELL_PRIMITIVES order: judgment=0, taste=1, craft=2, voice=3.)
+const ARC_CARDINAL_IDX = [1, 3, 3, 2] as const;
+
+// 8 brackets ↔ 4 cardinals (2 brackets per cardinal slot). The
+// SLOT_BRACKET_ANGLES order pairs as (0,1)=East, (2,3)=North,
+// (4,5)=West, (6,7)=South.
+const BRACKET_CARDINAL_IDX = [1, 1, 0, 0, 3, 3, 2, 2] as const;
+
+const ENCODE_CARDINAL_TOTAL = 4;
+// Mirror `sceneGeom.encodeCartridgeStagger` so each cardinal index
+// resolves to the same stagger window without importing from there.
+function cardinalStagger(orbits: number, cardinalIdx: number): number {
+  // SHELL_PRIMITIVES idx already matches ENCODE_CARTRIDGE_ORDER
+  // [0,1,2,3] in `sceneGeom.ts`, so the slot can be the idx directly.
+  return petalStaggerLocal(orbits, cardinalIdx, ENCODE_CARDINAL_TOTAL, ENCODE_DOCK_OVERLAP);
+}
+
 export function ShellEncode({ layerKey, reducedMotion = false }: ShellEncodeProps) {
   void layerKey;
   const groupRef = useRef<THREE.Group>(null);
@@ -107,32 +153,44 @@ export function ShellEncode({ layerKey, reducedMotion = false }: ShellEncodeProp
     []
   );
 
-  const arcMat = useMemo(() => makeLineMaterial(COLOR_GOLD, SLOT_ARC_ALPHA, false), []);
-  const bracketMat = useMemo(() => makeLineMaterial(COLOR_GOLD, SLOT_BRACKET_ALPHA, false), []);
+  // One material per arc + per bracket so each can fade independently
+  // as its corresponding cartridge lands. Allocating four arc + eight
+  // bracket materials adds nothing measurable to GPU state, and
+  // keeps the per-cardinal stagger clean (no shared-uniform fights).
+  const arcMats = useMemo(
+    () => SLOT_ARC_BOUNDS.map(() => makeLineMaterial(COLOR_GOLD, SLOT_ARC_ALPHA, false)),
+    []
+  );
+  const bracketMats = useMemo(
+    () => SLOT_BRACKET_ANGLES.map(() => makeLineMaterial(COLOR_GOLD, SLOT_BRACKET_ALPHA, false)),
+    []
+  );
 
   const arcVertCounts = useMemo(() => arcGeoms.map((g) => g.attributes.position.count), [arcGeoms]);
 
   // Open `THREE.Line` per arc so `setDrawRange` traces an arc on,
-  // rather than chord-closing as a `LineLoop` would.
+  // rather than chord-closing as a `LineLoop` would. Each line gets
+  // its own material so the per-cardinal stagger doesn't fight a
+  // shared uniform.
   const arcLines = useMemo(
     () =>
-      arcGeoms.map((g) => {
-        const line = new THREE.Line(g, arcMat);
+      arcGeoms.map((g, i) => {
+        const line = new THREE.Line(g, arcMats[i]);
         line.frustumCulled = false;
         g.setDrawRange(0, 0);
         return line;
       }),
-    [arcGeoms, arcMat]
+    [arcGeoms, arcMats]
   );
 
   useEffect(() => {
     return () => {
       arcGeoms.forEach((g) => g.dispose());
       bracketGeoms.forEach((g) => g.dispose());
-      arcMat.dispose();
-      bracketMat.dispose();
+      arcMats.forEach((m) => m.dispose());
+      bracketMats.forEach((m) => m.dispose());
     };
-  }, [arcGeoms, bracketGeoms, arcMat, bracketMat]);
+  }, [arcGeoms, bracketGeoms, arcMats, bracketMats]);
 
   useFrame(() => {
     const group = groupRef.current;
@@ -151,23 +209,31 @@ export function ShellEncode({ layerKey, reducedMotion = false }: ShellEncodeProp
     }
     group.visible = true;
 
-    // Arcs trim-draw on over `0 → ARC_DRAW_END`; opacity matches the
-    // draw so the line doesn't snap from empty to full alpha.
-    const arcT = reducedMotion ? 1 : smoother(Math.min(1, reveal / ARC_DRAW_END));
-    arcMat.opacity = arcT * SLOT_ARC_ALPHA;
+    // Per-arc draw + alpha: each arc's local progress is its
+    // cardinal's staggered progress mapped onto [0, ARC_LOCAL_DRAW_END].
+    // Arc trace + opacity both follow that local curve so the slot
+    // wall reads as completing on the cartridge's lock.
     for (let i = 0; i < arcGeoms.length; i++) {
+      const cardinalIdx = ARC_CARDINAL_IDX[i];
+      const stagger = reducedMotion ? 1 : cardinalStagger(reveal, cardinalIdx);
+      const local = Math.min(1, stagger / ARC_LOCAL_DRAW_END);
+      const arcT = smoother(local);
+      arcMats[i].opacity = arcT * SLOT_ARC_ALPHA;
       const count = arcVertCounts[i];
       const drawn = Math.max(0, Math.min(count, Math.round(arcT * count)));
       arcGeoms[i].setDrawRange(0, drawn);
     }
 
-    // Brackets fade in after the arcs have drawn most of the way —
-    // the slots "snap" defined once the dock ring is on.
-    const bracketRaw = reducedMotion
-      ? 1
-      : Math.max(0, (reveal - BRACKET_FADE_START) / (BRACKET_FADE_END - BRACKET_FADE_START));
-    const bracketT = smoother(Math.min(1, bracketRaw));
-    bracketMat.opacity = bracketT * SLOT_BRACKET_ALPHA;
+    // Per-bracket fade — windows fall in the back-half of each
+    // cardinal's stagger, so the slot "snaps" defined once the
+    // cartridge has locked and the arc wall has drawn.
+    for (let i = 0; i < bracketMats.length; i++) {
+      const cardinalIdx = BRACKET_CARDINAL_IDX[i];
+      const stagger = reducedMotion ? 1 : cardinalStagger(reveal, cardinalIdx);
+      const local = (stagger - BRACKET_LOCAL_START) / (BRACKET_LOCAL_END - BRACKET_LOCAL_START);
+      const bracketT = smoother(Math.max(0, Math.min(1, local)));
+      bracketMats[i].opacity = bracketT * SLOT_BRACKET_ALPHA;
+    }
   });
 
   return (
@@ -179,7 +245,7 @@ export function ShellEncode({ layerKey, reducedMotion = false }: ShellEncodeProp
         <lineSegments
           key={`slot-bracket-${i}`}
           geometry={g}
-          material={bracketMat}
+          material={bracketMats[i]}
           frustumCulled={false}
         />
       ))}

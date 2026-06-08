@@ -193,7 +193,7 @@ export function CopyAnchors({ text }: CopyAnchorsProps) {
 
       {/* Encode primitive labels — framed tags on the four compass
           cardinals (Judgment / Taste / Way of working / Voice). */}
-      {SHELL_PRIMITIVES.map((prim) => {
+      {SHELL_PRIMITIVES.map((prim, idx) => {
         const meta = PRIMITIVE_ANCHOR_META[prim.id];
         if (!meta) return null;
         return (
@@ -202,6 +202,10 @@ export function CopyAnchors({ text }: CopyAnchorsProps) {
             className={`home-v2-encode-primitive home-v2-encode-primitive--${meta.layout}`}
             data-world-anchor={`encode.primitive.${prim.id}`}
             data-anchor-origin={meta.origin}
+            // `gateEncodePrimitive` reads this attribute to apply the
+            // per-cardinal cartridge stagger (each cardinal opacity-
+            // locks as its fly-in arrives, not all four together).
+            data-encode-cardinal-idx={idx}
           >
             <div className="home-v2-encode-primitive__frame">
               <span className="home-v2-encode-primitive__label">{prim.label}</span>
@@ -272,22 +276,30 @@ export function CopyAnchors({ text }: CopyAnchorsProps) {
           labels read rightward off the tip (`left-center`). Names are
           representative — counts intentionally need not match the diamond
           counts; the idea reads either way. */}
-      {STACK_SOURCE_ITEMS.map((item) => (
+      {STACK_SOURCE_ITEMS.map((item, idx) => (
         <div
           key={`stack-source-${item.id}`}
           className="home-v2-stack-item home-v2-stack-item--source"
           data-world-anchor={`intelligence.source.${item.id}`}
           data-anchor-origin="right-center"
+          // `gateStackLabel` reads side + idx to sync each label's fade
+          // to its canvas pip's per-item lock snap. Without these
+          // attributes the label still fades on the whole-stack
+          // envelope (the previous behaviour).
+          data-stack-side="sources"
+          data-stack-idx={idx}
         >
           <span className="home-v2-stack-item__label">{item.label}</span>
         </div>
       ))}
-      {STACK_SURFACE_ITEMS.map((item) => (
+      {STACK_SURFACE_ITEMS.map((item, idx) => (
         <div
           key={`stack-surface-${item.id}`}
           className="home-v2-stack-item home-v2-stack-item--surface"
           data-world-anchor={`intelligence.surface.${item.id}`}
           data-anchor-origin="left-center"
+          data-stack-side="surfaces"
+          data-stack-idx={idx}
         >
           <span className="home-v2-stack-item__label">{item.label}</span>
         </div>

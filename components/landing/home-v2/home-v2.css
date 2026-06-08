@@ -170,17 +170,18 @@
 
 .home-v2-station-header {
   position: fixed;
-  /* The header band is a CENTRED max-width container (not pinned to
-     the viewport edges) so on wide screens the title + support pull
-     inward and frame the centre instrument like Linear's hero,
-     instead of splaying to the far corners. Title is anchored to the
-     container's LEFT edge, support to its RIGHT edge; both have
-     max-widths so they never crowd the centre where the sphere sits. */
-  top: clamp(56px, 8vh, 104px);
+  /* The header is a single left-aligned STACK — title with its support
+     paragraph directly beneath it (anime.js-style IA), rather than a
+     two-column title-left / support-right split. The block is anchored
+     to the LEFT of a centred max-width container so on wide screens it
+     sits inset (not jammed at the viewport edge) while leaving the
+     centre + right clear for the instrument. Lowered (2026-06-08
+     reveal-polish pass) so the title sits closer to the instrument's
+     upper hemisphere and reads as integrated, not floating. */
+  top: clamp(120px, 18vh, 220px);
   left: 50%;
   transform: translateX(-50%);
   width: min(90vw, 1400px);
-  height: 0;
   pointer-events: none;
   opacity: 0;
   z-index: 15;
@@ -190,11 +191,8 @@
 }
 
 .home-v2-station-header__title {
-  position: absolute;
-  top: 0;
-  left: 0;
   margin: 0;
-  max-width: min(32vw, 440px);
+  max-width: min(38vw, 460px);
   /* Brand display sans (PP Neue Montreal) — matches the previous
      header render. (The 2D-pivot draft accidentally used PT Mono.) */
   font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
@@ -215,11 +213,9 @@
 }
 
 .home-v2-station-header__support {
-  position: absolute;
-  top: 0;
-  right: 0;
-  margin: 0;
-  max-width: min(26vw, 360px);
+  /* Sits directly UNDER the title (stacked IA). */
+  margin: clamp(14px, 1.4vw, 20px) 0 0;
+  max-width: min(34vw, 400px);
   /* Brand display sans (PP Neue Montreal) — matches the previous
      header render. */
   font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
@@ -233,6 +229,76 @@
 .home-v2-station-header__support em {
   font-style: italic;
   color: var(--gold, #caa554);
+}
+
+/* Typewriter — per-character spans with a block cursor sitting at the
+   typing head. The opacity of each char is animated by the RAF loop in
+   `CorridorStationHeaders` (time-based, plays once on station arrival).
+   Layout stays stable because every glyph is rendered immediately at
+   opacity 0; only the visibility is animated, no width measurement,
+   no reflow. The `__char--em` modifier preserves the gold accent on
+   characters that lived inside an `<em>` in the source HTML. */
+.home-v2-station-header__char {
+  /* No display change — chars are inline siblings of the cursor. */
+  opacity: 0;
+}
+.home-v2-station-header__title .home-v2-station-header__char--em {
+  color: var(--gold, #caa554);
+  font-weight: 500;
+}
+.home-v2-station-header__support .home-v2-station-header__char--em {
+  font-style: italic;
+  color: var(--gold, #caa554);
+}
+
+/* Block cursor at the typing head — sits inline at the line's end,
+   blinks ONLY while its line is active. The RAF loop toggles the
+   `--alive` modifier on the cursor when it should be visible; without
+   that modifier the cursor stays at `opacity: 0` (no blink animation,
+   no inline-style fight with keyframes). */
+.home-v2-station-header__cursor {
+  display: inline-block;
+  margin-left: 0.06em;
+  vertical-align: baseline;
+  color: var(--gold, #caa554);
+  text-shadow: 0 0 12px rgba(202, 165, 84, 0.55);
+  /* Inline-block scale to ~70% of font height so the block reads as
+     a retro-terminal caret rather than a giant glyph. */
+  transform: translateY(-0.04em) scaleY(0.78);
+  transform-origin: center bottom;
+  pointer-events: none;
+  opacity: 0;
+}
+.home-v2-station-header__title .home-v2-station-header__cursor {
+  /* Slightly slimmer in the larger title so it reads as the
+     proportional sibling of a heading glyph. */
+  letter-spacing: -0.05em;
+}
+.home-v2-station-header__cursor--alive {
+  animation: home-v2-header-cursor-blink 1.05s steps(2, start) infinite;
+}
+@keyframes home-v2-header-cursor-blink {
+  /* `steps(2, start)` gives a hard on/off blink rather than a fade —
+     more like a CRT terminal than a CSS slider. The keyframe holds
+     opacity 1 for half the cycle and 0.25 for the other half so the
+     cursor reads as alive when present, dark when not. */
+  0%,
+  49.999% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0.25;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  /* No blink when motion is disabled. */
+  .home-v2-station-header__cursor--alive {
+    animation: none;
+  }
+  .home-v2-station-header__char {
+    opacity: 1 !important;
+  }
 }
 
 @media (max-width: 760px) {

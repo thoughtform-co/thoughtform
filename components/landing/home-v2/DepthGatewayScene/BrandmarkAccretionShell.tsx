@@ -12,6 +12,7 @@ import { ShellStack } from "./shell/ShellStack";
 import { ShellSubstrate } from "./shell/ShellSubstrate";
 import { ShellSubstrateGyro } from "./shell/ShellSubstrateGyro";
 import {
+  GYRO_ASSEMBLY_SCALE,
   SUBSTRATE_GYRO_DRIFT_AMP,
   SUBSTRATE_GYRO_DRIFT_PITCH_FREQ,
   SUBSTRATE_GYRO_DRIFT_ROLL_FREQ,
@@ -142,7 +143,12 @@ export function BrandmarkAccretionShell() {
   return (
     <group ref={shellGroupRef} visible={false}>
       {gyroEnabled ? (
-        <group ref={gyroAssemblyRef}>
+        // Uniform assembly scale enlarges the whole instrument (gimbal +
+        // cardinals + orbits + funnel) about the brandmark centre. The
+        // matching DOM-label scale lives in
+        // `sceneGeom.gyroAssemblyWorldPosition`. Rotation is still set
+        // imperatively per-frame in useFrame (scale + rotation compose).
+        <group ref={gyroAssemblyRef} scale={GYRO_ASSEMBLY_SCALE}>
           <ShellSubstrateGyro layerKey="substrate" reducedMotion={isMobile} />
           <ShellEncode layerKey="orbits" reducedMotion={isMobile} />
           <ShellStack layerKey="stack" reducedMotion={isMobile} />

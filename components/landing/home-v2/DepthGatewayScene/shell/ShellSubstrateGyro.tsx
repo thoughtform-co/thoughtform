@@ -33,7 +33,8 @@ import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import { getBrandmarkAccretionLayers } from "../sceneGeom";
 import {
   EMERGE_EPSILON,
-  shellWrapEmerge,
+  gyroAssemblyUnfold,
+  gyroRingUnfold,
   SUBSTRATE_GYRO_CARDINAL_RING_OPACITY,
   SUBSTRATE_GYRO_CARDINAL_RING_RADIUS,
   SUBSTRATE_GYRO_DEPTH_FAR,
@@ -66,6 +67,7 @@ import {
   SUBSTRATE_GYRO_SYMBOL_OPACITY,
   SUBSTRATE_GYRO_TICK_COUNT,
   SUBSTRATE_GYRO_TICK_OPACITY,
+  SUBSTRATE_GYRO_UNFOLD_RING_TILT_FLOOR,
 } from "./shellGeom";
 
 interface ShellSubstrateGyroProps {
@@ -727,6 +729,20 @@ export function ShellSubstrateGyro({ layerKey, reducedMotion = false }: ShellSub
     };
   }, [mats]);
 
+  // Smoothed copy of the dotted-shell radius multiplier so we can
+  // animate the BufferGeometry positions without thrashing the GPU
+  // buffer every frame. Only re-write when the smoothed value drifts
+  // far enough from the last write.
+  const lastShellRadiusMul = useRef<number>(SUBSTRATE_GYRO_DOTTED_SHELL_RADIUS_MUL);
+  // Snapshot of the original dotted-shell vertex positions at parked
+  // mul — captured once on first frame so we can rescale them in
+  // place without rebuilding the geometry.
+  const dottedShellBase = useRef<Float32Array | null>(null);
+  // Tilt groups for the three gimbal rings — captured by ref so we
+  // can write `rotation` directly each frame via the unfold lerp.
+  const ringTiltRefs = useRef<(THREE.Group | null)[]>([]);
+  const ringScaleRefs = useRef<(THREE.Group | null)[]>([]);
+
   useFrame((state, delta) => {
     const root = rootRef.current;
     const globeSpin = globeSpinRef.current;
@@ -749,11 +765,15 @@ export function ShellSubstrateGyro({ layerKey, reducedMotion = false }: ShellSub
     const dt = Math.min(0.1, delta);
     const { idleSpeed } = useGyroLabStore.getState();
 
-    const wrap = shellWrapEmerge(reveal);
-    root.scale.setScalar(wrap.scale);
+    // 2026-06-08 reveal-polish: replace shellWrapEmerge contract with a
+    // staggered fold-around-the-mark unfold. Subtle root scale, globe
+    // Y-bloom, decaying wrap-spin, dotted-shell inward settle, per-ring
+    // tilt-open + small landing overshoot.
+    const unfold = gyroAssemblyUnfold(reveal);
+    root.scale.setScalar(unfold.rootScale);
 
     const opacityCalm = 1 - (1 - SUBSTRATE_GYRO_ENCODE_OPACITY_FLOOR) * layers.orbits;
-    const presence = wrap.presence * opacityCalm;
+    const presence = unfold.presence * opacityCalm;
 
     const lineOpacity = (base: number) => base * presence;
     mats.globeDots.uniforms.uOpacity.value = SUBSTRATE_GYRO_GLOBE_DOTS_OPACITY * presence;
@@ -770,16 +790,64 @@ export function ShellSubstrateGyro({ layerKey, reducedMotion = false }: ShellSub
     mats.dottedShell.uniforms.uOpacity.value = SUBSTRATE_GYRO_DOTTED_SHELL_OPACITY * presence;
     mats.cardinalRing.uniforms.uOpacity.value = lineOpacity(SUBSTRATE_GYRO_CARDINAL_RING_OPACITY);
 
+    // Globe spin: keep the idle polar drift; add the decaying wrap-spin
+    // on top so the meridians/parallels appear to swirl around the
+    // mark during the unfold, then settle once reveal saturates.
     if (motionFrozen) {
       globeSpin.rotation.y = 0.4;
     } else {
-      globeSpin.rotation.y += SUBSTRATE_GYRO_GLOBE_SPIN * idleSpeed * dt;
+      const extra = unfold.wrapSpinExtra * idleSpeed * dt;
+      globeSpin.rotation.y += SUBSTRATE_GYRO_GLOBE_SPIN * idleSpeed * dt + extra;
+    }
+    // Globe Y-bloom: collapse to a near-disc at reveal 0 and bloom
+    // back to a sphere as the cage opens.
+    globeSpin.scale.set(1, unfold.globeY, 1);
+
+    // Ring unfold: tilt + scale per gimbal ring with petalStagger.
+    for (let i = 0; i < effectiveRingCount; i++) {
+      const tiltNode = ringTiltRefs.current[i];
+      const scaleNode = ringScaleRefs.current[i];
+      const spinNode = ringSpinRefs.current[i];
+      const axis = SUBSTRATE_GYRO_GIMBAL_RINGS[i];
+      const ring = gyroRingUnfold(reveal, i, effectiveRingCount);
+      // Tilt: lerp from a near-flat start toward the parked tilt.
+      const floor = SUBSTRATE_GYRO_UNFOLD_RING_TILT_FLOOR;
+      const tiltScalar = floor + (1 - floor) * ring.tiltT;
+      if (tiltNode) {
+        tiltNode.rotation.set(
+          axis.tilt[0] * tiltScalar,
+          axis.tilt[1] * tiltScalar,
+          axis.tilt[2] * tiltScalar
+        );
+      }
+      if (scaleNode) scaleNode.scale.setScalar(ring.scale);
+      if (spinNode && !motionFrozen) {
+        spinNode.rotation.y += axis.spin * idleSpeed * dt;
+      }
     }
 
-    for (let i = 0; i < effectiveRingCount; i++) {
-      const spinNode = ringSpinRefs.current[i];
-      if (!spinNode || motionFrozen) continue;
-      spinNode.rotation.y += SUBSTRATE_GYRO_GIMBAL_RINGS[i].spin * idleSpeed * dt;
+    // Dotted shell radius lerp: rescale vertex positions in-place from
+    // the captured `dottedShellBase` snapshot. We only re-upload when
+    // the smoothed radius mul drifts > 0.5% from the last write so the
+    // GPU buffer isn't churned every frame.
+    const targetShellMul = unfold.shellRadiusMul;
+    const lastMul = lastShellRadiusMul.current;
+    if (Math.abs(targetShellMul - lastMul) > 0.005 || dottedShellBase.current === null) {
+      const attr = geom.dottedShell.getAttribute("position") as THREE.BufferAttribute | undefined;
+      if (attr) {
+        const arr = attr.array as Float32Array;
+        if (dottedShellBase.current === null) {
+          // First frame — snapshot the parked positions (at
+          // SUBSTRATE_GYRO_DOTTED_SHELL_RADIUS_MUL by construction).
+          dottedShellBase.current = new Float32Array(arr.length);
+          dottedShellBase.current.set(arr);
+        }
+        const base = dottedShellBase.current;
+        const k = targetShellMul; // already relative to parked mul (1 = parked)
+        for (let i = 0; i < arr.length; i++) arr[i] = base[i] * k;
+        attr.needsUpdate = true;
+        lastShellRadiusMul.current = targetShellMul;
+      }
     }
   });
 
@@ -826,36 +894,54 @@ export function ShellSubstrateGyro({ layerKey, reducedMotion = false }: ShellSub
           this ring at ~1.08, so the cluster reads as one grouped dial. */}
       <lineLoop geometry={geom.cardinalRing} material={mats.cardinalRing} frustumCulled={false} />
 
-      {/* Gimbal cage — counter-rotating rings + pivot diamonds */}
+      {/* Gimbal cage — counter-rotating rings + pivot diamonds.
+          Hierarchy per ring (outer → inner):
+            tilt  — `ringTiltRefs[i]`: tilt-lerped each frame by
+                     `gyroRingUnfold(reveal)` from near-coplanar to the
+                     ring's parked tilt (`axis.tilt`).
+            scale — `ringScaleRefs[i]`: small landing overshoot scale
+                     so each ring snaps into place as it opens.
+            spin  — `ringSpinRefs[i]`: idle counter-rotation (unchanged). */}
       {SUBSTRATE_GYRO_GIMBAL_RINGS.slice(0, effectiveRingCount).map((axis, ringIdx) => (
-        <group key={`gimbal-ring-${ringIdx}`} rotation={[axis.tilt[0], axis.tilt[1], axis.tilt[2]]}>
+        <group
+          key={`gimbal-ring-${ringIdx}`}
+          ref={(node) => {
+            ringTiltRefs.current[ringIdx] = node;
+          }}
+        >
           <group
             ref={(node) => {
-              ringSpinRefs.current[ringIdx] = node;
+              ringScaleRefs.current[ringIdx] = node;
             }}
           >
-            <lineLoop
-              geometry={geom.gimbalRings[ringIdx]}
-              material={mats.ring}
-              frustumCulled={false}
-            />
-            {geom.ringGraduations[ringIdx] && (
-              <lineSegments
-                geometry={geom.ringGraduations[ringIdx]}
-                material={mats.graduation}
+            <group
+              ref={(node) => {
+                ringSpinRefs.current[ringIdx] = node;
+              }}
+            >
+              <lineLoop
+                geometry={geom.gimbalRings[ringIdx]}
+                material={mats.ring}
                 frustumCulled={false}
               />
-            )}
-            {/* Pivot diamonds at cardinal positions on each ring */}
-            {[0, Math.PI / 2, Math.PI, Math.PI * 1.5].map((a, pi) => (
-              <mesh
-                key={`pivot-${ringIdx}-${pi}`}
-                geometry={geom.pivot}
-                material={mats.pivot}
-                position={[Math.cos(a) * axis.radius, 0, Math.sin(a) * axis.radius]}
-                frustumCulled={false}
-              />
-            ))}
+              {geom.ringGraduations[ringIdx] && (
+                <lineSegments
+                  geometry={geom.ringGraduations[ringIdx]}
+                  material={mats.graduation}
+                  frustumCulled={false}
+                />
+              )}
+              {/* Pivot diamonds at cardinal positions on each ring */}
+              {[0, Math.PI / 2, Math.PI, Math.PI * 1.5].map((a, pi) => (
+                <mesh
+                  key={`pivot-${ringIdx}-${pi}`}
+                  geometry={geom.pivot}
+                  material={mats.pivot}
+                  position={[Math.cos(a) * axis.radius, 0, Math.sin(a) * axis.radius]}
+                  frustumCulled={false}
+                />
+              ))}
+            </group>
           </group>
         </group>
       ))}
