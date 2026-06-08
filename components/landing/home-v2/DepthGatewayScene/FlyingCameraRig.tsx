@@ -3,7 +3,13 @@
 import { useFrame, useThree } from "@react-three/fiber";
 import { useEffect } from "react";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
-import { CAMERA_START, getCameraFov, getCameraLookAt, getCameraPosition } from "./sceneGeom";
+import {
+  CAMERA_START,
+  getCameraFov,
+  getCameraLookAt,
+  getCameraPosition,
+  getEpilogueCameraPose,
+} from "./sceneGeom";
 
 /**
  * FlyingCameraRig — scroll-driven camera dolly for the home-v2
@@ -57,7 +63,20 @@ export function FlyingCameraRig() {
     // parked Thoughtform layout (progress 0) during the `armed` pre-
     // arm pass — mirrors the DOM tracker so DOM + R3F project from
     // the same camera the moment the stage pins.
-    const { paintProgress } = useDepthGatewayStore.getState().transform;
+    const { paintProgress, epilogueProgress } = useDepthGatewayStore.getState().transform;
+
+    // Epilogue v3 — once paintProgress saturates at 1 and the user
+    // continues scrolling into the epilogue, `getEpilogueCameraPose`
+    // takes over. At epilogueProgress = 0 the pose returns the parked
+    // CAMERA_END frame so the corridor->epilogue handoff is a no-op
+    // until the user actually starts scrolling past Build.
+    if (epilogueProgress > 0) {
+      const pose = getEpilogueCameraPose(epilogueProgress);
+      camera.position.set(...pose.position);
+      camera.lookAt(...pose.lookAt);
+      return;
+    }
+
     const [x, y, z] = getCameraPosition(paintProgress);
     camera.position.set(x, y, z);
     const [lx, ly, lz] = getCameraLookAt(paintProgress);

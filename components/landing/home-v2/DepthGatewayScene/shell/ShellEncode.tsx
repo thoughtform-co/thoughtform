@@ -23,6 +23,7 @@ import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { COLOR_GOLD } from "@/components/landing/intelligence-artifact/artifactGeom";
 import { makeLineMaterial } from "@/components/landing/intelligence-artifact/artifactPrimitives";
+import { epilogueBand } from "@/lib/home-v2/epilogueTimeline";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import { getBrandmarkAccretionLayers } from "../sceneGeom";
 import {
@@ -198,7 +199,8 @@ export function ShellEncode({ layerKey, reducedMotion = false }: ShellEncodeProp
     const group = groupRef.current;
     if (!group) return;
 
-    const { paintProgress, active, armed } = useDepthGatewayStore.getState().transform;
+    const { paintProgress, epilogueProgress, active, armed } =
+      useDepthGatewayStore.getState().transform;
     if (!active && !armed) {
       group.visible = false;
       return;
@@ -206,6 +208,15 @@ export function ShellEncode({ layerKey, reducedMotion = false }: ShellEncodeProp
 
     const reveal = getBrandmarkAccretionLayers(paintProgress).orbits;
     if (reveal <= EMERGE_EPSILON) {
+      group.visible = false;
+      return;
+    }
+    // Epilogue v3 — Encode orbits + cardinal cartridges fade out on
+    // BUILD_OUT so the substrate cleanly sheds its instrument
+    // vocabulary before we start the approach. After the band
+    // resolves the group is hidden entirely to spare the GPU.
+    const epFade = 1 - epilogueBand(epilogueProgress, "BUILD_OUT");
+    if (epFade <= EMERGE_EPSILON) {
       group.visible = false;
       return;
     }
@@ -220,7 +231,7 @@ export function ShellEncode({ layerKey, reducedMotion = false }: ShellEncodeProp
       const stagger = reducedMotion ? 1 : cardinalStagger(reveal, cardinalIdx);
       const local = Math.min(1, stagger / ARC_LOCAL_DRAW_END);
       const arcT = smoother(local);
-      arcMats[i].opacity = arcT * SLOT_ARC_ALPHA;
+      arcMats[i].opacity = arcT * SLOT_ARC_ALPHA * epFade;
       const count = arcVertCounts[i];
       const drawn = Math.max(0, Math.min(count, Math.round(arcT * count)));
       arcGeoms[i].setDrawRange(0, drawn);
@@ -234,7 +245,7 @@ export function ShellEncode({ layerKey, reducedMotion = false }: ShellEncodeProp
       const stagger = reducedMotion ? 1 : cardinalStagger(reveal, cardinalIdx);
       const local = (stagger - BRACKET_LOCAL_START) / (BRACKET_LOCAL_END - BRACKET_LOCAL_START);
       const bracketT = smoother(Math.max(0, Math.min(1, local)));
-      bracketMats[i].opacity = bracketT * SLOT_BRACKET_ALPHA;
+      bracketMats[i].opacity = bracketT * SLOT_BRACKET_ALPHA * epFade;
     }
   });
 

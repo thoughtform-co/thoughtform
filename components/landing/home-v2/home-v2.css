@@ -340,28 +340,32 @@ html[data-corridor-epilogue="true"] .home-v2-stage__canvas canvas {
    right half of the viewport is now empty (sphere slid out of the
    way) and the copy can claim a wider column. */
 .home-v2-station-header--signal {
-  /* Vertical-centre, left-anchored. Mirrors the screen position of
-     section 2's `.home-v2-copy-block--thoughtform-left` ("AI collapsed
-     the distance between thought and form") so the closing chapter
-     reads as the symmetric bookend to the opening copy. Camera is
-     parked during the epilogue, so this fixed anchor is pixel-stable. */
-  top: 50%;
-  /* Anchor to the left edge of a centred 1400px container so on wide
-     viewports the block sits at the same left inset as the corridor
-     headers (consistent inset), and on narrower screens it tucks
-     toward the gutter without jamming against the edge. */
-  left: max(24px, calc(50% - 700px));
-  transform: translateY(-50%);
-  width: min(86vw, 540px);
+  /* Top-centre. Sits in the "sky" above the planet's horizon line
+     once the landing tilt completes — the closing chord of the 3D
+     space, before whatever transition takes the user into the next
+     section. Camera is moving during APPROACH/LAND but the title
+     itself is viewport-fixed, so it's pixel-stable. */
+  top: clamp(80px, 12vh, 156px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(90vw, 720px);
+  text-align: center;
+}
+.home-v2-station-header--signal .home-v2-station-header__title,
+.home-v2-station-header--signal .home-v2-station-header__support {
+  /* Centred + full width inside the container — overrides the base
+     left-aligned + max-width clamps the corridor headers use. */
+  max-width: none;
+  text-align: center;
+  margin-left: auto;
+  margin-right: auto;
 }
 .home-v2-station-header--signal .home-v2-station-header__title {
-  /* The right half is empty — let the title breathe. */
-  max-width: min(44vw, 540px);
-  font-size: clamp(28px, 3.2vw, 48px);
+  font-size: clamp(26px, 3vw, 44px);
 }
 .home-v2-station-header--signal .home-v2-station-header__support {
-  max-width: min(38vw, 480px);
   font-size: clamp(15px, 1.25vw, 19px);
+  max-width: min(70vw, 560px);
 }
 
 @media (max-width: 760px) {

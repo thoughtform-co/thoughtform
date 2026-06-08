@@ -271,6 +271,114 @@ export function getCameraPosition(progress: number): [number, number, number] {
   return [0, 0, lerp(CAMERA_START[2], CAMERA_END[2], cameraZDollyT(progress))];
 }
 
+// ── Epilogue camera pose (v3: planet landing) ─────────────────────
+//
+// During the EPILOGUE the camera leaves its parked CAMERA_END pose
+// and flies TOWARD the substrate (which is simultaneously growing
+// into a planet, see `getEpiloguePlanetScale`). At peak LAND it
+// hovers just above the planet's north pole and looks tangentially
+// toward the horizon — so the surface fills the bottom of the
+// viewport, the limb of the planet reads as a curved horizon, and
+// the title sits in the sky above it.
+//
+// Math (deliberately simple — slerp-free, planar):
+//   - planet centre P = BRANDMARK_ANCHOR_INTELLIGENCE
+//   - UP angle theta: 0 = in front of the planet (parked), peak =
+//     EPILOGUE_LANDING_TILT (a touch off straight-up so we land
+//     facing slightly ahead rather than straight down at the pole)
+//   - direction from planet centre to camera: (0, sin(theta), cos(theta))
+//   - distance: lerp(parked-distance, planetRadius + standoff,
+//     approachT) — camera flies in as the planet grows, ending just
+//     above the surface
+//   - look-at at peak LAND: camera + tangent * horizon_distance,
+//     where tangent is perpendicular to the up direction and points
+//     in the +Z half (so we look "forward" along the surface)
+
+/** Tilt angle (radians) of the camera over the planet's pole at
+ *  peak LAND. 65deg = mostly above the planet, leaning enough toward
+ *  +Z (in front) that the surface fills the BOTTOM of the viewport
+ *  rather than the whole frame — the user sees the upper curvature
+ *  of the planet curving away below them while sky + title sit
+ *  above (matches the user's "bottom of the viewport just sees the
+ *  upper half or a quarter of the top of the sphere" brief). */
+const EPILOGUE_LANDING_TILT = (60 * Math.PI) / 180;
+
+/** Camera standoff (world units) above the planet surface at peak
+ *  LAND. Has to clear the narrow FOV (38deg) so the planet doesn't
+ *  fill the whole viewport — picked so the planet's limb sits
+ *  roughly mid-screen with sky above and the curved surface filling
+ *  the lower portion. */
+const EPILOGUE_LANDING_STANDOFF = 4.5;
+
+/** Vertical offset applied to the lookAt point at peak LAND, in
+ *  multiples of the planet radius. Positive values shift the gaze
+ *  UP from the planet centre toward the horizon line above the limb,
+ *  so the surface drops to the lower portion of the viewport. */
+const EPILOGUE_HORIZON_LIFT = 0.65;
+
+/** Camera pose during the epilogue beat — a fly-in + landing tilt
+ *  around the substrate sphere as it grows into a planet. Returns
+ *  the parked CAMERA_END pose at epilogueProgress 0 (so blending
+ *  it into `FlyingCameraRig` is a no-op inside the corridor) and a
+ *  surface POV at epilogueProgress 1. */
+export function getEpilogueCameraPose(epilogueProgress: number): {
+  position: [number, number, number];
+  lookAt: [number, number, number];
+} {
+  const approachT = epilogueBand(epilogueProgress, "APPROACH");
+  const landT = epilogueBand(epilogueProgress, "LAND");
+
+  const planetCentre = BRANDMARK_ANCHOR_INTELLIGENCE;
+  const baseRadius = SUBSTRATE_GYRO_GLOBE_RADIUS * GYRO_ASSEMBLY_SCALE;
+  const planetRadius = baseRadius * getEpiloguePlanetScale(epilogueProgress);
+
+  // UP direction from planet centre to camera.
+  // - Parked (no epilogue): camera sits +Z of planet -> theta = 0
+  // - LAND peak: camera hovers above the pole, tilted slightly toward +Z
+  const theta = EPILOGUE_LANDING_TILT * landT;
+  const sinT = Math.sin(theta);
+  const cosT = Math.cos(theta);
+
+  // Distance from planet centre to camera.
+  // - Parked: camera at CAMERA_END = (0,0,-17), planet at z ≈ -22.6,
+  //   so parked distance ≈ 5.5 units (camera +Z of planet).
+  // - Land: planetRadius + LANDING_STANDOFF (just above the surface).
+  const parkedDistance = CAMERA_END[2] - planetCentre[2];
+  const landingDistance = planetRadius + EPILOGUE_LANDING_STANDOFF;
+  const distance = lerp(parkedDistance, landingDistance, approachT);
+
+  const camX = planetCentre[0];
+  const camY = planetCentre[1] + sinT * distance;
+  const camZ = planetCentre[2] + cosT * distance;
+
+  // LookAt:
+  //
+  // - Parked (landT 0): use the corridor's parked lookAt — identical
+  //   to `getCameraLookAt(1)` so the corridor->epilogue transition
+  //   is invisible at the seam.
+  // - Land (landT 1): look at a point ABOVE the planet centre — a
+  //   "horizon line" that pulls the gaze up and shifts the planet
+  //   into the LOWER portion of the viewport. With the camera tilted
+  //   ~60deg up over the pole + a horizon lift of ~0.6 planet radii,
+  //   the planet's limb arcs across the middle of the screen, sky
+  //   sits above (where the title lands), and the surface fills the
+  //   lower portion (matching the user's brief: the user sees the
+  //   upper quarter/half of the sphere from "above").
+  const parkedLook = getCameraLookAt(1);
+  const landLookY = planetCentre[1] + planetRadius * EPILOGUE_HORIZON_LIFT;
+  const lookLand: [number, number, number] = [planetCentre[0], landLookY, planetCentre[2]];
+  const lookAt: [number, number, number] = [
+    lerp(parkedLook[0], lookLand[0], landT),
+    lerp(parkedLook[1], lookLand[1], landT),
+    lerp(parkedLook[2], lookLand[2], landT),
+  ];
+
+  return {
+    position: [camX, camY, camZ],
+    lookAt,
+  };
+}
+
 /** Base look-at point. Travels with the camera (LOOK_AHEAD units
  *  further down the corridor) and bobs sub-pixel Y so the gaze
  *  reads as hand-flown. Kept separate from `getCameraLookAt` so the
@@ -824,13 +932,11 @@ export function getBrandmarkWorldHalfExtent(progress: number): number {
 
 // ── Copy + label world anchors ───────────────────────────────────
 
-import { epilogueBand } from "@/lib/home-v2/epilogueTimeline";
+import { epilogueBand, getEpiloguePlanetScale } from "@/lib/home-v2/epilogueTimeline";
 import type { Beat, DepthGatewayTransform } from "@/lib/stores/depthGatewayStore";
 import { gyroTilt, useGyroLabStore } from "@/lib/stores/gyroLabStore";
 import type { WorldAnchor, WorldAnchorPosition } from "../hooks/useWorldDomTracker";
 import {
-  EPILOGUE_GYRO_SHRINK,
-  EPILOGUE_SHELL_X,
   GYRO_ASSEMBLY_SCALE,
   STACK_FAN_COUNT,
   STACK_FAN_HALF_HEIGHT,
@@ -838,6 +944,7 @@ import {
   STACK_LANE_Y_RANGE,
   STACK_SOURCES_X,
   STACK_SURFACES_X,
+  SUBSTRATE_GYRO_GLOBE_RADIUS,
   getPrimitiveLabelOffset,
   petalStagger,
   SHELL_PRIMITIVES,
@@ -1072,27 +1179,6 @@ function rotateGyroLocalOffset(local: readonly [number, number, number]): Vec3 {
   return [x2 * cz - y2 * sz, x2 * sz + y2 * cz, z2];
 }
 
-/** World-X offset of the accretion shell during the corridor's
- *  EPILOGUE beat. Matches the same SPHERE-band slide applied in
- *  `BrandmarkAccretionShell.useFrame` (which moves the canvas shell).
- *  Exposed here so the DOM-anchored labels that hang off the shell
- *  (cardinals, source/surface item labels, group headers) follow
- *  the sphere when it migrates right — otherwise the labels strand
- *  at the corridor's parked X while the canvas geometry slides
- *  underneath them. */
-function epilogueShellOffsetX(transform: DepthGatewayTransform): number {
-  return epilogueBand(transform.epilogueProgress, "SPHERE") * EPILOGUE_SHELL_X;
-}
-
-/** Per-frame shrink factor applied to the gyro assembly during the
- *  EPILOGUE beat. Mirrors the SPHERE-band shrink in
- *  `BrandmarkAccretionShell` so DOM cardinal labels shrink TOWARDS
- *  the sphere's centre instead of stranding at their original
- *  parked offset. */
-function epilogueGyroShrinkFactor(transform: DepthGatewayTransform): number {
-  return 1 + (EPILOGUE_GYRO_SHRINK - 1) * epilogueBand(transform.epilogueProgress, "SPHERE");
-}
-
 function gyroAssemblyWorldPosition(
   transform: DepthGatewayTransform,
   local: readonly [number, number, number]
@@ -1101,15 +1187,15 @@ function gyroAssemblyWorldPosition(
   // applies to the gyro assembly group (BrandmarkAccretionShell), so
   // projected DOM labels stay welded to the enlarged geometry. Only
   // when the gyro is enabled — flat-compass mode has no assembly scale.
-  // The epilogue SHRINK factor composes on top so cardinals migrate
-  // INWARD with the shrinking sphere.
+  // The epilogue planet-grow multiplier composes on top so cardinals
+  // scale with the planet (they fade out during BUILD_OUT/APPROACH
+  // anyway, since they'd sit inside the planet at full grow).
   const base = useGyroLabStore.getState().enabled ? GYRO_ASSEMBLY_SCALE : 1;
-  const s = base * epilogueGyroShrinkFactor(transform);
+  const s = base * getEpiloguePlanetScale(transform.epilogueProgress);
   const scaledLocal: [number, number, number] = [local[0] * s, local[1] * s, local[2] * s];
   const [bx, by, bz] = getBrandmarkWorldPosition(transform.paintProgress);
   const [x, y, z] = rotateGyroLocalOffset(scaledLocal);
-  const epX = epilogueShellOffsetX(transform);
-  return [bx + x + epX, by + y, bz + z];
+  return [bx + x, by + y, bz + z];
 }
 
 // ── Linear-style station header (desktop two-column) ──────────────

@@ -396,25 +396,24 @@ export function CorridorStationHeaders() {
       const p = painting ? t.paintProgress : 0;
       const nowSec = performance.now() / 1000;
 
-      // Epilogue v2 — Build header and signal block read SEPARATE
-      // sub-bands off the epilogue timeline so they never co-exist
-      // on screen. BUILD_OUT clears the Build header by epilogue
-      // 0.22; SIGNAL_IN brings the billions title in starting at
-      // 0.52 — the 0.22 -> 0.52 gap is pure morph + gateway, no
-      // copy visible. Mirrors the corridor's existing Navigate ->
-      // Encode and Encode -> Build handoff cadence.
+      // Epilogue v3 (planet landing) — Build header fades out on
+      // BUILD_OUT [0.00, 0.22] and the billions title fades in on
+      // TITLE_IN [0.70, 0.90], landing as the camera completes the
+      // tilt-up to the surface POV. The big gap between the two
+      // bands is filled by the fly-in and the landing tilt, so the
+      // user never has both titles on screen at once.
       const ep = t.epilogueProgress;
       const buildOut = 1 - epilogueBand(ep, "BUILD_OUT");
-      const signalIn = epilogueBand(ep, "SIGNAL_IN");
+      const titleIn = epilogueBand(ep, "TITLE_IN");
       const containerOps = {
         nav: bandOpacity(p, NAVIGATE_FADE_IN, NAVIGATE_FADE_OUT),
         enc: bandOpacity(p, ENCODE_FADE_IN, ENCODE_FADE_OUT),
         bld: bandOpacity(p, BUILD_FADE_IN) * buildOut,
-        // Signal block is the new bottom-left "billions" title +
-        // paragraph. Its only driver is the epilogue SIGNAL_IN band
-        // (gap from BUILD_OUT.end == 0.22 to SIGNAL_IN.start == 0.52
-        // guarantees the two titles never share the viewport).
-        sig: signalIn,
+        // Signal block — "The labs just bet billions on the same
+        // layer." Top-centre title that marks the end of the 3D
+        // space. Driven by the TITLE_IN band so it arrives after
+        // the planet landing has settled.
+        sig: titleIn,
       };
 
       // Container opacity writes (suppress when no meaningful change).

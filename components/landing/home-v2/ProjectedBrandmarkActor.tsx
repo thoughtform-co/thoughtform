@@ -10,6 +10,7 @@ import {
 } from "./DepthGatewayScene/sceneGeom";
 import { type WorldAnchor, useWorldDomTracker } from "./hooks/useWorldDomTracker";
 import { BEAT_ORDER } from "@/lib/home-v2/corridorMap";
+import { epilogueBand } from "@/lib/home-v2/epilogueTimeline";
 import { gyroTilt, useGyroLabStore } from "@/lib/stores/gyroLabStore";
 
 /**
@@ -157,7 +158,14 @@ export function ProjectedBrandmarkActor() {
           // desktop and 1 once raw progress passes the dwell, so it's a
           // no-op everywhere except the mobile copy moment.
           const { diagramFactor } = getThoughtformMobilePhase(transform.progress);
-          element.style.opacity = `${(bookend * intensity * diagramFactor).toFixed(3)}`;
+          // Epilogue v3 — fade the guiding-star brandmark across the
+          // APPROACH band so the core mark doesn't sit inside the
+          // substrate as it grows into a planet. By the LAND band the
+          // mark is invisible and we end "standing on the substrate"
+          // looking out at the curved horizon, not staring at the
+          // brandmark glyph in space.
+          const epFade = 1 - epilogueBand(transform.epilogueProgress, "APPROACH");
+          element.style.opacity = `${(bookend * intensity * diagramFactor * epFade).toFixed(3)}`;
 
           // Forward tilt: the inner div takes a small Y rotation
           // scaled by camera dolly so the mark reads as a 3D plate

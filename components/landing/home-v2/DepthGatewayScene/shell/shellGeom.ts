@@ -667,40 +667,16 @@ export const SUBSTRATE_GYRO_CARDINAL_RING_OPACITY = 0.55;
  *  that the instrument is re-centred and has the surrounding space. */
 export const GYRO_ASSEMBLY_SCALE = 1.18;
 
-/** World-X displacement of the whole accretion shell at peak
- *  `epilogueProgress`. Picked so the gimbal sphere clears the new
- *  bottom-left title block at 1440px while keeping the sphere AND
- *  its orbiting cards fully in frame. Tuned against the corridor's
- *  parked sphere world position (anchored at x=0) and the camera
- *  FOV; the corridor itself is unaffected (camera holds, gates
- *  parked, paintProgress saturated at 1). */
-export const EPILOGUE_SHELL_X = 0.95;
-
-/** Uniform scale multiplier applied to the gimbal assembly at peak
- *  epilogue. Picked so the substrate sphere shrinks from its parked
- *  GYRO_ASSEMBLY_SCALE (1.18) down to ~0.94 of that — small enough
- *  that the four orbiting news cards frame it nicely without
- *  intersecting, big enough that the cardinal labels still read.
- *  News cards are a SIBLING of the gyro assembly (not a child), so
- *  the cards keep their own size as the gimbal shrinks. */
-export const EPILOGUE_GYRO_SHRINK = 0.7;
-
-/** Orbit ring radius (shell-local units) for the news cards during
- *  the epilogue. Sits just outside the gimbal+stack envelope so the
- *  cards don't intersect the cage; small enough to read all four at
- *  a single glance at desktop FOV without the right-most card
- *  clipping the viewport edge after the sphere has slid right. */
-export const EPILOGUE_NEWS_RING_RADIUS = 1.35;
-
-/** Tilt of the news-card orbit ring (radians, X-axis). Slight tilt
- *  so the ring reads as a true 3D loop — cards in front are larger
- *  and cards behind the sphere are correctly occluded by it. */
-export const EPILOGUE_NEWS_RING_TILT_X = 0.32;
-
-/** Steady-state angular velocity of the news-card ring (radians /
- *  second). Slow enough that cards stay readable as they pass the
- *  camera; not so slow that the orbit feels frozen. */
-export const EPILOGUE_NEWS_SPIN_SPEED = 0.085;
+/** Peak planet-grow multiplier applied to the gimbal assembly at
+ *  the end of the EPILOGUE APPROACH band. The substrate gimbal
+ *  globe scales up from `GYRO_ASSEMBLY_SCALE` (parked) to
+ *  `GYRO_ASSEMBLY_SCALE * EPILOGUE_PLANET_GROW` so it reads as a
+ *  planet by the time we land. Tuned against the camera FOV (38deg)
+ *  and the standoff in `getEpilogueCameraPose` so the planet's
+ *  curvature fits in the LOWER portion of the viewport with sky
+ *  above (matches the user's brief: "the bottom of the viewport
+ *  just sees the upper half or a quarter of the top of the sphere"). */
+export const EPILOGUE_PLANET_GROW = 2.5;
 
 /** Static tilt when `prefers-reduced-motion` (radians). */
 export const SUBSTRATE_GYRO_STATIC_TILT_X = 0.12;

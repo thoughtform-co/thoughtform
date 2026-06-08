@@ -11,6 +11,172 @@
 
 ---
 
+## 2026-06-08 Revision (v3) — Substrate planet landing (cards + gateway + topology morph removed)
+
+The user reviewed v2 and called the orbiting news cards "not elegant", was
+unsure about the emerging gateway + background topology morph, and pitched a
+much stronger climactic ending:
+
+> we end with built on the substrate. that intelligence layer IS the
+> substrate. fly towards the sphere and land on top of it. the camera
+> angle also tilts so we are walking on a planet, so we see the curvature
+> in the distance of the sphere... like navigating with a spaceship to the
+> sphere, which is a planet in the distance. We fly towards it, and as we
+> land, the camera tilts upwards so that the bottom of the viewport just
+> sees the upper half or a quarter of the top of the sphere.
+
+This is on-brand in a way v2 wasn't: the substrate sphere IS the world
+you build on, so flying to it and landing on it makes the metaphor
+literal. v3 removes everything from v2 except the corridor itself + the
+billions title (now top-centre) and replaces the post-Build vista with a
+cinematic camera landing.
+
+### a. Removed v2 theatrics
+
+- Deleted `ShellNewsOrbit.tsx` and `lib/home-v2/signalCards.ts`.
+- Deleted `EpilogueGateway.tsx` and unmounted it from
+  `DepthGatewayScene/index.tsx`.
+- Reverted the per-vertex landscape morph in `LatentWormholeWalls.tsx`
+  (the `aMorphTarget` attribute, `uMorph`/`uMorphCameraZ`/
+  `uGatewayCenter`/`uGoldColor` uniforms, the front-to-back stagger,
+  and the gold horizon tint are all gone — the wormhole walls are
+  back to their corridor-only form).
+- Reverted the MORPH-band dims from `LatentTopographyContours.tsx` and
+  `LatentFieldTunnel.tsx`. These layers stay as the corridor/space we
+  fly through and recede naturally as the camera flies in.
+- The v2 epilogue helpers `epilogueShellOffsetX` and
+  `epilogueGyroShrinkFactor` and the v2 shellGeom constants
+  `EPILOGUE_SHELL_X`, `EPILOGUE_GYRO_SHRINK`,
+  `EPILOGUE_NEWS_RING_RADIUS`, `EPILOGUE_NEWS_RING_TILT_X`,
+  `EPILOGUE_NEWS_SPIN_SPEED` are gone.
+
+### b. New v3 epilogue bands
+
+[`lib/home-v2/epilogueTimeline.ts`](../../lib/home-v2/epilogueTimeline.ts)
+replaces v2's six bands with four:
+
+| Band        | Window       | Drives                                                                                                                                         |
+| ----------- | ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `BUILD_OUT` | 0.00 -> 0.22 | Build header + ShellStack + ShellEncode orbits/cardinals + gimbal armillary rings/ticks/symbols fade out (only the wireframe globe remains)    |
+| `APPROACH`  | 0.10 -> 0.62 | Camera flies in toward the substrate; the substrate scales up to planet size; gyro pointer-bank and drift calm to 0; projected brandmark fades |
+| `LAND`      | 0.55 -> 0.92 | Camera orbits up over the planet's pole and tilts so the limb sits across the middle of the viewport with sky above                            |
+| `TITLE_IN`  | 0.70 -> 0.90 | "The labs just bet billions on the same layer." title fades in at TOP-CENTRE (the closing chord of the 3D space)                               |
+
+New shared helper `getEpiloguePlanetScale(epilogueProgress)` ramps the
+gimbal assembly from `GYRO_ASSEMBLY_SCALE` to
+`GYRO_ASSEMBLY_SCALE * EPILOGUE_PLANET_GROW` across APPROACH.
+`EPILOGUE_PLANET_GROW = 2.5` (tuned against the 38deg FOV so the planet
+fits in the lower portion of the viewport rather than filling the
+whole frame).
+
+### c. Camera fly-in + landing tilt
+
+New [`getEpilogueCameraPose(epilogueProgress)`](../../components/landing/home-v2/DepthGatewayScene/sceneGeom.ts)
+returns the camera's epilogue-mode position + lookAt. Math:
+
+- planet centre P = `BRANDMARK_ANCHOR_INTELLIGENCE` (the parked
+  substrate centre, ~[0, 0, -22.6]);
+- planet radius = `SUBSTRATE_GYRO_GLOBE_RADIUS * GYRO_ASSEMBLY_SCALE *
+getEpiloguePlanetScale(ep)`;
+- camera UP direction from planet centre: `(0, sin(theta), cos(theta))`
+  where theta ramps 0 -> `EPILOGUE_LANDING_TILT = 60deg` across LAND
+  (parked frame at theta=0 is identical to `getCameraLookAt(1)`);
+- camera distance from planet centre: `lerp(parked_distance,
+planet_radius + EPILOGUE_LANDING_STANDOFF, approachT)` (standoff
+  = 4.5 so the camera ends comfortably above the surface with the
+  FOV not pinned to it);
+- lookAt blends from the corridor's parked lookAt (landT=0) to a
+  point lifted `EPILOGUE_HORIZON_LIFT = 0.65` planet radii ABOVE the
+  centre (landT=1) — pulls the gaze up so the planet drops into the
+  lower portion of the viewport.
+
+[`FlyingCameraRig.tsx`](../../components/landing/home-v2/DepthGatewayScene/FlyingCameraRig.tsx)
+short-circuits to `getEpilogueCameraPose` whenever
+`epilogueProgress > 0`. At `epilogueProgress = 0` the pose returns
+the parked CAMERA_END frame, so the corridor -> epilogue handoff is
+seamless at the seam.
+
+### d. Instrument vocabulary fades
+
+- [`ShellSubstrateGyro.tsx`](../../components/landing/home-v2/DepthGatewayScene/shell/ShellSubstrateGyro.tsx)
+  multiplies `ring`/`tick`/`graduation`/`symbol`/`pivot`/`cardinalRing`
+  material opacities by `(1 - epilogueBand("BUILD_OUT"))` so the
+  gimbal sheds its instrument affordances. The globe materials
+  (`globeDots`, `equator`, `particle`, `dottedShell`) stay — those
+  ARE the planet surface grid as it grows.
+- [`ShellEncode.tsx`](../../components/landing/home-v2/DepthGatewayScene/shell/ShellEncode.tsx)
+  hides the whole orbit/cartridge group on the same band, and
+  individual arc/bracket opacities are multiplied by the fade for a
+  clean dissolve before the geometry is hidden.
+- `ShellStack`, source/surface DOM labels, and the Build station
+  header retain their existing BUILD_OUT fades from v2.
+
+### e. Brandmark fade across APPROACH
+
+`ProjectedBrandmarkActor` multiplies its DOM opacity by
+`(1 - epilogueBand("APPROACH"))`. By LAND peak the guiding-star
+brandmark is invisible — it'd otherwise sit at the centre of the
+planet we just landed on, breaking the read.
+
+### f. Title at top-centre
+
+`.home-v2-station-header--signal` repositioned from vertical-centre-
+left (v2) to top-centre, with `text-align: center` and a wider width
+clamp. It lands in the sky above the planet's horizon line. Driven
+by the new `TITLE_IN` band in
+[`CorridorStationHeaders.tsx`](../../components/landing/home-v2/CorridorStationHeaders.tsx).
+
+### Files touched in v3
+
+| File                                                                        | Change                                                                                                                               |
+| --------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| Deleted                                                                     | `components/landing/home-v2/DepthGatewayScene/shell/ShellNewsOrbit.tsx`                                                              |
+| Deleted                                                                     | `lib/home-v2/signalCards.ts`                                                                                                         |
+| Deleted                                                                     | `components/landing/home-v2/DepthGatewayScene/EpilogueGateway.tsx`                                                                   |
+| `lib/home-v2/epilogueTimeline.ts`                                           | Replaced 6 v2 bands with BUILD_OUT/APPROACH/LAND/TITLE_IN; added `getEpiloguePlanetScale`                                            |
+| `components/landing/home-v2/DepthGatewayScene/sceneGeom.ts`                 | New `getEpilogueCameraPose`; restored `gyroAssemblyWorldPosition` (planet-scale only, no slide/shrink); removed v2 helpers + imports |
+| `components/landing/home-v2/DepthGatewayScene/shell/shellGeom.ts`           | Replaced 5 v2 constants with `EPILOGUE_PLANET_GROW = 2.5`                                                                            |
+| `components/landing/home-v2/DepthGatewayScene/FlyingCameraRig.tsx`          | Short-circuit to `getEpilogueCameraPose` when `epilogueProgress > 0`                                                                 |
+| `components/landing/home-v2/DepthGatewayScene/BrandmarkAccretionShell.tsx`  | Removed slide+shrink; added planet-grow via `getEpiloguePlanetScale`; calmed gyro bank + drift across APPROACH                       |
+| `components/landing/home-v2/DepthGatewayScene/shell/ShellSubstrateGyro.tsx` | Multiplied instrument material opacities by BUILD_OUT fade (keep globe materials)                                                    |
+| `components/landing/home-v2/DepthGatewayScene/shell/ShellEncode.tsx`        | Whole group hides on BUILD_OUT; per-arc opacity multiplied by fade                                                                   |
+| `components/landing/home-v2/DepthGatewayScene/LatentWormholeWalls.tsx`      | Reverted v2 per-vertex landscape morph (shader, uniforms, morphTargets attribute)                                                    |
+| `components/landing/home-v2/DepthGatewayScene/LatentTopographyContours.tsx` | Reverted v2 MORPH-band dim                                                                                                           |
+| `components/landing/home-v2/DepthGatewayScene/LatentFieldTunnel.tsx`        | Reverted v2 MORPH-band dim                                                                                                           |
+| `components/landing/home-v2/DepthGatewayScene/index.tsx`                    | Unmounted `<EpilogueGateway />`                                                                                                      |
+| `components/landing/home-v2/ProjectedBrandmarkActor.tsx`                    | Multiplied DOM opacity by `(1 - epilogueBand("APPROACH"))`                                                                           |
+| `components/landing/home-v2/home-v2.css`                                    | `.home-v2-station-header--signal` repositioned to top-centre, `text-align: center`                                                   |
+| `components/landing/home-v2/CorridorStationHeaders.tsx`                     | Repointed `sig` block from v2 `SIGNAL_IN` -> v3 `TITLE_IN`                                                                           |
+
+### Verified (v3)
+
+- `npm run build` clean (57 routes, no new errors).
+- Browser scrub at 1440x900 across 5 epilogueProgress checkpoints
+  (0.05 / 0.30 / 0.55 / 0.78 / 0.95):
+  - Build park composition unchanged (no regression).
+  - Substrate sheds its instrument vocabulary by tgt=0.30 (gimbal
+    rings + cardinals + sources/interfaces all gone).
+  - Substrate visibly grows between tgt=0.05 (centred small) and
+    tgt=0.55 (filling the viewport as a wireframe planet).
+  - Camera tilts up by tgt=0.78 — the substrate's curved equator
+    moves into the lower portion of the viewport with sky above.
+  - At tgt=0.95 the planet's curvature reads clearly: the gold
+    equator arcs across the middle/lower viewport, "THE LABS JUST
+    BET BILLIONS ON THE SAME LAYER." sits at top-centre with full
+    opacity, and the closing chord of the 3D space is in place.
+- No console errors.
+
+### Known polish for follow-up (not blocking)
+
+- The four DOM cardinals (`JUDGMENT` / `CRAFT` / `VOICE` / `TASTE`)
+  still ride the substrate at LAND because they're positioned by
+  `gyroAssemblyWorldPosition` (which now scales with planet-grow).
+  They read as compass points on the planet, which is OK — but if
+  the user wants a cleaner sky/planet split they should fade with
+  BUILD_OUT or APPROACH.
+
+---
+
 ## 2026-06-08 Revision (v2) — Epilogue choreography polish + landscape warp + emerging gateway
 
 The first epilogue pass (below) shipped sphere-slides-right + orbiting news

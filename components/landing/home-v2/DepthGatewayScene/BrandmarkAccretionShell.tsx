@@ -4,18 +4,15 @@ import { useFrame } from "@react-three/fiber";
 import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { useDeviceTier } from "@/lib/hooks/useDeviceTier";
-import { epilogueBand } from "@/lib/home-v2/epilogueTimeline";
+import { epilogueBand, getEpiloguePlanetScale } from "@/lib/home-v2/epilogueTimeline";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import { gyroTilt, useGyroLabStore } from "@/lib/stores/gyroLabStore";
 import { getBrandmarkAccretionLayers, getBrandmarkWorldPosition } from "./sceneGeom";
 import { ShellEncode } from "./shell/ShellEncode";
-import { ShellNewsOrbit } from "./shell/ShellNewsOrbit";
 import { ShellStack } from "./shell/ShellStack";
 import { ShellSubstrate } from "./shell/ShellSubstrate";
 import { ShellSubstrateGyro } from "./shell/ShellSubstrateGyro";
 import {
-  EPILOGUE_GYRO_SHRINK,
-  EPILOGUE_SHELL_X,
   GYRO_ASSEMBLY_SCALE,
   SUBSTRATE_GYRO_DRIFT_AMP,
   SUBSTRATE_GYRO_DRIFT_PITCH_FREQ,
@@ -89,14 +86,7 @@ export function BrandmarkAccretionShell() {
 
     shell.visible = true;
     const [bx, by, bz] = getBrandmarkWorldPosition(paintProgress);
-    // Epilogue v2 glide-right: SPHERE band drives the lateral slide so
-    // the sphere doesn't begin moving until just after BUILD_OUT starts
-    // clearing the Build chrome (avoids the slide racing the fade).
-    // The orbiting news cards are a SIBLING of the gyro assembly so
-    // they inherit this slide and stay framed around the sphere.
-    const sphereReveal = epilogueBand(epilogueProgress, "SPHERE");
-    const epiSlide = sphereReveal * EPILOGUE_SHELL_X;
-    shell.position.set(bx + epiSlide, by, bz);
+    shell.position.set(bx, by, bz);
 
     const gyroAssembly = gyroAssemblyRef.current;
     if (!gyroEnabled || !gyroAssembly) {
@@ -106,19 +96,21 @@ export function BrandmarkAccretionShell() {
       return;
     }
 
-    // Epilogue v2 shrink: the gimbal assembly contracts from the
-    // parked GYRO_ASSEMBLY_SCALE toward EPILOGUE_GYRO_SHRINK*scale as
-    // the SPHERE band ramps. The card ring (sibling) keeps its own
-    // size, so the cards visually surround the (now smaller) sphere
-    // at a tighter, more legible radius. The matching shrink for DOM-
-    // anchored cardinal labels lives in `sceneGeom.gyroAssemblyWorld
-    // Position` so labels stay welded.
-    const epShrink = 1 + (EPILOGUE_GYRO_SHRINK - 1) * sphereReveal;
-    gyroAssembly.scale.setScalar(GYRO_ASSEMBLY_SCALE * epShrink);
+    // Epilogue v3 planet-grow: the substrate gimbal scales up across
+    // the APPROACH band so the small instrument becomes a planet
+    // the camera lands on. Composes with the parked GYRO_ASSEMBLY_SCALE
+    // and saturates at 1 (no change) inside the calibrated corridor.
+    const planetScale = getEpiloguePlanetScale(epilogueProgress);
+    gyroAssembly.scale.setScalar(GYRO_ASSEMBLY_SCALE * planetScale);
 
     const layers = getBrandmarkAccretionLayers(paintProgress);
     const tiltCalm = 1 - (1 - SUBSTRATE_GYRO_ENCODE_TILT_FLOOR) * layers.orbits;
-    const mouseCalm = 1 - (1 - SUBSTRATE_GYRO_ENCODE_MOUSE_FLOOR) * layers.orbits;
+    // Calm the pointer bank to zero across APPROACH — planets don't
+    // wobble with the mouse. APPROACH ramps 0..1 so we lerp the
+    // existing mouseCalm down to 0 as it ramps.
+    const approachT = epilogueBand(epilogueProgress, "APPROACH");
+    const planetCalm = 1 - approachT;
+    const mouseCalm = (1 - (1 - SUBSTRATE_GYRO_ENCODE_MOUSE_FLOOR) * layers.orbits) * planetCalm;
     const { mouseAmpDeg, idleSpeed } = useGyroLabStore.getState();
     const ampRad = ((mouseAmpDeg * Math.PI) / 180) * mouseCalm;
     const dt = Math.min(0.1, delta);
@@ -141,11 +133,13 @@ export function BrandmarkAccretionShell() {
       const driftPitch =
         Math.sin(t * SUBSTRATE_GYRO_DRIFT_PITCH_FREQ * idleSpeed) *
         SUBSTRATE_GYRO_DRIFT_AMP *
-        tiltCalm;
+        tiltCalm *
+        planetCalm;
       const driftRoll =
         Math.sin(t * SUBSTRATE_GYRO_DRIFT_ROLL_FREQ * idleSpeed + 1.2) *
         SUBSTRATE_GYRO_DRIFT_AMP *
-        tiltCalm;
+        tiltCalm *
+        planetCalm;
 
       // Mouse amplitude is already calmed via `mouseCalm`; don't apply
       // `tiltCalm` a second time or the Build phase becomes visually
@@ -182,11 +176,6 @@ export function BrandmarkAccretionShell() {
           <ShellStack layerKey="stack" reducedMotion={isMobile} />
         </>
       )}
-      {/* News-card orbit lives as a sibling of the gyro assembly so it
-          inherits the shell's epilogue X-slide but is NOT subject to the
-          gyro's pointer-driven tilt — the cards stay billboarded toward
-          the camera regardless of mouse-look on the sphere. */}
-      <ShellNewsOrbit reducedMotion={isMobile} />
     </group>
   );
 }

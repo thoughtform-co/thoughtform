@@ -28,6 +28,7 @@ import {
   makeMeshMaterial,
 } from "@/components/landing/intelligence-artifact/artifactPrimitives";
 import { buildSphereCloudGeometry } from "@/components/landing/v7/intelligence-layer/celestialRingUtils";
+import { epilogueBand } from "@/lib/home-v2/epilogueTimeline";
 import { useGyroLabStore } from "@/lib/stores/gyroLabStore";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import { getBrandmarkAccretionLayers } from "../sceneGeom";
@@ -748,7 +749,8 @@ export function ShellSubstrateGyro({ layerKey, reducedMotion = false }: ShellSub
     const globeSpin = globeSpinRef.current;
     if (!root || !globeSpin) return;
 
-    const { paintProgress, active, armed } = useDepthGatewayStore.getState().transform;
+    const { paintProgress, epilogueProgress, active, armed } =
+      useDepthGatewayStore.getState().transform;
     if (!active && !armed) {
       root.visible = false;
       return;
@@ -761,6 +763,14 @@ export function ShellSubstrateGyro({ layerKey, reducedMotion = false }: ShellSub
       return;
     }
     root.visible = true;
+
+    // Epilogue v3 — as we leave the Build park the gyro's INSTRUMENT
+    // affordances (gimbal armillary rings, ticks, graduations, compass
+    // symbols, pivots, cardinal ring) fade out on BUILD_OUT so only
+    // the wireframe GLOBE remains. By APPROACH the substrate has
+    // stopped reading as a flight instrument and started reading as
+    // a planet.
+    const buildOutFade = 1 - epilogueBand(epilogueProgress, "BUILD_OUT");
 
     const dt = Math.min(0.1, delta);
     const { idleSpeed } = useGyroLabStore.getState();
@@ -776,19 +786,26 @@ export function ShellSubstrateGyro({ layerKey, reducedMotion = false }: ShellSub
     const presence = unfold.presence * opacityCalm;
 
     const lineOpacity = (base: number) => base * presence;
+    // GLOBE materials — kept through the epilogue (these BECOME the
+    // planet surface grid + atmospheric particles).
     mats.globeDots.uniforms.uOpacity.value = SUBSTRATE_GYRO_GLOBE_DOTS_OPACITY * presence;
     mats.globeDots.uniforms.uPixelRatio.value = state.viewport.dpr;
     mats.equator.uniforms.uOpacity.value = lineOpacity(SUBSTRATE_GYRO_GLOBE_EQUATOR_OPACITY);
-    mats.ring.uniforms.uOpacity.value = lineOpacity(SUBSTRATE_GYRO_RING_LINE_OPACITY);
-    mats.tick.uniforms.uOpacity.value = lineOpacity(SUBSTRATE_GYRO_TICK_OPACITY);
-    mats.graduation.uniforms.uOpacity.value = lineOpacity(SUBSTRATE_GYRO_RING_LINE_OPACITY * 0.95);
-    mats.symbol.uniforms.uOpacity.value = lineOpacity(SUBSTRATE_GYRO_SYMBOL_OPACITY);
-    mats.pivot.opacity = SUBSTRATE_GYRO_PIVOT_OPACITY * presence;
     mats.particle.uniforms.uPixelRatio.value = state.viewport.dpr;
     mats.particle.uniforms.uOpacity.value = SUBSTRATE_GYRO_PARTICLE_OPACITY * presence;
     mats.dottedShell.uniforms.uPixelRatio.value = state.viewport.dpr;
     mats.dottedShell.uniforms.uOpacity.value = SUBSTRATE_GYRO_DOTTED_SHELL_OPACITY * presence;
-    mats.cardinalRing.uniforms.uOpacity.value = lineOpacity(SUBSTRATE_GYRO_CARDINAL_RING_OPACITY);
+    // INSTRUMENT materials — fade out on BUILD_OUT so the substrate
+    // sheds its flight-instrument vocabulary before we approach.
+    mats.ring.uniforms.uOpacity.value =
+      lineOpacity(SUBSTRATE_GYRO_RING_LINE_OPACITY) * buildOutFade;
+    mats.tick.uniforms.uOpacity.value = lineOpacity(SUBSTRATE_GYRO_TICK_OPACITY) * buildOutFade;
+    mats.graduation.uniforms.uOpacity.value =
+      lineOpacity(SUBSTRATE_GYRO_RING_LINE_OPACITY * 0.95) * buildOutFade;
+    mats.symbol.uniforms.uOpacity.value = lineOpacity(SUBSTRATE_GYRO_SYMBOL_OPACITY) * buildOutFade;
+    mats.pivot.opacity = SUBSTRATE_GYRO_PIVOT_OPACITY * presence * buildOutFade;
+    mats.cardinalRing.uniforms.uOpacity.value =
+      lineOpacity(SUBSTRATE_GYRO_CARDINAL_RING_OPACITY) * buildOutFade;
 
     // Globe spin: keep the idle polar drift; add the decaying wrap-spin
     // on top so the meridians/parallels appear to swirl around the
