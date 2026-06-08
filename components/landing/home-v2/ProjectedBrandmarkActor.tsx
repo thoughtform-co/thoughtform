@@ -166,11 +166,13 @@ export function ProjectedBrandmarkActor() {
           const dollyTilt = (progress - 0.5) * 6; // ±3° across the corridor
           let gyroBankX = 0;
           let gyroBankY = 0;
+          let gyroBankZ = 0;
           if (useGyroLabStore.getState().enabled) {
             gyroBankX = gyroTilt.x * (180 / Math.PI);
             gyroBankY = gyroTilt.y * (180 / Math.PI);
+            gyroBankZ = gyroTilt.z * (180 / Math.PI);
           }
-          inner.style.transform = `rotateX(${gyroBankX.toFixed(2)}deg) rotateY(${(dollyTilt + gyroBankY).toFixed(2)}deg)`;
+          inner.style.transform = `rotateX(${gyroBankX.toFixed(2)}deg) rotateY(${(dollyTilt + gyroBankY).toFixed(2)}deg) rotateZ(${gyroBankZ.toFixed(2)}deg)`;
         },
       },
     ];

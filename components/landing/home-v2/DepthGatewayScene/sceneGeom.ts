@@ -906,12 +906,14 @@ const gateThoughtformDiagram: WorldAnchor["onPaint"] = (ctx, el) => {
 const gateStackLabel: WorldAnchor["onPaint"] = (ctx, el) => {
   const stack = getBrandmarkAccretionLayers(ctx.transform.paintProgress).stack;
   el.style.opacity = (ctx.visibilityOpacity * stack).toFixed(3);
+  applyGyroDomBank(el);
 };
 
 /** Gate Encode primitive labels on the orbits accretion envelope. */
 const gateEncodePrimitive: WorldAnchor["onPaint"] = (ctx, el) => {
   const orbits = getBrandmarkAccretionLayers(ctx.transform.paintProgress).orbits;
   el.style.opacity = (ctx.visibilityOpacity * orbits).toFixed(3);
+  applyGyroDomBank(el, 0.8);
 };
 
 /** Rotate a shell-local offset by the lab gyroscope's assembly bank.
@@ -949,6 +951,29 @@ function gyroAssemblyWorldPosition(
   return [bx + x, by + y, bz + z];
 }
 
+function gyroStraddleY(base: number, direction: 1 | -1): number {
+  return useGyroLabStore.getState().enabled ? base + direction * 0.24 : base;
+}
+
+function getGyroPrimitiveLabelLocal(idx: number): Vec3 {
+  const prim = SHELL_PRIMITIVES[idx];
+  const [ox, oy] = getPrimitiveLabelOffset(idx);
+  if (!useGyroLabStore.getState().enabled || !prim) return [ox, oy, 0.12];
+
+  const labelR = 1.34;
+  return [Math.cos(prim.angleRad) * labelR, Math.sin(prim.angleRad) * labelR, 0.18];
+}
+
+function applyGyroDomBank(el: HTMLElement, scale = 0.65): void {
+  if (!useGyroLabStore.getState().enabled) return;
+
+  const bankX = gyroTilt.x * (180 / Math.PI) * scale;
+  const bankY = gyroTilt.y * (180 / Math.PI) * scale;
+  const bankZ = gyroTilt.z * (180 / Math.PI) * scale;
+  el.style.transformStyle = "preserve-3d";
+  el.style.transform = `${el.style.transform} rotateX(${bankX.toFixed(2)}deg) rotateY(${bankY.toFixed(2)}deg) rotateZ(${bankZ.toFixed(2)}deg)`;
+}
+
 /**
  * COPY_ANCHORS — every DOM text element the world-DOM tracker
  * projects per frame. The order does not matter; the tracker walks
@@ -964,8 +989,7 @@ function gyroAssemblyWorldPosition(
 const ENCODE_PRIMITIVE_ANCHORS: WorldAnchor[] = SHELL_PRIMITIVES.map((prim, idx) => ({
   id: `encode.primitive.${prim.id}`,
   position: (transform) => {
-    const [ox, oy] = getPrimitiveLabelOffset(idx);
-    return gyroAssemblyWorldPosition(transform, [ox, oy, 0.12]);
+    return gyroAssemblyWorldPosition(transform, getGyroPrimitiveLabelLocal(idx));
   },
   // Visible from the Encode park (`diagnostic`) onward — the four
   // primitives ARE the encoded judgment, and the encoded layer persists
@@ -1098,7 +1122,7 @@ export const COPY_ANCHORS: readonly WorldAnchor[] = [
   // the primary straddle knobs.
   {
     id: "navigate.title",
-    position: [
+    position: () => [
       STATION_NAVIGATE.position[0],
       // Straddle journey: 0.55 (frameless) -> 0.72 (instrument readout
       // restyle) -> 0.60 (W1 de-gimmick, plan 03adb0dd). With the
@@ -1108,7 +1132,7 @@ export const COPY_ANCHORS: readonly WorldAnchor[] = [
       // is the only knob we touch — perspectiveScale, depthFade,
       // visibilityBeats own the approach/recede choreography
       // (ADR-018).
-      STATION_NAVIGATE.position[1] + 0.6,
+      gyroStraddleY(STATION_NAVIGATE.position[1] + 0.6, 1),
       STATION_NAVIGATE.position[2] + 0.1,
     ],
     // NOT eligible during `pass-01a`: that long entry leg is the pure
@@ -1131,13 +1155,13 @@ export const COPY_ANCHORS: readonly WorldAnchor[] = [
   },
   {
     id: "navigate.support",
-    position: [
+    position: () => [
       STATION_NAVIGATE.position[0],
       // Straddle journey: -0.6 (frameless) -> -0.78 (instrument
       // readout restyle) -> -0.65 (W1 de-gimmick, plan 03adb0dd).
       // Mirrors the title nudge inward; the shorter up-leader keeps
       // the support cluster reading as a caption close to the mark.
-      STATION_NAVIGATE.position[1] - 0.65,
+      gyroStraddleY(STATION_NAVIGATE.position[1] - 0.65, -1),
       STATION_NAVIGATE.position[2] + 0.1,
     ],
     visibilityBeats: ["navigate", "pass-01b"],
@@ -1175,7 +1199,7 @@ export const COPY_ANCHORS: readonly WorldAnchor[] = [
       // title sits slightly further out than Navigate, but the
       // shorter cluster lets us reclaim some closeness to the
       // mark.
-      STATION_DIAGNOSTIC.position[1] + 0.78,
+      gyroStraddleY(STATION_DIAGNOSTIC.position[1] + 0.78, 1),
       STATION_DIAGNOSTIC.position[2] + 0.1 + diagnosticApproachDepthOffset(transform.paintProgress),
     ],
     visibilityBeats: ["diagnostic"],
@@ -1202,7 +1226,7 @@ export const COPY_ANCHORS: readonly WorldAnchor[] = [
       // Straddle: -0.8 -> -1.02 -> -0.88 (W1 de-gimmick). Still
       // clears the lower orbit ring; the shorter leader makes the
       // caption sit visibly closer to the brandmark.
-      STATION_DIAGNOSTIC.position[1] - 0.88,
+      gyroStraddleY(STATION_DIAGNOSTIC.position[1] - 0.88, -1),
       STATION_DIAGNOSTIC.position[2] + 0.1 + diagnosticApproachDepthOffset(transform.paintProgress),
     ],
     visibilityBeats: ["diagnostic"],
@@ -1249,7 +1273,7 @@ export const COPY_ANCHORS: readonly WorldAnchor[] = [
       // substrate sphere is the centrepiece — the readout still
       // needs to sit clear of the pole, but with the shorter
       // cluster we can pull it closer.
-      STATION_INTELLIGENCE.position[1] + 0.74,
+      gyroStraddleY(STATION_INTELLIGENCE.position[1] + 0.74, 1),
       STATION_INTELLIGENCE.position[2] +
         0.1 +
         intelligenceApproachDepthOffset(transform.paintProgress),
@@ -1279,7 +1303,7 @@ export const COPY_ANCHORS: readonly WorldAnchor[] = [
       // Straddle: -0.85 -> -1.05 -> -0.9 (W1 de-gimmick). Still
       // clears the sphere's south pole; reclaims proximity to the
       // mark via the shorter cluster + leader.
-      STATION_INTELLIGENCE.position[1] - 0.9,
+      gyroStraddleY(STATION_INTELLIGENCE.position[1] - 0.9, -1),
       STATION_INTELLIGENCE.position[2] +
         0.1 +
         intelligenceApproachDepthOffset(transform.paintProgress),

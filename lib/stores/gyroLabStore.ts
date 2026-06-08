@@ -52,9 +52,9 @@ export const GYRO_LAB_DEFAULTS = {
   enabled: false,
   ringCount: 3,
   showParticles: true,
-  globeRadius: 0.6,
+  globeRadius: 0.72,
   globeDensity: 1.0,
-  particleDensity: 0.6,
+  particleDensity: 0.7,
   mouseAmpDeg: 28,
   idleSpeed: 1,
 } as const;

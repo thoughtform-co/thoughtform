@@ -573,26 +573,27 @@ export function shellWrapEmerge(reveal: number): ShellWrapEmerge {
 // only mounts when `gyroLabStore.enabled` is true (default false). The
 // flat-compass `SUBSTRATE_COMPASS_*` constants above are untouched.
 
-/** Default wireframe globe radius — inside the Encode slot ring (1.05). */
-export const SUBSTRATE_GYRO_GLOBE_RADIUS = 0.6;
+/** Default wireframe globe radius — larger than the flat compass but
+ *  still leaves room for Encode labels around the instrument. */
+export const SUBSTRATE_GYRO_GLOBE_RADIUS = 0.72;
 
 /** Meridian / parallel counts at `globeDensity` = 1.0. */
-export const SUBSTRATE_GYRO_MERIDIAN_COUNT = 7;
-export const SUBSTRATE_GYRO_PARALLEL_COUNT = 5;
+export const SUBSTRATE_GYRO_MERIDIAN_COUNT = 8;
+export const SUBSTRATE_GYRO_PARALLEL_COUNT = 6;
 
 /** Segments per great-circle / latitude arc. */
 export const SUBSTRATE_GYRO_GLOBE_SEGMENTS = 96;
 
-/** Three orthogonal gimbal rings — radii sit just outside the globe,
- *  inside the Encode slot ring. Mixed-sign spin rates counter-rotate. */
+/** Three orthogonal gimbal rings — full closed great circles that
+ *  counter-rotate to read as a genuine gimbal cage. */
 export const SUBSTRATE_GYRO_GIMBAL_RINGS: ReadonlyArray<{
   radius: number;
   tilt: readonly [number, number, number];
   spin: number;
 }> = [
-  { radius: 0.8, tilt: [0, 0, 0], spin: 0.22 },
-  { radius: 0.92, tilt: [Math.PI / 2, 0, 0], spin: -0.14 },
-  { radius: 1.04, tilt: [0, 0, Math.PI / 2], spin: 0.1 },
+  { radius: 0.88, tilt: [0, 0, 0], spin: 0.18 },
+  { radius: 1.02, tilt: [Math.PI / 2, 0, 0], spin: -0.12 },
+  { radius: 1.16, tilt: [0, 0, Math.PI / 2], spin: 0.09 },
 ];
 
 /** Slow polar spin of the attitude globe (rad/s). */
@@ -612,23 +613,36 @@ export const SUBSTRATE_GYRO_DEPTH_NEAR = 0.62;
 export const SUBSTRATE_GYRO_DEPTH_FAR = -0.62;
 
 /** Line opacities at full presence. */
-export const SUBSTRATE_GYRO_GLOBE_LINE_OPACITY = 0.75;
-export const SUBSTRATE_GYRO_GLOBE_EQUATOR_OPACITY = 0.95;
-export const SUBSTRATE_GYRO_RING_LINE_OPACITY = 0.7;
-export const SUBSTRATE_GYRO_PIVOT_OPACITY = 0.85;
+export const SUBSTRATE_GYRO_GLOBE_LINE_OPACITY = 0.52;
+export const SUBSTRATE_GYRO_GLOBE_EQUATOR_OPACITY = 0.92;
+export const SUBSTRATE_GYRO_RING_LINE_OPACITY = 0.82;
+export const SUBSTRATE_GYRO_PIVOT_OPACITY = 0.88;
+
+/** Dots per meridian / parallel circle at `globeDensity` = 1.0.
+ *  These replace the hard wireframe lines with soft particle trails. */
+export const SUBSTRATE_GYRO_DOTS_PER_MERIDIAN = 64;
+export const SUBSTRATE_GYRO_DOTS_PER_PARALLEL = 48;
+export const SUBSTRATE_GYRO_GLOBE_DOTS_POINT_SIZE = 5.0;
+export const SUBSTRATE_GYRO_GLOBE_DOTS_OPACITY = 0.6;
 
 /** Surface particle accent counts at `particleDensity` = 1.0. */
-export const SUBSTRATE_GYRO_PARTICLE_COUNT_DESKTOP = 180;
-export const SUBSTRATE_GYRO_PARTICLE_COUNT_MOBILE = 80;
-export const SUBSTRATE_GYRO_POINT_SIZE = 7.0;
-export const SUBSTRATE_GYRO_PARTICLE_OPACITY = 0.55;
+export const SUBSTRATE_GYRO_PARTICLE_COUNT_DESKTOP = 220;
+export const SUBSTRATE_GYRO_PARTICLE_COUNT_MOBILE = 90;
+export const SUBSTRATE_GYRO_POINT_SIZE = 6.0;
+export const SUBSTRATE_GYRO_PARTICLE_OPACITY = 0.45;
+
+/** Small navigational glyphs on the outer instrument ring. */
+export const SUBSTRATE_GYRO_TICK_COUNT = 48;
+export const SUBSTRATE_GYRO_MAJOR_TICK_EVERY = 4;
+export const SUBSTRATE_GYRO_TICK_OPACITY = 0.65;
+export const SUBSTRATE_GYRO_SYMBOL_OPACITY = 0.72;
 
 /** Static tilt when `prefers-reduced-motion` (radians). */
 export const SUBSTRATE_GYRO_STATIC_TILT_X = 0.12;
 export const SUBSTRATE_GYRO_STATIC_TILT_Y = 0.08;
 
 /** Fraction of tilt / opacity / mouse amp that REMAINS once Encode is
- *  fully emerged — gimbal persists but calms for the labels / stack. */
-export const SUBSTRATE_GYRO_ENCODE_TILT_FLOOR = 0.55;
-export const SUBSTRATE_GYRO_ENCODE_OPACITY_FLOOR = 0.72;
-export const SUBSTRATE_GYRO_ENCODE_MOUSE_FLOOR = 0.45;
+ *  fully emerged — gimbal persists through Build. */
+export const SUBSTRATE_GYRO_ENCODE_TILT_FLOOR = 0.6;
+export const SUBSTRATE_GYRO_ENCODE_OPACITY_FLOOR = 1.0;
+export const SUBSTRATE_GYRO_ENCODE_MOUSE_FLOOR = 0.5;
