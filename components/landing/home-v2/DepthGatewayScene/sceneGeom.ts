@@ -124,14 +124,14 @@ export const CORRIDOR_TIMELINE = {
   /** Thoughtform composition lateral centering pan window. PAN_END
    *  must stay locked to `dollyHoldEnd` so the camera dolly + ring
    *  flythrough release the moment the pan completes. */
-  thoughtformPan: { start: 0.08, end: 0.12 },
+  thoughtformPan: { start: 0.075, end: 0.109 },
 
   /** Gateway "boot-up" envelope phases. Ramp runs alongside the
    *  Thoughtform pan; hold spans the early ring flythrough; relax
    *  fades through the start of passthrough-01. Shared by
    *  `StaticStarfield`, `ThoughtformAtmosphere`, `CelestialMotes`,
    *  and `ThoughtformCompassGate`. */
-  thoughtformBoot: { preBoot: 0.03, rampEnd: 0.12, holdEnd: 0.21, relaxEnd: 0.5 },
+  thoughtformBoot: { preBoot: 0.03, rampEnd: 0.109, holdEnd: 0.24, relaxEnd: 0.55 },
 
   /** Compass ring forward translation at the end of each flythrough
    *  window. Parked compass sits at world Z≈5.6; +10 brings the
@@ -144,10 +144,10 @@ export const CORRIDOR_TIMELINE = {
    *  ends exactly at the passthrough-01 boundary so the supporting
    *  linework finishes sweeping just as Diagnostic takes focus. */
   flythrough: [
-    { start: 0.18, end: 0.53 }, // ring 0 (outer) — flies LAST
-    { start: 0.16, end: 0.51 }, // ring 1
-    { start: 0.14, end: 0.48 }, // ring 2
-    { start: 0.12, end: 0.455 }, // ring 3 (inner) — flies FIRST
+    { start: 0.2, end: 0.573 }, // ring 0 (outer) — flies LAST
+    { start: 0.18, end: 0.55 }, // ring 1
+    { start: 0.155, end: 0.525 }, // ring 2
+    { start: 0.13, end: 0.5 }, // ring 3 (inner) — flies FIRST
   ],
 
   /** Interstitial waypoint park progress. Sits inside passthrough-02
@@ -169,8 +169,8 @@ export const CORRIDOR_TIMELINE = {
    *    anchor and the substrate cloud takes over the silhouette. */
   brandmark: {
     thoughtformHold: 0.14,
-    diagnosticArrival: 0.57,
-    diagnosticHold: 0.65,
+    diagnosticArrival: 0.61,
+    diagnosticHold: 0.68,
     intelligenceArrival: 0.85,
     intelligenceLanding: 0.915,
   },
@@ -178,12 +178,12 @@ export const CORRIDOR_TIMELINE = {
   /** Brandmark lead-distance transit pull. Starts just after the
    *  Diagnostic park, reaches FULL_LEAD by the end of passthrough-02
    *  + a touch into intelligence (0.80). */
-  brandmarkLeadPull: { start: 0.65, end: 0.85 },
+  brandmarkLeadPull: { start: 0.68, end: 0.85 },
 
   /** Diagnostic head-copy + label depth-approach offset. The labels
    *  start `offset` world units behind their parked Z at `start` and
    *  converge to the parked plane by `end`. */
-  diagnosticApproach: { offset: -9, start: 0.18, end: 0.63 },
+  diagnosticApproach: { offset: -9, start: 0.24, end: 0.66 },
 
   /** Intelligence head-copy + side-body label depth-approach offset.
    *  Mirrors the Diagnostic pattern around the passthrough-02 →
@@ -238,7 +238,10 @@ export const CORRIDOR_TIMELINE = {
     // (~0.08 wide) sized to fire AT the park arrival make each
     // layer DEPLOY at the moment the mark arrives, so the petals
     // unfold around a stable mark, not approach from afar.
-    substrate: { start: 0.28, peakAt: 0.36 }, // Navigate park centre ~0.34
+    // Entry-buildup pass (2026-06-08): delay substrate/gyro deployment
+    // until the camera has spent a little time in the corridor after
+    // leaving Thoughtform. Encode/Build windows below are untouched.
+    substrate: { start: 0.345, peakAt: 0.415 }, // Navigate park centre ~0.40
     // Orbits window re-aligned to the Encode park ARRIVAL (2026-06-07)
     // so the staggered fold-in is WITNESSED as the camera enters Encode,
     // mirroring the compass at Navigate (window straddles the park:
@@ -247,7 +250,7 @@ export const CORRIDOR_TIMELINE = {
     // by arrival the orbits were already static ("just appear"). The
     // brandmark arrives at Diagnostic at 0.57 and holds to 0.65, so this
     // window deploys the orbits around the arriving + settling mark.
-    orbits: { start: 0.54, peakAt: 0.62 }, // Encode park centre ~0.60
+    orbits: { start: 0.58, peakAt: 0.66 }, // Encode park centre ~0.636
     stack: { start: 0.84, peakAt: 0.91 }, // Build park centre ~0.92
   },
 } as const;
@@ -901,6 +904,16 @@ const gateThoughtformDiagram: WorldAnchor["onPaint"] = (ctx, el) => {
   el.style.opacity = (ctx.visibilityOpacity * diagramFactor).toFixed(3);
 };
 
+/** Gate the Navigate station title/caption a touch later than the beat
+ *  boundary. This preserves the Navigate → Encode → Build sequence,
+ *  but gives the entry flythrough a clean corridor-only moment before
+ *  any Navigate copy or gyro shell resolves. */
+const gateNavigateReadout: WorldAnchor["onPaint"] = (ctx, el) => {
+  const p = ctx.transform.paintProgress;
+  const reveal = smoothstep(0.37, 0.405, p);
+  el.style.opacity = (ctx.visibilityOpacity * reveal).toFixed(3);
+};
+
 /** Gate stack tier labels on the Build accretion envelope so Sources /
  *  Surfaces only read once the funnel docks. */
 const gateStackLabel: WorldAnchor["onPaint"] = (ctx, el) => {
@@ -1073,40 +1086,28 @@ export const COPY_ANCHORS: readonly WorldAnchor[] = [
   // for build) lands on the anchor point — mirroring v7's
   // `text-anchor="end"` / `"start"`.
   //
-  // Visibility stays on `thoughtform` but uses an aggressive
-  // exit fade so the DOM labels survive across the start of
-  // passthrough-01, tracking the R3F supportingRef's forward
-  // sweep (which carries the gate's phase dots toward the
-  // camera). The behind-camera cull in `useWorldDomTracker`
-  // takes over once the camera passes the gate's world Z.
-  // Phase labels survive across the entire ring sweep so they
-  // travel with the supporting linework (which rides ring 0's
-  // 0.20→0.46 flythrough). `fadeFrac: 2.0` against the trimmed
-  // thoughtform beat [0.0, 0.14] gives a 0.28-wide fade window
-  // (visible at full through 0.14, ramping to 0 by 0.42 — just
-  // before `useWorldDomTracker` would cull them as behind-camera
-  // around 0.41). The labels read as travelling forward with the
-  // compass through the camera, not as snapping out at the beat
-  // boundary.
+  // Phase labels now end with the Thoughtform composition instead of
+  // lingering through pass-01a. That early pass is the pure corridor
+  // flythrough; Navigate copy + gyro appear later at the parked station.
   {
     id: "thoughtform.phase.navigate",
     position: thoughtformPhasePosition(-0.5, 0.7),
     visibilityBeats: ["thoughtform"],
-    fadeFrac: 2.0,
+    fadeFrac: 0.12,
     onPaint: gateThoughtformDiagram,
   },
   {
     id: "thoughtform.phase.encode",
     position: thoughtformPhasePosition(-0.325, -0.655),
     visibilityBeats: ["thoughtform"],
-    fadeFrac: 2.0,
+    fadeFrac: 0.12,
     onPaint: gateThoughtformDiagram,
   },
   {
     id: "thoughtform.phase.build",
     position: thoughtformPhasePosition(0.59, 0.135),
     visibilityBeats: ["thoughtform"],
-    fadeFrac: 2.0,
+    fadeFrac: 0.12,
     onPaint: gateThoughtformDiagram,
   },
 
@@ -1152,6 +1153,7 @@ export const COPY_ANCHORS: readonly WorldAnchor[] = [
       max: 1.1,
     },
     depthFade: { near: 0.4, nearFade: 1.8, far: STATION_NAVIGATE.parkDistance + 2.0, farFade: 1.6 },
+    onPaint: gateNavigateReadout,
   },
   {
     id: "navigate.support",
@@ -1172,6 +1174,7 @@ export const COPY_ANCHORS: readonly WorldAnchor[] = [
       max: 1.1,
     },
     depthFade: { near: 0.4, nearFade: 1.8, far: STATION_NAVIGATE.parkDistance + 2.0, farFade: 1.6 },
+    onPaint: gateNavigateReadout,
   },
 
   // ── Diagnostic ──────────────────────────────────────────────────

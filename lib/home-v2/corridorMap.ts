@@ -56,15 +56,19 @@ export const CAMERA_START: [number, number, number] = [0, 0, 10];
 
 /** Camera position at progress = 1 (end of corridor), on the axis.
  *  Deepened -8 → -11.5 (Refinement 3), then -11.5 → -14 (entry/section
- *  spacing pass) to lengthen the whole corridor so each section sits
- *  further apart in depth — the "entering a new realm" feel. Because
- *  every gate Z re-solves from `gateZAtParkProgress` and all
- *  choreography is progress-keyed (CORRIDOR_TIMELINE windows in 0..1),
- *  deepening the dolly only stretches the *world* spacing between beats
- *  — timing stays valid. The one absolute-Z consumer that does NOT
- *  follow is `AstrogationField`'s seed positions, re-spread to populate
- *  the deeper corridor. */
-export const CAMERA_END: [number, number, number] = [0, 0, -14];
+ *  spacing pass), and -14 → -17 (entry buildup pass, 2026-06-08) so the
+ *  pass-01a flythrough between Thoughtform and Navigate covers more
+ *  world distance — the gyro reads as "approaching from depth" rather
+ *  than assembling immediately on portal entry. Because every gate Z
+ *  re-solves from `gateZAtParkProgress` and all choreography is
+ *  progress-keyed (CORRIDOR_TIMELINE windows in 0..1), deepening the
+ *  dolly only stretches the *world* spacing between beats — timing
+ *  stays valid. The two absolute-Z consumers that need to follow are
+ *  `StaticStarfield`'s star Z range (pushed back so the deepest gate
+ *  stays in front of the stars) and `AstrogationField`'s seed
+ *  positions (already spread across the corridor; deepest seeds still
+ *  fly past during the Build approach). */
+export const CAMERA_END: [number, number, number] = [0, 0, -17];
 
 /** Distance the camera sits in FRONT of a gate when that gate is
  *  parked (centred). Picked so the gate's halfExtent comfortably fills
@@ -185,10 +189,10 @@ export type CorridorNode = StationNode | TransitionNode;
 //
 // Entry / section-spacing pass: the ENTRY flythrough (`pass-01a`) is the
 // long pure-wormhole stretch you fly through before arriving at the
-// first gate. It was grown to 23 (from 10) so you genuinely travel the
-// corridor before the Navigate gate + text appear. The Navigate copy is
-// ALSO gated out of `pass-01a` (see its `visibilityBeats` in sceneGeom)
-// so the flythrough stays text-free.
+// first gate. It has been grown multiple times so you genuinely travel
+// the corridor before the Navigate gate + text appear. The Navigate copy
+// is ALSO gated out of `pass-01a` (see its `visibilityBeats` in
+// sceneGeom) so the flythrough stays text-free.
 //
 // IMPORTANT: pass-01a is funded ENTIRELY from the other FRONT legs
 // (thoughtform/navigate/pass-01b), keeping the front total at 53 so the
@@ -196,12 +200,14 @@ export type CorridorNode = StationNode | TransitionNode;
 // CORRIDOR_TIMELINE choreography is therefore untouched. Only the FRONT
 // timeline values (pan, boot, ring flythrough, brandmark thoughtformHold)
 // + the front leg-reveal windows were re-tuned. Combined with the deeper
-// CAMERA_END (-14) every section also sits further apart in depth.
+// CAMERA_END (-17 after the 2026-06-08 entry-buildup pass) every section
+// also sits further apart in depth.
 //
-// Current windows: thoughtform [0,.12] · pass-01a [.12,.29] · navigate
-// [.29,.39] (park .34) · pass-01b [.39,.53] · diagnostic [.53,.67]
-// (park .60) · passthrough-02 [.67,.83] (interstitial waypoint ≈.70) ·
-// intelligence [.83,1] (park .915).
+// Current windows after the 2026-06-08 entry-buildup pass:
+// thoughtform [0,.109] · pass-01a [.109,.355] · navigate [.355,.445]
+// (park .40) · pass-01b [.445,.573] · diagnostic [.573,.70]
+// (park .636) · passthrough-02 [.70,.845] (interstitial waypoint ≈.727)
+// · intelligence [.845,1] (park .923).
 //
 // Navigate→Encode travel pass (2026-06-04): pass-01b was widened
 // 8 → 14 and pass-01a trimmed 23 → 17 (net 0, front total still 53).
@@ -236,7 +242,7 @@ export const CORRIDOR_MAP = [
   // pass-01a / navigate / pass-01b split (keep the sum at 32) and the
   // navigate `parkBias`. pass-01a 17 + navigate 10 + pass-01b 14 = 41,
   // plus thoughtform 12 = front total 53 (unchanged).
-  { kind: "transition", id: "pass-01a", label: "Navigate", travel: 17 },
+  { kind: "transition", id: "pass-01a", label: "Navigate", travel: 27 },
   {
     kind: "station",
     id: "navigate",

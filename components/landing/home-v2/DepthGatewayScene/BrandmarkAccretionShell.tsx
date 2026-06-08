@@ -43,10 +43,10 @@ export function BrandmarkAccretionShell() {
   const tier = useDeviceTier();
   const isMobile = tier === "mobile";
 
-  // LAB-ONLY: swap the flat Navigate compass for the particle-suggested
-  // gyroscope at `/test/navigate-gyroscope`. Defaults to `false` (see
-  // `gyroLabStore`), so production home + `/test/home-v2` always render
-  // the unchanged flat `ShellSubstrate`.
+  // 3D gimbaled gyroscope is the production Navigate read (default true
+  // in `gyroLabStore`). The lab route `/test/navigate-gyroscope` keeps
+  // the `GyroLabPanel` overlay for live tuning; setting `enabled` to
+  // false from anywhere restores the flat `ShellSubstrate` compass.
   const gyroEnabled = useGyroLabStore((s) => s.enabled);
 
   const shellGroupRef = useRef<THREE.Group>(null);

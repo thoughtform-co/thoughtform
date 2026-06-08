@@ -1,6 +1,5 @@
 /**
- * gyroLabStore — lab-only state for the Navigate gyroscope exploration
- * (`/test/navigate-gyroscope`).
+ * gyroLabStore — state for the 3D gimbaled Navigate gyroscope.
  *
  * Holds the toggle that swaps the flat Navigate compass (`ShellSubstrate`)
  * for the 3D gimbaled gyroscope (`ShellSubstrateGyro`) inside
@@ -8,10 +7,12 @@
  * `GyroLabPanel` writes and `ShellSubstrateGyro` reads imperatively in
  * its `useFrame` loop.
  *
- * PRODUCTION SAFETY: `enabled` defaults to `false`. Only the lab route's
- * `NavigateGyroscopePage` flips it `true` on mount and calls `reset()` on
- * unmount, so the production home page and `/test/home-v2` always render
- * the unchanged flat compass.
+ * As of 2026-06-08, `enabled` defaults to `true` so the production home
+ * page and `/test/home-v2` both render the gyro. The lab route
+ * (`/test/navigate-gyroscope`) keeps the `GyroLabPanel` overlay for live
+ * tuning. The flat `ShellSubstrate` remains in code as a fallback —
+ * setting `enabled` to `false` (programmatically or via the panel)
+ * restores the previous flat compass read.
  *
  * `gyroTilt` is a plain mutable ref (not Zustand state) so DOM projected
  * elements can read the current assembly bank without triggering React
@@ -25,7 +26,8 @@ import { create } from "zustand";
 export const gyroTilt = { x: 0, y: 0, z: 0 };
 
 export interface GyroLabState {
-  /** Master switch — false in prod; true only on the lab route. */
+  /** Master switch — defaults to true (gyro is the production read).
+   *  Set to false to restore the flat `ShellSubstrate` compass. */
   enabled: boolean;
   /** Gimbal cage ring count (0..3). */
   ringCount: number;
@@ -49,7 +51,7 @@ export interface GyroLabState {
 
 /** Canonical defaults for the 3D gimbal model. */
 export const GYRO_LAB_DEFAULTS = {
-  enabled: false,
+  enabled: true,
   ringCount: 3,
   showParticles: true,
   globeRadius: 0.72,
