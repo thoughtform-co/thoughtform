@@ -175,6 +175,11 @@ interface StationBlockProps {
   registerCursors: (title: HTMLSpanElement | null, support: HTMLSpanElement | null) => void;
   content: StationContent;
   typewriter: boolean;
+  /** Optional modifier class layered on top of `.home-v2-station-header`
+   *  so the same typewriter machinery can drive blocks anchored at
+   *  different viewport positions (e.g. the lower-left "signal" block
+   *  for the epilogue beat). */
+  variantClass?: string;
 }
 
 /** Render one header block. When `typewriter` is true the title +
@@ -188,7 +193,11 @@ function StationBlock({
   registerCursors,
   content,
   typewriter,
+  variantClass,
 }: StationBlockProps) {
+  const containerClass = variantClass
+    ? `home-v2-station-header ${variantClass}`
+    : "home-v2-station-header";
   const titleTokens = useMemo(() => tokenize(content.titleHtml), [content.titleHtml]);
   const supportTokens = useMemo(
     () => (content.supportHtml ? tokenize(content.supportHtml) : []),
@@ -212,7 +221,7 @@ function StationBlock({
 
   if (!typewriter) {
     return (
-      <div ref={refSetter} className="home-v2-station-header" style={{ opacity: 0 }}>
+      <div ref={refSetter} className={containerClass} style={{ opacity: 0 }}>
         <h2
           className="home-v2-station-header__title"
           dangerouslySetInnerHTML={{ __html: content.titleHtml }}
@@ -236,7 +245,7 @@ function StationBlock({
   const supportPlain = supportTokens.map((t) => t.ch).join("");
 
   return (
-    <div ref={refSetter} className="home-v2-station-header" style={{ opacity: 0 }}>
+    <div ref={refSetter} className={containerClass} style={{ opacity: 0 }}>
       <h2 className="home-v2-station-header__title" aria-label={titlePlain}>
         <span aria-hidden="true">
           {titleTokens.map((tok, idx) => (
@@ -301,10 +310,25 @@ function StationBlock({
   );
 }
 
+// ── Signal (epilogue) block content ──────────────────────────────
+//
+// Title + paragraph for the new "billions on the same layer" beat
+// that appears as the user scrolls past Build. Drawn through the
+// SAME typewriter machinery as the other station blocks (per-char
+// spans, gold `<em>` accent, block cursor) so the rhythm matches.
+// Lives next to the station headers because the markup, type-out,
+// and `position: fixed` viewport anchor pattern are identical —
+// only the CSS variant (`--signal`) and the opacity driver differ.
+const SIGNAL_CONTENT: StationContent = {
+  titleHtml: "The labs just bet <em>billions</em> on the same layer.",
+  supportHtml: "Not a model problem. A deployment problem. Both labs just said so out loud.",
+};
+
 export function CorridorStationHeaders() {
   const nav = stationById("navigate")?.content;
   const enc = stationById("diagnostic")?.content;
   const bld = stationById("intelligence")?.content;
+  const sig = SIGNAL_CONTENT;
 
   // Reduced-motion / SSR-safe detection. Cached at mount (a one-time
   // read is plenty; if the user toggles `prefers-reduced-motion` mid-
@@ -316,7 +340,7 @@ export function CorridorStationHeaders() {
   const typewriter = !reducedMotion;
 
   // Container + per-char ref state per station.
-  const stationRefs = useRef<Record<"nav" | "enc" | "bld", StationRefs>>({
+  const stationRefs = useRef<Record<"nav" | "enc" | "bld" | "sig", StationRefs>>({
     nav: {
       container: null,
       titleChars: [],
@@ -338,16 +362,29 @@ export function CorridorStationHeaders() {
       titleCursor: null,
       supportCursor: null,
     },
+    sig: {
+      container: null,
+      titleChars: [],
+      supportChars: [],
+      titleCursor: null,
+      supportCursor: null,
+    },
   });
 
-  const stationStates = useRef<Record<"nav" | "enc" | "bld", StationState>>({
+  const stationStates = useRef<Record<"nav" | "enc" | "bld" | "sig", StationState>>({
     nav: makeInitialState(),
     enc: makeInitialState(),
     bld: makeInitialState(),
+    sig: makeInitialState(),
   });
 
   // Last-written container opacities (suppress redundant DOM writes).
-  const lastContainerOps = useRef<{ nav: number; enc: number; bld: number } | null>(null);
+  const lastContainerOps = useRef<{
+    nav: number;
+    enc: number;
+    bld: number;
+    sig: number;
+  } | null>(null);
 
   useEffect(() => {
     let raf = 0;
@@ -358,10 +395,21 @@ export function CorridorStationHeaders() {
       const p = painting ? t.paintProgress : 0;
       const nowSec = performance.now() / 1000;
 
+      // Epilogue fade-out applies to the Build header only — Navigate /
+      // Encode have already faded out by the time the corridor's
+      // paintProgress saturates at 1. Smoothstepped against the
+      // epilogue scroll channel from `useDepthScroll`.
+      const ep = t.epilogueProgress;
+      const epEased = ep <= 0 ? 0 : ep >= 1 ? 1 : ep * ep * (3 - 2 * ep);
+      const epFadeOut = 1 - epEased;
       const containerOps = {
         nav: bandOpacity(p, NAVIGATE_FADE_IN, NAVIGATE_FADE_OUT),
         enc: bandOpacity(p, ENCODE_FADE_IN, ENCODE_FADE_OUT),
-        bld: bandOpacity(p, BUILD_FADE_IN),
+        bld: bandOpacity(p, BUILD_FADE_IN) * epFadeOut,
+        // Signal block is the new bottom-left "billions" title +
+        // paragraph. Its only driver is the epilogue scrub — the
+        // corridor stays at paintProgress 1 throughout the epilogue.
+        sig: epEased,
       };
 
       // Container opacity writes (suppress when no meaningful change).
@@ -370,17 +418,18 @@ export function CorridorStationHeaders() {
         !last ||
         Math.abs(last.nav - containerOps.nav) > 0.002 ||
         Math.abs(last.enc - containerOps.enc) > 0.002 ||
-        Math.abs(last.bld - containerOps.bld) > 0.002;
+        Math.abs(last.bld - containerOps.bld) > 0.002 ||
+        Math.abs(last.sig - containerOps.sig) > 0.002;
       if (containerChanged) {
         lastContainerOps.current = { ...containerOps };
-        for (const key of ["nav", "enc", "bld"] as const) {
+        for (const key of ["nav", "enc", "bld", "sig"] as const) {
           const el = stationRefs.current[key].container;
           if (el) el.style.opacity = containerOps[key].toFixed(3);
         }
       }
 
       // Per-station typewriter pass.
-      for (const key of ["nav", "enc", "bld"] as const) {
+      for (const key of ["nav", "enc", "bld", "sig"] as const) {
         const refs = stationRefs.current[key];
         const state = stationStates.current[key];
         const op = containerOps[key];
@@ -531,6 +580,9 @@ export function CorridorStationHeaders() {
   const setBldRef = (el: HTMLDivElement | null) => {
     stationRefs.current.bld.container = el;
   };
+  const setSigRef = (el: HTMLDivElement | null) => {
+    stationRefs.current.sig.container = el;
+  };
 
   const navRegisterChars = (title: HTMLSpanElement[], support: HTMLSpanElement[]) => {
     stationRefs.current.nav.titleChars = title;
@@ -544,6 +596,10 @@ export function CorridorStationHeaders() {
     stationRefs.current.bld.titleChars = title;
     stationRefs.current.bld.supportChars = support;
   };
+  const sigRegisterChars = (title: HTMLSpanElement[], support: HTMLSpanElement[]) => {
+    stationRefs.current.sig.titleChars = title;
+    stationRefs.current.sig.supportChars = support;
+  };
 
   const navRegisterCursors = (title: HTMLSpanElement | null, support: HTMLSpanElement | null) => {
     stationRefs.current.nav.titleCursor = title;
@@ -556,6 +612,10 @@ export function CorridorStationHeaders() {
   const bldRegisterCursors = (title: HTMLSpanElement | null, support: HTMLSpanElement | null) => {
     stationRefs.current.bld.titleCursor = title;
     stationRefs.current.bld.supportCursor = support;
+  };
+  const sigRegisterCursors = (title: HTMLSpanElement | null, support: HTMLSpanElement | null) => {
+    stationRefs.current.sig.titleCursor = title;
+    stationRefs.current.sig.supportCursor = support;
   };
 
   return (
@@ -587,6 +647,14 @@ export function CorridorStationHeaders() {
           typewriter={typewriter}
         />
       )}
+      <StationBlock
+        refSetter={setSigRef}
+        registerChars={sigRegisterChars}
+        registerCursors={sigRegisterCursors}
+        content={sig}
+        typewriter={typewriter}
+        variantClass="home-v2-station-header--signal"
+      />
     </div>
   );
 }

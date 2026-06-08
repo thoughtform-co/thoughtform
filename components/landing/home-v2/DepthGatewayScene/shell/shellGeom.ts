@@ -667,6 +667,32 @@ export const SUBSTRATE_GYRO_CARDINAL_RING_OPACITY = 0.55;
  *  that the instrument is re-centred and has the surrounding space. */
 export const GYRO_ASSEMBLY_SCALE = 1.18;
 
+/** World-X displacement of the whole accretion shell at peak
+ *  `epilogueProgress`. Picked so the gimbal sphere clears the new
+ *  bottom-left title block at 1440px while keeping the sphere AND
+ *  its orbiting cards fully in frame. Tuned against the corridor's
+ *  parked sphere world position (anchored at x=0) and the camera
+ *  FOV; the corridor itself is unaffected (camera holds, gates
+ *  parked, paintProgress saturated at 1). */
+export const EPILOGUE_SHELL_X = 0.95;
+
+/** Orbit ring radius (shell-local units) for the news cards during
+ *  the epilogue. Sits just outside the gimbal+stack envelope so the
+ *  cards don't intersect the cage; small enough to read all four at
+ *  a single glance at desktop FOV without the right-most card
+ *  clipping the viewport edge after the sphere has slid right. */
+export const EPILOGUE_NEWS_RING_RADIUS = 1.35;
+
+/** Tilt of the news-card orbit ring (radians, X-axis). Slight tilt
+ *  so the ring reads as a true 3D loop — cards in front are larger
+ *  and cards behind the sphere are correctly occluded by it. */
+export const EPILOGUE_NEWS_RING_TILT_X = 0.32;
+
+/** Steady-state angular velocity of the news-card ring (radians /
+ *  second). Slow enough that cards stay readable as they pass the
+ *  camera; not so slow that the orbit feels frozen. */
+export const EPILOGUE_NEWS_SPIN_SPEED = 0.085;
+
 /** Static tilt when `prefers-reduced-motion` (radians). */
 export const SUBSTRATE_GYRO_STATIC_TILT_X = 0.12;
 export const SUBSTRATE_GYRO_STATIC_TILT_Y = 0.08;

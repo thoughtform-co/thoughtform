@@ -226,7 +226,8 @@ export function ShellStack({ layerKey, reducedMotion = false }: ShellStackProps)
     const group = groupRef.current;
     if (!group) return;
 
-    const { paintProgress, active, armed } = useDepthGatewayStore.getState().transform;
+    const { paintProgress, epilogueProgress, active, armed } =
+      useDepthGatewayStore.getState().transform;
     if (!active && !armed) {
       group.visible = false;
       return;
@@ -234,6 +235,18 @@ export function ShellStack({ layerKey, reducedMotion = false }: ShellStackProps)
 
     const reveal = getBrandmarkAccretionLayers(paintProgress).stack;
     if (reveal <= EMERGE_EPSILON) {
+      group.visible = false;
+      return;
+    }
+    // Epilogue fade-out: the sources/interfaces stack is the FIRST
+    // thing to clear as the user scrolls past Build, so the sphere
+    // is reading clean before the news cards arrive. Smoothstepped
+    // so the stream lines and pips ease out together instead of a
+    // hard cut. Hide entirely once invisible to spare the GPU.
+    const ep = epilogueProgress;
+    const epEased = ep <= 0 ? 0 : ep >= 1 ? 1 : ep * ep * (3 - 2 * ep);
+    const epFade = 1 - epEased;
+    if (epFade <= EMERGE_EPSILON) {
       group.visible = false;
       return;
     }
@@ -276,11 +289,16 @@ export function ShellStack({ layerKey, reducedMotion = false }: ShellStackProps)
 
     // Fade lane / fan line opacities with the cluster slide so the
     // streams don't fully appear until the parts have arrived. Pips
-    // are individually scaled below.
-    mats.sourceLanes.opacity = sourcesSlideT * sourceLanePeakOp.current;
-    mats.surfaceFan.opacity = surfacesSlideT * surfaceFanPeakOp.current;
-    mats.sourceMotes.opacity = sourcesSlideT * SOURCE_PIP_OPACITY;
-    mats.surfaceMotes.opacity = surfacesSlideT * SOURCE_PIP_OPACITY;
+    // are individually scaled below. Epilogue fade is applied as a
+    // simple multiplier so every material dims together as the user
+    // scrolls into the news-card beat.
+    mats.sourceLanes.opacity = sourcesSlideT * sourceLanePeakOp.current * epFade;
+    mats.surfaceFan.opacity = surfacesSlideT * surfaceFanPeakOp.current * epFade;
+    mats.sourceMotes.opacity = sourcesSlideT * SOURCE_PIP_OPACITY * epFade;
+    mats.surfaceMotes.opacity = surfacesSlideT * SOURCE_PIP_OPACITY * epFade;
+    mats.sourcePip.opacity = SOURCE_PIP_OPACITY * epFade;
+    mats.surfacePipOutline.opacity = SURFACE_PIP_OPACITY * epFade;
+    mats.surfacePipFilled.opacity = SURFACE_PIP_OPACITY * 0.94 * epFade;
 
     // Per-pip lock snap: each pip eases from STACK_ITEM_SCALE_FLOOR
     // up to ~1.0 with a small overshoot on its own stagger window

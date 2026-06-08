@@ -828,6 +828,7 @@ import type { Beat, DepthGatewayTransform } from "@/lib/stores/depthGatewayStore
 import { gyroTilt, useGyroLabStore } from "@/lib/stores/gyroLabStore";
 import type { WorldAnchor, WorldAnchorPosition } from "../hooks/useWorldDomTracker";
 import {
+  EPILOGUE_SHELL_X,
   GYRO_ASSEMBLY_SCALE,
   STACK_FAN_COUNT,
   STACK_FAN_HALF_HEIGHT,
@@ -978,7 +979,13 @@ const gateStackLabel: WorldAnchor["onPaint"] = (ctx, el) => {
       lock = eased;
     }
   }
-  el.style.opacity = (ctx.visibilityOpacity * lock).toFixed(3);
+  // Epilogue fade: source/surface DOM labels clear with the canvas
+  // stack pips/lanes so the sphere reads clean during the news-card
+  // beat. Smoothstepped against `epilogueProgress` from the store.
+  const ep = ctx.transform.epilogueProgress;
+  const epEased = ep <= 0 ? 0 : ep >= 1 ? 1 : ep * ep * (3 - 2 * ep);
+  const epFade = 1 - epEased;
+  el.style.opacity = (ctx.visibilityOpacity * lock * epFade).toFixed(3);
   applyGyroDomBank(el);
 };
 
@@ -1065,6 +1072,20 @@ function rotateGyroLocalOffset(local: readonly [number, number, number]): Vec3 {
   return [x2 * cz - y2 * sz, x2 * sz + y2 * cz, z2];
 }
 
+/** World-X offset of the accretion shell during the corridor's
+ *  EPILOGUE beat. Matches the same smoothstepped slide applied in
+ *  `BrandmarkAccretionShell.useFrame` (which moves the canvas shell).
+ *  Exposed here so the DOM-anchored labels that hang off the shell
+ *  (cardinals, source/surface item labels, group headers) follow
+ *  the sphere when it migrates right — otherwise the labels strand
+ *  at the corridor's parked X while the canvas geometry slides
+ *  underneath them. */
+function epilogueShellOffsetX(transform: DepthGatewayTransform): number {
+  const ep = transform.epilogueProgress;
+  const eased = ep <= 0 ? 0 : ep >= 1 ? 1 : ep * ep * (3 - 2 * ep);
+  return eased * EPILOGUE_SHELL_X;
+}
+
 function gyroAssemblyWorldPosition(
   transform: DepthGatewayTransform,
   local: readonly [number, number, number]
@@ -1077,7 +1098,8 @@ function gyroAssemblyWorldPosition(
   const scaledLocal: [number, number, number] = [local[0] * s, local[1] * s, local[2] * s];
   const [bx, by, bz] = getBrandmarkWorldPosition(transform.paintProgress);
   const [x, y, z] = rotateGyroLocalOffset(scaledLocal);
-  return [bx + x, by + y, bz + z];
+  const epX = epilogueShellOffsetX(transform);
+  return [bx + x + epX, by + y, bz + z];
 }
 
 // ── Linear-style station header (desktop two-column) ──────────────

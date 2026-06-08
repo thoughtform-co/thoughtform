@@ -11,6 +11,133 @@
 
 ---
 
+## 2026-06-08 Revision — "Billions on the same layer" epilogue (orbiting news cards)
+
+User asked for a NEW final beat AFTER "Build on the substrate": when the
+user keeps scrolling past Build the gimbal sphere should glide right, the
+trusted-sources / interfaces stack and the Build header should fade out,
+a new bottom-left title + paragraph appear, and four 3D news cards
+(Palantir, Stripe, OpenAI, Anthropic — ported from the Aether
+`signalSection`) should orbit the sphere, each clickable to its source
+article. Reference: `activetheory.net/work`-style truly-3D card gallery,
+with Atlas's dark gold-HUD card grammar.
+
+### Key architectural choice — EPILOGUE channel, not a new map beat
+
+The corridor's `corridorMap.ts` normalizes every beat into `[0,1]` by
+weight, and its own comments stress that adding a beat **re-tiles every
+window** and forces hand-recalibration of every `CORRIDOR_TIMELINE`
+constant, the `CorridorStationHeaders` fade bands, and the brandmark /
+camera phases. Adding the receipts beat as a 5th beat would have
+silently shifted every Navigate/Encode/Build window by ~15-20% and
+required re-tuning the whole back-half choreography.
+
+Instead, the epilogue is a SECOND, INDEPENDENT progress channel on top
+of the same sticky stage:
+
+- `home-v2.css` grows `.home-v2-stage` from `460svh` to `640svh`.
+- `useDepthScroll.ts` splits raw progress at
+  `EPILOGUE_START = 460/640 = 0.71875`:
+  - `corridorProgress = clamp01(raw / EPILOGUE_START)` — feeds every
+    existing consumer (`paintProgress`, `resolveBeat`, HUD readouts).
+    Saturates at `1` for the entire epilogue, so the corridor reads
+    "fully parked at Build" throughout.
+  - `epilogueProgress = clamp01((raw - EPILOGUE_START) / (1 - EPILOGUE_START))`
+    — new channel exposed on `DepthGatewayTransform.epilogueProgress`.
+- Engagement is rect-based (not progress-based), so the corridor stays
+  `active` through the entire taller stage — no other gating needed.
+- The brandmark journey hand-off only fires once the tail sections are
+  live in the DOM (`useBrandmarkJourney` ~L420), so a taller sticky
+  stage just keeps the corridor in control. No regression.
+
+`CORRIDOR_TIMELINE`, `BEAT_WINDOWS`, `BEAT_PARK_CENTRES`, and every
+calibrated constant are byte-identical.
+
+### Painters that read the epilogue channel
+
+- **`BrandmarkAccretionShell`** — `shell.position.x` adds
+  `smoothstep(epilogueProgress) * EPILOGUE_SHELL_X` so the parked
+  sphere glides right.
+- **`sceneGeom.gyroAssemblyWorldPosition`** — same X offset added at
+  the DOM-projection step so cardinal labels (JUDGMENT / CRAFT / VOICE
+  / TASTE) and source/surface item labels follow the sphere.
+- **`ShellStack`** — every material opacity multiplied by
+  `(1 - epilogue)`, hidden entirely below epsilon. Stack lanes, pips,
+  surface fan all clear.
+- **`sceneGeom.gateStackLabel`** — DOM labels for sources/surfaces
+  multiplied by the same fade so the canvas and DOM clear in lockstep.
+- **`CorridorStationHeaders`** — Build header multiplied by
+  `(1 - epilogue)`; a NEW `sig` block (bottom-left, `.home-v2-station-
+header--signal`) uses the same typewriter machinery with opacity =
+  `epilogue`. Title `The labs just bet <em>billions</em> on the same
+layer.`, paragraph `Not a model problem. A deployment problem. Both
+labs just said so out loud.`
+
+### New 3D component — `ShellNewsOrbit`
+
+Mounted as a sibling of `gyroAssemblyRef` inside
+`BrandmarkAccretionShell`, so the cards inherit the shell's epilogue
+X-slide but are NOT subject to the gyro's pointer tilt — they orbit at
+their own steady rate.
+
+- **Geometry:** four `THREE.PlaneGeometry(0.95, 1.27)` planes on a
+  tilted ring (`EPILOGUE_NEWS_RING_RADIUS = 1.35`,
+  `EPILOGUE_NEWS_RING_TILT_X = 0.32 rad`). True 3D, so cards correctly
+  occlude behind the sphere as they swing through.
+- **Material:** `THREE.CanvasTexture` painted once per card from an
+  offscreen 2D canvas (`drawCardFace`). Dark void fill, 1px gold-dim
+  outline, 30px gold corner brackets, PT Mono mark + corner badge,
+  PT Mono kicker, PP Neue Montreal headline, gold under-rule + PT Mono
+  byline. Matches the Atlas Entity Card grammar in the Thoughtform
+  palette (`COLOR_GOLD = #CAA554`, `COLOR_DAWN = #ECE3D6`).
+- **Motion:** per-frame `theta = (i / 4) * 2π + epilogue*π + t * 0.085`
+  — half-turn deploy across the epilogue plus a slow steady spin.
+  Each card billboards toward the camera each frame (`mesh.lookAt(cam)`)
+  so text always reads upright. Reduced-motion / mobile drop the spin
+  and bob but cards still fade in via `epilogueProgress` so the visual
+  landing still reads.
+- **Interaction:** pointer-events on the canvas are gated by
+  `html[data-corridor-epilogue="true"]` (written by `useDepthScroll`),
+  so the raycaster is only live inside the epilogue. Hover boosts
+  opacity + scale via per-card smoothed lerp; click opens
+  `card.href` in a new tab.
+- **Card data:** `lib/home-v2/signalCards.ts` (4 entries, ported
+  verbatim from the Aether `signalSection`).
+
+### Files touched
+
+- New: `lib/home-v2/signalCards.ts`,
+  `components/landing/home-v2/DepthGatewayScene/shell/ShellNewsOrbit.tsx`
+- Modified:
+  `lib/stores/depthGatewayStore.ts` (added `epilogueProgress`),
+  `components/landing/home-v2/hooks/useDepthScroll.ts` (split raw progress,
+  toggle `data-corridor-epilogue`),
+  `components/landing/home-v2/home-v2.css` (stage `640svh`, pointer-events
+  gate, `--signal` variant),
+  `components/landing/home-v2/DepthGatewayScene/BrandmarkAccretionShell.tsx`
+  (shell X offset + orbit mount),
+  `components/landing/home-v2/DepthGatewayScene/shell/shellGeom.ts`
+  (`EPILOGUE_SHELL_X`, `EPILOGUE_NEWS_RING_RADIUS`, etc.),
+  `components/landing/home-v2/DepthGatewayScene/shell/ShellStack.tsx`
+  (epilogue fade),
+  `components/landing/home-v2/DepthGatewayScene/sceneGeom.ts`
+  (`epilogueShellOffsetX` in `gyroAssemblyWorldPosition`,
+  `gateStackLabel` epilogue fade),
+  `components/landing/home-v2/CorridorStationHeaders.tsx`
+  (new `sig` block, Build header epilogue fade).
+
+### Verified
+
+- `npm run build` clean (57 routes, no new errors).
+- Production homepage scrub verified at 1440x900: corridor unchanged
+  through Build park, sphere slides right + sources/Build header fade
+  - title + cards orbit during epilogue, BuildQuote hand-off clean.
+- Mobile (390x844): station-headers layer hidden as designed; R3F
+  cards still render in reduced-motion mode (no spin, no bob).
+- No console errors. `data-corridor-epilogue` toggles correctly.
+
+---
+
 ## 2026-06-06 Revision — Wrap-around shell + traveling brandmark + brain artifact
 
 User feedback after the lab-match shell landed: the cage + orbits feel

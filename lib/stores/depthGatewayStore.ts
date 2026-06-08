@@ -64,8 +64,27 @@ export interface DepthGatewayTransform {
    *  `armed` so the parked Thoughtform layout is what's visible as
    *  the stage rises into view. While neither active nor armed,
    *  equals `progress` but painters bail out early so the value is
-   *  moot. */
+   *  moot.
+   *
+   *  Note: `paintProgress` (and `progress`/`gateProgress`/`beat`) are
+   *  CLAMPED to the corridor span. Scroll past the corridor's last
+   *  beat is exposed separately as `epilogueProgress` so the
+   *  hand-calibrated corridor windows are never re-tiled. */
   paintProgress: number;
+  /** Epilogue scrub — 0..1 progress through the post-corridor scroll
+   *  channel. Equals 0 while the user is anywhere inside the corridor
+   *  (paintProgress 0..1 owns that range); ramps 0 -> 1 across the
+   *  extra scroll length added at the end of the sticky stage.
+   *
+   *  Drives: the parked gimbal sphere sliding right, fading out the
+   *  Build header + ShellStack (sources/interfaces), and the new
+   *  "billions on the same layer" title + orbiting news cards.
+   *
+   *  By design this is an INDEPENDENT channel from the corridor
+   *  progress — the corridor saturates at 1 (sphere parked, camera at
+   *  CAMERA_END, Build header at full opacity) and epilogueProgress
+   *  then takes over for the post-park choreography. */
+  epilogueProgress: number;
   /** Signed per-frame scroll velocity in "progress units per second".
    *  Positive when scrolling forward through the stage, negative on
    *  upward scroll, zero when idle. Used by `ScrollStreaks` to
@@ -81,6 +100,7 @@ export const INITIAL_TRANSFORM: DepthGatewayTransform = {
   active: false,
   armed: false,
   paintProgress: 0,
+  epilogueProgress: 0,
   velocity: 0,
 };
 
@@ -103,6 +123,7 @@ function transformEquals(a: DepthGatewayTransform, b: DepthGatewayTransform): bo
     a.active === b.active &&
     a.armed === b.armed &&
     a.paintProgress === b.paintProgress &&
+    a.epilogueProgress === b.epilogueProgress &&
     a.velocity === b.velocity
   );
 }

@@ -8,10 +8,12 @@ import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import { gyroTilt, useGyroLabStore } from "@/lib/stores/gyroLabStore";
 import { getBrandmarkAccretionLayers, getBrandmarkWorldPosition } from "./sceneGeom";
 import { ShellEncode } from "./shell/ShellEncode";
+import { ShellNewsOrbit } from "./shell/ShellNewsOrbit";
 import { ShellStack } from "./shell/ShellStack";
 import { ShellSubstrate } from "./shell/ShellSubstrate";
 import { ShellSubstrateGyro } from "./shell/ShellSubstrateGyro";
 import {
+  EPILOGUE_SHELL_X,
   GYRO_ASSEMBLY_SCALE,
   SUBSTRATE_GYRO_DRIFT_AMP,
   SUBSTRATE_GYRO_DRIFT_PITCH_FREQ,
@@ -22,6 +24,11 @@ import {
   SUBSTRATE_GYRO_STATIC_TILT_X,
   SUBSTRATE_GYRO_STATIC_TILT_Y,
 } from "./shell/shellGeom";
+
+function smoothstep(edge0: number, edge1: number, x: number): number {
+  const t = Math.max(0, Math.min(1, (x - edge0) / (edge1 - edge0)));
+  return t * t * (3 - 2 * t);
+}
 
 /**
  * BrandmarkAccretionShell — the inside-out intelligence layer that
@@ -75,7 +82,7 @@ export function BrandmarkAccretionShell() {
     if (!shell) return;
 
     const transform = useDepthGatewayStore.getState().transform;
-    const { paintProgress, active, armed } = transform;
+    const { paintProgress, epilogueProgress, active, armed } = transform;
     const painting = active || armed;
 
     if (!painting) {
@@ -85,7 +92,14 @@ export function BrandmarkAccretionShell() {
 
     shell.visible = true;
     const [bx, by, bz] = getBrandmarkWorldPosition(paintProgress);
-    shell.position.set(bx, by, bz);
+    // Epilogue glide-right: once the corridor has parked the shell at
+    // the Intelligence anchor (paintProgress === 1), `epilogueProgress`
+    // ramps 0..1 across the extra scroll and slides the whole accretion
+    // shell laterally by `EPILOGUE_SHELL_X`. The orbiting news cards
+    // mounted as a sibling of `gyroAssemblyRef` inherit this slide so
+    // they stay framed around the sphere as it migrates right.
+    const epiSlide = smoothstep(0, 1, epilogueProgress) * EPILOGUE_SHELL_X;
+    shell.position.set(bx + epiSlide, by, bz);
 
     const gyroAssembly = gyroAssemblyRef.current;
     if (!gyroEnabled || !gyroAssembly) {
@@ -160,6 +174,11 @@ export function BrandmarkAccretionShell() {
           <ShellStack layerKey="stack" reducedMotion={isMobile} />
         </>
       )}
+      {/* News-card orbit lives as a sibling of the gyro assembly so it
+          inherits the shell's epilogue X-slide but is NOT subject to the
+          gyro's pointer-driven tilt — the cards stay billboarded toward
+          the camera regardless of mouse-look on the sphere. */}
+      <ShellNewsOrbit reducedMotion={isMobile} />
     </group>
   );
 }

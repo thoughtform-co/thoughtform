@@ -13,6 +13,16 @@ import { isMobileComposition } from "@/lib/hooks/useDeviceTier";
 import { SECTOR_LABELS } from "@/lib/home-v2/corridorMap";
 import { getMobilePaintProgress } from "../DepthGatewayScene/sceneGeom";
 
+/** Fraction of the sticky stage that belongs to the calibrated
+ *  corridor. The remainder (1 - EPILOGUE_START) is the new
+ *  "billions on the same layer" epilogue scroll channel. Tied
+ *  to the stage height in home-v2.css (`460svh corridor + 180svh
+ *  epilogue` -> 460 / 640 = 0.71875). The corridor's normalized
+ *  progress (and beat windows) is computed AGAINST EPILOGUE_START,
+ *  so the corridor still tiles [0,1] across its physical span and
+ *  every CORRIDOR_TIMELINE constant stays byte-identical. */
+const EPILOGUE_START = 0.71875;
+
 /**
  * useDepthScroll — rAF-throttled scroll watcher for the home-v2
  * depth-corridor stage (ADR-018, world-owned rebuild).
@@ -49,7 +59,17 @@ export function useDepthScroll(stageRef: React.RefObject<HTMLDivElement | null>)
     const stageHeight = rect.height;
     const scrubHeight = Math.max(1, stageHeight - vh);
 
-    const progress = clamp01(-rect.top / scrubHeight);
+    // RAW progress runs across the WHOLE sticky stage (corridor +
+    // epilogue). We then split it: the calibrated corridor reads a
+    // CLAMPED, renormalized progress 0..1 across the corridor span,
+    // and the epilogue scrub gets its own independent 0..1 channel
+    // across the tail. This keeps every CORRIDOR_TIMELINE constant
+    // byte-identical while letting us extend the sticky stage.
+    const rawProgress = clamp01(-rect.top / scrubHeight);
+    const progress = clamp01(rawProgress / EPILOGUE_START);
+    const epilogueProgress = clamp01(
+      (rawProgress - EPILOGUE_START) / Math.max(1e-6, 1 - EPILOGUE_START)
+    );
 
     // ── Engagement state + velocity ─────────────────────────────
     // Two-phase engagement (ADR-018 "furnished room on arrival"):
@@ -64,6 +84,10 @@ export function useDepthScroll(stageRef: React.RefObject<HTMLDivElement | null>)
     // The hero is sticky-pinned beneath the stage layer; armed
     // painters write opacity 0 so nothing composites over the hero
     // even while transforms are being computed.
+    //
+    // Engagement is rect-based (not progress-based), so the longer
+    // stage just keeps the corridor `active` for the duration of
+    // the epilogue as well — exactly what we want.
     const engagement = getCorridorEngagement(rect, vh, progress);
     const { active, armed } = engagement;
 
@@ -99,6 +123,17 @@ export function useDepthScroll(stageRef: React.RefObject<HTMLDivElement | null>)
       if (html.getAttribute("data-corridor-engaged") !== engaged) {
         html.setAttribute("data-corridor-engaged", engaged);
       }
+      // Epilogue gate — when the user is anywhere inside the epilogue
+      // scroll channel, flip a `data-corridor-epilogue` attribute on
+      // `<html>` so the canvas can opt INTO receiving pointer events
+      // (the news-card raycaster needs pointer-events: auto to fire
+      // hover / click on the orbiting card meshes). The default for
+      // the canvas is `pointer-events: none` so it never steals scroll
+      // or hover from DOM siblings outside the epilogue.
+      const epilogueOn = epilogueProgress > 0.001 ? "true" : "false";
+      if (html.getAttribute("data-corridor-epilogue") !== epilogueOn) {
+        html.setAttribute("data-corridor-epilogue", epilogueOn);
+      }
     }
 
     // Only the corridor writes HUD readouts while it's the engaged
@@ -123,7 +158,12 @@ export function useDepthScroll(stageRef: React.RefObject<HTMLDivElement | null>)
 
     const prev = useDepthGatewayStore.getState().transform;
     const engagementChanged = active !== prev.active || armed !== prev.armed;
-    if (Math.abs(progress - lastProgress.current) > 0.00005 || engagementChanged) {
+    const epilogueChanged = Math.abs(epilogueProgress - prev.epilogueProgress) > 0.00005;
+    if (
+      Math.abs(progress - lastProgress.current) > 0.00005 ||
+      engagementChanged ||
+      epilogueChanged
+    ) {
       lastProgress.current = progress;
       useDepthGatewayStore.getState().setTransform({
         progress,
@@ -132,6 +172,7 @@ export function useDepthScroll(stageRef: React.RefObject<HTMLDivElement | null>)
         active,
         armed,
         paintProgress,
+        epilogueProgress,
         velocity,
       });
     } else if (Math.abs(velocity) > 0.0001) {
@@ -144,6 +185,7 @@ export function useDepthScroll(stageRef: React.RefObject<HTMLDivElement | null>)
         active,
         armed,
         paintProgress,
+        epilogueProgress,
         velocity,
       });
     }
@@ -185,6 +227,7 @@ export function useDepthScroll(stageRef: React.RefObject<HTMLDivElement | null>)
       useDepthGatewayStore.getState().setTransform(INITIAL_TRANSFORM);
       if (typeof document !== "undefined") {
         document.documentElement.removeAttribute("data-corridor-engaged");
+        document.documentElement.removeAttribute("data-corridor-epilogue");
       }
     };
   }, [onScroll, writeFrame]);
