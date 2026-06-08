@@ -5,7 +5,11 @@ import { ARTIFACT_LABELS } from "@/components/landing/intelligence-artifact/arti
 import type { V7CorridorText } from "@/lib/v7-parse";
 import { useDeviceTier } from "@/lib/hooks/useDeviceTier";
 import { stationById } from "@/lib/home-v2/corridorMap";
-import { COPY_ANCHORS } from "./DepthGatewayScene/sceneGeom";
+import {
+  COPY_ANCHORS,
+  STACK_SOURCE_ITEMS,
+  STACK_SURFACE_ITEMS,
+} from "./DepthGatewayScene/sceneGeom";
 import { SHELL_PRIMITIVES } from "./DepthGatewayScene/shell/shellGeom";
 import { useWorldDomTracker } from "./hooks/useWorldDomTracker";
 import { StationTitle } from "./StationTitle";
@@ -178,13 +182,14 @@ export function CopyAnchors({ text }: CopyAnchorsProps) {
       </div>
 
       {/* ─────────── NAVIGATE / ENCODE / BUILD ───────────
-          Each section title STRADDLES its gate's central reticle: a
-          frameless title just above + support line just below, near
-          screen-centre, lit by the gold glow. No kicker (it doubled the
-          title's verb), no card. The opening Thoughtform/setup
-          composition above is untouched. */}
-      {nav && <StationTitle content={nav} base="navigate" />}
-      {enc && <StationTitle content={enc} base="diagnostic" />}
+          Mobile-only: world-anchored straddle (title above + support
+          below the reticle) so the centred portrait composition still
+          ties to the brandmark. Desktop renders these as a flat 2D
+          overlay via `CorridorStationHeaders` (mounted by
+          `HomeCorridor`) so they don't skew with the camera or shift
+          with aspect ratio. */}
+      {isMobile && nav && <StationTitle content={nav} base="navigate" />}
+      {isMobile && enc && <StationTitle content={enc} base="diagnostic" />}
 
       {/* Encode primitive labels — framed tags on the four compass
           cardinals (Judgment / Taste / Way of working / Voice). */}
@@ -205,20 +210,20 @@ export function CopyAnchors({ text }: CopyAnchorsProps) {
         );
       })}
 
-      {bld && <StationTitle content={bld} base="intelligence" />}
+      {isMobile && bld && <StationTitle content={bld} base="intelligence" />}
 
-      {/* Stack tier labels — dock with the Build funnel (Sources left,
-          Surfaces right). Centre = Build title readout above. */}
+      {/* Stack tier GROUP labels — sit below the Build funnel streams
+          (top corners are now owned by the Linear-style station header).
+          Origin `top-center` so each label hangs from its anchor point
+          centred under the lane / fan. The old dashed-leader hyphen is
+          dropped — the per-item labels (Snowflake / Cursor / etc.)
+          carry the inventory; this group label is just a section header. */}
       {stackSourcesLabel && (
         <div
-          className="home-v2-stack-label home-v2-stack-label--sources"
+          className="home-v2-stack-label home-v2-stack-label--sources home-v2-stack-label--group"
           data-world-anchor="intelligence.sourcesLabel"
-          data-anchor-origin="center"
+          data-anchor-origin="top-center"
         >
-          <span
-            className="home-v2-stack-label__leader home-v2-stack-label__leader--right"
-            aria-hidden="true"
-          />
           <div className="home-v2-copy-body-label">
             <span
               className="home-v2-copy-body-label__num"
@@ -238,14 +243,10 @@ export function CopyAnchors({ text }: CopyAnchorsProps) {
       )}
       {stackSurfacesLabel && (
         <div
-          className="home-v2-stack-label home-v2-stack-label--surfaces"
+          className="home-v2-stack-label home-v2-stack-label--surfaces home-v2-stack-label--group"
           data-world-anchor="intelligence.surfacesLabel"
-          data-anchor-origin="center"
+          data-anchor-origin="top-center"
         >
-          <span
-            className="home-v2-stack-label__leader home-v2-stack-label__leader--left"
-            aria-hidden="true"
-          />
           <div className="home-v2-copy-body-label">
             <span
               className="home-v2-copy-body-label__num"
@@ -263,6 +264,34 @@ export function CopyAnchors({ text }: CopyAnchorsProps) {
           </div>
         </div>
       )}
+
+      {/* Per-item stack labels — one per source pip / surface tip.
+          World positions come from `STACK_SOURCE_ITEMS` / `STACK_SURFACE_ITEMS`
+          in sceneGeom.ts, which mirror ShellStack's pip/tip arrays exactly.
+          Source labels read leftward off the pip (`right-center`); surface
+          labels read rightward off the tip (`left-center`). Names are
+          representative — counts intentionally need not match the diamond
+          counts; the idea reads either way. */}
+      {STACK_SOURCE_ITEMS.map((item) => (
+        <div
+          key={`stack-source-${item.id}`}
+          className="home-v2-stack-item home-v2-stack-item--source"
+          data-world-anchor={`intelligence.source.${item.id}`}
+          data-anchor-origin="right-center"
+        >
+          <span className="home-v2-stack-item__label">{item.label}</span>
+        </div>
+      ))}
+      {STACK_SURFACE_ITEMS.map((item) => (
+        <div
+          key={`stack-surface-${item.id}`}
+          className="home-v2-stack-item home-v2-stack-item--surface"
+          data-world-anchor={`intelligence.surface.${item.id}`}
+          data-anchor-origin="left-center"
+        >
+          <span className="home-v2-stack-item__label">{item.label}</span>
+        </div>
+      ))}
     </div>
   );
 }

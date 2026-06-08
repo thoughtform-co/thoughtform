@@ -241,7 +241,7 @@ export const CORRIDOR_TIMELINE = {
     // Entry-buildup pass (2026-06-08): delay substrate/gyro deployment
     // until the camera has spent a little time in the corridor after
     // leaving Thoughtform. Encode/Build windows below are untouched.
-    substrate: { start: 0.345, peakAt: 0.415 }, // Navigate park centre ~0.40
+    substrate: { start: 0.345, peakAt: 0.415 }, // Navigate park centre ~0.40 — `gateNavigateReadout` reuses this window so the Navigate text fades in with the sphere
     // Orbits window re-aligned to the Encode park ARRIVAL (2026-06-07)
     // so the staggered fold-in is WITNESSED as the camera enters Encode,
     // mirroring the compass at Navigate (window straddles the park:
@@ -250,7 +250,9 @@ export const CORRIDOR_TIMELINE = {
     // by arrival the orbits were already static ("just appear"). The
     // brandmark arrives at Diagnostic at 0.57 and holds to 0.65, so this
     // window deploys the orbits around the arriving + settling mark.
-    orbits: { start: 0.58, peakAt: 0.66 }, // Encode park centre ~0.636
+    // 2026-06-08 entry-buildup follow-up: shifted -0.04 earlier so the
+    // Encode title/support read with the orbits instead of trailing.
+    orbits: { start: 0.54, peakAt: 0.62 }, // Encode park centre ~0.636 — `gateEncodeReadout` reuses this window so the Encode text fades in with the orbits
     stack: { start: 0.84, peakAt: 0.91 }, // Build park centre ~0.92
   },
 } as const;
@@ -681,6 +683,25 @@ export function getBrandmarkLeadWorldPosition(progress: number): [number, number
  *  through the park, then visibly drifts deeper as the lead grows
  *  toward `FULL_LEAD` through passthrough-02. See
  *  `getBrandmarkLeadWorldPosition` for the two-phase envelope. */
+/** Post-Thoughtform downward Y drop applied to the brandmark world
+ *  position so the gimbal sphere (and the centre brandmark) sit lower
+ *  in frame — frees the upper band for the Linear-style station
+ *  headers without panning the camera (which would drag the headers
+ *  down too). Held at 0 through Thoughtform; ramps to
+ *  `BRANDMARK_POST_THOUGHTFORM_DROP_Y` across `pass-01a` and persists
+ *  thereafter. (2026-06-08 instrument-drop pass.) */
+const BRANDMARK_POST_THOUGHTFORM_DROP_Y = -0.3;
+const BRANDMARK_POST_THOUGHTFORM_DROP_END = 0.355; // end of pass-01a window
+
+function postThoughtformDropY(progress: number): number {
+  const { thoughtformHold } = CORRIDOR_TIMELINE.brandmark;
+  return lerp(
+    0,
+    BRANDMARK_POST_THOUGHTFORM_DROP_Y,
+    smoothstep(thoughtformHold, BRANDMARK_POST_THOUGHTFORM_DROP_END, progress)
+  );
+}
+
 export function getBrandmarkWorldPosition(
   progress: number,
   rawProgress: number = progress
@@ -707,9 +728,17 @@ export function getBrandmarkWorldPosition(
   if (progress <= thoughtformHold) {
     // Mobile two-moment beat: the mark slides up from below-centre to
     // centre as Moment 2 fades it in (no-op on desktop → slideY 0).
+    // The post-Thoughtform drop is intentionally NOT applied here —
+    // Thoughtform composition stays byte-identical.
     const { slideY } = getThoughtformMobilePhase(rawProgress);
     return [tfX, BRANDMARK_ANCHOR_THOUGHTFORM[1] + slideY, BRANDMARK_ANCHOR_THOUGHTFORM[2]];
   }
+  // After Thoughtform, the gimbal sphere drops in world-Y so it sits
+  // lower in frame (header room). `dropY` is 0 right at thoughtformHold
+  // so the branch boundary is C0-continuous, ramps to
+  // `BRANDMARK_POST_THOUGHTFORM_DROP_Y` by the end of pass-01a, and
+  // holds thereafter through Build.
+  const dropY = postThoughtformDropY(progress);
   if (progress <= diagnosticArrival) {
     // Arrival lerp lands at the LEAD position at `diagnosticArrival`,
     // not the static Diagnostic anchor, so the lerp → lead handoff
@@ -723,7 +752,7 @@ export function getBrandmarkWorldPosition(
     const diagLeadStart = getBrandmarkLeadWorldPosition(diagnosticArrival);
     return [
       lerp(tfX, diagLeadStart[0], t),
-      lerp(BRANDMARK_ANCHOR_THOUGHTFORM[1], diagLeadStart[1], t),
+      lerp(BRANDMARK_ANCHOR_THOUGHTFORM[1], diagLeadStart[1], t) + dropY,
       lerp(BRANDMARK_ANCHOR_THOUGHTFORM[2], diagLeadStart[2], t),
     ];
   }
@@ -733,8 +762,15 @@ export function getBrandmarkWorldPosition(
   // intentionally gone — it grew the brandmark as the camera
   // dollied into the gate and snapped to a smaller size when lead
   // mode kicked in.
-  if (progress <= intelligenceLanding) return getBrandmarkLeadWorldPosition(progress);
-  return BRANDMARK_ANCHOR_INTELLIGENCE;
+  if (progress <= intelligenceLanding) {
+    const p = getBrandmarkLeadWorldPosition(progress);
+    return [p[0], p[1] + dropY, p[2]];
+  }
+  return [
+    BRANDMARK_ANCHOR_INTELLIGENCE[0],
+    BRANDMARK_ANCHOR_INTELLIGENCE[1] + dropY,
+    BRANDMARK_ANCHOR_INTELLIGENCE[2],
+  ];
 }
 
 /** WORLD-SPACE half-extent (radius) of the brandmark plate at each
@@ -812,6 +848,10 @@ import type { Beat, DepthGatewayTransform } from "@/lib/stores/depthGatewayStore
 import { gyroTilt, useGyroLabStore } from "@/lib/stores/gyroLabStore";
 import type { WorldAnchor, WorldAnchorPosition } from "../hooks/useWorldDomTracker";
 import {
+  STACK_FAN_COUNT,
+  STACK_FAN_HALF_HEIGHT,
+  STACK_LANE_COUNT,
+  STACK_LANE_Y_RANGE,
   STACK_SOURCES_X,
   STACK_SURFACES_X,
   getPrimitiveLabelOffset,
@@ -904,13 +944,26 @@ const gateThoughtformDiagram: WorldAnchor["onPaint"] = (ctx, el) => {
   el.style.opacity = (ctx.visibilityOpacity * diagramFactor).toFixed(3);
 };
 
-/** Gate the Navigate station title/caption a touch later than the beat
- *  boundary. This preserves the Navigate → Encode → Build sequence,
- *  but gives the entry flythrough a clean corridor-only moment before
- *  any Navigate copy or gyro shell resolves. */
+/** Gate the Navigate station title/caption to the substrate accretion
+ *  window so the text fades in with the gimbal sphere rather than
+ *  trailing it. Visibility-beat coverage extends back into `pass-01a`
+ *  so the substrate.start moment isn't clipped at the beat boundary.
+ *  (2026-06-08 timing-sync pass.) */
 const gateNavigateReadout: WorldAnchor["onPaint"] = (ctx, el) => {
   const p = ctx.transform.paintProgress;
-  const reveal = smoothstep(0.37, 0.405, p);
+  const { start, peakAt } = CORRIDOR_TIMELINE.accretion.substrate;
+  const reveal = smoothstep(start, peakAt, p);
+  el.style.opacity = (ctx.visibilityOpacity * reveal).toFixed(3);
+};
+
+/** Gate the Encode station title/caption to the orbits accretion
+ *  window so the text fades in with the judgment orbits instead of
+ *  arriving later. Mirrors `gateNavigateReadout` against the
+ *  Encode-phase shell layer. */
+const gateEncodeReadout: WorldAnchor["onPaint"] = (ctx, el) => {
+  const p = ctx.transform.paintProgress;
+  const { start, peakAt } = CORRIDOR_TIMELINE.accretion.orbits;
+  const reveal = smoothstep(start, peakAt, p);
   el.style.opacity = (ctx.visibilityOpacity * reveal).toFixed(3);
 };
 
@@ -964,8 +1017,40 @@ function gyroAssemblyWorldPosition(
   return [bx + x, by + y, bz + z];
 }
 
-function gyroStraddleY(base: number, direction: 1 | -1): number {
-  return useGyroLabStore.getState().enabled ? base + direction * 0.24 : base;
+// ── Linear-style station header (desktop two-column) ──────────────
+//
+// Each parked station's TITLE + SUPPORT now sits as a top-band header
+// on desktop (title upper-left, support upper-right, both anchored
+// along the same Y band), freeing the lower half of the frame for the
+// instrument geometry (gimbal sphere, encode orbits, build funnel).
+// Mobile retains the legacy straddle (title above the reticle / support
+// below) so the centred portrait composition keeps reading as a single
+// HUD instrument. (2026-06-08 Linear-headers pass.)
+
+/** Lateral offset for the title column (left of the gate centre).
+ *  Tuned so the title cluster's left edge sits at ~10% from the
+ *  viewport edge at parked distance 6.2 (FOV 38°) and the corner
+ *  brackets are visible. */
+const HEADER_TITLE_X = -2.0;
+/** Lateral offset for the support column (right of the gate centre).
+ *  Tuned so the support cluster's left edge sits just past the centre,
+ *  with the right edge inside the frame at typical desktop widths. */
+const HEADER_SUPPORT_X = 0.3;
+/** Shared Y for the upper header band on desktop. */
+const HEADER_TOP_Y = 1.4;
+
+function stationHeaderPosition(
+  station: GateStation,
+  role: "title" | "support",
+  mobileStraddleY: number,
+  approachOffsetZ: number = 0
+): Vec3 {
+  const baseZ = station.position[2] + 0.1 + approachOffsetZ;
+  if (isMobileComposition()) {
+    return [station.position[0], station.position[1] + mobileStraddleY, baseZ];
+  }
+  const dx = role === "title" ? HEADER_TITLE_X : HEADER_SUPPORT_X;
+  return [station.position[0] + dx, station.position[1] + HEADER_TOP_Y, baseZ];
 }
 
 function getGyroPrimitiveLabelLocal(idx: number): Vec3 {
@@ -973,7 +1058,11 @@ function getGyroPrimitiveLabelLocal(idx: number): Vec3 {
   const [ox, oy] = getPrimitiveLabelOffset(idx);
   if (!useGyroLabStore.getState().enabled || !prim) return [ox, oy, 0.12];
 
-  const labelR = 1.34;
+  // Cardinal labels hug the new cardinal-bezel ring (~1.08 in
+  // `shellGeom.SUBSTRATE_GYRO_CARDINAL_RING_RADIUS`). Was 1.34 — the
+  // labels used to float outside the outermost gimbal ring (1.16) and
+  // read as detached. (2026-06-08 cardinal-ring polish.)
+  const labelR = 1.0;
   return [Math.cos(prim.angleRad) * labelR, Math.sin(prim.angleRad) * labelR, 0.18];
 }
 
@@ -998,6 +1087,37 @@ function applyGyroDomBank(el: HTMLElement, scale = 0.65): void {
  *   - Z is slightly in front of the gate's Z so the projected DOM
  *     element composites above the canvas without depth-sort issues.
  */
+
+// ── Build-phase per-item label registry ────────────────────────────
+//
+// Names are representative of typical Loop substrate / surface tools;
+// counts mirror `ShellStack`'s pip arrays (5 lanes / 6 surfaces) and
+// the Y positions exactly match the `sourcePipPositions` /
+// `surfaceFanEnds` derivations there.
+
+export interface StackItem {
+  /** Stable DOM id suffix (`intelligence.source.{id}` / `…surface.{id}`). */
+  id: string;
+  label: string;
+  /** Local Y inside the shell (matches ShellStack pip/tip positions). */
+  y: number;
+}
+
+const STACK_SOURCE_NAMES = ["Snowflake", "Notion", "Monday", "Frontify", "CRM"] as const;
+const STACK_SURFACE_NAMES = ["Cursor", "Claude", "Web app", "REST", "Slack", "Agents"] as const;
+
+export const STACK_SOURCE_ITEMS: StackItem[] = Array.from({ length: STACK_LANE_COUNT }, (_, i) => ({
+  id: STACK_SOURCE_NAMES[i].toLowerCase().replace(/\s+/g, "-"),
+  label: STACK_SOURCE_NAMES[i] ?? `Source ${i + 1}`,
+  y: lerp(-STACK_LANE_Y_RANGE, STACK_LANE_Y_RANGE, i / Math.max(1, STACK_LANE_COUNT - 1)),
+}));
+
+export const STACK_SURFACE_ITEMS: StackItem[] = Array.from({ length: STACK_FAN_COUNT }, (_, i) => ({
+  id: STACK_SURFACE_NAMES[i].toLowerCase().replace(/\s+/g, "-"),
+  label: STACK_SURFACE_NAMES[i] ?? `Surface ${i + 1}`,
+  y: lerp(-STACK_FAN_HALF_HEIGHT, STACK_FAN_HALF_HEIGHT, i / Math.max(1, STACK_FAN_COUNT - 1)),
+}));
+
 /** Encode primitive label anchors — one per compass cardinal. */
 const ENCODE_PRIMITIVE_ANCHORS: WorldAnchor[] = SHELL_PRIMITIVES.map((prim, idx) => ({
   id: `encode.primitive.${prim.id}`,
@@ -1112,36 +1232,19 @@ export const COPY_ANCHORS: readonly WorldAnchor[] = [
   },
 
   // ── Navigate ────────────────────────────────────────────────────
-  // Straddle composition: a frameless TITLE just ABOVE the central
-  // reticle/brandmark (near screen-centre) and the SUPPORT line just
-  // BELOW it, so the title reads as the gate's annotation without a
-  // boxed card. Navigate is now a parked station, so the camera holds
-  // these steady for a beat. Camera-depth driven (full opacity at the
-  // ~4.5 park distance, just inside `far` 4.8) so they fade in on the
-  // approach and out as the camera passes — dark at the parked setup
-  // beat where the camera is ~6.8 units back. The +Y / −Y offsets are
-  // the primary straddle knobs.
+  // Desktop: Linear-style two-column header — TITLE upper-LEFT of the
+  // gate, SUPPORT upper-RIGHT, both anchored along the same upper Y
+  // band so the gimbal sphere has the lower half of the frame.
+  // Mobile: the legacy straddle is preserved by `stationHeaderPosition`.
+  //
+  // Reveal timing is synced to the substrate accretion window via
+  // `gateNavigateReadout`. `pass-01a` is added back to the visibility
+  // beats because the substrate.start (~0.345) sits in the tail of
+  // pass-01a — without it the gate would clip opacity to 0 there.
   {
     id: "navigate.title",
-    position: () => [
-      STATION_NAVIGATE.position[0],
-      // Straddle journey: 0.55 (frameless) -> 0.72 (instrument readout
-      // restyle) -> 0.60 (W1 de-gimmick, plan 03adb0dd). With the
-      // shorter leader (~18px) and tighter cluster padding (24px),
-      // the title can sit visibly closer to the brandmark again
-      // without the corner frame crowding the reticle. Straddle Y
-      // is the only knob we touch — perspectiveScale, depthFade,
-      // visibilityBeats own the approach/recede choreography
-      // (ADR-018).
-      gyroStraddleY(STATION_NAVIGATE.position[1] + 0.6, 1),
-      STATION_NAVIGATE.position[2] + 0.1,
-    ],
-    // NOT eligible during `pass-01a`: that long entry leg is the pure
-    // wormhole flythrough and must stay text-free ("fly through the
-    // corridor" before arriving). The copy appears only as the camera
-    // reaches the Navigate park (and lingers briefly leaving via
-    // `pass-01b`), with the depth fade owning the actual reveal.
-    visibilityBeats: ["navigate", "pass-01b"],
+    position: () => stationHeaderPosition(STATION_NAVIGATE, "title", 0.6),
+    visibilityBeats: ["pass-01a", "navigate", "pass-01b"],
     fadeFrac: 0.28,
     // referenceDistance + depthFade tracks STATION_NAVIGATE.parkDistance
     // (6.2 after the 2026-06-05 lab-match revision; was 4.5) so the
@@ -1152,28 +1255,24 @@ export const COPY_ANCHORS: readonly WorldAnchor[] = [
       min: 0.2,
       max: 1.1,
     },
-    depthFade: { near: 0.4, nearFade: 1.8, far: STATION_NAVIGATE.parkDistance + 2.0, farFade: 1.6 },
+    // Near raised from 0.4 → 4.0 so the title fades out fully as the
+    // camera closes the gap (depthMultiplier ≈ 0 at distance < 2.2).
+    // With the off-axis desktop X offset (-2.0), the projection blows
+    // up when the title is close to the camera; the depth fade guards that.
+    depthFade: { near: 4.0, nearFade: 1.8, far: STATION_NAVIGATE.parkDistance + 2.0, farFade: 1.6 },
     onPaint: gateNavigateReadout,
   },
   {
     id: "navigate.support",
-    position: () => [
-      STATION_NAVIGATE.position[0],
-      // Straddle journey: -0.6 (frameless) -> -0.78 (instrument
-      // readout restyle) -> -0.65 (W1 de-gimmick, plan 03adb0dd).
-      // Mirrors the title nudge inward; the shorter up-leader keeps
-      // the support cluster reading as a caption close to the mark.
-      gyroStraddleY(STATION_NAVIGATE.position[1] - 0.65, -1),
-      STATION_NAVIGATE.position[2] + 0.1,
-    ],
-    visibilityBeats: ["navigate", "pass-01b"],
+    position: () => stationHeaderPosition(STATION_NAVIGATE, "support", -0.65),
+    visibilityBeats: ["pass-01a", "navigate", "pass-01b"],
     fadeFrac: 0.28,
     perspectiveScale: {
       referenceDistance: STATION_NAVIGATE.parkDistance,
       min: 0.2,
       max: 1.1,
     },
-    depthFade: { near: 0.4, nearFade: 1.8, far: STATION_NAVIGATE.parkDistance + 2.0, farFade: 1.6 },
+    depthFade: { near: 4.0, nearFade: 1.8, far: STATION_NAVIGATE.parkDistance + 2.0, farFade: 1.6 },
     onPaint: gateNavigateReadout,
   },
 
@@ -1193,20 +1292,26 @@ export const COPY_ANCHORS: readonly WorldAnchor[] = [
   // toward the orbits on approach. The oversized entry fade (1.4x) +
   // depthFade keep them hidden during the parked Thoughtform read and
   // resolve only as the Diagnostic gate begins.
+  // Reveal timing is synced to the orbits accretion window via
+  // `gateEncodeReadout` so the Encode header fades in WITH the
+  // judgment orbits. Visibility now also covers `pass-01b` so the
+  // orbits.start (~0.54) inside that leg isn't clipped to 0.
   {
     id: "diagnostic.title",
-    position: (transform) => [
-      STATION_DIAGNOSTIC.position[0],
-      // Straddle: 0.7 -> 0.92 -> 0.78 (W1 de-gimmick). Encode's
-      // orbital field is still the tallest gate visual so the
-      // title sits slightly further out than Navigate, but the
-      // shorter cluster lets us reclaim some closeness to the
-      // mark.
-      gyroStraddleY(STATION_DIAGNOSTIC.position[1] + 0.78, 1),
-      STATION_DIAGNOSTIC.position[2] + 0.1 + diagnosticApproachDepthOffset(transform.paintProgress),
-    ],
-    visibilityBeats: ["diagnostic"],
-    fadeFrac: 1.4,
+    position: (transform) =>
+      stationHeaderPosition(
+        STATION_DIAGNOSTIC,
+        "title",
+        0.78,
+        diagnosticApproachDepthOffset(transform.paintProgress)
+      ),
+    visibilityBeats: ["pass-01b", "diagnostic"],
+    // Tighter fade-out (was 1.4) so the title hides cleanly when the
+    // camera dollies past the Encode park in passthrough-02. With the
+    // off-axis desktop X offset (-2.0), points close to the camera
+    // project to extreme NDC and would otherwise smear off-screen at
+    // ~0.8 opacity before the legacy fade-out completes.
+    fadeFrac: 0.4,
     // referenceDistance + depthFade tracks STATION_DIAGNOSTIC.parkDistance
     // (6.2 after the lab-match revision) so the title keeps its parked
     // apparent size and doesn't clip when the camera is pulled back.
@@ -1215,36 +1320,42 @@ export const COPY_ANCHORS: readonly WorldAnchor[] = [
       min: 0.18,
       max: 1.15,
     },
+    // Near raised from 0.9 → 4.5 so the title fades out fully as the
+    // camera closes the gap (depthMultiplier ≈ 0 at distance < 2.1).
+    // With the off-axis desktop X offset (-2.0), points close to the
+    // camera project to extreme NDC; the depth fade ensures the title
+    // is invisible before the off-screen smear happens.
     depthFade: {
-      near: 0.9,
+      near: 4.5,
       nearFade: 2.4,
       far: STATION_DIAGNOSTIC.parkDistance + 2.3,
       farFade: 2.2,
     },
+    onPaint: gateEncodeReadout,
   },
   {
     id: "diagnostic.support",
-    position: (transform) => [
-      STATION_DIAGNOSTIC.position[0],
-      // Straddle: -0.8 -> -1.02 -> -0.88 (W1 de-gimmick). Still
-      // clears the lower orbit ring; the shorter leader makes the
-      // caption sit visibly closer to the brandmark.
-      gyroStraddleY(STATION_DIAGNOSTIC.position[1] - 0.88, -1),
-      STATION_DIAGNOSTIC.position[2] + 0.1 + diagnosticApproachDepthOffset(transform.paintProgress),
-    ],
-    visibilityBeats: ["diagnostic"],
-    fadeFrac: 1.4,
+    position: (transform) =>
+      stationHeaderPosition(
+        STATION_DIAGNOSTIC,
+        "support",
+        -0.88,
+        diagnosticApproachDepthOffset(transform.paintProgress)
+      ),
+    visibilityBeats: ["pass-01b", "diagnostic"],
+    fadeFrac: 0.4,
     perspectiveScale: {
       referenceDistance: STATION_DIAGNOSTIC.parkDistance,
       min: 0.18,
       max: 1.15,
     },
     depthFade: {
-      near: 0.9,
+      near: 4.5,
       nearFade: 2.4,
       far: STATION_DIAGNOSTIC.parkDistance + 2.3,
       farFade: 2.2,
     },
+    onPaint: gateEncodeReadout,
   },
   // (Encode orbit labels removed — the Navigate/Encode/Build remap
   // drops the four "same pattern, four ways" pills; the orbital gate
@@ -1270,17 +1381,13 @@ export const COPY_ANCHORS: readonly WorldAnchor[] = [
   // bump title +0.8 / support −0.9 on preview if it crowds.
   {
     id: "intelligence.title",
-    position: (transform) => [
-      STATION_INTELLIGENCE.position[0],
-      // Straddle: 0.7 -> 0.88 -> 0.74 (W1 de-gimmick). Build's
-      // substrate sphere is the centrepiece — the readout still
-      // needs to sit clear of the pole, but with the shorter
-      // cluster we can pull it closer.
-      gyroStraddleY(STATION_INTELLIGENCE.position[1] + 0.74, 1),
-      STATION_INTELLIGENCE.position[2] +
-        0.1 +
-        intelligenceApproachDepthOffset(transform.paintProgress),
-    ],
+    position: (transform) =>
+      stationHeaderPosition(
+        STATION_INTELLIGENCE,
+        "title",
+        0.74,
+        intelligenceApproachDepthOffset(transform.paintProgress)
+      ),
     visibilityBeats: ["passthrough-02", "intelligence"],
     fadeFrac: 0.18,
     // referenceDistance + depthFade tracks STATION_INTELLIGENCE.parkDistance
@@ -1292,8 +1399,11 @@ export const COPY_ANCHORS: readonly WorldAnchor[] = [
       min: 0.2,
       max: 1.15,
     },
+    // Near raised from 0.9 → 4.5 so the title fades out if the camera
+    // ever overshoots into close range. Mirrors the diagnostic +
+    // navigate fade-on-approach guard for the off-axis (-2.0 X) layout.
     depthFade: {
-      near: 0.9,
+      near: 4.5,
       nearFade: 2.4,
       far: STATION_INTELLIGENCE.parkDistance + 2.3,
       farFade: 2.2,
@@ -1301,16 +1411,13 @@ export const COPY_ANCHORS: readonly WorldAnchor[] = [
   },
   {
     id: "intelligence.support",
-    position: (transform) => [
-      STATION_INTELLIGENCE.position[0],
-      // Straddle: -0.85 -> -1.05 -> -0.9 (W1 de-gimmick). Still
-      // clears the sphere's south pole; reclaims proximity to the
-      // mark via the shorter cluster + leader.
-      gyroStraddleY(STATION_INTELLIGENCE.position[1] - 0.9, -1),
-      STATION_INTELLIGENCE.position[2] +
-        0.1 +
-        intelligenceApproachDepthOffset(transform.paintProgress),
-    ],
+    position: (transform) =>
+      stationHeaderPosition(
+        STATION_INTELLIGENCE,
+        "support",
+        -0.9,
+        intelligenceApproachDepthOffset(transform.paintProgress)
+      ),
     visibilityBeats: ["passthrough-02", "intelligence"],
     fadeFrac: 0.18,
     perspectiveScale: {
@@ -1319,24 +1426,19 @@ export const COPY_ANCHORS: readonly WorldAnchor[] = [
       max: 1.15,
     },
     depthFade: {
-      near: 0.9,
+      near: 4.5,
       nearFade: 2.4,
       far: STATION_INTELLIGENCE.parkDistance + 2.3,
       farFade: 2.2,
     },
   },
-  // Stack tier labels — Sources (left) and Surfaces (right) dock with
-  // the Build funnel. Centre label is the existing Build title readout.
-  // Sources / Surfaces labels sit JUST OUTSIDE the source pip + surface
-  // fan tip rails respectively (rail X at ±STACK_*_X = ±2.4). Multiplier
-  // 1.10 pushes the label centre ~0.24 past the rail so the text reads
-  // as labelling the rail from outside, not crowding the funnel from
-  // inside.
+  // Stack tier labels — Sources (left) and Surfaces (right) sit BELOW
+  // their respective streams (the top corners are now owned by the
+  // Linear-style station header). Origin `top-center` so each label
+  // hangs from its anchor point centred under the fan/funnel.
   {
     id: "intelligence.sourcesLabel",
-    position: (transform) => {
-      return gyroAssemblyWorldPosition(transform, [STACK_SOURCES_X * 1.1, 0.1, 0]);
-    },
+    position: (transform) => gyroAssemblyWorldPosition(transform, [-1.6, -1.25, 0]),
     visibilityBeats: ["passthrough-02", "intelligence"],
     fadeFrac: 0.14,
     perspectiveScale: {
@@ -1348,9 +1450,7 @@ export const COPY_ANCHORS: readonly WorldAnchor[] = [
   },
   {
     id: "intelligence.surfacesLabel",
-    position: (transform) => {
-      return gyroAssemblyWorldPosition(transform, [STACK_SURFACES_X * 1.1, 0, 0]);
-    },
+    position: (transform) => gyroAssemblyWorldPosition(transform, [1.6, -1.45, 0]),
     visibilityBeats: ["passthrough-02", "intelligence"],
     fadeFrac: 0.14,
     perspectiveScale: {
@@ -1360,6 +1460,38 @@ export const COPY_ANCHORS: readonly WorldAnchor[] = [
     },
     onPaint: gateStackLabel,
   },
+  // Per-item stack labels — one DOM anchor per source pip / surface
+  // tip. World positions mirror `ShellStack`'s `sourcePipPositions` +
+  // `surfaceFanEnds` arrays so each label sits beside its diamond. The
+  // source label reads LEFTWARD off the pip (origin right-center in
+  // the DOM); the surface label reads RIGHTWARD off the tip (origin
+  // left-center). All share the Build-phase reveal via gateStackLabel.
+  ...STACK_SOURCE_ITEMS.map(({ id, y }) => ({
+    id: `intelligence.source.${id}`,
+    position: (transform: DepthGatewayTransform) =>
+      gyroAssemblyWorldPosition(transform, [STACK_SOURCES_X - 0.12, y, 0]),
+    visibilityBeats: ["passthrough-02", "intelligence"] as Beat[],
+    fadeFrac: 0.14,
+    perspectiveScale: {
+      referenceDistance: STATION_INTELLIGENCE.parkDistance,
+      min: 0.3,
+      max: 1.1,
+    },
+    onPaint: gateStackLabel,
+  })),
+  ...STACK_SURFACE_ITEMS.map(({ id, y }) => ({
+    id: `intelligence.surface.${id}`,
+    position: (transform: DepthGatewayTransform) =>
+      gyroAssemblyWorldPosition(transform, [STACK_SURFACES_X + 0.12, y, 0]),
+    visibilityBeats: ["passthrough-02", "intelligence"] as Beat[],
+    fadeFrac: 0.14,
+    perspectiveScale: {
+      referenceDistance: STATION_INTELLIGENCE.parkDistance,
+      min: 0.3,
+      max: 1.1,
+    },
+    onPaint: gateStackLabel,
+  })),
 ];
 
 // ── Substrate-cut envelope (ADR-017, unchanged) ──────────────────

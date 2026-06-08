@@ -7,6 +7,7 @@ import { corridorCapable } from "@/lib/hooks/useDeviceTier";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import { stationById } from "@/lib/home-v2/corridorMap";
 import { CopyAnchors } from "./CopyAnchors";
+import { CorridorStationHeaders } from "./CorridorStationHeaders";
 import { DepthGatewayScene } from "./DepthGatewayScene";
 import { useDepthScroll } from "./hooks/useDepthScroll";
 import { ProjectedBrandmarkActor } from "./ProjectedBrandmarkActor";
@@ -144,6 +145,13 @@ export function HomeCorridor({ text, debug = true }: HomeCorridorProps) {
         {/* Copy + label overlay — DOM text positioned by
             `useWorldDomTracker` (mounted inside `CopyAnchors`). */}
         {!fallback && <CopyAnchors text={text} />}
+
+        {/* Linear-style station headers (Navigate / Encode / Build).
+            Desktop-only 2D overlay rendered in viewport coordinates so
+            the headers don't skew with the 3D camera or shift with
+            aspect ratio. Mobile keeps the legacy world-anchored
+            straddle inside `CopyAnchors`. (2026-06-08 2D pivot.) */}
+        {!fallback && <CorridorStationHeaders />}
 
         {/* Projected brandmark — lives inside the sticky stage so
             armed prepaint is clipped to the incoming Thoughtform

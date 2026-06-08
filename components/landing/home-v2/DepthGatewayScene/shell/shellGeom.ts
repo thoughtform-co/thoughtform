@@ -650,6 +650,14 @@ export const SUBSTRATE_GYRO_MAJOR_TICK_EVERY = 4;
 export const SUBSTRATE_GYRO_TICK_OPACITY = 0.65;
 export const SUBSTRATE_GYRO_SYMBOL_OPACITY = 0.72;
 
+/** Flat XY-plane "cardinal-bezel" ring that contains the four Encode
+ *  cardinal labels (judgment / taste / craft / voice). Static and
+ *  camera-facing, like the navigation ticks and bearing glyphs. The
+ *  four labels sit just inside this ring (gyro label radius ~1.0 in
+ *  `getGyroPrimitiveLabelLocal`) so they read as one grouped dial. */
+export const SUBSTRATE_GYRO_CARDINAL_RING_RADIUS = 1.08;
+export const SUBSTRATE_GYRO_CARDINAL_RING_OPACITY = 0.55;
+
 /** Static tilt when `prefers-reduced-motion` (radians). */
 export const SUBSTRATE_GYRO_STATIC_TILT_X = 0.12;
 export const SUBSTRATE_GYRO_STATIC_TILT_Y = 0.08;

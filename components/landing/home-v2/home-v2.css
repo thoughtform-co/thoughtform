@@ -144,6 +144,105 @@
   z-index: 14;
 }
 
+/* ── Linear-style station headers — flat 2D viewport layer ─────
+   The three corridor headers (Navigate / Encode / Build) live in
+   screen space, NOT in the world projection, so they:
+   - never skew with the camera dolly,
+   - never smear off-screen at close camera ranges,
+   - sit identically across aspect ratios.
+
+   Each header is `position: fixed` so it anchors to the VIEWPORT
+   directly. The sticky-stage parent can scroll past its pin range
+   without dragging the headers with it; per-frame opacity (driven
+   by `CorridorStationHeaders` from `paintProgress`) is the only
+   thing that controls when the headers are visible, so when the
+   user scrolls above or below the corridor they're at opacity 0
+   regardless of their viewport-fixed position.
+
+   Mobile hides this layer; the world-anchored straddle in
+   `CopyAnchors` owns mobile. (2026-06-08 2D pivot.) */
+.home-v2-station-headers {
+  /* Wrapper is layout-neutral — children are individually `position:
+     fixed`. We keep the wrapper for semantic grouping + a single
+     pointer-events guard. */
+  pointer-events: none;
+}
+
+.home-v2-station-header {
+  position: fixed;
+  /* The header band is a CENTRED max-width container (not pinned to
+     the viewport edges) so on wide screens the title + support pull
+     inward and frame the centre instrument like Linear's hero,
+     instead of splaying to the far corners. Title is anchored to the
+     container's LEFT edge, support to its RIGHT edge; both have
+     max-widths so they never crowd the centre where the sphere sits. */
+  top: clamp(56px, 8vh, 104px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(90vw, 1400px);
+  height: 0;
+  pointer-events: none;
+  opacity: 0;
+  z-index: 15;
+  /* No CSS transitions — opacity is driven by per-frame writes from
+     `CorridorStationHeaders` so it stays in lock-step with the
+     scroll-driven paintProgress. */
+}
+
+.home-v2-station-header__title {
+  position: absolute;
+  top: 0;
+  left: 0;
+  margin: 0;
+  max-width: min(32vw, 440px);
+  /* Brand display sans (PP Neue Montreal) — matches the previous
+     header render. (The 2D-pivot draft accidentally used PT Mono.) */
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-size: clamp(26px, 3vw, 44px);
+  font-weight: 400;
+  line-height: 1.1;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--dawn, #ebe3d6);
+  text-align: left;
+  text-shadow: 0 0 22px rgba(202, 165, 84, 0.18);
+}
+
+.home-v2-station-header__title em {
+  font-style: normal;
+  color: var(--gold, #caa554);
+  font-weight: 500;
+}
+
+.home-v2-station-header__support {
+  position: absolute;
+  top: 0;
+  right: 0;
+  margin: 0;
+  max-width: min(26vw, 360px);
+  /* Brand display sans (PP Neue Montreal) — matches the previous
+     header render. */
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-size: clamp(15px, 1.2vw, 18px);
+  line-height: 1.45;
+  letter-spacing: 0.005em;
+  color: rgba(235, 227, 214, 0.8);
+  text-align: left;
+}
+
+.home-v2-station-header__support em {
+  font-style: italic;
+  color: var(--gold, #caa554);
+}
+
+@media (max-width: 760px) {
+  /* Hide the 2D header layer on mobile; the world-anchored straddle
+     in CopyAnchors owns the centred portrait composition. */
+  .home-v2-station-headers {
+    display: none;
+  }
+}
+
 /* All world-anchored elements share this base: positioned at the
    layer's top-left and translated into place by the tracker. The
    tracker writes inline `transform: translate3d(...) translate(...)`
@@ -211,6 +310,75 @@
    leader rises from the top toward the reticle. */
 .home-v2-readout--support {
   padding-top: 24px;
+}
+
+/* ── Desktop two-column header (2026-06-08 Linear-style pass) ──────
+   When the world anchor for `{base}.title` / `{base}.support` is
+   placed on the upper-LEFT / upper-RIGHT of the gate (origin
+   `top-left`), the readouts read as a Linear-style two-column
+   header: big title on the left, supporting paragraph on the right.
+   Mobile keeps the legacy straddle styles above; the modifier class
+   `home-v2-readout--twocol` is only set by StationTitle.tsx when
+   `useDeviceTier() !== "mobile"`.
+
+   2026-06-08 follow-up pass:
+   - Chip row (`.home-v2-readout__header`) is no longer rendered in
+     this layout; the title is the column header on its own.
+   - Title scaled up to a Linear-display register and tightened.
+   - Support paragraph scaled up so it carries equal weight.
+   - First-text-line of both columns share the same Y so the
+     read looks like a single horizontal header row. */
+.home-v2-readout--twocol {
+  /* Cluster anchors at top-left, no centering needed. The widths
+     below cap each column so they don't bleed into each other. */
+  margin: 0;
+  text-align: left;
+  /* The straddle padding (above) is irrelevant here — both clusters
+     sit on the same Y band and the gimbal sphere is dropped lower
+     in world space so neither leader is needed. */
+  padding-bottom: 0;
+  padding-top: 0;
+}
+.home-v2-readout--twocol.home-v2-readout--title {
+  width: clamp(300px, 32vw, 480px);
+}
+.home-v2-readout--twocol.home-v2-readout--support {
+  width: clamp(300px, 32vw, 460px);
+}
+.home-v2-readout--twocol .home-v2-readout__frame {
+  margin: 0;
+}
+/* Linear-style layout drops the gold L-corner brackets — the title
+   already reads as the gate's headline without an instrument frame,
+   and removing the brackets lets the title text's top edge sit
+   exactly at the cluster top, matching the support paragraph on
+   the right column. Mobile keeps the brackets via the unscoped
+   `.home-v2-readout__corner` rules above. */
+.home-v2-readout--twocol .home-v2-readout__corner {
+  display: none;
+}
+.home-v2-readout--twocol .home-v2-readout__title {
+  /* No padding: the title text top IS the cluster top, so the first
+     cap-height shares the same screen Y as the support paragraph
+     (which also has zero margin-top below). */
+  padding: 0;
+  max-width: none;
+  font-size: clamp(26px, 3vw, 44px);
+  letter-spacing: 0.06em;
+  line-height: 1.1;
+  text-align: left;
+}
+.home-v2-readout--twocol .home-v2-readout__support {
+  /* Top-aligned with the title text. Both clusters anchor at the
+     same world Y (origin top-left), and neither has any margin/
+     padding above its first text line, so the first cap-heights
+     match on the same screen Y. */
+  margin: 0;
+  max-width: 38ch;
+  font-size: clamp(15px, 1.2vw, 18px);
+  line-height: 1.45;
+  text-align: left;
+  color: rgba(235, 227, 214, 0.78);
 }
 
 /* ── Header chip row ────────────────────────────────────────────────
@@ -708,6 +876,53 @@
 .home-v2-stack-label--sources .home-v2-copy-body-label {
   align-items: flex-end;
   text-align: right;
+}
+
+/* Group-label variant (anchor origin `top-center`, sits BELOW the
+   streams). Drops the side leader and centres the ordinal/title/sub
+   stack as one block hanging from the anchor point. */
+.home-v2-stack-label--group {
+  flex-direction: column;
+  gap: 6px;
+  align-items: center;
+}
+.home-v2-stack-label--group.home-v2-stack-label--sources {
+  flex-direction: column;
+}
+.home-v2-stack-label--group .home-v2-copy-body-label {
+  align-items: center;
+  text-align: center;
+}
+.home-v2-stack-label--group.home-v2-stack-label--sources .home-v2-copy-body-label {
+  align-items: center;
+  text-align: center;
+}
+
+/* ── Per-item stack labels (one per source pip / surface tip) ──── */
+
+.home-v2-stack-item {
+  pointer-events: none;
+  font-family: var(--font-pt-mono, ui-monospace, monospace);
+  color: rgba(235, 227, 214, 0.7);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 10px;
+  white-space: nowrap;
+  /* Soft padding so the label sits a touch off the diamond pip rather
+     than touching it. The anchor origin (right-center / left-center)
+     already places the label edge at the diamond. */
+  padding: 0 8px;
+}
+.home-v2-stack-item--source {
+  text-align: right;
+  color: rgba(91, 122, 78, 0.78);
+}
+.home-v2-stack-item--surface {
+  text-align: left;
+  color: rgba(235, 227, 214, 0.72);
+}
+.home-v2-stack-item__label {
+  display: inline-block;
 }
 
 /* ── Encode primitive labels (cardinal framed tags) ────────── */

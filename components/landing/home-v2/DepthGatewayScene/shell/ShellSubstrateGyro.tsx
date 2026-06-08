@@ -34,6 +34,8 @@ import { getBrandmarkAccretionLayers } from "../sceneGeom";
 import {
   EMERGE_EPSILON,
   shellWrapEmerge,
+  SUBSTRATE_GYRO_CARDINAL_RING_OPACITY,
+  SUBSTRATE_GYRO_CARDINAL_RING_RADIUS,
   SUBSTRATE_GYRO_DEPTH_FAR,
   SUBSTRATE_GYRO_DEPTH_NEAR,
   SUBSTRATE_GYRO_DOTS_PER_MERIDIAN,
@@ -319,6 +321,23 @@ function buildParallel(
     positions[i * 3] = Math.cos(a) * r;
     positions[i * 3 + 1] = y;
     positions[i * 3 + 2] = Math.sin(a) * r;
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+  return g;
+}
+
+/** Closed circle in the XY plane (camera-facing) — used for the flat
+ *  cardinal-bezel ring that contains the four Encode primitive labels.
+ *  Distinct from `buildGreatCircle` (which builds in XZ for the gimbal
+ *  rings) so the bezel doesn't spin with the gyro and stays a flat dial. */
+function buildXyCircle(radius: number, segments: number): THREE.BufferGeometry {
+  const positions = new Float32Array((segments + 1) * 3);
+  for (let i = 0; i <= segments; i++) {
+    const a = (i / segments) * Math.PI * 2;
+    positions[i * 3] = Math.cos(a) * radius;
+    positions[i * 3 + 1] = Math.sin(a) * radius;
+    positions[i * 3 + 2] = 0;
   }
   const g = new THREE.BufferGeometry();
   g.setAttribute("position", new THREE.BufferAttribute(positions, 3));
@@ -629,6 +648,13 @@ export function ShellSubstrateGyro({ layerKey, reducedMotion = false }: ShellSub
     );
     const glyphs = buildBearingGlyphs(SUBSTRATE_GYRO_GIMBAL_RINGS[2].radius);
 
+    // Cardinal bezel — flat XY-plane circle that contains the four
+    // Encode cardinal labels (judgment / taste / craft / voice). The
+    // labels sit at radius ~1.0 (see `getGyroPrimitiveLabelLocal`), the
+    // bezel sits just outside at SUBSTRATE_GYRO_CARDINAL_RING_RADIUS so
+    // the cluster reads as one grouped dial. Static, camera-facing.
+    const cardinalRing = buildXyCircle(SUBSTRATE_GYRO_CARDINAL_RING_RADIUS, 96);
+
     const ringGraduations: THREE.BufferGeometry[] = [];
     for (let i = 0; i < SUBSTRATE_GYRO_GIMBAL_RINGS.length; i++) {
       const r = SUBSTRATE_GYRO_GIMBAL_RINGS[i].radius;
@@ -650,6 +676,7 @@ export function ShellSubstrateGyro({ layerKey, reducedMotion = false }: ShellSub
       ticks,
       ticksMiddle,
       glyphs,
+      cardinalRing,
       ringGraduations,
       meridianCount,
       parallelCount,
@@ -673,6 +700,7 @@ export function ShellSubstrateGyro({ layerKey, reducedMotion = false }: ShellSub
       pivot: makeMeshMaterial(COLOR_GOLD, SUBSTRATE_GYRO_PIVOT_OPACITY),
       particle: makeParticleMaterial(),
       dottedShell: makeSurfaceShellMaterial(SUBSTRATE_GYRO_DOTTED_SHELL_POINT_SIZE),
+      cardinalRing: makeDepthFadeLineMaterial(gold, SUBSTRATE_GYRO_CARDINAL_RING_OPACITY),
     };
   }, []);
 
@@ -688,6 +716,7 @@ export function ShellSubstrateGyro({ layerKey, reducedMotion = false }: ShellSub
       geom.ticks.dispose();
       geom.ticksMiddle.dispose();
       geom.glyphs.dispose();
+      geom.cardinalRing.dispose();
       geom.ringGraduations.forEach((g) => g.dispose());
     };
   }, [geom]);
@@ -739,6 +768,7 @@ export function ShellSubstrateGyro({ layerKey, reducedMotion = false }: ShellSub
     mats.particle.uniforms.uOpacity.value = SUBSTRATE_GYRO_PARTICLE_OPACITY * presence;
     mats.dottedShell.uniforms.uPixelRatio.value = state.viewport.dpr;
     mats.dottedShell.uniforms.uOpacity.value = SUBSTRATE_GYRO_DOTTED_SHELL_OPACITY * presence;
+    mats.cardinalRing.uniforms.uOpacity.value = lineOpacity(SUBSTRATE_GYRO_CARDINAL_RING_OPACITY);
 
     if (motionFrozen) {
       globeSpin.rotation.y = 0.4;
@@ -789,6 +819,12 @@ export function ShellSubstrateGyro({ layerKey, reducedMotion = false }: ShellSub
       <lineSegments geometry={geom.ticks} material={mats.tick} frustumCulled={false} />
       <lineSegments geometry={geom.ticksMiddle} material={mats.tick} frustumCulled={false} />
       <lineSegments geometry={geom.glyphs} material={mats.symbol} frustumCulled={false} />
+
+      {/* Cardinal bezel — a flat XY-plane ring that contains the four
+          Encode cardinal labels (judgment / taste / craft / voice). The
+          labels (DOM, projected at world radius ~1.0) sit just inside
+          this ring at ~1.08, so the cluster reads as one grouped dial. */}
+      <lineLoop geometry={geom.cardinalRing} material={mats.cardinalRing} frustumCulled={false} />
 
       {/* Gimbal cage — counter-rotating rings + pivot diamonds */}
       {SUBSTRATE_GYRO_GIMBAL_RINGS.slice(0, effectiveRingCount).map((axis, ringIdx) => (
