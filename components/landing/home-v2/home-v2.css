@@ -175,10 +175,10 @@
      two-column title-left / support-right split. The block is anchored
      to the LEFT of a centred max-width container so on wide screens it
      sits inset (not jammed at the viewport edge) while leaving the
-     centre + right clear for the instrument. Lowered (2026-06-08
-     reveal-polish pass) so the title sits closer to the instrument's
-     upper hemisphere and reads as integrated, not floating. */
-  top: clamp(120px, 18vh, 220px);
+     centre + right clear for the instrument. Raised again (2026-06-08
+     elegance pass) so the block sits in the upper third — clear of the
+     gimbal's top hemisphere without floating against the very edge. */
+  top: clamp(80px, 12vh, 156px);
   left: 50%;
   transform: translateX(-50%);
   width: min(90vw, 1400px);

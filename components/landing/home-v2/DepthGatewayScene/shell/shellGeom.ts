@@ -710,13 +710,16 @@ export const SUBSTRATE_GYRO_UNFOLD_GLOBE_Y_FLOOR = 0.08;
 /** Extra "wrap spin" applied to the globe during reveal — a damped
  *  Y-rotation on top of the idle spin so the meridian/parallel dots
  *  appear to swirl around the mark as the globe blooms open, then
- *  fade out as `reveal → 1`. Radians. */
-export const SUBSTRATE_GYRO_UNFOLD_WRAP_SPIN_AMP = Math.PI * 0.55;
+ *  fade out as `reveal → 1`. Radians. Softened (2026-06-08 elegance
+ *  pass) so the swirl reads as a settle, not a whip. */
+export const SUBSTRATE_GYRO_UNFOLD_WRAP_SPIN_AMP = Math.PI * 0.32;
 
-/** Petal-stagger overlap for the three rings. 0.45 gives a clear
- *  cascade (ring 0 opens first, ring 2 last) but with enough overlap
- *  to feel like one motion. */
-export const SUBSTRATE_GYRO_UNFOLD_RING_OVERLAP = 0.45;
+/** Petal-stagger overlap for the three rings. Higher overlap = each
+ *  ring's window is a bigger slice of the parent reveal, so the
+ *  per-ring tilt-open plays out more slowly while the end timing is
+ *  unchanged. 0.62 (2026-06-08 elegance pass) reads as a deliberate
+ *  unfold rather than three snaps; was 0.45. */
+export const SUBSTRATE_GYRO_UNFOLD_RING_OVERLAP = 0.62;
 
 /** Each gimbal ring starts NEARLY coplanar with the camera-facing XY
  *  plane and rotates open to its final tilt. We can't start at exactly

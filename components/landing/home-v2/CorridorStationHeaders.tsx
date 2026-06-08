@@ -50,7 +50,7 @@ import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 //   - substrate.start → Navigate text fades in WITH the gimbal
 //   - orbits.start    → Encode text fades in WITH the orbits
 //   - stack.start     → Build text fades in WITH the funnel
-const NAVIGATE_FADE_IN: [number, number] = [0.33, 0.43];
+const NAVIGATE_FADE_IN: [number, number] = [0.3, 0.42];
 const NAVIGATE_FADE_OUT: [number, number] = [0.47, 0.54];
 const ENCODE_FADE_IN: [number, number] = [0.54, 0.62];
 const ENCODE_FADE_OUT: [number, number] = [0.76, 0.83];
@@ -65,13 +65,19 @@ const TYPER_ARRIVE_OPACITY = 0.5;
  *  next arrival types out fresh. Lower than ARRIVE so transient
  *  jitters in the middle of a beat don't retype. */
 const TYPER_REARM_OPACITY = 0.04;
-/** Typing speed for the title (characters per second). Faster than
- *  the support paragraph so the headline lands first. */
-const TYPER_TITLE_CPS = 38;
-/** Typing speed for the support paragraph. */
-const TYPER_SUPPORT_CPS = 70;
-/** Gap (seconds) between title finishing and support starting. */
-const TYPER_GAP_S = 0.18;
+/** Typing speed for the title (characters per second). Title types
+ *  first and clears its line in ~0.4-0.5s for a ~25-char heading.
+ *  Faster than the original 38 cps so the title doesn't crawl. */
+const TYPER_TITLE_CPS = 55;
+/** Typing speed for the support paragraph. Faster than the title so
+ *  a 130-150 char paragraph lands within ~1s of the title — keeps
+ *  both lines in sync with the gimbal's arrival rather than the
+ *  paragraph dribbling on long after the title settles. Was 70. */
+const TYPER_SUPPORT_CPS = 140;
+/** Gap (seconds) between title finishing and support starting. Short
+ *  so the eye flows straight from headline to body without a beat of
+ *  empty space. Was 0.18. */
+const TYPER_GAP_S = 0.06;
 /** Time (seconds) a fully-typed char takes to fade up to opacity 1.
  *  Tiny — keeps each char snappy without a hard pop. */
 const TYPER_CHAR_FADE_S = 0.04;

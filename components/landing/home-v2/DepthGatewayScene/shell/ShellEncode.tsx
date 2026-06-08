@@ -42,10 +42,12 @@ interface ShellEncodeProps {
 const ARC_SEGMENTS = 32;
 
 /** Per-cardinal stagger overlap for the slot dock. Mirrors the
- *  Encode cartridge stagger in `sceneGeom.ts` so each slot draws on
- *  as its cartridge label lands, instead of all four arcs drawing
- *  together. (2026-06-08 cartridge pass.) */
-const ENCODE_DOCK_OVERLAP = 0.45;
+ *  `ENCODE_CARTRIDGE_OVERLAP` in `sceneGeom.ts` (single source of
+ *  truth, but duplicated here to avoid cross-module coupling) so
+ *  each slot draws on as its cartridge label lands, instead of all
+ *  four arcs drawing together. 0.62 (2026-06-08 elegance pass) =
+ *  longer per-arc draw; was 0.45. */
+const ENCODE_DOCK_OVERLAP = 0.62;
 
 /** Per-slot draw window inside the cardinal's staggered local
  *  progress: arc traces 0 → ARC_LOCAL_DRAW_END, then bracket fades

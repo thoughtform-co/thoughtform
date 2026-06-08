@@ -241,12 +241,13 @@ export const CORRIDOR_TIMELINE = {
     // Entry-buildup pass (2026-06-08): delay substrate/gyro deployment
     // until the camera has spent a little time in the corridor after
     // leaving Thoughtform. Encode/Build windows below are untouched.
-    // Widened (2026-06-08 reveal-polish) so the per-ring + globe-bloom
-    // unfold has room to read as a cascade rather than a single ramp.
-    // Park centre ~0.40 unchanged; window now spans ~12% of paint
-    // progress instead of 7%. `gateNavigateReadout` reuses this window
-    // so the Navigate text fades in with the sphere.
-    substrate: { start: 0.33, peakAt: 0.45 },
+    // Widened twice (2026-06-08): once for the reveal-polish cascade,
+    // then again for the elegance pass so the per-ring + globe-bloom
+    // unfold breathes instead of snapping. Now spans ~18% of paint
+    // progress (0.30 → 0.48). Park centre ~0.40 still in the middle.
+    // `gateNavigateReadout` reuses this window so the Navigate text
+    // fades in with the sphere.
+    substrate: { start: 0.3, peakAt: 0.48 },
     // Orbits window re-aligned to the Encode park ARRIVAL (2026-06-07)
     // so the staggered fold-in is WITNESSED as the camera enters Encode,
     // mirroring the compass at Navigate (window straddles the park:
@@ -981,11 +982,12 @@ const gateStackLabel: WorldAnchor["onPaint"] = (ctx, el) => {
   applyGyroDomBank(el);
 };
 
-/** Per-cardinal cartridge stagger overlap for Encode. 4 cardinals
- *  emerge in cascade across the `orbits` reveal — small overlap so
- *  each cartridge gets a distinct "punch" rather than blurring into
- *  one collective fade. */
-const ENCODE_CARTRIDGE_OVERLAP = 0.45;
+/** Per-cardinal cartridge stagger overlap for Encode. Higher overlap
+ *  means each cardinal's curved fly-in spans a bigger slice of the
+ *  `orbits` reveal — same parent envelope, but each cartridge's arc
+ *  plays out more slowly. 0.62 (2026-06-08 elegance pass) reads as
+ *  deliberate cartridge loading; was 0.45. */
+const ENCODE_CARTRIDGE_OVERLAP = 0.62;
 
 /** Order in which the cardinals fly in. Picked so the read circles
  *  the dial (north → east → south → west) — feels intentional, not
