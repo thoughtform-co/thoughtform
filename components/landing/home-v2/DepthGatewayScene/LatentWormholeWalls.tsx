@@ -197,9 +197,13 @@ const STREAK_RADIAL_FLARE = 0.22;
  *  particles whose density gradient says "this is the outer edge of
  *  the wormhole" — rather than ruled rings or line streaks.
  *
- *  Distinct roles after v3.9:
- *    - funnel field (dots)  = structure: always visible while leg 2
- *      is revealed, brightening + opening with `uExitWarp`.
+ *  Distinct roles after v3.11:
+ *    - funnel field (dots)  = structure: visible from a distance via
+ *      the dedicated `uRevealMouth` channel (early ramp, long-range
+ *      far-fade extension) so it reads as the door at the end of the
+ *      hallway, then brightens + opens with `uExitWarp`. Volumetric
+ *      butter-spread between INNER and OUTER * shell radius with 3
+ *      asymmetric angular density lobes drifting along Z.
  *    - line streaks         = motion accent: only visible while the
  *      user is actually scrolling fast (velocity-gated), because
  *      light streaks only make sense when travelling fast.
@@ -207,21 +211,56 @@ const STREAK_RADIAL_FLARE = 0.22;
  *  The dots ride the existing walls shader via the `aMouth` attribute
  *  (expansion + brightening under warp), so no new material is needed.
  *  Static geometry, built once. */
-const EXIT_FUNNEL_COUNT = 3400;
-/** Leg-local Z span. Starts at 0.30 — well INSIDE the tunnel (the
- *  mouth structures start at 0.62) — so the density gradient is felt
- *  long before the rim: sparse where you are, visibly massing toward
- *  the exit ahead. */
-const EXIT_FUNNEL_START_FRAC = 0.3;
+// Bumped 4800 -> 6000 (v3.11 butter-spread pass) so the wider radial
+// distribution still reads as dense at the mouth — the same particle
+// count was sparse when spread across an ~3x larger annulus.
+const EXIT_FUNNEL_COUNT = 6000;
+/** Leg-local Z span. Starts at 0.0 — the leg-2 origin sits ~0.5 world
+ *  units past the Encode gyro sphere (leg-local 0 ≈ the sphere plane
+ *  at the "Encode the judgment" park), so the funnel SOFTLY BEGINS at
+ *  the sphere itself and runs the full tunnel to the mouth (v3.10).
+ *  Because the density power-law rises from ~zero at the start, the
+ *  first stretch reads as a handful of stray dots, not a visible
+ *  boundary — the gradient is felt across the entire Encode -> Build
+ *  flight rather than appearing in the last third. */
+const EXIT_FUNNEL_START_FRAC = 0.0;
 const EXIT_FUNNEL_END_FRAC = 0.995;
-/** Radial scatter half-thickness (fraction of shell radius). Dots
- *  jitter inward/outward of the shell so the funnel reads organic
- *  (reference 2's scattered event-horizon cloud), not ruled. */
-const EXIT_FUNNEL_THICKNESS = 0.16;
+/** Radial INNER bound (fraction of shell radius). Dots scatter
+ *  between INNER and OUTER * shell so the funnel fills the volume
+ *  inside the tunnel rather than hugging the wall. The clear core
+ *  (r < INNER) keeps the optical axis quiet — that's where the
+ *  brandmark + Encode gimbal sit, and the user wants the centre
+ *  uncluttered. (v3.11 butter-spread pass; replaces EXIT_FUNNEL_THICKNESS.) */
+const EXIT_FUNNEL_INNER_R = 0.45;
+const EXIT_FUNNEL_OUTER_R = 1.08;
 /** Density bias exponent: z = lerp(start, end, u^bias). Values < 1
  *  push samples toward the mouth end, so dots-per-unit-length rises
- *  smoothly toward the rim — the gradient IS the funnel. */
-const EXIT_FUNNEL_DENSITY_BIAS = 0.55;
+ *  smoothly toward the rim — the gradient IS the funnel.
+ *
+ *  Softened 0.68 -> 0.85 (v3.11 butter-spread pass): mass distributes
+ *  more evenly along the leg so the dust is felt the entire way down
+ *  the corridor instead of stacking at the rim. Combined with the
+ *  earlier reveal channel + extended far visibility, this gives the
+ *  butter-on-bread spread the user asked for. */
+const EXIT_FUNNEL_DENSITY_BIAS = 0.85;
+/** Power that biases samples toward the OUTER wall while still
+ *  allowing inward dust. `r = lerp(INNER, OUTER, u^WALL_BIAS)`.
+ *  Values < 1 push samples toward the wall, > 1 push toward the
+ *  inner radius. 0.6 keeps the wall reading as the densest band
+ *  while letting ~30% of the field sit inboard for the tactile
+ *  texture. */
+const EXIT_FUNNEL_WALL_BIAS = 0.6;
+/** Asymmetric angular density modulation (v3.11). Three low-frequency
+ *  cosine lobes whose phases drift with leg-Z so the spread looks
+ *  organic / nebula-dust rather than a ruled cylinder. Amplitude is
+ *  the [0..1] keep-probability lift at lobe peaks; troughs reach
+ *  `1 - AMP * 2 * 0.5 = 1 - AMP` minimum. */
+const EXIT_FUNNEL_LOBE_COUNT = 3;
+const EXIT_FUNNEL_LOBE_AMP = 0.55;
+/** Scroll-along-Z phase rate for the lobes — full revolution every
+ *  ~3 leg units so adjacent Z bands have visibly different angular
+ *  density profiles. */
+const EXIT_FUNNEL_LOBE_PHASE_RATE = 2.1;
 
 /** Aperture depth-gate frames per leg. */
 const APERTURE_FRAMES_PER_LEG = 3;
@@ -245,6 +284,19 @@ const SHELF_X_SAMPLES = 8;
 const VISIBLE_NEAR = 0.6;
 const VISIBLE_FAR = 22;
 
+/** Far-fade EXTENSION for high-`aMouth` exit-funnel points (v3.11).
+ *  The leg-2 mouth sits ~24+ world units from the Navigate park, well
+ *  outside `VISIBLE_FAR = 22` for ordinary rail dots. We push the
+ *  visible far for funnel/mouth points further out so a quiet warm
+ *  glow is already present at the end of the corridor when the user
+ *  parks at Navigate — no more "door pops in at the last moment".
+ *  Scaled by `aMouth` in the shader so ordinary rail dots keep their
+ *  original visible band; only the rim-loaded funnel points reach. */
+const VISIBLE_FAR_MOUTH_EXTENSION = 14;
+/** Distance at which the long-range glow caps its alpha. Stays subtle
+ *  so the mouth never competes with the foreground gimbal sphere. */
+const MOUTH_LONGRANGE_ALPHA_CAP = 0.55;
+
 /** Reveal envelopes per leg, in global progress units.
  *
  *  Leg 1 lifts AFTER the opening Thoughtform park (centre ~0.06),
@@ -263,6 +315,17 @@ const LEG_1_REVEAL_START = 0.12;
 const LEG_1_REVEAL_END = 0.24;
 const LEG_2_REVEAL_START = 0.46;
 const LEG_2_REVEAL_END = 0.57;
+
+/** Exit FUNNEL + mouth-bloom reveal window (v3.11). Distinct from
+ *  `LEG_2_REVEAL_*` (which gates the leg-2 RAILS — the lattice that
+ *  the camera flies INSIDE) so the door at the end of the hallway
+ *  appears EARLY, not at the moment the camera arrives. Ramps on as
+ *  the user leaves Thoughtform, so by the Navigate park (~0.40) a
+ *  quiet warm glow is already visible at the end of the corridor.
+ *  The shell-wall structure stays gated by `LEG_2_REVEAL_*` and the
+ *  far-fade clamp, so the rails still fade in close-up. */
+const MOUTH_REVEAL_START = 0.16;
+const MOUTH_REVEAL_END = 0.32;
 
 /** Leg span fractions: rails START just past the source gate and END
  *  just before the destination gate. Tightened toward the gates
@@ -283,8 +346,16 @@ uniform float uPixelRatio;
 uniform vec3 uCameraPos;
 uniform float uVisibleNear;
 uniform float uVisibleFar;
+uniform float uVisibleFarMouthExtension;
+uniform float uMouthLongRangeAlphaCap;
 uniform float uReveal1;
 uniform float uReveal2;
+// v3.11 wormhole-exit funnel reveal channel — distinct from the
+// leg-2 rail reveal so the mouth glow appears EARLY (as the camera
+// leaves Thoughtform) instead of at the moment the leg-2 rails
+// arrive. aReveal selects: 0 = leg 1 rails, 1 = leg 2 rails,
+// 2 = leg 2 funnel + mouth-bloom particles.
+uniform float uRevealMouth;
 // v3.2 wormhole-exit warp: ramps 0->1 across the late corridor as
 // the camera approaches the Build park. At peak the rails splay
 // radially OUTWARD from the tube's optical axis, with stronger
@@ -338,13 +409,35 @@ void main() {
   vec4 mv = modelViewMatrix * vec4(worldPos, 1.0);
   float dist = distance(worldPos, uCameraPos);
 
+  // Per-point reveal channel selection (v3.11):
+  //   aReveal == 0  → leg 1 rails (uReveal1)
+  //   aReveal == 1  → leg 2 rails (uReveal2)
+  //   aReveal == 2  → leg 2 funnel + mouth bloom (uRevealMouth)
+  // The early-ramping mouth channel makes the door at the end of the
+  // corridor appear as a faint glow as the user leaves Thoughtform,
+  // long before the leg-2 rail lattice itself fades in.
+  float reveal;
+  if (aReveal > 1.5) {
+    reveal = uRevealMouth;
+  } else {
+    reveal = mix(uReveal1, uReveal2, aReveal);
+  }
+
   // Camera-space depth focus. Walls behind the camera or beyond the
   // far plane vanish; rails ahead fade in as they approach.
-  float farFade = smoothstep(uVisibleFar, uVisibleFar - 5.0, dist);
+  // Extend the far visibility for high-aMouth points (the funnel +
+  // mouth bloom) so the glow remains visible from the Navigate park
+  // ~24+ world units away, with a long-range alpha cap so it stays
+  // subtle and never competes with the foreground gimbal sphere.
+  float visibleFar = uVisibleFar + aMouth * uVisibleFarMouthExtension;
+  float farFade = smoothstep(visibleFar, visibleFar - 5.0, dist);
   float nearFade = smoothstep(uVisibleNear, uVisibleNear + 1.2, dist);
-
-  // Per-point leg gate: aReveal = 0 for leg 1, aReveal = 1 for leg 2.
-  float reveal = mix(uReveal1, uReveal2, aReveal);
+  // Extra gentle damping for high-aMouth points sitting beyond the
+  // ordinary far plane — they read as a quiet warm presence at
+  // distance instead of a bright cluster, while close-up funnel
+  // dots keep their full alpha.
+  float longRangeT = smoothstep(uVisibleFar, uVisibleFar + 8.0, dist);
+  float longRangeDamp = mix(1.0, uMouthLongRangeAlphaCap, longRangeT * aMouth);
 
   gl_Position = projectionMatrix * mv;
 
@@ -359,13 +452,21 @@ void main() {
   // is 0 for leg 1 and 1 for leg 2, so this only affects the
   // Encode->Build leg. aMouth particles already have their own
   // mouthAlpha curve, so we skip those (1 - aMouth) to avoid stacking.
-  float exitWallLift = mix(1.0, 1.3, uExitWarp * aReveal * (1.0 - aMouth));
-  vAlpha = reveal * farFade * nearFade * mix(1.0, mouthAlpha, aMouth) * exitWallLift;
+  // Funnel particles (aReveal == 2) are excluded from this lift so the
+  // long-range glow stays balanced.
+  float legRailMask = step(0.5, aReveal) * (1.0 - step(1.5, aReveal));
+  float exitWallLift = mix(1.0, 1.3, uExitWarp * legRailMask * (1.0 - aMouth));
+  vAlpha = reveal * farFade * nearFade * longRangeDamp * mix(1.0, mouthAlpha, aMouth) * exitWallLift;
 
   // Distance-based size with a generous floor so far rails still
   // resolve as individual dots, not pixel dust.
   float sizeFactor = clamp(7.0 / max(0.5, dist), 0.55, 2.6);
-  gl_PointSize = uPointSize * uPixelRatio * sizeFactor * aSize * mix(1.0, 1.16, aMouth);
+  // Funnel particles (aReveal == 2) shrink slightly at long range so
+  // density carries the read of the distant glow rather than a few
+  // big blobs — the butter-spread reads as fine dust, not chunks.
+  float funnelMask = step(1.5, aReveal);
+  float funnelLongRangeShrink = 1.0 - funnelMask * smoothstep(uVisibleFar, uVisibleFar + 8.0, dist) * 0.4;
+  gl_PointSize = uPointSize * uPixelRatio * sizeFactor * aSize * mix(1.0, 1.16, aMouth) * funnelLongRangeShrink;
 }
 `;
 
@@ -684,7 +785,10 @@ function buildExitMouthBloom(fromZ: number, toZ: number, buf: PointBuffers): voi
       const x = Math.cos(angle) * rx * petalBloom;
       const y = Math.sin(angle) * ry * petalBloom;
       const size = 0.48 + rimT * 0.72 + petal * 0.2 * rimT;
-      pushPoint(buf, x, y, z, ringColor, 1, size, mouthStrength);
+      // aReveal = 2 → uses the early-ramping `uRevealMouth` channel
+      // so the bloom shares the funnel field's early reveal: the door
+      // is visible from a distance, not at point-blank range.
+      pushPoint(buf, x, y, z, ringColor, 2, size, mouthStrength);
     }
   }
 
@@ -705,7 +809,7 @@ function buildExitMouthBloom(fromZ: number, toZ: number, buf: PointBuffers): voi
       const x = Math.cos(angle) * SHELL_RX * inward * depthBloom * petalBloom;
       const y = Math.sin(angle) * SHELL_RY * inward * depthBloom * petalBloom;
       const color = dawnSoft.clone().lerp(p % 2 === 0 ? gold : dawn, rimT);
-      pushPoint(buf, x, y, z, color, 1, 0.42 + rimT * 0.72, 0.06 + rimT * 0.94);
+      pushPoint(buf, x, y, z, color, 2, 0.42 + rimT * 0.72, 0.06 + rimT * 0.94);
     }
   }
 }
@@ -714,8 +818,9 @@ function buildExitMouthBloom(fromZ: number, toZ: number, buf: PointBuffers): voi
  *  particle read of the wormhole exit.
  *
  *  A dense organic scatter of small dots on/around the tunnel shell,
- *  spanning from well inside the tunnel (leg-local 0.30) to the mouth.
- *  Three coordinated gradients make the funnel tangible:
+ *  spanning the FULL leg — softly beginning at the Encode sphere plane
+ *  (leg-local 0.0, v3.10) and running to the mouth. Three coordinated
+ *  gradients make the funnel tangible:
  *
  *    1. DENSITY — samples are biased toward the mouth via
  *       u^EXIT_FUNNEL_DENSITY_BIAS, so dots-per-unit-length rises
@@ -746,11 +851,29 @@ function buildExitFunnelField(fromZ: number, toZ: number, buf: PointBuffers): vo
     return s - Math.floor(s);
   };
 
-  for (let i = 0; i < EXIT_FUNNEL_COUNT; i++) {
-    const u = (i + 0.5) / EXIT_FUNNEL_COUNT;
-    // Density bias toward the mouth: u^0.55 pushes samples toward 1,
-    // so z-density rises smoothly toward the rim.
-    const zBias = Math.pow(u, EXIT_FUNNEL_DENSITY_BIAS);
+  // v3.11 butter-spread pass: scattered VOLUMETRICALLY between INNER
+  // and OUTER * shell radius (not in a thin band against the wall),
+  // density softened along Z so mass spreads through the leg, and
+  // angular density modulated by 3 low-frequency cosine lobes whose
+  // phases drift with Z so the field reads as nebula dust — organic,
+  // tactile, asymmetric — instead of a ruled cylinder. All points
+  // carry `aReveal = 2` so they share the early `uRevealMouth`
+  // reveal channel: the door at the end of the hallway is visible
+  // from Navigate, not just at point-blank range.
+  // Reject-sample so the lobe cuts produce a real density variation
+  // rather than just a brightness wave; budget enough rejection
+  // headroom that EXIT_FUNNEL_COUNT points still land.
+  const REJECT_BUDGET = 4;
+  let placed = 0;
+  let attempts = 0;
+  while (placed < EXIT_FUNNEL_COUNT && attempts < EXIT_FUNNEL_COUNT * REJECT_BUDGET) {
+    const i = attempts;
+    attempts++;
+    const u = ((i + 0.5) / (EXIT_FUNNEL_COUNT * REJECT_BUDGET)) * REJECT_BUDGET;
+    const uClamped = u > 1 ? u - Math.floor(u) : u;
+    // Density bias along Z (softer than v3.10 — mass distributes
+    // along the whole leg instead of stacking at the mouth).
+    const zBias = Math.pow(uClamped, EXIT_FUNNEL_DENSITY_BIAS);
     const zT = lerp(EXIT_FUNNEL_START_FRAC, EXIT_FUNNEL_END_FRAC, zBias);
     const z = fromZ + span * zT;
     // Eased rim weight 0..1 for size / colour / mouth strength.
@@ -759,14 +882,30 @@ function buildExitFunnelField(fromZ: number, toZ: number, buf: PointBuffers): vo
     const h1 = hash(i * 12.9898 + 4.5453);
     const h2 = hash(i * 78.233 + 1.047);
     const h3 = hash(i * 39.425 + 2.665);
+    const h4 = hash(i * 27.619 + 0.731);
 
+    // Asymmetric angular lobes: 3 low-frequency cosines summed and
+    // rephased with Z so adjacent leg slices have visibly different
+    // density profiles around the cylinder. Reject-sample against
+    // the lobe weight to actually MOVE points (not just dim them).
     const angle = h1 * Math.PI * 2;
+    const lobePhase = z * EXIT_FUNNEL_LOBE_PHASE_RATE;
+    let lobeWeight = 0;
+    for (let k = 1; k <= EXIT_FUNNEL_LOBE_COUNT; k++) {
+      lobeWeight +=
+        Math.cos(angle * k + lobePhase * (1 + k * 0.37) + k * 1.91) / EXIT_FUNNEL_LOBE_COUNT;
+    }
+    // Map [-1, 1] -> [1 - AMP, 1]; lobeWeight > 0 -> denser sectors.
+    const keepProb = 1 - EXIT_FUNNEL_LOBE_AMP * (0.5 - lobeWeight * 0.5);
+    if (h4 > keepProb) continue;
+
+    // Volumetric radial scatter from INNER to OUTER. `WALL_BIAS`
+    // pushes most samples outward toward the wall while still
+    // letting some sit inboard — that's the butter-spread.
+    const radialU = Math.pow(h2, EXIT_FUNNEL_WALL_BIAS);
+    const rFactor = lerp(EXIT_FUNNEL_INNER_R, EXIT_FUNNEL_OUTER_R, radialU);
     const inward = 1 - zT * RAIL_INWARD_PULL;
-    // Radial scatter around the shell — thicker toward the rim so the
-    // mouth reads as a massed lip rather than a thin circle.
-    const thickness = EXIT_FUNNEL_THICKNESS * (0.45 + rim * 0.55);
-    const scatter = (h2 - 0.5) * 2 * thickness;
-    const r = (1 + scatter) * inward;
+    const r = rFactor * inward;
 
     const x = Math.cos(angle) * SHELL_RX * r;
     const y = Math.sin(angle) * SHELL_RY * r;
@@ -786,7 +925,11 @@ function buildExitFunnelField(fromZ: number, toZ: number, buf: PointBuffers): vo
     // particles; rim dots inherit the full flower-mouth open+brighten
     // behaviour under uExitWarp.
     const mouth = 0.12 + rim * 0.88;
-    pushPoint(buf, x, y, z, color, 1, size, mouth);
+    // aReveal = 2 → uses the dedicated `uRevealMouth` channel so the
+    // funnel appears as the user leaves Thoughtform (early), distinct
+    // from the leg-2 rail reveal that gates the surrounding walls.
+    pushPoint(buf, x, y, z, color, 2, size, mouth);
+    placed++;
   }
 }
 
@@ -1074,8 +1217,11 @@ export function LatentWormholeWalls() {
         uCameraPos: { value: new THREE.Vector3() },
         uVisibleNear: { value: VISIBLE_NEAR },
         uVisibleFar: { value: VISIBLE_FAR },
+        uVisibleFarMouthExtension: { value: VISIBLE_FAR_MOUTH_EXTENSION },
+        uMouthLongRangeAlphaCap: { value: MOUTH_LONGRANGE_ALPHA_CAP },
         uReveal1: { value: 0 },
         uReveal2: { value: 0 },
+        uRevealMouth: { value: 0 },
         uOpacity: { value: 0 },
         uExitWarp: { value: 0 },
       },
@@ -1135,6 +1281,7 @@ export function LatentWormholeWalls() {
       material.uniforms.uOpacity.value = 0;
       material.uniforms.uReveal1.value = 0;
       material.uniforms.uReveal2.value = 0;
+      material.uniforms.uRevealMouth.value = 0;
       material.uniforms.uExitWarp.value = 0;
       streakMaterial.uniforms.uOpacity.value = 0;
       streakMaterial.uniforms.uExitWarp.value = 0;
@@ -1143,8 +1290,13 @@ export function LatentWormholeWalls() {
 
     const reveal1 = smoothstep(LEG_1_REVEAL_START, LEG_1_REVEAL_END, paintProgress);
     const reveal2 = smoothstep(LEG_2_REVEAL_START, LEG_2_REVEAL_END, paintProgress);
+    // Exit funnel + mouth-bloom reveal channel — ramps EARLY (as the
+    // user leaves Thoughtform) so a quiet warm glow is already present
+    // at the end of the corridor when parked at Navigate.
+    const revealMouth = smoothstep(MOUTH_REVEAL_START, MOUTH_REVEAL_END, paintProgress);
     material.uniforms.uReveal1.value = reveal1;
     material.uniforms.uReveal2.value = reveal2;
+    material.uniforms.uRevealMouth.value = revealMouth;
 
     // v3.2 wormhole-exit widen — the tube splays radially outward at
     // the camera as we emerge into Build. The fragment fade follows

@@ -124,6 +124,58 @@ intentionally absent in stills since velocity ≈ 0)
 - Streak velocity gate: the `smoothstep(0.06, 0.32, velocityT)`
   edges in the `useFrame` block.
 
+### v3.11 Revision — Butter-spread + early-reveal mouth (2026-06-09)
+
+User feedback: the door at the end of the wormhole only appeared once
+the user was already at Encode — like a hallway whose door materialises
+at point-blank range. And the funnel was concentrated at the rim instead
+of feeling tactile through the leg. Three coordinated changes inside
+[`LatentWormholeWalls.tsx`](../../components/landing/home-v2/DepthGatewayScene/LatentWormholeWalls.tsx):
+
+1. **Dedicated `uRevealMouth` channel.** Funnel + mouth-bloom points carry
+   `aReveal = 2`; the shader selects `uRevealMouth` instead of mixing
+   `uReveal1`/`uReveal2`. Window: `[MOUTH_REVEAL_START 0.16, MOUTH_REVEAL_END
+0.32]` of paintProgress, so the mouth is fully revealed by the Navigate
+   park. Leg-2 RAILS still gate on `uReveal2 [0.46, 0.57]` — the lattice
+   the camera flies inside still fades up close, only the door at the end
+   of the corridor appears early.
+2. **Long-range visibility for high-`aMouth` points.** The shader extends
+   `uVisibleFar` by `uMouthLongRangeAlphaCap * aMouth` (max +14 world units)
+   and applies a long-range alpha cap (~0.55) so the rim glow is visible
+   from Navigate park (~24 world units away from the mouth) as a quiet
+   warm presence — not a bright cluster competing with the foreground
+   gimbal sphere. Funnel particles also shrink slightly past the ordinary
+   far plane so density carries the read at long range.
+3. **Volumetric butter-spread.** `buildExitFunnelField` no longer scatters
+   in a thin ±0.16 shell band; it scatters between
+   `EXIT_FUNNEL_INNER_R 0.45` and `EXIT_FUNNEL_OUTER_R 1.08` of shell
+   radius (with `EXIT_FUNNEL_WALL_BIAS 0.6` so most points sit toward
+   the wall while ~30% sit inboard for tactile texture), with 3
+   asymmetric angular density lobes (`EXIT_FUNNEL_LOBE_COUNT 3`,
+   `EXIT_FUNNEL_LOBE_AMP 0.55`) whose phases drift along Z
+   (`EXIT_FUNNEL_LOBE_PHASE_RATE 2.1`). The lobes drive a reject-sample so
+   density actually MOVES (not just dims) — adjacent leg slices have
+   visibly different angular density profiles. Density bias along Z
+   softened (`EXIT_FUNNEL_DENSITY_BIAS 0.68 → 0.85`) so the dust is felt
+   the entire way down the corridor instead of stacking at the rim.
+   Count bumped 4800 → 6000 to keep the wider distribution dense.
+
+Verification at 1440px:
+
+- `paintProgress 0.20`: faint warm glow already visible at the end of
+  the corridor (mouth reveal at ~30%) — the door is forming from a
+  distance.
+- `paintProgress 0.40` (Navigate park): mouth fully revealed, present
+  but quiet at long range thanks to the alpha cap.
+- `paintProgress 0.70` (mid passthrough-02): tactile asymmetric particle
+  spread between the sphere and the corridor walls — distinct denser
+  clusters at upper-left / lower right, not a ruled cylinder.
+
+Backward-compat note: `EXIT_FUNNEL_THICKNESS` is retired — replaced by
+`EXIT_FUNNEL_INNER_R` / `EXIT_FUNNEL_OUTER_R`. The v3.9 tunables list
+above remains as the historical record of that revision; the live
+constants are now the v3.11 set in `LatentWormholeWalls.tsx`.
+
 ---
 
 ## 2026-06-09 Revision (v3.8) — Streaks reweighted to the camera passing band

@@ -31,11 +31,13 @@ import { buildSphereCloudGeometry } from "@/components/landing/v7/intelligence-l
 import { epilogueBand } from "@/lib/home-v2/epilogueTimeline";
 import { useGyroLabStore } from "@/lib/stores/gyroLabStore";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
+import { clamp01 } from "@/lib/home-v2/corridorMap";
 import { getSmoothedAccretionLayers } from "../motionFollower";
 import {
   EMERGE_EPSILON,
   gyroAssemblyUnfold,
   gyroRingUnfold,
+  petalStagger,
   SUBSTRATE_GYRO_CARDINAL_RING_OPACITY,
   SUBSTRATE_GYRO_CARDINAL_RING_RADIUS,
   SUBSTRATE_GYRO_DEPTH_FAR,
@@ -827,6 +829,11 @@ export function ShellSubstrateGyro({ layerKey, reducedMotion = false }: ShellSub
   // can write `rotation` directly each frame via the unfold lerp.
   const ringTiltRefs = useRef<(THREE.Group | null)[]>([]);
   const ringScaleRefs = useRef<(THREE.Group | null)[]>([]);
+  // Per-ring pivot scale group — wraps the four pivot diamonds so they
+  // pop into place as their ring's draw-on completes (geometric
+  // emergence; `mats.pivot.opacity` is fixed across the unfold). 2026-
+  // 06-09 trim-path pass.
+  const pivotScaleRefs = useRef<(THREE.Group | null)[]>([]);
 
   useFrame((state, delta) => {
     const root = rootRef.current;
@@ -945,10 +952,16 @@ export function ShellSubstrateGyro({ layerKey, reducedMotion = false }: ShellSub
     globeSpin.scale.set(1, unfold.globeY, 1);
 
     // Ring unfold: tilt + scale per gimbal ring with petalStagger.
+    // 2026-06-09 trim-path pass: each ring's `setDrawRange` rides the
+    // SAME tiltT (the linear stagger) so the line draws on as the ring
+    // tilts open — instrument-style "booting" rather than fading in.
+    // Graduations + pivot diamonds + the per-ring tick stripes all ride
+    // the same stagger so each gimbal reads as one cohesive cassette.
     for (let i = 0; i < effectiveRingCount; i++) {
       const tiltNode = ringTiltRefs.current[i];
       const scaleNode = ringScaleRefs.current[i];
       const spinNode = ringSpinRefs.current[i];
+      const pivotScaleNode = pivotScaleRefs.current[i];
       const axis = SUBSTRATE_GYRO_GIMBAL_RINGS[i];
       const ring = gyroRingUnfold(reveal, i, effectiveRingCount);
       // Tilt: lerp from a near-flat start toward the parked tilt.
@@ -965,6 +978,118 @@ export function ShellSubstrateGyro({ layerKey, reducedMotion = false }: ShellSub
       if (spinNode && !motionFrozen) {
         spinNode.rotation.y += axis.spin * idleSpeed * dt;
       }
+      // Trim-path draw-on: the gimbal ring is a `<line>` over a
+      // closed-loop point list (first vertex == last). setDrawRange
+      // sweeps the polyline angularly so the ring DRAWS ITSELF as it
+      // tilts open. tiltT is monotone in [0,1] and matches the
+      // ring's tilt animation — same window, geometric reveal.
+      const ringGeom = geom.gimbalRings[i];
+      if (ringGeom) {
+        const total = ringGeom.attributes.position.count;
+        ringGeom.setDrawRange(0, Math.max(0, Math.floor(ring.tiltT * total)));
+      }
+      const gradGeom = geom.ringGraduations[i];
+      if (gradGeom) {
+        const total = gradGeom.attributes.position.count;
+        // lineSegments needs PAIRS of vertices — round down to even.
+        const n = Math.max(0, Math.floor(ring.tiltT * total));
+        gradGeom.setDrawRange(0, n - (n % 2));
+      }
+      // Pivot diamonds pop in once the ring has nearly drawn — staged
+      // emerge that lets the ring read first, then the pivots stamp
+      // the four cardinal positions. petalEmerge curve compresses the
+      // tail of the ring's tiltT so the pivots scale 0 → 1 across the
+      // last ~30% of the ring's draw.
+      if (pivotScaleNode) {
+        const pivotT = Math.max(0, (ring.tiltT - 0.7) / 0.3);
+        const pivotS = pivotT * pivotT * (3 - 2 * pivotT);
+        pivotScaleNode.scale.setScalar(pivotS);
+      }
+    }
+
+    // Per-element draw-on for the rest of the instrument. All driven
+    // off the SAME smoothed `reveal` so the cassette draws in one
+    // continuous unfold instead of separate fade-ins.
+
+    // Equator — headline horizon line, draws first so the globe has a
+    // visible "deck" before the meridians/parallels follow.
+    const equatorGeom = geom.equator;
+    if (equatorGeom) {
+      const total = equatorGeom.attributes.position.count;
+      const t = clamp01(reveal / 0.32);
+      equatorGeom.setDrawRange(0, Math.max(0, Math.floor(t * total)));
+    }
+
+    // Cardinal bezel — the flat XY-plane dial that contains the four
+    // Encode labels. Draws across the FIRST 45% of the substrate
+    // window so the dial is fully closed by the time the cardinal
+    // labels' Encode reveal even begins to ramp.
+    const cardinalGeom = geom.cardinalRing;
+    if (cardinalGeom) {
+      const total = cardinalGeom.attributes.position.count;
+      const t = clamp01(reveal / 0.45);
+      cardinalGeom.setDrawRange(0, Math.max(0, Math.floor(t * total)));
+    }
+
+    // Meridians + parallels — each rides its own petalStagger inside
+    // the substrate window so the globe LACES UP great-circle by
+    // great-circle (cascade) instead of all wires flickering on at
+    // once. The shader's depth-fade keeps the back hemisphere quiet
+    // so the read is "front meridian draws, back follows behind it".
+    for (let i = 0; i < geom.meridians.length; i++) {
+      const g = geom.meridians[i];
+      if (!g) continue;
+      const total = g.attributes.position.count;
+      const t = petalStagger(reveal, i, geom.meridians.length, 0.7);
+      g.setDrawRange(0, Math.max(0, Math.floor(t * total)));
+    }
+    for (let i = 0; i < geom.parallels.length; i++) {
+      const g = geom.parallels[i];
+      if (!g) continue;
+      const total = g.attributes.position.count;
+      const t = petalStagger(reveal, i, geom.parallels.length, 0.7);
+      g.setDrawRange(0, Math.max(0, Math.floor(t * total)));
+    }
+
+    // Sphere cloud — Fibonacci spiral order means a setDrawRange
+    // sweep traces a continuous spiral from one pole to the other,
+    // filling the surface in. Sweeps across the first 70% of reveal.
+    const particleGeom = geom.particles;
+    if (particleGeom) {
+      const total = particleGeom.attributes.position.count;
+      const t = clamp01(reveal / 0.7);
+      particleGeom.setDrawRange(0, Math.max(0, Math.floor(t * total)));
+    }
+
+    // Dotted shell — built band-by-band south pole → north pole, so a
+    // `setDrawRange` sweep walks latitude bands like a planet
+    // rendering itself. Sweeps with the substrate reveal directly so
+    // the full surface is in by the Navigate park.
+    const shellGeom = geom.dottedShell;
+    if (shellGeom) {
+      const total = shellGeom.attributes.position.count;
+      const t = reveal;
+      shellGeom.setDrawRange(0, Math.max(0, Math.floor(t * total)));
+    }
+
+    // Per-ring tick stripes — `ticks` belongs to ring 0, `ticksMiddle`
+    // to ring 1, `glyphs` to ring 2. Tie each to its corresponding
+    // ring's tiltT so the ticks sweep around the dial as the ring
+    // tilts open. lineSegments → round to pairs.
+    const draws = [
+      { g: geom.ticks, idx: 0 },
+      { g: geom.ticksMiddle, idx: 1 },
+      { g: geom.glyphs, idx: 2 },
+    ];
+    for (const { g, idx } of draws) {
+      if (!g || idx >= effectiveRingCount) {
+        if (g) g.setDrawRange(0, 0);
+        continue;
+      }
+      const ring = gyroRingUnfold(reveal, idx, effectiveRingCount);
+      const total = g.attributes.position.count;
+      const n = Math.max(0, Math.floor(ring.tiltT * total));
+      g.setDrawRange(0, n - (n % 2));
     }
 
     // Dotted shell radius lerp: rescale vertex positions in-place from
@@ -1014,7 +1139,12 @@ export function ShellSubstrateGyro({ layerKey, reducedMotion = false }: ShellSub
           />
         ))}
 
-        <lineLoop geometry={geom.equator} material={mats.equator} frustumCulled={false} />
+        {/* `<line>` (LINE_STRIP) instead of `<lineLoop>` so the
+            geometry's `setDrawRange` sweep actually trims the visible
+            arc — `lineLoop` always closes the ring on the GPU. The
+            buildGreatCircle list has first vertex == last vertex so
+            the closed-loop visual is preserved at draw progress 1. */}
+        <line geometry={geom.equator} material={mats.equator} frustumCulled={false} />
         {showParticles && (
           <points geometry={geom.particles} material={mats.particle} frustumCulled={false} />
         )}
@@ -1040,8 +1170,9 @@ export function ShellSubstrateGyro({ layerKey, reducedMotion = false }: ShellSub
       {/* Cardinal bezel — a flat XY-plane ring that contains the four
           Encode cardinal labels (judgment / taste / craft / voice). The
           labels (DOM, projected at world radius ~1.0) sit just inside
-          this ring at ~1.08, so the cluster reads as one grouped dial. */}
-      <lineLoop geometry={geom.cardinalRing} material={mats.cardinalRing} frustumCulled={false} />
+          this ring at ~1.08, so the cluster reads as one grouped dial.
+          `<line>` (LINE_STRIP) so the trim-path draw-on actually shows. */}
+      <line geometry={geom.cardinalRing} material={mats.cardinalRing} frustumCulled={false} />
 
       {/* Gimbal cage — counter-rotating rings + pivot diamonds.
           Hierarchy per ring (outer → inner):
@@ -1068,7 +1199,11 @@ export function ShellSubstrateGyro({ layerKey, reducedMotion = false }: ShellSub
                 ringSpinRefs.current[ringIdx] = node;
               }}
             >
-              <lineLoop
+              {/* `<line>` (LINE_STRIP) so `setDrawRange` actually
+                  trims the visible arc as the ring tilts open. The
+                  great-circle geometry's first vertex == last so the
+                  ring still closes at draw progress 1. */}
+              <line
                 geometry={geom.gimbalRings[ringIdx]}
                 material={mats.ring}
                 frustumCulled={false}
@@ -1080,16 +1215,26 @@ export function ShellSubstrateGyro({ layerKey, reducedMotion = false }: ShellSub
                   frustumCulled={false}
                 />
               )}
-              {/* Pivot diamonds at cardinal positions on each ring */}
-              {[0, Math.PI / 2, Math.PI, Math.PI * 1.5].map((a, pi) => (
-                <mesh
-                  key={`pivot-${ringIdx}-${pi}`}
-                  geometry={geom.pivot}
-                  material={mats.pivot}
-                  position={[Math.cos(a) * axis.radius, 0, Math.sin(a) * axis.radius]}
-                  frustumCulled={false}
-                />
-              ))}
+              {/* Pivot diamonds at cardinal positions on each ring.
+                  Wrapped in a scale group so they pop in geometrically
+                  as the ring's draw-on completes (Principle 4: emerge
+                  via geometry, never via opacity). */}
+              <group
+                ref={(node) => {
+                  pivotScaleRefs.current[ringIdx] = node;
+                }}
+                scale={0}
+              >
+                {[0, Math.PI / 2, Math.PI, Math.PI * 1.5].map((a, pi) => (
+                  <mesh
+                    key={`pivot-${ringIdx}-${pi}`}
+                    geometry={geom.pivot}
+                    material={mats.pivot}
+                    position={[Math.cos(a) * axis.radius, 0, Math.sin(a) * axis.radius]}
+                    frustumCulled={false}
+                  />
+                ))}
+              </group>
             </group>
           </group>
         </group>

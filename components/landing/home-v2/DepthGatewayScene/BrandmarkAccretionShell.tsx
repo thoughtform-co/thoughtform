@@ -4,6 +4,7 @@ import { useFrame } from "@react-three/fiber";
 import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { useDeviceTier } from "@/lib/hooks/useDeviceTier";
+import { DOLLY_HOLD_END, smoothstep } from "@/lib/home-v2/corridorMap";
 import { epilogueBand, getEpiloguePlanetScale } from "@/lib/home-v2/epilogueTimeline";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import { gyroTilt, useGyroLabStore } from "@/lib/stores/gyroLabStore";
@@ -111,7 +112,16 @@ export function BrandmarkAccretionShell() {
     // existing mouseCalm down to 0 as it ramps.
     const approachT = epilogueBand(epilogueProgress, "APPROACH");
     const planetCalm = 1 - approachT;
-    const mouseCalm = (1 - (1 - SUBSTRATE_GYRO_ENCODE_MOUSE_FLOOR) * layers.orbits) * planetCalm;
+    // Corridor-entry gate: pointer + drift + static tilt all ramp from
+    // 0 to 1 as the camera dolly releases at DOLLY_HOLD_END. While the
+    // user is parked at the section-2 Thoughtform read the brandmark
+    // sits axis-aligned and does NOT bank with the mouse; banking
+    // resolves only once we begin flying through the 3D corridor. The
+    // 0.06 ramp width sits inside pass-01a so the bank is fully active
+    // before the camera reaches Navigate.
+    const enterFly = smoothstep(DOLLY_HOLD_END, DOLLY_HOLD_END + 0.06, paintProgress);
+    const mouseCalm =
+      (1 - (1 - SUBSTRATE_GYRO_ENCODE_MOUSE_FLOOR) * layers.orbits) * planetCalm * enterFly;
     const { mouseAmpDeg, idleSpeed } = useGyroLabStore.getState();
     const ampRad = ((mouseAmpDeg * Math.PI) / 180) * mouseCalm;
     const dt = Math.min(0.1, delta);
@@ -122,8 +132,8 @@ export function BrandmarkAccretionShell() {
     let roll = 0;
 
     if (motionFrozen) {
-      pitch = SUBSTRATE_GYRO_STATIC_TILT_X;
-      yaw = SUBSTRATE_GYRO_STATIC_TILT_Y;
+      pitch = SUBSTRATE_GYRO_STATIC_TILT_X * enterFly;
+      yaw = SUBSTRATE_GYRO_STATIC_TILT_Y * enterFly;
     } else {
       const targetPitch = -pointer.current.y * ampRad;
       const targetYaw = pointer.current.x * ampRad;
@@ -135,12 +145,14 @@ export function BrandmarkAccretionShell() {
         Math.sin(t * SUBSTRATE_GYRO_DRIFT_PITCH_FREQ * idleSpeed) *
         SUBSTRATE_GYRO_DRIFT_AMP *
         tiltCalm *
-        planetCalm;
+        planetCalm *
+        enterFly;
       const driftRoll =
         Math.sin(t * SUBSTRATE_GYRO_DRIFT_ROLL_FREQ * idleSpeed + 1.2) *
         SUBSTRATE_GYRO_DRIFT_AMP *
         tiltCalm *
-        planetCalm;
+        planetCalm *
+        enterFly;
 
       // Mouse amplitude is already calmed via `mouseCalm`; don't apply
       // `tiltCalm` a second time or the Build phase becomes visually

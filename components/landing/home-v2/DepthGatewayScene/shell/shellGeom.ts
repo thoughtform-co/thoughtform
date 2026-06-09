@@ -810,9 +810,13 @@ export function gyroAssemblyUnfold(reveal: number): GyroAssemblyUnfold {
   // reveal 1 sits at 1.0 x parked.
   const shellRadiusMul =
     SUBSTRATE_GYRO_UNFOLD_SHELL_RADIUS_BOOST + (1 - SUBSTRATE_GYRO_UNFOLD_SHELL_RADIUS_BOOST) * s;
-  // Presence over the first 40% of reveal so the open shell doesn't
-  // pop at frame one.
-  const pFrac = 0.4;
+  // Anti-pop only (2026-06-09 trim-path pass): the visible reveal is
+  // owned by per-element `setDrawRange` trim-path draw-on inside
+  // `ShellSubstrateGyro`, so opacity just guards against a frame-1
+  // pop on the disc/sphere bloom. Was 0.4 (an opacity fade across most
+  // of the reveal) — now 0.08 so opacity reaches full almost
+  // immediately and the geometric draw-on does the storytelling.
+  const pFrac = 0.08;
   const pT = t < pFrac ? t / pFrac : 1;
   const presence = smootherStep(pT);
   return { rootScale, globeY, wrapSpinExtra, shellRadiusMul, presence };

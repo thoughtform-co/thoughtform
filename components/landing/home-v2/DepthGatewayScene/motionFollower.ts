@@ -39,10 +39,20 @@ export interface MotionFollowerState {
   stack: number;
 }
 
-/** Damping time constant (seconds). The follower covers ~63% of the
- *  remaining gap per tau, ~95% in 3·tau — a step target settles in
- *  roughly 0.6s. Raise for a dreamier lag, lower for snappier chase. */
-const MOTION_FOLLOWER_TAU_S = 0.2;
+/** Damping time constants (seconds), per channel. The follower covers
+ *  ~63% of the remaining gap per tau, ~95% in 3·tau.
+ *
+ *  - `pan` is the Thoughtform centering pan — snappier (0.1s, ~0.3s
+ *    settle) so the brandmark arrives at centre decisively as the
+ *    camera dolly releases at `dollyHoldEnd`. With the previous shared
+ *    0.2s the mark was still chasing centre well after the dolly had
+ *    already started flying, which read as drifting past the beat.
+ *  - `reveal` is the three accretion channels (substrate / orbits /
+ *    stack) — keeps 0.2s (~0.6s settle) so the per-ring + globe-bloom
+ *    gimbal unfold breathes. The sphere/orbit/stack reveals are
+ *    intentionally dreamier than the camera-pan. */
+const MOTION_FOLLOWER_TAU_PAN_S = 0.1;
+const MOTION_FOLLOWER_TAU_REVEAL_S = 0.2;
 
 /** `paintProgress` jump (per frame) above which we treat the change
  *  as a TELEPORT (hash nav, scroll restore on reload) and snap every
@@ -102,12 +112,14 @@ export function driveMotionFollower(
   const dt = Math.min(0.1, Math.max(0, dtSeconds));
   if (dt <= 0) return;
   // Exponential chase — frame-rate independent: identical convergence
-  // at 30 / 60 / 120 fps for the same wall-clock time.
-  const k = 1 - Math.exp(-dt / MOTION_FOLLOWER_TAU_S);
-  state.panOffsetX += (targets.panOffsetX - state.panOffsetX) * k;
-  state.substrate += (targets.substrate - state.substrate) * k;
-  state.orbits += (targets.orbits - state.orbits) * k;
-  state.stack += (targets.stack - state.stack) * k;
+  // at 30 / 60 / 120 fps for the same wall-clock time. Per-channel tau
+  // so the pan arrives decisively while the reveals breathe.
+  const kPan = 1 - Math.exp(-dt / MOTION_FOLLOWER_TAU_PAN_S);
+  const kReveal = 1 - Math.exp(-dt / MOTION_FOLLOWER_TAU_REVEAL_S);
+  state.panOffsetX += (targets.panOffsetX - state.panOffsetX) * kPan;
+  state.substrate += (targets.substrate - state.substrate) * kReveal;
+  state.orbits += (targets.orbits - state.orbits) * kReveal;
+  state.stack += (targets.stack - state.stack) * kReveal;
 }
 
 /** Smoothed Thoughtform centering pan offset (world X). Temporal
