@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Canvas } from "@react-three/fiber";
+import { Canvas, useFrame } from "@react-three/fiber";
 import { useDeviceTier } from "@/lib/hooks/useDeviceTier";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import { BrandmarkAccretionShell } from "./BrandmarkAccretionShell";
@@ -12,10 +12,44 @@ import { InterGateCorridor } from "./InterGateCorridor";
 import { LatentFieldTunnel } from "./LatentFieldTunnel";
 import { LatentTopographyContours } from "./LatentTopographyContours";
 import { LatentWormholeWalls } from "./LatentWormholeWalls";
+import { driveMotionFollower } from "./motionFollower";
 import { ScrollStreaks } from "./ScrollStreaks";
 import { StaticStarfield } from "./StaticStarfield";
 import { ThoughtformAtmosphere } from "./ThoughtformAtmosphere";
-import { CAMERA_START, getCameraFov, getCameraLookAt } from "./sceneGeom";
+import {
+  CAMERA_START,
+  getBrandmarkAccretionLayers,
+  getCameraFov,
+  getCameraLookAt,
+  getThoughtformCenterOffsetX,
+} from "./sceneGeom";
+
+/**
+ * MotionFollowerDriver — advances the temporal-smoothing follower
+ * (see `motionFollower.ts`) once per frame BEFORE every painter
+ * (useFrame priority -10). Computes the raw scroll-scrubbed targets
+ * from the pure `sceneGeom` envelopes and lets the follower chase
+ * them, so the pan + accretion reveals always play out elegantly
+ * even when the user flicks through a window in a single frame.
+ */
+function MotionFollowerDriver() {
+  useFrame((_, delta) => {
+    const { paintProgress, active } = useDepthGatewayStore.getState().transform;
+    const layers = getBrandmarkAccretionLayers(paintProgress);
+    driveMotionFollower(
+      {
+        panOffsetX: getThoughtformCenterOffsetX(paintProgress),
+        substrate: layers.substrate,
+        orbits: layers.orbits,
+        stack: layers.stack,
+      },
+      delta,
+      paintProgress,
+      active
+    );
+  }, -10);
+  return null;
+}
 
 /** Current viewport aspect (browser only; safe fallback on server).
  *  Used only for the Canvas's initial camera fov; `FlyingCameraRig`
@@ -212,6 +246,8 @@ export function DepthGatewayScene() {
         pointerEvents: "none",
       }}
     >
+      {/* Temporal-smoothing follower — must tick before all painters. */}
+      <MotionFollowerDriver />
       <FlyingCameraRig />
       <StaticStarfield />
       <ThoughtformAtmosphere />

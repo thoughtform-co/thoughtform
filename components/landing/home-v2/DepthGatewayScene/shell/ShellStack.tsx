@@ -33,7 +33,7 @@ import {
 } from "@/components/landing/intelligence-artifact/artifactPrimitives";
 import { epilogueBand } from "@/lib/home-v2/epilogueTimeline";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
-import { getBrandmarkAccretionLayers } from "../sceneGeom";
+import { getSmoothedAccretionLayers } from "../motionFollower";
 import {
   EMERGE_EPSILON,
   foldEmerge,
@@ -239,14 +239,15 @@ export function ShellStack({ layerKey, reducedMotion = false }: ShellStackProps)
     const group = groupRef.current;
     if (!group) return;
 
-    const { paintProgress, epilogueProgress, active, armed } =
-      useDepthGatewayStore.getState().transform;
+    const { epilogueProgress, active, armed } = useDepthGatewayStore.getState().transform;
     if (!active && !armed) {
       group.visible = false;
       return;
     }
 
-    const reveal = getBrandmarkAccretionLayers(paintProgress).stack;
+    // Temporally-smoothed reveal (motionFollower) — sources/surfaces
+    // always slide + lock elegantly regardless of scroll velocity.
+    const reveal = getSmoothedAccretionLayers().stack;
     if (reveal <= EMERGE_EPSILON) {
       group.visible = false;
       return;

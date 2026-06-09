@@ -31,7 +31,7 @@ import { buildSphereCloudGeometry } from "@/components/landing/v7/intelligence-l
 import { epilogueBand } from "@/lib/home-v2/epilogueTimeline";
 import { useGyroLabStore } from "@/lib/stores/gyroLabStore";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
-import { getBrandmarkAccretionLayers } from "../sceneGeom";
+import { getSmoothedAccretionLayers } from "../motionFollower";
 import {
   EMERGE_EPSILON,
   gyroAssemblyUnfold,
@@ -833,14 +833,17 @@ export function ShellSubstrateGyro({ layerKey, reducedMotion = false }: ShellSub
     const globeSpin = globeSpinRef.current;
     if (!root || !globeSpin) return;
 
-    const { paintProgress, epilogueProgress, active, armed } =
-      useDepthGatewayStore.getState().transform;
+    const { epilogueProgress, active, armed } = useDepthGatewayStore.getState().transform;
     if (!active && !armed) {
       root.visible = false;
       return;
     }
 
-    const layers = getBrandmarkAccretionLayers(paintProgress);
+    // Temporally-smoothed reveals (motionFollower) — the gimbal's
+    // ring cascade, globe Y-bloom, wrap-spin, and shell settle always
+    // unfurl over wall-clock time instead of compressing into a few
+    // frames under a fast scroll.
+    const layers = getSmoothedAccretionLayers();
     const reveal = layers.substrate;
     if (reveal <= EMERGE_EPSILON) {
       root.visible = false;

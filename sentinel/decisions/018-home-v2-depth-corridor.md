@@ -11,6 +11,48 @@
 
 ---
 
+## 2026-06-09 Revision (v3.10) — Funnel stretched to the full leg; gradient flattened
+
+Follow-up to v3.9. The funnel field still read as "concentrated at the
+end" because it only began at leg-local 0.30 — from the Encode park
+the first ~2.6 world units of tunnel were empty, then the density
+arrived as a block. Spatial reasoning on the leg-2 frame: the Encode
+gyro sphere parks at `dgZ ≈ -13.4`, and `leg2Start = lerp(dgZ, intZ,
+0.06) ≈ -13.9` — i.e. **leg-local 0 is the sphere plane**. So starting
+the funnel at 0.0 makes it softly begin exactly where the sphere sits
+at "Encode the judgment", which is what the user asked for.
+
+Three constant changes in
+[`LatentWormholeWalls.tsx`](../../components/landing/home-v2/DepthGatewayScene/LatentWormholeWalls.tsx),
+no shader or builder-logic changes:
+
+- `EXIT_FUNNEL_START_FRAC` 0.30 → **0.0** — the funnel spans the full
+  Encode → Build leg. Because the density power-law rises from ~zero
+  at the start, the first stretch reads as a few stray dots, not a
+  visible boundary.
+- `EXIT_FUNNEL_DENSITY_BIAS` 0.55 → **0.68** — dots-per-unit-length
+  along Z now grows as ~z^0.47 instead of ~z^0.82, so the mass creeps
+  inward as a subtle gradient instead of stacking against the rim.
+  Roughly a third of the field now lives in the front half of the leg.
+- `EXIT_FUNNEL_COUNT` 3400 → **4800** — keeps the rim mass at v3.9
+  levels while the ~1.4x longer span fills inward.
+
+### Verification (1440-class viewport, static scrub)
+
+- `paintProgress 0.64` (Encode park): sparse organic scatter already
+  present around the gyro sphere — the funnel softly begins at the
+  sphere, no clean void.
+- `paintProgress 0.71-0.76`: continuous dotted funnel from the sphere
+  outward to the frame edges, clearly graded — the "heading toward
+  the end of the gates" read.
+- `paintProgress 0.81-0.85`: peak warp; the far mass flares open with
+  the mouth (intended iris-opening beat), velocity streaks own the
+  motion read here.
+- `paintProgress 0.92`: Build park clean (`getBuildApproachFade`
+  has cleared the walls).
+
+---
+
 ## 2026-06-09 Revision (v3.9) — Particle funnel field owns the exit; streaks become velocity-gated
 
 Follow-up to v3.8. The side streaks finally landed in the right place,
@@ -2263,6 +2305,26 @@ The store exposes:
 **AstrogationField removed (2026-06-07):** the ambient off-axis "astrogation" orbit systems were removed from the scene — they read as competing/jiggling circles next to the Navigate compass. (`AstrogationField.tsx` is no longer mounted in `DepthGatewayScene/index.tsx`.)
 
 **Encode cardinal primitives (2026-06-07):** the ~18-plug ornament ring (`SHELL_PLUGS`) is replaced by **four labeled compass cardinals** (`SHELL_PRIMITIVES`: Judgment/N, Taste/E, Way of working/S, Voice/W) plus **~6 asymmetric captured notes** (`SHELL_NOTES`) that slide from an outer capture radius toward their target primitive and seat with a brief additive light-up. Stems draw rim → `PRIMITIVE_NODE_R` (1.15) via trim-path; notes compare against the nearest axis. Framed gold DOM tags (`encode.primitive.*` in `COPY_ANCHORS` / `CopyAnchors.tsx`) tie labels to nodes without competing with the station title. Lab corridor keeps legacy orbits in `corridor/labOrbits.ts`.
+
+## 2026-06-09 revision — temporal motion follower (elegance pass)
+
+**Principle change:** the corridor was 100% scroll-scrubbed — every reveal a pure function of `paintProgress`. A fast flick therefore compressed an entire unfold (gimbal bloom, cardinal fly-in, stack dock) into a couple of frames and the layers "just appeared". The corridor now layers **temporal smoothing on a small set of reveal channels** while the camera + beat topology stay pure scrub.
+
+**New module — `DepthGatewayScene/motionFollower.ts`:** a dependency-free mutable singleton (mirrors the `gyroTilt` pattern) holding four smoothed channels: `panOffsetX` (Thoughtform centering pan) + `substrate` / `orbits` / `stack` (accretion reveals). `MotionFollowerDriver` in `DepthGatewayScene/index.tsx` (useFrame priority -10, so it ticks before every painter) computes the raw scrubbed targets via `getThoughtformCenterOffsetX` / `getBrandmarkAccretionLayers` and chases them with an exponential damper (`tau = 0.2s`, ~95% settle in 0.6s, frame-rate independent). Rules:
+
+- **Snap while not `active`** — the armed/parked entry state stays byte-identical to the un-smoothed corridor.
+- **Snap on teleport** — `|Δ paintProgress| > 0.25` in one frame (hash nav, scroll restore) snaps instead of easing across half the corridor.
+- **Reverse scroll** simply chases backwards — the corridor remains fully reversible (the follower converges to the exact scrubbed value whenever the user parks).
+
+**Consumers swapped to the smoothed getters** (`getSmoothedThoughtformOffsetX()` / `getSmoothedAccretionLayers()`): `getBrandmarkWorldPosition`, `ThoughtformCompassGate`, `ThoughtformAtmosphere` (cluster + shockwave pan), `BrandmarkAccretionShell`, `ShellSubstrateGyro`, `ShellSubstrate`, `ShellEncode`, `ShellStack`, and the DOM gates `gateNavigateReadout` / `gateEncodeReadout` / `gateEncodePrimitive` / `gateStackLabel` / `getGyroPrimitiveLabelLocal` + the Thoughtform copy/phase anchors. The raw pure functions remain in `sceneGeom.ts` and are now consumed only by the driver. `CorridorStationHeaders` keeps its own scrubbed bands (text may lead the geometry by a beat — intentional).
+
+**Window retune:** `accretion.orbits` widened `0.54/0.62 → 0.52/0.64`, `accretion.stack` `0.84/0.91 → 0.81/0.93` so slow deliberate scrolls also witness the staggered deploys; both still straddle their park centres.
+
+**Epilogue framing + smoothness:** `EPILOGUE_LANDING_TILT` `28° → 32°` and `EPILOGUE_LOOK_DOWN_Y` `1.2 → 1.45` (planet limb sits lower in frame — more sky under the billions title; standoff untouched). The bank `arc` was `sin(flightRaw·π/2)` — maximum angular velocity at flight start, a visible kick as the full-sphere view began tilting. Now `sin(smoothstep(flightRaw)·π/2)`: zero velocity at the start, still leads the double-smoothed approach distance (glide-slope preserved). `EPILOGUE_SWOOP_DEPTH` `0.9 → 0.6`.
+
+**Hero cover bug fix (v7 side, `useLandingScroll.ts`):** `--hero-cover` was computed from `#definition`, which the production homepage strips (replaced by `#home-corridor-mount`) — so the hero video never zoomed/receded on `/`. The query now falls back to `[data-home-corridor-mount]`, and the cover value is smootherstep-eased before the CSS var write so the video zoom starts and lands gently.
+
+**Tuning knobs:** `MOTION_FOLLOWER_TAU_S` (0.2s) and `TELEPORT_PROGRESS_DELTA` (0.25) in `motionFollower.ts`.
 
 ## References
 

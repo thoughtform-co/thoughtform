@@ -4,12 +4,12 @@ import { useFrame } from "@react-three/fiber";
 import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { lerp, smoothstep, useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
+import { getSmoothedThoughtformOffsetX } from "./motionFollower";
 import {
   STATION_THOUGHTFORM,
   cameraSpaceDepth,
   depthFocusOpacity,
   getThoughtformBootEnvelope,
-  getThoughtformCenterOffsetX,
 } from "./sceneGeom";
 
 /**
@@ -355,7 +355,9 @@ export function ThoughtformAtmosphere() {
     // other Thoughtform element sat to its right — reading as a
     // floating cluster beside the mark during the opening beat.
     const clusterCentreZ = (STAR_Z_MIN + STAR_Z_MAX) * 0.5;
-    const panX = getThoughtformCenterOffsetX(paintProgress);
+    // 2026-06-09 elegance pass: smoothed follower value so the cluster
+    // pans with the same temporally-eased offset as the compass + copy.
+    const panX = getSmoothedThoughtformOffsetX();
     stars.position.x = STATION_THOUGHTFORM.position[0] + panX;
     const depth = cameraSpaceDepth(paintProgress, [
       STATION_THOUGHTFORM.position[0] + panX,
@@ -376,7 +378,7 @@ export function ThoughtformAtmosphere() {
     // camera-space depth gate so it can never show through after
     // the camera has passed the gate plane.
     const sw = shockwaveState(paintProgress);
-    const shockwaveX = STATION_THOUGHTFORM.position[0] + getThoughtformCenterOffsetX(paintProgress);
+    const shockwaveX = STATION_THOUGHTFORM.position[0] + getSmoothedThoughtformOffsetX();
     shockwave.position.x = shockwaveX;
     if (sw.opacity < 0.005 || depth < 0.4) {
       shockwave.visible = false;

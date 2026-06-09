@@ -25,7 +25,7 @@ import { COLOR_GOLD } from "@/components/landing/intelligence-artifact/artifactG
 import { makeLineMaterial } from "@/components/landing/intelligence-artifact/artifactPrimitives";
 import { epilogueBand } from "@/lib/home-v2/epilogueTimeline";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
-import { getBrandmarkAccretionLayers } from "../sceneGeom";
+import { getSmoothedAccretionLayers } from "../motionFollower";
 import {
   EMERGE_EPSILON,
   SLOT_ARC_BOUNDS,
@@ -199,14 +199,16 @@ export function ShellEncode({ layerKey, reducedMotion = false }: ShellEncodeProp
     const group = groupRef.current;
     if (!group) return;
 
-    const { paintProgress, epilogueProgress, active, armed } =
-      useDepthGatewayStore.getState().transform;
+    const { epilogueProgress, active, armed } = useDepthGatewayStore.getState().transform;
     if (!active && !armed) {
       group.visible = false;
       return;
     }
 
-    const reveal = getBrandmarkAccretionLayers(paintProgress).orbits;
+    // Temporally-smoothed reveal (motionFollower) — the staggered
+    // cartridge fold-in always plays out on wall-clock time, even
+    // when the user flicks through the orbits window in one frame.
+    const reveal = getSmoothedAccretionLayers().orbits;
     if (reveal <= EMERGE_EPSILON) {
       group.visible = false;
       return;

@@ -78,19 +78,31 @@ export function useLandingScroll(rootRef: React.RefObject<HTMLDivElement | null>
     root.style.setProperty("--depth", Math.min(1, progress * 1.2).toFixed(4));
 
     // Hero cover — drives `--hero-cover` on #hero so the video/content
-    // recede (scale + fade) as #definition rises into view. The
+    // recede (scale + fade) as the next station rises into view. The
     // mechanic is: hero is `position: sticky; top:0; height:100vh;
-    // z-index:1`, and #definition follows in normal flow at z-index:2
-    // with an opaque var(--void) shield. As #definition.top crosses
+    // z-index:1`, and the next station follows in normal flow at
+    // z-index:2 with an opaque var(--void) shield. As its top crosses
     // from `vh` to `0` (one viewport of scroll), it visually covers
     // the pinned hero from bottom to top.
+    //
+    // On the production homepage `#definition` is stripped and replaced
+    // by the home-v2 corridor mount (ADR-018), so fall back to the
+    // mount placeholder — without it `--hero-cover` is never written
+    // and the hero video never zooms/recedes.
     const heroEl = root.querySelector<HTMLElement>("#hero");
-    const defEl = root.querySelector<HTMLElement>("#definition");
+    const defEl =
+      root.querySelector<HTMLElement>("#definition") ??
+      root.querySelector<HTMLElement>("[data-home-corridor-mount]");
     let heroCover = 0;
     if (heroEl && defEl) {
       const defTop = defEl.getBoundingClientRect().top;
       heroCover = Math.max(0, Math.min(1, 1 - defTop / vh));
-      heroEl.style.setProperty("--hero-cover", heroCover.toFixed(4));
+      // Smootherstep the cover before writing the CSS var so the video
+      // zoom eases in and lands gently (zero velocity at both ends)
+      // instead of tracking scroll linearly. Raw cover keeps owning
+      // the visibility cutoff + telemetry (eased(1) === 1 anyway).
+      const eased = heroCover * heroCover * heroCover * (heroCover * (heroCover * 6 - 15) + 10);
+      heroEl.style.setProperty("--hero-cover", eased.toFixed(4));
       heroEl.style.visibility = heroCover >= 1 ? "hidden" : "";
     }
 

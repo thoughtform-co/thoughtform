@@ -5,11 +5,11 @@ import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { SIGIL_RING_MORPHS } from "@/lib/celestial/orbits";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
+import { getSmoothedThoughtformOffsetX } from "../motionFollower";
 import {
   STATION_THOUGHTFORM,
   depthOpacityForWorldPosition,
   getThoughtformBootEnvelope,
-  getThoughtformCenterOffsetX,
   getThoughtformMobilePhase,
   getThoughtformRingFlythrough,
 } from "../sceneGeom";
@@ -474,10 +474,12 @@ export function ThoughtformCompassGate() {
     const progress = paintProgress;
 
     // Cinematic centering pan: slide the whole group laterally
-    // toward dead-centre during [0.10, 0.16]. Apply this before
+    // toward dead-centre during the pan window. Apply this before
     // depth-opacity calculations so world-position samples use the
-    // same transform the user sees this frame.
-    group.position.x = STATION_THOUGHTFORM.position[0] + getThoughtformCenterOffsetX(progress);
+    // same transform the user sees this frame. 2026-06-09 elegance
+    // pass: reads the SMOOTHED follower offset so the pan eases on
+    // wall-clock time, in lockstep with the brandmark + copy + stars.
+    group.position.x = STATION_THOUGHTFORM.position[0] + getSmoothedThoughtformOffsetX();
 
     // Mobile two-moment beat: the whole compass rides the Moment-2
     // slide (up from below-centre) and is gated by `diagramFactor` so

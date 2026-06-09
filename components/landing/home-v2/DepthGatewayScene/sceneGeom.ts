@@ -43,6 +43,7 @@ import {
   stationById,
 } from "@/lib/home-v2/corridorMap";
 import { isMobileComposition } from "@/lib/hooks/useDeviceTier";
+import { getSmoothedAccretionLayers, getSmoothedThoughtformOffsetX } from "./motionFollower";
 
 // Re-exported for back-compat: external modules (FlyingCameraRig,
 // index, gate components, contour/intergate painters) import these
@@ -265,8 +266,13 @@ export const CORRIDOR_TIMELINE = {
     // window deploys the orbits around the arriving + settling mark.
     // 2026-06-08 entry-buildup follow-up: shifted -0.04 earlier so the
     // Encode title/support read with the orbits instead of trailing.
-    orbits: { start: 0.54, peakAt: 0.62 }, // Encode park centre ~0.636 — `gateEncodeReadout` reuses this window so the Encode text fades in with the orbits
-    stack: { start: 0.84, peakAt: 0.91 }, // Build park centre ~0.92
+    // 2026-06-09 elegance pass: orbits widened 0.54/0.62 -> 0.52/0.64
+    // and stack 0.84/0.91 -> 0.81/0.93 so even a slow deliberate
+    // scroll reads the staggered deploys; both windows still straddle
+    // their park centres (Encode ~0.636, Build ~0.92). The temporal
+    // follower (`motionFollower.ts`) guarantees the fast-scroll case.
+    orbits: { start: 0.52, peakAt: 0.64 }, // Encode park centre ~0.636 — `gateEncodeReadout` reuses this window so the Encode text fades in with the orbits
+    stack: { start: 0.81, peakAt: 0.93 }, // Build park centre ~0.92
   },
 } as const;
 
@@ -302,15 +308,20 @@ export function getCameraPosition(progress: number): [number, number, number] {
 //     in the +Z half (so we look "forward" along the surface)
 
 /** Tilt angle (radians) of the camera above the planet at peak LAND.
- *  v3.2 horizon framing — 28deg drops the camera from the v3.1
+ *  v3.2 horizon framing — dropped the camera from the v3.1
  *  bird's-eye (70deg) toward an ORBITAL HORIZON view: camera is
  *  slightly above the planet centre and well in front of it, like
  *  the Earth-reference screenshots the user provided. Combined with
  *  the new look-up gaze (`LOOK_DOWN_Y` > camera Y) and the closer
  *  standoff below, this reads as "we've left the corridor and we
  *  are orbiting a planet, looking out across its curved limb toward
- *  the title in the sky above." */
-const EPILOGUE_LANDING_TILT = (28 * Math.PI) / 180;
+ *  the title in the sky above."
+ *
+ *  2026-06-09 breathing-room pass: 28 -> 32deg lifts the camera a
+ *  touch higher over the pole (paired with the raised LOOK_DOWN_Y
+ *  below) so the planet's limb sits lower in frame and the title
+ *  gets more sky. */
+const EPILOGUE_LANDING_TILT = (32 * Math.PI) / 180;
 
 /** Camera standoff (world units) from the planet surface at peak
  *  LAND. v3.2 pulled 4.5 -> 3.5 so the planet reads BIG in frame.
@@ -322,19 +333,21 @@ const EPILOGUE_LANDING_STANDOFF = 3.5;
 /** lookAt target offset in PLANET-RADIUS units relative to the
  *  planet centre at peak LAND. v3.2 horizon framing:
  *
- *    - `LOOK_DOWN_Y = 1.2` places the look-at slightly ABOVE the
- *      planet pole (the pole sits at +1R; +1.2R is just above it).
- *      Because the camera at 28deg tilt sits at Y ≈ +1.1R itself,
- *      this means the camera's gaze tilts UP very slightly toward
- *      a point above the planet — the horizon (curved limb) ends
- *      up in the lower portion of the frame, with sky + title
- *      above. Matches the Earth-reference shot composition.
+ *    - `LOOK_DOWN_Y` places the look-at slightly ABOVE the planet
+ *      pole (the pole sits at +1R). Because the camera at landing
+ *      tilt sits just above the pole height itself, this means the
+ *      camera's gaze tilts UP very slightly toward a point above
+ *      the planet — the horizon (curved limb) ends up in the lower
+ *      portion of the frame, with sky + title above. Matches the
+ *      Earth-reference shot composition. 2026-06-09 breathing-room
+ *      pass: 1.2 -> 1.45 raises the gaze further so the limb drops
+ *      lower in frame (planet size unchanged — standoff untouched).
  *    - `LOOK_FWD_Z = 0.5` pushes the look-at half a radius PAST
  *      the planet centre (further down -Z) so the camera looks
  *      across the surface toward a point in the far sky, rather
  *      than directly at the planet — adds depth to the horizon
  *      read. */
-const EPILOGUE_LOOK_DOWN_Y = 1.2;
+const EPILOGUE_LOOK_DOWN_Y = 1.45;
 const EPILOGUE_LOOK_FWD_Z = 0.5;
 
 /** Single continuous FLIGHT window (in epilogueProgress) for the whole
@@ -355,8 +368,10 @@ const EPILOGUE_FLIGHT_END = 0.9;
  *  slightly CLOSER to the planet through the middle of the descent and
  *  eases back out to the orbital standoff at the end — the gentle
  *  "flare" of a landing approach. Kept well under the standoff so the
- *  camera never crosses the planet surface. */
-const EPILOGUE_SWOOP_DEPTH = 0.9;
+ *  camera never crosses the planet surface. 2026-06-09 smoothness
+ *  pass: 0.9 -> 0.6 so the mid-flight dip reads as a flare, not a
+ *  lurch, now that the bank arc itself eases in (see `arc` below). */
+const EPILOGUE_SWOOP_DEPTH = 0.6;
 
 /** Camera pose during the epilogue beat — a single curved fly-in +
  *  landing arc around the substrate sphere as it grows into a planet.
@@ -378,16 +393,24 @@ export function getEpilogueCameraPose(epilogueProgress: number): {
   const flightRaw = smoothstep(EPILOGUE_FLIGHT_START, EPILOGUE_FLIGHT_END, epilogueProgress);
   const flight = flightRaw * flightRaw * (3 - 2 * flightRaw);
 
-  // Bank angle LEADS the approach. `arc` is an ease-OUT on the raw
-  // flight (sin ramp: fast at the start, settling at the end) so the
-  // camera gains ALTITUDE early — by the time it closes in it is
-  // already looking down at the planet from above, like an aircraft
-  // on a glide slope, instead of boring straight at the planet's
-  // middle and only pitching up at the very end. The distance closes
-  // on the gentler double-smoothed `flight`, so altitude bows up first
-  // and the approach curves in under it: one continuous arc, never an
-  // L-shaped "straight in, then up".
-  const arc = Math.sin(flightRaw * Math.PI * 0.5);
+  // Bank angle LEADS the approach. `arc` eases OUT ahead of the
+  // double-smoothed `flight` so the camera gains ALTITUDE early — by
+  // the time it closes in it is already looking down at the planet
+  // from above, like an aircraft on a glide slope, instead of boring
+  // straight at the planet's middle and only pitching up at the very
+  // end. The distance closes on the gentler `flight`, so altitude
+  // bows up first and the approach curves in under it: one continuous
+  // arc, never an L-shaped "straight in, then up".
+  //
+  // 2026-06-09 smoothness pass: the raw `sin(t·π/2)` ease-out had its
+  // MAXIMUM angular velocity at flight start — the full-sphere view
+  // visibly kicked the moment the bank began. Feeding the sin through
+  // a smoothstep keeps the lead (smoothstep(t) ≥ smootherstep-of-
+  // smoothstep used by `flight` everywhere on [0,1]) but starts the
+  // bank with zero velocity, so "full sphere → top of the sphere"
+  // now eases in and out as one continuous move.
+  const arcIn = flightRaw * flightRaw * (3 - 2 * flightRaw);
+  const arc = Math.sin(arcIn * Math.PI * 0.5);
   const theta = EPILOGUE_LANDING_TILT * arc;
   const sinT = Math.sin(theta);
   const cosT = Math.cos(theta);
@@ -960,7 +983,14 @@ export function getBrandmarkWorldPosition(
   // anchor on the world axis — matching the Diagnostic lead
   // position's X — so the X-lerp is effectively a no-op and Y/Z
   // do all the travel work, as designed.
-  const tfOffsetX = getThoughtformCenterOffsetX(progress);
+  //
+  // 2026-06-09 elegance pass: the offset is the SMOOTHED follower
+  // value (see `motionFollower.ts`) so the right → centre pan eases
+  // in and out on wall-clock time even under a fast flick. Every
+  // pan consumer (compass gate, atmosphere, copy anchors) reads the
+  // same smoothed channel, so the composition still slides as one
+  // rigid camera-pan.
+  const tfOffsetX = getSmoothedThoughtformOffsetX();
   const tfX = BRANDMARK_ANCHOR_THOUGHTFORM[0] + tfOffsetX;
 
   if (progress <= thoughtformHold) {
@@ -1148,9 +1178,7 @@ function thoughtformPhasePosition(offsetX: number, offsetY: number): WorldAnchor
     const s = mobile ? MOBILE_PHASE_SCALE : 1;
     const slideY = mobile ? getThoughtformMobilePhase(transform.progress).slideY : 0;
     return [
-      STATION_THOUGHTFORM.position[0] +
-        offsetX * s +
-        getThoughtformCenterOffsetX(transform.paintProgress),
+      STATION_THOUGHTFORM.position[0] + offsetX * s + getSmoothedThoughtformOffsetX(),
       STATION_THOUGHTFORM.position[1] + offsetY * s + slideY,
       STATION_THOUGHTFORM.position[2] + 0.05,
     ];
@@ -1178,9 +1206,10 @@ const gateThoughtformDiagram: WorldAnchor["onPaint"] = (ctx, el) => {
  *  so the substrate.start moment isn't clipped at the beat boundary.
  *  (2026-06-08 timing-sync pass.) */
 const gateNavigateReadout: WorldAnchor["onPaint"] = (ctx, el) => {
-  const p = ctx.transform.paintProgress;
-  const { start, peakAt } = CORRIDOR_TIMELINE.accretion.substrate;
-  const reveal = smoothstep(start, peakAt, p);
+  // Smoothed follower channel (== smoothstep over the substrate
+  // window at rest) so the text fades in with the temporally-eased
+  // gimbal unfold instead of the raw scrub.
+  const reveal = getSmoothedAccretionLayers().substrate;
   el.style.opacity = (ctx.visibilityOpacity * reveal).toFixed(3);
 };
 
@@ -1189,9 +1218,8 @@ const gateNavigateReadout: WorldAnchor["onPaint"] = (ctx, el) => {
  *  arriving later. Mirrors `gateNavigateReadout` against the
  *  Encode-phase shell layer. */
 const gateEncodeReadout: WorldAnchor["onPaint"] = (ctx, el) => {
-  const p = ctx.transform.paintProgress;
-  const { start, peakAt } = CORRIDOR_TIMELINE.accretion.orbits;
-  const reveal = smoothstep(start, peakAt, p);
+  // Smoothed follower channel — fades with the eased orbit deploy.
+  const reveal = getSmoothedAccretionLayers().orbits;
   el.style.opacity = (ctx.visibilityOpacity * reveal).toFixed(3);
 };
 
@@ -1207,7 +1235,7 @@ const gateEncodeReadout: WorldAnchor["onPaint"] = (ctx, el) => {
 const STACK_CLUSTER_OVERLAP_DOM = 0.3;
 const STACK_ITEM_OVERLAP_DOM = 0.55;
 const gateStackLabel: WorldAnchor["onPaint"] = (ctx, el) => {
-  const stack = getBrandmarkAccretionLayers(ctx.transform.paintProgress).stack;
+  const stack = getSmoothedAccretionLayers().stack;
   const side = el.getAttribute("data-stack-side");
   const idxAttr = el.getAttribute("data-stack-idx");
   let lock = stack;
@@ -1279,7 +1307,7 @@ function encodeCartridgeCurve(t: number): number {
 const gateEncodePrimitive: WorldAnchor["onPaint"] = (ctx, el) => {
   const idxAttr = el.getAttribute("data-encode-cardinal-idx");
   const idx = idxAttr == null ? -1 : Number(idxAttr);
-  const orbits = getBrandmarkAccretionLayers(ctx.transform.paintProgress).orbits;
+  const orbits = getSmoothedAccretionLayers().orbits;
   const stagger = idx >= 0 ? encodeCartridgeStagger(orbits, idx) : orbits;
   // Each cartridge's opacity ramps over the back-half of its stagger
   // so it "lights up" as it locks in, rather than ghosting during the
@@ -1383,7 +1411,7 @@ const ENCODE_CARDINAL_START_R = 2.45;
  *  — reads as a load-arc with punch rather than a click-in. */
 const ENCODE_CARDINAL_ARC_RAD = 0.22;
 
-function getGyroPrimitiveLabelLocal(idx: number, progress: number): Vec3 {
+function getGyroPrimitiveLabelLocal(idx: number): Vec3 {
   const prim = SHELL_PRIMITIVES[idx];
   const [ox, oy] = getPrimitiveLabelOffset(idx);
   if (!useGyroLabStore.getState().enabled || !prim) return [ox, oy, 0.12];
@@ -1399,7 +1427,7 @@ function getGyroPrimitiveLabelLocal(idx: number, progress: number): Vec3 {
   // ENCODE_CARDINAL_FINAL_R with a soft tangential arc + landing
   // overshoot. At progress = 1 the position is exactly the parked
   // value so the end state is byte-identical.
-  const orbits = getBrandmarkAccretionLayers(progress).orbits;
+  const orbits = getSmoothedAccretionLayers().orbits;
   const stagger = encodeCartridgeStagger(orbits, idx);
   const tCurve = encodeCartridgeCurve(stagger);
   const r = ENCODE_CARDINAL_START_R + (ENCODE_CARDINAL_FINAL_R - ENCODE_CARDINAL_START_R) * tCurve;
@@ -1466,10 +1494,7 @@ export const STACK_SURFACE_ITEMS: StackItem[] = Array.from({ length: STACK_FAN_C
 const ENCODE_PRIMITIVE_ANCHORS: WorldAnchor[] = SHELL_PRIMITIVES.map((prim, idx) => ({
   id: `encode.primitive.${prim.id}`,
   position: (transform) => {
-    return gyroAssemblyWorldPosition(
-      transform,
-      getGyroPrimitiveLabelLocal(idx, transform.paintProgress)
-    );
+    return gyroAssemblyWorldPosition(transform, getGyroPrimitiveLabelLocal(idx));
   },
   // Visible from the Encode park (`diagnostic`) onward — the four
   // primitives ARE the encoded judgment, and the encoded layer persists
@@ -1514,8 +1539,8 @@ export const COPY_ANCHORS: readonly WorldAnchor[] = [
     // (`data-anchor-origin="center"`, Y = 0) and reads as one cohesive
     // paragraph rather than split above/below the mark. (ADR-018 mobile
     // two-moment revision.)
-    position: (transform) => {
-      const off = getThoughtformCenterOffsetX(transform.paintProgress);
+    position: () => {
+      const off = getSmoothedThoughtformOffsetX();
       if (isMobileComposition()) {
         return [STATION_THOUGHTFORM.position[0] + off, 0.0, STATION_THOUGHTFORM.position[2] + 0.1];
       }

@@ -7,7 +7,8 @@ import { useDeviceTier } from "@/lib/hooks/useDeviceTier";
 import { epilogueBand, getEpiloguePlanetScale } from "@/lib/home-v2/epilogueTimeline";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import { gyroTilt, useGyroLabStore } from "@/lib/stores/gyroLabStore";
-import { getBrandmarkAccretionLayers, getBrandmarkWorldPosition } from "./sceneGeom";
+import { getSmoothedAccretionLayers } from "./motionFollower";
+import { getBrandmarkWorldPosition } from "./sceneGeom";
 import { ShellEncode } from "./shell/ShellEncode";
 import { ShellStack } from "./shell/ShellStack";
 import { ShellSubstrate } from "./shell/ShellSubstrate";
@@ -103,7 +104,7 @@ export function BrandmarkAccretionShell() {
     const planetScale = getEpiloguePlanetScale(epilogueProgress);
     gyroAssembly.scale.setScalar(GYRO_ASSEMBLY_SCALE * planetScale);
 
-    const layers = getBrandmarkAccretionLayers(paintProgress);
+    const layers = getSmoothedAccretionLayers();
     const tiltCalm = 1 - (1 - SUBSTRATE_GYRO_ENCODE_TILT_FLOOR) * layers.orbits;
     // Calm the pointer bank to zero across APPROACH — planets don't
     // wobble with the mouse. APPROACH ramps 0..1 so we lerp the

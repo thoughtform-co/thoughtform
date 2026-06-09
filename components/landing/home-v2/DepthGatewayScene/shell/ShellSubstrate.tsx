@@ -34,7 +34,7 @@ import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { COLOR_DAWN, COLOR_GOLD } from "@/components/landing/intelligence-artifact/artifactGeom";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
-import { getBrandmarkAccretionLayers } from "../sceneGeom";
+import { getSmoothedAccretionLayers } from "../motionFollower";
 import {
   EMERGE_EPSILON,
   foldEmerge,
@@ -368,14 +368,15 @@ export function ShellSubstrate({ layerKey, reducedMotion = false }: ShellSubstra
     const group = groupRef.current;
     if (!group) return;
 
-    const { paintProgress, active, armed } = useDepthGatewayStore.getState().transform;
+    const { active, armed } = useDepthGatewayStore.getState().transform;
     if (!active && !armed) {
       group.visible = false;
       hideAll();
       return;
     }
 
-    const reveal = getBrandmarkAccretionLayers(paintProgress).substrate;
+    // Temporally-smoothed reveal (motionFollower) — see ShellSubstrateGyro.
+    const reveal = getSmoothedAccretionLayers().substrate;
     if (reveal <= EMERGE_EPSILON) {
       group.visible = false;
       hideAll();
