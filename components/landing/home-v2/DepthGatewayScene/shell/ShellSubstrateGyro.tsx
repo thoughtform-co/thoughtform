@@ -180,6 +180,75 @@ function makeParticleMaterial(): THREE.ShaderMaterial {
   });
 }
 
+// ── Planet atmosphere shell (v3.2) ──────────────────────────────────
+//
+// Fresnel rim-glow that surrounds the substrate sphere as it grows
+// into a planet during the EPILOGUE APPROACH. Rendered on a slightly
+// larger sphere than the dotted-shell surface so the glow sits at
+// the planet's silhouette — the signature "Earth from orbit" cyan/
+// blue rim, here painted in the corridor's gold/dawn palette.
+//
+// Uses BackSide rendering + additive blending: the back-faced sphere
+// shows through anything in front (so the atmosphere reads as a halo
+// AROUND the planet, not as a sphere occluding it), and the additive
+// blending lifts the limb without darkening the starfield.
+//
+// `uOpacity` is driven per-frame from the EPILOGUE APPROACH band so
+// the atmosphere is invisible in the parked corridor and fades in as
+// the substrate transitions into a planet.
+
+const atmosphereVertex = /* glsl */ `
+varying vec3 vViewNormal;
+varying vec3 vViewPos;
+void main() {
+  vec4 mv = modelViewMatrix * vec4(position, 1.0);
+  gl_Position = projectionMatrix * mv;
+  // Normal in view space; rim glow is highest where this is
+  // perpendicular to the view direction (i.e. silhouette).
+  vViewNormal = normalize(normalMatrix * normal);
+  vViewPos = mv.xyz;
+}
+`;
+
+const atmosphereFragment = /* glsl */ `
+uniform vec3 uColor;
+uniform float uOpacity;
+uniform float uPower;
+varying vec3 vViewNormal;
+varying vec3 vViewPos;
+void main() {
+  // View direction TOWARD the camera. For a back-faced sphere we
+  // flip the normal so the math reads as "outer-facing normal vs
+  // camera direction" identical to a front-faced fresnel.
+  vec3 viewDir = normalize(-vViewPos);
+  vec3 n = -vViewNormal;
+  // Fresnel: bright at glancing angles (silhouette), transparent
+  // toward the centre of the planet. uPower=2.5 gives a soft halo
+  // rather than a thin ring — closer to atmospheric scatter than
+  // hard outline.
+  float fresnel = pow(clamp(1.0 - dot(n, viewDir), 0.0, 1.0), uPower);
+  float alpha = fresnel * uOpacity;
+  if (alpha < 0.005) discard;
+  gl_FragColor = vec4(uColor, alpha);
+}
+`;
+
+function makeAtmosphereMaterial(): THREE.ShaderMaterial {
+  return new THREE.ShaderMaterial({
+    vertexShader: atmosphereVertex,
+    fragmentShader: atmosphereFragment,
+    uniforms: {
+      uColor: { value: new THREE.Color(COLOR_GOLD) },
+      uOpacity: { value: 0 },
+      uPower: { value: 2.5 },
+    },
+    transparent: true,
+    depthWrite: false,
+    side: THREE.BackSide,
+    blending: THREE.AdditiveBlending,
+  });
+}
+
 // ── Dotted-shell surface shader (per-dot facing fade) ───────────────
 // The dots sit on a sphere shell. Each dot's outward normal is dotted
 // with the view direction so the front hemisphere is bright and a touch
@@ -668,6 +737,14 @@ export function ShellSubstrateGyro({ layerKey, reducedMotion = false }: ShellSub
       ringGraduations.push(buildRingGraduations(r, density, majorEvery));
     }
 
+    // v3.2 atmosphere shell — sits slightly OUTSIDE the dotted shell
+    // so the fresnel rim-glow paints at the planet's silhouette. The
+    // 1.15x multiplier was tuned so the halo reads as a soft band
+    // outside the surface dots rather than overlapping them. 48 width
+    // / 32 height segments is plenty for a smooth fresnel curve.
+    const atmosphereRadius = dottedShellRadius * 1.15;
+    const atmosphere = new THREE.SphereGeometry(atmosphereRadius, 48, 32);
+
     return {
       meridians,
       parallels,
@@ -675,6 +752,7 @@ export function ShellSubstrateGyro({ layerKey, reducedMotion = false }: ShellSub
       gimbalRings,
       particles,
       dottedShell,
+      atmosphere,
       pivot,
       ticks,
       ticksMiddle,
@@ -704,6 +782,11 @@ export function ShellSubstrateGyro({ layerKey, reducedMotion = false }: ShellSub
       particle: makeParticleMaterial(),
       dottedShell: makeSurfaceShellMaterial(SUBSTRATE_GYRO_DOTTED_SHELL_POINT_SIZE),
       cardinalRing: makeDepthFadeLineMaterial(gold, SUBSTRATE_GYRO_CARDINAL_RING_OPACITY),
+      // v3.2 atmosphere — fresnel rim-glow that fades in across the
+      // EPILOGUE APPROACH band. Invisible in the parked corridor; at
+      // peak landing it paints the planet's silhouette with a soft
+      // gold halo (the Earth-reference atmosphere look).
+      atmosphere: makeAtmosphereMaterial(),
     };
   }, []);
 
@@ -715,6 +798,7 @@ export function ShellSubstrateGyro({ layerKey, reducedMotion = false }: ShellSub
       geom.gimbalRings.forEach((g) => g.dispose());
       geom.particles.dispose();
       geom.dottedShell.dispose();
+      geom.atmosphere.dispose();
       geom.pivot.dispose();
       geom.ticks.dispose();
       geom.ticksMiddle.dispose();
@@ -786,15 +870,52 @@ export function ShellSubstrateGyro({ layerKey, reducedMotion = false }: ShellSub
     const presence = unfold.presence * opacityCalm;
 
     const lineOpacity = (base: number) => base * presence;
+
+    // v3.2 planet-density boost — as the substrate grows into a
+    // planet during APPROACH, scale the surface point dots' SIZE
+    // and OPACITY up so the sphere reads as a dense, glowing planet
+    // surface rather than a faint wireframe at 3x scale. The boost
+    // tracks the APPROACH band so it ramps with the grow; before
+    // APPROACH the values are byte-identical to the parked corridor.
+    const approachT = epilogueBand(epilogueProgress, "APPROACH");
+    // Size multiplier: 1 at parked, ~1.8 at peak. Combined with the
+    // 3x physical grow, surface dots end up ~5.4x as big in screen
+    // space as the planet ramps up.
+    const pointSizeBoost = 1 + approachT * 0.8;
+    // Opacity multiplier: 1 at parked, ~1.5 at peak (capped at 1
+    // via Math.min so we don't oversaturate).
+    const opacityBoost = 1 + approachT * 0.55;
+
     // GLOBE materials — kept through the epilogue (these BECOME the
     // planet surface grid + atmospheric particles).
-    mats.globeDots.uniforms.uOpacity.value = SUBSTRATE_GYRO_GLOBE_DOTS_OPACITY * presence;
+    mats.globeDots.uniforms.uOpacity.value = Math.min(
+      1,
+      SUBSTRATE_GYRO_GLOBE_DOTS_OPACITY * presence * opacityBoost
+    );
+    mats.globeDots.uniforms.uPointSize.value =
+      SUBSTRATE_GYRO_GLOBE_DOTS_POINT_SIZE * pointSizeBoost;
     mats.globeDots.uniforms.uPixelRatio.value = state.viewport.dpr;
     mats.equator.uniforms.uOpacity.value = lineOpacity(SUBSTRATE_GYRO_GLOBE_EQUATOR_OPACITY);
     mats.particle.uniforms.uPixelRatio.value = state.viewport.dpr;
-    mats.particle.uniforms.uOpacity.value = SUBSTRATE_GYRO_PARTICLE_OPACITY * presence;
+    mats.particle.uniforms.uOpacity.value = Math.min(
+      1,
+      SUBSTRATE_GYRO_PARTICLE_OPACITY * presence * opacityBoost
+    );
+    mats.particle.uniforms.uPointSize.value = SUBSTRATE_GYRO_POINT_SIZE * pointSizeBoost;
     mats.dottedShell.uniforms.uPixelRatio.value = state.viewport.dpr;
-    mats.dottedShell.uniforms.uOpacity.value = SUBSTRATE_GYRO_DOTTED_SHELL_OPACITY * presence;
+    mats.dottedShell.uniforms.uOpacity.value = Math.min(
+      1,
+      SUBSTRATE_GYRO_DOTTED_SHELL_OPACITY * presence * opacityBoost
+    );
+    mats.dottedShell.uniforms.uPointSize.value =
+      SUBSTRATE_GYRO_DOTTED_SHELL_POINT_SIZE * pointSizeBoost;
+
+    // v3.2 atmosphere rim-glow: fades in across APPROACH so the
+    // planet's silhouette gets a soft halo as the substrate
+    // transitions from "instrument" to "planet". Capped at 0.6 so
+    // it sits as a gentle atmospheric ring, not a bloom that drowns
+    // the dotted-shell surface.
+    mats.atmosphere.uniforms.uOpacity.value = approachT * 0.6;
     // INSTRUMENT materials — fade out on BUILD_OUT so the substrate
     // sheds its flight-instrument vocabulary before we approach.
     mats.ring.uniforms.uOpacity.value =
@@ -900,6 +1021,14 @@ export function ShellSubstrateGyro({ layerKey, reducedMotion = false }: ShellSub
           gimbal cage reads as a real 3D sphere shell (front bright,
           back hemisphere fades to near zero). */}
       <points geometry={geom.dottedShell} material={mats.dottedShell} frustumCulled={false} />
+
+      {/* v3.2 atmosphere — fresnel rim-glow on a sphere just outside
+          the dotted shell. Invisible in the parked corridor (uOpacity
+          starts at 0); fades in across the EPILOGUE APPROACH band as
+          the substrate transitions into a planet. Back-faced +
+          additive blending so it reads as a halo at the silhouette,
+          not a sphere that occludes the surface. */}
+      <mesh geometry={geom.atmosphere} material={mats.atmosphere} frustumCulled={false} />
 
       <lineSegments geometry={geom.ticks} material={mats.tick} frustumCulled={false} />
       <lineSegments geometry={geom.ticksMiddle} material={mats.tick} frustumCulled={false} />

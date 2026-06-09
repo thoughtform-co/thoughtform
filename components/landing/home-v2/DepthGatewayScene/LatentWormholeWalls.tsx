@@ -4,7 +4,13 @@ import { useFrame } from "@react-three/fiber";
 import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { lerp, smoothstep, useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
-import { STATION_DIAGNOSTIC, STATION_INTELLIGENCE, STATION_THOUGHTFORM } from "./sceneGeom";
+import {
+  STATION_DIAGNOSTIC,
+  STATION_INTELLIGENCE,
+  STATION_THOUGHTFORM,
+  getBuildApproachFade,
+  getWormholeExitWarp,
+} from "./sceneGeom";
 
 /**
  * LatentWormholeWalls — subtle particle-based wormhole topology
@@ -186,6 +192,13 @@ uniform float uVisibleNear;
 uniform float uVisibleFar;
 uniform float uReveal1;
 uniform float uReveal2;
+// v3.2 wormhole-exit warp: ramps 0->1 across the late corridor as
+// the camera approaches the Build park. At peak the rails splay
+// radially OUTWARD from the tube's optical axis, with stronger
+// expansion near + ahead of the camera — reads as flying out of
+// the mouth of the tube. The shader does no work when uExitWarp
+// is 0, so the corridor's earlier passes are byte-identical.
+uniform float uExitWarp;
 
 attribute vec3 aColor;
 attribute float aReveal;
@@ -195,8 +208,31 @@ varying vec3 vColor;
 varying float vAlpha;
 
 void main() {
-  vec4 mv = modelViewMatrix * vec4(position, 1.0);
-  float dist = distance(position, uCameraPos);
+  // Wormhole-exit radial widen. The tube is centred on the world Z
+  // axis (corridor optical axis), so each point's radial direction
+  // is just (x, y) in world space. Multiply that radius by a factor
+  // that grows with uExitWarp and with how close the point is to
+  // or in front of the camera: the mouth opens around us as we
+  // emerge, while the tube far behind / far ahead stays untouched.
+  vec3 worldPos = position;
+  if (uExitWarp > 0.0) {
+    // Camera-relative Z offset. uCameraPos.z is the camera's world
+    // Z; points with position.z > uCameraPos.z are BEHIND the camera
+    // (more positive Z), points with position.z < uCameraPos.z are
+    // AHEAD (deeper into the corridor).
+    float relZ = position.z - uCameraPos.z;
+    // nearWeight: 1 right at the camera, falls off both far ahead
+    // and far behind. 4-unit decay matches the rail spacing.
+    float nearWeight = exp(-abs(relZ) / 4.0);
+    // Bias slightly toward "ahead of camera": the mouth we're
+    // flying THROUGH should splay, not the tube behind.
+    float aheadBias = clamp(1.0 - relZ * 0.15, 0.4, 1.4);
+    float expand = uExitWarp * nearWeight * aheadBias * 1.6;
+    worldPos.xy *= 1.0 + expand;
+  }
+
+  vec4 mv = modelViewMatrix * vec4(worldPos, 1.0);
+  float dist = distance(worldPos, uCameraPos);
 
   // Camera-space depth focus. Walls behind the camera or beyond the
   // far plane vanish; rails ahead fade in as they approach.
@@ -543,6 +579,7 @@ export function LatentWormholeWalls() {
         uReveal1: { value: 0 },
         uReveal2: { value: 0 },
         uOpacity: { value: 0 },
+        uExitWarp: { value: 0 },
       },
       transparent: true,
       depthWrite: false,
@@ -577,6 +614,7 @@ export function LatentWormholeWalls() {
       material.uniforms.uOpacity.value = 0;
       material.uniforms.uReveal1.value = 0;
       material.uniforms.uReveal2.value = 0;
+      material.uniforms.uExitWarp.value = 0;
       return;
     }
 
@@ -584,6 +622,13 @@ export function LatentWormholeWalls() {
     const reveal2 = smoothstep(LEG_2_REVEAL_START, LEG_2_REVEAL_END, paintProgress);
     material.uniforms.uReveal1.value = reveal1;
     material.uniforms.uReveal2.value = reveal2;
+
+    // v3.2 wormhole-exit widen — the tube splays radially outward at
+    // the camera as we emerge into Build. The fragment fade follows
+    // shortly after via `getBuildApproachFade` (window 0.86-0.97), so
+    // the rails read as "opening up around you THEN dissolving" rather
+    // than a flat opacity cut.
+    material.uniforms.uExitWarp.value = getWormholeExitWarp(paintProgress);
 
     // Velocity lift sharpens the lattice during active travel.
     // |velocity| is in progress-units / sec; a 2x multiplier reaches
@@ -595,7 +640,13 @@ export function LatentWormholeWalls() {
     // Critically-damped tracking so the lift doesn't snap.
     const k = 1 - Math.exp(-OPACITY_RESPONSE * dt);
     opacityRef.current += (target - opacityRef.current) * k;
-    material.uniforms.uOpacity.value = Math.min(1, opacityRef.current);
+    // Build-approach declutter (v3.1) — the wormhole rail walls fade
+    // out across the approach to the Build park so the gimbal +
+    // sources/surfaces stack carry the Build read without competing
+    // ambient noise on the left/right edges. Stays at 0 through the
+    // epilogue because paintProgress is pinned at 1.
+    const buildFade = getBuildApproachFade(paintProgress);
+    material.uniforms.uOpacity.value = Math.min(1, opacityRef.current) * buildFade;
   });
 
   if (!geometry) return null;

@@ -34,7 +34,45 @@ const STARFIELD_BASE_OPACITY = 0.6;
 /** Maximum additive lift on top of the baseline at full boot. */
 const STARFIELD_BOOT_LIFT = 0.35;
 
+// ── Build-approach starfield boost (v3.2) ─────────────────────────
+//
+// The corridor-to-Build transition originally left the background
+// quite empty (the ambient corridor fades to clear the stage, but
+// the starfield only had its quiet baseline 0.6 opacity). v3.2 ramps
+// the starfield's brightness AND point size as the camera approaches
+// Build, then HOLDS that boosted state through the epilogue (because
+// `paintProgress` is pinned at 1 through the planet flyover). Net
+// effect: at Build the deep-space backdrop reads richly, and the
+// epilogue planet flyover sits in a real sky.
+
+/** Window in paintProgress where the starfield ramps from quiet to
+ *  full. Ends at the Build park centre (0.92) so the lift is in
+ *  place by the time the substrate lands. */
+const STARFIELD_BUILD_BOOST_WINDOW: [number, number] = [0.78, 0.92];
+/** Opacity ADDITIVE on top of the baseline + boot lift at peak Build
+ *  boost. Picks 0.45 so peak opacity ≈ 1.0 (cap matches the existing
+ *  shader logic). */
+const STARFIELD_BUILD_OPACITY_LIFT = 0.45;
+/** Point size at peak Build boost. Baseline is `uPointSize = 2.0`
+ *  (set on the material below); the lift sends it to ~3.2 so stars
+ *  read as more substantial dots at low FOV, matching the Earth-ref
+ *  starfield density without doubling the geometry count. */
+const STARFIELD_BUILD_POINT_SIZE_PEAK = 3.2;
+const STARFIELD_BASE_POINT_SIZE = 2.0;
+
 const STAR_COLOR = new THREE.Color(0.93, 0.89, 0.84);
+
+/** Inline smoothstep — local copy to avoid importing from `sceneGeom`
+ *  (which imports back from this folder via `shellGeom`, creating a
+ *  module-graph cycle the bundler complains about). Identical to the
+ *  shared `smoothstep` in `corridorMap`. */
+function smoothstep01(edge0: number, edge1: number, x: number): number {
+  if (edge1 <= edge0) return x >= edge1 ? 1 : 0;
+  const t = (x - edge0) / (edge1 - edge0);
+  if (t <= 0) return 0;
+  if (t >= 1) return 1;
+  return t * t * (3 - 2 * t);
+}
 
 const vertexShader = /* glsl */ `
 uniform float uPointSize;
@@ -76,13 +114,16 @@ export function StaticStarfield({ count }: StaticStarfieldProps = {}) {
   // Counts bumped 2026-05-25 (+33% across tiers) so the deep-space
   // backdrop reads as a denser starfield as the camera dollies
   // through the corridor — more parallax events per second.
+  // v3.2: desktop bumped 2400 -> 3200 to support the Build/epilogue
+  // brightness boost (more stars means the boosted field still reads
+  // as discrete points rather than a uniform glow).
   const starCount = useMemo(() => {
     if (count != null) return count;
     if (typeof window === "undefined") return 1900;
     const w = window.innerWidth;
     if (w < 760) return 1200;
     if (w < 1280) return 1700;
-    return 2400;
+    return 3200;
   }, [count]);
 
   const geometry = useMemo(() => {
@@ -117,7 +158,7 @@ export function StaticStarfield({ count }: StaticStarfieldProps = {}) {
       vertexShader,
       fragmentShader,
       uniforms: {
-        uPointSize: { value: 2.0 },
+        uPointSize: { value: STARFIELD_BASE_POINT_SIZE },
         uPixelRatio: { value: typeof window !== "undefined" ? window.devicePixelRatio : 1 },
         uColor: { value: STAR_COLOR.clone() },
         uOpacity: { value: STARFIELD_BASE_OPACITY },
@@ -135,19 +176,40 @@ export function StaticStarfield({ count }: StaticStarfieldProps = {}) {
     };
   }, [geometry, material]);
 
-  // Boot-lift: lift the field's uOpacity by up to `STARFIELD_BOOT_LIFT`
-  // while the Thoughtform boot envelope is engaged. Outside the
-  // boot window the uniform sits at `STARFIELD_BASE_OPACITY`, so the
-  // field is "paint-only" everywhere else and matches the original
-  // backdrop intensity at every other beat.
+  // Per-frame brightness writes:
+  //
+  // 1. Thoughtform boot-lift (original): lifts uOpacity by up to
+  //    `STARFIELD_BOOT_LIFT` while the Thoughtform boot envelope is
+  //    engaged at the opening beat.
+  // 2. Build/epilogue boost (v3.2): ramps uOpacity + uPointSize as
+  //    paintProgress approaches Build (0.78 -> 0.92). Because
+  //    paintProgress is pinned at 1 across the epilogue, the boost
+  //    HOLDS through the planet flyover — the sky stays bright behind
+  //    the orbital horizon view.
   useFrame(() => {
     const { paintProgress, active, armed } = useDepthGatewayStore.getState().transform;
     if (!active && !armed) {
       material.uniforms.uOpacity.value = STARFIELD_BASE_OPACITY;
+      material.uniforms.uPointSize.value = STARFIELD_BASE_POINT_SIZE;
       return;
     }
     const boot = getThoughtformBootEnvelope(paintProgress);
-    material.uniforms.uOpacity.value = STARFIELD_BASE_OPACITY + boot * STARFIELD_BOOT_LIFT;
+    // Smoothstep is monotonic and trivially inlined here to avoid an
+    // import cycle (sceneGeom imports from this folder).
+    const buildBoostT = smoothstep01(
+      STARFIELD_BUILD_BOOST_WINDOW[0],
+      STARFIELD_BUILD_BOOST_WINDOW[1],
+      paintProgress
+    );
+    material.uniforms.uOpacity.value = Math.min(
+      1.0,
+      STARFIELD_BASE_OPACITY +
+        boot * STARFIELD_BOOT_LIFT +
+        buildBoostT * STARFIELD_BUILD_OPACITY_LIFT
+    );
+    material.uniforms.uPointSize.value =
+      STARFIELD_BASE_POINT_SIZE +
+      buildBoostT * (STARFIELD_BUILD_POINT_SIZE_PEAK - STARFIELD_BASE_POINT_SIZE);
   });
 
   return <points geometry={geometry} material={material} frustumCulled={false} />;

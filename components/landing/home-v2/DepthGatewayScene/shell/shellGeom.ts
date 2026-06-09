@@ -638,7 +638,11 @@ export const SUBSTRATE_GYRO_PARTICLE_OPACITY = 0.45;
  *  reference dotted globe; the facing-fade shader handles the
  *  hemisphere drop-off, additive blending handles the brightness. */
 export const SUBSTRATE_GYRO_DOTTED_SHELL_RADIUS_MUL = 1.32;
-export const SUBSTRATE_GYRO_DOTTED_SHELL_COUNT_DESKTOP = 3600;
+// v3.2 planet-density pass: desktop bumped 3600 -> 6000 so the
+// substrate surface still reads as a dense planet when scaled up
+// 3x for the EPILOGUE flyover. The full ring stays cheap (static
+// points, no per-frame motion).
+export const SUBSTRATE_GYRO_DOTTED_SHELL_COUNT_DESKTOP = 6000;
 export const SUBSTRATE_GYRO_DOTTED_SHELL_COUNT_MOBILE = 1200;
 export const SUBSTRATE_GYRO_DOTTED_SHELL_BANDS = 28;
 export const SUBSTRATE_GYRO_DOTTED_SHELL_POINT_SIZE = 6.5;
@@ -671,12 +675,10 @@ export const GYRO_ASSEMBLY_SCALE = 1.18;
  *  the end of the EPILOGUE APPROACH band. The substrate gimbal
  *  globe scales up from `GYRO_ASSEMBLY_SCALE` (parked) to
  *  `GYRO_ASSEMBLY_SCALE * EPILOGUE_PLANET_GROW` so it reads as a
- *  planet by the time we land. Tuned against the camera FOV (38deg)
- *  and the standoff in `getEpilogueCameraPose` so the planet's
- *  curvature fits in the LOWER portion of the viewport with sky
- *  above (matches the user's brief: "the bottom of the viewport
- *  just sees the upper half or a quarter of the top of the sphere"). */
-export const EPILOGUE_PLANET_GROW = 2.5;
+ *  planet by the time we land. v3.2 bumped 2.5 -> 3.0 to match the
+ *  Earth-reference framing — a bigger, closer planet that fills
+ *  the lower portion of the viewport with its curved horizon. */
+export const EPILOGUE_PLANET_GROW = 3.0;
 
 /** Static tilt when `prefers-reduced-motion` (radians). */
 export const SUBSTRATE_GYRO_STATIC_TILT_X = 0.12;

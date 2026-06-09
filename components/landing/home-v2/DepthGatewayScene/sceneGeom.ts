@@ -123,8 +123,15 @@ export const CORRIDOR_TIMELINE = {
 
   /** Thoughtform composition lateral centering pan window. PAN_END
    *  must stay locked to `dollyHoldEnd` so the camera dolly + ring
-   *  flythrough release the moment the pan completes. */
-  thoughtformPan: { start: 0.075, end: 0.109 },
+   *  flythrough release the moment the pan completes. v3.1 polish
+   *  pass widened START 0.075 -> 0.035 (twice as long) and the curve
+   *  in `getThoughtformCenterOffsetX` switched from `smoothstep` to
+   *  the C2-continuous `smootherstep` so velocity is zero at both
+   *  ends — kills the scroll-back snap when scrolling reverses
+   *  across the pan boundary. END is unchanged so every coupled
+   *  downstream beat (dolly release, ring flythrough start 0.13,
+   *  boot rampEnd 0.109) stays in lockstep. */
+  thoughtformPan: { start: 0.035, end: 0.109 },
 
   /** Gateway "boot-up" envelope phases. Ramp runs alongside the
    *  Thoughtform pan; hold spans the early ring flythrough; relax
@@ -294,27 +301,41 @@ export function getCameraPosition(progress: number): [number, number, number] {
 //     where tangent is perpendicular to the up direction and points
 //     in the +Z half (so we look "forward" along the surface)
 
-/** Tilt angle (radians) of the camera over the planet's pole at
- *  peak LAND. 65deg = mostly above the planet, leaning enough toward
- *  +Z (in front) that the surface fills the BOTTOM of the viewport
- *  rather than the whole frame — the user sees the upper curvature
- *  of the planet curving away below them while sky + title sit
- *  above (matches the user's "bottom of the viewport just sees the
- *  upper half or a quarter of the top of the sphere" brief). */
-const EPILOGUE_LANDING_TILT = (60 * Math.PI) / 180;
+/** Tilt angle (radians) of the camera above the planet at peak LAND.
+ *  v3.2 horizon framing — 28deg drops the camera from the v3.1
+ *  bird's-eye (70deg) toward an ORBITAL HORIZON view: camera is
+ *  slightly above the planet centre and well in front of it, like
+ *  the Earth-reference screenshots the user provided. Combined with
+ *  the new look-up gaze (`LOOK_DOWN_Y` > camera Y) and the closer
+ *  standoff below, this reads as "we've left the corridor and we
+ *  are orbiting a planet, looking out across its curved limb toward
+ *  the title in the sky above." */
+const EPILOGUE_LANDING_TILT = (28 * Math.PI) / 180;
 
-/** Camera standoff (world units) above the planet surface at peak
- *  LAND. Has to clear the narrow FOV (38deg) so the planet doesn't
- *  fill the whole viewport — picked so the planet's limb sits
- *  roughly mid-screen with sky above and the curved surface filling
- *  the lower portion. */
-const EPILOGUE_LANDING_STANDOFF = 4.5;
+/** Camera standoff (world units) from the planet surface at peak
+ *  LAND. v3.2 pulled 4.5 -> 3.5 so the planet reads BIG in frame.
+ *  The grow-aware `distance = planetRadius + standoff` math still
+ *  guarantees the camera stays outside the growing planet, so this
+ *  is safe to tighten further if needed during live tuning. */
+const EPILOGUE_LANDING_STANDOFF = 3.5;
 
-/** Vertical offset applied to the lookAt point at peak LAND, in
- *  multiples of the planet radius. Positive values shift the gaze
- *  UP from the planet centre toward the horizon line above the limb,
- *  so the surface drops to the lower portion of the viewport. */
-const EPILOGUE_HORIZON_LIFT = 0.65;
+/** lookAt target offset in PLANET-RADIUS units relative to the
+ *  planet centre at peak LAND. v3.2 horizon framing:
+ *
+ *    - `LOOK_DOWN_Y = 1.2` places the look-at slightly ABOVE the
+ *      planet pole (the pole sits at +1R; +1.2R is just above it).
+ *      Because the camera at 28deg tilt sits at Y ≈ +1.1R itself,
+ *      this means the camera's gaze tilts UP very slightly toward
+ *      a point above the planet — the horizon (curved limb) ends
+ *      up in the lower portion of the frame, with sky + title
+ *      above. Matches the Earth-reference shot composition.
+ *    - `LOOK_FWD_Z = 0.5` pushes the look-at half a radius PAST
+ *      the planet centre (further down -Z) so the camera looks
+ *      across the surface toward a point in the far sky, rather
+ *      than directly at the planet — adds depth to the horizon
+ *      read. */
+const EPILOGUE_LOOK_DOWN_Y = 1.2;
+const EPILOGUE_LOOK_FWD_Z = 0.5;
 
 /** Camera pose during the epilogue beat — a fly-in + landing tilt
  *  around the substrate sphere as it grows into a planet. Returns
@@ -356,17 +377,19 @@ export function getEpilogueCameraPose(epilogueProgress: number): {
   // - Parked (landT 0): use the corridor's parked lookAt — identical
   //   to `getCameraLookAt(1)` so the corridor->epilogue transition
   //   is invisible at the seam.
-  // - Land (landT 1): look at a point ABOVE the planet centre — a
-  //   "horizon line" that pulls the gaze up and shifts the planet
-  //   into the LOWER portion of the viewport. With the camera tilted
-  //   ~60deg up over the pole + a horizon lift of ~0.6 planet radii,
-  //   the planet's limb arcs across the middle of the screen, sky
-  //   sits above (where the title lands), and the surface fills the
-  //   lower portion (matching the user's brief: the user sees the
-  //   upper quarter/half of the sphere from "above").
+  // - Land (landT 1): look DOWN+FORWARD over the planet's pole. The
+  //   target sits slightly ABOVE the planet centre in Y (so the line
+  //   of sight from the high camera tilts down at the upper dome) and
+  //   well in front of the planet in -Z (so we look ACROSS the dome
+  //   toward the limb beyond). The result is the v3.1 bird's-eye
+  //   flyover: top hemisphere arcs across the lower frame, starfield
+  //   + title fill the upper frame.
   const parkedLook = getCameraLookAt(1);
-  const landLookY = planetCentre[1] + planetRadius * EPILOGUE_HORIZON_LIFT;
-  const lookLand: [number, number, number] = [planetCentre[0], landLookY, planetCentre[2]];
+  const lookLand: [number, number, number] = [
+    planetCentre[0],
+    planetCentre[1] + planetRadius * EPILOGUE_LOOK_DOWN_Y,
+    planetCentre[2] - planetRadius * EPILOGUE_LOOK_FWD_Z,
+  ];
   const lookAt: [number, number, number] = [
     lerp(parkedLook[0], lookLand[0], landT),
     lerp(parkedLook[1], lookLand[1], landT),
@@ -616,8 +639,16 @@ export function getThoughtformCenterOffsetX(progress: number): number {
   const { start, end } = CORRIDOR_TIMELINE.thoughtformPan;
   if (progress <= start) return 0;
   if (progress >= end) return -STATION_THOUGHTFORM.position[0];
-  const t = smoothstep(start, end, progress);
-  return -STATION_THOUGHTFORM.position[0] * t;
+  // smootherstep — Ken Perlin's C2-continuous easing (6t^5 - 15t^4
+  // + 10t^3) — has zero velocity AND zero acceleration at both ends.
+  // Compared to `smoothstep` (3t^2 - 2t^3, C1-continuous, non-zero
+  // acceleration at the boundary) this kills the scroll-back snap at
+  // `progress = start`: when the user reverses scroll across the pan
+  // window the rectangular gateway + brandmark + copy ease off the
+  // axis instead of jumping. (v3.1 polish pass.)
+  const t = (progress - start) / (end - start);
+  const s = t * t * t * (t * (t * 6 - 15) + 10);
+  return -STATION_THOUGHTFORM.position[0] * s;
 }
 
 /** "Gateway boot-up" envelope (0..1) used by painters that want to
@@ -642,6 +673,46 @@ export function getThoughtformBootEnvelope(progress: number): number {
   if (progress <= holdEnd) return 1;
   if (progress <= relaxEnd) return 1 - smoothstep(holdEnd, relaxEnd, progress);
   return 0;
+}
+
+/** Build-approach ambient fade.
+ *
+ *  The corridor's ambient framing layers (wormhole rail walls,
+ *  drifting latent-field dots, contour shards, intergate debris,
+ *  celestial motes) read as decorative noise once we arrive at the
+ *  Build park — they crowd the left/right edges of the frame while
+ *  the substrate gimbal + sources/surfaces stack should be the
+ *  centre of attention. This helper returns 1 across the early
+ *  corridor and fades to 0 across the approach to the Build park.
+ *
+ *  Window [0.86, 0.97] (v3.2 wormhole-exit retune): pushed later than
+ *  the original [0.80, 0.915] so the wormhole walls remain VISIBLE
+ *  through their `uExitWarp` widen — the tube has to splay open
+ *  BEFORE it dissolves, otherwise the exit reads as a hard fade.
+ *  The ambient still clears by passthrough-02 / Build-park edge,
+ *  leaving a clean stage for the gimbal landing. Bonus: during the
+ *  epilogue `paintProgress` is pinned at 1, so the ambient stays
+ *  gone — the planet flyover gets a clean stage.
+ *
+ *  Layers that read this fade are listed in their own comments
+ *  (LatentWormholeWalls, LatentFieldTunnel, LatentTopographyContours,
+ *  InterGateCorridor, CelestialMotes). `StaticStarfield`, `ShellStack`
+ *  and the gimbal are intentionally NOT in this group. */
+export function getBuildApproachFade(paintProgress: number): number {
+  return 1 - smoothstep(0.86, 0.97, paintProgress);
+}
+
+/** Wormhole-exit warp (v3.2).
+ *
+ *  Drives the radial expansion of the wormhole rails as the camera
+ *  emerges into Build. 0 across the rest of the corridor; ramps
+ *  0 -> 1 across [0.80, 0.93] of paintProgress so the rails splay
+ *  open BEFORE the ambient fade above (which starts at 0.86) and
+ *  is fully resolved by the time the dissolve completes. Reads as
+ *  "we just flew out the mouth of the wormhole into the Build
+ *  station." */
+export function getWormholeExitWarp(paintProgress: number): number {
+  return smoothstep(0.8, 0.93, paintProgress);
 }
 
 // ── Thoughtform compass flythrough ───────────────────────────────

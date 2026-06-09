@@ -11,6 +11,319 @@
 
 ---
 
+## 2026-06-09 Revision (v3.2) — Wormhole exit widen, Build starfield boost, Earth-reference horizon planet
+
+Three independent polish passes on the corridor-to-Build transition
+and the epilogue planet flyover, in response to user feedback:
+
+> "Right now the fading out of the corridor is quite harsh; can't we
+> do it so it feels like you're moving out of the corridor when you
+> enter the build phase as if you're exiting the wormhole — so the
+> end (mouth) of the corridor can organically widen as you exit. I
+> still want a starfield in the background, which becomes a bit
+> clearer when you enter the Build on the Substrate page, otherwise
+> the background is very empty. And then that shot afterwards I want
+> the perspective to be like the two Earth screenshots — a simple
+> perspective; let's also increase the pixel density count as you
+> move into this perspective because right now it's barely visible."
+
+### a. Wormhole mouth widens on exit
+
+The v3.1 declutter pass faded the ambient corridor layers
+(`LatentWormholeWalls`, `LatentFieldTunnel`, `LatentTopographyContours`,
+`InterGateCorridor`, `CelestialMotes`) via a plain opacity ramp
+(`getBuildApproachFade`, window `[0.80, 0.915]`). The user read this
+as a hard cut — the corridor just "stopped existing." v3.2 keeps the
+opacity fade for the AMBIENT layers, but replaces it for the
+`LatentWormholeWalls` rails with a radial expansion that opens the
+tube mouth around the camera as it emerges into Build.
+
+In
+[`LatentWormholeWalls.tsx`](../../components/landing/home-v2/DepthGatewayScene/LatentWormholeWalls.tsx)
+the vertex shader gained a `uExitWarp` uniform driven from
+`getWormholeExitWarp(paintProgress)` in
+[`sceneGeom.ts`](../../components/landing/home-v2/DepthGatewayScene/sceneGeom.ts)
+(`smoothstep(0.80, 0.93, paintProgress)`). At peak warp each point's
+world-space `xy` is multiplied by `1 + uExitWarp * nearWeight * aheadBias * 1.6`,
+where `nearWeight = exp(-|relZ| / 4)` and `relZ = position.z - uCameraPos.z`.
+Net behaviour:
+
+- The tube opens MOST at the camera's immediate vicinity (peak
+  `nearWeight = 1`).
+- The opening biases toward "ahead of the camera" via `aheadBias`,
+  so the mouth WE'RE FLYING THROUGH splays open rather than the
+  tube behind us.
+- Far down the tube and far behind the camera, the warp decays to
+  zero — the rest of the corridor doesn't deform.
+
+The ambient opacity fade was retimed from `[0.80, 0.915]` to
+`[0.86, 0.97]` so the rails splay open BEFORE they dissolve — first
+the mouth widens, then it dissolves. Reads as "we just flew out the
+end of the wormhole into the Build station."
+
+### b. Background starfield, boosted at Build
+
+`StaticStarfield` originally sat at `uOpacity = 0.6` baseline with a
+Thoughtform-boot additive lift only — once the boot fade ended, the
+field returned to baseline for the rest of the corridor and the
+Build/epilogue background read empty. v3.2 adds a Build-approach
+boost in
+[`StaticStarfield.tsx`](../../components/landing/home-v2/DepthGatewayScene/StaticStarfield.tsx):
+
+- `uOpacity` ramps `0.6 + bootLift` → `~1.0` (additive lift `0.45`,
+  capped at `1.0`) across `smoothstep(0.78, 0.92, paintProgress)`.
+- `uPointSize` ramps `2.0 → 3.2` across the same window so the dots
+  read as more substantial stars at low FOV.
+- Desktop `starCount` bumped `2400 → 3200` so the boosted field
+  still resolves as discrete points rather than a uniform glow.
+
+The boost is driven off `paintProgress` (not `epilogueProgress`).
+Since `paintProgress` saturates at 1 throughout the epilogue, the
+boosted starfield AUTOMATICALLY carries through the planet flyover
+— the sky stays bright behind the orbital horizon view without any
+epilogue-specific code.
+
+### c. Earth-reference horizon planet
+
+The v3.1 bird's-eye flyover (camera tilt 70deg) gave the user "we're
+flying over the top" but the planet read as a faint wireframe almost
+below the viewport. The user pointed at two Earth-from-orbit
+reference screenshots and asked for that simpler horizon framing
+plus more density.
+
+Two coordinated changes in
+[`sceneGeom.ts`](../../components/landing/home-v2/DepthGatewayScene/sceneGeom.ts)
+and [`shellGeom.ts`](../../components/landing/home-v2/DepthGatewayScene/shell/shellGeom.ts):
+
+**Horizon camera retune** in `getEpilogueCameraPose`:
+
+- `EPILOGUE_LANDING_TILT` `70deg → 28deg` — the camera drops from
+  high-above to a near-level orbital perspective, slightly above
+  the planet's centre and well in front of it.
+- `EPILOGUE_LANDING_STANDOFF` `4.5 → 3.5` — pulls the camera in so
+  the planet reads BIG (combined with the grow below it still fits
+  safely outside the planet's surface).
+- `EPILOGUE_PLANET_GROW` `2.5 → 3.0` — planet ends up 3x the
+  parked-corridor scale at peak LAND. Combined with the tighter
+  standoff the planet's curved limb arcs across the lower 30-50%
+  of the frame.
+- `EPILOGUE_LOOK_DOWN_Y` `2.0 → 1.2` and `EPILOGUE_LOOK_FWD_Z`
+  `0 → 0.5` — gaze sits just above the planet pole with a slight
+  forward bias, dropping the planet's silhouette into the lower
+  portion of the frame with sky + title above. Matches the Earth
+  reference composition.
+
+**Planet density + atmosphere** in
+[`ShellSubstrateGyro.tsx`](../../components/landing/home-v2/DepthGatewayScene/shell/ShellSubstrateGyro.tsx)
+and [`shellGeom.ts`](../../components/landing/home-v2/DepthGatewayScene/shell/shellGeom.ts):
+
+- `SUBSTRATE_GYRO_DOTTED_SHELL_COUNT_DESKTOP` `3600 → 6000` — the
+  surface stays dense at 3x grow.
+- Per-frame, as the EPILOGUE APPROACH band ramps `0 → 1`:
+  - `mats.globeDots`, `mats.particle`, `mats.dottedShell`
+    `uPointSize` scales `1.0 → 1.8x` (combined with the 3x grow,
+    surface dots end up ~5.4x as large in screen space at peak).
+  - Same materials' `uOpacity` scales `1.0 → 1.55x` (capped at 1).
+- A new `mats.atmosphere` material (fresnel rim-glow on a
+  back-faced sphere at `1.15x` the dotted-shell radius, additive
+  blending, gold tint) fades in `uOpacity 0 → 0.6` across the
+  APPROACH band. The shader uses `pow(1 - dot(n, viewDir), 2.5)`
+  so the glow is brightest at the silhouette and transparent
+  through the planet's "front face" — the Earth-from-orbit
+  atmospheric halo.
+
+### Architecture
+
+- All four refinements are independent. Wormhole warp lives in the
+  walls' vertex shader; starfield boost lives in `StaticStarfield`;
+  camera retune is param-only in `getEpilogueCameraPose`; planet
+  density + atmosphere live entirely inside `ShellSubstrateGyro`.
+  No coupling between them.
+- The wormhole warp and the ambient opacity fade are driven off the
+  SAME `paintProgress` channel, but with offset windows
+  (`[0.80, 0.93]` warp vs `[0.86, 0.97]` opacity) so the rails
+  visibly splay open BEFORE they dissolve. Net feel: exiting the
+  wormhole mouth, not a cut.
+- Starfield boost intentionally rides `paintProgress` (not
+  `epilogueProgress`) so the boosted state propagates into the
+  epilogue without an explicit handoff.
+- Atmosphere lives INSIDE `ShellSubstrateGyro`'s `rootRef`, so it
+  inherits the gyro assembly's parking position, rotation, AND the
+  `getEpiloguePlanetScale` grow — the halo scales with the planet
+  exactly as it should.
+
+### Verification
+
+Dev scrub at 1440x900 with `block_until_ms: 0` background:
+
+- **Wormhole exit (paintProgress ≈ 0.85)**: rails clearly splayed
+  outward into a wide ellipse rather than the parked tight tube;
+  starting to fade. Reads as "the mouth is opening" instead of a
+  flat cut.
+- **Build park (paintProgress ≈ 0.92)**: substrate gimbal + cardinal
+  bezel + sources/surfaces stack visible against a markedly DENSER
+  starfield — hundreds of small star dots clearly visible in the
+  background vs the corridor's quieter baseline.
+- **Epilogue peak LAND (`epiScroll(0.95)`)**: BIG planet with a
+  clear curved limb across the lower ~40% of the frame, soft GOLD
+  fresnel halo at the silhouette, dense starfield visible in the
+  upper "sky," "THE LABS JUST BET BILLIONS ON THE SAME LAYER." at
+  top-centre. Matches the Earth-reference brief.
+- **No console errors**. Lint + build clean.
+
+### Tunables (`getEpilogueCameraPose` + `ShellSubstrateGyro`)
+
+- Camera horizon angle: `EPILOGUE_LANDING_TILT`. Lower = more
+  level; higher = more overhead.
+- Planet size: `EPILOGUE_PLANET_GROW` + `EPILOGUE_LANDING_STANDOFF`
+  (paired — increase grow / decrease standoff to push the planet
+  bigger in frame).
+- Planet/sky split: `EPILOGUE_LOOK_DOWN_Y`. Lower = more sky above;
+  higher = more planet below.
+- Atmosphere intensity: peak `uOpacity` multiplier (currently 0.6)
+  and the fresnel `uPower` (currently 2.5 → tighter ring at higher
+  power).
+- Density boost: `pointSizeBoost` peak (currently 1.8) and
+  `opacityBoost` peak (currently 1.55) in `ShellSubstrateGyro`'s
+  `useFrame`.
+
+---
+
+## 2026-06-09 Revision (v3.1) — Bird's-eye flyover, Build declutter, smoother section-2 pan
+
+Three polish refinements on top of v3:
+
+### a. Bird's-eye planet flyover
+
+The v3 landing tilted the camera ~60deg and lifted the gaze to a
+mid-screen horizon, so the planet's limb sat across the middle of
+the viewport. The user asked for "we're about to fly over the top"
+— only the upper portion of the sphere visible, sky+title above.
+
+In [`sceneGeom.ts`](../../components/landing/home-v2/DepthGatewayScene/sceneGeom.ts)
+`getEpilogueCameraPose`:
+
+- `EPILOGUE_LANDING_TILT`: 60deg -> 70deg (camera lifts higher
+  above the planet's pole).
+- `EPILOGUE_LANDING_STANDOFF`: kept at 4.5 (a closer 2.5 pushed the
+  planet to fill the entire FOV).
+- `EPILOGUE_LOOK_DOWN_Y`: 0.65 -> 2.0 (lookAt now at 2 planet-radii
+  above the planet centre — well above the pole at +1R — which
+  shifts the planet's silhouette into the LOWER portion of the
+  viewport at peak).
+- `EPILOGUE_LOOK_FWD_Z`: kept at 0 (lookAt at planet centre Z, not
+  past it). The v2 epilogue v2 used a "look past" value which
+  pointed the camera AWAY from the planet — confirmed wrong, never
+  used in v3 because the parameter never existed there.
+
+At peak (tilt=70deg, distance=R+4.5=6.625, planet centre at angle
+~29deg below forward, half-angular = 18.7deg) the planet's top rim
+arcs across the middle of the viewport (~53% down from centre) and
+its body fills the lower portion. Starfield + "billions" title fill
+the upper portion. Matches the user brief.
+
+### b. Build-approach ambient fade
+
+The corridor's ambient framing (wormhole rail walls, latent-field
+dots, contour shards, intergate debris, celestial motes) crowded
+the left/right edges of the frame at the Build park where the
+substrate gimbal + sources/surfaces stack should be the centre of
+attention.
+
+New helper in
+[`sceneGeom.ts`](../../components/landing/home-v2/DepthGatewayScene/sceneGeom.ts):
+
+```ts
+export function getBuildApproachFade(paintProgress: number): number {
+  return 1 - smoothstep(0.8, 0.915, paintProgress);
+}
+```
+
+Returns 1 across the early corridor, ramps to 0 by the Build park
+centre (paintProgress ~0.915). Bonus: `paintProgress` is pinned at
+1 throughout the epilogue, so the ambient stays gone — the
+bird's-eye flyover gets a clean stage.
+
+Applied as a per-frame multiplier to the final opacity of:
+
+- [`LatentWormholeWalls.tsx`](../../components/landing/home-v2/DepthGatewayScene/LatentWormholeWalls.tsx)
+  — multiplies `uOpacity` uniform
+- [`LatentFieldTunnel.tsx`](../../components/landing/home-v2/DepthGatewayScene/LatentFieldTunnel.tsx)
+  — multiplies points / vectors / tokens targets
+- [`LatentTopographyContours.tsx`](../../components/landing/home-v2/DepthGatewayScene/LatentTopographyContours.tsx)
+  — multiplies the three shard variants' final material opacities
+- [`InterGateCorridor.tsx`](../../components/landing/home-v2/DepthGatewayScene/InterGateCorridor.tsx)
+  — multiplies the band material opacity
+- [`CelestialMotes.tsx`](../../components/landing/home-v2/DepthGatewayScene/CelestialMotes.tsx)
+  — multiplies the alpha target
+
+Untouched (intentionally): `StaticStarfield` (the background sky
+should stay), `ShellStack` (sources/surfaces — the Build story
+itself), the substrate gimbal.
+
+### c. Smoother section-2 centering pan
+
+The Thoughtform centering pan (`getThoughtformCenterOffsetX`)
+slides the rectangular compass gate + brandmark + copy to the
+optical axis as the corridor enters. v3.1 found this read as
+"harsh" — short window with `smoothstep` easing and hard plateaus
+at both ends, so scroll-back through `progress = 0.075` snapped the
+composition off-axis.
+
+Two changes:
+
+- `CORRIDOR_TIMELINE.thoughtformPan.start` 0.075 -> 0.035 — twice
+  as long. END unchanged at 0.109 so the camera dolly hold,
+  thoughtform boot ramp, and inner compass-ring flythrough (start
+  at 0.13) stay byte-identical.
+- Curve `smoothstep` -> `smootherstep` (Ken Perlin's
+  6t^5-15t^4+10t^3) — C2-continuous with zero velocity AND zero
+  acceleration at both ends, so the scroll-back at `start` is a
+  smooth deceleration rather than a hard stop.
+
+The pan still drives the four square compass loops, the brandmark,
+the left copy block, the phase labels, the Thoughtform atmosphere,
+and the boot glow — all one function call, all in lockstep.
+
+### Files touched in v3.1
+
+| File                                                                        | Change                                                                                                                                                                                                                                                |
+| --------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `components/landing/home-v2/DepthGatewayScene/sceneGeom.ts`                 | Retuned `EPILOGUE_LANDING_TILT` / `EPILOGUE_LANDING_STANDOFF` / `EPILOGUE_LOOK_DOWN_Y` / `EPILOGUE_LOOK_FWD_Z`; added `getBuildApproachFade`; widened `thoughtformPan.start` 0.075 -> 0.035; `getThoughtformCenterOffsetX` smoothstep -> smootherstep |
+| `components/landing/home-v2/DepthGatewayScene/LatentWormholeWalls.tsx`      | Multiply `uOpacity` by `getBuildApproachFade`                                                                                                                                                                                                         |
+| `components/landing/home-v2/DepthGatewayScene/LatentFieldTunnel.tsx`        | Multiply points/vectors/tokens targets by `getBuildApproachFade`                                                                                                                                                                                      |
+| `components/landing/home-v2/DepthGatewayScene/LatentTopographyContours.tsx` | Multiply the 3 shard variants' opacities by `getBuildApproachFade`                                                                                                                                                                                    |
+| `components/landing/home-v2/DepthGatewayScene/InterGateCorridor.tsx`        | Multiply band material opacity by `getBuildApproachFade`                                                                                                                                                                                              |
+| `components/landing/home-v2/DepthGatewayScene/CelestialMotes.tsx`           | Multiply alpha target by `getBuildApproachFade`                                                                                                                                                                                                       |
+
+### Verified (v3.1)
+
+- `npm run build` clean (57 routes, no new errors).
+- Section-2 centering: rectangular gate scrolls smoothly to the
+  axis with the new wider window + smootherstep; scroll-back
+  through the new start (0.035) no longer snaps the composition
+  off-axis.
+- Build park (corridor progress 0.92, rawP 0.557): substrate
+  gimbal + sources/surfaces stack + Build header all read with NO
+  ambient corridor crowding the edges. Clean composition.
+- Bird's-eye peak (epilogueProgress 0.98): title at top-centre
+  full opacity, planet's wireframe silhouette in the lower portion
+  of the viewport (sparse but present — the wireframe globe
+  becomes faint at planet scale; densifying the globe on grow is
+  an optional polish for future iteration).
+- No console errors.
+
+### Known polish for follow-up (not blocking)
+
+- The substrate wireframe globe is sparse at planet scale (grow
+  2.5x) — the planet reads as a faint arc rather than a solid
+  surface. Could be densified during APPROACH by scaling up
+  `SUBSTRATE_GYRO_DOTS_PER_MERIDIAN` / `_PARALLEL` (or by adding a
+  surface particle boost) so the planet feels more "real" at
+  flyover scale. Not blocking — the composition geometry is right.
+
+---
+
 ## 2026-06-08 Revision (v3) — Substrate planet landing (cards + gateway + topology morph removed)
 
 The user reviewed v2 and called the orbiting news cards "not elegant", was
