@@ -1144,7 +1144,7 @@ export function ShellSubstrateGyro({ layerKey, reducedMotion = false }: ShellSub
             arc — `lineLoop` always closes the ring on the GPU. The
             buildGreatCircle list has first vertex == last vertex so
             the closed-loop visual is preserved at draw progress 1. */}
-        <line geometry={geom.equator} material={mats.equator} frustumCulled={false} />
+        <threeLine geometry={geom.equator} material={mats.equator} frustumCulled={false} />
         {showParticles && (
           <points geometry={geom.particles} material={mats.particle} frustumCulled={false} />
         )}
@@ -1172,7 +1172,7 @@ export function ShellSubstrateGyro({ layerKey, reducedMotion = false }: ShellSub
           labels (DOM, projected at world radius ~1.0) sit just inside
           this ring at ~1.08, so the cluster reads as one grouped dial.
           `<line>` (LINE_STRIP) so the trim-path draw-on actually shows. */}
-      <line geometry={geom.cardinalRing} material={mats.cardinalRing} frustumCulled={false} />
+      <threeLine geometry={geom.cardinalRing} material={mats.cardinalRing} frustumCulled={false} />
 
       {/* Gimbal cage — counter-rotating rings + pivot diamonds.
           Hierarchy per ring (outer → inner):
@@ -1203,7 +1203,7 @@ export function ShellSubstrateGyro({ layerKey, reducedMotion = false }: ShellSub
                   trims the visible arc as the ring tilts open. The
                   great-circle geometry's first vertex == last so the
                   ring still closes at draw progress 1. */}
-              <line
+              <threeLine
                 geometry={geom.gimbalRings[ringIdx]}
                 material={mats.ring}
                 frustumCulled={false}
