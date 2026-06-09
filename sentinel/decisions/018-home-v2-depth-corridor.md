@@ -11,6 +11,240 @@
 
 ---
 
+## 2026-06-09 Revision (v3.6) — Wormhole acceleration field
+
+Follow-up to v3.5.1. The graded mouth density read as a static
+gradient — beautiful, but it did not feel like the camera was
+accelerating into the gateway. The user wanted the event-horizon
+sensation: light/material streaming past as the corridor end
+approaches.
+
+The fix is a NEW lightweight layer alongside the existing point shell:
+short directional STREAKS on the inner surface of leg 2, distributed
+inward toward the mouth with both density and length gradients. The
+streaks are world-rigid line segments; "motion" comes from the camera
+dollying past them while `uExitWarp` brightens them — no per-frame
+position updates needed.
+
+[`LatentWormholeWalls.tsx`](../../components/landing/home-v2/DepthGatewayScene/LatentWormholeWalls.tsx)
+gains:
+
+- A `StreakBuffers` interface + `buildExitMouthStreaks()` builder
+  generating 360 axial line segments across the last ~53% of leg 2.
+  Each streak sits slightly inboard of the dotted shell
+  (`STREAK_INNER_RADIUS = 0.86`) so it reads as inner-surface flow,
+  not as another rail dot.
+- Per-streak `aStreamStrength` (0..1) eased on leg-local Z so the
+  field starts faint at the throat and accumulates density and
+  length toward the rim (`STREAK_LENGTH_MIN 0.7 -> MAX 3.2`).
+- A second `ShaderMaterial` (`streakVertex`/`streakFragment`) on a
+  `<lineSegments>` mount with uniforms mirroring the wall shader:
+  `uCameraPos`, `uVisibleNear/Far`, `uOpacity`, `uExitWarp`. Additive
+  blending so streaks read as light over the wall, not solid lines.
+- Per-frame: streak `uExitWarp` shares
+  `getWormholeExitWarp(paintProgress)` with the wall material, and
+  the streak `uOpacity` shares the wall's velocity-lift + Build-fade
+  envelope so streaks brighten with active scroll and dissolve with
+  the ambient walls.
+
+The "streaks" are NOT particles dragged in real time — that would
+violate the world-rigid corridor invariant from ADR-018. They are
+static segments; the camera dolly + warp ramp create the perception
+of light flowing past. This keeps the cost flat (one extra
+`<lineSegments>` draw call, no per-frame vertex shuffling) while
+delivering the requested wormhole-acceleration read.
+
+Sequence as scrubbed at 1440x900:
+
+- `paintProgress 0.64`: Encode park clean, streaks not yet visible
+  (warp ramp begins here).
+- `paintProgress 0.72`: streaks emerge as faint horizontal dashes on
+  the upper/lower wall bands, density building inward.
+- `paintProgress 0.78`: clear inner-surface flow reading across the
+  corridor, with the streak field accumulating density toward the
+  Build-side rim.
+- `paintProgress 0.82`: peak warp; streaks read as accelerated light
+  flow against the static rail lattice while the mouth flowers open.
+- `paintProgress 0.88`: Build dock; streaks dissolve with the ambient
+  walls via the shared `getBuildApproachFade` envelope.
+
+### Tunables (v3.6)
+
+- Field density: `STREAK_COUNT` (360).
+- Length ramp: `STREAK_LENGTH_MIN/MAX` (0.7 / 3.2).
+- Coverage range: `STREAK_START_FRAC/END_FRAC` (0.46 / 0.99).
+- Inner-surface offset: `STREAK_INNER_RADIUS` (0.86).
+- Rim radial flare: `STREAK_RADIAL_FLARE` (0.22).
+- Opacity ceiling vs walls: `streakMaterial.uOpacity` multiplier
+  (currently 1.05x of the wall envelope, capped at 1.0).
+
+### Architecture invariants kept
+
+- No per-frame geometry edits — both wall + streak buffers are built
+  once at mount.
+- All progress-driven behaviour comes from existing helpers
+  (`getWormholeExitWarp`, `getBuildApproachFade`) so the broader
+  corridor cadence is byte-stable.
+- Streaks gated by the same `enabled` viewport check that hides the
+  walls on narrow viewports, so mobile remains untouched.
+
+---
+
+## 2026-06-09 Revision (v3.5.1) — Mouth density becomes a gradient, not a particle cloud
+
+Follow-up to v3.5. The dense flower-mouth fixed legibility, but the
+first version made every mouth particle equally strong (`aMouth = 1`),
+so it read as a separate cloud at the edge of the opening. The desired
+read is that the wormhole material itself becomes denser as it approaches
+the rim: sparse throat -> denser rim -> fade/clear as Build lands.
+
+[`LatentWormholeWalls.tsx`](../../components/landing/home-v2/DepthGatewayScene/LatentWormholeWalls.tsx)
+now treats `aMouth` as a continuous 0..1 strength:
+
+- `EXIT_MOUTH_RING_COUNT` increased `6 -> 9`, but each ring's dot count
+  ramps from `28 -> 132` based on eased rim progress.
+- The mouth starts earlier in leg-local Z (`0.62`) with low-size,
+  low-opacity throat dots, then builds density toward the rim.
+- Petal/rib particles now fade their own `aMouth`, size, and colour
+  along the same gradient instead of appearing as full-strength strokes.
+- Shader response softened: mouth particles expand `1.9 -> 2.75` at the
+  rim (was `1.9 -> 3.4` everywhere), brighten only near the rim, and
+  keep throat particles close to ordinary wall behaviour.
+
+Verification at 1440x900:
+
+- `paintProgress 0.65`: Encode remains dominant; the mouth is only a
+  subtle density buildup inside/behind the judgment shell.
+- `paintProgress 0.78`: particles now build toward the rim in a graded
+  way rather than as an even floating halo.
+- `paintProgress 0.88`: Build docks cleanly; the mouth density has
+  cleared with the ambient walls.
+
+---
+
+## 2026-06-09 Revision (v3.5) — Dense flower-mouth at the Build end of the Encode wormhole
+
+Follow-up to v3.4. Extending the post-Encode runway made the timing
+correct, but the mouth was still built from the same sparse wall lattice
+as the rest of the tunnel. The user asked for the gateway mouth itself to
+gain density and open outward like a flower: as we leave Encode,
+Judgment should visibly open in the background before landing into
+Build.
+
+[`LatentWormholeWalls.tsx`](../../components/landing/home-v2/DepthGatewayScene/LatentWormholeWalls.tsx)
+now adds a dedicated exit-mouth particle structure near the Build end of
+leg 2 (Encode -> Build):
+
+- `buildExitMouthBloom()` creates six layered rings across the final
+  ~30% of leg 2 (`EXIT_MOUTH_START_FRAC = 0.70`, `END = 0.995`).
+- Each ring uses 96 dots (vs ordinary cross-rings at 32) and an
+  8-petal radial modulation, so the mouth reads as an iris/flower rather
+  than a plain oval.
+- Eight sparse petal ribs connect the throat to the outer opening,
+  giving the eye a clear outward-unfolding direction while preserving
+  the dotted wormhole language.
+- Mouth particles carry a new `aMouth` attribute. The shader uses it to
+  brighten and enlarge mouth particles under `uExitWarp`, and to expand
+  them harder than ordinary wall particles (`mix(1.9, 3.4, aMouth)`).
+
+The result keeps the same world-rigid particle architecture (no SVG or
+separate portal mesh), but the end of the gateway now has enough local
+density to be read as a specific object in the background. The sequence
+is now:
+
+1. Exit Encode: dense dotted iris appears behind/around the judgment
+   sphere.
+2. Mid-transition: the iris petals/ribs open outward while the corridor
+   remains visible.
+3. Build approach: trusted sources + headless surfaces dock into the
+   substrate as the flower-mouth clears.
+
+Verification at 1440x900:
+
+- `paintProgress 0.65`: Encode copy still dominant; a denser iris is
+  visible behind/inside the judgment sphere.
+- `paintProgress 0.78`: petal/rib particles have expanded outward across
+  the frame while Encode still lingers.
+- `paintProgress 0.88`: Build is landing; sources/surfaces dock as the
+  mouth structure fades with the ambient walls.
+
+---
+
+## 2026-06-09 Revision (v3.4) — Longer post-Encode runway for the wormhole exit
+
+Follow-up to v3.3.1. Pulling `getWormholeExitWarp` earlier made the
+mouth start at the Encode exit, but the user still read the effect as
+too quick because the underlying physical corridor span was too short:
+even a wide progress window (`0.66 -> 0.90`) still happened inside the
+same compressed scroll distance. The fix is structural, not shader-only:
+the calibrated corridor now gets more physical scroll budget before the
+epilogue takes over.
+
+In
+[`home-v2.css`](../../components/landing/home-v2/home-v2.css)
+and
+[`useDepthScroll.ts`](../../components/landing/home-v2/hooks/useDepthScroll.ts):
+
+- Stage height changed `760svh -> 920svh`.
+- Calibrated corridor span changed `460svh -> 620svh`.
+- Epilogue span remains `300svh`.
+- `EPILOGUE_START` changed `460 / 760 -> 620 / 920`.
+
+This keeps every normalized corridor constant byte-stable while slowing
+the whole calibrated corridor physically. The practical win is the
+post-Encode leg: the same Encode-exit -> Build progress interval now
+has ~35% more scroll runway, so the mouth can be witnessed rather than
+arriving as a near-instant transition.
+
+The mouth timing was then retuned in
+[`sceneGeom.ts`](../../components/landing/home-v2/DepthGatewayScene/sceneGeom.ts):
+
+- `getWormholeExitWarp` changed `[0.66, 0.90] -> [0.64, 0.91]`.
+- Start just after the Encode park centre, while the Encode readout is
+  still present.
+- End just before the ambient dissolve completes, so the sequence still
+  reads: **Encode exits -> mouth widens -> sources/surfaces dock -> walls
+  dissolve -> Build is parked**.
+
+Verification at 1440x900:
+
+- `paintProgress 0.65`: Encode copy still dominant; mouth only just
+  begins to loosen around the substrate.
+- `paintProgress 0.78`: user is still in the transition, but the
+  enclosing rings have visibly expanded into a much larger aperture.
+- `paintProgress 0.88`: Build is arriving; sources/surfaces are docking
+  while the corridor has had time to open around them.
+
+Result: the wormhole now feels physically longer after Encode. The
+effect is no longer just "the shader starts earlier"; there is actual
+scroll distance to perceive the tunnel widening before the Build park.
+
+---
+
+## 2026-06-09 Revision (v3.3.1) — Wormhole mouth starts widening at the Encode exit
+
+Follow-up to v3.3. The mouth-funnel widen read as "too quick": its
+window was `[0.74, 0.92]` of paintProgress, but the Encode→Build
+passthrough is short (Encode beat window `[0.573, 0.700]`, passthrough-02
+`[0.700, 0.846]`, Build park ≈0.923), so 0.74 only began the dilation a
+third of the way through the passthrough — by the time the mouth opened
+the camera was almost at Build.
+
+`getWormholeExitWarp` in
+[`sceneGeom.ts`](../../components/landing/home-v2/DepthGatewayScene/sceneGeom.ts)
+window pulled back to `[0.66, 0.90]`: 0.66 begins the dilation right as
+the camera pulls OUT of the Encode park (centre ≈0.636, window end
+≈0.700), so the tunnel ahead starts morphing open the moment you leave
+Encode and widens gradually across the entire Encode-exit → Build leg.
+End held at 0.90 so the mouth is fully open just before the ambient
+walls dissolve (`getBuildApproachFade` `[0.86, 0.97]`). Verified by
+scrubbing pp 0.67 → 0.78 → 0.86: the mouth begins at the Encode exit
+(header still up) and opens progressively into Build. The forward-bias
+
+- 1.9 magnitude from v3.3 are unchanged; only the timing moved.
+
+---
+
 ## 2026-06-09 Revision (v3.3) — Curved landing arc, mouth-funnel exit, sources fly in from outside
 
 Three follow-up refinements on the v3.2 corridor-exit + planet landing,

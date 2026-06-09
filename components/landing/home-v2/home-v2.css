@@ -85,8 +85,8 @@
 .home-v2-stage {
   position: relative;
   width: 100%;
-  /* Total stage height = corridor span (460svh, unchanged) + epilogue
-     span (180svh, NEW). Stage growth history:
+  /* Total stage height = corridor span (620svh) + epilogue span
+     (300svh). Stage growth history:
        - 300svh: original world-owned corridor.
        - 360svh: Thoughtform -> Diagnostics immersion pass
          (passthrough-01 widened from 14% to 24% of scroll).
@@ -112,8 +112,14 @@
          (corridor cadence rule). The new sub-bands
          (BUILD_OUT / SPHERE / MORPH / GATEWAY / SIGNAL_IN /
          CARDS_IN) live in `lib/home-v2/epilogueTimeline.ts`;
-         `EPILOGUE_START` recomputes to 460/760 ≈ 0.6053. */
-  height: 760svh;
+         `EPILOGUE_START` recomputes to 460/760 ≈ 0.6053.
+       - 920svh: epilogue v3.4 — extended the CALIBRATED corridor
+         from 460svh to 620svh while keeping the epilogue tail at
+         300svh. This gives the short Encode -> Build leg enough
+         runway for the wormhole mouth to visibly widen across the
+         whole exit, instead of opening almost on top of the Build
+         park. `EPILOGUE_START` recomputes to 620/920 ≈ 0.6739. */
+  height: 920svh;
   background: var(--void, #050403);
   z-index: 2;
   isolation: isolate;
@@ -241,11 +247,23 @@ html[data-corridor-epilogue="true"] .home-v2-stage__canvas canvas {
 .home-v2-station-header__support {
   /* Sits directly UNDER the title (stacked IA). */
   margin: clamp(14px, 1.4vw, 20px) 0 0;
-  max-width: min(34vw, 400px);
+  /* Match the title's column width so the body doesn't feel hemmed in
+     under a wider headline. Title uses `min(38vw, 460px)`; using the
+     same here gives a single column read (heading + body share one
+     edge), matching the hero-pair typography pattern used by polished
+     scroll sites (e.g. animejs.com hero where both lines occupy the
+     same column). */
+  max-width: min(38vw, 460px);
   /* Brand display sans (PP Neue Montreal) — matches the previous
      header render. */
   font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
-  font-size: clamp(15px, 1.2vw, 18px);
+  /* Type pair rebalanced 2026-06-09: body bumped 15/1.2/18 -> 16/1.4/20
+     so the title:body ratio comes in around 2.2 (was ~2.55) and the
+     paragraph reads with weight instead of as a caption. 20 is the
+     brand reference body scale (divisible by 5 at the design system's
+     reference scale per `thoughtform-design/SKILL.md` "Universal
+     Foundations: Typography"). */
+  font-size: clamp(16px, 1.4vw, 20px);
   line-height: 1.45;
   letter-spacing: 0.005em;
   color: rgba(235, 227, 214, 0.8);
@@ -364,7 +382,10 @@ html[data-corridor-epilogue="true"] .home-v2-stage__canvas canvas {
   font-size: clamp(26px, 3vw, 44px);
 }
 .home-v2-station-header--signal .home-v2-station-header__support {
-  font-size: clamp(15px, 1.25vw, 19px);
+  /* Match the corridor headers' rebalanced body scale (16/1.4/20) so
+     the epilogue title-paragraph pair reads with the same hierarchy
+     as Navigate/Encode/Build (2026-06-09 type-pair pass). */
+  font-size: clamp(16px, 1.4vw, 20px);
   max-width: min(70vw, 560px);
 }
 
@@ -508,7 +529,9 @@ html[data-corridor-epilogue="true"] .home-v2-stage__canvas canvas {
      match on the same screen Y. */
   margin: 0;
   max-width: 38ch;
-  font-size: clamp(15px, 1.2vw, 18px);
+  /* Matches the corridor station-header body pair (2026-06-09 pass) so
+     the readout columns stay aligned with the rest of the journey. */
+  font-size: clamp(16px, 1.4vw, 20px);
   line-height: 1.45;
   text-align: left;
   color: rgba(235, 227, 214, 0.78);

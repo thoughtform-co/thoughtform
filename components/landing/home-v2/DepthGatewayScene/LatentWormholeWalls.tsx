@@ -130,6 +130,61 @@ const CROSS_RING_COUNT_PER_LEG = 6;
  *  smooth circle from afar but stays clearly dotted up close. */
 const CROSS_RING_DOTS = 32;
 
+/** Exit-mouth density pass (v3.5.1).
+ *
+ *  Ordinary rails are intentionally sparse, which made the Build-end
+ *  mouth hard to read even after timing + runway fixes. These particles
+ *  live ONLY near the end of leg 2 (Encode -> Build), but they are
+ *  deliberately GRADED: sparse/soft near the throat, increasingly dense
+ *  toward the rim. `aMouth` is a 0..1 strength, not a boolean, so the
+ *  shader can make the rim open/brighter without creating a detached
+ *  cloud of equally strong particles. */
+const EXIT_MOUTH_RING_COUNT = 9;
+const EXIT_MOUTH_DOTS_MIN = 28;
+const EXIT_MOUTH_DOTS_MAX = 132;
+const EXIT_MOUTH_PETAL_COUNT = 8;
+const EXIT_MOUTH_RIB_DOTS = 14;
+const EXIT_MOUTH_START_FRAC = 0.62;
+const EXIT_MOUTH_END_FRAC = 0.995;
+const EXIT_MOUTH_PETAL_AMP = 0.2;
+const EXIT_MOUTH_DEPTH_BLOOM = 0.18;
+
+/** Exit acceleration field (v3.6).
+ *
+ *  Short directional streaks along the inner surface of the leg-2
+ *  tunnel that read as "light streaming past you" as the camera
+ *  approaches the Build mouth. The streaks are static line segments
+ *  in world space; the perceived motion comes from camera dolly +
+ *  per-streak opacity ramping with `uExitWarp`.
+ *
+ *  Designed to NOT pile up at the rim: each streak has its own
+ *  `streamStrength` gradient eased by its leg-local Z, so they begin
+ *  faint and short well inside the tunnel and accumulate density +
+ *  length toward the mouth. This is what gives the sensation of
+ *  inward acceleration rather than a rim-only halo.
+ *
+ *  Cheap by construction — a few hundred line segments, no per-frame
+ *  vertex shuffling. */
+const STREAK_COUNT = 360;
+/** Min/max base length along Z. Min applies at the inner start of
+ *  the streak field; max applies at the rim under full warp. */
+const STREAK_LENGTH_MIN = 0.7;
+const STREAK_LENGTH_MAX = 3.2;
+/** Leg-local Z fractions across which the streak field lives. Starts
+ *  earlier than `EXIT_MOUTH_START_FRAC` so streaks are already present
+ *  while leaving Encode (faintly), then builds density toward the
+ *  mouth. */
+const STREAK_START_FRAC = 0.46;
+const STREAK_END_FRAC = 0.99;
+/** Inner radius factor — streaks sit slightly INSIDE the shell so they
+ *  read as the inner-surface flow, not as the outer wall. 0.86 puts
+ *  them visibly inboard of the dotted shell so they don't merge with
+ *  the existing rail dots. */
+const STREAK_INNER_RADIUS = 0.86;
+/** Per-streak radial flare amount under full warp (fraction of the
+ *  shell radius). Small — the streaks should mostly read as axial. */
+const STREAK_RADIAL_FLARE = 0.22;
+
 /** Aperture depth-gate frames per leg. */
 const APERTURE_FRAMES_PER_LEG = 3;
 /** Dots along each corner's two short arms. */
@@ -203,6 +258,7 @@ uniform float uExitWarp;
 attribute vec3 aColor;
 attribute float aReveal;
 attribute float aSize;
+attribute float aMouth;
 
 varying vec3 vColor;
 varying float vAlpha;
@@ -232,7 +288,12 @@ void main() {
     // radius at full warp so the opening is unmistakable as you fly
     // toward it, while the forward bias keeps the throat — and thus the
     // frame — clear (no v3.2-style flat-ring blowout at the camera).
-    float expand = uExitWarp * mouth * 1.9;
+    // Graded mouth particles (aMouth 0..1) act like the same tunnel
+    // material getting denser toward the rim. Only the rim opens harder;
+    // throat particles stay close to the ordinary rail warp so the
+    // mouth reads as part of the tube, not a detached particle cloud.
+    float rim = smoothstep(0.18, 1.0, aMouth);
+    float expand = uExitWarp * mouth * mix(1.9, 2.75, rim);
     worldPos.xy *= 1.0 + expand;
   }
 
@@ -250,12 +311,16 @@ void main() {
   gl_Position = projectionMatrix * mv;
 
   vColor = aColor;
-  vAlpha = reveal * farFade * nearFade;
+  // aMouth is a density/strength gradient. Low mouth values sit slightly
+  // quieter than the ordinary rails; only the rim gains brightness as it
+  // opens. This removes the "floating cloud at the edge" read.
+  float mouthAlpha = mix(0.78, 1.28, smoothstep(0.08, 1.0, aMouth) * uExitWarp);
+  vAlpha = reveal * farFade * nearFade * mix(1.0, mouthAlpha, aMouth);
 
   // Distance-based size with a generous floor so far rails still
   // resolve as individual dots, not pixel dust.
   float sizeFactor = clamp(7.0 / max(0.5, dist), 0.55, 2.6);
-  gl_PointSize = uPointSize * uPixelRatio * sizeFactor * aSize;
+  gl_PointSize = uPointSize * uPixelRatio * sizeFactor * aSize * mix(1.0, 1.16, aMouth);
 }
 `;
 
@@ -276,6 +341,62 @@ void main() {
 }
 `;
 
+// ── Streak shaders (v3.6 acceleration field) ─────────────────────
+//
+// Lightweight per-vertex shader for the inner-surface line streaks.
+// Each line is two vertices in the geometry; both carry the same
+// `aStreamStrength` (0..1 leg-local rim weight). The shader uses
+// `uExitWarp` to brighten/extend streaks toward the mouth — at low
+// warp they're effectively invisible, at peak warp the closest
+// streaks read as warp-speed flow past the camera.
+
+const streakVertex = /* glsl */ `
+uniform vec3 uCameraPos;
+uniform float uVisibleNear;
+uniform float uVisibleFar;
+uniform float uExitWarp;
+
+attribute float aStreamStrength;
+attribute float aEnd;   // 0 at the tail (near camera), 1 at the head (far)
+attribute vec3 aColor;
+
+varying vec3 vColor;
+varying float vAlpha;
+
+void main() {
+  vec4 mv = modelViewMatrix * vec4(position, 1.0);
+  float dist = distance(position, uCameraPos);
+
+  // Camera-space depth focus — same envelope as the dotted walls so
+  // streaks fade in/out symmetrically with the surrounding shell.
+  float farFade = smoothstep(uVisibleFar, uVisibleFar - 5.0, dist);
+  float nearFade = smoothstep(uVisibleNear, uVisibleNear + 0.6, dist);
+
+  // Streaks reveal AS the warp ramps. The far end of each streak fades
+  // slightly to give the line a soft trail, which reads as motion blur
+  // when the camera dollies past.
+  float streamReveal = smoothstep(0.15, 1.0, aStreamStrength) * uExitWarp;
+  float tailFade = mix(1.0, 0.35, aEnd);
+
+  gl_Position = projectionMatrix * mv;
+  vColor = aColor;
+  vAlpha = streamReveal * farFade * nearFade * tailFade;
+}
+`;
+
+const streakFragment = /* glsl */ `
+uniform float uOpacity;
+
+varying vec3 vColor;
+varying float vAlpha;
+
+void main() {
+  float alpha = vAlpha * uOpacity;
+  if (alpha < 0.01) discard;
+  gl_FragColor = vec4(vColor, alpha);
+}
+`;
+
 // ── Geometry builders ───────────────────────────────────────────
 
 interface PointBuffers {
@@ -283,6 +404,16 @@ interface PointBuffers {
   colors: number[];
   reveals: number[];
   sizes: number[];
+  mouths: number[];
+}
+
+/** Per-streak vertex buffers. Two vertices per streak (tail + head);
+ *  the line list draws them as line segments. */
+interface StreakBuffers {
+  positions: number[];
+  colors: number[];
+  strengths: number[];
+  ends: number[]; // 0 at tail, 1 at head
 }
 
 // (Epilogue landscape morph removed in v3 — the substrate sphere now
@@ -296,12 +427,14 @@ function pushPoint(
   z: number,
   color: THREE.Color,
   reveal: number,
-  size: number
+  size: number,
+  mouth = 0
 ): void {
   buf.positions.push(x, y, z);
   buf.colors.push(color.r, color.g, color.b);
   buf.reveals.push(reveal);
   buf.sizes.push(size);
+  buf.mouths.push(mouth);
 }
 
 /** Build the longitudinal dotted rails around the oval shell for one
@@ -450,6 +583,159 @@ function buildCrossRings(fromZ: number, toZ: number, legIdx: 0 | 1, buf: PointBu
   }
 }
 
+/** Dense exit-mouth gradient at the end of leg 2 (Encode -> Build).
+ *
+ *  This is not a solid portal mesh; it's still the same dotted
+ *  wormhole language, just concentrated into a rim-density gradient.
+ *  The throat has few dim dots; each subsequent ring adds more points,
+ *  size, and `aMouth` strength until the rim becomes visibly dense. This
+ *  makes the gateway feel like it is building up toward its edge instead
+ *  of forming a separate particle cloud at the edge. */
+function buildExitMouthBloom(fromZ: number, toZ: number, buf: PointBuffers): void {
+  const gold = new THREE.Color(GOLD_HEX);
+  const dawn = new THREE.Color(DAWN_HEX);
+  const dawnSoft = new THREE.Color(DAWN_SOFT_HEX);
+  const span = toZ - fromZ;
+
+  for (let r = 0; r < EXIT_MOUTH_RING_COUNT; r++) {
+    const ringT = EXIT_MOUTH_RING_COUNT > 1 ? r / (EXIT_MOUTH_RING_COUNT - 1) : 1;
+    const rimT = ringT * ringT * (3 - 2 * ringT);
+    const zT = lerp(EXIT_MOUTH_START_FRAC, EXIT_MOUTH_END_FRAC, ringT);
+    const z = fromZ + span * zT;
+
+    // The mouth widens as it approaches the Build end even BEFORE the
+    // shader warp, but the gradient is eased: early rings are close to
+    // the ordinary tunnel radius, the rim is where density and openness
+    // gather. That avoids a floating halo/cloud at the mouth edge.
+    const depthBloom = 1 + rimT * EXIT_MOUTH_DEPTH_BLOOM;
+    const inward = 1 - zT * RAIL_INWARD_PULL;
+    const rx = SHELL_RX * inward * depthBloom;
+    const ry = SHELL_RY * inward * depthBloom;
+    const ringColor = dawnSoft.clone().lerp(dawn, Math.min(1, rimT * 1.25));
+    if (rimT > 0.55) ringColor.lerp(gold, (rimT - 0.55) / 0.45);
+    const dotCount = Math.round(lerp(EXIT_MOUTH_DOTS_MIN, EXIT_MOUTH_DOTS_MAX, rimT));
+    const mouthStrength = 0.08 + rimT * 0.92;
+
+    for (let d = 0; d < dotCount; d++) {
+      const angleT = d / dotCount;
+      const angle = angleT * Math.PI * 2 + 0.18 + ringT * 0.18;
+      // 8-lobed radial modulation: petal tips are denser/brighter and
+      // open harder under the shader, while valleys keep the iris airy.
+      const petal = Math.max(0, Math.cos(angle * EXIT_MOUTH_PETAL_COUNT + ringT * Math.PI));
+      const petalBloom = 1 + petal * EXIT_MOUTH_PETAL_AMP * (0.25 + rimT * 0.75);
+      const x = Math.cos(angle) * rx * petalBloom;
+      const y = Math.sin(angle) * ry * petalBloom;
+      const size = 0.48 + rimT * 0.72 + petal * 0.2 * rimT;
+      pushPoint(buf, x, y, z, ringColor, 1, size, mouthStrength);
+    }
+  }
+
+  // Petal ribs: sparse radial dotted strokes that connect the throat to
+  // the opening. These give the eye a clear "unfolding" direction as the
+  // mouth blooms, without turning the portal into a flat filled flower.
+  for (let p = 0; p < EXIT_MOUTH_PETAL_COUNT; p++) {
+    const angle = (p / EXIT_MOUTH_PETAL_COUNT) * Math.PI * 2 + 0.18;
+    const tipPetal = 1 + EXIT_MOUTH_PETAL_AMP;
+    for (let d = 0; d < EXIT_MOUTH_RIB_DOTS; d++) {
+      const t = EXIT_MOUTH_RIB_DOTS > 1 ? d / (EXIT_MOUTH_RIB_DOTS - 1) : 1;
+      const rimT = t * t * (3 - 2 * t);
+      const zT = lerp(EXIT_MOUTH_START_FRAC, EXIT_MOUTH_END_FRAC, t);
+      const z = fromZ + span * zT;
+      const inward = 1 - zT * RAIL_INWARD_PULL;
+      const depthBloom = 1 + rimT * EXIT_MOUTH_DEPTH_BLOOM;
+      const petalBloom = lerp(0.72, tipPetal, rimT);
+      const x = Math.cos(angle) * SHELL_RX * inward * depthBloom * petalBloom;
+      const y = Math.sin(angle) * SHELL_RY * inward * depthBloom * petalBloom;
+      const color = dawnSoft.clone().lerp(p % 2 === 0 ? gold : dawn, rimT);
+      pushPoint(buf, x, y, z, color, 1, 0.42 + rimT * 0.72, 0.06 + rimT * 0.94);
+    }
+  }
+}
+
+/** Build the inner-surface streak field for leg 2 (Encode -> Build).
+ *
+ *  Each streak is a short line segment on the inside of the tunnel
+ *  shell, aligned mostly along the optical Z axis with a small radial
+ *  flare. Streaks accumulate density and length toward the mouth via
+ *  a deterministic distribution so the camera reads them as the
+ *  tunnel "streaming past" as it accelerates into the exit.
+ *
+ *  The distribution is intentionally biased: more samples fall near
+ *  the rim than the throat, but every streak still owns its OWN leg-
+ *  local Z, so even leaving Encode you see a few faint streaks far
+ *  ahead — the field BUILDS rather than appearing at the rim.
+ *
+ *  Static geometry. The "motion" comes from the camera dollying past
+ *  the streaks while `uExitWarp` brightens them, not from per-frame
+ *  position updates. */
+function buildExitMouthStreaks(fromZ: number, toZ: number, buf: StreakBuffers): void {
+  const gold = new THREE.Color(GOLD_HEX);
+  const dawn = new THREE.Color(DAWN_HEX);
+  const dawnSoft = new THREE.Color(DAWN_SOFT_HEX);
+  const span = toZ - fromZ;
+
+  for (let i = 0; i < STREAK_COUNT; i++) {
+    // Deterministic uniform sample, then biased toward the rim with
+    // a power curve so the density gradient feels graded, not flat.
+    const u = (i + 0.5) / STREAK_COUNT;
+    const biased = Math.pow(u, 1.6); // rim-leaning
+    const zT = lerp(STREAK_START_FRAC, STREAK_END_FRAC, biased);
+    const tailZ = fromZ + span * zT;
+
+    // Rim weight 0..1, eased so the strength curve is gentle inside
+    // and steepens near the mouth.
+    const rimT = biased * biased * (3 - 2 * biased);
+    const streamStrength = 0.08 + rimT * 0.92;
+
+    // Streak length scales with rim weight. Near the mouth, streaks
+    // grow long enough that they overlap the next ring and read as
+    // continuous light flow.
+    const len = lerp(STREAK_LENGTH_MIN, STREAK_LENGTH_MAX, rimT);
+
+    // Distribute streaks around the full oval cross-section with a
+    // hash-style phase so they don't collide with the rail angles.
+    const phase = (i * 2.39996) % (Math.PI * 2);
+    const inward = 1 - zT * RAIL_INWARD_PULL;
+    const r = STREAK_INNER_RADIUS * inward;
+    // Slight radial flare at the rim — bell-shaped, max at mid-streak
+    // so the head and tail both sit on the shell surface but the body
+    // bows slightly outward (subtle, ~0.08 at peak).
+    const flare = STREAK_RADIAL_FLARE * rimT;
+
+    const baseX = Math.cos(phase) * SHELL_RX * r;
+    const baseY = Math.sin(phase) * SHELL_RY * r;
+
+    // The HEAD of the streak sits FURTHER from the camera (deeper -Z
+    // in our world axis). The TAIL is closer to the camera. So
+    // tailZ is the camera-side end and headZ is the mouth-side end.
+    const headZ = tailZ - len;
+
+    const tailX = baseX;
+    const tailY = baseY;
+    const headX = baseX * (1 + flare);
+    const headY = baseY * (1 + flare);
+
+    // Color tiering — most streaks dawn-soft, a quarter dawn, and the
+    // rim-strongest in gold. Keeps the field reading as quiet ambient
+    // light with bright punctuation rather than a uniform halo.
+    let color: THREE.Color;
+    if (rimT > 0.7 && i % 5 === 0) color = gold;
+    else if (i % 4 === 0) color = dawn;
+    else color = dawnSoft;
+
+    // Push tail (aEnd=0)
+    buf.positions.push(tailX, tailY, tailZ);
+    buf.colors.push(color.r, color.g, color.b);
+    buf.strengths.push(streamStrength);
+    buf.ends.push(0);
+    // Push head (aEnd=1)
+    buf.positions.push(headX, headY, headZ);
+    buf.colors.push(color.r, color.g, color.b);
+    buf.strengths.push(streamStrength);
+    buf.ends.push(1);
+  }
+}
+
 /** Build the lower topographic shelves for one leg — a few rows of
  *  faintly waved dots below the optical axis. Reads as a latent
  *  floor receding into the corridor, mirroring the archived
@@ -483,12 +769,14 @@ function buildWormholeWalls(): {
   colors: Float32Array;
   reveals: Float32Array;
   sizes: Float32Array;
+  mouths: Float32Array;
 } {
   const buf: PointBuffers = {
     positions: [],
     colors: [],
     reveals: [],
     sizes: [],
+    mouths: [],
   };
 
   const tfZ = STATION_THOUGHTFORM.position[2];
@@ -517,6 +805,7 @@ function buildWormholeWalls(): {
   const leg2End = lerp(dgZ, intZ, LEG_RAIL_END_FRAC);
   buildLegRails(leg2Start, leg2End, 1, buf);
   buildCrossRings(leg2Start, leg2End, 1, buf);
+  buildExitMouthBloom(leg2Start, leg2End, buf);
   buildShelves(leg2Start, leg2End, 1, buf);
   for (let i = 0; i < APERTURE_FRAMES_PER_LEG; i++) {
     const t = (i + 1) / (APERTURE_FRAMES_PER_LEG + 1);
@@ -531,6 +820,39 @@ function buildWormholeWalls(): {
     colors: new Float32Array(buf.colors),
     reveals: new Float32Array(buf.reveals),
     sizes: new Float32Array(buf.sizes),
+    mouths: new Float32Array(buf.mouths),
+  };
+}
+
+/** Build the leg-2 streak field as a separate set of buffers for the
+ *  `<lineSegments>` mount. Kept independent so the streaks can use a
+ *  dedicated material/shader without inflating the points-shader
+ *  vertex throughput. */
+function buildWormholeStreaks(): {
+  positions: Float32Array;
+  colors: Float32Array;
+  strengths: Float32Array;
+  ends: Float32Array;
+} {
+  const buf: StreakBuffers = {
+    positions: [],
+    colors: [],
+    strengths: [],
+    ends: [],
+  };
+
+  const dgZ = STATION_DIAGNOSTIC.position[2];
+  const intZ = STATION_INTELLIGENCE.position[2];
+  const leg2Start = lerp(dgZ, intZ, LEG_RAIL_START_FRAC);
+  const leg2End = lerp(dgZ, intZ, LEG_RAIL_END_FRAC);
+
+  buildExitMouthStreaks(leg2Start, leg2End, buf);
+
+  return {
+    positions: new Float32Array(buf.positions),
+    colors: new Float32Array(buf.colors),
+    strengths: new Float32Array(buf.strengths),
+    ends: new Float32Array(buf.ends),
   };
 }
 
@@ -562,12 +884,27 @@ export function LatentWormholeWalls() {
 
   const geometry = useMemo(() => {
     if (!enabled) return null;
-    const { positions, colors, reveals, sizes } = buildWormholeWalls();
+    const { positions, colors, reveals, sizes, mouths } = buildWormholeWalls();
     const geom = new THREE.BufferGeometry();
     geom.setAttribute("position", new THREE.BufferAttribute(positions, 3));
     geom.setAttribute("aColor", new THREE.BufferAttribute(colors, 3));
     geom.setAttribute("aReveal", new THREE.BufferAttribute(reveals, 1));
     geom.setAttribute("aSize", new THREE.BufferAttribute(sizes, 1));
+    geom.setAttribute("aMouth", new THREE.BufferAttribute(mouths, 1));
+    return geom;
+  }, [enabled]);
+
+  // v3.6 acceleration field — separate <lineSegments> geometry on the
+  // inner surface of leg 2. Static buffers; the perceived flow comes
+  // from camera dolly + uExitWarp opacity ramp.
+  const streakGeometry = useMemo(() => {
+    if (!enabled) return null;
+    const { positions, colors, strengths, ends } = buildWormholeStreaks();
+    const geom = new THREE.BufferGeometry();
+    geom.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+    geom.setAttribute("aColor", new THREE.BufferAttribute(colors, 3));
+    geom.setAttribute("aStreamStrength", new THREE.BufferAttribute(strengths, 1));
+    geom.setAttribute("aEnd", new THREE.BufferAttribute(ends, 1));
     return geom;
   }, [enabled]);
 
@@ -592,12 +929,33 @@ export function LatentWormholeWalls() {
     });
   }, []);
 
+  // Streak material — minimal uniform set, additive blending so the
+  // streaks read as light streaming past rather than solid lines.
+  const streakMaterial = useMemo(() => {
+    return new THREE.ShaderMaterial({
+      vertexShader: streakVertex,
+      fragmentShader: streakFragment,
+      uniforms: {
+        uCameraPos: { value: new THREE.Vector3() },
+        uVisibleNear: { value: VISIBLE_NEAR },
+        uVisibleFar: { value: VISIBLE_FAR },
+        uOpacity: { value: 0 },
+        uExitWarp: { value: 0 },
+      },
+      transparent: true,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+    });
+  }, []);
+
   useEffect(() => {
     return () => {
       material.dispose();
+      streakMaterial.dispose();
       geometry?.dispose();
+      streakGeometry?.dispose();
     };
-  }, [material, geometry]);
+  }, [material, streakMaterial, geometry, streakGeometry]);
 
   useFrame((state) => {
     if (!geometry) return;
@@ -613,6 +971,7 @@ export function LatentWormholeWalls() {
 
     material.uniforms.uPixelRatio.value = viewport.dpr;
     (material.uniforms.uCameraPos.value as THREE.Vector3).copy(camera.position);
+    (streakMaterial.uniforms.uCameraPos.value as THREE.Vector3).copy(camera.position);
 
     if (!painting) {
       opacityRef.current = 0;
@@ -620,6 +979,8 @@ export function LatentWormholeWalls() {
       material.uniforms.uReveal1.value = 0;
       material.uniforms.uReveal2.value = 0;
       material.uniforms.uExitWarp.value = 0;
+      streakMaterial.uniforms.uOpacity.value = 0;
+      streakMaterial.uniforms.uExitWarp.value = 0;
       return;
     }
 
@@ -633,7 +994,9 @@ export function LatentWormholeWalls() {
     // shortly after via `getBuildApproachFade` (window 0.86-0.97), so
     // the rails read as "opening up around you THEN dissolving" rather
     // than a flat opacity cut.
-    material.uniforms.uExitWarp.value = getWormholeExitWarp(paintProgress);
+    const exitWarp = getWormholeExitWarp(paintProgress);
+    material.uniforms.uExitWarp.value = exitWarp;
+    streakMaterial.uniforms.uExitWarp.value = exitWarp;
 
     // Velocity lift sharpens the lattice during active travel.
     // |velocity| is in progress-units / sec; a 2x multiplier reaches
@@ -652,9 +1015,23 @@ export function LatentWormholeWalls() {
     // epilogue because paintProgress is pinned at 1.
     const buildFade = getBuildApproachFade(paintProgress);
     material.uniforms.uOpacity.value = Math.min(1, opacityRef.current) * buildFade;
+
+    // Streaks share the same build-fade so they clear with the walls;
+    // their internal `uExitWarp` ramp is what makes them appear only
+    // near the mouth. Slight lift over the wall opacity (1.05x) so the
+    // streaks read as accelerated light flow against the static rail
+    // lattice; capped at 1.0 by the shader's smoothstep envelope.
+    streakMaterial.uniforms.uOpacity.value = Math.min(1, opacityRef.current * 1.05) * buildFade;
   });
 
   if (!geometry) return null;
 
-  return <points ref={pointsRef} geometry={geometry} material={material} frustumCulled={false} />;
+  return (
+    <group>
+      <points ref={pointsRef} geometry={geometry} material={material} frustumCulled={false} />
+      {streakGeometry && (
+        <lineSegments geometry={streakGeometry} material={streakMaterial} frustumCulled={false} />
+      )}
+    </group>
+  );
 }

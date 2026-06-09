@@ -736,19 +736,26 @@ export function getBuildApproachFade(paintProgress: number): number {
   return 1 - smoothstep(0.86, 0.97, paintProgress);
 }
 
-/** Wormhole-exit warp (v3.3).
+/** Wormhole-exit warp (v3.4).
  *
  *  Drives the forward MOUTH dilation of the wormhole rails as the
- *  camera emerges into Build (see the `uExitWarp` block in
+ *  camera flies from Encode toward Build (see the `uExitWarp` block in
  *  `LatentWormholeWalls`). 0 across the rest of the corridor; ramps
- *  0 -> 1 across [0.74, 0.92] of paintProgress. Pulled earlier + wider
- *  than the v3.2 [0.80, 0.93] window so the opening is GRADUAL and
- *  clearly visible while the walls are still opaque (the ambient
- *  dissolve doesn't start until 0.86), instead of flashing open right
- *  as the rails vanish. Reads as "the tunnel opens up ahead and we
- *  fly out through it into the Build space." */
+ *  0 -> 1 across [0.64, 0.91] of paintProgress.
+ *
+ *  v3.4 pairs this timing with a longer physical corridor span
+ *  (`620svh corridor + 300svh epilogue`). The prior [0.66, 0.90]
+ *  timing began at the Encode exit but still had too little physical
+ *  scroll between Encode and Build; the mouth opened correctly in
+ *  progress-space but the user still felt the Build park arrived
+ *  immediately. The new [0.64, 0.91] window starts just after the
+ *  Encode park centre and runs across the now-longer post-Encode
+ *  runway, so the tunnel visibly morphs open over multiple viewports
+ *  before the sources/surfaces dock. The ambient walls still dissolve
+ *  later (`getBuildApproachFade` [0.86, 0.97]) — first the mouth opens,
+ *  then the corridor clears. */
 export function getWormholeExitWarp(paintProgress: number): number {
-  return smoothstep(0.74, 0.92, paintProgress);
+  return smoothstep(0.64, 0.91, paintProgress);
 }
 
 // ── Thoughtform compass flythrough ───────────────────────────────
