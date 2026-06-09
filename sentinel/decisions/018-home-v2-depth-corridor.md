@@ -11,6 +11,116 @@
 
 ---
 
+## 2026-06-09 Revision (v3.3) — Curved landing arc, mouth-funnel exit, sources fly in from outside
+
+Three follow-up refinements on the v3.2 corridor-exit + planet landing,
+in response to user feedback:
+
+> "When I fly to the Build section, I don't see the end of the core
+> morphing into a wider thing. We need to fly into that with the
+> trusted sources and then the headless surfaces — they don't come
+> from inside the wormhole, they come from outside it, from the new
+> space you enter when you exit. And when we move into the planet
+> phase the camera should fly with a curve so we land in one elegant
+> move — like an airplane, they don't go straight for the middle of
+> the earth, they fly above it."
+
+### a. Camera: one curved landing arc (was "straight in, then up")
+
+The v3.2 epilogue camera drove DISTANCE on the `APPROACH` band and the
+bank TILT on the `LAND` band — two nearly-sequential windows. Because
+the parked distance (≈5.6) and the landing distance (planetRadius +
+standoff ≈6.0) are almost equal (the planet GROWS rather than the
+camera closing much), almost all the visible motion was the late tilt
+swing on `LAND` — it read as "hold facing the sphere, then pitch up
+over the pole."
+
+`getEpilogueCameraPose` in
+[`sceneGeom.ts`](../../components/landing/home-v2/DepthGatewayScene/sceneGeom.ts)
+now drives the whole descent off ONE continuous flight curve:
+
+- `EPILOGUE_FLIGHT_START/END` = `[0.12, 0.90]` — a single flight window
+  spanning the whole descent. The `LAND` band is no longer read by the
+  camera (it was the camera's only consumer).
+- `flightRaw` = `smoothstep(START, END, epi)`; `flight` adds a second
+  smoothing pass (smootherstep) for kink-free accel/decel.
+- **Bank angle LEADS**: `arc = sin(flightRaw · π/2)` — an ease-OUT, so
+  the camera gains ALTITUDE early (already ~13° tilted by epi 0.30)
+  and is looking DOWN at the planet from above as it closes in, like
+  an aircraft on a glide slope. `theta = LANDING_TILT · arc`.
+- **Distance follows** on the gentler double-smoothed `flight`, with a
+  mid-flight `EPILOGUE_SWOOP_DEPTH` (0.9 world units) sin-bump dip —
+  the landing flare. Altitude bows up first, the approach curves in
+  under it: one continuous arc, never an L.
+- The `lookAt` blends parked→land on the SAME leading `arc` so the
+  gaze tracks where the camera is banking.
+
+Endpoint pose is essentially unchanged from the v3.2-approved framing
+(big planet, gold atmosphere limb across the upper frame, surface
+below, title top-centre) — only the PATH to it changed.
+
+### b. Wormhole exit: forward mouth-funnel (was a near-camera blowout)
+
+The v3.2 `uExitWarp` pushed rail points radially out with a weight that
+PEAKED at the camera — so the near rails blew off the frame edges and
+left a thin flat ellipse (the "I don't see the core morphing into a
+wider thing" complaint). v3.3 reverses the bias in
+[`LatentWormholeWalls.tsx`](../../components/landing/home-v2/DepthGatewayScene/LatentWormholeWalls.tsx):
+the warp now dilates points AHEAD of the camera (`ahead = max(0, camZ −
+position.z)`, `mouth = 1 − exp(−ahead/4)`, `expand = uExitWarp · mouth ·
+1.9`). The throat right in front of us stays tight while the far rim
+flares to ~3× radius — a trumpet-bell / iris the camera flies THROUGH,
+framing the substrate in a widening opening rather than ballooning the
+whole shell into a ring. `getWormholeExitWarp` window pulled earlier +
+wider (`[0.80,0.93]` → `[0.74,0.92]`) so the opening is gradual and
+visible while the walls are still opaque (the ambient dissolve starts
+at 0.86).
+
+### c. Sources + surfaces fly in from OUTSIDE the wormhole
+
+[`ShellStack.tsx`](../../components/landing/home-v2/DepthGatewayScene/shell/ShellStack.tsx)
+previously slid the trusted-sources and headless-surfaces clusters in
+purely laterally (X = ±`STACK_SLOT_X_OFFSET`) in the substrate plane —
+it read as wings sliding in, not as arrivals from the new space. A new
+`STACK_SLOT_Z_OFFSET` (2.6, local) adds a FORWARD (toward-camera) start
+offset, so each cluster begins off to the side AND out in front of the
+substrate — in the space the camera has just emerged into — and flies
+back-and-inward to dock on the substrate plane (z=0). With the existing
+per-item lock-snap + fold-emerge landing this reads as the sources and
+surfaces converging onto the substrate from the surrounding space as
+the wormhole opens. Sources still lead, surfaces follow (cluster
+stagger unchanged).
+
+### Verification
+
+Drove the corridor directly (CDP scroll helpers, 1440×900) and read the
+frames first-hand (a prior verification subagent misread the gold
+dotted-wireframe planet as "starfield"):
+
+- **Camera arc**: epi 0.30 — planet large, camera already above the
+  equator (equator line bows downward); epi 0.55 — camera high, far
+  limb arcing across the upper frame; epi 1.0 — settled landing (big
+  planet, gold atmosphere limb top, surface dots below, title
+  top-centre). A single continuous rising curve, not an L.
+- **Wormhole mouth**: rawP≈0.50 — the aperture frame dilates and rails
+  spread outward around the substrate (flying through an opening), no
+  flat-ring blowout.
+- **Sources/surfaces**: rawP≈0.53 — green source pips strung along
+  lanes flying in from the front-left with depth, surfaces forming
+  front-right, then docking at the Build park.
+- `npm run build` + `npm run lint` clean (0 errors).
+
+### Tunables (v3.3)
+
+- Arc altitude lead: the `arc` exponent / `sin` shaping in
+  `getEpilogueCameraPose`. Landing flare: `EPILOGUE_SWOOP_DEPTH`.
+  Flight pacing: `EPILOGUE_FLIGHT_START/END`.
+- Mouth flare: the `· 1.9` magnitude + `exp(−ahead/4)` decay in the
+  `uExitWarp` block; opening timing: `getWormholeExitWarp` window.
+- Fly-in depth: `STACK_SLOT_Z_OFFSET` (paired with `STACK_SLOT_X_OFFSET`).
+
+---
+
 ## 2026-06-09 Revision (v3.2) — Wormhole exit widen, Build starfield boost, Earth-reference horizon planet
 
 Three independent polish passes on the corridor-to-Build transition

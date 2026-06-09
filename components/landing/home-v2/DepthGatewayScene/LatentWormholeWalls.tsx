@@ -208,26 +208,31 @@ varying vec3 vColor;
 varying float vAlpha;
 
 void main() {
-  // Wormhole-exit radial widen. The tube is centred on the world Z
-  // axis (corridor optical axis), so each point's radial direction
-  // is just (x, y) in world space. Multiply that radius by a factor
-  // that grows with uExitWarp and with how close the point is to
-  // or in front of the camera: the mouth opens around us as we
-  // emerge, while the tube far behind / far ahead stays untouched.
+  // Wormhole-exit MOUTH widen (v3.3). The tube is centred on the world
+  // Z axis (corridor optical axis), so each point's radial direction is
+  // just (x, y) in world space. As we approach Build we dilate the tube
+  // AHEAD of the camera so its far end flares open like a trumpet bell /
+  // iris — we fly THROUGH a widening mouth into the new space. Points at
+  // or behind the camera keep their radius (we've already passed them),
+  // so the throat stays tight and only the opening ahead spreads — this
+  // reads as the corridor opening up, not as the whole shell ballooning
+  // into a flat ring (the v3.2 near-camera blowout).
   vec3 worldPos = position;
   if (uExitWarp > 0.0) {
-    // Camera-relative Z offset. uCameraPos.z is the camera's world
-    // Z; points with position.z > uCameraPos.z are BEHIND the camera
-    // (more positive Z), points with position.z < uCameraPos.z are
-    // AHEAD (deeper into the corridor).
-    float relZ = position.z - uCameraPos.z;
-    // nearWeight: 1 right at the camera, falls off both far ahead
-    // and far behind. 4-unit decay matches the rail spacing.
-    float nearWeight = exp(-abs(relZ) / 4.0);
-    // Bias slightly toward "ahead of camera": the mouth we're
-    // flying THROUGH should splay, not the tube behind.
-    float aheadBias = clamp(1.0 - relZ * 0.15, 0.4, 1.4);
-    float expand = uExitWarp * nearWeight * aheadBias * 1.6;
+    // ahead > 0 for points DEEPER down the corridor than the camera
+    // (more negative Z); 0 for points at / behind the camera.
+    float ahead = max(0.0, uCameraPos.z - position.z);
+    // Mouth opening grows with distance ahead but saturates, so the far
+    // rim flares wide while the throat right in front of us stays
+    // tighter — the bell shape. 4-unit decay so the flare ramps up
+    // within the near visible span (more of the tube ahead reads as
+    // opening rather than only the far rim).
+    float mouth = 1.0 - exp(-ahead / 4.0);
+    // Magnitude 1.9 (up from 1.3): the far rim roughly triples its
+    // radius at full warp so the opening is unmistakable as you fly
+    // toward it, while the forward bias keeps the throat — and thus the
+    // frame — clear (no v3.2-style flat-ring blowout at the camera).
+    float expand = uExitWarp * mouth * 1.9;
     worldPos.xy *= 1.0 + expand;
   }
 

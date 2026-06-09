@@ -79,6 +79,18 @@ const STACK_CLUSTER_OVERLAP = 0.3;
  *  16:9). Negative for sources, positive for surfaces. */
 export const STACK_SLOT_X_OFFSET = 8;
 
+/** Forward (toward-camera, +Z local) offset at cluster stagger = 0
+ *  (v3.3 "fly in from outside the wormhole" pass). The clusters start
+ *  not just off to the SIDE but also IN FRONT of the substrate — out
+ *  in the new space the camera has just emerged into as it exits the
+ *  wormhole — and fly back-and-inward to dock on the substrate plane
+ *  (z = 0 local). Combined with the X offset this reads as the sources
+ *  and surfaces arriving from the surrounding space rather than sliding
+ *  flatly in from the wings. Local units (the assembly is scaled by
+ *  GYRO_ASSEMBLY_SCALE); kept modest so the clusters stay between the
+ *  camera and the substrate (no clip past the near plane). */
+export const STACK_SLOT_Z_OFFSET = 2.6;
+
 /** Per-item lock stagger inside its cluster's window. Each lane/fan
  *  tip's scale snaps from a starting floor up to 1.0 in sequence,
  *  so the parts read as plugging in one-by-one instead of arriving
@@ -266,24 +278,32 @@ export function ShellStack({ layerKey, reducedMotion = false }: ShellStackProps)
     const sourcesScale = sourcesFold.scale;
     const surfacesScale = surfacesFold.scale;
 
-    // Cluster X-slide: at stagger 0 the group sits OFF-SCREEN on its
-    // own side; at stagger 1 it's at the parked X = 0 (relative to
-    // the brandmark world position). The slide uses a smootherstep
-    // so the cluster doesn't pop in halfway.
+    // Cluster slide: at stagger 0 the group sits OFF-SCREEN on its own
+    // side AND out in front of the substrate (in the new space we've
+    // just flown into); at stagger 1 it's docked at the parked
+    // (0, 0, 0) relative to the brandmark world position. The slide
+    // uses a smootherstep so the cluster doesn't pop in halfway.
+    //
+    // v3.3: the Z component makes the clusters fly IN from outside the
+    // wormhole toward the substrate, rather than sliding flatly in from
+    // the wings — they arrive from the surrounding space as the camera
+    // exits the tube.
     const sourcesSlideT = reducedMotion ? 1 : smootherStack(sourcesStagger);
     const surfacesSlideT = reducedMotion ? 1 : smootherStack(surfacesStagger);
     const sourcesX = -STACK_SLOT_X_OFFSET * (1 - sourcesSlideT);
     const surfacesX = STACK_SLOT_X_OFFSET * (1 - surfacesSlideT);
+    const sourcesZ = STACK_SLOT_Z_OFFSET * (1 - sourcesSlideT);
+    const surfacesZ = STACK_SLOT_Z_OFFSET * (1 - surfacesSlideT);
 
     if (sourcesGroupRef.current) {
       sourcesGroupRef.current.visible = sourcesScale > EMERGE_EPSILON;
       sourcesGroupRef.current.scale.setScalar(sourcesScale);
-      sourcesGroupRef.current.position.set(sourcesX, 0, 0);
+      sourcesGroupRef.current.position.set(sourcesX, 0, sourcesZ);
     }
     if (surfacesGroupRef.current) {
       surfacesGroupRef.current.visible = surfacesScale > EMERGE_EPSILON;
       surfacesGroupRef.current.scale.setScalar(surfacesScale);
-      surfacesGroupRef.current.position.set(surfacesX, 0, 0);
+      surfacesGroupRef.current.position.set(surfacesX, 0, surfacesZ);
     }
 
     // Fade lane / fan line opacities with the cluster slide so the

@@ -337,63 +337,97 @@ const EPILOGUE_LANDING_STANDOFF = 3.5;
 const EPILOGUE_LOOK_DOWN_Y = 1.2;
 const EPILOGUE_LOOK_FWD_Z = 0.5;
 
-/** Camera pose during the epilogue beat — a fly-in + landing tilt
- *  around the substrate sphere as it grows into a planet. Returns
- *  the parked CAMERA_END pose at epilogueProgress 0 (so blending
- *  it into `FlyingCameraRig` is a no-op inside the corridor) and a
- *  surface POV at epilogueProgress 1. */
+/** Single continuous FLIGHT window (in epilogueProgress) for the whole
+ *  planet descent (v3.3 curved-landing pass). Both the bank ANGLE and
+ *  the approach DISTANCE ride this one curve so the camera arcs up AND
+ *  in as a single elegant move — like an aircraft lining up with a
+ *  runway — instead of the v3.2 behaviour where distance closed on the
+ *  APPROACH band and the tilt only swung up later on the LAND band
+ *  (which read as "fly straight at the sphere, THEN pitch up").
+ *
+ *  Starts a touch into BUILD_OUT so the Build chrome has begun clearing
+ *  before the camera leaves its park; ends at the old LAND end so the
+ *  pose is fully settled by the time the title is in. */
+const EPILOGUE_FLIGHT_START = 0.12;
+const EPILOGUE_FLIGHT_END = 0.9;
+
+/** Mid-flight landing-flare swoop depth (world units). The camera dips
+ *  slightly CLOSER to the planet through the middle of the descent and
+ *  eases back out to the orbital standoff at the end — the gentle
+ *  "flare" of a landing approach. Kept well under the standoff so the
+ *  camera never crosses the planet surface. */
+const EPILOGUE_SWOOP_DEPTH = 0.9;
+
+/** Camera pose during the epilogue beat — a single curved fly-in +
+ *  landing arc around the substrate sphere as it grows into a planet.
+ *  Returns the parked CAMERA_END pose at epilogueProgress 0 (so
+ *  blending it into `FlyingCameraRig` is a no-op inside the corridor)
+ *  and an orbital horizon POV at the end of the flight. */
 export function getEpilogueCameraPose(epilogueProgress: number): {
   position: [number, number, number];
   lookAt: [number, number, number];
 } {
-  const approachT = epilogueBand(epilogueProgress, "APPROACH");
-  const landT = epilogueBand(epilogueProgress, "LAND");
-
   const planetCentre = BRANDMARK_ANCHOR_INTELLIGENCE;
   const baseRadius = SUBSTRATE_GYRO_GLOBE_RADIUS * GYRO_ASSEMBLY_SCALE;
   const planetRadius = baseRadius * getEpiloguePlanetScale(epilogueProgress);
 
-  // UP direction from planet centre to camera.
-  // - Parked (no epilogue): camera sits +Z of planet -> theta = 0
-  // - LAND peak: camera hovers above the pole, tilted slightly toward +Z
-  const theta = EPILOGUE_LANDING_TILT * landT;
+  // One continuous flight parameter for the whole descent. `flightRaw`
+  // is the linear smoothstep across the flight window; `flight` adds a
+  // second smoothing pass (smootherstep) so the camera eases out of the
+  // park and decelerates into the landing without a kink at either end.
+  const flightRaw = smoothstep(EPILOGUE_FLIGHT_START, EPILOGUE_FLIGHT_END, epilogueProgress);
+  const flight = flightRaw * flightRaw * (3 - 2 * flightRaw);
+
+  // Bank angle LEADS the approach. `arc` is an ease-OUT on the raw
+  // flight (sin ramp: fast at the start, settling at the end) so the
+  // camera gains ALTITUDE early — by the time it closes in it is
+  // already looking down at the planet from above, like an aircraft
+  // on a glide slope, instead of boring straight at the planet's
+  // middle and only pitching up at the very end. The distance closes
+  // on the gentler double-smoothed `flight`, so altitude bows up first
+  // and the approach curves in under it: one continuous arc, never an
+  // L-shaped "straight in, then up".
+  const arc = Math.sin(flightRaw * Math.PI * 0.5);
+  const theta = EPILOGUE_LANDING_TILT * arc;
   const sinT = Math.sin(theta);
   const cosT = Math.cos(theta);
 
   // Distance from planet centre to camera.
   // - Parked: camera at CAMERA_END = (0,0,-17), planet at z ≈ -22.6,
-  //   so parked distance ≈ 5.5 units (camera +Z of planet).
-  // - Land: planetRadius + LANDING_STANDOFF (just above the surface).
+  //   so parked distance ≈ 5.6 units (camera +Z of planet).
+  // - Landing: planetRadius + LANDING_STANDOFF (orbital standoff).
+  // The mid-flight `swoop` dips the camera closer through the middle of
+  // the descent then eases back out — the landing flare.
   const parkedDistance = CAMERA_END[2] - planetCentre[2];
   const landingDistance = planetRadius + EPILOGUE_LANDING_STANDOFF;
-  const distance = lerp(parkedDistance, landingDistance, approachT);
+  const swoop = Math.sin(Math.PI * flightRaw) * EPILOGUE_SWOOP_DEPTH;
+  const distance = lerp(parkedDistance, landingDistance, flight) - swoop;
 
   const camX = planetCentre[0];
   const camY = planetCentre[1] + sinT * distance;
   const camZ = planetCentre[2] + cosT * distance;
 
-  // LookAt:
-  //
-  // - Parked (landT 0): use the corridor's parked lookAt — identical
-  //   to `getCameraLookAt(1)` so the corridor->epilogue transition
-  //   is invisible at the seam.
-  // - Land (landT 1): look DOWN+FORWARD over the planet's pole. The
-  //   target sits slightly ABOVE the planet centre in Y (so the line
-  //   of sight from the high camera tilts down at the upper dome) and
-  //   well in front of the planet in -Z (so we look ACROSS the dome
-  //   toward the limb beyond). The result is the v3.1 bird's-eye
-  //   flyover: top hemisphere arcs across the lower frame, starfield
-  //   + title fill the upper frame.
+  // LookAt rides the SAME flight curve so the gaze rotates WITH the
+  // arc (no lag between the camera rising and where it is looking).
+  // - flight 0: the corridor's parked lookAt — identical to
+  //   `getCameraLookAt(1)` so the corridor->epilogue seam is invisible.
+  // - flight 1: look DOWN+FORWARD over the planet's pole — target sits
+  //   slightly ABOVE the planet centre in Y and well in front of it in
+  //   -Z, so the upper hemisphere arcs across the lower frame and the
+  //   starfield + title fill the upper frame (the Earth-reference look).
   const parkedLook = getCameraLookAt(1);
   const lookLand: [number, number, number] = [
     planetCentre[0],
     planetCentre[1] + planetRadius * EPILOGUE_LOOK_DOWN_Y,
     planetCentre[2] - planetRadius * EPILOGUE_LOOK_FWD_Z,
   ];
+  // Gaze rides the same leading `arc` as the bank angle so the camera
+  // looks where it is banking — the planet stays framed below the
+  // horizon line as the camera rises over it.
   const lookAt: [number, number, number] = [
-    lerp(parkedLook[0], lookLand[0], landT),
-    lerp(parkedLook[1], lookLand[1], landT),
-    lerp(parkedLook[2], lookLand[2], landT),
+    lerp(parkedLook[0], lookLand[0], arc),
+    lerp(parkedLook[1], lookLand[1], arc),
+    lerp(parkedLook[2], lookLand[2], arc),
   ];
 
   return {
@@ -702,17 +736,19 @@ export function getBuildApproachFade(paintProgress: number): number {
   return 1 - smoothstep(0.86, 0.97, paintProgress);
 }
 
-/** Wormhole-exit warp (v3.2).
+/** Wormhole-exit warp (v3.3).
  *
- *  Drives the radial expansion of the wormhole rails as the camera
- *  emerges into Build. 0 across the rest of the corridor; ramps
- *  0 -> 1 across [0.80, 0.93] of paintProgress so the rails splay
- *  open BEFORE the ambient fade above (which starts at 0.86) and
- *  is fully resolved by the time the dissolve completes. Reads as
- *  "we just flew out the mouth of the wormhole into the Build
- *  station." */
+ *  Drives the forward MOUTH dilation of the wormhole rails as the
+ *  camera emerges into Build (see the `uExitWarp` block in
+ *  `LatentWormholeWalls`). 0 across the rest of the corridor; ramps
+ *  0 -> 1 across [0.74, 0.92] of paintProgress. Pulled earlier + wider
+ *  than the v3.2 [0.80, 0.93] window so the opening is GRADUAL and
+ *  clearly visible while the walls are still opaque (the ambient
+ *  dissolve doesn't start until 0.86), instead of flashing open right
+ *  as the rails vanish. Reads as "the tunnel opens up ahead and we
+ *  fly out through it into the Build space." */
 export function getWormholeExitWarp(paintProgress: number): number {
-  return smoothstep(0.8, 0.93, paintProgress);
+  return smoothstep(0.74, 0.92, paintProgress);
 }
 
 // ── Thoughtform compass flythrough ───────────────────────────────
