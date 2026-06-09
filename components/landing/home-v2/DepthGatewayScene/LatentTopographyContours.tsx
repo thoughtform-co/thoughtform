@@ -10,6 +10,7 @@ import {
   STATION_INTELLIGENCE,
   STATION_THOUGHTFORM,
   depthOpacityForWorldPosition,
+  getBuildApproachFade,
 } from "./sceneGeom";
 
 /**
@@ -504,8 +505,15 @@ function ContourShard({
     const depthOpacity = depthOpacityForWorldPosition(paintProgress, pos, depthWindow);
     // Cap at 0.32 — contours are a backdrop layer, never compete
     // with the orbits or the brandmark. Suppressed across the Navigate
-    // park so the compass reads clean there.
-    material.opacity = depthOpacity * reveal * 0.32 * navParkVisibility(paintProgress);
+    // park so the compass reads clean there. Build-approach declutter
+    // (v3.1) fades the whole layer out across the approach to the
+    // Build park.
+    material.opacity =
+      depthOpacity *
+      reveal *
+      0.32 *
+      navParkVisibility(paintProgress) *
+      getBuildApproachFade(paintProgress);
   });
 
   return (
@@ -598,7 +606,11 @@ function RidgeShard({
     }
     const reveal = legRevealForZ(pos[2], paintProgress);
     const depthOpacity = depthOpacityForWorldPosition(paintProgress, pos, depthWindow);
-    const base = depthOpacity * reveal * navParkVisibility(paintProgress);
+    const base =
+      depthOpacity *
+      reveal *
+      navParkVisibility(paintProgress) *
+      getBuildApproachFade(paintProgress);
     arcMat.opacity = base * 0.45;
     tickMat.opacity = base * 0.7;
   });
@@ -701,7 +713,11 @@ function VectorShard({ pos, dir, length, color = DAWN_HEX }: Omit<VectorShardArt
     }
     const reveal = legRevealForZ(midpoint[2], paintProgress);
     const depthOpacity = depthOpacityForWorldPosition(paintProgress, midpoint, depthWindow);
-    const base = depthOpacity * reveal * navParkVisibility(paintProgress);
+    const base =
+      depthOpacity *
+      reveal *
+      navParkVisibility(paintProgress) *
+      getBuildApproachFade(paintProgress);
     lineMat.opacity = base * 0.6;
     diamondMat.opacity = base * 0.85;
   });

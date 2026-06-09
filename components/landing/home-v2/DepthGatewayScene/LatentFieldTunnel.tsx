@@ -4,7 +4,7 @@ import { useFrame, useThree } from "@react-three/fiber";
 import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
-import { getThoughtformBootEnvelope } from "./sceneGeom";
+import { getBuildApproachFade, getThoughtformBootEnvelope } from "./sceneGeom";
 
 /**
  * LatentFieldTunnel — layered latent-space visualisation that frames
@@ -783,19 +783,27 @@ export function LatentFieldTunnel() {
     const velocityT = Math.min(1, absV * 2.0);
     const parkedReveal = latentParkedReveal(paintProgress);
 
+    // Build-approach declutter (v3.1) — the camera-relative latent
+    // field is ambient atmosphere; fade it out across the approach
+    // to the Build park so the gimbal + stack carry the read. Stays
+    // at 0 through the epilogue since paintProgress is pinned at 1.
+    const buildFade = getBuildApproachFade(paintProgress);
+
     const pointsTarget =
       (POINT_AMBIENT + velocityT * (POINT_PEAK - POINT_AMBIENT) + boot * POINT_BOOT_LIFT) *
-      parkedReveal;
+      parkedReveal *
+      buildFade;
     const vectorsTarget =
       (VECTOR_AMBIENT + velocityT * (VECTOR_PEAK - VECTOR_AMBIENT) + boot * VECTOR_BOOT_LIFT) *
-      parkedReveal;
+      parkedReveal *
+      buildFade;
     // Tokens damp at high velocity so they don't smear into illegible
     // streaks during a fast scroll. The damping multiplier scales
     // down the velocity lift but leaves ambient + boot intact.
     const tokensVelocityLift =
       velocityT * (TOKEN_PEAK - TOKEN_AMBIENT) * (1 - velocityT * TOKEN_VELOCITY_DAMP);
     const tokensTarget =
-      (TOKEN_AMBIENT + tokensVelocityLift + boot * TOKEN_BOOT_LIFT) * parkedReveal;
+      (TOKEN_AMBIENT + tokensVelocityLift + boot * TOKEN_BOOT_LIFT) * parkedReveal * buildFade;
 
     const k = 1 - Math.exp(-ALPHA_RESPONSE * dt);
     pointsAlpha.current += (pointsTarget - pointsAlpha.current) * k;

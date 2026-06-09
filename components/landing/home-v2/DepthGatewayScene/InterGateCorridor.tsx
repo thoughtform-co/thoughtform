@@ -11,6 +11,7 @@ import {
   STATION_INTERSTITIAL,
   STATION_THOUGHTFORM,
   depthOpacityForWorldPosition,
+  getBuildApproachFade,
 } from "./sceneGeom";
 
 /**
@@ -131,12 +132,15 @@ function RingBand({
 
     const opacity = depthOpacityForWorldPosition(progress, [offsetX, 0, centreZ], focusWindow);
 
-    if (opacity <= 0.001) {
+    // Build-approach declutter (v3.1) — intergate debris bands fade
+    // out across the approach to the Build park.
+    const buildFade = getBuildApproachFade(progress);
+    if (opacity * buildFade <= 0.001) {
       group.visible = false;
       return;
     }
     group.visible = true;
-    material.opacity = opacity * alphaCeiling;
+    material.opacity = opacity * alphaCeiling * buildFade;
 
     // Slow Z-spin gives the band a "current" feel without the
     // particles having to translate. The whole group rotates so all

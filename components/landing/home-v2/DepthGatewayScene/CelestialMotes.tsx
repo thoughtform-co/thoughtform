@@ -4,7 +4,7 @@ import { useFrame, useThree } from "@react-three/fiber";
 import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
-import { getThoughtformBootEnvelope } from "./sceneGeom";
+import { getBuildApproachFade, getThoughtformBootEnvelope } from "./sceneGeom";
 
 /**
  * CelestialMotes — small sphere-shaped particle clusters that drift
@@ -375,8 +375,13 @@ export function CelestialMotes() {
     const absV = Math.abs(velocity);
     const velocityT = Math.min(1, absV * 1.8);
     const bootEnv = getThoughtformBootEnvelope(transform.paintProgress);
+    // Build-approach declutter (v3.1) — celestial motes drift across
+    // the corridor as ambient; fade them out across the approach to
+    // the Build park.
+    const buildFade = getBuildApproachFade(transform.paintProgress);
     const target =
-      AMBIENT_OPACITY + velocityT * (PEAK_OPACITY - AMBIENT_OPACITY) + bootEnv * BOOT_LIFT;
+      (AMBIENT_OPACITY + velocityT * (PEAK_OPACITY - AMBIENT_OPACITY) + bootEnv * BOOT_LIFT) *
+      buildFade;
     const k = 1 - Math.exp(-ALPHA_RESPONSE * dt);
     smoothedAlpha.current += (target - smoothedAlpha.current) * k;
     material.uniforms.uOpacity.value = Math.min(1, smoothedAlpha.current);

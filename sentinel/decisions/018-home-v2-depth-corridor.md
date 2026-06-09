@@ -11,6 +11,220 @@
 
 ---
 
+## 2026-06-09 Revision (v3.9) — Particle funnel field owns the exit; streaks become velocity-gated
+
+Follow-up to v3.8. The side streaks finally landed in the right place,
+but the user's references (the dotted black-hole funnel) clarified the
+intended structure: the exit should read as a DENSITY GRADIENT of
+small particles — sparse deep inside the tunnel, massing toward the
+mouth rim — using the corridor's existing dotted particle language,
+not line segments. Line streaks "only make sense when travelling
+fast"; they are a motion accent, not the structure.
+
+Two changes in
+[`LatentWormholeWalls.tsx`](../../components/landing/home-v2/DepthGatewayScene/LatentWormholeWalls.tsx):
+
+### a. Exit funnel field (new structural layer, dots)
+
+`buildExitFunnelField()` scatters 3400 small dots on/around the leg-2
+shell from leg-local 0.30 (well inside the tunnel — "extends further
+in" than the mouth structures at 0.62) to the mouth at 0.995. Three
+coordinated gradients:
+
+- **Density** — sampling biased toward the mouth via
+  `z = lerp(start, end, u^0.55)`, so dots-per-unit-length rises
+  smoothly toward the rim. The density gradient itself reads as
+  "this is the outer edge of the wormhole".
+- **Size** — dots grow toward the rim (`0.32 + h*0.26 + rim*0.42`)
+  so the rim gains luminance as well as count.
+- **`aMouth`** — rim dots carry high mouth strength
+  (`0.12 + rim*0.88`), inheriting the v3.5 flower-mouth machinery
+  (radial opening + brightening under `uExitWarp`) for free via the
+  existing walls shader. No new material.
+
+Radial jitter (±16% of shell radius, widening toward the rim) keeps
+the cloud organic — the black-hole-reference scatter, not ruled
+rings. Gold reserved for the rim mass; dawn-soft carries the texture.
+Static geometry, deterministic hashes, rides the existing walls draw
+call.
+
+### b. Streaks velocity-gated (motion accent only)
+
+The line-streak layer's opacity is now multiplied by a damped scroll
+velocity factor (`smoothstep(0.06, 0.32, velocityT)` tracked with the
+same critically-damped k as the wall opacity): idle = no streaks,
+deliberate scroll = partial, fast flick = full warp-speed lines. The
+v3.7 bell envelope still gates WHERE streaks may appear (pre-Build
+only). This matches the physical intuition — light streaks are a
+speed phenomenon — and leaves the funnel field as the always-present
+structure.
+
+### Sequence verification at 1440x900 (static scrub; streaks
+
+intentionally absent in stills since velocity ≈ 0)
+
+- `paintProgress 0.70`: dense particle halo massing around/behind the
+  judgment sphere — the exit visibly forming ahead.
+- `paintProgress 0.76`: full organic funnel surrounds the corridor —
+  scattered particle texture across the frame edges with the sphere
+  clean in the centre; clearly the reference read.
+- `paintProgress 0.82`: camera passing through the rim mass.
+- `paintProgress 0.88`: funnel cleared with the ambient walls
+  (`getBuildApproachFade`); Build composition forming cleanly.
+
+### Tunables (v3.9)
+
+- Funnel mass: `EXIT_FUNNEL_COUNT` (3400).
+- Inward reach: `EXIT_FUNNEL_START_FRAC` (0.30).
+- Density curve: `EXIT_FUNNEL_DENSITY_BIAS` (0.55; lower = more
+  rim-heavy).
+- Organic thickness: `EXIT_FUNNEL_THICKNESS` (0.16).
+- Streak velocity gate: the `smoothstep(0.06, 0.32, velocityT)`
+  edges in the `useFrame` block.
+
+---
+
+## 2026-06-09 Revision (v3.8) — Streaks reweighted to the camera passing band
+
+Follow-up to v3.7. The pre-Build timing was correct, but the streaks
+were still hard to see. Browsing the live page revealed the spatial
+bug: the streak distribution and the shader reveal both leaned toward
+the FAR end of leg 2 (the mouth), which in screen space sat directly
+behind the gyroscope sphere at the Encode park. Streaks were visually
+there; they just lived where the sphere occluded them. Streaks that
+WOULD have been visible at the frame edges (near-camera, projected to
+the side walls as long perspective-stretched lines) were nearly
+transparent because their `aStreamStrength` was low.
+
+Net read in the prior version: a faint flutter behind the sphere, then
+the streaks "appear" right as Build forms. The user's expected read is
+warp-speed light streaming past the side walls throughout the
+Encode-to-Build exit.
+
+Three coordinated changes in
+[`LatentWormholeWalls.tsx`](../../components/landing/home-v2/DepthGatewayScene/LatentWormholeWalls.tsx):
+
+### a. Camera-passing-band reveal (streak shader)
+
+`streakVertex` now drives `streamReveal` from each streak's distance
+ahead of the camera in world Z, not from its rim weight:
+
+- `ahead = uCameraPos.z - position.z`
+- `passBand = (1 - smoothstep(4, 9, ahead)) * smoothstep(-1, 0.3, ahead)`
+- `farHint = 0.22 * (1 - passBand)`
+- `streamReveal = (passBand + farHint) * aStreamStrength * uExitWarp`
+
+Effect: streaks brighten as they approach the camera and are
+brightest right as they pass within ~0-4 units ahead. At that point a
+streak on the shell projects to the frame edges as a long, bright,
+perspective-stretched line — the warp-speed read. Streaks deep in the
+tunnel (behind the gyro sphere) stay faint as anticipation only.
+`aStreamStrength` is repurposed as a per-streak VARIETY hash (0.55-1.0)
+so neighbouring streaks differ in intensity without re-imposing a
+spatial gradient.
+
+### b. Uniform distribution along the exit span (geometry)
+
+`buildExitMouthStreaks` drops the `Math.pow(u, 1.6)` rim bias and
+distributes 520 streaks (was 360) uniformly across the exit span.
+Combined with the passing-band shader, this guarantees there are
+ALWAYS streaks inside the camera's bright band as the camera dollies
+forward — continuous flow past the viewer, not a one-shot cluster at
+the mouth.
+
+Length now scales with leg-Z near-to-far (1.4 -> 3.6 world units) so
+near-camera streaks are longer (the perspective-stretched warp-speed
+line) and far-mouth streaks stay short. Colour tiering driven by the
+same variety hash so gold punctuation distributes evenly across the
+span (the prior version concentrated gold at the rim).
+
+### c. Side-wall densify under `uExitWarp` (wall shader)
+
+`wallsVertex` lifts leg-2 wall dot alpha by up to 1.3x during the
+exit warp:
+
+```
+exitWallLift = mix(1.0, 1.3, uExitWarp * aReveal * (1.0 - aMouth));
+```
+
+`aReveal` gates this to leg 2 only; the `(1 - aMouth)` factor skips
+the mouth-particle subset (those already have their own brightness
+curve). One-line change, no new geometry, addresses the "corridors on
+the sides should become a bit denser" note.
+
+### Sequence verification at 1440x900
+
+- `paintProgress 0.70`: walls visibly denser around the gyro sphere
+  (the densify lift is engaged); streaks beginning to register at the
+  frame edges as the camera leaves the Encode park.
+- `paintProgress 0.78`: peak warp — long bright streaks radiating
+  outward from the sphere into all four corners of the viewport,
+  reading as light streaming past the side walls.
+- `paintProgress 0.86`: streaks largely cleared; HUD flips to
+  INTELLIGENCE; sources/surfaces begin docking.
+- `paintProgress 0.92`: Build park clean — gyro sphere + sources +
+  surfaces composed, no streak residue.
+
+The v3.7 bell envelope (`getWormholeExitStreak`) still owns WHEN;
+v3.8 only fixed WHERE.
+
+---
+
+## 2026-06-09 Revision (v3.7) — Streaks retimed to a pre-Build event
+
+Follow-up to v3.6. The acceleration streaks were correct in concept but
+mistimed: they shared `getWormholeExitWarp` (peak 0.91, i.e. right at
+the Build park ~0.923) for their reveal and `getBuildApproachFade`
+(fade 0.86 -> 0.97) for their opacity. Net effect — the streaks peaked
+and lingered exactly as the Build-on-the-Substrate composition formed,
+so they read as a Build-section event. The user's mental model is the
+opposite: the streaks are the "exiting the wormhole" moment that fires
+as you LEAVE Encode, and must be gone before Build.
+
+Two changes in
+[`sceneGeom.ts`](../../components/landing/home-v2/DepthGatewayScene/sceneGeom.ts):
+
+- New `getWormholeExitStreak(paintProgress)` — a dedicated BELL
+  envelope for the streaks: ramp `smoothstep(0.64, 0.76)`, fade
+  `1 - smoothstep(0.80, 0.88)`. Peaks across the mid-passthrough
+  (~0.76-0.80) and returns to 0 by ~0.88, before the Build stack
+  accretion (`[0.84, 0.91]`) and the Build park. 0 through the
+  epilogue (paintProgress pinned at 1).
+- `getWormholeExitWarp` peak pulled `0.91 -> 0.85` so the mouth
+  finishes morphing during the passthrough and dissolves into Build
+  rather than peaking on top of it.
+
+In
+[`LatentWormholeWalls.tsx`](../../components/landing/home-v2/DepthGatewayScene/LatentWormholeWalls.tsx):
+
+- The streak material's `uExitWarp` is now driven by
+  `getWormholeExitStreak` (not the shared wall warp), so the streak
+  `streamReveal` rises and falls on the bell.
+- The streak `uOpacity` rides the velocity-lifted base only (no
+  `getBuildApproachFade`) — the bell owns the pre-Build timing, so the
+  streaks fully clear by ~0.88 regardless of the slower wall fade.
+- Streak distribution pulled back from the substrate
+  (`STREAK_START_FRAC 0.46 -> 0.42`, `STREAK_END_FRAC 0.99 -> 0.93`) so
+  the densest rim streaks no longer sit exactly where the camera parks
+  at Build.
+
+Sequence now reads as requested: exit Encode -> streaks stream past
+(peak mid-passthrough) -> wormhole mouth warps + dissolves -> enter
+Build on the Substrate.
+
+Verification at 1440x900:
+
+- `paintProgress 0.70`: "ENCODE THE JUDGMENT" still up; streaks rising
+  (~50%) as the camera leaves the Encode park.
+- `paintProgress 0.78`: PASSTHROUGH; streaks at peak streaming flow,
+  Build not yet formed.
+- `paintProgress 0.86`: HUD on INTELLIGENCE/Build; streaks ~16% and
+  clearing as sources/surfaces begin to dock.
+- `paintProgress 0.92`: Build park clean — no streaks, sources +
+  surfaces docked.
+
+---
+
 ## 2026-06-09 Revision (v3.6) — Wormhole acceleration field
 
 Follow-up to v3.5.1. The graded mouth density read as a static

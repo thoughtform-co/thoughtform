@@ -736,26 +736,48 @@ export function getBuildApproachFade(paintProgress: number): number {
   return 1 - smoothstep(0.86, 0.97, paintProgress);
 }
 
-/** Wormhole-exit warp (v3.4).
+/** Wormhole-exit warp (v3.7).
  *
  *  Drives the forward MOUTH dilation of the wormhole rails as the
  *  camera flies from Encode toward Build (see the `uExitWarp` block in
  *  `LatentWormholeWalls`). 0 across the rest of the corridor; ramps
- *  0 -> 1 across [0.64, 0.91] of paintProgress.
+ *  0 -> 1 across [0.64, 0.85] of paintProgress.
  *
- *  v3.4 pairs this timing with a longer physical corridor span
- *  (`620svh corridor + 300svh epilogue`). The prior [0.66, 0.90]
- *  timing began at the Encode exit but still had too little physical
- *  scroll between Encode and Build; the mouth opened correctly in
- *  progress-space but the user still felt the Build park arrived
- *  immediately. The new [0.64, 0.91] window starts just after the
- *  Encode park centre and runs across the now-longer post-Encode
- *  runway, so the tunnel visibly morphs open over multiple viewports
- *  before the sources/surfaces dock. The ambient walls still dissolve
- *  later (`getBuildApproachFade` [0.86, 0.97]) — first the mouth opens,
- *  then the corridor clears. */
+ *  v3.7 pulled the PEAK earlier (0.91 -> 0.85). At 0.91 the mouth was
+ *  fully open right AT the Build park (~0.923), so the "wormhole warps"
+ *  read landed on top of the Build composition instead of before it.
+ *  Peaking at 0.85 means the mouth has finished morphing during the
+ *  Encode->Build passthrough; the ambient walls then dissolve
+ *  (`getBuildApproachFade` [0.86, 0.97]) as the substrate stack docks.
+ *  Sequence: exit Encode -> streaks (see `getWormholeExitStreak`) ->
+ *  mouth warps + dissolves -> Build park. */
 export function getWormholeExitWarp(paintProgress: number): number {
-  return smoothstep(0.64, 0.91, paintProgress);
+  return smoothstep(0.64, 0.85, paintProgress);
+}
+
+/** Wormhole-exit STREAK envelope (v3.7).
+ *
+ *  Dedicated bell curve for the leg-2 acceleration streaks
+ *  (`LatentWormholeWalls` `<lineSegments>`). The streaks must read as a
+ *  PRE-Build event — the "you are exiting the wormhole" warp-speed
+ *  flow that fires as the camera leaves Encode and is GONE before the
+ *  Build-on-the-Substrate composition forms.
+ *
+ *  Previously the streaks shared `getWormholeExitWarp` (peak 0.91) +
+ *  `getBuildApproachFade` (fade 0.86 -> 0.97), so they peaked and
+ *  lingered right as Build docked — they read as a Build-section
+ *  event. This bell instead:
+ *    - ramps 0 -> 1 across [0.64, 0.76] (camera leaving the Encode
+ *      park, centre ~0.636 / window end ~0.700), so the streaks are
+ *      already streaming as you exit Encode;
+ *    - peaks across the mid-passthrough (~0.76 -> 0.80);
+ *    - fades 1 -> 0 across [0.80, 0.88], so they're gone BEFORE the
+ *      Build stack accretion ([0.84, 0.91]) and the Build park
+ *      (~0.923). 0 through the epilogue (paintProgress pinned at 1). */
+export function getWormholeExitStreak(paintProgress: number): number {
+  const rampUp = smoothstep(0.64, 0.76, paintProgress);
+  const fadeOut = 1 - smoothstep(0.8, 0.88, paintProgress);
+  return rampUp * fadeOut;
 }
 
 // ── Thoughtform compass flythrough ───────────────────────────────
