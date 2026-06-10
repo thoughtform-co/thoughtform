@@ -7,6 +7,7 @@ import { corridorCapable } from "@/lib/hooks/useDeviceTier";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import { stationById } from "@/lib/home-v2/corridorMap";
 import { CopyAnchors } from "./CopyAnchors";
+import { CorridorProgressRail } from "./CorridorProgressRail";
 import { CorridorStationHeaders } from "./CorridorStationHeaders";
 import { DepthGatewayScene } from "./DepthGatewayScene";
 import { useDepthScroll } from "./hooks/useDepthScroll";
@@ -153,6 +154,13 @@ export function HomeCorridor({ text, debug = true }: HomeCorridorProps) {
             straddle inside `CopyAnchors`. (2026-06-08 2D pivot.) */}
         {!fallback && <CorridorStationHeaders />}
 
+        {/* Persistent HUD breadcrumb — Navigate → Encode → Build,
+            appending each stage as the camera arrives. Sits on the top
+            HUD frame line (sibling in spirit to the left/right depth
+            rails); reads the depth store directly. Desktop-only via
+            CSS, matching the 2D station headers. */}
+        {!fallback && <CorridorProgressRail />}
+
         {/* Projected brandmark — lives inside the sticky stage so
             armed prepaint is clipped to the incoming Thoughtform
             section instead of floating over the hero. */}
@@ -184,6 +192,13 @@ function StageHud() {
   );
 }
 
+/** Strip a leading station ordinal ("01 · ", "02 — ", etc.) from a
+ *  kicker so the static fallback reads "Navigate" / "Encode" / "Build"
+ *  without the numbers — matching the numberless HUD breadcrumb. */
+function stripStationIndex(kicker: string): string {
+  return kicker.replace(/^\s*\d+\s*[·.\u2013\u2014-]\s*/, "");
+}
+
 /** Simple stacked-text fallback — paints the corridor copy in plain
  *  flow when WebGL or motion is unavailable. */
 function FallbackCorridor({ text }: { text: V7CorridorText }) {
@@ -201,14 +216,14 @@ function FallbackCorridor({ text }: { text: V7CorridorText }) {
       </section>
       {enc && (
         <section>
-          <p className="home-v2-fallback-text__bridge">{enc.kicker}</p>
+          <p className="home-v2-fallback-text__bridge">{stripStationIndex(enc.kicker)}</p>
           <h2 dangerouslySetInnerHTML={{ __html: enc.titleHtml }} />
           {enc.supportHtml && <p dangerouslySetInnerHTML={{ __html: enc.supportHtml }} />}
         </section>
       )}
       {bld && (
         <section>
-          <p className="home-v2-fallback-text__bridge">{bld.kicker}</p>
+          <p className="home-v2-fallback-text__bridge">{stripStationIndex(bld.kicker)}</p>
           <h2 dangerouslySetInnerHTML={{ __html: bld.titleHtml }} />
           {bld.supportHtml && <p dangerouslySetInnerHTML={{ __html: bld.supportHtml }} />}
         </section>

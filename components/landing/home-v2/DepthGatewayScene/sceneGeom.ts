@@ -1342,11 +1342,18 @@ const gateEncodeReadout: WorldAnchor["onPaint"] = (ctx, el) => {
  *  attribute) keep the previous whole-envelope fade. */
 const STACK_CLUSTER_OVERLAP_DOM = 0.3;
 const STACK_ITEM_OVERLAP_DOM = 0.55;
+/** Pixel distance each per-row chip travels (left → right) while its
+ *  lock ramps. Matches the canvas pips' directional slides (flow
+ *  pass, 2026-06-10): source chips ARRIVE rightward into the sphere
+ *  (inputs), surface chips EMERGE rightward out of it along the
+ *  output lines. Small — the slide is a direction cue, not a fly-in. */
+const STACK_CHIP_SLIDE_PX = 14;
 const gateStackLabel: WorldAnchor["onPaint"] = (ctx, el) => {
   const stack = getSmoothedAccretionLayers().stack;
   const side = el.getAttribute("data-stack-side");
   const idxAttr = el.getAttribute("data-stack-idx");
   let lock = stack;
+  let slidePx = 0;
   if (side && idxAttr !== null) {
     const idx = Number(idxAttr);
     if (Number.isFinite(idx) && idx >= 0) {
@@ -1358,6 +1365,10 @@ const gateStackLabel: WorldAnchor["onPaint"] = (ctx, el) => {
       const item = petalStagger(clusterStagger, idx, total, STACK_ITEM_OVERLAP_DOM);
       const eased = item * item * item * (item * (item * 6 - 15) + 10);
       lock = eased;
+      // Directional flow slide — both sides travel left → right with
+      // the pipeline (in from the left, through the sphere, out to
+      // the right), landing at 0 when the row locks.
+      slidePx = -(1 - eased) * STACK_CHIP_SLIDE_PX;
     }
   }
   // Epilogue v2 fade: source/surface DOM labels clear with the canvas
@@ -1365,6 +1376,13 @@ const gateStackLabel: WorldAnchor["onPaint"] = (ctx, el) => {
   // composition leaves together (corridor cadence rule).
   const epFade = 1 - epilogueBand(ctx.transform.epilogueProgress, "BUILD_OUT");
   el.style.opacity = (ctx.visibilityOpacity * lock * epFade).toFixed(3);
+  if (slidePx < -0.01) {
+    // Appended AFTER the tracker's translate/origin/scale segments and
+    // BEFORE the gyro bank rotations — the tracker rewrites the base
+    // transform every frame for these anchors (perspectiveScale), so
+    // this never accumulates.
+    el.style.transform = `${el.style.transform} translateX(${slidePx.toFixed(2)}px)`;
+  }
   applyGyroDomBank(el);
 };
 
@@ -1994,12 +2012,14 @@ export const COPY_ANCHORS: readonly WorldAnchor[] = [
     onPaint: gateStackLabel,
   },
   // Per-item stack labels — one DOM anchor per source pip / surface
-  // tip. World position is the pip's column X; chip origins on the
-  // DOM side are flipped so each chip's text grows INWARD (sources:
-  // left-center → text extends RIGHT toward the sphere; surfaces:
-  // right-center → text extends LEFT toward the sphere). Chips can
-  // never exit the viewport because they only ever extend toward
-  // x=0, and x=0 is the sphere centre.
+  // tip. World position is the pip's column X. Flow pass
+  // (2026-06-10): both sides anchor `left-center` and extend RIGHT,
+  // following the pipeline's direction — source chips read inward
+  // toward the sphere (inputs feeding in), surface chips extend
+  // OUTWARD past their tips (destinations of the output lines).
+  // Surface chips therefore extend beyond the column X; the
+  // frustum-clamped column keeps ~10% viewport margin to the HUD
+  // rail on supported desktop aspects (mobile hides the chips).
   ...STACK_SOURCE_ITEMS.map(({ id, y }) => ({
     id: `intelligence.source.${id}`,
     position: (transform: DepthGatewayTransform) => {

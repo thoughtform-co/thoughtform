@@ -270,17 +270,18 @@ export function CopyAnchors({ text }: CopyAnchorsProps) {
       {/* Per-item stack labels — one per source pip / surface tip.
           World positions come from `STACK_SOURCE_ITEMS` / `STACK_SURFACE_ITEMS`
           in sceneGeom.ts, which mirror ShellStack's pip/tip arrays exactly.
-          Source labels read leftward off the pip (`right-center`); surface
-          labels read rightward off the tip (`left-center`). Names are
-          representative — counts intentionally need not match the diamond
-          counts; the idea reads either way. */}
-      {/* Stack v3 (2026-06-10) — per-row chips grow INWARD toward
-          the sphere. Source chips anchor at the pip with `left-center`
-          (chip extends RIGHT) and surface chips with `right-center`
-          (chip extends LEFT). Because the chip can only extend
-          toward x=0 (the sphere centre, always inside the frame),
-          a chip can never crop off the screen regardless of the
-          viewport aspect or the row's column X. */}
+          Names are representative — counts intentionally need not match
+          the diamond counts; the idea reads either way. */}
+      {/* Flow pass (2026-06-10) — chips follow the pipeline's
+          direction. SOURCE chips anchor at the pip with `left-center`
+          and extend RIGHT toward the sphere (inputs feeding in).
+          SURFACE chips also anchor `left-center` but at the TIP, so
+          they extend RIGHT past the arrowhead, AWAY from the sphere —
+          they are the destinations of the output lines, not labels
+          hung back against the flow. Surface chips therefore extend
+          outward; `getStackColumnLocalX` clamps the column inside the
+          frustum with enough margin that a ~130px chip never reaches
+          the HUD rail on supported desktop aspects. */}
       {STACK_SOURCE_ITEMS.map((item, idx) => (
         <div
           key={`stack-source-${item.id}`}
@@ -304,7 +305,7 @@ export function CopyAnchors({ text }: CopyAnchorsProps) {
           key={`stack-surface-${item.id}`}
           className="home-v2-stack-item home-v2-stack-item--surface"
           data-world-anchor={`intelligence.surface.${item.id}`}
-          data-anchor-origin="right-center"
+          data-anchor-origin="left-center"
           data-stack-side="surfaces"
           data-stack-idx={idx}
         >

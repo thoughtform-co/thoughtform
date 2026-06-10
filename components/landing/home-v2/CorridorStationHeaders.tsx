@@ -167,10 +167,11 @@ function makeInitialState(): StationState {
 }
 
 interface StationContent {
-  /** Optional chrome eyebrow rendered above the title — small PT
-   *  Mono row with flanking hairline rules + a centre diamond.
-   *  Drives the "instrument cartouche" read for the corridor headers
-   *  (e.g. "01 \u00b7 Navigate"). The signal block leaves it unset. */
+  /** Numbered eyebrow (e.g. "01 \u00b7 Navigate"). No longer rendered by
+   *  this component — the persistent `CorridorProgressRail` HUD
+   *  breadcrumb (Navigate \u25c6 Encode \u25c6 Build) replaced the
+   *  per-station cartouche. Kept on the type because the corridor-map
+   *  content carries it and the static fallback still reads it. */
   kicker?: string;
   titleHtml: string;
   supportHtml?: string;
@@ -243,30 +244,18 @@ function StationBlock({
     registerCursors(titleCursorRef.current, supportCursorRef.current);
   }, [registerChars, registerCursors, titleTokens, supportLineTokens]);
 
-  // Cartouche chrome — small PT Mono kicker row above the title with
-  // flanking hairline rules and a centre diamond. Renders for the
-  // corridor stations (`content.kicker` is supplied) but NOT for the
-  // signal block (kicker undefined).
-  const kicker = content.kicker;
-  const cartoucheChrome = kicker ? (
-    <div className="home-v2-station-header__chrome" aria-hidden="true">
-      <span className="home-v2-station-header__rule" />
-      <span className="home-v2-station-header__diamond" />
-      <span className="home-v2-station-header__kicker">{kicker}</span>
-      <span className="home-v2-station-header__diamond" />
-      <span className="home-v2-station-header__rule" />
-    </div>
-  ) : null;
+  // The numbered station eyebrow (e.g. "01 · Navigate") used to render
+  // here as a cartouche above the title. It now lives once, persistently,
+  // on the HUD top frame as `CorridorProgressRail` — a Navigate → Encode
+  // → Build breadcrumb that appends each stage — so the per-station
+  // cartouche is gone and the head band carries just the title.
 
   if (!typewriter) {
     const head = (
-      <>
-        {cartoucheChrome}
-        <h2
-          className="home-v2-station-header__title"
-          dangerouslySetInnerHTML={{ __html: content.titleHtml }}
-        />
-      </>
+      <h2
+        className="home-v2-station-header__title"
+        dangerouslySetInnerHTML={{ __html: content.titleHtml }}
+      />
     );
     const support = content.supportHtml ? (
       <p
@@ -384,15 +373,11 @@ function StationBlock({
     <div ref={refSetter} className={containerClass} style={{ opacity: 0 }}>
       {split ? (
         <>
-          <div className="home-v2-station-header__head">
-            {cartoucheChrome}
-            {titleEl}
-          </div>
+          <div className="home-v2-station-header__head">{titleEl}</div>
           {supportEl && <div className="home-v2-station-header__foot">{supportEl}</div>}
         </>
       ) : (
         <>
-          {cartoucheChrome}
           {titleEl}
           {supportEl}
         </>

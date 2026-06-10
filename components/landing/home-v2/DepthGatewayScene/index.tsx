@@ -8,6 +8,7 @@ import { BrandmarkAccretionShell } from "./BrandmarkAccretionShell";
 import { CelestialMotes } from "./CelestialMotes";
 import { CorridorPhotons } from "./CorridorPhotons";
 import { FlyingCameraRig } from "./FlyingCameraRig";
+import { GatewayThroat } from "./GatewayThroat";
 import { GatewayWorld } from "./gates/GatewayWorld";
 import { InterGateCorridor } from "./InterGateCorridor";
 import { LatentFieldTunnel } from "./LatentFieldTunnel";
@@ -252,6 +253,13 @@ export function DepthGatewayScene() {
       <FlyingCameraRig />
       <StaticStarfield />
       <ThoughtformAtmosphere />
+      {/* GatewayThroat — receding dotted echoes of the portal frame
+          behind the Thoughtform gate at the parked beat, so the
+          portal visibly has an inside (depth hint of the wormhole).
+          Welded to the gate's centering pan; boots with the gateway;
+          cross-dissolves out (0.125–0.21) as the real leg-1 wormhole
+          walls reveal (0.12–0.24). Paints under the gate linework. */}
+      <GatewayThroat />
       <InterGateCorridor />
       <LatentFieldTunnel />
       <LatentWormholeWalls />

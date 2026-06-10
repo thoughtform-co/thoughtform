@@ -27,10 +27,15 @@
  *
  *   - Column X computed LIVE from the camera frustum via
  *     `getStackColumnLocalX(aspect)` — fits every desktop aspect.
- *   - Per-row pips slide INWARD a short distance and lock in
- *     sequence (`stackItemLock`); no cluster-level overshoot —
- *     nothing ever travels off-screen.
- *   - DOM chips grow inward toward the sphere (sceneGeom anchors).
+ *   - Per-row pips lock in sequence (`stackItemLock`) with
+ *     DIRECTIONAL slides (2026-06-10 flow pass): source pips arrive
+ *     from outside-left (inputs captured), surface tips emerge from
+ *     the sphere side and slide out to their column (outputs
+ *     emitted). No cluster-level overshoot.
+ *   - DOM chips: source chips grow inward toward the sphere;
+ *     surface chips sit PAST their tips, extending outward —
+ *     destinations at the end of the output lines (sceneGeom
+ *     anchors + CopyAnchors origins).
  *
  * Motes flow along the same curves (sampled polylines), so the
  * particle flow and the field lines agree exactly.
@@ -498,8 +503,14 @@ export function ShellStack({ layerKey, reducedMotion = false }: ShellStackProps)
     mats.surfacePipOutline.opacity = SURFACE_PIP_OPACITY * epFade;
     mats.surfacePipFilled.opacity = SURFACE_PIP_OPACITY * 0.94 * epFade;
 
-    // Per-row dock: pips slide inward from a small outer offset and
-    // scale-snap in sequence.
+    // Per-row dock — directional flow semantics (2026-06-10 flow
+    // pass): SOURCES are inputs, so their pips ARRIVE from outside-
+    // left and slide right into the column (captured by the sphere).
+    // SURFACES are outputs, so their tips EMERGE from the sphere
+    // side (inside-right) and slide further right to their parked
+    // column — emitted along the field line, not delivered against
+    // its flow. Both sides therefore travel left → right, matching
+    // the source→sphere→surface pipeline and the motes' direction.
     for (let i = 0; i < sourcePipRefs.current.length; i++) {
       const node = sourcePipRefs.current[i];
       if (!node) continue;
@@ -522,7 +533,7 @@ export function ShellStack({ layerKey, reducedMotion = false }: ShellStackProps)
       }
       const lock = stackItemLock(surfacesStagger, i, surfaceTipRefs.current.length);
       node.scale.setScalar(lock.scale);
-      node.position.x = colX + STACK_ROW_SLIDE_LOCAL_X * (1 - lock.slide);
+      node.position.x = colX - STACK_ROW_SLIDE_LOCAL_X * (1 - lock.slide);
     }
 
     // Motes ride the field-line curves — sources flow pip → wrap

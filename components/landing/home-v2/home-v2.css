@@ -207,6 +207,75 @@ html[data-corridor-epilogue="true"] .home-v2-stage__canvas canvas {
   pointer-events: none;
 }
 
+/* ── Corridor progress rail (Navigate → Encode → Build breadcrumb) ──
+   A persistent HUD element on the top frame line — sibling in spirit to
+   the left/right depth rails. It appends each stage as the camera
+   arrives, so the trail reads as the flywheel's progression. All motion
+   (per-unit `max-width` grow, opacity, gold lerp, container fade) is
+   written per frame by `CorridorProgressRail` off the scrubbed
+   `paintProgress`, so it stays in lock-step with the wheel — hence NO
+   CSS transitions here. Units start clipped at `max-width: 0` so the
+   first paint is empty (no full-width flash before the rAF engages). */
+.home-v2-progress-rail {
+  position: fixed;
+  /* Sit on the top HUD frame line, centred between the corner brackets;
+     the left/right rails own the vertical edges, this owns the top. */
+  top: var(--hud-margin, 32px);
+  left: 50%;
+  transform: translate3d(-50%, 0, 0);
+  z-index: 16;
+  display: flex;
+  align-items: center;
+  pointer-events: none;
+  opacity: 0;
+  font-family: var(--font-pt-mono, ui-monospace, monospace);
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  will-change: opacity;
+}
+
+.home-v2-progress-rail__unit {
+  display: inline-flex;
+  align-items: center;
+  overflow: hidden;
+  white-space: nowrap;
+  /* Clipped shut until its stage appends; the rAF loop grows max-width
+     0 → natural so the unit extends the trail left-to-right. */
+  max-width: 0;
+  opacity: 0;
+  /* `color` is lerped visited-grey → gold per frame; the label and the
+     diamond divider both read it via `inherit` / `currentColor`. */
+  color: rgb(150, 143, 128);
+}
+
+.home-v2-progress-rail__div {
+  flex: none;
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  /* Leading separation lives on the divider so the diamond reads as the
+     seam between two stages. */
+  margin: 0 13px;
+  background: currentColor;
+  transform: rotate(45deg);
+}
+
+.home-v2-progress-rail__label {
+  flex: none;
+  color: inherit;
+  font-weight: 500;
+}
+
+@media (max-width: 760px) {
+  /* Desktop-only, like the 2D station headers — the mobile composition
+     uses the world-anchored straddle in CopyAnchors. */
+  .home-v2-progress-rail {
+    display: none;
+  }
+}
+
 .home-v2-station-header {
   position: fixed;
   /* Base anchor = bottom-centre stack (used by the epilogue signal
@@ -1158,13 +1227,15 @@ html[data-corridor-epilogue="true"] .home-v2-stage__canvas canvas {
 }
 
 /* ── Per-row stack labels (one per source pip / surface tip) ────
-   Stack v3 (2026-06-10): chip + leader inside a row, with the row's
-   anchor origin at the pip. Source chips anchor `left-center` and
-   their leader extends RIGHT (chip-then-leader); surface chips
-   anchor `right-center` and their leader extends LEFT
-   (leader-then-chip). Both grow inward toward the sphere, so the
-   text never extends past the column X — cropping is structurally
-   impossible. */
+   Flow pass (2026-06-10): chips follow the pipeline's direction.
+   SOURCE rows anchor `left-center` at the pip, chip-then-leader —
+   the chip reads inward toward the sphere (input feeding in).
+   SURFACE rows also anchor `left-center` but at the TIP,
+   leader-then-chip — the row extends OUTWARD past the arrowhead,
+   away from the sphere, so the chip is the destination of the
+   output line rather than a label hung back against the flow.
+   The surface padding-left clears the canvas diamond arrowhead
+   drawn at the tip anchor. */
 
 .home-v2-stack-item {
   pointer-events: none;
@@ -1212,6 +1283,9 @@ html[data-corridor-epilogue="true"] .home-v2-stage__canvas canvas {
 }
 .home-v2-stack-item--surface {
   color: rgba(235, 227, 214, 0.85);
+  /* Stand off from the tip anchor so the leader hairline starts just
+     past the canvas diamond arrowhead instead of crossing it. */
+  padding-left: 12px;
 }
 
 /* ── Encode primitive labels (cardinal callouts) ────────────────
