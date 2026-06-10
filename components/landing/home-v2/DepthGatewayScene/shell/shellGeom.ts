@@ -347,24 +347,52 @@ export function getNoteSeatOffset(note: ShellNote): readonly [number, number] {
 // diverges to the right. The intelligence layer (substrate + orbits)
 // sits at the centre — no outer geodesic cage at Build.
 
-/** Left cluster X for trusted-source lanes (world units, shell-local). */
-export const STACK_SOURCES_X = -2.4;
+/** Left cluster X for trusted-source lanes (world units, shell-local).
+ *  Stack v3 (2026-06-10) — superseded as a layout source by the
+ *  aspect-adaptive `getStackColumnLocalX(aspect)` helper in
+ *  `sceneGeom.ts`. Kept exported for backwards-compatibility with any
+ *  off-corridor consumers (lab variants); the production canvas +
+ *  DOM tracker both compute the column live so the layout adapts to
+ *  the viewport instead of cropping. */
+export const STACK_SOURCES_X = -2.16;
 
 /** Centre X — brandmark + layer core. */
 export const STACK_SUBSTRATE_X = 0;
 
-/** Right fan-tip X for headless surfaces. */
-export const STACK_SURFACES_X = 2.4;
+/** Right fan-tip X for headless surfaces (see `STACK_SOURCES_X`
+ *  comment — superseded by the live column helper at runtime). */
+export const STACK_SURFACES_X = 2.16;
 
 export const STACK_LANE_COUNT = 5;
-export const STACK_LANE_Y_RANGE = 0.85;
+/** Source column vertical spread. Bumped 0.85 -> 1.05 (stack v3,
+ *  2026-06-10) so the 5 source rows have a tighter, more legible
+ *  rhythm in the new registry-column layout. */
+export const STACK_LANE_Y_RANGE = 1.05;
 export const STACK_FAN_COUNT = 6;
-export const STACK_FAN_HALF_HEIGHT = 1.05;
+/** Surface column vertical spread. Bumped 1.05 -> 1.15 (stack v3,
+ *  2026-06-10) so the 6 surface rows distribute evenly across a
+ *  span that matches the (slightly taller) source column. */
+export const STACK_FAN_HALF_HEIGHT = 1.15;
 export const STACK_MOTES_PER_LANE = 12;
 export const STACK_MOTES_PER_RAY = 8;
 
 /** Diamond pip scale relative to `PYLON_CAP_SIZE`. */
 export const STACK_PIP_SCALE = 0.55;
+
+/** Surface tip outline scale relative to `PYLON_CAP_SIZE`. Stack v3
+ *  (2026-06-10) — was full `PYLON_CAP_SIZE` (the giant-diamond read
+ *  in the previous screenshot). 0.78 makes the surface tips read as
+ *  pips that match the source pip scale. */
+export const STACK_TIP_OUTLINE_SCALE = 0.78;
+/** Surface tip inner-fill scale relative to `PYLON_CAP_SIZE`. Stack
+ *  v3 (2026-06-10) — was `STACK_PIP_SCALE` (0.55). 0.50 reads as a
+ *  small filled core inside the outline ring. */
+export const STACK_TIP_INNER_SCALE = 0.5;
+/** Per-row inward slide distance (local X) at slide=0. Stack v3
+ *  (2026-06-10) — replaces the old `STACK_SLOT_X_OFFSET` cluster
+ *  slide from far off-frame. 0.8 reads as "row arrives in its lane",
+ *  not "cluster flies in from off-screen". */
+export const STACK_ROW_SLIDE_LOCAL_X = 0.8;
 
 // ── Petal-unfold helpers (2026-06-05 revision) ──────────────────────
 //

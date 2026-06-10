@@ -261,19 +261,21 @@ export const CORRIDOR_MAP = [
     content: {
       kicker: "01 · Navigate",
       titleHtml: "Navigate the <em>intelligence</em>.",
-      // W2 (plan 03adb0dd) — replaces "AI isn't software. It's
+      // W2 (plan 03adb0dd) replaced "AI isn't software. It's
       // intelligence that sits between tool and collaborator." which
       // violated the strategy skill's voice rule against the
-      // "X is not Y, it is Z" construction. New line is plain
-      // declarative agency first-person, matches the strategy spine
-      // ("learn to work with the intelligence inside real work")
-      // and the Aether flywheel's Navigate body ("Team works with
-      // Claude inside real, named workflows"). 2026-06-08 copy pass:
-      // names the trained-on-us-but-alien framing and the
-      // command→navigate shift. Gold em on "navigating" reinforces
+      // "X is not Y, it is Z" construction. The 2026-06-08 follow-up
+      // named the trained-on-us-but-alien framing and the
+      // command→navigate shift; gold em on "navigating" reinforces
       // the station verb.
+      //
+      // Stack v3 caption pass (2026-06-10): condensed for the new
+      // bottom-centre cartouche (one-line read), keeping the alien-
+      // intelligence framing and the navigate verb but trimming the
+      // tail — the centred caption format makes long phrasing read
+      // as overcrowded.
       supportHtml:
-        "Trained on us, but it doesn't think like us. So you stop commanding and start <em>navigating</em>, finding where it leads and where you do.",
+        "Trained on us, but it doesn't think like us — so you stop commanding and start <em>navigating</em>: where it leads, and where you do.",
       telemetry: {
         sector: "STATION 01",
         callsign: "NAV-01",
@@ -303,8 +305,10 @@ export const CORRIDOR_MAP = [
       // 2026-06-08 copy pass — frames encoding as moving tacit
       // judgment out of people's heads into something the model can
       // inherit. Gold em on "brief" names the encoded artefact.
+      // Stack v3 caption pass (2026-06-10): condensed for the
+      // centred cartouche while keeping the heads-to-brief beat.
       supportHtml:
-        "The judgment that makes your work good was stuck in people's heads. Now it's a <em>brief</em> the model can inherit instead of guessing.",
+        "The judgment that makes your work good was stuck in heads. Now it's a <em>brief</em> the model inherits instead of guessing.",
       telemetry: {
         sector: "STATION 02",
         callsign: "ENC-02",
@@ -343,8 +347,11 @@ export const CORRIDOR_MAP = [
       // judgment becomes capability that runs across every surface
       // and outlives any single model. Gold em on "owned capability"
       // mirrors the Thoughtform spine "...until they own it."
+      // Stack v3 caption pass (2026-06-10): condensed for the
+      // centred cartouche while keeping ownership + survives-the-
+      // next-model anchor.
       supportHtml:
-        "Encoded once, it becomes <em>owned capability</em>, running across chat, agents, and your own apps, and surviving the next model.",
+        "Encoded once, it's <em>owned capability</em> — running across chat, agents, and your own apps, surviving the next model.",
       telemetry: {
         sector: "STATION 03",
         callsign: "BLD-03",

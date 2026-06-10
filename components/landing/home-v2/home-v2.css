@@ -209,31 +209,75 @@ html[data-corridor-epilogue="true"] .home-v2-stage__canvas canvas {
 
 .home-v2-station-header {
   position: fixed;
-  /* The header is a single left-aligned STACK — title with its support
-     paragraph directly beneath it (anime.js-style IA), rather than a
-     two-column title-left / support-right split. The block is anchored
-     to the LEFT of a centred max-width container so on wide screens it
-     sits inset (not jammed at the viewport edge) while leaving the
-     centre + right clear for the instrument. Raised again (2026-06-08
-     elegance pass) so the block sits in the upper third — clear of the
-     gimbal's top hemisphere without floating against the very edge. */
-  top: clamp(80px, 12vh, 156px);
+  /* Stack v3 / cartouche pivot (2026-06-10) — the corridor station
+     headers move from the upper-left stack (anime.js-style IA) to a
+     bottom-centre instrument cartouche. The cartouche reads as a
+     navigational caption attached to the centre instrument, leaving
+     the upper field clear for the corridor depth read (wormhole
+     mouth, distant glow). The boosted Navigate sphere's bottom edge
+     sits at ~82% of the viewport, so the cartouche band (~84-97%
+     vh) clears it across the calibrated aspect range.
+
+     The base `transform: translate3d(-50%, 0, 0)` centres the block
+     horizontally; `CorridorStationHeaders` overwrites the inline
+     transform per frame to add a small `gyroTilt`-driven parallax,
+     so the cartouche subtly banks with the instrument while staying
+     screen-aligned for legibility. */
+  bottom: clamp(28px, 5vh, 64px);
   left: 50%;
-  transform: translateX(-50%);
-  width: min(90vw, 1400px);
+  transform: translate3d(-50%, 0, 0);
+  width: min(86vw, 760px);
   pointer-events: none;
   opacity: 0;
   z-index: 15;
-  /* No CSS transitions — opacity is driven by per-frame writes from
-     `CorridorStationHeaders` so it stays in lock-step with the
-     scroll-driven paintProgress. */
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(10px, 1.2vw, 18px);
+  /* No CSS transitions — opacity + transform are driven by per-frame
+     writes from `CorridorStationHeaders` so they stay in lock-step
+     with the scroll-driven paintProgress + gyro bank. */
+}
+
+/* Cartouche chrome row — short hairline rule + diamond + PT Mono
+   kicker + diamond + rule. Reads as a chart-cartouche caption above
+   the title. Stack v3 polish (2026-06-10). */
+.home-v2-station-header__chrome {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: var(--font-pt-mono, ui-monospace, monospace);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(202, 165, 84, 0.78);
+}
+
+.home-v2-station-header__rule {
+  display: block;
+  width: clamp(28px, 6vw, 64px);
+  height: 1px;
+  background: rgba(202, 165, 84, 0.5);
+}
+
+.home-v2-station-header__diamond {
+  display: block;
+  width: 5px;
+  height: 5px;
+  background: var(--gold, #caa554);
+  transform: rotate(45deg);
+}
+
+.home-v2-station-header__kicker {
+  white-space: nowrap;
+  font-weight: 500;
 }
 
 .home-v2-station-header__title {
   margin: 0;
-  max-width: min(38vw, 460px);
-  /* Brand display sans (PP Neue Montreal) — matches the previous
-     header render. (The 2D-pivot draft accidentally used PT Mono.) */
+  max-width: min(72vw, 720px);
   font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
   font-size: clamp(26px, 3vw, 44px);
   font-weight: 400;
@@ -241,7 +285,7 @@ html[data-corridor-epilogue="true"] .home-v2-stage__canvas canvas {
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--dawn, #ebe3d6);
-  text-align: left;
+  text-align: center;
   text-shadow: 0 0 22px rgba(202, 165, 84, 0.18);
 }
 
@@ -252,29 +296,18 @@ html[data-corridor-epilogue="true"] .home-v2-stage__canvas canvas {
 }
 
 .home-v2-station-header__support {
-  /* Sits directly UNDER the title (stacked IA). */
-  margin: clamp(14px, 1.4vw, 20px) 0 0;
-  /* Match the title's column width so the body doesn't feel hemmed in
-     under a wider headline. Title uses `min(38vw, 460px)`; using the
-     same here gives a single column read (heading + body share one
-     edge), matching the hero-pair typography pattern used by polished
-     scroll sites (e.g. animejs.com hero where both lines occupy the
-     same column). */
-  max-width: min(38vw, 460px);
-  /* Brand display sans (PP Neue Montreal) — matches the previous
-     header render. */
+  margin: 0;
+  max-width: min(64vw, 680px);
   font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
-  /* Type pair rebalanced 2026-06-09: body bumped 15/1.2/18 -> 16/1.4/20
-     so the title:body ratio comes in around 2.2 (was ~2.55) and the
-     paragraph reads with weight instead of as a caption. 20 is the
-     brand reference body scale (divisible by 5 at the design system's
-     reference scale per `thoughtform-design/SKILL.md` "Universal
-     Foundations: Typography"). */
-  font-size: clamp(16px, 1.4vw, 20px);
+  /* Slightly smaller than the upper-left stack version since the
+     centred caption reads as a single line or two; matches the
+     `--signal` block scale so the three corridor parks and the
+     epilogue title share one rhythm. */
+  font-size: clamp(15px, 1.25vw, 18px);
   line-height: 1.45;
   letter-spacing: 0.005em;
-  color: rgba(235, 227, 214, 0.8);
-  text-align: left;
+  color: rgba(235, 227, 214, 0.78);
+  text-align: center;
 }
 
 .home-v2-station-header__support em {
@@ -369,10 +402,17 @@ html[data-corridor-epilogue="true"] .home-v2-stage__canvas canvas {
      once the landing tilt completes — the closing chord of the 3D
      space, before whatever transition takes the user into the next
      section. Camera is moving during APPROACH/LAND but the title
-     itself is viewport-fixed, so it's pixel-stable. */
+     itself is viewport-fixed, so it's pixel-stable.
+
+     Stack v3 (2026-06-10) — explicitly overrides the base
+     bottom-centre cartouche anchor so this single block stays at
+     top-centre. `bottom: auto` releases the base anchor; the rAF
+     loop also writes a bare `translate3d(-50%, 0, 0)` transform
+     here (no parallax) so the title sits perfectly centred. */
   top: clamp(80px, 12vh, 156px);
+  bottom: auto;
   left: 50%;
-  transform: translateX(-50%);
+  transform: translate3d(-50%, 0, 0);
   width: min(90vw, 720px);
   text-align: center;
 }
@@ -400,6 +440,17 @@ html[data-corridor-epilogue="true"] .home-v2-stage__canvas canvas {
   /* Hide the 2D header layer on mobile; the world-anchored straddle
      in CopyAnchors owns the centred portrait composition. */
   .home-v2-station-headers {
+    display: none;
+  }
+  /* Stack v3 (2026-06-10) — the registry-column chips and column
+     headers are calibrated for desktop frustum widths; on portrait
+     mobile the column X clamps inward to fit the frame, which puts
+     the chips on top of the sphere. The mobile composition reads
+     the Build content via `StationTitle` (mobile straddle), so the
+     stack chips/headers are hidden on portrait to avoid the sphere
+     overlap. */
+  .home-v2-stack-item,
+  .home-v2-stack-label {
     display: none;
   }
 }
@@ -991,18 +1042,73 @@ html[data-corridor-epilogue="true"] .home-v2-stage__canvas canvas {
   font-weight: 700;
 }
 
-/* ── Stack tier labels (Build funnel dock) ─────────────────── */
+/* ── Stack v3 column-header labels (Build funnel) ────────────────
+   The Sources / Surfaces group labels sit ABOVE their respective
+   columns as proper headers — a short hairline rule + ordinal +
+   title + sub stacked vertically. Each header anchors at the top
+   of its column with `bottom-{left,right}` origin so the text grows
+   INWARD toward the sphere, never outward off the frame. */
 
 .home-v2-stack-label {
   display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 10px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
   pointer-events: none;
 }
 
 .home-v2-stack-label--sources {
-  flex-direction: row-reverse;
+  align-items: flex-start;
+}
+.home-v2-stack-label--surfaces {
+  align-items: flex-end;
+}
+
+.home-v2-stack-label__rule {
+  display: block;
+  width: 36px;
+  height: 1px;
+  background: currentColor;
+  opacity: 0.5;
+  margin-bottom: 2px;
+}
+
+.home-v2-stack-label--sources .home-v2-stack-label__rule {
+  color: #5b7a4e;
+}
+.home-v2-stack-label--surfaces .home-v2-stack-label__rule {
+  color: #ebe3d6;
+}
+
+.home-v2-stack-label__body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.home-v2-stack-label--sources .home-v2-stack-label__body {
+  align-items: flex-start;
+  text-align: left;
+}
+.home-v2-stack-label--surfaces .home-v2-stack-label__body {
+  align-items: flex-end;
+  text-align: right;
+}
+
+.home-v2-stack-label__num {
+  font-family: var(--font-pt-mono, ui-monospace, monospace);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  font-weight: 500;
+  opacity: 0.7;
+}
+
+.home-v2-stack-label__name {
+  font-family: var(--font-pt-mono, ui-monospace, monospace);
+  font-size: 13px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-weight: 700;
 }
 
 .home-v2-stack-label__sub {
@@ -1011,62 +1117,16 @@ html[data-corridor-epilogue="true"] .home-v2-stage__canvas canvas {
   letter-spacing: 0.08em;
   text-transform: lowercase;
   color: rgba(235, 227, 214, 0.62);
-  margin-top: 2px;
 }
 
-.home-v2-stack-label__leader {
-  display: block;
-  width: 42px;
-  height: 0;
-  border-top: 1px dashed currentColor;
-  opacity: 0.55;
-  flex-shrink: 0;
-}
-
-.home-v2-stack-label--sources .home-v2-stack-label__leader {
-  color: #5b7a4e;
-}
-
-.home-v2-stack-label--surfaces .home-v2-stack-label__leader {
-  color: #ebe3d6;
-}
-
-.home-v2-stack-label .home-v2-copy-body-label {
-  align-items: flex-start;
-  text-align: left;
-}
-
-.home-v2-stack-label--sources .home-v2-copy-body-label {
-  align-items: flex-end;
-  text-align: right;
-}
-
-/* Group-label variant (anchor origin `top-center`, sits BELOW the
-   streams). Drops the side leader and centres the ordinal/title/sub
-   stack as one block hanging from the anchor point. */
-.home-v2-stack-label--group {
-  flex-direction: column;
-  gap: 6px;
-  align-items: center;
-}
-.home-v2-stack-label--group.home-v2-stack-label--sources {
-  flex-direction: column;
-}
-.home-v2-stack-label--group .home-v2-copy-body-label {
-  align-items: center;
-  text-align: center;
-}
-.home-v2-stack-label--group.home-v2-stack-label--sources .home-v2-copy-body-label {
-  align-items: center;
-  text-align: center;
-}
-
-/* ── Per-item stack labels (one per source pip / surface tip) ────
-   Polish round 2 v2 (2026-06-10): hairline-boxed chip + index
-   prefix + thin leader to the pip. Reads distinctly from the
-   unboxed cardinal labels — provenance / output stream membership
-   is the read, not wayfinding — and looks more like a panel label
-   on a technical drawing than free-floating text. */
+/* ── Per-row stack labels (one per source pip / surface tip) ────
+   Stack v3 (2026-06-10): chip + leader inside a row, with the row's
+   anchor origin at the pip. Source chips anchor `left-center` and
+   their leader extends RIGHT (chip-then-leader); surface chips
+   anchor `right-center` and their leader extends LEFT
+   (leader-then-chip). Both grow inward toward the sphere, so the
+   text never extends past the column X — cropping is structurally
+   impossible. */
 
 .home-v2-stack-item {
   pointer-events: none;
@@ -1082,7 +1142,7 @@ html[data-corridor-epilogue="true"] .home-v2-stage__canvas canvas {
 
 .home-v2-stack-item__leader {
   display: block;
-  width: 12px;
+  width: 14px;
   height: 1px;
   background: currentColor;
   opacity: 0.45;
@@ -1111,7 +1171,6 @@ html[data-corridor-epilogue="true"] .home-v2-stage__canvas canvas {
 
 .home-v2-stack-item--source {
   color: rgba(91, 122, 78, 0.92);
-  flex-direction: row-reverse;
 }
 .home-v2-stack-item--surface {
   color: rgba(235, 227, 214, 0.85);

@@ -11,6 +11,145 @@
 
 ---
 
+## 2026-06-10 Revision (v3.13) — Polish round 3: stack v3 registry columns + bottom-centre cartouche
+
+Hard course correction on the Build park. v3.12 ("polish round 2") shipped a
+funnel stack that still cropped at typical desktop aspects: docked column
+width was a fixed `±2.4` shell-local (`±2.83` world after `GYRO_ASSEMBLY_SCALE`)
+while the frustum half-width at the Build park varies from ~3.20 (1.5:1) to
+~3.79 (16:9), AND the per-row DOM chips grew OUTWARD from each pip — so on
+narrow desktop aspects the labels were guaranteed to crop. The 1.45×
+cluster `foldEmerge` overshoot threw the entire reveal outside the frame
+mid-animation. Group labels floated in empty space below the streams and
+broke the column flow.
+
+Round 3 rebuilds the Build composition AND moves the three corridor station
+headers to a bottom-centre instrument cartouche.
+
+### 1. Aspect-adaptive registry columns
+
+[ShellStack.tsx](../../components/landing/home-v2/DepthGatewayScene/shell/ShellStack.tsx) +
+[sceneGeom.ts](../../components/landing/home-v2/DepthGatewayScene/sceneGeom.ts):
+
+- New `getStackColumnLocalX(aspect)` helper reads the live camera
+  frustum at the Build park distance (`STATION_INTELLIGENCE.parkDistance`,
+  6.2) and returns a column X that fits inside the frame with a 0.4
+  world margin, capped at 2.16 (the 16:9 ceiling) and floored at 1.4.
+- ShellStack tracks the live aspect via a debounced resize listener,
+  rebuilding lane / fan / pip geometry on resize. DOM anchor resolvers
+  in `sceneGeom.COPY_ANCHORS` call the same helper inside their
+  per-frame `position` callbacks (via `getLiveAspectForStack()`), so
+  canvas pips and DOM chips share one source of truth even while the
+  viewport is resizing.
+- `STACK_LANE_Y_RANGE` 0.85 → 1.05; `STACK_FAN_HALF_HEIGHT` 1.05 →
+  1.15 — the registry columns get a tighter, more-legible vertical
+  rhythm.
+- New `STACK_TIP_OUTLINE_SCALE` 0.78 / `STACK_TIP_INNER_SCALE` 0.50
+  shrink the surface tip diamonds; previous full-`PYLON_CAP_SIZE`
+  outline read as detached "giant diamonds".
+
+### 2. Inward slide reveal
+
+- Cluster-level `foldEmerge` removed entirely. Cluster groups stay at
+  origin (no slide, no scale overshoot).
+- Per-row docking: each pip slides inward from a small
+  `STACK_ROW_SLIDE_LOCAL_X` 0.8 outer offset to its parked column X,
+  driven by the existing `stackItemLock` stagger (with the 0.12
+  scale overshoot retained). Lanes / fan are static channels; their
+  opacity fades in with the cluster stagger so the channels appear
+  ahead of the rows that dock into them.
+- Every frame of the reveal stays inside the frame by construction.
+
+### 3. Inward-growing chips + column-header group labels
+
+[CopyAnchors.tsx](../../components/landing/home-v2/CopyAnchors.tsx) +
+[home-v2.css](../../components/landing/home-v2/home-v2.css):
+
+- Per-row chips flip origins: source chips `right-center` →
+  `left-center` (text grows RIGHT, toward the sphere); surface chips
+  `left-center` → `right-center` (text grows LEFT, toward the
+  sphere). Combined with chip-then-leader / leader-then-chip DOM
+  ordering, every label can only ever extend toward x = 0 (the
+  sphere centre, always inside the frame). Cropping is structurally
+  impossible.
+- Group labels become COLUMN HEADERS hanging ABOVE each column at
+  shell-local `Y = +1.45`, anchored with `bottom-left` (sources) /
+  `bottom-right` (surfaces). New CSS class structure
+  (`.home-v2-stack-label__rule` + `__body` + `__num` / `__name` /
+  `__sub`) replaces the old `--group` modifier — the floating-below
+  treatment is gone.
+
+### 4. Bottom-centre cartouche for Navigate / Encode / Build
+
+[CorridorStationHeaders.tsx](../../components/landing/home-v2/CorridorStationHeaders.tsx) +
+[home-v2.css](../../components/landing/home-v2/home-v2.css):
+
+- `.home-v2-station-header` moves from `top: 12vh` left-stack to
+  `bottom: 5vh; left: 50%; translate3d(-50%,0,0)` centred. Width
+  `min(86vw, 760px)`; title centred (`max-width min(72vw, 720px)`);
+  support centred (`max-width min(64vw, 680px)`).
+- New cartouche chrome row above the title: `__rule` hairline +
+  `__diamond` + `__kicker` (PT Mono kicker from
+  `corridorMap.content.kicker`) + `__diamond` + `__rule`. The
+  `kicker` field already existed on every station's `content` —
+  this is the first place that renders it. `StationContent`
+  interface gains an optional `kicker` field.
+- World-coupled parallax: each frame the rAF loop reads `gyroTilt`
+  and writes a small `translate(±~8px)` offset on the three corridor
+  cartouches so they bank with the rotating instrument while staying
+  screen-aligned. Reduced-motion / non-gyro: parallax = 0 (gyroTilt
+  is 0 in those modes anyway). The signal cartouche stays purely
+  centred at top (it lives in the sky above the planet, not attached
+  to the gimbal).
+- `.home-v2-station-header--signal` explicitly overrides
+  `bottom: auto; top: clamp(80px, 12vh, 156px)` so the epilogue
+  title stays at top-centre.
+
+### 5. Condensed support copy
+
+[corridorMap.ts](../../lib/home-v2/corridorMap.ts) — three station
+support strings tightened for the centred cartouche while preserving
+each station's gold em + the strategy spine:
+
+- Navigate: "Trained on us, but it doesn't think like us — so you
+  stop commanding and start _navigating_: where it leads, and where
+  you do."
+- Encode: "The judgment that makes your work good was stuck in
+  heads. Now it's a _brief_ the model inherits instead of guessing."
+- Build: "Encoded once, it's _owned capability_ — running across
+  chat, agents, and your own apps, surviving the next model."
+
+### 6. Mobile
+
+The desktop-calibrated registry columns clamp their column X inward
+on portrait viewports (mobile aspect ~0.46 with widened FOV). At the
+new floor the chips would project on top of the sphere. The mobile
+composition uses `StationTitle` (world-anchored straddle) for all
+three station headers, so the per-row chips and column headers are
+hidden via `@media (max-width: 760px)` — the cartouche layer is
+already hidden the same way.
+
+### Verification (1440 + 1280 + 1920 desktop, 390 mobile)
+
+- **Build park, 1440x900 (1.6):** all 5 source chips + 6 surface
+  chips legible inside the frame; column headers above each column;
+  cartouche `03 BUILD / BUILD ON THE SUBSTRATE / Encoded once, it's
+owned capability — …` reads as a centred caption.
+- **Build park, 1280x853 (1.5):** identical chip + cartouche
+  composition; the column X clamps inward by ~2% but everything
+  still fits.
+- **Build park, 1920x1080 (1.78):** column X stays at the 2.16 cap;
+  more breathing room around the sphere; cartouche still centred.
+- **Navigate park (1440):** sphere fills upper-mid frame; cartouche
+  reads as a clean instrument caption with no clutter.
+- **Encode park (1440):** four cardinals visible above the
+  cartouche; CRAFT cardinal sits just above the chrome row, tight
+  but not overlapping.
+- **Mobile 390:** stack chips/headers hidden; mobile straddle owns
+  the title.
+
+---
+
 ## 2026-06-10 Revision (v3.12) — Polish round 2: photons, sphere parity, funnel subtlety, stack v2, label depth, epilogue compression, mount hardening
 
 Seven coupled passes responding to in-flight feedback after v3.11 shipped:

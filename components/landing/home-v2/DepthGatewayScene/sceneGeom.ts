@@ -1121,8 +1121,6 @@ import {
   STACK_FAN_HALF_HEIGHT,
   STACK_LANE_COUNT,
   STACK_LANE_Y_RANGE,
-  STACK_SOURCES_X,
-  STACK_SURFACES_X,
   SUBSTRATE_GYRO_GLOBE_RADIUS,
   getPrimitiveLabelOffset,
   petalStagger,
@@ -1151,6 +1149,45 @@ function diagnosticApproachDepthOffset(progress: number): number {
 function intelligenceApproachDepthOffset(progress: number): number {
   const { offset, start, end } = CORRIDOR_TIMELINE.intelligenceApproach;
   return lerp(offset, 0, smoothstep(start, end, progress));
+}
+
+// ── Stack-v3 aspect-adaptive column layout ───────────────────────
+//
+// The Build sources/surfaces previously sat at a FIXED `STACK_*_X = ±2.4`
+// in shell-local coords. After the GYRO_ASSEMBLY_SCALE (1.18) the docked
+// pips landed at ±2.83 world units, with DOM label chips growing OUTWARD
+// from each pip — so on viewports where the frustum half-width at the
+// Build park (~3.2 at 1.5:1 desktop) was tighter than 2.83 + chip width,
+// the labels were guaranteed to crop off the screen.
+//
+// Stack v3 (2026-06-10 polish round 3) computes the column X live from
+// the camera's frustum width at the Build park distance, capped at the
+// original 2.16 (so wide viewports still get a clean two-column read,
+// not a stretched-out funnel). DOM labels grow INWARD toward the
+// sphere, never outward, so cropping is impossible by construction.
+
+/** Live shell-local X for the source/surface columns at the Build park
+ *  (DOM anchors + canvas pip positions both call this so they stay
+ *  welded). Returns a NEGATIVE value for the source side (the caller
+ *  applies the sign). */
+const STACK_COLUMN_X_CAP = 2.16;
+const STACK_COLUMN_MARGIN = 0.4;
+export function getStackColumnLocalX(aspect: number): number {
+  const fovDeg = getCameraFov(aspect);
+  const fovRad = (fovDeg * Math.PI) / 180;
+  const halfH = STATION_INTELLIGENCE.parkDistance * Math.tan(fovRad / 2);
+  const safeAspect = Number.isFinite(aspect) && aspect > 0 ? aspect : 16 / 9;
+  const halfW = halfH * safeAspect;
+  const local = (halfW - STACK_COLUMN_MARGIN) / GYRO_ASSEMBLY_SCALE;
+  return Math.min(STACK_COLUMN_X_CAP, Math.max(1.4, local));
+}
+
+/** Live aspect read used by DOM-side anchor resolvers. Pulled into a
+ *  helper so SSR / non-browser environments fall back to a sensible
+ *  16:9 default. */
+export function getLiveAspectForStack(): number {
+  if (typeof window === "undefined" || !window.innerHeight) return 16 / 9;
+  return window.innerWidth / window.innerHeight;
 }
 
 /** Brandmark accretion reveal envelopes — one per layer of the
@@ -1909,13 +1946,19 @@ export const COPY_ANCHORS: readonly WorldAnchor[] = [
       farFade: 2.2,
     },
   },
-  // Stack tier labels — Sources (left) and Surfaces (right) sit BELOW
-  // their respective streams (the top corners are now owned by the
-  // Linear-style station header). Origin `top-center` so each label
-  // hangs from its anchor point centred under the fan/funnel.
+  // Stack v3 (2026-06-10 polish round 3) — Sources / Surfaces become
+  // proper COLUMN HEADERS hanging above their respective columns, with
+  // the column X computed live from the camera frustum so the layout
+  // adapts to the viewport instead of cropping. Group labels share an
+  // origin that grows their text INWARD toward the sphere; per-item
+  // chips do the same — nothing in this layout can leave the frame
+  // by construction.
   {
     id: "intelligence.sourcesLabel",
-    position: (transform) => gyroAssemblyWorldPosition(transform, [-1.6, -1.25, 0]),
+    position: (transform) => {
+      const colX = getStackColumnLocalX(getLiveAspectForStack());
+      return gyroAssemblyWorldPosition(transform, [-colX, 1.45, 0]);
+    },
     visibilityBeats: ["passthrough-02", "intelligence"],
     fadeFrac: 0.14,
     perspectiveScale: {
@@ -1927,7 +1970,10 @@ export const COPY_ANCHORS: readonly WorldAnchor[] = [
   },
   {
     id: "intelligence.surfacesLabel",
-    position: (transform) => gyroAssemblyWorldPosition(transform, [1.6, -1.45, 0]),
+    position: (transform) => {
+      const colX = getStackColumnLocalX(getLiveAspectForStack());
+      return gyroAssemblyWorldPosition(transform, [colX, 1.45, 0]);
+    },
     visibilityBeats: ["passthrough-02", "intelligence"],
     fadeFrac: 0.14,
     perspectiveScale: {
@@ -1938,15 +1984,18 @@ export const COPY_ANCHORS: readonly WorldAnchor[] = [
     onPaint: gateStackLabel,
   },
   // Per-item stack labels — one DOM anchor per source pip / surface
-  // tip. World positions mirror `ShellStack`'s `sourcePipPositions` +
-  // `surfaceFanEnds` arrays so each label sits beside its diamond. The
-  // source label reads LEFTWARD off the pip (origin right-center in
-  // the DOM); the surface label reads RIGHTWARD off the tip (origin
-  // left-center). All share the Build-phase reveal via gateStackLabel.
+  // tip. World position is the pip's column X; chip origins on the
+  // DOM side are flipped so each chip's text grows INWARD (sources:
+  // left-center → text extends RIGHT toward the sphere; surfaces:
+  // right-center → text extends LEFT toward the sphere). Chips can
+  // never exit the viewport because they only ever extend toward
+  // x=0, and x=0 is the sphere centre.
   ...STACK_SOURCE_ITEMS.map(({ id, y }) => ({
     id: `intelligence.source.${id}`,
-    position: (transform: DepthGatewayTransform) =>
-      gyroAssemblyWorldPosition(transform, [STACK_SOURCES_X - 0.12, y, 0]),
+    position: (transform: DepthGatewayTransform) => {
+      const colX = getStackColumnLocalX(getLiveAspectForStack());
+      return gyroAssemblyWorldPosition(transform, [-colX, y, 0]);
+    },
     visibilityBeats: ["passthrough-02", "intelligence"] as Beat[],
     fadeFrac: 0.14,
     perspectiveScale: {
@@ -1958,8 +2007,10 @@ export const COPY_ANCHORS: readonly WorldAnchor[] = [
   })),
   ...STACK_SURFACE_ITEMS.map(({ id, y }) => ({
     id: `intelligence.surface.${id}`,
-    position: (transform: DepthGatewayTransform) =>
-      gyroAssemblyWorldPosition(transform, [STACK_SURFACES_X + 0.12, y, 0]),
+    position: (transform: DepthGatewayTransform) => {
+      const colX = getStackColumnLocalX(getLiveAspectForStack());
+      return gyroAssemblyWorldPosition(transform, [colX, y, 0]);
+    },
     visibilityBeats: ["passthrough-02", "intelligence"] as Beat[],
     fadeFrac: 0.14,
     perspectiveScale: {

@@ -224,29 +224,24 @@ export function CopyAnchors({ text }: CopyAnchorsProps) {
 
       {isMobile && bld && <StationTitle content={bld} base="intelligence" />}
 
-      {/* Stack tier GROUP labels — sit below the Build funnel streams
-          (top corners are now owned by the Linear-style station header).
-          Origin `top-center` so each label hangs from its anchor point
-          centred under the lane / fan. The old dashed-leader hyphen is
-          dropped — the per-item labels (Snowflake / Cursor / etc.)
-          carry the inventory; this group label is just a section header. */}
+      {/* Stack v3 (2026-06-10) — group labels become COLUMN HEADERS.
+          Each one anchors at the TOP of its column (Y = +1.45 in
+          shell-local) with `bottom-{left,right}` origin so the
+          header text sits ABOVE the column and grows INWARD toward
+          the sphere. Replaces the v2 floating-below treatment that
+          broke the column flow. */}
       {stackSourcesLabel && (
         <div
-          className="home-v2-stack-label home-v2-stack-label--sources home-v2-stack-label--group"
+          className="home-v2-stack-label home-v2-stack-label--sources home-v2-stack-label--column"
           data-world-anchor="intelligence.sourcesLabel"
-          data-anchor-origin="top-center"
+          data-anchor-origin="bottom-left"
         >
-          <div className="home-v2-copy-body-label">
-            <span
-              className="home-v2-copy-body-label__num"
-              style={{ color: stackSourcesLabel.color }}
-            >
+          <span className="home-v2-stack-label__rule" aria-hidden="true" />
+          <div className="home-v2-stack-label__body">
+            <span className="home-v2-stack-label__num" style={{ color: stackSourcesLabel.color }}>
               {stackSourcesLabel.ordinal}
             </span>
-            <span
-              className="home-v2-copy-body-label__name"
-              style={{ color: stackSourcesLabel.color }}
-            >
+            <span className="home-v2-stack-label__name" style={{ color: stackSourcesLabel.color }}>
               {stackSourcesLabel.title}
             </span>
             <span className="home-v2-stack-label__sub">{stackSourcesLabel.sub}</span>
@@ -255,21 +250,16 @@ export function CopyAnchors({ text }: CopyAnchorsProps) {
       )}
       {stackSurfacesLabel && (
         <div
-          className="home-v2-stack-label home-v2-stack-label--surfaces home-v2-stack-label--group"
+          className="home-v2-stack-label home-v2-stack-label--surfaces home-v2-stack-label--column"
           data-world-anchor="intelligence.surfacesLabel"
-          data-anchor-origin="top-center"
+          data-anchor-origin="bottom-right"
         >
-          <div className="home-v2-copy-body-label">
-            <span
-              className="home-v2-copy-body-label__num"
-              style={{ color: stackSurfacesLabel.color }}
-            >
+          <span className="home-v2-stack-label__rule" aria-hidden="true" />
+          <div className="home-v2-stack-label__body">
+            <span className="home-v2-stack-label__num" style={{ color: stackSurfacesLabel.color }}>
               {stackSurfacesLabel.ordinal}
             </span>
-            <span
-              className="home-v2-copy-body-label__name"
-              style={{ color: stackSurfacesLabel.color }}
-            >
+            <span className="home-v2-stack-label__name" style={{ color: stackSurfacesLabel.color }}>
               {stackSurfacesLabel.title}
             </span>
             <span className="home-v2-stack-label__sub">{stackSurfacesLabel.sub}</span>
@@ -284,31 +274,29 @@ export function CopyAnchors({ text }: CopyAnchorsProps) {
           labels read rightward off the tip (`left-center`). Names are
           representative — counts intentionally need not match the diamond
           counts; the idea reads either way. */}
-      {/* Per-item stack labels (polish round 2 v2). Hairline-boxed
-          chips with a numeric index prefix so the inventory reads
-          differently from the unboxed cardinal labels — provenance/
-          output stream membership is the read here, not wayfinding.
-          Each chip is colour-tinted to its side (green sources / dawn
-          surfaces) and anchored at the pip with a thin leader
-          implied by the box edge. */}
+      {/* Stack v3 (2026-06-10) — per-row chips grow INWARD toward
+          the sphere. Source chips anchor at the pip with `left-center`
+          (chip extends RIGHT) and surface chips with `right-center`
+          (chip extends LEFT). Because the chip can only extend
+          toward x=0 (the sphere centre, always inside the frame),
+          a chip can never crop off the screen regardless of the
+          viewport aspect or the row's column X. */}
       {STACK_SOURCE_ITEMS.map((item, idx) => (
         <div
           key={`stack-source-${item.id}`}
           className="home-v2-stack-item home-v2-stack-item--source"
           data-world-anchor={`intelligence.source.${item.id}`}
-          data-anchor-origin="right-center"
+          data-anchor-origin="left-center"
           // `gateStackLabel` reads side + idx to sync each label's fade
-          // to its canvas pip's per-item lock snap. Without these
-          // attributes the label still fades on the whole-stack
-          // envelope (the previous behaviour).
+          // to its canvas pip's per-row lock snap.
           data-stack-side="sources"
           data-stack-idx={idx}
         >
-          <span className="home-v2-stack-item__leader" aria-hidden="true" />
           <span className="home-v2-stack-item__chip">
             <span className="home-v2-stack-item__index">{String(idx + 1).padStart(2, "0")}</span>
             <span className="home-v2-stack-item__label">{item.label}</span>
           </span>
+          <span className="home-v2-stack-item__leader" aria-hidden="true" />
         </div>
       ))}
       {STACK_SURFACE_ITEMS.map((item, idx) => (
@@ -316,15 +304,15 @@ export function CopyAnchors({ text }: CopyAnchorsProps) {
           key={`stack-surface-${item.id}`}
           className="home-v2-stack-item home-v2-stack-item--surface"
           data-world-anchor={`intelligence.surface.${item.id}`}
-          data-anchor-origin="left-center"
+          data-anchor-origin="right-center"
           data-stack-side="surfaces"
           data-stack-idx={idx}
         >
+          <span className="home-v2-stack-item__leader" aria-hidden="true" />
           <span className="home-v2-stack-item__chip">
             <span className="home-v2-stack-item__index">{String(idx + 1).padStart(2, "0")}</span>
             <span className="home-v2-stack-item__label">{item.label}</span>
           </span>
-          <span className="home-v2-stack-item__leader" aria-hidden="true" />
         </div>
       ))}
     </div>

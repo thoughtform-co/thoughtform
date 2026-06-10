@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef } from "react";
 import { stationById } from "@/lib/home-v2/corridorMap";
 import { epilogueBand } from "@/lib/home-v2/epilogueTimeline";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
+import { gyroTilt } from "@/lib/stores/gyroLabStore";
 
 /**
  * CorridorStationHeaders — flat 2D screen-space layer for the three
@@ -166,6 +167,11 @@ function makeInitialState(): StationState {
 }
 
 interface StationContent {
+  /** Optional chrome eyebrow rendered above the title — small PT
+   *  Mono row with flanking hairline rules + a centre diamond.
+   *  Drives the "instrument cartouche" read for the corridor headers
+   *  (e.g. "01 \u00b7 Navigate"). The signal block leaves it unset. */
+  kicker?: string;
   titleHtml: string;
   supportHtml?: string;
 }
@@ -220,9 +226,26 @@ function StationBlock({
     registerCursors(titleCursorRef.current, supportCursorRef.current);
   }, [registerChars, registerCursors, titleTokens, supportTokens]);
 
+  // Cartouche chrome — small PT Mono kicker row above the title with
+  // flanking hairline rules and a centre diamond. Renders for the
+  // corridor stations (`content.kicker` is supplied) but NOT for the
+  // signal block (kicker undefined). Drives the "instrument caption"
+  // read for the bottom-centre cartouche layout.
+  const kicker = content.kicker;
+  const cartoucheChrome = kicker ? (
+    <div className="home-v2-station-header__chrome" aria-hidden="true">
+      <span className="home-v2-station-header__rule" />
+      <span className="home-v2-station-header__diamond" />
+      <span className="home-v2-station-header__kicker">{kicker}</span>
+      <span className="home-v2-station-header__diamond" />
+      <span className="home-v2-station-header__rule" />
+    </div>
+  ) : null;
+
   if (!typewriter) {
     return (
       <div ref={refSetter} className={containerClass} style={{ opacity: 0 }}>
+        {cartoucheChrome}
         <h2
           className="home-v2-station-header__title"
           dangerouslySetInnerHTML={{ __html: content.titleHtml }}
@@ -247,6 +270,7 @@ function StationBlock({
 
   return (
     <div ref={refSetter} className={containerClass} style={{ opacity: 0 }}>
+      {cartoucheChrome}
       <h2 className="home-v2-station-header__title" aria-label={titlePlain}>
         <span aria-hidden="true">
           {titleTokens.map((tok, idx) => (
@@ -432,6 +456,29 @@ export function CorridorStationHeaders() {
           if (el) el.style.opacity = containerOps[key].toFixed(3);
         }
       }
+
+      // World-coupled parallax for the bottom-centre cartouche
+      // (2026-06-10 polish round 3). Read the live gyro bank and
+      // shift each corridor cartouche by a small pixel offset so the
+      // caption visibly belongs to the rotating instrument while
+      // staying screen-aligned for legibility. Capped at 8px so the
+      // text never travels far enough to break the centred
+      // composition. Reduced-motion / non-gyro setups read 0 (no
+      // parallax) because `gyroTilt.{x,y}` are 0 when the lab is
+      // disabled and the calmed pointer bank settles to 0 too.
+      const PARALLAX_PX = reducedMotion ? 0 : 8;
+      const px = (gyroTilt.y * PARALLAX_PX).toFixed(2);
+      const py = (-gyroTilt.x * PARALLAX_PX).toFixed(2);
+      const cartoucheTransform = `translate3d(-50%, 0, 0) translate(${px}px, ${py}px)`;
+      for (const key of ["nav", "enc", "bld"] as const) {
+        const el = stationRefs.current[key].container;
+        if (el) el.style.transform = cartoucheTransform;
+      }
+      // Signal block keeps its base centred transform (no parallax)
+      // — it lives in the sky above the planet, not attached to the
+      // gimbal.
+      const sigEl = stationRefs.current.sig.container;
+      if (sigEl) sigEl.style.transform = "translate3d(-50%, 0, 0)";
 
       // Per-station typewriter pass.
       for (const key of ["nav", "enc", "bld", "sig"] as const) {

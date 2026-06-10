@@ -1,18 +1,44 @@
 "use client";
 
 /**
- * ShellStack — Build accretion layer. Docks the assembled intelligence
- * layer (substrate sphere + Encode judgment orbits) into the full
- * stack: trusted sources feed in from the left (green lanes), headless
- * surfaces fan out to the right (dawn diamonds).
+ * ShellStack — Build accretion layer (stack v3, 2026-06-10 polish r3).
  *
- * Ported from the FUNNEL variant in the intelligence-artifact lab.
- * No group spin — the directional flow is the read. Geometry emerges
- * via `foldEmerge` + `petalStagger`, not opacity ramps.
+ * Two compact registry columns flanking the intelligence-layer
+ * sphere: 5 trusted-source rows (green) on the left, 6 headless-
+ * surface rows (dawn) on the right. Each row is a diamond pip
+ * connected to the sphere via a static dotted lane (sources) or
+ * fan ray (surfaces), through the existing aperture ports at
+ * `±0.85` shell-local.
+ *
+ * Stack v3 fixes the v2 cropping disaster:
+ *
+ *   - Column X is computed LIVE from the camera frustum via
+ *     `getStackColumnLocalX(aspect)` in `sceneGeom.ts`, so the
+ *     layout fits 1.5:1 just as well as 16:9 (the previous fixed
+ *     ±2.4 always cropped on narrow desktop aspects).
+ *   - Lanes / fan are STATIC channels — only the per-row pips slide
+ *     INWARD from a small `STACK_ROW_SLIDE_LOCAL_X` offset, so
+ *     nothing inside the cluster ever travels off-screen.
+ *   - The cluster-level `foldEmerge` (1.45x position overshoot, the
+ *     v2 off-frame culprit) is gone. Reveal cadence comes from the
+ *     existing per-row `stackItemLock` stagger only — clean snap
+ *     into each lane / port, no dramatic flight-in.
+ *   - Surface tip diamonds shrink to match source pip size
+ *     (`STACK_TIP_OUTLINE_SCALE` / `STACK_TIP_INNER_SCALE`) — the v2
+ *     full-`PYLON_CAP_SIZE` outline read as giant detached diamonds.
+ *
+ * DOM labels grow INWARD toward the sphere (sources `left-center` →
+ * text extends right; surfaces `right-center` → text extends left)
+ * via the live column X in `sceneGeom.COPY_ANCHORS` — text can never
+ * exit the viewport because it only ever extends toward x = 0.
+ *
+ * Geometry rebuilds on resize (the column X changes with the live
+ * aspect ratio); a debounced `resize` listener updates `liveAspect`
+ * state, which keys the `useMemo` chain.
  */
 
-import { useFrame } from "@react-three/fiber";
-import { useEffect, useMemo, useRef } from "react";
+import { useFrame, useThree } from "@react-three/fiber";
+import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import {
   COLOR_SOURCES,
@@ -34,9 +60,9 @@ import {
 import { epilogueBand } from "@/lib/home-v2/epilogueTimeline";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import { getSmoothedAccretionLayers } from "../motionFollower";
+import { getStackColumnLocalX } from "../sceneGeom";
 import {
   EMERGE_EPSILON,
-  foldEmerge,
   petalStagger,
   STACK_FAN_COUNT,
   STACK_FAN_HALF_HEIGHT,
@@ -45,9 +71,10 @@ import {
   STACK_MOTES_PER_LANE,
   STACK_MOTES_PER_RAY,
   STACK_PIP_SCALE,
-  STACK_SOURCES_X,
+  STACK_ROW_SLIDE_LOCAL_X,
   STACK_SUBSTRATE_X,
-  STACK_SURFACES_X,
+  STACK_TIP_INNER_SCALE,
+  STACK_TIP_OUTLINE_SCALE,
 } from "./shellGeom";
 
 interface ShellStackProps {
@@ -60,63 +87,15 @@ const SOURCE_PIP_OPACITY = 0.95;
 const SURFACE_FAN_OPACITY = 0.6;
 const SURFACE_PIP_OPACITY = 0.9;
 
-// ── Slot-in tuning (2026-06-08 reveal-polish) ─────────────────────
-//
-// Each cluster slides in from off-screen toward the substrate:
-// sources from far LEFT, surfaces from far RIGHT. The cluster X
-// offset is driven by the cluster's outer stagger window; the
-// existing `foldEmerge` scale stays so the cluster "lands" with a
-// soft overshoot on arrival. On top, each per-item pip / fan tip
-// gets its own staggered scale snap so the parts read as slotting
-// into the machine in sequence.
-
-/** Outer cluster stagger overlap. 0.30 gives a clear sources →
- *  surfaces handoff while still feeling like one motion. */
+/** Cluster-level stagger overlap. 0.30 gives a clear sources →
+ *  surfaces handoff while still feeling like one motion. The
+ *  cluster stagger now only drives lane/fan opacity fades + sequences
+ *  the per-row stagger; no group position offset. */
 const STACK_CLUSTER_OVERLAP = 0.3;
-
-/** Off-screen X offset at cluster stagger = 0. Picked so the cluster
- *  is clearly outside the gate frame at parked distance 6.2 (FOV 38°,
- *  16:9). Negative for sources, positive for surfaces.
- *
- *  Polish round 2 (2026-06-10): trimmed 8 -> 3.0. The previous 8
- *  put the cluster at the parent-local X ~= ±10.4 at slide=0 (after
- *  GYRO_ASSEMBLY_SCALE), which was so far off-frame the user only
- *  ever saw the LAST sliver of the slide animation — most of the
- *  fly-in was cropped out. 3.0 starts the cluster just outside the
- *  parked frustum (parent-local ~= ±5.4 → world ~= ±6.4 after
- *  scale; frustum half-width at park distance 6.2 is ~3.79), so
- *  the slide arc reads in-frame instead of as a final pop. */
-export const STACK_SLOT_X_OFFSET = 3.0;
-
-/** Forward (toward-camera, +Z local) offset at cluster stagger = 0
- *  (v3.3 "fly in from outside the wormhole" pass). The clusters start
- *  not just off to the SIDE but also IN FRONT of the substrate — out
- *  in the new space the camera has just emerged into as it exits the
- *  wormhole — and fly back-and-inward to dock on the substrate plane
- *  (z = 0 local). Combined with the X offset this reads as the sources
- *  and surfaces arriving from the surrounding space rather than sliding
- *  flatly in from the wings. Local units (the assembly is scaled by
- *  GYRO_ASSEMBLY_SCALE); kept modest so the clusters stay between the
- *  camera and the substrate (no clip past the near plane).
- *
- *  Polish round 2 (2026-06-10): trimmed 2.6 -> 1.6. The previous
- *  2.6 made the clusters loom huge near the camera at slide=0
- *  (the perspective scaling exaggerated the off-frame X), which
- *  contributed to the "out of frame" read. 1.6 keeps the volumetric
- *  fly-in feel without the foreground bloom. */
-export const STACK_SLOT_Z_OFFSET = 1.6;
-
-/** Per-item lock stagger inside its cluster's window. Each lane/fan
- *  tip's scale snaps from a starting floor up to 1.0 in sequence,
- *  so the parts read as plugging in one-by-one instead of arriving
- *  as one block. */
+/** Per-row lock stagger inside its cluster's window. Each row
+ *  scale-snaps + slides inward a short distance in sequence. */
 const STACK_ITEM_OVERLAP = 0.55;
-/** Per-item scale floor — pips start at this scale and snap to 1.0
- *  on lock. Small enough to read as a snap, large enough that the
- *  pip is still visible during slide so the eye tracks it. */
 const STACK_ITEM_SCALE_FLOOR = 0.6;
-/** Soft landing overshoot peak on each item (additive to 1.0 at the
- *  mid of the per-item curve, decays to 0 at full lock). */
 const STACK_ITEM_OVERSHOOT = 0.12;
 
 function smootherStack(t: number): number {
@@ -124,20 +103,49 @@ function smootherStack(t: number): number {
   return x * x * x * (x * (x * 6 - 15) + 10);
 }
 
-/** Per-item lock progress + scale. Used for source pips and surface
- *  tips (both rendered as individually-positioned meshes/groups, so
- *  each can scale independently of the cluster geometry). */
+/** Per-row lock progress + scale + inward slide. Used for source
+ *  pips and surface tips. `slide` 0..1 ramps from "outer offset"
+ *  (row pre-dock) to 1 (row docked at column X). */
 export function stackItemLock(
   clusterStagger: number,
   idx: number,
   total: number
-): { scale: number; locked: number } {
-  if (total <= 0) return { scale: 1, locked: 1 };
+): { scale: number; locked: number; slide: number } {
+  if (total <= 0) return { scale: 1, locked: 1, slide: 1 };
   const s = petalStagger(clusterStagger, idx, total, STACK_ITEM_OVERLAP);
   const eased = smootherStack(s);
   const base = STACK_ITEM_SCALE_FLOOR + (1 - STACK_ITEM_SCALE_FLOOR) * eased;
   const overshoot = Math.sin(Math.PI * s) * STACK_ITEM_OVERSHOOT * (1 - s);
-  return { scale: base + overshoot, locked: s };
+  return { scale: base + overshoot, locked: s, slide: eased };
+}
+
+/** Compute the live viewport aspect for the stack column layout.
+ *  Falls back to 16:9 in non-browser contexts. */
+function readLiveAspect(): number {
+  if (typeof window === "undefined" || !window.innerHeight) return 16 / 9;
+  return window.innerWidth / window.innerHeight;
+}
+
+/** React hook: live aspect ratio, debounced resize listener. The
+ *  geometry `useMemo` chain depends on this so the lanes/fan rebuild
+ *  whenever the column X changes (resize, devtools open/close). */
+function useStackLiveAspect(): number {
+  const [aspect, setAspect] = useState(() => readLiveAspect());
+  useEffect(() => {
+    let timer: number | null = null;
+    const onResize = () => {
+      if (timer != null) window.clearTimeout(timer);
+      timer = window.setTimeout(() => {
+        setAspect(readLiveAspect());
+      }, 80);
+    };
+    window.addEventListener("resize", onResize);
+    return () => {
+      if (timer != null) window.clearTimeout(timer);
+      window.removeEventListener("resize", onResize);
+    };
+  }, []);
+  return aspect;
 }
 
 export function ShellStack({ layerKey, reducedMotion = false }: ShellStackProps) {
@@ -147,52 +155,87 @@ export function ShellStack({ layerKey, reducedMotion = false }: ShellStackProps)
   const surfacesGroupRef = useRef<THREE.Group>(null);
   const sourceMotesRef = useRef<THREE.Points>(null);
   const surfaceMotesRef = useRef<THREE.Points>(null);
-  // Per-pip / per-tip group refs so we can apply per-item scale + lock
-  // snap independently while the parent cluster slides in.
+  // Per-pip / per-tip group refs so each row can be independently
+  // scaled and slid inward via its `stackItemLock` window.
   const sourcePipRefs = useRef<(THREE.Group | null)[]>([]);
   const surfaceTipRefs = useRef<(THREE.Group | null)[]>([]);
-  // Capture pre-stagger lane materials' base opacities so we can fade
-  // the lane and fan lines on with the cluster (the line geometry is
-  // a single buffer, not per-lane).
   const sourceLanePeakOp = useRef(SOURCE_LANE_OPACITY);
   const surfaceFanPeakOp = useRef(SURFACE_FAN_OPACITY);
 
-  const sourceLaneEnds = useMemo(() => {
-    const starts: Array<[number, number, number]> = [];
-    const ends: Array<[number, number, number]> = [];
-    for (let i = 0; i < STACK_LANE_COUNT; i++) {
-      const t = i / (STACK_LANE_COUNT - 1);
-      const y = lerp(-STACK_LANE_Y_RANGE, STACK_LANE_Y_RANGE, t);
-      starts.push([STACK_SOURCES_X, y, 0]);
-      ends.push([STACK_SUBSTRATE_X - 0.85, y * 0.25, 0]);
-    }
-    return { starts, ends };
-  }, []);
+  // Live column X — recomputed on resize via `useStackLiveAspect`. The
+  // R3F viewport is also subscribed below for fov/aspect (kept for
+  // future fov tuning); this hook is the resize source of truth.
+  const liveAspect = useStackLiveAspect();
+  const colX = useMemo(() => getStackColumnLocalX(liveAspect), [liveAspect]);
+  const r3f = useThree((s) => s.viewport);
+  void r3f;
 
-  const surfaceFanEnds = useMemo(() => {
-    const dests: Array<[number, number, number]> = [];
+  // Per-row Y positions (5 sources / 6 surfaces). The DOM-side anchor
+  // arrays in `sceneGeom.STACK_SOURCE_ITEMS` / `STACK_SURFACE_ITEMS`
+  // use the same `lerp(-Y_RANGE, Y_RANGE, ...)` derivation, so DOM
+  // labels and canvas pips are guaranteed to share Y values.
+  // Per-row Y positions — `STACK_*_COUNT` are constants >= 2, so the
+  // divide-by-(count-1) is always safe. Keeping the math inline so
+  // TypeScript can verify the literal types match the runtime use.
+  const sourceYs = useMemo(() => {
+    const out: number[] = [];
+    const denom = STACK_LANE_COUNT - 1;
+    for (let i = 0; i < STACK_LANE_COUNT; i++) {
+      out.push(lerp(-STACK_LANE_Y_RANGE, STACK_LANE_Y_RANGE, i / denom));
+    }
+    return out;
+  }, []);
+  const surfaceYs = useMemo(() => {
+    const out: number[] = [];
+    const denom = STACK_FAN_COUNT - 1;
     for (let i = 0; i < STACK_FAN_COUNT; i++) {
-      const t = i / (STACK_FAN_COUNT - 1);
-      const y = lerp(-STACK_FAN_HALF_HEIGHT, STACK_FAN_HALF_HEIGHT, t);
-      dests.push([STACK_SURFACES_X, y, 0]);
-    }
-    return dests;
-  }, []);
-
-  const sourcePipPositions = useMemo(() => {
-    const out: Array<[number, number, number]> = [];
-    for (let i = 0; i < STACK_LANE_COUNT; i++) {
-      const t = i / (STACK_LANE_COUNT - 1);
-      const y = lerp(-STACK_LANE_Y_RANGE, STACK_LANE_Y_RANGE, t);
-      out.push([STACK_SOURCES_X, y, 0]);
+      out.push(lerp(-STACK_FAN_HALF_HEIGHT, STACK_FAN_HALF_HEIGHT, i / denom));
     }
     return out;
   }, []);
 
+  // Source lane endpoints — fixed channels from the column X to the
+  // source aperture port at -0.85. Each lane funnels INWARD toward
+  // the port: end-Y compresses to 25% of the start-Y so the bundle
+  // converges visually as the channels approach the sphere.
+  const sourceLaneEnds = useMemo(() => {
+    const starts: Array<[number, number, number]> = [];
+    const ends: Array<[number, number, number]> = [];
+    for (let i = 0; i < STACK_LANE_COUNT; i++) {
+      const y = sourceYs[i];
+      starts.push([-colX, y, 0]);
+      ends.push([STACK_SUBSTRATE_X - 0.85, y * 0.25, 0]);
+    }
+    return { starts, ends };
+  }, [colX, sourceYs]);
+
+  // Surface fan destinations — diverging from the surface aperture
+  // port at +0.85 to each surface tip at the column X.
+  const surfaceFanEnds = useMemo(() => {
+    const dests: Array<[number, number, number]> = [];
+    for (let i = 0; i < STACK_FAN_COUNT; i++) {
+      const y = surfaceYs[i];
+      dests.push([colX, y, 0]);
+    }
+    return dests;
+  }, [colX, surfaceYs]);
+
+  // Parked pip / tip world positions — these are the ANCHOR points
+  // each row slides inward to. Per-frame, each pip's
+  // `node.position.x` is set to the slide-blended value below.
+  const sourcePipPositions = useMemo(
+    () => sourceYs.map((y) => [-colX, y, 0] as [number, number, number]),
+    [colX, sourceYs]
+  );
+  const surfaceTipPositions = useMemo(
+    () => surfaceYs.map((y) => [colX, y, 0] as [number, number, number]),
+    [colX, surfaceYs]
+  );
+
   const geoms = useMemo(() => {
     const sourceLanes = buildLaneLinesGeometry(
       STACK_LANE_COUNT,
-      STACK_SOURCES_X,
+      -colX,
       STACK_SUBSTRATE_X - 0.85,
       STACK_LANE_Y_RANGE,
       0
@@ -210,15 +253,13 @@ export function ShellStack({ layerKey, reducedMotion = false }: ShellStackProps)
     ]);
     const surfaceMotes = buildLinearMotes(surfaceStarts, surfaceFanEnds, STACK_MOTES_PER_RAY);
     const sourcePipFilled = buildFilledDiamondGeometry(PYLON_CAP_SIZE * STACK_PIP_SCALE);
-    const surfacePipOutline = buildDiamondGeometry(PYLON_CAP_SIZE);
-    const surfacePipFilled = buildFilledDiamondGeometry(PYLON_CAP_SIZE * STACK_PIP_SCALE);
-    // Aperture ports — slightly larger diamonds than the source/
-    // surface pips, sitting where the lanes converge into the
-    // sphere (sources side, [-0.85, 0, 0]) and where the fan
-    // emerges from the sphere (surfaces side, [+0.85, 0, 0]). Read
-    // as the "intelligence-layer ports" so the funnel reads as
-    // sources -> port -> sphere -> port -> surfaces, rather than
-    // lanes/fans terminating at empty space. (2026-06-10 polish.)
+    // Stack v3 (2026-06-10) — surface tips shrink to match the source
+    // pip read; was full `PYLON_CAP_SIZE` for the outline.
+    const surfacePipOutline = buildDiamondGeometry(PYLON_CAP_SIZE * STACK_TIP_OUTLINE_SCALE);
+    const surfacePipFilled = buildFilledDiamondGeometry(PYLON_CAP_SIZE * STACK_TIP_INNER_SCALE);
+    // Aperture ports — kept at the previous size; their position
+    // `[±0.85, 0, 0]` is independent of the column X so they sit at
+    // a fixed sphere-edge anchor regardless of viewport.
     const aperturePortOutline = buildDiamondGeometry(PYLON_CAP_SIZE * 1.5);
     const aperturePortInner = buildFilledDiamondGeometry(PYLON_CAP_SIZE * 0.6);
 
@@ -233,7 +274,7 @@ export function ShellStack({ layerKey, reducedMotion = false }: ShellStackProps)
       aperturePortOutline,
       aperturePortInner,
     };
-  }, [sourceLaneEnds, surfaceFanEnds]);
+  }, [colX, sourceLaneEnds, surfaceFanEnds]);
 
   const mats = useMemo(
     () => ({
@@ -244,9 +285,6 @@ export function ShellStack({ layerKey, reducedMotion = false }: ShellStackProps)
       sourcePip: makeMeshMaterial(COLOR_SOURCES, SOURCE_PIP_OPACITY),
       surfacePipOutline: makeLineMaterial(COLOR_SURFACES, SURFACE_PIP_OPACITY, true),
       surfacePipFilled: makeMeshMaterial(COLOR_SURFACES, SURFACE_PIP_OPACITY * 0.94),
-      // Aperture ports use the dawn pipe palette tied to each side
-      // (sources green, surfaces dawn) so the port reads as part of
-      // its stream, not a third visual class.
       sourceApertureOutline: makeLineMaterial(COLOR_SOURCES, SOURCE_PIP_OPACITY, true),
       sourceApertureInner: makeMeshMaterial(COLOR_SOURCES, SOURCE_PIP_OPACITY * 0.7),
       surfaceApertureOutline: makeLineMaterial(COLOR_SURFACES, SURFACE_PIP_OPACITY, true),
@@ -280,18 +318,11 @@ export function ShellStack({ layerKey, reducedMotion = false }: ShellStackProps)
       return;
     }
 
-    // Temporally-smoothed reveal (motionFollower) — sources/surfaces
-    // always slide + lock elegantly regardless of scroll velocity.
     const reveal = getSmoothedAccretionLayers().stack;
     if (reveal <= EMERGE_EPSILON) {
       group.visible = false;
       return;
     }
-    // Epilogue v2 fade-out — the sources / interfaces stack clears
-    // alongside the Build header on the shared BUILD_OUT band so the
-    // whole "Build on the substrate" composition leaves the stage in
-    // one motion (corridor cadence rule). Hide entirely once
-    // invisible to spare the GPU.
     const epFade = 1 - epilogueBand(epilogueProgress, "BUILD_OUT");
     if (epFade <= EMERGE_EPSILON) {
       group.visible = false;
@@ -299,54 +330,27 @@ export function ShellStack({ layerKey, reducedMotion = false }: ShellStackProps)
     }
     group.visible = true;
 
-    // Cluster-level staggers: sources arrive first, surfaces follow
-    // with a soft overlap so the read flows left → right into the
-    // central layer.
     const sourcesStagger = petalStagger(reveal, 0, 2, STACK_CLUSTER_OVERLAP);
     const surfacesStagger = petalStagger(reveal, 1, 2, STACK_CLUSTER_OVERLAP);
-
-    // Fold-emerge gives a soft landing overshoot on the cluster scale
-    // — `foldEmerge` already overshoots 1.0 around the mid of the
-    // stagger and settles to 1.0 at the end (existing behavior). We
-    // keep it as a polish landing on top of the new X-slide.
-    const sourcesFold = foldEmerge(sourcesStagger);
-    const surfacesFold = foldEmerge(surfacesStagger);
-    const sourcesScale = sourcesFold.scale;
-    const surfacesScale = surfacesFold.scale;
-
-    // Cluster slide: at stagger 0 the group sits OFF-SCREEN on its own
-    // side AND out in front of the substrate (in the new space we've
-    // just flown into); at stagger 1 it's docked at the parked
-    // (0, 0, 0) relative to the brandmark world position. The slide
-    // uses a smootherstep so the cluster doesn't pop in halfway.
-    //
-    // v3.3: the Z component makes the clusters fly IN from outside the
-    // wormhole toward the substrate, rather than sliding flatly in from
-    // the wings — they arrive from the surrounding space as the camera
-    // exits the tube.
     const sourcesSlideT = reducedMotion ? 1 : smootherStack(sourcesStagger);
     const surfacesSlideT = reducedMotion ? 1 : smootherStack(surfacesStagger);
-    const sourcesX = -STACK_SLOT_X_OFFSET * (1 - sourcesSlideT);
-    const surfacesX = STACK_SLOT_X_OFFSET * (1 - surfacesSlideT);
-    const sourcesZ = STACK_SLOT_Z_OFFSET * (1 - sourcesSlideT);
-    const surfacesZ = STACK_SLOT_Z_OFFSET * (1 - surfacesSlideT);
 
     if (sourcesGroupRef.current) {
-      sourcesGroupRef.current.visible = sourcesScale > EMERGE_EPSILON;
-      sourcesGroupRef.current.scale.setScalar(sourcesScale);
-      sourcesGroupRef.current.position.set(sourcesX, 0, sourcesZ);
+      // No cluster-level slide or fold-emerge any more — the cluster
+      // group sits at the parked origin; reveal cadence is per-row.
+      sourcesGroupRef.current.visible = sourcesSlideT > EMERGE_EPSILON;
+      sourcesGroupRef.current.scale.setScalar(1);
+      sourcesGroupRef.current.position.set(0, 0, 0);
     }
     if (surfacesGroupRef.current) {
-      surfacesGroupRef.current.visible = surfacesScale > EMERGE_EPSILON;
-      surfacesGroupRef.current.scale.setScalar(surfacesScale);
-      surfacesGroupRef.current.position.set(surfacesX, 0, surfacesZ);
+      surfacesGroupRef.current.visible = surfacesSlideT > EMERGE_EPSILON;
+      surfacesGroupRef.current.scale.setScalar(1);
+      surfacesGroupRef.current.position.set(0, 0, 0);
     }
 
-    // Fade lane / fan line opacities with the cluster slide so the
-    // streams don't fully appear until the parts have arrived. Pips
-    // are individually scaled below. Epilogue fade is applied as a
-    // simple multiplier so every material dims together as the user
-    // scrolls into the news-card beat.
+    // Lane / fan opacity tracks the cluster-level stagger so the
+    // channels appear FIRST (waiting to receive their pips), then
+    // each row docks into its lane via the per-row slide below.
     mats.sourceLanes.opacity = sourcesSlideT * sourceLanePeakOp.current * epFade;
     mats.surfaceFan.opacity = surfacesSlideT * surfaceFanPeakOp.current * epFade;
     mats.sourceMotes.opacity = sourcesSlideT * SOURCE_PIP_OPACITY * epFade;
@@ -354,42 +358,48 @@ export function ShellStack({ layerKey, reducedMotion = false }: ShellStackProps)
     mats.sourcePip.opacity = SOURCE_PIP_OPACITY * epFade;
     mats.surfacePipOutline.opacity = SURFACE_PIP_OPACITY * epFade;
     mats.surfacePipFilled.opacity = SURFACE_PIP_OPACITY * 0.94 * epFade;
-    // Aperture ports lock to the docked frame as their cluster
-    // arrives — they read as the streams plugging into the
-    // intelligence-layer interface, so they should be quietest while
-    // the cluster is still mid-slide and brighten as it docks.
     mats.sourceApertureOutline.opacity = sourcesSlideT * SOURCE_PIP_OPACITY * epFade;
     mats.sourceApertureInner.opacity = sourcesSlideT * SOURCE_PIP_OPACITY * 0.7 * epFade;
     mats.surfaceApertureOutline.opacity = surfacesSlideT * SURFACE_PIP_OPACITY * epFade;
     mats.surfaceApertureInner.opacity = surfacesSlideT * SURFACE_PIP_OPACITY * 0.7 * epFade;
 
-    // Per-pip lock snap: each pip eases from STACK_ITEM_SCALE_FLOOR
-    // up to ~1.0 with a small overshoot on its own stagger window
-    // inside the cluster — reads as "each pip plugs into its slot
-    // in sequence" rather than the cluster appearing as one block.
+    // Per-row dock: each pip slides INWARD from a small outer offset
+    // (`STACK_ROW_SLIDE_LOCAL_X`) to its parked column position, plus
+    // the per-row scale snap with a tiny landing overshoot. The slide
+    // and the lane channels mean every frame of the animation has the
+    // pip inside or just outside its column — never off-screen.
     for (let i = 0; i < sourcePipRefs.current.length; i++) {
       const node = sourcePipRefs.current[i];
       if (!node) continue;
-      const { scale } = reducedMotion
-        ? { scale: 1 }
-        : stackItemLock(sourcesStagger, i, sourcePipRefs.current.length);
-      node.scale.setScalar(scale);
+      if (reducedMotion) {
+        node.scale.setScalar(1);
+        node.position.x = -colX;
+        continue;
+      }
+      const lock = stackItemLock(sourcesStagger, i, sourcePipRefs.current.length);
+      node.scale.setScalar(lock.scale);
+      // Outer offset blends to 0 as `slide` lerps 0..1.
+      node.position.x = -colX - STACK_ROW_SLIDE_LOCAL_X * (1 - lock.slide);
     }
     for (let i = 0; i < surfaceTipRefs.current.length; i++) {
       const node = surfaceTipRefs.current[i];
       if (!node) continue;
-      const { scale } = reducedMotion
-        ? { scale: 1 }
-        : stackItemLock(surfacesStagger, i, surfaceTipRefs.current.length);
-      node.scale.setScalar(scale);
+      if (reducedMotion) {
+        node.scale.setScalar(1);
+        node.position.x = colX;
+        continue;
+      }
+      const lock = stackItemLock(surfacesStagger, i, surfaceTipRefs.current.length);
+      node.scale.setScalar(lock.scale);
+      node.position.x = colX + STACK_ROW_SLIDE_LOCAL_X * (1 - lock.slide);
     }
 
     if (!reducedMotion) {
       const t = clock.elapsedTime;
-      if (sourceMotesRef.current && sourcesScale > EMERGE_EPSILON) {
+      if (sourceMotesRef.current && sourcesSlideT > EMERGE_EPSILON) {
         advanceLinearMotes(geoms.sourceMotes, (t / 3.4) % 1);
       }
-      if (surfaceMotesRef.current && surfacesScale > EMERGE_EPSILON) {
+      if (surfaceMotesRef.current && surfacesSlideT > EMERGE_EPSILON) {
         advanceLinearMotes(geoms.surfaceMotes, (t / 4.2) % 1);
       }
     }
@@ -409,9 +419,9 @@ export function ShellStack({ layerKey, reducedMotion = false }: ShellStackProps)
           material={mats.sourceMotes}
           frustumCulled={false}
         />
-        {/* Source aperture port — sits where the lanes converge into
-            the sphere, so the funnel reads as sources -> port ->
-            sphere rather than five lanes terminating at empty space. */}
+        {/* Source aperture port — fixed at the sphere edge (-0.85),
+            independent of the column X so the funnel reads as
+            `pip → channel → port → sphere` regardless of viewport. */}
         <group position={[STACK_SUBSTRATE_X - 0.85, 0, 0]}>
           <lineLoop
             geometry={geoms.aperturePortOutline}
@@ -453,8 +463,6 @@ export function ShellStack({ layerKey, reducedMotion = false }: ShellStackProps)
           material={mats.surfaceMotes}
           frustumCulled={false}
         />
-        {/* Surface aperture port — symmetric companion to the source
-            port, sitting where the fan emerges from the sphere. */}
         <group position={[STACK_SUBSTRATE_X + 0.85, 0, 0]}>
           <lineLoop
             geometry={geoms.aperturePortOutline}
@@ -467,7 +475,7 @@ export function ShellStack({ layerKey, reducedMotion = false }: ShellStackProps)
             frustumCulled={false}
           />
         </group>
-        {surfaceFanEnds.map((pos, i) => (
+        {surfaceTipPositions.map((pos, i) => (
           <group
             key={`stack-srf-${i}`}
             position={pos}
