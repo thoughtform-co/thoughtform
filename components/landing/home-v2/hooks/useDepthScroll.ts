@@ -16,19 +16,20 @@ import { getMobilePaintProgress } from "../DepthGatewayScene/sceneGeom";
 /** Fraction of the sticky stage that belongs to the calibrated
  *  corridor. The remainder (1 - EPILOGUE_START) is the
  *  "flywheel in practice" epilogue scroll channel. Tied to the
- *  stage height in home-v2.css (`620svh corridor + 440svh
- *  epilogue` -> 620 / 1060 ≈ 0.5849). The corridor's normalized
+ *  stage height in home-v2.css (`620svh corridor + 280svh
+ *  epilogue` -> 620 / 900 ≈ 0.6889). The corridor's normalized
  *  progress (and beat windows) is computed AGAINST EPILOGUE_START,
  *  so the corridor still tiles [0,1] across its physical span and
  *  every CORRIDOR_TIMELINE constant stays byte-identical.
  *
  *  Sub-bands inside the epilogue live in
- *  `lib/home-v2/epilogueTimeline.ts`. v4 (2026-06-10 flywheel
- *  pass) replaced the planet-landing tail with the docked
- *  artifact + three accumulating HUD frames; the epilogue grew
- *  from 200svh to 440svh so each FRAME band gets ~one viewport of
- *  scroll runway. The corridor span itself is byte-identical. */
-const EPILOGUE_START = 620 / 1060;
+ *  `lib/home-v2/epilogueTimeline.ts`. v4.1 (2026-06-10 Glyphic
+ *  grid pass) collapsed the three accumulating frames into a
+ *  single `GRID_IN` band where the cards settle as a static grid;
+ *  the epilogue shrank from 440svh to 280svh while keeping the
+ *  ~88svh DOCK runway intact. The corridor span itself is
+ *  byte-identical. */
+const EPILOGUE_START = 620 / 900;
 
 /**
  * useDepthScroll — rAF-throttled scroll watcher for the home-v2

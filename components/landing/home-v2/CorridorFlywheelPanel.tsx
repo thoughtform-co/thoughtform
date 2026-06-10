@@ -1,152 +1,106 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { epilogueBand } from "@/lib/home-v2/epilogueTimeline";
+import {
+  EPILOGUE_BANDS,
+  GRID_IN_STAGGER,
+  band,
+  epilogueBand,
+} from "@/lib/home-v2/epilogueTimeline";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 
 /**
- * CorridorFlywheelPanel — the LEFT-half "flywheel in practice" panel
- * that takes over the post-Build epilogue (ADR-018 epilogue v4).
+ * CorridorFlywheelPanel — the RIGHT-half "flywheel in practice" panel
+ * (ADR-018 epilogue v4.1, Glyphic grid pass).
  *
- * Concept (v4, 2026-06-10): once the user crosses past the Build
- * park, the gyro assembly DOCKS rightward via
- * `getEpilogueDockTransform` while this panel claims the left ~44vw.
- * It is an editorial illustration of how Navigate / Encode / Build
- * land in a real organisation — three retro-futuristic HUD frames
- * that scroll into view one at a time and ACCUMULATE, ending with
- * the whole flywheel readable beside the docked artifact.
+ * Concept (v4.1, 2026-06-10): once the user crosses past the Build
+ * park, the gyro assembly DOCKS leftward via
+ * `getEpilogueDockTransform` while this panel claims the right
+ * column, grid-locked to the right HUD rail. Three minimal cards
+ * (Navigate / Encode / Build) settle as a STATIC grid below the
+ * title — they all arrive together (small per-card stagger reads as
+ * a settle, not a cascade) and rest for the rest of the epilogue.
+ *
+ * Encode is the soft visual emphasis: it carries the gold ordinal
+ * fill + a faint gold wash + brighter dotted border, because it is
+ * the Thoughtform claim — the encoded judgment is the asset that
+ * compounds. Navigate and Build read at the same hierarchy as each
+ * other, slightly muted relative to Encode.
  *
  * Structure:
  *
- *     THE FLYWHEEL                       (kicker, eyebrow)
- *     The flywheel in PRACTICE.          (title — gold em on accent)
+ *     THE FLYWHEEL                                    (kicker)
+ *     The flywheel in PRACTICE.                       (title — gold em)
+ *     ───────────────────────────────────────────  o  (hairline + pip)
+ *     [01] NAVIGATE
+ *     Headline.                                       (PP Neue Montreal)
+ *     One short supporting sentence.                  (muted dawn)
+ *     ───────────────────────────────────────────  o
+ *     [02] ENCODE                       <- soft gold highlight
+ *     Headline.
+ *     Supporting sentence.
+ *     ───────────────────────────────────────────  o
+ *     [03] BUILD
+ *     Headline.
+ *     Supporting sentence.
  *
- *     ┌── 01 · NAVIGATE ──── LOG-22 ─┐
- *     │ Every team starts here.       │
- *     │ LEGAL              DONE       │
- *     │ FINANCE            DONE       │   FRAME_1 [0.28, 0.46]
- *     │ STUDIO             DONE       │
- *     │ PRODUCT DESIGN     DONE       │
- *     │ CRO                QUEUED     │
- *     │ EXPANSION          QUEUED     │
- *     │ "Same short kickoff..."       │
- *     └───────────────────────────────┘
- *           ┊  ONE RECORD  ┊            (dotted connector)
- *     ┌── 02 · ENCODE ────── REC-01 ─┐
- *     │ The work feeds the layer.     │
- *     │ MEETING   recorded · transcr. │   FRAME_2 [0.48, 0.66]
- *     │ SKILL     captured ...        │
- *     │ LIBRARY   shared · versioned  │
- *     │ GITHUB    graduates to ...    │
- *     │ "Captured once, ..."          │
- *     └───────────────────────────────┘
- *           ┊  ONE LAYER   ┊
- *     ┌── 03 · BUILD ─────── PAT-03 ─┐
- *     │ Patterns become tools.        │
- *     │ Creative strategy   BRIEFING  │
- *     │ Product marketing   BRIEFING  │   FRAME_3 [0.68, 0.86]
- *     │ Campaign mgmt       BRIEFING  │
- *     │ ┌── MARKETING INTELLIGENCE ─┐ │
- *     │ │   (aka Briefing Agent)    │ │
- *     │ └───────────────────────────┘ │
- *     │ "Three teams ..."             │
- *     └───────────────────────────────┘
- *
- * Contract: written per-frame via inline styles (opacity + transform)
- * driven by the depth store. No React state churn per scroll tick;
+ * Contract: the panel rAF loop writes opacity + transform inline per
+ * card off the depth store. No React state churn per scroll tick;
  * the component re-mounts only when the corridor (re-)engages.
  */
 
-interface FlywheelRow {
-  /** Left-aligned PT Mono uppercase label. */
-  label: string;
-  /** Right-aligned value or status chip text. */
-  value: string;
-  /** Optional status chip variant — drives chip colour tier:
-   *    - `done`    : Atreides green (provenance)
-   *    - `queued`  : dawn (neutral, "in queue")
-   *    - `live`    : gold (active wayfinding)
-   *    - `briefing`: gold-dim (pending pattern) */
-  status?: "done" | "queued" | "live" | "briefing";
-}
-
-interface FlywheelFrame {
+interface FlywheelCard {
   /** Stable id for keys + data attributes. */
-  id: string;
+  id: "navigate" | "encode" | "build";
   /** Numbered ordinal (e.g. "01"). */
   ordinal: string;
   /** Phase name (e.g. "NAVIGATE"). */
   phase: string;
-  /** Tiny telemetry readout in the eyebrow row. Mono, 9px-ish; reads
-   *  as a station code (LOG-22, REC-01, PAT-03). */
-  telemetry: string;
-  /** PP Neue Montreal heading (one short statement). */
-  heading: string;
-  /** 4–7 manifest rows. */
-  rows: readonly FlywheelRow[];
-  /** Optional inset OUTPUT tile (used by Build frame to render the
-   *  Marketing Intelligence agent that emerges from the pattern). */
-  output?: { label: string; sub?: string };
-  /** Closing caption — one or two declarative sentences. */
-  caption: string;
+  /** PP Neue Montreal headline (one short, declarative line). */
+  headline: string;
+  /** One short supporting sentence (muted dawn). */
+  support: string;
+  /** Soft highlight flag — Encode is the resting emphasis. */
+  core?: boolean;
 }
 
-const FRAMES: readonly FlywheelFrame[] = [
+const CARDS: readonly FlywheelCard[] = [
   {
     id: "navigate",
     ordinal: "01",
     phase: "NAVIGATE",
-    telemetry: "LOG-22",
-    heading: "Every team starts here.",
-    rows: [
-      { label: "LEGAL", value: "DONE", status: "done" },
-      { label: "FINANCE", value: "DONE", status: "done" },
-      { label: "STUDIO", value: "DONE", status: "done" },
-      { label: "PRODUCT DESIGN", value: "DONE", status: "done" },
-      { label: "CRO  ·  EXPANSION", value: "QUEUED", status: "queued" },
-    ],
-    caption:
-      "Same short kickoff, same intelligence. Each team leaves with one workflow worth capturing as a skill.",
+    headline: "Work with the intelligence inside real work.",
+    support:
+      "Hands-on sessions in your own workflows, not demos. Each one ends with a workflow worth keeping.",
   },
   {
     id: "encode",
     ordinal: "02",
     phase: "ENCODE",
-    telemetry: "REC-01",
-    heading: "The work feeds the layer.",
-    rows: [
-      { label: "MEETING", value: "recorded · transcribed" },
-      { label: "SKILL", value: "captured from the work" },
-      { label: "LIBRARY", value: "shared · versioned" },
-      { label: "GITHUB", value: "graduates to monorepo" },
-    ],
-    caption: "Captured once, the workflow lands in a shared library the next team builds on.",
+    headline: "Encode the judgment that makes work good.",
+    support:
+      "That judgment becomes substrate — skills any model can inherit, versioned and shared. The asset that compounds.",
+    core: true,
   },
   {
     id: "build",
     ordinal: "03",
     phase: "BUILD",
-    telemetry: "PAT-03",
-    heading: "Patterns become tools.",
-    rows: [
-      { label: "Creative strategy", value: "BRIEFING", status: "briefing" },
-      { label: "Product marketing", value: "BRIEFING", status: "briefing" },
-      { label: "Campaign mgmt", value: "BRIEFING", status: "briefing" },
-    ],
-    output: { label: "MARKETING INTELLIGENCE", sub: "(aka Briefing Agent)" },
-    caption:
-      "Three teams doing the same work is a skill worth sharing. Three teams needing the same tool is one worth building.",
+    headline: "Build tools on the layer.",
+    support:
+      "When several teams need the same thing, the substrate becomes a tool. Agents, automations, capabilities.",
   },
 ];
 
-const CONNECTOR_LABELS = ["ONE RECORD", "ONE LAYER"] as const;
-
-/** Pixel slide distance each block travels while its band ramps. The
- *  "scrolls into view" feel comes from this short upward translate
- *  paired with an opacity ramp; tuned small (40px / 60px) so the
- *  motion reads as a settle, not a fly-in. */
+/** Pixel slide distance the title block travels while its band
+ *  ramps. Small (40px) so the motion reads as a settle. */
 const TITLE_SLIDE_PX = 40;
-const FRAME_SLIDE_PX = 60;
+
+/** Pixel slide distance each card travels while its staggered band
+ *  ramps. Also small — the cards arrive as a group, so each one only
+ *  needs a short upward translate to feel like it lands rather than
+ *  pops. */
+const CARD_SLIDE_PX = 36;
 
 /** Threshold below which we treat a value as 0 to suppress redundant
  *  inline writes during steady-state idle. */
@@ -155,18 +109,15 @@ const EPS = 0.002;
 export function CorridorFlywheelPanel() {
   const containerRef = useRef<HTMLDivElement>(null);
   const titleRef = useRef<HTMLDivElement>(null);
-  // Frames render as `<article>` and connectors as `<div>`; both
-  // satisfy the broader `HTMLElement` type the panel writes inline
-  // styles to.
-  const frameRefs = useRef<(HTMLElement | null)[]>([]);
-  const connectorRefs = useRef<(HTMLElement | null)[]>([]);
+  // Cards render as `<article>` elements; `HTMLElement` is the right
+  // shared supertype for the inline-style writes below.
+  const cardRefs = useRef<(HTMLElement | null)[]>([]);
 
-  // Cache of last-written values so we skip writes on frames where
-  // nothing meaningful changed. The arrays are sized in lockstep with
-  // FRAMES / CONNECTOR_LABELS so the indices line up with refs.
+  // Cache of last-written values so we skip writes on tiles where
+  // nothing meaningful changed. Sized in lockstep with CARDS so the
+  // indices line up with refs.
   const lastTitle = useRef<number>(-1);
-  const lastFrames = useRef<number[]>(FRAMES.map(() => -1));
-  const lastConnectors = useRef<number[]>(CONNECTOR_LABELS.map(() => -1));
+  const lastCards = useRef<number[]>(CARDS.map(() => -1));
   const lastEngaged = useRef<boolean | null>(null);
 
   useEffect(() => {
@@ -175,11 +126,11 @@ export function CorridorFlywheelPanel() {
       raf = requestAnimationFrame(tick);
       const t = useDepthGatewayStore.getState().transform;
       const ep = t.epilogueProgress;
-      // Show the panel as soon as the user crosses into the epilogue
-      // and the corridor is engaged. Outside the epilogue the panel
-      // is invisible AND non-painting — `display: none` toggled via a
-      // data attribute so it doesn't allocate layout while the user
-      // is reading the corridor.
+      // Show the panel as soon as the user crosses into the
+      // epilogue and the corridor is engaged. Outside the epilogue
+      // the panel is invisible AND non-painting — `data-engaged`
+      // toggles a CSS-driven opacity gate so the panel doesn't
+      // composite while the user is reading the corridor.
       const engaged = (t.active || t.armed) && ep > 0.001;
       if (engaged !== lastEngaged.current) {
         lastEngaged.current = engaged;
@@ -190,11 +141,6 @@ export function CorridorFlywheelPanel() {
       if (!engaged) return;
 
       const titleT = epilogueBand(ep, "TITLE_IN");
-      const frameTs: [number, number, number] = [
-        epilogueBand(ep, "FRAME_1"),
-        epilogueBand(ep, "FRAME_2"),
-        epilogueBand(ep, "FRAME_3"),
-      ];
 
       // Title — opacity tracks the band; transform slides up from
       // +TITLE_SLIDE_PX to 0 as the band fills.
@@ -205,36 +151,22 @@ export function CorridorFlywheelPanel() {
         titleRef.current.style.transform = `translate3d(0, ${slide.toFixed(2)}px, 0)`;
       }
 
-      // Frames — same recipe at a larger slide distance. Each frame
-      // RIDES its own band, so they appear in cascade as the user
-      // scrolls and PERSIST after their band saturates (band returns
-      // 1 once epilogueProgress passes its end). End state at
-      // epilogueProgress = 1: all three frames at full opacity, no
-      // residual slide.
-      for (let i = 0; i < frameTs.length; i++) {
-        const node = frameRefs.current[i];
+      // Cards — each one rides the GRID_IN base band offset by
+      // `i * GRID_IN_STAGGER`. The stagger is small (0.02) so the
+      // three arrive within ~6svh of each other and read as a single
+      // settle. Once their band saturates they hold at opacity 1
+      // through the rest of the epilogue.
+      const grid = EPILOGUE_BANDS.GRID_IN;
+      for (let i = 0; i < CARDS.length; i++) {
+        const node = cardRefs.current[i];
         if (!node) continue;
-        const op = frameTs[i];
-        if (Math.abs(op - lastFrames.current[i]) <= EPS) continue;
-        lastFrames.current[i] = op;
-        const slide = FRAME_SLIDE_PX * (1 - op);
+        const offset = i * GRID_IN_STAGGER;
+        const op = band(ep, grid.start + offset, grid.end + offset);
+        if (Math.abs(op - lastCards.current[i]) <= EPS) continue;
+        lastCards.current[i] = op;
+        const slide = CARD_SLIDE_PX * (1 - op);
         node.style.opacity = op.toFixed(3);
         node.style.transform = `translate3d(0, ${slide.toFixed(2)}px, 0)`;
-      }
-
-      // Connectors — fade in with the LATER of the two frames they
-      // bridge. Reads as "frame N docks; the dotted line to frame
-      // N+1 emerges; frame N+1 follows." Capped by the earlier
-      // frame's reveal so the connector never paints over a frame
-      // that hasn't started yet (paranoia; FRAME_2 / FRAME_3 bands
-      // are strictly ordered already).
-      for (let i = 0; i < connectorRefs.current.length; i++) {
-        const node = connectorRefs.current[i];
-        if (!node) continue;
-        const op = Math.min(frameTs[i], frameTs[i + 1] ?? 0);
-        if (Math.abs(op - lastConnectors.current[i]) <= EPS) continue;
-        lastConnectors.current[i] = op;
-        node.style.opacity = op.toFixed(3);
       }
     };
     raf = requestAnimationFrame(tick);
@@ -258,107 +190,31 @@ export function CorridorFlywheelPanel() {
         </h2>
       </div>
 
-      <div className="home-v2-flywheel-panel__stack">
-        {FRAMES.map((frame, idx) => (
-          <div key={frame.id} className="home-v2-flywheel-panel__cell">
-            {idx > 0 && (
-              <div
-                ref={(el) => {
-                  connectorRefs.current[idx - 1] = el;
-                }}
-                className="home-v2-flywheel-connector"
-                aria-hidden="true"
-              >
-                <span className="home-v2-flywheel-connector__rule" />
-                <span className="home-v2-flywheel-connector__diamond" />
-                <span className="home-v2-flywheel-connector__label">
-                  {CONNECTOR_LABELS[idx - 1]}
-                </span>
-                <span className="home-v2-flywheel-connector__diamond" />
-                <span className="home-v2-flywheel-connector__rule" />
-              </div>
-            )}
+      <ol className="home-v2-flywheel-panel__grid">
+        {CARDS.map((card, idx) => (
+          <li key={card.id} className="home-v2-flywheel-panel__cell">
             <article
               ref={(el) => {
-                frameRefs.current[idx] = el;
+                cardRefs.current[idx] = el;
               }}
-              className="home-v2-flywheel-frame"
-              data-flywheel-frame={frame.id}
+              className="home-v2-flywheel-card"
+              data-flywheel-card={card.id}
+              data-core={card.core ? "true" : "false"}
             >
-              <span
-                aria-hidden="true"
-                className="home-v2-flywheel-frame__corner home-v2-flywheel-frame__corner--tl"
-              />
-              <span
-                aria-hidden="true"
-                className="home-v2-flywheel-frame__corner home-v2-flywheel-frame__corner--tr"
-              />
-              <span
-                aria-hidden="true"
-                className="home-v2-flywheel-frame__corner home-v2-flywheel-frame__corner--bl"
-              />
-              <span
-                aria-hidden="true"
-                className="home-v2-flywheel-frame__corner home-v2-flywheel-frame__corner--br"
-              />
-              <header className="home-v2-flywheel-frame__head">
-                <span className="home-v2-flywheel-frame__pip" aria-hidden="true" />
-                <span className="home-v2-flywheel-frame__cartouche">
-                  <span className="home-v2-flywheel-frame__ordinal">{frame.ordinal}</span>
-                  <span className="home-v2-flywheel-frame__sep" aria-hidden="true">
-                    ·
-                  </span>
-                  <span className="home-v2-flywheel-frame__phase">{frame.phase}</span>
+              <span className="home-v2-flywheel-card__rule" aria-hidden="true" />
+              <span className="home-v2-flywheel-card__pip" aria-hidden="true" />
+              <header className="home-v2-flywheel-card__head">
+                <span className="home-v2-flywheel-card__ordinal" aria-hidden="true">
+                  {card.ordinal}
                 </span>
-                <span className="home-v2-flywheel-frame__telemetry">{frame.telemetry}</span>
+                <span className="home-v2-flywheel-card__phase">{card.phase}</span>
               </header>
-              <h3 className="home-v2-flywheel-frame__heading">{frame.heading}</h3>
-              <ul className="home-v2-flywheel-frame__rows">
-                {frame.rows.map((row, ri) => (
-                  <li key={ri} className="home-v2-flywheel-frame__row">
-                    <span className="home-v2-flywheel-frame__row-label">{row.label}</span>
-                    <span
-                      className={[
-                        "home-v2-flywheel-frame__row-value",
-                        row.status ? `home-v2-flywheel-frame__row-value--${row.status}` : "",
-                      ]
-                        .filter(Boolean)
-                        .join(" ")}
-                    >
-                      {row.value}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-              {frame.output && (
-                <div className="home-v2-flywheel-frame__output">
-                  <span
-                    className="home-v2-flywheel-frame__output-corner home-v2-flywheel-frame__output-corner--tl"
-                    aria-hidden="true"
-                  />
-                  <span
-                    className="home-v2-flywheel-frame__output-corner home-v2-flywheel-frame__output-corner--tr"
-                    aria-hidden="true"
-                  />
-                  <span
-                    className="home-v2-flywheel-frame__output-corner home-v2-flywheel-frame__output-corner--bl"
-                    aria-hidden="true"
-                  />
-                  <span
-                    className="home-v2-flywheel-frame__output-corner home-v2-flywheel-frame__output-corner--br"
-                    aria-hidden="true"
-                  />
-                  <span className="home-v2-flywheel-frame__output-label">{frame.output.label}</span>
-                  {frame.output.sub && (
-                    <span className="home-v2-flywheel-frame__output-sub">{frame.output.sub}</span>
-                  )}
-                </div>
-              )}
-              <p className="home-v2-flywheel-frame__caption">{frame.caption}</p>
+              <h3 className="home-v2-flywheel-card__headline">{card.headline}</h3>
+              <p className="home-v2-flywheel-card__support">{card.support}</p>
             </article>
-          </div>
+          </li>
         ))}
-      </div>
+      </ol>
     </div>
   );
 }
@@ -366,7 +222,7 @@ export function CorridorFlywheelPanel() {
 /** Plain-text mirror of the flywheel content, used by the static
  *  fallback path in `HomeCorridor` so reduced-motion / no-WebGL
  *  visitors get the post-Build editorial without any motion or
- *  HUD chrome. */
+ *  HUD chrome. Same minimal three-card model as the live panel. */
 export function FallbackFlywheelSummary() {
   return (
     <section className="home-v2-fallback-flywheel">
@@ -374,29 +230,17 @@ export function FallbackFlywheelSummary() {
       <h2>
         The flywheel <em>in practice</em>.
       </h2>
-      {FRAMES.map((frame) => (
-        <article key={frame.id} className="home-v2-fallback-flywheel__frame">
-          <p className="home-v2-fallback-flywheel__cartouche">
-            {frame.ordinal} · {frame.phase}
-          </p>
-          <h3>{frame.heading}</h3>
-          <ul>
-            {frame.rows.map((row, ri) => (
-              <li key={ri}>
-                <span>{row.label}</span>
-                <span>{row.value}</span>
-              </li>
-            ))}
-          </ul>
-          {frame.output && (
-            <p className="home-v2-fallback-flywheel__output">
-              <strong>{frame.output.label}</strong>
-              {frame.output.sub ? ` ${frame.output.sub}` : ""}
+      <ol className="home-v2-fallback-flywheel__grid">
+        {CARDS.map((card) => (
+          <li key={card.id} data-core={card.core ? "true" : "false"}>
+            <p className="home-v2-fallback-flywheel__cartouche">
+              {card.ordinal} · {card.phase}
             </p>
-          )}
-          <p>{frame.caption}</p>
-        </article>
-      ))}
+            <h3>{card.headline}</h3>
+            <p>{card.support}</p>
+          </li>
+        ))}
+      </ol>
     </section>
   );
 }

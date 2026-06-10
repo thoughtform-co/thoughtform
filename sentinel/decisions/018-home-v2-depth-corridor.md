@@ -2933,6 +2933,139 @@ The old `SIGNAL_CONTENT` billions block + `sig` typewriter machinery
 - Console clean except the pre-existing `PPNeueMontreal-Italic.otf`
   404 (documented unrelated).
 
+## Epilogue v4.1 — flywheel in practice, Glyphic grid (2026-06-10)
+
+Iteration on v4: the post-Build "flywheel in practice" surface stayed,
+but the chip-grid frames + connectors were too dense. Vince called for
+a calmer, clearer layout drawing on Glyphic
+([glyphic.bio](https://www.glyphic.bio)) — left-half sticky 3D
+artifact, right-half three-step grid where each step is a single
+hairline rule + small numbered square + big heading + one short body
+sentence, with right-edge ticks aligning the rows to a column rail.
+
+### Composition flip + simpler choreography
+
+- **Mirrored dock**: `EPILOGUE_DOCK_OFFSET_NDC` flipped from `+0.28`
+  to `-0.42` so the gyro assembly docks LEFT (≈29% viewport width)
+  instead of right. The flywheel panel claims the right column,
+  grid-locked to the right HUD rail. Dock scale stayed `0.54`.
+- **Static grid replaces accumulating frames**: `FRAME_1/2/3` bands
+  collapsed into one `GRID_IN` (`[0.42, 0.62]`) plus
+  `GRID_IN_STAGGER = 0.02` applied per-card by the panel. The three
+  cards arrive together (~6svh apart) instead of cascading; once
+  landed they rest. The motion reads as one settle, not a reveal.
+- **Stage shortens 1060svh → 900svh** (mobile 760svh → 660svh).
+  `EPILOGUE_START = 620 / 900 ≈ 0.6889`. DOCK keeps its ~88svh
+  physical runway (now `[0.06, 0.38]` of a 280svh epilogue), so the
+  dock animation feels identical to v4. The trail after `GRID_IN`
+  ends (~84svh of stable rest) is read time before the next section.
+
+### Card model (`CorridorFlywheelPanel`)
+
+The chip / telemetry / output-tile / connector vocabulary is gone.
+Each card carries only: ordinal (`01` / `02` / `03`) inside a small
+1px square box, phase name (`NAVIGATE` / `ENCODE` / `BUILD`) in PT
+Mono, one PP Neue Montreal headline, and one short supporting
+sentence. Evergreen copy:
+
+| Phase       | Headline                                     | Support                                                                                                         |
+| ----------- | -------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| 01 NAVIGATE | Work with the intelligence inside real work. | Hands-on sessions in your own workflows, not demos. Each one ends with a workflow worth keeping.                |
+| 02 ENCODE   | Encode the judgment that makes work good.    | That judgment becomes substrate — skills any model can inherit, versioned and shared. The asset that compounds. |
+| 03 BUILD    | Build tools on the layer.                    | When several teams need the same thing, the substrate becomes a tool. Agents, automations, capabilities.        |
+
+### Soft Encode highlight
+
+Encode is the Thoughtform claim — the encoded judgment is the asset
+that compounds — so it carries the resting visual emphasis without
+shouting:
+
+- **Ordinal box**: filled gold with ink-coloured digit (Navigate /
+  Build keep an outlined box with a dawn digit).
+- **Phase label**: gold + 600 weight (vs muted dawn + 500 on the
+  others).
+- **Top hairline**: brighter gold dotted rule vs the dawn-alpha rule
+  on Navigate / Build.
+- **Background**: faint left-to-right gold wash
+  (`rgba(202, 165, 84, 0.04)` → `0.06` → transparent) so the card
+  reads as the anchor of the column.
+- Soft horizontal inset (`clamp(12px, 1.2vw, 18px)`) so the wash
+  doesn't bleed into the right-edge pip rhythm.
+
+### Right-rail grid lock
+
+Each card's top hairline rule terminates at a 4×4px gold diamond
+pip pinned at the rule's right end. The pips visually continue the
+right HUD rail's tick column at major rail ticks (`.hud__rail--r
+.hud__rail__tick--major` in v7 `landing.css`), so the panel reads as
+"three rows of one grid" rather than three free-floating cards. The
+panel's `right` is anchored as
+`calc(var(--hud-margin) + var(--hud-rail-width) + clamp(12px, 1.4vw, 22px))`
+so the pip → rail gap stays ~13px on 1280–1680 viewports; width is
+`min(34vw, 500px)` so the panel column sits comfortably inside the
+horizontal envelope between sphere surfaces (~55% width) and rail
+(~93%).
+
+### Dock scale + offset trade-off
+
+Tested at 1440×900:
+
+- Sphere centre after dock: ~29% width.
+- SOURCE chips (anchored right-of-tip, extending LEFT) end at ~16%
+  width — clear of the left depth gauge (~7%).
+- SURFACE chips (anchored left-of-tip, extending RIGHT) end at ~55%
+  width — clear of the panel's left edge (~57%) by ~25px.
+- Right-edge pips at ~91% width — ~13px gap to the right HUD rail
+  ticks (~92.5%).
+
+If a future tweak narrows the gap further, push `EPILOGUE_DOCK_OFFSET_NDC`
+slightly more negative before changing the panel — the sphere has
+plenty of room on the left before sources crowd the rail.
+
+### Mobile (≤760px)
+
+Portrait dock unchanged (sphere lifts via `EPILOGUE_DOCK_LIFT_NDC =
+0.55`, scale `EPILOGUE_DOCK_SCALE_PORTRAIT = 0.42`). Panel collapses
+to a bottom-anchored content-height column under the lifted sphere:
+`top: auto`, `bottom: clamp(20px, 3vh, 36px)`, full-width
+(`left/right: clamp(20px, 5vw, 36px)`), `max-height: 62vh`.
+
+The grid loses `flex: 1 1 0` on cells — cards stack at intrinsic
+content height because there is no fixed parent height to distribute
+across. Headlines and support text scale down (`clamp(15px, 4.4vw,
+18px)` and `clamp(12px, 3.4vw, 14px)`); support text stays since each
+card now carries only one short sentence.
+
+### Files touched in v4.1
+
+| File                                                   | Change                                                                                               |
+| ------------------------------------------------------ | ---------------------------------------------------------------------------------------------------- |
+| `lib/home-v2/epilogueTimeline.ts`                      | v4.1 band table (`HEADER_OUT` / `DOCK` / `TITLE_IN` / `GRID_IN` + `GRID_IN_STAGGER`); offset → -0.42 |
+| `components/landing/home-v2/CorridorFlywheelPanel.tsx` | Rewrote model (FlywheelCard with ordinal/phase/headline/support); static-grid choreography; copy     |
+| `components/landing/home-v2/home-v2.css`               | Stage 900svh (mobile 660svh); panel anchored right; Glyphic-grid card styles; old chip CSS removed   |
+| `components/landing/home-v2/hooks/useDepthScroll.ts`   | `EPILOGUE_START = 620/900`                                                                           |
+
+No changes needed in the R3F shell, scene geometry, brandmark actor,
+station headers, or progress rail — `getEpilogueDockTransform` reads
+the new (negative) offset transparently and the rest of the dock
+plumbing was already sign-agnostic.
+
+### Verified (v4.1)
+
+- `npm run build` clean; `npm run lint` clean (0 errors on all
+  touched files).
+- 1440×900 desktop: Build park byte-identical at ep=0; mid-DOCK
+  shows assembly sliding LEFT and shrinking with sources clearing
+  the left rail; end-state shows three cards as a calm grid with
+  Encode softly highlighted, surfaces ending ~25px clear of the
+  panel column, right pips reading as one row with the right HUD
+  rail tick column.
+- 390×844 portrait: sphere lifts to upper third; panel renders as
+  a stacked column below with Encode highlighted; all three cards
+  visible without inner scroll.
+- Scroll-back fully reversible (panel disengages, sphere returns to
+  centre, "Build on the substrate." header re-paints).
+
 ## References
 
 - Star Atlas reference: [experience.staratlas.com](https://experience.staratlas.com/) — depth corridor pattern (camera through persistent world).
