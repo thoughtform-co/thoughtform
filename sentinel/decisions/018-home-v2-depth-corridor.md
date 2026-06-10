@@ -2775,6 +2775,164 @@ The store exposes:
 
 **Tuning knobs:** `MOTION_FOLLOWER_TAU_S` (0.2s) and `TELEPORT_PROGRESS_DELTA` (0.25) in `motionFollower.ts`.
 
+## 2026-06-10 revision — epilogue v4 "the flywheel in practice" (replaces planet landing + billions title)
+
+User direction: after "Build on the substrate", do NOT fly into the
+sphere and land on "The labs just bet billions on the same layer."
+Instead, **dock the whole Build composition (sphere + sources +
+surfaces) to the right side, shrunk**, and bring three
+retro-futuristic HUD frames into view on the **left** — Navigate /
+Encode / Build applied practically (adapted from the Loop flywheel
+deck, not copied verbatim) — accumulating as the user scrolls. The
+billions title is cut entirely.
+
+### a. World docks, camera parks
+
+The v3 planet-landing camera flight is **gone** — `FlyingCameraRig`
+reads `paintProgress` end-to-end (pinned at 1 across the epilogue)
+and `getEpilogueCameraPose` was deleted from `sceneGeom.ts`. The
+motion is now a **dock transform on the gyro assembly**: new
+`getEpilogueDockTransform(epilogueProgress, aspect)` returns
+`{ offsetX, offsetY, scale }` and every consumer composes it:
+
+- `BrandmarkAccretionShell` — shell group position `+offsetX/+offsetY`,
+  assembly scale `GYRO_ASSEMBLY_SCALE * dock.scale * navBoost`;
+- `gyroAssemblyWorldPosition` — DOM chips / cardinal labels / column
+  headers ride the same offset + scale so the composition docks as
+  one rigid body;
+- `ProjectedBrandmarkActor` — position rides the dock offset AND the
+  projected half-extent rides `dock.scale`, so the glyph shrinks
+  with the sphere instead of reading ~2x oversized at the dock.
+
+Landscape docks RIGHT (`offsetX = EPILOGUE_DOCK_OFFSET_NDC (0.28) ×
+frustum half-width`, scale → `EPILOGUE_DOCK_SCALE (0.54)`); portrait
+docks UP (`offsetY = 0.55 × half-height`, scale → 0.42) so the
+flywheel panel claims the lower band as a full-width column. Both
+tunables live in `epilogueTimeline.ts`; the frustum math mirrors
+`getStackColumnLocalX` so the docked seat is aspect-stable. The
+camera-parked + DOM-mirror-camera contract means
+`useWorldDomTracker` needed **zero changes**.
+
+### b. Band table v4
+
+`EPILOGUE_BANDS` replaced wholesale (planet bands BUILD_OUT /
+APPROACH / LAND / TITLE_IN-billions deleted, `getEpiloguePlanetScale`
+
+- `EPILOGUE_PLANET_GROW` removed):
+
+| Band         | Window      | Drives                                                         |
+| ------------ | ----------- | -------------------------------------------------------------- |
+| `HEADER_OUT` | 0.00 → 0.10 | Build station header out (desktop 2D header + mobile straddle) |
+| `DOCK`       | 0.04 → 0.24 | Assembly offset + shrink; portrait cardinal-label fade         |
+| `TITLE_IN`   | 0.14 → 0.28 | Flywheel panel kicker + title                                  |
+| `FRAME_1`    | 0.28 → 0.46 | 01 NAVIGATE frame scrolls in, persists                         |
+| `FRAME_2`    | 0.48 → 0.66 | 02 ENCODE frame, persists                                      |
+| `FRAME_3`    | 0.68 → 0.86 | 03 BUILD frame, persists                                       |
+
+Everything else that used to clear on BUILD_OUT now **stays
+visible** for the whole epilogue: `ShellStack` lanes/pips/motes,
+`ShellEncode` slot arcs, `ShellSubstrateGyro` instrument materials
+(armillary rings, ticks, graduations, symbols, pivots, cardinal
+ring), the source/surface DOM chips (`gateStackLabel` epFade
+removed), and the `CorridorProgressRail` breadcrumb (the rail IS the
+flywheel — it reads beside the docked artifact). The pointer bank
+quiets to ~60% at peak DOCK (was zeroed across APPROACH) so the
+docked instrument still feels alive.
+
+The DOM brandmark's exit bookend (`TAIL_FADE_OUT_START = 0.97`)
+re-keyed from `paintProgress` (which pins at 1 for the entire
+epilogue and would zero the glyph through the whole flywheel beat)
+to `epilogueProgress` — the glyph stays docked and only fades on the
+last slice before the stage unpins.
+
+### c. New left column — `CorridorFlywheelPanel`
+
+New `components/landing/home-v2/CorridorFlywheelPanel.tsx`, mounted
+in `HomeCorridor` beside `CorridorStationHeaders`. Same rAF
+pattern: reads `epilogueProgress` per frame, writes inline opacity +
+translate (no React churn). Content is a single `FRAMES` const
+(easy copy edits): 01 NAVIGATE workshop manifest (LEGAL/FINANCE/
+STUDIO/PRODUCT DESIGN `DONE`, CRO · EXPANSION `QUEUED`), 02 ENCODE
+record pipeline (MEETING/SKILL/LIBRARY/GITHUB), 03 BUILD pattern
+detector (three `BRIEFING` rows → `MARKETING INTELLIGENCE` output
+tile). Frames slide up 60px + fade on their band and persist;
+dotted connectors (`ONE RECORD`, `ONE LAYER`) bridge them.
+
+Visual grammar (thoughtform-design): zero border-radius, gold corner
+L-brackets (4 positioned spans per frame), **1px dotted hairline
+borders** (terminal/particle read, no solid boxes), PT Mono
+cartouches + telemetry codes (LOG-22 / REC-01 / PAT-03), PP Neue
+Montreal headings/captions, status chips on the colour tiers (gold =
+active, Atreides green = provenance `DONE`, dawn = neutral). The
+Build output tile uses green dotted enclosure + green corner
+brackets (provenance: "you made this").
+
+The old `SIGNAL_CONTENT` billions block + `sig` typewriter machinery
+
+- `--signal` CSS were deleted from `CorridorStationHeaders`.
+
+### d. Stage + mobile + fallback
+
+- Stage `820svh → 1060svh` (epilogue tail 200 → 440svh, ~1 viewport
+  per frame); `EPILOGUE_START = 620/1060 ≈ 0.5849`. Mobile stage
+  `620svh → 760svh`.
+- Portrait (≤760px): sphere docks UP as a compact emblem (brandmark
+  glyph at centre, cardinal labels fade on DOCK — 9px labels around
+  a ~90px sphere are clutter), panel renders bottom-anchored
+  full-width with captions hidden + tightened type so title + all
+  three frames fit ~62vh with NO inner scroll (panel stays
+  `pointer-events: none`).
+- Hide-fix: the portrait `display: none` on `.home-v2-stack-item` /
+  `.home-v2-stack-label` never actually won — the base
+  `.home-v2-stack-item { display: flex }` sits LATER in the
+  stylesheet at equal specificity. Now scoped under
+  `.home-v2-copy-layer` so the chips genuinely hide on portrait.
+- Mobile straddle: new `gateBuildReadout` onPaint fades
+  `intelligence.title` / `intelligence.support` on HEADER_OUT (on
+  desktop these anchors have no DOM element; on mobile they were
+  painting "Build on the substrate." over the flywheel panel).
+- Static fallback: `FallbackFlywheelSummary` (exported from the
+  panel module) appends the three frames as plain stacked sections
+  in `FallbackCorridor`.
+
+### Files touched in v4
+
+| File                                                                        | Change                                                                                                                                       |
+| --------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `lib/home-v2/epilogueTimeline.ts`                                           | v4 band table; `EPILOGUE_DOCK_OFFSET_NDC` / `EPILOGUE_DOCK_SCALE`; planet helpers removed                                                    |
+| New: `components/landing/home-v2/CorridorFlywheelPanel.tsx`                 | Flywheel panel + `FallbackFlywheelSummary`                                                                                                   |
+| `components/landing/home-v2/DepthGatewayScene/sceneGeom.ts`                 | `getEpilogueDockTransform`; dock composed into `gyroAssemblyWorldPosition`; `gateBuildReadout`; epilogue camera removed; chip epFade removed |
+| `components/landing/home-v2/DepthGatewayScene/FlyingCameraRig.tsx`          | Epilogue branch removed (camera parks)                                                                                                       |
+| `components/landing/home-v2/DepthGatewayScene/BrandmarkAccretionShell.tsx`  | Dock offset + scale on the assembly; `dockCalm` replaces `planetCalm`                                                                        |
+| `components/landing/home-v2/DepthGatewayScene/shell/ShellStack.tsx`         | BUILD_OUT clear removed                                                                                                                      |
+| `components/landing/home-v2/DepthGatewayScene/shell/ShellEncode.tsx`        | BUILD_OUT clear removed                                                                                                                      |
+| `components/landing/home-v2/DepthGatewayScene/shell/ShellSubstrateGyro.tsx` | Instrument fades + APPROACH planet boosts removed                                                                                            |
+| `components/landing/home-v2/DepthGatewayScene/shell/shellGeom.ts`           | `EPILOGUE_PLANET_GROW` removed                                                                                                               |
+| `components/landing/home-v2/ProjectedBrandmarkActor.tsx`                    | Dock position + scaled half-extent; APPROACH fade removed; bookend re-keyed to epilogue                                                      |
+| `components/landing/home-v2/CorridorStationHeaders.tsx`                     | SIGNAL block + sig machinery removed; Build header → HEADER_OUT                                                                              |
+| `components/landing/home-v2/CorridorProgressRail.tsx`                       | Rail persists through the epilogue                                                                                                           |
+| `components/landing/home-v2/HomeCorridor.tsx`                               | Panel mounted; fallback summary appended                                                                                                     |
+| `components/landing/home-v2/hooks/useDepthScroll.ts`                        | `EPILOGUE_START = 620/1060`                                                                                                                  |
+| `components/landing/home-v2/home-v2.css`                                    | Stage 1060svh (mobile 760svh); flywheel panel/frame/connector styles; `--signal` CSS removed; portrait chip hide-fix                         |
+
+### Verified (v4)
+
+- `npm run build` clean; `npm run lint` clean on all touched files.
+- Browser scrub at 1440×832 (test route + production `/`): Build
+  park byte-identical at ep=0 (brandmark centred, full-size, header
+  in); mid-DOCK shows assembly sliding right + shrinking as one
+  rigid body with title fading in; end state shows all three frames
+  stacked + dotted connectors + docked artifact with chips clear of
+  both the panel (65px gap) and the right depth gauge (~75px), frame
+  3 inside the viewport.
+- Scroll-back fully reversible (brandmark returns to centre at
+  720px, panel disengages).
+- 390×844 portrait: sphere docks up as compact emblem (no cardinal
+  clutter, no chip overlap, no station-title bleed), title + three
+  frames fit without inner scroll.
+- Console clean except the pre-existing `PPNeueMontreal-Italic.otf`
+  404 (documented unrelated).
+
 ## References
 
 - Star Atlas reference: [experience.staratlas.com](https://experience.staratlas.com/) — depth corridor pattern (camera through persistent world).

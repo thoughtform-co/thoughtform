@@ -86,7 +86,7 @@
   position: relative;
   width: 100%;
   /* Total stage height = corridor span (620svh) + epilogue span
-     (200svh). Stage growth history:
+     (440svh). Stage growth history:
        - 300svh: original world-owned corridor.
        - 360svh: Thoughtform -> Diagnostics immersion pass
          (passthrough-01 widened from 14% to 24% of scroll).
@@ -109,24 +109,22 @@
          identical — see `depthGatewayStore.epilogueProgress`.
        - 760svh: epilogue v2 — extended the epilogue to ~300svh so
          the Build header and the billions title never co-exist
-         (corridor cadence rule). The new sub-bands
-         (BUILD_OUT / SPHERE / MORPH / GATEWAY / SIGNAL_IN /
-         CARDS_IN) live in `lib/home-v2/epilogueTimeline.ts`;
-         `EPILOGUE_START` recomputes to 460/760 ≈ 0.6053.
+         (corridor cadence rule).
        - 920svh: epilogue v3.4 — extended the CALIBRATED corridor
          from 460svh to 620svh while keeping the epilogue tail at
-         300svh. This gives the short Encode -> Build leg enough
-         runway for the wormhole mouth to visibly widen across the
-         whole exit, instead of opening almost on top of the Build
-         park. `EPILOGUE_START` recomputes to 620/920 ≈ 0.6739.
-       - 820svh: polish round 2 (2026-06-10) — compressed the
-         epilogue tail from 300svh to 200svh and pulled TITLE_IN
-         from 0.7 to ~0.52 (+ retuned APPROACH/LAND ends) so the
-         Build park hands off to "The labs just bet billions on
-         the same layer" in roughly one viewport of scroll instead
-         of ~3. The corridor span is unchanged. `EPILOGUE_START`
-         recomputes to 620/820 ≈ 0.7561. */
-  height: 820svh;
+         300svh.
+       - 820svh: polish round 2 — compressed the planet-landing
+         epilogue tail to 200svh.
+       - 1060svh: epilogue v4 (2026-06-10 flywheel pass) — replaced
+         the planet-landing tail with the FLYWHEEL IN PRACTICE
+         epilogue. The artifact docks rightward (`getEpilogueDockTransform`)
+         while three retro-futuristic HUD frames scroll into view
+         on the LEFT and accumulate (Navigate / Encode / Build
+         applied practically). 440svh tail = ~1 viewport per frame
+         + the dock + title in fades. `EPILOGUE_START` recomputes
+         to 620/1060 ≈ 0.5849. The corridor span itself is
+         unchanged. */
+  height: 1060svh;
   background: var(--void, #050403);
   z-index: 2;
   isolation: isolate;
@@ -159,18 +157,12 @@
   pointer-events: none;
 }
 
-/* During the epilogue beat the canvas opts INTO pointer events so the
-   news-card raycaster can fire hover / click on the orbiting card
-   meshes. The flag is written by `useDepthScroll` (`data-corridor-
-   epilogue`) only while the user is inside the epilogue scroll
-   channel — outside that window the canvas reverts to
-   `pointer-events: none` so it never intercepts events from siblings.
-   Wheel + touch scroll still propagate to the document scroll context;
-   only click / hover are captured here, and only on raycast hits. */
-html[data-corridor-epilogue="true"] .home-v2-stage__canvas,
-html[data-corridor-epilogue="true"] .home-v2-stage__canvas canvas {
-  pointer-events: auto;
-}
+/* Epilogue v4 (2026-06-10 flywheel pass): the v2-era
+   `data-corridor-epilogue` pointer-events opt-in is gone. It existed
+   for the orbiting news-card raycaster (removed in v3); the v4
+   epilogue has no interactive canvas elements, so the canvas stays
+   `pointer-events: none` end-to-end and never intercepts events
+   meant for DOM siblings. */
 
 /* ── DOM copy + label overlay ─────────────────────────────────
    Container for `<CopyAnchors>`. Each child element is positioned
@@ -492,55 +484,463 @@ html[data-corridor-epilogue="true"] .home-v2-stage__canvas canvas {
   }
 }
 
-/* ── Signal block (epilogue) ───────────────────────────────────────
-   The "billions on the same layer" title + paragraph that appears
-   during the epilogue, after the corridor has saturated at progress
-   1 and the sphere is sliding right. Anchored bottom-left to mirror
-   the screen position of section 2's `.home-v2-copy-block--thoughtform-left`
-   (left, lower-third of the viewport) so it reads as the symmetric
-   bookend to the opening copy. Inherits typography from the base
-   `.home-v2-station-header` (PP Neue Montreal, uppercase title, gold
-   `<em>` accent, typewriter machinery) — only the viewport anchor +
-   width budget differ. Larger title sizing (38px clamp) because the
-   right half of the viewport is now empty (sphere slid out of the
-   way) and the copy can claim a wider column. */
-.home-v2-station-header--signal {
-  /* Top-centre. Sits in the "sky" above the planet's horizon line
-     once the landing tilt completes — the closing chord of the 3D
-     space, before whatever transition takes the user into the next
-     section. Camera is moving during APPROACH/LAND but the title
-     itself is viewport-fixed, so it's pixel-stable.
+/* The "billions on the same layer" SIGNAL block + `--signal` CSS
+   variant were removed in epilogue v4 (2026-06-10 flywheel pass).
+   The post-Build copy now lives in `CorridorFlywheelPanel` on the
+   left half of the viewport, beside the docked artifact. */
 
-     Stack v3 (2026-06-10) — explicitly overrides the base
-     bottom-centre cartouche anchor so this single block stays at
-     top-centre. `bottom: auto` releases the base anchor; the rAF
-     loop also writes a bare `translate3d(-50%, 0, 0)` transform
-     here (no parallax) so the title sits perfectly centred. */
-  top: clamp(80px, 12vh, 156px);
-  bottom: auto;
-  left: 50%;
-  transform: translate3d(-50%, 0, 0);
-  width: min(90vw, 720px);
-  text-align: center;
+/* ── Flywheel panel (epilogue v4) ──────────────────────────────────
+   The retro-futuristic "flywheel in practice" panel that anchors the
+   LEFT half of the viewport across the post-Build epilogue. The
+   container is fixed-positioned (sticky-stage child) at the left
+   edge of the frame, clear of the HUD rail; three HUD frames stack
+   beneath the title and slide up + fade in as their EPILOGUE band
+   fires (`CorridorFlywheelPanel` writes opacity + transform per
+   frame off the depth store). The frames PERSIST once revealed so
+   the user reads "01 NAVIGATE → 02 ENCODE → 03 BUILD" as a single
+   accumulating composition by the time the epilogue ends.
+
+   Visual grammar: zero border-radius, gold corner L-brackets,
+   1px dotted hairline borders (terminal/particle read), PT Mono
+   uppercase cartouches, PP Neue Montreal headings, status chips in
+   the brand tier colours (gold = active wayfinding, atreides green
+   = provenance, dawn = neutral). Mirrors the existing chip /
+   primitive vocabulary in `.home-v2-encode-primitive` so the panel
+   reads as part of the same instrument family. */
+.home-v2-flywheel-panel {
+  position: fixed;
+  /* Left rail clearance: the depth-rail aside (`--hud-rail-aside`)
+     sits on the left edge; we add ~1.4vw breathing room. The right
+     edge of the panel is set by `width` so the docked sphere on the
+     right has its own column with no overlap.
+
+     Vertical bounds are compressed so the three frames + title +
+     connectors fit between the HUD top frame and the bottom rail
+     diamond on standard 832-880 desktop viewports. */
+  left: clamp(56px, 6vw, 88px);
+  top: clamp(48px, 7vh, 72px);
+  bottom: clamp(20px, 3vh, 40px);
+  width: min(38vw, 520px);
+  display: flex;
+  flex-direction: column;
+  gap: clamp(6px, 0.8vh, 12px);
+  pointer-events: none;
+  z-index: 16;
+  /* Hidden until the corridor enters the epilogue; the panel rAF
+     loop flips `data-engaged="true"` when epilogueProgress > 0. */
+  opacity: 0;
 }
-.home-v2-station-header--signal .home-v2-station-header__title,
-.home-v2-station-header--signal .home-v2-station-header__support {
-  /* Centred + full width inside the container — overrides the base
-     left-aligned + max-width clamps the corridor headers use. */
-  max-width: none;
-  text-align: center;
+.home-v2-flywheel-panel[data-engaged="true"] {
+  opacity: 1;
+}
+
+.home-v2-flywheel-panel__head {
+  /* Title block: kicker (PT Mono cartouche) + heading. Slide-up +
+     fade is written inline by the panel rAF loop. */
+  opacity: 0;
+  will-change: opacity, transform;
+}
+
+.home-v2-flywheel-panel__kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-pt-mono, ui-monospace, monospace);
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(202, 165, 84, 0.78);
+  margin-bottom: clamp(4px, 0.7vh, 8px);
+}
+
+.home-v2-flywheel-panel__kicker-pip {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  background: var(--gold, #caa554);
+  transform: rotate(45deg);
+  box-shadow: 0 0 6px rgba(202, 165, 84, 0.5);
+}
+
+.home-v2-flywheel-panel__title {
+  font-family: var(--font-pp-neue-montreal, "PP Neue Montreal", sans-serif);
+  font-size: clamp(22px, 2.4vw, 30px);
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  color: var(--dawn, #ebe3d6);
+  margin: 0;
+  text-wrap: balance;
+}
+.home-v2-flywheel-panel__title em {
+  font-style: italic;
+  color: var(--gold, #caa554);
+}
+
+.home-v2-flywheel-panel__stack {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(4px, 0.6vh, 10px);
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: visible;
+}
+
+.home-v2-flywheel-panel__cell {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(3px, 0.5vh, 8px);
+}
+
+/* ── Connector between frames ──────────────────────────────────────
+   Dotted line + diamond endpoints + tiny mono label ("ONE RECORD",
+   "ONE LAYER"). Dashed via `repeating-linear-gradient` so the
+   pattern matches the particle-grid grammar (terminal/punch-card
+   read, no solid stroke). */
+.home-v2-flywheel-connector {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 clamp(8px, 1.2vw, 18px);
+  font-family: var(--font-pt-mono, ui-monospace, monospace);
+  font-size: 9.5px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: rgba(235, 227, 214, 0.6);
+  opacity: 0;
+  will-change: opacity;
+}
+.home-v2-flywheel-connector__rule {
+  flex: 1 1 auto;
+  height: 1px;
+  background-image: linear-gradient(to right, rgba(202, 165, 84, 0.45) 50%, transparent 50%);
+  background-size: 6px 1px;
+  background-repeat: repeat-x;
+}
+.home-v2-flywheel-connector__diamond {
+  display: inline-block;
+  width: 4px;
+  height: 4px;
+  background: var(--gold, #caa554);
+  transform: rotate(45deg);
+  flex-shrink: 0;
+}
+.home-v2-flywheel-connector__label {
+  flex: none;
+  white-space: nowrap;
+  color: rgba(202, 165, 84, 0.78);
+}
+
+/* ── Single HUD frame ──────────────────────────────────────────────
+   Hairline-bordered card with gold corner L-brackets, PT Mono
+   cartouche row, PP Neue Montreal heading, manifest rows + caption.
+   Border is a 1px dotted hairline (NOT a solid stroke) so the frame
+   reads as a terminal frame consistent with the particle system. */
+.home-v2-flywheel-frame {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(4px, 0.55vh, 7px);
+  padding: clamp(9px, 1.1vh, 13px) clamp(14px, 1.6vw, 22px);
+  /* 1px dotted hairline — alpha is gold-low so the border reads
+     as a quiet enclosure rather than a strong outline. */
+  border: 1px dotted rgba(202, 165, 84, 0.42);
+  background: rgba(10, 9, 8, 0.66);
+  /* Soft inner glow tying the frame to the brand tier; very low
+     alpha so it doesn't compete with the docked sphere on the right. */
+  box-shadow:
+    inset 0 0 0 0 transparent,
+    0 0 0 1px rgba(235, 227, 214, 0.04),
+    0 18px 48px -28px rgba(0, 0, 0, 0.75);
+  opacity: 0;
+  will-change: opacity, transform;
+}
+
+/* Gold corner L-brackets — four pseudo-spans positioned at each
+   corner. Read as the "registered station" bracket motif used
+   across the brand. The two visible edges of each L are 1px solid
+   gold, length proportional to the frame so wide frames get longer
+   brackets without re-tuning. */
+.home-v2-flywheel-frame__corner {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border: 0 solid var(--gold, #caa554);
+  pointer-events: none;
+}
+.home-v2-flywheel-frame__corner--tl {
+  top: -1px;
+  left: -1px;
+  border-top-width: 1px;
+  border-left-width: 1px;
+}
+.home-v2-flywheel-frame__corner--tr {
+  top: -1px;
+  right: -1px;
+  border-top-width: 1px;
+  border-right-width: 1px;
+}
+.home-v2-flywheel-frame__corner--bl {
+  bottom: -1px;
+  left: -1px;
+  border-bottom-width: 1px;
+  border-left-width: 1px;
+}
+.home-v2-flywheel-frame__corner--br {
+  bottom: -1px;
+  right: -1px;
+  border-bottom-width: 1px;
+  border-right-width: 1px;
+}
+
+/* Eyebrow row inside a frame: pip + cartouche on the left,
+   telemetry mono on the right. */
+.home-v2-flywheel-frame__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-pt-mono, ui-monospace, monospace);
+  font-size: 10.5px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+.home-v2-flywheel-frame__pip {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  background: var(--gold, #caa554);
+  transform: rotate(45deg);
+  flex-shrink: 0;
+  box-shadow: 0 0 6px rgba(202, 165, 84, 0.5);
+}
+.home-v2-flywheel-frame__cartouche {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--gold, #caa554);
+}
+.home-v2-flywheel-frame__sep {
+  color: rgba(202, 165, 84, 0.5);
+}
+.home-v2-flywheel-frame__phase {
+  font-weight: 600;
+}
+.home-v2-flywheel-frame__telemetry {
   margin-left: auto;
-  margin-right: auto;
+  color: rgba(235, 227, 214, 0.42);
+  font-size: 9.5px;
+  letter-spacing: 0.16em;
 }
-.home-v2-station-header--signal .home-v2-station-header__title {
-  font-size: clamp(26px, 3vw, 44px);
+
+.home-v2-flywheel-frame__heading {
+  font-family: var(--font-pp-neue-montreal, "PP Neue Montreal", sans-serif);
+  font-size: clamp(14px, 1.3vw, 16px);
+  font-weight: 500;
+  line-height: 1.25;
+  letter-spacing: -0.005em;
+  color: var(--dawn, #ebe3d6);
+  margin: 0;
 }
-.home-v2-station-header--signal .home-v2-station-header__support {
-  /* Match the corridor headers' rebalanced body scale (16/1.4/20) so
-     the epilogue title-paragraph pair reads with the same hierarchy
-     as Navigate/Encode/Build (2026-06-09 type-pair pass). */
-  font-size: clamp(16px, 1.4vw, 20px);
-  max-width: min(70vw, 560px);
+
+.home-v2-flywheel-frame__rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.home-v2-flywheel-frame__row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: baseline;
+  gap: 12px;
+  padding: 1px 0;
+  /* Per-row dotted hairline — the border-bottom mirrors the frame's
+     dotted enclosure but at lower alpha so the rows read as registry
+     entries inside one ledger, not separate boxes. */
+  border-bottom: 1px dotted rgba(235, 227, 214, 0.1);
+  font-family: var(--font-pt-mono, ui-monospace, monospace);
+  font-size: 10px;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+.home-v2-flywheel-frame__row:last-child {
+  border-bottom: none;
+}
+.home-v2-flywheel-frame__row-label {
+  color: rgba(235, 227, 214, 0.78);
+}
+.home-v2-flywheel-frame__row-value {
+  /* Default value (no status): muted dawn, italic-feeling lower-case
+     rendered as upper-case via text-transform. */
+  color: rgba(235, 227, 214, 0.5);
+  text-transform: none;
+  letter-spacing: 0.04em;
+  font-size: 10.5px;
+  white-space: nowrap;
+}
+/* Status chips — each tier paints a tiny upper-case badge. The
+   chip itself is just a coloured pill; the `--done` / `--queued`
+   etc. variants set the colour. */
+.home-v2-flywheel-frame__row-value--done,
+.home-v2-flywheel-frame__row-value--queued,
+.home-v2-flywheel-frame__row-value--live,
+.home-v2-flywheel-frame__row-value--briefing {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 1px 6px;
+  border: 1px solid currentColor;
+  background: rgba(10, 9, 8, 0.6);
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+.home-v2-flywheel-frame__row-value--done {
+  /* Atreides green — provenance ("you made this"). */
+  color: var(--atreides-light, #5b7a4e);
+}
+.home-v2-flywheel-frame__row-value--queued {
+  color: rgba(235, 227, 214, 0.55);
+}
+.home-v2-flywheel-frame__row-value--live {
+  color: var(--gold, #caa554);
+}
+.home-v2-flywheel-frame__row-value--briefing {
+  color: rgba(202, 165, 84, 0.78);
+}
+
+/* Build frame's inset OUTPUT tile — "MARKETING INTELLIGENCE (aka
+   Briefing Agent)". Extra hairline frame + corner brackets at a
+   smaller scale so it reads as the BUILT artifact emerging out of
+   the pattern. */
+.home-v2-flywheel-frame__output {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  margin-top: 3px;
+  padding: clamp(8px, 1vh, 12px) 12px;
+  border: 1px dotted rgba(91, 122, 78, 0.55);
+  background: rgba(91, 122, 78, 0.06);
+}
+.home-v2-flywheel-frame__output-corner {
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  border: 0 solid var(--atreides-light, #5b7a4e);
+  pointer-events: none;
+}
+.home-v2-flywheel-frame__output-corner--tl {
+  top: -1px;
+  left: -1px;
+  border-top-width: 1px;
+  border-left-width: 1px;
+}
+.home-v2-flywheel-frame__output-corner--tr {
+  top: -1px;
+  right: -1px;
+  border-top-width: 1px;
+  border-right-width: 1px;
+}
+.home-v2-flywheel-frame__output-corner--bl {
+  bottom: -1px;
+  left: -1px;
+  border-bottom-width: 1px;
+  border-left-width: 1px;
+}
+.home-v2-flywheel-frame__output-corner--br {
+  bottom: -1px;
+  right: -1px;
+  border-bottom-width: 1px;
+  border-right-width: 1px;
+}
+.home-v2-flywheel-frame__output-label {
+  font-family: var(--font-pp-neue-montreal, "PP Neue Montreal", sans-serif);
+  font-size: clamp(12px, 1.1vw, 15px);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--dawn, #ebe3d6);
+}
+.home-v2-flywheel-frame__output-sub {
+  font-family: var(--font-pt-mono, ui-monospace, monospace);
+  font-size: 9.5px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(91, 122, 78, 0.85);
+}
+
+.home-v2-flywheel-frame__caption {
+  font-family: var(--font-pp-neue-montreal, "PP Neue Montreal", sans-serif);
+  font-size: clamp(11px, 0.95vw, 12.5px);
+  line-height: 1.35;
+  color: rgba(235, 227, 214, 0.66);
+  margin: 0;
+  text-wrap: pretty;
+}
+
+/* ── Static fallback flywheel summary ──────────────────────────────
+   Plain stacked sections rendered by `FallbackFlywheelSummary`
+   (mounted inside the static `FallbackCorridor`) for reduced-motion
+   / no-WebGL visitors. Inherits typography from the surrounding
+   fallback text block; the only structural rules here are the
+   eyebrow cartouche + the row grid + the OUTPUT pill. */
+.home-v2-fallback-flywheel {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  margin-top: 32px;
+}
+.home-v2-fallback-flywheel__kicker {
+  font-family: var(--font-pt-mono, ui-monospace, monospace);
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--gold, #caa554);
+  margin: 0 0 4px 0;
+}
+.home-v2-fallback-flywheel__frame {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px 18px;
+  border: 1px dotted rgba(202, 165, 84, 0.42);
+  background: rgba(10, 9, 8, 0.66);
+}
+.home-v2-fallback-flywheel__cartouche {
+  font-family: var(--font-pt-mono, ui-monospace, monospace);
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--gold, #caa554);
+  margin: 0;
+}
+.home-v2-fallback-flywheel__frame ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.home-v2-fallback-flywheel__frame li {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  font-family: var(--font-pt-mono, ui-monospace, monospace);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(235, 227, 214, 0.78);
+}
+.home-v2-fallback-flywheel__output {
+  margin: 4px 0 0 0;
+  padding: 8px 10px;
+  border: 1px dotted rgba(91, 122, 78, 0.55);
+  font-size: 13px;
+  color: var(--dawn, #ebe3d6);
 }
 
 @media (max-width: 760px) {
@@ -555,10 +955,86 @@ html[data-corridor-epilogue="true"] .home-v2-stage__canvas canvas {
      the chips on top of the sphere. The mobile composition reads
      the Build content via `StationTitle` (mobile straddle), so the
      stack chips/headers are hidden on portrait to avoid the sphere
-     overlap. */
-  .home-v2-stack-item,
-  .home-v2-stack-label {
+     overlap.
+
+     Epilogue v4 hide-fix (2026-06-10): scoped under
+     `.home-v2-copy-layer` to OUT-RANK the base
+     `.home-v2-stack-item { display: flex }` rule, which sits LATER
+     in this stylesheet and was winning the equal-specificity
+     cascade — the chips were painting on portrait despite this
+     block. */
+  .home-v2-copy-layer .home-v2-stack-item,
+  .home-v2-copy-layer .home-v2-stack-label {
     display: none;
+  }
+
+  /* Epilogue v4 (2026-06-10 flywheel pass) — the desktop two-column
+     dock-right + flywheel-left layout collapses on portrait to a
+     SINGLE-COLUMN stack. The artifact stays on the optical axis
+     (`getEpilogueDockTransform` returns offsetX 0 because the live
+     aspect read passes through `getStackColumnLocalX`'s frustum
+     math; we additionally trim the dock SCALE on mobile via the
+     panel's data attribute so the sphere doesn't shrink awkwardly).
+     The flywheel panel renders as a full-width column anchored
+     below the docked artifact, scrolling into view as the user
+     pulls past the Build park. */
+  .home-v2-flywheel-panel {
+    /* Bottom-anchored full-width column — sits below the docked
+       sphere (which the portrait dock branch lifts into the upper
+       third of the frame). The frames are compressed hard enough
+       (captions hidden, tight paddings) that all three + title fit
+       inside ~62vh without inner scrolling — the panel stays
+       pointer-events: none like every other corridor overlay. */
+    left: clamp(20px, 6vw, 40px);
+    right: clamp(20px, 6vw, 40px);
+    top: auto;
+    bottom: clamp(20px, 3vh, 36px);
+    width: auto;
+    max-height: 68vh;
+    gap: 6px;
+    overflow: hidden;
+  }
+  .home-v2-flywheel-panel__kicker {
+    margin-bottom: 3px;
+  }
+  .home-v2-flywheel-panel__title {
+    font-size: clamp(18px, 5.2vw, 22px);
+  }
+  .home-v2-flywheel-frame {
+    padding: 8px 14px;
+    gap: 3px;
+  }
+  .home-v2-flywheel-frame__head {
+    font-size: 9.5px;
+  }
+  .home-v2-flywheel-frame__heading {
+    font-size: 13px;
+  }
+  .home-v2-flywheel-connector {
+    font-size: 8.5px;
+  }
+  .home-v2-flywheel-frame__output-sub {
+    display: none;
+  }
+  .home-v2-flywheel-frame__rows {
+    gap: 1px;
+  }
+  .home-v2-flywheel-frame__row,
+  .home-v2-flywheel-frame__row-label,
+  .home-v2-flywheel-frame__row-value {
+    font-size: 9.5px;
+  }
+  /* Captions are support text — on portrait the heading + manifest
+     rows carry the read and the captions are the first thing to
+     yield for vertical budget. */
+  .home-v2-flywheel-frame__caption {
+    display: none;
+  }
+  .home-v2-flywheel-frame__output {
+    padding: 6px 10px;
+  }
+  .home-v2-flywheel-frame__output-label {
+    font-size: 12px;
   }
 }
 
@@ -1386,9 +1862,19 @@ html[data-corridor-epilogue="true"] .home-v2-stage__canvas canvas {
      scroll moments (copy, then the brandmark + diagram reveal), each
      ~one viewport, before the corridor fly. `getMobilePaintProgress`
      maps the [0, 0.38] raw dwell into the camera-hold span. (ADR-018
-     mobile two-moment revision.) */
+     mobile two-moment revision.)
+
+     Epilogue v4 (2026-06-10 flywheel pass): added ~140svh of mobile
+     epilogue runway so the docked artifact + flywheel panel get
+     comfortable scroll room without a separate camera fly. The
+     `EPILOGUE_START` ratio in `useDepthScroll` reads the desktop
+     value (620 / 1060 ≈ 0.5849); on mobile the corridor span
+     consumes 620 of the 760svh stage, so EPILOGUE_START is
+     effectively ~0.816 — fine because the mobile epilogue painter
+     hides the desktop dock layout and renders a vertical stack
+     instead. */
   .home-v2-stage {
-    height: 620svh;
+    height: 760svh;
   }
   /* Mobile Thoughtform copy: one vertically-centred column (bridge,
      title, body, chevron cue) that reads as a single cohesive paragraph.

@@ -699,14 +699,11 @@ export const SUBSTRATE_GYRO_CARDINAL_RING_OPACITY = 0.55;
  *  that the instrument is re-centred and has the surrounding space. */
 export const GYRO_ASSEMBLY_SCALE = 1.18;
 
-/** Peak planet-grow multiplier applied to the gimbal assembly at
- *  the end of the EPILOGUE APPROACH band. The substrate gimbal
- *  globe scales up from `GYRO_ASSEMBLY_SCALE` (parked) to
- *  `GYRO_ASSEMBLY_SCALE * EPILOGUE_PLANET_GROW` so it reads as a
- *  planet by the time we land. v3.2 bumped 2.5 -> 3.0 to match the
- *  Earth-reference framing — a bigger, closer planet that fills
- *  the lower portion of the viewport with its curved horizon. */
-export const EPILOGUE_PLANET_GROW = 3.0;
+// Note: the v3 `EPILOGUE_PLANET_GROW` constant was removed in
+// epilogue v4 (2026-06-10 flywheel pass). The assembly no longer
+// scales UP into a planet during the epilogue — it shrinks and
+// docks rightward via `getEpilogueDockTransform` in `sceneGeom.ts`,
+// reading `EPILOGUE_DOCK_SCALE` from `epilogueTimeline.ts`.
 
 /** Static tilt when `prefers-reduced-motion` (radians). */
 export const SUBSTRATE_GYRO_STATIC_TILT_X = 0.12;

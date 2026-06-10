@@ -5,11 +5,15 @@ import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { useDeviceTier } from "@/lib/hooks/useDeviceTier";
 import { DOLLY_HOLD_END, smoothstep } from "@/lib/home-v2/corridorMap";
-import { epilogueBand, getEpiloguePlanetScale } from "@/lib/home-v2/epilogueTimeline";
+import { epilogueBand } from "@/lib/home-v2/epilogueTimeline";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import { gyroTilt, useGyroLabStore } from "@/lib/stores/gyroLabStore";
 import { getSmoothedAccretionLayers } from "./motionFollower";
-import { getBrandmarkWorldPosition, getNavigateApparentSizeBoost } from "./sceneGeom";
+import {
+  getBrandmarkWorldPosition,
+  getEpilogueDockTransform,
+  getNavigateApparentSizeBoost,
+} from "./sceneGeom";
 import { ShellEncode } from "./shell/ShellEncode";
 import { ShellStack } from "./shell/ShellStack";
 import { ShellSubstrate } from "./shell/ShellSubstrate";
@@ -87,8 +91,17 @@ export function BrandmarkAccretionShell() {
     }
 
     shell.visible = true;
+    // Epilogue v4 (2026-06-10 flywheel pass): the WHOLE assembly
+    // docks rightward as a rigid body. The shell group's position is
+    // the brandmark world position + the dock offsetX, so the
+    // sphere, lanes, surface fan, chips and projected brandmark
+    // anchor all travel together as the user scrolls past Build.
+    // `getEpilogueDockTransform` returns the identity (offsetX 0,
+    // scale 1) outside the DOCK band, so the corridor->epilogue
+    // handoff is byte-identical inside the calibrated corridor.
+    const dock = getEpilogueDockTransform(epilogueProgress);
     const [bx, by, bz] = getBrandmarkWorldPosition(paintProgress);
-    shell.position.set(bx, by, bz);
+    shell.position.set(bx + dock.offsetX, by + dock.offsetY, bz);
 
     const gyroAssembly = gyroAssemblyRef.current;
     if (!gyroEnabled || !gyroAssembly) {
@@ -98,11 +111,6 @@ export function BrandmarkAccretionShell() {
       return;
     }
 
-    // Epilogue v3 planet-grow: the substrate gimbal scales up across
-    // the APPROACH band so the small instrument becomes a planet
-    // the camera lands on. Composes with the parked GYRO_ASSEMBLY_SCALE
-    // and saturates at 1 (no change) inside the calibrated corridor.
-    const planetScale = getEpiloguePlanetScale(epilogueProgress);
     // Polish round 2 (2026-06-10): Navigate apparent-size boost
     // compensates the camera-distance penalty at the Navigate park
     // so the gimbal sphere reads at the same screen size as the
@@ -110,15 +118,16 @@ export function BrandmarkAccretionShell() {
     // line is byte-identical at Encode/Build. See
     // `getNavigateApparentSizeBoost` for the envelope.
     const navBoost = getNavigateApparentSizeBoost(paintProgress);
-    gyroAssembly.scale.setScalar(GYRO_ASSEMBLY_SCALE * planetScale * navBoost);
+    gyroAssembly.scale.setScalar(GYRO_ASSEMBLY_SCALE * dock.scale * navBoost);
 
     const layers = getSmoothedAccretionLayers();
     const tiltCalm = 1 - (1 - SUBSTRATE_GYRO_ENCODE_TILT_FLOOR) * layers.orbits;
-    // Calm the pointer bank to zero across APPROACH — planets don't
-    // wobble with the mouse. APPROACH ramps 0..1 so we lerp the
-    // existing mouseCalm down to 0 as it ramps.
-    const approachT = epilogueBand(epilogueProgress, "APPROACH");
-    const planetCalm = 1 - approachT;
+    // Quiet (don't kill) the pointer bank as the assembly docks. At
+    // peak DOCK the bank settles to ~60% so the docked instrument
+    // still feels alive without distracting from the flywheel
+    // panel reading on the left half of the viewport.
+    const dockT = epilogueBand(epilogueProgress, "DOCK");
+    const dockCalm = 1 - 0.4 * dockT;
     // Corridor-entry gate: pointer + drift + static tilt all ramp from
     // 0 to 1 as the camera dolly releases at DOLLY_HOLD_END. While the
     // user is parked at the section-2 Thoughtform read the brandmark
@@ -128,7 +137,7 @@ export function BrandmarkAccretionShell() {
     // before the camera reaches Navigate.
     const enterFly = smoothstep(DOLLY_HOLD_END, DOLLY_HOLD_END + 0.06, paintProgress);
     const mouseCalm =
-      (1 - (1 - SUBSTRATE_GYRO_ENCODE_MOUSE_FLOOR) * layers.orbits) * planetCalm * enterFly;
+      (1 - (1 - SUBSTRATE_GYRO_ENCODE_MOUSE_FLOOR) * layers.orbits) * dockCalm * enterFly;
     const { mouseAmpDeg, idleSpeed } = useGyroLabStore.getState();
     const ampRad = ((mouseAmpDeg * Math.PI) / 180) * mouseCalm;
     const dt = Math.min(0.1, delta);
@@ -152,13 +161,13 @@ export function BrandmarkAccretionShell() {
         Math.sin(t * SUBSTRATE_GYRO_DRIFT_PITCH_FREQ * idleSpeed) *
         SUBSTRATE_GYRO_DRIFT_AMP *
         tiltCalm *
-        planetCalm *
+        dockCalm *
         enterFly;
       const driftRoll =
         Math.sin(t * SUBSTRATE_GYRO_DRIFT_ROLL_FREQ * idleSpeed + 1.2) *
         SUBSTRATE_GYRO_DRIFT_AMP *
         tiltCalm *
-        planetCalm *
+        dockCalm *
         enterFly;
 
       // Mouse amplitude is already calmed via `mouseCalm`; don't apply

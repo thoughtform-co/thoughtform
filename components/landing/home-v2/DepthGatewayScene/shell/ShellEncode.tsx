@@ -23,7 +23,6 @@ import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { COLOR_GOLD } from "@/components/landing/intelligence-artifact/artifactGeom";
 import { makeLineMaterial } from "@/components/landing/intelligence-artifact/artifactPrimitives";
-import { epilogueBand } from "@/lib/home-v2/epilogueTimeline";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import { getSmoothedAccretionLayers } from "../motionFollower";
 import {
@@ -199,7 +198,7 @@ export function ShellEncode({ layerKey, reducedMotion = false }: ShellEncodeProp
     const group = groupRef.current;
     if (!group) return;
 
-    const { epilogueProgress, active, armed } = useDepthGatewayStore.getState().transform;
+    const { active, armed } = useDepthGatewayStore.getState().transform;
     if (!active && !armed) {
       group.visible = false;
       return;
@@ -208,17 +207,12 @@ export function ShellEncode({ layerKey, reducedMotion = false }: ShellEncodeProp
     // Temporally-smoothed reveal (motionFollower) — the staggered
     // cartridge fold-in always plays out on wall-clock time, even
     // when the user flicks through the orbits window in one frame.
+    //
+    // Epilogue v4 (2026-06-10 flywheel pass): the BUILD_OUT clear is
+    // gone. The cartridges DOCK with the assembly and stay legible
+    // beside the flywheel panel through the whole epilogue.
     const reveal = getSmoothedAccretionLayers().orbits;
     if (reveal <= EMERGE_EPSILON) {
-      group.visible = false;
-      return;
-    }
-    // Epilogue v3 — Encode orbits + cardinal cartridges fade out on
-    // BUILD_OUT so the substrate cleanly sheds its instrument
-    // vocabulary before we start the approach. After the band
-    // resolves the group is hidden entirely to spare the GPU.
-    const epFade = 1 - epilogueBand(epilogueProgress, "BUILD_OUT");
-    if (epFade <= EMERGE_EPSILON) {
       group.visible = false;
       return;
     }
@@ -233,7 +227,7 @@ export function ShellEncode({ layerKey, reducedMotion = false }: ShellEncodeProp
       const stagger = reducedMotion ? 1 : cardinalStagger(reveal, cardinalIdx);
       const local = Math.min(1, stagger / ARC_LOCAL_DRAW_END);
       const arcT = smoother(local);
-      arcMats[i].opacity = arcT * SLOT_ARC_ALPHA * epFade;
+      arcMats[i].opacity = arcT * SLOT_ARC_ALPHA;
       const count = arcVertCounts[i];
       const drawn = Math.max(0, Math.min(count, Math.round(arcT * count)));
       arcGeoms[i].setDrawRange(0, drawn);
@@ -247,7 +241,7 @@ export function ShellEncode({ layerKey, reducedMotion = false }: ShellEncodeProp
       const stagger = reducedMotion ? 1 : cardinalStagger(reveal, cardinalIdx);
       const local = (stagger - BRACKET_LOCAL_START) / (BRACKET_LOCAL_END - BRACKET_LOCAL_START);
       const bracketT = smoother(Math.max(0, Math.min(1, local)));
-      bracketMats[i].opacity = bracketT * SLOT_BRACKET_ALPHA * epFade;
+      bracketMats[i].opacity = bracketT * SLOT_BRACKET_ALPHA;
     }
   });
 

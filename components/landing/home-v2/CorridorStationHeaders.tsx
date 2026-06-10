@@ -386,25 +386,15 @@ function StationBlock({
   );
 }
 
-// ── Signal (epilogue) block content ──────────────────────────────
-//
-// Title + paragraph for the new "billions on the same layer" beat
-// that appears as the user scrolls past Build. Drawn through the
-// SAME typewriter machinery as the other station blocks (per-char
-// spans, gold `<em>` accent, block cursor) so the rhythm matches.
-// Lives next to the station headers because the markup, type-out,
-// and `position: fixed` viewport anchor pattern are identical —
-// only the CSS variant (`--signal`) and the opacity driver differ.
-const SIGNAL_CONTENT: StationContent = {
-  titleHtml: "The labs just bet <em>billions</em> on the same layer.",
-  supportHtml: "Not a model problem. A deployment problem. Both labs just said so out loud.",
-};
+// Epilogue v4 (2026-06-10 flywheel pass): the standalone "billions on
+// the same layer" SIGNAL block is gone. The flywheel-in-practice panel
+// (`CorridorFlywheelPanel`) handles all post-Build copy on the LEFT
+// half of the viewport while the docked artifact reads on the right.
 
 export function CorridorStationHeaders() {
   const nav = stationById("navigate")?.content;
   const enc = stationById("diagnostic")?.content;
   const bld = stationById("intelligence")?.content;
-  const sig = SIGNAL_CONTENT;
 
   // Reduced-motion / SSR-safe detection. Cached at mount (a one-time
   // read is plenty; if the user toggles `prefers-reduced-motion` mid-
@@ -416,7 +406,7 @@ export function CorridorStationHeaders() {
   const typewriter = !reducedMotion;
 
   // Container + per-char ref state per station.
-  const stationRefs = useRef<Record<"nav" | "enc" | "bld" | "sig", StationRefs>>({
+  const stationRefs = useRef<Record<"nav" | "enc" | "bld", StationRefs>>({
     nav: {
       container: null,
       titleChars: [],
@@ -438,20 +428,12 @@ export function CorridorStationHeaders() {
       titleCursor: null,
       supportCursor: null,
     },
-    sig: {
-      container: null,
-      titleChars: [],
-      supportChars: [],
-      titleCursor: null,
-      supportCursor: null,
-    },
   });
 
-  const stationStates = useRef<Record<"nav" | "enc" | "bld" | "sig", StationState>>({
+  const stationStates = useRef<Record<"nav" | "enc" | "bld", StationState>>({
     nav: makeInitialState(),
     enc: makeInitialState(),
     bld: makeInitialState(),
-    sig: makeInitialState(),
   });
 
   // Last-written container opacities (suppress redundant DOM writes).
@@ -459,7 +441,6 @@ export function CorridorStationHeaders() {
     nav: number;
     enc: number;
     bld: number;
-    sig: number;
   } | null>(null);
 
   useEffect(() => {
@@ -471,25 +452,18 @@ export function CorridorStationHeaders() {
       const p = painting ? t.paintProgress : 0;
       const nowSec = performance.now() / 1000;
 
-      // Epilogue v3 (planet landing) — Build header fades out on
-      // BUILD_OUT [0.00, 0.22] and the billions title fades in on
-      // TITLE_IN [0.52, 0.74] (polish round 2 retune), landing as
-      // the camera completes the tilt-up to the surface POV. The
-      // gap between the two bands is filled by the fly-in and the
-      // landing tilt, so the user never has both titles on screen
-      // at once.
+      // Epilogue v4 (2026-06-10 flywheel pass) — only the Build
+      // station HEADER fades out on the new HEADER_OUT band so the
+      // centred Build cartouche cedes the frame to the docked
+      // artifact + flywheel panel. Every other corridor visual
+      // (substrate sphere, lanes, surface fan, chip column,
+      // cardinal labels, projected brandmark, progress rail) STAYS.
       const ep = t.epilogueProgress;
-      const buildOut = 1 - epilogueBand(ep, "BUILD_OUT");
-      const titleIn = epilogueBand(ep, "TITLE_IN");
+      const headerOut = 1 - epilogueBand(ep, "HEADER_OUT");
       const containerOps = {
         nav: bandOpacity(p, NAVIGATE_FADE_IN, NAVIGATE_FADE_OUT),
         enc: bandOpacity(p, ENCODE_FADE_IN, ENCODE_FADE_OUT),
-        bld: bandOpacity(p, BUILD_FADE_IN) * buildOut,
-        // Signal block — "The labs just bet billions on the same
-        // layer." Top-centre title that marks the end of the 3D
-        // space. Driven by the TITLE_IN band so it arrives after
-        // the planet landing has settled.
-        sig: titleIn,
+        bld: bandOpacity(p, BUILD_FADE_IN) * headerOut,
       };
 
       // Container opacity writes (suppress when no meaningful change).
@@ -498,11 +472,10 @@ export function CorridorStationHeaders() {
         !last ||
         Math.abs(last.nav - containerOps.nav) > 0.002 ||
         Math.abs(last.enc - containerOps.enc) > 0.002 ||
-        Math.abs(last.bld - containerOps.bld) > 0.002 ||
-        Math.abs(last.sig - containerOps.sig) > 0.002;
+        Math.abs(last.bld - containerOps.bld) > 0.002;
       if (containerChanged) {
         lastContainerOps.current = { ...containerOps };
-        for (const key of ["nav", "enc", "bld", "sig"] as const) {
+        for (const key of ["nav", "enc", "bld"] as const) {
           const el = stationRefs.current[key].container;
           if (el) el.style.opacity = containerOps[key].toFixed(3);
         }
@@ -525,14 +498,9 @@ export function CorridorStationHeaders() {
         const el = stationRefs.current[key].container;
         if (el) el.style.transform = cartoucheTransform;
       }
-      // Signal block keeps its base centred transform (no parallax)
-      // — it lives in the sky above the planet, not attached to the
-      // gimbal.
-      const sigEl = stationRefs.current.sig.container;
-      if (sigEl) sigEl.style.transform = "translate3d(-50%, 0, 0)";
 
       // Per-station typewriter pass.
-      for (const key of ["nav", "enc", "bld", "sig"] as const) {
+      for (const key of ["nav", "enc", "bld"] as const) {
         const refs = stationRefs.current[key];
         const state = stationStates.current[key];
         const op = containerOps[key];
@@ -683,9 +651,6 @@ export function CorridorStationHeaders() {
   const setBldRef = (el: HTMLDivElement | null) => {
     stationRefs.current.bld.container = el;
   };
-  const setSigRef = (el: HTMLDivElement | null) => {
-    stationRefs.current.sig.container = el;
-  };
 
   const navRegisterChars = (title: HTMLSpanElement[], support: HTMLSpanElement[]) => {
     stationRefs.current.nav.titleChars = title;
@@ -699,10 +664,6 @@ export function CorridorStationHeaders() {
     stationRefs.current.bld.titleChars = title;
     stationRefs.current.bld.supportChars = support;
   };
-  const sigRegisterChars = (title: HTMLSpanElement[], support: HTMLSpanElement[]) => {
-    stationRefs.current.sig.titleChars = title;
-    stationRefs.current.sig.supportChars = support;
-  };
 
   const navRegisterCursors = (title: HTMLSpanElement | null, support: HTMLSpanElement | null) => {
     stationRefs.current.nav.titleCursor = title;
@@ -715,10 +676,6 @@ export function CorridorStationHeaders() {
   const bldRegisterCursors = (title: HTMLSpanElement | null, support: HTMLSpanElement | null) => {
     stationRefs.current.bld.titleCursor = title;
     stationRefs.current.bld.supportCursor = support;
-  };
-  const sigRegisterCursors = (title: HTMLSpanElement | null, support: HTMLSpanElement | null) => {
-    stationRefs.current.sig.titleCursor = title;
-    stationRefs.current.sig.supportCursor = support;
   };
 
   return (
@@ -753,14 +710,6 @@ export function CorridorStationHeaders() {
           split
         />
       )}
-      <StationBlock
-        refSetter={setSigRef}
-        registerChars={sigRegisterChars}
-        registerCursors={sigRegisterCursors}
-        content={sig}
-        typewriter={typewriter}
-        variantClass="home-v2-station-header--signal"
-      />
     </div>
   );
 }

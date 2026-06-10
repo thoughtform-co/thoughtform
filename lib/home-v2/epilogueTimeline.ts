@@ -1,6 +1,6 @@
 /**
  * epilogueTimeline — single source of truth for the corridor's
- * post-Build epilogue (ADR-018 epilogue v3 "planet landing").
+ * post-Build epilogue (ADR-018 epilogue v4 "the flywheel in practice").
  *
  * The corridor saturates at `paintProgress === 1` (camera parked at
  * CAMERA_END, sphere parked at Intelligence). The epilogue then takes
@@ -9,36 +9,37 @@
  * epilogue reads its own SUB-BAND off this table so the choreography
  * stays declarative.
  *
- * v3 narrative (substrate-as-planet landing):
+ * v4 narrative (the flywheel in practice):
  *
- *   1. BUILD_OUT — Build chapter clears: header + sources/interfaces
- *      stack + Encode orbits + cardinal labels + gimbal armillary
- *      rings all fade out. Only the wireframe substrate globe stays,
- *      becoming the planet we're about to land on.
+ *   1. HEADER_OUT — Build station header ("Build on the substrate.")
+ *      fades out so the centred cartouche cedes the frame to the
+ *      docked artifact + the new flywheel panel.
  *
- *   2. APPROACH — Camera flies in from the parked CAMERA_END toward
- *      the substrate. The substrate globe scales up to planet size
- *      (so the small instrument becomes a world). The pointer-bank
- *      on the gyro calms to 0 (planets don't wobble with the mouse).
- *      The DOM guiding-star brandmark fades — once we're inside the
- *      planet radius it would sit at the centre of the world.
+ *   2. DOCK — The whole substrate composition (gimbal sphere +
+ *      sources lanes + surfaces fan + per-row chips + cardinal
+ *      labels + projected brandmark) shrinks and slides RIGHT into
+ *      the +X half of the viewport. Camera stays parked at
+ *      CAMERA_END — the WORLD docks, not the camera.
  *
- *   3. LAND — Camera orbits up over the pole and tilts so the surface
- *      fills the bottom of the viewport and the limb of the planet
- *      reads as the horizon. We end "standing on the substrate".
+ *   3. TITLE_IN — The flywheel panel's kicker + title "The flywheel
+ *      in practice." fades up on the LEFT half of the viewport.
  *
- *   4. TITLE_IN — "The labs just bet billions on the same layer."
- *      fades in at the top-centre of the viewport (in the sky above
- *      the horizon). The end of the 3D space; the title marks the
- *      transition to whatever section comes after.
+ *   4. FRAME_1 / FRAME_2 / FRAME_3 — Three retro-futuristic HUD
+ *      frames scroll into view one by one and ACCUMULATE
+ *      (Navigate / Encode / Build applied practically). Each frame
+ *      stays visible once revealed; the panel ends with all three
+ *      stacked beside the docked artifact.
+ *
+ * Design contract: every band consumer composes additively with the
+ * parked corridor. At `epilogueProgress === 0` every band returns 0,
+ * so the corridor->epilogue handoff is byte-identical inside the
+ * calibrated corridor.
  *
  * Authoring rule: bands are [start, end] in epilogueProgress space.
- * The stage's epilogue span is ~200svh after polish round 2
- * (2026-06-10; was 300svh), so each 0.1 of epilogueProgress is
- * ~20svh — about one fifth of a viewport.
+ * The stage's epilogue span is ~440svh after v4 (2026-06-10 flywheel
+ * pass; was 200svh planet-landing tail), so each 0.10 of
+ * epilogueProgress is ~44svh — about half a viewport.
  */
-
-import { EPILOGUE_PLANET_GROW } from "@/components/landing/home-v2/DepthGatewayScene/shell/shellGeom";
 
 /** Closed-form smoothstep used by every band consumer. Equivalent to
  *  GLSL's `smoothstep(a, b, p)` — eases the 0..1 ramp at both ends so
@@ -53,38 +54,41 @@ export function band(p: number, edge0: number, edge1: number): number {
 
 /** Each band's [start, end] in epilogueProgress (0..1).
  *
- *  Polish round 2 (2026-06-10): bands retuned so the title fades
- *  in DURING the landing arc instead of after it, and the camera
- *  flight resolves earlier. Combined with the shorter physical
- *  epilogue span (200svh vs 300svh), the Build → "billions"
- *  handoff now resolves in ~1 viewport of scroll. */
+ *  v4 (2026-06-10 flywheel pass): the planet-landing bands
+ *  (BUILD_OUT / APPROACH / LAND / TITLE_IN-billions) are gone. The
+ *  artifact stays visible — sphere, lanes, surface fan, chips, the
+ *  Navigate/Encode/Build cardinal labels, and the projected
+ *  brandmark all dock together. Only the Build station HEADER fades
+ *  (HEADER_OUT) because it would compete with the flywheel title. */
 export const EPILOGUE_BANDS = {
-  /** Build header + ShellStack (sources / surfaces lanes + pips) +
-   *  source/surface DOM labels + Encode orbits/cardinals + gimbal
-   *  armillary rings fade OUT. Sized to match the Navigate->Encode
-   *  and Encode->Build header fade windows so the Build chapter
-   *  exits on the same cadence as the prior chapters. After this
-   *  band the substrate is just the wireframe globe — the planet. */
-  BUILD_OUT: { start: 0.0, end: 0.22 } as const,
+  /** Build station header ("Build on the substrate.") fades out so
+   *  the docked artifact + flywheel panel claim the frame. The
+   *  rest of the Build composition (sources / surfaces / chips /
+   *  cardinals / brandmark) STAYS — it is what we are docking. */
+  HEADER_OUT: { start: 0.0, end: 0.1 } as const,
 
-  /** Camera flies in toward the substrate AND the substrate scales
-   *  up to planet size. Polish round 2: end pulled 0.62 -> 0.56 so
-   *  the planet grow finishes earlier, leaving room for LAND to
-   *  start during APPROACH's back half. */
-  APPROACH: { start: 0.1, end: 0.56 } as const,
+  /** The whole gyro assembly (sphere + lanes + fan + chips +
+   *  cardinals + projected brandmark) shrinks and slides right into
+   *  the +X half of the viewport. Camera stays parked. Composes
+   *  through `getEpilogueDockTransform` in `sceneGeom.ts`. */
+  DOCK: { start: 0.04, end: 0.24 } as const,
 
-  /** Camera orbits up over the pole and tilts so the surface fills
-   *  the bottom of the viewport and the limb reads as the horizon.
-   *  Polish round 2: window pulled 0.55/0.92 -> 0.48/0.86 so the
-   *  landing arc resolves earlier and overlaps the title fade. */
-  LAND: { start: 0.48, end: 0.86 } as const,
+  /** Flywheel panel TITLE ("The flywheel in practice.") fades up on
+   *  the LEFT half. Starts a touch before DOCK ends so the artifact
+   *  is on its way to its docked seat as the title arrives. */
+  TITLE_IN: { start: 0.14, end: 0.28 } as const,
 
-  /** Top-centre "billions" title fades in. Polish round 2:
-   *  pulled 0.7/0.9 -> 0.52/0.74 so the title rises DURING the
-   *  landing arc (~1 viewport into the epilogue at the new 200svh
-   *  span) instead of waiting until after it (~2.1 viewports at
-   *  the old 300svh span). */
-  TITLE_IN: { start: 0.52, end: 0.74 } as const,
+  /** Frame 1 — 01 NAVIGATE: every team starts here. Workshop
+   *  manifest. Scrolls into view; once revealed, persists. */
+  FRAME_1: { start: 0.28, end: 0.46 } as const,
+
+  /** Frame 2 — 02 ENCODE: the work feeds the layer. Record
+   *  pipeline. Persists. */
+  FRAME_2: { start: 0.48, end: 0.66 } as const,
+
+  /** Frame 3 — 03 BUILD: patterns become tools. Pattern detector
+   *  graduating to a tool. Persists. */
+  FRAME_3: { start: 0.68, end: 0.86 } as const,
 } as const;
 
 /** Helper that returns the eased 0..1 reveal for a named band. */
@@ -93,15 +97,29 @@ export function epilogueBand(epilogueProgress: number, band_: keyof typeof EPILO
   return band(epilogueProgress, w.start, w.end);
 }
 
-/** Uniform scale multiplier applied to the gimbal assembly across
- *  the EPILOGUE APPROACH band so the substrate globe grows into a
- *  planet. Composes on top of the parked `GYRO_ASSEMBLY_SCALE` in
- *  `BrandmarkAccretionShell.useFrame` (canvas) and
- *  `sceneGeom.gyroAssemblyWorldPosition` (DOM cardinal labels — they
- *  fade during BUILD_OUT, but stay welded while they fade).
- *
- *  Returns 1 inside the calibrated corridor (epilogueProgress == 0)
- *  so the corridor is byte-identical to its pre-epilogue self. */
-export function getEpiloguePlanetScale(epilogueProgress: number): number {
-  return 1 + (EPILOGUE_PLANET_GROW - 1) * epilogueBand(epilogueProgress, "APPROACH");
-}
+// ── Dock transform tunables ──────────────────────────────────────
+//
+// `getEpilogueDockTransform` in `sceneGeom.ts` reads these to compute
+// the per-frame world-X offset + uniform scale applied to the gyro
+// assembly during the DOCK band. They live here next to the bands so
+// the whole epilogue choreography stays in one declarative file.
+
+/** Final dock offset in NDC half-width units at peak DOCK. The
+ *  assembly centre slides this fraction of the camera frustum's
+ *  half-width at the parked Build distance into the +X half of the
+ *  viewport. 0.28 puts the sphere centre at ~64% viewport width.
+ *  Tuned against the SURFACE chips, which anchor `left-center` at
+ *  their fan tips and extend RIGHT (outward): at 0.42 the chips
+ *  cropped past the right HUD rail; 0.28 (paired with the 0.54
+ *  dock scale) keeps the rightmost chip clear of the right depth
+ *  gauge's tick numbers on 1280-1680 viewports. */
+export const EPILOGUE_DOCK_OFFSET_NDC = 0.28;
+
+/** Final uniform scale multiplier applied to the gyro assembly at
+ *  peak DOCK (composes with parked `GYRO_ASSEMBLY_SCALE`). 0.54
+ *  shrinks the sphere to ~54% of its parked apparent size — small
+ *  enough that both chip columns clear the flywheel panel (left)
+ *  and the depth gauge (right), large enough that the lanes /
+ *  surface fan / chip column still read as a live diagram, not a
+ *  thumbnail. */
+export const EPILOGUE_DOCK_SCALE = 0.54;

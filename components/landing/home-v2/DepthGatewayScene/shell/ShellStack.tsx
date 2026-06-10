@@ -57,7 +57,6 @@ import {
   makeMeshMaterial,
   makePointsMaterial,
 } from "@/components/landing/intelligence-artifact/artifactPrimitives";
-import { epilogueBand } from "@/lib/home-v2/epilogueTimeline";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import { getSmoothedAccretionLayers } from "../motionFollower";
 import { getStackColumnLocalX } from "../sceneGeom";
@@ -463,19 +462,19 @@ export function ShellStack({ layerKey, reducedMotion = false }: ShellStackProps)
     const group = groupRef.current;
     if (!group) return;
 
-    const { epilogueProgress, active, armed } = useDepthGatewayStore.getState().transform;
+    const { active, armed } = useDepthGatewayStore.getState().transform;
     if (!active && !armed) {
       group.visible = false;
       return;
     }
 
+    // Epilogue v4 (2026-06-10 flywheel pass): the BUILD_OUT clear is
+    // gone. The whole stack composition (sources lanes + surface fan +
+    // pips + motes) DOCKS with the assembly via
+    // `getEpilogueDockTransform` and stays legible beside the
+    // flywheel panel through the entire epilogue.
     const reveal = getSmoothedAccretionLayers().stack;
     if (reveal <= EMERGE_EPSILON) {
-      group.visible = false;
-      return;
-    }
-    const epFade = 1 - epilogueBand(epilogueProgress, "BUILD_OUT");
-    if (epFade <= EMERGE_EPSILON) {
       group.visible = false;
       return;
     }
@@ -495,13 +494,13 @@ export function ShellStack({ layerKey, reducedMotion = false }: ShellStackProps)
 
     // Stream + mote opacities track the cluster stagger so the field
     // lines fade up as their side arrives.
-    mats.sourceStream.opacity = sourcesSlideT * SOURCE_STREAM_OPACITY * epFade;
-    mats.surfaceStream.opacity = surfacesSlideT * SURFACE_STREAM_OPACITY * epFade;
-    mats.sourceMotes.opacity = sourcesSlideT * SOURCE_PIP_OPACITY * epFade;
-    mats.surfaceMotes.opacity = surfacesSlideT * SOURCE_PIP_OPACITY * epFade;
-    mats.sourcePip.opacity = SOURCE_PIP_OPACITY * epFade;
-    mats.surfacePipOutline.opacity = SURFACE_PIP_OPACITY * epFade;
-    mats.surfacePipFilled.opacity = SURFACE_PIP_OPACITY * 0.94 * epFade;
+    mats.sourceStream.opacity = sourcesSlideT * SOURCE_STREAM_OPACITY;
+    mats.surfaceStream.opacity = surfacesSlideT * SURFACE_STREAM_OPACITY;
+    mats.sourceMotes.opacity = sourcesSlideT * SOURCE_PIP_OPACITY;
+    mats.surfaceMotes.opacity = surfacesSlideT * SOURCE_PIP_OPACITY;
+    mats.sourcePip.opacity = SOURCE_PIP_OPACITY;
+    mats.surfacePipOutline.opacity = SURFACE_PIP_OPACITY;
+    mats.surfacePipFilled.opacity = SURFACE_PIP_OPACITY * 0.94;
 
     // Per-row dock — directional flow semantics (2026-06-10 flow
     // pass): SOURCES are inputs, so their pips ARRIVE from outside-
