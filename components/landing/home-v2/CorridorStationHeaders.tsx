@@ -187,6 +187,12 @@ interface StationBlockProps {
    *  different viewport positions (e.g. the lower-left "signal" block
    *  for the epilogue beat). */
   variantClass?: string;
+  /** Split cartouche layout (2026-06-10 polish round 4): the eyebrow +
+   *  title render in a `__head` band ABOVE the sphere and the support
+   *  paragraph renders in a `__support` band BELOW it. The corridor
+   *  stations use this; the epilogue signal block keeps the single
+   *  top-centre stack. */
+  split?: boolean;
 }
 
 /** Render one header block. When `typewriter` is true the title +
@@ -201,15 +207,26 @@ function StationBlock({
   content,
   typewriter,
   variantClass,
+  split = false,
 }: StationBlockProps) {
-  const containerClass = variantClass
-    ? `home-v2-station-header ${variantClass}`
-    : "home-v2-station-header";
+  const containerClass = [
+    "home-v2-station-header",
+    split ? "home-v2-station-header--split" : "",
+    variantClass ?? "",
+  ]
+    .filter(Boolean)
+    .join(" ");
   const titleTokens = useMemo(() => tokenize(content.titleHtml), [content.titleHtml]);
-  const supportTokens = useMemo(
-    () => (content.supportHtml ? tokenize(content.supportHtml) : []),
-    [content.supportHtml]
-  );
+  // Support copy may carry `<br>` separators — deliberate sentence-
+  // per-line breaks for the centred caption (2026-06-10 polish round
+  // 4). The tokenizer drops unknown tags, so split FIRST, tokenize
+  // each line, and render each line as a block-level span. The flat
+  // char registration below concatenates lines in order so the
+  // typewriter machinery is untouched.
+  const supportLineTokens = useMemo(() => {
+    if (!content.supportHtml) return [] as CharToken[][];
+    return content.supportHtml.split(/<br\s*\/?>/i).map((line) => tokenize(line.trim()));
+  }, [content.supportHtml]);
 
   const titleSpanRefs = useRef<HTMLSpanElement[]>([]);
   const supportSpanRefs = useRef<HTMLSpanElement[]>([]);
@@ -224,13 +241,12 @@ function StationBlock({
   useEffect(() => {
     registerChars(titleSpanRefs.current, supportSpanRefs.current);
     registerCursors(titleCursorRef.current, supportCursorRef.current);
-  }, [registerChars, registerCursors, titleTokens, supportTokens]);
+  }, [registerChars, registerCursors, titleTokens, supportLineTokens]);
 
   // Cartouche chrome — small PT Mono kicker row above the title with
   // flanking hairline rules and a centre diamond. Renders for the
   // corridor stations (`content.kicker` is supplied) but NOT for the
-  // signal block (kicker undefined). Drives the "instrument caption"
-  // read for the bottom-centre cartouche layout.
+  // signal block (kicker undefined).
   const kicker = content.kicker;
   const cartoucheChrome = kicker ? (
     <div className="home-v2-station-header__chrome" aria-hidden="true">
@@ -243,18 +259,33 @@ function StationBlock({
   ) : null;
 
   if (!typewriter) {
-    return (
-      <div ref={refSetter} className={containerClass} style={{ opacity: 0 }}>
+    const head = (
+      <>
         {cartoucheChrome}
         <h2
           className="home-v2-station-header__title"
           dangerouslySetInnerHTML={{ __html: content.titleHtml }}
         />
-        {content.supportHtml && (
-          <p
-            className="home-v2-station-header__support"
-            dangerouslySetInnerHTML={{ __html: content.supportHtml }}
-          />
+      </>
+    );
+    const support = content.supportHtml ? (
+      <p
+        className="home-v2-station-header__support"
+        dangerouslySetInnerHTML={{ __html: content.supportHtml }}
+      />
+    ) : null;
+    return (
+      <div ref={refSetter} className={containerClass} style={{ opacity: 0 }}>
+        {split ? (
+          <>
+            <div className="home-v2-station-header__head">{head}</div>
+            {support && <div className="home-v2-station-header__foot">{support}</div>}
+          </>
+        ) : (
+          <>
+            {head}
+            {support}
+          </>
         )}
       </div>
     );
@@ -266,70 +297,105 @@ function StationBlock({
   // heading + paragraph carry `aria-label` with the plain text and
   // their visible char spans are `aria-hidden`.
   const titlePlain = titleTokens.map((t) => t.ch).join("");
-  const supportPlain = supportTokens.map((t) => t.ch).join("");
+  const supportPlain = supportLineTokens.map((line) => line.map((t) => t.ch).join("")).join(" ");
+
+  // Flat char index across support lines — the typewriter machinery
+  // reads `supportChars` as one flat sequence, so each rendered span
+  // registers at its global index regardless of which visual line it
+  // sits on.
+  let supportCharCursor = 0;
+
+  const titleEl = (
+    <h2 className="home-v2-station-header__title" aria-label={titlePlain}>
+      <span aria-hidden="true">
+        {titleTokens.map((tok, idx) => (
+          <span
+            key={`t-${idx}`}
+            ref={(el) => {
+              if (el) titleSpanRefs.current[idx] = el;
+            }}
+            className={
+              tok.em
+                ? "home-v2-station-header__char home-v2-station-header__char--em"
+                : "home-v2-station-header__char"
+            }
+            style={{ opacity: 0 }}
+          >
+            {/* Render the real character — including a real space —
+                so the browser can word-wrap at space boundaries. */}
+            {tok.ch}
+          </span>
+        ))}
+        <span
+          ref={titleCursorRef}
+          className="home-v2-station-header__cursor"
+          style={{ opacity: 0 }}
+        >
+          {"\u2588"}
+        </span>
+      </span>
+    </h2>
+  );
+
+  const supportEl =
+    supportLineTokens.length > 0 ? (
+      <p className="home-v2-station-header__support" aria-label={supportPlain}>
+        <span aria-hidden="true">
+          {supportLineTokens.map((lineTokens, li) => {
+            const isLast = li === supportLineTokens.length - 1;
+            return (
+              <span key={`sl-${li}`} className="home-v2-station-header__line">
+                {lineTokens.map((tok, idx) => {
+                  const globalIdx = supportCharCursor++;
+                  return (
+                    <span
+                      key={`s-${li}-${idx}`}
+                      ref={(el) => {
+                        if (el) supportSpanRefs.current[globalIdx] = el;
+                      }}
+                      className={
+                        tok.em
+                          ? "home-v2-station-header__char home-v2-station-header__char--em"
+                          : "home-v2-station-header__char"
+                      }
+                      style={{ opacity: 0 }}
+                    >
+                      {tok.ch}
+                    </span>
+                  );
+                })}
+                {isLast && (
+                  <span
+                    ref={supportCursorRef}
+                    className="home-v2-station-header__cursor"
+                    style={{ opacity: 0 }}
+                  >
+                    {"\u2588"}
+                  </span>
+                )}
+              </span>
+            );
+          })}
+        </span>
+      </p>
+    ) : null;
 
   return (
     <div ref={refSetter} className={containerClass} style={{ opacity: 0 }}>
-      {cartoucheChrome}
-      <h2 className="home-v2-station-header__title" aria-label={titlePlain}>
-        <span aria-hidden="true">
-          {titleTokens.map((tok, idx) => (
-            <span
-              key={`t-${idx}`}
-              ref={(el) => {
-                if (el) titleSpanRefs.current[idx] = el;
-              }}
-              className={
-                tok.em
-                  ? "home-v2-station-header__char home-v2-station-header__char--em"
-                  : "home-v2-station-header__char"
-              }
-              style={{ opacity: 0 }}
-            >
-              {/* Render the real character — including a real space —
-                  so the browser can word-wrap at space boundaries.
-                  Using a non-breaking space here would force the whole
-                  line onto one row. */}
-              {tok.ch}
-            </span>
-          ))}
-          <span
-            ref={titleCursorRef}
-            className="home-v2-station-header__cursor"
-            style={{ opacity: 0 }}
-          >
-            {"\u2588"}
-          </span>
-        </span>
-      </h2>
-      {content.supportHtml && (
-        <p className="home-v2-station-header__support" aria-label={supportPlain}>
-          <span aria-hidden="true">
-            {supportTokens.map((tok, idx) => (
-              <span
-                key={`s-${idx}`}
-                ref={(el) => {
-                  if (el) supportSpanRefs.current[idx] = el;
-                }}
-                className={
-                  tok.em
-                    ? "home-v2-station-header__char home-v2-station-header__char--em"
-                    : "home-v2-station-header__char"
-                }
-                style={{ opacity: 0 }}
-              >
-                {tok.ch}
-              </span>
-            ))}
-            <span
-              ref={supportCursorRef}
-              className="home-v2-station-header__cursor"
-              style={{ opacity: 0 }}
-            >
-              {"\u2588"}
-            </span>
-          </span>
-        </p>
+      {split ? (
+        <>
+          <div className="home-v2-station-header__head">
+            {cartoucheChrome}
+            {titleEl}
+          </div>
+          {supportEl && <div className="home-v2-station-header__foot">{supportEl}</div>}
+        </>
+      ) : (
+        <>
+          {cartoucheChrome}
+          {titleEl}
+          {supportEl}
+        </>
       )}
     </div>
   );
@@ -679,6 +745,7 @@ export function CorridorStationHeaders() {
           registerCursors={navRegisterCursors}
           content={nav}
           typewriter={typewriter}
+          split
         />
       )}
       {enc && (
@@ -688,6 +755,7 @@ export function CorridorStationHeaders() {
           registerCursors={encRegisterCursors}
           content={enc}
           typewriter={typewriter}
+          split
         />
       )}
       {bld && (
@@ -697,6 +765,7 @@ export function CorridorStationHeaders() {
           registerCursors={bldRegisterCursors}
           content={bld}
           typewriter={typewriter}
+          split
         />
       )}
       <StationBlock

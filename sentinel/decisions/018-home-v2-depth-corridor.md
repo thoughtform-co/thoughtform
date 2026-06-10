@@ -11,6 +11,86 @@
 
 ---
 
+## 2026-06-10 Revision (v3.14) — Polish round 4: split cartouche + magnetic field streams
+
+Same-day follow-up to v3.13 from live review:
+
+### 1. Split cartouche (title above, caption below)
+
+The single bottom-centre cartouche crowded the lower band (kicker
+row collided with the Build kicker + CRAFT cardinal). The corridor
+station headers now use a SPLIT layout
+(`.home-v2-station-header--split` in
+[home-v2.css](../../components/landing/home-v2/home-v2.css)):
+
+- `__head` band (chrome eyebrow + title) sits ABOVE the sphere at
+  `top: clamp(44px, 7vh, 96px)`.
+- `__foot` band (support paragraph) sits BELOW at
+  `bottom: clamp(32px, 5.5vh, 72px)`.
+- Support font bumped `15/1.25/18 → 17/1.45/21`; colour `0.78 →
+0.82` dawn — the caption reads with weight, not as a footnote.
+- The epilogue signal block keeps the single top-centre stack
+  (unchanged layout, `split` prop false).
+
+### 2. Sentence-per-line caption breaks
+
+Support copy now carries `<br>` separators
+([corridorMap.ts](../../lib/home-v2/corridorMap.ts));
+[CorridorStationHeaders.tsx](../../components/landing/home-v2/CorridorStationHeaders.tsx)
+splits on them BEFORE tokenizing (the tokenizer drops unknown tags)
+and renders each line as a block-level `__line` span. The flat
+char registration is preserved so the typewriter machinery is
+untouched; the cursor sits at the end of the last line. Mobile
+`StationTitle` renders the raw HTML where `<br>` works natively.
+
+### 3. Columns tightened + headers lowered
+
+- `STACK_COLUMN_X_CAP` 2.16 → **1.92** — columns hug the sphere on
+  wide viewports instead of drifting to the frame edges.
+- `STACK_LANE_Y_RANGE` 1.05 → **0.95**, `STACK_FAN_HALF_HEIGHT`
+  1.15 → **1.05** — compact manifest read.
+- Column header anchors `Y +1.45 → +1.24` — the headers were
+  sliding under the HUD top bar ("fall out of the interface").
+
+### 4. Magnetic field streams (aperture ports retired)
+
+The v3 aperture-port diamonds ("rotated squares inside the sphere")
+are gone. [ShellStack.tsx](../../components/landing/home-v2/DepthGatewayScene/shell/ShellStack.tsx)
+replaces the straight lane/fan lines with curved field-line streams:
+
+- SOURCE streams: quadratic-bezier swoop from the pip toward the
+  sphere, then a wrap of ~66° around the globe at orbit radius
+  0.86 → 0.78 (just outside the dotted shell, inside the gimbal
+  rings), fading to 5% colour along the wrap — the stream reads as
+  absorbed into the substrate.
+- SURFACE streams: the same in reverse — fading in from a wrap,
+  emerging on the right hemisphere, straightening out to the tip.
+- Upper rows wrap over the top of the sphere, lower rows under it;
+  alternating ±0.26 Z-drift pushes successive wraps in front of /
+  behind the globe — the bundle reads volumetric / organic.
+- Per-vertex `vertexColors` carry the wrap fade
+  (`LineBasicMaterial({ vertexColors: true })`); material opacity
+  carries the reveal envelope. Rendered via `<threeLine>` strips
+  (extend registered locally, idempotent with ShellSubstrateGyro's).
+- Motes now ride the SAME sampled polylines (`advanceCurveMotes` /
+  `samplePolyline`) so particle flow and field lines agree exactly.
+  Sources flow pip → wrap (absorbed); surfaces flow wrap → tip
+  (emitted). Distinct periods (5.2s / 6.4s) avoid metronome sync.
+- `buildLaneLinesGeometry` / `buildFanLinesGeometry` /
+  `buildLinearMotes` imports dropped from this module.
+
+### Verification (1440x900)
+
+- Build park: streams visibly curve into / out of the sphere and
+  wrap around it; no port diamonds; columns + chips inside frame;
+  eyebrow + title above, two-line caption below.
+- Encode park: eyebrow + title clear of the JUDGMENT cardinal; two
+  caption lines balanced ("…was stuck in heads." / "Now it's a
+  brief…").
+- Navigate park: clean instrument composition, sphere centre-stage.
+
+---
+
 ## 2026-06-10 Revision (v3.13) — Polish round 3: stack v3 registry columns + bottom-centre cartouche
 
 Hard course correction on the Build park. v3.12 ("polish round 2") shipped a

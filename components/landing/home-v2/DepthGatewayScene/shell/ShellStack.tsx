@@ -1,43 +1,42 @@
 "use client";
 
 /**
- * ShellStack — Build accretion layer (stack v3, 2026-06-10 polish r3).
+ * ShellStack — Build accretion layer (stack v3.1, 2026-06-10 polish r4).
  *
  * Two compact registry columns flanking the intelligence-layer
  * sphere: 5 trusted-source rows (green) on the left, 6 headless-
- * surface rows (dawn) on the right. Each row is a diamond pip
- * connected to the sphere via a static dotted lane (sources) or
- * fan ray (surfaces), through the existing aperture ports at
- * `±0.85` shell-local.
+ * surface rows (dawn) on the right. Each row is a diamond pip whose
+ * stream BLENDS INTO the sphere as a curved magnetic-field line:
  *
- * Stack v3 fixes the v2 cropping disaster:
+ *   - SOURCE streams flow from the pip toward the sphere, then wrap
+ *     partway AROUND the globe (radius just above the dotted shell)
+ *     like a field line being captured — fading out along the wrap
+ *     so the energy reads as absorbed into the substrate.
+ *   - SURFACE streams emerge FROM a wrap around the sphere (fading
+ *     in from the orbit) and straighten out to their tip pip — the
+ *     same field-line read in reverse: capability radiating out of
+ *     the layer onto each surface.
  *
- *   - Column X is computed LIVE from the camera frustum via
- *     `getStackColumnLocalX(aspect)` in `sceneGeom.ts`, so the
- *     layout fits 1.5:1 just as well as 16:9 (the previous fixed
- *     ±2.4 always cropped on narrow desktop aspects).
- *   - Lanes / fan are STATIC channels — only the per-row pips slide
- *     INWARD from a small `STACK_ROW_SLIDE_LOCAL_X` offset, so
- *     nothing inside the cluster ever travels off-screen.
- *   - The cluster-level `foldEmerge` (1.45x position overshoot, the
- *     v2 off-frame culprit) is gone. Reveal cadence comes from the
- *     existing per-row `stackItemLock` stagger only — clean snap
- *     into each lane / port, no dramatic flight-in.
- *   - Surface tip diamonds shrink to match source pip size
- *     (`STACK_TIP_OUTLINE_SCALE` / `STACK_TIP_INNER_SCALE`) — the v2
- *     full-`PYLON_CAP_SIZE` outline read as giant detached diamonds.
+ *   Upper rows wrap over the top of the sphere; lower rows wrap
+ *   under it; alternating Z-drift pushes successive wraps in front
+ *   of / behind the globe so the bundle reads volumetric, organic —
+ *   not a ruled diagram. The v3 aperture-port diamonds (the "rotated
+ *   squares") are gone; the curve itself is the connection.
  *
- * DOM labels grow INWARD toward the sphere (sources `left-center` →
- * text extends right; surfaces `right-center` → text extends left)
- * via the live column X in `sceneGeom.COPY_ANCHORS` — text can never
- * exit the viewport because it only ever extends toward x = 0.
+ * Layout fixes carried from stack v3:
  *
- * Geometry rebuilds on resize (the column X changes with the live
- * aspect ratio); a debounced `resize` listener updates `liveAspect`
- * state, which keys the `useMemo` chain.
+ *   - Column X computed LIVE from the camera frustum via
+ *     `getStackColumnLocalX(aspect)` — fits every desktop aspect.
+ *   - Per-row pips slide INWARD a short distance and lock in
+ *     sequence (`stackItemLock`); no cluster-level overshoot —
+ *     nothing ever travels off-screen.
+ *   - DOM chips grow inward toward the sphere (sceneGeom anchors).
+ *
+ * Motes flow along the same curves (sampled polylines), so the
+ * particle flow and the field lines agree exactly.
  */
 
-import { useFrame, useThree } from "@react-three/fiber";
+import { extend, useFrame } from "@react-three/fiber";
 import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import {
@@ -47,12 +46,8 @@ import {
   lerp,
 } from "@/components/landing/intelligence-artifact/artifactGeom";
 import {
-  advanceLinearMotes,
   buildDiamondGeometry,
-  buildFanLinesGeometry,
   buildFilledDiamondGeometry,
-  buildLaneLinesGeometry,
-  buildLinearMotes,
   makeLineMaterial,
   makeMeshMaterial,
   makePointsMaterial,
@@ -72,40 +67,65 @@ import {
   STACK_MOTES_PER_RAY,
   STACK_PIP_SCALE,
   STACK_ROW_SLIDE_LOCAL_X,
-  STACK_SUBSTRATE_X,
   STACK_TIP_INNER_SCALE,
   STACK_TIP_OUTLINE_SCALE,
 } from "./shellGeom";
+
+// `<line>` collides with the SVG intrinsic; the typed alias
+// `<threeLine>` needs the runtime catalog entry (see
+// ShellSubstrateGyro for the original registration — repeating it
+// here is idempotent and keeps this module self-sufficient).
+extend({ ThreeLine: THREE.Line });
 
 interface ShellStackProps {
   layerKey: "stack";
   reducedMotion?: boolean;
 }
 
-const SOURCE_LANE_OPACITY = 0.65;
+const SOURCE_STREAM_OPACITY = 0.7;
 const SOURCE_PIP_OPACITY = 0.95;
-const SURFACE_FAN_OPACITY = 0.6;
+const SURFACE_STREAM_OPACITY = 0.62;
 const SURFACE_PIP_OPACITY = 0.9;
 
 /** Cluster-level stagger overlap. 0.30 gives a clear sources →
- *  surfaces handoff while still feeling like one motion. The
- *  cluster stagger now only drives lane/fan opacity fades + sequences
- *  the per-row stagger; no group position offset. */
+ *  surfaces handoff while still feeling like one motion. */
 const STACK_CLUSTER_OVERLAP = 0.3;
-/** Per-row lock stagger inside its cluster's window. Each row
- *  scale-snaps + slides inward a short distance in sequence. */
+/** Per-row lock stagger inside its cluster's window. */
 const STACK_ITEM_OVERLAP = 0.55;
 const STACK_ITEM_SCALE_FLOOR = 0.6;
 const STACK_ITEM_OVERSHOOT = 0.12;
+
+// ── Field-stream curve tuning (polish round 4) ────────────────────
+//
+// The wrap orbit sits just outside the dotted globe
+// (`SUBSTRATE_GYRO_GLOBE_RADIUS` 0.72) and inside the gimbal rings
+// (1.0+), so the field lines hug the sphere without colliding with
+// the ring cage.
+/** Orbit radius where the stream meets the sphere (junction). */
+const STREAM_ORBIT_R0 = 0.86;
+/** Orbit radius at the wrap tail — tightens slightly so the line
+ *  reads as being captured by the sphere. */
+const STREAM_ORBIT_R1 = 0.78;
+/** Wrap sweep (radians). ~66° of orbit per stream. */
+const STREAM_WRAP_SWEEP = 1.15;
+/** Out-of-plane Z drift at the wrap tail. Alternates sign per row so
+ *  successive wraps pass in front of / behind the globe. */
+const STREAM_WRAP_Z = 0.26;
+/** Tail colour multiplier — the wrap fades toward the void so the
+ *  stream reads as absorbed / emitted rather than chopped. */
+const STREAM_TAIL_FADE = 0.05;
+/** Vertical spread of the junction points on the sphere (radians off
+ *  the horizontal axis, scaled by the row's normalised Y). */
+const STREAM_ENTRY_SPREAD = 0.5;
+const STREAM_SAMPLES_APPROACH = 16;
+const STREAM_SAMPLES_WRAP = 20;
 
 function smootherStack(t: number): number {
   const x = t < 0 ? 0 : t > 1 ? 1 : t;
   return x * x * x * (x * (x * 6 - 15) + 10);
 }
 
-/** Per-row lock progress + scale + inward slide. Used for source
- *  pips and surface tips. `slide` 0..1 ramps from "outer offset"
- *  (row pre-dock) to 1 (row docked at column X). */
+/** Per-row lock progress + scale + inward slide. */
 export function stackItemLock(
   clusterStagger: number,
   idx: number,
@@ -119,16 +139,13 @@ export function stackItemLock(
   return { scale: base + overshoot, locked: s, slide: eased };
 }
 
-/** Compute the live viewport aspect for the stack column layout.
- *  Falls back to 16:9 in non-browser contexts. */
 function readLiveAspect(): number {
   if (typeof window === "undefined" || !window.innerHeight) return 16 / 9;
   return window.innerWidth / window.innerHeight;
 }
 
-/** React hook: live aspect ratio, debounced resize listener. The
- *  geometry `useMemo` chain depends on this so the lanes/fan rebuild
- *  whenever the column X changes (resize, devtools open/close). */
+/** Live aspect ratio with a debounced resize listener — keys the
+ *  geometry `useMemo` chain so the columns rebuild on resize. */
 function useStackLiveAspect(): number {
   const [aspect, setAspect] = useState(() => readLiveAspect());
   useEffect(() => {
@@ -148,6 +165,189 @@ function useStackLiveAspect(): number {
   return aspect;
 }
 
+// ── Field-stream curve builders ───────────────────────────────────
+
+interface StreamCurve {
+  /** Sampled polyline in FLOW order (pip → wrap tail for sources;
+   *  wrap tail → tip for surfaces). */
+  points: THREE.Vector3[];
+  /** Flat RGB per point (vertexColors). */
+  colors: number[];
+}
+
+/** Quadratic Bezier sample. */
+function qBezier(p0: THREE.Vector3, c: THREE.Vector3, p1: THREE.Vector3, t: number): THREE.Vector3 {
+  const a = (1 - t) * (1 - t);
+  const b = 2 * (1 - t) * t;
+  const d = t * t;
+  return new THREE.Vector3(
+    a * p0.x + b * c.x + d * p1.x,
+    a * p0.y + b * c.y + d * p1.y,
+    a * p0.z + b * c.z + d * p1.z
+  );
+}
+
+/** SOURCE stream: pip → swoop toward the sphere → wrap around it.
+ *  Flow order: index 0 at the pip, last index at the faded wrap
+ *  tail. Upper rows wrap over the top (theta decreasing from ~π);
+ *  lower rows wrap under the bottom. */
+function buildSourceStream(y0: number, colX: number, rowIdx: number): StreamCurve {
+  const base = new THREE.Color(COLOR_SOURCES);
+  const points: THREE.Vector3[] = [];
+  const colors: number[] = [];
+
+  const yNorm = y0 / Math.max(0.001, STACK_LANE_Y_RANGE);
+  // Junction on the LEFT hemisphere: theta near π, offset by the
+  // row's vertical position so upper rows meet the sphere high.
+  const theta0 = Math.PI - yNorm * STREAM_ENTRY_SPREAD;
+  const junction = new THREE.Vector3(
+    Math.cos(theta0) * STREAM_ORBIT_R0,
+    Math.sin(theta0) * STREAM_ORBIT_R0,
+    0
+  );
+  const p0 = new THREE.Vector3(-colX, y0, 0);
+  // Control point: mostly horizontal pull from the pip so the stream
+  // leaves the column flat, then bends into the sphere.
+  const ctrl = new THREE.Vector3(lerp(p0.x, junction.x, 0.62), lerp(p0.y, junction.y, 0.18), 0);
+
+  for (let s = 0; s < STREAM_SAMPLES_APPROACH; s++) {
+    const t = s / STREAM_SAMPLES_APPROACH; // excludes 1 (junction owned by wrap)
+    points.push(qBezier(p0, ctrl, junction, t));
+    colors.push(base.r, base.g, base.b);
+  }
+
+  // Wrap: upper rows sweep over the top (theta decreasing), lower
+  // rows under the bottom (theta increasing). Z alternates per row.
+  const sweepDir = y0 >= 0 ? -1 : 1;
+  const zDir = rowIdx % 2 === 0 ? 1 : -1;
+  for (let s = 0; s <= STREAM_SAMPLES_WRAP; s++) {
+    const t = s / STREAM_SAMPLES_WRAP;
+    const theta = theta0 + sweepDir * STREAM_WRAP_SWEEP * t;
+    const r = lerp(STREAM_ORBIT_R0, STREAM_ORBIT_R1, t);
+    const z = Math.sin((t * Math.PI) / 2) * STREAM_WRAP_Z * zDir;
+    points.push(new THREE.Vector3(Math.cos(theta) * r, Math.sin(theta) * r, z));
+    const fade = 1 - (1 - STREAM_TAIL_FADE) * t;
+    colors.push(base.r * fade, base.g * fade, base.b * fade);
+  }
+
+  return { points, colors };
+}
+
+/** SURFACE stream: faint wrap around the sphere → emerges on the
+ *  right → straightens out to the tip. Flow order: index 0 at the
+ *  faded wrap tail, last index at the tip pip. */
+function buildSurfaceStream(y1: number, colX: number, rowIdx: number): StreamCurve {
+  const base = new THREE.Color(COLOR_SURFACES);
+  const points: THREE.Vector3[] = [];
+  const colors: number[] = [];
+
+  const yNorm = y1 / Math.max(0.001, STACK_FAN_HALF_HEIGHT);
+  // Junction on the RIGHT hemisphere: theta near 0, offset by row Y.
+  const theta1 = yNorm * STREAM_ENTRY_SPREAD;
+  // Wrap tail sits deeper around the sphere: upper rows arrive from
+  // over the top (theta1 + sweep), lower rows from under the bottom.
+  const sweepDir = y1 >= 0 ? 1 : -1;
+  const zDir = rowIdx % 2 === 0 ? -1 : 1;
+
+  for (let s = 0; s < STREAM_SAMPLES_WRAP; s++) {
+    const t = s / STREAM_SAMPLES_WRAP; // 0 = tail, 1 = junction (owned by bezier start below)
+    const theta = theta1 + sweepDir * STREAM_WRAP_SWEEP * (1 - t);
+    const r = lerp(STREAM_ORBIT_R1, STREAM_ORBIT_R0, t);
+    const z = Math.sin(((1 - t) * Math.PI) / 2) * STREAM_WRAP_Z * zDir;
+    points.push(new THREE.Vector3(Math.cos(theta) * r, Math.sin(theta) * r, z));
+    const fade = STREAM_TAIL_FADE + (1 - STREAM_TAIL_FADE) * t;
+    colors.push(base.r * fade, base.g * fade, base.b * fade);
+  }
+
+  const junction = new THREE.Vector3(
+    Math.cos(theta1) * STREAM_ORBIT_R0,
+    Math.sin(theta1) * STREAM_ORBIT_R0,
+    0
+  );
+  const p1 = new THREE.Vector3(colX, y1, 0);
+  const ctrl = new THREE.Vector3(lerp(p1.x, junction.x, 0.62), lerp(p1.y, junction.y, 0.18), 0);
+
+  for (let s = 0; s <= STREAM_SAMPLES_APPROACH; s++) {
+    const t = s / STREAM_SAMPLES_APPROACH;
+    points.push(qBezier(junction, ctrl, p1, t));
+    colors.push(base.r, base.g, base.b);
+  }
+
+  return { points, colors };
+}
+
+function curveToGeometry(curve: StreamCurve): THREE.BufferGeometry {
+  const positions = new Float32Array(curve.points.length * 3);
+  for (let i = 0; i < curve.points.length; i++) {
+    positions[i * 3] = curve.points[i].x;
+    positions[i * 3 + 1] = curve.points[i].y;
+    positions[i * 3 + 2] = curve.points[i].z;
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+  g.setAttribute("color", new THREE.BufferAttribute(new Float32Array(curve.colors), 3));
+  return g;
+}
+
+/** Sample a polyline at normalised u ∈ [0,1) (linear between the two
+ *  nearest samples). */
+function samplePolyline(points: THREE.Vector3[], u: number, out: THREE.Vector3): void {
+  const n = points.length;
+  if (n === 0) {
+    out.set(0, 0, 0);
+    return;
+  }
+  const f = Math.max(0, Math.min(0.99999, u)) * (n - 1);
+  const i = Math.floor(f);
+  const frac = f - i;
+  const a = points[i];
+  const b = points[Math.min(n - 1, i + 1)];
+  out.set(lerp(a.x, b.x, frac), lerp(a.y, b.y, frac), lerp(a.z, b.z, frac));
+}
+
+interface CurveMotes {
+  geometry: THREE.BufferGeometry;
+  /** Per-mote: which curve + phase offset. */
+  laneIdx: Uint8Array;
+  phase: Float32Array;
+}
+
+function buildCurveMotes(curveCount: number, motesPerCurve: number): CurveMotes {
+  const total = curveCount * motesPerCurve;
+  const positions = new Float32Array(total * 3);
+  const laneIdx = new Uint8Array(total);
+  const phase = new Float32Array(total);
+  for (let c = 0; c < curveCount; c++) {
+    for (let m = 0; m < motesPerCurve; m++) {
+      const i = c * motesPerCurve + m;
+      laneIdx[i] = c;
+      // Deterministic phase scatter (golden-ratio stride) so motes
+      // distribute evenly without RNG flicker across rebuilds.
+      phase[i] = (m / motesPerCurve + c * 0.618) % 1;
+    }
+  }
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+  return { geometry, laneIdx, phase };
+}
+
+const MOTE_SAMPLE = new THREE.Vector3();
+
+function advanceCurveMotes(motes: CurveMotes, curves: StreamCurve[], flowT: number): void {
+  const posAttr = motes.geometry.getAttribute("position") as THREE.BufferAttribute;
+  const arr = posAttr.array as Float32Array;
+  for (let i = 0; i < motes.phase.length; i++) {
+    const curve = curves[motes.laneIdx[i]];
+    if (!curve) continue;
+    const u = (motes.phase[i] + flowT) % 1;
+    samplePolyline(curve.points, u, MOTE_SAMPLE);
+    arr[i * 3] = MOTE_SAMPLE.x;
+    arr[i * 3 + 1] = MOTE_SAMPLE.y;
+    arr[i * 3 + 2] = MOTE_SAMPLE.z;
+  }
+  posAttr.needsUpdate = true;
+}
+
 export function ShellStack({ layerKey, reducedMotion = false }: ShellStackProps) {
   void layerKey;
   const groupRef = useRef<THREE.Group>(null);
@@ -155,28 +355,12 @@ export function ShellStack({ layerKey, reducedMotion = false }: ShellStackProps)
   const surfacesGroupRef = useRef<THREE.Group>(null);
   const sourceMotesRef = useRef<THREE.Points>(null);
   const surfaceMotesRef = useRef<THREE.Points>(null);
-  // Per-pip / per-tip group refs so each row can be independently
-  // scaled and slid inward via its `stackItemLock` window.
   const sourcePipRefs = useRef<(THREE.Group | null)[]>([]);
   const surfaceTipRefs = useRef<(THREE.Group | null)[]>([]);
-  const sourceLanePeakOp = useRef(SOURCE_LANE_OPACITY);
-  const surfaceFanPeakOp = useRef(SURFACE_FAN_OPACITY);
 
-  // Live column X — recomputed on resize via `useStackLiveAspect`. The
-  // R3F viewport is also subscribed below for fov/aspect (kept for
-  // future fov tuning); this hook is the resize source of truth.
   const liveAspect = useStackLiveAspect();
   const colX = useMemo(() => getStackColumnLocalX(liveAspect), [liveAspect]);
-  const r3f = useThree((s) => s.viewport);
-  void r3f;
 
-  // Per-row Y positions (5 sources / 6 surfaces). The DOM-side anchor
-  // arrays in `sceneGeom.STACK_SOURCE_ITEMS` / `STACK_SURFACE_ITEMS`
-  // use the same `lerp(-Y_RANGE, Y_RANGE, ...)` derivation, so DOM
-  // labels and canvas pips are guaranteed to share Y values.
-  // Per-row Y positions — `STACK_*_COUNT` are constants >= 2, so the
-  // divide-by-(count-1) is always safe. Keeping the math inline so
-  // TypeScript can verify the literal types match the runtime use.
   const sourceYs = useMemo(() => {
     const out: number[] = [];
     const denom = STACK_LANE_COUNT - 1;
@@ -194,35 +378,8 @@ export function ShellStack({ layerKey, reducedMotion = false }: ShellStackProps)
     return out;
   }, []);
 
-  // Source lane endpoints — fixed channels from the column X to the
-  // source aperture port at -0.85. Each lane funnels INWARD toward
-  // the port: end-Y compresses to 25% of the start-Y so the bundle
-  // converges visually as the channels approach the sphere.
-  const sourceLaneEnds = useMemo(() => {
-    const starts: Array<[number, number, number]> = [];
-    const ends: Array<[number, number, number]> = [];
-    for (let i = 0; i < STACK_LANE_COUNT; i++) {
-      const y = sourceYs[i];
-      starts.push([-colX, y, 0]);
-      ends.push([STACK_SUBSTRATE_X - 0.85, y * 0.25, 0]);
-    }
-    return { starts, ends };
-  }, [colX, sourceYs]);
-
-  // Surface fan destinations — diverging from the surface aperture
-  // port at +0.85 to each surface tip at the column X.
-  const surfaceFanEnds = useMemo(() => {
-    const dests: Array<[number, number, number]> = [];
-    for (let i = 0; i < STACK_FAN_COUNT; i++) {
-      const y = surfaceYs[i];
-      dests.push([colX, y, 0]);
-    }
-    return dests;
-  }, [colX, surfaceYs]);
-
-  // Parked pip / tip world positions — these are the ANCHOR points
-  // each row slides inward to. Per-frame, each pip's
-  // `node.position.x` is set to the slide-blended value below.
+  // Parked pip / tip positions — the per-frame slide writes
+  // `position.x` toward these column anchors.
   const sourcePipPositions = useMemo(
     () => sourceYs.map((y) => [-colX, y, 0] as [number, number, number]),
     [colX, sourceYs]
@@ -232,81 +389,70 @@ export function ShellStack({ layerKey, reducedMotion = false }: ShellStackProps)
     [colX, surfaceYs]
   );
 
+  // Field-stream curves + geometries (rebuilt on column-X change).
+  const streams = useMemo(() => {
+    const sourceCurves = sourceYs.map((y, i) => buildSourceStream(y, colX, i));
+    const surfaceCurves = surfaceYs.map((y, i) => buildSurfaceStream(y, colX, i));
+    return {
+      sourceCurves,
+      surfaceCurves,
+      sourceGeoms: sourceCurves.map(curveToGeometry),
+      surfaceGeoms: surfaceCurves.map(curveToGeometry),
+    };
+  }, [colX, sourceYs, surfaceYs]);
+
+  const motes = useMemo(
+    () => ({
+      source: buildCurveMotes(STACK_LANE_COUNT, STACK_MOTES_PER_LANE),
+      surface: buildCurveMotes(STACK_FAN_COUNT, STACK_MOTES_PER_RAY),
+    }),
+    []
+  );
+
   const geoms = useMemo(() => {
-    const sourceLanes = buildLaneLinesGeometry(
-      STACK_LANE_COUNT,
-      -colX,
-      STACK_SUBSTRATE_X - 0.85,
-      STACK_LANE_Y_RANGE,
-      0
-    );
-    const surfaceFan = buildFanLinesGeometry([STACK_SUBSTRATE_X + 0.85, 0, 0], surfaceFanEnds);
-    const sourceMotes = buildLinearMotes(
-      sourceLaneEnds.starts,
-      sourceLaneEnds.ends,
-      STACK_MOTES_PER_LANE
-    );
-    const surfaceStarts: Array<[number, number, number]> = surfaceFanEnds.map(() => [
-      STACK_SUBSTRATE_X + 0.85,
-      0,
-      0,
-    ]);
-    const surfaceMotes = buildLinearMotes(surfaceStarts, surfaceFanEnds, STACK_MOTES_PER_RAY);
     const sourcePipFilled = buildFilledDiamondGeometry(PYLON_CAP_SIZE * STACK_PIP_SCALE);
-    // Stack v3 (2026-06-10) — surface tips shrink to match the source
-    // pip read; was full `PYLON_CAP_SIZE` for the outline.
     const surfacePipOutline = buildDiamondGeometry(PYLON_CAP_SIZE * STACK_TIP_OUTLINE_SCALE);
     const surfacePipFilled = buildFilledDiamondGeometry(PYLON_CAP_SIZE * STACK_TIP_INNER_SCALE);
-    // Aperture ports — kept at the previous size; their position
-    // `[±0.85, 0, 0]` is independent of the column X so they sit at
-    // a fixed sphere-edge anchor regardless of viewport.
-    const aperturePortOutline = buildDiamondGeometry(PYLON_CAP_SIZE * 1.5);
-    const aperturePortInner = buildFilledDiamondGeometry(PYLON_CAP_SIZE * 0.6);
-
-    return {
-      sourceLanes,
-      surfaceFan,
-      sourceMotes,
-      surfaceMotes,
-      sourcePipFilled,
-      surfacePipOutline,
-      surfacePipFilled,
-      aperturePortOutline,
-      aperturePortInner,
-    };
-  }, [colX, sourceLaneEnds, surfaceFanEnds]);
+    return { sourcePipFilled, surfacePipOutline, surfacePipFilled };
+  }, []);
 
   const mats = useMemo(
     () => ({
-      sourceLanes: makeLineMaterial(COLOR_SOURCES, SOURCE_LANE_OPACITY, false),
-      surfaceFan: makeLineMaterial(COLOR_SURFACES, SURFACE_FAN_OPACITY, false),
-      sourceMotes: makePointsMaterial(COLOR_SOURCES, SOURCE_PIP_OPACITY, 0.05, false),
-      surfaceMotes: makePointsMaterial(COLOR_SURFACES, SOURCE_PIP_OPACITY, 0.05, false),
+      // vertexColors carry the per-point wrap fade; material opacity
+      // carries the cluster reveal envelope.
+      sourceStream: new THREE.LineBasicMaterial({
+        vertexColors: true,
+        transparent: true,
+        opacity: SOURCE_STREAM_OPACITY,
+        depthWrite: false,
+      }),
+      surfaceStream: new THREE.LineBasicMaterial({
+        vertexColors: true,
+        transparent: true,
+        opacity: SURFACE_STREAM_OPACITY,
+        depthWrite: false,
+      }),
+      sourceMotes: makePointsMaterial(COLOR_SOURCES, SOURCE_PIP_OPACITY, 0.045, false),
+      surfaceMotes: makePointsMaterial(COLOR_SURFACES, SOURCE_PIP_OPACITY, 0.045, false),
       sourcePip: makeMeshMaterial(COLOR_SOURCES, SOURCE_PIP_OPACITY),
       surfacePipOutline: makeLineMaterial(COLOR_SURFACES, SURFACE_PIP_OPACITY, true),
       surfacePipFilled: makeMeshMaterial(COLOR_SURFACES, SURFACE_PIP_OPACITY * 0.94),
-      sourceApertureOutline: makeLineMaterial(COLOR_SOURCES, SOURCE_PIP_OPACITY, true),
-      sourceApertureInner: makeMeshMaterial(COLOR_SOURCES, SOURCE_PIP_OPACITY * 0.7),
-      surfaceApertureOutline: makeLineMaterial(COLOR_SURFACES, SURFACE_PIP_OPACITY, true),
-      surfaceApertureInner: makeMeshMaterial(COLOR_SURFACES, SURFACE_PIP_OPACITY * 0.7),
     }),
     []
   );
 
   useEffect(() => {
     return () => {
-      geoms.sourceLanes.dispose();
-      geoms.surfaceFan.dispose();
-      geoms.sourceMotes.geometry.dispose();
-      geoms.surfaceMotes.geometry.dispose();
+      streams.sourceGeoms.forEach((g) => g.dispose());
+      streams.surfaceGeoms.forEach((g) => g.dispose());
+      motes.source.geometry.dispose();
+      motes.surface.geometry.dispose();
       geoms.sourcePipFilled.dispose();
       geoms.surfacePipOutline.dispose();
       geoms.surfacePipFilled.dispose();
-      geoms.aperturePortOutline.dispose();
-      geoms.aperturePortInner.dispose();
       Object.values(mats).forEach((m) => m.dispose());
     };
-  }, [geoms, mats]);
+  }, [streams, motes, geoms, mats]);
 
   useFrame(({ clock }) => {
     const group = groupRef.current;
@@ -336,38 +482,24 @@ export function ShellStack({ layerKey, reducedMotion = false }: ShellStackProps)
     const surfacesSlideT = reducedMotion ? 1 : smootherStack(surfacesStagger);
 
     if (sourcesGroupRef.current) {
-      // No cluster-level slide or fold-emerge any more — the cluster
-      // group sits at the parked origin; reveal cadence is per-row.
       sourcesGroupRef.current.visible = sourcesSlideT > EMERGE_EPSILON;
-      sourcesGroupRef.current.scale.setScalar(1);
-      sourcesGroupRef.current.position.set(0, 0, 0);
     }
     if (surfacesGroupRef.current) {
       surfacesGroupRef.current.visible = surfacesSlideT > EMERGE_EPSILON;
-      surfacesGroupRef.current.scale.setScalar(1);
-      surfacesGroupRef.current.position.set(0, 0, 0);
     }
 
-    // Lane / fan opacity tracks the cluster-level stagger so the
-    // channels appear FIRST (waiting to receive their pips), then
-    // each row docks into its lane via the per-row slide below.
-    mats.sourceLanes.opacity = sourcesSlideT * sourceLanePeakOp.current * epFade;
-    mats.surfaceFan.opacity = surfacesSlideT * surfaceFanPeakOp.current * epFade;
+    // Stream + mote opacities track the cluster stagger so the field
+    // lines fade up as their side arrives.
+    mats.sourceStream.opacity = sourcesSlideT * SOURCE_STREAM_OPACITY * epFade;
+    mats.surfaceStream.opacity = surfacesSlideT * SURFACE_STREAM_OPACITY * epFade;
     mats.sourceMotes.opacity = sourcesSlideT * SOURCE_PIP_OPACITY * epFade;
     mats.surfaceMotes.opacity = surfacesSlideT * SOURCE_PIP_OPACITY * epFade;
     mats.sourcePip.opacity = SOURCE_PIP_OPACITY * epFade;
     mats.surfacePipOutline.opacity = SURFACE_PIP_OPACITY * epFade;
     mats.surfacePipFilled.opacity = SURFACE_PIP_OPACITY * 0.94 * epFade;
-    mats.sourceApertureOutline.opacity = sourcesSlideT * SOURCE_PIP_OPACITY * epFade;
-    mats.sourceApertureInner.opacity = sourcesSlideT * SOURCE_PIP_OPACITY * 0.7 * epFade;
-    mats.surfaceApertureOutline.opacity = surfacesSlideT * SURFACE_PIP_OPACITY * epFade;
-    mats.surfaceApertureInner.opacity = surfacesSlideT * SURFACE_PIP_OPACITY * 0.7 * epFade;
 
-    // Per-row dock: each pip slides INWARD from a small outer offset
-    // (`STACK_ROW_SLIDE_LOCAL_X`) to its parked column position, plus
-    // the per-row scale snap with a tiny landing overshoot. The slide
-    // and the lane channels mean every frame of the animation has the
-    // pip inside or just outside its column — never off-screen.
+    // Per-row dock: pips slide inward from a small outer offset and
+    // scale-snap in sequence.
     for (let i = 0; i < sourcePipRefs.current.length; i++) {
       const node = sourcePipRefs.current[i];
       if (!node) continue;
@@ -378,7 +510,6 @@ export function ShellStack({ layerKey, reducedMotion = false }: ShellStackProps)
       }
       const lock = stackItemLock(sourcesStagger, i, sourcePipRefs.current.length);
       node.scale.setScalar(lock.scale);
-      // Outer offset blends to 0 as `slide` lerps 0..1.
       node.position.x = -colX - STACK_ROW_SLIDE_LOCAL_X * (1 - lock.slide);
     }
     for (let i = 0; i < surfaceTipRefs.current.length; i++) {
@@ -394,13 +525,17 @@ export function ShellStack({ layerKey, reducedMotion = false }: ShellStackProps)
       node.position.x = colX + STACK_ROW_SLIDE_LOCAL_X * (1 - lock.slide);
     }
 
+    // Motes ride the field-line curves — sources flow pip → wrap
+    // (absorbed into the sphere); surfaces flow wrap → tip (emitted
+    // out of the sphere). Different periods keep the two sides from
+    // reading as a synchronised metronome.
     if (!reducedMotion) {
       const t = clock.elapsedTime;
       if (sourceMotesRef.current && sourcesSlideT > EMERGE_EPSILON) {
-        advanceLinearMotes(geoms.sourceMotes, (t / 3.4) % 1);
+        advanceCurveMotes(motes.source, streams.sourceCurves, (t / 5.2) % 1);
       }
       if (surfaceMotesRef.current && surfacesSlideT > EMERGE_EPSILON) {
-        advanceLinearMotes(geoms.surfaceMotes, (t / 4.2) % 1);
+        advanceCurveMotes(motes.surface, streams.surfaceCurves, (t / 6.4) % 1);
       }
     }
   });
@@ -408,32 +543,20 @@ export function ShellStack({ layerKey, reducedMotion = false }: ShellStackProps)
   return (
     <group ref={groupRef} visible={false}>
       <group ref={sourcesGroupRef} visible={false}>
-        <lineSegments
-          geometry={geoms.sourceLanes}
-          material={mats.sourceLanes}
-          frustumCulled={false}
-        />
+        {streams.sourceGeoms.map((g, i) => (
+          <threeLine
+            key={`stack-src-stream-${i}`}
+            geometry={g}
+            material={mats.sourceStream}
+            frustumCulled={false}
+          />
+        ))}
         <points
           ref={sourceMotesRef}
-          geometry={geoms.sourceMotes.geometry}
+          geometry={motes.source.geometry}
           material={mats.sourceMotes}
           frustumCulled={false}
         />
-        {/* Source aperture port — fixed at the sphere edge (-0.85),
-            independent of the column X so the funnel reads as
-            `pip → channel → port → sphere` regardless of viewport. */}
-        <group position={[STACK_SUBSTRATE_X - 0.85, 0, 0]}>
-          <lineLoop
-            geometry={geoms.aperturePortOutline}
-            material={mats.sourceApertureOutline}
-            frustumCulled={false}
-          />
-          <mesh
-            geometry={geoms.aperturePortInner}
-            material={mats.sourceApertureInner}
-            frustumCulled={false}
-          />
-        </group>
         {sourcePipPositions.map((pos, i) => (
           <group
             key={`stack-src-${i}`}
@@ -452,29 +575,20 @@ export function ShellStack({ layerKey, reducedMotion = false }: ShellStackProps)
       </group>
 
       <group ref={surfacesGroupRef} visible={false}>
-        <lineSegments
-          geometry={geoms.surfaceFan}
-          material={mats.surfaceFan}
-          frustumCulled={false}
-        />
+        {streams.surfaceGeoms.map((g, i) => (
+          <threeLine
+            key={`stack-srf-stream-${i}`}
+            geometry={g}
+            material={mats.surfaceStream}
+            frustumCulled={false}
+          />
+        ))}
         <points
           ref={surfaceMotesRef}
-          geometry={geoms.surfaceMotes.geometry}
+          geometry={motes.surface.geometry}
           material={mats.surfaceMotes}
           frustumCulled={false}
         />
-        <group position={[STACK_SUBSTRATE_X + 0.85, 0, 0]}>
-          <lineLoop
-            geometry={geoms.aperturePortOutline}
-            material={mats.surfaceApertureOutline}
-            frustumCulled={false}
-          />
-          <mesh
-            geometry={geoms.aperturePortInner}
-            material={mats.surfaceApertureInner}
-            frustumCulled={false}
-          />
-        </group>
         {surfaceTipPositions.map((pos, i) => (
           <group
             key={`stack-srf-${i}`}

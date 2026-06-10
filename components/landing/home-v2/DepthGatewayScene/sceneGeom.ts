@@ -1169,8 +1169,13 @@ function intelligenceApproachDepthOffset(progress: number): number {
 /** Live shell-local X for the source/surface columns at the Build park
  *  (DOM anchors + canvas pip positions both call this so they stay
  *  welded). Returns a NEGATIVE value for the source side (the caller
- *  applies the sign). */
-const STACK_COLUMN_X_CAP = 2.16;
+ *  applies the sign).
+ *
+ *  Polish round 4 (2026-06-10): cap trimmed 2.16 -> 1.92 so the
+ *  columns hug the sphere tighter on wide viewports — the previous
+ *  cap let the registry columns drift toward the frame edges on
+ *  16:9+, which read as oversized/detached. */
+const STACK_COLUMN_X_CAP = 1.92;
 const STACK_COLUMN_MARGIN = 0.4;
 export function getStackColumnLocalX(aspect: number): number {
   const fovDeg = getCameraFov(aspect);
@@ -1957,7 +1962,10 @@ export const COPY_ANCHORS: readonly WorldAnchor[] = [
     id: "intelligence.sourcesLabel",
     position: (transform) => {
       const colX = getStackColumnLocalX(getLiveAspectForStack());
-      return gyroAssemblyWorldPosition(transform, [-colX, 1.45, 0]);
+      // Polish round 4: header anchor pulled 1.45 -> 1.24 — the
+      // previous height pushed the header block under the HUD top
+      // bar ("falls out of the interface").
+      return gyroAssemblyWorldPosition(transform, [-colX, 1.24, 0]);
     },
     visibilityBeats: ["passthrough-02", "intelligence"],
     fadeFrac: 0.14,
@@ -1972,7 +1980,9 @@ export const COPY_ANCHORS: readonly WorldAnchor[] = [
     id: "intelligence.surfacesLabel",
     position: (transform) => {
       const colX = getStackColumnLocalX(getLiveAspectForStack());
-      return gyroAssemblyWorldPosition(transform, [colX, 1.45, 0]);
+      // Polish round 4: header anchor pulled 1.45 -> 1.24 (see
+      // sourcesLabel note).
+      return gyroAssemblyWorldPosition(transform, [colX, 1.24, 0]);
     },
     visibilityBeats: ["passthrough-02", "intelligence"],
     fadeFrac: 0.14,

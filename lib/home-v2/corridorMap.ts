@@ -269,13 +269,13 @@ export const CORRIDOR_MAP = [
       // command→navigate shift; gold em on "navigating" reinforces
       // the station verb.
       //
-      // Stack v3 caption pass (2026-06-10): condensed for the new
-      // bottom-centre cartouche (one-line read), keeping the alien-
-      // intelligence framing and the navigate verb but trimming the
-      // tail — the centred caption format makes long phrasing read
-      // as overcrowded.
+      // Stack v3 caption pass (2026-06-10): condensed for the centred
+      // cartouche. Polish round 4: the `<br>` is a deliberate
+      // sentence-per-line break — CorridorStationHeaders splits on it
+      // and renders each line as a block, so the caption reads as two
+      // clean balanced lines instead of an awkward wrap.
       supportHtml:
-        "Trained on us, but it doesn't think like us — so you stop commanding and start <em>navigating</em>: where it leads, and where you do.",
+        "Trained on us, but it doesn't think like us.<br>So you stop commanding and start <em>navigating</em> — where it leads, and where you do.",
       telemetry: {
         sector: "STATION 01",
         callsign: "NAV-01",
@@ -307,8 +307,9 @@ export const CORRIDOR_MAP = [
       // inherit. Gold em on "brief" names the encoded artefact.
       // Stack v3 caption pass (2026-06-10): condensed for the
       // centred cartouche while keeping the heads-to-brief beat.
+      // Polish round 4: `<br>` = sentence-per-line break.
       supportHtml:
-        "The judgment that makes your work good was stuck in heads. Now it's a <em>brief</em> the model inherits instead of guessing.",
+        "The judgment that makes your work good was stuck in heads.<br>Now it's a <em>brief</em> the model inherits instead of guessing.",
       telemetry: {
         sector: "STATION 02",
         callsign: "ENC-02",
@@ -349,9 +350,10 @@ export const CORRIDOR_MAP = [
       // mirrors the Thoughtform spine "...until they own it."
       // Stack v3 caption pass (2026-06-10): condensed for the
       // centred cartouche while keeping ownership + survives-the-
-      // next-model anchor.
+      // next-model anchor. Polish round 4: `<br>` = sentence-per-
+      // line break.
       supportHtml:
-        "Encoded once, it's <em>owned capability</em> — running across chat, agents, and your own apps, surviving the next model.",
+        "Encoded once, it's <em>owned capability</em> — running across chat, agents, and your own apps.<br>And surviving the next model.",
       telemetry: {
         sector: "STATION 03",
         callsign: "BLD-03",

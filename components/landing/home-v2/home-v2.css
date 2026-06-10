@@ -209,14 +209,13 @@ html[data-corridor-epilogue="true"] .home-v2-stage__canvas canvas {
 
 .home-v2-station-header {
   position: fixed;
-  /* Stack v3 / cartouche pivot (2026-06-10) — the corridor station
-     headers move from the upper-left stack (anime.js-style IA) to a
-     bottom-centre instrument cartouche. The cartouche reads as a
-     navigational caption attached to the centre instrument, leaving
-     the upper field clear for the corridor depth read (wormhole
-     mouth, distant glow). The boosted Navigate sphere's bottom edge
-     sits at ~82% of the viewport, so the cartouche band (~84-97%
-     vh) clears it across the calibrated aspect range.
+  /* Base anchor = bottom-centre stack (used by the epilogue signal
+     block via its own top override). The three corridor stations use
+     the `--split` modifier below, which turns the container into a
+     full-height wrapper with the eyebrow + title in a band ABOVE the
+     sphere and the support paragraph in a band BELOW it (2026-06-10
+     polish round 4 — the single bottom cartouche crowded the lower
+     band and collided with the Build kicker + CRAFT cardinal).
 
      The base `transform: translate3d(-50%, 0, 0)` centres the block
      horizontally; `CorridorStationHeaders` overwrites the inline
@@ -238,6 +237,43 @@ html[data-corridor-epilogue="true"] .home-v2-stage__canvas canvas {
   /* No CSS transitions — opacity + transform are driven by per-frame
      writes from `CorridorStationHeaders` so they stay in lock-step
      with the scroll-driven paintProgress + gyro bank. */
+}
+
+/* Split cartouche (corridor stations) — full-height wrapper, head
+   band above the sphere, foot band below it. */
+.home-v2-station-header--split {
+  top: 0;
+  bottom: 0;
+  width: min(92vw, 1200px);
+  display: block;
+}
+
+.home-v2-station-header__head {
+  position: absolute;
+  /* Above the sphere: the (boosted) gimbal ring's top edge sits at
+     ~17.5% viewport height, so the head band lives in ~5-16%. */
+  top: clamp(44px, 7vh, 96px);
+  left: 0;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(8px, 1vw, 14px);
+}
+
+.home-v2-station-header__foot {
+  position: absolute;
+  bottom: clamp(32px, 5.5vh, 72px);
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+}
+
+/* Explicit caption lines — support copy carries `<br>` separators
+   (sentence-per-line breaks); each line renders as its own block. */
+.home-v2-station-header__line {
+  display: block;
 }
 
 /* Cartouche chrome row — short hairline rule + diamond + PT Mono
@@ -297,16 +333,18 @@ html[data-corridor-epilogue="true"] .home-v2-stage__canvas canvas {
 
 .home-v2-station-header__support {
   margin: 0;
-  max-width: min(64vw, 680px);
+  /* Wide enough that the explicit `<br>` lines never re-wrap at
+     desktop widths — the authored sentence-per-line breaks ARE the
+     layout (2026-06-10 polish round 4). */
+  max-width: min(84vw, 920px);
   font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
-  /* Slightly smaller than the upper-left stack version since the
-     centred caption reads as a single line or two; matches the
-     `--signal` block scale so the three corridor parks and the
-     epilogue title share one rhythm. */
-  font-size: clamp(15px, 1.25vw, 18px);
-  line-height: 1.45;
+  /* Bumped 15/1.25/18 -> 17/1.45/21 (2026-06-10 polish round 4) so
+     the caption paragraph reads with real weight under the sphere
+     instead of as a footnote. */
+  font-size: clamp(17px, 1.45vw, 21px);
+  line-height: 1.5;
   letter-spacing: 0.005em;
-  color: rgba(235, 227, 214, 0.78);
+  color: rgba(235, 227, 214, 0.82);
   text-align: center;
 }
 

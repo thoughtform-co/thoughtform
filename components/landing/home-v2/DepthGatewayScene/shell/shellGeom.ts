@@ -364,15 +364,15 @@ export const STACK_SUBSTRATE_X = 0;
 export const STACK_SURFACES_X = 2.16;
 
 export const STACK_LANE_COUNT = 5;
-/** Source column vertical spread. Bumped 0.85 -> 1.05 (stack v3,
- *  2026-06-10) so the 5 source rows have a tighter, more legible
- *  rhythm in the new registry-column layout. */
-export const STACK_LANE_Y_RANGE = 1.05;
+/** Source column vertical spread. Polish round 4 (2026-06-10):
+ *  1.05 -> 0.95 — the columns shrink toward the sphere equator so
+ *  the registry reads as a compact manifest, not a full-height
+ *  ladder. */
+export const STACK_LANE_Y_RANGE = 0.95;
 export const STACK_FAN_COUNT = 6;
-/** Surface column vertical spread. Bumped 1.05 -> 1.15 (stack v3,
- *  2026-06-10) so the 6 surface rows distribute evenly across a
- *  span that matches the (slightly taller) source column. */
-export const STACK_FAN_HALF_HEIGHT = 1.15;
+/** Surface column vertical spread. Polish round 4 (2026-06-10):
+ *  1.15 -> 1.05 — matches the tightened source column rhythm. */
+export const STACK_FAN_HALF_HEIGHT = 1.05;
 export const STACK_MOTES_PER_LANE = 12;
 export const STACK_MOTES_PER_RAY = 8;
 
