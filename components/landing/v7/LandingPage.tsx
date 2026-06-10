@@ -80,13 +80,35 @@ export function LandingPage({
   // remounts / bfcache restores, leaving the portal attached to a
   // detached node. A tiny nested root lets us tear down and re-create
   // the corridor whenever the live placeholder changes.
+  //
+  // Polish round 2 (2026-06-10): hardened the mount guard. The old
+  // guard short-circuited whenever the placeholder DOM node identity
+  // matched the cached ref — but if the nested React root died (HMR
+  // crash, bfcache restore that detached the React internals, or any
+  // path that left the placeholder DOM node intact but empty), the
+  // early-return skipped remount and the corridor section read as a
+  // ~820svh blank void. The new guard ALSO requires that the cached
+  // root is still recorded AND that the mount node has children; if
+  // either is false the placeholder is treated as stale and we
+  // recreate the root. A `pageshow` listener with `persisted=true`
+  // covers the bfcache back-navigation case explicitly.
   useLayoutEffect(() => {
     const root = rootRef.current;
     if (!root || !corridorText) return;
 
     const mountCorridor = () => {
       const mount = root.querySelector<HTMLElement>(`#${corridorMountId}`);
-      if (!mount || mount === corridorMountRef.current) return;
+      if (!mount) return;
+
+      const sameNode = mount === corridorMountRef.current;
+      const rootAlive = corridorRootRef.current != null;
+      // Healthy renders leave at least the `.home-corridor-host`
+      // wrapper as a child. An empty placeholder with cached ref
+      // identity is the smoking gun for "root died but DOM node
+      // survived" — recover by tearing down (no-op if the root is
+      // already gone) and recreating.
+      const hasContent = mount.childNodes.length > 0;
+      if (sameNode && rootAlive && hasContent) return;
 
       corridorRootRef.current?.unmount();
       corridorMountRef.current = mount;
@@ -102,8 +124,18 @@ export function LandingPage({
     const observer = new MutationObserver(mountCorridor);
     observer.observe(root, { childList: true, subtree: true });
 
+    // bfcache back-navigation: the page is restored as a snapshot,
+    // effects don't re-run, but the React tree may have been detached.
+    // Re-running mountCorridor here is a cheap belt-and-braces — if
+    // the existing render is healthy the new guard short-circuits.
+    const onPageShow = (event: PageTransitionEvent) => {
+      if (event.persisted) mountCorridor();
+    };
+    window.addEventListener("pageshow", onPageShow);
+
     return () => {
       observer.disconnect();
+      window.removeEventListener("pageshow", onPageShow);
       corridorRootRef.current?.unmount();
       corridorRootRef.current = null;
       corridorMountRef.current = null;

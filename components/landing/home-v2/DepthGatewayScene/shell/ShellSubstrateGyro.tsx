@@ -19,9 +19,18 @@
  * PRODUCTION SAFETY: only mounts when `gyroLabStore.enabled` (default false).
  */
 
-import { useFrame } from "@react-three/fiber";
+import { extend, useFrame } from "@react-three/fiber";
 import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
+
+// `<line>` collides with the SVG intrinsic; r3f exposes the typed
+// alias `<threeLine>` for `THREE.Line`, but the auto-`extend(THREE)`
+// inside `<Canvas>` populates the runtime catalog with `Line`, not
+// `ThreeLine`. Without an explicit extend the dev/prod runtime
+// throws `R3F: ThreeLine is not part of the THREE namespace!` the
+// first time the gimbal sphere reveals. Register the alias once at
+// module load so the trim-path rings render. (2026-06-10 fix.)
+extend({ ThreeLine: THREE.Line });
 import { COLOR_DAWN, COLOR_GOLD } from "@/components/landing/intelligence-artifact/artifactGeom";
 import {
   buildDiamondGeometry,

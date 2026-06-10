@@ -398,10 +398,11 @@ export function CorridorStationHeaders() {
 
       // Epilogue v3 (planet landing) — Build header fades out on
       // BUILD_OUT [0.00, 0.22] and the billions title fades in on
-      // TITLE_IN [0.70, 0.90], landing as the camera completes the
-      // tilt-up to the surface POV. The big gap between the two
-      // bands is filled by the fly-in and the landing tilt, so the
-      // user never has both titles on screen at once.
+      // TITLE_IN [0.52, 0.74] (polish round 2 retune), landing as
+      // the camera completes the tilt-up to the surface POV. The
+      // gap between the two bands is filled by the fly-in and the
+      // landing tilt, so the user never has both titles on screen
+      // at once.
       const ep = t.epilogueProgress;
       const buildOut = 1 - epilogueBand(ep, "BUILD_OUT");
       const titleIn = epilogueBand(ep, "TITLE_IN");

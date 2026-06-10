@@ -76,8 +76,17 @@ const STACK_CLUSTER_OVERLAP = 0.3;
 
 /** Off-screen X offset at cluster stagger = 0. Picked so the cluster
  *  is clearly outside the gate frame at parked distance 6.2 (FOV 38°,
- *  16:9). Negative for sources, positive for surfaces. */
-export const STACK_SLOT_X_OFFSET = 8;
+ *  16:9). Negative for sources, positive for surfaces.
+ *
+ *  Polish round 2 (2026-06-10): trimmed 8 -> 3.0. The previous 8
+ *  put the cluster at the parent-local X ~= ±10.4 at slide=0 (after
+ *  GYRO_ASSEMBLY_SCALE), which was so far off-frame the user only
+ *  ever saw the LAST sliver of the slide animation — most of the
+ *  fly-in was cropped out. 3.0 starts the cluster just outside the
+ *  parked frustum (parent-local ~= ±5.4 → world ~= ±6.4 after
+ *  scale; frustum half-width at park distance 6.2 is ~3.79), so
+ *  the slide arc reads in-frame instead of as a final pop. */
+export const STACK_SLOT_X_OFFSET = 3.0;
 
 /** Forward (toward-camera, +Z local) offset at cluster stagger = 0
  *  (v3.3 "fly in from outside the wormhole" pass). The clusters start
@@ -88,8 +97,14 @@ export const STACK_SLOT_X_OFFSET = 8;
  *  and surfaces arriving from the surrounding space rather than sliding
  *  flatly in from the wings. Local units (the assembly is scaled by
  *  GYRO_ASSEMBLY_SCALE); kept modest so the clusters stay between the
- *  camera and the substrate (no clip past the near plane). */
-export const STACK_SLOT_Z_OFFSET = 2.6;
+ *  camera and the substrate (no clip past the near plane).
+ *
+ *  Polish round 2 (2026-06-10): trimmed 2.6 -> 1.6. The previous
+ *  2.6 made the clusters loom huge near the camera at slide=0
+ *  (the perspective scaling exaggerated the off-frame X), which
+ *  contributed to the "out of frame" read. 1.6 keeps the volumetric
+ *  fly-in feel without the foreground bloom. */
+export const STACK_SLOT_Z_OFFSET = 1.6;
 
 /** Per-item lock stagger inside its cluster's window. Each lane/fan
  *  tip's scale snaps from a starting floor up to 1.0 in sequence,
@@ -197,6 +212,15 @@ export function ShellStack({ layerKey, reducedMotion = false }: ShellStackProps)
     const sourcePipFilled = buildFilledDiamondGeometry(PYLON_CAP_SIZE * STACK_PIP_SCALE);
     const surfacePipOutline = buildDiamondGeometry(PYLON_CAP_SIZE);
     const surfacePipFilled = buildFilledDiamondGeometry(PYLON_CAP_SIZE * STACK_PIP_SCALE);
+    // Aperture ports — slightly larger diamonds than the source/
+    // surface pips, sitting where the lanes converge into the
+    // sphere (sources side, [-0.85, 0, 0]) and where the fan
+    // emerges from the sphere (surfaces side, [+0.85, 0, 0]). Read
+    // as the "intelligence-layer ports" so the funnel reads as
+    // sources -> port -> sphere -> port -> surfaces, rather than
+    // lanes/fans terminating at empty space. (2026-06-10 polish.)
+    const aperturePortOutline = buildDiamondGeometry(PYLON_CAP_SIZE * 1.5);
+    const aperturePortInner = buildFilledDiamondGeometry(PYLON_CAP_SIZE * 0.6);
 
     return {
       sourceLanes,
@@ -206,6 +230,8 @@ export function ShellStack({ layerKey, reducedMotion = false }: ShellStackProps)
       sourcePipFilled,
       surfacePipOutline,
       surfacePipFilled,
+      aperturePortOutline,
+      aperturePortInner,
     };
   }, [sourceLaneEnds, surfaceFanEnds]);
 
@@ -218,6 +244,13 @@ export function ShellStack({ layerKey, reducedMotion = false }: ShellStackProps)
       sourcePip: makeMeshMaterial(COLOR_SOURCES, SOURCE_PIP_OPACITY),
       surfacePipOutline: makeLineMaterial(COLOR_SURFACES, SURFACE_PIP_OPACITY, true),
       surfacePipFilled: makeMeshMaterial(COLOR_SURFACES, SURFACE_PIP_OPACITY * 0.94),
+      // Aperture ports use the dawn pipe palette tied to each side
+      // (sources green, surfaces dawn) so the port reads as part of
+      // its stream, not a third visual class.
+      sourceApertureOutline: makeLineMaterial(COLOR_SOURCES, SOURCE_PIP_OPACITY, true),
+      sourceApertureInner: makeMeshMaterial(COLOR_SOURCES, SOURCE_PIP_OPACITY * 0.7),
+      surfaceApertureOutline: makeLineMaterial(COLOR_SURFACES, SURFACE_PIP_OPACITY, true),
+      surfaceApertureInner: makeMeshMaterial(COLOR_SURFACES, SURFACE_PIP_OPACITY * 0.7),
     }),
     []
   );
@@ -231,6 +264,8 @@ export function ShellStack({ layerKey, reducedMotion = false }: ShellStackProps)
       geoms.sourcePipFilled.dispose();
       geoms.surfacePipOutline.dispose();
       geoms.surfacePipFilled.dispose();
+      geoms.aperturePortOutline.dispose();
+      geoms.aperturePortInner.dispose();
       Object.values(mats).forEach((m) => m.dispose());
     };
   }, [geoms, mats]);
@@ -319,6 +354,14 @@ export function ShellStack({ layerKey, reducedMotion = false }: ShellStackProps)
     mats.sourcePip.opacity = SOURCE_PIP_OPACITY * epFade;
     mats.surfacePipOutline.opacity = SURFACE_PIP_OPACITY * epFade;
     mats.surfacePipFilled.opacity = SURFACE_PIP_OPACITY * 0.94 * epFade;
+    // Aperture ports lock to the docked frame as their cluster
+    // arrives — they read as the streams plugging into the
+    // intelligence-layer interface, so they should be quietest while
+    // the cluster is still mid-slide and brighten as it docks.
+    mats.sourceApertureOutline.opacity = sourcesSlideT * SOURCE_PIP_OPACITY * epFade;
+    mats.sourceApertureInner.opacity = sourcesSlideT * SOURCE_PIP_OPACITY * 0.7 * epFade;
+    mats.surfaceApertureOutline.opacity = surfacesSlideT * SURFACE_PIP_OPACITY * epFade;
+    mats.surfaceApertureInner.opacity = surfacesSlideT * SURFACE_PIP_OPACITY * 0.7 * epFade;
 
     // Per-pip lock snap: each pip eases from STACK_ITEM_SCALE_FLOOR
     // up to ~1.0 with a small overshoot on its own stagger window
@@ -366,6 +409,21 @@ export function ShellStack({ layerKey, reducedMotion = false }: ShellStackProps)
           material={mats.sourceMotes}
           frustumCulled={false}
         />
+        {/* Source aperture port — sits where the lanes converge into
+            the sphere, so the funnel reads as sources -> port ->
+            sphere rather than five lanes terminating at empty space. */}
+        <group position={[STACK_SUBSTRATE_X - 0.85, 0, 0]}>
+          <lineLoop
+            geometry={geoms.aperturePortOutline}
+            material={mats.sourceApertureOutline}
+            frustumCulled={false}
+          />
+          <mesh
+            geometry={geoms.aperturePortInner}
+            material={mats.sourceApertureInner}
+            frustumCulled={false}
+          />
+        </group>
         {sourcePipPositions.map((pos, i) => (
           <group
             key={`stack-src-${i}`}
@@ -395,6 +453,20 @@ export function ShellStack({ layerKey, reducedMotion = false }: ShellStackProps)
           material={mats.surfaceMotes}
           frustumCulled={false}
         />
+        {/* Surface aperture port — symmetric companion to the source
+            port, sitting where the fan emerges from the sphere. */}
+        <group position={[STACK_SUBSTRATE_X + 0.85, 0, 0]}>
+          <lineLoop
+            geometry={geoms.aperturePortOutline}
+            material={mats.surfaceApertureOutline}
+            frustumCulled={false}
+          />
+          <mesh
+            geometry={geoms.aperturePortInner}
+            material={mats.surfaceApertureInner}
+            frustumCulled={false}
+          />
+        </group>
         {surfaceFanEnds.map((pos, i) => (
           <group
             key={`stack-srf-${i}`}

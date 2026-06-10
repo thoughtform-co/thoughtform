@@ -9,7 +9,7 @@ import { epilogueBand, getEpiloguePlanetScale } from "@/lib/home-v2/epilogueTime
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import { gyroTilt, useGyroLabStore } from "@/lib/stores/gyroLabStore";
 import { getSmoothedAccretionLayers } from "./motionFollower";
-import { getBrandmarkWorldPosition } from "./sceneGeom";
+import { getBrandmarkWorldPosition, getNavigateApparentSizeBoost } from "./sceneGeom";
 import { ShellEncode } from "./shell/ShellEncode";
 import { ShellStack } from "./shell/ShellStack";
 import { ShellSubstrate } from "./shell/ShellSubstrate";
@@ -103,7 +103,14 @@ export function BrandmarkAccretionShell() {
     // the camera lands on. Composes with the parked GYRO_ASSEMBLY_SCALE
     // and saturates at 1 (no change) inside the calibrated corridor.
     const planetScale = getEpiloguePlanetScale(epilogueProgress);
-    gyroAssembly.scale.setScalar(GYRO_ASSEMBLY_SCALE * planetScale);
+    // Polish round 2 (2026-06-10): Navigate apparent-size boost
+    // compensates the camera-distance penalty at the Navigate park
+    // so the gimbal sphere reads at the same screen size as the
+    // Encode gimbal. Returns 1.0 outside the Navigate window — this
+    // line is byte-identical at Encode/Build. See
+    // `getNavigateApparentSizeBoost` for the envelope.
+    const navBoost = getNavigateApparentSizeBoost(paintProgress);
+    gyroAssembly.scale.setScalar(GYRO_ASSEMBLY_SCALE * planetScale * navBoost);
 
     const layers = getSmoothedAccretionLayers();
     const tiltCalm = 1 - (1 - SUBSTRATE_GYRO_ENCODE_TILT_FLOOR) * layers.orbits;

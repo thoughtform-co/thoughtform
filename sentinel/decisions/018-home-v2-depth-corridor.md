@@ -11,6 +11,184 @@
 
 ---
 
+## 2026-06-10 Revision (v3.12) — Polish round 2: photons, sphere parity, funnel subtlety, stack v2, label depth, epilogue compression, mount hardening
+
+Seven coupled passes responding to in-flight feedback after v3.11 shipped:
+
+### 1. Corridor photon comets ([CorridorPhotons.tsx](../../components/landing/home-v2/DepthGatewayScene/CorridorPhotons.tsx))
+
+New painter mounted in [DepthGatewayScene/index.tsx](../../components/landing/home-v2/DepthGatewayScene/index.tsx)
+right after `LatentWormholeWalls`. Sparse fast comets (~24-photon pool)
+fly along the dotted wormhole rails toward the corridor end as a
+clock-driven life signal:
+
+- Path math reuses `sampleRailPoint(leg, railIdx, t)` exported from
+  [LatentWormholeWalls.tsx](../../components/landing/home-v2/DepthGatewayScene/LatentWormholeWalls.tsx)
+  so comets trace the same rails the walls paint — no drift between
+  rail and comet.
+- Spawn cadence randomised in `[1.5s, 3.5s]`; per-photon traversal
+  randomised in `[1.4s, 2.2s]`. The result reads as occasional
+  punctuation, not a continuous stream.
+- Gated by `LEG_*_REVEAL_*` and `active || armed` so comets never
+  appear on a leg the user can't yet see. Disabled on narrow viewports
+  and under reduced-motion preference. Same `VISIBLE_NEAR/FAR` depth
+  fade as the rails.
+- Birth/death alpha envelope on `aLife` so each comet fades in at the
+  start of its rail and fades out at the end (no pop).
+- Per-leg constant exports added to LatentWormholeWalls
+  (`SHELL_RX/RY`, `RAIL_INWARD_PULL`, `RAIL_COUNT_PER_LEG`,
+  `LEG_*_REVEAL_*`, `LEG_RAIL_*_FRAC`, `VISIBLE_NEAR/FAR`).
+
+### 2. Navigate sphere apparent-size parity
+
+The Navigate park sphere read ~29% smaller on screen than the Encode
+gimbal. Two compounding causes (camera distance ~7.9 vs ~6.1; substrate
+unfold only ~58% complete at park):
+
+- `CORRIDOR_TIMELINE.accretion.substrate.peakAt` 0.48 → **0.42** in
+  [sceneGeom.ts](../../components/landing/home-v2/DepthGatewayScene/sceneGeom.ts).
+  The substrate is essentially fully unfolded at the Navigate park
+  centre (~0.40); the per-ring stagger inside `gyroAssemblyUnfold`
+  still plays the cascade.
+- New helper `getNavigateApparentSizeBoost(paintProgress)` returns
+  `1.30` at peak (camera-distance ratio between Navigate and Encode),
+  ramping in `[0.30, 0.355]`, holding through the Navigate window,
+  ramping out by `[0.445, 0.52]` — fully released before orbits begin.
+- Applied multiplicatively to the gyro assembly scale in
+  [BrandmarkAccretionShell.tsx](../../components/landing/home-v2/DepthGatewayScene/BrandmarkAccretionShell.tsx)
+  AND mirrored identically in `gyroAssemblyWorldPosition` so DOM
+  cardinal/group labels stay welded to the boosted geometry.
+- Camera path, park distances, and brandmark travel are byte-identical
+  outside `[0.30, 0.52]`.
+
+### 3. Subtler exit funnel near the foreground sphere
+
+The funnel was visually clashing with the gimbal sphere at the
+Navigate park. Tuned six constants in
+[LatentWormholeWalls.tsx](../../components/landing/home-v2/DepthGatewayScene/LatentWormholeWalls.tsx)
+to keep the long-range "door at the end of the corridor" gradient
+while quieting near the foreground:
+
+- `EXIT_FUNNEL_INNER_R` 0.45 → **0.62** — quiet core extends past the
+  gimbal outer ring.
+- `EXIT_FUNNEL_DENSITY_BIAS` 0.85 → **0.6** — mass concentrates at
+  the mouth, leg near the sphere thins.
+- `EXIT_FUNNEL_LOBE_AMP` 0.55 → **0.4** — gentler angular density
+  variation; less clumping.
+- `EXIT_FUNNEL_COUNT` 6000 → **4600** — less mass, GPU win.
+- Shader `mouthAlpha` ceiling `mix(0.78, 1.28)` →
+  **`mix(0.72, 1.05)`** — peak rim brightness no longer competes with
+  rail brightness.
+- `MOUTH_LONGRANGE_ALPHA_CAP` 0.55 → **0.4** and
+  `VISIBLE_FAR_MOUTH_EXTENSION` 14 → **11** — dimmer, shorter long-
+  range glow.
+
+### 4. Funnel stack v2 — contained framing, aperture ports, indexed labels
+
+[ShellStack.tsx](../../components/landing/home-v2/DepthGatewayScene/shell/ShellStack.tsx):
+
+- `STACK_SLOT_X_OFFSET` 8 → **3.0** and `STACK_SLOT_Z_OFFSET` 2.6 →
+  **1.6**. Cluster slide-in starts just outside the parked frustum
+  instead of way off-screen; the slide arc reads in-frame instead of
+  as a final pop.
+- New aperture port diamonds at `[STACK_SUBSTRATE_X ± 0.85, 0, 0]`
+  (where lanes converge into / fan emerges from the sphere) — the
+  funnel reads as `sources -> port -> sphere -> port -> surfaces`
+  rather than lanes terminating in empty space. Sized
+  `PYLON_CAP_SIZE * 1.5` outline + `PYLON_CAP_SIZE * 0.6` inner;
+  green-tinted on the source side, dawn on the surface side; opacity
+  tracks the cluster slide.
+- Per-item label markup in
+  [CopyAnchors.tsx](../../components/landing/home-v2/CopyAnchors.tsx)
+  becomes `chip + leader` with a numeric index prefix (`01_`, `02_`,
+  …). Colour-tinted to its side (green sources, dawn surfaces).
+  Distinct visual class from cardinal callouts so provenance/output
+  stream membership reads differently from wayfinding.
+
+### 5. Cardinal label integration (depth-cued callouts)
+
+The four Encode cardinals (Judgment / Taste / Craft / Voice) used to
+read as flat black-box stickers latched on a 3D object. Replaced with
+instrument-grade callouts in
+[CopyAnchors.tsx](../../components/landing/home-v2/CopyAnchors.tsx) +
+[home-v2.css](../../components/landing/home-v2/home-v2.css):
+
+- Diamond marker (`__marker`) at the cardinal anchor — the label is
+  visibly anchored to the gimbal node.
+- Thin gold leader (`__leader`) between the marker and the caption
+  chip; orientation handled by the parent flex direction.
+- Hairline-frame caption replacing the heavy gold-bordered black box
+  (`background: rgba(10, 9, 8, 0.62)` vs the old `0.94`; border
+  `rgba(202, 165, 84, 0.4)` vs `0.72`).
+- `gateEncodePrimitive` in
+  [sceneGeom.ts](../../components/landing/home-v2/DepthGatewayScene/sceneGeom.ts)
+  computes each cardinal's rotated Z (via `rotateGyroLocalOffset`)
+  and dims/scales the chip when the cardinal swings to the back side
+  of the sphere. The label visibly belongs to the rotating assembly.
+
+### 6. Quicker, smoother Build → "billions" handoff
+
+The epilogue tail used to be ~3 viewports of camera-only flight
+before the title arrived. Compressed:
+
+- `.home-v2-stage` height `920svh` → **`820svh`** in
+  [home-v2.css](../../components/landing/home-v2/home-v2.css).
+- `EPILOGUE_START` `620/920` → **`620/820`** in
+  [useDepthScroll.ts](../../components/landing/home-v2/hooks/useDepthScroll.ts).
+- Band retune in
+  [epilogueTimeline.ts](../../lib/home-v2/epilogueTimeline.ts):
+  `APPROACH.end` 0.62 → **0.56**, `LAND` 0.55/0.92 → **0.48/0.86**,
+  `TITLE_IN` 0.7/0.9 → **0.52/0.74** — title fades in DURING the
+  landing arc instead of after it.
+- `EPILOGUE_FLIGHT_END` 0.9 → **0.86** in sceneGeom so camera
+  resolves inside the new tail. Mobile stage stays 620svh; mobile
+  epilogue is correspondingly tighter (intended).
+
+### 7. Hardened corridor mount guard
+
+[LandingPage.tsx](../../components/landing/v7/LandingPage.tsx):
+
+- The `mount === corridorMountRef.current` early-return used to skip
+  remount whenever the placeholder DOM identity matched, leaving an
+  empty 820svh void if the nested React root died (HMR crash, bfcache
+  restore that detached internals). New guard ALSO requires the
+  cached root to be alive AND the mount to have children.
+- Added a `pageshow` listener (`event.persisted`) that re-runs the
+  mount check on bfcache restores explicitly.
+
+### 8. r3f `<threeLine>` runtime registration
+
+[ShellSubstrateGyro.tsx](../../components/landing/home-v2/DepthGatewayScene/shell/ShellSubstrateGyro.tsx):
+
+- The trim-path sphere shipped in v3.11 used `<threeLine>` (the r3f
+  TypeScript alias for `THREE.Line`) to dodge the `<line>` SVG
+  collision. Build passed but the dev/prod runtime threw
+  `R3F: ThreeLine is not part of the THREE namespace` whenever the
+  gimbal first revealed — the auto-`extend(THREE)` inside `<Canvas>`
+  registers the THREE namespace under its own keys (`Line`), not
+  under r3f's typed alias (`ThreeLine`). Added one
+  `extend({ ThreeLine: THREE.Line })` at module load so `<threeLine>`
+  resolves correctly at runtime.
+
+### Verification (1440 desktop)
+
+- Navigate park (`paintProgress ~0.40`): sphere reads at the same
+  apparent size as the Encode gimbal; cardinal labels not visible
+  yet (orbits accretion at 0); funnel particles quiet around the
+  sphere with a dim distant glow at the corridor end.
+- Encode park (`~0.636`): all four cardinals visible with marker +
+  leader + hairline-frame chips; sphere matches Navigate.
+- Build park (`~0.923`): aperture ports visible at the sphere edges;
+  per-item chips with `01_…` index prefixes legible on both sides;
+  group labels (Sources, Surfaces) below their clusters.
+- Build → "billions": title fades in around scrollY ~6800 (vs
+  ~7500+ before the compression), with the planet horizon already
+  composed below.
+- Corridor section survives a hard reload + dev-server restart (mount
+  guard exercised).
+
+---
+
 ## 2026-06-09 Revision (v3.10) — Funnel stretched to the full leg; gradient flattened
 
 Follow-up to v3.9. The funnel field still read as "concentrated at the

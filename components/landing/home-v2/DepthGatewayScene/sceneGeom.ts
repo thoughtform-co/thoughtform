@@ -251,11 +251,19 @@ export const CORRIDOR_TIMELINE = {
     // leaving Thoughtform. Encode/Build windows below are untouched.
     // Widened twice (2026-06-08): once for the reveal-polish cascade,
     // then again for the elegance pass so the per-ring + globe-bloom
-    // unfold breathes instead of snapping. Now spans ~18% of paint
-    // progress (0.30 → 0.48). Park centre ~0.40 still in the middle.
-    // `gateNavigateReadout` reuses this window so the Navigate text
-    // fades in with the sphere.
-    substrate: { start: 0.3, peakAt: 0.48 },
+    // unfold breathes instead of snapping. `gateNavigateReadout`
+    // reuses this window so the Navigate text fades in with the
+    // sphere.
+    //
+    // Polish round 2 (2026-06-10): peakAt pulled 0.48 → 0.42 so the
+    // substrate is essentially fully unfolded at the Navigate park
+    // centre (~0.40). The previous 0.48 left the globe Y-squashed
+    // (~58% revealed at the park) which combined with the larger
+    // camera distance to make the sphere read smaller than the
+    // Encode gimbal. The narrower peak window still breathes
+    // (~12% of paint progress) and the per-ring stagger inside
+    // `gyroAssemblyUnfold` continues to play the cascade.
+    substrate: { start: 0.3, peakAt: 0.42 },
     // Orbits window re-aligned to the Encode park ARRIVAL (2026-06-07)
     // so the staggered fold-in is WITNESSED as the camera enters Encode,
     // mirroring the compass at Navigate (window straddles the park:
@@ -359,10 +367,15 @@ const EPILOGUE_LOOK_FWD_Z = 0.5;
  *  (which read as "fly straight at the sphere, THEN pitch up").
  *
  *  Starts a touch into BUILD_OUT so the Build chrome has begun clearing
- *  before the camera leaves its park; ends at the old LAND end so the
- *  pose is fully settled by the time the title is in. */
+ *  before the camera leaves its park; ends just before the title is
+ *  fully in (TITLE_IN.end = 0.74) so the pose is settled as the
+ *  user reads the line.
+ *
+ *  Polish round 2 (2026-06-10): EPILOGUE_FLIGHT_END pulled 0.9 -> 0.86
+ *  to align with the new LAND.end (0.86) so the camera resolves
+ *  inside the compressed epilogue tail. */
 const EPILOGUE_FLIGHT_START = 0.12;
-const EPILOGUE_FLIGHT_END = 0.9;
+const EPILOGUE_FLIGHT_END = 0.86;
 
 /** Mid-flight landing-flare swoop depth (world units). The camera dips
  *  slightly CLOSER to the planet through the middle of the descent and
@@ -1162,6 +1175,59 @@ export function getBrandmarkAccretionLayers(progress: number): {
   };
 }
 
+// ── Navigate apparent-size boost ─────────────────────────────────
+//
+// At the Navigate park (paintProgress ~= 0.40) the camera sits ~7.9
+// world units from the brandmark, vs ~6.1 at the Encode park — so
+// the gimbal sphere reads ~29% smaller on screen at Navigate even
+// though the assembly's local geometry is identical. Combined with
+// the substrate unfold still settling (globe Y-bloom + ring tilt),
+// the first place we introduce the gimbal felt visibly smaller than
+// the same instrument at Encode.
+//
+// We bridge the gap with a uniform scale envelope on the gyro
+// assembly (NOT on the camera path or station park distances — those
+// stay calibrated for the flight feel). The envelope ramps in just
+// before the Navigate park, holds across the park window, and eases
+// back out before the orbits accretion begins, so the assembly is
+// compensated only where the eye needs it.
+//
+// `BrandmarkAccretionShell` writes the canvas group's scale and
+// `gyroAssemblyWorldPosition` mirrors the same factor for projected
+// DOM labels — both must read this helper or labels desync from
+// canvas geometry. (2026-06-10 polish-round-2 pass.)
+
+/** Peak boost factor at the Navigate park. ~1.295 (the camera-distance
+ *  ratio between Navigate and Encode parks) rounded to 1.30. */
+const NAVIGATE_APPARENT_SIZE_BOOST = 1.3;
+/** Ramp-in window — finishes JUST before the Navigate beat begins
+ *  (pass-01a → navigate boundary at 0.355) so the boost is fully
+ *  active when the camera arrives at the park. */
+const NAVIGATE_BOOST_RAMP_IN_START = 0.3;
+const NAVIGATE_BOOST_RAMP_IN_END = 0.355;
+/** Ramp-out window — eases back to 1.0 well before the orbits
+ *  accretion starts (0.52) so the Encode park is on the un-boosted
+ *  scale and never has to compose against a ramping factor. */
+const NAVIGATE_BOOST_RAMP_OUT_START = 0.445;
+const NAVIGATE_BOOST_RAMP_OUT_END = 0.52;
+
+/** Uniform scale factor to multiply the parked `GYRO_ASSEMBLY_SCALE`
+ *  by, so the Navigate sphere reads at the same apparent size as
+ *  the Encode gimbal. Composes with `getEpiloguePlanetScale`
+ *  multiplicatively — outside the [0.30, 0.52] window this returns
+ *  exactly 1.0 so existing windows are byte-identical. */
+export function getNavigateApparentSizeBoost(paintProgress: number): number {
+  const rampIn = smoothstep(
+    NAVIGATE_BOOST_RAMP_IN_START,
+    NAVIGATE_BOOST_RAMP_IN_END,
+    paintProgress
+  );
+  const rampOut =
+    1 - smoothstep(NAVIGATE_BOOST_RAMP_OUT_START, NAVIGATE_BOOST_RAMP_OUT_END, paintProgress);
+  const envelope = Math.min(rampIn, rampOut);
+  return 1 + (NAVIGATE_APPARENT_SIZE_BOOST - 1) * envelope;
+}
+
 /** Mobile inward-pull for the Thoughtform phase labels. Portrait FOV
  *  (widened by `getCameraFov`) spreads the gate-relative label offsets
  *  toward the frame edges, so on mobile they're scaled toward the gate
@@ -1303,7 +1369,13 @@ function encodeCartridgeCurve(t: number): number {
  *  stagger so each label fades on as its cartridge arrives (instead
  *  of all four fading in together). The position resolver (below)
  *  uses the SAME stagger to fly each cardinal inward from its outer
- *  start, with a curved tangential arc and overshoot punch. */
+ *  start, with a curved tangential arc and overshoot punch.
+ *
+ *  Polish round 2 (2026-06-10): added depth cue — cardinals that
+ *  bank to the back of the sphere (rotated Z > 0 in shell-local
+ *  coords; camera looks toward -Z) dim their opacity and shrink
+ *  slightly. The label visibly belongs to the rotating 3D assembly
+ *  instead of reading as a flat sticker latched on a 3D object. */
 const gateEncodePrimitive: WorldAnchor["onPaint"] = (ctx, el) => {
   const idxAttr = el.getAttribute("data-encode-cardinal-idx");
   const idx = idxAttr == null ? -1 : Number(idxAttr);
@@ -1313,8 +1385,32 @@ const gateEncodePrimitive: WorldAnchor["onPaint"] = (ctx, el) => {
   // so it "lights up" as it locks in, rather than ghosting during the
   // fly-in. Multiplied by the parent visibility envelope.
   const op = smoother(stagger);
-  el.style.opacity = (ctx.visibilityOpacity * op).toFixed(3);
+  // Depth cue (polish round 2). Compute the cardinal's rotated Z
+  // and dim/shrink as it swings to the back of the sphere.
+  let depthOp = 1;
+  let depthScale = 1;
+  if (idx >= 0 && useGyroLabStore.getState().enabled) {
+    const local = getGyroPrimitiveLabelLocal(idx);
+    const rotated = rotateGyroLocalOffset(local);
+    // Normalise rotated Z by the cardinal's planar radius so the
+    // back/front classification is invariant of the per-stagger
+    // radius animation.
+    const r = Math.sqrt(local[0] * local[0] + local[1] * local[1]);
+    if (r > 0) {
+      const zNorm = Math.max(-1, Math.min(1, rotated[2] / r));
+      // Front (zNorm <= 0): full read. Back (zNorm > 0): dim to
+      // ~0.45 opacity, scale to ~0.88, so the label still reads as
+      // present (you don't fully lose it) but visibly recedes.
+      const backT = Math.max(0, zNorm);
+      depthOp = 1 - backT * 0.55;
+      depthScale = 1 - backT * 0.12;
+    }
+  }
+  el.style.opacity = (ctx.visibilityOpacity * op * depthOp).toFixed(3);
   applyGyroDomBank(el, 0.8);
+  if (depthScale !== 1) {
+    el.style.transform = `${el.style.transform} scale(${depthScale.toFixed(3)})`;
+  }
 };
 
 /** Rotate a shell-local offset by the lab gyroscope's assembly bank.
@@ -1354,8 +1450,17 @@ function gyroAssemblyWorldPosition(
   // The epilogue planet-grow multiplier composes on top so cardinals
   // scale with the planet (they fade out during BUILD_OUT/APPROACH
   // anyway, since they'd sit inside the planet at full grow).
+  //
+  // Polish round 2 (2026-06-10): also fold in the Navigate apparent-
+  // size boost so DOM cardinal/group labels stay welded if the gyro
+  // is scaled up around the Navigate park. The boost returns 1.0
+  // outside the [0.30, 0.52] paintProgress window, so byte-identical
+  // welding everywhere else.
   const base = useGyroLabStore.getState().enabled ? GYRO_ASSEMBLY_SCALE : 1;
-  const s = base * getEpiloguePlanetScale(transform.epilogueProgress);
+  const s =
+    base *
+    getEpiloguePlanetScale(transform.epilogueProgress) *
+    getNavigateApparentSizeBoost(transform.paintProgress);
   const scaledLocal: [number, number, number] = [local[0] * s, local[1] * s, local[2] * s];
   const [bx, by, bz] = getBrandmarkWorldPosition(transform.paintProgress);
   const [x, y, z] = rotateGyroLocalOffset(scaledLocal);

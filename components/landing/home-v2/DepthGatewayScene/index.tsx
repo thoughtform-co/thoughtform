@@ -6,6 +6,7 @@ import { useDeviceTier } from "@/lib/hooks/useDeviceTier";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import { BrandmarkAccretionShell } from "./BrandmarkAccretionShell";
 import { CelestialMotes } from "./CelestialMotes";
+import { CorridorPhotons } from "./CorridorPhotons";
 import { FlyingCameraRig } from "./FlyingCameraRig";
 import { GatewayWorld } from "./gates/GatewayWorld";
 import { InterGateCorridor } from "./InterGateCorridor";
@@ -254,6 +255,12 @@ export function DepthGatewayScene() {
       <InterGateCorridor />
       <LatentFieldTunnel />
       <LatentWormholeWalls />
+      {/* CorridorPhotons — sparse fast comets that fly along the
+          wormhole rails as a clock-driven life signal (ADR-018,
+          polish round 2). Mounted right after the walls so the
+          photons paint on top of the rail dots that share their
+          path. */}
+      <CorridorPhotons />
       <LatentTopographyContours />
       <CelestialMotes />
       <ScrollStreaks />

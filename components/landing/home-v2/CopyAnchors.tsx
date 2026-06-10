@@ -191,8 +191,14 @@ export function CopyAnchors({ text }: CopyAnchorsProps) {
       {isMobile && nav && <StationTitle content={nav} base="navigate" />}
       {isMobile && enc && <StationTitle content={enc} base="diagnostic" />}
 
-      {/* Encode primitive labels — framed tags on the four compass
-          cardinals (Judgment / Taste / Way of working / Voice). */}
+      {/* Encode primitive labels — diamond marker + thin leader +
+          hairline-bordered caption on the four compass cardinals
+          (Judgment / Taste / Way of working / Voice). The marker
+          sits at the cardinal node so the label visibly belongs to
+          the gimbal, with a depth cue (`gateEncodePrimitive`)
+          dimming the back-side cardinals as the sphere banks.
+          (2026-06-10 polish — replaces the flat black-box treatment
+          that read as a sticker on a 3D object.) */}
       {SHELL_PRIMITIVES.map((prim, idx) => {
         const meta = PRIMITIVE_ANCHOR_META[prim.id];
         if (!meta) return null;
@@ -207,6 +213,8 @@ export function CopyAnchors({ text }: CopyAnchorsProps) {
             // locks as its fly-in arrives, not all four together).
             data-encode-cardinal-idx={idx}
           >
+            <span className="home-v2-encode-primitive__marker" aria-hidden="true" />
+            <span className="home-v2-encode-primitive__leader" aria-hidden="true" />
             <div className="home-v2-encode-primitive__frame">
               <span className="home-v2-encode-primitive__label">{prim.label}</span>
             </div>
@@ -276,6 +284,13 @@ export function CopyAnchors({ text }: CopyAnchorsProps) {
           labels read rightward off the tip (`left-center`). Names are
           representative — counts intentionally need not match the diamond
           counts; the idea reads either way. */}
+      {/* Per-item stack labels (polish round 2 v2). Hairline-boxed
+          chips with a numeric index prefix so the inventory reads
+          differently from the unboxed cardinal labels — provenance/
+          output stream membership is the read here, not wayfinding.
+          Each chip is colour-tinted to its side (green sources / dawn
+          surfaces) and anchored at the pip with a thin leader
+          implied by the box edge. */}
       {STACK_SOURCE_ITEMS.map((item, idx) => (
         <div
           key={`stack-source-${item.id}`}
@@ -289,7 +304,11 @@ export function CopyAnchors({ text }: CopyAnchorsProps) {
           data-stack-side="sources"
           data-stack-idx={idx}
         >
-          <span className="home-v2-stack-item__label">{item.label}</span>
+          <span className="home-v2-stack-item__leader" aria-hidden="true" />
+          <span className="home-v2-stack-item__chip">
+            <span className="home-v2-stack-item__index">{String(idx + 1).padStart(2, "0")}</span>
+            <span className="home-v2-stack-item__label">{item.label}</span>
+          </span>
         </div>
       ))}
       {STACK_SURFACE_ITEMS.map((item, idx) => (
@@ -301,7 +320,11 @@ export function CopyAnchors({ text }: CopyAnchorsProps) {
           data-stack-side="surfaces"
           data-stack-idx={idx}
         >
-          <span className="home-v2-stack-item__label">{item.label}</span>
+          <span className="home-v2-stack-item__chip">
+            <span className="home-v2-stack-item__index">{String(idx + 1).padStart(2, "0")}</span>
+            <span className="home-v2-stack-item__label">{item.label}</span>
+          </span>
+          <span className="home-v2-stack-item__leader" aria-hidden="true" />
         </div>
       ))}
     </div>

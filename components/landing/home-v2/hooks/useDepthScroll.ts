@@ -16,8 +16,8 @@ import { getMobilePaintProgress } from "../DepthGatewayScene/sceneGeom";
 /** Fraction of the sticky stage that belongs to the calibrated
  *  corridor. The remainder (1 - EPILOGUE_START) is the
  *  "billions on the same layer" epilogue scroll channel. Tied
- *  to the stage height in home-v2.css (`620svh corridor + 300svh
- *  epilogue` -> 620 / 920 ≈ 0.6739). The corridor's normalized
+ *  to the stage height in home-v2.css (`620svh corridor + 200svh
+ *  epilogue` -> 620 / 820 ≈ 0.7561). The corridor's normalized
  *  progress (and beat windows) is computed AGAINST EPILOGUE_START,
  *  so the corridor still tiles [0,1] across its physical span and
  *  every CORRIDOR_TIMELINE constant stays byte-identical.
@@ -31,8 +31,14 @@ import { getMobilePaintProgress } from "../DepthGatewayScene/sceneGeom";
  *  460svh to 620svh while keeping the epilogue at 300svh. This gives
  *  the Encode -> Build leg real runway so the wormhole mouth can
  *  visibly widen across the transition instead of racing into the
- *  Build park. */
-const EPILOGUE_START = 620 / 920;
+ *  Build park.
+ *
+ *  Polish round 2 (2026-06-10): compressed the epilogue tail from
+ *  300svh to 200svh and pulled TITLE_IN forward inside the band
+ *  table so the Build → "billions" handoff resolves in roughly one
+ *  viewport of scroll instead of three. The corridor span itself
+ *  is byte-identical. */
+const EPILOGUE_START = 620 / 820;
 
 /**
  * useDepthScroll — rAF-throttled scroll watcher for the home-v2

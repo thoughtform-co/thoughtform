@@ -86,7 +86,7 @@
   position: relative;
   width: 100%;
   /* Total stage height = corridor span (620svh) + epilogue span
-     (300svh). Stage growth history:
+     (200svh). Stage growth history:
        - 300svh: original world-owned corridor.
        - 360svh: Thoughtform -> Diagnostics immersion pass
          (passthrough-01 widened from 14% to 24% of scroll).
@@ -118,8 +118,15 @@
          300svh. This gives the short Encode -> Build leg enough
          runway for the wormhole mouth to visibly widen across the
          whole exit, instead of opening almost on top of the Build
-         park. `EPILOGUE_START` recomputes to 620/920 ≈ 0.6739. */
-  height: 920svh;
+         park. `EPILOGUE_START` recomputes to 620/920 ≈ 0.6739.
+       - 820svh: polish round 2 (2026-06-10) — compressed the
+         epilogue tail from 300svh to 200svh and pulled TITLE_IN
+         from 0.7 to ~0.52 (+ retuned APPROACH/LAND ends) so the
+         Build park hands off to "The labs just bet billions on
+         the same layer" in roughly one viewport of scroll instead
+         of ~3. The corridor span is unchanged. `EPILOGUE_START`
+         recomputes to 620/820 ≈ 0.7561. */
+  height: 820svh;
   background: var(--void, #050403);
   z-index: 2;
   isolation: isolate;
@@ -1054,39 +1061,75 @@ html[data-corridor-epilogue="true"] .home-v2-stage__canvas canvas {
   text-align: center;
 }
 
-/* ── Per-item stack labels (one per source pip / surface tip) ──── */
+/* ── Per-item stack labels (one per source pip / surface tip) ────
+   Polish round 2 v2 (2026-06-10): hairline-boxed chip + index
+   prefix + thin leader to the pip. Reads distinctly from the
+   unboxed cardinal labels — provenance / output stream membership
+   is the read, not wayfinding — and looks more like a panel label
+   on a technical drawing than free-floating text. */
 
 .home-v2-stack-item {
   pointer-events: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
   font-family: var(--font-pt-mono, ui-monospace, monospace);
-  color: rgba(235, 227, 214, 0.7);
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
   font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
   white-space: nowrap;
-  /* Soft padding so the label sits a touch off the diamond pip rather
-     than touching it. The anchor origin (right-center / left-center)
-     already places the label edge at the diamond. */
-  padding: 0 8px;
-}
-.home-v2-stack-item--source {
-  text-align: right;
-  color: rgba(91, 122, 78, 0.78);
-}
-.home-v2-stack-item--surface {
-  text-align: left;
-  color: rgba(235, 227, 214, 0.72);
-}
-.home-v2-stack-item__label {
-  display: inline-block;
 }
 
-/* ── Encode primitive labels (cardinal framed tags) ────────── */
+.home-v2-stack-item__leader {
+  display: block;
+  width: 12px;
+  height: 1px;
+  background: currentColor;
+  opacity: 0.45;
+  flex-shrink: 0;
+}
+
+.home-v2-stack-item__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 3px 8px;
+  border: 1px solid currentColor;
+  /* Quieter mask than the old cardinal box — the chip frames the
+     text without competing with the gimbal sphere's depth read. */
+  background: rgba(10, 9, 8, 0.6);
+}
+
+.home-v2-stack-item__index {
+  opacity: 0.55;
+  font-weight: 500;
+}
+
+.home-v2-stack-item__label {
+  font-weight: 500;
+}
+
+.home-v2-stack-item--source {
+  color: rgba(91, 122, 78, 0.92);
+  flex-direction: row-reverse;
+}
+.home-v2-stack-item--surface {
+  color: rgba(235, 227, 214, 0.85);
+}
+
+/* ── Encode primitive labels (cardinal callouts) ────────────────
+   Polish round 2 (2026-06-10): replaced the heavy gold-bordered
+   black box with a marker + leader + hairline-frame callout so the
+   label visibly belongs to the rotating gimbal — a small diamond
+   anchor pinned at the cardinal node, a thin gold leader, and a
+   muted-frame caption offset outward. The chip itself stays
+   screen-aligned for legibility while `gateEncodePrimitive` banks
+   it with the sphere and dims it on the back side. */
 
 .home-v2-encode-primitive {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   pointer-events: none;
 }
 
@@ -1106,17 +1149,46 @@ html[data-corridor-epilogue="true"] .home-v2-stage__canvas canvas {
   flex-direction: row-reverse;
 }
 
+/* Diamond marker — sits at the cardinal anchor point so the label
+   reads as physically connected to the gimbal node. */
+.home-v2-encode-primitive__marker {
+  display: block;
+  width: 7px;
+  height: 7px;
+  background: var(--gold, #caa554);
+  transform: rotate(45deg);
+  flex-shrink: 0;
+  box-shadow: 0 0 6px rgba(202, 165, 84, 0.45);
+}
+
+/* Thin leader between marker and caption — orientation handled by
+   the parent flex-direction (the leader is just a 1px line, length
+   set per axis below). */
+.home-v2-encode-primitive__leader {
+  display: block;
+  background: rgba(202, 165, 84, 0.55);
+  flex-shrink: 0;
+}
+.home-v2-encode-primitive--east .home-v2-encode-primitive__leader,
+.home-v2-encode-primitive--west .home-v2-encode-primitive__leader {
+  width: 14px;
+  height: 1px;
+}
+.home-v2-encode-primitive--north .home-v2-encode-primitive__leader,
+.home-v2-encode-primitive--south .home-v2-encode-primitive__leader {
+  width: 1px;
+  height: 14px;
+}
+
 .home-v2-encode-primitive__frame {
   display: flex;
   flex-direction: column;
-  padding: 5px 10px;
-  border: 1px solid rgba(202, 165, 84, 0.72);
-  /* Strong masking opacity so the Build funnel motes that pass behind
-     the Voice / Taste labels (lane termini at x=±0.85, inside the
-     label radial range) read as ambient and don't appear to feed
-     into the labels. */
-  background: rgba(10, 9, 8, 0.94);
-  box-shadow: 0 0 0 1px rgba(202, 165, 84, 0.1);
+  padding: 4px 9px;
+  /* Hairline frame — much lighter than the old solid-gold box so the
+     label reads as a callout chip integrated with the instrument,
+     not a sticker latched on. */
+  border: 1px solid rgba(202, 165, 84, 0.4);
+  background: rgba(10, 9, 8, 0.62);
 }
 
 .home-v2-encode-primitive__label {

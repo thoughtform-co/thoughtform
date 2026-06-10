@@ -95,21 +95,21 @@ const GOLD_HEX = "#caa554";
 /** Oval cross-section of the wormhole shell. Wider than tall so the
  *  rails read with the 16:9-leaning corridor frame and clear the HUD
  *  rails (which sit roughly at the viewport extremes). */
-const SHELL_RX = 2.15;
-const SHELL_RY = 1.35;
+export const SHELL_RX = 2.15;
+export const SHELL_RY = 1.35;
 
 /** How much each rail pulls inward at its far end. A larger inward
  *  drift gives the shell a clearer vanishing-point read — the rails
  *  visibly converge toward the optical axis as they recede, which
  *  is the single strongest cue that the user is flying through a
  *  tunnel and not past a flat picture. */
-const RAIL_INWARD_PULL = 0.28;
+export const RAIL_INWARD_PULL = 0.28;
 
 /** Longitudinal rails per leg. Bumped 14 -> 20 (2026-06-05 wall
  *  presence pass) so the shell reads as a denser tunnel — the
  *  perceived "you're flying inside walls" cue scales with how many
  *  rails the rays of perspective can catch on. */
-const RAIL_COUNT_PER_LEG = 20;
+export const RAIL_COUNT_PER_LEG = 20;
 
 /** Dot counts per rail. Partial rails end midway through the leg
  *  so the shell never closes off into a cage. Bumped 32/16 -> 42/22
@@ -214,7 +214,12 @@ const STREAK_RADIAL_FLARE = 0.22;
 // Bumped 4800 -> 6000 (v3.11 butter-spread pass) so the wider radial
 // distribution still reads as dense at the mouth — the same particle
 // count was sparse when spread across an ~3x larger annulus.
-const EXIT_FUNNEL_COUNT = 6000;
+// Polish round 2 (2026-06-10): trimmed 6000 -> 4600. Combined with
+// the larger `INNER_R` (cleaner core around the gimbal sphere) and
+// the steeper `DENSITY_BIAS` (more mass at the mouth, less along
+// the leg), this calms the whole funnel near the foreground sphere
+// while preserving the mouth gradient at distance.
+const EXIT_FUNNEL_COUNT = 4600;
 /** Leg-local Z span. Starts at 0.0 — the leg-2 origin sits ~0.5 world
  *  units past the Encode gyro sphere (leg-local 0 ≈ the sphere plane
  *  at the "Encode the judgment" park), so the funnel SOFTLY BEGINS at
@@ -230,19 +235,29 @@ const EXIT_FUNNEL_END_FRAC = 0.995;
  *  inside the tunnel rather than hugging the wall. The clear core
  *  (r < INNER) keeps the optical axis quiet — that's where the
  *  brandmark + Encode gimbal sit, and the user wants the centre
- *  uncluttered. (v3.11 butter-spread pass; replaces EXIT_FUNNEL_THICKNESS.) */
-const EXIT_FUNNEL_INNER_R = 0.45;
+ *  uncluttered. (v3.11 butter-spread pass; replaces EXIT_FUNNEL_THICKNESS.)
+ *
+ *  Polish round 2 (2026-06-10): bumped 0.45 -> 0.62 so the quiet
+ *  core extends well past the gimbal sphere outer ring (~1.16
+ *  world units, vs the new inner of 0.62 * 1.35 ~= 0.84 vertically
+ *  / 0.62 * 2.15 ~= 1.33 horizontally). The funnel no longer
+ *  overlaps the gimbal in the off-axis direction, which is the
+ *  source of the "cluttered around the sphere" read at the
+ *  Navigate park. */
+const EXIT_FUNNEL_INNER_R = 0.62;
 const EXIT_FUNNEL_OUTER_R = 1.08;
 /** Density bias exponent: z = lerp(start, end, u^bias). Values < 1
  *  push samples toward the mouth end, so dots-per-unit-length rises
  *  smoothly toward the rim — the gradient IS the funnel.
  *
- *  Softened 0.68 -> 0.85 (v3.11 butter-spread pass): mass distributes
- *  more evenly along the leg so the dust is felt the entire way down
- *  the corridor instead of stacking at the rim. Combined with the
- *  earlier reveal channel + extended far visibility, this gives the
- *  butter-on-bread spread the user asked for. */
-const EXIT_FUNNEL_DENSITY_BIAS = 0.85;
+ *  Polish round 2 (2026-06-10): pulled 0.85 -> 0.6 so the gradient
+ *  is steeper toward the mouth — mass concentrates at the corridor
+ *  end (where the eye should track the gateway opening) and the
+ *  near-leg dust thins around the foreground sphere. The previous
+ *  0.85 spread mass evenly along the leg, which read as clutter
+ *  near the gimbal. The early `uRevealMouth` channel + the larger
+ *  far-fade extension keep the distant gradient unmistakable. */
+const EXIT_FUNNEL_DENSITY_BIAS = 0.6;
 /** Power that biases samples toward the OUTER wall while still
  *  allowing inward dust. `r = lerp(INNER, OUTER, u^WALL_BIAS)`.
  *  Values < 1 push samples toward the wall, > 1 push toward the
@@ -256,7 +271,10 @@ const EXIT_FUNNEL_WALL_BIAS = 0.6;
  *  the [0..1] keep-probability lift at lobe peaks; troughs reach
  *  `1 - AMP * 2 * 0.5 = 1 - AMP` minimum. */
 const EXIT_FUNNEL_LOBE_COUNT = 3;
-const EXIT_FUNNEL_LOBE_AMP = 0.55;
+// Polish round 2 (2026-06-10): trimmed 0.55 -> 0.4 so the angular
+// density variation is gentler — less clumping = the funnel reads
+// as smooth dust rather than three rotating clouds.
+const EXIT_FUNNEL_LOBE_AMP = 0.4;
 /** Scroll-along-Z phase rate for the lobes — full revolution every
  *  ~3 leg units so adjacent Z bands have visibly different angular
  *  density profiles. */
@@ -281,8 +299,8 @@ const SHELF_X_SAMPLES = 8;
 /** Camera-space distance band where wall points are visible. Wider
  *  than the latent field's because rails span more world Z and
  *  should fade in gently as they approach. */
-const VISIBLE_NEAR = 0.6;
-const VISIBLE_FAR = 22;
+export const VISIBLE_NEAR = 0.6;
+export const VISIBLE_FAR = 22;
 
 /** Far-fade EXTENSION for high-`aMouth` exit-funnel points (v3.11).
  *  The leg-2 mouth sits ~24+ world units from the Navigate park, well
@@ -291,11 +309,19 @@ const VISIBLE_FAR = 22;
  *  glow is already present at the end of the corridor when the user
  *  parks at Navigate — no more "door pops in at the last moment".
  *  Scaled by `aMouth` in the shader so ordinary rail dots keep their
- *  original visible band; only the rim-loaded funnel points reach. */
-const VISIBLE_FAR_MOUTH_EXTENSION = 14;
+ *  original visible band; only the rim-loaded funnel points reach.
+ *
+ *  Polish round 2 (2026-06-10): trimmed 14 -> 11 so the long-range
+ *  glow extends only as far as needed to read at the Navigate park,
+ *  not to dominate it. */
+const VISIBLE_FAR_MOUTH_EXTENSION = 11;
 /** Distance at which the long-range glow caps its alpha. Stays subtle
- *  so the mouth never competes with the foreground gimbal sphere. */
-const MOUTH_LONGRANGE_ALPHA_CAP = 0.55;
+ *  so the mouth never competes with the foreground gimbal sphere.
+ *  Polish round 2 (2026-06-10): trimmed 0.55 -> 0.4 — the door at
+ *  the end of the corridor reads as a quieter signal at the
+ *  Navigate park, with the gradient build still clearly visible
+ *  from a distance. */
+const MOUTH_LONGRANGE_ALPHA_CAP = 0.4;
 
 /** Reveal envelopes per leg, in global progress units.
  *
@@ -311,10 +337,10 @@ const MOUTH_LONGRANGE_ALPHA_CAP = 0.55;
  *  for a beat. Revealing leg 2 by ~0.57 (combined with the
  *  continuous leg spans below) keeps the left/right rails present the
  *  whole way through, including across the Encode park. */
-const LEG_1_REVEAL_START = 0.12;
-const LEG_1_REVEAL_END = 0.24;
-const LEG_2_REVEAL_START = 0.46;
-const LEG_2_REVEAL_END = 0.57;
+export const LEG_1_REVEAL_START = 0.12;
+export const LEG_1_REVEAL_END = 0.24;
+export const LEG_2_REVEAL_START = 0.46;
+export const LEG_2_REVEAL_END = 0.57;
 
 /** Exit FUNNEL + mouth-bloom reveal window (v3.11). Distinct from
  *  `LEG_2_REVEAL_*` (which gates the leg-2 RAILS — the lattice that
@@ -335,8 +361,8 @@ const MOUTH_REVEAL_END = 0.32;
  *  by it, so the rail shell reads as ONE continuous tube from the
  *  entry flythrough all the way to the substrate instead of two
  *  disconnected segments with a hole at Encode. */
-const LEG_RAIL_START_FRAC = 0.06;
-const LEG_RAIL_END_FRAC = 0.99;
+export const LEG_RAIL_START_FRAC = 0.06;
+export const LEG_RAIL_END_FRAC = 0.99;
 
 // ── Shaders ─────────────────────────────────────────────────────
 
@@ -445,7 +471,12 @@ void main() {
   // aMouth is a density/strength gradient. Low mouth values sit slightly
   // quieter than the ordinary rails; only the rim gains brightness as it
   // opens. This removes the "floating cloud at the edge" read.
-  float mouthAlpha = mix(0.78, 1.28, smoothstep(0.08, 1.0, aMouth) * uExitWarp);
+  // Polish round 2 (2026-06-10): mix(0.78, 1.28) -> mix(0.72, 1.05)
+  // so the mouth peak no longer brightens above ordinary rail
+  // values — the gradient still reads (low end is quieter, rim is
+  // marginally brighter) but the mouth never visually clashes with
+  // the foreground gimbal sphere even at peak warp.
+  float mouthAlpha = mix(0.72, 1.05, smoothstep(0.08, 1.0, aMouth) * uExitWarp);
   // v3.8 side-wall densify: leg-2 wall dots gain a small alpha lift
   // during the exit warp so the corridors flanking the gyroscope
   // sphere read as denser walls as you exit the wormhole. aReveal
@@ -594,6 +625,45 @@ function pushPoint(
   buf.reveals.push(reveal);
   buf.sizes.push(size);
   buf.mouths.push(mouth);
+}
+
+/** Per-leg Z endpoints. Public sampler `sampleRailPoint` reuses these
+ *  so the photon comets ride the same dotted rails the walls paint —
+ *  no separate path geometry, no drift between rail and comet. */
+export function getLegRailRange(legIdx: 0 | 1): { fromZ: number; toZ: number } {
+  const tfZ = STATION_THOUGHTFORM.position[2];
+  const dgZ = STATION_DIAGNOSTIC.position[2];
+  const intZ = STATION_INTELLIGENCE.position[2];
+  if (legIdx === 0) {
+    return {
+      fromZ: lerp(tfZ, dgZ, LEG_RAIL_START_FRAC),
+      toZ: lerp(tfZ, dgZ, LEG_RAIL_END_FRAC),
+    };
+  }
+  return {
+    fromZ: lerp(dgZ, intZ, LEG_RAIL_START_FRAC),
+    toZ: lerp(dgZ, intZ, LEG_RAIL_END_FRAC),
+  };
+}
+
+/** Sample a world position along a specific rail at fractional `t`
+ *  in [0, 1]. Mirrors the geometry produced by `buildLegRails`:
+ *  even angular distribution per leg with the per-leg phase offset,
+ *  oval cross-section, inward perspective pull along Z. Used by
+ *  `CorridorPhotons` so the photon comets travel the visible rails
+ *  exactly. */
+export function sampleRailPoint(
+  legIdx: 0 | 1,
+  railIdx: number,
+  t: number
+): { x: number; y: number; z: number } {
+  const angle = (railIdx / RAIL_COUNT_PER_LEG) * Math.PI * 2 + legIdx * 0.18;
+  const baseX = Math.cos(angle) * SHELL_RX;
+  const baseY = Math.sin(angle) * SHELL_RY;
+  const { fromZ, toZ } = getLegRailRange(legIdx);
+  const z = lerp(fromZ, toZ, t);
+  const inward = 1 - t * RAIL_INWARD_PULL;
+  return { x: baseX * inward, y: baseY * inward, z };
 }
 
 /** Build the longitudinal dotted rails around the oval shell for one

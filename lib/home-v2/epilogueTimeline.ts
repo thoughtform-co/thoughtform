@@ -33,8 +33,9 @@
  *      transition to whatever section comes after.
  *
  * Authoring rule: bands are [start, end] in epilogueProgress space.
- * The stage's epilogue span is ~300svh, so each 0.1 of
- * epilogueProgress is ~30svh — roughly one viewport.
+ * The stage's epilogue span is ~200svh after polish round 2
+ * (2026-06-10; was 300svh), so each 0.1 of epilogueProgress is
+ * ~20svh — about one fifth of a viewport.
  */
 
 import { EPILOGUE_PLANET_GROW } from "@/components/landing/home-v2/DepthGatewayScene/shell/shellGeom";
@@ -50,7 +51,13 @@ export function band(p: number, edge0: number, edge1: number): number {
   return t * t * (3 - 2 * t);
 }
 
-/** Each band's [start, end] in epilogueProgress (0..1). */
+/** Each band's [start, end] in epilogueProgress (0..1).
+ *
+ *  Polish round 2 (2026-06-10): bands retuned so the title fades
+ *  in DURING the landing arc instead of after it, and the camera
+ *  flight resolves earlier. Combined with the shorter physical
+ *  epilogue span (200svh vs 300svh), the Build → "billions"
+ *  handoff now resolves in ~1 viewport of scroll. */
 export const EPILOGUE_BANDS = {
   /** Build header + ShellStack (sources / surfaces lanes + pips) +
    *  source/surface DOM labels + Encode orbits/cardinals + gimbal
@@ -61,21 +68,23 @@ export const EPILOGUE_BANDS = {
   BUILD_OUT: { start: 0.0, end: 0.22 } as const,
 
   /** Camera flies in toward the substrate AND the substrate scales
-   *  up to planet size. Wide window so the approach feels like a
-   *  genuine spaceship descent, not a snap. Overlaps with the back
-   *  half of BUILD_OUT so the planet is already starting to grow as
-   *  the corridor chrome clears. */
-  APPROACH: { start: 0.1, end: 0.62 } as const,
+   *  up to planet size. Polish round 2: end pulled 0.62 -> 0.56 so
+   *  the planet grow finishes earlier, leaving room for LAND to
+   *  start during APPROACH's back half. */
+  APPROACH: { start: 0.1, end: 0.56 } as const,
 
   /** Camera orbits up over the pole and tilts so the surface fills
    *  the bottom of the viewport and the limb reads as the horizon.
-   *  Starts mid-APPROACH so the tilt and the grow blend into one
-   *  continuous descent. */
-  LAND: { start: 0.55, end: 0.92 } as const,
+   *  Polish round 2: window pulled 0.55/0.92 -> 0.48/0.86 so the
+   *  landing arc resolves earlier and overlaps the title fade. */
+  LAND: { start: 0.48, end: 0.86 } as const,
 
-  /** Top-centre "billions" title fades in. Starts shortly before
-   *  LAND finishes so the title is settled at peak landing. */
-  TITLE_IN: { start: 0.7, end: 0.9 } as const,
+  /** Top-centre "billions" title fades in. Polish round 2:
+   *  pulled 0.7/0.9 -> 0.52/0.74 so the title rises DURING the
+   *  landing arc (~1 viewport into the epilogue at the new 200svh
+   *  span) instead of waiting until after it (~2.1 viewports at
+   *  the old 300svh span). */
+  TITLE_IN: { start: 0.52, end: 0.74 } as const,
 } as const;
 
 /** Helper that returns the eased 0..1 reveal for a named band. */
