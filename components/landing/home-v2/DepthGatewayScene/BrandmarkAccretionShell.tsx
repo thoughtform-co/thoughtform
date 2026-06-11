@@ -8,7 +8,7 @@ import { DOLLY_HOLD_END, smoothstep } from "@/lib/home-v2/corridorMap";
 import { epilogueBand, getEpiloguePlanetScale } from "@/lib/home-v2/epilogueTimeline";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import { gyroTilt, useGyroLabStore } from "@/lib/stores/gyroLabStore";
-import { getSmoothedAccretionLayers } from "./motionFollower";
+import { getSmoothedAccretionLayers, getSmoothedEpilogueProgress } from "./motionFollower";
 import { getBrandmarkWorldPosition, getNavigateApparentSizeBoost } from "./sceneGeom";
 import { ShellEncode } from "./shell/ShellEncode";
 import { ShellStack } from "./shell/ShellStack";
@@ -78,7 +78,11 @@ export function BrandmarkAccretionShell() {
     if (!shell) return;
 
     const transform = useDepthGatewayStore.getState().transform;
-    const { paintProgress, epilogueProgress, active, armed } = transform;
+    const { paintProgress, active, armed } = transform;
+    // Smoothed epilogue scrub — same channel the camera flies
+    // (2026-06-11 smoothness pass), so planet grow + pointer calm
+    // never step against the gliding camera.
+    const epilogueProgress = getSmoothedEpilogueProgress();
     const painting = active || armed;
 
     if (!painting) {

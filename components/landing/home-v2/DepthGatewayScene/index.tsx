@@ -36,7 +36,7 @@ import {
  */
 function MotionFollowerDriver() {
   useFrame((_, delta) => {
-    const { paintProgress, active } = useDepthGatewayStore.getState().transform;
+    const { paintProgress, epilogueProgress, active } = useDepthGatewayStore.getState().transform;
     const layers = getBrandmarkAccretionLayers(paintProgress);
     driveMotionFollower(
       {
@@ -44,6 +44,7 @@ function MotionFollowerDriver() {
         substrate: layers.substrate,
         orbits: layers.orbits,
         stack: layers.stack,
+        epilogue: epilogueProgress,
       },
       delta,
       paintProgress,

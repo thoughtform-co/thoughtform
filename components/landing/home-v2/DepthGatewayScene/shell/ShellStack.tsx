@@ -39,6 +39,16 @@
  *
  * Motes flow along the same curves (sampled polylines), so the
  * particle flow and the field lines agree exactly.
+ *
+ * Epilogue exit (2026-06-11): on BUILD_OUT the stack does NOT fade —
+ * it DRAINS in flow order (one final cycle through the layer).
+ * Source lines reel INTO the sphere via `setDrawRange` trim, each
+ * pip riding its own field line in and getting swallowed at the
+ * junction; surface lines then drain OUTWARD from the sphere to
+ * their tips, which close with a small outward release. Motes
+ * accelerate and converge into the shrinking windows. Opacity only
+ * sweeps the last faint fragments at each side's window end. See
+ * `stackDrainRow` / `stackDrainCluster` in shellGeom.
  */
 
 import { extend, useFrame } from "@react-three/fiber";
@@ -57,9 +67,9 @@ import {
   makeMeshMaterial,
   makePointsMaterial,
 } from "@/components/landing/intelligence-artifact/artifactPrimitives";
-import { epilogueBand } from "@/lib/home-v2/epilogueTimeline";
+import { band, epilogueBand } from "@/lib/home-v2/epilogueTimeline";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
-import { getSmoothedAccretionLayers } from "../motionFollower";
+import { getSmoothedAccretionLayers, getSmoothedEpilogueProgress } from "../motionFollower";
 import { getStackColumnLocalX } from "../sceneGeom";
 import {
   EMERGE_EPSILON,
@@ -74,6 +84,9 @@ import {
   STACK_ROW_SLIDE_LOCAL_X,
   STACK_TIP_INNER_SCALE,
   STACK_TIP_OUTLINE_SCALE,
+  STACK_TIP_RELEASE_DRIFT,
+  stackDrainCluster,
+  stackDrainRow,
 } from "./shellGeom";
 
 // `<line>` collides with the SVG intrinsic; the typed alias
@@ -337,14 +350,25 @@ function buildCurveMotes(curveCount: number, motesPerCurve: number): CurveMotes 
 }
 
 const MOTE_SAMPLE = new THREE.Vector3();
+/** Scratch for the source-pip swallow ride (epilogue drain). */
+const PIP_RIDE = new THREE.Vector3();
 
-function advanceCurveMotes(motes: CurveMotes, curves: StreamCurve[], flowT: number): void {
+function advanceCurveMotes(
+  motes: CurveMotes,
+  curves: StreamCurve[],
+  flowT: number,
+  laneFront?: Float32Array
+): void {
   const posAttr = motes.geometry.getAttribute("position") as THREE.BufferAttribute;
   const arr = posAttr.array as Float32Array;
   for (let i = 0; i < motes.phase.length; i++) {
     const curve = curves[motes.laneIdx[i]];
     if (!curve) continue;
-    const u = (motes.phase[i] + flowT) % 1;
+    // Epilogue drain: remap the cyclic phase into the lane's remaining
+    // visible window [front, 1] so motes converge with their draining
+    // line instead of riding through erased geometry.
+    const front = laneFront ? laneFront[motes.laneIdx[i]] : 0;
+    const u = front + ((motes.phase[i] + flowT) % 1) * (1 - front);
     samplePolyline(curve.points, u, MOTE_SAMPLE);
     arr[i * 3] = MOTE_SAMPLE.x;
     arr[i * 3 + 1] = MOTE_SAMPLE.y;
@@ -414,6 +438,17 @@ export function ShellStack({ layerKey, reducedMotion = false }: ShellStackProps)
     []
   );
 
+  // Per-lane drain fronts (0 = intact, 1 = fully consumed) — per-frame
+  // mutable scratch shared by the line drawRanges, pip rides, and mote
+  // window remaps.
+  const laneFrontsRef = useRef({
+    source: new Float32Array(STACK_LANE_COUNT),
+    surface: new Float32Array(STACK_FAN_COUNT),
+  });
+  // Accumulated mote flow phase. Replaces `clock.elapsedTime / period`
+  // so the drain can RAMP the flow speed without phase jumps.
+  const flowPhase = useRef({ source: 0, surface: 0 });
+
   const geoms = useMemo(() => {
     const sourcePipFilled = buildFilledDiamondGeometry(PYLON_CAP_SIZE * STACK_PIP_SCALE);
     const surfacePipOutline = buildDiamondGeometry(PYLON_CAP_SIZE * STACK_TIP_OUTLINE_SCALE);
@@ -459,11 +494,14 @@ export function ShellStack({ layerKey, reducedMotion = false }: ShellStackProps)
     };
   }, [streams, motes, geoms, mats]);
 
-  useFrame(({ clock }) => {
+  useFrame((_, delta) => {
     const group = groupRef.current;
     if (!group) return;
 
-    const { epilogueProgress, active, armed } = useDepthGatewayStore.getState().transform;
+    const { active, armed } = useDepthGatewayStore.getState().transform;
+    // Smoothed epilogue scrub — same channel as the camera so the
+    // BUILD_OUT drain glides with the flight (2026-06-11).
+    const epilogueProgress = getSmoothedEpilogueProgress();
     if (!active && !armed) {
       group.visible = false;
       return;
@@ -474,12 +512,36 @@ export function ShellStack({ layerKey, reducedMotion = false }: ShellStackProps)
       group.visible = false;
       return;
     }
-    const epFade = 1 - epilogueBand(epilogueProgress, "BUILD_OUT");
-    if (epFade <= EMERGE_EPSILON) {
+
+    // ── Epilogue BUILD_OUT — "final cycle" drain ──────────────────
+    // Not an opacity fade: the stack completes one last transmission
+    // and is consumed by the substrate in flow order. Source lines
+    // reel INTO the sphere (the planet-to-be inhales its inputs);
+    // surface lines then drain OUTWARD to their tips (the last pulse
+    // leaves the layer). See shellGeom `stackDrainRow`.
+    const epAbsorb = epilogueBand(epilogueProgress, "BUILD_OUT");
+    if (epAbsorb >= 1 - EMERGE_EPSILON) {
       group.visible = false;
       return;
     }
     group.visible = true;
+
+    // Per-lane drain fronts — sources reel first, surfaces trail, so
+    // the final pulse passes through the sphere left to right.
+    const laneFronts = laneFrontsRef.current;
+    for (let i = 0; i < STACK_LANE_COUNT; i++) {
+      laneFronts.source[i] = reducedMotion ? 0 : stackDrainRow(epAbsorb, 0, i, STACK_LANE_COUNT);
+    }
+    for (let i = 0; i < STACK_FAN_COUNT; i++) {
+      laneFronts.surface[i] = reducedMotion ? 0 : stackDrainRow(epAbsorb, 1, i, STACK_FAN_COUNT);
+    }
+    const srcCluster = reducedMotion ? 0 : stackDrainCluster(epAbsorb, 0);
+    const srfCluster = reducedMotion ? 0 : stackDrainCluster(epAbsorb, 1);
+    // The geometry does the storytelling; opacity only sweeps the last
+    // faint fragments (wrap tails, bunched motes) at each side's
+    // window end. Reduced motion keeps the calm whole-band fade.
+    const srcTailFade = reducedMotion ? 1 - epAbsorb : 1 - band(srcCluster, 0.8, 1);
+    const srfTailFade = reducedMotion ? 1 - epAbsorb : 1 - band(srfCluster, 0.8, 1);
 
     const sourcesStagger = petalStagger(reveal, 0, 2, STACK_CLUSTER_OVERLAP);
     const surfacesStagger = petalStagger(reveal, 1, 2, STACK_CLUSTER_OVERLAP);
@@ -487,21 +549,39 @@ export function ShellStack({ layerKey, reducedMotion = false }: ShellStackProps)
     const surfacesSlideT = reducedMotion ? 1 : smootherStack(surfacesStagger);
 
     if (sourcesGroupRef.current) {
-      sourcesGroupRef.current.visible = sourcesSlideT > EMERGE_EPSILON;
+      sourcesGroupRef.current.visible =
+        sourcesSlideT > EMERGE_EPSILON && srcTailFade > EMERGE_EPSILON;
     }
     if (surfacesGroupRef.current) {
-      surfacesGroupRef.current.visible = surfacesSlideT > EMERGE_EPSILON;
+      surfacesGroupRef.current.visible =
+        surfacesSlideT > EMERGE_EPSILON && srfTailFade > EMERGE_EPSILON;
     }
 
     // Stream + mote opacities track the cluster stagger so the field
-    // lines fade up as their side arrives.
-    mats.sourceStream.opacity = sourcesSlideT * SOURCE_STREAM_OPACITY * epFade;
-    mats.surfaceStream.opacity = surfacesSlideT * SURFACE_STREAM_OPACITY * epFade;
-    mats.sourceMotes.opacity = sourcesSlideT * SOURCE_PIP_OPACITY * epFade;
-    mats.surfaceMotes.opacity = surfacesSlideT * SOURCE_PIP_OPACITY * epFade;
-    mats.sourcePip.opacity = SOURCE_PIP_OPACITY * epFade;
-    mats.surfacePipOutline.opacity = SURFACE_PIP_OPACITY * epFade;
-    mats.surfacePipFilled.opacity = SURFACE_PIP_OPACITY * 0.94 * epFade;
+    // lines fade up as their side arrives (build-in); the drain exit
+    // stays geometric apart from the tail sweep.
+    mats.sourceStream.opacity = sourcesSlideT * SOURCE_STREAM_OPACITY * srcTailFade;
+    mats.surfaceStream.opacity = surfacesSlideT * SURFACE_STREAM_OPACITY * srfTailFade;
+    mats.sourceMotes.opacity = sourcesSlideT * SOURCE_PIP_OPACITY * srcTailFade;
+    mats.surfaceMotes.opacity = surfacesSlideT * SOURCE_PIP_OPACITY * srfTailFade;
+    mats.sourcePip.opacity = SOURCE_PIP_OPACITY * srcTailFade;
+    mats.surfacePipOutline.opacity = SURFACE_PIP_OPACITY * srfTailFade;
+    mats.surfacePipFilled.opacity = SURFACE_PIP_OPACITY * 0.94 * srfTailFade;
+
+    // Line drain — trim each polyline from its FLOW-ORIGIN end so the
+    // field line is consumed in its own travel direction: source lines
+    // vanish pip-first into the sphere; surface lines lift off the
+    // sphere and dissolve out toward their tips.
+    streams.sourceGeoms.forEach((g, i) => {
+      const n = (g.getAttribute("position") as THREE.BufferAttribute).count;
+      const start = Math.min(n - 1, Math.floor(laneFronts.source[i] * (n - 1)));
+      g.setDrawRange(start, n - start);
+    });
+    streams.surfaceGeoms.forEach((g, i) => {
+      const n = (g.getAttribute("position") as THREE.BufferAttribute).count;
+      const start = Math.min(n - 1, Math.floor(laneFronts.surface[i] * (n - 1)));
+      g.setDrawRange(start, n - start);
+    });
 
     // Per-row dock — directional flow semantics (2026-06-10 flow
     // pass): SOURCES are inputs, so their pips ARRIVE from outside-
@@ -520,8 +600,20 @@ export function ShellStack({ layerKey, reducedMotion = false }: ShellStackProps)
         continue;
       }
       const lock = stackItemLock(sourcesStagger, i, sourcePipRefs.current.length);
-      node.scale.setScalar(lock.scale);
-      node.position.x = -colX - STACK_ROW_SLIDE_LOCAL_X * (1 - lock.slide);
+      const drain = laneFronts.source[i];
+      if (drain > EMERGE_EPSILON) {
+        // Swallow ride: the pip is the head of its reeling line — it
+        // travels its own curve to the sphere junction and shrinks to
+        // nothing as the substrate captures it.
+        const curve = streams.sourceCurves[i];
+        const uJunction = STREAM_SAMPLES_APPROACH / (curve.points.length - 1);
+        samplePolyline(curve.points, Math.min(drain, uJunction), PIP_RIDE);
+        node.position.set(PIP_RIDE.x, PIP_RIDE.y, PIP_RIDE.z);
+        node.scale.setScalar(lock.scale * (1 - band(drain, uJunction * 0.5, uJunction)));
+      } else {
+        node.scale.setScalar(lock.scale);
+        node.position.set(-colX - STACK_ROW_SLIDE_LOCAL_X * (1 - lock.slide), sourceYs[i], 0);
+      }
     }
     for (let i = 0; i < surfaceTipRefs.current.length; i++) {
       const node = surfaceTipRefs.current[i];
@@ -532,21 +624,46 @@ export function ShellStack({ layerKey, reducedMotion = false }: ShellStackProps)
         continue;
       }
       const lock = stackItemLock(surfacesStagger, i, surfaceTipRefs.current.length);
-      node.scale.setScalar(lock.scale);
-      node.position.x = colX - STACK_ROW_SLIDE_LOCAL_X * (1 - lock.slide);
+      const drain = laneFronts.surface[i];
+      if (drain > EMERGE_EPSILON) {
+        // Release: the tip holds while its line drains toward it, then
+        // closes — collapsing with a small outward drift as the last
+        // pulse leaves the system.
+        const release = band(drain, 0.72, 0.98);
+        node.scale.setScalar(lock.scale * (1 - release));
+        node.position.x = colX + STACK_TIP_RELEASE_DRIFT * release;
+      } else {
+        node.scale.setScalar(lock.scale);
+        node.position.x = colX - STACK_ROW_SLIDE_LOCAL_X * (1 - lock.slide);
+      }
     }
 
     // Motes ride the field-line curves — sources flow pip → wrap
     // (absorbed into the sphere); surfaces flow wrap → tip (emitted
     // out of the sphere). Different periods keep the two sides from
-    // reading as a synchronised metronome.
+    // reading as a synchronised metronome. During the drain the flow
+    // ACCELERATES (the final pulse rushes through) — phase accumulates
+    // via delta so the speed ramp never jumps.
     if (!reducedMotion) {
-      const t = clock.elapsedTime;
+      flowPhase.current.source =
+        (flowPhase.current.source + (delta / 5.2) * (1 + 2.5 * srcCluster)) % 1;
+      flowPhase.current.surface =
+        (flowPhase.current.surface + (delta / 6.4) * (1 + 2.5 * srfCluster)) % 1;
       if (sourceMotesRef.current && sourcesSlideT > EMERGE_EPSILON) {
-        advanceCurveMotes(motes.source, streams.sourceCurves, (t / 5.2) % 1);
+        advanceCurveMotes(
+          motes.source,
+          streams.sourceCurves,
+          flowPhase.current.source,
+          laneFronts.source
+        );
       }
       if (surfaceMotesRef.current && surfacesSlideT > EMERGE_EPSILON) {
-        advanceCurveMotes(motes.surface, streams.surfaceCurves, (t / 6.4) % 1);
+        advanceCurveMotes(
+          motes.surface,
+          streams.surfaceCurves,
+          flowPhase.current.surface,
+          laneFronts.surface
+        );
       }
     }
   });

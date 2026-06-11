@@ -1114,6 +1114,7 @@ export function getBrandmarkWorldHalfExtent(progress: number): number {
 import { epilogueBand, getEpiloguePlanetScale } from "@/lib/home-v2/epilogueTimeline";
 import type { Beat, DepthGatewayTransform } from "@/lib/stores/depthGatewayStore";
 import { gyroTilt, useGyroLabStore } from "@/lib/stores/gyroLabStore";
+import { getSmoothedEpilogueProgress } from "./motionFollower";
 import type { WorldAnchor, WorldAnchorPosition } from "../hooks/useWorldDomTracker";
 import {
   GYRO_ASSEMBLY_SCALE,
@@ -1125,6 +1126,7 @@ import {
   getPrimitiveLabelOffset,
   petalStagger,
   SHELL_PRIMITIVES,
+  stackDrainRow,
 } from "./shell/shellGeom";
 
 /** Depth offset (world units, negative = deeper behind parked Z)
@@ -1348,12 +1350,22 @@ const STACK_ITEM_OVERLAP_DOM = 0.55;
  *  (inputs), surface chips EMERGE rightward out of it along the
  *  output lines. Small — the slide is a direction cue, not a fly-in. */
 const STACK_CHIP_SLIDE_PX = 14;
+/** Pixel distance a chip continues ALONG the flow (rightward) as its
+ *  canvas row drains during the epilogue exit — source chips chase
+ *  their pip into the sphere, surface chips push out past their tip. */
+const STACK_CHIP_DRAIN_SLIDE_PX = 18;
 const gateStackLabel: WorldAnchor["onPaint"] = (ctx, el) => {
   const stack = getSmoothedAccretionLayers().stack;
   const side = el.getAttribute("data-stack-side");
   const idxAttr = el.getAttribute("data-stack-idx");
+  // Epilogue drain (2026-06-11): reads the SMOOTHED epilogue scrub so
+  // the exit glides with the camera. Group labels (Sources/Surfaces
+  // headers) keep the whole-band fade; per-row chips leave WITH their
+  // canvas row below — same drain clock as the lines/pips/motes.
+  const epAbsorb = epilogueBand(getSmoothedEpilogueProgress(), "BUILD_OUT");
   let lock = stack;
   let slidePx = 0;
+  let epFade = 1 - epAbsorb;
   if (side && idxAttr !== null) {
     const idx = Number(idxAttr);
     if (Number.isFinite(idx) && idx >= 0) {
@@ -1369,14 +1381,17 @@ const gateStackLabel: WorldAnchor["onPaint"] = (ctx, el) => {
       // the pipeline (in from the left, through the sphere, out to
       // the right), landing at 0 when the row locks.
       slidePx = -(1 - eased) * STACK_CHIP_SLIDE_PX;
+      // Drain exit: the chip keeps travelling rightward along the flow
+      // and fades on its row's drain front — it departs with its line
+      // (sources swallowed into the sphere, surfaces released out)
+      // instead of dissolving in place.
+      const drain = stackDrainRow(epAbsorb, clusterIdx, idx, total);
+      epFade = 1 - drain;
+      slidePx += STACK_CHIP_DRAIN_SLIDE_PX * drain;
     }
   }
-  // Epilogue v2 fade: source/surface DOM labels clear with the canvas
-  // stack pips/lanes on the shared BUILD_OUT band so the whole Build
-  // composition leaves together (corridor cadence rule).
-  const epFade = 1 - epilogueBand(ctx.transform.epilogueProgress, "BUILD_OUT");
   el.style.opacity = (ctx.visibilityOpacity * lock * epFade).toFixed(3);
-  if (slidePx < -0.01) {
+  if (Math.abs(slidePx) > 0.01) {
     // Appended AFTER the tracker's translate/origin/scale segments and
     // BEFORE the gyro bank rotations — the tracker rewrites the base
     // transform every frame for these anchors (perspectiveScale), so
@@ -1517,9 +1532,13 @@ function gyroAssemblyWorldPosition(
   // outside the [0.30, 0.52] paintProgress window, so byte-identical
   // welding everywhere else.
   const base = useGyroLabStore.getState().enabled ? GYRO_ASSEMBLY_SCALE : 1;
+  // Planet grow reads the SMOOTHED epilogue scrub — the canvas gyro
+  // assembly scales with the same channel (BrandmarkAccretionShell),
+  // so projected DOM labels stay welded to the gliding geometry
+  // instead of stepping against it (2026-06-11 smoothness pass).
   const s =
     base *
-    getEpiloguePlanetScale(transform.epilogueProgress) *
+    getEpiloguePlanetScale(getSmoothedEpilogueProgress()) *
     getNavigateApparentSizeBoost(transform.paintProgress);
   const scaledLocal: [number, number, number] = [local[0] * s, local[1] * s, local[2] * s];
   const [bx, by, bz] = getBrandmarkWorldPosition(transform.paintProgress);

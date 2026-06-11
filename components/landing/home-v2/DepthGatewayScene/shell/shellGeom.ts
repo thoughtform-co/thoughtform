@@ -394,6 +394,59 @@ export const STACK_TIP_INNER_SCALE = 0.5;
  *  not "cluster flies in from off-screen". */
 export const STACK_ROW_SLIDE_LOCAL_X = 0.8;
 
+// ── Stack drain — epilogue BUILD_OUT exit (2026-06-11) ──────────────
+//
+// When the corridor hands off to the planet flyover, the Build stack
+// does NOT fade — it completes one final cycle and is consumed by the
+// substrate, in flow order (brandmark Principle 4: transitions are
+// geometric, not opacity). Source lines reel INTO the sphere first
+// (the planet-to-be inhales its inputs; each pip rides its own field
+// line in and is swallowed at the junction), then the surface lines
+// drain OUTWARD from the sphere to their tips (the last pulse leaves
+// the layer; each tip closes with a small outward release).
+// `ShellStack` (canvas lines/pips/motes) and `sceneGeom`'s
+// `gateStackLabel` (DOM chips) both read these helpers so the whole
+// composition drains on one clock.
+
+/** Cluster windows inside the BUILD_OUT band: sources ≈ [0, 0.6],
+ *  surfaces ≈ [0.4, 1] — the final pulse passes THROUGH the sphere
+ *  left to right. */
+export const STACK_DRAIN_CLUSTER_OVERLAP = 0.35;
+
+/** Per-row stagger inside each cluster window — lines reel in cascade
+ *  (same index order as the build-in lock stagger). */
+export const STACK_DRAIN_ROW_OVERLAP = 0.6;
+
+/** Outward drift (local X, world units) a surface tip picks up while
+ *  it collapses at the end of its drain — the port closes and lets
+ *  the last pulse go. */
+export const STACK_TIP_RELEASE_DRIFT = 0.18;
+
+/** Side-level drain envelope (0 = parked, 1 = side fully drained).
+ *  `clusterIdx` 0 = sources, 1 = surfaces. Input is the eased
+ *  BUILD_OUT band value (`epilogueBand(p, "BUILD_OUT")`). */
+export function stackDrainCluster(epAbsorb: number, clusterIdx: 0 | 1): number {
+  return petalStagger(epAbsorb, clusterIdx, 2, STACK_DRAIN_CLUSTER_OVERLAP);
+}
+
+/** Per-row eased drain front (0 = line intact, 1 = fully consumed).
+ *  Doubles as the polyline trim fraction AND the pip's ride parameter
+ *  so a row's line, pip, motes, and DOM chip drain as one body. */
+export function stackDrainRow(
+  epAbsorb: number,
+  clusterIdx: 0 | 1,
+  rowIdx: number,
+  rowCount: number
+): number {
+  const row = petalStagger(
+    stackDrainCluster(epAbsorb, clusterIdx),
+    rowIdx,
+    rowCount,
+    STACK_DRAIN_ROW_OVERLAP
+  );
+  return smootherStep(row);
+}
+
 // ── Petal-unfold helpers (2026-06-05 revision) ──────────────────────
 //
 // The shell layers deploy with PETAL UNFOLD motion: each individual

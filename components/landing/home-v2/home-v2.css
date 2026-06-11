@@ -319,9 +319,12 @@ html[data-corridor-epilogue="true"] .home-v2-stage__canvas canvas {
 
 .home-v2-station-header__head {
   position: absolute;
-  /* Above the sphere: the (boosted) gimbal ring's top edge sits at
-     ~17.5% viewport height, so the head band lives in ~5-16%. */
-  top: clamp(44px, 7vh, 96px);
+  /* Above the sphere, just clear of the CorridorProgressRail
+     breadcrumb that sits on the top HUD frame line (rail bottom ≈
+     hud-margin + 16px ≈ 52-70px). The framed title console carries
+     its own vertical padding, so the band hugs that boundary
+     instead of the old clamp(44px, 7vh, 96px). */
+  top: clamp(48px, 6.8vh, 84px);
   left: 0;
   right: 0;
   display: flex;
@@ -332,11 +335,181 @@ html[data-corridor-epilogue="true"] .home-v2-stage__canvas canvas {
 
 .home-v2-station-header__foot {
   position: absolute;
-  bottom: clamp(32px, 5.5vh, 72px);
+  bottom: clamp(28px, 5svh, 64px);
   left: 0;
   right: 0;
   display: flex;
   justify-content: center;
+}
+
+/* ── V8 console chrome (2026-06-11, ported from navigate-copy-lab) ──
+   Both station text bands render inside a low-profile HUD console:
+   dotted particle frame segments, corner brackets, and (on the
+   support band) telemetry meta/readout rows. The frame segments
+   UNFOLD from the centre when the container gains `is-armed` —
+   toggled by the RAF loop at the same instant the typewriter starts,
+   so chrome and chars resolve together. Collapse plays in reverse
+   when the station re-arms (scroll back out). */
+
+.home-v2-station-header__console {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.home-v2-station-header__console--title {
+  /* Matches the support console (88vw / 920px) so the two consoles
+     bracket the sphere with the same horizontal extent and the long
+     Navigate title ("NAVIGATE THE INTELLIGENCE.") stays on one line
+     at the desktop type scale. */
+  width: min(88vw, 920px);
+  min-height: 70px;
+  padding: 12px clamp(22px, 3vw, 42px) 14px;
+  background:
+    linear-gradient(90deg, rgba(10, 9, 8, 0), rgba(10, 9, 8, 0.48) 20% 80%, rgba(10, 9, 8, 0)),
+    radial-gradient(ellipse 65% 120% at 50% 0%, rgba(202, 165, 84, 0.08), transparent 64%);
+}
+
+.home-v2-station-header__console--support {
+  /* Wide enough that the authored `<br>` sentence-per-line breaks in
+     the corridor support copy never re-wrap inside the console
+     (longest line ≈ 78 chars at the 20px cap ≈ 780px). */
+  width: min(88vw, 920px);
+  min-height: 104px;
+  padding: 18px clamp(22px, 3vw, 44px) 16px;
+  gap: 10px;
+  background:
+    linear-gradient(90deg, rgba(10, 9, 8, 0), rgba(10, 9, 8, 0.68) 18% 82%, rgba(10, 9, 8, 0)),
+    radial-gradient(ellipse 75% 120% at 50% 100%, rgba(202, 165, 84, 0.1), transparent 62%);
+}
+
+/* Dotted particle frame runs — folded (scaleX 0) until the container
+   is armed, then unfold outward from the centre. Fast + no delay:
+   the unfold resolves in ~0.26s with the brand deceleration curve,
+   in step with the title type-out (~0.15s). */
+.home-v2-station-header__frame {
+  position: absolute;
+  height: 1px;
+  background-image: repeating-linear-gradient(
+    to right,
+    rgba(202, 165, 84, 0.62) 0 1.5px,
+    transparent 1.5px 7px
+  );
+  pointer-events: none;
+  transform: scaleX(0);
+  transform-origin: center;
+  transition: transform 0.26s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.home-v2-station-header.is-armed .home-v2-station-header__frame {
+  transform: scaleX(1);
+}
+.home-v2-station-header__console--title .home-v2-station-header__frame {
+  left: clamp(14px, 3vw, 44px);
+  right: clamp(14px, 3vw, 44px);
+  background-image: repeating-linear-gradient(
+    to right,
+    rgba(202, 165, 84, 0.5) 0 1.5px,
+    transparent 1.5px 7px
+  );
+}
+.home-v2-station-header__console--support .home-v2-station-header__frame {
+  left: clamp(18px, 4vw, 56px);
+  right: clamp(18px, 4vw, 56px);
+}
+.home-v2-station-header__frame--top {
+  top: 0;
+}
+.home-v2-station-header__frame--bottom {
+  bottom: 0;
+}
+/* Title console reads underlined now (2026-06-11): the prominent
+   dotted rule sits BELOW the title, the faint one above — flipped
+   from the original top-rule treatment. */
+.home-v2-station-header__console--title .home-v2-station-header__frame--top {
+  opacity: 0.32;
+}
+.home-v2-station-header__console--support .home-v2-station-header__frame--bottom {
+  opacity: 0.42;
+}
+
+/* Corner brackets removed (2026-06-11) — the title console's bottom
+   corners and the support console's top corners competed with the
+   instrument; the frames now end open toward the sphere. */
+
+/* Telemetry rows — PT Mono micro-readouts above and below the support
+   paragraph. Chrome, not content: they fade with the frames rather
+   than typing out. */
+.home-v2-station-header__meta,
+.home-v2-station-header__readouts {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: var(--font-pt-mono, ui-monospace, monospace);
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(202, 165, 84, 0.76);
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.home-v2-station-header.is-armed .home-v2-station-header__meta,
+.home-v2-station-header.is-armed .home-v2-station-header__readouts {
+  opacity: 1;
+}
+.home-v2-station-header__readouts {
+  gap: clamp(12px, 2.6vw, 32px);
+  color: rgba(235, 227, 214, 0.42);
+  font-size: 8px;
+  letter-spacing: 0.16em;
+}
+.home-v2-station-header__meta-diamond,
+.home-v2-station-header__meta-sep {
+  display: inline-block;
+  width: 4px;
+  height: 4px;
+  transform: rotate(45deg);
+  flex: none;
+}
+.home-v2-station-header__meta-diamond {
+  background: var(--gold, #caa554);
+  box-shadow: 0 0 10px rgba(202, 165, 84, 0.7);
+}
+.home-v2-station-header__meta-sep {
+  width: 3px;
+  height: 3px;
+  background: rgba(235, 227, 214, 0.32);
+}
+.home-v2-station-header__meta-status {
+  color: var(--gold, #caa554);
+}
+
+/* Inside the consoles the text measures against the console box, and
+   the support paragraph tightens slightly (V8 band sizing) so the
+   framed band stays compact under the sphere. */
+.home-v2-station-header__console .home-v2-station-header__title {
+  max-width: 100%;
+}
+.home-v2-station-header__console--support .home-v2-station-header__support {
+  max-width: 100%;
+  font-size: clamp(16px, 1.3vw, 20px);
+  line-height: 1.45;
+  letter-spacing: 0.008em;
+  color: rgba(235, 227, 214, 0.88);
+  text-shadow: 0 0 18px rgba(10, 9, 8, 0.72);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Frames appear instantly when armed — no unfold motion. */
+  .home-v2-station-header__frame,
+  .home-v2-station-header__meta,
+  .home-v2-station-header__readouts {
+    transition: none;
+  }
 }
 
 /* Explicit caption lines — support copy carries `<br>` separators

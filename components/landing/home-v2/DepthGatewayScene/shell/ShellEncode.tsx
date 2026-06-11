@@ -25,7 +25,7 @@ import { COLOR_GOLD } from "@/components/landing/intelligence-artifact/artifactG
 import { makeLineMaterial } from "@/components/landing/intelligence-artifact/artifactPrimitives";
 import { epilogueBand } from "@/lib/home-v2/epilogueTimeline";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
-import { getSmoothedAccretionLayers } from "../motionFollower";
+import { getSmoothedAccretionLayers, getSmoothedEpilogueProgress } from "../motionFollower";
 import {
   EMERGE_EPSILON,
   SLOT_ARC_BOUNDS,
@@ -199,7 +199,10 @@ export function ShellEncode({ layerKey, reducedMotion = false }: ShellEncodeProp
     const group = groupRef.current;
     if (!group) return;
 
-    const { epilogueProgress, active, armed } = useDepthGatewayStore.getState().transform;
+    const { active, armed } = useDepthGatewayStore.getState().transform;
+    // Smoothed epilogue scrub — same channel as the camera so the
+    // BUILD_OUT fade glides with the flight (2026-06-11).
+    const epilogueProgress = getSmoothedEpilogueProgress();
     if (!active && !armed) {
       group.visible = false;
       return;

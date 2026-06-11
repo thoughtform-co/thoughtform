@@ -37,6 +37,13 @@ export interface MotionFollowerState {
   substrate: number;
   orbits: number;
   stack: number;
+  /** Smoothed epilogue scrub (0..1). The post-Build flyover (camera
+   *  pose + planet grow + shell fades) covers a large spatial arc in
+   *  only ~2 viewports of scroll, so raw wheel-notch quantization
+   *  reads as camera judder. Every epilogue consumer flies this
+   *  chased value instead of the raw store scrub (2026-06-11
+   *  smoothness pass). */
+  epilogue: number;
 }
 
 /** Damping time constants (seconds), per channel. The follower covers
@@ -53,6 +60,10 @@ export interface MotionFollowerState {
  *    intentionally dreamier than the camera-pan. */
 const MOTION_FOLLOWER_TAU_PAN_S = 0.1;
 const MOTION_FOLLOWER_TAU_REVEAL_S = 0.2;
+/** Epilogue flight chase. Slightly faster than the reveals so the
+ *  camera feels attached to the scroll, but slow enough that wheel
+ *  steps melt into one continuous glide (~0.55s settle). */
+const MOTION_FOLLOWER_TAU_EPILOGUE_S = 0.18;
 
 /** `paintProgress` jump (per frame) above which we treat the change
  *  as a TELEPORT (hash nav, scroll restore on reload) and snap every
@@ -67,6 +78,7 @@ const state: MotionFollowerState = {
   substrate: 0,
   orbits: 0,
   stack: 0,
+  epilogue: 0,
 };
 
 let lastPaintProgress: number | null = null;
@@ -79,6 +91,7 @@ export function snapMotionFollower(targets: MotionFollowerState): void {
   state.substrate = targets.substrate;
   state.orbits = targets.orbits;
   state.stack = targets.stack;
+  state.epilogue = targets.epilogue;
 }
 
 /**
@@ -109,6 +122,15 @@ export function driveMotionFollower(
     return;
   }
 
+  // Epilogue-channel teleport: paintProgress is pinned at 1 across
+  // the whole epilogue, so a hash-nav / scroll-restore jump WITHIN
+  // the epilogue never trips the paintProgress check above. A gap
+  // this size cannot come from physical scrolling between frames —
+  // snap the channel rather than gliding across half the flight.
+  if (Math.abs(targets.epilogue - state.epilogue) > 0.5) {
+    state.epilogue = targets.epilogue;
+  }
+
   const dt = Math.min(0.1, Math.max(0, dtSeconds));
   if (dt <= 0) return;
   // Exponential chase — frame-rate independent: identical convergence
@@ -116,10 +138,18 @@ export function driveMotionFollower(
   // so the pan arrives decisively while the reveals breathe.
   const kPan = 1 - Math.exp(-dt / MOTION_FOLLOWER_TAU_PAN_S);
   const kReveal = 1 - Math.exp(-dt / MOTION_FOLLOWER_TAU_REVEAL_S);
+  const kEpilogue = 1 - Math.exp(-dt / MOTION_FOLLOWER_TAU_EPILOGUE_S);
   state.panOffsetX += (targets.panOffsetX - state.panOffsetX) * kPan;
   state.substrate += (targets.substrate - state.substrate) * kReveal;
   state.orbits += (targets.orbits - state.orbits) * kReveal;
   state.stack += (targets.stack - state.stack) * kReveal;
+  state.epilogue += (targets.epilogue - state.epilogue) * kEpilogue;
+  // Settle the epilogue chase exactly on target once the remaining
+  // gap is sub-perceptual, so the parked pose is byte-identical to
+  // the scrub (no asymptotic micro-creep in the camera).
+  if (Math.abs(targets.epilogue - state.epilogue) < 0.0004) {
+    state.epilogue = targets.epilogue;
+  }
 }
 
 /** Smoothed Thoughtform centering pan offset (world X). Temporal
@@ -137,4 +167,12 @@ export function getSmoothedAccretionLayers(): {
   stack: number;
 } {
   return { substrate: state.substrate, orbits: state.orbits, stack: state.stack };
+}
+
+/** Smoothed epilogue scrub. Temporal counterpart of the store's
+ *  `epilogueProgress`. Camera pose, planet grow, and shell fades all
+ *  fly THIS value so the whole flyover moves on one clock — smoothing
+ *  only the camera would let the planet's scale step against it. */
+export function getSmoothedEpilogueProgress(): number {
+  return state.epilogue;
 }

@@ -11,6 +11,7 @@ import {
 import { type WorldAnchor, useWorldDomTracker } from "./hooks/useWorldDomTracker";
 import { BEAT_ORDER } from "@/lib/home-v2/corridorMap";
 import { epilogueBand } from "@/lib/home-v2/epilogueTimeline";
+import { getSmoothedEpilogueProgress } from "./DepthGatewayScene/motionFollower";
 import { gyroTilt, useGyroLabStore } from "@/lib/stores/gyroLabStore";
 
 /**
@@ -163,8 +164,10 @@ export function ProjectedBrandmarkActor() {
           // substrate as it grows into a planet. By the LAND band the
           // mark is invisible and we end "standing on the substrate"
           // looking out at the curved horizon, not staring at the
-          // brandmark glyph in space.
-          const epFade = 1 - epilogueBand(transform.epilogueProgress, "APPROACH");
+          // brandmark glyph in space. Reads the SMOOTHED epilogue
+          // scrub (same channel as the camera + planet grow) so the
+          // fade glides with the flight (2026-06-11 smoothness pass).
+          const epFade = 1 - epilogueBand(getSmoothedEpilogueProgress(), "APPROACH");
           element.style.opacity = `${(bookend * intensity * diagramFactor * epFade).toFixed(3)}`;
 
           // Forward tilt: the inner div takes a small Y rotation

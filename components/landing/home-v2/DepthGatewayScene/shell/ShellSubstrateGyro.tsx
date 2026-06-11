@@ -41,7 +41,7 @@ import { epilogueBand } from "@/lib/home-v2/epilogueTimeline";
 import { useGyroLabStore } from "@/lib/stores/gyroLabStore";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import { clamp01 } from "@/lib/home-v2/corridorMap";
-import { getSmoothedAccretionLayers } from "../motionFollower";
+import { getSmoothedAccretionLayers, getSmoothedEpilogueProgress } from "../motionFollower";
 import {
   EMERGE_EPSILON,
   gyroAssemblyUnfold,
@@ -849,7 +849,10 @@ export function ShellSubstrateGyro({ layerKey, reducedMotion = false }: ShellSub
     const globeSpin = globeSpinRef.current;
     if (!root || !globeSpin) return;
 
-    const { epilogueProgress, active, armed } = useDepthGatewayStore.getState().transform;
+    const { active, armed } = useDepthGatewayStore.getState().transform;
+    // Smoothed epilogue scrub — same channel as the camera so the
+    // shed + surface boost glide with the flight (2026-06-11).
+    const epilogueProgress = getSmoothedEpilogueProgress();
     if (!active && !armed) {
       root.visible = false;
       return;

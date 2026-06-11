@@ -3,6 +3,7 @@
 import { useFrame, useThree } from "@react-three/fiber";
 import { useEffect } from "react";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
+import { getSmoothedEpilogueProgress } from "./motionFollower";
 import {
   CAMERA_START,
   getCameraFov,
@@ -63,15 +64,27 @@ export function FlyingCameraRig() {
     // parked Thoughtform layout (progress 0) during the `armed` pre-
     // arm pass — mirrors the DOM tracker so DOM + R3F project from
     // the same camera the moment the stage pins.
-    const { paintProgress, epilogueProgress } = useDepthGatewayStore.getState().transform;
+    const { paintProgress } = useDepthGatewayStore.getState().transform;
 
     // Epilogue v3 — once paintProgress saturates at 1 and the user
     // continues scrolling into the epilogue, `getEpilogueCameraPose`
     // takes over. At epilogueProgress = 0 the pose returns the parked
     // CAMERA_END frame so the corridor->epilogue handoff is a no-op
     // until the user actually starts scrolling past Build.
-    if (epilogueProgress > 0) {
-      const pose = getEpilogueCameraPose(epilogueProgress);
+    //
+    // 2026-06-11 smoothness pass: the pose flies the SMOOTHED scrub
+    // from the motion follower, not the raw store value. The raw
+    // scrub is quantized by wheel notches, and the flyover covers a
+    // large spatial arc in ~2 viewports of scroll, so each notch
+    // stepped the camera visibly. The follower (driven at priority
+    // -10, before this rig) melts those steps into one continuous
+    // exponential glide; planet grow + shell fades read the same
+    // channel so the whole flyover moves on one clock. Scroll-back
+    // eases the camera home through the same curve before the
+    // corridor path resumes.
+    const ep = getSmoothedEpilogueProgress();
+    if (ep > 0) {
+      const pose = getEpilogueCameraPose(ep);
       camera.position.set(...pose.position);
       camera.lookAt(...pose.lookAt);
       return;
