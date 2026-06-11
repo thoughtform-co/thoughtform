@@ -178,7 +178,7 @@ export function CorridorProgressRail() {
       if (containerChanged || !prev) {
         last.current = { container: containerOpacity, reveal, active };
       } else {
-        last.current = { ...last.current, reveal, active };
+        last.current = { container: prev.container, reveal, active };
       }
     };
     raf = requestAnimationFrame(tick);
