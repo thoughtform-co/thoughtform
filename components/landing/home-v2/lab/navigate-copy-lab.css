@@ -1,0 +1,1142 @@
+/* ─────────────────────────────────────────────────────────────────
+ * navigate-copy-lab.css — styles for `/test/navigate-copy-lab`.
+ *
+ * Loaded only by the lab route, so production / `/test/home-v2`
+ * never see these rules. Variant classes are namespaced under `ncl-`
+ * ("navigate copy lab") to make sure they never collide with the
+ * production `.home-v2-station-header*` classes.
+ * ──────────────────────────────────────────────────────────────── */
+
+/* ── Pinned lab stage ─────────────────────────────────────────────
+ * Cancel the home-v2 sticky-stage scroll model: no scroll, no
+ * 900svh height — just a fixed full-viewport box that holds the
+ * canvas, brandmark, and the active variant overlay. */
+.navigate-copy-lab {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100svh;
+  overflow: hidden;
+  background: var(--void, #050403);
+}
+
+.navigate-copy-lab .navigate-copy-lab__stage {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* Override `home-v2-stage` defaults (which set min-height 900svh
+ * + position: relative for the scroll model). */
+.navigate-copy-lab .home-v2-stage {
+  min-height: 0;
+  height: 100%;
+}
+
+.navigate-copy-lab .home-v2-stage__sticky {
+  position: relative;
+  top: auto;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* Mobile override for stage height stays out — the lab is
+ * desktop-only by intent. */
+
+/* Sphere-offset wrapper — translates the canvas + brandmark together
+ * so their relative composition stays correct under any lateral
+ * shift. Variant overlays sit OUTSIDE this wrapper so they stay
+ * anchored to the viewport regardless of the offset. */
+.navigate-copy-lab__shift {
+  position: absolute;
+  inset: 0;
+  transform: translateX(var(--lab-sphere-offset, 0));
+  transform-origin: center center;
+  /* Keep the inner canvas + brandmark transforms in their own
+   * compositor layer to avoid jank when the slider scrubs. */
+  will-change: transform;
+}
+
+/* Re-anchor the inner canvas to fill the wrapper so the existing
+ * `home-v2-stage__canvas { inset: 0 }` reference resolves against
+ * the shift wrapper, not the viewport. */
+.navigate-copy-lab__shift .home-v2-stage__canvas {
+  position: absolute;
+  inset: 0;
+}
+
+/* HUD chrome inside the lab — the v7 prototype HUD is rendered
+ * inside `home-v2-hud-root`; lift it above the canvas (z:5) but
+ * BELOW the variant overlay (z:30) and the control panel
+ * (z:9000). */
+.navigate-copy-lab__hud {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  pointer-events: none;
+}
+.navigate-copy-lab__hud .hud {
+  pointer-events: none;
+}
+.navigate-copy-lab__hud .hud__nav,
+.navigate-copy-lab__hud .hud__nav__btn,
+.navigate-copy-lab__hud a {
+  pointer-events: auto;
+}
+
+/* All variants share the overlay container z-index — they sit
+ * between the HUD chrome and the projected brandmark. */
+.ncl-variant {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  color: var(--dawn, #ebe3d6);
+  z-index: 30;
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+}
+
+/* ─────────────────────────────────────────────────────────────────
+ * Shared HUD primitives — telemetry row + token colors.
+ * ──────────────────────────────────────────────────────────────── */
+
+.ncl-telemetry {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(202, 165, 84, 0.78);
+  white-space: nowrap;
+}
+.ncl-telemetry__diamond {
+  display: inline-block;
+  width: 4px;
+  height: 4px;
+  background: var(--gold, #caa554);
+  transform: rotate(45deg);
+  flex: none;
+}
+.ncl-telemetry__sep {
+  display: inline-block;
+  width: 3px;
+  height: 3px;
+  background: rgba(235, 227, 214, 0.35);
+  transform: rotate(45deg);
+  flex: none;
+}
+.ncl-telemetry__status {
+  color: var(--gold, #caa554);
+}
+
+/* Italic em accents in titles/captions = gold, matching corridor
+ * production styling. */
+.ncl-variant h2 em,
+.ncl-variant p em {
+  font-style: normal;
+  color: var(--gold, #caa554);
+  font-weight: 500;
+}
+.ncl-variant p em {
+  font-style: italic;
+}
+
+/* Explicit caption lines — support copy carries `<br>` separators
+ * (sentence-per-line breaks). */
+.ncl-variant p br {
+  /* render as natural break; no styling needed */
+}
+
+/* ─────────────────────────────────────────────────────────────────
+ * V0 — Baseline split (control sample)
+ * Faithful copy of `.home-v2-station-header--split` geometry so the
+ * lab compares the new variants against the production layout 1:1.
+ * ──────────────────────────────────────────────────────────────── */
+
+.ncl-v0 {
+  display: block;
+}
+.ncl-v0__head {
+  position: absolute;
+  top: clamp(44px, 7vh, 96px);
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+}
+.ncl-v0__foot {
+  position: absolute;
+  bottom: clamp(32px, 5.5vh, 72px);
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+}
+.ncl-v0__title {
+  margin: 0;
+  max-width: min(72vw, 720px);
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-size: clamp(26px, 3vw, 44px);
+  font-weight: 400;
+  line-height: 1.1;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--dawn, #ebe3d6);
+  text-align: center;
+  text-shadow: 0 0 22px rgba(202, 165, 84, 0.18);
+}
+.ncl-v0__support {
+  margin: 0;
+  max-width: min(84vw, 920px);
+  font-size: clamp(17px, 1.45vw, 21px);
+  line-height: 1.5;
+  letter-spacing: 0.005em;
+  color: rgba(235, 227, 214, 0.82);
+  text-align: center;
+}
+
+/* ─────────────────────────────────────────────────────────────────
+ * V1 — Rail card (top-left diagnostic card)
+ *
+ * Ship-diagnostic readout: header band → path breadcrumb → dotted
+ * divider → title → support → telemetry footer. The frame is built
+ * from PARTIAL dotted "particle" segments (repeating-gradient dot
+ * runs), not a closed border box — the card reads as an annotation
+ * layer of the navigational interface, docked into the left HUD
+ * rail by a dotted tether + diamond node.
+ * ──────────────────────────────────────────────────────────────── */
+
+.ncl-v1 {
+  /* Shared geometry so the tether and the card stay welded. */
+  --ncl-card-top: clamp(96px, 14svh, 168px);
+  --ncl-card-left: clamp(84px, 7.5vw, 132px);
+  /* Left HUD rail guide x-position (matches the v7 hud margin). */
+  --ncl-rail-x: clamp(24px, 2.2vw, 36px);
+  /* Particle dot runs — 1.5px gold dots on a 7px rhythm. */
+  --ncl-dots-h: repeating-linear-gradient(
+    to right,
+    rgba(202, 165, 84, 0.6) 0 1.5px,
+    transparent 1.5px 7px
+  );
+  --ncl-dots-v: repeating-linear-gradient(
+    to bottom,
+    rgba(202, 165, 84, 0.6) 0 1.5px,
+    transparent 1.5px 7px
+  );
+  display: block;
+}
+
+/* ── Card shell ── */
+.ncl-v1__card {
+  position: absolute;
+  top: var(--ncl-card-top);
+  left: var(--ncl-card-left);
+  width: min(33vw, 432px);
+  padding: 16px 24px 18px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+  /* Whisper of a scrim — separates the card zone from the starfield
+     without reading as a filled panel. */
+  background: linear-gradient(180deg, rgba(10, 9, 8, 0.5) 0%, rgba(10, 9, 8, 0.12) 100%);
+}
+.ncl-v1.is-mirrored .ncl-v1__card {
+  left: auto;
+  right: var(--ncl-card-left);
+}
+
+/* ── Partial particle-dot frame segments ── */
+.ncl-v1__frame {
+  position: absolute;
+  pointer-events: none;
+}
+.ncl-v1__frame--top {
+  top: 0;
+  left: 0;
+  /* Overshoots the card's right edge — an open run, not a box lid. */
+  width: calc(100% + 28px);
+  height: 1px;
+  background-image: var(--ncl-dots-h);
+}
+.ncl-v1.is-mirrored .ncl-v1__frame--top {
+  left: auto;
+  right: 0;
+}
+.ncl-v1__frame--left {
+  top: 0;
+  left: 0;
+  width: 1px;
+  /* Runs ~70% of the card height then stops — open frame. */
+  height: 72%;
+  background-image: var(--ncl-dots-v);
+}
+.ncl-v1.is-mirrored .ncl-v1__frame--left {
+  left: auto;
+  right: 0;
+}
+
+/* Solid corner notch top-left — the one "welded" point of the
+   frame; everything else is dotted/partial. */
+.ncl-v1__corner {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 11px;
+  height: 11px;
+  border-top: 1px solid var(--gold, #caa554);
+  border-left: 1px solid var(--gold, #caa554);
+  pointer-events: none;
+}
+.ncl-v1.is-mirrored .ncl-v1__corner {
+  left: auto;
+  right: 0;
+  border-left: none;
+  border-right: 1px solid var(--gold, #caa554);
+}
+/* Tiny answering notch bottom-right — closes the composition
+   diagonally without boxing it in. */
+.ncl-v1__corner-br {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 11px;
+  height: 11px;
+  border-bottom: 1px solid rgba(202, 165, 84, 0.55);
+  border-right: 1px solid rgba(202, 165, 84, 0.55);
+  pointer-events: none;
+}
+.ncl-v1.is-mirrored .ncl-v1__corner-br {
+  right: auto;
+  left: 0;
+  border-right: none;
+  border-left: 1px solid rgba(202, 165, 84, 0.55);
+}
+
+/* ── Tether — dotted run from the rail into the header line ── */
+.ncl-v1__tether {
+  position: absolute;
+  /* Sits on the card's header band line (padding-top + half the
+     header row height). */
+  top: calc(var(--ncl-card-top) + 21px);
+  left: var(--ncl-rail-x);
+  width: calc(var(--ncl-card-left) - var(--ncl-rail-x));
+  display: flex;
+  align-items: center;
+  pointer-events: none;
+}
+.ncl-v1.is-mirrored .ncl-v1__tether {
+  left: auto;
+  right: var(--ncl-rail-x);
+  flex-direction: row-reverse;
+}
+.ncl-v1__tether-line {
+  flex: 1;
+  height: 1px;
+  background-image: var(--ncl-dots-h);
+}
+.ncl-v1__tether-diamond {
+  flex: none;
+  width: 6px;
+  height: 6px;
+  margin-right: 4px;
+  background: var(--gold, #caa554);
+  transform: rotate(45deg);
+  box-shadow: 0 0 10px rgba(202, 165, 84, 0.6);
+}
+.ncl-v1.is-mirrored .ncl-v1__tether-diamond {
+  margin-right: 0;
+  margin-left: 4px;
+}
+
+/* ── Header band — diamond + kicker + status ── */
+.ncl-v1__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+.ncl-v1__head-diamond {
+  flex: none;
+  width: 4px;
+  height: 4px;
+  background: var(--gold, #caa554);
+  transform: rotate(45deg);
+}
+.ncl-v1__head-kicker {
+  color: var(--gold, #caa554);
+  font-weight: 500;
+}
+.ncl-v1__head-status {
+  margin-left: auto;
+  padding: 2px 6px;
+  font-size: 8px;
+  letter-spacing: 0.2em;
+  color: var(--gold, #caa554);
+  border: 1px solid rgba(202, 165, 84, 0.4);
+}
+
+/* ── Path breadcrumb — system-file line under the header ── */
+.ncl-v1__path {
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: 8.5px;
+  letter-spacing: 0.12em;
+  color: rgba(235, 227, 214, 0.38);
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Dotted divider between meta and content ── */
+.ncl-v1__divider {
+  display: block;
+  width: 100%;
+  height: 1px;
+  background-image: repeating-linear-gradient(
+    to right,
+    rgba(235, 227, 214, 0.32) 0 1.5px,
+    transparent 1.5px 7px
+  );
+  margin: 2px 0;
+}
+
+/* ── Content ── */
+.ncl-v1__title {
+  margin: 6px 0 0 0;
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-size: clamp(24px, 2.35vw, 34px);
+  font-weight: 400;
+  line-height: 1.12;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--dawn, #ebe3d6);
+  text-align: left;
+  text-shadow: 0 0 22px rgba(202, 165, 84, 0.14);
+}
+.ncl-v1__support {
+  margin: 0;
+  font-size: clamp(14px, 1.05vw, 16px);
+  line-height: 1.55;
+  letter-spacing: 0.005em;
+  color: rgba(235, 227, 214, 0.76);
+  max-width: 38ch;
+}
+.ncl-v1.is-mirrored .ncl-v1__title,
+.ncl-v1.is-mirrored .ncl-v1__support {
+  text-align: right;
+}
+.ncl-v1.is-mirrored .ncl-v1__support {
+  align-self: flex-end;
+}
+.ncl-v1.is-mirrored .ncl-v1__head {
+  flex-direction: row-reverse;
+}
+.ncl-v1.is-mirrored .ncl-v1__head-status {
+  margin-left: 0;
+  margin-right: auto;
+}
+.ncl-v1.is-mirrored .ncl-v1__path {
+  text-align: right;
+}
+
+/* ── Telemetry footer — label:value readouts ── */
+.ncl-v1__foot {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-top: 6px;
+  padding-top: 10px;
+  /* Short dotted run above the footer — partial, left-anchored. */
+  background-image: repeating-linear-gradient(
+    to right,
+    rgba(235, 227, 214, 0.28) 0 1.5px,
+    transparent 1.5px 7px
+  );
+  background-repeat: no-repeat;
+  background-size: 38% 1px;
+  background-position: left top;
+}
+.ncl-v1.is-mirrored .ncl-v1__foot {
+  justify-content: flex-end;
+  background-position: right top;
+}
+.ncl-v1__foot-item {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+}
+.ncl-v1__foot-label {
+  font-size: 8px;
+  letter-spacing: 0.18em;
+  color: rgba(235, 227, 214, 0.42);
+  text-transform: uppercase;
+}
+.ncl-v1__foot-value {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: var(--gold, #caa554);
+  font-variant-numeric: tabular-nums;
+}
+.ncl-v1__sig {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+.ncl-v1__sig-dot {
+  width: 4px;
+  height: 4px;
+  background: rgba(235, 227, 214, 0.22);
+  transform: rotate(45deg);
+}
+.ncl-v1__sig-dot.is-on {
+  background: var(--gold, #caa554);
+}
+
+/* ─────────────────────────────────────────────────────────────────
+ * V2 — Corner console
+ * Compact mission-card dock at bottom-left, above the HUD brandmark
+ * anchor (~80–96px from the edges).
+ * ──────────────────────────────────────────────────────────────── */
+
+.ncl-v2 {
+  display: block;
+}
+.ncl-v2__card {
+  position: absolute;
+  left: clamp(72px, 6vw, 112px);
+  bottom: clamp(80px, 8vh, 128px);
+  width: min(34vw, 360px);
+  padding: clamp(16px, 1.4vw, 22px) clamp(20px, 1.6vw, 26px);
+  display: flex;
+  flex-direction: column;
+  gap: clamp(10px, 1vw, 14px);
+  background: rgba(10, 9, 8, 0.55);
+  border: 1px solid rgba(235, 227, 214, 0.18);
+  backdrop-filter: blur(6px);
+}
+.ncl-v2.is-mirrored .ncl-v2__card {
+  left: auto;
+  right: clamp(72px, 6vw, 112px);
+  text-align: right;
+  align-items: flex-end;
+}
+.ncl-v2.is-mirrored .ncl-v2__card .ncl-telemetry {
+  justify-content: flex-end;
+}
+
+.ncl-v2__bracket {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  pointer-events: none;
+  border-color: var(--gold, #caa554);
+  opacity: 0.85;
+}
+.ncl-v2__bracket--tl {
+  top: -1px;
+  left: -1px;
+  border-top: 1px solid;
+  border-left: 1px solid;
+}
+.ncl-v2__bracket--tr {
+  top: -1px;
+  right: -1px;
+  border-top: 1px solid;
+  border-right: 1px solid;
+}
+.ncl-v2__bracket--bl {
+  bottom: -1px;
+  left: -1px;
+  border-bottom: 1px solid;
+  border-left: 1px solid;
+}
+.ncl-v2__bracket--br {
+  bottom: -1px;
+  right: -1px;
+  border-bottom: 1px solid;
+  border-right: 1px solid;
+}
+
+.ncl-v2__title {
+  margin: 0;
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-size: clamp(20px, 1.9vw, 26px);
+  font-weight: 400;
+  line-height: 1.15;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--dawn, #ebe3d6);
+}
+.ncl-v2__support {
+  margin: 0;
+  font-size: clamp(13px, 0.95vw, 15px);
+  line-height: 1.5;
+  letter-spacing: 0.005em;
+  color: rgba(235, 227, 214, 0.78);
+}
+
+/* ─────────────────────────────────────────────────────────────────
+ * V3 — Unified cartouche
+ * Title + caption stacked together, centered above the sphere.
+ * Hairline + diamond chrome above the title (kicker), divider
+ * between title and caption.
+ * ──────────────────────────────────────────────────────────────── */
+
+.ncl-v3 {
+  display: flex;
+  justify-content: center;
+}
+.ncl-v3__card {
+  position: absolute;
+  top: clamp(48px, 8vh, 96px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(74vw, 720px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(12px, 1.2vw, 18px);
+  text-align: center;
+}
+.ncl-v3__chrome {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: rgba(202, 165, 84, 0.78);
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+.ncl-v3__rule {
+  display: block;
+  width: clamp(40px, 6vw, 72px);
+  height: 1px;
+  background: rgba(202, 165, 84, 0.5);
+}
+.ncl-v3__diamond {
+  display: block;
+  width: 5px;
+  height: 5px;
+  background: var(--gold, #caa554);
+  transform: rotate(45deg);
+}
+.ncl-v3__kicker {
+  white-space: nowrap;
+}
+.ncl-v3__title {
+  margin: 0;
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-size: clamp(26px, 3vw, 44px);
+  font-weight: 400;
+  line-height: 1.1;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--dawn, #ebe3d6);
+  text-shadow: 0 0 22px rgba(202, 165, 84, 0.18);
+}
+.ncl-v3__divider {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 2px 0;
+}
+.ncl-v3__divider-line {
+  display: block;
+  width: clamp(28px, 4vw, 48px);
+  height: 1px;
+  background: rgba(235, 227, 214, 0.3);
+}
+.ncl-v3__divider-diamond {
+  display: block;
+  width: 4px;
+  height: 4px;
+  background: var(--gold, #caa554);
+  transform: rotate(45deg);
+}
+.ncl-v3__support {
+  margin: 0;
+  max-width: 56ch;
+  font-size: clamp(15px, 1.2vw, 18px);
+  line-height: 1.5;
+  letter-spacing: 0.005em;
+  color: rgba(235, 227, 214, 0.82);
+}
+
+/* ─────────────────────────────────────────────────────────────────
+ * V4 — Limb callout
+ * Title overlaps the sphere's upper-left limb (clear of the central
+ * brandmark). Leader line + diamond ties the head into the sphere;
+ * a soft local radial scrim under the text holds legibility.
+ * ──────────────────────────────────────────────────────────────── */
+
+.ncl-v4 {
+  display: block;
+}
+.ncl-v4__group {
+  position: absolute;
+  /* Text head sits over the upper-LEFT quadrant of the sphere so it
+   * crosses the gold ring's outer arc (the "limb") while staying
+   * well above the central brandmark glyph. Sphere centre is at
+   * the viewport centre; its visible particle radius is ~22% of
+   * viewport width, so a text block anchored at top:22svh, left:24vw
+   * straddles the upper-left limb naturally. */
+  top: clamp(150px, 22svh, 220px);
+  left: clamp(220px, 24vw, 360px);
+  width: min(36vw, 440px);
+  display: flex;
+  flex-direction: column;
+  gap: clamp(14px, 1.4vw, 22px);
+}
+.ncl-v4.is-mirrored .ncl-v4__group {
+  left: auto;
+  right: clamp(220px, 24vw, 360px);
+  align-items: flex-end;
+  text-align: right;
+}
+
+.ncl-v4__scrim {
+  position: absolute;
+  /* Wide horizontal ellipse hugging the text — strong centre, soft
+   * edges, so the text reads cleanly over the brightest particles
+   * without painting a visible card. */
+  inset: -40px -80px;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.ncl-v4__leader {
+  position: absolute;
+  /* Leader sits at the bottom-right corner of the text block and
+   * dives DOWN-INTO the sphere centre region — reads as a scan
+   * callout tying the annotation to the substrate. */
+  bottom: -8px;
+  right: -88px;
+  display: flex;
+  align-items: center;
+  pointer-events: none;
+}
+.ncl-v4.is-mirrored .ncl-v4__leader {
+  right: auto;
+  left: -88px;
+  flex-direction: row-reverse;
+}
+.ncl-v4__leader-line {
+  display: block;
+  width: clamp(72px, 9vw, 120px);
+  height: 1px;
+  background: linear-gradient(to right, rgba(202, 165, 84, 0), rgba(202, 165, 84, 0.95));
+  /* Outer glow so the hairline punches through the bright particle
+   * field; the gradient end goes nearly opaque to anchor the eye. */
+  box-shadow: 0 0 6px rgba(202, 165, 84, 0.45);
+}
+.ncl-v4.is-mirrored .ncl-v4__leader-line {
+  background: linear-gradient(to left, rgba(202, 165, 84, 0), rgba(202, 165, 84, 0.95));
+}
+.ncl-v4__leader-diamond {
+  display: block;
+  width: 8px;
+  height: 8px;
+  background: var(--gold, #caa554);
+  transform: rotate(45deg);
+  /* Layered shadow: tight bright halo + wider soft glow so the
+   * marker reads as a HUD anchor point against the substrate. */
+  box-shadow:
+    0 0 0 1px rgba(10, 9, 8, 0.6),
+    0 0 6px rgba(202, 165, 84, 0.9),
+    0 0 14px rgba(202, 165, 84, 0.55);
+  flex: none;
+}
+
+.ncl-v4__head {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.ncl-v4__kicker {
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(202, 165, 84, 0.78);
+}
+.ncl-v4__title {
+  margin: 0;
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-size: clamp(24px, 2.5vw, 36px);
+  font-weight: 400;
+  line-height: 1.1;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--dawn, #ebe3d6);
+  text-shadow: 0 0 24px rgba(10, 9, 8, 0.85);
+}
+.ncl-v4__support {
+  margin: 0;
+  font-size: clamp(14px, 1.05vw, 17px);
+  line-height: 1.5;
+  letter-spacing: 0.005em;
+  color: rgba(235, 227, 214, 0.82);
+  text-shadow: 0 0 20px rgba(10, 9, 8, 0.85);
+}
+
+/* ─────────────────────────────────────────────────────────────────
+ * V5 — Bottom stack
+ * Minimal centered block at the bottom: dotted rule → kicker →
+ * title → tightened paragraph. No card, no frame — the most
+ * restrained variant. Title size switchable S/M/L via the panel
+ * (`data-title-size` on the variant root).
+ * ──────────────────────────────────────────────────────────────── */
+
+.ncl-v5 {
+  display: block;
+  /* Title size presets — resolved per `data-title-size`. */
+  --ncl-v5-title-size: clamp(24px, 2.4vw, 34px);
+}
+.ncl-v5[data-title-size="S"] {
+  --ncl-v5-title-size: clamp(19px, 1.8vw, 26px);
+}
+.ncl-v5[data-title-size="L"] {
+  --ncl-v5-title-size: clamp(30px, 3.2vw, 46px);
+}
+
+.ncl-v5__stack {
+  position: absolute;
+  bottom: clamp(40px, 7svh, 84px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(80vw, 760px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  text-align: center;
+}
+
+/* Short dotted particle rule — the only chrome on this variant. */
+.ncl-v5__rule {
+  display: block;
+  width: clamp(48px, 5vw, 80px);
+  height: 1px;
+  background-image: repeating-linear-gradient(
+    to right,
+    rgba(202, 165, 84, 0.6) 0 1.5px,
+    transparent 1.5px 7px
+  );
+  margin-bottom: 2px;
+}
+
+.ncl-v5__kicker {
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: 10px;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: rgba(202, 165, 84, 0.8);
+}
+
+.ncl-v5__title {
+  margin: 0;
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-size: var(--ncl-v5-title-size);
+  font-weight: 400;
+  line-height: 1.1;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--dawn, #ebe3d6);
+  text-shadow: 0 0 22px rgba(202, 165, 84, 0.16);
+}
+
+.ncl-v5__support {
+  margin: 2px 0 0 0;
+  max-width: 52ch;
+  font-size: clamp(14px, 1.1vw, 17px);
+  line-height: 1.55;
+  letter-spacing: 0.005em;
+  color: rgba(235, 227, 214, 0.78);
+}
+
+/* ─────────────────────────────────────────────────────────────────
+ * V6 — Top stack
+ * Mirror of V5 anchored to the TOP of the viewport. Identical
+ * reading order (rule → kicker → title → paragraph) so the eye
+ * still flows downward, and the title-size presets (S/M/L) are
+ * shared via the same `data-title-size` token.
+ * ──────────────────────────────────────────────────────────────── */
+
+.ncl-v6 {
+  display: block;
+  --ncl-v6-title-size: clamp(24px, 2.4vw, 34px);
+}
+.ncl-v6[data-title-size="S"] {
+  --ncl-v6-title-size: clamp(19px, 1.8vw, 26px);
+}
+.ncl-v6[data-title-size="L"] {
+  --ncl-v6-title-size: clamp(30px, 3.2vw, 46px);
+}
+
+.ncl-v6__stack {
+  position: absolute;
+  /* Sits just below the top HUD frame line — clears the top-right
+     chapter label + top-left bracket without crowding the sphere's
+     upper limb. */
+  top: clamp(56px, 8svh, 96px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(80vw, 760px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  text-align: center;
+}
+
+.ncl-v6__rule {
+  display: block;
+  width: clamp(48px, 5vw, 80px);
+  height: 1px;
+  background-image: repeating-linear-gradient(
+    to right,
+    rgba(202, 165, 84, 0.6) 0 1.5px,
+    transparent 1.5px 7px
+  );
+  margin-bottom: 2px;
+}
+
+.ncl-v6__kicker {
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: 10px;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: rgba(202, 165, 84, 0.8);
+}
+
+.ncl-v6__title {
+  margin: 0;
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-size: var(--ncl-v6-title-size);
+  font-weight: 400;
+  line-height: 1.1;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--dawn, #ebe3d6);
+  text-shadow: 0 0 22px rgba(202, 165, 84, 0.16);
+}
+
+.ncl-v6__support {
+  margin: 2px 0 0 0;
+  max-width: 52ch;
+  font-size: clamp(14px, 1.1vw, 17px);
+  line-height: 1.55;
+  letter-spacing: 0.005em;
+  color: rgba(235, 227, 214, 0.78);
+}
+
+/* ─────────────────────────────────────────────────────────────────
+ * V7 — Scanner callout
+ *
+ * Title + paragraph render as one unified block at the sphere's
+ * upper-left. A dotted leader hairline extends from the block's
+ * right edge horizontally into the sphere and terminates in a
+ * reticle + glowing diamond — reads like a celestial-scanner
+ * annotation pointing at a feature of the substrate. Same dotted
+ * particle grammar as the V1 card frames.
+ *
+ * Geometry: the block's right edge sits `--ncl-v7-scan-gap` away
+ * from the sphere's left limb (calc(50vw - 22vmin)), and the
+ * leader spans that gap with a small overshoot so the diamond
+ * lands just inside the particle border.
+ * ──────────────────────────────────────────────────────────────── */
+
+.ncl-v7 {
+  /* Sphere geometry (matches the R3F gimbal sphere on screen).
+     Used by both block placement and the leader endpoint so the
+     dashboard scales correctly across viewports. */
+  --ncl-v7-sphere-r: 22vmin;
+  /* Gap between the block's right edge and the sphere's left
+     limb — the scanner leader runs across this distance. */
+  --ncl-v7-scan-gap: 7vmin;
+  /* How far PAST the limb the diamond target lands, so the
+     reticle bites into the sphere rather than stopping at its
+     edge — gives the scanner a real "lock on" feel. */
+  --ncl-v7-target-bleed: 4vmin;
+  display: block;
+}
+
+/* Unified block — kicker rule, kicker, title, paragraph, leader.
+   Anchored close to the sphere's upper-left so the eye reads the
+   block, then follows the leader into the sphere as one motion. */
+.ncl-v7__block {
+  position: absolute;
+  /* Anchored so the block's VERTICAL MIDDLE sits at the sphere's
+     vertical centre (50svh). `translateY(-50%)` pulls the block
+     up by half its own height, so `top: 50svh` resolves to "block
+     centre = sphere centre". The leader then exits the block's
+     middle dead-level with the sphere centre and locks onto the
+     brandmark zone. */
+  top: 50svh;
+  transform: translateY(-50%);
+  /* Right edge of the block = sphere left limb minus the scan
+     gap, so the leader has clean run-up space. */
+  right: calc(50vw + var(--ncl-v7-sphere-r) + var(--ncl-v7-scan-gap));
+  width: min(28vw, 380px);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+}
+.ncl-v7.is-mirrored .ncl-v7__block {
+  right: auto;
+  left: calc(50vw + var(--ncl-v7-sphere-r) + var(--ncl-v7-scan-gap));
+  align-items: flex-end;
+  text-align: right;
+}
+
+.ncl-v7__rule {
+  display: block;
+  width: clamp(48px, 5vw, 80px);
+  height: 1px;
+  background-image: repeating-linear-gradient(
+    to right,
+    rgba(202, 165, 84, 0.6) 0 1.5px,
+    transparent 1.5px 7px
+  );
+}
+
+.ncl-v7__kicker {
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: 10px;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: rgba(202, 165, 84, 0.8);
+}
+
+.ncl-v7__title {
+  margin: 0;
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-size: clamp(24px, 2.4vw, 34px);
+  font-weight: 400;
+  line-height: 1.1;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--dawn, #ebe3d6);
+  text-shadow: 0 0 22px rgba(202, 165, 84, 0.16);
+}
+
+.ncl-v7__support {
+  margin: 4px 0 0 0;
+  font-size: clamp(15px, 1.1vw, 17px);
+  line-height: 1.55;
+  letter-spacing: 0.005em;
+  color: rgba(235, 227, 214, 0.84);
+  max-width: 34ch;
+}
+
+/* ── Scanner leader ──
+   Anchored to the block's right edge at vertical middle. Sequence
+   left-to-right: short opening tick where the leader leaves the
+   block, dotted hairline across the scan gap, 4-pointer reticle
+   crosshair at the sphere's left limb, glowing gold diamond as
+   the final target inside the sphere. Reads as a HUD scan beam
+   locking onto the substrate. */
+.ncl-v7__leader {
+  position: absolute;
+  top: 50%;
+  left: 100%;
+  transform: translateY(-50%);
+  /* Full leader span = scan gap + bleed past limb so the diamond
+     sits inside the sphere. */
+  width: calc(var(--ncl-v7-scan-gap) + var(--ncl-v7-target-bleed));
+  height: 10px;
+  display: flex;
+  align-items: center;
+  pointer-events: none;
+}
+.ncl-v7.is-mirrored .ncl-v7__leader {
+  left: auto;
+  right: 100%;
+  flex-direction: row-reverse;
+}
+
+.ncl-v7__leader-tick {
+  flex: none;
+  width: 1px;
+  height: 9px;
+  background: rgba(202, 165, 84, 0.55);
+}
+
+.ncl-v7__leader-line {
+  flex: 1;
+  height: 1px;
+  margin: 0 4px;
+  background-image: repeating-linear-gradient(
+    to right,
+    rgba(202, 165, 84, 0.62) 0 1.5px,
+    transparent 1.5px 7px
+  );
+}
+
+/* Reticle — two short orthogonal hairlines forming a crosshair
+   right at the sphere's left limb. Marks the "scan boundary"
+   the beam crosses to lock onto the target. */
+.ncl-v7__leader-reticle {
+  flex: none;
+  position: relative;
+  width: 10px;
+  height: 10px;
+}
+.ncl-v7__leader-reticle-arm {
+  position: absolute;
+  background: rgba(202, 165, 84, 0.75);
+}
+.ncl-v7__leader-reticle-arm:nth-child(1) {
+  /* Horizontal arm */
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  transform: translateY(-50%);
+}
+.ncl-v7__leader-reticle-arm:nth-child(2) {
+  /* Vertical arm */
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  transform: translateX(-50%);
+}
+
+.ncl-v7__leader-diamond {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  margin-left: 6px;
+  background: var(--gold, #caa554);
+  transform: rotate(45deg);
+  /* Layered glow — bright lock-on marker against the substrate. */
+  box-shadow:
+    0 0 0 1px rgba(10, 9, 8, 0.55),
+    0 0 8px rgba(202, 165, 84, 0.95),
+    0 0 20px rgba(202, 165, 84, 0.55);
+}
+.ncl-v7.is-mirrored .ncl-v7__leader-diamond {
+  margin-left: 0;
+  margin-right: 6px;
+}
+
+/* ─────────────────────────────────────────────────────────────────
+ * Defensive: hide CorridorProgressRail / station headers in case
+ * they ever get mounted into this route. The lab owns the copy.
+ * ──────────────────────────────────────────────────────────────── */
+.navigate-copy-lab .home-v2-station-headers,
+.navigate-copy-lab .home-v2-progress-rail,
+.navigate-copy-lab .home-v2-copy-layer {
+  display: none !important;
+}
