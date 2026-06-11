@@ -275,7 +275,7 @@ export const CORRIDOR_MAP = [
       // and renders each line as a block, so the caption reads as two
       // clean balanced lines instead of an awkward wrap.
       supportHtml:
-        "Trained on us, but it doesn't think like us.<br>So you stop commanding and start <em>navigating</em> — where it leads, and where you do.",
+        "Trained on us, but it doesn't think like us.<br>So you stop commanding and start <em>navigating</em>.",
       telemetry: {
         sector: "STATION 01",
         callsign: "NAV-01",
@@ -302,14 +302,11 @@ export const CORRIDOR_MAP = [
     content: {
       kicker: "02 · Encode",
       titleHtml: "Encode the <em>judgment</em>.",
-      // 2026-06-08 copy pass — frames encoding as moving tacit
-      // judgment out of people's heads into something the model can
-      // inherit. Gold em on "brief" names the encoded artefact.
-      // Stack v3 caption pass (2026-06-10): condensed for the
-      // centred cartouche while keeping the heads-to-brief beat.
+      // 2026-06-11 copy pass — judgment trapped in heads, unreachable
+      // by the model; encoding once so it inherits instead of guesses.
       // Polish round 4: `<br>` = sentence-per-line break.
       supportHtml:
-        "The judgment that makes your work good was stuck in heads.<br>Now it's a <em>brief</em> the model inherits instead of guessing.",
+        "Judgment sits in heads. The model can't reach it there.<br>Encode it once. It inherits instead of guessing.",
       telemetry: {
         sector: "STATION 02",
         callsign: "ENC-02",
