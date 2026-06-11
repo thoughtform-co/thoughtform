@@ -10,16 +10,17 @@ import {
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 
 /**
- * CorridorFlywheelPanel — the RIGHT-half "flywheel in practice" panel
- * (ADR-018 epilogue v4.1, Glyphic grid pass).
+ * CorridorFlywheelPanel — the LEFT-half "flywheel in practice" panel
+ * (ADR-018 epilogue v4.2, centred Glyphic grid pass).
  *
- * Concept (v4.1, 2026-06-10): once the user crosses past the Build
- * park, the gyro assembly DOCKS leftward via
- * `getEpilogueDockTransform` while this panel claims the right
- * column, grid-locked to the right HUD rail. Three minimal cards
- * (Navigate / Encode / Build) settle as a STATIC grid below the
- * title — they all arrive together (small per-card stagger reads as
- * a settle, not a cascade) and rest for the rest of the epilogue.
+ * Concept (v4.2, 2026-06-11): once the user crosses past the Build
+ * park, the gyro assembly DOCKS rightward via
+ * `getEpilogueDockTransform` while this panel claims the left
+ * column, pulled toward centre rather than hugging the HUD rail
+ * (Glyphic reference). Three minimal cards (Navigate / Encode /
+ * Build) settle as a STATIC grid below the title — they all arrive
+ * together (small per-card stagger reads as a settle, not a
+ * cascade) and rest for the rest of the epilogue.
  *
  * Encode is the soft visual emphasis: it carries the gold ordinal
  * fill + a faint gold wash + brighter dotted border, because it is

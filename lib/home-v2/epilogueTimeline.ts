@@ -10,7 +10,7 @@
  * epilogue reads its own SUB-BAND off this table so the choreography
  * stays declarative.
  *
- * v4.1 narrative (mirrored dock + Glyphic-style grid):
+ * v4.2 narrative (dock RIGHT + centred Glyphic-style grid):
  *
  *   1. HEADER_OUT — Build station header ("Build on the substrate.")
  *      fades out so the centred cartouche cedes the frame to the
@@ -18,14 +18,14 @@
  *
  *   2. DOCK — The whole substrate composition (gimbal sphere +
  *      sources lanes + surfaces fan + per-row chips + cardinal
- *      labels + projected brandmark) shrinks and slides LEFT into
- *      the -X half of the viewport. Camera stays parked at
- *      CAMERA_END — the WORLD docks, not the camera. (Mirrors v4,
- *      which docked rightward; the panel now claims the right half
- *      so it can grid-lock to the right HUD rail.)
+ *      labels + projected brandmark) shrinks and slides RIGHT into
+ *      the +X half of the viewport. Camera stays parked at
+ *      CAMERA_END — the WORLD docks, not the camera. (v4.1 docked
+ *      leftward; v4.2 flips it back rightward and pulls the panel
+ *      toward centre instead of hugging the right HUD rail.)
  *
  *   3. TITLE_IN — The flywheel panel's kicker + title "The flywheel
- *      in practice." fades up on the RIGHT half of the viewport.
+ *      in practice." fades up on the LEFT half of the viewport.
  *
  *   4. GRID_IN — Three minimal cards (Navigate / Encode / Build)
  *      settle as a STATIC GRID below the title. The panel applies
@@ -75,15 +75,15 @@ export const EPILOGUE_BANDS = {
   HEADER_OUT: { start: 0.0, end: 0.16 } as const,
 
   /** The whole gyro assembly (sphere + lanes + fan + chips +
-   *  cardinals + projected brandmark) shrinks and slides LEFT into
-   *  the -X half of the viewport. Camera stays parked. Composes
-   *  through `getEpilogueDockTransform` in `sceneGeom.ts`. v4.1
+   *  cardinals + projected brandmark) shrinks and slides RIGHT into
+   *  the +X half of the viewport. Camera stays parked. Composes
+   *  through `getEpilogueDockTransform` in `sceneGeom.ts`. v4.2
    *  span: 0.06..0.38 of a 280svh epilogue ≈ 90svh, matching v4's
    *  88svh runway so the dock animation itself reads identically. */
   DOCK: { start: 0.06, end: 0.38 } as const,
 
   /** Flywheel panel TITLE ("The flywheel in practice.") fades up on
-   *  the RIGHT half. Starts before DOCK ends so the artifact is on
+   *  the LEFT half. Starts before DOCK ends so the artifact is on
    *  its way to its docked seat as the title arrives. */
   TITLE_IN: { start: 0.22, end: 0.42 } as const,
 
@@ -116,27 +116,35 @@ export function epilogueBand(epilogueProgress: number, band_: keyof typeof EPILO
 // assembly during the DOCK band. They live here next to the bands so
 // the whole epilogue choreography stays in one declarative file.
 
-/** Final dock offset in NDC half-width units at peak DOCK. NEGATIVE
- *  in v4.1 because the assembly now docks LEFT (mirroring v4's
- *  rightward dock so the flywheel panel can grid-lock to the right
- *  HUD rail). The assembly centre slides this fraction of the
- *  camera frustum's half-width at the parked Build distance into
- *  the -X half of the viewport. -0.42 puts the sphere centre at
- *  ~29% viewport width. Tuned against the SOURCE chips (anchored
- *  `right-center` at their lane tips, extending LEFT toward the
- *  left HUD rail) and the SURFACE chips (anchored `left-center` at
- *  the fan tips, extending RIGHT toward the panel's left edge):
- *  -0.42 paired with the 0.54 dock scale keeps the leftmost source
- *  chip clear of the left depth gauge's tick numbers and the
- *  rightmost surface chip clear of the panel column on 1280-1680
- *  viewports. */
-export const EPILOGUE_DOCK_OFFSET_NDC = -0.42;
+/** Final dock offset in NDC half-width units at peak DOCK. POSITIVE
+ *  in v4.2 because the assembly docks RIGHT (the flywheel panel now
+ *  claims the LEFT half, pulled toward centre rather than hugging a
+ *  HUD rail — Glyphic reference). The assembly centre slides this
+ *  fraction of the camera frustum's half-width at the parked Build
+ *  distance into the +X half of the viewport. +0.42 puts the sphere
+ *  centre at ~71% viewport width. Tuned against the SOURCE chips
+ *  (anchored `right-center` at their lane tips, extending LEFT
+ *  toward the flywheel panel) and the SURFACE chips (anchored
+ *  `left-center` at the fan tips, extending RIGHT toward the right
+ *  HUD rail): +0.42 paired with the 0.54 dock scale keeps the
+ *  rightmost surface chip clear of the right depth gauge's tick
+ *  numbers and the leftmost source chip clear of the panel column
+ *  on 1280-1680 viewports.
+ *
+ *  v4.2 tune (2026-06-11): +0.24 (was a brief +0.42 mirror that
+ *  shoved the surface fan off the right edge). The offset is the
+ *  centre shift in NDC half-widths — screen shift ≈ offset * vw/2 —
+ *  so +0.24 lands the docked sphere centre at ~68% viewport width:
+ *  far enough right to read as "on the right", close enough that
+ *  the surface fan clears the right HUD rail and the source lanes
+ *  clear the centred flywheel panel on the left. */
+export const EPILOGUE_DOCK_OFFSET_NDC = 0.24;
 
 /** Final uniform scale multiplier applied to the gyro assembly at
- *  peak DOCK (composes with parked `GYRO_ASSEMBLY_SCALE`). 0.54
- *  shrinks the sphere to ~54% of its parked apparent size — small
- *  enough that both chip columns clear the depth gauge (left) and
- *  the flywheel panel (right), large enough that the lanes /
- *  surface fan / chip column still read as a live diagram, not a
- *  thumbnail. */
-export const EPILOGUE_DOCK_SCALE = 0.54;
+ *  peak DOCK (composes with parked `GYRO_ASSEMBLY_SCALE`). v4.2:
+ *  0.48 (was 0.54) — a touch smaller so the docked diagram fits
+ *  the slot between the centred flywheel panel (left) and the
+ *  right HUD rail without the source/surface fans crowding either.
+ *  Still large enough that the lanes / surface fan / chip column
+ *  read as a live diagram, not a thumbnail. */
+export const EPILOGUE_DOCK_SCALE = 0.48;

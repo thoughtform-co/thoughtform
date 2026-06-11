@@ -3066,6 +3066,57 @@ plumbing was already sign-agnostic.
 - Scroll-back fully reversible (panel disengages, sphere returns to
   centre, "Build on the substrate." header re-paints).
 
+## Epilogue v4.2 — dock RIGHT + centred grid (2026-06-11)
+
+Design direction (per the Glyphic Bio reference): mirror the v4.1
+layout so the substrate artifact docks on the **right** and the
+flywheel cards sit on the **left, pulled toward centre** rather than
+hugging a HUD rail.
+
+The dock direction is a single sign on `EPILOGUE_DOCK_OFFSET_NDC`, and
+the whole assembly (sphere + lanes + fan + chips + cardinals +
+projected brandmark) composes through `getEpilogueDockTransform`, so
+flipping the constant mirrors the choreography coherently — no plumbing
+changes. The naive `+0.42` mirror, however, shoved the **surface fan**
+(which extends right, toward the rail) off the right edge. Two coupled
+tunables fixed it:
+
+- `EPILOGUE_DOCK_OFFSET_NDC = +0.24` (screen shift ≈ `offset · vw/2`):
+  docked sphere centre lands at ~67% viewport width — clearly "on the
+  right" yet the surface fan clears the right HUD rail.
+- `EPILOGUE_DOCK_SCALE = 0.48` (was 0.54): a slightly more compact
+  docked diagram so it fits the slot between the centred panel (left)
+  and the right rail without either fan crowding.
+
+Panel re-anchored in CSS from `right:` to `left: clamp(56px, 10.5vw,
+175px)`, `width: min(33vw, 470px)` — right edge near centre (~43% at
+1440), left edge off the rail. The right-edge card pip now marks each
+card's **inner** edge, gesturing across the gap toward the docked
+diagram. Mobile is unchanged: portrait docks UP via the Y-lift, so the
+left/right swap doesn't apply, and the panel stays a full-width
+bottom-anchored column.
+
+### Files touched in v4.2
+
+| File                                                   | Change                                                                                                    |
+| ------------------------------------------------------ | --------------------------------------------------------------------------------------------------------- |
+| `lib/home-v2/epilogueTimeline.ts`                      | `EPILOGUE_DOCK_OFFSET_NDC` -0.42 → +0.24; `EPILOGUE_DOCK_SCALE` 0.54 → 0.48; directional comments flipped |
+| `components/landing/home-v2/home-v2.css`               | Panel re-anchored left-of-centre; pip + mobile comments updated                                           |
+| `components/landing/home-v2/CorridorFlywheelPanel.tsx` | Doc comment flipped (LEFT panel, dock RIGHT)                                                              |
+
+### Verified (v4.2)
+
+- Measured at 1440×900 (epilogueProgress 0.80): sphere centre ~971px
+  (67%); surface fan right edge 1295px, **37px** clear of the right
+  rail (left edge 1332px); source lanes left edge 646px, **25px** clear
+  of the panel (right edge 621px); cards left-of-centre, off the rail.
+- Mid-DOCK (ep ≈ 0.26): assembly slides RIGHT and shrinks, title fades
+  up on the left — clean transition.
+- 390×844 portrait: unchanged — sphere lifts to upper third, three
+  cards stack full-width below (no collapse).
+- Scroll-back reversible: Build park re-centres, panel disengages.
+- `npm run lint` clean (0 errors on touched files).
+
 ## References
 
 - Star Atlas reference: [experience.staratlas.com](https://experience.staratlas.com/) — depth corridor pattern (camera through persistent world).

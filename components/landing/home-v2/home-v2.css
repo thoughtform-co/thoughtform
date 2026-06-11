@@ -493,15 +493,16 @@
    it was itself replaced in v4.1 (2026-06-10 Glyphic grid pass) by
    the minimal three-card panel below — see ADR-018 epilogue v4.1. */
 
-/* ── Flywheel panel (epilogue v4.1, Glyphic grid) ──────────────────
-   The minimal "flywheel in practice" panel that anchors the RIGHT
-   half of the viewport across the post-Build epilogue (mirrors v4,
-   which lived on the LEFT). Three cards (Navigate / Encode / Build)
-   settle as a STATIC grid below the title — every card always
-   shows its full content; nothing reveals as the user scrolls
-   further. The panel is grid-locked to the right HUD rail so the
-   right-edge gold pip on each card visually continues the rail's
-   tick rhythm.
+/* ── Flywheel panel (epilogue v4.2, centred Glyphic grid) ──────────
+   The minimal "flywheel in practice" panel that anchors the LEFT
+   half of the viewport across the post-Build epilogue (v4 lived on
+   the left, v4.1 moved it right; v4.2 returns it left but pulled
+   toward CENTRE — not hugging a HUD rail — per the Glyphic
+   reference). Three cards (Navigate / Encode / Build) settle as a
+   STATIC grid below the title — every card always shows its full
+   content; nothing reveals as the user scrolls further. The
+   right-edge gold pip on each card marks the column's inner edge
+   and gestures toward the docked diagram on the right.
 
    Visual grammar: zero border-radius, no card frame (cards are
    delineated by a top hairline + right-edge pip, Glyphic style),
@@ -512,20 +513,21 @@
    the asset that compounds. */
 .home-v2-flywheel-panel {
   position: fixed;
-  /* Right-rail clearance: the v7 right HUD rail occupies
-     `--hud-rail-width` (clamp 48..82px) inset by `--hud-margin`
-     (~32-50px); we add ~1.4vw breathing room so the right-edge pips
-     sit just inside the rail's tick column without colliding.
-     The left edge is set by `width` so the docked sphere on the
-     left has its own column. Width is tuned against the SURFACE
-     chip column (anchored at sphere centre, extending right): with
-     `EPILOGUE_DOCK_OFFSET_NDC = -0.42` the rightmost surface chip
-     clears ~58% viewport width on 1440-1680 viewports, so the
-     panel column starts no earlier than ~62% to keep a clean gap. */
-  right: calc(var(--hud-margin, 32px) + var(--hud-rail-width, 64px) + clamp(12px, 1.4vw, 22px));
+  /* v4.2 (2026-06-11 dock-right pass): the artifact docks RIGHT
+     (`EPILOGUE_DOCK_OFFSET_NDC = +0.42`) and this panel claims the
+     LEFT half — but pulled toward CENTRE rather than hugging the
+     left HUD rail (Glyphic reference: a comfortable column with
+     breathing room on its outer side). The left inset clears the
+     left depth gauge + gives the column air; the right edge lands
+     just left of centre (~46% on 1440) so a clean gap opens to the
+     SOURCE chips (which extend left from the docked sphere toward
+     this panel). Tuned against those source chips: the panel's
+     right edge stays clear of the leftmost source chip on
+     1280-1680 viewports. */
+  left: clamp(56px, 10.5vw, 175px);
   top: clamp(48px, 7vh, 84px);
   bottom: clamp(28px, 4vh, 60px);
-  width: min(34vw, 500px);
+  width: min(33vw, 470px);
   display: flex;
   flex-direction: column;
   gap: clamp(12px, 1.6vh, 22px);
@@ -658,9 +660,10 @@
 }
 
 /* Right-edge pip — 4px gold diamond pinned at the far right of the
-   hairline rule, vertically centred on it. Reads as the rail tick
-   for this row of the grid; visually continues the rhythm of the
-   v7 right HUD rail's `.hud__rail__tick--major` ticks. */
+   hairline rule, vertically centred on it. In v4.2 the panel sits
+   on the LEFT half, so the pip marks each card's INNER edge and
+   gestures across the gap toward the docked diagram on the right —
+   a quiet tick rhythm that ties the card column to the artifact. */
 .home-v2-flywheel-card__pip {
   position: absolute;
   top: 0;
@@ -813,9 +816,11 @@
     display: none;
   }
 
-  /* Epilogue v4.1 (2026-06-10 Glyphic grid pass) — the desktop
-     dock-left + panel-right layout collapses on portrait to a
-     SINGLE-COLUMN stack. The artifact stays on the optical axis
+  /* Epilogue v4.2 (2026-06-11 dock-right pass) — the desktop
+     dock-right + panel-left layout collapses on portrait to a
+     SINGLE-COLUMN stack (portrait docks UP via the Y-lift, so the
+     left/right swap doesn't affect mobile). The artifact stays on
+     the optical axis
      (`getEpilogueDockTransform` lifts it into the upper third of
      the frame via `EPILOGUE_DOCK_LIFT_NDC`, and we trim the dock
      SCALE on mobile so the sphere doesn't crowd the panel below).
