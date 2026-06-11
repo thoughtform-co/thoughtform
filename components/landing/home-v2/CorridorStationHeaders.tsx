@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
-import { stationById } from "@/lib/home-v2/corridorMap";
+import { useEffect, useMemo, useRef, type ReactNode } from "react";
+import { stationById, type StationTelemetry } from "@/lib/home-v2/corridorMap";
 import { epilogueBand } from "@/lib/home-v2/epilogueTimeline";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import { gyroTilt } from "@/lib/stores/gyroLabStore";
@@ -153,6 +153,12 @@ interface StationState {
    *  started this visit. Set back to false once container drops
    *  below REARM. */
   typing: boolean;
+  /** True while the console frame chrome is unfolded (`is-armed`
+   *  class on the container). Shares the typewriter's ARRIVE/REARM
+   *  thresholds so frames and chars resolve together, but tracked
+   *  separately because the reduced-motion path skips the typewriter
+   *  while still needing the frames. */
+  framed: boolean;
   /** `performance.now()` (seconds) when this visit's type-out
    *  started — only valid while `typing === true`. */
   startSec: number;
@@ -163,7 +169,7 @@ interface StationState {
 }
 
 function makeInitialState(): StationState {
-  return { typing: false, startSec: 0, titleHead: -1, supportHead: -1 };
+  return { typing: false, framed: false, startSec: 0, titleHead: -1, supportHead: -1 };
 }
 
 interface StationContent {
@@ -175,6 +181,90 @@ interface StationContent {
   kicker?: string;
   titleHtml: string;
   supportHtml?: string;
+  /** Station telemetry readouts (sector / callsign / status / code /
+   *  metric) rendered as chrome rows inside the support console. */
+  telemetry?: StationTelemetry;
+}
+
+/** HUD console chrome for the split cartouche (2026-06-11 V8 pass,
+ *  ported from `/test/navigate-copy-lab`). The title band gets a
+ *  dotted top + faint bottom frame with bottom corner brackets; the
+ *  support band gets the inverse weighting (strong top corners) plus
+ *  telemetry meta/readout rows. Frame segments UNFOLD via the
+ *  container's `is-armed` state class — toggled by the RAF loop at
+ *  the exact frame the typewriter arms, so chrome and chars resolve
+ *  together with no delay. */
+function TitleConsole({ children }: { children: ReactNode }) {
+  return (
+    <div className="home-v2-station-header__console home-v2-station-header__console--title">
+      <span
+        className="home-v2-station-header__frame home-v2-station-header__frame--top"
+        aria-hidden="true"
+      />
+      <span
+        className="home-v2-station-header__frame home-v2-station-header__frame--bottom"
+        aria-hidden="true"
+      />
+      <span
+        className="home-v2-station-header__bracket home-v2-station-header__bracket--title-left"
+        aria-hidden="true"
+      />
+      <span
+        className="home-v2-station-header__bracket home-v2-station-header__bracket--title-right"
+        aria-hidden="true"
+      />
+      {children}
+    </div>
+  );
+}
+
+function SupportConsole({
+  telemetry,
+  kicker,
+  children,
+}: {
+  telemetry?: StationTelemetry;
+  kicker?: string;
+  children: ReactNode;
+}) {
+  return (
+    <div className="home-v2-station-header__console home-v2-station-header__console--support">
+      <span
+        className="home-v2-station-header__frame home-v2-station-header__frame--top"
+        aria-hidden="true"
+      />
+      <span
+        className="home-v2-station-header__frame home-v2-station-header__frame--bottom"
+        aria-hidden="true"
+      />
+      <span
+        className="home-v2-station-header__bracket home-v2-station-header__bracket--support-left"
+        aria-hidden="true"
+      />
+      <span
+        className="home-v2-station-header__bracket home-v2-station-header__bracket--support-right"
+        aria-hidden="true"
+      />
+      {telemetry && (
+        <div className="home-v2-station-header__meta" aria-hidden="true">
+          <span className="home-v2-station-header__meta-diamond" />
+          {kicker && <span>{kicker}</span>}
+          {kicker && <span className="home-v2-station-header__meta-sep" />}
+          <span>{telemetry.callsign}</span>
+          <span className="home-v2-station-header__meta-sep" />
+          <span className="home-v2-station-header__meta-status">{telemetry.status}</span>
+        </div>
+      )}
+      {children}
+      {telemetry && (
+        <div className="home-v2-station-header__readouts" aria-hidden="true">
+          <span>{telemetry.sector}</span>
+          <span>{telemetry.code}</span>
+          <span>{telemetry.metric}</span>
+        </div>
+      )}
+    </div>
+  );
 }
 
 interface StationBlockProps {
@@ -267,8 +357,16 @@ function StationBlock({
       <div ref={refSetter} className={containerClass} style={{ opacity: 0 }}>
         {split ? (
           <>
-            <div className="home-v2-station-header__head">{head}</div>
-            {support && <div className="home-v2-station-header__foot">{support}</div>}
+            <div className="home-v2-station-header__head">
+              <TitleConsole>{head}</TitleConsole>
+            </div>
+            {support && (
+              <div className="home-v2-station-header__foot">
+                <SupportConsole telemetry={content.telemetry} kicker={content.kicker}>
+                  {support}
+                </SupportConsole>
+              </div>
+            )}
           </>
         ) : (
           <>
@@ -373,8 +471,16 @@ function StationBlock({
     <div ref={refSetter} className={containerClass} style={{ opacity: 0 }}>
       {split ? (
         <>
-          <div className="home-v2-station-header__head">{titleEl}</div>
-          {supportEl && <div className="home-v2-station-header__foot">{supportEl}</div>}
+          <div className="home-v2-station-header__head">
+            <TitleConsole>{titleEl}</TitleConsole>
+          </div>
+          {supportEl && (
+            <div className="home-v2-station-header__foot">
+              <SupportConsole telemetry={content.telemetry} kicker={content.kicker}>
+                {supportEl}
+              </SupportConsole>
+            </div>
+          )}
         </>
       ) : (
         <>
@@ -509,6 +615,12 @@ export function CorridorStationHeaders() {
         // (opacity below REARM). Reset per-char opacities so the
         // next arrival types out from scratch.
         if (op < TYPER_REARM_OPACITY) {
+          // Fold the console frames back so the next arrival unfolds
+          // fresh (class transition handles the collapse).
+          if (state.framed) {
+            state.framed = false;
+            refs.container?.classList.remove("is-armed");
+          }
           if (state.typing) {
             state.typing = false;
             state.titleHead = -1;
@@ -532,6 +644,16 @@ export function CorridorStationHeaders() {
             }
           }
           continue;
+        }
+
+        // Unfold the console frame chrome the instant the header
+        // crosses ARRIVE — the same frame the typewriter arms below,
+        // so frames and first chars start together with no delay.
+        // Runs BEFORE the reduced-motion skip: that path still gets
+        // the frames (CSS disables the unfold transition there).
+        if (!state.framed && op >= TYPER_ARRIVE_OPACITY) {
+          state.framed = true;
+          refs.container?.classList.add("is-armed");
         }
 
         // Skip the typewriter machinery entirely when the user

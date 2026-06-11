@@ -1132,6 +1132,209 @@
 }
 
 /* ─────────────────────────────────────────────────────────────────
+ * V8 — Baseline split + HUD footer
+ *
+ * V0's composition with a sharper bottom readout: the title remains
+ * above the sphere, while the lower copy becomes a compact cockpit
+ * band with partial dotted frame segments and telemetry. This keeps
+ * the original reading rhythm but removes the "loose paragraph"
+ * feeling at the bottom of the viewport.
+ * ──────────────────────────────────────────────────────────────── */
+
+.ncl-v8 {
+  display: block;
+}
+
+.ncl-v8__head {
+  position: absolute;
+  top: clamp(24px, 4.4vh, 58px);
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+}
+
+.ncl-v8__title-console {
+  position: relative;
+  width: min(72vw, 720px);
+  min-height: 70px;
+  padding: 12px clamp(22px, 3vw, 42px) 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  background:
+    linear-gradient(90deg, rgba(10, 9, 8, 0), rgba(10, 9, 8, 0.48) 20% 80%, rgba(10, 9, 8, 0)),
+    radial-gradient(ellipse 65% 120% at 50% 0%, rgba(202, 165, 84, 0.08), transparent 64%);
+}
+
+.ncl-v8__title-frame {
+  position: absolute;
+  left: clamp(14px, 3vw, 44px);
+  right: clamp(14px, 3vw, 44px);
+  height: 1px;
+  background-image: repeating-linear-gradient(
+    to right,
+    rgba(202, 165, 84, 0.5) 0 1.5px,
+    transparent 1.5px 7px
+  );
+  pointer-events: none;
+}
+.ncl-v8__title-frame--top {
+  top: 0;
+}
+.ncl-v8__title-frame--bottom {
+  bottom: 0;
+  opacity: 0.32;
+}
+
+.ncl-v8__title-corner {
+  position: absolute;
+  bottom: 0;
+  width: 24px;
+  height: 24px;
+  border-bottom: 1px solid rgba(202, 165, 84, 0.55);
+  pointer-events: none;
+}
+.ncl-v8__title-corner--left {
+  left: clamp(14px, 3vw, 44px);
+  border-left: 1px solid rgba(202, 165, 84, 0.55);
+}
+.ncl-v8__title-corner--right {
+  right: clamp(14px, 3vw, 44px);
+  border-right: 1px solid rgba(202, 165, 84, 0.55);
+}
+
+.ncl-v8__title {
+  margin: 0;
+  max-width: 100%;
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-size: clamp(26px, 3vw, 44px);
+  font-weight: 400;
+  line-height: 1.1;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--dawn, #ebe3d6);
+  text-align: center;
+  text-shadow: 0 0 22px rgba(202, 165, 84, 0.18);
+}
+
+.ncl-v8__foot {
+  position: absolute;
+  bottom: clamp(28px, 5svh, 64px);
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+}
+
+.ncl-v8__console {
+  position: relative;
+  width: min(78vw, 760px);
+  min-height: 104px;
+  padding: 18px clamp(22px, 3vw, 44px) 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  text-align: center;
+  background:
+    linear-gradient(90deg, rgba(10, 9, 8, 0), rgba(10, 9, 8, 0.68) 18% 82%, rgba(10, 9, 8, 0)),
+    radial-gradient(ellipse 75% 120% at 50% 100%, rgba(202, 165, 84, 0.1), transparent 62%);
+}
+
+.ncl-v8__frame {
+  position: absolute;
+  left: clamp(18px, 4vw, 56px);
+  right: clamp(18px, 4vw, 56px);
+  height: 1px;
+  background-image: repeating-linear-gradient(
+    to right,
+    rgba(202, 165, 84, 0.62) 0 1.5px,
+    transparent 1.5px 7px
+  );
+  pointer-events: none;
+}
+.ncl-v8__frame--top {
+  top: 0;
+}
+.ncl-v8__frame--bottom {
+  bottom: 0;
+  opacity: 0.42;
+}
+
+.ncl-v8__corner {
+  position: absolute;
+  top: 0;
+  width: 28px;
+  height: 28px;
+  border-top: 1px solid rgba(202, 165, 84, 0.72);
+  pointer-events: none;
+}
+.ncl-v8__corner--left {
+  left: clamp(18px, 4vw, 56px);
+  border-left: 1px solid rgba(202, 165, 84, 0.72);
+}
+.ncl-v8__corner--right {
+  right: clamp(18px, 4vw, 56px);
+  border-right: 1px solid rgba(202, 165, 84, 0.72);
+}
+
+.ncl-v8__meta,
+.ncl-v8__readouts {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(202, 165, 84, 0.76);
+  white-space: nowrap;
+}
+
+.ncl-v8__diamond,
+.ncl-v8__sep {
+  display: inline-block;
+  width: 4px;
+  height: 4px;
+  transform: rotate(45deg);
+  flex: none;
+}
+.ncl-v8__diamond {
+  background: var(--gold, #caa554);
+  box-shadow: 0 0 10px rgba(202, 165, 84, 0.7);
+}
+.ncl-v8__sep {
+  width: 3px;
+  height: 3px;
+  background: rgba(235, 227, 214, 0.32);
+}
+.ncl-v8__status {
+  color: var(--gold, #caa554);
+}
+
+.ncl-v8__support {
+  margin: 0;
+  max-width: 58ch;
+  font-size: clamp(16px, 1.3vw, 20px);
+  line-height: 1.45;
+  letter-spacing: 0.008em;
+  color: rgba(235, 227, 214, 0.88);
+  text-shadow: 0 0 18px rgba(10, 9, 8, 0.72);
+}
+
+.ncl-v8__readouts {
+  gap: clamp(12px, 2.6vw, 32px);
+  color: rgba(235, 227, 214, 0.42);
+  font-size: 8px;
+  letter-spacing: 0.16em;
+}
+
+/* ─────────────────────────────────────────────────────────────────
  * Defensive: hide CorridorProgressRail / station headers in case
  * they ever get mounted into this route. The lab owns the copy.
  * ──────────────────────────────────────────────────────────────── */

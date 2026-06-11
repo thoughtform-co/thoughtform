@@ -3,7 +3,7 @@
 import type { CSSProperties } from "react";
 import { stationById } from "@/lib/home-v2/corridorMap";
 
-export type VariantId = "V0" | "V1" | "V2" | "V3" | "V4" | "V5" | "V6" | "V7";
+export type VariantId = "V0" | "V1" | "V2" | "V3" | "V4" | "V5" | "V6" | "V7" | "V8";
 export type CopyMode = "full" | "condensed";
 export type TitleSize = "S" | "M" | "L";
 
@@ -63,6 +63,8 @@ export function NavigateCopyVariants({
       return <VariantTopStack {...copy} copyMode={copyMode} titleSize={titleSize} />;
     case "V7":
       return <VariantLimbWrap {...copy} mirror={mirror} />;
+    case "V8":
+      return <VariantHudFooter {...copy} copyMode={copyMode} />;
     default:
       return null;
   }
@@ -261,7 +263,7 @@ function VariantUnifiedCartouche({ titleHtml, supportHtml, telemetry }: VariantC
 // sphere keeps the full stage. Title size is switchable S/M/L.
 // ─────────────────────────────────────────────────────────────────
 
-/** Shared rewritten copy for the minimal stack variants (V5 / V6). */
+/** Shared rewritten copy for the minimal stack variants (V5 / V6 / V8). */
 function stackSupportHtml(copyMode: CopyMode): string {
   return copyMode === "full"
     ? "Trained on us, but it doesn't think like us.<br>You don't command it — you <em>navigate</em> it."
@@ -350,6 +352,62 @@ function VariantLimbWrap({ titleHtml, mirror }: VariantContent & { mirror: boole
           </span>
           <span className="ncl-v7__leader-diamond" />
         </span>
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────
+// V8 — Baseline split + HUD footer
+//
+// Keeps the original V0 reading architecture: title above the sphere,
+// support below. Only the bottom copy changes: shorter, contained in
+// a low-profile interface band so it feels like part of the cockpit
+// instead of loose editorial text.
+// ─────────────────────────────────────────────────────────────────
+
+function VariantHudFooter({
+  titleHtml,
+  copyMode,
+  telemetry,
+}: VariantContent & { copyMode: CopyMode }) {
+  const supportHtml = stackSupportHtml(copyMode);
+  return (
+    <div className="ncl-variant ncl-v8">
+      <div className="ncl-v8__head">
+        <div className="ncl-v8__title-console">
+          <span className="ncl-v8__title-frame ncl-v8__title-frame--top" aria-hidden="true" />
+          <span className="ncl-v8__title-frame ncl-v8__title-frame--bottom" aria-hidden="true" />
+          <span className="ncl-v8__title-corner ncl-v8__title-corner--left" aria-hidden="true" />
+          <span className="ncl-v8__title-corner ncl-v8__title-corner--right" aria-hidden="true" />
+          <h2 className="ncl-v8__title" dangerouslySetInnerHTML={{ __html: titleHtml }} />
+        </div>
+      </div>
+
+      <div className="ncl-v8__foot">
+        <div className="ncl-v8__console">
+          <span className="ncl-v8__frame ncl-v8__frame--top" aria-hidden="true" />
+          <span className="ncl-v8__frame ncl-v8__frame--bottom" aria-hidden="true" />
+          <span className="ncl-v8__corner ncl-v8__corner--left" aria-hidden="true" />
+          <span className="ncl-v8__corner ncl-v8__corner--right" aria-hidden="true" />
+
+          <div className="ncl-v8__meta" aria-label="Navigate station telemetry">
+            <span className="ncl-v8__diamond" aria-hidden="true" />
+            <span>01 · NAVIGATE</span>
+            <span className="ncl-v8__sep" aria-hidden="true" />
+            <span>{telemetry.callsign}</span>
+            <span className="ncl-v8__sep" aria-hidden="true" />
+            <span className="ncl-v8__status">{telemetry.status}</span>
+          </div>
+
+          <p className="ncl-v8__support" dangerouslySetInnerHTML={{ __html: supportHtml }} />
+
+          <div className="ncl-v8__readouts" aria-hidden="true">
+            <span>MODE / WAYFINDING</span>
+            <span>BRG / 312°</span>
+            <span>DRIFT / HUMAN</span>
+          </div>
+        </div>
       </div>
     </div>
   );

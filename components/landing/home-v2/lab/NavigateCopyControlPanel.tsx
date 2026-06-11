@@ -27,6 +27,7 @@ const VARIANTS: { id: VariantId; label: string; sub: string }[] = [
   { id: "V5", label: "V5", sub: "Btm stack" },
   { id: "V6", label: "V6", sub: "Top stack" },
   { id: "V7", label: "V7", sub: "Limb wrap" },
+  { id: "V8", label: "V8", sub: "HUD foot" },
 ];
 
 const TITLE_SIZES: TitleSize[] = ["S", "M", "L"];
