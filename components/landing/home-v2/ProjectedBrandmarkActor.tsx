@@ -6,11 +6,11 @@ import { BrandmarkGlyph } from "@/components/landing/v7/BrandmarkGlyph";
 import {
   getBrandmarkWorldHalfExtent,
   getBrandmarkWorldPosition,
-  getEpilogueDockTransform,
   getThoughtformMobilePhase,
 } from "./DepthGatewayScene/sceneGeom";
 import { type WorldAnchor, useWorldDomTracker } from "./hooks/useWorldDomTracker";
 import { BEAT_ORDER } from "@/lib/home-v2/corridorMap";
+import { epilogueBand } from "@/lib/home-v2/epilogueTimeline";
 import { gyroTilt, useGyroLabStore } from "@/lib/stores/gyroLabStore";
 
 /**
@@ -54,9 +54,6 @@ import { gyroTilt, useGyroLabStore } from "@/lib/stores/gyroLabStore";
  */
 
 const PERSPECTIVE_PX = 1200;
-/** Epilogue-progress value at which the docked glyph begins its exit
- *  fade (epilogue v4 — was keyed on paintProgress when the corridor
- *  ended at the planet landing). */
 const TAIL_FADE_OUT_START = 0.97;
 
 /** Aspect ratio of the BrandmarkGlyph SVG (height/width). */
@@ -82,17 +79,8 @@ export function ProjectedBrandmarkActor() {
     return [
       {
         id: "home-v2.brandmark",
-        // Epilogue v4 (2026-06-10 flywheel pass): the Build park's
-        // brandmark anchor docks rightward with the gyro assembly.
-        // `getEpilogueDockTransform` returns offsetX 0 inside the
-        // calibrated corridor, so the parked travel is unchanged; at
-        // peak DOCK the projected glyph rides the assembly into the
-        // +X half of the viewport beside the flywheel panel.
-        position: (transform) => {
-          const base = getBrandmarkWorldPosition(transform.paintProgress, transform.progress);
-          const dock = getEpilogueDockTransform(transform.epilogueProgress);
-          return [base[0] + dock.offsetX, base[1] + dock.offsetY, base[2]];
-        },
+        position: (transform) =>
+          getBrandmarkWorldPosition(transform.paintProgress, transform.progress),
         // Brandmark is visible across EVERY beat; substrate-cut is
         // handled inside onPaint so the DOM hides during the
         // intelligence morph window. Derived from BEAT_ORDER so it
@@ -127,14 +115,7 @@ export function ProjectedBrandmarkActor() {
           // measure the screen-space distance from the centre. This
           // picks up camera dolly + camera roll + the beat-to-beat
           // half-extent ramp automatically.
-          //
-          // Epilogue v4 (2026-06-10 flywheel pass): the half-extent
-          // rides the dock SCALE so the glyph shrinks with the
-          // assembly as it docks rightward — without this the mark
-          // would stay at parked size and read ~2x too large inside
-          // the 54%-scale docked sphere.
-          const dock = getEpilogueDockTransform(transform.epilogueProgress);
-          const halfExtent = getBrandmarkWorldHalfExtent(progress) * dock.scale;
+          const halfExtent = getBrandmarkWorldHalfExtent(progress);
           scratch.current.right.setFromMatrixColumn(camera.matrixWorld, 0);
           scratch.current.target.set(worldPos[0], worldPos[1], worldPos[2]);
           scratch.current.edge
@@ -159,20 +140,10 @@ export function ProjectedBrandmarkActor() {
           // Tail fade-out. The head transition is a hard hero-gate
           // (above) rather than a fade — the brandmark is already
           // visible the moment we enter Thoughtform (Principle 5:
-          // only the post-corridor exit uses an opacity ramp).
-          //
-          // Epilogue v4 (2026-06-10 flywheel pass): re-keyed from
-          // `paintProgress` to `epilogueProgress`. paintProgress pins
-          // at 1 for the entire epilogue, so the old key zeroed the
-          // glyph for the whole flywheel section. The mark now stays
-          // docked + visible through the epilogue and only fades on
-          // the LAST slice of the epilogue scrub, handing off cleanly
-          // to the journey-driven global painter when the stage
-          // unpins.
+          // only the post-orbit exit uses an opacity ramp).
           let bookend = 1;
-          const ep = transform.epilogueProgress;
-          if (ep > TAIL_FADE_OUT_START) {
-            bookend = Math.max(0, 1 - (ep - TAIL_FADE_OUT_START) / (1 - TAIL_FADE_OUT_START));
+          if (progress > TAIL_FADE_OUT_START) {
+            bookend = Math.max(0, 1 - (progress - TAIL_FADE_OUT_START) / (1 - TAIL_FADE_OUT_START));
           }
           // Slightly brighter at parked beats than during transits.
           // The Navigate park is intentionally NOT included: the mark
@@ -187,13 +158,14 @@ export function ProjectedBrandmarkActor() {
           // desktop and 1 once raw progress passes the dwell, so it's a
           // no-op everywhere except the mobile copy moment.
           const { diagramFactor } = getThoughtformMobilePhase(transform.progress);
-          // Epilogue v4 (2026-06-10 flywheel pass): the brandmark
-          // STAYS visible through the epilogue. It docks with the
-          // gyro assembly via the position resolver above; opacity
-          // is unchanged by the epilogue so the docked glyph reads as
-          // the still-present centre of the assembly beside the
-          // flywheel panel.
-          element.style.opacity = `${(bookend * intensity * diagramFactor).toFixed(3)}`;
+          // Epilogue v3 — fade the guiding-star brandmark across the
+          // APPROACH band so the core mark doesn't sit inside the
+          // substrate as it grows into a planet. By the LAND band the
+          // mark is invisible and we end "standing on the substrate"
+          // looking out at the curved horizon, not staring at the
+          // brandmark glyph in space.
+          const epFade = 1 - epilogueBand(transform.epilogueProgress, "APPROACH");
+          element.style.opacity = `${(bookend * intensity * diagramFactor * epFade).toFixed(3)}`;
 
           // Forward tilt: the inner div takes a small Y rotation
           // scaled by camera dolly so the mark reads as a 3D plate

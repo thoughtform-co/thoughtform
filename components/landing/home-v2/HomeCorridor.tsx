@@ -7,7 +7,6 @@ import { corridorCapable } from "@/lib/hooks/useDeviceTier";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import { stationById } from "@/lib/home-v2/corridorMap";
 import { CopyAnchors } from "./CopyAnchors";
-import { CorridorFlywheelPanel, FallbackFlywheelSummary } from "./CorridorFlywheelPanel";
 import { CorridorProgressRail } from "./CorridorProgressRail";
 import { CorridorStationHeaders } from "./CorridorStationHeaders";
 import { DepthGatewayScene } from "./DepthGatewayScene";
@@ -167,17 +166,6 @@ export function HomeCorridor({ text, debug = true }: HomeCorridorProps) {
             section instead of floating over the hero. */}
         {!fallback && <ProjectedBrandmarkActor />}
 
-        {/* Epilogue v4 (2026-06-10 flywheel pass) — once the user
-            scrolls past the Build park, the gyro assembly docks
-            rightward (`getEpilogueDockTransform`) and this panel
-            takes over the LEFT half of the viewport with the
-            "flywheel in practice" editorial. Three retro-futuristic
-            HUD frames scroll into view one at a time and accumulate.
-            Hidden during the calibrated corridor via a data attribute
-            on the panel root. Desktop-only via CSS; mobile renders
-            the same content as a vertical-stack fallback below. */}
-        {!fallback && <CorridorFlywheelPanel />}
-
         {/* Debug HUD — progress + active beat readout. */}
         {!fallback && debug && <StageHud />}
 
@@ -240,11 +228,6 @@ function FallbackCorridor({ text }: { text: V7CorridorText }) {
           {bld.supportHtml && <p dangerouslySetInnerHTML={{ __html: bld.supportHtml }} />}
         </section>
       )}
-      {/* Epilogue v4 (2026-06-10 flywheel pass) — the same three-frame
-          editorial as the live corridor's `CorridorFlywheelPanel`,
-          rendered as plain stacked sections so reduced-motion / no-WebGL
-          visitors get the post-Build content. */}
-      <FallbackFlywheelSummary />
     </div>
   );
 }

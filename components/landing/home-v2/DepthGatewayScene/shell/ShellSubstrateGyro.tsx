@@ -37,6 +37,7 @@ import {
   makeMeshMaterial,
 } from "@/components/landing/intelligence-artifact/artifactPrimitives";
 import { buildSphereCloudGeometry } from "@/components/landing/v7/intelligence-layer/celestialRingUtils";
+import { epilogueBand } from "@/lib/home-v2/epilogueTimeline";
 import { useGyroLabStore } from "@/lib/stores/gyroLabStore";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import { clamp01 } from "@/lib/home-v2/corridorMap";
@@ -848,7 +849,7 @@ export function ShellSubstrateGyro({ layerKey, reducedMotion = false }: ShellSub
     const globeSpin = globeSpinRef.current;
     if (!root || !globeSpin) return;
 
-    const { active, armed } = useDepthGatewayStore.getState().transform;
+    const { epilogueProgress, active, armed } = useDepthGatewayStore.getState().transform;
     if (!active && !armed) {
       root.visible = false;
       return;
@@ -858,12 +859,6 @@ export function ShellSubstrateGyro({ layerKey, reducedMotion = false }: ShellSub
     // ring cascade, globe Y-bloom, wrap-spin, and shell settle always
     // unfurl over wall-clock time instead of compressing into a few
     // frames under a fast scroll.
-    //
-    // Epilogue v4 (2026-06-10 flywheel pass): the BUILD_OUT instrument
-    // fade and APPROACH planet-density boost are gone. The whole
-    // gimbal — armillary rings, ticks, graduations, compass symbols,
-    // pivots, cardinal ring, dotted shell — STAYS visible and reads
-    // as a docked instrument beside the flywheel panel.
     const layers = getSmoothedAccretionLayers();
     const reveal = layers.substrate;
     if (reveal <= EMERGE_EPSILON) {
@@ -871,6 +866,14 @@ export function ShellSubstrateGyro({ layerKey, reducedMotion = false }: ShellSub
       return;
     }
     root.visible = true;
+
+    // Epilogue v3 — as we leave the Build park the gyro's INSTRUMENT
+    // affordances (gimbal armillary rings, ticks, graduations, compass
+    // symbols, pivots, cardinal ring) fade out on BUILD_OUT so only
+    // the wireframe GLOBE remains. By APPROACH the substrate has
+    // stopped reading as a flight instrument and started reading as
+    // a planet.
+    const buildOutFade = 1 - epilogueBand(epilogueProgress, "BUILD_OUT");
 
     const dt = Math.min(0.1, delta);
     const { idleSpeed } = useGyroLabStore.getState();
@@ -887,27 +890,62 @@ export function ShellSubstrateGyro({ layerKey, reducedMotion = false }: ShellSub
 
     const lineOpacity = (base: number) => base * presence;
 
-    // GLOBE materials — kept through the epilogue.
-    mats.globeDots.uniforms.uOpacity.value = SUBSTRATE_GYRO_GLOBE_DOTS_OPACITY * presence;
-    mats.globeDots.uniforms.uPointSize.value = SUBSTRATE_GYRO_GLOBE_DOTS_POINT_SIZE;
+    // v3.2 planet-density boost — as the substrate grows into a
+    // planet during APPROACH, scale the surface point dots' SIZE
+    // and OPACITY up so the sphere reads as a dense, glowing planet
+    // surface rather than a faint wireframe at 3x scale. The boost
+    // tracks the APPROACH band so it ramps with the grow; before
+    // APPROACH the values are byte-identical to the parked corridor.
+    const approachT = epilogueBand(epilogueProgress, "APPROACH");
+    // Size multiplier: 1 at parked, ~1.8 at peak. Combined with the
+    // 3x physical grow, surface dots end up ~5.4x as big in screen
+    // space as the planet ramps up.
+    const pointSizeBoost = 1 + approachT * 0.8;
+    // Opacity multiplier: 1 at parked, ~1.5 at peak (capped at 1
+    // via Math.min so we don't oversaturate).
+    const opacityBoost = 1 + approachT * 0.55;
+
+    // GLOBE materials — kept through the epilogue (these BECOME the
+    // planet surface grid + atmospheric particles).
+    mats.globeDots.uniforms.uOpacity.value = Math.min(
+      1,
+      SUBSTRATE_GYRO_GLOBE_DOTS_OPACITY * presence * opacityBoost
+    );
+    mats.globeDots.uniforms.uPointSize.value =
+      SUBSTRATE_GYRO_GLOBE_DOTS_POINT_SIZE * pointSizeBoost;
     mats.globeDots.uniforms.uPixelRatio.value = state.viewport.dpr;
     mats.equator.uniforms.uOpacity.value = lineOpacity(SUBSTRATE_GYRO_GLOBE_EQUATOR_OPACITY);
     mats.particle.uniforms.uPixelRatio.value = state.viewport.dpr;
-    mats.particle.uniforms.uOpacity.value = SUBSTRATE_GYRO_PARTICLE_OPACITY * presence;
-    mats.particle.uniforms.uPointSize.value = SUBSTRATE_GYRO_POINT_SIZE;
+    mats.particle.uniforms.uOpacity.value = Math.min(
+      1,
+      SUBSTRATE_GYRO_PARTICLE_OPACITY * presence * opacityBoost
+    );
+    mats.particle.uniforms.uPointSize.value = SUBSTRATE_GYRO_POINT_SIZE * pointSizeBoost;
     mats.dottedShell.uniforms.uPixelRatio.value = state.viewport.dpr;
-    mats.dottedShell.uniforms.uOpacity.value = SUBSTRATE_GYRO_DOTTED_SHELL_OPACITY * presence;
-    mats.dottedShell.uniforms.uPointSize.value = SUBSTRATE_GYRO_DOTTED_SHELL_POINT_SIZE;
+    mats.dottedShell.uniforms.uOpacity.value = Math.min(
+      1,
+      SUBSTRATE_GYRO_DOTTED_SHELL_OPACITY * presence * opacityBoost
+    );
+    mats.dottedShell.uniforms.uPointSize.value =
+      SUBSTRATE_GYRO_DOTTED_SHELL_POINT_SIZE * pointSizeBoost;
 
-    // Atmosphere rim-glow stays at 0 in v4 (no more planet-grow read).
-    mats.atmosphere.uniforms.uOpacity.value = 0;
-    // INSTRUMENT materials — kept visible through the epilogue.
-    mats.ring.uniforms.uOpacity.value = lineOpacity(SUBSTRATE_GYRO_RING_LINE_OPACITY);
-    mats.tick.uniforms.uOpacity.value = lineOpacity(SUBSTRATE_GYRO_TICK_OPACITY);
-    mats.graduation.uniforms.uOpacity.value = lineOpacity(SUBSTRATE_GYRO_RING_LINE_OPACITY * 0.95);
-    mats.symbol.uniforms.uOpacity.value = lineOpacity(SUBSTRATE_GYRO_SYMBOL_OPACITY);
-    mats.pivot.opacity = SUBSTRATE_GYRO_PIVOT_OPACITY * presence;
-    mats.cardinalRing.uniforms.uOpacity.value = lineOpacity(SUBSTRATE_GYRO_CARDINAL_RING_OPACITY);
+    // v3.2 atmosphere rim-glow: fades in across APPROACH so the
+    // planet's silhouette gets a soft halo as the substrate
+    // transitions from "instrument" to "planet". Capped at 0.6 so
+    // it sits as a gentle atmospheric ring, not a bloom that drowns
+    // the dotted-shell surface.
+    mats.atmosphere.uniforms.uOpacity.value = approachT * 0.6;
+    // INSTRUMENT materials — fade out on BUILD_OUT so the substrate
+    // sheds its flight-instrument vocabulary before we approach.
+    mats.ring.uniforms.uOpacity.value =
+      lineOpacity(SUBSTRATE_GYRO_RING_LINE_OPACITY) * buildOutFade;
+    mats.tick.uniforms.uOpacity.value = lineOpacity(SUBSTRATE_GYRO_TICK_OPACITY) * buildOutFade;
+    mats.graduation.uniforms.uOpacity.value =
+      lineOpacity(SUBSTRATE_GYRO_RING_LINE_OPACITY * 0.95) * buildOutFade;
+    mats.symbol.uniforms.uOpacity.value = lineOpacity(SUBSTRATE_GYRO_SYMBOL_OPACITY) * buildOutFade;
+    mats.pivot.opacity = SUBSTRATE_GYRO_PIVOT_OPACITY * presence * buildOutFade;
+    mats.cardinalRing.uniforms.uOpacity.value =
+      lineOpacity(SUBSTRATE_GYRO_CARDINAL_RING_OPACITY) * buildOutFade;
 
     // Globe spin: keep the idle polar drift; add the decaying wrap-spin
     // on top so the meridians/parallels appear to swirl around the

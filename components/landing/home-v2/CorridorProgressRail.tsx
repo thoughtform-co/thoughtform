@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useRef } from "react";
+import { epilogueBand } from "@/lib/home-v2/epilogueTimeline";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 
 /**
@@ -20,12 +21,9 @@ import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
  * trail, dimmed. Every value is scrubbed off the corridor's
  * `paintProgress`, so the trail grows on the way down and recedes on
  * the way up in lock-step with scroll — no time-based tween that could
- * desync from the wheel.
- *
- * Epilogue v4 (2026-06-10 flywheel pass): the rail STAYS visible
- * through the epilogue. The breadcrumb IS the flywheel, so it sits on
- * the top HUD line beside the docked artifact while the user reads the
- * three "in practice" frames on the left.
+ * desync from the wheel. The whole rail rides the corridor's
+ * engagement and leaves on the epilogue `BUILD_OUT` band with the
+ * Build chapter, before the "billions" title claims top-centre.
  *
  * Desktop-only, mirroring `CorridorStationHeaders` (mobile uses the
  * world-anchored straddle in `CopyAnchors`).
@@ -123,12 +121,11 @@ export function CorridorProgressRail() {
       const engaged = t.active || t.armed;
       const p = engaged ? t.paintProgress : 0;
 
-      // Epilogue v4: the breadcrumb stays at full opacity through the
-      // epilogue tail (the rail IS the flywheel — it reads beside the
-      // docked artifact while the in-practice frames flow in on the
-      // left). The container only fades when the corridor itself is
-      // disengaged.
-      const containerOpacity = engaged ? 1 : 0;
+      // The rail leaves with the Build chapter: as the epilogue's
+      // BUILD_OUT band runs, fade the whole trail out before the
+      // "billions" title rises into top-centre.
+      const buildOut = epilogueBand(t.epilogueProgress, "BUILD_OUT");
+      const containerOpacity = engaged ? Math.max(0, 1 - buildOut) : 0;
 
       // Per-stage reveal (append) + active (current-stage highlight).
       // A stage is active once it has appended and until the NEXT stage
@@ -178,12 +175,11 @@ export function CorridorProgressRail() {
         }
       }
 
-      // Cache all three values together — the container opacity is
-      // cheap to assign and keeping the cache shape consistent
-      // satisfies the `{ container: number; ... }` invariant TS
-      // expects (the prior `{ ...last.current, ... }` spread could
-      // narrow to optional when `last.current` was null).
-      last.current = { container: containerOpacity, reveal, active };
+      if (containerChanged || !prev) {
+        last.current = { container: containerOpacity, reveal, active };
+      } else {
+        last.current = { ...last.current, reveal, active };
+      }
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);

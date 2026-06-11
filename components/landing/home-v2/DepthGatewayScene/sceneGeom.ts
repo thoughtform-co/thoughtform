@@ -292,20 +292,185 @@ export function getCameraPosition(progress: number): [number, number, number] {
   return [0, 0, lerp(CAMERA_START[2], CAMERA_END[2], cameraZDollyT(progress))];
 }
 
-// ── Epilogue camera (v4: parked) ─────────────────────────────────
+// ── Epilogue camera pose (v3: planet landing) ─────────────────────
 //
-// In v4 ("the flywheel in practice", 2026-06-10) the EPILOGUE no
-// longer flies the camera anywhere. The world DOCKS instead — the
-// gyro assembly slides into the +X half of the viewport and shrinks
-// (see `getEpilogueDockTransform` below) while the left half receives
-// the flywheel panel. The camera stays exactly at the parked CAMERA_END
-// pose so the artifact's projection only changes by the explicit dock
-// transform on the assembly group.
+// During the EPILOGUE the camera leaves its parked CAMERA_END pose
+// and flies TOWARD the substrate (which is simultaneously growing
+// into a planet, see `getEpiloguePlanetScale`). At peak LAND it
+// hovers just above the planet's north pole and looks tangentially
+// toward the horizon — so the surface fills the bottom of the
+// viewport, the limb of the planet reads as a curved horizon, and
+// the title sits in the sky above it.
 //
-// The previous `getEpilogueCameraPose` helper drove a planet-landing
-// fly-in around the substrate sphere; it is gone in v4. `FlyingCameraRig`
-// now reads `paintProgress` end-to-end (pinned at 1 across the
-// epilogue tail).
+// Math (deliberately simple — slerp-free, planar):
+//   - planet centre P = BRANDMARK_ANCHOR_INTELLIGENCE
+//   - UP angle theta: 0 = in front of the planet (parked), peak =
+//     EPILOGUE_LANDING_TILT (a touch off straight-up so we land
+//     facing slightly ahead rather than straight down at the pole)
+//   - direction from planet centre to camera: (0, sin(theta), cos(theta))
+//   - distance: lerp(parked-distance, planetRadius + standoff,
+//     approachT) — camera flies in as the planet grows, ending just
+//     above the surface
+//   - look-at at peak LAND: camera + tangent * horizon_distance,
+//     where tangent is perpendicular to the up direction and points
+//     in the +Z half (so we look "forward" along the surface)
+
+/** Tilt angle (radians) of the camera above the planet at peak LAND.
+ *  v3.2 horizon framing — dropped the camera from the v3.1
+ *  bird's-eye (70deg) toward an ORBITAL HORIZON view: camera is
+ *  slightly above the planet centre and well in front of it, like
+ *  the Earth-reference screenshots the user provided. Combined with
+ *  the new look-up gaze (`LOOK_DOWN_Y` > camera Y) and the closer
+ *  standoff below, this reads as "we've left the corridor and we
+ *  are orbiting a planet, looking out across its curved limb toward
+ *  the title in the sky above."
+ *
+ *  2026-06-09 breathing-room pass: 28 -> 32deg lifts the camera a
+ *  touch higher over the pole (paired with the raised LOOK_DOWN_Y
+ *  below) so the planet's limb sits lower in frame and the title
+ *  gets more sky. */
+const EPILOGUE_LANDING_TILT = (32 * Math.PI) / 180;
+
+/** Camera standoff (world units) from the planet surface at peak
+ *  LAND. v3.2 pulled 4.5 -> 3.5 so the planet reads BIG in frame.
+ *  The grow-aware `distance = planetRadius + standoff` math still
+ *  guarantees the camera stays outside the growing planet, so this
+ *  is safe to tighten further if needed during live tuning. */
+const EPILOGUE_LANDING_STANDOFF = 3.5;
+
+/** lookAt target offset in PLANET-RADIUS units relative to the
+ *  planet centre at peak LAND. v3.2 horizon framing:
+ *
+ *    - `LOOK_DOWN_Y` places the look-at slightly ABOVE the planet
+ *      pole (the pole sits at +1R). Because the camera at landing
+ *      tilt sits just above the pole height itself, this means the
+ *      camera's gaze tilts UP very slightly toward a point above
+ *      the planet — the horizon (curved limb) ends up in the lower
+ *      portion of the frame, with sky + title above. Matches the
+ *      Earth-reference shot composition. 2026-06-09 breathing-room
+ *      pass: 1.2 -> 1.45 raises the gaze further so the limb drops
+ *      lower in frame (planet size unchanged — standoff untouched).
+ *    - `LOOK_FWD_Z = 0.5` pushes the look-at half a radius PAST
+ *      the planet centre (further down -Z) so the camera looks
+ *      across the surface toward a point in the far sky, rather
+ *      than directly at the planet — adds depth to the horizon
+ *      read. */
+const EPILOGUE_LOOK_DOWN_Y = 1.45;
+const EPILOGUE_LOOK_FWD_Z = 0.5;
+
+/** Single continuous FLIGHT window (in epilogueProgress) for the whole
+ *  planet descent (v3.3 curved-landing pass). Both the bank ANGLE and
+ *  the approach DISTANCE ride this one curve so the camera arcs up AND
+ *  in as a single elegant move — like an aircraft lining up with a
+ *  runway — instead of the v3.2 behaviour where distance closed on the
+ *  APPROACH band and the tilt only swung up later on the LAND band
+ *  (which read as "fly straight at the sphere, THEN pitch up").
+ *
+ *  Starts a touch into BUILD_OUT so the Build chrome has begun clearing
+ *  before the camera leaves its park; ends just before the title is
+ *  fully in (TITLE_IN.end = 0.74) so the pose is settled as the
+ *  user reads the line.
+ *
+ *  Polish round 2 (2026-06-10): EPILOGUE_FLIGHT_END pulled 0.9 -> 0.86
+ *  to align with the new LAND.end (0.86) so the camera resolves
+ *  inside the compressed epilogue tail. */
+const EPILOGUE_FLIGHT_START = 0.12;
+const EPILOGUE_FLIGHT_END = 0.86;
+
+/** Mid-flight landing-flare swoop depth (world units). The camera dips
+ *  slightly CLOSER to the planet through the middle of the descent and
+ *  eases back out to the orbital standoff at the end — the gentle
+ *  "flare" of a landing approach. Kept well under the standoff so the
+ *  camera never crosses the planet surface. 2026-06-09 smoothness
+ *  pass: 0.9 -> 0.6 so the mid-flight dip reads as a flare, not a
+ *  lurch, now that the bank arc itself eases in (see `arc` below). */
+const EPILOGUE_SWOOP_DEPTH = 0.6;
+
+/** Camera pose during the epilogue beat — a single curved fly-in +
+ *  landing arc around the substrate sphere as it grows into a planet.
+ *  Returns the parked CAMERA_END pose at epilogueProgress 0 (so
+ *  blending it into `FlyingCameraRig` is a no-op inside the corridor)
+ *  and an orbital horizon POV at the end of the flight. */
+export function getEpilogueCameraPose(epilogueProgress: number): {
+  position: [number, number, number];
+  lookAt: [number, number, number];
+} {
+  const planetCentre = BRANDMARK_ANCHOR_INTELLIGENCE;
+  const baseRadius = SUBSTRATE_GYRO_GLOBE_RADIUS * GYRO_ASSEMBLY_SCALE;
+  const planetRadius = baseRadius * getEpiloguePlanetScale(epilogueProgress);
+
+  // One continuous flight parameter for the whole descent. `flightRaw`
+  // is the linear smoothstep across the flight window; `flight` adds a
+  // second smoothing pass (smootherstep) so the camera eases out of the
+  // park and decelerates into the landing without a kink at either end.
+  const flightRaw = smoothstep(EPILOGUE_FLIGHT_START, EPILOGUE_FLIGHT_END, epilogueProgress);
+  const flight = flightRaw * flightRaw * (3 - 2 * flightRaw);
+
+  // Bank angle LEADS the approach. `arc` eases OUT ahead of the
+  // double-smoothed `flight` so the camera gains ALTITUDE early — by
+  // the time it closes in it is already looking down at the planet
+  // from above, like an aircraft on a glide slope, instead of boring
+  // straight at the planet's middle and only pitching up at the very
+  // end. The distance closes on the gentler `flight`, so altitude
+  // bows up first and the approach curves in under it: one continuous
+  // arc, never an L-shaped "straight in, then up".
+  //
+  // 2026-06-09 smoothness pass: the raw `sin(t·π/2)` ease-out had its
+  // MAXIMUM angular velocity at flight start — the full-sphere view
+  // visibly kicked the moment the bank began. Feeding the sin through
+  // a smoothstep keeps the lead (smoothstep(t) ≥ smootherstep-of-
+  // smoothstep used by `flight` everywhere on [0,1]) but starts the
+  // bank with zero velocity, so "full sphere → top of the sphere"
+  // now eases in and out as one continuous move.
+  const arcIn = flightRaw * flightRaw * (3 - 2 * flightRaw);
+  const arc = Math.sin(arcIn * Math.PI * 0.5);
+  const theta = EPILOGUE_LANDING_TILT * arc;
+  const sinT = Math.sin(theta);
+  const cosT = Math.cos(theta);
+
+  // Distance from planet centre to camera.
+  // - Parked: camera at CAMERA_END = (0,0,-17), planet at z ≈ -22.6,
+  //   so parked distance ≈ 5.6 units (camera +Z of planet).
+  // - Landing: planetRadius + LANDING_STANDOFF (orbital standoff).
+  // The mid-flight `swoop` dips the camera closer through the middle of
+  // the descent then eases back out — the landing flare.
+  const parkedDistance = CAMERA_END[2] - planetCentre[2];
+  const landingDistance = planetRadius + EPILOGUE_LANDING_STANDOFF;
+  const swoop = Math.sin(Math.PI * flightRaw) * EPILOGUE_SWOOP_DEPTH;
+  const distance = lerp(parkedDistance, landingDistance, flight) - swoop;
+
+  const camX = planetCentre[0];
+  const camY = planetCentre[1] + sinT * distance;
+  const camZ = planetCentre[2] + cosT * distance;
+
+  // LookAt rides the SAME flight curve so the gaze rotates WITH the
+  // arc (no lag between the camera rising and where it is looking).
+  // - flight 0: the corridor's parked lookAt — identical to
+  //   `getCameraLookAt(1)` so the corridor->epilogue seam is invisible.
+  // - flight 1: look DOWN+FORWARD over the planet's pole — target sits
+  //   slightly ABOVE the planet centre in Y and well in front of it in
+  //   -Z, so the upper hemisphere arcs across the lower frame and the
+  //   starfield + title fill the upper frame (the Earth-reference look).
+  const parkedLook = getCameraLookAt(1);
+  const lookLand: [number, number, number] = [
+    planetCentre[0],
+    planetCentre[1] + planetRadius * EPILOGUE_LOOK_DOWN_Y,
+    planetCentre[2] - planetRadius * EPILOGUE_LOOK_FWD_Z,
+  ];
+  // Gaze rides the same leading `arc` as the bank angle so the camera
+  // looks where it is banking — the planet stays framed below the
+  // horizon line as the camera rises over it.
+  const lookAt: [number, number, number] = [
+    lerp(parkedLook[0], lookLand[0], arc),
+    lerp(parkedLook[1], lookLand[1], arc),
+    lerp(parkedLook[2], lookLand[2], arc),
+  ];
+
+  return {
+    position: [camX, camY, camZ],
+    lookAt,
+  };
+}
 
 /** Base look-at point. Travels with the camera (LOOK_AHEAD units
  *  further down the corridor) and bobs sub-pixel Y so the gaze
@@ -946,11 +1111,7 @@ export function getBrandmarkWorldHalfExtent(progress: number): number {
 
 // ── Copy + label world anchors ───────────────────────────────────
 
-import {
-  epilogueBand,
-  EPILOGUE_DOCK_OFFSET_NDC,
-  EPILOGUE_DOCK_SCALE,
-} from "@/lib/home-v2/epilogueTimeline";
+import { epilogueBand, getEpiloguePlanetScale } from "@/lib/home-v2/epilogueTimeline";
 import type { Beat, DepthGatewayTransform } from "@/lib/stores/depthGatewayStore";
 import { gyroTilt, useGyroLabStore } from "@/lib/stores/gyroLabStore";
 import type { WorldAnchor, WorldAnchorPosition } from "../hooks/useWorldDomTracker";
@@ -960,6 +1121,7 @@ import {
   STACK_FAN_HALF_HEIGHT,
   STACK_LANE_COUNT,
   STACK_LANE_Y_RANGE,
+  SUBSTRATE_GYRO_GLOBE_RADIUS,
   getPrimitiveLabelOffset,
   petalStagger,
   SHELL_PRIMITIVES,
@@ -1033,73 +1195,6 @@ export function getLiveAspectForStack(): number {
   return window.innerWidth / window.innerHeight;
 }
 
-// ── Epilogue dock transform (v4: flywheel in practice) ────────────
-//
-// The whole gyro assembly (sphere + lanes + fan + chips + cardinals +
-// projected brandmark) shrinks and slides RIGHT into the +X half of
-// the viewport across the EPILOGUE DOCK band, ceding the LEFT half
-// to the flywheel-in-practice panel. The camera does not move; only
-// the assembly's world position + uniform scale change.
-//
-// Every consumer reads from this single helper so the canvas group,
-// the projected brandmark, and the per-row chip / cardinal / column-
-// header DOM anchors all dock together as one rigid composition.
-
-export interface EpilogueDockTransform {
-  /** World-X offset (positive = right) added to the assembly centre.
-   *  Computed from the camera frustum at the parked Build distance so
-   *  the docked sphere lands at a consistent NDC position regardless
-   *  of viewport aspect. Returns 0 outside the DOCK band; on portrait
-   *  viewports stays 0 (mobile docks vertically). */
-  offsetX: number;
-  /** World-Y offset (positive = up) added to the assembly centre. 0
-   *  on landscape; on portrait viewports lifts the sphere into the
-   *  upper third so the flywheel panel can claim the bottom band as
-   *  a full-width column below the docked artifact. */
-  offsetY: number;
-  /** Uniform multiplier on top of `GYRO_ASSEMBLY_SCALE` applied to the
-   *  whole assembly (canvas group + DOM-projected local offsets).
-   *  Returns 1 outside the DOCK band, so the corridor->epilogue handoff
-   *  is byte-identical inside the calibrated corridor. */
-  scale: number;
-}
-
-/** Mobile peak shrink — much more aggressive than desktop so the
- *  sphere reads as a compact emblem above the full-width flywheel
- *  panel instead of a half-frame instrument. */
-const EPILOGUE_DOCK_SCALE_PORTRAIT = 0.42;
-
-/** Mobile peak Y-lift in NDC half-height units. The sphere translates
- *  this fraction of the half-height upward so the lower ~66vh is free
- *  for the flywheel panel column. */
-const EPILOGUE_DOCK_LIFT_NDC = 0.55;
-
-/** Per-frame dock transform for the gyro assembly. Reads the eased
- *  `DOCK` band off `epilogueTimeline` and translates the tunables
- *  (`EPILOGUE_DOCK_OFFSET_NDC`, `EPILOGUE_DOCK_SCALE`) into world
- *  units at the live camera aspect. Defaults `aspect` to the live
- *  viewport read so DOM consumers can omit it. Branches on the
- *  aspect ratio: landscape docks RIGHT (X-offset), portrait docks
- *  UP (Y-offset) so the flywheel panel can claim the bottom band. */
-export function getEpilogueDockTransform(
-  epilogueProgress: number,
-  aspect: number = getLiveAspectForStack()
-): EpilogueDockTransform {
-  const t = epilogueBand(epilogueProgress, "DOCK");
-  if (t <= 0) return { offsetX: 0, offsetY: 0, scale: 1 };
-  const fovDeg = getCameraFov(aspect);
-  const fovRad = (fovDeg * Math.PI) / 180;
-  const halfH = STATION_INTELLIGENCE.parkDistance * Math.tan(fovRad / 2);
-  const safeAspect = Number.isFinite(aspect) && aspect > 0 ? aspect : 16 / 9;
-  const halfW = halfH * safeAspect;
-  const portrait = safeAspect < 1;
-  const offsetX = portrait ? 0 : EPILOGUE_DOCK_OFFSET_NDC * halfW * t;
-  const offsetY = portrait ? EPILOGUE_DOCK_LIFT_NDC * halfH * t : 0;
-  const peakScale = portrait ? EPILOGUE_DOCK_SCALE_PORTRAIT : EPILOGUE_DOCK_SCALE;
-  const scale = 1 + (peakScale - 1) * t;
-  return { offsetX, offsetY, scale };
-}
-
 /** Brandmark accretion reveal envelopes — one per layer of the
  *  intelligence layer + stack that accretes around the travelling
  *  brandmark:
@@ -1160,7 +1255,7 @@ const NAVIGATE_BOOST_RAMP_OUT_END = 0.52;
 
 /** Uniform scale factor to multiply the parked `GYRO_ASSEMBLY_SCALE`
  *  by, so the Navigate sphere reads at the same apparent size as
- *  the Encode gimbal. Composes with `getEpilogueDockTransform.scale`
+ *  the Encode gimbal. Composes with `getEpiloguePlanetScale`
  *  multiplicatively — outside the [0.30, 0.52] window this returns
  *  exactly 1.0 so existing windows are byte-identical. */
 export function getNavigateApparentSizeBoost(paintProgress: number): number {
@@ -1236,18 +1331,6 @@ const gateEncodeReadout: WorldAnchor["onPaint"] = (ctx, el) => {
   el.style.opacity = (ctx.visibilityOpacity * reveal).toFixed(3);
 };
 
-/** Epilogue v4 (2026-06-10 flywheel pass): fade the Build station
- *  title/support on the HEADER_OUT band. On desktop these anchors
- *  have no matching DOM element (the 2D `CorridorStationHeaders`
- *  owns the header and applies the same band) — this gate exists
- *  for the MOBILE straddle (`StationTitle`), which would otherwise
- *  keep "Build on the substrate." painted over the flywheel panel
- *  for the whole epilogue. */
-const gateBuildReadout: WorldAnchor["onPaint"] = (ctx, el) => {
-  const headerOut = 1 - epilogueBand(ctx.transform.epilogueProgress, "HEADER_OUT");
-  el.style.opacity = (ctx.visibilityOpacity * headerOut).toFixed(3);
-};
-
 /** Gate stack tier labels on the Build accretion envelope so Sources /
  *  Surfaces only read once the funnel docks.
  *
@@ -1288,13 +1371,11 @@ const gateStackLabel: WorldAnchor["onPaint"] = (ctx, el) => {
       slidePx = -(1 - eased) * STACK_CHIP_SLIDE_PX;
     }
   }
-  // Epilogue v4 (2026-06-10 flywheel pass): the BUILD_OUT clear is
-  // gone. Source / surface chips DOCK with the gyro assembly during
-  // the DOCK band (their world position resolves through
-  // `gyroAssemblyWorldPosition`, which composes
-  // `getEpilogueDockTransform`), and they stay legible beside the
-  // flywheel panel for the entire epilogue.
-  el.style.opacity = (ctx.visibilityOpacity * lock).toFixed(3);
+  // Epilogue v2 fade: source/surface DOM labels clear with the canvas
+  // stack pips/lanes on the shared BUILD_OUT band so the whole Build
+  // composition leaves together (corridor cadence rule).
+  const epFade = 1 - epilogueBand(ctx.transform.epilogueProgress, "BUILD_OUT");
+  el.style.opacity = (ctx.visibilityOpacity * lock * epFade).toFixed(3);
   if (slidePx < -0.01) {
     // Appended AFTER the tracker's translate/origin/scale segments and
     // BEFORE the gyro bank rotations — the tracker rewrites the base
@@ -1363,17 +1444,7 @@ const gateEncodePrimitive: WorldAnchor["onPaint"] = (ctx, el) => {
   // Each cartridge's opacity ramps over the back-half of its stagger
   // so it "lights up" as it locks in, rather than ghosting during the
   // fly-in. Multiplied by the parent visibility envelope.
-  //
-  // Epilogue v4, portrait only: the cardinal labels fade out on the
-  // DOCK band. The portrait dock shrinks the assembly to a compact
-  // emblem above the flywheel panel — 9px labels around a ~90px
-  // sphere would be unreadable clutter, and the lowest cardinal
-  // (CRAFT) would collide with the panel title. Desktop keeps the
-  // cardinals docked + legible.
-  const portraitDockFade = isMobileComposition()
-    ? 1 - epilogueBand(ctx.transform.epilogueProgress, "DOCK")
-    : 1;
-  const op = smoother(stagger) * portraitDockFade;
+  const op = smoother(stagger);
   // Depth cue (polish round 2). Compute the cardinal's rotated Z
   // and dim/shrink as it swings to the back of the sphere.
   let depthOp = 1;
@@ -1436,13 +1507,9 @@ function gyroAssemblyWorldPosition(
   // applies to the gyro assembly group (BrandmarkAccretionShell), so
   // projected DOM labels stay welded to the enlarged geometry. Only
   // when the gyro is enabled — flat-compass mode has no assembly scale.
-  //
-  // Epilogue v4 (2026-06-10 flywheel pass): the planet-grow multiplier
-  // is replaced by the DOCK transform — the assembly shrinks (scale
-  // < 1) and slides right (offsetX > 0). Local offsets ride the dock
-  // scale so chips and cardinals stay welded as the sphere docks; the
-  // assembly centre rides the dock offsetX so the WHOLE composition
-  // travels as one rigid body to the +X half of the viewport.
+  // The epilogue planet-grow multiplier composes on top so cardinals
+  // scale with the planet (they fade out during BUILD_OUT/APPROACH
+  // anyway, since they'd sit inside the planet at full grow).
   //
   // Polish round 2 (2026-06-10): also fold in the Navigate apparent-
   // size boost so DOM cardinal/group labels stay welded if the gyro
@@ -1450,12 +1517,14 @@ function gyroAssemblyWorldPosition(
   // outside the [0.30, 0.52] paintProgress window, so byte-identical
   // welding everywhere else.
   const base = useGyroLabStore.getState().enabled ? GYRO_ASSEMBLY_SCALE : 1;
-  const dock = getEpilogueDockTransform(transform.epilogueProgress);
-  const s = base * dock.scale * getNavigateApparentSizeBoost(transform.paintProgress);
+  const s =
+    base *
+    getEpiloguePlanetScale(transform.epilogueProgress) *
+    getNavigateApparentSizeBoost(transform.paintProgress);
   const scaledLocal: [number, number, number] = [local[0] * s, local[1] * s, local[2] * s];
   const [bx, by, bz] = getBrandmarkWorldPosition(transform.paintProgress);
   const [x, y, z] = rotateGyroLocalOffset(scaledLocal);
-  return [bx + dock.offsetX + x, by + dock.offsetY + y, bz + z];
+  return [bx + x, by + y, bz + z];
 }
 
 // ── Linear-style station header (desktop two-column) ──────────────
@@ -1876,10 +1945,6 @@ export const COPY_ANCHORS: readonly WorldAnchor[] = [
       far: STATION_INTELLIGENCE.parkDistance + 2.3,
       farFade: 2.2,
     },
-    // Epilogue v4: mobile straddle fades out on HEADER_OUT so the
-    // flywheel panel inherits a clean lower band. No-op on desktop
-    // (no DOM element matches these ids there).
-    onPaint: gateBuildReadout,
   },
   {
     id: "intelligence.support",
@@ -1903,7 +1968,6 @@ export const COPY_ANCHORS: readonly WorldAnchor[] = [
       far: STATION_INTELLIGENCE.parkDistance + 2.3,
       farFade: 2.2,
     },
-    onPaint: gateBuildReadout,
   },
   // Stack v3 (2026-06-10 polish round 3) — Sources / Surfaces become
   // proper COLUMN HEADERS hanging above their respective columns, with

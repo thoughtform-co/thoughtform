@@ -15,21 +15,30 @@ import { getMobilePaintProgress } from "../DepthGatewayScene/sceneGeom";
 
 /** Fraction of the sticky stage that belongs to the calibrated
  *  corridor. The remainder (1 - EPILOGUE_START) is the
- *  "flywheel in practice" epilogue scroll channel. Tied to the
- *  stage height in home-v2.css (`620svh corridor + 280svh
- *  epilogue` -> 620 / 900 ≈ 0.6889). The corridor's normalized
+ *  "billions on the same layer" epilogue scroll channel. Tied
+ *  to the stage height in home-v2.css (`620svh corridor + 200svh
+ *  epilogue` -> 620 / 820 ≈ 0.7561). The corridor's normalized
  *  progress (and beat windows) is computed AGAINST EPILOGUE_START,
  *  so the corridor still tiles [0,1] across its physical span and
  *  every CORRIDOR_TIMELINE constant stays byte-identical.
  *
- *  Sub-bands inside the epilogue live in
- *  `lib/home-v2/epilogueTimeline.ts`. v4.1 (2026-06-10 Glyphic
- *  grid pass) collapsed the three accumulating frames into a
- *  single `GRID_IN` band where the cards settle as a static grid;
- *  the epilogue shrank from 440svh to 280svh while keeping the
- *  ~88svh DOCK runway intact. The corridor span itself is
- *  byte-identical. */
-const EPILOGUE_START = 620 / 900;
+ *  Epilogue v2 (2026-06-08) expanded the epilogue from 180svh to
+ *  300svh so the Build header has room to fade out fully BEFORE the
+ *  billions title arrives — corridor cadence rule. Sub-bands inside
+ *  the epilogue live in `lib/home-v2/epilogueTimeline.ts`.
+ *
+ *  v3.4 (2026-06-09) expanded the calibrated corridor span from
+ *  460svh to 620svh while keeping the epilogue at 300svh. This gives
+ *  the Encode -> Build leg real runway so the wormhole mouth can
+ *  visibly widen across the transition instead of racing into the
+ *  Build park.
+ *
+ *  Polish round 2 (2026-06-10): compressed the epilogue tail from
+ *  300svh to 200svh and pulled TITLE_IN forward inside the band
+ *  table so the Build → "billions" handoff resolves in roughly one
+ *  viewport of scroll instead of three. The corridor span itself
+ *  is byte-identical. */
+const EPILOGUE_START = 620 / 820;
 
 /**
  * useDepthScroll — rAF-throttled scroll watcher for the home-v2
@@ -131,11 +140,17 @@ export function useDepthScroll(stageRef: React.RefObject<HTMLDivElement | null>)
       if (html.getAttribute("data-corridor-engaged") !== engaged) {
         html.setAttribute("data-corridor-engaged", engaged);
       }
-      // Epilogue v4 (2026-06-10 flywheel pass): the v2-era
-      // `data-corridor-epilogue` pointer-events gate is gone. It
-      // served the orbiting news-card raycaster (removed in v3);
-      // the v4 flywheel epilogue has no interactive canvas elements,
-      // so the canvas keeps `pointer-events: none` end-to-end.
+      // Epilogue gate — when the user is anywhere inside the epilogue
+      // scroll channel, flip a `data-corridor-epilogue` attribute on
+      // `<html>` so the canvas can opt INTO receiving pointer events
+      // (the news-card raycaster needs pointer-events: auto to fire
+      // hover / click on the orbiting card meshes). The default for
+      // the canvas is `pointer-events: none` so it never steals scroll
+      // or hover from DOM siblings outside the epilogue.
+      const epilogueOn = epilogueProgress > 0.001 ? "true" : "false";
+      if (html.getAttribute("data-corridor-epilogue") !== epilogueOn) {
+        html.setAttribute("data-corridor-epilogue", epilogueOn);
+      }
     }
 
     // Only the corridor writes HUD readouts while it's the engaged
@@ -229,6 +244,7 @@ export function useDepthScroll(stageRef: React.RefObject<HTMLDivElement | null>)
       useDepthGatewayStore.getState().setTransform(INITIAL_TRANSFORM);
       if (typeof document !== "undefined") {
         document.documentElement.removeAttribute("data-corridor-engaged");
+        document.documentElement.removeAttribute("data-corridor-epilogue");
       }
     };
   }, [onScroll, writeFrame]);

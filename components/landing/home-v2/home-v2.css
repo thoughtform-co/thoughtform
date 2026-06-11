@@ -86,7 +86,7 @@
   position: relative;
   width: 100%;
   /* Total stage height = corridor span (620svh) + epilogue span
-     (440svh). Stage growth history:
+     (200svh). Stage growth history:
        - 300svh: original world-owned corridor.
        - 360svh: Thoughtform -> Diagnostics immersion pass
          (passthrough-01 widened from 14% to 24% of scroll).
@@ -109,25 +109,24 @@
          identical — see `depthGatewayStore.epilogueProgress`.
        - 760svh: epilogue v2 — extended the epilogue to ~300svh so
          the Build header and the billions title never co-exist
-         (corridor cadence rule).
+         (corridor cadence rule). The new sub-bands
+         (BUILD_OUT / SPHERE / MORPH / GATEWAY / SIGNAL_IN /
+         CARDS_IN) live in `lib/home-v2/epilogueTimeline.ts`;
+         `EPILOGUE_START` recomputes to 460/760 ≈ 0.6053.
        - 920svh: epilogue v3.4 — extended the CALIBRATED corridor
          from 460svh to 620svh while keeping the epilogue tail at
-         300svh.
-       - 820svh: polish round 2 — compressed the planet-landing
-         epilogue tail to 200svh.
-       - 1060svh: epilogue v4 (2026-06-10 flywheel pass) — replaced
-         the planet-landing tail with the FLYWHEEL IN PRACTICE
-         epilogue. The artifact docked rightward while three
-         HUD frames accumulated on the LEFT.
-       - 900svh: epilogue v4.1 (2026-06-10 Glyphic grid pass) —
-         mirrored the dock LEFT and rebuilt the panel as a STATIC
-         right-aligned grid (Glyphic-style). The three cards land
-         together instead of accumulating, so the epilogue tail
-         shortens from 440svh to 280svh: ~90svh DOCK + ~56svh
-         TITLE_IN + ~56svh GRID_IN settle + ~78svh stable read
-         time. `EPILOGUE_START` recomputes to 620/900 ≈ 0.6889.
-         The corridor span itself is unchanged. */
-  height: 900svh;
+         300svh. This gives the short Encode -> Build leg enough
+         runway for the wormhole mouth to visibly widen across the
+         whole exit, instead of opening almost on top of the Build
+         park. `EPILOGUE_START` recomputes to 620/920 ≈ 0.6739.
+       - 820svh: polish round 2 (2026-06-10) — compressed the
+         epilogue tail from 300svh to 200svh and pulled TITLE_IN
+         from 0.7 to ~0.52 (+ retuned APPROACH/LAND ends) so the
+         Build park hands off to "The labs just bet billions on
+         the same layer" in roughly one viewport of scroll instead
+         of ~3. The corridor span is unchanged. `EPILOGUE_START`
+         recomputes to 620/820 ≈ 0.7561. */
+  height: 820svh;
   background: var(--void, #050403);
   z-index: 2;
   isolation: isolate;
@@ -160,12 +159,18 @@
   pointer-events: none;
 }
 
-/* Epilogue v4 (2026-06-10 flywheel pass): the v2-era
-   `data-corridor-epilogue` pointer-events opt-in is gone. It existed
-   for the orbiting news-card raycaster (removed in v3); the v4
-   epilogue has no interactive canvas elements, so the canvas stays
-   `pointer-events: none` end-to-end and never intercepts events
-   meant for DOM siblings. */
+/* During the epilogue beat the canvas opts INTO pointer events so the
+   news-card raycaster can fire hover / click on the orbiting card
+   meshes. The flag is written by `useDepthScroll` (`data-corridor-
+   epilogue`) only while the user is inside the epilogue scroll
+   channel — outside that window the canvas reverts to
+   `pointer-events: none` so it never intercepts events from siblings.
+   Wheel + touch scroll still propagate to the document scroll context;
+   only click / hover are captured here, and only on raycast hits. */
+html[data-corridor-epilogue="true"] .home-v2-stage__canvas,
+html[data-corridor-epilogue="true"] .home-v2-stage__canvas canvas {
+  pointer-events: auto;
+}
 
 /* ── DOM copy + label overlay ─────────────────────────────────
    Container for `<CopyAnchors>`. Each child element is positioned
@@ -314,12 +319,9 @@
 
 .home-v2-station-header__head {
   position: absolute;
-  /* Above the sphere, just clear of the CorridorProgressRail
-     breadcrumb that sits on the top HUD frame line (rail bottom ≈
-     hud-margin + 16px ≈ 52-70px). The framed title console carries
-     its own vertical padding, so the band hugs that boundary
-     instead of the old clamp(44px, 7vh, 96px). */
-  top: clamp(48px, 6.8vh, 84px);
+  /* Above the sphere: the (boosted) gimbal ring's top edge sits at
+     ~17.5% viewport height, so the head band lives in ~5-16%. */
+  top: clamp(44px, 7vh, 96px);
   left: 0;
   right: 0;
   display: flex;
@@ -330,215 +332,11 @@
 
 .home-v2-station-header__foot {
   position: absolute;
-  bottom: clamp(28px, 5svh, 64px);
+  bottom: clamp(32px, 5.5vh, 72px);
   left: 0;
   right: 0;
   display: flex;
   justify-content: center;
-}
-
-/* ── V8 console chrome (2026-06-11, ported from navigate-copy-lab) ──
-   Both station text bands render inside a low-profile HUD console:
-   dotted particle frame segments, corner brackets, and (on the
-   support band) telemetry meta/readout rows. The frame segments
-   UNFOLD from the centre when the container gains `is-armed` —
-   toggled by the RAF loop at the same instant the typewriter starts,
-   so chrome and chars resolve together. Collapse plays in reverse
-   when the station re-arms (scroll back out). */
-
-.home-v2-station-header__console {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-}
-
-.home-v2-station-header__console--title {
-  /* Matches the support console (88vw / 920px) so the two consoles
-     bracket the sphere with the same horizontal extent and the long
-     Navigate title ("NAVIGATE THE INTELLIGENCE.") stays on one line
-     at the desktop type scale. */
-  width: min(88vw, 920px);
-  min-height: 70px;
-  padding: 12px clamp(22px, 3vw, 42px) 14px;
-  background:
-    linear-gradient(90deg, rgba(10, 9, 8, 0), rgba(10, 9, 8, 0.48) 20% 80%, rgba(10, 9, 8, 0)),
-    radial-gradient(ellipse 65% 120% at 50% 0%, rgba(202, 165, 84, 0.08), transparent 64%);
-}
-
-.home-v2-station-header__console--support {
-  /* Wide enough that the authored `<br>` sentence-per-line breaks in
-     the corridor support copy never re-wrap inside the console
-     (longest line ≈ 78 chars at the 20px cap ≈ 780px). */
-  width: min(88vw, 920px);
-  min-height: 104px;
-  padding: 18px clamp(22px, 3vw, 44px) 16px;
-  gap: 10px;
-  background:
-    linear-gradient(90deg, rgba(10, 9, 8, 0), rgba(10, 9, 8, 0.68) 18% 82%, rgba(10, 9, 8, 0)),
-    radial-gradient(ellipse 75% 120% at 50% 100%, rgba(202, 165, 84, 0.1), transparent 62%);
-}
-
-/* Dotted particle frame runs — folded (scaleX 0) until the container
-   is armed, then unfold outward from the centre. Fast + no delay:
-   the unfold resolves in ~0.26s with the brand deceleration curve,
-   in step with the title type-out (~0.15s). */
-.home-v2-station-header__frame {
-  position: absolute;
-  height: 1px;
-  background-image: repeating-linear-gradient(
-    to right,
-    rgba(202, 165, 84, 0.62) 0 1.5px,
-    transparent 1.5px 7px
-  );
-  pointer-events: none;
-  transform: scaleX(0);
-  transform-origin: center;
-  transition: transform 0.26s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.home-v2-station-header.is-armed .home-v2-station-header__frame {
-  transform: scaleX(1);
-}
-.home-v2-station-header__console--title .home-v2-station-header__frame {
-  left: clamp(14px, 3vw, 44px);
-  right: clamp(14px, 3vw, 44px);
-  background-image: repeating-linear-gradient(
-    to right,
-    rgba(202, 165, 84, 0.5) 0 1.5px,
-    transparent 1.5px 7px
-  );
-}
-.home-v2-station-header__console--support .home-v2-station-header__frame {
-  left: clamp(18px, 4vw, 56px);
-  right: clamp(18px, 4vw, 56px);
-}
-.home-v2-station-header__frame--top {
-  top: 0;
-}
-.home-v2-station-header__frame--bottom {
-  bottom: 0;
-}
-.home-v2-station-header__console--title .home-v2-station-header__frame--bottom {
-  opacity: 0.32;
-}
-.home-v2-station-header__console--support .home-v2-station-header__frame--bottom {
-  opacity: 0.42;
-}
-
-/* Corner brackets — title console closes at the BOTTOM corners, the
-   support console at the TOP corners, so the two consoles read as
-   complementary halves of one instrument frame around the sphere.
-   They fade up with the frames (no delay, slightly quicker). */
-.home-v2-station-header__bracket {
-  position: absolute;
-  width: 26px;
-  height: 26px;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.home-v2-station-header.is-armed .home-v2-station-header__bracket {
-  opacity: 1;
-}
-.home-v2-station-header__bracket--title-left {
-  bottom: 0;
-  left: clamp(14px, 3vw, 44px);
-  border-bottom: 1px solid rgba(202, 165, 84, 0.55);
-  border-left: 1px solid rgba(202, 165, 84, 0.55);
-}
-.home-v2-station-header__bracket--title-right {
-  bottom: 0;
-  right: clamp(14px, 3vw, 44px);
-  border-bottom: 1px solid rgba(202, 165, 84, 0.55);
-  border-right: 1px solid rgba(202, 165, 84, 0.55);
-}
-.home-v2-station-header__bracket--support-left {
-  top: 0;
-  left: clamp(18px, 4vw, 56px);
-  border-top: 1px solid rgba(202, 165, 84, 0.72);
-  border-left: 1px solid rgba(202, 165, 84, 0.72);
-}
-.home-v2-station-header__bracket--support-right {
-  top: 0;
-  right: clamp(18px, 4vw, 56px);
-  border-top: 1px solid rgba(202, 165, 84, 0.72);
-  border-right: 1px solid rgba(202, 165, 84, 0.72);
-}
-
-/* Telemetry rows — PT Mono micro-readouts above and below the support
-   paragraph. Chrome, not content: they fade with the frames rather
-   than typing out. */
-.home-v2-station-header__meta,
-.home-v2-station-header__readouts {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  font-family: var(--font-pt-mono, ui-monospace, monospace);
-  font-size: 9px;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: rgba(202, 165, 84, 0.76);
-  white-space: nowrap;
-  opacity: 0;
-  transition: opacity 0.24s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.home-v2-station-header.is-armed .home-v2-station-header__meta,
-.home-v2-station-header.is-armed .home-v2-station-header__readouts {
-  opacity: 1;
-}
-.home-v2-station-header__readouts {
-  gap: clamp(12px, 2.6vw, 32px);
-  color: rgba(235, 227, 214, 0.42);
-  font-size: 8px;
-  letter-spacing: 0.16em;
-}
-.home-v2-station-header__meta-diamond,
-.home-v2-station-header__meta-sep {
-  display: inline-block;
-  width: 4px;
-  height: 4px;
-  transform: rotate(45deg);
-  flex: none;
-}
-.home-v2-station-header__meta-diamond {
-  background: var(--gold, #caa554);
-  box-shadow: 0 0 10px rgba(202, 165, 84, 0.7);
-}
-.home-v2-station-header__meta-sep {
-  width: 3px;
-  height: 3px;
-  background: rgba(235, 227, 214, 0.32);
-}
-.home-v2-station-header__meta-status {
-  color: var(--gold, #caa554);
-}
-
-/* Inside the consoles the text measures against the console box, and
-   the support paragraph tightens slightly (V8 band sizing) so the
-   framed band stays compact under the sphere. */
-.home-v2-station-header__console .home-v2-station-header__title {
-  max-width: 100%;
-}
-.home-v2-station-header__console--support .home-v2-station-header__support {
-  max-width: 100%;
-  font-size: clamp(16px, 1.3vw, 20px);
-  line-height: 1.45;
-  letter-spacing: 0.008em;
-  color: rgba(235, 227, 214, 0.88);
-  text-shadow: 0 0 18px rgba(10, 9, 8, 0.72);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  /* Frames appear instantly when armed — no unfold motion. */
-  .home-v2-station-header__frame,
-  .home-v2-station-header__bracket,
-  .home-v2-station-header__meta,
-  .home-v2-station-header__readouts {
-    transition: none;
-  }
 }
 
 /* Explicit caption lines — support copy carries `<br>` separators
@@ -694,308 +492,55 @@
   }
 }
 
-/* The "billions on the same layer" SIGNAL block + `--signal` CSS
-   variant were removed in epilogue v4 (2026-06-10 flywheel pass).
-   The flywheel-frame chip-grid + connector vocabulary that replaced
-   it was itself replaced in v4.1 (2026-06-10 Glyphic grid pass) by
-   the minimal three-card panel below — see ADR-018 epilogue v4.1. */
+/* ── Signal block (epilogue) ───────────────────────────────────────
+   The "billions on the same layer" title + paragraph that appears
+   during the epilogue, after the corridor has saturated at progress
+   1 and the sphere is sliding right. Anchored bottom-left to mirror
+   the screen position of section 2's `.home-v2-copy-block--thoughtform-left`
+   (left, lower-third of the viewport) so it reads as the symmetric
+   bookend to the opening copy. Inherits typography from the base
+   `.home-v2-station-header` (PP Neue Montreal, uppercase title, gold
+   `<em>` accent, typewriter machinery) — only the viewport anchor +
+   width budget differ. Larger title sizing (38px clamp) because the
+   right half of the viewport is now empty (sphere slid out of the
+   way) and the copy can claim a wider column. */
+.home-v2-station-header--signal {
+  /* Top-centre. Sits in the "sky" above the planet's horizon line
+     once the landing tilt completes — the closing chord of the 3D
+     space, before whatever transition takes the user into the next
+     section. Camera is moving during APPROACH/LAND but the title
+     itself is viewport-fixed, so it's pixel-stable.
 
-/* ── Flywheel panel (epilogue v4.2, centred Glyphic grid) ──────────
-   The minimal "flywheel in practice" panel that anchors the LEFT
-   half of the viewport across the post-Build epilogue (v4 lived on
-   the left, v4.1 moved it right; v4.2 returns it left but pulled
-   toward CENTRE — not hugging a HUD rail — per the Glyphic
-   reference). Three cards (Navigate / Encode / Build) settle as a
-   STATIC grid below the title — every card always shows its full
-   content; nothing reveals as the user scrolls further. The
-   right-edge gold pip on each card marks the column's inner edge
-   and gestures toward the docked diagram on the right.
-
-   Visual grammar: zero border-radius, no card frame (cards are
-   delineated by a top hairline + right-edge pip, Glyphic style),
-   1px dotted dawn-alpha hairlines, PT Mono ordinal squares, PP
-   Neue Montreal headlines. Encode is the soft visual emphasis
-   (gold-filled ordinal + faint gold wash + brighter hairline)
-   because it is the Thoughtform claim — the encoded judgment is
-   the asset that compounds. */
-.home-v2-flywheel-panel {
-  position: fixed;
-  /* v4.2 (2026-06-11 dock-right pass): the artifact docks RIGHT
-     (`EPILOGUE_DOCK_OFFSET_NDC = +0.42`) and this panel claims the
-     LEFT half — but pulled toward CENTRE rather than hugging the
-     left HUD rail (Glyphic reference: a comfortable column with
-     breathing room on its outer side). The left inset clears the
-     left depth gauge + gives the column air; the right edge lands
-     just left of centre (~46% on 1440) so a clean gap opens to the
-     SOURCE chips (which extend left from the docked sphere toward
-     this panel). Tuned against those source chips: the panel's
-     right edge stays clear of the leftmost source chip on
-     1280-1680 viewports. */
-  left: clamp(56px, 10.5vw, 175px);
-  top: clamp(48px, 7vh, 84px);
-  bottom: clamp(28px, 4vh, 60px);
-  width: min(33vw, 470px);
-  display: flex;
-  flex-direction: column;
-  gap: clamp(12px, 1.6vh, 22px);
-  pointer-events: none;
-  z-index: 16;
-  /* Hidden until the corridor enters the epilogue; the panel rAF
-     loop flips `data-engaged="true"` when epilogueProgress > 0. */
-  opacity: 0;
+     Stack v3 (2026-06-10) — explicitly overrides the base
+     bottom-centre cartouche anchor so this single block stays at
+     top-centre. `bottom: auto` releases the base anchor; the rAF
+     loop also writes a bare `translate3d(-50%, 0, 0)` transform
+     here (no parallax) so the title sits perfectly centred. */
+  top: clamp(80px, 12vh, 156px);
+  bottom: auto;
+  left: 50%;
+  transform: translate3d(-50%, 0, 0);
+  width: min(90vw, 720px);
+  text-align: center;
 }
-.home-v2-flywheel-panel[data-engaged="true"] {
-  opacity: 1;
+.home-v2-station-header--signal .home-v2-station-header__title,
+.home-v2-station-header--signal .home-v2-station-header__support {
+  /* Centred + full width inside the container — overrides the base
+     left-aligned + max-width clamps the corridor headers use. */
+  max-width: none;
+  text-align: center;
+  margin-left: auto;
+  margin-right: auto;
 }
-
-.home-v2-flywheel-panel__head {
-  /* Title block: kicker (PT Mono cartouche) + heading. Slide-up +
-     fade is written inline by the panel rAF loop. */
-  opacity: 0;
-  will-change: opacity, transform;
-  flex: none;
+.home-v2-station-header--signal .home-v2-station-header__title {
+  font-size: clamp(26px, 3vw, 44px);
 }
-
-.home-v2-flywheel-panel__kicker {
-  display: inline-flex;
-  align-items: center;
-  gap: 9px;
-  font-family: var(--font-pt-mono, ui-monospace, monospace);
-  font-size: 11px;
-  letter-spacing: 0.24em;
-  text-transform: uppercase;
-  color: rgba(202, 165, 84, 0.82);
-  margin-bottom: clamp(8px, 1vh, 14px);
-}
-
-.home-v2-flywheel-panel__kicker-pip {
-  display: inline-block;
-  width: 6px;
-  height: 6px;
-  background: var(--gold, #caa554);
-  transform: rotate(45deg);
-  box-shadow: 0 0 6px rgba(202, 165, 84, 0.5);
-}
-
-.home-v2-flywheel-panel__title {
-  font-family: var(--font-pp-neue-montreal, "PP Neue Montreal", sans-serif);
-  font-size: clamp(26px, 2.6vw, 36px);
-  line-height: 1.06;
-  letter-spacing: -0.012em;
-  color: var(--dawn, #ebe3d6);
-  margin: 0;
-  text-wrap: balance;
-}
-.home-v2-flywheel-panel__title em {
-  font-style: italic;
-  color: var(--gold, #caa554);
-}
-
-/* The card grid: three equal-height rows. `flex: 1 1 0` on each
-   cell distributes remaining vertical space evenly so the rhythm
-   matches the right-rail tick rhythm regardless of viewport
-   height. `min-height: 0` lets the items shrink past their
-   intrinsic size on small viewports. */
-.home-v2-flywheel-panel__grid {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  flex: 1 1 auto;
-  min-height: 0;
-}
-
-.home-v2-flywheel-panel__cell {
-  flex: 1 1 0;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-}
-
-/* ── Single Glyphic-style card ─────────────────────────────────────
-   Cards are NOT framed boxes — they are delineated by a top
-   hairline rule that runs the full card width and a small gold
-   diamond pip pinned at the right end of that rule (echoing the
-   right HUD rail's tick rhythm). Inside each card: an ordinal box
-   + phase cartouche row, a big headline, a one-sentence support
-   line. Generous vertical padding so the three cards form an even
-   grid against the rail. */
-.home-v2-flywheel-card {
-  position: relative;
-  flex: 1 1 0;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  gap: clamp(8px, 1.1vh, 14px);
-  padding: clamp(14px, 1.8vh, 26px) 0 clamp(10px, 1.4vh, 18px) 0;
-  opacity: 0;
-  will-change: opacity, transform;
-}
-/* Soft Encode highlight — faint gold wash + slightly tighter
-   horizontal inset so the card visually anchors. */
-.home-v2-flywheel-card[data-core="true"] {
-  padding-left: clamp(12px, 1.2vw, 18px);
-  padding-right: clamp(12px, 1.2vw, 18px);
-  background: linear-gradient(
-    to right,
-    rgba(202, 165, 84, 0.04) 0%,
-    rgba(202, 165, 84, 0.06) 60%,
-    rgba(202, 165, 84, 0) 100%
-  );
-}
-
-/* Top hairline rule — full-width 1px dotted dawn-alpha line.
-   `inset-block-start: 0` plus `inset-inline: 0` makes it span the
-   card's content box; the right-edge pip overlaps it slightly so
-   the seam reads as one element. */
-.home-v2-flywheel-card__rule {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background-image: linear-gradient(to right, rgba(235, 227, 214, 0.22) 50%, transparent 50%);
-  background-size: 5px 1px;
-  background-repeat: repeat-x;
-}
-/* Encode card brightens the rule to gold so the row reads as the
-   anchor of the grid. */
-.home-v2-flywheel-card[data-core="true"] .home-v2-flywheel-card__rule {
-  background-image: linear-gradient(to right, rgba(202, 165, 84, 0.55) 50%, transparent 50%);
-}
-
-/* Right-edge pip — 4px gold diamond pinned at the far right of the
-   hairline rule, vertically centred on it. In v4.2 the panel sits
-   on the LEFT half, so the pip marks each card's INNER edge and
-   gestures across the gap toward the docked diagram on the right —
-   a quiet tick rhythm that ties the card column to the artifact. */
-.home-v2-flywheel-card__pip {
-  position: absolute;
-  top: 0;
-  right: -3px;
-  width: 6px;
-  height: 6px;
-  background: var(--gold, #caa554);
-  transform: translate(0, -50%) rotate(45deg);
-  box-shadow: 0 0 6px rgba(202, 165, 84, 0.45);
-}
-
-/* Cartouche row: ordinal box + phase. PT Mono uppercase, low key
-   so the headline below reads as the dominant typographic moment. */
-.home-v2-flywheel-card__head {
-  display: inline-flex;
-  align-items: center;
-  gap: 12px;
-  font-family: var(--font-pt-mono, ui-monospace, monospace);
-  font-size: 11px;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-}
-
-.home-v2-flywheel-card__ordinal {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 22px;
-  height: 22px;
-  border: 1px solid rgba(235, 227, 214, 0.28);
-  color: rgba(235, 227, 214, 0.78);
-  font-size: 10px;
-  letter-spacing: 0.06em;
-  /* Optical centring nudge for PT Mono digits inside a tight box. */
-  padding-top: 1px;
-}
-/* Encode ordinal: filled gold with ink-coloured digit — the soft
-   highlight device that makes the middle card the resting visual
-   emphasis. */
-.home-v2-flywheel-card[data-core="true"] .home-v2-flywheel-card__ordinal {
-  border-color: var(--gold, #caa554);
-  background: var(--gold, #caa554);
-  color: var(--void, #050403);
-}
-
-.home-v2-flywheel-card__phase {
-  color: rgba(235, 227, 214, 0.62);
-  font-weight: 500;
-}
-.home-v2-flywheel-card[data-core="true"] .home-v2-flywheel-card__phase {
-  color: var(--gold, #caa554);
-  font-weight: 600;
-}
-
-/* Headline — the dominant typographic moment per card. PP Neue
-   Montreal, dawn, big enough to read as the answer to the phase. */
-.home-v2-flywheel-card__headline {
-  font-family: var(--font-pp-neue-montreal, "PP Neue Montreal", sans-serif);
-  font-size: clamp(20px, 2vw, 26px);
-  font-weight: 500;
-  line-height: 1.18;
-  letter-spacing: -0.012em;
-  color: var(--dawn, #ebe3d6);
-  margin: 0;
-  text-wrap: balance;
-}
-.home-v2-flywheel-card[data-core="true"] .home-v2-flywheel-card__headline {
-  color: var(--dawn, #ebe3d6);
-}
-
-.home-v2-flywheel-card__support {
-  font-family: var(--font-pp-neue-montreal, "PP Neue Montreal", sans-serif);
-  font-size: clamp(13px, 1.05vw, 15px);
-  line-height: 1.4;
-  color: rgba(235, 227, 214, 0.62);
-  margin: 0;
-  max-width: 46ch;
-  text-wrap: pretty;
-}
-.home-v2-flywheel-card[data-core="true"] .home-v2-flywheel-card__support {
-  color: rgba(235, 227, 214, 0.78);
-}
-
-/* ── Static fallback flywheel summary ──────────────────────────────
-   Plain stacked sections rendered by `FallbackFlywheelSummary`
-   (mounted inside the static `FallbackCorridor`) for reduced-motion
-   / no-WebGL visitors. Mirrors the live panel's three-card model
-   (no chips, no telemetry, no output tile) so the editorial reads
-   the same across the capability boundary. */
-.home-v2-fallback-flywheel {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-  margin-top: 32px;
-}
-.home-v2-fallback-flywheel__kicker {
-  font-family: var(--font-pt-mono, ui-monospace, monospace);
-  font-size: 11px;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: var(--gold, #caa554);
-  margin: 0 0 4px 0;
-}
-.home-v2-fallback-flywheel__grid {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-}
-.home-v2-fallback-flywheel__grid > li {
-  border-top: 1px dotted rgba(235, 227, 214, 0.22);
-  padding-top: 16px;
-}
-.home-v2-fallback-flywheel__grid > li[data-core="true"] {
-  border-top-color: rgba(202, 165, 84, 0.55);
-}
-.home-v2-fallback-flywheel__cartouche {
-  font-family: var(--font-pt-mono, ui-monospace, monospace);
-  font-size: 11px;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: var(--gold, #caa554);
-  margin: 0;
+.home-v2-station-header--signal .home-v2-station-header__support {
+  /* Match the corridor headers' rebalanced body scale (16/1.4/20) so
+     the epilogue title-paragraph pair reads with the same hierarchy
+     as Navigate/Encode/Build (2026-06-09 type-pair pass). */
+  font-size: clamp(16px, 1.4vw, 20px);
+  max-width: min(70vw, 560px);
 }
 
 @media (max-width: 760px) {
@@ -1010,94 +555,10 @@
      the chips on top of the sphere. The mobile composition reads
      the Build content via `StationTitle` (mobile straddle), so the
      stack chips/headers are hidden on portrait to avoid the sphere
-     overlap.
-
-     Epilogue v4 hide-fix (2026-06-10): scoped under
-     `.home-v2-copy-layer` to OUT-RANK the base
-     `.home-v2-stack-item { display: flex }` rule, which sits LATER
-     in this stylesheet and was winning the equal-specificity
-     cascade — the chips were painting on portrait despite this
-     block. */
-  .home-v2-copy-layer .home-v2-stack-item,
-  .home-v2-copy-layer .home-v2-stack-label {
+     overlap. */
+  .home-v2-stack-item,
+  .home-v2-stack-label {
     display: none;
-  }
-
-  /* Epilogue v4.2 (2026-06-11 dock-right pass) — the desktop
-     dock-right + panel-left layout collapses on portrait to a
-     SINGLE-COLUMN stack (portrait docks UP via the Y-lift, so the
-     left/right swap doesn't affect mobile). The artifact stays on
-     the optical axis
-     (`getEpilogueDockTransform` lifts it into the upper third of
-     the frame via `EPILOGUE_DOCK_LIFT_NDC`, and we trim the dock
-     SCALE on mobile so the sphere doesn't crowd the panel below).
-     The flywheel panel renders as a full-width column anchored
-     below the docked artifact, with all three cards laid out as a
-     compact static grid. Support sentences stay (they're short)
-     since the cards no longer carry chip rows + captions stacked.
-     The panel stays pointer-events: none like every other corridor
-     overlay. */
-  .home-v2-flywheel-panel {
-    /* Mobile uses bottom-anchored content-height layout instead of
-       top+bottom fill: the docked sphere lifts to the upper third
-       (`EPILOGUE_DOCK_LIFT_NDC`), and the panel sits below it sized
-       to its natural content height. We anchor with `top: auto` so
-       the panel grows UP from the bottom; max-height + overflow
-       guard against very small viewports. */
-    right: clamp(20px, 5vw, 36px);
-    left: clamp(20px, 5vw, 36px);
-    top: auto;
-    bottom: clamp(20px, 3vh, 36px);
-    width: auto;
-    max-height: 62vh;
-    gap: 10px;
-    overflow: hidden;
-  }
-  .home-v2-flywheel-panel__head {
-    margin-bottom: 4px;
-    flex: none;
-  }
-  .home-v2-flywheel-panel__kicker {
-    margin-bottom: 4px;
-    font-size: 10px;
-  }
-  .home-v2-flywheel-panel__title {
-    font-size: clamp(20px, 5.6vw, 26px);
-  }
-  /* On mobile the grid no longer fills available vertical space —
-     the panel sizes to its content. Cards stack at their intrinsic
-     content height instead of distributing equally. */
-  .home-v2-flywheel-panel__grid {
-    flex: none;
-    gap: 0;
-  }
-  .home-v2-flywheel-panel__cell {
-    flex: none;
-  }
-  .home-v2-flywheel-card {
-    flex: none;
-    padding: 11px 0 9px 0;
-    gap: 5px;
-  }
-  .home-v2-flywheel-card[data-core="true"] {
-    padding-left: 10px;
-    padding-right: 10px;
-  }
-  .home-v2-flywheel-card__head {
-    font-size: 10px;
-    gap: 9px;
-  }
-  .home-v2-flywheel-card__ordinal {
-    width: 19px;
-    height: 19px;
-    font-size: 9.5px;
-  }
-  .home-v2-flywheel-card__headline {
-    font-size: clamp(15px, 4.4vw, 18px);
-  }
-  .home-v2-flywheel-card__support {
-    font-size: clamp(12px, 3.4vw, 14px);
-    line-height: 1.35;
   }
 }
 
@@ -1925,18 +1386,9 @@
      scroll moments (copy, then the brandmark + diagram reveal), each
      ~one viewport, before the corridor fly. `getMobilePaintProgress`
      maps the [0, 0.38] raw dwell into the camera-hold span. (ADR-018
-     mobile two-moment revision.)
-
-     Epilogue v4.1 (2026-06-10 Glyphic grid pass): mobile stage
-     trims from 760svh to 660svh now that the cards land as a
-     static stack instead of scrolling in one at a time. The
-     `EPILOGUE_START` ratio in `useDepthScroll` reads the desktop
-     value (620 / 900 ≈ 0.6889); on mobile the corridor span
-     consumes 620 of the 660svh stage so the mobile epilogue
-     painter still has ~40svh of dwell after the dock to keep the
-     stack readable before the next section. */
+     mobile two-moment revision.) */
   .home-v2-stage {
-    height: 660svh;
+    height: 620svh;
   }
   /* Mobile Thoughtform copy: one vertically-centred column (bridge,
      title, body, chevron cue) that reads as a single cohesive paragraph.
