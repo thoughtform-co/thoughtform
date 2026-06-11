@@ -140,11 +140,16 @@ const CROSS_RING_DOTS = 32;
  *  toward the rim. `aMouth` is a 0..1 strength, not a boolean, so the
  *  shader can make the rim open/brighter without creating a detached
  *  cloud of equally strong particles. */
-const EXIT_MOUTH_RING_COUNT = 9;
-const EXIT_MOUTH_DOTS_MIN = 28;
-const EXIT_MOUTH_DOTS_MAX = 132;
+// Polish round 3 (2026-06-11): the rim flower still read as busy
+// from the Navigate park even after round 2's funnel trim. Cut
+// rings 9 -> 7, max-dots-per-ring 132 -> 88, rib dots 14 -> 10:
+// ~35% fewer particles in the mouth bloom while keeping the
+// gradient (sparse throat -> denser rim) and the 8-petal shape.
+const EXIT_MOUTH_RING_COUNT = 7;
+const EXIT_MOUTH_DOTS_MIN = 24;
+const EXIT_MOUTH_DOTS_MAX = 88;
 const EXIT_MOUTH_PETAL_COUNT = 8;
-const EXIT_MOUTH_RIB_DOTS = 14;
+const EXIT_MOUTH_RIB_DOTS = 10;
 const EXIT_MOUTH_START_FRAC = 0.62;
 const EXIT_MOUTH_END_FRAC = 0.995;
 const EXIT_MOUTH_PETAL_AMP = 0.2;
@@ -219,7 +224,12 @@ const STREAK_RADIAL_FLARE = 0.22;
 // the steeper `DENSITY_BIAS` (more mass at the mouth, less along
 // the leg), this calms the whole funnel near the foreground sphere
 // while preserving the mouth gradient at distance.
-const EXIT_FUNNEL_COUNT = 4600;
+// Polish round 3 (2026-06-11): trimmed 4600 -> 3200 (~30%). The
+// funnel-as-bulk-dust was the loudest contributor to the busy
+// read from the Navigate park; with the steep density bias (0.6)
+// most of the removed mass came from near the foreground sphere,
+// not from the mouth gradient itself.
+const EXIT_FUNNEL_COUNT = 3200;
 /** Leg-local Z span. Starts at 0.0 — the leg-2 origin sits ~0.5 world
  *  units past the Encode gyro sphere (leg-local 0 ≈ the sphere plane
  *  at the "Encode the judgment" park), so the funnel SOFTLY BEGINS at
@@ -317,11 +327,13 @@ export const VISIBLE_FAR = 22;
 const VISIBLE_FAR_MOUTH_EXTENSION = 11;
 /** Distance at which the long-range glow caps its alpha. Stays subtle
  *  so the mouth never competes with the foreground gimbal sphere.
- *  Polish round 2 (2026-06-10): trimmed 0.55 -> 0.4 — the door at
- *  the end of the corridor reads as a quieter signal at the
- *  Navigate park, with the gradient build still clearly visible
- *  from a distance. */
-const MOUTH_LONGRANGE_ALPHA_CAP = 0.4;
+ *  Polish round 2 (2026-06-10): trimmed 0.55 -> 0.4.
+ *  Polish round 3 (2026-06-11): trimmed 0.4 -> 0.26 — paired with the
+ *  density reductions above so the surviving rim particles read as
+ *  a subtle warm signature at the end of the hallway instead of a
+ *  competing focal point during Navigate. The gradient is still
+ *  legible from a distance; only its luminance drops. */
+const MOUTH_LONGRANGE_ALPHA_CAP = 0.26;
 
 /** Reveal envelopes per leg, in global progress units.
  *
