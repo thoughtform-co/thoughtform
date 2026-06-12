@@ -901,36 +901,28 @@ export function getMouthYieldFade(paintProgress: number): number {
   return 1 - smoothstep(0.85, 0.92, paintProgress);
 }
 
-/** Substrate-realm THRESHOLD WAVE channel (v3.12c).
+/** Substrate-realm THRESHOLD WAVE channel (v3.13 diagram cascade).
  *
- *  Drives `SubstrateTopography` — both the gravitational-wave ring
- *  train that radiates out of the sphere at the wormhole exit AND
- *  the per-point ignition of the realm terrain in the wave's wake
- *  (each terrain point's delay = its screen radius from the sphere,
- *  so the visible front and the ignition cross each screen position
- *  together).
+ *  Drives `SubstrateTopography` — both the layered diagram cascade
+ *  that opens out of the sphere at the wormhole exit AND the
+ *  per-point ignition of the realm terrain in its wake. The cascade
+ *  is partial arcs + bearing ticks, not a dense particle halo, so it
+ *  reads as Thoughtform linework instead of an asteroid field.
  *
  *    - 0 across the entire corridor (the realm must NOT be visible
  *      while flying Encode→Build — the threshold event is the
  *      moment, not a slow leak of information);
- *    - sweeps 0 → 1 across [0.845, 0.925]: launches the instant
- *      the intelligence beat begins (0.845) — as the mouth rings
- *      yield (`getMouthYieldFade` [0.85, 0.92]) and the exit glow
- *      crests — and completes as the camera settles into the park
- *      (~0.923). Widened from the original 0.905 end (v3.12c ramp
- *      pass) so the unfurl breathes instead of snapping. The
- *      painter rides this through a cascaded damped follower with
- *      a quintic remap, so even a single fast flick across the
- *      window plays the cascade as ~a second of eased motion.
+ *    - sweeps 0 → 1 across [0.825, 0.975]: launches just before the
+ *      intelligence beat begins (0.845), while the mouth rings yield
+ *      (`getMouthYieldFade` [0.85, 0.92]) and the exit glow crests,
+ *      then resolves inside the Build section after the park centre
+ *      (~0.923). This wider window gives the arcs and the terrain
+ *      unfurl an elegant slow-in / slow-out instead of a snap.
  *
- *  This is the Thoughtform answer to the full-screen "liquid"
- *  section transitions of awwwards-school sites (nk.studio
- *  reference): not a fluid mask — a gravitational wave in the
- *  corridor's own oval line grammar, with the new realm igniting
- *  in its wake. Scroll-symmetric: reversing retracts the wave into
- *  the sphere and the realm dissolves with it. */
+ *  Scroll-symmetric: reversing retracts the cascade into the sphere
+ *  and the realm dissolves with it. */
 export function getSubstrateRealmEnvelope(paintProgress: number): number {
-  return smoothstep(0.845, 0.925, paintProgress);
+  return smoothstep(0.825, 0.975, paintProgress);
 }
 
 // ── Thoughtform compass flythrough ───────────────────────────────

@@ -11,6 +11,106 @@
 
 ---
 
+## 2026-06-12 Revision (v3.13) — Crossing as diagram cascade
+
+Live-review follow-up to v3.12c. Three notes:
+
+1. **"The concentric ring feels like an asteroid field."** The dense
+   circular dissipation band is retired. The Crossing remains a
+   single GPU point layer, but its buffer now emits structured
+   Thoughtform diagram geometry: ten staggered near-complete arc
+   layers, 16 bearing ticks per layer, and 8 radial spoke chains per
+   layer. The shader advances each layer through a double-smoothed
+   radius ramp and keeps the layer visible longer, so the transition
+   reads as a full-screen realm threshold rather than quiet detail or
+   random debris.
+
+2. **"It's unfolding too quickly."** `getSubstrateRealmEnvelope`
+   widened from `[0.845, 0.925]` to `[0.825, 0.975]`. The front and
+   terrain followers were slowed (`WAVE_FRONT_RESPONSE 7.0 → 4.4`,
+   `WAVE_TERRAIN_RESPONSE 5.0 → 3.2`), and the terrain reveal/flash
+   bands were widened (`0.13 → 0.18`, `0.11 → 0.14`) so the threshold
+   has a slow-in / fast-middle / slow-out cadence instead of a snap.
+
+3. **"The ground should unfold from the circle, not from the bottom."**
+   The terrain ignition is no longer depth-from-camera. Each point's
+   delay is keyed to its radial X/Z distance from the sphere's footprint
+   at the near edge of the realm (`WAVE_ROLLOUT_ORIGIN_Z = REALM_Z_NEAR`),
+   with a screen-normalized lateral term (`WAVE_ROLLOUT_X_WEIGHT 0.58`)
+   so the topology rolls out like a carpet from the diagram circles.
+   The lower-frame-first read is retired; the sphere/circle is now the
+   visible source of both the crossing arcs and the ground.
+
+4. **"Inside Build we should see a landscape."** The realm floor was
+   lifted and brightened without moving the camera or sphere:
+   `REALM_BASE_Y -3.4 → -2.75`, `REALM_HORIZON_LIFT 0.35 → 0.72`,
+   `REALM_BOWL_RISE 0.9 → 1.12`, rows/samples increased to `38 × 164`,
+   point size `6.5 → 8.2`, opacity `0.85 → 1.05`, and far haze
+   extended to `74`. The Build park should now hold a visible latent
+   topography under the artifact instead of a near-black floor.
+
+### Same-day follow-up (v3.13b) — instrument rebalance
+
+Live review of the full-screen pass: **"too intense — like a circus
+carnival. The dots should be more subtle, with more different types."**
+The cascade keeps its full-screen reach but the uniform loud
+arcs+ticks+spokes vocabulary is replaced by four quiet layer
+archetypes cycling across nine layers:
+
+- **hairline** — a near-continuous ring of ~140 fine round dots
+  (alpha ~0.4, dawn-soft/dawn), the structural stroke;
+- **grain** — three loose dust arcs with radial jitter (alpha
+  0.18–0.34), the atmospheric stroke;
+- **ticks** — 14 sparse bearing diamonds, one gold cardinal per
+  half-revolution (alpha ≤ 0.66);
+- **anchors** — eight deliberate diamond pips, alternating gold/dawn.
+
+Dotted filaments survive only on every third layer (5 × 9 quiet dots,
+alpha ≤ 0.38) so the sphere stays causally connected to the rollout
+without a starburst read. A per-particle `aShape` attribute splits the
+fragment falloff between soft round grain and crisp diamond markers
+(the HUD's existing split). Peak alpha `1.65 → 1.0`, marker sizes
+roughly halved, point budget ~4,000 → ~900. Gold now appears only on
+the few registration markers, restoring the dawn-dominant tier
+balance. (First cut of this rebalance went too far — alphas 0.13–0.58
+with peak 0.85 made the cascade vanish against the terrain; settled at
+the values above so the layers stay legible without shouting.)
+
+### Same-day follow-up (v3.13c) — legibility floor
+
+Live review of v3.13b: **"the rings are literally invisible."** The
+archetype split stays, but the legibility floor is raised and the radius
+motion now reaches the viewport earlier:
+
+- wave peak alpha `1.0 → 1.55`;
+- radius remap changed from double smootherstep to `smoothstep(0, 0.58,
+layerPhase)`, so the rings reach full-screen before the terrain fully
+  resolves instead of arriving after the moment has passed;
+- hairlines `140 → 180` dots, size `~2.4–3.4 → ~4.0–5.45`, alpha
+  `~0.34–0.48 → ~0.72–0.9`;
+- grain arcs `34 → 48` dots with alpha `0.35–0.6`;
+- diamonds and anchors lifted to `0.72–0.95` / `0.74–0.9`, still sparse
+  and gold-limited.
+
+The first legibility bump was still too faint in a fresh forward sample,
+so peak alpha settled at `1.55`. The target is now a visible threshold
+layer with quiet variety: dawn hairlines and grain do the work, sparse
+gold diamonds punctuate it.
+
+### Same-day follow-up (v3.13d) — smoother speed graph
+
+Live review after the rings became visible: **"make the speed graph
+animation smoother."** Two changes:
+
+- the diagram-front channel now uses the same cascaded two-stage chase
+  pattern as the terrain (`target → frontMid → front`), with
+  `WAVE_FRONT_RESPONSE 4.4 → 5.8`, giving the ring radius zero initial
+  velocity instead of a single-exponential kick;
+- the shader radius remap changed from cubic `smoothstep(0, 0.58,
+layerPhase)` to a C2-continuous quintic `smootherstep01(layerPhase /
+0.68)`, so the visible rings still reach full-screen early enough but
+  have zero velocity and acceleration at the launch/settle boundaries.
+
 ## 2026-06-12 Revision (v3.12c) — The Crossing: gravitational-wave threshold + valley reposition
 
 Live-review follow-up to v3.12b. Two notes:

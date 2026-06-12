@@ -90,8 +90,8 @@ const REALM_Z_FAR = INT_Z - 52;
 /** Terrain rows (Z slices) and samples per row. Anisotropic on
  *  purpose: dense along X, discrete in Z — from high above, the
  *  rows read as topographic contour lines crossing the valley. */
-const REALM_ROWS = 30;
-const REALM_SAMPLES_PER_ROW = 150;
+const REALM_ROWS = 38;
+const REALM_SAMPLES_PER_ROW = 164;
 
 /** Row Z distribution bias (> 1 packs rows toward the near edge —
  *  perspective compresses the far rows on screen anyway). */
@@ -101,18 +101,18 @@ const REALM_ROW_BIAS = 1.18;
  *  past the frame edges. */
 const REALM_WIDTH_MARGIN = 1.14;
 
-/** Valley placement (v3.12c "higher in the sky" revision). The
+/** Valley placement (v3.13 landscape-legibility revision). The
  *  camera stays exactly where the corridor parks it — the TERRAIN
- *  dropped. Base floor ~3.4 units below the flight line puts the
- *  visible horizon in the lower third of the frame; the far rise
- *  keeps a legible horizon band instead of an abrupt cut. */
-const REALM_BASE_Y = -3.4;
-const REALM_HORIZON_LIFT = 0.35;
+ *  owns the read. Base floor is high enough to register as a
+ *  landscape inside Build while still clearing the sphere/copy band;
+ *  the stronger far lift keeps the horizon line present. */
+const REALM_BASE_Y = -2.75;
+const REALM_HORIZON_LIFT = 0.72;
 
 /** Valley cross-profile: the floor stays deep under the optical
  *  axis and BOWLS upward toward the frame edges — distant ridge
  *  flanks rising at the periphery. */
-const REALM_BOWL_RISE = 0.9;
+const REALM_BOWL_RISE = 1.12;
 const REALM_BOWL_POWER = 1.8;
 
 /** Relief amplitude: calm basin floor, stronger ridges at the
@@ -126,8 +126,8 @@ const REALM_EDGE_POWER = 1.65;
 const REALM_Y_CEILING = -1.05;
 
 /** Visibility + material. */
-const REALM_VISIBLE_FAR = 64;
-const REALM_OPACITY_BASE = 0.85;
+const REALM_VISIBLE_FAR = 74;
+const REALM_OPACITY_BASE = 1.05;
 
 /** Epilogue recession floor. */
 const REALM_EPILOGUE_FLOOR = 0.4;
@@ -147,60 +147,60 @@ const WAVE_R_LAUNCH = 1.5;
 /** Radius at which the dissipating band has cleared every frame
  *  corner at the park viewpoint (half-diagonal ≈ 4.4 at the wave
  *  plane; margin past it so the last particles exit off-screen). */
-const WAVE_R_MAX = 5.4;
+const WAVE_R_MAX = 6.35;
 
-/** Dissipating particle band (replaces the v3.12c ring train).
- *  ~900 dots scattered around the front radius: spread starts as a
- *  tight shell hugging the sphere and loosens as the wave travels
- *  (`BAND_SPREAD_*`), a fraction of particles trail behind the
- *  front stretching back toward the sphere (`TRAIL_PULL`), sizes
- *  are tiered with sparse bold pips (the Colorpong read), and the
- *  whole field dims as it dissipates — energy spreading over area. */
-const WAVE_PARTICLE_COUNT = 1600;
-/** Band spread (world units around the front radius). Stays TIGHT
- *  through the crossing (growth curve `pow(phase, 1.6)` in the
- *  shader) and only loosens near the end — the front must read as
- *  a coherent wavefront mid-frame, dissolving as it exits. First
- *  build spread linearly to 1.7 over the whole life and the band
- *  thinned into unreadable specks before it ever crossed. */
-const WAVE_BAND_SPREAD_LAUNCH = 0.1;
-const WAVE_BAND_SPREAD_MAX = 0.9;
-const WAVE_TRAIL_PULL = 0.3;
-const WAVE_FRONT_PEAK_ALPHA = 1.0;
+/** Diagram cascade (v3.13b — instrument rebalance). The crossing keeps
+ *  its full-screen layered reach, but each layer is one of four QUIET
+ *  archetypes — hairline ring, grain arcs, bearing ticks, anchor pips —
+ *  plus sparse dotted filaments on every third layer. The mass of the
+ *  effect is fine dawn-soft dots at low alpha; diamonds and gold are
+ *  reserved for the few registration markers, so the threshold reads
+ *  as drafted instrument layers rather than a wall of identical
+ *  bright dots. */
+const WAVE_DIAGRAM_LAYER_COUNT = 9;
+const WAVE_LAYER_DELAY_SPAN = 0.24;
+const WAVE_LAYER_RADIUS_OFFSET = 0.46;
+const WAVE_SPOKE_RADIUS_SPAN = 1.0;
+const WAVE_FRONT_PEAK_ALPHA = 1.55;
 
-/** Unfurl cascade. The ground catches at the BOTTOM of the frame
- *  as the wave launches, then rolls away along the Z axis to the
- *  horizon. Depth owns the per-point delay; a small lateral fan
- *  makes each row ripple outward from the optical axis a beat
- *  after its centre; jitter keeps the rolling front shimmering.
- *  Sum of spans + jitter + reveal band stays < 1 so the whole
- *  realm is resolved when the wave channel saturates. */
-const WAVE_UNFURL_SPAN = 0.68;
-const WAVE_LATERAL_FAN = 0.1;
+/** Unfurl cascade. The ground now catches from the sphere's footprint,
+ *  not from the viewport bottom: the same diagram circles that open
+ *  out of the artifact trigger the terrain beneath them, then the
+ *  surface rolls away like a carpet across X/Z. Sum of span + jitter
+ *  stays < 1 so the whole realm is resolved when the wave channel
+ *  saturates. */
+const WAVE_UNFURL_SPAN = 0.78;
 const WAVE_DELAY_JITTER = 0.05;
-/** Camera-distance band (from the parked viewpoint) across which
- *  the unfurl travels: first visible ground at the frame's bottom
- *  edge → the far haze. */
-const WAVE_UNFURL_NEAR_DIST = 7;
-const WAVE_UNFURL_FAR_DIST = 58;
+/** Ground-plane rollout origin: the terrain starts just behind the
+ *  sphere plane, so the first ignition appears below the artifact
+ *  and not at the camera's lower frame edge. */
+const WAVE_ROLLOUT_ORIGIN_Z = REALM_Z_NEAR;
+const WAVE_ROLLOUT_Z_REACH = Math.abs(REALM_Z_FAR - REALM_Z_NEAR);
+/** Lateral contribution is screen-normalized so the front reads as an
+ *  expanding circle/ellipse from the sphere even as rows widen with
+ *  perspective. Kept below 1 so the rollout's dominant direction is
+ *  forward into the landscape, not sideways to the rails. */
+const WAVE_ROLLOUT_X_WEIGHT = 0.58;
+const WAVE_ROLLOUT_RADIUS_POWER = 0.86;
 
 /** Per-point ignition band width (in wave-time units). Widened
  *  0.075 → 0.13 in the ramp pass — each row eases up over a longer
  *  beat instead of popping. */
-const WAVE_REVEAL_BAND = 0.13;
+const WAVE_REVEAL_BAND = 0.18;
 /** Flash half-width — the gold-lifted band riding the unfurl
  *  front. Widened with the reveal band so the highlight breathes. */
-const WAVE_FLASH_WIDTH = 0.11;
+const WAVE_FLASH_WIDTH = 0.14;
 /** Vertical swell at the unfurl front (world units). */
 const WAVE_SWELL = 0.28;
 
 /** Speed-ramp followers (v3.12c ramp pass).
- *  - FRONT: single-stage chase, snappier — the shock LEADS.
+ *  - FRONT: cascaded two-stage chase — the diagram rings now have
+ *    zero-velocity onset too, so the visible threshold doesn't kick.
  *  - TERRAIN: cascaded two-stage chase (zero-velocity onset) +
  *    quintic remap — the unfurl follows with an editorial
  *    slow-in / slow-out. Settle ≈ 1s on a fast flick. */
-const WAVE_FRONT_RESPONSE = 7.0;
-const WAVE_TERRAIN_RESPONSE = 5.0;
+const WAVE_FRONT_RESPONSE = 5.8;
+const WAVE_TERRAIN_RESPONSE = 3.2;
 
 // ── Shaders ──────────────────────────────────────────────────────
 
@@ -221,8 +221,8 @@ const vec3 GOLD = vec3(0.792, 0.647, 0.329);
 
 void main() {
   // Unfurl terms. uWave is the terrain's EASED wave channel; each
-  // point's delay is its normalized depth from the parked viewpoint
-  // so the realm rolls open near → far.
+  // point's delay is its world-space radial distance from the
+  // sphere-footprint origin, so the realm rolls out from the circle.
   float on = smoothstep(aDelay, aDelay + ${WAVE_REVEAL_BAND.toFixed(3)}, uWave);
   float frontDist = abs(uWave - aDelay);
   float flash = smoothstep(${WAVE_FLASH_WIDTH.toFixed(3)}, 0.0, frontDist);
@@ -246,11 +246,11 @@ void main() {
   float nearFade = smoothstep(2.5, 5.0, dist);
 
   // Gold-lifted flash at the front; resting palette in the wake.
-  vColor = mix(aColor, GOLD, flash * 0.45);
-  vAlpha = on * farFade * nearFade * (1.0 + 2.0 * flash);
+  vColor = mix(aColor, GOLD, flash * 0.6);
+  vAlpha = on * farFade * nearFade * (1.0 + 2.8 * flash);
 
   float sizeFactor = clamp(11.0 / max(0.5, dist), 0.42, 1.6);
-  gl_PointSize = uPointSize * uPixelRatio * sizeFactor * aSize * (1.0 + 0.5 * flash);
+  gl_PointSize = uPointSize * uPixelRatio * sizeFactor * aSize * (1.0 + 0.8 * flash);
 }
 `;
 
@@ -272,70 +272,67 @@ void main() {
 }
 `;
 
-// Dissipating particle wave — every particle's position is derived
-// per frame from uFrontPhase alone (static attributes), so the
-// whole front is one draw call with zero CPU vertex work.
+// Diagram cascade — every particle's position is derived per frame
+// from uFrontPhase alone (static attributes), so the whole crossing is
+// one draw call with zero CPU vertex work.
 const waveVertex = /* glsl */ `
 uniform float uPixelRatio;
 uniform float uFrontPhase;
 
 attribute float aAngle;
-attribute float aRadial;
-attribute float aTrail;
+attribute float aRadiusOffset;
+attribute float aDelay;
 attribute float aSize;
 attribute vec3 aColor;
+attribute float aAlpha;
 attribute float aShimmer;
+// 0 = soft round grain dot, 1 = crisp diamond registration marker.
+attribute float aShape;
 
 varying vec3 vColor;
 varying float vAlpha;
+varying float vShape;
 
 const float R_LAUNCH = ${WAVE_R_LAUNCH.toFixed(2)};
 const float R_MAX = ${WAVE_R_MAX.toFixed(2)};
-const float SPREAD_LAUNCH = ${WAVE_BAND_SPREAD_LAUNCH.toFixed(2)};
-const float SPREAD_MAX = ${WAVE_BAND_SPREAD_MAX.toFixed(2)};
-const float TRAIL_PULL = ${WAVE_TRAIL_PULL.toFixed(2)};
 const vec3 DAWN_SOFT = vec3(0.839, 0.804, 0.710);
+
+float smootherstep01(float t) {
+  float x = clamp(t, 0.0, 1.0);
+  return x * x * x * (x * (x * 6.0 - 15.0) + 10.0);
+}
 
 void main() {
   float phase = uFrontPhase;
 
-  // Front radius travels at constant speed (a gravitational wave).
-  // The scatter band stays TIGHT through the crossing and only
-  // loosens late (pow 1.6) — coherent front mid-frame, dissolving
-  // into dust as it exits the corners.
-  float front = mix(R_LAUNCH, R_MAX, phase);
-  float spread = mix(SPREAD_LAUNCH, SPREAD_MAX, pow(phase, 1.6));
-
-  // Particle radius: a dense spine on the front (aRadial² pulls the
-  // gaussian scatter toward the centre line), with trailing
-  // particles stretched back toward the sphere — the wake.
-  float scatter = aRadial * abs(aRadial);
-  float r = front + scatter * spread - aTrail * (front - R_LAUNCH) * TRAIL_PULL;
+  // Each layer starts a beat after the previous one. The radius eases
+  // twice so the diagram opens with a slow-in / fast-middle / slow-out
+  // cadence instead of a stamped radial blast.
+  float layerPhase = clamp((phase - aDelay) / max(0.001, 1.0 - aDelay * 0.35), 0.0, 1.0);
+  // Reach the full viewport early enough to read as a threshold event,
+  // but use a C2-continuous speed graph (zero velocity + acceleration
+  // at the boundaries) so the visible rings don't kick on launch.
+  float eased = smootherstep01(layerPhase / 0.68);
+  float r = mix(R_LAUNCH + aRadiusOffset, R_MAX + aRadiusOffset * 0.25, eased);
 
   vec3 pos = vec3(cos(aAngle) * r, WAVE_CENTER_Y_GLSL + sin(aAngle) * r, 0.0);
   vec4 mv = modelViewMatrix * vec4(pos.x, pos.y, ${WAVE_PLANE_Z.toFixed(2)}, 1.0);
   gl_Position = projectionMatrix * mv;
 
-  // Alpha: launch ramp → sustained crossing → dissipation to zero.
-  // Per-particle terms: trailing wake dims, off-band scatter dims,
-  // and a phase-keyed shimmer varies neighbours so the band reads
-  // as living particles, not a stamped ring. (Shimmer is a function
-  // of phase — scroll-driven, never idle.) A crest factor front-
-  // loads the energy: the wave is BRIGHT leaving the sphere and
-  // spends itself across the frame.
-  float launch = smoothstep(0.0, 0.06, phase);
-  float dissipate = pow(max(0.0, 1.0 - phase), 0.45);
-  float crest = 1.0 + 0.5 * (1.0 - phase);
-  float bandWeight = mix(1.0, 0.65, min(1.0, abs(aRadial)));
-  float trailDamp = 1.0 - aTrail * 0.35;
-  float shimmer = 0.85 + 0.15 * sin(aShimmer * 6.2832 + phase * 9.0);
-  vAlpha = launch * dissipate * crest * bandWeight * trailDamp * shimmer;
+  // Alpha: layer boot → sustained diagram read → off-frame yield.
+  // Shimmer is phase-keyed, never idle, so a parked section is still.
+  float boot = smoothstep(0.0, 0.08, layerPhase);
+  float yield = 1.0 - smoothstep(0.88, 1.0, layerPhase);
+  float shimmer = 0.94 + 0.06 * sin(aShimmer * 6.2832 + phase * 7.0);
+  vAlpha = boot * yield * aAlpha * shimmer;
 
-  // Colour cools toward dawn-soft as the energy dissipates.
-  vColor = mix(aColor, DAWN_SOFT, phase * 0.45);
+  // Colour cools toward dawn-soft as each layer travels outward.
+  vColor = mix(aColor, DAWN_SOFT, layerPhase * 0.18);
+  vShape = aShape;
 
-  // Particles shrink slightly as the wave spends itself.
-  gl_PointSize = aSize * uPixelRatio * mix(1.2, 0.7, phase);
+  // Markers start a hair stronger, then settle into fine drafting
+  // dots as the layer clears the frame.
+  gl_PointSize = aSize * uPixelRatio * mix(1.18, 0.82, layerPhase);
 }
 `;
 
@@ -344,11 +341,16 @@ uniform float uOpacity;
 
 varying vec3 vColor;
 varying float vAlpha;
+varying float vShape;
 
 void main() {
   vec2 uv = gl_PointCoord - 0.5;
-  float d = length(uv);
-  float core = smoothstep(0.5, 0.0, d);
+  // Two dot vocabularies (per-particle aShape): soft round grain for
+  // the quiet mass of the diagram, crisp diamonds for the sparse
+  // registration markers — same split the rest of the HUD uses.
+  float roundCore = smoothstep(0.5, 0.12, length(uv));
+  float diamondCore = 1.0 - smoothstep(0.2, 0.46, abs(uv.x) + abs(uv.y));
+  float core = mix(roundCore, diamondCore, vShape);
   float alpha = core * vAlpha * uOpacity;
   if (alpha < 0.01) discard;
   gl_FragColor = vec4(vColor, alpha);
@@ -421,19 +423,22 @@ function buildRealm(): {
 
       sizes.push(0.55 + h1 * 0.5 + rowT * 0.35);
 
-      // Unfurl delay: DEPTH owns the cascade (near ground first,
-      // horizon last); a small lateral fan ripples each row outward
-      // from the optical axis; jitter keeps the front shimmering.
+      // Unfurl delay: the sphere's footprint owns the cascade. The
+      // topology catches at the centre under the artifact, then rolls
+      // outward/forward like a carpet from the diagram circles.
       const pdist = Math.max(1, PARK_CAM_Z - z);
-      const depthNorm = Math.min(
+      const forwardNorm = Math.min(
         1,
-        Math.max(
-          0,
-          (pdist - WAVE_UNFURL_NEAR_DIST) / (WAVE_UNFURL_FAR_DIST - WAVE_UNFURL_NEAR_DIST)
-        )
+        Math.max(0, (WAVE_ROLLOUT_ORIGIN_Z - z) / WAVE_ROLLOUT_Z_REACH)
       );
       const sxAbs = Math.min(1, Math.abs(x / (pdist * HFOV_TAN)));
-      delays.push(depthNorm * WAVE_UNFURL_SPAN + sxAbs * WAVE_LATERAL_FAN + h2 * WAVE_DELAY_JITTER);
+      const radialNorm = Math.min(
+        1,
+        Math.sqrt(forwardNorm * forwardNorm + Math.pow(sxAbs * WAVE_ROLLOUT_X_WEIGHT, 2))
+      );
+      delays.push(
+        Math.pow(radialNorm, WAVE_ROLLOUT_RADIUS_POWER) * WAVE_UNFURL_SPAN + h2 * WAVE_DELAY_JITTER
+      );
     }
   }
 
@@ -445,69 +450,202 @@ function buildRealm(): {
   };
 }
 
-/** Build the dissipating wave-particle attributes. Positions are
- *  computed per frame in the vertex shader from `uFrontPhase`; the
- *  buffer only carries each particle's identity. */
+/** Build the diagram-cascade attributes. Positions are computed per
+ *  frame in the vertex shader from `uFrontPhase`; the buffer only
+ *  carries each particle's identity inside the layered diagram. */
+/** Layer archetypes — each ring of the cascade is ONE of these, so the
+ *  threshold layers read as different instrument strokes instead of
+ *  the same loud arc repeated ten times. */
+type WaveLayerKind = "hairline" | "grain" | "ticks" | "anchors";
+
+const WAVE_LAYER_KINDS: readonly WaveLayerKind[] = [
+  "hairline",
+  "grain",
+  "ticks",
+  "grain",
+  "hairline",
+  "anchors",
+  "grain",
+  "ticks",
+  "hairline",
+];
+
 function buildWaveParticles(): {
   positions: Float32Array;
   angles: Float32Array;
-  radials: Float32Array;
-  trails: Float32Array;
+  radiusOffsets: Float32Array;
+  delays: Float32Array;
   sizes: Float32Array;
   colors: Float32Array;
+  alphas: Float32Array;
   shimmers: Float32Array;
+  shapes: Float32Array;
 } {
-  const n = WAVE_PARTICLE_COUNT;
-  const positions = new Float32Array(n * 3); // dummy (shader-owned)
-  const angles = new Float32Array(n);
-  const radials = new Float32Array(n);
-  const trails = new Float32Array(n);
-  const sizes = new Float32Array(n);
-  const colors = new Float32Array(n * 3);
-  const shimmers = new Float32Array(n);
+  const positions: number[] = []; // dummy (shader-owned)
+  const angles: number[] = [];
+  const radiusOffsets: number[] = [];
+  const delays: number[] = [];
+  const sizes: number[] = [];
+  const colors: number[] = [];
+  const alphas: number[] = [];
+  const shimmers: number[] = [];
+  const shapes: number[] = [];
 
   const gold = new THREE.Color(GOLD_HEX);
   const dawn = new THREE.Color(DAWN_HEX);
   const dawnSoft = new THREE.Color(DAWN_SOFT_HEX);
 
-  const GOLDEN_ANGLE = 2.39996;
+  const push = (
+    angle: number,
+    radiusOffset: number,
+    delay: number,
+    size: number,
+    color: THREE.Color,
+    alpha: number,
+    shimmer: number,
+    shape: 0 | 1
+  ) => {
+    positions.push(0, 0, 0);
+    angles.push(angle);
+    radiusOffsets.push(radiusOffset);
+    delays.push(delay);
+    sizes.push(size);
+    colors.push(color.r, color.g, color.b);
+    alphas.push(alpha);
+    shimmers.push(shimmer);
+    shapes.push(shape);
+  };
 
-  for (let i = 0; i < n; i++) {
-    const h1 = hash(i * 12.9898 + 4.5453);
-    const h2 = hash(i * 78.233 + 1.047);
-    const h3 = hash(i * 39.425 + 2.665);
-    const h4 = hash(i * 27.619 + 0.731);
+  const tau = Math.PI * 2;
 
-    // Golden-angle base + jitter: even coverage, organic clusters.
-    angles[i] = (i * GOLDEN_ANGLE + h1 * 0.9) % (Math.PI * 2);
+  for (let layer = 0; layer < WAVE_DIAGRAM_LAYER_COUNT; layer++) {
+    const layerT = WAVE_DIAGRAM_LAYER_COUNT > 1 ? layer / (WAVE_DIAGRAM_LAYER_COUNT - 1) : 0;
+    const delay = layerT * WAVE_LAYER_DELAY_SPAN;
+    const layerSeed = layer * 997.13;
+    const ringOffset = (layerT - 0.5) * WAVE_LAYER_RADIUS_OFFSET;
+    const layerRotation = layer * 0.31;
+    const kind = WAVE_LAYER_KINDS[layer % WAVE_LAYER_KINDS.length];
 
-    // Roughly gaussian radial scatter (sum of two uniforms − 1).
-    radials[i] = h2 + h3 - 1;
+    if (kind === "hairline") {
+      // A thin, near-continuous dotted circle — the quiet structural
+      // stroke of the cascade. Fine round dots, no gold.
+      const dots = 180;
+      for (let i = 0; i < dots; i++) {
+        const h = hash(layerSeed + i * 3.911);
+        const angle = layerRotation + (i / dots) * tau + (h - 0.5) * 0.004;
+        push(
+          angle,
+          ringOffset,
+          delay,
+          4.0 + h * 1.45,
+          h > 0.62 ? dawn : dawnSoft,
+          0.72 + h * 0.18,
+          h,
+          0
+        );
+      }
+    } else if (kind === "grain") {
+      // Loose dust arcs — scattered fine grain with radial jitter so
+      // the layer reads as atmosphere, not a drawn line.
+      const arcs = 3;
+      const span = (tau / arcs) * 0.62;
+      for (let a = 0; a < arcs; a++) {
+        const centre = layerRotation + (a / arcs) * tau;
+        const start = centre - span / 2;
+        const dots = 48;
+        for (let i = 0; i < dots; i++) {
+          const h = hash(layerSeed + a * 53.17 + i * 7.13);
+          const angle = start + (i / (dots - 1)) * span + (h - 0.5) * 0.012;
+          const rJitter = (hash(layerSeed + a * 11.3 + i * 2.71 + 5.5) - 0.5) * 0.16;
+          push(
+            angle,
+            ringOffset + rJitter,
+            delay + h * 0.012,
+            3.0 + h * 3.0,
+            dawnSoft,
+            0.35 + h * 0.25,
+            h,
+            0
+          );
+        }
+      }
+    } else if (kind === "ticks") {
+      // Bearing ticks — sparse diamonds on a regular grid; one rare
+      // gold cardinal per half-revolution keeps the wayfinding accent.
+      const ticks = 14;
+      for (let t = 0; t < ticks; t++) {
+        const h = hash(layerSeed + t * 17.71 + 88.1);
+        const angle = layerRotation * 0.5 + (t / ticks) * tau;
+        const cardinal = t % 7 === 0;
+        push(
+          angle,
+          ringOffset,
+          delay + 0.01,
+          cardinal ? 9.4 + h * 1.6 : 7.0 + h * 1.5,
+          cardinal ? gold : dawn,
+          cardinal ? 0.95 : 0.72,
+          h,
+          1
+        );
+      }
+    } else {
+      // Anchor pips — the rarest, most deliberate layer: eight
+      // diamonds, alternating gold/dawn, slightly off the ring line.
+      const pips = 8;
+      for (let p = 0; p < pips; p++) {
+        const h = hash(layerSeed + p * 23.91 + 41.7);
+        const angle = layerRotation + (p / pips) * tau + tau / (pips * 2);
+        const isGold = p % 2 === 0;
+        push(
+          angle,
+          ringOffset + (h - 0.5) * 0.1,
+          delay + 0.012,
+          8.6 + h * 1.9,
+          isGold ? gold : dawn,
+          isGold ? 0.9 : 0.74,
+          h,
+          1
+        );
+      }
+    }
 
-    // Most particles ride the front; a tail fraction trails back
-    // toward the sphere (pow biases toward 0 = front).
-    trails[i] = Math.pow(h4, 1.7);
-
-    // Size tiers — mostly fine grain, sparse bold pips (the
-    // Colorpong "Cosmos" read). Sized in device pixels (no
-    // distance attenuation — the wave plane sits at a near-
-    // constant camera distance through its lifetime).
-    let size: number;
-    if (h3 > 0.94) size = 13.0 + h1 * 6.0;
-    else if (h3 > 0.74) size = 7.5 + h1 * 3.0;
-    else size = 4.0 + h1 * 2.6;
-    sizes[i] = size;
-
-    // Palette: gold carries the energy, dawn/dawn-soft the scatter.
-    const c = h2 < 0.45 ? gold : h2 < 0.78 ? dawn : dawnSoft;
-    colors[i * 3] = c.r;
-    colors[i * 3 + 1] = c.g;
-    colors[i * 3 + 2] = c.b;
-
-    shimmers[i] = h4;
+    // Quiet dotted filaments on every third layer — they keep the
+    // sphere visibly connected to the rollout without the starburst
+    // read of full radial spokes on every ring.
+    if (layer % 3 === 1) {
+      const spokes = 5;
+      for (let s = 0; s < spokes; s++) {
+        const spokeAngle = layerRotation * 0.7 + (s / spokes) * tau + tau / (spokes * 2);
+        const dots = 9;
+        for (let d = 0; d < dots; d++) {
+          const u = d / (dots - 1);
+          const h = hash(layerSeed + s * 31.37 + d * 7.19 + 12.4);
+          push(
+            spokeAngle + (h - 0.5) * 0.005,
+            ringOffset - WAVE_SPOKE_RADIUS_SPAN * (1 - u),
+            delay + u * 0.03,
+            2.6 + u * 2.1 + h * 0.9,
+            dawnSoft,
+            0.28 + u * 0.32,
+            h,
+            0
+          );
+        }
+      }
+    }
   }
 
-  return { positions, angles, radials, trails, sizes, colors, shimmers };
+  return {
+    positions: new Float32Array(positions),
+    angles: new Float32Array(angles),
+    radiusOffsets: new Float32Array(radiusOffsets),
+    delays: new Float32Array(delays),
+    sizes: new Float32Array(sizes),
+    colors: new Float32Array(colors),
+    alphas: new Float32Array(alphas),
+    shimmers: new Float32Array(shimmers),
+    shapes: new Float32Array(shapes),
+  };
 }
 
 /** Quintic smootherstep — zero velocity AND acceleration at both
@@ -522,7 +660,8 @@ function quintic(t: number): number {
 export function SubstrateTopography() {
   const pointsRef = useRef<THREE.Points>(null);
   const wavePointsRef = useRef<THREE.Points>(null);
-  /** Front chase (single-stage — the shock leads). */
+  /** Front chase (cascaded two-stage — smooth ring speed graph). */
+  const frontMidRef = useRef<number>(0);
   const frontRef = useRef<number>(0);
   /** Terrain chase (cascaded two-stage — zero-velocity onset). */
   const terrainMidRef = useRef<number>(0);
@@ -550,7 +689,7 @@ export function SubstrateTopography() {
       vertexShader: realmVertex,
       fragmentShader: realmFragment,
       uniforms: {
-        uPointSize: { value: 6.5 },
+        uPointSize: { value: 8.2 },
         uPixelRatio: { value: typeof window !== "undefined" ? window.devicePixelRatio : 1 },
         uCameraPos: { value: new THREE.Vector3() },
         uWave: { value: 0 },
@@ -564,15 +703,18 @@ export function SubstrateTopography() {
 
   const waveGeometry = useMemo(() => {
     if (!enabled) return null;
-    const { positions, angles, radials, trails, sizes, colors, shimmers } = buildWaveParticles();
+    const { positions, angles, radiusOffsets, delays, sizes, colors, alphas, shimmers, shapes } =
+      buildWaveParticles();
     const geom = new THREE.BufferGeometry();
     geom.setAttribute("position", new THREE.BufferAttribute(positions, 3));
     geom.setAttribute("aAngle", new THREE.BufferAttribute(angles, 1));
-    geom.setAttribute("aRadial", new THREE.BufferAttribute(radials, 1));
-    geom.setAttribute("aTrail", new THREE.BufferAttribute(trails, 1));
+    geom.setAttribute("aRadiusOffset", new THREE.BufferAttribute(radiusOffsets, 1));
+    geom.setAttribute("aDelay", new THREE.BufferAttribute(delays, 1));
     geom.setAttribute("aSize", new THREE.BufferAttribute(sizes, 1));
     geom.setAttribute("aColor", new THREE.BufferAttribute(colors, 3));
+    geom.setAttribute("aAlpha", new THREE.BufferAttribute(alphas, 1));
     geom.setAttribute("aShimmer", new THREE.BufferAttribute(shimmers, 1));
+    geom.setAttribute("aShape", new THREE.BufferAttribute(shapes, 1));
     return geom;
   }, [enabled]);
 
@@ -613,6 +755,7 @@ export function SubstrateTopography() {
     (material.uniforms.uCameraPos.value as THREE.Vector3).copy(camera.position);
 
     if (!painting) {
+      frontMidRef.current = 0;
       frontRef.current = 0;
       terrainMidRef.current = 0;
       terrainRef.current = 0;
@@ -627,11 +770,11 @@ export function SubstrateTopography() {
 
     const waveTarget = getSubstrateRealmEnvelope(paintProgress);
 
-    // FRONT: single-stage chase — the shock leads. Snappy enough to
-    // feel attached to the scroll, slow enough that a flick still
-    // sweeps rather than pops.
+    // FRONT: cascaded chase — the visible diagram rings get zero
+    // initial velocity instead of the single-exponential kick.
     const kFront = 1 - Math.exp(-WAVE_FRONT_RESPONSE * dt);
-    frontRef.current += (waveTarget - frontRef.current) * kFront;
+    frontMidRef.current += (waveTarget - frontMidRef.current) * kFront;
+    frontRef.current += (frontMidRef.current - frontRef.current) * kFront;
 
     // TERRAIN: cascaded two-stage chase + quintic remap — the AE
     // speed ramp. Zero velocity at onset (slow-in), exponential tail
@@ -646,7 +789,7 @@ export function SubstrateTopography() {
     const epDamp = 1 - (1 - REALM_EPILOGUE_FLOOR) * epilogueBand(ep);
     material.uniforms.uOpacity.value = REALM_OPACITY_BASE * epDamp;
 
-    // Dissipating particle wave.
+    // Diagram cascade.
     const phase = frontRef.current;
     waveMaterial.uniforms.uFrontPhase.value = phase;
     waveMaterial.uniforms.uOpacity.value = WAVE_FRONT_PEAK_ALPHA;
