@@ -7,7 +7,6 @@ import { smoothstep, useDepthGatewayStore } from "@/lib/stores/depthGatewayStore
 import { BEAT_WINDOWS } from "@/lib/home-v2/corridorMap";
 import {
   STATION_DIAGNOSTIC,
-  STATION_INTELLIGENCE,
   STATION_THOUGHTFORM,
   depthOpacityForWorldPosition,
   getBuildApproachFade,
@@ -15,8 +14,15 @@ import {
 
 /**
  * LatentTopographyContours — world-fixed topographic shards spaced
- * along the Z corridor between Thoughtform → Diagnostic and
- * Diagnostic → Intelligence (ADR-018).
+ * along the Thoughtform → Diagnostic corridor leg (ADR-018).
+ *
+ * v3.12 realm-transition pass: the leg-2 (Encode → Build) shard
+ * catalogue is RETIRED. Those shards were never physically passed
+ * by the camera (it parks at Build short of their Z), so they hung
+ * in the wormhole-mouth backdrop as static nested-ring "mandalas" —
+ * competing with the exit aperture and the gyroscope. Passthrough-02
+ * texture is owned by the wormhole walls / streaks / photons / exit
+ * glow; the post-exit backdrop is owned by `SubstrateTopography`.
  *
  * Replaces the earlier `LatentArtifactBands` (literal equations +
  * tokens) with an abstract, more artistic latent-space treatment:
@@ -74,7 +80,6 @@ const RIDGE_SEGMENTS = 32;
 
 const TF_Z = STATION_THOUGHTFORM.position[2];
 const DG_Z = STATION_DIAGNOSTIC.position[2];
-const INT_Z = STATION_INTELLIGENCE.position[2];
 
 /** Z position interpolated between two stations. `t = 0` lands at
  *  `fromZ`, `t = 1` at `toZ`. Used so the shard catalogue auto-
@@ -89,21 +94,20 @@ function lerpZ(t: number, fromZ: number, toZ: number): number {
 const LEG_1_START_Z = lerpZ(0.34, TF_Z, DG_Z);
 const LEG_1_END_Z = DG_Z + 0.5;
 
-// Leg 2 spans passthrough-02 — same shape, between DG and INT.
-const LEG_2_START_Z = lerpZ(0.34, DG_Z, INT_Z);
-const LEG_2_END_Z = INT_Z + 0.5;
+// Leg 2 (passthrough-02) shards RETIRED (v3.12 realm-transition
+// pass). The nested contour rings hovering ahead of the camera in
+// the Encode→Build leg were never physically passed (the camera
+// parks at Build before reaching their Z), so they hung in the
+// mouth/Build backdrop as static "mandala" rings — an aesthetic
+// the exit sequence explicitly moves away from. The exit zone is
+// now owned by the wormhole exit aperture (ring cadence + glow,
+// `LatentWormholeWalls`) and the substrate realm topography that
+// resolves at the threshold (`SubstrateTopography`).
 
-/** Reveal envelope per leg. Leg 1 mirrors the original semantic
- *  corridor reveal (becomes visible as the camera leaves the
- *  parked Thoughtform read). Leg 2 only resolves once the camera
- *  begins dollying out of the parked Diagnostic beat, so the
- *  parked Diagnostic composition stays clean too. */
-function legRevealForZ(z: number, progress: number): number {
-  // Re-tuned for the entry/section-spacing pass: front leg resolves
-  // across the longer entry; back leg lifts after the Diagnostic park
-  // (centre 0.60) and resolves inside passthrough-02 (0.67 → 0.83).
-  if (z > DG_Z) return smoothstep(0.14, 0.28, progress);
-  return smoothstep(0.63, 0.77, progress);
+/** Reveal envelope — leg-1 only after the v3.12 retirement. Becomes
+ *  visible as the camera leaves the parked Thoughtform read. */
+function legReveal(progress: number): number {
+  return smoothstep(0.14, 0.28, progress);
 }
 
 /** Navigate-park suppression: hide the topography shards across the
@@ -170,10 +174,10 @@ interface VectorShardArtifact {
 
 type Artifact = ContourShardArtifact | RidgeShardArtifact | VectorShardArtifact;
 
-/** Catalogue — 5 contour + 3 ridge + 4 vector per leg = 24 shards
- *  total. Z positions distribute evenly inside each leg's span via
- *  `lerpZ`, so retuning the stations in `sceneGeom.ts` moves the
- *  whole layer without manual respacing. */
+/** Catalogue — 5 contour + 3 ridge + 4 vector on leg 1 = 12 shards
+ *  total (leg 2 retired in v3.12). Z positions distribute evenly
+ *  inside the leg's span via `lerpZ`, so retuning the stations in
+ *  `sceneGeom.ts` moves the whole layer without manual respacing. */
 const ARTIFACTS: Artifact[] = [
   // ── Leg 1 (passthrough-01) ────────────────────────────────────
   // Contour basins along the left + right peripheral rails.
@@ -274,100 +278,9 @@ const ARTIFACTS: Artifact[] = [
     length: 0.85,
   },
 
-  // ── Leg 2 (passthrough-02) ────────────────────────────────────
-  {
-    kind: "contour",
-    pos: [-2.0, 0.85, lerpZ(0.12, LEG_2_START_Z, LEG_2_END_Z)],
-    outerRadius: 0.6,
-    aspect: 0.95,
-    rotation: -0.35,
-    color: DAWN_SOFT_HEX,
-  },
-  {
-    kind: "contour",
-    pos: [1.95, -0.6, lerpZ(0.3, LEG_2_START_Z, LEG_2_END_Z)],
-    outerRadius: 0.7,
-    aspect: 1.15,
-    rotation: 0.4,
-    rings: 4,
-    color: GOLD_HEX,
-  },
-  {
-    kind: "contour",
-    pos: [-1.75, -0.95, lerpZ(0.5, LEG_2_START_Z, LEG_2_END_Z)],
-    outerRadius: 0.55,
-    aspect: 0.8,
-    rotation: -0.5,
-    color: DAWN_HEX,
-  },
-  {
-    kind: "contour",
-    pos: [2.1, 0.75, lerpZ(0.68, LEG_2_START_Z, LEG_2_END_Z)],
-    outerRadius: 0.65,
-    aspect: 1.1,
-    rotation: 0.2,
-    color: DAWN_SOFT_HEX,
-  },
-  {
-    kind: "contour",
-    pos: [-1.85, 0.55, lerpZ(0.88, LEG_2_START_Z, LEG_2_END_Z)],
-    outerRadius: 0.48,
-    aspect: 0.92,
-    rotation: 0.6,
-    color: DAWN_SOFT_HEX,
-  },
-
-  {
-    kind: "ridge",
-    pos: [1.55, 1.1, lerpZ(0.2, LEG_2_START_Z, LEG_2_END_Z)],
-    arcRadius: 0.78,
-    bow: -0.18,
-    rotation: 0.5,
-    color: DAWN_HEX,
-  },
-  {
-    kind: "ridge",
-    pos: [-1.55, 0.0, lerpZ(0.42, LEG_2_START_Z, LEG_2_END_Z)],
-    arcRadius: 0.8,
-    bow: 0.16,
-    rotation: -0.4,
-    color: DAWN_SOFT_HEX,
-  },
-  {
-    kind: "ridge",
-    pos: [1.9, -1.05, lerpZ(0.76, LEG_2_START_Z, LEG_2_END_Z)],
-    arcRadius: 0.72,
-    bow: 0.2,
-    rotation: 0.25,
-    color: DAWN_SOFT_HEX,
-  },
-
-  {
-    kind: "vector",
-    pos: [-1.3, 1.05, lerpZ(0.22, LEG_2_START_Z, LEG_2_END_Z)],
-    dir: [-0.6, -0.35, -0.4],
-    length: 0.9,
-    color: GOLD_HEX,
-  },
-  {
-    kind: "vector",
-    pos: [1.45, -0.85, lerpZ(0.4, LEG_2_START_Z, LEG_2_END_Z)],
-    dir: [0.55, 0.4, -0.4],
-    length: 0.85,
-  },
-  {
-    kind: "vector",
-    pos: [-1.4, -0.6, lerpZ(0.6, LEG_2_START_Z, LEG_2_END_Z)],
-    dir: [-0.6, 0.35, -0.4],
-    length: 0.9,
-    color: GOLD_HEX,
-  },
-  {
-    kind: "vector",
-    pos: [1.2, 0.55, lerpZ(0.84, LEG_2_START_Z, LEG_2_END_Z)],
-    dir: [0.55, 0.45, -0.4],
-    length: 0.85,
-  },
+  // Leg 2 (passthrough-02) shards retired — see the v3.12 note above
+  // `legReveal`. The Encode→Build leg's backdrop is owned by the exit
+  // aperture + substrate realm now.
 ];
 
 // ── Geometry builders ─────────────────────────────────────────
@@ -501,7 +414,7 @@ function ContourShard({
       material.opacity = 0;
       return;
     }
-    const reveal = legRevealForZ(pos[2], paintProgress);
+    const reveal = legReveal(paintProgress);
     const depthOpacity = depthOpacityForWorldPosition(paintProgress, pos, depthWindow);
     // Cap at 0.32 — contours are a backdrop layer, never compete
     // with the orbits or the brandmark. Suppressed across the Navigate
@@ -604,7 +517,7 @@ function RidgeShard({
       tickMat.opacity = 0;
       return;
     }
-    const reveal = legRevealForZ(pos[2], paintProgress);
+    const reveal = legReveal(paintProgress);
     const depthOpacity = depthOpacityForWorldPosition(paintProgress, pos, depthWindow);
     const base =
       depthOpacity *
@@ -711,7 +624,7 @@ function VectorShard({ pos, dir, length, color = DAWN_HEX }: Omit<VectorShardArt
       diamondMat.opacity = 0;
       return;
     }
-    const reveal = legRevealForZ(midpoint[2], paintProgress);
+    const reveal = legReveal(paintProgress);
     const depthOpacity = depthOpacityForWorldPosition(paintProgress, midpoint, depthWindow);
     const base =
       depthOpacity *

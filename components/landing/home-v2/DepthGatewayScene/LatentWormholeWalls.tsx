@@ -9,6 +9,8 @@ import {
   STATION_INTELLIGENCE,
   STATION_THOUGHTFORM,
   getBuildApproachFade,
+  getExitGlowEnvelope,
+  getMouthYieldFade,
   getWormholeExitStreak,
   getWormholeExitWarp,
 } from "./sceneGeom";
@@ -26,11 +28,11 @@ import {
  * Composition per leg (Thoughtform → Diagnostic and
  * Diagnostic → Intelligence):
  *
- *   1. **Longitudinal rails** — 14 dotted lines that run along Z
- *      around an oval shell. About a third are partial rails (end
- *      midway through the leg) so the shell never reads as a closed
- *      cage. Rails drift slightly inward with depth so the shell
- *      visibly converges toward the optical axis.
+ *   1. **Longitudinal rails** — dotted lines that run along Z around
+ *      an oval shell. About a third are partial rails (end midway
+ *      through the leg) so the shell never reads as a closed cage.
+ *      Rails drift slightly inward with depth so the shell visibly
+ *      converges toward the optical axis.
  *
  *   2. **Aperture frames** — 3 sparse depth-gate frames per leg.
  *      Four gold corner anchors with short dawn arms in two
@@ -40,9 +42,30 @@ import {
  *
  *   3. **Topographic shelves** — a few rows of low-alpha dawn-soft
  *      dots below the optical axis. Faintly waved across X+Z so
- *      they suggest a latent floor receding into the corridor,
- *      mirroring the archived `pushTopographicFloor` recipe in
- *      `components/landing/latent-cases/celestialGatewayGeometry.ts`.
+ *      they suggest a latent floor receding into the corridor.
+ *
+ *   4. **Leg-2 exit aperture** (v3.12, Encode→Build only). The exit
+ *      is articulated as STRUCTURE + LIGHT, not density:
+ *        - Ring cadence: clean dotted ellipses with geometric Z
+ *          compression toward the rim. The accelerating rhythm of
+ *          rings passing the camera communicates "exit approaching"
+ *          kinesthetically. Echoes the cross-ring vocabulary of the
+ *          rest of the wormhole and the gimbal-ring grammar of the
+ *          intelligence layer it leads to.
+ *        - Exit glow (`<ExitGlow>` quad, see component below): a
+ *          single warm radial gradient seated just past the mouth Z.
+ *          Always on (faint at the Navigate park; resolved from haze
+ *          by atmospheric perspective; brightens through the
+ *          passthrough; yields to a low residual that backlights the
+ *          gyroscope at the Build park). Drives `getExitGlowEnvelope`.
+ *      The earlier dust-cloud articulation (volumetric funnel field
+ *      of 3,200 additive dots + 8-petal flower bloom + radial ribs)
+ *      was retired in v3.12: density-as-articulation summed into
+ *      noise, the petal grammar fought the gyroscope's ring grammar,
+ *      and gold-on-gold rim made the mouth compete with the Build
+ *      hero. The new aperture reads with structure (rings) + light
+ *      (glow) — the foreground gyro stays the focal mass, but the
+ *      tunnel still earns its exit moment.
  *
  * Visibility contract (ADR-018):
  *
@@ -60,13 +83,18 @@ import {
  *     longer drop out as the camera passes Encode. The opening
  *     Thoughtform park stays clean because leg 1 only lifts once the
  *     entry flythrough begins.
+ *   - The leg-2 mouth ring channel (`uRevealMouth`) ramps EARLY (as
+ *     the user leaves Thoughtform) AND yields BEFORE the Build park
+ *     (`getMouthYieldFade`, [0.85, 0.92]) so rings clear the stage
+ *     for the Build composition. The exit glow has its own bell
+ *     (`getExitGlowEnvelope`) that lingers as a low residual past
+ *     the park — the light persists, the rings don't.
  *   - Per-point camera-space depth fade is computed in the vertex
  *     shader so dots ahead of the camera fade in as they approach
  *     and clip out as they cross the near plane — same depth-focus
  *     pattern used by every other world-rigid layer on this route.
  *   - A small scroll-velocity opacity lift sharpens the read during
- *     active travel, but the baseline alpha cap stays subtle (peak
- *     centre-of-dot alpha ~0.35 even with lift).
+ *     active travel, but the baseline alpha cap stays subtle.
  *
  * Pairs with:
  *   - `LatentFieldTunnel`        : camera-relative ambient field +
@@ -78,6 +106,10 @@ import {
  *   - `InterGateCorridor`        : ring debris bands — the walls
  *                                 enclose the same Z bands that
  *                                 already host the debris.
+ *   - `BrandmarkAccretionShell`  : the gyroscope intelligence layer
+ *                                 the corridor exits ONTO. The exit
+ *                                 glow's residual literally backlights
+ *                                 it at the Build park.
  *
  * Mobile-narrow viewports skip the layer entirely, matching the
  * `LatentTopographyContours` gate, so tight viewports keep the
@@ -131,28 +163,50 @@ const CROSS_RING_COUNT_PER_LEG = 6;
  *  smooth circle from afar but stays clearly dotted up close. */
 const CROSS_RING_DOTS = 32;
 
-/** Exit-mouth density pass (v3.5.1).
+/** Exit-mouth ring cadence (v3.12 aperture grammar).
  *
- *  Ordinary rails are intentionally sparse, which made the Build-end
- *  mouth hard to read even after timing + runway fixes. These particles
- *  live ONLY near the end of leg 2 (Encode -> Build), but they are
- *  deliberately GRADED: sparse/soft near the throat, increasingly dense
- *  toward the rim. `aMouth` is a 0..1 strength, not a boolean, so the
- *  shader can make the rim open/brighter without creating a detached
- *  cloud of equally strong particles. */
-// Polish round 3 (2026-06-11): the rim flower still read as busy
-// from the Navigate park even after round 2's funnel trim. Cut
-// rings 9 -> 7, max-dots-per-ring 132 -> 88, rib dots 14 -> 10:
-// ~35% fewer particles in the mouth bloom while keeping the
-// gradient (sparse throat -> denser rim) and the 8-petal shape.
-const EXIT_MOUTH_RING_COUNT = 7;
-const EXIT_MOUTH_DOTS_MIN = 24;
-const EXIT_MOUTH_DOTS_MAX = 88;
-const EXIT_MOUTH_PETAL_COUNT = 8;
-const EXIT_MOUTH_RIB_DOTS = 10;
+ *  The leg-2 exit is articulated as a sequence of clean dotted
+ *  ellipse rings — same grammar as the cross-rings used elsewhere on
+ *  the wormhole and the gimbal rings on the intelligence layer the
+ *  corridor exits onto. The trick is the SPACING: rings are spaced
+ *  with a geometric (power) compression toward the rim, so as the
+ *  camera dollies into them the rhythm of rings passing perceptibly
+ *  accelerates. That accelerating cadence — not particle density —
+ *  is what reads as "exit approaching".
+ *
+ *  Versus v3.11:
+ *    - Petal modulation + radial ribs removed. The 8-petal flower
+ *      shape was organic and fought the precision-instrument grammar
+ *      of the gimbal rings the user is travelling toward; rings now
+ *      stay perfect ellipses.
+ *    - Ring count trimmed (7 → 6) and rim dot count clamped (88 → 64)
+ *      so the rim ring reads as a hero pearl-string, not a dense
+ *      mass. Density still grades from throat to rim, but quietly.
+ *    - Cadence exponent (`Z_CADENCE_POWER = 1.7`) replaces linear
+ *      ring spacing. Inner rings sit further apart, outer rings
+ *      cluster toward the rim — the runway-approach-light rhythm.
+ *    - Palette discipline: dawn-soft → dawn ramp only. Gold mix
+ *      capped at the absolute rim and very small, since gold is
+ *      the gyroscope's accent.
+ *    - `aMouth` strength curve unchanged so the existing
+ *      `uExitWarp` trumpet-bell splay still drives the mouth's
+ *      flare during the passthrough.
+ *
+ *  Yield: rings (`aReveal == 2`) are multiplied by `getMouthYieldFade`
+ *  in the useFrame so they clear before the Build park (~0.923),
+ *  leaving the stage for the gyroscope. The `<ExitGlow>` quad
+ *  persists as a low residual backlight. */
+const EXIT_MOUTH_RING_COUNT = 6;
+const EXIT_MOUTH_DOTS_MIN = 22;
+const EXIT_MOUTH_DOTS_MAX = 64;
 const EXIT_MOUTH_START_FRAC = 0.62;
 const EXIT_MOUTH_END_FRAC = 0.995;
-const EXIT_MOUTH_PETAL_AMP = 0.2;
+/** Geometric ring-spacing exponent. Z position along the leg is
+ *  `lerp(start, end, ringT^POWER)` with ringT = i/(N-1). POWER > 1
+ *  pushes successive rings toward the rim, so the stack reads as
+ *  inner rings widely spaced with a tightening cadence approaching
+ *  the mouth — accelerating runway lights, not even-spaced ladder. */
+const EXIT_MOUTH_Z_CADENCE_POWER = 1.7;
 const EXIT_MOUTH_DEPTH_BLOOM = 0.18;
 
 /** Exit acceleration field (v3.6).
@@ -193,102 +247,18 @@ const STREAK_INNER_RADIUS = 0.86;
  *  shell radius). Small — the streaks should mostly read as axial. */
 const STREAK_RADIAL_FLARE = 0.22;
 
-/** Exit funnel field (v3.9).
+/** Exit funnel field (RETIRED in v3.12).
  *
- *  The STRUCTURAL read of the wormhole exit: a dense organic cloud of
- *  small DOTS scattered on/around the leg-2 shell, with density, dot
- *  size, and `aMouth` strength all ramping toward the mouth. Reads
- *  like the black-hole particle-funnel reference — thousands of small
- *  particles whose density gradient says "this is the outer edge of
- *  the wormhole" — rather than ruled rings or line streaks.
- *
- *  Distinct roles after v3.11:
- *    - funnel field (dots)  = structure: visible from a distance via
- *      the dedicated `uRevealMouth` channel (early ramp, long-range
- *      far-fade extension) so it reads as the door at the end of the
- *      hallway, then brightens + opens with `uExitWarp`. Volumetric
- *      butter-spread between INNER and OUTER * shell radius with 3
- *      asymmetric angular density lobes drifting along Z.
- *    - line streaks         = motion accent: only visible while the
- *      user is actually scrolling fast (velocity-gated), because
- *      light streaks only make sense when travelling fast.
- *
- *  The dots ride the existing walls shader via the `aMouth` attribute
- *  (expansion + brightening under warp), so no new material is needed.
- *  Static geometry, built once. */
-// Bumped 4800 -> 6000 (v3.11 butter-spread pass) so the wider radial
-// distribution still reads as dense at the mouth — the same particle
-// count was sparse when spread across an ~3x larger annulus.
-// Polish round 2 (2026-06-10): trimmed 6000 -> 4600. Combined with
-// the larger `INNER_R` (cleaner core around the gimbal sphere) and
-// the steeper `DENSITY_BIAS` (more mass at the mouth, less along
-// the leg), this calms the whole funnel near the foreground sphere
-// while preserving the mouth gradient at distance.
-// Polish round 3 (2026-06-11): trimmed 4600 -> 3200 (~30%). The
-// funnel-as-bulk-dust was the loudest contributor to the busy
-// read from the Navigate park; with the steep density bias (0.6)
-// most of the removed mass came from near the foreground sphere,
-// not from the mouth gradient itself.
-const EXIT_FUNNEL_COUNT = 3200;
-/** Leg-local Z span. Starts at 0.0 — the leg-2 origin sits ~0.5 world
- *  units past the Encode gyro sphere (leg-local 0 ≈ the sphere plane
- *  at the "Encode the judgment" park), so the funnel SOFTLY BEGINS at
- *  the sphere itself and runs the full tunnel to the mouth (v3.10).
- *  Because the density power-law rises from ~zero at the start, the
- *  first stretch reads as a handful of stray dots, not a visible
- *  boundary — the gradient is felt across the entire Encode -> Build
- *  flight rather than appearing in the last third. */
-const EXIT_FUNNEL_START_FRAC = 0.0;
-const EXIT_FUNNEL_END_FRAC = 0.995;
-/** Radial INNER bound (fraction of shell radius). Dots scatter
- *  between INNER and OUTER * shell so the funnel fills the volume
- *  inside the tunnel rather than hugging the wall. The clear core
- *  (r < INNER) keeps the optical axis quiet — that's where the
- *  brandmark + Encode gimbal sit, and the user wants the centre
- *  uncluttered. (v3.11 butter-spread pass; replaces EXIT_FUNNEL_THICKNESS.)
- *
- *  Polish round 2 (2026-06-10): bumped 0.45 -> 0.62 so the quiet
- *  core extends well past the gimbal sphere outer ring (~1.16
- *  world units, vs the new inner of 0.62 * 1.35 ~= 0.84 vertically
- *  / 0.62 * 2.15 ~= 1.33 horizontally). The funnel no longer
- *  overlaps the gimbal in the off-axis direction, which is the
- *  source of the "cluttered around the sphere" read at the
- *  Navigate park. */
-const EXIT_FUNNEL_INNER_R = 0.62;
-const EXIT_FUNNEL_OUTER_R = 1.08;
-/** Density bias exponent: z = lerp(start, end, u^bias). Values < 1
- *  push samples toward the mouth end, so dots-per-unit-length rises
- *  smoothly toward the rim — the gradient IS the funnel.
- *
- *  Polish round 2 (2026-06-10): pulled 0.85 -> 0.6 so the gradient
- *  is steeper toward the mouth — mass concentrates at the corridor
- *  end (where the eye should track the gateway opening) and the
- *  near-leg dust thins around the foreground sphere. The previous
- *  0.85 spread mass evenly along the leg, which read as clutter
- *  near the gimbal. The early `uRevealMouth` channel + the larger
- *  far-fade extension keep the distant gradient unmistakable. */
-const EXIT_FUNNEL_DENSITY_BIAS = 0.6;
-/** Power that biases samples toward the OUTER wall while still
- *  allowing inward dust. `r = lerp(INNER, OUTER, u^WALL_BIAS)`.
- *  Values < 1 push samples toward the wall, > 1 push toward the
- *  inner radius. 0.6 keeps the wall reading as the densest band
- *  while letting ~30% of the field sit inboard for the tactile
- *  texture. */
-const EXIT_FUNNEL_WALL_BIAS = 0.6;
-/** Asymmetric angular density modulation (v3.11). Three low-frequency
- *  cosine lobes whose phases drift with leg-Z so the spread looks
- *  organic / nebula-dust rather than a ruled cylinder. Amplitude is
- *  the [0..1] keep-probability lift at lobe peaks; troughs reach
- *  `1 - AMP * 2 * 0.5 = 1 - AMP` minimum. */
-const EXIT_FUNNEL_LOBE_COUNT = 3;
-// Polish round 2 (2026-06-10): trimmed 0.55 -> 0.4 so the angular
-// density variation is gentler — less clumping = the funnel reads
-// as smooth dust rather than three rotating clouds.
-const EXIT_FUNNEL_LOBE_AMP = 0.4;
-/** Scroll-along-Z phase rate for the lobes — full revolution every
- *  ~3 leg units so adjacent Z bands have visibly different angular
- *  density profiles. */
-const EXIT_FUNNEL_LOBE_PHASE_RATE = 2.1;
+ *  Three rounds of v3.9 → v3.11 polish (volumetric particle field
+ *  spread across the leg-2 shell with density / radial / lobe
+ *  gradients) could not fully calm the noise floor it created
+ *  around the foreground gyroscope. The articulation strategy was
+ *  density (dust); the reference-aligned articulation is structure
+ *  (rings) plus light (the new `<ExitGlow>` quad). The mouth-bloom
+ *  ring cadence above + the exit glow below replace the field
+ *  entirely. ~3,200 additive points removed from the leg-2 budget
+ *  at the moment of heaviest overdraw. See ADR-018 (v3.12 aperture
+ *  grammar) for the full rationale. */
 
 /** Aperture depth-gate frames per leg. */
 const APERTURE_FRAMES_PER_LEG = 3;
@@ -304,6 +274,42 @@ const SHELF_ROW_COUNT = 3;
 const SHELF_Z_SLICES = 5;
 const SHELF_X_SAMPLES = 8;
 
+// ── Exit glow (v3.12 aperture grammar) ──────────────────────────
+
+/** Half-extent (world units) of the exit-glow plane. v3.12c: grown
+ *  3.0 → 4.0 AND the disc dropped slightly below the axis (see
+ *  `EXIT_GLOW_Y_DROP`) — at 3.0 centred on the sphere the peak read
+ *  as "the centre of the sphere lights up". Larger + lower, the
+ *  same luminance spreads into an ambient wash sitting on the
+ *  valley horizon behind the artifact's lower limb. */
+const EXIT_GLOW_HALF = 4.0;
+
+/** World-Z offset BEHIND the leg-2 mouth end (more negative Z). The
+ *  glow sits past the rim ring but in front of the deep starfield,
+ *  reading as an ambient light source the corridor opens onto. The
+ *  brandmark-followed gyroscope sits in front of the glow at the
+ *  Build park, so the residual glow naturally backlights it. */
+const EXIT_GLOW_Z_BEHIND_MOUTH = 0.6;
+
+/** Vertical drop of the glow disc below the optical axis (v3.12c).
+ *  Centres the warm core behind the sphere's LOWER limb / the
+ *  substrate-valley horizon instead of dead-centre behind the
+ *  brandmark — backlight, not a lit bulb inside the artifact. */
+const EXIT_GLOW_Y_DROP = -0.55;
+
+/** Peak alpha at full envelope. Quiet by design — the glow is the
+ *  ambient light source, not a bright object. v3.12c trimmed
+ *  0.55 → 0.38: the threshold WAVE carries the exit event now;
+ *  the glow is only the warm key behind it. */
+const EXIT_GLOW_PEAK_OPACITY = 0.38;
+
+/** Inner / outer colours of the glow's two-stage radial gradient.
+ *  Inner is brand gold (the same hue the rim ring tints toward, so
+ *  the glow / ring / gyroscope share one warm key); outer is a dim
+ *  warm bath that fades into the void. */
+const EXIT_GLOW_INNER_COLOR = new THREE.Color("#caa554");
+const EXIT_GLOW_OUTER_COLOR = new THREE.Color(0.34, 0.24, 0.13);
+
 // ── Visibility constants ────────────────────────────────────────
 
 /** Camera-space distance band where wall points are visible. Wider
@@ -312,27 +318,23 @@ const SHELF_X_SAMPLES = 8;
 export const VISIBLE_NEAR = 0.6;
 export const VISIBLE_FAR = 22;
 
-/** Far-fade EXTENSION for high-`aMouth` exit-funnel points (v3.11).
+/** Far-fade EXTENSION for high-`aMouth` exit-mouth ring particles
+ *  (v3.12 — was `funnel points`).
+ *
  *  The leg-2 mouth sits ~24+ world units from the Navigate park, well
  *  outside `VISIBLE_FAR = 22` for ordinary rail dots. We push the
- *  visible far for funnel/mouth points further out so a quiet warm
- *  glow is already present at the end of the corridor when the user
- *  parks at Navigate — no more "door pops in at the last moment".
+ *  visible far for mouth-channel points further out so the rim ring
+ *  resolves as a faint silhouette at the end of the corridor when
+ *  the user parks at Navigate, anchored by the always-on `<ExitGlow>`
+ *  behind it. Atmospheric perspective, not progress-keyed pop-in.
  *  Scaled by `aMouth` in the shader so ordinary rail dots keep their
- *  original visible band; only the rim-loaded funnel points reach.
- *
- *  Polish round 2 (2026-06-10): trimmed 14 -> 11 so the long-range
- *  glow extends only as far as needed to read at the Navigate park,
- *  not to dominate it. */
+ *  original visible band; only the rim-loaded ring points reach. */
 const VISIBLE_FAR_MOUTH_EXTENSION = 11;
-/** Distance at which the long-range glow caps its alpha. Stays subtle
- *  so the mouth never competes with the foreground gimbal sphere.
- *  Polish round 2 (2026-06-10): trimmed 0.55 -> 0.4.
- *  Polish round 3 (2026-06-11): trimmed 0.4 -> 0.26 — paired with the
- *  density reductions above so the surviving rim particles read as
- *  a subtle warm signature at the end of the hallway instead of a
- *  competing focal point during Navigate. The gradient is still
- *  legible from a distance; only its luminance drops. */
+/** Distance at which the long-range mouth glow caps its alpha. Stays
+ *  subtle so the rim ring never competes with the foreground
+ *  gyroscope. The exit glow quad does the heavy "light at end of
+ *  tunnel" work; the rings are the structural read on top of that
+ *  light. */
 const MOUTH_LONGRANGE_ALPHA_CAP = 0.26;
 
 /** Reveal envelopes per leg, in global progress units.
@@ -354,14 +356,18 @@ export const LEG_1_REVEAL_END = 0.24;
 export const LEG_2_REVEAL_START = 0.46;
 export const LEG_2_REVEAL_END = 0.57;
 
-/** Exit FUNNEL + mouth-bloom reveal window (v3.11). Distinct from
- *  `LEG_2_REVEAL_*` (which gates the leg-2 RAILS — the lattice that
- *  the camera flies INSIDE) so the door at the end of the hallway
- *  appears EARLY, not at the moment the camera arrives. Ramps on as
- *  the user leaves Thoughtform, so by the Navigate park (~0.40) a
- *  quiet warm glow is already visible at the end of the corridor.
- *  The shell-wall structure stays gated by `LEG_2_REVEAL_*` and the
- *  far-fade clamp, so the rails still fade in close-up. */
+/** Exit-mouth ring reveal window (v3.12 — was `funnel + mouth-bloom`).
+ *  Distinct from `LEG_2_REVEAL_*` (which gates the leg-2 RAILS — the
+ *  lattice the camera flies INSIDE) so the rim ring's silhouette
+ *  resolves EARLY, not at the moment the camera arrives. Ramps on as
+ *  the user leaves Thoughtform, so by the Navigate park (~0.40) the
+ *  rim ring is faintly readable in front of the always-on
+ *  `<ExitGlow>` quad. The shell-wall structure stays gated by
+ *  `LEG_2_REVEAL_*` and the far-fade clamp.
+ *
+ *  Multiplied by `getMouthYieldFade` per frame in `useFrame` so the
+ *  rings clear before the Build park (the `<ExitGlow>` keeps a low
+ *  residual past it as the gyroscope's backlight). */
 const MOUTH_REVEAL_START = 0.16;
 const MOUTH_REVEAL_END = 0.32;
 
@@ -599,6 +605,49 @@ void main() {
 }
 `;
 
+// ── Exit-glow shaders (v3.12 aperture grammar) ───────────────────
+//
+// A single quad seated just past the leg-2 mouth Z. Two-stage radial
+// gradient — bright warm core, soft cool halo — same pattern the
+// boot-glow disk uses behind the Thoughtform compass (see
+// `bootGlowFragmentShader` in `ThoughtformAtmosphere.tsx`). Reads as
+// "the corridor opens onto a light source": at distance it's a tiny
+// promise of light; up close it bathes the mouth + gyroscope in
+// warm fill. Additive blending so the gyro silhouette gains a
+// physical-feeling backlight rim where the two overlap.
+
+const exitGlowVertex = /* glsl */ `
+varying vec2 vUv;
+void main() {
+  vUv = uv;
+  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+}
+`;
+
+const exitGlowFragment = /* glsl */ `
+uniform vec3 uInnerColor;
+uniform vec3 uOuterColor;
+uniform float uOpacity;
+varying vec2 vUv;
+void main() {
+  // Radial distance from disk centre (0 at centre, 1 at edge).
+  vec2 centred = vUv - 0.5;
+  float d = length(centred) * 2.0;
+  if (d >= 1.0) discard;
+  // Two-stage falloff: a tight bright core surrounded by a wider
+  // soft halo so the glow reads as a luminous source bathing the
+  // surrounding void in light, not as a flat tinted disk. The
+  // halo extends to the disk edge before clipping; the core is
+  // concentrated within the inner ~half of the radius.
+  float core = smoothstep(0.55, 0.0, d);
+  float halo = smoothstep(1.0, 0.18, d);
+  vec3 color = mix(uOuterColor, uInnerColor, core);
+  float alpha = mix(halo * 0.45, 1.0, core) * uOpacity;
+  if (alpha < 0.005) discard;
+  gl_FragColor = vec4(color, alpha);
+}
+`;
+
 // ── Geometry builders ───────────────────────────────────────────
 
 interface PointBuffers {
@@ -656,6 +705,20 @@ export function getLegRailRange(legIdx: 0 | 1): { fromZ: number; toZ: number } {
     fromZ: lerp(dgZ, intZ, LEG_RAIL_START_FRAC),
     toZ: lerp(dgZ, intZ, LEG_RAIL_END_FRAC),
   };
+}
+
+/** World-Z position of the exit-glow plane (v3.12). Sits
+ *  `EXIT_GLOW_Z_BEHIND_MOUTH` units past the leg-2 mouth end,
+ *  which is itself `EXIT_MOUTH_END_FRAC` of the leg span past the
+ *  Diagnostic station. The result is a fixed-world position the
+ *  camera physically approaches, so the disk shrinks under
+ *  perspective at distance and grows at the Build park — no
+ *  progress-keyed scaling needed. */
+function getExitGlowZ(): number {
+  const { fromZ, toZ } = getLegRailRange(1);
+  const span = toZ - fromZ;
+  const mouthEndZ = fromZ + span * EXIT_MOUTH_END_FRAC;
+  return mouthEndZ - EXIT_GLOW_Z_BEHIND_MOUTH;
 }
 
 /** Sample a world position along a specific rail at fractional `t`
@@ -824,14 +887,24 @@ function buildCrossRings(fromZ: number, toZ: number, legIdx: 0 | 1, buf: PointBu
   }
 }
 
-/** Dense exit-mouth gradient at the end of leg 2 (Encode -> Build).
+/** Build the exit-mouth ring cadence at the end of leg 2 (Encode →
+ *  Build). v3.12 aperture grammar: structure (rings) + light (the
+ *  separate `<ExitGlow>` quad), no density dust.
  *
- *  This is not a solid portal mesh; it's still the same dotted
- *  wormhole language, just concentrated into a rim-density gradient.
- *  The throat has few dim dots; each subsequent ring adds more points,
- *  size, and `aMouth` strength until the rim becomes visibly dense. This
- *  makes the gateway feel like it is building up toward its edge instead
- *  of forming a separate particle cloud at the edge. */
+ *  Rings are clean dotted ellipses spaced with a geometric Z
+ *  compression toward the rim (`EXIT_MOUTH_Z_CADENCE_POWER`). As the
+ *  camera dollies into them the rhythm of rings passing perceptibly
+ *  accelerates — that cadence, not particle mass, communicates "exit
+ *  approaching". The grammar rhymes with the cross-rings elsewhere on
+ *  the wormhole and with the gimbal rings of the intelligence layer
+ *  the corridor exits onto.
+ *
+ *  Per ring we still grade dot count / size / colour / `aMouth`
+ *  strength toward the rim so the outermost ring reads as the hero
+ *  pearl-string and the inner rings read as anticipation. The
+ *  trumpet-bell flare under `uExitWarp` (high-`aMouth` rim particles
+ *  splay outward) is unchanged from earlier versions — the rebuild
+ *  is about WHAT carries the static read, not the warp dynamics. */
 function buildExitMouthBloom(fromZ: number, toZ: number, buf: PointBuffers): void {
   const gold = new THREE.Color(GOLD_HEX);
   const dawn = new THREE.Color(DAWN_HEX);
@@ -840,178 +913,62 @@ function buildExitMouthBloom(fromZ: number, toZ: number, buf: PointBuffers): voi
 
   for (let r = 0; r < EXIT_MOUTH_RING_COUNT; r++) {
     const ringT = EXIT_MOUTH_RING_COUNT > 1 ? r / (EXIT_MOUTH_RING_COUNT - 1) : 1;
+    // Eased rim weight (0..1) drives count / size / colour / mouth
+    // strength so the outermost ring reads as the rim mass.
     const rimT = ringT * ringT * (3 - 2 * ringT);
-    const zT = lerp(EXIT_MOUTH_START_FRAC, EXIT_MOUTH_END_FRAC, ringT);
+    // Geometric ring spacing — `ringT^POWER` (POWER > 1) pushes
+    // successive rings toward the mouth end so the cadence
+    // perceptibly accelerates as the camera approaches the rim.
+    // This is the runway-approach-light rhythm: inner rings widely
+    // spaced, outer rings clustered, the eye reads "something is
+    // about to happen".
+    const zPower = Math.pow(ringT, EXIT_MOUTH_Z_CADENCE_POWER);
+    const zT = lerp(EXIT_MOUTH_START_FRAC, EXIT_MOUTH_END_FRAC, zPower);
     const z = fromZ + span * zT;
 
-    // The mouth widens as it approaches the Build end even BEFORE the
-    // shader warp, but the gradient is eased: early rings are close to
-    // the ordinary tunnel radius, the rim is where density and openness
-    // gather. That avoids a floating halo/cloud at the mouth edge.
+    // The mouth widens slightly toward the rim even before the
+    // shader warp — early rings sit at the ordinary tunnel radius,
+    // the rim ring sits a hair outside. The trumpet-bell splay
+    // under `uExitWarp` then expands the rim much further.
     const depthBloom = 1 + rimT * EXIT_MOUTH_DEPTH_BLOOM;
     const inward = 1 - zT * RAIL_INWARD_PULL;
     const rx = SHELL_RX * inward * depthBloom;
     const ry = SHELL_RY * inward * depthBloom;
-    const ringColor = dawnSoft.clone().lerp(dawn, Math.min(1, rimT * 1.25));
-    if (rimT > 0.55) ringColor.lerp(gold, (rimT - 0.55) / 0.45);
+
+    // Palette discipline: dawn-soft → dawn ramp drives the inner
+    // rings; the rim ring carries a small gold tint (capped at 0.25)
+    // as a quiet rhyme with the gyroscope it reveals. NOT a hot
+    // gold rim — gold is the gyroscope's accent and the mouth must
+    // not compete with it.
+    const ringColor = dawnSoft.clone().lerp(dawn, Math.min(1, rimT * 1.15));
+    if (rimT > 0.7) {
+      const goldT = ((rimT - 0.7) / 0.3) * 0.25;
+      ringColor.lerp(gold, goldT);
+    }
+
     const dotCount = Math.round(lerp(EXIT_MOUTH_DOTS_MIN, EXIT_MOUTH_DOTS_MAX, rimT));
+    // `aMouth` is unchanged from earlier versions — the existing
+    // shader's mouth-alpha curve and `uExitWarp` rim splay both
+    // depend on it, and that machinery is still doing the right job.
     const mouthStrength = 0.08 + rimT * 0.92;
+    // Per-ring angular phase offset so successive rings don't share
+    // dot angles (otherwise the rings collapse into longitudinal
+    // streaks under the trumpet-bell warp).
+    const ringPhase = 0.18 + ringT * 0.31;
 
     for (let d = 0; d < dotCount; d++) {
-      const angleT = d / dotCount;
-      const angle = angleT * Math.PI * 2 + 0.18 + ringT * 0.18;
-      // 8-lobed radial modulation: petal tips are denser/brighter and
-      // open harder under the shader, while valleys keep the iris airy.
-      const petal = Math.max(0, Math.cos(angle * EXIT_MOUTH_PETAL_COUNT + ringT * Math.PI));
-      const petalBloom = 1 + petal * EXIT_MOUTH_PETAL_AMP * (0.25 + rimT * 0.75);
-      const x = Math.cos(angle) * rx * petalBloom;
-      const y = Math.sin(angle) * ry * petalBloom;
-      const size = 0.48 + rimT * 0.72 + petal * 0.2 * rimT;
+      const angle = (d / dotCount) * Math.PI * 2 + ringPhase;
+      const x = Math.cos(angle) * rx;
+      const y = Math.sin(angle) * ry;
+      // Size grades toward the rim ring so the hero pearl-string
+      // reads as the densest, brightest band without needing extra
+      // dot count.
+      const size = 0.48 + rimT * 0.72;
       // aReveal = 2 → uses the early-ramping `uRevealMouth` channel
-      // so the bloom shares the funnel field's early reveal: the door
-      // is visible from a distance, not at point-blank range.
+      // so the rim ring resolves at distance (Navigate park view),
+      // not at point-blank range.
       pushPoint(buf, x, y, z, ringColor, 2, size, mouthStrength);
     }
-  }
-
-  // Petal ribs: sparse radial dotted strokes that connect the throat to
-  // the opening. These give the eye a clear "unfolding" direction as the
-  // mouth blooms, without turning the portal into a flat filled flower.
-  for (let p = 0; p < EXIT_MOUTH_PETAL_COUNT; p++) {
-    const angle = (p / EXIT_MOUTH_PETAL_COUNT) * Math.PI * 2 + 0.18;
-    const tipPetal = 1 + EXIT_MOUTH_PETAL_AMP;
-    for (let d = 0; d < EXIT_MOUTH_RIB_DOTS; d++) {
-      const t = EXIT_MOUTH_RIB_DOTS > 1 ? d / (EXIT_MOUTH_RIB_DOTS - 1) : 1;
-      const rimT = t * t * (3 - 2 * t);
-      const zT = lerp(EXIT_MOUTH_START_FRAC, EXIT_MOUTH_END_FRAC, t);
-      const z = fromZ + span * zT;
-      const inward = 1 - zT * RAIL_INWARD_PULL;
-      const depthBloom = 1 + rimT * EXIT_MOUTH_DEPTH_BLOOM;
-      const petalBloom = lerp(0.72, tipPetal, rimT);
-      const x = Math.cos(angle) * SHELL_RX * inward * depthBloom * petalBloom;
-      const y = Math.sin(angle) * SHELL_RY * inward * depthBloom * petalBloom;
-      const color = dawnSoft.clone().lerp(p % 2 === 0 ? gold : dawn, rimT);
-      pushPoint(buf, x, y, z, color, 2, 0.42 + rimT * 0.72, 0.06 + rimT * 0.94);
-    }
-  }
-}
-
-/** Build the exit FUNNEL FIELD for leg 2 (v3.9) — the structural
- *  particle read of the wormhole exit.
- *
- *  A dense organic scatter of small dots on/around the tunnel shell,
- *  spanning the FULL leg — softly beginning at the Encode sphere plane
- *  (leg-local 0.0, v3.10) and running to the mouth. Three coordinated
- *  gradients make the funnel tangible:
- *
- *    1. DENSITY — samples are biased toward the mouth via
- *       u^EXIT_FUNNEL_DENSITY_BIAS, so dots-per-unit-length rises
- *       smoothly from sparse (deep inside) to massed (at the rim).
- *       The density gradient itself is what reads as "this is the
- *       outer edge of the wormhole" — exactly the black-hole
- *       particle-funnel reference.
- *    2. SIZE — dots grow slightly toward the rim so the rim mass
- *       also gains luminance, not just count.
- *    3. aMouth — rim dots carry high mouth strength so the existing
- *       walls shader opens them outward + brightens them under
- *       uExitWarp (the flower-mouth machinery from v3.5 applies to
- *       the whole funnel for free).
- *
- *  Radial jitter (inward/outward of the shell) keeps the cloud
- *  organic rather than ruled; jitter widens toward the rim so the
- *  mouth reads as a thickened lip, not a thin circle.
- *
- *  Static geometry, deterministic hashes, single draw call (rides
- *  the existing walls points buffer + shader). */
-function buildExitFunnelField(fromZ: number, toZ: number, buf: PointBuffers): void {
-  const gold = new THREE.Color(GOLD_HEX);
-  const dawn = new THREE.Color(DAWN_HEX);
-  const dawnSoft = new THREE.Color(DAWN_SOFT_HEX);
-  const span = toZ - fromZ;
-  const hash = (n: number) => {
-    const s = Math.sin(n) * 43758.5453;
-    return s - Math.floor(s);
-  };
-
-  // v3.11 butter-spread pass: scattered VOLUMETRICALLY between INNER
-  // and OUTER * shell radius (not in a thin band against the wall),
-  // density softened along Z so mass spreads through the leg, and
-  // angular density modulated by 3 low-frequency cosine lobes whose
-  // phases drift with Z so the field reads as nebula dust — organic,
-  // tactile, asymmetric — instead of a ruled cylinder. All points
-  // carry `aReveal = 2` so they share the early `uRevealMouth`
-  // reveal channel: the door at the end of the hallway is visible
-  // from Navigate, not just at point-blank range.
-  // Reject-sample so the lobe cuts produce a real density variation
-  // rather than just a brightness wave; budget enough rejection
-  // headroom that EXIT_FUNNEL_COUNT points still land.
-  const REJECT_BUDGET = 4;
-  let placed = 0;
-  let attempts = 0;
-  while (placed < EXIT_FUNNEL_COUNT && attempts < EXIT_FUNNEL_COUNT * REJECT_BUDGET) {
-    const i = attempts;
-    attempts++;
-    const u = ((i + 0.5) / (EXIT_FUNNEL_COUNT * REJECT_BUDGET)) * REJECT_BUDGET;
-    const uClamped = u > 1 ? u - Math.floor(u) : u;
-    // Density bias along Z (softer than v3.10 — mass distributes
-    // along the whole leg instead of stacking at the mouth).
-    const zBias = Math.pow(uClamped, EXIT_FUNNEL_DENSITY_BIAS);
-    const zT = lerp(EXIT_FUNNEL_START_FRAC, EXIT_FUNNEL_END_FRAC, zBias);
-    const z = fromZ + span * zT;
-    // Eased rim weight 0..1 for size / colour / mouth strength.
-    const rim = zBias * zBias * (3 - 2 * zBias);
-
-    const h1 = hash(i * 12.9898 + 4.5453);
-    const h2 = hash(i * 78.233 + 1.047);
-    const h3 = hash(i * 39.425 + 2.665);
-    const h4 = hash(i * 27.619 + 0.731);
-
-    // Asymmetric angular lobes: 3 low-frequency cosines summed and
-    // rephased with Z so adjacent leg slices have visibly different
-    // density profiles around the cylinder. Reject-sample against
-    // the lobe weight to actually MOVE points (not just dim them).
-    const angle = h1 * Math.PI * 2;
-    const lobePhase = z * EXIT_FUNNEL_LOBE_PHASE_RATE;
-    let lobeWeight = 0;
-    for (let k = 1; k <= EXIT_FUNNEL_LOBE_COUNT; k++) {
-      lobeWeight +=
-        Math.cos(angle * k + lobePhase * (1 + k * 0.37) + k * 1.91) / EXIT_FUNNEL_LOBE_COUNT;
-    }
-    // Map [-1, 1] -> [1 - AMP, 1]; lobeWeight > 0 -> denser sectors.
-    const keepProb = 1 - EXIT_FUNNEL_LOBE_AMP * (0.5 - lobeWeight * 0.5);
-    if (h4 > keepProb) continue;
-
-    // Volumetric radial scatter from INNER to OUTER. `WALL_BIAS`
-    // pushes most samples outward toward the wall while still
-    // letting some sit inboard — that's the butter-spread.
-    const radialU = Math.pow(h2, EXIT_FUNNEL_WALL_BIAS);
-    const rFactor = lerp(EXIT_FUNNEL_INNER_R, EXIT_FUNNEL_OUTER_R, radialU);
-    const inward = 1 - zT * RAIL_INWARD_PULL;
-    const r = rFactor * inward;
-
-    const x = Math.cos(angle) * SHELL_RX * r;
-    const y = Math.sin(angle) * SHELL_RY * r;
-
-    // Small dots — density carries the read, not blob size. Slight
-    // growth toward the rim for luminance massing.
-    const size = 0.32 + h3 * 0.26 + rim * 0.42;
-
-    // Palette: mostly dawn-soft texture, dawn accents, gold reserved
-    // for the rim mass so the lip glows in brand gold.
-    let color: THREE.Color;
-    if (rim > 0.75 && h3 > 0.82) color = gold;
-    else if (h3 > 0.62) color = dawn;
-    else color = dawnSoft;
-
-    // Mouth strength gradient: deep dots behave like ordinary wall
-    // particles; rim dots inherit the full flower-mouth open+brighten
-    // behaviour under uExitWarp.
-    const mouth = 0.12 + rim * 0.88;
-    // aReveal = 2 → uses the dedicated `uRevealMouth` channel so the
-    // funnel appears as the user leaves Thoughtform (early), distinct
-    // from the leg-2 rail reveal that gates the surrounding walls.
-    pushPoint(buf, x, y, z, color, 2, size, mouth);
-    placed++;
   }
 }
 
@@ -1180,7 +1137,6 @@ function buildWormholeWalls(): {
   buildLegRails(leg2Start, leg2End, 1, buf);
   buildCrossRings(leg2Start, leg2End, 1, buf);
   buildExitMouthBloom(leg2Start, leg2End, buf);
-  buildExitFunnelField(leg2Start, leg2End, buf);
   buildShelves(leg2Start, leg2End, 1, buf);
   for (let i = 0; i < APERTURE_FRAMES_PER_LEG; i++) {
     const t = (i + 1) / (APERTURE_FRAMES_PER_LEG + 1);
@@ -1255,6 +1211,10 @@ export function LatentWormholeWalls() {
   // owns the always-present structural read). Damped so the streaks
   // ease in/out rather than strobing with each scroll event.
   const streakVelRef = useRef<number>(0);
+  // v3.12 aperture grammar — exit-glow quad just past the leg-2
+  // mouth. The "promise / frame / backlight" light source the
+  // corridor exits onto.
+  const glowRef = useRef<THREE.Mesh>(null);
   const lastTime = useRef<number>(-1);
 
   // Skip on narrow viewports — same gate as `LatentTopographyContours`.
@@ -1332,14 +1292,40 @@ export function LatentWormholeWalls() {
     });
   }, []);
 
+  // v3.12 — exit-glow quad. A single plane geometry built once with
+  // a half-extent matching the disk size; the fragment shader's
+  // radial gradient handles the soft falloff so there is no hard
+  // disk edge anywhere in the visible band.
+  const glowGeometry = useMemo(() => {
+    if (!enabled) return null;
+    return new THREE.PlaneGeometry(EXIT_GLOW_HALF * 2, EXIT_GLOW_HALF * 2, 1, 1);
+  }, [enabled]);
+
+  const glowMaterial = useMemo(() => {
+    return new THREE.ShaderMaterial({
+      vertexShader: exitGlowVertex,
+      fragmentShader: exitGlowFragment,
+      uniforms: {
+        uInnerColor: { value: EXIT_GLOW_INNER_COLOR.clone() },
+        uOuterColor: { value: EXIT_GLOW_OUTER_COLOR.clone() },
+        uOpacity: { value: 0 },
+      },
+      transparent: true,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+    });
+  }, []);
+
   useEffect(() => {
     return () => {
       material.dispose();
       streakMaterial.dispose();
+      glowMaterial.dispose();
       geometry?.dispose();
       streakGeometry?.dispose();
+      glowGeometry?.dispose();
     };
-  }, [material, streakMaterial, geometry, streakGeometry]);
+  }, [material, streakMaterial, glowMaterial, geometry, streakGeometry, glowGeometry]);
 
   useFrame((state) => {
     if (!geometry) return;
@@ -1367,18 +1353,25 @@ export function LatentWormholeWalls() {
       material.uniforms.uExitWarp.value = 0;
       streakMaterial.uniforms.uOpacity.value = 0;
       streakMaterial.uniforms.uExitWarp.value = 0;
+      glowMaterial.uniforms.uOpacity.value = 0;
       return;
     }
 
     const reveal1 = smoothstep(LEG_1_REVEAL_START, LEG_1_REVEAL_END, paintProgress);
     const reveal2 = smoothstep(LEG_2_REVEAL_START, LEG_2_REVEAL_END, paintProgress);
-    // Exit funnel + mouth-bloom reveal channel — ramps EARLY (as the
-    // user leaves Thoughtform) so a quiet warm glow is already present
-    // at the end of the corridor when parked at Navigate.
-    const revealMouth = smoothstep(MOUTH_REVEAL_START, MOUTH_REVEAL_END, paintProgress);
+    // v3.12 — mouth ring reveal:
+    //   1. Early ramp: rings resolve from haze as the camera leaves
+    //      Thoughtform, so by the Navigate park the rim ring is a
+    //      faint silhouette in front of the always-on exit glow.
+    //   2. Yield fade: rings clear BEFORE the Build park (~0.923)
+    //      so the gyroscope has a clean stage. The glow keeps its
+    //      own residual envelope past the park, leaving a backlight
+    //      without leaving the rings competing with the hero.
+    const revealMouthRamp = smoothstep(MOUTH_REVEAL_START, MOUTH_REVEAL_END, paintProgress);
+    const mouthYield = getMouthYieldFade(paintProgress);
     material.uniforms.uReveal1.value = reveal1;
     material.uniforms.uReveal2.value = reveal2;
-    material.uniforms.uRevealMouth.value = revealMouth;
+    material.uniforms.uRevealMouth.value = revealMouthRamp * mouthYield;
 
     // v3.2 wormhole-exit widen — the tube splays radially outward at
     // the camera as we emerge into Build. The fragment fade follows
@@ -1416,25 +1409,46 @@ export function LatentWormholeWalls() {
 
     // v3.9 — streaks are VELOCITY-GATED: light streaks only make
     // sense while travelling fast, so the line layer eases in with
-    // actual scroll speed and eases out at rest. The dotted funnel
-    // field (part of the walls buffer) owns the always-present
-    // structural read of the exit. The bell envelope (`streakEnv` ->
-    // uExitWarp) still owns WHERE in the journey streaks may appear
-    // at all (pre-Build only). smoothstep(0.06, 0.32, velocityT):
-    // idle = 0, deliberate scroll ~= partial, fast flick = full.
+    // actual scroll speed and eases out at rest. The bell envelope
+    // (`streakEnv` -> uExitWarp) still owns WHERE in the journey
+    // streaks may appear at all (pre-Build only). smoothstep(0.06,
+    // 0.32, velocityT): idle = 0, deliberate scroll ~= partial,
+    // fast flick = full.
     const streakVelTarget = smoothstep(0.06, 0.32, velocityT);
     streakVelRef.current += (streakVelTarget - streakVelRef.current) * k;
     streakMaterial.uniforms.uOpacity.value =
       Math.min(1, opacityRef.current * 1.05) * streakVelRef.current;
+
+    // v3.12 — exit glow runs on its OWN envelope (`getExitGlowEnvelope`)
+    // independent of the wall opacity / build-approach fade. That's
+    // intentional: the glow must SURVIVE past the Build park as a
+    // residual backlight while the surrounding ambient walls fade.
+    // No scroll-velocity gate either — the glow is the always-on
+    // light source, not a kinetic accent. Peak alpha is small by
+    // design (`EXIT_GLOW_PEAK_OPACITY`) so additive blending against
+    // the gyroscope rims its silhouette without flooding it.
+    glowMaterial.uniforms.uOpacity.value =
+      getExitGlowEnvelope(paintProgress) * EXIT_GLOW_PEAK_OPACITY;
   });
 
   if (!geometry) return null;
+
+  const glowZ = getExitGlowZ();
 
   return (
     <group>
       <points ref={pointsRef} geometry={geometry} material={material} frustumCulled={false} />
       {streakGeometry && (
         <lineSegments geometry={streakGeometry} material={streakMaterial} frustumCulled={false} />
+      )}
+      {glowGeometry && (
+        <mesh
+          ref={glowRef}
+          geometry={glowGeometry}
+          material={glowMaterial}
+          position={[0, EXIT_GLOW_Y_DROP, glowZ]}
+          frustumCulled={false}
+        />
       )}
     </group>
   );

@@ -17,6 +17,7 @@ import { LatentWormholeWalls } from "./LatentWormholeWalls";
 import { driveMotionFollower } from "./motionFollower";
 import { ScrollStreaks } from "./ScrollStreaks";
 import { StaticStarfield } from "./StaticStarfield";
+import { SubstrateTopography } from "./SubstrateTopography";
 import { ThoughtformAtmosphere } from "./ThoughtformAtmosphere";
 import {
   CAMERA_START,
@@ -69,6 +70,16 @@ function viewportAspect(): number {
  * Scene composition (paint order, near -> far):
  *
  *   - StaticStarfield       : non-animated deep-space background.
+ *   - SubstrateTopography   : the realm OUTSIDE the wormhole — a
+ *                             latent-topography particle landscape
+ *                             extending into the distance behind
+ *                             the Build station. Invisible across
+ *                             the whole corridor; blooms outward
+ *                             from the exit threshold across
+ *                             [0.848, 0.93], synchronized with the
+ *                             exit-glow peak + mouth-ring yield
+ *                             (v3.12 realm-transition pass).
+ *                             Recedes during the epilogue flyover.
  *   - ThoughtformAtmosphere : dense local star cluster behind the
  *                             Thoughtform gate plus a soft gold
  *                             shockwave ring that pulses at the
@@ -253,6 +264,13 @@ export function DepthGatewayScene() {
       <MotionFollowerDriver />
       <FlyingCameraRig />
       <StaticStarfield />
+      {/* SubstrateTopography — the realm OUTSIDE the wormhole: a
+          latent-topography landscape extending into the distance
+          behind the Build station. Invisible across the whole
+          corridor; blooms outward from the exit threshold across
+          [0.848, 0.93] as the mouth rings yield and the exit glow
+          peaks (v3.12 realm-transition pass). */}
+      <SubstrateTopography />
       <ThoughtformAtmosphere />
       {/* GatewayThroat — receding dotted echoes of the portal frame
           behind the Thoughtform gate at the parked beat, so the

@@ -280,7 +280,14 @@ export const CORRIDOR_TIMELINE = {
     // their park centres (Encode ~0.636, Build ~0.92). The temporal
     // follower (`motionFollower.ts`) guarantees the fast-scroll case.
     orbits: { start: 0.52, peakAt: 0.64 }, // Encode park centre ~0.636 — `gateEncodeReadout` reuses this window so the Encode text fades in with the orbits
-    stack: { start: 0.81, peakAt: 0.93 }, // Build park centre ~0.92
+    // v3.12c Crossing follow-up: stack pushed 0.81/0.93 → 0.875/0.95
+    // so the sources/surfaces streams begin docking only AFTER the
+    // threshold wave has launched and the realm is unfurling
+    // ([0.845, 0.905]). Sequence at the Build arrival: wave fires →
+    // valley unfurls beneath → sources/surfaces flow in over the
+    // resolved realm → full stack just after the park settles. The
+    // temporal follower still guarantees the fast-scroll case.
+    stack: { start: 0.875, peakAt: 0.95 }, // Build park centre ~0.92
   },
 } as const;
 
@@ -816,6 +823,116 @@ export function getWormholeExitStreak(paintProgress: number): number {
   return rampUp * fadeOut;
 }
 
+/** Wormhole-exit GLOW envelope (v3.12 aperture grammar).
+ *
+ *  Drives the soft radial backlight quad seated just past the leg-2
+ *  mouth (`<ExitGlow>` inside `LatentWormholeWalls`). One light, three
+ *  jobs across the journey:
+ *
+ *    1. PROMISE — a faint warm glow is already present at the end of
+ *       the corridor when the user parks at Navigate (~0.40) and
+ *       Encode (~0.636). Reads as "light at the end of the tunnel"
+ *       resolved by atmospheric perspective, not as a layer that
+ *       turned on. (Anchors the early-reveal `aMouth` particles to a
+ *       physical light rather than a floating density gradient.)
+ *
+ *    2. FRAME — the glow brightens through the Encode→Build
+ *       passthrough alongside `getWormholeExitWarp`, so the trumpet-
+ *       bell mouth rings splay open AROUND a brightening light source
+ *       instead of into empty space.
+ *
+ *    3. BACKLIGHT — yields gracefully to a low residual at the Build
+ *       park (~0.923). The residual persists through the park and the
+ *       epilogue (paintProgress pinned at 1) so the glow lives on as
+ *       the gyroscope's backlight rim — the light you travelled
+ *       toward becomes the light that haloes the intelligence layer.
+ *
+ *  Curve:
+ *    - 0.30 → 0.30 promise plateau across [0.30, 0.78]
+ *    - 0.30 → 1.00 build across [0.78, 0.86] (peak with the warp)
+ *    - 1.00 → 0.18 yield across [0.86, 0.93] (residual backlight)
+ *    - 0.18 thereafter (Build park + epilogue)
+ *
+ *  Returned 0..1; the painter scales by its own peak alpha. */
+export function getExitGlowEnvelope(paintProgress: number): number {
+  const promiseStart = 0.3;
+  const promiseLevel = 0.3;
+  const peakStart = 0.78;
+  const peakAt = 0.86;
+  const yieldEnd = 0.93;
+  // v3.12c: residual trimmed 0.18 → 0.12 — at the Build park the
+  // glow read as "the centre of the sphere lights up" rather than
+  // ambient backlight. The threshold wave now carries the exit
+  // event; the glow only needs to keep a quiet warm key behind
+  // the artifact.
+  const residual = 0.12;
+
+  if (paintProgress <= promiseStart) {
+    return promiseLevel * smoothstep(0.16, promiseStart, paintProgress);
+  }
+  if (paintProgress <= peakStart) {
+    return promiseLevel;
+  }
+  if (paintProgress <= peakAt) {
+    return lerp(promiseLevel, 1, smoothstep(peakStart, peakAt, paintProgress));
+  }
+  if (paintProgress <= yieldEnd) {
+    return lerp(1, residual, smoothstep(peakAt, yieldEnd, paintProgress));
+  }
+  return residual;
+}
+
+/** Mouth-channel yield fade (v3.12 aperture grammar).
+ *
+ *  Multiplied into the `uRevealMouth` channel so all mouth-bloom ring
+ *  particles (`aReveal == 2` in `LatentWormholeWalls`) clear BEFORE
+ *  the Build park. The mouth's job is to splay open through the
+ *  passthrough then YIELD — leaving a clean stage for the gyroscope
+ *  + sources/surfaces stack at the Build park (~0.923).
+ *
+ *  Window [0.85, 0.92]: rings finish their trumpet-bell flare with the
+ *  warp peak (0.85), then dissolve over the next 0.07 progress units
+ *  so they're invisible by the park. Distinct from
+ *  `getBuildApproachFade` (which fades the AMBIENT walls + latent
+ *  field over [0.86, 0.97]) — the mouth needs to clear earlier and
+ *  faster than the surrounding shell so it doesn't read as a halo
+ *  competing with the gyroscope as the park composition forms. */
+export function getMouthYieldFade(paintProgress: number): number {
+  return 1 - smoothstep(0.85, 0.92, paintProgress);
+}
+
+/** Substrate-realm THRESHOLD WAVE channel (v3.12c).
+ *
+ *  Drives `SubstrateTopography` — both the gravitational-wave ring
+ *  train that radiates out of the sphere at the wormhole exit AND
+ *  the per-point ignition of the realm terrain in the wave's wake
+ *  (each terrain point's delay = its screen radius from the sphere,
+ *  so the visible front and the ignition cross each screen position
+ *  together).
+ *
+ *    - 0 across the entire corridor (the realm must NOT be visible
+ *      while flying Encode→Build — the threshold event is the
+ *      moment, not a slow leak of information);
+ *    - sweeps 0 → 1 across [0.845, 0.925]: launches the instant
+ *      the intelligence beat begins (0.845) — as the mouth rings
+ *      yield (`getMouthYieldFade` [0.85, 0.92]) and the exit glow
+ *      crests — and completes as the camera settles into the park
+ *      (~0.923). Widened from the original 0.905 end (v3.12c ramp
+ *      pass) so the unfurl breathes instead of snapping. The
+ *      painter rides this through a cascaded damped follower with
+ *      a quintic remap, so even a single fast flick across the
+ *      window plays the cascade as ~a second of eased motion.
+ *
+ *  This is the Thoughtform answer to the full-screen "liquid"
+ *  section transitions of awwwards-school sites (nk.studio
+ *  reference): not a fluid mask — a gravitational wave in the
+ *  corridor's own oval line grammar, with the new realm igniting
+ *  in its wake. Scroll-symmetric: reversing retracts the wave into
+ *  the sphere and the realm dissolves with it. */
+export function getSubstrateRealmEnvelope(paintProgress: number): number {
+  return smoothstep(0.845, 0.925, paintProgress);
+}
+
 // ── Thoughtform compass flythrough ───────────────────────────────
 
 /** Per-ring flythrough state for the Thoughtform compass.
@@ -1212,10 +1329,19 @@ export function getBrandmarkAccretionLayers(progress: number): {
   stack: number;
 } {
   const { substrate, orbits, stack } = CORRIDOR_TIMELINE.accretion;
+  // Stack rides a QUINTIC smootherstep (zero velocity AND zero
+  // acceleration at both ends) instead of the cubic smoothstep the
+  // other layers use — paired with the second-order chase in
+  // `motionFollower.ts` this gives the sources/surfaces dock its
+  // editorial slow-in / slow-out speed ramp (v3.12c stack-ramp
+  // pass). Substrate/orbits keep the cubic: their unfolds are
+  // staggered per-ring internally and already read smooth.
+  const stackT = smoothstep(stack.start, stack.peakAt, progress);
+  const stackQuintic = stackT * stackT * stackT * (stackT * (stackT * 6 - 15) + 10);
   return {
     substrate: smoothstep(substrate.start, substrate.peakAt, progress),
     orbits: smoothstep(orbits.start, orbits.peakAt, progress),
-    stack: smoothstep(stack.start, stack.peakAt, progress),
+    stack: stackQuintic,
   };
 }
 

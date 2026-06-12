@@ -11,6 +11,391 @@
 
 ---
 
+## 2026-06-12 Revision (v3.12c) — The Crossing: gravitational-wave threshold + valley reposition
+
+Live-review follow-up to v3.12b. Two notes:
+
+1. **"We need to be higher in the sky."** The v3.12b terrain read
+   as a plain at eye level (near rows sweeping under the camera,
+   horizon at mid-frame). Camera + sphere positions are untouched
+   (corridor-owned); the TERRAIN dropped instead — base floor
+   `-1.3 → -3.4` world units below the flight line, an explicit
+   valley bowl (`REALM_BOWL_RISE 0.9 · edgeT^1.8` — deep floor
+   under the optical axis, flanks rising at the periphery),
+   relief amplitude raised for legibility from altitude, lateral
+   jitter tightened (0.55 → 0.4) so the dotted rows read as crisp
+   contour lines. Horizon now sits in the lower third; arriving at
+   Build reads as hanging in the sky over a vast topology.
+
+2. **"There's not really a transition — the topology suddenly
+   appears."** The v3.12b distance-staggered fade was too soft to
+   read as an event, and the exit glow's peak read as "the centre
+   of the sphere lights up". Replaced by **the Crossing** — a
+   gravitational-wave transition in
+   [SubstrateTopography.tsx](../../components/landing/home-v2/DepthGatewayScene/SubstrateTopography.tsx):
+   - **Wavefront ring train** — a dotted pearl-string front (the
+     corridor's primary matter) + double line stroke in gold, with
+     dawn / dawn-soft echo rings behind it, expanding out of the
+     sphere's limb (`WAVE_R_LAUNCH 1.5`) across the entire frame
+     (`WAVE_R_MAX 6.2`, past every corner at the park viewpoint).
+     Ellipse aspect 1.6 matches the wormhole shell's oval grammar.
+     Radius is LINEAR in phase — constant wave speed, physically
+     gravitational-wave-true, and it keeps the front legible while
+     crossing the mid-frame instead of racing to the edges.
+   - **Screen-radius ignition coupling** — each terrain point's
+     reveal delay equals its normalized screen radius from the
+     sphere (pinhole-projected at build time from the parked
+     camera), so the realm IGNITES exactly where the visible front
+     passes: one cascade, two media. Points at the front carry a
+     gold-lifted flash (×2.2 alpha, +50% size) and a 0.28-unit
+     vertical swell — the ground literally ripples as the wave
+     crosses it.
+   - **Damped wave channel** — the progress envelope
+     (`getSubstrateRealmEnvelope`, tightened to [0.845, 0.905])
+     rides a critically-damped local follower (response 6.5), so a
+     single fast wheel-flick across the threshold still plays the
+     cascade as ~0.5 s of motion. Scroll-symmetric: reversing
+     retracts the wave into the sphere and the realm dissolves
+     with it.
+
+   Glow rebalance (the "centre lights up" fix) in
+   [LatentWormholeWalls.tsx](../../components/landing/home-v2/DepthGatewayScene/LatentWormholeWalls.tsx) +
+   [sceneGeom.ts](../../components/landing/home-v2/DepthGatewayScene/sceneGeom.ts):
+   peak 0.55 → 0.38, residual 0.18 → 0.12, disc half 3.0 → 4.0 and
+   dropped 0.55 below the axis — an ambient wash on the valley
+   horizon behind the artifact's lower limb, not a bulb inside it.
+   The wave owns the exit event now; the glow is only its warm key.
+
+### Same-day follow-up 2: dissipation wave + editorial speed ramps
+
+Third live-review round. Three notes, three mechanisms:
+
+1. **"The ripple needs the same shape as our sphere… maybe not
+   concentric circles — a dissipation of particle effects."** The
+   ring train (line loops + pearl string, oval) is RETIRED. The
+   Crossing is now a **dissipating particle wave**: ~1,600 dots in
+   a CIRCULAR band (the sphere's own silhouette expanding), dense
+   spine with gaussian fringes (`aRadial·|aRadial|` scatter),
+   trailing wake stretching back toward the sphere, tiered sizes
+   with sparse bold pips (Colorpong "Cosmos" reference in dawn/
+   gold), colour cooling toward dawn-soft and alpha spending
+   itself (`dissipate · crest`) as the band travels — energy
+   dissipating through the latent medium, never a stamped ring.
+   All positions are computed in the vertex shader from one
+   `uFrontPhase` uniform; static buffers, one draw call.
+   Tuning lesson recorded: the first build spread the band to
+   ±1.7 world units over its whole life and it thinned into
+   unreadable specks — the spread must stay tight through the
+   crossing (`pow(phase, 1.6)` growth to ±0.9) so the front stays
+   coherent mid-frame and only dissolves at the exits.
+
+2. **"Sources/surfaces animate too quickly — AE-style speed
+   ramps."** Two mechanisms:
+   - the stack's raw curve in `getBrandmarkAccretionLayers` is now
+     QUINTIC (smootherstep — zero velocity and acceleration at
+     both ends) instead of cubic;
+   - the stack channel in `motionFollower.ts` now runs a CASCADED
+     second-order chase (`target → stackMid → state.stack`,
+     τ 0.17 s each). A single exponential has max velocity at
+     onset (ease-out only); the cascade has zero initial velocity
+     — true slow-in / fast-middle / slow-out, ~1 s settle,
+     frame-rate independent, still converging exactly.
+
+3. **"The topology appears really fast — jarring."** The unfurl
+   now rides the same ramp architecture: wave window widened
+   [0.845, 0.905] → **[0.845, 0.925]**, terrain channel runs a
+   cascaded two-stage local follower + quintic remap (the particle
+   front runs a snappier single-stage chase so the SHOCK leads and
+   the unfurl follows), ignition band widened 0.075 → 0.13 and
+   flash width 0.085 → 0.11 so each row breathes up instead of
+   popping.
+
+   Debug note: the first build read `state.clock.elapsedTime`
+   deltas for the follower dt and silently received dt = 0 in this
+   R3F setup — the followers never advanced (terrain stuck dark,
+   wave invisible). Fixed by using the `useFrame` `delta` argument,
+   the same pattern `MotionFollowerDriver` uses. Verify painter
+   followers with the delta argument, not clock arithmetic.
+
+### Same-day follow-up: unfurl cascade + stack re-sequencing
+
+Live review of the first Crossing build asked for two refinements:
+
+1. **Unfurl, don't radiate (terrain).** The terrain's per-point
+   delay was re-keyed from screen-radius-from-sphere to DEPTH from
+   the parked viewpoint (`WAVE_UNFURL_SPAN 0.72` across camera
+   distance 7 → 58, plus a small `WAVE_LATERAL_FAN 0.1` screen-x
+   term and jitter). The nearest ground now catches at the BOTTOM
+   of the frame the instant the wave launches, then the front
+   rolls away along the Z axis to the horizon — the realm unfurls
+   beneath the visitor while the ring train sweeps the sky above
+   it: one event, two motions.
+
+2. **Stack waits for the realm.** `CORRIDOR_TIMELINE.accretion.stack`
+   pushed `0.81/0.93 → 0.875/0.95` so the sources/surfaces streams
+   begin docking only after the wave has launched and the valley
+   is unfurling. Arrival sequence: wave fires → realm unfurls →
+   sources/surfaces flow in over the resolved realm → full stack
+   just after the park settles.
+
+### Threshold sequence (verified 2094×1103)
+
+| paintProgress | Read                                                                                                                    |
+| ------------: | ----------------------------------------------------------------------------------------------------------------------- |
+|         0.845 | Wave launches from the sphere's limb                                                                                    |
+|     0.86–0.87 | Ring train sweeps the frame; ground catches at the bottom edge and unfurls away toward the horizon; NO stack chrome yet |
+|         0.886 | Front clears the corners and dissipates; realm broadly unfurled                                                         |
+|         0.895 | Sources begin fading in over the resolved realm                                                                         |
+|         0.905 | Wave complete, realm fully resolved                                                                                     |
+|    0.923–0.95 | Build park — stack docks over the valley; no ring residue; quiet glow key                                               |
+
+---
+
+## 2026-06-12 Revision (v3.12b) — Realm transition: mandala retirement + substrate topography
+
+Same-day follow-up to the aperture grammar from live review. Two
+complaints landed together:
+
+1. **"Mandalas" in the pre-Build backdrop.** Nested concentric-ring
+   decorations hovering ahead of the camera through the
+   Encode→Build approach. Root cause: three ambient layers placed
+   ring-shaped landmarks in the leg-2 / Build-backdrop Z band that
+   the camera NEVER physically passes (it parks at Build short of
+   their Z) — so instead of sweeping past like leg-1 debris, they
+   hung static in the frame:
+   - `LatentTopographyContours` leg-2 catalogue (nested contour
+     basins = the literal mandala read);
+   - `InterGateCorridor` bands 3 + 4 (slow-SPINNING concentric
+     line-loop clusters between Diagnostic→Interstitial→Intelligence);
+   - `CelestialMotes` scattered into the FAR_Z band, lingering
+     until the shared 0.86–0.97 fade.
+
+2. **The space outside the wormhole was void.** Exiting a wormhole
+   should transport you to another realm; instead the Build park
+   backdrop was starfield + leftovers. Reference: the ORIGINAL
+   homepage's gateway topology (geometry extending into the
+   distance) and nk.studio's full-screen section transitions
+   (realm A → liquid mask → realm B with persistent foreground).
+
+### Changes
+
+**Mandala retirement:**
+
+- [LatentTopographyContours.tsx](../../components/landing/home-v2/DepthGatewayScene/LatentTopographyContours.tsx)
+  — leg-2 shard catalogue (5 contour + 3 ridge + 4 vector) deleted;
+  layer is leg-1-only now. `legRevealForZ(z, p)` simplified to
+  `legReveal(p)`.
+- [InterGateCorridor.tsx](../../components/landing/home-v2/DepthGatewayScene/InterGateCorridor.tsx)
+  — bands 3 + 4 (DG→Inter, Inter→IL) deleted; bands 1 + 2 on
+  passthrough-01 unchanged (those ARE physically passed).
+- [CelestialMotes.tsx](../../components/landing/home-v2/DepthGatewayScene/CelestialMotes.tsx)
+  — build-approach clear pulled earlier: `min(getBuildApproachFade,
+1 - smoothstep(0.76, 0.84, p))` so motes are gone before the
+  threshold sequence instead of lingering to 0.97.
+
+**Substrate realm (new layer):**
+
+- [SubstrateTopography.tsx](../../components/landing/home-v2/DepthGatewayScene/SubstrateTopography.tsx)
+  — a latent-topography particle landscape extending from under the
+  parked camera's lower frame edge (`INT_Z + 3`) to `INT_Z − 52`:
+  30 dotted terrain rows × 150 samples (~4.5k points, one draw
+  call), full frustum width per row + margin, deterministic
+  hash-seeded relief. Quiet basin under the optical axis (the
+  Build composition floats over calm ground), ridges rising at the
+  frame edges, base lifting toward a horizon band. Dawn-soft
+  substrate, dawn accents, gold reserved for sparse crest pips on
+  the outer ridges. Additive, `depthWrite: false`, mobile-narrow
+  skipped, world-fixed, zero idle motion.
+- `getSubstrateRealmEnvelope` (new in
+  [sceneGeom.ts](../../components/landing/home-v2/DepthGatewayScene/sceneGeom.ts))
+  — 0 for the whole corridor; ramps [0.848, 0.93].
+
+### The threshold transition ("transported to another realm")
+
+The realm is INVISIBLE during the entire corridor flight — no leak
+of information while travelling. The reveal is choreographed into
+the existing exit beats so the swap reads as one event:
+
+| paintProgress | Beat                                                                                                                                                                                 |
+| ------------: | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+|   0.78 → 0.86 | Exit glow builds to peak (brightest moment of the journey)                                                                                                                           |
+|   0.85 → 0.92 | Mouth rings yield (`getMouthYieldFade`)                                                                                                                                              |
+|  0.848 → 0.93 | Realm blooms in — per-point reveal staggered by distance from the threshold origin (Build station), so the topology resolves OUTWARD from the light: near ground first, horizon last |
+|   0.86 → 0.93 | Glow dims to backlight residual — as the light yields, the realm is simply THERE                                                                                                     |
+
+This is the Thoughtform answer to nk.studio's liquid realm
+transitions: not a fluid mask — a **threshold of light** with the
+new world's geometry blooming outward from it. Geometric, latent,
+scroll-symmetric (reversing dissolves the realm back into the
+light before the wormhole re-forms).
+
+During the epilogue the realm recedes to a 0.4 luminance floor
+(`REALM_EPILOGUE_FLOOR`) so the planet flyover + "billions" title
+own the frame while the realm keeps the world's floor.
+
+### Verification (2094×1103 desktop)
+
+- 0.76 / 0.80: corner mandalas gone; corridor structure (aperture
+  frame + rails + rim ring) carries the travel read; no realm leak.
+- 0.858: threshold peak — glow brightest, rings yielding, Build
+  chrome forming, realm not yet resolved.
+- 0.885: realm mid-bloom — near rows sweeping in beneath the
+  composition, horizon still resolving.
+- 0.923 (Build park): full realm — particle topology extending to
+  the horizon under the gyroscope + sources/surfaces columns;
+  basin keeps the centre calm; caption readable.
+- Epilogue mid + title: planet limb + clean sky; realm receded, no
+  competition with the title.
+
+---
+
+## 2026-06-12 Revision (wormhole-walls v3.12) — Encode→Build exit: dust → aperture grammar
+
+The leg-2 exit (Encode → Build mouth) was articulated by particle
+DENSITY through three polish rounds (v3.9 → v3.11):
+volumetric funnel field of 3,200 dots + 7-ring 8-petal flower
+bloom + radial petal ribs. Even after density trims, color-cap
+trims, and yield-window tuning, the mouth still read as busy from
+the Navigate / Encode parks and visually competed with the
+foreground gyroscope ("intelligence layer") that the corridor
+exits onto. Three diagnoses landed simultaneously:
+
+1. **Density-as-articulation creates a noise floor.** Three
+   independently-tuned additive systems (funnel field 3.2k dots,
+   ring bloom 7 rings × up to 88 dots × 8 petals + ribs, 520
+   streaks) overlap in the same world Z band and sum into texture
+   that no single tuning knob can calm — the mouth at distance
+   reads as warm haze around the gyroscope's silhouette.
+
+2. **Shape-language conflict.** The 8-petal radial-flower mouth
+   is organic; the gyroscope is a precision-instrument grammar
+   (gimbal rings + dotted shell). The two systems fight each
+   other for the eye.
+
+3. **Gold-on-gold.** The funnel rim ramped to brand gold; the
+   gyroscope is the page's gold mass. Two competing accents.
+
+### Aperture grammar (v3.12) — structure plus light, not dust
+
+The mouth is now articulated as **structure** (clean dotted ring
+cadence with geometric Z compression) plus **light** (a single
+warm radial-gradient quad seated past the mouth). The dust is
+gone.
+
+**Three jobs across the journey, never more than one at a time:**
+
+```mermaid
+flowchart LR
+    promise["Navigate / Encode parks\nPROMISE\nfaint warm glow at\ncorridor end"] --> frame["Passthrough 0.70-0.85\nFRAME\nring cadence accelerates,\nwarp splays rings past you"] --> backlight["Build park 0.923+\nBACKLIGHT\nrings yielded; residual\nglow rims the gyroscope"]
+```
+
+The light you travel toward becomes the light that backlights the
+intelligence layer at the destination — the metaphor and the
+geometry agree.
+
+### Implementation
+
+Files:
+[components/landing/home-v2/DepthGatewayScene/LatentWormholeWalls.tsx](../../components/landing/home-v2/DepthGatewayScene/LatentWormholeWalls.tsx)
+and
+[components/landing/home-v2/DepthGatewayScene/sceneGeom.ts](../../components/landing/home-v2/DepthGatewayScene/sceneGeom.ts).
+
+1. **Funnel field retired.** `buildExitFunnelField` and all
+   `EXIT_FUNNEL_*` constants deleted. ~3,200 additive points
+   removed at the moment of heaviest leg-2 overdraw.
+
+2. **Ring cadence (rebuilt `buildExitMouthBloom`).**
+   - Rings: 7 → **6**; max dots/ring: 88 → **64**.
+   - Petal modulation (`EXIT_MOUTH_PETAL_*`) and petal ribs
+     deleted. Rings are clean dotted ellipses — same vocabulary
+     as the existing cross-rings and the gimbal rings of the
+     intelligence layer. Shape grammar harmonised.
+   - Linear ring spacing replaced with **geometric Z compression**
+     (`EXIT_MOUTH_Z_CADENCE_POWER = 1.7`): inner rings widely
+     spaced, outer rings clustered toward the rim. As the camera
+     dollies into them, the rhythm of rings passing perceptibly
+     accelerates — the runway-approach-light cadence
+     communicating "exit approaching" kinesthetically, not by
+     mass.
+   - Palette discipline: dawn-soft → dawn ramp; gold tint capped
+     at the absolute rim and limited to 0.25 mix. Gold belongs to
+     the gyroscope.
+   - The trumpet-bell flare under `uExitWarp` (high-`aMouth` rim
+     particles splay outward at peak warp ≈ 0.85) is unchanged —
+     the rebuild is about WHAT carries the static read, not the
+     warp dynamics.
+
+3. **Exit glow (new `<ExitGlow>` mesh).** A single
+   `THREE.PlaneGeometry` quad seated `EXIT_GLOW_Z_BEHIND_MOUTH = 0.6`
+   units past the leg-2 mouth Z (i.e., past the intelligence
+   station anchor). Two-stage radial-gradient shader pattern
+   reused from
+   [`ThoughtformAtmosphere.tsx`](../../components/landing/home-v2/DepthGatewayScene/ThoughtformAtmosphere.tsx)
+   `bootGlowFragmentShader`. Half-extent 3.0 world units —
+   `2*3.0` plane reads as a tiny "light at end of tunnel" at
+   Navigate-park distance (~32 units) and a warm fill at
+   Build-park distance (~6.8 units). Same physical disk reads
+   correctly at both beats; no progress-keyed scaling. Additive
+   blending so the gyroscope silhouette gains a backlit rim
+   where the two overlap.
+
+4. **`getExitGlowEnvelope` (new in `sceneGeom.ts`).** Drives the
+   glow opacity:
+   - `0.30 → 0.30` promise plateau across `[0.30, 0.78]`
+     (visible as a faint warm signature from Navigate / Encode
+     parks)
+   - `0.30 → 1.00` build across `[0.78, 0.86]` (peaks with the
+     warp)
+   - `1.00 → 0.18` yield across `[0.86, 0.93]` to a low residual
+   - `0.18` thereafter (Build park + epilogue)
+
+   Multiplied by `EXIT_GLOW_PEAK_OPACITY = 0.55` so the disk is
+   ambient light, not a bright object.
+
+5. **`getMouthYieldFade` (new in `sceneGeom.ts`).** Multiplied
+   into `uRevealMouth` per frame. Rings clear over `[0.85, 0.92]`
+   so they're invisible by the Build park (~0.923) — the
+   gyroscope gets a clean stage. Distinct from
+   `getBuildApproachFade` `[0.86, 0.97]` (which fades the
+   surrounding ambient walls + latent field). The mouth needs to
+   clear earlier and faster than the shell so it doesn't read as
+   a halo competing with the hero.
+
+6. **Streaks unchanged.** The 520 line streaks (velocity-gated,
+   bell envelope `[0.64, 0.88]`) are exactly the travel energy
+   that makes the passthrough feel kinetic and they don't
+   compete with the gyroscope at any park. Kept verbatim.
+
+### Why the earlier "reveal on approach" attempts failed
+
+Several v3.x rounds tried tying the mouth to camera distance via
+progress windows. They felt like a door spawning at the end of a
+hallway — because they were progress-keyed pop-ins. The right
+physical answer is **atmospheric perspective**: details emerge
+around a light that was always there. The exit glow is that
+always-there light; the rings are details that resolve out of
+haze around it via the existing `aMouth` far-fade extension.
+Nothing pops in.
+
+### Verification (1440-class desktop, browser at 2094×1103)
+
+Five-beat scrub on `/test/home-v2`:
+
+| paintProgress | Beat               | Reads as                                                                                                                                                                                               |
+| ------------: | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+|          0.40 | Navigate park      | Faint warm signature behind the gyro at the corridor's vanishing point. No competing dust halo.                                                                                                        |
+|         0.636 | Encode park        | **Stage is clean.** Gyroscope is the sole focal mass. Dramatic improvement vs. v3.11 which still showed dust spurs around the upper-right of the sphere and a diffuse warm haze over ~⅓ of the screen. |
+|          0.70 | Leaving Encode     | Aperture frame visible behind gyro; first hints of rim ring above.                                                                                                                                     |
+|          0.80 | Warp peak approach | Trumpet-bell splay clearly readable as a horizontal warm band passing through the brandmark — the rim ring opening.                                                                                    |
+|          0.88 | Pre-park           | Build composition forming (sources/surfaces ports docking); rings yielding; no halo competition.                                                                                                       |
+|         0.923 | Build park         | Walls fully faded; rings gone; **residual exit glow visible as backlight rim around the gyroscope's hub.** Light-at-end-of-tunnel becomes intelligence-layer backlight as designed.                    |
+
+Mobile-narrow (`<760px`) gating on `LatentWormholeWalls` is
+unchanged — the layer is skipped, so the new aperture has no
+mobile surface to verify.
+
+---
+
 ## 2026-06-10 Revision (v3.14) — Polish round 4: split cartouche + magnetic field streams
 
 Same-day follow-up to v3.13 from live review:
@@ -3116,6 +3501,42 @@ bottom-anchored column.
   cards stack full-width below (no collapse).
 - Scroll-back reversible: Build park re-centres, panel disengages.
 - `npm run lint` clean (0 errors on touched files).
+
+## 2026-06-11 revision — epilogue v4 family REMOVED; v3.x planet-landing flyover restored
+
+User direction: the docked-right artifact + three-card flywheel panel
+read as a detour. Remove the entire v4/v4.1/v4.2 epilogue and restore
+the v3.x camera flyover — only the upper half of the sphere in frame,
+"as if a spaceship flying over it", with the billions title landing
+top-centre as the closing chord.
+
+### What was restored (from `9272549`, the last pre-v4 commit)
+
+Wholesale: `epilogueTimeline.ts` (BUILD_OUT / APPROACH / LAND /
+TITLE_IN bands; `getEpiloguePlanetScale`), `sceneGeom.ts`
+(`getEpilogueCameraPose` back; `getEpilogueDockTransform` gone),
+`FlyingCameraRig`, `BrandmarkAccretionShell`, `ShellEncode`,
+`ShellStack`, `ShellSubstrateGyro`, `shellGeom`, `HomeCorridor`,
+`ProjectedBrandmarkActor`, `useDepthScroll` (820svh stage /
+`EPILOGUE_START` 620/820), `CorridorProgressRail`.
+
+Deleted: `CorridorFlywheelPanel.tsx` (+ its `FallbackFlywheelSummary`
+mount in the fallback corridor) and all `home-v2-flywheel-*` CSS.
+
+### Surgical merges (files that gained unrelated work after v4)
+
+- `CorridorStationHeaders.tsx` — SIGNAL block ("The labs just bet
+  billions on the same layer.") re-added with its BUILD_OUT/TITLE_IN
+  drivers, ON TOP of the 2026-06-11 V8 console chrome (TitleConsole /
+  SupportConsole + `is-armed` unfold). The sig block is not `split`,
+  so it renders without consoles — `is-armed` on it is a no-op.
+- `home-v2.css` — restored to the v3.x base (820svh stage history,
+  `--signal` styles, `data-corridor-epilogue` rule) then the V8
+  console block re-applied (`__head` top `clamp(48px, 6.8vh, 84px)`,
+  `__foot` bottom `clamp(28px, 5svh, 64px)`, console/frame/bracket/
+  telemetry styles, 920px console width).
+
+The v4 sections above stay as history; this revision supersedes them.
 
 ## References
 

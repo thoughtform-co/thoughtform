@@ -7,8 +7,6 @@ import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import {
   type DepthFocusWindow,
   STATION_DIAGNOSTIC,
-  STATION_INTELLIGENCE,
-  STATION_INTERSTITIAL,
   STATION_THOUGHTFORM,
   depthOpacityForWorldPosition,
   getBuildApproachFade,
@@ -167,27 +165,33 @@ function RingBand({
 
 /**
  * InterGateCorridor — composes ring debris bands at intermediate Z
- * stations between the four gates.
+ * stations between the gates.
  *
  * Bands:
  *   1. Approach band, Thoughtform -> Diagnostic — sits 1/3 of
  *      the way from Thoughtform to Diagnostic.
  *   2. Mid band, Thoughtform -> Diagnostic — sits 2/3 of the
  *      way to Diagnostic.
- *   3. Diagnostic -> Interstitial.
- *   4. Interstitial -> Intelligence.
  *
- *  Two bands across passthrough-01 (was one) keep the longer
- *  fly-through populated with light debris parallax without
- *  reintroducing a topology/tunnel grid — each band is still
- *  just faint orbital ring fragments at varied radii. Their
- *  opacity now follows depth, matching the gate painters.
+ *  Two bands across passthrough-01 keep the longer fly-through
+ *  populated with light debris parallax without reintroducing a
+ *  topology/tunnel grid — each band is still just faint orbital
+ *  ring fragments at varied radii. Their opacity follows depth,
+ *  matching the gate painters.
+ *
+ *  The passthrough-02 bands (Diagnostic → Interstitial and
+ *  Interstitial → Intelligence) were RETIRED in the v3.12
+ *  realm-transition pass. The camera parks at Build BEFORE
+ *  physically reaching either band's Z, so both hovered ahead of
+ *  the camera through the whole Encode → Build approach as slowly
+ *  spinning concentric circles — the "mandala" read in the exit
+ *  backdrop. The wormhole exit aperture (`LatentWormholeWalls`)
+ *  and the substrate realm (`SubstrateTopography`) own that zone
+ *  now.
  */
 export function InterGateCorridor() {
   const tfZ = STATION_THOUGHTFORM.position[2];
   const dgZ = STATION_DIAGNOSTIC.position[2];
-  const interZ = STATION_INTERSTITIAL.position[2];
-  const ilZ = STATION_INTELLIGENCE.position[2];
 
   // Two intermediate Z stations across the Thoughtform ->
   // Diagnostic gap. Splitting the run means each band is a
@@ -216,26 +220,6 @@ export function InterGateCorridor() {
         spinRate={-0.05}
         color="#f0e6cf"
         alphaCeiling={0.18}
-      />
-      <RingBand
-        centreZ={(dgZ + interZ) / 2}
-        offsetX={-0.3}
-        ringCount={14}
-        minRadius={0.3}
-        maxRadius={1.1}
-        spinRate={-0.05}
-        color="#f0e6cf"
-        alphaCeiling={0.2}
-      />
-      <RingBand
-        centreZ={(interZ + ilZ) / 2}
-        offsetX={0.25}
-        ringCount={14}
-        minRadius={0.25}
-        maxRadius={1.05}
-        spinRate={0.04}
-        color="#ebe3d6"
-        alphaCeiling={0.2}
       />
     </>
   );

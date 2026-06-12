@@ -3,7 +3,7 @@
 import { useFrame, useThree } from "@react-three/fiber";
 import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
-import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
+import { smoothstep, useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import { getBuildApproachFade, getThoughtformBootEnvelope } from "./sceneGeom";
 
 /**
@@ -375,10 +375,18 @@ export function CelestialMotes() {
     const absV = Math.abs(velocity);
     const velocityT = Math.min(1, absV * 1.8);
     const bootEnv = getThoughtformBootEnvelope(transform.paintProgress);
-    // Build-approach declutter (v3.1) — celestial motes drift across
-    // the corridor as ambient; fade them out across the approach to
-    // the Build park.
-    const buildFade = getBuildApproachFade(transform.paintProgress);
+    // Build-approach declutter — celestial motes drift across the
+    // corridor as ambient; fade them out across the approach to the
+    // Build park. v3.12 realm-transition pass: the clear is pulled
+    // EARLIER than the shared `getBuildApproachFade` window
+    // ([0.86, 0.97]) — motes scattered in the FAR_Z band would
+    // otherwise still hover in the wormhole-mouth backdrop while the
+    // exit aperture + substrate realm need a clean stage. Motes are
+    // fully gone by 0.84, just before the threshold sequence begins.
+    const buildFade = Math.min(
+      getBuildApproachFade(transform.paintProgress),
+      1 - smoothstep(0.76, 0.84, transform.paintProgress)
+    );
     const target =
       (AMBIENT_OPACITY + velocityT * (PEAK_OPACITY - AMBIENT_OPACITY) + bootEnv * BOOT_LIFT) *
       buildFade;

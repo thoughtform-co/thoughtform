@@ -64,6 +64,17 @@ const MOTION_FOLLOWER_TAU_REVEAL_S = 0.2;
  *  camera feels attached to the scroll, but slow enough that wheel
  *  steps melt into one continuous glide (~0.55s settle). */
 const MOTION_FOLLOWER_TAU_EPILOGUE_S = 0.18;
+/** STACK channel time constant — used TWICE (cascaded second-order
+ *  chase, see below). The sources/surfaces dock is the corridor's
+ *  final reveal and reads best as an editorial speed ramp: a single
+ *  exponential has its maximum velocity at onset (ease-out only),
+ *  which made the stack LEAP into frame on a flick. Cascading two
+ *  exponentials gives the output zero initial velocity — a true
+ *  slow-in / fast-middle / slow-out S-curve, the After-Effects-style
+ *  ramp — while staying frame-rate independent and converging to
+ *  the exact scrubbed value when the user parks (fully reversible).
+ *  Settle ≈ 3·(2·tau) ≈ 1.0 s. (v3.12c stack-ramp pass.) */
+const MOTION_FOLLOWER_TAU_STACK_S = 0.17;
 
 /** `paintProgress` jump (per frame) above which we treat the change
  *  as a TELEPORT (hash nav, scroll restore on reload) and snap every
@@ -81,6 +92,11 @@ const state: MotionFollowerState = {
   epilogue: 0,
 };
 
+/** Intermediate stage of the stack's cascaded (second-order) chase:
+ *  `stackMid` chases the raw target, `state.stack` chases `stackMid`.
+ *  The composition has zero velocity at onset — the S-ramp. */
+let stackMid = 0;
+
 let lastPaintProgress: number | null = null;
 
 /** Snap every channel straight to its target (no easing). Used on the
@@ -91,6 +107,7 @@ export function snapMotionFollower(targets: MotionFollowerState): void {
   state.substrate = targets.substrate;
   state.orbits = targets.orbits;
   state.stack = targets.stack;
+  stackMid = targets.stack;
   state.epilogue = targets.epilogue;
 }
 
@@ -139,10 +156,15 @@ export function driveMotionFollower(
   const kPan = 1 - Math.exp(-dt / MOTION_FOLLOWER_TAU_PAN_S);
   const kReveal = 1 - Math.exp(-dt / MOTION_FOLLOWER_TAU_REVEAL_S);
   const kEpilogue = 1 - Math.exp(-dt / MOTION_FOLLOWER_TAU_EPILOGUE_S);
+  const kStack = 1 - Math.exp(-dt / MOTION_FOLLOWER_TAU_STACK_S);
   state.panOffsetX += (targets.panOffsetX - state.panOffsetX) * kPan;
   state.substrate += (targets.substrate - state.substrate) * kReveal;
   state.orbits += (targets.orbits - state.orbits) * kReveal;
-  state.stack += (targets.stack - state.stack) * kReveal;
+  // Stack: cascaded second-order chase (target → stackMid → state) —
+  // zero-velocity onset gives the sources/surfaces dock its
+  // editorial slow-in / slow-out ramp. See TAU_STACK_S note above.
+  stackMid += (targets.stack - stackMid) * kStack;
+  state.stack += (stackMid - state.stack) * kStack;
   state.epilogue += (targets.epilogue - state.epilogue) * kEpilogue;
   // Settle the epilogue chase exactly on target once the remaining
   // gap is sub-perceptual, so the parked pose is byte-identical to
