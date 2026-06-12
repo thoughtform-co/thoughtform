@@ -1,0 +1,778 @@
+.handoff-lab {
+  --handoff-progress: 0;
+  --handoff-epilogue-progress: 0;
+  position: relative;
+  overflow-x: clip;
+  background:
+    radial-gradient(circle at 78% 18%, rgba(202, 165, 84, 0.08), transparent 34vw),
+    radial-gradient(circle at 20% 72%, rgba(91, 122, 78, 0.08), transparent 38vw),
+    var(--void, #050403);
+  color: var(--dawn, #ece3d6);
+}
+
+.handoff-lab__epilogue {
+  position: relative;
+  height: 185svh;
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  background: var(--void, #050403);
+  isolation: isolate;
+  z-index: 3;
+}
+
+.handoff-lab__epilogue-sticky {
+  position: sticky;
+  top: 0;
+  width: 100%;
+  height: 100svh;
+  overflow: hidden;
+  background: var(--void, #050403);
+}
+
+.handoff-lab__scene {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+}
+
+.handoff-lab__scene canvas {
+  display: block;
+}
+
+/* Push-back dim — additive void layer over the canvas. Driven by the
+   cover progress (orbit approach-cover) so the 3D space recedes into
+   darkness while the services layer slides over it. Sits below the
+   pivot copy (z 18), above the canvas (z 5). */
+.handoff-lab__scene-dim {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  pointer-events: none;
+  background: var(--void, #050403);
+  opacity: calc(var(--handoff-cover-progress, 0) * 0.6);
+}
+
+.handoff-lab__pivot {
+  position: absolute;
+  left: 50%;
+  top: clamp(72px, 11vh, 140px);
+  z-index: 18;
+  width: min(86vw, 720px);
+  transform: translate3d(-50%, calc(var(--handoff-epilogue-progress) * -18px), 0);
+  text-align: center;
+  opacity: calc(0.22 + var(--handoff-epilogue-progress) * 0.78);
+  pointer-events: none;
+}
+
+.handoff-lab__kicker {
+  margin: 0 0 14px;
+  font-family: var(--font-pt-mono, ui-monospace, monospace);
+  font-size: 10px;
+  line-height: 1;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--gold, #caa554);
+}
+
+.handoff-lab__pivot h1,
+.handoff-lab__scenario-head h2,
+.handoff-lab__dock h3 {
+  margin: 0;
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-weight: 400;
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+}
+
+.handoff-lab__pivot h1 {
+  font-size: clamp(32px, 4.6vw, 72px);
+  line-height: 0.98;
+  color: var(--dawn, #ece3d6);
+}
+
+.handoff-lab__pivot p:last-child {
+  max-width: 54ch;
+  margin: clamp(18px, 2.4vh, 28px) auto 0;
+  font-size: clamp(16px, 1.2vw, 20px);
+  line-height: 1.55;
+  color: rgba(236, 227, 214, 0.74);
+}
+
+.handoff-lab__services {
+  position: relative;
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  min-height: 360svh;
+  padding: clamp(72px, 10vh, 132px) clamp(20px, 5vw, 96px) clamp(88px, 14vh, 160px);
+  background:
+    linear-gradient(
+      180deg,
+      var(--void, #050403) 0%,
+      var(--surface-0, #0a0908) 18%,
+      var(--surface-1, #0f0e0c) 100%
+    ),
+    var(--void, #050403);
+  isolation: isolate;
+  z-index: 4;
+}
+
+.handoff-lab__services::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, rgba(236, 227, 214, 0.05) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(236, 227, 214, 0.035) 1px, transparent 1px);
+  background-size: 17vw 11vh;
+  mask-image: radial-gradient(circle at 50% 20%, black, transparent 72%);
+  opacity: 0.2;
+}
+
+.handoff-lab__scenario-head {
+  position: relative;
+  z-index: 2;
+  width: min(92vw, 1040px);
+  margin: 0 auto clamp(72px, 11vh, 128px);
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(280px, 0.75fr);
+  gap: clamp(28px, 6vw, 96px);
+  align-items: end;
+}
+
+.handoff-lab__scenario-head h2 {
+  max-width: 13ch;
+  font-size: clamp(48px, 7vw, 104px);
+  line-height: 0.92;
+  color: var(--dawn, #ece3d6);
+}
+
+.handoff-lab__scenario-head p {
+  margin: 0;
+  font-size: clamp(18px, 1.6vw, 25px);
+  line-height: 1.35;
+  color: rgba(236, 227, 214, 0.84);
+}
+
+.handoff-lab__scenario-head span {
+  display: block;
+  grid-column: 2;
+  max-width: 54ch;
+  margin-top: 18px;
+  font-family: var(--font-pt-mono, ui-monospace, monospace);
+  font-size: 10px;
+  line-height: 1.6;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(236, 227, 214, 0.44);
+}
+
+.handoff-lab__services-grid {
+  position: relative;
+  z-index: 2;
+  width: min(94vw, 1240px);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(280px, 0.82fr) minmax(0, 1fr);
+  gap: clamp(40px, 8vw, 120px);
+  align-items: start;
+}
+
+.handoff-lab__artifact {
+  position: sticky;
+  top: clamp(88px, 15vh, 150px);
+  min-height: min(68svh, 680px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 22px;
+}
+
+.handoff-lab__artifact p {
+  margin: 0;
+  font-family: var(--font-pt-mono, ui-monospace, monospace);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(236, 227, 214, 0.48);
+}
+
+.handoff-lab__artifact-shell {
+  --artifact-size: clamp(250px, 30vw, 430px);
+  position: relative;
+  width: var(--artifact-size);
+  height: var(--artifact-size);
+  border: 1px solid rgba(236, 227, 214, 0.1);
+  background:
+    radial-gradient(circle at 48% 44%, rgba(202, 165, 84, 0.2), transparent 12%),
+    radial-gradient(circle at 52% 58%, rgba(91, 122, 78, 0.18), transparent 24%),
+    radial-gradient(circle, rgba(236, 227, 214, 0.065), transparent 60%);
+  clip-path: polygon(0 9%, 9% 0, 100% 0, 100% 91%, 91% 100%, 0 100%);
+}
+
+.handoff-lab__artifact-shell::before,
+.handoff-lab__artifact-shell::after,
+.handoff-lab__artifact-orbit,
+.handoff-lab__artifact-band,
+.handoff-lab__artifact-mark {
+  position: absolute;
+  pointer-events: none;
+}
+
+.handoff-lab__artifact-shell::before {
+  content: "";
+  inset: 14%;
+  border: 1px solid rgba(202, 165, 84, 0.28);
+  transform: rotate(45deg);
+}
+
+.handoff-lab__artifact-shell::after {
+  content: "";
+  inset: 31%;
+  background: radial-gradient(
+    circle,
+    rgba(202, 165, 84, 0.26),
+    rgba(10, 9, 8, 0.3) 54%,
+    transparent 64%
+  );
+  box-shadow: 0 0 60px rgba(202, 165, 84, 0.16);
+}
+
+.handoff-lab__artifact-orbit {
+  inset: 9%;
+  border: 1px solid rgba(236, 227, 214, 0.15);
+  transform: rotate(var(--orbit-rotation, 0deg)) scaleY(0.62);
+}
+
+.handoff-lab__artifact-orbit--mid {
+  inset: 20%;
+  --orbit-rotation: 38deg;
+  border-color: rgba(202, 165, 84, 0.24);
+}
+
+.handoff-lab__artifact-orbit--inner {
+  inset: 31%;
+  --orbit-rotation: -28deg;
+  border-color: rgba(91, 122, 78, 0.34);
+}
+
+.handoff-lab__artifact-band {
+  left: 8%;
+  right: 8%;
+  top: 50%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(202, 165, 84, 0.54), transparent);
+}
+
+.handoff-lab__artifact-band--a {
+  transform: rotate(16deg);
+}
+
+.handoff-lab__artifact-band--b {
+  transform: rotate(-32deg);
+  opacity: 0.55;
+}
+
+.handoff-lab__artifact-mark {
+  left: 50%;
+  top: 50%;
+  z-index: 2;
+  width: 18%;
+  height: 18%;
+  transform: translate(-50%, -50%);
+  filter: drop-shadow(0 0 18px rgba(202, 165, 84, 0.55));
+}
+
+.handoff-lab__service-flow {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(52px, 13vh, 140px);
+}
+
+.handoff-lab__service {
+  position: relative;
+  min-height: 76svh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: clamp(28px, 4vw, 54px);
+  border-top: 1px solid rgba(236, 227, 214, 0.1);
+  border-bottom: 1px solid rgba(236, 227, 214, 0.06);
+  background:
+    linear-gradient(90deg, rgba(236, 227, 214, 0.035), transparent 42%), rgba(10, 9, 8, 0.34);
+}
+
+.handoff-lab__service::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 9px;
+  height: 9px;
+  background: var(--gold, #caa554);
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.handoff-lab__service-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 22px;
+  font-family: var(--font-pt-mono, ui-monospace, monospace);
+  font-size: 10px;
+  line-height: 1;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.handoff-lab__service-meta span {
+  color: var(--gold, #caa554);
+}
+
+.handoff-lab__service-meta strong {
+  color: var(--dawn, #ece3d6);
+}
+
+.handoff-lab__service-meta em {
+  font-style: normal;
+  color: rgba(236, 227, 214, 0.42);
+}
+
+.handoff-lab__service h3 {
+  max-width: 12ch;
+  margin: 0 0 20px;
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-size: clamp(42px, 5.8vw, 86px);
+  font-weight: 400;
+  line-height: 0.94;
+  letter-spacing: -0.035em;
+  color: var(--dawn, #ece3d6);
+  text-wrap: balance;
+}
+
+.handoff-lab__service p {
+  max-width: 62ch;
+  margin: 0;
+  font-size: clamp(15px, 1.15vw, 18px);
+  line-height: 1.62;
+  color: rgba(236, 227, 214, 0.68);
+}
+
+.handoff-lab__service-line {
+  margin-bottom: 18px !important;
+  font-size: clamp(19px, 1.55vw, 25px) !important;
+  line-height: 1.34 !important;
+  color: rgba(236, 227, 214, 0.92) !important;
+}
+
+.handoff-lab__service dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  max-width: 760px;
+  margin: clamp(28px, 4vh, 42px) 0 0;
+}
+
+.handoff-lab__service dl div {
+  padding: 15px 16px;
+  border: 1px solid rgba(236, 227, 214, 0.09);
+  background: rgba(5, 4, 3, 0.38);
+}
+
+.handoff-lab__service dt {
+  margin: 0 0 8px;
+  font-family: var(--font-pt-mono, ui-monospace, monospace);
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--gold, #caa554);
+}
+
+.handoff-lab__service dd {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: rgba(236, 227, 214, 0.68);
+}
+
+.handoff-lab__dock {
+  position: relative;
+  z-index: 2;
+  width: min(92vw, 980px);
+  margin: clamp(88px, 16vh, 180px) auto 0;
+  padding: clamp(24px, 4vw, 48px);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 32px;
+  align-items: end;
+  border: 1px solid rgba(202, 165, 84, 0.24);
+  background:
+    linear-gradient(90deg, rgba(202, 165, 84, 0.08), transparent 48%), rgba(10, 9, 8, 0.78);
+  clip-path: polygon(0 18px, 18px 0, calc(100% - 18px) 0, 100% 18px, 100% 100%, 0 100%);
+}
+
+.handoff-lab__dock h3 {
+  max-width: 15ch;
+  font-size: clamp(34px, 4.5vw, 72px);
+  line-height: 0.96;
+}
+
+.handoff-lab__dock p:last-child {
+  max-width: 58ch;
+  margin: 20px 0 0;
+  color: rgba(236, 227, 214, 0.66);
+  line-height: 1.58;
+}
+
+.handoff-lab__dock a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 116px;
+  min-height: 44px;
+  padding: 12px 18px;
+  border: 1px solid rgba(202, 165, 84, 0.42);
+  color: var(--gold, #caa554);
+  font-family: var(--font-pt-mono, ui-monospace, monospace);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  text-decoration: none;
+  background: rgba(202, 165, 84, 0.06);
+}
+
+/* ── Scenario A: approach-and-cover transition (3D → 2D) ──────────────
+   The seam is choreographed instead of a plain document break:
+
+   1. The epilogue runway grows by one viewport (285svh) so the scene
+      stays PINNED while the services layer arrives.
+   2. The services section pulls itself up over that extra viewport
+      (margin-top: -100svh) and slides OVER the pinned scene — a cover
+      transition, the same grammar as the v7 sticky covers.
+   3. During the cover window (`--handoff-cover-progress` 0 → 1) the
+      scene pushes back (small scale + translate) and dims, the pivot
+      copy lifts away, and the intelligence-layer artifact arrives
+      centred over the receding space with a parallax lag.
+   4. Once the section pins, the artifact glides right into the
+      instrument slot (deadrabbit pattern) and stays sticky while the
+      service readouts scroll past on the left. */
+
+.handoff-lab[data-scenario="orbit"] .handoff-lab__epilogue {
+  height: 285svh;
+}
+
+.handoff-lab[data-scenario="orbit"] .handoff-lab__services {
+  margin-top: -100svh;
+  padding-top: 0;
+  /* Intentionally transparent at the top (ADR-008 rule 2 exception):
+     the pinned epilogue scene (sibling beneath at z 3) is MEANT to
+     show through while this layer slides over it. The gradient
+     re-shields to full opacity within ~96svh, before any later
+     content can sit over the gateway. */
+  background: linear-gradient(
+    180deg,
+    rgba(5, 4, 3, 0) 0,
+    rgba(5, 4, 3, 0.66) 48svh,
+    rgba(10, 9, 8, 0.97) 96svh,
+    var(--surface-0, #0a0908) 140svh,
+    var(--surface-1, #0f0e0c) 100%
+  );
+}
+
+.handoff-lab[data-scenario="orbit"] .handoff-lab__scene {
+  will-change: transform;
+  transform-origin: 50% 36%;
+  transform: translate3d(0, calc(var(--handoff-cover-progress, 0) * -7vh), 0)
+    scale(calc(1 - var(--handoff-cover-progress, 0) * 0.045));
+}
+
+.handoff-lab[data-scenario="orbit"] .handoff-lab__pivot {
+  opacity: calc(
+    (0.22 + var(--handoff-epilogue-progress, 0) * 0.78) *
+      (1 - var(--handoff-cover-progress, 0) * 1.6)
+  );
+  transform: translate3d(
+    -50%,
+    calc(var(--handoff-epilogue-progress, 0) * -18px - var(--handoff-cover-progress, 0) * 10vh),
+    0
+  );
+}
+
+/* The arrival stage — first viewport of the services section. Sticky
+   for the rest of the section so the artifact remains the fixed
+   instrument the readouts orbit around. */
+.handoff-lab__artifact--stage {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  height: 100svh;
+  min-height: 0;
+  margin: 0;
+  display: block;
+  pointer-events: none;
+}
+
+.handoff-lab__artifact-stage-inner {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 22px;
+  will-change: transform;
+  /* Settle: dwell centred for the first beats of section scroll, then
+     glide right into the instrument slot. */
+  --settle: clamp(0, calc((var(--handoff-progress, 0) - 0.04) * 5), 1);
+  transform: translate3d(
+      calc(-50% + var(--settle) * 27vw),
+      calc(-50% + var(--settle) * -3vh + (1 - var(--handoff-cover-progress, 1)) * 12vh),
+      0
+    )
+    scale(calc(1.08 - var(--settle) * 0.3));
+}
+
+.handoff-lab[data-scenario="orbit"] .handoff-lab__artifact-shell {
+  --artifact-size: clamp(280px, 33vw, 520px);
+  transform: rotate(calc(var(--handoff-progress, 0) * 14deg));
+}
+
+/* Copy owns the left field for the whole section; the right field
+   belongs to the pinned artifact (deadrabbit / glyphic IA). */
+.handoff-lab[data-scenario="orbit"] .handoff-lab__scenario-head {
+  grid-template-columns: minmax(0, 0.62fr);
+  margin-top: clamp(48px, 9vh, 120px);
+}
+
+.handoff-lab[data-scenario="orbit"] .handoff-lab__scenario-head span {
+  grid-column: auto;
+}
+
+.handoff-lab[data-scenario="orbit"] .handoff-lab__services-grid {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.handoff-lab[data-scenario="orbit"] .handoff-lab__service-flow {
+  max-width: min(60%, 700px);
+}
+
+/* Scenario B: the veil releases to a flat editorial flow. */
+.handoff-lab[data-scenario="veil"] .handoff-lab__services {
+  background:
+    linear-gradient(
+      180deg,
+      var(--void, #050403),
+      var(--surface-0, #0a0908) 24%,
+      var(--surface-0, #0a0908)
+    ),
+    var(--surface-0, #0a0908);
+}
+
+.handoff-lab[data-scenario="veil"] .handoff-lab__services-grid {
+  grid-template-columns: minmax(220px, 0.48fr) minmax(0, 1fr);
+}
+
+.handoff-lab[data-scenario="veil"] .handoff-lab__artifact-shell {
+  --artifact-size: clamp(160px, 18vw, 260px);
+  opacity: 0.7;
+}
+
+.handoff-lab[data-scenario="veil"] .handoff-lab__service {
+  min-height: 92svh;
+  background: transparent;
+  border-top-color: rgba(236, 227, 214, 0.13);
+}
+
+.handoff-lab__veil {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  height: 0;
+  pointer-events: none;
+}
+
+.handoff-lab__veil span {
+  position: absolute;
+  top: -1px;
+  height: 100svh;
+  width: 26vw;
+  background: var(--void, #050403);
+  opacity: calc(1 - var(--handoff-progress) * 8);
+  transform: translateY(calc(var(--handoff-progress) * -110%));
+  clip-path: polygon(0 0, 100% 0, 86% 100%, 0 100%);
+}
+
+.handoff-lab__veil span:nth-child(1) {
+  left: 0;
+}
+
+.handoff-lab__veil span:nth-child(2) {
+  left: 25vw;
+  transition-delay: 20ms;
+}
+
+.handoff-lab__veil span:nth-child(3) {
+  left: 50vw;
+  transition-delay: 40ms;
+}
+
+.handoff-lab__veil span:nth-child(4) {
+  left: 75vw;
+  transition-delay: 60ms;
+}
+
+/* Scenario C: collapse the scene into a single artifact, then unfold service bands. */
+.handoff-lab[data-scenario="collapse"] .handoff-lab__services-grid {
+  grid-template-columns: minmax(280px, 0.72fr) minmax(0, 1fr);
+}
+
+.handoff-lab[data-scenario="collapse"] .handoff-lab__artifact-shell {
+  --artifact-size: clamp(260px, 34vw, 500px);
+  transform: translate3d(
+      calc((1 - var(--handoff-progress)) * 18vw),
+      calc((1 - var(--handoff-progress)) * -8vh),
+      0
+    )
+    scale(calc(0.74 + var(--handoff-progress) * 0.26));
+}
+
+.handoff-lab[data-scenario="collapse"] .handoff-lab__artifact-orbit--outer {
+  transform: rotate(calc(var(--handoff-progress) * 72deg))
+    scaleY(calc(0.22 + var(--handoff-progress) * 0.4));
+}
+
+.handoff-lab[data-scenario="collapse"] .handoff-lab__artifact-band--a {
+  transform: rotate(calc(16deg + var(--handoff-progress) * 34deg))
+    scaleX(calc(0.2 + var(--handoff-progress) * 0.8));
+}
+
+.handoff-lab[data-scenario="collapse"] .handoff-lab__artifact-band--b {
+  transform: rotate(calc(-32deg - var(--handoff-progress) * 28deg))
+    scaleX(calc(0.2 + var(--handoff-progress) * 0.8));
+}
+
+@media (max-width: 960px) {
+  .handoff-lab__scenario-head,
+  .handoff-lab__services-grid,
+  .handoff-lab__dock {
+    grid-template-columns: 1fr;
+  }
+
+  .handoff-lab[data-scenario="orbit"] .handoff-lab__services-grid,
+  .handoff-lab[data-scenario="veil"] .handoff-lab__services-grid,
+  .handoff-lab[data-scenario="collapse"] .handoff-lab__services-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .handoff-lab__scenario-head span {
+    grid-column: auto;
+  }
+
+  .handoff-lab__artifact {
+    position: relative;
+    top: auto;
+    min-height: auto;
+    margin-bottom: 36px;
+  }
+
+  /* Stage becomes a static intro block on mobile: the artifact still
+     rides in over the transparent seam, but without the sticky glide
+     (no room for a right instrument column on portrait). */
+  .handoff-lab__artifact--stage {
+    position: relative;
+    height: auto;
+    padding: 16svh 0 8svh;
+  }
+
+  .handoff-lab__artifact-stage-inner {
+    position: relative;
+    top: auto;
+    left: auto;
+    transform: none;
+    margin: 0 auto;
+    width: max-content;
+    max-width: 100%;
+  }
+
+  .handoff-lab[data-scenario="orbit"] .handoff-lab__scenario-head {
+    margin-top: 0;
+  }
+
+  .handoff-lab[data-scenario="orbit"] .handoff-lab__service-flow {
+    max-width: none;
+  }
+
+  .handoff-lab__service {
+    min-height: auto;
+    padding: clamp(24px, 7vw, 40px) 0;
+    background: transparent;
+  }
+
+  .handoff-lab__service dl {
+    grid-template-columns: 1fr;
+  }
+
+  .handoff-lab[data-scenario="orbit"] .handoff-lab__artifact,
+  .handoff-lab[data-scenario="veil"] .handoff-lab__artifact,
+  .handoff-lab[data-scenario="collapse"] .handoff-lab__artifact,
+  .handoff-lab[data-scenario="orbit"] .handoff-lab__service-flow,
+  .handoff-lab[data-scenario="veil"] .handoff-lab__service-flow,
+  .handoff-lab[data-scenario="collapse"] .handoff-lab__service-flow {
+    grid-column: auto;
+    grid-row: auto;
+  }
+
+  .handoff-lab[data-scenario="collapse"] .handoff-lab__artifact-shell,
+  .handoff-lab[data-scenario="orbit"] .handoff-lab__artifact-shell {
+    transform: none;
+  }
+}
+
+@media (max-width: 620px) {
+  .handoff-lab__services {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+
+  .handoff-lab__pivot {
+    top: 84px;
+  }
+
+  .handoff-lab__pivot h1,
+  .handoff-lab__scenario-head h2,
+  .handoff-lab__service h3 {
+    letter-spacing: -0.02em;
+  }
+
+  .handoff-lab__artifact-shell {
+    --artifact-size: min(78vw, 320px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .handoff-lab__pivot,
+  .handoff-lab[data-scenario="orbit"] .handoff-lab__artifact-shell,
+  .handoff-lab[data-scenario="orbit"] .handoff-lab__scene,
+  .handoff-lab[data-scenario="collapse"] .handoff-lab__artifact-shell,
+  .handoff-lab[data-scenario="collapse"] .handoff-lab__artifact-orbit--outer,
+  .handoff-lab[data-scenario="collapse"] .handoff-lab__artifact-band--a,
+  .handoff-lab[data-scenario="collapse"] .handoff-lab__artifact-band--b {
+    transform: none;
+  }
+
+  .handoff-lab__scene-dim {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) and (min-width: 961px) {
+  /* Static settled position for the stage artifact — no glide.
+     Desktop only; the mobile block above already makes the stage a
+     static flow element. */
+  .handoff-lab__artifact-stage-inner {
+    transform: translate3d(calc(-50% + 27vw), -53%, 0) scale(0.78);
+  }
+}

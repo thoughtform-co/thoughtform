@@ -150,3 +150,34 @@ Patterns decomposed from reference screenshots and mapped to Thoughtform grammar
 
 - The brutalist all-caps body text (our body text is sentence case, light weight)
 - Excessive edge-to-edge monospace (fine for a portfolio, too much for a productivity tool)
+
+---
+
+## Flywheel Handoff Reference Set
+
+**Source**: `sentinel/research/handoff-transition/reference-extractions.md`
+
+### Layout
+
+- Corridor-to-services transition references for the home-v2 handoff after the substrate-globe epilogue.
+- Useful split: persistent artifact / calm service copy / final docked proof object.
+- Capture set includes Lando Norris, iyo One, Sleep Well Creatives, Zentry, Dead Rabbit Moon, and Astral Frontier. Auremin was partial; Hashgraph VC, Active Theory, Glyphic Bio, and Pixila timed out in automation and are documented as blockers in the research file.
+
+### Patterns Extracted
+
+- **Docked proof object** from Lando Norris — maps to a services/build-cases dock rather than an ecommerce cart.
+- **Fixed celestial instrument** from Dead Rabbit Moon and Astral Frontier — maps to a pinned intelligence artifact with sparse scrolling copy.
+- **DOM mask/shutter transition** from Zentry — maps to a performant chapter cut without adding more WebGL.
+- **Quiet product-spec rhythm** from iyo One — maps to one idea per viewport, large type, generous line spacing.
+- **Sphere-to-layout transformation** from Auremin/supplied reference — maps to the collapse-and-unfold prototype.
+
+### What's Worth Adopting
+
+- Let the artifact remain the orientation object when the story still needs continuity.
+- Use the veil/mask only as a short transition, not a persistent overlay.
+- Keep the services layer editorial and sparse; the particle/corridor section has already spent the motion budget.
+
+### What to Avoid
+
+- Purple Zentry palette, ecommerce literalism, rounded capsules, and crypto/agency spectacle.
+- Turning Navigate / Encode / Build into three equal PowerPoint cards.

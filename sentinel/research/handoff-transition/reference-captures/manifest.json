@@ -1,0 +1,99 @@
+[
+  {
+    "key": "lando",
+    "url": "https://landonorris.com/",
+    "status": "captured",
+    "screenshots": [
+      "C:\\Users\\buyss\\Manifold Delta\\Artifacts\\01_thoughtform\\sentinel\\research\\handoff-transition\\reference-captures\\lando-entry.png",
+      "C:\\Users\\buyss\\Manifold Delta\\Artifacts\\01_thoughtform\\sentinel\\research\\handoff-transition\\reference-captures\\lando-deep.png"
+    ],
+    "error": null
+  },
+  {
+    "key": "auremin",
+    "url": "https://www.auremin.com/",
+    "status": "blocked",
+    "screenshots": [
+      "C:\\Users\\buyss\\Manifold Delta\\Artifacts\\01_thoughtform\\sentinel\\research\\handoff-transition\\reference-captures\\auremin-entry.png"
+    ],
+    "error": "page.screenshot: Timeout 30000ms exceeded.\nCall log:\n  - taking page screenshot\n"
+  },
+  {
+    "key": "hashgraph",
+    "url": "https://hashgraphvc.com/",
+    "status": "blocked",
+    "screenshots": [],
+    "error": "page.goto: Timeout 25000ms exceeded.\nCall log:\n  - navigating to \"https://hashgraphvc.com/\", waiting until \"domcontentloaded\"\n"
+  },
+  {
+    "key": "activetheory",
+    "url": "https://activetheory.net/work",
+    "status": "blocked",
+    "screenshots": [],
+    "error": "page.goto: Timeout 25000ms exceeded.\nCall log:\n  - navigating to \"https://activetheory.net/work\", waiting until \"domcontentloaded\"\n"
+  },
+  {
+    "key": "glyphic",
+    "url": "https://www.glyphic.bio/",
+    "status": "blocked",
+    "screenshots": [],
+    "error": "page.goto: Timeout 25000ms exceeded.\nCall log:\n  - navigating to \"https://www.glyphic.bio/\", waiting until \"domcontentloaded\"\n"
+  },
+  {
+    "key": "pixila",
+    "url": "https://pixila.net/",
+    "status": "blocked",
+    "screenshots": [],
+    "error": "page.goto: Timeout 25000ms exceeded.\nCall log:\n  - navigating to \"https://pixila.net/\", waiting until \"domcontentloaded\"\n"
+  },
+  {
+    "key": "iyo",
+    "url": "https://www.iyo.ai/iyo-one",
+    "status": "captured",
+    "screenshots": [
+      "C:\\Users\\buyss\\Manifold Delta\\Artifacts\\01_thoughtform\\sentinel\\research\\handoff-transition\\reference-captures\\iyo-entry.png",
+      "C:\\Users\\buyss\\Manifold Delta\\Artifacts\\01_thoughtform\\sentinel\\research\\handoff-transition\\reference-captures\\iyo-deep.png"
+    ],
+    "error": null
+  },
+  {
+    "key": "sleepwell",
+    "url": "https://sleep-well-creatives.com/",
+    "status": "captured",
+    "screenshots": [
+      "C:\\Users\\buyss\\Manifold Delta\\Artifacts\\01_thoughtform\\sentinel\\research\\handoff-transition\\reference-captures\\sleepwell-entry.png",
+      "C:\\Users\\buyss\\Manifold Delta\\Artifacts\\01_thoughtform\\sentinel\\research\\handoff-transition\\reference-captures\\sleepwell-deep.png"
+    ],
+    "error": null
+  },
+  {
+    "key": "zentry",
+    "url": "https://zentry.com/",
+    "status": "captured",
+    "screenshots": [
+      "C:\\Users\\buyss\\Manifold Delta\\Artifacts\\01_thoughtform\\sentinel\\research\\handoff-transition\\reference-captures\\zentry-entry.png",
+      "C:\\Users\\buyss\\Manifold Delta\\Artifacts\\01_thoughtform\\sentinel\\research\\handoff-transition\\reference-captures\\zentry-deep.png"
+    ],
+    "error": null
+  },
+  {
+    "key": "deadrabbit",
+    "url": "https://deadrabbit.collax.app/the-moon",
+    "status": "captured",
+    "screenshots": [
+      "C:\\Users\\buyss\\Manifold Delta\\Artifacts\\01_thoughtform\\sentinel\\research\\handoff-transition\\reference-captures\\deadrabbit-entry.png",
+      "C:\\Users\\buyss\\Manifold Delta\\Artifacts\\01_thoughtform\\sentinel\\research\\handoff-transition\\reference-captures\\deadrabbit-deep.png"
+    ],
+    "error": null
+  },
+  {
+    "key": "astralfrontier",
+    "url": "https://www.theastralfrontier.com/",
+    "status": "captured",
+    "screenshots": [
+      "C:\\Users\\buyss\\Manifold Delta\\Artifacts\\01_thoughtform\\sentinel\\research\\handoff-transition\\reference-captures\\astralfrontier-entry.png",
+      "C:\\Users\\buyss\\Manifold Delta\\Artifacts\\01_thoughtform\\sentinel\\research\\handoff-transition\\reference-captures\\astralfrontier-deep.png"
+    ],
+    "error": null
+  }
+]
