@@ -31,7 +31,11 @@ import * as THREE from "three";
 // first time the gimbal sphere reveals. Register the alias once at
 // module load so the trim-path rings render. (2026-06-10 fix.)
 extend({ ThreeLine: THREE.Line });
-import { COLOR_DAWN, COLOR_GOLD } from "@/components/landing/intelligence-artifact/artifactGeom";
+import {
+  COLOR_DAWN,
+  COLOR_GOLD,
+  COLOR_VOID,
+} from "@/components/landing/intelligence-artifact/artifactGeom";
 import {
   buildDiamondGeometry,
   makeMeshMaterial,
@@ -49,6 +53,9 @@ import {
   petalStagger,
   SUBSTRATE_GYRO_CARDINAL_RING_OPACITY,
   SUBSTRATE_GYRO_CARDINAL_RING_RADIUS,
+  SUBSTRATE_GYRO_CORE_DENSITY,
+  SUBSTRATE_GYRO_CORE_OPACITY,
+  SUBSTRATE_GYRO_CORE_RADIUS_MUL,
   SUBSTRATE_GYRO_DEPTH_FAR,
   SUBSTRATE_GYRO_DEPTH_NEAR,
   SUBSTRATE_GYRO_DOTS_PER_MERIDIAN,
@@ -144,7 +151,7 @@ void main() {
   vec4 mv = modelViewMatrix * vec4(position, 1.0);
   gl_Position = projectionMatrix * mv;
   float dist = max(0.4, -mv.z);
-  float sizeFactor = clamp(6.0 / dist, 0.5, 2.4);
+  float sizeFactor = clamp(6.0 / dist, 0.5, 2.0);
   gl_PointSize = uPointSize * uPixelRatio * sizeFactor * mix(0.7, 1.55, aRank);
   vSeed = aSeed;
   vRank = aRank;
@@ -162,10 +169,15 @@ varying float vTint;
 void main() {
   vec2 uv = gl_PointCoord - 0.5;
   float d = length(uv);
-  float coreR = mix(0.10, 0.18, vRank);
-  float core = smoothstep(coreR, 0.0, d);
-  float halo = smoothstep(0.5, 0.14, d);
-  float soft = max(core, halo * 0.5);
+  // Crispness pass (2026-06-12): the core owns the sprite. The old
+  // falloff (core 10-18% of the radius, halo out to 50% at half
+  // strength) made every dot a soft blob — the sphere read as
+  // low-res. Now the solid core spans ~22-32% with a short faint
+  // halo, so each dot resolves as a point with a breath of glow.
+  float coreR = mix(0.22, 0.32, vRank);
+  float core = smoothstep(coreR, coreR * 0.45, d);
+  float halo = smoothstep(0.34, 0.10, d);
+  float soft = max(core, halo * 0.26);
   float jitter = 0.7 + fract(vSeed * 41.0) * 0.3;
   vec3 col = mix(uColorCool, uColorWarm, vTint);
   float alpha = soft * uOpacity * jitter;
@@ -260,6 +272,80 @@ function makeAtmosphereMaterial(): THREE.ShaderMaterial {
   });
 }
 
+// ── Smoky occluder core (2026-06-12) ────────────────────────────────
+//
+// Every other element of the instrument is additive-blended dots and
+// lines — the sphere had NO body, so the terrain rollout, crossing
+// rings, wormhole walls and stars passed through it at full strength.
+// This core is a NORMAL-blended void-ink sphere just inside the
+// dotted shell: whatever was painted behind it gets composited toward
+// the corridor ink, i.e. dimmed, exactly where the sphere's volume is.
+//
+// Alpha follows the chord length a view ray travels through the ball
+// (Beer–Lambert through a uniform volume): facing = cos(angle between
+// surface normal and view ray) is proportional to the chord, so
+// alpha = uOpacity * (1 - exp(-density * facing)) — densest at the
+// disk centre, falling smoothly to ZERO at the rim. No hard silhouette
+// circle; the body reads as smoked glass, not a cut-out disc.
+//
+// Render order makes it work — three buckets via per-object
+// renderOrder (groupOrder is useless here: every nested THREE.Group
+// resets it):
+//
+//   0  all default scene content (terrain, walls, rings, gates, the
+//      sibling ShellStack/ShellEncode lines — which therefore dim as
+//      they plunge INTO the body: the absorption read the stack
+//      drain choreography wants);
+//   1  this core — drawn after the scene, dimming it;
+//   2  every other renderable of THIS instrument (assigned by a
+//      traverse in the component) — dots, rings, ticks, pivots and
+//      atmosphere stay bright on top of the body.
+
+const coreVertex = /* glsl */ `
+varying vec3 vViewNormal;
+varying vec3 vViewPos;
+void main() {
+  vec4 mv = modelViewMatrix * vec4(position, 1.0);
+  gl_Position = projectionMatrix * mv;
+  vViewNormal = normalize(normalMatrix * normal);
+  vViewPos = mv.xyz;
+}
+`;
+
+const coreFragment = /* glsl */ `
+uniform vec3 uColor;
+uniform float uOpacity;
+uniform float uDensity;
+varying vec3 vViewNormal;
+varying vec3 vViewPos;
+void main() {
+  vec3 viewDir = normalize(-vViewPos);
+  float facing = clamp(dot(normalize(vViewNormal), viewDir), 0.0, 1.0);
+  // Normalized Beer–Lambert: alpha hits exactly uOpacity at the disk
+  // centre (facing = 1) and 0 at the rim (facing = 0).
+  float absorb = (1.0 - exp(-uDensity * facing)) / (1.0 - exp(-uDensity));
+  float alpha = uOpacity * absorb;
+  if (alpha < 0.004) discard;
+  gl_FragColor = vec4(uColor, alpha);
+}
+`;
+
+function makeCoreMaterial(): THREE.ShaderMaterial {
+  return new THREE.ShaderMaterial({
+    vertexShader: coreVertex,
+    fragmentShader: coreFragment,
+    uniforms: {
+      uColor: { value: new THREE.Color(COLOR_VOID) },
+      uOpacity: { value: 0 },
+      uDensity: { value: SUBSTRATE_GYRO_CORE_DENSITY },
+    },
+    transparent: true,
+    depthWrite: false,
+    side: THREE.FrontSide,
+    blending: THREE.NormalBlending,
+  });
+}
+
 // ── Dotted-shell surface shader (per-dot facing fade) ───────────────
 // The dots sit on a sphere shell. Each dot's outward normal is dotted
 // with the view direction so the front hemisphere is bright and a touch
@@ -289,7 +375,7 @@ void main() {
   float facing = vNormal.z;
   vFacing = facing;
 
-  float sizeFactor = clamp(6.0 / dist, 0.5, 2.4);
+  float sizeFactor = clamp(6.0 / dist, 0.5, 2.0);
   float sizeFade = smoothstep(-0.3, 0.5, facing);
   gl_PointSize = uPointSize * uPixelRatio * sizeFactor *
                  mix(0.55, 1.4, sizeFade) * mix(0.8, 1.3, aRank);
@@ -311,10 +397,12 @@ varying float vTint;
 void main() {
   vec2 uv = gl_PointCoord - 0.5;
   float d = length(uv);
-  float coreR = mix(0.10, 0.18, vRank);
-  float core = smoothstep(coreR, 0.0, d);
-  float halo = smoothstep(0.5, 0.14, d);
-  float soft = max(core, halo * 0.5);
+  // Crispness pass (2026-06-12): core-dominant sprite, short halo —
+  // see gyroParticleFragment for the rationale.
+  float coreR = mix(0.22, 0.32, vRank);
+  float core = smoothstep(coreR, coreR * 0.45, d);
+  float halo = smoothstep(0.34, 0.10, d);
+  float soft = max(core, halo * 0.26);
 
   // Per-dot facing fade: side-facing dots (the sphere silhouette) at
   // full brightness, back hemisphere fades to near zero. The curve is
@@ -639,6 +727,10 @@ function prefersReducedMotion(): boolean {
 
 const PIVOT_SIZE = 0.028;
 
+/** Name tag for the occluder core mesh so the renderOrder traverse
+ *  can skip it (the core must stay in its own sort bucket). */
+const CORE_MESH_NAME = "substrate-occluder-core";
+
 export function ShellSubstrateGyro({ layerKey, reducedMotion = false }: ShellSubstrateGyroProps) {
   void layerKey;
 
@@ -756,6 +848,14 @@ export function ShellSubstrateGyro({ layerKey, reducedMotion = false }: ShellSub
     const atmosphereRadius = dottedShellRadius * 1.15;
     const atmosphere = new THREE.SphereGeometry(atmosphereRadius, 48, 32);
 
+    // Occluder core — just inside the dotted shell so the surface
+    // dots paint on top of the body (see makeCoreMaterial).
+    const core = new THREE.SphereGeometry(
+      dottedShellRadius * SUBSTRATE_GYRO_CORE_RADIUS_MUL,
+      48,
+      32
+    );
+
     return {
       meridians,
       parallels,
@@ -764,6 +864,7 @@ export function ShellSubstrateGyro({ layerKey, reducedMotion = false }: ShellSub
       particles,
       dottedShell,
       atmosphere,
+      core,
       pivot,
       ticks,
       ticksMiddle,
@@ -798,6 +899,10 @@ export function ShellSubstrateGyro({ layerKey, reducedMotion = false }: ShellSub
       // peak landing it paints the planet's silhouette with a soft
       // gold halo (the Earth-reference atmosphere look).
       atmosphere: makeAtmosphereMaterial(),
+      // Smoky occluder core — gives the sphere a translucent body so
+      // scene content behind it reads dimmed instead of passing
+      // through untouched.
+      core: makeCoreMaterial(),
     };
   }, []);
 
@@ -810,6 +915,7 @@ export function ShellSubstrateGyro({ layerKey, reducedMotion = false }: ShellSub
       geom.particles.dispose();
       geom.dottedShell.dispose();
       geom.atmosphere.dispose();
+      geom.core.dispose();
       geom.pivot.dispose();
       geom.ticks.dispose();
       geom.ticksMiddle.dispose();
@@ -824,6 +930,27 @@ export function ShellSubstrateGyro({ layerKey, reducedMotion = false }: ShellSub
       Object.values(mats).forEach((m) => m.dispose());
     };
   }, [mats]);
+
+  // Sort-bucket assignment for the occluder core (see the core
+  // material's comment): every renderable of this instrument draws at
+  // renderOrder 2 — AFTER the core (1), which itself draws after all
+  // default scene content (0). Re-runs on any structural change that
+  // mounts new renderables (geometry rebuild, ring count, particle
+  // toggle).
+  useEffect(() => {
+    const root = rootRef.current;
+    if (!root) return;
+    root.traverse((obj) => {
+      if (obj.name === CORE_MESH_NAME) return;
+      if (
+        (obj as THREE.Points).isPoints ||
+        (obj as THREE.Line).isLine ||
+        (obj as THREE.Mesh).isMesh
+      ) {
+        obj.renderOrder = 2;
+      }
+    });
+  }, [geom, effectiveRingCount, showParticles]);
 
   // Smoothed copy of the dotted-shell radius multiplier so we can
   // animate the BufferGeometry positions without thrashing the GPU
@@ -938,6 +1065,17 @@ export function ShellSubstrateGyro({ layerKey, reducedMotion = false }: ShellSub
     // it sits as a gentle atmospheric ring, not a bloom that drowns
     // the dotted-shell surface.
     mats.atmosphere.uniforms.uOpacity.value = approachT * 0.6;
+
+    // Occluder core — anti-pop presence only; the geometric emergence
+    // comes free from the globe-spin group's Y-bloom (the core
+    // flattens to a dark lens at reveal 0 and inflates into a ball as
+    // the cage opens). Solidifies a touch across APPROACH so the
+    // planet reads more opaque than the parked instrument.
+    mats.core.uniforms.uOpacity.value = Math.min(
+      0.78,
+      SUBSTRATE_GYRO_CORE_OPACITY * presence * (1 + approachT * 0.4)
+    );
+
     // INSTRUMENT materials — fade out on BUILD_OUT so the substrate
     // sheds its flight-instrument vocabulary before we approach.
     mats.ring.uniforms.uOpacity.value =
@@ -1133,6 +1271,20 @@ export function ShellSubstrateGyro({ layerKey, reducedMotion = false }: ShellSub
     <group ref={rootRef} visible={false}>
       {/* Globe spin group — meridians, parallels, equator, particles */}
       <group ref={globeSpinRef}>
+        {/* Smoky occluder core — the sphere's translucent BODY.
+            Lives inside the spin group so the unfold's Y-bloom
+            (disc → sphere) emerges it geometrically; the spin itself
+            is invisible on a uniform ball. renderOrder 1 draws it
+            after all default scene content (which it dims); the
+            traverse below lifts every other instrument renderable to
+            renderOrder 2 so the bright elements stay on top. */}
+        <mesh
+          name={CORE_MESH_NAME}
+          geometry={geom.core}
+          material={mats.core}
+          renderOrder={1}
+          frustumCulled={false}
+        />
         {geom.meridians.map((g, i) => {
           const angle = (i / geom.meridianCount) * Math.PI;
           return (

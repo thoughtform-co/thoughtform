@@ -700,16 +700,19 @@ export const SUBSTRATE_GYRO_RING_LINE_OPACITY = 0.82;
 export const SUBSTRATE_GYRO_PIVOT_OPACITY = 0.88;
 
 /** Dots per meridian / parallel circle at `globeDensity` = 1.0.
- *  These replace the hard wireframe lines with soft particle trails. */
-export const SUBSTRATE_GYRO_DOTS_PER_MERIDIAN = 64;
-export const SUBSTRATE_GYRO_DOTS_PER_PARALLEL = 48;
-export const SUBSTRATE_GYRO_GLOBE_DOTS_POINT_SIZE = 5.0;
+ *  These replace the hard wireframe lines with soft particle trails.
+ *  Crispness pass (2026-06-12): more, smaller dots — the sphere read
+ *  as "low res" because each lattice dot was a large halo-heavy
+ *  sprite. Finer grain at the same coverage reads as resolution. */
+export const SUBSTRATE_GYRO_DOTS_PER_MERIDIAN = 84;
+export const SUBSTRATE_GYRO_DOTS_PER_PARALLEL = 62;
+export const SUBSTRATE_GYRO_GLOBE_DOTS_POINT_SIZE = 4.0;
 export const SUBSTRATE_GYRO_GLOBE_DOTS_OPACITY = 0.6;
 
 /** Surface particle accent counts at `particleDensity` = 1.0. */
 export const SUBSTRATE_GYRO_PARTICLE_COUNT_DESKTOP = 220;
 export const SUBSTRATE_GYRO_PARTICLE_COUNT_MOBILE = 90;
-export const SUBSTRATE_GYRO_POINT_SIZE = 6.0;
+export const SUBSTRATE_GYRO_POINT_SIZE = 5.0;
 export const SUBSTRATE_GYRO_PARTICLE_OPACITY = 0.45;
 
 /** Dotted-sphere shell — dots in latitude bands on a single sphere
@@ -723,11 +726,30 @@ export const SUBSTRATE_GYRO_DOTTED_SHELL_RADIUS_MUL = 1.32;
 // substrate surface still reads as a dense planet when scaled up
 // 3x for the EPILOGUE flyover. The full ring stays cheap (static
 // points, no per-frame motion).
-export const SUBSTRATE_GYRO_DOTTED_SHELL_COUNT_DESKTOP = 6000;
-export const SUBSTRATE_GYRO_DOTTED_SHELL_COUNT_MOBILE = 1200;
-export const SUBSTRATE_GYRO_DOTTED_SHELL_BANDS = 28;
-export const SUBSTRATE_GYRO_DOTTED_SHELL_POINT_SIZE = 6.5;
+// Crispness pass (2026-06-12): 6000 -> 9600 dots at point size
+// 6.5 -> 4.8 with 28 -> 32 latitude bands. Same surface coverage,
+// finer grain — the shell stops reading as a cloud of soft blobs.
+export const SUBSTRATE_GYRO_DOTTED_SHELL_COUNT_DESKTOP = 9600;
+export const SUBSTRATE_GYRO_DOTTED_SHELL_COUNT_MOBILE = 1900;
+export const SUBSTRATE_GYRO_DOTTED_SHELL_BANDS = 32;
+export const SUBSTRATE_GYRO_DOTTED_SHELL_POINT_SIZE = 4.8;
 export const SUBSTRATE_GYRO_DOTTED_SHELL_OPACITY = 1.0;
+
+/** Smoky occluder core (2026-06-12). A translucent void-ink sphere
+ *  just inside the dotted shell that gives the instrument a BODY:
+ *  scene content behind the sphere (terrain rollout, crossing rings,
+ *  wormhole walls, stars) is dimmed through it instead of passing
+ *  through untouched. Alpha is shaped by chord length in the shader
+ *  (densest at the disk centre, zero at the rim) so the body reads as
+ *  a volume, not a hard-edged disc. Radius sits at 0.96x the dotted
+ *  shell so the front-hemisphere surface dots stay bright on top. */
+export const SUBSTRATE_GYRO_CORE_RADIUS_MUL = 0.96;
+/** Peak centre alpha of the core at full presence (parked corridor).
+ *  ~0.5 reads as "slightly dimmed", not a black hole. */
+export const SUBSTRATE_GYRO_CORE_OPACITY = 0.52;
+/** Optical-density constant for the chord-length alpha curve —
+ *  higher saturates the centre faster. */
+export const SUBSTRATE_GYRO_CORE_DENSITY = 2.2;
 
 /** Small navigational glyphs on the outer instrument ring. */
 export const SUBSTRATE_GYRO_TICK_COUNT = 48;

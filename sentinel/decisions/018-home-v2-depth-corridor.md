@@ -111,6 +111,68 @@ layerPhase)` to a C2-continuous quintic `smootherstep01(layerPhase /
 0.68)`, so the visible rings still reach full-screen early enough but
   have zero velocity and acceleration at the launch/settle boundaries.
 
+### Same-day follow-up (v3.13e) — sphere occluder core
+
+Live review: **"the sphere shouldn't be fully transparent — elements
+behind it should be slightly dimmed."** Every element of the gimbal
+instrument is additive-blended dots/lines, so the sphere had no body:
+the terrain rollout, crossing rings, wormhole walls and stars passed
+through it at full strength. `ShellSubstrateGyro` now mounts a smoky
+occluder core — a NORMAL-blended void-ink (`COLOR_VOID`) sphere at
+0.96x the dotted-shell radius:
+
+- **Alpha = chord length.** The fragment shader shapes alpha with a
+  normalized Beer–Lambert curve over `facing` (∝ the chord a view ray
+  travels through the ball): peak `SUBSTRATE_GYRO_CORE_OPACITY = 0.52`
+  at the disk centre, falling smoothly to zero at the rim — smoked
+  glass, not a cut-out disc.
+- **Three renderOrder buckets** (groupOrder is useless — every nested
+  `THREE.Group` resets it): default scene content at 0, the core at 1
+  (drawn after the scene, dimming it), and every other renderable of
+  the instrument lifted to 2 by a structural-change-keyed traverse so
+  the dots/rings/ticks stay bright on top. Sibling `ShellStack` lines
+  stay at 0 on purpose: they dim as they plunge into the body — the
+  absorption read the stack drain choreography wants.
+- **Geometric emergence for free.** The core lives inside the
+  globe-spin group, so the unfold's Y-bloom flattens it to a dark lens
+  at reveal 0 and inflates it with the cage; opacity is anti-pop
+  presence only. It solidifies a touch across the EPILOGUE APPROACH
+  (`× (1 + approachT * 0.4)`, capped 0.78) so the planet reads more
+  opaque than the parked instrument and properly occludes the
+  starfield during the flyover.
+
+True backdrop _blur_ was considered and rejected: the corridor canvas
+renders in a single transparent pass, so blurring what's behind the
+sphere would need a render-to-texture post pass (and could never reach
+DOM content behind the canvas). The volumetric dim delivers the same
+"body in front of the realm" read at zero extra passes.
+
+### Same-day follow-up (v3.13f) — particle crispness pass
+
+Live review: **"are the particles in our sphere low res?"** They were
+not low-res in buffer terms (the DPR cap stays at 1.75 desktop) — they
+were big, halo-dominant sprites. Every gyro dot spent only 10–18% of
+its sprite radius on the crisp core with a half-strength halo
+stretching to 50%, at base sizes up to ~20+ device px after the
+distance boost. Few large soft blobs read as low resolution. Fix is
+finer grain at the same coverage:
+
+- **Sprite falloff** (`gyroParticleFragment` + `surfaceShellFragment`):
+  solid core now spans 22–32% of the radius with a plateau, halo
+  shortened `0.5 → 0.34` and dropped `0.5 → 0.26` intensity — each dot
+  resolves as a point with a breath of glow.
+- **Sizes down, counts up:** dotted shell `6.5px → 4.8px` at
+  `6000 → 9600` dots (mobile `1200 → 1900`) across `28 → 32` latitude
+  bands; globe lattice dots `5.0 → 4.0px` at `64 → 84` per meridian /
+  `48 → 62` per parallel; sphere-cloud accents `6.0 → 5.0px`.
+- **Near-camera blow-up trimmed:** per-vertex distance size factor cap
+  `2.4 → 2.0` so parked close-ups don't balloon the sprites back into
+  blobs.
+
+The planet flyover inherits the density bump, so the APPROACH
+point-size boost (×1.8) lands on smaller bases — the grown planet
+surface now reads as fine grain rather than enlarged blur.
+
 ## 2026-06-12 Revision (v3.12c) — The Crossing: gravitational-wave threshold + valley reposition
 
 Live-review follow-up to v3.12b. Two notes:
