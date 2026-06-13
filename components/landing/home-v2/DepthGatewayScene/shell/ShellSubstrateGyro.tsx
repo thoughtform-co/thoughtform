@@ -976,11 +976,11 @@ export function ShellSubstrateGyro({ layerKey, reducedMotion = false }: ShellSub
     const globeSpin = globeSpinRef.current;
     if (!root || !globeSpin) return;
 
-    const { active, armed } = useDepthGatewayStore.getState().transform;
+    const { active, armed, docked } = useDepthGatewayStore.getState().transform;
     // Smoothed epilogue scrub — same channel as the camera so the
     // shed + surface boost glide with the flight (2026-06-11).
     const epilogueProgress = getSmoothedEpilogueProgress();
-    if (!active && !armed) {
+    if (!active && !armed && !docked) {
       root.visible = false;
       return;
     }
@@ -1030,7 +1030,8 @@ export function ShellSubstrateGyro({ layerKey, reducedMotion = false }: ShellSub
     // Size multiplier: 1 at parked, ~1.8 at peak. Combined with the
     // 3x physical grow, surface dots end up ~5.4x as big in screen
     // space as the planet ramps up.
-    const pointSizeBoost = 1 + approachT * 0.8;
+    const dockVisibilityBoost = docked ? 1.65 : 1;
+    const pointSizeBoost = (1 + approachT * 0.8) * (docked ? 1.28 : 1);
     // Opacity multiplier: 1 at parked, ~1.5 at peak (capped at 1
     // via Math.min so we don't oversaturate).
     const opacityBoost = 1 + approachT * 0.55;
@@ -1039,22 +1040,25 @@ export function ShellSubstrateGyro({ layerKey, reducedMotion = false }: ShellSub
     // planet surface grid + atmospheric particles).
     mats.globeDots.uniforms.uOpacity.value = Math.min(
       1,
-      SUBSTRATE_GYRO_GLOBE_DOTS_OPACITY * presence * opacityBoost
+      SUBSTRATE_GYRO_GLOBE_DOTS_OPACITY * presence * opacityBoost * dockVisibilityBoost
     );
     mats.globeDots.uniforms.uPointSize.value =
       SUBSTRATE_GYRO_GLOBE_DOTS_POINT_SIZE * pointSizeBoost;
     mats.globeDots.uniforms.uPixelRatio.value = state.viewport.dpr;
-    mats.equator.uniforms.uOpacity.value = lineOpacity(SUBSTRATE_GYRO_GLOBE_EQUATOR_OPACITY);
+    mats.equator.uniforms.uOpacity.value = Math.min(
+      1,
+      lineOpacity(SUBSTRATE_GYRO_GLOBE_EQUATOR_OPACITY) * dockVisibilityBoost
+    );
     mats.particle.uniforms.uPixelRatio.value = state.viewport.dpr;
     mats.particle.uniforms.uOpacity.value = Math.min(
       1,
-      SUBSTRATE_GYRO_PARTICLE_OPACITY * presence * opacityBoost
+      SUBSTRATE_GYRO_PARTICLE_OPACITY * presence * opacityBoost * dockVisibilityBoost
     );
     mats.particle.uniforms.uPointSize.value = SUBSTRATE_GYRO_POINT_SIZE * pointSizeBoost;
     mats.dottedShell.uniforms.uPixelRatio.value = state.viewport.dpr;
     mats.dottedShell.uniforms.uOpacity.value = Math.min(
       1,
-      SUBSTRATE_GYRO_DOTTED_SHELL_OPACITY * presence * opacityBoost
+      SUBSTRATE_GYRO_DOTTED_SHELL_OPACITY * presence * opacityBoost * dockVisibilityBoost
     );
     mats.dottedShell.uniforms.uPointSize.value =
       SUBSTRATE_GYRO_DOTTED_SHELL_POINT_SIZE * pointSizeBoost;

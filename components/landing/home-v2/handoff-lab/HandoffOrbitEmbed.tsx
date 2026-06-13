@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, type RefObject } from "react";
+import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import { HANDOFF_SCENARIOS, HANDOFF_SERVICES } from "./content";
 
 function clamp01(value: number): number {
@@ -40,8 +41,35 @@ function useEmbeddedServicesScroll(servicesRef: RefObject<HTMLElement | null>) {
       const servicesRect = services.getBoundingClientRect();
       const travel = Math.max(1, servicesRect.height - vh);
       const sectionProgress = clamp01(-servicesRect.top / travel);
+      const servicesInView = servicesRect.top < vh && servicesRect.bottom > 0;
+      const reducedMotion =
+        window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
+      const mobile = window.matchMedia?.("(max-width: 960px)").matches ?? false;
+      const corridorFallback =
+        document.querySelector<HTMLElement>(".home-v2-stage")?.dataset.fallback === "true";
+      const dockCapable = !reducedMotion && !mobile && !corridorFallback;
+      const docked = dockCapable && servicesInView && servicesRect.top <= vh * 0.92;
 
       services.style.setProperty("--handoff-progress", sectionProgress.toFixed(4));
+      if (docked) {
+        document.documentElement.setAttribute("data-corridor-docked", "true");
+      } else {
+        document.documentElement.removeAttribute("data-corridor-docked");
+      }
+
+      // ONLY own the dock channel. The corridor's `useDepthScroll`
+      // remains the sole writer of progress / paintProgress /
+      // epilogueProgress — having both hooks write epilogueProgress made
+      // the two rAF loops fight every frame, which read as the sphere
+      // jittering/pulsing during the handoff. The scene painters read
+      // `docked` and hold a fixed pose themselves, so we never need to
+      // overwrite the epilogue scrub here.
+      const store = useDepthGatewayStore.getState();
+      const prev = store.transform;
+      const nextDockProgress = docked ? sectionProgress : 0;
+      if (prev.docked !== docked || Math.abs(prev.dockProgress - nextDockProgress) > 0.0005) {
+        store.setTransform({ ...prev, docked, dockProgress: nextDockProgress });
+      }
     };
 
     const requestWrite = () => {
@@ -58,6 +86,13 @@ function useEmbeddedServicesScroll(servicesRef: RefObject<HTMLElement | null>) {
       if (frame) window.cancelAnimationFrame(frame);
       window.removeEventListener("scroll", requestWrite);
       window.removeEventListener("resize", requestWrite);
+      document.documentElement.removeAttribute("data-corridor-docked");
+      const store = useDepthGatewayStore.getState();
+      store.setTransform({
+        ...store.transform,
+        docked: false,
+        dockProgress: 0,
+      });
     };
   }, [servicesRef]);
 }

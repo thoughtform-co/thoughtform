@@ -152,6 +152,19 @@
   z-index: 5;
 }
 
+/* Dock handoff: while #buildQuote's services section is in view, the
+   completed corridor canvas becomes an intentional fixed backdrop in
+   the hashgraph-style layer stack. The later services surface carries a
+   transparent top by design so the live sphere can remain visible behind
+   the copy; release is driven by `data-corridor-docked` clearing. */
+html[data-corridor-docked="true"] .home-v2-stage__canvas {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100svh;
+  z-index: 2;
+}
+
 .home-v2-stage__canvas canvas {
   display: block;
   width: 100%;
@@ -170,6 +183,17 @@
 html[data-corridor-epilogue="true"] .home-v2-stage__canvas,
 html[data-corridor-epilogue="true"] .home-v2-stage__canvas canvas {
   pointer-events: auto;
+}
+
+/* During the docked services handoff the canvas is a full-viewport
+   fixed backdrop. It must NEVER capture pointer events — the services
+   copy, CTA, and cards scroll over it and own all interaction. This
+   also stops the R3F raycaster from running across the whole viewport
+   while the user reads the readouts. Declared AFTER the epilogue rule
+   so it wins at equal specificity (both flags can be true at once). */
+html[data-corridor-docked="true"] .home-v2-stage__canvas,
+html[data-corridor-docked="true"] .home-v2-stage__canvas canvas {
+  pointer-events: none;
 }
 
 /* ── DOM copy + label overlay ─────────────────────────────────
@@ -742,6 +766,11 @@ html[data-corridor-epilogue="true"] .home-v2-stage__canvas canvas {
     0 0 12px rgba(10, 9, 8, 0.95),
     0 0 18px rgba(202, 165, 84, 0.14);
 }
+
+/* The docked sphere stays CENTERED, so the signal block + ticker keep
+   their epilogue (centred) position throughout — only their opacity
+   cross-dissolves. No reposition on dock (a left-shift here used to make
+   the ticker jump sideways the instant the dock engaged). */
 
 .home-v2-signal-actions {
   position: relative;

@@ -109,6 +109,8 @@ function useHandoffScroll(
         paintProgress: 1,
         epilogueProgress,
         velocity: 0,
+        docked: false,
+        dockProgress: 0,
       });
 
       runway.style.setProperty("--handoff-epilogue-progress", local.toFixed(4));

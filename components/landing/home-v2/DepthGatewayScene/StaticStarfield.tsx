@@ -187,8 +187,8 @@ export function StaticStarfield({ count }: StaticStarfieldProps = {}) {
   //    HOLDS through the planet flyover — the sky stays bright behind
   //    the orbital horizon view.
   useFrame(() => {
-    const { paintProgress, active, armed } = useDepthGatewayStore.getState().transform;
-    if (!active && !armed) {
+    const { paintProgress, active, armed, docked } = useDepthGatewayStore.getState().transform;
+    if (!active && !armed && !docked) {
       material.uniforms.uOpacity.value = STARFIELD_BASE_OPACITY;
       material.uniforms.uPointSize.value = STARFIELD_BASE_POINT_SIZE;
       return;

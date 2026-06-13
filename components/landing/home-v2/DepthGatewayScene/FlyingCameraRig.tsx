@@ -1,7 +1,8 @@
 "use client";
 
 import { useFrame, useThree } from "@react-three/fiber";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
+import { DOCKED_INSTRUMENT_EPILOGUE_POSE } from "@/lib/home-v2/epilogueTimeline";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import { getSmoothedEpilogueProgress } from "./motionFollower";
 import {
@@ -28,6 +29,10 @@ import {
  */
 export function FlyingCameraRig() {
   const { camera } = useThree();
+  // Eased 0..1 blend toward the docked pose. Lerping the effective
+  // epilogue scrub between the live (landing) value and the held docked
+  // pose means engaging/leaving the dock glides instead of snapping.
+  const dockBlend = useRef(0);
 
   // One-time bootstrap + resize sync. R3F's <Canvas camera={...}> only
   // sets the initial position; we set position + lookAt + fov here so
@@ -59,12 +64,12 @@ export function FlyingCameraRig() {
     };
   }, [camera]);
 
-  useFrame(() => {
+  useFrame((_, delta) => {
     // Drive the rig from `paintProgress` so the camera sits at the
     // parked Thoughtform layout (progress 0) during the `armed` pre-
     // arm pass — mirrors the DOM tracker so DOM + R3F project from
     // the same camera the moment the stage pins.
-    const { paintProgress } = useDepthGatewayStore.getState().transform;
+    const { paintProgress, docked } = useDepthGatewayStore.getState().transform;
 
     // Epilogue v3 — once paintProgress saturates at 1 and the user
     // continues scrolling into the epilogue, `getEpilogueCameraPose`
@@ -82,7 +87,11 @@ export function FlyingCameraRig() {
     // channel so the whole flyover moves on one clock. Scroll-back
     // eases the camera home through the same curve before the
     // corridor path resumes.
-    const ep = getSmoothedEpilogueProgress();
+    const smoothedEp = getSmoothedEpilogueProgress();
+    const dt = Math.min(0.1, Math.max(0, delta));
+    const k = 1 - Math.exp(-dt / 0.28);
+    dockBlend.current += ((docked ? 1 : 0) - dockBlend.current) * k;
+    const ep = smoothedEp + (DOCKED_INSTRUMENT_EPILOGUE_POSE - smoothedEp) * dockBlend.current;
     if (ep > 0) {
       const pose = getEpilogueCameraPose(ep);
       camera.position.set(...pose.position);

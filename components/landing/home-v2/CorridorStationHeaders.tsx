@@ -523,7 +523,7 @@ function EpilogueNewsTicker({ animate }: { animate: boolean }) {
       focusable="false"
     >
       <defs>
-        <path id="home-v2-signal-ticker-arc" d="M -320 292 Q 600 -108 1520 292" />
+        <path id="home-v2-signal-ticker-arc" d="M -420 330 Q 600 -212 1620 330" />
       </defs>
       <text className="home-v2-signal-ticker__text">
         <textPath href="#home-v2-signal-ticker-arc" startOffset={animate ? "0%" : "7%"}>
@@ -625,6 +625,7 @@ export function CorridorStationHeaders() {
       const p = painting ? t.paintProgress : 0;
       const corridorEngaged = painting;
       const inEpilogue = t.epilogueProgress > 0.001;
+      const docked = t.docked;
       const nowSec = performance.now() / 1000;
 
       // Epilogue v3 (planet landing, restored 2026-06-11) — Build
@@ -646,27 +647,40 @@ export function CorridorStationHeaders() {
       // fade is driven by the stage's own scroll-out, not an epilogue band.
       // /test/home-v2 has no cover layer, so the title simply stays up.
       let titleOut = 0;
-      if (inEpilogue && document.querySelector(".handoff-lab--embedded")) {
-        const stageEl = document.querySelector<HTMLElement>(".home-v2-stage");
-        const sr = stageEl?.getBoundingClientRect();
-        if (sr) {
-          const vhNow = window.innerHeight || 1;
-          // release: 0 when the stage just un-pins (bottom == vh), 1 when
-          // the stage has fully scrolled out (bottom == 0).
-          const release = Math.max(0, Math.min(1, (vhNow - sr.bottom) / vhNow));
-          titleOut = smoothstep(0.5, 0.82, release);
+      const embedded = document.querySelector(".handoff-lab--embedded");
+      const vhNow = window.innerHeight || 1;
+      if (embedded) {
+        if (docked) {
+          // DOCKED cross-dissolve. As the services intro climbs toward the
+          // top of the viewport, fade the billions block (title + ticker +
+          // CTA) out so the two text layers never overlap. This is the fix
+          // for the pile-up where "Stay in the instrument" scrolled up
+          // straight through the fixed "billions" title with no occlusion.
+          const sr = document
+            .querySelector<HTMLElement>(".handoff-lab__services")
+            ?.getBoundingClientRect();
+          // top/vh: ~1 while the section is entering from the bottom, →0 as
+          // its top reaches the viewport top, <0 once it has scrolled past.
+          const topRatio = sr ? sr.top / vhNow : 0;
+          titleOut = 1 - smoothstep(0.12, 0.54, topRatio);
+        } else if (inEpilogue) {
+          // Pre-dock epilogue: fade as the corridor stage scrolls away.
+          const sr = document.querySelector<HTMLElement>(".home-v2-stage")?.getBoundingClientRect();
+          if (sr) {
+            const release = Math.max(0, Math.min(1, (vhNow - sr.bottom) / vhNow));
+            titleOut = smoothstep(0.5, 0.82, release);
+          }
         }
       }
       const containerOps = {
         nav: bandOpacity(p, NAVIGATE_FADE_IN, NAVIGATE_FADE_OUT),
         enc: bandOpacity(p, ENCODE_FADE_IN, ENCODE_FADE_OUT),
         bld: bandOpacity(p, BUILD_FADE_IN) * buildOut,
-        // Signal block — labs epilogue title + ticker + CTA. Scoped to
-        // corridor engagement AND the epilogue scrub channel so the
-        // fixed overlay never paints over the hero or during Navigate/
-        // Encode/Build travel. Fades back out (titleOut) as the handoff
-        // cover rises over it on production.
-        sig: corridorEngaged && inEpilogue ? titleIn * (1 - titleOut) : 0,
+        // Signal block — billions title + ticker + CTA. Visible through
+        // the epilogue AND the docked handoff, cross-dissolving out via
+        // `titleIn * (1 - titleOut)` so it never collides with the
+        // services copy rising over the persistent sphere.
+        sig: docked || (corridorEngaged && inEpilogue) ? titleIn * (1 - titleOut) : 0,
       };
 
       // Container opacity writes (suppress when no meaningful change).

@@ -24,12 +24,22 @@
   min-height: 0;
   padding: 0;
   overflow: visible;
-  background: var(--void, #050403);
+  /* Intentional transparent cover: during the dock handoff the live
+     corridor canvas is promoted to a fixed backdrop behind this station.
+     `.handoff-lab__services` re-shields to opaque void after the opening
+     viewport so later content never exposes the v7 gateway by accident. */
+  background: transparent;
   will-change: auto;
 }
 
 .build-quote--handoff .handoff-lab {
   width: 100%;
+}
+
+.handoff-lab--embedded {
+  /* See-through by design: the embedded services layer is the cover
+     surface that scrolls over the docked HomeCorridor canvas. */
+  background: transparent;
 }
 
 /* Embedded orbit handoff (production #buildQuote). The main HomeCorridor
@@ -49,22 +59,24 @@
    -100svh) and covers it through the transparent-top gradient, while the
    corridor's labs title cross-fades out via the SIGNAL_OUT band in
    CorridorStationHeaders so the handoff reads as a dissolve. */
-.handoff-lab--embedded .handoff-lab__artifact--stage {
-  margin-bottom: -100svh;
+@media (min-width: 961px) {
+  .handoff-lab--embedded .handoff-lab__artifact--stage {
+    display: none;
+  }
 }
 
-.handoff-lab--embedded .handoff-lab__artifact-stage-inner {
-  transform: translate3d(calc(-50% + 27vw), calc(-50% - 3vh), 0) scale(0.78);
-}
-
-/* Cancel the orbit cover's -100svh pull-up so the services layer does NOT
-   overlap the corridor's final viewport. The corridor's sphere + labs
-   title get a full viewport to themselves; only on further scroll does
-   "Stay in the instrument" rise in below. Higher specificity than the
-   base `.handoff-lab[data-scenario="orbit"]` rule so it wins regardless
-   of source order. */
 .handoff-lab.handoff-lab--embedded[data-scenario="orbit"] .handoff-lab__services {
-  margin-top: 0;
+  margin-top: -100svh;
+  z-index: 6;
+  background: linear-gradient(
+    180deg,
+    rgba(5, 4, 3, 0) 0,
+    rgba(5, 4, 3, 0.16) 28svh,
+    rgba(5, 4, 3, 0.5) 62svh,
+    rgba(10, 9, 8, 0.94) 108svh,
+    var(--surface-0, #0a0908) 152svh,
+    var(--surface-1, #0f0e0c) 100%
+  );
 }
 
 .handoff-lab__epilogue {

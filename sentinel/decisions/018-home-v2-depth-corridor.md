@@ -2,12 +2,62 @@
 
 **Date:** 2026-05-21
 **Status:** Proposed
-**Scope:** `/test/home-v2` only — the production homepage (`/`) is untouched.
+**Scope:** `/test/home-v2` and the production homepage corridor mount (`/`).
 **Related:**
 [ADR-008 — Landing v7 background layers](008-landing-v7-background-layers.md),
 [ADR-013 — Brandmark journey refactor](013-brandmark-journey-refactor.md),
 [ADR-015 — Brandmark vector-first](015-brandmark-vector-first.md),
 [ADR-017 — Orbit journey + substrate-sphere morph](017-orbit-journey-and-substrate-morph.md).
+
+---
+
+## 2026-06-13 Revision (v3.14) — Docked instrument handoff
+
+The production `#buildQuote` handoff now keeps the completed corridor
+sphere alive as a fixed backdrop while the services copy scrolls over it.
+This borrows the hashgraph-style composite pattern (persistent fixed
+WebGL layer, DOM content above it) without replacing the existing
+rect-based corridor scroll architecture.
+
+- `depthGatewayStore` gains `docked` and `dockProgress`. The corridor
+  stage still owns `progress` / `epilogueProgress`; the embedded
+  `HandoffOrbitEmbed` owns the later dock channel while its services
+  section is in view.
+- `html[data-corridor-docked="true"]` promotes
+  `.home-v2-stage__canvas` to `position: fixed; inset: 0` so the live
+  R3F scene persists after the sticky stage releases.
+- The substrate globe stays CENTERED as a persistent backdrop (with a
+  slow in-place spin), and the camera EASES into a held orbital pose
+  (`DOCKED_INSTRUMENT_EPILOGUE_POSE`) via a damped blend so docking never
+  pops. An earlier lateral X-slide was removed — it read as the sphere
+  "randomly moving right" and neither reference site translates its
+  background.
+- `HandoffOrbitEmbed` owns ONLY `docked` + `dockProgress`. It must NOT
+  also write `epilogueProgress`/`paintProgress`: two rAF hooks writing
+  the same channel fought every frame and made the sphere jitter/pulse.
+  `useDepthScroll` stays the sole writer of the scrub; painters read
+  `docked` and hold the fixed pose themselves.
+- The signal block (billions title + ticker + CTA) stays viewport-fixed
+  and CENTERED, cross-dissolving out (`titleIn * (1 - titleOut)`, keyed
+  to the services rect) as the services intro climbs to the top — so the
+  two text layers never overlap. The ticker arc is deepened to follow the
+  centered globe; it is NOT re-anchored sideways.
+- Reduced motion, mobile, and WebGL-fallback modes keep the previous
+  sequential handoff: no fixed dock layer, no live-canvas backdrop.
+
+**Rejected — global Lenis smooth scroll.** A global Lenis root was
+trialed on the v7 `LandingPage` to chase the hashgraph "buttery" feel.
+It introduced visible scroll stutter through the 3D corridor: Lenis runs
+its own rAF + interpolation, and the corridor camera (`FlyingCameraRig`),
+DOM copy tracker (`useWorldDomTracker`), and `useDepthScroll` each read
+scroll in their own rAF, so the heavy R3F scrub desynced by 1–2 frames.
+Measured on a high-refresh display across a 3.5s corridor scroll: p95
+frame time 33ms / max 67ms / 9 frames >40ms WITH Lenis, versus p95 4.3ms
+/ max 33ms / 0 frames >40ms WITHOUT. The fixed-canvas dock delivers the
+hashgraph composite feel on its own, so Lenis was removed. Do NOT
+reintroduce a global smooth-scroll wrapper over the corridor without
+unifying it into a single rAF that drives the scroll read + R3F render
+in order. (`useLenis` remains for the legacy cockpit/test routes only.)
 
 ---
 

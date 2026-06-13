@@ -105,3 +105,9 @@ export function epilogueBand(epilogueProgress: number, band_: keyof typeof EPILO
 export function getEpiloguePlanetScale(epilogueProgress: number): number {
   return 1 + (EPILOGUE_PLANET_GROW - 1) * epilogueBand(epilogueProgress, "APPROACH");
 }
+
+/** The dock handoff holds the globe as a centered instrument backdrop
+ *  (not the fully landed surface POV). A late orbital pose where TITLE_IN
+ *  has resolved and the sphere arc is still clearly visible behind the
+ *  services copy. The camera eases into this pose so docking never pops. */
+export const DOCKED_INSTRUMENT_EPILOGUE_POSE = 0.62;

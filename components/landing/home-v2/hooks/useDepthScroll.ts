@@ -191,6 +191,8 @@ export function useDepthScroll(stageRef: React.RefObject<HTMLDivElement | null>)
         paintProgress,
         epilogueProgress,
         velocity,
+        docked: prev.docked,
+        dockProgress: prev.dockProgress,
       });
     } else if (Math.abs(velocity) > 0.0001) {
       // Surface velocity decay even when progress hasn't changed,
@@ -204,6 +206,8 @@ export function useDepthScroll(stageRef: React.RefObject<HTMLDivElement | null>)
         paintProgress,
         epilogueProgress,
         velocity,
+        docked: prev.docked,
+        dockProgress: prev.dockProgress,
       });
     }
   }, [stageRef]);

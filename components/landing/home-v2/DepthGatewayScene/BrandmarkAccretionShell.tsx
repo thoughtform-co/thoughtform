@@ -78,12 +78,12 @@ export function BrandmarkAccretionShell() {
     if (!shell) return;
 
     const transform = useDepthGatewayStore.getState().transform;
-    const { paintProgress, active, armed } = transform;
+    const { paintProgress, active, armed, docked } = transform;
     // Smoothed epilogue scrub — same channel the camera flies
     // (2026-06-11 smoothness pass), so planet grow + pointer calm
     // never step against the gliding camera.
     const epilogueProgress = getSmoothedEpilogueProgress();
-    const painting = active || armed;
+    const painting = active || armed || docked;
 
     if (!painting) {
       shell.visible = false;
@@ -91,6 +91,10 @@ export function BrandmarkAccretionShell() {
     }
 
     shell.visible = true;
+    // The sphere stays CENTERED as a persistent backdrop while docked —
+    // both reference sites (hashgraphvc, activetheory) keep the 3D
+    // background parked and cross-fade the content over it. A lateral
+    // slide read as "the sphere randomly moves right", so it's gone.
     const [bx, by, bz] = getBrandmarkWorldPosition(paintProgress);
     shell.position.set(bx, by, bz);
 
@@ -173,9 +177,10 @@ export function BrandmarkAccretionShell() {
       roll = driftRoll;
     }
 
-    gyroAssembly.rotation.set(pitch, yaw, roll);
+    const dockSpin = docked && !motionFrozen ? t * 0.045 : 0;
+    gyroAssembly.rotation.set(pitch, yaw + dockSpin, roll);
     gyroTilt.x = pitch;
-    gyroTilt.y = yaw;
+    gyroTilt.y = yaw + dockSpin;
     gyroTilt.z = roll;
   });
 

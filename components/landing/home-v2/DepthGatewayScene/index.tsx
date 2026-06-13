@@ -37,7 +37,8 @@ import {
  */
 function MotionFollowerDriver() {
   useFrame((_, delta) => {
-    const { paintProgress, epilogueProgress, active } = useDepthGatewayStore.getState().transform;
+    const { paintProgress, epilogueProgress, active, docked } =
+      useDepthGatewayStore.getState().transform;
     const layers = getBrandmarkAccretionLayers(paintProgress);
     driveMotionFollower(
       {
@@ -49,7 +50,7 @@ function MotionFollowerDriver() {
       },
       delta,
       paintProgress,
-      active
+      active || docked
     );
   }, -10);
   return null;
@@ -207,11 +208,11 @@ export function DepthGatewayScene() {
   // handoff effect, which reads the same signal).
   const [engaged, setEngaged] = useState(() => {
     const t = useDepthGatewayStore.getState().transform;
-    return t.active || t.armed;
+    return t.active || t.armed || t.docked;
   });
   useEffect(() => {
     const unsubscribe = useDepthGatewayStore.subscribe((state) =>
-      setEngaged(state.transform.active || state.transform.armed)
+      setEngaged(state.transform.active || state.transform.armed || state.transform.docked)
     );
     return unsubscribe;
   }, []);

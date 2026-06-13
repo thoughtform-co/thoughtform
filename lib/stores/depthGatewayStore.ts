@@ -91,6 +91,16 @@ export interface DepthGatewayTransform {
    *  amplify near-camera streak flow only when the user is
    *  actively moving. */
   velocity: number;
+  /** True while the post-corridor services handoff keeps the live
+   *  R3F instrument docked as a fixed backdrop behind scrolling DOM
+   *  readouts. Written by the embedded handoff section, not by the
+   *  corridor stage's own scroll hook. */
+  docked: boolean;
+  /** 0..1 scrub through the docked services section. Kept separate
+   *  from `epilogueProgress` so the corridor's calibrated stage can
+   *  finish normally, then the later DOM section can keep the sphere
+   *  parked and subtly alive while its copy scrolls over it. */
+  dockProgress: number;
 }
 
 export const INITIAL_TRANSFORM: DepthGatewayTransform = {
@@ -102,6 +112,8 @@ export const INITIAL_TRANSFORM: DepthGatewayTransform = {
   paintProgress: 0,
   epilogueProgress: 0,
   velocity: 0,
+  docked: false,
+  dockProgress: 0,
 };
 
 interface DepthGatewayState {
@@ -124,7 +136,9 @@ function transformEquals(a: DepthGatewayTransform, b: DepthGatewayTransform): bo
     a.armed === b.armed &&
     a.paintProgress === b.paintProgress &&
     a.epilogueProgress === b.epilogueProgress &&
-    a.velocity === b.velocity
+    a.velocity === b.velocity &&
+    a.docked === b.docked &&
+    a.dockProgress === b.dockProgress
   );
 }
 

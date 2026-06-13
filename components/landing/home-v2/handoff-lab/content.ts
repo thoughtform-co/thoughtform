@@ -70,7 +70,7 @@ export const HANDOFF_SCENARIOS: Record<HandoffScenarioId, HandoffScenarioMeta> =
     label: "A / Orbit and Dock",
     title: "Stay in the instrument.",
     thesis:
-      "The globe never fully leaves the scene. It parks to the right and becomes the instrument each service readout orbits around.",
+      "The globe never leaves the scene. It stays the fixed instrument each service readout scrolls past and orbits around.",
     borrow:
       "Supports the deadrabbit and Astral Frontier direction: fixed celestial object, sparse copy, slow drift, and a docked proof object at the end.",
   },

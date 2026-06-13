@@ -114,10 +114,10 @@ export function HomeCorridor({ text, debug = true }: HomeCorridorProps) {
     // Apply immediately based on current engagement so the first
     // paint already matches the desired state.
     const initial = useDepthGatewayStore.getState().transform;
-    apply(initial.active || initial.armed);
+    apply(initial.active || initial.armed || initial.docked);
 
     const unsubscribe = useDepthGatewayStore.subscribe((state) => {
-      apply(state.transform.active || state.transform.armed);
+      apply(state.transform.active || state.transform.armed || state.transform.docked);
     });
 
     return () => {

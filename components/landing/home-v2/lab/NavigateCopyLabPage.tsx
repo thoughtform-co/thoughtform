@@ -67,6 +67,8 @@ export function NavigateCopyLabPage({ hudHtml, bodyClass }: NavigateCopyLabPageP
       paintProgress: parkProgress,
       epilogueProgress: 0,
       velocity: 0,
+      docked: false,
+      dockProgress: 0,
     });
     return () => {
       useDepthGatewayStore.getState().setTransform(INITIAL_TRANSFORM);
