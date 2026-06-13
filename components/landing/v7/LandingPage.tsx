@@ -12,6 +12,7 @@ import { CelestialPortals } from "./CelestialConnector/CelestialPortals";
 import { PhaseGlyphPortals } from "./PhaseGlyph";
 import { BuildCasesPortal } from "./build-cases";
 import { HomeCorridor } from "@/components/landing/home-v2/HomeCorridor";
+import { HandoffOrbitEmbed } from "@/components/landing/home-v2/handoff-lab/HandoffOrbitEmbed";
 import { CelestialEditorOverlay } from "@/components/admin/CelestialEditor";
 import { useCelestialDrafts } from "@/components/admin/CelestialEditor/useCelestialDrafts";
 import type { SlotsMap } from "@/lib/celestial/schema";
@@ -45,6 +46,8 @@ export function LandingPage({
   const brandmarkActorRef = useRef<BrandmarkActorHandle>(null);
   const corridorRootRef = useRef<Root | null>(null);
   const corridorMountRef = useRef<HTMLElement | null>(null);
+  const buildQuoteRootRef = useRef<Root | null>(null);
+  const buildQuoteMountRef = useRef<HTMLElement | null>(null);
 
   useLandingScroll(rootRef);
   useRevealMotion(rootRef);
@@ -141,6 +144,59 @@ export function LandingPage({
       corridorMountRef.current = null;
     };
   }, [corridorMountId, corridorText]);
+
+  // Replace the prototype's static Benedict Evans axiom cover with the
+  // production version of the /test/handoff-a orbit flow. Kept as a
+  // nested root for the same reason as HomeCorridor above: the parent
+  // HTML is owned by `dangerouslySetInnerHTML`, so this mount has to be
+  // resilient to dev remounts and bfcache restores.
+  useLayoutEffect(() => {
+    const root = rootRef.current;
+    if (!root) return;
+
+    const mountHandoff = () => {
+      const mount = root.querySelector<HTMLElement>("#buildQuote");
+      if (!mount) return;
+
+      const runway = mount.closest<HTMLElement>(".build-quote-runway");
+      runway?.setAttribute("data-build-handoff", "true");
+      mount.classList.add("build-quote--handoff");
+
+      const sameNode = mount === buildQuoteMountRef.current;
+      const rootAlive = buildQuoteRootRef.current != null;
+      const hasContent = mount.childNodes.length > 0;
+      if (sameNode && rootAlive && hasContent) return;
+
+      buildQuoteRootRef.current?.unmount();
+      mount.replaceChildren();
+      buildQuoteMountRef.current = mount;
+      buildQuoteRootRef.current = createRoot(mount);
+      buildQuoteRootRef.current.render(<HandoffOrbitEmbed />);
+    };
+
+    mountHandoff();
+    const observer = new MutationObserver(mountHandoff);
+    observer.observe(root, { childList: true, subtree: true });
+
+    const onPageShow = (event: PageTransitionEvent) => {
+      if (event.persisted) mountHandoff();
+    };
+    window.addEventListener("pageshow", onPageShow);
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("pageshow", onPageShow);
+      buildQuoteRootRef.current?.unmount();
+      buildQuoteRootRef.current = null;
+      if (buildQuoteMountRef.current) {
+        buildQuoteMountRef.current
+          .closest<HTMLElement>(".build-quote-runway")
+          ?.removeAttribute("data-build-handoff");
+        buildQuoteMountRef.current.classList.remove("build-quote--handoff");
+      }
+      buildQuoteMountRef.current = null;
+    };
+  }, []);
 
   // Hamburger toggle — wire imperatively since the nav markup comes from HTML
   useEffect(() => {

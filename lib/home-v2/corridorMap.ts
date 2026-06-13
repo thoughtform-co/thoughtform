@@ -99,6 +99,8 @@ export interface NodeContent {
   titleHtml: string;
   /** Optional one-line supporting clause (may contain `<em>`). */
   supportHtml?: string;
+  /** Shorter support copy for mobile / reduced-motion readouts. */
+  floorHtml?: string;
   /** Optional pseudo-telemetry block rendered around the station's
    *  HUD readout cluster (header row + status prefix). All fields
    *  are short uppercase strings; the StationTitle component
@@ -259,29 +261,18 @@ export const CORRIDOR_MAP = [
     // (2026-06-05).
     parkDistance: 6.2,
     content: {
-      kicker: "01 · Navigate",
-      titleHtml: "Navigate the <em>intelligence</em>.",
-      // W2 (plan 03adb0dd) replaced "AI isn't software. It's
-      // intelligence that sits between tool and collaborator." which
-      // violated the strategy skill's voice rule against the
-      // "X is not Y, it is Z" construction. The 2026-06-08 follow-up
-      // named the trained-on-us-but-alien framing and the
-      // command→navigate shift; gold em on "navigating" reinforces
-      // the station verb.
-      //
-      // Stack v3 caption pass (2026-06-10): condensed for the centred
-      // cartouche. Polish round 4: the `<br>` is a deliberate
-      // sentence-per-line break — CorridorStationHeaders splits on it
-      // and renders each line as a block, so the caption reads as two
-      // clean balanced lines instead of an awkward wrap.
+      kicker: "01 · NAVIGATE",
+      titleHtml: "NAVIGATE THE <em>INTELLIGENCE.</em>",
       supportHtml:
-        "Trained on us, but it doesn't think like us.<br>So you stop commanding and start <em>navigating</em>.",
+        "Trained on us, but it doesn't think like us.<br>So commands give you everyone's answer. <em>Navigation</em> gives you yours.",
+      floorHtml:
+        "Trained on us. Thinks nothing like us.<br>Commands give you everyone's answer. <em>Navigation</em> gives you yours.",
       telemetry: {
-        sector: "STATION 01",
+        sector: "01 · NAVIGATE",
         callsign: "NAV-01",
-        code: "ID NX-01",
-        status: "LOCKED",
-        metric: "BRG 312°",
+        code: "NAVIGATE",
+        status: "TRACKING",
+        metric: "TRACKING",
       },
     },
   },
@@ -300,19 +291,18 @@ export const CORRIDOR_MAP = [
     // oversight margin (lab-match revision).
     parkDistance: 6.2,
     content: {
-      kicker: "02 · Encode",
-      titleHtml: "Encode the <em>judgment</em>.",
-      // 2026-06-11 copy pass — judgment trapped in heads, unreachable
-      // by the model; encoding once so it inherits instead of guesses.
-      // Polish round 4: `<br>` = sentence-per-line break.
+      kicker: "02 · ENCODE",
+      titleHtml: "ENCODE THE <em>EXPERTISE.</em>",
       supportHtml:
-        "Judgment sits in heads. The model can't reach it there.<br>Encode it once. It inherits instead of guessing.",
+        "Expertise sits in heads. The model can't reach it there.<br>Encode it once. It <em>inherits</em> instead of guessing.",
+      floorHtml:
+        "Expertise sits in heads. The model can't reach it.<br><em>Encode</em> it once. Guessing ends.",
       telemetry: {
-        sector: "STATION 02",
+        sector: "02 · ENCODE",
         callsign: "ENC-02",
-        code: "ID EN-02",
+        code: "ENCODE",
         status: "ENCODING",
-        metric: "DPT 0.53",
+        metric: "ENCODING",
       },
     },
   },
@@ -339,24 +329,18 @@ export const CORRIDOR_MAP = [
     // instead of filling the viewport (lab-match revision).
     parkDistance: 6.2,
     content: {
-      kicker: "03 · Build",
-      titleHtml: "Build on the <em>substrate</em>.",
-      // 2026-06-08 copy pass — lands on durable ownership: encoded
-      // judgment becomes capability that runs across every surface
-      // and outlives any single model. Gold em on "owned capability"
-      // mirrors the Thoughtform spine "...until they own it."
-      // Stack v3 caption pass (2026-06-10): condensed for the
-      // centred cartouche while keeping ownership + survives-the-
-      // next-model anchor. Polish round 4: `<br>` = sentence-per-
-      // line break.
+      kicker: "03 · BUILD",
+      titleHtml: "BUILD ON THE <em>LAYER.</em>",
       supportHtml:
-        "Encoded once, it's <em>owned capability</em> — running across chat, agents, and your own apps.<br>And surviving the next model.",
+        "One layer under every surface: chat, agents, your own tools.<br>You <em>own</em> it. Models change. It holds.",
+      floorHtml:
+        "One layer under everything. Chat, agents, your own tools.<br><em>Yours.</em> Models change. It holds.",
       telemetry: {
-        sector: "STATION 03",
+        sector: "03 · BUILD",
         callsign: "BLD-03",
-        code: "ID SB-03",
+        code: "BUILD",
         status: "LIVE",
-        metric: "RUN 24/7",
+        metric: "LIVE",
       },
     },
   },

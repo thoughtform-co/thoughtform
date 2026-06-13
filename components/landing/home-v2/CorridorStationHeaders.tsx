@@ -182,6 +182,7 @@ interface StationContent {
   kicker?: string;
   titleHtml: string;
   supportHtml?: string;
+  floorHtml?: string;
   /** Station telemetry readouts (sector / callsign / status / code /
    *  metric) rendered as chrome rows inside the support console. */
   telemetry?: StationTelemetry;
@@ -259,6 +260,8 @@ interface StationBlockProps {
   registerCursors: (title: HTMLSpanElement | null, support: HTMLSpanElement | null) => void;
   content: StationContent;
   typewriter: boolean;
+  beforeContent?: ReactNode;
+  afterContent?: ReactNode;
   /** Optional modifier class layered on top of `.home-v2-station-header`
    *  so the same typewriter machinery can drive blocks anchored at
    *  different viewport positions (e.g. the lower-left "signal" block
@@ -283,6 +286,8 @@ function StationBlock({
   registerCursors,
   content,
   typewriter,
+  beforeContent,
+  afterContent,
   variantClass,
   split = false,
 }: StationBlockProps) {
@@ -294,6 +299,7 @@ function StationBlock({
     .filter(Boolean)
     .join(" ");
   const titleTokens = useMemo(() => tokenize(content.titleHtml), [content.titleHtml]);
+  const supportHtml = !typewriter && content.floorHtml ? content.floorHtml : content.supportHtml;
   // Support copy may carry `<br>` separators — deliberate sentence-
   // per-line breaks for the centred caption (2026-06-10 polish round
   // 4). The tokenizer drops unknown tags, so split FIRST, tokenize
@@ -301,9 +307,9 @@ function StationBlock({
   // char registration below concatenates lines in order so the
   // typewriter machinery is untouched.
   const supportLineTokens = useMemo(() => {
-    if (!content.supportHtml) return [] as CharToken[][];
-    return content.supportHtml.split(/<br\s*\/?>/i).map((line) => tokenize(line.trim()));
-  }, [content.supportHtml]);
+    if (!supportHtml) return [] as CharToken[][];
+    return supportHtml.split(/<br\s*\/?>/i).map((line) => tokenize(line.trim()));
+  }, [supportHtml]);
 
   const titleSpanRefs = useRef<HTMLSpanElement[]>([]);
   const supportSpanRefs = useRef<HTMLSpanElement[]>([]);
@@ -333,10 +339,10 @@ function StationBlock({
         dangerouslySetInnerHTML={{ __html: content.titleHtml }}
       />
     );
-    const support = content.supportHtml ? (
+    const support = supportHtml ? (
       <p
         className="home-v2-station-header__support"
-        dangerouslySetInnerHTML={{ __html: content.supportHtml }}
+        dangerouslySetInnerHTML={{ __html: supportHtml }}
       />
     ) : null;
     return (
@@ -356,7 +362,9 @@ function StationBlock({
           </>
         ) : (
           <>
+            {beforeContent}
             {head}
+            {afterContent}
             {support}
           </>
         )}
@@ -470,7 +478,9 @@ function StationBlock({
         </>
       ) : (
         <>
+          {beforeContent}
           {titleEl}
+          {afterContent}
           {supportEl}
         </>
       )}
@@ -490,9 +500,59 @@ function StationBlock({
 // anchor pattern are identical — only the CSS variant (`--signal`)
 // and the opacity driver differ.
 const SIGNAL_CONTENT: StationContent = {
-  titleHtml: "The labs just bet <em>billions</em> on the same layer.",
-  supportHtml: "Not a model problem. A deployment problem. Both labs just said so out loud.",
+  titleHtml: "AND THE LABS ARE SPENDING <em>BILLIONS</em> ON THE SAME LAYER.",
 };
+
+const SIGNAL_TICKER_ITEMS = [
+  "OpenAI launches a $10B Deployment Company to put AI inside business workflows",
+  "Anthropic backs a $1.5B AI consultancy to drive Claude adoption across enterprises",
+  "Palantir's Forward Deployed Engineers embed to capture how each company works",
+  "Stripe staffs AI-natives inside marketing until the team can run it alone",
+];
+
+function EpilogueNewsTicker({ animate }: { animate: boolean }) {
+  const tickerText = `${SIGNAL_TICKER_ITEMS.join("     ◆     ")}     ◆     `;
+  const repeatedTickerText = `${tickerText}${tickerText}`;
+
+  return (
+    <svg
+      className="home-v2-signal-ticker"
+      viewBox="0 0 1200 240"
+      preserveAspectRatio="xMidYMid meet"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <defs>
+        <path id="home-v2-signal-ticker-arc" d="M -320 292 Q 600 -108 1520 292" />
+      </defs>
+      <text className="home-v2-signal-ticker__text">
+        <textPath href="#home-v2-signal-ticker-arc" startOffset={animate ? "0%" : "7%"}>
+          {repeatedTickerText}
+          {animate && (
+            <animate
+              attributeName="startOffset"
+              from="0%"
+              to="-50%"
+              dur="18s"
+              repeatCount="indefinite"
+            />
+          )}
+        </textPath>
+      </text>
+    </svg>
+  );
+}
+
+function SignalActions() {
+  return (
+    <div className="home-v2-signal-actions">
+      <a className="home-v2-signal-cta" href="#contact">
+        BUILD YOUR OWN LAYER <span aria-hidden="true">→</span>
+      </a>
+      <p className="home-v2-signal-note">Before they sell it back to you.</p>
+    </div>
+  );
+}
 
 export function CorridorStationHeaders() {
   const nav = stationById("navigate")?.content;
@@ -563,6 +623,10 @@ export function CorridorStationHeaders() {
       const t = useDepthGatewayStore.getState().transform;
       const painting = t.active || t.armed;
       const p = painting ? t.paintProgress : 0;
+      const stage = document.querySelector<HTMLElement>(".home-v2-stage");
+      const stageRect = stage?.getBoundingClientRect();
+      const stageInViewport =
+        !!stageRect && stageRect.top < window.innerHeight && stageRect.bottom > 0;
       const nowSec = performance.now() / 1000;
 
       // Epilogue v3 (planet landing, restored 2026-06-11) — Build
@@ -583,8 +647,13 @@ export function CorridorStationHeaders() {
         // Signal block — "The labs just bet billions on the same
         // layer." Top-centre title that marks the end of the 3D
         // space. Driven by the TITLE_IN band so it arrives after
-        // the planet landing has settled.
-        sig: titleIn,
+        // the planet landing has settled. It must still be scoped to
+        // the corridor stage because this layer is `position: fixed`;
+        // otherwise a stale epilogue scrub from another section can
+        // paint the labs ticker/CTA over the hero. We use the stage
+        // rect rather than `active/armed` because the late epilogue can
+        // remain visibly pinned after the store has dropped engagement.
+        sig: stageInViewport ? titleIn : 0,
       };
 
       // Container opacity writes (suppress when no meaningful change).
@@ -601,6 +670,11 @@ export function CorridorStationHeaders() {
           const el = stationRefs.current[key].container;
           if (el) el.style.opacity = containerOps[key].toFixed(3);
         }
+      }
+      const signalEl = stationRefs.current.sig.container;
+      if (signalEl) {
+        if (containerOps.sig >= TYPER_ARRIVE_OPACITY) signalEl.removeAttribute("inert");
+        else signalEl.setAttribute("inert", "");
       }
 
       // World-coupled parallax for the bottom-centre cartouche
@@ -795,6 +869,7 @@ export function CorridorStationHeaders() {
     stationRefs.current.bld.container = el;
   };
   const setSigRef = (el: HTMLDivElement | null) => {
+    if (el) el.setAttribute("inert", "");
     stationRefs.current.sig.container = el;
   };
 
@@ -870,6 +945,8 @@ export function CorridorStationHeaders() {
         registerCursors={sigRegisterCursors}
         content={sig}
         typewriter={typewriter}
+        beforeContent={<EpilogueNewsTicker animate={!reducedMotion} />}
+        afterContent={<SignalActions />}
         variantClass="home-v2-station-header--signal"
       />
     </div>

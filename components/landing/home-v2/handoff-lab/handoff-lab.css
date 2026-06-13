@@ -10,6 +10,28 @@
   color: var(--dawn, #ece3d6);
 }
 
+.build-quote-runway[data-build-handoff="true"] {
+  height: auto;
+}
+
+.station.station--cover.build-quote--handoff {
+  position: relative;
+  top: auto;
+  display: block;
+  align-items: initial;
+  justify-content: initial;
+  height: auto;
+  min-height: 0;
+  padding: 0;
+  overflow: visible;
+  background: var(--void, #050403);
+  will-change: auto;
+}
+
+.build-quote--handoff .handoff-lab {
+  width: 100%;
+}
+
 .handoff-lab__epilogue {
   position: relative;
   height: 185svh;

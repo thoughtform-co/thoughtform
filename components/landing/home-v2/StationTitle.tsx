@@ -42,6 +42,7 @@ export function StationTitle({ content, base }: StationTitleProps) {
   const titleOrigin = isMobile ? "bottom-center" : "top-left";
   const supportOrigin = isMobile ? "top-center" : "top-left";
   const layoutClass = isMobile ? "" : " home-v2-readout--twocol";
+  const supportHtml = isMobile && content.floorHtml ? content.floorHtml : content.supportHtml;
 
   return (
     <>
@@ -111,7 +112,7 @@ export function StationTitle({ content, base }: StationTitleProps) {
       {/* ── Support cluster ────────────────────────────────────────
           Desktop: top-RIGHT band of the gate, paired with the title
           column. Mobile: below the reticle with a vertical up-leader. */}
-      {content.supportHtml && (
+      {supportHtml && (
         <div
           className={`home-v2-readout home-v2-readout--support${layoutClass}`}
           data-world-anchor={`${base}.support`}
@@ -127,7 +128,7 @@ export function StationTitle({ content, base }: StationTitleProps) {
           )}
           <p
             className="home-v2-readout__support home-v2-copy-body home-v2-station-support"
-            dangerouslySetInnerHTML={{ __html: content.supportHtml }}
+            dangerouslySetInnerHTML={{ __html: supportHtml }}
           />
         </div>
       )}
