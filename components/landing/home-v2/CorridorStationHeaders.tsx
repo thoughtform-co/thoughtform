@@ -623,10 +623,8 @@ export function CorridorStationHeaders() {
       const t = useDepthGatewayStore.getState().transform;
       const painting = t.active || t.armed;
       const p = painting ? t.paintProgress : 0;
-      const stage = document.querySelector<HTMLElement>(".home-v2-stage");
-      const stageRect = stage?.getBoundingClientRect();
-      const stageInViewport =
-        !!stageRect && stageRect.top < window.innerHeight && stageRect.bottom > 0;
+      const corridorEngaged = painting;
+      const inEpilogue = t.epilogueProgress > 0.001;
       const nowSec = performance.now() / 1000;
 
       // Epilogue v3 (planet landing, restored 2026-06-11) — Build
@@ -640,20 +638,35 @@ export function CorridorStationHeaders() {
       const ep = getSmoothedEpilogueProgress();
       const buildOut = 1 - epilogueBand(ep, "BUILD_OUT");
       const titleIn = epilogueBand(ep, "TITLE_IN");
+      // Fade the labs signal out as the corridor stage scrolls away beneath
+      // the production handoff cover. The sphere + title hold a full
+      // viewport at the epilogue climax; once the stage un-pins and scrolls
+      // out, the services layer rises in below and the title dissolves with
+      // it. epilogueProgress is saturated (==1) through this release, so the
+      // fade is driven by the stage's own scroll-out, not an epilogue band.
+      // /test/home-v2 has no cover layer, so the title simply stays up.
+      let titleOut = 0;
+      if (inEpilogue && document.querySelector(".handoff-lab--embedded")) {
+        const stageEl = document.querySelector<HTMLElement>(".home-v2-stage");
+        const sr = stageEl?.getBoundingClientRect();
+        if (sr) {
+          const vhNow = window.innerHeight || 1;
+          // release: 0 when the stage just un-pins (bottom == vh), 1 when
+          // the stage has fully scrolled out (bottom == 0).
+          const release = Math.max(0, Math.min(1, (vhNow - sr.bottom) / vhNow));
+          titleOut = smoothstep(0.5, 0.82, release);
+        }
+      }
       const containerOps = {
         nav: bandOpacity(p, NAVIGATE_FADE_IN, NAVIGATE_FADE_OUT),
         enc: bandOpacity(p, ENCODE_FADE_IN, ENCODE_FADE_OUT),
         bld: bandOpacity(p, BUILD_FADE_IN) * buildOut,
-        // Signal block — "The labs just bet billions on the same
-        // layer." Top-centre title that marks the end of the 3D
-        // space. Driven by the TITLE_IN band so it arrives after
-        // the planet landing has settled. It must still be scoped to
-        // the corridor stage because this layer is `position: fixed`;
-        // otherwise a stale epilogue scrub from another section can
-        // paint the labs ticker/CTA over the hero. We use the stage
-        // rect rather than `active/armed` because the late epilogue can
-        // remain visibly pinned after the store has dropped engagement.
-        sig: stageInViewport ? titleIn : 0,
+        // Signal block — labs epilogue title + ticker + CTA. Scoped to
+        // corridor engagement AND the epilogue scrub channel so the
+        // fixed overlay never paints over the hero or during Navigate/
+        // Encode/Build travel. Fades back out (titleOut) as the handoff
+        // cover rises over it on production.
+        sig: corridorEngaged && inEpilogue ? titleIn * (1 - titleOut) : 0,
       };
 
       // Container opacity writes (suppress when no meaningful change).

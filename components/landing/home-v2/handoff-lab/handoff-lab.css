@@ -32,6 +32,41 @@
   width: 100%;
 }
 
+/* Embedded orbit handoff (production #buildQuote). The main HomeCorridor
+   epilogue already paints the sphere + labs title, so the embed drops its
+   duplicate 3D runway/pivot and the services layer starts directly under
+   the labs title. Cancel the orbit cover-transition pull-up + transparent
+   top — there is no pinned scene beneath this layer to cover. Higher
+   specificity than the `[data-scenario="orbit"]` base rule so it wins
+   regardless of source order. */
+/* Embedded orbit handoff (production #buildQuote): the section opens
+   directly on its content — no approach runway, no centred-arrival beat.
+   The artifact rail is pulled out of flow (negative margin equal to its
+   sticky height) so the kicker + headline are the first thing in view,
+   and the instrument rests docked-right from the first frame (the
+   readouts orbit it). The orbit base rules still own the rise: the
+   services panel overlaps the corridor's final viewport (margin-top
+   -100svh) and covers it through the transparent-top gradient, while the
+   corridor's labs title cross-fades out via the SIGNAL_OUT band in
+   CorridorStationHeaders so the handoff reads as a dissolve. */
+.handoff-lab--embedded .handoff-lab__artifact--stage {
+  margin-bottom: -100svh;
+}
+
+.handoff-lab--embedded .handoff-lab__artifact-stage-inner {
+  transform: translate3d(calc(-50% + 27vw), calc(-50% - 3vh), 0) scale(0.78);
+}
+
+/* Cancel the orbit cover's -100svh pull-up so the services layer does NOT
+   overlap the corridor's final viewport. The corridor's sphere + labs
+   title get a full viewport to themselves; only on further scroll does
+   "Stay in the instrument" rise in below. Higher specificity than the
+   base `.handoff-lab[data-scenario="orbit"]` rule so it wins regardless
+   of source order. */
+.handoff-lab.handoff-lab--embedded[data-scenario="orbit"] .handoff-lab__services {
+  margin-top: 0;
+}
+
 .handoff-lab__epilogue {
   position: relative;
   height: 185svh;
