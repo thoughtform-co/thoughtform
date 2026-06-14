@@ -649,28 +649,18 @@ export function CorridorStationHeaders() {
       let titleOut = 0;
       const embedded = document.querySelector(".handoff-lab--embedded");
       const vhNow = window.innerHeight || 1;
-      if (embedded) {
-        if (docked) {
-          // DOCKED cross-dissolve. As the services intro climbs toward the
-          // top of the viewport, fade the billions block (title + ticker +
-          // CTA) out so the two text layers never overlap. This is the fix
-          // for the pile-up where "Stay in the instrument" scrolled up
-          // straight through the fixed "billions" title with no occlusion.
-          const sr = document
-            .querySelector<HTMLElement>(".handoff-lab__services")
-            ?.getBoundingClientRect();
-          // top/vh: ~1 while the section is entering from the bottom, →0 as
-          // its top reaches the viewport top, <0 once it has scrolled past.
-          const topRatio = sr ? sr.top / vhNow : 0;
-          titleOut = 1 - smoothstep(0.12, 0.54, topRatio);
-        } else if (inEpilogue) {
-          // Pre-dock epilogue: fade as the corridor stage scrolls away.
-          const sr = document.querySelector<HTMLElement>(".home-v2-stage")?.getBoundingClientRect();
-          if (sr) {
-            const release = Math.max(0, Math.min(1, (vhNow - sr.bottom) / vhNow));
-            titleOut = smoothstep(0.5, 0.82, release);
-          }
-        }
+      if (embedded && docked) {
+        // The billions block belongs to the sphere scene, so it recedes +
+        // fades WITH the sphere as the opaque services plane covers it.
+        // Key the fade to the COVER progress (how far the services plane has
+        // risen over the viewport): hold full early, gone by the time the
+        // cover is ~halfway up — well before it would hard-occlude the title
+        // — so the billions never co-reads with "Stay in the instrument".
+        const sr = document
+          .querySelector<HTMLElement>(".handoff-lab__services")
+          ?.getBoundingClientRect();
+        const cover = sr ? Math.max(0, Math.min(1, (vhNow - sr.top) / vhNow)) : 0;
+        titleOut = smoothstep(0.06, 0.5, cover);
       }
       const containerOps = {
         nav: bandOpacity(p, NAVIGATE_FADE_IN, NAVIGATE_FADE_OUT),

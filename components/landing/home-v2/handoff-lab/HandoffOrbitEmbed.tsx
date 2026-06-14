@@ -8,6 +8,17 @@ function clamp01(value: number): number {
   return Math.max(0, Math.min(1, value));
 }
 
+/** Corridor epilogueProgress at/after which the live sphere docks as a
+ *  fixed backdrop. Chosen so the billions title is essentially up
+ *  (TITLE_IN ends 0.74) and the camera has all but landed before the
+ *  instrument is held — the start of the deliberate DWELL on the landed
+ *  sphere, BEFORE the services copy begins to rise. Engaging here (rather
+ *  than off this section's own position) is what opens a clean hold:
+ *  the canvas is promoted absolute → fixed while the stage is still
+ *  sticky-pinned, so the switch is seamless, and the sphere then stays
+ *  put as the stage scrolls out beneath the rising cover. */
+const DOCK_ENGAGE_EP = 0.72;
+
 /**
  * useEmbeddedServicesScroll — single rAF scroll watcher for the
  * production-embedded orbit handoff.
@@ -41,16 +52,33 @@ function useEmbeddedServicesScroll(servicesRef: RefObject<HTMLElement | null>) {
       const servicesRect = services.getBoundingClientRect();
       const travel = Math.max(1, servicesRect.height - vh);
       const sectionProgress = clamp01(-servicesRect.top / travel);
-      const servicesInView = servicesRect.top < vh && servicesRect.bottom > 0;
       const reducedMotion =
         window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
       const mobile = window.matchMedia?.("(max-width: 960px)").matches ?? false;
       const corridorFallback =
         document.querySelector<HTMLElement>(".home-v2-stage")?.dataset.fallback === "true";
       const dockCapable = !reducedMotion && !mobile && !corridorFallback;
-      const docked = dockCapable && servicesInView && servicesRect.top <= vh * 0.92;
+
+      // Dock OFF the corridor epilogue (sphere landed + billions title up),
+      // NOT off this section's scroll position. Holding the sphere as a
+      // fixed backdrop from `DOCK_ENGAGE_EP` onward is what opens the
+      // dwell: the instrument is locked the moment the landing resolves,
+      // so the climax holds a clean viewport before this copy rises. Stays
+      // docked until the section has fully scrolled past (into continuum)
+      // or the user scrolls back up into the live epilogue (ep drops).
+      const ep = useDepthGatewayStore.getState().transform.epilogueProgress;
+      const docked = dockCapable && ep >= DOCK_ENGAGE_EP && servicesRect.bottom > 0;
+
+      // Cover progress — how far this opaque services plane has risen over
+      // the viewport: 0 when its top sits at the viewport bottom, 1 once it
+      // covers the full viewport. Drives the SPHERE recede (the docked
+      // canvas scale + fade in home-v2.css) and the billions cross-fade —
+      // the parallax depth at the seam. Written on <html> so the fixed
+      // canvas + the corridor headers can read it.
+      const cover = clamp01((vh - servicesRect.top) / vh);
 
       services.style.setProperty("--handoff-progress", sectionProgress.toFixed(4));
+      document.documentElement.style.setProperty("--handoff-cover", cover.toFixed(4));
       if (docked) {
         document.documentElement.setAttribute("data-corridor-docked", "true");
       } else {
@@ -87,6 +115,7 @@ function useEmbeddedServicesScroll(servicesRef: RefObject<HTMLElement | null>) {
       window.removeEventListener("scroll", requestWrite);
       window.removeEventListener("resize", requestWrite);
       document.documentElement.removeAttribute("data-corridor-docked");
+      document.documentElement.style.removeProperty("--handoff-cover");
       const store = useDepthGatewayStore.getState();
       store.setTransform({
         ...store.transform,

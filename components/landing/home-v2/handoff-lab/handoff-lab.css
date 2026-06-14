@@ -66,15 +66,23 @@
 }
 
 .handoff-lab.handoff-lab--embedded[data-scenario="orbit"] .handoff-lab__services {
-  margin-top: -100svh;
+  /* OPAQUE cover. The services layer begins where the corridor stage ends
+     and slides UP over the docked sphere as one solid plane — a clean
+     swipe, NOT a transparent veil and with NO empty dwell band. "Stay in
+     the instrument" sits near the top of the cover (normal section
+     padding only). A 3svh feather on the leading edge keeps the top from
+     reading as a hard cut; everything below is full void. The depth at the
+     seam comes from the SPHERE receding behind this plane — the canvas
+     scale + fade driven by `--handoff-cover` in home-v2.css (the parallax).
+     */
+  margin-top: 0;
+  padding-top: clamp(40px, 6vh, 84px);
   z-index: 6;
   background: linear-gradient(
     180deg,
     rgba(5, 4, 3, 0) 0,
-    rgba(5, 4, 3, 0.16) 28svh,
-    rgba(5, 4, 3, 0.5) 62svh,
-    rgba(10, 9, 8, 0.94) 108svh,
-    var(--surface-0, #0a0908) 152svh,
+    var(--void, #050403) 3svh,
+    var(--surface-0, #0a0908) 56svh,
     var(--surface-1, #0f0e0c) 100%
   );
 }
@@ -613,7 +621,10 @@
    belongs to the pinned artifact (deadrabbit / glyphic IA). */
 .handoff-lab[data-scenario="orbit"] .handoff-lab__scenario-head {
   grid-template-columns: minmax(0, 0.62fr);
-  margin-top: clamp(48px, 9vh, 120px);
+  /* Headline leads the cover — small top offset so "Stay in the
+     instrument" sits near the cover's leading edge, not floating in a
+     band of empty void below it. */
+  margin-top: clamp(16px, 2.5vh, 44px);
 }
 
 .handoff-lab[data-scenario="orbit"] .handoff-lab__scenario-head span {
