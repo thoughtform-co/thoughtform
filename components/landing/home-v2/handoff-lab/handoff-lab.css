@@ -42,23 +42,13 @@
   background: transparent;
 }
 
-/* Embedded orbit handoff (production #buildQuote). The main HomeCorridor
-   epilogue already paints the sphere + labs title, so the embed drops its
-   duplicate 3D runway/pivot and the services layer starts directly under
-   the labs title. Cancel the orbit cover-transition pull-up + transparent
-   top — there is no pinned scene beneath this layer to cover. Higher
-   specificity than the `[data-scenario="orbit"]` base rule so it wins
-   regardless of source order. */
-/* Embedded orbit handoff (production #buildQuote): the section opens
-   directly on its content — no approach runway, no centred-arrival beat.
-   The artifact rail is pulled out of flow (negative margin equal to its
-   sticky height) so the kicker + headline are the first thing in view,
-   and the instrument rests docked-right from the first frame (the
-   readouts orbit it). The orbit base rules still own the rise: the
-   services panel overlaps the corridor's final viewport (margin-top
-   -100svh) and covers it through the transparent-top gradient, while the
-   corridor's labs title cross-fades out via the SIGNAL_OUT band in
-   CorridorStationHeaders so the handoff reads as a dissolve. */
+/* Embedded swipe handoff (production #buildQuote). The main HomeCorridor
+   epilogue already paints the sphere + labs title, so production does not
+   mount the lab's duplicate R3F runway. Instead, the live corridor canvas
+   docks as a fixed backdrop and this services section supplies the cover
+   plane: one viewport of mostly visual swipe, then the practical copy.
+   The transparent leading edge is intentional (ADR-008 exception) and
+   becomes fully opaque as `--handoff-cover` reaches 1. */
 @media (min-width: 961px) {
   .handoff-lab--embedded .handoff-lab__artifact--stage {
     display: none;
@@ -66,23 +56,19 @@
 }
 
 .handoff-lab.handoff-lab--embedded[data-scenario="orbit"] .handoff-lab__services {
-  /* OPAQUE cover. The services layer begins where the corridor stage ends
-     and slides UP over the docked sphere as one solid plane — a clean
-     swipe, NOT a transparent veil and with NO empty dwell band. "Stay in
-     the instrument" sits near the top of the cover (normal section
-     padding only). A 3svh feather on the leading edge keeps the top from
-     reading as a hard cut; everything below is full void. The depth at the
-     seam comes from the SPHERE receding behind this plane — the canvas
-     scale + fade driven by `--handoff-cover` in home-v2.css (the parallax).
-     */
   margin-top: 0;
-  padding-top: clamp(40px, 6vh, 84px);
+  min-height: 420svh;
+  padding-top: 0;
   z-index: 6;
+  /* The top edge starts atmospheric while the docked sphere is still
+     visible, then the alpha is driven to opaque by the cover progress so
+     the services layer fully replaces the scene after one viewport. */
   background: linear-gradient(
     180deg,
-    rgba(5, 4, 3, 0) 0,
-    var(--void, #050403) 3svh,
-    var(--surface-0, #0a0908) 56svh,
+    rgba(5, 4, 3, calc(0.08 + var(--handoff-cover, 0) * 0.92)) 0,
+    rgba(5, 4, 3, calc(0.68 + var(--handoff-cover, 0) * 0.32)) 30svh,
+    var(--void, #050403) 78svh,
+    var(--surface-0, #0a0908) 130svh,
     var(--surface-1, #0f0e0c) 100%
   );
 }
@@ -207,6 +193,61 @@
   opacity: 0.2;
 }
 
+.handoff-lab__swipe-cover {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  height: 100svh;
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+
+.handoff-lab__swipe-cover::before,
+.handoff-lab__swipe-cover::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+}
+
+.handoff-lab__swipe-cover::before {
+  inset: clamp(24px, 5vh, 54px) clamp(18px, 4vw, 72px);
+  border-top: 1px solid rgba(236, 227, 214, 0.14);
+  border-bottom: 1px solid rgba(236, 227, 214, 0.08);
+  opacity: calc(0.16 + var(--handoff-cover, 0) * 0.34);
+}
+
+.handoff-lab__swipe-cover::after {
+  left: 50%;
+  top: 50%;
+  width: min(58vw, 760px);
+  height: min(48vh, 420px);
+  transform: translate3d(-50%, calc(-50% + (1 - var(--handoff-cover, 0)) * 8vh), 0) skewY(-5deg);
+  background:
+    linear-gradient(115deg, transparent 0 46%, rgba(236, 227, 214, 0.09) 47% 48%, transparent 49%),
+    radial-gradient(circle at 50% 52%, rgba(202, 165, 84, 0.11), transparent 54%);
+  opacity: calc(0.18 + var(--handoff-cover, 0) * 0.26);
+  mix-blend-mode: screen;
+}
+
+.handoff-lab__swipe-chrome {
+  position: absolute;
+  left: clamp(20px, 5vw, 96px);
+  right: clamp(20px, 5vw, 96px);
+  bottom: clamp(34px, 7vh, 86px);
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  font-family: var(--font-pt-mono, ui-monospace, monospace);
+  font-size: 9px;
+  line-height: 1;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(236, 227, 214, 0.42);
+  opacity: calc(var(--handoff-cover, 0) * 0.75);
+}
+
 .handoff-lab__scenario-head {
   position: relative;
   z-index: 2;
@@ -243,6 +284,18 @@
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: rgba(236, 227, 214, 0.44);
+}
+
+.handoff-lab__scenario-head--production {
+  margin-top: clamp(12px, 3vh, 40px);
+}
+
+.handoff-lab__scenario-head--production h2 {
+  max-width: 10.5ch;
+}
+
+.handoff-lab__scenario-head--production p {
+  max-width: 34ch;
 }
 
 .handoff-lab__services-grid {
@@ -735,6 +788,23 @@
 }
 
 @media (max-width: 960px) {
+  .handoff-lab.handoff-lab--embedded[data-scenario="orbit"] .handoff-lab__services {
+    min-height: auto;
+    padding-top: clamp(64px, 12vh, 108px);
+    background:
+      linear-gradient(
+        180deg,
+        var(--void, #050403) 0%,
+        var(--surface-0, #0a0908) 24%,
+        var(--surface-1, #0f0e0c) 100%
+      ),
+      var(--void, #050403);
+  }
+
+  .handoff-lab--embedded .handoff-lab__swipe-cover {
+    display: none;
+  }
+
   .handoff-lab__scenario-head,
   .handoff-lab__services-grid,
   .handoff-lab__dock {
@@ -833,6 +903,21 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .handoff-lab.handoff-lab--embedded[data-scenario="orbit"] .handoff-lab__services {
+    background:
+      linear-gradient(
+        180deg,
+        var(--void, #050403) 0%,
+        var(--surface-0, #0a0908) 24%,
+        var(--surface-1, #0f0e0c) 100%
+      ),
+      var(--void, #050403);
+  }
+
+  .handoff-lab--embedded .handoff-lab__swipe-cover {
+    display: none;
+  }
+
   .handoff-lab__pivot,
   .handoff-lab[data-scenario="orbit"] .handoff-lab__artifact-shell,
   .handoff-lab[data-scenario="orbit"] .handoff-lab__scene,

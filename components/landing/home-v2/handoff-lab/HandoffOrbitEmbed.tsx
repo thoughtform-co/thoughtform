@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, type RefObject } from "react";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
-import { HANDOFF_SCENARIOS, HANDOFF_SERVICES } from "./content";
+import { HANDOFF_SERVICES } from "./content";
 
 function clamp01(value: number): number {
   return Math.max(0, Math.min(1, value));
@@ -21,20 +21,19 @@ const DOCK_ENGAGE_EP = 0.72;
 
 /**
  * useEmbeddedServicesScroll — single rAF scroll watcher for the
- * production-embedded orbit handoff.
+ * production-embedded swipe handoff.
  *
  * The embed lives BELOW the main HomeCorridor on the homepage. The
  * corridor's own epilogue already paints the sphere + labs title
- * ("AND THE LABS ARE SPENDING BILLIONS…"), so the embed deliberately
- * drops the duplicate 3D runway/pivot and starts at the services
- * layer. With no R3F scene of its own, it never writes the shared
- * depth store — it only scrubs the artifact settle/rotate.
+ * ("AND THE LABS ARE SPENDING BILLIONS…"), so this component does not
+ * mount a duplicate R3F runway. Instead it uses the live corridor canvas
+ * promoted to a fixed backdrop, then slides a one-viewport DOM cover over
+ * it before the services copy enters.
  *
- * The instrument is docked from the first frame (CSS), so the section
- * opens directly on its content — kicker, headline, and readouts —
- * instead of a leading approach runway or a centred-arrival beat.
- * `--handoff-progress` is a plain section-scroll scrub that only drives
- * the slow artifact rotation.
+ * `--handoff-cover` is the real transition clock: 0 when the cover
+ * plane touches the viewport bottom, 1 when it has fully replaced the
+ * previous scene. The dock channel is released after that point so the
+ * R3F frameloop can idle behind an opaque services surface.
  */
 function useEmbeddedServicesScroll(servicesRef: RefObject<HTMLElement | null>) {
   useEffect(() => {
@@ -67,15 +66,9 @@ function useEmbeddedServicesScroll(servicesRef: RefObject<HTMLElement | null>) {
       // docked until the section has fully scrolled past (into continuum)
       // or the user scrolls back up into the live epilogue (ep drops).
       const ep = useDepthGatewayStore.getState().transform.epilogueProgress;
-      const docked = dockCapable && ep >= DOCK_ENGAGE_EP && servicesRect.bottom > 0;
-
-      // Cover progress — how far this opaque services plane has risen over
-      // the viewport: 0 when its top sits at the viewport bottom, 1 once it
-      // covers the full viewport. Drives the SPHERE recede (the docked
-      // canvas scale + fade in home-v2.css) and the billions cross-fade —
-      // the parallax depth at the seam. Written on <html> so the fixed
-      // canvas + the corridor headers can read it.
       const cover = clamp01((vh - servicesRect.top) / vh);
+      const coverInView = servicesRect.top < vh && servicesRect.bottom > 0;
+      const docked = dockCapable && ep >= DOCK_ENGAGE_EP && coverInView && cover < 0.999;
 
       services.style.setProperty("--handoff-progress", sectionProgress.toFixed(4));
       document.documentElement.style.setProperty("--handoff-cover", cover.toFixed(4));
@@ -94,7 +87,7 @@ function useEmbeddedServicesScroll(servicesRef: RefObject<HTMLElement | null>) {
       // overwrite the epilogue scrub here.
       const store = useDepthGatewayStore.getState();
       const prev = store.transform;
-      const nextDockProgress = docked ? sectionProgress : 0;
+      const nextDockProgress = docked ? cover : 0;
       if (prev.docked !== docked || Math.abs(prev.dockProgress - nextDockProgress) > 0.0005) {
         store.setTransform({ ...prev, docked, dockProgress: nextDockProgress });
       }
@@ -128,7 +121,6 @@ function useEmbeddedServicesScroll(servicesRef: RefObject<HTMLElement | null>) {
 
 export function HandoffOrbitEmbed() {
   const servicesRef = useRef<HTMLElement>(null);
-  const meta = HANDOFF_SCENARIOS.orbit;
 
   useEmbeddedServicesScroll(servicesRef);
 
@@ -141,8 +133,15 @@ export function HandoffOrbitEmbed() {
       <section
         ref={servicesRef}
         className="handoff-lab__services"
-        aria-label={`${meta.label}: services handoff`}
+        aria-label="Practice layer services handoff"
       >
+        <div className="handoff-lab__swipe-cover" aria-hidden="true">
+          <div className="handoff-lab__swipe-chrome">
+            <span>TRANSIT 04 / PRACTICE LAYER</span>
+            <span>SCENE COVER / 001</span>
+          </div>
+        </div>
+
         <aside
           className="handoff-lab__artifact handoff-lab__artifact--stage"
           aria-label="Intelligence layer artifact"
@@ -152,11 +151,14 @@ export function HandoffOrbitEmbed() {
           </div>
         </aside>
 
-        <div className="handoff-lab__scenario-head">
-          <p className="handoff-lab__kicker">{meta.label}</p>
-          <h2>{meta.title}</h2>
-          <p>{meta.thesis}</p>
-          <span>{meta.borrow}</span>
+        <div className="handoff-lab__scenario-head handoff-lab__scenario-head--production">
+          <p className="handoff-lab__kicker">Practice layer</p>
+          <h2>Make the layer useful.</h2>
+          <p>
+            The labs are building the intelligence. Thoughtform builds the operating layer around
+            it: workflows, judgment, and thin capabilities teams can actually use.
+          </p>
+          <span>Navigate the work. Encode the judgment. Build the smallest useful system.</span>
         </div>
 
         <div className="handoff-lab__services-grid">

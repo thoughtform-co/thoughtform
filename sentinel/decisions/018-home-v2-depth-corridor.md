@@ -11,6 +11,31 @@
 
 ---
 
+## 2026-06-14 Revision (v3.15) — One-viewport swipe cover
+
+The production handoff now uses the intended cover-swipe grammar instead
+of opening directly on the services copy. The corridor through Navigate,
+Encode, Build, and the "billions" epilogue remains native-scroll and
+unchanged; only the post-corridor `#buildQuote` embed owns the swipe.
+
+- `HandoffOrbitEmbed` renders a 100svh cover viewport before the
+  practical services layer. The lower plane rises over the completed
+  corridor scene, visually replacing it before the Navigate / Encode /
+  Build service readouts become primary.
+- `--handoff-cover` remains the transition clock, but the dock channel is
+  now limited to the cover window (`cover < 1`). Once the plane has fully
+  covered the viewport, `data-corridor-docked` clears so the R3F backdrop
+  can release behind the opaque services surface.
+- The docked canvas still uses the live corridor scene, not a duplicate
+  lab scene. Its fixed-layer transform now includes a small upward
+  push-back plus scale/fade, matching the Active Theory / Hashgraph class
+  of "incoming plane replaces receding scene" without introducing Lenis or
+  a second scroll model.
+- Mobile, reduced-motion, and WebGL fallback paths keep a sequential dark
+  editorial services section with no fixed-canvas swipe.
+
+---
+
 ## 2026-06-13 Revision (v3.14) — Docked instrument handoff
 
 The production `#buildQuote` handoff now keeps the completed corridor

@@ -167,7 +167,8 @@ html[data-corridor-docked="true"] .home-v2-stage__canvas {
      by `useEmbeddedServicesScroll`. transform-origin biased toward where
      the landed sphere sits on screen so it recedes toward its own centre.
      At cover 0 this is identity (scale 1, opacity 1) — docking never pops. */
-  transform: scale(calc(1 - var(--handoff-cover, 0) * 0.1));
+  transform: translate3d(0, calc(var(--handoff-cover, 0) * -6vh), 0)
+    scale(calc(1 - var(--handoff-cover, 0) * 0.12));
   transform-origin: 50% 44%;
   opacity: calc(1 - var(--handoff-cover, 0) * 0.82);
 }

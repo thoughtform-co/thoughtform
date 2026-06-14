@@ -32,17 +32,17 @@ After Regression 1 was reverted, connectors still flashed gold → black for ~88
 
 The following ordering is load-bearing and must not be changed without an ADR update:
 
-| Layer | Element                                                                        | Position | z-index                | Paints                                                                                                            |
-| ----- | ------------------------------------------------------------------------------ | -------- | ---------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| 0     | `body`                                                                         | static   | —                      | `rgb(10, 9, 8)` (`--void`)                                                                                        |
-| 1     | `.gateway`                                                                     | fixed    | 0                      | gold + green radials + `--void`                                                                                   |
-| 1a    | `.gateway__grain`                                                              | absolute | auto                   | radial dither, `mix-blend-mode: overlay`                                                                          |
-| 2     | `.stations`                                                                    | relative | 10                     | (transparent; creates stacking context)                                                                           |
-| 3     | `.hero`                                                                        | sticky   | 1                      | video + overlay; goes `visibility: hidden` at `heroCover ≥ 1`                                                     |
-| 4     | `.station:not(.hero)`                                                          | relative | 2                      | `var(--void)` — opaque shield                                                                                     |
-| 4     | `.celestial-connector`                                                         | relative | 2                      | `var(--void)` — opaque shield                                                                                     |
-| 4a    | `.home-v2-stage__canvas` during `data-corridor-docked`                         | fixed    | 2 inside corridor host | live R3F sphere backdrop for the services handoff                                                                 |
-| 5     | `#buildQuote.build-quote--handoff` / `.handoff-lab--embedded` opening viewport | relative | 3+                     | intentionally transparent cover over docked canvas; `.handoff-lab__services` re-shields to opaque void lower down |
+| Layer | Element                                                                        | Position | z-index                | Paints                                                                                                        |
+| ----- | ------------------------------------------------------------------------------ | -------- | ---------------------- | ------------------------------------------------------------------------------------------------------------- |
+| 0     | `body`                                                                         | static   | —                      | `rgb(10, 9, 8)` (`--void`)                                                                                    |
+| 1     | `.gateway`                                                                     | fixed    | 0                      | gold + green radials + `--void`                                                                               |
+| 1a    | `.gateway__grain`                                                              | absolute | auto                   | radial dither, `mix-blend-mode: overlay`                                                                      |
+| 2     | `.stations`                                                                    | relative | 10                     | (transparent; creates stacking context)                                                                       |
+| 3     | `.hero`                                                                        | sticky   | 1                      | video + overlay; goes `visibility: hidden` at `heroCover ≥ 1`                                                 |
+| 4     | `.station:not(.hero)`                                                          | relative | 2                      | `var(--void)` — opaque shield                                                                                 |
+| 4     | `.celestial-connector`                                                         | relative | 2                      | `var(--void)` — opaque shield                                                                                 |
+| 4a    | `.home-v2-stage__canvas` during `data-corridor-docked`                         | fixed    | 2 inside corridor host | live R3F sphere backdrop for the one-viewport swipe handoff; releases once the cover reaches 1                |
+| 5     | `#buildQuote.build-quote--handoff` / `.handoff-lab--embedded` opening viewport | relative | 3+                     | intentionally feathered cover over docked canvas; `.handoff-lab__services` becomes opaque before service copy |
 
 Any new `position: fixed` or `position: sticky` layer on the landing page must be added to this table in the same PR.
 

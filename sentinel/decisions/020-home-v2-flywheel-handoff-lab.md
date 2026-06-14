@@ -38,6 +38,15 @@ Scenario C should remain a future DREAM-band option until the actual R3F globe a
 
 **Amendment (2026-06-12, after first review):** Scenario A gained an approach-cover seam that resolves the flat document-scroll entry. Mechanics: the epilogue runway extends one viewport (285svh) so the scene stays pinned; the services section overlaps it (`margin-top: -100svh`) and slides over with an intentionally transparent top gradient (ADR-008 rule 2 exception, re-shielded within ~96svh); a cover-progress channel (`--handoff-cover-progress`, written by the single-rAF `useHandoffScroll`) drives scene push-back + dim, pivot exit, and the artifact's arrival lag; the artifact (orbits + brandmark only) then settles from centre into a section-long sticky instrument slot on the right. Corridor engagement drops (frameloop to demand) once cover reaches 1. This seam is the preferred 3D-to-2D transition regardless of which scenario's services layout ships.
 
+**Production amendment (2026-06-14):** Scenario A's cover seam ships in a
+production-specific form inside `HandoffOrbitEmbed`. Production does not
+mount the lab's duplicate `DepthGatewayScene`; it reuses the completed
+HomeCorridor canvas as a fixed docked backdrop, renders a 100svh cover
+plane before services copy, and releases the dock channel once
+`--handoff-cover` reaches 1. This preserves the existing corridor and
+billions epilogue while delivering the Active Theory / Hashgraph class of
+"lower plane swipes up and replaces the previous scene."
+
 ## Alternatives Considered
 
 ### Continue the 3D space for the full services section
