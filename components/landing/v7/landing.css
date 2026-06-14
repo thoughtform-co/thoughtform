@@ -76,6 +76,8 @@
   --atreides-15: rgba(61, 75, 51, 0.15);
   --gold-05: rgba(202, 165, 84, 0.05);
   --dawn-04: rgba(236, 227, 214, 0.04);
+  --hud-rail-line: rgba(235, 227, 214, 0.42);
+  --hud-rail-line-soft: rgba(235, 227, 214, 0.16);
   --hud-content-inset: calc(var(--hud-margin) + var(--hud-rail-width) + clamp(24px, 3vw, 56px));
 }
 
@@ -211,7 +213,7 @@
   position: fixed;
   inset: 0;
   pointer-events: none;
-  z-index: 20;
+  z-index: 50;
 }
 .hud > * {
   pointer-events: auto;
@@ -257,7 +259,7 @@
   align-items: flex-start;
   padding: var(--hud-margin);
   pointer-events: none;
-  z-index: 21;
+  z-index: 51;
 }
 .hud__top > * {
   pointer-events: auto;
@@ -480,11 +482,15 @@
   top: 0;
   bottom: 0;
   width: 1px;
+  z-index: 0;
+  pointer-events: none;
   background: linear-gradient(
     to bottom,
     transparent,
-    var(--dawn-30) 8%,
-    var(--dawn-30) 92%,
+    var(--hud-rail-line-soft) 4%,
+    var(--hud-rail-line) 8%,
+    var(--hud-rail-line) 92%,
+    var(--hud-rail-line-soft) 96%,
     transparent
   );
 }
@@ -498,6 +504,8 @@
 .hud__rail__tick {
   position: absolute;
   height: 1px;
+  z-index: 1;
+  pointer-events: none;
   background: var(--gold-40, var(--dawn-30));
 }
 .hud__rail--l .hud__rail__tick {
@@ -519,6 +527,7 @@
 
 .hud__rail__label {
   position: absolute;
+  z-index: 2;
   font-family: var(--font-pt-mono);
   font-size: 9px;
   color: var(--dawn-50);
@@ -537,6 +546,7 @@
   left: -4px;
   width: 17px;
   height: 17px;
+  z-index: 3;
   transition: top 120ms var(--ease-out);
 }
 .hud__depth::before {

@@ -1,15 +1,20 @@
 ---
-description: Scroll metrics and NavigationCockpitV2 hooks
+description: Scroll metrics, NavigationCockpitV2 hooks, and home-v2 handoff compositing
 globs:
   - lib/hooks/useScroll*
   - components/hud/NavigationCockpitV2/hooks/**
+  - components/landing/home-v2/handoff-lab/**
+  - components/landing/home-v2/home-v2.css
+  - components/landing/home-v2/hooks/useDepthScroll.ts
 alwaysApply: false
 ---
 
 # Rule: Scroll animations & cockpit hooks
 
-Shared scroll progress and cockpit integration; changes affect Lenis, GSAP, and HUD behavior.
+Shared scroll progress, cockpit integration, and home-v2 handoff compositing. Changes affect Lenis, GSAP, HUD behavior, and the depth-corridor cover transition.
 
-**Read first:** `sentinel/decisions/002-scroll-animation-architecture.md`, `sentinel/decisions/005-scroll-captured-content-reveal.md`.
+**Read first:** `sentinel/decisions/002-scroll-animation-architecture.md`, `sentinel/decisions/005-scroll-captured-content-reveal.md`, `sentinel/decisions/018-home-v2-depth-corridor.md`.
 
-**Process:** `sentinel/MAINTENANCE.md` — document contract changes (ADR or decision addendum).
+**Process:** `sentinel/MAINTENANCE.md` - document contract changes with an ADR or decision addendum.
+
+**Home-v2 handoff invariant:** the post-corridor swipe is an opaque incoming cover plane over a held corridor canvas. Keep the first-read services copy inside the 100svh cover, keep the docked canvas opacity at `1`, and let the cover plane do the replacement. Do not re-create this as a transparent parallax section plus a canvas fade.

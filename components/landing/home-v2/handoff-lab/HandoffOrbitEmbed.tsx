@@ -135,10 +135,21 @@ export function HandoffOrbitEmbed() {
         className="handoff-lab__services"
         aria-label="Practice layer services handoff"
       >
-        <div className="handoff-lab__swipe-cover" aria-hidden="true">
-          <div className="handoff-lab__swipe-chrome">
-            <span>TRANSIT 04 / PRACTICE LAYER</span>
-            <span>SCENE COVER / 001</span>
+        <div className="handoff-lab__swipe-cover">
+          <div className="handoff-lab__swipe-plane">
+            <div className="handoff-lab__swipe-chrome" aria-hidden="true">
+              <span>TRANSIT 04 / PRACTICE LAYER</span>
+              <span>SCENE COVER / 001</span>
+            </div>
+            <div className="handoff-lab__scenario-head handoff-lab__scenario-head--production">
+              <p className="handoff-lab__kicker">Practice layer</p>
+              <h2>Make the layer useful.</h2>
+              <p>
+                The labs are building the intelligence. Thoughtform builds the operating layer
+                around it: workflows, judgment, and thin capabilities teams can actually use.
+              </p>
+              <span>Navigate the work. Encode the judgment. Build the smallest useful system.</span>
+            </div>
           </div>
         </div>
 
@@ -150,16 +161,6 @@ export function HandoffOrbitEmbed() {
             <OrbitArtifactShell />
           </div>
         </aside>
-
-        <div className="handoff-lab__scenario-head handoff-lab__scenario-head--production">
-          <p className="handoff-lab__kicker">Practice layer</p>
-          <h2>Make the layer useful.</h2>
-          <p>
-            The labs are building the intelligence. Thoughtform builds the operating layer around
-            it: workflows, judgment, and thin capabilities teams can actually use.
-          </p>
-          <span>Navigate the work. Encode the judgment. Build the smallest useful system.</span>
-        </div>
 
         <div className="handoff-lab__services-grid">
           <div className="handoff-lab__service-flow">

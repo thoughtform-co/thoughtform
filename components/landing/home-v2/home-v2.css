@@ -154,9 +154,9 @@
 
 /* Dock handoff: while #buildQuote's services section is in view, the
    completed corridor canvas becomes a fixed backdrop. The opaque services
-   plane slides UP over it; as it does, the sphere RECEDES (scale + fade)
-   into depth behind the plane — the parallax "splice". Release is driven
-   by `data-corridor-docked` clearing. */
+   plane slides UP over it; the sphere only recedes slightly behind that
+   plane, with no opacity fade. Release is driven by `data-corridor-docked`
+   clearing. */
 html[data-corridor-docked="true"] .home-v2-stage__canvas {
   position: fixed;
   inset: 0;
@@ -167,10 +167,10 @@ html[data-corridor-docked="true"] .home-v2-stage__canvas {
      by `useEmbeddedServicesScroll`. transform-origin biased toward where
      the landed sphere sits on screen so it recedes toward its own centre.
      At cover 0 this is identity (scale 1, opacity 1) — docking never pops. */
-  transform: translate3d(0, calc(var(--handoff-cover, 0) * -6vh), 0)
-    scale(calc(1 - var(--handoff-cover, 0) * 0.12));
+  transform: translate3d(0, calc(var(--handoff-cover, 0) * -2.5vh), 0)
+    scale(calc(1 - var(--handoff-cover, 0) * 0.035));
   transform-origin: 50% 44%;
-  opacity: calc(1 - var(--handoff-cover, 0) * 0.82);
+  opacity: 1;
 }
 
 .home-v2-stage__canvas canvas {

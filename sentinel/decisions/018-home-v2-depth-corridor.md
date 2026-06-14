@@ -20,17 +20,24 @@ unchanged; only the post-corridor `#buildQuote` embed owns the swipe.
 
 - `HandoffOrbitEmbed` renders a 100svh cover viewport before the
   practical services layer. The lower plane rises over the completed
-  corridor scene, visually replacing it before the Navigate / Encode /
-  Build service readouts become primary.
+  corridor scene, and the first-read "Make the layer useful" copy lives
+  inside that cover plane so the replacement is visible during the sweep,
+  before the Navigate / Encode / Build service readouts become primary.
+- During the active cover window, the cover is promoted to a fixed
+  viewport layer and the plane is clipped by `--handoff-cover`; the
+  service grid is padded below the viewport until release. This prevents
+  the handoff from degenerating into a padded document section scrolling
+  over the sphere.
 - `--handoff-cover` remains the transition clock, but the dock channel is
   now limited to the cover window (`cover < 1`). Once the plane has fully
   covered the viewport, `data-corridor-docked` clears so the R3F backdrop
   can release behind the opaque services surface.
 - The docked canvas still uses the live corridor scene, not a duplicate
   lab scene. Its fixed-layer transform now includes a small upward
-  push-back plus scale/fade, matching the Active Theory / Hashgraph class
-  of "incoming plane replaces receding scene" without introducing Lenis or
-  a second scroll model.
+  push-back plus slight scale, but no opacity fade; the incoming opaque
+  plane must do the covering. This matches the Active Theory / Hashgraph
+  class of "incoming plane replaces receding scene" without introducing
+  Lenis or a second scroll model.
 - Mobile, reduced-motion, and WebGL fallback paths keep a sequential dark
   editorial services section with no fixed-canvas swipe.
 

@@ -115,6 +115,28 @@ if (tDefToManifesto > 0.9 && !manifestoComplete) {
 
 ---
 
+### Cover Swipes Are Replacement Planes, Not Fade-Outs
+
+For Active Theory / Hashgraph-style handoffs, keep the completed scene as a
+fixed backdrop and let an opaque incoming section plane physically cover it.
+Do not make the old scene disappear with `opacity`, and do not put the next
+section's first-read copy after the 100svh cover viewport.
+
+The first-read content must live inside the cover plane and become visible
+during the sweep. The old scene may get a small transform to feel like depth,
+but the cover, not a fade, must own the replacement.
+
+**Runtime check:** sample the handoff with Playwright at cover progress
+around `0.35`, `0.65`, and `0.9`. The docked canvas opacity should still be
+`1`; the incoming copy should already have a viewport rect inside the pinned
+cover.
+
+**Why it matters:** A fading old canvas plus late incoming copy reads as
+ordinary parallax and can produce a blank dark interval, which is the opposite
+of a swipe/sweep replacement.
+
+---
+
 ## 🧷 DOM Pinning & ScrollTrigger (brandmark / fixed actors)
 
 > See also: [ADR-010](decisions/010-brandmark-choreography.md), `.claude/skills/brandmark-choreography/SKILL.md`.  
@@ -313,6 +335,34 @@ const handleComponentClick = (componentId: string, parentCategoryId: string) => 
 ---
 
 ## 🎨 CSS & Styling
+
+### Fixed HUD Chrome Must Outrank Particle Canvases
+
+The landing HUD is instrumentation chrome, not page content. Keep `.hud`
+above global particle/fixed canvases, and give 1px rails their own visible
+line token instead of relying on a generic low-alpha border token.
+
+```css
+.hud {
+  z-index: 50;
+}
+
+.hud__rail__track {
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    var(--hud-rail-line) 8%,
+    var(--hud-rail-line) 92%,
+    transparent
+  );
+}
+```
+
+**Why it matters:** Transparent WebGL canvases can still sit above the HUD in
+the stacking order. Thin rail guides are the first chrome element to look
+"deleted" when they sit underneath or paint too faintly.
+
+---
 
 ### Polygon Cards: Separate Background from Border
 

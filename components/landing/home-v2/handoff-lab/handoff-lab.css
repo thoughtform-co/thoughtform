@@ -58,19 +58,26 @@
 .handoff-lab.handoff-lab--embedded[data-scenario="orbit"] .handoff-lab__services {
   margin-top: 0;
   min-height: 420svh;
-  padding-top: 0;
+  padding: 0;
+  box-sizing: border-box;
+  overflow: clip;
   z-index: 6;
-  /* The top edge starts atmospheric while the docked sphere is still
-     visible, then the alpha is driven to opaque by the cover progress so
-     the services layer fully replaces the scene after one viewport. */
+  /* The first viewport stays transparent outside the clipped swipe plane
+     so the completed corridor remains visible until the sweep covers it. */
   background: linear-gradient(
     180deg,
-    rgba(5, 4, 3, calc(0.08 + var(--handoff-cover, 0) * 0.92)) 0,
-    rgba(5, 4, 3, calc(0.68 + var(--handoff-cover, 0) * 0.32)) 30svh,
-    var(--void, #050403) 78svh,
+    rgba(5, 4, 3, 0) 0,
+    rgba(5, 4, 3, 0) 100svh,
+    var(--void, #050403) 100svh,
     var(--surface-0, #0a0908) 130svh,
     var(--surface-1, #0f0e0c) 100%
   );
+}
+
+html[data-corridor-docked="true"]
+  .handoff-lab.handoff-lab--embedded[data-scenario="orbit"]
+  .handoff-lab__services {
+  padding-top: 100svh;
 }
 
 .handoff-lab__epilogue {
@@ -194,31 +201,57 @@
 }
 
 .handoff-lab__swipe-cover {
-  position: relative;
-  z-index: 2;
-  width: 100%;
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
   height: 100svh;
   min-height: 100dvh;
-  display: grid;
-  place-items: center;
+  display: block;
+  overflow: hidden;
+  background: transparent;
+  isolation: isolate;
   pointer-events: none;
 }
 
-.handoff-lab__swipe-cover::before,
-.handoff-lab__swipe-cover::after {
+html[data-corridor-docked="true"] .handoff-lab__swipe-cover {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100svh;
+  margin-left: 0;
+}
+
+.handoff-lab__swipe-plane {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  background:
+    linear-gradient(180deg, rgba(5, 4, 3, 0.98), rgba(5, 4, 3, 1) 62%),
+    radial-gradient(circle at 52% 78%, rgba(202, 165, 84, 0.08), transparent 42%),
+    var(--void, #050403);
+  clip-path: inset(calc((1 - var(--handoff-cover, 0)) * 100%) 0 0 0);
+  transform: translate3d(0, calc((1 - var(--handoff-cover, 0)) * 4vh), 0);
+  will-change: clip-path, transform;
+}
+
+.handoff-lab__swipe-plane::before,
+.handoff-lab__swipe-plane::after {
   content: "";
   position: absolute;
   pointer-events: none;
 }
 
-.handoff-lab__swipe-cover::before {
+.handoff-lab__swipe-plane::before {
   inset: clamp(24px, 5vh, 54px) clamp(18px, 4vw, 72px);
   border-top: 1px solid rgba(236, 227, 214, 0.14);
   border-bottom: 1px solid rgba(236, 227, 214, 0.08);
-  opacity: calc(0.16 + var(--handoff-cover, 0) * 0.34);
+  opacity: calc(0.22 + var(--handoff-cover, 0) * 0.34);
 }
 
-.handoff-lab__swipe-cover::after {
+.handoff-lab__swipe-plane::after {
   left: 50%;
   top: 50%;
   width: min(58vw, 760px);
@@ -290,6 +323,20 @@
   margin-top: clamp(12px, 3vh, 40px);
 }
 
+.handoff-lab--embedded .handoff-lab__swipe-plane .handoff-lab__scenario-head--production {
+  --cover-copy-in: clamp(0, calc((var(--handoff-cover, 0) - 0.24) * 2.35), 1);
+  --service-copy-out: clamp(0, calc(var(--handoff-progress, 0) * 10), 1);
+  position: absolute;
+  left: clamp(96px, 13vw, 210px);
+  right: clamp(72px, 9vw, 160px);
+  bottom: clamp(56px, 8vh, 104px);
+  z-index: 2;
+  width: auto;
+  margin: 0;
+  opacity: calc(var(--cover-copy-in) * (1 - var(--service-copy-out)));
+  transform: translate3d(0, calc((1 - var(--cover-copy-in)) * 7vh), 0);
+}
+
 .handoff-lab__scenario-head--production h2 {
   max-width: 10.5ch;
 }
@@ -300,7 +347,7 @@
 
 .handoff-lab__services-grid {
   position: relative;
-  z-index: 2;
+  z-index: 5;
   width: min(94vw, 1240px);
   margin: 0 auto;
   display: grid;
@@ -680,6 +727,12 @@
   margin-top: clamp(16px, 2.5vh, 44px);
 }
 
+.handoff-lab--embedded[data-scenario="orbit"]
+  .handoff-lab__swipe-plane
+  .handoff-lab__scenario-head--production {
+  margin: 0;
+}
+
 .handoff-lab[data-scenario="orbit"] .handoff-lab__scenario-head span {
   grid-column: auto;
 }
@@ -802,7 +855,40 @@
   }
 
   .handoff-lab--embedded .handoff-lab__swipe-cover {
+    position: relative;
+    top: auto;
+    width: 100%;
+    height: auto;
+    min-height: 0;
+    margin-left: 0;
+    overflow: visible;
+    background: transparent;
+  }
+
+  .handoff-lab--embedded .handoff-lab__swipe-plane {
+    position: relative;
+    inset: auto;
+    overflow: visible;
+    background: transparent;
+    clip-path: none;
+    transform: none;
+  }
+
+  .handoff-lab--embedded .handoff-lab__swipe-plane::before,
+  .handoff-lab--embedded .handoff-lab__swipe-plane::after,
+  .handoff-lab--embedded .handoff-lab__swipe-chrome {
     display: none;
+  }
+
+  .handoff-lab--embedded .handoff-lab__swipe-plane .handoff-lab__scenario-head--production {
+    position: relative;
+    left: auto;
+    right: auto;
+    bottom: auto;
+    width: min(92vw, 1040px);
+    margin: 0 auto clamp(36px, 7vh, 72px);
+    opacity: 1;
+    transform: none;
   }
 
   .handoff-lab__scenario-head,
@@ -915,7 +1001,40 @@
   }
 
   .handoff-lab--embedded .handoff-lab__swipe-cover {
+    position: relative;
+    top: auto;
+    width: 100%;
+    height: auto;
+    min-height: 0;
+    margin-left: 0;
+    overflow: visible;
+    background: transparent;
+  }
+
+  .handoff-lab--embedded .handoff-lab__swipe-plane {
+    position: relative;
+    inset: auto;
+    overflow: visible;
+    background: transparent;
+    clip-path: none;
+    transform: none;
+  }
+
+  .handoff-lab--embedded .handoff-lab__swipe-plane::before,
+  .handoff-lab--embedded .handoff-lab__swipe-plane::after,
+  .handoff-lab--embedded .handoff-lab__swipe-chrome {
     display: none;
+  }
+
+  .handoff-lab--embedded .handoff-lab__swipe-plane .handoff-lab__scenario-head--production {
+    position: relative;
+    left: auto;
+    right: auto;
+    bottom: auto;
+    width: min(92vw, 1040px);
+    margin: 0 auto clamp(36px, 7vh, 72px);
+    opacity: 1;
+    transform: none;
   }
 
   .handoff-lab__pivot,
