@@ -13,6 +13,7 @@ import {
   getMouthYieldFade,
   getWormholeExitStreak,
   getWormholeExitWarp,
+  parkDwellVisibility,
 } from "./sceneGeom";
 
 /**
@@ -1371,7 +1372,13 @@ export function LatentWormholeWalls() {
     const mouthYield = getMouthYieldFade(paintProgress);
     material.uniforms.uReveal1.value = reveal1;
     material.uniforms.uReveal2.value = reveal2;
-    material.uniforms.uRevealMouth.value = revealMouthRamp * mouthYield;
+    // Mouth bloom (`aReveal == 2`) is the only ring channel decoupled
+    // from the rails, so it can be cleared at the parks without
+    // touching the corridor structure. Suppress it across the Navigate
+    // + Encode dwells so the door's concentric rings don't read as
+    // clutter circling the parked instrument; rails stay untouched.
+    material.uniforms.uRevealMouth.value =
+      revealMouthRamp * mouthYield * parkDwellVisibility(paintProgress);
 
     // v3.2 wormhole-exit widen — the tube splays radially outward at
     // the camera as we emerge into Build. The fragment fade follows

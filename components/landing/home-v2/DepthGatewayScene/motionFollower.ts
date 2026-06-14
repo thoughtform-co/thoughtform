@@ -99,6 +99,24 @@ let stackMid = 0;
 
 let lastPaintProgress: number | null = null;
 
+/** Wall-clock timestamp (ms) of the previous driven frame, or 0 before
+ *  the first drive. The R3F loop idles (`frameloop="demand"`) while the
+ *  corridor is off-screen, so the follower simply STOPS ticking — its
+ *  channels stay frozen at whatever value they held when the user
+ *  scrolled away (often deep in the epilogue/docked pose). On scroll-
+ *  back the scene re-engages and the follower resumes; without a reset
+ *  it would glide from that stale value across the whole flight, which
+ *  read as the camera sweeping back through the epilogue (or, paired
+ *  with the demand-loop stall, a frame of wrong/blank pose). */
+let lastDriveTime = 0;
+
+/** Gap (ms) above which we treat the follower as having RESUMED from an
+ *  off-screen idle rather than running frame-to-frame, and snap every
+ *  channel to the live scrubbed target. A comfortable multiple of a
+ *  60fps frame: continuous play ticks ~16ms apart, so only an
+ *  off-screen idle (or backgrounded tab) opens a gap this large. */
+const RESUME_IDLE_GAP_MS = 200;
+
 /** Snap every channel straight to its target (no easing). Used on the
  *  first driven frame, while the stage is parked/armed, and on
  *  teleport-sized progress jumps. */
@@ -129,12 +147,19 @@ export function driveMotionFollower(
   paintProgress: number,
   active: boolean
 ): void {
+  const nowMs = typeof performance !== "undefined" ? performance.now() : 0;
+  const resumedAfterIdle = lastDriveTime > 0 && nowMs - lastDriveTime > RESUME_IDLE_GAP_MS;
+  lastDriveTime = nowMs;
+
   const teleport =
     lastPaintProgress === null ||
     Math.abs(paintProgress - lastPaintProgress) > TELEPORT_PROGRESS_DELTA;
   lastPaintProgress = paintProgress;
 
-  if (!active || teleport) {
+  // `resumedAfterIdle` covers scroll-back re-entry: the loop was idle
+  // off-screen, so snap to the live target instead of gliding from the
+  // frozen (often epilogue/docked) value the channels were left at.
+  if (!active || teleport || resumedAfterIdle) {
     snapMotionFollower(targets);
     return;
   }

@@ -30,6 +30,7 @@
  */
 
 import {
+  BEAT_WINDOWS,
   CAMERA_END,
   CAMERA_START,
   DOLLY_HOLD_END,
@@ -777,6 +778,42 @@ export function getThoughtformBootEnvelope(progress: number): number {
  *  and the gimbal are intentionally NOT in this group. */
 export function getBuildApproachFade(paintProgress: number): number {
   return 1 - smoothstep(0.86, 0.97, paintProgress);
+}
+
+/** Parked stations whose dwell should read CLEAN (no background ring
+ *  clutter). Navigate + Encode (Diagnostic) are the two front-corridor
+ *  parks where the user holds and reads; the instrument should sit in
+ *  open space, not inside a pile of passing depth rings. */
+const PARK_SUPPRESS_WINDOWS = (["navigate", "diagnostic"] as const)
+  .map((beat) => BEAT_WINDOWS.find((w) => w.beat === beat))
+  .filter((w): w is (typeof BEAT_WINDOWS)[number] => w !== undefined);
+
+/** Station-park clutter suppression (parks-only richness rule).
+ *
+ *  The background depth rings — topography "mandala" contour shards
+ *  (`LatentTopographyContours`), wormhole cross/mouth rings
+ *  (`LatentWormholeWalls`), and inter-gate debris bands
+ *  (`InterGateCorridor`) — read as elegant passing depth DURING the
+ *  fly-through, but pile up behind the parked instrument when the
+ *  camera HOLDS at a station, where the user reads them as clutter
+ *  ("mandalas" / "children's-drawing orbits") ringing the Navigate and
+ *  Encode spheres. This returns a 0..1 multiplier that dips to 0 across
+ *  the parked Navigate + Encode beats (soft fades into the flanking
+ *  passthroughs) and stays 1 during transit, so the parks read clean
+ *  while motion keeps the corridor's depth. Generalised from the old
+ *  Navigate-only `navParkVisibility` that lived in
+ *  `LatentTopographyContours`. Apply ONLY to decorative ring layers —
+ *  never to the wormhole rails themselves (the camera flies through
+ *  those). */
+export function parkDwellVisibility(paintProgress: number): number {
+  const fade = 0.035;
+  let suppression = 0;
+  for (const w of PARK_SUPPRESS_WINDOWS) {
+    const entering = smoothstep(w.start - fade, w.start + fade, paintProgress);
+    const leaving = 1 - smoothstep(w.end - fade, w.end + fade, paintProgress);
+    suppression = Math.max(suppression, Math.min(entering, leaving));
+  }
+  return 1 - suppression;
 }
 
 /** Wormhole-exit warp (v3.7).

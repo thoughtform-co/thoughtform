@@ -187,6 +187,18 @@ const BOOT_GLOW_Z_BEHIND_GATE = -0.45;
 const BOOT_GLOW_INNER_COLOR = new THREE.Color("#caa554");
 const BOOT_GLOW_OUTER_COLOR = new THREE.Color(0.42, 0.3, 0.16);
 
+/** Boot-glow ramp-OUT window (paintProgress). The warm gateway glow
+ *  used to be gated off by the camera-space depth focus
+ *  (`depthFocusOpacity`), which snaps to 0 the instant the camera
+ *  crosses the gate plane (~0.355) — exactly when "Navigate the
+ *  intelligence" arrives, so the glow visibly POPPED out. Instead we
+ *  cross-fade it across this window with a smoothstep so it hands off
+ *  to Navigate's own gold radial + the wormhole exit-glow plateau. The
+ *  boot envelope still owns the ramp-IN; this only governs the
+ *  ramp-OUT. */
+const BOOT_GLOW_HANDOFF_START = 0.3;
+const BOOT_GLOW_HANDOFF_END = 0.45;
+
 const bootGlowVertexShader = /* glsl */ `
 varying vec2 vUv;
 void main() {
@@ -396,11 +408,18 @@ export function ThoughtformAtmosphere() {
     // brandmark + copy) so the light source stays under the
     // gateway, not anchored off-axis. A gentle breath modulates
     // alpha by ±4 % over ~7 s so the lighting feels alive without
-    // distracting. Camera-space depth gates the whole thing off
-    // once the camera passes the gate plane.
+    // distracting.
+    //
+    // Ramp-out is a SMOOTH paintProgress cross-fade (not the
+    // camera-space depth cull, which snapped to 0 the instant the
+    // camera crossed the gate plane and made the glow pop out exactly
+    // as Navigate arrived). `boot` owns the ramp-in; the handoff fade
+    // eases the glow off across [0.30, 0.45] so it hands over to the
+    // Navigate header glow + wormhole exit plateau.
     const boot = getThoughtformBootEnvelope(paintProgress);
-    const bootDepthAlpha = depthFocusOpacity(depth, STAR_DEPTH_WINDOW);
-    const glowAlpha = boot * bootDepthAlpha * BOOT_GLOW_PEAK_OPACITY;
+    const glowHandoff =
+      1 - smoothstep(BOOT_GLOW_HANDOFF_START, BOOT_GLOW_HANDOFF_END, paintProgress);
+    const glowAlpha = boot * glowHandoff * BOOT_GLOW_PEAK_OPACITY;
     if (glowAlpha < 0.003) {
       bootGlow.visible = false;
     } else {

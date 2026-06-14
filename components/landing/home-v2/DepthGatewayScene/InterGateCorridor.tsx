@@ -10,6 +10,7 @@ import {
   STATION_THOUGHTFORM,
   depthOpacityForWorldPosition,
   getBuildApproachFade,
+  parkDwellVisibility,
 } from "./sceneGeom";
 
 /**
@@ -133,12 +134,17 @@ function RingBand({
     // Build-approach declutter (v3.1) — intergate debris bands fade
     // out across the approach to the Build park.
     const buildFade = getBuildApproachFade(progress);
-    if (opacity * buildFade <= 0.001) {
+    // Parks-only richness: clear the debris bands across the Navigate +
+    // Encode dwells so they don't read as scattered orbit rings around
+    // the parked instrument; they return as passing depth during the
+    // fly-through.
+    const parkClean = parkDwellVisibility(progress);
+    if (opacity * buildFade * parkClean <= 0.001) {
       group.visible = false;
       return;
     }
     group.visible = true;
-    material.opacity = opacity * alphaCeiling * buildFade;
+    material.opacity = opacity * alphaCeiling * buildFade * parkClean;
 
     // Slow Z-spin gives the band a "current" feel without the
     // particles having to translate. The whole group rotates so all

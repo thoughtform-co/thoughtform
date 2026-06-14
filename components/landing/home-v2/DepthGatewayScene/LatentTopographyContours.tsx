@@ -4,12 +4,12 @@ import { useFrame } from "@react-three/fiber";
 import { useEffect, useMemo } from "react";
 import * as THREE from "three";
 import { smoothstep, useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
-import { BEAT_WINDOWS } from "@/lib/home-v2/corridorMap";
 import {
   STATION_DIAGNOSTIC,
   STATION_THOUGHTFORM,
   depthOpacityForWorldPosition,
   getBuildApproachFade,
+  parkDwellVisibility,
 } from "./sceneGeom";
 
 /**
@@ -110,18 +110,11 @@ function legReveal(progress: number): number {
   return smoothstep(0.14, 0.28, progress);
 }
 
-/** Navigate-park suppression: hide the topography shards across the
- *  Navigate beat (with soft fades into the flanking passthroughs) so
- *  the migrated compass reads clean at that park. They return for the
- *  rest of the corridor. Returns a 0..1 visibility multiplier. */
-const NAV_WINDOW = BEAT_WINDOWS.find((w) => w.beat === "navigate");
-function navParkVisibility(progress: number): number {
-  if (!NAV_WINDOW) return 1;
-  const fade = 0.035;
-  const entering = smoothstep(NAV_WINDOW.start - fade, NAV_WINDOW.start + fade, progress);
-  const leaving = 1 - smoothstep(NAV_WINDOW.end - fade, NAV_WINDOW.end + fade, progress);
-  return 1 - Math.min(entering, leaving);
-}
+// Park-dwell suppression (hide these "mandala" contour shards across
+// the Navigate AND Encode parks so the parked instrument reads clean)
+// is now the shared `parkDwellVisibility` from sceneGeom — it covers
+// both front-corridor parks instead of Navigate alone, which is what
+// left the shards ringing the Encode sphere.
 
 // ── Artifact catalogue ────────────────────────────────────────
 
@@ -418,14 +411,14 @@ function ContourShard({
     const depthOpacity = depthOpacityForWorldPosition(paintProgress, pos, depthWindow);
     // Cap at 0.32 — contours are a backdrop layer, never compete
     // with the orbits or the brandmark. Suppressed across the Navigate
-    // park so the compass reads clean there. Build-approach declutter
-    // (v3.1) fades the whole layer out across the approach to the
-    // Build park.
+    // AND Encode parks so both compasses read clean there. Build-
+    // approach declutter (v3.1) fades the whole layer out across the
+    // approach to the Build park.
     material.opacity =
       depthOpacity *
       reveal *
       0.32 *
-      navParkVisibility(paintProgress) *
+      parkDwellVisibility(paintProgress) *
       getBuildApproachFade(paintProgress);
   });
 
@@ -522,7 +515,7 @@ function RidgeShard({
     const base =
       depthOpacity *
       reveal *
-      navParkVisibility(paintProgress) *
+      parkDwellVisibility(paintProgress) *
       getBuildApproachFade(paintProgress);
     arcMat.opacity = base * 0.45;
     tickMat.opacity = base * 0.7;
@@ -629,7 +622,7 @@ function VectorShard({ pos, dir, length, color = DAWN_HEX }: Omit<VectorShardArt
     const base =
       depthOpacity *
       reveal *
-      navParkVisibility(paintProgress) *
+      parkDwellVisibility(paintProgress) *
       getBuildApproachFade(paintProgress);
     lineMat.opacity = base * 0.6;
     diamondMat.opacity = base * 0.85;

@@ -76,8 +76,15 @@
   --atreides-15: rgba(61, 75, 51, 0.15);
   --gold-05: rgba(202, 165, 84, 0.05);
   --dawn-04: rgba(236, 227, 214, 0.04);
-  --hud-rail-line: rgba(235, 227, 214, 0.42);
-  --hud-rail-line-soft: rgba(235, 227, 214, 0.16);
+  /* Rail hairline alpha. Bumped (0.42 -> 0.55 / 0.16 -> 0.28) for
+     robustness: a 1px line over the bright hero key-visual can land on a
+     fractional device pixel at non-100% zoom / HiDPI and get
+     anti-aliased toward invisible in Chrome. Higher base alpha survives
+     that split and keeps the rail readable over both bright video and
+     dark space. (If the rail is STILL invisible, confirm the browser is
+     at 100% zoom — Ctrl+0 — which is the most common cause.) */
+  --hud-rail-line: rgba(235, 227, 214, 0.55);
+  --hud-rail-line-soft: rgba(235, 227, 214, 0.28);
   --hud-content-inset: calc(var(--hud-margin) + var(--hud-rail-width) + clamp(24px, 3vw, 56px));
 }
 
@@ -481,16 +488,28 @@
   position: absolute;
   top: 0;
   bottom: 0;
-  width: 1px;
+  /* 2px (not 1px) so the line ALWAYS covers at least one full device
+     column. The rail sits at a responsive clamp() margin that lands on a
+     fractional CSS pixel (e.g. left: 52.45px); a 1px line there is
+     anti-aliased across two device columns at ~half alpha each and
+     washes out in Chrome's rasterizer (it survived in Electron/Chromium,
+     hence "visible in Cursor, gone in Chrome"). At 2px one column is
+     always fully covered, so the hairline renders crisply at any
+     fractional offset, zoom level, or DPR. The ticks never had this
+     problem because they're 10–20px wide. */
+  width: 2px;
   z-index: 0;
   pointer-events: none;
+  /* Hold the solid core across nearly the full track (6% -> 94%) so the
+     visible hairline is a consistent, readable line rather than a faint
+     gradient that the compositor can wash out at the ends. */
   background: linear-gradient(
     to bottom,
     transparent,
-    var(--hud-rail-line-soft) 4%,
-    var(--hud-rail-line) 8%,
-    var(--hud-rail-line) 92%,
-    var(--hud-rail-line-soft) 96%,
+    var(--hud-rail-line-soft) 3%,
+    var(--hud-rail-line) 6%,
+    var(--hud-rail-line) 94%,
+    var(--hud-rail-line-soft) 97%,
     transparent
   );
 }

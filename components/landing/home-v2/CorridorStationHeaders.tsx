@@ -1,9 +1,24 @@
 "use client";
 
 import { useEffect, useMemo, useRef, type ReactNode } from "react";
+import * as THREE from "three";
 import { stationById, type StationTelemetry } from "@/lib/home-v2/corridorMap";
-import { epilogueBand } from "@/lib/home-v2/epilogueTimeline";
+import {
+  DOCKED_INSTRUMENT_EPILOGUE_POSE,
+  epilogueBand,
+  getEpiloguePlanetScale,
+} from "@/lib/home-v2/epilogueTimeline";
 import { getSmoothedEpilogueProgress } from "./DepthGatewayScene/motionFollower";
+import {
+  BRANDMARK_ANCHOR_INTELLIGENCE,
+  getCameraFov,
+  getEpilogueCameraPose,
+} from "./DepthGatewayScene/sceneGeom";
+import {
+  GYRO_ASSEMBLY_SCALE,
+  SUBSTRATE_GYRO_DOTTED_SHELL_RADIUS_MUL,
+  SUBSTRATE_GYRO_GLOBE_RADIUS,
+} from "./DepthGatewayScene/shell/shellGeom";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import { gyroTilt } from "@/lib/stores/gyroLabStore";
 
@@ -510,30 +525,169 @@ const SIGNAL_TICKER_ITEMS = [
   "Stripe staffs AI-natives inside marketing until the team can run it alone",
 ];
 
+/** World radius of the planet's visible golden atmosphere (the dotted
+ *  shell of the substrate gyro the epilogue camera flies to). Matches
+ *  `ShellSubstrateGyro` so the projected ring lands on the real limb. */
+const PLANET_LIMB_WORLD_RADIUS =
+  SUBSTRATE_GYRO_GLOBE_RADIUS * SUBSTRATE_GYRO_DOTTED_SHELL_RADIUS_MUL * GYRO_ASSEMBLY_SCALE;
+/** Ring radius as a fraction of the projected limb. >1 so the headline
+ *  ring sits OUTSIDE the particle shell — in the dark band just above
+ *  where the planet's particles end — reading as a true outer ring
+ *  rather than cutting through the atmosphere. */
+const TICKER_RING_RADIUS_MUL = 1.07;
+/** Half-angle (rad, from the top) the headline arc spans across the cap.
+ *  Wide enough to ring the planet, shallow enough that the side text
+ *  stays legible rather than tipping near-vertical. */
+const TICKER_ARC_HALF_SPAN = (40 * Math.PI) / 180;
+/** Smoothed epilogue scrub below which the ticker is not painted
+ *  (the planet hasn't landed and the title hasn't faded in yet). */
+const TICKER_MIN_EP = 0.42;
+
+/**
+ * EpilogueNewsTicker — headline ring welded to the substrate planet.
+ *
+ * The planet is a WebGL object whose on-screen centre + radius change
+ * with the epilogue camera flight, the planet-grow, the dock recede,
+ * AND the viewport. A fixed CSS arc cannot track that (it read as
+ * "completely off" at other viewports). Instead this runs its own rAF
+ * that mirrors the epilogue camera (single source: `getEpilogueCameraPose`
+ * + the same docked-pose ease as `FlyingCameraRig`), projects the planet
+ * centre and a limb point to screen, and rewrites a circular-arc path on
+ * that real circle every frame. The text rides the arc as an outer ring;
+ * opacity mirrors the signal block so it cross-dissolves with the title.
+ */
 function EpilogueNewsTicker({ animate }: { animate: boolean }) {
   const tickerText = `${SIGNAL_TICKER_ITEMS.join("     ◆     ")}     ◆     `;
   const repeatedTickerText = `${tickerText}${tickerText}`;
+  const svgRef = useRef<SVGSVGElement>(null);
+  const pathRef = useRef<SVGPathElement>(null);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const aspect = () => window.innerWidth / window.innerHeight;
+    const camera = new THREE.PerspectiveCamera(getCameraFov(aspect()), aspect(), 0.1, 100);
+    const center = new THREE.Vector3();
+    const edge = new THREE.Vector3();
+    const right = new THREE.Vector3();
+    const proj = new THREE.Vector3();
+
+    let raf = 0;
+    let lastT = 0;
+    let dockBlend = 0;
+    let last = { cx: -1, cy: -1, r: -1, op: -1 };
+
+    const onResize = () => {
+      camera.aspect = aspect();
+      camera.fov = getCameraFov(camera.aspect);
+      camera.updateProjectionMatrix();
+    };
+    window.addEventListener("resize", onResize);
+
+    const tick = (now: number) => {
+      raf = requestAnimationFrame(tick);
+      const svg = svgRef.current;
+      const path = pathRef.current;
+      if (!svg || !path) return;
+
+      // Opacity is owned by the signal block (single source of truth for
+      // the TITLE_IN / cover cross-dissolve) — mirror it so the ring
+      // fades exactly with the billions title.
+      const sigEl = document.querySelector<HTMLElement>(".home-v2-station-header--signal");
+      const sigOp = sigEl ? parseFloat(sigEl.style.opacity || "0") : 0;
+
+      const transform = useDepthGatewayStore.getState().transform;
+      const smoothedEp = getSmoothedEpilogueProgress();
+      // Match FlyingCameraRig: ease the effective scrub toward the held
+      // docked pose so the ring keeps tracking the sphere into the dock.
+      const dt = Math.min(0.1, Math.max(0, (now - lastT) / 1000));
+      lastT = now;
+      dockBlend += ((transform.docked ? 1 : 0) - dockBlend) * (1 - Math.exp(-dt / 0.28));
+      const ep = smoothedEp + (DOCKED_INSTRUMENT_EPILOGUE_POSE - smoothedEp) * dockBlend;
+
+      if (sigOp <= 0.001 || ep <= TICKER_MIN_EP) {
+        if (last.op !== 0) {
+          svg.style.opacity = "0";
+          last = { cx: -1, cy: -1, r: -1, op: 0 };
+        }
+        return;
+      }
+
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+
+      // Mirror the live epilogue camera, then project the planet centre.
+      const pose = getEpilogueCameraPose(ep);
+      camera.position.set(pose.position[0], pose.position[1], pose.position[2]);
+      camera.up.set(0, 1, 0);
+      camera.lookAt(pose.lookAt[0], pose.lookAt[1], pose.lookAt[2]);
+      camera.updateMatrixWorld();
+
+      center.set(
+        BRANDMARK_ANCHOR_INTELLIGENCE[0],
+        BRANDMARK_ANCHOR_INTELLIGENCE[1],
+        BRANDMARK_ANCHOR_INTELLIGENCE[2]
+      );
+      proj.copy(center).project(camera);
+      const cx = (proj.x * 0.5 + 0.5) * vw;
+      const cy = (-proj.y * 0.5 + 0.5) * vh;
+
+      // Screen radius: project a limb point (centre + worldRadius along
+      // camera-right), same technique the brandmark uses for its width.
+      const worldRadius = PLANET_LIMB_WORLD_RADIUS * getEpiloguePlanetScale(ep);
+      right.setFromMatrixColumn(camera.matrixWorld, 0);
+      edge.copy(center).addScaledVector(right, worldRadius);
+      proj.copy(edge).project(camera);
+      const edgeX = (proj.x * 0.5 + 0.5) * vw;
+      const edgeY = (-proj.y * 0.5 + 0.5) * vh;
+      const ringR = Math.hypot(edgeX - cx, edgeY - cy) * TICKER_RING_RADIUS_MUL;
+
+      // Skip the text-on-path relayout when nothing moved meaningfully.
+      if (
+        last.op === sigOp &&
+        Math.abs(cx - last.cx) < 0.5 &&
+        Math.abs(cy - last.cy) < 0.5 &&
+        Math.abs(ringR - last.r) < 0.5
+      ) {
+        return;
+      }
+
+      // Circular cap centred on (cx, cy) at radius ringR, spanning
+      // ±half-span around 12 o'clock so the headline reads left→right
+      // over the limb. point(a) = (cx + r·sin a, cy − r·cos a).
+      const x0 = cx + ringR * Math.sin(-TICKER_ARC_HALF_SPAN);
+      const y0 = cy - ringR * Math.cos(-TICKER_ARC_HALF_SPAN);
+      const x1 = cx + ringR * Math.sin(TICKER_ARC_HALF_SPAN);
+      const y1 = cy - ringR * Math.cos(TICKER_ARC_HALF_SPAN);
+      path.setAttribute(
+        "d",
+        `M ${x0.toFixed(1)} ${y0.toFixed(1)} A ${ringR.toFixed(1)} ${ringR.toFixed(1)} 0 0 1 ${x1.toFixed(1)} ${y1.toFixed(1)}`
+      );
+      svg.style.opacity = sigOp.toFixed(3);
+      last = { cx, cy, r: ringR, op: sigOp };
+    };
+
+    raf = requestAnimationFrame(tick);
+    return () => {
+      window.removeEventListener("resize", onResize);
+      cancelAnimationFrame(raf);
+    };
+  }, []);
 
   return (
-    <svg
-      className="home-v2-signal-ticker"
-      viewBox="0 0 1200 240"
-      preserveAspectRatio="xMidYMid meet"
-      aria-hidden="true"
-      focusable="false"
-    >
+    <svg ref={svgRef} className="home-v2-signal-ticker" aria-hidden="true" focusable="false">
       <defs>
-        <path id="home-v2-signal-ticker-arc" d="M -420 330 Q 600 -212 1620 330" />
+        <path ref={pathRef} id="home-v2-signal-ticker-arc" d="" />
       </defs>
       <text className="home-v2-signal-ticker__text">
-        <textPath href="#home-v2-signal-ticker-arc" startOffset={animate ? "0%" : "7%"}>
+        <textPath href="#home-v2-signal-ticker-arc" startOffset={animate ? "0%" : "12%"}>
           {repeatedTickerText}
           {animate && (
             <animate
               attributeName="startOffset"
               from="0%"
               to="-50%"
-              dur="18s"
+              dur="20s"
               repeatCount="indefinite"
             />
           )}
@@ -956,13 +1110,17 @@ export function CorridorStationHeaders() {
           split
         />
       )}
+      {/* Ticker is its OWN fixed full-viewport layer (NOT inside the
+          signal block, whose per-frame `translate3d` transform would
+          make the fixed SVG a containing block and break viewport-space
+          projection). It welds itself to the planet via world projection. */}
+      <EpilogueNewsTicker animate={!reducedMotion} />
       <StationBlock
         refSetter={setSigRef}
         registerChars={sigRegisterChars}
         registerCursors={sigRegisterCursors}
         content={sig}
         typewriter={typewriter}
-        beforeContent={<EpilogueNewsTicker animate={!reducedMotion} />}
         afterContent={<SignalActions />}
         variantClass="home-v2-station-header--signal"
       />

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Canvas, useFrame } from "@react-three/fiber";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { useDeviceTier } from "@/lib/hooks/useDeviceTier";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import { BrandmarkAccretionShell } from "./BrandmarkAccretionShell";
@@ -53,6 +53,37 @@ function MotionFollowerDriver() {
       active || docked
     );
   }, -10);
+  return null;
+}
+
+/**
+ * FrameInvalidator — guarantees the demand-mode render loop wakes up
+ * whenever the corridor is (re)engaged.
+ *
+ * The Canvas runs `frameloop="demand"` while the corridor is fully
+ * off-screen so the GPU idles. R3F's demand mode only paints when
+ * `invalidate()` is called, and toggling the `frameloop` prop back to
+ * `"always"` does NOT reliably restart the internal loop on its own.
+ * That left the corridor + gateway showing a stale, cleared (black)
+ * buffer after the user scrolled past the stage and back up — the
+ * scene only recovered on a full reload.
+ *
+ * Requesting a frame on every ENGAGED transform change makes re-entry
+ * self-healing: the moment `active` / `armed` / `docked` flips back on
+ * (or any scroll frame while engaged), a paint is scheduled, so the
+ * loop resumes immediately instead of waiting for a render that never
+ * comes. The guard keeps the GPU quiet while the corridor is fully
+ * off-screen (no invalidate when disengaged). (ADR-018 scroll-reentry
+ * fix.)
+ */
+function FrameInvalidator() {
+  const invalidate = useThree((s) => s.invalidate);
+  useEffect(() => {
+    return useDepthGatewayStore.subscribe((state) => {
+      const t = state.transform;
+      if (t.active || t.armed || t.docked) invalidate();
+    });
+  }, [invalidate]);
   return null;
 }
 
@@ -263,6 +294,9 @@ export function DepthGatewayScene() {
     >
       {/* Temporal-smoothing follower — must tick before all painters. */}
       <MotionFollowerDriver />
+      {/* Re-entry guard — wakes the demand-mode loop when the corridor
+          re-engages so scroll-back never strands a cleared buffer. */}
+      <FrameInvalidator />
       <FlyingCameraRig />
       <StaticStarfield />
       {/* SubstrateTopography — the realm OUTSIDE the wormhole: a
