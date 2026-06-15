@@ -1,0 +1,232 @@
+# ADR-022: Hero → Corridor 3D Flip Transition
+
+**Date:** 2026-06-15
+**Status:** Proposed
+**Revisions:** v2 (2026-06-15) — Enclose-then-flip with two-faced card (KPR parity); see "v2 rework" below. The original v1 single-element rotateY recede is preserved at the bottom of this ADR as the rejected predecessor.
+**Scope:** Production home page (`/`) — the seam between the v7 hero (`section#hero`, the wormhole key-visual `<video>`) and the home-v2 depth corridor's parked Thoughtform start frame (`#home-corridor-mount` → `.home-corridor-host` → `HomeCorridor`). The transition the user experiences as they begin scrolling.
+**Related:**
+[ADR-008 — Landing v7 background layers](008-landing-v7-background-layers.md),
+[ADR-018 — Home V2 Depth Corridor](018-home-v2-depth-corridor.md),
+[ADR-021 — Corridor Exit Zoom-Dissipate](021-corridor-exit-zoom-dissipate.md),
+[ADR-002 — Scroll Animation Architecture](002-scroll-animation-architecture.md).
+
+---
+
+## Context
+
+The hero's existing exit was a quiet **scale + fade**: as the corridor mount rose into view, [`useLandingScroll`](../../components/landing/v7/hooks/useLandingScroll.ts) wrote an eased `--hero-cover` (0..1) to `#hero` and the hero video gently zoomed and faded while the corridor host (`z:3`) physically slid up over the pinned hero (`z:1`). Functional, but it lacked the deliberate "the page just turned" beat that the rest of the v7 brand grammar trades on (HUD bracket frames, depth-corridor flythrough, sphere zoom-dissipate at the corridor exit).
+
+The reference behaviour is [kprverse.com](https://kprverse.com/), which **wraps the hero into a card and 3D-rotates it through depth** to reveal the next section. Browser inspection of KPR's site confirms: native scroll, lerped via a virtual `scroller`, with a single Three.js canvas painting both the wrap and the rotateY recede; the next section is built from the same card shape so the wrap "lands" as content.
+
+Two constraints shaped the response:
+
+1. **The home-v2 depth corridor must not move.** ADR-018 / ADR-021 lock down `progress` / `paintProgress` / `epilogueProgress` / `dockProgress` as single-writer scroll channels owned by [`useDepthScroll`](../../components/landing/home-v2/hooks/useDepthScroll.ts) and [`useCorridorExitScroll`](../../components/landing/home-v2/hooks/useCorridorExitScroll.ts). The 820svh stage height, `EPILOGUE_START = 620/820`, the camera rig, and the dock-engage gate (`epilogueProgress >= 0.72`) are all calibrated against each other; touching them risks sphere jitter, exit dock failure, or the wormhole flythrough breaking.
+2. **The reveal must land _exactly_ on the corridor's parked Thoughtform frame** — the keyframe with `THOUGHTFORM /θɔːtfɔːrm/` copy on the left and the dotted compass-gate brandmark with NAVIGATE / BUILD / ENCODE labels on the right. That frame is what the user wants the flip to "open onto."
+
+The load-bearing observation is that the corridor's `getCorridorEngagement` ([`lib/stores/depthGatewayStore.ts`](../../lib/stores/depthGatewayStore.ts) L173-184) defines an **`armed` phase** that fires while the stage rises into the viewport but is not yet pinned. While armed, the corridor's `<Canvas>` runs `frameloop="always"` and paints `paintProgress = 0` at full opacity — i.e. the parked Thoughtform frame is already on screen, fully rendered, behind the hero, throughout the same one-viewport scroll band that drives `--hero-cover`. The flip's `cover = 1` end state therefore coincides frame-for-frame with the corridor's natural start. Nothing about the corridor needs to move; only the hero's exit visual changes.
+
+---
+
+## Decision
+
+Replace the hero's existing scale + fade with a **wrap + 3D `rotateY` recede**, driven entirely by the existing `--hero-cover` channel and a single new `data-hero-flip="1"` attribute that promotes the hero above the corridor host mid-band so the flip _reveals_ — rather than is covered by — the rising mount. No changes anywhere under `components/landing/home-v2/**`. No new scroll listeners. No new store channels.
+
+### Mechanics
+
+1. **`--hero-cover` stays the single progress source.** [`useLandingScroll`](../../components/landing/v7/hooks/useLandingScroll.ts) continues to write the smootherstep-eased cover value on every rAF frame as the corridor mount's top crosses from `vh` to `0`. ADR-002's "single rAF, batched reads" pattern is preserved.
+
+2. **`.hero[data-hero-flip="1"]` promotes z-index 1 → 5 mid-band only.** The same hook that writes `--hero-cover` toggles a capability-gated dataset attribute in the same frame:
+
+   ```ts
+   const flipCapable = !reduceMotion && window.matchMedia("(min-width: 961px)").matches;
+   if (flipCapable && heroCover > 0 && heroCover < 1) {
+     heroEl.dataset.heroFlip = "1";
+   } else {
+     delete heroEl.dataset.heroFlip;
+   }
+   ```
+
+   At `cover = 0` (before the band) and `cover = 1` (after, where the existing `visibility: hidden` cleanup takes over), the attribute is absent and the hero stays at its sticky `z:1`. The promotion is purely the band-time inversion that makes a _reveal_ read as a reveal instead of a cover.
+
+3. **CSS owns all phase math.** A single media query, `@media (prefers-reduced-motion: no-preference) and (min-width: 961px)`, wraps the flip treatment so reduced-motion and narrow viewports fall through to the legacy scale + fade rules above it (which stay in place as the fallback path).
+
+   Inside the gate:
+
+   ```css
+   .hero {
+     background: var(--void);
+     transform-origin: 50% 50%;
+     will-change: transform;
+     transform: perspective(1600px)
+       translateZ(calc(var(--hero-cover, 0) * var(--hero-cover, 0) * -640px))
+       rotateY(calc(var(--hero-cover, 0) * var(--hero-cover, 0) * var(--hero-cover, 0) * -58deg))
+       scale(calc(1 - var(--hero-cover, 0) * 0.13));
+   }
+   .hero[data-hero-flip="1"] {
+     z-index: 5;
+   }
+   .hero__video {
+     inset: calc(var(--hero-cover, 0) * 24px);
+     border-radius: calc(var(--hero-cover, 0) * 28px);
+     transform: none;
+     opacity: 1;
+   }
+   .hero__content {
+     transform: none;
+     opacity: calc(1 - var(--hero-cover, 0) * 1.8);
+   }
+   ```
+
+   - **Wrap (linear `cover`):** `.hero__video` insets and rounds, exposing the parent `.hero`'s `var(--void)` background as a frame around the video. The hero's `overflow: hidden` already constrains the rounded video card inside the box.
+   - **Fade (linear, fast `cover * 1.8`):** `.hero__content` (wordmark + tagline) clears around `cover ≈ 0.55` so copy is gone before the rotation gets dramatic.
+   - **Flip (`cover²` for translateZ, `cover³` for rotateY):** the recede and rotation curves are concentrated at the back half of the band. Because `--hero-cover` is already smootherstep-eased upstream, the effective curves are `smootherstep²` and `smootherstep³` — at raw cover 0.5 the rotation is ~7°, at raw cover 0.85 it's ~53°, at raw cover 1.0 it's 58°. The big reveal sits exactly where the corridor pins.
+   - **`transform: none` on `.hero__video` and `.hero__content`** explicitly nulls the legacy scale rules from `Hero polish` (line ~6135) and the `[data-parallax]`-cascade re-declaration (line ~6471); on capable devices the hero flips as a single rigid card.
+
+4. **The reveal target is the live, armed corridor.** While `--hero-cover` is in the band, `getCorridorEngagement` reports `{ active: false, armed: true, paintProgress: 0 }` — the corridor canvas is painting the parked Thoughtform frame at full opacity, with the same `data-corridor-engaged="true"` HUD-handover that the existing flow uses. As the hero card rotates and recedes, the user sees the parked corridor frame revealed through and around it. At `cover = 1`, the existing `heroEl.style.visibility = "hidden"` line takes over and the corridor takes the screen. There is no separate "land" choreography to write — the corridor's natural start IS the landing frame.
+
+5. **Capability + fallback gate is dual-locked.** The JS toggle and the CSS media query check the same conditions (`prefers-reduced-motion: no-preference` AND `min-width: 961px`). If JS lags or fails, the attribute simply isn't set and the CSS rules still resolve to identity-equivalent at `cover = 0`. Reduced-motion users and ≤960px viewports never hit the flip rules at all — they keep the legacy scale + fade and the existing visibility cutoff.
+
+### Files changed
+
+- [`components/landing/v7/hooks/useLandingScroll.ts`](../../components/landing/v7/hooks/useLandingScroll.ts) — capability check hoisted to the top of the rAF frame; `data-hero-flip` toggle added inside the same `if (heroEl && defEl)` block that writes `--hero-cover`. The duplicate `reduceMotion` declaration in the parallax block was removed (now reuses the hoisted value). No new listeners; no changes to `useEffect` / `useLayoutEffect` lifecycle.
+- [`components/landing/v7/landing.css`](../../components/landing/v7/landing.css) — new `@media (prefers-reduced-motion: no-preference) and (min-width: 961px)` block appended after the existing late-cascade hero rules (~line 6475); the legacy scale + fade rules above it are preserved as the fallback.
+
+No edits under `components/landing/home-v2/**`. No edits to corridor stores, hooks, scene, camera rig, shells, or the parsed v7 HTML pipeline.
+
+---
+
+## Constraints honored (do not regress)
+
+- **Single-writer scroll channels** (ADR-018, ADR-021). `useLandingScroll` continues to own only `--depth`, `--hero-cover`, `--py`, the HUD readouts, and now `data-hero-flip`. It does not touch `progress`, `paintProgress`, `epilogueProgress`, `dockProgress`, or `data-corridor-docked` / `data-corridor-engaged`.
+- **No global Lenis over the corridor** (ADR-018 v3.10). Native window scroll only.
+- **`EPILOGUE_START = 620/820` synced to `.home-v2-stage { height: 820svh }`** (ADR-018, ADR-021). Untouched.
+- **`getCameraFov` parity between R3F camera and the DOM mirror camera** (ADR-018). Untouched.
+- **`FrameInvalidator` and engagement-gated `frameloop`** (ADR-018). Untouched.
+- **Reverse-scroll release (`DOCK_RELEASE_EPILOGUE_PROGRESS = 0.7`)** (ADR-021). Untouched. The flip is fully reversible by symmetry: `--hero-cover` is recomputed every frame from the live `defTop`, and the dataset attribute is set / cleared the same way on the way back up.
+- **ADR-008 paint-stack invariants.** `.hero` retains its `var(--void)` background — explicitly set in the new rule so the wrap frame is opaque. The promotion to `z:5` only happens _during_ the band, where the hero is already shielding behind itself; before and after the band the hero is at `z:1` (sticky) or `visibility: hidden`. The fixed `.gateway` (`z:0`) and HUD chrome are unaffected.
+
+## Consequences
+
+### Positive
+
+- The hero exit reads as a deliberate brand beat (wrap → flip → reveal) instead of a quiet zoom, matching the corridor's other dramatic seams (gateway flythrough, sphere zoom-dissipate).
+- Zero risk to the corridor: the entire change is two files outside `components/landing/home-v2/**`, and the corridor's armed pre-paint already does the work of "having the next frame ready."
+- Reversibility is automatic. The CSS values are pure functions of `--hero-cover`, which is recomputed every rAF; scroll-up retraces scroll-down. The dataset attribute is a band gate, not a latch.
+- bfcache-safe. Both writers (`--hero-cover` and the dataset toggle) run inside `useLayoutEffect` on first paint and again on every scroll, so `pageshow` restoration converges to the correct state on the first frame.
+
+### Negative
+
+- One more CSS variable consumer to keep in mind when reasoning about the hero exit band. The legacy scale + fade rules now exist as a _fallback path_ rather than the primary path, which inverts the cascade priority for someone reading top-down.
+- The `pow()`-via-multiplication trick (`var(--hero-cover) * var(--hero-cover) * ...`) reads less directly than `pow(var(--hero-cover), 3)`. Multiplication was chosen for compatibility breadth; revisit if `pow()` lands as the codebase's preferred style elsewhere.
+- The hero, while flipped, accepts pointer events at `z:5`. The hero contains no interactive elements (the HUD chrome lives outside `#hero`), but if interactive content is ever added inside the hero, this band is a place where it will eclipse the rising corridor. Today, this is fine.
+
+### Neutral
+
+- Hero `background` is now explicitly `var(--void)` inside the media query. Functionally identical to the existing implicit body / void cascade, but makes the wrap frame self-sufficient regardless of stacking context.
+
+---
+
+## What NOT to do (failure modes that would regress this)
+
+- **Don't move the band-gate logic into the corridor hooks.** The flip is a hero exit visual; the corridor only provides the landing frame. Putting `data-hero-flip` writes inside `useDepthScroll` or `useCorridorExitScroll` would re-create the cross-writer scroll-channel bug pattern documented in ADR-018 v3.14 / ADR-021.
+- **Don't promote the hero to `z:5` outside the band.** Leaving the attribute permanently set would put the hero above the corridor at all times — covering the corridor's armed pre-paint with a stale hero card and breaking the existing handoff entirely. The attribute is a strict in-band gate.
+- **Don't remove the `transform: none` overrides on `.hero__video` and `.hero__content`.** The legacy late-cascade rule (`landing.css` ~line 6471) re-applies `transform: scale(...)` after the parallax block; without explicit `none` overrides inside the media query, the legacy scale would compose on top of the flip and the card would stretch instead of flipping cleanly.
+- **Don't change `--hero-cover`'s upstream easing without retuning the `pow²` / `pow³` curves.** The wrap-vs-flip split is calibrated against the smootherstep curve, not raw scroll. Pushing easing changes upstream silently shifts the visual band.
+- **Don't add the flip rules outside the media query.** The `prefers-reduced-motion` and `min-width: 961px` gates are dual-locked with the JS toggle for safety; collapsing them would break the reduced-motion fallback path.
+- **Don't bake brandmark or station-specific reveal animations into the hero card.** The corridor's parked Thoughtform frame already includes the brandmark gateway, the dotted compass square, and the NAVIGATE / BUILD / ENCODE labels (painted by the corridor's R3F canvas + `CorridorStationHeaders`). The flip is a _hero exit_; treat the corridor as a black box.
+
+---
+
+## References
+
+- [`components/landing/v7/hooks/useLandingScroll.ts`](../../components/landing/v7/hooks/useLandingScroll.ts) — `flipCapable` + `data-hero-flip` toggle (in the same rAF frame as `--hero-cover`).
+- [`components/landing/v7/landing.css`](../../components/landing/v7/landing.css) — new `@media (prefers-reduced-motion: no-preference) and (min-width: 961px)` block (~line 6495).
+- [`components/landing/home-v2/HomeCorridor.tsx`](../../components/landing/home-v2/HomeCorridor.tsx) and [`components/landing/home-v2/DepthGatewayScene/index.tsx`](../../components/landing/home-v2/DepthGatewayScene/index.tsx) — black box; not edited.
+- [`lib/stores/depthGatewayStore.ts`](../../lib/stores/depthGatewayStore.ts) L173-184 — `getCorridorEngagement`'s `armed` phase, which guarantees the parked frame is on screen and ready throughout the flip band.
+- [kprverse.com](https://kprverse.com/) — reference behaviour. Native scroll + lerped virtual scroller + Three.js for the wrap and rotateY recede; this ADR's CSS path is a brand-grammar adaptation, not a faithful Three.js port.
+
+---
+
+## v2 rework — Enclose-then-flip with two-faced card (2026-06-15)
+
+### Why v1 wasn't enough
+
+v1 was a single-element "wrap then rotate the hero away" that revealed the live corridor _behind_ the hero as it receded. Closer Playwright scrubbing of [kprverse.com](https://kprverse.com/) showed a different mechanic: the hero **first encloses into a contained card** (no rotation, just shrink + round corners + black margin), and **then** flips on a vertical axis to reveal **the next section on the back face of the card**. The next section isn't behind the flipping hero — it's _on the other side_ of the card. The corridor is an asset that lives "inside" the card, not behind it.
+
+The v2 rework matches that mechanic while still keeping the live corridor untouched.
+
+### What changed
+
+**Choreography (CSS `@media (prefers-reduced-motion: no-preference) and (min-width: 961px)`):**
+
+| Phase     | `--hero-cover` | What happens                                                                                                                                                                                                               |
+| --------- | -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ENCLOSE   | 0 → 0.45       | Card pinches inward (`scale 1 → 0.85`), corners round, void-black backdrop fades in. NO rotation.                                                                                                                          |
+| FLIP      | 0.45 → 1       | `rotateY 0deg → 180deg` on both faces; card grows back (`scale 0.85 → 1`). Front (`#hero`) shows live wormhole video; back shows Thoughtform facade. `backface-visibility: hidden` on each side handles the swap at 90deg. |
+| CROSSFADE | 0.85 → 1       | Backdrop + facade opacity 1 → 0, revealing the live corridor that has naturally pinned at `paintProgress = 0`.                                                                                                             |
+
+The shared phase clocks live in CSS variables defined on `<html data-hero-flip="1">` so the front (in parsed `main.stations`) and the portalled back deck inherit identical values:
+
+```css
+html[data-hero-flip="1"] {
+  --enclose: clamp(0, min(calc(var(--hero-cover) / 0.45), calc((1 - var(--hero-cover)) / 0.55)), 1);
+  --flip: clamp(0, calc((var(--hero-cover) - 0.45) / 0.55), 1);
+  --back-fade: clamp(0, calc((1 - var(--hero-cover)) / 0.15), 1);
+}
+```
+
+`--enclose` is a triangle (0 → 1 at cover 0.45 → 0 at cover 1) so the card pinches in then grows back out during the flip. `--flip` is linear (0 at cover 0.45 → 1 at cover 1). `--back-fade` is the deck's alpha (1 across the band, ramps to 0 across cover 0.85 → 1).
+
+**The back face is a static DOM facade, not the live corridor.** The corridor's flythrough reads `getBoundingClientRect()` on its 820svh stage every frame to drive `paintProgress` / `epilogueProgress`; any 3D transform on an ancestor of that stage corrupts the rect and breaks the flythrough. Instead, [`HeroFlipBackface`](../../components/landing/v7/HeroFlipBackface.tsx) is a small `position: fixed` deck containing:
+
+1. `.hero-flip-backdrop` — opaque `var(--void)` covering the viewport, providing the black margin around the enclosed card.
+2. `.hero-flip-back` — the facade itself: a copy column (reusing `text.thoughtform.bridge / titleHtml / body1Html / body2Html / cta` and the `.home-v2-copy-block--thoughtform-left` / `.home-v2-copy-bridge` / `.home-v2-copy-title` / `.home-v2-copy-body` typography classes from `home-v2.css` verbatim, so the typographic scale matches the live corridor 1:1) plus the canonical [`BrandmarkGlyph`](../../components/landing/v7/BrandmarkGlyph.tsx) inside a dashed diamond frame (`transform: rotate(45deg)` on the frame, `rotate(-45deg)` on the brandmark to keep it upright).
+
+The deck **portals into `main.stations`** (via `createPortal(content, mainEl)`) so its stacking context is the same as `#hero`. Layered:
+
+```
+z:3  .home-corridor-host  (rising, parked frame; armed)
+z:4  .hero-flip-backdrop  (void-black margin)
+z:5  .hero-flip-back      (facade: copy + brandmark, rotateY+180)
+z:6  #hero[data-hero-flip] (front: live video, rotateY)
+```
+
+Everything fits inside `main`'s own `z:10` envelope, so the deck never competes with the HUD (`z:50`) or the gateway (`z:0`). Front and back are full-bleed siblings (not parent/child) — `#hero` lives in parsed `dangerouslySetInnerHTML` markup we don't mutate, and its `overflow: hidden` would clip a child rotated card.
+
+The crossfade window (cover 0.85 → 1) hides the facade and backdrop just as the live corridor — armed at `paintProgress = 0` throughout the band — would be revealed. By cover 1 the deck is `display: none` (gated by `html[data-hero-flip="1"]` which `useLandingScroll` clears at the boundary), the hero is `visibility: hidden`, and the live corridor takes the screen as its natural pin engages.
+
+### Files changed in v2
+
+- [`components/landing/v7/hooks/useLandingScroll.ts`](../../components/landing/v7/hooks/useLandingScroll.ts) — additionally mirrors `--hero-cover` (eased) and `data-hero-flip` onto `document.documentElement` so the deck siblings inherit the channel via cascade.
+- [`components/landing/v7/HeroFlipBackface.tsx`](../../components/landing/v7/HeroFlipBackface.tsx) — new component. `position: fixed` deck portalled into `main.stations`. Reads `text: V7CorridorText`. `display: none` outside `<html data-hero-flip="1">`.
+- [`components/landing/v7/LandingPage.tsx`](../../components/landing/v7/LandingPage.tsx) — mounts `<HeroFlipBackface text={corridorText} containerRef={rootRef} />` as a sibling.
+- [`components/landing/v7/landing.css`](../../components/landing/v7/landing.css) — flip media-query block reworked to enclose-then-flip; new `.hero-flip-deck / .hero-flip-backdrop / .hero-flip-back / .hero-flip-back__inner / .hero-flip-back__copy / .hero-flip-back__diagram / .hero-flip-back__diagram-frame / .hero-flip-back__brandmark` rules.
+
+### v2 verification (Playwright, 1920×1080 viewport)
+
+| y    | cover (eased) | flipAttr | hero z | hero vis | back opacity     | corridor engaged                |
+| ---- | ------------- | -------- | ------ | -------- | ---------------- | ------------------------------- |
+| 0    | 0.000         | null     | 1      | visible  | 1 (display:none) | false                           |
+| 270  | 0.104         | "1"      | 6      | visible  | 1                | true (armed)                    |
+| 540  | 0.500         | "1"      | 6      | visible  | 1                | true (armed)                    |
+| 700  | 0.762         | "1"      | 6      | visible  | 1                | true (armed)                    |
+| 800  | 0.886         | "1"      | 6      | visible  | 0.76             | true (armed)                    |
+| 920  | 0.974         | "1"      | 6      | visible  | 0.17             | true                            |
+| 1000 | 0.996         | "1"      | 6      | visible  | 0.024            | true                            |
+| 1080 | 1.000         | null     | 1      | hidden   | (display:none)   | true (pinned)                   |
+| 4500 | 1.000         | null     | 1      | hidden   | (display:none)   | true (active)                   |
+| 9500 | 1.000         | null     | 1      | hidden   | (display:none)   | true + docked + dissipate=0.596 |
+
+Reverse-scroll re-enters band cleanly (same values at same y in both directions). Mobile fallback (≤960px): media gate skips the flip rules entirely; deck stays `display: none`, hero keeps the legacy scale+fade (verified `videoT: matrix(1.09, …) opacity: 0.775` at cover=0.5 in 800×1080).
+
+### v2 additional invariants (extend the v1 list)
+
+- **The back face is a facade, not the live corridor.** Never replace `HeroFlipBackface` with the home-v2 R3F canvas, a portal of the corridor, or any element whose layout is read by `useDepthScroll`. The crossfade exists because facade ↔ live corridor parity isn't pixel-perfect; closing it via shared rendering would corrupt the corridor's rect math.
+- **The deck must portal into `main.stations`, not be a root sibling.** A root-level deck would need a z-index above `main` (z:10) to paint over the rising corridor host (z:3); but then the deck would also paint over the hero (which is z:5/6 inside main). Putting the deck inside main keeps front/back/backdrop in one stacking context where the standard z-order works as written.
+- **Front and back are siblings, never parent/child.** `#hero` lives in parsed `dangerouslySetInnerHTML` and has `overflow: hidden`; a back face inside it would be clipped during rotation. The two-element flip with matching `perspective(1600px)` + `transform-origin: 50% 50%` + opposite rotateY is the only stable pattern.
+- **Don't drop `backface-visibility: hidden` from either face.** Without it, both faces paint at all rotations and the user sees a mirrored ghost of the front through the back during the flip.
+- **The deck must be `display: none` outside the band.** Otherwise the void-black backdrop (`opacity: var(--back-fade, 0)` defaults to 0, but the deck still occupies layout) could intercept pointer events or affect the brandmark suppression check in `HomeCorridor`.
+
+### Why v1 was rejected
+
+v1 was a "hero rotates away to reveal corridor _behind_ it" mechanic — the corridor was pre-rendered behind the rotating hero, and the user's eye followed the receding hero. This works visually (the corridor IS behind it, armed and fully painted), but it tells the wrong narrative: the hero is _exiting_, not _enclosing the next section_. KPR's chosen mechanic — and what the user requested — is "the next section lives inside the back of the flipped section." That requires a true two-faced card with the next section's content rendered on the back, which is what v2 delivers via the facade + crossfade.

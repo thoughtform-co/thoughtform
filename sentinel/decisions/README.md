@@ -40,6 +40,8 @@ Write an ADR when you:
 | 009 | [Repo Structure Conventions](009-repo-structure-conventions.md)         | Accepted | 2025+   |
 | 010 | [Brandmark Choreography](010-brandmark-choreography.md)                 | Accepted | 2026-04 |
 | 018 | [Home V2 Depth Corridor](018-home-v2-depth-corridor.md)                 | Proposed | 2026-05 |
+| 021 | [Corridor Exit Zoom-Dissipate](021-corridor-exit-zoom-dissipate.md)     | Proposed | 2026-06 |
+| 022 | [Hero → Corridor Flip Transition](022-hero-corridor-flip-transition.md) | Proposed | 2026-06 |
 
 ---
 

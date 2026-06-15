@@ -6465,10 +6465,208 @@ body.density-dense .station {
 }
 
 /* Hero cover motion must come after the generic [data-parallax] rule so
-   the pinned video can still zoom/recede as section 02 enters. */
+   the pinned video can still zoom/recede as section 02 enters. This is
+   the legacy scale+fade fallback used by reduced-motion mode and narrow
+   viewports; the 3D flip block below overrides it on capable devices. */
 .hero__video {
   transform: scale(calc(1 + var(--hero-cover, 0) * 0.18));
   opacity: calc(1 - var(--hero-cover, 0) * 0.45);
+}
+
+/* ─── HERO → THOUGHTFORM ENCLOSE-THEN-FLIP TRANSITION (ADR-022) ──────
+   KPR-style two-faced flip card. Three sequential phases, all driven
+   by the smootherstep-eased `--hero-cover` (0..1) written by
+   `useLandingScroll`. The home-v2 depth corridor (ADR-018 / ADR-021)
+   is NEVER rotated or reparented — its flythrough reads stage rect
+   every frame and would break under any ancestor 3D transform. The
+   back of the flip is a STATIC DOM facade (`HeroFlipBackface`) that
+   renders the same `text.thoughtform` source the live corridor uses
+   and crossfades to the live corridor at completion.
+
+   Phases (cover 0 → 1):
+     • ENCLOSE (cover 0 → 0.45): card pinches inward (scale 1 → 0.85),
+       corners round, void-black backdrop fades in. NO rotation.
+     • FLIP    (cover 0.45 → 1): rotateY 0deg → 180deg, card grows back
+       to full bleed (scale 0.85 → 1). Front shows live hero video;
+       back shows the Thoughtform facade (`backface-visibility:
+       hidden` on each side does the swap at 90deg).
+     • CROSS   (cover 0.85 → 1): backdrop + facade opacity 1 → 0,
+       revealing the live corridor that has naturally pinned at
+       `paintProgress = 0`.
+
+   `--enclose` is a triangle (0 → 1 @ cover 0.45 → 0 @ cover 1) so the
+   card pinches in then grows back during the flip. `--flip` is linear
+   (0 @ cover 0.45 → 1 @ cover 1).
+
+   Gating matches JS `flipCapable` in useLandingScroll: motion-allowed
+   + ≥961px. Reduced-motion / mobile fall through to the legacy
+   scale+fade rules above (the deck stays `display: none`).
+   ──────────────────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: no-preference) and (min-width: 961px) {
+  /* Shared phase variables. Defined on `<html>` so the front (`#hero`,
+     inside parsed main) and the portalled back deck both inherit. The
+     `--hero-cover` mirror onto <html> happens in the same rAF frame as
+     the `#hero` write; both faces always see identical values. */
+  html[data-hero-flip="1"] {
+    --enclose: clamp(
+      0,
+      min(calc(var(--hero-cover, 0) / 0.45), calc((1 - var(--hero-cover, 0)) / 0.55)),
+      1
+    );
+    --flip: clamp(0, calc((var(--hero-cover, 0) - 0.45) / 0.55), 1);
+    /* Back-deck crossfade clock: 1 across cover 0..0.85, then 1 → 0
+       across 0.85..1 to reveal the live corridor as it pins. */
+    --back-fade: clamp(0, calc((1 - var(--hero-cover, 0)) / 0.15), 1);
+  }
+
+  .hero {
+    background: var(--void);
+    transform-origin: 50% 50%;
+    backface-visibility: hidden;
+    will-change: transform;
+    transform: perspective(1600px) scale(calc(1 - var(--enclose, 0) * 0.15))
+      rotateY(calc(var(--flip, 0) * 180deg));
+  }
+  /* Promote the hero above the back deck (z:5) and backdrop (z:4)
+     mid-band so the FRONT face paints over the matching backdrop. The
+     two faces are siblings inside `main.stations`, so this z stays
+     within main's own z:10 envelope. */
+  .hero[data-hero-flip="1"] {
+    z-index: 6;
+  }
+  /* Override the legacy `.hero__video` scale+fade rules (above) so the
+     hero flips as a single rigid card. The video insets and rounds
+     during ENCLOSE; the `.hero` `var(--void)` background paints the
+     frame around it. */
+  .hero__video {
+    inset: calc(var(--enclose, 0) * 18px);
+    border-radius: calc(var(--enclose, 0) * 26px);
+    transform: none;
+    opacity: 1;
+    will-change: inset, border-radius;
+  }
+  .hero__content {
+    transform: none;
+    /* Faster fade — copy is gone before the rotation gets dramatic. */
+    opacity: calc(1 - var(--hero-cover, 0) * 2.2);
+    will-change: opacity;
+  }
+}
+
+/* ─── HERO FLIP DECK (back face + backdrop, portalled into main.stations)
+   Renders only when `<html data-hero-flip="1">`. Reduced-motion / mobile
+   paths never see these rules — the deck stays `display: none`.
+   ──────────────────────────────────────────────────────────────────── */
+.hero-flip-deck {
+  display: none;
+}
+@media (prefers-reduced-motion: no-preference) and (min-width: 961px) {
+  html[data-hero-flip="1"] .hero-flip-deck {
+    display: block;
+  }
+}
+
+.hero-flip-backdrop,
+.hero-flip-back {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+}
+
+.hero-flip-backdrop {
+  z-index: 4;
+  background: var(--void, #0a0908);
+  /* `--back-fade` is the deck's alpha: 1 = fully visible, 0 = faded.
+     Defaults to 0 outside the band so the backdrop is invisible (the
+     deck is also `display: none` outside the band; this default is a
+     belt-and-braces guard). Crossfades 1 → 0 across cover 0.85 → 1
+     to reveal the live corridor that has naturally pinned at
+     `paintProgress = 0`. */
+  opacity: var(--back-fade, 0);
+  will-change: opacity;
+}
+
+.hero-flip-back {
+  z-index: 5;
+  background: var(--void, #0a0908);
+  transform-origin: 50% 50%;
+  backface-visibility: hidden;
+  /* Pre-rotated 180deg so its visible side appears once `--flip`
+     reaches 1.0 (front-back swap at flip ≈ 0.5 via
+     `backface-visibility: hidden`). Pinches/grows in lockstep with
+     the front so both faces of the card occupy the same projected
+     box throughout. */
+  transform: perspective(1600px) scale(calc(1 - var(--enclose, 0) * 0.15))
+    rotateY(calc(var(--flip, 0) * 180deg + 180deg));
+  border-radius: calc(var(--enclose, 0) * 26px);
+  overflow: hidden;
+  /* Same crossfade clock as the backdrop. */
+  opacity: var(--back-fade, 1);
+  will-change: transform, opacity;
+}
+
+/* ── Facade layout — copy column left, brandmark + frame right ──── */
+.hero-flip-back__inner {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+  align-items: center;
+  /* Match `.hero` padding so copy lines up with the corridor's
+     `.home-v2-copy-block--thoughtform-left` placement during the
+     crossfade (ADR-018). */
+  padding: 140px clamp(96px, 8vw + 40px, 140px) 220px;
+  gap: clamp(40px, 4vw, 80px);
+}
+
+.hero-flip-back__copy {
+  /* Reuses `.home-v2-copy-block--thoughtform-left` typography from
+     home-v2.css verbatim — bridge/title/body/cta scale matches the
+     live corridor 1:1 so the crossfade is invisible. */
+  position: relative;
+  max-width: 36ch;
+}
+
+/* The CTA on the facade is non-interactive (the deck has
+   `pointer-events: none` and its inner span isn't an `<a>`). It exists
+   purely to mirror the live corridor's parked composition during the
+   crossfade. */
+.hero-flip-back__copy .home-v2-copy-cta {
+  /* Strip hover-lift so the static cue doesn't flash mid-flip. */
+  transition: none;
+}
+
+.hero-flip-back__diagram {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+}
+
+/* Dotted diamond frame around the brandmark — echoes the corridor's
+   parked Thoughtform compass-gate diagram. The labels (NAVIGATE /
+   BUILD / ENCODE) sit on the frame's three exposed corners. */
+.hero-flip-back__diagram-frame {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  width: min(56vh, 480px);
+  border: 1px dashed var(--dawn-30, rgba(235, 227, 214, 0.3));
+  /* Diamond rotation matches the corridor's parked frame. */
+  transform: rotate(45deg);
+  display: grid;
+  place-items: center;
+}
+
+.hero-flip-back__brandmark {
+  /* Counter-rotate so the brandmark itself stays upright inside the
+     diamond frame. Matches the live corridor's parked brandmark
+     orientation. The live corridor's own NAVIGATE / ENCODE / BUILD
+     labels are not duplicated here — the ~15% crossfade brings the
+     live corridor in fast enough that label parity isn't needed. */
+  transform: rotate(-45deg);
+  width: 38%;
+  aspect-ratio: 1 / 1;
 }
 
 /* Gateway depth layers — slight additional drift for depth cue.

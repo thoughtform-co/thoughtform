@@ -7,6 +7,7 @@ import { useRevealMotion } from "./hooks/useRevealMotion";
 import { useBrandmarkJourney } from "./hooks/useBrandmarkJourney";
 import { type BrandmarkActorHandle } from "./BrandmarkActor";
 import { BrandmarkSystem } from "./BrandmarkSystem";
+import { HeroFlipBackface } from "./HeroFlipBackface";
 import { useBrandmarkSingletonCheck } from "./lib/brandmarkSingletonCheck";
 import { CelestialPortals } from "./CelestialConnector/CelestialPortals";
 import { PhaseGlyphPortals } from "./PhaseGlyph";
@@ -548,6 +549,14 @@ export function LandingPage({
       {mergedSlots && <CelestialPortals slots={mergedSlots} containerRef={rootRef} />}
       <PhaseGlyphPortals containerRef={rootRef} />
       <BuildCasesPortal containerRef={rootRef} />
+      {/* Hero → Thoughtform two-faced flip deck (ADR-022 enclose-then-flip
+          rework). Sibling of the parsed v7 root so its rotateY transform
+          can NEVER touch the live home-v2 depth corridor's stage rect.
+          Hidden via CSS until `useLandingScroll` sets
+          `<html data-hero-flip="1">` mid-band on capable devices.
+          Reduced-motion / ≤960px paths skip it entirely (CSS `display:
+          none` outside the gate). */}
+      {corridorText && <HeroFlipBackface text={corridorText} containerRef={rootRef} />}
       {/* IntelligenceLayerPortal + TravelingOrbits were removed when
           the Thoughtform / Diagnostic / Intelligence-layer station
           stack was replaced by the home-v2 depth corridor (ADR-018)

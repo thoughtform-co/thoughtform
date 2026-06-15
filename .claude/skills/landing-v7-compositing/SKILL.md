@@ -39,6 +39,27 @@ Two layers paint **continuously** behind the scrolling flow:
 1. **`.gateway`** (`position: fixed; z-index: 0`) paints a warm gold + green radial glow on top of void across the entire viewport at all times. It is the ambient "atmosphere" behind the site.
 2. **`.hero`** (`position: sticky; top: 0; z-index: 1`) stays pinned to the viewport until `useLandingScroll` sets `visibility: hidden` at `heroCover >= 1` (`components/landing/v7/hooks/useLandingScroll.ts:66`). While pinned, its video keeps painting.
 
+### In-band hero flip deck — enclose-then-flip (ADR-022 v2)
+
+[ADR-022 v2](../../../sentinel/decisions/022-hero-corridor-flip-transition.md) introduces a **two-faced flip card** rendered only mid-band on capable devices (`prefers-reduced-motion: no-preference` AND `min-width: 961px`). When `--hero-cover` is `> 0` and `< 1`, `useLandingScroll` writes `data-hero-flip="1"` on both `#hero` and `<html>`, mirrors the eased `--hero-cover` onto `<html>` so the deck inherits it, and CSS reveals the deck. `HeroFlipBackface` portals the deck into `main.stations` so all four layers share `main`'s `z:10` envelope:
+
+```
+z:3  .home-corridor-host           (rising; live corridor parked frame, armed)
+z:4  .hero-flip-backdrop           (void-black margin, only visible mid-band)
+z:5  .hero-flip-back               (Thoughtform facade: copy + brandmark, rotateY+180)
+z:6  #hero[data-hero-flip="1"]     (live wormhole video, rotateY)
+```
+
+The card pinches in (cover 0 → 0.45, no rotation), then flips on `rotateY 0deg → 180deg` (cover 0.45 → 1, growing back to full bleed). `backface-visibility: hidden` swaps front and back at the 90° crossover (cover ≈ 0.725). Over the last 15% (cover 0.85 → 1) the backdrop and facade fade out, revealing the live corridor that has naturally pinned at `paintProgress = 0`. At `cover = 1` the deck is `display: none`, the hero is `visibility: hidden`, and the corridor takes the screen unchanged.
+
+**Critical invariants for anyone editing this:**
+
+- **The back face is a static DOM facade, not the live R3F corridor.** Any 3D transform on an ancestor of the corridor's `.home-v2-stage` would corrupt the rect math `useDepthScroll` reads every frame; the facade exists precisely to keep the corridor untouched. The 15% crossfade absorbs any facade ↔ live-corridor parity drift.
+- **The deck must portal into `main.stations`** (sibling of `#hero`), not be a root sibling. Root siblings would need `z > 10` to paint above the rising corridor host (z:3), which would also eclipse the live hero front face. Inside main, the standard z-order works.
+- **Front (`#hero`) and back (`.hero-flip-back`) are siblings, never parent/child.** `#hero` is parsed `dangerouslySetInnerHTML` markup with `overflow: hidden` — a back face inside it would be clipped during rotation.
+- **`backface-visibility: hidden` is required on both faces.** Without it, both paint simultaneously and the user sees a mirrored ghost.
+- **Reduced-motion / ≤960px fall through cleanly:** the deck is `display: none` outside the media query, and the hero keeps its legacy scale+fade rules from outside the media block.
+
 Every section/divider/connector that sits inside `.stations` and is intended to read as dark void **must** paint an opaque `var(--void)` fill on top of those two layers. That is the only thing making the rest of the page look like a solid dark page.
 
 ---
@@ -233,7 +254,7 @@ Rules that hold for any future section-scoped canvas:
 
 ## Section-scoped sticky pairs (general guidance)
 
-The v7 page uses **only one** sticky pair today: the hero (`.hero`) sits at `z:1` and is covered by the next `section.station` (at `z:2`) as it slides up. The previous `.brand-handoff-stage` (ADR-012 v5d) that pinned `#missing-layer` + `#intelligence-layer` was retired in v6 — both sections now flow as ordinary stacked stations and the brandmark choreography handles the miss → substrate transit over the natural scroll distance. **Do not reintroduce a sticky-cover wrapper around those two sections** without an ADR; the cover slide reads as parallax / discrete UI gesture rather than as continuous scroll narrative, which fights the editorial intent.
+The v7 page uses **only one** sticky pair today: the hero (`.hero`) sits at `z:1` and is covered by the next element below it as it slides up. On the production homepage that "next element" is `.home-corridor-host` at `z:3` (the home-v2 corridor mount inserted by `lib/v7-parse.ts`); on capable devices [ADR-022 v2](../../../sentinel/decisions/022-hero-corridor-flip-transition.md) replaces the cover with an enclose-then-flip card, promoting the hero to `z:6` and adding a portalled deck (`.hero-flip-backdrop` z:4, `.hero-flip-back` z:5) only inside the `--hero-cover ∈ (0, 1)` band — see "In-band hero flip deck" above for the full layer stack. The previous `.brand-handoff-stage` (ADR-012 v5d) that pinned `#missing-layer` + `#intelligence-layer` was retired in v6 — both sections now flow as ordinary stacked stations and the brandmark choreography handles the miss → substrate transit over the natural scroll distance. **Do not reintroduce a sticky-cover wrapper around those two sections** without an ADR; the cover slide reads as parallax / discrete UI gesture rather than as continuous scroll narrative, which fights the editorial intent.
 
 If a future feature genuinely needs another sticky pair inside `.stations`, the rules below still apply (they're the same rules that govern the hero → first-station cover):
 

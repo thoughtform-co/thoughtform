@@ -42,6 +42,14 @@ export function useLandingScroll(rootRef: React.RefObject<HTMLDivElement | null>
     const scrollMax = Math.max(1, document.documentElement.scrollHeight - vh);
     const progress = Math.max(0, Math.min(1, scrollY / scrollMax));
 
+    // Capability gates (cheap matchMedia reads; cached locally so both
+    // the hero-flip toggle below and the parallax block at the bottom
+    // share a single read per frame). `flipCapable` matches the CSS
+    // gate `@media (prefers-reduced-motion: no-preference) and
+    // (min-width: 961px)` that wraps the 3D flip treatment.
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const flipCapable = !reduceMotion && window.matchMedia("(min-width: 961px)").matches;
+
     // Defer HUD rail/coord readouts to the corridor while it's the
     // engaged owner of the depth gauge. `useDepthScroll` (home-v2)
     // sets `data-corridor-engaged="true"` on <html> whenever the
@@ -102,8 +110,36 @@ export function useLandingScroll(rootRef: React.RefObject<HTMLDivElement | null>
       // instead of tracking scroll linearly. Raw cover keeps owning
       // the visibility cutoff + telemetry (eased(1) === 1 anyway).
       const eased = heroCover * heroCover * heroCover * (heroCover * (heroCover * 6 - 15) + 10);
-      heroEl.style.setProperty("--hero-cover", eased.toFixed(4));
+      const easedStr = eased.toFixed(4);
+      heroEl.style.setProperty("--hero-cover", easedStr);
       heroEl.style.visibility = heroCover >= 1 ? "hidden" : "";
+
+      // Mirror `--hero-cover` to <html> so the sibling Hero Flip deck
+      // (`.hero-flip-deck` rendered by `HeroFlipBackface`, mounted
+      // outside the parsed v7 `<main>`) reads the same channel via
+      // ordinary CSS inheritance. The deck's facade + backdrop are
+      // siblings of `#hero`, not descendants — without this mirror they
+      // can't see the variable. Single rAF frame, single writer; ADR-022
+      // (enclose-then-flip rework).
+      document.documentElement.style.setProperty("--hero-cover", easedStr);
+
+      // Hero flip transition (KPR-style enclose-then-flip with a
+      // two-faced card; the back face is a Thoughtform facade that
+      // crossfades to the live corridor at completion). Active only
+      // mid-band on capable devices; the attribute promotes the hero
+      // above the corridor host (z:3 → z:6) and reveals the sibling
+      // flip deck. CSS owns all phase math; this attribute is a pure
+      // capability + band gate. Reduced-motion and narrow viewports
+      // fall through to the legacy scale+fade rules (the deck stays
+      // `display: none`).
+      const inBand = flipCapable && heroCover > 0 && heroCover < 1;
+      if (inBand) {
+        heroEl.dataset.heroFlip = "1";
+        document.documentElement.dataset.heroFlip = "1";
+      } else {
+        delete heroEl.dataset.heroFlip;
+        delete document.documentElement.dataset.heroFlip;
+      }
     }
 
     // The Practice → BuildQuote cover handoff was retired entirely
@@ -133,8 +169,7 @@ export function useLandingScroll(rootRef: React.RefObject<HTMLDivElement | null>
       if (sectorEl) sectorEl.textContent = SECTORS[activeKey] || "Field";
     }
 
-    // Parallax
-    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    // Parallax (reuses `reduceMotion` cached at the top of the frame)
     if (!reduceMotion && scrollY !== lastScrollY.current) {
       lastScrollY.current = scrollY;
       const viewportCenter = scrollY + vh / 2;
