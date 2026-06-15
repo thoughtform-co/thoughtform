@@ -1,8 +1,8 @@
 # ADR-022: Hero → Corridor Reveal Transition
 
 **Date:** 2026-06-15
-**Status:** Active (v6.3 — cover-plane swipe with gate-matched proxy)
-**Revisions:** v6.3 (2026-06-15) - **cover-plane swipe with gate-matched proxy**. The user confirmed the v6.0-v6.2 cover-plane SWEEP itself was right; their only objection was the boundary JUMP. An interim "remove the proxy / direct corridor reveal (+ edge chrome)" pass (briefly the active design) _removed the sweep entirely_ — wrong. v6.3 restores the cover-plane swipe and fixes the jump at its real source: the proxy diagram was a single ROTATED dashed diamond while the live `ThoughtformCompassGate` is CONCENTRIC AXIS-ALIGNED dashed squares. v6.3 rebuilds the proxy diagram to mirror the live gate (4 concentric axis-aligned square loops + compass brandmark + NAVIGATE/ENCODE/BUILD labels, tuned to the live gate's parked size/position at 1920x1080) so the proxy -> live handoff is a soft settle, not a shape swap. v1-v6.2 are preserved below as history.
+**Status:** Active (v8 — ToyFight curtain reveal: hero lifts off a frozen corridor frame)
+**Revisions:** v8 (2026-06-15) - **ToyFight curtain reveal**. v7 made the hero a held layer the corridor rose to meet; the user looked at [toyfight.co](https://toyfight.co/) again and clarified the inverse is wanted: the **hero** is the moving layer that scrolls straight **up and off**, uncovering a second section that sits **frozen** behind it. Browser-traced ToyFight: sections are normal-flow with **descending z-index** (hero `z:4`, intro `z:3`…); the hero scrolls off with `transform:none`, and section 2's inner wrapper takes a scroll-linked `translateY` counter-transform that holds it dead-still at viewport top while the hero lifts off it. v8 maps that onto our corridor: `.hero` becomes `position: relative; z-index: 4` (the departing curtain, scrolls off naturally — no `--hero-cover` transform/fade), and `useLandingScroll` writes `--corridor-pin` (px) + `html[data-corridor-entry]` over the first viewport so a counter-transform on `.home-v2-stage__sticky` cancels its natural rise and freezes the parked `ThoughtformCompassGate` frame at viewport top. The pin's stage rect (read by `useDepthScroll`) is never transformed, and the transform is gated to the entry band only (so the docked-exit `position: fixed` canvas is never captured). v1–v7 are preserved below as history.
 **Scope:** Production home page (`/`) — the seam between the v7 hero (`section#hero`, the wormhole key-visual `<video>`) and the home-v2 depth corridor's parked Thoughtform start frame (`#home-corridor-mount` → `.home-corridor-host` → `HomeCorridor`). The transition the user experiences as they begin scrolling.
 **Related:**
 [ADR-008 — Landing v7 background layers](008-landing-v7-background-layers.md),
@@ -12,7 +12,156 @@
 
 ---
 
-## v6.3 (active) — Cover-plane swipe with gate-matched proxy (2026-06-15)
+## v8 (active) — ToyFight curtain reveal (2026-06-15)
+
+### What this is
+
+A faithful [toyfight.co](https://toyfight.co/) **curtain**: the hero is the TOP, MOVING layer and scrolls straight up and off the viewport over the first 100vh, **uncovering the corridor's parked Thoughtform frame which is held frozen behind it**. The corridor IS the revealed second section — there is no proxy and no copy, and the corridor's flythrough / scroll math / billions epilogue are untouched.
+
+### Why v7 was wrong
+
+v7 made the hero a held backplate and let the live corridor rise in normal flow to cover it. The user's reaction: "the second section scrolls over the hero section, whereas in the reference we have the hero section scrolling upwards and then revealing the second section." i.e. v7 had the wrong layer moving. v8 inverts it: the hero moves, the corridor is revealed.
+
+### ToyFight mechanic (browser-traced at 1865×1156)
+
+Sections are normal-flow `<section>`s with **descending z-index** (`HomeHeroSection z:4`, `HomeIntroSection z:3`, …) so earlier sections paint on top. At `scrollY=580`: the hero has `transform:none`, `top:-580` (scrolled straight up off the top); the intro section's inner `HomeIntroPinned` wrapper has `transform: translateY(-576px)` — a scroll-linked counter-translate holding section 2 frozen at viewport top while the hero lifts off it.
+
+### Mechanic (ours)
+
+```
+Layer stack:
+  z:0  .gateway              fixed gold radial (shielded throughout)
+  z:4  #hero (relative)      the departing curtain — scrolls straight up & off
+  z:3  .home-corridor-host   the revealed second section
+       └ .home-v2-stage          (820svh; NEVER transformed → useDepthScroll intact)
+         └ .home-v2-stage__sticky  counter-translated during entry to freeze at viewport top
+```
+
+| Phase  | scrollY | `#hero`                         | `.home-v2-stage__sticky`                                                  | `data-corridor-entry` |
+| ------ | ------- | ------------------------------- | ------------------------------------------------------------------------- | --------------------- |
+| start  | 0       | rectTop 0 (covers viewport)     | `translateY(-100vh)` → rectTop 0 (frozen behind hero)                     | `1`                   |
+| mid    | ~0.5vh  | rectTop −0.5vh (lifting)        | `translateY(−(100vh−S))` → rectTop 0 (still frozen, uncovered below hero) | `1`                   |
+| land   | 100vh   | off-screen, `visibility:hidden` | transform → `none`; native sticky pins at rectTop 0 (seamless)            | cleared               |
+| beyond | >100vh  | hidden                          | native sticky pin / flythrough / docked exit — NO transform               | cleared               |
+
+`useLandingScroll` computes `defTop` = the corridor mount's viewport top (= `100vh − scrollY` until the stage reaches the top) and writes `--corridor-pin = max(0, defTop)` (px) + sets `html[data-corridor-entry]` while `defTop > 0.5`. CSS (`home-v2.css`) applies `transform: translateY(calc(var(--corridor-pin) * -1px))` to `.home-v2-stage__sticky` ONLY under `html[data-corridor-entry="1"]`. Because the sticky cell's children (canvas + copy + brandmark) are positioned by `useWorldDomTracker` in viewport-projected coordinates relative to that cell, freezing the cell at viewport `(0,0)` lands them at their correct final positions — the frame reads "composed on arrival," not rising.
+
+### Why it's corridor-safe
+
+- **`useDepthScroll` reads `.home-v2-stage` (the track), which is never transformed** — only the sticky cell inside it is. All corridor timing (`progress` / `paintProgress` / `epilogueProgress` / `dockProgress`) is byte-identical.
+- **The transform is gated to the entry band.** Outside `[0, 100vh)` `data-corridor-entry` is absent → `transform: none`. This is essential for the ADR-021 docked exit, where `.home-v2-stage__canvas` becomes `position: fixed`: a transformed ancestor would capture it. Verified `canvasPos: fixed` + `stickyTf: none` across the whole dock window.
+- **The hero occupies the same 100vh of flow** whether `sticky` or `relative`, so the corridor stage's document position (and thus its rect) is unchanged.
+
+### Files
+
+- [components/landing/v7/landing.css](../../components/landing/v7/landing.css) — `.hero` is now `position: relative; z-index: 4` (departing curtain); the v7 `--hero-cover` parallax/​fade block is removed (the hero just scrolls); `.hero__video` stays `opacity: 1` (gateway shield).
+- [components/landing/v7/hooks/useLandingScroll.ts](../../components/landing/v7/hooks/useLandingScroll.ts) — writes `--corridor-pin` (px) + toggles `html[data-corridor-entry]` over the first-viewport band; clears both on unmount; keeps the `heroCover >= 1 → visibility:hidden` cleanup. No more `--hero-cover` CSS write.
+- [components/landing/home-v2/home-v2.css](../../components/landing/home-v2/home-v2.css) — `html[data-corridor-entry="1"] .home-v2-stage__sticky { transform: translateY(calc(var(--corridor-pin,0) * -1px)) }`, documented as gated to the entry band only.
+
+No edits under `components/landing/home-v2/**` scene / store / `useDepthScroll` / `useWorldDomTracker`.
+
+### v8 invariants
+
+- **The hero is the mover; the corridor is frozen.** Never reintroduce a held/​covered hero or a corridor that rises over it (that was v7's mistake). Never paint a proxy/​copy of the second section (v6's mistake).
+- **Only the sticky CELL is transformed, never `.home-v2-stage`.** Transforming the stage shifts the rect `useDepthScroll` reads and desyncs every corridor channel.
+- **The entry transform is gated to `data-corridor-entry`.** It MUST be `none` during the flythrough and especially the ADR-021 docked exit (transformed ancestor captures the fixed canvas → hard seam line returns).
+- **Hero video stays opaque, never scaled/faded** (ADR-008 Rule 3, gateway shield). The hero scrolls off as one rigid card.
+- **`--corridor-pin` is RAW px (`max(0, defTop)`), not eased** — it must exactly cancel the cell's linear rise so the frame is truly frozen.
+
+### Verification (Playwright/CDP, 1865×1156)
+
+| scrollY    | `#hero` rectTop / vis | sticky transform / rectTop       | entry | observable                                                            |
+| ---------- | --------------------- | -------------------------------- | ----- | --------------------------------------------------------------------- |
+| 0          | 0 / visible (z:4)     | `translateY(-1156)` / 0          | 1     | hero full-bleed; frozen corridor behind                               |
+| 578        | −578 / visible        | `translateY(-578)` / 0           | 1     | hero lifted halfway; frozen corridor (compass + copy) uncovered below |
+| 1180       | −1180 / hidden        | `none` / 0 (native pin)          | —     | corridor owns screen; seamless handoff                                |
+| 6500       | hidden                | `none` / 0                       | —     | flythrough unchanged                                                  |
+| 9000       | hidden                | `none`                           | —     | billions epilogue unchanged                                           |
+| 9800–10600 | hidden                | `none` (canvas `position:fixed`) | —     | docked zoom-dissipate intact                                          |
+
+Reverse scroll to 0 restores the curtain (`entry=1`, sticky `translateY(-1156)`, hero visible). `npm run lint`: 0 errors.
+
+---
+
+## v7 (superseded) — Direct parallax reveal (2026-06-15)
+
+### What this is
+
+The hero → corridor seam is a single-layer reveal: the live `.home-corridor-host` (z:3) rises in normal flow over the sticky `#hero` (z:1) as the user scrolls and lands directly on the live armed parked frame (`ThoughtformCompassGate` painting at `paintProgress = 0`, with the projected brandmark centred). To give the seam a ToyFight-class parallax feel, the held hero drifts up slightly and its content gently fades; the hero video itself stays opaque throughout (ADR-008 Rule 3, gateway shield).
+
+There is **no proxy plane**, **no `<html>` mirror**, **no band gate**, **no `data-hero-handoff` attribute**, **no `--deck-clear` hairline**, **no z-promotion of the hero**. Everything that v6.x called the "cover-plane swipe" is removed.
+
+### Why v6.3 had to go
+
+The user explicitly rejected the v6.3 cover-plane swipe + gate-matched proxy: the proxy painted a **duplicate first-read copy + a fake compass gate** in front of the live one, then `display: none`-d itself at `cover = 1` to expose the real corridor frame underneath. Even with the silhouette matched (concentric axis-aligned squares matching the live `ThoughtformCompassGate`), the user reads it as "a copy of the second section that suddenly disappears, then you see the actual one." That perceived duplication is the v6.x problem. No amount of silhouette tuning solves it — the architecture itself paints two stacked second sections.
+
+The reduced-motion / ≤960px fallback, by contrast, already handled this cleanly: no proxy, no copy, the corridor host rises over the held hero and lands on the live parked frame. v7 promotes that fallback to the single path everyone gets, plus a small parallax garnish for motion-allowed users.
+
+### Mechanic
+
+```
+Layer stack (no portalled deck, no z-promotion):
+
+  z:0   .gateway              fixed gold radial (shielded by the hero)
+  z:1   #hero (sticky)        held; drifts up slightly + .hero__content fades
+  z:3   .home-corridor-host   rises in normal flow; lands on the parked frame
+```
+
+Channels:
+
+| Channel        | Writer             | Curve                                        | Visual                                                                                                         |
+| -------------- | ------------------ | -------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `--hero-cover` | `useLandingScroll` | smootherstep of `1 - defTop / vh` on `#hero` | Drives `.hero { translateY }` and `.hero__content { opacity }` via CSS.                                        |
+| visibility     | `useLandingScroll` | `heroCover >= 1 ? "hidden" : ""`             | Belt-and-braces cleanup so the held hero never paints under later sections during scroll-back-into-band edges. |
+
+CSS (the only motion the seam owns; gated by `prefers-reduced-motion: no-preference`, NO width gate):
+
+```css
+@media (prefers-reduced-motion: no-preference) {
+  .hero {
+    transform: translate3d(0, calc(var(--hero-cover, 0) * -10vh), 0);
+    will-change: transform;
+  }
+  .hero__content {
+    opacity: calc(1 - var(--hero-cover, 0) * 1.6);
+    will-change: opacity;
+  }
+}
+```
+
+`.hero__video { opacity: 1 }` (no scale). The `[data-parallax]` rule still gives the inner video a tiny `translate` micro-drift; that composes with the outer `.hero` `transform` because they are independent CSS properties.
+
+Reduced-motion users get nothing inside the media block — the hero stays static and the corridor host simply rises over it. Mobile/narrow viewports get the same parallax as desktop (no width gate; `-10vh` is safe everywhere because the corridor host always covers the hero from below).
+
+### Files
+
+- [components/landing/v7/HeroHandoffCover.tsx](../../components/landing/v7/HeroHandoffCover.tsx) — **DELETED**.
+- [components/landing/v7/LandingPage.tsx](../../components/landing/v7/LandingPage.tsx) — `HeroHandoffCover` import + JSX mount removed; the inline `--hero-cover` style comment retuned to describe the v7 architecture (no more `<html>` mirror).
+- [components/landing/v7/hooks/useLandingScroll.ts](../../components/landing/v7/hooks/useLandingScroll.ts) — `handoffCapable`, the `data-hero-handoff` band gate, and the `<html>` mirrors of `--hero-cover` / `data-hero-handoff` are removed. The eased `--hero-cover` is still written on `#hero` (drives the new parallax). Visibility cleanup simplified to `heroCover >= 1`.
+- [components/landing/v7/landing.css](../../components/landing/v7/landing.css) — the entire `.hero-handoff-*` block + `html[data-hero-handoff]` / `.hero[data-hero-handoff]` rules are gone (~270 LOC). Both legacy `.hero__video { transform: scale(...) }` declarations are replaced with `opacity: 1` (no scale, gateway shield). New `@media (prefers-reduced-motion: no-preference)` block adds the `.hero` translateY drift + `.hero__content` opacity fade.
+
+No edits under `components/landing/home-v2/**` — corridor / scene / store / hooks / parsed pipeline untouched.
+
+### v7 invariants
+
+- **No proxy plane, no duplicate copy.** The corridor IS the second section; there is exactly one. Reintroducing a portalled cover or any DOM that paints the Thoughtform copy / compass before the live corridor recreates the duplication beat that the user rejected.
+- **No `data-hero-handoff` band gate, no `<html>` mirrors.** The hook writes `--hero-cover` on `#hero` only; the parallax CSS reads it from the same element. Adding back the `<html>` mirror or a band-gate attribute is a strong signal a future agent is about to reintroduce a separate cover layer.
+- **Hero video stays opaque.** `.hero__video { opacity: 1 }`, no scale, ever (ADR-008 Rule 3 — scaling exposes the gateway at the edges; pulling opacity below 1 lets the gateway gradient bleed through). The inner `[data-parallax]` micro-drift on `.hero__video` is independent (CSS `translate`, not `transform`) and stays.
+- **Hero motion = `.hero` `translateY` (≤ 10vh) + `.hero__content` `opacity` only.** Driven by `--hero-cover`, gated by `prefers-reduced-motion: no-preference`. Larger drift, scale, rotation, or perspective transforms would expose the gateway and reintroduce flat-poster / shrinking-card readings the previous iterations chased and rejected.
+- **The corridor stays a black box.** The seam never transforms, reparents, clones, or reads geometry from `.home-corridor-host` / its scene / its scroll channels. The corridor's natural `armed` paint is the landing frame (ADR-018/021).
+- **Reduced-motion = held hero.** The `@media (prefers-reduced-motion: no-preference)` gate ensures users with reduced-motion enabled see no parallax drift / no fade — only the corridor rising over the held hero. Do not lift the gate.
+
+### Verification
+
+- Scroll hero → corridor at any width: hero drifts up + content fades, the live corridor rises over it and lands on the parked compass / brandmark frame. **No duplicate copy, no plane, no flash, no shape swap.**
+- Reverse scroll back to top retraces cleanly (every value is a pure function of `--hero-cover`, recomputed every rAF).
+- `prefers-reduced-motion: reduce`: hero held static, corridor still covers it cleanly.
+- Corridor flythrough + ADR-021 zoom-dissipate exit unchanged.
+- `npm run lint` clean.
+
+---
+
+## v6.3 (superseded) — Cover-plane swipe with gate-matched proxy (2026-06-15)
 
 ### What this is
 

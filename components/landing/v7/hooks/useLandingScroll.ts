@@ -42,13 +42,13 @@ export function useLandingScroll(rootRef: React.RefObject<HTMLDivElement | null>
     const scrollMax = Math.max(1, document.documentElement.scrollHeight - vh);
     const progress = Math.max(0, Math.min(1, scrollY / scrollMax));
 
-    // Capability gates (cheap matchMedia reads; cached locally so the
-    // hero-handoff toggle below and the parallax block at the bottom
-    // share one read per frame). `handoffCapable` matches the CSS gate
-    // `@media (prefers-reduced-motion: no-preference) and (min-width:
-    // 961px)` that wraps the cover-plane swipe (ADR-022 v6 final).
+    // Capability gate (single matchMedia read per frame, reused by the
+    // parallax block at the bottom of the frame). The hero -> corridor
+    // seam is a direct parallax reveal (ADR-022 v7): no portalled proxy
+    // plane, no `data-hero-handoff` band gate, no `<html>` mirrors.
+    // CSS reads `--hero-cover` written below to drift + fade the held
+    // hero while the live `.home-corridor-host` (z:3) rises over it.
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const handoffCapable = !reduceMotion && window.matchMedia("(min-width: 961px)").matches;
 
     // Defer HUD rail/coord readouts to the corridor while it's the
     // engaged owner of the depth gauge. `useDepthScroll` (home-v2)
@@ -85,64 +85,60 @@ export function useLandingScroll(rootRef: React.RefObject<HTMLDivElement | null>
     // corridor owns the HUD readouts.
     root.style.setProperty("--depth", Math.min(1, progress * 1.2).toFixed(4));
 
-    // Hero cover — drives `--hero-cover` (ADR-022 v6 final, cover-plane
-    // swipe). Hero is `position: sticky; top:0; height:100vh;
-    // z-index:1`; the home-v2 corridor mount follows in normal flow at
-    // z-index:3 (armed, painting its real parked Thoughtform frame at
-    // paintProgress 0). On capable devices a portalled opaque plane
-    // (`.hero-handoff-cover`, z:6) clip-swipes up over the held hero
-    // carrying the first-read copy + a matching compass gate, then
-    // hands the screen to the live corridor at cover = 1.
+    // Hero → corridor CURTAIN reveal (ADR-022 v8, ToyFight-class).
+    //
+    // The hero is the TOP, MOVING layer (`.hero`, position:relative,
+    // z:4): it scrolls straight up and off over the first viewport. The
+    // home-v2 corridor mount follows in normal flow at z:3 and, while
+    // `armed`, paints its real parked Thoughtform frame at
+    // paintProgress 0. To make the hero lift off a FROZEN second
+    // section (rather than the corridor rising into view), we hold the
+    // corridor's parked frame still at viewport top during the band:
+    //
+    //   `defTop` = the corridor mount's viewport top = the amount the
+    //   corridor's `.home-v2-stage__sticky` cell has NOT yet pinned
+    //   (it equals (100vh - scrollY) until the stage reaches the top).
+    //   CSS counter-translates the sticky cell up by `--corridor-pin`
+    //   px (= defTop) ONLY while `data-corridor-entry` is set, cancelling
+    //   the rise so the frame sits frozen at viewport top. At defTop <= 0
+    //   (stage reached the top) the flag clears, the transform reverts to
+    //   `none`, and the corridor's own sticky pin + flythrough take over
+    //   untouched. The stage rect that `useDepthScroll` reads is never
+    //   transformed, so corridor timing is unaffected.
     //
     // On the production homepage `#definition` is stripped and replaced
     // by the home-v2 corridor mount (ADR-018), so fall back to the
-    // mount placeholder — without it `--hero-cover` is never written.
+    // mount placeholder — without it the pin is never written.
     const heroEl = root.querySelector<HTMLElement>("#hero");
     const defEl =
       root.querySelector<HTMLElement>("#definition") ??
       root.querySelector<HTMLElement>("[data-home-corridor-mount]");
     let heroCover = 0;
+    const docEl = document.documentElement;
     if (heroEl && defEl) {
       const defTop = defEl.getBoundingClientRect().top;
       heroCover = Math.max(0, Math.min(1, 1 - defTop / vh));
-      // Smootherstep the cover before writing the CSS var so the swipe
-      // eases (zero velocity at both ends). Raw cover keeps owning
-      // telemetry + the band gate (eased(1) === 1).
-      const eased = heroCover * heroCover * heroCover * (heroCover * (heroCover * 6 - 15) + 10);
-      const easedStr = eased.toFixed(4);
-      heroEl.style.setProperty("--hero-cover", easedStr);
-      // Mirror the eased cover onto <html> so the portalled sweep plane
-      // (`.hero-handoff-cover`, a sibling of `#hero` inside
-      // `main.stations`) inherits the channel — siblings can't read a
-      // var set on `#hero`. Single rAF frame, single writer.
-      document.documentElement.style.setProperty("--hero-cover", easedStr);
-      // Hide the hero at eased >= 0.98 — exactly where the CSS
-      // `--deck-clear` hairline begins fading the plane. The plane is
-      // opaque until then (hero stays covered); hiding here means the
-      // hairline fade reveals the LIVE corridor (z:3), never the held
-      // hero (z:5) — the historical "hero flash" right before landing.
-      heroEl.style.visibility = handoffCapable
-        ? eased >= 0.98
-          ? "hidden"
-          : ""
-        : heroCover >= 1
-          ? "hidden"
-          : "";
-
-      // Band gate (ADR-022 v6 final): set `data-hero-handoff="1"` on the
-      // hero + <html> only mid-band on capable devices. Promotes the
-      // held hero to z:5 and flips the sweep plane to `display: block`.
-      // Cleared at cover 0 (before the band) and cover 1 (where the band
-      // gate clearing drops the plane to `display: none` and the live
-      // corridor — risen to its final parked position — takes over).
-      const inBand = handoffCapable && heroCover > 0 && heroCover < 1;
-      if (inBand) {
-        heroEl.dataset.heroHandoff = "1";
-        document.documentElement.dataset.heroHandoff = "1";
+      // The pin (px) is the exact distance the sticky cell must be
+      // counter-translated to stay frozen at viewport top. Clamp at 0:
+      // once the stage has reached the top (defTop <= 0) the corridor's
+      // natural sticky pin owns it and the transform must be gone.
+      const pin = Math.max(0, defTop);
+      // Entry band = while the corridor's parked frame is still being
+      // uncovered by the departing hero (stage top below the viewport
+      // top). The flag GATES the counter-transform so it is `none`
+      // everywhere else — critical so the docked-exit `position: fixed`
+      // canvas (ADR-021) is never captured by a transformed ancestor.
+      if (defTop > 0.5) {
+        docEl.style.setProperty("--corridor-pin", pin.toFixed(1));
+        docEl.dataset.corridorEntry = "1";
       } else {
-        delete heroEl.dataset.heroHandoff;
-        delete document.documentElement.dataset.heroHandoff;
+        delete docEl.dataset.corridorEntry;
+        docEl.style.removeProperty("--corridor-pin");
       }
+      // Belt-and-braces visibility cleanup: once the hero has fully
+      // scrolled off (cover 1), hide it so it can never paint under
+      // later sections during scroll-back-into-band edge cases.
+      heroEl.style.visibility = heroCover >= 1 ? "hidden" : "";
     }
 
     // The Practice → BuildQuote cover handoff was retired entirely
@@ -208,6 +204,12 @@ export function useLandingScroll(rootRef: React.RefObject<HTMLDivElement | null>
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onResize);
       if (rafId.current) window.cancelAnimationFrame(rafId.current);
+      // Don't leave the corridor entry-pin engaged if the hook unmounts
+      // mid-band — a stale transform on the sticky cell would capture
+      // the docked-exit fixed canvas.
+      const docEl = document.documentElement;
+      delete docEl.dataset.corridorEntry;
+      docEl.style.removeProperty("--corridor-pin");
     };
   }, [onScroll, onResize]);
 

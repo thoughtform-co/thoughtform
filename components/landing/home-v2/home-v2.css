@@ -52,14 +52,16 @@
    Two structural concerns the host has to solve that the test route
    doesn't:
 
-   1. Stacking. The v7 hero (`section.station.hero`) is sticky at
-      `z-index: 1` inside `<main class="stations">`. If the host
-      stacks at `z-auto`, the sticky hero paints OVER the corridor
-      while the corridor's sticky cell is pinned, so the user just
-      sees the hero video where the 3D scene should be. We give the
-      host `z-index: 3` so it sits above the hero AND the
-      build-quote runway (`#buildQuote` sticky at `z-index: 3`),
-      while still scrolling away once the corridor exits.
+   1. Stacking. `z-index: 3` keeps the corridor above the other
+      stations (`.station:not(.hero)` at `z:2`) and any legacy
+      build-quote runway, while still scrolling away once the corridor
+      exits. The v7 hero (`section.station.hero`) sits ABOVE the
+      corridor at `z-index: 4` (ADR-022 v8): it is the departing
+      curtain that scrolls up and off to reveal this corridor host,
+      whose parked frame is held frozen behind it during the entry band
+      (see the `html[data-corridor-entry]` rule on
+      `.home-v2-stage__sticky` below). The host must therefore stay an
+      opaque, self-isolated layer so the hero lifts off a clean frame.
 
    2. Full-bleed width. `<main class="stations">` is inset by the
       v7 HUD rails (~180px each side) on wide viewports, so any
@@ -153,6 +155,33 @@
   width: 100%;
   height: 100svh;
   overflow: hidden;
+}
+
+/* Hero → corridor CURTAIN reveal (ADR-022 v8). While the departing hero
+   (`.hero`, z:4) scrolls up and off the first viewport, we hold the
+   corridor's parked Thoughtform frame FROZEN at viewport top so the hero
+   lifts off a still second section (ToyFight-style), instead of the
+   corridor rising into view.
+
+   Until the stage reaches the top, the sticky cell is NOT yet pinned —
+   it sits at viewport top `defTop = (100vh - scrollY)`. `useLandingScroll`
+   writes that distance to `--corridor-pin` (px) and sets
+   `data-corridor-entry` during the band; the counter-translate below
+   cancels the rise so the cell (and the canvas + copy + brandmark it
+   contains, all positioned in viewport coords by `useWorldDomTracker`)
+   sit still at viewport top. The corridor's `.home-v2-stage` itself is
+   never transformed, so the rect `useDepthScroll` reads — and therefore
+   all corridor timing — is untouched.
+
+   CRITICAL: this transform is gated behind `data-corridor-entry` so it
+   is `none` everywhere else. Outside the band the cell falls back to its
+   native sticky pin (flythrough) and, at the corridor exit, the docked
+   `position: fixed` canvas (ADR-021) must NOT be captured by a
+   transformed ancestor — `data-corridor-entry` is never set during the
+   dock, so the cell carries no transform there. */
+html[data-corridor-entry="1"] .home-v2-stage__sticky {
+  transform: translateY(calc(var(--corridor-pin, 0) * -1px));
+  will-change: transform;
 }
 
 /* Docked exit (ADR-021): once the canvas is promoted to a fixed

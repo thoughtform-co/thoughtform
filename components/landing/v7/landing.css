@@ -1186,10 +1186,16 @@
   margin: 0 0 var(--space-2xl);
 }
 
-/* ═══════════ 01 HERO — full-viewport video (pinned stage) ═══════════ */
+/* ═══════════ 01 HERO — full-viewport video (departing curtain) ═══════════
+   ToyFight-class reveal (ADR-022 v8): the hero is the TOP, MOVING layer.
+   It is NOT pinned — it scrolls straight up and off the top over the first
+   viewport, uncovering the live corridor frame that is held frozen behind
+   it (z:3, pinned by `useLandingScroll` via `--corridor-pin`). Higher
+   z-index than the corridor so it paints over the frozen frame until it
+   has lifted clear (mirrors ToyFight's descending section z-index). */
 .hero {
-  position: sticky;
-  top: 0;
+  position: relative;
+  z-index: 4;
   height: 100vh;
   min-height: 0;
   display: flex;
@@ -1208,7 +1214,8 @@
      composition). */
   padding: 140px clamp(96px, 8vw + 40px, 140px) 220px;
   overflow: hidden;
-  z-index: 1;
+  /* z-index lives at the top of this block (z:4) — the hero is the
+     departing curtain above the corridor (z:3). ADR-022 v8. */
 }
 
 .hero__video {
@@ -6132,16 +6139,11 @@ body.density-dense .station {
 .hero__tagline {
   text-wrap: balance;
 }
+/* Hero video stays fully opaque — it is the gateway shield (ADR-008
+   Rule 3) and the face of the departing curtain. The hero scrolls off
+   intact as one rigid card (ADR-022 v8); it is NOT scaled or faded. */
 .hero__video {
-  transform: scale(calc(1 + var(--hero-cover, 0) * 0.18));
-  opacity: calc(1 - var(--hero-cover, 0) * 0.45);
-  will-change: transform, opacity;
-}
-.hero__content {
-  transform: scale(calc(1 + var(--hero-cover, 0) * 0.035));
-  transform-origin: left center;
-  opacity: calc(1 - var(--hero-cover, 0) * 1.4);
-  will-change: transform, opacity;
+  opacity: 1;
 }
 .hero__meta {
   border-top: 1px dashed var(--dawn-08);
@@ -6464,285 +6466,23 @@ body.density-dense .station {
   will-change: translate;
 }
 
-/* Hero cover motion must come after the generic [data-parallax] rule so
-   the pinned video can still zoom/recede as section 02 enters. This is
-   the legacy scale+fade fallback used by reduced-motion mode and narrow
-   viewports; the 3D flip block below overrides it on capable devices. */
-.hero__video {
-  transform: scale(calc(1 + var(--hero-cover, 0) * 0.18));
-  opacity: calc(1 - var(--hero-cover, 0) * 0.45);
-}
+/* ─── HERO → CORRIDOR CURTAIN REVEAL (ADR-022 v8) ────────────────────
+   ToyFight-class curtain. The hero is the TOP, MOVING layer (`.hero`,
+   `position: relative; z-index: 4` — see the hero block above): it
+   scrolls straight up and off the viewport over the first 100vh,
+   uncovering the live corridor frame held FROZEN behind it.
 
-/* ─── HERO → THOUGHTFORM COVER-PLANE SWIPE (ADR-022 v6 final) ────────
-   Active Theory / Hashgraph-class cover sweep. An opaque viewport plane
-   (`.hero-handoff-cover` -> `.hero-handoff-plane`) carrying the
-   Thoughtform first-read copy + a compass-gate diagram CLIP-SWIPES
-   upward over the held hero. The clip edge is the reveal; opacity is
-   not the transition owner during the swipe. The live home-v2 corridor
-   (ADR-018/021) is never transformed — it is `armed` and painting its
-   real parked frame behind everything, and the plane hands the screen
-   to it at `cover = 1`.
-
-   The jump that earlier iterations had at `cover = 1` came from the
-   proxy diagram being a single ROTATED dashed DIAMOND while the live
-   corridor's parked frame (`ThoughtformCompassGate`) is CONCENTRIC
-   AXIS-ALIGNED dashed squares. v6 final matches that silhouette
-   (`.hero-handoff__ring--1..4`) so the proxy -> live handoff lands
-   cleanly instead of swapping shapes.
-
-     SWIPE  cover 0 -> ~0.98 : plane clip-path inset((1-cover)*100% 0 0 0)
-                               recedes 100% -> ~2%, + a small upward
-                               settle. Hero HELD beneath (opacity 1, no
-                               zoom); above the clip line the hero still
-                               shields the gateway. Copy + concentric-
-                               square gate ride INSIDE the plane.
-     CLEAR  cover 0.98 -> 1  : hairline `--deck-clear` fades the plane as
-                               the live corridor (risen to its final
-                               parked position) takes over. Hero hidden
-                               at eased >= 0.98 so the fade reveals the
-                               live corridor, never the held hero (the
-                               historical "hero flash"). Matching gate
-                               silhouettes make this a soft settle, not a
-                               doubled crossfade.
-
-   Gating matches JS `handoffCapable` in useLandingScroll: motion-allowed
-   + >=961px. Reduced-motion / <=960px fall through to the legacy
-   `.hero__video` scale+fade above (the plane stays `display: none`,
-   and the corridor still rises over the hero as the plain cover). */
-@media (prefers-reduced-motion: no-preference) and (min-width: 961px) {
-  /* Shared phase var on <html> so the portalled deck (sibling of
-     `#hero`) inherits it. `--hero-cover` is mirrored onto <html> in the
-     same rAF frame `useLandingScroll` writes it on `#hero`. */
-  html[data-hero-handoff="1"] {
-    /* Hairline plane-clear: opaque across the whole swipe, fades only in
-       the last ~2% so the matching gate dissolves into the live one. */
-    --deck-clear: clamp(0, calc((1 - var(--hero-cover, 0)) / 0.02), 1);
-  }
-
-  /* Hold the hero key visual static (null the legacy zoom) so it reads
-     as a rigid backplate behind the sweep. No transform on `.hero` /
-     `.hero__video` — opacity stays 1 and the hero keeps full-viewport
-     coverage so no gateway edge bleed (ADR-008 Rule 3). */
-  .hero__video {
-    transform: none;
-    opacity: 1;
-  }
-  .hero__content {
-    opacity: calc(1 - var(--hero-cover, 0) * 2.2);
-    will-change: opacity;
-  }
-  /* Promote the held hero above the rising corridor host (z:3) during
-     the band so it (not a half-risen corridor) sits beneath the sweep
-     plane; the plane is z:6. Cleared with the band gate at cover 0/1. */
-  .hero[data-hero-handoff="1"] {
-    z-index: 5;
-  }
-}
-
-/* ─── HERO HANDOFF COVER (the sweep plane, portalled into main.stations).
-   `display: none` unless `<html data-hero-handoff="1">`. Reduced-motion /
-   <=960px never see it.
-   ──────────────────────────────────────────────────────────────────── */
-.hero-handoff-cover {
-  display: none;
-}
-@media (prefers-reduced-motion: no-preference) and (min-width: 961px) {
-  html[data-hero-handoff="1"] .hero-handoff-cover {
-    display: block;
-  }
-}
-
-.hero-handoff-cover {
-  position: fixed;
-  inset: 0;
-  width: 100vw;
-  height: 100svh;
-  z-index: 6;
-  pointer-events: none;
-  isolation: isolate;
-  /* Opaque across the swipe; hairline fade only at the very end so the
-     proxy gate dissolves into the live one. */
-  opacity: var(--deck-clear, 0);
-  will-change: opacity;
-}
-
-.hero-handoff-plane {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-  /* Opaque void surface with subtle layered glow so the sweep reads as
-     a designed surface, not a dead black field. */
-  background:
-    linear-gradient(180deg, rgba(5, 4, 3, 0.985), rgba(5, 4, 3, 1) 62%),
-    radial-gradient(circle at 52% 60%, rgba(202, 165, 84, 0.06), transparent 46%),
-    var(--void, #050403);
-  /* The clip IS the swipe: top inset recedes 100% -> 0% as cover rises,
-     so the plane fills bottom-up. */
-  clip-path: inset(calc((1 - var(--hero-cover, 0)) * 100%) 0 0 0);
-  /* Small upward settle so the plane reads as travelling into place. */
-  transform: translate3d(0, calc((1 - var(--hero-cover, 0)) * 3vh), 0);
-  will-change: clip-path, transform;
-}
-
-/* Brand-grammar accents on the sweep surface (top/bottom rule + faint
-   diagonal slash), mirroring handoff-lab's plane so the two cover
-   sweeps in the page share a visual language. */
-.hero-handoff-plane::before,
-.hero-handoff-plane::after {
-  content: "";
-  position: absolute;
-  pointer-events: none;
-}
-
-.hero-handoff-plane::before {
-  inset: clamp(24px, 5vh, 54px) clamp(18px, 4vw, 72px);
-  border-top: 1px solid rgba(236, 227, 214, 0.12);
-  border-bottom: 1px solid rgba(236, 227, 214, 0.07);
-  opacity: calc(0.2 + var(--hero-cover, 0) * 0.3);
-}
-
-.hero-handoff-plane::after {
-  left: 50%;
-  top: 50%;
-  width: min(58vw, 760px);
-  height: min(48vh, 420px);
-  transform: translate3d(-50%, calc(-50% + (1 - var(--hero-cover, 0)) * 6vh), 0) skewY(-5deg);
-  background: linear-gradient(
-    115deg,
-    transparent 0 46%,
-    rgba(236, 227, 214, 0.06) 47% 48%,
-    transparent 49%
-  );
-  opacity: calc(0.14 + var(--hero-cover, 0) * 0.2);
-  mix-blend-mode: screen;
-}
-
-/* First-read Thoughtform copy — same typography classes + position as
-   the live corridor's parked left copy, so the handoff is continuous. */
-.hero-handoff__copy {
-  position: absolute;
-  left: clamp(220px, 16.55vw, 318px);
-  top: clamp(275px, 33.2vh, 360px);
-  width: clamp(360px, 24vw, 460px);
-  max-width: clamp(360px, 24vw, 460px);
-  z-index: 2;
-}
-
-.hero-handoff__copy .home-v2-copy-cta {
-  transition: none;
-}
-
-/* Compass-gate diagram — concentric axis-aligned square loops + the
-   brandmark + phase labels, mirroring the live `ThoughtformCompassGate`
-   so the proxy -> live swap at cover = 1 lands cleanly. */
-.hero-handoff__diagram {
-  position: absolute;
-  /* Tuned to the live gate's parked position/size at 1920x1080
-     (outer ring ~480px, compass ~50% of it, centred ~x1325/y542) so
-     the proxy -> live handoff lands without a size/position pop. The
-     live gate's continuous breath spin is near-zero at a fresh entry,
-     so the proxy stays axis-aligned (no spin) to match. */
-  left: clamp(600px, 56vw, 1075px);
-  top: clamp(200px, 27vh, 294px);
-  width: clamp(320px, 26vw, 500px);
-  height: clamp(320px, 26vw, 500px);
-  display: grid;
-  place-items: center;
-  z-index: 2;
-}
-
-.hero-handoff__ring {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  aspect-ratio: 1;
-  transform: translate(-50%, -50%);
-}
-
-/* Ring sizes mirror the live gate RING_RADII ratios [0.75,0.63,0.52,
-   0.39] -> 100/84/69/52%. Outer two dawn, inner two gold; the inner
-   dotted dawn square is the live gate's most legible loop, so it reads
-   strongest here too. */
-.hero-handoff__ring--1 {
-  width: 100%;
-  border: 1px solid rgba(235, 227, 214, 0.16);
-}
-.hero-handoff__ring--2 {
-  width: 84%;
-  border: 1px dotted rgba(235, 227, 214, 0.3);
-}
-.hero-handoff__ring--3 {
-  width: 69%;
-  border: 1px dashed rgba(202, 165, 84, 0.4);
-}
-.hero-handoff__ring--4 {
-  width: 52%;
-  border: 1px dotted rgba(202, 165, 84, 0.34);
-}
-
-/* Bearing crosshair — 4 short cardinal stubs just inside the outer ring
-   (matches the live gate's dawn-30 crosshair). */
-.hero-handoff__crosshair {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 100%;
-  height: 100%;
-  transform: translate(-50%, -50%);
-  background:
-    linear-gradient(
-        90deg,
-        transparent calc(50% - 0.5px),
-        rgba(235, 227, 214, 0.22) calc(50% - 0.5px),
-        rgba(235, 227, 214, 0.22) calc(50% + 0.5px),
-        transparent calc(50% + 0.5px)
-      )
-      center / 100% 8% no-repeat,
-    linear-gradient(
-        0deg,
-        transparent calc(50% - 0.5px),
-        rgba(235, 227, 214, 0.22) calc(50% - 0.5px),
-        rgba(235, 227, 214, 0.22) calc(50% + 0.5px),
-        transparent calc(50% + 0.5px)
-      )
-      center / 8% 100% no-repeat;
-}
-
-.hero-handoff__brandmark {
-  position: relative;
-  z-index: 2;
-  /* ~50% of the outer ring, matching the live gate's compass scale so
-     it fills the inner loop the same way. */
-  width: 50%;
-  aspect-ratio: 1;
-}
-
-.hero-handoff__axis-label {
-  position: absolute;
-  color: var(--dawn-50, rgba(235, 227, 214, 0.5));
-  font-family: var(--font-data, "PT Mono", monospace);
-  font-size: clamp(9px, 0.78vw, 12px);
-  line-height: 1;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  white-space: nowrap;
-}
-
-/* Phase-label positions mirror the live gate's PHASE_NODES bearings:
-   navigate upper-left, encode lower-left, build right. */
-.hero-handoff__axis-label--navigate {
-  top: 7%;
-  left: 19%;
-}
-.hero-handoff__axis-label--encode {
-  bottom: 7%;
-  left: 30%;
-}
-.hero-handoff__axis-label--build {
-  top: 44%;
-  right: 6%;
-  color: var(--gold, #caa554);
-}
+   The freeze lives in `home-v2.css`: `useLandingScroll` writes
+   `--corridor-pin` (px) + toggles `html[data-corridor-entry]` during
+   the first-viewport band, and a counter-transform on
+   `.home-v2-stage__sticky` cancels its natural rise so the parked
+   `ThoughtformCompassGate` frame sits still at viewport top while the
+   hero lifts off it. NOTHING here drives the hero by `--hero-cover` —
+   the hero just scrolls (no transform, no fade), so this seam needs no
+   rule in this block. The earlier ADR-022 v6 proxy sweep
+   (`HeroHandoffCover`, `.hero-handoff-*`) and the v7 hero parallax
+   drift were both removed; the corridor itself is now the revealed
+   second section, never a copy. */
 
 /* Gateway depth layers — slight additional drift for depth cue.
    The existing --depth transform is z-axis; we layer subtle Y motion
