@@ -42,13 +42,13 @@ export function useLandingScroll(rootRef: React.RefObject<HTMLDivElement | null>
     const scrollMax = Math.max(1, document.documentElement.scrollHeight - vh);
     const progress = Math.max(0, Math.min(1, scrollY / scrollMax));
 
-    // Capability gates (cheap matchMedia reads; cached locally so both
-    // the hero-flip toggle below and the parallax block at the bottom
-    // share a single read per frame). `flipCapable` matches the CSS
-    // gate `@media (prefers-reduced-motion: no-preference) and
-    // (min-width: 961px)` that wraps the 3D flip treatment.
+    // Capability gates (cheap matchMedia reads; cached locally so the
+    // hero-handoff toggle below and the parallax block at the bottom
+    // share one read per frame). `handoffCapable` matches the CSS gate
+    // `@media (prefers-reduced-motion: no-preference) and (min-width:
+    // 961px)` that wraps the cover-plane swipe (ADR-022 v6 final).
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const flipCapable = !reduceMotion && window.matchMedia("(min-width: 961px)").matches;
+    const handoffCapable = !reduceMotion && window.matchMedia("(min-width: 961px)").matches;
 
     // Defer HUD rail/coord readouts to the corridor while it's the
     // engaged owner of the depth gauge. `useDepthScroll` (home-v2)
@@ -85,18 +85,18 @@ export function useLandingScroll(rootRef: React.RefObject<HTMLDivElement | null>
     // corridor owns the HUD readouts.
     root.style.setProperty("--depth", Math.min(1, progress * 1.2).toFixed(4));
 
-    // Hero cover — drives `--hero-cover` on #hero so the video/content
-    // recede (scale + fade) as the next station rises into view. The
-    // mechanic is: hero is `position: sticky; top:0; height:100vh;
-    // z-index:1`, and the next station follows in normal flow at
-    // z-index:2 with an opaque var(--void) shield. As its top crosses
-    // from `vh` to `0` (one viewport of scroll), it visually covers
-    // the pinned hero from bottom to top.
+    // Hero cover — drives `--hero-cover` (ADR-022 v6 final, cover-plane
+    // swipe). Hero is `position: sticky; top:0; height:100vh;
+    // z-index:1`; the home-v2 corridor mount follows in normal flow at
+    // z-index:3 (armed, painting its real parked Thoughtform frame at
+    // paintProgress 0). On capable devices a portalled opaque plane
+    // (`.hero-handoff-cover`, z:6) clip-swipes up over the held hero
+    // carrying the first-read copy + a matching compass gate, then
+    // hands the screen to the live corridor at cover = 1.
     //
     // On the production homepage `#definition` is stripped and replaced
     // by the home-v2 corridor mount (ADR-018), so fall back to the
-    // mount placeholder — without it `--hero-cover` is never written
-    // and the hero video never zooms/recedes.
+    // mount placeholder — without it `--hero-cover` is never written.
     const heroEl = root.querySelector<HTMLElement>("#hero");
     const defEl =
       root.querySelector<HTMLElement>("#definition") ??
@@ -105,40 +105,43 @@ export function useLandingScroll(rootRef: React.RefObject<HTMLDivElement | null>
     if (heroEl && defEl) {
       const defTop = defEl.getBoundingClientRect().top;
       heroCover = Math.max(0, Math.min(1, 1 - defTop / vh));
-      // Smootherstep the cover before writing the CSS var so the video
-      // zoom eases in and lands gently (zero velocity at both ends)
-      // instead of tracking scroll linearly. Raw cover keeps owning
-      // the visibility cutoff + telemetry (eased(1) === 1 anyway).
+      // Smootherstep the cover before writing the CSS var so the swipe
+      // eases (zero velocity at both ends). Raw cover keeps owning
+      // telemetry + the band gate (eased(1) === 1).
       const eased = heroCover * heroCover * heroCover * (heroCover * (heroCover * 6 - 15) + 10);
       const easedStr = eased.toFixed(4);
       heroEl.style.setProperty("--hero-cover", easedStr);
-      heroEl.style.visibility = heroCover >= 1 ? "hidden" : "";
-
-      // Mirror `--hero-cover` to <html> so the sibling Hero Flip deck
-      // (`.hero-flip-deck` rendered by `HeroFlipBackface`, mounted
-      // outside the parsed v7 `<main>`) reads the same channel via
-      // ordinary CSS inheritance. The deck's facade + backdrop are
-      // siblings of `#hero`, not descendants — without this mirror they
-      // can't see the variable. Single rAF frame, single writer; ADR-022
-      // (enclose-then-flip rework).
+      // Mirror the eased cover onto <html> so the portalled sweep plane
+      // (`.hero-handoff-cover`, a sibling of `#hero` inside
+      // `main.stations`) inherits the channel — siblings can't read a
+      // var set on `#hero`. Single rAF frame, single writer.
       document.documentElement.style.setProperty("--hero-cover", easedStr);
+      // Hide the hero at eased >= 0.98 — exactly where the CSS
+      // `--deck-clear` hairline begins fading the plane. The plane is
+      // opaque until then (hero stays covered); hiding here means the
+      // hairline fade reveals the LIVE corridor (z:3), never the held
+      // hero (z:5) — the historical "hero flash" right before landing.
+      heroEl.style.visibility = handoffCapable
+        ? eased >= 0.98
+          ? "hidden"
+          : ""
+        : heroCover >= 1
+          ? "hidden"
+          : "";
 
-      // Hero flip transition (KPR-style enclose-then-flip with a
-      // two-faced card; the back face is a Thoughtform facade that
-      // crossfades to the live corridor at completion). Active only
-      // mid-band on capable devices; the attribute promotes the hero
-      // above the corridor host (z:3 → z:6) and reveals the sibling
-      // flip deck. CSS owns all phase math; this attribute is a pure
-      // capability + band gate. Reduced-motion and narrow viewports
-      // fall through to the legacy scale+fade rules (the deck stays
-      // `display: none`).
-      const inBand = flipCapable && heroCover > 0 && heroCover < 1;
+      // Band gate (ADR-022 v6 final): set `data-hero-handoff="1"` on the
+      // hero + <html> only mid-band on capable devices. Promotes the
+      // held hero to z:5 and flips the sweep plane to `display: block`.
+      // Cleared at cover 0 (before the band) and cover 1 (where the band
+      // gate clearing drops the plane to `display: none` and the live
+      // corridor — risen to its final parked position — takes over).
+      const inBand = handoffCapable && heroCover > 0 && heroCover < 1;
       if (inBand) {
-        heroEl.dataset.heroFlip = "1";
-        document.documentElement.dataset.heroFlip = "1";
+        heroEl.dataset.heroHandoff = "1";
+        document.documentElement.dataset.heroHandoff = "1";
       } else {
-        delete heroEl.dataset.heroFlip;
-        delete document.documentElement.dataset.heroFlip;
+        delete heroEl.dataset.heroHandoff;
+        delete document.documentElement.dataset.heroHandoff;
       }
     }
 

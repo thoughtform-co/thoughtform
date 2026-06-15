@@ -39,46 +39,34 @@ Two layers paint **continuously** behind the scrolling flow:
 1. **`.gateway`** (`position: fixed; z-index: 0`) paints a warm gold + green radial glow on top of void across the entire viewport at all times. It is the ambient "atmosphere" behind the site.
 2. **`.hero`** (`position: sticky; top: 0; z-index: 1`) stays pinned to the viewport until `useLandingScroll` sets `visibility: hidden` at `heroCover >= 1` (`components/landing/v7/hooks/useLandingScroll.ts:66`). While pinned, its video keeps painting.
 
-### In-band hero deck - KPR-style depth-window sweep (ADR-022 v5)
+### In-band hero seam - cover-plane swipe with gate-matched proxy (ADR-022 v6.3)
 
-[ADR-022 v5](../../../sentinel/decisions/022-hero-corridor-flip-transition.md) replaces the v4 two-faced flip card with a **KPR-style depth-window sweep**: the hero encloses into a beveled-corner window that recedes back in Z, drifts left, and fades, while a matching beveled Thoughtform window drifts in from the right and scales forward. Both windows have content layers that **counter-translate the frame's drift** so the texture/copy reads as a deeper plane than the bevel — this is the KPR signature the user described as "rotates slower than the card." Live KPR inspection (1440x900, Playwright) confirmed KPR does NOT flip; it sweeps and scales beveled windows with content parallax inside. The literal 180deg DOM flip was the source of the v4 "flat 2D slab" feel.
+[ADR-022 v6.3](../../../sentinel/decisions/022-hero-corridor-flip-transition.md) is an Active Theory / Hashgraph-class **cover-plane swipe**: an opaque viewport plane (`.hero-handoff-cover` → `.hero-handoff-plane`, portalled into `main.stations`) carrying the Thoughtform first-read copy + a compass-gate diagram **clip-swipes upward** over the held hero, then hands the screen to the live home-v2 corridor at `cover = 1`. The clip edge is the reveal; opacity is not the transition owner during the swipe.
 
-Rendered only mid-band on capable devices (`prefers-reduced-motion: no-preference` AND `min-width: 961px`). When `--hero-cover` is `> 0` and `< 1`, `useLandingScroll` writes `data-hero-flip="1"` on both `#hero` and `<html>`, mirrors the eased `--hero-cover` onto `<html>` so the deck inherits it, and CSS reveals the deck. `HeroFlipBackface` portals the deck into `main.stations` so all layers share `main`'s `z:10` envelope:
+The user validated this sweep; the only objection was the **boundary jump**, whose real cause was a fixable shape mismatch: the proxy diagram used to be a single **rotated dashed diamond** while the live `ThoughtformCompassGate` is **concentric AXIS-ALIGNED dashed squares**. v6.3 rebuilds the proxy diagram to mirror the live gate (4 concentric axis-aligned `.hero-handoff__ring--1..4` at ratios 100/84/69/52% + `BrandmarkGlyph` compass at ~50% + NAVIGATE/ENCODE/BUILD labels, tuned to the live gate's parked size/position at 1920×1080), so the handoff is a soft settle instead of a shape swap. (An interim "remove the proxy / direct reveal + edge chrome" pass removed the sweep entirely — that was wrong and is reverted.)
 
 ```
-z:3  .home-corridor-host           (rising; live corridor parked frame, armed)
-z:4  .hero-flip-backdrop           (radial void surround)
-z:4  .hero-flip-enclosure          (four void-black inset planes; belt-and-braces)
-z:5  .hero-flip-back-window        (Thoughtform window: beveled, screen-facing)
-z:6  #hero[data-hero-flip="1"]     (front window: live wormhole video, beveled)
+z:0   .gateway                 (fixed gold radial — shielded by the hero above the clip line)
+z:1/5 #hero[data-hero-handoff]  (held; promoted to z:5 during the band; opaque; NO transform)
+z:3   .home-corridor-host       (live corridor, armed at paintProgress 0 — the reveal target)
+z:6   .hero-handoff-cover       (the sweep plane; opacity = --deck-clear)
+        └── .hero-handoff-plane (opaque void + accents; clip-path inset((1-cover)*100% 0 0 0))
+              ├── .hero-handoff__copy      (Thoughtform left copy)
+              └── .hero-handoff__diagram   (concentric-square compass gate; matches the live one)
 ```
 
-Phase clocks (defined on `html[data-hero-flip="1"]`, all driven by smootherstep-eased `--hero-cover` written by `useLandingScroll`):
-
-- `--enclose` 0 -> 1 across cover [0, 0.40]: video insets, `--bevel` grows 0 -> ~32px.
-- `--recede` 0 -> 1 across cover [0.30, 1.00]: hero translates `translateZ(-360px)` + `translateX(-2.8vw)` + `rotateY(18deg)`, scales -6%, fades.
-- `--reveal` 0 -> 1 across cover [0.34, 0.95]: back window drifts in `+3vw -> 0`, scales `0.90 -> 1.00`, opacity `0 -> 1`.
-- `--back-fade` hairline at cover [~0.994, 1.00]: final crossfade to the live corridor.
-
-Both windows use the same KPR-style beveled `clip-path: polygon(...)` polygon (sized by `--bevel`); at cover 0 the bevel is 0 and the polygon is a full-bleed rectangle. The bevels expose `.hero`'s `var(--void)` background through corner cuts, so the void surround "hugs" the silhouette without needing dedicated corner triangles. The four `.hero-flip-enclosure` planes are belt-and-braces void shielding for the inset gap.
-
-Each window has THREE coordinated layers that work together to produce the depth feel:
-
-1. **Frame** (`.hero` for the front, `.hero-flip-back-window` for the back). Carries the depth recede / lateral drift / scale.
-2. **Window shape** (`.hero__video` for the front). Sets `inset` + `border-radius` + the beveled `clip-path`.
-3. **Content parallax** (`.hero__video video` for the front; `.hero-flip-back__copy` and `.hero-flip-back__diagram` for the back). Counter-translates ~50% of the frame's drift, counter-scales the recede. **This is the depth ingredient — without it, the windows are flat 2D posters.**
+`useLandingScroll` (capable devices: `prefers-reduced-motion: no-preference` AND `min-width: 961px`) writes eased `--hero-cover` on `#hero` AND mirrors it onto `<html>` so the portalled plane (a sibling of `#hero`) inherits it; toggles `data-hero-handoff="1"` mid-band (promotes hero to z:5, flips the plane to `display: block`); and hides the hero at eased `>= 0.98` — exactly where the `--deck-clear` hairline begins — so the fade reveals the live corridor, never the held hero (the historical "hero flash").
 
 **Critical invariants for anyone editing this:**
 
-- **No literal flip.** The hero rotates a maximum of 18deg on the Y-axis as it recedes; this is a parallax cue, not a card-turn. Re-introducing `rotateY` magnitudes >~30deg or two-faced `backface-visibility` setups returns the page to v4's flat-slab feel and breaks the depth-window read.
-- **Both windows are beveled and screen-facing.** Use the shared `--bevel` polygon clip-path on both `.hero__video` and `.hero-flip-back-window`. Do NOT rotate readable window content (copy / brandmark / video) on its own axis; rotation lives only on the hero frame's recede.
-- **Content parallax is non-negotiable.** Without the counter-transform on `.hero__video video` (and on `.hero-flip-back__copy` / `.hero-flip-back__diagram`), the windows revert to v3-flavored 2D posters. Magnitude rule: counter-translate is ~50% of the frame's drift in the OPPOSITE direction; counter-scale is ~50% of the frame's recede magnitude.
-- **The back face is a static DOM facade, not the live R3F corridor.** Any 3D transform on an ancestor of the corridor's `.home-v2-stage` would corrupt the rect math `useDepthScroll` reads every frame; the facade exists precisely to keep the corridor untouched. The hairline `--back-fade` (cover ~0.994 -> 1) absorbs the facade -> live-corridor handoff.
-- **The deck portals into `main.stations`** (sibling of `#hero`), not a root sibling. Root siblings would need `z > 10` to paint above the rising corridor host (z:3), which would also eclipse the live hero front window.
-- **Front (`#hero`) and back window (`.hero-flip-back-window`) are siblings, never parent/child.** `#hero` is parsed `dangerouslySetInnerHTML` markup with `overflow: hidden`; nesting would clip during transform.
-- **Avoid a long duplicate-read blend.** If `--back-fade` widens, the back window and the live corridor read at the same time and the second section duplicates in the same frame. Keep it hairline.
-- **Reduced-motion / <=960px fall through cleanly:** the deck is `display: none` outside the media query, and the hero keeps its legacy scale+fade rules from outside the media block.
-- **The rotating aperture shell is gone.** v2-v4 used a `.hero-flip-back` rim/glaze layer that rotated opposite the front; do NOT reintroduce it. The bevel on the back window is the same shape as the front, and content parallax (not a rotating shell) supplies the depth read.
+- **Keep the sweep.** The opaque clip-swipe plane is the validated beat. Do NOT remove it to chase a perfect handoff (that was the interim mistake that deleted the sweep).
+- **Match the gate silhouette, not a diamond.** The proxy diagram must mirror the live `ThoughtformCompassGate` — concentric AXIS-ALIGNED squares + compass + phase labels. A rotated diamond (or any clearly different shape/size/position) reintroduces the boundary jump. The match is necessarily approximate (the live gate is R3F, spins slowly over time, and rises during the band); the hairline crossfade absorbs the residual.
+- **Hairline `--deck-clear` only (~2%).** Fade the plane at the very end; the hero `visibility: hidden` threshold (`eased >= 0.98`) MUST match the hairline start, or the fade reveals the held hero instead of the live corridor.
+- **Hold the hero; never scale it down** (ADR-008 Rule 3 — exposes the gateway at the hero edges). `.hero__video { transform: none; opacity: 1 }`; hero promoted to z:5 only during the band.
+- **The plane portals into `main.stations`** (sibling of `#hero`), reads `--hero-cover` via the `<html>` mirror, `pointer-events: none`.
+- **The corridor stays a black box** (ADR-018/021): the proxy mirrors its parked composition but never transforms/reparents it.
+- **Reduced-motion / ≤960px**: plane `display: none`; hero on legacy `.hero__video` scale+fade; the corridor rises over it (unchanged pre-ADR-022 baseline).
+- **Superseded artifacts not to reintroduce:** the rotated-diamond proxy (v6.0-v6.2 jump), the flip / depth-window / beveled-window / content-parallax stacks (v2-v5), and the `.home-corridor-host::before/::after` "edge chrome" + proxy-less "direct reveal" (interim pass that deleted the sweep).
 
 Every section/divider/connector that sits inside `.stations` and is intended to read as dark void **must** paint an opaque `var(--void)` fill on top of those two layers. That is the only thing making the rest of the page look like a solid dark page.
 
@@ -274,7 +262,7 @@ Rules that hold for any future section-scoped canvas:
 
 ## Section-scoped sticky pairs (general guidance)
 
-The v7 page uses **only one** sticky pair today: the hero (`.hero`) sits at `z:1` and is covered by the next element below it as it slides up. On the production homepage that "next element" is `.home-corridor-host` at `z:3` (the home-v2 corridor mount inserted by `lib/v7-parse.ts`); on capable devices [ADR-022 v5](../../../sentinel/decisions/022-hero-corridor-flip-transition.md) replaces the cover with a KPR-style depth-window sweep, promoting the hero to `z:6` and adding a portalled deck (`.hero-flip-backdrop` / `.hero-flip-enclosure` z:4, `.hero-flip-back-window` z:5) only inside the `--hero-cover ∈ (0, 1)` band — see "In-band hero deck" above for the full layer stack. The previous `.brand-handoff-stage` (ADR-012 v5d) that pinned `#missing-layer` + `#intelligence-layer` was retired in v6 — both sections now flow as ordinary stacked stations and the brandmark choreography handles the miss → substrate transit over the natural scroll distance. **Do not reintroduce a sticky-cover wrapper around those two sections** without an ADR; the cover slide reads as parallax / discrete UI gesture rather than as continuous scroll narrative, which fights the editorial intent.
+The v7 page uses **only one** sticky pair today: the hero (`.hero`) sits at `z:1` and is covered by the next element below it as it slides up. On the production homepage that "next element" is `.home-corridor-host` at `z:3` (the home-v2 corridor mount inserted by `lib/v7-parse.ts`). On capable devices [ADR-022 v6.3](../../../sentinel/decisions/022-hero-corridor-flip-transition.md) dresses that seam with a cover-plane swipe: the hero is promoted to `z:5` and held (`.hero__video { transform: none; opacity: 1 }`) while a portalled opaque plane (`.hero-handoff-cover`, `z:6`) carrying the Thoughtform copy + a gate-matched proxy clip-swipes up, then hands to the live corridor at `cover = 1` — see "In-band hero seam" above. Reduced-motion / ≤960px keep the legacy `.hero__video` scale+fade with the hero at `z:1` and the corridor covering it from the bottom up. The previous `.brand-handoff-stage` (ADR-012 v5d) that pinned `#missing-layer` + `#intelligence-layer` was retired in v6 — both sections now flow as ordinary stacked stations and the brandmark choreography handles the miss → substrate transit over the natural scroll distance. **Do not reintroduce a sticky-cover wrapper around those two sections** without an ADR; the cover slide reads as parallax / discrete UI gesture rather than as continuous scroll narrative, which fights the editorial intent.
 
 If a future feature genuinely needs another sticky pair inside `.stations`, the rules below still apply (they're the same rules that govern the hero → first-station cover):
 

@@ -6473,380 +6473,275 @@ body.density-dense .station {
   opacity: calc(1 - var(--hero-cover, 0) * 0.45);
 }
 
-/* ─── HERO → THOUGHTFORM DEPTH-WINDOW SWEEP (ADR-022 v5) ─────────────
-   KPR-style depth-window sweep. NOT a flip. Driven entirely by the
-   smootherstep-eased `--hero-cover` (0..1) written by
-   `useLandingScroll`. The home-v2 depth corridor (ADR-018 / ADR-021)
-   is NEVER rotated or reparented — its flythrough reads stage rect
-   every frame and would break under any ancestor 3D transform. The
-   reveal target is a STATIC DOM facade (`HeroFlipBackface`) that
-   renders the same `text.thoughtform` source the live corridor uses
-   and hairline-crossfades to the live corridor at completion.
+/* ─── HERO → THOUGHTFORM COVER-PLANE SWIPE (ADR-022 v6 final) ────────
+   Active Theory / Hashgraph-class cover sweep. An opaque viewport plane
+   (`.hero-handoff-cover` -> `.hero-handoff-plane`) carrying the
+   Thoughtform first-read copy + a compass-gate diagram CLIP-SWIPES
+   upward over the held hero. The clip edge is the reveal; opacity is
+   not the transition owner during the swipe. The live home-v2 corridor
+   (ADR-018/021) is never transformed — it is `armed` and painting its
+   real parked frame behind everything, and the plane hands the screen
+   to it at `cover = 1`.
 
-   Confirmed via live KPR inspection (1440x900): KPR uses one fixed
-   WebGL canvas painting a beveled-corner window whose texture
-   parallaxes slower than the frame, then sweeps/scales between
-   shaped windows to change sections. The literal 180deg flip we
-   shipped through v4 was the source of the "flat 2D slab" feel —
-   v5 replaces it with three layered, coordinated motions:
+   The jump that earlier iterations had at `cover = 1` came from the
+   proxy diagram being a single ROTATED dashed DIAMOND while the live
+   corridor's parked frame (`ThoughtformCompassGate`) is CONCENTRIC
+   AXIS-ALIGNED dashed squares. v6 final matches that silhouette
+   (`.hero-handoff__ring--1..4`) so the proxy -> live handoff lands
+   cleanly instead of swapping shapes.
 
-     ENCLOSE  cover 0 → 0.40 : video insets into a beveled window,
-                                bevel grows, void-black surround
-                                planes close inward.
-     RECEDE   cover 0.30 → 1 : the hero card translates back in Z,
-                                drifts left, gets a gentle 18deg
-                                rotateY, and fades out.
-     REVEAL   cover 0.34 → 0.95 : the Thoughtform back window drifts
-                                in from the right, scales 0.90 → 1.00,
-                                its copy + brandmark parallax forward
-                                on a deeper plane (counter-translate
-                                to the window's drift, counter-scale
-                                to the window's growth).
-     CLEAR    cover ~0.994 → 1 : hairline crossfade replaces the
-                                facade with the live corridor (which
-                                has been armed at paintProgress 0
-                                throughout the band).
+     SWIPE  cover 0 -> ~0.98 : plane clip-path inset((1-cover)*100% 0 0 0)
+                               recedes 100% -> ~2%, + a small upward
+                               settle. Hero HELD beneath (opacity 1, no
+                               zoom); above the clip line the hero still
+                               shields the gateway. Copy + concentric-
+                               square gate ride INSIDE the plane.
+     CLEAR  cover 0.98 -> 1  : hairline `--deck-clear` fades the plane as
+                               the live corridor (risen to its final
+                               parked position) takes over. Hero hidden
+                               at eased >= 0.98 so the fade reveals the
+                               live corridor, never the held hero (the
+                               historical "hero flash"). Matching gate
+                               silhouettes make this a soft settle, not a
+                               doubled crossfade.
 
-   The "rotates slower than the frame" depth feel is a content
-   parallax INSIDE the window: `.hero__video video` counter-translates
-   and counter-scales the frame's recede so the texture reads as a
-   deeper plane than the bevel. Same principle on the back window.
-
-   Gating matches JS `flipCapable` in useLandingScroll: motion-allowed
-   + ≥961px. Reduced-motion / mobile fall through to the legacy
-   scale+fade rules above (the deck stays `display: none`). The
-   `data-hero-flip="1"` attribute name is preserved from v4 to avoid
-   churn across the JS gate, the deck portal, and the docs — it is
-   the band gate, not a flip indicator.
-   ──────────────────────────────────────────────────────────────────── */
+   Gating matches JS `handoffCapable` in useLandingScroll: motion-allowed
+   + >=961px. Reduced-motion / <=960px fall through to the legacy
+   `.hero__video` scale+fade above (the plane stays `display: none`,
+   and the corridor still rises over the hero as the plain cover). */
 @media (prefers-reduced-motion: no-preference) and (min-width: 961px) {
-  /* Shared phase variables. Defined on `<html>` so the front (`#hero`,
-     inside parsed main) and the portalled back deck both inherit. The
-     `--hero-cover` mirror onto <html> happens in the same rAF frame as
-     the `#hero` write; both layers always see identical values.
-
-     `--enclose`, `--recede`, `--reveal`, `--back-fade` replace the v4
-     `--flip` / `--window-reveal` / `--front-fade` / `--shell-fade`
-     stack. The phase windows overlap deliberately (0.30..0.40 holds
-     both ENCLOSE and RECEDE; 0.34..0.95 holds both RECEDE and REVEAL)
-     so the camera move feels continuous rather than stepped. */
-  html[data-hero-flip="1"] {
-    --enclose: clamp(0, calc(var(--hero-cover, 0) / 0.4), 1);
-    --recede: clamp(0, calc((var(--hero-cover, 0) - 0.3) / 0.7), 1);
-    --reveal: clamp(0, calc((var(--hero-cover, 0) - 0.34) / 0.61), 1);
-    /* Back-deck clear clock: keep the facade opaque through almost
-       the entire band; clear only in the last hairline band so the
-       second section never reads twice in the same frame. */
-    --back-fade: clamp(0, calc((1 - var(--hero-cover, 0) - 0.001) / 0.006), 1);
-
-    /* Geometry. `--hero-card-x/y` are the inset distances at full
-       enclose; `--bevel` is the diagonal corner cut driving the
-       beveled `clip-path: polygon(...)` on both windows. */
-    --hero-card-x: clamp(18px, 3vw, 48px);
-    --hero-card-y: clamp(16px, 3.4vh, 36px);
-    --hero-card-radius: calc(var(--enclose, 0) * 14px);
-    --bevel: calc(var(--enclose, 0) * 32px);
+  /* Shared phase var on <html> so the portalled deck (sibling of
+     `#hero`) inherits it. `--hero-cover` is mirrored onto <html> in the
+     same rAF frame `useLandingScroll` writes it on `#hero`. */
+  html[data-hero-handoff="1"] {
+    /* Hairline plane-clear: opaque across the whole swipe, fades only in
+       the last ~2% so the matching gate dissolves into the live one. */
+    --deck-clear: clamp(0, calc((1 - var(--hero-cover, 0)) / 0.02), 1);
   }
 
-  /* The hero is the FRAME of the front window. It carries the depth
-     recede, lateral sweep, and fade — but NOT a 180deg rotation, so
-     `backface-visibility` is no longer needed and there is no edge-on
-     crossover. The bevel + content parallax happen on its descendants
-     (`.hero__video` and `.hero__video video`), not here. */
-  .hero {
-    background: var(--void);
-    transform-origin: 50% 50%;
-    will-change: transform, opacity;
-    transform: perspective(1900px) translateX(calc(var(--recede, 0) * -2.8vw))
-      translateZ(calc(var(--recede, 0) * -360px)) rotateY(calc(var(--recede, 0) * 18deg))
-      scale(calc(1 - var(--enclose, 0) * 0.06));
-    opacity: calc(1 - var(--recede, 0) * 1.06);
-  }
-  /* Promote the hero above the back window (z:5) and enclosure (z:4)
-     mid-band so the FRONT window paints over the surround. Both layers
-     are siblings inside `main.stations`, so this z stays within main's
-     own z:10 envelope. */
-  .hero[data-hero-flip="1"] {
-    z-index: 6;
-  }
-  /* Window shape: KPR-style beveled rectangle. The `clip-path` polygon
-     cuts 45deg corners whose size grows with `--enclose`; at cover 0
-     bevel is 0 and the polygon collapses to the full-bleed rectangle
-     so nothing is clipped. The legacy `.hero__video` scale+fade rules
-     (above this block) are nulled by `transform: none; opacity: 1`. */
+  /* Hold the hero key visual static (null the legacy zoom) so it reads
+     as a rigid backplate behind the sweep. No transform on `.hero` /
+     `.hero__video` — opacity stays 1 and the hero keeps full-viewport
+     coverage so no gateway edge bleed (ADR-008 Rule 3). */
   .hero__video {
-    inset: calc(var(--enclose, 0) * var(--hero-card-y)) calc(var(--enclose, 0) * var(--hero-card-x));
-    border-radius: var(--hero-card-radius);
-    clip-path: polygon(
-      var(--bevel, 0px) 0%,
-      calc(100% - var(--bevel, 0px)) 0%,
-      100% var(--bevel, 0px),
-      100% calc(100% - var(--bevel, 0px)),
-      calc(100% - var(--bevel, 0px)) 100%,
-      var(--bevel, 0px) 100%,
-      0% calc(100% - var(--bevel, 0px)),
-      0% var(--bevel, 0px)
-    );
     transform: none;
     opacity: 1;
-    will-change: inset, clip-path, border-radius;
-  }
-  /* Content parallax — the depth ingredient. The inner <video> texture
-     counter-moves the frame's recede so it reads as a deeper plane
-     sliding more slowly than the window edge. Counter-translate is
-     ~50% the magnitude of the frame's lateral drift (`-2.8vw` → `+1.4vw`)
-     and counter-scale compensates the depth recede so the texture stays
-     filling the bevel as the frame moves back. This is the
-     "rotates slower than the card" KPR signature. */
-  .hero__video video {
-    transform-origin: 50% 50%;
-    transform: translateX(calc(var(--recede, 0) * 1.4vw)) scale(calc(1 + var(--recede, 0) * 0.05));
-    will-change: transform;
   }
   .hero__content {
-    transform: none;
-    /* Faster fade — copy is gone before depth gets dramatic. */
     opacity: calc(1 - var(--hero-cover, 0) * 2.2);
     will-change: opacity;
   }
+  /* Promote the held hero above the rising corridor host (z:3) during
+     the band so it (not a half-risen corridor) sits beneath the sweep
+     plane; the plane is z:6. Cleared with the band gate at cover 0/1. */
+  .hero[data-hero-handoff="1"] {
+    z-index: 5;
+  }
 }
 
-/* ─── HERO FLIP DECK (back face + backdrop, portalled into main.stations)
-   Renders only when `<html data-hero-flip="1">`. Reduced-motion / mobile
-   paths never see these rules — the deck stays `display: none`.
+/* ─── HERO HANDOFF COVER (the sweep plane, portalled into main.stations).
+   `display: none` unless `<html data-hero-handoff="1">`. Reduced-motion /
+   <=960px never see it.
    ──────────────────────────────────────────────────────────────────── */
-.hero-flip-deck {
+.hero-handoff-cover {
   display: none;
 }
 @media (prefers-reduced-motion: no-preference) and (min-width: 961px) {
-  html[data-hero-flip="1"] .hero-flip-deck {
+  html[data-hero-handoff="1"] .hero-handoff-cover {
     display: block;
   }
 }
 
-.hero-flip-backdrop,
-.hero-flip-enclosure,
-.hero-flip-back-window {
+.hero-handoff-cover {
   position: fixed;
   inset: 0;
+  width: 100vw;
+  height: 100svh;
+  z-index: 6;
   pointer-events: none;
-}
-
-.hero-flip-backdrop {
-  z-index: 4;
-  background:
-    radial-gradient(circle at 50% 50%, rgba(10, 9, 8, 0) 0 34%, rgba(10, 9, 8, 0.68) 64%),
-    var(--void, #0a0908);
-  /* `--back-fade` is the deck's alpha: 1 = fully visible, 0 = faded.
-     Defaults to 0 outside the band so the backdrop is invisible (the
-     deck is also `display: none` outside the band; this default is a
-     belt-and-braces guard). It stays opaque through most of the reveal
-     so the facade, not the live corridor behind it, owns the section. */
-  opacity: min(var(--enclose, 0), var(--back-fade, 0));
+  isolation: isolate;
+  /* Opaque across the swipe; hairline fade only at the very end so the
+     proxy gate dissolves into the live one. */
+  opacity: var(--deck-clear, 0);
   will-change: opacity;
 }
 
-.hero-flip-enclosure {
-  z-index: 4;
-}
-
-.hero-flip-enclosure__plane {
-  position: absolute;
-  display: block;
-  background: var(--void, #0a0908);
-  opacity: var(--back-fade, 0);
-  will-change: width, height, opacity;
-}
-
-.hero-flip-enclosure__plane--top,
-.hero-flip-enclosure__plane--bottom {
-  left: 0;
-  width: 100%;
-  height: calc(var(--enclose, 0) * var(--hero-card-y, 0px));
-}
-
-.hero-flip-enclosure__plane--top {
-  top: 0;
-}
-
-.hero-flip-enclosure__plane--bottom {
-  bottom: 0;
-}
-
-.hero-flip-enclosure__plane--left,
-.hero-flip-enclosure__plane--right {
-  top: 0;
-  height: 100%;
-  width: calc(var(--enclose, 0) * var(--hero-card-x, 0px));
-}
-
-.hero-flip-enclosure__plane--left {
-  left: 0;
-}
-
-.hero-flip-enclosure__plane--right {
-  right: 0;
-}
-
-/* The Thoughtform back window — KPR-style beveled silhouette. Starts
-   smaller and slightly off-center so it reads as a deeper plane that
-   slides forward as the front hero recedes. The corner bevel uses the
-   same `--bevel` polygon as the front window so both silhouettes
-   match across the band. ADR-022 v5 (depth-window sweep): the v4
-   `clip-path: inset(...)` with a `--shell-fade` rotating aperture in
-   front of it is gone; the window itself is the visible silhouette
-   and stays screen-facing throughout (no rotation). */
-.hero-flip-back-window {
-  z-index: 5;
-  background:
-    linear-gradient(180deg, rgba(5, 4, 3, 0.94), rgba(5, 4, 3, 0.99)), var(--void, #0a0908);
-  clip-path: polygon(
-    var(--bevel, 0px) 0%,
-    calc(100% - var(--bevel, 0px)) 0%,
-    100% var(--bevel, 0px),
-    100% calc(100% - var(--bevel, 0px)),
-    calc(100% - var(--bevel, 0px)) 100%,
-    var(--bevel, 0px) 100%,
-    0% calc(100% - var(--bevel, 0px)),
-    0% var(--bevel, 0px)
-  );
-  /* Drift in from the right (counter to the front hero's leftward
-     sweep) and scale forward 0.90 → 1.00 so the new section feels
-     like it's emerging from depth rather than being pasted in. */
-  transform-origin: 50% 50%;
-  transform: translateX(calc((1 - var(--reveal, 0)) * 3vw))
-    scale(calc(0.9 + var(--reveal, 0) * 0.1));
-  opacity: min(var(--reveal, 0), var(--back-fade, 1));
-  will-change: transform, opacity, clip-path;
-}
-
-.hero-flip-back-window__inner {
+.hero-handoff-plane {
   position: absolute;
   inset: 0;
-  display: block;
-  isolation: isolate;
-  padding: 0;
+  overflow: hidden;
+  /* Opaque void surface with subtle layered glow so the sweep reads as
+     a designed surface, not a dead black field. */
+  background:
+    linear-gradient(180deg, rgba(5, 4, 3, 0.985), rgba(5, 4, 3, 1) 62%),
+    radial-gradient(circle at 52% 60%, rgba(202, 165, 84, 0.06), transparent 46%),
+    var(--void, #050403);
+  /* The clip IS the swipe: top inset recedes 100% -> 0% as cover rises,
+     so the plane fills bottom-up. */
+  clip-path: inset(calc((1 - var(--hero-cover, 0)) * 100%) 0 0 0);
+  /* Small upward settle so the plane reads as travelling into place. */
+  transform: translate3d(0, calc((1 - var(--hero-cover, 0)) * 3vh), 0);
+  will-change: clip-path, transform;
 }
 
-.hero-flip-back__copy {
-  /* Reuses `.home-v2-copy-block--thoughtform-left` typography from
-     home-v2.css verbatim — bridge/title/body/cta scale matches the
-     live corridor 1:1 so the hairline crossfade is invisible.
-     Lives on a deeper plane than the window frame: as the window
-     drifts in from the right and scales forward, the copy
-     counter-translates (lags the frame) and counter-scales so it
-     reads as further inside the window than the bevel edge. This is
-     the same content-parallax principle as `.hero__video video`. */
+/* Brand-grammar accents on the sweep surface (top/bottom rule + faint
+   diagonal slash), mirroring handoff-lab's plane so the two cover
+   sweeps in the page share a visual language. */
+.hero-handoff-plane::before,
+.hero-handoff-plane::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+}
+
+.hero-handoff-plane::before {
+  inset: clamp(24px, 5vh, 54px) clamp(18px, 4vw, 72px);
+  border-top: 1px solid rgba(236, 227, 214, 0.12);
+  border-bottom: 1px solid rgba(236, 227, 214, 0.07);
+  opacity: calc(0.2 + var(--hero-cover, 0) * 0.3);
+}
+
+.hero-handoff-plane::after {
+  left: 50%;
+  top: 50%;
+  width: min(58vw, 760px);
+  height: min(48vh, 420px);
+  transform: translate3d(-50%, calc(-50% + (1 - var(--hero-cover, 0)) * 6vh), 0) skewY(-5deg);
+  background: linear-gradient(
+    115deg,
+    transparent 0 46%,
+    rgba(236, 227, 214, 0.06) 47% 48%,
+    transparent 49%
+  );
+  opacity: calc(0.14 + var(--hero-cover, 0) * 0.2);
+  mix-blend-mode: screen;
+}
+
+/* First-read Thoughtform copy — same typography classes + position as
+   the live corridor's parked left copy, so the handoff is continuous. */
+.hero-handoff__copy {
   position: absolute;
   left: clamp(220px, 16.55vw, 318px);
   top: clamp(275px, 33.2vh, 360px);
   width: clamp(360px, 24vw, 460px);
   max-width: clamp(360px, 24vw, 460px);
-  opacity: clamp(0, calc((var(--reveal, 0) - 0.1) / 0.3), 1);
-  transform: translate3d(
-    calc((1 - var(--reveal, 0)) * -22px),
-    calc((1 - var(--reveal, 0)) * 12px),
-    0
-  );
-  will-change: opacity, transform;
+  z-index: 2;
 }
 
-/* The CTA on the facade is non-interactive (the deck has
-   `pointer-events: none` and its inner span isn't an `<a>`). It exists
-   purely to mirror the live corridor's parked composition during the
-   crossfade. */
-.hero-flip-back__copy .home-v2-copy-cta {
-  /* Strip hover-lift so the static cue doesn't flash mid-flip. */
+.hero-handoff__copy .home-v2-copy-cta {
   transition: none;
 }
 
-.hero-flip-back__diagram {
-  /* Brandmark + dotted diamond, mirroring the corridor's parked frame.
-     Lags the window's rightward drift slightly (counter-translate) and
-     undershoots the final scale by a hair so it reads as a deeper
-     plane than the bevel. */
+/* Compass-gate diagram — concentric axis-aligned square loops + the
+   brandmark + phase labels, mirroring the live `ThoughtformCompassGate`
+   so the proxy -> live swap at cover = 1 lands cleanly. */
+.hero-handoff__diagram {
   position: absolute;
-  left: clamp(780px, 55vw, 1056px);
-  top: clamp(220px, 26vh, 282px);
-  width: clamp(430px, 31vw, 600px);
-  height: clamp(430px, 31vw, 600px);
+  /* Tuned to the live gate's parked position/size at 1920x1080
+     (outer ring ~480px, compass ~50% of it, centred ~x1325/y542) so
+     the proxy -> live handoff lands without a size/position pop. The
+     live gate's continuous breath spin is near-zero at a fresh entry,
+     so the proxy stays axis-aligned (no spin) to match. */
+  left: clamp(600px, 56vw, 1075px);
+  top: clamp(200px, 27vh, 294px);
+  width: clamp(320px, 26vw, 500px);
+  height: clamp(320px, 26vw, 500px);
   display: grid;
   place-items: center;
-  opacity: clamp(0, calc((var(--reveal, 0) - 0.05) / 0.32), 1);
-  transform: translate3d(calc((1 - var(--reveal, 0)) * 28px), 0, 0)
-    scale(calc(0.985 + var(--reveal, 0) * 0.015));
-  will-change: opacity, transform;
+  z-index: 2;
 }
 
-.hero-flip-back__depth-grid {
+.hero-handoff__ring {
   position: absolute;
-  inset: 11%;
-  border: 1px solid var(--dawn-08, rgba(235, 227, 214, 0.08));
-  background:
-    linear-gradient(rgba(235, 227, 214, 0.045) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(235, 227, 214, 0.045) 1px, transparent 1px);
-  background-size: 42px 42px;
-  opacity: calc(0.18 + var(--reveal, 0) * 0.2);
-  transform: scale(0.9);
+  top: 50%;
+  left: 50%;
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
 }
 
-/* Dotted diamond frame around the brandmark — echoes the corridor's
-   parked Thoughtform compass-gate diagram. The labels (NAVIGATE /
-   BUILD / ENCODE) sit on the frame's three exposed corners. */
-.hero-flip-back__diagram-frame {
-  position: relative;
-  aspect-ratio: 1 / 1;
-  width: min(42vh, 420px);
-  border: 1px dashed var(--dawn-30, rgba(235, 227, 214, 0.3));
-  /* Diamond rotation matches the corridor's parked frame. */
-  transform: translateZ(60px) rotate(45deg);
-  display: grid;
-  place-items: center;
-  box-shadow:
-    0 0 0 1px rgba(235, 227, 214, 0.035),
-    0 0 80px rgba(202, 165, 84, 0.08);
+/* Ring sizes mirror the live gate RING_RADII ratios [0.75,0.63,0.52,
+   0.39] -> 100/84/69/52%. Outer two dawn, inner two gold; the inner
+   dotted dawn square is the live gate's most legible loop, so it reads
+   strongest here too. */
+.hero-handoff__ring--1 {
+  width: 100%;
+  border: 1px solid rgba(235, 227, 214, 0.16);
 }
-
-.hero-flip-back__brandmark {
-  /* Counter-rotate so the brandmark itself stays upright inside the
-     diamond frame. Matches the live corridor's parked brandmark
-     orientation. The live corridor's own NAVIGATE / ENCODE / BUILD
-     labels are not duplicated here — the ~15% crossfade brings the
-     live corridor in fast enough that label parity isn't needed. */
-  transform: rotate(-45deg);
+.hero-handoff__ring--2 {
+  width: 84%;
+  border: 1px dotted rgba(235, 227, 214, 0.3);
+}
+.hero-handoff__ring--3 {
+  width: 69%;
+  border: 1px dashed rgba(202, 165, 84, 0.4);
+}
+.hero-handoff__ring--4 {
   width: 52%;
-  aspect-ratio: 1 / 1;
+  border: 1px dotted rgba(202, 165, 84, 0.34);
 }
 
-.hero-flip-back__axis-label {
+/* Bearing crosshair — 4 short cardinal stubs just inside the outer ring
+   (matches the live gate's dawn-30 crosshair). */
+.hero-handoff__crosshair {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100%;
+  height: 100%;
+  transform: translate(-50%, -50%);
+  background:
+    linear-gradient(
+        90deg,
+        transparent calc(50% - 0.5px),
+        rgba(235, 227, 214, 0.22) calc(50% - 0.5px),
+        rgba(235, 227, 214, 0.22) calc(50% + 0.5px),
+        transparent calc(50% + 0.5px)
+      )
+      center / 100% 8% no-repeat,
+    linear-gradient(
+        0deg,
+        transparent calc(50% - 0.5px),
+        rgba(235, 227, 214, 0.22) calc(50% - 0.5px),
+        rgba(235, 227, 214, 0.22) calc(50% + 0.5px),
+        transparent calc(50% + 0.5px)
+      )
+      center / 8% 100% no-repeat;
+}
+
+.hero-handoff__brandmark {
+  position: relative;
+  z-index: 2;
+  /* ~50% of the outer ring, matching the live gate's compass scale so
+     it fills the inner loop the same way. */
+  width: 50%;
+  aspect-ratio: 1;
+}
+
+.hero-handoff__axis-label {
   position: absolute;
   color: var(--dawn-50, rgba(235, 227, 214, 0.5));
   font-family: var(--font-data, "PT Mono", monospace);
   font-size: clamp(9px, 0.78vw, 12px);
   line-height: 1;
-  letter-spacing: 0;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
   white-space: nowrap;
-  transform: rotate(-45deg);
 }
 
-.hero-flip-back__axis-label--navigate {
-  top: -22px;
-  left: 50%;
-  transform: translate(-50%, -100%) rotate(-45deg);
+/* Phase-label positions mirror the live gate's PHASE_NODES bearings:
+   navigate upper-left, encode lower-left, build right. */
+.hero-handoff__axis-label--navigate {
+  top: 7%;
+  left: 19%;
 }
-
-.hero-flip-back__axis-label--encode {
-  right: -22px;
-  top: 50%;
+.hero-handoff__axis-label--encode {
+  bottom: 7%;
+  left: 30%;
+}
+.hero-handoff__axis-label--build {
+  top: 44%;
+  right: 6%;
   color: var(--gold, #caa554);
-  transform: translate(100%, -50%) rotate(-45deg);
-}
-
-.hero-flip-back__axis-label--build {
-  bottom: -22px;
-  left: 50%;
-  transform: translate(-50%, 100%) rotate(-45deg);
 }
 
 /* Gateway depth layers — slight additional drift for depth cue.

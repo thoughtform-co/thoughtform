@@ -1,8 +1,8 @@
-# ADR-022: Hero → Corridor Depth-Window Sweep
+# ADR-022: Hero → Corridor Reveal Transition
 
 **Date:** 2026-06-15
-**Status:** Active (v5)
-**Revisions:** v5 (2026-06-15) - KPR depth-window sweep, superseding the v4 hollow aperture + 180deg flip. Live KPR inspection (1440x900) confirmed KPR does NOT flip; it sweeps and scales beveled-corner windows with content that parallaxes inside them. v1-v4 are preserved below as history.
+**Status:** Active (v6.3 — cover-plane swipe with gate-matched proxy)
+**Revisions:** v6.3 (2026-06-15) - **cover-plane swipe with gate-matched proxy**. The user confirmed the v6.0-v6.2 cover-plane SWEEP itself was right; their only objection was the boundary JUMP. An interim "remove the proxy / direct corridor reveal (+ edge chrome)" pass (briefly the active design) _removed the sweep entirely_ — wrong. v6.3 restores the cover-plane swipe and fixes the jump at its real source: the proxy diagram was a single ROTATED dashed diamond while the live `ThoughtformCompassGate` is CONCENTRIC AXIS-ALIGNED dashed squares. v6.3 rebuilds the proxy diagram to mirror the live gate (4 concentric axis-aligned square loops + compass brandmark + NAVIGATE/ENCODE/BUILD labels, tuned to the live gate's parked size/position at 1920x1080) so the proxy -> live handoff is a soft settle, not a shape swap. v1-v6.2 are preserved below as history.
 **Scope:** Production home page (`/`) — the seam between the v7 hero (`section#hero`, the wormhole key-visual `<video>`) and the home-v2 depth corridor's parked Thoughtform start frame (`#home-corridor-mount` → `.home-corridor-host` → `HomeCorridor`). The transition the user experiences as they begin scrolling.
 **Related:**
 [ADR-008 — Landing v7 background layers](008-landing-v7-background-layers.md),
@@ -12,7 +12,97 @@
 
 ---
 
-## v5 (active) — KPR depth-window sweep (2026-06-15)
+## v6.3 (active) — Cover-plane swipe with gate-matched proxy (2026-06-15)
+
+### What this is
+
+An Active Theory / Hashgraph-class **cover-plane swipe**: an opaque viewport plane (`.hero-handoff-cover` -> `.hero-handoff-plane`) carrying the Thoughtform first-read copy + a compass-gate diagram **clip-swipes upward** over the held hero, then hands the screen to the live home-v2 corridor at `cover = 1`. The clip edge is the reveal; opacity is not the transition owner during the swipe. This is the sweep the user validated in v6.0-v6.2.
+
+### The jump, and its real cause
+
+The user's only objection to the v6.0-v6.2 sweep was the **boundary jump**: at `cover = 1` the static proxy was replaced by the live corridor and the composition visibly changed. The cause was NOT "static proxy can never match R3F" in general — it was a specific, fixable shape mismatch: the proxy diagram was a single **rotated dashed diamond** (`transform: rotate(45deg)`), while the live `ThoughtformCompassGate` is **concentric AXIS-ALIGNED dashed squares** + a compass brandmark + NAVIGATE/ENCODE/BUILD labels. Diamond -> squares is the jump.
+
+(An interim pass removed the proxy entirely — "direct corridor reveal", then an "edge chrome" line — to dodge the match problem. That **removed the sweep**, which the user explicitly wanted kept. Reverted.)
+
+### The fix
+
+Rebuild the proxy diagram to mirror the live gate:
+
+- 4 concentric **axis-aligned** square loops (`.hero-handoff__ring--1..4`) at the live RING_RADII ratios [0.75, 0.63, 0.52, 0.39] -> 100 / 84 / 69 / 52%. Outer two dawn, inner two gold; the inner dotted dawn loop reads strongest, like the live gate.
+- The canonical `BrandmarkGlyph` compass at ~50% of the outer ring (the live compass scale) + a faint bearing crosshair.
+- NAVIGATE / ENCODE / BUILD labels positioned at the live gate's phase bearings (navigate upper-left, encode lower-left, build right).
+- Diagram container tuned to the live gate's parked size + centre at 1920x1080 (outer ring ~480px, centre ~x1325/y542).
+
+With the silhouette matched, the `cover -> 1` handoff is a soft settle (the proxy dissolves over a ~2% `--deck-clear` hairline into the live gate that has risen to its final parked position), not a shape swap.
+
+Residual (acknowledged, minor): the live gate has a continuous breath spin (`rotation.z = elapsedTime * 0.012`) — ~0 at a fresh entry (so it matches the axis-aligned proxy), but it drifts if the page sits open for a long time before the user scrolls; and the live gate carries tiny phase sublabels the proxy omits. The hairline crossfade absorbs these. A pixel-perfect match is impossible because the gate is live R3F that rotates over time and rises during the band; this is as close as a static proxy gets while preserving the sweep.
+
+The post-corridor "Make the layer useful." -> services seam is **NOT touched** (ADR-021 zoom-dissipate).
+
+### Mechanic
+
+```
+SWIPE  cover 0 -> ~0.98 : .hero-handoff-plane clip-path inset((1-cover)*100% 0 0 0)
+                          recedes 100% -> ~2% (fills bottom-up) + a small upward
+                          settle. Hero HELD beneath (z:5, opacity 1, no zoom);
+                          above the clip line the hero still shields the gateway.
+                          Copy + concentric-square gate ride INSIDE the plane.
+CLEAR  cover 0.98 -> 1  : hairline `--deck-clear` fades the plane as the live
+                          corridor (risen to its final parked position) takes
+                          over. Hero hidden at eased >= 0.98 so the fade reveals
+                          the live corridor, never the held hero (the historical
+                          "hero flash"). Matching gate silhouettes -> soft settle.
+cover = 1              : band gate clears -> plane display:none, hero z:1 +
+                          visibility:hidden; the live corridor owns the screen.
+```
+
+### Layer stack during the band (deck portalled into `main.stations`, within main's z:10)
+
+```
+z:0   .gateway                    fixed gold radial (shielded by the hero above the clip line)
+z:1/5 #hero[data-hero-handoff]    held; promoted to z:5 during the band, opaque, no transform
+z:3   .home-corridor-host         live corridor, armed at paintProgress 0 (the reveal target)
+z:6   .hero-handoff-cover         the sweep plane (clip-swipe up), opacity = --deck-clear
+        └── .hero-handoff-plane   opaque void + branded accents
+              ├── .hero-handoff__copy      Thoughtform left copy
+              └── .hero-handoff__diagram   concentric-square compass gate (matches the live one)
+```
+
+### Files
+
+- [components/landing/v7/HeroHandoffCover.tsx](../../components/landing/v7/HeroHandoffCover.tsx) — the portalled sweep plane; diagram is concentric axis-aligned `.hero-handoff__ring--1..4` + `BrandmarkGlyph` + crosshair + labels.
+- [components/landing/v7/landing.css](../../components/landing/v7/landing.css) — `@media (prefers-reduced-motion: no-preference) and (min-width: 961px)` block: `--deck-clear` clock + hero hold + `.hero[data-hero-handoff]` z:5; the `.hero-handoff-*` cover/plane/ring/brandmark/label rules.
+- [components/landing/v7/hooks/useLandingScroll.ts](../../components/landing/v7/hooks/useLandingScroll.ts) — `handoffCapable` gate, eased `--hero-cover` mirrored onto `<html>`, `data-hero-handoff` band toggle, hero `visibility: hidden` at eased >= 0.98.
+- [components/landing/v7/LandingPage.tsx](../../components/landing/v7/LandingPage.tsx) — mounts `<HeroHandoffCover>`.
+- [components/landing/home-v2/home-v2.css](../../components/landing/home-v2/home-v2.css) — the interim `.home-corridor-host::before/::after` edge chrome was removed; the corridor host is back to plain.
+
+No edits under `components/landing/home-v2/**` scene/store/hooks or `lib/v7-parse.ts`.
+
+### v6.3 invariants
+
+- **Keep the sweep.** The opaque clip-swipe plane is the validated beat; do not remove it in pursuit of a perfect handoff (that was the interim mistake).
+- **Match the gate silhouette, not a diamond.** The proxy diagram must mirror the live `ThoughtformCompassGate` — concentric AXIS-ALIGNED squares + compass + phase labels. A rotated diamond (or any clearly different shape) reintroduces the jump.
+- **Hairline `--deck-clear` only.** Fade the plane over ~2% at the very end; the hero `visibility: hidden` threshold (`eased >= 0.98`) must match the hairline start so the fade reveals the live corridor, not the held hero.
+- **Hero held, never scaled down** (ADR-008 Rule 3); promoted to z:5 only during the band.
+- **The corridor stays a black box** (ADR-018/021): the proxy mirrors its parked composition but never transforms/reparents it.
+- **Reduced-motion / ≤960px**: plane `display: none`; hero on legacy `.hero__video` scale+fade; corridor rises over it.
+
+### Verification (Playwright, 1920×1080)
+
+| cover | plane clip-path | hero vis | deck opacity | observable                                                    |
+| ----- | --------------- | -------- | ------------ | ------------------------------------------------------------- |
+| 0.00  | inset(100% …)   | visible  | display:none | hero full-bleed                                               |
+| 0.50  | inset(50% …)    | visible  | 1            | opaque plane swept to mid-viewport; proxy gate + copy rising  |
+| 0.93  | inset(6.8% …)   | visible  | 1            | plane near-full; proxy compass gate (concentric squares) read |
+| 0.98  | inset(2% …)     | hidden   | ~1 -> fading | hero hidden as the hairline begins                            |
+| 0.999 | inset(~0% …)    | hidden   | ~0.04        | live corridor essentially shown; only a faint copy ghost      |
+| 1.00  | display:none    | hidden   | display:none | live corridor owns the screen                                 |
+
+Fresh-load comparison (proxy at cover ~0.97 vs live at cover 1.0): copy identical, compass brandmark aligned in size + position, rings axis-aligned and close. Mobile (800×1080) + reduced-motion: plane `display: none`; hero legacy scale+fade; corridor rises over it.
+
+---
+
+## v5 — KPR depth-window sweep (2026-06-15, superseded by v6)
 
 ### Why v4 wasn't enough
 

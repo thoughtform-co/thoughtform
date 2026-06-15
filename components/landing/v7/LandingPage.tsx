@@ -7,8 +7,8 @@ import { useRevealMotion } from "./hooks/useRevealMotion";
 import { useBrandmarkJourney } from "./hooks/useBrandmarkJourney";
 import { type BrandmarkActorHandle } from "./BrandmarkActor";
 import { BrandmarkSystem } from "./BrandmarkSystem";
-import { HeroFlipBackface } from "./HeroFlipBackface";
 import { useBrandmarkSingletonCheck } from "./lib/brandmarkSingletonCheck";
+import { HeroHandoffCover } from "./HeroHandoffCover";
 import { CelestialPortals } from "./CelestialConnector/CelestialPortals";
 import { PhaseGlyphPortals } from "./PhaseGlyph";
 import { BuildCasesPortal } from "./build-cases";
@@ -539,8 +539,20 @@ export function LandingPage({
           {
             position: "relative",
             minHeight: "100vh",
+            // `--depth` initial only — it is written every rAF onto
+            // this rootRef by `useLandingScroll`, which is the closest
+            // ancestor that owns the depth channel for the parsed
+            // `.gateway` / station tree.
             "--depth": 0,
-            "--hero-cover": 0,
+            // `--hero-cover` is intentionally NOT initialised here.
+            // `useLandingScroll` writes the eased value to `<html>` and
+            // `#hero` on the first useLayoutEffect (before paint), and
+            // every subsequent rAF. Setting it inline on this rootRef
+            // would shadow the html-level mirror at `0` for the entire
+            // band — that broke the cover-plane swipe in ADR-022 v6
+            // (clip-path frozen at inset(100%)). The CSS rules use
+            // `var(--hero-cover, 0)` everywhere, so the fallback handles
+            // the undefined-pre-mount case identically to an explicit 0.
           } as React.CSSProperties
         }
         suppressHydrationWarning
@@ -549,14 +561,18 @@ export function LandingPage({
       {mergedSlots && <CelestialPortals slots={mergedSlots} containerRef={rootRef} />}
       <PhaseGlyphPortals containerRef={rootRef} />
       <BuildCasesPortal containerRef={rootRef} />
-      {/* Hero → Thoughtform two-faced flip deck (ADR-022 enclose-then-flip
-          rework). Sibling of the parsed v7 root so its rotateY transform
-          can NEVER touch the live home-v2 depth corridor's stage rect.
-          Hidden via CSS until `useLandingScroll` sets
-          `<html data-hero-flip="1">` mid-band on capable devices.
-          Reduced-motion / ≤960px paths skip it entirely (CSS `display:
-          none` outside the gate). */}
-      {corridorText && <HeroFlipBackface text={corridorText} containerRef={rootRef} />}
+      {/* Hero → Thoughtform cover-plane swipe (ADR-022 v6 final). An
+          opaque plane carrying the Thoughtform first-read copy + a
+          compass-gate diagram (concentric squares matching the live
+          gate) clip-swipes up over the held hero, then hands the screen
+          to the live corridor at cover = 1. Sibling-portalled into
+          `main.stations`; `display: none` until `useLandingScroll` sets
+          `<html data-hero-handoff="1">` mid-band on capable devices.
+          Reduced-motion / ≤960px skip it (the corridor still rises over
+          the hero as the plain cover). NEVER transforms the live
+          corridor — the plane only mirrors its parked composition for
+          the duration of the swipe. */}
+      {corridorText && <HeroHandoffCover text={corridorText} containerRef={rootRef} />}
       {/* IntelligenceLayerPortal + TravelingOrbits were removed when
           the Thoughtform / Diagnostic / Intelligence-layer station
           stack was replaced by the home-v2 depth corridor (ADR-018)
