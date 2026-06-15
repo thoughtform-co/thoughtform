@@ -26,7 +26,7 @@ Concretely:
 
 - The production page order becomes: hero → corridor → **services** → continuum → practice → build → about → contact. The `#buildQuote` station is stripped from the parsed v7 HTML alongside the legacy `definition` / `missing-layer` / `intelligence-layer` / `approach` stations that the corridor already replaces. `#services` is sliced from its source position and re-inserted immediately after the corridor mount placeholder. The orphaned `data-celestial-slot="practice-to-about"` connector that previously trailed `#services` is dropped at the seam.
 - The `HandoffOrbitEmbed` mount inside [`LandingPage`](../../components/landing/v7/LandingPage.tsx) is removed; `useEmbeddedServicesScroll` is replaced by `useCorridorExitScroll`, which watches `#services` and writes a single `--corridor-dissipate` (0..1) channel plus the `docked` flag.
-- The `docked` channel still promotes `.home-v2-stage__canvas` to a fixed backdrop (the corridor's R3F canvas persists across the seam) — but the `--handoff-cover` clip-path plane and copy cross-dissolve are gone. The canvas plays a final fly-into-sphere arc + particle scatter + fade, ending transparent over the Services dark surface within the first viewport of `#services`.
+- The `docked` channel still promotes `.home-v2-stage__canvas` to a fixed backdrop (the corridor's R3F canvas persists across the seam) — but the `--handoff-cover` clip-path plane and copy cross-dissolve are gone. The canvas plays a final fly-into-sphere arc + particle scatter + fade over an eased ~1.6-viewport Services runway, ending transparent over the Services dark surface.
 - The BILLIONS signal block + `EpilogueNewsTicker` fade out on the dissipate clock, not the cover clock. The Services section keeps its existing dark surface (`linear-gradient(180deg, var(--void), var(--surface-0))`), with an ADR-008-exception transparent leading viewport so the dissipating sphere is visible through it.
 - Mobile / reduced-motion / no-WebGL keeps the existing fallback path: no fixed dock layer, no zoom — a static dark cut from corridor to Services, mirroring the existing `dockCapable` gate in `useEmbeddedServicesScroll`.
 
@@ -119,7 +119,7 @@ A completed sphere becomes the transition. The camera dollies INTO the sphere al
 
 ### Mechanics
 
-1. **`--corridor-dissipate` is the transition clock.** Same shape as the retired cover clock (`(vh - servicesRect.top) / vh`), written by `useCorridorExitScroll` per scroll frame. 0 when `#services`'s top is at the viewport bottom; 1 when the section has fully covered the viewport. The hook also keeps the `docked` flag set while the dissipate is in progress so the canvas stays a fixed backdrop through the seam.
+1. **`--corridor-dissipate` is the transition clock.** It is written by `useCorridorExitScroll` per scroll frame from the live `#services` rect, but the physical runway is intentionally longer than the retired cover clock: `raw = (vh - servicesRect.top) / (vh * 1.58)`, then `smootherstep(raw)`. 0 when `#services`'s top is at the viewport bottom; 1 once the section has travelled through roughly 1.6 viewports. This keeps the sphere expansion / particle fade from completing too abruptly under wheel input. The hook also keeps the `docked` flag set while the dissipate is in progress so the canvas stays a fixed backdrop through the seam.
 
 2. **Camera fly-into-sphere arc.** `getEpilogueCameraPose` is extended with a final tail that, once the dissipate clock is active, eases the camera's standoff distance from `EPILOGUE_LANDING_STANDOFF` toward ~0 along the line from `CAMERA_END` to `BRANDMARK_ANCHOR_INTELLIGENCE`. By dissipate 1 the camera is inside the sphere's footprint — the surface particles are passing the near plane and the planet has effectively swallowed the viewport.
 
@@ -133,17 +133,7 @@ A completed sphere becomes the transition. The camera dollies INTO the sphere al
 
 5. **Single-writer rule preserved.** `useCorridorExitScroll` owns `--corridor-dissipate` + `docked` + `dockProgress`. It does NOT touch `progress` / `paintProgress` / `epilogueProgress`. The corridor's `useDepthScroll` stays the sole writer of those channels and keeps its reverse-scroll release gate (it now reads `--corridor-dissipate` clear instead of the old `--handoff-cover` clear; the safety valve logic is identical).
 
-6. **Services section ownership + soft leading edge.** `#services` keeps its own dark `--void` surface. While the exit is engaged (`html[data-corridor-exit="true"]`) the section background is NOT a uniform alpha fill — that gave the section's top edge a hard horizontal step (full-brightness sphere above, dimmed sphere below) that sliced across the planet. Instead it is a vertical gradient whose top is fully transparent (alpha 0, the sphere reads through with no edge) ramping to opaque `--void` over a band that SHRINKS as the dissipate completes:
-
-   ```css
-   background-image: linear-gradient(
-     to bottom,
-     rgba(5, 4, 3, 0) 0,
-     var(--void) calc((1 - var(--corridor-dissipate)) * 72svh)
-   );
-   ```
-
-   At dissipate 0 the band is ~72svh (a soft veil the sphere shows through); as dissipate → 1 the band shrinks to 0 so the section is fully opaque `--void` from the top down, exactly matching the post-release `.station` background (the `data-corridor-exit` attribute clears at dissipate ≥ 0.999, so the release is a no-op — no opacity/star pop). This couples the section solidifying to the sphere's particle-fade on the same clock, so the sphere "fills in" the Services background as it leaves rather than being chopped by a box. `background-size/position/repeat` must be reset in the override because `.station:not(.hero)` sets a tiled 1600×900 stars background that would otherwise tile + clip the gradient. The only remaining horizontal boundary during the seam is the 3D sphere's own atmosphere limb (canvas), which is a soft fresnel glow, not a CSS edge. The section's "/ Services - How we run it" eyebrow + "Three ways to bring the practice in" lede become the first practical copy after the labs/billions beat.
+6. **Services section ownership + soft leading edge.** `#services` keeps its own dark `--void` surface. While the exit is engaged (`html[data-corridor-exit="true"]`), the section itself stays transparent and a fixed full-viewport `body::before` veil darkens from alpha 0 → 1 on `--corridor-dissipate`. This avoids a rectangular section-top edge cutting across the planet. The Services content is brought in late on sibling CSS vars from the same raw clock: `--services-header-in` for the eyebrow/lede, `--services-grid-in` for the service cards, and `--services-cta-in` for the lower CTA. Header, grid, and CTA opacity/translate/blur ease in progressively while the sphere continues to dissipate behind them. At dissipate 1 the veil is opaque `var(--void)`, `data-corridor-exit` clears, and normal station background ownership resumes with no opacity/star pop.
 
 7. **Mobile / reduced-motion / no-WebGL fallback.** `useCorridorExitScroll` reuses `dockCapable = !reducedMotion && !mobile && !corridorFallback`. When false: skip the zoom (canvas stays inside the sticky stage), let the BILLIONS title hold through the natural end of the epilogue, and Services lands as a sequential dark cut. No flashing, no jitter, no zoom artifacts on low-end devices.
 

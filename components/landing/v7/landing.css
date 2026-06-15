@@ -1190,7 +1190,7 @@
    ToyFight-class reveal (ADR-022 v8): the hero is the TOP, MOVING layer.
    It is NOT pinned — it scrolls straight up and off the top over the first
    viewport, uncovering the live corridor frame that is held frozen behind
-   it (z:3, pinned by `useLandingScroll` via `--corridor-pin`). Higher
+   it (z:3, fixed during entry by `useLandingScroll`). Higher
    z-index than the corridor so it paints over the frozen frame until it
    has lifted clear (mirrors ToyFight's descending section z-index). */
 .hero {
@@ -1280,6 +1280,7 @@
 .hero {
   transform-origin: center center;
   transition: none;
+  will-change: transform;
 }
 
 /* Post-hero stations sit above the pinned hero and must be full-bleed
@@ -6472,14 +6473,13 @@ body.density-dense .station {
    scrolls straight up and off the viewport over the first 100vh,
    uncovering the live corridor frame held FROZEN behind it.
 
-   The freeze lives in `home-v2.css`: `useLandingScroll` writes
-   `--corridor-pin` (px) + toggles `html[data-corridor-entry]` during
-   the first-viewport band, and a counter-transform on
-   `.home-v2-stage__sticky` cancels its natural rise so the parked
+   The freeze lives in `home-v2.css`: `useLandingScroll` toggles
+   `html[data-corridor-entry]` during the first-viewport band, making
+   `.home-v2-stage__sticky` a fixed viewport layer so the parked
    `ThoughtformCompassGate` frame sits still at viewport top while the
-   hero lifts off it. NOTHING here drives the hero by `--hero-cover` —
-   the hero just scrolls (no transform, no fade), so this seam needs no
-   rule in this block. The earlier ADR-022 v6 proxy sweep
+   hero lifts off it. NOTHING here drives the hero by `--hero-cover`;
+   the only hero transform allowed is the tiny capped inertial correction
+   written inline by `useLandingScroll`. The earlier ADR-022 v6 proxy sweep
    (`HeroHandoffCover`, `.hero-handoff-*`) and the v7 hero parallax
    drift were both removed; the corridor itself is now the revealed
    second section, never a copy. */

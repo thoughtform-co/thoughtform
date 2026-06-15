@@ -338,6 +338,41 @@ html[data-corridor-exit="true"] #services > * {
   z-index: 7;
 }
 
+html[data-corridor-exit="true"] #services .exec__header {
+  opacity: var(--services-header-in, 0);
+  transform: translate3d(0, calc((1 - var(--services-header-in, 0)) * 40px), 0);
+  filter: blur(calc((1 - var(--services-header-in, 0)) * 5px));
+  will-change: opacity, transform, filter;
+}
+
+html[data-corridor-exit="true"] #services .exec__grid {
+  opacity: var(--services-grid-in, 0);
+  transform: translate3d(0, calc((1 - var(--services-grid-in, 0)) * 58px), 0);
+  filter: blur(calc((1 - var(--services-grid-in, 0)) * 6px));
+  will-change: opacity, transform, filter;
+}
+
+html[data-corridor-exit="true"] #services .practice-cta--funnel {
+  opacity: var(--services-cta-in, 0);
+  transform: translate3d(0, calc((1 - var(--services-cta-in, 0)) * 72px), 0);
+  filter: blur(calc((1 - var(--services-cta-in, 0)) * 6px));
+  will-change: opacity, transform, filter;
+}
+
+html[data-corridor-exit="true"] #services .service-card {
+  background: rgba(10, 9, 8, calc(0.38 + var(--services-grid-in, 0) * 0.24));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-corridor-exit="true"] #services .exec__header,
+  html[data-corridor-exit="true"] #services .exec__grid,
+  html[data-corridor-exit="true"] #services .practice-cta--funnel {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+}
+
 /* ── DOM copy + label overlay ─────────────────────────────────
    Container for `<CopyAnchors>`. Each child element is positioned
    by `useWorldDomTracker` writing inline `transform: translate3d(...)`

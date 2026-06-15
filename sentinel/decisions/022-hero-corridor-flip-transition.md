@@ -2,7 +2,7 @@
 
 **Date:** 2026-06-15
 **Status:** Active (v8 — ToyFight curtain reveal: hero lifts off a frozen corridor frame)
-**Revisions:** v8 (2026-06-15) - **ToyFight curtain reveal**. v7 made the hero a held layer the corridor rose to meet; the user looked at [toyfight.co](https://toyfight.co/) again and clarified the inverse is wanted: the **hero** is the moving layer that scrolls straight **up and off**, uncovering a second section that sits **frozen** behind it. Browser-traced ToyFight: sections are normal-flow with **descending z-index** (hero `z:4`, intro `z:3`…); the hero scrolls off with `transform:none`, and section 2's inner wrapper takes a scroll-linked `translateY` counter-transform that holds it dead-still at viewport top while the hero lifts off it. v8 maps that onto our corridor: `.hero` becomes `position: relative; z-index: 4` (the departing curtain, scrolls off naturally — no `--hero-cover` transform/fade), and `useLandingScroll` writes `--corridor-pin` (px) + `html[data-corridor-entry]` over the first viewport so a counter-transform on `.home-v2-stage__sticky` cancels its natural rise and freezes the parked `ThoughtformCompassGate` frame at viewport top. The pin's stage rect (read by `useDepthScroll`) is never transformed, and the transform is gated to the entry band only (so the docked-exit `position: fixed` canvas is never captured). v1–v7 are preserved below as history.
+**Revisions:** v8 (2026-06-15) - **ToyFight curtain reveal**. v7 made the hero a held layer the corridor rose to meet; the user looked at [toyfight.co](https://toyfight.co/) again and clarified the inverse is wanted: the **hero** is the moving layer that scrolls **up and off**, uncovering a second section that sits **frozen** behind it. Browser-traced ToyFight: sections are normal-flow with **descending z-index** (hero `z:4`, intro `z:3`…); the hero scrolls off while section 2's inner wrapper is held dead-still at viewport top. v8 maps that onto our corridor: `.hero` becomes `position: relative; z-index: 4` (the departing curtain), and `useLandingScroll` toggles `html[data-corridor-entry]` over the first viewport so `.home-v2-stage__sticky` becomes a fixed viewport layer (`position: fixed; inset: 0`) while the hero lifts off it. The stage rect (read by `useDepthScroll`) is never transformed, and the fixed hold is gated to the entry band only (so the docked-exit `position: fixed` canvas is never captured). A small capped hero-only inertial transform may be applied for ToyFight-like smoothness; document scroll and corridor channels remain untouched. v1–v7 are preserved below as history.
 **Scope:** Production home page (`/`) — the seam between the v7 hero (`section#hero`, the wormhole key-visual `<video>`) and the home-v2 depth corridor's parked Thoughtform start frame (`#home-corridor-mount` → `.home-corridor-host` → `HomeCorridor`). The transition the user experiences as they begin scrolling.
 **Related:**
 [ADR-008 — Landing v7 background layers](008-landing-v7-background-layers.md),
@@ -34,39 +34,39 @@ Layer stack:
   z:4  #hero (relative)      the departing curtain — scrolls straight up & off
   z:3  .home-corridor-host   the revealed second section
        └ .home-v2-stage          (820svh; NEVER transformed → useDepthScroll intact)
-         └ .home-v2-stage__sticky  counter-translated during entry to freeze at viewport top
+         └ .home-v2-stage__sticky  fixed during entry to freeze at viewport top
 ```
 
-| Phase  | scrollY | `#hero`                         | `.home-v2-stage__sticky`                                                  | `data-corridor-entry` |
-| ------ | ------- | ------------------------------- | ------------------------------------------------------------------------- | --------------------- |
-| start  | 0       | rectTop 0 (covers viewport)     | `translateY(-100vh)` → rectTop 0 (frozen behind hero)                     | `1`                   |
-| mid    | ~0.5vh  | rectTop −0.5vh (lifting)        | `translateY(−(100vh−S))` → rectTop 0 (still frozen, uncovered below hero) | `1`                   |
-| land   | 100vh   | off-screen, `visibility:hidden` | transform → `none`; native sticky pins at rectTop 0 (seamless)            | cleared               |
-| beyond | >100vh  | hidden                          | native sticky pin / flythrough / docked exit — NO transform               | cleared               |
+| Phase  | scrollY | `#hero`                         | `.home-v2-stage__sticky`                                    | `data-corridor-entry` |
+| ------ | ------- | ------------------------------- | ----------------------------------------------------------- | --------------------- |
+| start  | 0       | rectTop 0 (covers viewport)     | `position:fixed; top:0` (frozen behind hero)                | `1`                   |
+| mid    | ~0.5vh  | rectTop −0.5vh (lifting)        | fixed at rectTop 0 (still frozen, uncovered below)          | `1`                   |
+| land   | 100vh   | off-screen, `visibility:hidden` | native sticky pins at rectTop 0 (seamless)                  | cleared               |
+| beyond | >100vh  | hidden                          | native sticky pin / flythrough / docked exit — NO transform | cleared               |
 
-`useLandingScroll` computes `defTop` = the corridor mount's viewport top (= `100vh − scrollY` until the stage reaches the top) and writes `--corridor-pin = max(0, defTop)` (px) + sets `html[data-corridor-entry]` while `defTop > 0.5`. CSS (`home-v2.css`) applies `transform: translateY(calc(var(--corridor-pin) * -1px))` to `.home-v2-stage__sticky` ONLY under `html[data-corridor-entry="1"]`. Because the sticky cell's children (canvas + copy + brandmark) are positioned by `useWorldDomTracker` in viewport-projected coordinates relative to that cell, freezing the cell at viewport `(0,0)` lands them at their correct final positions — the frame reads "composed on arrival," not rising.
+`useLandingScroll` computes `defTop` = the corridor mount's viewport top (= `100vh − scrollY` until the stage reaches the top) and sets `html[data-corridor-entry]` while `defTop > 0.5`. CSS (`home-v2.css`) makes `.home-v2-stage__sticky` `position: fixed; inset: 0` ONLY under `html[data-corridor-entry="1"]`. Because the sticky cell's children (canvas + copy + brandmark) are positioned by `useWorldDomTracker` in viewport-projected coordinates relative to that cell, freezing the cell at viewport `(0,0)` lands them at their correct final positions — the frame reads "composed on arrival," not rising. The previous `--corridor-pin` counter-transform was retired because sticky + transform fought under real wheel/trackpad scroll and read as a bounce.
 
 ### Why it's corridor-safe
 
 - **`useDepthScroll` reads `.home-v2-stage` (the track), which is never transformed** — only the sticky cell inside it is. All corridor timing (`progress` / `paintProgress` / `epilogueProgress` / `dockProgress`) is byte-identical.
-- **The transform is gated to the entry band.** Outside `[0, 100vh)` `data-corridor-entry` is absent → `transform: none`. This is essential for the ADR-021 docked exit, where `.home-v2-stage__canvas` becomes `position: fixed`: a transformed ancestor would capture it. Verified `canvasPos: fixed` + `stickyTf: none` across the whole dock window.
+- **The fixed hold is gated to the entry band.** Outside `[0, 100vh)` `data-corridor-entry` is absent → native sticky owns the cell. This is essential for the ADR-021 docked exit, where `.home-v2-stage__canvas` becomes `position: fixed`.
 - **The hero occupies the same 100vh of flow** whether `sticky` or `relative`, so the corridor stage's document position (and thus its rect) is unchanged.
 
 ### Files
 
 - [components/landing/v7/landing.css](../../components/landing/v7/landing.css) — `.hero` is now `position: relative; z-index: 4` (departing curtain); the v7 `--hero-cover` parallax/​fade block is removed (the hero just scrolls); `.hero__video` stays `opacity: 1` (gateway shield).
-- [components/landing/v7/hooks/useLandingScroll.ts](../../components/landing/v7/hooks/useLandingScroll.ts) — writes `--corridor-pin` (px) + toggles `html[data-corridor-entry]` over the first-viewport band; clears both on unmount; keeps the `heroCover >= 1 → visibility:hidden` cleanup. No more `--hero-cover` CSS write.
-- [components/landing/home-v2/home-v2.css](../../components/landing/home-v2/home-v2.css) — `html[data-corridor-entry="1"] .home-v2-stage__sticky { transform: translateY(calc(var(--corridor-pin,0) * -1px)) }`, documented as gated to the entry band only.
+- [components/landing/v7/hooks/useLandingScroll.ts](../../components/landing/v7/hooks/useLandingScroll.ts) — toggles `html[data-corridor-entry]` over the first-viewport band; clears it on unmount; keeps the hero visibility cleanup and applies only a tiny capped hero-only inertial transform for ToyFight feel.
+- [components/landing/home-v2/home-v2.css](../../components/landing/home-v2/home-v2.css) — `html[data-corridor-entry="1"] .home-v2-stage__sticky { position: fixed; inset: 0; }`, documented as gated to the entry band only.
 
 No edits under `components/landing/home-v2/**` scene / store / `useDepthScroll` / `useWorldDomTracker`.
 
 ### v8 invariants
 
 - **The hero is the mover; the corridor is frozen.** Never reintroduce a held/​covered hero or a corridor that rises over it (that was v7's mistake). Never paint a proxy/​copy of the second section (v6's mistake).
-- **Only the sticky CELL is transformed, never `.home-v2-stage`.** Transforming the stage shifts the rect `useDepthScroll` reads and desyncs every corridor channel.
-- **The entry transform is gated to `data-corridor-entry`.** It MUST be `none` during the flythrough and especially the ADR-021 docked exit (transformed ancestor captures the fixed canvas → hard seam line returns).
+- **Never transform `.home-v2-stage`.** Transforming the stage shifts the rect `useDepthScroll` reads and desyncs every corridor channel.
+- **The entry fixed hold is gated to `data-corridor-entry`.** It MUST be absent during the flythrough and especially the ADR-021 docked exit.
 - **Hero video stays opaque, never scaled/faded** (ADR-008 Rule 3, gateway shield). The hero scrolls off as one rigid card.
-- **`--corridor-pin` is RAW px (`max(0, defTop)`), not eased** — it must exactly cancel the cell's linear rise so the frame is truly frozen.
+- **No `--corridor-pin` counter-transform** — it was retired after real-scroll jitter; the fixed hold freezes the frame without a transform loop.
 
 ### Verification (Playwright/CDP, 1865×1156)
 

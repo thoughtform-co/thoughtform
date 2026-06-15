@@ -12,9 +12,26 @@ import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
  *  sphere stays identical — the only thing that changed at the seam is
  *  what plays AFTER the dwell, not when the dwell starts. */
 const DOCK_ENGAGE_EP = 0.72;
+const DISSIPATE_SCROLL_SPAN_VH = 1.58;
+const SERVICES_HEADER_IN_START = 0.3;
+const SERVICES_HEADER_IN_END = 0.86;
+const SERVICES_GRID_IN_START = 0.5;
+const SERVICES_GRID_IN_END = 0.98;
+const SERVICES_CTA_IN_START = 0.72;
+const SERVICES_CTA_IN_END = 1.0;
 
 function clamp01(value: number): number {
   return Math.max(0, Math.min(1, value));
+}
+
+function smootherstep(value: number): number {
+  const t = clamp01(value);
+  return t * t * t * (t * (t * 6 - 15) + 10);
+}
+
+function band(value: number, start: number, end: number): number {
+  if (end <= start) return value >= end ? 1 : 0;
+  return smootherstep((value - start) / (end - start));
 }
 
 /**
@@ -86,21 +103,34 @@ export function useCorridorExitScroll(rootRef: RefObject<HTMLDivElement | null>)
       const dockCapable = !reducedMotion && !mobile && !corridorFallback;
 
       // Dissipate clock: 0 when #services's top is at the viewport
-      // bottom, 1 when the section has fully replaced the previous
-      // scene. Same shape the retired cover-plane sweep used for
-      // `--handoff-cover` — the value is the natural "how far has the
-      // section risen over the viewport" metric.
-      const dissipate = clamp01((vh - servicesRect.top) / vh);
+      // bottom, 1 after the section has risen through a deliberately
+      // longer-than-one-viewport runway. ToyFight's feel comes from
+      // a smoothed scroll runtime; here we preserve native scroll/R3F
+      // timing and instead stretch/ease only this seam's single clock.
+      const rawDissipate = clamp01((vh - servicesRect.top) / (vh * DISSIPATE_SCROLL_SPAN_VH));
+      const dissipate = smootherstep(rawDissipate);
+      const servicesHeaderIn = band(rawDissipate, SERVICES_HEADER_IN_START, SERVICES_HEADER_IN_END);
+      const servicesGridIn = band(rawDissipate, SERVICES_GRID_IN_START, SERVICES_GRID_IN_END);
+      const servicesCtaIn = band(rawDissipate, SERVICES_CTA_IN_START, SERVICES_CTA_IN_END);
       const sectionInView = servicesRect.top < vh && servicesRect.bottom > 0;
 
       // Dock OFF the corridor epilogue (sphere landed + BILLIONS title
       // up), not off this section's scroll position. See the function
       // docstring + ADR-021 for the rationale.
       const ep = useDepthGatewayStore.getState().transform.epilogueProgress;
-      const docked = dockCapable && ep >= DOCK_ENGAGE_EP && sectionInView && dissipate < 0.999;
+      const docked = dockCapable && ep >= DOCK_ENGAGE_EP && sectionInView && rawDissipate < 0.999;
 
       services.style.setProperty("--corridor-dissipate", dissipate.toFixed(4));
+      services.style.setProperty("--services-header-in", servicesHeaderIn.toFixed(4));
+      services.style.setProperty("--services-grid-in", servicesGridIn.toFixed(4));
+      services.style.setProperty("--services-cta-in", servicesCtaIn.toFixed(4));
       document.documentElement.style.setProperty("--corridor-dissipate", dissipate.toFixed(4));
+      document.documentElement.style.setProperty(
+        "--services-header-in",
+        servicesHeaderIn.toFixed(4)
+      );
+      document.documentElement.style.setProperty("--services-grid-in", servicesGridIn.toFixed(4));
+      document.documentElement.style.setProperty("--services-cta-in", servicesCtaIn.toFixed(4));
       if (docked) {
         document.documentElement.setAttribute("data-corridor-docked", "true");
         document.documentElement.setAttribute("data-corridor-exit", "true");
@@ -140,6 +170,9 @@ export function useCorridorExitScroll(rootRef: RefObject<HTMLDivElement | null>)
       document.documentElement.removeAttribute("data-corridor-docked");
       document.documentElement.removeAttribute("data-corridor-exit");
       document.documentElement.style.removeProperty("--corridor-dissipate");
+      document.documentElement.style.removeProperty("--services-header-in");
+      document.documentElement.style.removeProperty("--services-grid-in");
+      document.documentElement.style.removeProperty("--services-cta-in");
       const store = useDepthGatewayStore.getState();
       store.setTransform({
         ...store.transform,

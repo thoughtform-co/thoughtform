@@ -23,6 +23,9 @@ const SECTORS: Record<string, string> = {
   contact: "Horizon",
 };
 
+const HERO_CURTAIN_EASE = 0.42;
+const HERO_CURTAIN_MAX_LAG = 72;
+
 export function useLandingScroll(rootRef: React.RefObject<HTMLDivElement | null>) {
   const telemetryRef = useRef<ScrollTelemetry>({
     progress: 0,
@@ -30,7 +33,78 @@ export function useLandingScroll(rootRef: React.RefObject<HTMLDivElement | null>
     heroCover: 0,
   });
   const rafId = useRef<number | null>(null);
+  const heroCurtainRafId = useRef<number | null>(null);
+  const heroCurtainVisualY = useRef(0);
+  const heroCurtainTargetY = useRef(0);
   const lastScrollY = useRef(-1);
+
+  const stopHeroCurtainLoop = useCallback(() => {
+    if (heroCurtainRafId.current != null) {
+      window.cancelAnimationFrame(heroCurtainRafId.current);
+      heroCurtainRafId.current = null;
+    }
+  }, []);
+
+  const writeHeroCurtainLift = useCallback(
+    (heroEl: HTMLElement, vh: number, reduceMotion: boolean) => {
+      if (reduceMotion) {
+        stopHeroCurtainLoop();
+        heroCurtainVisualY.current = Math.min(vh, Math.max(0, window.scrollY));
+        heroEl.style.transform = "";
+        heroEl.style.visibility = window.scrollY >= vh ? "hidden" : "";
+        return;
+      }
+
+      if (window.scrollY <= 0.5) {
+        stopHeroCurtainLoop();
+        heroCurtainVisualY.current = 0;
+        heroCurtainTargetY.current = 0;
+        heroEl.style.transform = "";
+        heroEl.style.visibility = "";
+        return;
+      }
+
+      heroCurtainTargetY.current = Math.min(vh, Math.max(0, window.scrollY));
+
+      const tick = () => {
+        const targetY = heroCurtainTargetY.current;
+        const visualY = heroCurtainVisualY.current;
+        const nextY = visualY + (targetY - visualY) * HERO_CURTAIN_EASE;
+        const snappedY = Math.abs(targetY - nextY) < 0.35 ? targetY : nextY;
+
+        heroCurtainVisualY.current = snappedY;
+
+        const actualY = window.scrollY;
+        const rawLag = actualY - snappedY;
+        const lag = Math.max(-HERO_CURTAIN_MAX_LAG, Math.min(HERO_CURTAIN_MAX_LAG, rawLag));
+
+        // The hero still scrolls naturally. This tiny capped positive/negative
+        // correction gives the departing card ToyFight-like inertia without
+        // changing document scroll or the corridor's own stage rect.
+        heroEl.style.transform =
+          Math.abs(lag) > 0.1 ? `translate3d(0, ${lag.toFixed(2)}px, 0)` : "";
+        heroEl.style.visibility = snappedY >= vh - 0.5 || actualY > vh * 1.35 ? "hidden" : "";
+
+        if (actualY > vh * 1.35) {
+          heroCurtainVisualY.current = vh;
+          heroEl.style.transform = "";
+          stopHeroCurtainLoop();
+          return;
+        }
+
+        if (snappedY !== targetY) {
+          heroCurtainRafId.current = window.requestAnimationFrame(tick);
+        } else {
+          heroCurtainRafId.current = null;
+        }
+      };
+
+      if (heroCurtainRafId.current == null) {
+        heroCurtainRafId.current = window.requestAnimationFrame(tick);
+      }
+    },
+    [stopHeroCurtainLoop]
+  );
 
   // Corridor entry state is toggled synchronously on scroll because the
   // CSS uses it as a layer-mode switch (`sticky` -> fixed viewport hold)
@@ -138,11 +212,10 @@ export function useLandingScroll(rootRef: React.RefObject<HTMLDivElement | null>
       heroCover = Math.max(0, Math.min(1, 1 - defTop / vh));
       // Entry layer state (`data-corridor-entry`) is written synchronously
       // in `syncCorridorEntryState` on every scroll event so the fixed
-      // hold clears exactly when native sticky takes over.
-      // Belt-and-braces visibility cleanup: once the hero has fully
-      // scrolled off (cover 1), hide it so it can never paint under
-      // later sections during scroll-back-into-band edge cases.
-      heroEl.style.visibility = heroCover >= 1 ? "hidden" : "";
+      // hold clears exactly when native sticky takes over. The hero's
+      // visual lift gets a tiny capped inertial correction, matching the
+      // ToyFight feel without changing document scroll.
+      writeHeroCurtainLift(heroEl, vh, reduceMotion);
     }
 
     // The Practice → BuildQuote cover handoff was retired entirely
@@ -185,7 +258,7 @@ export function useLandingScroll(rootRef: React.RefObject<HTMLDivElement | null>
     }
 
     telemetryRef.current = { progress, activeStation: activeKey, heroCover };
-  }, [rootRef]);
+  }, [rootRef, writeHeroCurtainLift]);
 
   const onScroll = useCallback(() => {
     syncCorridorEntryState();
@@ -210,12 +283,13 @@ export function useLandingScroll(rootRef: React.RefObject<HTMLDivElement | null>
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onResize);
       if (rafId.current) window.cancelAnimationFrame(rafId.current);
+      stopHeroCurtainLoop();
       // Don't leave the corridor entry hold engaged if the hook unmounts
       // mid-band.
       const docEl = document.documentElement;
       delete docEl.dataset.corridorEntry;
     };
-  }, [onScroll, onResize]);
+  }, [onScroll, onResize, stopHeroCurtainLoop]);
 
   return telemetryRef;
 }
