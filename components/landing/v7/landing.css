@@ -6483,20 +6483,24 @@ body.density-dense .station {
    renders the same `text.thoughtform` source the live corridor uses
    and crossfades to the live corridor at completion.
 
-   Phases (cover 0 → 1):
-     • ENCLOSE (cover 0 → 0.45): card pinches inward (scale 1 → 0.85),
-       corners round, void-black backdrop fades in. NO rotation.
-     • FLIP    (cover 0.45 → 1): rotateY 0deg → 180deg, card grows back
-       to full bleed (scale 0.85 → 1). Front shows live hero video;
-       back shows the Thoughtform facade (`backface-visibility:
-       hidden` on each side does the swap at 90deg).
-     • CROSS   (cover 0.85 → 1): backdrop + facade opacity 1 → 0,
-       revealing the live corridor that has naturally pinned at
-       `paintProgress = 0`.
+   KPR-style aperture/window phases (cover 0 -> 1):
+     - ENCLOSE (cover 0 -> 0.42): the video insets, corners round, and
+       void-black surround planes close inward. This reads as the dark
+       page closing around the hero, not the hero zooming away.
+     - FLIP (cover 0.28 -> 0.86): the front card rotates through the
+       true edge-on crossover and toward 180deg. The readable window is
+       a separate fixed scene behind a hollow rotating aperture, so the
+       copy/brandmark do not inherit the shell tilt.
+     - SETTLE (cover ~0.72 -> 0.9): the hollow shell dissolves while the
+       proxy copy slides/widens into the live corridor coordinates.
+     - CLEAR (cover ~0.999 -> 1): the proxy clears in a hairline band so
+       the live corridor does not double-read behind it.
 
-   `--enclose` is a triangle (0 → 1 @ cover 0.45 → 0 @ cover 1) so the
-   card pinches in then grows back during the flip. `--flip` is linear
-   (0 @ cover 0.45 → 1 @ cover 1).
+   `--enclose` is a monotonic clamp for the closing void frame. `--flip`
+   starts early enough to reveal depth, `--window-reveal` fades the fixed
+   section proxy in behind the aperture, `--front-fade` removes the front
+   slab after the edge-on crossover, and `--shell-fade` dissolves the
+   aperture before the final clear.
 
    Gating matches JS `flipCapable` in useLandingScroll: motion-allowed
    + ≥961px. Reduced-motion / mobile fall through to the legacy
@@ -6508,24 +6512,31 @@ body.density-dense .station {
      `--hero-cover` mirror onto <html> happens in the same rAF frame as
      the `#hero` write; both faces always see identical values. */
   html[data-hero-flip="1"] {
-    --enclose: clamp(
-      0,
-      min(calc(var(--hero-cover, 0) / 0.45), calc((1 - var(--hero-cover, 0)) / 0.55)),
-      1
-    );
-    --flip: clamp(0, calc((var(--hero-cover, 0) - 0.45) / 0.55), 1);
-    /* Back-deck crossfade clock: 1 across cover 0..0.85, then 1 → 0
-       across 0.85..1 to reveal the live corridor as it pins. */
-    --back-fade: clamp(0, calc((1 - var(--hero-cover, 0)) / 0.15), 1);
+    --enclose: clamp(0, calc(var(--hero-cover, 0) / 0.42), 1);
+    --flip: clamp(0, calc((var(--hero-cover, 0) - 0.28) / 0.58), 1);
+    --window-reveal: clamp(0, calc((var(--flip, 0) - 0.24) / 0.22), 1);
+    --front-fade: clamp(0, calc((var(--flip, 0) - 0.38) / 0.2), 1);
+    --shell-fade: clamp(0, calc((0.9 - var(--hero-cover, 0)) / 0.18), 1);
+    --hero-card-x: clamp(18px, 3vw, 48px);
+    --hero-card-y: clamp(16px, 3.4vh, 36px);
+    --hero-card-radius: calc(var(--enclose, 0) * 28px);
+    --hero-aperture-rim: clamp(12px, 1.4vw, 28px);
+    /* Back-deck clear clock: keep the proxy section opaque while it
+       settles into the live corridor coordinates; clear only in the
+       last hairline band to avoid a visible duplicate-read blend. */
+    --back-fade: clamp(0, calc((1 - var(--hero-cover, 0) - 0.001) / 0.006), 1);
   }
 
   .hero {
     background: var(--void);
     transform-origin: 50% 50%;
     backface-visibility: hidden;
-    will-change: transform;
-    transform: perspective(1600px) scale(calc(1 - var(--enclose, 0) * 0.15))
-      rotateY(calc(var(--flip, 0) * 180deg));
+    will-change: transform, opacity;
+    transform: perspective(1900px) translateX(calc(var(--window-reveal, 0) * 4vw))
+      translateZ(calc(var(--flip, 0) * -260px))
+      scale(calc(1 - var(--enclose, 0) * 0.065 - var(--window-reveal, 0) * 0.025))
+      rotateY(calc(var(--flip, 0) * -180deg));
+    opacity: calc(1 - var(--front-fade, 0));
   }
   /* Promote the hero above the back deck (z:5) and backdrop (z:4)
      mid-band so the FRONT face paints over the matching backdrop. The
@@ -6539,8 +6550,8 @@ body.density-dense .station {
      during ENCLOSE; the `.hero` `var(--void)` background paints the
      frame around it. */
   .hero__video {
-    inset: calc(var(--enclose, 0) * 18px);
-    border-radius: calc(var(--enclose, 0) * 26px);
+    inset: calc(var(--enclose, 0) * var(--hero-card-y)) calc(var(--enclose, 0) * var(--hero-card-x));
+    border-radius: var(--hero-card-radius);
     transform: none;
     opacity: 1;
     will-change: inset, border-radius;
@@ -6567,7 +6578,9 @@ body.density-dense .station {
 }
 
 .hero-flip-backdrop,
-.hero-flip-back {
+.hero-flip-enclosure,
+.hero-flip-back,
+.hero-flip-back-window {
   position: fixed;
   inset: 0;
   pointer-events: none;
@@ -6575,56 +6588,171 @@ body.density-dense .station {
 
 .hero-flip-backdrop {
   z-index: 4;
-  background: var(--void, #0a0908);
+  background:
+    radial-gradient(circle at 50% 50%, rgba(10, 9, 8, 0) 0 34%, rgba(10, 9, 8, 0.68) 64%),
+    var(--void, #0a0908);
   /* `--back-fade` is the deck's alpha: 1 = fully visible, 0 = faded.
      Defaults to 0 outside the band so the backdrop is invisible (the
      deck is also `display: none` outside the band; this default is a
-     belt-and-braces guard). Crossfades 1 → 0 across cover 0.85 → 1
-     to reveal the live corridor that has naturally pinned at
-     `paintProgress = 0`. */
-  opacity: var(--back-fade, 0);
+     belt-and-braces guard). It stays opaque through most of the reveal
+     so the facade, not the live corridor behind it, owns the section. */
+  opacity: min(var(--enclose, 0), var(--back-fade, 0));
   will-change: opacity;
+}
+
+.hero-flip-enclosure {
+  z-index: 4;
+}
+
+.hero-flip-enclosure__plane {
+  position: absolute;
+  display: block;
+  background: var(--void, #0a0908);
+  opacity: var(--back-fade, 0);
+  will-change: width, height, opacity;
+}
+
+.hero-flip-enclosure__plane--top,
+.hero-flip-enclosure__plane--bottom {
+  left: 0;
+  width: 100%;
+  height: calc(var(--enclose, 0) * var(--hero-card-y, 0px));
+}
+
+.hero-flip-enclosure__plane--top {
+  top: 0;
+}
+
+.hero-flip-enclosure__plane--bottom {
+  bottom: 0;
+}
+
+.hero-flip-enclosure__plane--left,
+.hero-flip-enclosure__plane--right {
+  top: 0;
+  height: 100%;
+  width: calc(var(--enclose, 0) * var(--hero-card-x, 0px));
+}
+
+.hero-flip-enclosure__plane--left {
+  left: 0;
+}
+
+.hero-flip-enclosure__plane--right {
+  right: 0;
 }
 
 .hero-flip-back {
   z-index: 5;
-  background: var(--void, #0a0908);
   transform-origin: 50% 50%;
   backface-visibility: hidden;
-  /* Pre-rotated 180deg so its visible side appears once `--flip`
-     reaches 1.0 (front-back swap at flip ≈ 0.5 via
-     `backface-visibility: hidden`). Pinches/grows in lockstep with
-     the front so both faces of the card occupy the same projected
-     box throughout. */
-  transform: perspective(1600px) scale(calc(1 - var(--enclose, 0) * 0.15))
-    rotateY(calc(var(--flip, 0) * 180deg + 180deg));
-  border-radius: calc(var(--enclose, 0) * 26px);
-  overflow: hidden;
+  /* Hollow structural shell: this carries the heavy card rotation. The
+     readable copy/brandmark live behind it in `.hero-flip-back-window`
+     and never inherit this transform. */
+  transform: perspective(1900px) translateX(calc(var(--window-reveal, 0) * 4vw))
+    translateZ(calc((1 - var(--window-reveal, 0)) * -120px))
+    scale(calc(1 - var(--enclose, 0) * 0.065 - var(--window-reveal, 0) * 0.025))
+    rotateY(calc(var(--flip, 0) * -180deg + 180deg));
+  border-radius: var(--hero-card-radius, 0px);
+  overflow: visible;
   /* Same crossfade clock as the backdrop. */
-  opacity: var(--back-fade, 1);
+  opacity: min(var(--window-reveal, 0), var(--shell-fade, 1), var(--back-fade, 1));
   will-change: transform, opacity;
 }
 
-/* ── Facade layout — copy column left, brandmark + frame right ──── */
-.hero-flip-back__inner {
+/* Rotating aperture shell. The center is deliberately transparent so
+   the screen-facing window behind it reads as depth, not as a poster
+   glued to the card. */
+.hero-flip-back__rim,
+.hero-flip-back__glaze {
+  position: absolute;
+  inset: calc(var(--enclose, 0) * var(--hero-card-y, 0px))
+    calc(var(--enclose, 0) * var(--hero-card-x, 0px));
+  border-radius: var(--hero-card-radius, 0px);
+}
+
+.hero-flip-back__rim {
+  display: block;
+  border: 1px solid var(--dawn-08, rgba(235, 227, 214, 0.08));
+  background:
+    linear-gradient(115deg, rgba(235, 227, 214, 0.05), rgba(235, 227, 214, 0) 34%),
+    linear-gradient(180deg, rgba(10, 9, 8, 0.98), rgba(10, 9, 8, 0.88)), var(--void, #0a0908);
+  box-shadow:
+    inset 0 0 0 1px rgba(235, 227, 214, 0.04),
+    inset 0 0 34px rgba(0, 0, 0, 0.72),
+    0 0 48px rgba(0, 0, 0, 0.42);
+}
+
+.hero-flip-back__rim--top {
+  bottom: auto;
+  height: var(--hero-aperture-rim, 32px);
+}
+
+.hero-flip-back__rim--right {
+  left: auto;
+  width: var(--hero-aperture-rim, 32px);
+}
+
+.hero-flip-back__rim--bottom {
+  top: auto;
+  height: var(--hero-aperture-rim, 32px);
+}
+
+.hero-flip-back__rim--left {
+  right: auto;
+  width: var(--hero-aperture-rim, 32px);
+}
+
+.hero-flip-back__glaze {
+  border: 1px solid var(--dawn-12, rgba(235, 227, 214, 0.12));
+  background:
+    radial-gradient(circle at 58% 48%, rgba(202, 165, 84, 0.05), transparent 34%),
+    linear-gradient(115deg, rgba(235, 227, 214, 0.028), transparent 42%);
+  box-shadow:
+    inset 0 0 0 1px rgba(235, 227, 214, 0.035),
+    inset 0 0 86px rgba(0, 0, 0, 0.34),
+    0 0 0 1px rgba(10, 9, 8, 0.42);
+}
+
+.hero-flip-back-window {
+  z-index: 5;
+  clip-path: inset(
+    calc(var(--enclose, 0) * var(--hero-card-y, 0px))
+      calc(var(--enclose, 0) * var(--hero-card-x, 0px)) round var(--hero-card-radius, 0px)
+  );
+  overflow: hidden;
+  background:
+    linear-gradient(180deg, rgba(5, 4, 3, 0.94), rgba(5, 4, 3, 0.99)), var(--void, #0a0908);
+  opacity: min(var(--window-reveal, 0), var(--back-fade, 1));
+  transform-origin: 50% 50%;
+  transform: translate3d(0, 0, 0) scale(calc(0.975 + var(--window-reveal, 0) * 0.025));
+  will-change: clip-path, opacity, transform;
+}
+
+.hero-flip-back-window__inner {
   position: absolute;
   inset: 0;
-  display: grid;
-  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
-  align-items: center;
-  /* Match `.hero` padding so copy lines up with the corridor's
-     `.home-v2-copy-block--thoughtform-left` placement during the
-     crossfade (ADR-018). */
-  padding: 140px clamp(96px, 8vw + 40px, 140px) 220px;
-  gap: clamp(40px, 4vw, 80px);
+  display: block;
+  isolation: isolate;
+  padding: 0;
 }
 
 .hero-flip-back__copy {
   /* Reuses `.home-v2-copy-block--thoughtform-left` typography from
      home-v2.css verbatim — bridge/title/body/cta scale matches the
      live corridor 1:1 so the crossfade is invisible. */
-  position: relative;
-  max-width: 36ch;
+  position: absolute;
+  left: clamp(220px, 16.55vw, 318px);
+  top: clamp(275px, 33.2vh, 360px);
+  width: max(340px, calc(clamp(360px, 24vw, 460px) - var(--shell-fade, 0) * 114px));
+  max-width: max(340px, calc(clamp(360px, 24vw, 460px) - var(--shell-fade, 0) * 114px));
+  opacity: clamp(0, calc((var(--window-reveal, 0) - 0.1) / 0.26), 1);
+  transform: translate3d(
+    calc((1 - var(--window-reveal, 0)) * -18px + var(--shell-fade, 0) * -178px),
+    calc((1 - var(--window-reveal, 0)) * 8px),
+    0
+  );
+  will-change: opacity, transform;
 }
 
 /* The CTA on the facade is non-interactive (the deck has
@@ -6637,11 +6765,29 @@ body.density-dense .station {
 }
 
 .hero-flip-back__diagram {
-  position: relative;
-  width: 100%;
-  height: 100%;
+  position: absolute;
+  left: clamp(780px, 55vw, 1056px);
+  top: clamp(220px, 26vh, 282px);
+  width: clamp(430px, 31vw, 600px);
+  height: clamp(430px, 31vw, 600px);
   display: grid;
   place-items: center;
+  opacity: clamp(0, calc((var(--window-reveal, 0) - 0.05) / 0.3), 1);
+  transform: translate3d(calc((1 - var(--window-reveal, 0)) * 24px), 0, 0)
+    scale(calc(0.985 + var(--window-reveal, 0) * 0.015));
+  will-change: opacity, transform;
+}
+
+.hero-flip-back__depth-grid {
+  position: absolute;
+  inset: 11%;
+  border: 1px solid var(--dawn-08, rgba(235, 227, 214, 0.08));
+  background:
+    linear-gradient(rgba(235, 227, 214, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(235, 227, 214, 0.045) 1px, transparent 1px);
+  background-size: 42px 42px;
+  opacity: calc(0.18 + var(--window-reveal, 0) * 0.2);
+  transform: scale(0.9);
 }
 
 /* Dotted diamond frame around the brandmark — echoes the corridor's
@@ -6650,12 +6796,15 @@ body.density-dense .station {
 .hero-flip-back__diagram-frame {
   position: relative;
   aspect-ratio: 1 / 1;
-  width: min(56vh, 480px);
+  width: min(42vh, 420px);
   border: 1px dashed var(--dawn-30, rgba(235, 227, 214, 0.3));
   /* Diamond rotation matches the corridor's parked frame. */
-  transform: rotate(45deg);
+  transform: translateZ(60px) rotate(45deg);
   display: grid;
   place-items: center;
+  box-shadow:
+    0 0 0 1px rgba(235, 227, 214, 0.035),
+    0 0 80px rgba(202, 165, 84, 0.08);
 }
 
 .hero-flip-back__brandmark {
@@ -6665,8 +6814,39 @@ body.density-dense .station {
      labels are not duplicated here — the ~15% crossfade brings the
      live corridor in fast enough that label parity isn't needed. */
   transform: rotate(-45deg);
-  width: 38%;
+  width: 52%;
   aspect-ratio: 1 / 1;
+}
+
+.hero-flip-back__axis-label {
+  position: absolute;
+  color: var(--dawn-50, rgba(235, 227, 214, 0.5));
+  font-family: var(--font-data, "PT Mono", monospace);
+  font-size: clamp(9px, 0.78vw, 12px);
+  line-height: 1;
+  letter-spacing: 0;
+  text-transform: uppercase;
+  white-space: nowrap;
+  transform: rotate(-45deg);
+}
+
+.hero-flip-back__axis-label--navigate {
+  top: -22px;
+  left: 50%;
+  transform: translate(-50%, -100%) rotate(-45deg);
+}
+
+.hero-flip-back__axis-label--encode {
+  right: -22px;
+  top: 50%;
+  color: var(--gold, #caa554);
+  transform: translate(100%, -50%) rotate(-45deg);
+}
+
+.hero-flip-back__axis-label--build {
+  bottom: -22px;
+  left: 50%;
+  transform: translate(-50%, 100%) rotate(-45deg);
 }
 
 /* Gateway depth layers — slight additional drift for depth cue.

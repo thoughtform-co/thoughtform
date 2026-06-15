@@ -6,18 +6,21 @@ import type { V7CorridorText } from "@/lib/v7-parse";
 import { BrandmarkGlyph } from "./BrandmarkGlyph";
 
 /**
- * HeroFlipBackface — Thoughtform facade rendered on the BACK of the
- * hero flip card (ADR-022, enclose-then-flip rework).
+ * HeroFlipBackface — stable Thoughtform window revealed by the hero
+ * flip shell (ADR-022, KPR-style aperture rework).
  *
  * The hero (`#hero`, the wormhole `<video>`) acts as the FRONT face of
- * a two-faced flip; this component renders the matching back-face deck
- * (a void-black backdrop + facade) and **portals it into `main.stations`**
+ * a two-faced flip; this component renders the matching aperture deck
+ * (a void-black surround + stable proxy window + hollow rotating shell)
+ * and **portals it into `main.stations`**
  * — the same stacking context the hero lives in. That lets us layer:
  *
- *     z:3  .home-corridor-host  (rising; live corridor parked frame)
- *     z:4  .hero-flip-backdrop  (void-black margin around the card)
- *     z:5  .hero-flip-back      (facade: copy + brandmark, rotateY+180)
- *     z:6  #hero[data-hero-flip] (front: live video, rotateY)
+ *     z:3    .home-corridor-host      (rising; live corridor parked frame)
+ *     z:4    .hero-flip-backdrop      (void-black surround)
+ *     z:4    .hero-flip-enclosure     (four closing void planes)
+ *     z:5    .hero-flip-back-window   (screen-facing section proxy)
+ *     z:5    .hero-flip-back          (rotating hollow aperture shell)
+ *     z:6    #hero[data-hero-flip]    (front: live video, rotateY)
  *
  * within main's z:10 envelope. Putting the deck OUTSIDE main would
  * require its z to exceed 10, which would eclipse the live hero front
@@ -30,14 +33,17 @@ import { BrandmarkGlyph } from "./BrandmarkGlyph";
  * `dangerouslySetInnerHTML` markup we don't mutate, and its
  * `overflow: hidden` would clip a child rotated card. As siblings the
  * card's two faces share `transform-origin: 50% 50%` and a matching
- * `perspective(1600px)`, with `backface-visibility: hidden` on each
- * so the browser swaps them at the 90° crossover.
+ * `perspective(1900px)`, with `backface-visibility: hidden` on each
+ * so the browser swaps ownership at the 90° crossover.
  *
- * The corridor flythrough (ADR-018) is never rotated or reparented:
- * the back face is a STATIC DOM facade rendering the same
- * `text.thoughtform` source and the canonical `BrandmarkGlyph` SVG.
- * Over the last ~15% of `--hero-cover` the backdrop + facade fade
- * out, revealing the live corridor that has naturally pinned at
+ * The corridor flythrough (ADR-018) is never rotated or reparented.
+ * The readable section proxy is a fixed, screen-facing DOM window that
+ * renders the same `text.thoughtform` source and the canonical
+ * `BrandmarkGlyph` SVG. The rotating layer is deliberately hollow: it
+ * supplies only rim, glass, and edge depth, so the user reads the next
+ * section as being visible through the back of the card rather than
+ * pasted onto it. At the very end of `--hero-cover` the deck fades out,
+ * revealing the live corridor that has naturally pinned at
  * `paintProgress = 0` (its "armed" pre-paint state).
  *
  * The deck is `display: none` unless `<html data-hero-flip="1">` is
@@ -78,8 +84,14 @@ export function HeroFlipBackface({ text, containerRef }: HeroFlipBackfaceProps) 
   return createPortal(
     <div className="hero-flip-deck" aria-hidden="true">
       <div className="hero-flip-backdrop" />
-      <div className="hero-flip-back">
-        <div className="hero-flip-back__inner">
+      <div className="hero-flip-enclosure" aria-hidden="true">
+        <span className="hero-flip-enclosure__plane hero-flip-enclosure__plane--top" />
+        <span className="hero-flip-enclosure__plane hero-flip-enclosure__plane--right" />
+        <span className="hero-flip-enclosure__plane hero-flip-enclosure__plane--bottom" />
+        <span className="hero-flip-enclosure__plane hero-flip-enclosure__plane--left" />
+      </div>
+      <div className="hero-flip-back-window">
+        <div className="hero-flip-back-window__inner">
           <div className="hero-flip-back__copy home-v2-copy-block home-v2-copy-block--thoughtform-left">
             <div className="home-v2-copy-bridge">{tf.bridge}</div>
             <h2 className="home-v2-copy-title" dangerouslySetInnerHTML={{ __html: tf.titleHtml }} />
@@ -95,13 +107,30 @@ export function HeroFlipBackface({ text, containerRef }: HeroFlipBackfaceProps) 
             </div>
           </div>
           <div className="hero-flip-back__diagram" aria-hidden="true">
+            <div className="hero-flip-back__depth-grid" />
             <div className="hero-flip-back__diagram-frame">
               <div className="hero-flip-back__brandmark">
                 <BrandmarkGlyph outline={false} />
               </div>
+              <span className="hero-flip-back__axis-label hero-flip-back__axis-label--navigate">
+                NAVIGATE
+              </span>
+              <span className="hero-flip-back__axis-label hero-flip-back__axis-label--encode">
+                ENCODE
+              </span>
+              <span className="hero-flip-back__axis-label hero-flip-back__axis-label--build">
+                BUILD
+              </span>
             </div>
           </div>
         </div>
+      </div>
+      <div className="hero-flip-back" aria-hidden="true">
+        <span className="hero-flip-back__rim hero-flip-back__rim--top" />
+        <span className="hero-flip-back__rim hero-flip-back__rim--right" />
+        <span className="hero-flip-back__rim hero-flip-back__rim--bottom" />
+        <span className="hero-flip-back__rim hero-flip-back__rim--left" />
+        <span className="hero-flip-back__glaze" />
       </div>
     </div>,
     mainEl

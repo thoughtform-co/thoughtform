@@ -2,7 +2,7 @@
 
 **Date:** 2026-06-15
 **Status:** Proposed
-**Revisions:** v2 (2026-06-15) — Enclose-then-flip with two-faced card (KPR parity); see "v2 rework" below. The original v1 single-element rotateY recede is preserved at the bottom of this ADR as the rejected predecessor.
+**Revisions:** v4 (2026-06-15) - hollow aperture + settling proxy, superseding the v3 counter-moving-window attempt. v3/v2/v1 are preserved below as history and rejected/intermediate states.
 **Scope:** Production home page (`/`) — the seam between the v7 hero (`section#hero`, the wormhole key-visual `<video>`) and the home-v2 depth corridor's parked Thoughtform start frame (`#home-corridor-mount` → `.home-corridor-host` → `HomeCorridor`). The transition the user experiences as they begin scrolling.
 **Related:**
 [ADR-008 — Landing v7 background layers](008-landing-v7-background-layers.md),
@@ -226,6 +226,88 @@ Reverse-scroll re-enters band cleanly (same values at same y in both directions)
 - **Front and back are siblings, never parent/child.** `#hero` lives in parsed `dangerouslySetInnerHTML` and has `overflow: hidden`; a back face inside it would be clipped during rotation. The two-element flip with matching `perspective(1600px)` + `transform-origin: 50% 50%` + opposite rotateY is the only stable pattern.
 - **Don't drop `backface-visibility: hidden` from either face.** Without it, both faces paint at all rotations and the user sees a mirrored ghost of the front through the back during the flip.
 - **The deck must be `display: none` outside the band.** Otherwise the void-black backdrop (`opacity: var(--back-fade, 0)` defaults to 0, but the deck still occupies layout) could intercept pointer events or affect the brandmark suppression check in `HomeCorridor`.
+
+---
+
+## v3 refinement - KPR depth window, not a rotating poster (2026-06-15)
+
+### What changed from v2
+
+Closer inspection of KPR's production bundle showed the reference is not a DOM card whose child content rotates as a flat poster. KPR renders a persistent WebGL card with separate front/back faces and masks; the page content/UI is layered so the visible section content stays comparatively stable while the card shell supplies the depth move. The user-facing effect is "content inside a back window," not "content pasted onto a rotating plane."
+
+The v3 implementation keeps the v2 safety boundary - no corridor code moves - but splits the deck into three roles:
+
+```
+z:3  .home-corridor-host          (live corridor, armed/pinned by its own hooks)
+z:4  .hero-flip-backdrop          (radial void surround)
+z:4  .hero-flip-enclosure         (four closing void planes)
+z:5  .hero-flip-back              (rotating structural shell only)
+z:5  .hero-flip-back-window       (nearly-flat content window)
+z:6  #hero[data-hero-flip="1"]    (front: live wormhole video)
+```
+
+The front hero now rotates to 150deg rather than a full 180deg, with a smaller scale change (`1 -> 0.94`) and a modest `translateZ(-120px)`. The black frame is created primarily by the four enclosure planes and the video inset, so the motion reads as the void closing in around the hero instead of the hero simply zooming out.
+
+The back shell still rotates opposite the front, but the actual Thoughtform copy/brandmark lives in `.hero-flip-back-window`, which counter-moves only slightly (`rotateY` up to 10deg while revealing, then 0deg) and sits forward in Z. Copy and diagram layers get their own shallow `translateZ` offsets so the facade reads as a window with internal depth.
+
+The fade clock also changed. v2 faded the deck from cover 0.85 to 1.0; visual QA showed a long duplicate-read window where the facade copy and the live corridor copy were both visible. v3 keeps the facade as the owner of the revealed second section almost to the end, then clears it in a short final handoff:
+
+```css
+--back-fade: clamp(0, calc((1 - var(--hero-cover, 0)) / 0.02), 1);
+```
+
+The deck stays fully readable through roughly cover 0.98, then fades quickly as the hero reaches the boundary. At cover 1 the existing `data-hero-flip` clear and hero visibility cleanup remove the deck path entirely, and the live corridor owns the screen cleanly.
+
+### v3 invariants
+
+- **Rotate the shell, not the window content.** `.hero-flip-back` is the structural back face. `.hero-flip-back-window` carries the readable facade and should remain almost front-facing.
+- **The black frame is an enclosure.** Keep `.hero-flip-enclosure` as four closing planes plus the video inset. Do not reintroduce a large hero-only zoom as the primary cue.
+- **Avoid a long duplicate-read blend.** Keep the facade as the owner through most of the band and make the final handoff short; otherwise the second section exists twice in the same frame.
+- **The corridor remains a black box.** Do not mount, transform, clone, or reparent the home-v2 corridor inside the back face. The facade-to-corridor handoff is a short visual blend, not shared rendering.
+
+---
+
+## v4 refinement - Hollow aperture + settling proxy (2026-06-15)
+
+The v3 pass still read too much like a 2D poster because the readable Thoughtform facade participated in the card's 3D transform. A second KPR inspection found the important production detail: KPR's home bundle contains a `PersistentCardMask` scene with separate `frontFace` / `backFace` objects and stencil render passes. The card supplies the mask and depth move; the section content is effectively revealed through that mask instead of being ordinary DOM content glued to a rotating plane.
+
+v4 adapts that mechanic without moving the home-v2 corridor:
+
+```
+z:3  .home-corridor-host          (live corridor, armed/pinned by its own hooks)
+z:4  .hero-flip-backdrop          (void surround)
+z:4  .hero-flip-enclosure         (closing void planes)
+z:5  .hero-flip-back-window       (fixed, screen-facing Thoughtform proxy)
+z:5  .hero-flip-back              (rotating hollow aperture: rim + glass only)
+z:6  #hero[data-hero-flip="1"]    (front: live wormhole video, rotates/fades)
+```
+
+Key changes from v3:
+
+- The front hero now rotates through a real `rotateY(-180deg)` and fades out immediately after the edge-on crossover, so the wormhole image cannot survive as a large 2D slab during the reveal.
+- `.hero-flip-back-window` is fixed and screen-facing. It no longer counter-rotates, tilts, or carries `translateZ`; it is the section proxy seen through the aperture.
+- `.hero-flip-back` is hollow. It renders rim bars and a light glass outline only; there is no filled back poster surface.
+- The aperture shell has its own `--shell-fade`, so it disappears once it has established depth. The proxy remains readable after that.
+- The proxy copy uses a two-phase settle: while the shell is active it is left/narrow to avoid the projected rim slicing the copy; as `--shell-fade` reaches 0 it slides/widens into the measured live corridor copy coordinates (`left ~= 318px`, `width ~= 460px` at 1920x1080). This makes the final clear into the real corridor much less jumpy.
+- `--back-fade` is a hairline clear, not a long crossfade: `clamp(0, calc((1 - var(--hero-cover) - 0.001) / 0.006), 1)`. Long blends visibly duplicate the second section; the proxy must stay opaque until it has settled, then clear only at the boundary.
+
+v4 verification points (Playwright, 1920x1080):
+
+| y    | cover  | front opacity | window opacity | shell opacity | state                                       |
+| ---- | ------ | ------------- | -------------- | ------------- | ------------------------------------------- |
+| 625  | 0.6452 | 0             | 1              | 1             | hollow aperture reveal; copy left/narrow    |
+| 860  | 0.9392 | 0             | 1              | 0             | shell dissolved; proxy live-aligned         |
+| 978  | 0.9927 | 0             | 1              | 0             | proxy still opaque; no duplicate-read blend |
+| 1040 | 0.9995 | 0             | 0              | 0             | real corridor visible                       |
+| 1080 | 1.0000 | hidden        | display none   | display none  | deck removed; corridor pinned               |
+
+v4 invariants:
+
+- **Never rotate readable window content.** If copy/brandmark tilt with the shell, the illusion collapses back into a 2D poster.
+- **Keep `.hero-flip-back` hollow.** Rim/glass can rotate; a filled surface cannot.
+- **Do not widen the final blend.** Long opacity blends reveal the live corridor under the proxy and duplicate the second section.
+- **Do not remove the proxy settle.** The left/narrow -> live-aligned copy move is what prevents the shell edge from cutting text while still handing off to the real corridor.
+- **The live corridor remains a black box.** No corridor component, canvas, world anchor, or scroll channel is transformed or reparented by the flip.
 
 ### Why v1 was rejected
 
