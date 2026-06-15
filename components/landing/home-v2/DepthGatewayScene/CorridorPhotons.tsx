@@ -227,7 +227,12 @@ export function CorridorPhotons() {
     const now = state.clock.elapsedTime;
     const lastT = lastTime.current;
     lastTime.current = now;
-    const dt = lastT < 0 ? 0 : Math.min(0.1, now - lastT);
+    // Clamp dt to >= 0: R3F resets clock.elapsedTime to 0 on every
+    // frameloop "always" <-> "demand" toggle (corridor re-engagement),
+    // so an unclamped `now - lastT` goes large-negative and corrupts the
+    // photon spawn/life accumulators. See LatentWormholeWalls for the
+    // full root-cause note (same clock-reset trigger).
+    const dt = lastT < 0 ? 0 : Math.max(0, Math.min(0.1, now - lastT));
 
     const transform = useDepthGatewayStore.getState().transform;
     const { paintProgress, active, armed } = transform;

@@ -1334,7 +1334,23 @@ export function LatentWormholeWalls() {
     const now = state.clock.elapsedTime;
     const lastT = lastTime.current;
     lastTime.current = now;
-    const dt = lastT < 0 ? 0 : Math.min(0.1, now - lastT);
+    // CRITICAL: clamp dt to >= 0. `now` is the R3F clock's elapsedTime,
+    // and R3F RESETS clock.elapsedTime to 0 whenever the Canvas
+    // `frameloop` prop toggles ("always" <-> "demand") — which happens
+    // every time the corridor disengages/re-engages on scroll-back. With
+    // a stale `lastT` from before the reset, `now - lastT` goes large
+    // NEGATIVE, and feeding that into `k = 1 - exp(-OPACITY_RESPONSE*dt)`
+    // (below) yields a large negative k. That turns the opacity follower
+    // `opacityRef += (target - opacityRef) * k` into a divergent
+    // (positive-feedback) loop: opacityRef blows up to ±1e60 in a single
+    // frame. Since `uOpacity = min(1, opacityRef) * buildFade`, a negative
+    // opacityRef makes every wall point's alpha negative → discarded →
+    // the corridor walls VANISH, and the filter takes hundreds of frames
+    // to crawl back (or never, if re-kicked) — "walls gone until refresh".
+    // Mirror FlyingCameraRig, which already clamps `Math.max(0, delta)`
+    // (that's why the sphere recovered on scroll-back but the walls did
+    // not). A clock reset now costs one zero-dt frame, not a blowup.
+    const dt = lastT < 0 ? 0 : Math.max(0, Math.min(0.1, now - lastT));
 
     const transform = useDepthGatewayStore.getState().transform;
     const { paintProgress, active, armed, velocity } = transform;

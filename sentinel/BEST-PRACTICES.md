@@ -194,6 +194,49 @@ in `components/landing/home-v2/DepthGatewayScene/index.tsx`.
 
 ---
 
+### Per-frame `dt` from `clock.elapsedTime` MUST be clamped to ≥ 0 — frameloop toggles reset the clock
+
+R3F **resets `clock.elapsedTime` to 0** whenever the Canvas `frameloop` prop
+toggles between `"always"` and `"demand"`. The home-v2 corridor flips that prop
+every time it engages/disengages on scroll (`frameloop={engaged ? "always" :
+"demand"}`), so the clock resets on every scroll-back. Any painter that derives
+its frame delta as `dt = clock.elapsedTime - lastTime` then sees a large
+**negative** `dt` on the first frame after a reset (a small `now` minus a stale
+large `lastTime`).
+
+A negative `dt` is catastrophic for an **exponential follower**:
+`k = 1 - exp(-RESPONSE * dt)` becomes a large negative number, which turns
+`ref += (target - ref) * k` into a positive-feedback loop. This shipped as the
+"corridor walls vanish on scroll-back (sphere is fine)" bug: `LatentWormholeWalls`'
+`opacityRef` blew up to `±1e60` in a single frame. Because
+`uOpacity = min(1, opacityRef) * buildFade`, a negative `opacityRef` made every
+wall point's alpha negative → discarded → walls gone, and the filter took
+hundreds of frames to crawl back (or never, if re-kicked) — "gone until refresh".
+
+The tell was the **asymmetry**: the sphere/camera (`FlyingCameraRig`) recovered
+but the walls didn't — because the camera already clamped `Math.max(0, delta)`
+while the walls clamped only the upper bound (`Math.min(0.1, now - lastT)`).
+
+```ts
+// ❌ upper-bound only — negative dt after a clock reset destabilizes the filter
+const dt = lastT < 0 ? 0 : Math.min(0.1, now - lastT);
+
+// ✅ clamp both ends — a clock reset costs one zero-dt frame, never a blowup
+const dt = lastT < 0 ? 0 : Math.max(0, Math.min(0.1, now - lastT));
+```
+
+Rule: any `dt` fed into a per-frame integrator (followers, phase accumulators,
+spawn/life timers) must be clamped to `[0, cap]`. Fixed across
+`LatentWormholeWalls`, `CorridorPhotons`, `CelestialMotes`, `LatentFieldTunnel`,
+and `ScrollStreaks`.
+
+**Runtime check:** sample `opacityRef` (or any follower) across a continuous
+services→corridor→services round-trip; it must stay within its physical range
+(`[0, ~1]`) and never go non-finite. A value like `-4e60` is filter divergence,
+not a scene-graph error.
+
+---
+
 ### Cover Swipes Are Replacement Planes, Not Fade-Outs
 
 For Active Theory / Hashgraph-style handoffs, keep the completed scene as a
