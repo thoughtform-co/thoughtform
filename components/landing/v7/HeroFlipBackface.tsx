@@ -6,45 +6,52 @@ import type { V7CorridorText } from "@/lib/v7-parse";
 import { BrandmarkGlyph } from "./BrandmarkGlyph";
 
 /**
- * HeroFlipBackface — stable Thoughtform window revealed by the hero
- * flip shell (ADR-022, KPR-style aperture rework).
+ * HeroFlipBackface — Thoughtform back window revealed by the hero
+ * depth-window sweep (ADR-022 v5, KPR depth-window pivot).
  *
- * The hero (`#hero`, the wormhole `<video>`) acts as the FRONT face of
- * a two-faced flip; this component renders the matching aperture deck
- * (a void-black surround + stable proxy window + hollow rotating shell)
- * and **portals it into `main.stations`**
- * — the same stacking context the hero lives in. That lets us layer:
+ * The hero (`#hero`, the wormhole `<video>`) is the FRONT window of a
+ * KPR-style depth-window sweep: it encloses into a beveled silhouette,
+ * recedes back in Z, drifts left, and fades. This component renders
+ * the matching back deck — a void-black surround + the Thoughtform
+ * back window — and **portals it into `main.stations`**, the same
+ * stacking context the hero lives in. That lets us layer:
  *
  *     z:3    .home-corridor-host      (rising; live corridor parked frame)
- *     z:4    .hero-flip-backdrop      (void-black surround)
+ *     z:4    .hero-flip-backdrop      (radial void surround)
  *     z:4    .hero-flip-enclosure     (four closing void planes)
- *     z:5    .hero-flip-back-window   (screen-facing section proxy)
- *     z:5    .hero-flip-back          (rotating hollow aperture shell)
- *     z:6    #hero[data-hero-flip]    (front: live video, rotateY)
+ *     z:5    .hero-flip-back-window   (Thoughtform window: copy + brandmark)
+ *     z:6    #hero[data-hero-flip]    (front window: live video)
  *
  * within main's z:10 envelope. Putting the deck OUTSIDE main would
  * require its z to exceed 10, which would eclipse the live hero front
- * face — wrong. Portaling inside keeps front/back/backdrop in one
+ * window — wrong. Portaling inside keeps front/back/backdrop in one
  * stacking context, so the front always paints over its backdrop and
- * the rotation reads as a true two-faced card.
+ * the depth recede reads as a true window receding.
  *
- * Critically, the deck is **siblings of `#hero`** inside `main.stations`,
- * NOT a descendant of `#hero` — the hero element lives inside parsed
+ * The deck is **siblings of `#hero`** inside `main.stations`, NOT a
+ * descendant of `#hero` — the hero element lives inside parsed
  * `dangerouslySetInnerHTML` markup we don't mutate, and its
- * `overflow: hidden` would clip a child rotated card. As siblings the
- * card's two faces share `transform-origin: 50% 50%` and a matching
- * `perspective(1900px)`, with `backface-visibility: hidden` on each
- * so the browser swaps ownership at the 90° crossover.
+ * `overflow: hidden` would clip a child window during transform. As
+ * siblings, both windows share `transform-origin: 50% 50%` and use
+ * matching beveled `clip-path: polygon(...)` silhouettes driven by
+ * the shared `--bevel` variable.
  *
  * The corridor flythrough (ADR-018) is never rotated or reparented.
- * The readable section proxy is a fixed, screen-facing DOM window that
+ * The Thoughtform window is a fixed, screen-facing DOM facade that
  * renders the same `text.thoughtform` source and the canonical
- * `BrandmarkGlyph` SVG. The rotating layer is deliberately hollow: it
- * supplies only rim, glass, and edge depth, so the user reads the next
- * section as being visible through the back of the card rather than
- * pasted onto it. At the very end of `--hero-cover` the deck fades out,
- * revealing the live corridor that has naturally pinned at
- * `paintProgress = 0` (its "armed" pre-paint state).
+ * `BrandmarkGlyph` SVG; its inner copy + diagram **counter-translate
+ * the window's drift** so they read as a deeper plane than the bevel
+ * (the KPR "rotates slower than the card" depth signature). At the
+ * very end of `--hero-cover` the deck fades out via the hairline
+ * `--back-fade` clock, revealing the live corridor that has been
+ * armed at `paintProgress = 0` throughout the band.
+ *
+ * History: v2-v4 used a two-faced 180deg flip with a hollow rotating
+ * aperture shell (`.hero-flip-back` rim + glaze) sitting in front of
+ * a counter-rotating window. Live KPR inspection (1440x900) confirmed
+ * KPR does NOT flip — it sweeps and scales beveled-corner windows with
+ * content that parallaxes inside them. v5 drops the shell and the
+ * literal 180deg rotation in favor of the depth-window sweep model.
  *
  * The deck is `display: none` unless `<html data-hero-flip="1">` is
  * set by `useLandingScroll` mid-band on capable devices. Reduced-
@@ -124,13 +131,6 @@ export function HeroFlipBackface({ text, containerRef }: HeroFlipBackfaceProps) 
             </div>
           </div>
         </div>
-      </div>
-      <div className="hero-flip-back" aria-hidden="true">
-        <span className="hero-flip-back__rim hero-flip-back__rim--top" />
-        <span className="hero-flip-back__rim hero-flip-back__rim--right" />
-        <span className="hero-flip-back__rim hero-flip-back__rim--bottom" />
-        <span className="hero-flip-back__rim hero-flip-back__rim--left" />
-        <span className="hero-flip-back__glaze" />
       </div>
     </div>,
     mainEl

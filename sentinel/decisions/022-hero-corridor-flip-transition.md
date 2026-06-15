@@ -1,14 +1,143 @@
-# ADR-022: Hero → Corridor 3D Flip Transition
+# ADR-022: Hero → Corridor Depth-Window Sweep
 
 **Date:** 2026-06-15
-**Status:** Proposed
-**Revisions:** v4 (2026-06-15) - hollow aperture + settling proxy, superseding the v3 counter-moving-window attempt. v3/v2/v1 are preserved below as history and rejected/intermediate states.
+**Status:** Active (v5)
+**Revisions:** v5 (2026-06-15) - KPR depth-window sweep, superseding the v4 hollow aperture + 180deg flip. Live KPR inspection (1440x900) confirmed KPR does NOT flip; it sweeps and scales beveled-corner windows with content that parallaxes inside them. v1-v4 are preserved below as history.
 **Scope:** Production home page (`/`) — the seam between the v7 hero (`section#hero`, the wormhole key-visual `<video>`) and the home-v2 depth corridor's parked Thoughtform start frame (`#home-corridor-mount` → `.home-corridor-host` → `HomeCorridor`). The transition the user experiences as they begin scrolling.
 **Related:**
 [ADR-008 — Landing v7 background layers](008-landing-v7-background-layers.md),
 [ADR-018 — Home V2 Depth Corridor](018-home-v2-depth-corridor.md),
 [ADR-021 — Corridor Exit Zoom-Dissipate](021-corridor-exit-zoom-dissipate.md),
 [ADR-002 — Scroll Animation Architecture](002-scroll-animation-architecture.md).
+
+---
+
+## v5 (active) — KPR depth-window sweep (2026-06-15)
+
+### Why v4 wasn't enough
+
+v4 shipped a literal two-faced 180deg DOM flip with a hollow rotating aperture shell sitting in front of a fixed Thoughtform proxy window. It was rigorous about safety boundaries (corridor untouched, facade-then-hairline-clear handoff) and Playwright-scrubbed clean. Live user feedback was that **it still read flat** — like a 2D slab rotating on the X-axis, not a "window into a layer behind it." Closer **live inspection of [kprverse.com](https://kprverse.com/)** at 1440x900 (Playwright `browser_evaluate`) confirmed the reference does NOT flip:
+
+- KPR is a Nuxt page with native scroll, ~16400px tall, painting through one fixed full-screen WebGL `<canvas>` (no THREE namespace globals; bundled as a closure).
+- The "card" is a **shaped beveled-corner window** (chamfered 45deg corners — silhouette confirmed across `y=500`, `y=950`, `y=1450`).
+- Across the hero -> section-2 band, it **resizes / repositions / multiplies** beveled windows (one big hero window -> a small gallery + larger right-side window -> a full-bleed scene). It is a sweep/scale of shaped windows, not a flip.
+- Inside each window, the texture **parallaxes slower than the frame** — comparing the portrait framing at `y=950` vs `y=1450` shows the character's face moves a smaller distance than the window's rounded corners do. **That texture lag is the depth signature** the user described as "rotates slower than the card."
+
+v5 keeps v4's safety boundary (corridor stays a black box; facade hairline-crossfades to the live corridor) but pivots the visual model to KPR's: **enclose into a beveled window -> recede -> reveal a second beveled window -> hairline clear**, with **content parallax inside both windows** as the depth ingredient.
+
+### Mechanics
+
+```
+Layer stack (portalled into main.stations, within main's z:10 envelope):
+  z:3   .home-corridor-host         live corridor parked frame, armed/pinned
+  z:4   .hero-flip-backdrop         radial void surround
+  z:4   .hero-flip-enclosure        four void-black inset planes (belt-and-braces)
+  z:5   .hero-flip-back-window      Thoughtform window (beveled, screen-facing)
+  z:6   #hero[data-hero-flip="1"]   front window: live wormhole video (beveled)
+```
+
+Phase clocks (cover 0..1, all defined on `html[data-hero-flip="1"]`):
+
+| Var           | Window       | Curve                            | Visual                                                                   |
+| ------------- | ------------ | -------------------------------- | ------------------------------------------------------------------------ |
+| `--enclose`   | 0 -> 0.40    | `clamp(0, cover/0.40, 1)`        | Video insets, bevel grows 0 -> 32px, void surround closes in.            |
+| `--recede`    | 0.30 -> 1    | `clamp(0, (cover-0.30)/0.70, 1)` | Hero window: translateZ -360px, translateX -2.8vw, rotateY 18deg, fades. |
+| `--reveal`    | 0.34 -> 0.95 | `clamp(0, (cover-0.34)/0.61, 1)` | Back window: translateX 3vw -> 0, scale 0.90 -> 1.00, opacity 0 -> 1.    |
+| `--back-fade` | ~0.994 -> 1  | hairline                         | Final clear; live corridor takes the screen.                             |
+
+The phase windows overlap deliberately (0.30..0.40 holds both ENCLOSE and RECEDE; 0.34..0.95 holds both RECEDE and REVEAL) so the camera move feels continuous rather than stepped.
+
+### Three coordinated layers per window (the depth ingredient)
+
+The flat-2D feel of v4 came from rotating a full-bleed slab with no content parallax. v5 splits each window into three independent layers:
+
+1. **Frame** (`.hero` for the front, `.hero-flip-back-window` for the back). Carries the depth recede / lateral sweep / scale. Beveled silhouette via `clip-path: polygon(...)` driven by `--bevel`.
+2. **Window shape** (`.hero__video` for the front). Sets `inset` + `border-radius` + the beveled `clip-path`. Stays aligned with the frame.
+3. **Content parallax** (`.hero__video video` for the front; `.hero-flip-back__copy` and `.hero-flip-back__diagram` for the back). **Counter-translates** opposite the frame's drift and **counter-scales** opposite the frame's recede, so the texture / copy reads as a deeper plane sliding **slower** than the bevel edge. This is the KPR signature — the user said it as "rotates slower than the card."
+
+Concrete values (front window):
+
+```css
+.hero {
+  /* Frame: depth recede + lateral sweep, no flip. */
+  transform: perspective(1900px) translateX(calc(var(--recede, 0) * -2.8vw))
+    translateZ(calc(var(--recede, 0) * -360px)) rotateY(calc(var(--recede, 0) * 18deg))
+    scale(calc(1 - var(--enclose, 0) * 0.06));
+  opacity: calc(1 - var(--recede, 0) * 1.06);
+}
+.hero__video video {
+  /* Content parallax: ~50% magnitude of the frame's drift, opposite sign. */
+  transform: translateX(calc(var(--recede, 0) * 1.4vw)) /* +1.4vw vs frame's -2.8vw */
+    scale(calc(1 + var(--recede, 0) * 0.05)); /* counter-scale to frame's recede */
+}
+```
+
+The back window mirrors the technique: it drifts in from the right (counter to the front's leftward sweep) and scales 0.90 -> 1.00 forward. Its inner copy and diagram counter-translate the drift and counter-scale the growth, so they sit on a deeper plane than the bevel.
+
+### Beveled silhouette
+
+Both windows use the same KPR-style beveled-corner polygon, sized by `--bevel` (which is `calc(var(--enclose, 0) * 32px)`):
+
+```css
+clip-path: polygon(
+  var(--bevel) 0%,
+  calc(100% - var(--bevel)) 0%,
+  100% var(--bevel),
+  100% calc(100% - var(--bevel)),
+  calc(100% - var(--bevel)) 100%,
+  var(--bevel) 100%,
+  0% calc(100% - var(--bevel)),
+  0% var(--bevel)
+);
+```
+
+At cover 0 the bevel is 0 and the polygon is a full-bleed rectangle (no clipping). The bevels appear as the windows enclose, exposing `.hero`'s `var(--void)` background through the corner cuts. The four `.hero-flip-enclosure` planes form a redundant thin frame around the inset gap (belt-and-braces); the visible "card on void" silhouette is primarily the result of `.hero`'s background showing through the bevel + the backdrop's `inset: 0` void shielding the screen edges.
+
+### Files changed in v5
+
+- [`components/landing/v7/landing.css`](../../components/landing/v7/landing.css) — `@media (prefers-reduced-motion: no-preference) and (min-width: 961px)` block reworked: phase clocks become `--enclose / --recede / --reveal / --back-fade / --bevel`; `.hero` swaps `rotateY(... -180deg)` for the depth-window sweep; `.hero__video` adds the beveled `clip-path: polygon(...)`; new rule `.hero__video video` for the inner-content parallax; `.hero-flip-back-window` becomes a forward-scaling beveled window with the same `--bevel` polygon; `.hero-flip-back__copy` / `.hero-flip-back__diagram` switch to `--reveal`; the entire `.hero-flip-back / __rim / __glaze` rotating-aperture shell block is **deleted**.
+- [`components/landing/v7/HeroFlipBackface.tsx`](../../components/landing/v7/HeroFlipBackface.tsx) — the `<div className="hero-flip-back">` rim/glaze block is removed from the JSX. Backdrop + enclosure + back-window subtree (copy + diagram + brandmark) preserved verbatim. Docblock rewritten to describe the v5 depth-window sweep model.
+- [`.claude/skills/landing-v7-compositing/SKILL.md`](../../.claude/skills/landing-v7-compositing/SKILL.md) — "In-band hero flip deck" section rewritten to describe v5: layer stack, phase clocks, beveled silhouette, content parallax, updated invariants.
+
+No edits to:
+
+- `useLandingScroll` (continues writing eased `--hero-cover` to both `#hero` and `<html>`, toggling `data-hero-flip="1"` mid-band on capable devices, single rAF frame).
+- Anything under `components/landing/home-v2/**` (corridor scene, store, exit scroll hook).
+- The parsed v7 HTML pipeline (`lib/v7-parse.ts`).
+
+### v5 invariants (extend the v1 list; **supersede v2-v4 invariants** about flips and rotating aperture shells)
+
+- **No literal flip.** The hero rotates a maximum of 18deg on the Y-axis as it recedes; this is a parallax cue, not a card-turn. Re-introducing `rotateY` magnitudes >~30deg, or two-faced `backface-visibility` setups, returns the page to v4's flat-slab feel and breaks the depth-window read.
+- **Both windows are beveled and screen-facing.** Use the shared `--bevel` polygon clip-path. Do NOT rotate readable window content (copy / brandmark / video) on its own axis; rotation lives only on the hero frame's recede, not on the window contents or the back window.
+- **Content parallax is non-negotiable.** Without the counter-transform on `.hero__video video` (and on `.hero-flip-back__copy` / `.hero-flip-back__diagram`), the windows revert to v3-flavored 2D posters. Magnitude rule: counter-translate is ~50% of the frame's drift, counter-scale is ~50% of the frame's recede magnitude.
+- **The back window stays opaque to almost the boundary.** Keep the hairline `--back-fade` (clears across cover 0.994 -> 1.0). Long crossfades duplicate the second section in the same frame.
+- **The corridor remains a black box.** No corridor component, canvas, world anchor, or scroll channel is transformed or reparented by the deck. The facade-to-corridor handoff is a short visual blend, not shared rendering.
+- **The deck portals into `main.stations`** as siblings of `#hero`, with `pointer-events: none` and `var(--void)` shields intact (ADR-008).
+- **Reduced-motion / <=960px** keep falling through to the legacy scale+fade rules above the `@media` block; the deck is `display: none` outside the gate.
+
+### Why we chose DOM/CSS over a WebGL port
+
+A faithful KPR-style port (one fixed `<canvas>`, one shaped mesh per window, parallaxing texture as a UV offset) is technically closer to the reference but disproportionate to this seam:
+
+- It would collide with the live home-v2 R3F corridor canvas and the brandmark particle canvas — three WebGL contexts on one page is a perf and integration headache.
+- The DOM/CSS version captures the FEEL (beveled silhouette + content parallax + sweep) at zero new runtime cost beyond two `transform` properties per frame.
+- If this still falls short, a future ADR can revisit a single shared canvas without reverting any of the safety scaffolding here.
+
+### Verification
+
+Playwright at 1920x1080:
+
+| cover | --enclose | --recede | --reveal | --back-fade | observable                                                         |
+| ----- | --------- | -------- | -------- | ----------- | ------------------------------------------------------------------ |
+| 0.00  | 0         | 0        | 0        | 1           | full-bleed video; back window invisible                            |
+| 0.20  | 0.50      | 0        | 0        | 1           | bevel growing, video inset ~24px; back invisible                   |
+| 0.45  | 1.00      | 0.214    | 0.180    | 1           | full bevel; hero starting to recede / drift; back fading in        |
+| 0.70  | 1.00      | 0.571    | 0.590    | 1           | hero clearly receded + tilted; back window approaching final scale |
+| 0.92  | 1.00      | 0.886    | 0.951    | 1           | hero almost gone; back window at final scale                       |
+| 0.998 | 1.00      | 0.997    | 1.000    | ~0.5        | hairline clear; live corridor emerging                             |
+| 1.00  | -         | -        | -        | 0           | deck `display: none`; hero `visibility: hidden`; corridor pinned   |
+
+Verify content parallax delta (frame translateX vs video translateX) is non-zero across the recede band; corridor `data-corridor-engaged="true"` is `true` throughout the band; `paintProgress` is 0 across the band, 1 at cover=1; reduced-motion / 800x1080 paths never enter the deck (`display: none`, hero on legacy scale+fade fallback).
 
 ---
 

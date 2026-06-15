@@ -6473,92 +6473,139 @@ body.density-dense .station {
   opacity: calc(1 - var(--hero-cover, 0) * 0.45);
 }
 
-/* ─── HERO → THOUGHTFORM ENCLOSE-THEN-FLIP TRANSITION (ADR-022) ──────
-   KPR-style two-faced flip card. Three sequential phases, all driven
-   by the smootherstep-eased `--hero-cover` (0..1) written by
+/* ─── HERO → THOUGHTFORM DEPTH-WINDOW SWEEP (ADR-022 v5) ─────────────
+   KPR-style depth-window sweep. NOT a flip. Driven entirely by the
+   smootherstep-eased `--hero-cover` (0..1) written by
    `useLandingScroll`. The home-v2 depth corridor (ADR-018 / ADR-021)
    is NEVER rotated or reparented — its flythrough reads stage rect
    every frame and would break under any ancestor 3D transform. The
-   back of the flip is a STATIC DOM facade (`HeroFlipBackface`) that
+   reveal target is a STATIC DOM facade (`HeroFlipBackface`) that
    renders the same `text.thoughtform` source the live corridor uses
-   and crossfades to the live corridor at completion.
+   and hairline-crossfades to the live corridor at completion.
 
-   KPR-style aperture/window phases (cover 0 -> 1):
-     - ENCLOSE (cover 0 -> 0.42): the video insets, corners round, and
-       void-black surround planes close inward. This reads as the dark
-       page closing around the hero, not the hero zooming away.
-     - FLIP (cover 0.28 -> 0.86): the front card rotates through the
-       true edge-on crossover and toward 180deg. The readable window is
-       a separate fixed scene behind a hollow rotating aperture, so the
-       copy/brandmark do not inherit the shell tilt.
-     - SETTLE (cover ~0.72 -> 0.9): the hollow shell dissolves while the
-       proxy copy slides/widens into the live corridor coordinates.
-     - CLEAR (cover ~0.999 -> 1): the proxy clears in a hairline band so
-       the live corridor does not double-read behind it.
+   Confirmed via live KPR inspection (1440x900): KPR uses one fixed
+   WebGL canvas painting a beveled-corner window whose texture
+   parallaxes slower than the frame, then sweeps/scales between
+   shaped windows to change sections. The literal 180deg flip we
+   shipped through v4 was the source of the "flat 2D slab" feel —
+   v5 replaces it with three layered, coordinated motions:
 
-   `--enclose` is a monotonic clamp for the closing void frame. `--flip`
-   starts early enough to reveal depth, `--window-reveal` fades the fixed
-   section proxy in behind the aperture, `--front-fade` removes the front
-   slab after the edge-on crossover, and `--shell-fade` dissolves the
-   aperture before the final clear.
+     ENCLOSE  cover 0 → 0.40 : video insets into a beveled window,
+                                bevel grows, void-black surround
+                                planes close inward.
+     RECEDE   cover 0.30 → 1 : the hero card translates back in Z,
+                                drifts left, gets a gentle 18deg
+                                rotateY, and fades out.
+     REVEAL   cover 0.34 → 0.95 : the Thoughtform back window drifts
+                                in from the right, scales 0.90 → 1.00,
+                                its copy + brandmark parallax forward
+                                on a deeper plane (counter-translate
+                                to the window's drift, counter-scale
+                                to the window's growth).
+     CLEAR    cover ~0.994 → 1 : hairline crossfade replaces the
+                                facade with the live corridor (which
+                                has been armed at paintProgress 0
+                                throughout the band).
+
+   The "rotates slower than the frame" depth feel is a content
+   parallax INSIDE the window: `.hero__video video` counter-translates
+   and counter-scales the frame's recede so the texture reads as a
+   deeper plane than the bevel. Same principle on the back window.
 
    Gating matches JS `flipCapable` in useLandingScroll: motion-allowed
    + ≥961px. Reduced-motion / mobile fall through to the legacy
-   scale+fade rules above (the deck stays `display: none`).
+   scale+fade rules above (the deck stays `display: none`). The
+   `data-hero-flip="1"` attribute name is preserved from v4 to avoid
+   churn across the JS gate, the deck portal, and the docs — it is
+   the band gate, not a flip indicator.
    ──────────────────────────────────────────────────────────────────── */
 @media (prefers-reduced-motion: no-preference) and (min-width: 961px) {
   /* Shared phase variables. Defined on `<html>` so the front (`#hero`,
      inside parsed main) and the portalled back deck both inherit. The
      `--hero-cover` mirror onto <html> happens in the same rAF frame as
-     the `#hero` write; both faces always see identical values. */
+     the `#hero` write; both layers always see identical values.
+
+     `--enclose`, `--recede`, `--reveal`, `--back-fade` replace the v4
+     `--flip` / `--window-reveal` / `--front-fade` / `--shell-fade`
+     stack. The phase windows overlap deliberately (0.30..0.40 holds
+     both ENCLOSE and RECEDE; 0.34..0.95 holds both RECEDE and REVEAL)
+     so the camera move feels continuous rather than stepped. */
   html[data-hero-flip="1"] {
-    --enclose: clamp(0, calc(var(--hero-cover, 0) / 0.42), 1);
-    --flip: clamp(0, calc((var(--hero-cover, 0) - 0.28) / 0.58), 1);
-    --window-reveal: clamp(0, calc((var(--flip, 0) - 0.24) / 0.22), 1);
-    --front-fade: clamp(0, calc((var(--flip, 0) - 0.38) / 0.2), 1);
-    --shell-fade: clamp(0, calc((0.9 - var(--hero-cover, 0)) / 0.18), 1);
+    --enclose: clamp(0, calc(var(--hero-cover, 0) / 0.4), 1);
+    --recede: clamp(0, calc((var(--hero-cover, 0) - 0.3) / 0.7), 1);
+    --reveal: clamp(0, calc((var(--hero-cover, 0) - 0.34) / 0.61), 1);
+    /* Back-deck clear clock: keep the facade opaque through almost
+       the entire band; clear only in the last hairline band so the
+       second section never reads twice in the same frame. */
+    --back-fade: clamp(0, calc((1 - var(--hero-cover, 0) - 0.001) / 0.006), 1);
+
+    /* Geometry. `--hero-card-x/y` are the inset distances at full
+       enclose; `--bevel` is the diagonal corner cut driving the
+       beveled `clip-path: polygon(...)` on both windows. */
     --hero-card-x: clamp(18px, 3vw, 48px);
     --hero-card-y: clamp(16px, 3.4vh, 36px);
-    --hero-card-radius: calc(var(--enclose, 0) * 28px);
-    --hero-aperture-rim: clamp(12px, 1.4vw, 28px);
-    /* Back-deck clear clock: keep the proxy section opaque while it
-       settles into the live corridor coordinates; clear only in the
-       last hairline band to avoid a visible duplicate-read blend. */
-    --back-fade: clamp(0, calc((1 - var(--hero-cover, 0) - 0.001) / 0.006), 1);
+    --hero-card-radius: calc(var(--enclose, 0) * 14px);
+    --bevel: calc(var(--enclose, 0) * 32px);
   }
 
+  /* The hero is the FRAME of the front window. It carries the depth
+     recede, lateral sweep, and fade — but NOT a 180deg rotation, so
+     `backface-visibility` is no longer needed and there is no edge-on
+     crossover. The bevel + content parallax happen on its descendants
+     (`.hero__video` and `.hero__video video`), not here. */
   .hero {
     background: var(--void);
     transform-origin: 50% 50%;
-    backface-visibility: hidden;
     will-change: transform, opacity;
-    transform: perspective(1900px) translateX(calc(var(--window-reveal, 0) * 4vw))
-      translateZ(calc(var(--flip, 0) * -260px))
-      scale(calc(1 - var(--enclose, 0) * 0.065 - var(--window-reveal, 0) * 0.025))
-      rotateY(calc(var(--flip, 0) * -180deg));
-    opacity: calc(1 - var(--front-fade, 0));
+    transform: perspective(1900px) translateX(calc(var(--recede, 0) * -2.8vw))
+      translateZ(calc(var(--recede, 0) * -360px)) rotateY(calc(var(--recede, 0) * 18deg))
+      scale(calc(1 - var(--enclose, 0) * 0.06));
+    opacity: calc(1 - var(--recede, 0) * 1.06);
   }
-  /* Promote the hero above the back deck (z:5) and backdrop (z:4)
-     mid-band so the FRONT face paints over the matching backdrop. The
-     two faces are siblings inside `main.stations`, so this z stays
-     within main's own z:10 envelope. */
+  /* Promote the hero above the back window (z:5) and enclosure (z:4)
+     mid-band so the FRONT window paints over the surround. Both layers
+     are siblings inside `main.stations`, so this z stays within main's
+     own z:10 envelope. */
   .hero[data-hero-flip="1"] {
     z-index: 6;
   }
-  /* Override the legacy `.hero__video` scale+fade rules (above) so the
-     hero flips as a single rigid card. The video insets and rounds
-     during ENCLOSE; the `.hero` `var(--void)` background paints the
-     frame around it. */
+  /* Window shape: KPR-style beveled rectangle. The `clip-path` polygon
+     cuts 45deg corners whose size grows with `--enclose`; at cover 0
+     bevel is 0 and the polygon collapses to the full-bleed rectangle
+     so nothing is clipped. The legacy `.hero__video` scale+fade rules
+     (above this block) are nulled by `transform: none; opacity: 1`. */
   .hero__video {
     inset: calc(var(--enclose, 0) * var(--hero-card-y)) calc(var(--enclose, 0) * var(--hero-card-x));
     border-radius: var(--hero-card-radius);
+    clip-path: polygon(
+      var(--bevel, 0px) 0%,
+      calc(100% - var(--bevel, 0px)) 0%,
+      100% var(--bevel, 0px),
+      100% calc(100% - var(--bevel, 0px)),
+      calc(100% - var(--bevel, 0px)) 100%,
+      var(--bevel, 0px) 100%,
+      0% calc(100% - var(--bevel, 0px)),
+      0% var(--bevel, 0px)
+    );
     transform: none;
     opacity: 1;
-    will-change: inset, border-radius;
+    will-change: inset, clip-path, border-radius;
+  }
+  /* Content parallax — the depth ingredient. The inner <video> texture
+     counter-moves the frame's recede so it reads as a deeper plane
+     sliding more slowly than the window edge. Counter-translate is
+     ~50% the magnitude of the frame's lateral drift (`-2.8vw` → `+1.4vw`)
+     and counter-scale compensates the depth recede so the texture stays
+     filling the bevel as the frame moves back. This is the
+     "rotates slower than the card" KPR signature. */
+  .hero__video video {
+    transform-origin: 50% 50%;
+    transform: translateX(calc(var(--recede, 0) * 1.4vw)) scale(calc(1 + var(--recede, 0) * 0.05));
+    will-change: transform;
   }
   .hero__content {
     transform: none;
-    /* Faster fade — copy is gone before the rotation gets dramatic. */
+    /* Faster fade — copy is gone before depth gets dramatic. */
     opacity: calc(1 - var(--hero-cover, 0) * 2.2);
     will-change: opacity;
   }
@@ -6579,7 +6626,6 @@ body.density-dense .station {
 
 .hero-flip-backdrop,
 .hero-flip-enclosure,
-.hero-flip-back,
 .hero-flip-back-window {
   position: fixed;
   inset: 0;
@@ -6642,91 +6688,36 @@ body.density-dense .station {
   right: 0;
 }
 
-.hero-flip-back {
-  z-index: 5;
-  transform-origin: 50% 50%;
-  backface-visibility: hidden;
-  /* Hollow structural shell: this carries the heavy card rotation. The
-     readable copy/brandmark live behind it in `.hero-flip-back-window`
-     and never inherit this transform. */
-  transform: perspective(1900px) translateX(calc(var(--window-reveal, 0) * 4vw))
-    translateZ(calc((1 - var(--window-reveal, 0)) * -120px))
-    scale(calc(1 - var(--enclose, 0) * 0.065 - var(--window-reveal, 0) * 0.025))
-    rotateY(calc(var(--flip, 0) * -180deg + 180deg));
-  border-radius: var(--hero-card-radius, 0px);
-  overflow: visible;
-  /* Same crossfade clock as the backdrop. */
-  opacity: min(var(--window-reveal, 0), var(--shell-fade, 1), var(--back-fade, 1));
-  will-change: transform, opacity;
-}
-
-/* Rotating aperture shell. The center is deliberately transparent so
-   the screen-facing window behind it reads as depth, not as a poster
-   glued to the card. */
-.hero-flip-back__rim,
-.hero-flip-back__glaze {
-  position: absolute;
-  inset: calc(var(--enclose, 0) * var(--hero-card-y, 0px))
-    calc(var(--enclose, 0) * var(--hero-card-x, 0px));
-  border-radius: var(--hero-card-radius, 0px);
-}
-
-.hero-flip-back__rim {
-  display: block;
-  border: 1px solid var(--dawn-08, rgba(235, 227, 214, 0.08));
-  background:
-    linear-gradient(115deg, rgba(235, 227, 214, 0.05), rgba(235, 227, 214, 0) 34%),
-    linear-gradient(180deg, rgba(10, 9, 8, 0.98), rgba(10, 9, 8, 0.88)), var(--void, #0a0908);
-  box-shadow:
-    inset 0 0 0 1px rgba(235, 227, 214, 0.04),
-    inset 0 0 34px rgba(0, 0, 0, 0.72),
-    0 0 48px rgba(0, 0, 0, 0.42);
-}
-
-.hero-flip-back__rim--top {
-  bottom: auto;
-  height: var(--hero-aperture-rim, 32px);
-}
-
-.hero-flip-back__rim--right {
-  left: auto;
-  width: var(--hero-aperture-rim, 32px);
-}
-
-.hero-flip-back__rim--bottom {
-  top: auto;
-  height: var(--hero-aperture-rim, 32px);
-}
-
-.hero-flip-back__rim--left {
-  right: auto;
-  width: var(--hero-aperture-rim, 32px);
-}
-
-.hero-flip-back__glaze {
-  border: 1px solid var(--dawn-12, rgba(235, 227, 214, 0.12));
-  background:
-    radial-gradient(circle at 58% 48%, rgba(202, 165, 84, 0.05), transparent 34%),
-    linear-gradient(115deg, rgba(235, 227, 214, 0.028), transparent 42%);
-  box-shadow:
-    inset 0 0 0 1px rgba(235, 227, 214, 0.035),
-    inset 0 0 86px rgba(0, 0, 0, 0.34),
-    0 0 0 1px rgba(10, 9, 8, 0.42);
-}
-
+/* The Thoughtform back window — KPR-style beveled silhouette. Starts
+   smaller and slightly off-center so it reads as a deeper plane that
+   slides forward as the front hero recedes. The corner bevel uses the
+   same `--bevel` polygon as the front window so both silhouettes
+   match across the band. ADR-022 v5 (depth-window sweep): the v4
+   `clip-path: inset(...)` with a `--shell-fade` rotating aperture in
+   front of it is gone; the window itself is the visible silhouette
+   and stays screen-facing throughout (no rotation). */
 .hero-flip-back-window {
   z-index: 5;
-  clip-path: inset(
-    calc(var(--enclose, 0) * var(--hero-card-y, 0px))
-      calc(var(--enclose, 0) * var(--hero-card-x, 0px)) round var(--hero-card-radius, 0px)
-  );
-  overflow: hidden;
   background:
     linear-gradient(180deg, rgba(5, 4, 3, 0.94), rgba(5, 4, 3, 0.99)), var(--void, #0a0908);
-  opacity: min(var(--window-reveal, 0), var(--back-fade, 1));
+  clip-path: polygon(
+    var(--bevel, 0px) 0%,
+    calc(100% - var(--bevel, 0px)) 0%,
+    100% var(--bevel, 0px),
+    100% calc(100% - var(--bevel, 0px)),
+    calc(100% - var(--bevel, 0px)) 100%,
+    var(--bevel, 0px) 100%,
+    0% calc(100% - var(--bevel, 0px)),
+    0% var(--bevel, 0px)
+  );
+  /* Drift in from the right (counter to the front hero's leftward
+     sweep) and scale forward 0.90 → 1.00 so the new section feels
+     like it's emerging from depth rather than being pasted in. */
   transform-origin: 50% 50%;
-  transform: translate3d(0, 0, 0) scale(calc(0.975 + var(--window-reveal, 0) * 0.025));
-  will-change: clip-path, opacity, transform;
+  transform: translateX(calc((1 - var(--reveal, 0)) * 3vw))
+    scale(calc(0.9 + var(--reveal, 0) * 0.1));
+  opacity: min(var(--reveal, 0), var(--back-fade, 1));
+  will-change: transform, opacity, clip-path;
 }
 
 .hero-flip-back-window__inner {
@@ -6740,16 +6731,21 @@ body.density-dense .station {
 .hero-flip-back__copy {
   /* Reuses `.home-v2-copy-block--thoughtform-left` typography from
      home-v2.css verbatim — bridge/title/body/cta scale matches the
-     live corridor 1:1 so the crossfade is invisible. */
+     live corridor 1:1 so the hairline crossfade is invisible.
+     Lives on a deeper plane than the window frame: as the window
+     drifts in from the right and scales forward, the copy
+     counter-translates (lags the frame) and counter-scales so it
+     reads as further inside the window than the bevel edge. This is
+     the same content-parallax principle as `.hero__video video`. */
   position: absolute;
   left: clamp(220px, 16.55vw, 318px);
   top: clamp(275px, 33.2vh, 360px);
-  width: max(340px, calc(clamp(360px, 24vw, 460px) - var(--shell-fade, 0) * 114px));
-  max-width: max(340px, calc(clamp(360px, 24vw, 460px) - var(--shell-fade, 0) * 114px));
-  opacity: clamp(0, calc((var(--window-reveal, 0) - 0.1) / 0.26), 1);
+  width: clamp(360px, 24vw, 460px);
+  max-width: clamp(360px, 24vw, 460px);
+  opacity: clamp(0, calc((var(--reveal, 0) - 0.1) / 0.3), 1);
   transform: translate3d(
-    calc((1 - var(--window-reveal, 0)) * -18px + var(--shell-fade, 0) * -178px),
-    calc((1 - var(--window-reveal, 0)) * 8px),
+    calc((1 - var(--reveal, 0)) * -22px),
+    calc((1 - var(--reveal, 0)) * 12px),
     0
   );
   will-change: opacity, transform;
@@ -6765,6 +6761,10 @@ body.density-dense .station {
 }
 
 .hero-flip-back__diagram {
+  /* Brandmark + dotted diamond, mirroring the corridor's parked frame.
+     Lags the window's rightward drift slightly (counter-translate) and
+     undershoots the final scale by a hair so it reads as a deeper
+     plane than the bevel. */
   position: absolute;
   left: clamp(780px, 55vw, 1056px);
   top: clamp(220px, 26vh, 282px);
@@ -6772,9 +6772,9 @@ body.density-dense .station {
   height: clamp(430px, 31vw, 600px);
   display: grid;
   place-items: center;
-  opacity: clamp(0, calc((var(--window-reveal, 0) - 0.05) / 0.3), 1);
-  transform: translate3d(calc((1 - var(--window-reveal, 0)) * 24px), 0, 0)
-    scale(calc(0.985 + var(--window-reveal, 0) * 0.015));
+  opacity: clamp(0, calc((var(--reveal, 0) - 0.05) / 0.32), 1);
+  transform: translate3d(calc((1 - var(--reveal, 0)) * 28px), 0, 0)
+    scale(calc(0.985 + var(--reveal, 0) * 0.015));
   will-change: opacity, transform;
 }
 
@@ -6786,7 +6786,7 @@ body.density-dense .station {
     linear-gradient(rgba(235, 227, 214, 0.045) 1px, transparent 1px),
     linear-gradient(90deg, rgba(235, 227, 214, 0.045) 1px, transparent 1px);
   background-size: 42px 42px;
-  opacity: calc(0.18 + var(--window-reveal, 0) * 0.2);
+  opacity: calc(0.18 + var(--reveal, 0) * 0.2);
   transform: scale(0.9);
 }
 
