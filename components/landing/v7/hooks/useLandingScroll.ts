@@ -32,6 +32,27 @@ export function useLandingScroll(rootRef: React.RefObject<HTMLDivElement | null>
   const rafId = useRef<number | null>(null);
   const lastScrollY = useRef(-1);
 
+  // Corridor entry state is toggled synchronously on scroll because the
+  // CSS uses it as a layer-mode switch (`sticky` -> fixed viewport hold)
+  // for the hero curtain reveal.
+  const syncCorridorEntryState = useCallback(() => {
+    const root = rootRef.current;
+    if (!root) return;
+
+    const defEl =
+      root.querySelector<HTMLElement>("#definition") ??
+      root.querySelector<HTMLElement>("[data-home-corridor-mount]");
+    if (!defEl) return;
+
+    const docEl = document.documentElement;
+    const defTop = defEl.getBoundingClientRect().top;
+    if (defTop > 0.5) {
+      if (docEl.dataset.corridorEntry !== "1") docEl.dataset.corridorEntry = "1";
+    } else {
+      delete docEl.dataset.corridorEntry;
+    }
+  }, [rootRef]);
+
   const onScrollFrame = useCallback(() => {
     rafId.current = null;
     const root = rootRef.current;
@@ -44,10 +65,8 @@ export function useLandingScroll(rootRef: React.RefObject<HTMLDivElement | null>
 
     // Capability gate (single matchMedia read per frame, reused by the
     // parallax block at the bottom of the frame). The hero -> corridor
-    // seam is a direct parallax reveal (ADR-022 v7): no portalled proxy
-    // plane, no `data-hero-handoff` band gate, no `<html>` mirrors.
-    // CSS reads `--hero-cover` written below to drift + fade the held
-    // hero while the live `.home-corridor-host` (z:3) rises over it.
+    // seam is a fixed-entry curtain reveal (ADR-022 v8): no portalled
+    // proxy plane, no held hero, no `--hero-cover` transform channel.
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     // Defer HUD rail/coord readouts to the corridor while it's the
@@ -98,43 +117,28 @@ export function useLandingScroll(rootRef: React.RefObject<HTMLDivElement | null>
     //   `defTop` = the corridor mount's viewport top = the amount the
     //   corridor's `.home-v2-stage__sticky` cell has NOT yet pinned
     //   (it equals (100vh - scrollY) until the stage reaches the top).
-    //   CSS counter-translates the sticky cell up by `--corridor-pin`
-    //   px (= defTop) ONLY while `data-corridor-entry` is set, cancelling
-    //   the rise so the frame sits frozen at viewport top. At defTop <= 0
-    //   (stage reached the top) the flag clears, the transform reverts to
-    //   `none`, and the corridor's own sticky pin + flythrough take over
-    //   untouched. The stage rect that `useDepthScroll` reads is never
-    //   transformed, so corridor timing is unaffected.
+    //   CSS temporarily makes the sticky cell `position: fixed` ONLY
+    //   while `data-corridor-entry` is set, so the frame sits frozen at
+    //   viewport top without scroll-linked counter-transforms. At
+    //   defTop <= 0 (stage reached the top) the flag clears and the
+    //   corridor's own sticky pin + flythrough take over untouched. The
+    //   stage rect that `useDepthScroll` reads is never transformed, so
+    //   corridor timing is unaffected.
     //
     // On the production homepage `#definition` is stripped and replaced
     // by the home-v2 corridor mount (ADR-018), so fall back to the
-    // mount placeholder — without it the pin is never written.
+    // mount placeholder — without it the entry state is never toggled.
     const heroEl = root.querySelector<HTMLElement>("#hero");
     const defEl =
       root.querySelector<HTMLElement>("#definition") ??
       root.querySelector<HTMLElement>("[data-home-corridor-mount]");
     let heroCover = 0;
-    const docEl = document.documentElement;
     if (heroEl && defEl) {
       const defTop = defEl.getBoundingClientRect().top;
       heroCover = Math.max(0, Math.min(1, 1 - defTop / vh));
-      // The pin (px) is the exact distance the sticky cell must be
-      // counter-translated to stay frozen at viewport top. Clamp at 0:
-      // once the stage has reached the top (defTop <= 0) the corridor's
-      // natural sticky pin owns it and the transform must be gone.
-      const pin = Math.max(0, defTop);
-      // Entry band = while the corridor's parked frame is still being
-      // uncovered by the departing hero (stage top below the viewport
-      // top). The flag GATES the counter-transform so it is `none`
-      // everywhere else — critical so the docked-exit `position: fixed`
-      // canvas (ADR-021) is never captured by a transformed ancestor.
-      if (defTop > 0.5) {
-        docEl.style.setProperty("--corridor-pin", pin.toFixed(1));
-        docEl.dataset.corridorEntry = "1";
-      } else {
-        delete docEl.dataset.corridorEntry;
-        docEl.style.removeProperty("--corridor-pin");
-      }
+      // Entry layer state (`data-corridor-entry`) is written synchronously
+      // in `syncCorridorEntryState` on every scroll event so the fixed
+      // hold clears exactly when native sticky takes over.
       // Belt-and-braces visibility cleanup: once the hero has fully
       // scrolled off (cover 1), hide it so it can never paint under
       // later sections during scroll-back-into-band edge cases.
@@ -184,9 +188,10 @@ export function useLandingScroll(rootRef: React.RefObject<HTMLDivElement | null>
   }, [rootRef]);
 
   const onScroll = useCallback(() => {
+    syncCorridorEntryState();
     if (rafId.current) return;
     rafId.current = window.requestAnimationFrame(onScrollFrame);
-  }, [onScrollFrame]);
+  }, [onScrollFrame, syncCorridorEntryState]);
 
   const onResize = useCallback(() => {
     onScroll();
@@ -194,8 +199,9 @@ export function useLandingScroll(rootRef: React.RefObject<HTMLDivElement | null>
 
   // Run FIRST frame synchronously before paint to prevent hero flash
   useLayoutEffect(() => {
+    syncCorridorEntryState();
     onScrollFrame();
-  }, [onScrollFrame]);
+  }, [onScrollFrame, syncCorridorEntryState]);
 
   useEffect(() => {
     window.addEventListener("scroll", onScroll, { passive: true });
@@ -204,12 +210,10 @@ export function useLandingScroll(rootRef: React.RefObject<HTMLDivElement | null>
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onResize);
       if (rafId.current) window.cancelAnimationFrame(rafId.current);
-      // Don't leave the corridor entry-pin engaged if the hook unmounts
-      // mid-band — a stale transform on the sticky cell would capture
-      // the docked-exit fixed canvas.
+      // Don't leave the corridor entry hold engaged if the hook unmounts
+      // mid-band.
       const docEl = document.documentElement;
       delete docEl.dataset.corridorEntry;
-      docEl.style.removeProperty("--corridor-pin");
     };
   }, [onScroll, onResize]);
 

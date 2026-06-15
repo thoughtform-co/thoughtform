@@ -163,13 +163,11 @@
    lifts off a still second section (ToyFight-style), instead of the
    corridor rising into view.
 
-   Until the stage reaches the top, the sticky cell is NOT yet pinned —
-   it sits at viewport top `defTop = (100vh - scrollY)`. `useLandingScroll`
-   writes that distance to `--corridor-pin` (px) and sets
-   `data-corridor-entry` during the band; the counter-translate below
-   cancels the rise so the cell (and the canvas + copy + brandmark it
-   contains, all positioned in viewport coords by `useWorldDomTracker`)
-   sit still at viewport top. The corridor's `.home-v2-stage` itself is
+   Until the stage reaches the top, `useLandingScroll` sets
+   `data-corridor-entry` and the sticky cell becomes a fixed viewport
+   layer. That holds the real corridor frame still without scroll-linked
+   transforms, so the browser never has to reconcile sticky constraints
+   with a counter-translate. The corridor's `.home-v2-stage` itself is
    never transformed, so the rect `useDepthScroll` reads — and therefore
    all corridor timing — is untouched.
 
@@ -180,8 +178,15 @@
    transformed ancestor — `data-corridor-entry` is never set during the
    dock, so the cell carries no transform there. */
 html[data-corridor-entry="1"] .home-v2-stage__sticky {
-  transform: translateY(calc(var(--corridor-pin, 0) * -1px));
-  will-change: transform;
+  /* The entry band is a pure fixed hold. The previous counter-translate
+     fought with native sticky under real wheel/trackpad scroll, producing
+     a visible up/down bounce. Fixed maps directly to the desired visual:
+     the real corridor frame stays at viewport top while the hero scrolls
+     away, then native sticky resumes when the stage reaches the top. */
+  position: fixed;
+  inset: 0;
+  top: 0;
+  height: 100svh;
 }
 
 /* Docked exit (ADR-021): once the canvas is promoted to a fixed
