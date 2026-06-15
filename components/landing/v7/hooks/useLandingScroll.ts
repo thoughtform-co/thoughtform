@@ -106,10 +106,11 @@ export function useLandingScroll(rootRef: React.RefObject<HTMLDivElement | null>
       heroEl.style.visibility = heroCover >= 1 ? "hidden" : "";
     }
 
-    // The Practice → BuildQuote cover handoff was retired when
-    // #buildQuote moved up to sit between #intelligence-layer and
-    // #continuum. Without that handoff, #practice ends naturally
-    // and no sticky-pin compensation is needed inside this hook.
+    // The Practice → BuildQuote cover handoff was retired entirely
+    // (ADR-021): #buildQuote is now stripped from the production HTML
+    // and the corridor-exit seam is owned by `useCorridorExitScroll`.
+    // Without #buildQuote, #practice ends naturally and no sticky-pin
+    // compensation is needed inside this hook.
 
     // Active station
     const stations = Array.from(root.querySelectorAll<HTMLElement>(".station"));

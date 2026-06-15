@@ -257,6 +257,18 @@ cover.
 ordinary parallax and can produce a blank dark interval, which is the opposite
 of a swipe/sweep replacement.
 
+**Two valid exits from a held R3F backdrop (ADR-021):** the cover-plane sweep
+above (incoming opaque plane covers the held canvas) and the
+**zoom-dissipate** (camera flies INTO the held object, surface particles
+scatter, destination section is already in place). Both share the same
+infrastructure — single-writer `docked` / `dockProgress` channel, ADR-008
+transparent-leading-viewport exception, reverse-scroll release gate,
+mobile / reduced-motion fallback. The production corridor→Services seam ships
+the zoom-dissipate; the lab routes (`/test/handoff-a|b|c`) + the
+`components/landing/home-v2/handoff-lab/` recipe ship the cover-plane sweep.
+Reuse the appropriate recipe verbatim — do not invent a third hybrid that
+fades the canvas with `opacity`.
+
 ---
 
 ## 🧷 DOM Pinning & ScrollTrigger (brandmark / fixed actors)

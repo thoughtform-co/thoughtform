@@ -43,6 +43,7 @@ import {
   smoothstep,
   stationById,
 } from "@/lib/home-v2/corridorMap";
+import { DOCKED_INSTRUMENT_EPILOGUE_POSE } from "@/lib/home-v2/epilogueTimeline";
 import { isMobileComposition } from "@/lib/hooks/useDeviceTier";
 import { getSmoothedAccretionLayers, getSmoothedThoughtformOffsetX } from "./motionFollower";
 
@@ -478,6 +479,91 @@ export function getEpilogueCameraPose(epilogueProgress: number): {
     position: [camX, camY, camZ],
     lookAt,
   };
+}
+
+// ── Corridor-exit fly-in pose (ADR-021 — zoom-dissipate) ─────────────
+//
+// Once #services enters the dock window and the `dockProgress` clock
+// (now interpreted as the dissipate clock — same channel, owned by the
+// new exit hook) starts ramping, the camera leaves the held docked
+// instrument pose and flies INTO the sphere along the direction from
+// the docked camera toward the planet centre. The sphere stays put;
+// the camera pulls in toward it and the surface particles scatter
+// past the near plane.
+//
+// At dissipate 0 this returns EXACTLY the docked pose
+// (`getEpilogueCameraPose(DOCKED_INSTRUMENT_EPILOGUE_POSE)`), so the
+// branch boundary in `FlyingCameraRig` is continuous: no pop when the
+// dissipate engages, no pop when it releases on scroll-back. Same
+// branch-continuity contract as the corridor↔epilogue handoff (see
+// BEST-PRACTICES "Exponential blends never reach their target").
+
+/** Fraction of the docked-camera → planet-centre distance the camera
+ *  covers by dissipate 1. ~0.9 puts the camera well inside the
+ *  planet's growing footprint at peak scatter — the surface particles
+ *  visibly fly past the near plane — without quite touching the
+ *  geometric centre (which would let the gaze flip behind the
+ *  scattering points). */
+const EXIT_FLY_IN_DISTANCE_FRAC = 0.9;
+
+/** Lift the lookAt point slightly past the planet centre along the
+ *  camera's direction of travel so the gaze keeps tracking the scatter
+ *  cloud at peak fly-in rather than diving into a single fixed point.
+ *  Small fraction; the visible effect is to keep the sphere centred in
+ *  frame as the camera enters it. */
+const EXIT_LOOK_OVERSHOOT = 0.35;
+
+/** Camera pose during the corridor-exit zoom-dissipate.
+ *
+ *  At `dissipateProgress = 0` returns the docked-instrument pose
+ *  exactly — so the branch is a no-op until the dissipate engages.
+ *  Across `[0, 1]` the camera lerps along the docked → planet-centre
+ *  line by an eased fraction, ending well inside the planet's
+ *  footprint at peak scatter. The gaze stays locked on the planet
+ *  centre (with a small overshoot) so the dissolving cloud reads
+ *  centred in frame throughout. */
+export function getCorridorExitCameraPose(dissipateProgress: number): {
+  position: [number, number, number];
+  lookAt: [number, number, number];
+} {
+  const docked = getEpilogueCameraPose(DOCKED_INSTRUMENT_EPILOGUE_POSE);
+  const planetCentre = BRANDMARK_ANCHOR_INTELLIGENCE;
+
+  const t = clamp01(dissipateProgress);
+  // Smoothstep so the fly-in eases in (no kick at engage) and decelerates
+  // at peak scatter (no kink when the dissipate clock pins to 1 against
+  // the cover viewport edge).
+  const eased = t * t * (3 - 2 * t);
+
+  // Travel along the docked → planet-centre line by an eased fraction
+  // of the total distance.
+  const travel = EXIT_FLY_IN_DISTANCE_FRAC * eased;
+  const position: [number, number, number] = [
+    lerp(docked.position[0], planetCentre[0], travel),
+    lerp(docked.position[1], planetCentre[1], travel),
+    lerp(docked.position[2], planetCentre[2], travel),
+  ];
+
+  // LookAt: pull from the docked lookAt toward a point slightly past
+  // the planet centre along the same axis. Slight overshoot so the
+  // gaze still has somewhere to converge when the camera is inside the
+  // planet — otherwise it spins to face the planet centre as we cross
+  // it, which reads as a snap. The lerp uses `t` (not `eased`) so the
+  // lookAt leads the position slightly.
+  const lookCentre: [number, number, number] = [
+    planetCentre[0],
+    planetCentre[1],
+    // Look fractionally past the centre along the docked → centre
+    // direction (centre is in -Z, so subtract).
+    planetCentre[2] - EXIT_LOOK_OVERSHOOT,
+  ];
+  const lookAt: [number, number, number] = [
+    lerp(docked.lookAt[0], lookCentre[0], t),
+    lerp(docked.lookAt[1], lookCentre[1], t),
+    lerp(docked.lookAt[2], lookCentre[2], t),
+  ];
+
+  return { position, lookAt };
 }
 
 /** Base look-at point. Travels with the camera (LOOK_AHEAD units

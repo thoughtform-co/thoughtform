@@ -125,7 +125,22 @@
          Build park hands off to "The labs just bet billions on
          the same layer" in roughly one viewport of scroll instead
          of ~3. The corridor span is unchanged. `EPILOGUE_START`
-         recomputes to 620/820 ≈ 0.7561. */
+         recomputes to 620/820 ≈ 0.7561.
+       - 820svh: ADR-021 corridor-exit zoom-dissipate (2026-06-15)
+         — the stage HEIGHT is byte-identical (the corridor span
+         and epilogue tail are untouched), but the post-corridor
+         seam has been reworked. The retired `#buildQuote`
+         HandoffOrbitEmbed cover-plane sweep that used to sit
+         immediately AFTER this stage is removed; the docked
+         sphere now plays a fly-into-sphere zoom + particle scatter
+         + atmosphere bloom while #services (relocated to directly
+         follow the corridor mount) re-shields the viewport with
+         its own dark surface. The dock channel
+         (`data-corridor-docked` + `dockProgress`) is still owned
+         by ONE hook (`useCorridorExitScroll`) per the single-writer
+         rule. The retired sweep recipe is preserved in
+         `components/landing/home-v2/handoff-lab/` + the
+         `/test/handoff-a|b|c` lab routes as a reusable reference. */
   height: 820svh;
   background: var(--void, #050403);
   z-index: 2;
@@ -140,6 +155,22 @@
   overflow: hidden;
 }
 
+/* Docked exit (ADR-021): once the canvas is promoted to a fixed
+   full-viewport backdrop, the sticky cell must stop clipping it. With
+   `overflow: hidden` still active on `.home-v2-stage__sticky`, the fixed
+   canvas rendered correctly ABOVE the sticky cell's bottom edge but was
+   clipped BELOW it as the sticky cell scrolled away. That produced the
+   remaining hard horizontal line exactly at:
+
+     sticky.getBoundingClientRect().bottom === #services.getBoundingClientRect().top
+
+   Keep the clip in normal corridor mode (it prevents off-stage painters
+   from bleeding into neighbouring sections), but release it only while
+   the docked corridor-exit seam is active. */
+html[data-corridor-docked="true"] .home-v2-stage__sticky {
+  overflow: visible;
+}
+
 /* ── R3F canvas — world-rigid gates + ring debris ─────────────
    Sits inside the sticky cell, behind the DOM copy overlay and
    the projected brandmark actor. */
@@ -152,24 +183,43 @@
   z-index: 5;
 }
 
-/* Dock handoff: while #buildQuote's services section is in view, the
-   completed corridor canvas becomes a fixed backdrop. The opaque services
-   plane slides UP over it; the sphere only recedes slightly behind that
-   plane, with no opacity fade. Release is driven by `data-corridor-docked`
-   clearing. */
+/* Corridor-exit dock (ADR-021): while #services is in view, the
+   completed corridor canvas becomes a fixed backdrop. The sphere
+   plays the zoom-dissipate (camera flies INTO the sphere, particles
+   scatter, atmosphere blooms then fades) — every visual contract is
+   owned by R3F painters reading `dockProgress` (the dissipate clock).
+   This rule keeps the canvas in viewport-fixed position with NO CSS
+   transform: any visual recede must come from the camera arc, not a
+   2D transform, so the dissipate composes with the scatter cleanly.
+   Release is driven by `data-corridor-docked` clearing. */
 html[data-corridor-docked="true"] .home-v2-stage__canvas {
   position: fixed;
   inset: 0;
   width: 100vw;
   height: 100svh;
   z-index: 2;
-  /* Parallax recede driven by `--handoff-cover` (0..1) written on <html>
-     by `useEmbeddedServicesScroll`. transform-origin biased toward where
-     the landed sphere sits on screen so it recedes toward its own centre.
-     At cover 0 this is identity (scale 1, opacity 1) — docking never pops. */
-  transform: translate3d(0, calc(var(--handoff-cover, 0) * -2.5vh), 0)
-    scale(calc(1 - var(--handoff-cover, 0) * 0.035));
-  transform-origin: 50% 44%;
+  /* The WebGL canvas is alpha-transparent. In normal corridor mode the
+     sticky stage / parent section provides the dark backing behind those
+     transparent pixels. During the docked exit, however, the sticky cell
+     is scrolling away while the canvas is fixed. If the fixed wrapper
+     stays transparent, pixels ABOVE the sticky bottom composite over the
+     corridor stage backing while pixels BELOW it composite over the next
+     section / body backing — a hard horizontal layer change exactly at
+     `sticky.bottom === #services.top`. Give the fixed wrapper its own
+     full-viewport void backing so the transparent WebGL buffer has one
+     continuous background for the whole docked seam. */
+  background: var(--void, #050403);
+  /* No CSS transform on purpose. The retired cover-plane sweep used
+     `--handoff-cover` for a small recede (translate + scale) UNDER an
+     opaque rising plane; the dissipate has no plane to recede from,
+     and the camera fly-in is the visible motion. Adding a CSS recede
+     on top of the camera fly-in stacks two motion channels and reads
+     as a jolt. */
+  transform: none;
+  /* Opacity 1 here; the canvas's painters fade themselves to 0 across
+     the back of the dissipate (`dissipateOpacityMultiplier`). Once
+     dissipate ~1 the canvas is effectively empty so we leave the
+     element opaque/mounted for the reverse-scroll restore. */
   opacity: 1;
 }
 
@@ -202,6 +252,56 @@ html[data-corridor-epilogue="true"] .home-v2-stage__canvas canvas {
 html[data-corridor-docked="true"] .home-v2-stage__canvas,
 html[data-corridor-docked="true"] .home-v2-stage__canvas canvas {
   pointer-events: none;
+}
+
+/* Corridor-exit Services backdrop (ADR-021): while the corridor-exit
+   zoom-dissipate is engaged, the section dissolves INTO the dissipating
+   sphere with a SOFT fixed veil instead of letting the #services normal-
+   flow rectangle cut a hard horizontal edge across the planet.
+
+   Important: the veil is a fixed full-viewport body::before layer, NOT the
+   section's own background. A gradient on the section background still
+   starts at the section's top border, so the browser composites a new
+   rectangular layer exactly where #services enters normal flow — the line
+   the user saw. A pseudo-element inside #services can still inherit section
+   paint/stacking behaviour, so the final veil lives on body instead: no
+   section geometry, no section top edge, no clip.
+
+   Final shape: a fixed FULL-VIEWPORT UNIFORM veil keyed to the same
+   dissipate clock. It has no section edge and no internal horizontal
+   gradient stop. The sphere still does the authored transition (camera
+   fly-in + particle scatter + material fade); this layer only brings
+   the page back to the normal dark station surface underneath it. At
+   dissipate ~1 it is effectively opaque void, so when
+   `data-corridor-exit` clears and `.station:not(.hero)` resumes ownership,
+   the release is visually continuous. #services itself stays transparent
+   during the seam; its content is raised above the veil with z-index: 1. */
+html[data-corridor-exit="true"] #services {
+  position: relative;
+  z-index: 6;
+  background-color: transparent;
+  background-image: none;
+  /* `.station:not(.hero)` sets `content-visibility: auto`, which creates
+     paint containment. During the docked seam that containment clips even
+     fixed descendants / pseudo layers to the #services border box, bringing
+     back the exact hard edge we are trying to remove. Disable it only while
+     the exit is active; after release the normal station performance hint
+     resumes. */
+  content-visibility: visible;
+}
+
+html[data-corridor-exit="true"] body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  background: rgba(5, 4, 3, var(--corridor-dissipate, 0));
+}
+
+html[data-corridor-exit="true"] #services > * {
+  position: relative;
+  z-index: 7;
 }
 
 /* ── DOM copy + label overlay ─────────────────────────────────
@@ -712,8 +812,9 @@ html[data-corridor-docked="true"] .home-v2-stage__canvas canvas {
      Stack v3 (2026-06-10) — explicitly overrides the base
      bottom-centre cartouche anchor so this single block stays at
      top-centre. `bottom: auto` releases the base anchor; the rAF
-     loop also writes a bare `translate3d(-50%, 0, 0)` transform
-     here (no parallax) so the title sits perfectly centred. */
+     loop writes the live transform so the title sits perfectly centred
+     during the epilogue, then drifts upward + subtly scales with the
+     sphere during the ADR-021 dissipate. */
   top: clamp(80px, 12vh, 156px);
   bottom: auto;
   left: 50%;
@@ -765,6 +866,13 @@ html[data-corridor-docked="true"] .home-v2-stage__canvas canvas {
   overflow: visible;
   pointer-events: none;
   opacity: 0;
+  /* The ticker rides the corridor-exit fly-in via its own per-frame limb
+     projection (`EpilogueNewsTicker`) up to the fly-in cap, so it rises
+     welded to the sphere. `--ticker-exit-lift` is 0 until that cap, then
+     carries the frozen arc the rest of the way off the top — it is NOT the
+     title/CTA's `--signal-exit-lift` (using that would double the motion
+     during the welded phase). */
+  transform: translate3d(0, var(--ticker-exit-lift, 0px), 0);
   filter: drop-shadow(0 0 16px rgba(10, 9, 8, 0.9)) drop-shadow(0 0 10px rgba(202, 165, 84, 0.18));
   mask-image: linear-gradient(90deg, transparent 0%, #000 16%, #000 84%, transparent 100%);
 }
@@ -781,11 +889,13 @@ html[data-corridor-docked="true"] .home-v2-stage__canvas canvas {
     0 0 18px rgba(202, 165, 84, 0.14);
 }
 
-/* The title + CTA stay CENTERED (viewport-fixed) and only cross-dissolve.
-   The TICKER is a separate world-projected layer (see
-   `.home-v2-signal-ticker` + `EpilogueNewsTicker`) that rides the planet's
-   real projected limb, so it tracks the sphere across camera flight, dock
-   recede, and any viewport. */
+/* During the ADR-021 dissipate, the signal title/CTA are PUSHED OUT of the
+   top of the viewport via `--signal-exit-lift` (a full-viewport,
+   scroll-coupled translate written by `CorridorStationHeaders`), so they
+   leave with the scene instead of fading in place. The ticker leaves too,
+   but it rides the corridor-exit fly-in directly through its own per-frame
+   limb projection (`EpilogueNewsTicker`), so it stays welded to the rising
+   sphere limb rather than using the CSS lift. */
 
 .home-v2-signal-actions {
   position: relative;

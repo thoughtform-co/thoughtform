@@ -91,15 +91,24 @@ export interface DepthGatewayTransform {
    *  amplify near-camera streak flow only when the user is
    *  actively moving. */
   velocity: number;
-  /** True while the post-corridor services handoff keeps the live
-   *  R3F instrument docked as a fixed backdrop behind scrolling DOM
-   *  readouts. Written by the embedded handoff section, not by the
-   *  corridor stage's own scroll hook. */
+  /** True while the post-corridor exit hook keeps the live R3F
+   *  instrument docked as a fixed backdrop behind the destination
+   *  section. Written by the exit hook (`useCorridorExitScroll` per
+   *  ADR-021; previously `useEmbeddedServicesScroll`), NOT by the
+   *  corridor stage's own scroll hook. Single-writer rule — see
+   *  `sentinel/BEST-PRACTICES.md` "Cross-writer scroll state needs an
+   *  owner and a release guard". */
   docked: boolean;
-  /** 0..1 scrub through the docked services section. Kept separate
+  /** 0..1 scrub through the docked destination section. Kept separate
    *  from `epilogueProgress` so the corridor's calibrated stage can
    *  finish normally, then the later DOM section can keep the sphere
-   *  parked and subtly alive while its copy scrolls over it. */
+   *  parked and subtly alive while its copy scrolls over it.
+   *  Reinterpreted by the painters as the DISSIPATE clock under
+   *  ADR-021: the substrate sphere reads it for shell scatter +
+   *  particle fade, the camera reads it via
+   *  `getCorridorExitCameraPose(dissipate)` to fly INTO the sphere,
+   *  and the BILLIONS signal block reads it via
+   *  `dissipateBand(dockProgress, "SIGNAL_OUT")` for the title fade. */
   dockProgress: number;
 }
 

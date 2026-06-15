@@ -132,11 +132,125 @@ function parseV7Html(htmlPath: string, tokensPath: string, options?: ParseOption
       const escaped = id.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
       bodyHtml = bodyHtml.replace(new RegExp(`href="#${escaped}"`, "g"), `href="#${mountId}"`);
     }
+
+    // After #buildQuote is stripped, its sole-purpose wrapper
+    // `<div class="build-quote-runway">` is left holding only
+    // whitespace. The wrapper had no semantics of its own (the
+    // production handoff used to mount its `HandoffOrbitEmbed`
+    // root into the inner section) — keeping it as an empty ghost
+    // would leave an orphan container at the corridor seam.
+    bodyHtml = removeEmptyBuildQuoteRunway(bodyHtml);
+  }
+
+  // Optional surgery: slice a station out of its source position and
+  // re-insert it right after the corridor mount placeholder. Powers
+  // the production corridor-exit reorder (ADR-021): #services moves
+  // up to directly follow the corridor so the labs/billions epilogue
+  // hands off into the practical "Three ways to bring the practice
+  // in" copy via the new zoom-dissipate seam.
+  if (options?.relocateStationsToMount && options.relocateStationsToMount.length) {
+    const mountId = options.corridorMountId ?? "home-corridor-mount";
+    for (const spec of options.relocateStationsToMount) {
+      bodyHtml = relocateStationToMount(bodyHtml, spec.stationId, mountId, {
+        dropTrailingConnectorSlot: spec.dropTrailingConnectorSlot,
+      });
+    }
   }
 
   const scopedCss = scopeV7Css(tokensCss, inlineStyles);
 
   return { bodyHtml, bodyClass, scopedCss };
+}
+
+/**
+ * Drop the now-empty `<div class="build-quote-runway">` wrapper that
+ * remains after `#buildQuote` is removed. The wrapper only ever held
+ * the single buildQuote `<section>` (production formerly portaled the
+ * handoff mount into it); once the section is gone the wrapper carries
+ * just whitespace and stale CSS hooks. The regex is intentionally
+ * narrow — it tolerates leading/trailing whitespace inside the wrapper
+ * but won't match a wrapper that still contains real content, so a
+ * future markup change that puts siblings inside the runway leaves the
+ * wrapper alone.
+ */
+function removeEmptyBuildQuoteRunway(bodyHtml: string): string {
+  return bodyHtml.replace(/<div\s+class="build-quote-runway"\s*>\s*<\/div>\s*/g, "");
+}
+
+/**
+ * Slice a station block out of its source position and re-insert it
+ * immediately after the corridor mount placeholder. Uses the same
+ * balanced-tag walker as `removeStationsFromBody` so nested sections
+ * are preserved intact. If `dropTrailingConnectorSlot` is provided,
+ * a `<div data-celestial-slot="...">` connector immediately following
+ * the relocated section is removed too — it would otherwise be left
+ * orphaned in the source position (bridging the wrong two sections)
+ * AND duplicated at the new position (the section is reinserted alone,
+ * so the connector doesn't travel with it).
+ */
+function relocateStationToMount(
+  bodyHtml: string,
+  stationId: string,
+  mountId: string,
+  options?: { dropTrailingConnectorSlot?: string }
+): string {
+  const openRe = new RegExp(`<section\\b[^>]*\\bid="${stationId}"[^>]*>`);
+  const openMatch = openRe.exec(bodyHtml);
+  if (!openMatch) return bodyHtml;
+
+  const startIdx = openMatch.index;
+  const tagRe = /<section\b|<\/section>/g;
+  tagRe.lastIndex = startIdx;
+  let depth = 0;
+  let endIdx = -1;
+  let m: RegExpExecArray | null;
+  while ((m = tagRe.exec(bodyHtml)) !== null) {
+    if (m[0] === "</section>") {
+      depth -= 1;
+      if (depth === 0) {
+        endIdx = m.index + m[0].length;
+        break;
+      }
+    } else {
+      depth += 1;
+    }
+  }
+  if (endIdx <= startIdx) return bodyHtml;
+
+  // Capture the section block on its own. Anything ahead of the section
+  // (comments, whitespace) stays where it was — only the section travels.
+  const sectionHtml = bodyHtml.slice(startIdx, endIdx);
+
+  // Extend the slice to also consume a trailing connector slot, with
+  // any whitespace + HTML comments between them collapsed too.
+  let trailingEnd = endIdx;
+  if (options?.dropTrailingConnectorSlot) {
+    const slotId = options.dropTrailingConnectorSlot.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const trailPattern = new RegExp(
+      `^(?:\\s|<!--[\\s\\S]*?-->)*<div\\s+data-celestial-slot="${slotId}"\\s*>\\s*</div>\\s*`
+    );
+    const trailMatch = trailPattern.exec(bodyHtml.slice(endIdx));
+    if (trailMatch) trailingEnd = endIdx + trailMatch[0].length;
+  }
+
+  const withoutSection = bodyHtml.slice(0, startIdx) + bodyHtml.slice(trailingEnd);
+
+  // Insert the section right after the corridor mount placeholder.
+  // Pattern intentionally omits `\b` after the id attribute: the next
+  // character is a quote (non-word) followed by a space (also non-word),
+  // and `\b` requires a word↔non-word transition, so a `\b` here never
+  // matches. `[^>]*` accepts the placeholder's trailing
+  // `data-home-corridor-mount` flag attribute on its own.
+  const escapedMountId = mountId.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const mountPattern = new RegExp(`<div\\s+id="${escapedMountId}"[^>]*></div>`);
+  if (!mountPattern.test(withoutSection)) {
+    // No placeholder to anchor against — leave the section where the
+    // walker first found it (caller mis-configured the relocate, but
+    // dropping the section entirely would be worse).
+    return bodyHtml;
+  }
+
+  return withoutSection.replace(mountPattern, (match) => `${match}\n${sectionHtml}`);
 }
 
 /**
@@ -224,6 +338,18 @@ function removeHudNavEntries(bodyHtml: string, ids: readonly string[]): string {
   return out;
 }
 
+export interface RelocateStationSpec {
+  /** Station id (the `<section id="X">` to slice out) that should move
+   *  to right after the corridor mount placeholder. */
+  stationId: string;
+  /** Optional `data-celestial-slot` value of a connector div that
+   *  immediately follows the section in source order. When set, the
+   *  connector is dropped during the relocate so it isn't orphaned
+   *  bridging the wrong two sections AND duplicated at the new
+   *  position. */
+  dropTrailingConnectorSlot?: string;
+}
+
 export interface ParseOptions {
   /** Station ids to strip from `<main class="stations">`. The first
    *  removed section is replaced with a `<div id="${corridorMountId}"
@@ -231,6 +357,12 @@ export interface ParseOptions {
    *  anchors are also stripped, and any leftover `href="#${id}"` cross
    *  links are redirected to the corridor mount. */
   removeStations?: readonly string[];
+  /** Stations that should be sliced out of their source position and
+   *  re-inserted immediately after the corridor mount placeholder.
+   *  Powers the production corridor-exit reorder (ADR-021). Runs AFTER
+   *  `removeStations` so the relocated section can't collide with a
+   *  station scheduled for removal. */
+  relocateStationsToMount?: readonly RelocateStationSpec[];
   /** Id used for the mount placeholder div + the redirected cross-
    *  links. Defaults to `"home-corridor-mount"`. */
   corridorMountId?: string;

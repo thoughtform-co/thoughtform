@@ -41,7 +41,13 @@ import {
   makeMeshMaterial,
 } from "@/components/landing/intelligence-artifact/artifactPrimitives";
 import { buildSphereCloudGeometry } from "@/components/landing/v7/intelligence-layer/celestialRingUtils";
-import { epilogueBand } from "@/lib/home-v2/epilogueTimeline";
+import {
+  dissipateAtmosphereEnvelope,
+  dissipateCoreMultiplier,
+  dissipateOpacityMultiplier,
+  dissipateShellScatter,
+  epilogueBand,
+} from "@/lib/home-v2/epilogueTimeline";
 import { useGyroLabStore } from "@/lib/stores/gyroLabStore";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import { clamp01 } from "@/lib/home-v2/corridorMap";
@@ -976,7 +982,7 @@ export function ShellSubstrateGyro({ layerKey, reducedMotion = false }: ShellSub
     const globeSpin = globeSpinRef.current;
     if (!root || !globeSpin) return;
 
-    const { active, armed, docked } = useDepthGatewayStore.getState().transform;
+    const { active, armed, docked, dockProgress } = useDepthGatewayStore.getState().transform;
     // Smoothed epilogue scrub — same channel as the camera so the
     // shed + surface boost glide with the flight (2026-06-11).
     const epilogueProgress = getSmoothedEpilogueProgress();
@@ -984,6 +990,20 @@ export function ShellSubstrateGyro({ layerKey, reducedMotion = false }: ShellSub
       root.visible = false;
       return;
     }
+
+    // ADR-021 corridor-exit zoom-dissipate clock. While docked,
+    // `dockProgress` is the dissipate clock (owned by
+    // `useCorridorExitScroll`, single-writer rule); it ramps 0→1 as
+    // #services scrolls up over the docked sphere. At dissipate 0 all
+    // four dissipate helpers return their identity values (1 / 1 / 1 / 1),
+    // so the parked epilogue pose is byte-identical to its pre-ADR-021
+    // self. When `!docked` the dissipate stays 0 so reverse-scroll
+    // restores the held planet cleanly.
+    const dissipate = docked ? dockProgress : 0;
+    const dissipateOp = dissipateOpacityMultiplier(dissipate);
+    const dissipateCoreOp = dissipateCoreMultiplier(dissipate);
+    const dissipateShellMul = dissipateShellScatter(dissipate);
+    const dissipateAtmoEnv = dissipateAtmosphereEnvelope(dissipate);
 
     // Temporally-smoothed reveals (motionFollower) — the gimbal's
     // ring cascade, globe Y-bloom, wrap-spin, and shell settle always
@@ -1037,29 +1057,31 @@ export function ShellSubstrateGyro({ layerKey, reducedMotion = false }: ShellSub
     const opacityBoost = 1 + approachT * 0.55;
 
     // GLOBE materials — kept through the epilogue (these BECOME the
-    // planet surface grid + atmospheric particles).
-    mats.globeDots.uniforms.uOpacity.value = Math.min(
-      1,
-      SUBSTRATE_GYRO_GLOBE_DOTS_OPACITY * presence * opacityBoost * dockVisibilityBoost
-    );
+    // planet surface grid + atmospheric particles). Multiplied by
+    // `dissipateOp` so the surface dots fade to 0 as the dissipate
+    // clock ramps; identity (×1) at dissipate 0.
+    mats.globeDots.uniforms.uOpacity.value =
+      Math.min(
+        1,
+        SUBSTRATE_GYRO_GLOBE_DOTS_OPACITY * presence * opacityBoost * dockVisibilityBoost
+      ) * dissipateOp;
     mats.globeDots.uniforms.uPointSize.value =
       SUBSTRATE_GYRO_GLOBE_DOTS_POINT_SIZE * pointSizeBoost;
     mats.globeDots.uniforms.uPixelRatio.value = state.viewport.dpr;
-    mats.equator.uniforms.uOpacity.value = Math.min(
-      1,
-      lineOpacity(SUBSTRATE_GYRO_GLOBE_EQUATOR_OPACITY) * dockVisibilityBoost
-    );
+    mats.equator.uniforms.uOpacity.value =
+      Math.min(1, lineOpacity(SUBSTRATE_GYRO_GLOBE_EQUATOR_OPACITY) * dockVisibilityBoost) *
+      dissipateOp;
     mats.particle.uniforms.uPixelRatio.value = state.viewport.dpr;
-    mats.particle.uniforms.uOpacity.value = Math.min(
-      1,
-      SUBSTRATE_GYRO_PARTICLE_OPACITY * presence * opacityBoost * dockVisibilityBoost
-    );
+    mats.particle.uniforms.uOpacity.value =
+      Math.min(1, SUBSTRATE_GYRO_PARTICLE_OPACITY * presence * opacityBoost * dockVisibilityBoost) *
+      dissipateOp;
     mats.particle.uniforms.uPointSize.value = SUBSTRATE_GYRO_POINT_SIZE * pointSizeBoost;
     mats.dottedShell.uniforms.uPixelRatio.value = state.viewport.dpr;
-    mats.dottedShell.uniforms.uOpacity.value = Math.min(
-      1,
-      SUBSTRATE_GYRO_DOTTED_SHELL_OPACITY * presence * opacityBoost * dockVisibilityBoost
-    );
+    mats.dottedShell.uniforms.uOpacity.value =
+      Math.min(
+        1,
+        SUBSTRATE_GYRO_DOTTED_SHELL_OPACITY * presence * opacityBoost * dockVisibilityBoost
+      ) * dissipateOp;
     mats.dottedShell.uniforms.uPointSize.value =
       SUBSTRATE_GYRO_DOTTED_SHELL_POINT_SIZE * pointSizeBoost;
 
@@ -1068,29 +1090,46 @@ export function ShellSubstrateGyro({ layerKey, reducedMotion = false }: ShellSub
     // transitions from "instrument" to "planet". Capped at 0.6 so
     // it sits as a gentle atmospheric ring, not a bloom that drowns
     // the dotted-shell surface.
-    mats.atmosphere.uniforms.uOpacity.value = approachT * 0.6;
+    //
+    // ADR-021 dissipate: `dissipateAtmoEnv` BLOOMS the rim to ~1.8×
+    // its parked value at dissipate 0.35, then fades it to 0 by 0.92.
+    // The cap is lifted to 1 during the bloom so the burst reads as
+    // an actual flare against the scattering particles. Envelope is
+    // 1 at dissipate 0 so the parked epilogue value is preserved.
+    mats.atmosphere.uniforms.uOpacity.value = Math.min(1, approachT * 0.6 * dissipateAtmoEnv);
 
     // Occluder core — anti-pop presence only; the geometric emergence
     // comes free from the globe-spin group's Y-bloom (the core
     // flattens to a dark lens at reveal 0 and inflates into a ball as
     // the cage opens). Solidifies a touch across APPROACH so the
     // planet reads more opaque than the parked instrument.
-    mats.core.uniforms.uOpacity.value = Math.min(
-      0.78,
-      SUBSTRATE_GYRO_CORE_OPACITY * presence * (1 + approachT * 0.4)
-    );
+    //
+    // ADR-021 dissipate: `dissipateCoreOp` sheds the core early
+    // (CORE_SHED band 0→0.42) so the scattering surface dots never
+    // reveal a hard silhouette disc behind them. Identity at
+    // dissipate 0.
+    mats.core.uniforms.uOpacity.value =
+      Math.min(0.78, SUBSTRATE_GYRO_CORE_OPACITY * presence * (1 + approachT * 0.4)) *
+      dissipateCoreOp;
 
     // INSTRUMENT materials — fade out on BUILD_OUT so the substrate
     // sheds its flight-instrument vocabulary before we approach.
+    // They are already 0 by the time the dissipate engages
+    // (BUILD_OUT.end = 0.22 of the EPILOGUE clock; the dock only
+    // engages at epilogueProgress >= 0.72), so no extra dissipate
+    // multiply is needed here — but mirroring `dissipateOp` is cheap
+    // safety in case future tuning moves BUILD_OUT later.
     mats.ring.uniforms.uOpacity.value =
-      lineOpacity(SUBSTRATE_GYRO_RING_LINE_OPACITY) * buildOutFade;
-    mats.tick.uniforms.uOpacity.value = lineOpacity(SUBSTRATE_GYRO_TICK_OPACITY) * buildOutFade;
+      lineOpacity(SUBSTRATE_GYRO_RING_LINE_OPACITY) * buildOutFade * dissipateOp;
+    mats.tick.uniforms.uOpacity.value =
+      lineOpacity(SUBSTRATE_GYRO_TICK_OPACITY) * buildOutFade * dissipateOp;
     mats.graduation.uniforms.uOpacity.value =
-      lineOpacity(SUBSTRATE_GYRO_RING_LINE_OPACITY * 0.95) * buildOutFade;
-    mats.symbol.uniforms.uOpacity.value = lineOpacity(SUBSTRATE_GYRO_SYMBOL_OPACITY) * buildOutFade;
-    mats.pivot.opacity = SUBSTRATE_GYRO_PIVOT_OPACITY * presence * buildOutFade;
+      lineOpacity(SUBSTRATE_GYRO_RING_LINE_OPACITY * 0.95) * buildOutFade * dissipateOp;
+    mats.symbol.uniforms.uOpacity.value =
+      lineOpacity(SUBSTRATE_GYRO_SYMBOL_OPACITY) * buildOutFade * dissipateOp;
+    mats.pivot.opacity = SUBSTRATE_GYRO_PIVOT_OPACITY * presence * buildOutFade * dissipateOp;
     mats.cardinalRing.uniforms.uOpacity.value =
-      lineOpacity(SUBSTRATE_GYRO_CARDINAL_RING_OPACITY) * buildOutFade;
+      lineOpacity(SUBSTRATE_GYRO_CARDINAL_RING_OPACITY) * buildOutFade * dissipateOp;
 
     // Globe spin: keep the idle polar drift; add the decaying wrap-spin
     // on top so the meridians/parallels appear to swirl around the
@@ -1250,7 +1289,13 @@ export function ShellSubstrateGyro({ layerKey, reducedMotion = false }: ShellSub
     // the captured `dottedShellBase` snapshot. We only re-upload when
     // the smoothed radius mul drifts > 0.5% from the last write so the
     // GPU buffer isn't churned every frame.
-    const targetShellMul = unfold.shellRadiusMul;
+    //
+    // ADR-021 dissipate: `dissipateShellMul` pushes the shell outward
+    // (1 + AMP * dissipate) so the cassette geometry stays put but the
+    // surface dots scatter radially as the camera flies in. Composes
+    // multiplicatively on top of the existing `unfold.shellRadiusMul`,
+    // so dissipate 0 is byte-identical to the pre-ADR-021 write.
+    const targetShellMul = unfold.shellRadiusMul * dissipateShellMul;
     const lastMul = lastShellRadiusMul.current;
     if (Math.abs(targetShellMul - lastMul) > 0.005 || dottedShellBase.current === null) {
       const attr = geom.dottedShell.getAttribute("position") as THREE.BufferAttribute | undefined;

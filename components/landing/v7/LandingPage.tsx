@@ -12,7 +12,7 @@ import { CelestialPortals } from "./CelestialConnector/CelestialPortals";
 import { PhaseGlyphPortals } from "./PhaseGlyph";
 import { BuildCasesPortal } from "./build-cases";
 import { HomeCorridor } from "@/components/landing/home-v2/HomeCorridor";
-import { HandoffOrbitEmbed } from "@/components/landing/home-v2/handoff-lab/HandoffOrbitEmbed";
+import { useCorridorExitScroll } from "@/components/landing/home-v2/hooks/useCorridorExitScroll";
 import { CelestialEditorOverlay } from "@/components/admin/CelestialEditor";
 import { useCelestialDrafts } from "@/components/admin/CelestialEditor/useCelestialDrafts";
 import type { SlotsMap } from "@/lib/celestial/schema";
@@ -47,12 +47,15 @@ export function LandingPage({
   const corridorRootRef = useRef<Root | null>(null);
   const corridorMountRef = useRef<HTMLElement | null>(null);
   const corridorUnmountTimerRef = useRef<number | null>(null);
-  const buildQuoteRootRef = useRef<Root | null>(null);
-  const buildQuoteMountRef = useRef<HTMLElement | null>(null);
-  const buildQuoteUnmountTimerRef = useRef<number | null>(null);
 
   useLandingScroll(rootRef);
   useRevealMotion(rootRef);
+  // Corridor-exit seam (ADR-021): watch #services to drive the
+  // zoom-dissipate clock + the docked-backdrop flag while the live
+  // R3F canvas hands off from the corridor epilogue into the
+  // practical services copy. Replaces the retired #buildQuote
+  // HandoffOrbitEmbed cover-plane sweep.
+  useCorridorExitScroll(rootRef);
   // ADR-013: the brandmark journey is a single continuous transform.
   // `useBrandmarkJourney` writes the transform to `brandmarkJourneyStore`
   // every scroll frame; the global painter + R3F ringfield both read it.
@@ -158,69 +161,14 @@ export function LandingPage({
     };
   }, [corridorMountId, corridorText]);
 
-  // Replace the prototype's static Benedict Evans axiom cover with the
-  // production version of the /test/handoff-a orbit flow. Kept as a
-  // nested root for the same reason as HomeCorridor above: the parent
-  // HTML is owned by `dangerouslySetInnerHTML`, so this mount has to be
-  // resilient to dev remounts and bfcache restores.
-  useLayoutEffect(() => {
-    const root = rootRef.current;
-    if (!root) return;
-    if (buildQuoteUnmountTimerRef.current != null) {
-      window.clearTimeout(buildQuoteUnmountTimerRef.current);
-      buildQuoteUnmountTimerRef.current = null;
-    }
-
-    const mountHandoff = () => {
-      const mount = root.querySelector<HTMLElement>("#buildQuote");
-      if (!mount) return;
-
-      const runway = mount.closest<HTMLElement>(".build-quote-runway");
-      runway?.setAttribute("data-build-handoff", "true");
-      mount.classList.add("build-quote--handoff");
-
-      const sameNode = mount === buildQuoteMountRef.current;
-      const rootAlive = buildQuoteRootRef.current != null;
-      const hasContent = mount.childNodes.length > 0;
-      if (sameNode && rootAlive && hasContent) return;
-
-      buildQuoteRootRef.current?.unmount();
-      mount.replaceChildren();
-      buildQuoteMountRef.current = mount;
-      buildQuoteRootRef.current = createRoot(mount);
-      buildQuoteRootRef.current.render(<HandoffOrbitEmbed />);
-    };
-
-    mountHandoff();
-    const observer = new MutationObserver(mountHandoff);
-    observer.observe(root, { childList: true, subtree: true });
-
-    const onPageShow = (event: PageTransitionEvent) => {
-      if (event.persisted) mountHandoff();
-    };
-    window.addEventListener("pageshow", onPageShow);
-
-    return () => {
-      observer.disconnect();
-      window.removeEventListener("pageshow", onPageShow);
-      if (buildQuoteMountRef.current) {
-        buildQuoteMountRef.current
-          .closest<HTMLElement>(".build-quote-runway")
-          ?.removeAttribute("data-build-handoff");
-        buildQuoteMountRef.current.classList.remove("build-quote--handoff");
-      }
-      const rootToUnmount = buildQuoteRootRef.current;
-      if (!rootToUnmount) return;
-      buildQuoteUnmountTimerRef.current = window.setTimeout(() => {
-        if (buildQuoteRootRef.current === rootToUnmount) {
-          rootToUnmount.unmount();
-          buildQuoteRootRef.current = null;
-          buildQuoteMountRef.current = null;
-        }
-        buildQuoteUnmountTimerRef.current = null;
-      }, 0);
-    };
-  }, []);
+  // The retired `#buildQuote` HandoffOrbitEmbed mount used to live here
+  // (ADR-021). The corridor-exit seam is now a zoom-dissipate driven by
+  // `useCorridorExitScroll` above — no separate section mount is needed.
+  // The `getV7Content({ removeStations: [..., "buildQuote"], ... })` call
+  // in the route strips the prototype's "Make the layer useful." cover
+  // section AND the now-empty `.build-quote-runway` wrapper, and
+  // relocates `#services` to immediately follow the corridor mount so
+  // the dissipate hands off into the practical services copy.
 
   // Hamburger toggle — wire imperatively since the nav markup comes from HTML
   useEffect(() => {

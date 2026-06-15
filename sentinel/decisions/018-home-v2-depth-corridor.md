@@ -7,11 +7,68 @@
 [ADR-008 — Landing v7 background layers](008-landing-v7-background-layers.md),
 [ADR-013 — Brandmark journey refactor](013-brandmark-journey-refactor.md),
 [ADR-015 — Brandmark vector-first](015-brandmark-vector-first.md),
-[ADR-017 — Orbit journey + substrate-sphere morph](017-orbit-journey-and-substrate-morph.md).
+[ADR-017 — Orbit journey + substrate-sphere morph](017-orbit-journey-and-substrate-morph.md),
+[ADR-021 — Corridor exit zoom-dissipate](021-corridor-exit-zoom-dissipate.md).
 
 ---
 
-## 2026-06-14 Revision (v3.15) — One-viewport swipe cover
+## 2026-06-15 Revision (v3.16) — Zoom-dissipate exit (supersedes v3.15)
+
+The post-corridor cover-plane sweep (v3.15) is retired in production.
+The corridor exit now plays a **zoom-dissipate**: the camera flies
+INTO the docked sphere, the surface particles scatter radially
+outward, the atmosphere blooms then fades, and the destination
+`#services` section's own dark surface re-shields the viewport
+within the first 100svh. See [ADR-021](021-corridor-exit-zoom-dissipate.md)
+for the full rationale, the retired cover-plane sweep recipe, and
+the new dissipate sub-band timing.
+
+Mechanics inherited from v3.15:
+
+- The single-writer rule still holds — the exit hook
+  (`useCorridorExitScroll`) is the only writer of `docked` /
+  `dockProgress`; the corridor's `useDepthScroll` remains the sole
+  writer of `progress` / `paintProgress` / `epilogueProgress`. The
+  same two-rAF-loops-fighting-the-same-channel hazard documented in
+  v3.15 still applies.
+- The dock still engages at `epilogueProgress >= 0.72` (`DOCK_ENGAGE_EP`)
+  so the dwell at the landed sphere opens BEFORE the section enters
+  the viewport. Engagement off the section's own rect would lose
+  the dwell.
+- The `data-corridor-docked` attribute still promotes
+  `.home-v2-stage__canvas` to a fixed full-viewport backdrop while
+  the seam plays. The retired CSS recede transform (`translate3d`
+  - `scale` driven by `--handoff-cover`) is gone; the camera
+    fly-in is the visible motion.
+- Reduced motion, mobile, and WebGL-fallback paths keep a
+  sequential dark editorial Services section with no fixed-canvas
+  zoom (same `dockCapable` gate the cover-plane recipe used).
+
+Mechanics that changed from v3.15:
+
+- `dockProgress` is now interpreted as the **dissipate clock** by
+  the painters. The substrate sphere reads it for shell scatter +
+  particle fade + atmosphere bloom; the camera reads it via the
+  new `getCorridorExitCameraPose(dissipate)` that pulls the docked
+  camera toward `BRANDMARK_ANCHOR_INTELLIGENCE`. The clock value
+  itself is unchanged (still `(vh - servicesRect.top) / vh`).
+- `#services` is the destination, not a new `#buildQuote` lab
+  section. The `getV7Content({ removeStations, relocateStationsToMount })`
+  pipeline strips `#buildQuote` (and its now-empty
+  `.build-quote-runway` wrapper) and relocates `#services`
+  immediately after the corridor mount placeholder so the
+  rhetorical setup of the BILLIONS epilogue hands directly into
+  "Three ways to bring the practice in" without `#continuum` /
+  `#practice` / `#build` intervening.
+- The retired cover-plane sweep recipe is preserved in
+  `components/landing/home-v2/handoff-lab/` + `/test/handoff-a|b|c`
+  as a documented reusable pattern (ADR-021). Any future section
+  that needs an Active Theory / Hashgraph-class cover sweep should
+  import that recipe verbatim, not invent a third hybrid.
+
+---
+
+## 2026-06-14 Revision (v3.15) — One-viewport swipe cover (RETIRED, see v3.16)
 
 The production handoff now uses the intended cover-swipe grammar instead
 of opening directly on the services copy. The corridor through Navigate,

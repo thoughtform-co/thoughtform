@@ -5,6 +5,7 @@ import * as THREE from "three";
 import { stationById, type StationTelemetry } from "@/lib/home-v2/corridorMap";
 import {
   DOCKED_INSTRUMENT_EPILOGUE_POSE,
+  dissipateBand,
   epilogueBand,
   getEpiloguePlanetScale,
 } from "@/lib/home-v2/epilogueTimeline";
@@ -12,6 +13,7 @@ import { getSmoothedEpilogueProgress } from "./DepthGatewayScene/motionFollower"
 import {
   BRANDMARK_ANCHOR_INTELLIGENCE,
   getCameraFov,
+  getCorridorExitCameraPose,
   getEpilogueCameraPose,
 } from "./DepthGatewayScene/sceneGeom";
 import {
@@ -542,6 +544,14 @@ const TICKER_ARC_HALF_SPAN = (40 * Math.PI) / 180;
 /** Smoothed epilogue scrub below which the ticker is not painted
  *  (the planet hasn't landed and the title hasn't faded in yet). */
 const TICKER_MIN_EP = 0.42;
+/** Dissipate value past which the ticker STOPS following the corridor-exit
+ *  fly-in (ADR-021). The fly-in pulls the mirror camera toward the planet
+ *  centre; past this cap the camera would cross into the planet radius and
+ *  the limb projection (centre + radius) blows up. Capping keeps the ticker
+ *  welded to the rising limb through the visible part of the exit, then it
+ *  holds that last welded pose while the opacity fade (SIGNAL_OUT, which
+ *  starts at 0.72) carries it the rest of the way out. */
+const TICKER_EXIT_FLYIN_CAP = 0.5;
 
 /**
  * EpilogueNewsTicker — headline ring welded to the substrate planet.
@@ -616,11 +626,39 @@ function EpilogueNewsTicker({ animate }: { animate: boolean }) {
       const vw = window.innerWidth;
       const vh = window.innerHeight;
 
-      // Mirror the live epilogue camera, then project the planet centre.
-      const pose = getEpilogueCameraPose(ep);
-      camera.position.set(pose.position[0], pose.position[1], pose.position[2]);
+      // Mirror the live camera — including the ADR-021 corridor-exit
+      // fly-in — so the ticker stays WELDED to the same limb the sphere
+      // shows as it zooms up and off, instead of lagging behind at the
+      // docked-pose limb. This mirrors `FlyingCameraRig`: base epilogue
+      // pose, then lerp toward `getCorridorExitCameraPose(dissipate)` on
+      // the same `t = dissipate²(3 − 2·dissipate)` curve. The fly-in the
+      // ticker follows is CAPPED (`TICKER_EXIT_FLYIN_CAP`) so the mirror
+      // camera never crosses into the planet radius (which would blow the
+      // limb projection up); past the cap the arc holds its last welded
+      // pose and the opacity fade carries it out.
+      const dissipate = transform.docked
+        ? Math.min(transform.dockProgress, TICKER_EXIT_FLYIN_CAP)
+        : 0;
+      const basePose = getEpilogueCameraPose(ep);
+      let camPos = basePose.position;
+      let camLook = basePose.lookAt;
+      if (dissipate > 1e-4) {
+        const exitPose = getCorridorExitCameraPose(dissipate);
+        const tt = dissipate * dissipate * (3 - 2 * dissipate);
+        camPos = [
+          basePose.position[0] + (exitPose.position[0] - basePose.position[0]) * tt,
+          basePose.position[1] + (exitPose.position[1] - basePose.position[1]) * tt,
+          basePose.position[2] + (exitPose.position[2] - basePose.position[2]) * tt,
+        ];
+        camLook = [
+          basePose.lookAt[0] + (exitPose.lookAt[0] - basePose.lookAt[0]) * tt,
+          basePose.lookAt[1] + (exitPose.lookAt[1] - basePose.lookAt[1]) * tt,
+          basePose.lookAt[2] + (exitPose.lookAt[2] - basePose.lookAt[2]) * tt,
+        ];
+      }
+      camera.position.set(camPos[0], camPos[1], camPos[2]);
       camera.up.set(0, 1, 0);
-      camera.lookAt(pose.lookAt[0], pose.lookAt[1], pose.lookAt[2]);
+      camera.lookAt(camLook[0], camLook[1], camLook[2]);
       camera.updateMatrixWorld();
 
       center.set(
@@ -629,6 +667,10 @@ function EpilogueNewsTicker({ animate }: { animate: boolean }) {
         BRANDMARK_ANCHOR_INTELLIGENCE[2]
       );
       proj.copy(center).project(camera);
+      // `proj.z` outside [-1, 1] means the planet centre is behind / past
+      // the camera (it has flown through) — the projection is meaningless,
+      // so hold the last good arc and let opacity finish the exit.
+      const centreValid = proj.z > -1 && proj.z < 1;
       const cx = (proj.x * 0.5 + 0.5) * vw;
       const cy = (-proj.y * 0.5 + 0.5) * vh;
 
@@ -641,6 +683,16 @@ function EpilogueNewsTicker({ animate }: { animate: boolean }) {
       const edgeX = (proj.x * 0.5 + 0.5) * vw;
       const edgeY = (-proj.y * 0.5 + 0.5) * vh;
       const ringR = Math.hypot(edgeX - cx, edgeY - cy) * TICKER_RING_RADIUS_MUL;
+
+      // Projection guard: if the centre is behind the camera or the radius
+      // is non-finite / absurd (camera near the surface), keep the last
+      // valid arc and just keep the opacity fade alive — never paint a
+      // blown-up ring.
+      if (!centreValid || !Number.isFinite(ringR) || ringR > vw * 3) {
+        svg.style.opacity = sigOp.toFixed(3);
+        last = { ...last, op: sigOp };
+        return;
+      }
 
       // Skip the text-on-path relayout when nothing moved meaningfully.
       if (
@@ -794,28 +846,54 @@ export function CorridorStationHeaders() {
       const buildOut = 1 - epilogueBand(ep, "BUILD_OUT");
       const titleIn = epilogueBand(ep, "TITLE_IN");
       // Fade the labs signal out as the corridor stage scrolls away beneath
-      // the production handoff cover. The sphere + title hold a full
-      // viewport at the epilogue climax; once the stage un-pins and scrolls
-      // out, the services layer rises in below and the title dissolves with
-      // it. epilogueProgress is saturated (==1) through this release, so the
-      // fade is driven by the stage's own scroll-out, not an epilogue band.
-      // /test/home-v2 has no cover layer, so the title simply stays up.
+      // the production corridor-exit zoom-dissipate (ADR-021). The sphere +
+      // title hold a full viewport at the epilogue climax; once #services
+      // enters the dock window, `useCorridorExitScroll` ramps `dockProgress`
+      // (the dissipate clock) from 0 → 1 across the first Services
+      // viewport, and the sphere dissipates with it. The BILLIONS title
+      // belongs to the sphere scene, so it now yields across a DELAYED
+      // mid-dissipate band (SIGNAL_OUT 0.16 → 0.72): first the user
+      // reads it, then the title/CTA/ticker visibly lift with the
+      // sphere, THEN they fade out. Earlier tuning faded on the front
+      // half (0.04 → 0.42), which made the ticker vanish before its
+      // movement was legible. On /test/home-v2 there is no exit hook so
+      // `docked` stays false and the title simply stays up.
       let titleOut = 0;
-      const embedded = document.querySelector(".handoff-lab--embedded");
-      const vhNow = window.innerHeight || 1;
-      if (embedded && docked) {
-        // The billions block belongs to the sphere scene, so it recedes +
-        // fades WITH the sphere as the opaque services plane covers it.
-        // Key the fade to the COVER progress (how far the services plane has
-        // risen over the viewport): hold full early, gone by the time the
-        // cover is ~halfway up — well before it would hard-occlude the title
-        // — so the billions never co-reads with "Stay in the instrument".
-        const sr = document
-          .querySelector<HTMLElement>(".handoff-lab__services")
-          ?.getBoundingClientRect();
-        const cover = sr ? Math.max(0, Math.min(1, (vhNow - sr.top) / vhNow)) : 0;
-        titleOut = smoothstep(0.06, 0.5, cover);
+      if (docked) {
+        titleOut = dissipateBand(t.dockProgress, "SIGNAL_OUT");
       }
+      // ADR-021 follow-through: the signal group (BILLIONS title + CTA +
+      // note) AND the news ticker should be PUSHED OUT of the top of the
+      // viewport as the user scrolls into the dissipate — not fade in
+      // place. The dissipate clock is exactly `(vh - servicesRect.top) /
+      // vh`, so a lift of `-dissipate * vh` moves the fixed signal layer
+      // up 1:1 with scroll: it reads as the epilogue scene scrolling away
+      // under the rising services section (the sphere zooms via the
+      // camera fly-in; the text + ticker ride straight up and off). The
+      // lift is LINEAR (not eased) so the 1:1 scroll coupling is exact,
+      // and it spans a FULL viewport so the whole group clears the top
+      // well before the opacity fade (SIGNAL_OUT) even begins — the fade
+      // is now only a safety for short viewports / the dock release, the
+      // exit itself is pure translation. Exposed as a CSS var on <html>
+      // so the independently fixed ticker SVG rides the same clock
+      // without being nested under the signal block's transform (nesting
+      // would break its viewport-space limb projection).
+      const signalDriftRaw = docked ? t.dockProgress : 0;
+      const vhNow = typeof window !== "undefined" ? window.innerHeight || 1 : 1;
+      const signalLiftPx = reducedMotion ? 0 : -signalDriftRaw * vhNow;
+      const signalScale = reducedMotion ? 1 : 1 - signalDriftRaw * 0.03;
+      // Ticker exit: it rides the fly-in limb projection up to
+      // `TICKER_EXIT_FLYIN_CAP` (where the mirror camera would otherwise
+      // cross into the planet and blow the projection up), then the
+      // projection freezes mid-screen. A POST-CAP CSS lift carries that
+      // frozen arc the rest of the way off the top so it never stalls and
+      // fades in place. 0 until the cap, then ramps fast enough to clear
+      // the viewport before the opacity fade (SIGNAL_OUT) starts at 0.72.
+      const tickerPostCap =
+        signalDriftRaw > TICKER_EXIT_FLYIN_CAP
+          ? (signalDriftRaw - TICKER_EXIT_FLYIN_CAP) / (1 - TICKER_EXIT_FLYIN_CAP)
+          : 0;
+      const tickerLiftPx = reducedMotion ? 0 : -tickerPostCap * vhNow * 1.5;
       const containerOps = {
         nav: bandOpacity(p, NAVIGATE_FADE_IN, NAVIGATE_FADE_OUT),
         enc: bandOpacity(p, ENCODE_FADE_IN, ENCODE_FADE_OUT),
@@ -865,11 +943,24 @@ export function CorridorStationHeaders() {
         const el = stationRefs.current[key].container;
         if (el) el.style.transform = cartoucheTransform;
       }
-      // Signal block keeps its base centred transform (no parallax)
-      // — it lives in the sky above the planet, not attached to the
-      // gimbal.
+      // Signal block: centred (translateX -50%) + scroll-coupled upward
+      // lift so it is pushed out of the top of the viewport with scroll.
       const sigEl = stationRefs.current.sig.container;
-      if (sigEl) sigEl.style.transform = "translate3d(-50%, 0, 0)";
+      if (sigEl) {
+        sigEl.style.transform = `translate3d(-50%, ${signalLiftPx.toFixed(2)}px, 0) scale(${signalScale.toFixed(4)})`;
+      }
+      // Title/CTA read these inherited vars for the 1:1 push-out. The
+      // ticker reads `--ticker-exit-lift` (post-cap only) so it leaves
+      // with the scene after its welded fly-in rise freezes.
+      document.documentElement.style.setProperty(
+        "--signal-exit-lift",
+        `${signalLiftPx.toFixed(2)}px`
+      );
+      document.documentElement.style.setProperty("--signal-exit-scale", signalScale.toFixed(4));
+      document.documentElement.style.setProperty(
+        "--ticker-exit-lift",
+        `${tickerLiftPx.toFixed(2)}px`
+      );
 
       // Per-station typewriter pass.
       for (const key of ["nav", "enc", "bld", "sig"] as const) {

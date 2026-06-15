@@ -111,3 +111,113 @@ export function getEpiloguePlanetScale(epilogueProgress: number): number {
  *  has resolved and the sphere arc is still clearly visible behind the
  *  services copy. The camera eases into this pose so docking never pops. */
 export const DOCKED_INSTRUMENT_EPILOGUE_POSE = 0.62;
+
+// ────────────────────────────────────────────────────────────────────
+// Dissipate clock (ADR-021 — corridor-exit zoom-dissipate)
+//
+// The dissipate is a SECOND clock, independent of `epilogueProgress`.
+// It is written by `useCorridorExitScroll` from the live #services
+// rect (the same `(vh - servicesRect.top) / vh` shape the retired
+// cover-plane sweep used for `--handoff-cover`) and stored on the
+// depth store as `dockProgress` while `docked === true`.
+//
+// At dissipate 0 the canvas is still showing the parked / docked
+// epilogue pose (sphere held, BILLIONS title visible). At dissipate 1
+// the sphere has scattered outward and faded, the camera has flown
+// into the planet's footprint, and the destination section's own
+// dark surface owns the viewport.
+//
+// Sub-bands inside the dissipate clock — each painter reads its own
+// reveal off this table so the choreography stays declarative.
+// ────────────────────────────────────────────────────────────────────
+
+export const DISSIPATE_BANDS = {
+  /** Smoky occluder core sheds early so the dissipating shell never
+   *  reveals a hard silhouette behind it. The core was the only
+   *  normal-blended body in the sphere (every other element is
+   *  additive); leaving it longer than the surface fade would leave
+   *  a dark disc floating where the planet used to be. */
+  CORE_SHED: { start: 0.0, end: 0.42 } as const,
+
+  /** Shell vertices push radially outward across the whole dissipate.
+   *  The cassette geometry stays put; only the dotted-shell radius
+   *  multiplier is scaled, which (combined with PARTICLE_FADE) reads
+   *  as the sphere "atomizing" outward into the camera. */
+  SHELL_SCATTER: { start: 0.0, end: 1.0 } as const,
+
+  /** All particle materials (globe dots, surface shell, ambient
+   *  particles, atmosphere) fade to 0 across the back half so the
+   *  canvas is effectively empty by dissipate ~0.9. */
+  PARTICLE_FADE: { start: 0.42, end: 0.95 } as const,
+
+  /** BILLIONS signal block + ticker opacity fade. The signal group +
+   *  ticker now EXIT by translation (a full-viewport, scroll-coupled
+   *  upward lift in `CorridorStationHeaders`), so the visible exit is the
+   *  push-out, not the fade. This band is pushed late on purpose: by the
+   *  time it starts the group has already cleared the top of the viewport
+   *  on normal/tall viewports, so the fade is only a safety for short
+   *  viewports and the dock release (it must reach 0 before the dock
+   *  detaches at dissipate >= 0.999). Earlier tunings (0.04->0.42, then
+   *  0.16->0.72) faded the text/ticker while it was still on screen, which
+   *  read as "it just disappears" instead of "it gets pushed out". */
+  SIGNAL_OUT: { start: 0.72, end: 0.95 } as const,
+} as const;
+
+/** Eased 0..1 reveal for a named dissipate band. Same shape as
+ *  `epilogueBand`. */
+export function dissipateBand(
+  dissipateProgress: number,
+  bandKey: keyof typeof DISSIPATE_BANDS
+): number {
+  const w = DISSIPATE_BANDS[bandKey];
+  return band(dissipateProgress, w.start, w.end);
+}
+
+/** Radial scatter multiplier for the dotted-shell radius across the
+ *  dissipate clock. Returns 1.0 at dissipate 0 (parked / docked, no
+ *  scatter), grows to `1 + DISSIPATE_SHELL_SCATTER_AMP` at dissipate
+ *  1. Applied multiplicatively on top of the existing
+ *  `unfold.shellRadiusMul` and the epilogue planet scale, so all the
+ *  existing radius lerps remain byte-identical when dissipate is 0. */
+export const DISSIPATE_SHELL_SCATTER_AMP = 1.8;
+export function dissipateShellScatter(dissipateProgress: number): number {
+  return 1 + DISSIPATE_SHELL_SCATTER_AMP * dissipateBand(dissipateProgress, "SHELL_SCATTER");
+}
+
+/** Atmosphere fresnel-rim ENVELOPE across the dissipate clock —
+ *  a brief BLOOM peak followed by a fade to 0. Composes
+ *  multiplicatively with the existing APPROACH-band atmosphere
+ *  reveal (caller does the multiply), so the resting epilogue
+ *  atmosphere is untouched when dissipate is 0 (envelope returns 1).
+ *
+ *  Shape: 1 at dissipate 0 (no change) → peak ~1.8 at dissipate 0.35
+ *  (the bloom moment, like a thin Earth atmosphere flaring just
+ *  before atmospheric re-entry) → 0 by dissipate 0.92. */
+const DISSIPATE_ATMOSPHERE_PEAK_AT = 0.35;
+const DISSIPATE_ATMOSPHERE_PEAK_MUL = 1.8;
+const DISSIPATE_ATMOSPHERE_END = 0.92;
+export function dissipateAtmosphereEnvelope(dissipateProgress: number): number {
+  if (dissipateProgress <= 0) return 1;
+  if (dissipateProgress >= DISSIPATE_ATMOSPHERE_END) return 0;
+  if (dissipateProgress < DISSIPATE_ATMOSPHERE_PEAK_AT) {
+    const t = band(dissipateProgress, 0, DISSIPATE_ATMOSPHERE_PEAK_AT);
+    return 1 + (DISSIPATE_ATMOSPHERE_PEAK_MUL - 1) * t;
+  }
+  // Falling edge from peak → 0.
+  const t = band(dissipateProgress, DISSIPATE_ATMOSPHERE_PEAK_AT, DISSIPATE_ATMOSPHERE_END);
+  return DISSIPATE_ATMOSPHERE_PEAK_MUL * (1 - t);
+}
+
+/** Per-painter opacity multiplier across the dissipate. Returns 1 at
+ *  dissipate 0 (no change), ramps to 0 across PARTICLE_FADE so the
+ *  sphere is gone by ~dissipate 0.95. Caller multiplies onto its
+ *  existing `uOpacity` so dissipate 0 keeps the epilogue pose intact. */
+export function dissipateOpacityMultiplier(dissipateProgress: number): number {
+  return 1 - dissipateBand(dissipateProgress, "PARTICLE_FADE");
+}
+
+/** Smoky occluder-core opacity multiplier — sheds early on CORE_SHED
+ *  so the dissipating shell never reveals a hard silhouette disc. */
+export function dissipateCoreMultiplier(dissipateProgress: number): number {
+  return 1 - dissipateBand(dissipateProgress, "CORE_SHED");
+}
