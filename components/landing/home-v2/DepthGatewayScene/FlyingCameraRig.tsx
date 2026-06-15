@@ -91,8 +91,22 @@ export function FlyingCameraRig() {
     const dt = Math.min(0.1, Math.max(0, delta));
     const k = 1 - Math.exp(-dt / 0.28);
     dockBlend.current += ((docked ? 1 : 0) - dockBlend.current) * k;
+    // CRITICAL: snap the dock blend to exactly 0 once we're fully out of the
+    // epilogue (not docked AND no smoothed scrub). The blend decays
+    // exponentially and never reaches 0 on its own, so after ANY dock visit it
+    // lingered at a sub-perceptual positive value forever. That kept `ep > 0`
+    // true, pinning the camera to the epilogue branch — and
+    // `getEpilogueCameraPose(~0)` returns CAMERA_END, which teleported the
+    // camera to the corridor's END pose even after the user scrolled back to a
+    // mid-corridor station. The parked dolly (`getCameraPosition`) never
+    // reapplied, so the substrate gimbal sat at the wrong camera distance and
+    // collapsed into a diffuse point cloud until a full page refresh reset the
+    // ref. The snap restores the corridor dolly the moment we leave the
+    // epilogue. (The branch boundary stays continuous: getCameraPosition(1) ===
+    // CAMERA_END === getEpilogueCameraPose(0).)
+    if (!docked && smoothedEp <= 1e-4) dockBlend.current = 0;
     const ep = smoothedEp + (DOCKED_INSTRUMENT_EPILOGUE_POSE - smoothedEp) * dockBlend.current;
-    if (ep > 0) {
+    if (ep > 1e-4) {
       const pose = getEpilogueCameraPose(ep);
       camera.position.set(...pose.position);
       camera.lookAt(...pose.lookAt);

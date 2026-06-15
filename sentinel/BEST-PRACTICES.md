@@ -138,6 +138,62 @@ as "it vanished until refresh," even though the DOM nodes are still present.
 
 ---
 
+### Exponential blends never reach their target — snap them, and gate branches with an epsilon
+
+An exponential follower (`x += (target - x) * (1 - exp(-dt/tau))`) asymptotes
+toward its target but **never reaches it exactly**. If a render branch is gated
+on that value being `> 0`, the branch stays active forever on a sub-perceptual
+residual.
+
+This shipped as a corridor bug: `FlyingCameraRig.dockBlend` eased toward 0 after
+a services-dock visit but kept a residual `~1e-10`, so `ep` stayed `> 0` and the
+camera kept using the **epilogue pose**. `getEpilogueCameraPose(~0)` returns
+`CAMERA_END`, so after scrolling back to a mid-corridor station the camera was
+pinned to the corridor's _end_ distance — the substrate gimbal filled the
+viewport and read as a structureless point cloud (and the walls dropped out)
+until a full refresh reset the ref. Every scalar (follower reveals, opacities,
+geometry buffers, scales) was byte-identical to a fresh load; only the camera Z
+differed, which is why measuring scene-graph values alone never explained it.
+
+```ts
+// ❌ residual keeps the branch alive forever after a dock visit
+dockBlend.current += ((docked ? 1 : 0) - dockBlend.current) * k;
+const ep = smoothedEp + (DOCKED_POSE - smoothedEp) * dockBlend.current;
+if (ep > 0) return epiloguePose(ep); // CAMERA_END at ep≈0
+
+// ✅ snap to exactly 0 when the source condition is fully off, gate with epsilon
+dockBlend.current += ((docked ? 1 : 0) - dockBlend.current) * k;
+if (!docked && smoothedEp <= 1e-4) dockBlend.current = 0;
+const ep = smoothedEp + (DOCKED_POSE - smoothedEp) * dockBlend.current;
+if (ep > 1e-4) return epiloguePose(ep);
+```
+
+Keep the branch boundary **continuous** so the snap can't pop:
+`getCameraPosition(1) === CAMERA_END === getEpilogueCameraPose(0)`.
+
+**Debug recipe:** when a re-entered scroll scene renders wrong but every
+JS-computed value matches a fresh load, suspect a stale GL/transform value, not
+the scene graph. Sample the **camera** (`state.camera.position`/`fov`) fresh vs.
+returned at the _same_ scroll position — a mismatch there with matching
+follower/store values points straight at a camera-pose branch.
+
+**Why it matters:** Asymptotic blends + `> 0` branch gates are a silent
+"sticks until refresh" trap. Snap on the off-condition and gate with an epsilon.
+
+---
+
+### Keep the render loop alive while a demand-mode scene is engaged
+
+A `frameloop="demand"` R3F canvas does not reliably resume continuous rendering
+by toggling the prop back to `"always"`, and invalidating only on store
+_changes_ lets the loop die the moment the user stops scrolling — freezing every
+per-frame accumulator (motion followers, opacity ramps, idle spin) at its last
+value. While the scene is engaged (on screen), pump `invalidate()` every
+animation frame and stop only when it fully disengages. See `FrameInvalidator`
+in `components/landing/home-v2/DepthGatewayScene/index.tsx`.
+
+---
+
 ### Cover Swipes Are Replacement Planes, Not Fade-Outs
 
 For Active Theory / Hashgraph-style handoffs, keep the completed scene as a

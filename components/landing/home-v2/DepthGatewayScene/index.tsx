@@ -57,32 +57,90 @@ function MotionFollowerDriver() {
 }
 
 /**
- * FrameInvalidator — guarantees the demand-mode render loop wakes up
- * whenever the corridor is (re)engaged.
+ * FrameInvalidator — keeps the render loop running continuously for as
+ * long as the corridor is engaged (`active` / `armed` / `docked`).
  *
  * The Canvas runs `frameloop="demand"` while the corridor is fully
  * off-screen so the GPU idles. R3F's demand mode only paints when
  * `invalidate()` is called, and toggling the `frameloop` prop back to
- * `"always"` does NOT reliably restart the internal loop on its own.
- * That left the corridor + gateway showing a stale, cleared (black)
- * buffer after the user scrolled past the stage and back up — the
- * scene only recovered on a full reload.
+ * `"always"` does NOT reliably restart the internal loop after a demand
+ * cycle.
  *
- * Requesting a frame on every ENGAGED transform change makes re-entry
- * self-healing: the moment `active` / `armed` / `docked` flips back on
- * (or any scroll frame while engaged), a paint is scheduled, so the
- * loop resumes immediately instead of waiting for a render that never
- * comes. The guard keeps the GPU quiet while the corridor is fully
- * off-screen (no invalidate when disengaged). (ADR-018 scroll-reentry
- * fix.)
+ * The previous version only invalidated on each ENGAGED store *change*.
+ * That self-heals re-entry while the user is actively scrolling, but the
+ * moment they stop, the store stops changing, no more frames are
+ * scheduled, and the loop dies even though the corridor is still on
+ * screen and engaged. Every per-frame accumulator then freezes at
+ * whatever value it held on the last scroll tick:
+ *
+ *   - the motion follower's `epilogue` channel stays pinned near 1 after
+ *     scrolling back from the services/epilogue, so the substrate gimbal
+ *     is stranded in its "planet" state (instrument wireframe faded out
+ *     by `buildOutFade`, assembly inflated by `getEpiloguePlanetScale`),
+ *     reading as a diffuse scattered cloud instead of the structured
+ *     sphere;
+ *   - `LatentWormholeWalls`' opacity ramp stays at the value it froze on,
+ *     so corridor-wall segments read as missing.
+ *
+ * A self-perpetuating rAF that calls `invalidate()` every frame WHILE
+ * ENGAGED guarantees the follower + painter accumulators keep advancing
+ * to their live targets (and snap on resume), so scroll-back always
+ * resolves to the correct parked composition. The pump stops the instant
+ * the corridor scrolls fully off screen, so the GPU still idles when
+ * disengaged. (ADR-018 scroll-reentry fix, v2.)
  */
 function FrameInvalidator() {
   const invalidate = useThree((s) => s.invalidate);
   useEffect(() => {
-    return useDepthGatewayStore.subscribe((state) => {
-      const t = state.transform;
-      if (t.active || t.armed || t.docked) invalidate();
+    let raf = 0;
+    let engaged = false;
+
+    const isEngaged = () => {
+      const t = useDepthGatewayStore.getState().transform;
+      return t.active || t.armed || t.docked;
+    };
+
+    const pump = () => {
+      if (!engaged) {
+        raf = 0;
+        return;
+      }
+      invalidate();
+      raf = requestAnimationFrame(pump);
+    };
+
+    const start = () => {
+      if (!raf) raf = requestAnimationFrame(pump);
+    };
+    const stop = () => {
+      if (raf) {
+        cancelAnimationFrame(raf);
+        raf = 0;
+      }
+    };
+
+    engaged = isEngaged();
+    if (engaged) start();
+
+    const unsubscribe = useDepthGatewayStore.subscribe(() => {
+      const next = isEngaged();
+      if (next && !engaged) {
+        engaged = true;
+        start();
+      } else if (!next && engaged) {
+        engaged = false;
+        stop();
+        // Paint one final frame so painters settle into their
+        // disengaged (hidden) state before the loop idles.
+        invalidate();
+      }
     });
+
+    return () => {
+      engaged = false;
+      stop();
+      unsubscribe();
+    };
   }, [invalidate]);
   return null;
 }
