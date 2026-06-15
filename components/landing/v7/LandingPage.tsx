@@ -46,8 +46,10 @@ export function LandingPage({
   const brandmarkActorRef = useRef<BrandmarkActorHandle>(null);
   const corridorRootRef = useRef<Root | null>(null);
   const corridorMountRef = useRef<HTMLElement | null>(null);
+  const corridorUnmountTimerRef = useRef<number | null>(null);
   const buildQuoteRootRef = useRef<Root | null>(null);
   const buildQuoteMountRef = useRef<HTMLElement | null>(null);
+  const buildQuoteUnmountTimerRef = useRef<number | null>(null);
 
   useLandingScroll(rootRef);
   useRevealMotion(rootRef);
@@ -98,6 +100,10 @@ export function LandingPage({
   useLayoutEffect(() => {
     const root = rootRef.current;
     if (!root || !corridorText) return;
+    if (corridorUnmountTimerRef.current != null) {
+      window.clearTimeout(corridorUnmountTimerRef.current);
+      corridorUnmountTimerRef.current = null;
+    }
 
     const mountCorridor = () => {
       const mount = root.querySelector<HTMLElement>(`#${corridorMountId}`);
@@ -139,9 +145,16 @@ export function LandingPage({
     return () => {
       observer.disconnect();
       window.removeEventListener("pageshow", onPageShow);
-      corridorRootRef.current?.unmount();
-      corridorRootRef.current = null;
-      corridorMountRef.current = null;
+      const rootToUnmount = corridorRootRef.current;
+      if (!rootToUnmount) return;
+      corridorUnmountTimerRef.current = window.setTimeout(() => {
+        if (corridorRootRef.current === rootToUnmount) {
+          rootToUnmount.unmount();
+          corridorRootRef.current = null;
+          corridorMountRef.current = null;
+        }
+        corridorUnmountTimerRef.current = null;
+      }, 0);
     };
   }, [corridorMountId, corridorText]);
 
@@ -153,6 +166,10 @@ export function LandingPage({
   useLayoutEffect(() => {
     const root = rootRef.current;
     if (!root) return;
+    if (buildQuoteUnmountTimerRef.current != null) {
+      window.clearTimeout(buildQuoteUnmountTimerRef.current);
+      buildQuoteUnmountTimerRef.current = null;
+    }
 
     const mountHandoff = () => {
       const mount = root.querySelector<HTMLElement>("#buildQuote");
@@ -186,15 +203,22 @@ export function LandingPage({
     return () => {
       observer.disconnect();
       window.removeEventListener("pageshow", onPageShow);
-      buildQuoteRootRef.current?.unmount();
-      buildQuoteRootRef.current = null;
       if (buildQuoteMountRef.current) {
         buildQuoteMountRef.current
           .closest<HTMLElement>(".build-quote-runway")
           ?.removeAttribute("data-build-handoff");
         buildQuoteMountRef.current.classList.remove("build-quote--handoff");
       }
-      buildQuoteMountRef.current = null;
+      const rootToUnmount = buildQuoteRootRef.current;
+      if (!rootToUnmount) return;
+      buildQuoteUnmountTimerRef.current = window.setTimeout(() => {
+        if (buildQuoteRootRef.current === rootToUnmount) {
+          rootToUnmount.unmount();
+          buildQuoteRootRef.current = null;
+          buildQuoteMountRef.current = null;
+        }
+        buildQuoteUnmountTimerRef.current = null;
+      }, 0);
     };
   }, []);
 

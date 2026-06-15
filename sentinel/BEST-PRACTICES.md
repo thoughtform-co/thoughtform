@@ -115,6 +115,29 @@ if (tDefToManifesto > 0.9 && !manifestoComplete) {
 
 ---
 
+### Cross-writer scroll state needs an owner and a release guard
+
+When two scroll hooks share one visual state, one hook must own the state and
+the other hook must verify that the owner's DOM/runtime gate is still true
+before carrying it forward.
+
+For the home-v2 corridor, `useEmbeddedServicesScroll` is the only writer that
+can set the dock handoff. `useDepthScroll` may preserve that value while the
+stage is still engaged, but it must clear stale dock state when the user
+scrolls back before the dock window or when `data-corridor-docked` is no
+longer present.
+
+**Runtime check:** sample the page after `corridor mid -> dock window ->
+pre-dock back -> corridor mid back`. The corridor canvas and brandmark should
+remain mounted; `data-corridor-docked` should be absent before the dock window;
+the canvas should return to `position: absolute` inside the sticky stage.
+
+**Why it matters:** A stale boolean from a later handoff can keep an earlier
+scroll scene in the wrong CSS layer or camera pose. The user experiences that
+as "it vanished until refresh," even though the DOM nodes are still present.
+
+---
+
 ### Cover Swipes Are Replacement Planes, Not Fade-Outs
 
 For Active Theory / Hashgraph-style handoffs, keep the completed scene as a
@@ -537,4 +560,4 @@ Trivial changes (typos, copy, formatting-only) skip this; see [MAINTENANCE — W
 
 ---
 
-_Last updated: 2026-04-26_
+_Last updated: 2026-06-15_

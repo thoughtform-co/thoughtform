@@ -39,6 +39,11 @@ import { getMobilePaintProgress } from "../DepthGatewayScene/sceneGeom";
  *  viewport of scroll instead of three. The corridor span itself
  *  is byte-identical. */
 const EPILOGUE_START = 620 / 820;
+// Safety valve for reverse scroll / HMR races: the services handoff is
+// the only writer allowed to set docked=true, and it only engages at
+// epilogue >= 0.72. Once the corridor scrolls back before that window,
+// any lingering dock flag is stale and must be cleared synchronously.
+const DOCK_RELEASE_EPILOGUE_PROGRESS = 0.7;
 
 /**
  * useDepthScroll — rAF-throttled scroll watcher for the home-v2
@@ -174,12 +179,24 @@ export function useDepthScroll(stageRef: React.RefObject<HTMLDivElement | null>)
     }
 
     const prev = useDepthGatewayStore.getState().transform;
+    const htmlDocked =
+      typeof document !== "undefined" &&
+      document.documentElement.getAttribute("data-corridor-docked") === "true";
+    const docked = prev.docked && htmlDocked && epilogueProgress >= DOCK_RELEASE_EPILOGUE_PROGRESS;
+    const dockProgress = docked ? prev.dockProgress : 0;
+    if (prev.docked && !docked && typeof document !== "undefined") {
+      document.documentElement.removeAttribute("data-corridor-docked");
+      document.documentElement.style.setProperty("--handoff-cover", "0");
+    }
     const engagementChanged = active !== prev.active || armed !== prev.armed;
     const epilogueChanged = Math.abs(epilogueProgress - prev.epilogueProgress) > 0.00005;
+    const dockChanged =
+      docked !== prev.docked || Math.abs(dockProgress - prev.dockProgress) > 0.0005;
     if (
       Math.abs(progress - lastProgress.current) > 0.00005 ||
       engagementChanged ||
-      epilogueChanged
+      epilogueChanged ||
+      dockChanged
     ) {
       lastProgress.current = progress;
       useDepthGatewayStore.getState().setTransform({
@@ -191,8 +208,8 @@ export function useDepthScroll(stageRef: React.RefObject<HTMLDivElement | null>)
         paintProgress,
         epilogueProgress,
         velocity,
-        docked: prev.docked,
-        dockProgress: prev.dockProgress,
+        docked,
+        dockProgress,
       });
     } else if (Math.abs(velocity) > 0.0001) {
       // Surface velocity decay even when progress hasn't changed,
@@ -206,8 +223,8 @@ export function useDepthScroll(stageRef: React.RefObject<HTMLDivElement | null>)
         paintProgress,
         epilogueProgress,
         velocity,
-        docked: prev.docked,
-        dockProgress: prev.dockProgress,
+        docked,
+        dockProgress,
       });
     }
   }, [stageRef]);
