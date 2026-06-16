@@ -315,14 +315,16 @@ function StationBlock({
   ]
     .filter(Boolean)
     .join(" ");
-  const titleTokens = useMemo(() => tokenize(content.titleHtml), [content.titleHtml]);
   const supportHtml = !typewriter && content.floorHtml ? content.floorHtml : content.supportHtml;
-  // Support copy may carry `<br>` separators — deliberate sentence-
-  // per-line breaks for the centred caption (2026-06-10 polish round
-  // 4). The tokenizer drops unknown tags, so split FIRST, tokenize
-  // each line, and render each line as a block-level span. The flat
-  // char registration below concatenates lines in order so the
-  // typewriter machinery is untouched.
+  // Title and support copy may carry `<br>` separators — deliberate
+  // line breaks for centred captions. The tokenizer drops unknown tags,
+  // so split FIRST, tokenize each line, and render each line as a
+  // block-level span. The flat char registration below concatenates
+  // lines in order so the typewriter machinery is untouched.
+  const titleLineTokens = useMemo(
+    () => content.titleHtml.split(/<br\s*\/?>/i).map((line) => tokenize(line.trim())),
+    [content.titleHtml]
+  );
   const supportLineTokens = useMemo(() => {
     if (!supportHtml) return [] as CharToken[][];
     return supportHtml.split(/<br\s*\/?>/i).map((line) => tokenize(line.trim()));
@@ -341,7 +343,7 @@ function StationBlock({
   useEffect(() => {
     registerChars(titleSpanRefs.current, supportSpanRefs.current);
     registerCursors(titleCursorRef.current, supportCursorRef.current);
-  }, [registerChars, registerCursors, titleTokens, supportLineTokens]);
+  }, [registerChars, registerCursors, titleLineTokens, supportLineTokens]);
 
   // The numbered station eyebrow (e.g. "01 · Navigate") used to render
   // here as a cartouche above the title. It now lives once, persistently,
@@ -394,43 +396,56 @@ function StationBlock({
   // hear the FULL sentence in one go, not letter-by-letter. So the
   // heading + paragraph carry `aria-label` with the plain text and
   // their visible char spans are `aria-hidden`.
-  const titlePlain = titleTokens.map((t) => t.ch).join("");
+  const titlePlain = titleLineTokens.map((line) => line.map((t) => t.ch).join("")).join(" ");
   const supportPlain = supportLineTokens.map((line) => line.map((t) => t.ch).join("")).join(" ");
 
-  // Flat char index across support lines — the typewriter machinery
-  // reads `supportChars` as one flat sequence, so each rendered span
-  // registers at its global index regardless of which visual line it
-  // sits on.
+  // Flat char index across title/support lines — the typewriter
+  // machinery reads each char array as one flat sequence, so each
+  // rendered span registers at its global index regardless of which
+  // visual line it sits on.
+  let titleCharCursor = 0;
   let supportCharCursor = 0;
 
   const titleEl = (
     <h2 className="home-v2-station-header__title" aria-label={titlePlain}>
       <span aria-hidden="true">
-        {titleTokens.map((tok, idx) => (
-          <span
-            key={`t-${idx}`}
-            ref={(el) => {
-              if (el) titleSpanRefs.current[idx] = el;
-            }}
-            className={
-              tok.em
-                ? "home-v2-station-header__char home-v2-station-header__char--em"
-                : "home-v2-station-header__char"
-            }
-            style={{ opacity: 0 }}
-          >
-            {/* Render the real character — including a real space —
-                so the browser can word-wrap at space boundaries. */}
-            {tok.ch}
-          </span>
-        ))}
-        <span
-          ref={titleCursorRef}
-          className="home-v2-station-header__cursor"
-          style={{ opacity: 0 }}
-        >
-          {"\u2588"}
-        </span>
+        {titleLineTokens.map((lineTokens, li) => {
+          const isLast = li === titleLineTokens.length - 1;
+          return (
+            <span key={`tl-${li}`} className="home-v2-station-header__line">
+              {lineTokens.map((tok, idx) => {
+                const globalIdx = titleCharCursor++;
+                return (
+                  <span
+                    key={`t-${li}-${idx}`}
+                    ref={(el) => {
+                      if (el) titleSpanRefs.current[globalIdx] = el;
+                    }}
+                    className={
+                      tok.em
+                        ? "home-v2-station-header__char home-v2-station-header__char--em"
+                        : "home-v2-station-header__char"
+                    }
+                    style={{ opacity: 0 }}
+                  >
+                    {/* Render the real character — including a real space —
+                        so the browser can word-wrap at space boundaries. */}
+                    {tok.ch}
+                  </span>
+                );
+              })}
+              {isLast && (
+                <span
+                  ref={titleCursorRef}
+                  className="home-v2-station-header__cursor"
+                  style={{ opacity: 0 }}
+                >
+                  {"\u2588"}
+                </span>
+              )}
+            </span>
+          );
+        })}
       </span>
     </h2>
   );
@@ -517,68 +532,34 @@ function StationBlock({
 // anchor pattern are identical — only the CSS variant (`--signal`)
 // and the opacity driver differ.
 const SIGNAL_CONTENT: StationContent = {
-  titleHtml: "EVERYONE IS RACING TO BUILD <em>THIS LAYER</em>.",
+  titleHtml: "EVERYONE IS RACING TO<br>BUILD <em>THIS LAYER</em>.",
 };
 
-interface SignalTickerPacket {
+interface SignalTickerItem {
   source: string;
-  lines: [string, string];
-  tone: "openai" | "anthropic" | "palantir" | "stripe";
-  width: number;
-  angleDeg: number;
+  headline: string;
 }
 
-const SIGNAL_TICKER_PACKETS: SignalTickerPacket[] = [
+const SIGNAL_TICKER_ITEMS: SignalTickerItem[] = [
   {
-    source: "OPENAI",
-    lines: ["launches a $10B Deployment Company", "to put AI inside business workflows"],
-    tone: "openai",
-    width: 430,
-    angleDeg: -32,
+    source: "OpenAI",
+    headline: "launches a $10B Deployment Company to put AI inside business workflows",
   },
   {
-    source: "ANTHROPIC",
-    lines: ["backs a $1.5B AI consultancy", "to drive Claude adoption across enterprises"],
-    tone: "anthropic",
-    width: 455,
-    angleDeg: -10,
+    source: "Anthropic",
+    headline: "backs a $1.5B AI consultancy to drive Claude adoption across enterprises",
   },
   {
-    source: "PALANTIR",
-    lines: ["Forward Deployed Engineers embed", "to capture how each company works"],
-    tone: "palantir",
-    width: 455,
-    angleDeg: 10,
+    source: "Palantir",
+    headline: "Forward Deployed Engineers embed to capture how each company works",
   },
   {
-    source: "STRIPE",
-    lines: ["staffs AI-natives inside marketing", "until the team can run it alone"],
-    tone: "stripe",
-    width: 430,
-    angleDeg: 32,
+    source: "Stripe",
+    headline: "staffs AI-natives inside marketing until the team can run it alone",
   },
 ];
 
-const TICKER_PACKET_HEIGHT = 58;
-const TICKER_PACKET_RADIUS_MUL = 1.02;
-const TICKER_PACKET_NOTCH = 9;
-
-function packetFramePath(width: number): string {
-  const w = width / 2;
-  const h = TICKER_PACKET_HEIGHT / 2;
-  const n = TICKER_PACKET_NOTCH;
-  return [
-    `M ${(-w + n).toFixed(1)} ${(-h).toFixed(1)}`,
-    `L ${(w - n).toFixed(1)} ${(-h).toFixed(1)}`,
-    `L ${w.toFixed(1)} ${(-h + n).toFixed(1)}`,
-    `L ${w.toFixed(1)} ${(h - n).toFixed(1)}`,
-    `L ${(w - n).toFixed(1)} ${h.toFixed(1)}`,
-    `L ${(-w + n).toFixed(1)} ${h.toFixed(1)}`,
-    `L ${(-w).toFixed(1)} ${(h - n).toFixed(1)}`,
-    `L ${(-w).toFixed(1)} ${(-h + n).toFixed(1)}`,
-    "Z",
-  ].join(" ");
-}
+const TICKER_DIAMOND_SEP = "     \u25C6     ";
 
 /** World radius of the planet's visible golden atmosphere (the dotted
  *  shell of the substrate gyro the epilogue camera flies to). Matches
@@ -594,49 +575,6 @@ const TICKER_RING_RADIUS_MUL = 1.07;
  *  Wide enough to ring the planet, shallow enough that the side text
  *  stays legible rather than tipping near-vertical. */
 const TICKER_ARC_HALF_SPAN = (40 * Math.PI) / 180;
-/** Dotted "signal rail" arc radius as a fraction of the text baseline
- *  (ringR). The rail sits in the dark band between the particle limb
- *  (~0.935·ringR) and the text baseline (1.0·ringR), reading as a fine
- *  navigational track the headlines are printed on — same dotted-leader
- *  pattern as the HUD references. */
-const TICKER_RAIL_RADIUS_MUL = 0.965;
-/** Half-angle of the rail. A touch wider than the text arc so the rail
- *  reads as the underlying track and the text "lifts off" it at the ends
- *  rather than being capped by the rail itself. */
-const TICKER_RAIL_HALF_SPAN = TICKER_ARC_HALF_SPAN * 1.04;
-/** Radial extent of the bracket "tick caps" at the arc endpoints. Inner
- *  starts just outside the particle limb, outer reaches just past the
- *  text baseline — framing the readout like the corner brackets in the
- *  HUD references without crossing the text. */
-const TICKER_TICK_INNER_MUL = 0.94;
-const TICKER_TICK_OUTER_MUL = 1.05;
-/** Tangential sweep (rad) of the corner-bracket "foot" that folds inward
- *  from each end's radial arm — turns the plain end divider into an L
- *  register mark (the corner-registration vocabulary from
- *  `RegisterMarks.tsx`) that frames the arc span. */
-const TICKER_BRACKET_FOOT = (2.4 * Math.PI) / 180;
-
-// ── Gauge tick scale (BearingTicks vocabulary) ────────────────────
-/** The instrument's bearing scale: short radial ticks hung off the rail,
- *  pointing inward toward the planet so they never cross the headline
- *  baseline. Minor ticks at every `GAUGE_STEP`, every `MAJOR_EVERY`-th a
- *  longer major — same minor/major grammar as the HUD rail (7/21px) and
- *  `BearingTicks` (`M0 -r L0 -(r-len)`). */
-const TICKER_GAUGE_BASE_MUL = TICKER_RAIL_RADIUS_MUL;
-const TICKER_GAUGE_STEP = (3.6 * Math.PI) / 180;
-const TICKER_GAUGE_MAJOR_EVERY = 4;
-const TICKER_GAUGE_MINOR_LEN = 6;
-const TICKER_GAUGE_MAJOR_LEN = 13;
-
-const TICKER_APEX_DIAMOND = 5.5;
-
-/** Build a rotated-square (diamond) path centred at (x, y) with half-width
- *  `s` — the `OrbitalMarker` / `Reticle` point-marker shape
- *  (`M0 -s L s 0 L0 s L-s 0 Z`), the brand's "diamonds not circles" law. */
-function diamondPath(x: number, y: number, s: number): string {
-  return `M ${x.toFixed(1)} ${(y - s).toFixed(1)} L ${(x + s).toFixed(1)} ${y.toFixed(1)} L ${x.toFixed(1)} ${(y + s).toFixed(1)} L ${(x - s).toFixed(1)} ${y.toFixed(1)} Z`;
-}
-
 /** Smoothed epilogue scrub below which the ticker is not painted
  *  (the planet hasn't landed and the title hasn't faded in yet). */
 const TICKER_MIN_EP = 0.42;
@@ -665,20 +603,6 @@ const TICKER_EXIT_FLYIN_CAP = 0.5;
 function EpilogueNewsTicker({ animate }: { animate: boolean }) {
   const svgRef = useRef<SVGSVGElement>(null);
   const pathRef = useRef<SVGPathElement>(null);
-  // Companion chrome welded to the same limb projection as the headline
-  // arc — all written from the same `cx, cy, ringR` each frame so the
-  // whole instrument stays locked to the sphere through the epilogue
-  // camera flight, planet-grow, and corridor-exit fly-in:
-  //   rail      — faint dotted ruler baseline the headlines ride
-  //   gauge     — minor/major bearing ticks hung off the rail
-  //   brackets  — L register marks framing the two arc ends
-  //   connectors — short arc segments linking the article nodes
-  const railRef = useRef<SVGPathElement>(null);
-  const gaugeRef = useRef<SVGPathElement>(null);
-  const ticksRef = useRef<SVGPathElement>(null);
-  const endMarksRef = useRef<SVGPathElement>(null);
-  const packetConnectorsRef = useRef<SVGPathElement>(null);
-  const packetRefs = useRef<SVGGElement[]>([]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -827,111 +751,6 @@ function EpilogueNewsTicker({ animate }: { animate: boolean }) {
         `M ${x0.toFixed(1)} ${y0.toFixed(1)} A ${ringR.toFixed(1)} ${ringR.toFixed(1)} 0 0 1 ${x1.toFixed(1)} ${y1.toFixed(1)}`
       );
 
-      // Shared polar helper for every welded chrome element: a point at
-      // radius `r` and bearing `a` (rad, 0 = apex / 12 o'clock) on the
-      // limb circle. point(a) = (cx + r·sin a, cy − r·cos a).
-      const aMin = -TICKER_ARC_HALF_SPAN;
-      const aMax = TICKER_ARC_HALF_SPAN;
-      const px = (r: number, a: number) => cx + r * Math.sin(a);
-      const py = (r: number, a: number) => cy - r * Math.cos(a);
-
-      // Dotted signal rail — faint ruler baseline the headlines ride. A
-      // touch wider than the text arc so the headlines visibly "lift off"
-      // the rail at the ends rather than getting capped by it.
-      const railEl = railRef.current;
-      if (railEl) {
-        const railR = ringR * TICKER_RAIL_RADIUS_MUL;
-        railEl.setAttribute(
-          "d",
-          `M ${px(railR, -TICKER_RAIL_HALF_SPAN).toFixed(1)} ${py(railR, -TICKER_RAIL_HALF_SPAN).toFixed(1)} A ${railR.toFixed(1)} ${railR.toFixed(1)} 0 0 1 ${px(railR, TICKER_RAIL_HALF_SPAN).toFixed(1)} ${py(railR, TICKER_RAIL_HALF_SPAN).toFixed(1)}`
-        );
-      }
-
-      // Bearing gauge — minor/major radial ticks hung off the rail,
-      // pointing inward toward the planet (BearingTicks vocabulary). One
-      // path, lengths differentiate major from minor. Fades with the
-      // SVG mask at the ends like a real gauge running off-scale.
-      const gaugeEl = gaugeRef.current;
-      if (gaugeEl) {
-        const baseR = ringR * TICKER_GAUGE_BASE_MUL;
-        const nTicks = Math.max(1, Math.round((aMax - aMin) / TICKER_GAUGE_STEP));
-        let gd = "";
-        for (let i = 0; i <= nTicks; i++) {
-          const a = aMin + ((aMax - aMin) * i) / nTicks;
-          const len =
-            i % TICKER_GAUGE_MAJOR_EVERY === 0 ? TICKER_GAUGE_MAJOR_LEN : TICKER_GAUGE_MINOR_LEN;
-          gd += `M ${px(baseR, a).toFixed(1)} ${py(baseR, a).toFixed(1)} L ${px(baseR - len, a).toFixed(1)} ${py(baseR - len, a).toFixed(1)} `;
-        }
-        gaugeEl.setAttribute("d", gd);
-      }
-
-      // End register marks — at each arc end, a radial arm (the "vertical
-      // divider" kept from the prior pass) plus a short tangential foot
-      // folding inward along the arc, forming an L that frames the span
-      // (RegisterMarks vocabulary). Stroke-only (fill:none) so the open L
-      // paths don't fill into wedges.
-      const innerR = ringR * TICKER_TICK_INNER_MUL;
-      const outerR = ringR * TICKER_TICK_OUTER_MUL;
-      const ticksEl = ticksRef.current;
-      if (ticksEl) {
-        const lFoot = aMin + TICKER_BRACKET_FOOT;
-        const rFoot = aMax - TICKER_BRACKET_FOOT;
-        ticksEl.setAttribute(
-          "d",
-          // left L: radial arm + tangential foot
-          `M ${px(innerR, aMin).toFixed(1)} ${py(innerR, aMin).toFixed(1)} L ${px(outerR, aMin).toFixed(1)} ${py(outerR, aMin).toFixed(1)} L ${px(outerR, lFoot).toFixed(1)} ${py(outerR, lFoot).toFixed(1)} ` +
-            // right L
-            `M ${px(innerR, aMax).toFixed(1)} ${py(innerR, aMax).toFixed(1)} L ${px(outerR, aMax).toFixed(1)} ${py(outerR, aMax).toFixed(1)} L ${px(outerR, rFoot).toFixed(1)} ${py(outerR, rFoot).toFixed(1)}`
-        );
-      }
-
-      // Gold corner waypoint diamonds at the outer end of each bracket —
-      // separate FILLED path (the brackets above are stroke-only).
-      const endMarksEl = endMarksRef.current;
-      if (endMarksEl) {
-        endMarksEl.setAttribute(
-          "d",
-          `${diamondPath(px(outerR, aMin), py(outerR, aMin), TICKER_APEX_DIAMOND * 0.82)} ${diamondPath(px(outerR, aMax), py(outerR, aMax), TICKER_APEX_DIAMOND * 0.82)}`
-        );
-      }
-
-      // Article packets — separate framed "signal cards" instead of one
-      // continuous textPath ribbon. Each packet has its own bearing and is
-      // rotated along the arc tangent, making every item read as a distinct
-      // captured source rather than flowing into the next headline.
-      const packetR = ringR * TICKER_PACKET_RADIUS_MUL;
-      SIGNAL_TICKER_PACKETS.forEach((packet, idx) => {
-        const packetEl = packetRefs.current[idx];
-        if (!packetEl) return;
-        const a = (packet.angleDeg * Math.PI) / 180;
-        packetEl.setAttribute(
-          "transform",
-          `translate(${px(packetR, a).toFixed(1)} ${py(packetR, a).toFixed(1)}) rotate(${packet.angleDeg.toFixed(1)})`
-        );
-      });
-
-      // Short arc connectors between adjacent article nodes. They begin at
-      // the right edge of one packet and end at the left edge of the next,
-      // so the line reads as a node graph connection rather than a
-      // continuous article ticker.
-      const packetConnectorsEl = packetConnectorsRef.current;
-      if (packetConnectorsEl) {
-        let cd = "";
-        for (let i = 0; i < SIGNAL_TICKER_PACKETS.length - 1; i++) {
-          const aPacket = SIGNAL_TICKER_PACKETS[i];
-          const bPacket = SIGNAL_TICKER_PACKETS[i + 1];
-          const aCenter = (aPacket.angleDeg * Math.PI) / 180;
-          const bCenter = (bPacket.angleDeg * Math.PI) / 180;
-          const aHalf = aPacket.width / 2 / packetR;
-          const bHalf = bPacket.width / 2 / packetR;
-          const startA = aCenter + aHalf + 0.012;
-          const endA = bCenter - bHalf - 0.012;
-          if (endA <= startA) continue;
-          cd += `M ${px(packetR, startA).toFixed(1)} ${py(packetR, startA).toFixed(1)} A ${packetR.toFixed(1)} ${packetR.toFixed(1)} 0 0 1 ${px(packetR, endA).toFixed(1)} ${py(packetR, endA).toFixed(1)} `;
-        }
-        packetConnectorsEl.setAttribute("d", cd);
-      }
-
       svg.style.opacity = sigOp.toFixed(3);
       last = { cx, cy, r: ringR, op: sigOp };
     };
@@ -943,68 +762,33 @@ function EpilogueNewsTicker({ animate }: { animate: boolean }) {
     };
   }, []);
 
+  const segments = SIGNAL_TICKER_ITEMS.map((item, i) => (
+    <tspan key={i}>
+      <tspan className="home-v2-signal-ticker__source">{item.source}</tspan>
+      {` ${item.headline}${TICKER_DIAMOND_SEP}`}
+    </tspan>
+  ));
+
   return (
-    <svg
-      ref={svgRef}
-      className="home-v2-signal-ticker"
-      data-animate={animate ? "true" : "false"}
-      aria-hidden="true"
-      focusable="false"
-    >
+    <svg ref={svgRef} className="home-v2-signal-ticker" aria-hidden="true" focusable="false">
       <defs>
         <path ref={pathRef} id="home-v2-signal-ticker-arc" d="" />
       </defs>
-      {/* Ruler baseline + bearing gauge sit BEHIND the headlines. */}
-      <path ref={railRef} className="home-v2-signal-ticker__rail" d="" />
-      <path ref={gaugeRef} className="home-v2-signal-ticker__gauge" d="" />
-      <path ref={packetConnectorsRef} className="home-v2-signal-packet__connector" d="" />
-      {SIGNAL_TICKER_PACKETS.map((packet, idx) => {
-        const w = packet.width;
-        const h = TICKER_PACKET_HEIGHT;
-        const left = -w / 2;
-        return (
-          <g
-            key={packet.source}
-            ref={(el) => {
-              if (el) packetRefs.current[idx] = el;
-            }}
-            className={`home-v2-signal-packet home-v2-signal-packet--${packet.tone}`}
-          >
-            <path className="home-v2-signal-packet__frame" d={packetFramePath(w)} />
-            <path
-              className="home-v2-signal-packet__source-diamond"
-              d={diamondPath(left + 14, -h / 2 + 13, 3.2)}
+      <text className="home-v2-signal-ticker__text">
+        <textPath href="#home-v2-signal-ticker-arc" startOffset={animate ? "0%" : "12%"}>
+          {segments}
+          {segments}
+          {animate && (
+            <animate
+              attributeName="startOffset"
+              from="0%"
+              to="-50%"
+              dur="20s"
+              repeatCount="indefinite"
             />
-            <line
-              className="home-v2-signal-packet__rule"
-              x1={left + 24}
-              y1={-h / 2 + 13}
-              x2={left + Math.min(92, w * 0.34)}
-              y2={-h / 2 + 13}
-            />
-            <text className="home-v2-signal-packet__source" x={left + 28} y={-6}>
-              {packet.source}
-            </text>
-            <text className="home-v2-signal-packet__headline" x={left + 28} y={9}>
-              {packet.lines[0]}
-            </text>
-            <text className="home-v2-signal-packet__detail" x={left + 28} y={22}>
-              {packet.lines[1]}
-            </text>
-            <text
-              className="home-v2-signal-packet__code"
-              x={w / 2 - 10}
-              y={h / 2 - 8}
-              textAnchor="end"
-            >
-              {String(idx + 1).padStart(2, "0")}
-            </text>
-          </g>
-        );
-      })}
-      {/* End register marks ON TOP of the headline ends, framing the span. */}
-      <path ref={ticksRef} className="home-v2-signal-ticker__ticks" d="" />
-      <path ref={endMarksRef} className="home-v2-signal-ticker__end-diamond" d="" />
+          )}
+        </textPath>
+      </text>
     </svg>
   );
 }

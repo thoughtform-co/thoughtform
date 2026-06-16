@@ -943,181 +943,24 @@ html[data-corridor-exit="true"] #services > * {
      during the welded phase). */
   transform: translate3d(0, var(--ticker-exit-lift, 0px), 0);
   filter: drop-shadow(0 0 16px rgba(10, 9, 8, 0.9)) drop-shadow(0 0 10px rgba(202, 165, 84, 0.18));
-  /* Soft edge fade so the scrolling headlines + gauge run off-scale at the
-     screen edges rather than hard-cutting. Narrowed to 10/90% (was 16/84%)
-     so the end register marks read as deliberate frame corners. */
-  mask-image: linear-gradient(90deg, transparent 0%, #000 10%, #000 90%, transparent 100%);
+  mask-image: linear-gradient(90deg, transparent 0%, #000 16%, #000 84%, transparent 100%);
 }
 
-/* Distinct framed article packets. These replace the old continuous
-   textPath ribbon: each source now reads as a separate captured signal
-   packet welded to its own bearing on the limb. */
-.home-v2-signal-packet {
-  opacity: 0.98;
-  filter: drop-shadow(0 0 16px rgba(10, 9, 8, 0.98)) drop-shadow(0 0 14px rgba(202, 165, 84, 0.18));
-}
-
-.home-v2-signal-packet__frame {
-  fill: rgba(10, 9, 8, 0.48);
-  stroke: rgba(202, 165, 84, 0.64);
-  stroke-width: 1;
-  stroke-linejoin: round;
-}
-
-.home-v2-signal-packet__connector {
-  fill: none;
-  stroke: rgba(202, 165, 84, 0.52);
-  stroke-width: 1;
-  stroke-dasharray: 6 5;
-  stroke-linecap: round;
-}
-
-.home-v2-signal-packet__source,
-.home-v2-signal-packet__headline,
-.home-v2-signal-packet__detail,
-.home-v2-signal-packet__code {
+.home-v2-signal-ticker__text {
   font-family: var(--font-pt-mono, ui-monospace, monospace);
-  text-transform: uppercase;
-  paint-order: stroke fill;
-  stroke: rgba(10, 9, 8, 0.88);
-  stroke-width: 2px;
-}
-
-.home-v2-signal-packet__source {
-  fill: var(--gold, #caa554);
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.18em;
-}
-
-.home-v2-signal-packet__headline {
-  fill: rgba(235, 227, 214, 0.94);
-  font-size: 13px;
-  font-weight: 500;
-  letter-spacing: 0.08em;
-}
-
-.home-v2-signal-packet__detail {
-  fill: rgba(235, 227, 214, 0.66);
-  font-size: 9.5px;
+  font-size: 18px;
   font-weight: 400;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.045em;
+  text-transform: none;
+  fill: rgba(235, 227, 214, 0.9);
+  text-shadow:
+    0 0 12px rgba(10, 9, 8, 0.95),
+    0 0 18px rgba(202, 165, 84, 0.14);
 }
 
-.home-v2-signal-packet__code {
-  fill: rgba(202, 165, 84, 0.54);
-  font-size: 8px;
-  letter-spacing: 0.14em;
-}
-
-.home-v2-signal-packet__source-diamond {
+.home-v2-signal-ticker__source {
   fill: var(--gold, #caa554);
-  stroke: none;
-}
-
-.home-v2-signal-packet__rule {
-  fill: none;
-  stroke: rgba(202, 165, 84, 0.72);
-  stroke-width: 1;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
-/* OpenAI: dashed deployment bulletin. */
-.home-v2-signal-packet--openai .home-v2-signal-packet__frame {
-  stroke: rgba(202, 165, 84, 0.56);
-  stroke-dasharray: 4 4;
-}
-
-.home-v2-signal-packet--openai .home-v2-signal-packet__source {
-  fill: rgba(235, 227, 214, 0.76);
-}
-
-/* Anthropic: primary gold signal, stronger frame and source. */
-.home-v2-signal-packet--anthropic {
-  opacity: 1;
-}
-
-.home-v2-signal-packet--anthropic .home-v2-signal-packet__frame {
-  fill: rgba(202, 165, 84, 0.11);
-  stroke: rgba(202, 165, 84, 0.95);
-}
-
-.home-v2-signal-packet--anthropic .home-v2-signal-packet__source,
-.home-v2-signal-packet--anthropic .home-v2-signal-packet__code {
-  fill: var(--gold, #caa554);
-}
-
-/* Palantir: field-ops packet, dawn frame with gold telemetry accents. */
-.home-v2-signal-packet--palantir {
-  opacity: 1;
-}
-
-.home-v2-signal-packet--palantir .home-v2-signal-packet__frame {
-  fill: rgba(235, 227, 214, 0.055);
-  stroke: rgba(235, 227, 214, 0.68);
-}
-
-.home-v2-signal-packet--palantir .home-v2-signal-packet__source {
-  fill: var(--gold, #caa554);
-}
-
-.home-v2-signal-packet--palantir .home-v2-signal-packet__headline {
-  fill: rgba(235, 227, 214, 0.96);
-}
-
-/* Stripe: quieter embedded-operator signal. */
-.home-v2-signal-packet--stripe .home-v2-signal-packet__frame {
-  stroke: rgba(202, 165, 84, 0.56);
-  stroke-dasharray: 1.5 5.5;
-}
-
-.home-v2-signal-packet--stripe .home-v2-signal-packet__source {
-  fill: rgba(202, 165, 84, 0.78);
-}
-
-/* ── Signal-ring instrument chrome (2026-06-16 framed-readout pass) ──
-   The arc is no longer a bare text ribbon: it reads as a navigational
-   instrument welded to the planet limb, built from the celestial diagram
-   vocabulary (BearingTicks gauge, RegisterMarks corners, OrbitalMarker
-   diamonds, a DiagramLabels-style title plate). Every element is gold on
-   the dark limb band; all geometry is rewritten per frame by
-   `EpilogueNewsTicker` so the whole instrument stays welded. */
-
-/* Faint dotted ruler baseline the headlines ride (the gauge hangs off it).
-   Quieter than the gauge ticks so it reads as the scale line, not chrome. */
-.home-v2-signal-ticker__rail {
-  fill: none;
-  stroke: rgba(202, 165, 84, 0.36);
-  stroke-width: 1;
-  stroke-dasharray: 1.5 5.5;
-  stroke-linecap: round;
-}
-
-/* Bearing gauge — minor/major radial ticks hung off the rail. One path;
-   tick LENGTH differentiates major from minor (HUD-rail 7/21px grammar),
-   so a single gold weight keeps the scale calm under the moving headlines. */
-.home-v2-signal-ticker__gauge {
-  fill: none;
-  stroke: rgba(202, 165, 84, 0.62);
-  stroke-width: 1;
-  stroke-linecap: butt;
-}
-
-/* End register marks — L brackets framing the arc span (radial arm +
-   tangential foot). Stroke-only so the open L paths don't fill. */
-.home-v2-signal-ticker__ticks {
-  fill: none;
-  stroke: rgba(202, 165, 84, 0.82);
-  stroke-width: 1;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
-/* Gold corner waypoint diamonds at the outer end of each bracket. */
-.home-v2-signal-ticker__end-diamond {
-  fill: var(--gold, #caa554);
-  stroke: none;
+  font-weight: 600;
 }
 
 /* During the ADR-021 dissipate, the signal title/CTA are PUSHED OUT of the

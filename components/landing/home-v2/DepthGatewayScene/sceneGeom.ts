@@ -1338,6 +1338,45 @@ export function getBrandmarkWorldHalfExtent(progress: number): number {
   return H.intelligence;
 }
 
+/** Fraction of the substrate gyro sphere's visible world radius the in-corridor
+ *  brandmark fills (2026-06-16). The physics core is no longer a small
+ *  bright core inside the sphere — once the camera flies into the
+ *  corridor the mark grows to the SAME radius as the full visible
+ *  dotted sphere shell it sits inside, so the brandmark arc blends
+ *  into the gimbal globe instead
+ *  of reading as a smaller centre core. Single tuning knob — see
+ *  `getBrandmarkSphereMatchHalfExtent`. */
+export const BRANDMARK_SPHERE_FILL = 1.0;
+
+/** World half-extent that makes the brandmark match the substrate gyro
+ *  SPHERE's apparent size at the current corridor progress.
+ *
+ *  The visible sphere is the dotted shell, which sits at world radius
+ *  `SUBSTRATE_GYRO_GLOBE_RADIUS × SUBSTRATE_GYRO_DOTTED_SHELL_RADIUS_MUL
+ *  × GYRO_ASSEMBLY_SCALE × navBoost` — the same scale stack
+ *  `BrandmarkAccretionShell` applies to the gimbal assembly, MINUS the
+ *  epilogue planet-grow (the physics core is hidden by the time the dock
+ *  engages, so there is nothing to match there).
+ *  Because the core and the sphere share a centre
+ *  (`getBrandmarkWorldPosition`) and the same camera + Navigate
+ *  apparent-size boost, matching world radius == matching apparent size
+ *  at every beat — including the Navigate park where both grow ~30%
+ *  together via `getNavigateApparentSizeBoost`.
+ *
+ *  `BrandmarkPhysicsCoreActor` ramps from `getBrandmarkWorldHalfExtent`
+ *  (the DOM-SVG handoff size) to THIS across the ignite band, so the
+ *  mark grows to fill the sphere as the camera flies into the corridor
+ *  and stays sphere-sized through Build. */
+export function getBrandmarkSphereMatchHalfExtent(progress: number): number {
+  return (
+    SUBSTRATE_GYRO_GLOBE_RADIUS *
+    SUBSTRATE_GYRO_DOTTED_SHELL_RADIUS_MUL *
+    GYRO_ASSEMBLY_SCALE *
+    getNavigateApparentSizeBoost(progress) *
+    BRANDMARK_SPHERE_FILL
+  );
+}
+
 // ── Copy + label world anchors ───────────────────────────────────
 
 import { epilogueBand, getEpiloguePlanetScale } from "@/lib/home-v2/epilogueTimeline";
@@ -1351,6 +1390,7 @@ import {
   STACK_FAN_HALF_HEIGHT,
   STACK_LANE_COUNT,
   STACK_LANE_Y_RANGE,
+  SUBSTRATE_GYRO_DOTTED_SHELL_RADIUS_MUL,
   SUBSTRATE_GYRO_GLOBE_RADIUS,
   getPrimitiveLabelOffset,
   petalStagger,

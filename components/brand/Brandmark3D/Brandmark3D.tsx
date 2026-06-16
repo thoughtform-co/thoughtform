@@ -1,0 +1,495 @@
+"use client";
+
+/**
+ * Brandmark3D — R3F group that paints the Thoughtform brandmark as a
+ * real beveled 3D solid with selectable finishes:
+ *
+ *   - Material: a procedural matcap (no scene lights — matches the
+ *     corridor's unlit aesthetic) OR a PBR physical material that
+ *     reflects an environment map (chrome / liquid-metal; pair with
+ *     `<RoomEnvironmentRig>`).
+ *   - Wireframe overlay: the triangulated mesh (or feature edges)
+ *     drawn over the solid for a technical-model read.
+ *   - Half/half cutaway: a clipping plane shows the solid on one side
+ *     and the wireframe on the other.
+ *
+ * Lifecycle:
+ *   - Geometry is built async from the SVG via `buildBrandmarkGeometry`,
+ *     disposed on swap + unmount.
+ *   - Matcap texture / wireframe geometry / materials are memoised and
+ *     disposed when they change.
+ *   - Motion: slow Y auto-rotation, pointer parallax, and middle-mouse
+ *     drag — all applied to the GROUP so the solid + wireframe move
+ *     together. Skipped under `prefers-reduced-motion`.
+ *
+ * The component is shaped so the production move (drop into
+ * `DepthGatewayScene`/`BrandmarkAccretionShell`, anchored at
+ * `BRANDMARK_ANCHOR_INTELLIGENCE`) is a clean port.
+ */
+
+import { useFrame, useThree } from "@react-three/fiber";
+import { useEffect, useMemo, useRef, useState } from "react";
+import * as THREE from "three";
+import {
+  buildBrandmarkGeometry,
+  DEFAULT_BRANDMARK_SVG_URL,
+  type BuildBrandmarkGeometryOptions,
+} from "./buildBrandmarkGeometry";
+import {
+  DEFAULT_GOLD_MATCAP_STOPS,
+  makeMatcapTexture,
+  type GoldMatcapStops,
+  type MatcapStyle,
+} from "./makeGoldMatcap";
+
+export type Brandmark3DMaterialMode = "matcap" | "physical";
+
+export interface Brandmark3DPhysicalParams {
+  /** Base colour / metal tint. Default `#caa554` (brand gold). */
+  color?: string;
+  /** 0 = dielectric, 1 = metal. Default 1. */
+  metalness?: number;
+  /** 0 = mirror, 1 = fully rough. Default 0.15. */
+  roughness?: number;
+  /** Clearcoat layer strength 0..1. Default 0. */
+  clearcoat?: number;
+  /** Clearcoat roughness 0..1. Default 0.1. */
+  clearcoatRoughness?: number;
+  /** Thin-film iridescence strength 0..1. Default 0. */
+  iridescence?: number;
+  /** Reflection strength from the env map. Default 1. */
+  envMapIntensity?: number;
+}
+
+export interface Brandmark3DWireframeParams {
+  enabled?: boolean;
+  /** `triangles` = every mesh edge (dense, technical); `edges` =
+   *  feature edges only (cleaner). Default `edges`. */
+  style?: "edges" | "triangles";
+  color?: string;
+  opacity?: number;
+}
+
+export interface Brandmark3DCutawayParams {
+  enabled?: boolean;
+  /** Split axis in object space. Default `x`. */
+  axis?: "x" | "y";
+  /** Split position along the axis, in normalized units (mark spans
+   *  about ±0.5). Default 0 (centre). */
+  offset?: number;
+  /** Swap which side is solid vs wireframe. Default false. */
+  flip?: boolean;
+}
+
+export interface Brandmark3DProps {
+  /** Override the source SVG (defaults to the canonical brandmark). */
+  svgUrl?: string;
+  /** Geometry-shape props — any change triggers an async rebuild. */
+  geometry?: BuildBrandmarkGeometryOptions;
+  /** Material mode. Default `matcap`. */
+  materialMode?: Brandmark3DMaterialMode;
+  /** Matcap stops + style — used when `materialMode === "matcap"`. */
+  matcap?: Partial<GoldMatcapStops> & {
+    resolution?: number;
+    style?: MatcapStyle;
+  };
+  /** Caller-supplied matcap texture (e.g. a captured PNG). Skips the
+   *  procedural generator when set. */
+  matcapTexture?: THREE.Texture | null;
+  /** PBR params — used when `materialMode === "physical"`. */
+  physical?: Brandmark3DPhysicalParams;
+  /** Wireframe overlay config. */
+  wireframe?: Brandmark3DWireframeParams;
+  /** Half/half clipping cutaway config. */
+  cutaway?: Brandmark3DCutawayParams;
+  /** Auto-rotation rate around Y in radians/sec. Default 0.18. */
+  autoRotateSpeed?: number;
+  /** Whether to enable pointer-driven parallax tilt. Default true. */
+  pointerParallax?: boolean;
+  /** Peak pointer-driven tilt in radians. Default 0.22. */
+  pointerTiltAmount?: number;
+  /** Smoothing factor for pointer parallax lerp (0..1). Default 0.08. */
+  pointerLerp?: number;
+  /** Enable middle-mouse-button drag rotation. Default true. */
+  middleMouseDrag?: boolean;
+  /** Radians per pixel of pointer drag. Default π/400. */
+  dragSensitivity?: number;
+  /** Forwarded position/rotation. */
+  position?: [number, number, number];
+  rotation?: [number, number, number];
+  /** Optional scale multiplier on top of the geometry's normalized size. */
+  scale?: number;
+  /** Called once geometry has finished building, with its size. */
+  onReady?: (size: THREE.Vector3) => void;
+}
+
+const REDUCED_MOTION_QUERY = "(prefers-reduced-motion: reduce)";
+
+export function Brandmark3D({
+  svgUrl = DEFAULT_BRANDMARK_SVG_URL,
+  geometry: geometryOpts,
+  materialMode = "matcap",
+  matcap: matcapStops,
+  matcapTexture,
+  physical,
+  wireframe,
+  cutaway,
+  autoRotateSpeed = 0.18,
+  pointerParallax = true,
+  pointerTiltAmount = 0.22,
+  pointerLerp = 0.08,
+  middleMouseDrag = true,
+  dragSensitivity = Math.PI / 400,
+  position,
+  rotation,
+  scale = 1,
+  onReady,
+}: Brandmark3DProps) {
+  const groupRef = useRef<THREE.Group>(null);
+  const [geometry, setGeometry] = useState<THREE.BufferGeometry | null>(null);
+
+  // Stable scalar deps so effects don't re-fire on `{}` identity.
+  const depth = geometryOpts?.depth;
+  const bevelThickness = geometryOpts?.bevelThickness;
+  const bevelSize = geometryOpts?.bevelSize;
+  const bevelSegments = geometryOpts?.bevelSegments;
+  const curveSegments = geometryOpts?.curveSegments;
+  const includeSlivers = geometryOpts?.includeSlivers;
+  const targetSize = geometryOpts?.targetSize;
+
+  const matcapCore = matcapStops?.core;
+  const matcapMid = matcapStops?.mid;
+  const matcapEdge = matcapStops?.edge;
+  const matcapMidStop = matcapStops?.midStop;
+  const matcapEdgeStop = matcapStops?.edgeStop;
+  const matcapResolution = matcapStops?.resolution;
+  const matcapStyle = matcapStops?.style;
+
+  const physColor = physical?.color ?? "#caa554";
+  const physMetalness = physical?.metalness ?? 1;
+  const physRoughness = physical?.roughness ?? 0.15;
+  const physClearcoat = physical?.clearcoat ?? 0;
+  const physClearcoatRoughness = physical?.clearcoatRoughness ?? 0.1;
+  const physIridescence = physical?.iridescence ?? 0;
+  const physEnvIntensity = physical?.envMapIntensity ?? 1;
+
+  const wireEnabled = wireframe?.enabled ?? false;
+  const wireStyle = wireframe?.style ?? "edges";
+  const wireColor = wireframe?.color ?? "#caa554";
+  const wireOpacity = wireframe?.opacity ?? 0.5;
+
+  const cutawayEnabled = cutaway?.enabled ?? false;
+  const cutawayAxis = cutaway?.axis ?? "x";
+  const cutawayOffset = cutaway?.offset ?? 0;
+  const cutawayFlip = cutaway?.flip ?? false;
+
+  // The wireframe shows whenever the overlay is on OR a cutaway is
+  // active (the cutaway needs the wire half to read).
+  const showWire = wireEnabled || cutawayEnabled;
+
+  const gl = useThree((s) => s.gl);
+
+  // ── Async geometry build ──────────────────────────────────────
+  useEffect(() => {
+    let cancelled = false;
+    buildBrandmarkGeometry(svgUrl, {
+      depth,
+      bevelThickness,
+      bevelSize,
+      bevelSegments,
+      curveSegments,
+      includeSlivers,
+      targetSize,
+    })
+      .then((result) => {
+        if (cancelled) {
+          result.geometry.dispose();
+          return;
+        }
+        setGeometry((prev) => {
+          if (prev) prev.dispose();
+          return result.geometry;
+        });
+        onReady?.(result.size);
+      })
+      .catch((err) => {
+        if (cancelled) return;
+
+        console.error("[Brandmark3D] geometry build failed:", err);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    svgUrl,
+    depth,
+    bevelThickness,
+    bevelSize,
+    bevelSegments,
+    curveSegments,
+    includeSlivers,
+    targetSize,
+    onReady,
+  ]);
+
+  useEffect(() => {
+    return () => {
+      setGeometry((prev) => {
+        if (prev) prev.dispose();
+        return null;
+      });
+    };
+  }, []);
+
+  // ── Wireframe geometry (derived from the solid geometry) ──────
+  const wireGeometry = useMemo(() => {
+    if (!geometry || !showWire) return null;
+    return wireStyle === "triangles"
+      ? new THREE.WireframeGeometry(geometry)
+      : new THREE.EdgesGeometry(geometry, 24);
+  }, [geometry, showWire, wireStyle]);
+
+  useEffect(() => {
+    return () => {
+      wireGeometry?.dispose();
+    };
+  }, [wireGeometry]);
+
+  // ── Clipping planes (stable objects; params updated each frame) ─
+  const solidPlane = useMemo(() => new THREE.Plane(new THREE.Vector3(1, 0, 0), 0), []);
+  const wirePlane = useMemo(() => new THREE.Plane(new THREE.Vector3(-1, 0, 0), 0), []);
+
+  useEffect(() => {
+    const sign = cutawayFlip ? -1 : 1;
+    const n = cutawayAxis === "y" ? new THREE.Vector3(0, 1, 0) : new THREE.Vector3(1, 0, 0);
+    // Solid visible where axis·p ≥ offset; wire on the opposite side.
+    solidPlane.normal.copy(n).multiplyScalar(sign);
+    solidPlane.constant = -cutawayOffset * sign;
+    wirePlane.normal.copy(n).multiplyScalar(-sign);
+    wirePlane.constant = cutawayOffset * sign;
+  }, [cutawayAxis, cutawayOffset, cutawayFlip, solidPlane, wirePlane]);
+
+  // Local clipping must be enabled on the renderer for material
+  // `clippingPlanes` to take effect.
+  useEffect(() => {
+    if (cutawayEnabled) gl.localClippingEnabled = true;
+  }, [gl, cutawayEnabled]);
+
+  // ── Matcap texture (matcap mode only) ─────────────────────────
+  const proceduralMatcap = useMemo(() => {
+    if (materialMode !== "matcap") return null;
+    if (matcapTexture) return null;
+    if (typeof window === "undefined" || typeof document === "undefined") {
+      return null;
+    }
+    return makeMatcapTexture({
+      core: matcapCore ?? DEFAULT_GOLD_MATCAP_STOPS.core,
+      mid: matcapMid ?? DEFAULT_GOLD_MATCAP_STOPS.mid,
+      edge: matcapEdge ?? DEFAULT_GOLD_MATCAP_STOPS.edge,
+      midStop: matcapMidStop ?? DEFAULT_GOLD_MATCAP_STOPS.midStop,
+      edgeStop: matcapEdgeStop ?? DEFAULT_GOLD_MATCAP_STOPS.edgeStop,
+      style: matcapStyle ?? "metallic",
+      resolution: matcapResolution,
+    });
+  }, [
+    materialMode,
+    matcapTexture,
+    matcapCore,
+    matcapMid,
+    matcapEdge,
+    matcapMidStop,
+    matcapEdgeStop,
+    matcapStyle,
+    matcapResolution,
+  ]);
+
+  useEffect(() => {
+    return () => {
+      proceduralMatcap?.dispose();
+    };
+  }, [proceduralMatcap]);
+
+  // ── Solid material ────────────────────────────────────────────
+  const solidMaterial = useMemo<THREE.Material>(() => {
+    const clippingPlanes = cutawayEnabled ? [solidPlane] : undefined;
+    if (materialMode === "physical") {
+      return new THREE.MeshPhysicalMaterial({
+        color: new THREE.Color(physColor),
+        metalness: physMetalness,
+        roughness: physRoughness,
+        clearcoat: physClearcoat,
+        clearcoatRoughness: physClearcoatRoughness,
+        iridescence: physIridescence,
+        envMapIntensity: physEnvIntensity,
+        clippingPlanes,
+        clipShadows: false,
+        side: THREE.DoubleSide,
+      });
+    }
+    const tex = matcapTexture ?? proceduralMatcap ?? null;
+    return new THREE.MeshMatcapMaterial({
+      matcap: tex,
+      flatShading: false,
+      toneMapped: false,
+      transparent: false,
+      clippingPlanes,
+    });
+  }, [
+    materialMode,
+    matcapTexture,
+    proceduralMatcap,
+    physColor,
+    physMetalness,
+    physRoughness,
+    physClearcoat,
+    physClearcoatRoughness,
+    physIridescence,
+    physEnvIntensity,
+    cutawayEnabled,
+    solidPlane,
+  ]);
+
+  useEffect(() => {
+    return () => {
+      solidMaterial.dispose();
+    };
+  }, [solidMaterial]);
+
+  // ── Wireframe material ────────────────────────────────────────
+  const wireMaterial = useMemo(() => {
+    return new THREE.LineBasicMaterial({
+      color: new THREE.Color(wireColor),
+      transparent: true,
+      opacity: clamp01(wireOpacity),
+      toneMapped: false,
+      depthWrite: false,
+      clippingPlanes: cutawayEnabled ? [wirePlane] : undefined,
+    });
+  }, [wireColor, wireOpacity, cutawayEnabled, wirePlane]);
+
+  useEffect(() => {
+    return () => {
+      wireMaterial.dispose();
+    };
+  }, [wireMaterial]);
+
+  // ── Reduced-motion gate ───────────────────────────────────────
+  const [reducedMotion, setReducedMotion] = useState(false);
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.matchMedia) return;
+    const mq = window.matchMedia(REDUCED_MOTION_QUERY);
+    setReducedMotion(mq.matches);
+    const handler = (e: MediaQueryListEvent) => setReducedMotion(e.matches);
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, []);
+
+  // ── Motion: auto-rotate + parallax + middle-mouse drag ────────
+  const pointer = useThree((s) => s.pointer);
+  const tiltState = useRef({ x: 0, y: 0 });
+  const draggingRef = useRef(false);
+  const lastPointerRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+  const manualBaseRef = useRef({ x: rotation?.[0] ?? 0 });
+
+  useEffect(() => {
+    if (!middleMouseDrag) return;
+    const canvas = gl.domElement;
+
+    const handlePointerDown = (e: PointerEvent) => {
+      if (e.button !== 1) return;
+      e.preventDefault();
+      draggingRef.current = true;
+      lastPointerRef.current = { x: e.clientX, y: e.clientY };
+      try {
+        canvas.setPointerCapture(e.pointerId);
+      } catch {
+        // ignore — pointermove still fires on the canvas
+      }
+    };
+
+    const handlePointerMove = (e: PointerEvent) => {
+      if (!draggingRef.current) return;
+      const group = groupRef.current;
+      if (!group) return;
+      const dx = e.clientX - lastPointerRef.current.x;
+      const dy = e.clientY - lastPointerRef.current.y;
+      lastPointerRef.current = { x: e.clientX, y: e.clientY };
+      group.rotation.y += dx * dragSensitivity;
+      manualBaseRef.current.x += dy * dragSensitivity;
+      group.rotation.x = manualBaseRef.current.x;
+    };
+
+    const handlePointerUp = (e: PointerEvent) => {
+      if (e.button !== 1 && draggingRef.current === false) return;
+      draggingRef.current = false;
+      try {
+        canvas.releasePointerCapture(e.pointerId);
+      } catch {
+        // ignore
+      }
+    };
+
+    const handlePointerCancel = () => {
+      draggingRef.current = false;
+    };
+
+    const handleAuxClick = (e: MouseEvent) => {
+      if (e.button === 1) e.preventDefault();
+    };
+
+    canvas.addEventListener("pointerdown", handlePointerDown);
+    canvas.addEventListener("pointermove", handlePointerMove);
+    canvas.addEventListener("pointerup", handlePointerUp);
+    canvas.addEventListener("pointercancel", handlePointerCancel);
+    canvas.addEventListener("auxclick", handleAuxClick);
+    return () => {
+      canvas.removeEventListener("pointerdown", handlePointerDown);
+      canvas.removeEventListener("pointermove", handlePointerMove);
+      canvas.removeEventListener("pointerup", handlePointerUp);
+      canvas.removeEventListener("pointercancel", handlePointerCancel);
+      canvas.removeEventListener("auxclick", handleAuxClick);
+      draggingRef.current = false;
+    };
+  }, [gl, middleMouseDrag, dragSensitivity]);
+
+  useFrame((_, delta) => {
+    const group = groupRef.current;
+    if (!group) return;
+    const dragging = draggingRef.current;
+
+    if (!reducedMotion && autoRotateSpeed !== 0 && !dragging) {
+      group.rotation.y += autoRotateSpeed * delta;
+    }
+
+    if (pointerParallax && !reducedMotion && pointerTiltAmount > 0 && !dragging) {
+      const targetX = -pointer.y * pointerTiltAmount;
+      const targetY = pointer.x * pointerTiltAmount;
+      const a = clamp01(pointerLerp);
+      tiltState.current.x += (targetX - tiltState.current.x) * a;
+      tiltState.current.y += (targetY - tiltState.current.y) * a;
+      group.rotation.x = manualBaseRef.current.x + tiltState.current.x;
+      group.rotation.z = (rotation?.[2] ?? 0) + tiltState.current.y * 0.25;
+    } else if (!dragging) {
+      group.rotation.x = manualBaseRef.current.x;
+      group.rotation.z = rotation?.[2] ?? 0;
+    }
+  });
+
+  if (!geometry) return null;
+
+  return (
+    <group ref={groupRef} position={position} scale={scale} rotation={rotation}>
+      <mesh geometry={geometry} material={solidMaterial} />
+      {showWire && wireGeometry ? (
+        <lineSegments geometry={wireGeometry} material={wireMaterial} />
+      ) : null}
+    </group>
+  );
+}
+
+function clamp01(v: number): number {
+  if (!Number.isFinite(v)) return 0;
+  if (v < 0) return 0;
+  if (v > 1) return 1;
+  return v;
+}

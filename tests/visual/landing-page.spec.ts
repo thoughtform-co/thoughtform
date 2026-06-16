@@ -77,12 +77,9 @@ test.describe("Component Visual Regression", () => {
     await page.waitForTimeout(1000);
   });
 
-  test("HUD hamburger menu", async ({ page }) => {
-    const hudNav = page.locator(".hud__nav").first();
-    if (await hudNav.isVisible()) {
-      await expect(hudNav).toHaveScreenshot("hud-nav-hamburger.png");
-    }
-  });
+  // HUD hamburger menu test removed — the .hud__nav was retired
+  // per the Brand Codex hero contract; there is no top-right HUD
+  // nav to regression-test any more.
 
   test("HUD corner brackets", async ({ page }) => {
     const corner = page.locator(".hud__corner--tl").first();

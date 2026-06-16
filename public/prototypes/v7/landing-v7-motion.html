@@ -4199,34 +4199,9 @@ html { scroll-behavior: smooth; }
   <div class="hud__corner hud__corner--bl"></div>
   <div class="hud__corner hud__corner--br"></div>
 
-  <!-- Nav trigger — bare three lines, top-right -->
-  <header class="hud__top">
-    <nav class="hud__nav" id="hudNav">
-      <button class="hud__nav__btn" aria-label="Navigation menu" type="button">
-        <span class="bars"><span></span><span></span><span></span></span>
-      </button>
-      <div class="hud__nav__list">
-        <div class="hud__nav__list__head">
-          <span class="k">Navigate</span><span>Stations · 10</span>
-        </div>
-        <a href="#hero" data-station="hero" class="is-active"><span class="num">01</span>Interface</a>
-        <a href="#definition" data-station="definition"><span class="num">02</span>Thoughtform</a>
-        <a href="#missing-layer" data-station="missingLayer"><span class="num">03</span>Missing layer</a>
-        <a href="#intelligence-layer" data-station="intelligenceLayer"><span class="num">04</span>Intelligence layer</a>
-        <a href="#continuum" data-station="continuum"><span class="num">05</span>Continuum</a>
-        <a href="#practice" data-station="practice"><span class="num">06</span>Practice</a>
-        <a href="#build" data-station="build"><span class="num">07</span>Build</a>
-        <a href="#services" data-station="services"><span class="num">08</span>Services</a>
-        <a href="#about" data-station="about"><span class="num">09</span>About</a>
-        <a href="#contact" data-station="contact"><span class="num">10</span>Contact</a>
-        <div class="hud__nav__status">
-          <span><span class="k">δ</span><span id="coordD">0.27</span> <span class="k">θ</span><span id="coordT">058.1°</span></span>
-          <span><span class="k">Sector</span> <span id="hudSector">Origin</span></span>
-          <span><span class="k">Depth</span> <span id="hudProgress">00%</span></span>
-        </div>
-      </div>
-    </nav>
-  </header>
+  <!-- Hamburger nav trigger removed per Brand Codex hero contract —
+       the hero now reads as wordmark + tagline + gateway analysis
+       marks, with no top-right HUD nav. -->
 
   <!-- Left rail: depth gauge -->
   <aside class="hud__rail hud__rail--l">
@@ -4274,6 +4249,36 @@ html { scroll-behavior: smooth; }
       </video>
       <div class="hero__video__overlay"></div>
     </div>
+
+    <!-- Hero gateway analysis: cockpit-style leader lines from the
+         key-visual throat to framed callout readouts. This borrows
+         the older NavigationCockpit definition-section principle:
+         the object is analysed by angular linework and right-side
+         modules, instead of being decorated with isolated pins. -->
+    <div class="hero__diagram" aria-hidden="true">
+      <svg class="hero__analysis-lines" viewBox="0 0 100 100" preserveAspectRatio="none">
+        <path class="hero__analysis-line hero__analysis-line--01" d="M58 43 L67 31 L74 31" pathLength="1" />
+        <path class="hero__analysis-line hero__analysis-line--02" d="M58 43 L67 43 L74 43" pathLength="1" />
+        <path class="hero__analysis-line hero__analysis-line--03" d="M58 43 L67 56 L74 56" pathLength="1" />
+      </svg>
+      <span class="hero__analysis-origin"></span>
+      <div class="hero__analysis-card hero__analysis-card--01">
+        <span class="hero__analysis-card__node"></span>
+        <h3>NAVIGATE</h3>
+        <p>Read the signal before choosing the route.</p>
+      </div>
+      <div class="hero__analysis-card hero__analysis-card--02">
+        <span class="hero__analysis-card__node"></span>
+        <h3>ENCODE</h3>
+        <p>Turn the work's judgment into reusable substrate.</p>
+      </div>
+      <div class="hero__analysis-card hero__analysis-card--03">
+        <span class="hero__analysis-card__node"></span>
+        <h3>BUILD</h3>
+        <p>Shape capability the team can keep operating.</p>
+      </div>
+    </div>
+
     <div class="hero__content">
       <div class="hero__wordmark">
         <img src="assets/logos/Thoughtform_Wordmark_Lockup-Vertical%20%28Dual%29.svg" alt="Thoughtform" />

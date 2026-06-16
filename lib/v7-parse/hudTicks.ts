@@ -1,44 +1,109 @@
 /**
- * Static depth-gauge tick markup for the left and right HUD rails.
+ * Brand Codex HUD rail tick ladders (left + right).
  *
- * The prototype HTML ships empty `<div id="leftTicks"></div>` /
- * `<div id="rightTicks"></div>` shells; the parser injects a fully
- * built tick ladder into them so the rails render the same way they
- * do in the standalone prototype. The labels were originally driven
- * by JavaScript at runtime — keeping the markup static avoids a
- * client-side reflow on first paint.
+ * Canonical source: Brand Codex design file XO8yGN90SfxiG1hmYPGYXn,
+ * node 1767:2327 (TEXT+IMG 1b specimen). Mirrors the contract used by
+ * the Astrolabe runtime in
+ *   ../../02_astrolabe.thoughtform/lib/navigation/rail-contract.ts
+ *
+ * Each rail carries 13 equal-spacing tick positions (0%, 8.33%, …,
+ * 100%) over the rail-aside height:
+ *
+ *   - LEFT rail: 12 ticks (skips 8.33% — that slot is reserved for
+ *     the compass waypoint / depth marker that lives outside the
+ *     tick ladder on the left rail). Majors at 33.33% and 66.67%,
+ *     labelled "2" and "5".
+ *   - RIGHT rail: 13 ticks (includes 8.33% as a regular minor —
+ *     there is no compass on the right rail). Majors at 33.33% and
+ *     66.67%, no labels.
+ *
+ * Widths: 7px minor, 21px major. CSS handles the outward extension
+ * from the guide (left rail extends LEFT, right rail extends RIGHT).
+ *
+ * The prototype HTML ships empty `<div id="leftTicks">` / `<div
+ * id="rightTicks">` shells; this module injects each side's ladder
+ * at parse time so the rails render the Brand Codex contract on
+ * first paint without a client-side reflow.
  */
 
-const TICK_COUNT = 20;
+interface TickMark {
+  yPct: number;
+  major: boolean;
+  /** Optional bearing label rendered just inside the rail. */
+  label?: string;
+}
 
-const TICK_LABELS: Record<number, string> = {
-  0: "0",
-  5: "2",
-  10: "5",
-  15: "7",
-  20: "10",
-};
+const LEFT_TICKS: readonly TickMark[] = [
+  { yPct: 0, major: false },
+  // 8.33% skipped — compass waypoint slot on the left rail.
+  { yPct: 16.67, major: false },
+  { yPct: 25, major: false },
+  { yPct: 33.33, major: true, label: "2" },
+  { yPct: 41.67, major: false },
+  { yPct: 50, major: false },
+  { yPct: 58.33, major: false },
+  { yPct: 66.67, major: true, label: "5" },
+  { yPct: 75, major: false },
+  { yPct: 83.33, major: false },
+  { yPct: 91.67, major: false },
+  { yPct: 100, major: false },
+];
 
-/** Build a single rail's full tick ladder as a single HTML string. */
-export function buildDepthTicksHtml(): string {
+const RIGHT_TICKS: readonly TickMark[] = [
+  { yPct: 0, major: false },
+  { yPct: 8.33, major: false },
+  { yPct: 16.67, major: false },
+  { yPct: 25, major: false },
+  { yPct: 33.33, major: true },
+  { yPct: 41.67, major: false },
+  { yPct: 50, major: false },
+  { yPct: 58.33, major: false },
+  { yPct: 66.67, major: true },
+  { yPct: 75, major: false },
+  { yPct: 83.33, major: false },
+  { yPct: 91.67, major: false },
+  { yPct: 100, major: false },
+];
+
+function buildRailHtml(ticks: readonly TickMark[]): string {
   let html = "";
-  for (let i = 0; i <= TICK_COUNT; i += 1) {
-    const isMajor = i % 5 === 0;
-    const topPct = ((i / TICK_COUNT) * 100).toFixed(4);
-    const cls = "hud__rail__tick" + (isMajor ? " hud__rail__tick--major" : "");
-    html += `<div class="${cls}" style="top:${topPct}%"></div>`;
-    if (isMajor && TICK_LABELS[i] !== undefined) {
-      html += `<div class="hud__rail__label" style="top:${topPct}%;transform:translateY(-50%)">${TICK_LABELS[i]}</div>`;
+  for (const tick of ticks) {
+    const cls = "hud__rail__tick" + (tick.major ? " hud__rail__tick--major" : "");
+    const top = tick.yPct.toFixed(4);
+    html += `<div class="${cls}" style="top:${top}%"></div>`;
+    if (tick.label !== undefined) {
+      html += `<div class="hud__rail__label" style="top:${top}%;transform:translateY(-50%)">${tick.label}</div>`;
     }
   }
   return html;
 }
 
-/** Inject the same ladder into both `#leftTicks` and `#rightTicks`
+/** Build the LEFT rail tick ladder as a single HTML string. */
+export function buildLeftRailTicksHtml(): string {
+  return buildRailHtml(LEFT_TICKS);
+}
+
+/** Build the RIGHT rail tick ladder as a single HTML string. */
+export function buildRightRailTicksHtml(): string {
+  return buildRailHtml(RIGHT_TICKS);
+}
+
+/**
+ * @deprecated Use `buildLeftRailTicksHtml` / `buildRightRailTicksHtml`.
+ * Kept as an alias of the left-rail builder for any external caller
+ * that hard-coded the old single-ladder name.
+ */
+export function buildDepthTicksHtml(): string {
+  return buildLeftRailTicksHtml();
+}
+
+/** Inject the per-side ladders into `#leftTicks` and `#rightTicks`
  *  if they are present in the body markup. */
 export function injectStaticHudChildren(html: string): string {
-  const ticksHtml = buildDepthTicksHtml();
   return html
-    .replace(/<div id="leftTicks"><\/div>/, `<div id="leftTicks">${ticksHtml}</div>`)
-    .replace(/<div id="rightTicks"><\/div>/, `<div id="rightTicks">${ticksHtml}</div>`);
+    .replace(/<div id="leftTicks"><\/div>/, `<div id="leftTicks">${buildLeftRailTicksHtml()}</div>`)
+    .replace(
+      /<div id="rightTicks"><\/div>/,
+      `<div id="rightTicks">${buildRightRailTicksHtml()}</div>`
+    );
 }

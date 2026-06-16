@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
 import type { V7CorridorText } from "@/lib/v7-parse";
 import { HomeCorridor } from "./HomeCorridor";
 
@@ -30,26 +30,12 @@ interface HomeV2PageProps {
 export function HomeV2Page({ hudHtml, bodyClass, text }: HomeV2PageProps) {
   const rootRef = useRef<HTMLDivElement>(null);
 
-  // HUD hamburger nav — wire the bare minimum from v7 LandingPage so
-  // the menu can open / close.
-  useEffect(() => {
-    const root = rootRef.current;
-    if (!root) return;
-    const navEl = root.querySelector<HTMLElement>(".hud__nav");
-    const navBtn = root.querySelector<HTMLButtonElement>(".hud__nav__btn");
-    if (!navEl || !navBtn) return;
-    const toggle = () => {
-      navEl.classList.toggle("is-open");
-    };
-    navBtn.addEventListener("click", toggle);
-    return () => {
-      navBtn.removeEventListener("click", toggle);
-    };
-  }, []);
+  // The HUD hamburger nav was retired per the Brand Codex hero
+  // contract — no `.hud__nav` ships in the sliced hudHtml any more.
 
   return (
     <div ref={rootRef} className={`home-v2-root ${bodyClass}`} data-theme="dark">
-      {/* v7 HUD chrome — `.gateway` + `.hud` rails + `.hud__nav`. */}
+      {/* v7 HUD chrome — `.gateway` + `.hud` rails + corner brackets. */}
       <div
         className="home-v2-hud-root"
         suppressHydrationWarning
@@ -73,6 +59,49 @@ export function HomeV2Page({ hudHtml, bodyClass, text }: HomeV2PageProps) {
           </video>
           <div className="hero__video__overlay" />
         </div>
+
+        {/* Hero gateway analysis — production-parity. Cockpit-style
+            leader lines from the key-visual throat to framed callout
+            readouts, borrowing the older definition-section principle
+            where linework analyzes the brandmark/sigil. Hidden under
+            960px via the same CSS rule that hides .hud__brandmark on
+            mobile. */}
+        <div className="hero__diagram" aria-hidden="true">
+          <svg className="hero__analysis-lines" viewBox="0 0 100 100" preserveAspectRatio="none">
+            <path
+              className="hero__analysis-line hero__analysis-line--01"
+              d="M58 43 L67 31 L74 31"
+              pathLength="1"
+            />
+            <path
+              className="hero__analysis-line hero__analysis-line--02"
+              d="M58 43 L67 43 L74 43"
+              pathLength="1"
+            />
+            <path
+              className="hero__analysis-line hero__analysis-line--03"
+              d="M58 43 L67 56 L74 56"
+              pathLength="1"
+            />
+          </svg>
+          <span className="hero__analysis-origin" />
+          <div className="hero__analysis-card hero__analysis-card--01">
+            <span className="hero__analysis-card__node" />
+            <h3>NAVIGATE</h3>
+            <p>Read the signal before choosing the route.</p>
+          </div>
+          <div className="hero__analysis-card hero__analysis-card--02">
+            <span className="hero__analysis-card__node" />
+            <h3>ENCODE</h3>
+            <p>Turn the work&apos;s judgment into reusable substrate.</p>
+          </div>
+          <div className="hero__analysis-card hero__analysis-card--03">
+            <span className="hero__analysis-card__node" />
+            <h3>BUILD</h3>
+            <p>Shape capability the team can keep operating.</p>
+          </div>
+        </div>
+
         <div className="hero__content">
           <div className="hero__wordmark">
             <img

@@ -95,44 +95,11 @@ export function LandingPage({
   // copy.
   useCorridorMount(rootRef, corridorText, { corridorMountId, debug: false });
 
-  // Hamburger toggle — wire imperatively since the nav markup comes from HTML
-  useEffect(() => {
-    const root = rootRef.current;
-    if (!root) return;
-
-    const navEl = root.querySelector<HTMLElement>(".hud__nav");
-    const navBtn = root.querySelector<HTMLButtonElement>(".hud__nav__btn");
-    if (!navEl || !navBtn) return;
-
-    const toggle = () => {
-      navEl.classList.toggle("is-open");
-    };
-    navBtn.addEventListener("click", toggle);
-
-    // Smooth scroll on nav links
-    const links = Array.from(root.querySelectorAll<HTMLAnchorElement>("#hudNav a"));
-    const handlers: Array<[HTMLAnchorElement, (e: MouseEvent) => void]> = [];
-    for (const link of links) {
-      const handler = (event: MouseEvent) => {
-        const href = link.getAttribute("href");
-        if (!href) return;
-        const target = root.querySelector<HTMLElement>(href);
-        if (!target) return;
-        event.preventDefault();
-        navEl.classList.remove("is-open");
-        window.scrollTo({ top: target.offsetTop - 20, behavior: "smooth" });
-      };
-      link.addEventListener("click", handler);
-      handlers.push([link, handler]);
-    }
-
-    return () => {
-      navBtn.removeEventListener("click", toggle);
-      for (const [link, handler] of handlers) {
-        link.removeEventListener("click", handler);
-      }
-    };
-  }, []);
+  // Hamburger nav was retired per the Brand Codex hero contract — no
+  // `.hud__nav` / `.hud__nav__btn` markup ships in the parsed body
+  // any more, so the previous toggle + smooth-scroll effect would be
+  // a no-op. Section navigation now happens via in-content CTAs
+  // (e.g. the hero "See the practice" link) and the brandmark journey.
 
   // Practice section choreography. Three coupled layers, all driven
   // from a single rAF-throttled scroll handler:

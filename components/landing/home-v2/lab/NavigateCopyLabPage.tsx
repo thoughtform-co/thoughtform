@@ -84,21 +84,8 @@ export function NavigateCopyLabPage({ hudHtml, bodyClass }: NavigateCopyLabPageP
     return () => useGyroLabStore.getState().reset();
   }, []);
 
-  // ── HUD hamburger nav (same hookup as HomeV2Page) ────────────────
-  useEffect(() => {
-    const root = rootRef.current;
-    if (!root) return;
-    const navEl = root.querySelector<HTMLElement>(".hud__nav");
-    const navBtn = root.querySelector<HTMLButtonElement>(".hud__nav__btn");
-    if (!navEl || !navBtn) return;
-    const toggle = () => {
-      navEl.classList.toggle("is-open");
-    };
-    navBtn.addEventListener("click", toggle);
-    return () => {
-      navBtn.removeEventListener("click", toggle);
-    };
-  }, []);
+  // The HUD hamburger nav was retired per the Brand Codex hero
+  // contract — no `.hud__nav` ships in the parsed hudHtml any more.
 
   // ── Mark the corridor engaged so co-mounted scroll listeners (if
   // any) don't fight us. There are none on this route in practice,

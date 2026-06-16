@@ -484,42 +484,33 @@
 .hud__rail--r {
   right: var(--hud-margin);
 }
+/* Guide hairline — Brand Codex contract. Solid 1px line inset from
+   the rail-aside outer edge by `--hud-rail-guide-inset` (~9px at
+   reference). The previous gradient fade was retired with this
+   update: the rail must read as a continuous instrument hairline,
+   not a soft glow. The corner brackets above and the brandmark
+   anchor below already give the rail breathing room at top + bottom. */
 .hud__rail__track {
   position: absolute;
   top: 0;
   bottom: 0;
-  /* 2px (not 1px) so the line ALWAYS covers at least one full device
-     column. The rail sits at a responsive clamp() margin that lands on a
-     fractional CSS pixel (e.g. left: 52.45px); a 1px line there is
-     anti-aliased across two device columns at ~half alpha each and
-     washes out in Chrome's rasterizer (it survived in Electron/Chromium,
-     hence "visible in Cursor, gone in Chrome"). At 2px one column is
-     always fully covered, so the hairline renders crisply at any
-     fractional offset, zoom level, or DPR. The ticks never had this
-     problem because they're 10–20px wide. */
-  width: 2px;
+  width: 1px;
   z-index: 0;
   pointer-events: none;
-  /* Hold the solid core across nearly the full track (6% -> 94%) so the
-     visible hairline is a consistent, readable line rather than a faint
-     gradient that the compositor can wash out at the ends. */
-  background: linear-gradient(
-    to bottom,
-    transparent,
-    var(--hud-rail-line-soft) 3%,
-    var(--hud-rail-line) 6%,
-    var(--hud-rail-line) 94%,
-    var(--hud-rail-line-soft) 97%,
-    transparent
-  );
+  background: var(--hud-rail-line);
 }
 .hud__rail--l .hud__rail__track {
-  left: 0;
+  left: var(--hud-rail-guide-inset);
 }
 .hud__rail--r .hud__rail__track {
-  right: 0;
+  right: var(--hud-rail-guide-inset);
 }
 
+/* Ticks — extend OUTWARD from the guide (left rail extends LEFT,
+   right rail extends RIGHT). Minor = 7px, major = 21px. Mirrors the
+   Astrolabe HudTick primitive at
+     ../../02_astrolabe.thoughtform/components/hud/HudTick.tsx
+   so both surfaces read the same rail vocabulary. */
 .hud__rail__tick {
   position: absolute;
   height: 1px;
@@ -528,22 +519,27 @@
   background: var(--gold-40, var(--dawn-30));
 }
 .hud__rail--l .hud__rail__tick {
-  left: 0;
-  width: 10px;
+  left: calc(var(--hud-rail-guide-inset) - 7px);
+  width: 7px;
 }
 .hud__rail--l .hud__rail__tick--major {
-  width: 20px;
+  left: calc(var(--hud-rail-guide-inset) - 21px);
+  width: 21px;
   background: var(--gold);
 }
 .hud__rail--r .hud__rail__tick {
-  right: 0;
-  width: 10px;
+  right: calc(var(--hud-rail-guide-inset) - 7px);
+  width: 7px;
 }
 .hud__rail--r .hud__rail__tick--major {
-  width: 20px;
+  right: calc(var(--hud-rail-guide-inset) - 21px);
+  width: 21px;
   background: var(--gold);
 }
 
+/* Bearing labels — sit just INSIDE the guide (between the rail and
+   the content area) so they read with the page rhythm rather than
+   floating outside in the gutter. */
 .hud__rail__label {
   position: absolute;
   z-index: 2;
@@ -553,16 +549,18 @@
   letter-spacing: var(--track-wider);
 }
 .hud__rail--l .hud__rail__label {
-  left: 28px;
+  left: calc(var(--hud-rail-guide-inset) + 10px);
 }
 .hud__rail--r .hud__rail__label {
-  right: 28px;
+  right: calc(var(--hud-rail-guide-inset) + 10px);
 }
 
-/* Scroll chevron (gold diamond on the left rail) */
+/* Scroll-depth diamond (left rail). Centered on the guide so it
+   tracks scroll position along the canonical Brand Codex hairline.
+   `top` is rewritten per scroll frame by `useLandingScroll`. */
 .hud__depth {
   position: absolute;
-  left: -4px;
+  left: calc(var(--hud-rail-guide-inset) - 8px);
   width: 17px;
   height: 17px;
   z-index: 3;
@@ -1276,6 +1274,182 @@
   color: var(--gold);
 }
 
+/* ── Hero gateway analysis ─────────────────────────────────────────
+   Cockpit-style analysis layer adapted from the old definition
+   section: angular gold linework originates at the key-visual throat
+   and terminates in framed readout cards. This is the "analyzing the
+   brandmark" principle applied to the hero gateway centre.
+   Sits ABOVE the hero video (z:0) and BELOW the wordmark / tagline
+   text (z:2) so the leaders never paint over the brand marks.
+   Hidden under 960px (mobile mirrors `.hud__brandmark`). */
+.hero__diagram {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.hero__analysis-lines {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.hero__analysis-line {
+  fill: none;
+  stroke: rgba(202, 165, 84, 0.55);
+  stroke-width: 1;
+  stroke-linecap: square;
+  stroke-linejoin: miter;
+  vector-effect: non-scaling-stroke;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: heroAnalysisDraw 700ms var(--analysis-delay, 400ms) var(--ease-out) forwards;
+}
+.hero__analysis-line--01 {
+  --analysis-delay: 300ms;
+}
+.hero__analysis-line--02 {
+  --analysis-delay: 470ms;
+}
+.hero__analysis-line--03 {
+  --analysis-delay: 640ms;
+}
+
+.hero__analysis-origin {
+  position: absolute;
+  left: 58%;
+  top: 43%;
+  width: 18px;
+  height: 18px;
+  margin: -9px 0 0 -9px;
+  opacity: 0;
+  animation: heroAnalysisFade 500ms 180ms var(--ease-out) forwards;
+}
+.hero__analysis-origin::before,
+.hero__analysis-origin::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  background: var(--gold-40);
+}
+.hero__analysis-origin::before {
+  width: 30px;
+  height: 1px;
+  margin-left: -15px;
+}
+.hero__analysis-origin::after {
+  width: 1px;
+  height: 30px;
+  margin-top: -15px;
+}
+
+.hero__analysis-card {
+  position: absolute;
+  left: 75%;
+  width: clamp(140px, 13vw, 220px);
+  padding: 14px 16px 15px;
+  background: rgba(5, 4, 3, 0.22);
+  border: 1px solid var(--dawn-08);
+  color: var(--dawn);
+  backdrop-filter: blur(8px);
+  opacity: 0;
+  transform: translateX(10px);
+  animation: heroAnalysisCardIn 560ms var(--card-delay, 620ms) var(--ease-out) forwards;
+}
+.hero__analysis-card::before,
+.hero__analysis-card::after {
+  content: "";
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  pointer-events: none;
+}
+.hero__analysis-card::before {
+  top: -1px;
+  left: -1px;
+  border-top: 1px solid var(--gold);
+  border-left: 1px solid var(--gold);
+}
+.hero__analysis-card::after {
+  right: -1px;
+  bottom: -1px;
+  border-right: 1px solid var(--gold);
+  border-bottom: 1px solid var(--gold);
+}
+.hero__analysis-card--01 {
+  top: calc(31% - 37px);
+  --card-delay: 780ms;
+}
+.hero__analysis-card--02 {
+  top: calc(43% - 37px);
+  --card-delay: 940ms;
+}
+.hero__analysis-card--03 {
+  top: calc(56% - 37px);
+  --card-delay: 1100ms;
+}
+.hero__analysis-card__node {
+  position: absolute;
+  left: -5px;
+  top: 50%;
+  width: 8px;
+  height: 8px;
+  background: var(--gold);
+  transform: translateY(-50%) rotate(45deg);
+  box-shadow: 0 0 10px var(--gold-40);
+}
+.hero__analysis-card h3 {
+  margin: 0 0 8px;
+  font-family: var(--font-pt-mono);
+  font-size: 11px;
+  line-height: 1;
+  letter-spacing: 0.18em;
+  color: var(--dawn);
+  text-shadow: 0 0 14px rgba(5, 4, 3, 0.75);
+}
+.hero__analysis-card p {
+  margin: 0;
+  font-family: var(--font-pt-mono);
+  font-size: 9px;
+  line-height: 1.45;
+  letter-spacing: 0.04em;
+  color: var(--dawn-70);
+  text-shadow: 0 0 12px rgba(5, 4, 3, 0.8);
+}
+
+@keyframes heroAnalysisFade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes heroAnalysisDraw {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes heroAnalysisCardIn {
+  from {
+    opacity: 0;
+    transform: translateX(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
 /* Inward scroll transition: hero recedes as definition enters */
 .hero {
   transform-origin: center center;
@@ -1415,6 +1589,30 @@
   .hero {
     padding-left: 32px;
     padding-right: 32px;
+  }
+  /* The gateway analysis cards are desktop composition elements. At
+     compact widths they compress into the wordmark / key visual, so
+     mirror the existing `.hud__brandmark` mobile rule and let the
+     hero read as wordmark + tagline only. */
+  .hero__diagram {
+    display: none;
+  }
+}
+
+/* Reduced-motion override for the hero diagram. The global
+   `* { animation-duration: 0.01ms !important; }` rule (~line 6094)
+   collapses entry animations to an instant; force the final state
+   explicitly so line draw + card reveal never flash half-rendered. */
+@media (prefers-reduced-motion: reduce) {
+  .hero__analysis-origin,
+  .hero__analysis-card {
+    opacity: 1 !important;
+    transform: none !important;
+    animation: none !important;
+  }
+  .hero__analysis-line {
+    animation: none !important;
+    stroke-dashoffset: 0 !important;
   }
 }
 
