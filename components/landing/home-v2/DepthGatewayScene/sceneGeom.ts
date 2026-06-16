@@ -1353,10 +1353,11 @@ export const BRANDMARK_SPHERE_FILL = 1.0;
  *
  *  The visible sphere is the dotted shell, which sits at world radius
  *  `SUBSTRATE_GYRO_GLOBE_RADIUS × SUBSTRATE_GYRO_DOTTED_SHELL_RADIUS_MUL
- *  × GYRO_ASSEMBLY_SCALE × navBoost` — the same scale stack
- *  `BrandmarkAccretionShell` applies to the gimbal assembly, MINUS the
- *  epilogue planet-grow (the physics core is hidden by the time the dock
- *  engages, so there is nothing to match there).
+ *  × GYRO_ASSEMBLY_SCALE × navBoost` — the same base scale stack
+ *  `BrandmarkAccretionShell` applies to the gimbal assembly. The
+ *  epilogue planet-grow multiplier is intentionally composed in
+ *  `BrandmarkPhysicsCoreActor`, where it can read the same smoothed
+ *  epilogue clock as the live sphere.
  *  Because the core and the sphere share a centre
  *  (`getBrandmarkWorldPosition`) and the same camera + Navigate
  *  apparent-size boost, matching world radius == matching apparent size
@@ -1365,8 +1366,9 @@ export const BRANDMARK_SPHERE_FILL = 1.0;
  *
  *  `BrandmarkPhysicsCoreActor` ramps from `getBrandmarkWorldHalfExtent`
  *  (the DOM-SVG handoff size) to THIS across the ignite band, so the
- *  mark grows to fill the sphere as the camera flies into the corridor
- *  and stays sphere-sized through Build. */
+ *  mark grows to fill the sphere as the camera flies into the corridor,
+ *  stays sphere-sized through Build, then keeps matching the sphere's
+ *  planet-grow speed across non-docked epilogue. */
 export function getBrandmarkSphereMatchHalfExtent(progress: number): number {
   return (
     SUBSTRATE_GYRO_GLOBE_RADIUS *

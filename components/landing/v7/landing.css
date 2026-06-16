@@ -60,7 +60,13 @@
   --hud-corner-zone: clamp(28px, 4.17vmin, 45px);
   --hud-rail-top: clamp(32px, min(2.604vw, 4.63vmin), 50px);
   --hud-rail-bottom: clamp(32px, min(2.604vw, 4.63vmin), 50px);
-  --hud-rail-guide-inset: clamp(5px, 0.47vw, 9px);
+  /* Guide hairline offset from the rail-aside outer edge. Held at 0
+     so the line lands flush with the corner brackets per the Brand
+     Codex Figma reference (file XO8yGN90SfxiG1hmYPGYXn, node 1767:2327).
+     Ticks, bearing labels and the scroll-depth diamond are all
+     positioned with `calc(var(--hud-rail-guide-inset) ...)` so they
+     follow the line as one rigid assembly. */
+  --hud-rail-guide-inset: 0px;
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --duration-fast: 80ms;
   --duration-normal: 120ms;
@@ -236,14 +242,14 @@
 .hud__corner--tl {
   top: var(--hud-margin);
   left: var(--hud-margin);
-  border-top: 1px solid var(--dawn-30);
-  border-left: 1px solid var(--dawn-30);
+  border-top: 2px solid var(--hud-rail-line);
+  border-left: 2px solid var(--hud-rail-line);
 }
 .hud__corner--bl {
   bottom: var(--hud-margin);
   left: var(--hud-margin);
-  border-bottom: 1px solid var(--dawn-30);
-  border-left: 1px solid var(--dawn-30);
+  border-bottom: 2px solid var(--hud-rail-line);
+  border-left: 2px solid var(--hud-rail-line);
   transition:
     border-bottom-color 0.35s var(--ease-out),
     border-left-color 0.35s var(--ease-out);
@@ -251,8 +257,8 @@
 .hud__corner--br {
   bottom: var(--hud-margin);
   right: var(--hud-margin);
-  border-bottom: 1px solid var(--dawn-30);
-  border-right: 1px solid var(--dawn-30);
+  border-bottom: 2px solid var(--hud-rail-line);
+  border-right: 2px solid var(--hud-rail-line);
 }
 
 /* ─────────────────────────────────────────────────────────────────
@@ -484,17 +490,19 @@
 .hud__rail--r {
   right: var(--hud-margin);
 }
-/* Guide hairline — Brand Codex contract. Solid 1px line inset from
-   the rail-aside outer edge by `--hud-rail-guide-inset` (~9px at
-   reference). The previous gradient fade was retired with this
-   update: the rail must read as a continuous instrument hairline,
-   not a soft glow. The corner brackets above and the brandmark
-   anchor below already give the rail breathing room at top + bottom. */
+/* Guide hairline — Brand Codex contract. Solid 1px line offset from
+   the rail-aside outer edge by `--hud-rail-guide-inset` (held at 0
+   so the line lands flush with the corner brackets, matching the
+   Brand Codex Figma reference). The previous gradient fade was
+   retired earlier: the rail must read as a continuous instrument
+   hairline, not a soft glow. The corner brackets above and the
+   brandmark anchor below give the line breathing room at top +
+   bottom. */
 .hud__rail__track {
   position: absolute;
   top: 0;
   bottom: 0;
-  width: 1px;
+  width: 2px;
   z-index: 0;
   pointer-events: none;
   background: var(--hud-rail-line);
@@ -513,10 +521,10 @@
    so both surfaces read the same rail vocabulary. */
 .hud__rail__tick {
   position: absolute;
-  height: 1px;
+  height: 2px;
   z-index: 1;
   pointer-events: none;
-  background: var(--gold-40, var(--dawn-30));
+  background: var(--hud-rail-line);
 }
 .hud__rail--l .hud__rail__tick {
   left: calc(var(--hud-rail-guide-inset) - 7px);
@@ -525,7 +533,7 @@
 .hud__rail--l .hud__rail__tick--major {
   left: calc(var(--hud-rail-guide-inset) - 21px);
   width: 21px;
-  background: var(--gold);
+  background: var(--hud-rail-line);
 }
 .hud__rail--r .hud__rail__tick {
   right: calc(var(--hud-rail-guide-inset) - 7px);
@@ -534,7 +542,7 @@
 .hud__rail--r .hud__rail__tick--major {
   right: calc(var(--hud-rail-guide-inset) - 21px);
   width: 21px;
-  background: var(--gold);
+  background: var(--hud-rail-line);
 }
 
 /* Bearing labels — sit just INSIDE the guide (between the rail and

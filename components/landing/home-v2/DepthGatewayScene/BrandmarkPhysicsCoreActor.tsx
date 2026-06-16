@@ -28,12 +28,14 @@ import { useMemo, useRef } from "react";
 import * as THREE from "three";
 import { useDeviceTier } from "@/lib/hooks/useDeviceTier";
 import { DOLLY_HOLD_END, smoothstep, windowFor } from "@/lib/home-v2/corridorMap";
+import { getEpiloguePlanetScale } from "@/lib/home-v2/epilogueTimeline";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import {
   BrandmarkPhysicsCore,
   BRANDMARK_PHYSICS_CORE_COUNT_DESKTOP,
   BRANDMARK_PHYSICS_CORE_COUNT_MOBILE,
 } from "@/components/brand/BrandmarkPhysicsCore";
+import { getSmoothedEpilogueProgress } from "./motionFollower";
 import {
   getBrandmarkSphereMatchHalfExtent,
   getBrandmarkWorldHalfExtent,
@@ -56,6 +58,21 @@ const COLLAPSE_RAMP_WIDTH = 0.018;
  *  particles collapse into the mark, then the assembled mark expands
  *  into the full visible sphere envelope during the gateway approach. */
 const SIZE_MERGE_END = windowFor("navigate").start;
+
+/** The corridor brandmark core ramps from a subtle PARKED baseline (a
+ *  low-ignite swirl sitting behind the crisp SVG Thoughtform mark at
+ *  the section-2 rest) up to a brighter, larger-speck FLY-IN body as
+ *  the camera dives into the substrate sphere — so the particle mark
+ *  reads as the luminous CENTRE of the intelligence-layer artifact
+ *  instead of nearly vanishing inside the denser gimbal shell (9600
+ *  dots at ~4.8px). The ramp rides the same `collapseT` gate as
+ *  ignite, so brightness + assembly arrive together the instant the
+ *  dolly releases; the parked read stays clean. Parked values match
+ *  the `BrandmarkPhysicsCore` DEFAULT_* baselines. */
+const CORE_OPACITY_PARKED = 0.78;
+const CORE_OPACITY_FLYIN = 0.95;
+const CORE_POINT_SIZE_PARKED = 2.8;
+const CORE_POINT_SIZE_FLYIN = 4.0;
 
 interface BrandmarkPhysicsCoreActorProps {
   /** Pass-through tints. The actor doesn't bake in palette decisions
@@ -93,6 +110,8 @@ export function BrandmarkPhysicsCoreActor({
 
   const groupRef = useRef<THREE.Group>(null);
   const igniteRef = useRef(0);
+  const opacityRef = useRef(CORE_OPACITY_PARKED);
+  const pointSizeRef = useRef(CORE_POINT_SIZE_PARKED);
   const pausedRef = useRef(true);
 
   // Drive the per-frame transform (position, scale, visibility) AND
@@ -131,6 +150,22 @@ export function BrandmarkPhysicsCoreActor({
     const ignite = PRE_GATE_SWIRL_IGNITE + (1 - PRE_GATE_SWIRL_IGNITE) * collapseT;
     igniteRef.current = ignite;
 
+    // Brightness + speck-size ramp rides the same collapse gate as
+    // ignite: subtle parked swirl behind the SVG mark → luminous
+    // fly-in core that merges with the substrate sphere.
+    const flyInOpacity =
+      CORE_OPACITY_PARKED + (CORE_OPACITY_FLYIN - CORE_OPACITY_PARKED) * collapseT;
+
+    // Corridor → epilogue handoff: the in-canvas core continues to own
+    // the mark while the visitor exits Build and flies through the
+    // substrate sphere. It yields only once the later dock / Services
+    // handoff owns the mark and the DOM SVG is allowed back in.
+    const handoffFade = t.docked ? 0 : 1;
+
+    opacityRef.current = flyInOpacity * handoffFade;
+    pointSizeRef.current =
+      CORE_POINT_SIZE_PARKED + (CORE_POINT_SIZE_FLYIN - CORE_POINT_SIZE_PARKED) * collapseT;
+
     // Size (2026-06-16): hand off from the DOM SVG at its own world
     // half-extent so the pre-gateway overlap is size-continuous. After
     // the quick collapse has completed, grow the now-assembled mark
@@ -142,10 +177,16 @@ export function BrandmarkPhysicsCoreActor({
     const sphereHalf = getBrandmarkSphereMatchHalfExtent(progress);
     const sizeMerge = smoothstep(DOLLY_HOLD_END + COLLAPSE_RAMP_WIDTH, SIZE_MERGE_END, progress);
     const half = handoffHalf + (sphereHalf - handoffHalf) * sizeMerge;
+    // The substrate sphere composes this exact smoothed epilogue scale
+    // in `BrandmarkAccretionShell`. The core is the mark INSIDE that
+    // sphere during non-docked epilogue, so it must ride the same
+    // clock/multiplier or it appears to lag as the planet grows into
+    // the title section.
+    const planetScale = getEpiloguePlanetScale(getSmoothedEpilogueProgress());
 
     group.visible = true;
     group.position.set(bx, by, bz);
-    group.scale.setScalar(half * 2);
+    group.scale.setScalar(half * 2 * planetScale);
 
     // Keep the sim alive while the corridor is painting so the
     // pre-gateway low-ignite state actually swirls. We still pause
@@ -158,6 +199,8 @@ export function BrandmarkPhysicsCoreActor({
       <BrandmarkPhysicsCore
         count={count}
         igniteRef={igniteRef}
+        opacityRef={opacityRef}
+        pointSizeRef={pointSizeRef}
         color={color}
         accentColor={accentColor}
         pausedRef={pausedRef}

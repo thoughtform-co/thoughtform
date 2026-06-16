@@ -485,13 +485,21 @@ export function ProjectedBrandmarkActor() {
           const { diagramFactor } = getThoughtformMobilePhase(transform.progress);
           // Corridor-fade: 1 at section-2 Thoughtform rest, 0 once
           // the camera has flown into the corridor (ADR-023 ignite
-          // band). Skipped on the welded epilogue / dock path so the
-          // ride-out + Services re-centre keep their full-strength
-          // glyph — the corridor fade is a one-way handoff while the
-          // tracker is in its corridor branch.
-          const corridorFade = useEpilogueOverride
-            ? 1
-            : 1 - smoothstep(DOLLY_HOLD_END, DOLLY_HOLD_END + IGNITE_RAMP_WIDTH, paintProgress);
+          // band).
+          //
+          // Corridor → epilogue handoff (2026-06-16): the welded SVG
+          // must NOT appear while we are still exiting Build / flying
+          // through the substrate sphere. That phase remains owned by
+          // the in-canvas particle core. The SVG returns only once the
+          // later dock / Services handoff owns the mark, where the solid
+          // glyph is needed for re-centre + seam pixelization.
+          let corridorFade: number;
+          if (useEpilogueOverride) {
+            corridorFade = docked ? 1 : 0;
+          } else {
+            corridorFade =
+              1 - smoothstep(DOLLY_HOLD_END, DOLLY_HOLD_END + IGNITE_RAMP_WIDTH, paintProgress);
+          }
           element.style.opacity = `${(intensity * diagramFactor * corridorFade).toFixed(3)}`;
 
           // Forward tilt: the inner div takes a small Y rotation

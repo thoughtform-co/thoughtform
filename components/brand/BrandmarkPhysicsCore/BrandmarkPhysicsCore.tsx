@@ -96,21 +96,23 @@ const IGNITE_ON_FORCES: BrandmarkPhysicsCoreForces = {
 export const BRANDMARK_PHYSICS_CORE_COUNT_DESKTOP = 1300;
 export const BRANDMARK_PHYSICS_CORE_COUNT_MOBILE = 650;
 
-/** Default per-particle CSS pixel size. Tuned smaller so each
- *  particle reads as a discrete speck of light with visible
- *  negative space around it — same airy stipple feel as the
- *  `CorridorSeamPixelField` (3px grid pixels) the visitor sees in
- *  `#services`, just rendered as soft additive dots instead of
- *  hard squares. With a larger pointSize the soft halos overlap
- *  and the dense cross+bar of the brandmark saturates into solid
- *  paint, breaking integration with the surrounding gimbal sphere
- *  hairlines. */
+/** Default per-particle CSS pixel size — the PARKED BASELINE (the
+ *  low-ignite swirl behind the crisp SVG mark at the section-2
+ *  Thoughtform rest). Kept small so each particle reads as a discrete
+ *  speck with visible negative space, and the swirl stays subtle
+ *  behind the SVG. The corridor actor ramps this UP (-> ~4.0) via
+ *  `pointSizeRef` as the mark ignites and flies into the substrate
+ *  sphere, where the core must read as a luminous body against the
+ *  denser gimbal shell (9600 dots at ~4.8px). See
+ *  `BrandmarkPhysicsCoreActor`. */
 const DEFAULT_POINT_SIZE_PX = 2.8;
 
-/** Default per-particle opacity. Tuned alongside the smaller
- *  pointSize so even the densest stroke (cross+bar) accumulates
- *  into a soft glow under additive blending instead of saturating
- *  into a hard mass. */
+/** Default per-particle opacity — the PARKED BASELINE (see point-size
+ *  note above). Tuned subtle so the parked swirl doesn't compete with
+ *  the crisp SVG Thoughtform read; the corridor actor ramps this UP
+ *  (-> ~0.95) via `opacityRef` during the fly-in so the brandmark
+ *  merges into the sphere as a clearly-visible bright body rather than
+ *  an almost-invisible wisp. */
 const DEFAULT_OPACITY = 0.78;
 
 /** Read-only ref shape for the live-value props. `MutableRefObject`
@@ -138,8 +140,13 @@ export interface BrandmarkPhysicsCoreProps {
    *  parent can drive the value imperatively without re-rendering.
    *  Wins over the static `ignite` prop when both are provided. */
   igniteRef?: ReadonlyRef<number>;
-  /** Per-particle CSS pixel size. Default 4.2. */
+  /** Per-particle CSS pixel size. Default `DEFAULT_POINT_SIZE_PX`. */
   pointSize?: number;
+  /** Live ref for `pointSize`. Read every frame inside `useFrame` so
+   *  the corridor actor can ramp the speck size as the mark ignites /
+   *  flies in without re-rendering. Wins over the static `pointSize`
+   *  prop when provided. */
+  pointSizeRef?: ReadonlyRef<number>;
   /** Primary tint — body of the cloud. */
   color?: string;
   /** Accent tint — rim particles (high `edgeWeight`) blend toward
@@ -147,6 +154,11 @@ export interface BrandmarkPhysicsCoreProps {
   accentColor?: string;
   /** Additional alpha multiplier (0..1). */
   opacity?: number;
+  /** Live ref for `opacity`. Read every frame inside `useFrame` so the
+   *  corridor actor can ramp brightness as the mark ignites / flies in
+   *  without re-rendering. Wins over the static `opacity` prop when
+   *  provided. */
+  opacityRef?: ReadonlyRef<number>;
   /** Initial scatter radius in NORMALISED units (the cloud lives in
    *  a [-0.5, 0.5] cube). 0.5 produces an initial sphere of dust
    *  the size of the brandmark itself. */
@@ -267,9 +279,11 @@ export function BrandmarkPhysicsCore({
   ignite = 0,
   igniteRef,
   pointSize = DEFAULT_POINT_SIZE_PX,
+  pointSizeRef,
   color = "#caa554",
   accentColor = "#e9c97a",
   opacity = DEFAULT_OPACITY,
+  opacityRef,
   scatterRadius = 0.55,
   bulge,
   thickness,
@@ -462,6 +476,13 @@ export function BrandmarkPhysicsCore({
     const mat = materialRef.current;
     if (!mat || !resources) return;
 
+    // Live size / brightness: prefer the refs so the corridor actor can
+    // ramp the core from its parked baseline up to the bright fly-in
+    // body without re-rendering this tree. Static props are the
+    // fallback for simple lab usage.
+    const resolvedPointSize = pointSizeRef ? pointSizeRef.current : pointSize;
+    const resolvedOpacity = opacityRef ? opacityRef.current : opacity;
+
     // Reduced-motion / static path. The home texture was bound once
     // when resources were built; we just keep tint / opacity / time
     // in step here. No compute, no GPU writes from this component.
@@ -471,8 +492,8 @@ export function BrandmarkPhysicsCore({
       }
       mat.uniforms.uColor.value.set(color);
       mat.uniforms.uAccentColor.value.set(accentColor);
-      mat.uniforms.uPointSize.value = pointSize;
-      mat.uniforms.uOpacity.value = opacity;
+      mat.uniforms.uPointSize.value = resolvedPointSize;
+      mat.uniforms.uOpacity.value = resolvedOpacity;
       mat.uniforms.uTime.value = state.clock.elapsedTime;
       return;
     }
@@ -504,8 +525,8 @@ export function BrandmarkPhysicsCore({
     mat.uniforms.uPositionTexture.value = sim.getPositionTexture();
     mat.uniforms.uColor.value.set(color);
     mat.uniforms.uAccentColor.value.set(accentColor);
-    mat.uniforms.uPointSize.value = pointSize;
-    mat.uniforms.uOpacity.value = opacity;
+    mat.uniforms.uPointSize.value = resolvedPointSize;
+    mat.uniforms.uOpacity.value = resolvedOpacity;
     mat.uniforms.uTime.value = state.clock.elapsedTime;
   });
 
