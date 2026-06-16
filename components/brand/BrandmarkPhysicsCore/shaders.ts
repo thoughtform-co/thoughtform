@@ -101,12 +101,13 @@ export const brandmarkCoreFragmentShader = /* glsl */ `
     float d = length(c);
     
     // Soft radial dot — full intensity in the central core, then a
-    // smooth ramp to alpha 0 at d = 0.5. Slightly softer than the
-    // v7 silhouette painter (0.30 → 0.50) so dense overlap reads as
-    // a luminous glow under additive blending instead of a flat
-    // mass, but tight enough that each particle still reads as a
-    // discrete speck of light rather than a featureless smear.
-    float alpha = 1.0 - smoothstep(0.22, 0.50, d);
+    // smooth ramp to alpha 0 at d = 0.5. Tighter than the previous
+    // pass (0.22 → 0.50) so each particle reads as a more discrete
+    // speck of light, matching the airy stipple feel of the
+    // CorridorSeamPixelField in #services. Dense overlap still
+    // accumulates into a soft glow under additive blending; tight
+    // single particles read crisply against the dark background.
+    float alpha = 1.0 - smoothstep(0.30, 0.50, d);
     if (alpha < 0.005) discard;
     
     // Per-particle brightness variance. \`vLuma\` is the deterministic

@@ -96,19 +96,22 @@ const IGNITE_ON_FORCES: BrandmarkPhysicsCoreForces = {
 export const BRANDMARK_PHYSICS_CORE_COUNT_DESKTOP = 1300;
 export const BRANDMARK_PHYSICS_CORE_COUNT_MOBILE = 650;
 
-/** Default per-particle CSS pixel size. Tuned down from the first
- *  pass (4.2px) to bring the cloud's visual weight closer to the
- *  surrounding gimbal hairlines — the brandmark should read as a
- *  luminous core embedded in the instrument, not as bold paint
- *  over it. */
-const DEFAULT_POINT_SIZE_PX = 3.6;
+/** Default per-particle CSS pixel size. Tuned smaller so each
+ *  particle reads as a discrete speck of light with visible
+ *  negative space around it — same airy stipple feel as the
+ *  `CorridorSeamPixelField` (3px grid pixels) the visitor sees in
+ *  `#services`, just rendered as soft additive dots instead of
+ *  hard squares. With a larger pointSize the soft halos overlap
+ *  and the dense cross+bar of the brandmark saturates into solid
+ *  paint, breaking integration with the surrounding gimbal sphere
+ *  hairlines. */
+const DEFAULT_POINT_SIZE_PX = 2.8;
 
-/** Default per-particle opacity. Sub-1 by default so additive
- *  blending accumulates dense regions into a soft glow instead of
- *  saturating into a hard mass. Combined with the shader's
- *  per-particle twinkle + depth-dim, the cloud reads as a real
- *  luminous body rather than printed gold. */
-const DEFAULT_OPACITY = 0.9;
+/** Default per-particle opacity. Tuned alongside the smaller
+ *  pointSize so even the densest stroke (cross+bar) accumulates
+ *  into a soft glow under additive blending instead of saturating
+ *  into a hard mass. */
+const DEFAULT_OPACITY = 0.78;
 
 /** Read-only ref shape for the live-value props. `MutableRefObject`
  *  (which is what `useRef` returns) is structurally compatible — we

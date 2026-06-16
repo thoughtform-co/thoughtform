@@ -35,10 +35,10 @@ const DEFAULTS = {
   thickness: 0.06,
 
   // Render
-  pointSize: 3.6,
+  pointSize: 2.8,
   color: "#caa554",
   accentColor: "#e9c97a",
-  opacity: 0.9,
+  opacity: 0.78,
 
   // State
   ignite: 1,
