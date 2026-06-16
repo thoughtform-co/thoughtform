@@ -69,6 +69,22 @@ import { gyroTilt, useGyroLabStore } from "@/lib/stores/gyroLabStore";
  * `useCorridorExitScroll`) holds the mark fixed-centred in
  * `#services` and fades it out as `#continuum` enters.
  *
+ * Pixel-field handoff (2026-06-16, ADR-021 follow-up Phase 2): on
+ * the capable path the hook writes `data-services-pixelate="true"`
+ * the MOMENT this welded mark has re-centred and shown itself —
+ * during the dock TAIL (`dissipate >= MARK_CENTRED_DOCK_PROGRESS`),
+ * not only after the dock releases. Under that attribute
+ * `home-v2.css` overrides this actor's SVG glyph to `opacity: 0`
+ * and reveals `CorridorSeamPixelField`'s 2D canvas, so the visible
+ * mark in `#services` is a grid-snapped gold/dawn pixel cloud
+ * sampled from the SAME `BRANDMARK_FULL_PATHS` source that
+ * progressively dissolves as the user scrolls toward `#continuum`.
+ * The actor's welded ride-out + re-centre + post-active painter all
+ * stay intact — once the mark is centred the SVG simply hands its
+ * pixels to the canvas. The fallback path (no
+ * `data-services-pixelate` attribute) keeps the legacy
+ * `--services-brandmark` opacity fade on the SVG glyph.
+ *
  * There is NO post-Build opacity fade in this component. The mark
  * stays present at Build and exits geometrically with the sphere
  * as the epilogue camera carries the substrate out of view.

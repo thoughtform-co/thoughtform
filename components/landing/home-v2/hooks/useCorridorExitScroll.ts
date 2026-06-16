@@ -29,6 +29,28 @@ const DISSIPATE_SCROLL_SPAN_VH = 2.0;
  *  still completes the fade before #continuum is fully in. */
 const CONTINUUM_FADE_HOLD = 0.5;
 const CONTINUUM_FADE_END = 0.1;
+/** Eased `dockProgress` at/after which the welded brandmark recentre
+ *  has reached the viewport centre. MUST mirror `DOCK_RECENTRE_FRAC`
+ *  in `ProjectedBrandmarkActor.tsx` — that component lerps the welded
+ *  mark to centre over `smoothstep(dissipate / DOCK_RECENTRE_FRAC)`,
+ *  so the mark is fully centred once `dockProgress >= this`. The seam
+ *  pixel morph must not open before this point or the canvas (which
+ *  paints at the fixed viewport centre) would mismatch the still-
+ *  travelling welded SVG. */
+const MARK_CENTRED_DOCK_PROGRESS = 0.85;
+/** `#continuum.top / vh` at which the seam pixel morph BEGINS. The
+ *  brandmark re-centres while the dock is still engaged (around
+ *  `continuum.top ≈ 2vh` for the 200svh runway), so opening the morph
+ *  here lets the dissolve start the instant the mark "shows itself"
+ *  and run a long, elegant runway down to `#continuum`'s arrival —
+ *  rather than a late burst in the final fade band. Slightly below the
+ *  recentre-complete `continuum.top` so there is a brief settled-mark
+ *  beat before the dissolve. */
+const SEAM_MORPH_START_VH = 1.9;
+/** `#continuum.top / vh` at which the seam pixel morph COMPLETES
+ *  (fully dispersed). Aligned with `CONTINUUM_FADE_END` so the pixel
+ *  field finishes exactly as the next section takes the viewport. */
+const SEAM_MORPH_END_VH = CONTINUUM_FADE_END;
 /** Engage the fixed dock slightly BEFORE #services physically enters
  *  the viewport. If we wait until `services.top < vh`, the corridor
  *  sticky cell has already started releasing (`sticky.top < 0`), and
@@ -41,6 +63,11 @@ const DOCK_PRELOAD_VH = 0.25;
 
 function clamp01(value: number): number {
   return Math.max(0, Math.min(1, value));
+}
+
+function smoothstep01(value: number): number {
+  const t = clamp01(value);
+  return t * t * (3 - 2 * t);
 }
 
 /**
@@ -67,10 +94,25 @@ function clamp01(value: number): number {
  *   - `data-services-brandmark` attribute on `<html>` — once the
  *     dock disengages, this gate flips to `"hold"` (mark held fixed-
  *     centred in #services via CSS) and then `"fade"` as #continuum
- *     enters. `--services-brandmark` (0..1) drives the fade opacity.
+ *     enters. `--services-brandmark` (0..1) drives the fade opacity
+ *     on the FALLBACK path (reduced-motion / mobile / no-WebGL).
  *     `ProjectedBrandmarkActor` reads the gate to release the
  *     element to CSS — it stops writing inline transform/opacity
  *     when the gate is `"hold"` or `"fade"`.
+ *   - `data-services-pixelate` attribute + `--services-pixelate`
+ *     (0..1) on `<html>` and `transform.seamMorph` in the depth-
+ *     gateway store — the seam pixel-field morph clock (capable path
+ *     only). OPENS the instant the welded brandmark has re-centred
+ *     into the viewport (while the dock is still engaged — see
+ *     `MARK_CENTRED_DOCK_PROGRESS`) and ramps 0 → 1 across a long
+ *     runway driven by `#continuum`'s approach
+ *     (`SEAM_MORPH_START_VH` → `SEAM_MORPH_END_VH`). 0 = brandmark
+ *     assembled, 1 = pixels fully scattered. `CorridorSeamPixelField`
+ *     reads `seamMorph` to paint the dissolve; the
+ *     `data-services-pixelate` attribute hides the SVG glyph (so the
+ *     pixels are the only visible mark) and shows the canvas. Never
+ *     set on the fallback path, so the SVG `--services-brandmark`
+ *     fade still owns that path.
  *
  * 2026-06-16 (ADR-021 follow-up): the per-element reveal vars
  * (`--services-header-in`, `--services-grid-in`, `--services-cta-in`)
@@ -155,57 +197,47 @@ export function useCorridorExitScroll(rootRef: RefObject<HTMLDivElement | null>)
         document.documentElement.removeAttribute("data-corridor-exit");
       }
 
-      // ── Services brandmark gate ────────────────────────────────
-      // After the dock disengages, the brandmark needs to remain on
-      // screen — fixed-centred in #services for a beat, then fading
-      // out as #continuum enters. The gate is mutually exclusive
-      // with `data-corridor-docked` so the post-active rAF in
-      // `ProjectedBrandmarkActor` can branch on either flag cleanly
-      // (no overlap → no `!important` arms race between the gate
-      // CSS and the JS-written rect).
+      // Resolve #continuum once — both the actor-lifecycle gate and
+      // the pixel-field morph clock key off its distance to the
+      // viewport top. The continuum slot used to live here (it was
+      // dropped at the seam — `dropTrailingConnectorSlot:
+      // "practice-to-about"` in the page route — so #continuum is the
+      // next station after #services).
+      const continuum = root.querySelector<HTMLElement>("#continuum");
+      const continuumRect = continuum?.getBoundingClientRect() ?? null;
+      const continuumTopVh = continuumRect ? continuumRect.top / vh : Number.POSITIVE_INFINITY;
+
+      // ── Services brandmark gate (actor lifecycle) ──────────────
+      // Drives `ProjectedBrandmarkActor`'s release-to-CSS + the
+      // FALLBACK SVG opacity fade. On the capable path the SVG is
+      // hidden by `data-services-pixelate` (below) and the pixel
+      // field owns the visible mark — so here the gate only governs
+      // the actor's fixed-centre positioning + clean release. The
+      // gate is mutually exclusive with `data-corridor-docked` so the
+      // post-active rAF in the actor can branch on either flag.
       //
       // States:
-      //   - (no attribute) : either we're not in the services
-      //     context yet, OR `data-corridor-docked` owns the mark.
-      //   - "hold" : dock has released, mark held fixed-centred at
-      //     opacity 1.
-      //   - "fade" : #continuum is approaching the top of the
-      //     viewport. `--services-brandmark` ramps opacity 1 → 0
-      //     across the `CONTINUUM_FADE_HOLD → CONTINUUM_FADE_END`
-      //     band of `continuum.top / vh`.
-      //
-      // Released back to (no attribute) once #continuum is fully in
-      // OR the user has scrolled back into the dock window — the
-      // `docked` branch above re-takes ownership in that case.
+      //   - (no attribute) : not in services context yet, OR
+      //     `data-corridor-docked` owns the mark.
+      //   - "hold" : dock released, mark fixed-centred.
+      //   - "fade" : #continuum approaching; `--services-brandmark`
+      //     ramps opacity 1 → 0 (FALLBACK SVG path only).
       let servicesGate: "hold" | "fade" | null = null;
       let servicesBrandmarkOpacity = 1;
       if (!docked && dockCapable && rawDissipate >= 0.999) {
-        // Dock has released. Decide hold vs fade based on the next
-        // section's leading edge. The continuum slot used to live
-        // here (it was dropped at the seam — `dropTrailingConnectorSlot:
-        // "practice-to-about"` in the page route — so #continuum is
-        // the next station after #services).
-        const continuum = root.querySelector<HTMLElement>("#continuum");
-        const continuumRect = continuum?.getBoundingClientRect() ?? null;
-        if (!continuumRect || continuumRect.top >= vh * CONTINUUM_FADE_HOLD) {
+        if (!continuumRect || continuumTopVh >= CONTINUUM_FADE_HOLD) {
           servicesGate = "hold";
           servicesBrandmarkOpacity = 1;
-        } else if (continuumRect.top <= vh * CONTINUUM_FADE_END) {
-          // Fully faded; the next section owns the viewport now.
-          // Releasing the gate (rather than holding it at "fade"
-          // with opacity 0) lets `.home-v2-projected-brandmark`
+        } else if (continuumTopVh <= CONTINUUM_FADE_END) {
+          // Fully past; the next section owns the viewport now.
+          // Releasing the gate lets `.home-v2-projected-brandmark`
           // drop back to its `position: absolute` default so it
           // doesn't keep a fixed layer alive past its usefulness.
           servicesGate = null;
           servicesBrandmarkOpacity = 0;
         } else {
-          // Linear fade across the continuum approach band — a
-          // CSS-driven opacity ramp on a fixed-centred mark, no
-          // position writes from JS (the post-active rAF clears its
-          // inline styles when the gate is "fade").
           const t =
-            (continuumRect.top - vh * CONTINUUM_FADE_END) /
-            (vh * (CONTINUUM_FADE_HOLD - CONTINUUM_FADE_END));
+            (continuumTopVh - CONTINUUM_FADE_END) / (CONTINUUM_FADE_HOLD - CONTINUUM_FADE_END);
           servicesGate = "fade";
           servicesBrandmarkOpacity = clamp01(t);
         }
@@ -221,17 +253,60 @@ export function useCorridorExitScroll(rootRef: RefObject<HTMLDivElement | null>)
         document.documentElement.style.removeProperty("--services-brandmark");
       }
 
-      // ONLY own the dock channel. The corridor's `useDepthScroll`
-      // remains the sole writer of progress / paintProgress /
-      // epilogueProgress (single-writer rule). The painters read
-      // `dockProgress` (the dissipate clock) and hold a fixed pose
-      // themselves, so we never need to overwrite the epilogue scrub
-      // here.
+      // ── Seam pixelate morph (capable path only) ────────────────
+      // The brandmark rides out with the planet and re-centres into
+      // the viewport centre during the dock (the welded recentre
+      // completes once `dissipate >= MARK_CENTRED_DOCK_PROGRESS`).
+      // From the moment it has shown itself centred, scrolling should
+      // progressively DISSOLVE it into the pixel field across a long
+      // runway — not hold it static until #continuum is near. We
+      // therefore open the morph WHILE STILL DOCKED (the mark is
+      // already pinned at centre) and drive it off #continuum's
+      // approach from `SEAM_MORPH_START_VH` down to
+      // `SEAM_MORPH_END_VH`. The canvas paints over the dissipating
+      // planet and keeps painting seamlessly across the dock release
+      // (the morph clock is independent of `docked`).
+      //
+      // `data-services-pixelate="true"` hides the SVG glyph (CSS) so
+      // the pixels are the only visible mark, and shows the seam
+      // canvas. Never set on the fallback path, so the SVG
+      // `--services-brandmark` fade still owns that path.
+      const markCentred = docked ? dissipate >= MARK_CENTRED_DOCK_PROGRESS : rawDissipate >= 0.999;
+      const pixelateActive =
+        dockCapable && sectionNearDock && markCentred && continuumTopVh < SEAM_MORPH_START_VH;
+      const seamMorph = pixelateActive
+        ? smoothstep01(
+            (SEAM_MORPH_START_VH - continuumTopVh) / (SEAM_MORPH_START_VH - SEAM_MORPH_END_VH)
+          )
+        : 0;
+      if (pixelateActive) {
+        document.documentElement.setAttribute("data-services-pixelate", "true");
+        document.documentElement.style.setProperty("--services-pixelate", seamMorph.toFixed(4));
+      } else {
+        document.documentElement.removeAttribute("data-services-pixelate");
+        document.documentElement.style.removeProperty("--services-pixelate");
+      }
+
+      // ONLY own the dock + seam channels. The corridor's
+      // `useDepthScroll` remains the sole writer of progress /
+      // paintProgress / epilogueProgress (single-writer rule). The
+      // painters read `dockProgress` (the dissipate clock) and
+      // `seamMorph` (the pixelate clock) and hold a fixed pose
+      // themselves, so we never need to overwrite the epilogue
+      // scrub here.
       const store = useDepthGatewayStore.getState();
       const prev = store.transform;
       const nextDockProgress = docked ? dissipate : 0;
-      if (prev.docked !== docked || Math.abs(prev.dockProgress - nextDockProgress) > 0.0005) {
-        store.setTransform({ ...prev, docked, dockProgress: nextDockProgress });
+      const dockChanged =
+        prev.docked !== docked || Math.abs(prev.dockProgress - nextDockProgress) > 0.0005;
+      const seamChanged = Math.abs(prev.seamMorph - seamMorph) > 0.0005;
+      if (dockChanged || seamChanged) {
+        store.setTransform({
+          ...prev,
+          docked,
+          dockProgress: nextDockProgress,
+          seamMorph,
+        });
       }
     };
 
@@ -252,13 +327,16 @@ export function useCorridorExitScroll(rootRef: RefObject<HTMLDivElement | null>)
       document.documentElement.removeAttribute("data-corridor-docked");
       document.documentElement.removeAttribute("data-corridor-exit");
       document.documentElement.removeAttribute("data-services-brandmark");
+      document.documentElement.removeAttribute("data-services-pixelate");
       document.documentElement.style.removeProperty("--corridor-dissipate");
       document.documentElement.style.removeProperty("--services-brandmark");
+      document.documentElement.style.removeProperty("--services-pixelate");
       const store = useDepthGatewayStore.getState();
       store.setTransform({
         ...store.transform,
         docked: false,
         dockProgress: 0,
+        seamMorph: 0,
       });
     };
   }, [rootRef]);

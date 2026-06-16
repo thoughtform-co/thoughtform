@@ -69,6 +69,7 @@ export function NavigateCopyLabPage({ hudHtml, bodyClass }: NavigateCopyLabPageP
       velocity: 0,
       docked: false,
       dockProgress: 0,
+      seamMorph: 0,
     });
     return () => {
       useDepthGatewayStore.getState().setTransform(INITIAL_TRANSFORM);

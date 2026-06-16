@@ -110,6 +110,24 @@ export interface DepthGatewayTransform {
    *  and the BILLIONS signal block reads it via
    *  `dissipateBand(dockProgress, "SIGNAL_OUT")` for the title fade. */
   dockProgress: number;
+  /** 0..1 dispersal of the centred brandmark into a "pixelated"
+   *  particle field (ADR-021 follow-up Phase 2, capable path only).
+   *
+   *  - 0 = brandmark fully assembled (just re-centred / "shown").
+   *  - 1 = pixels fully scattered + faded; `#continuum` has taken
+   *    over the viewport.
+   *
+   *  Written by `useCorridorExitScroll` ONLY on the capable path
+   *  (not reduced-motion / mobile / WebGL fallback). OPENS the
+   *  instant the welded brandmark has re-centred and shown itself —
+   *  during the dock TAIL (`dissipate >= MARK_CENTRED_DOCK_PROGRESS`),
+   *  not only after the dock releases — and ramps across a long
+   *  runway driven by `#continuum`'s approach. Stays 0 before the
+   *  recentre and on the fallback path (where the legacy
+   *  `--services-brandmark` opacity fade drives the SVG glyph
+   *  instead). Read by `CorridorSeamPixelField` to paint the
+   *  gold/dawn pixel cloud. */
+  seamMorph: number;
 }
 
 export const INITIAL_TRANSFORM: DepthGatewayTransform = {
@@ -123,6 +141,7 @@ export const INITIAL_TRANSFORM: DepthGatewayTransform = {
   velocity: 0,
   docked: false,
   dockProgress: 0,
+  seamMorph: 0,
 };
 
 interface DepthGatewayState {
@@ -147,7 +166,8 @@ function transformEquals(a: DepthGatewayTransform, b: DepthGatewayTransform): bo
     a.epilogueProgress === b.epilogueProgress &&
     a.velocity === b.velocity &&
     a.docked === b.docked &&
-    a.dockProgress === b.dockProgress
+    a.dockProgress === b.dockProgress &&
+    a.seamMorph === b.seamMorph
   );
 }
 

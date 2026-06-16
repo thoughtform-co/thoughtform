@@ -351,6 +351,141 @@ PROGRESS = 0.7`) still owns the cross-writer guard. The actor's
 - [`public/prototypes/v7/landing-v7-motion.html`](../../public/prototypes/v7/landing-v7-motion.html)
   — `#services` stripped of its `.exec` block + `.practice-cta--funnel`.
 
+## 2026-06-16 Revision — Phase 2: Brandmark → pixelated gateway field
+
+The 2026-06-16 ride-out revision settled the brandmark in `#services`
+as a static centred SVG that opacity-faded as `#continuum`
+approached. With the Services runway now empty of execution copy,
+that terminal beat read as the brand simply blinking out — the
+corridor's headline artifact left the page on an opacity ramp,
+disagreeing with the rest of the journey's geometric vocabulary.
+
+This phase replaces the held SVG mark in `#services` with a
+**pixelated particle field** sampled from the SAME canonical
+brandmark paths (`BRANDMARK_FULL_PATHS` via
+`lib/brandmark/sampleShape.ts`, ADR-014's single-source-of-truth).
+The dissolve begins the **moment the brandmark re-centres and shows
+itself** — which happens WHILE THE DOCK IS STILL ENGAGED (the
+welded recentre completes at `dockProgress >=
+MARK_CENTRED_DOCK_PROGRESS = 0.85`, well before the dock releases at
+`rawDissipate >= 0.999`). From that point the field paints the mark
+assembled (silhouette pixels at full alpha) and then progressively
+disperses across a LONG runway driven by `#continuum`'s approach
+(`SEAM_MORPH_START_VH = 1.9` → `SEAM_MORPH_END_VH = 0.1`, ~1.8
+viewports), particles drifting outward + lifting upward and fading —
+a continuous geometric dissolve rather than a late burst in the
+final fade band. The morph clock is independent of `docked`, so the
+canvas paints over the dissipating planet during the dock tail and
+keeps painting seamlessly across the dock release.
+
+**Revision note (2026-06-16, same day):** the morph originally only
+ran across the narrow `data-services-brandmark="fade"` band (the
+last ~0.4vh before `#continuum`), so the re-centred mark sat static
+for ~1 viewport before pixelating. Per user feedback ("from the
+moment the brandmark shows itself again, scrolling should transform
+it into the particle system") the clock was rebased to open at the
+recentre-complete point and span the whole post-reveal runway.
+
+The 3px square grid borrows directly from
+`/test/gateway`'s `ImageParticleGateway` hero (`fillRect`,
+`GRID = 3`). ADR-015 retired the square aesthetic for the brandmark
+particle painters proper; this seam field is **NOT one of the
+capped brandmark painters** (it lives outside the
+`BrandmarkParticleCanvas` cap of two global meshes — atmosphere
+and silhouette — and the substrate-sphere mesh inside the
+intelligence-layer canvas), so the square pixels are an intentional
+borrow and are documented here as the official exception.
+
+### What changed
+
+- **`lib/home-v2/seamPixelize.ts`** (NEW) — pure dispersal math.
+  `dispersePixel(particle, layout)` maps a sampled brandmark point
+  - its seed/rank through the `seamMorph` 0..1 clock to a snapped
+    viewport-pixel position, alpha, and gold↔dawn colour mix. Pinned
+    by unit tests (assemble at 0, fully dispersed/faded at 1, grid-
+    snapped, deterministic). Exports the shared
+    `getServicesTargetHalfPx(vw)` and `SEAM_BRANDMARK_ASPECT` so the
+    pixel field and the actor read at the same Services-centred size.
+- **`components/landing/home-v2/CorridorSeamPixelField.tsx`** (NEW)
+  — fixed full-viewport 2D canvas. Samples
+  `BRANDMARK_FULL_PATHS` once on mount (substrate-tier density —
+  1900 desktop / 700 mobile, matching `BrandmarkSilhouettePoints`),
+  reads `seamMorph` from `depthGatewayStore` each frame, and
+  paints the pixel cloud via `dispersePixel`. Bails out (single
+  attribute read + clearRect) when `data-services-brandmark` is
+  not `"hold"` or `"fade"`.
+- **`useCorridorExitScroll.ts`** — publishes the new clock:
+  `transform.seamMorph` on the depth-gateway store, the
+  `--services-pixelate` (0..1) CSS var on `<html>`, and the
+  scoping attribute `data-services-pixelate="true"`. The morph is
+  active when `dockCapable && sectionNearDock && markCentred &&
+continuumTopVh < SEAM_MORPH_START_VH`, where `markCentred =
+  docked ? dissipate >= MARK_CENTRED_DOCK_PROGRESS : rawDissipate
+  > = 0.999`— i.e. it opens during the dock tail once the welded
+recentre lands, NOT only after the dock releases.`seamMorph =
+  > smoothstep01((SEAM_MORPH_START_VH - continuumTopVh) /
+  > (SEAM_MORPH_START_VH - SEAM_MORPH_END_VH))`. The actor-lifecycle
+gate (`data-services-brandmark`hold/fade +`--services-brandmark`opacity) is kept UNCHANGED for the SVG release + the fallback
+path; on the capable path the SVG is hidden by`data-services-pixelate` regardless of that gate.
+- **`depthGatewayStore.ts`** — adds `seamMorph: number` field to
+  `DepthGatewayTransform`. Updated `transformEquals` /
+  `INITIAL_TRANSFORM` / cleanup. The hook stays the single writer
+  of `docked` / `dockProgress` / `seamMorph`.
+- **`home-v2.css`** — adds `.home-v2-seam-pixels` layer (fixed
+  full-viewport, `z-index: 24`, `display: none` by default; flips
+  to `block` under `data-services-pixelate="true"`). Adds an
+  override that sets the SVG glyph to `opacity: 0` under the
+  same attribute, so the visible mark in `#services` is the pixel
+  cloud (capable path) while the legacy SVG opacity fade stays
+  intact for any future fallback path that ever sets the gate
+  without the pixelate attribute.
+- **`HomeCorridor.tsx`** — mounts `CorridorSeamPixelField` next to
+  `ProjectedBrandmarkActor` on the non-fallback path.
+- **`ProjectedBrandmarkActor.tsx`** — docstring update only. The
+  actor still owns the welded ride-out + recentre + post-active
+  rAF; the visible flip from SVG to canvas is handled entirely
+  via the new CSS attribute.
+
+### Invariants preserved
+
+- **Single-writer rule.** Hook still owns `docked` / `dockProgress`
+  / `seamMorph`. No other writer touches the store fields it
+  publishes.
+- **Brandmark Principles 2 + 5.** The seam pixel field is an
+  EXIT BOOKEND — opacity ramps are allowed here (Principle 5).
+  Inside the corridor proper the journey-driven painters still
+  honour Principle 2 (no opacity mid-journey).
+- **Brandmark painter cap (ADR-015 / ADR-019).** Three painters max
+  inside `BrandmarkParticleCanvas` + the substrate-sphere mesh.
+  `CorridorSeamPixelField` is OUTSIDE that canvas (its own 2D
+  canvas with its own rAF) and is OUTSIDE the brandmark journey
+  contract — it does not count against the cap. New particle
+  visuals that extend the BRANDMARK JOURNEY itself still must
+  respect the cap.
+- **ADR-014 single-source-of-truth.** The pixel field samples the
+  SAME `BRANDMARK_FULL_PATHS` the SVG glyph and the existing
+  silhouette painter render. No parallel geometry source.
+- **Reduced-motion / mobile / no-WebGL fallback.** `dockCapable`
+  still gates the gate. The pixel field is mounted only when
+  `!fallback` in `HomeCorridor`. The fallback path keeps the
+  pre-revision sequential dark cut.
+
+### Files touched in this revision
+
+- [`lib/home-v2/seamPixelize.ts`](../../lib/home-v2/seamPixelize.ts) (NEW)
+- [`components/landing/home-v2/CorridorSeamPixelField.tsx`](../../components/landing/home-v2/CorridorSeamPixelField.tsx) (NEW)
+- [`tests/lib/seam-pixelize.test.ts`](../../tests/lib/seam-pixelize.test.ts) (NEW)
+- [`components/landing/home-v2/hooks/useCorridorExitScroll.ts`](../../components/landing/home-v2/hooks/useCorridorExitScroll.ts)
+  — `seamMorph` clock + `data-services-pixelate` attribute writes.
+- [`lib/stores/depthGatewayStore.ts`](../../lib/stores/depthGatewayStore.ts)
+  — `seamMorph` field on `DepthGatewayTransform`.
+- [`components/landing/home-v2/HomeCorridor.tsx`](../../components/landing/home-v2/HomeCorridor.tsx)
+  — mounts the seam pixel field on the capable path.
+- [`components/landing/home-v2/ProjectedBrandmarkActor.tsx`](../../components/landing/home-v2/ProjectedBrandmarkActor.tsx)
+  — docstring update only.
+- [`components/landing/home-v2/home-v2.css`](../../components/landing/home-v2/home-v2.css)
+  — `.home-v2-seam-pixels` layer + SVG hide rule under `data-services-pixelate`.
+
 ## Related Decisions
 
 - [ADR-002 — Scroll Animation Architecture](002-scroll-animation-architecture.md)

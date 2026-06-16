@@ -212,6 +212,9 @@ export function useDepthScroll(stageRef: React.RefObject<HTMLDivElement | null>)
         velocity,
         docked,
         dockProgress,
+        // Pass through — `useCorridorExitScroll` is the sole
+        // writer of the seam pixelate clock (single-writer rule).
+        seamMorph: prev.seamMorph,
       });
     } else if (Math.abs(velocity) > 0.0001) {
       // Surface velocity decay even when progress hasn't changed,
@@ -227,6 +230,7 @@ export function useDepthScroll(stageRef: React.RefObject<HTMLDivElement | null>)
         velocity,
         docked,
         dockProgress,
+        seamMorph: prev.seamMorph,
       });
     }
   }, [stageRef]);
