@@ -111,8 +111,8 @@ export function FlyingCameraRig() {
       const pose = getEpilogueCameraPose(ep);
       // ADR-021 corridor-exit zoom-dissipate: when the user scrolls
       // into #services, `useCorridorExitScroll` keeps `docked = true`
-      // and ramps `dockProgress` (reused as the dissipate clock) from
-      // 0 → 1 across the first viewport. The exit pose at dissipate 0
+      // and ramps `dockProgress` (the single speed-ramped dissipate
+      // clock) from 0 → 1 across the first viewport. The exit pose at dissipate 0
       // returns EXACTLY the docked pose by construction
       // (`getCorridorExitCameraPose(0) === getEpilogueCameraPose(
       // DOCKED_INSTRUMENT_EPILOGUE_POSE)`), so this lerp is identity
@@ -125,7 +125,11 @@ export function FlyingCameraRig() {
       const dissipate = docked ? dockProgress : 0;
       if (dissipate > 1e-4) {
         const exitPose = getCorridorExitCameraPose(dissipate);
-        const t = dissipate * dissipate * (3 - 2 * dissipate);
+        // `dockProgress` already passed through
+        // `corridorExitSpeedRamp` in `useCorridorExitScroll`. Do not
+        // smoothstep again here — stacking eases is what made the
+        // sphere feel like it lagged before growing.
+        const t = dissipate;
         camera.position.set(
           pose.position[0] * (1 - t) + exitPose.position[0] * t,
           pose.position[1] * (1 - t) + exitPose.position[1] * t,

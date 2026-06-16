@@ -644,7 +644,10 @@ function EpilogueNewsTicker({ animate }: { animate: boolean }) {
       let camLook = basePose.lookAt;
       if (dissipate > 1e-4) {
         const exitPose = getCorridorExitCameraPose(dissipate);
-        const tt = dissipate * dissipate * (3 - 2 * dissipate);
+        // `dockProgress` is already speed-ramped by the exit hook.
+        // Consume it directly so the ticker remains welded to the
+        // same camera path as the sphere (no stacked easing lag).
+        const tt = dissipate;
         camPos = [
           basePose.position[0] + (exitPose.position[0] - basePose.position[0]) * tt,
           basePose.position[1] + (exitPose.position[1] - basePose.position[1]) * tt,

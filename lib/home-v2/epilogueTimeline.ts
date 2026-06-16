@@ -173,6 +173,28 @@ export function dissipateBand(
   return band(dissipateProgress, w.start, w.end);
 }
 
+/** Corridor-exit speed ramp (ADR-021 follow-up).
+ *
+ * This is the ONLY easing applied to the Services dissipate clock.
+ * Earlier revisions stacked easing in three places:
+ *
+ *   raw services rect -> smootherstep in `useCorridorExitScroll`
+ *   dockProgress      -> smoothstep in `FlyingCameraRig`
+ *   dissipate pose    -> smoothstep in `getCorridorExitCameraPose`
+ *
+ * That triple ease produced a perceptible "wait, then lurch" feeling
+ * at the BILLIONS -> Services seam: the first wheel notches barely
+ * moved the camera, then the sphere had to catch up. This ramp is an
+ * ease-out speed ramp (`1 - (1 - t)^3`): it responds immediately as
+ * #services enters, then decelerates softly into the centred Services
+ * mark. Consumers must use it DIRECTLY (no second smoothstep) so the
+ * sphere growth reads as one authored curve instead of stacked lag.
+ */
+export function corridorExitSpeedRamp(rawProgress: number): number {
+  const t = Math.max(0, Math.min(1, rawProgress));
+  return 1 - Math.pow(1 - t, 3);
+}
+
 /** Radial scatter multiplier for the dotted-shell radius across the
  *  dissipate clock. Returns 1.0 at dissipate 0 (parked / docked, no
  *  scatter), grows to `1 + DISSIPATE_SHELL_SCATTER_AMP` at dissipate

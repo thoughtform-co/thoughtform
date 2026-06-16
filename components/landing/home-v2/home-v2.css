@@ -338,39 +338,39 @@ html[data-corridor-exit="true"] #services > * {
   z-index: 7;
 }
 
-html[data-corridor-exit="true"] #services .exec__header {
-  opacity: var(--services-header-in, 0);
-  transform: translate3d(0, calc((1 - var(--services-header-in, 0)) * 40px), 0);
-  filter: blur(calc((1 - var(--services-header-in, 0)) * 5px));
-  will-change: opacity, transform, filter;
-}
-
-html[data-corridor-exit="true"] #services .exec__grid {
-  opacity: var(--services-grid-in, 0);
-  transform: translate3d(0, calc((1 - var(--services-grid-in, 0)) * 58px), 0);
-  filter: blur(calc((1 - var(--services-grid-in, 0)) * 6px));
-  will-change: opacity, transform, filter;
-}
-
-html[data-corridor-exit="true"] #services .practice-cta--funnel {
-  opacity: var(--services-cta-in, 0);
-  transform: translate3d(0, calc((1 - var(--services-cta-in, 0)) * 72px), 0);
-  filter: blur(calc((1 - var(--services-cta-in, 0)) * 6px));
-  will-change: opacity, transform, filter;
-}
-
-html[data-corridor-exit="true"] #services .service-card {
-  background: rgba(10, 9, 8, calc(0.38 + var(--services-grid-in, 0) * 0.24));
-}
-
-@media (prefers-reduced-motion: reduce) {
-  html[data-corridor-exit="true"] #services .exec__header,
-  html[data-corridor-exit="true"] #services .exec__grid,
-  html[data-corridor-exit="true"] #services .practice-cta--funnel {
-    opacity: 1;
-    transform: none;
-    filter: none;
-  }
+/* Services section length — taller than a single viewport so the
+ * brandmark coming off the corridor-exit dissipate has runway to
+ * re-centre, hold a beat, and fade out before #continuum enters.
+ *
+ * 2026-06-16 (ADR-021 follow-up): the original `.exec__header` +
+ * `.exec__grid` (Keynotes / Workshops / Strategy) + `.practice-cta--funnel`
+ * have been stripped from #services in the v7 prototype. The section
+ * is now a runway for the welded brandmark re-centre. With a single
+ * 100vh height the brandmark "arrived" the moment the section
+ * reached the viewport — too soon. At 200svh the geometry resolves
+ * to:
+ *   scrollY ≈ +8.2vh past page top — services first enters viewport,
+ *                                    dock engages, brandmark welded.
+ *   scrollY ≈ +9.2vh — services.top hits viewport top; corridor
+ *                      stage releases its sticky (`active` flips false).
+ *                      Brandmark hands off from tracker → post-active
+ *                      rAF mid-recentre.
+ *   scrollY ≈ +10.2vh — dock dissipate completes, brandmark fully
+ *                       centred. Dock releases, services-brandmark
+ *                       gate flips to "hold".
+ *   scrollY ≈ +10.7vh — continuum.top crosses 0.5·vh — gate flips to
+ *                       "fade" as the next section approaches.
+ *   scrollY ≈ +11.2vh — services bottom leaves viewport. Brandmark
+ *                       fully faded. Normal page flow resumes.
+ *
+ * `#services` (id, specificity 1,0,0) beats the density rules
+ * (`body.density-spacious .station`, specificity 0,2,1) and the
+ * `.station` default (0,1,0). The `svh` line is the modern dynamic-
+ * viewport sizing; the `vh` line is the fallback for older engines
+ * (matches the `.station` default that ships both). */
+#services {
+  min-height: 200svh;
+  min-height: 200vh;
 }
 
 /* ── DOM copy + label overlay ─────────────────────────────────
@@ -2094,6 +2094,72 @@ html[data-corridor-exit="true"] #services .service-card {
   width: 100%;
   height: 100%;
   display: block;
+}
+
+/* Corridor-exit dock promotion (ADR-021 follow-up, 2026-06-16): while
+   the corridor canvas is docked, the brandmark must ride OUTSIDE its
+   sticky-cell containing block so the post-active rAF's viewport-pixel
+   writes (in `ProjectedBrandmarkActor`) land at the right screen
+   coords once the sticky cell has scrolled past. Mirrors the canvas's
+   own `position: fixed` promotion under the same `data-corridor-docked`
+   gate. `inset: 0 auto auto 0` keeps origin at viewport (0,0) so the
+   actor's `translate3d(left, top, 0)` writes still resolve to absolute
+   viewport coords.
+   `!important` beats the actor's inline `position: absolute` /
+   `left: 0` / `top: 0` defaults (React inline styles otherwise win
+   over external CSS at equal specificity). */
+html[data-corridor-docked="true"] .home-v2-projected-brandmark {
+  position: fixed !important;
+  inset: 0 auto auto 0 !important;
+}
+
+html[data-corridor-docked="true"] .home-v2-projected-brandmark > div {
+  transform: none !important;
+}
+
+/* Services brandmark hold + fade (ADR-021 follow-up). Once the dock
+   disengages (canvas frameloop idles behind the now-opaque services
+   surface) the brandmark needs a separate fixed-centred CSS layer to
+   carry it through the rest of the section + the fade as #continuum
+   enters. The gate states are written by `useCorridorExitScroll`:
+     - data-services-brandmark="hold" — full opacity, fixed centre.
+     - data-services-brandmark="fade" — opacity ramps via
+       `--services-brandmark` (0..1) as continuum approaches the top.
+   `ProjectedBrandmarkActor`'s post-active rAF clears its inline
+   styles when these gates are active so the centred rules below win
+   for transform/opacity (no `!important` needed there — once the
+   inline value is `""` the stylesheet rule takes effect). The
+   position / inset / display / aspect-ratio / width overrides DO
+   use `!important` to beat the actor's inline `position: absolute`
+   / `left: 0` / `top: 0` / `display: none` defaults (which the rAF
+   intentionally doesn't touch — they're the corridor mode's resting
+   style and clearing them would race with the tracker on reverse
+   scroll).
+   Aspect ratio matches the BrandmarkGlyph SVG (430.99 / 436); a
+   width clamp keeps the mark readable on narrow screens and prevents
+   it from blowing out on wide hero-asset viewports. */
+html[data-services-brandmark="hold"] .home-v2-projected-brandmark,
+html[data-services-brandmark="fade"] .home-v2-projected-brandmark {
+  position: fixed !important;
+  display: block !important;
+  inset: 50% auto auto 50% !important;
+  width: clamp(220px, 21vw, 360px) !important;
+  height: auto !important;
+  aspect-ratio: 430.99 / 436 !important;
+  transform: translate(-50%, -50%);
+}
+
+html[data-services-brandmark="hold"] .home-v2-projected-brandmark {
+  opacity: 1;
+}
+
+html[data-services-brandmark="fade"] .home-v2-projected-brandmark {
+  opacity: var(--services-brandmark, 1);
+}
+
+html[data-services-brandmark="hold"] .home-v2-projected-brandmark > div,
+html[data-services-brandmark="fade"] .home-v2-projected-brandmark > div {
+  transform: none !important;
 }
 
 /* ── Tail sections (normal scroll, placeholder) ──────────────── */

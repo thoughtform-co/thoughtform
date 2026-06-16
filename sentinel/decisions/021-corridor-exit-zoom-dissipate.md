@@ -209,6 +209,148 @@ Both keep the `docked` channel, the `data-corridor-docked` CSS gate, the single-
 - Fixed-backdrop CSS: [`components/landing/home-v2/home-v2.css`](../../components/landing/home-v2/home-v2.css)
 - Retired sweep reference (kept): [`components/landing/home-v2/handoff-lab/`](../../components/landing/home-v2/handoff-lab), `/test/handoff-a|b|c`.
 
+---
+
+## 2026-06-16 Revision — Brandmark ride-out + Services re-centre
+
+The original ADR retired the docked cover-plane sweep but inherited the
+epilogue v3 brandmark contract verbatim: the DOM brandmark FADED OUT
+across the `APPROACH` band so it wouldn't sit inside the sphere as the
+planet grew. With the sweep gone the visible exit became "the brandmark
+quietly disappears, then services slides up under a docked sphere",
+which read as the corridor's headline artifact abandoning the scene
+rather than completing its arc. This revision restores the brandmark
+through the seam: it RIDES the sphere out of view geometrically during
+the BILLIONS beat, then re-centres into `#services` as the planet
+scatters, holds for a beat, and fades as `#continuum` enters.
+
+Services also lost its execution-strip + funnel-CTA contents in this
+revision and is now a runway for the re-centring brandmark. Final copy
+
+- offer are pending; the structural change here is the seam contract.
+
+### What changed
+
+- **`ProjectedBrandmarkActor.tsx`** — the epilogue v3 `APPROACH`-band
+  opacity fade is GONE. The mark is welded to
+  `BRANDMARK_ANCHOR_INTELLIGENCE` (sphere centre) via a private mirror
+  camera that follows the SAME pose chain as `FlyingCameraRig` +
+  `EpilogueNewsTicker` (`getEpilogueCameraPose` with docked-pose ease,
+  then `getCorridorExitCameraPose` once the dissipate engages). The
+  welded screen position rides the sphere off-screen during LAND and
+  then lerps toward the viewport centre across the first 85% of the
+  dissipate clock (`DOCK_RECENTRE_FRAC = 0.85`). A NEW parallel rAF in
+  the actor takes over from the tracker once the corridor stage's
+  sticky cell releases (`active = false` while `docked` is still
+  true), so the recentre completes even after the cell scrolls past.
+  Welded math + scratch state are extracted to `computeWeldedRect` so
+  the tracker `onPaint` (corridor-active path) and the post-active
+  rAF share the same pose chain + last-welded cache.
+- **`useCorridorExitScroll.ts`** — `DISSIPATE_SCROLL_SPAN_VH` widened
+  1.58 → 2.0 so the welded recentre resolves ~1.3 viewports past the
+  section's first reveal instead of right at it. The per-element
+  reveal vars (`--services-header-in`, `--services-grid-in`,
+  `--services-cta-in`) are removed (their DOM targets are gone). A
+  NEW gate `data-services-brandmark` (`"hold"` | `"fade"`) + a
+  `--services-brandmark` (0..1) opacity var are written by the hook
+  based on `#continuum.top / vh` — `"hold"` once the dock releases
+  and `"fade"` as `#continuum` crosses the 0.5 → 0.1 vh band, with
+  the gate cleared entirely once `#continuum` is fully in (so the
+  fixed brandmark layer drops back to its `position: absolute`
+  default and doesn't keep a fixed layer alive past usefulness).
+  The gate is mutually exclusive with `data-corridor-docked`, so the
+  actor's post-active rAF can branch on either flag with no overlap.
+- **`home-v2.css`** — `#services` is given `min-height: 200svh` so
+  the section has the runway for the recentre + hold + fade. Two new
+  rules promote `.home-v2-projected-brandmark` to `position: fixed`:
+  one for `data-corridor-docked` (JS owns the rect, position is
+  fixed-from-viewport-origin so the actor's pixel writes land
+  correctly once the sticky containing block scrolls away) and one
+  for `data-services-brandmark="hold"|"fade"` (CSS owns the rect
+  with fixed-centred via `inset: 50% auto auto 50%` +
+  `transform: translate(-50%, -50%)`, `aspect-ratio: 430.99 / 436`,
+  and `opacity: var(--services-brandmark, 1)`). All position /
+  display / inset / width / aspect-ratio overrides use `!important`
+  to beat the actor's inline `position: absolute` / `display: none`
+  / `left: 0` / `top: 0` defaults (React inline styles otherwise
+  win at equal specificity); the centred rule's `transform` and
+  `opacity` do not need `!important` because the post-active rAF
+  clears the corresponding inline values when the gate is active.
+- **`landing-v7-motion.html`** — `#services` is stripped of its
+  `.exec` block (`.exec__header` eyebrow + lede, `.exec__grid`
+  Keynotes / Workshops / Strategy cards) and the
+  `.practice-cta--funnel` CTA. The section keeps its `<section>`
+  shell + `.station__idx` corner chrome so HUD nav, the celestial
+  slots layer, and the ADR-021 `relocateStationsToMount` spec all
+  still resolve. Final copy + offer are pending.
+
+### Why the welded camera, not the corridor mirror
+
+`useWorldDomTracker`'s mirror camera follows `paintProgress`, which is
+forced to 0 outside the active stage and saturates at 1 during the
+corridor's end. That camera stays parked at `CAMERA_END` through the
+entire epilogue + dock — which is correct for the brandmark anchor's
+WORLD position (sphere centre never moves) but wrong for the
+projected SCREEN position once the canvas camera tilts up over the
+pole during LAND. The welded path runs a SECOND mirror camera that
+follows `getEpilogueCameraPose(ep) → getCorridorExitCameraPose(d)` on
+the SAME `t = d²(3-2d)` blend `FlyingCameraRig` + `EpilogueNewsTicker`
+use, so the brandmark's screen rect is C0-continuous with the visible
+sphere centre. The ticker had the same problem and the same solution;
+this revision applies that pattern to the brandmark.
+
+### Why a parallel rAF (and not "just include `docked` in `painting`")
+
+The tracker's `painting = active || armed` gate is shared by every
+anchor it tracks — notably `CopyAnchors`. Widening the gate to
+include `docked` would keep the corridor's per-station copy painting
+during the dock window, even though those labels are tied to the
+corridor's beat sequence (Navigate / Encode / Build) and should be
+gone once the sphere is dissipating. The parallel rAF in the actor is
+scoped to the brandmark; the tracker's gate is left untouched and
+copy labels release cleanly when the stage scrolls past.
+
+### Invariants preserved
+
+- **Single-writer rule.** `useCorridorExitScroll` is still the only
+  writer of `docked` / `dockProgress`. The new gate (`data-services-
+brandmark`) lives on `<html>` as a DOM attribute, NOT on the store
+  — `useDepthScroll`'s reverse-scroll release (`DOCK_RELEASE_EPILOGUE_
+PROGRESS = 0.7`) still owns the cross-writer guard. The actor's
+  post-active rAF is read-only against the store; it never writes
+  `docked` / `dockProgress`.
+- **ADR-008 paint stack.** The fixed `body::before` veil
+  (`html[data-corridor-exit="true"]`) still owns the re-shielding of
+  the dark surface as the dissipate completes; the brandmark sits
+  ABOVE the veil at z-index 24 (its existing rule, untouched).
+- **Reduced-motion / mobile / no-WebGL fallback.** `dockCapable`
+  still gates dock engagement. When `dockCapable` is false the new
+  gate is also never set (the hook short-circuits before computing
+  it), so the page reads as a sequential dark cut from corridor to
+  Services to Continuum. No new motion is introduced in the fallback
+  path.
+- **Geometric exits + entries.** The brandmark's only opacity ramps
+  are still the corridor tail bookend (`TAIL_FADE_OUT_START`) and
+  the per-parked-beat brightness intensity. The visible exit is the
+  welded ride-out off-screen; the visible entry into Services is the
+  welded → centre rect lerp; the visible exit into Continuum is the
+  CSS-driven `--services-brandmark` fade, gated on `#continuum.top`
+  (a SCROLL-driven geometric trigger, not a corridor-clock one).
+
+### Files touched in this revision
+
+- [`components/landing/home-v2/ProjectedBrandmarkActor.tsx`](../../components/landing/home-v2/ProjectedBrandmarkActor.tsx)
+  — welded mirror camera, `computeWeldedRect` helper, post-active
+  parallel rAF, removed epilogue `APPROACH` opacity fade.
+- [`components/landing/home-v2/hooks/useCorridorExitScroll.ts`](../../components/landing/home-v2/hooks/useCorridorExitScroll.ts)
+  — widened dissipate span, dropped header/grid/cta reveal channels,
+  added `data-services-brandmark` + `--services-brandmark` gate.
+- [`components/landing/home-v2/home-v2.css`](../../components/landing/home-v2/home-v2.css)
+  — `#services` height bump, fixed-position promotion under both
+  gates, hold + fade rules.
+- [`public/prototypes/v7/landing-v7-motion.html`](../../public/prototypes/v7/landing-v7-motion.html)
+  — `#services` stripped of its `.exec` block + `.practice-cta--funnel`.
+
 ## Related Decisions
 
 - [ADR-002 — Scroll Animation Architecture](002-scroll-animation-architecture.md)

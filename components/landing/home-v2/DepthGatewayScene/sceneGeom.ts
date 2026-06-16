@@ -530,14 +530,11 @@ export function getCorridorExitCameraPose(dissipateProgress: number): {
   const planetCentre = BRANDMARK_ANCHOR_INTELLIGENCE;
 
   const t = clamp01(dissipateProgress);
-  // Smoothstep so the fly-in eases in (no kick at engage) and decelerates
-  // at peak scatter (no kink when the dissipate clock pins to 1 against
-  // the cover viewport edge).
-  const eased = t * t * (3 - 2 * t);
-
-  // Travel along the docked → planet-centre line by an eased fraction
-  // of the total distance.
-  const travel = EXIT_FLY_IN_DISTANCE_FRAC * eased;
+  // `dissipateProgress` already passed through
+  // `corridorExitSpeedRamp` in `useCorridorExitScroll`. Travel uses it
+  // directly; applying another smoothstep here stacks easing and makes
+  // the sphere growth feel delayed before it catches up.
+  const travel = EXIT_FLY_IN_DISTANCE_FRAC * t;
   const position: [number, number, number] = [
     lerp(docked.position[0], planetCentre[0], travel),
     lerp(docked.position[1], planetCentre[1], travel),
@@ -1696,6 +1693,7 @@ const gateEncodePrimitive: WorldAnchor["onPaint"] = (ctx, el) => {
   const idxAttr = el.getAttribute("data-encode-cardinal-idx");
   const idx = idxAttr == null ? -1 : Number(idxAttr);
   const orbits = getSmoothedAccretionLayers().orbits;
+  const buildOut = 1 - epilogueBand(getSmoothedEpilogueProgress(), "BUILD_OUT");
   const stagger = idx >= 0 ? encodeCartridgeStagger(orbits, idx) : orbits;
   // Each cartridge's opacity ramps over the back-half of its stagger
   // so it "lights up" as it locks in, rather than ghosting during the
@@ -1722,7 +1720,7 @@ const gateEncodePrimitive: WorldAnchor["onPaint"] = (ctx, el) => {
       depthScale = 1 - backT * 0.12;
     }
   }
-  el.style.opacity = (ctx.visibilityOpacity * op * depthOp).toFixed(3);
+  el.style.opacity = (ctx.visibilityOpacity * op * depthOp * buildOut).toFixed(3);
   applyGyroDomBank(el, 0.8);
   if (depthScale !== 1) {
     el.style.transform = `${el.style.transform} scale(${depthScale.toFixed(3)})`;
