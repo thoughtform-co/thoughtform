@@ -85,14 +85,16 @@ const IGNITE_ON_FORCES: BrandmarkPhysicsCoreForces = {
   turbulence: 0.012,
 };
 
-/** Default desktop / mobile particle counts. Slightly under the v7
- *  `BrandmarkSilhouettePoints` density (1900 / 700) so the
- *  per-particle twinkle + depth-dim shader path reads as
- *  atmospheric dust rather than a uniform fill. The brandmark
- *  silhouette is still solid at 1700 thanks to the wider soft
- *  halo in the fragment shader. */
-export const BRANDMARK_PHYSICS_CORE_COUNT_DESKTOP = 1700;
-export const BRANDMARK_PHYSICS_CORE_COUNT_MOBILE = 900;
+/** Default desktop / mobile particle counts. Tuned to balance the
+ *  cloud's visual weight against the surrounding substrate gimbal
+ *  sphere — at higher densities (e.g. v7 silhouette's 1900) the
+ *  brandmark reads heavier than the gimbal's hairline wireframe
+ *  and the composition tips brandmark-forward. At ~1300 the
+ *  silhouette still reads solid (thanks to the soft-halo fragment
+ *  + per-particle twinkle) but the cloud sits at the same visual
+ *  weight as the gimbal sphere it's nested inside. */
+export const BRANDMARK_PHYSICS_CORE_COUNT_DESKTOP = 1300;
+export const BRANDMARK_PHYSICS_CORE_COUNT_MOBILE = 650;
 
 /** Default per-particle CSS pixel size. Tuned down from the first
  *  pass (4.2px) to bring the cloud's visual weight closer to the

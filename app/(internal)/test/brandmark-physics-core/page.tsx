@@ -28,6 +28,9 @@ const DEFAULTS = {
   // Particles
   count: BRANDMARK_PHYSICS_CORE_COUNT_DESKTOP,
   scatterRadius: 0.55,
+  // (BRANDMARK_PHYSICS_CORE_COUNT_DESKTOP = 1300 — balanced against
+  //  the substrate gimbal so the brandmark reads as the bright core,
+  //  not the heaviest element in the composition.)
   bulge: 0.18,
   thickness: 0.06,
 
