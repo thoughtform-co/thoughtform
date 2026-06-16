@@ -1,0 +1,175 @@
+# ADR-023: Corridor Brandmark Physics Core
+
+**Date:** 2026-06-16
+**Status:** Active
+**Scope:** Home-v2 depth corridor brandmark — the central mark that travels Navigate → Encode → Build inside the accreting intelligence-layer artifact.
+**Related:**
+[ADR-013 — Brandmark Journey Refactor](013-brandmark-journey-refactor.md),
+[ADR-017 — Orbit Journey + Substrate Morph](017-orbit-journey-and-substrate-morph.md),
+[ADR-018 — Home-V2 Depth Corridor](018-home-v2-depth-corridor.md),
+[ADR-019 — Brandmark Silhouette Morph](019-brandmark-silhouette-morph.md),
+[ADR-021 — Corridor Exit Zoom-Dissipate](021-corridor-exit-zoom-dissipate.md).
+
+---
+
+## Context
+
+The home-v2 corridor brandmark was a flat DOM SVG glyph (`BrandmarkGlyph` rendered through `ProjectedBrandmarkActor`), perspective-projected onto the brandmark world position each frame. From the section-2 Thoughtform rest all the way through Build it remained the same flat plate — a small `rotateY` tilt was the only depth cue.
+
+A previous decision (recorded 2026-06-06 in `ProjectedBrandmarkActor.tsx`) explicitly removed an earlier substrate-morph particle handoff ("the brandmark should stay the same 2D SVG mark throughout"). That decision was correct for the build it shipped against — the morph it removed swapped the SVG for a particle SPHERE / particle LOGO at Build, which read as the mark "becoming something else." But it left the corridor without the visceral "you are flying into something alive" cue at the moment the camera releases its dolly hold.
+
+Recent additions made a new direction possible:
+
+- **A real 3D brandmark** ([ADR-018 follow-up](../../components/brand/Brandmark3D/Brandmark3D.tsx)) — `buildBrandmarkGeometry` produces a beveled `ExtrudeGeometry` from the source SVG, dialed in at `/test/brandmark-3d`.
+- **A GPGPU particle simulation** ([lib/key-visual/gpgpu-simulation.ts](../../lib/key-visual/gpgpu-simulation.ts)) — curl-noise flow + return-to-origin + pointer + turbulence, written for the gateway key-visual but never wired into a production consumer.
+
+The user's brief: "transform the brandmark into the particle system the moment you scroll into the corridor — the bright core of our intelligence layer artifact, with depth, like a 3D physical object."
+
+This ADR records reversing the "stay 2D SVG" decision specifically for the in-corridor beats while preserving the SVG everywhere else.
+
+---
+
+## Decision
+
+The corridor brandmark is a **GPGPU-driven 3D particle core** from the moment the camera flies past the dolly hold through to Build. The crisp DOM SVG owns only the section-2 Thoughtform rest and the epilogue / dock / `#services` handoff.
+
+```
+section-2 rest          dolly release          Navigate → Build       epilogue / dock / #services
+─────────────────       ─────────────          ─────────────────       ─────────────────────────
+DOM SVG @ opacity=1  →  cross-dissolve     →   particle core only  →  DOM SVG re-shown @ opacity=1
+                        across [DOLLY_HOLD_END,
+                                +0.06]
+                                                ↑ assemble band ↑
+particle core off       core ignites           core fully assembled
+                        (assemble in)          (breathing wobble)
+```
+
+Both surfaces share the SAME ignite band so the cross-dissolve reads as a single handoff — SVG yields, core ignites. The band is `[DOLLY_HOLD_END, DOLLY_HOLD_END + 0.06]` of `paintProgress`, the same gate `BrandmarkAccretionShell` already uses to release pointer / drift / static-tilt.
+
+---
+
+## Architecture
+
+```mermaid
+flowchart LR
+  svg["Thoughtform_Brandmark.svg"] --> geo["buildBrandmarkGeometry()<br/>beveled 3D extrusion"]
+  geo --> samp["sampleBrandmarkVolume()<br/>3D home points + seeds"]
+  samp --> sim["GPGPUParticleSimulation<br/>(uHomeTexture + forces)"]
+  sim --> core["BrandmarkPhysicsCore<br/>additive gold points"]
+  store["depthGatewayStore.transform.paintProgress"] --> ignite["ignite = smoothstep(DOLLY_HOLD_END, +0.06)"]
+  ignite --> actor["BrandmarkPhysicsCoreActor<br/>scales + positions"]
+  actor --> core
+  ignite --> svgactor["ProjectedBrandmarkActor<br/>SVG fades while core ignites"]
+```
+
+### Layers
+
+1. **Silhouette + depth sample** — [`lib/brandmark/sampleBrandmarkParticles.ts`](../../lib/brandmark/sampleBrandmarkParticles.ts) samples the brandmark's 2D silhouette via `sampleShape` (same primitive as v7 [`BrandmarkSilhouettePoints`](../../components/brand/BrandmarkParticleField/BrandmarkSilhouettePoints.tsx)) and adds depth via a forward dome (r²-falloff) plus a per-particle Z jitter (same recipe as [`intelligence-artifact/SubstrateBrandmark`](../../components/landing/intelligence-artifact/SubstrateBrandmark.tsx)). The brandmark silhouette is therefore guaranteed to read as the brandmark — depth is a layered enhancement, not the source of shape. (An earlier draft sampled the beveled `ExtrudeGeometry` mesh with `MeshSurfaceSampler`. That distributed particles by face area across the front cap / back cap / side walls and saturated into a featureless blob under additive blending. The silhouette+dome approach matches the readability of the v7 mark while keeping the physical-object feel.)
+2. **Sim with 3D origins** — `GPGPUParticleSimulation` accepts an optional `homePositions: Float32Array` that gets packed into a static `uHomeTexture` (RGBA Float32 DataTexture). The position shader branches on `uUseHomeTexture > 0.5`:
+   - **3D-origin path** — origin sampled from `uHomeTexture`; integration is first-order Euler (`pos += totalForce * dt`) so coefficients are world-units-per-second.
+   - **Legacy path** — origin from the existing `posData.w` / `velData.w` two-channel pack with `origin.z = 0`; integration is the pseudo-momentum step the key-visual portal calibrated against. Untouched.
+3. **R3F painter** — [`components/brand/BrandmarkPhysicsCore/`](../../components/brand/BrandmarkPhysicsCore/) owns the sim + `<points>` mesh with a corridor-tuned shader pair ([`shaders.ts`](../../components/brand/BrandmarkPhysicsCore/shaders.ts)). The shaders project through the R3F camera matrix (so the dome reads as foreshortening when the camera is off-axis) but use pixel-space point sizing (no `(K / Z)` perspective scale) — the legacy key-visual shader's `(300 / Z)` factor would blow up to ~145-pixel points at the corridor's parked camera distance and saturate the cloud. Falloff is the tighter v7 silhouette family (`smoothstep(0.30, 0.5, d)`). `ignite ∈ [0, 1]` interpolates between two force tables:
+   - `IGNITE_OFF_FORCES` — `returnStrength: 0.4`, `flowStrength: 0.06`, `turbulence: 0.32` (dispersed cloud of dust).
+   - `IGNITE_ON_FORCES` — `returnStrength: 6.0`, `flowStrength: 0.012`, `turbulence: 0.012` (assembled core, slight breathing wobble).
+4. **Corridor wiring** — [`BrandmarkPhysicsCoreActor`](../../components/landing/home-v2/DepthGatewayScene/BrandmarkPhysicsCoreActor.tsx) tracks `getBrandmarkWorldPosition(paintProgress)` + scales by `2 * getBrandmarkWorldHalfExtent(progress)` per frame, drives `ignite` from the dolly-release smoothstep, and pauses the sim when the stage is off-screen. Mounted alongside `BrandmarkAccretionShell` in [`DepthGatewayScene/index.tsx`](../../components/landing/home-v2/DepthGatewayScene/index.tsx).
+5. **SVG handoff** — [`ProjectedBrandmarkActor`](../../components/landing/home-v2/ProjectedBrandmarkActor.tsx) multiplies the corridor-path opacity by `corridorFade = 1 - smoothstep(DOLLY_HOLD_END, DOLLY_HOLD_END + 0.06, paintProgress)`. The welded epilogue / dock branch is exempt (`corridorFade = 1` there) so the sphere ride-out + Services re-centre keep the full-strength glyph as before. The post-active rAF (which runs after `active` flips off) is unchanged — it still owns the dock + Services handoff.
+
+### Live-value props
+
+`BrandmarkPhysicsCore` accepts `igniteRef` / `pausedRef` (read-only refs) in addition to the static `ignite` / `paused` props. `BrandmarkPhysicsCoreActor` writes its refs from inside `useFrame` and the core reads them back, so the parent never re-renders. Static props are kept for the lab and other simple consumers.
+
+---
+
+## Fallback tiers
+
+| Path        | Trigger                                                                          | Behaviour                                                                                                                                                                                                                                                                                    |
+| ----------- | -------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| GPGPU core  | `tier === "desktop"` AND `renderer.capabilities.isWebGL2`                        | Full sim — particles assemble across the ignite band, breathe at home.                                                                                                                                                                                                                       |
+| Static core | `tier === "mobile"` OR `!isWebGL2`                                               | No GPGPU compute. `BrandmarkPhysicsCore` builds the home positions into a one-shot `DataTexture` and binds it directly to `uPositionTexture` so the render shader paints particles AT home with the same additive gold treatment. The SVG handoff still fades so the static core takes over. |
+| Static text | `webglOK === false` OR `prefers-reduced-motion` OR `corridorCapable() === false` | Existing `HomeCorridor` fallback path is unchanged — neither the canvas nor the actor mount; the static text overlay (`FallbackCorridor`) reads the corridor copy as plain flow content.                                                                                                     |
+
+The GPGPU consumer always supplies `homePositions`, so the legacy two-channel pack continues to drive the unmodified key-visual portal flow with byte-identical behaviour.
+
+---
+
+## Alternatives Considered
+
+### Alternative A — Lighter shader-only point cloud (no live force sim)
+
+A static 3D point cloud sampled from the same extrusion, with a per-frame shader-side wander instead of a true compute pass. Cheaper, lower risk, reuses the existing `BrandmarkSilhouettePoints` family.
+
+- **Pros:** Half the GPU cost; no GPGPU plumbing; fits the existing `brandmark-particle` skill cap.
+- **Cons:** Doesn't deliver the "physical object" feel the user explicitly asked for. The assemble-on-entry transition would have to be faked via opacity instead of a true convergence.
+
+Rejected because the user's chosen direction (when asked) was the GPGPU path — they want the core to feel **alive**, not just **drawn**.
+
+### Alternative B — Subscribe `BrandmarkPhysicsCore` directly to the depth store
+
+Instead of an actor wrapper, have the painter read `paintProgress` itself and compute its own ignite envelope.
+
+- **Pros:** One fewer file.
+- **Cons:** Couples the painter to the corridor's state shape, breaking its lab-reusability and the `/test/brandmark-physics-core` tuning surface. The actor wrapper isolates corridor concerns from the painter's API surface.
+
+Rejected on reusability grounds.
+
+### Alternative C — Restore the 2026-06-06 substrate-morph (SVG → particle SPHERE at Build)
+
+The earlier removed handoff swapped the SVG for a particle sphere at Build only.
+
+- **Pros:** Already had a code shape (ADR-017 family).
+- **Cons:** Reads as the mark BECOMING SOMETHING ELSE, which is exactly what the 2026-06-06 decision flagged. The current direction keeps the mark as a particle MARK throughout the corridor, only changing its medium.
+
+Rejected — this is the decision being reversed in spirit but with a different visual outcome.
+
+---
+
+## Consequences
+
+### Positive
+
+- The corridor's central mark visibly **lives** as a 3D object — depth, breathing, a clean assemble that punctuates the camera's release into flight.
+- The SVG and the core never fight: they share the same band, with one yielding as the other ignites.
+- The lab (`/test/brandmark-physics-core`) gives future agents a single tuning surface for the assemble envelope without touching production scenes.
+- The legacy key-visual portal's GPGPU calibration is preserved exactly — the new path is opt-in via `homePositions`.
+
+### Negative
+
+- New GPU cost: the GPGPU compute pass runs every frame the corridor is engaged on desktops. Mobile is shielded by the static path; the corridor's `frameloop="demand"` already idles the GPU when the stage is off-screen.
+- One more in-canvas painter tracks `getBrandmarkWorldPosition` per frame (alongside `BrandmarkAccretionShell`). They share the helper; both must be kept in step if the trajectory math evolves.
+- The previous "stay 2D SVG throughout the corridor" docstring in `ProjectedBrandmarkActor` no longer holds — comment updated to reflect the handoff.
+
+### Neutral
+
+- The home-v2 corridor system is separate from the v7 `BrandmarkParticleCanvas` three-painter cap (`brandmark-particle` skill). This new painter does NOT count against that cap; it lives inside the corridor R3F canvas, not the global one.
+
+---
+
+## Invariants (do not regress)
+
+1. **Single-painter rule.** Across the corridor span, exactly one of `{ProjectedBrandmarkActor SVG, BrandmarkPhysicsCoreActor particle core}` is fully visible at any `paintProgress` outside the ignite band. Inside the band they cross-dissolve continuously.
+2. **The welded epilogue / dock path keeps the SVG.** Skipping the corridor fade (`corridorFade = 1` when `useEpilogueOverride`) is load-bearing — the ride-out + Services re-centre + `data-services-brandmark` gate + `CorridorSeamPixelField` machinery (ADR-021) all assume the SVG glyph is still the surface they read.
+3. **The ignite band is shared.** Both `BrandmarkPhysicsCoreActor.IGNITE_RAMP_WIDTH` and `ProjectedBrandmarkActor.IGNITE_RAMP_WIDTH` are 0.06; both anchor at `DOLLY_HOLD_END`. If you change one, change the other.
+4. **`homePositions` opt-in is one-way.** The legacy key-visual portal's two-channel origin pack must keep working. Any future change to the position shader's force integration must branch on `uUseHomeTexture` to preserve that.
+5. **The static path on mobile / no-WebGL2 paints the same silhouette.** The `BrandmarkPhysicsCore` reduced-motion branch reads the same `homes` buffer the GPGPU path consumes, so the visible mark on mobile is identical to a freshly-assembled desktop core.
+6. **No GPGPU compute when the stage is off-screen.** The actor pauses the sim early; the canvas's `frameloop="demand"` idles the rest of the GPU. Don't reintroduce a continuous warm-up loop without a corresponding fix in `FrameInvalidator`.
+
+---
+
+## Files
+
+- New: [`lib/brandmark/sampleBrandmarkParticles.ts`](../../lib/brandmark/sampleBrandmarkParticles.ts) — silhouette sample + dome depth + per-particle jitter.
+- New: [`components/brand/BrandmarkPhysicsCore/BrandmarkPhysicsCore.tsx`](../../components/brand/BrandmarkPhysicsCore/BrandmarkPhysicsCore.tsx) + [`shaders.ts`](../../components/brand/BrandmarkPhysicsCore/shaders.ts) + [`index.ts`](../../components/brand/BrandmarkPhysicsCore/index.ts) — corridor-tuned shaders (pixel-space sizing, tight v7-family falloff).
+- New: [`components/landing/home-v2/DepthGatewayScene/BrandmarkPhysicsCoreActor.tsx`](../../components/landing/home-v2/DepthGatewayScene/BrandmarkPhysicsCoreActor.tsx)
+- New: [`app/(internal)/test/brandmark-physics-core/page.tsx`](<../../app/(internal)/test/brandmark-physics-core/page.tsx>) — tuning lab
+- Modified: [`lib/key-visual/gpgpu-simulation.ts`](../../lib/key-visual/gpgpu-simulation.ts) — added `uHomeTexture` + `uUseHomeTexture` uniforms, optional `homePositions` constructor field, first-order Euler integration on the 3D-origin branch.
+- Modified: [`components/landing/home-v2/DepthGatewayScene/index.tsx`](../../components/landing/home-v2/DepthGatewayScene/index.tsx) — mounts `BrandmarkPhysicsCoreActor` alongside `BrandmarkAccretionShell`.
+- Modified: [`components/landing/home-v2/ProjectedBrandmarkActor.tsx`](../../components/landing/home-v2/ProjectedBrandmarkActor.tsx) — corridor fade across the ignite band; welded path exempt; docstring updated to reflect the handoff.
+
+---
+
+## References
+
+- Live tuning: `/test/brandmark-physics-core`
+- 3D mesh tuning: `/test/brandmark-3d`
+- Skill: [`.claude/skills/brandmark-choreography/SKILL.md`](../../.claude/skills/brandmark-choreography/SKILL.md) — corridor section updated to point at this ADR.
+- Skill: [`.claude/skills/brandmark-particle/SKILL.md`](../../.claude/skills/brandmark-particle/SKILL.md) — global painter cap unaffected; this painter lives inside the corridor R3F canvas.

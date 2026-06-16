@@ -5,6 +5,7 @@ import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { useDeviceTier } from "@/lib/hooks/useDeviceTier";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import { BrandmarkAccretionShell } from "./BrandmarkAccretionShell";
+import { BrandmarkPhysicsCoreActor } from "./BrandmarkPhysicsCoreActor";
 import { CelestialMotes } from "./CelestialMotes";
 import { CorridorPhotons } from "./CorridorPhotons";
 import { FlyingCameraRig } from "./FlyingCameraRig";
@@ -389,6 +390,14 @@ export function DepthGatewayScene() {
           accretes around the brandmark (substrate at Navigate;
           judgment orbits at Encode; stack funnel at Build). */}
       <BrandmarkAccretionShell />
+      {/* BrandmarkPhysicsCoreActor — luminous 3D particle core that
+          ignites the moment the camera flies into the corridor
+          (ADR-023). Sits inside the accretion shell as the bright
+          centre of the intelligence-layer artifact. The DOM SVG
+          (`ProjectedBrandmarkActor`) holds at the section-2
+          Thoughtform rest, fades across the ignite band, and the
+          core takes over for the rest of the corridor. */}
+      <BrandmarkPhysicsCoreActor />
     </Canvas>
   );
 }

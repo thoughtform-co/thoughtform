@@ -17,6 +17,14 @@ const positionShader = /* glsl */ `
   uniform vec3 uPointer;
   uniform float uPointerStrength;
   uniform float uTurbulence;
+  // Optional 3D home-position texture. When uUseHomeTexture > 0.5,
+  // the return-to-origin force pulls particles toward the full 3D
+  // home stored in this texture (xyz in rgb). When 0.0, fall back
+  // to the legacy two-channel w-pack (origin.x in posData.w,
+  // origin.y in velData.w, origin.z = 0) used by the key-visual
+  // portal.
+  uniform sampler2D uHomeTexture;
+  uniform float uUseHomeTexture;
   
   // Simplex noise
   vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
@@ -111,7 +119,15 @@ const positionShader = /* glsl */ `
     
     vec3 pos = posData.xyz;
     vec3 vel = velData.xyz;
-    vec3 origin = vec3(posData.w, velData.w, 0.0); // Store origin in w components
+    // Origin: full 3D from uHomeTexture when enabled (preserves
+    // depth for sampled volumes like the brandmark extrusion), else
+    // the legacy w-channel pack with origin.z forced to 0.
+    vec3 origin;
+    if (uUseHomeTexture > 0.5) {
+      origin = texture2D(uHomeTexture, uv).xyz;
+    } else {
+      origin = vec3(posData.w, velData.w, 0.0);
+    }
     
     // === FLOW FIELD (curl noise) ===
     vec3 flowPos = pos * 2.0 + vec3(uTime * 0.1, 0.0, 0.0);
@@ -146,18 +162,29 @@ const positionShader = /* glsl */ `
     // === COMBINE FORCES ===
     vec3 totalForce = flow + returnForce + pointerForce + turbulence;
     
-    // Update velocity with damping
-    vel = vel * 0.95 + totalForce * uDeltaTime;
-    
-    // Clamp velocity
-    float maxSpeed = 0.5;
-    float speed = length(vel);
-    if (speed > maxSpeed) {
-      vel = vel / speed * maxSpeed;
+    if (uUseHomeTexture > 0.5) {
+      // 3D-origin path: first-order Euler. Forces map directly to
+      // world units per second so coefficients (returnStrength,
+      // turbulence, etc.) are intuitive: a returnStrength of 6.0
+      // closes a 1-unit gap in roughly 0.17s. The legacy
+      // pseudo-momentum step below is intentionally NOT used here:
+      // the velocity texture is never written by this shader, so
+      // vel.xyz is always 0 and the legacy step degenerates to
+      // pos += totalForce * dt^2, which is far too slow for the
+      // brandmark ignite.
+      pos += totalForce * uDeltaTime;
+    } else {
+      // Legacy path: pseudo-momentum + speed clamp. Preserved
+      // verbatim so the key-visual portal's calibrated motion is
+      // unchanged by the home-texture extension.
+      vel = vel * 0.95 + totalForce * uDeltaTime;
+      float maxSpeed = 0.5;
+      float speed = length(vel);
+      if (speed > maxSpeed) {
+        vel = vel / speed * maxSpeed;
+      }
+      pos += vel * uDeltaTime;
     }
-    
-    // Update position
-    pos += vel * uDeltaTime;
     
     // Output
     gl_FragColor = vec4(pos, posData.w);
@@ -186,6 +213,14 @@ export interface GPGPUSimulationOptions {
   particleCount: number;
   /** Initial positions (Float32Array with x,y,z per particle) */
   initialPositions: Float32Array;
+  /** Optional full 3D home positions (Float32Array with x,y,z per
+   *  particle). When provided, the simulation's return-to-origin
+   *  force pulls particles back to these full 3D coordinates instead
+   *  of the legacy two-channel pack (origin.z = 0). Use this for
+   *  sampled volumes like the brandmark extrusion where depth must
+   *  be preserved. When omitted, behaves exactly like the
+   *  pre-extension key-visual portal flow. */
+  homePositions?: Float32Array;
 }
 
 export interface GPGPUSimulationUniforms {
@@ -211,9 +246,12 @@ export class GPGPUParticleSimulation {
   private velocityVariable: GPUComputeVariable;
   private textureSize: number;
   private particleCount: number;
+  /** Active home-position texture when the consumer opted into the
+   *  3D-origin path. Held so we can dispose it cleanly. */
+  private homeTexture: THREE.DataTexture | null = null;
 
   constructor(options: GPGPUSimulationOptions) {
-    const { renderer, particleCount, initialPositions } = options;
+    const { renderer, particleCount, initialPositions, homePositions } = options;
 
     // Calculate texture size (power of 2)
     this.textureSize = Math.ceil(Math.sqrt(particleCount));
@@ -269,6 +307,21 @@ export class GPGPUParticleSimulation {
     posUniforms.uPointerStrength = { value: 0.3 };
     posUniforms.uTurbulence = { value: 0.02 };
 
+    // 3D home-texture uniforms. Always declared so the shader compiles
+    // identically across both paths; `uUseHomeTexture` selects which
+    // origin source the position update consults each frame.
+    if (homePositions) {
+      this.homeTexture = this.buildHomeTexture(homePositions);
+      posUniforms.uHomeTexture = { value: this.homeTexture };
+      posUniforms.uUseHomeTexture = { value: 1.0 };
+    } else {
+      // GPUComputationRenderer requires every sampler uniform to be a
+      // valid texture even when the shader gates against it — supply
+      // a 1×1 placeholder so legacy callers don't have to opt in.
+      posUniforms.uHomeTexture = { value: makePlaceholderTexture() };
+      posUniforms.uUseHomeTexture = { value: 0.0 };
+    }
+
     // Add uniforms to velocity shader
     const velUniforms = this.velocityVariable.material.uniforms;
     velUniforms.uDeltaTime = { value: 0.016 };
@@ -278,6 +331,30 @@ export class GPGPUParticleSimulation {
     if (error !== null) {
       console.error("GPGPU init error:", error);
     }
+  }
+
+  /**
+   * Pack `homePositions` (Float32Array of xyz triples) into an RGBA
+   * Float32 DataTexture sized `textureSize × textureSize`. Particle
+   * `i` lives at uv `(i % textureSize / textureSize, ...)` — the same
+   * convention `createParticleUVs()` writes — so the position shader
+   * can sample its origin directly with `gl_FragCoord.xy / resolution`.
+   */
+  private buildHomeTexture(homePositions: Float32Array): THREE.DataTexture {
+    const size = this.textureSize;
+    const data = new Float32Array(size * size * 4);
+    const total = Math.min(homePositions.length / 3, size * size);
+    for (let i = 0; i < total; i++) {
+      const i3 = i * 3;
+      const i4 = i * 4;
+      data[i4] = homePositions[i3];
+      data[i4 + 1] = homePositions[i3 + 1];
+      data[i4 + 2] = homePositions[i3 + 2];
+      data[i4 + 3] = 1.0;
+    }
+    const tex = new THREE.DataTexture(data, size, size, THREE.RGBAFormat, THREE.FloatType);
+    tex.needsUpdate = true;
+    return tex;
   }
 
   private fillPositionTexture(texture: THREE.DataTexture, initialPositions: Float32Array): void {
@@ -377,7 +454,29 @@ export class GPGPUParticleSimulation {
   dispose(): void {
     this.positionVariable.material.dispose();
     this.velocityVariable.material.dispose();
+    if (this.homeTexture) {
+      this.homeTexture.dispose();
+      this.homeTexture = null;
+    }
   }
+}
+
+/** A throwaway 1×1 RGBA Float32 texture, used as the placeholder
+ *  bound to `uHomeTexture` whenever the consumer didn't opt into the
+ *  3D-origin path. Sampling it is gated off in the shader; we just
+ *  need a valid sampler to satisfy `GPUComputationRenderer.init()`.
+ *
+ *  Cached at module scope so legacy callers don't allocate one per
+ *  simulation instance. Never disposed because it stays alive for the
+ *  page lifetime — the cost is a single 16-byte texture. */
+let _placeholderTexture: THREE.DataTexture | null = null;
+function makePlaceholderTexture(): THREE.DataTexture {
+  if (_placeholderTexture) return _placeholderTexture;
+  const data = new Float32Array([0, 0, 0, 1]);
+  const tex = new THREE.DataTexture(data, 1, 1, THREE.RGBAFormat, THREE.FloatType);
+  tex.needsUpdate = true;
+  _placeholderTexture = tex;
+  return tex;
 }
 
 /**

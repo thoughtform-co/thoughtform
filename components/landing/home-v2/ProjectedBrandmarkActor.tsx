@@ -13,7 +13,7 @@ import {
   getThoughtformMobilePhase,
 } from "./DepthGatewayScene/sceneGeom";
 import { type WorldAnchor, useWorldDomTracker } from "./hooks/useWorldDomTracker";
-import { BEAT_ORDER } from "@/lib/home-v2/corridorMap";
+import { BEAT_ORDER, DOLLY_HOLD_END, smoothstep } from "@/lib/home-v2/corridorMap";
 import { DOCKED_INSTRUMENT_EPILOGUE_POSE } from "@/lib/home-v2/epilogueTimeline";
 import { getSmoothedEpilogueProgress } from "./DepthGatewayScene/motionFollower";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
@@ -44,13 +44,19 @@ import { gyroTilt, useGyroLabStore } from "@/lib/stores/gyroLabStore";
  * vs world-project during transits) is gone — co-location via the
  * gate group makes dock mode unnecessary.
  *
- * Consistent SVG mark across all three phases (2026-06-06): the DOM
- * glyph is THE brandmark for the entire corridor — Navigate, Encode,
- * AND Build. The earlier substrate-morph hand-off (DOM mark
- * cross-fades to an in-canvas particle sphere / particle logo at the
- * Build beat, ADR-017 pattern) was removed on user feedback: the
- * brandmark should stay the same 2D SVG mark throughout, never
- * turning into a particle sphere or a particle version of the logo.
+ * SVG → particle core handoff (2026-06-16, ADR-023): the DOM glyph
+ * is THE brandmark only at the section-2 Thoughtform rest (parked
+ * `paintProgress <= DOLLY_HOLD_END`). The instant the camera begins
+ * flying through the corridor, the SVG fades out across the
+ * dolly-release band (`[DOLLY_HOLD_END, DOLLY_HOLD_END +
+ * IGNITE_RAMP_WIDTH]`) while `BrandmarkPhysicsCoreActor` ignites
+ * an in-canvas GPGPU-driven 3D particle core at the same band. The
+ * core stays the visible mark through Navigate / Encode / Build as
+ * the bright centre of the accreting intelligence-layer artifact.
+ * (This reverses the earlier 2026-06-06 "stay 2D SVG" decision; see
+ * ADR-023 for the rationale.) The DOM glyph re-takes the role at
+ * the epilogue / dock / `#services` handoff — the welded projection
+ * branch below restores the SVG's opacity to 1.
  *
  * Ride-out + re-centre (2026-06-16, ADR-021 follow-up): the epilogue
  * APPROACH-band opacity fade is GONE. Instead, the mark is WELDED
@@ -117,6 +123,15 @@ const DOCK_RECENTRE_FRAC = 0.85;
  *  arrive at / depart from the docked instrument pose on the same
  *  curve. */
 const DOCK_BLEND_TAU_S = 0.28;
+
+/** Width of the ignite-band fade for the DOM SVG (ADR-023). The DOM
+ *  glyph holds at full opacity through the section-2 Thoughtform rest
+ *  (`paintProgress <= DOLLY_HOLD_END`), then fades to 0 across the
+ *  same `DOLLY_HOLD_END → DOLLY_HOLD_END + IGNITE_RAMP_WIDTH` band the
+ *  in-canvas `BrandmarkPhysicsCoreActor` uses to assemble its
+ *  particle core. The two channels share the band so the cross-
+ *  dissolve reads as a clean handoff: SVG yields, core ignites. */
+const IGNITE_RAMP_WIDTH = 0.06;
 
 /** Target apparent half-width (px) the welded mark settles toward at
  *  dock end — a viewport-responsive readable size for the empty
@@ -448,6 +463,13 @@ export function ProjectedBrandmarkActor() {
           // old post-Build tail fade is also gone: Build must retain
           // the brandmark; it becomes invisible only when the sphere
           // moves it out of view.
+          //
+          // ADR-023 ignite handoff: across the dolly-release band
+          // the SVG yields to the in-canvas particle core. The fade
+          // ONLY applies to the corridor path — the welded
+          // epilogue / dock branch keeps its full-strength glyph so
+          // the sphere ride-out + Services re-centre read correctly.
+          //
           // Slightly brighter at parked beats than during transits.
           // The Navigate park is intentionally NOT included: the mark
           // is mid-flight LEADING the camera through Navigate (it is
@@ -461,7 +483,16 @@ export function ProjectedBrandmarkActor() {
           // desktop and 1 once raw progress passes the dwell, so it's a
           // no-op everywhere except the mobile copy moment.
           const { diagramFactor } = getThoughtformMobilePhase(transform.progress);
-          element.style.opacity = `${(intensity * diagramFactor).toFixed(3)}`;
+          // Corridor-fade: 1 at section-2 Thoughtform rest, 0 once
+          // the camera has flown into the corridor (ADR-023 ignite
+          // band). Skipped on the welded epilogue / dock path so the
+          // ride-out + Services re-centre keep their full-strength
+          // glyph — the corridor fade is a one-way handoff while the
+          // tracker is in its corridor branch.
+          const corridorFade = useEpilogueOverride
+            ? 1
+            : 1 - smoothstep(DOLLY_HOLD_END, DOLLY_HOLD_END + IGNITE_RAMP_WIDTH, paintProgress);
+          element.style.opacity = `${(intensity * diagramFactor * corridorFade).toFixed(3)}`;
 
           // Forward tilt: the inner div takes a small Y rotation
           // scaled by camera dolly so the mark reads as a 3D plate
