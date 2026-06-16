@@ -3,10 +3,16 @@ import { test, expect, type Page } from "@playwright/test";
 /**
  * Visual Regression Tests for Thoughtform Landing Page
  *
- * Componentized V7 architecture: React hooks drive scroll/motion/phase
- * behavior; CSS loaded as a proper import; useLayoutEffect prevents
- * hero flash on first paint. The prototype HTML body is still
- * server-extracted but rendered inside a real component tree.
+ * Production composition (ADR-018, ADR-021, ADR-022):
+ *   hero → home-v2 corridor (Navigate / Encode / Build + epilogue) →
+ *   services (zoom-dissipate seam) → continuum → practice → build →
+ *   about → contact.
+ *
+ * The marketing route parses the v7 prototype HTML, strips the
+ * legacy definition / missing-layer / intelligence-layer / approach /
+ * buildQuote stations, and mounts `HomeCorridor` at
+ * `#home-corridor-mount`. Scroll percentages below correspond to the
+ * production layout, not the original v7 station positions.
  *
  * IMPORTANT: After any visual change, re-capture baselines:
  *   npm run test:visual:update
@@ -33,29 +39,29 @@ test.describe("Landing Page Visual Regression", () => {
     await expect(page).toHaveScreenshot("hero-0.png", { fullPage: false });
   });
 
-  test("Definition section - 12% scroll", async ({ page }) => {
+  test("Corridor parked frame - 12% scroll (Thoughtform compass)", async ({ page }) => {
     await scrollToPercentage(page, 12);
-    await expect(page).toHaveScreenshot("definition-12.png", { fullPage: false });
+    await expect(page).toHaveScreenshot("corridor-thoughtform-12.png", { fullPage: false });
   });
 
-  test("Continuum section - 25% scroll", async ({ page }) => {
+  test("Corridor Encode beat - 25% scroll", async ({ page }) => {
     await scrollToPercentage(page, 25);
-    await expect(page).toHaveScreenshot("continuum-25.png", { fullPage: false });
+    await expect(page).toHaveScreenshot("corridor-encode-25.png", { fullPage: false });
   });
 
-  test("Practice section - 40% scroll", async ({ page }) => {
+  test("Corridor Build epilogue - 40% scroll", async ({ page }) => {
     await scrollToPercentage(page, 40);
-    await expect(page).toHaveScreenshot("practice-40.png", { fullPage: false });
+    await expect(page).toHaveScreenshot("corridor-build-40.png", { fullPage: false });
   });
 
-  test("About section - 60% scroll", async ({ page }) => {
+  test("Services / Continuum tail - 60% scroll", async ({ page }) => {
     await scrollToPercentage(page, 60);
-    await expect(page).toHaveScreenshot("about-60.png", { fullPage: false });
+    await expect(page).toHaveScreenshot("services-tail-60.png", { fullPage: false });
   });
 
-  test("Products section - 75% scroll", async ({ page }) => {
+  test("About / Build tail - 75% scroll", async ({ page }) => {
     await scrollToPercentage(page, 75);
-    await expect(page).toHaveScreenshot("products-75.png", { fullPage: false });
+    await expect(page).toHaveScreenshot("about-tail-75.png", { fullPage: false });
   });
 
   test("Contact section - 95% scroll", async ({ page }) => {
@@ -95,7 +101,7 @@ test.describe("Component Visual Regression", () => {
 });
 
 test.describe("Hero Flash Prevention", () => {
-  test("hero is not visible when page loads scrolled to definition", async ({ page }) => {
+  test("hero is not visible while the corridor is engaged (heroCover >= 1)", async ({ page }) => {
     await page.goto("/");
     await page.waitForLoadState("networkidle");
     await scrollToPercentage(page, 15);
@@ -105,42 +111,42 @@ test.describe("Hero Flash Prevention", () => {
     expect(visibility).toBe("hidden");
   });
 
-  test("no hero bleed at connector boundary", async ({ page }) => {
+  test("no hero bleed through the corridor mount during entry curtain", async ({ page }) => {
     await page.goto("/");
     await page.waitForLoadState("networkidle");
     await page.waitForTimeout(1000);
     await scrollToPercentage(page, 18);
     await page.waitForTimeout(300);
-    await expect(page).toHaveScreenshot("connector-02-03-boundary.png", {
+    await expect(page).toHaveScreenshot("hero-corridor-curtain-boundary.png", {
       fullPage: false,
     });
   });
 });
 
-test.describe("Connector Transitions", () => {
+test.describe("Post-corridor seams", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/");
     await page.waitForLoadState("networkidle");
     await page.waitForTimeout(1000);
   });
 
-  test("Connector 02-03 (definition to continuum)", async ({ page }) => {
-    await scrollToPercentage(page, 20);
-    await expect(page).toHaveScreenshot("connector-02-03.png", {
+  test("Corridor → Services dissipate (ADR-021)", async ({ page }) => {
+    await scrollToPercentage(page, 50);
+    await expect(page).toHaveScreenshot("seam-corridor-to-services.png", {
       fullPage: false,
     });
   });
 
-  test("Connector 03-04 (continuum to practice)", async ({ page }) => {
-    await scrollToPercentage(page, 32);
-    await expect(page).toHaveScreenshot("connector-03-04.png", {
+  test("Services → Continuum brandmark fade", async ({ page }) => {
+    await scrollToPercentage(page, 58);
+    await expect(page).toHaveScreenshot("seam-services-to-continuum.png", {
       fullPage: false,
     });
   });
 
-  test("Connector 04-07 (practice to about)", async ({ page }) => {
-    await scrollToPercentage(page, 55);
-    await expect(page).toHaveScreenshot("connector-04-07.png", {
+  test("Practice → About connector", async ({ page }) => {
+    await scrollToPercentage(page, 72);
+    await expect(page).toHaveScreenshot("seam-practice-to-about.png", {
       fullPage: false,
     });
   });

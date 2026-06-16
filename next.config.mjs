@@ -2,6 +2,8 @@ import withBundleAnalyzer from "@next/bundle-analyzer";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { buildSecurityHeaders } from "./lib/security/headers.mjs";
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -14,6 +16,16 @@ const bundleAnalyzer = withBundleAnalyzer({
 // Static export is incompatible with redirects(), middleware, and API routes,
 // so the package script also quarantines those before invoking `next build`.
 const exportMode = process.env.NEXT_OUTPUT_EXPORT === "1";
+
+// Security headers are computed once per build (not per request) — the
+// shape doesn't depend on request state. CSP is currently delivered in
+// `Content-Security-Policy-Report-Only` mode so we can collect violations
+// from the live homepage without breaking the v7 prototype's inline
+// styles + R3F shader pipeline. Promote to enforced once the report
+// queue is empty across all production routes (`enforceCsp: true`).
+const securityHeaders = buildSecurityHeaders({
+  isDevelopment: process.env.NODE_ENV !== "production",
+});
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -37,6 +49,14 @@ const nextConfig = {
     : {
         async redirects() {
           return [{ source: "/v7", destination: "/", permanent: true }];
+        },
+        async headers() {
+          return [
+            {
+              source: "/:path*",
+              headers: securityHeaders,
+            },
+          ];
         },
       }),
   // Suppress OpenTelemetry warnings

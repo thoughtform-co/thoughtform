@@ -1,37 +1,15 @@
-import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { NextRequest } from "next/server";
+
+import { jsonError, jsonSuccess, requireServiceClient, requireUser } from "@/lib/api/guards";
 
 // ═══════════════════════════════════════════════════════════════════════════
 // SINGLE CONVERSATION API
-// Phase 3: Get, update, delete specific conversation
+// Get / update / delete a specific conversation. Authorization is per-user
+// (Supabase Bearer token) and the row filter scopes everything by `user_id`.
+// 2026-06-16: routed through `lib/api/guards`.
 // ═══════════════════════════════════════════════════════════════════════════
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-
-function getSupabaseClient() {
-  return createClient(supabaseUrl, supabaseServiceKey);
-}
-
-async function getUserIdFromToken(request: NextRequest): Promise<string | null> {
-  const authHeader = request.headers.get("authorization");
-  if (!authHeader?.startsWith("Bearer ")) {
-    return null;
-  }
-
-  const token = authHeader.slice(7);
-  const supabase = getSupabaseClient();
-
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.getUser(token);
-  if (error || !user) {
-    return null;
-  }
-
-  return user.id;
-}
+export const dynamic = "force-dynamic";
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -42,26 +20,27 @@ interface RouteParams {
  * Get a specific conversation with its messages
  */
 export async function GET(request: NextRequest, { params }: RouteParams) {
-  try {
-    const userId = await getUserIdFromToken(request);
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+  const auth = await requireUser(request);
+  if (!auth.ok) return auth.response;
 
+  const sc = requireServiceClient();
+  if (!sc.ok) return sc.response;
+
+  try {
     const { id } = await params;
-    const supabase = getSupabaseClient();
+    const supabase = sc.supabase;
 
     // Get conversation
     const { data: conversation, error: convError } = await supabase
       .from("assistant_conversations")
       .select("*")
       .eq("id", id)
-      .eq("user_id", userId)
+      .eq("user_id", auth.user.id)
       .is("deleted_at", null)
       .single();
 
     if (convError || !conversation) {
-      return NextResponse.json({ error: "Conversation not found" }, { status: 404 });
+      return jsonError("Conversation not found", 404);
     }
 
     // Get messages
@@ -73,16 +52,16 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     if (msgError) {
       console.error("Failed to fetch messages:", msgError);
-      return NextResponse.json({ error: "Failed to fetch messages" }, { status: 500 });
+      return jsonError("Failed to fetch messages");
     }
 
-    return NextResponse.json({
+    return jsonSuccess({
       conversation,
       messages: messages || [],
     });
   } catch (error) {
     console.error("Conversation GET error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return jsonError("Internal server error");
   }
 }
 
@@ -91,31 +70,28 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
  * Update conversation (title, etc.)
  */
 export async function PATCH(request: NextRequest, { params }: RouteParams) {
-  try {
-    const userId = await getUserIdFromToken(request);
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+  const auth = await requireUser(request);
+  if (!auth.ok) return auth.response;
 
+  const sc = requireServiceClient();
+  if (!sc.ok) return sc.response;
+
+  try {
     const { id } = await params;
     const body = await request.json();
-    const { title } = body;
+    const { title } = body ?? {};
 
-    const supabase = getSupabaseClient();
+    const supabase = sc.supabase;
 
-    // Verify ownership
     const { data: existing } = await supabase
       .from("assistant_conversations")
       .select("id")
       .eq("id", id)
-      .eq("user_id", userId)
+      .eq("user_id", auth.user.id)
       .single();
 
-    if (!existing) {
-      return NextResponse.json({ error: "Conversation not found" }, { status: 404 });
-    }
+    if (!existing) return jsonError("Conversation not found", 404);
 
-    // Update
     const { data, error } = await supabase
       .from("assistant_conversations")
       .update({ title })
@@ -125,13 +101,13 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 
     if (error) {
       console.error("Failed to update conversation:", error);
-      return NextResponse.json({ error: "Failed to update conversation" }, { status: 500 });
+      return jsonError("Failed to update conversation");
     }
 
-    return NextResponse.json({ conversation: data });
+    return jsonSuccess({ conversation: data });
   } catch (error) {
     console.error("Conversation PATCH error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return jsonError("Internal server error");
   }
 }
 
@@ -140,30 +116,29 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
  * Soft-delete a conversation
  */
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
+  const auth = await requireUser(request);
+  if (!auth.ok) return auth.response;
+
+  const sc = requireServiceClient();
+  if (!sc.ok) return sc.response;
+
   try {
-    const userId = await getUserIdFromToken(request);
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
     const { id } = await params;
-    const supabase = getSupabaseClient();
 
-    // Verify ownership and soft-delete
-    const { error } = await supabase
+    const { error } = await sc.supabase
       .from("assistant_conversations")
       .update({ deleted_at: new Date().toISOString() })
       .eq("id", id)
-      .eq("user_id", userId);
+      .eq("user_id", auth.user.id);
 
     if (error) {
       console.error("Failed to delete conversation:", error);
-      return NextResponse.json({ error: "Failed to delete conversation" }, { status: 500 });
+      return jsonError("Failed to delete conversation");
     }
 
-    return NextResponse.json({ success: true });
+    return jsonSuccess({ success: true });
   } catch (error) {
     console.error("Conversation DELETE error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return jsonError("Internal server error");
   }
 }

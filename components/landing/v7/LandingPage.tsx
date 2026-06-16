@@ -1,17 +1,16 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useRef, useMemo } from "react";
-import { createRoot, type Root } from "react-dom/client";
+import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import { useLandingScroll } from "./hooks/useLandingScroll";
 import { useRevealMotion } from "./hooks/useRevealMotion";
 import { useBrandmarkJourney } from "./hooks/useBrandmarkJourney";
+import { useCorridorMount } from "./hooks/useCorridorMount";
 import { type BrandmarkActorHandle } from "./BrandmarkActor";
 import { BrandmarkSystem } from "./BrandmarkSystem";
 import { useBrandmarkSingletonCheck } from "./lib/brandmarkSingletonCheck";
 import { CelestialPortals } from "./CelestialConnector/CelestialPortals";
 import { PhaseGlyphPortals } from "./PhaseGlyph";
 import { BuildCasesPortal } from "./build-cases";
-import { HomeCorridor } from "@/components/landing/home-v2/HomeCorridor";
 import { useCorridorExitScroll } from "@/components/landing/home-v2/hooks/useCorridorExitScroll";
 import { CelestialEditorOverlay } from "@/components/admin/CelestialEditor";
 import { useCelestialDrafts } from "@/components/admin/CelestialEditor/useCelestialDrafts";
@@ -44,9 +43,6 @@ export function LandingPage({
 }: LandingPageProps) {
   const rootRef = useRef<HTMLDivElement>(null);
   const brandmarkActorRef = useRef<BrandmarkActorHandle>(null);
-  const corridorRootRef = useRef<Root | null>(null);
-  const corridorMountRef = useRef<HTMLElement | null>(null);
-  const corridorUnmountTimerRef = useRef<number | null>(null);
 
   useLandingScroll(rootRef);
   useRevealMotion(rootRef);
@@ -83,92 +79,21 @@ export function LandingPage({
   useBrandmarkSingletonCheck(rootRef);
 
   // Mount the reusable home-v2 corridor into the live placeholder
-  // inside the parsed v7 HTML. A React portal is fragile here because
-  // `dangerouslySetInnerHTML` can replace that placeholder during dev
-  // remounts / bfcache restores, leaving the portal attached to a
-  // detached node. A tiny nested root lets us tear down and re-create
-  // the corridor whenever the live placeholder changes.
+  // inside the parsed v7 HTML. The bfcache / HMR / Strict-Mode
+  // safety valves live inside `useCorridorMount` — see that hook
+  // for the full mount-lifecycle rationale.
   //
-  // Polish round 2 (2026-06-10): hardened the mount guard. The old
-  // guard short-circuited whenever the placeholder DOM node identity
-  // matched the cached ref — but if the nested React root died (HMR
-  // crash, bfcache restore that detached the React internals, or any
-  // path that left the placeholder DOM node intact but empty), the
-  // early-return skipped remount and the corridor section read as a
-  // ~820svh blank void. The new guard ALSO requires that the cached
-  // root is still recorded AND that the mount node has children; if
-  // either is false the placeholder is treated as stale and we
-  // recreate the root. A `pageshow` listener with `persisted=true`
-  // covers the bfcache back-navigation case explicitly.
-  useLayoutEffect(() => {
-    const root = rootRef.current;
-    if (!root || !corridorText) return;
-    if (corridorUnmountTimerRef.current != null) {
-      window.clearTimeout(corridorUnmountTimerRef.current);
-      corridorUnmountTimerRef.current = null;
-    }
-
-    const mountCorridor = () => {
-      const mount = root.querySelector<HTMLElement>(`#${corridorMountId}`);
-      if (!mount) return;
-
-      const sameNode = mount === corridorMountRef.current;
-      const rootAlive = corridorRootRef.current != null;
-      // Healthy renders leave at least the `.home-corridor-host`
-      // wrapper as a child. An empty placeholder with cached ref
-      // identity is the smoking gun for "root died but DOM node
-      // survived" — recover by tearing down (no-op if the root is
-      // already gone) and recreating.
-      const hasContent = mount.childNodes.length > 0;
-      if (sameNode && rootAlive && hasContent) return;
-
-      corridorRootRef.current?.unmount();
-      corridorMountRef.current = mount;
-      corridorRootRef.current = createRoot(mount);
-      corridorRootRef.current.render(
-        <div className="home-corridor-host">
-          <HomeCorridor text={corridorText} debug={false} />
-        </div>
-      );
-    };
-
-    mountCorridor();
-    const observer = new MutationObserver(mountCorridor);
-    observer.observe(root, { childList: true, subtree: true });
-
-    // bfcache back-navigation: the page is restored as a snapshot,
-    // effects don't re-run, but the React tree may have been detached.
-    // Re-running mountCorridor here is a cheap belt-and-braces — if
-    // the existing render is healthy the new guard short-circuits.
-    const onPageShow = (event: PageTransitionEvent) => {
-      if (event.persisted) mountCorridor();
-    };
-    window.addEventListener("pageshow", onPageShow);
-
-    return () => {
-      observer.disconnect();
-      window.removeEventListener("pageshow", onPageShow);
-      const rootToUnmount = corridorRootRef.current;
-      if (!rootToUnmount) return;
-      corridorUnmountTimerRef.current = window.setTimeout(() => {
-        if (corridorRootRef.current === rootToUnmount) {
-          rootToUnmount.unmount();
-          corridorRootRef.current = null;
-          corridorMountRef.current = null;
-        }
-        corridorUnmountTimerRef.current = null;
-      }, 0);
-    };
-  }, [corridorMountId, corridorText]);
-
-  // The retired `#buildQuote` HandoffOrbitEmbed mount used to live here
-  // (ADR-021). The corridor-exit seam is now a zoom-dissipate driven by
-  // `useCorridorExitScroll` above — no separate section mount is needed.
-  // The `getV7Content({ removeStations: [..., "buildQuote"], ... })` call
-  // in the route strips the prototype's "Make the layer useful." cover
-  // section AND the now-empty `.build-quote-runway` wrapper, and
-  // relocates `#services` to immediately follow the corridor mount so
-  // the dissipate hands off into the practical services copy.
+  // The retired `#buildQuote` HandoffOrbitEmbed mount used to live
+  // here too (ADR-021). The corridor-exit seam is now a zoom-
+  // dissipate driven by `useCorridorExitScroll` above — no separate
+  // section mount is needed. The
+  // `getV7Content({ removeStations: [..., "buildQuote"], ... })`
+  // call in the route strips the prototype's "Make the layer useful."
+  // cover section AND the now-empty `.build-quote-runway` wrapper,
+  // and relocates `#services` to immediately follow the corridor
+  // mount so the dissipate hands off into the practical services
+  // copy.
+  useCorridorMount(rootRef, corridorText, { corridorMountId, debug: false });
 
   // Hamburger toggle — wire imperatively since the nav markup comes from HTML
   useEffect(() => {

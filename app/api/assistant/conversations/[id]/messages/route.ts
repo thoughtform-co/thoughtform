@@ -1,37 +1,14 @@
-import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { NextRequest } from "next/server";
+
+import { jsonError, jsonSuccess, requireServiceClient, requireUser } from "@/lib/api/guards";
 
 // ═══════════════════════════════════════════════════════════════════════════
 // CONVERSATION MESSAGES API
-// Phase 3: Add messages to a conversation
+// Add / list messages for a specific conversation. Per-user scoped.
+// 2026-06-16: routed through `lib/api/guards`.
 // ═══════════════════════════════════════════════════════════════════════════
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-
-function getSupabaseClient() {
-  return createClient(supabaseUrl, supabaseServiceKey);
-}
-
-async function getUserIdFromToken(request: NextRequest): Promise<string | null> {
-  const authHeader = request.headers.get("authorization");
-  if (!authHeader?.startsWith("Bearer ")) {
-    return null;
-  }
-
-  const token = authHeader.slice(7);
-  const supabase = getSupabaseClient();
-
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.getUser(token);
-  if (error || !user) {
-    return null;
-  }
-
-  return user.id;
-}
+export const dynamic = "force-dynamic";
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -42,28 +19,26 @@ interface RouteParams {
  * List messages in a conversation
  */
 export async function GET(request: NextRequest, { params }: RouteParams) {
-  try {
-    const userId = await getUserIdFromToken(request);
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+  const auth = await requireUser(request);
+  if (!auth.ok) return auth.response;
 
+  const sc = requireServiceClient();
+  if (!sc.ok) return sc.response;
+
+  try {
     const { id } = await params;
-    const supabase = getSupabaseClient();
+    const supabase = sc.supabase;
 
     // Verify conversation ownership
     const { data: conversation } = await supabase
       .from("assistant_conversations")
       .select("id")
       .eq("id", id)
-      .eq("user_id", userId)
+      .eq("user_id", auth.user.id)
       .single();
 
-    if (!conversation) {
-      return NextResponse.json({ error: "Conversation not found" }, { status: 404 });
-    }
+    if (!conversation) return jsonError("Conversation not found", 404);
 
-    // Get messages
     const { searchParams } = new URL(request.url);
     const limit = parseInt(searchParams.get("limit") || "100", 10);
     const offset = parseInt(searchParams.get("offset") || "0", 10);
@@ -77,13 +52,13 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     if (error) {
       console.error("Failed to fetch messages:", error);
-      return NextResponse.json({ error: "Failed to fetch messages" }, { status: 500 });
+      return jsonError("Failed to fetch messages");
     }
 
-    return NextResponse.json({ messages: messages || [] });
+    return jsonSuccess({ messages: messages || [] });
   } catch (error) {
     console.error("Messages GET error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return jsonError("Internal server error");
   }
 }
 
@@ -92,42 +67,37 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
  * Add a message to a conversation
  */
 export async function POST(request: NextRequest, { params }: RouteParams) {
-  try {
-    const userId = await getUserIdFromToken(request);
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+  const auth = await requireUser(request);
+  if (!auth.ok) return auth.response;
 
+  const sc = requireServiceClient();
+  if (!sc.ok) return sc.response;
+
+  try {
     const { id } = await params;
     const body = await request.json();
-    const { role, content, structured_data, model, tokens_used } = body;
+    const { role, content, structured_data, model, tokens_used } = body ?? {};
 
     if (!role || !content) {
-      return NextResponse.json(
-        { error: "Missing required fields: role, content" },
-        { status: 400 }
-      );
+      return jsonError("Missing required fields: role, content", 400);
     }
 
     if (!["user", "assistant", "system"].includes(role)) {
-      return NextResponse.json({ error: "Invalid role" }, { status: 400 });
+      return jsonError("Invalid role", 400);
     }
 
-    const supabase = getSupabaseClient();
+    const supabase = sc.supabase;
 
     // Verify conversation ownership
     const { data: conversation } = await supabase
       .from("assistant_conversations")
       .select("id")
       .eq("id", id)
-      .eq("user_id", userId)
+      .eq("user_id", auth.user.id)
       .single();
 
-    if (!conversation) {
-      return NextResponse.json({ error: "Conversation not found" }, { status: 404 });
-    }
+    if (!conversation) return jsonError("Conversation not found", 404);
 
-    // Insert message
     const { data: message, error } = await supabase
       .from("assistant_messages")
       .insert({
@@ -143,12 +113,12 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 
     if (error) {
       console.error("Failed to create message:", error);
-      return NextResponse.json({ error: "Failed to create message" }, { status: 500 });
+      return jsonError("Failed to create message");
     }
 
-    return NextResponse.json({ message }, { status: 201 });
+    return jsonSuccess({ message }, { status: 201 });
   } catch (error) {
     console.error("Messages POST error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return jsonError("Internal server error");
   }
 }

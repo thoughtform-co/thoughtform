@@ -1,0 +1,46 @@
+name: verify
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# Cancel an in-flight run when a new commit lands on the same ref.
+# Lint + typecheck + unit tests are cheap; running them once per
+# tip is enough.
+concurrency:
+  group: verify-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Lint + typecheck + unit tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          # Pinned to the runtime Vercel deploys with (same major as
+          # the repo's @types/node devDependency).
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        # `--ignore-scripts` is the supply-chain baseline declared in
+        # `.npmrc` and the Sentinel `npm-supply-chain-defense` skill;
+        # passing it explicitly keeps CI consistent with the Vercel
+        # `installCommand` (`vercel.json`) regardless of how npm
+        # resolves the rc files.
+        run: npm install --legacy-peer-deps --ignore-scripts
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Unit tests
+        run: npm run test:run

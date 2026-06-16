@@ -1,25 +1,29 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
-// We need to mock process.env before importing logger
+// `process.env.NODE_ENV` is typed as a readonly literal under
+// Next.js / TS 5+; cast through a mutable record to drive the env
+// for these tests without changing global typings.
+const env = process.env as Record<string, string | undefined>;
+
 describe("logger", () => {
   let originalEnv: string | undefined;
 
   beforeEach(() => {
-    originalEnv = process.env.NODE_ENV;
+    originalEnv = env.NODE_ENV;
     vi.spyOn(console, "log").mockImplementation(() => {});
     vi.spyOn(console, "warn").mockImplementation(() => {});
     vi.spyOn(console, "error").mockImplementation(() => {});
   });
 
   afterEach(() => {
-    process.env.NODE_ENV = originalEnv;
+    env.NODE_ENV = originalEnv;
     vi.restoreAllMocks();
     vi.resetModules();
   });
 
   describe("in development", () => {
     beforeEach(() => {
-      process.env.NODE_ENV = "development";
+      env.NODE_ENV = "development";
     });
 
     it("logger.log should call console.log in development", async () => {
@@ -60,7 +64,7 @@ describe("logger", () => {
 
   describe("in production", () => {
     beforeEach(() => {
-      process.env.NODE_ENV = "production";
+      env.NODE_ENV = "production";
     });
 
     it("logger.error should still log in production", async () => {
