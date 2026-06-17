@@ -45,6 +45,15 @@ export function smoothstep(edge0: number, edge1: number, x: number): number {
   return t * t * (3 - 2 * t);
 }
 
+/** Ken Perlin's smootherstep — like `smoothstep` but with zero 1st AND
+ *  2nd derivatives at both ends, so a ramp accelerates and settles
+ *  more gently. Used on the SVG→particle-core handoff so the
+ *  cross-dissolve eases in/out instead of having a perceptible edge. */
+export function smootherstep(edge0: number, edge1: number, x: number): number {
+  const t = clamp01((x - edge0) / (edge1 - edge0));
+  return t * t * t * (t * (t * 6 - 15) + 10);
+}
+
 export function lerp(a: number, b: number, t: number): number {
   return a + (b - a) * t;
 }
@@ -409,6 +418,22 @@ export const SECTOR_LABELS: Record<Beat, string> = (() => {
  *  setup beat), then dollies. Derived from the map so it tracks the
  *  setup window edge even as the topology grows — never hardcode. */
 export const DOLLY_HOLD_END = BEAT_WINDOWS[0].end;
+
+/** Shared SVG → particle-core handoff CUT width (ADR-023, rev. 2026-06-17).
+ *  The crisp DOM brandmark and the GPGPU particle core are the SAME mark
+ *  — so the handoff is NOT a crossfade between two different-looking
+ *  things. It is a near-instant cross-cut across
+ *  `[DOLLY_HOLD_END, DOLLY_HOLD_END + CORRIDOR_HANDOFF_CUT_WIDTH]`: the
+ *  SVG fades out while the particle core (held FLAT, `uDepth ≈ 0`, so it
+ *  paints the EXACT same 2D silhouette at the same screen position)
+ *  fades in. Because the two silhouettes match, the cut is invisible —
+ *  then the core extrudes flat → 3D over the wider `DEPTH_MORPH_WIDTH`
+ *  band (owned by `BrandmarkPhysicsCoreActor`). Both
+ *  `ProjectedBrandmarkActor` (SVG fade) and `BrandmarkPhysicsCoreActor`
+ *  (core reveal) import this so the cut can never drift apart. Kept
+ *  small (a few scroll frames) so it reads as a clean medium-swap, not a
+ *  lingering dissolve. */
+export const CORRIDOR_HANDOFF_CUT_WIDTH = 0.012;
 
 /** Camera Z dolly easing — held at 0 across the setup window, then
  *  smoothstep'd 0 -> 1 across the remaining scroll. Shared by the

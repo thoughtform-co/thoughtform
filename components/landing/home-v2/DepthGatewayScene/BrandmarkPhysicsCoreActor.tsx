@@ -3,9 +3,19 @@
 /**
  * BrandmarkPhysicsCoreActor — corridor-side wrapper around
  * `BrandmarkPhysicsCore` (ADR-023). Tracks the brandmark's world
- * position + half-extent every frame, drives the low-swirl →
- * collapse envelope from the corridor's dolly-release gate, and bails
- * out when the stage is off-screen so the GPGPU sim doesn't burn cycles.
+ * position + half-extent every frame, drives the 2D → 3D MORPH from
+ * the corridor's dolly-release gate, and bails out when the stage is
+ * off-screen so the GPGPU sim doesn't burn cycles.
+ *
+ * The morph (rev. 2026-06-17): the flat DOM SVG brandmark and the
+ * particle core are the SAME mark. At the dolly release the SVG is
+ * instant-cut to the particle core while the core is held FLAT (its
+ * `uDepth` ≈ 0 paints the exact same 2D silhouette at the same screen
+ * position), then `depth` ramps 0 → 1 and the flat silhouette EXTRUDES
+ * into the 3D domed mark. The particles never swirl — ignite is pinned
+ * to assembled and the sim is `seedAtHome`, so the cloud is the
+ * brandmark from frame one. This replaced an earlier model that
+ * crossfaded a crisp SVG against a SEPARATE swirling cloud.
  *
  * Single-painter rule: this is the ONE in-canvas painter for the
  * corridor brandmark mark itself. The shell layers
@@ -27,7 +37,13 @@ import { useFrame, useThree } from "@react-three/fiber";
 import { useMemo, useRef } from "react";
 import * as THREE from "three";
 import { useDeviceTier } from "@/lib/hooks/useDeviceTier";
-import { DOLLY_HOLD_END, smoothstep, windowFor } from "@/lib/home-v2/corridorMap";
+import {
+  CORRIDOR_HANDOFF_CUT_WIDTH,
+  DOLLY_HOLD_END,
+  smoothstep,
+  smootherstep,
+  windowFor,
+} from "@/lib/home-v2/corridorMap";
 import { getEpiloguePlanetScale } from "@/lib/home-v2/epilogueTimeline";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import {
@@ -42,37 +58,36 @@ import {
   getBrandmarkWorldPosition,
 } from "./sceneGeom";
 
-/** Low pre-gateway ignite keeps the mark as a living swirl while the
- *  section-2 Thoughtform read is still parked. `0` is too dead/static;
- *  values above ~0.18 start looking like an already-collapsed mark. */
-const PRE_GATE_SWIRL_IGNITE = 0.08;
+/** Ignite is pinned to "assembled" for the corridor. The mark is the
+ *  SAME brandmark end-to-end — it must never assemble from a visible
+ *  swirl (the morph is a flat → 3D EXTRUDE, not a scatter → gather).
+ *  Combined with `seedAtHome` on `BrandmarkPhysicsCore`, the cloud IS
+ *  the brandmark silhouette from the first visible frame. */
+const ASSEMBLED_IGNITE = 1;
 
-/** Collapse window after the camera dolly releases. Deliberately much
- *  narrower than the old `0.06` ignite ramp: the moment the visitor
- *  scrolls into the gateway, the particle cloud should snap into the
- *  proper brandmark state rather than staying fuzzy through the fly-in. */
-const COLLAPSE_RAMP_WIDTH = 0.018;
+/** Width of the 2D → 3D EXTRUDE band (paint-progress). Once the cut has
+ *  swapped the crisp SVG for the FLAT particle silhouette, `depth` ramps
+ *  0 → 1 across this window and the core's `uDepth` uniform extrudes the
+ *  flat mark into its forward-domed 3D self. Wider than the cut so the
+ *  extrude reads as a continuous morph rather than a snap. */
+const DEPTH_MORPH_WIDTH = 0.05;
 
 /** Size merge completes by the Navigate station start. This decouples
- *  "become the real mark" from "grow to sphere dimensions": first the
- *  particles collapse into the mark, then the assembled mark expands
- *  into the full visible sphere envelope during the gateway approach. */
+ *  "become the 3D mark" from "grow to sphere dimensions": first the flat
+ *  silhouette extrudes into the domed mark at SVG size, then the
+ *  assembled 3D mark expands into the full visible sphere envelope
+ *  during the gateway approach. */
 const SIZE_MERGE_END = windowFor("navigate").start;
 
-/** The corridor brandmark core ramps from a subtle PARKED baseline (a
- *  low-ignite swirl sitting behind the crisp SVG Thoughtform mark at
- *  the section-2 rest) up to a brighter, larger-speck FLY-IN body as
- *  the camera dives into the substrate sphere — so the particle mark
- *  reads as the luminous CENTRE of the intelligence-layer artifact
- *  instead of nearly vanishing inside the denser gimbal shell (9600
- *  dots at ~4.8px). The ramp rides the same `collapseT` gate as
- *  ignite, so brightness + assembly arrive together the instant the
- *  dolly releases; the parked read stays clean. Parked values match
- *  the `BrandmarkPhysicsCore` DEFAULT_* baselines. */
-const CORE_OPACITY_PARKED = 0.78;
-const CORE_OPACITY_FLYIN = 0.95;
-const CORE_POINT_SIZE_PARKED = 2.8;
-const CORE_POINT_SIZE_FLYIN = 4.0;
+/** The 3D particle core's brightness + speck size. `CORE_OPACITY` is
+ *  held bright/solid so the FLAT silhouette (the instant the cut fires)
+ *  reads as densely as the crisp SVG it replaces — no "stippled vs
+ *  vector" mismatch at the swap. Speck size grows slightly as the mark
+ *  extrudes into the luminous 3D body nested inside the substrate
+ *  sphere (where it must read against the gimbal shell's dots). */
+const CORE_OPACITY = 0.95;
+const CORE_POINT_SIZE_FLAT = 3.0;
+const CORE_POINT_SIZE_3D = 4.0;
 
 interface BrandmarkPhysicsCoreActorProps {
   /** Pass-through tints. The actor doesn't bake in palette decisions
@@ -109,9 +124,10 @@ export function BrandmarkPhysicsCoreActor({
     : BRANDMARK_PHYSICS_CORE_COUNT_DESKTOP;
 
   const groupRef = useRef<THREE.Group>(null);
-  const igniteRef = useRef(0);
-  const opacityRef = useRef(CORE_OPACITY_PARKED);
-  const pointSizeRef = useRef(CORE_POINT_SIZE_PARKED);
+  const igniteRef = useRef(ASSEMBLED_IGNITE);
+  const depthRef = useRef(0);
+  const opacityRef = useRef(0);
+  const pointSizeRef = useRef(CORE_POINT_SIZE_FLAT);
   const pausedRef = useRef(true);
 
   // Drive the per-frame transform (position, scale, visibility) AND
@@ -136,25 +152,33 @@ export function BrandmarkPhysicsCoreActor({
     const progress = t.paintProgress;
     const [bx, by, bz] = getBrandmarkWorldPosition(progress);
 
-    // Ignite is intentionally DECOUPLED from size now:
+    // ── SVG → particle MORPH (ADR-023, rev. 2026-06-17) ───────────
+    // The mark is the SAME brandmark end-to-end; only its MEDIUM and
+    // its DIMENSION change. Two channels, both anchored at the dolly
+    // release — NOT a crossfade between two different-looking things:
     //
-    //   1. Pre-gateway (`progress <= DOLLY_HOLD_END`): keep a low
-    //      ignite value so the core reads as swirling particles behind
-    //      / with the SVG Thoughtform mark.
-    //   2. Gateway entry: collapse very quickly to ignite=1, so the
-    //      moment the camera flies in the cloud becomes the proper
-    //      brandmark instead of staying fuzzy.
-    //   3. Size merge happens separately below — assembled mark first,
-    //      sphere dimensions second.
-    const collapseT = smoothstep(DOLLY_HOLD_END, DOLLY_HOLD_END + COLLAPSE_RAMP_WIDTH, progress);
-    const ignite = PRE_GATE_SWIRL_IGNITE + (1 - PRE_GATE_SWIRL_IGNITE) * collapseT;
-    igniteRef.current = ignite;
-
-    // Brightness + speck-size ramp rides the same collapse gate as
-    // ignite: subtle parked swirl behind the SVG mark → luminous
-    // fly-in core that merges with the substrate sphere.
-    const flyInOpacity =
-      CORE_OPACITY_PARKED + (CORE_OPACITY_FLYIN - CORE_OPACITY_PARKED) * collapseT;
+    //   1. CUT (`reveal`, `CORRIDOR_HANDOFF_CUT_WIDTH`) — a near-instant
+    //      cross-cut from the crisp DOM SVG to the particle core. At
+    //      this instant the core is held FLAT (depth ≈ 0) and assembled,
+    //      so it paints the EXACT same silhouette at the same screen
+    //      position — the swap is invisible. The SVG fade in
+    //      `ProjectedBrandmarkActor` rides this same band so the two
+    //      swap as one frame-matched event.
+    //   2. DEPTH (`depth`, `DEPTH_MORPH_WIDTH`) — once cut over, the
+    //      flat silhouette EXTRUDES into the 3D domed mark via the
+    //      core's `uDepth` uniform. This is the visible 2D → 3D morph.
+    //
+    // The particles NEVER swirl: ignite is pinned to assembled and the
+    // sim is seeded at home, so the cloud is the brandmark from frame
+    // one. Size growth into the sphere happens separately below.
+    const reveal = smootherstep(
+      DOLLY_HOLD_END,
+      DOLLY_HOLD_END + CORRIDOR_HANDOFF_CUT_WIDTH,
+      progress
+    );
+    const depth = smootherstep(DOLLY_HOLD_END, DOLLY_HOLD_END + DEPTH_MORPH_WIDTH, progress);
+    igniteRef.current = ASSEMBLED_IGNITE;
+    depthRef.current = depth;
 
     // Corridor → epilogue handoff: the in-canvas core continues to own
     // the mark while the visitor exits Build and flies through the
@@ -162,20 +186,24 @@ export function BrandmarkPhysicsCoreActor({
     // handoff owns the mark and the DOM SVG is allowed back in.
     const handoffFade = t.docked ? 0 : 1;
 
-    opacityRef.current = flyInOpacity * handoffFade;
+    // Hidden at the section-2 rest (the SVG owns the crisp 2D mark);
+    // the cut brings the core to full brightness as the SVG vanishes.
+    // Bright/solid throughout so the flat silhouette reads as densely
+    // as the SVG it replaces.
+    opacityRef.current = CORE_OPACITY * reveal * handoffFade;
+    // Crisp small specks for the flat silhouette → slightly larger
+    // specks for the luminous 3D body, riding the depth extrude.
     pointSizeRef.current =
-      CORE_POINT_SIZE_PARKED + (CORE_POINT_SIZE_FLYIN - CORE_POINT_SIZE_PARKED) * collapseT;
+      CORE_POINT_SIZE_FLAT + (CORE_POINT_SIZE_3D - CORE_POINT_SIZE_FLAT) * depth;
 
-    // Size (2026-06-16): hand off from the DOM SVG at its own world
-    // half-extent so the pre-gateway overlap is size-continuous. After
-    // the quick collapse has completed, grow the now-assembled mark
-    // into the full visible substrate-sphere dimensions by the time
-    // the Navigate station begins. This preserves the low-ignite swirl
-    // at the setup beat without letting fuzzy particles linger inside
-    // the gateway.
+    // Size: hand off at the DOM-SVG world half-extent (size-continuous
+    // cut), then grow the assembled 3D mark into the full visible
+    // substrate-sphere dimensions by the Navigate station. Anchored to
+    // the depth-morph END so the order reads "extrude into the mark,
+    // then grow into the sphere".
     const handoffHalf = getBrandmarkWorldHalfExtent(progress);
     const sphereHalf = getBrandmarkSphereMatchHalfExtent(progress);
-    const sizeMerge = smoothstep(DOLLY_HOLD_END + COLLAPSE_RAMP_WIDTH, SIZE_MERGE_END, progress);
+    const sizeMerge = smoothstep(DOLLY_HOLD_END + DEPTH_MORPH_WIDTH, SIZE_MERGE_END, progress);
     const half = handoffHalf + (sphereHalf - handoffHalf) * sizeMerge;
     // The substrate sphere composes this exact smoothed epilogue scale
     // in `BrandmarkAccretionShell`. The core is the mark INSIDE that
@@ -199,6 +227,8 @@ export function BrandmarkPhysicsCoreActor({
       <BrandmarkPhysicsCore
         count={count}
         igniteRef={igniteRef}
+        depthRef={depthRef}
+        seedAtHome
         opacityRef={opacityRef}
         pointSizeRef={pointSizeRef}
         color={color}

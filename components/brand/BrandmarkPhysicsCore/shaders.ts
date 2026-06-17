@@ -47,6 +47,7 @@ export const brandmarkCoreVertexShader = /* glsl */ `
   uniform sampler2D uPositionTexture;
   uniform float uPointSize;     // CSS pixels
   uniform float uPixelRatio;
+  uniform float uDepth;         // 0 = flat 2D silhouette, 1 = full 3D dome
   
   attribute vec2 aUV;
   attribute float aLuma;        // per-particle phase [0, 1)
@@ -65,6 +66,16 @@ export const brandmarkCoreVertexShader = /* glsl */ `
     // home-positions DataTexture).
     vec4 posData = texture2D(uPositionTexture, aUV);
     vec3 pos = posData.xyz;
+    
+    // 2D → 3D MORPH (ADR-023). The brandmark silhouette lives entirely
+    // in XY (the dome + jitter only ever displace Z — see
+    // sampleBrandmarkParticles). Scaling Z by uDepth therefore morphs
+    // the cloud continuously between the FLAT 2D silhouette (uDepth = 0,
+    // pixel-identical to the SVG brandmark it hands off from) and the
+    // full 3D domed mark (uDepth = 1). The XY silhouette is preserved at
+    // every value, so the mark reads as the SAME brandmark gaining depth
+    // — not a different object fading in.
+    pos.z *= uDepth;
     
     // Forward Z hand-off to the fragment shader. The brandmark home
     // dome puts particles in z ∈ [~-0.06, ~+0.21]; the GPGPU sim

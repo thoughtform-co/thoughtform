@@ -140,6 +140,23 @@ export interface BrandmarkPhysicsCoreProps {
    *  parent can drive the value imperatively without re-rendering.
    *  Wins over the static `ignite` prop when both are provided. */
   igniteRef?: ReadonlyRef<number>;
+  /** 2D → 3D morph dial. `0` collapses the cloud to the FLAT brandmark
+   *  silhouette (z = 0, pixel-identical to the SVG it replaces); `1` is
+   *  the full forward-domed 3D mark. The XY silhouette is preserved at
+   *  every value (the dome only ever lives in Z), so the brandmark reads
+   *  as the SAME mark gaining depth. Default `1` (full 3D) for lab /
+   *  simple consumers. */
+  depth?: number;
+  /** Live ref for `depth`. Read every frame inside `useFrame` so the
+   *  corridor actor can drive the flat → 3D morph imperatively without
+   *  re-rendering. Wins over the static `depth` prop when provided. */
+  depthRef?: ReadonlyRef<number>;
+  /** When true, the GPGPU sim is seeded with the particles already AT
+   *  their home positions (instead of a scattered sphere of dust). Use
+   *  for the corridor morph, where the mark must read as the brandmark
+   *  from the first visible frame — never assemble from a swirl. The
+   *  scattered seed is the lab default (false). */
+  seedAtHome?: boolean;
   /** Per-particle CSS pixel size. Default `DEFAULT_POINT_SIZE_PX`. */
   pointSize?: number;
   /** Live ref for `pointSize`. Read every frame inside `useFrame` so
@@ -278,6 +295,9 @@ export function BrandmarkPhysicsCore({
   count = BRANDMARK_PHYSICS_CORE_COUNT_DESKTOP,
   ignite = 0,
   igniteRef,
+  depth = 1,
+  depthRef,
+  seedAtHome = false,
   pointSize = DEFAULT_POINT_SIZE_PX,
   pointSizeRef,
   color = "#caa554",
@@ -335,7 +355,14 @@ export function BrandmarkPhysicsCore({
       homeTexture = makeHomePositionTexture(sample.homes, textureSize);
     } else {
       const random = makePrng(prngSeed ^ 0x77665544);
-      const initial = buildScatteredInitial(sample.count, scatterRadius, random);
+      // Corridor morph (`seedAtHome`): start the particles already AT
+      // the brandmark home positions so the mark reads as the brandmark
+      // from frame one — it must never assemble from a visible swirl
+      // (the morph is a flat → 3D extrude, not a scatter → gather). The
+      // lab default is a scattered sphere of dust for the assemble demo.
+      const initial = seedAtHome
+        ? sample.homes.slice()
+        : buildScatteredInitial(sample.count, scatterRadius, random);
       sim = new GPGPUParticleSimulation({
         renderer,
         particleCount: sample.count,
@@ -344,13 +371,15 @@ export function BrandmarkPhysicsCore({
       });
       textureSize = sim.getTextureSize();
 
-      // Seed the position shader with the assemble-OFF coefficients
-      // so the very first compute step uses the dispersed forces (the
-      // visible state at ignite = 0).
+      // Seed the position shader with the force coefficients matching
+      // the seed: assembled (home) forces when `seedAtHome`, dispersed
+      // forces otherwise, so the very first compute step doesn't kick
+      // the particles away from where they started.
+      const seedForces = seedAtHome ? IGNITE_ON_FORCES : IGNITE_OFF_FORCES;
       sim.updateUniforms({
-        flowStrength: IGNITE_OFF_FORCES.flowStrength,
-        returnStrength: IGNITE_OFF_FORCES.returnStrength,
-        turbulence: IGNITE_OFF_FORCES.turbulence,
+        flowStrength: seedForces.flowStrength,
+        returnStrength: seedForces.returnStrength,
+        turbulence: seedForces.turbulence,
         pointerStrength: 0,
       });
     }
@@ -380,7 +409,7 @@ export function BrandmarkPhysicsCore({
       // outlive the GPU buffers it owns.
       setResources((current) => (current === next ? null : current));
     };
-  }, [sample, renderer, scatterRadius, prngSeed, reducedMotion]);
+  }, [sample, renderer, scatterRadius, prngSeed, reducedMotion, seedAtHome]);
 
   // ── Build the render geometry from the sample ───────────────
   const geometry = useMemo(() => {
@@ -425,6 +454,7 @@ export function BrandmarkPhysicsCore({
         uColor: { value: new THREE.Color(color) },
         uAccentColor: { value: new THREE.Color(accentColor) },
         uOpacity: { value: opacity },
+        uDepth: { value: depth },
         uTime: { value: 0 },
       },
       vertexShader: brandmarkCoreVertexShader,
@@ -482,10 +512,13 @@ export function BrandmarkPhysicsCore({
     // fallback for simple lab usage.
     const resolvedPointSize = pointSizeRef ? pointSizeRef.current : pointSize;
     const resolvedOpacity = opacityRef ? opacityRef.current : opacity;
+    const resolvedDepth = depthRef ? depthRef.current : depth;
 
     // Reduced-motion / static path. The home texture was bound once
-    // when resources were built; we just keep tint / opacity / time
-    // in step here. No compute, no GPU writes from this component.
+    // when resources were built; we just keep tint / opacity / depth /
+    // time in step here. No compute, no GPU writes from this component.
+    // The uDepth morph still applies — the static silhouette flattens /
+    // extrudes exactly like the dynamic core.
     if (reducedMotion || !resources.sim) {
       if (resources.homeTexture) {
         mat.uniforms.uPositionTexture.value = resources.homeTexture;
@@ -494,6 +527,7 @@ export function BrandmarkPhysicsCore({
       mat.uniforms.uAccentColor.value.set(accentColor);
       mat.uniforms.uPointSize.value = resolvedPointSize;
       mat.uniforms.uOpacity.value = resolvedOpacity;
+      mat.uniforms.uDepth.value = resolvedDepth;
       mat.uniforms.uTime.value = state.clock.elapsedTime;
       return;
     }
@@ -527,6 +561,7 @@ export function BrandmarkPhysicsCore({
     mat.uniforms.uAccentColor.value.set(accentColor);
     mat.uniforms.uPointSize.value = resolvedPointSize;
     mat.uniforms.uOpacity.value = resolvedOpacity;
+    mat.uniforms.uDepth.value = resolvedDepth;
     mat.uniforms.uTime.value = state.clock.elapsedTime;
   });
 

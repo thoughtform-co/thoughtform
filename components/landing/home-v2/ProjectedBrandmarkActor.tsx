@@ -13,7 +13,12 @@ import {
   getThoughtformMobilePhase,
 } from "./DepthGatewayScene/sceneGeom";
 import { type WorldAnchor, useWorldDomTracker } from "./hooks/useWorldDomTracker";
-import { BEAT_ORDER, DOLLY_HOLD_END, smoothstep } from "@/lib/home-v2/corridorMap";
+import {
+  BEAT_ORDER,
+  CORRIDOR_HANDOFF_CUT_WIDTH,
+  DOLLY_HOLD_END,
+  smootherstep,
+} from "@/lib/home-v2/corridorMap";
 import { DOCKED_INSTRUMENT_EPILOGUE_POSE } from "@/lib/home-v2/epilogueTimeline";
 import { getSmoothedEpilogueProgress } from "./DepthGatewayScene/motionFollower";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
@@ -44,15 +49,18 @@ import { gyroTilt, useGyroLabStore } from "@/lib/stores/gyroLabStore";
  * vs world-project during transits) is gone — co-location via the
  * gate group makes dock mode unnecessary.
  *
- * SVG → particle core handoff (2026-06-16, ADR-023): the DOM glyph
- * is THE brandmark only at the section-2 Thoughtform rest (parked
- * `paintProgress <= DOLLY_HOLD_END`). The instant the camera begins
- * flying through the corridor, the SVG fades out across the
- * dolly-release band (`[DOLLY_HOLD_END, DOLLY_HOLD_END +
- * IGNITE_RAMP_WIDTH]`) while `BrandmarkPhysicsCoreActor` ignites
- * an in-canvas GPGPU-driven 3D particle core at the same band. The
- * core stays the visible mark through Navigate / Encode / Build as
- * the bright centre of the accreting intelligence-layer artifact.
+ * SVG → particle core handoff (2026-06-16, morph rev. 2026-06-17,
+ * ADR-023): the DOM glyph is THE brandmark only at the section-2
+ * Thoughtform rest (parked `paintProgress <= DOLLY_HOLD_END`). The
+ * instant the camera begins flying through the corridor, the SVG is
+ * CUT to 0 across the shared `CORRIDOR_HANDOFF_CUT_WIDTH` band while
+ * `BrandmarkPhysicsCoreActor` reveals an in-canvas GPGPU particle core
+ * held FLAT (its `uDepth ≈ 0` paints the EXACT same 2D silhouette at
+ * the same screen position) across the SAME band — so the swap is a
+ * MORPH, not a crossfade between two different-looking things. The core
+ * then extrudes flat → 3D and stays the visible mark through Navigate /
+ * Encode / Build as the bright centre of the accreting
+ * intelligence-layer artifact.
  * (This reverses the earlier 2026-06-06 "stay 2D SVG" decision; see
  * ADR-023 for the rationale.) The DOM glyph re-takes the role at
  * the epilogue / dock / `#services` handoff — the welded projection
@@ -124,14 +132,17 @@ const DOCK_RECENTRE_FRAC = 0.85;
  *  curve. */
 const DOCK_BLEND_TAU_S = 0.28;
 
-/** Width of the ignite-band fade for the DOM SVG (ADR-023). The DOM
+/** Width of the SVG cut-out band (ADR-023, rev. 2026-06-17). The DOM
  *  glyph holds at full opacity through the section-2 Thoughtform rest
- *  (`paintProgress <= DOLLY_HOLD_END`), then fades to 0 across the
- *  same `DOLLY_HOLD_END → DOLLY_HOLD_END + IGNITE_RAMP_WIDTH` band the
- *  in-canvas `BrandmarkPhysicsCoreActor` uses to assemble its
- *  particle core. The two channels share the band so the cross-
- *  dissolve reads as a clean handoff: SVG yields, core ignites. */
-const IGNITE_RAMP_WIDTH = 0.06;
+ *  (`paintProgress <= DOLLY_HOLD_END`), then cuts to 0 across the shared
+ *  `CORRIDOR_HANDOFF_CUT_WIDTH` band — the SAME band the in-canvas
+ *  `BrandmarkPhysicsCoreActor` uses to reveal its particle core. Because
+ *  the core is held FLAT (its `uDepth ≈ 0` paints the exact same 2D
+ *  silhouette at the same screen position) during this band, the swap is
+ *  invisible: the mark simply becomes particles, then extrudes into 3D.
+ *  This is a MORPH, not a crossfade between two different-looking
+ *  things. Imported from `corridorMap` so the two channels can't drift. */
+const SVG_CUT_WIDTH = CORRIDOR_HANDOFF_CUT_WIDTH;
 
 /** Target apparent half-width (px) the welded mark settles toward at
  *  dock end — a viewport-responsive readable size for the empty
@@ -498,7 +509,7 @@ export function ProjectedBrandmarkActor() {
             corridorFade = docked ? 1 : 0;
           } else {
             corridorFade =
-              1 - smoothstep(DOLLY_HOLD_END, DOLLY_HOLD_END + IGNITE_RAMP_WIDTH, paintProgress);
+              1 - smootherstep(DOLLY_HOLD_END, DOLLY_HOLD_END + SVG_CUT_WIDTH, paintProgress);
           }
           element.style.opacity = `${(intensity * diagramFactor * corridorFade).toFixed(3)}`;
 

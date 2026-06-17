@@ -665,8 +665,26 @@ export const SUBSTRATE_GYRO_PARALLEL_COUNT = 6;
 /** Segments per great-circle / latitude arc. */
 export const SUBSTRATE_GYRO_GLOBE_SEGMENTS = 96;
 
+/** Lean of the brandmark's vertical "sword" stroke off true vertical,
+ *  measured from the canonical SVG (`Thoughtform_Brandmark.svg`, viewBox
+ *  430.99×436): the stroke runs from the top vertex (254.35, 0) to the
+ *  bottom tip (179.17, 408.81), so it leans `atan2(75.18, 408.81)` ≈
+ *  10.4° off vertical, top toward +X. The substrate's vertical gimbal
+ *  orbit is rolled by this exact angle (below) so it traces the
+ *  brandmark's spine — the sphere then reads as a 3D extrusion of the
+ *  2D mark rather than a generic gimbal. Sourced from the SVG endpoints
+ *  so it stays correct if the mark's geometry is ever re-exported. */
+export const BRANDMARK_SWORD_TILT_RAD = Math.atan2(254.35 - 179.17, 408.81);
+
 /** Three orthogonal gimbal rings — full closed great circles that
- *  counter-rotate to read as a genuine gimbal cage. */
+ *  counter-rotate to read as a genuine gimbal cage.
+ *
+ *  Ring 2 is the VERTICAL orbit (its great circle projects to an
+ *  on-screen vertical line). It is rolled by `BRANDMARK_SWORD_TILT_RAD`
+ *  off true vertical and held STATIC (`spin: 0`) so it stays aligned
+ *  with the brandmark core's vertical stroke — the sphere's spine and
+ *  the mark's spine coincide. The other two rings keep counter-rotating
+ *  so the cage still reads as a live instrument. */
 export const SUBSTRATE_GYRO_GIMBAL_RINGS: ReadonlyArray<{
   radius: number;
   tilt: readonly [number, number, number];
@@ -674,7 +692,7 @@ export const SUBSTRATE_GYRO_GIMBAL_RINGS: ReadonlyArray<{
 }> = [
   { radius: 0.88, tilt: [0, 0, 0], spin: 0.18 },
   { radius: 1.02, tilt: [Math.PI / 2, 0, 0], spin: -0.12 },
-  { radius: 1.16, tilt: [0, 0, Math.PI / 2], spin: 0.09 },
+  { radius: 1.16, tilt: [0, 0, Math.PI / 2 - BRANDMARK_SWORD_TILT_RAD], spin: 0 },
 ];
 
 /** Slow polar spin of the attitude globe (rad/s). */
