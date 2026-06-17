@@ -38,9 +38,16 @@ import {
  */
 function MotionFollowerDriver() {
   useFrame((_, delta) => {
-    const { paintProgress, epilogueProgress, active, docked } =
+    const { paintProgress, epilogueProgress, active, armed, docked } =
       useDepthGatewayStore.getState().transform;
     const layers = getBrandmarkAccretionLayers(paintProgress);
+    // Pass `active || armed || docked` so the follower eases continuously
+    // across the active <-> armed boundary (corridor entry seam). The
+    // previous `active || docked` flag flipped to false during armed,
+    // which combined with the follower's `!active` snap rule caused a
+    // visible bounce on reverse scroll back across the seam. The
+    // follower's snap-on-real-discontinuities (teleport / idle resume)
+    // covers genuine jumps; armed is a continuous neighbour of active.
     driveMotionFollower(
       {
         panOffsetX: getThoughtformCenterOffsetX(paintProgress),
@@ -51,7 +58,7 @@ function MotionFollowerDriver() {
       },
       delta,
       paintProgress,
-      active || docked
+      active || armed || docked
     );
   }, -10);
   return null;

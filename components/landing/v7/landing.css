@@ -6683,9 +6683,10 @@ body.density-dense .station {
    `html[data-corridor-entry]` during the first-viewport band, making
    `.home-v2-stage__sticky` a fixed viewport layer so the parked
    `ThoughtformCompassGate` frame sits still at viewport top while the
-   hero lifts off it. NOTHING here drives the hero by `--hero-cover`;
-   the only hero transform allowed is the tiny capped inertial correction
-   written inline by `useLandingScroll`. The earlier ADR-022 v6 proxy sweep
+   hero lifts off it. The hero rides NATIVE compositor scroll (no JS
+   wheel hijack — a main-thread scroll follower fought the corridor
+   R3F render and felt heavy); `useLandingScroll` only toggles corridor
+   entry state and hero visibility. The earlier ADR-022 v6 proxy sweep
    (`HeroHandoffCover`, `.hero-handoff-*`) and the v7 hero parallax
    drift were both removed; the corridor itself is now the revealed
    second section, never a copy. */

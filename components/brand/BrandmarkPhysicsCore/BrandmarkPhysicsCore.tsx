@@ -151,6 +151,26 @@ export interface BrandmarkPhysicsCoreProps {
    *  corridor actor can drive the flat → 3D morph imperatively without
    *  re-rendering. Wins over the static `depth` prop when provided. */
   depthRef?: ReadonlyRef<number>;
+  /** Subtle matrix-glitch amplitude (0..1). Drives a gentle scanline-band
+   *  displacement + in-palette hue warble in the shader. Default 0 (no
+   *  glitch). The corridor actor ramps this as a bell across the 2D → 3D
+   *  handoff so the mark briefly destabilises as it gains depth. */
+  glitch?: number;
+  /** Live ref for `glitch`. Read every frame inside `useFrame` so the
+   *  corridor actor can drive the bell imperatively without re-rendering.
+   *  Wins over the static `glitch` prop when provided. */
+  glitchRef?: ReadonlyRef<number>;
+  /** Backward-Z stream amplitude (normalised local units). Pushes
+   *  particles toward the background for a flying-into-depth momentum;
+   *  a base component shifts the whole silhouette, a seed-varied
+   *  component trails individual particles. Default 0. The corridor
+   *  actor drives this from a scroll/velocity envelope across the
+   *  entry → sphere band. */
+  stream?: number;
+  /** Live ref for `stream`. Read every frame inside `useFrame` so the
+   *  corridor actor can drive the momentum imperatively without
+   *  re-rendering. Wins over the static `stream` prop when provided. */
+  streamRef?: ReadonlyRef<number>;
   /** When true, the GPGPU sim is seeded with the particles already AT
    *  their home positions (instead of a scattered sphere of dust). Use
    *  for the corridor morph, where the mark must read as the brandmark
@@ -297,6 +317,10 @@ export function BrandmarkPhysicsCore({
   igniteRef,
   depth = 1,
   depthRef,
+  glitch = 0,
+  glitchRef,
+  stream = 0,
+  streamRef,
   seedAtHome = false,
   pointSize = DEFAULT_POINT_SIZE_PX,
   pointSizeRef,
@@ -455,6 +479,8 @@ export function BrandmarkPhysicsCore({
         uAccentColor: { value: new THREE.Color(accentColor) },
         uOpacity: { value: opacity },
         uDepth: { value: depth },
+        uGlitch: { value: glitch },
+        uStream: { value: stream },
         uTime: { value: 0 },
       },
       vertexShader: brandmarkCoreVertexShader,
@@ -513,6 +539,8 @@ export function BrandmarkPhysicsCore({
     const resolvedPointSize = pointSizeRef ? pointSizeRef.current : pointSize;
     const resolvedOpacity = opacityRef ? opacityRef.current : opacity;
     const resolvedDepth = depthRef ? depthRef.current : depth;
+    const resolvedGlitch = glitchRef ? glitchRef.current : glitch;
+    const resolvedStream = streamRef ? streamRef.current : stream;
 
     // Reduced-motion / static path. The home texture was bound once
     // when resources were built; we just keep tint / opacity / depth /
@@ -528,6 +556,8 @@ export function BrandmarkPhysicsCore({
       mat.uniforms.uPointSize.value = resolvedPointSize;
       mat.uniforms.uOpacity.value = resolvedOpacity;
       mat.uniforms.uDepth.value = resolvedDepth;
+      mat.uniforms.uGlitch.value = resolvedGlitch;
+      mat.uniforms.uStream.value = resolvedStream;
       mat.uniforms.uTime.value = state.clock.elapsedTime;
       return;
     }
@@ -562,6 +592,8 @@ export function BrandmarkPhysicsCore({
     mat.uniforms.uPointSize.value = resolvedPointSize;
     mat.uniforms.uOpacity.value = resolvedOpacity;
     mat.uniforms.uDepth.value = resolvedDepth;
+    mat.uniforms.uGlitch.value = resolvedGlitch;
+    mat.uniforms.uStream.value = resolvedStream;
     mat.uniforms.uTime.value = state.clock.elapsedTime;
   });
 

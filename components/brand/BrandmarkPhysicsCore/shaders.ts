@@ -48,6 +48,14 @@ export const brandmarkCoreVertexShader = /* glsl */ `
   uniform float uPointSize;     // CSS pixels
   uniform float uPixelRatio;
   uniform float uDepth;         // 0 = flat 2D silhouette, 1 = full 3D dome
+  uniform float uStream;        // backward-Z momentum (vertex-only)
+  // uGlitch / uTime are shared with the fragment shader; they MUST carry
+  // a matching precision qualifier or the program silently fails to link
+  // on WebGL2 ("Precisions of uniform differ between VERTEX and FRAGMENT
+  // shaders"). The fragment runs \`precision mediump float\`, so these are
+  // declared mediump here to match.
+  uniform mediump float uGlitch; // 0 = no glitch, ~1 at handoff peak (bell)
+  uniform mediump float uTime;   // wall-clock seconds (animates the tear)
   
   attribute vec2 aUV;
   attribute float aLuma;        // per-particle phase [0, 1)
@@ -56,6 +64,11 @@ export const brandmarkCoreVertexShader = /* glsl */ `
   varying float vLuma;
   varying float vEdgeWeight;
   varying float vDepth;         // local Z, drives atmospheric dim
+  
+  // Cheap deterministic hash for the per-band scanline displacement.
+  float hash11(float n) {
+    return fract(sin(n * 12.9898) * 43758.5453);
+  }
   
   void main() {
     vLuma = aLuma;
@@ -77,10 +90,42 @@ export const brandmarkCoreVertexShader = /* glsl */ `
     // — not a different object fading in.
     pos.z *= uDepth;
     
+    // ── SUBTLE MATRIX GLITCH (uGlitch > 0) ───────────────────────
+    // A gentle scanline tear that ONLY runs across the 2D → 3D handoff
+    // band (uGlitch is a bell, 0 at both ends). Particles in the same
+    // horizontal band shift together by a small amount; ~10% of bands
+    // are "tear" bands that shift a touch further. Amplitudes are kept
+    // small (a few percent of the brandmark half-width) so the dust
+    // streaks in scanlines rather than scattering apart — it reads as
+    // the mark briefly destabilising as it gains depth, integrated with
+    // the soft-halo cloud rather than a harsh digital break.
+    if (uGlitch > 0.001) {
+      float band = floor(pos.y * 14.0);
+      float bandSeed = hash11(band + floor(uTime * 11.0));
+      float tear = step(0.9, hash11(band * 0.27 + 3.1));
+      float lateral = (bandSeed - 0.5) * 2.0 + tear * sign(bandSeed - 0.5) * 0.5;
+      pos.x += lateral * 0.022 * uGlitch;
+      pos.y += (hash11(band * 0.7 + aLuma * 23.0) - 0.5) * 0.012 * uGlitch;
+    }
+    
+    // ── Z-STREAM MOMENTUM (uStream > 0) ──────────────────────────
+    // As the mark flies into the corridor toward the substrate sphere,
+    // push particles toward the BACKGROUND (local −Z, deeper into the
+    // corridor where the sphere wraps). A base component shifts the
+    // whole silhouette back (the mark reads as flying backward into the
+    // sphere); a seed-varied component trails individual particles
+    // further, so the cloud gains a comet-tail sense of momentum rather
+    // than translating as one rigid block. uStream is a scroll/velocity
+    // envelope (0 outside the entry → sphere band), so the silhouette
+    // settles back to home once the mark is parked inside the sphere.
+    float streamFactor = 0.4 + 0.6 * pow(aLuma, 1.3);
+    pos.z -= uStream * streamFactor;
+    
     // Forward Z hand-off to the fragment shader. The brandmark home
     // dome puts particles in z ∈ [~-0.06, ~+0.21]; the GPGPU sim
     // perturbs them within that band. Fragment normalises into a
-    // 0..1 brightness factor.
+    // 0..1 brightness factor — streamed particles read dimmer as they
+    // recede into the background, reinforcing the depth momentum.
     vDepth = pos.z;
     
     vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
@@ -102,10 +147,15 @@ export const brandmarkCoreFragmentShader = /* glsl */ `
   uniform vec3 uAccentColor;
   uniform float uOpacity;
   uniform float uTime;
+  uniform float uGlitch;   // mediump via the precision stmt — matches vertex
   
   varying float vLuma;
   varying float vEdgeWeight;
   varying float vDepth;
+  
+  float hashF(float n) {
+    return fract(sin(n * 12.9898) * 43758.5453);
+  }
   
   void main() {
     vec2 c = gl_PointCoord - vec2(0.5);
@@ -153,6 +203,20 @@ export const brandmarkCoreFragmentShader = /* glsl */ `
     float pulseFreq = 0.6 + vLuma * 1.4;
     float pulse = sin(uTime * pulseFreq + vLuma * 6.28) * 0.10 + 0.90;
     color *= pulse;
+    
+    // ── SUBTLE MATRIX GLITCH (uGlitch > 0) ───────────────────────
+    // Stays in-palette so it reads as part of the gold dust, not an
+    // alien CRT tear: a warm hue warble nudges a subset of cells
+    // toward the dawn accent, and a gentle brightness flicker lifts /
+    // dims cells. Both fade with uGlitch (a bell, 0 outside the
+    // handoff), so the cloud is its normal soft-halo self everywhere
+    // else. Paired with the vertex scanline shift, this reads as the
+    // dust briefly "reconstituting" as the mark gains depth.
+    if (uGlitch > 0.001) {
+      float cellSeed = hashF(floor(vLuma * 53.0) + floor(uTime * 15.0));
+      color = mix(color, uAccentColor, step(0.72, cellSeed) * 0.35 * uGlitch);
+      color *= 1.0 + (cellSeed - 0.5) * 0.45 * uGlitch;
+    }
     
     gl_FragColor = vec4(color, alpha * uOpacity);
   }

@@ -133,8 +133,19 @@ export const CORRIDOR_TIMELINE = {
    *  ends — kills the scroll-back snap when scrolling reverses
    *  across the pan boundary. END is unchanged so every coupled
    *  downstream beat (dolly release, ring flythrough start 0.13,
-   *  boot rampEnd 0.109) stays in lockstep. */
-  thoughtformPan: { start: 0.035, end: 0.109 },
+   *  boot rampEnd 0.109) stays in lockstep.
+   *
+   *  START moved 0.035 -> 0 (2026-06-17): the dead zone before the
+   *  pan made the corridor feel like it lost momentum the instant the
+   *  hero cleared — the composition sat parked (and a smoothing
+   *  follower settled into place) for ~250px of scroll before the
+   *  centering began, which read as "drifts a bit, THEN slides left".
+   *  Starting the pan at the seam means the brandmark begins centering
+   *  the moment section-2 owns the viewport, so the entry carries
+   *  straight through. smootherstep still gives zero velocity at p=0,
+   *  so the parked frame (progress 0, shown behind the departing hero)
+   *  is byte-identical and the scroll-back boundary stays snap-free. */
+  thoughtformPan: { start: 0, end: 0.109 },
 
   /** Gateway "boot-up" envelope phases. Ramp runs alongside the
    *  Thoughtform pan; hold spans the early ring flythrough; relax

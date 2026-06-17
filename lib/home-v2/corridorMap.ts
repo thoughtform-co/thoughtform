@@ -435,6 +435,17 @@ export const DOLLY_HOLD_END = BEAT_WINDOWS[0].end;
  *  lingering dissolve. */
 export const CORRIDOR_HANDOFF_CUT_WIDTH = 0.012;
 
+/** Subtle matrix-glitch band width (ADR-023, 2026-06-17). The corridor
+ *  brandmark core drives a `uGlitch` BELL (`sin(t·π)`) across
+ *  `[DOLLY_HOLD_END, DOLLY_HOLD_END + GLITCH_BAND_WIDTH]`. The bell is 0
+ *  at both ends and peaks at 1 in the middle, so the soft-halo cloud is
+ *  byte-stable outside the handoff. Aligned with `DEPTH_MORPH_WIDTH`
+ *  (the flat → 3D extrude in `BrandmarkPhysicsCoreActor`) so the gentle
+ *  scanline tear + in-palette hue warble accompany the moment the mark
+ *  gains depth — a subtle "reconstituting into 3D" beat rather than a
+ *  separate harsh effect. Owned by `BrandmarkPhysicsCoreActor`. */
+export const GLITCH_BAND_WIDTH = 0.05;
+
 /** Camera Z dolly easing — held at 0 across the setup window, then
  *  smoothstep'd 0 -> 1 across the remaining scroll. Shared by the
  *  runtime camera-position function (`sceneGeom.getCameraPosition`)

@@ -136,16 +136,20 @@ export function snapMotionFollower(targets: MotionFollowerState): void {
  * @param dtSeconds     Frame delta (clamped internally).
  * @param paintProgress Current store paintProgress — used for teleport
  *                      detection only.
- * @param active        Store `active` flag. While the stage is not
- *                      actively pinned (parked above / armed / below)
- *                      the follower snaps so the entry state is
- *                      byte-identical to the un-smoothed corridor.
+ * @param engaged       Store `active || armed || docked` flag. The follower
+ *                      eases continuously across the active <-> armed
+ *                      boundary so reverse scroll across the corridor entry
+ *                      seam doesn't snap the parked composition into place
+ *                      (the previous `!active` clause caused a visible
+ *                      vertical bounce on scroll-back). Snapping is now
+ *                      reserved for genuine teleports (hash nav, scroll
+ *                      restore) and idle resumes (loop was off-screen).
  */
 export function driveMotionFollower(
   targets: MotionFollowerState,
   dtSeconds: number,
   paintProgress: number,
-  active: boolean
+  engaged: boolean
 ): void {
   const nowMs = typeof performance !== "undefined" ? performance.now() : 0;
   const resumedAfterIdle = lastDriveTime > 0 && nowMs - lastDriveTime > RESUME_IDLE_GAP_MS;
@@ -156,10 +160,16 @@ export function driveMotionFollower(
     Math.abs(paintProgress - lastPaintProgress) > TELEPORT_PROGRESS_DELTA;
   lastPaintProgress = paintProgress;
 
-  // `resumedAfterIdle` covers scroll-back re-entry: the loop was idle
-  // off-screen, so snap to the live target instead of gliding from the
-  // frozen (often epilogue/docked) value the channels were left at.
-  if (!active || teleport || resumedAfterIdle) {
+  // Snap only on real discontinuities: teleport (hash nav, scroll
+  // restore), idle resume (the demand-mode loop was off-screen and
+  // would otherwise glide from a stale value), or while the stage is
+  // fully disengaged (off-screen — no observer to see the snap). The
+  // `active <-> armed` boundary is intentionally NOT a snap: at the
+  // corridor entry seam, paintProgress is a continuous 0 across both
+  // states, so easing across the toggle is a no-op for armed-from-
+  // forward but kills the visible snap-back when scrolling reverse
+  // across the seam after having been active.
+  if (!engaged || teleport || resumedAfterIdle) {
     snapMotionFollower(targets);
     return;
   }

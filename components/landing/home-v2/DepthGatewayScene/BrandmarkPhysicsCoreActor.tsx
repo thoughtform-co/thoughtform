@@ -40,6 +40,7 @@ import { useDeviceTier } from "@/lib/hooks/useDeviceTier";
 import {
   CORRIDOR_HANDOFF_CUT_WIDTH,
   DOLLY_HOLD_END,
+  GLITCH_BAND_WIDTH,
   smoothstep,
   smootherstep,
   windowFor,
@@ -89,6 +90,25 @@ const CORE_OPACITY = 0.95;
 const CORE_POINT_SIZE_FLAT = 3.0;
 const CORE_POINT_SIZE_3D = 4.0;
 
+/** Z-stream momentum (2026-06-17). As the mark flies into the corridor
+ *  toward the substrate sphere, particles stream toward the background
+ *  (local −Z) so the brandmark reads as flying backward into the sphere
+ *  with a comet-tail sense of motion (vs. a rigid block that just
+ *  translates). The shader splits this into a base shift (whole
+ *  silhouette) + a seed-varied tail (individual particles).
+ *
+ *  - `STREAM_MAX` — peak backward-Z in normalised local units.
+ *  - The envelope is gated to the entry → Navigate-park band and
+ *    velocity-modulated: a faster scroll trails further (momentum),
+ *    with `STREAM_VEL_BASE` keeping the stream readable on a slow
+ *    scroll. It fades to 0 by `SIZE_MERGE_END` so the silhouette is
+ *    clean once parked inside the sphere. */
+const STREAM_MAX = 0.5;
+const STREAM_VEL_SCALE = 3.2;
+const STREAM_VEL_BASE = 0.45;
+const STREAM_TAU_S = 0.12;
+const STREAM_FADE_BAND = 0.08;
+
 interface BrandmarkPhysicsCoreActorProps {
   /** Pass-through tints. The actor doesn't bake in palette decisions
    *  so the consumer keeps the canonical Thoughtform tokens at the
@@ -126,6 +146,8 @@ export function BrandmarkPhysicsCoreActor({
   const groupRef = useRef<THREE.Group>(null);
   const igniteRef = useRef(ASSEMBLED_IGNITE);
   const depthRef = useRef(0);
+  const glitchRef = useRef(0);
+  const streamRef = useRef(0);
   const opacityRef = useRef(0);
   const pointSizeRef = useRef(CORE_POINT_SIZE_FLAT);
   const pausedRef = useRef(true);
@@ -134,7 +156,7 @@ export function BrandmarkPhysicsCoreActor({
   // the in-component refs that read into `BrandmarkPhysicsCore` props
   // on the next render. Position + scale don't need React; they're
   // imperative writes on the group.
-  useFrame(() => {
+  useFrame((_state, delta) => {
     const group = groupRef.current;
     if (!group) return;
 
@@ -177,8 +199,41 @@ export function BrandmarkPhysicsCoreActor({
       progress
     );
     const depth = smootherstep(DOLLY_HOLD_END, DOLLY_HOLD_END + DEPTH_MORPH_WIDTH, progress);
+
+    // Subtle matrix-glitch BELL (2026-06-17). `sin(t·π)` across
+    // `[DOLLY_HOLD_END, DOLLY_HOLD_END + GLITCH_BAND_WIDTH]` so glitch is
+    // exactly 0 at both ends (the soft-halo cloud is byte-stable outside
+    // the handoff) and peaks at 1 mid-band — right as the flat silhouette
+    // extrudes into 3D. The shader keeps the displacement + hue warble
+    // small and in-palette, so this reads as the dust briefly
+    // destabilising as it gains depth, integrated with the soft-halo
+    // look rather than a separate harsh effect.
+    let glitch = 0;
+    if (progress > DOLLY_HOLD_END && progress < DOLLY_HOLD_END + GLITCH_BAND_WIDTH) {
+      const t = (progress - DOLLY_HOLD_END) / GLITCH_BAND_WIDTH;
+      glitch = Math.sin(t * Math.PI);
+    }
+
+    // ── Z-STREAM momentum envelope (2026-06-17) ──────────────────
+    // Active across the entry → Navigate-park "fly into the sphere"
+    // leg. Velocity-modulated so a faster scroll trails the particles
+    // further back (momentum), with a baseline so the stream still
+    // reads on a slow scroll. Fades to 0 by SIZE_MERGE_END so the
+    // silhouette is clean once parked inside the sphere. Eased on
+    // wall-clock time so the velocity term doesn't jitter frame-to-frame.
+    const streamBandIn = smoothstep(DOLLY_HOLD_END, DOLLY_HOLD_END + 0.02, progress);
+    const streamBandOut =
+      1 - smoothstep(SIZE_MERGE_END - STREAM_FADE_BAND, SIZE_MERGE_END, progress);
+    const streamBand = streamBandIn * streamBandOut;
+    const velNorm = Math.min(1, Math.abs(t.velocity) * STREAM_VEL_SCALE);
+    const streamTarget =
+      streamBand * STREAM_MAX * (STREAM_VEL_BASE + (1 - STREAM_VEL_BASE) * velNorm);
+    const kStream = 1 - Math.exp(-Math.max(0, delta) / STREAM_TAU_S);
+    streamRef.current += (streamTarget - streamRef.current) * kStream;
+
     igniteRef.current = ASSEMBLED_IGNITE;
     depthRef.current = depth;
+    glitchRef.current = glitch;
 
     // Corridor → epilogue handoff: the in-canvas core continues to own
     // the mark while the visitor exits Build and flies through the
@@ -228,6 +283,8 @@ export function BrandmarkPhysicsCoreActor({
         count={count}
         igniteRef={igniteRef}
         depthRef={depthRef}
+        glitchRef={glitchRef}
+        streamRef={streamRef}
         seedAtHome
         opacityRef={opacityRef}
         pointSizeRef={pointSizeRef}
