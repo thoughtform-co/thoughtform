@@ -173,26 +173,35 @@ export function dissipateBand(
   return band(dissipateProgress, w.start, w.end);
 }
 
-/** Corridor-exit speed ramp (ADR-021 follow-up).
+/** Corridor-exit speed ramp (ADR-021; elegance pass 2026-06-18).
  *
- * This is the ONLY easing applied to the Services dissipate clock.
- * Earlier revisions stacked easing in three places:
+ * The ONLY authored easing curve applied to the Services dissipate
+ * clock. Consumers use the result DIRECTLY (no second smoothstep) so
+ * the sphere expansion reads as one authored curve — an earlier
+ * revision stacked THREE smoothsteps (hook + `FlyingCameraRig` +
+ * `getCorridorExitCameraPose`), which read as "wait, then lurch", so
+ * that single-curve contract is preserved.
  *
- *   raw services rect -> smootherstep in `useCorridorExitScroll`
- *   dockProgress      -> smoothstep in `FlyingCameraRig`
- *   dissipate pose    -> smoothstep in `getCorridorExitCameraPose`
+ * Curve: `smootherstep` (`6t⁵ − 15t⁴ + 10t³`) — an ease-IN-OUT S with
+ * ZERO velocity AND acceleration at both ends. The previous ease-OUT
+ * cubic (`1 − (1 − t)³`) had its MAXIMUM velocity at `t = 0`, so the
+ * camera leapt into the sphere the instant `#services` entered — the
+ * "harsh, abrupt" onset. smootherstep starts the fly-in from rest and
+ * settles gently, matching the zero-velocity-onset curves the epilogue
+ * flight (`getEpilogueCameraPose`) already uses, so the corridor →
+ * Services exit feels like the same instrument as the canvas → BILLIONS
+ * epilogue ramp that precedes it.
  *
- * That triple ease produced a perceptible "wait, then lurch" feeling
- * at the BILLIONS -> Services seam: the first wheel notches barely
- * moved the camera, then the sphere had to catch up. This ramp is an
- * ease-out speed ramp (`1 - (1 - t)^3`): it responds immediately as
- * #services enters, then decelerates softly into the centred Services
- * mark. Consumers must use it DIRECTLY (no second smoothstep) so the
- * sphere growth reads as one authored curve instead of stacked lag.
+ * The sphere/camera consumers ALSO ride a temporal follower
+ * (`getSmoothedDissipate`, mirroring the epilogue's motion-follower
+ * channel) so wheel-notch quantization melts into a continuous glide —
+ * the other half of what makes the epilogue read as fluid. That is a
+ * temporal FILTER, not a second easing curve, so the single-authored-
+ * curve contract above still holds.
  */
 export function corridorExitSpeedRamp(rawProgress: number): number {
   const t = Math.max(0, Math.min(1, rawProgress));
-  return 1 - Math.pow(1 - t, 3);
+  return t * t * t * (t * (t * 6 - 15) + 10);
 }
 
 /** Radial scatter multiplier for the dotted-shell radius across the

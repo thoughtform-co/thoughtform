@@ -89,6 +89,7 @@ function MotionFollowerSnapDriver() {
       orbits: 0,
       stack: 0,
       epilogue: 0,
+      dissipate: 0,
     });
     // Touch driveMotionFollower to keep the import live — if any
     // future refactor moves the snap inside `drive`, we want the
@@ -125,6 +126,7 @@ export function SubstrateSphereStage({
       orbits: 0,
       stack: 0,
       epilogue: 0,
+      dissipate: 0,
     });
     // Ensure the gyro path is enabled; preserve the user's tuning
     // knobs — we only force `enabled`. Other params stay at whatever

@@ -38,7 +38,7 @@ import {
  */
 function MotionFollowerDriver() {
   useFrame((_, delta) => {
-    const { paintProgress, epilogueProgress, active, armed, docked } =
+    const { paintProgress, epilogueProgress, active, armed, docked, dockProgress } =
       useDepthGatewayStore.getState().transform;
     const layers = getBrandmarkAccretionLayers(paintProgress);
     // Pass `active || armed || docked` so the follower eases continuously
@@ -55,6 +55,10 @@ function MotionFollowerDriver() {
         orbits: layers.orbits,
         stack: layers.stack,
         epilogue: epilogueProgress,
+        // Dissipate target is the raw (smootherstep-ramped) dock scrub
+        // while docked, 0 otherwise — so reverse-scroll out of the dock
+        // eases the fly-into-sphere back out instead of snapping.
+        dissipate: docked ? dockProgress : 0,
       },
       delta,
       paintProgress,

@@ -120,7 +120,7 @@ describe("dissipate clock", () => {
 });
 
 describe("corridorExitSpeedRamp", () => {
-  it("is a strictly monotonic ease-out over [0, 1]", () => {
+  it("is a strictly monotonic ease-in-out (smootherstep) over [0, 1]", () => {
     expect(corridorExitSpeedRamp(0)).toBe(0);
     expect(corridorExitSpeedRamp(1)).toBeCloseTo(1, 10);
     let last = -Infinity;
@@ -129,8 +129,18 @@ describe("corridorExitSpeedRamp", () => {
       expect(v).toBeGreaterThanOrEqual(last - 1e-6);
       last = v;
     }
-    // Ease-out: at the midpoint the ramp is past 0.5.
-    expect(corridorExitSpeedRamp(0.5)).toBeGreaterThan(0.5);
+    // Ease-in-out: symmetric S — below the diagonal in the first half,
+    // above it in the second, with the midpoint exactly at 0.5.
+    expect(corridorExitSpeedRamp(0.5)).toBeCloseTo(0.5, 6);
+    expect(corridorExitSpeedRamp(0.25)).toBeLessThan(0.25);
+    expect(corridorExitSpeedRamp(0.75)).toBeGreaterThan(0.75);
+  });
+
+  it("has a gentle (near zero-velocity) onset — no harsh leap as #services enters", () => {
+    // smootherstep'(0) === 0, so a tiny input maps to a far smaller
+    // output than the previous ease-out cubic (slope 3 at the origin),
+    // which is what removed the abrupt onset of the sphere fly-in.
+    expect(corridorExitSpeedRamp(0.02)).toBeLessThan(0.02);
   });
 
   it("clamps inputs outside [0, 1]", () => {

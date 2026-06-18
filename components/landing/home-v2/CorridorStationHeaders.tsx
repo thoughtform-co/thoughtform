@@ -13,7 +13,6 @@ import { getSmoothedEpilogueProgress } from "./DepthGatewayScene/motionFollower"
 import {
   BRANDMARK_ANCHOR_INTELLIGENCE,
   getCameraFov,
-  getCorridorExitCameraPose,
   getEpilogueCameraPose,
 } from "./DepthGatewayScene/sceneGeom";
 import {
@@ -571,21 +570,28 @@ const PLANET_LIMB_WORLD_RADIUS =
  *  where the planet's particles end — reading as a true outer ring
  *  rather than cutting through the atmosphere. */
 const TICKER_RING_RADIUS_MUL = 1.07;
-/** Half-angle (rad, from the top) the headline arc spans across the cap.
- *  Wide enough to ring the planet, shallow enough that the side text
- *  stays legible rather than tipping near-vertical. */
-const TICKER_ARC_HALF_SPAN = (40 * Math.PI) / 180;
+/** MAX half-angle (rad, from the top) the headline arc may span. The
+ *  ACTUAL span is solved per-frame (see the tick) so the arc endpoints
+ *  always land `TICKER_EDGE_MARGIN_PX` BEYOND the viewport edges — the
+ *  scrolling headlines bleed OFF screen on both sides instead of ending
+ *  in view. This cap only bites if the planet ever projects small (so the
+ *  arc can't reach the edges); it keeps the ring from wrapping absurdly
+ *  far down the limb in that degenerate case. */
+const TICKER_ARC_MAX_HALF_SPAN = (74 * Math.PI) / 180;
+/** Pixels beyond each viewport edge the arc endpoints reach, so the
+ *  scrolling headlines run fully off-screen on both sides rather than
+ *  truncating / fading in view. */
+const TICKER_EDGE_MARGIN_PX = 96;
 /** Smoothed epilogue scrub below which the ticker is not painted
  *  (the planet hasn't landed and the title hasn't faded in yet). */
 const TICKER_MIN_EP = 0.42;
-/** Dissipate value past which the ticker STOPS following the corridor-exit
- *  fly-in (ADR-021). The fly-in pulls the mirror camera toward the planet
- *  centre; past this cap the camera would cross into the planet radius and
- *  the limb projection (centre + radius) blows up. Capping keeps the ticker
- *  welded to the rising limb through the visible part of the exit, then it
- *  holds that last welded pose while the opacity fade (SIGNAL_OUT, which
- *  starts at 0.72) carries it the rest of the way out. */
-const TICKER_EXIT_FLYIN_CAP = 0.5;
+/** Boost on the ticker's exit lift relative to the signal title/CTA
+ *  (`--signal-exit-lift`). The ticker arc sits LOWER in frame than the
+ *  title, so on a 1:1 lift it would clear the top later; the boost lifts it
+ *  a touch faster so the whole signal group (title + CTA + ticker) leaves
+ *  together. The onset is SHARED (both start at dissipate 0), so they move
+ *  away at the same time (2026-06-18 ticker-sync pass). */
+const TICKER_EXIT_LIFT_BOOST = 1.5;
 
 /**
  * EpilogueNewsTicker — headline ring welded to the substrate planet.
@@ -658,39 +664,20 @@ function EpilogueNewsTicker({ animate }: { animate: boolean }) {
       const vw = window.innerWidth;
       const vh = window.innerHeight;
 
-      // Mirror the live camera — including the ADR-021 corridor-exit
-      // fly-in — so the ticker stays WELDED to the same limb the sphere
-      // shows as it zooms up and off, instead of lagging behind at the
-      // docked-pose limb. This mirrors `FlyingCameraRig`: base epilogue
-      // pose, then lerp toward `getCorridorExitCameraPose(dissipate)` on
-      // the same `t = dissipate²(3 − 2·dissipate)` curve. The fly-in the
-      // ticker follows is CAPPED (`TICKER_EXIT_FLYIN_CAP`) so the mirror
-      // camera never crosses into the planet radius (which would blow the
-      // limb projection up); past the cap the arc holds its last welded
-      // pose and the opacity fade carries it out.
-      const dissipate = transform.docked
-        ? Math.min(transform.dockProgress, TICKER_EXIT_FLYIN_CAP)
-        : 0;
+      // EXIT SYNC (2026-06-18): the ticker no longer rides the ADR-021
+      // corridor-exit fly-in. It stays WELDED to the docked-pose limb —
+      // `getEpilogueCameraPose(ep)`, where `ep` eases to
+      // `DOCKED_INSTRUMENT_EPILOGUE_POSE` via the dock blend below — and
+      // leaves with the rest of the signal group via the CSS
+      // `--ticker-exit-lift` translate (shared onset with the title/CTA's
+      // `--signal-exit-lift`). Previously it tracked the sphere as the
+      // camera dove into it, so it lingered + moved on a different clock
+      // than the title; now the whole signal group (title + CTA + ticker)
+      // moves away together while the sphere dissipates on its own clock
+      // behind them.
       const basePose = getEpilogueCameraPose(ep);
-      let camPos = basePose.position;
-      let camLook = basePose.lookAt;
-      if (dissipate > 1e-4) {
-        const exitPose = getCorridorExitCameraPose(dissipate);
-        // `dockProgress` is already speed-ramped by the exit hook.
-        // Consume it directly so the ticker remains welded to the
-        // same camera path as the sphere (no stacked easing lag).
-        const tt = dissipate;
-        camPos = [
-          basePose.position[0] + (exitPose.position[0] - basePose.position[0]) * tt,
-          basePose.position[1] + (exitPose.position[1] - basePose.position[1]) * tt,
-          basePose.position[2] + (exitPose.position[2] - basePose.position[2]) * tt,
-        ];
-        camLook = [
-          basePose.lookAt[0] + (exitPose.lookAt[0] - basePose.lookAt[0]) * tt,
-          basePose.lookAt[1] + (exitPose.lookAt[1] - basePose.lookAt[1]) * tt,
-          basePose.lookAt[2] + (exitPose.lookAt[2] - basePose.lookAt[2]) * tt,
-        ];
-      }
+      const camPos = basePose.position;
+      const camLook = basePose.lookAt;
       camera.position.set(camPos[0], camPos[1], camPos[2]);
       camera.up.set(0, 1, 0);
       camera.lookAt(camLook[0], camLook[1], camLook[2]);
@@ -740,12 +727,25 @@ function EpilogueNewsTicker({ animate }: { animate: boolean }) {
       }
 
       // Circular cap centred on (cx, cy) at radius ringR, spanning
-      // ±half-span around 12 o'clock so the headline reads left→right
-      // over the limb. point(a) = (cx + r·sin a, cy − r·cos a).
-      const x0 = cx + ringR * Math.sin(-TICKER_ARC_HALF_SPAN);
-      const y0 = cy - ringR * Math.cos(-TICKER_ARC_HALF_SPAN);
-      const x1 = cx + ringR * Math.sin(TICKER_ARC_HALF_SPAN);
-      const y1 = cy - ringR * Math.cos(TICKER_ARC_HALF_SPAN);
+      // ±halfSpan around 12 o'clock so the headline reads left→right over
+      // the limb. point(a) = (cx + r·sin a, cy − r·cos a).
+      //
+      // The half-span is SOLVED so the endpoints land `TICKER_EDGE_MARGIN_PX`
+      // beyond the viewport edges (capped) — `cx + ringR·sin(halfSpan) =
+      // edge + margin` ⇒ `sin(halfSpan) = (halfWidth + margin) / ringR`.
+      // This makes the scrolling headlines bleed OFF screen on both sides
+      // (the marquee runs in from off the left and out off the right)
+      // rather than truncating in view, and it self-sizes across viewports
+      // and as the planet's projected radius changes.
+      const reach = (Math.max(cx, vw - cx) + TICKER_EDGE_MARGIN_PX) / ringR;
+      const halfSpan = Math.min(
+        TICKER_ARC_MAX_HALF_SPAN,
+        Math.asin(Math.min(1, Math.max(0, reach)))
+      );
+      const x0 = cx + ringR * Math.sin(-halfSpan);
+      const y0 = cy - ringR * Math.cos(-halfSpan);
+      const x1 = cx + ringR * Math.sin(halfSpan);
+      const y1 = cy - ringR * Math.cos(halfSpan);
       path.setAttribute(
         "d",
         `M ${x0.toFixed(1)} ${y0.toFixed(1)} A ${ringR.toFixed(1)} ${ringR.toFixed(1)} 0 0 1 ${x1.toFixed(1)} ${y1.toFixed(1)}`
@@ -926,18 +926,15 @@ export function CorridorStationHeaders() {
       const vhNow = typeof window !== "undefined" ? window.innerHeight || 1 : 1;
       const signalLiftPx = reducedMotion ? 0 : -signalDriftRaw * vhNow;
       const signalScale = reducedMotion ? 1 : 1 - signalDriftRaw * 0.03;
-      // Ticker exit: it rides the fly-in limb projection up to
-      // `TICKER_EXIT_FLYIN_CAP` (where the mirror camera would otherwise
-      // cross into the planet and blow the projection up), then the
-      // projection freezes mid-screen. A POST-CAP CSS lift carries that
-      // frozen arc the rest of the way off the top so it never stalls and
-      // fades in place. 0 until the cap, then ramps fast enough to clear
-      // the viewport before the opacity fade (SIGNAL_OUT) starts at 0.72.
-      const tickerPostCap =
-        signalDriftRaw > TICKER_EXIT_FLYIN_CAP
-          ? (signalDriftRaw - TICKER_EXIT_FLYIN_CAP) / (1 - TICKER_EXIT_FLYIN_CAP)
-          : 0;
-      const tickerLiftPx = reducedMotion ? 0 : -tickerPostCap * vhNow * 1.5;
+      // Ticker exit: shares the signal group's ONSET — it starts lifting at
+      // dissipate 0, exactly like the title/CTA (`--signal-exit-lift`), so
+      // they move away together. A small boost (`TICKER_EXIT_LIFT_BOOST`)
+      // lifts it a touch faster because the arc sits lower in frame and
+      // would otherwise clear the top later. The ticker no longer rides the
+      // welded fly-in (see `EpilogueNewsTicker`), so this CSS lift owns its
+      // whole exit; the shared SIGNAL_OUT opacity fade removes whatever is
+      // still on screen.
+      const tickerLiftPx = reducedMotion ? 0 : -signalDriftRaw * vhNow * TICKER_EXIT_LIFT_BOOST;
       const containerOps = {
         nav: bandOpacity(p, NAVIGATE_FADE_IN, NAVIGATE_FADE_OUT),
         enc: bandOpacity(p, ENCODE_FADE_IN, ENCODE_FADE_OUT),
@@ -994,8 +991,8 @@ export function CorridorStationHeaders() {
         sigEl.style.transform = `translate3d(-50%, ${signalLiftPx.toFixed(2)}px, 0) scale(${signalScale.toFixed(4)})`;
       }
       // Title/CTA read these inherited vars for the 1:1 push-out. The
-      // ticker reads `--ticker-exit-lift` (post-cap only) so it leaves
-      // with the scene after its welded fly-in rise freezes.
+      // ticker reads `--ticker-exit-lift` (shared onset, slightly boosted)
+      // so the whole signal group leaves together.
       document.documentElement.style.setProperty(
         "--signal-exit-lift",
         `${signalLiftPx.toFixed(2)}px`

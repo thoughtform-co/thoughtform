@@ -20,7 +20,10 @@ import {
   smootherstep,
 } from "@/lib/home-v2/corridorMap";
 import { DOCKED_INSTRUMENT_EPILOGUE_POSE } from "@/lib/home-v2/epilogueTimeline";
-import { getSmoothedEpilogueProgress } from "./DepthGatewayScene/motionFollower";
+import {
+  getSmoothedDissipate,
+  getSmoothedEpilogueProgress,
+} from "./DepthGatewayScene/motionFollower";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import { gyroTilt, useGyroLabStore } from "@/lib/stores/gyroLabStore";
 
@@ -202,7 +205,7 @@ function computeWeldedRect(
   now: number,
   smoothedEp: number,
   docked: boolean,
-  dockProgress: number,
+  dissipateProgress: number,
   vw: number,
   vh: number
 ): { left: number; top: number; width: number; height: number } {
@@ -222,13 +225,14 @@ function computeWeldedRect(
   const basePose = getEpilogueCameraPose(effectiveEp);
   let camPos = basePose.position;
   let camLook = basePose.lookAt;
-  const dissipate = docked ? clamp01(dockProgress) : 0;
+  const dissipate = docked ? clamp01(dissipateProgress) : 0;
   if (dissipate > 1e-4) {
     // ADR-021 corridor-exit fly-in. `getCorridorExitCameraPose(0)`
     // === the docked pose by construction, so this lerp is identity
-    // at engage. `dockProgress` is already speed-ramped by
-    // `useCorridorExitScroll`; consume it directly so this DOM weld
-    // stays synchronized with `FlyingCameraRig`.
+    // at engage. The caller passes the SMOOTHED dissipate (the same
+    // motionFollower channel `FlyingCameraRig` flies), so this DOM weld
+    // stays glued to the canvas sphere through the eased fly-in
+    // (2026-06-18 elegance pass).
     const exitPose = getCorridorExitCameraPose(dissipate);
     const tt = dissipate;
     camPos = [
@@ -382,7 +386,7 @@ export function ProjectedBrandmarkActor() {
           if (!inner) return;
 
           const { transform, camera, vw, vh, screenX, screenY, worldPos } = ctx;
-          const { paintProgress, beat, epilogueProgress, docked, dockProgress } = transform;
+          const { paintProgress, beat, epilogueProgress, docked } = transform;
           // Drive geometry off `paintProgress` so during the armed
           // pre-arm pass the mark is sized + placed at parked
           // Thoughtform. We now paint at FULL opacity during armed
@@ -446,7 +450,7 @@ export function ProjectedBrandmarkActor() {
               performance.now(),
               getSmoothedEpilogueProgress(),
               docked,
-              dockProgress,
+              getSmoothedDissipate(),
               vw,
               vh
             );
@@ -610,7 +614,7 @@ export function ProjectedBrandmarkActor() {
           performance.now(),
           getSmoothedEpilogueProgress(),
           t.docked,
-          t.dockProgress,
+          getSmoothedDissipate(),
           vw,
           vh
         );

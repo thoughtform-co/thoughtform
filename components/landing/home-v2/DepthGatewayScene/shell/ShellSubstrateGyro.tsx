@@ -51,7 +51,11 @@ import {
 import { useGyroLabStore } from "@/lib/stores/gyroLabStore";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import { clamp01 } from "@/lib/home-v2/corridorMap";
-import { getSmoothedAccretionLayers, getSmoothedEpilogueProgress } from "../motionFollower";
+import {
+  getSmoothedAccretionLayers,
+  getSmoothedDissipate,
+  getSmoothedEpilogueProgress,
+} from "../motionFollower";
 import {
   EMERGE_EPSILON,
   gyroAssemblyUnfold,
@@ -982,7 +986,7 @@ export function ShellSubstrateGyro({ layerKey, reducedMotion = false }: ShellSub
     const globeSpin = globeSpinRef.current;
     if (!root || !globeSpin) return;
 
-    const { active, armed, docked, dockProgress } = useDepthGatewayStore.getState().transform;
+    const { active, armed, docked } = useDepthGatewayStore.getState().transform;
     // Smoothed epilogue scrub — same channel as the camera so the
     // shed + surface boost glide with the flight (2026-06-11).
     const epilogueProgress = getSmoothedEpilogueProgress();
@@ -991,15 +995,18 @@ export function ShellSubstrateGyro({ layerKey, reducedMotion = false }: ShellSub
       return;
     }
 
-    // ADR-021 corridor-exit zoom-dissipate clock. While docked,
-    // `dockProgress` is the dissipate clock (owned by
-    // `useCorridorExitScroll`, single-writer rule); it ramps 0→1 as
-    // #services scrolls up over the docked sphere. At dissipate 0 all
-    // four dissipate helpers return their identity values (1 / 1 / 1 / 1),
-    // so the parked epilogue pose is byte-identical to its pre-ADR-021
+    // ADR-021 corridor-exit zoom-dissipate clock. While docked, the
+    // dissipate clock (owned by `useCorridorExitScroll`, single-writer
+    // rule) ramps 0→1 as #services scrolls up over the docked sphere.
+    // We read the SMOOTHED dissipate (motionFollower) — the SAME channel
+    // the camera + welded marks fly (2026-06-18 elegance pass) — so the
+    // shell scatter + particle fade glide with the fly-into-sphere
+    // instead of stepping under wheel input. At dissipate 0 all four
+    // dissipate helpers return their identity values (1 / 1 / 1 / 1), so
+    // the parked epilogue pose is byte-identical to its pre-ADR-021
     // self. When `!docked` the dissipate stays 0 so reverse-scroll
     // restores the held planet cleanly.
-    const dissipate = docked ? dockProgress : 0;
+    const dissipate = docked ? getSmoothedDissipate() : 0;
     const dissipateOp = dissipateOpacityMultiplier(dissipate);
     const dissipateCoreOp = dissipateCoreMultiplier(dissipate);
     const dissipateShellMul = dissipateShellScatter(dissipate);

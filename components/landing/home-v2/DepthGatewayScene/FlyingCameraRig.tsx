@@ -4,7 +4,7 @@ import { useFrame, useThree } from "@react-three/fiber";
 import { useEffect, useRef } from "react";
 import { DOCKED_INSTRUMENT_EPILOGUE_POSE } from "@/lib/home-v2/epilogueTimeline";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
-import { getSmoothedEpilogueProgress } from "./motionFollower";
+import { getSmoothedDissipate, getSmoothedEpilogueProgress } from "./motionFollower";
 import {
   CAMERA_START,
   getCameraFov,
@@ -70,7 +70,7 @@ export function FlyingCameraRig() {
     // parked Thoughtform layout (progress 0) during the `armed` pre-
     // arm pass — mirrors the DOM tracker so DOM + R3F project from
     // the same camera the moment the stage pins.
-    const { paintProgress, docked, dockProgress } = useDepthGatewayStore.getState().transform;
+    const { paintProgress, docked } = useDepthGatewayStore.getState().transform;
 
     // Epilogue v3 — once paintProgress saturates at 1 and the user
     // continues scrolling into the epilogue, `getEpilogueCameraPose`
@@ -122,13 +122,19 @@ export function FlyingCameraRig() {
       // `useCorridorExitScroll` is the only writer of this channel
       // while `useDepthScroll` zeroes it on release), so the camera
       // returns to the docked-blend pose with no pop.
-      const dissipate = docked ? dockProgress : 0;
+      // Fly the SMOOTHED dissipate (motionFollower) instead of the raw
+      // store scrub so the fly-into-sphere melts wheel notches into one
+      // glide, matching the epilogue flyover. The dissipate is already
+      // shaped by `corridorExitSpeedRamp` (smootherstep) in
+      // `useCorridorExitScroll`; the follower is a temporal FILTER on
+      // top, NOT a second easing curve, so the single-authored-curve
+      // contract holds (the welded brandmark + ticker fly the SAME
+      // smoothed value, so they stay glued to this sphere). Easing from
+      // 0 is a no-op at engage because `getCorridorExitCameraPose(0)`
+      // === the docked pose by construction.
+      const dissipate = docked ? getSmoothedDissipate() : 0;
       if (dissipate > 1e-4) {
         const exitPose = getCorridorExitCameraPose(dissipate);
-        // `dockProgress` already passed through
-        // `corridorExitSpeedRamp` in `useCorridorExitScroll`. Do not
-        // smoothstep again here — stacking eases is what made the
-        // sphere feel like it lagged before growing.
         const t = dissipate;
         camera.position.set(
           pose.position[0] * (1 - t) + exitPose.position[0] * t,

@@ -44,6 +44,16 @@ export interface MotionFollowerState {
    *  chased value instead of the raw store scrub (2026-06-11
    *  smoothness pass). */
   epilogue: number;
+  /** Smoothed dissipate / dock scrub (0..1). The corridor-exit
+   *  zoom-dissipate (camera fly-INTO the sphere + dotted-shell radial
+   *  scatter + particle fade) covers a large spatial arc in ~2
+   *  viewports too, so the raw scroll-derived `dockProgress` reads as
+   *  stepped under wheel input — the same problem the epilogue channel
+   *  solves. Every SPHERE/CAMERA consumer flies THIS chased value so
+   *  the whole exit glides on one clock and the welded DOM marks
+   *  (brandmark + news ticker) stay glued to the canvas sphere
+   *  (2026-06-18 elegance pass). */
+  dissipate: number;
 }
 
 /** Damping time constants (seconds), per channel. The follower covers
@@ -64,6 +74,11 @@ const MOTION_FOLLOWER_TAU_REVEAL_S = 0.2;
  *  camera feels attached to the scroll, but slow enough that wheel
  *  steps melt into one continuous glide (~0.55s settle). */
 const MOTION_FOLLOWER_TAU_EPILOGUE_S = 0.18;
+/** Dissipate (corridor-exit) chase. Matched to the epilogue so the
+ *  zoom-dissipate exit reads as the same instrument as the epilogue
+ *  flyover the user reads just before it — wheel steps melt into one
+ *  glide instead of stepping the fly-into-sphere (~0.55s settle). */
+const MOTION_FOLLOWER_TAU_DISSIPATE_S = 0.18;
 /** STACK channel time constant — used TWICE (cascaded second-order
  *  chase, see below). The sources/surfaces dock is the corridor's
  *  final reveal and reads best as an editorial speed ramp: a single
@@ -90,6 +105,7 @@ const state: MotionFollowerState = {
   orbits: 0,
   stack: 0,
   epilogue: 0,
+  dissipate: 0,
 };
 
 /** Intermediate stage of the stack's cascaded (second-order) chase:
@@ -127,6 +143,7 @@ export function snapMotionFollower(targets: MotionFollowerState): void {
   state.stack = targets.stack;
   stackMid = targets.stack;
   state.epilogue = targets.epilogue;
+  state.dissipate = targets.dissipate;
 }
 
 /**
@@ -182,6 +199,13 @@ export function driveMotionFollower(
   if (Math.abs(targets.epilogue - state.epilogue) > 0.5) {
     state.epilogue = targets.epilogue;
   }
+  // Dissipate-channel teleport: same reasoning as the epilogue channel
+  // — paintProgress stays pinned at 1 through the dock, so a hash-nav /
+  // scroll-restore landing mid-dissipate would otherwise glide the
+  // camera across half the fly-into-sphere. Snap on a non-physical gap.
+  if (Math.abs(targets.dissipate - state.dissipate) > 0.5) {
+    state.dissipate = targets.dissipate;
+  }
 
   const dt = Math.min(0.1, Math.max(0, dtSeconds));
   if (dt <= 0) return;
@@ -192,6 +216,7 @@ export function driveMotionFollower(
   const kReveal = 1 - Math.exp(-dt / MOTION_FOLLOWER_TAU_REVEAL_S);
   const kEpilogue = 1 - Math.exp(-dt / MOTION_FOLLOWER_TAU_EPILOGUE_S);
   const kStack = 1 - Math.exp(-dt / MOTION_FOLLOWER_TAU_STACK_S);
+  const kDissipate = 1 - Math.exp(-dt / MOTION_FOLLOWER_TAU_DISSIPATE_S);
   state.panOffsetX += (targets.panOffsetX - state.panOffsetX) * kPan;
   state.substrate += (targets.substrate - state.substrate) * kReveal;
   state.orbits += (targets.orbits - state.orbits) * kReveal;
@@ -206,6 +231,13 @@ export function driveMotionFollower(
   // the scrub (no asymptotic micro-creep in the camera).
   if (Math.abs(targets.epilogue - state.epilogue) < 0.0004) {
     state.epilogue = targets.epilogue;
+  }
+  state.dissipate += (targets.dissipate - state.dissipate) * kDissipate;
+  // Same sub-perceptual settle as the epilogue so the docked / parked
+  // pose lands exactly on the scrubbed dissipate (no micro-creep in
+  // the fly-into-sphere when the user holds at a scroll position).
+  if (Math.abs(targets.dissipate - state.dissipate) < 0.0004) {
+    state.dissipate = targets.dissipate;
   }
 }
 
@@ -232,4 +264,16 @@ export function getSmoothedAccretionLayers(): {
  *  only the camera would let the planet's scale step against it. */
 export function getSmoothedEpilogueProgress(): number {
   return state.epilogue;
+}
+
+/** Smoothed dissipate scrub. Temporal counterpart of the store's
+ *  `dockProgress` (the corridor-exit zoom-dissipate clock). The camera
+ *  fly-into-sphere, the dotted-shell radial scatter + particle fade,
+ *  and the welded DOM marks (brandmark + news ticker) all fly THIS
+ *  value so the exit moves on one clock and the welds stay glued to
+ *  the canvas sphere — smoothing only the camera would let the welded
+ *  marks step against it. Driven only while docked (target falls back
+ *  to 0 otherwise, so reverse-scroll eases the fly-in back out). */
+export function getSmoothedDissipate(): number {
+  return state.dissipate;
 }

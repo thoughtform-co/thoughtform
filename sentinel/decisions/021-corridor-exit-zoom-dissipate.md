@@ -486,6 +486,79 @@ path; on the capable path the SVG is hidden by`data-services-pixelate` regardles
 - [`components/landing/home-v2/home-v2.css`](../../components/landing/home-v2/home-v2.css)
   — `.home-v2-seam-pixels` layer + SVG hide rule under `data-services-pixelate`.
 
+## 2026-06-18 Revision — Dissipate elegance pass (gentle onset + temporal follower)
+
+The zoom-dissipate sphere fly-in read as **harsh and abrupt at the
+onset**: the moment `#services` entered the viewport the camera leapt
+into the sphere, then decelerated. Two causes, both differences from
+the epilogue flyover that immediately precedes it (which the user holds
+as the "right" speed/smoothness reference):
+
+1. **Onset curve.** `corridorExitSpeedRamp` was an ease-OUT cubic
+   (`1 − (1 − t)³`) with its MAXIMUM velocity at `t = 0`. The earlier
+   ease-out was chosen to kill a "wait, then lurch" feel from THREE
+   stacked smoothsteps (hook + rig + pose), but it overcorrected into a
+   hard onset.
+2. **No temporal smoothing.** Every dissipate consumer read the raw
+   scroll-derived `dockProgress`, so wheel-notch quantization stepped
+   the fly-into-sphere — whereas the epilogue rides the motion
+   follower's exponential chase (`getSmoothedEpilogueProgress`) that
+   melts notches into a continuous glide.
+
+### What changed
+
+- **`lib/home-v2/epilogueTimeline.ts`** — `corridorExitSpeedRamp` is now
+  **smootherstep** (`6t⁵ − 15t⁴ + 10t³`), an ease-IN-OUT curve with zero
+  velocity AND acceleration at both ends, so the fly-in starts from rest
+  and settles gently. It is still the SINGLE authored easing curve
+  consumed directly (no second smoothstep), so the "wait, then lurch"
+  regression cannot recur.
+- **`DepthGatewayScene/motionFollower.ts`** — adds a `dissipate` channel
+  (tau 0.18s, matched to the epilogue) + `getSmoothedDissipate()`,
+  mirroring the epilogue channel. The follower is a temporal FILTER, not
+  a second easing curve, so the single-authored-curve contract holds.
+- **`DepthGatewayScene/index.tsx`** — `MotionFollowerDriver` feeds the
+  channel `docked ? dockProgress : 0` so reverse-scroll eases the fly-in
+  back out instead of snapping.
+- **The four glued sphere/camera consumers** now fly the SAME smoothed
+  value so the welded DOM marks stay glued to the canvas sphere:
+  `FlyingCameraRig` (camera fly-in), `ShellSubstrateGyro` (shell scatter
+  - particle fade + atmosphere/core), `ProjectedBrandmarkActor`
+    (welded brandmark, both the tracker `onPaint` and the post-active
+    rAF, via `computeWeldedRect`), and `EpilogueNewsTicker` (welded ring).
+- **`tests/lib/epilogue-timeline.test.ts`** — the `corridorExitSpeedRamp`
+  spec now asserts the symmetric ease-in-out shape + the gentle onset.
+
+### Invariants preserved
+
+- **Single-writer rule.** `useCorridorExitScroll` is still the only
+  writer of `docked` / `dockProgress` / `seamMorph`. The smoothed
+  dissipate lives in the motion-follower module singleton (read-only
+  getter), exactly like the epilogue channel — no new store field.
+- **Single authored curve.** smootherstep is applied once (in the
+  ramp); the follower is a temporal filter on top. Consumers still do
+  not stack a second smoothstep.
+- **Threshold gates unchanged.** The DOM signal-block lift, the seam
+  pixel-field morph clock, and the `markCentred` / `DOCK_RECENTRE_FRAC`
+  gates continue to read the raw `dockProgress` (they are translations /
+  coarse thresholds, not welded to the camera), so their timing is
+  unchanged.
+- **Reverse-scroll / release / fallback.** The follower snaps on
+  teleport + idle-resume (mirrors the epilogue channel) and eases the
+  target back to 0 when `docked` releases; the existing
+  visibility/veil gating still covers the dock-release frame.
+
+### Files touched in this revision
+
+- [`lib/home-v2/epilogueTimeline.ts`](../../lib/home-v2/epilogueTimeline.ts)
+- [`components/landing/home-v2/DepthGatewayScene/motionFollower.ts`](../../components/landing/home-v2/DepthGatewayScene/motionFollower.ts)
+- [`components/landing/home-v2/DepthGatewayScene/index.tsx`](../../components/landing/home-v2/DepthGatewayScene/index.tsx)
+- [`components/landing/home-v2/DepthGatewayScene/FlyingCameraRig.tsx`](../../components/landing/home-v2/DepthGatewayScene/FlyingCameraRig.tsx)
+- [`components/landing/home-v2/DepthGatewayScene/shell/ShellSubstrateGyro.tsx`](../../components/landing/home-v2/DepthGatewayScene/shell/ShellSubstrateGyro.tsx)
+- [`components/landing/home-v2/ProjectedBrandmarkActor.tsx`](../../components/landing/home-v2/ProjectedBrandmarkActor.tsx)
+- [`components/landing/home-v2/CorridorStationHeaders.tsx`](../../components/landing/home-v2/CorridorStationHeaders.tsx)
+- [`tests/lib/epilogue-timeline.test.ts`](../../tests/lib/epilogue-timeline.test.ts)
+
 ## Related Decisions
 
 - [ADR-002 — Scroll Animation Architecture](002-scroll-animation-architecture.md)
