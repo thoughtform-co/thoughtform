@@ -44,6 +44,7 @@ import { buildSphereCloudGeometry } from "@/components/landing/v7/intelligence-l
 import {
   dissipateAtmosphereEnvelope,
   dissipateCoreMultiplier,
+  dissipateInteriorOpacityMultiplier,
   dissipateOpacityMultiplier,
   dissipateShellScatter,
   epilogueBand,
@@ -1008,6 +1009,12 @@ export function ShellSubstrateGyro({ layerKey, reducedMotion = false }: ShellSub
     // restores the held planet cleanly.
     const dissipate = docked ? getSmoothedDissipate() : 0;
     const dissipateOp = dissipateOpacityMultiplier(dissipate);
+    // Interior cloud (ambient particles inside the volume) settles on a
+    // muted floor instead of fading to 0 — the camera flies INTO the
+    // sphere during the dissipate, so the inside should keep reading as
+    // a soft particulate volume behind the Services copy rather than
+    // being erased.
+    const dissipateInteriorOp = dissipateInteriorOpacityMultiplier(dissipate);
     const dissipateCoreOp = dissipateCoreMultiplier(dissipate);
     const dissipateShellMul = dissipateShellScatter(dissipate);
     const dissipateAtmoEnv = dissipateAtmosphereEnvelope(dissipate);
@@ -1064,9 +1071,14 @@ export function ShellSubstrateGyro({ layerKey, reducedMotion = false }: ShellSub
     const opacityBoost = 1 + approachT * 0.55;
 
     // GLOBE materials — kept through the epilogue (these BECOME the
-    // planet surface grid + atmospheric particles). Multiplied by
-    // `dissipateOp` so the surface dots fade to 0 as the dissipate
-    // clock ramps; identity (×1) at dissipate 0.
+    // planet surface grid + atmospheric particles). The dissipate fade
+    // is split: SURFACE elements (great-circle grid + equator + dotted
+    // shell) ride `dissipateOp` to 0 so the silhouette dissolves, while
+    // the INTERIOR ambient cloud (`mats.particle`) rides
+    // `dissipateInteriorOp` to a muted floor so the volume keeps
+    // reading as a soft particulate haze behind the Services copy as
+    // the camera flies through it. Identity (×1) at dissipate 0 so the
+    // parked epilogue pose is byte-identical to its pre-dissipate self.
     mats.globeDots.uniforms.uOpacity.value =
       Math.min(
         1,
@@ -1081,7 +1093,7 @@ export function ShellSubstrateGyro({ layerKey, reducedMotion = false }: ShellSub
     mats.particle.uniforms.uPixelRatio.value = state.viewport.dpr;
     mats.particle.uniforms.uOpacity.value =
       Math.min(1, SUBSTRATE_GYRO_PARTICLE_OPACITY * presence * opacityBoost * dockVisibilityBoost) *
-      dissipateOp;
+      dissipateInteriorOp;
     mats.particle.uniforms.uPointSize.value = SUBSTRATE_GYRO_POINT_SIZE * pointSizeBoost;
     mats.dottedShell.uniforms.uPixelRatio.value = state.viewport.dpr;
     mats.dottedShell.uniforms.uOpacity.value =

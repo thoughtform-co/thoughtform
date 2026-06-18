@@ -247,6 +247,27 @@ export function dissipateOpacityMultiplier(dissipateProgress: number): number {
   return 1 - dissipateBand(dissipateProgress, "PARTICLE_FADE");
 }
 
+/** Default opacity floor for interior sphere particles during the
+ *  dissipate. The narrative is "we have entered the sphere" — the
+ *  surface shell scatters outward and dissolves, but ambient particles
+ *  inside the volume remain visible (muted) so the camera reads as
+ *  flying THROUGH the sphere rather than into an empty hole. */
+export const DISSIPATE_INTERIOR_OPACITY_FLOOR = 0.18;
+
+/** Interior-particle opacity multiplier — same shape as
+ *  `dissipateOpacityMultiplier` (1 at dissipate 0, monotonic across
+ *  PARTICLE_FADE), but it settles on `floor` instead of 0 at the tail
+ *  so the interior cloud stays softly visible after the surface shell
+ *  has dissolved. Caller multiplies onto its existing `uOpacity` so
+ *  dissipate 0 stays byte-identical to the parked epilogue pose. */
+export function dissipateInteriorOpacityMultiplier(
+  dissipateProgress: number,
+  floor: number = DISSIPATE_INTERIOR_OPACITY_FLOOR
+): number {
+  const f = Math.max(0, Math.min(1, floor));
+  return 1 - (1 - f) * dissipateBand(dissipateProgress, "PARTICLE_FADE");
+}
+
 /** Smoky occluder-core opacity multiplier — sheds early on CORE_SHED
  *  so the dissipating shell never reveals a hard silhouette disc. */
 export function dissipateCoreMultiplier(dissipateProgress: number): number {

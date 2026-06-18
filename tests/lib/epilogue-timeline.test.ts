@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   DISSIPATE_BANDS,
+  DISSIPATE_INTERIOR_OPACITY_FLOOR,
   DISSIPATE_SHELL_SCATTER_AMP,
   DOCKED_INSTRUMENT_EPILOGUE_POSE,
   EPILOGUE_BANDS,
@@ -10,6 +11,7 @@ import {
   dissipateAtmosphereEnvelope,
   dissipateBand,
   dissipateCoreMultiplier,
+  dissipateInteriorOpacityMultiplier,
   dissipateOpacityMultiplier,
   dissipateShellScatter,
   epilogueBand,
@@ -116,6 +118,40 @@ describe("dissipate clock", () => {
       expect(v).toBeGreaterThanOrEqual(last - 1e-6);
       last = v;
     }
+  });
+
+  it("interior opacity multiplier holds at 1 before PARTICLE_FADE and settles on the floor", () => {
+    expect(dissipateInteriorOpacityMultiplier(0)).toBe(1);
+    expect(dissipateInteriorOpacityMultiplier(DISSIPATE_BANDS.PARTICLE_FADE.start)).toBe(1);
+    // At PARTICLE_FADE.end the band saturates → multiplier === floor.
+    expect(dissipateInteriorOpacityMultiplier(DISSIPATE_BANDS.PARTICLE_FADE.end)).toBeCloseTo(
+      DISSIPATE_INTERIOR_OPACITY_FLOOR,
+      5
+    );
+    expect(dissipateInteriorOpacityMultiplier(1)).toBeCloseTo(DISSIPATE_INTERIOR_OPACITY_FLOOR, 5);
+  });
+
+  it("interior opacity multiplier never drops below `dissipateOpacityMultiplier`", () => {
+    // The interior helper is a relaxation of the surface helper — at every
+    // dissipate sample its output must be >= the surface output, so
+    // routing the interior cloud through it can only INCREASE visible
+    // alpha vs. the previous full-fade behavior (and never make the
+    // interior dimmer than the dissipating shell).
+    for (let p = 0; p <= 1.0001; p += 0.05) {
+      const interior = dissipateInteriorOpacityMultiplier(p);
+      const surface = dissipateOpacityMultiplier(p);
+      expect(interior).toBeGreaterThanOrEqual(surface - 1e-6);
+    }
+  });
+
+  it("interior opacity multiplier accepts a custom floor", () => {
+    expect(dissipateInteriorOpacityMultiplier(1, 0)).toBeCloseTo(0, 5);
+    expect(dissipateInteriorOpacityMultiplier(1, 0.5)).toBeCloseTo(0.5, 5);
+    // Out-of-range floors are clamped so callers can't accidentally
+    // brighten the cloud above the parked alpha.
+    expect(dissipateInteriorOpacityMultiplier(0, 1.5)).toBe(1);
+    expect(dissipateInteriorOpacityMultiplier(1, 1.5)).toBeCloseTo(1, 5);
+    expect(dissipateInteriorOpacityMultiplier(1, -0.2)).toBeCloseTo(0, 5);
   });
 });
 

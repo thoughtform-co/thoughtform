@@ -45,14 +45,17 @@ import {
   smootherstep,
   windowFor,
 } from "@/lib/home-v2/corridorMap";
-import { getEpiloguePlanetScale } from "@/lib/home-v2/epilogueTimeline";
+import {
+  dissipateInteriorOpacityMultiplier,
+  getEpiloguePlanetScale,
+} from "@/lib/home-v2/epilogueTimeline";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import {
   BrandmarkPhysicsCore,
   BRANDMARK_PHYSICS_CORE_COUNT_DESKTOP,
   BRANDMARK_PHYSICS_CORE_COUNT_MOBILE,
 } from "@/components/brand/BrandmarkPhysicsCore";
-import { getSmoothedEpilogueProgress } from "./motionFollower";
+import { getSmoothedDissipate, getSmoothedEpilogueProgress } from "./motionFollower";
 import {
   getBrandmarkSphereMatchHalfExtent,
   getBrandmarkWorldHalfExtent,
@@ -89,6 +92,19 @@ const SIZE_MERGE_END = windowFor("navigate").start;
 const CORE_OPACITY = 0.95;
 const CORE_POINT_SIZE_FLAT = 3.0;
 const CORE_POINT_SIZE_3D = 4.0;
+
+/** Opacity floor for the in-canvas core during dock / dissipate. The
+ *  DOM SVG (`ProjectedBrandmarkActor`) owns the readable mark while the
+ *  visitor enters Services, so the core can't sit at full brightness
+ *  (it would paint a duplicate silhouette over the welded SVG). But
+ *  hiding it entirely (the previous `handoffFade = t.docked ? 0 : 1`
+ *  hard-cut) reads as the interior of the sphere going empty just as
+ *  the camera flies into it. Holding the core at this low fraction of
+ *  `CORE_OPACITY` keeps a soft particulate hint inside the volume —
+ *  the narrative is "we have entered the sphere", and that should
+ *  show as muted texture in the background, not as a visible foreground
+ *  mark. */
+const CORE_DOCKED_OPACITY_FLOOR = 0.12;
 
 /** Z-stream momentum (2026-06-17). As the mark flies into the corridor
  *  toward the substrate sphere, particles stream toward the background
@@ -161,7 +177,12 @@ export function BrandmarkPhysicsCoreActor({
     if (!group) return;
 
     const t = useDepthGatewayStore.getState().transform;
-    const painting = t.active || t.armed;
+    // Keep the sim alive through the dock so the in-sphere core fades
+    // gradually with the dissipate (see `handoffFade` below). Without
+    // `t.docked` the actor would early-return as soon as the corridor
+    // released `active`, which read as the interior of the sphere
+    // going empty just as the camera flies into it.
+    const painting = t.active || t.armed || t.docked;
     if (!painting) {
       group.visible = false;
       pausedRef.current = true;
@@ -235,16 +256,31 @@ export function BrandmarkPhysicsCoreActor({
     depthRef.current = depth;
     glitchRef.current = glitch;
 
-    // Corridor → epilogue handoff: the in-canvas core continues to own
-    // the mark while the visitor exits Build and flies through the
-    // substrate sphere. It yields only once the later dock / Services
-    // handoff owns the mark and the DOM SVG is allowed back in.
-    const handoffFade = t.docked ? 0 : 1;
+    // Corridor → epilogue handoff: the in-canvas core owns the mark
+    // while the visitor exits Build and flies through the substrate
+    // sphere. Once the dock engages the DOM SVG re-centres into
+    // `#services` and owns the readable FOREGROUND mark, so the core
+    // yields its foreground role — but instead of the previous hard
+    // `t.docked ? 0 : 1` cut, it drops to a low floor for the rest of
+    // the dock so the inside of the sphere keeps reading as muted
+    // particulate texture while the camera enters the volume. The
+    // floor is also nudged down across the dissipate so the soft
+    // interior haze fades alongside the dotted-shell scatter and
+    // doesn't outlive the rest of the sphere. `dissipateInteriorOpacity`
+    // mirrors `mats.particle` in `ShellSubstrateGyro` (same helper, same
+    // floor semantics) so the core relaxes in step with the gyro's
+    // ambient interior cloud — both read as a single soft volume rather
+    // than as two layers on different clocks.
+    const handoffFade = t.docked
+      ? CORE_DOCKED_OPACITY_FLOOR * dissipateInteriorOpacityMultiplier(getSmoothedDissipate(), 0.5)
+      : 1;
 
     // Hidden at the section-2 rest (the SVG owns the crisp 2D mark);
     // the cut brings the core to full brightness as the SVG vanishes.
-    // Bright/solid throughout so the flat silhouette reads as densely
-    // as the SVG it replaces.
+    // Bright/solid through the corridor + epilogue so the silhouette
+    // reads as densely as the SVG it replaces; dropped to the muted
+    // floor at dock engage so it reads as interior texture under the
+    // welded SVG, not a duplicate mark.
     opacityRef.current = CORE_OPACITY * reveal * handoffFade;
     // Crisp small specks for the flat silhouette → slightly larger
     // specks for the luminous 3D body, riding the depth extrude.
