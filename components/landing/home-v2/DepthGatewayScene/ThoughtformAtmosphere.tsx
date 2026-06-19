@@ -174,10 +174,11 @@ function shockwaveState(progress: number): { scale: number; opacity: number } {
  *  falloff handles the visual softness. */
 const BOOT_GLOW_HALF = 3.6;
 
-/** Peak alpha of the glow at full boot. Deliberately low so the
- *  disk reads as ambient lighting, never as a solid coloured
- *  shape competing with the brandmark. */
-const BOOT_GLOW_PEAK_OPACITY = 0.18;
+/** Peak alpha of the glow at full boot. Set to 0 (2026-06-19, design
+ *  request) to disable the warm gateway boot-up bloom — the local star
+ *  cluster + stargate shockwave are kept. Restore to 0.18 to bring the
+ *  warm radial bloom back. */
+const BOOT_GLOW_PEAK_OPACITY = 0;
 
 /** Z offset behind the gate plane so the glow composites BEHIND
  *  the compass rings + brandmark — the rings read against it, the

@@ -13,7 +13,6 @@ import { GatewayThroat } from "./GatewayThroat";
 import { GatewayWorld } from "./gates/GatewayWorld";
 import { InterGateCorridor } from "./InterGateCorridor";
 import { LatentFieldTunnel } from "./LatentFieldTunnel";
-import { LatentTopographyContours } from "./LatentTopographyContours";
 import { LatentWormholeWalls } from "./LatentWormholeWalls";
 import { driveMotionFollower } from "./motionFollower";
 import { ScrollStreaks } from "./ScrollStreaks";
@@ -412,7 +411,10 @@ export function DepthGatewayScene() {
           photons paint on top of the rail dots that share their
           path. */}
       <CorridorPhotons />
-      <LatentTopographyContours />
+      {/* LatentTopographyContours (latent-space contour "mandalas" on the
+          Navigate -> Encode leg) removed 2026-06-19 per design request —
+          they read as busy hand-drawn orbit decoration between stations.
+          Re-add `<LatentTopographyContours />` here to restore them. */}
       <CelestialMotes />
       <ScrollStreaks />
       <GatewayWorld />
