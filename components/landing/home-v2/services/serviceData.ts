@@ -34,6 +34,8 @@ export interface Service {
   index: string;
   /** Display verb ("KEYNOTE", "WORKSHOP", "EMBEDDED"). */
   verb: string;
+  /** Title-case name shown in the Services stage left list ("Keynote"). */
+  name: string;
   /** Mono kicker that names the loop framing ("THE LOOP AS ARGUMENT"). */
   kicker: string;
   /** Big editorial subtitle ("Install the frame in a room."). */
@@ -54,28 +56,12 @@ export interface Service {
   shapeKey: "loop-forming" | "loop-encoding" | "loop-crystallized";
 }
 
-export const SERVICES_HEADER = {
-  /** PT Mono eyebrow above the heading. */
-  eyebrow: "/ Services — how we run it",
-  /** Big PP Neue Montreal heading (split across two lines). The
-   *  italic emphasis lives on the second half (see CSS). */
-  titleLine1: "One loop.",
-  titleLine2: "Three depths.",
-  /** Right-column lede paragraph (Linear-style). */
-  lede: "How far we run the loop is the only thing that changes. Each format installs the same Navigate → Encode → Build practice — only the depth changes.",
-} as const;
-
-export const PHASE_LABELS: Record<ServicePhase, string> = {
-  navigate: "Navigate",
-  "navigate-encode": "Navigate · Encode",
-  all: "Navigate · Encode · Build",
-};
-
 export const SERVICES: readonly Service[] = [
   {
     id: "keynote",
     index: "01",
     verb: "KEYNOTE",
+    name: "Keynote",
     kicker: "THE LOOP AS ARGUMENT",
     tagline: "Install the frame in a room.",
     body: "The frame, installed in a room. Your team leaves seeing AI as intelligence to navigate, not software to command.",
@@ -93,6 +79,7 @@ export const SERVICES: readonly Service[] = [
     id: "workshop",
     index: "02",
     verb: "WORKSHOP",
+    name: "Workshop",
     kicker: "THE LOOP ON YOUR WORK",
     tagline: "Encode what works.",
     body: "We take your real briefs, navigate them together, and encode what works into substrate the team keeps. From a half-day sprint to a multi-week track.",
@@ -111,6 +98,7 @@ export const SERVICES: readonly Service[] = [
     id: "embedded",
     index: "03",
     verb: "EMBEDDED",
+    name: "Embedded",
     kicker: "THE LOOP UNTIL IT RUNS ITSELF",
     tagline: "Compound the layer.",
     body: "I work alongside the team, loop after loop, until the layer compounds on its own. Navigate, encode, and build thin tools on top of what's encoded.",

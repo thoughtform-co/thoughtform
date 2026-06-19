@@ -394,15 +394,16 @@ html[data-corridor-exit="true"] #services > * {
  * `.station` default (0,1,0). The `svh` line is the modern dynamic-
  * viewport sizing; the `vh` line is the fallback for older engines
  * (matches the `.station` default that ships both). */
-/* 2026-06-19: #services is now a content section (Keynote/Workshop/
- * Embedded terminal stacking cards) — NOT a brandmark runway. The
- * height is driven by the three sticky-stacking cards in
- * `services.css` (each card ≈ 100svh of scroll runway). Removing the
- * legacy 200svh override lets the section size to its own content
- * + sticky overflow instead of being padded with empty runway. */
+/* 2026-06-19: #services is a Jasmina-style pinned stage (left service
+ * list · centered particle brandmark · right paragraph) — NOT a
+ * brandmark runway. Its height is driven by the `.services-stage-root`
+ * runway (~3×100svh) in `services.css`, inside which a sticky stage
+ * pins; the active step crossfades the right paragraph. Removing the
+ * legacy 200svh override lets the section size to that runway instead
+ * of being padded with empty height. */
 #services {
   /* Intentionally no min-height override here. See services.css for
-   * the actual sticky-stack geometry. */
+   * the actual runway + sticky-stage geometry. */
 }
 
 /* ── DOM copy + label overlay ─────────────────────────────────

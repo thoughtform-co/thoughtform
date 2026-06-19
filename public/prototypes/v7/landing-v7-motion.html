@@ -5288,39 +5288,28 @@ html { scroll-behavior: smooth; }
        to sit immediately after the home-corridor mount placeholder
        so the corridor-exit zoom-dissipate hands off here (ADR-021).
 
-       2026-06-16: the original execution strip (Keynotes · Workshops ·
-       Strategy) + funnel CTA were stripped — the section is now the
-       stage for the re-centred brandmark coming off the dissipate.
-       `useCorridorExitScroll` lerps the welded brandmark into the
-       section centre and holds it via `data-services-brandmark`
-       (see `home-v2.css`). The empty section keeps:
+       2026-06-19: retired the stacked terminal cards AND the section
+       header. The section is now a pinned, Jasmina-style stage — a left
+       service list, a centered particle brandmark, and a right paragraph
+       that crossfades as the stage steps. The whole stage is a React
+       portal mounted into the data-services-root slot below (see
+       `ServicesStage`); the parsed shell keeps only:
          · its full section#services shell so HUD nav, celestial slots,
            and the ADR-021 relocate spec still resolve;
          · the .station__idx corner chrome so the station still reads
            as a numbered station to the user.
+       The corridor-exit ambient hold (interior sphere particles behind
+       the section) is unchanged — it is keyed off section#services and
+       the html data-corridor-exit attribute, not the interior markup.
        NOTE: this comment must contain NO angle-bracket tag syntax —
        the v7-parse relocate/remove walkers regex-scan the raw HTML
-       (comments included), so a literal section/div tag here would be
+       (comments included), so a literal section or div tag here would be
        counted as a real element and break the balanced-tag walk.
-       Final copy + offer come later. ============================ -->
+       ============================ -->
   <section class="station station--services" id="services" data-station="services" data-screen-label="08 Services">
     <div class="station__idx">Services<span class="landmark">Landmark · how we run it</span></div>
 
-    <header class="services__header" data-services-header>
-      <p class="services__eyebrow" data-m="eyebrow">/ Services &mdash; how we run it</p>
-      <div class="services__header__grid">
-        <h2 class="services__title" data-m="title">
-          One loop.<br><em>Three depths.</em>
-        </h2>
-        <p class="services__lede" data-m="body">
-          How far we run the loop is the only thing that changes. Each format
-          installs the same Navigate &rarr; Encode &rarr; Build practice
-          &mdash; only the depth changes.
-        </p>
-      </div>
-    </header>
-
-    <div class="services__stack" data-services-root></div>
+    <div class="services-stage-root" data-services-root></div>
   </section>
 
   <!-- ═══════════ CONNECTOR · 06 → 07 (slot: React portal mount) ═══════════

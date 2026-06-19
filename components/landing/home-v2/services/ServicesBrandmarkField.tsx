@@ -2,60 +2,60 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { sampleShape } from "@/lib/brandmark/sampleShape";
-import { SERVICE_SHAPES, type ServiceShapeKey } from "@/lib/services/serviceShapes";
+import { BRANDMARK_FULL_PATHS, BRANDMARK_SHAPE_KEYS } from "@/lib/brandmark/shapes";
 
-interface ServiceSigilFieldProps {
-  shapeKey: ServiceShapeKey;
-  /** True for the visually emphasised "lead" card — particles paint
-   *  in `--gold` instead of `--dawn-70`. */
-  accent?: boolean;
-}
+/** Source viewBox of `public/logos/Thoughtform_Brandmark.svg` (see
+ *  `lib/brandmark/shapes.ts`). Nearly square — the ~1% vertical squash
+ *  from drawing into a square canvas is imperceptible. */
+const BRANDMARK_VIEWBOX = { x: 0, y: 0, width: 430.99, height: 436 } as const;
+
+/** Substrate-tier density so the mark reads as a solid filled glyph
+ *  (matches the global silhouette painter's order of magnitude). */
+const COUNT_DESKTOP = 1800;
+const COUNT_MOBILE = 800;
 
 /**
- * Card-scoped 2D particle painter for the Services terminal cards.
+ * Centered, constant particle render of the full Thoughtform brandmark —
+ * the visual anchor of the redesigned Services stage (the "particle
+ * version of our brand mark" that flanks the left service list and the
+ * right explanation).
  *
- * Samples a service-specific silhouette via
- * `lib/brandmark/sampleShape.ts` (the same proven stratified sampler
- * the brandmark painters use, ADR-011) into a dense home-position
- * Float32Array. Per frame, paints each particle as a 1.5-2px square
- * dot at a slow sinusoidal jitter around its home position, so the
- * cloud reads as "instrument-grade" — alive but not noisy.
+ * This is the SAME proven 2D-canvas painter as the retired
+ * `ServiceSigilField` (ADR-011 stratified sampler → slow per-particle
+ * sinusoidal breathing around fixed home positions), but it samples the
+ * canonical `BRANDMARK_FULL_PATHS` instead of a per-card service
+ * silhouette, and it does NOT change with scroll — one constant mark
+ * across all three services (per the brief).
  *
- * Painter scope: it is NOT part of the global brandmark painter cap
- * (`BrandmarkParticleCanvas`); it is its own scoped 2D canvas, sized
- * to its container box. Each card mounts its own field. Pattern
- * mirrors `CorridorSeamPixelField` but bounded to a card-sized rect
- * instead of the viewport.
+ * Painter scope: its own container-sized 2D canvas. It is NOT part of
+ * the global `BrandmarkParticleCanvas` painter cap — it composites in
+ * front of the ambient interior-sphere particles that the corridor-exit
+ * hold keeps alive behind `#services` (the "inside the sphere" backdrop).
  *
- * Idle policy:
- *   - rAF runs only while the canvas is in the viewport
- *     (IntersectionObserver gate).
- *   - When `prefers-reduced-motion: reduce`, the painter renders a
- *     single static frame and returns.
- *   - Pre-hydration / SSR: the inline fallback SVG (from
- *     `SERVICE_SHAPES[key].fallbackSvg`) is visible until the
+ * Idle / fallback policy (mirrors `ServiceSigilField`):
+ *   - rAF runs only while the canvas is in the viewport (IO gate).
+ *   - `prefers-reduced-motion: reduce` → a single static frame.
+ *   - Pre-hydration / SSR → the inline fallback SVG is visible until the
  *     canvas takes over.
  */
-export function ServiceSigilField({ shapeKey, accent = false }: ServiceSigilFieldProps) {
+export function ServicesBrandmarkField() {
   const wrapRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [reducedMotion, setReducedMotion] = useState(false);
   const [hydrated, setHydrated] = useState(false);
 
-  const spec = SERVICE_SHAPES[shapeKey];
-
-  // Pre-resolve sample on the client only — `sampleShape` no-ops
-  // during SSR. Memoised by (shapeKey, count) so multiple cards of
-  // the same shape share the same cloud.
+  // Sample once on the client (no-ops during SSR). Memoised by the
+  // stable shape key inside `sampleShape`, so re-mounts reuse the cloud.
   const sample = useMemo(() => {
     if (typeof document === "undefined") return null;
+    const mobile = window.matchMedia?.("(max-width: 960px)").matches ?? false;
     return sampleShape({
-      shapeKey: spec.key,
-      paths: spec.paths,
-      viewBox: spec.viewBox,
-      count: spec.count,
+      shapeKey: BRANDMARK_SHAPE_KEYS.full,
+      paths: BRANDMARK_FULL_PATHS,
+      viewBox: BRANDMARK_VIEWBOX,
+      count: mobile ? COUNT_MOBILE : COUNT_DESKTOP,
     });
-  }, [spec]);
+  }, []);
 
   useEffect(() => {
     setHydrated(true);
@@ -86,9 +86,6 @@ export function ServiceSigilField({ shapeKey, accent = false }: ServiceSigilFiel
 
     const resize = () => {
       const rect = wrap.getBoundingClientRect();
-      // Use the smaller dimension as the visual square; the cloud is
-      // 200×200 in viewBox space and we want it to fit the card's
-      // visual area without spilling out of the corner-bracket frame.
       const sizeCss = Math.max(1, Math.min(rect.width, rect.height));
       dpr = Math.min(window.devicePixelRatio || 1, 2);
       width = Math.max(1, Math.round(rect.width * dpr));
@@ -97,7 +94,9 @@ export function ServiceSigilField({ shapeKey, accent = false }: ServiceSigilFiel
       canvas.height = height;
       canvas.style.width = `${rect.width}px`;
       canvas.style.height = `${rect.height}px`;
-      half = (sizeCss * 0.82) / 2; // 82% of the smaller dim — leaves padding
+      // 82% of the smaller dim leaves padding so the outer C-arc never
+      // clips against the container edge.
+      half = (sizeCss * 0.82) / 2;
       cx = (rect.width * dpr) / 2;
       cy = (rect.height * dpr) / 2;
     };
@@ -105,25 +104,24 @@ export function ServiceSigilField({ shapeKey, accent = false }: ServiceSigilFiel
     const draw = (timeMs: number) => {
       ctx.clearRect(0, 0, width, height);
       const t = timeMs * 0.001;
-      // Soft instrument colour — gold for lead cards, dawn for the
-      // others. Each dot is painted as a 1.5-2px square at DPR so the
-      // cloud reads as crisp pixels on retina.
-      const color = accent ? "rgba(202, 165, 84, 0.92)" : "rgba(236, 227, 214, 0.78)";
+      // Warm gold mark — the brand colour, reading cleanly in front of
+      // the dim ambient sphere haze behind the section.
+      ctx.fillStyle = "rgba(202, 165, 84, 0.82)";
       const dot = Math.max(1.5, 1.7 * dpr);
       const halfDot = dot * 0.5;
       const home = sample.home;
       const seed = sample.seed;
       const count = sample.count;
       const halfPx = half * dpr;
-      const jitter = 0.012; // ≈ 1.2% of the half-rect — barely perceptible
+      // Calm centerpiece — a touch less wander than the card sigils so
+      // it reads as steady, not noisy.
+      const jitter = 0.01;
 
-      ctx.fillStyle = color;
       for (let i = 0; i < count; i++) {
         const hx = home[i * 2];
         const hy = home[i * 2 + 1];
         const sx = seed[i * 2];
         const sy = seed[i * 2 + 1];
-        // Per-particle slow drift, deterministic per seed.
         const px = hx + jitter * Math.sin(t * 0.5 + sx);
         const py = hy + jitter * Math.cos(t * 0.4 + sy);
         const x = cx + px * 2 * halfPx;
@@ -140,8 +138,6 @@ export function ServiceSigilField({ shapeKey, accent = false }: ServiceSigilFiel
     };
 
     resize();
-    // Initial static frame so the cloud is visible even before the
-    // first rAF lands (and is the only frame for reduced motion).
     draw(performance.now ? performance.now() : 0);
 
     const onResize = () => {
@@ -149,19 +145,10 @@ export function ServiceSigilField({ shapeKey, accent = false }: ServiceSigilFiel
       draw(performance.now ? performance.now() : 0);
     };
 
-    // ResizeObserver re-measures when the card actually lays out. The
-    // #services section uses `content-visibility: auto`, so the cards
-    // are layout-skipped until scrolled near — `resize()` on mount can
-    // capture a stale/collapsed box. The observer fires once on observe
-    // (current size) and again whenever the box changes (content-
-    // visibility flip, font load, scroll-near, viewport resize), so the
-    // canvas always matches the rendered sigil square.
     const ro = new ResizeObserver(onResize);
     ro.observe(wrap);
 
     if (reducedMotion) {
-      // One static frame; no animation loop. The ResizeObserver above
-      // still keeps the single frame correctly sized.
       window.addEventListener("resize", onResize);
       return () => {
         window.removeEventListener("resize", onResize);
@@ -195,25 +182,23 @@ export function ServiceSigilField({ shapeKey, accent = false }: ServiceSigilFiel
       window.removeEventListener("resize", onResize);
       if (rafId) window.cancelAnimationFrame(rafId);
     };
-  }, [sample, reducedMotion, accent]);
+  }, [sample, reducedMotion]);
 
   return (
-    <div
-      ref={wrapRef}
-      className="svc-card__sigil"
-      data-shape={shapeKey}
-      data-accent={accent ? "true" : "false"}
-    >
-      {/* Static SVG fallback — visible pre-hydration and as a layer
-          behind the canvas (the canvas is mostly transparent so the
-          SVG silhouette gives a soft underpaint to the particles). */}
-      <div
-        className="svc-card__sigil__fallback"
-        aria-hidden="true"
-        dangerouslySetInnerHTML={{ __html: spec.fallbackSvg }}
-        style={{ opacity: hydrated ? 0 : 0.18 }}
-      />
-      <canvas ref={canvasRef} className="svc-card__sigil__canvas" aria-hidden="true" />
+    <div ref={wrapRef} className="services-stage__brandmark" aria-hidden="true">
+      {/* Static SVG fallback — visible pre-hydration and as a faint
+          underpaint behind the (mostly transparent) particle canvas. */}
+      <svg
+        className="services-stage__brandmark__fallback"
+        viewBox={`0 0 ${BRANDMARK_VIEWBOX.width} ${BRANDMARK_VIEWBOX.height}`}
+        xmlns="http://www.w3.org/2000/svg"
+        style={{ opacity: hydrated ? 0 : 0.16 }}
+      >
+        {BRANDMARK_FULL_PATHS.map((d, i) => (
+          <path key={i} d={d} fill="currentColor" />
+        ))}
+      </svg>
+      <canvas ref={canvasRef} className="services-stage__brandmark__canvas" />
     </div>
   );
 }

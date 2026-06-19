@@ -10,6 +10,38 @@
 
 ---
 
+## Amendment (2026-06-19) — Services is a pinned brandmark stage; ground-truth note
+
+`#services` was redesigned from the sticky-stacking terminal cards into a
+**Jasmina-style pinned stage**: a left service list · a centered particle
+brandmark · a right paragraph that crossfades as the stage steps. New files:
+[`ServicesStage`](../../components/landing/home-v2/services/ServicesStage.tsx),
+[`ServicesBrandmarkField`](../../components/landing/home-v2/services/ServicesBrandmarkField.tsx)
+(reuses the `ServiceSigilField` 2D-canvas painter against `BRANDMARK_FULL_PATHS`),
+and [`useServicesStageScroll`](../../components/landing/home-v2/hooks/useServicesStageScroll.ts)
+(a rect-rAF hook writing only `data-active-step` on the stage). The section header
+("One loop. Three depths.") and the cards/`ServiceSigilField`/`useReveal`/
+`lib/services/serviceShapes` are gone.
+
+**The corridor-exit contract is unchanged.** The dissipate clock is anchored to
+`servicesRect.top` (height-independent), so the much taller section (a
+`min-height: 300svh` `.services-stage-root` runway with a `position: sticky`
+stage) does not disturb the dive-in seam — the one height-sensitive term
+(`servicesRect.bottom > 0`) only extends the ambient hold. The transparent
+`#services` exception below is exactly what lets the ambient interior-sphere
+particles show through behind the centered brandmark.
+
+> **Ground-truth note.** Parts of this ADR (and `.claude/rules/scroll-animations.md`
+> and the `landing-v7-compositing` skill) describe an in-`#services` brandmark
+> **re-centre**, a seam **pixel field** (`CorridorSeamPixelField`), the
+> `data-services-brandmark` / `data-services-pixelate` gates, and a "~1.6/2-viewport
+> runway" — all **retired**. [`useCorridorExitScroll.ts`](../../components/landing/home-v2/hooks/useCorridorExitScroll.ts)
+> is ground truth: it writes only `--corridor-dissipate`, `data-corridor-docked`,
+> `data-corridor-exit` + `--corridor-exit-veil`, and `data-services-ambient` +
+> `--services-ambient` (with `seamMorph` held inert at 0).
+
+---
+
 ## Context
 
 The home-v2 depth corridor (ADR-018) saturates at `paintProgress = 1` with the camera parked at `CAMERA_END`, the substrate sphere grown into a planet, and the "AND THE LABS ARE SPENDING BILLIONS ON THE SAME LAYER." signal block painted over the limb. The corridor's next move was the post-corridor `#buildQuote` "Make the layer useful." section, embedded as a docked **cover-plane sweep** (ADR-020 production amendment, ADR-018 v3.15) that lifted a 100svh opaque plane over the held corridor canvas before handing off to the Navigate/Encode/Build services flow.
