@@ -49,6 +49,7 @@ import {
   dissipateShellScatter,
   epilogueBand,
   SERVICES_AMBIENT_HOLD_LEVEL,
+  SERVICES_AMBIENT_SURFACE_LEVEL,
   servicesAmbientOpacityMultiplier,
 } from "@/lib/home-v2/epilogueTimeline";
 import { useGyroLabStore } from "@/lib/stores/gyroLabStore";
@@ -1050,6 +1051,23 @@ export function ShellSubstrateGyro({ layerKey, reducedMotion = false }: ShellSub
     const interiorMul = servicesAmbient
       ? servicesAmbientOpacityMultiplier(servicesAmbientLevel)
       : dissipateInteriorOpacityMultiplier(dissipate, SERVICES_AMBIENT_HOLD_LEVEL);
+    // Surface particles (dotted shell, globe dots, equator) — ADR-021
+    // follow-up (2026-06-19). The original dissipate faded these fully
+    // to 0 so the sphere dissolved into an empty view. The camera then
+    // parks inside the radially-scattered shell for the whole Services
+    // section, so an empty view read as "the particles disappeared".
+    // Hold the surface at a low floor (continuous, SELECTED not
+    // multiplied — same pattern as the interior cloud): the dock tail
+    // settles the surface from full → SURFACE_LEVEL, and the ambient
+    // hold keeps it there (level 1) then fades to 0 as #continuum
+    // approaches. The scattered shell at this floor reads as a sparse
+    // particle BED filling the frame from inside the sphere, behind the
+    // Services content, for the entire section. At dissipate 0 this is
+    // identity (×1), so the parked / pre-exit epilogue pose is
+    // byte-identical to its pre-ADR-021 self.
+    const surfaceMul = servicesAmbient
+      ? servicesAmbientOpacityMultiplier(servicesAmbientLevel, SERVICES_AMBIENT_SURFACE_LEVEL)
+      : dissipateInteriorOpacityMultiplier(dissipate, SERVICES_AMBIENT_SURFACE_LEVEL);
 
     // Temporally-smoothed reveals (motionFollower) — the gimbal's
     // ring cascade, globe Y-bloom, wrap-spin, and shell settle always
@@ -1093,11 +1111,20 @@ export function ShellSubstrateGyro({ layerKey, reducedMotion = false }: ShellSub
     // tracks the APPROACH band so it ramps with the grow; before
     // APPROACH the values are byte-identical to the parked corridor.
     const approachT = epilogueBand(epilogueProgress, "APPROACH");
+    // `interiorHeld` treats the dock fly-in and the post-dock services
+    // ambient hold as ONE regime (defined here so the surface boosts
+    // below can bridge the seam too). ADR-021 follow-up: the surface
+    // particle bed now persists through the ambient hold, so its
+    // visibility/size boosts must stay warm across the dock release —
+    // gating them on `docked` alone stepped the bed dimmer + smaller
+    // exactly when the hold began.
+    const interiorHeld = docked || servicesAmbient;
     // Size multiplier: 1 at parked, ~1.8 at peak. Combined with the
     // 3x physical grow, surface dots end up ~5.4x as big in screen
-    // space as the planet ramps up.
-    const dockVisibilityBoost = docked ? 1.65 : 1;
-    const pointSizeBoost = (1 + approachT * 0.8) * (docked ? 1.28 : 1);
+    // space as the planet ramps up. Bridged across the dock release so
+    // the surface bed stays continuous into the ambient hold.
+    const dockVisibilityBoost = interiorHeld ? 1.65 : 1;
+    const pointSizeBoost = (1 + approachT * 0.8) * (interiorHeld ? 1.28 : 1);
     // Opacity multiplier: 1 at parked, ~1.5 at peak (capped at 1
     // via Math.min so we don't oversaturate).
     const opacityBoost = 1 + approachT * 0.55;
@@ -1112,7 +1139,6 @@ export function ShellSubstrateGyro({ layerKey, reducedMotion = false }: ShellSub
     // interior opacity boost simply reuses `opacityBoost` (which is a
     // function of the epilogue scrub, already saturated at the park, so
     // it is continuous across the boundary on its own).
-    const interiorHeld = docked || servicesAmbient;
     const interiorVisibilityBoost = interiorHeld ? 1.65 : 1;
     const interiorPointSizeBoost = (1 + approachT * 0.8) * (interiorHeld ? 1.28 : 1);
 
@@ -1129,13 +1155,13 @@ export function ShellSubstrateGyro({ layerKey, reducedMotion = false }: ShellSub
       Math.min(
         1,
         SUBSTRATE_GYRO_GLOBE_DOTS_OPACITY * presence * opacityBoost * dockVisibilityBoost
-      ) * dissipateOp;
+      ) * surfaceMul;
     mats.globeDots.uniforms.uPointSize.value =
       SUBSTRATE_GYRO_GLOBE_DOTS_POINT_SIZE * pointSizeBoost;
     mats.globeDots.uniforms.uPixelRatio.value = state.viewport.dpr;
     mats.equator.uniforms.uOpacity.value =
       Math.min(1, lineOpacity(SUBSTRATE_GYRO_GLOBE_EQUATOR_OPACITY) * dockVisibilityBoost) *
-      dissipateOp;
+      surfaceMul;
     mats.particle.uniforms.uPixelRatio.value = state.viewport.dpr;
     // Interior cloud opacity. `interiorMul` is the single continuous
     // dock→ambient envelope (full → hold during the dock, hold → 0
@@ -1153,7 +1179,7 @@ export function ShellSubstrateGyro({ layerKey, reducedMotion = false }: ShellSub
       Math.min(
         1,
         SUBSTRATE_GYRO_DOTTED_SHELL_OPACITY * presence * opacityBoost * dockVisibilityBoost
-      ) * dissipateOp;
+      ) * surfaceMul;
     mats.dottedShell.uniforms.uPointSize.value =
       SUBSTRATE_GYRO_DOTTED_SHELL_POINT_SIZE * pointSizeBoost;
 
@@ -1206,9 +1232,16 @@ export function ShellSubstrateGyro({ layerKey, reducedMotion = false }: ShellSub
     // Globe spin: keep the idle polar drift; add the decaying wrap-spin
     // on top so the meridians/parallels appear to swirl around the
     // mark during the unfold, then settle once reveal saturates.
+    //
+    // ADR-021 follow-up (2026-06-19): during the services ambient hold
+    // the sphere is a STATIC backdrop behind the scrolling Services
+    // content — freeze the idle spin so the inside-sphere particle bed
+    // does not rotate while the user scrolls the section. The spin is
+    // simply not advanced (rotation.y holds wherever the dock fly-in
+    // left it), so there is no pop — the slow idle drift just stops.
     if (motionFrozen) {
       globeSpin.rotation.y = 0.4;
-    } else {
+    } else if (!servicesAmbient) {
       const extra = unfold.wrapSpinExtra * idleSpeed * dt;
       globeSpin.rotation.y += SUBSTRATE_GYRO_GLOBE_SPIN * idleSpeed * dt + extra;
     }
@@ -1240,7 +1273,9 @@ export function ShellSubstrateGyro({ layerKey, reducedMotion = false }: ShellSub
         );
       }
       if (scaleNode) scaleNode.scale.setScalar(ring.scale);
-      if (spinNode && !motionFrozen) {
+      // Frozen during the services ambient hold so the gimbal bed is a
+      // static backdrop while the Services content scrolls over it.
+      if (spinNode && !motionFrozen && !servicesAmbient) {
         spinNode.rotation.y += axis.spin * idleSpeed * dt;
       }
       // Trim-path draw-on: the gimbal ring is a `<line>` over a

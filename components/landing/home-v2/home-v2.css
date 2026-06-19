@@ -241,13 +241,12 @@ html[data-corridor-docked="true"] .home-v2-stage__sticky {
    2D transform, so the dissipate composes with the scatter cleanly.
    Release is driven by `data-corridor-docked` clearing.
 
-   ADR-021 amendment (2026-06-19): the `data-services-ambient` gate
-   is RETIRED. `#services` is now a content section with its own
-   opaque `--void` backing (see `services.css`), so there is no
-   ambient post-dock interior haze to keep fixed. Once the dock
-   releases, the canvas falls back to its sticky-stage parent and
-   the services surface takes over. */
-html[data-corridor-docked="true"] .home-v2-stage__canvas {
+   ADR-021 follow-up (2026-06-19): `data-services-ambient` is
+   background-only. It keeps the inside-sphere particles/starfield
+   fixed behind the Services content after the dock releases, without
+   reintroducing the retired centred brandmark or pixel-field beats. */
+html[data-corridor-docked="true"] .home-v2-stage__canvas,
+html[data-services-ambient="true"] .home-v2-stage__canvas {
   position: fixed;
   inset: 0;
   width: 100vw;
@@ -305,7 +304,9 @@ html[data-corridor-epilogue="true"] .home-v2-stage__canvas canvas {
    while the user reads the readouts. Declared AFTER the epilogue rule
    so it wins at equal specificity (both flags can be true at once). */
 html[data-corridor-docked="true"] .home-v2-stage__canvas,
-html[data-corridor-docked="true"] .home-v2-stage__canvas canvas {
+html[data-corridor-docked="true"] .home-v2-stage__canvas canvas,
+html[data-services-ambient="true"] .home-v2-stage__canvas,
+html[data-services-ambient="true"] .home-v2-stage__canvas canvas {
   pointer-events: none;
 }
 
@@ -347,11 +348,8 @@ html[data-corridor-exit="true"] #services {
 
 /* Veil alpha (ADR-021 addendum, 2026-06-19): reads `--corridor-exit-veil`
    instead of the raw dissipate clock. The hook computes the veil with
-   a cap (`VEIL_AMBIENT_CAP`) so the docked canvas remains visible
-   through the back of the dissipate AND through the ambient hold. The
-   normal-station opaque shield re-takes ownership the moment
-   `data-corridor-exit` clears at the end of the hold/fade, so the
-   release stays visually continuous. */
+   a dock cap and a lower ambient cap so the fixed canvas remains
+   visible under Services while the next station fade-out stays smooth. */
 html[data-corridor-exit="true"] body::before {
   content: "";
   position: fixed;
@@ -2177,13 +2175,10 @@ html[data-corridor-docked="true"] .home-v2-projected-brandmark > div {
 
 /* ADR-021 amendment (2026-06-19): the in-#services brandmark gates
  * (`data-services-brandmark="hold" | "fade"`, `data-services-pixelate`,
- * `data-services-ambient`, the `.home-v2-seam-pixels` canvas layer,
- * and the matching opacity + fixed-centre rules) are all RETIRED.
- * `#services` is now a content section (terminal cards), and the
- * brandmark fades out with the dissipating sphere across the back
- * half of the dock clock (see `ProjectedBrandmarkActor`). The
- * `.home-v2-seam-pixels` canvas is no longer mounted; the SVG glyph
- * is no longer hidden by the retired pixelate attribute. */
+ * the `.home-v2-seam-pixels` canvas layer, and the matching opacity +
+ * fixed-centre rules) remain RETIRED. `data-services-ambient` is now a
+ * background-only exception: it keeps the inside-sphere particles behind
+ * the terminal cards but never shows the centred SVG or pixel field. */
 
 /* ── Tail sections (normal scroll, placeholder) ──────────────── */
 

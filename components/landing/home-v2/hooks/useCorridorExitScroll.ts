@@ -24,9 +24,17 @@ const DISSIPATE_SCROLL_SPAN_VH = 0.9;
 const DOCK_PRELOAD_VH = 0.25;
 /** Cap on the body veil so the canvas remains visible underneath
  *  through the dock window. The veil ramps from 0 to this cap with
- *  the dissipate clock and never goes higher — once `#services`'s
- *  opaque void shield takes over the dark backing, the veil clears. */
+ *  the dissipate clock and never goes higher. */
 const VEIL_DOCK_CAP = 0.55;
+/** Lower veil cap for the ambient-only Services background. Kept well
+ *  below the dock cap so the inside-sphere particle bed stays clearly
+ *  visible behind the Services content for the whole section. */
+const VEIL_AMBIENT_CAP = 0.3;
+/** Start the ambient hold once the surface dissipate is complete. */
+const AMBIENT_ENGAGE_RAW = 0.999;
+/** Fade the ambient particles as the next station approaches. */
+const CONTINUUM_FADE_START_VH = 0.5;
+const CONTINUUM_FADE_END_VH = 0.1;
 
 function clamp01(value: number): number {
   return Math.max(0, Math.min(1, value));
@@ -45,9 +53,9 @@ function clamp01(value: number): number {
  *     the live R3F scene persists across the seam.
  *   - `data-corridor-exit` attribute + `--corridor-exit-veil` (0..1)
  *     on `<html>` — drives the fixed `body::before` veil that ramps
- *     from 0 → VEIL_DOCK_CAP across the dissipate. The veil clears
- *     once the dock releases (the section's opaque `--void` shield
- *     takes over from there).
+ *     from 0 → VEIL_DOCK_CAP across the dissipate, then holds at a
+ *     lower ambient cap while the inside-sphere particle bed remains
+ *     visible behind Services.
  *   - `depthGatewayStore.transform.docked` + `dockProgress` —
  *     `dockProgress` IS the dissipate clock; the camera rig +
  *     substrate painters read it to fly into the sphere + scatter
@@ -64,21 +72,20 @@ function clamp01(value: number): number {
  *   - `data-services-pixelate` + `--services-pixelate` +
  *     `transform.seamMorph` — the seam pixel field is unmounted;
  *     no late-pixel dissolve in Services.
- *   - `data-services-ambient` + `--services-ambient` +
- *     `transform.servicesAmbient` / `servicesAmbientLevel` — no
- *     ambient interior haze through Services; the section's `--void`
- *     shield owns the dark backing once dissipate completes.
+ *   - `data-services-brandmark` / `data-services-pixelate` remain
+ *     retired. `data-services-ambient` is intentionally re-enabled as
+ *     a background-only hold: no centred brandmark, no pixel field,
+ *     only the interior sphere particles / starfield behind content.
  *
- * For continuity with the surviving store fields (`seamMorph`,
- * `servicesAmbient`, `servicesAmbientLevel`) the hook still writes
- * them — always to their inert values (0 / false / 0). The downstream
- * R3F painters branch off the flags and gracefully no-op.
+ * For continuity with the surviving store fields, `seamMorph` remains
+ * inert at 0; `servicesAmbient` / `servicesAmbientLevel` are the
+ * background-only continuation signal.
  *
  * Engages off the corridor's own `epilogueProgress >= DOCK_ENGAGE_EP`
  * (NOT off `#services`'s rect alone) so the dwell at the landed
- * sphere opens BEFORE the user scrolls into the section. Disengages
- * once dissipate ≥ 0.999 so the R3F frameloop can idle behind the
- * opaque services surface.
+ * sphere opens BEFORE the user scrolls into the section. Once
+ * dissipate ≥ 0.999, the dock releases and the R3F frameloop switches
+ * to ambient-only mode until the next station approaches.
  *
  * Single-writer rule (ADR-021 invariant): this hook is the ONLY
  * writer of `docked` / `dockProgress` / `seamMorph` /
@@ -121,6 +128,8 @@ export function useCorridorExitScroll(rootRef: RefObject<HTMLDivElement | null>)
       const dissipate = corridorExitSpeedRamp(rawDissipate);
       const sectionNearDock =
         servicesRect.top < vh * (1 + DOCK_PRELOAD_VH) && servicesRect.bottom > 0;
+      const continuum = root.querySelector<HTMLElement>("#continuum");
+      const continuumTopVh = (continuum?.getBoundingClientRect().top ?? servicesRect.bottom) / vh;
 
       // Dock OFF the corridor epilogue (sphere landed + BILLIONS title
       // up), not off this section's scroll position. See ADR-021.
@@ -135,14 +144,47 @@ export function useCorridorExitScroll(rootRef: RefObject<HTMLDivElement | null>)
         document.documentElement.removeAttribute("data-corridor-docked");
       }
 
+      // ── Background-only Services ambient ───────────────────────
+      // Keep the "inside the sphere" particle bed alive behind the
+      // Services content after the surface dissipate completes. This
+      // is deliberately NOT the retired brandmark runway: no centred
+      // SVG, no seam pixel field, and no brandmark opacity gate.
+      const ambientFadeRaw = clamp01(
+        (CONTINUUM_FADE_START_VH - continuumTopVh) /
+          (CONTINUUM_FADE_START_VH - CONTINUUM_FADE_END_VH)
+      );
+      const ambientLevelRaw = 1 - corridorExitSpeedRamp(ambientFadeRaw);
+      const servicesAmbient =
+        dockCapable &&
+        ep >= DOCK_ENGAGE_EP &&
+        sectionNearDock &&
+        rawDissipate >= AMBIENT_ENGAGE_RAW &&
+        ambientLevelRaw > 0.001;
+      const servicesAmbientLevel = servicesAmbient ? ambientLevelRaw : 0;
+
+      if (servicesAmbient) {
+        document.documentElement.setAttribute("data-services-ambient", "true");
+        document.documentElement.style.setProperty(
+          "--services-ambient",
+          servicesAmbientLevel.toFixed(4)
+        );
+      } else {
+        document.documentElement.removeAttribute("data-services-ambient");
+        document.documentElement.style.removeProperty("--services-ambient");
+      }
+
       // ── Body veil ──────────────────────────────────────────────
       // While docked the veil ramps from 0 → VEIL_DOCK_CAP with the
       // dissipate so the canvas stays visible underneath during the
-      // zoom-in. Once the dock releases, the veil clears entirely —
-      // `#services`'s own opaque `--void` shield owns the dark
-      // backing for the rest of the section.
-      const corridorExit = docked;
-      const veilAlpha = docked ? Math.min(VEIL_DOCK_CAP, dissipate * VEIL_DOCK_CAP) : 0;
+      // zoom-in. In ambient mode it stays low enough for the interior
+      // particles to remain visible behind Services copy/cards, then
+      // fades with `servicesAmbientLevel` as #continuum approaches.
+      const corridorExit = docked || servicesAmbient;
+      const veilAlpha = docked
+        ? Math.min(VEIL_DOCK_CAP, dissipate * VEIL_DOCK_CAP)
+        : servicesAmbient
+          ? VEIL_AMBIENT_CAP * servicesAmbientLevel
+          : 0;
       if (corridorExit) {
         document.documentElement.setAttribute("data-corridor-exit", "true");
         document.documentElement.style.setProperty("--corridor-exit-veil", veilAlpha.toFixed(4));
@@ -151,32 +193,30 @@ export function useCorridorExitScroll(rootRef: RefObject<HTMLDivElement | null>)
         document.documentElement.style.removeProperty("--corridor-exit-veil");
       }
 
-      // Single-writer rule: only own dock / dissipate / inert
-      // seam+ambient channels. `useDepthScroll` stays the sole writer
-      // of progress / paintProgress / epilogueProgress.
+      // Single-writer rule: only own dock / dissipate / inert seam +
+      // ambient channels. `useDepthScroll` stays the sole writer of
+      // progress / paintProgress / epilogueProgress.
       const store = useDepthGatewayStore.getState();
       const prev = store.transform;
       const nextDockProgress = docked ? dissipate : 0;
       const dockChanged =
         prev.docked !== docked || Math.abs(prev.dockProgress - nextDockProgress) > 0.0005;
-      // The seam / ambient store fields stay alive in the type for
-      // R3F painter source-compat, but they are no longer driven
-      // here. Force them inert if any other writer ever set them.
+      // The seam pixel field is still retired; keep its clock inert.
+      // The ambient fields are background-only and intentionally driven
+      // so the sphere's interior particles remain visible in Services.
       const seamMorphInert = 0;
-      const ambientInert = false;
-      const ambientLevelInert = 0;
       const seamInertChanged = Math.abs(prev.seamMorph - seamMorphInert) > 0.0005;
-      const ambientInertChanged =
-        prev.servicesAmbient !== ambientInert ||
-        Math.abs(prev.servicesAmbientLevel - ambientLevelInert) > 0.0005;
-      if (dockChanged || seamInertChanged || ambientInertChanged) {
+      const ambientChanged =
+        prev.servicesAmbient !== servicesAmbient ||
+        Math.abs(prev.servicesAmbientLevel - servicesAmbientLevel) > 0.0005;
+      if (dockChanged || seamInertChanged || ambientChanged) {
         store.setTransform({
           ...prev,
           docked,
           dockProgress: nextDockProgress,
           seamMorph: seamMorphInert,
-          servicesAmbient: ambientInert,
-          servicesAmbientLevel: ambientLevelInert,
+          servicesAmbient,
+          servicesAmbientLevel,
         });
       }
     };
@@ -197,8 +237,10 @@ export function useCorridorExitScroll(rootRef: RefObject<HTMLDivElement | null>)
       window.removeEventListener("resize", requestWrite);
       document.documentElement.removeAttribute("data-corridor-docked");
       document.documentElement.removeAttribute("data-corridor-exit");
+      document.documentElement.removeAttribute("data-services-ambient");
       document.documentElement.style.removeProperty("--corridor-dissipate");
       document.documentElement.style.removeProperty("--corridor-exit-veil");
+      document.documentElement.style.removeProperty("--services-ambient");
       const store = useDepthGatewayStore.getState();
       store.setTransform({
         ...store.transform,

@@ -40,8 +40,10 @@
  * card contributes ~100svh of scroll runway via min-height).
  *
  * The section is given a hard opaque `--void` background under the
- * stack so the dissipating sphere never bleeds through once the
- * dissipate has completed (ADR-008 rule 2 — opaque shield). */
+ * stack as the normal fallback/steady-state shield. During the
+ * corridor-exit ambient handoff, `html[data-corridor-exit] #services`
+ * temporarily makes this transparent so the inside-sphere particles can
+ * remain visible behind the cards. */
 .station--services {
   background-color: var(--void);
   /* Generous bottom padding so the final stacked card has room to

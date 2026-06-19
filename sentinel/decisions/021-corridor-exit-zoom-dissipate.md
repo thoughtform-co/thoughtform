@@ -885,7 +885,7 @@ becomes a short entrance transition — the sphere zoom-in resolves as
 the section's header reaches the viewport top — and the brandmark
 fades out with the dissipating sphere instead of re-centring.
 
-### Retired beats (all four)
+### Retired beats (brandmark-specific)
 
 - **Welded re-centre lerp** in `ProjectedBrandmarkActor`:
   `DOCK_RECENTRE_FRAC` + the position/size lerp from the welded
@@ -906,16 +906,71 @@ fades out with the dissipating sphere instead of re-centring.
   `lib/home-v2/seamPixelize.ts` + its unit tests stay in the tree as
   a reusable reference for any future "particle dissolve at a
   section seam" composition.
-- **Services ambient hold** (`data-services-ambient` /
-  `--services-ambient`, the canvas + veil fixed-promotion under the
-  ambient gate, the R3F painter ambient branches in
-  `ShellSubstrateGyro` / `StaticStarfield` / `FlyingCameraRig` /
-  `MotionFollowerDriver` / `BrandmarkPhysicsCoreActor`). The flag is
-  never set on the production path. The painter ambient branches
-  stay in the tree (they no-op cleanly when the flag is `false`) so
-  the helpers + smoothed-dissipate continuity remain available for
-  the reverse-scroll guard in `useDepthScroll` and for any future
-  reuse.
+
+**2026-06-19 follow-up:** user review of the new content section showed
+that the transition lost the "inside the sphere" particle bed exactly as
+the Services header/cards arrived. The ambient layer is therefore
+re-enabled as a **background-only** continuation:
+
+- `data-services-ambient` / `--services-ambient` /
+  `transform.servicesAmbient` / `servicesAmbientLevel` are allowed
+  after the dock dissipate completes, and they stay engaged for the
+  WHOLE section (released only as `#continuum` approaches — the
+  `CONTINUUM_FADE_START_VH 0.5 → CONTINUUM_FADE_END_VH 0.1` band in
+  `useCorridorExitScroll`).
+- The fixed canvas promotion and capped body veil continue while the
+  ambient flag is active, so `ShellSubstrateGyro`'s interior cloud and
+  `StaticStarfield` remain visible behind Services content.
+
+**2026-06-19 follow-up #2 — particles persist for the WHOLE section:**
+the first ambient pass faded the sphere SURFACE to 0 (the dissipate's
+`PARTICLE_FADE`), so once the camera parked at the deepest fly-into-
+sphere pose (`dissipate` pinned at 1) the view emptied out a third of
+the way down the section — the user reported "the particles disappear,
+they should remain visible throughout the ENTIRE services section". Fix
+(matching the existing interior-cloud continuity pattern):
+
+- **`SERVICES_AMBIENT_SURFACE_LEVEL = 0.3`** (`epilogueTimeline.ts`) —
+  a low floor for the surface particles (dotted shell, globe dots,
+  equator). `ShellSubstrateGyro` SELECTS (never multiplies) between the
+  dock-tail multiplier (`dissipateInteriorOpacityMultiplier(dissipate,
+SURFACE_LEVEL)`, full → floor) and the ambient multiplier
+  (`servicesAmbientOpacityMultiplier(level, SURFACE_LEVEL)`, floor →
+  0 as continuum approaches), so the dock release is C0-continuous and
+  the radially-scattered shell reads as a sparse particle BED filling
+  the frame from inside the sphere for the whole section. At dissipate
+  0 the floor multiplier is identity (×1), so the parked / pre-exit
+  pose is byte-identical.
+- **Surface visibility/point-size boosts bridged via `interiorHeld`**
+  (`docked || servicesAmbient`) in `ShellSubstrateGyro` so the bed does
+  not step dimmer/smaller at the dock release (same bridge the interior
+  cloud already used).
+- **`VEIL_AMBIENT_CAP` lowered 0.45 → 0.3** so the particle bed stays
+  clearly visible behind the Services content (the dock veil cap is
+  unchanged).
+- The camera pose is UNCHANGED (still `getCorridorExitCameraPose(1)` via
+  the pinned smoothed dissipate), so there is no reverse-motion at the
+  dock → ambient seam — only the surface opacity floor + lower veil
+  changed.
+
+**2026-06-19 follow-up #3 — the ambient backdrop is STATIC under scroll.**
+The fixed canvas + pinned camera already hold the background still in the
+viewport, but `ShellSubstrateGyro` still advanced its idle polar spin
+(`globeSpin.rotation.y += …` and the per-ring spins) every frame from
+wall-clock time, so the inside-sphere particle bed kept rotating behind
+the scrolling Services content. The user asked for the background to not
+move while scrolling the section. Fix: gate the idle spin off when
+`servicesAmbient` (in addition to the existing reduced-motion freeze) —
+the rotation simply stops advancing and holds wherever the dock fly-in
+left it (no reset, no pop). The per-card `ServiceSigilField` canvases are
+card content and continue to scroll with their cards; only the global
+background sphere is frozen.
+
+- The brandmark remains retired in Services: no
+  `data-services-brandmark`, no fixed-centred SVG, no
+  `data-services-pixelate`, and no `CorridorSeamPixelField` mount.
+  `BrandmarkPhysicsCoreActor` still forces `handoffFade = 0` during
+  ambient so the in-canvas core never paints a duplicate mark.
 
 ### What stays
 
@@ -931,14 +986,16 @@ fades out with the dissipating sphere instead of re-centring.
 - **`data-corridor-docked`** — same fixed canvas promotion through
   the (short) dock window.
 - **`data-corridor-exit` + `--corridor-exit-veil`** — same body
-  veil, but capped at the new `VEIL_DOCK_CAP = 0.55` and **ramps to
-  0** when the dock releases (no ambient hold). `#services`'s own
-  opaque `--void` shield takes over the dark backing from that
-  point.
+  veil, capped at `VEIL_DOCK_CAP = 0.55` during dock and then held
+  lower (`VEIL_AMBIENT_CAP`) while `data-services-ambient` is active.
+  `#services` stays transparent during that ambient window so the
+  inside-sphere particles remain visible behind content; the opaque
+  station shield re-takes ownership as `#continuum` approaches.
 - **Single-writer rule** — `useCorridorExitScroll` still owns
   `docked` / `dockProgress` / `seamMorph` / `servicesAmbient` /
-  `servicesAmbientLevel`. The latter three are now permanently
-  written to their inert values (0 / false / 0).
+  `servicesAmbientLevel`. `seamMorph` is permanently inert on the
+  production path; the ambient fields are background-only and fade out
+  as the next station approaches.
 - **Fallback** (`!dockCapable`) — unchanged. The sticky stage stays
   pinned, no dock, sequential dark cut from corridor → Services →
   Continuum. On mobile + reduced-motion the new cards also drop the

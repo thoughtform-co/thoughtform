@@ -284,6 +284,19 @@ export function dissipateCoreMultiplier(dissipateProgress: number): number {
  *  that the welded brandmark remains the dominant read. */
 export const SERVICES_AMBIENT_HOLD_LEVEL = 0.48;
 
+/** Opacity floor for the sphere SURFACE particles (dotted shell, globe
+ *  dots, equator) during the dock tail + services ambient hold
+ *  (ADR-021 follow-up, 2026-06-19). The original dissipate faded the
+ *  surface fully to 0 so the sphere "dissolved" into an empty view —
+ *  but the camera ends up parked inside the (radially-scattered) shell
+ *  for the whole Services section, and an empty view there read as
+ *  "the particles disappeared". Holding the surface at a low floor
+ *  keeps the scattered shell reading as a sparse particle BED that
+ *  fills the frame from inside the sphere, behind the Services
+ *  content, for the entire section. Lower than the interior hold so
+ *  the shell stays a faint backdrop, not a structured sphere. */
+export const SERVICES_AMBIENT_SURFACE_LEVEL = 0.3;
+
 /** Services ambient hold opacity multiplier (ADR-021 addendum).
  *
  *  Maps the services ambient envelope (1 across the hold band,

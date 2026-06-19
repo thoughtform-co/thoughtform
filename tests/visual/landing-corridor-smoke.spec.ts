@@ -146,22 +146,46 @@ test.describe("Homepage corridor smoke", () => {
   test("ADR-021 amendment: retired in-#services brandmark attributes are NEVER set", async ({
     page,
   }) => {
-    // After the 2026-06-19 amendment, none of these attributes should
-    // appear at any scroll depth: `data-services-pixelate`,
-    // `data-services-brandmark`, `data-services-ambient`. They are all
-    // retired with the in-#services choreography. Sample across the
-    // page to confirm the writes are gone everywhere.
+    // After the 2026-06-19 Services-content amendment, the centred
+    // brandmark and pixel-field gates stay retired at every scroll
+    // depth. `data-services-ambient` is allowed separately as a
+    // background-only inside-sphere particle hold.
     const samples = [10, 25, 55, 65, 75, 85];
     for (const pct of samples) {
       await scrollToPercentage(page, pct);
       const attrs = await page.evaluate(() => ({
         pixelate: document.documentElement.getAttribute("data-services-pixelate"),
         brandmark: document.documentElement.getAttribute("data-services-brandmark"),
-        ambient: document.documentElement.getAttribute("data-services-ambient"),
       }));
       expect(attrs.pixelate).toBeNull();
       expect(attrs.brandmark).toBeNull();
-      expect(attrs.ambient).toBeNull();
     }
+  });
+
+  test("ADR-021 follow-up: Services can keep ambient particles without brandmark gates", async ({
+    page,
+  }) => {
+    await page.evaluate(() => {
+      const services = document.getElementById("services");
+      if (!services) return;
+      window.scrollTo({
+        top: services.offsetTop + window.innerHeight * 0.2,
+        behavior: "instant",
+      });
+    });
+    await page.waitForTimeout(500);
+
+    const attrs = await page.evaluate(() => ({
+      fallback: document.querySelector<HTMLElement>(".home-v2-stage")?.dataset.fallback === "true",
+      ambient: document.documentElement.getAttribute("data-services-ambient"),
+      pixelate: document.documentElement.getAttribute("data-services-pixelate"),
+      brandmark: document.documentElement.getAttribute("data-services-brandmark"),
+    }));
+
+    if (!attrs.fallback) {
+      expect(attrs.ambient).toBe("true");
+    }
+    expect(attrs.pixelate).toBeNull();
+    expect(attrs.brandmark).toBeNull();
   });
 });
