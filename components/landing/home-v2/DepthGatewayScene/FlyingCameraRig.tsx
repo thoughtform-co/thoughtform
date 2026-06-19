@@ -70,7 +70,17 @@ export function FlyingCameraRig() {
     // parked Thoughtform layout (progress 0) during the `armed` pre-
     // arm pass — mirrors the DOM tracker so DOM + R3F project from
     // the same camera the moment the stage pins.
-    const { paintProgress, docked } = useDepthGatewayStore.getState().transform;
+    //
+    // `servicesAmbient` is the ADR-021 addendum "inside the sphere"
+    // hold beat. It is true after the dock has released but while
+    // the brandmark is still centred in `#services` (the gate is
+    // "hold" or "fade"). The camera must stay at the deepest
+    // fly-into-sphere pose so the ambient haze reads as a
+    // continuation of the docked pose rather than snapping back to
+    // the parked-planet view. Treat ambient as a continuation of
+    // `docked` for the dock-blend + epilogue-branch decisions.
+    const { paintProgress, docked, servicesAmbient } = useDepthGatewayStore.getState().transform;
+    const dockHeld = docked || servicesAmbient;
 
     // Epilogue v3 — once paintProgress saturates at 1 and the user
     // continues scrolling into the epilogue, `getEpilogueCameraPose`
@@ -91,9 +101,9 @@ export function FlyingCameraRig() {
     const smoothedEp = getSmoothedEpilogueProgress();
     const dt = Math.min(0.1, Math.max(0, delta));
     const k = 1 - Math.exp(-dt / 0.28);
-    dockBlend.current += ((docked ? 1 : 0) - dockBlend.current) * k;
+    dockBlend.current += ((dockHeld ? 1 : 0) - dockBlend.current) * k;
     // CRITICAL: snap the dock blend to exactly 0 once we're fully out of the
-    // epilogue (not docked AND no smoothed scrub). The blend decays
+    // epilogue (neither dock-held NOR a smoothed scrub). The blend decays
     // exponentially and never reaches 0 on its own, so after ANY dock visit it
     // lingered at a sub-perceptual positive value forever. That kept `ep > 0`
     // true, pinning the camera to the epilogue branch — and
@@ -105,7 +115,7 @@ export function FlyingCameraRig() {
     // ref. The snap restores the corridor dolly the moment we leave the
     // epilogue. (The branch boundary stays continuous: getCameraPosition(1) ===
     // CAMERA_END === getEpilogueCameraPose(0).)
-    if (!docked && smoothedEp <= 1e-4) dockBlend.current = 0;
+    if (!dockHeld && smoothedEp <= 1e-4) dockBlend.current = 0;
     const ep = smoothedEp + (DOCKED_INSTRUMENT_EPILOGUE_POSE - smoothedEp) * dockBlend.current;
     if (ep > 1e-4) {
       const pose = getEpilogueCameraPose(ep);
@@ -132,7 +142,12 @@ export function FlyingCameraRig() {
       // smoothed value, so they stay glued to this sphere). Easing from
       // 0 is a no-op at engage because `getCorridorExitCameraPose(0)`
       // === the docked pose by construction.
-      const dissipate = docked ? getSmoothedDissipate() : 0;
+      //
+      // During the services ambient hold the dock has released but the
+      // motion follower keeps `dissipate` pinned at 1 (see
+      // `MotionFollowerDriver`), so the camera sits at the deepest
+      // inside-the-sphere pose for the entire hold beat.
+      const dissipate = dockHeld ? getSmoothedDissipate() : 0;
       if (dissipate > 1e-4) {
         const exitPose = getCorridorExitCameraPose(dissipate);
         const t = dissipate;

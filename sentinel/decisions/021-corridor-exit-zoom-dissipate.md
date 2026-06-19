@@ -599,6 +599,267 @@ independent exit actor:
   by the signal group.
 - The late fade still reaches 0 before the dock release (`dissipate >= 0.999`).
 
+## 2026-06-19 Revision — Services ambient hold (inside-the-sphere)
+
+The ADR-021 corridor-exit choreography flies the camera into the
+intelligence-layer sphere and scatters its surface particles, then
+hands the welded brandmark off into `#services`. By the time the
+dock releases (`rawDissipate >= 0.999`) the surface helpers have
+faded to 0, the body veil has ramped to its dissipate-1 alpha, and
+the `#services` shell takes ownership of the dark backing again.
+Functionally correct, but it collapsed the **hold beat** — the
+~1 viewport runway between the dock release and `#continuum`'s
+arrival, during which the welded brandmark sits centred in the
+section — to a flat void rectangle. The narrative read ("we flew
+into our own intelligence layer") cut out the moment the camera
+arrived inside the sphere.
+
+This revision keeps a low-key warm interior particle haze painting
+behind the centred brandmark across that hold band, so the user
+reads the centred mark as floating **inside** the sphere they just
+flew into rather than against a black backdrop. The persistent-
+sphere-ambient alternative the original ADR rejected ("Persistent
+faint sphere ambient behind all of Services") is realised here in a
+bounded form: the ambient hold is scoped to the 200svh runway only
+(NOT the entire Services flow), and the surface geometry is fully
+hidden — only the interior cloud + a baseline starfield keep
+painting.
+
+### What changed
+
+- **`lib/stores/depthGatewayStore.ts`** — adds two fields to
+  `DepthGatewayTransform`: `servicesAmbient: boolean` and
+  `servicesAmbientLevel: number` (0..1 envelope, 1 across the hold,
+  ramps to 0 with the continuum-approach fade). `transformEquals` /
+  `INITIAL_TRANSFORM` updated. `useCorridorExitScroll` is the sole
+  writer; the two existing call sites that built the transform
+  literally (`HandoffLabPage`, `NavigateCopyLabPage`) pass the
+  default `false`/`0` for the new fields.
+- **`lib/home-v2/epilogueTimeline.ts`** — adds
+  `SERVICES_AMBIENT_HOLD_LEVEL = 0.48` and
+  `servicesAmbientOpacityMultiplier(ambientLevel, holdLevel?)`. The
+  helper composes multiplicatively onto an existing `uOpacity` so
+  callers can drop it in alongside `dissipateInteriorOpacity-
+Multiplier` without disturbing the dock-time path. Pinned by unit
+  tests covering the envelope endpoints, monotonicity, custom hold
+  level, input clamping, and a band check on the hold constant.
+- **`components/landing/home-v2/hooks/useCorridorExitScroll.ts`** —
+  computes `servicesAmbient = dockCapable && servicesGate != null`
+  (i.e. engages alongside `data-services-brandmark` = `"hold"` or
+  `"fade"`, after the dock release). Publishes a new `<html>`
+  attribute `data-services-ambient="true"` + a `--services-ambient`
+  (0..1) CSS var that mirrors the `--services-brandmark` fade so the
+  haze and the brandmark cross-fade together as `#continuum`
+  approaches. Also splits the body veil from the raw dissipate
+  clock by writing a new `--corridor-exit-veil` (0..1) var capped at
+  `VEIL_AMBIENT_CAP = 0.45`. The veil ramps with the dissipate while
+  docked but never crosses the cap, holds at the cap across the
+  ambient hold, and ramps back to 0 with the ambient envelope so the
+  canvas paints visibly under it throughout. The `data-corridor-
+exit` attribute now persists across both the dock and the ambient
+  hold, so `#services` stays transparent + `content-visibility:
+  visible` for the whole seam; the normal-station opaque void shield
+  re-takes ownership the moment both flags clear.
+- **`components/landing/home-v2/home-v2.css`** — extends the fixed
+  canvas promotion rule to match `data-services-ambient="true"` as
+  well as `data-corridor-docked="true"` (same fixed pose + void
+  backing + pointer-events: none). Updates the `body::before` veil
+  to read `var(--corridor-exit-veil, 0)` instead of
+  `var(--corridor-dissipate, 0)`.
+- **R3F painters** — extend the engaged gate (`active || armed ||
+docked || servicesAmbient`) on the four contributors to the
+  inside-the-sphere read:
+  - `DepthGatewayScene/index.tsx`:
+    - `FrameInvalidator` — keeps the demand-mode pump alive during
+      ambient so the haze doesn't freeze when the user stops
+      scrolling inside the hold band.
+    - `MotionFollowerDriver` — pins the smoothed `dissipate` target
+      at 1 during ambient (the dock has released but the camera +
+      welded marks should stay parked at the deepest inside-the-
+      sphere pose), and extends the `painting` gate so the follower
+      keeps easing across the dock <-> ambient boundary.
+  - `FlyingCameraRig.tsx` — treats `docked || servicesAmbient` as
+    "dock-held" for the dock-blend + reverse-scroll snap rule, so
+    the camera stays on the corridor-exit pose at dissipate ≈ 1
+    through the hold (no snap back to the parked-planet view).
+  - `ShellSubstrateGyro.tsx` — surface materials still ride
+    `dissipateOp` to 0 by ambient engage; the interior particle
+    cloud now composes the ambient multiplier
+    (`servicesAmbientOpacityMultiplier(servicesAmbientLevel)`) on
+    top of `dissipateInteriorOp` so the cloud picks up the held
+    alpha as the dissipate floor crosses over to the ambient
+    envelope. Suppresses the dock-time visibility/size/opacity
+    boosts during ambient so the haze reads as distant background
+    dust, not foreground bokeh.
+  - `StaticStarfield.tsx` — keeps painting at the baseline opacity
+    (no Build boost) scaled by `servicesAmbientLevel`, so a low,
+    distant star bed sits behind the gyro haze and fades with it.
+  - `BrandmarkPhysicsCoreActor.tsx` — keeps the sim warm during
+    ambient (so reverse-scroll back into the dock doesn't re-warm-
+    spike) but forces `handoffFade = 0` so the in-canvas core never
+    paints a duplicate mark behind the welded SVG / pixel field.
+- **`components/landing/home-v2/hooks/useDepthScroll.ts`** —
+  reverse-scroll release guard for the ambient channel. Mirrors the
+  existing `DOCK_RELEASE_EPILOGUE_PROGRESS = 0.7` gate that clears a
+  stale `docked` flag; if the user reverse-scrolls past the same
+  threshold while `prev.servicesAmbient` is still true, we
+  synchronously clear both the store flag and the
+  `data-services-ambient` attribute / `--services-ambient` var so
+  the painters drop the inside-the-sphere camera pose at the same
+  frame they leave the dock window.
+
+### Why a separate engagement flag and not "just extend `docked`"
+
+`docked` is a precise contract: the corridor-exit dissipate clock is
+ramping and the camera is mid fly-into-sphere. Several painters /
+gates / CSS rules already key on it (the dock canvas promotion, the
+veil ramp, the welded brandmark recentre, the BrandmarkPhysicsCore
+floor, the smoothed dissipate motion follower). Widening it to
+include the post-release hold would either:
+
+- silently apply the dock-time visibility/size boosts to the ambient
+  cloud (the planet-density boost is gated on `docked` directly),
+  reading as a curtain of foreground dust during the hold; or
+- require every existing `docked` consumer to grow a "but not
+  ambient" carve-out, which is the inverse of the single-flag
+  intent.
+
+A second flag with a single writer keeps the dock contract intact
+and lets ambient painters opt in explicitly. The motion follower
+still maps both flags to the same smoothed `dissipate` channel, so
+the camera path is C0-continuous across the boundary; the only
+thing that changes at the dock release frame is which painters
+contribute.
+
+### Invariants preserved
+
+- **Single-writer rule.** `useCorridorExitScroll` owns `docked` /
+  `dockProgress` / `seamMorph` / `servicesAmbient` /
+  `servicesAmbientLevel`. The reverse-scroll release in
+  `useDepthScroll` is the documented exception — it CLEARS but
+  never SETS the new flags, mirroring the existing dock release
+  guard. The `--corridor-exit-veil` var is written only by the exit
+  hook.
+- **ADR-008 paint stack.** `#services` is still transparent only
+  while `data-corridor-exit` is active; the body veil still owns
+  the re-shielding of the dark surface, with the new
+  `--corridor-exit-veil` clock keeping it below 1 while the canvas
+  is meant to be visible underneath and ramping it to 0 across the
+  ambient fade. No new opaque rectangle is introduced.
+- **GPU cost bounded to the hold.** The ambient flag releases at the
+  same `#continuum.top / vh` window that releases the brandmark
+  hold (`CONTINUUM_FADE_END = 0.1`), so the R3F canvas idles via
+  demand mode the moment the next station owns the viewport. This
+  is the original ADR's rejected "persistent through all of
+  Services" alternative scoped to a single 200svh runway — the
+  reason the alternative was rejected (full-section GPU cost
+  competing with the cards) does not apply to the runway-only
+  scope.
+- **ADR-015 brandmark painter cap.** The ambient hold reuses the
+  existing `ShellSubstrateGyro` substrate-sphere mesh and the
+  `StaticStarfield` ambient layer; it does not add a new painter to
+  `BrandmarkParticleCanvas`. The cap is unchanged.
+- **Reduced-motion / mobile / no-WebGL fallback.** `dockCapable`
+  still gates `servicesAmbient`. When false the flag is never set,
+  the fixed canvas promotion never engages, and the page reads as a
+  sequential dark cut from corridor → services → continuum exactly
+  as before.
+
+### Files touched in this revision
+
+- [`lib/stores/depthGatewayStore.ts`](../../lib/stores/depthGatewayStore.ts)
+- [`lib/home-v2/epilogueTimeline.ts`](../../lib/home-v2/epilogueTimeline.ts)
+- [`tests/lib/epilogue-timeline.test.ts`](../../tests/lib/epilogue-timeline.test.ts)
+- [`components/landing/home-v2/hooks/useCorridorExitScroll.ts`](../../components/landing/home-v2/hooks/useCorridorExitScroll.ts)
+- [`components/landing/home-v2/hooks/useDepthScroll.ts`](../../components/landing/home-v2/hooks/useDepthScroll.ts)
+- [`components/landing/home-v2/home-v2.css`](../../components/landing/home-v2/home-v2.css)
+- [`components/landing/home-v2/DepthGatewayScene/index.tsx`](../../components/landing/home-v2/DepthGatewayScene/index.tsx)
+- [`components/landing/home-v2/DepthGatewayScene/StaticStarfield.tsx`](../../components/landing/home-v2/DepthGatewayScene/StaticStarfield.tsx)
+- [`components/landing/home-v2/DepthGatewayScene/FlyingCameraRig.tsx`](../../components/landing/home-v2/DepthGatewayScene/FlyingCameraRig.tsx)
+- [`components/landing/home-v2/DepthGatewayScene/BrandmarkPhysicsCoreActor.tsx`](../../components/landing/home-v2/DepthGatewayScene/BrandmarkPhysicsCoreActor.tsx)
+- [`components/landing/home-v2/DepthGatewayScene/shell/ShellSubstrateGyro.tsx`](../../components/landing/home-v2/DepthGatewayScene/shell/ShellSubstrateGyro.tsx)
+- [`components/landing/home-v2/handoff-lab/HandoffLabPage.tsx`](../../components/landing/home-v2/handoff-lab/HandoffLabPage.tsx)
+  — typed pass-through only.
+- [`components/landing/home-v2/lab/NavigateCopyLabPage.tsx`](../../components/landing/home-v2/lab/NavigateCopyLabPage.tsx)
+  — typed pass-through only.
+
+### 2026-06-19 follow-up — the dock-release cut (paintProgress collapse)
+
+The first ambient-hold pass still read as "particles visible during the
+dissipate, then they vanish suddenly a bit further down." The visible
+disappearance was NOT (only) the interior-opacity compounding bug below —
+it was a deeper collapse rooted in how `paintProgress` behaves once the
+sticky stage scrolls out of view.
+
+**Root cause.** The corridor stage is ~820svh and `#services` follows it
+immediately, so the stage's bottom passes the viewport top roughly
+halfway through the dissipate runway (`rawDissipate ≈ 0.5`). At that
+point `getCorridorEngagement` flips `active` to false, and
+`paintProgress` (= `active ? progress : 0`) snaps `1 → 0` mid-dock.
+Three things collapse at once:
+
+1. **Shell position.** [`BrandmarkAccretionShell`](../../components/landing/home-v2/DepthGatewayScene/BrandmarkAccretionShell.tsx)
+   sets `shell.position = getBrandmarkWorldPosition(paintProgress)`. At
+   `paintProgress 0` that is the far Thoughtform station — the sphere
+   teleports out of the camera's view.
+2. **Accretion reveal.** `getBrandmarkAccretionLayers(0).substrate =
+smoothstep(0.3, 0.42, 0) = 0`, so the motion follower's `substrate`
+   channel targets 0 and [`ShellSubstrateGyro`](../../components/landing/home-v2/DepthGatewayScene/shell/ShellSubstrateGyro.tsx)
+   early-returns (`reveal <= EMERGE_EPSILON` → `root.visible = false`).
+3. **Follower teleport snap.** The `1 → 0` jump exceeds
+   `TELEPORT_PROGRESS_DELTA`, so `driveMotionFollower` snaps every
+   channel instead of easing — the collapse is instant, not gradual.
+
+So the WHOLE sphere (surface scatter + interior haze) blinked out around
+the middle of the dock, before the ambient interior code ever ran.
+
+**Fix — hold `paintProgress` at 1 across the exit.** The corridor never
+conceptually leaves the sphere during the exit; it flew INTO it. While
+`docked || servicesAmbient` and `!active`, [`useDepthScroll`](../../components/landing/home-v2/hooks/useDepthScroll.ts)
+now pins `paintProgress = 1` (the Build/intelligence park). This keeps
+the shell parked at the Build world position, holds the accretion reveal
+saturated, and removes the `1 → 0` jump so the follower never teleport-
+snaps. The dissipate/ambient clocks (owned by `useCorridorExitScroll`)
+still drive the surface scatter + interior fade on top of this stable
+base. The pin lifts the instant the exit flags clear (reverse-scroll
+release or the dock/ambient gates going false), by which point the stage
+has re-pinned and live `paintProgress` resumes with no jump.
+
+Supporting changes:
+
+- [`BrandmarkAccretionShell`](../../components/landing/home-v2/DepthGatewayScene/BrandmarkAccretionShell.tsx)
+  `painting` gate gains `servicesAmbient` so the sphere subtree stays
+  mounted/positioned through the hold (its `visible = false` early
+  return would otherwise hide `ShellSubstrateGyro` even with the gyro's
+  own loop running).
+- **Interior continuity** in `ShellSubstrateGyro`: the interior cloud is
+  ONE continuous envelope, SELECTED not multiplied — dock uses
+  `dissipateInteriorOpacityMultiplier(dissipate, SERVICES_AMBIENT_HOLD_LEVEL)`
+  (full → hold), ambient uses `servicesAmbientOpacityMultiplier(level)`
+  (hold → 0). The interior floor is raised from the old 0.18 to
+  `SERVICES_AMBIENT_HOLD_LEVEL` so dock-end == ambient-start (C0
+  continuous) AND the inside of the sphere stays clearly visible. The
+  dock-era visibility/size boosts are bridged across the dock release
+  (`interiorHeld = docked || servicesAmbient`) so the cloud doesn't jump
+  dimmer/smaller at the seam. (The earlier pass multiplied BOTH the
+  dissipate floor and the ambient multiplier, dropping the cloud to
+  ~0.18 × 0.48 at the boundary — a second, smaller cut.)
+- **Starfield continuity** in [`StaticStarfield`](../../components/landing/home-v2/DepthGatewayScene/StaticStarfield.tsx):
+  with `paintProgress` pinned at 1 the build-boost is already saturated,
+  so the ambient branch now just FADES the build-boosted brightness by
+  `servicesAmbientLevel` instead of dropping to the dim baseline (which
+  was its own ~40% step at the dock release).
+
+**Invariant note.** The pin is a `paintProgress` WRITE, and
+`useDepthScroll` remains its sole writer — it only reads the exit-hook-
+owned `docked` / `servicesAmbient` flags to decide when to hold. The
+single-writer rule is intact.
+
+Additional file touched in this follow-up:
+
+- [`components/landing/home-v2/DepthGatewayScene/BrandmarkAccretionShell.tsx`](../../components/landing/home-v2/DepthGatewayScene/BrandmarkAccretionShell.tsx)
+  — `servicesAmbient` added to the `painting` gate.
+
 ## Related Decisions
 
 - [ADR-002 — Scroll Animation Architecture](002-scroll-animation-architecture.md)

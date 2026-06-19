@@ -239,8 +239,17 @@ html[data-corridor-docked="true"] .home-v2-stage__sticky {
    This rule keeps the canvas in viewport-fixed position with NO CSS
    transform: any visual recede must come from the camera arc, not a
    2D transform, so the dissipate composes with the scatter cleanly.
-   Release is driven by `data-corridor-docked` clearing. */
-html[data-corridor-docked="true"] .home-v2-stage__canvas {
+   Release is driven by `data-corridor-docked` clearing.
+
+   ADR-021 addendum (services ambient hold): the same fixed promotion
+   continues under `data-services-ambient="true"` after the dock
+   releases, so `ShellSubstrateGyro`'s interior particle cloud (the
+   "inside the sphere" haze) keeps painting behind the centred
+   brandmark instead of cutting to a flat void. Both gates share the
+   same fixed pose + void backing so the visual transition between
+   the two states is continuous; only the painter contracts switch. */
+html[data-corridor-docked="true"] .home-v2-stage__canvas,
+html[data-services-ambient="true"] .home-v2-stage__canvas {
   position: fixed;
   inset: 0;
   width: 100vw;
@@ -296,9 +305,14 @@ html[data-corridor-epilogue="true"] .home-v2-stage__canvas canvas {
    copy, CTA, and cards scroll over it and own all interaction. This
    also stops the R3F raycaster from running across the whole viewport
    while the user reads the readouts. Declared AFTER the epilogue rule
-   so it wins at equal specificity (both flags can be true at once). */
+   so it wins at equal specificity (both flags can be true at once).
+   Extended (ADR-021 addendum) to the services ambient hold so the
+   ambient haze layer never intercepts events from #services chrome
+   or #continuum as it scrolls into view. */
 html[data-corridor-docked="true"] .home-v2-stage__canvas,
-html[data-corridor-docked="true"] .home-v2-stage__canvas canvas {
+html[data-corridor-docked="true"] .home-v2-stage__canvas canvas,
+html[data-services-ambient="true"] .home-v2-stage__canvas,
+html[data-services-ambient="true"] .home-v2-stage__canvas canvas {
   pointer-events: none;
 }
 
@@ -338,13 +352,20 @@ html[data-corridor-exit="true"] #services {
   content-visibility: visible;
 }
 
+/* Veil alpha (ADR-021 addendum, 2026-06-19): reads `--corridor-exit-veil`
+   instead of the raw dissipate clock. The hook computes the veil with
+   a cap (`VEIL_AMBIENT_CAP`) so the docked canvas remains visible
+   through the back of the dissipate AND through the ambient hold. The
+   normal-station opaque shield re-takes ownership the moment
+   `data-corridor-exit` clears at the end of the hold/fade, so the
+   release stays visually continuous. */
 html[data-corridor-exit="true"] body::before {
   content: "";
   position: fixed;
   inset: 0;
   z-index: 5;
   pointer-events: none;
-  background: rgba(5, 4, 3, var(--corridor-dissipate, 0));
+  background: rgba(5, 4, 3, var(--corridor-exit-veil, 0));
 }
 
 html[data-corridor-exit="true"] #services > * {

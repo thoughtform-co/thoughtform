@@ -113,6 +113,25 @@ function smoothstep01(value: number): number {
  *     pixels are the only visible mark) and shows the canvas. Never
  *     set on the fallback path, so the SVG `--services-brandmark`
  *     fade still owns that path.
+ *   - `data-services-ambient` attribute + `--services-ambient` (0..1)
+ *     on `<html>` and `transform.servicesAmbient` /
+ *     `transform.servicesAmbientLevel` in the depth-gateway store —
+ *     the "inside the sphere" ambient hold (ADR-021 addendum, capable
+ *     path only). Engages alongside the brandmark hold/fade gate
+ *     (after the dock has released) and keeps the R3F canvas fixed
+ *     so `ShellSubstrateGyro`'s interior particle cloud + the static
+ *     starfield keep painting as a warm haze behind the centred mark.
+ *     `--services-ambient` holds at 1 across the hold band, ramps to
+ *     0 across the continuum-approach fade, then both flags clear
+ *     and the normal-station opaque void shield re-takes ownership.
+ *   - `--corridor-exit-veil` (0..1) on `<html>` — the alpha for the
+ *     fixed `body::before` veil. Tracks `--corridor-dissipate` while
+ *     docked (capped at `VEIL_AMBIENT_CAP` so the canvas stays
+ *     visible through it), holds at the cap across the ambient hold,
+ *     and ramps back to 0 with `--services-ambient` as `#continuum`
+ *     approaches. Replaced the older `var(--corridor-dissipate)`
+ *     direct read so the late-dissipate alpha-1 cover does not hide
+ *     the ambient-hold canvas painting underneath.
  *
  * 2026-06-16 (ADR-021 follow-up): the per-element reveal vars
  * (`--services-header-in`, `--services-grid-in`, `--services-cta-in`)
@@ -191,10 +210,8 @@ export function useCorridorExitScroll(rootRef: RefObject<HTMLDivElement | null>)
       document.documentElement.style.setProperty("--corridor-dissipate", dissipate.toFixed(4));
       if (docked) {
         document.documentElement.setAttribute("data-corridor-docked", "true");
-        document.documentElement.setAttribute("data-corridor-exit", "true");
       } else {
         document.documentElement.removeAttribute("data-corridor-docked");
-        document.documentElement.removeAttribute("data-corridor-exit");
       }
 
       // Resolve #continuum once — both the actor-lifecycle gate and
@@ -287,12 +304,94 @@ export function useCorridorExitScroll(rootRef: RefObject<HTMLDivElement | null>)
         document.documentElement.style.removeProperty("--services-pixelate");
       }
 
-      // ONLY own the dock + seam channels. The corridor's
+      // ── Services ambient hold (ADR-021 addendum) ───────────────
+      // After the camera has flown into the sphere and the dock has
+      // released, the brandmark sits centred in `#services` for a
+      // ~1-viewport hold beat before `#continuum` enters. Without
+      // anything else painting, the user's eye drops onto a flat
+      // void rectangle. The ambient hold extends the R3F canvas
+      // through this beat so the `ShellSubstrateGyro` interior
+      // particle volume keeps reading as a warm "inside the sphere"
+      // haze behind the welded mark — the corridor's narrative read
+      // ("we flew into our own intelligence layer") continues into
+      // the hold rather than collapsing the instant the dock
+      // releases.
+      //
+      // Surface geometry (dotted shell, globe grid, equator,
+      // atmosphere rim, accretion shell, in-canvas brandmark core)
+      // is fully scattered/faded by `dissipateOp` already; the
+      // ambient gate keeps ONLY the interior cloud painting and
+      // suppresses the surface multiplier on the capable painters.
+      //
+      // Engages once the dock-release/hold gate is set (servicesGate
+      // != null) and the capable path is in use. `--services-ambient`
+      // (0..1) is held at 1 across the hold and ramps to 0 across
+      // the same `CONTINUUM_FADE_HOLD -> CONTINUUM_FADE_END` window
+      // the brandmark fade uses, so the haze and the brandmark fade
+      // together as `#continuum` enters.
+      const servicesAmbient = dockCapable && servicesGate != null;
+      const servicesAmbientLevel = servicesAmbient
+        ? servicesGate === "fade"
+          ? servicesBrandmarkOpacity
+          : 1
+        : 0;
+      if (servicesAmbient) {
+        document.documentElement.setAttribute("data-services-ambient", "true");
+        document.documentElement.style.setProperty(
+          "--services-ambient",
+          servicesAmbientLevel.toFixed(4)
+        );
+      } else {
+        document.documentElement.removeAttribute("data-services-ambient");
+        document.documentElement.style.removeProperty("--services-ambient");
+      }
+
+      // ── Corridor-exit body veil ────────────────────────────────
+      // The fixed `body::before` veil (home-v2.css) was previously
+      // gated on `data-corridor-exit` alone and read
+      // `--corridor-dissipate` directly. Two problems for the
+      // ambient hold:
+      //
+      //   1. At dissipate 1 the veil reaches alpha 1, so the
+      //      services-ambient particles painted on the canvas
+      //      underneath would be hidden — defeating the purpose.
+      //   2. The legacy attribute was also flipped off the moment
+      //      `docked` cleared, leaving the canvas un-fixed during
+      //      the hold.
+      //
+      // Split the veil into its own var (`--corridor-exit-veil`) and
+      // keep `data-corridor-exit` active across BOTH the dock and the
+      // ambient hold (so `#services` stays transparent +
+      // `content-visibility: visible` throughout). During dock the
+      // veil tracks the dissipate clock UP TO a low cap so the
+      // canvas remains visible through it. During the ambient hold
+      // the veil sits at that cap, then ramps back to 0 as the
+      // haze fades, so the canvas can paint cleanly under it. The
+      // normal-station opaque void shield re-takes ownership the
+      // moment both flags clear (release at the bottom of the hook).
+      const VEIL_AMBIENT_CAP = 0.45;
+      let veilAlpha = 0;
+      if (docked) {
+        veilAlpha = Math.min(VEIL_AMBIENT_CAP, dissipate * VEIL_AMBIENT_CAP);
+      } else if (servicesAmbient) {
+        veilAlpha = VEIL_AMBIENT_CAP * servicesAmbientLevel;
+      }
+      const corridorExit = docked || servicesAmbient;
+      if (corridorExit) {
+        document.documentElement.setAttribute("data-corridor-exit", "true");
+        document.documentElement.style.setProperty("--corridor-exit-veil", veilAlpha.toFixed(4));
+      } else {
+        document.documentElement.removeAttribute("data-corridor-exit");
+        document.documentElement.style.removeProperty("--corridor-exit-veil");
+      }
+
+      // ONLY own the dock + seam + ambient channels. The corridor's
       // `useDepthScroll` remains the sole writer of progress /
       // paintProgress / epilogueProgress (single-writer rule). The
-      // painters read `dockProgress` (the dissipate clock) and
-      // `seamMorph` (the pixelate clock) and hold a fixed pose
-      // themselves, so we never need to overwrite the epilogue
+      // painters read `dockProgress` (the dissipate clock),
+      // `seamMorph` (the pixelate clock), and `servicesAmbient` /
+      // `servicesAmbientLevel` (the ambient hold) and hold a fixed
+      // pose themselves, so we never need to overwrite the epilogue
       // scrub here.
       const store = useDepthGatewayStore.getState();
       const prev = store.transform;
@@ -300,12 +399,17 @@ export function useCorridorExitScroll(rootRef: RefObject<HTMLDivElement | null>)
       const dockChanged =
         prev.docked !== docked || Math.abs(prev.dockProgress - nextDockProgress) > 0.0005;
       const seamChanged = Math.abs(prev.seamMorph - seamMorph) > 0.0005;
-      if (dockChanged || seamChanged) {
+      const ambientChanged =
+        prev.servicesAmbient !== servicesAmbient ||
+        Math.abs(prev.servicesAmbientLevel - servicesAmbientLevel) > 0.0005;
+      if (dockChanged || seamChanged || ambientChanged) {
         store.setTransform({
           ...prev,
           docked,
           dockProgress: nextDockProgress,
           seamMorph,
+          servicesAmbient,
+          servicesAmbientLevel,
         });
       }
     };
@@ -328,15 +432,20 @@ export function useCorridorExitScroll(rootRef: RefObject<HTMLDivElement | null>)
       document.documentElement.removeAttribute("data-corridor-exit");
       document.documentElement.removeAttribute("data-services-brandmark");
       document.documentElement.removeAttribute("data-services-pixelate");
+      document.documentElement.removeAttribute("data-services-ambient");
       document.documentElement.style.removeProperty("--corridor-dissipate");
+      document.documentElement.style.removeProperty("--corridor-exit-veil");
       document.documentElement.style.removeProperty("--services-brandmark");
       document.documentElement.style.removeProperty("--services-pixelate");
+      document.documentElement.style.removeProperty("--services-ambient");
       const store = useDepthGatewayStore.getState();
       store.setTransform({
         ...store.transform,
         docked: false,
         dockProgress: 0,
         seamMorph: 0,
+        servicesAmbient: false,
+        servicesAmbientLevel: 0,
       });
     };
   }, [rootRef]);

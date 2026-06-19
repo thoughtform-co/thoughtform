@@ -38,16 +38,25 @@ import {
  */
 function MotionFollowerDriver() {
   useFrame((_, delta) => {
-    const { paintProgress, epilogueProgress, active, armed, docked, dockProgress } =
-      useDepthGatewayStore.getState().transform;
+    const {
+      paintProgress,
+      epilogueProgress,
+      active,
+      armed,
+      docked,
+      dockProgress,
+      servicesAmbient,
+    } = useDepthGatewayStore.getState().transform;
     const layers = getBrandmarkAccretionLayers(paintProgress);
-    // Pass `active || armed || docked` so the follower eases continuously
-    // across the active <-> armed boundary (corridor entry seam). The
-    // previous `active || docked` flag flipped to false during armed,
-    // which combined with the follower's `!active` snap rule caused a
-    // visible bounce on reverse scroll back across the seam. The
-    // follower's snap-on-real-discontinuities (teleport / idle resume)
-    // covers genuine jumps; armed is a continuous neighbour of active.
+    // Pass `active || armed || docked || servicesAmbient` so the follower
+    // eases continuously across the active <-> armed boundary (corridor
+    // entry seam) AND across the dock <-> ambient-hold boundary (corridor
+    // exit seam). The previous `active || docked` flag flipped to false
+    // during armed, which combined with the follower's `!active` snap
+    // rule caused a visible bounce on reverse scroll back across the
+    // seam. The follower's snap-on-real-discontinuities (teleport / idle
+    // resume) covers genuine jumps; armed and the services ambient hold
+    // are continuous neighbours of active/docked.
     driveMotionFollower(
       {
         panOffsetX: getThoughtformCenterOffsetX(paintProgress),
@@ -56,13 +65,18 @@ function MotionFollowerDriver() {
         stack: layers.stack,
         epilogue: epilogueProgress,
         // Dissipate target is the raw (smootherstep-ramped) dock scrub
-        // while docked, 0 otherwise — so reverse-scroll out of the dock
-        // eases the fly-into-sphere back out instead of snapping.
-        dissipate: docked ? dockProgress : 0,
+        // while docked. During the services ambient hold the dock has
+        // released but the camera + sphere painters should stay parked
+        // at the inside-the-sphere pose (dissipate ≈ 1) so the ambient
+        // haze reads as a continuation of the dock pose rather than
+        // snapping back to the parked-planet view. 0 otherwise so
+        // reverse-scroll out of the dock eases the fly-into-sphere
+        // back out instead of snapping.
+        dissipate: docked ? dockProgress : servicesAmbient ? 1 : 0,
       },
       delta,
       paintProgress,
-      active || armed || docked
+      active || armed || docked || servicesAmbient
     );
   }, -10);
   return null;
@@ -109,7 +123,12 @@ function FrameInvalidator() {
 
     const isEngaged = () => {
       const t = useDepthGatewayStore.getState().transform;
-      return t.active || t.armed || t.docked;
+      // Includes `servicesAmbient` (ADR-021 addendum) so the demand
+      // loop keeps the canvas painting during the inside-the-sphere
+      // hold beat after the dock has released; without it the
+      // interior haze freezes the moment the user stops scrolling
+      // inside #services.
+      return t.active || t.armed || t.docked || t.servicesAmbient;
     };
 
     const pump = () => {

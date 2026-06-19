@@ -125,7 +125,7 @@ export function useDepthScroll(stageRef: React.RefObject<HTMLDivElement | null>)
     // `paintProgress`, so the camera, mirror camera, rings, brandmark,
     // and copy all shift together. (ADR-018 mobile revision.)
     const mobile = isMobileComposition();
-    const paintProgress =
+    let paintProgress =
       active && mobile ? getMobilePaintProgress(progress) : engagement.paintProgress;
 
     // Beat / gateProgress drive cosmetics (brandmark `isParkedBeat`
@@ -190,15 +190,67 @@ export function useDepthScroll(stageRef: React.RefObject<HTMLDivElement | null>)
       document.documentElement.removeAttribute("data-corridor-docked");
       document.documentElement.style.setProperty("--handoff-cover", "0");
     }
+    // ADR-021 addendum (services ambient hold): mirror the docked
+    // release guard for the ambient channel. `useCorridorExitScroll`
+    // is the sole writer of `servicesAmbient`, and it only engages
+    // after the dock has released (`servicesGate != null`), which by
+    // construction can only happen at `epilogueProgress >=
+    // DOCK_ENGAGE_EP (0.72)`. If the user reverse-scrolls all the way
+    // back past `DOCK_RELEASE_EPILOGUE_PROGRESS` into the
+    // mid-corridor, any lingering ambient flag is stale (the exit
+    // hook will not run until the next scroll frame, by which point
+    // the painters would have re-applied an inside-the-sphere camera
+    // pose against the wrong epilogue scrub). Drop the flag
+    // synchronously and clear the associated <html> attribute / vars
+    // so the body veil + fixed canvas release at the same frame.
+    const ambientReleased =
+      prev.servicesAmbient && epilogueProgress < DOCK_RELEASE_EPILOGUE_PROGRESS;
+    const servicesAmbient = ambientReleased ? false : prev.servicesAmbient;
+    const servicesAmbientLevel = ambientReleased ? 0 : prev.servicesAmbientLevel;
+    if (ambientReleased && typeof document !== "undefined") {
+      document.documentElement.removeAttribute("data-services-ambient");
+      document.documentElement.style.removeProperty("--services-ambient");
+    }
+
+    // ── Corridor-exit paint hold (ADR-021 addendum, 2026-06-19) ──────
+    // `paintProgress` is normally forced to 0 whenever the sticky stage
+    // is not pinned (`engagement.paintProgress = active ? progress : 0`).
+    // That is correct for the corridor entry/exit at large, BUT the
+    // corridor-exit dock + services ambient hold keep the live R3F sphere
+    // docked as a FIXED backdrop AFTER the sticky stage has scrolled out
+    // of view (active=false). With paintProgress at 0 the sphere's world
+    // position (`getBrandmarkWorldPosition(0)` → far Thoughtform station)
+    // and its accretion reveal (`getBrandmarkAccretionLayers(0).substrate
+    // = 0`) both collapse, AND the 1→0 jump trips the motion-follower's
+    // teleport snap — so the whole sphere (surface scatter + interior
+    // haze) vanishes the instant the stage unpins, roughly halfway
+    // through the dock. That was the "particles disappear suddenly" cut.
+    //
+    // While the exit is engaged the paint state should stay SATURATED at
+    // the Build/intelligence park (progress 1) — the corridor never
+    // conceptually left the sphere; we flew INTO it. Hold paintProgress
+    // at 1 so the shell position, the accretion reveal, and the follower
+    // all stay parked at Build for the whole dock + ambient hold. The
+    // dissipate/ambient clocks (owned by `useCorridorExitScroll`) still
+    // drive the surface scatter + interior fade on top of this stable
+    // base. The hold lifts the moment the exit flags clear (reverse
+    // scroll release above, or the dock/ambient gates going false), at
+    // which point the stage has re-pinned (active=true) and live
+    // paintProgress resumes with no jump.
+    if (!active && (docked || servicesAmbient)) {
+      paintProgress = 1;
+    }
     const engagementChanged = active !== prev.active || armed !== prev.armed;
     const epilogueChanged = Math.abs(epilogueProgress - prev.epilogueProgress) > 0.00005;
     const dockChanged =
       docked !== prev.docked || Math.abs(dockProgress - prev.dockProgress) > 0.0005;
+    const ambientChanged = ambientReleased;
     if (
       Math.abs(progress - lastProgress.current) > 0.00005 ||
       engagementChanged ||
       epilogueChanged ||
-      dockChanged
+      dockChanged ||
+      ambientChanged
     ) {
       lastProgress.current = progress;
       useDepthGatewayStore.getState().setTransform({
@@ -213,8 +265,16 @@ export function useDepthScroll(stageRef: React.RefObject<HTMLDivElement | null>)
         docked,
         dockProgress,
         // Pass through — `useCorridorExitScroll` is the sole
-        // writer of the seam pixelate clock (single-writer rule).
+        // writer of the seam pixelate clock and the services
+        // ambient hold channel (single-writer rule). The reverse-
+        // scroll release guard above is the sole exception: when
+        // the user scrolls back past `DOCK_RELEASE_EPILOGUE_PROGRESS`
+        // we clear the ambient flag in-line so the painters don't
+        // hold a stale inside-the-sphere camera pose against a
+        // mid-corridor epilogue scrub.
         seamMorph: prev.seamMorph,
+        servicesAmbient,
+        servicesAmbientLevel,
       });
     } else if (Math.abs(velocity) > 0.0001) {
       // Surface velocity decay even when progress hasn't changed,
@@ -231,6 +291,8 @@ export function useDepthScroll(stageRef: React.RefObject<HTMLDivElement | null>)
         docked,
         dockProgress,
         seamMorph: prev.seamMorph,
+        servicesAmbient,
+        servicesAmbientLevel,
       });
     }
   }, [stageRef]);

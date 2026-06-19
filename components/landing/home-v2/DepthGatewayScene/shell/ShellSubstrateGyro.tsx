@@ -48,6 +48,8 @@ import {
   dissipateOpacityMultiplier,
   dissipateShellScatter,
   epilogueBand,
+  SERVICES_AMBIENT_HOLD_LEVEL,
+  servicesAmbientOpacityMultiplier,
 } from "@/lib/home-v2/epilogueTimeline";
 import { useGyroLabStore } from "@/lib/stores/gyroLabStore";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
@@ -987,11 +989,12 @@ export function ShellSubstrateGyro({ layerKey, reducedMotion = false }: ShellSub
     const globeSpin = globeSpinRef.current;
     if (!root || !globeSpin) return;
 
-    const { active, armed, docked } = useDepthGatewayStore.getState().transform;
+    const { active, armed, docked, servicesAmbient, servicesAmbientLevel } =
+      useDepthGatewayStore.getState().transform;
     // Smoothed epilogue scrub — same channel as the camera so the
     // shed + surface boost glide with the flight (2026-06-11).
     const epilogueProgress = getSmoothedEpilogueProgress();
-    if (!active && !armed && !docked) {
+    if (!active && !armed && !docked && !servicesAmbient) {
       root.visible = false;
       return;
     }
@@ -1007,17 +1010,46 @@ export function ShellSubstrateGyro({ layerKey, reducedMotion = false }: ShellSub
     // the parked epilogue pose is byte-identical to its pre-ADR-021
     // self. When `!docked` the dissipate stays 0 so reverse-scroll
     // restores the held planet cleanly.
-    const dissipate = docked ? getSmoothedDissipate() : 0;
+    //
+    // ADR-021 addendum (services ambient hold): once the dock releases
+    // and `servicesAmbient` engages, the dissipate clock is held at 1
+    // so the surface helpers (dotted shell, globe grid, equator,
+    // atmosphere) stay at 0 / their fully-scattered end-state, and the
+    // interior cloud handoff to `servicesAmbientOpacityMultiplier`
+    // (the `interiorMul` SELECT below) picks up at the same hold level
+    // the dock dimmed to. Pinning dissipate to 1 here also keeps the
+    // welded marks / camera path continuous because the motion follower
+    // drives the same channel (see `MotionFollowerDriver`).
+    const dissipate = docked ? getSmoothedDissipate() : servicesAmbient ? 1 : 0;
     const dissipateOp = dissipateOpacityMultiplier(dissipate);
-    // Interior cloud (ambient particles inside the volume) settles on a
-    // muted floor instead of fading to 0 — the camera flies INTO the
-    // sphere during the dissipate, so the inside should keep reading as
-    // a soft particulate volume behind the Services copy rather than
-    // being erased.
-    const dissipateInteriorOp = dissipateInteriorOpacityMultiplier(dissipate);
     const dissipateCoreOp = dissipateCoreMultiplier(dissipate);
     const dissipateShellMul = dissipateShellScatter(dissipate);
     const dissipateAtmoEnv = dissipateAtmosphereEnvelope(dissipate);
+    // Interior cloud (ambient particles inside the volume) — ONE
+    // continuous "inside the sphere" envelope across the dock dissipate
+    // and the services ambient hold (ADR-021 addendum; 2026-06-19 cut
+    // fix). The two phases are SELECTED, never multiplied:
+    //
+    //   - Dock: `dissipateInteriorOpacityMultiplier(dissipate,
+    //     SERVICES_AMBIENT_HOLD_LEVEL)` dims the cloud from full (1) down
+    //     to the hold level across PARTICLE_FADE. The floor is raised
+    //     from the old 0.18 to SERVICES_AMBIENT_HOLD_LEVEL so the inside
+    //     of the sphere stays clearly visible (the user must still read
+    //     "rotating particles" as the surface scatters away).
+    //   - Ambient: `servicesAmbientOpacityMultiplier(level)` holds at the
+    //     SAME hold level (level 1) then fades to 0 across the continuum
+    //     approach.
+    //
+    // dock-end (dissipate → 1) == ambient-start (level 1) ==
+    // SERVICES_AMBIENT_HOLD_LEVEL, so the dock RELEASE is C0-continuous —
+    // the interior cloud no longer collapses the instant the dock
+    // detaches (the previous code multiplied BOTH multipliers, dropping
+    // the cloud to ~0.18 × 0.48 at the boundary). Outside the exit this
+    // is the plain dock path; at dissipate 0 it returns 1 (identity), so
+    // the parked epilogue pose is byte-identical to its pre-ADR-021 self.
+    const interiorMul = servicesAmbient
+      ? servicesAmbientOpacityMultiplier(servicesAmbientLevel)
+      : dissipateInteriorOpacityMultiplier(dissipate, SERVICES_AMBIENT_HOLD_LEVEL);
 
     // Temporally-smoothed reveals (motionFollower) — the gimbal's
     // ring cascade, globe Y-bloom, wrap-spin, and shell settle always
@@ -1069,13 +1101,27 @@ export function ShellSubstrateGyro({ layerKey, reducedMotion = false }: ShellSub
     // Opacity multiplier: 1 at parked, ~1.5 at peak (capped at 1
     // via Math.min so we don't oversaturate).
     const opacityBoost = 1 + approachT * 0.55;
+    // ADR-021 addendum (services ambient hold): keep the dock-era
+    // interior boosts WARM through the ambient hold so the interior
+    // cloud's brightness AND point size stay continuous across the dock
+    // release. The dock visibility/size boosts are gated on `docked`,
+    // which flips false at the dock→ambient boundary — without bridging
+    // them the cloud would jump dimmer + smaller exactly when the hold
+    // begins (a second contributor to the "particles vanish suddenly"
+    // cut). `interiorHeld` treats dock and ambient as one regime; the
+    // interior opacity boost simply reuses `opacityBoost` (which is a
+    // function of the epilogue scrub, already saturated at the park, so
+    // it is continuous across the boundary on its own).
+    const interiorHeld = docked || servicesAmbient;
+    const interiorVisibilityBoost = interiorHeld ? 1.65 : 1;
+    const interiorPointSizeBoost = (1 + approachT * 0.8) * (interiorHeld ? 1.28 : 1);
 
     // GLOBE materials — kept through the epilogue (these BECOME the
     // planet surface grid + atmospheric particles). The dissipate fade
     // is split: SURFACE elements (great-circle grid + equator + dotted
     // shell) ride `dissipateOp` to 0 so the silhouette dissolves, while
-    // the INTERIOR ambient cloud (`mats.particle`) rides
-    // `dissipateInteriorOp` to a muted floor so the volume keeps
+    // the INTERIOR ambient cloud (`mats.particle`) rides the continuous
+    // `interiorMul` envelope to a muted hold level so the volume keeps
     // reading as a soft particulate haze behind the Services copy as
     // the camera flies through it. Identity (×1) at dissipate 0 so the
     // parked epilogue pose is byte-identical to its pre-dissipate self.
@@ -1091,10 +1137,17 @@ export function ShellSubstrateGyro({ layerKey, reducedMotion = false }: ShellSub
       Math.min(1, lineOpacity(SUBSTRATE_GYRO_GLOBE_EQUATOR_OPACITY) * dockVisibilityBoost) *
       dissipateOp;
     mats.particle.uniforms.uPixelRatio.value = state.viewport.dpr;
+    // Interior cloud opacity. `interiorMul` is the single continuous
+    // dock→ambient envelope (full → hold during the dock, hold → 0
+    // during the ambient fade); the boosts are bridged across the dock
+    // release via `interiorHeld`, so the cloud's brightness is
+    // C0-continuous and never cuts out at the seam.
     mats.particle.uniforms.uOpacity.value =
-      Math.min(1, SUBSTRATE_GYRO_PARTICLE_OPACITY * presence * opacityBoost * dockVisibilityBoost) *
-      dissipateInteriorOp;
-    mats.particle.uniforms.uPointSize.value = SUBSTRATE_GYRO_POINT_SIZE * pointSizeBoost;
+      Math.min(
+        1,
+        SUBSTRATE_GYRO_PARTICLE_OPACITY * presence * opacityBoost * interiorVisibilityBoost
+      ) * interiorMul;
+    mats.particle.uniforms.uPointSize.value = SUBSTRATE_GYRO_POINT_SIZE * interiorPointSizeBoost;
     mats.dottedShell.uniforms.uPixelRatio.value = state.viewport.dpr;
     mats.dottedShell.uniforms.uOpacity.value =
       Math.min(

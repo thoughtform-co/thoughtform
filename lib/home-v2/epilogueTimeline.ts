@@ -274,3 +274,37 @@ export function dissipateInteriorOpacityMultiplier(
 export function dissipateCoreMultiplier(dissipateProgress: number): number {
   return 1 - dissipateBand(dissipateProgress, "CORE_SHED");
 }
+
+/** Default opacity level for the services ambient hold (ADR-021
+ *  addendum, "inside the sphere" hold beat). Sets the interior haze
+ *  brightness while the brandmark sits centred in `#services` — a
+ *  touch warmer than `DISSIPATE_INTERIOR_OPACITY_FLOOR` so the volume
+ *  still reads as the source of the warm gold backdrop the user
+ *  associates with the intelligence layer, but still muted enough
+ *  that the welded brandmark remains the dominant read. */
+export const SERVICES_AMBIENT_HOLD_LEVEL = 0.48;
+
+/** Services ambient hold opacity multiplier (ADR-021 addendum).
+ *
+ *  Maps the services ambient envelope (1 across the hold band,
+ *  ramping to 0 as `#continuum` approaches) to the interior cloud's
+ *  on-screen alpha. At envelope 0 the haze is fully gone (matches
+ *  the post-fade transition into the next section). At envelope 1
+ *  the haze sits at `holdLevel` (default `SERVICES_AMBIENT_HOLD_LEVEL`)
+ *  so the inside of the sphere reads as a warm starfield behind the
+ *  centred brandmark.
+ *
+ *  Composes multiplicatively onto an existing `uOpacity` so callers
+ *  can use it as a drop-in replacement for `dissipateInteriorOpacity-
+ *  Multiplier` once the dock has released and the surface dissipate
+ *  has completed. Caller is responsible for picking the right
+ *  multiplier per frame (dissipate during the dock, ambient during
+ *  the hold). */
+export function servicesAmbientOpacityMultiplier(
+  ambientLevel: number,
+  holdLevel: number = SERVICES_AMBIENT_HOLD_LEVEL
+): number {
+  const env = Math.max(0, Math.min(1, ambientLevel));
+  const hold = Math.max(0, Math.min(1, holdLevel));
+  return env * hold;
+}

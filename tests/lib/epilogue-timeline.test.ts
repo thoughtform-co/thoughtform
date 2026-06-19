@@ -6,6 +6,7 @@ import {
   DISSIPATE_SHELL_SCATTER_AMP,
   DOCKED_INSTRUMENT_EPILOGUE_POSE,
   EPILOGUE_BANDS,
+  SERVICES_AMBIENT_HOLD_LEVEL,
   band,
   corridorExitSpeedRamp,
   dissipateAtmosphereEnvelope,
@@ -16,6 +17,7 @@ import {
   dissipateShellScatter,
   epilogueBand,
   getEpiloguePlanetScale,
+  servicesAmbientOpacityMultiplier,
 } from "@/lib/home-v2/epilogueTimeline";
 
 /**
@@ -158,6 +160,41 @@ describe("dissipate clock", () => {
     expect(dissipateInteriorOpacityMultiplier(0, 1.5)).toBe(1);
     expect(dissipateInteriorOpacityMultiplier(1, 1.5)).toBeCloseTo(1, 5);
     expect(dissipateInteriorOpacityMultiplier(1, -0.2)).toBeCloseTo(0, 5);
+  });
+});
+
+describe("servicesAmbientOpacityMultiplier", () => {
+  it("is 0 when the envelope is 0 (post-fade) and at the hold level when fully held", () => {
+    expect(servicesAmbientOpacityMultiplier(0)).toBe(0);
+    expect(servicesAmbientOpacityMultiplier(1)).toBeCloseTo(SERVICES_AMBIENT_HOLD_LEVEL, 5);
+  });
+
+  it("ramps monotonically across [0, 1]", () => {
+    let last = -Infinity;
+    for (let p = 0; p <= 1.0001; p += 0.05) {
+      const v = servicesAmbientOpacityMultiplier(p);
+      expect(v).toBeGreaterThanOrEqual(last - 1e-6);
+      last = v;
+    }
+  });
+
+  it("accepts a custom hold level and clamps both inputs", () => {
+    expect(servicesAmbientOpacityMultiplier(1, 0)).toBe(0);
+    expect(servicesAmbientOpacityMultiplier(1, 0.3)).toBeCloseTo(0.3, 5);
+    expect(servicesAmbientOpacityMultiplier(1, 1.5)).toBeCloseTo(1, 5);
+    expect(servicesAmbientOpacityMultiplier(1, -0.2)).toBe(0);
+    expect(servicesAmbientOpacityMultiplier(-1, 0.5)).toBe(0);
+    expect(servicesAmbientOpacityMultiplier(2, 0.5)).toBeCloseTo(0.5, 5);
+  });
+
+  it("hold level is muted enough to keep the brandmark dominant", () => {
+    // The hold level is the interior cloud's alpha while the centred
+    // brandmark sits in front of it. A floor above ~0.6 would compete
+    // with the welded mark; below ~0.3 the inside-the-sphere read
+    // collapses to a flat dark field. Pin the band so any future
+    // tuning is intentional.
+    expect(SERVICES_AMBIENT_HOLD_LEVEL).toBeGreaterThanOrEqual(0.3);
+    expect(SERVICES_AMBIENT_HOLD_LEVEL).toBeLessThanOrEqual(0.6);
   });
 });
 

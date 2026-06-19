@@ -187,8 +187,9 @@ export function StaticStarfield({ count }: StaticStarfieldProps = {}) {
   //    HOLDS through the planet flyover — the sky stays bright behind
   //    the orbital horizon view.
   useFrame(() => {
-    const { paintProgress, active, armed, docked } = useDepthGatewayStore.getState().transform;
-    if (!active && !armed && !docked) {
+    const { paintProgress, active, armed, docked, servicesAmbient, servicesAmbientLevel } =
+      useDepthGatewayStore.getState().transform;
+    if (!active && !armed && !docked && !servicesAmbient) {
       material.uniforms.uOpacity.value = STARFIELD_BASE_OPACITY;
       material.uniforms.uPointSize.value = STARFIELD_BASE_POINT_SIZE;
       return;
@@ -201,12 +202,27 @@ export function StaticStarfield({ count }: StaticStarfieldProps = {}) {
       STARFIELD_BUILD_BOOST_WINDOW[1],
       paintProgress
     );
-    material.uniforms.uOpacity.value = Math.min(
+    let opacity = Math.min(
       1.0,
       STARFIELD_BASE_OPACITY +
         boot * STARFIELD_BOOT_LIFT +
         buildBoostT * STARFIELD_BUILD_OPACITY_LIFT
     );
+    // Services ambient hold (ADR-021 addendum). `useDepthScroll` pins
+    // `paintProgress` at 1 across the whole corridor exit, so the
+    // build-boost above is already saturated here — the starfield is
+    // at the SAME deep-space brightness it held through the dock. We
+    // therefore only need to FADE it with the ambient envelope as
+    // `#continuum` approaches, so the distant star bed cross-fades in
+    // step with the interior haze + the brandmark instead of dropping
+    // to a dim baseline the instant the dock releases (which was a
+    // contributor to the "particles vanish suddenly" cut). `docked`
+    // takes precedence — while still docked the dissipate owns the
+    // scene and the starfield holds at full.
+    if (servicesAmbient && !docked) {
+      opacity *= servicesAmbientLevel;
+    }
+    material.uniforms.uOpacity.value = opacity;
     material.uniforms.uPointSize.value =
       STARFIELD_BASE_POINT_SIZE +
       buildBoostT * (STARFIELD_BUILD_POINT_SIZE_PEAK - STARFIELD_BASE_POINT_SIZE);

@@ -182,7 +182,16 @@ export function BrandmarkPhysicsCoreActor({
     // `t.docked` the actor would early-return as soon as the corridor
     // released `active`, which read as the interior of the sphere
     // going empty just as the camera flies into it.
-    const painting = t.active || t.armed || t.docked;
+    //
+    // Also keep painting through the services ambient hold (ADR-021
+    // addendum) so the sim's GPU state stays warm if the user
+    // reverse-scrolls back into the dock — without it the actor
+    // would unmount its render contribution between dock release and
+    // ambient release, which costs a re-warm spike on reverse. The
+    // core itself is held INVISIBLE during ambient (`handoffFade=0`
+    // below) so the centred DOM brandmark + seam pixel field stay
+    // the sole foreground marks.
+    const painting = t.active || t.armed || t.docked || t.servicesAmbient;
     if (!painting) {
       group.visible = false;
       pausedRef.current = true;
@@ -271,9 +280,18 @@ export function BrandmarkPhysicsCoreActor({
     // floor semantics) so the core relaxes in step with the gyro's
     // ambient interior cloud — both read as a single soft volume rather
     // than as two layers on different clocks.
-    const handoffFade = t.docked
-      ? CORE_DOCKED_OPACITY_FLOOR * dissipateInteriorOpacityMultiplier(getSmoothedDissipate(), 0.5)
-      : 1;
+    //
+    // During the services ambient hold (ADR-021 addendum), the dock
+    // has released and the welded DOM brandmark + seam pixel field own
+    // the foreground. Force the core to 0 so it never reads as a
+    // second mark behind the SVG; the ambient haze is provided by
+    // `mats.particle` in `ShellSubstrateGyro` instead.
+    const handoffFade = t.servicesAmbient
+      ? 0
+      : t.docked
+        ? CORE_DOCKED_OPACITY_FLOOR *
+          dissipateInteriorOpacityMultiplier(getSmoothedDissipate(), 0.5)
+        : 1;
 
     // Hidden at the section-2 rest (the SVG owns the crisp 2D mark);
     // the cut brings the core to full brightness as the SVG vanishes.

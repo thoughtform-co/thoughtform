@@ -128,6 +128,34 @@ export interface DepthGatewayTransform {
    *  instead). Read by `CorridorSeamPixelField` to paint the
    *  gold/dawn pixel cloud. */
   seamMorph: number;
+  /** True while the post-dock Services hold beat keeps an interior
+   *  ambient haze painting behind the centred brandmark
+   *  (ADR-021 addendum, "inside the sphere" hold).
+   *
+   *  Engages when the welded recentre has resolved and the brandmark
+   *  is held centred in `#services` (i.e. `data-services-brandmark`
+   *  is `"hold"` or `"fade"`) AND the capable path is in use. While
+   *  engaged the R3F canvas stays fixed and `ShellSubstrateGyro`'s
+   *  interior particle volume keeps painting at a muted floor — the
+   *  surface (dotted shell, globe grid, equator, atmosphere) is
+   *  fully scattered/faded by the dissipate, so what remains reads
+   *  as "background stars inside the sphere" rather than a sphere.
+   *
+   *  Released when the gate clears (continuum has fully taken the
+   *  viewport) or when reverse-scroll lifts the user back out of
+   *  the services hold band (mirrored release guard in
+   *  `useDepthScroll`). Painters that opt in (`ShellSubstrateGyro`,
+   *  `FlyingCameraRig`, `StaticStarfield`, `BrandmarkPhysicsCoreActor`,
+   *  the frame invalidator, the motion follower) read `servicesAmbient`
+   *  the same way they read `docked`. Other corridor painters bail
+   *  out as usual. */
+  servicesAmbient: boolean;
+  /** 0..1 ambient-haze opacity envelope for the services hold beat.
+   *  Equal to 1 across the hold band, ramps 1 -> 0 across the
+   *  continuum-approach fade window (mirrors `--services-brandmark`
+   *  so the haze and the brandmark fade together). 0 when
+   *  `servicesAmbient` is false. */
+  servicesAmbientLevel: number;
 }
 
 export const INITIAL_TRANSFORM: DepthGatewayTransform = {
@@ -142,6 +170,8 @@ export const INITIAL_TRANSFORM: DepthGatewayTransform = {
   docked: false,
   dockProgress: 0,
   seamMorph: 0,
+  servicesAmbient: false,
+  servicesAmbientLevel: 0,
 };
 
 interface DepthGatewayState {
@@ -167,7 +197,9 @@ function transformEquals(a: DepthGatewayTransform, b: DepthGatewayTransform): bo
     a.velocity === b.velocity &&
     a.docked === b.docked &&
     a.dockProgress === b.dockProgress &&
-    a.seamMorph === b.seamMorph
+    a.seamMorph === b.seamMorph &&
+    a.servicesAmbient === b.servicesAmbient &&
+    a.servicesAmbientLevel === b.servicesAmbientLevel
   );
 }
 

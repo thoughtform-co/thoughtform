@@ -78,12 +78,19 @@ export function BrandmarkAccretionShell() {
     if (!shell) return;
 
     const transform = useDepthGatewayStore.getState().transform;
-    const { paintProgress, active, armed, docked } = transform;
+    const { paintProgress, active, armed, docked, servicesAmbient } = transform;
     // Smoothed epilogue scrub — same channel the camera flies
     // (2026-06-11 smoothness pass), so planet grow + pointer calm
     // never step against the gliding camera.
     const epilogueProgress = getSmoothedEpilogueProgress();
-    const painting = active || armed || docked;
+    // `servicesAmbient` (ADR-021 addendum) keeps the sphere subtree
+    // mounted/positioned through the inside-the-sphere hold after the
+    // dock releases. Without it this group's `visible=false` early
+    // return would hide ShellSubstrateGyro (and its interior haze)
+    // even though the gyro's own frame loop is still running. With
+    // paintProgress held at 1 across the exit (useDepthScroll), the
+    // shell stays parked at the Build world position for the hold.
+    const painting = active || armed || docked || servicesAmbient;
 
     if (!painting) {
       shell.visible = false;
