@@ -2,21 +2,21 @@
 
 import { useEffect, useRef } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { ServiceStack } from "./ServiceStack";
+import { ServicesStage } from "./ServicesStage";
 
 interface ServicesPortalProps {
   containerRef: React.RefObject<HTMLElement | null>;
 }
 
 /**
- * Mounts {@link ServiceStack} into the `[data-services-root]`
+ * Mounts {@link ServicesStage} into the `[data-services-root]`
  * placeholder declared inside the `#services` station in the v7
  * prototype HTML (rendered into the page via `dangerouslySetInnerHTML`
  * by `LandingPage`). Cleans up on unmount.
  *
- * Mirrors `components/landing/v7/build-cases/BuildCasesPortal.tsx` —
- * the parsed station markup owns the wrapper + header, the React
- * portal owns the three sticky-stacking terminal cards.
+ * The parsed station markup is now a thin shell (section + corner
+ * `.station__idx` only); the React portal owns the whole pinned stage
+ * (left service list · centered particle brandmark · right paragraph).
  */
 export function ServicesPortal({ containerRef }: ServicesPortalProps) {
   const rootRef = useRef<Root | null>(null);
@@ -33,7 +33,7 @@ export function ServicesPortal({ containerRef }: ServicesPortalProps) {
       root = createRoot(slot);
       rootRef.current = root;
     }
-    root.render(<ServiceStack />);
+    root.render(<ServicesStage />);
 
     return () => {
       const r = rootRef.current;
