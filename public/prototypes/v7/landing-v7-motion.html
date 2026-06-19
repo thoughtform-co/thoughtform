@@ -5303,8 +5303,24 @@ html { scroll-behavior: smooth; }
        (comments included), so a literal section/div tag here would be
        counted as a real element and break the balanced-tag walk.
        Final copy + offer come later. ============================ -->
-  <section class="station" id="services" data-station="services" data-screen-label="08 Services">
+  <section class="station station--services" id="services" data-station="services" data-screen-label="08 Services">
     <div class="station__idx">Services<span class="landmark">Landmark · how we run it</span></div>
+
+    <header class="services__header" data-services-header>
+      <p class="services__eyebrow" data-m="eyebrow">/ Services &mdash; how we run it</p>
+      <div class="services__header__grid">
+        <h2 class="services__title" data-m="title">
+          One loop.<br><em>Three depths.</em>
+        </h2>
+        <p class="services__lede" data-m="body">
+          How far we run the loop is the only thing that changes. Each format
+          installs the same Navigate &rarr; Encode &rarr; Build practice
+          &mdash; only the depth changes.
+        </p>
+      </div>
+    </header>
+
+    <div class="services__stack" data-services-root></div>
   </section>
 
   <!-- ═══════════ CONNECTOR · 06 → 07 (slot: React portal mount) ═══════════

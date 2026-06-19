@@ -119,15 +119,18 @@ const BRANDMARK_ASPECT = 436 / 430.99;
  *  size-continuous. */
 const EPILOGUE_WELDED_HALF_EXTENT = 0.34;
 
-/** Fraction of the dissipate clock across which the dock re-centre
- *  lerp completes. Set to 0.85 (was 0.6) so the brandmark migration
- *  from welded → viewport centre spans MOST of the dissipate clock and
- *  arrives just as the dock disengages — leaving the last ~15% of the
- *  dock as a brief steady-state at centre while the planet's last
- *  particles scatter, and the immediate post-dock handoff to the
- *  `data-services-brandmark="hold"` gate is a no-op (mark is already
- *  at viewport centre). */
-const DOCK_RECENTRE_FRAC = 0.85;
+/** ADR-021 amendment (2026-06-19): the in-#services re-centre lerp is
+ *  RETIRED. The brandmark stays welded to the sphere geometrically
+ *  through the dissipate and fades to 0 across the back half of the
+ *  clock — `#services` is now a content section (terminal cards),
+ *  not a brandmark runway. The fade band below replaces the recentre. */
+/** Start of the brandmark dissipate-fade band — opacity is 1 below
+ *  this point on the smoothed dissipate clock. */
+const DISSIPATE_FADE_START = 0.5;
+/** End of the brandmark dissipate-fade band — opacity is 0 above this
+ *  point. Tuned to complete the fade before the dock disengages
+ *  (`rawDissipate ≥ 0.999`). */
+const DISSIPATE_FADE_END = 0.95;
 
 /** Smoothed-blend time constant for the dock pose ease — identical to
  *  `FlyingCameraRig` + `EpilogueNewsTicker` so all three painters
@@ -146,15 +149,6 @@ const DOCK_BLEND_TAU_S = 0.28;
  *  This is a MORPH, not a crossfade between two different-looking
  *  things. Imported from `corridorMap` so the two channels can't drift. */
 const SVG_CUT_WIDTH = CORRIDOR_HANDOFF_CUT_WIDTH;
-
-/** Target apparent half-width (px) the welded mark settles toward at
- *  dock end — a viewport-responsive readable size for the empty
- *  Services centre. The clamp lower-bounds it on narrow viewports
- *  (so the mark still reads at < 1100px width) and caps it on wide
- *  ones (so it never blows out as a hero asset). */
-function getServicesTargetHalfPx(vw: number): number {
-  return Math.max(110, Math.min(180, vw * 0.105));
-}
 
 function clamp01(x: number): number {
   return Math.max(0, Math.min(1, x));
@@ -300,17 +294,14 @@ function computeWeldedRect(
     weldedHalfPx = 120;
   }
 
-  // Dock re-centre lerp. Position + size travel from the welded sphere
-  // projection (which sits well below the viewport once the camera has
-  // tilted up across LAND) to the viewport centre across the first
-  // `DOCK_RECENTRE_FRAC` of the dissipate clock, then HOLD at centre
-  // through the back band so the read is stable while the planet
-  // finishes scattering. Pure geometric motion — no opacity ramp.
-  const recentre = docked ? smoothstep01(dissipate / DOCK_RECENTRE_FRAC) : 0;
-  const targetHalfPx = getServicesTargetHalfPx(vw);
-  const cx = weldedCx + (vw * 0.5 - weldedCx) * recentre;
-  const cy = weldedCy + (vh * 0.5 - weldedCy) * recentre;
-  const halfPx = weldedHalfPx + (targetHalfPx - weldedHalfPx) * recentre;
+  // ADR-021 amendment (2026-06-19): no in-#services re-centre. The
+  // mark stays welded to the sphere geometrically — it rides off-
+  // screen with the camera fly-in during the dissipate. Opacity
+  // (owned by the caller) fades to 0 across the back half of the
+  // clock so the mark is gone by the time the dock releases.
+  const cx = weldedCx;
+  const cy = weldedCy;
+  const halfPx = weldedHalfPx;
 
   const width = halfPx * 2;
   const height = width * BRANDMARK_ASPECT;
@@ -510,7 +501,15 @@ export function ProjectedBrandmarkActor() {
           // glyph is needed for re-centre + seam pixelization.
           let corridorFade: number;
           if (useEpilogueOverride) {
-            corridorFade = docked ? 1 : 0;
+            if (docked) {
+              // ADR-021 amendment (2026-06-19): brandmark fades out
+              // with the dissipating sphere across the back half of
+              // the dock clock. No re-centre / hold in #services.
+              const sd = getSmoothedDissipate();
+              corridorFade = 1 - smootherstep(DISSIPATE_FADE_START, DISSIPATE_FADE_END, sd);
+            } else {
+              corridorFade = 0;
+            }
           } else {
             corridorFade =
               1 - smootherstep(DOLLY_HOLD_END, DOLLY_HOLD_END + SVG_CUT_WIDTH, paintProgress);
@@ -587,24 +586,14 @@ export function ProjectedBrandmarkActor() {
       // Tracker owns these frames.
       if (t.active || t.armed) return;
 
-      const gate = document.documentElement.getAttribute("data-services-brandmark");
-      if (gate === "hold" || gate === "fade") {
-        // Hand the element off to the CSS gate. Clearing the inline
-        // styles the tracker / dock path wrote lets the gate
-        // selector's fixed-centre rules win without an `!important`
-        // arms race. Display is also cleared so the initial inline
-        // `display: none` (set on mount) doesn't override the gate.
-        if (shell.style.display !== "") shell.style.display = "";
-        if (shell.style.transform !== "") shell.style.transform = "";
-        if (shell.style.opacity !== "") shell.style.opacity = "";
-        if (shell.style.width !== "") shell.style.width = "";
-        if (shell.style.height !== "") shell.style.height = "";
-        return;
-      }
-
       // Post-active dock window — continue painting the welded
-      // projection so the recentre lerp completes inside #services
-      // even after the corridor sticky cell has released.
+      // projection so the dissipate fade completes after the corridor
+      // sticky cell has released.
+      //
+      // ADR-021 amendment (2026-06-19): the `data-services-brandmark`
+      // "hold"/"fade" CSS gate is RETIRED. The mark fades to 0 with
+      // the dissipating sphere in the back half of the clock — no
+      // in-#services re-centre, no hold, no fade-to-continuum step.
       if (t.docked || t.epilogueProgress > 1e-3) {
         if (shell.style.display === "none") shell.style.display = "";
         const vw = window.innerWidth;
@@ -621,13 +610,24 @@ export function ProjectedBrandmarkActor() {
         shell.style.transform = `translate3d(${rect.left.toFixed(2)}px, ${rect.top.toFixed(2)}px, 0)`;
         shell.style.width = `${rect.width.toFixed(2)}px`;
         shell.style.height = `${rect.height.toFixed(2)}px`;
-        // Opacity stays at 1 — the visible exit is geometric (ride
-        // out off-screen with the sphere) and the visible entry is
-        // geometric too (lerp from welded → viewport centre during
-        // dissipate). The corridor tail bookend / mobile dwell are
-        // tracker-only concerns and don't apply once `active` is
-        // false.
-        shell.style.opacity = "1";
+        // Fade with the PERSISTENT dissipate clock (the eased
+        // `--corridor-dissipate` the exit hook writes on <html>), NOT the
+        // smoothed dock channel. `getSmoothedDissipate()` resets to 0 once
+        // `docked` releases, and the old `t.docked ? … : 1` ternary then
+        // popped the mark back to full opacity in #services — the same
+        // class of bug as the corridor signal group (ADR-021 amendment,
+        // 2026-06-19). The persistent var ramps 0 → 1 with the section and
+        // STAYS at 1 after it scrolls past, so the mark fades out with the
+        // dissipating sphere and stays gone through the whole section.
+        const dissipateStr =
+          document.documentElement.style.getPropertyValue("--corridor-dissipate");
+        const exitDissipate = dissipateStr ? parseFloat(dissipateStr) || 0 : 0;
+        const fade =
+          1 -
+          smoothstep01(
+            (exitDissipate - DISSIPATE_FADE_START) / (DISSIPATE_FADE_END - DISSIPATE_FADE_START)
+          );
+        shell.style.opacity = fade.toFixed(3);
         return;
       }
 

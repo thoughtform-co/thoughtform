@@ -8,7 +8,13 @@ import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import { stationById } from "@/lib/home-v2/corridorMap";
 import { CopyAnchors } from "./CopyAnchors";
 import { CorridorProgressRail } from "./CorridorProgressRail";
-import { CorridorSeamPixelField } from "./CorridorSeamPixelField";
+// ADR-021 amendment (2026-06-19): CorridorSeamPixelField is RETIRED on
+// the production path. `#services` is now a content section (Keynote /
+// Workshop / Embedded terminal cards), not a brandmark runway, and the
+// brandmark fades out with the dissipating sphere instead of dissolving
+// into a pixel field inside the section. The component file remains in
+// the tree as a reusable reference for any future "particle dissolve at
+// a section seam" composition.
 import { CorridorStationHeaders } from "./CorridorStationHeaders";
 import { DepthGatewayScene } from "./DepthGatewayScene";
 import { useDepthScroll } from "./hooks/useDepthScroll";
@@ -167,13 +173,8 @@ export function HomeCorridor({ text, debug = true }: HomeCorridorProps) {
             section instead of floating over the hero. */}
         {!fallback && <ProjectedBrandmarkActor />}
 
-        {/* Seam pixel field (ADR-021 follow-up) — fixed full-viewport
-            2D canvas that replaces the centred SVG mark in #services
-            with a gold/dawn pixel cloud and disperses it as
-            #continuum approaches. Active only on the capable path
-            via the `data-services-brandmark` CSS gate; idle (single
-            attribute read per frame) the rest of the time. */}
-        {!fallback && <CorridorSeamPixelField />}
+        {/* Seam pixel field — retired on the production path (ADR-021
+            amendment, 2026-06-19). See the comment on the import. */}
 
         {/* Debug HUD — progress + active beat readout. */}
         {!fallback && debug && <StageHud />}

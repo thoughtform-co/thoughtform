@@ -860,6 +860,174 @@ Additional file touched in this follow-up:
 - [`components/landing/home-v2/DepthGatewayScene/BrandmarkAccretionShell.tsx`](../../components/landing/home-v2/DepthGatewayScene/BrandmarkAccretionShell.tsx)
   — `servicesAmbient` added to the `painting` gate.
 
+## 2026-06-19 Amendment — Services becomes a content section; in-section brandmark beats RETIRED
+
+Through three follow-up revisions (2026-06-16 ride-out + re-centre,
+2026-06-16 Phase 2 pixel-field handoff, 2026-06-19 ambient hold) the
+`#services` station accreted a long brandmark-runway choreography:
+welded ride-out → re-centre lerp → fixed-centre hold → grid-snapped
+pixel dissolve → inside-the-sphere ambient haze → continuum-approach
+cross-fade. Each step was correct in isolation but the cumulative
+effect was a 200svh section dedicated entirely to walking the
+brandmark off-screen with zero practical content — the corridor's
+rhetorical setup ("...the labs are spending billions on the same
+layer") never landed on its practical answer.
+
+This amendment makes `#services` a content section again: a
+Linear-style header (heading left, lede right) plus three retro-
+terminal stacking cards (Keynote · Workshop · Embedded — "one loop,
+three depths"). The cards are SVR-shaped wide horizontal panels
+(hard corners + 45° top-right notch) with a card-scoped 2D particle
+sigil on the left and PT Mono / PP Neue Montreal copy on the right.
+They sticky-stack natively (Enerblock-style) inside the section's
+content gutters so the existing HUD rails stay clear. The dissipate
+becomes a short entrance transition — the sphere zoom-in resolves as
+the section's header reaches the viewport top — and the brandmark
+fades out with the dissipating sphere instead of re-centring.
+
+### Retired beats (all four)
+
+- **Welded re-centre lerp** in `ProjectedBrandmarkActor`:
+  `DOCK_RECENTRE_FRAC` + the position/size lerp from the welded
+  sphere projection to viewport centre are gone. The mark stays
+  welded geometrically through the dock — it rides off-screen with
+  the camera fly-in.
+- **`data-services-brandmark` actor-lifecycle gate** (`"hold"` /
+  `"fade"`) + `--services-brandmark` opacity var. No fixed-centred
+  CSS layer in `#services`, no continuum-approach fade owned by the
+  hook. The brandmark fades out across the back half of the dock
+  clock instead (`DISSIPATE_FADE_START = 0.5`,
+  `DISSIPATE_FADE_END = 0.95`, smootherstep, applied to both the
+  tracker-driven `onPaint` and the post-active rAF).
+- **Pixel-field handoff** (`CorridorSeamPixelField`, the
+  `data-services-pixelate` / `--services-pixelate` writes,
+  `transform.seamMorph`). The fixed 2D canvas is no longer mounted
+  on the production path. The component file +
+  `lib/home-v2/seamPixelize.ts` + its unit tests stay in the tree as
+  a reusable reference for any future "particle dissolve at a
+  section seam" composition.
+- **Services ambient hold** (`data-services-ambient` /
+  `--services-ambient`, the canvas + veil fixed-promotion under the
+  ambient gate, the R3F painter ambient branches in
+  `ShellSubstrateGyro` / `StaticStarfield` / `FlyingCameraRig` /
+  `MotionFollowerDriver` / `BrandmarkPhysicsCoreActor`). The flag is
+  never set on the production path. The painter ambient branches
+  stay in the tree (they no-op cleanly when the flag is `false`) so
+  the helpers + smoothed-dissipate continuity remain available for
+  the reverse-scroll guard in `useDepthScroll` and for any future
+  reuse.
+
+### What stays
+
+- **`docked` / `dockProgress`** — `useCorridorExitScroll` still owns
+  them and they still drive the camera fly-in + the sphere surface
+  scatter through `ShellSubstrateGyro`. The clock is intentionally
+  SHORT now: `DISSIPATE_SCROLL_SPAN_VH = 0.9` (was 2.0), so the
+  zoom-in resolves as the section's header reaches the viewport top
+  instead of stretching across the whole section.
+- **`--corridor-dissipate`** on `<html>`/`#services` — same dock
+  clock, mirrored as a CSS var for any consumer that wants to read
+  the same value from CSS.
+- **`data-corridor-docked`** — same fixed canvas promotion through
+  the (short) dock window.
+- **`data-corridor-exit` + `--corridor-exit-veil`** — same body
+  veil, but capped at the new `VEIL_DOCK_CAP = 0.55` and **ramps to
+  0** when the dock releases (no ambient hold). `#services`'s own
+  opaque `--void` shield takes over the dark backing from that
+  point.
+- **Single-writer rule** — `useCorridorExitScroll` still owns
+  `docked` / `dockProgress` / `seamMorph` / `servicesAmbient` /
+  `servicesAmbientLevel`. The latter three are now permanently
+  written to their inert values (0 / false / 0).
+- **Fallback** (`!dockCapable`) — unchanged. The sticky stage stays
+  pinned, no dock, sequential dark cut from corridor → Services →
+  Continuum. On mobile + reduced-motion the new cards also drop the
+  sticky pin and render as a simple vertical list (see
+  `services.css` mq).
+
+### New surface
+
+- Section markup edits in
+  [`public/prototypes/v7/landing-v7-motion.html`](../../public/prototypes/v7/landing-v7-motion.html)
+  — `#services` gets a `.services__header` + `<div data-services-root>`
+  portal mount and the legacy `.station--services` class.
+- React portal pattern (mirrors `BuildCasesPortal`):
+  - [`components/landing/home-v2/services/ServicesPortal.tsx`](../../components/landing/home-v2/services/ServicesPortal.tsx)
+    — `createRoot` into `[data-services-root]`.
+  - [`components/landing/home-v2/services/ServiceStack.tsx`](../../components/landing/home-v2/services/ServiceStack.tsx),
+    [`ServiceCard.tsx`](../../components/landing/home-v2/services/ServiceCard.tsx),
+    [`serviceData.ts`](../../components/landing/home-v2/services/serviceData.ts).
+- Card-scoped 2D particle painter:
+  - [`components/landing/home-v2/services/ServiceSigilField.tsx`](../../components/landing/home-v2/services/ServiceSigilField.tsx)
+    — reuses `lib/brandmark/sampleShape.ts` (the same stratified
+    sampler the brandmark painters use, ADR-011), with three
+    progressive "compass-resolution" silhouettes (disc → disc +
+    vertical bar → disc + cross). Each card mounts its own canvas;
+    they're outside the global brandmark painter cap (their own
+    container-sized 2D canvases, IntersectionObserver-gated rAF,
+    static SVG fallback for reduced-motion / SSR / no-canvas paths).
+  - [`lib/services/serviceShapes.ts`](../../lib/services/serviceShapes.ts)
+    — three `ServiceShapeSpec`s + fallback SVGs.
+- Styling:
+  [`components/landing/home-v2/services/services.css`](../../components/landing/home-v2/services/services.css)
+  — Linear-style header grid; SVR card geometry (`clip-path` 45°
+  top-right notch + corner brackets + mono header strip); native
+  sticky-stack (`--svc-stack-i` drives an incremental sticky `top`);
+  PT Mono eyebrows / indices / meta labels; gold accent on the lead
+  card (WORKSHOP); responsive + reduced-motion fallback unpins.
+- Portal mount in
+  [`components/landing/v7/LandingPage.tsx`](../../components/landing/v7/LandingPage.tsx)
+  next to `BuildCasesPortal`.
+
+### Code that changed (functional)
+
+- [`components/landing/home-v2/hooks/useCorridorExitScroll.ts`](../../components/landing/home-v2/hooks/useCorridorExitScroll.ts)
+  — `DISSIPATE_SCROLL_SPAN_VH` 2.0 → 0.9; retired the
+  `data-services-brandmark` / `--services-brandmark`,
+  `data-services-pixelate` / `--services-pixelate` /
+  `transform.seamMorph`, and `data-services-ambient` /
+  `--services-ambient` / `transform.servicesAmbient` writes; new
+  `VEIL_DOCK_CAP = 0.55` for the body veil cap; the inert seam +
+  ambient store fields are still published as `0` / `false` for
+  source-compat with downstream R3F painters.
+- [`components/landing/home-v2/ProjectedBrandmarkActor.tsx`](../../components/landing/home-v2/ProjectedBrandmarkActor.tsx)
+  — removed `DOCK_RECENTRE_FRAC` + `getServicesTargetHalfPx` local
+  helper + the recentre lerp in `computeWeldedRect`. Added
+  `DISSIPATE_FADE_START` / `DISSIPATE_FADE_END` band; `corridorFade`
+  in the tracker-driven `onPaint` and the post-active rAF now fade
+  the docked mark across that band. Removed the
+  `data-services-brandmark` gate handoff branch in the post-active
+  rAF (the gate is never set now).
+- [`components/landing/home-v2/HomeCorridor.tsx`](../../components/landing/home-v2/HomeCorridor.tsx)
+  — `CorridorSeamPixelField` import + mount are gone.
+- [`components/landing/home-v2/home-v2.css`](../../components/landing/home-v2/home-v2.css)
+  — removed the `data-services-brandmark` (hold / fade) +
+  `data-services-pixelate` + `data-services-ambient` rules + the
+  `.home-v2-seam-pixels` layer + the SVG hide under the pixelate
+  attribute. Kept `data-corridor-docked` canvas promotion + body
+  veil.
+- [`tests/visual/landing-corridor-smoke.spec.ts`](../../tests/visual/landing-corridor-smoke.spec.ts)
+  — Phase 2 seam canvas presence test inverted to assert the canvas
+  is NOT mounted; a new test asserts none of the retired attributes
+  (`data-services-pixelate` / `-brandmark` / `-ambient`) appear at
+  any scroll depth.
+
+### Why not a separate ADR
+
+The seam contract is the same (`docked` / `dockProgress` / single-
+writer / fallback / reverse-scroll release); only the in-section
+phases change. Documenting the retirement here keeps the seam's full
+history co-located with the surviving recipe.
+
+### Reverse-scroll safety
+
+`useDepthScroll`'s `servicesAmbient` clearer branch (set up in the
+2026-06-19 ambient addendum) stays in the tree as a defensive no-op:
+the flag is never set now, so the branch never fires, but if a future
+recipe ever re-engages an ambient state the guard is still correct.
+The `data-services-ambient` attribute + `--services-ambient` var
+removal lines in that branch are now dead but harmless.
+
 ## Related Decisions
 
 - [ADR-002 — Scroll Animation Architecture](002-scroll-animation-architecture.md)

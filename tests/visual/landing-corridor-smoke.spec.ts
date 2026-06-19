@@ -132,49 +132,36 @@ test.describe("Homepage corridor smoke", () => {
     expect(deadHrefs).toEqual([]);
   });
 
-  test("ADR-021 Phase 2: seam pixel field canvas mounts inside the corridor host", async ({
+  test("ADR-021 amendment (2026-06-19): seam pixel field is NOT mounted", async ({ page }) => {
+    // The seam pixel field was the visible mark inside #services on the
+    // capable path. The 2026-06-19 amendment retires the in-#services
+    // brandmark beats entirely (Services is now a content section with
+    // terminal cards), so the canvas must NEVER mount on production.
+    const seamCanvas = page.locator("#home-corridor-mount canvas.home-v2-seam-pixels");
+    await expect(seamCanvas).toHaveCount(0);
+    const seamLayer = page.locator(".home-v2-seam-pixels");
+    await expect(seamLayer).toHaveCount(0);
+  });
+
+  test("ADR-021 amendment: retired in-#services brandmark attributes are NEVER set", async ({
     page,
   }) => {
-    // The pixel field is mounted next to ProjectedBrandmarkActor on
-    // the capable path. Reduced-motion / fallback paths skip it
-    // entirely, so we only assert presence here without forcing a
-    // capable Playwright environment to validate visibility.
-    const seamCanvas = page.locator("#home-corridor-mount canvas.home-v2-seam-pixels");
-    await expect(seamCanvas).toHaveCount(1);
-  });
-
-  test("ADR-021 Phase 2: pixelate gate is dormant inside the corridor", async ({ page }) => {
-    // Mid-corridor — well before the brandmark re-centres — the
-    // seam-pixelate attribute must be absent so the canvas stays
-    // display:none and the rAF idles on the gate read.
-    await scrollToPercentage(page, 25);
-    const pixelateMid = await page.evaluate(() =>
-      document.documentElement.getAttribute("data-services-pixelate")
-    );
-    expect(pixelateMid).toBeNull();
-  });
-
-  test("ADR-021 Phase 2: pixelate gate only carries the literal 'true' value", async ({ page }) => {
-    // The morph opens once the welded brandmark has re-centred — which
-    // happens WHILE the dock is still engaged (Phase 2: the dissolve
-    // begins the moment the mark shows itself, not after the dock
-    // releases), so `data-services-pixelate` may legitimately co-exist
-    // with `data-corridor-docked`. The robust invariant across
-    // capable + fallback runtimes is: the attribute is only ever unset
-    // or the literal string "true" — never a stale/other value — and
-    // it is never set deep inside the corridor interior.
-    await scrollToPercentage(page, 25);
-    expect(
-      await page.evaluate(() => document.documentElement.getAttribute("data-services-pixelate"))
-    ).toBeNull();
-
-    const samples = [55, 65, 75, 85];
+    // After the 2026-06-19 amendment, none of these attributes should
+    // appear at any scroll depth: `data-services-pixelate`,
+    // `data-services-brandmark`, `data-services-ambient`. They are all
+    // retired with the in-#services choreography. Sample across the
+    // page to confirm the writes are gone everywhere.
+    const samples = [10, 25, 55, 65, 75, 85];
     for (const pct of samples) {
       await scrollToPercentage(page, pct);
-      const value = await page.evaluate(() =>
-        document.documentElement.getAttribute("data-services-pixelate")
-      );
-      expect(value === null || value === "true").toBe(true);
+      const attrs = await page.evaluate(() => ({
+        pixelate: document.documentElement.getAttribute("data-services-pixelate"),
+        brandmark: document.documentElement.getAttribute("data-services-brandmark"),
+        ambient: document.documentElement.getAttribute("data-services-ambient"),
+      }));
+      expect(attrs.pixelate).toBeNull();
+      expect(attrs.brandmark).toBeNull();
+      expect(attrs.ambient).toBeNull();
     }
   });
 });

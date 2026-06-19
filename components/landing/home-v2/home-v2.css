@@ -241,15 +241,13 @@ html[data-corridor-docked="true"] .home-v2-stage__sticky {
    2D transform, so the dissipate composes with the scatter cleanly.
    Release is driven by `data-corridor-docked` clearing.
 
-   ADR-021 addendum (services ambient hold): the same fixed promotion
-   continues under `data-services-ambient="true"` after the dock
-   releases, so `ShellSubstrateGyro`'s interior particle cloud (the
-   "inside the sphere" haze) keeps painting behind the centred
-   brandmark instead of cutting to a flat void. Both gates share the
-   same fixed pose + void backing so the visual transition between
-   the two states is continuous; only the painter contracts switch. */
-html[data-corridor-docked="true"] .home-v2-stage__canvas,
-html[data-services-ambient="true"] .home-v2-stage__canvas {
+   ADR-021 amendment (2026-06-19): the `data-services-ambient` gate
+   is RETIRED. `#services` is now a content section with its own
+   opaque `--void` backing (see `services.css`), so there is no
+   ambient post-dock interior haze to keep fixed. Once the dock
+   releases, the canvas falls back to its sticky-stage parent and
+   the services surface takes over. */
+html[data-corridor-docked="true"] .home-v2-stage__canvas {
   position: fixed;
   inset: 0;
   width: 100vw;
@@ -302,17 +300,12 @@ html[data-corridor-epilogue="true"] .home-v2-stage__canvas canvas {
 
 /* During the docked services handoff the canvas is a full-viewport
    fixed backdrop. It must NEVER capture pointer events — the services
-   copy, CTA, and cards scroll over it and own all interaction. This
+   header, cards, and CTAs scroll over it and own all interaction. This
    also stops the R3F raycaster from running across the whole viewport
    while the user reads the readouts. Declared AFTER the epilogue rule
-   so it wins at equal specificity (both flags can be true at once).
-   Extended (ADR-021 addendum) to the services ambient hold so the
-   ambient haze layer never intercepts events from #services chrome
-   or #continuum as it scrolls into view. */
+   so it wins at equal specificity (both flags can be true at once). */
 html[data-corridor-docked="true"] .home-v2-stage__canvas,
-html[data-corridor-docked="true"] .home-v2-stage__canvas canvas,
-html[data-services-ambient="true"] .home-v2-stage__canvas,
-html[data-services-ambient="true"] .home-v2-stage__canvas canvas {
+html[data-corridor-docked="true"] .home-v2-stage__canvas canvas {
   pointer-events: none;
 }
 
@@ -403,9 +396,15 @@ html[data-corridor-exit="true"] #services > * {
  * `.station` default (0,1,0). The `svh` line is the modern dynamic-
  * viewport sizing; the `vh` line is the fallback for older engines
  * (matches the `.station` default that ships both). */
+/* 2026-06-19: #services is now a content section (Keynote/Workshop/
+ * Embedded terminal stacking cards) — NOT a brandmark runway. The
+ * height is driven by the three sticky-stacking cards in
+ * `services.css` (each card ≈ 100svh of scroll runway). Removing the
+ * legacy 200svh override lets the section size to its own content
+ * + sticky overflow instead of being padded with empty runway. */
 #services {
-  min-height: 200svh;
-  min-height: 200vh;
+  /* Intentionally no min-height override here. See services.css for
+   * the actual sticky-stack geometry. */
 }
 
 /* ── DOM copy + label overlay ─────────────────────────────────
@@ -2176,84 +2175,15 @@ html[data-corridor-docked="true"] .home-v2-projected-brandmark > div {
   transform: none !important;
 }
 
-/* Services brandmark hold + fade (ADR-021 follow-up). Once the dock
-   disengages (canvas frameloop idles behind the now-opaque services
-   surface) the brandmark needs a separate fixed-centred CSS layer to
-   carry it through the rest of the section + the fade as #continuum
-   enters. The gate states are written by `useCorridorExitScroll`:
-     - data-services-brandmark="hold" — full opacity, fixed centre.
-     - data-services-brandmark="fade" — opacity ramps via
-       `--services-brandmark` (0..1) as continuum approaches the top.
-   `ProjectedBrandmarkActor`'s post-active rAF clears its inline
-   styles when these gates are active so the centred rules below win
-   for transform/opacity (no `!important` needed there — once the
-   inline value is `""` the stylesheet rule takes effect). The
-   position / inset / display / aspect-ratio / width overrides DO
-   use `!important` to beat the actor's inline `position: absolute`
-   / `left: 0` / `top: 0` / `display: none` defaults (which the rAF
-   intentionally doesn't touch — they're the corridor mode's resting
-   style and clearing them would race with the tracker on reverse
-   scroll).
-   Aspect ratio matches the BrandmarkGlyph SVG (430.99 / 436); a
-   width clamp keeps the mark readable on narrow screens and prevents
-   it from blowing out on wide hero-asset viewports. */
-html[data-services-brandmark="hold"] .home-v2-projected-brandmark,
-html[data-services-brandmark="fade"] .home-v2-projected-brandmark {
-  position: fixed !important;
-  display: block !important;
-  inset: 50% auto auto 50% !important;
-  width: clamp(220px, 21vw, 360px) !important;
-  height: auto !important;
-  aspect-ratio: 430.99 / 436 !important;
-  transform: translate(-50%, -50%);
-}
-
-html[data-services-brandmark="hold"] .home-v2-projected-brandmark {
-  opacity: 1;
-}
-
-html[data-services-brandmark="fade"] .home-v2-projected-brandmark {
-  opacity: var(--services-brandmark, 1);
-}
-
-html[data-services-brandmark="hold"] .home-v2-projected-brandmark > div,
-html[data-services-brandmark="fade"] .home-v2-projected-brandmark > div {
-  transform: none !important;
-}
-
-/* Pixel-field handoff (ADR-021 follow-up Phase 2, 2026-06-16): on
-   the capable path the seam pixel field paints the brandmark as a
-   grid-snapped gold/dawn cloud sampled from the SAME
-   `BRANDMARK_FULL_PATHS` source. Override the SVG glyph to opacity 0
-   so the visible mark is the canvas; the legacy
-   `--services-brandmark` opacity rule above stays in place for any
-   path that ever sets the gate WITHOUT also setting
-   `data-services-pixelate` (e.g. a future fallback recipe).
-   `!important` beats the per-state opacity rules above.
-   Specificity is identical to the legacy rules, so the source order
-   matters — keep this rule AFTER the opacity rules. */
-html[data-services-pixelate="true"] .home-v2-projected-brandmark {
-  opacity: 0 !important;
-}
-
-/* ── Corridor seam pixel field (ADR-021 follow-up Phase 2) ─────
-   Fixed full-viewport 2D canvas painted by
-   `CorridorSeamPixelField`. The component handles its own DPR +
-   `canvas.width/height` sizing on resize; CSS just controls layer
-   visibility (only paints during the post-dock services beat) and
-   stacking (matches the projected brandmark's `z-index: 24` so the
-   pixel cloud sits in the same layer the SVG mark would). */
-.home-v2-seam-pixels {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  display: none;
-  z-index: 24;
-}
-
-html[data-services-pixelate="true"] .home-v2-seam-pixels {
-  display: block;
-}
+/* ADR-021 amendment (2026-06-19): the in-#services brandmark gates
+ * (`data-services-brandmark="hold" | "fade"`, `data-services-pixelate`,
+ * `data-services-ambient`, the `.home-v2-seam-pixels` canvas layer,
+ * and the matching opacity + fixed-centre rules) are all RETIRED.
+ * `#services` is now a content section (terminal cards), and the
+ * brandmark fades out with the dissipating sphere across the back
+ * half of the dock clock (see `ProjectedBrandmarkActor`). The
+ * `.home-v2-seam-pixels` canvas is no longer mounted; the SVG glyph
+ * is no longer hidden by the retired pixelate attribute. */
 
 /* ── Tail sections (normal scroll, placeholder) ──────────────── */
 

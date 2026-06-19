@@ -946,10 +946,23 @@ export function CorridorStationHeaders() {
       // made the ticker vanish before its movement was legible. On
       // /test/home-v2 there is no exit hook so `docked` stays false
       // and the title simply stays up.
-      let titleOut = 0;
-      if (docked) {
-        titleOut = dissipateBand(t.dockProgress, "SIGNAL_OUT");
-      }
+      // Persistent dissipate clock (ADR-021 amendment, 2026-06-19).
+      // The dock now releases on a SHORT runway (`DISSIPATE_SCROLL_SPAN_VH
+      // = 0.9`), so `docked` flips false while the corridor stage is still
+      // momentarily engaged at the seam. Gating the fade behind `docked`
+      // and reading `t.dockProgress` (which the exit hook RESETS to 0 on
+      // release) made the BILLIONS title + CTA + ticker POP back to full
+      // opacity for the scroll band right as `#services` reaches the top.
+      // Read the eased dissipate the exit hook writes on `<html>` instead:
+      // it ramps 0 -> 1 with the section and STAYS at 1 after the section
+      // scrolls past, so the fade + lift complete and stay complete.
+      // Reads the INLINE custom prop (cheap, no style recalc). During the
+      // corridor climax (before `#services` enters) it is "0.0000" so the
+      // signal holds full; on `/test/home-v2` there is no exit hook so it
+      // is "" -> 0 and the title simply stays up (prior behavior).
+      const dissipateStr = document.documentElement.style.getPropertyValue("--corridor-dissipate");
+      const exitDissipate = dissipateStr ? parseFloat(dissipateStr) || 0 : 0;
+      const titleOut = dissipateBand(exitDissipate, "SIGNAL_OUT");
       // ADR-021 follow-through: the signal group (BILLIONS title + CTA +
       // note) AND the news ticker should be PUSHED OUT of the top of the
       // viewport as the user scrolls into the dissipate — not fade in
@@ -966,7 +979,7 @@ export function CorridorStationHeaders() {
       // so the independently fixed ticker SVG rides the same clock
       // without being nested under the signal block's transform (nesting
       // would break its viewport-space limb projection).
-      const signalDriftRaw = docked ? t.dockProgress : 0;
+      const signalDriftRaw = exitDissipate;
       const vhNow = typeof window !== "undefined" ? window.innerHeight || 1 : 1;
       const signalLiftPx = reducedMotion ? 0 : -signalDriftRaw * vhNow;
       const signalScale = reducedMotion ? 1 : 1 - signalDriftRaw * 0.03;

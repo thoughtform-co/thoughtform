@@ -4,6 +4,7 @@ import { LandingPage } from "@/components/landing/v7";
 import { getCelestialSlots } from "@/lib/celestial/queries";
 import "@/components/landing/v7/landing.css";
 import "@/components/landing/home-v2/home-v2.css";
+import "@/components/landing/home-v2/services/services.css";
 import "@/components/landing/home-v2/handoff-lab/handoff-lab.css";
 
 export const metadata: Metadata = {

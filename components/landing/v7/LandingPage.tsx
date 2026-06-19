@@ -11,6 +11,7 @@ import { useBrandmarkSingletonCheck } from "./lib/brandmarkSingletonCheck";
 import { CelestialPortals } from "./CelestialConnector/CelestialPortals";
 import { PhaseGlyphPortals } from "./PhaseGlyph";
 import { BuildCasesPortal } from "./build-cases";
+import { ServicesPortal } from "@/components/landing/home-v2/services";
 import { useCorridorExitScroll } from "@/components/landing/home-v2/hooks/useCorridorExitScroll";
 import { CelestialEditorOverlay } from "@/components/admin/CelestialEditor";
 import { useCelestialDrafts } from "@/components/admin/CelestialEditor/useCelestialDrafts";
@@ -453,6 +454,7 @@ export function LandingPage({
       {mergedSlots && <CelestialPortals slots={mergedSlots} containerRef={rootRef} />}
       <PhaseGlyphPortals containerRef={rootRef} />
       <BuildCasesPortal containerRef={rootRef} />
+      <ServicesPortal containerRef={rootRef} />
       {/* Hero → Corridor seam (ADR-022 v7, direct parallax reveal):
           NO proxy plane. The sticky `#hero` (z:1) drifts up + gently
           fades as the live corridor mount (`.home-corridor-host` z:3)

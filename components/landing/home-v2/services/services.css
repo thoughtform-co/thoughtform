@@ -1,0 +1,550 @@
+/* ═══════════════════════════════════════════════════════════════════════
+ * services.css — Services station (#services) terminal stacking cards
+ * ═══════════════════════════════════════════════════════════════════════
+ *
+ * Scope:
+ *   - Linear-style header (heading left, lede right)
+ *   - Three SVR-shaped, 45°-notched cards that sticky-stack on scroll
+ *     (Enerblock-style, native CSS `position: sticky`)
+ *   - Retro-futuristic terminal styling: PT Mono eyebrows / indices /
+ *     meta labels, PP Neue Montreal display, corner brackets, diamond
+ *     seams, gold accent for the "lead" middle card (WORKSHOP).
+ *
+ * Mount points (in `public/prototypes/v7/landing-v7-motion.html`):
+ *   #services
+ *     .services__header        (parsed HTML — eyebrow + 2-col grid)
+ *       .services__title       (data-m="title")
+ *       .services__lede        (data-m="body")
+ *     .services__stack[data-services-root]
+ *       — React portal: ServiceStack > ServiceCard[3]
+ *
+ * Token map (defined in `public/prototypes/v7/tokens.css` and v7
+ * landing.css): --void, --dawn, --dawn-70, --dawn-30, --dawn-15,
+ * --dawn-08, --gold, --gold-40, --gold-15, --gold-05,
+ * --hud-content-inset, --font-pt-mono, --font-pp-neue-montreal.
+ *
+ * Sticky geometry: each card holds `--svc-stack-i` (its 0-based index)
+ * which drives an incremental `top` offset so each card pins slightly
+ * lower than the previous one — successive cards stack visibly above
+ * earlier ones at the end of the scroll. ADR-021 followup: the
+ * in-section brandmark re-centre/hold/pixel-field beats are retired;
+ * the section is opaque content, not a brandmark runway.
+ *
+ * Reduced motion / mobile: cards drop the sticky pin and render as a
+ * vertical list with the same card geometry, no overlap.
+ */
+
+/* ── Section shell ───────────────────────────────────────────────── */
+/* `.station--services` is set on the parsed <section> in the v7 HTML.
+ * The section sizes itself naturally from the stacking cards (each
+ * card contributes ~100svh of scroll runway via min-height).
+ *
+ * The section is given a hard opaque `--void` background under the
+ * stack so the dissipating sphere never bleeds through once the
+ * dissipate has completed (ADR-008 rule 2 — opaque shield). */
+.station--services {
+  background-color: var(--void);
+  /* Generous bottom padding so the final stacked card has room to
+   * unpin before #continuum reaches the viewport top. */
+  padding-bottom: clamp(120px, 14vh, 240px);
+}
+
+/* ── Header (Linear-style) ──────────────────────────────────────── */
+.services__header {
+  position: relative;
+  z-index: 2;
+  padding-top: clamp(80px, 12vh, 180px);
+  padding-bottom: clamp(48px, 6vh, 96px);
+  /* Same content gutters as the rest of the v7 stations — clears the
+   * left + right HUD rails. */
+  margin: 0 auto;
+  max-width: 1320px;
+}
+
+.services__eyebrow {
+  font-family: var(--font-pt-mono);
+  font-size: clamp(11px, 0.85vw, 13px);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin: 0 0 clamp(20px, 2.4vh, 32px) 0;
+}
+
+/* Two-column grid: heading on the left (~58%), lede on the right
+ * (~38%), with a small gap. On narrow viewports the lede slides
+ * underneath the heading. */
+.services__header__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+  column-gap: clamp(32px, 5vw, 80px);
+  row-gap: clamp(20px, 3vh, 36px);
+  align-items: end;
+}
+
+.services__title {
+  font-family: var(--font-pp-neue-montreal);
+  font-weight: 700;
+  font-size: clamp(40px, 6.2vw, 88px);
+  line-height: 0.96;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+  color: var(--dawn);
+  margin: 0;
+}
+.services__title em {
+  font-style: italic;
+  font-weight: 400;
+  color: var(--gold);
+}
+
+.services__lede {
+  font-family: var(--font-pp-neue-montreal);
+  font-weight: 300;
+  font-size: clamp(15px, 1.15vw, 19px);
+  line-height: 1.6;
+  color: var(--dawn-70);
+  max-width: 48ch;
+  margin: 0;
+}
+
+/* ── Stack container ────────────────────────────────────────────── */
+.services__stack {
+  position: relative;
+  z-index: 2;
+  margin: 0 auto;
+  max-width: 1320px;
+}
+
+.services__list {
+  /* Each card is its own sticky cell; the list itself owns no
+   * background — the section's `--void` shield does. */
+  display: flex;
+  flex-direction: column;
+  gap: clamp(48px, 6vh, 96px);
+}
+
+/* ── Card — SVR shape with 45° corner notch ─────────────────────── */
+/*
+ *  Reference geometry (top-right corner notch only, matching the SVR
+ *  drawing). Hard 90° corners on top-left + both bottom corners.
+ *
+ *  ┌────────────────────────────────────╲
+ *  │                                     ╲
+ *  │                                      │
+ *  │                                      │
+ *  └──────────────────────────────────────┘
+ *
+ *  The notch is ~28px on a side at the standard card width.
+ */
+
+.svc-card {
+  /* Sticky-stack: each card pins slightly LOWER than the previous one,
+   * so when card 02 enters it travels up to a pin point above card 01,
+   * and card 01 stays parked behind it. The visible result reads as
+   * cards stacking on top of each other (Enerblock). */
+  position: sticky;
+  top: calc(var(--svc-card-pin, 12vh) + var(--svc-stack-i, 0) * var(--svc-card-stack-offset, 24px));
+  /* Reserve scroll runway PER card so subsequent cards actually
+   * travel up underneath. With three cards and ~80vh runway each,
+   * the section is roughly 240vh tall (plus header). */
+  margin: 0;
+  min-height: clamp(560px, 78vh, 760px);
+  width: 100%;
+
+  /* Visual: hard-cornered SVR-shape panel. The 45° notch lives on
+   * the TOP-RIGHT corner. */
+  position: sticky; /* repeat for clarity — overridden in fallback below */
+  background: linear-gradient(180deg, rgba(15, 13, 11, 0.92) 0%, rgba(8, 7, 6, 0.94) 100%);
+  border: 1px solid var(--dawn-08);
+  --svc-card-notch: clamp(20px, 2.2vw, 32px);
+  /* Clip-path cuts the top-right corner at 45°. The polygon visits
+   * the four "real" corners in order; the cut replaces the top-right
+   * corner with two inset points. */
+  clip-path: polygon(
+    0 0,
+    calc(100% - var(--svc-card-notch)) 0,
+    100% var(--svc-card-notch),
+    100% 100%,
+    0 100%
+  );
+
+  /* Each card is z-stacked above the previous one so as it pins, it
+   * cleanly covers the card below. */
+  z-index: calc(10 + var(--svc-stack-i, 0));
+
+  isolation: isolate;
+  overflow: hidden;
+  /* Keep the card on its own paint layer to avoid sticky-jitter on
+   * mobile Safari. */
+  will-change: transform;
+}
+
+/* Lead card (WORKSHOP) — gold accent. Border + soft inner glow + a
+ * hairline gold rule on the header strip. */
+.svc-card--lead {
+  border-color: var(--gold-15);
+  background: linear-gradient(180deg, rgba(18, 15, 10, 0.94) 0%, rgba(10, 8, 6, 0.96) 100%);
+  box-shadow:
+    0 0 0 1px var(--gold-05) inset,
+    0 12px 40px rgba(0, 0, 0, 0.5);
+}
+
+/* ── Header strip (mono counter + phase pill) ───────────────────── */
+.svc-card__header {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 16px;
+  padding: 14px clamp(24px, 2.6vw, 40px);
+  border-bottom: 1px solid var(--dawn-08);
+  font-family: var(--font-pt-mono);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--dawn-30);
+}
+.svc-card--lead .svc-card__header {
+  border-bottom-color: var(--gold-15);
+}
+.svc-card__counter {
+  color: var(--dawn-70);
+}
+.svc-card__rule {
+  display: block;
+  height: 1px;
+  background: var(--dawn-08);
+}
+.svc-card--lead .svc-card__rule {
+  background: var(--gold-15);
+}
+.svc-card__phase {
+  color: var(--gold);
+}
+
+/* ── Body — two-column composition (visual left, copy right) ───── */
+.svc-card__body {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.55fr) minmax(0, 1fr);
+  align-items: stretch;
+  min-height: clamp(420px, 60vh, 600px);
+}
+
+/* ── Left column — particle visual ─────────────────────────────── */
+.svc-card__visual {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-right: 1px solid var(--dawn-08);
+  padding: clamp(28px, 3.5vw, 56px);
+  /* Subtle gradient lifts the canvas off the card body. */
+  background: radial-gradient(ellipse at center, rgba(202, 165, 84, 0.04) 0%, transparent 60%);
+  overflow: hidden;
+}
+.svc-card--lead .svc-card__visual {
+  border-right-color: var(--gold-15);
+  background: radial-gradient(ellipse at center, rgba(202, 165, 84, 0.08) 0%, transparent 60%);
+}
+
+/* The sigil itself — a deterministic responsive SQUARE.
+ *
+ * Sizing BOTH axes from the viewport with the same clamp guarantees a
+ * true square regardless of the parent's flex/grid resolution, and
+ * keeps the particle cloud crisp. (The card BEM root is `svc-card`,
+ * NOT `svc-card`, to avoid colliding with the legacy v7
+ * `.svc-card` deck in `landing.css`, whose `.svc-card__sigil`
+ * forces `height: 120px`.) */
+.svc-card__sigil {
+  position: relative;
+  width: clamp(150px, 16vw, 280px);
+  height: clamp(150px, 16vw, 280px);
+  max-width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--dawn-70);
+}
+.svc-card__sigil[data-accent="true"] {
+  color: var(--gold);
+}
+
+.svc-card__sigil__canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.svc-card__sigil__fallback {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  transition: opacity 320ms var(--ease-out, ease-out);
+}
+.svc-card__sigil__fallback svg {
+  width: 60%;
+  height: 60%;
+  color: inherit;
+}
+
+/* ── Right column — copy ────────────────────────────────────────── */
+.svc-card__copy {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: clamp(14px, 1.8vh, 22px);
+  padding: clamp(32px, 4vw, 64px);
+}
+
+.svc-card__index {
+  font-family: var(--font-pt-mono);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--dawn-30);
+  margin: 0;
+}
+.svc-card__index > span:first-child {
+  color: var(--gold);
+  margin-right: 4px;
+}
+.svc-card--lead .svc-card__index {
+  color: var(--dawn-70);
+}
+
+.svc-card__kicker {
+  font-family: var(--font-pt-mono);
+  font-size: clamp(11px, 0.9vw, 13px);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin: 0;
+}
+
+.svc-card__tagline {
+  font-family: var(--font-pp-neue-montreal);
+  font-weight: 500;
+  font-size: clamp(26px, 2.6vw, 40px);
+  line-height: 1.08;
+  letter-spacing: -0.015em;
+  color: var(--dawn);
+  margin: 0;
+}
+.svc-card--lead .svc-card__tagline {
+  color: var(--dawn);
+}
+
+.svc-card__lede {
+  font-family: var(--font-pp-neue-montreal);
+  font-weight: 300;
+  font-size: clamp(15px, 1.1vw, 18px);
+  line-height: 1.55;
+  color: var(--dawn-70);
+  margin: 0;
+  max-width: 52ch;
+}
+
+/* Meta rows — Runs / Shape / Leaves behind. Mono label LEFT, sentence
+ * value RIGHT. Hairline rule between rows. */
+.svc-card__meta {
+  display: grid;
+  grid-template-columns: minmax(80px, 120px) minmax(0, 1fr);
+  column-gap: 18px;
+  row-gap: 0;
+  margin: clamp(10px, 1.4vh, 16px) 0 clamp(14px, 1.6vh, 22px) 0;
+  padding: 12px 0;
+  border-top: 1px solid var(--dawn-08);
+  border-bottom: 1px solid var(--dawn-08);
+}
+.svc-card--lead .svc-card__meta {
+  border-color: var(--gold-15);
+}
+.svc-card__meta__row {
+  display: contents;
+}
+.svc-card__meta__label {
+  font-family: var(--font-pt-mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gold);
+  padding: 8px 0;
+  border-top: 1px dashed var(--dawn-08);
+}
+.svc-card__meta__value {
+  font-family: var(--font-pp-neue-montreal);
+  font-size: clamp(13px, 0.95vw, 15px);
+  line-height: 1.5;
+  color: var(--dawn-70);
+  padding: 8px 0;
+  border-top: 1px dashed var(--dawn-08);
+  margin: 0;
+}
+/* First row has no dashed top — it borders against the solid rule. */
+.svc-card__meta__row:first-child .svc-card__meta__label,
+.svc-card__meta__row:first-child .svc-card__meta__value {
+  border-top: none;
+}
+.svc-card--lead .svc-card__meta__label,
+.svc-card--lead .svc-card__meta__value {
+  border-top-color: var(--gold-15);
+}
+
+/* CTA — terminal-style arrow link. */
+.svc-card__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  align-self: flex-start;
+  padding: 14px 22px 14px 24px;
+  background: transparent;
+  border: 1px solid var(--dawn-15);
+  color: var(--dawn);
+  font-family: var(--font-pt-mono);
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition:
+    border-color 220ms var(--ease-out, ease-out),
+    color 220ms var(--ease-out, ease-out),
+    background 220ms var(--ease-out, ease-out);
+  clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 0 100%);
+}
+.svc-card__cta:hover {
+  border-color: var(--gold-40);
+  color: var(--gold);
+  background: var(--gold-05);
+}
+.svc-card__cta__arrow {
+  font-family: var(--font-pp-neue-montreal);
+  font-size: 15px;
+  transition: transform 220ms var(--ease-out, ease-out);
+}
+.svc-card__cta:hover .svc-card__cta__arrow {
+  transform: translateX(2px);
+}
+.svc-card--lead .svc-card__cta {
+  border-color: var(--gold-40);
+  color: var(--gold);
+}
+.svc-card--lead .svc-card__cta:hover {
+  border-color: var(--gold);
+  background: var(--gold-10);
+}
+
+/* ── Responsive ─────────────────────────────────────────────────── */
+@media (max-width: 960px) {
+  .services__header__grid {
+    grid-template-columns: 1fr;
+  }
+  .svc-card__body {
+    grid-template-columns: 1fr;
+  }
+  .svc-card__visual {
+    border-right: none;
+    border-bottom: 1px solid var(--dawn-08);
+    aspect-ratio: 16 / 9;
+    min-height: 280px;
+  }
+  .svc-card--lead .svc-card__visual {
+    border-bottom-color: var(--gold-15);
+  }
+  .svc-card {
+    /* On narrow viewports, drop the sticky pin so cards just stack
+     * vertically without overlap. Sticky scroll-pinning depends on a
+     * tall layout column with reliable wheel scroll; on tablets +
+     * phones the simpler stacked read is preferable. */
+    position: relative;
+    top: auto;
+    min-height: auto;
+  }
+  .services__list {
+    gap: clamp(28px, 4vh, 56px);
+  }
+  .svc-card__meta {
+    grid-template-columns: 1fr;
+  }
+  .svc-card__meta__row {
+    display: block;
+    padding: 10px 0;
+    border-top: 1px dashed var(--dawn-08);
+  }
+  .svc-card__meta__label,
+  .svc-card__meta__value {
+    border-top: none;
+    padding: 0;
+  }
+  .svc-card__meta__label {
+    margin-bottom: 4px;
+  }
+  .svc-card__meta__row:first-child {
+    border-top: none;
+  }
+}
+
+/* ── Reveal motion ──────────────────────────────────────────────
+ * Smooth, slightly slower entrance for the Services section, using the
+ * site's shared motion tokens (--m-ease) so it feels of-a-piece with
+ * the rest of the page.
+ *
+ * Header: the eyebrow / title / lede already animate via the global
+ * `[data-m]` + `.is-in` reveal (static HTML, observed by
+ * `useRevealMotion`). They are nested inside the header grid, so the
+ * global per-group stagger (`[data-m-group] > [data-m]`) never reaches
+ * them and they all fired at once. Give them an explicit eyebrow ->
+ * title -> lede cascade and bump the durations a touch.
+ *
+ * Cards: React-portaled (mounted after the global observer captured its
+ * targets), so each card runs its own one-shot observer (`useReveal`)
+ * that flips `data-in`. The panel fades + rises in as it scrolls into
+ * view; cards enter one at a time so the stack reads as a calm cascade. */
+.services__eyebrow[data-m] {
+  transition-duration: 560ms;
+}
+.services__title[data-m] {
+  transition-duration: 1080ms;
+  transition-delay: 150ms;
+}
+.services__lede[data-m] {
+  transition-duration: 820ms;
+  transition-delay: 330ms;
+}
+
+.svc-card {
+  opacity: 0;
+  transform: translateY(34px);
+  transition:
+    opacity 940ms var(--m-ease, cubic-bezier(0.22, 0.61, 0.36, 1)),
+    transform 940ms var(--m-ease, cubic-bezier(0.22, 0.61, 0.36, 1));
+}
+.svc-card[data-in="true"] {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Reduced motion: cards drop the sticky pin and render as a vertical
+ * list, and the reveal collapses to a short fade (no transform).
+ * Mirrors the global `[data-m]` reduced-motion behaviour. */
+@media (prefers-reduced-motion: reduce) {
+  .svc-card {
+    position: relative;
+    top: auto;
+    transform: none;
+    transition-duration: 240ms;
+  }
+  .services__eyebrow[data-m],
+  .services__title[data-m],
+  .services__lede[data-m] {
+    transition-delay: 0ms !important;
+    transition-duration: 220ms !important;
+  }
+  .svc-card__cta,
+  .svc-card__cta__arrow {
+    transition: none;
+  }
+}
