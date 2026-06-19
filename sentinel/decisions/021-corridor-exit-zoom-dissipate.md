@@ -559,6 +559,46 @@ as the "right" speed/smoothness reference):
 - [`components/landing/home-v2/CorridorStationHeaders.tsx`](../../components/landing/home-v2/CorridorStationHeaders.tsx)
 - [`tests/lib/epilogue-timeline.test.ts`](../../tests/lib/epilogue-timeline.test.ts)
 
+## 2026-06-19 Revision — Ticker exit follows signal lift, not camera fly-in
+
+The 2026-06-18 polish made `EpilogueNewsTicker` a full smoothed-dissipate
+consumer alongside the camera, shell, and projected brandmark. That kept the
+ring mathematically glued to the sphere, but visually it made the ticker react
+on the sphere camera clock before the top signal group had clearly begun its
+own exit. On scroll-forward the ticker could clip / vanish abruptly while
+`EVERYONE IS RACING TO BUILD THIS LAYER.` was still readable in place, which
+split one editorial beat into two.
+
+This revision makes the ticker a signal-group follower instead of an
+independent exit actor:
+
+- **Vertical movement:** the ticker reads `--ticker-exit-lift`, and that var is
+  now exactly the same raw `dockProgress` lift as the signal title/CTA
+  (`TICKER_EXIT_LIFT_BOOST = 1`). The ticker starts moving when the headline
+  starts moving, not a moment before.
+- **Radius:** the ticker stays projected on the stable docked epilogue limb and
+  no longer borrows shell scatter (`TICKER_SHELL_SCATTER_SHARE = 0`). Runtime
+  evidence showed even a restrained radius share added extra upward motion on
+  top of the matched CSS lift, causing the arc to leave while the title was
+  still visible.
+- **Opacity:** `SIGNAL_OUT` is pushed to `0.86 -> 0.99`, and the ticker now
+  reads `--signal-opacity` from the same signal rAF that writes the title/CTA
+  opacity. The ticker's own rAF only redraws the arc path; it does not read or
+  write opacity. This removes the second-rAF race where stale inline
+  `sigEl.style.opacity` could blank the ticker while the title was visible.
+
+### Invariants preserved
+
+- `useCorridorExitScroll` remains the single writer of `docked` /
+  `dockProgress`.
+- The sphere/camera painters continue to use the smoothed dissipate channel.
+  The ticker's **vertical timing** is intentionally raw-scroll-synced because it
+  is an editorial DOM signal group element, not a physical camera consumer.
+- The ticker path continues to project from the docked epilogue limb so it stays
+  visually tied to the sphere horizon, but visibility and exit motion are owned
+  by the signal group.
+- The late fade still reaches 0 before the dock release (`dissipate >= 0.999`).
+
 ## Related Decisions
 
 - [ADR-002 — Scroll Animation Architecture](002-scroll-animation-architecture.md)

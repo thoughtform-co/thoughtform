@@ -934,28 +934,41 @@ html[data-corridor-exit="true"] #services > * {
 
 .home-v2-signal-ticker {
   /* Own fixed full-viewport layer. No viewBox → 1 SVG user unit = 1px,
-     so `EpilogueNewsTicker` rewrites the arc path in viewport pixels each
+     so `EpilogueNewsTicker` rewrites the arc PATH in viewport pixels each
      frame, welded to the planet's PROJECTED limb (centre + radius from
-     the live epilogue camera). Opacity is JS-driven to mirror the signal
-     block, so it starts hidden and cross-dissolves with the billions
-     title. This is deliberately NOT a CSS-positioned arc: the planet is a
-     WebGL object whose screen centre/size depends on camera flight,
-     planet-grow, dock recede, and viewport — a fixed arc cannot track it
-     (it read as "completely off" at other viewports). */
+     the live epilogue camera). This is deliberately NOT a CSS-positioned
+     arc: the planet is a WebGL object whose screen centre/size depends on
+     camera flight, planet-grow, dock recede, and viewport — a fixed arc
+     cannot track it (it read as "completely off" at other viewports). */
   position: fixed;
   inset: 0;
   width: 100%;
   height: 100%;
   overflow: visible;
   pointer-events: none;
-  opacity: 0;
-  /* The ticker leaves WITH the rest of the signal group (title + CTA):
-     `--ticker-exit-lift` shares the title/CTA's exit onset (both start at
-     dissipate 0) and is slightly boosted so the lower-sitting arc clears
-     the top at about the same time. It no longer rides the corridor-exit
-     fly-in — the arc stays welded to the docked-pose limb and this CSS
-     translate carries it off the top. */
-  transform: translate3d(0, var(--ticker-exit-lift, 0px), 0);
+  /* Same stacking layer as the signal title/CTA header
+     (`.home-v2-station-header--signal`, z-index 15) — a DOM sibling.
+     WITHOUT this the ticker is `z-index: auto` and the rising `#services`
+     section (z-index 6) + the dissipate veil (z-index 5) paint OVER it.
+     Because the readable ticker text sits LOW on screen (on the sphere
+     limb) while the title sits high, `#services` covered the ticker from
+     the bottom up long before it reached the title — so the ticker
+     "disappeared too soon" while the title/CTA stayed (runtime proof:
+     elementsFromPoint on the ticker text returned `SECTION.station[z6]`
+     on top at dockProgress 0.35-0.40, ticker at `z-index: auto`).
+     Matching z-index 15 puts the ticker in the title's layer so the whole
+     signal group lifts out the top together and the ticker is never
+     covered (2026-06-19 occlusion fix). */
+  z-index: 15;
+  /* Opacity + lift are driven by the SAME `--signal-opacity` /
+     `--signal-exit-lift` vars the title/CTA use, written once per frame
+     by the signal rAF (`CorridorStationHeaders`). Sharing the title's
+     exact vars guarantees the ticker fades + lifts on the IDENTICAL frame
+     as "EVERYONE IS RACING…" — no second-rAF race that previously blanked
+     / clipped the ticker out of step at the dock boundary (2026-06-19
+     single-writer sync). The ticker rAF now only rewrites the arc PATH. */
+  opacity: var(--signal-opacity, 0);
+  transform: translate3d(0, var(--signal-exit-lift, 0px), 0);
   filter: drop-shadow(0 0 16px rgba(10, 9, 8, 0.9)) drop-shadow(0 0 10px rgba(202, 165, 84, 0.18));
   /* Soft edge fade ONLY at the very edges (last ~5%): the arc itself is
      sized so the headlines run off-screen on both sides (see

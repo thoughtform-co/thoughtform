@@ -17,7 +17,6 @@ import {
 import {
   BRANDMARK_ANCHOR_INTELLIGENCE,
   getCameraFov,
-  getCorridorExitCameraPose,
   getEpilogueCameraPose,
 } from "./DepthGatewayScene/sceneGeom";
 import {
@@ -591,15 +590,28 @@ const TICKER_EDGE_MARGIN_PX = 96;
  *  (the planet hasn't landed and the title hasn't faded in yet). */
 const TICKER_MIN_EP = 0.42;
 /** Boost on the ticker's exit lift relative to the signal title/CTA
- *  (`--signal-exit-lift`). 0 → CSS lift is OFF; the ticker now leaves
- *  GEOMETRICALLY by riding the welded sphere fly-in (camera flies into
- *  the planet → centre projects up off-screen, limb radius scales by
- *  `dissipateShellScatter`, the arc bleeds out of the viewport on its
- *  own). Doubling that with a CSS translate read as the ticker
- *  disappearing too quickly + abruptly — the geometry alone is the
- *  authored exit, in step with the sphere expanding behind it
- *  (2026-06-18 sphere-exit polish). */
-const TICKER_EXIT_LIFT_BOOST = 0;
+ *  (`--signal-exit-lift`). 1 means the ticker translates on EXACTLY the
+ *  same raw dock clock as "EVERYONE IS RACING..." — not a frame before,
+ *  not faster. Earlier variants either boosted this lift or replaced it
+ *  with the smoothed camera fly-in; both made the ticker exit ahead of
+ *  the headline. */
+const TICKER_EXIT_LIFT_BOOST = 1;
+/** How much of the sphere's radial dissipate scatter the ticker arc
+ *  adopts so it FOLLOWS THE SPHERE'S ARC as the planet expands. The arc
+ *  radius is multiplied by `1 + (dissipateShellScatter - 1) * SHARE`,
+ *  keyed to the SAME smoothed-dissipate clock the substrate shell uses
+ *  (`getSmoothedDissipate`) — so the ticker widens / flattens at the
+ *  sphere's pace, hugging the dotted-shell limb as it scatters outward.
+ *
+ *  Was 0 (radius pinned to the parked limb) while the ticker still had
+ *  no z-index and the rising `#services` covered it — any arc growth
+ *  then read as "disappears too soon". Now that the ticker shares the
+ *  title's `z-index: 15` (no occlusion), the arc can expand with the
+ *  sphere safely. Kept a fraction (not 1.0) so the readable headline
+ *  near the apex doesn't outrun the title's CSS lift off the top — the
+ *  vertical exit stays group-synced while the curvature follows the
+ *  sphere (2026-06-19 sphere-follow pass). */
+const TICKER_SHELL_SCATTER_SHARE = 0.6;
 
 /**
  * EpilogueNewsTicker — headline ring welded to the substrate planet.
@@ -646,9 +658,10 @@ function EpilogueNewsTicker({ animate }: { animate: boolean }) {
       const path = pathRef.current;
       if (!svg || !path) return;
 
-      // Opacity is owned by the signal block (single source of truth for
-      // the TITLE_IN / cover cross-dissolve) — mirror it so the ring
-      // fades exactly with the billions title.
+      // Ticker opacity is CSS-driven via `--signal-opacity` (single-writer
+      // sync, 2026-06-19), so this rAF does NOT set opacity. `sigOp` is read
+      // only as a cheap input to the skip-relayout cache below (so the arc
+      // path isn't rewritten when nothing meaningful changed).
       const sigEl = document.querySelector<HTMLElement>(".home-v2-station-header--signal");
       const sigOp = sigEl ? parseFloat(sigEl.style.opacity || "0") : 0;
 
@@ -661,9 +674,14 @@ function EpilogueNewsTicker({ animate }: { animate: boolean }) {
       dockBlend += ((transform.docked ? 1 : 0) - dockBlend) * (1 - Math.exp(-dt / 0.28));
       const ep = smoothedEp + (DOCKED_INSTRUMENT_EPILOGUE_POSE - smoothedEp) * dockBlend;
 
-      if (sigOp <= 0.001 || ep <= TICKER_MIN_EP) {
+      if (ep <= TICKER_MIN_EP) {
+        // Skip geometry work only while the planet hasn't landed. Ticker
+        // visibility is CSS-driven by `--signal-opacity` from the signal
+        // rAF; do NOT gate path drawing on `sigEl.style.opacity` here.
+        // That inline value can be stale for one frame at the dock boundary,
+        // which previously left the ticker path empty while the title/CTA
+        // were visibly on-screen.
         if (last.op !== 0) {
-          svg.style.opacity = "0";
           last = { cx: -1, cy: -1, r: -1, op: 0 };
         }
         return;
@@ -672,47 +690,27 @@ function EpilogueNewsTicker({ animate }: { animate: boolean }) {
       const vw = window.innerWidth;
       const vh = window.innerHeight;
 
-      // EXIT WELD (2026-06-18 sphere-exit polish): the ticker rides the
-      // SAME smoothed dissipate camera + shell-scatter as the canvas
-      // sphere and the projected brandmark (`computeWeldedRect` in
-      // `ProjectedBrandmarkActor`). Two channels:
+      // EXIT SYNC (2026-06-19 ticker timing): keep the ticker on the
+      // docked-pose limb and move it with the SAME raw dock clock as
+      // the signal title/CTA (`--signal-exit-lift`). The previous
+      // smoothed camera-fly-in weld made the arc react on the sphere's
+      // camera clock, which could push/clip the ticker before the
+      // "EVERYONE IS RACING..." group visibly started its exit. Here:
       //
-      //   1. CAMERA — `getEpilogueCameraPose(ep)` lerps toward
-      //      `getCorridorExitCameraPose(dissipate)` as the dock engages
-      //      (identical at dissipate 0, so re-engaging the dock is a
-      //      no-op pose). The smoothed dissipate channel matches
-      //      `FlyingCameraRig` / `ShellSubstrateGyro` so the welded arc
-      //      stays glued to the canvas sphere through the eased fly-in.
-      //
-      //   2. RADIUS — the projected limb is multiplied by
-      //      `dissipateShellScatter(dissipate)` so the ticker arc
-      //      visibly EXPANDS as the surface dots scatter outward. This
-      //      is the authored exit: the arc gets pushed past the viewport
-      //      edges geometrically, in step with the sphere it tracks.
-      //
-      // The CSS `--ticker-exit-lift` translate that previously pulled
-      // the ticker straight up ran on a separate (faster) clock than
-      // this geometry, so the ticker disappeared abruptly while the
-      // sphere was still expanding behind it. `TICKER_EXIT_LIFT_BOOST`
-      // is now 0 so this geometric weld owns the visible exit.
-      const dissipate = transform.docked ? getSmoothedDissipate() : 0;
+      //   - CAMERA stays at the docked epilogue limb, so projection
+      //     remains stable and cannot vanish at the fly-through guard
+      //     (the fly-in dive sent the arc off the top before the title).
+      //   - TRANSLATE is owned by `--ticker-exit-lift` below, exactly
+      //     matched to the title/CTA lift clock (vertical exit stays
+      //     group-synced).
+      //   - RADIUS rides the sphere's OWN shell-scatter clock
+      //     (`getSmoothedDissipate`, the same value `ShellSubstrateGyro`
+      //     uses) so the arc curvature widens / flattens at the sphere's
+      //     pace and hugs the expanding dotted-shell limb.
+      const tickerExit = transform.docked ? getSmoothedDissipate() : 0;
       const basePose = getEpilogueCameraPose(ep);
-      let camPos = basePose.position;
-      let camLook = basePose.lookAt;
-      if (dissipate > 1e-4) {
-        const exitPose = getCorridorExitCameraPose(dissipate);
-        const tt = dissipate;
-        camPos = [
-          basePose.position[0] + (exitPose.position[0] - basePose.position[0]) * tt,
-          basePose.position[1] + (exitPose.position[1] - basePose.position[1]) * tt,
-          basePose.position[2] + (exitPose.position[2] - basePose.position[2]) * tt,
-        ];
-        camLook = [
-          basePose.lookAt[0] + (exitPose.lookAt[0] - basePose.lookAt[0]) * tt,
-          basePose.lookAt[1] + (exitPose.lookAt[1] - basePose.lookAt[1]) * tt,
-          basePose.lookAt[2] + (exitPose.lookAt[2] - basePose.lookAt[2]) * tt,
-        ];
-      }
+      const camPos = basePose.position;
+      const camLook = basePose.lookAt;
       camera.position.set(camPos[0], camPos[1], camPos[2]);
       camera.up.set(0, 1, 0);
       camera.lookAt(camLook[0], camLook[1], camLook[2]);
@@ -733,12 +731,14 @@ function EpilogueNewsTicker({ animate }: { animate: boolean }) {
 
       // Screen radius: project a limb point (centre + worldRadius along
       // camera-right), same technique the brandmark uses for its width.
-      // The world radius is multiplied by `dissipateShellScatter` so the
-      // arc rides the same outward scatter as the dotted-shell surface
-      // dots — the visible result is the ticker pushing past the
-      // viewport edges as the sphere expands.
-      const shellScatter = dissipateShellScatter(dissipate);
-      const worldRadius = PLANET_LIMB_WORLD_RADIUS * getEpiloguePlanetScale(ep) * shellScatter;
+      // The ticker takes `TICKER_SHELL_SCATTER_SHARE` of the sphere's
+      // shell scatter on the sphere's own smoothed-dissipate clock, so
+      // the arc expands outward with the swelling planet at the sphere's
+      // pace while the vertical exit stays locked to the title lift.
+      const fullShellScatter = dissipateShellScatter(tickerExit);
+      const tickerShellScatter = 1 + (fullShellScatter - 1) * TICKER_SHELL_SCATTER_SHARE;
+      const worldRadius =
+        PLANET_LIMB_WORLD_RADIUS * getEpiloguePlanetScale(ep) * tickerShellScatter;
       right.setFromMatrixColumn(camera.matrixWorld, 0);
       edge.copy(center).addScaledVector(right, worldRadius);
       proj.copy(edge).project(camera);
@@ -751,7 +751,7 @@ function EpilogueNewsTicker({ animate }: { animate: boolean }) {
       // valid arc and just keep the opacity fade alive — never paint a
       // blown-up ring.
       if (!centreValid || !Number.isFinite(ringR) || ringR > vw * 3) {
-        svg.style.opacity = sigOp.toFixed(3);
+        // Hold the last good arc; opacity stays CSS-driven (`--signal-opacity`).
         last = { ...last, op: sigOp };
         return;
       }
@@ -791,7 +791,8 @@ function EpilogueNewsTicker({ animate }: { animate: boolean }) {
         `M ${x0.toFixed(1)} ${y0.toFixed(1)} A ${ringR.toFixed(1)} ${ringR.toFixed(1)} 0 0 1 ${x1.toFixed(1)} ${y1.toFixed(1)}`
       );
 
-      svg.style.opacity = sigOp.toFixed(3);
+      // Opacity is owned by CSS `--signal-opacity` (single-writer sync,
+      // 2026-06-19) — this rAF only rewrites the arc PATH.
       last = { cx, cy, r: ringR, op: sigOp };
     };
 
@@ -936,10 +937,11 @@ export function CorridorStationHeaders() {
       // (the dissipate clock) from 0 → 1 across the first Services
       // viewport, and the sphere dissipates with it. The BILLIONS title
       // belongs to the sphere scene, so it now yields across a DELAYED
-      // back-band (SIGNAL_OUT 0.72 → 0.95): the title/CTA visibly lift
-      // with the sphere across the front half, the ticker rides the
-      // expanding sphere geometrically (welded fly-in + shell-scatter
-      // limb), THEN the whole signal group fades out at the tail.
+      // tail-band (SIGNAL_OUT 0.86 → 0.99): the title/CTA visibly lift
+      // with the sphere first, the ticker starts moving on the exact
+      // same lift clock while its arc borrows a restrained outward
+      // shell expansion, THEN the whole signal group fades out at the
+      // tail.
       // Earlier tuning faded on the front half (0.04 → 0.42), which
       // made the ticker vanish before its movement was legible. On
       // /test/home-v2 there is no exit hook so `docked` stays false
@@ -968,15 +970,11 @@ export function CorridorStationHeaders() {
       const vhNow = typeof window !== "undefined" ? window.innerHeight || 1 : 1;
       const signalLiftPx = reducedMotion ? 0 : -signalDriftRaw * vhNow;
       const signalScale = reducedMotion ? 1 : 1 - signalDriftRaw * 0.03;
-      // Ticker exit (2026-06-18 sphere-exit polish): the ticker now leaves
-      // GEOMETRICALLY by riding the smoothed dissipate camera + the
-      // `dissipateShellScatter` limb-radius multiplier (see
-      // `EpilogueNewsTicker`). With `TICKER_EXIT_LIFT_BOOST = 0` the CSS
-      // `--ticker-exit-lift` translate is held at 0 so the geometry alone
-      // owns the visible exit and the ticker stays in step with the
-      // sphere it tracks. The CSS var is still written each frame
-      // (defaulted to 0) so future short-viewport / fallback tuning can
-      // re-introduce a translate component without re-wiring the rAF.
+      // Ticker exit (2026-06-19 sync pass): move the ticker on the same
+      // raw lift as the title/CTA. The ring's rAF still expands the arc
+      // outward with a restrained shell-scatter share, but the visible
+      // upward exit starts with "EVERYONE IS RACING..." and not a moment
+      // before.
       const tickerLiftPx = reducedMotion ? 0 : -signalDriftRaw * vhNow * TICKER_EXIT_LIFT_BOOST;
       const containerOps = {
         nav: bandOpacity(p, NAVIGATE_FADE_IN, NAVIGATE_FADE_OUT),
@@ -1034,8 +1032,13 @@ export function CorridorStationHeaders() {
         sigEl.style.transform = `translate3d(-50%, ${signalLiftPx.toFixed(2)}px, 0) scale(${signalScale.toFixed(4)})`;
       }
       // Title/CTA read these inherited vars for the 1:1 push-out. The
-      // ticker reads `--ticker-exit-lift` (shared onset, slightly boosted)
-      // so the whole signal group leaves together.
+      // ticker SVG reads BOTH `--signal-exit-lift` (same translate) AND
+      // `--signal-opacity` (same opacity) from THIS single rAF, so the
+      // whole signal group — title, CTA, and news ticker — is driven by
+      // ONE writer on ONE frame and can never desync. (Previously the
+      // ticker ran its own rAF that re-read the signal opacity + store a
+      // frame apart, which made it blank/clip out of step with the title
+      // at the dock boundary — 2026-06-19 single-writer sync.)
       document.documentElement.style.setProperty(
         "--signal-exit-lift",
         `${signalLiftPx.toFixed(2)}px`
@@ -1045,6 +1048,7 @@ export function CorridorStationHeaders() {
         "--ticker-exit-lift",
         `${tickerLiftPx.toFixed(2)}px`
       );
+      document.documentElement.style.setProperty("--signal-opacity", containerOps.sig.toFixed(4));
 
       // Per-station typewriter pass.
       for (const key of ["nav", "enc", "bld", "sig"] as const) {

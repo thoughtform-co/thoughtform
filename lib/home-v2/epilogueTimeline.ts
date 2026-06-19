@@ -151,16 +151,17 @@ export const DISSIPATE_BANDS = {
   PARTICLE_FADE: { start: 0.42, end: 0.95 } as const,
 
   /** BILLIONS signal block + ticker opacity fade. The signal group +
-   *  ticker now EXIT by translation (a full-viewport, scroll-coupled
-   *  upward lift in `CorridorStationHeaders`), so the visible exit is the
-   *  push-out, not the fade. This band is pushed late on purpose: by the
-   *  time it starts the group has already cleared the top of the viewport
-   *  on normal/tall viewports, so the fade is only a safety for short
-   *  viewports and the dock release (it must reach 0 before the dock
-   *  detaches at dissipate >= 0.999). Earlier tunings (0.04->0.42, then
-   *  0.16->0.72) faded the text/ticker while it was still on screen, which
-   *  read as "it just disappears" instead of "it gets pushed out". */
-  SIGNAL_OUT: { start: 0.72, end: 0.95 } as const,
+   *  ticker EXIT by movement first: the title/CTA translate upward on
+   *  raw dockProgress, and the ticker matches that translate exactly
+   *  while borrowing a restrained shell-radius expansion. The opacity
+   *  fade is therefore a tail cleanup only, pushed very late so the
+   *  ticker items never disappear before "EVERYONE IS RACING..." has
+   *  visibly begun leaving with them. It still reaches 0 before the
+   *  dock detaches at dissipate >= 0.999. Earlier tunings (0.04->0.42,
+   *  0.16->0.72, 0.72->0.95) faded the text/ticker while it was still
+   *  on screen, which read as "it just disappears" instead of "it gets
+   *  pushed out". */
+  SIGNAL_OUT: { start: 0.86, end: 0.99 } as const,
 } as const;
 
 /** Eased 0..1 reveal for a named dissipate band. Same shape as

@@ -99,6 +99,12 @@ describe("dissipate clock", () => {
     expect(dissipateOpacityMultiplier(0.99)).toBeCloseTo(0, 1);
   });
 
+  it("keeps SIGNAL_OUT as a late tail fade after movement has started", () => {
+    expect(DISSIPATE_BANDS.SIGNAL_OUT.start).toBeGreaterThanOrEqual(0.85);
+    expect(DISSIPATE_BANDS.SIGNAL_OUT.end).toBeGreaterThanOrEqual(0.99);
+    expect(DISSIPATE_BANDS.SIGNAL_OUT.end).toBeLessThan(1);
+  });
+
   it("core multiplier sheds early (CORE_SHED) and atmosphere envelope ends at 0", () => {
     expect(dissipateCoreMultiplier(0)).toBe(1);
     expect(dissipateCoreMultiplier(DISSIPATE_BANDS.CORE_SHED.end)).toBeCloseTo(0, 5);
