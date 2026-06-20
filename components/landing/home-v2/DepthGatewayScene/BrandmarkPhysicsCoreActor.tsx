@@ -45,10 +45,7 @@ import {
   smootherstep,
   windowFor,
 } from "@/lib/home-v2/corridorMap";
-import {
-  dissipateInteriorOpacityMultiplier,
-  getEpiloguePlanetScale,
-} from "@/lib/home-v2/epilogueTimeline";
+import { getEpiloguePlanetScale } from "@/lib/home-v2/epilogueTimeline";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import {
   BrandmarkPhysicsCore,
@@ -93,18 +90,26 @@ const CORE_OPACITY = 0.95;
 const CORE_POINT_SIZE_FLAT = 3.0;
 const CORE_POINT_SIZE_3D = 4.0;
 
-/** Opacity floor for the in-canvas core during dock / dissipate. The
- *  DOM SVG (`ProjectedBrandmarkActor`) owns the readable mark while the
- *  visitor enters Services, so the core can't sit at full brightness
- *  (it would paint a duplicate silhouette over the welded SVG). But
- *  hiding it entirely (the previous `handoffFade = t.docked ? 0 : 1`
- *  hard-cut) reads as the interior of the sphere going empty just as
- *  the camera flies into it. Holding the core at this low fraction of
- *  `CORE_OPACITY` keeps a soft particulate hint inside the volume —
- *  the narrative is "we have entered the sphere", and that should
- *  show as muted texture in the background, not as a visible foreground
- *  mark. */
-const CORE_DOCKED_OPACITY_FLOOR = 0.12;
+/** Core-shrink handoff into Services (2026-06-20). The in-sphere
+ *  particle core IS the brandmark end-to-end — at the Services dive it
+ *  doesn't dim out and hand off to a separate mark; it SHRINKS from
+ *  sphere-fill down to a small centred centerpiece and stays the one and
+ *  only mark. These knobs drive that shrink off the dissipate clock:
+ *
+ *   - `SHRINK_START/END` — dissipate window the shrink + re-centre runs
+ *     over (0 = sphere-fill at "everyone is racing", 1 = parked
+ *     centerpiece). Settles before the dock releases into ambient.
+ *   - `CENTER_DISTANCE` — how far in front of the live camera the shrunk
+ *     core is placed, so the camera fly-in can't carry it off; it lands
+ *     dead-centre in the viewport.
+ *   - `CENTER_TARGET_SCALE` — world scale (geometry is normalised to 1)
+ *     of the parked centerpiece. Combined with `CENTER_DISTANCE` this
+ *     sets the on-screen size — tune both so it reads like the Services
+ *     centerpiece. */
+const SHRINK_START = 0.04;
+const SHRINK_END = 0.9;
+const CENTER_DISTANCE = 3.2;
+const CENTER_TARGET_SCALE = 1.15;
 
 /** Z-stream momentum (2026-06-17). As the mark flies into the corridor
  *  toward the substrate sphere, particles stream toward the background
@@ -160,6 +165,11 @@ export function BrandmarkPhysicsCoreActor({
     : BRANDMARK_PHYSICS_CORE_COUNT_DESKTOP;
 
   const groupRef = useRef<THREE.Group>(null);
+  // Scratch for the Services core-shrink (camera-front re-centre) so we
+  // don't allocate per frame.
+  const fwdScratch = useRef(new THREE.Vector3());
+  const frontScratch = useRef(new THREE.Vector3());
+  const posScratch = useRef(new THREE.Vector3());
   const igniteRef = useRef(ASSEMBLED_IGNITE);
   const depthRef = useRef(0);
   const glitchRef = useRef(0);
@@ -172,7 +182,7 @@ export function BrandmarkPhysicsCoreActor({
   // the in-component refs that read into `BrandmarkPhysicsCore` props
   // on the next render. Position + scale don't need React; they're
   // imperative writes on the group.
-  useFrame((_state, delta) => {
+  useFrame((state, delta) => {
     const group = groupRef.current;
     if (!group) return;
 
@@ -203,6 +213,16 @@ export function BrandmarkPhysicsCoreActor({
     // (dispersed cloud, but invisible — see opacity gate below).
     const progress = t.paintProgress;
     const [bx, by, bz] = getBrandmarkWorldPosition(progress);
+
+    // ── Services core-shrink (2026-06-20) ────────────────────────────
+    // As the user scrolls into #services the dissipate clock ramps 0→1.
+    // The core (which fills the sphere at "everyone is racing") shrinks
+    // down to a small centred centerpiece and stays the one mark. `recT`
+    // is the eased shrink/re-centre progress; 0 = sphere-fill (no change
+    // from today), 1 = parked centerpiece. Held at 1 through the services
+    // ambient hold (the motion follower pins dissipate at 1).
+    const dissipate = t.docked || t.servicesAmbient ? getSmoothedDissipate() : 0;
+    const recT = smootherstep(SHRINK_START, SHRINK_END, dissipate);
 
     // ── SVG → particle MORPH (ADR-023, rev. 2026-06-17) ───────────
     // The mark is the SAME brandmark end-to-end; only its MEDIUM and
@@ -262,7 +282,10 @@ export function BrandmarkPhysicsCoreActor({
     streamRef.current += (streamTarget - streamRef.current) * kStream;
 
     igniteRef.current = ASSEMBLED_IGNITE;
-    depthRef.current = depth;
+    // Flatten the 3D dome back toward a clean flat silhouette as the core
+    // shrinks to the centred Services centerpiece (Z-only, so the XY mark
+    // is preserved).
+    depthRef.current = depth * (1 - recT);
     glitchRef.current = glitch;
 
     // Corridor → epilogue handoff: the in-canvas core owns the mark
@@ -281,24 +304,17 @@ export function BrandmarkPhysicsCoreActor({
     // ambient interior cloud — both read as a single soft volume rather
     // than as two layers on different clocks.
     //
-    // During the services ambient hold (ADR-021 addendum), the dock
-    // has released and the welded DOM brandmark + seam pixel field own
-    // the foreground. Force the core to 0 so it never reads as a
-    // second mark behind the SVG; the ambient haze is provided by
-    // `mats.particle` in `ShellSubstrateGyro` instead.
-    const handoffFade = t.servicesAmbient
-      ? 0
-      : t.docked
-        ? CORE_DOCKED_OPACITY_FLOOR *
-          dissipateInteriorOpacityMultiplier(getSmoothedDissipate(), 0.5)
-        : 1;
+    // Core-shrink handoff (2026-06-20): the core IS the brandmark through
+    // the dock + Services ambient — it shrinks to the centred centerpiece
+    // and stays the one visible mark (the welded SVG + separate 2D field
+    // are retired). So keep it at full brightness the whole way instead of
+    // dimming to a floor / forcing 0. The ambient shell haze still comes
+    // from `mats.particle` in `ShellSubstrateGyro`.
+    const handoffFade = 1;
 
-    // Hidden at the section-2 rest (the SVG owns the crisp 2D mark);
-    // the cut brings the core to full brightness as the SVG vanishes.
-    // Bright/solid through the corridor + epilogue so the silhouette
-    // reads as densely as the SVG it replaces; dropped to the muted
-    // floor at dock engage so it reads as interior texture under the
-    // welded SVG, not a duplicate mark.
+    // Hidden at the section-2 rest (the SVG owns the crisp 2D mark); the
+    // cut brings the core to full brightness as the SVG vanishes, and it
+    // stays bright/solid through the corridor → epilogue → Services shrink.
     opacityRef.current = CORE_OPACITY * reveal * handoffFade;
     // Crisp small specks for the flat silhouette → slightly larger
     // specks for the luminous 3D body, riding the depth extrude.
@@ -321,9 +337,30 @@ export function BrandmarkPhysicsCoreActor({
     // the title section.
     const planetScale = getEpiloguePlanetScale(getSmoothedEpilogueProgress());
 
+    // Sphere-fill scale (today's behaviour) → small centerpiece scale as
+    // the core shrinks. At recT 0 this is byte-identical to before.
+    const sphereScale = half * 2 * planetScale;
+    const scale = sphereScale + (CENTER_TARGET_SCALE - sphereScale) * recT;
+
+    // Position: sphere centre (world) → a point dead-centre in front of
+    // the LIVE camera, so the camera fly-in can't carry the shrinking mark
+    // off-screen. At recT 0 it sits at the sphere centre (unchanged).
+    posScratch.current.set(bx, by, bz);
+    if (recT > 1e-4) {
+      const cam = state.camera;
+      fwdScratch.current.set(0, 0, -1).applyQuaternion(cam.quaternion);
+      frontScratch.current.copy(cam.position).addScaledVector(fwdScratch.current, CENTER_DISTANCE);
+      posScratch.current.lerp(frontScratch.current, recT);
+      // Billboard toward the camera as it centres so the flattened mark
+      // faces the viewer head-on at the centerpiece.
+      group.quaternion.identity().slerp(cam.quaternion, recT);
+    } else {
+      group.quaternion.identity();
+    }
+
     group.visible = true;
-    group.position.set(bx, by, bz);
-    group.scale.setScalar(half * 2 * planetScale);
+    group.position.copy(posScratch.current);
+    group.scale.setScalar(scale);
 
     // Keep the sim alive while the corridor is painting so the
     // pre-gateway low-ignite state actually swirls. We still pause

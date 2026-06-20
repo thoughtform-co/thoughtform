@@ -3839,6 +3839,38 @@ mount in the fallback corridor) and all `home-v2-flywheel-*` CSS.
 
 The v4 sections above stay as history; this revision supersedes them.
 
+## 2026-06-20 — WebGL hardening (corridor-mount root teardown)
+
+`useCorridorMount`'s nested-root recovery (`mountCorridor`) previously
+unmounted the old `createRoot` **synchronously** before recreating. Under
+Fast Refresh the parent's `dangerouslySetInnerHTML` REPLACES the
+placeholder node, so the `MutationObserver` fires `mountCorridor` during
+React's commit — and the synchronous `unmount()` produced a steady stream
+of `"Attempted to synchronously unmount a root while React was already
+rendering"` warnings plus real R3F root-thrash (repeatedly creating /
+destroying the corridor's WebGL context, a contributor to dev context
+loss).
+
+Fix: split the teardown by container identity. When the placeholder node
+was **replaced** (`!sameNode`, the common HMR trigger) the new root is
+wired up first and the **old root's unmount is deferred by a
+`queueMicrotask`** — the two roots live on different containers, so this
+is safe and never unmounts during render. The rare **same-node** recovery
+("root died but DOM node survived") still unmounts synchronously before
+recreating, so two roots never share one container. This mirrors the
+deferral patterns already used in this file's cleanup (0ms timer) and in
+`IntelligenceLayerPortal` (`queueMicrotask`). Behaviour is otherwise
+unchanged; this is the only sanctioned deviation from the
+"byte-identical extraction" rule noted in the hook's header.
+
+Sibling portals that unmounted synchronously in their cleanup
+(`BuildCasesPortal`, `ServicesPortal`, `CelestialPortals`, `PhaseGlyph`)
+were given the same `queueMicrotask` deferral in the same pass. In the
+same hardening pass the global `BrandmarkParticleCanvas` gained the WebGL
+context-loss/restore handler the corridor canvas already had, and the
+always-on `useLenis` + `useWorldDomTracker` rAF loops now pause while the
+tab is hidden.
+
 ## References
 
 - Star Atlas reference: [experience.staratlas.com](https://experience.staratlas.com/) — depth corridor pattern (camera through persistent world).

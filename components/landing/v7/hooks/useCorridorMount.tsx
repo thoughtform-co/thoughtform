@@ -34,11 +34,15 @@ import type { V7CorridorText } from "@/lib/v7-parse";
  *     coverage in `tests/visual/landing-corridor-smoke.spec.ts`
  *     speak directly to this hook's contract.
  *
- *   - The behavior is BYTE-IDENTICAL to the previous inline
- *     useLayoutEffect — same effect ordering, same guards, same
- *     teardown timer, same dependency list. Migration is a pure
- *     extraction; do not "improve" the safety logic during this
- *     pass without an ADR.
+ *   - The behavior was a pure extraction (BYTE-IDENTICAL to the
+ *     previous inline useLayoutEffect) EXCEPT for one sanctioned
+ *     2026-06-20 change (ADR-018): the recovery-path root teardown is
+ *     now deferred by a microtask in the node-REPLACED case to avoid
+ *     React's "synchronously unmount a root while rendering" warning +
+ *     the WebGL root-thrash it caused under Fast Refresh. The rare
+ *     same-node recovery stays synchronous. Do not otherwise "improve"
+ *     the safety logic (MutationObserver, pageshow, 0ms teardown timer,
+ *     hasContent guard) without an ADR.
  */
 export interface UseCorridorMountOptions {
   /** Element id of the corridor mount placeholder injected by
@@ -86,7 +90,27 @@ export function useCorridorMount(
       const hasContent = mount.childNodes.length > 0;
       if (sameNode && rootAlive && hasContent) return;
 
-      corridorRootRef.current?.unmount();
+      // Recovery / re-mount. The previous root must be torn down, but
+      // unmounting it SYNCHRONOUSLY here triggers React's "Attempted to
+      // synchronously unmount a root while React was already rendering"
+      // warning (and the real root-thrash it signals), because this runs
+      // from the MutationObserver firing during the parent's
+      // `dangerouslySetInnerHTML` commit — the common Fast-Refresh case,
+      // where the placeholder node is REPLACED (i.e. `!sameNode`).
+      //
+      // Split by container identity (2026-06-20, see ADR-018):
+      //   - Different node (the HMR placeholder-replacement trigger): wire
+      //     up the new root first, then DEFER the old root's unmount by a
+      //     microtask. The roots are on different containers, so this is
+      //     safe and never unmounts during render.
+      //   - Same node but content wiped ("root died, node survived"): must
+      //     unmount BEFORE recreating on the same container (else React
+      //     warns about two roots on one node). This rare recovery stays
+      //     synchronous — byte-identical to the original.
+      const prevRoot = corridorRootRef.current;
+      const sameNodeRecover = rootAlive && sameNode;
+      if (sameNodeRecover) prevRoot?.unmount();
+
       corridorMountNodeRef.current = mount;
       corridorRootRef.current = createRoot(mount);
       corridorRootRef.current.render(
@@ -94,6 +118,16 @@ export function useCorridorMount(
           <HomeCorridor text={corridorText} debug={debug} />
         </div>
       );
+
+      if (!sameNodeRecover && prevRoot) {
+        // Defer one MACROTASK (not a microtask): the orphaned root renders
+        // its own React tree asynchronously, so a microtask-deferred
+        // unmount can still land mid-render. setTimeout(0) lets both the
+        // parent commit AND the orphaned root's render settle first.
+        // `prevRoot` is a captured orphan on the OLD node (never reused),
+        // so no guard is needed. Matches this hook's cleanup teardown.
+        window.setTimeout(() => prevRoot.unmount(), 0);
+      }
     };
 
     mountCorridor();

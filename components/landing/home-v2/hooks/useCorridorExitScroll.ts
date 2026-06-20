@@ -9,16 +9,18 @@ import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
  *  Chosen so the BILLIONS title is essentially up (TITLE_IN ends 0.74)
  *  and the camera has all but landed before the instrument is held. */
 const DOCK_ENGAGE_EP = 0.72;
-/** Scroll runway (in viewports) over which the dissipate clock fills.
+/** Scroll runway (in viewports) over which the dissipate clock fills —
+ *  i.e. the "length of road" between the epilogue sphere ("everyone is
+ *  racing") and the settled Services centerpiece. EVERYTHING on the seam
+ *  is keyed to this single clock (camera fly-in, shell scatter, the core
+ *  shrink-to-centre, and the Services copy entrance), so widening it
+ *  stretches the whole transition over more scroll WITHOUT changing any
+ *  animation curve — the dive just feels less rushed / more spacious.
  *
- *  ADR-021 amendment (2026-06-19): retired the in-#services brandmark
- *  re-centre / hold / pixel-field / ambient beats — `#services` is now
- *  a content section (Keynote / Workshop / Embedded terminal cards),
- *  NOT a brandmark runway. The dissipate is intentionally SHORT so
- *  the sphere zoom-in resolves as the section's header reaches the
- *  viewport top; the brandmark fades out with the dissipating sphere
- *  rather than re-centring into the section. */
-const DISSIPATE_SCROLL_SPAN_VH = 0.9;
+ *  2026-06-20: lengthened from 0.9 → 1.6 so the core has more road to
+ *  shrink in over (the prior 0.9 made the two sections feel jammed
+ *  together). This is the single knob for "make the road longer/shorter". */
+const DISSIPATE_SCROLL_SPAN_VH = 1.6;
 /** Engage the fixed dock slightly BEFORE #services physically enters
  *  the viewport. See ADR-021 history for the rationale. */
 const DOCK_PRELOAD_VH = 0.25;

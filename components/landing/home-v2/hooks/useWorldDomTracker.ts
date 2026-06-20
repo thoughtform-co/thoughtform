@@ -411,8 +411,26 @@ export function useWorldDomTracker(
 
     rafRef.current = requestAnimationFrame(tick);
 
+    // Pause the per-frame projection loop while the tab is hidden — it
+    // projects ~N anchors every frame and is pure overhead in the
+    // background. Safe to hard-stop: `tick` carries no integrated state
+    // (it re-reads `paintProgress` and projects from scratch each frame),
+    // so the first frame after resume is fully correct with no snap.
+    const onVisibility = () => {
+      if (document.hidden) {
+        if (rafRef.current != null) {
+          cancelAnimationFrame(rafRef.current);
+          rafRef.current = null;
+        }
+      } else if (rafRef.current == null) {
+        rafRef.current = requestAnimationFrame(tick);
+      }
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+
     return () => {
       window.removeEventListener("resize", onResize);
+      document.removeEventListener("visibilitychange", onVisibility);
       if (rafRef.current != null) {
         cancelAnimationFrame(rafRef.current);
         rafRef.current = null;

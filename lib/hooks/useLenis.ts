@@ -27,8 +27,6 @@ export function useLenis(): UseLenisReturn {
       rafRef.current = requestAnimationFrame(raf);
     }
 
-    rafRef.current = requestAnimationFrame(raf);
-
     // Track scroll progress
     const onScroll = () => {
       const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
@@ -36,12 +34,34 @@ export function useLenis(): UseLenisReturn {
       setScrollProgress(Math.min(1, Math.max(0, progress)));
     };
 
+    // Pause the Lenis rAF while the tab is hidden — it integrates smooth
+    // scroll every frame and is pure background overhead otherwise. The
+    // rAF `time` is the document timeline (frozen while hidden), so the
+    // first frame after resume gets a continuous timestamp (no teleport);
+    // `onScroll()` on resume refreshes progress from the live `scrollY`.
+    const start = () => {
+      if (!rafRef.current) {
+        rafRef.current = requestAnimationFrame(raf);
+        onScroll();
+      }
+    };
+    const stop = () => {
+      if (rafRef.current) {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = 0;
+      }
+    };
+    const onVisibility = () => (document.hidden ? stop() : start());
+
+    rafRef.current = requestAnimationFrame(raf);
     window.addEventListener("scroll", onScroll, { passive: true });
+    document.addEventListener("visibilitychange", onVisibility);
     onScroll(); // Initial call
 
     return () => {
       cancelAnimationFrame(rafRef.current);
       window.removeEventListener("scroll", onScroll);
+      document.removeEventListener("visibilitychange", onVisibility);
       lenis.destroy();
     };
   }, []);

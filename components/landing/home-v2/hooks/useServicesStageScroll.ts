@@ -29,6 +29,17 @@ const SHRINK_END = 0.97;
 const FADE_START = 0.4;
 const FADE_END = 0.65;
 
+/**
+ * Services content entrance (2026-06-20). The list + paragraph fade/rise
+ * IN off the corridor-exit dissipate, DELAYED so the in-sphere particle
+ * core has already shrunk to the centred centerpiece before the copy
+ * arrives. `smootherstep` (C2-continuous) gives a gentle ease-in/out, and
+ * the late start (`CONTENT_IN_START`) is the "delay". `--svc-content-in`
+ * (0..1) is mapped to opacity + a small upward translate in `services.css`.
+ */
+const CONTENT_IN_START = 0.62;
+const CONTENT_IN_END = 1.0;
+
 function clamp01(v: number): number {
   return v < 0 ? 0 : v > 1 ? 1 : v;
 }
@@ -38,6 +49,15 @@ function smoothstep(edge0: number, edge1: number, x: number): number {
   if (edge1 <= edge0) return x >= edge1 ? 1 : 0;
   const t = clamp01((x - edge0) / (edge1 - edge0));
   return t * t * (3 - 2 * t);
+}
+
+/** Smootherstep on [edge0, edge1] — C2-continuous (zero 1st AND 2nd
+ *  derivative at both ends), so reveals read as a gentle settle rather
+ *  than the slight kick smoothstep has at its endpoints. */
+function smootherstep(edge0: number, edge1: number, x: number): number {
+  if (edge1 <= edge0) return x >= edge1 ? 1 : 0;
+  const t = clamp01((x - edge0) / (edge1 - edge0));
+  return t * t * t * (t * (t * 6 - 15) + 10);
 }
 
 /**
@@ -79,6 +99,7 @@ export function useServicesStageScroll(stageRef: RefObject<HTMLElement | null>):
     let currentStep = -1;
     let currentShrink = -1;
     let currentFade = -1;
+    let currentContentIn = -1;
 
     const isInert = () =>
       (window.matchMedia?.("(max-width: 960px)").matches ?? false) ||
@@ -101,16 +122,25 @@ export function useServicesStageScroll(stageRef: RefObject<HTMLElement | null>):
       }
     };
 
+    const setContentIn = (stage: HTMLElement, v: number) => {
+      if (Math.abs(v - currentContentIn) >= 0.001) {
+        stage.style.setProperty("--svc-content-in", v.toFixed(4));
+        currentContentIn = v;
+      }
+    };
+
     const write = () => {
       frame = 0;
       if (disposed) return;
       const stage = stageRef.current;
       if (!stage) return;
 
-      // Static layouts (mobile / reduced motion): no stepping, no shrink.
+      // Static layouts (mobile / reduced motion): no stepping, no shrink,
+      // content fully in (no scroll-driven entrance).
       if (isInert()) {
         setStep(stage, 0);
         setArrive(stage, 1, 1);
+        setContentIn(stage, 1);
         return;
       }
 
@@ -126,6 +156,9 @@ export function useServicesStageScroll(stageRef: RefObject<HTMLElement | null>):
         smoothstep(SHRINK_START, SHRINK_END, dissipate),
         smoothstep(FADE_START, FADE_END, dissipate)
       );
+      // Services copy entrance — delayed + smootherstep so the list +
+      // paragraph rise in gently AFTER the core has shrunk to centre.
+      setContentIn(stage, smootherstep(CONTENT_IN_START, CONTENT_IN_END, dissipate));
 
       // Active step — from the runway scroll position.
       const runway = stage.parentElement; // .services-stage-root (the tall slot)

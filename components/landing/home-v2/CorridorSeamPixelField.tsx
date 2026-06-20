@@ -112,12 +112,15 @@ export function CorridorSeamPixelField() {
 
     let raf = 0;
     let disposed = false;
-    let dpr = window.devicePixelRatio || 1;
+    // Cap DPR at 2 (matches ServicesBrandmarkField) — above 2x the gain is
+    // imperceptible for this brief 2D seam effect but the fill cost scales
+    // with the square of DPR (a DPR-3 phone would allocate 2.25x the pixels).
+    let dpr = Math.min(window.devicePixelRatio || 1, 2);
     let vw = window.innerWidth;
     let vh = window.innerHeight;
 
     const resize = () => {
-      dpr = window.devicePixelRatio || 1;
+      dpr = Math.min(window.devicePixelRatio || 1, 2);
       vw = window.innerWidth;
       vh = window.innerHeight;
       canvas.width = Math.floor(vw * dpr);

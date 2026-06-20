@@ -42,6 +42,14 @@ export function BrandmarkParticleCanvas({
 }: BrandmarkParticleCanvasProps = {}) {
   const mode = useBrandmarkJourneyStore((s) => s.mode);
   const [webglOK, setWebglOK] = useState<boolean | null>(null);
+  // WebGL context-loss recovery (mirrors DepthGatewayScene). This canvas
+  // runs `frameloop="always"`; without a handler a transient context loss
+  // (GPU reset, tab backgrounding, memory pressure) would leave it
+  // permanently black. On restore we bump `glEpoch` to remount the Canvas
+  // so the `useMemo` geometry rebuilds against the fresh context. The
+  // painters dispose cleanly and read the journey transform from the store
+  // every frame, so the remount re-syncs with no state to migrate.
+  const [glEpoch, setGlEpoch] = useState(0);
   // W4 (plan 03adb0dd) — corridor handoff hardening. The home-v2
   // depth corridor sets `data-brandmark-mode="off"` on `<html>`
   // whenever its engagement is armed/active (see HomeCorridor.tsx),
@@ -122,7 +130,15 @@ export function BrandmarkParticleCanvas({
         }
       `}</style>
       <Canvas
+        key={glEpoch}
         orthographic
+        onCreated={({ gl }) => {
+          const canvas = gl.domElement;
+          const onLost = (e: Event) => e.preventDefault();
+          const onRestored = () => setGlEpoch((n) => n + 1);
+          canvas.addEventListener("webglcontextlost", onLost as EventListener, false);
+          canvas.addEventListener("webglcontextrestored", onRestored, false);
+        }}
         camera={{
           // Identity projection — the vertex shader does pixel-to-NDC
           // conversion directly via the `uViewport` uniform, so the

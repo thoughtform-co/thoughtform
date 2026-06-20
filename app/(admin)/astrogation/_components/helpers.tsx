@@ -123,7 +123,11 @@ export function HUDWrapper({
       className={className}
       style={style}
     >
-      {children}
+      {/* `@thoughtform/ui` resolves a different `@types/react` (v18) than
+          this app (v19), so its `ReactNode` lacks `bigint` and a plain
+          pass-through fails the production type-check. Cast to Frame's own
+          children type to bridge the dual-version gap (no runtime effect). */}
+      {children as React.ComponentProps<typeof Frame>["children"]}
     </Frame>
   );
 }
