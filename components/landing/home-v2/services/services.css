@@ -93,6 +93,18 @@
   width: clamp(220px, 26vw, 400px);
   aspect-ratio: 1;
   color: var(--gold); /* tints the SVG fallback */
+  /* Dive-in handoff: the centerpiece brandmark shrinks from sphere-scale
+   * to its parked size + fades in as the corridor sphere expands into
+   * #services, picking up the handoff from the inside-sphere mark that
+   * fades out across the same dissipate. `--svc-arrive` (0..1) is published
+   * by useServicesStageScroll from `--corridor-dissipate` (1 = parked).
+   * Tune `--svc-arrive-from` for how large / "sphere-sized" the arrival
+   * reads. The corridor/sphere are untouched — this only reads the clock. */
+  --svc-arrive-from: 2.1;
+  transform: scale(calc(1 + (var(--svc-arrive-from) - 1) * (1 - var(--svc-arrive, 1))));
+  transform-origin: center center;
+  opacity: var(--svc-arrive-op, 1);
+  will-change: transform, opacity;
 }
 .services-stage__brandmark__canvas,
 .services-stage__brandmark__fallback {
@@ -198,6 +210,10 @@
   .services-stage__brandmark {
     grid-column: 1;
     width: min(56vw, 260px);
+    /* No dive-in shrink on mobile (no pinned corridor seam here). */
+    transform: none;
+    opacity: 1;
+    will-change: auto;
   }
   .services-stage__list {
     grid-column: 1;
@@ -252,6 +268,12 @@
     position: static;
     opacity: 1;
     transition: none;
+  }
+  .services-stage__brandmark {
+    /* No dive-in shrink under reduced motion — park the centerpiece. */
+    transform: none;
+    opacity: 1;
+    will-change: auto;
   }
   .services-stage__brandmark__fallback {
     transition: none;
