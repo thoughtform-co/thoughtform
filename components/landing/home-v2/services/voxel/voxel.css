@@ -1,0 +1,133 @@
+/* Voxel media-block effect — lab + shared layout.
+   Prototype-scoped; production port restyles services.css per ADR-008. */
+
+.voxel-lab {
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(120% 90% at 50% 40%, #2a160d 0%, #140b07 55%, #0a0604 100%);
+  overflow: hidden;
+  color: var(--paper, #ebe3d6);
+}
+
+/* Canvas stage fills the viewport behind the HUD chrome. */
+.voxel-lab__stage {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+.voxel-lab__canvas {
+  position: absolute;
+  inset: 0;
+}
+
+/* Block labels overlaid below the row. */
+.voxel-lab__labels {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 8%;
+  z-index: 3;
+  display: flex;
+  justify-content: center;
+  gap: clamp(1rem, 8vw, 7rem);
+  pointer-events: none;
+  font-family: var(--mono, "PT Mono", monospace);
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(235, 227, 214, 0.66);
+}
+
+/* --- dev controls panel (top-left, slim) --- */
+.voxel-lab__controls {
+  position: absolute;
+  top: 64px;
+  left: 24px;
+  z-index: 5;
+  width: 232px;
+  padding: 14px 16px;
+  border: 1px solid rgba(235, 227, 214, 0.18);
+  border-radius: 8px;
+  background: rgba(10, 8, 6, 0.62);
+  backdrop-filter: blur(10px);
+  font-family: var(--mono, "PT Mono", monospace);
+  font-size: 0.66rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(235, 227, 214, 0.82);
+}
+
+.voxel-lab__controls h2 {
+  margin: 0 0 10px;
+  font-size: 0.62rem;
+  letter-spacing: 0.22em;
+  color: var(--gold, #caa554);
+}
+
+.voxel-lab__row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 8px;
+  margin: 7px 0;
+}
+
+.voxel-lab__row span:last-child {
+  color: rgba(235, 227, 214, 0.55);
+  font-variant-numeric: tabular-nums;
+}
+
+.voxel-lab__row input[type="range"] {
+  grid-column: 1 / -1;
+  width: 100%;
+  accent-color: var(--gold, #caa554);
+}
+
+.voxel-lab__hint {
+  margin-top: 10px;
+  font-size: 0.6rem;
+  line-height: 1.5;
+  letter-spacing: 0.04em;
+  text-transform: none;
+  color: rgba(235, 227, 214, 0.42);
+}
+
+/* --- static fallback grid (no WebGL / reduced motion) --- */
+.voxel-fallback {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 18px;
+  width: min(1100px, 90vw);
+  margin: 14vh auto 0;
+}
+
+.voxel-fallback__card {
+  margin: 0;
+  position: relative;
+  border: 1px solid rgba(235, 227, 214, 0.16);
+  border-radius: 6px;
+  overflow: hidden;
+  background: #160d08;
+}
+
+.voxel-fallback__media {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+}
+
+.voxel-fallback__label {
+  position: absolute;
+  left: 12px;
+  bottom: 10px;
+  font-family: var(--mono, "PT Mono", monospace);
+  font-size: 0.66rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--paper, #ebe3d6);
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.8);
+}
