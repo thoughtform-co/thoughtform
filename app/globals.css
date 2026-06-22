@@ -3,14 +3,13 @@
    Modular CSS Architecture
    ═══════════════════════════════════════════════════════════════ */
 
-/* Tailwind Base */
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
 /* ═══════════════════════════════════════════════════════════════
    MODULAR CSS IMPORTS
-   Import order matters - variables must come first
+   Import order matters - variables must come first.
+   NOTE: @import must precede @tailwind — postcss-import silently drops
+   any @import that follows a non-@import/@charset statement, which
+   previously dropped variables.css and left design tokens (--dawn,
+   --gold, …) undefined, rendering token-colored text as black.
    ═══════════════════════════════════════════════════════════════ */
 
 /* 1. Design Tokens & CSS Variables */
@@ -30,3 +29,8 @@
 
 /* 6. Navigation Cockpit V2 (hero, bridge, manifesto, modules) */
 @import "./styles/navigation.css";
+
+/* Tailwind layers (must come AFTER @import per postcss-import) */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
