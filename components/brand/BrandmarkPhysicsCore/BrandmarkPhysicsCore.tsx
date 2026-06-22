@@ -85,15 +85,54 @@ const IGNITE_ON_FORCES: BrandmarkPhysicsCoreForces = {
   turbulence: 0.012,
 };
 
-/** Default desktop / mobile particle counts. Tuned to balance the
- *  cloud's visual weight against the surrounding substrate gimbal
- *  sphere — at higher densities (e.g. v7 silhouette's 1900) the
- *  brandmark reads heavier than the gimbal's hairline wireframe
- *  and the composition tips brandmark-forward. At ~1300 the
- *  silhouette still reads solid (thanks to the soft-halo fragment
- *  + per-particle twinkle) but the cloud sits at the same visual
- *  weight as the gimbal sphere it's nested inside. */
-export const BRANDMARK_PHYSICS_CORE_COUNT_DESKTOP = 1300;
+/** Fraction of the sim's MOTION forces (turbulence + flow) retained at the
+ *  parked Services centerpiece (cleanField → 1). 0 = dead still: the strong
+ *  return-to-home grip pins every particle exactly at home, killing the fast
+ *  per-particle "wobble"; ~0.04–0.08 would leave a barely-there shimmer. The
+ *  complaint was the fast jitter, so this defaults to 0. Range 0..0.15.
+ *  Gated by cleanField, so the corridor / sphere (cleanField = 0) keep the full
+ *  IGNITE_ON breathing — byte-identical. `returnStrength` is never damped, so
+ *  the cloud is HELD at home rather than loosened. */
+const CLEAN_FIELD_FORCE_FLOOR = 0;
+
+/** Default desktop / mobile particle counts.
+ *
+ *  Density rev. (2026-06-22): bumped 1300 → 3600 so the mark reads as a
+ *  FINE, EVENLY-SPREAD particle field rather than a sparse scatter of fat
+ *  "Christmas-light" beads — the Services centerpiece reference is a dense
+ *  stipple (vos9x.com), and the clean-field path (`uCleanField`) shrinks the
+ *  dots there, which only reads well once enough points carry the fill.
+ *
+ *  Free GPU compute: `GPGPUParticleSimulation` rounds the particle count up
+ *  to a power-of-two texture (1300 already allocates a 64×64 = 4096-texel
+ *  sim and the compute pass runs over ALL 4096 texels regardless). Drawing
+ *  3600 instead of 1300 just renders more of the particles the sim is
+ *  already integrating — no extra compute, only ~2300 more cheap point
+ *  verts. Anything up to 4096 is free on desktop; keep a little headroom.
+ *
+ *  Composition balance is preserved: 3600 still sits well under the
+ *  surrounding gimbal's dotted shell (9600 dots, see
+ *  `SUBSTRATE_GYRO_DOTTED_SHELL_COUNT_DESKTOP`), so the brandmark stays the
+ *  lighter luminous core nested inside the heavier cage during the
+ *  corridor / sphere phase.
+ *
+ *  Mobile 650 → 1000 stays inside the 32×32 = 1024-texel sim (same
+ *  free-compute logic); going past 1024 would jump it to a 64×64 sim
+ *  (4× the compute) on phones, so it's held under that ceiling.
+ *
+ *  Density decoupling (2026-06-22c): the count is the GLOBAL particle budget,
+ *  shared by the corridor AND the parked centerpiece. To make the Services
+ *  centerpiece DENSE while keeping the corridor (Navigate / Encode / sphere)
+ *  CALM, the count is large (6000) and the CORRIDOR draws only a fraction of it
+ *  via the `corridorKeep` rank-clip — the actor passes ~0.27
+ *  (`CORRIDOR_DRAW_TARGET / count`), so the corridor still draws ~1600 (calm, ≈
+ *  the prior look) — while the parked centerpiece draws `cleanFieldKeep` (~0.65)
+ *  ≈ 3900. So raise the count to add centerpiece density; the corridor
+ *  self-corrects via `corridorKeep`. NOTE: 6000 crosses the GPGPU sim texture
+ *  from 64×64 (4096) to 128×128 (16384) — ~4× the per-frame compute (a tiny
+ *  offscreen render), desktop only. Mobile (650) stays in 32×32 and its WebGL
+ *  core is only the reduced-motion fallback (corridorKeep resolves to 1). */
+export const BRANDMARK_PHYSICS_CORE_COUNT_DESKTOP = 6000;
 export const BRANDMARK_PHYSICS_CORE_COUNT_MOBILE = 650;
 
 /** Default per-particle CSS pixel size — the PARKED BASELINE (the
@@ -181,6 +220,21 @@ export interface BrandmarkPhysicsCoreProps {
   /** Live ref for `cleanField`. Read every frame inside `useFrame`. Wins
    *  over the static `cleanField` prop when provided. */
   cleanFieldRef?: ReadonlyRef<number>;
+  /** Surviving particle fraction in the CORRIDOR (`cleanField` = 0). 1 = no
+   *  thinning (default — lab + other consumers unchanged). Production sets this
+   *  < 1 to thin a LARGE global count back down so Navigate / Encode / sphere
+   *  stay calm while the centerpiece draws densely from the same cloud. */
+  corridorKeep?: number;
+  /** Surviving particle fraction at the parked centerpiece (`cleanField` = 1).
+   *  1 = no thinning. Production default 0.65. Tunable so the lab can dial the
+   *  centerpiece spacing without touching the corridor (gated by cleanField). */
+  cleanFieldKeep?: number;
+  /** Dot-size multiplier at the parked centerpiece (`cleanField` = 1).
+   *  Production default 0.50 (fine dots). */
+  cleanFieldDotScale?: number;
+  /** Dot-falloff inner edge at the parked centerpiece (`cleanField` = 1) —
+   *  higher = crisper / tighter dots. Production default 0.40. */
+  cleanFieldEdge?: number;
   /** When true, the GPGPU sim is seeded with the particles already AT
    *  their home positions (instead of a scattered sphere of dust). Use
    *  for the corridor morph, where the mark must read as the brandmark
@@ -333,6 +387,10 @@ export function BrandmarkPhysicsCore({
   streamRef,
   cleanField = 0,
   cleanFieldRef,
+  corridorKeep = 1,
+  cleanFieldKeep = 0.65,
+  cleanFieldDotScale = 0.5,
+  cleanFieldEdge = 0.4,
   seedAtHome = false,
   pointSize = DEFAULT_POINT_SIZE_PX,
   pointSizeRef,
@@ -494,6 +552,10 @@ export function BrandmarkPhysicsCore({
         uGlitch: { value: glitch },
         uStream: { value: stream },
         uCleanField: { value: cleanField },
+        uCorridorKeep: { value: corridorKeep },
+        uCleanFieldKeep: { value: cleanFieldKeep },
+        uCleanFieldDotScale: { value: cleanFieldDotScale },
+        uCleanFieldEdge: { value: cleanFieldEdge },
         uTime: { value: 0 },
       },
       vertexShader: brandmarkCoreVertexShader,
@@ -573,6 +635,10 @@ export function BrandmarkPhysicsCore({
       mat.uniforms.uGlitch.value = resolvedGlitch;
       mat.uniforms.uStream.value = resolvedStream;
       mat.uniforms.uCleanField.value = resolvedCleanField;
+      mat.uniforms.uCorridorKeep.value = corridorKeep;
+      mat.uniforms.uCleanFieldKeep.value = cleanFieldKeep;
+      mat.uniforms.uCleanFieldDotScale.value = cleanFieldDotScale;
+      mat.uniforms.uCleanFieldEdge.value = cleanFieldEdge;
       mat.uniforms.uTime.value = state.clock.elapsedTime;
       return;
     }
@@ -590,12 +656,19 @@ export function BrandmarkPhysicsCore({
       const t = clamp01(igniteValue);
       const offForces = { ...IGNITE_OFF_FORCES, ...forces?.off };
       const onForces = { ...IGNITE_ON_FORCES, ...forces?.on };
+      // Centerpiece calm: as the mark settles into #services (cleanField → 1)
+      // damp the MOTION forces (turbulence + flow) toward CLEAN_FIELD_FORCE_FLOOR
+      // so the unchanged return-to-home grip holds every particle dead-still —
+      // this kills the fast per-particle wobble without loosening the cloud.
+      // Corridor / sphere: cleanField = 0 → calm = 1 → forces are the exact
+      // pre-change lerp (byte-identical).
+      const calm = 1 - (1 - CLEAN_FIELD_FORCE_FLOOR) * clamp01(resolvedCleanField);
       sim.updateUniforms({
         time: state.clock.elapsedTime,
         deltaTime: Math.min(0.05, Math.max(0.001, delta)),
-        flowStrength: lerp(offForces.flowStrength, onForces.flowStrength, t),
+        flowStrength: lerp(offForces.flowStrength, onForces.flowStrength, t) * calm,
         returnStrength: lerp(offForces.returnStrength, onForces.returnStrength, t),
-        turbulence: lerp(offForces.turbulence, onForces.turbulence, t),
+        turbulence: lerp(offForces.turbulence, onForces.turbulence, t) * calm,
         pointerStrength: 0,
       });
       sim.compute();
@@ -610,6 +683,10 @@ export function BrandmarkPhysicsCore({
     mat.uniforms.uGlitch.value = resolvedGlitch;
     mat.uniforms.uStream.value = resolvedStream;
     mat.uniforms.uCleanField.value = resolvedCleanField;
+    mat.uniforms.uCorridorKeep.value = corridorKeep;
+    mat.uniforms.uCleanFieldKeep.value = cleanFieldKeep;
+    mat.uniforms.uCleanFieldDotScale.value = cleanFieldDotScale;
+    mat.uniforms.uCleanFieldEdge.value = cleanFieldEdge;
     mat.uniforms.uTime.value = state.clock.elapsedTime;
   });
 

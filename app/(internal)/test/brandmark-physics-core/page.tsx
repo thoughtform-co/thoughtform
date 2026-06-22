@@ -8,6 +8,11 @@
  * Goals:
  *   - Dial the assemble envelope (force coefficients at ignite=0
  *     vs ignite=1) until the burst-into-focus reads right.
+ *   - Tune the parked #services CENTERPIECE look (clean-field thinning,
+ *     dot scale + crispness, gentle 3D drift) — "Centerpiece view" snaps
+ *     to the production parked state so you start from the real mark.
+ *   - Save a tuning combo to Supabase and get a short shareable id
+ *     (load it back by pasting the id) — see `brandmark_presets`.
  *   - Compare against the flat SVG (toggle the bottom-left chip).
  *   - Inspect against the wireframe icosphere context that wraps
  *     the core in the production scene.
@@ -15,22 +20,24 @@
  * Internal route only — blocked from production by `middleware.ts`.
  */
 
-import { Canvas } from "@react-three/fiber";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { Canvas, useFrame } from "@react-three/fiber";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import * as THREE from "three";
 import {
   BrandmarkPhysicsCore,
   BRANDMARK_PHYSICS_CORE_COUNT_DESKTOP,
 } from "@/components/brand/BrandmarkPhysicsCore";
 import { BrandmarkGlyph } from "@/components/landing/v7/BrandmarkGlyph";
+import { supabase } from "@/lib/supabase";
 
 const DEFAULTS = {
   // Particles
   count: BRANDMARK_PHYSICS_CORE_COUNT_DESKTOP,
   scatterRadius: 0.55,
-  // (BRANDMARK_PHYSICS_CORE_COUNT_DESKTOP = 1300 — balanced against
-  //  the substrate gimbal so the brandmark reads as the bright core,
-  //  not the heaviest element in the composition.)
+  // (BRANDMARK_PHYSICS_CORE_COUNT_DESKTOP = 3600 — dense enough that the
+  //  Services centerpiece reads as a fine, evenly-spread field; still well
+  //  under the gimbal's 9600-dot shell so the brandmark stays the lighter
+  //  bright core, not the heaviest element in the composition.)
   bulge: 0.18,
   thickness: 0.06,
 
@@ -39,6 +46,19 @@ const DEFAULTS = {
   color: "#caa554",
   accentColor: "#e9c97a",
   opacity: 0.78,
+
+  // Centerpiece (Services parked state — cleanField 0 = corridor, 1 = parked)
+  cleanField: 0,
+  depth: 1,
+  corridorKeep: 1, // surviving particle fraction at clean=0 (corridor thinning)
+  cleanFieldKeep: 0.65, // surviving particle fraction at clean=1 (spacing)
+  cleanFieldDotScale: 0.5, // dot-size mult at clean=1 (fineness)
+  cleanFieldEdge: 0.4, // dot falloff inner edge at clean=1 (crispness)
+  // Centerpiece drift — lab replica of the actor's gentle 3D tilt (× cleanField)
+  driftAmpX: 0.16,
+  driftAmpY: 0.21,
+  driftPeriodX: 17,
+  driftPeriodY: 13,
 
   // State
   ignite: 1,
@@ -76,6 +96,23 @@ export default function BrandmarkPhysicsCorePage() {
   const [color, setColor] = useState(DEFAULTS.color);
   const [accentColor, setAccentColor] = useState(DEFAULTS.accentColor);
   const [opacity, setOpacity] = useState(DEFAULTS.opacity);
+  const [cleanField, setCleanField] = useState(DEFAULTS.cleanField);
+  const [depth, setDepth] = useState(DEFAULTS.depth);
+  const [corridorKeep, setCorridorKeep] = useState(DEFAULTS.corridorKeep);
+  const [cleanFieldKeep, setCleanFieldKeep] = useState(DEFAULTS.cleanFieldKeep);
+  const [cleanFieldDotScale, setCleanFieldDotScale] = useState(DEFAULTS.cleanFieldDotScale);
+  const [cleanFieldEdge, setCleanFieldEdge] = useState(DEFAULTS.cleanFieldEdge);
+  const [driftAmpX, setDriftAmpX] = useState(DEFAULTS.driftAmpX);
+  const [driftAmpY, setDriftAmpY] = useState(DEFAULTS.driftAmpY);
+  const [driftPeriodX, setDriftPeriodX] = useState(DEFAULTS.driftPeriodX);
+  const [driftPeriodY, setDriftPeriodY] = useState(DEFAULTS.driftPeriodY);
+
+  // Presets (Supabase save / load with a short shareable slug)
+  const [presetLabel, setPresetLabel] = useState("");
+  const [presetSlug, setPresetSlug] = useState("");
+  const [loadSlug, setLoadSlug] = useState("");
+  const [presetStatus, setPresetStatus] = useState("");
+  const [presetBusy, setPresetBusy] = useState(false);
 
   const [ignite, setIgnite] = useState(DEFAULTS.ignite);
   const [reducedMotion, setReducedMotion] = useState(DEFAULTS.reducedMotion);
@@ -114,6 +151,16 @@ export default function BrandmarkPhysicsCorePage() {
     setColor(DEFAULTS.color);
     setAccentColor(DEFAULTS.accentColor);
     setOpacity(DEFAULTS.opacity);
+    setCleanField(DEFAULTS.cleanField);
+    setDepth(DEFAULTS.depth);
+    setCorridorKeep(DEFAULTS.corridorKeep);
+    setCleanFieldKeep(DEFAULTS.cleanFieldKeep);
+    setCleanFieldDotScale(DEFAULTS.cleanFieldDotScale);
+    setCleanFieldEdge(DEFAULTS.cleanFieldEdge);
+    setDriftAmpX(DEFAULTS.driftAmpX);
+    setDriftAmpY(DEFAULTS.driftAmpY);
+    setDriftPeriodX(DEFAULTS.driftPeriodX);
+    setDriftPeriodY(DEFAULTS.driftPeriodY);
   }, []);
 
   const resetForces = useCallback(() => {
@@ -143,6 +190,165 @@ export default function BrandmarkPhysicsCorePage() {
     setReducedMotion(DEFAULTS.reducedMotion);
     setPaused(DEFAULTS.paused);
   }, [resetParticles, resetRender, resetForces, resetContext]);
+
+  // Snap to the production parked-#services centerpiece look (the values the
+  // actor drives at recT=1) so you start tuning from the real mark.
+  const setCenterpieceView = useCallback(() => {
+    setIgnite(1); // assembled
+    setCleanField(1); // parked
+    setDepth(1); // 3D dome kept
+    setOpacity(0.9); // CENTER_OPACITY (decoupled centerpiece opacity)
+    setPointSize(4.0); // CORE_POINT_SIZE_3D
+    setCount(6000); // BRANDMARK_PHYSICS_CORE_COUNT_DESKTOP
+    setCorridorKeep(0.27); // ≈ CORRIDOR_DRAW_TARGET / count (corridor stays calm)
+    setCleanFieldKeep(0.65); // CLEAN_FIELD_KEEP
+    setCleanFieldDotScale(0.5);
+    setCleanFieldEdge(0.4);
+  }, []);
+
+  // Collect the current brandmark-appearance state into a flat settings object.
+  // Keys map 1:1 to the production constants (see the panel's "production map"
+  // note), so a shared id translates straight into the real centerpiece tune.
+  const buildSettings = useCallback(
+    () => ({
+      v: 1,
+      target: "services-centerpiece",
+      count,
+      cleanField,
+      corridorKeep,
+      cleanFieldKeep,
+      cleanFieldDotScale,
+      cleanFieldEdge,
+      pointSize,
+      opacity,
+      color,
+      accentColor,
+      depth,
+      bulge,
+      thickness,
+      ignite,
+      scatterRadius,
+      driftAmpX,
+      driftAmpY,
+      driftPeriodX,
+      driftPeriodY,
+    }),
+    [
+      count,
+      cleanField,
+      corridorKeep,
+      cleanFieldKeep,
+      cleanFieldDotScale,
+      cleanFieldEdge,
+      pointSize,
+      opacity,
+      color,
+      accentColor,
+      depth,
+      bulge,
+      thickness,
+      ignite,
+      scatterRadius,
+      driftAmpX,
+      driftAmpY,
+      driftPeriodX,
+      driftPeriodY,
+    ]
+  );
+
+  const applySettings = useCallback((s: Record<string, unknown>) => {
+    const num = (k: string, fallback: number) =>
+      typeof s[k] === "number" ? (s[k] as number) : fallback;
+    const str = (k: string, fallback: string) =>
+      typeof s[k] === "string" ? (s[k] as string) : fallback;
+    setCount(num("count", DEFAULTS.count));
+    setCleanField(num("cleanField", DEFAULTS.cleanField));
+    setCorridorKeep(num("corridorKeep", DEFAULTS.corridorKeep));
+    setCleanFieldKeep(num("cleanFieldKeep", DEFAULTS.cleanFieldKeep));
+    setCleanFieldDotScale(num("cleanFieldDotScale", DEFAULTS.cleanFieldDotScale));
+    setCleanFieldEdge(num("cleanFieldEdge", DEFAULTS.cleanFieldEdge));
+    setPointSize(num("pointSize", DEFAULTS.pointSize));
+    setOpacity(num("opacity", DEFAULTS.opacity));
+    setColor(str("color", DEFAULTS.color));
+    setAccentColor(str("accentColor", DEFAULTS.accentColor));
+    setDepth(num("depth", DEFAULTS.depth));
+    setBulge(num("bulge", DEFAULTS.bulge));
+    setThickness(num("thickness", DEFAULTS.thickness));
+    setIgnite(num("ignite", DEFAULTS.ignite));
+    setScatterRadius(num("scatterRadius", DEFAULTS.scatterRadius));
+    setDriftAmpX(num("driftAmpX", DEFAULTS.driftAmpX));
+    setDriftAmpY(num("driftAmpY", DEFAULTS.driftAmpY));
+    setDriftPeriodX(num("driftPeriodX", DEFAULTS.driftPeriodX));
+    setDriftPeriodY(num("driftPeriodY", DEFAULTS.driftPeriodY));
+  }, []);
+
+  const handleSavePreset = useCallback(async () => {
+    if (!supabase) {
+      setPresetStatus("Supabase not configured (.env.local)");
+      return;
+    }
+    setPresetBusy(true);
+    setPresetStatus("Saving…");
+    const settings = buildSettings();
+    const label = presetLabel.trim().slice(0, 120);
+    for (let attempt = 0; attempt < 5; attempt++) {
+      let slug = "";
+      for (let i = 0; i < 6; i++) slug += ((Math.random() * 36) | 0).toString(36);
+      const { error } = await supabase
+        .from("brandmark_presets")
+        .insert({ slug, label: label || null, settings });
+      if (!error) {
+        setPresetSlug(slug);
+        setLoadSlug(slug);
+        setPresetStatus(`Saved — share this id: ${slug}`);
+        setPresetBusy(false);
+        return;
+      }
+      if (error.code === "23505") continue; // slug collision → retry
+      setPresetStatus(`Save failed: ${error.message}`);
+      setPresetBusy(false);
+      return;
+    }
+    setPresetStatus("Save failed: too many slug collisions");
+    setPresetBusy(false);
+  }, [buildSettings, presetLabel]);
+
+  const handleLoadPreset = useCallback(
+    async (rawSlug: string) => {
+      if (!supabase) {
+        setPresetStatus("Supabase not configured (.env.local)");
+        return;
+      }
+      const slug = rawSlug.trim().toLowerCase();
+      if (!slug) {
+        setPresetStatus("Enter an id to load");
+        return;
+      }
+      setPresetBusy(true);
+      setPresetStatus(`Loading ${slug}…`);
+      const { data, error } = await supabase
+        .from("brandmark_presets")
+        .select("settings,label")
+        .eq("slug", slug)
+        .maybeSingle();
+      if (error) {
+        setPresetStatus(`Load failed: ${error.message}`);
+        setPresetBusy(false);
+        return;
+      }
+      if (!data) {
+        setPresetStatus(`No preset found for "${slug}"`);
+        setPresetBusy(false);
+        return;
+      }
+      applySettings((data.settings ?? {}) as Record<string, unknown>);
+      setPresetLabel(typeof data.label === "string" ? data.label : "");
+      setPresetSlug(slug);
+      setPresetStatus(`Loaded "${slug}"`);
+      setPresetBusy(false);
+    },
+    [applySettings]
+  );
 
   const backgroundColor =
     background === "dark"
@@ -176,7 +382,14 @@ export default function BrandmarkPhysicsCorePage() {
         style={{ position: "absolute", inset: 0, pointerEvents: "auto" }}
       >
         {showSphere ? <WireframeSphere radius={sphereRadius} detail={sphereDetail} /> : null}
-        <group scale={worldHalfExtent * 2}>
+        <CenterpieceDriftRig
+          scale={worldHalfExtent * 2}
+          cleanField={cleanField}
+          ampX={driftAmpX}
+          ampY={driftAmpY}
+          periodX={driftPeriodX}
+          periodY={driftPeriodY}
+        >
           <BrandmarkPhysicsCore
             key={simEpoch}
             count={count}
@@ -185,6 +398,12 @@ export default function BrandmarkPhysicsCorePage() {
             color={color}
             accentColor={accentColor}
             opacity={opacity}
+            cleanField={cleanField}
+            corridorKeep={corridorKeep}
+            cleanFieldKeep={cleanFieldKeep}
+            cleanFieldDotScale={cleanFieldDotScale}
+            cleanFieldEdge={cleanFieldEdge}
+            depth={depth}
             scatterRadius={scatterRadius}
             bulge={bulge}
             thickness={thickness}
@@ -192,7 +411,7 @@ export default function BrandmarkPhysicsCorePage() {
             reducedMotion={reducedMotion}
             forces={forces}
           />
-        </group>
+        </CenterpieceDriftRig>
       </Canvas>
 
       {showFlatCompare ? (
@@ -280,6 +499,111 @@ export default function BrandmarkPhysicsCorePage() {
           </button>
         </div>
 
+        <SectionLabel>Presets · save / share</SectionLabel>
+        <button type="button" onClick={setCenterpieceView} style={primaryResetButtonStyle}>
+          Centerpiece view (parked #services)
+        </button>
+        <input
+          type="text"
+          value={presetLabel}
+          onChange={(e) => setPresetLabel(e.target.value)}
+          placeholder="Label (optional)"
+          maxLength={120}
+          style={{
+            width: "100%",
+            boxSizing: "border-box",
+            margin: "8px 0",
+            padding: "6px 8px",
+            background: "rgba(0,0,0,0.3)",
+            border: "1px solid rgba(202,165,84,0.3)",
+            color: "var(--dawn, #ece3d6)",
+            fontFamily: "inherit",
+            fontSize: 11,
+          }}
+        />
+        <button
+          type="button"
+          onClick={handleSavePreset}
+          disabled={presetBusy}
+          style={{ ...primaryResetButtonStyle, opacity: presetBusy ? 0.5 : 1 }}
+        >
+          Save → share id
+        </button>
+        {presetSlug ? (
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 8,
+              margin: "8px 0",
+              padding: "6px 10px",
+              background: "rgba(202,165,84,0.08)",
+              border: "1px solid rgba(202,165,84,0.35)",
+            }}
+          >
+            <span style={{ color: "var(--gold, #caa554)", fontSize: 14, letterSpacing: "0.12em" }}>
+              {presetSlug}
+            </span>
+            <button
+              type="button"
+              onClick={() => navigator.clipboard?.writeText(presetSlug)}
+              style={{
+                background: "transparent",
+                border: "1px solid rgba(202,165,84,0.4)",
+                color: "var(--dawn, #ece3d6)",
+                fontSize: 9,
+                padding: "3px 8px",
+                cursor: "pointer",
+                textTransform: "uppercase",
+                letterSpacing: "0.1em",
+              }}
+            >
+              copy
+            </button>
+          </div>
+        ) : null}
+        <div style={{ display: "flex", gap: 6, marginTop: 8 }}>
+          <input
+            type="text"
+            value={loadSlug}
+            onChange={(e) => setLoadSlug(e.target.value)}
+            placeholder="Paste id…"
+            style={{
+              flex: 1,
+              minWidth: 0,
+              boxSizing: "border-box",
+              padding: "6px 8px",
+              background: "rgba(0,0,0,0.3)",
+              border: "1px solid rgba(202,165,84,0.3)",
+              color: "var(--dawn, #ece3d6)",
+              fontFamily: "inherit",
+              fontSize: 11,
+            }}
+          />
+          <button
+            type="button"
+            onClick={() => handleLoadPreset(loadSlug)}
+            disabled={presetBusy}
+            style={{ ...resetButtonStyle, marginTop: 0, opacity: presetBusy ? 0.5 : 1 }}
+          >
+            Load
+          </button>
+        </div>
+        {presetStatus ? (
+          <div
+            style={{
+              fontSize: 10,
+              color: "rgba(236,227,214,0.6)",
+              margin: "8px 0",
+              lineHeight: 1.5,
+              wordBreak: "break-word",
+            }}
+          >
+            {presetStatus}
+          </div>
+        ) : null}
+
         <SectionLabel>Ignite</SectionLabel>
         <ControlSlider
           label="Ignite"
@@ -310,13 +634,35 @@ export default function BrandmarkPhysicsCorePage() {
 
         <SectionLabel>Particles</SectionLabel>
         <ControlSlider
-          label="Particle count"
+          label="Particle count (global budget)"
           value={count}
           min={500}
-          max={6000}
+          max={8000}
           step={100}
           onChange={(v) => setCount(Math.round(v))}
         />
+        <ControlSlider
+          label="Corridor keep (clean=0 draw frac)"
+          value={corridorKeep}
+          min={0.1}
+          max={1}
+          step={0.01}
+          onChange={setCorridorKeep}
+        />
+        <div
+          style={{
+            fontSize: 9,
+            color: "rgba(236, 227, 214, 0.4)",
+            marginTop: -4,
+            marginBottom: 8,
+            lineHeight: 1.5,
+          }}
+        >
+          Count is the shared budget. Corridor keep thins it back down at clean field 0 so the
+          corridor stays calm while the centerpiece (clean field 1, Keep slider) draws densely.
+          Prod: count 6000, corridor keep ≈ 0.27 (≈1600 drawn). &gt; 4096 uses a 128×128 sim texture
+          (~4× compute).
+        </div>
         <ControlSlider
           label="Scatter radius"
           value={scatterRadius}
@@ -364,9 +710,113 @@ export default function BrandmarkPhysicsCorePage() {
           step={0.01}
           onChange={setOpacity}
         />
+
+        <SectionLabel>Centerpiece (Services parked)</SectionLabel>
+        <ControlSlider
+          label="Clean field (0 corridor · 1 parked)"
+          value={cleanField}
+          min={0}
+          max={1}
+          step={0.01}
+          onChange={setCleanField}
+        />
+        <ControlSlider
+          label="Depth (0 flat · 1 dome)"
+          value={depth}
+          min={0}
+          max={1}
+          step={0.01}
+          onChange={setDepth}
+        />
+        <ControlSlider
+          label="Keep — particle fraction (spacing)"
+          value={cleanFieldKeep}
+          min={0.4}
+          max={1}
+          step={0.01}
+          onChange={setCleanFieldKeep}
+        />
+        <ControlSlider
+          label="Dot scale (fineness)"
+          value={cleanFieldDotScale}
+          min={0.2}
+          max={1.2}
+          step={0.01}
+          onChange={setCleanFieldDotScale}
+        />
+        <ControlSlider
+          label="Dot crispness (edge)"
+          value={cleanFieldEdge}
+          min={0.2}
+          max={0.5}
+          step={0.01}
+          onChange={setCleanFieldEdge}
+        />
+        <div
+          style={{
+            fontSize: 9,
+            color: "rgba(236, 227, 214, 0.4)",
+            marginTop: -4,
+            marginBottom: 8,
+            lineHeight: 1.5,
+          }}
+        >
+          Clean field → 1 is the parked #services look: thinned (Keep), fine uniform dots (Dot
+          scale), crisp (Dot crispness), no per-particle pulse, sim turbulence damped to 0 (wobble
+          kill); Depth keeps the 3D dome and the drift below tilts it; background dim = the Opacity
+          slider. Production map → count: COUNT_DESKTOP · Keep: CLEAN_FIELD_KEEP · Dot scale: clean
+          dot mult · Dot crispness: clean falloff · Opacity: CENTER_OPACITY · Point size:
+          CORE_POINT_SIZE_3D · Tilt: CENTER_DRIFT_*.
+        </div>
         <button type="button" onClick={resetRender} style={resetButtonStyle}>
           Reset render
         </button>
+
+        <SectionLabel>Centerpiece drift (× clean field)</SectionLabel>
+        <ControlSlider
+          label="Tilt amp X (rad)"
+          value={driftAmpX}
+          min={0}
+          max={0.5}
+          step={0.01}
+          onChange={setDriftAmpX}
+        />
+        <ControlSlider
+          label="Tilt amp Y (rad)"
+          value={driftAmpY}
+          min={0}
+          max={0.5}
+          step={0.01}
+          onChange={setDriftAmpY}
+        />
+        <ControlSlider
+          label="Tilt period X (s)"
+          value={driftPeriodX}
+          min={5}
+          max={40}
+          step={0.5}
+          onChange={setDriftPeriodX}
+        />
+        <ControlSlider
+          label="Tilt period Y (s)"
+          value={driftPeriodY}
+          min={5}
+          max={40}
+          step={0.5}
+          onChange={setDriftPeriodY}
+        />
+        <div
+          style={{
+            fontSize: 9,
+            color: "rgba(236, 227, 214, 0.4)",
+            marginTop: -4,
+            marginBottom: 8,
+            lineHeight: 1.5,
+          }}
+        >
+          Both amplitudes 0 = fully still. Maps to CENTER_DRIFT_AMP_* / CENTER_DRIFT_PERIOD_* in the
+          actor. Tilt scales with clean field, so it&apos;s flat in the corridor (cleanField = 0).
+        </div>
 
         <SectionLabel>Forces · ignite=0 (dispersed)</SectionLabel>
         <ControlSlider
@@ -488,6 +938,47 @@ export default function BrandmarkPhysicsCorePage() {
         </p>
       </div>
     </main>
+  );
+}
+
+interface CenterpieceDriftRigProps {
+  scale: number;
+  cleanField: number;
+  ampX: number;
+  ampY: number;
+  periodX: number;
+  periodY: number;
+  children: ReactNode;
+}
+
+/** Lab replica of the actor's centerpiece gentle 3D drift: a slow sinusoidal
+ *  X / Y tilt scaled by `cleanField` (the lab's stand-in for the production
+ *  `recT`). Mirrors `CENTER_DRIFT_*` in `BrandmarkPhysicsCoreActor`. At
+ *  cleanField = 0 (corridor) the tilt is 0 → flat, like production. */
+function CenterpieceDriftRig({
+  scale,
+  cleanField,
+  ampX,
+  ampY,
+  periodX,
+  periodY,
+  children,
+}: CenterpieceDriftRigProps) {
+  const ref = useRef<THREE.Group>(null);
+  useFrame((state) => {
+    const g = ref.current;
+    if (!g) return;
+    const t = state.clock.elapsedTime;
+    const k = cleanField < 0 ? 0 : cleanField > 1 ? 1 : cleanField;
+    const px = periodX || 1;
+    const py = periodY || 1;
+    g.rotation.x = Math.sin((t / px) * Math.PI * 2) * ampX * k;
+    g.rotation.y = Math.sin((t / py) * Math.PI * 2) * ampY * k;
+  });
+  return (
+    <group ref={ref} scale={scale}>
+      {children}
+    </group>
   );
 }
 

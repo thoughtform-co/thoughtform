@@ -85,10 +85,23 @@ const SIZE_MERGE_END = windowFor("navigate").start;
  *  reads as densely as the crisp SVG it replaces — no "stippled vs
  *  vector" mismatch at the swap. Speck size grows slightly as the mark
  *  extrudes into the luminous 3D body nested inside the substrate
- *  sphere (where it must read against the gimbal shell's dots). */
-const CORE_OPACITY = 0.95;
+ *  sphere (where it must read against the gimbal shell's dots).
+ *
+ *  Corridor calm-down (2026-06-22b): lowered 0.95 → 0.72 because the corridor
+ *  read TOO BRIGHT (additive bloom). Paired with the count dial-back to 1600.
+ *  This is the CORRIDOR brightness only — the Services centerpiece has its own
+ *  absolute `CENTER_OPACITY` (decoupled), so lowering this never drags the
+ *  centerpiece with it. Lower further to dim the corridor. */
+const CORE_OPACITY = 0.72;
 const CORE_POINT_SIZE_FLAT = 3.0;
 const CORE_POINT_SIZE_3D = 4.0;
+
+/** Target number of particles DRAWN in the corridor (Navigate / Encode /
+ *  sphere). The global count is large (6000) to feed a dense parked centerpiece;
+ *  the corridor thins back to this via `corridorKeep` so it stays calm — ≈ the
+ *  prior corridor density. Raising the global count adds centerpiece density
+ *  without touching the corridor (the keep auto-recomputes). */
+const CORRIDOR_DRAW_TARGET = 1600;
 
 /** Core-shrink handoff into Services (2026-06-20). The in-sphere
  *  particle core IS the brandmark end-to-end — at the Services dive it
@@ -110,6 +123,30 @@ const SHRINK_START = 0.04;
 const SHRINK_END = 0.9;
 const CENTER_DISTANCE = 3.2;
 const CENTER_TARGET_SCALE = 1.15;
+
+/** Gentle 3D drift at the parked centerpiece — a slow sinusoidal tilt that
+ *  reveals the kept dome's depth, so the mark reads as a living 3D object
+ *  rather than a flat decal. Kept small-amplitude so it NEVER rotates edge-on
+ *  (the brandmark silhouette is shallow-Z; a full spin would collapse it to a
+ *  sliver). Different X / Y periods give a slow Lissajous nod, not a metronome.
+ *  Set both amplitudes to 0 for a fully still centerpiece. Eased in by `recT`,
+ *  so the corridor / sphere are untouched. */
+const CENTER_DRIFT_AMP_X_RAD = 0.16; // ~9° pitch
+const CENTER_DRIFT_AMP_Y_RAD = 0.21; // ~12° yaw
+const CENTER_DRIFT_PERIOD_X_S = 17;
+const CENTER_DRIFT_PERIOD_Y_S = 13;
+
+/** ABSOLUTE opacity of the parked Services centerpiece, DECOUPLED from the
+ *  corridor `CORE_OPACITY`: the mark lerps from the corridor brightness to this
+ *  as `recT` → 1, so dialing the corridor brightness up/down never drags the
+ *  centerpiece with it. (The earlier MULTIPLIER coupling, combined with the
+ *  count dial-back to 1600, made the centerpiece nearly vanish — this fixes
+ *  that.) Tuned so the mark reads as a present-but-soft background element
+ *  behind the copy — NOT invisible (it must survive the small centerpiece dots
+ *  + the lower 1600 count). Raise for more presence, lower for more recede.
+ *  At 0.90 the mark reads clearly but, with its small crisp 2px dots, still
+ *  sits softer than the 4px corridor stations (≈⅓ their per-dot ink). */
+const CENTER_OPACITY = 0.9;
 
 /** Z-stream momentum (2026-06-17). As the mark flies into the corridor
  *  toward the substrate sphere, particles stream toward the background
@@ -163,6 +200,10 @@ export function BrandmarkPhysicsCoreActor({
   const count = isMobile
     ? BRANDMARK_PHYSICS_CORE_COUNT_MOBILE
     : BRANDMARK_PHYSICS_CORE_COUNT_DESKTOP;
+  // Corridor draws only a fraction of the (large) global count so it stays calm
+  // while the centerpiece draws densely from the same cloud. Desktop:
+  // 1600/6000 ≈ 0.27; mobile: min(1, 1600/650) = 1 (no thinning — already low).
+  const corridorKeep = Math.min(1, CORRIDOR_DRAW_TARGET / count);
 
   const groupRef = useRef<THREE.Group>(null);
   // Scratch for the Services core-shrink (camera-front re-centre) so we
@@ -170,6 +211,9 @@ export function BrandmarkPhysicsCoreActor({
   const fwdScratch = useRef(new THREE.Vector3());
   const frontScratch = useRef(new THREE.Vector3());
   const posScratch = useRef(new THREE.Vector3());
+  // Scratch for the centerpiece gentle-drift tilt (avoid per-frame allocs).
+  const driftQuatScratch = useRef(new THREE.Quaternion());
+  const driftEulerScratch = useRef(new THREE.Euler());
   const igniteRef = useRef(ASSEMBLED_IGNITE);
   const depthRef = useRef(0);
   const glitchRef = useRef(0);
@@ -286,10 +330,13 @@ export function BrandmarkPhysicsCoreActor({
     streamRef.current += (streamTarget - streamRef.current) * kStream;
 
     igniteRef.current = ASSEMBLED_IGNITE;
-    // Flatten the 3D dome back toward a clean flat silhouette as the core
-    // shrinks to the centred Services centerpiece (Z-only, so the XY mark
-    // is preserved).
-    depthRef.current = depth * (1 - recT);
+    // Keep the forward 3D dome at the parked Services centerpiece (do NOT
+    // flatten). `depth` is already 1 well before the shrink begins, so this
+    // holds the baked dome (bulge / thickness) — the mark reads as a
+    // dimensional 3D object in #services, and the gentle drift below reveals
+    // that volume. (Was `depth * (1 - recT)`, which collapsed it to a flat
+    // billboard at the centerpiece.) Z-only, so the XY silhouette is preserved.
+    depthRef.current = depth;
     // Clean up the particle style (uniform size/brightness, crisp dot, no
     // flicker) in lock-step with the shrink — corridor/sphere stays dust.
     cleanFieldRef.current = recT;
@@ -319,10 +366,18 @@ export function BrandmarkPhysicsCoreActor({
     // from `mats.particle` in `ShellSubstrateGyro`.
     const handoffFade = 1;
 
-    // Hidden at the section-2 rest (the SVG owns the crisp 2D mark); the
-    // cut brings the core to full brightness as the SVG vanishes, and it
-    // stays bright/solid through the corridor → epilogue → Services shrink.
-    opacityRef.current = CORE_OPACITY * reveal * handoffFade;
+    // Centerpiece opacity is DECOUPLED from the corridor CORE_OPACITY: it lerps
+    // from the corridor brightness to an ABSOLUTE target (CENTER_OPACITY) as the
+    // mark parks, so dialing the corridor brightness never drags the centerpiece
+    // with it. recT = 0 in the corridor → parkedOpacity = CORE_OPACITY (the
+    // corridor is byte-identical).
+    const parkedOpacity = CORE_OPACITY + (CENTER_OPACITY - CORE_OPACITY) * recT;
+
+    // Hidden at the section-2 rest (the SVG owns the crisp 2D mark); the cut
+    // brings the core to full brightness as the SVG vanishes; it stays
+    // bright/solid through the corridor → epilogue → Services shrink, then
+    // settles to its own absolute centerpiece opacity at the parked mark.
+    opacityRef.current = parkedOpacity * reveal * handoffFade;
     // Crisp small specks for the flat silhouette → slightly larger
     // specks for the luminous 3D body, riding the depth extrude.
     pointSizeRef.current =
@@ -358,9 +413,23 @@ export function BrandmarkPhysicsCoreActor({
       fwdScratch.current.set(0, 0, -1).applyQuaternion(cam.quaternion);
       frontScratch.current.copy(cam.position).addScaledVector(fwdScratch.current, CENTER_DISTANCE);
       posScratch.current.lerp(frontScratch.current, recT);
-      // Billboard toward the camera as it centres so the flattened mark
-      // faces the viewer head-on at the centerpiece.
+      // Head-on billboard base so the mark faces the viewer at the centerpiece.
       group.quaternion.identity().slerp(cam.quaternion, recT);
+      // Gentle 3D drift: a slow, small-amplitude sinusoidal tilt on X / Y (a
+      // Lissajous nod, different periods) eased in by recT. It parallax-reveals
+      // the kept dome's depth so the mark reads as a living 3D object — WITHOUT
+      // ever rotating edge-on (the silhouette is shallow-Z, so a full spin would
+      // collapse it to a sliver). Wall-clock phase → continuous on reverse.
+      // Amplitudes 0 ⇒ a clean "fully still" centerpiece. recT = 0 in the
+      // corridor ⇒ no tilt and the slerp is identity (unchanged).
+      const tSec = state.clock.elapsedTime;
+      const ax =
+        Math.sin((tSec / CENTER_DRIFT_PERIOD_X_S) * Math.PI * 2) * CENTER_DRIFT_AMP_X_RAD * recT;
+      const ay =
+        Math.sin((tSec / CENTER_DRIFT_PERIOD_Y_S) * Math.PI * 2) * CENTER_DRIFT_AMP_Y_RAD * recT;
+      driftEulerScratch.current.set(ax, ay, 0, "XYZ");
+      driftQuatScratch.current.setFromEuler(driftEulerScratch.current);
+      group.quaternion.multiply(driftQuatScratch.current);
     } else {
       group.quaternion.identity();
     }
@@ -379,6 +448,7 @@ export function BrandmarkPhysicsCoreActor({
     <group ref={groupRef} visible={false}>
       <BrandmarkPhysicsCore
         count={count}
+        corridorKeep={corridorKeep}
         igniteRef={igniteRef}
         depthRef={depthRef}
         glitchRef={glitchRef}

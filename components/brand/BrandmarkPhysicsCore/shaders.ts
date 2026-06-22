@@ -61,6 +61,13 @@ export const brandmarkCoreVertexShader = /* glsl */ `
   // untouched and the mark cleans up as it settles. Declared mediump to
   // match the fragment (shared-uniform precision rule, see uGlitch/uTime).
   uniform mediump float uCleanField;
+  // Centerpiece tuners (vertex-only → plain highp, NOT shared with the fragment,
+  // so no precision-match constraint per Invariant 8). Material defaults equal
+  // the production values, so the corridor + centerpiece are unchanged unless a
+  // consumer (the tuning lab) overrides them.
+  uniform float uCorridorKeep;       // surviving particle fraction at clean = 0 (corridor)
+  uniform float uCleanFieldKeep;     // surviving particle fraction at clean = 1 (centerpiece)
+  uniform float uCleanFieldDotScale; // dot-size multiplier at clean = 1
 
   attribute vec2 aUV;
   attribute float aLuma;        // per-particle phase [0, 1)
@@ -69,7 +76,7 @@ export const brandmarkCoreVertexShader = /* glsl */ `
   varying float vLuma;
   varying float vEdgeWeight;
   varying float vDepth;         // local Z, drives atmospheric dim
-  
+
   // Cheap deterministic hash for the per-band scanline displacement.
   float hash11(float n) {
     return fract(sin(n * 12.9898) * 43758.5453);
@@ -141,11 +148,32 @@ export const brandmarkCoreVertexShader = /* glsl */ `
     // hotter; the variance keeps the cloud from looking like a
     // uniform texture.
     float sizeMul = 0.78 + aEdgeWeight * 0.32 + aLuma * 0.18;
-    // Clean-field: collapse the per-particle size variance to a uniform
-    // speck (kept near full size — the cloud is only ~1300 points, so
-    // shrinking the dots too far makes the small centerpiece read sparse /
-    // faint). Uniform size is what kills the "mixed-size lights" look.
-    sizeMul = mix(sizeMul, 0.95, uCleanField);
+    // Clean-field: collapse the per-particle size variance to a uniform,
+    // FINE speck. With the denser count (3600, see BrandmarkPhysicsCore) the
+    // Services centerpiece has enough points to read as a continuous,
+    // evenly-spread field at a much smaller dot — so we shrink the dots here
+    // rather than holding them near full size. Uniform + small is what turns
+    // the sparse fat-bead ("Christmas lights") read into a fine, spread-out
+    // particle field (vos9x.com centerpiece reference).
+    sizeMul = mix(sizeMul, uCleanFieldDotScale, uCleanField);
+
+    // ── Density rank-clip — both ends tunable (decoupled) ────────
+    // keepFrac ramps uCorridorKeep (clean = 0, corridor) → uCleanFieldKeep
+    // (clean = 1, parked centerpiece). aLuma is uniform in [0, 1), so keepFrac
+    // is the surviving fraction; clipped particles collapse to zero point size
+    // (they rasterise no fragments — the cheapest cull, no fragment discard).
+    // This lets the corridor thin a LARGE global count back down (so it stays
+    // calm) while the centerpiece draws densely from the same cloud — the
+    // count is shared, the draw is not. The threshold slides with uCleanField,
+    // so points thin in/out gradually across the shrink-in rather than popping.
+    // uCorridorKeep defaults to 1.0 (no corridor thinning) for the lab + other
+    // consumers. gl_Position is already written above, so the early return is
+    // safe (same pattern as the v7 silhouette rank-clip).
+    float keepFrac = mix(uCorridorKeep, uCleanFieldKeep, uCleanField);
+    if (aLuma >= keepFrac) {
+      gl_PointSize = 0.0;
+      return;
+    }
     gl_PointSize = uPointSize * uPixelRatio * sizeMul;
   }
 `;
@@ -159,6 +187,7 @@ export const brandmarkCoreFragmentShader = /* glsl */ `
   uniform float uTime;
   uniform float uGlitch;   // mediump via the precision stmt — matches vertex
   uniform float uCleanField; // 0 = luminous dust, 1 = clean uniform field
+  uniform float uCleanFieldEdge; // dot-falloff inner edge at clean = 1 (crispness)
 
   varying float vLuma;
   varying float vEdgeWeight;
@@ -179,10 +208,11 @@ export const brandmarkCoreFragmentShader = /* glsl */ `
     // CorridorSeamPixelField in #services. Dense overlap still
     // accumulates into a soft glow under additive blending; tight
     // single particles read crisply against the dark background.
-    // Clean-field tightens the falloff a touch (less halo bloom, so dense
-    // overlap stops glowing into blobs) while keeping enough soft coverage
-    // that the sparse ~1300-point cloud still reads as a continuous mark.
-    float dotEdge0 = mix(0.30, 0.36, uCleanField);
+    // Clean-field tightens the falloff (less halo bloom, so the dense fine
+    // field reads as crisp discrete specks instead of glowing into blobs).
+    // The denser 3600-point cloud carries the continuous-mark read, so the
+    // centerpiece can afford a crisper, tighter core.
+    float dotEdge0 = mix(0.30, uCleanFieldEdge, uCleanField);
     float alpha = 1.0 - smoothstep(dotEdge0, 0.50, d);
     if (alpha < 0.005) discard;
     

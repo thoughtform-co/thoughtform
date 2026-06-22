@@ -73,7 +73,7 @@ The vector actor crossfades out across `silhouetteMorph ∈ [0, 0.55]` so the vi
 
 [`components/brand/BrandmarkParticleField/shaders.ts`](../../../components/brand/BrandmarkParticleField/shaders.ts) defines the vertex + fragment shaders. The vertex shader does four things:
 
-1. **Rank clip.** `if (aRank > uVisibleCount) gl_PointSize = 0` — density dial without rebuilding the buffer.
+1. **Rank clip.** `if (aRank > uVisibleCount) gl_PointSize = 0` — density dial without rebuilding the buffer. (The home-v2 corridor core `BrandmarkPhysicsCore` reuses this exact pattern for its Services-centerpiece thinning: a `uCleanField`-gated `aLuma` rank-clip — `if (aLuma >= mix(1.0, CLEAN_FIELD_KEEP, uCleanField)) gl_PointSize = 0` — thins the airy parked mark without changing its count. See ADR-023 § Services centerpiece treatment.)
 2. **Wander.** Two-frequency sinusoidal drift on `aSeed`, scaled by `uDispersion * uHalfSize`.
 3. **Squash-rotation (ADR-013).** `aHome.x *= cos(uRotationY)` plus a perspective shear `aHome.y * sin(uRotationY) * SHEAR_SCALE`. At `uRotationY = 0` this is identity (axis-aligned); at peak tilt the brandmark squashes to a vertical strip — visually equivalent to the 3D rotation read of the surrounding R3F rings.
 4. **Pixel → NDC.** Direct conversion via `uViewport` — no camera matrix needed. The painter is pixel-native; rect lerps in `getBoundingClientRect()` space, no projection math required.
