@@ -159,6 +159,27 @@ const DEFAULT_OPACITY = 0.78;
  *  only ever read `.current`. */
 type ReadonlyRef<T> = { readonly current: T };
 
+/** Render-mode + symbol identifiers for the lab particle-type switch
+ *  (ADR-023 addendum). Encoded to the `int` shader uniforms below. */
+export type BrandmarkCoreShape = "dot" | "dither" | "voxel" | "glyph";
+export type BrandmarkCoreGlyph = "plus" | "cross" | "square" | "ring" | "diamond" | "asterisk";
+export type BrandmarkCoreBlending = "additive" | "normal";
+
+const SHAPE_TO_INT: Record<BrandmarkCoreShape, number> = {
+  dot: 0,
+  dither: 1,
+  voxel: 2,
+  glyph: 3,
+};
+const GLYPH_TO_INT: Record<BrandmarkCoreGlyph, number> = {
+  plus: 0,
+  cross: 1,
+  square: 2,
+  ring: 3,
+  diamond: 4,
+  asterisk: 5,
+};
+
 export interface BrandmarkPhysicsCoreForceOverrides {
   /** Force values at `ignite = 0`. Partial overrides — anything not
    *  specified falls back to `IGNITE_OFF_FORCES`. */
@@ -284,6 +305,18 @@ export interface BrandmarkPhysicsCoreProps {
   /** Lab-only: enable depthWrite. Default false (additive on,
    *  depthWrite off — the standard "luminous" path). */
   depthWrite?: boolean;
+  /** Per-particle render shape (lab; ADR-023 addendum). Default "dot" so the
+   *  corridor + parked centerpiece are byte-identical. "dither" / "voxel" /
+   *  "glyph" rewrite only the fragment-shader coverage mask. */
+  shape?: BrandmarkCoreShape;
+  /** Symbol drawn when `shape === "glyph"`. Default "plus". */
+  glyph?: BrandmarkCoreGlyph;
+  /** Stroke half-width (glyph) / gap (voxel) / shape-weight knob. Default 0.12. */
+  shapeStroke?: number;
+  /** Blend mode of the points material. "additive" (default) is the luminous
+   *  glow; "normal" flattens it into a crisp retro field (kills the bloom that
+   *  reads as "Christmas lights"). */
+  blending?: BrandmarkCoreBlending;
   /** Stable seed for the deterministic scatter PRNG. */
   prngSeed?: number;
   /** Render order, forwarded to the underlying `<points>`. */
@@ -406,6 +439,10 @@ export function BrandmarkPhysicsCore({
   reducedMotion = false,
   forces,
   depthWrite = false,
+  shape = "dot",
+  glyph = "plus",
+  shapeStroke = 0.12,
+  blending = "additive",
   prngSeed = 0xc0ffeeed,
   renderOrder = 1,
 }: BrandmarkPhysicsCoreProps) {
@@ -556,13 +593,16 @@ export function BrandmarkPhysicsCore({
         uCleanFieldKeep: { value: cleanFieldKeep },
         uCleanFieldDotScale: { value: cleanFieldDotScale },
         uCleanFieldEdge: { value: cleanFieldEdge },
+        uShape: { value: SHAPE_TO_INT[shape] },
+        uGlyph: { value: GLYPH_TO_INT[glyph] },
+        uShapeStroke: { value: shapeStroke },
         uTime: { value: 0 },
       },
       vertexShader: brandmarkCoreVertexShader,
       fragmentShader: brandmarkCoreFragmentShader,
       transparent: true,
       depthWrite,
-      blending: THREE.AdditiveBlending,
+      blending: blending === "normal" ? THREE.NormalBlending : THREE.AdditiveBlending,
     });
     // `color` / `accentColor` updates are routed through the per-frame
     // uniform writes below so re-creating the material isn't necessary
@@ -580,6 +620,18 @@ export function BrandmarkPhysicsCore({
       material.dispose();
     };
   }, [material]);
+
+  // Swap the points blend mode when the lab toggles it. Fires only on change
+  // (never per frame); needsUpdate forces three.js to refresh the GL state.
+  // Default "additive" keeps the luminous look; "normal" flattens the field.
+  // Routed through materialRef (set in the effect above) rather than mutating
+  // the memoised `material` directly, so it stays the single mutable handle.
+  useEffect(() => {
+    const mat = materialRef.current;
+    if (!mat) return;
+    mat.blending = blending === "normal" ? THREE.NormalBlending : THREE.AdditiveBlending;
+    mat.needsUpdate = true;
+  }, [blending]);
 
   // Dispose the captured geometry when it's swapped out / unmounted.
   useEffect(() => {
@@ -639,6 +691,9 @@ export function BrandmarkPhysicsCore({
       mat.uniforms.uCleanFieldKeep.value = cleanFieldKeep;
       mat.uniforms.uCleanFieldDotScale.value = cleanFieldDotScale;
       mat.uniforms.uCleanFieldEdge.value = cleanFieldEdge;
+      mat.uniforms.uShape.value = SHAPE_TO_INT[shape];
+      mat.uniforms.uGlyph.value = GLYPH_TO_INT[glyph];
+      mat.uniforms.uShapeStroke.value = shapeStroke;
       mat.uniforms.uTime.value = state.clock.elapsedTime;
       return;
     }
@@ -687,6 +742,9 @@ export function BrandmarkPhysicsCore({
     mat.uniforms.uCleanFieldKeep.value = cleanFieldKeep;
     mat.uniforms.uCleanFieldDotScale.value = cleanFieldDotScale;
     mat.uniforms.uCleanFieldEdge.value = cleanFieldEdge;
+    mat.uniforms.uShape.value = SHAPE_TO_INT[shape];
+    mat.uniforms.uGlyph.value = GLYPH_TO_INT[glyph];
+    mat.uniforms.uShapeStroke.value = shapeStroke;
     mat.uniforms.uTime.value = state.clock.elapsedTime;
   });
 

@@ -20,4 +20,7 @@ export type {
   BrandmarkPhysicsCoreProps,
   BrandmarkPhysicsCoreForces,
   BrandmarkPhysicsCoreForceOverrides,
+  BrandmarkCoreShape,
+  BrandmarkCoreGlyph,
+  BrandmarkCoreBlending,
 } from "./BrandmarkPhysicsCore";

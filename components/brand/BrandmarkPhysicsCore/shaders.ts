@@ -188,6 +188,14 @@ export const brandmarkCoreFragmentShader = /* glsl */ `
   uniform float uGlitch;   // mediump via the precision stmt — matches vertex
   uniform float uCleanField; // 0 = luminous dust, 1 = clean uniform field
   uniform float uCleanFieldEdge; // dot-falloff inner edge at clean = 1 (crispness)
+  // ── Render-mode switch (lab; ADR-023 addendum) ───────────────
+  // All fragment-only → plain precision, no vertex/fragment precision-match
+  // constraint (Invariant 8). The defaults (uShape 0 = dot, additive blending
+  // set on the material) keep the corridor + parked centerpiece byte-identical;
+  // only the tuning lab overrides them to explore retro-futuristic looks.
+  uniform int uShape;         // 0 = dot, 1 = dither, 2 = voxel, 3 = glyph
+  uniform int uGlyph;         // 0 plus · 1 cross · 2 square · 3 ring · 4 diamond · 5 asterisk
+  uniform float uShapeStroke; // glyph stroke half-width · voxel gap · shape weight
 
   varying float vLuma;
   varying float vEdgeWeight;
@@ -196,24 +204,95 @@ export const brandmarkCoreFragmentShader = /* glsl */ `
   float hashF(float n) {
     return fract(sin(n * 12.9898) * 43758.5453);
   }
-  
+
+  // ── Render-mode helpers ──────────────────────────────────────
+  // Ordered 4×4 Bayer threshold, computed ARITHMETICALLY (the recursive
+  // bayer2 → bayer4 construction) so there is NO dynamic array indexing —
+  // a hard requirement under GLSL ES 1.00, which this material compiles as
+  // even on a WebGL2 context. Returns a per-pixel threshold in [0, 1).
+  float bayer2(vec2 a) {
+    a = floor(a);
+    return fract(a.x / 2.0 + a.y * a.y * 0.75);
+  }
+  float bayer4(vec2 a) {
+    return bayer2(0.5 * a) * 0.25 + bayer2(a);
+  }
+
+  // Signed-distance helpers for the procedural glyph SDFs (all array-free).
+  float sdBox(vec2 p, vec2 b) {
+    vec2 q = abs(p) - b;
+    return length(max(q, 0.0)) + min(max(q.x, q.y), 0.0);
+  }
+  vec2 rot45(vec2 p) {
+    float s = 0.70710678;
+    return vec2(p.x * s - p.y * s, p.x * s + p.y * s);
+  }
+
+  // Procedural glyph mask over centred coord p in [-0.5, 0.5]. w is the
+  // stroke half-width (uShapeStroke). Small smoothstep for a touch of AA so
+  // the symbols read crisp but not jagged at small point sizes.
+  float glyphMask(vec2 p, int g, float w) {
+    float aa = 0.03;
+    float sdf = 1.0;
+    if (g == 0) {            // plus
+      sdf = min(sdBox(p, vec2(0.45, w)), sdBox(p, vec2(w, 0.45)));
+    } else if (g == 1) {     // cross / ×
+      vec2 q = rot45(p);
+      sdf = min(sdBox(q, vec2(0.45, w)), sdBox(q, vec2(w, 0.45)));
+    } else if (g == 2) {     // square outline
+      sdf = abs(sdBox(p, vec2(0.40))) - w;
+    } else if (g == 3) {     // ring
+      sdf = abs(length(p) - 0.38) - w;
+    } else if (g == 4) {     // diamond outline
+      vec2 q = rot45(p);
+      sdf = abs(sdBox(q, vec2(0.34))) - w;
+    } else {                 // asterisk (plus ∪ cross → 8 spokes)
+      float a = min(sdBox(p, vec2(0.45, w * 0.8)), sdBox(p, vec2(w * 0.8, 0.45)));
+      vec2 q = rot45(p);
+      float b = min(sdBox(q, vec2(0.45, w * 0.8)), sdBox(q, vec2(w * 0.8, 0.45)));
+      sdf = min(a, b);
+    }
+    return 1.0 - smoothstep(-aa, aa, sdf);
+  }
+
   void main() {
     vec2 c = gl_PointCoord - vec2(0.5);
     float d = length(c);
-    
-    // Soft radial dot — full intensity in the central core, then a
-    // smooth ramp to alpha 0 at d = 0.5. Tighter than the previous
-    // pass (0.22 → 0.50) so each particle reads as a more discrete
-    // speck of light, matching the airy stipple feel of the
-    // CorridorSeamPixelField in #services. Dense overlap still
-    // accumulates into a soft glow under additive blending; tight
-    // single particles read crisply against the dark background.
-    // Clean-field tightens the falloff (less halo bloom, so the dense fine
-    // field reads as crisp discrete specks instead of glowing into blobs).
-    // The denser 3600-point cloud carries the continuous-mark read, so the
-    // centerpiece can afford a crisper, tighter core.
-    float dotEdge0 = mix(0.30, uCleanFieldEdge, uCleanField);
-    float alpha = 1.0 - smoothstep(dotEdge0, 0.50, d);
+
+    // ── Per-particle coverage MASK by render mode ────────────────
+    // The mask is the only thing the mode switch changes; it then feeds the
+    // SAME color pipeline below (twinkle / depth / tint / pulse / glitch), so
+    // every mode keeps the brandmark's palette + clean-field behaviour. The
+    // default branch (uShape 0) is the original soft radial dot, byte-for-byte,
+    // so the corridor + parked centerpiece are unchanged when nothing overrides
+    // uShape. shade is a voxel-only bevel multiplier (1.0 in every other mode).
+    float mask;
+    float shade = 1.0;
+    if (uShape == 1) {
+      // DITHER — convert the soft radial coverage to a 1-bit stipple via an
+      // ordered screen-space Bayer threshold. Each speck becomes a dithered
+      // disc; overlapping specks read as a retro halftone field (best paired
+      // with Normal blending so it doesn't bloom back into glow).
+      float soft = 1.0 - smoothstep(0.0, 0.5, d);
+      float thr = bayer4(gl_FragCoord.xy);
+      mask = step(thr, soft);
+    } else if (uShape == 2) {
+      // VOXEL — hard square with a small gap + a diagonal quadrant bevel so
+      // each speck reads as a lit cube face / LED cell.
+      float gap = clamp(uShapeStroke, 0.02, 0.3);
+      mask = step(max(abs(c.x), abs(c.y)), 0.5 - gap);
+      shade = clamp(1.0 + (-c.x - c.y) * 0.6, 0.0, 1.8); // brighter toward top-left
+    } else if (uShape == 3) {
+      // GLYPH — procedural SDF symbol per particle (selected by uGlyph).
+      mask = glyphMask(c, uGlyph, max(0.02, uShapeStroke));
+    } else {
+      // DOT (default) — original soft radial speck. Tighter at the parked
+      // centerpiece via uCleanFieldEdge so the dense field stays crisp.
+      float dotEdge0 = mix(0.30, uCleanFieldEdge, uCleanField);
+      mask = 1.0 - smoothstep(dotEdge0, 0.50, d);
+    }
+
+    float alpha = mask;
     if (alpha < 0.005) discard;
     
     // Per-particle brightness variance. \`vLuma\` is the deterministic
@@ -248,6 +327,7 @@ export const brandmarkCoreFragmentShader = /* glsl */ `
     // blends with the gold sphere rather than going monochrome/cool).
     color = mix(color, uColor, uCleanField * 0.7);
     color *= depthFactor;
+    color *= shade; // voxel bevel (1.0 in every other mode)
     
     // Per-particle pulse with seed-varied phase AND frequency so
     // the cloud flickers organically rather than breathing as one

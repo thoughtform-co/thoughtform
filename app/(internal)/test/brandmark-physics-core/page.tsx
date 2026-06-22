@@ -26,6 +26,9 @@ import * as THREE from "three";
 import {
   BrandmarkPhysicsCore,
   BRANDMARK_PHYSICS_CORE_COUNT_DESKTOP,
+  type BrandmarkCoreShape,
+  type BrandmarkCoreGlyph,
+  type BrandmarkCoreBlending,
 } from "@/components/brand/BrandmarkPhysicsCore";
 import { BrandmarkGlyph } from "@/components/landing/v7/BrandmarkGlyph";
 import { supabase } from "@/lib/supabase";
@@ -46,6 +49,12 @@ const DEFAULTS = {
   color: "#caa554",
   accentColor: "#e9c97a",
   opacity: 0.78,
+
+  // Particle shape (lab render-mode switch — ADR-023 addendum)
+  shape: "dot" as BrandmarkCoreShape, // dot · dither · voxel · glyph
+  glyph: "plus" as BrandmarkCoreGlyph, // symbol when shape = glyph
+  shapeStroke: 0.12, // glyph stroke / voxel gap / weight
+  blending: "additive" as BrandmarkCoreBlending, // additive glow vs flat retro field
 
   // Centerpiece (Services parked state — cleanField 0 = corridor, 1 = parked)
   cleanField: 0,
@@ -82,9 +91,33 @@ const DEFAULTS = {
   showFlatCompare: false,
   worldHalfExtent: 0.34,
   background: "dark" as const,
+  // HUD reticle framing (lab-only retro-futuristic overlay)
+  showReticle: false,
+  reticleScale: 1,
 } satisfies Record<string, unknown>;
 
 type Background = "dark" | "void" | "test";
+
+const SHAPE_OPTIONS: { value: BrandmarkCoreShape; label: string }[] = [
+  { value: "dot", label: "Dot" },
+  { value: "dither", label: "Dither" },
+  { value: "voxel", label: "Voxel" },
+  { value: "glyph", label: "Glyph" },
+];
+
+const GLYPH_OPTIONS: { value: BrandmarkCoreGlyph; label: string }[] = [
+  { value: "plus", label: "+" },
+  { value: "cross", label: "✕" },
+  { value: "square", label: "▢" },
+  { value: "ring", label: "◦" },
+  { value: "diamond", label: "◇" },
+  { value: "asterisk", label: "✳" },
+];
+
+const BLENDING_OPTIONS: { value: BrandmarkCoreBlending; label: string }[] = [
+  { value: "additive", label: "Additive" },
+  { value: "normal", label: "Normal" },
+];
 
 export default function BrandmarkPhysicsCorePage() {
   const [count, setCount] = useState(DEFAULTS.count);
@@ -96,6 +129,10 @@ export default function BrandmarkPhysicsCorePage() {
   const [color, setColor] = useState(DEFAULTS.color);
   const [accentColor, setAccentColor] = useState(DEFAULTS.accentColor);
   const [opacity, setOpacity] = useState(DEFAULTS.opacity);
+  const [shape, setShape] = useState<BrandmarkCoreShape>(DEFAULTS.shape);
+  const [glyph, setGlyph] = useState<BrandmarkCoreGlyph>(DEFAULTS.glyph);
+  const [shapeStroke, setShapeStroke] = useState(DEFAULTS.shapeStroke);
+  const [blending, setBlending] = useState<BrandmarkCoreBlending>(DEFAULTS.blending);
   const [cleanField, setCleanField] = useState(DEFAULTS.cleanField);
   const [depth, setDepth] = useState(DEFAULTS.depth);
   const [corridorKeep, setCorridorKeep] = useState(DEFAULTS.corridorKeep);
@@ -132,6 +169,8 @@ export default function BrandmarkPhysicsCorePage() {
   const [showFlatCompare, setShowFlatCompare] = useState(DEFAULTS.showFlatCompare);
   const [worldHalfExtent, setWorldHalfExtent] = useState(DEFAULTS.worldHalfExtent);
   const [background, setBackground] = useState<Background>(DEFAULTS.background);
+  const [showReticle, setShowReticle] = useState(DEFAULTS.showReticle);
+  const [reticleScale, setReticleScale] = useState(DEFAULTS.reticleScale);
 
   // Bumping `simEpoch` re-mounts the core, which re-runs the volume
   // sample + sim build — the cleanest way to "replay" the assemble
@@ -151,6 +190,10 @@ export default function BrandmarkPhysicsCorePage() {
     setColor(DEFAULTS.color);
     setAccentColor(DEFAULTS.accentColor);
     setOpacity(DEFAULTS.opacity);
+    setShape(DEFAULTS.shape);
+    setGlyph(DEFAULTS.glyph);
+    setShapeStroke(DEFAULTS.shapeStroke);
+    setBlending(DEFAULTS.blending);
     setCleanField(DEFAULTS.cleanField);
     setDepth(DEFAULTS.depth);
     setCorridorKeep(DEFAULTS.corridorKeep);
@@ -179,6 +222,8 @@ export default function BrandmarkPhysicsCorePage() {
     setShowFlatCompare(DEFAULTS.showFlatCompare);
     setWorldHalfExtent(DEFAULTS.worldHalfExtent);
     setBackground(DEFAULTS.background);
+    setShowReticle(DEFAULTS.showReticle);
+    setReticleScale(DEFAULTS.reticleScale);
   }, []);
 
   const resetAll = useCallback(() => {
@@ -223,6 +268,10 @@ export default function BrandmarkPhysicsCorePage() {
       opacity,
       color,
       accentColor,
+      shape,
+      glyph,
+      shapeStroke,
+      blending,
       depth,
       bulge,
       thickness,
@@ -244,6 +293,10 @@ export default function BrandmarkPhysicsCorePage() {
       opacity,
       color,
       accentColor,
+      shape,
+      glyph,
+      shapeStroke,
+      blending,
       depth,
       bulge,
       thickness,
@@ -271,6 +324,15 @@ export default function BrandmarkPhysicsCorePage() {
     setOpacity(num("opacity", DEFAULTS.opacity));
     setColor(str("color", DEFAULTS.color));
     setAccentColor(str("accentColor", DEFAULTS.accentColor));
+    const shapeVal = str("shape", DEFAULTS.shape);
+    setShape(
+      shapeVal === "dither" || shapeVal === "voxel" || shapeVal === "glyph" ? shapeVal : "dot"
+    );
+    const glyphVal = str("glyph", DEFAULTS.glyph);
+    const glyphSet = ["plus", "cross", "square", "ring", "diamond", "asterisk"];
+    setGlyph(glyphSet.includes(glyphVal) ? (glyphVal as BrandmarkCoreGlyph) : "plus");
+    setShapeStroke(num("shapeStroke", DEFAULTS.shapeStroke));
+    setBlending(str("blending", DEFAULTS.blending) === "normal" ? "normal" : "additive");
     setDepth(num("depth", DEFAULTS.depth));
     setBulge(num("bulge", DEFAULTS.bulge));
     setThickness(num("thickness", DEFAULTS.thickness));
@@ -398,6 +460,10 @@ export default function BrandmarkPhysicsCorePage() {
             color={color}
             accentColor={accentColor}
             opacity={opacity}
+            shape={shape}
+            glyph={glyph}
+            shapeStroke={shapeStroke}
+            blending={blending}
             cleanField={cleanField}
             corridorKeep={corridorKeep}
             cleanFieldKeep={cleanFieldKeep}
@@ -447,6 +513,8 @@ export default function BrandmarkPhysicsCorePage() {
           </div>
         </div>
       ) : null}
+
+      {showReticle ? <ReticleOverlay scale={reticleScale} /> : null}
 
       <div
         style={{
@@ -711,6 +779,41 @@ export default function BrandmarkPhysicsCorePage() {
           onChange={setOpacity}
         />
 
+        <SectionLabel>Particle shape</SectionLabel>
+        <ChoiceRow label="Shape" value={shape} options={SHAPE_OPTIONS} onChange={setShape} />
+        {shape === "glyph" ? (
+          <ChoiceRow label="Symbol" value={glyph} options={GLYPH_OPTIONS} onChange={setGlyph} />
+        ) : null}
+        {shape !== "dot" ? (
+          <ControlSlider
+            label={shape === "voxel" ? "Voxel gap" : "Stroke / weight"}
+            value={shapeStroke}
+            min={0.02}
+            max={0.3}
+            step={0.005}
+            onChange={setShapeStroke}
+          />
+        ) : null}
+        <ChoiceRow
+          label="Blending"
+          value={blending}
+          options={BLENDING_OPTIONS}
+          onChange={setBlending}
+        />
+        <div
+          style={{
+            fontSize: 9,
+            color: "rgba(236, 227, 214, 0.4)",
+            marginTop: -2,
+            marginBottom: 8,
+            lineHeight: 1.5,
+          }}
+        >
+          Dot is the original soft glow. Dither / Voxel / Glyph rewrite only the per-particle mask;
+          pair them with Normal blending to kill the additive bloom (the &ldquo;Christmas
+          lights&rdquo; read). Lab-only &mdash; the live #services centerpiece is unaffected.
+        </div>
+
         <SectionLabel>Centerpiece (Services parked)</SectionLabel>
         <ControlSlider
           label="Clean field (0 corridor · 1 parked)"
@@ -904,6 +1007,17 @@ export default function BrandmarkPhysicsCorePage() {
           checked={showFlatCompare}
           onChange={setShowFlatCompare}
         />
+        <Checkbox label="HUD reticle framing" checked={showReticle} onChange={setShowReticle} />
+        {showReticle ? (
+          <ControlSlider
+            label="Reticle size"
+            value={reticleScale}
+            min={0.5}
+            max={2}
+            step={0.05}
+            onChange={setReticleScale}
+          />
+        ) : null}
         <SectionLabel>Background</SectionLabel>
         <RadioRow
           label="Dark"
@@ -1190,6 +1304,182 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
       }}
     >
       {children}
+    </div>
+  );
+}
+
+interface ChoiceRowProps<T extends string> {
+  label: string;
+  value: T;
+  options: { value: T; label: string }[];
+  onChange: (v: T) => void;
+}
+
+/** Compact segmented button group — used for the shape / symbol / blending
+ *  switches (more legible than a stack of radios for short enumerations). */
+function ChoiceRow<T extends string>({ label, value, options, onChange }: ChoiceRowProps<T>) {
+  return (
+    <div style={{ marginBottom: 10 }}>
+      <span
+        style={{
+          display: "block",
+          marginBottom: 5,
+          textTransform: "uppercase",
+          letterSpacing: "0.16em",
+          fontSize: 10,
+          color: "var(--dawn-70, rgba(236,227,214,0.7))",
+        }}
+      >
+        {label}
+      </span>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
+        {options.map((opt) => {
+          const active = opt.value === value;
+          return (
+            <button
+              key={opt.value}
+              type="button"
+              onClick={() => onChange(opt.value)}
+              style={{
+                flex: "1 1 auto",
+                minWidth: 36,
+                padding: "5px 8px",
+                background: active ? "rgba(202,165,84,0.18)" : "transparent",
+                border: `1px solid ${active ? "rgba(202,165,84,0.7)" : "rgba(202,165,84,0.25)"}`,
+                color: active ? "var(--gold, #caa554)" : "rgba(236,227,214,0.6)",
+                fontFamily: "inherit",
+                fontSize: 11,
+                letterSpacing: "0.1em",
+                textTransform: "uppercase",
+                cursor: "pointer",
+              }}
+            >
+              {opt.label}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/** Retro-futuristic focus-reticle overlay (corner brackets + registration ticks
+ *  + mono labels) framing the centred mark — the look from the Benjamin /
+ *  HORSE 2026 references. Lab-only presentation; never mounted in production. */
+function ReticleOverlay({ scale }: { scale: number }) {
+  const side = 46 * scale; // vmin
+  const arm = 24; // px bracket arm length
+  const stroke = "rgba(202, 165, 84, 0.85)";
+  const faint = "rgba(202, 165, 84, 0.5)";
+  const corner: React.CSSProperties = {
+    position: "absolute",
+    width: arm,
+    height: arm,
+    borderColor: stroke,
+    borderStyle: "solid",
+    borderWidth: 0,
+  };
+  const tick: React.CSSProperties = { position: "absolute", background: stroke };
+  const label: React.CSSProperties = {
+    position: "absolute",
+    fontFamily: "var(--font-pt-mono, ui-monospace), monospace",
+    fontSize: 10,
+    letterSpacing: "0.22em",
+    textTransform: "uppercase",
+    color: "rgba(236, 227, 214, 0.7)",
+    whiteSpace: "nowrap",
+  };
+  return (
+    <div
+      aria-hidden
+      style={{
+        position: "fixed",
+        top: "50%",
+        left: "50%",
+        width: `${side}vmin`,
+        height: `${side}vmin`,
+        transform: "translate(-50%, -50%)",
+        pointerEvents: "none",
+        zIndex: 40,
+      }}
+    >
+      {/* corner brackets */}
+      <div style={{ ...corner, top: 0, left: 0, borderTopWidth: 2, borderLeftWidth: 2 }} />
+      <div style={{ ...corner, top: 0, right: 0, borderTopWidth: 2, borderRightWidth: 2 }} />
+      <div style={{ ...corner, bottom: 0, left: 0, borderBottomWidth: 2, borderLeftWidth: 2 }} />
+      <div style={{ ...corner, bottom: 0, right: 0, borderBottomWidth: 2, borderRightWidth: 2 }} />
+
+      {/* edge registration ticks */}
+      <div
+        style={{
+          ...tick,
+          top: -1,
+          left: "50%",
+          width: 1,
+          height: 10,
+          transform: "translateX(-50%)",
+        }}
+      />
+      <div
+        style={{
+          ...tick,
+          bottom: -1,
+          left: "50%",
+          width: 1,
+          height: 10,
+          transform: "translateX(-50%)",
+        }}
+      />
+      <div
+        style={{
+          ...tick,
+          left: -1,
+          top: "50%",
+          width: 10,
+          height: 1,
+          transform: "translateY(-50%)",
+        }}
+      />
+      <div
+        style={{
+          ...tick,
+          right: -1,
+          top: "50%",
+          width: 10,
+          height: 1,
+          transform: "translateY(-50%)",
+        }}
+      />
+
+      {/* center crosshair */}
+      <div
+        style={{
+          position: "absolute",
+          top: "50%",
+          left: "50%",
+          width: 16,
+          height: 1,
+          background: faint,
+          transform: "translate(-50%, -50%)",
+        }}
+      />
+      <div
+        style={{
+          position: "absolute",
+          top: "50%",
+          left: "50%",
+          width: 1,
+          height: 16,
+          background: faint,
+          transform: "translate(-50%, -50%)",
+        }}
+      />
+
+      {/* mono labels */}
+      <div style={{ ...label, top: -18, left: 2 }}>Brandmark · Core</div>
+      <div style={{ ...label, top: -18, right: 2, color: "rgba(202,165,84,0.8)" }}>TF—023</div>
+      <div style={{ ...label, bottom: -18, left: 2 }}>Lat 0.000 · Lon 0.000</div>
+      <div style={{ ...label, bottom: -18, right: 2 }}>Scan ▮▮▯</div>
     </div>
   );
 }
