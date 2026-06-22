@@ -1,40 +1,47 @@
 /* ═══════════════════════════════════════════════════════════════════════
- * services.css — Services station (#services) pinned brandmark stage
+ * services.css — Services station (#services) celestial-map stage
  * ═══════════════════════════════════════════════════════════════════════
  *
- * Scope (2026-06-19 redesign — replaces the sticky-stacking terminal
- * cards and the "One loop. Three depths." header):
+ * Scope (2026-06-22 redesign — replaces the Jasmina-style
+ * list · brandmark · paragraph stage with a retrofuturistic orrery):
  *
- *   A Jasmina-style pinned stage —
- *     left service list  ·  centered particle brandmark  ·  right paragraph
+ *   A `position: sticky` stage pins across a tall runway
+ *   (`.services-stage-root`, ~3×100vh). The brandmark particle core parks
+ *   at center as the "sun"; `ServicesOrbitMap` draws one tilted orbit per
+ *   service around it (nodes drifted by `useOrbitDrift`); one
+ *   `ServiceCelestialCard` is revealed at a time, anchored lower-right.
  *
- *   The stage is `position: sticky` inside a tall runway
- *   (`.services-stage-root`, ~3×100vh). `useServicesStageScroll` maps
- *   runway scroll to a discrete `data-active-step` (0..2) on
- *   `.services-stage`; CSS moves the left-list highlight and crossfades
- *   the right paragraph (the brandmark itself stays constant).
+ *   `useServicesStageScroll` maps runway scroll to a discrete
+ *   `data-active-step` (0..2) on `.services-stage`; CSS below reveals the
+ *   matching card and lights up the matching orbit/node. The particle sun
+ *   itself stays constant.
  *
  * Mount points (in `public/prototypes/v7/landing-v7-motion.html`):
  *   #services  (section shell + .station__idx corner chrome only)
  *     .services-stage-root[data-services-root]   ← runway, reserves height
  *       — React portal: ServicesStage
  *           .services-stage (sticky)
- *             .services-stage__items (grid: list · brandmark · copy)
+ *             .services-stage__items (relative, full-size layer host)
+ *               .services-stage__brandmark   (center sun footprint / 2D fallback)
+ *               .services-orbit-map           (SVG orrery overlay)
+ *               .services-cards               (HUD readouts, one per step)
  *
  * Compositing (ADR-008 / ADR-021): the stage is intentionally
  * `background: transparent` so the corridor-exit ambient interior-sphere
- * particles remain visible behind the centered brandmark (the "inside the
- * sphere" backdrop). This is a sanctioned ADR-008 Rule 1 exception for
- * `#services`, already gated by `html[data-corridor-exit] #services` in
- * `home-v2.css` (which bumps the section to z:6 and its children to z:7,
- * above the body veil at z:5 and the fixed dock canvas at z:2). When
- * `data-corridor-exit` is absent (mobile / reduced-motion / no-WebGL, or
- * after the seam releases) `.station:not(.hero)` repaints opaque `--void`,
- * so the stage reads fine on a dark field.
+ * particles remain visible behind the orbits (the "inside the sphere"
+ * backdrop). This is a sanctioned ADR-008 Rule 1 exception for `#services`,
+ * gated by `html[data-corridor-exit] #services` in `home-v2.css` (which
+ * bumps the section to z:6 and its children to z:7, above the body veil at
+ * z:5 and the fixed dock canvas at z:2). All layers below live INSIDE
+ * `.services-stage` (no fixed/sticky, no opaque full-bleed background, no
+ * opacity animation on the stage wrapper itself). When `data-corridor-exit`
+ * is absent (mobile / reduced-motion / no-WebGL) `.station:not(.hero)`
+ * repaints opaque `--void`, so the stage reads fine on a dark field.
  *
  * Token map (defined in `tokens.css` / v7 landing.css): --void, --dawn,
- * --dawn-70, --dawn-30, --dawn-08, --gold, --hud-content-inset,
- * --font-pt-mono, --font-pp-neue-montreal, --m-ease.
+ * --dawn-70, --dawn-60, --dawn-50, --dawn-40, --dawn-30, --dawn-08, --gold,
+ * --gold-30, --gold-08, --hud-content-inset, --font-pt-mono,
+ * --font-pp-neue-montreal, --m-ease.
  */
 
 /* ── Section shell ───────────────────────────────────────────────── */
@@ -69,39 +76,31 @@
   background: transparent;
 }
 
-/* Three sibling cells in one grid: brandmark (centre, col 2), the name
- * list (col 1), and the paragraph stack (col 3). Keeping them as
- * separate cells decouples their heights — the mark never stretches the
- * name spacing, the paragraph never stretches the list. */
+/* Full-size relative host — the three layers (brandmark sun, orbit map,
+ * cards) are absolutely centered / anchored within it. */
 .services-stage__items {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-  align-items: center;
-  column-gap: clamp(28px, 5vw, 104px);
+  position: relative;
   width: 100%;
-  max-width: 1320px;
-  margin: 0 auto;
-  padding: 0 var(--hud-content-inset, 32px);
+  height: 100%;
 }
 
-/* ── Centre — particle brandmark (col 2) ─────────────────────────── */
+/* ── Center — particle brandmark (the "sun") ─────────────────────── */
 .services-stage__brandmark {
-  grid-column: 2;
-  grid-row: 1;
-  justify-self: center;
-  position: relative;
+  position: absolute;
+  top: 50%;
+  left: 50%;
   width: clamp(220px, 26vw, 400px);
   aspect-ratio: 1;
   color: var(--gold); /* tints the SVG fallback */
+  z-index: 0;
   /* Dive-in handoff: the centerpiece brandmark shrinks from sphere-scale
    * to its parked size + fades in as the corridor sphere expands into
-   * #services, picking up the handoff from the inside-sphere mark that
-   * fades out across the same dissipate. `--svc-arrive` (0..1) is published
-   * by useServicesStageScroll from `--corridor-dissipate` (1 = parked).
-   * Tune `--svc-arrive-from` for how large / "sphere-sized" the arrival
-   * reads. The corridor/sphere are untouched — this only reads the clock. */
+   * #services. `--svc-arrive` (0..1) is published by useServicesStageScroll
+   * from `--corridor-dissipate` (1 = parked). The corridor/sphere are
+   * untouched — this only reads the clock. */
   --svc-arrive-from: 2.1;
-  transform: scale(calc(1 + (var(--svc-arrive-from) - 1) * (1 - var(--svc-arrive, 1))));
+  transform: translate(-50%, -50%)
+    scale(calc(1 + (var(--svc-arrive-from) - 1) * (1 - var(--svc-arrive, 1))));
   transform-origin: center center;
   opacity: var(--svc-arrive-op, 1);
   will-change: transform, opacity;
@@ -119,13 +118,11 @@
   transition: opacity 320ms var(--ease-out, ease-out);
 }
 
-/* Core-shrink handoff (2026-06-20): on the dock-capable desktop path the
- * in-sphere particle core (BrandmarkPhysicsCoreActor) shrinks in to BECOME
- * the centerpiece, so the separate 2D field is hidden — the wrapper stays
- * as a grid spacer that reserves col-2 width so the name list + paragraph
- * keep their positions, and the R3F core projects into that space. On
- * mobile / reduced-motion (no dock, no core) the 2D field remains the
- * centerpiece (rules below / inline fallback). */
+/* Core-shrink handoff: on the dock-capable desktop path the in-sphere
+ * particle core (BrandmarkPhysicsCoreActor) shrinks in to BECOME the
+ * centerpiece, so the separate 2D field is hidden and the R3F core
+ * projects into that space. On mobile / reduced-motion (no dock, no core)
+ * the 2D field remains the centerpiece (static block below). */
 @media (min-width: 961px) and (prefers-reduced-motion: no-preference) {
   .services-stage__brandmark__canvas,
   .services-stage__brandmark__fallback {
@@ -133,86 +130,247 @@
   }
 }
 
-/* ── Left — service list (col 1) ─────────────────────────────────── */
-.services-stage__list {
-  grid-column: 1;
-  grid-row: 1;
-  justify-self: end;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end; /* names hug the mark side */
-  gap: clamp(6px, 1.1vh, 16px);
-  text-align: right;
-  /* Delayed entrance (see useServicesStageScroll): the copy rises in
-   * gently AFTER the core has shrunk to centre. `--svc-content-in` (0..1)
-   * is a smootherstep off the dissipate. Defaults to 1 so the copy is
-   * present whenever the var is absent (mobile / reduced / pre-hydration). */
+/* ── Celestial orrery overlay ────────────────────────────────────── */
+.services-orbit-map {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: clamp(560px, 66vw, 1040px);
+  max-width: 96vw;
+  aspect-ratio: 1;
+  pointer-events: none;
+  z-index: 1;
+  /* Assemble the orrery AFTER the sun parks — `--svc-content-in` (0..1) is
+   * the delayed entrance envelope useServicesStageScroll publishes from the
+   * corridor dissipate (1 = parked; defaults to 1 when absent / inert). */
   opacity: var(--svc-content-in, 1);
-  transform: translateY(calc((1 - var(--svc-content-in, 1)) * 22px));
-  will-change: opacity, transform;
 }
-.services-stage__name {
-  font-family: var(--font-pp-neue-montreal);
-  font-weight: 400;
-  font-size: clamp(28px, 3.4vw, 52px);
-  line-height: 1.04;
-  letter-spacing: -0.015em;
-  color: var(--dawn-30);
-  /* Smoother, slightly longer highlight crossfade between steps. */
-  transition: color 760ms cubic-bezier(0.33, 0, 0.2, 1);
-}
-/* Active service — keyed off the stage's data-active-step. */
-.services-stage[data-active-step="0"] .services-stage__name[data-i="0"],
-.services-stage[data-active-step="1"] .services-stage__name[data-i="1"],
-.services-stage[data-active-step="2"] .services-stage__name[data-i="2"] {
-  color: var(--dawn);
+.services-orbit-map__svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
 }
 
-/* ── Right — paragraph stack (col 3), crossfaded ─────────────────── */
-/* All three paragraphs share one grid cell (stacked); only the active
- * one is opacity 1, so the cell sizes to the tallest paragraph and the
- * visible one stays vertically centred next to the mark. */
-.services-stage__copy {
-  grid-column: 3;
-  grid-row: 1;
-  justify-self: start;
-  align-self: center;
-  display: grid;
-  align-items: center;
-  /* Explicit width — otherwise the shrink-to-fit grid collapses to the
-   * longest word and the paragraph wraps into a tall sliver. */
-  width: clamp(300px, 26vw, 420px);
-  /* Same delayed entrance as the list (see `.services-stage__list`). */
-  opacity: var(--svc-content-in, 1);
-  transform: translateY(calc((1 - var(--svc-content-in, 1)) * 22px));
-  will-change: opacity, transform;
+/* Orbit path — base (inactive) state is faint; active brightens. The
+ * per-orbit stroke/dash identity is set inline from `celestialData`. */
+.svc-orbit {
+  opacity: 0.26;
+  transition: opacity 720ms var(--m-ease, cubic-bezier(0.33, 0, 0.2, 1));
 }
-.services-stage__para {
-  grid-area: 1 / 1;
-  margin: 0;
-  max-width: 100%;
-  font-family: var(--font-pp-neue-montreal);
-  font-weight: 300;
-  font-size: clamp(19px, 2.1vw, 32px);
-  line-height: 1.38;
-  letter-spacing: -0.005em;
-  color: var(--dawn);
-  opacity: 0;
-  /* Smoother, slightly longer paragraph crossfade between steps. */
-  transition: opacity 820ms cubic-bezier(0.33, 0, 0.2, 1);
+.svc-orbit__node {
+  fill: var(--gold);
 }
-.services-stage[data-active-step="0"] .services-stage__para[data-i="0"],
-.services-stage[data-active-step="1"] .services-stage__para[data-i="1"],
-.services-stage[data-active-step="2"] .services-stage__para[data-i="2"] {
+.svc-orbit__halo,
+.svc-orbit__tick {
+  opacity: 0; /* active-only emphasis */
+  transition: opacity 480ms var(--m-ease, ease);
+}
+.svc-orbit__label {
+  fill: var(--dawn-30, rgba(235, 227, 214, 0.3));
+  font-family: var(--font-pt-mono, "PT Mono", monospace);
+  font-size: 6px; /* SVG user units — scales with the map */
+  letter-spacing: 0.14em;
+  transition: fill 600ms var(--m-ease, ease);
+}
+
+/* Active orbit/node — keyed off the stage's data-active-step (same model
+ * the old list highlight used). All orbits stay present; only the active
+ * one is full-strength + shows its node halo/tick and a gold label. */
+.services-stage[data-active-step="0"] .svc-orbit[data-i="0"],
+.services-stage[data-active-step="1"] .svc-orbit[data-i="1"],
+.services-stage[data-active-step="2"] .svc-orbit[data-i="2"] {
   opacity: 1;
 }
+.services-stage[data-active-step="0"] .svc-orbit[data-i="0"] .svc-orbit__halo,
+.services-stage[data-active-step="0"] .svc-orbit[data-i="0"] .svc-orbit__tick,
+.services-stage[data-active-step="1"] .svc-orbit[data-i="1"] .svc-orbit__halo,
+.services-stage[data-active-step="1"] .svc-orbit[data-i="1"] .svc-orbit__tick,
+.services-stage[data-active-step="2"] .svc-orbit[data-i="2"] .svc-orbit__halo,
+.services-stage[data-active-step="2"] .svc-orbit[data-i="2"] .svc-orbit__tick {
+  opacity: 1;
+}
+.services-stage[data-active-step="0"] .svc-orbit[data-i="0"] .svc-orbit__label,
+.services-stage[data-active-step="1"] .svc-orbit[data-i="1"] .svc-orbit__label,
+.services-stage[data-active-step="2"] .svc-orbit[data-i="2"] .svc-orbit__label {
+  fill: var(--gold);
+}
 
-/* ── Mobile / narrow ─────────────────────────────────────────────── */
-/* The corridor dock is gated off ≤960px (useCorridorExitScroll), so there
- * is no ambient sphere here — the stage stands alone on opaque void. Drop
- * the pin and stack into a single centred column; the step hook is inert,
- * so reveal every paragraph. */
-@media (max-width: 960px) {
+/* ── Service cards (HUD readouts, one revealed per step) ──────────── */
+.services-cards {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+  /* Same delayed entrance as the orrery (multiplies the per-card reveal). */
+  opacity: var(--svc-content-in, 1);
+}
+
+.service-celestial-card {
+  position: absolute;
+  /* Anchored to the lower-right corner, narrow enough that its left edge
+   * clears the centered sun's footprint across desktop widths (the sun is
+   * the R3F core / 2D fallback at ~clamp(220,26vw,400)px). Reads as a
+   * corner readout, like the orrery reference's lower-right data block. */
+  right: clamp(18px, 2.6vw, 40px);
+  bottom: clamp(28px, 6vh, 76px);
+  width: clamp(290px, 25vw, 348px);
+  padding: clamp(18px, 1.5vw, 24px);
+  box-sizing: border-box;
+  pointer-events: auto;
+  /* Translucent panel + a faint gold dither stipple (background-image
+   * paints under the text — legibility preserved). */
+  background-color: rgba(10, 9, 8, 0.62);
+  background-image: radial-gradient(rgba(202, 165, 84, 0.05) 0.5px, transparent 0.6px);
+  background-size: 4px 4px;
+  backdrop-filter: blur(9px);
+  -webkit-backdrop-filter: blur(9px);
+  border: 1px solid var(--dawn-08, rgba(235, 227, 214, 0.08));
+  box-shadow:
+    0 0 0 1px rgba(235, 227, 214, 0.04),
+    0 0 60px rgba(202, 165, 84, 0.08),
+    0 30px 80px rgba(0, 0, 0, 0.55);
+  /* Reveal state (inactive) — faded out + nudged down, taken out of the
+   * pointer/hit path via visibility after the fade. */
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(14px);
+  transition:
+    opacity 640ms var(--m-ease, cubic-bezier(0.33, 0, 0.2, 1)),
+    transform 640ms var(--m-ease, cubic-bezier(0.33, 0, 0.2, 1)),
+    visibility 0s linear 640ms;
+}
+.service-celestial-card--lead {
+  border-color: var(--gold-30, rgba(202, 165, 84, 0.3));
+}
+
+.services-stage[data-active-step="0"] .service-celestial-card[data-i="0"],
+.services-stage[data-active-step="1"] .service-celestial-card[data-i="1"],
+.services-stage[data-active-step="2"] .service-celestial-card[data-i="2"] {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+  transition:
+    opacity 640ms var(--m-ease, cubic-bezier(0.33, 0, 0.2, 1)),
+    transform 640ms var(--m-ease, cubic-bezier(0.33, 0, 0.2, 1)),
+    visibility 0s;
+}
+
+/* Card internals */
+.service-celestial-card__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: clamp(12px, 1.2vw, 18px);
+}
+.service-celestial-card__index {
+  font-family: var(--font-pt-mono, "PT Mono", monospace);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: var(--gold);
+}
+.service-celestial-card__dot {
+  width: 4px;
+  height: 4px;
+  background: var(--gold);
+  opacity: 0.7;
+}
+.service-celestial-card__kicker {
+  font-family: var(--font-pt-mono, "PT Mono", monospace);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--dawn-50, rgba(235, 227, 214, 0.5));
+}
+.service-celestial-card__verb {
+  margin: 0;
+  font-family: var(--font-pp-neue-montreal, sans-serif);
+  font-weight: 400;
+  font-size: clamp(24px, 2.2vw, 30px);
+  line-height: 1.02;
+  letter-spacing: 0.01em;
+  color: var(--dawn);
+}
+.service-celestial-card__tagline {
+  margin: 6px 0 0;
+  font-family: var(--font-pp-neue-montreal, sans-serif);
+  font-weight: 300;
+  font-size: clamp(14px, 1.1vw, 16px);
+  line-height: 1.3;
+  color: var(--dawn-70, rgba(235, 227, 214, 0.7));
+}
+.service-celestial-card__body {
+  margin: clamp(12px, 1.2vw, 16px) 0 0;
+  font-family: var(--font-pp-neue-montreal, sans-serif);
+  font-weight: 300;
+  font-size: clamp(12.5px, 0.95vw, 14px);
+  line-height: 1.5;
+  color: var(--dawn-60, rgba(235, 227, 214, 0.6));
+}
+.service-celestial-card__meta {
+  margin: clamp(14px, 1.4vw, 20px) 0 0;
+  padding: clamp(12px, 1.2vw, 16px) 0 0;
+  border-top: 1px solid var(--dawn-08, rgba(235, 227, 214, 0.08));
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.service-celestial-card__meta-row {
+  display: grid;
+  grid-template-columns: minmax(78px, auto) 1fr;
+  gap: 12px;
+  align-items: baseline;
+}
+.service-celestial-card__meta-label {
+  font-family: var(--font-pt-mono, "PT Mono", monospace);
+  font-size: 9.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--dawn-40, rgba(235, 227, 214, 0.4));
+}
+.service-celestial-card__meta-value {
+  margin: 0;
+  font-family: var(--font-pt-mono, "PT Mono", monospace);
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--dawn-70, rgba(235, 227, 214, 0.7));
+}
+.service-celestial-card__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: clamp(16px, 1.6vw, 22px);
+}
+.service-celestial-card__phase {
+  font-family: var(--font-pt-mono, "PT Mono", monospace);
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  color: var(--dawn-60, rgba(235, 227, 214, 0.6));
+  padding: 4px 9px;
+  border: 1px solid var(--dawn-08, rgba(235, 227, 214, 0.08));
+}
+.service-celestial-card__cta {
+  font-family: var(--font-pt-mono, "PT Mono", monospace);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--gold);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: color 200ms var(--m-ease, ease);
+}
+.service-celestial-card__cta:hover {
+  color: var(--dawn);
+}
+
+/* ── Mobile / reduced motion — static stacked layout ─────────────── */
+/* The corridor dock is gated off ≤960px AND under reduced motion
+ * (useCorridorExitScroll), so there is no ambient sphere and no R3F sun
+ * here — the 2D field is the center. Drop the pin, render the brandmark +
+ * a static/simplified orrery as a header, then stack every card. The step
+ * hook + drift are inert, so all cards read at full strength. */
+@media (max-width: 960px), (prefers-reduced-motion: reduce) {
   .services-stage-root {
     min-height: 0;
   }
@@ -223,86 +381,62 @@
     padding: clamp(72px, 12vh, 140px) 0;
   }
   .services-stage__items {
-    grid-template-columns: 1fr;
-    row-gap: clamp(28px, 5vh, 48px);
-    justify-items: center;
+    display: block;
+    position: relative;
+    width: 100%;
+    max-width: 560px;
+    height: auto;
+    margin: 0 auto;
+    padding: 0 var(--hud-content-inset, 22px);
   }
-  /* Reset the desktop row pinning so the cells stack instead of
-   * overlapping in row 1 (brandmark → names → paragraphs). */
-  .services-stage__brandmark,
-  .services-stage__list,
-  .services-stage__copy {
-    grid-row: auto;
-  }
-  .services-stage__brandmark {
-    grid-column: 1;
-    width: min(56vw, 260px);
-    /* No dive-in shrink on mobile (no pinned corridor seam here). */
-    transform: none;
-    opacity: 1;
-    will-change: auto;
-  }
-  .services-stage__list {
-    grid-column: 1;
-    justify-self: center;
-    align-items: center;
-    text-align: center;
-    gap: clamp(4px, 1vh, 12px);
-  }
-  /* Static list: every name reads at full strength (no active step). */
-  .services-stage__name {
-    color: var(--dawn);
-  }
-  .services-stage__copy {
-    grid-column: 1;
-    justify-self: center;
-    display: flex;
-    flex-direction: column;
-    gap: clamp(20px, 4vh, 36px);
-  }
-  .services-stage__para {
-    position: static;
-    max-width: 38ch;
-    text-align: center;
-    font-size: clamp(18px, 4.4vw, 24px);
-    opacity: 1; /* all paragraphs visible in the static list */
-  }
-}
 
-/* ── Reduced motion ──────────────────────────────────────────────── */
-/* Same calm static read at any width: no pin, no crossfade, every step
- * visible, single brandmark frame (the painter renders one frame too). */
-@media (prefers-reduced-motion: reduce) {
-  .services-stage-root {
-    min-height: 0;
-  }
-  .services-stage {
+  /* Hero band: brandmark (static) with the orrery overlaid + centered. */
+  .services-stage__brandmark {
     position: relative;
     top: auto;
-    height: auto;
-    padding: clamp(72px, 12vh, 140px) 0;
+    left: auto;
+    transform: none;
+    opacity: 1;
+    will-change: auto;
+    width: min(60vw, 280px);
+    margin: 0 auto clamp(40px, 8vh, 72px);
   }
-  .services-stage__name {
-    color: var(--dawn);
-    transition: none;
+  .services-orbit-map {
+    position: absolute;
+    top: calc(min(60vw, 280px) / 2); /* center on the brandmark center */
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: min(86vw, 360px);
+    max-width: none;
+    z-index: 1;
   }
-  .services-stage__copy {
+  /* Simplify the orrery on mobile: static decorative rings only. */
+  .svc-orbit {
+    opacity: 0.42;
+  }
+  .svc-orbit__halo,
+  .svc-orbit__tick,
+  .svc-orbit__label {
+    display: none;
+  }
+
+  /* Cards: stack every one, full strength, in normal flow below the hero. */
+  .services-cards {
+    position: static;
+    inset: auto;
+    pointer-events: auto;
     display: flex;
     flex-direction: column;
     gap: clamp(20px, 4vh, 36px);
   }
-  .services-stage__para {
+  .service-celestial-card {
     position: static;
+    right: auto;
+    bottom: auto;
+    width: 100%;
     opacity: 1;
-    transition: none;
-  }
-  .services-stage__brandmark {
-    /* No dive-in shrink under reduced motion — park the centerpiece. */
+    visibility: visible;
     transform: none;
-    opacity: 1;
-    will-change: auto;
-  }
-  .services-stage__brandmark__fallback {
     transition: none;
   }
 }
