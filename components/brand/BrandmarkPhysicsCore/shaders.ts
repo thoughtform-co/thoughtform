@@ -56,7 +56,12 @@ export const brandmarkCoreVertexShader = /* glsl */ `
   // declared mediump here to match.
   uniform mediump float uGlitch; // 0 = no glitch, ~1 at handoff peak (bell)
   uniform mediump float uTime;   // wall-clock seconds (animates the tear)
-  
+  // 0 = luminous "dust" (corridor / sphere look); 1 = clean uniform field
+  // (the Services centerpiece). Ramps with the shrink-in so the sphere is
+  // untouched and the mark cleans up as it settles. Declared mediump to
+  // match the fragment (shared-uniform precision rule, see uGlitch/uTime).
+  uniform mediump float uCleanField;
+
   attribute vec2 aUV;
   attribute float aLuma;        // per-particle phase [0, 1)
   attribute float aEdgeWeight;  // edge proximity [0, 1]
@@ -136,6 +141,11 @@ export const brandmarkCoreVertexShader = /* glsl */ `
     // hotter; the variance keeps the cloud from looking like a
     // uniform texture.
     float sizeMul = 0.78 + aEdgeWeight * 0.32 + aLuma * 0.18;
+    // Clean-field: collapse the per-particle size variance to a uniform
+    // speck (kept near full size — the cloud is only ~1300 points, so
+    // shrinking the dots too far makes the small centerpiece read sparse /
+    // faint). Uniform size is what kills the "mixed-size lights" look.
+    sizeMul = mix(sizeMul, 0.95, uCleanField);
     gl_PointSize = uPointSize * uPixelRatio * sizeMul;
   }
 `;
@@ -148,7 +158,8 @@ export const brandmarkCoreFragmentShader = /* glsl */ `
   uniform float uOpacity;
   uniform float uTime;
   uniform float uGlitch;   // mediump via the precision stmt — matches vertex
-  
+  uniform float uCleanField; // 0 = luminous dust, 1 = clean uniform field
+
   varying float vLuma;
   varying float vEdgeWeight;
   varying float vDepth;
@@ -168,7 +179,11 @@ export const brandmarkCoreFragmentShader = /* glsl */ `
     // CorridorSeamPixelField in #services. Dense overlap still
     // accumulates into a soft glow under additive blending; tight
     // single particles read crisply against the dark background.
-    float alpha = 1.0 - smoothstep(0.30, 0.50, d);
+    // Clean-field tightens the falloff a touch (less halo bloom, so dense
+    // overlap stops glowing into blobs) while keeping enough soft coverage
+    // that the sparse ~1300-point cloud still reads as a continuous mark.
+    float dotEdge0 = mix(0.30, 0.36, uCleanField);
+    float alpha = 1.0 - smoothstep(dotEdge0, 0.50, d);
     if (alpha < 0.005) discard;
     
     // Per-particle brightness variance. \`vLuma\` is the deterministic
@@ -176,7 +191,9 @@ export const brandmarkCoreFragmentShader = /* glsl */ `
     // cloud a fireflies-in-fog quality — every particle reads, but
     // the brighter ones catch the light hotter so the silhouette
     // doesn't paint as a uniform field.
-    float twinkle = 0.55 + 0.45 * vLuma;
+    // Clean-field flattens the per-particle brightness variance to a
+    // uniform value — this is the main fix for the "Christmas lights" read.
+    float twinkle = mix(0.55 + 0.45 * vLuma, 1.0, uCleanField);
     alpha *= twinkle;
     
     // Atmospheric depth dim. The brandmark's Z range is small but
@@ -187,12 +204,19 @@ export const brandmarkCoreFragmentShader = /* glsl */ `
     // particles recede) without crushing the back layer into
     // invisibility.
     float depthFactor = 0.70 + 0.30 * smoothstep(-0.06, 0.18, vDepth);
-    
+    // Clean-field lifts the dim toward full, uniform brightness (the mark
+    // is flat at the centerpiece, so there is no depth to convey there).
+    depthFactor = mix(depthFactor, 1.0, uCleanField);
+
     // Tint blend. Edge particles (high \`vEdgeWeight\`, near the
     // silhouette extremes) trend toward the rim accent. Mix amount
     // is conservative so the body stays anchored in the gold body
     // tone — only the limb hints toward dawn.
     vec3 color = mix(uColor, uAccentColor, vEdgeWeight * 0.55);
+    // Clean-field pulls the rim-accent variance back toward the uniform
+    // body gold so the field reads as one even tone (stays on-brand —
+    // blends with the gold sphere rather than going monochrome/cool).
+    color = mix(color, uColor, uCleanField * 0.7);
     color *= depthFactor;
     
     // Per-particle pulse with seed-varied phase AND frequency so
@@ -202,6 +226,9 @@ export const brandmarkCoreFragmentShader = /* glsl */ `
     // looking like the cloud is strobing.
     float pulseFreq = 0.6 + vLuma * 1.4;
     float pulse = sin(uTime * pulseFreq + vLuma * 6.28) * 0.10 + 0.90;
+    // Clean-field stills the per-particle flicker so the centerpiece reads
+    // calm and steady (the breathing is corridor-only character).
+    pulse = mix(pulse, 1.0, uCleanField);
     color *= pulse;
     
     // ── SUBTLE MATRIX GLITCH (uGlitch > 0) ───────────────────────

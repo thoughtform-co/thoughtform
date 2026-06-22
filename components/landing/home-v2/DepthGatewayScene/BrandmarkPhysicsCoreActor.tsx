@@ -174,6 +174,10 @@ export function BrandmarkPhysicsCoreActor({
   const depthRef = useRef(0);
   const glitchRef = useRef(0);
   const streamRef = useRef(0);
+  // Clean-field dial: 0 = luminous dust (corridor/sphere), 1 = uniform crisp
+  // field (Services centerpiece). Driven from the shrink progress so the
+  // mark cleans up exactly as it settles into #services (see shaders).
+  const cleanFieldRef = useRef(0);
   const opacityRef = useRef(0);
   const pointSizeRef = useRef(CORE_POINT_SIZE_FLAT);
   const pausedRef = useRef(true);
@@ -286,6 +290,9 @@ export function BrandmarkPhysicsCoreActor({
     // shrinks to the centred Services centerpiece (Z-only, so the XY mark
     // is preserved).
     depthRef.current = depth * (1 - recT);
+    // Clean up the particle style (uniform size/brightness, crisp dot, no
+    // flicker) in lock-step with the shrink — corridor/sphere stays dust.
+    cleanFieldRef.current = recT;
     glitchRef.current = glitch;
 
     // Corridor → epilogue handoff: the in-canvas core owns the mark
@@ -376,6 +383,7 @@ export function BrandmarkPhysicsCoreActor({
         depthRef={depthRef}
         glitchRef={glitchRef}
         streamRef={streamRef}
+        cleanFieldRef={cleanFieldRef}
         seedAtHome
         opacityRef={opacityRef}
         pointSizeRef={pointSizeRef}

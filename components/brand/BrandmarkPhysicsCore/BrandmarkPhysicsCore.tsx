@@ -171,6 +171,16 @@ export interface BrandmarkPhysicsCoreProps {
    *  corridor actor can drive the momentum imperatively without
    *  re-rendering. Wins over the static `stream` prop when provided. */
   streamRef?: ReadonlyRef<number>;
+  /** Clean-field dial (0..1). 0 = luminous "dust" (the corridor / sphere
+   *  look: per-particle brightness + size variance, soft halo, organic
+   *  flicker); 1 = clean uniform field (the Services centerpiece: uniform
+   *  size + brightness, crisp dot, no flicker, even gold tone). Default 0.
+   *  The corridor actor ramps this with the shrink-in so the sphere is
+   *  untouched and the mark cleans up as it settles into #services. */
+  cleanField?: number;
+  /** Live ref for `cleanField`. Read every frame inside `useFrame`. Wins
+   *  over the static `cleanField` prop when provided. */
+  cleanFieldRef?: ReadonlyRef<number>;
   /** When true, the GPGPU sim is seeded with the particles already AT
    *  their home positions (instead of a scattered sphere of dust). Use
    *  for the corridor morph, where the mark must read as the brandmark
@@ -321,6 +331,8 @@ export function BrandmarkPhysicsCore({
   glitchRef,
   stream = 0,
   streamRef,
+  cleanField = 0,
+  cleanFieldRef,
   seedAtHome = false,
   pointSize = DEFAULT_POINT_SIZE_PX,
   pointSizeRef,
@@ -481,6 +493,7 @@ export function BrandmarkPhysicsCore({
         uDepth: { value: depth },
         uGlitch: { value: glitch },
         uStream: { value: stream },
+        uCleanField: { value: cleanField },
         uTime: { value: 0 },
       },
       vertexShader: brandmarkCoreVertexShader,
@@ -541,6 +554,7 @@ export function BrandmarkPhysicsCore({
     const resolvedDepth = depthRef ? depthRef.current : depth;
     const resolvedGlitch = glitchRef ? glitchRef.current : glitch;
     const resolvedStream = streamRef ? streamRef.current : stream;
+    const resolvedCleanField = cleanFieldRef ? cleanFieldRef.current : cleanField;
 
     // Reduced-motion / static path. The home texture was bound once
     // when resources were built; we just keep tint / opacity / depth /
@@ -558,6 +572,7 @@ export function BrandmarkPhysicsCore({
       mat.uniforms.uDepth.value = resolvedDepth;
       mat.uniforms.uGlitch.value = resolvedGlitch;
       mat.uniforms.uStream.value = resolvedStream;
+      mat.uniforms.uCleanField.value = resolvedCleanField;
       mat.uniforms.uTime.value = state.clock.elapsedTime;
       return;
     }
@@ -594,6 +609,7 @@ export function BrandmarkPhysicsCore({
     mat.uniforms.uDepth.value = resolvedDepth;
     mat.uniforms.uGlitch.value = resolvedGlitch;
     mat.uniforms.uStream.value = resolvedStream;
+    mat.uniforms.uCleanField.value = resolvedCleanField;
     mat.uniforms.uTime.value = state.clock.elapsedTime;
   });
 
