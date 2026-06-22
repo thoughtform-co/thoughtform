@@ -24,3 +24,7 @@ export type {
   BrandmarkCoreGlyph,
   BrandmarkCoreBlending,
 } from "./BrandmarkPhysicsCore";
+
+// Re-export the basis type from the sampler so consumers (the lab,
+// production actor) can use one import for the full appearance API.
+export type { BrandmarkBasis } from "@/lib/brandmark/sampleBrandmarkParticles";

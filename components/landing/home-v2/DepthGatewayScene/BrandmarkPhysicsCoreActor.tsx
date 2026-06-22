@@ -51,6 +51,10 @@ import {
   BrandmarkPhysicsCore,
   BRANDMARK_PHYSICS_CORE_COUNT_DESKTOP,
   BRANDMARK_PHYSICS_CORE_COUNT_MOBILE,
+  type BrandmarkBasis,
+  type BrandmarkCoreBlending,
+  type BrandmarkCoreGlyph,
+  type BrandmarkCoreShape,
 } from "@/components/brand/BrandmarkPhysicsCore";
 import { getSmoothedDissipate, getSmoothedEpilogueProgress } from "./motionFollower";
 import {
@@ -102,6 +106,64 @@ const CORE_POINT_SIZE_3D = 4.0;
  *  prior corridor density. Raising the global count adds centerpiece density
  *  without touching the corridor (the keep auto-recomputes). */
 const CORRIDOR_DRAW_TARGET = 1600;
+
+/** ── Production appearance (basis · primitive · blending) ─────────────
+ *  These constants pick a particular visual preset for the live corridor
+ *  + Services centerpiece. The lab (`/test/brandmark-physics-core`) can
+ *  explore alternatives via the "Visual preset" picker; promoting one to
+ *  production is a constant edit here. The defaults below reproduce the
+ *  legacy luminous-dust look (`dome-fill` + additive `dot`) so the
+ *  corridor + parked centerpiece stay byte-identical until the chosen
+ *  preset is wired in.
+ *
+ *  Why these are explicit (not relying on the component's defaults):
+ *  the lab can change defaults during prototyping without dragging the
+ *  live mark along with it — these pins are the production contract.
+ *
+ *  Invariant guardrail: changing `PRODUCTION_BASIS` away from
+ *  `dome-fill` re-targets the sample silhouette. The SVG → core morph
+ *  (ADR-023 Invariant 3) assumes the FLAT particle silhouette matches
+ *  the SVG paint at `uDepth = 0`. The `dome-fill` basis samples the
+ *  filled paths and matches by definition; `svg-outline` samples points
+ *  ALONG the path contours (the outline reads as the mark but the
+ *  morph would now be SVG-fill → particle-outline). If a future ADR
+ *  promotes `svg-outline`/`model-wire`, either accept that the morph
+ *  reads as a fill→outline transition or revise the SVG handoff to
+ *  paint the brandmark outline instead of the filled paths.
+ *
+ *  Current look (2026-06-22, preset `y95do0` "Dither 3"): `edge-lattice`
+ *  basis + `voxel` shape + additive blending. The dome-fill silhouette is
+ *  quantised to a ~1/60 grid (`PRODUCTION_GRID_SNAP`) and each surviving
+ *  cell is painted as a hard gold square (`voxel`, gap `PRODUCTION_SHAPE_STROKE`).
+ *  Consequence (accepted by the brief): the SVG → core cut now reads as the
+ *  crisp vector mark "pixelating" into a voxel grid (fill → raster), not the
+ *  byte-identical fill → fill of the legacy dome-fill/dot look. The lattice
+ *  is already a sparse set of cells, so the corridor is NOT additionally
+ *  thinned — `PRODUCTION_CORRIDOR_KEEP` overrides the count-based keep to 1.0
+ *  (see below). `freezeMotion` stays false (the preset kept the slight
+ *  corridor breathing; the centerpiece still calms via `cleanField` → 1). */
+const PRODUCTION_BASIS: BrandmarkBasis = "edge-lattice";
+const PRODUCTION_SHAPE: BrandmarkCoreShape = "voxel";
+const PRODUCTION_GLYPH: BrandmarkCoreGlyph = "plus";
+const PRODUCTION_BLENDING: BrandmarkCoreBlending = "additive";
+const PRODUCTION_SHAPE_STROKE = 0.12;
+const PRODUCTION_PRIMITIVE_ASPECT = 2.4;
+const PRODUCTION_LINE_JITTER = 0;
+
+/** Lattice cell size for `PRODUCTION_BASIS = "edge-lattice"` (normalised
+ *  units; ~1/60 across the mark). Ignored by the other bases. From preset
+ *  `y95do0`. */
+const PRODUCTION_GRID_SNAP = 0.0165;
+
+/** Corridor draw-fraction override. `null` → use the count-based
+ *  `CORRIDOR_DRAW_TARGET / count` thinning (correct for the dense `dome-fill`
+ *  basis). A number pins the corridor keep directly — needed for sparse bases
+ *  like `edge-lattice`, where the dome-fill samples are already collapsed to a
+ *  small set of unique grid cells, so the count-based 0.27 keep would shred the
+ *  voxel grid into a broken scatter. The preset `y95do0` draws the full lattice
+ *  (keep 1.0). The centerpiece still thins via `cleanFieldKeep` as `cleanField`
+ *  ramps to 1. */
+const PRODUCTION_CORRIDOR_KEEP: number | null = 1;
 
 /** Core-shrink handoff into Services (2026-06-20). The in-sphere
  *  particle core IS the brandmark end-to-end — at the Services dive it
@@ -203,7 +265,10 @@ export function BrandmarkPhysicsCoreActor({
   // Corridor draws only a fraction of the (large) global count so it stays calm
   // while the centerpiece draws densely from the same cloud. Desktop:
   // 1600/6000 ≈ 0.27; mobile: min(1, 1600/650) = 1 (no thinning — already low).
-  const corridorKeep = Math.min(1, CORRIDOR_DRAW_TARGET / count);
+  // `PRODUCTION_CORRIDOR_KEEP` overrides this for sparse bases (edge-lattice):
+  // the lattice already collapses the cloud to a small set of unique cells, so
+  // the count-based 0.27 keep would shred the voxel grid — pin it to 1.0 there.
+  const corridorKeep = PRODUCTION_CORRIDOR_KEEP ?? Math.min(1, CORRIDOR_DRAW_TARGET / count);
 
   const groupRef = useRef<THREE.Group>(null);
   // Scratch for the Services core-shrink (camera-front re-centre) so we
@@ -461,6 +526,21 @@ export function BrandmarkPhysicsCoreActor({
         accentColor={accentColor}
         pausedRef={pausedRef}
         reducedMotion={reducedMotion}
+        // ── Production appearance (PRODUCTION_* constants above). These
+        // are passed EXPLICITLY rather than relying on the component's
+        // default props so the live corridor look can't drift if the lab
+        // changes its own defaults. The default values reproduce today's
+        // luminous-dust look (dome-fill + additive dot), so the corridor
+        // and parked centerpiece are byte-identical until a preset is
+        // deliberately promoted into PRODUCTION_*.
+        basis={PRODUCTION_BASIS}
+        gridSnap={PRODUCTION_GRID_SNAP}
+        shape={PRODUCTION_SHAPE}
+        glyph={PRODUCTION_GLYPH}
+        blending={PRODUCTION_BLENDING}
+        shapeStroke={PRODUCTION_SHAPE_STROKE}
+        primitiveAspect={PRODUCTION_PRIMITIVE_ASPECT}
+        lineJitter={PRODUCTION_LINE_JITTER}
       />
     </group>
   );

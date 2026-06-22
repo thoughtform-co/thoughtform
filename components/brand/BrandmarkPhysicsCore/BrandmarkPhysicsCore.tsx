@@ -41,6 +41,7 @@ import * as THREE from "three";
 import { createParticleUVs, GPGPUParticleSimulation } from "@/lib/key-visual/gpgpu-simulation";
 import {
   sampleBrandmarkParticles,
+  type BrandmarkBasis,
   type BrandmarkParticleSample,
 } from "@/lib/brandmark/sampleBrandmarkParticles";
 import { brandmarkCoreFragmentShader, brandmarkCoreVertexShader } from "./shaders";
@@ -160,8 +161,24 @@ const DEFAULT_OPACITY = 0.78;
 type ReadonlyRef<T> = { readonly current: T };
 
 /** Render-mode + symbol identifiers for the lab particle-type switch
- *  (ADR-023 addendum). Encoded to the `int` shader uniforms below. */
-export type BrandmarkCoreShape = "dot" | "dither" | "voxel" | "glyph";
+ *  (ADR-023 addendum). Encoded to the `int` shader uniforms below.
+ *
+ *  Eight modes today — `dot` is the historical default (byte-identical
+ *  to the corridor / parked centerpiece). The newer modes (`dash`,
+ *  `cell`, `bracket`, `scan`) rotate the point sprite by the particle's
+ *  `aAngle` so oriented primitives align with the SVG-outline tangent
+ *  when the new `svg-outline` / `model-wire` bases are in use. With the
+ *  legacy `dome-fill` basis the angles are 0, so those modes degenerate
+ *  to axis-aligned variants — still useful as a more tactical look. */
+export type BrandmarkCoreShape =
+  | "dot"
+  | "dither"
+  | "voxel"
+  | "glyph"
+  | "dash"
+  | "cell"
+  | "bracket"
+  | "scan";
 export type BrandmarkCoreGlyph = "plus" | "cross" | "square" | "ring" | "diamond" | "asterisk";
 export type BrandmarkCoreBlending = "additive" | "normal";
 
@@ -170,6 +187,10 @@ const SHAPE_TO_INT: Record<BrandmarkCoreShape, number> = {
   dither: 1,
   voxel: 2,
   glyph: 3,
+  dash: 4,
+  cell: 5,
+  bracket: 6,
+  scan: 7,
 };
 const GLYPH_TO_INT: Record<BrandmarkCoreGlyph, number> = {
   plus: 0,
@@ -306,17 +327,50 @@ export interface BrandmarkPhysicsCoreProps {
    *  depthWrite off — the standard "luminous" path). */
   depthWrite?: boolean;
   /** Per-particle render shape (lab; ADR-023 addendum). Default "dot" so the
-   *  corridor + parked centerpiece are byte-identical. "dither" / "voxel" /
-   *  "glyph" rewrite only the fragment-shader coverage mask. */
+   *  corridor + parked centerpiece are byte-identical. Other modes rewrite
+   *  only the fragment-shader coverage mask. */
   shape?: BrandmarkCoreShape;
   /** Symbol drawn when `shape === "glyph"`. Default "plus". */
   glyph?: BrandmarkCoreGlyph;
   /** Stroke half-width (glyph) / gap (voxel) / shape-weight knob. Default 0.12. */
   shapeStroke?: number;
+  /** Length:width ratio for oriented primitives (`dash` / `scan`). 1 = square;
+   *  >1 = elongated along the contour tangent. Default 2.4 — long enough to
+   *  read as a stroke, short enough to keep the contour broken into discrete
+   *  marks rather than dissolving into a solid line. */
+  primitiveAspect?: number;
+  /** Perpendicular jitter on oriented primitives (0..1). 0 = clean
+   *  parallel strokes; 0.3 = a touch of life so neighbouring dashes
+   *  don't merge into a solid bar. Default 0. */
+  lineJitter?: number;
+  /** When true, the cloud reads as a STATIC render: the GPGPU sim's
+   *  per-particle wobble (turbulence + flow) is damped to zero AND the
+   *  fragment-shader pulse + brightness twinkle are flattened. Decoupled
+   *  from `cleanField` so a corridor-look dither / raster / wire preset
+   *  can stay still without dragging the rest of the centerpiece colour /
+   *  density treatment with it (which is what `cleanField` does). Default
+   *  false — production keeps the breathing corridor character. */
+  freezeMotion?: boolean;
+  /** Live ref for `freezeMotion`. Same imperative-write pattern as
+   *  `pausedRef`. Wins over the static `freezeMotion` prop when both
+   *  are provided. */
+  freezeMotionRef?: ReadonlyRef<boolean>;
   /** Blend mode of the points material. "additive" (default) is the luminous
    *  glow; "normal" flattens it into a crisp retro field (kills the bloom that
    *  reads as "Christmas lights"). */
   blending?: BrandmarkCoreBlending;
+  /** Which particle basis to sample (where particles LIVE, separate from
+   *  what each particle DRAWS). Default "dome-fill" (legacy — the filled
+   *  silhouette + shallow dome). "svg-outline" lays particles along the
+   *  brandmark's path contours with per-particle tangent angles;
+   *  "edge-lattice" snaps the dome-fill to a regular grid (raster /
+   *  halftone read); "model-wire" extends svg-outline with per-path Z so
+   *  the contours fan into a wire-frame 3D artifact. See
+   *  `lib/brandmark/sampleBrandmarkParticles.ts` for the recipe. */
+  basis?: BrandmarkBasis;
+  /** Lattice cell size for the `edge-lattice` basis, in normalised units.
+   *  Smaller = finer raster, larger = chunkier pixel grid. Default ~1/32. */
+  gridSnap?: number;
   /** Stable seed for the deterministic scatter PRNG. */
   prngSeed?: number;
   /** Render order, forwarded to the underlying `<points>`. */
@@ -335,6 +389,10 @@ interface SimResources {
   homes: Float32Array;
   edgeWeights: Float32Array;
   seeds: Float32Array;
+  /** Per-particle orientation (radians). Drives oriented primitives
+   *  (dash / bracket / scan) via the `aAngle` vertex attribute. 0 for
+   *  the legacy `dome-fill` / `edge-lattice` bases. */
+  angles: Float32Array;
   count: number;
   textureSize: number;
 }
@@ -442,7 +500,13 @@ export function BrandmarkPhysicsCore({
   shape = "dot",
   glyph = "plus",
   shapeStroke = 0.12,
+  primitiveAspect = 2.4,
+  lineJitter = 0,
+  freezeMotion = false,
+  freezeMotionRef,
   blending = "additive",
+  basis = "dome-fill",
+  gridSnap,
   prngSeed = 0xc0ffeeed,
   renderOrder = 1,
 }: BrandmarkPhysicsCoreProps) {
@@ -458,9 +522,9 @@ export function BrandmarkPhysicsCore({
   // re-rasterising.
   const sample = useMemo<BrandmarkParticleSample | null>(() => {
     if (typeof document === "undefined") return null;
-    const s = sampleBrandmarkParticles({ count, bulge, thickness });
+    const s = sampleBrandmarkParticles({ count, bulge, thickness, basis, gridSnap });
     return s.count > 0 ? s : null;
-  }, [count, bulge, thickness]);
+  }, [count, bulge, thickness, basis, gridSnap]);
 
   // Resources travel through state (not a ref) so the geometry memo
   // and per-frame writer both see the same simulation instance React
@@ -523,6 +587,7 @@ export function BrandmarkPhysicsCore({
       homes: sample.homes,
       edgeWeights: sample.edgeWeights,
       seeds: sample.seeds,
+      angles: sample.angles,
       count: sample.count,
       textureSize,
     };
@@ -545,7 +610,7 @@ export function BrandmarkPhysicsCore({
   // ── Build the render geometry from the sample ───────────────
   const geometry = useMemo(() => {
     if (!resources) return null;
-    const { uvs, edgeWeights, seeds, count: cnt } = resources;
+    const { uvs, edgeWeights, seeds, angles, count: cnt } = resources;
 
     const geo = new THREE.BufferGeometry();
     // `position` is required by three.js to size the draw call; it is
@@ -555,9 +620,11 @@ export function BrandmarkPhysicsCore({
     const perParticleUVs = new Float32Array(cnt * 2);
     const aLuma = new Float32Array(cnt);
     const aEdgeWeight = new Float32Array(cnt);
+    const aAngle = new Float32Array(cnt);
     for (let i = 0; i < cnt; i++) {
       aLuma[i] = seeds[i];
       aEdgeWeight[i] = edgeWeights[i];
+      aAngle[i] = angles[i];
       // Particle `i` reads from texel `(i % size, floor(i / size))` —
       // identical to the layout `createParticleUVs(textureSize)`
       // writes. Slicing the first `cnt * 2` entries gives a 1:1
@@ -570,6 +637,7 @@ export function BrandmarkPhysicsCore({
     geo.setAttribute("aUV", new THREE.BufferAttribute(perParticleUVs, 2));
     geo.setAttribute("aLuma", new THREE.BufferAttribute(aLuma, 1));
     geo.setAttribute("aEdgeWeight", new THREE.BufferAttribute(aEdgeWeight, 1));
+    geo.setAttribute("aAngle", new THREE.BufferAttribute(aAngle, 1));
 
     return geo;
   }, [resources]);
@@ -596,6 +664,9 @@ export function BrandmarkPhysicsCore({
         uShape: { value: SHAPE_TO_INT[shape] },
         uGlyph: { value: GLYPH_TO_INT[glyph] },
         uShapeStroke: { value: shapeStroke },
+        uPrimitiveAspect: { value: primitiveAspect },
+        uLineJitter: { value: lineJitter },
+        uFreezeMotion: { value: freezeMotion ? 1 : 0 },
         uTime: { value: 0 },
       },
       vertexShader: brandmarkCoreVertexShader,
@@ -669,6 +740,7 @@ export function BrandmarkPhysicsCore({
     const resolvedGlitch = glitchRef ? glitchRef.current : glitch;
     const resolvedStream = streamRef ? streamRef.current : stream;
     const resolvedCleanField = cleanFieldRef ? cleanFieldRef.current : cleanField;
+    const resolvedFreezeMotion = freezeMotionRef ? freezeMotionRef.current : freezeMotion;
 
     // Reduced-motion / static path. The home texture was bound once
     // when resources were built; we just keep tint / opacity / depth /
@@ -694,6 +766,9 @@ export function BrandmarkPhysicsCore({
       mat.uniforms.uShape.value = SHAPE_TO_INT[shape];
       mat.uniforms.uGlyph.value = GLYPH_TO_INT[glyph];
       mat.uniforms.uShapeStroke.value = shapeStroke;
+      mat.uniforms.uPrimitiveAspect.value = primitiveAspect;
+      mat.uniforms.uLineJitter.value = lineJitter;
+      mat.uniforms.uFreezeMotion.value = resolvedFreezeMotion ? 1 : 0;
       mat.uniforms.uTime.value = state.clock.elapsedTime;
       return;
     }
@@ -717,7 +792,14 @@ export function BrandmarkPhysicsCore({
       // this kills the fast per-particle wobble without loosening the cloud.
       // Corridor / sphere: cleanField = 0 → calm = 1 → forces are the exact
       // pre-change lerp (byte-identical).
-      const calm = 1 - (1 - CLEAN_FIELD_FORCE_FLOOR) * clamp01(resolvedCleanField);
+      //
+      // `freezeMotion` is an INDEPENDENT stillness channel: when true the
+      // forces collapse to 0 regardless of cleanField, so a corridor-look
+      // dither / raster preset can run without the "wobble like liquid" the
+      // sim micro-jitter produces on hard pixel cells. The returnStrength is
+      // never damped (the cloud is held at home, not loosened).
+      const cleanCalm = 1 - (1 - CLEAN_FIELD_FORCE_FLOOR) * clamp01(resolvedCleanField);
+      const calm = resolvedFreezeMotion ? 0 : cleanCalm;
       sim.updateUniforms({
         time: state.clock.elapsedTime,
         deltaTime: Math.min(0.05, Math.max(0.001, delta)),
@@ -745,6 +827,9 @@ export function BrandmarkPhysicsCore({
     mat.uniforms.uShape.value = SHAPE_TO_INT[shape];
     mat.uniforms.uGlyph.value = GLYPH_TO_INT[glyph];
     mat.uniforms.uShapeStroke.value = shapeStroke;
+    mat.uniforms.uPrimitiveAspect.value = primitiveAspect;
+    mat.uniforms.uLineJitter.value = lineJitter;
+    mat.uniforms.uFreezeMotion.value = resolvedFreezeMotion ? 1 : 0;
     mat.uniforms.uTime.value = state.clock.elapsedTime;
   });
 

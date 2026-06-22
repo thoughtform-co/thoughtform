@@ -41,6 +41,27 @@
  * gpgpu shader's `(300 / Z)` factor blew the points up to ~145
  * pixels each, saturating the cloud into a featureless blob. Pixel-
  * space sizing matches the v7 `BrandmarkSilhouettePoints` style.
+ *
+ * ── Render-mode switch (lab; ADR-023 addendum) ─────────────────
+ * The fragment shader carries an opt-in `uShape` branch that
+ * rewrites only the per-particle COVERAGE MASK. Eight modes today
+ * (defaults to `dot`, byte-identical to the corridor / parked
+ * centerpiece):
+ *
+ *   0 dot      — soft radial speck (original)
+ *   1 dither   — Bayer-stippled soft disc
+ *   2 voxel    — hard square + diagonal bevel
+ *   3 glyph    — procedural SDF symbol (plus / cross / square / …)
+ *   4 dash     — oriented short stroke (rotated by `aAngle`)
+ *   5 cell     — hard outlined square (raster / LED panel feel)
+ *   6 bracket  — corner registration bracket
+ *   7 scan     — oriented scan-slit + bright leading edge
+ *
+ * Modes 4 / 6 / 7 rotate `gl_PointCoord` by `aAngle` (radians),
+ * which `sampleBrandmarkParticles` writes from the SVG-outline
+ * tangent. With the legacy `dome-fill` basis the angles are 0 so
+ * those modes degenerate to axis-aligned variants — still useful,
+ * still byte-stable on the corridor default.
  */
 
 export const brandmarkCoreVertexShader = /* glsl */ `
@@ -72,10 +93,12 @@ export const brandmarkCoreVertexShader = /* glsl */ `
   attribute vec2 aUV;
   attribute float aLuma;        // per-particle phase [0, 1)
   attribute float aEdgeWeight;  // edge proximity [0, 1]
+  attribute float aAngle;       // per-particle orientation (radians, vertex-only varying-to-fragment)
   
   varying float vLuma;
   varying float vEdgeWeight;
   varying float vDepth;         // local Z, drives atmospheric dim
+  varying float vAngle;         // forwarded to fragment so dash / scan / bracket can rotate
 
   // Cheap deterministic hash for the per-band scanline displacement.
   float hash11(float n) {
@@ -85,6 +108,7 @@ export const brandmarkCoreVertexShader = /* glsl */ `
   void main() {
     vLuma = aLuma;
     vEdgeWeight = aEdgeWeight;
+    vAngle = aAngle;
     
     // Sim-driven position. The texture is updated each frame by the
     // GPGPU compute pass (or, on the static path, by a one-shot
@@ -193,13 +217,24 @@ export const brandmarkCoreFragmentShader = /* glsl */ `
   // constraint (Invariant 8). The defaults (uShape 0 = dot, additive blending
   // set on the material) keep the corridor + parked centerpiece byte-identical;
   // only the tuning lab overrides them to explore retro-futuristic looks.
-  uniform int uShape;         // 0 = dot, 1 = dither, 2 = voxel, 3 = glyph
-  uniform int uGlyph;         // 0 plus · 1 cross · 2 square · 3 ring · 4 diamond · 5 asterisk
-  uniform float uShapeStroke; // glyph stroke half-width · voxel gap · shape weight
+  uniform int uShape;            // 0 dot · 1 dither · 2 voxel · 3 glyph · 4 dash · 5 cell · 6 bracket · 7 scan
+  uniform int uGlyph;            // 0 plus · 1 cross · 2 square · 3 ring · 4 diamond · 5 asterisk
+  uniform float uShapeStroke;    // glyph stroke half-width · voxel gap · shape weight
+  uniform float uPrimitiveAspect; // dash / scan length:width ratio (1 = square, >1 = elongated)
+  uniform float uLineJitter;      // perpendicular jitter on oriented primitives (0..1)
+  // Independent "freeze motion" channel (fragment-only). 0 = animate the
+  // per-particle pulse + brightness twinkle as normal; 1 = lock them at their
+  // mean value so the cloud reads as a STATIC dither / raster / wire field
+  // without changing colour, density, or dot scale. This is decoupled from
+  // uCleanField so the corridor / centerpiece appearance is untouched — the
+  // toggle exists for static-render looks (dither / cell / bracket) where the
+  // animated pulse + sim micro-jitter looked "wobbly like liquid".
+  uniform float uFreezeMotion;
 
   varying float vLuma;
   varying float vEdgeWeight;
   varying float vDepth;
+  varying float vAngle;
   
   float hashF(float n) {
     return fract(sin(n * 12.9898) * 43758.5453);
@@ -226,6 +261,12 @@ export const brandmarkCoreFragmentShader = /* glsl */ `
   vec2 rot45(vec2 p) {
     float s = 0.70710678;
     return vec2(p.x * s - p.y * s, p.x * s + p.y * s);
+  }
+  // Rotate vec2 by an angle in radians.
+  vec2 rotByAngle(vec2 p, float a) {
+    float c = cos(a);
+    float s = sin(a);
+    return vec2(p.x * c - p.y * s, p.x * s + p.y * c);
   }
 
   // Procedural glyph mask over centred coord p in [-0.5, 0.5]. w is the
@@ -285,6 +326,56 @@ export const brandmarkCoreFragmentShader = /* glsl */ `
     } else if (uShape == 3) {
       // GLYPH — procedural SDF symbol per particle (selected by uGlyph).
       mask = glyphMask(c, uGlyph, max(0.02, uShapeStroke));
+    } else if (uShape == 4) {
+      // DASH — oriented short stroke. Rotates c by -vAngle so the long axis
+      // of the dash aligns with the local contour tangent (svg-outline /
+      // model-wire). Width = uShapeStroke; length = width * uPrimitiveAspect
+      // (clamped so the dash always fits the point sprite). Small AA band so
+      // the strokes read crisp without looking jagged.
+      vec2 q = rotByAngle(c, -vAngle);
+      // Perpendicular jitter — moves the dash sideways inside the point
+      // sprite by a small amount so neighbouring dashes don't perfectly
+      // overlap into a continuous bar.
+      q.y += (hashF(vLuma * 113.0) - 0.5) * uLineJitter * 0.6;
+      float halfWid = clamp(uShapeStroke, 0.03, 0.25);
+      float halfLen = clamp(halfWid * uPrimitiveAspect, halfWid, 0.48);
+      float sdf = sdBox(q, vec2(halfLen, halfWid));
+      float aa = 0.04;
+      mask = 1.0 - smoothstep(-aa, aa, sdf);
+    } else if (uShape == 5) {
+      // CELL — hard outlined square. Stroke width = uShapeStroke; an LED /
+      // pixel-grid feel. No bevel (it's a wireframe cell, not a lit face).
+      float gap = clamp(uShapeStroke, 0.02, 0.25);
+      float outer = step(max(abs(c.x), abs(c.y)), 0.45);
+      float inner = step(max(abs(c.x), abs(c.y)), 0.45 - gap);
+      mask = clamp(outer - inner, 0.0, 1.0);
+    } else if (uShape == 6) {
+      // BRACKET — corner registration mark (the HUD reticle motif). Two
+      // short L-arms in the top-left corner of the sprite, then rotated
+      // by vAngle so the brackets snap to the contour. Reads as a row of
+      // tactical registration marks along the silhouette edge.
+      vec2 q = rotByAngle(c, -vAngle);
+      // Move origin to top-left so the L sits in one corner.
+      q -= vec2(-0.35, 0.35);
+      float armLen = 0.30;
+      float armWid = clamp(uShapeStroke, 0.03, 0.18);
+      float h = sdBox(q + vec2(armLen * 0.5, 0.0), vec2(armLen * 0.5, armWid));
+      float v = sdBox(q + vec2(0.0, -armLen * 0.5), vec2(armWid, armLen * 0.5));
+      float aa = 0.03;
+      mask = 1.0 - smoothstep(-aa, aa, min(h, v));
+    } else if (uShape == 7) {
+      // SCAN — oriented scan slit + bright leading edge. Used to imply a
+      // raster pass running along the contour. Long thin rectangle along
+      // the tangent, with a bright "head" on the leading edge.
+      vec2 q = rotByAngle(c, -vAngle);
+      float halfWid = clamp(uShapeStroke * 0.5, 0.02, 0.15);
+      float halfLen = clamp(halfWid * uPrimitiveAspect * 1.6, halfWid, 0.48);
+      float slit = sdBox(q, vec2(halfLen, halfWid));
+      float aa = 0.04;
+      float body = 1.0 - smoothstep(-aa, aa, slit);
+      // Leading-edge brightness: the +x end of the slit is hotter.
+      float head = smoothstep(0.0, halfLen, q.x) * step(slit, 0.0);
+      mask = clamp(body + head * 0.5, 0.0, 1.4);
     } else {
       // DOT (default) — original soft radial speck. Tighter at the parked
       // centerpiece via uCleanFieldEdge so the dense field stays crisp.
@@ -302,7 +393,12 @@ export const brandmarkCoreFragmentShader = /* glsl */ `
     // doesn't paint as a uniform field.
     // Clean-field flattens the per-particle brightness variance to a
     // uniform value — this is the main fix for the "Christmas lights" read.
-    float twinkle = mix(0.55 + 0.45 * vLuma, 1.0, uCleanField);
+    // uFreezeMotion is a SECOND, decoupled "stillness" channel that flattens
+    // the twinkle without dragging the rest of the centerpiece treatment with
+    // it (so a dither / raster look stays animated in colour but static in
+    // brightness). max() means EITHER channel can request stillness.
+    float stillness = max(uCleanField, uFreezeMotion);
+    float twinkle = mix(0.55 + 0.45 * vLuma, 1.0, stillness);
     alpha *= twinkle;
     
     // Atmospheric depth dim. The brandmark's Z range is small but
@@ -337,8 +433,12 @@ export const brandmarkCoreFragmentShader = /* glsl */ `
     float pulseFreq = 0.6 + vLuma * 1.4;
     float pulse = sin(uTime * pulseFreq + vLuma * 6.28) * 0.10 + 0.90;
     // Clean-field stills the per-particle flicker so the centerpiece reads
-    // calm and steady (the breathing is corridor-only character).
-    pulse = mix(pulse, 1.0, uCleanField);
+    // calm and steady (the breathing is corridor-only character). The
+    // uFreezeMotion channel (max() with uCleanField above) also stills the
+    // pulse independently so a corridor-look dither / raster preset can run
+    // without the "wobble like liquid" the animated pulse produces on hard
+    // pixel cells.
+    pulse = mix(pulse, 1.0, stillness);
     color *= pulse;
     
     // ── SUBTLE MATRIX GLITCH (uGlitch > 0) ───────────────────────

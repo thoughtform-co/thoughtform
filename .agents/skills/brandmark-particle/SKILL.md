@@ -112,6 +112,27 @@ Tune in `/test/brandmark-vector` (the new dev preview page that mounts both the 
 | Sampling strategy (uniform vs stratified) | `lib/brandmark/sampleShape.ts`                                                      |
 | Add a new uniform / shader feature        | `shaders.ts` + `BrandmarkParticleStation.tsx` (uniforms object + `useFrame` writer) |
 
+### Corridor physics core — basis + primitive system (ADR-023, 2026-06-22e)
+
+`BrandmarkPhysicsCore` (the corridor / Services centerpiece, NOT the v7 global painters covered above) has two orthogonal appearance axes:
+
+- **`basis`** — WHERE the particles live (`homes`):
+  - `dome-fill` (default · legacy filled silhouette + shallow dome)
+  - `svg-outline` (particles ALONG the path contour, tangent stored in `aAngle`)
+  - `edge-lattice` (dome-fill quantised to a grid, deduped — raster read)
+  - `model-wire` (svg-outline + per-path Z displacement — wireframe 3D)
+- **`shape`** — HOW each particle draws inside its point sprite:
+  - `dot` (default · soft radial speck) · `dither` (Bayer-stippled) · `voxel` (hard square + bevel) · `glyph` (procedural SDF — plus/cross/etc) · `dash` / `bracket` / `scan` (oriented — rotate by `vAngle` so they align to the contour tangent under the outline / wire basis).
+
+`basis` is **mount-time geometry** (changing it remounts the sim + GPU buffers); `shape` is fragment-only and switches per-frame. The lab `/test/brandmark-physics-core` bundles coordinated `(basis, shape, blending, sizing)` tuples behind a **Visual preset** picker (`Luminous Dust` · `Vector Trace` · `Raster Field` · `Wire Artifact` · `HUD Glyph`). Production is wired through `PRODUCTION_BASIS` / `PRODUCTION_SHAPE` / `PRODUCTION_GLYPH` / `PRODUCTION_BLENDING` / `PRODUCTION_SHAPE_STROKE` / `PRODUCTION_PRIMITIVE_ASPECT` / `PRODUCTION_LINE_JITTER` constants at the top of [`BrandmarkPhysicsCoreActor.tsx`](../../components/landing/home-v2/DepthGatewayScene/BrandmarkPhysicsCoreActor.tsx); promoting a lab look to production is a single constant edit there. See [ADR-023 § Particle basis + oriented primitives + production wiring](../../../sentinel/decisions/023-corridor-brandmark-physics-core.md) and Invariant 12.
+
+| Corridor physics core change        | File                                                                                                                                      |
+| ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| Promote a lab Visual preset to prod | `BrandmarkPhysicsCoreActor.tsx` — `PRODUCTION_*` constants block                                                                          |
+| Add a new particle basis            | `lib/brandmark/sampleBrandmarkParticles.ts` (new branch in `sampleBrandmarkParticles`) + `BrandmarkBasis` type                            |
+| Add a new oriented primitive        | `components/brand/BrandmarkPhysicsCore/shaders.ts` (new `else if (uShape == N)` branch) + `SHAPE_TO_INT` map + `BrandmarkCoreShape` union |
+| Tune dash / scan length / width     | shaders.ts (`uPrimitiveAspect` / `uShapeStroke`) and / or `BrandmarkPhysicsCoreActor` PRODUCTION\_\* constants                            |
+
 ---
 
 ## Don't reintroduce

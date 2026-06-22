@@ -26,6 +26,7 @@ import * as THREE from "three";
 import {
   BrandmarkPhysicsCore,
   BRANDMARK_PHYSICS_CORE_COUNT_DESKTOP,
+  type BrandmarkBasis,
   type BrandmarkCoreShape,
   type BrandmarkCoreGlyph,
   type BrandmarkCoreBlending,
@@ -50,10 +51,20 @@ const DEFAULTS = {
   accentColor: "#e9c97a",
   opacity: 0.78,
 
-  // Particle shape (lab render-mode switch — ADR-023 addendum)
-  shape: "dot" as BrandmarkCoreShape, // dot · dither · voxel · glyph
+  // Particle BASIS — where each particle LIVES (independent of how it
+  // DRAWS). `dome-fill` is the legacy filled silhouette; the new bases
+  // light up oriented primitives (dash / bracket / scan) by giving each
+  // particle a contour tangent in `aAngle`.
+  basis: "dome-fill" as BrandmarkBasis,
+  gridSnap: 1 / 32, // edge-lattice cell size in normalised units
+
+  // Particle SHAPE — how each particle draws inside its point sprite.
+  shape: "dot" as BrandmarkCoreShape, // dot · dither · voxel · glyph · dash · cell · bracket · scan
   glyph: "plus" as BrandmarkCoreGlyph, // symbol when shape = glyph
-  shapeStroke: 0.12, // glyph stroke / voxel gap / weight
+  shapeStroke: 0.12, // glyph stroke / voxel gap / weight / dash width
+  primitiveAspect: 2.4, // length:width for oriented primitives (dash / scan)
+  lineJitter: 0, // perpendicular jitter on oriented primitives
+  freezeMotion: false, // freeze sim wobble + fragment pulse (independent of cleanField)
   blending: "additive" as BrandmarkCoreBlending, // additive glow vs flat retro field
 
   // Centerpiece (Services parked state — cleanField 0 = corridor, 1 = parked)
@@ -103,6 +114,21 @@ const SHAPE_OPTIONS: { value: BrandmarkCoreShape; label: string }[] = [
   { value: "dither", label: "Dither" },
   { value: "voxel", label: "Voxel" },
   { value: "glyph", label: "Glyph" },
+  { value: "dash", label: "Dash" },
+  { value: "cell", label: "Cell" },
+  { value: "bracket", label: "Brkt" },
+  { value: "scan", label: "Scan" },
+];
+
+const ALL_SHAPE_VALUES: ReadonlyArray<BrandmarkCoreShape> = [
+  "dot",
+  "dither",
+  "voxel",
+  "glyph",
+  "dash",
+  "cell",
+  "bracket",
+  "scan",
 ];
 
 const GLYPH_OPTIONS: { value: BrandmarkCoreGlyph; label: string }[] = [
@@ -114,9 +140,196 @@ const GLYPH_OPTIONS: { value: BrandmarkCoreGlyph; label: string }[] = [
   { value: "asterisk", label: "✳" },
 ];
 
+const ALL_GLYPH_VALUES: ReadonlyArray<BrandmarkCoreGlyph> = [
+  "plus",
+  "cross",
+  "square",
+  "ring",
+  "diamond",
+  "asterisk",
+];
+
 const BLENDING_OPTIONS: { value: BrandmarkCoreBlending; label: string }[] = [
   { value: "additive", label: "Additive" },
   { value: "normal", label: "Normal" },
+];
+
+const BASIS_OPTIONS: { value: BrandmarkBasis; label: string }[] = [
+  { value: "dome-fill", label: "Filled" },
+  { value: "svg-outline", label: "Outline" },
+  { value: "edge-lattice", label: "Lattice" },
+  { value: "model-wire", label: "Wire" },
+];
+
+const ALL_BASIS_VALUES: ReadonlyArray<BrandmarkBasis> = [
+  "dome-fill",
+  "svg-outline",
+  "edge-lattice",
+  "model-wire",
+];
+
+/** Visual preset = a coordinated bundle of basis / shape / blending /
+ *  primitive knobs that the lab can apply with one click, so changes
+ *  read as a genuine style shift rather than a single slider tweak.
+ *  Five presets cover the design space we're exploring:
+ *
+ *   - `Luminous Dust` — the legacy soft-halo additive cloud (today's
+ *     production look). Equivalent to "reset render".
+ *   - `Vector Trace` — particles ON the SVG contour with oriented short
+ *     dashes (tangent-aligned). Tactical drafting feel; pairs with
+ *     Normal blending so the dashes read crisp.
+ *   - `Raster Field` — dome-fill quantised to a lattice with hard outlined
+ *     cells. HORSE 2026 / halftone look.
+ *   - `Wire Artifact` — model-wire basis (contours fan into the depth
+ *     plane) with oriented dashes; reads as a wireframe 3D object.
+ *   - `HUD Glyph` — dome-fill with plus / cross glyphs. The closest to
+ *     the Shift5 reticle grid: legible glyphs over the brandmark area. */
+interface VisualPreset {
+  id: string;
+  label: string;
+  description: string;
+  apply: {
+    basis: BrandmarkBasis;
+    shape: BrandmarkCoreShape;
+    glyph?: BrandmarkCoreGlyph;
+    blending: BrandmarkCoreBlending;
+    shapeStroke: number;
+    primitiveAspect: number;
+    lineJitter: number;
+    pointSize: number;
+    opacity: number;
+    corridorKeep: number;
+    cleanFieldKeep: number;
+    cleanFieldDotScale: number;
+    cleanFieldEdge: number;
+    cleanField: number;
+    bulge: number;
+    thickness: number;
+    /** Freeze sim wobble + fragment pulse. Defaults to `true` for raster /
+     *  wire-style looks where the brandmark should read as a STATIC dither /
+     *  cell field rather than a breathing cloud (sim micro-jitter on hard
+     *  pixel cells reads as "wobble like liquid"). */
+    freezeMotion: boolean;
+  };
+}
+
+const VISUAL_PRESETS: ReadonlyArray<VisualPreset> = [
+  {
+    id: "luminous-dust",
+    label: "Luminous Dust",
+    description: "Soft halo · additive · the legacy production look. Breathing motion.",
+    apply: {
+      basis: "dome-fill",
+      shape: "dot",
+      blending: "additive",
+      shapeStroke: 0.12,
+      primitiveAspect: 2.4,
+      lineJitter: 0,
+      pointSize: 2.8,
+      opacity: 0.9,
+      corridorKeep: 1,
+      cleanFieldKeep: 0.65,
+      cleanFieldDotScale: 0.5,
+      cleanFieldEdge: 0.4,
+      cleanField: 0,
+      bulge: 0.18,
+      thickness: 0.06,
+      freezeMotion: false,
+    },
+  },
+  {
+    id: "vector-trace",
+    label: "Vector Trace",
+    description: "Particles ON the contour · tangent-aligned dashes · normal blending · static.",
+    apply: {
+      basis: "svg-outline",
+      shape: "dash",
+      blending: "normal",
+      shapeStroke: 0.09,
+      primitiveAspect: 2.6,
+      lineJitter: 0.2,
+      pointSize: 4.5,
+      opacity: 0.95,
+      corridorKeep: 1,
+      cleanFieldKeep: 1,
+      cleanFieldDotScale: 1,
+      cleanFieldEdge: 0.4,
+      cleanField: 0,
+      bulge: 0,
+      thickness: 0,
+      freezeMotion: true,
+    },
+  },
+  {
+    id: "raster-field",
+    label: "Raster Field",
+    description: "Filled silhouette snapped to a lattice · outlined cells · static raster.",
+    apply: {
+      basis: "edge-lattice",
+      shape: "cell",
+      blending: "normal",
+      shapeStroke: 0.16,
+      primitiveAspect: 1,
+      lineJitter: 0,
+      pointSize: 6,
+      opacity: 0.95,
+      corridorKeep: 1,
+      cleanFieldKeep: 1,
+      cleanFieldDotScale: 1,
+      cleanFieldEdge: 0.4,
+      cleanField: 0,
+      bulge: 0,
+      thickness: 0,
+      freezeMotion: true,
+    },
+  },
+  {
+    id: "wire-artifact",
+    label: "Wire Artifact",
+    description: "Contours fan into depth · oriented dashes · wireframe 3D object · static.",
+    apply: {
+      basis: "model-wire",
+      shape: "dash",
+      blending: "additive",
+      shapeStroke: 0.07,
+      primitiveAspect: 3,
+      lineJitter: 0.1,
+      pointSize: 3.5,
+      opacity: 0.9,
+      corridorKeep: 1,
+      cleanFieldKeep: 1,
+      cleanFieldDotScale: 1,
+      cleanFieldEdge: 0.4,
+      cleanField: 0,
+      bulge: 0.22,
+      thickness: 0,
+      freezeMotion: true,
+    },
+  },
+  {
+    id: "hud-glyph",
+    label: "HUD Glyph",
+    description: "Filled silhouette · plus/cross glyphs · additive HUD reticle field · static.",
+    apply: {
+      basis: "dome-fill",
+      shape: "glyph",
+      glyph: "plus",
+      blending: "additive",
+      shapeStroke: 0.08,
+      primitiveAspect: 1,
+      lineJitter: 0,
+      pointSize: 5,
+      opacity: 0.85,
+      corridorKeep: 1,
+      cleanFieldKeep: 0.7,
+      cleanFieldDotScale: 0.7,
+      cleanFieldEdge: 0.4,
+      cleanField: 0,
+      bulge: 0,
+      thickness: 0,
+      freezeMotion: true,
+    },
+  },
 ];
 
 export default function BrandmarkPhysicsCorePage() {
@@ -129,10 +342,16 @@ export default function BrandmarkPhysicsCorePage() {
   const [color, setColor] = useState(DEFAULTS.color);
   const [accentColor, setAccentColor] = useState(DEFAULTS.accentColor);
   const [opacity, setOpacity] = useState(DEFAULTS.opacity);
+  const [basis, setBasis] = useState<BrandmarkBasis>(DEFAULTS.basis);
+  const [gridSnap, setGridSnap] = useState(DEFAULTS.gridSnap);
   const [shape, setShape] = useState<BrandmarkCoreShape>(DEFAULTS.shape);
   const [glyph, setGlyph] = useState<BrandmarkCoreGlyph>(DEFAULTS.glyph);
   const [shapeStroke, setShapeStroke] = useState(DEFAULTS.shapeStroke);
+  const [primitiveAspect, setPrimitiveAspect] = useState(DEFAULTS.primitiveAspect);
+  const [lineJitter, setLineJitter] = useState(DEFAULTS.lineJitter);
+  const [freezeMotion, setFreezeMotion] = useState(DEFAULTS.freezeMotion);
   const [blending, setBlending] = useState<BrandmarkCoreBlending>(DEFAULTS.blending);
+  const [activePreset, setActivePreset] = useState<string>("luminous-dust");
   const [cleanField, setCleanField] = useState(DEFAULTS.cleanField);
   const [depth, setDepth] = useState(DEFAULTS.depth);
   const [corridorKeep, setCorridorKeep] = useState(DEFAULTS.corridorKeep);
@@ -150,6 +369,11 @@ export default function BrandmarkPhysicsCorePage() {
   const [loadSlug, setLoadSlug] = useState("");
   const [presetStatus, setPresetStatus] = useState("");
   const [presetBusy, setPresetBusy] = useState(false);
+  // Tracks whether the on-mount ?preset=<slug> auto-load has fired so React
+  // strict mode's effect double-invocation in dev doesn't load the same
+  // preset twice. A ref (not state) so the strict-mode second run sees the
+  // value the first run set — `useEffect` cleanup doesn't reset refs.
+  const initialUrlLoadHandled = useRef(false);
 
   const [ignite, setIgnite] = useState(DEFAULTS.ignite);
   const [reducedMotion, setReducedMotion] = useState(DEFAULTS.reducedMotion);
@@ -190,10 +414,16 @@ export default function BrandmarkPhysicsCorePage() {
     setColor(DEFAULTS.color);
     setAccentColor(DEFAULTS.accentColor);
     setOpacity(DEFAULTS.opacity);
+    setBasis(DEFAULTS.basis);
+    setGridSnap(DEFAULTS.gridSnap);
     setShape(DEFAULTS.shape);
     setGlyph(DEFAULTS.glyph);
     setShapeStroke(DEFAULTS.shapeStroke);
+    setPrimitiveAspect(DEFAULTS.primitiveAspect);
+    setLineJitter(DEFAULTS.lineJitter);
+    setFreezeMotion(DEFAULTS.freezeMotion);
     setBlending(DEFAULTS.blending);
+    setActivePreset("luminous-dust");
     setCleanField(DEFAULTS.cleanField);
     setDepth(DEFAULTS.depth);
     setCorridorKeep(DEFAULTS.corridorKeep);
@@ -204,6 +434,34 @@ export default function BrandmarkPhysicsCorePage() {
     setDriftAmpY(DEFAULTS.driftAmpY);
     setDriftPeriodX(DEFAULTS.driftPeriodX);
     setDriftPeriodY(DEFAULTS.driftPeriodY);
+  }, []);
+
+  // Apply a coordinated visual preset (basis + shape + blending + sizing
+  // + clean-field knobs all together) so a single click lands a fully-
+  // realised look instead of fiddling with sliders one by one. Preserves
+  // `count` / `worldHalfExtent` / forces (the lab's tuning context),
+  // updates only the appearance dials.
+  const applyVisualPreset = useCallback((id: string) => {
+    const preset = VISUAL_PRESETS.find((p) => p.id === id);
+    if (!preset) return;
+    setActivePreset(preset.id);
+    setBasis(preset.apply.basis);
+    setShape(preset.apply.shape);
+    if (preset.apply.glyph) setGlyph(preset.apply.glyph);
+    setBlending(preset.apply.blending);
+    setShapeStroke(preset.apply.shapeStroke);
+    setPrimitiveAspect(preset.apply.primitiveAspect);
+    setLineJitter(preset.apply.lineJitter);
+    setFreezeMotion(preset.apply.freezeMotion);
+    setPointSize(preset.apply.pointSize);
+    setOpacity(preset.apply.opacity);
+    setCorridorKeep(preset.apply.corridorKeep);
+    setCleanFieldKeep(preset.apply.cleanFieldKeep);
+    setCleanFieldDotScale(preset.apply.cleanFieldDotScale);
+    setCleanFieldEdge(preset.apply.cleanFieldEdge);
+    setCleanField(preset.apply.cleanField);
+    setBulge(preset.apply.bulge);
+    setThickness(preset.apply.thickness);
   }, []);
 
   const resetForces = useCallback(() => {
@@ -254,10 +512,15 @@ export default function BrandmarkPhysicsCorePage() {
   // Collect the current brandmark-appearance state into a flat settings object.
   // Keys map 1:1 to the production constants (see the panel's "production map"
   // note), so a shared id translates straight into the real centerpiece tune.
+  // Schema v2 adds `basis`, `gridSnap`, `primitiveAspect`, `lineJitter`, and
+  // `activePreset` — v1 presets still load (missing fields fall back to defaults).
   const buildSettings = useCallback(
     () => ({
-      v: 1,
+      v: 2,
       target: "services-centerpiece",
+      activePreset,
+      basis,
+      gridSnap,
       count,
       cleanField,
       corridorKeep,
@@ -271,6 +534,9 @@ export default function BrandmarkPhysicsCorePage() {
       shape,
       glyph,
       shapeStroke,
+      primitiveAspect,
+      lineJitter,
+      freezeMotion,
       blending,
       depth,
       bulge,
@@ -283,6 +549,9 @@ export default function BrandmarkPhysicsCorePage() {
       driftPeriodY,
     }),
     [
+      activePreset,
+      basis,
+      gridSnap,
       count,
       cleanField,
       corridorKeep,
@@ -296,6 +565,9 @@ export default function BrandmarkPhysicsCorePage() {
       shape,
       glyph,
       shapeStroke,
+      primitiveAspect,
+      lineJitter,
+      freezeMotion,
       blending,
       depth,
       bulge,
@@ -324,14 +596,28 @@ export default function BrandmarkPhysicsCorePage() {
     setOpacity(num("opacity", DEFAULTS.opacity));
     setColor(str("color", DEFAULTS.color));
     setAccentColor(str("accentColor", DEFAULTS.accentColor));
-    const shapeVal = str("shape", DEFAULTS.shape);
-    setShape(
-      shapeVal === "dither" || shapeVal === "voxel" || shapeVal === "glyph" ? shapeVal : "dot"
+    // Basis (v2) — gracefully defaults to "dome-fill" for v1 presets that
+    // never wrote one, preserving their visual intent (filled silhouette).
+    const basisVal = str("basis", DEFAULTS.basis) as BrandmarkBasis;
+    setBasis(
+      (ALL_BASIS_VALUES as ReadonlyArray<string>).includes(basisVal) ? basisVal : DEFAULTS.basis
     );
-    const glyphVal = str("glyph", DEFAULTS.glyph);
-    const glyphSet = ["plus", "cross", "square", "ring", "diamond", "asterisk"];
-    setGlyph(glyphSet.includes(glyphVal) ? (glyphVal as BrandmarkCoreGlyph) : "plus");
+    setGridSnap(num("gridSnap", DEFAULTS.gridSnap));
+    const shapeVal = str("shape", DEFAULTS.shape) as BrandmarkCoreShape;
+    setShape((ALL_SHAPE_VALUES as ReadonlyArray<string>).includes(shapeVal) ? shapeVal : "dot");
+    const glyphVal = str("glyph", DEFAULTS.glyph) as BrandmarkCoreGlyph;
+    setGlyph((ALL_GLYPH_VALUES as ReadonlyArray<string>).includes(glyphVal) ? glyphVal : "plus");
     setShapeStroke(num("shapeStroke", DEFAULTS.shapeStroke));
+    setPrimitiveAspect(num("primitiveAspect", DEFAULTS.primitiveAspect));
+    setLineJitter(num("lineJitter", DEFAULTS.lineJitter));
+    // freezeMotion (v2). Missing on v1 presets → default false (legacy
+    // "Luminous Dust" breathing motion). Boolean cast so JSON `false` and
+    // `undefined` both produce the right result.
+    setFreezeMotion(
+      typeof s["freezeMotion"] === "boolean"
+        ? (s["freezeMotion"] as boolean)
+        : DEFAULTS.freezeMotion
+    );
     setBlending(str("blending", DEFAULTS.blending) === "normal" ? "normal" : "additive");
     setDepth(num("depth", DEFAULTS.depth));
     setBulge(num("bulge", DEFAULTS.bulge));
@@ -342,6 +628,29 @@ export default function BrandmarkPhysicsCorePage() {
     setDriftAmpY(num("driftAmpY", DEFAULTS.driftAmpY));
     setDriftPeriodX(num("driftPeriodX", DEFAULTS.driftPeriodX));
     setDriftPeriodY(num("driftPeriodY", DEFAULTS.driftPeriodY));
+    // Mark the loaded preset as "custom" so the UI doesn't claim it
+    // matches one of the canned VISUAL_PRESETS unless v2 explicitly says so.
+    const presetVal = str("activePreset", "");
+    setActivePreset(VISUAL_PRESETS.some((p) => p.id === presetVal) ? presetVal : "custom");
+  }, []);
+
+  // Build a shareable URL for the current preset. The page lives at
+  // /test/brandmark-physics-core; a `?preset=<slug>` query param re-loads
+  // the preset on next visit. Returns a string the user can paste anywhere.
+  const buildPresetUrl = useCallback((slug: string): string => {
+    if (typeof window === "undefined") return "";
+    const { origin, pathname } = window.location;
+    return `${origin}${pathname}?preset=${encodeURIComponent(slug)}`;
+  }, []);
+
+  // Reflect a loaded / saved slug in the address bar so a refresh re-loads
+  // and the URL itself is shareable. `replaceState` (not `pushState`) keeps
+  // the browser back-stack clean — bouncing between presets shouldn't fill
+  // up history.
+  const writePresetToUrl = useCallback((slug: string): void => {
+    if (typeof window === "undefined") return;
+    const next = `${window.location.pathname}?preset=${encodeURIComponent(slug)}`;
+    window.history.replaceState(null, "", next);
   }, []);
 
   const handleSavePreset = useCallback(async () => {
@@ -362,6 +671,7 @@ export default function BrandmarkPhysicsCorePage() {
       if (!error) {
         setPresetSlug(slug);
         setLoadSlug(slug);
+        writePresetToUrl(slug);
         setPresetStatus(`Saved — share this id: ${slug}`);
         setPresetBusy(false);
         return;
@@ -373,7 +683,7 @@ export default function BrandmarkPhysicsCorePage() {
     }
     setPresetStatus("Save failed: too many slug collisions");
     setPresetBusy(false);
-  }, [buildSettings, presetLabel]);
+  }, [buildSettings, presetLabel, writePresetToUrl]);
 
   const handleLoadPreset = useCallback(
     async (rawSlug: string) => {
@@ -406,11 +716,38 @@ export default function BrandmarkPhysicsCorePage() {
       applySettings((data.settings ?? {}) as Record<string, unknown>);
       setPresetLabel(typeof data.label === "string" ? data.label : "");
       setPresetSlug(slug);
+      setLoadSlug(slug);
+      writePresetToUrl(slug);
       setPresetStatus(`Loaded "${slug}"`);
       setPresetBusy(false);
     },
-    [applySettings]
+    [applySettings, writePresetToUrl]
   );
+
+  // On mount, honour ?preset=<slug> from the URL so a shared link loads the
+  // right look automatically. The ref guard prevents React strict mode's
+  // effect double-invocation in dev from firing the load twice. Runs only
+  // once per page mount; subsequent URL changes are intentionally ignored
+  // (the user has the input + Load button for explicit reloads).
+  //
+  // `handleLoadPreset` eventually writes state (busy / status / loadSlug /
+  // preset settings) via an async Supabase fetch — the `react-hooks/
+  // set-state-in-effect` rule flags this conservatively because it can't
+  // see across the promise boundary, but this is exactly the "subscribe to
+  // an external system" pattern the rule's docs OK. The cascading-render
+  // concern doesn't apply: the load fires once per page mount.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (initialUrlLoadHandled.current) return;
+    initialUrlLoadHandled.current = true;
+    const params = new URLSearchParams(window.location.search);
+    const slug = params.get("preset");
+    if (!slug) return;
+    const trimmed = slug.trim().toLowerCase();
+    if (!trimmed) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void handleLoadPreset(trimmed);
+  }, [handleLoadPreset]);
 
   const backgroundColor =
     background === "dark"
@@ -460,9 +797,14 @@ export default function BrandmarkPhysicsCorePage() {
             color={color}
             accentColor={accentColor}
             opacity={opacity}
+            basis={basis}
+            gridSnap={gridSnap}
             shape={shape}
             glyph={glyph}
             shapeStroke={shapeStroke}
+            primitiveAspect={primitiveAspect}
+            lineJitter={lineJitter}
+            freezeMotion={freezeMotion}
             blending={blending}
             cleanField={cleanField}
             corridorKeep={corridorKeep}
@@ -610,25 +952,43 @@ export default function BrandmarkPhysicsCorePage() {
               border: "1px solid rgba(202,165,84,0.35)",
             }}
           >
-            <span style={{ color: "var(--gold, #caa554)", fontSize: 14, letterSpacing: "0.12em" }}>
-              {presetSlug}
-            </span>
-            <button
-              type="button"
-              onClick={() => navigator.clipboard?.writeText(presetSlug)}
+            <span
               style={{
-                background: "transparent",
-                border: "1px solid rgba(202,165,84,0.4)",
-                color: "var(--dawn, #ece3d6)",
-                fontSize: 9,
-                padding: "3px 8px",
-                cursor: "pointer",
-                textTransform: "uppercase",
-                letterSpacing: "0.1em",
+                color: "var(--gold, #caa554)",
+                fontSize: 14,
+                letterSpacing: "0.12em",
+                flex: "1 1 auto",
+                minWidth: 0,
               }}
             >
-              copy
-            </button>
+              {presetSlug}
+            </span>
+            <div style={{ display: "flex", gap: 4, flex: "0 0 auto" }}>
+              <button
+                type="button"
+                onClick={() => {
+                  navigator.clipboard?.writeText(presetSlug);
+                  setPresetStatus(`Copied id: ${presetSlug}`);
+                }}
+                title="Copy just the id"
+                style={presetMicroButtonStyle}
+              >
+                id
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const url = buildPresetUrl(presetSlug);
+                  if (!url) return;
+                  navigator.clipboard?.writeText(url);
+                  setPresetStatus(`Copied URL: ${url}`);
+                }}
+                title="Copy a shareable URL with the preset embedded"
+                style={presetMicroButtonStyle}
+              >
+                url
+              </button>
+            </div>
           </div>
         ) : null}
         <div style={{ display: "flex", gap: 6, marginTop: 8 }}>
@@ -636,9 +996,19 @@ export default function BrandmarkPhysicsCorePage() {
             type="text"
             value={loadSlug}
             onChange={(e) => setLoadSlug(e.target.value)}
+            onKeyDown={(e) => {
+              // Enter loads — no need to round-trip through the button. Also
+              // accept the most common "I just hit space by mistake" → trim
+              // in handleLoadPreset, so leading whitespace doesn't fail the
+              // 23505 slug regex.
+              if (e.key === "Enter") {
+                e.preventDefault();
+                if (!presetBusy) handleLoadPreset(loadSlug);
+              }
+            }}
             placeholder="Paste id…"
             style={{
-              flex: 1,
+              flex: "1 1 auto",
               minWidth: 0,
               boxSizing: "border-box",
               padding: "6px 8px",
@@ -653,7 +1023,18 @@ export default function BrandmarkPhysicsCorePage() {
             type="button"
             onClick={() => handleLoadPreset(loadSlug)}
             disabled={presetBusy}
-            style={{ ...resetButtonStyle, marginTop: 0, opacity: presetBusy ? 0.5 : 1 }}
+            // Without an explicit width override, this button inherits
+            // `width: 100%` from resetButtonStyle. In a flex row that becomes
+            // its flex-basis, so the button greedily fills the row and the
+            // input shrinks to a single character wide. Pin it to auto.
+            style={{
+              ...resetButtonStyle,
+              width: "auto",
+              flex: "0 0 auto",
+              marginTop: 0,
+              padding: "6px 14px",
+              opacity: presetBusy ? 0.5 : 1,
+            }}
           >
             Load
           </button>
@@ -779,39 +1160,188 @@ export default function BrandmarkPhysicsCorePage() {
           onChange={setOpacity}
         />
 
-        <SectionLabel>Particle shape</SectionLabel>
-        <ChoiceRow label="Shape" value={shape} options={SHAPE_OPTIONS} onChange={setShape} />
+        <SectionLabel>Visual preset</SectionLabel>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginBottom: 6 }}>
+          {VISUAL_PRESETS.map((p) => {
+            const active = p.id === activePreset;
+            return (
+              <button
+                key={p.id}
+                type="button"
+                onClick={() => applyVisualPreset(p.id)}
+                style={{
+                  flex: "1 1 calc(50% - 4px)",
+                  minWidth: 100,
+                  padding: "6px 8px",
+                  textAlign: "left",
+                  background: active ? "rgba(202,165,84,0.18)" : "transparent",
+                  border: `1px solid ${active ? "rgba(202,165,84,0.7)" : "rgba(202,165,84,0.25)"}`,
+                  color: active ? "var(--gold, #caa554)" : "rgba(236,227,214,0.7)",
+                  fontFamily: "inherit",
+                  fontSize: 10,
+                  letterSpacing: "0.1em",
+                  textTransform: "uppercase",
+                  cursor: "pointer",
+                  lineHeight: 1.3,
+                }}
+              >
+                {p.label}
+              </button>
+            );
+          })}
+        </div>
+        <div
+          style={{
+            fontSize: 9,
+            color: "rgba(236, 227, 214, 0.5)",
+            marginBottom: 8,
+            lineHeight: 1.5,
+            minHeight: 26,
+          }}
+        >
+          {VISUAL_PRESETS.find((p) => p.id === activePreset)?.description ??
+            "Custom · loaded from a shared id or hand-tuned."}
+        </div>
+
+        <SectionLabel>Particle basis (where particles live)</SectionLabel>
+        <ChoiceRow
+          label="Basis"
+          value={basis}
+          options={BASIS_OPTIONS}
+          onChange={(v) => {
+            setBasis(v);
+            setActivePreset("custom");
+          }}
+        />
+        {basis === "edge-lattice" ? (
+          <ControlSlider
+            label="Lattice cell (1/N)"
+            value={gridSnap}
+            min={1 / 80}
+            max={1 / 12}
+            step={0.001}
+            onChange={(v) => {
+              setGridSnap(v);
+              setActivePreset("custom");
+            }}
+          />
+        ) : null}
+        <div
+          style={{
+            fontSize: 9,
+            color: "rgba(236, 227, 214, 0.4)",
+            marginTop: -4,
+            marginBottom: 8,
+            lineHeight: 1.5,
+          }}
+        >
+          Filled = legacy silhouette (today&rsquo;s production). Outline = particles ON the SVG
+          contour (tangent stored in aAngle for oriented strokes). Lattice = silhouette snapped to a
+          grid for raster reads. Wire = outline + per-path Z so contours fan into depth.
+        </div>
+
+        <SectionLabel>Particle shape (how each draws)</SectionLabel>
+        <ChoiceRow
+          label="Shape"
+          value={shape}
+          options={SHAPE_OPTIONS}
+          onChange={(v) => {
+            setShape(v);
+            setActivePreset("custom");
+          }}
+        />
         {shape === "glyph" ? (
-          <ChoiceRow label="Symbol" value={glyph} options={GLYPH_OPTIONS} onChange={setGlyph} />
+          <ChoiceRow
+            label="Symbol"
+            value={glyph}
+            options={GLYPH_OPTIONS}
+            onChange={(v) => {
+              setGlyph(v);
+              setActivePreset("custom");
+            }}
+          />
         ) : null}
         {shape !== "dot" ? (
           <ControlSlider
-            label={shape === "voxel" ? "Voxel gap" : "Stroke / weight"}
+            label={
+              shape === "voxel"
+                ? "Voxel gap"
+                : shape === "cell"
+                  ? "Cell stroke"
+                  : shape === "dash" || shape === "scan"
+                    ? "Stroke width"
+                    : "Stroke / weight"
+            }
             value={shapeStroke}
             min={0.02}
             max={0.3}
             step={0.005}
-            onChange={setShapeStroke}
+            onChange={(v) => {
+              setShapeStroke(v);
+              setActivePreset("custom");
+            }}
           />
+        ) : null}
+        {shape === "dash" || shape === "scan" || shape === "bracket" ? (
+          <>
+            <ControlSlider
+              label="Primitive aspect (len:width)"
+              value={primitiveAspect}
+              min={1}
+              max={5}
+              step={0.05}
+              onChange={(v) => {
+                setPrimitiveAspect(v);
+                setActivePreset("custom");
+              }}
+            />
+            <ControlSlider
+              label="Line jitter (perpendicular)"
+              value={lineJitter}
+              min={0}
+              max={1}
+              step={0.02}
+              onChange={(v) => {
+                setLineJitter(v);
+                setActivePreset("custom");
+              }}
+            />
+          </>
         ) : null}
         <ChoiceRow
           label="Blending"
           value={blending}
           options={BLENDING_OPTIONS}
-          onChange={setBlending}
+          onChange={(v) => {
+            setBlending(v);
+            setActivePreset("custom");
+          }}
+        />
+        <Checkbox
+          label="Freeze motion (static render)"
+          checked={freezeMotion}
+          onChange={(v) => {
+            setFreezeMotion(v);
+            setActivePreset("custom");
+          }}
         />
         <div
           style={{
             fontSize: 9,
             color: "rgba(236, 227, 214, 0.4)",
-            marginTop: -2,
+            marginTop: -4,
             marginBottom: 8,
             lineHeight: 1.5,
           }}
         >
-          Dot is the original soft glow. Dither / Voxel / Glyph rewrite only the per-particle mask;
-          pair them with Normal blending to kill the additive bloom (the &ldquo;Christmas
-          lights&rdquo; read). Lab-only &mdash; the live #services centerpiece is unaffected.
+          Dot = original soft glow. Dither / Voxel / Cell / Glyph rewrite the per-particle mask.
+          Dash / Bracket / Scan rotate by the contour tangent &mdash; pair them with the Outline or
+          Wire basis to get oriented strokes; on Filled basis they fall back to axis-aligned. Normal
+          blending kills the additive bloom for the rasterised looks. <strong>Freeze motion</strong>{" "}
+          damps the GPGPU sim&rsquo;s turbulence + flow to 0 AND stills the fragment pulse, so the
+          brandmark reads as a STATIC dither / raster field instead of wobbling like a liquid.
+          Decoupled from Clean field, so colour / density stay where they are. Lab-only &mdash; the
+          live #services centerpiece is unaffected unless production wires a preset.
         </div>
 
         <SectionLabel>Centerpiece (Services parked)</SectionLabel>
@@ -1508,4 +2038,19 @@ const primaryResetButtonStyle: React.CSSProperties = {
   background: "rgba(202, 165, 84, 0.12)",
   borderColor: "rgba(202, 165, 84, 0.55)",
   color: "var(--gold, #caa554)",
+};
+
+// Compact micro-button used inside the "preset slug" chip for the
+// `id` / `url` copy actions. Sized to read as a hint inside the chip,
+// not as a primary action — the chip itself is the affordance.
+const presetMicroButtonStyle: React.CSSProperties = {
+  background: "transparent",
+  border: "1px solid rgba(202,165,84,0.4)",
+  color: "var(--dawn, #ece3d6)",
+  fontFamily: "var(--font-pt-mono, ui-monospace), monospace",
+  fontSize: 9,
+  padding: "3px 8px",
+  cursor: "pointer",
+  textTransform: "uppercase",
+  letterSpacing: "0.1em",
 };
