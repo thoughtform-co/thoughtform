@@ -41,10 +41,16 @@ import {
   type BrandmarkCoreShape,
 } from "@/components/brand/BrandmarkPhysicsCore";
 import { CanvasErrorBoundary } from "@/components/hud";
+import {
+  ServiceCelestialCard,
+  ServicesOrbitMap,
+  SERVICES,
+} from "@/components/landing/home-v2/services";
 import { BrandmarkGlyph } from "@/components/landing/v7/BrandmarkGlyph";
 import { supabase } from "@/lib/supabase";
 
-type LabMode = "solid" | "particle" | "scene";
+type LabMode = "solid" | "particle";
+type SavedLabMode = LabMode | "scene";
 type SceneFrame = "object" | "services-rails" | "terminal-plot" | "active-chamber";
 type SignalMode = "none" | "motes" | "scan" | "contours" | "orbits" | "dither" | "wire";
 
@@ -52,6 +58,8 @@ const REDUCED_MOTION_QUERY = "(prefers-reduced-motion: reduce)";
 const PREVIEW_ROTATION: [number, number, number] = [0.16, -0.42, 0];
 const CENTERED_ROTATION: [number, number, number] = [0, 0, 0];
 const LOCAL_PRESET_KEY = "thoughtform.brandmarkLab.presets.v1";
+const DEFAULT_SCENE_FRAME: SceneFrame = "services-rails";
+const DEFAULT_PRESET_ID = "scene-services-rails";
 
 const PALETTE = {
   void: "#050403",
@@ -175,7 +183,7 @@ interface SavedSnapshot {
   v: 3;
   lab: "brandmark-unified";
   label: string;
-  mode: LabMode;
+  mode: SavedLabMode;
   scene: SceneFrame;
   solid: SolidSettings;
   particle: ParticleSettings;
@@ -324,6 +332,32 @@ const SERVICES_PARTICLE: ParticleSettings = {
   showSphere: false,
 };
 
+const SERVICES_SECTION_PARTICLE: ParticleSettings = {
+  ...SERVICES_PARTICLE,
+  basis: "edge-lattice",
+  gridSnap: 0.0165,
+  shape: "voxel",
+  glyph: "plus",
+  blending: "additive",
+  pointSize: 3.1,
+  opacity: 0.78,
+  cleanField: 1,
+  corridorKeep: 1,
+  cleanFieldKeep: 1,
+  cleanFieldDotScale: 0.5,
+  cleanFieldEdge: 0.46,
+  bulge: 0.12,
+  thickness: 0.035,
+  scatterRadius: 0.42,
+  color: PALETTE.gold,
+  accentColor: PALETTE.hotGold,
+  freezeMotion: true,
+  worldScale: 0.55,
+  driftAmpX: 0,
+  driftAmpY: 0,
+  showSphere: false,
+};
+
 const BASE_LIGHTING: LightingSettings = {
   intensity: 1.65,
   animated: true,
@@ -400,7 +434,7 @@ function preset(config: {
     id: config.id,
     label: config.label,
     mode: config.mode,
-    scene: config.scene ?? "object",
+    scene: config.scene ?? DEFAULT_SCENE_FRAME,
     description: config.description,
     solid: solid(config.solid ?? {}),
     particle: particle(config.particle ?? {}),
@@ -808,19 +842,27 @@ const BUILT_IN_PRESETS: ReadonlyArray<UnifiedPreset> = [
   preset({
     id: "scene-services-rails",
     label: "Services Rails Dither",
-    mode: "scene",
+    mode: "particle",
     scene: "services-rails",
-    description: "Services-section composition: centered mark, left/right rails, terminal dither.",
-    particle: SERVICES_PARTICLE,
-    lighting: { intensity: 1.45, accentColor: PALETTE.red, secondaryColor: PALETTE.gold },
-    post: { bloomIntensity: 1.28, bloomThreshold: 0.25, noise: 0.075, vignette: 0.68 },
-    signal: { mode: "orbits", intensity: 0.48, density: 0.5 },
-    motion: { autoRotate: 0.035 },
+    description:
+      "Exact Services section preview: centered particle sun, orrery, rails, readout card.",
+    particle: SERVICES_SECTION_PARTICLE,
+    lighting: {
+      intensity: 0.85,
+      animated: false,
+      cards: false,
+      accentColor: PALETTE.gold,
+      secondaryColor: PALETTE.dawn,
+      exposure: 1,
+    },
+    post: { bloomIntensity: 0.78, bloomThreshold: 0.38, chromatic: 0, noise: 0.03, vignette: 0.36 },
+    signal: { mode: "none", intensity: 0, density: 0.18 },
+    motion: { autoRotate: 0 },
   }),
   preset({
     id: "scene-services-glass",
     label: "Services Rails Glass",
-    mode: "scene",
+    mode: "solid",
     scene: "services-rails",
     description: "Same Services frame, but with a solid umber glass brandmark.",
     solid: {
@@ -851,7 +893,7 @@ const BUILT_IN_PRESETS: ReadonlyArray<UnifiedPreset> = [
   preset({
     id: "scene-terminal-plot",
     label: "Terminal Plot",
-    mode: "scene",
+    mode: "particle",
     scene: "terminal-plot",
     description: "Red-gold plotter diagram around the mark for fast aesthetic scanning.",
     particle: {
@@ -871,7 +913,7 @@ const BUILT_IN_PRESETS: ReadonlyArray<UnifiedPreset> = [
   preset({
     id: "scene-active-chamber",
     label: "Active Chamber",
-    mode: "scene",
+    mode: "solid",
     scene: "active-chamber",
     description: "Cinematic dark chamber lighting without importing the Active Theory asset style.",
     solid: {
@@ -906,7 +948,6 @@ const BUILT_IN_PRESETS: ReadonlyArray<UnifiedPreset> = [
 const MODE_LABELS: Record<LabMode, string> = {
   solid: "Solid",
   particle: "Particle",
-  scene: "Scene",
 };
 
 const SHAPE_OPTIONS: ReadonlyArray<BrandmarkCoreShape> = [
@@ -948,12 +989,25 @@ const SIGNAL_OPTIONS: ReadonlyArray<SignalMode> = [
   "wire",
 ];
 
+const SERVICES_PREVIEW_STARS = (() => {
+  const random = seededRandom("services-section-preview-stars");
+  return Array.from({ length: 72 }, (_, i) => ({
+    id: i,
+    left: `${3 + random() * 94}%`,
+    top: `${2 + random() * 92}%`,
+    size: `${0.8 + random() * 2.2}px`,
+    opacity: 0.12 + random() * 0.46,
+  }));
+})();
+
 export default function BrandmarkUnifiedLabPage() {
   const reducedMotion = usePrefersReducedMotion();
   const [savedPresets, setSavedPresets] = useState<UnifiedPreset[]>(() => readLocalPresets());
   const presets = useMemo(() => [...BUILT_IN_PRESETS, ...savedPresets], [savedPresets]);
-  const [activePresetId, setActivePresetId] = useState(BUILT_IN_PRESETS[0].id);
-  const activePreset = presets.find((p) => p.id === activePresetId) ?? BUILT_IN_PRESETS[0];
+  const defaultPreset =
+    presets.find((presetItem) => presetItem.id === DEFAULT_PRESET_ID) ?? BUILT_IN_PRESETS[0];
+  const [activePresetId, setActivePresetId] = useState(DEFAULT_PRESET_ID);
+  const activePreset = presets.find((p) => p.id === activePresetId) ?? defaultPreset;
   const [mode, setMode] = useState<LabMode>(activePreset.mode);
   const [sceneFrame, setSceneFrame] = useState<SceneFrame>(activePreset.scene);
   const [solidSettings, setSolidSettings] = useState<SolidSettings>(() =>
@@ -983,7 +1037,7 @@ export default function BrandmarkUnifiedLabPage() {
 
   const applyUnifiedPreset = useCallback(
     (presetId: string, resetRotation = true) => {
-      const next = presets.find((p) => p.id === presetId) ?? BUILT_IN_PRESETS[0];
+      const next = presets.find((p) => p.id === presetId) ?? defaultPreset;
       setActivePresetId(next.id);
       setMode(next.mode);
       setSceneFrame(next.scene);
@@ -998,7 +1052,7 @@ export default function BrandmarkUnifiedLabPage() {
         setRotationResetKey((key) => key + 1);
       }
     },
-    [presets]
+    [defaultPreset, presets]
   );
 
   const modePresets = useMemo(
@@ -1010,9 +1064,13 @@ export default function BrandmarkUnifiedLabPage() {
     (nextMode: LabMode) => {
       setMode(nextMode);
       const first = presets.find((presetItem) => presetItem.mode === nextMode);
-      if (first) applyUnifiedPreset(first.id);
+      if (first) {
+        const currentSceneFrame = sceneFrame;
+        applyUnifiedPreset(first.id);
+        setSceneFrame(currentSceneFrame);
+      }
     },
-    [applyUnifiedPreset, presets]
+    [applyUnifiedPreset, presets, sceneFrame]
   );
 
   const stepPreset = useCallback(
@@ -1089,7 +1147,7 @@ export default function BrandmarkUnifiedLabPage() {
         return;
       }
       setMode("particle");
-      setSceneFrame("object");
+      setSceneFrame(DEFAULT_SCENE_FRAME);
       setParticleSettings(oldParticle);
       setSolidSettings(cloneSolid(BASE_SOLID));
       setLightingSettings({ ...BASE_LIGHTING });
@@ -1100,11 +1158,13 @@ export default function BrandmarkUnifiedLabPage() {
       return;
     }
 
+    const snapshotMode = coerceLabMode(snapshot.mode);
+    const snapshotScene = coerceSceneFrame(snapshot.scene);
     const savedPreset: UnifiedPreset = {
       id: fallbackId,
       label: snapshot.label || "Loaded preset",
-      mode: snapshot.mode,
-      scene: snapshot.scene,
+      mode: snapshotMode,
+      scene: snapshotScene,
       description: "Saved snapshot loaded from the brandmark preset store.",
       solid: cloneSolid(snapshot.solid),
       particle: cloneParticle(snapshot.particle),
@@ -1210,17 +1270,17 @@ export default function BrandmarkUnifiedLabPage() {
     [applySnapshot]
   );
 
-  const renderedAsSolid =
-    mode === "solid" ||
-    (mode === "scene" &&
-      (activePresetId === "scene-services-glass" || activePresetId === "scene-active-chamber"));
+  const renderedAsSolid = mode === "solid";
+  const isServicesSectionScene = sceneFrame === "services-rails";
   const debugMode = renderedAsSolid ? solidSettings.debugMode : "none";
   const effectsEnabled = postSettings.enabled && !reducedMotion && debugMode === "none";
   const animatedEnvironment = lightingSettings.animated && !reducedMotion;
   const matcap = solidSettings.materialMode === "matcap" ? MATCAP_PRESETS.iridescent : undefined;
 
   return (
-    <main className="brandmark-lab">
+    <main
+      className={`brandmark-lab${isServicesSectionScene ? " brandmark-lab--services-scene" : ""}`}
+    >
       <style>{responsiveStyles}</style>
       <CanvasErrorBoundary fallback={<CanvasFallback />}>
         <Canvas
@@ -1244,16 +1304,20 @@ export default function BrandmarkUnifiedLabPage() {
             }
           }}
         >
-          <color attach="background" args={[PALETTE.void]} />
-          <fog attach="fog" args={[PALETTE.void, 4.2, 8.2]} />
+          <color attach="background" args={[isServicesSectionScene ? "#1a1814" : PALETTE.void]} />
+          <fog attach="fog" args={[isServicesSectionScene ? "#1a1814" : PALETTE.void, 4.2, 8.2]} />
           <ExposureSync exposure={lightingSettings.exposure} />
-          <ReflectiveEnvironmentRig
-            intensity={lightingSettings.intensity}
-            animated={animatedEnvironment}
-            showReflectionCards={lightingSettings.cards}
-            accentColor={lightingSettings.accentColor}
-            secondaryColor={lightingSettings.secondaryColor}
-          />
+          {isServicesSectionScene ? (
+            <ServicesSceneLights />
+          ) : (
+            <ReflectiveEnvironmentRig
+              intensity={lightingSettings.intensity}
+              animated={animatedEnvironment}
+              showReflectionCards={lightingSettings.cards}
+              accentColor={lightingSettings.accentColor}
+              secondaryColor={lightingSettings.secondaryColor}
+            />
+          )}
           <TurntableRig
             rotation={presentationRotation}
             resetKey={rotationResetKey}
@@ -1280,25 +1344,25 @@ export default function BrandmarkUnifiedLabPage() {
                 pointerParallax={false}
                 middleMouseDrag={false}
                 rotation={[0, 0, 0]}
-                scale={mode === "scene" ? 1.08 : 1.04}
+                scale={isServicesSectionScene ? 0.9 : 1.04}
               />
             ) : (
               <ParticleBrandmark settings={particleSettings} reducedMotion={reducedMotion} />
             )}
           </TurntableRig>
-          {debugMode === "none" ? (
+          {debugMode === "none" && !isServicesSectionScene ? (
             <SignalLayer
               settings={signalSettings}
               reducedMotion={reducedMotion}
               scene={sceneFrame}
             />
           ) : null}
-          <SceneReticle scene={sceneFrame} />
+          {!isServicesSectionScene ? <SceneReticle scene={sceneFrame} /> : null}
           <ReflectivePostProcessing settings={postSettings} enabled={effectsEnabled} />
         </Canvas>
       </CanvasErrorBoundary>
 
-      <SceneOverlay scene={sceneFrame} mode={mode} />
+      <SceneOverlay scene={sceneFrame} />
 
       <aside className="brandmark-lab__panel">
         <div className="brandmark-lab__header">
@@ -1317,8 +1381,8 @@ export default function BrandmarkUnifiedLabPage() {
         </div>
 
         <SectionLabel icon={<Sparkles size={12} />}>Mode</SectionLabel>
-        <div className="segmented segmented--three">
-          {(["solid", "particle", "scene"] as const).map((value) => (
+        <div className="segmented">
+          {(["solid", "particle"] as const).map((value) => (
             <button
               key={value}
               type="button"
@@ -1368,7 +1432,7 @@ export default function BrandmarkUnifiedLabPage() {
           />
         </div>
 
-        {mode === "solid" || renderedAsSolid ? (
+        {mode === "solid" ? (
           <details open className="control-group">
             <summary>Solid Material</summary>
             <SegmentedControl
@@ -1507,7 +1571,7 @@ export default function BrandmarkUnifiedLabPage() {
           </details>
         ) : null}
 
-        {mode === "particle" || !renderedAsSolid ? (
+        {mode === "particle" ? (
           <details open className="control-group">
             <summary>Particle Material</summary>
             <NativeSelect
@@ -1587,7 +1651,7 @@ export default function BrandmarkUnifiedLabPage() {
           <NativeSelect
             label="Scene"
             value={sceneFrame}
-            options={["object", "services-rails", "terminal-plot", "active-chamber"]}
+            options={["services-rails", "terminal-plot", "active-chamber"]}
             onChange={(scene) => setSceneFrame(scene as SceneFrame)}
           />
           <ControlSlider
@@ -2048,6 +2112,16 @@ function buildSignalBuffers(
   return { points: new Float32Array(points) };
 }
 
+function ServicesSceneLights() {
+  return (
+    <>
+      <ambientLight intensity={0.42} color="#d7c18c" />
+      <directionalLight position={[0.8, 1.1, 2.5]} intensity={0.9} color="#ffe890" />
+      <pointLight position={[-1.2, -0.5, 1.2]} intensity={0.8} color="#caa554" distance={4} />
+    </>
+  );
+}
+
 function SceneReticle({ scene }: { scene: SceneFrame }) {
   const opacity = scene === "object" ? 0.18 : 0.28;
   return (
@@ -2071,13 +2145,17 @@ function SceneReticle({ scene }: { scene: SceneFrame }) {
   );
 }
 
-function SceneOverlay({ scene, mode }: { scene: SceneFrame; mode: LabMode }) {
+function SceneOverlay({ scene }: { scene: SceneFrame }) {
+  if (scene === "services-rails") {
+    return <ServicesSectionOverlay />;
+  }
+
   return (
     <div className={`scene-overlay scene-overlay--${scene}`} aria-hidden>
       <div className="corner corner--tl" />
       <div className="corner corner--bl" />
       <div className="corner corner--br" />
-      {scene !== "object" || mode === "scene" ? (
+      {scene !== "object" ? (
         <>
           <div className="scene-rail scene-rail--left" />
           <div className="scene-rail scene-rail--right" />
@@ -2086,6 +2164,71 @@ function SceneOverlay({ scene, mode }: { scene: SceneFrame; mode: LabMode }) {
             <strong>Services</strong>
           </div>
           <div className="scene-caption">Navigate / Encode / Build</div>
+        </>
+      ) : null}
+    </div>
+  );
+}
+
+function ServicesSectionOverlay() {
+  const service = SERVICES.find((item) => item.id === "keynote") ?? SERVICES[0];
+  if (!service) return null;
+
+  return (
+    <div className="services-preview">
+      <div className="services-preview__stars">
+        {SERVICES_PREVIEW_STARS.map((star) => (
+          <span
+            key={star.id}
+            style={{
+              left: star.left,
+              top: star.top,
+              width: star.size,
+              height: star.size,
+              opacity: star.opacity,
+            }}
+          />
+        ))}
+      </div>
+      <ServicesHudRail side="left" />
+      <ServicesHudRail side="right" />
+      <div className="services-preview__top-status">
+        <strong>VINCE</strong>
+        <span>ACTIVE</span>
+        <b>▼</b>
+      </div>
+      <div className="services-preview__compass">N</div>
+      <div className="services-stage services-stage--lab" data-active-step="0">
+        <div className="services-stage__items">
+          <ServicesOrbitMap />
+          <div className="services-cards">
+            <ServiceCelestialCard service={service} index={0} />
+          </div>
+        </div>
+      </div>
+      <span className="services-preview__scroll-pill" />
+    </div>
+  );
+}
+
+function ServicesHudRail({ side }: { side: "left" | "right" }) {
+  return (
+    <div className={`services-preview__rail services-preview__rail--${side}`}>
+      <span className="services-preview__corner services-preview__corner--top" />
+      <span className="services-preview__corner services-preview__corner--bottom" />
+      <span className="services-preview__rail-line" />
+      <span className="services-preview__tick services-preview__tick--a" />
+      <span className="services-preview__tick services-preview__tick--b" />
+      <span className="services-preview__tick services-preview__tick--c" />
+      <span className="services-preview__tick services-preview__tick--d" />
+      <span className="services-preview__tick services-preview__tick--e" />
+      {side === "left" ? (
+        <>
+          <span className="services-preview__rail-index services-preview__rail-index--top">2</span>
+          <span className="services-preview__rail-index services-preview__rail-index--bottom">
+            5
+          </span>
+          <span className="services-preview__rail-diamond" />
         </>
       ) : null}
     </div>
@@ -2310,8 +2453,8 @@ function snapshotToPreset(slug: string, snapshot: SavedSnapshot): UnifiedPreset 
   return {
     id: `saved-${slug}`,
     label: snapshot.label || slug,
-    mode: snapshot.mode,
-    scene: snapshot.scene,
+    mode: coerceLabMode(snapshot.mode),
+    scene: coerceSceneFrame(snapshot.scene),
     description: "Saved snapshot from this unified brandmark lab.",
     solid: cloneSolid(snapshot.solid),
     particle: cloneParticle(snapshot.particle),
@@ -2398,6 +2541,18 @@ function stringValue<T extends string>(value: unknown, fallback: T): string {
   return typeof value === "string" ? value : fallback;
 }
 
+function coerceLabMode(value: unknown, fallback: LabMode = "particle"): LabMode {
+  if (value === "solid" || value === "particle") return value;
+  return fallback;
+}
+
+function coerceSceneFrame(value: unknown): SceneFrame {
+  if (value === "services-rails" || value === "terminal-plot" || value === "active-chamber") {
+    return value;
+  }
+  return DEFAULT_SCENE_FRAME;
+}
+
 function formatValue(value: number, step: number): string {
   if (step >= 1) return value.toFixed(0);
   if (step >= 0.1) return value.toFixed(1);
@@ -2420,6 +2575,393 @@ const responsiveStyles = `
   position: absolute !important;
   inset: 0;
   pointer-events: auto;
+}
+.brandmark-lab--services-scene {
+  --void: #1a1814;
+  --dawn: #ebe3d6;
+  --dawn-70: rgba(235, 227, 214, 0.7);
+  --dawn-60: rgba(235, 227, 214, 0.6);
+  --dawn-50: rgba(235, 227, 214, 0.5);
+  --dawn-40: rgba(235, 227, 214, 0.4);
+  --dawn-08: rgba(235, 227, 214, 0.08);
+  --gold: #caa554;
+  --gold-30: rgba(202, 165, 84, 0.3);
+  --m-ease: cubic-bezier(0.33, 0, 0.2, 1);
+  background:
+    radial-gradient(circle at 50% 52%, rgba(202, 165, 84, 0.07), transparent 32%),
+    radial-gradient(circle at 78% 74%, rgba(202, 165, 84, 0.06), transparent 22%),
+    #1a1814;
+}
+.brandmark-lab--services-scene .brandmark-lab__canvas {
+  z-index: 2;
+}
+.brandmark-lab--services-scene .brandmark-lab__panel {
+  right: 22px;
+  width: min(360px, calc(100vw - 44px));
+  background:
+    linear-gradient(90deg, rgba(7, 6, 5, 0.9), rgba(16, 13, 9, 0.88)),
+    radial-gradient(circle at 0% 26%, rgba(202, 165, 84, 0.08), transparent 42%);
+  backdrop-filter: blur(12px);
+}
+.services-preview {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  color: var(--dawn);
+  pointer-events: none;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 50% 52%, rgba(235, 227, 214, 0.025), transparent 27%),
+    radial-gradient(circle at 52% 52%, transparent 0 23%, rgba(202, 165, 84, 0.025) 24%, transparent 44%),
+    linear-gradient(180deg, rgba(26, 24, 20, 0.04), rgba(26, 24, 20, 0.18));
+}
+.services-preview__stars {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+.services-preview__stars span {
+  position: absolute;
+  border-radius: 999px;
+  background: rgba(235, 227, 214, 0.9);
+  box-shadow: 0 0 10px rgba(235, 227, 214, 0.24);
+}
+.services-preview__top-status {
+  position: absolute;
+  top: 28px;
+  right: clamp(40px, 4vw, 70px);
+  z-index: 8;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 9px;
+  letter-spacing: 0.13em;
+  color: rgba(235, 227, 214, 0.84);
+}
+.services-preview__top-status strong,
+.services-preview__top-status span,
+.services-preview__top-status b {
+  font: inherit;
+  font-weight: 700;
+}
+.services-preview__top-status span {
+  color: rgba(184, 211, 136, 0.72);
+}
+.services-preview__rail {
+  position: absolute;
+  top: 42px;
+  bottom: 42px;
+  width: 48px;
+  z-index: 8;
+  color: rgba(235, 227, 214, 0.82);
+  pointer-events: none;
+}
+.services-preview__rail--left {
+  left: clamp(24px, 2.2vw, 46px);
+}
+.services-preview__rail--right {
+  right: clamp(24px, 2.2vw, 46px);
+}
+.services-preview__rail-line {
+  position: absolute;
+  top: 64px;
+  bottom: 64px;
+  width: 1px;
+  background: rgba(235, 227, 214, 0.72);
+}
+.services-preview__rail--left .services-preview__rail-line {
+  left: 0;
+}
+.services-preview__rail--right .services-preview__rail-line {
+  right: 0;
+}
+.services-preview__corner {
+  position: absolute;
+  width: 38px;
+  height: 38px;
+}
+.services-preview__rail--left .services-preview__corner {
+  left: 0;
+  border-left: 2px solid rgba(235, 227, 214, 0.78);
+}
+.services-preview__rail--right .services-preview__corner {
+  right: 0;
+  border-right: 2px solid rgba(235, 227, 214, 0.78);
+}
+.services-preview__corner--top {
+  top: 0;
+  border-top: 2px solid rgba(235, 227, 214, 0.78);
+}
+.services-preview__corner--bottom {
+  bottom: 0;
+  border-bottom: 2px solid rgba(235, 227, 214, 0.78);
+}
+.services-preview__tick {
+  position: absolute;
+  width: 16px;
+  height: 1px;
+  background: rgba(235, 227, 214, 0.76);
+}
+.services-preview__rail--left .services-preview__tick {
+  left: 0;
+  transform: translateX(-1px);
+}
+.services-preview__rail--right .services-preview__tick {
+  right: 0;
+  transform: translateX(1px);
+}
+.services-preview__tick--a { top: 22%; }
+.services-preview__tick--b { top: 36%; }
+.services-preview__tick--c { top: 52%; }
+.services-preview__tick--d { top: 66%; }
+.services-preview__tick--e { top: 82%; }
+.services-preview__rail-index {
+  position: absolute;
+  left: 12px;
+  color: rgba(235, 227, 214, 0.7);
+  font-size: 10px;
+}
+.services-preview__rail-index--top {
+  top: 35%;
+}
+.services-preview__rail-index--bottom {
+  top: 66%;
+}
+.services-preview__rail-diamond {
+  position: absolute;
+  top: 50%;
+  left: -5px;
+  width: 11px;
+  height: 11px;
+  transform: translateY(-50%) rotate(45deg);
+  background: #fff2a0;
+  box-shadow: 0 0 12px rgba(255, 242, 160, 0.42);
+}
+.services-preview__compass {
+  position: absolute;
+  left: clamp(17px, 1.6vw, 34px);
+  bottom: clamp(14px, 2vh, 24px);
+  z-index: 9;
+  width: 34px;
+  height: 34px;
+  border: 1px solid rgba(235, 227, 214, 0.48);
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  color: #ebe3d6;
+  font-size: 14px;
+  line-height: 1;
+  background: rgba(0, 0, 0, 0.28);
+}
+.services-preview__compass::after {
+  content: "";
+  position: absolute;
+  right: 6px;
+  top: 6px;
+  width: 5px;
+  height: 5px;
+  border-top: 1px solid #ebe3d6;
+  border-right: 1px solid #ebe3d6;
+}
+.services-preview__scroll-pill {
+  position: absolute;
+  left: 50%;
+  bottom: 13px;
+  z-index: 9;
+  width: 28px;
+  height: 5px;
+  transform: translateX(-50%);
+  border: 1px solid rgba(235, 227, 214, 0.38);
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.18);
+}
+.services-stage--lab {
+  position: absolute;
+  inset: 0;
+  height: 100%;
+  display: block;
+  background: transparent;
+  pointer-events: none;
+  z-index: 4;
+}
+.services-stage--lab .services-stage__items {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+.services-stage--lab .services-orbit-map {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: clamp(520px, 56vw, 920px);
+  max-width: 92vw;
+  aspect-ratio: 1;
+  pointer-events: none;
+  z-index: 4;
+  transform: translate(-50%, -50%);
+}
+.services-stage--lab .services-orbit-map__svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.services-stage--lab .svc-cartography {
+  opacity: 1;
+}
+.services-stage--lab .svc-orbit__path {
+  filter: drop-shadow(0 0 5px rgba(202, 165, 84, 0.18));
+}
+.services-stage--lab .svc-orbit__path:not(.svc-orbit__path--dotted) {
+  stroke-dasharray: 100;
+  stroke-dashoffset: 0;
+}
+.services-stage--lab .svc-orbit__path--dotted {
+  opacity: 0.92;
+}
+.services-stage--lab .svc-orbit__node {
+  fill: var(--gold);
+  fill-opacity: 0.88;
+  filter: drop-shadow(0 0 5px rgba(255, 239, 144, 0.34));
+}
+.services-stage--lab .services-cards {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  pointer-events: none;
+}
+.services-stage--lab .service-celestial-card {
+  position: absolute;
+  right: clamp(54px, 7vw, 150px);
+  bottom: clamp(44px, 7vh, 86px);
+  width: clamp(286px, 21vw, 320px);
+  box-sizing: border-box;
+  padding: clamp(18px, 1.5vw, 24px);
+  pointer-events: auto;
+  background-color: rgba(10, 9, 8, 0.62);
+  background-image: radial-gradient(rgba(202, 165, 84, 0.05) 0.5px, transparent 0.6px);
+  background-size: 4px 4px;
+  backdrop-filter: blur(9px);
+  border: 1px solid var(--dawn-08);
+  box-shadow:
+    0 0 0 1px rgba(235, 227, 214, 0.04),
+    0 0 60px rgba(202, 165, 84, 0.08),
+    0 30px 80px rgba(0, 0, 0, 0.55);
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+}
+.services-stage--lab .service-celestial-card__leader {
+  position: absolute;
+  right: calc(100% - 6px);
+  top: 16px;
+  width: 120px;
+  height: 64px;
+  overflow: visible;
+  pointer-events: none;
+}
+.services-stage--lab .service-celestial-card__leader svg {
+  display: block;
+  overflow: visible;
+}
+.services-stage--lab .service-celestial-card__leader-line,
+.services-stage--lab .service-celestial-card__leader-pip {
+  opacity: 0.82;
+}
+.services-stage--lab .service-celestial-card__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: clamp(12px, 1.2vw, 18px);
+}
+.services-stage--lab .service-celestial-card__index {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: var(--gold);
+}
+.services-stage--lab .service-celestial-card__dot {
+  width: 4px;
+  height: 4px;
+  background: var(--gold);
+  opacity: 0.7;
+}
+.services-stage--lab .service-celestial-card__kicker {
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--dawn-50);
+}
+.services-stage--lab .service-celestial-card__verb {
+  margin: 0;
+  font-family: var(--font-pp-neue-montreal, sans-serif);
+  font-weight: 400;
+  font-size: clamp(24px, 2.2vw, 30px);
+  line-height: 1.02;
+  color: var(--dawn);
+}
+.services-stage--lab .service-celestial-card__tagline {
+  margin: 6px 0 0;
+  font-family: var(--font-pp-neue-montreal, sans-serif);
+  font-weight: 300;
+  font-size: clamp(14px, 1.1vw, 16px);
+  line-height: 1.3;
+  color: var(--dawn-70);
+}
+.services-stage--lab .service-celestial-card__body {
+  margin: clamp(12px, 1.2vw, 16px) 0 0;
+  font-family: var(--font-pp-neue-montreal, sans-serif);
+  font-weight: 300;
+  font-size: clamp(12.5px, 0.95vw, 14px);
+  line-height: 1.5;
+  color: var(--dawn-60);
+}
+.services-stage--lab .service-celestial-card__meta {
+  margin: clamp(14px, 1.4vw, 20px) 0 0;
+  padding: clamp(12px, 1.2vw, 16px) 0 0;
+  border-top: 1px solid var(--dawn-08);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.services-stage--lab .service-celestial-card__meta-row {
+  display: grid;
+  grid-template-columns: minmax(78px, auto) 1fr;
+  gap: 12px;
+  align-items: baseline;
+}
+.services-stage--lab .service-celestial-card__meta-label {
+  font-size: 9.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--dawn-40);
+}
+.services-stage--lab .service-celestial-card__meta-value {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--dawn-70);
+}
+.services-stage--lab .service-celestial-card__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: clamp(16px, 1.6vw, 22px);
+}
+.services-stage--lab .service-celestial-card__phase {
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  color: var(--dawn-60);
+  padding: 4px 9px;
+  border: 1px solid var(--dawn-08);
+}
+.services-stage--lab .service-celestial-card__cta {
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--gold);
+  text-decoration: none;
+  white-space: nowrap;
 }
 .brandmark-lab__panel {
   position: fixed;
@@ -2473,9 +3015,6 @@ const responsiveStyles = `
   grid-template-columns: repeat(2, minmax(0, 1fr));
   border: 1px solid rgba(235, 227, 214, 0.13);
   margin-bottom: 10px;
-}
-.segmented--three {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 .segmented button,
 .preset-browser button,
@@ -2742,6 +3281,10 @@ const responsiveStyles = `
     bottom: 12px;
     width: auto;
     max-height: 45vh;
+  }
+  .brandmark-lab--services-scene .brandmark-lab__panel {
+    right: 12px;
+    width: auto;
   }
   .scene-overlay {
     inset: 18px;
